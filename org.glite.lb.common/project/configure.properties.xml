@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.2  2004/07/06 20:50:10  flammer
+	Moved to configure.properties.xml
+	
 	
 -->
 
@@ -48,6 +51,7 @@ expat_prefix=${with.expat.prefix}
 ares_prefix=${with.ares.prefix}
 thrflavour=${with.globus.thr.flavor}
 nothrflavour=${with.globus.nothr.flavor}
+cppunit=${with.cppunit.prefix}
 			</echo>
 	    </target>
 	</project>

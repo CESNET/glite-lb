@@ -19,8 +19,9 @@ ares_prefix=/opt/ares
 
 -include Makefile.inc
 
-VPATH=${top_srcdir}/src
+VPATH=${top_srcdir}/src:${top_srcdir}/test
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
+
 
 SUFFIXES = .T
 
@@ -33,20 +34,30 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${glite_location}/include \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
+	${COVERAGE_FLAGS} \
 	-DDATAGRID_EXTENSION
 
+GLOBUS_LIBS:=-L${globus_prefix}/lib \
+        -lglobus_common_${nothrflavour} \
+        -lglobus_gssapi_gsi_${nothrflavour} \
+
 GLITE_LIBS:=-L${glite_location}/lib
-GLOBUS_LIBS:=-L${globus_prefix}/lib
-EXPAT_LIBS:=-L${expat_prefix}/lib
-ARES_LIBS:=-L${ares_prefix}/lib
+EXPAT_LIBS:=-L${expat_prefix}/lib -lexpat
+ARES_LIBS:=-L${ares_prefix}/lib -lares
 LDFLAGS:=-L${stagedir}/lib \
     ${GLITE_LIBS} \
     ${GLOBUS_LIBS} \
     ${EXPAT_LIBS} \
-    ${ARES_LIBS}
+    ${ARES_LIBS} \
+    ${COVERAGE_FLAGS}
+
+TEST_LIBS:=-L${cppunit}/lib -lcppunit
+TEST_INC:=-I${cppunit}/include
+
     
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 OBJS:=lb_gss.o escape.o events.o mini_http.o query_rec.o status.o \
@@ -92,8 +103,11 @@ ${THRLTLIB}: ${THROBJS}
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
-check:
-	echo Unit tests missing
+check: check.parse
+
+check.parse: parse.cpp
+	${CXX} -c ${CFLAGS} ${TEST_INC} $<
+	${LINKXX} -o $@ parse.o ${LTLIB} ${TEST_LIBS}
 
 dist: distsrc distbin
 
@@ -130,6 +144,11 @@ clean:
 	chmod -w $@ >/dev/null
 
 %.c: %.c.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
+
+%.cpp: %.cpp.T
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
