@@ -76,6 +76,7 @@ int main(int argc,char *argv[])
 			fprintf(stderr,"edg_wll_NotifBind(): %s (%s)\n",et,ed);
 			exit(EX_UNAVAILABLE);
 		}
+		printf("bound to %s\n\t Expires: %s",argv[optind],ctime(&valid));
 	}
 	else { usage(argv[0]); exit(EX_USAGE); }
 
