@@ -345,6 +345,7 @@ int handle_conn(int conn, struct timeval client_start, void *data)
 	struct clnt_data_t *cdata = (struct clnt_data_t *)data;
 	edg_wll_Context		ctx;
 	struct timeval		total_to = { TOTAL_CLNT_TIMEOUT,0 };
+	char				buf[300];
 
 
 	if ( !(ctx = (edg_wll_Context) calloc(1, sizeof(*ctx))) ) {
@@ -362,6 +363,7 @@ int handle_conn(int conn, struct timeval client_start, void *data)
 	ctx->allowAnonymous = 1;
 	ctx->isProxy = 1;
 	ctx->noAuth = 1;
+	ctx->noIndex = 1;
 	ctx->semset = semset;
 	ctx->semaphores = semaphores;
 
