@@ -97,6 +97,8 @@ EXT_LIB:= ${EXPAT_LIBS} \
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
+COMMON_LIB=-lglite_lb_common_${nothrflavour}
+
 LDFLAGS:=-L${stagedir}/lib \
 	${COVERAGE_FLAGS}
 
@@ -136,6 +138,7 @@ THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job
+EXAMPLES_CL=user_jobs job_status
 FAKE_EXAMPLES:=job_log_fake
 
 MAN_GZ:=glite-lb-logevent.1.gz
@@ -166,6 +169,9 @@ logevent: logevent.o args.o
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+
+${EXAMPLES_CL}: %: %.o
+	${LINK} -o $@ $< ${LIB} ${COMMON_LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
 ${FAKE_EXAMPLES}: %: %.o ${FAKELIB}
 	${LINK} -o $@ $< ${FAKELIB} ${TEST_LIBS} ${EXT_LIB} ${GLOBUS_LIBS}
@@ -219,7 +225,7 @@ default: all
 
 compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
 
-examples: ${EXAMPLES} ${sh_PROGS}
+examples: ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}
 
 fake: ${FAKE_EXAMPLES}
 
@@ -265,7 +271,7 @@ install:
 	for p in ${TOOLS} logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
-	for p in ${TOOLS} logevent ${EXAMPLES} ${sh_PROGS}; do \
+	for p in ${TOOLS} logevent ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1

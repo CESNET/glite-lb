@@ -282,6 +282,9 @@ gen qq{\t    //edg_wll_Log$t();
 
 	if (ff) free(ff);
 	if (fmt_arg) free(fmt_arg);
+#ifdef ENABLE_REASON_LENGTH
+	if (reason) free(reason);
+#endif
 
 	return err;
 }
