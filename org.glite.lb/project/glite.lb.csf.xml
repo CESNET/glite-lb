@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.4  2004/07/29 10:47:46  dimeglio
+	Added server and logger
+	
 	Revision 1.3  2004/07/16 16:25:43  flammer
 	Added tags for automated adding of components.
 	
@@ -255,8 +258,8 @@
 	</target>
 
 	<!-- All project modules -->
- 	<target name="project" depends="common,
- 						client-interface,
+ 	<target name="project" depends="client-interface,
+ 						common
  						client,
  						server,
  						logger"/>
