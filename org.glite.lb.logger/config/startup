@@ -1,14 +1,18 @@
 #!/bin/sh
 
-GLITE_LOCATION=/opt/glite
-GLITE_USER=glite
-GLITE_LOCATION_VAR=/opt/glite/var
+GLITE_LOCATION=${GLITE_LOCATION:-/opt/glite}
+GLITE_USER=${GLITE_USER:-glite}
+GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-$GLITE_LOCATION/var}
 
 [ -f /etc/glite.conf ] && . /etc/glite.conf
-[ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
+[ -f $GLITE_LOCATION/etc/glite-wms.conf ] && . $GLITE_LOCATION/etc/glite-wms.conf
 
 [ -f $GLITE_LOCATION/etc/lb.conf ] && . $GLITE_LOCATION/etc/lb.conf
 [ -f $GLITE_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LOCATION_VAR/etc/lb.conf
+
+[ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
+
+unset creds port
 
 start()
 {
