@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.1  2004/06/22 22:04:55  dimeglio
+	First version of this file
+	
 -->
 
 	<!-- ======================================================
@@ -34,7 +37,7 @@
 			<echo file="${module.build.dir}/Makefile.inc">
 top_srcdir=..
 builddir=build
-stagedir=${stage.dir}
+stagedir=${stage.abs.dir}
 distdir=${dist.dir}
 package=${module.package.name}
 PREFIX=${install.dir}
