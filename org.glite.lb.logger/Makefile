@@ -101,6 +101,7 @@ distbin:
 	rm -rf tmpbuilddir
 	
 install:
+	mkdir ${PREFIX}/bin
 	${INSTALL} -m 755 glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd ${PREFIX}/bin
 
 %.no: %.c
