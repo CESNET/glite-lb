@@ -1,0 +1,10 @@
+tar_exclude
+CVS
+build.xml
+build
+build.properties
+properties.xml
+configure.properties.xml
+.cvsignore
+.project
+.cdtproject
