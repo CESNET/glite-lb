@@ -21,7 +21,7 @@ enum {
 typedef struct _edg_wll_GssConnection {
   gss_ctx_id_t context;
   int sock;
-  char buffer[BUFSIZ];
+  char *buffer;
   size_t bufsize;
 } edg_wll_GssConnection;
 
