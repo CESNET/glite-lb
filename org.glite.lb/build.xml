@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.21  2004/10/25 20:57:38  dimeglio
+	Use antExec
+	
 	Revision 1.20  2004/10/21 10:37:48  akrenek
 	make server depend on logger due to notification interlogger
 	
@@ -216,7 +219,7 @@
 		</antcall>
 	</target>
 
-	<target name="clean">
+	<target name="clean" depends="envchecks">
 
 		<property name="offline.repository" value="true" />
 		<antcall target="buildmodules">
@@ -231,11 +234,7 @@
 
 	</target>
 
-	<target name="cleanAll" depends="localinit">
-		<antcall target="buildmodules">
-			<param name="target" value="cleanAll"/>
-		</antcall>
-	</target>
+	<target name="cleanAll" depends="clean"/>
 
 	<!-- ===============================================
 		 Private targets
