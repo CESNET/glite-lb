@@ -83,7 +83,10 @@ int main(int argc,char **argv)
 	if ( argc < 2 ) {
 		usage(NULL); goto cleanup;
 	}
-	if ( (argc < 2) || !strcmp(argv[1], "help") ) {
+	if ( (argc < 2) || 
+	!strcmp(argv[1], "help") || !strcmp(argv[1], "--help") || 
+	!strcmp(argv[1], "-h") || !strcmp(argv[1], "-?")) 
+	{
 		usage(NULL); goto cleanup;
 	}
 	else if ( !strcmp(argv[1], "test") ) {
