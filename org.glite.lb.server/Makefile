@@ -160,10 +160,8 @@ lb_xml_parse.c: lb_xml_parse.c.T
 ${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c: LB.xh
 	${gsoap_prefix}/bin/soapcpp2 -w -c -p ${GSOAP_FILES_PREFIX} LB.xh
 
-LB.xh: LB.wsdl ws_typemap.dat
-	cp ${top_srcdir}/project/LB.wsdl .
-	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ LB.wsdl
-	rm LB.wsdl
+LB.xh: ws_typemap.dat
+	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl
 
 test.xml: test_xml
 	./test_xml
