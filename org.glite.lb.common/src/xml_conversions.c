@@ -1,6 +1,7 @@
 #ident "$Header$"
 
 #include <string.h>
+#include <stdlib.h>
 #include <expat.h>
 
 #include "trio.h"
@@ -64,6 +65,16 @@ void edg_wll_initXMLCtx(edg_wll_XML_ctx *c) {
 	c->attrsGlobal	= NULL;
 	c->errCode = 0;
 	c->bound = 0;
+	c->statsFunction = NULL;
+	c->statsConditions = NULL;
+	c->statsMajor = EDG_WLL_JOB_UNDEF;
+	c->statsMinor = 0;
+	c->statsRate = 0;
+	c->statsDuration = 0;
+	c->statsFrom = 0;
+	c->statsTo = 0;
+	c->statsResFrom = 0;
+	c->statsResTo = 0;
 	c->errDesc = NULL;
 	c->stat_begin = 0;
 	c->jobQueryRec_begin = 0;
@@ -134,6 +145,22 @@ void edg_wll_add_int_to_XMLBody(char **body, const int toAdd, const char *tag, c
                 *body = newBody;
 	}
 }
+
+
+/* edg_wll_add_float_to_XMLBody(&body, rate, "rate", 0) */
+
+void edg_wll_add_float_to_XMLBody(char **body, const float toAdd, const char *tag, const float null)
+{
+	if (toAdd != null) {
+                char *newBody;
+
+                trio_asprintf(&newBody,"%s\t\t\t<%s>%|Xf</%s>\r\n", *body, tag, toAdd, tag);
+
+                free(*body);
+                *body = newBody;
+	}
+}
+
 
 
 /* edg_wll_add_timeval_to_XMLBody(&body, eventsOut[i].any.tv, "timestamp", -1) */
@@ -541,6 +568,21 @@ int edg_wll_from_string_to_int(edg_wll_XML_ctx *XMLCtx)
 
         return(out);
 }
+
+
+
+/* XMLCtx->eventsOutGlobal[XMLCtx->position].jobClear.clearReason = 
+	edg_wll_from_string_to_int(XMLCtx); 				*/
+float edg_wll_from_string_to_float(edg_wll_XML_ctx *XMLCtx)
+{
+        float out;
+
+        out = strtof(XMLCtx->char_buf, (char **) NULL);
+        edg_wll_freeBuf(XMLCtx);
+
+        return(out);
+}
+
 
 
 long edg_wll_from_string_to_long(edg_wll_XML_ctx *XMLCtx)
