@@ -111,7 +111,7 @@ check.parse: parse.cpp
 	${LINKXX} -o $@ parse.o ${LTLIB} ${TEST_LIBS}
 
 check.gss: test_gss
-	test_gss
+	./test_gss
 
 check.il: il_test
 	il_test

@@ -5,6 +5,10 @@
 
 #include <gssapi.h>
 
+#ifdef __cplusplus
+extern "C" { 
+#endif
+
 enum {
   EDG_WLL_GSS_OK		=  0,  /* no GSS errors */
   EDG_WLL_GSS_ERROR_GSS		= -1,  /* GSS specific error, call edg_wll_get_gss_error() for details */
@@ -105,4 +109,8 @@ int
 edg_wll_gss_get_name(gss_cred_id_t cred, char **name);
 */
 
+#ifdef __cplusplus
+} 
+#endif
+	
 #endif /* __EDG_WORKLOAD_LOGGING_COMMON_LB_GSS_H__ */
