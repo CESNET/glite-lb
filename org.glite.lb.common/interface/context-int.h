@@ -28,6 +28,7 @@ typedef struct _edg_wll_ConnPool {
 	edg_wll_GssConnection	gss;
 	char		*buf;
 	int		bufUse,bufSize;
+	int		conn;		/* for plain (non-gss) connections - i.e. lbproxy */
 
 /* timestamp of usage of this entry in ctx.connPool */
 	struct timeval	lastUsed;
