@@ -132,6 +132,7 @@ struct _edg_wll_Context {
 /* producer part */
 	edg_wlc_JobId	p_jobid;
 	edg_wll_SeqCode	p_seqcode;
+	int		count_statistics;
 };
 
 /* to be used internally: set, update and and clear the error information in 
