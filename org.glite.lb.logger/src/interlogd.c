@@ -222,13 +222,6 @@ main (int argc, char **argv)
   if (CAcert_dir)
      setenv("X509_CERT_DIR", CAcert_dir, 1);
 
-  /* XXX DK: still needed? */
-  il_log(LOG_INFO, "Initializing SSL...\n");
-  if(edg_wlc_SSLInitialization() < 0) {
-    il_log(LOG_CRIT, "Failed to initialize SSL. Exiting.\n");
-    exit(EXIT_FAILURE);
-  }
-
   ret = edg_wll_gss_acquire_cred_gsi(cert_file, &cred_handle, NULL, &gss_stat);
   if (ret) {
      char *gss_err = NULL;
@@ -253,12 +246,6 @@ main (int argc, char **argv)
 
   if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS)	{
   	il_log(LOG_CRIT, "Failed to initialize Globus common module\n");
-  	exit(EXIT_FAILURE);
-  }
-
-  /* XXX DK: needed? */
-  if (edg_wlc_SSLLockingInit() != 0) {
-  	il_log(LOG_CRIT, "Failed to initialize SSL locking. Exiting.\n");
   	exit(EXIT_FAILURE);
   }
 

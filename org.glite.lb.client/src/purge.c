@@ -170,8 +170,6 @@ int main(int argc,char *argv[])
 		dprintf(("yes.\n"));
 	}
 
-	edg_wlc_SSLInitialization();
-
 	/* initialize context */
 	edg_wll_InitContext(&ctx);
 

@@ -660,8 +660,6 @@ int main(int argc,char *argv[])
 		return 1;
 	}
 
-	dprintf(("Initializing SSL ...\n"));
-	edg_wlc_SSLInitialization();
 	if (!cert || !key) fprintf(stderr,"%s: key or certificate file not specified - unable to watch them for changes!\n",argv[0]);
 
 	if (cadir) setenv("X509_CERT_DIR",cadir,1);

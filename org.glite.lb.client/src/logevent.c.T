@@ -124,8 +124,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	edg_wlc_SSLInitialization();
-
 	edg_wll_InitContext(&ctx);
 
 	/* log the event - priority/normal */

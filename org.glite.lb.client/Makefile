@@ -37,8 +37,6 @@ CFLAGS:=${DEBUG} \
 
 CXXFLAGS:=${CFLAGS}
 
-HELPERS:=-L${glite_location}/lib -lglite_wmsutils_tls_ssl_helpers
-
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
 	-lglobus_gssapi_gsi_${nothrflavour} \
@@ -87,10 +85,10 @@ THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 TOOLS:=dump load purge
 
 ${LIB}: ${LIBOBJS}
-	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour} ${HELPERS}
+	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour} ${HELPERS}
+	${LINK} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS}
 	${LINK} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}

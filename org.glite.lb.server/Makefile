@@ -65,9 +65,6 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 
 COMMON_LIB:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}
 
-HELPERS:= -L${stagedir}/lib -lglite_wmsutils_tls_ssl_helpers
-
-
 SERVER_OBJS:= bkserverd.o get_events.o index.o jobstat.o jobstat_supp.o \
 	write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
@@ -80,10 +77,10 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 	lb_authz.o store.o bkindex.o
 
 glite_lb_bkserverd: ${SERVER_OBJS}
-	${LINK} -o $@ ${SERVER_OBJS} ${COMMON_LIB} ${HELPERS} ${EXT_LIBS}
+	${LINK} -o $@ ${SERVER_OBJS} ${COMMON_LIB} ${EXT_LIBS}
 
 glite_lb_bkindex: ${INDEX_OBJS}
-	${LINK} -o $@ ${INDEX_OBJS} ${COMMON_LIB} ${HELPERS} ${EXT_LIBS}
+	${LINK} -o $@ ${INDEX_OBJS} ${COMMON_LIB} ${EXT_LIBS}
 
 default all: compile
 

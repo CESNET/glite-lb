@@ -340,13 +340,6 @@ Copyright (c) 2002 CERN, INFN and CESNET on behalf of the EU DataGrid.\n");
    if (mysignal(SIGTERM, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGCHLD, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
 
-   /* SSL init */
-   edg_wll_ll_log(LOG_INFO,"Initializing SSL:\n");
-   if (edg_wlc_SSLInitialization() != 0) {
-	   edg_wll_ll_log(LOG_CRIT,"Failed to initialize SSL. Exiting.\n");
-	   exit(1);
-   }
-
    /* XXX DK: support noAuth */
    ret = edg_wll_gss_acquire_cred_gsi(cert_file, &cred, &my_subject_name,
 	 			      &gss_stat);

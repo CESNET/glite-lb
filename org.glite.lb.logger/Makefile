@@ -50,9 +50,6 @@ GLOBUS_THRLIBS:= -L${globus_prefix}/lib \
 EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	-L${expat_prefix}/lib -lexpat
 
-HELPERS:=-lglite_wmsutils_tls_ssl_helpers
-PHELPERS:=-lglite_wmsutils_tls_ssl_pthr_helpers
-	
 COMMON_LIB:=-lglite_lb_common
 
 LOGD_OBJS:= logd_proto.o logd.o
@@ -65,15 +62,15 @@ INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 INTERLOG_NOBJS:=${INTERLOG_OBJS:.o=.no}
 
 glite_lb_logd: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${HELPERS} ${EXT_LIBS} ${GLOBUS_LIBS}
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS}
 
 glite_lb_interlogd: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} \
-		${COMMON_LIB}_${thrflavour} ${HELPERS} ${PHELPERS} ${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
+		${COMMON_LIB}_${thrflavour} ${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
 
 glite_lb_notif_interlogd: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} \
-		${COMMON_LIB}_${thrflavour} ${HELPERS} ${PHELPERS} ${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
+		${COMMON_LIB}_${thrflavour} ${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
 
 default: all
 
