@@ -132,8 +132,9 @@ distbin:
 	rm -rf tmpbuilddir
 
 install:
-	mkdir -p ${PREFIX}/bin
-	mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/bin
+	-mkdir -p ${PREFIX}/etc/init.d
+	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 755 glite_lb_logd ${PREFIX}/bin/glite-lb-logd
 	${INSTALL} -m 755 glite_lb_interlogd ${PREFIX}/bin/glite-lb-interlogd
 	${INSTALL} -m 755 glite_lb_notif_interlogd ${PREFIX}/bin/glite-lb-notif-interlogd
