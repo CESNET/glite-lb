@@ -153,8 +153,8 @@ distsrc:
 	rm -rf ${top_srcdir}/${package}-${version}
 
 distbin:
-	$(MAKE) install PREFIX=`pwd`/tmpbuilddir
-	cd tmpbuilddir && tar -czf ../${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *
+	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
+	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
 	
 install:
