@@ -40,12 +40,18 @@ CFLAGS:= -DNO_VOMS -DNO_GACL \
 	${DEBUG} -I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
+	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include \
 	-I${globus_prefix}/include/${nothrflavour}
+
+
+TEST_LIBS:=-L${cppunit}/lib -lcppunit
+TEST_INC:=-I${cppunit}/include
 
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 
 # assisst & gss due to VOMS only
 #	-lglobus_gss_assist_${nothrflavour} \
@@ -90,8 +96,19 @@ default all: compile
 
 compile: glite_lb_bkserverd glite_lb_bkindex
 
-check: 
+check: test_xml
 	-echo check.query not complete yet
+
+test_xml: test_xml.cpp
+	${CXX} -c ${CFLAGS} ${TEST_INC} $<
+	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIB} ${TEST_LIBS}
+	./test_xml
+
+lb_xml_parse.c: lb_xml_parse.c.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
+
 
 check.query: test_query_events
 	./test_query_events
@@ -105,6 +122,9 @@ test_query_events: test_query_events.o
 doc:
 
 stage: compile
+#	$(MAKE) install PREFIX=${top_srcdir}/${stagedir}
+	$(MAKE) install PREFIX=${stagedir}
+#	cd ${top_srcdir}/interface && install -m 644 ${STATIC_H} ${PREFIX}/${STAGETO}
 	${INSTALL} -m 755 glite_lb_bkserverd glite_lb_bkindex ${stagedir}/bin
 
 dist: distsrc distbin
@@ -145,6 +165,11 @@ clean:
 	mv y.tab.h $*.h
 	${CC} -c ${CFLAGS} $*.c
 	rm $*.c
+
+%.cpp: %.cpp.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
 
 
 test_query_events.o: %.o: %.cpp
