@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.2  2004/06/18 23:05:12  dimeglio
+	Added/upgraded default build scripts
+	
 -->
 
 <project name="lb" default="dist">
@@ -211,13 +214,13 @@
 		 Modules proxy targets
 	     =============================================== -->
 
-<!--	<target name="catalog-fas-api-perl" unless="setenvonly" depends="catalog-client-perl">
-		<ant dir="${workspace.dir}/${subsystem.name}.catalog-fas-api-perl"
+	<target name="client-interface" unless="setenvonly">
+		<ant dir="${workspace.dir}/${subsystem.name}.client-interface"
 		     target="${target}"
 		     inheritall="false" />
-	</target> -->
+	</target>
 
 	<!-- Main proxy -->
-	<target name="buildmodules" depends=""/>
+	<target name="buildmodules" depends="client-interface"/>
 
 </project>
