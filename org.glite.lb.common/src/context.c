@@ -31,6 +31,7 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	for (i=0; i<EDG_WLL_PARAM__LAST; i++) edg_wll_SetParam(out,i,NULL);
 
 	out->connPool = (edg_wll_ConnPool *) calloc(out->poolSize, sizeof(edg_wll_ConnPool));
+	out->connPoolNotif = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
 
 	*ctx = out;
 	return 0;
@@ -96,12 +97,12 @@ static const char* const errTexts[] = {
 	"Bad URL format",
 	"MD5 key clash",
 	"GSSAPI Error",
-	"DNS resolver error",
 	"No JobId specified in context",
 	"No indexed condition in query",
 	"Interlogger protocol error",
 	"Interlogger internal error",
 	"Interlogger has events pending"
+	"DNS resolver error",
 };
 
 const char *edg_wll_GetErrorText(int code) {

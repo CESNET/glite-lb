@@ -44,6 +44,7 @@ struct _edg_wll_Context {
 
 	void		*mysql;
 	edg_wll_ConnPool	*connPool;
+	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
 
 	int		semaphores,semset;
 	edg_wll_QueryRec	**job_index;
@@ -86,6 +87,9 @@ struct _edg_wll_Context {
 	int		connOpened;	/* number of opened connections  */
 	int		connToUse;	/* index of connection that will *
 					 *  be used by low-level f-cions */
+	// XXX similar variables will be needed for connPoolNotif
+
+	
 /* other client stuff */
 	int		notifSock;		/* default client socket	*
 					   	 * for receiving notifications  */   

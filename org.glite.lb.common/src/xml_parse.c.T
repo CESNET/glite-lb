@@ -2591,7 +2591,7 @@ int edg_wll_NotifRequestToXML(
 	pomA = strdup("");
 	edg_wll_add_string_to_XMLBody(&pomA, edg_wll_NotifIdUnparse(notifId), "notifId", NULL);
 	edg_wll_add_string_to_XMLBody(&pomA, address, "clientAddress", NULL);
-	edg_wll_add_int_to_XMLBody(&pomA, op, "notifChangeOp", EDG_WLL_NOTIF_NOOP);
+	edg_wll_add_string_to_XMLBody(&pomA, edg_wll_NotifChangeOpToString(op), "notifChangeOp", NULL);
 	if (conditions && conditions[0] && conditions[0][0].attr != EDG_WLL_QUERY_ATTR_UNDEF)
 		edg_wll_JobQueryRecToXML(ctx, conditions, &pomB);
 		
