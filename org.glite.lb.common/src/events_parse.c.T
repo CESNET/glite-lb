@@ -92,7 +92,6 @@ if ( eventcode == EDG_WLL_EVENT_UNDEF ) {
 /* allocate memory for 'this' (edg_wll_Event) */
 // XXX:  this = (edg_wll_Event *) calloc(1,sizeof(edg_wll_Event)); 
 this = edg_wll_InitEvent(eventcode);
-this->any.type = eventcode;
 
 /* go through all fields and fill in the edg_wll_Event union
  * in each step check for key duplicity and key name misuse 
@@ -578,7 +577,6 @@ if ( edg_wll_ULMProcessParseTable(table) != 0 ) {
 
 /* allocate memory for 'this' (edg_wll_Event) */
 this = edg_wll_InitEvent(eventcode);
-this->any.type = eventcode;
 
 /* go through all fields and fill in the edg_wll_Event union
  * in each step check for key duplicity and key name misuse 

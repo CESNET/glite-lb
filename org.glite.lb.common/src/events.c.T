@@ -257,6 +257,7 @@ edg_wll_Event *event;
 /* allocate memory for 'event' (edg_wll_Event); use calloc to also clean it */
 /* FIXME: what if calloc fails? should be checked somehow -> nomem etc. */
 	event = (edg_wll_Event *) calloc(1,sizeof(edg_wll_Event));
+	event->type = eventcode;
 /* initialize common fields */
 @@@{
 $indent = "\t";

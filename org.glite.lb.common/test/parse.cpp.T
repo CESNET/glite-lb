@@ -46,7 +46,6 @@ void EventParseTest::regJob()
 
 	edg_wll_InitContext(&ctx);
 	e1 = edg_wll_InitEvent(EDG_WLL_EVENT_REGJOB);
-	e1->any.type = EDG_WLL_EVENT_REGJOB;
 
 	e1->regJob.jdl = strdup("very long job = \"blabla\" \\\\ \n hugh\t;");
 	e1->regJob.ns = strdup("ns address");
@@ -97,7 +96,6 @@ void EventParseTest::$l(){
 
 	edg_wll_InitContext(&ctx);
 	e1 = edg_wll_InitEvent(EDG_WLL_EVENT_$u);
-	e1->any.type = EDG_WLL_EVENT_$u;
 ";
 
 		selectType $event '_common_';
