@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.22  2004/10/26 13:11:13  dimeglio
+	Added dependency of clean on envchecks
+	
 	Revision 1.21  2004/10/25 20:57:38  dimeglio
 	Use antExec
 	
@@ -219,7 +222,7 @@
 		</antcall>
 	</target>
 
-	<target name="clean" depends="envchecks">
+	<target name="clean" depends="envcheck">
 
 		<property name="offline.repository" value="true" />
 		<antcall target="buildmodules">
