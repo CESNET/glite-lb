@@ -25,10 +25,10 @@ start()
 		creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
 
 	if test -z "$creds"; then
-		if su $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem"; then
+		if su - $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem"; then
 			echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
 			echo "$0:          creating $cred_copy from it"
-			su $GLITE_USER -c "umask 077; cat /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem >$cred_copy"
+			su - $GLITE_USER -c "umask 077; cat /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem >$cred_copy"
 			creds="-c $cred_copy -k $cred_copy"
 		fi
 	fi
@@ -39,13 +39,13 @@ start()
 	[ -n "$GLITE_LB_SERVER_PORT" ] && port="-p $GLITE_LB_SERVER_PORT"
 
 	echo -n Starting glite-lb-bkserver ...
-	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
+	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=/tmp/glite-lb-notif.sock \
 		--notif-il-fprefix=/var/tmp/glite-lb-notif \
 		$creds -i $pidfile $port" && echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-notif-interlogd ...
-	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
+	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
 		-f /var/tmp/glite-lb-notif -s /tmp/glite-lb-notif.sock \
 		$creds" && echo " done" || echo " FAILED"
 }
