@@ -40,11 +40,19 @@ start()
 
 	echo -n Starting glite-lb-bkserver ...
 	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
+		--notif-il-sock=/tmp/glite-lb-notif.sock \
+		--notif-il-fprefix=/var/tmp/glite-lb-notif \
 		$creds -i $pidfile $port" && echo " done" || echo " FAILED"
+
+	echo -n Starting glite-lb-notif-interlogd ...
+	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
+		-f /var/tmp/glite-lb-notif -s /tmp/glite-lb-notif.sock \
+		$creds" && echo " done" || echo " FAILED"
 }
 
 stop()
 {
+	killall glite-lb-notif-interlogd
 	if [ -f $pidfile ]; then
 		pid=`cat $pidfile`
 		kill $pid
