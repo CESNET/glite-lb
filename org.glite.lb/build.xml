@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.27  2004/11/29 13:55:02  akrenek
+	added dependence on ws-interface
+	
 	Revision 1.26  2004/10/29 22:53:41  dimeglio
 	Use envset target
 	
@@ -278,7 +281,6 @@
 	</target>
 
 	<target name="ws-interface" unless="setenvonly" depends="envset">
-<!--
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -292,7 +294,6 @@
                         	     inheritall="false" />
 			</else>
 		</if>
--->
 	</target>
 
 	<target name="server-bones" unless="setenvonly" depends="envset">

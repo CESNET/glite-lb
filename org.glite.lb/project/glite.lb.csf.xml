@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.8  2004/10/18 22:55:14  dimeglio
+	Added oscheck to various targets
+	
 	Revision 1.7  2004/10/15 12:30:01  akrenek
 	build with lb.sever-bones
 	
@@ -148,6 +151,10 @@
 			<equals arg1="${org.glite.lb.client-interface.version}" arg2="HEAD" />
 		</condition>
 
+		<condition property="ws-interface.head">
+			<equals arg1="${org.glite.lb.ws-interface.version}" arg2="HEAD" />
+		</condition>
+
 		<condition property="client.head">
 			<equals arg1="${org.glite.lb.client.version}" arg2="HEAD" />
 		</condition>
@@ -251,6 +258,16 @@
 			tag="${org.glite.lb.client-interface.version}" />
 	</target>
 
+	<!-- WS interface -->
+ 	<target name="ws-interface" depends="get.ws-interface.head, get.ws-interface.tag"/>
+	<target name="get.ws-interface.head" if="ws-interface.head">
+		<cvs-co package="org.glite.lb.ws-interface" />
+	</target>
+	<target name="get.ws-interface.tag" unless="ws-interface.head">
+		<cvs-co package="org.glite.lb.ws-interface"
+			tag="${org.glite.lb.ws-interface.version}" />
+	</target>
+
 	<!-- client -->
  	<target name="client" depends="get.client.head, get.client.tag"/>
 	<target name="get.client.head" if="client.head">
@@ -283,6 +300,7 @@
 
 	<!-- All project modules -->
  	<target name="project" depends="client-interface,
+						ws-interface,
  						common,
  						server-bones,
  						client,
