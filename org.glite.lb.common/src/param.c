@@ -118,10 +118,6 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 			free(ctx->p_destination);
 			ctx->p_destination = val ? strdup(val) : extract_host(param,EDG_WLL_LOG_HOST_DEFAULT);
 			break;
-		case EDG_WLL_PARAM_LBPROXY_USER:
-			free(ctx->p_user_lbproxy);
-			ctx->p_user_lbproxy = val ? strdup(val) : NULL;
-			break;
 		case EDG_WLL_PARAM_QUERY_SERVER:     
 			free(ctx->p_query_server);
 			ctx->p_query_server = val ? strdup(val) : extract_host(param,NULL);
@@ -154,6 +150,10 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:      
 			free(ctx->p_lbproxy_serve_sock);
 			ctx->p_lbproxy_serve_sock = val ? strdup(val): NULL;
+			break;
+		case EDG_WLL_PARAM_LBPROXY_USER:
+			free(ctx->p_user_lbproxy);
+			ctx->p_user_lbproxy = val ? strdup(val) : NULL;
 			break;
 		default:
 			return edg_wll_SetError(ctx,EINVAL,"unknown parameter");
@@ -285,7 +285,6 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_HOST:             
 		case EDG_WLL_PARAM_INSTANCE:         
 		case EDG_WLL_PARAM_DESTINATION:      
-		case EDG_WLL_PARAM_LBPROXY_USER:
 		case EDG_WLL_PARAM_QUERY_SERVER:     
 		case EDG_WLL_PARAM_NOTIF_SERVER:     
 		case EDG_WLL_PARAM_QUERY_SERVER_OVERRIDE:
@@ -294,6 +293,7 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_X509_CERT:        
 		case EDG_WLL_PARAM_LBPROXY_STORE_SOCK:
 		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:
+		case EDG_WLL_PARAM_LBPROXY_USER:
 			return edg_wll_SetParamString(ctx,param,va_arg(ap,char *));
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 		case EDG_WLL_PARAM_LOG_SYNC_TIMEOUT: 
@@ -367,10 +367,6 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 			p_string = va_arg(ap, char **);
 			*p_string = estrdup(ctx->p_destination);
 			break;
-		case EDG_WLL_PARAM_LBPROXY_USER:
-			p_string = va_arg(ap, char **);
-			*p_string = estrdup(ctx->p_user_lbproxy);
-			break;
 		case EDG_WLL_PARAM_QUERY_SERVER:     
 			p_string = va_arg(ap, char **);
 			*p_string = estrdup(ctx->p_query_server);
@@ -403,7 +399,10 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 			p_string = va_arg(ap, char **);
 			*p_string = estrdup(ctx->p_lbproxy_serve_sock);
 			break;
-
+		case EDG_WLL_PARAM_LBPROXY_USER:
+			p_string = va_arg(ap, char **);
+			*p_string = estrdup(ctx->p_user_lbproxy);
+			break;
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 			p_tv = va_arg(ap,struct timeval *);
 			*p_tv = ctx->p_log_timeout;
