@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <errno.h>
 
 int 
 encode_il_msg(char **buffer, const char *event)
@@ -64,7 +63,7 @@ decode_il_msg(char **event, const char *buf)
   p = get_string((char*)buf, event);
   if(p == NULL) {
     if(*event) { free(*event); *event = NULL; };
-    return(EINVAL);
+    return(-1);
   }
   return(p - buf);
 }
@@ -76,13 +75,13 @@ decode_il_reply(int *maj, int *min, char **err, const char * buf)
   char *p = buf;
 
   p = get_int(p, maj);
-  if(p == NULL) return(EINVAL);
+  if(p == NULL) return(-1);
   p = get_int(p, min);
-  if(p == NULL) return(EINVAL);
+  if(p == NULL) return(-1);
   p = get_string(p, err);
   if(p == NULL) {
     if(*err) { free(*err); *err = NULL; };
-    return(EINVAL);
+    return(-1);
   }
   return(p - buf);
 }
@@ -100,15 +99,16 @@ read_il_data(char **buffer,
   if(len < 0) {
     goto err;
   }
+  buf[16] = 0;
   if((len=atoi(buf)) <= 0) {
-    len = EINVAL;
+    len = -1;
     goto err;
   }
 
   /* allocate room for the body */
   *buffer = malloc(len+1);
   if(*buffer == NULL) {
-    len = ENOMEM;
+    len = -1;
     goto err;
   }
 
