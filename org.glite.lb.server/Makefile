@@ -80,19 +80,44 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o
 
-default: stage
-
-compile: glite_lb_bkserverd glite_lb_bkindex
-
 glite_lb_bkserverd: ${SERVER_OBJS}
 	${LINK} -o $@ ${SERVER_OBJS} ${COMMON_LIB} ${HELPERS} ${EXT_LIBS}
 
 glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${COMMON_LIB} ${HELPERS} ${EXT_LIBS}
 
-all stage export: compile
+default all: compile
+
+compile: glite_lb_bkserverd glite_lb_bkindex
+
+check:
+	echo No unit tests so far.
+
+doc:
+
+stage: compile
 	${INSTALL} -m 755 glite_lb_bkserverd glite_lb_bkindex ${stagedir}/bin
 
+dist: distsrc distbin
+
+distsrc:
+	mkdir -p ${top_srcdir}/${package}-${version}
+	cd ${top_srcdir} && GLOBIGNORE="${package}-${version}" && cp -Rf * ${package}-${version}
+	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${version}
+	rm -rf ${top_srcdir}/${package}-${version}
+
+distbin:
+	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
+	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
+	rm -rf tmpbuilddir
+        
+install:
+	mkdir -p ${PREFIX}/bin
+	for p in bkserverd bkindex; do \
+		${INSTALL} -m 755 "glite_lb_$$p" "${PREFIX}/bin/glite-lb-$$p"; \
+	done
+
+clean:
 
 %.c: %.c.T
 	rm -f $@
