@@ -1,22 +1,50 @@
-include Makefile.inc
+# Default values
+top_srcdir=.
+builddir=build
+top_builddir=${top_srcdir}/${builddir}
+stagedir=.
+distdir=.
+globalprefix=glite
+lbprefix=lb
+package=glite-lb-client
+version=0.0.0
+PREFIX=/opt/glite
 
+glite_location=/opt/glite
+globus_prefix=/opt/globus
+globus_prefix=/opt/globus
+expat_prefix=/opt/expat
+ares_prefix=/opt/ares
 
-VPATH:=${src}
-AT3:=perl -I${lbconfig} ${lbproject}/at3
+-include Makefile.inc
+
+VPATH=${top_srcdir}/src
+AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
 SUFFIXES = .T
 
-DEBUG:=-g -O0
-CFLAGS:=${DEBUG} -I${src} -I${repository}/${globus}/include/${globusflavour} \
-	-I${repository}/${globus}/include/${globusflavour}/openssl \
-	-I${repository}/${ares}/include -I${repository}/${expat}/include\
-	-I${stageinc} -I${interface} \
+DEBUG:=-g -O0 -Wall
+CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
+	-I${top_srcdir}/${stagedir}/include \
+	-I${glite_location}/include \
+    -I${globus_prefix}/include/${globusflavour} \
+	-I${globus_prefix}/include/${globusflavour}/openssl \
+	-I${expat_prefix}/include \
+	-I${ares_prefix}/include \
 	-DDATAGRID_EXTENSION
 
-LDFLAGS:=-L${stagelib}
-
+GLITE_LIBS:=-L${glite_location}/lib
+GLOBUS_LIBS:=-L${globus_prefix}/lib
+EXPAT_LIBS:=-L${expat_prefix}/lib
+ARES_LIBS:=-L${ares_prefix}/lib
+LDFLAGS:=-L${top_srcdir}/${stagedir}/lib \
+    ${GLITE_LIBS} \
+    ${GLOBUS_LIBS} \
+    ${EXPAT_LIBS} \
+    ${ARES_LIBS}
+    
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagelib} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${top_srcdir}/${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 OBJS:=dgssl.o escape.o events.o mini_http.o query_rec.o status.o \
@@ -34,7 +62,7 @@ LTLIB:=libglite_lb_common.la
 
 default: all
 
-compile: ${STATICLIB} ${LTLIB}
+all compile: ${STATICLIB} ${LTLIB}
 
 ${STATICLIB}: ${OBJS}
 	ar crv $@ ${OBJS}
@@ -42,7 +70,7 @@ ${STATICLIB}: ${OBJS}
 
 ${LTLIB}: ${OBJS}
 	${LINK} -o $@ ${LOBJS} \
-		-L${stagelib} -lglobus_ssl_utils -lglite_wms_cjobid \
+		-lglobus_ssl_utils -lglite_wms_cjobid \
 		-lm
 
 stage export all: compile
