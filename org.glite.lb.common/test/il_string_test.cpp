@@ -1,6 +1,5 @@
 #include <cppunit/extensions/HelperMacros.h>
 
-
 extern "C" {
 #include "il_string.h"
 }
@@ -23,7 +22,6 @@ public:
 	void testPutString() {
 		put_string(buffer, "ahoj");
 		CPPUNIT_ASSERT( !strncmp(buffer,"4 ahoj\n",7) );
-		CPPUNIT_ASSERT(buffer[7] == 0);
 	}
 
 	void testGetString() {
@@ -31,6 +29,7 @@ public:
 		get_string("4 ahoj\n", &s);
 		CPPUNIT_ASSERT( s != NULL );
 		CPPUNIT_ASSERT( !strcmp(s, "ahoj") );
+		CPPUNIT_ASSERT( s[4] == 0 );
 		free(s);
 	}
 
