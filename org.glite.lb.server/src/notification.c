@@ -513,8 +513,8 @@ static int split_cond_list(
 	if ( !conditions || !conditions[0] ) {
 		if (ctx->noAuth) nconds_ct = jobs_ct = 0;
 		else return edg_wll_SetError(ctx, EINVAL, "Empty condition list");
-	} else for ( nconds_ct = jobs_ct = i = 0; conditions[i]; i++ )
-	{
+	}
+	else for ( nconds_ct = jobs_ct = i = 0; conditions[i]; i++ ) {
 		if ( conditions[i][0].attr && conditions[i][0].attr != EDG_WLL_QUERY_ATTR_JOBID )
 			nconds_ct++;
 		for ( j = 0; conditions[i][j].attr; j++ )
@@ -640,7 +640,18 @@ static int update_notif(
 		 */
 	}
 
-	if ( host ) edg_wll_NotifChangeDestination(ctx, nid, host, port);
+	if ( host ) {
+		printf("edg_wll_NotifChangeDestination(ctx, %s, %s, %d)\n",
+				nid_s? nid_s: "nid", host, port);
+		if ( edg_wll_NotifChangeDestination(ctx, nid, host, port) ) {
+			char *errt, *errd;
+
+			edg_wll_Error(ctx, &errt, &errd);
+			printf("edg_wll_NotifChangeDestination(): %s (%s)\n", errt, errd);
+			free(errt);
+			free(errd);
+		}
+	}
 
 
 cleanup:
@@ -650,5 +661,3 @@ cleanup:
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
-
-

@@ -111,10 +111,11 @@ static time_t			purge_timeout[EDG_WLL_NUMBER_OF_STATCODES];
 static time_t			notif_duration = 60*60*24*7;
 
 static gss_cred_id_t	mycred = GSS_C_NO_CREDENTIAL;
+time_t					cert_mtime = 0;
 char				   *cadir = NULL,
 					   *vomsdir = NULL,
-					*server_key = NULL,
-					*server_cert = NULL;
+					   *server_key = NULL,
+					   *server_cert = NULL;
 
 
 static struct option opts[] = {
@@ -481,6 +482,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 						" - unable to watch them for changes!\n", argv[0]);
 
 	if ( cadir ) setenv("X509_CERT_DIR", cadir, 1);
+	edg_wll_gss_watch_creds(server_cert, &cert_mtime);
 	if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &mysubj, &gss_code) )
 	{
 		int	i;
@@ -644,6 +646,7 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 	edg_wll_Context		ctx;
 	gss_name_t			client_name = GSS_C_NO_NAME;
 	gss_buffer_desc		token = GSS_C_EMPTY_BUFFER;
+	gss_cred_id_t		newcred = GSS_C_NO_CREDENTIAL;
 	edg_wll_GssStatus	gss_code;
 	OM_uint32			min_stat,
 						maj_stat;
@@ -657,6 +660,18 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 	int					h_errno;
 
 
+
+	switch ( edg_wll_gss_watch_creds(server_cert, &cert_mtime) ) {
+	case 0: break;
+	case 1:
+		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, NULL, &gss_code) ) {
+			dprintf(("[%d] reloading credentials\n", getpid()));
+			gss_release_cred(&min_stat, &mycred);
+			mycred = newcred;
+		} else { dprintf(("[%d] reloading credentials failed\n", getpid())); }
+		break;
+	case -1: dprintf(("[%d] edg_wll_gss_watch_creds failed\n", getpid())); break;
+	}
 
 	if ( edg_wll_InitContext(&ctx) )
 	{
