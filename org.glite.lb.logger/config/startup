@@ -26,11 +26,11 @@ start()
 	echo -n Starting glite-lb-logd ...
         (cd /tmp && ls -f /tmp |fgrep ^dglogd_sock_ |xargs rm -f)
 	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-logd \
-		$creds $port" && echo " done"
+		$creds $port" && echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-interlogd ...
 	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-interlogd \
-		$creds" && echo " done"
+		$creds" && echo " done" || echo " FAILED"
 }
 
 stop()
