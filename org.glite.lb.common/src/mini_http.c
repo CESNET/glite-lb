@@ -171,7 +171,10 @@ edg_wll_ErrorCode edg_wll_http_recv_proxy(edg_wll_Context ctx,char **firstOut,ch
 				ctx->connPlain->buf+ctx->connPlain->bufUse,
 				ctx->connPlain->bufSize-ctx->connPlain->bufUse,
 				&ctx->p_tmp_timeout);
-		if ( len < 0 ) goto error;
+		if ( len < 0 ) {
+			edg_wll_SetError(ctx, errno, "edg_wll_plain_read()");
+			goto error;
+		}
 
 		ctx->connPlain->bufUse += len;
 		rdmore = 0;

@@ -51,6 +51,7 @@ int edg_wll_plain_accept(
 	if ( (conn->sock = accept(sock, (struct sockaddr *)&a, &alen)) )
 		return -1;
 	*/
+	conn->sock = sock;
 	return 0;
 }
 

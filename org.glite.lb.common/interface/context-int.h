@@ -36,7 +36,6 @@ typedef struct _edg_wll_ConnPool {
 /* http(s) stream */
 	gss_cred_id_t	gsiCred;
 	edg_wll_GssConnection	gss;
-	edg_wll_Connection	conn;	/* for plain (non-gss) connections - i.e. lbproxy */
 	char		*buf;
 	int		bufUse,bufSize;
 
@@ -56,6 +55,7 @@ struct _edg_wll_Context {
 	void		*mysql;
 	edg_wll_ConnPool	*connPool;
 	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
+
 	edg_wll_Connection	*connPlain;		/* holds one plain connection */
 
 	int		semaphores,semset;
