@@ -133,23 +133,25 @@ EXAMPLES:=job_reg feed_shark notify
 FAKE_EXAMPLES:=job_log_fake job_reg_fake
 FAKE_EXAMPLES_SOURCES:=job_log.c job_reg.c
 
+version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
+
 ${LIB}: ${LIBOBJS}
-	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
 
 ${TESTLIB}: ${TESTLIBOBJS}
-	${LINK} -o $@ ${TESTLIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
+	${LINK} ${version_info} -o $@ ${TESTLIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
 
 ${TESTTHRLIB}: ${TESTLIBTHROBJS}
-	${LINK} -o $@ ${TESTLIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
+	${LINK} ${version_info} -o $@ ${TESTLIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS}
-	${LINK} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
+	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS}
-	${LINK} -o $@ ${PLUSTHRLOBJS} -rpath ${glite_location}/lib ${THRLIB}
+	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${glite_location}/lib ${THRLIB}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
@@ -208,7 +210,7 @@ logevent_fake.o: logevent.c
 default: all
 
 
-compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} examples
+compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${EXAMPLES} ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} ${FAKE_EXAMPLES}
 
 examples: ${EXAMPLES} ${FAKE_EXAMPLES} ${sh_PROGS} logevent_fake
 
@@ -244,9 +246,18 @@ install:
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	for p in ${TOOLS} logevent ${EXAMPLES} ${FAKE_EXAMPLES} logevent_fake ${sh_PROGS}; do \
+	for p in ${TOOLS} logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 
 clean:
 
+check_version:
+	@perl -ne '/#define GLITE_LB_CLIENT_INTERFACE "(\d+)\.\d+\.\d+"/; \
+		$$iface=$$1; \
+		$$_="${version}"; /(\d+)\.\d+\.\d+/; \
+		if ($$iface != $$1) { \
+			print "error: Major version of the interface ($$iface) does not match implementation ($$1)\n" ;\
+			exit 1;  \
+		} \
+		' ${stagedir}/include/glite/lb/interface_version.h
