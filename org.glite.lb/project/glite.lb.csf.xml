@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.11  2004/12/01 18:01:55  zsalvet
+	LB here, not R-GMA
+	
 	Revision 1.10  2004/11/29 16:01:21  zsalvet
 	Evaluate component.{head,tag} conditions before use of get.* targets.
 	
@@ -169,6 +172,10 @@
 			<equals arg1="${org.glite.lb.server.version}" arg2="HEAD" />
 		</condition>
 
+		<condition property="proxy.head">
+			<equals arg1="${org.glite.lb.proxy.version}" arg2="HEAD" />
+		</condition>
+
 		<condition property="logger.head">
 			<equals arg1="${org.glite.lb.logger.version}" arg2="HEAD" />
 		</condition>
@@ -295,6 +302,16 @@
 			tag="${org.glite.lb.server.version}" />
 	</target>
 
+	<!-- proxy -->
+ 	<target name="proxy" depends="evaluate.cvs.tags, get.proxy.head, get.proxy.tag"/>
+	<target name="get.proxy.head" if="proxy.head">
+		<cvs-co package="org.glite.lb.proxy" />
+	</target>
+	<target name="get.proxy.tag" unless="proxy.head">
+		<cvs-co package="org.glite.lb.proxy"
+			tag="${org.glite.lb.proxy.version}" />
+	</target>
+
 	<!-- logger -->
  	<target name="logger" depends="evaluate.cvs.tags, get.logger.head, get.logger.tag"/>
 	<target name="get.logger.head" if="logger.head">
@@ -312,6 +329,7 @@
  						server-bones,
  						client,
  						server,
+ 						proxy,
  						logger"/>
 
 

@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.28  2004/11/29 15:16:26  zsalvet
+	Add ws-interface to checkout/build machinery.
+	
 	Revision 1.27  2004/11/29 13:55:02  akrenek
 	added dependence on ws-interface
 	
@@ -356,6 +359,22 @@
 				<ant dir="${lb.subsystem.dir}.server"
                         	     target="${target}"
                         	     inheritall="false" />
+			</else>
+		</if>
+	</target>
+
+	<target name="proxy" unless="setenvonly" depends="envset,globus,expat,ares,client-interface,common,server">
+		<if>
+			<isset property="small.memory" />
+			<then>
+				<exec dir="${lb.subsystem.dir}.proxy" executable="${antExec}" failonerror="${failonerror}">
+					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.proxy"
+	                    	     target="${target}"
+	                    	     inheritall="false" />
 			</else>
 		</if>
 	</target>
