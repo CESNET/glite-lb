@@ -21,9 +21,12 @@ class QueryEventsTest: public CppUnit::TestFixture
 
 private:
 	edg_wll_Context	ctx;
+	vector<pair<string,vector<string>>>	expQueries;
+	int					queryIdx;
 
 public:
 	void oneJob();
+	int ExecStmt(const char *, edg_wll_Stmt *);
 
 	void setUp() {
 		edg_wll_InitContext(&ctx);
@@ -43,7 +46,17 @@ void QueryEventsTest::oneJob()
 	edg_wlc_JobIdParse("https://fake.server/fake_job",&job[0].value.j);
 	job[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 
+	expQueries.clear();
+	/*
+	 *	XXX: ...
+	 */
+	expQueries.push_back();
 	CPPUNIT_ASSERT(!edg_wll_QueryEventsServer(ctx,1,jobs,NULL,&events));
+}
+
+int QueryEventsTest::ExecStmt(const char *, edg_wll_Stmt *)
+{
+	return 0;
 }
 
 extern "C" {
@@ -51,7 +64,9 @@ extern "C" {
 int edg_wll_ExecStmt(edg_wll_Context ctx,char *qry,edg_wll_Stmt *stmt)
 {
 	cout << qry << endl;
-	return 0;
+
+	class QueryEventsTest *tst = (class QueryEventsTest *)(ctx->mysql);
+	return tst->ExecStmt(qry, stmt);
 }
 
 int edg_wll_FetchRow(edg_wll_Stmt stmt, char **cols)
