@@ -338,6 +338,12 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		if ($ft eq 'string') {
 			gen $indent."\tif (event->$tl.$fn) free(event->$tl.$fn);\n"
 		}
+		if ($ft eq 'jobid') {
+			gen $indent."\tif (event->$tl.$fn) edg_wlc_JobIdFree(event->$tl.$fn);\n"
+		}
+		if ($ft eq 'notifid') {
+			gen $indent."\tif (event->$tl.$fn) edg_wll_NotifIdFree(event->$tl.$fn);\n"
+		}
 	}
 	gen $indent.$indent."break;\n"
 }
