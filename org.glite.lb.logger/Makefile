@@ -19,7 +19,9 @@ ares_prefix=/opt/ares
 
 -include Makefile.inc
 
-VPATH:=${top_srcdir}/src
+CC=gcc
+
+VPATH:=${top_srcdir}/src:${top_srcdir}/src/test
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
@@ -37,6 +39,7 @@ CFLAGS:=${DEBUG} \
 
 LDFLAGS:=-L${stagedir}/lib
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
@@ -51,6 +54,9 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	-L${expat_prefix}/lib -lexpat
 
 COMMON_LIB:=-lglite_lb_common
+
+TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
+TEST_INC:=-I${cppunit_prefix}/include
 
 LOGD_OBJS:= logd_proto.o logd.o
 
@@ -79,8 +85,11 @@ all compile: glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
-check:
-	echo No unit tests so far
+check: check.ll
+
+check.ll: logd_proto_test.o ll_test.cpp
+	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS} ${TEST_LIBS} $<
+	./check.ll
 
 dist: distsrc distbin
 
@@ -94,7 +103,7 @@ distbin:
 	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
 	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
-	
+
 install:
 	mkdir -p ${PREFIX}/bin
 	${INSTALL} -m 755 glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd ${PREFIX}/bin
@@ -108,3 +117,5 @@ ${INTERLOG_OBJS}: %.o: %.c
 ${LOGD_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
 
+logd_proto_test.o: logd_proto_test.cpp
+	${CXX} ${CFLAGS} ${GLOBUSINC} ${TEST_INC} -c $< -o $@
