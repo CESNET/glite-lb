@@ -11,7 +11,7 @@ GLITE_LOCATION_VAR=/opt/glite/var
 [ -f $GLITE_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LOCATION_VAR/etc/lb.conf
 
 [ -n "$GLITE_LB_SERVER_PIDFILE" ] && pidfile=$GLITE_LB_SERVER_PIDFILE ||
-	pidfile=$GLITE_LOCATION_VAR/glite_lb_bkserverd.pid
+	pidfile=$GLITE_LOCATION_VAR/glite-lb-bkserverd.pid
 
 start()
 {
@@ -22,8 +22,8 @@ start()
 
 	[ -n "$GLITE_LB_SERVER_PORT" ] && port="-p $GLITE_LB_SERVER_PORT"
 
-	echo -n Starting glite_lb_bkserver ...
-	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite_lb_bkserverd \
+	echo -n Starting glite-lb-bkserver ...
+	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		$creds -i $pidfile" && echo " done"
 }
 
@@ -32,7 +32,7 @@ stop()
 	if [ -f $pidfile ]; then
 		pid=`cat $pidfile`
 		kill $pid
-		echo -n Stopping glite_lb_bkserverd \($pid\) ...
+		echo -n Stopping glite-lb-bkserverd \($pid\) ...
 		try=0
 		while ps p $pid >/dev/null 2>&1; do 
 			sleep 1;
@@ -45,7 +45,7 @@ stop()
 		echo " done"
 		rm -f $pidfile
 	else
-		echo $pidfile does not exist - glite_lb_bkserverd not running? >&2
+		echo $pidfile does not exist - glite-lb-bkserverd not running? >&2
 		return 1
 	fi
 }
@@ -55,12 +55,12 @@ status()
 	if [ -f $pidfile ]; then
 		pid=`cat $pidfile`
 		if ps p $pid >/dev/null 2>&1; then
-			echo glite_lb_bkserverd running as $pid 
+			echo glite-lb-bkserverd running as $pid 
 			return 0
 		fi
 	fi
 
-	echo glite_lb_bkserverd not running
+	echo glite-lb-bkserverd not running
 	return 1
 }
 
