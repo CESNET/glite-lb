@@ -53,7 +53,7 @@ DEBUG:=-g -O0 -Wall
 #	-I/usr/include/libxml2
 
 GRIDSITE_CFLAGS = `xml2-config --cflags`
-GRIDSITE_LIBS = -lgridsite `xml2-config --libs`
+GRIDSITE_LIBS = -lgridsite_globus `xml2-config --libs`
 
 # -DNO_VOMS -DNO_GACL to be removed when voms/gridsite are available
 #CFLAGS:= -DNO_VOMS -DNO_GACL 
