@@ -31,19 +31,63 @@ static const char* socket_path="/tmp/lb_proxy_store.sock";
 #ifdef FAKE_VERSION
 int edg_wll_DoLogEvent(edg_wll_Context context, edg_wll_LogLine logline);
 int edg_wll_DoLogEventProxy(edg_wll_Context context, edg_wll_LogLine logline);
+int edg_wll_DoLogEventDirect(edg_wll_Context context, edg_wll_LogLine logline);
 #else
+
+/*
+ *----------------------------------------------------------------------
+ * handle_answers - handle answers from edg_wll_log_proto_client*
+ *----------------------------------------------------------------------
+ */
+static
+int handle_answers(edg_wll_Context context, int code, const char *text)
+{
+        static char     err[256];
+
+	switch(code) {
+		case 0:
+		case EINVAL:
+		case ENOSPC:
+		case ENOMEM:
+		case EDG_WLL_ERROR_GSS:
+		case EDG_WLL_ERROR_DNS:
+		case ENOTCONN:
+		case ECONNREFUSED:
+		case ETIMEDOUT:
+		case EAGAIN:
+			break;
+		case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
+		case EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE:
+		case EDG_WLL_ERROR_PARSE_KEY_DUPLICITY:
+		case EDG_WLL_ERROR_PARSE_KEY_MISUSE:
+//		case EDG_WLL_ERROR_PARSE_OK_WITH_EXTRA_FIELDS:
+                        snprintf(err, sizeof(err), "%s: Error code mapped to EINVAL", text);
+                        edg_wll_UpdateError(context,EINVAL,err);
+                        break;
+		case EDG_WLL_IL_PROTO:
+		case EDG_WLL_IL_SYS:
+		case EDG_WLL_IL_EVENTS_WAITING:
+                        snprintf(err, sizeof(err), "%s: Error code mapped to EAGAIN", text);
+                        edg_wll_UpdateError(context,EAGAIN,err);
+			break;
+		default:
+                        snprintf(err, sizeof(err), "%s: Error code mapped to EAGAIN", text);
+                        edg_wll_UpdateError(context,EAGAIN,err);
+			break;
+	}
+
+	return edg_wll_Error(context, NULL, NULL);
+}
 /**
  *----------------------------------------------------------------------
  * Connects to local-logger and sends already formatted ULM string
  * \brief helper logging function
  * \param context	INOUT context to work with,
- * \param priority	IN priority flag (0 for async, 1 for sync)
  * \param logline	IN formated ULM string
  *----------------------------------------------------------------------
  */
 static int edg_wll_DoLogEvent(
 	edg_wll_Context context,
-/*	int priority,  */
 	edg_wll_LogLine logline)
 {
 	int	ret,answer;
@@ -58,7 +102,6 @@ static int edg_wll_DoLogEvent(
 	memset(&con, 0, sizeof(con));
 
    /* open an authenticated connection to the local-logger: */
-
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"Logging to host %s, port %d\n",
 			context->p_destination, context->p_dest_port);
@@ -82,69 +125,12 @@ static int edg_wll_DoLogEvent(
 	if ((answer = edg_wll_gss_connect(cred,
 			context->p_destination, context->p_dest_port, 
 			&context->p_tmp_timeout, &con, &gss_stat)) < 0) {
-		switch(answer) {
-                case EDG_WLL_GSS_ERROR_EOF:
-			edg_wll_SetError(context,ENOTCONN,"edg_wll_gss_connect()");
-			break;
-                case EDG_WLL_GSS_ERROR_TIMEOUT:
-			edg_wll_SetError(context,ETIMEDOUT,"edg_wll_gss_connect()");
-			break;
-                case EDG_WLL_GSS_ERROR_ERRNO:
-			edg_wll_SetError(context,errno,"edg_wll_gss_connect()");
-			break;
-                case EDG_WLL_GSS_ERROR_GSS: 
-			edg_wll_SetErrorGss(context, "failed to authenticate to server",&gss_stat);
-			break;
-		case EDG_WLL_GSS_ERROR_HERRNO:
-			{ 
-				const char *msg1;
-				char *msg2;
-				msg1 = hstrerror(errno);
-				asprintf(&msg2, "edg_wll_gss_connect(): %s", msg1);
-				edg_wll_SetError(context,EDG_WLL_ERROR_DNS, msg2);
-				free(msg2);
-			}
-                        break;
-		default:
-			edg_wll_SetError(context,ECONNREFUSED,"edg_wll_gss_connect(): unknown");
-			break;
-		}
+		edg_wll_log_proto_handle_gss_failures(context,answer,&gss_stat,"edg_wll_gss_connect()");
 		goto edg_wll_DoLogEvent_end;
 	}
 
    /* and send the message to the local-logger: */
-
-	answer = edg_wll_log_proto_client(context,&con,logline/*,priority*/);
-
-	switch(answer) {
-		case 0:
-		case EINVAL:
-		case ENOSPC:
-		case ENOMEM:
-		case EDG_WLL_ERROR_GSS:
-		case EDG_WLL_ERROR_DNS:
-		case ENOTCONN:
-		case ECONNREFUSED:
-		case ETIMEDOUT:
-		case EAGAIN:
-			break;
-		case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
-		case EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE:
-		case EDG_WLL_ERROR_PARSE_KEY_DUPLICITY:
-		case EDG_WLL_ERROR_PARSE_KEY_MISUSE:
-//		case EDG_WLL_ERROR_PARSE_OK_WITH_EXTRA_FIELDS:
-			edg_wll_UpdateError(context,EINVAL,"edg_wll_DoLogEvent(): Error code mapped to EINVAL");
-			break;
-		case EDG_WLL_IL_PROTO:
-		case EDG_WLL_IL_SYS:
-		case EDG_WLL_IL_EVENTS_WAITING:
-			edg_wll_UpdateError(context,EAGAIN,"edg_wll_DoLogEvent(): Error code mapped to EAGAIN");
-			break;
-
-		default:
-			edg_wll_UpdateError(context,EAGAIN,"edg_wll_DoLogEvent(): Error code mapped to EAGAIN");
-		break;
-	}
+	answer = edg_wll_log_proto_client(context,&con,logline);
 
 edg_wll_DoLogEvent_end:
 	if (con.context != GSS_C_NO_CONTEXT)
@@ -152,7 +138,7 @@ edg_wll_DoLogEvent_end:
 	if (cred != GSS_C_NO_CREDENTIAL)
 		gss_release_cred(&min_stat, &cred);
 
-	return edg_wll_Error(context, NULL, NULL);
+	return handle_answers(context,answer,"edg_wll_DoLogEvent()");
 }
 
 /**
@@ -168,15 +154,18 @@ static int edg_wll_DoLogEventProxy(
 	edg_wll_LogLine logline)
 {
 	int	answer;
-	struct sockaddr_un saddr;
 	int 	flags;
+	char	*name_esc,*dguser;
+	struct sockaddr_un saddr;
 	edg_wll_PlainConnection conn;
+	edg_wll_LogLine out;
+
+	answer = 0;
+	name_esc = dguser = out = NULL;
 
 	edg_wll_ResetError(context);
-	answer = 0;
 
    /* open a connection to the L&B Proxy: */
-
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"Logging to L&B Proxy at socket %s\n",
 		context->p_lbproxy_store_sock? context->p_lbproxy_store_sock: socket_path);
@@ -204,51 +193,131 @@ static int edg_wll_DoLogEventProxy(
 		}
 	}
 
-
-   /* and send the message to the L&B Proxy: */
-
-	answer = edg_wll_log_proto_client_proxy(context,&conn,logline);
-	
-	edg_wll_plain_close(&conn);
-
-edg_wll_DoLogEventProxy_end:
-
-	switch(answer) {
-		case 0:
-		case EINVAL:
-		case ENOSPC:
-		case ENOMEM:
-		case EDG_WLL_ERROR_GSS:
-		case EDG_WLL_ERROR_DNS:
-		case ENOTCONN:
-		case ECONNREFUSED:
-		case ETIMEDOUT:
-		case EAGAIN:
-			break;
-		case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
-		case EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE:
-		case EDG_WLL_ERROR_PARSE_KEY_DUPLICITY:
-		case EDG_WLL_ERROR_PARSE_KEY_MISUSE:
-//		case EDG_WLL_ERROR_PARSE_OK_WITH_EXTRA_FIELDS:
-			edg_wll_UpdateError(context,EINVAL,"edg_wll_DoLogEventProxy(): Error code mapped to EINVAL");
-			break;
-
-		default:
-			edg_wll_UpdateError(context,EAGAIN,"edg_wll_DoLogEventProxy(): Error code mapped to EAGAIN");
-		break;
+   /* add DG.USER to the message: */
+        name_esc = edg_wll_LogEscape(context->p_user_lbproxy);
+        if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
+		edg_wll_SetError(context,answer = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
+		goto edg_wll_DoLogEventProxy_end; 
+        }
+	if (asprintf(&out,"%s%s\n",dguser,logline) == -1) { 
+		edg_wll_SetError(context,answer = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
+		goto edg_wll_DoLogEventProxy_end; 
 	}
 
-	return edg_wll_Error(context, NULL, NULL);
+   /* and send the message to the L&B Proxy: */
+	answer = edg_wll_log_proto_client_proxy(context,&conn,out);
+	
+edg_wll_DoLogEventProxy_end:
+	edg_wll_plain_close(&conn);
+
+	if (name_esc) free(name_esc);
+	if (dguser) free(dguser);
+	if (out) free(out);
+
+	return handle_answers(context,answer,"edg_wll_DoLogEventProxy()");
 }
+
+/**
+ *----------------------------------------------------------------------
+ * Connects to bkserver and sends already formatted ULM string
+ * \brief helper logging function
+ * \param context	INOUT context to work with,
+ * \param logline	IN formated ULM string
+ *----------------------------------------------------------------------
+ */
+static int edg_wll_DoLogEventDirect(
+	edg_wll_Context context,
+	edg_wll_LogLine logline)
+{
+	int	ret,answer;
+	char	*my_subject_name,*name_esc,*dguser;
+	char	*host;
+	int	port;
+	edg_wll_LogLine out;
+	edg_wll_GssStatus	gss_stat;
+	edg_wll_GssConnection	con;
+	gss_cred_id_t	cred = GSS_C_NO_CREDENTIAL;
+	OM_uint32	min_stat;
+
+	ret = answer = 0;
+	my_subject_name = name_esc = dguser = out = NULL;
+	memset(&con, 0, sizeof(con));
+
+	edg_wll_ResetError(context);
+
+   /* get bkserver location: */
+	edg_wlc_JobIdGetServerParts(context->p_jobid,&host,&port);
+	port +=1;
+
+   /* open an authenticated connection to the bkserver: */
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"Logging to bkserver host %s, port %d\n", host, port);
+#endif
+	ret = edg_wll_gss_acquire_cred_gsi(
+	      context->p_proxy_filename ? context->p_proxy_filename : context->p_cert_filename,
+	      context->p_proxy_filename ? context->p_proxy_filename : context->p_key_filename,
+	      &cred, &my_subject_name, &gss_stat);
+	/* Give up if unable to prescribed credentials, otherwise go on anonymously */
+	if (ret && context->p_proxy_filename) {
+		edg_wll_SetErrorGss(context, "failed to load GSI credentials", &gss_stat);
+		goto edg_wll_DoLogEventDirect_end;
+	}
+	      				   
+#ifdef EDG_WLL_LOG_STUB
+	if (my_subject_name) {
+		fprintf(stderr,"Using certificate: %s\n",my_subject_name);
+	} else {
+		fprintf(stderr,"Going on anonymously\n");
+	}
+#endif
+	if ((answer = edg_wll_gss_connect(cred,host,port,
+			&context->p_tmp_timeout, &con, &gss_stat)) < 0) {
+		edg_wll_log_proto_handle_gss_failures(context,answer,&gss_stat,"edg_wll_gss_connect()");
+		goto edg_wll_DoLogEventDirect_end;
+	}
+
+   /* add DG.USER to the message: */
+        name_esc = edg_wll_LogEscape(my_subject_name);
+        if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
+		edg_wll_SetError(context,answer = ENOMEM,"edg_wll_DoLogEventDirect(): asprintf() error"); 
+		goto edg_wll_DoLogEventDirect_end; 
+        }
+	if (asprintf(&out,"%s%s\n",dguser,logline) == -1) { 
+		edg_wll_SetError(context,answer = ENOMEM,"edg_wll_DoLogEventDirect(): asprintf() error"); 
+		goto edg_wll_DoLogEventDirect_end; 
+	}
+
+   /* and send the message to the bkserver: */
+	answer = edg_wll_log_proto_client_direct(context,&con,out);
+
+edg_wll_DoLogEventDirect_end:
+	if (con.context != GSS_C_NO_CONTEXT)
+		edg_wll_gss_close(&con,&context->p_tmp_timeout);
+	if (cred != GSS_C_NO_CREDENTIAL)
+		gss_release_cred(&min_stat, &cred);
+	if (host) free(host);
+	if (name_esc) free(name_esc);
+	if (dguser) free(dguser);
+	if (out) free(out);
+	if(my_subject_name) free(my_subject_name);
+
+	return handle_answers(context,answer,"edg_wll_DoLogEventDirect()");
+}
+
 #endif /* FAKE_VERSION */
 
+#define	LOGFLAG_ASYNC	0 /**< asynchronous logging */
+#define	LOGFLAG_SYNC	1 /**< synchronous logging */
+#define	LOGFLAG_NORMAL	2 /**< logging to local logger */
+#define	LOGFLAG_PROXY	4 /**< logging to L&B Proxy */
+#define	LOGFLAG_DIRECT	8 /**< logging directly to bkserver */
 
 /**
  *----------------------------------------------------------------------
  * Formats a logging message and sends it to local-logger
  * \brief master logging event function
  * \param context	INOUT context to work with,
- * \param priority	IN priority flag (0 for async, 1 for sync)
+ * \param flags		IN as defined by LOGFLAG_*
  * \param event		IN type of the event,
  * \param fmt		IN printf()-like format string,
  * \param ...		IN event specific values/data according to fmt.
@@ -256,11 +325,12 @@ edg_wll_DoLogEventProxy_end:
  */
 static int edg_wll_LogEventMaster(
 	edg_wll_Context context,
-	int priority,
+	int flags,
 	edg_wll_EventCode event,
 	char *fmt, ...)
 {
 	va_list	fmt_args;
+	int	priority;
 	int	ret,answer;
 	char	*fix,*var;
 	char	*source,*eventName,*lvl, *fullid,*seq;
@@ -270,8 +340,9 @@ static int edg_wll_LogEventMaster(
 	size_t  size;
 	int	i;
 
-	i = errno  =  size = 0;
+	i = errno = size = 0;
 	seq = fix = var = out = source = eventName = lvl = fullid = NULL;
+	priority = flags & LOGFLAG_SYNC;
 
 	edg_wll_ResetError(context);
 
@@ -337,8 +408,19 @@ static int edg_wll_LogEventMaster(
 		context->p_tmp_timeout = context->p_log_timeout;
 	}
 
-   /* and send the message to the local-logger: */
-	ret = edg_wll_DoLogEvent(context, /* priority,*/ out);
+   /* and send the message */ 
+	if (flags & LOGFLAG_NORMAL) {
+		/* to the local-logger: */
+		ret = edg_wll_DoLogEvent(context, out);
+	} else if (flags & LOGFLAG_PROXY) {
+		/* to the L&B Proxy: */
+		ret = edg_wll_DoLogEventProxy(context, out);
+	} else if (flags & LOGFLAG_DIRECT) {
+		/* directly to the bkserver: */
+		ret = edg_wll_DoLogEventDirect(context, out);
+	} else {
+		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMaster(): wrong flag specified");
+	}
 
 edg_wll_logeventmaster_end:
 	va_end(fmt_args);
@@ -350,119 +432,6 @@ edg_wll_logeventmaster_end:
 	if (lvl) free(lvl);
 	if (eventName) free(eventName);
 	if (fullid) free(fullid);
-
-	if (ret) edg_wll_UpdateError(context,0,"Logging library ERROR: ");
-
-	return edg_wll_Error(context,NULL,NULL);
-}
-
-/**
- *----------------------------------------------------------------------
- * Formats a logging message and sends it to L&B Proxy
- * \brief master proxy logging event function
- * \param context	INOUT context to work with,
- * \param event		IN type of the event,
- * \param fmt		IN printf()-like format string,
- * \param ...		IN event specific values/data according to fmt.
- *----------------------------------------------------------------------
- */
-static int edg_wll_LogEventMasterProxy(
-	edg_wll_Context context,
-	edg_wll_EventCode event,
-	char *fmt, ...)
-{
-	va_list	fmt_args;
-	int	ret,answer;
-	char	*fix,*var,*dguser;
-	char	*source,*eventName,*lvl, *fullid,*seq,*name_esc;
-        struct timeval start_time;
-	char	date[ULM_DATE_STRING_LENGTH+1];
-	edg_wll_LogLine out;
-	size_t  size;
-	int	i;
-
-	i = errno  =  size = 0;
-	seq = fix = var = dguser = out = source = eventName = lvl = fullid = NULL;
-
-	edg_wll_ResetError(context);
-
-   /* default return value is "Try Again" */
-	answer = ret = EAGAIN; 
-
-   /* format the message: */
-	va_start(fmt_args,fmt);
-
-	gettimeofday(&start_time,0);
-	if (edg_wll_ULMTimevalToDate(start_time.tv_sec,start_time.tv_usec,date) != 0) {
-		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMasterProxy(): edg_wll_ULMTimevalToDate() error"); 
-		goto edg_wll_logeventmasterproxy_end; 
-	}
- 	source = edg_wll_SourceToString(context->p_source);
-	lvl = edg_wll_LevelToString(context->p_level);
-	eventName = edg_wll_EventToString(event);
-	if (!eventName) { 
-		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMasterProxy(): event name not specified"); 
-		goto edg_wll_logeventmasterproxy_end; 
-	}
-	if (!(fullid = edg_wlc_JobIdUnparse(context->p_jobid))) { 
-		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMasterProxy(): edg_wlc_JobIdUnparse() error"); 
-		goto edg_wll_logeventmasterproxy_end;
-	}
-	seq = edg_wll_GetSequenceCode(context);
-	if (edg_wll_IncSequenceCode(context)) {
-		ret = EINVAL;
-		goto edg_wll_logeventmasterproxy_end;
-	}
-	if (trio_asprintf(&fix,EDG_WLL_FORMAT_COMMON,
-			date,context->p_host,lvl,1,
-			source,context->p_instance ? context->p_instance : "",
-			eventName,fullid,seq) == -1) {
-		edg_wll_SetError(context,ret = ENOMEM,"edg_wll_LogEventMasterProxy(): trio_asprintf() error"); 
-		goto edg_wll_logeventmasterproxy_end; 
-	}
-	if (trio_vasprintf(&var,fmt,fmt_args) == -1) { 
-		edg_wll_SetError(context,ret = ENOMEM,"edg_wll_LogEventMasterProxy(): trio_vasprintf() error"); 
-		goto edg_wll_logeventmasterproxy_end; 
-	}
-        /* format the DG.USER string */
-/* XXX: put user credentials here probably from context */
-        name_esc = edg_wll_LogEscape(context->p_user_lbproxy);
-        if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
-		edg_wll_SetError(context,ret = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
-		goto edg_wll_logeventmasterproxy_end; 
-        }
-	if (asprintf(&out,"%s%s%s\n",dguser,fix,var) == -1) { 
-		edg_wll_SetError(context,ret = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
-		goto edg_wll_logeventmasterproxy_end; 
-	}
-	size = strlen(out);
-
-	if (size > EDG_WLL_LOG_SYNC_MAXMSGSIZE) {
-		edg_wll_SetError(context,ret = ENOSPC,"edg_wll_LogEventMasterProxy(): Message size too large for synchronous transfer");
-		goto edg_wll_logeventmasterproxy_end;
-	}
-
-#ifdef EDG_WLL_LOG_STUB
-//	fprintf(stderr,"edg_wll_LogEvent (%d chars): %s",size,out);
-#endif
-	
-	context->p_tmp_timeout = context->p_sync_timeout;
-
-   /* and send the message to the L&B Proxy: */
-	ret = edg_wll_DoLogEventProxy(context, out);
-
-edg_wll_logeventmasterproxy_end:
-	va_end(fmt_args);
-	if (seq) free(seq); 
-	if (fix) free(fix); 
-	if (var) free(var); 
-	if (dguser) free(dguser); 
-	if (out) free(out);
-	if (source) free(source);
-	if (lvl) free(lvl);
-	if (eventName) free(eventName);
-	if (fullid) free(fullid);
-	if (name_esc) free(name_esc); 
 
 	if (ret) edg_wll_UpdateError(context,0,"Logging library ERROR: ");
 
@@ -492,7 +461,7 @@ int edg_wll_LogEvent(
 		goto edg_wll_logevent_end; 
 	}
 
-	ret=edg_wll_LogEventMaster(context,0,event,"%s",list);
+	ret=edg_wll_LogEventMaster(context,LOGFLAG_NORMAL | LOGFLAG_ASYNC,event,"%s",list);
 
 edg_wll_logevent_end:
 	va_end(fmt_args);
@@ -527,7 +496,7 @@ int edg_wll_LogEventSync(
 		goto edg_wll_logeventsync_end; 
 	}
 
-	ret=edg_wll_LogEventMaster(context,1,event,"%s",list);
+	ret=edg_wll_LogEventMaster(context,LOGFLAG_NORMAL | LOGFLAG_SYNC,event,"%s",list);
 
 edg_wll_logeventsync_end:
 	va_end(fmt_args);
@@ -561,7 +530,7 @@ int edg_wll_LogEventProxy(
                 goto edg_wll_logevent_end;
         }
 
-        ret=edg_wll_LogEventMasterProxy(context,event,"%s",list);
+        ret=edg_wll_LogEventMaster(context,LOGFLAG_PROXY | LOGFLAG_SYNC, event,"%s",list);
 
 edg_wll_logevent_end:
         va_end(fmt_args);
@@ -571,7 +540,6 @@ edg_wll_logevent_end:
 
         return edg_wll_Error(context,NULL,NULL);
 }
-
 
 /**
  *-----------------------------------------------------------------------
@@ -615,7 +583,7 @@ int edg_wll_LogFlush(
 	else
 		context->p_tmp_timeout = context->p_sync_timeout;
 
-	ret = edg_wll_DoLogEvent(context, /* 1,*/ out);
+	ret = edg_wll_DoLogEvent(context, out);
 
 edg_wll_logflush_end:
 	if(out) free(out);
@@ -660,7 +628,7 @@ int edg_wll_LogFlushAll(
 	else
 		context->p_tmp_timeout = context->p_sync_timeout;
 
-	ret = edg_wll_DoLogEvent(context, /* 1,*/ out);
+	ret = edg_wll_DoLogEvent(context, out);
 
 edg_wll_logflushall_end:
 	if(out) free(out);
@@ -689,12 +657,10 @@ int edg_wll_SetLoggingJob(
 	if (!job) return edg_wll_SetError(context,EINVAL,"jobid is null");
 
 	edg_wlc_JobIdFree(context->p_jobid);
-	if ((err = edg_wlc_JobIdDup(job,&context->p_jobid)))
+	if ((err = edg_wlc_JobIdDup(job,&context->p_jobid))) {
 		edg_wll_SetError(context,err,"edg_wll_SetLoggingJob(): edg_wlc_JobIdDup() error");
-
-	else {
-		if (!edg_wll_SetSequenceCode(context,code,flags))
-			edg_wll_IncSequenceCode(context);
+	} else if (!edg_wll_SetSequenceCode(context,code,flags)) {
+		edg_wll_IncSequenceCode(context);
 	}
 
 	return edg_wll_Error(context,NULL,NULL);
@@ -744,6 +710,7 @@ int edg_wll_SetLoggingJobProxy(
 	
 edg_wll_setloggingjobproxy_end:
 	if (code_loc) free(code_loc);
+
         return edg_wll_Error(context,NULL,NULL);
 }
 
@@ -754,54 +721,7 @@ edg_wll_setloggingjobproxy_end:
  */
 static int edg_wll_RegisterJobMaster(
         edg_wll_Context         context,
-	int			pri,
-        const edg_wlc_JobId     job,
-        enum edg_wll_RegJobJobtype	type,
-        const char *            jdl,
-        const char *            ns,
-	edg_wlc_JobId		parent,
-        int                     num_subjobs,
-        const char *            seed,
-        edg_wlc_JobId **        subjobs)
-{
-	char	*type_s = NULL,*intseed = NULL, *seq = NULL;
-	char	*parent_s = NULL;
-	int	err = 0;
-
-	edg_wll_ResetError(context);
-
-	intseed = seed ? strdup(seed) : 
-		str2md5base64(seq = edg_wll_GetSequenceCode(context));
-
-	free(seq);
-
-	type_s = edg_wll_RegJobJobtypeToString(type);
-	if (!type_s) return edg_wll_SetError(context,EINVAL,"edg_wll_RegisterJobMaster(): no jobtype specified");
-
-	if ((type == EDG_WLL_REGJOB_DAG || type == EDG_WLL_REGJOB_PARTITIONED)
-		&& num_subjobs > 0) 
-			err = edg_wll_GenerateSubjobIds(context,job,
-					num_subjobs,intseed,subjobs);
-
-	parent_s = parent ? edg_wlc_JobIdUnparse(parent) : strdup("");
-
-	if (err == 0 &&
-		edg_wll_SetLoggingJob(context,job,NULL,EDG_WLL_SEQ_NORMAL) == 0)
-			edg_wll_LogEventMaster(context,pri,
-				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
-				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
-
-	free(type_s); free(intseed); free(parent_s);
-	return edg_wll_Error(context,NULL,NULL);
-}
-
-/**
- *-----------------------------------------------------------------------
- * Register job with L&B Proxy service.
- *-----------------------------------------------------------------------
- */
-static int edg_wll_RegisterJobMasterProxy(
-        edg_wll_Context         context,
+	int			flags,
         const edg_wlc_JobId     job,
         enum edg_wll_RegJobJobtype	type,
 	const char *		user,
@@ -812,34 +732,55 @@ static int edg_wll_RegisterJobMasterProxy(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	char	*type_s = NULL,*intseed = NULL, *seq = NULL;
-	char	*parent_s = NULL;
+	char	*seq,*type_s,*intseed,*parent_s;
 	int	err = 0;
+
+	seq = type_s = intseed = parent_s = NULL;
 
 	edg_wll_ResetError(context);
 
 	intseed = seed ? strdup(seed) : 
 		str2md5base64(seq = edg_wll_GetSequenceCode(context));
 
-	free(seq);
-
 	type_s = edg_wll_RegJobJobtypeToString(type);
-	if (!type_s) return edg_wll_SetError(context,EINVAL,"edg_wll_RegisterJobMasterProxy(): no jobtype specified");
-
+	if (!type_s) {
+		edg_wll_SetError(context,EINVAL,"edg_wll_RegisterJobMaster(): no jobtype specified");
+		goto edg_wll_registerjobmaster_end;
+	}
 	if ((type == EDG_WLL_REGJOB_DAG || type == EDG_WLL_REGJOB_PARTITIONED)
-		&& num_subjobs > 0) 
-			err = edg_wll_GenerateSubjobIds(context,job,
-					num_subjobs,intseed,subjobs);
-
+		&& num_subjobs > 0) {
+		err = edg_wll_GenerateSubjobIds(context,job,num_subjobs,intseed,subjobs);
+	}
+	if (err) {
+		edg_wll_UpdateError(context,EINVAL,"edg_wll_RegisterJobMaster(): edg_wll_GenerateSubjobIds() error");
+		goto edg_wll_registerjobmaster_end;
+	}
 	parent_s = parent ? edg_wlc_JobIdUnparse(parent) : strdup("");
 
-	if (err == 0 &&
-		edg_wll_SetLoggingJobProxy(context,job,NULL,user,EDG_WLL_SEQ_NORMAL) == 0)
-			edg_wll_LogEventMasterProxy(context,
+	if (flags & LOGFLAG_DIRECT) {
+		if (edg_wll_SetLoggingJob(context,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
+			edg_wll_LogEventMaster(context,LOGFLAG_DIRECT | LOGFLAG_SYNC,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
+		}
+	} else if (flags & LOGFLAG_PROXY) {
+		if (edg_wll_SetLoggingJobProxy(context,job,NULL,user,EDG_WLL_SEQ_NORMAL) == 0) {
+			edg_wll_LogEventMaster(context,LOGFLAG_PROXY | LOGFLAG_SYNC,
+				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
+				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
+		}
+	} else if (flags & LOGFLAG_NORMAL) {
+		edg_wll_SetError(context,EINVAL,
+			"edg_wll_RegisterJobMaster(): register via interlogger is no more supported");
+	} else {
+		edg_wll_SetError(context,EINVAL,"edg_wll_RegisterJobMaster(): wrong flag specified");
+	}
 
-	free(type_s); free(intseed); free(parent_s);
+edg_wll_registerjobmaster_end:
+	if (seq) free(seq);
+	if (type_s) free(type_s); 
+	if (intseed) free(intseed); 
+	if (parent_s) free(parent_s);
 	return edg_wll_Error(context,NULL,NULL);
 }
 
@@ -853,7 +794,7 @@ int edg_wll_RegisterJobSync(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(context,1,job,type,jdl,ns, NULL, num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,NULL,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterJob(
@@ -866,7 +807,7 @@ int edg_wll_RegisterJob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(context,0,job,type,jdl,ns, NULL, num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,NULL,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterSubjob(
@@ -880,7 +821,7 @@ int edg_wll_RegisterSubjob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(context,0,job,type,jdl,ns, parent, num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,NULL,jdl,ns,parent,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterSubjobs(edg_wll_Context ctx,const edg_wlc_JobId parent,
@@ -919,28 +860,30 @@ int edg_wll_RegisterJobProxy(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	int ret = edg_wll_RegisterJobSync(context,job,type,jdl,ns,num_subjobs,seed,subjobs);
+	/* first register with bkserver */
+	int ret = edg_wll_RegisterJob(context,job,type,jdl,ns,num_subjobs,seed,subjobs);
 	if (ret) {
 		edg_wll_UpdateError(context,0,"edg_wll_RegisterJobProxy(): unable to register with bkserver");
 		return edg_wll_Error(context,NULL,NULL);
 	}
-
-	return edg_wll_RegisterJobMasterProxy(context,job,type,user,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	/* and then with L&B Proxy */
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,user,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_ChangeACL(
-		edg_wll_Context				ctx,
-		const edg_wlc_JobId			jobid,
-		const char				   *user_id,
+		edg_wll_Context			ctx,
+		const edg_wlc_JobId		jobid,
+		const char			*user_id,
 		enum edg_wll_UserIdType		user_id_type,
 		enum edg_wll_Permission		permission,
 		enum edg_wll_PermissionType	permission_type,
 		enum edg_wll_ACLOperation	operation)
 {
-	if ( edg_wll_SetLoggingJob(ctx, jobid, NULL, EDG_WLL_SEQ_NORMAL) == 0 )
-		edg_wll_LogEventMaster(ctx, 1, EDG_WLL_EVENT_CHANGEACL, EDG_WLL_FORMAT_CHANGEACL,
-				user_id, user_id_type, permission, permission_type, operation);
-
+	if ( edg_wll_SetLoggingJob(ctx, jobid, NULL, EDG_WLL_SEQ_NORMAL) == 0 ) {
+		edg_wll_LogEventMaster(ctx, LOGFLAG_NORMAL | LOGFLAG_SYNC, 
+			EDG_WLL_EVENT_CHANGEACL, EDG_WLL_FORMAT_CHANGEACL,
+			user_id, user_id_type, permission, permission_type, operation);
+	}
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
