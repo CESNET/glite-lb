@@ -4,7 +4,7 @@ build.xml
 build
 build.properties
 properties.xml
-configure-options.xml
+configure.properties.xml
 .cvsignore
 .project
 .cdtproject
