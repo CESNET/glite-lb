@@ -20,8 +20,6 @@
 
 	Revision history:
 	$Log$
-	Revision 1.1  2004/06/23 02:08:44  dimeglio
-	First version of this file
 	
 -->
 
@@ -46,7 +44,8 @@ PREFIX=${install.dir}
 version=${module.version}
 glite_location=${with.glite.location}
 globus_prefix=${with.globus.prefix}
-globusflavour=${with.globus.dbg.nothr.flavor}
+thrflavour=${with.globus.thr.flavor}
+nothrflavour=${with.globus.nothr.flavor}
 expat_prefix=${with.expat.prefix}
 ares_prefix=${with.ares.prefix}
 			</echo>
