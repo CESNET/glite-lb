@@ -727,17 +727,18 @@ int edg_wll_SetLoggingJobProxy(
 		goto err;
 	}
 
-	/* query LBProxyServer for sequence code if not user-suplied *?
+	/* query LBProxyServer for sequence code if not user-suplied */
 	if (!code) {
 		edg_wll_QuerySequenceCode(context, job, &code_loc);
 		goto err;	
 	}
 	else
-		code_loc = code;
+		code_loc = strdup(code);
 	
 	if (!edg_wll_SetSequenceCode(context,code_loc,flags))
 /* XXX: ask proxy for last known sequence code */
 		edg_wll_IncSequenceCode(context);
+	free(code_loc);
 	
 err:
         return edg_wll_Error(context,NULL,NULL);

@@ -158,3 +158,10 @@ int edg_wll_JobLog(
 
 	return edg_wll_QueryEvents(ctx,j,e,eventsOut);
 }
+
+/* XXX missing */
+int edg_wll_QuerySequenceCode(edg_wll_Context ctx, edg_wlc_JobId jobId, char **code)
+{
+	return edg_wll_SetError(ctx, EOPNOTSUPP, NULL);
+}	
+
