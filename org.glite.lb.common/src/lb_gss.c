@@ -760,7 +760,7 @@ edg_wll_gss_write(edg_wll_GssConnection *connection, const void *buf, size_t buf
    input_token.value = (void*)buf;
    input_token.length = bufsize;
 
-   maj_stat = gss_wrap (&min_stat, connection->context, 0, GSS_C_QOP_DEFAULT,
+   maj_stat = gss_wrap (&min_stat, connection->context, 1, GSS_C_QOP_DEFAULT,
 			&input_token, NULL, &output_token);
    if (GSS_ERROR(maj_stat)) {
       if (gss_code) {
