@@ -199,7 +199,7 @@ static int edg_wll_DoLogEventProxy(
 		edg_wll_SetError(context,answer = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
 		goto edg_wll_DoLogEventProxy_end; 
         }
-	if (asprintf(&out,"%s%s\n",dguser,logline) == -1) { 
+	if (asprintf(&out,"%s%s",dguser,logline) == -1) { 
 		edg_wll_SetError(context,answer = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
 		goto edg_wll_DoLogEventProxy_end; 
 	}
@@ -778,7 +778,10 @@ static int edg_wll_RegisterJobMaster(
 			goto edg_wll_registerjobmaster_end;
 		}
 		/* SetLoggingJobProxy and and log to proxy */
-		if (edg_wll_SetLoggingJobProxy(context,job,NULL,user_dn,EDG_WLL_SEQ_NORMAL) == 0) {
+		edg_wll_SetSequenceCode(context, NULL, EDG_WLL_SEQ_NORMAL);
+		if (seq) free(seq);
+		seq = edg_wll_GetSequenceCode(context);
+		if (edg_wll_SetLoggingJobProxy(context,job,seq,user_dn,EDG_WLL_SEQ_NORMAL) == 0) {
 			edg_wll_LogEventMaster(context,LOGFLAG_PROXY | LOGFLAG_SYNC,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
