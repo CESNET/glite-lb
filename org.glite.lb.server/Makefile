@@ -17,8 +17,6 @@ thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 ares_prefix=/opt/ares
 gsoap_prefix=/opt/gsoap
-gridsite_prefix=/opt/gridsite
-voms_prefix=/opt/voms
 
 -include Makefile.inc
 
@@ -54,8 +52,8 @@ DEBUG:=-g -O0 -Wall
 #	-I${gacl}/include \
 #	-I/usr/include/libxml2
 
-GRIDSITE_CFLAGS = -I${gridsite_prefix}/include `xml2-config --cflags`
-GRIDSITE_LIBS = -L${gridsite_prefix}/lib -lgridsite `xml2-config --libs`
+GRIDSITE_CFLAGS = `xml2-config --cflags`
+GRIDSITE_LIBS = -lgridsite `xml2-config --libs`
 
 # -DNO_VOMS -DNO_GACL to be removed when voms/gridsite are available
 #CFLAGS:= -DNO_VOMS -DNO_GACL 
@@ -71,7 +69,6 @@ CFLAGS:= \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
 	$(GRIDSITE_CFLAGS) \
-	-I${voms_prefix}/include \
 	-D_GNU_SOURCE
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
