@@ -66,16 +66,6 @@ INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 
 INTERLOG_NOBJS:=${INTERLOG_OBJS:.o=.no}
 
-default: all
-
-compile: glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd
-
-stage export all: compile
-	${INSTALL} -m 755 glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd ${stagedir}/bin
-
-check:
-	echo No unit tests so far
-
 glite_lb_logd: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${HELPERS} ${EXT_LIBS} ${GLOBUS_LIBS}
 
@@ -86,6 +76,32 @@ glite_lb_interlogd: ${INTERLOG_OBJS}
 glite_lb_notif_interlogd: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} \
 		${COMMON_LIB}_${thrflavour} ${HELPERS} ${PHELPERS} ${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
+
+default: all
+
+all compile: glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd
+
+stage: compile
+	$(MAKE) install PREFIX=${stagedir}
+
+check:
+	echo No unit tests so far
+
+dist: distsrc distbin
+
+distsrc:
+	mkdir -p ${top_srcdir}/${package}-${version}
+	cd ${top_srcdir} && GLOBIGNORE="${package}-${version}" && cp -Rf * ${package}-${version}
+	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${version}
+	rm -rf ${top_srcdir}/${package}-${version}
+
+distbin:
+	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
+	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
+	rm -rf tmpbuilddir
+	
+install:
+	${INSTALL} -m 755 glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd ${PREFIX}/bin
 
 %.no: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DIL_NOTIFICATIONS -c $< -o $@
