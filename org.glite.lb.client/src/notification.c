@@ -16,7 +16,7 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/events_parse.h"
-#include "glite/lb/il_string.h"
+#include "glite/lb/il_msg.h"
 #include "glite/lb/escape.h"
 #include "glite/lb/lb_gss.h"
 
@@ -446,14 +446,37 @@ err:
 }
 
 
+static edg_wll_Context tmp_ctx;
+
+static int gss_reader(char *buffer, int max_len)
+{
+  edg_wll_GssStatus gss_code;
+  int ret, len;
+
+  ret = edg_wll_gss_read_full(&tmp_ctx->connPoolNotif[0].gss,
+			      buffer, max_len,
+			      &tmp_ctx->p_tmp_timeout,
+			      &len, &gss_code);
+  if(ret < 0)
+    switch(ret) {
+    case EDG_WLL_GSS_ERROR_TIMEOUT:
+      ret = edg_wll_SetError(tmp_ctx, ETIMEDOUT, "read message");
+      break;
+    case EDG_WLL_GSS_ERROR_EOF:
+      ret = edg_wll_SetError(tmp_ctx, ENOTCONN, NULL);
+      break;
+    default:
+      ret = edg_wll_SetError(tmp_ctx, EDG_WLL_ERROR_GSS, "read message");
+      break;
+    }
+
+  return(ret);
+}
+
 
 static int recv_notif(edg_wll_Context ctx)
 {
-	int 	ret, len;
-	char 	fbuf[17];
-	size_t  total;
-	edg_wll_GssStatus  gss_code;
-
+	int 	len;
 	
 	if (ctx->connPoolNotif[0].buf) {
 		free(ctx->connPoolNotif[0].buf);
@@ -461,50 +484,13 @@ static int recv_notif(edg_wll_Context ctx)
 	}
 	ctx->connPoolNotif[0].bufUse = 0;
 	ctx->connPoolNotif[0].bufSize = 0;
-
-	ret = edg_wll_gss_read_full(&ctx->connPoolNotif[0].gss,
-	      			    fbuf,17, &ctx->p_tmp_timeout,&total, &gss_code);
-	if (ret < 0) 
-		switch (ret) {
-			case EDG_WLL_GSS_ERROR_TIMEOUT: 
-				return edg_wll_SetError(ctx,ETIMEDOUT,"read message header");
-			case EDG_WLL_GSS_ERROR_EOF: 
-				return edg_wll_SetError(ctx,ENOTCONN,NULL);
-			case EDG_WLL_GSS_ERROR_GSS:
-				return edg_wll_SetErrorGss(ctx, "read message header", &gss_code);
-			default: 
-				return edg_wll_SetError(ctx,EDG_WLL_ERROR_GSS,"read message header"); /* XXX */
-	}
-
-	if ((len = atoi(fbuf)) <= 0) {
-		return edg_wll_SetError(ctx,EINVAL,"message length");
-	}
-
+	
+	tmp_ctx = ctx;
+	len = read_il_data(&ctx->connPoolNotif[0].buf, gss_reader);
+	if(len < 0)
+	  return(len);
+	
 	ctx->connPoolNotif[0].bufSize = len+1;
-
-	ctx->connPoolNotif[0].buf = (char *) malloc(
-		ctx->connPoolNotif[0].bufSize);
-	
-	if (!ctx->connPoolNotif[0].buf) {
-		return edg_wll_SetError(ctx, ENOMEM, "recv_notif()");
-	}
-	
-
-	ret = edg_wll_gss_read_full(&ctx->connPoolNotif[0].gss,
-	                            ctx->connPoolNotif[0].buf, len,
-				    &ctx->p_tmp_timeout,&total, &gss_code);
-	if (ret < 0) {
-		free(ctx->connPoolNotif[0].buf);
-		ctx->connPoolNotif[0].bufUse = 0;
-		ctx->connPoolNotif[0].bufSize = 0;
-		return edg_wll_SetError(ctx,
-			ret == EDG_WLL_GSS_ERROR_TIMEOUT ?
-				ETIMEDOUT : EDG_WLL_ERROR_GSS,
-			"read message");
-	}
-
-
-	ctx->connPoolNotif[0].buf[len] = 0;
 	ctx->connPoolNotif[0].bufUse = len+1;
 
 	
@@ -515,8 +501,8 @@ static int recv_notif(edg_wll_Context ctx)
 
 static int send_reply(const edg_wll_Context ctx)
 {
-	int	ret, len, err_code, err_code_min = 0, max_len = 256;
-	char	*p, *err_msg = NULL, buf[max_len];
+	int	ret, len, err_code, err_code_min = 0;
+	char	*buf, *err_msg = NULL;
 	size_t  total;
 	edg_wll_GssStatus  gss_code;
 
@@ -525,17 +511,11 @@ static int send_reply(const edg_wll_Context ctx)
 
 	if (!err_msg) err_msg=strdup("OK");
 	
-	len = 17 + len_int(err_code) + len_int(err_code_min) +len_string(err_msg);
-	if(len > max_len) {
+	len = encode_il_reply(&buf, err_code, err_code_min, err_msg);
+	if(len < 0) {
 		edg_wll_SetError(ctx,E2BIG,"create_reply()");
 		goto err;
 	}
-
-	snprintf(buf, max_len, "%16d\n", len - 17);
-	p = buf + 17;
-	p = put_int(p, err_code);
-	p = put_int(p, err_code_min);
-	p = put_string(p, err_msg);
 
 	ret = edg_wll_gss_write_full(&ctx->connPoolNotif[0].gss,
 	                             buf,len,&ctx->p_tmp_timeout,&total, &gss_code);
@@ -548,6 +528,7 @@ static int send_reply(const edg_wll_Context ctx)
 	}
 	
 err:
+	if(buf) free(buf);
 	free(err_msg);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -732,8 +713,7 @@ err:
 	int 			recv_sock, alen;
 	edg_wll_Event 		*event = NULL;
 	struct timeval 		start_time,check_time,tv;
-	char 			*p = NULL, *ucs = NULL,
-       				*event_char = NULL, *jobstat_char = NULL;
+	char 			*event_char = NULL, *jobstat_char = NULL;
 	edg_wll_GssStatus	gss_code;
 	
 	
@@ -839,16 +819,8 @@ select:
 		goto err;		/* error set in send_reply() */
 	}
 	
-	p = ctx->connPoolNotif[0].buf;
-	p = get_string(p, &ucs);
-	if (p == NULL) return edg_wll_SetError(ctx,EDG_WLL_IL_PROTO,"reading UCS");
-	free(ucs);
-
-	p = get_string(p, &event_char);
-	if (p == NULL) {
-		free(ucs);
-		return edg_wll_SetError(ctx,EDG_WLL_IL_PROTO,"reading event string");;
-	}
+	if(decode_il_msg(&event_char, ctx->connPoolNotif[0].buf) < 0)
+	  return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "decoding event string");
 	
 	/****************************************************************/
 	/* end of  notif-interlogger message exchange			*/
