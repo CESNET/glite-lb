@@ -165,7 +165,7 @@ int edg_wll_log_proto_client_failure(edg_wll_Context context, int code, edg_wll_
  */
 static
 int
-get_reply(edg_wll_Context context, int sock, char **buf, int *code_min)
+get_reply(edg_wll_Context context, edg_wll_Connection *conn, char **buf, int *code_min)
 {
 	char buffer[17];
 	char *msg, *p;
@@ -173,7 +173,7 @@ get_reply(edg_wll_Context context, int sock, char **buf, int *code_min)
 
 	code = 0;
 	/* get message header */
-	len = edg_wll_plain_read_fullbuf(sock, buffer, 17, &context->p_tmp_timeout);
+	len = edg_wll_plain_read_full(conn, buffer, 17, &context->p_tmp_timeout);
 	if(len < 0) {
 		edg_wll_SetError(context,LB_PROTO,"get_reply(): error reading message header");
 		goto get_reply_end;
@@ -194,7 +194,7 @@ get_reply(edg_wll_Context context, int sock, char **buf, int *code_min)
 	}
 
 	/* read all the data */
-	len = edg_wll_plain_read_fullbuf(sock, msg, len, &context->p_tmp_timeout);
+	len = edg_wll_plain_read_full(conn, msg, len, &context->p_tmp_timeout);
 	if(len < 0) {
 		edg_wll_SetError(context,LB_PROTO,"get_reply(): error reading message body");
 		goto get_reply_end;
@@ -243,7 +243,7 @@ get_reply_end:
  *
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_client_proxy(edg_wll_Context context, int socket, edg_wll_LogLine logline)
+int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_Connection *conn, edg_wll_LogLine logline)
 {
 	char *p;  int  len;
 	char *ucs = "honik6";
@@ -276,7 +276,7 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, int socket, edg_wll_
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"Sending message to socket...\n");
 #endif
-	if (( count = edg_wll_plain_write_full(socket, buffer, size, &context->p_tmp_timeout)) < 0) {
+	if (( count = edg_wll_plain_write_full(conn, buffer, size, &context->p_tmp_timeout)) < 0) {
 		edg_wll_SetError(context,LB_PROTO,"edg_wll_log_proto_client_proxy(): error sending message to socket");
 		goto edg_wll_log_proto_client_proxy_end;
 	}
@@ -286,7 +286,7 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, int socket, edg_wll_
 	fprintf(stderr,"Reading answer from server...\n");
 #endif
 	count = 0;
-	if ((err = get_reply(context, socket, &answer, &code)) < 0 ) {
+	if ((err = get_reply(context, conn, &answer, &code)) < 0 ) {
 		edg_wll_SetError(context,LB_PROTO,"edg_wll_log_proto_client_proxy(): error reading answer from L&B proxy server");
 	} else {
 #ifdef EDG_WLL_LOG_STUB

@@ -25,7 +25,7 @@
 
 #include "prod_proto.h"
 
-static const char* socket_path="/tmp/lbproxy.sock";
+static const char* socket_path="/tmp/lb_proxy_store.sock";
 
 /**
  *----------------------------------------------------------------------
@@ -164,7 +164,8 @@ static int edg_wll_DoLogEventProxy(
 {
 	int	answer;
 	struct sockaddr_un saddr;
-	int 	sock,flags;
+	int 	flags;
+	edg_wll_Connection conn;
 
 	edg_wll_ResetError(context);
 	answer = 0;
@@ -172,25 +173,27 @@ static int edg_wll_DoLogEventProxy(
    /* open a connection to the L&B Proxy: */
 
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"Logging to L&B Proxy at socket %s\n", socketpath);
+	fprintf(stderr,"Logging to L&B Proxy at socket %s\n",
+		context->p_lbproxy_store_sock? context->p_lbproxy_store_sock: socket_path);
 #endif
-	sock = socket(PF_UNIX, SOCK_STREAM, 0);
-	if (sock < 0) {
+	conn.sock = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (conn.sock < 0) {
 		edg_wll_SetError(context,answer = errno,"socket() error");
 		goto edg_wll_DoLogEventProxy_end;
 	}
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sun_family = AF_UNIX;
-	strcpy(saddr.sun_path, socket_path);
-	if ((flags = fcntl(sock, F_GETFL, 0)) < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0) {
+	strcpy(saddr.sun_path, context->p_lbproxy_store_sock?
+				context->p_lbproxy_store_sock: socket_path);
+	if ((flags = fcntl(conn.sock, F_GETFL, 0)) < 0 || fcntl(conn.sock, F_SETFL, flags | O_NONBLOCK) < 0) {
 		edg_wll_SetError(context,answer = errno,"fcntl()");
-		close(sock);
+		close(conn.sock);
 		goto edg_wll_DoLogEventProxy_end;
 	}
-	if (connect(sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
+	if (connect(conn.sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
 		if(errno != EISCONN) {
 			edg_wll_SetError(context,answer = errno,"connect()");
-			close(sock);
+			close(conn.sock);
 			goto edg_wll_DoLogEventProxy_end;
 		}
 	}
@@ -198,10 +201,9 @@ static int edg_wll_DoLogEventProxy(
 
    /* and send the message to the L&B Proxy: */
 
-//	answer = edg_wll_log_proto_client_proxy(context,&sock,logline);
-	answer = EAGAIN;
+	answer = edg_wll_log_proto_client_proxy(context,&conn,logline);
 	
-	close(sock);
+	close(conn.sock);
 
 edg_wll_DoLogEventProxy_end:
 

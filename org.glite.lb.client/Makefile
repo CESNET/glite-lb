@@ -91,8 +91,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge
-#EXAMPLES:=feed_shark
-EXAMPLES:=
+EXAMPLES:=log_usertag_proxy job_reg feed_shark
 
 ${LIB}: ${LIBOBJS}
 	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
@@ -142,7 +141,10 @@ ${LIBTHROBJS}: %.thr.o: %.c
 
 default: all
 
+
 compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${EXAMPLES} ${PLUSLIB} ${THRPLUSLIB}
+
+examples: ${EXAMPLES}
 
 check: compile check.producer
 
