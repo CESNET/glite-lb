@@ -46,6 +46,20 @@ extern edg_wll_ErrorCode edg_wll_CheckEvent(
 );
 
 /**
+ * Compare two event structures
+ * Auxiliary function, compares all fields of two event structure 
+ * \param context IN: context to work with
+ * \param e1 IN: first event to compare
+ * \param e2 IN: second event to compare
+ */
+extern edg_wll_ErrorCode edg_wll_CompareEvents(
+        edg_wll_Context context,
+        const edg_wll_Event *e1,
+        const edg_wll_Event *e2
+);
+
+
+/**
  * Parse "only" jobId from ULM message
  * \param logline IN: ULM string to parse
  * \return jobId string
