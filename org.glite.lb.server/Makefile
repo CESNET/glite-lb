@@ -112,13 +112,15 @@ distbin:
 	rm -rf tmpbuilddir
         
 install:
-	mkdir -p ${PREFIX}/bin ${PREFIX}/etc
+	-mkdir -p ${PREFIX}/bin ${PREFIX}/etc ${PREFIX}/etc/init.d
 	for p in bkserverd bkindex; do \
 		${INSTALL} -m 755 "glite_lb_$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 
 	for f in dbsetup.sql index.conf.template; do \
-		${INSTALL} -m 644 "glite-lb-$$p" ${PREFIX}/etc
+		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$p" ${PREFIX}/etc
+
+	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
 
 clean:
 
