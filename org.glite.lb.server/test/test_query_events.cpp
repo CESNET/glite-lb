@@ -99,7 +99,7 @@ extern "C" {
 
 int edg_wll_ExecStmt(edg_wll_Context ctx,char *qry,edg_wll_Stmt *stmt)
 {
-	cout << qry << endl;
+	cout << "edg_wll_ExecStmt: " << qry << endl;
 
 	class QueryEventsTest *tst = (class QueryEventsTest *)(ctx->mysql);
 	return tst->ExecStmt(qry, stmt);
@@ -112,6 +112,7 @@ int edg_wll_FetchRow(edg_wll_Stmt stmt, char **cols)
 
 	if (**rows == "END") return 0;
 	row = strdup((*rows)->c_str());
+	(*rows)++;
 	for (p = strtok(row,"\t"); p; p = strtok(NULL,"\t"))
 		cols[i++] = strdup(p);
 
