@@ -14,10 +14,21 @@ GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-$GLITE_LOCATION/var}
 
 unset creds port
 
+cred_copy=/var/tmp/glite-lb-logger.pem
+
 start()
 {
 	[ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
 		creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
+
+	if test -z "$creds"; then
+		if su $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem"; then
+			echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
+			echo "$0:          creating $cred_copy from it"
+			su $GLITE_USER -c "umask 077; cat /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem >$cred_copy"
+			creds="-c $cred_copy -k $cred_copy"
+		fi
+	fi
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
@@ -41,6 +52,7 @@ stop()
 		echo -n Stopping glite-lb-interlogd ...
 		killall glite-lb-interlogd
 		echo " done"
+		rm -f $cred_copy
 }
 
 status()
