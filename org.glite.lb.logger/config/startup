@@ -1,7 +1,6 @@
 #!/bin/sh
 
 GLITE_LOCATION=${GLITE_LOCATION:-/opt/glite}
-GLITE_USER=${GLITE_USER:-glite}
 GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-$GLITE_LOCATION/var}
 
 [ -f /etc/glite.conf ] && . /etc/glite.conf
@@ -18,15 +17,19 @@ cred_copy=/var/tmp/glite-lb-logger.pem
 
 start()
 {
+	if test -z "$GLITE_USER" ;then
+		echo 'Error: GLITE_USER is not set'
+		echo FAILED
+		return 1
+	fi
+
 	[ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
 		creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
 
 	if test -z "$creds"; then
-		if su $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem"; then
+		if su - $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem"; then
 			echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
-			echo "$0:          creating $cred_copy from it"
-			su $GLITE_USER -c "umask 077; cat /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem >$cred_copy"
-			creds="-c $cred_copy -k $cred_copy"
+			creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
 		fi
 	fi
 
@@ -36,11 +39,11 @@ start()
 
 	echo -n Starting glite-lb-logd ...
         (cd /tmp && ls -f /tmp |fgrep ^dglogd_sock_ |xargs rm -f)
-	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-logd \
+	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-logd \
 		$creds $port" && echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-interlogd ...
-	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-interlogd \
+	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-interlogd \
 		$creds" && echo " done" || echo " FAILED"
 }
 
