@@ -788,9 +788,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                 	}
 		}
 		else if (!strncmp(requestPTR,KEY_QUERY_SEQUENCE_CODE,sizeof(KEY_QUERY_SEQUENCE_CODE)-1)) {
-			char		*source;
-			char		*seqCode;
-			edg_wlc_JobId	jobId;
+			char		*source = NULL;
+			char		*seqCode = NULL;
+			edg_wlc_JobId	jobId = NULL;
 			
 
 			if (parseQuerySequenceCodeRequest(ctx, messageBody, &jobId, &source))
@@ -817,10 +817,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 						ret = HTTP_INTERNAL;
 			}
 
-			free(source);
-			free(seqCode);
+			if ( source ) free(source);
+			if ( seqCode ) free(seqCode);
 			edg_wlc_JobIdFree(jobId);
-
 		}
 
 			
