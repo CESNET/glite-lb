@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.2  2004/06/22 22:06:52  dimeglio
+	Added standard comments
+	
 -->
 
 <project name="common" default="compile">
@@ -94,7 +97,6 @@
 				<include name="*.pm" />
 			</fileset>
 		</copy>	
-		<echo>${glite_location}</echo>
 		<antcall target="lbmakefiles" />
 	</target>
 		
