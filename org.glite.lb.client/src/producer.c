@@ -180,6 +180,7 @@ static int edg_wll_DoLogEventProxy(
 	fprintf(stderr,"Logging to L&B Proxy at socket %s\n",
 		context->p_lbproxy_store_sock? context->p_lbproxy_store_sock: socket_path);
 #endif
+	memset(&conn, 0, sizeof(conn));
 	conn.sock = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (conn.sock < 0) {
 		edg_wll_SetError(context,answer = errno,"socket() error");
@@ -729,7 +730,7 @@ int edg_wll_SetLoggingJobProxy(
 
 	/* query LBProxyServer for sequence code if not user-suplied */
 	if (!code) {
-		edg_wll_QuerySequenceCode(context, job, &code_loc);
+		edg_wll_QuerySequenceCodeProxy(context, job, &code_loc);
 		goto err;	
 	}
 	else

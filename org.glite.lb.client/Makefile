@@ -135,7 +135,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge
-EXAMPLES:=log_usertag_proxy job_reg feed_shark notify
+EXAMPLES:=query_seq_code log_usertag_proxy job_reg feed_shark notify query_ext
 FAKE_EXAMPLES:=job_log_fake job_reg_fake logevent_fake
 FAKE_EXAMPLES_SOURCES:=job_log.c job_reg.c
 

@@ -204,17 +204,17 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sun_family = AF_UNIX;
-	if (!ctx->p_proxy_filename) {
+	if (!ctx->p_lbproxy_serve_sock) {
 		edg_wll_SetError(ctx, EINVAL, "Proxy socket path not set!");
 		goto err;
 	}
 	
-	if (strlen(ctx->p_proxy_filename) > 108) {	// UNIX_PATH_MAX (def. in linux/un.h)
+	if (strlen(ctx->p_lbproxy_serve_sock) > 108) {	// UNIX_PATH_MAX (def. in linux/un.h)
 							// but not defined in sys/un.h
 		 edg_wll_SetError(ctx, EINVAL, "proxy_filename too long!");
 		 goto err;
 	}
-	strcpy(saddr.sun_path, ctx->p_proxy_filename);
+	strcpy(saddr.sun_path, ctx->p_lbproxy_serve_sock);
 
 	if ((flags = fcntl(ctx->connPlain->sock, F_GETFL, 0)) < 0 || 
 			fcntl(ctx->connPlain->sock, F_SETFL, flags | O_NONBLOCK) < 0) {
