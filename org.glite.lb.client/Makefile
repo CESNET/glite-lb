@@ -181,7 +181,7 @@ ${LIBTHROBJS} ${TESTLIBTHROBJS}: %.thr.o: %.c
 	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
 logevent_fake.o: logevent.c
-	${COMPILE} ${GLOBUSINC} -DFAKE -c $< -o $@
+	${COMPILE} ${GLOBUSINC} -c $< -o $@
 
 # catches $TOOLS and logevent compilation
 %.o: %.c 
