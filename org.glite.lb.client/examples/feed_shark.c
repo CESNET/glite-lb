@@ -1,92 +1,125 @@
-#include <getopt.h>
-#include <stdsoap2.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <assert.h>
+#include <errno.h>
+#include <sysexits.h>
 
-#include "glite/lb/consumer.h"
+#include "glite/lb/notification.h"
 
-#include "ws_plugin.h"
-#include "bk_ws_H.h"
+static void usage(const char *);
+static void printstat(edg_wll_JobStat, int);
 
-static struct option opts[] = {
-	{"help",	0,	NULL,	'h'},
-	{"server",	1,	NULL,	'm'},
-	{"jobid",	1,	NULL,	'j'}
-};
-
-static void usage(char *me)
+int main(int argc,char *argv[])
 {
-	fprintf(stderr,"usage: %s [option]\n"
-		"\t-h, --help      Shows this screen.\n"
-		"\t-m, --server    BK server address:port.\n"
-		"\t-j, --jobid     ID of requested job.\n"
-		, me);
-}
+	int	o;
+	edg_wll_Context	ctx;
+	edg_wll_NotifId	notif;
+	time_t	valid = 0;
+	struct timeval	timeout;
 
-static void printstat(edg_wll_JobStat stat, int level);
+	edg_wll_InitContext(&ctx);
 
-int main(int argc,char** argv)
-{
-    edg_wll_Context						ctx;
-    struct soap						   *mydlo = soap_new();
-    struct edgwll2__JobStatusResponse	out;
-    int									opt, err;
-	char							   *server = "http://localhost:8999/",
-									   *jobid = NULL,
-									   *name = NULL;
+/* parse options, reflect them in the LB context */
+	while ((o = getopt(argc,argv,"s:")) >= 0) switch (o) {
+		case 's': {
+			char	*server = strdup(optarg),
+				*port_s = strchr(server,':');
 
+			int	port;
 
-	name = strrchr(argv[0],'/');
-	if (name) name++; else name = argv[0];
-
-	while ((opt = getopt_long(argc, argv, "hm:j:", opts, NULL)) != EOF) switch (opt)
-	{
-	case 'h': usage(name); return 0;
-	case 'm': server = strdup(optarg); break;
-	case 'j': jobid = strdup(optarg); break;
-	case '?': usage(name); return 1;
+			if (port_s) {
+				*port_s = 0;
+				port = atoi(port_s+1);
+			}
+			
+			edg_wll_SetParam(ctx,EDG_WLL_PARAM_NOTIF_SERVER,server);
+			if (port_s) edg_wll_SetParam(ctx,EDG_WLL_PARAM_NOTIF_SERVER_PORT,port);
+			free(server);
+		} break;
+			  
+		case '?': usage(argv[0]); exit(EX_USAGE);
 	}
 
-	if ( !jobid )
-	{
-		printf("jobid should be given\n");
-		usage(name);
-		return 1;
-	}
-		
-    edg_wll_InitContext(&ctx);
+/* no notification Id supplied -- create a new one */
+	if (argc == optind) {
+		edg_wll_QueryRec	const *empty[] = { NULL };
+		char	*notif_s;
 
-	if ( soap_register_plugin_arg(mydlo, edg_wll_ws_plugin, (void *)ctx) )
-	{
-		soap_print_fault(mydlo, stderr);
-		return 1;
-	}
+		if (edg_wll_NotifNew(ctx,empty,-1,NULL,&notif,&valid)) {
+			char	*et,*ed;
 
-    switch (err = soap_call_edgwll2__JobStatus(mydlo, server, "", jobid,0,&out))
-	{
-	case SOAP_OK:
-		{
-		edg_wll_JobStat s;
-
-		edg_wll_SoapToStatus(mydlo,out.status,&s);
-		printstat(s, 0);
+			edg_wll_Error(ctx,&et,&ed);
+			fprintf(stderr,"edg_wll_NotifNew(): %s (%s)\n",et,ed);
+			exit(EX_UNAVAILABLE);
 		}
-		break;
-	case SOAP_FAULT: 
-	case SOAP_SVR_FAULT:
-		{
+
+		notif_s = edg_wll_NotifIdUnparse(notif);
+		printf("notification registered:\n\tId: %s\n\tExpires: %s",
+				notif_s,ctime(&valid));
+		free(notif_s);
+	}
+/* notification Id supplied -- bind to it */
+	else if (argc == optind + 1) {
+		if (edg_wll_NotifIdParse(argv[optind],&notif)) {
+			fprintf(stderr,"%s: invalid notification Id\n",
+					argv[optind]);
+			exit(EX_DATAERR);
+		}
+
+		if (edg_wll_NotifBind(ctx,notif,-1,NULL,&valid)) {
+			char	*et,*ed;
+
+			edg_wll_Error(ctx,&et,&ed);
+			fprintf(stderr,"edg_wll_NotifBind(): %s (%s)\n",et,ed);
+			exit(EX_UNAVAILABLE);
+		}
+	}
+	else { usage(argv[0]); exit(EX_USAGE); }
+
+/* main loop */
+	while (1) {
+		edg_wll_JobStat	stat;
 		char	*et,*ed;
 
-		edg_wll_FaultToErr(mydlo,ctx);
-		edg_wll_Error(ctx,&et,&ed);
-		fprintf(stderr,"%s: %s (%s)\n",argv[0],et,ed);
-		exit(1);
-		}
-	default:
-		fprintf(stderr,"err = %d\n",err);
-		soap_print_fault(mydlo,stderr);
-    }
+/* calculate time left for this notification */
+		gettimeofday(&timeout,NULL);
+		timeout.tv_sec = valid - timeout.tv_sec;
+		assert(timeout.tv_sec >= 0);	/* XXX: hope we are no late */
 
-    return 0;
+/* half time before notification renewal */
+		timeout.tv_sec /= 2;
+
+		switch (edg_wll_NotifReceive(ctx,-1,&timeout,&stat,NULL)) {
+			case 0: /* OK, got it */
+				printstat(stat,0);
+				edg_wll_FreeStatus(&stat);
+				break;
+			case EAGAIN: 	/* timeout */
+				if (edg_wll_NotifRefresh(ctx,notif,&valid)) {
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_NotifRefresh(): %s (%s)\n",et,ed);
+					exit(EX_UNAVAILABLE);
+				}
+				printf("Notification refreshed, expires %s",ctime(&valid));
+				break;
+			default:
+				edg_wll_Error(ctx,&et,&ed);
+				fprintf(stderr,"edg_wll_NotifReceive(): %s (%s)\n",et,ed);
+				exit(EX_UNAVAILABLE);
+		}
+	}
 }
+
+
+static void usage(const char *me) 
+{
+	fprintf(stderr,"usage: %s [ -s server[:port] ] [notif_id]\n",me);
+}
+
+
 
 static void printstat(edg_wll_JobStat stat, int level)
 {
