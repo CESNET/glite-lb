@@ -240,6 +240,9 @@ event_queue_remove(struct event_queue *eq)
     /* we are removing last priority message */
     eq->tail_ems = NULL;
   }
+
+  eq->mark_this = NULL;
+  eq->mark_prev = NULL;
 #else
   el = eq->head;
   if(el == NULL) {
@@ -277,6 +280,7 @@ event_queue_move_events(struct event_queue *eq_s, struct event_queue *eq_d, char
 	}
 	source_prev = &(eq_s->head);
 	p = *source_prev;
+	eq_s = NULL;
 	while(p) {
 		if(strcmp(p->msg->job_id_s, notif_id) == 0) {
 			il_log(LOG_DEBUG, "  moving event with notif id %s from %s to %s\n",
@@ -288,6 +292,7 @@ event_queue_move_events(struct event_queue *eq_s, struct event_queue *eq_d, char
 				p->prev = NULL;
 				*dest_tail = p;
 				dest_tail = &(p->prev);
+				eq_d->tail = p;
 			} else {
 				/* free the message */
 				server_msg_free(p->msg);
@@ -296,6 +301,7 @@ event_queue_move_events(struct event_queue *eq_s, struct event_queue *eq_d, char
 		} else {
 			/* message stays */
 			source_prev = &(p->prev);
+			eq_s->tail = p;
 		}
 		p = *source_prev;
 	}

@@ -164,8 +164,6 @@ server_msg_init(struct server_msg *msg, char *event)
 	msg->job_id_s = edg_wll_NotifIdUnparse(notif_event->notification.notifId);
 	if(notif_event->notification.jobstat && 
 	   (strlen(notif_event->notification.jobstat) > 0)) {
-		/* remember to add event separator to the length */
-		msg->ev_len = strlen(event) + 1;
 		msg->len = create_msg(event, &msg->msg, &msg->receipt_to);
 	}
 	edg_wll_FreeEvent(notif_event);
@@ -174,14 +172,15 @@ server_msg_init(struct server_msg *msg, char *event)
 		return(-1);
 	}
 #else
-	/* remember to add event separator to the length */
-	msg->ev_len = strlen(event) + 1;
 	msg->len = create_msg(event, &msg->msg, &msg->receipt_to);
 	if(msg->len < 0) {
 		return(-1);
 	}
 	msg->job_id_s = edg_wll_GetJobId(event);
 #endif
+	/* remember to add event separator to the length */
+	msg->ev_len = strlen(event) + 1;
+
 	if(msg->job_id_s == NULL) {
 		set_error(IL_LBAPI, EDG_WLL_ERROR_PARSE_BROKEN_ULM, "server_msg_init: error getting id");
 		return(-1);
