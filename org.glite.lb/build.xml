@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.23  2004/10/26 15:12:06  dimeglio
+	Fixed spelling error in envchecks
+	
 	Revision 1.22  2004/10/26 13:11:13  dimeglio
 	Added dependency of clean on envchecks
 	
@@ -249,7 +252,7 @@
 
 	<!-- component targets definitions tag = do not remove = -->
 
-	<target name="client-interface" unless="setenvonly">
+	<target name="client-interface" unless="setenvonly" depends="envcheck">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -265,7 +268,7 @@
 		</if>
 	</target>
 
-	<target name="server-bones" unless="setenvonly">
+	<target name="server-bones" unless="setenvonly" depends="envcheck">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -281,7 +284,7 @@
 		</if>
 	</target>
 
-	<target name="common" unless="setenvonly" depends="globus,expat,ares,client-interface">
+	<target name="common" unless="setenvonly" depends="envcheck, globus,expat,ares,client-interface">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -297,7 +300,7 @@
 		</if>
 	</target>
 
-	<target name="client" unless="setenvonly" depends="globus,expat,ares,client-interface,common">
+	<target name="client" unless="setenvonly" depends="envcheck, globus,expat,ares,client-interface,common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -313,7 +316,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="globus,expat,ares,mysql,gsoap,client-interface,common,logger">
+	<target name="server" unless="setenvonly" depends="envcheck, globus,expat,ares,mysql,gsoap,client-interface,common,logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -329,7 +332,7 @@
 		</if>
 	</target>
 
-	<target name="logger" unless="setenvonly" depends="globus,expat,ares,client-interface,common">
+	<target name="logger" unless="setenvonly" depends="envcheck, globus,expat,ares,client-interface,common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -346,7 +349,8 @@
 	</target>
 
 	<!-- Main proxy -->
-	<target name="buildmodules" depends="client-interface,
+	<target name="buildmodules" depends="envcheck, 
+						 client-interface,
 					     client,
 					     server-bones,
 					     common,
