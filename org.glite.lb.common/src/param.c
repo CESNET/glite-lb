@@ -433,6 +433,40 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
+void edg_wll_FreeParams(edg_wll_Context ctx) {
+	if (ctx->p_jobid) edg_wlc_JobIdFree(ctx->p_jobid);
+	if (ctx->p_host) free(ctx->p_host);
+	if (ctx->p_instance) free(ctx->p_instance);
+	if (ctx->p_destination) free(ctx->p_destination);
+	if (ctx->p_user_lbproxy) free(ctx->p_user_lbproxy);
+	if (ctx->p_query_server) free(ctx->p_query_server);
+	if (ctx->p_notif_server) free(ctx->p_notif_server);
+	if (ctx->p_proxy_filename) free(ctx->p_proxy_filename);
+	if (ctx->p_cert_filename) free(ctx->p_cert_filename);
+	if (ctx->p_key_filename) free(ctx->p_key_filename);
+	if (ctx->p_lbproxy_store_sock) free(ctx->p_lbproxy_store_sock);
+	if (ctx->p_lbproxy_serve_sock) free(ctx->p_lbproxy_serve_sock);
+
+	ctx->p_jobid = NULL;
+	ctx->p_host = NULL;
+	ctx->p_instance = NULL;
+	ctx->p_destination = NULL;
+	ctx->p_user_lbproxy = NULL;
+	ctx->p_query_server = NULL;
+	ctx->p_notif_server = NULL;
+	ctx->p_proxy_filename = NULL;
+	ctx->p_cert_filename = NULL;
+	ctx->p_key_filename = NULL;
+	ctx->p_lbproxy_store_sock = NULL;
+	ctx->p_lbproxy_serve_sock = NULL;
+
+	/* do not free (references only)
+	 * ctx->job_index
+	 * ctx->job_index_cols
+	 * ctx->mysql */
+
+}
+
 #if 0
 /* only for reference */
 edg_wll_ErrorCode edg_wll_SetLoggingParams(edg_wll_Context ctx, 

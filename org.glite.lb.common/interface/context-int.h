@@ -172,6 +172,8 @@ extern int edg_wll_ContextReopen(edg_wll_Context);
 extern int edg_wll_SetSequenceCode(edg_wll_Context, const char *, int);
 extern int edg_wll_IncSequenceCode(edg_wll_Context ctx);
 
+extern void edg_wll_FreeParams(edg_wll_Context context);
+
 
 #ifdef __cplusplus
 }
