@@ -48,11 +48,13 @@ GLITE_LIBS:=-L${glite_location}/lib
 EXPAT_LIBS:=-L${expat_prefix}/lib -lexpat
 ARES_LIBS:=-L${ares_prefix}/lib -lares
 LDFLAGS:=-L${stagedir}/lib \
-    ${GLITE_LIBS} \
-    ${GLOBUS_LIBS} \
-    ${EXPAT_LIBS} \
-    ${ARES_LIBS} \
     ${COVERAGE_FLAGS}
+
+# breaks linking when not installed in /opt, /home/dimeglio etc.
+#    ${GLITE_LIBS} \
+#    ${GLOBUS_LIBS} \
+#    ${EXPAT_LIBS} \
+#    ${ARES_LIBS} \
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include

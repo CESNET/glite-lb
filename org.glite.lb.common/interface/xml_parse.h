@@ -3,10 +3,6 @@
 
 #ident "$Header$"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "glite/lb/purge.h"
 #include "glite/lb/dump.h"
 #include "glite/lb/load.h"
