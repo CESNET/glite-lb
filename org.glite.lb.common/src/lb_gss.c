@@ -521,7 +521,9 @@ edg_wll_gss_acquire_cred_gsi(char *cert_file, char *key_file, gss_cred_id_t *cre
        goto end;
     }
 
-    if (lifetime == 0) {
+    /* Must cast to time_t since OM_uint32 is unsinged and hence we couldn't
+     * detect negative values. */
+    if ((time_t) lifetime <= 0) {
        major_status = GSS_S_CREDENTIALS_EXPIRED;
        minor_status = 0; /* XXX */
        ret = EDG_WLL_GSS_ERROR_GSS;
