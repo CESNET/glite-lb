@@ -19,6 +19,7 @@ ares_prefix=/opt/ares
 gsoap_prefix=/opt/gsoap
 
 -include Makefile.inc
+-include ../Makefile.inc
 
 GSOAP_FILES_PREFIX:= bk_ws_
 
@@ -107,13 +108,20 @@ default all: compile
 
 compile: glite_lb_bkserverd glite_lb_bkindex
 
-check: ws_jobstat
+check: compile test.xml
 	-echo check.query not complete yet
+
+test_coverage:
+	-mkdir coverage
+	cd coverage && $(MAKE) -f ../Makefile top_srcdir=../../ COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage" check
+	cd coverage && for i in `echo ${INDEX_OBJS} ${SERVER_OBJS} | tr ' ' '\012' | sort -u`; do gcov $$i ; done
+
+test.xml: test_xml
+	./test_xml
 
 test_xml: test_xml.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIB} ${TEST_LIBS}
-	./test_xml
 
 lb_xml_parse.c: lb_xml_parse.c.T
 	rm -f $@

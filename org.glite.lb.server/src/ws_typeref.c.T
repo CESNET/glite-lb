@@ -8,7 +8,7 @@
 #include "glite/lb/consumer.h"
 /* XXX: references only, src and dest share pointers */
 
-static void edg_wll_JobStatCodeToSoap(enum edgwll__JobStatCode in, edg_wll_JobStatCode *out)
+static void edg_wll_JobStatCodeToSoap(edg_wll_JobStatCode in, enum edgwll__JobStatCode *out)
 {
 	switch ( in )
 	{
@@ -233,24 +233,53 @@ int edg_wll_SoapToQueryVal(
 	const struct edgwll__QueryRecValue *in,
 	union edg_wll_QueryVal			   *out)
 {
-	assert(attr); assert(in); assert(out);
-	switch ( attr )
-	{
+	assert(in); assert(out);
+	if ( in->c ) {
+		if ( attr == EDG_WLL_QUERY_ATTR_JOBID || attr == EDG_WLL_QUERY_ATTR_PARENT ) {
+			if ( edg_wlc_JobIdParse(in->c, &(out->j)) ) return -1;
+		} else {
+			if ( !(out->c = strdup(in->c)) ) return -1;
+		}
+	}
+	else if ( in->t ) {
+		out->t.tv_sec = in->t->tvSec;
+		out->t.tv_usec = in->t->tvUsec;
+	}
+	else if ( in->i ) out->i = *(in->i);
+
+	return 0;
+}
+
+int edg_wll_QueryValToSoap(
+	struct soap					   *soap,
+	const edg_wll_QueryAttr			attr,
+	const union edg_wll_QueryVal   *in,
+	struct edgwll__QueryRecValue   *out)
+{
+	assert(in); assert(out);
+	memset(out, 0, sizeof(*out));
+	switch ( attr ) {
 	case EDG_WLL_QUERY_ATTR_USERTAG:
 	case EDG_WLL_QUERY_ATTR_OWNER: 
 	case EDG_WLL_QUERY_ATTR_LOCATION:
 	case EDG_WLL_QUERY_ATTR_DESTINATION:
 	case EDG_WLL_QUERY_ATTR_HOST:
 	case EDG_WLL_QUERY_ATTR_INSTANCE:
-		out->c = strdup(in->c);
+		if ( !(out->c = soap_strdup(soap, in->c)) ) return SOAP_FAULT;
 		break;
 	case EDG_WLL_QUERY_ATTR_JOBID:
-	case EDG_WLL_QUERY_ATTR_PARENT:
-		edg_wlc_JobIdParse(in->c, &(out->j));
+	case EDG_WLL_QUERY_ATTR_PARENT: {
+			char *s = edg_wlc_JobIdUnparse(in->j);
+			out->c = soap_strdup(soap, s);
+			free(s);
+			if ( !out->c ) return SOAP_FAULT;
+		}
 		break;
 	case EDG_WLL_QUERY_ATTR_TIME:
-		out->t.tv_sec = in->t->tvSec;
-		out->t.tv_usec = in->t->tvUsec;
+		out->t = soap_malloc(soap, sizeof(*(out->t)));
+		if ( !out->t ) return SOAP_FAULT;
+		out->t->tvSec = in->t.tv_sec;
+		out->t->tvUsec = in->t.tv_usec;
 		break;
 	case EDG_WLL_QUERY_ATTR_STATUS:
 	case EDG_WLL_QUERY_ATTR_DONECODE:
@@ -259,26 +288,13 @@ int edg_wll_SoapToQueryVal(
 	case EDG_WLL_QUERY_ATTR_EVENT_TYPE:
 	case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 	default:
-		out->i = *(in->i);
+		out->i = soap_malloc(soap, sizeof(*(out->i)));
+		if ( !out->i ) return SOAP_FAULT;
+		*(out->i) = in->i;
 		break;
 	}
 
-	return 0;
-}
-
-int edg_wll_QueryValToSoap(
-	const edg_wll_QueryAttr				attr,
-	union edg_wll_QueryVal			   *in,
-	struct edgwll__QueryRecValue	   *out)
-{
-	assert(attr); assert(in); assert(out);
-	if ( (attr == EDG_WLL_QUERY_ATTR_JOBID) || (attr == EDG_WLL_QUERY_ATTR_PARENT) ) {
-		out->c = edg_wlc_JobIdUnparse(in->j);
-	}
-	else
-		return edg_wll_SoapToQueryVal(attr, out, in);
-
-	return 0;
+	return SOAP_OK;
 }
 
 int edg_wll_SoapToQueryRec(
@@ -304,9 +320,9 @@ int edg_wll_SoapToQueryRec(
 	switch ( out->op )
 	{
 	case EDG_WLL_QUERY_OP_WITHIN:
-		if ( edg_wll_SoapToQueryVal(attr, in->value2, &(out->value2)) ) goto err;
+		if ( edg_wll_SoapToQueryVal(out->attr, in->value2, &(out->value2)) ) goto err;
 	default:
-		if ( edg_wll_SoapToQueryVal(attr, in->value1, &(out->value)) ) goto err;
+		if ( edg_wll_SoapToQueryVal(out->attr, in->value1, &(out->value)) ) goto err;
 		break;
 	}
 
@@ -317,10 +333,42 @@ err:
 }
 
 int edg_wll_QueryRecToSoap(
-	struct soap					   *soap,
-	const edg_wll_QueryRec		   *in,
-	const struct edgwll__QueryRec  *out)
+	struct soap				   *soap,
+	const edg_wll_QueryRec	   *in,
+	struct edgwll__QueryRec	   *out)
 {
+	struct edgwll__QueryRec		qr;
+
+
+	assert(in); assert(out);
+	if ( !in ) { memset(out, 0, sizeof(*out)); return SOAP_OK; }
+	memset(&qr, 0, sizeof(qr));
+	edg_wll_QueryOpToSoap(in->op, &(qr.op));
+	if (   in->attr == EDG_WLL_QUERY_ATTR_TIME
+		|| in->attr == EDG_WLL_QUERY_ATTR_USERTAG ) {
+		if ( !(qr.attrid = soap_malloc(soap, sizeof(*(qr.attrid)))) ) return SOAP_FAULT;
+		memset(qr.attrid, 0, sizeof(*(qr.attrid)));
+		if ( in->attr == EDG_WLL_QUERY_ATTR_TIME ) {
+			qr.attrid->state = soap_malloc(soap, sizeof(*(qr.attrid->state)));
+			if ( !qr.attrid->state ) return SOAP_FAULT;
+			edg_wll_JobStatCodeToSoap(in->attr_id.state, qr.attrid->state);
+		}
+		else {
+			qr.attrid->tag = soap_strdup(soap, in->attr_id.tag);
+			if ( !qr.attrid->tag ) return SOAP_FAULT;
+		}
+	}
+	switch ( in->op ) {
+	case EDG_WLL_QUERY_OP_WITHIN:
+		if ( !(qr.value2 = soap_malloc(soap, sizeof(*(qr.value2)))) ) return SOAP_FAULT;
+		if ( edg_wll_QueryValToSoap(soap, in->attr, &(in->value2), qr.value2) ) return SOAP_FAULT;
+	default:
+		if ( !(qr.value1 = soap_malloc(soap, sizeof(*(qr.value1)))) ) return SOAP_FAULT;
+		if ( edg_wll_QueryValToSoap(soap, in->attr, &(in->value), qr.value1) ) return SOAP_FAULT;
+		break;
+	}
+
+	memcpy(out, &qr, sizeof(qr));
 	return SOAP_OK;
 }
 
@@ -356,19 +404,18 @@ int edg_wll_QueryCondsToSoap(
 
 	assert(out);
 	if ( !in ) { memset(out, 0, sizeof(*out)); return SOAP_OK; }
-	memset(qc, 0, sizeof(*qc));
+	memset(&qc, 0, sizeof(qc));
 	while ( in[qc.__sizerecords].attr ) qc.__sizerecords++;
 	if ( qc.__sizerecords ) { memset(out, 0, sizeof(*out)); return SOAP_OK; }
 	qc.records = soap_malloc(soap, sizeof(*qc.records)*qc.__sizerecords);
 	if ( !qc.records ) return SOAP_FAULT;
-	qc.attr = in[0].attr;
+	edg_wll_AttrToSoap(in[0].attr, &(qc.attr));
 	for ( i = 0; in[i].attr; i++ )
 		if ( edg_wll_QueryRecToSoap(soap, in+i, qc.records[i]) )
 			return SOAP_FAULT;
 
-	memcpy(out, &qc, sizeof(*qc));
+	memcpy(out, &qc, sizeof(qc));
 	return SOAP_OK;
-
 }
 
 int edg_wll_SoapToQueryCondsExt(const struct edgwll__QueryConditions *in, edg_wll_QueryRec ***out)
@@ -409,16 +456,16 @@ int edg_wll_QueryCondsExtToSoap(
 
 	assert(out);
 	if ( !in ) { memset(out, 0, sizeof(*out)); return SOAP_OK; }
-	memset(qc, 0, sizeof(*qc));
+	memset(&qc, 0, sizeof(qc));
 	while ( in[qc.__sizecondition] ) qc.__sizecondition++;
 	if ( !qc.__sizecondition ) { memset(out, 0, sizeof(*out)); return SOAP_OK; }
 	qc.condition = soap_malloc(soap, sizeof(*qc.condition)*qc.__sizecondition);
-	if ( !qc.conditions ) return SOAP_FAULT;
+	if ( !qc.condition ) return SOAP_FAULT;
 	for ( i = 0; in[i]; i++ )
 		if ( edg_wll_QueryCondsToSoap(soap, in[i], qc.condition[i]) )
 			return SOAP_FAULT;
 
-	memcpy(out, &qc, sizeof(*qc));
+	memcpy(out, &qc, sizeof(qc));
 	return SOAP_OK;
 }
 
@@ -443,7 +490,7 @@ int edg_wll_JobsQueryResToSoap(
 		for ( i = 0; jobs[i]; i++ ) {
 			char	   *s;
 			if ( !(s = edg_wlc_JobIdUnparse(jobs[i])) ) return SOAP_FAULT;
-			if ( !(out->jobs->jobs[i] = soap_strdup(s)) ) return SOAP_FAULT;
+			if ( !(out->jobs->jobs[i] = soap_strdup(soap, s)) ) return SOAP_FAULT;
 			free(s);
 		}
 	}
