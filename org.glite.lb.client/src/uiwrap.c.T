@@ -58,6 +58,13 @@ $decl
 	return edg_wll_LogEvent$b;
 \}\n
 };
+	gen qq{
+int edg_wll_Log${t}Proxy$a
+\{
+$decl
+	return edg_wll_LogEventProxy$b;
+\}\n
+};
 	for ($event->getFieldsOrdered) {
 		my $f = selectField $event $_;
 		my $fn = $f->getName;
@@ -91,8 +98,15 @@ $decl
 				gen qq{
 int edg_wll_Log$t$code$c
 \{
-$decl;
+$decl
 	return edg_wll_LogEvent$d;
+\}\n
+};
+				gen qq{
+int edg_wll_Log$t${code}Proxy$c
+\{
+$decl
+	return edg_wll_LogEventProxy$d;
 \}\n
 };
 			}
