@@ -131,7 +131,9 @@ distbin:
 
 install:
 	mkdir -p ${PREFIX}/bin
+	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 755 glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd ${PREFIX}/bin
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 
 %.no: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DIL_NOTIFICATIONS -c $< -o $@
