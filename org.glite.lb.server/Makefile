@@ -6,7 +6,7 @@ stagedir=.
 distdir=.
 globalprefix=glite
 lbprefix=lb
-package=glite-lb-client
+package=glite-lb-server
 version=0.0.0
 PREFIX=/opt/glite
 
