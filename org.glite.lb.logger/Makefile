@@ -102,7 +102,7 @@ default: all
 all compile: glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd
 
 stage: compile
-	$(MAKE) install PREFIX=${stagedir}
+	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 check: 
 # do nothing until test/ is really added to CVS
@@ -137,7 +137,9 @@ install:
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 755 glite_lb_logd ${PREFIX}/bin/glite-lb-logd
 	${INSTALL} -m 755 glite_lb_interlogd ${PREFIX}/bin/glite-lb-interlogd
-	${INSTALL} -m 755 glite_lb_notif_interlogd ${PREFIX}/bin/glite-lb-notif-interlogd
+	if [ x${DOSTAGE} = xyes ]; then \
+		${INSTALL} -m 755 glite_lb_notif_interlogd ${PREFIX}/bin/glite-lb-notif-interlogd; \
+	fi
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 
