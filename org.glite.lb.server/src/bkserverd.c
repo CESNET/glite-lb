@@ -1100,7 +1100,11 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 			   || soap_recv_header(soap)
 			   || soap_body_begin_in(soap)
 			   || soap_serve_request(soap)
-			   || (soap->fserveloop && soap->fserveloop(soap)) )
+#if GSOAP_VERSION >= 20700
+			   /* XXX: Is it really neccesary ? */
+			   || (soap->fserveloop && soap->fserveloop(soap))
+#endif
+			   )
 		err = soap_send_fault(soap);
 
 	if ( err ) {
