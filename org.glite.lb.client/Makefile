@@ -210,7 +210,7 @@ logevent_fake.o: logevent.c
 default: all
 
 
-compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${EXAMPLES} ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} ${FAKE_EXAMPLES}
+compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} examples
 
 examples: ${EXAMPLES} ${FAKE_EXAMPLES} ${sh_PROGS} logevent_fake
 
@@ -246,8 +246,12 @@ install:
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	mkdir -p ${PREFIX}/examples
 	for p in ${TOOLS} logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
+	done
+	for p in ${TOOLS} logevent ${EXAMPLES} ${sh_PROGS}; do \
+		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
 
 clean:

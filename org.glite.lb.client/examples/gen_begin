@@ -5,7 +5,7 @@ if test ! -z "$FAKE"; then
 	SUFFIX="_fake"
 fi
 LOGFD=${LOGFD:-2}
-LOGEV=${LOGEV:-`dirname $0`/glite-lb-logevent}${SUFFIX}
+LOGEV=glite-lb-logevent${SUFFIX}
 JOB_REG=${JOB_REG:-`dirname $0`/glite-lb-job_reg}${SUFFIX}
 EDG_JOBID=
 
