@@ -3,8 +3,6 @@
  *   - implementation of IL API calls for notifications
  *
  */
-#ident "$Header$"
-
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/socket.h>

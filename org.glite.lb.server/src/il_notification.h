@@ -1,8 +1,6 @@
 #ifndef IL_NOTIFICATION_H
 #define IL_NOTIFICATION_H
 
-#ident "$Header$"
-
 /* needed for the edg_wll_NotifId */
 #include "glite/lb/notification.h"
 /* import the edg_wll_JobStat structure */
