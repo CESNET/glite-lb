@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
 
 	asprintf(&port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT);
 #ifdef GLITE_LB_SERVER_WITH_WS
-	asprintf(&ws_port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT+2);
+	asprintf(&ws_port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT+3);
 #endif 	/* GLITE_LB_SERVER_WITH_WS */
 	server_cert = server_key = cadir = vomsdir = NULL;
 
