@@ -19,21 +19,24 @@ ares_prefix=/opt/ares
 
 -include Makefile.inc
 
-VPATH=${top_srcdir}/src
+VPATH=${top_srcdir}/src:${top_srcdir}/test
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
 SUFFIXES = .T 
 
+DEBUG:=-g -O0 -Wall
+
 GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
-DEBUG:=-g -O0 
 CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	-I${glite_location}/include \
 	-I${expat_prefix}/include \
-	-I${ares_prefix}/include
+	-I${ares_prefix}/include \
+	${COVERAGE_FLAGS} 
+
 
 CXXFLAGS:=${CFLAGS}
 
@@ -51,14 +54,19 @@ EXPAT_LIBS:=-L${expat_prefix}/lib \
 ARES_LIBS:=-L${ares_prefix}/lib \
 	-lares
 
-LDFLAGS:=-L${stagedir}/lib
-
 EXT_LIB:= ${EXPAT_LIBS} \
     ${ARES_LIBS}
+
+TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
+TEST_INC:=-I${cppunit_prefix}/include
+
+LDFLAGS:=-L${stagedir}/lib \
+	${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
@@ -134,9 +142,16 @@ default: all
 
 compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB}
 
-check:
-	echo No unit tests so far.
+check: check.producer
 
+check.producer: producer_test
+
+producer_test: producer_test.o prod_proto_test.o
+	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+
+
+producer_test.o: %.o: %.cpp
+	${CXX} -c ${CXXFLAGS} ${TEST_INC} $<
+	
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 dist: distsrc distbin
