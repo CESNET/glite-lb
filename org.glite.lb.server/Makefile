@@ -142,7 +142,10 @@ HDRS=index.h ws_plugin.h lb_authz.h lbs_db.h
 
 LIB_OBJS_PS:=test_ws_plugin.o ws_fault.o lb_authz.o lbs_db.o
 L_LIB_OBJS_PS:=${LIB_OBJS_PS:.o=.lo}
-LIB_OBJS_BK:=lb_authz.o lbs_db.o stats.o openserver.o index.o
+LIB_OBJS_BK:=lb_authz.o lbs_db.o query.o jobstat.o lb_xml_parse.o \
+	il_notification.o notif_match.o il_lbproxy.o lock.o \
+	jobstat_supp.o write2rgma.o get_events.o store.o \
+	db_store.o stats.o openserver.o index.o
 L_LIB_OBJS_BK:=${LIB_OBJS_BK:.o=.lo}
 STATIC_LIB_PS:=libglite_lb_server_misc_ps_${nothrflavour}.a
 LT_LIB_PS:=libglite_lb_server_misc_ps_${nothrflavour}.la
