@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.11  2004/08/09 03:06:11  dimeglio
+	Fixed inheritance of failonerror property
+	
 	Revision 1.10  2004/08/09 02:35:35  dimeglio
 	Set default value for failonerror
 	
@@ -251,7 +254,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.client-interface" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
 			<else>
@@ -267,7 +270,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.common" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
 			<else>
@@ -283,7 +286,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.client" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
 			<else>
@@ -299,7 +302,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.server" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
 			<else>
@@ -315,7 +318,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.logger" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
 			<else>
