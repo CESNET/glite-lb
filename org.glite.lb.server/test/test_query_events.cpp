@@ -78,14 +78,18 @@ int QueryEventsTest::ExecStmt(const char *qry, edg_wll_Stmt *stmt_out)
 {
 	vector<pair<string,vector<string> > >::iterator	stmt = queries.begin();
 
-	for (; stmt != queries.end() && strcmp(stmt->first.c_str(),qry); stmt++) cout << stmt->first << endl;
+	for (; stmt != queries.end(); stmt++) {
+		const char	*q = stmt->first.c_str();
+
+		/* XXX: there some spaces at the end of qry */
+		if (!strncmp(q,qry,strlen(q))) break;
+	}
 
 	if (stmt == queries.end()) {
 		cerr << "query not found" << endl;
 		CPPUNIT_ASSERT(0);
 	}
 	vector<string>::iterator	*rows = new vector<string>::iterator(stmt->second.begin());
-	cout << "first: " << stmt->first << endl;
 
 	*stmt_out = (edg_wll_Stmt) rows;
 	return stmt->second.size()-1;
@@ -108,9 +112,8 @@ int edg_wll_FetchRow(edg_wll_Stmt stmt, char **cols)
 
 	if (**rows == "END") return 0;
 	row = strdup((*rows)->c_str());
-	for (p = strtok(row,"\t"); p; p = strtok(NULL,"\t")) {
-		cout << (cols[i++] = strdup(p)) << endl;
-	}
+	for (p = strtok(row,"\t"); p; p = strtok(NULL,"\t"))
+		cols[i++] = strdup(p);
 
 	return i;
 }
