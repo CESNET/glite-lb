@@ -31,8 +31,6 @@ else
 	STDSOAP2C=
 endif
 
-CC=gcc
-
 GSOAP_FILES_PREFIX:= bk_ws_
 
 YACC=bison -y
@@ -47,16 +45,9 @@ TEST_INC:=-I${cppunit}/include
 SUFFIXES = .T 
 
 DEBUG:=-g -O0 -Wall
-# not yet
-#	-I${voms}/include \
-#	-I${gacl}/include \
-#	-I/usr/include/libxml2
 
 GRIDSITE_CFLAGS = `xml2-config --cflags`
 GRIDSITE_LIBS = -lgridsite_globus `xml2-config --libs`
-
-# -DNO_VOMS -DNO_GACL to be removed when voms/gridsite are available
-#CFLAGS:= -DNO_VOMS -DNO_GACL 
 
 CFLAGS:= \
 	${WS_CFLAGS} ${DEBUG} \
@@ -108,47 +99,54 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	-lvomsc${vomsflavour} \
 	${GLOBUS_LIBS}
 
-GSOAP_LIBS:= -L${gsoap_prefix}/lib -lgsoap
-
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
+COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
 
-COMMON_LIB:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}
-
-LB_PROXY_COMMON_LIB:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}
-
-ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
-	SERVER_SOAP_OBJS:=${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
-			ws_plugin.o ws_query.o ws_fault.o ws_typeref.o
-	SERVER_WS_LIBS=${GSOAP_LIBS}
-else
-	SERVER_SOAP_OBJS=
-	SERVER_WS_LIBS=
-endif
-
-LB_PROXY_OBJS:= lbproxy.o il_lbproxy.o get_events.o index.o jobstat.o seqcode.o \
-	jobstat_supp.o write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o  \
-	lb_xml_parse.o lb_xml_parse_V21.o \
-	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
-	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o
-
-SERVER_OBJS:= bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
+BKSERVER_BASE_OBJS:= \
+	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
 	seqcode.o write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o
 
+ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
+	BKSERVER_OBJS:= \
+		${BKSERVER_BASE_OBJS} \
+		${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
+		ws_query.o ws_fault.o ws_typeref.o 
+
+	BKSERVER_LIBS= \
+		${EXT_LIBS} \
+		${SRVBONES_LIB} \
+		-lglite_lb_common_${nothrflavour} \
+		-L${gsoap_prefix}/lib -lgsoap \
+		-lglite_security_gsoap_plugin_${nothrflavour}
+else
+	BKSERVER_LIBS= \
+		${EXT_LIBS} \
+		${SRVBONES_LIB} \
+		-lglite_lb_common_${nothrflavour} \
+		-lglite_security_gss_${nothrflavour}
+endif
+
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o
 
-WS_CLIENT_OBJS:= stdsoap2_patched.o test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
-WS_CLIENT_LIBS:= -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
+INDEX_LIBS:= ${EXT_LIBS} ${SRVBONES_LIB} ${COMMON_LIBS}
 
-HDRS=index.h ws_plugin.h lb_authz.h lbs_db.h store.h
+WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
+WS_CLIENT_LIBS:= -L${stagedir}/lib \
+		${EXT_LIBS} \
+		-lglite_lb_client_${nothrflavour} \
+		-lglite_lb_common_${nothrflavour} \
+		-L${gsoap_prefix}/lib -lgsoap \
+		-lglite_security_gsoap_plugin_${nothrflavour}
 
-LIB_OBJS_PS:=test_ws_plugin.o ws_fault.o lb_authz.o lbs_db.o
+HDRS=index.h lb_authz.h lbs_db.h store.h
+
+LIB_OBJS_PS:=ws_fault.o lb_authz.o lbs_db.o
 L_LIB_OBJS_PS:=${LIB_OBJS_PS:.o=.lo}
 LIB_OBJS_BK:=lb_authz.o lbs_db.o query.o jobstat.o lb_xml_parse.o \
 	il_notification.o notif_match.o il_lbproxy.o lock.o \
@@ -160,18 +158,15 @@ LT_LIB_PS:=libglite_lb_server_misc_ps_${nothrflavour}.la
 STATIC_LIB_BK:=libglite_lb_server_misc_bk_${nothrflavour}.a
 LT_LIB_BK:=libglite_lb_server_misc_bk_${nothrflavour}.la
 
-glite_lb_proxy: ${LB_PROXY_OBJS}
-	${LINK} -o $@ ${LB_PROXY_OBJS} ${COMMON_LIB} ${SRVBONES_LIB} ${EXT_LIBS}
-
-glite_lb_bkserverd: ${SERVER_OBJS} ${SERVER_SOAP_OBJS}
-	${LINK} -o $@ ${SERVER_OBJS} ${SERVER_SOAP_OBJS} ${COMMON_LIB} ${SRVBONES_LIB} ${EXT_LIBS} ${SERVER_WS_LIBS}
+glite_lb_bkserverd: LoggingAndBookkeeping.nsmap ${BKSERVER_OBJS}
+	${LINK} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
 glite_lb_bkindex: ${INDEX_OBJS}
-	${LINK} -o $@ ${INDEX_OBJS} ${COMMON_LIB} ${EXT_LIBS}
+	${LINK} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}
 
 default all: compile
 
-compile: glite_lb_bkserverd glite_lb_bkindex glite_lb_proxy ${LT_LIB_PS} ${LT_LIB_BK}
+compile: glite_lb_bkserverd glite_lb_bkindex ${LT_LIB_PS} ${LT_LIB_BK}
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -179,7 +174,7 @@ check: compile test.xml test.query
 test_coverage:
 	-mkdir coverage
 	cd coverage && $(MAKE) -f ../Makefile top_srcdir=../../ COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage" check
-	cd coverage && for i in `echo ${INDEX_OBJS} ${SERVER_OBJS} | tr ' ' '\012' | sort -u`; do gcov $$i ; done
+	cd coverage && for i in `echo ${INDEX_OBJS} ${BKSERVER_OBJS} | tr ' ' '\012' | sort -u`; do gcov $$i ; done
 
 lb_xml_parse.c: lb_xml_parse.c.T
 	rm -f $@
@@ -197,43 +192,37 @@ test.xml: test_xml
 
 test_xml: test_xml.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIB} ${TEST_LIBS} ${EXT_LIBS}
+	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIBS} ${TEST_LIBS} ${EXT_LIBS}
 
 test.query: test_query_events
 	./test_query_events
 
-query_events_objs:=`echo ${SERVER_OBJS} | sed 's/lbs_db\.o//;s/bkserverd\.o//'`
+query_events_objs:=`echo ${BKSERVER_BASE_OBJS} | sed 's/lbs_db\.o//;s/bkserverd\.o//'`
 
 test_query_events: test_query_events.o
 	${LINKXX} -o $@ test_query_events.o ${query_events_objs} \
-	${TEST_LIBS} ${COMMON_LIB} ${EXT_LIBS}
+	${TEST_LIBS} ${COMMON_LIBS} ${EXT_LIBS}
 
 test.soapconv: test_soap_conv
 	./test_soap_conv
 
 test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ test_soap_conv.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${COMMON_LIB} ${TEST_LIBS}
+	${LINKXX} -o $@ test_soap_conv.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${TEST_LIBS}
 
 examples: ws_getversion ws_jobstat ws_query_ex
 
 ws_getversion: ws_getversion.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ ws_getversion.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
+	${LINK} -o $@ ws_getversion.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} 
 
 ws_jobstat: ws_jobstat.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ ws_jobstat.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
+	${LINK} -o $@ ws_jobstat.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
 ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ ws_query_ex.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
+	${LINK} -o $@ ws_query_ex.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
 ws_query_ext: ws_query_ext.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ ws_query_ext.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
-
-stdsoap2_patched.o:
-	${CC} ${CFLAGS} -c -o $@ ${STDSOAP2C}
-
-test_ws_plugin.o: ws_plugin.c
-	${COMPILE} ${CFLAGS} -DPLUGIN_TEST -c -o $@ ${top_srcdir}/src/ws_plugin.c
+	${LINK} -o $@ ws_query_ext.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
 ${LT_LIB_PS}: ${LIB_OBJS_PS}
 	${LINK} -o $@ ${L_LIB_OBJS_PS}

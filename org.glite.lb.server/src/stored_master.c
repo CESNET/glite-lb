@@ -8,8 +8,8 @@
 #include <errno.h>
 #include <assert.h>
 
+#include "glite/security/glite_gss.h"
 #include "glite/lb/il_msg.h"
-#include "glite/lb/lb_gss.h"
 #include "glite/lb/lb_plain_io.h"
 #include "glite/lb/context-int.h"
 

@@ -1,10 +1,12 @@
 #include <getopt.h>
 #include <stdsoap2.h>
 
+#include "glite/security/glite_gsplugin.h"
 #include "glite/lb/consumer.h"
 
-#include "ws_plugin.h"
 #include "bk_ws_H.h"
+
+#include "LoggingAndBookkeeping.nsmap"
 
 static struct option opts[] = {
 	{"help",	0,	NULL,	'h'},
@@ -26,6 +28,7 @@ static void printstat(edg_wll_JobStat stat, int level);
 int main(int argc,char** argv)
 {
     edg_wll_Context						ctx;
+    glite_gsplugin_Context				gsplugin_ctx;
     struct soap						   *mydlo = soap_new();
     struct edgwll2__JobStatusResponse	out;
     int									opt, err;
@@ -53,12 +56,16 @@ int main(int argc,char** argv)
 	}
 		
     edg_wll_InitContext(&ctx);
+    glite_gsplugin_init_context(&gsplugin_ctx);
 
-	if ( soap_register_plugin_arg(mydlo, edg_wll_ws_plugin, (void *)ctx) )
+	if ( soap_register_plugin_arg(mydlo, glite_gsplugin, (void *)gsplugin_ctx) )
 	{
 		soap_print_fault(mydlo, stderr);
 		return 1;
 	}
+
+    glite_gsplugin_set_udata(mydlo, ctx);
+
 
     switch (err = soap_call_edgwll2__JobStatus(mydlo, server, "", jobid,0,&out))
 	{

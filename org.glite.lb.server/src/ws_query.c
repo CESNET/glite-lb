@@ -1,11 +1,12 @@
 #include <stdsoap2.h>
 
+#include "glite/security/glite_gsplugin.h"
+
 #include "glite/lb/context-int.h"
 #include "glite/lb/consumer.h"
 
 #include "jobstat.h"
 #include "query.h"
-#include "ws_plugin.h"
 #include "bk_ws_H.h"
 #include "get_events.h"
 #include "ws_fault.h"
@@ -27,7 +28,7 @@ int edgwll2__JobStatus(
         struct edgwll__JobStatFlags		   *flags,
         struct edgwll2__JobStatusResponse  *out)
 {
-	edg_wll_Context		ctx = (edg_wll_Context) soap_lookup_plugin(soap, PLUGIN_ID);
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	edg_wlc_JobId		j;
 	edg_wll_JobStat		s;
 
@@ -56,7 +57,7 @@ int edgwll2__QueryJobs(
 	struct edgwll__JobStatFlags		   *flags,
 	struct edgwll2__QueryJobsResponse  *out)
 {
-	edg_wll_Context		ctx = (edg_wll_Context) soap_lookup_plugin(soap, PLUGIN_ID);
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	edg_wlc_JobId	   *jobsOut = NULL;
 	edg_wll_JobStat	   *statesOut = NULL;
 	edg_wll_QueryRec  **qr = NULL;

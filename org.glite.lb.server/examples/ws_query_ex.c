@@ -1,12 +1,14 @@
 #include <getopt.h>
 #include <stdsoap2.h>
 
+#include "glite/security/glite_gsplugin.h"
 #include "glite/lb/consumer.h"
 
-#include "ws_plugin.h"
 #include "bk_ws_H.h"
 
 #include "ws_typeref.h"
+
+#include "LoggingAndBookkeeping.nsmap"
 
 
 static struct option opts[] = {
@@ -27,6 +29,7 @@ static void printstat(edg_wll_JobStat stat, int level);
 int main(int argc,char** argv)
 {
     edg_wll_Context						ctx;
+    glite_gsplugin_Context				gsplugin_ctx;
 	edg_wll_QueryRec				  **conditions = NULL;
     struct soap						   *soap = soap_new();
 	struct edgwll__QueryConditions	   *jconds = NULL;
@@ -48,12 +51,15 @@ int main(int argc,char** argv)
 	}
 
     edg_wll_InitContext(&ctx);
+    glite_gsplugin_init_context(&gsplugin_ctx);
 
-	if ( soap_register_plugin_arg(soap, edg_wll_ws_plugin, (void *)ctx) )
+	if ( soap_register_plugin_arg(soap, glite_gsplugin, (void *)gsplugin_ctx) )
 	{
 		soap_print_fault(soap, stderr);
 		return 1;
 	}
+
+	glite_gsplugin_set_udata(soap, ctx);
 
 	conditions = (edg_wll_QueryRec **)calloc(3,sizeof(edg_wll_QueryRec *));
 

@@ -29,16 +29,18 @@
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 #include <stdsoap2.h>
+#include "glite/security/glite_gsplugin.h"
+
 int soap_serve(struct soap*); 
 #endif /* GLITE_LB_SERVER_WITH_WS */
 
+#include "glite/security/glite_gss.h"
 #include "glite/lb/srvbones.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/purge.h"
 #include "glite/lb/context.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/lb_gss.h"
 
 #include "lb_http.h"
 #include "lb_proto.h"
@@ -46,10 +48,11 @@ int soap_serve(struct soap*);
 #include "lbs_db.h"
 #include "lb_authz.h"
 #include "il_notification.h"
+#include "stats.h"
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-#include "ws_plugin.h"
-#endif	/* GLITE_LB_SERVER_WITH_WS */
+#include "LoggingAndBookkeeping.nsmap"
+#endif /* GLITE_LB_SERVER_WITH_WS */
 
 extern int edg_wll_StoreProto(edg_wll_Context ctx);
 extern edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs);
@@ -863,30 +866,49 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 int bk_handle_ws_connection(int conn, struct timeval client_start, void *data)
 {
     struct clnt_data_t	   *cdata = (struct clnt_data_t *) data;
-	struct soap			   *soap;
-	int						rv;
+	struct soap			   *soap = NULL;
+	glite_gsplugin_Context	gsplugin_ctx;
+	int						rv = 0;
 
 
-	if ( !(soap = soap_new()) )
-	{
-		fprintf(stderr, "Couldn't create soap environment");
+	if ( glite_gsplugin_init_context(&gsplugin_ctx) ) {
+		fprintf(stderr, "Couldn't create gSOAP plugin context");
 		return -1;
 	}
 
-	if ( (rv = bk_handle_connection(conn, client_start, data)) )
-	{
-		soap_destroy(soap);
-		return rv;
+	if ( !(soap = soap_new()) ) {
+		fprintf(stderr, "Couldn't create soap environment");
+		goto err;
 	}
 
+	soap_init2(soap, SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
+    if ( soap_set_namespaces(soap, namespaces) ) { 
+		soap_done(soap);
+		perror("Couldn't set soap namespaces");
+		goto err;
+	}
+    if ( soap_register_plugin_arg(soap, glite_gsplugin, gsplugin_ctx) ) {
+		soap_done(soap);
+		perror("Couldn't set soap namespaces");
+		goto err;
+	}
+	if ( (rv = bk_handle_connection(conn, client_start, data)) ) {
+		soap_done(soap);
+		goto err;
+	}
+	gsplugin_ctx->connection = &cdata->ctx->connPool[cdata->ctx->connToUse].gss;
+	gsplugin_ctx->timeout = cdata->ctx->p_tmp_timeout;
+	gsplugin_ctx->cred = mycred;
 	cdata->soap = soap;
-
-	soap_init(soap);
-    soap_set_namespaces(soap, namespaces);
-    soap_register_plugin_arg(soap, edg_wll_ws_plugin, cdata->ctx);
 
 
 	return 0;
+
+err:
+	if ( gsplugin_ctx ) glite_gsplugin_free_context(gsplugin_ctx);
+	if ( soap ) soap_destroy(soap);
+
+	return rv? : -1;
 }
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
@@ -1018,15 +1040,9 @@ int bk_accept_ws(int conn, void *cdata)
 {
 	struct soap		   *soap = ((struct clnt_data_t *) cdata)->soap;
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
+	glite_gsplugin_Context gsplugin_ctx;
 
 
-	/*	XXX: Is it neccessary?
-	 *
-	 * 	BEWARE: gSoap is trying to handle this connection -> closes the
-	 * 	socket after then query is served (or something like that :)
-	 *
-	soap->socket = conn;
-	 */
 	if ( soap_serve(soap) )
 	{
 		char    *errt, *errd;
@@ -1046,6 +1062,10 @@ int bk_accept_ws(int conn, void *cdata)
 			edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, NULL);
 			edg_wll_FreeContext(ctx);
 			ctx = NULL;
+			gsplugin_ctx = glite_gsplugin_get_context(soap);
+			gsplugin_ctx->cred = GSS_C_NO_CREDENTIAL;
+			gsplugin_ctx->connection = NULL;
+			glite_gsplugin_free_context(gsplugin_ctx);
 			free(errt); free(errd);
 			dprintf(("[%d] Connection closed\n", getpid()));
 			/*
@@ -1103,13 +1123,19 @@ int bk_clnt_disconnect(int conn, void *cdata)
 #ifdef GLITE_LB_SERVER_WITH_WS
 int bk_ws_clnt_disconnect(int conn, void *cdata)
 {
-	int		rv;
+	struct soap			   *soap = ((struct clnt_data_t *) cdata)->soap;
+	glite_gsplugin_Context	gsplugin_ctx;
+	int						rv;
 
 
+	gsplugin_ctx = glite_gsplugin_get_context(soap);
+	gsplugin_ctx->cred = GSS_C_NO_CREDENTIAL;
+	gsplugin_ctx->connection = NULL;
 	if ( (rv = bk_clnt_disconnect(conn, cdata)) )
 		return rv;
 
 	soap_destroy(((struct clnt_data_t *)cdata)->soap);
+	glite_gsplugin_free_context(gsplugin_ctx);
 
 	return 0;
 }
