@@ -26,7 +26,23 @@
 	        logsrc=>'"int"',
 	        port=>'"int"',
 	        int=>'"int"'
+	},
+	'wsdl'=>{
+		bool=>'"xsd:boolean"',
+		string=>'"xsd:string"',
+		int=>'"xsd:int"',
+		jobid=>'"xsd:string"',
+		jobstat=>'"jobStatus"',
+		usertag=>'"tagValue"',
+		timeval=>'"timeval"',
 	}
+);
+
+%baseTypes = (
+	intlist=>'int',
+	strlist=>'string',
+	stslist=>'jobstat',
+	taglist=>'usertag'
 );
 
 %toString = (
