@@ -10,6 +10,11 @@
 #include "glite/lb/producer.h"
 #include "glite/lb/notification.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+	
+
 /* function for parsing XML responses from server */
 
 extern edg_wll_ErrorCode edg_wll_ParseQueryEvents(edg_wll_Context, char *, edg_wll_Event **);
@@ -54,5 +59,8 @@ extern int edg_wll_IndexedAttrsRequestToXML(edg_wll_Context ctx, char **message)
 
 extern int edg_wll_NotifRequestToXML( edg_wll_Context ctx, const char *function, const edg_wll_NotifId notifId, const char *address, edg_wll_NotifChangeOp op, edg_wll_QueryRec const * const *conditions, char **message);
 
-	
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* __EDG_WORKLOAD_LOGGING_COMMON_XML_PARSE_H__ */
