@@ -137,6 +137,7 @@ install:
 	${INSTALL} -m 755 glite_lb_logd ${PREFIX}/bin/glite-lb-logd
 	${INSTALL} -m 755 glite_lb_interlogd ${PREFIX}/bin/glite-lb-interlogd
 	${INSTALL} -m 755 glite_lb_notif_interlogd ${PREFIX}/bin/glite-lb-notif-interlogd
+	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 
 %.no: %.c
