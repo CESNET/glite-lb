@@ -89,8 +89,9 @@ SERVER_OBJS:= bkserverd.o get_events.o index.o jobstat.o jobstat_supp.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o \
-	${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
+	notification.o il_notification.o notif_match.o
+
+SERVER_SOAP_OBJS:=${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
 	ws_plugin.o ws_query.o ws_fault.o ws_typeref.o
 
 
@@ -98,8 +99,8 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o
 
-glite_lb_bkserverd: ${SERVER_OBJS}
-	${LINK} -o $@ ${SERVER_OBJS} ${COMMON_LIB} ${SRVBONES_LIB} ${GSOAP_LIBS} ${EXT_LIBS}
+glite_lb_bkserverd: ${SERVER_OBJS} ${SERVER_SOAP_OBJS}
+	${LINK} -o $@ ${SERVER_OBJS} ${SERVER_SOAP_OBJS} ${COMMON_LIB} ${SRVBONES_LIB} ${GSOAP_LIBS} ${EXT_LIBS}
 
 glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${COMMON_LIB} ${EXT_LIBS}
@@ -146,12 +147,15 @@ test_query_events: test_query_events.o
 	${LINKXX} -o $@ test_query_events.o ${query_events_objs} \
 	${TEST_LIBS} ${COMMON_LIB} ${EXT_LIBS}
 
-WS_JOBSTAT_OBJS:= ws_jobstat.o test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o \
-	ws_fault.o ws_typeref.o
-WS_JOBSTAT_LIBS:= ${GSOAP_LIBS} -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
+WS_CLIENT_OBJS:= test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
+WS_CLIENT_LIBS:= ${GSOAP_LIBS} -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
 
-ws_jobstat: ${WS_JOBSTAT_OBJS}
-	${LINK} -o $@ ${WS_JOBSTAT_OBJS} ${WS_JOBSTAT_LIBS} ${EXT_LIBS}
+
+ws_jobstat: ws_jobstat.o ${WS_CLIENT_OBJS}
+	${LINK} -o $@ ws_jobstat.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
+
+ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
+	${LINK} -o $@ ws_query_ex.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
 
 test_ws_plugin.o: ${top_srcdir}/src/ws_plugin.c
 	${CC} ${CFLAGS} -DPLUGIN_TEST -c -o $@ ${top_srcdir}/src/ws_plugin.c
