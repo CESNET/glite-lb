@@ -36,6 +36,7 @@ DEBUG:=-g -O0
 CFLAGS:= -DNO_VOMS -DNO_GACL \
 	${DEBUG} -I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${expat_prefix}/include \
+	-I${ares_prefix}/include \
 	-I${mysql_prefix}/include \
 	-I${globus_prefix}/include/${nothrflavour} \
 	-I${globus_prefix}/include/${nothrflavour}/openssl
