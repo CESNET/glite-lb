@@ -10,6 +10,17 @@
 #include "glite/lb/xml_conversions.h"
 #include "glite/lb/consumer.h"
 
+int use_proxy = 0;
+
+int (*user_jobs)(edg_wll_Context, edg_wlc_JobId **, edg_wll_JobStat **);
+
+
+void
+usage(char *me)
+{
+	fprintf(stderr,"usage: %s [-h] [-x] [userid]\n", me);
+}
+
 int main(int argc,char **argv)
 {
 	edg_wll_Context	ctx;
@@ -19,24 +30,25 @@ int main(int argc,char **argv)
 	int		i,j;
 	char 		*owner = NULL;
 
-	switch (argc) {
-		case 1 : break;
-	
-		case 2 : /* fprintf(stderr,"\'userid\' option not implemented yet.\n"); */
-			 if ( strcmp(argv[1],"--help")) {
-				 owner = strdup(argv[1]);
-				 break; 	
-			 }
-			 /* else : fall through */
-	
-		default: fprintf(stderr,"usage: %s [userid]\n",argv[0]);
-         	         return 1;
-        }
-	
+	user_jobs = edg_wll_UserJobs;
+	for ( i = 1; i < argc; i++ ) {
+		if ( !strcmp(argv[i], "-h") || !strcmp(argv[i], "--help") ) {
+			usage(argv[0]);
+			exit(0);
+		} else if ( !strcmp(argv[i], "-x") ) {
+			user_jobs = edg_wll_UserJobsProxy;
+			continue;
+		}
+
+		owner = strdup(argv[i]);
+		break; 	
+	}
 
 	edg_wll_InitContext(&ctx);
+	if ( user_jobs == edg_wll_UserJobsProxy  && owner )
+		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, owner);
 
-	if (edg_wll_UserJobs(ctx,&jobs,&states)) goto err;
+	if (user_jobs(ctx,&jobs,&states)) goto err;
  	for (i=0; states[i].state != EDG_WLL_JOB_UNDEF; i++) {	
 		char *id = edg_wlc_JobIdUnparse(states[i].jobId),
 		     *st = edg_wll_StatToString(states[i].state);

@@ -19,85 +19,78 @@ static void printstat(edg_wll_JobStat,int);
 
 static char 	*myname;
 
+static void usage(char *);
+static int query_all(edg_wll_Context, edg_wll_JobStat **, edg_wlc_JobId **);
 
 int main(int argc,char *argv[])
 {
-	edg_wll_Context	ctx, sctx[MAX_SERVERS];
-	int		i, result=0, nsrv=0;
+	edg_wll_Context	sctx[MAX_SERVERS];
 	char		*servers[MAX_SERVERS];
-	char 		*errstr = NULL;
+	int		i, result=0, nsrv=0;
 
 	
 	myname = argv[0];
 	printf("\n");
 
-	if (argc < 2 || strcmp(argv[1],"--help") == 0) {
-		fprintf(stderr,"Usage: %s job_id [job_id [...]]\n",argv[0]);
-		fprintf(stderr,"       %s -all\n",argv[0]);
-                return 1;
-        }
-        else if (argc >= 2 && strcmp(argv[1],"-all") == 0) {
+	if ( argc < 2 || strcmp(argv[1],"--help") == 0 ) { usage(argv[0]); return 0; }
+
+	if ( edg_wll_InitContext(&sctx[0]) ) {
+		fprintf(stderr,"cannot initialize edg_wll_Context\n");
+		exit(1);
+	}
+
+	if ( !strcmp(argv[1], "-all" ) ) {
 		edg_wll_JobStat		*statesOut;
 		edg_wlc_JobId		*jobsOut;
-	        edg_wll_QueryRec        jc[2];
 
 		jobsOut = NULL;
 		statesOut = NULL;
-/* init context */
-		if (edg_wll_InitContext(&ctx)) {
-			fprintf(stderr,"%s: cannot initialize edg_wll_Context\n",myname);
-			exit(1);
-		}
-/* retrieve job ID's */
-        	memset(jc,0,sizeof jc);
+		if ( (result = query_all(sctx[0], &statesOut, &jobsOut)) ) dgerr(sctx[0], "edg_wll_QueryJobs");
+		else for ( i = 0; statesOut[i].state; i++ ) printstat(statesOut[i],0);
 
-	        jc[0].attr = EDG_WLL_QUERY_ATTR_OWNER;
-        	jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
-	        jc[0].value.c = NULL;	/* is NULL, peerName filled in on server side */
-		jc[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-
-		//if (edg_wll_QueryJobs(ctx,jc,EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT,
-		result = edg_wll_QueryJobs(ctx,jc,0,&jobsOut, &statesOut);
-		if (result == E2BIG) {
-			int r;
-			edg_wll_Error(ctx, NULL, &errstr);
-			if (edg_wll_GetParam(ctx, EDG_WLL_PARAM_QUERY_RESULTS, &r)) {
-				dgerr(ctx,"edg_wll_GetParam(EDG_WLL_PARAM_QUERY_RESULTS)");
-				free(errstr);
-				result=1; goto cleanup;
-			}
-			if (r != EDG_WLL_QUERYRES_LIMITED) goto late_error;
-		} else if (result) {
-			dgerr(ctx,"edg_wll_QueryJobs");
-			result=1; goto cleanup;
-		}
-
-/* retrieve and print status of each job */
-		for (i=0; statesOut[i].state; i++) 
-			printstat(statesOut[i],0);
-
-late_error:	if (result) {
-			edg_wll_SetError(ctx, result, errstr);
-			free(errstr);
-			dgerr(ctx,"edg_wll_QueryJobs");
-			result=1; 
-		}
-
-cleanup:
-		if (jobsOut)
-		{
+		if ( jobsOut ) {
 			for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
 			free(jobsOut);
 		}
-		if (statesOut)
-		{
-			for (i=0; statesOut[i].state; i++) edg_wll_FreeStatus(&statesOut[i]);		
+		if ( statesOut ) {
+			for (i=0; statesOut[i].state; i++) edg_wll_FreeStatus(&statesOut[i]);
 			free(statesOut);
 		}
-		edg_wll_FreeContext(ctx);
+		edg_wll_FreeContext(sctx[0]);
+
+		return result;
 	} 
-	else {
-	    for (i=1; i<argc; i++) {
+
+	if ( !strcmp(argv[1], "-x") ) {
+		edg_wlc_JobId 	job;		
+		edg_wll_JobStat status;
+
+		if ( argc < 3 ) { usage(argv[0]); return 1; }
+		if ( edg_wll_InitContext(&sctx[0]) ) {
+			fprintf(stderr,"%s: cannot initialize edg_wll_Context\n",myname);
+			exit(1);
+		}
+		edg_wll_SetParam(sctx[0], EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, argv[2]);
+		for ( i = 3; i < argc; i++ ) {
+			memset(&status, 0, sizeof status);
+			if (edg_wlc_JobIdParse(argv[i],&job)) {
+				fprintf(stderr,"%s: %s: cannot parse jobId\n", myname, argv[i]);
+				continue;
+			}
+			if ( edg_wll_JobStatusProxy(sctx[0], job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT, &status)) {
+				dgerr(sctx[0], "edg_wll_JobStatusProxy"); result = 1;
+			} else printstat(status, 0);
+
+			if ( job ) edg_wlc_JobIdFree(job);
+			if ( status.state ) edg_wll_FreeStatus(&status);
+		}
+		edg_wll_FreeContext(sctx[0]);
+
+		return result;
+	}
+
+
+	for ( i = 1; i < argc; i++ ) {
 		int		j;
 		char		*bserver;
 		edg_wlc_JobId 	job;		
@@ -105,44 +98,67 @@ cleanup:
 
 		memset(&status,0,sizeof status);
 
-/* parse job ID */
+
 		if (edg_wlc_JobIdParse(argv[i],&job)) {
-			fprintf(stderr,"%s: %s: cannot parse jobId\n",
-				myname,argv[i]);
+			fprintf(stderr,"%s: %s: cannot parse jobId\n", myname,argv[i]);
 			continue;
 		}
-/* determine bookkeeping server address */
                 bserver = edg_wlc_JobIdGetServer(job);
                 if (!bserver) {
-                        fprintf(stderr,"%s: %s: cannot extract bookkeeping server address\n",
-                                myname,argv[i]);
-                         edg_wlc_JobIdFree(job);
+                        fprintf(stderr,"%s: %s: cannot extract bookkeeping server address\n", myname,argv[i]);
+			edg_wlc_JobIdFree(job);
                         continue;
                 }
-/* use context database */
-                for (j=0; j<nsrv && strcmp(bserver,servers[j]); j++);
-                if (j==nsrv) {
-                        edg_wll_InitContext(&sctx[j]);
+                for ( j = 0; j < nsrv && strcmp(bserver, servers[j]); j++ );
+                if ( j == nsrv ) {
+                        if ( i > 0 ) edg_wll_InitContext(&sctx[j]);
                         nsrv++;
                         servers[j] = bserver;
                 }
 
 		if (edg_wll_JobStatus(sctx[j], job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT, &status)) {
-			dgerr(sctx[j],"edg_wll_JobStatus");
-			result=1; goto cleanup2;
-		}
+			dgerr(sctx[j],"edg_wll_JobStatus"); result = 1; 
+		} else printstat(status,0);
 
-/* print job status */
-		printstat(status,0);
-
-cleanup2:	
 		if (job) edg_wlc_JobIdFree(job);
 		if (status.state) edg_wll_FreeStatus(&status);
-	    }
-		for (i=0; i<nsrv; i++) edg_wll_FreeContext(sctx[i]);
 	}
+	for ( i = 0; i < nsrv; i++ ) edg_wll_FreeContext(sctx[i]);
 
 	return result;
+}
+
+static void
+usage(char *name)
+{
+	fprintf(stderr,"Usage: %s job_id [-x lb_proxy_serve_sock] [job_id [...]]\n", name);
+	fprintf(stderr,"       %s -all\n", name);
+}
+
+static int
+query_all(edg_wll_Context ctx, edg_wll_JobStat **statesOut, edg_wlc_JobId **jobsOut)
+{
+	edg_wll_QueryRec        jc[2];
+	int			ret;
+
+	memset(jc, 0, sizeof jc);
+	jc[0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+       	jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
+	jc[0].value.c = NULL;	/* is NULL, peerName filled in on server side */
+	jc[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+
+	if ( (ret = edg_wll_QueryJobs(ctx, jc, 0, jobsOut, statesOut)) ) {
+		if ( ret == E2BIG ) {
+			int r;
+			if ( edg_wll_GetParam(ctx, EDG_WLL_PARAM_QUERY_RESULTS, &r) ) return ret;
+			if ( r != EDG_WLL_QUERYRES_LIMITED ) return ret;
+
+			printf("Warning: only limited result returned!\n");
+			return 0;
+		} else return ret;
+	}
+
+	return ret;
 }
 
 static void

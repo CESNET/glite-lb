@@ -15,6 +15,7 @@
 
 #include <globus_common.h>
 
+#include "glite/security/glite_gss.h"
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/producer.h"
@@ -35,7 +36,9 @@ int main(int argc, char *argv[])
 	char	*src_instance = NULL;
 	int	err = 0/*,i,done = 0,fmtlen*/;
 	int     pri = 0;
-	char	*lbproxy = NULL;
+	int		use_lbproxy = 0;
+	char	*lbproxy_user = NULL;
+	char	*lbproxy_store_sock = NULL;
         int 	deb = 0;
 #ifdef ENABLE_REASON_LENGTH
 	int     elength = 0;
@@ -76,7 +79,10 @@ int main(int argc, char *argv[])
 	edg_wll_Args parray[] = {
 	    { EDG_WLL_ARGS_EVENT, "e", "event", "select event type (see -e help)", &event },
 	    { EDG_WLL_ARGS_BOOL, "p", "priority", "send as priority event", &pri },
-	    { EDG_WLL_ARGS_STRING, "x", "lbproxy", "send directly to L&B Proxy (not locallogger) with given credentials", &lbproxy },
+	    { EDG_WLL_ARGS_BOOL, "x", "lbproxy", "send directly to L&B Proxy (not locallogger)", &use_lbproxy },
+	    { EDG_WLL_ARGS_STRING, "S", "lbproxy-store-sock", "L&B Proxy store socket path", &lbproxy_store_sock },
+	    { EDG_WLL_ARGS_STRING, "U", "lbproxy-user-dn", "User certificate DN L&B Proxy store socket path", &lbproxy_user },
+
 	    { EDG_WLL_ARGS_STRING, "m", "machine", 0, &server },
 	    { EDG_WLL_ARGS_SOURCE, "s", "source", "event source (see -s help)", &src },
 	    { EDG_WLL_ARGS_STRING, "i", "source-instance", "event source instance", &src_instance },
@@ -119,21 +125,15 @@ int main(int argc, char *argv[])
 	    { EDG_WLL_ARGS_NONE },
 	};
 	edg_wll_ParseArgs(&argc, argv, parray,
-			  "Usage: %s [-d] [-p] [-x] [-l eventlen] [-j dg_jobid]"
+			  "Usage: %s [-d] [-p] [[-x] [-S sock] [-U user_dn]] [-l eventlen] [-j dg_jobid]"
 			  "[-s source_id] -e event [key=value ...]");
 
-/* XXX: Obsolete?
-	if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS) {
-		fprintf(stderr, "Cannot initialize Globus common module\n");
-		exit(1);
-	}
-*/
 
 	edg_wll_InitContext(&ctx);
 
 	/* log the event - priority/normal/proxy */
 	logev = (pri) ? edg_wll_LogEventSync : edg_wll_LogEvent;
-	logev = (lbproxy) ? edg_wll_LogEventProxy : logev;
+	logev = (use_lbproxy) ? edg_wll_LogEventProxy : logev;
 
         /* if no job given - generate some */
 	if (jobid_s == 0) {
@@ -161,13 +161,21 @@ int main(int argc, char *argv[])
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_LEVEL,
 			 (deb) ? EDG_WLL_LEVEL_DEBUG : EDG_WLL_LEVEL_SYSTEM);
 
-	if (lbproxy) {
-		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, "/tmp/lb_proxy_store.sock");
-		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, "/tmp/lb_proxy_serve.sock");
-		if (edg_wll_SetLoggingJobProxy(ctx,jobid,code,lbproxy,EDG_WLL_SEQ_NORMAL)) {
+	if ( use_lbproxy ) {
+		if ( !lbproxy_user ) {
+			gss_cred_id_t		gss_cred = GSS_C_NO_CREDENTIAL;
+			edg_wll_GssStatus   gss_stat;
+			OM_uint32			min_stat;
+			if ( edg_wll_gss_acquire_cred_gsi(NULL, NULL, &gss_cred, &lbproxy_user, &gss_stat) )
+				lbproxy_user = "anonymous";
+			if ( gss_cred != GSS_C_NO_CREDENTIAL ) gss_release_cred(&min_stat, &gss_cred);
+		}
+		if ( lbproxy_store_sock )
+			edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, lbproxy_store_sock);
+		if (edg_wll_SetLoggingJobProxy(ctx,jobid,code,lbproxy_user,EDG_WLL_SEQ_NORMAL)) {
 			char 	*et,*ed;
 			edg_wll_Error(ctx,&et,&ed);
-			fprintf(stderr,"SetLoggingJobProxy(%s,%s,%s): %s (%s)\n",jobid_s,code,lbproxy,et,ed);
+			fprintf(stderr,"SetLoggingJobProxy(%s,%s,%s): %s (%s)\n",jobid_s,code,lbproxy_user,et,ed);
 			exit(1);
 		}
 	} else {
