@@ -7,7 +7,7 @@
 
 
 #include <glite/lb/producer.h>
-#include <glite/lb/events_parse.h>
+#include "events_parse.h"
 
 class EventParseTest: public  CppUnit::TestFixture
 {
