@@ -1,0 +1,263 @@
+#ident "$Header$"
+
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <netdb.h>
+
+#include "globus_config.h"
+#include "glite/wms/thirdparty/globus_ssl_utils/sslutils.h"
+
+#include "glite/lb/consumer.h"
+#include "glite/lb/context-int.h"
+#include "glite/lb/dgssl.h"
+#include "glite/lb/mini_http.h"
+
+
+
+static void CloseConnection(edg_wll_Context ctx, int conn_index)
+{
+	/* close connection ad free its structures */
+	if (ctx->connPool[conn_index].ssl) 
+		edg_wll_ssl_close_timeout(ctx->connPool[conn_index].ssl,&ctx->p_tmp_timeout);
+	if (ctx->connPool[conn_index].gsiCred) 
+		edg_wll_ssl_free(ctx->connPool[conn_index].gsiCred);
+	free(ctx->connPool[conn_index].peerName);
+	free(ctx->connPool[conn_index].buf);
+	
+	memset(ctx->connPool + conn_index, 0, sizeof(edg_wll_ConnPool));
+	
+	/* if deleted conn was not the last one -> there is a 'hole' and then 	*/
+	/* 'shake' together connections in pool, no holes are allowed		*/
+	if (conn_index < ctx->connOpened - 1) {	
+		ctx->connPool[conn_index] = ctx->connPool[ctx->connOpened - 1];
+		memset(ctx->connPool + ctx->connOpened  - 1 , 0, sizeof(edg_wll_ConnPool));
+	}
+	ctx->connOpened--;
+}
+
+
+
+static int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
+{
+	int i;
+
+        for (i=0; i<ctx->connOpened;i++) 
+		if (!strcmp(name, ctx->connPool[i].peerName) &&
+		    (port == ctx->connPool[i].peerPort)) return i;
+						
+	return -1;
+}
+
+
+
+static int AddConnection(edg_wll_Context ctx, char *name, int port)
+{
+	int index = ctx->connOpened;
+	
+	free(ctx->connPool[index].peerName);	// should be empty; just to be sure
+	ctx->connPool[index].peerName = strdup(ctx->srvName);
+	ctx->connPool[index].peerPort = ctx->srvPort;
+	ctx->connOpened++;
+
+	return index;
+}
+
+
+
+static void ReleaseConnection(edg_wll_Context ctx, char *name, int port)
+{
+	int i, index = 0;
+	long min;
+
+
+	if (ctx->connOpened == 0) return;	/* nothing to release */
+	
+	if (name) {
+		if ((index = ConnectionIndex(ctx, name, port)) >= 0)
+			CloseConnection(ctx, index);
+	}
+	else {					/* free the oldest connection*/
+		min = ctx->connPool[0].lastUsed.tv_sec;
+		for (i=0; i<ctx->connOpened; i++) {
+			if (ctx->connPool[i].lastUsed.tv_sec < min) {
+				min = ctx->connPool[i].lastUsed.tv_sec;
+				index = i;
+			}
+		}
+		CloseConnection(ctx, index);
+	}
+}
+			
+
+
+
+int edg_wll_close(edg_wll_Context ctx)
+{
+	edg_wll_ResetError(ctx);
+
+	CloseConnection(ctx, ctx->connToUse);
+		
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+
+int edg_wll_open(edg_wll_Context ctx)
+{
+	int index;
+	
+
+	edg_wll_ResetError(ctx);
+
+	if ( (index = ConnectionIndex(ctx, ctx->srvName, ctx->srvPort)) == -1 ) {
+		/* no such open connection in pool */
+		if (ctx->connOpened == ctx->poolSize)
+			ReleaseConnection(ctx, NULL, 0);
+		
+		index = AddConnection(ctx, ctx->srvName, ctx->srvPort);
+		
+	}
+	/* else - there is cached open connection, reuse it */
+	
+	ctx->connToUse = index;
+	
+	if (!ctx->connPool[index].gsiCred) { 
+		if (!(ctx->connPool[index].gsiCred = edg_wll_ssl_init(SSL_VERIFY_PEER,0,
+			ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
+			ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+			0, 0)))
+		{
+			edg_wll_SetError(ctx,EDG_WLL_ERROR_SSL,
+				ERR_error_string(ERR_get_error(), NULL));
+			goto err;
+		}
+		
+	}
+
+	if (!ctx->connPool[index].ssl) {	
+		switch (edg_wll_ssl_connect(ctx->connPool[index].gsiCred,
+				ctx->connPool[index].peerName, ctx->connPool[index].peerPort,
+				&ctx->p_tmp_timeout,&ctx->connPool[index].ssl)) {
+		
+			case EDG_WLL_SSL_OK: 
+				goto ok;
+			case EDG_WLL_SSL_ERROR_ERRNO:
+				edg_wll_SetError(ctx,errno,"edg_wll_ssl_connect()");
+				break;
+			case EDG_WLL_SSL_ERROR_SSL:
+				edg_wll_SetError(ctx,EDG_WLL_ERROR_SSL,
+						ERR_error_string(ERR_get_error(), NULL));
+				break;
+			case EDG_WLL_SSL_ERROR_HERRNO:
+        	                { const char *msg1;
+                	          char *msg2;
+                        	  msg1 = hstrerror(errno);
+	                          asprintf(&msg2, "edg_wll_ssl_connect(): %s", msg1);
+        	                  edg_wll_SetError(ctx,EDG_WLL_ERROR_DNS, msg2);
+                	          free(msg2);
+                        	}
+				break;
+			case EDG_WLL_SSL_ERROR_EOF:
+				edg_wll_SetError(ctx,ECONNREFUSED,"edg_wll_ssl_connect():"
+					       " server closed the connection, probably due to overload");
+				break;
+			case EDG_WLL_SSL_ERROR_TIMEOUT:
+				edg_wll_SetError(ctx,ETIMEDOUT,"edg_wll_ssl_connect()");
+				break;
+		}
+	}
+	else goto ok;
+
+err:
+	/* some error occured; close created connection
+	 * and free all fields in connPool[index] */
+	CloseConnection(ctx, index);
+ok:	
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+
+/* transform HTTP error code to ours */
+int http_check_status(
+	edg_wll_Context ctx,
+	char *response)
+
+{
+	int	code,len;
+
+	edg_wll_ResetError(ctx);
+	sscanf(response,"HTTP/%*f %n%d",&len,&code);
+	switch (code) {
+		case HTTP_OK: 
+			break;
+		/* soft errors - some useful data may be returned too */
+		case HTTP_UNAUTH: /* EPERM */
+		case HTTP_NOTFOUND: /* ENOENT */
+		case HTTP_NOTIMPL: /* ENOSYS */
+		case HTTP_UNAVAIL: /* EAGAIN */
+		case HTTP_INVALID: /* EINVAL */
+			break;
+		case EDG_WLL_SSL_ERROR_HERRNO:
+                        { const char *msg1;
+                          char *msg2;
+                          msg1 = hstrerror(errno);
+                          asprintf(&msg2, "edg_wll_ssl_connect(): %s", msg1);
+                          edg_wll_SetError(ctx,EDG_WLL_ERROR_DNS, msg2);
+                          free(msg2);
+                        }
+			break;
+		case HTTP_NOTALLOWED:
+			edg_wll_SetError(ctx, ENXIO, "Method Not Allowed");
+			break;
+		case HTTP_UNSUPPORTED:
+			edg_wll_SetError(ctx, ENOTSUP, "Protocol versions incompatible");
+			break;								
+		case HTTP_INTERNAL:
+			/* fall through */
+		default: 
+			edg_wll_SetError(ctx,EDG_WLL_ERROR_SERVER_RESPONSE,response+len);
+	}
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+
+int edg_wll_http_send_recv(
+	edg_wll_Context ctx,
+	char *request,
+	const char * const *req_head,
+	char *req_body,
+	char **response,
+	char ***resp_head,
+	char **resp_body)
+{
+	if (edg_wll_open(ctx)) return edg_wll_Error(ctx,NULL,NULL);
+	
+	switch (edg_wll_http_send(ctx,request,req_head,req_body)) {
+		case ENOTCONN:
+			edg_wll_close(ctx);
+			if (edg_wll_open(ctx)
+				|| edg_wll_http_send(ctx,request,req_head,req_body))
+					return edg_wll_Error(ctx,NULL,NULL);
+			/* fallthrough */
+		case 0: break;
+		default: return edg_wll_Error(ctx,NULL,NULL);
+	}
+
+	if (edg_wll_http_recv(ctx,response,resp_head,resp_body) == ENOTCONN) {
+		edg_wll_close(ctx);
+		(void) (edg_wll_open(ctx)
+			|| edg_wll_http_send(ctx,request,req_head,req_body)
+			|| edg_wll_http_recv(ctx,response,resp_head,resp_body));
+	}
+	
+	gettimeofday(&ctx->connPool[ctx->connToUse].lastUsed, NULL);
+	
+	return edg_wll_Error(ctx,NULL,NULL);
+}
