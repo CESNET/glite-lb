@@ -640,10 +640,7 @@ static int update_notif(
 		 */
 	}
 
-	if ( host ) {
-		fprintf(stderr, "edg_wll_NotifChangeDestination(ctx, nid, %s, %d);\n", host, port);
-		edg_wll_NotifChangeDestination(ctx, nid, host, port);
-	}
+	if ( host ) edg_wll_NotifChangeDestination(ctx, nid, host, port);
 
 
 cleanup:
