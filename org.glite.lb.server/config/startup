@@ -16,8 +16,6 @@ GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-${GLITE_LOCATION}/var}
 
 unset creds port
 
-cred_copy=/var/tmp/glite-lb-server.pem
-
 start()
 {
 	if test -z "$GLITE_USER" ;then
@@ -75,7 +73,6 @@ stop()
 		echo $pidfile does not exist - glite-lb-bkserverd not running? >&2
 		return 1
 	fi
-	rm -f $cred_copy
 }
 
 status()

@@ -13,8 +13,6 @@ GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-$GLITE_LOCATION/var}
 
 unset creds port
 
-cred_copy=/var/tmp/glite-lb-logger.pem
-
 start()
 {
 	if test -z "$GLITE_USER" ;then
@@ -55,7 +53,6 @@ stop()
 		echo -n Stopping glite-lb-interlogd ...
 		killall glite-lb-interlogd
 		echo " done"
-		rm -f $cred_copy
 }
 
 status()
