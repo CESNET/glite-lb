@@ -88,6 +88,8 @@ SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
 
 COMMON_LIB:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}
 
+LB_PROXY_COMMON_LIB:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}
+
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	SERVER_SOAP_OBJS:=${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
 			ws_plugin.o ws_query.o ws_fault.o ws_typeref.o
@@ -96,6 +98,13 @@ else
 	SERVER_SOAP_OBJS=
 	SERVER_WS_LIBS=
 endif
+
+LB_PROXY_OBJS:= lbproxy.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
+	write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	lb_xml_parse_V21.o \
+	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
+	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
+	notification.o il_notification.o notif_match.o
 
 SERVER_OBJS:= bkserverd.o get_events.o index.o jobstat.o jobstat_supp.o \
 	write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
@@ -111,6 +120,9 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 WS_CLIENT_OBJS:= stdsoap2_patched.o test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
 
+
+glite_lb_proxy: ${LB_PROXY_OBJS}
+	${LINK} -o $@ ${LB_PROXY_OBJS} ${COMMON_LIB} ${SRVBONES_LIB} ${EXT_LIBS}
 
 glite_lb_bkserverd: ${SERVER_OBJS} ${SERVER_SOAP_OBJS}
 	${LINK} -o $@ ${SERVER_OBJS} ${SERVER_SOAP_OBJS} ${COMMON_LIB} ${SRVBONES_LIB} ${EXT_LIBS} ${SERVER_WS_LIBS}

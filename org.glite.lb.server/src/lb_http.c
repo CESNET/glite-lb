@@ -24,7 +24,8 @@ int edg_wll_ServerHTTP(edg_wll_Context ctx)
 	edg_wll_ErrorCode	err = 0;
 
 
-	err = edg_wll_http_recv(ctx,&req,&hdr,&body);
+	if ( ctx->isProxy ) err = edg_wll_http_recv_proxy(ctx,&req,&hdr,&body);
+	else err = edg_wll_http_recv(ctx,&req,&hdr,&body);
 
 	dprintf(("[%d] %s\n",getpid(),req));
 	if (body) dprintf(("\n%s\n\n",body));
@@ -33,7 +34,12 @@ int edg_wll_ServerHTTP(edg_wll_Context ctx)
 		if ((err = edg_wll_Proto(ctx,req,hdr,body,&resp,&hdrOut,&bodyOut))) 
 			edg_wll_Error(ctx,NULL,&err_desc);
 
-		if (resp) edg_wll_http_send(ctx,resp,(char const * const *)hdrOut,bodyOut);
+		if (resp) {
+			if ( ctx->isProxy )
+				edg_wll_http_send_proxy(ctx,resp,(char const * const *)hdrOut,bodyOut);
+			else
+				edg_wll_http_send(ctx,resp,(char const * const *)hdrOut,bodyOut);
+		}
 	}
 
 	free(req);

@@ -70,7 +70,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   if (edg_wll_UnlockJob(ctx,ev->any.jobId)) goto err;
   if (err) goto err;
 
-  if (newstat.state) {
+  if (!ctx->isProxy && newstat.state) {
 	  edg_wll_NotifMatch(ctx,&newstat);
 	  edg_wll_FreeStatus(&newstat);
   }

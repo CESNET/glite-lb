@@ -10,6 +10,7 @@
 
 #include "glite/lb/il_string.h"
 #include "glite/lb/lb_gss.h"
+#include "glite/lb/lb_plain_io.h"
 #include "glite/lb/context-int.h"
 
 #include "store.h"
@@ -56,4 +57,41 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 	else edg_wll_SetError(ctx,E2BIG,"create_reply()");
 
 	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
+{
+	char	fbuf[256], *buf;
+	int		len, ret;
+
+
+	edg_wll_ResetError(ctx);
+	ret = edg_wll_plain_read_full(&ctx->connPool[ctx->connToUse].conn,
+				fbuf, 17, &ctx->p_tmp_timeout);
+	if ( ret < 0 ) return edg_wll_SetError(ctx, errno, "StoreProtoProxy() - reading data");
+
+	len = atoi(fbuf);
+	if ( len <= 0 ) return edg_wll_SetError(ctx, EINVAL, "message length");
+
+	buf = malloc(len+1);
+	if ( !buf ) return edg_wll_SetError(ctx, errno, "StoreProtoProxy()");
+
+	if ( edg_wll_plain_read_full(&ctx->connPool[ctx->connToUse].conn,
+				buf, len, &ctx->p_tmp_timeout) < 0) {
+		free(buf);
+		return edg_wll_SetError(ctx, errno, "StoreProtoProxy() - reading data");
+	}
+
+	buf[len] = 0;
+	handle_request(ctx, buf, len);
+	free(buf);
+
+	if ( (len = create_reply(ctx, fbuf, sizeof fbuf)) ) {
+		if ( edg_wll_plain_write_full(&ctx->connPool[ctx->connToUse].conn,
+					fbuf, len, &ctx->p_tmp_timeout) < 0 )
+			return edg_wll_SetError(ctx, errno, "StoreProtoProxy() - sending reply");
+	}
+	else edg_wll_SetError(ctx, E2BIG, "create_reply()");
+
+	return edg_wll_Error(ctx, NULL, NULL);
 }
