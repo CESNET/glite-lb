@@ -160,7 +160,7 @@ distbin:
 install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/lib
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
 	for p in ${TOOLS} logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
