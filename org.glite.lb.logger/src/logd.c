@@ -305,20 +305,6 @@ Copyright (c) 2002 CERN, INFN and CESNET on behalf of the EU DataGrid.\n");
    if (CAcert_dir)
       setenv("X509_CERT_DIR", CAcert_dir, 1);
 
-   /* daemonize */
-   edg_wll_ll_log(LOG_INFO,"Running as daemon...");
-   if (debug) {
-       edg_wll_ll_log(LOG_NOTICE,"no.\n");
-   }
-   else if (daemon(0,0) < 0) {
-       edg_wll_ll_log(LOG_CRIT,"Failed to run as daemon. Exiting.\n");
-       perror("daemon");
-       exit(1);
-   }
-   else {
-       edg_wll_ll_log(LOG_INFO,"yes.\n");
-   }
-
    /* initialize Globus common module */
    edg_wll_ll_log(LOG_INFO,"Initializing Globus common module...");
    if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS) {
@@ -373,6 +359,20 @@ Copyright (c) 2002 CERN, INFN and CESNET on behalf of the EU DataGrid.\n");
 
    client_addr_len = sizeof(client_addr);
    bzero((char *) &client_addr, client_addr_len);
+
+   /* daemonize */
+   edg_wll_ll_log(LOG_INFO,"Running as daemon...");
+   if (debug) {
+       edg_wll_ll_log(LOG_NOTICE,"no.\n");
+   }
+   else if (daemon(0,0) < 0) {
+       edg_wll_ll_log(LOG_CRIT,"Failed to run as daemon. Exiting.\n");
+       perror("daemon");
+       exit(1);
+   }
+   else {
+       edg_wll_ll_log(LOG_INFO,"yes.\n");
+   }
 
    /*
     * Main loop
