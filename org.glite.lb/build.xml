@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.18  2004/09/29 13:35:39  flammer
+	Only update of line formatting.
+	
 	Revision 1.17  2004/09/09 21:05:29  dimeglio
 	Moved tag target to targets-common
 	
@@ -254,6 +257,22 @@
 		</if>
 	</target>
 
+	<target name="server-bones" unless="setenvonly">
+		<if>
+			<isset property="small.memory" />
+			<then>
+				<exec dir="${lb.subsystem.dir}.server-bones" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.server-bones"
+                        	     target="${target}"
+                        	     inheritall="false" />
+			</else>
+		</if>
+	</target>
+
 	<target name="common" unless="setenvonly" depends="globus,expat,ares,client-interface">
 		<if>
 			<isset property="small.memory" />
@@ -286,7 +305,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="globus,expat,ares,mysql,client-interface,common">
+	<target name="server" unless="setenvonly" depends="globus,expat,ares,mysql,gsoap,client-interface,common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -321,6 +340,7 @@
 	<!-- Main proxy -->
 	<target name="buildmodules" depends="client-interface,
 					     client,
+					     server-bones,
 					     common,
 					     server,
 					     logger">
