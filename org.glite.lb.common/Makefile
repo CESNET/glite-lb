@@ -114,6 +114,7 @@ check.gss: test_gss
 	test_gss
 
 check.il: il_test
+	il_test
 
 test_gss: test_gss.o
 	${LINKXX} -o $@ test_gss.o ${LTLIB} ${TEST_LIBS}
