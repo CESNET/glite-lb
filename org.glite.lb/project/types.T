@@ -86,7 +86,7 @@
 #		level=>'"($a == $b)"',
 		bool=>'"(($a || !$b) && ($b || !$a))"',
 		string=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp($a,$b))"',
-		jobid=>'"($a) == ($b)"',
+		jobid=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wlc_JobIdUnparse($a),edg_wlc_JobIdUnparse($b)))"',
 		notifid=>'"($a) == ($b)"',
 		logsrc=>'"($a) == ($b)"',
 		timeval=>'"($a).tv_sec == ($b).tv_sec && ($a).tv_usec == ($b).tv_usec"',
