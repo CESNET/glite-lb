@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
 	if (num_subjobs) for (i=0; subjobs[i]; i++) {
 		char	*job_s = edg_wlc_JobIdUnparse(subjobs[i]);
-		printf("EDG_WL_SUB_JOBID[%lu]=\"%s\"\n",i,job_s);
+		printf("EDG_WL_SUB_JOBID[%d]=\"%s\"\n",i,job_s);
 		free(job_s);
 	}
 
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 			asprintf(jdls+i, "JDL of subjob #%d\n", i+1);
 		}
 
-		if (edg_wll_RegisterSubjobs(ctx, jobid, jdls, NULL, subjobs)) {
+		if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
 			char 	*et,*ed;
 			edg_wll_Error(ctx,&et,&ed);
 			fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);

@@ -29,6 +29,7 @@
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 #include <stdsoap2.h>
+int soap_serve(struct soap*); 
 #endif /* GLITE_LB_SERVER_WITH_WS */
 
 #include "glite/lb/srvbones.h"

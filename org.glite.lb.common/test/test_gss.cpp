@@ -116,7 +116,7 @@ void GSSTest::echo()
 	err = edg_wll_gss_read_full(&conn, buf2, strlen(buf)+1, &timeout, &total, &stat);
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_gss_read_full()", !err);
 
-	CPPUNIT_ASSERT(strlen(buf)+1 == (int) total && !strcmp(buf,buf2) );
+	CPPUNIT_ASSERT(strlen(buf)+1 == total && !strcmp(buf,buf2) );
 
 	edg_wll_gss_close(&conn, &timeout);
 		

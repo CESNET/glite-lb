@@ -163,8 +163,8 @@ int edg_wll_ULMProcessParseTable(p_edg_wll_ULMFields this)
            else qmCnt--;
          }              
          if ((qmCnt == 0) && (!isspace(this->raw[i+1]) && (this->raw[i+1] != '\0'))) {
-             fprintf(stderr,"%s: PARSE ERROR: Disallowed character ('%c') after ending '%c'at i=%d size=%d char=%d.\n",
-                     func,this->raw[i+1],ULM_QM,i,size,this->raw[i+1]);
+             fprintf(stderr,"%s: PARSE ERROR: Disallowed character ('%c') after ending '%c'at i=%d size=%lu char=%d.\n",
+                     func,this->raw[i+1],ULM_QM,i,(unsigned long)size,this->raw[i+1]);
              for (j=0; j<=i; j++) fputc(this->raw[j],stderr);
              fputc(ULM_LF,stderr);
              return ULM_PARSE_ERROR;

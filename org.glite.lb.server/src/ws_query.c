@@ -77,7 +77,8 @@ int edgwll2__QueryJobs(
 		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
 		goto cleanup;
 	}
-	if ( edg_wll_QueryJobsServer(ctx, qr, fl, &jobsOut, &statesOut) ) goto cleanup;
+	if ( edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)qr, fl,
+					&jobsOut, &statesOut) ) goto cleanup;
 	if ( edg_wll_JobsQueryResToSoap(soap, jobsOut, statesOut, out) ) goto cleanup;
 	ret = SOAP_OK;
 

@@ -48,7 +48,7 @@ static char *enc_string(char *old, char *item)
 	if (item == NULL) {
 		asprintf(&out,"%s-1 ", old);
 	} else {
-		asprintf(&out,"%s%d %s",old, strlen(item), item);
+		asprintf(&out,"%s%ld %s",old, (long)strlen(item), item);
 	}
 	free(old);
 	return out;
@@ -57,10 +57,10 @@ static char *enc_string(char *old, char *item)
 static char *dec_string(char *in, char **rest)
 {
 	int scret;
-	int len = -1;
+	long len = -1;
 	char *out;
 	
-	scret = sscanf(in, "%d", &len);
+	scret = sscanf(in, "%ld", &len);
 	if (scret < 1) {
 		*rest = NULL;
 		return NULL;
