@@ -53,7 +53,9 @@ start()
 
 stop()
 {
+	echo -n Stopping glite-lb-interlogd ...
 	killall glite-lb-notif-interlogd
+	echo done
 	if [ -f $pidfile ]; then
 		pid=`cat $pidfile`
 		kill $pid
@@ -77,6 +79,13 @@ stop()
 
 status()
 {
+	if netstat -an --unix | grep "^unix .* LISTEN.* /tmp/glite-lb-notif.sock$" >/dev/null 2>&1 ;then
+		echo glite-lb-notif-interlogd running
+	else
+		echo glite-lb-notif-interlogd not running
+		return 1
+	fi
+
 	if [ -f $pidfile ]; then
 		pid=`cat $pidfile`
 		if ps p $pid >/dev/null 2>&1; then
