@@ -51,6 +51,12 @@ int soap_serve(struct soap*);
 #include "stats.h"
 
 #ifdef GLITE_LB_SERVER_WITH_WS
+#  if GSOAP_VERSION < 20700
+	 /*	STATUS - defined in <arpa/nameser.h> and it's includes
+	  *	brake the build
+	  */
+#    undef STATUS
+#  endif
 #include "LoggingAndBookkeeping.nsmap"
 #endif /* GLITE_LB_SERVER_WITH_WS */
 
@@ -897,7 +903,7 @@ int bk_handle_ws_connection(int conn, struct timeval client_start, void *data)
 		goto err;
 	}
 	gsplugin_ctx->connection = &cdata->ctx->connPool[cdata->ctx->connToUse].gss;
-	gsplugin_ctx->timeout = cdata->ctx->p_tmp_timeout;
+	glite_gsplugin_set_timeout(gsplugin_ctx, &cdata->ctx->p_tmp_timeout);
 	gsplugin_ctx->cred = mycred;
 	cdata->soap = soap;
 
