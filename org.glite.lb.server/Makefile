@@ -158,7 +158,7 @@ lb_xml_parse.c: lb_xml_parse.c.T
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
-${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c: LB.xh
+${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c ${GSOAP_FILES_PREFIX}ServerLib.c ${GSOAP_FILES_PREFIX}ClientLib.c LoggingAndBookkeeping.nsmap: LB.xh
 	${gsoap_prefix}/bin/soapcpp2 -w -c -p ${GSOAP_FILES_PREFIX} LB.xh
 
 LB.xh: ws_typemap.dat
