@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<!--
+	Copyright (c) 2004 on behalf of the EU EGEE Project: 
+	The European Organization for Nuclear Research (CERN), 
+	Istituto Nazionale di Fisica Nucleare (INFN), Italy
+	Datamat Spa, Italy
+	Centre National de la Recherche Scientifique (CNRS), France
+	CS Systeme d'Information (CSSI), France
+	Royal Institute of Technology, Center for Parallel Computers (KTH-PDC), Sweden
+	Universiteit van Amsterdam (UvA), Netherlands
+	University of Helsinki (UH.HIP), Finland
+	University of Bergen (UiB), Norway
+	Council for the Central Laboratory of the Research Councils (CCLRC), United Kingdom
+
+	gLite Middleware Logging and Bookkeping Configuration Specification File
+	
+	Authors: Alberto Di Meglio <alberto.di.meglio@cern.ch>	
+	         Joachim Flammer <Joachim.Flammer@cern.ch>	
+	         Ales Krenek <ljocha@ics.muni.cz>
+	Version info: $Id$
+	Release: $Name$
+
+	Revision history:
+	$Log$
+-->
+
+
+<project name="GLite Middleware Logging and Bookkeping CSF" default="all">
+
+	<!-- ===============================================
+		  Determine workspace directory 
+		 =============================================== -->
+
+	<!-- Relative workspace root directory -->
+	<property name="workspace.dir" value="../.." />
+	
+	<!-- ===============================================
+		 Load properties
+		 =============================================== -->
+
+	<!-- load baseline and user properties -->
+	<import file="${workspace.dir}/org.glite/project/baseline.properties.xml" />
+
+	<!-- define build properties file location since we are already in project dir -->
+	<property name="subsystem.build.properties.file" value="./build.properties" />
+
+	<!-- Load subsystem-specific property file -->
+	<property file="./properties.xml"/>
+
+	<!-- load global properties -->
+	<import file="${global.properties.file}" />
+
+	<!-- ===============================================
+		 Load dependencies 
+		 =============================================== -->
+
+	<!-- Load user dependencies file -->
+	<property file="${user.dependencies.file}" />
+		
+	<!-- Load subsystem dependencies file -->
+	<property file="./dependencies.properties" />
+
+	<!-- Load global dependencies file -->
+	<property file="${global.dependencies.file}" />
+
+	<!-- ===============================================
+		 Load targets
+		 =============================================== -->
+	<import file="${global.targets-envchecks.file}" />
+	<import file="${global.targets-external-dependencies.file}" />	
+
+	<!-- ===============================================
+		 Evaluate CVS tags
+		 =============================================== -->
+
+    <target name="evaluate.cvs.tags" description="Figure out if we need tagged CVS checkout">
+		<condition property="glite.head">
+			<and>
+				<equals arg1="${org.glite.version}" arg2="HEAD" />
+				<or>
+					<istrue value="${update}" />
+					<not>
+						<available file="${global.dependencies.file}" type="file" />
+					</not>
+				</or>
+			</and>
+		</condition>
+		<condition property="glite.tag">
+			<and>
+				<not>
+					<equals arg1="${org.glite.version}" arg2="HEAD" />
+				</not>
+				<or>
+					<istrue value="${update}" />
+					<not>
+						<available file="${global.dependencies.file}" type="file" />
+					</not>
+				</or>
+			</and>
+		</condition>
+		<condition property="glite-lb.head">
+			<and>
+				<equals arg1="${org.glite.lb.version}" arg2="HEAD" />
+				<istrue value="${update}" />
+			</and>
+		</condition>
+		<condition property="glite-lb.tag">
+			<and>
+				<not>
+					<equals arg1="${org.glite.lb.version}" arg2="HEAD" />
+				</not>
+				<istrue value="${update}" />
+			</and>
+		</condition>
+		<condition property="common.head">
+			<equals arg1="${org.glite.lb.common.version}" arg2="HEAD" />
+		</condition>
+    </target>
+
+    <presetdef name="cvs-co">
+		<cvs command="checkout" dest="${workspace.dir}" />
+    </presetdef>
+
+	<!-- =====================================================
+		 Self-update if required
+		 ===================================================== -->
+		
+	<!-- Update main GLite module -->
+ 	<target name="org.glite" depends="get.glite.head, get.glite.tag"/>
+	<target name="get.glite.head" if="glite.head">
+		<cvs-co package="org.glite" />
+	</target>
+	<target name="get.glite.tag" if="glite.tag">
+		<cvs-co package="org.glite"
+			tag="${org.glite.version}" />
+	</target>
+
+	<!-- Update the current module -->
+ 	<target name="org.glite.lb" depends="get.glite-lb.head, get.glite-lb.tag"/>
+	<target name="get.glite-lb.head" if="glite-lb.head">
+		<cvs-co package="org.glite.lb" />
+		<fail>The org.glite and org.glite.lb modules have been updated, please rerun the configuration file</fail>
+	</target>
+	<target name="get.glite-lb.tag" if="glite-lb.tag">
+		<cvs-co package="org.glite.lb"
+			tag="${org.glite.lb.version}" />
+		<fail>The org.glite and org.glite.lb modules have been updated, please rerun the configuration file</fail>
+	</target>
+
+	<!-- *****************************************************-->
+	<!-- Development tools                                    -->
+	<!-- *****************************************************-->
+	
+	<!-- All development tools -->
+ 	<target name="devtools" depends="junitcheck,
+					 				 junit,
+ 									 chkstyle,
+ 									 jalopy,
+ 									 ant-contrib,
+ 									 cpptasks,
+ 									 egee-ant-ext"
+ 			description="Get development tools into repository."/>		
+
+	<!-- =====================================================
+		 External libraries
+		 ===================================================== -->
+	
+	<!--  All external libraries -->
+ 	<target name="external" depends="globus"
+ 			description="Install external packages"/>
+ 	
+	<!-- =====================================================
+		 GLite Middleware R-GMA modules
+		 ===================================================== -->
+	
+	<!-- All project modules -->
+ 	<target name="project" depends=""/>
+
+	<!-- common -->
+ 	<target name="common" depends="get.common.head, get.common.tag"/>
+	<target name="get.common.head" if="common.head">
+		<cvs-co package="org.glite.lb.common" />
+	</target>
+	<target name="get.common.tag" unless="common.head">
+		<cvs-co package="org.glite.lb.common"
+			tag="${org.glite.lb.common.version}" />
+	</target>
+
+	<!-- ====================================================
+		 Checkout all
+		 ==================================================== -->
+	
+	<!-- All libraries -->
+ 	<target name="all" depends="evaluate.cvs.tags, defaultenvchecks, org.glite, org.glite.lb, devtools, external, project" />		
+
+	<!-- ====================================================
+		 Print dependecies to console
+		 ==================================================== -->
+	
+ 	<target name="dependencies">
+ 		<concat>
+ 			<fileset dir="." includes="dependencies.properties" />
+ 		</concat>
+ 	</target>		
+
+</project>

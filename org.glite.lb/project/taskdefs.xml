@@ -1,34 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Copyright (c) 2004 on behalf of the EU EGEE Project: 
+	The European Organization for Nuclear Research (CERN), 
+	Istituto Nazionale di Fisica Nucleare (INFN), Italy
+	Datamat Spa, Italy
+	Centre National de la Recherche Scientifique (CNRS), France
+	CS Systeme d'Information (CSSI), France
+	Royal Institute of Technology, Center for Parallel Computers (KTH-PDC), Sweden
+	Universiteit van Amsterdam (UvA), Netherlands
+	University of Helsinki (UH.HIP), Finland
+	University of Bergen (UiB), Norway
+	Council for the Central Laboratory of the Research Councils (CCLRC), United Kingdom
 
-<project name="LB Subsystem common tasks and types definitions">
-	<target name="lbmakefiles">
-		<exec executable="ln" failonerror="true">
-			<arg line="-fs ${component.dir}/Makefile ${module.build.dir}/Makefile"/>
-		</exec>
-		<echo file="${module.build.dir}/Makefile.inc">
-repository=${repository}
-platform=${platform}
-globus=${ext.globus.subdir}
-lbproject=${subsystem.project.dir}
-lbconfig=${subsystem.dir}/config
-src=${module.src.dir}
-interface=${module.int.dir}
-autosrc=${module.autosrc.dir}
-stageinc=${stage.inc.dir}
-stagelib=${stage.lib.dir}
-stagebin=${stage.bin.dir}
-globalprefix=${global.prefix}
-lbprefix=${subsystem.prefix}
-installdir=${install.dir}
-globusflavour=gcc32dbg
-ares=${ext.ares.subdir}
-expat=${ext.expat.subdir}
-voms=${ext.voms.subdir}
-gacl=${ext.gacl.subdir}
-mysql=${ext.mysql.subdir}
-</echo>
-	</target>
+	Common Ant task definition file for the gLite Logging and Bookeeping modules
+	
+	Authors: Ales Krenek <ljocha@ics.muni.cz>
+			 Alberto Di Meglio <alberto.di.meglio@cern.ch>		
+	Version info: $Id$
+	Release: $Name$
 
-	<target name="clean-autotools">
-	</target>
+	Revision history:
+	$Log$
+-->
+
+<project name="Logging and Bookeeping subsystem common tasks and types definitions">
+	
+	<!-- ======================================================
+		 Subsystem task definitions
+		 ====================================================== -->
+	
 </project>
