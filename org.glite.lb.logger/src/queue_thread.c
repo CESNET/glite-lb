@@ -39,6 +39,8 @@ queue_thread(void *q)
 		pthread_exit(NULL);
 	}
   
+	il_log(LOG_DEBUG, "  started new thread for delivery to %s:%d\n", eq->dest_name, eq->dest_port);
+
 	pthread_cleanup_push(queue_thread_cleanup, q); 
 
 	event_queue_cond_lock(eq);
@@ -152,19 +154,26 @@ event_queue_create_thread(struct event_queue *eq)
 {
 	assert(eq != NULL);
 
+	event_queue_lock(eq);
+
 	/* if there is a thread already, just return */
-	if(eq->thread_id > 0)
+	if(eq->thread_id > 0) {
+		event_queue_unlock(eq);
 		return(0);
+	}
 
 	/* create the thread itself */
 	if(pthread_create(&eq->thread_id, NULL, queue_thread, eq) < 0) {
 		eq->thread_id = 0;
 		set_error(IL_SYS, errno, "event_queue_create_thread: error creating new thread");
+		event_queue_unlock(eq);
 		return(-1);
 	}
 
 	/* the thread is never going to be joined */
 	pthread_detach(eq->thread_id);
+	
+	event_queue_unlock(eq);
 
 	return(1);
 }

@@ -40,14 +40,15 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 	   (messsage was just to change the delivery address) */
 	if(msg->len == 0) 
 		return(0);
-
 #endif
 	/* avoid losing signal to thread */
 	event_queue_cond_lock(eq);
 
 	/* insert new event */
-	if(event_queue_insert(eq, msg) < 0)
+	if(event_queue_insert(eq, msg) < 0) {
+		event_queue_cond_unlock(eq);
 		return(-1);
+	}
       
 	/* signal thread that we have a new message */
 	event_queue_signal(eq);
@@ -359,7 +360,8 @@ handle_msg(char *event, long offset)
 #endif
 
 	/* if there was no error, set the next expected event offset */
-	event_store_next(es, msg->ev_len);
+	event_store_next(es, offset, msg->ev_len);
+
 	/* allow cleanup thread to check on this event_store */
 	event_store_release(es);
 
