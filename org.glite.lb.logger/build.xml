@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.3  2004/07/29 23:21:51  dimeglio
+	Changed default target from compile to dist
+	
 	Revision 1.2  2004/07/07 09:24:57  akrenek
 	thr/nonthr flavours used correctly
 	
@@ -105,4 +108,14 @@
 		description="Module specific cleaning tasks">
 	</target>
 	
+	<!-- =========================================
+	     RPM settings
+	     ========================================= -->
+
+	<property name="build.package.summary" value="L&amp;B local logger" />
+	<property name="build.package.description" value="
+Daemons installed on any EGEE machine producing Logging &amp; Bookkeeping
+(L&amp;B)&#xA;events. They are responsible for non-blocking accept of
+an event, persistent&#xA;storage, and reliable transfer to bookkeeping server." />
+
 </project>		

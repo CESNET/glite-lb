@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.5  2004/07/28 12:27:00  dimeglio
+	Changed default target from compile to dist
+	
 	Revision 1.4  2004/07/06 17:51:37  flammer
 	Update of classpath definitions, targets & configure file.
 	
@@ -121,4 +124,13 @@
 		</delete>	
 	</target>
 	
+	<!-- =========================================
+	     RPM settings
+	     ========================================= -->
+
+	<property name="build.package.summary" value="L&amp;B common subroutines library" />
+	<property name="build.package.description" value="
+Library of common routines used by Logging &amp; Bookkeeping daemons,&#xA;client
+libraries, programs, and utilities." />
+
 </project>		
