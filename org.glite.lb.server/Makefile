@@ -178,10 +178,7 @@ test_ws_plugin.o: ws_plugin.c
 doc:
 
 stage: compile
-#	$(MAKE) install PREFIX=${top_srcdir}/${stagedir}
 	$(MAKE) install PREFIX=${stagedir}
-#	cd ${top_srcdir}/interface && install -m 644 ${STATIC_H} ${PREFIX}/${STAGETO}
-	${INSTALL} -m 755 glite_lb_bkserverd glite_lb_bkindex ${stagedir}/bin
 
 dist: distsrc distbin
 
