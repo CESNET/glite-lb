@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="LB Subsystem common tasks and types definitions">
+	<target name="lbmakefiles">
+		<exec executable="ln" failonerror="true">
+			<arg line="-fs ${component.dir}/Makefile ${module.build.dir}/Makefile"/>
+		</exec>
+		<echo file="${module.build.dir}/Makefile.inc">
+repository=${repository}
+platform=${platform}
+globus=${ext.globus.subdir}
+lbproject=${subsystem.project.dir}
+lbconfig=${subsystem.dir}/config
+src=${module.src.dir}
+interface=${module.int.dir}
+autosrc=${module.autosrc.dir}
+stageinc=${stage.inc.dir}
+stagelib=${stage.lib.dir}
+stagebin=${stage.bin.dir}
+globalprefix=${global.prefix}
+lbprefix=${subsystem.prefix}
+installdir=${install.dir}
+globusflavour=gcc32dbg
+ares=${ext.ares.subdir}
+expat=${ext.expat.subdir}
+voms=${ext.voms.subdir}
+gacl=${ext.gacl.subdir}
+mysql=${ext.mysql.subdir}
+</echo>
+	</target>
+
+	<target name="clean-autotools">
+	</target>
+</project>

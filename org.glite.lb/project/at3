@@ -1,0 +1,93 @@
+#!/usr/bin/perl -w
+
+use File::Basename;
+my $dir;
+BEGIN{
+	$dir = dirname $0;
+}
+
+my $lines = $ENV{AT3_LINES};
+
+use lib $dir;
+use MultiStruct;
+require 'types.T';
+
+my $eventsn;
+for (@INC) { 
+	if (-f "$_/events.T") {
+		$eventsn="$_/events.T";
+		last;
+	}
+}
+
+my $statusn;
+for (@INC) {
+	if (-f "$_/status.T") {
+		$statusn = "$_/status.T";
+		last;
+	}
+}
+
+my $indent = '';
+
+my $event = new MultiStruct;
+my $status = new MultiStruct;
+
+sub gen {
+	local $_ = shift;
+
+	s/^\n!//;
+	s/\n!/\n/g;
+	print $_;
+}
+
+
+open EVENTS,$eventsn or die "$eventsn: $!\n";
+$event->load(\*EVENTS);
+close EVENTS;
+
+open STATUS,$statusn or die "$statusn: $!\n";
+$status->load(\*STATUS);
+close STATUS;
+
+my $code;
+my $startcode;
+while (<>) {
+	chomp;
+	if (/^\@\@\@LANG: (\S+)$/) {
+		$StructField::lang = $1;
+		next;
+	}
+
+	if ($code) {
+		if (/^\@\@\@}$/) {
+			$code .= "1;\n";
+			print "#line $startcode \"$ARGV\"\n/* begin */\n" if $lines;
+			eval $code or warn "eval: $@ at $ARGV:$.\n";
+			my $nxtline = $.+1;
+			print "/* end */\n#line $nxtline \"$ARGV\"\n" if $lines;
+			undef $code;
+		}
+		else { $code .= $_."\n"; }
+	}
+	else {
+		if (/^\@\@\@{$/) {
+			$startcode = $.;
+			$code = "\n";
+		}
+		elsif (/^\@\@\@AUTO$/) {
+			print qq{
+  !! Automatically generated file
+  !! Do not edit, your changes will be discarded upon build
+  !! Change the corresponding template file $ARGV
+
+};
+			print "#line $. \"$ARGV\"\n" if $lines;
+		}
+		else {
+			print "$_\n";
+		}
+	}
+}
+
+# print $event_common{prog}->copy('bla','hu');

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="LB Subsystem common properties">
+	<property name="subsystem.build.properties.file" value="./project/build.properties" />
+	<property file="${subsystem.build.properties.file}" />	
+	<property name="subsystem.name" value="${lb.subsystem.name}"/>
+	<property name="subsystem.prefix" value="${lb.subsystem.prefix}"/>
+
+	<import file="${subsystem.general.properties.file}" />
+
+	<!--  XXX: should be resolved at project level -->
+	<property name="ext.ares.subdir" value="ares" />
+	<property name="ext.expat.subdir" value="expat" />
+	<property name="ext.voms.subdir" value="voms" />
+	<property name="ext.gacl.subdir" value="gacl" />
+	<property name="ext.mysql.subdir" value="mysql" />
+</project>
