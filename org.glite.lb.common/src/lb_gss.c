@@ -827,7 +827,7 @@ edg_wll_gss_read(edg_wll_GssConnection *connection, void *buf, size_t bufsize,
    memcpy(buf, output_token.value, output_token.length);
 
    ret = output_token.length;
-   gss_release_cred(&min_stat, &output_token);
+   gss_release_buffer(&min_stat, &output_token);
 
    return ret;
 }
