@@ -722,7 +722,7 @@ int edg_wll_SetLoggingJobProxy(
                         edg_wll_IncSequenceCode(context);
         }
 /* XXX: add user credentials somewhere - to context? */
-	edg_wll_SetParamString(context, EDG_WLL_PARAM_USER_LBPROXY, user);
+	edg_wll_SetParamString(context, EDG_WLL_PARAM_LBPROXY_USER, user);
 
         return edg_wll_Error(context,NULL,NULL);
 }
