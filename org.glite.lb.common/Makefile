@@ -52,7 +52,12 @@ GLOBUS_LIBS:=-L${globus_prefix}/lib \
         -lglobus_gssapi_gsi_${nothrflavour} \
 
 GLITE_LIBS:=-L${glite_location}/lib
-EXPAT_LIBS:=-L${expat_prefix}/lib -lexpat
+
+ifneq (${expat_prefix},/usr)
+	EXPAT_LIBS:=-L${expat_prefix}/lib
+endif
+EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
+
 ARES_LIBS:=-L${ares_prefix}/lib -lares
 LDFLAGS:=-L${stagedir}/lib \
     ${COVERAGE_FLAGS}

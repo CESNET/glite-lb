@@ -82,8 +82,10 @@ GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
 	-lglobus_common_${thrflavour} \
 	-lglobus_gssapi_gsi_${thrflavour}
 
-EXPAT_LIBS:=-L${expat_prefix}/lib \
-	-lexpat
+ifneq (${expat_prefix},/usr)
+	EXPAT_LIBS:=-L${expat_prefix}/lib
+endif
+EXPAT_LIBS := ${EXPAT_LIBS} -lexpat
 
 ARES_LIBS:=-L${ares_prefix}/lib \
 	-lares
