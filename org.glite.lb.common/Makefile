@@ -150,7 +150,7 @@ check.il: il_test
 test_gss: test_gss.o
 	${LINKXX} -o $@ test_gss.o ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
 
-il_test: il_test.o il_int_test.o il_string_test.o
+il_test: il_test.o il_int_test.o il_string_test.o il_msg_test.o
 	${LINKXX} -o $@ $+ ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
 
 test_coverage:
@@ -191,7 +191,7 @@ clean:
 test_gss.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${GLOBUSINC} ${TEST_INC} $<
 
-il_int_test.o il_string_test.o il_test.o: %.o: %.cpp
+il_int_test.o il_string_test.o il_test.o il_msg_test.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 
 %.thr.o: %.c
