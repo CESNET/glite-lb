@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.2  2004/06/22 22:49:08  dimeglio
+	Use of stage.abs.dir is required by -rpath
+	
 	Revision 1.1  2004/06/22 22:04:55  dimeglio
 	First version of this file
 	
@@ -39,6 +42,8 @@ top_srcdir=..
 builddir=build
 stagedir=${stage.abs.dir}
 distdir=${dist.dir}
+globalprefix=${global.prefix}
+lbprefix=${subsystem.prefix}
 package=${module.package.name}
 PREFIX=${install.dir}
 version=${module.version}
