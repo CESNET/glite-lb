@@ -205,8 +205,8 @@ int edg_wll_DumpEvents(
 
 	edg_wll_DumpRequestToXML(ctx, request, &send_mess);
 
-	//edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_TIMEOUT, 4000);
-	ctx->p_tmp_timeout.tv_sec = 400;
+	ctx->p_tmp_timeout = ctx->p_query_timeout;
+	if (ctx->p_tmp_timeout.tv_sec < 600) ctx->p_tmp_timeout.tv_sec = 600;
 
 	if (set_server_name_and_port(ctx, NULL))
 		goto edg_wll_dumpevents_end;

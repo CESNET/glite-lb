@@ -365,8 +365,8 @@ int edg_wll_Purge(
 	if (edg_wll_PurgeRequestToXML(ctx, request, &send_mess))
 		goto edg_wll_purge_end;
 
-	//edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_TIMEOUT, 4000);
-	ctx->p_tmp_timeout.tv_sec = 400;
+	ctx->p_tmp_timeout = ctx->p_query_timeout;
+	if (ctx->p_tmp_timeout.tv_sec < 600) ctx->p_tmp_timeout.tv_sec = 600;
 
 	if (set_server_name_and_port(ctx, NULL)) 
 		goto edg_wll_purge_end;
