@@ -20,6 +20,7 @@ ares_prefix=/opt/ares
 -include Makefile.inc
 
 YACC=bison -y
+CC=gcc
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
@@ -59,7 +60,7 @@ LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour}
+	-lglobus_gssapi_gsi_${nothrflavour} \
 
 
 # XXX: our vomsc.la depends on badly installed expat
@@ -96,12 +97,17 @@ default all: compile
 
 compile: glite_lb_bkserverd glite_lb_bkindex
 
-check: test_xml
+check: compile test.xml test.query
 	-echo check.query not complete yet
 
 test_xml: test_xml.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIB} ${TEST_LIBS}
+	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIB} ${TEST_LIBS} ${EXT_LIBS}
+
+test.query: test_query_events
+	./test_query_events ${top_srcdir}/test
+
+test.xml: test_xml
 	./test_xml
 
 lb_xml_parse.c: lb_xml_parse.c.T
