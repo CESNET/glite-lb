@@ -793,15 +793,12 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			edg_wlc_JobId	jobId;
 			
 
-        	        if (parseQuerySequenceCodeRequest(ctx, messageBody, &jobId, &source))
+			if (parseQuerySequenceCodeRequest(ctx, messageBody, &jobId, &source))
 				ret = HTTP_BADREQ;
 			else {
 				int     fatal = 0;
 				
-/* XXX - needs server-side function
- * consult error codes with nykolas 
- *
-				switch (edg_wll_QuerySequenceCode(ctx, jobId, source, &seqCode)) {
+				switch (edg_wll_QuerySequenceCodeServer(ctx, jobId, source, &seqCode)) {
 					case 0: if (html) ret = HTTP_NOTIMPL;
 						else      ret = HTTP_OK; 
 						break;
@@ -813,7 +810,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					case ENOMEM: fatal = 1; ret = HTTP_INTERNAL; break;
 					default: ret = HTTP_INTERNAL; break;
 				}
-*/
 				
 				/* glue errors (if eny) to XML responce */ 
 				if (!html && !fatal)

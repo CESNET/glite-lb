@@ -66,8 +66,7 @@ int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
 
 
 	edg_wll_ResetError(ctx);
-	ret = edg_wll_plain_read_full(&ctx->connPool[ctx->connToUse].conn,
-				fbuf, 17, &ctx->p_tmp_timeout);
+	ret = edg_wll_plain_read_full(ctx->connPlain, fbuf, 17, &ctx->p_tmp_timeout);
 	if ( ret < 0 ) return edg_wll_SetError(ctx, errno, "StoreProtoProxy() - reading data");
 
 	len = atoi(fbuf);
@@ -76,8 +75,7 @@ int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
 	buf = malloc(len+1);
 	if ( !buf ) return edg_wll_SetError(ctx, errno, "StoreProtoProxy()");
 
-	if ( edg_wll_plain_read_full(&ctx->connPool[ctx->connToUse].conn,
-				buf, len, &ctx->p_tmp_timeout) < 0) {
+	if ( edg_wll_plain_read_full(ctx->connPlain, buf, len, &ctx->p_tmp_timeout) < 0) {
 		free(buf);
 		return edg_wll_SetError(ctx, errno, "StoreProtoProxy() - reading data");
 	}
@@ -87,8 +85,7 @@ int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
 	free(buf);
 
 	if ( (len = create_reply(ctx, fbuf, sizeof fbuf)) ) {
-		if ( edg_wll_plain_write_full(&ctx->connPool[ctx->connToUse].conn,
-					fbuf, len, &ctx->p_tmp_timeout) < 0 )
+		if ( edg_wll_plain_write_full(ctx->connPlain, fbuf, len, &ctx->p_tmp_timeout) < 0 )
 			return edg_wll_SetError(ctx, errno, "StoreProtoProxy() - sending reply");
 	}
 	else edg_wll_SetError(ctx, E2BIG, "create_reply()");

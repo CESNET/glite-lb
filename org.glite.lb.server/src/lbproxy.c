@@ -372,11 +372,15 @@ int handle_conn(int conn, struct timeval client_start, void *data)
 		ctx->p_tmp_timeout.tv_usec = total_to.tv_usec;
 	}
 	
-	ctx->poolSize = 1;
-	ctx->connPool = calloc(1, sizeof(edg_wll_ConnPool));
-	ctx->connToUse = 0;
+	ctx->connPlain = (edg_wll_Connection *) calloc(1, sizeof(edg_wll_Connection));
+	if ( !ctx->connPlain ) {
+		perror("calloc");
+		edg_wll_FreeContext(ctx);
 
-	if ( edg_wll_plain_accept(conn, &ctx->connPool[0].conn) ) {
+		return -1;
+	}
+
+	if ( edg_wll_plain_accept(conn, ctx->connPlain) ) {
 		perror("accept");
 		edg_wll_FreeContext(ctx);
 
