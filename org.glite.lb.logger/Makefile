@@ -21,7 +21,7 @@ ares_prefix=/opt/ares
 
 CC=gcc
 
-VPATH:=${top_srcdir}/src:${top_srcdir}/src/test
+VPATH:=${top_srcdir}/src:${top_srcdir}/test
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
