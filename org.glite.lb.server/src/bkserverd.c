@@ -219,19 +219,19 @@ int bk_clnt_data_init(void **);
 	 *	Serve & Store handlers
 	 */
 int bk_clnt_reject(int);
-int bk_handle_connection(int, struct timeval, void *);
-int bk_accept_serve(int, void *);
-int bk_accept_store(int, void *);
-int bk_clnt_disconnect(int, void *);
+int bk_handle_connection(int, struct timeval *, void *);
+int bk_accept_serve(int, struct timeval *, void *);
+int bk_accept_store(int, struct timeval *, void *);
+int bk_clnt_disconnect(int, struct timeval *, void *);
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 	/*
 	 *	WS handlers
 	 */
-int bk_handle_ws_connection(int, struct timeval, void *);
-int bk_accept_ws(int, void *);
+int bk_handle_ws_connection(int, struct timeval *, void *);
+int bk_accept_ws(int, struct timeval *, void *);
 int bk_ws_clnt_reject(int);
-int bk_ws_clnt_disconnect(int, void *);
+int bk_ws_clnt_disconnect(int, struct timeval *, void *);
 #endif 	/*GLITE_LB_SERVER_WITH_WS */
 
 #define SRV_SERVE		0
@@ -553,13 +553,18 @@ a.sin_addr.s_addr = INADDR_ANY;
 	}
 
 
-	glite_srvbones_set_param(GLITE_SBPARAM_SLAVES_CT, slaves);
+	glite_srvbones_set_param(GLITE_SBPARAM_SLAVES_COUNT, slaves);
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_OVERLOAD, SLAVE_OVERLOAD);
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_CONNS_MAX, SLAVE_CONNS_MAX);
+	/* XXX
+	 * not final version - yet!
+	 */
 	to = (struct timeval){CLNT_TIMEOUT, 0};
-	glite_srvbones_set_param(GLITE_SBPARAM_CLNT_TIMEOUT, &to);
+	glite_srvbones_set_param(GLITE_SBPARAM_CONNECT_TIMEOUT, &to);
+	to = (struct timeval){CLNT_TIMEOUT, 0};
+	glite_srvbones_set_param(GLITE_SBPARAM_REQUEST_TIMEOUT, &to);
 	to = (struct timeval){TOTAL_CLNT_TIMEOUT, 0};
-	glite_srvbones_set_param(GLITE_SBPARAM_TOTAL_CLNT_TIMEOUT, &to);
+	glite_srvbones_set_param(GLITE_SBPARAM_IDLE_TIMEOUT, &to);
 
 	glite_srvbones_run(bk_clnt_data_init, service_table, sizofa(service_table), debug);
 
@@ -657,7 +662,7 @@ int bk_clnt_data_init(void **data)
  *	gets the connection info
  *	and accepts the gss connection
  */
-int bk_handle_connection(int conn, struct timeval client_start, void *data)
+int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 {
 	struct clnt_data_t *cdata = (struct clnt_data_t *)data;
 	edg_wll_Context		ctx;
@@ -669,12 +674,12 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 						maj_stat;
 	struct timeval		dns_to = {DNS_TIMEOUT, 0},
 						total_to = { TOTAL_CLNT_TIMEOUT,0 },
-						now;
+						conn_start, now;
 	struct sockaddr_in	a;
 	int					alen;
 	char			   *server_name = NULL,
 					   *name = NULL;
-	int					h_errno;
+	int					h_errno, ret;
 
 
 
@@ -734,6 +739,8 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 	ctx->connPool[ctx->connToUse].peerPort = ntohs(a.sin_port);
 	ctx->count_statistics = count_statistics;
 
+	gettimeofday(&conn_start, 0);
+
 	/* not a critical operation, do not waste all SLAVE_TIMEOUT */
 	h_errno = asyn_gethostbyaddr(&name, (char *)&a.sin_addr.s_addr,sizeof(a.sin_addr.s_addr), AF_INET, &dns_to);
 	switch ( h_errno )
@@ -752,8 +759,8 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 		break;
 	}
 	
-	gettimeofday(&now,0);
-	if ( decrement_timeout(&ctx->p_tmp_timeout, client_start, now) )
+	gettimeofday(&now, 0);
+	if ( decrement_timeout(timeout, conn_start, now) )
 	{
 		if (debug) fprintf(stderr, "gethostbyaddr() timeout");
 		else syslog(LOG_ERR, "gethostbyaddr(): timeout");
@@ -807,10 +814,19 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 		ctx->srvPort = ntohs(a.sin_port);
 	}
 
-	if ( edg_wll_gss_accept(mycred, conn, &ctx->p_tmp_timeout, &ctx->connPool[ctx->connToUse].gss, &gss_code) )
+	if ( (ret = edg_wll_gss_accept(mycred, conn, timeout, &ctx->connPool[ctx->connToUse].gss, &gss_code)) )
 	{
-		dprintf(("[%d] Client authentication failed, closing.\n", getpid()));
-		if (!debug) syslog(LOG_ERR, "Client authentication failed");
+		if ( ret == EDG_WLL_GSS_ERROR_TIMEOUT )
+		{
+			dprintf(("[%d] Client authentication failed - timeout reached, closing.\n", getpid()));
+			if (!debug) syslog(LOG_ERR, "Client authentication failed - timeout reached");
+		}
+		else
+		{
+			dprintf(("[%d] Client authentication failed, closing.\n", getpid()));
+			if (!debug) syslog(LOG_ERR, "Client authentication failed");
+
+		}
 		edg_wll_FreeContext(ctx);
 		return 1;
 	} 
@@ -869,7 +885,7 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 }
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-int bk_handle_ws_connection(int conn, struct timeval client_start, void *data)
+int bk_handle_ws_connection(int conn, struct timeval *timeout, void *data)
 {
     struct clnt_data_t	   *cdata = (struct clnt_data_t *) data;
 	struct soap			   *soap = NULL;
@@ -898,7 +914,7 @@ int bk_handle_ws_connection(int conn, struct timeval client_start, void *data)
 		perror("Couldn't set soap namespaces");
 		goto err;
 	}
-	if ( (rv = bk_handle_connection(conn, client_start, data)) ) {
+	if ( (rv = bk_handle_connection(conn, timeout, data)) ) {
 		soap_done(soap);
 		goto err;
 	}
@@ -918,20 +934,24 @@ err:
 }
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
-int bk_accept_store(int conn, void *cdata)
+int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 {
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
+	struct timeval		before, after;
 
 	/*
 	 *	serve the request
 	 */
+	memcpy(&ctx->p_tmp_timeout, timeout, sizeof(ctx->p_tmp_timeout));
+	gettimeofday(&before, NULL);
 	if ( edg_wll_StoreProto(ctx) )
 	{ 
 		char    *errt, *errd;
+		int		err;
 
 		
 		errt = errd = NULL;
-		switch ( edg_wll_Error(ctx, &errt, &errd) )
+		switch ( (err = edg_wll_Error(ctx, &errt, &errd)) )
 		{
 		case ETIMEDOUT:
 		case EDG_WLL_ERROR_GSS:
@@ -949,7 +969,7 @@ int bk_accept_store(int conn, void *cdata)
 			/*
 			 *	"recoverable" error - return (>0)
 			 */
-			return 1;
+			return err;
 			break;
 
 		case ENOENT:
@@ -975,17 +995,26 @@ int bk_accept_store(int conn, void *cdata)
 		} 
 		free(errt); free(errd);
 	}
+	gettimeofday(&after, NULL);
+	if ( decrement_timeout(timeout, before, after) ) {
+		if (debug) fprintf(stderr, "Serving store connection timed out");
+		else syslog(LOG_ERR, "Serving store connection timed out");
+		return ETIMEDOUT;
+	}
 
 	return 0;
 }
 
-int bk_accept_serve(int conn, void *cdata)
+int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 {
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
+	struct timeval		before, after;
 
 	/*
 	 *	serve the request
 	 */
+	memcpy(&ctx->p_tmp_timeout, timeout, sizeof(ctx->p_tmp_timeout));
+	gettimeofday(&before, NULL);
 	if ( edg_wll_ServerHTTP(ctx) )
 	{ 
 		char    *errt, *errd;
@@ -1036,13 +1065,19 @@ int bk_accept_serve(int conn, void *cdata)
 		} 
 		free(errt); free(errd);
 	}
+	gettimeofday(&after, NULL);
+	if ( decrement_timeout(timeout, before, after) ) {
+		if (debug) fprintf(stderr, "Serving store connection timed out");
+		else syslog(LOG_ERR, "Serving store connection timed out");
+		return ETIMEDOUT;
+	}
 
 	return 0;
 }
 
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-int bk_accept_ws(int conn, void *cdata)
+int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 {
 	struct soap		   *soap = ((struct clnt_data_t *) cdata)->soap;
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
@@ -1110,7 +1145,7 @@ int bk_accept_ws(int conn, void *cdata)
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 
-int bk_clnt_disconnect(int conn, void *cdata)
+int bk_clnt_disconnect(int conn, struct timeval *timeout, void *cdata)
 {
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
 
@@ -1127,7 +1162,7 @@ int bk_clnt_disconnect(int conn, void *cdata)
 }
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-int bk_ws_clnt_disconnect(int conn, void *cdata)
+int bk_ws_clnt_disconnect(int conn, struct timeval *timeout, void *cdata)
 {
 	struct soap			   *soap = ((struct clnt_data_t *) cdata)->soap;
 	glite_gsplugin_Context	gsplugin_ctx;
@@ -1137,7 +1172,7 @@ int bk_ws_clnt_disconnect(int conn, void *cdata)
 	gsplugin_ctx = glite_gsplugin_get_context(soap);
 	gsplugin_ctx->cred = GSS_C_NO_CREDENTIAL;
 	gsplugin_ctx->connection = NULL;
-	if ( (rv = bk_clnt_disconnect(conn, cdata)) )
+	if ( (rv = bk_clnt_disconnect(conn, timeout, cdata)) )
 		return rv;
 
 	soap_destroy(((struct clnt_data_t *)cdata)->soap);
