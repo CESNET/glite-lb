@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.9  2004/08/08 19:07:17  dimeglio
+	Added small.memory type of build
+	
 	Revision 1.8  2004/07/29 10:47:46  dimeglio
 	Added server and logger
 	
@@ -174,13 +177,33 @@
 		</antcall>
 	</target>
 
-	<target name="tag">
+	<target name="tag" if="do.cvs.tag"
+		description="Apply tags.">
+		
+		<antcall target="buildmodules">
+			<param name="target" value="tag"/>
+		</antcall>
 
-		<!-- This target is not recursive
-			 It is only used to set private tags
-			 Tagging is done by the build system -->
-		<!-- TODO -->		
-
+		<!-- TO DO: Add logic to update dependecies.properties file with new components tags -->
+		
+		<!-- Increment build number -->
+		<propertyfile file="${module.version.file}">
+		  <entry  key="module.version" value="${module.version}"/>
+		  <entry  key="module.build" type="int" default="1" operation="+"/>
+		  <entry  key="module.age" value="${module.age}"/>
+		</propertyfile>
+		<exec dir="${module.project.dir}" executable="cvs">
+			<arg line="ci -m &quot;Incremented build number&quot; version.properties" />
+		</exec>
+		<var name="module.build" unset="true"/>
+    	<property file="${module.version.file}" />
+    	
+		<!-- CVS Label -->
+		<property name="cvs.label" value="${module.package.name}_B_${module.build}" />
+		<exec dir="${workspace.abs.dir}" executable="cvs">
+			<arg line="rtag -aFR ${cvs.label} ${module.name}" />
+		</exec>
+	
 	</target>
 
 	<target name="all" depends="localinit">
@@ -224,7 +247,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.client-interface" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+				<exec dir="${lb.subsystem.dir}.client-interface" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
 				</exec>
 			</then>
@@ -240,7 +263,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.common" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+				<exec dir="${lb.subsystem.dir}.common" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
 				</exec>
 			</then>
@@ -256,7 +279,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.client" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+				<exec dir="${lb.subsystem.dir}.client" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
 				</exec>
 			</then>
@@ -272,7 +295,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.server" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+				<exec dir="${lb.subsystem.dir}.server" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
 				</exec>
 			</then>
@@ -288,7 +311,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.logger" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+				<exec dir="${lb.subsystem.dir}.logger" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
 				</exec>
 			</then>
