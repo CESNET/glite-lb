@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.12  2004/08/09 04:36:44  dimeglio
+	Fixed inheritance of do.cvs.tag property
+	
 	Revision 1.11  2004/08/09 03:06:11  dimeglio
 	Fixed inheritance of failonerror property
 	
@@ -207,7 +210,7 @@
 		<!-- CVS Label -->
 		<property name="cvs.label" value="${module.package.name}_B_${module.build}" />
 		<exec dir="${workspace.abs.dir}" executable="cvs">
-			<arg line="rtag -aFR ${cvs.label} ${module.name}" />
+			<arg line="tag -aFR ${cvs.label} ${module.name}" />
 		</exec>
 	
 	</target>
