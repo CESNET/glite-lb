@@ -174,6 +174,7 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
   event_queue_unlock(eq);
   /* end of critical section */
 
+  assert(eq->head != NULL);
   return(0);
 }
 
