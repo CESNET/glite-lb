@@ -31,14 +31,14 @@ for my $e (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 };
 
 /**
- * \fn edg_wll_EventCode edg_wll_StringToEvent(char *name)
+ * \fn edg_wll_EventCode edg_wll_StringToEvent(const char *name)
  * \param name          a string event name (e.g. "JobTransfer")
  * \return corresponding numeric code (edg_wll_EventCode)
  * \brief convert a string event name to the corresponding numeric code  
  * Calls: strcasecmp
  * Algorithm: array lookup
  */
-edg_wll_EventCode edg_wll_StringToEvent(char *name)
+edg_wll_EventCode edg_wll_StringToEvent(const char *name)
 {
 	unsigned int	i;
 
@@ -95,14 +95,14 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 };
 
 /*
- * \fn edg_wll_KeyNameCode edg_wll_StringToKeyName(char *name)
+ * \fn edg_wll_KeyNameCode edg_wll_StringToKeyName(const char *name)
  * \param name		a string ULM key name (e.g. "DG.JOB.TRANSFER.DEST")
  * \return corresponding numeric code (edg_wll_KeyNameCode)
  * \brief convert a string ULM key name to the corresponding numeric code
  * Calls: strcasecmp
  * Algorithm: array lookup
  */
-edg_wll_KeyNameCode edg_wll_StringToKeyName(char *name)
+edg_wll_KeyNameCode edg_wll_StringToKeyName(const char *name)
 {
 	unsigned int	i;
 
@@ -156,11 +156,11 @@ static const char \*${char}\[\] = \{
 # function StringTo:
 		gen qq{
 /**
- * \\fn $enum edg_wll_StringTo${c}(char *name)
+ * \\fn $enum edg_wll_StringTo${c}(const char *name)
  * Calls: strcasecmp
  * Algorithm: array lookup
  */
-$enum edg_wll_StringTo${c}(char *name) 
+$enum edg_wll_StringTo${c}(const char *name) 
 \{
 	unsigned int	i;
 
@@ -212,11 +212,11 @@ static const char \*${char}\[\] = \{
 # function StringTo:
 			gen qq{
 /**
- * \\fn $enum edg_wll_StringTo${c}(char *name)
+ * \\fn $enum edg_wll_StringTo${c}(const char *name)
  * Calls: strcasecmp
  * Algorithm: array lookup
  */
-$enum edg_wll_StringTo${c}(char *name) 
+$enum edg_wll_StringTo${c}(const char *name) 
 \{
 	unsigned int	i;
 
