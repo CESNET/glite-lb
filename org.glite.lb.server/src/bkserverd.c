@@ -30,8 +30,6 @@
 #ifdef GLITE_LB_SERVER_WITH_WS
 #include <stdsoap2.h>
 #include "glite/security/glite_gsplugin.h"
-
-int soap_serve(struct soap*); 
 #endif /* GLITE_LB_SERVER_WITH_WS */
 
 #include "glite/security/glite_gss.h"
@@ -927,7 +925,6 @@ int bk_handle_ws_connection(int conn, struct timeval *timeout, void *data)
 		goto err;
 	}
 	gsplugin_ctx->connection = &cdata->ctx->connPool[cdata->ctx->connToUse].gss;
-	glite_gsplugin_set_timeout(gsplugin_ctx, &cdata->ctx->p_tmp_timeout);
 	gsplugin_ctx->cred = mycred;
 	cdata->soap = soap;
 
@@ -970,7 +967,6 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 			 */
 		case ENOTCONN:
 			free(errt); free(errd);
-			dprintf(("[%d] Connection closed\n", getpid()));
 			/*
 			 *	"recoverable" error - return (>0)
 			 */
@@ -1023,10 +1019,11 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 	if ( edg_wll_ServerHTTP(ctx) )
 	{ 
 		char    *errt, *errd;
+		int		err;
 
 		
 		errt = errd = NULL;
-		switch ( edg_wll_Error(ctx, &errt, &errd) )
+		switch ( (err = edg_wll_Error(ctx, &errt, &errd)) )
 		{
 		case ETIMEDOUT:
 		case EDG_WLL_ERROR_GSS:
@@ -1037,11 +1034,10 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 			 */
 		case ENOTCONN:
 			free(errt); free(errd);
-			dprintf(("[%d] Connection closed\n", getpid()));
 			/*
 			 *	"recoverable" error - return (>0)
 			 */
-			return 1;
+			return err;
 			break;
 
 		case ENOENT:
@@ -1081,40 +1077,53 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 #ifdef GLITE_LB_SERVER_WITH_WS
 int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 {
-	struct soap		   *soap = ((struct clnt_data_t *) cdata)->soap;
-	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
-	glite_gsplugin_Context gsplugin_ctx;
+	struct soap			   *soap = ((struct clnt_data_t *) cdata)->soap;
+	edg_wll_Context			ctx = ((struct clnt_data_t *) cdata)->ctx;
+	glite_gsplugin_Context	gsplugin_ctx;
+	int						err;
 
 
-	if ( soap_serve(soap) )
-	{
+	gsplugin_ctx = glite_gsplugin_get_context(soap);
+	glite_gsplugin_set_timeout(gsplugin_ctx, timeout);
+	glite_gsplugin_set_udata(soap, ctx);
+	/*	soap->max_keep_alive must be higher tha 0,
+	 *	because on 0 value soap closes the connection
+	 */
+	soap->max_keep_alive = 1;
+	soap_begin(soap);
+	err = 0;
+	if ( soap_begin_recv(soap) ) {
+		if ( soap->error == SOAP_EOF ) return ENOTCONN;
+		if ( soap->error < SOAP_STOP ) err = soap_send_fault(soap);
+		else soap_closesock(soap);	/*	XXX: Do close the socket here? */
+	} else if (   soap_envelope_begin_in(soap)
+			   || soap_recv_header(soap)
+			   || soap_body_begin_in(soap)
+			   || soap_serve_request(soap)
+			   || (soap->fserveloop && soap->fserveloop(soap)) )
+		err = soap_send_fault(soap);
+
+	if ( err ) {
 		char    *errt, *errd;
+		int		ret;
 
 		
 		errt = errd = NULL;
-		switch ( edg_wll_Error(ctx, &errt, &errd) )
-		{
+		switch ( (ret = edg_wll_Error(ctx, &errt, &errd)) ) {
 		case ETIMEDOUT:
 		case EDG_WLL_ERROR_GSS:
 		case EPIPE:
 			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
 			if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
-			/*	fallthrough
+			/*	"recoverable" error - return (>0)
+			 *	fallthrough
 			 */
 		case ENOTCONN:
-			edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, NULL);
-			edg_wll_FreeContext(ctx);
-			ctx = NULL;
-			gsplugin_ctx = glite_gsplugin_get_context(soap);
-			gsplugin_ctx->cred = GSS_C_NO_CREDENTIAL;
-			gsplugin_ctx->connection = NULL;
-			glite_gsplugin_free_context(gsplugin_ctx);
-			free(errt); free(errd);
-			dprintf(("[%d] Connection closed\n", getpid()));
-			/*
-			 *	"recoverable" error - return (>0)
+			/*	"recoverable" error - return (>0)
+			 *	return ENOTCONN to tell bones to clean up
 			 */
-			return 1;
+			free(errt); free(errd);
+			return ret;
 			break;
 
 		case ENOENT:
