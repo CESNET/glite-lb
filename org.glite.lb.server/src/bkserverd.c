@@ -95,7 +95,6 @@ static int				hardEventsLimit = 0;
 static int				hardRespSizeLimit = 0;
 static char			   *dbstring = NULL,*fake_host = NULL;
 static int				fake_port = 0;
-static char			   *proxy = NULL;
 static char			  **super_users = NULL;
 static int				slaves = 10,
 						semaphores = -1,
@@ -228,7 +227,8 @@ int main(int argc, char *argv[])
 	int					opt;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *port, *ws_port,
-					   *name;
+					   *name,
+					   *cert, *key;
 	FILE			   *fpid;
 	key_t				semkey;
 	edg_wll_Context		ctx;
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
 
 	asprintf(&port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT);
 	asprintf(&ws_port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT+2);
-	proxy = cadir = vomsdir = NULL;
+	cert = key = cadir = vomsdir = NULL;
 
 /* no magic here: 1 month, 3 and 7 days */
 	purge_timeout[EDG_WLL_PURGE_JOBSTAT_OTHER] = 60*60*24*31;	
@@ -268,9 +268,8 @@ int main(int argc, char *argv[])
 
 	while ((opt = getopt_long(argc,argv,"a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:",opts,NULL)) != EOF) switch (opt) {
 		case 'a': fake_host = strdup(optarg); break;
-		case 'c': proxy = optarg; break;
-		case 'k': if ( proxy ) fprintf(stderr,"%s: proxy already defined (cert = key nowadays)\n", argv[0]);
-				  else proxy = optarg;
+		case 'c': cert = optarg; break;
+		case 'k': key = optarg; break;
 		case 'C': cadir = optarg; break;
 		case 'V': vomsdir = optarg; break;
 		case 'p': free(port); port = strdup(optarg); break;
@@ -442,13 +441,12 @@ a.sin_addr.s_addr = INADDR_ANY;
 	}
 	if ( listen(service_table[SRV_WS].conn, CON_QUEUE) ) { perror("listen()"); return 1; }
 
-	if ( !proxy )
-		fprintf(stderr,
-				"%s: key or certificate file not specified "
-				"- unable to watch them for changes!\n", argv[0]);
+	if (!cert || !key)
+		fprintf(stderr, "%s: key or certificate file not specified"
+						" - unable to watch them for changes!\n", argv[0]);
 
 	if ( cadir ) setenv("X509_CERT_DIR", cadir, 1);
-	if ( !edg_wll_gss_acquire_cred_gsi(proxy, &mycred, &mysubj, &gss_code) )
+	if ( !edg_wll_gss_acquire_cred_gsi(cert, key, &mycred, &mysubj, &gss_code) )
 	{
 		int	i;
 
