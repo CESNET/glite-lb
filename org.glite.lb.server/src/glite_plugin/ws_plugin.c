@@ -5,16 +5,13 @@
 #include <signal.h>
 #include <stdsoap2.h>
 
-#include "glite/lb/lb_gss.h"
-#include "glite/lb/context-int.h"
+#include "lb_gss.h"
 
 #ifdef PLUGIN_TEST
 extern int edg_wll_open(edg_wll_Context);
 #endif
 
 #include "ws_plugin.h"
-
-#include "LoggingAndBookkeeping.nsmap"
 
 #ifdef WS_PLUGIN_DEBUG
 #  define pdprintf(s)	printf s
@@ -46,6 +43,8 @@ int edg_wll_ws_plugin(struct soap *soap, struct soap_plugin *p, void *arg)
 #endif
 	soap->fsend		= edg_wll_ws_send;
 	soap->frecv		= edg_wll_ws_recv;
+
+	/* XXX globus_module_activate(GLOBUS_COMMON_MODULE); */
 
 	return SOAP_OK;
 }
@@ -79,21 +78,23 @@ static void edg_wll_ws_delete(struct soap *soap, struct soap_plugin *p)
 
 size_t edg_wll_ws_recv(struct soap *soap, char *buf, size_t bufsz)
 {
-	edg_wll_Context		ctx = (edg_wll_Context)soap_lookup_plugin(soap, plugin_id);
+	edg_wll_ws_Context	ctx = (edg_wll_ws_Context)soap_lookup_plugin(soap, plugin_id);
 	edg_wll_GssStatus	gss_code;
 	int					len;
 
 
-	edg_wll_ResetError(ctx);
-	if ( ctx->connPool[ctx->connToUse].gss.context == GSS_C_NO_CONTEXT )
+	if (ctx->error_msg)
+		free(ctx->error_msg);
+	ctx->error_msg = NULL;
+
+	if ( ctx->connection->context == GSS_C_NO_CONTEXT )
 	{
-		edg_wll_SetError(ctx, ENOTCONN, NULL);
 		soap->errnum = ENOTCONN;
+		/* XXX edg_wll_ws_send() returns SOAP_EOF on errors */
 		return 0;
 	}
 	
-	len = edg_wll_gss_read(&ctx->connPool[ctx->connToUse].gss,
-					buf, bufsz, &ctx->p_tmp_timeout, &gss_code);
+	len = edg_wll_gss_read(ctx->connection, buf, bufsz, ctx->timeout, &gss_code);
 
 	switch ( len )
 	{
@@ -101,22 +102,21 @@ size_t edg_wll_ws_recv(struct soap *soap, char *buf, size_t bufsz)
 		break;
 
 	case EDG_WLL_GSS_ERROR_GSS:
-		edg_wll_SetErrorGss(ctx, "receving WS request", &gss_code);
+		edg_wll_gss_get_error(&gss_code, "receving WS request",
+		      		      &ctx->error_msg);
 		soap->errnum = ENOTCONN;
 		return 0;
 
 	case EDG_WLL_GSS_ERROR_ERRNO:
-		edg_wll_SetError(ctx, errno, "edg_wll_gss_read()");
+		ctx->error_msg = strdup("edg_wll_gss_read()");
 		soap->errnum = errno;
 		return 0;
 
 	case EDG_WLL_GSS_ERROR_TIMEOUT:
-		edg_wll_SetError(ctx, ETIMEDOUT, NULL);
 		soap->errnum = ETIMEDOUT;
 		return 0;
 
 	case EDG_WLL_GSS_ERROR_EOF:
-		edg_wll_SetError(ctx, ENOTCONN, NULL);
 		soap->errnum = ENOTCONN;
 		return 0;
 
@@ -129,18 +129,14 @@ size_t edg_wll_ws_recv(struct soap *soap, char *buf, size_t bufsz)
 
 static int edg_wll_ws_send(struct soap *soap, const char *buf, size_t bufsz)
 {
-	edg_wll_Context		ctx = (edg_wll_Context) soap_lookup_plugin(soap, plugin_id);
+	edg_wll_ws_Context	ctx = (edg_wll_ws_Context) soap_lookup_plugin(soap, plugin_id);
 	edg_wll_GssStatus	gss_code;
 	struct sigaction	sa, osa;
 	size_t			total = 0;
 	int			ret;
 
-
-	edg_wll_ResetError(ctx);
-
-	if ( ctx->connPool[ctx->connToUse].gss.context == GSS_C_NO_CONTEXT )
+	if ( ctx->connection->context == GSS_C_NO_CONTEXT )
 	{
-		edg_wll_SetError(ctx, ENOTCONN, NULL);
 		soap->errnum = ENOTCONN;
 		return SOAP_EOF;
 	}
@@ -150,9 +146,9 @@ static int edg_wll_ws_send(struct soap *soap, const char *buf, size_t bufsz)
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGPIPE, &sa, &osa);
 
-	ret = edg_wll_gss_write_full(&ctx->connPool[ctx->connToUse].gss,
+	ret = edg_wll_gss_write_full(ctx->connection,
 				(void*)buf, bufsz,
-				&ctx->p_tmp_timeout,
+				ctx->timeout,
 				&total, &gss_code);
 
 	sigaction(SIGPIPE, &osa, NULL);
@@ -164,19 +160,19 @@ static int edg_wll_ws_send(struct soap *soap, const char *buf, size_t bufsz)
 		break;
 
 	case EDG_WLL_GSS_ERROR_TIMEOUT:
-		edg_wll_SetError(ctx, ETIMEDOUT, "edg_wll_ws_send()");
+		ctx->error_msg = strdup("edg_wll_ws_send()");
 		soap->errnum = ETIMEDOUT;
 		return SOAP_EOF;
 
 	case EDG_WLL_GSS_ERROR_ERRNO:
 		if ( errno == EPIPE )
 		{
-			edg_wll_SetError(ctx, ENOTCONN, "edg_wll_ws_send()");
+			ctx->error_msg = strdup("edg_wll_ws_send()");
 			soap->errnum = ENOTCONN;
 		}
 		else
 		{
-			edg_wll_SetError(ctx, errno, "edg_wll_ws_send()");
+			ctx->error_msg = strdup("edg_wll_ws_send()");
 			soap->errnum = errno;
 		}
 		return SOAP_EOF;
@@ -184,7 +180,7 @@ static int edg_wll_ws_send(struct soap *soap, const char *buf, size_t bufsz)
 	case EDG_WLL_GSS_ERROR_GSS:
 	case EDG_WLL_GSS_ERROR_EOF:
 	default:
-		edg_wll_SetError(ctx, ENOTCONN, "edg_wll_ws_send()");
+		ctx->error_msg = strdup("edg_wll_ws_send()");
 		soap->errnum = ENOTCONN;
 		return SOAP_EOF;
 	}
