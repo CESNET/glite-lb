@@ -256,7 +256,7 @@ error:
 
 static int real_write(edg_wll_Context ctx, edg_wll_GssConnection *con,const char *data,int len)
 {
-	int	total = 0;
+	size_t	total = 0;
 	struct sigaction	sa,osa;
 	edg_wll_GssStatus	gss_code;
 	int	ret;

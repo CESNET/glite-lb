@@ -31,7 +31,7 @@ int edg_wll_log_proto_client(edg_wll_Context context, edg_wll_GssConnection *con
 	int	err;
 	int	answer;
 	u_int8_t answer_end[4];
-	int	count;
+	size_t	count;
 	int	size;
 	u_int8_t size_end[4];
 	edg_wll_GssStatus gss_code;

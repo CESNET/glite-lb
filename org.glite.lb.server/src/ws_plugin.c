@@ -130,8 +130,8 @@ static int edg_wll_ws_send(struct soap *soap, const char *buf, size_t bufsz)
 	edg_wll_Context		ctx = (edg_wll_Context) soap_lookup_plugin(soap, plugin_id);
 	edg_wll_GssStatus	gss_code;
 	struct sigaction	sa, osa;
-	int					total = 0,
-						ret;
+	size_t			total = 0;
+	int			ret;
 
 
 	edg_wll_ResetError(ctx);

@@ -243,7 +243,8 @@ notif_send_socket(edg_wll_Context       context,
 {
 	int ret;
 	struct sockaddr_un saddr;
-	int msg_sock, flags, count;
+	int msg_sock, flags;
+	size_t count;
 	struct timeval timeout;
 
 	timeout.tv_sec = EDG_WLL_LOG_TIMEOUT_MAX;

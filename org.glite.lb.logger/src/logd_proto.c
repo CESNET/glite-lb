@@ -38,7 +38,7 @@ int edg_wll_ll_log_level;
  *----------------------------------------------------------------------
  */
 static int send_answer_back(edg_wll_GssConnection *con, int answer, struct timeval *timeout) {
-	int count = 0;
+	size_t count = 0;
 	int err = 0;
 	int ans = answer;
 	u_int8_t ans_end[4];
@@ -310,7 +310,8 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	char	*buf,*dglllid,*dguser,*jobId,*name_esc;
 	char	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1];
 	char	outfilename[FILENAME_MAX];
-	int	count,count_total,size;
+	size_t	count;
+	int	count_total,size;
 	u_int8_t size_end[4];
 	size_t  msg_size,dglllid_size,dguser_size;
 	int	i,answer,answer_sent;

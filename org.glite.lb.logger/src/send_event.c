@@ -102,7 +102,8 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
 {
   char buffer[17];
   char *msg, *p;
-  int len, code, l;
+  int inlen, code;
+  size_t len, l;
   edg_wll_GssConnection *gss;
   struct timeval tv;
   edg_wll_GssStatus gss_stat;
@@ -126,11 +127,12 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
     
   buffer[16] = 0;
 
-  sscanf(buffer, "%d", &len);
-  if(len > MAXLEN) {
+  sscanf(buffer, "%d", &inlen);
+  if(inlen < 0 || inlen > MAXLEN) {
     set_error(IL_PROTO, LB_NOMEM, "get_reply: error reading reply length");
     return(-1);
   }
+  len = (size_t) inlen;
 
   /* allocate room for message body */
   if((msg = malloc(len)) == NULL) {
@@ -251,7 +253,8 @@ event_queue_send(struct event_queue *eq)
   while (!event_queue_empty(eq)) {
     struct server_msg *msg;
     char *rep;
-    int  ret, code, code_min, bytes_sent;
+    int  ret, code, code_min;
+    size_t bytes_sent;
     struct timeval tv;
     edg_wll_GssStatus gss_stat;
 
