@@ -45,6 +45,9 @@ public:
 	}
 
 	void testEncodeReply() {
+		CPPUNIT_ASSERT_EQUAL(len_rep, 31);
+		CPPUNIT_ASSERT(buffer_rep != NULL);
+		CPPUNIT_ASSERT(!strncmp(buffer_rep, rep, len_rep));
 	}
 
 	void testDecodeReply() {
@@ -85,7 +88,7 @@ private:
 };
 
 const char *IlMsgTest::msg = "               9\n6 zprava\n";
-const char *IlMsgTest::rep = "";
+const char *IlMsgTest::rep = "              14\n10\n20\n5 chyba\n";
 int IlMsgTest::pos;
 
 CPPUNIT_TEST_SUITE_REGISTRATION( IlMsgTest );
