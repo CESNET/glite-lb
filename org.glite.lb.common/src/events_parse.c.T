@@ -319,7 +319,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 }
 
 /* put it all together (inc. the ending LF) */
-if (asprintf(&logline,"%s%s%s\n",common,user,var) == -1) NOMEM
+if (trio_asprintf(&logline,"%s%s%s\n",common,user,var) == -1) NOMEM
 
 clean:
 	if (date) free(date);
@@ -416,6 +416,58 @@ ret=edg_wll_ResetError(context);
 
 end:
 	return ret;
+}
+
+/**
+ * edg_wll_CompareEvents - compare two event structures
+ * Calls: 
+ * Algorithm:
+ */
+edg_wll_ErrorCode edg_wll_CompareEvents(
+	edg_wll_Context context,        /* context IN */
+	const edg_wll_Event *e1,	/* event 1 IN */ 
+	const edg_wll_Event *e2		/* event 2 IN */
+)
+{
+	if (e1->any.type != e2->any.type) return edg_wll_SetError(context,EDG_WLL_ERROR_COMPARE_EVENTS,"Different event types");
+@@@{
+	selectType $event '_common_';
+	for ($event->getFieldsOrdered) {
+		my $f = selectField $event $_;
+		my $fn = getName $f;
+		my $ft = $f->{type};
+
+		my $a = "e1->any.$fn";
+		my $b = "e2->any.$fn";
+
+		gen "\tif (!(".eval($main::compare{C}->{$ft}).")) return edg_wll_SetError(context,EDG_WLL_ERROR_COMPARE_EVENTS,\"Different $fn\");\n";
+	}
+	
+	gen "\tswitch(e1->any.type) {\n";
+	for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
+		$event->getTypes)
+	{
+		my $tu = uc $t;
+		my $tl = lcfirst $t;
+
+		selectType $event $t;
+		gen "\t\tcase EDG_WLL_EVENT\_$tu :\n";
+		for ($event->getFieldsOrdered) {
+			my $f = selectField $event $_;
+			my $fn = $f->{name};
+			my $ft = $f->{type};
+
+			my $a = "e1->$tl.$fn";
+			my $b = "e2->$tl.$fn";
+
+			gen "\t\t\tif (!(".eval($main::compare{C}->{$ft}).")) return edg_wll_SetError(context,EDG_WLL_ERROR_COMPARE_EVENTS,\"Different $fn\");\n";
+		}
+		gen "\t\tbreak;\n";
+	}
+@@@}
+		default: return edg_wll_SetError(context,EDG_WLL_ERROR_COMPARE_EVENTS,"Unknown difference");
+	} /* switch */
+	return edg_wll_ResetError(context);
 }
 
 
@@ -721,7 +773,7 @@ $indent = "   ";
 @@@}
 
 /* put it all together (inc. the ending LF) */
-if (asprintf(&logline,"%s%s\n",common,var) == -1) NOMEM
+if (trio_asprintf(&logline,"%s%s\n",common,var) == -1) NOMEM
 
 clean:
         if (date) free(date);

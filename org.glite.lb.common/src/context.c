@@ -90,6 +90,7 @@ static const char* const errTexts[] = {
 	"Duplicate ULM key",
 	"Misuse of ULM key",
 	"Warning: extra ULM fields",
+	"Compared events differ",
 	"XML Parse error",
 	"Server response error",
 	"Bad JobId format",
