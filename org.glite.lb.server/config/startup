@@ -1,7 +1,6 @@
 #!/bin/sh
 
 GLITE_LOCATION=${GLITE_LOCATION:-/opt/glite}
-GLITE_USER=${GLITE_USER:-glite}
 GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-${GLITE_LOCATION}/var}
 
 [ -f /etc/glite.conf ] && . /etc/glite.conf
@@ -21,6 +20,12 @@ cred_copy=/var/tmp/glite-lb-server.pem
 
 start()
 {
+	if test -z "$GLITE_USER" ;then
+		echo 'Error: GLITE_USER is not set'
+		echo FAILED
+		return 1
+	fi
+
 	[ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
 		creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
 
