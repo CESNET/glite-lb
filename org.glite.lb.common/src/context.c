@@ -59,6 +59,14 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		}	
 		free(ctx->connPool);
 	}
+ 	if (ctx->connPoolNotif) {
+ 		if (ctx->connPoolNotif[0].peerName) free(ctx->connPoolNotif[0].peerName);
+ 		edg_wll_gss_close(&ctx->connPoolNotif[0].gss,&close_timeout);
+ 		if (ctx->connPoolNotif[0].gsiCred)
+ 			gss_release_cred(&min_stat, &ctx->connPoolNotif[0].gsiCred);
+ 		if (ctx->connPoolNotif[0].buf) free(ctx->connPoolNotif[0].buf);
+ 		free(ctx->connPoolNotif);
+ 	}
 	if ( ctx->connProxy ) {
 		if ( ctx->connProxy->buf ) free(ctx->connProxy->buf);
 		edg_wll_plain_close(&ctx->connProxy->conn);

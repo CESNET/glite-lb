@@ -224,7 +224,7 @@ producer_test: producer_test.o prod_proto_test.o
 	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+ ${EXT_LIB} ${GLOBUS_LIBS}
 
 producer_test.o: %.o: %.cpp
-	${CXX} -c ${CXXFLAGS} ${TEST_INC} $<
+	${CXX} -c ${CXXFLAGS} ${TEST_INC} ${GLOBUSINC} $<
 	
 stage: compile ${FAKELIB} ${FAKETHRLIB} 
 	$(MAKE) install PREFIX=${stagedir}

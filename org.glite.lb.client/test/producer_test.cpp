@@ -13,8 +13,10 @@
 #include <assert.h>
 #include <string.h>
 
+#include "glite/lb/context-int.h"
+
 extern "C" {
-int edg_wll_log_proto_client(int *,char *,char *,int,int);
+int edg_wll_log_proto_client(edg_wll_Context, int *,char *);
 }
 
 class ProducerTest: public  CppUnit::TestFixture
@@ -35,14 +37,47 @@ public:
   }
 
   void testProtoClient() {
-    int ret=0;
-    CPPUNIT_ASSERT( ret == 0 );
+    edg_wll_Context context;
+    int err;
+    char *tst_msg = "DATE=20040831150159.702224 HOST=\"some.host\" PROG=edg-wms LVL=USAGE DG.PRIORITY=0 DG.SOURCE=\"UserInterface\" DG.SRC_INSTANCE=\"\" DG.EVNT=\"RegJob\" DG.JOBID=\"https://some.host:1234/x67qr549qc\" DG.SEQCODE=\"UI=2:NS=0:WM=0:BH=1:JSS=0:LM=0:LRMS=0:APP=0\" DG.REGJOB.JDL=\"\" DG.REGJOB.NS=\"ns address\" DG.REGJOB.PARENT=\"\" DG.REGJOB.JOBTYPE=\"SIMPLE\" DG.REGJOB.NSUBJOBS=\"0\" DG.REGJOB.SEED=\"\"";
+
+    err = edg_wll_InitContext(&context);
+    CPPUNIT_ASSERT(err == 0);
+    err = edg_wll_log_proto_client(context, &pd[1], tst_msg);
+    CPPUNIT_ASSERT(err == 0);
+    log_proto_server(pd[0], tst_msg);
+    edg_wll_FreeContext(context);
   }
 
 private:
   int  pd[2];
+  int sock;
 
-  int log_proto_server(int con, char *logline) {
+  void log_proto_server(int con, char *logline) {
+    int i;
+    char b[4];
+    char *buf;
+    ssize_t size, retsize;
+
+    // read DGLOG
+    retsize = read(con, b, 5);
+    CPPUNIT_ASSERT(retsize == 5);
+    CPPUNIT_ASSERT(b[0] = 'D' && b[1] == 'G' && b[2] == 'L' && b[3] == 'O' && b[4] == 'G');
+
+    // read size (including '\0', little endian)
+    for (i = 0; i < 4; i++)
+      CPPUNIT_ASSERT(read(con, b + i, 1) == 1);
+    size = 0;
+    for (i = 0; i < 4; i++)
+      size = (size << 8) + b[3-i];
+
+    // read the message
+    buf = (char *)malloc(size);
+    retsize = read(con, buf, size);
+    CPPUNIT_ASSERT(size == retsize);
+
+    CPPUNIT_ASSERT(strcmp(buf, logline) == 0);
+    free(buf);
   }
 };
 
