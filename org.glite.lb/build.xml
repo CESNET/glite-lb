@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.10  2004/08/09 02:35:35  dimeglio
+	Set default value for failonerror
+	
 	Revision 1.9  2004/08/08 19:07:17  dimeglio
 	Added small.memory type of build
 	
@@ -248,7 +251,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.client-interface" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
 				</exec>
 			</then>
 			<else>
@@ -264,7 +267,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.common" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
 				</exec>
 			</then>
 			<else>
@@ -280,7 +283,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.client" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
 				</exec>
 			</then>
 			<else>
@@ -296,7 +299,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.server" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
 				</exec>
 			</then>
 			<else>
@@ -312,7 +315,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.logger" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror}"/>
 				</exec>
 			</then>
 			<else>
