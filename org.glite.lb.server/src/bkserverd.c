@@ -95,6 +95,7 @@ static const int		one = 1;
 static int				noAuth = 0;
 static int				noIndex = 0;
 static int				strict_locking = 0;
+static int count_statistics = 0;
 static int				hardJobsLimit = 0;
 static int				hardEventsLimit = 0;
 static int				hardRespSizeLimit = 0;
@@ -146,13 +147,14 @@ static struct option opts[] = {
 	{"notif-dur",	1, NULL,	'N'},
 	{"notif-il-sock",	1, NULL,	'X'},
 	{"notif-il-fprefix",	1, NULL,	'Y'},
+	{"count-statistics",	1, NULL,	'T'},
 	{NULL,0,NULL,0}
 };
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:";
+static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:";
 #else
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:";
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:";
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 static void usage(char *me) 
@@ -185,6 +187,8 @@ static void usage(char *me)
 		"\t--strict-locking=1\t lock jobs also on storing events (may be slow)\n"
 		"\t--notif-il-sock\t socket to send notifications\n"
 		"\t--notif-il-fprefix\t file prefix for notifications\n"
+		"\t--count-statistics=1\t count certain statistics on jobs\n"
+		"\t                  =2\t ... and allow anonymous access\n"
 	,me);
 }
 
@@ -346,6 +350,8 @@ int main(int argc, char *argv[])
 			  if (noIndex < 0 || noIndex > 2) { usage(name); return 1; }
 			  break;
 		case 'P': strict_locking = 1;
+			  break;
+		case 'T': count_statistics = atoi(optarg);
 			  break;
 		case '?': usage(name); return 1;
 	}
@@ -517,6 +523,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 		fprintf(stderr,"%s: open database: %s (%s)\n",argv[0],et,ed);
 		return 1;
 	}
+	if (count_statistics) edg_wll_InitStatistics(ctx);
 	edg_wll_Close(ctx);
 	edg_wll_FreeContext(ctx);
 
@@ -716,6 +723,7 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 	getpeername(conn, (struct sockaddr *)&a, &alen);
 	ctx->connPool[ctx->connToUse].peerName = strdup(inet_ntoa(a.sin_addr));
 	ctx->connPool[ctx->connToUse].peerPort = ntohs(a.sin_port);
+	ctx->count_statistics = count_statistics;
 
 	/* not a critical operation, do not waste all SLAVE_TIMEOUT */
 	h_errno = asyn_gethostbyaddr(&name, (char *)&a.sin_addr.s_addr,sizeof(a.sin_addr.s_addr), AF_INET, &dns_to);
