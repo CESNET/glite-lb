@@ -107,7 +107,7 @@ ${THRLTLIB}: ${THROBJS}
 		-lm
 
 stage: compile
-	$(MAKE) install PREFIX=${stagedir}
+	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 check: compile check.parse check.gss check.il
 
@@ -150,13 +150,15 @@ distbin:
 	rm -rf tmpbuilddir
 
 install:
-	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${STATICLIB} ${THRSTATICLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}
+	if [ x${DOSTAGE} = xyes ]; then \
+		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
+		cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
+	fi
 
 clean:
 
