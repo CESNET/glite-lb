@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.7  2004/10/15 12:30:01  akrenek
+	build with lb.sever-bones
+	
 	Revision 1.6  2004/08/27 10:03:41  zurek
 	typo problem
 	
@@ -194,7 +197,8 @@
 	<!-- *****************************************************-->
 	
 	<!-- All development tools -->
- 	<target name="devtools" depends="junitcheck,
+ 	<target name="devtools" depends="oscheck,
+ 					 				 junitcheck,
 					 				 junit,
  									 chkstyle,
  									 jalopy,
@@ -208,7 +212,7 @@
 		 ===================================================== -->
 	
 	<!--  All external libraries -->
- 	<target name="external" depends="globus"
+ 	<target name="external" depends="oscheck,globus"
  			description="Install external packages"/>
  	
 	<!-- =====================================================
@@ -291,7 +295,7 @@
 		 ==================================================== -->
 	
 	<!-- All libraries -->
- 	<target name="all" depends="evaluate.cvs.tags, defaultenvchecks, org.glite, org.glite.lb, devtools, external, project" />		
+ 	<target name="all" depends="oscheck,evaluate.cvs.tags, defaultenvchecks, org.glite, org.glite.lb, devtools, external, project" />		
 
 	<!-- ====================================================
 		 Print dependecies to console
