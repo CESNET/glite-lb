@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.20  2004/10/21 10:37:48  akrenek
+	make server depend on logger due to notification interlogger
+	
 	Revision 1.19  2004/10/15 12:30:01  akrenek
 	build with lb.sever-bones
 	
@@ -248,7 +251,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.client-interface" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
+				<exec dir="${lb.subsystem.dir}.client-interface" executable="${antExec}" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
@@ -264,7 +267,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.server-bones" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
+				<exec dir="${lb.subsystem.dir}.server-bones" executable="${antExec}" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
@@ -280,7 +283,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.common" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
+				<exec dir="${lb.subsystem.dir}.common" executable="${antExec}" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
@@ -296,7 +299,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.client" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
+				<exec dir="${lb.subsystem.dir}.client" executable="${antExec}" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
@@ -312,7 +315,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.server" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
+				<exec dir="${lb.subsystem.dir}.server" executable="${antExec}" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
@@ -328,7 +331,7 @@
 		<if>
 			<isset property="small.memory" />
 			<then>
-				<exec dir="${lb.subsystem.dir}.logger" executable="${env.ANT_HOME}/bin/ant" failonerror="${failonerror}">
+				<exec dir="${lb.subsystem.dir}.logger" executable="${antExec}" failonerror="${failonerror}">
 					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
