@@ -543,6 +543,7 @@ int edg_wll_UserJobsProxy(
 		edg_wll_JobStat	**statesOut)
 {
 	ctx->isProxy = 1;
+	if ( ctx->p_user_lbproxy ) ctx->peerName = strdup(ctx->p_user_lbproxy);
 	
 	return edg_wll_UserJobs(ctx, jobsOut, statesOut);
 }
