@@ -60,7 +60,7 @@ int edg_wll_plain_read(
 	size_t					outbufsz,
 	struct timeval		   *to)
 {
-	size_t			ct, toread = 0;
+	int				ct, toread = 0;
 	fd_set			fds;
 	struct timeval	timeout, before, after;
 
@@ -150,7 +150,7 @@ int edg_wll_plain_read_full(
 	}
 
 	while ( total < outbufsz ) {
-		size_t ct = edg_wll_plain_read(conn, outbuf+total, outbufsz-total, to);
+		int ct = edg_wll_plain_read(conn, outbuf+total, outbufsz-total, to);
 		if ( ct < 0) return ct;
 		total += ct;
 	}
@@ -165,7 +165,7 @@ int edg_wll_plain_write_full(
 	struct timeval	   *to)
 {
 	size_t			written = 0;
-	ssize_t			ct = -1;
+	int				ct = -1;
 	fd_set			fds;
 	struct timeval	timeout, before, after;
 
