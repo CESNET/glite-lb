@@ -34,6 +34,9 @@ static const char *myenv[] = {
 	"EDG_WL_NOTIF_SERVER",
 	"EDG_WL_NOTIF_SERVER",
 	"EDG_WL_NOTIF_TIMEOUT",
+	"EDG_WL_LBPROXY_STORE_SOCK",
+	"EDG_WL_LBPROXY_SERVE_SOCK",
+	"EDG_WL_LBPROXY_USER",
 /* don't care about X509_USER_*, GSI looks at them anyway */
 	NULL,
 	NULL,
@@ -115,7 +118,7 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 			free(ctx->p_destination);
 			ctx->p_destination = val ? strdup(val) : extract_host(param,EDG_WLL_LOG_HOST_DEFAULT);
 			break;
-		case EDG_WLL_PARAM_USER_LBPROXY:
+		case EDG_WLL_PARAM_LBPROXY_USER:
 			free(ctx->p_user_lbproxy);
 			ctx->p_user_lbproxy = val ? strdup(val) : NULL;
 			break;
@@ -282,7 +285,7 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_HOST:             
 		case EDG_WLL_PARAM_INSTANCE:         
 		case EDG_WLL_PARAM_DESTINATION:      
-		case EDG_WLL_PARAM_USER_LBPROXY:
+		case EDG_WLL_PARAM_LBPROXY_USER:
 		case EDG_WLL_PARAM_QUERY_SERVER:     
 		case EDG_WLL_PARAM_NOTIF_SERVER:     
 		case EDG_WLL_PARAM_QUERY_SERVER_OVERRIDE:
@@ -364,7 +367,7 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 			p_string = va_arg(ap, char **);
 			*p_string = estrdup(ctx->p_destination);
 			break;
-		case EDG_WLL_PARAM_USER_LBPROXY:
+		case EDG_WLL_PARAM_LBPROXY_USER:
 			p_string = va_arg(ap, char **);
 			*p_string = estrdup(ctx->p_user_lbproxy);
 			break;
