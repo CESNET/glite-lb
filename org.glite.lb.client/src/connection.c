@@ -9,9 +9,9 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+#include "glite/security/glite_gss.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/lb_gss.h"
 #include "glite/lb/mini_http.h"
 
 

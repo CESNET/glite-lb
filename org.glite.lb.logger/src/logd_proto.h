@@ -17,7 +17,7 @@ extern "C" {
 #include <syslog.h>
 
 #include "glite/lb/log_proto.h"
-#include "glite/lb/lb_gss.h"
+#include "glite/security/glite_gss.h"
 
 int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefix, int noipc, int noparse);
 int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, const char *text);

@@ -5,9 +5,9 @@ extern "C" {
 #include <pthread.h>
 #include "glite/wmsutils/tls/ssl_helpers/ssl_inits.h"
 #include "glite/wmsutils/tls/ssl_helpers/ssl_pthreads.h"
+#include "glite/security/glite_gss.h"
 #include "interlogd.h"
 #include "glite/lb/consumer.h"
-#include "glite/lb/lb_gss.h"
 }
 
 #if defined(IL_NOTIFICATIONS)

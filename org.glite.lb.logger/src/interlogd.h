@@ -4,7 +4,7 @@
 #ident "$Header$"
 
 #include "il_error.h"
-#include "glite/lb/lb_gss.h"
+#include "glite/security/glite_gss.h"
 
 #include <pthread.h>
 #include <sys/time.h>

@@ -15,12 +15,12 @@
 #include <netdb.h>
 
 #include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/security/glite_gss.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/ulm_parse.h"
 #include "glite/lb/trio.h"
-#include "glite/lb/lb_gss.h"
 #include "glite/lb/lb_plain_io.h"
 #include "glite/lb/escape.h"
 

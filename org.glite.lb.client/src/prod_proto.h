@@ -14,9 +14,9 @@ extern "C" {
 #endif
 
 
+#include "glite/security/glite_gss.h"
 #include "glite/lb/log_proto.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/lb_gss.h"
 
 int edg_wll_log_proto_client(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline);
 int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline);

@@ -60,6 +60,7 @@ EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 EXT_LIBS:= -L${ares_prefix}/lib -lares ${EXPAT_LIBS}
 
 COMMON_LIB:=-lglite_lb_common
+GLITE_GSS_LIB:=-lglite_security_gss
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
@@ -91,15 +92,19 @@ INTERLOG_TEST_OBJS:= \
 	il_test.o 
 
 glite_lb_logd: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS}
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${GLITE_GSS_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS}
 
 glite_lb_interlogd: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} \
-		${COMMON_LIB}_${thrflavour} ${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
+		${COMMON_LIB}_${thrflavour} \
+		${GLITE_GSS_LIB}_${nothrflavour} \
+		${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
 
 glite_lb_notif_interlogd: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} \
-		${COMMON_LIB}_${thrflavour} ${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
+		${COMMON_LIB}_${thrflavour} \
+		${GLITE_GSS_LIB}_${nothrflavour} \
+		${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
 
 default: all
 
@@ -120,7 +125,7 @@ check.ll:
 	-echo commented out -- fix needed
 
 check.il: ${INTERLOG_TEST_OBJS}
-	${LINKXX} -o $@ ${COMMON_LIB}_${thrflavour} ${EXT_LIBS} ${GLOBUS_THRLIBS} ${TEST_LIBS} -lpthread $+
+	${LINKXX} -o $@ ${COMMON_LIB}_${thrflavour} ${GLITE_GSS_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_THRLIBS} ${TEST_LIBS} -lpthread $+
 
 dist: distsrc distbin
 

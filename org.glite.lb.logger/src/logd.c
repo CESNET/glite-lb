@@ -15,7 +15,7 @@
 
 #include "logd_proto.h"
 #include "glite/lb/consumer.h"
-#include "glite/lb/lb_gss.h"
+#include "glite/security/glite_gss.h"
 
 static const char rcsid[] = "@(#)$Id$";
 static int verbose = 0;

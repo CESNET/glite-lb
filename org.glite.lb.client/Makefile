@@ -147,16 +147,24 @@ MAN = $(MAN_GZ:.gz=)
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
 ${LIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib \
+			-lglite_lb_common_${nothrflavour} \
+			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib \
+			-lglite_lb_common_${thrflavour} \
+			-lglite_security_gss_${thrflavour}
 
 ${FAKELIB}: ${FAKELIBOBJS}
-	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
+	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${glite_location}/lib \
+			-lglite_lb_common_${nothrflavour} \
+			-lglite_security_gss_${nothrflavour}
 
 ${FAKETHRLIB}: ${FAKELIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
+	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${glite_location}/lib \
+			-lglite_lb_common_${thrflavour} \
+			-lglite_security_gss_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS}
 	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}

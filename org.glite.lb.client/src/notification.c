@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-
+#include "glite/security/glite_gss.h"
 #include "glite/lb/notification.h"
 #include "glite/lb/events.h"
 #include "glite/lb/log_proto.h"
@@ -18,7 +18,6 @@
 #include "glite/lb/events_parse.h"
 #include "glite/lb/il_msg.h"
 #include "glite/lb/escape.h"
-#include "glite/lb/lb_gss.h"
 
 #include "connection.h"
 

@@ -4,8 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "glite/security/glite_gss.h"
 #include "glite/lb/context.h"
-#include "glite/lb/lb_gss.h"
 #include "glite/lb/notification.h"
 
 

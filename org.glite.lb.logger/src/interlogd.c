@@ -13,7 +13,7 @@
 
 #include "interlogd.h"
 #include "glite/lb/consumer.h"
-#include "glite/lb/lb_gss.h"
+#include "glite/security/glite_gss.h"
 
 #define EXIT_FAILURE 1
 #if defined(IL_NOTIFICATIONS)

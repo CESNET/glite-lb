@@ -11,7 +11,7 @@
 /* XXX DK: */
 #include <err.h> // SSL header file 
 
-#include "glite/lb/lb_gss.h"
+#include "glite/security/glite_gss.h"
 
 #include "il_error.h"
 
