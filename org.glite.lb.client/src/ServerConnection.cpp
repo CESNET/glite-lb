@@ -595,6 +595,8 @@ ServerConnection::getIndexedAttrs(void) {
 	check_result(edg_wll_GetIndexedAttrs(context,&recs),context,
 		"edg_wll_GetIndexedAttrs()");
 	
+	if (!recs) return out;
+
 	for (i=0; recs[i]; i++) {
 		std::vector<std::pair<QueryRecord::Attr,std::string> >	idx;
 		for (j=0; recs[i][j].attr; j++) {
