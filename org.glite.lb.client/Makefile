@@ -17,7 +17,11 @@ thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 ares_prefix=/opt/ares
 
+CC:=gcc
+CXX:=g++
+
 -include Makefile.inc
+
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
