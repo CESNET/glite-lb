@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.26  2004/10/29 22:53:41  dimeglio
+	Use envset target
+	
 	Revision 1.25  2004/10/28 22:57:36  dimeglio
 	Quoted ant command line parameters
 	
@@ -274,6 +277,24 @@
 		</if>
 	</target>
 
+	<target name="ws-interface" unless="setenvonly" depends="envset">
+<!--
+		<if>
+			<isset property="small.memory" />
+			<then>
+				<exec dir="${lb.subsystem.dir}.ws-interface" executable="${antExec}" failonerror="${failonerror}">
+					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.ws-interface"
+                        	     target="${target}"
+                        	     inheritall="false" />
+			</else>
+		</if>
+-->
+	</target>
+
 	<target name="server-bones" unless="setenvonly" depends="envset">
 		<if>
 			<isset property="small.memory" />
@@ -322,7 +343,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus,expat,ares,mysql,gsoap,client-interface,common,logger">
+	<target name="server" unless="setenvonly" depends="envset, globus,expat,ares,mysql,gsoap,client-interface,ws-interface,common,logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -356,7 +377,8 @@
 
 	<!-- Main proxy -->
 	<target name="buildmodules" depends="envset, 
-						 client-interface,
+					     client-interface,
+					     ws-interface,
 					     client,
 					     server-bones,
 					     common,
