@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.25  2004/10/28 22:57:36  dimeglio
+	Quoted ant command line parameters
+	
 	Revision 1.24  2004/10/28 18:19:30  dimeglio
 	Added envcheck to individual components
 	
@@ -255,7 +258,7 @@
 
 	<!-- component targets definitions tag = do not remove = -->
 
-	<target name="client-interface" unless="setenvonly" depends="envcheck">
+	<target name="client-interface" unless="setenvonly" depends="envset">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -271,7 +274,7 @@
 		</if>
 	</target>
 
-	<target name="server-bones" unless="setenvonly" depends="envcheck">
+	<target name="server-bones" unless="setenvonly" depends="envset">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -287,7 +290,7 @@
 		</if>
 	</target>
 
-	<target name="common" unless="setenvonly" depends="envcheck, globus,expat,ares,client-interface">
+	<target name="common" unless="setenvonly" depends="envset, globus,expat,ares,client-interface">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -303,7 +306,7 @@
 		</if>
 	</target>
 
-	<target name="client" unless="setenvonly" depends="envcheck, globus,expat,ares,client-interface,common">
+	<target name="client" unless="setenvonly" depends="envset, globus,expat,ares,client-interface,common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -319,7 +322,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envcheck, globus,expat,ares,mysql,gsoap,client-interface,common,logger">
+	<target name="server" unless="setenvonly" depends="envset, globus,expat,ares,mysql,gsoap,client-interface,common,logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -335,7 +338,7 @@
 		</if>
 	</target>
 
-	<target name="logger" unless="setenvonly" depends="envcheck, globus,expat,ares,client-interface,common">
+	<target name="logger" unless="setenvonly" depends="envset, globus,expat,ares,client-interface,common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -352,7 +355,7 @@
 	</target>
 
 	<!-- Main proxy -->
-	<target name="buildmodules" depends="envcheck, 
+	<target name="buildmodules" depends="envset, 
 						 client-interface,
 					     client,
 					     server-bones,
