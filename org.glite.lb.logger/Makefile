@@ -35,9 +35,11 @@ DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src \
 	-D_GNU_SOURCE \
+	${COVERAGE_FLAGS} \
 	${VERSION}
 
-LDFLAGS:=-L${stagedir}/lib
+LDFLAGS:=-L${stagedir}/lib \
+	${COVERAGE_FLAGS} 
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
@@ -88,7 +90,7 @@ stage: compile
 check: check.ll
 
 check.ll: logd_proto_test.o ll_test.o
-	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS} ${TEST_LIBS} $<
+	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS} ${TEST_LIBS} logd_proto_test.o ll_test.o
 	./check.ll
 
 dist: distsrc distbin
@@ -121,4 +123,4 @@ logd_proto_test.o: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
 
 ll_test.o: ll_test.cpp
-	${CXX} ${CFLAGS} -c $< -0 $@
+	${CXX} ${CFLAGS} ${TEST_INC} -c $< -o $@
