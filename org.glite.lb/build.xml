@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.8  2004/07/29 10:47:46  dimeglio
+	Added server and logger
+	
 	Revision 1.7  2004/07/29 07:39:57  dimeglio
 	Removed local envinfo and envcheck target (must use common ones)
 	
@@ -218,33 +221,83 @@
 	<!-- component targets definitions tag = do not remove = -->
 
 	<target name="client-interface" unless="setenvonly">
-		<ant dir="${workspace.dir}/${subsystem.name}.client-interface"
-		     target="${target}"
-		     inheritall="false" />
+		<if>
+			<isset property="small.memory" />
+			<then>
+				<exec dir="${lb.subsystem.dir}.client-interface" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.client-interface"
+                        target="${target}"
+                        inheritall="false" />
+			</else>
+		</if>
 	</target>
 
 	<target name="common" unless="setenvonly" depends="globus,expat,ares,client-interface">
-		<ant dir="${workspace.dir}/${subsystem.name}.common"
-		     target="${target}"
-		     inheritall="false" />
+		<if>
+			<isset property="small.memory" />
+			<then>
+				<exec dir="${lb.subsystem.dir}.common" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.common"
+                        target="${target}"
+                        inheritall="false" />
+			</else>
+		</if>
 	</target>
 
 	<target name="client" unless="setenvonly" depends="globus,expat,ares,client-interface,common">
-		<ant dir="${workspace.dir}/${subsystem.name}.client"
-		     target="${target}"
-		     inheritall="false" />
+		<if>
+			<isset property="small.memory" />
+			<then>
+				<exec dir="${lb.subsystem.dir}.client" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.client"
+                        target="${target}"
+                        inheritall="false" />
+			</else>
+		</if>
 	</target>
 
 	<target name="server" unless="setenvonly" depends="globus,expat,ares,mysql,client-interface,common">
-		<ant dir="${workspace.dir}/${subsystem.name}.server"
-		     target="${target}"
-		     inheritall="false" />
+		<if>
+			<isset property="small.memory" />
+			<then>
+				<exec dir="${lb.subsystem.dir}.server" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.server"
+                        target="${target}"
+                        inheritall="false" />
+			</else>
+		</if>
 	</target>
 
 	<target name="logger" unless="setenvonly" depends="globus,expat,ares,client-interface,common">
-		<ant dir="${workspace.dir}/${subsystem.name}.logger"
-		     target="${target}"
-		     inheritall="false" />
+		<if>
+			<isset property="small.memory" />
+			<then>
+				<exec dir="${lb.subsystem.dir}.logger" executable="${env.ANT_HOME}/bin/ant" failonerror="true">
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.logger"
+	                    target="${target}"
+	                    inheritall="false" />
+			</else>
+		</if>
 	</target>
 
 	<!-- Main proxy -->
