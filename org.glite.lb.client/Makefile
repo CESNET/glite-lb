@@ -69,7 +69,8 @@ CFLAGS:=${DEBUG} \
 	-I${glite_location}/include \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
-	${COVERAGE_FLAGS} 
+	${COVERAGE_FLAGS} \
+	-D_GNU_SOURCE
 
 
 CXXFLAGS:=${CFLAGS}

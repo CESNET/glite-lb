@@ -64,7 +64,8 @@ CFLAGS:= -DNO_VOMS -DNO_GACL \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
-	-I${gridsite_prefix}/include -I${globus_prefix}/include/${nothrflavour}/openssl
+	-I${gridsite_prefix}/include -I${globus_prefix}/include/${nothrflavour}/openssl \
+	-D_GNU_SOURCE
 
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit

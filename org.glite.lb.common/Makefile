@@ -38,6 +38,7 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
 	${COVERAGE_FLAGS} \
+	-D_GNU_SOURCE \
 	-DDATAGRID_EXTENSION
 
 # We must follow major version changes of org.glite.lb.client-interface due to
