@@ -121,12 +121,6 @@ There is no ant equivalent, hence the following procedure is required:
     make fake
 
 
-* TODO (MATOUCI): v examples/ musi byt jednak priklady, ktere se linkuji s normalni
-* knihovnou a funguji plnohodnotne dle ocekavani, a navic neco jako
-* fake_job_log, ktery bude prikladem unittestu (opravdu s pouzitim cppUnitu
-* atd.) nejake funkce z jinak opravdoveho job_log (asi bude treba ji
-* pro tyto ucely vytahnout z main()u).
-
-In the example examples/job_log.c is showed how to use callbacks and their
-registration. Examples examples/job_reg.c and src/logevent.c are original L&B
-examples which are just linked with the fake library too.
+An example of unit test using the fake library is the file
+examples/job_log_fake.cpp. There is showed how to use callbacks and their
+registration.

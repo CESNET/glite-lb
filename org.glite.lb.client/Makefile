@@ -135,9 +135,8 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge
-EXAMPLES:=log_usertag_proxy job_reg feed_shark notify query_ext query_seq_code
-FAKE_EXAMPLES:=job_log_fake job_reg_fake logevent_fake
-FAKE_EXAMPLES_SOURCES:=job_log.c job_reg.c
+EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code
+FAKE_EXAMPLES:=job_log_fake
 
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
@@ -162,19 +161,16 @@ ${THRPLUSLIB}: ${PLUSTHROBJS}
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
-logevent_fake: logevent_fake.o args.o
-	${LINK} -o $@ logevent_fake.o args.o ${FAKELIB} ${EXT_LIB} ${GLOBUS_LIBS}
-
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
-${FAKE_EXAMPLES_SOURCES:.c=_fake}: %: %.o ${FAKELIB}
-	${LINK} -o $@ $< ${FAKELIB} ${EXT_LIB} ${GLOBUS_LIBS}
+${FAKE_EXAMPLES}: %: %.o ${FAKELIB}
+	${LINK} -o $@ $< ${FAKELIB} ${TEST_LIBS} ${EXT_LIB} ${GLOBUS_LIBS}
 
 ${TOOLS}: ${LIB}
 
-${FAKE_EXAMPLES_SOURCES:.c=_fake.o}: %_fake.o: %.c
-	${COMPILE} ${GLOBUSINC} -DUSE_CALLBACKS -c $< -o $@
+${FAKE_EXAMPLES:=.o}: %.o: %.cpp
+	${COMPILE} ${GLOBUSINC} ${TEST_INC} -c $< -o $@
 
 ${PLUSOBJS}: %.o: %.cpp
 	${CXXCOMPILE} ${GLOBUSINC} -c $<

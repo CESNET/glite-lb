@@ -71,9 +71,11 @@ int edg_wll_QueryEvents(
   
   edg_wll_ResetError(context);
 
-  // get asked event type or use _EVENT_CHKPT
+  // determine type of the returned events, ignore _QUERY_OP_*:
+  //   - asked event type for _QUERY_ATTR_EVENT_TYPE
+  //   - _EVENT_CHKPT for other
   i = 0;
-  while (event_conditions[i].attr != EDG_WLL_QUERY_ATTR_UNDEF && (event_conditions[i].attr != EDG_WLL_QUERY_ATTR_EVENT_TYPE || event_conditions[i].op != EDG_WLL_QUERY_OP_EQUAL)) i++;
+  while (event_conditions[i].attr != EDG_WLL_QUERY_ATTR_UNDEF && (event_conditions[i].attr != EDG_WLL_QUERY_ATTR_EVENT_TYPE)) i++;
   if (event_conditions[i].attr == EDG_WLL_QUERY_ATTR_UNDEF)
     event_code = EDG_WLL_EVENT_CHKPT;
   else
@@ -92,7 +94,7 @@ int edg_wll_QueryEvents(
     if (job_conditions[i].attr == EDG_WLL_QUERY_ATTR_JOBID && job_conditions[i].op == EDG_WLL_QUERY_OP_EQUAL) {
       jobid = job_conditions[i].value.j;
       for (j = 0; j < NUM_EVENTS; j++) {
-         if ((err = edg_wlc_JobIdDup(jobid, &(*events)[i].any.jobId)) != 0) goto error;	 
+         if ((err = edg_wlc_JobIdDup(jobid, &(*events)[i].any.jobId)) != 0) goto error;
       }
       break;
     }
