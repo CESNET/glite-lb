@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.3  2004/06/22 18:24:35  dimeglio
+	Added client interface module
+	
 	Revision 1.2  2004/06/18 23:05:12  dimeglio
 	Added/upgraded default build scripts
 	
@@ -220,7 +223,21 @@
 		     inheritall="false" />
 	</target>
 
-	<!-- Main proxy -->
-	<target name="buildmodules" depends="client-interface"/>
+	<target name="common" unless="setenvonly" depends="globus,expat,ares,client-interface">
+		<ant dir="${workspace.dir}/${subsystem.name}.common"
+		     target="${target}"
+		     inheritall="false" />
+	</target>
+
+	<target name="client" unless="setenvonly" depends="globus,expat,ares,client-interface,common">
+		<ant dir="${workspace.dir}/${subsystem.name}.client"
+		     target="${target}"
+		     inheritall="false" />
+	</target>
+
+		<!-- Main proxy -->
+	<target name="buildmodules" depends="client-interface,
+										 client,
+										 common"/>
 
 </project>
