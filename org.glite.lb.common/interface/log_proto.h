@@ -3,6 +3,7 @@
 
 #ident "$Header$"
 
+
 /**
  * \file edg/workload/logging/common/log_proto.h
  * \brief common part of the logging protocol
@@ -13,6 +14,8 @@
 extern "C" {
 #endif
 
+
+#include "glite/lb/context.h"
 
 /**
  * default (noauth) user name
@@ -68,7 +71,6 @@ extern "C" {
  */
 #define EDG_WLL_LOG_CONNECTIONS_DEFAULT		4
 
-	
 
 #ifdef __cplusplus
 }
@@ -96,5 +98,6 @@ edg_wll_log_event_send(
 	int                 msg_size,
 	int                 conn_attempts,
 	struct timeval     *timeout);
+
 
 #endif /* __EDG_WORKLOAD_LOGGING_COMMON_LOG_PROTO_H__ */
