@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.5  2004/08/27 09:13:11  zurek
+	changing thee order for build
+	
 	Revision 1.4  2004/07/29 10:47:46  dimeglio
 	Added server and logger
 	
@@ -259,7 +262,7 @@
 
 	<!-- All project modules -->
  	<target name="project" depends="client-interface,
- 						common
+ 						common,
  						client,
  						server,
  						logger"/>
