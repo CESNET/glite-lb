@@ -173,7 +173,7 @@ ${FAKE_EXAMPLES_SOURCES:.c=_fake}: %: %.o ${FAKELIB}
 
 ${TOOLS}: ${LIB}
 
-${FAKE_EXAMPLES_SOURCES:.c=_fake.o}: ${FAKE_EXAMPLES_SOURCES}
+${FAKE_EXAMPLES_SOURCES:.c=_fake.o}: %_fake.o: %.c
 	${COMPILE} ${GLOBUSINC} -DUSE_CALLBACKS -c $< -o $@
 
 ${PLUSOBJS}: %.o: %.cpp
