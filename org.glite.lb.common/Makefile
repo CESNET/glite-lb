@@ -83,12 +83,12 @@ ${THRSTATICLIB}: ${THROBJS}
 
 ${LTLIB}: ${OBJS}
 	${LINK} -o $@ ${LOBJS} \
-		-lglobus_ssl_utils -lglite_wms_cjobid \
+		-lglobus_ssl_utils -lglite_wmsutils_cjobid \
 		-lm
 
 ${THRLTLIB}: ${THROBJS}
 	${LINK} -o $@ ${THRLOBJS} \
-		-lglobus_ssl_utils -lglite_wms_cjobid \
+		-lglobus_ssl_utils -lglite_wmsutils_cjobid \
 		-lm
 
 stage: compile
