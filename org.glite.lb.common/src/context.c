@@ -120,6 +120,7 @@ static const char* const errTexts[] = {
 	"Interlogger internal error",
 	"Interlogger has events pending",
 	"Compared events differ",
+	"SQL parse error",
 };
 
 const char *edg_wll_GetErrorText(int code) {
