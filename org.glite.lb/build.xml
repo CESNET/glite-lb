@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.24  2004/10/28 18:19:30  dimeglio
+	Added envcheck to individual components
+	
 	Revision 1.23  2004/10/26 15:12:06  dimeglio
 	Fixed spelling error in envchecks
 	
@@ -257,7 +260,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.client-interface" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
 				</exec>
 			</then>
 			<else>
@@ -273,7 +276,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.server-bones" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
 				</exec>
 			</then>
 			<else>
@@ -289,7 +292,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.common" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
 				</exec>
 			</then>
 			<else>
@@ -305,7 +308,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.client" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
 				</exec>
 			</then>
 			<else>
@@ -321,7 +324,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.server" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
 				</exec>
 			</then>
 			<else>
@@ -337,7 +340,7 @@
 			<isset property="small.memory" />
 			<then>
 				<exec dir="${lb.subsystem.dir}.logger" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
 				</exec>
 			</then>
 			<else>
