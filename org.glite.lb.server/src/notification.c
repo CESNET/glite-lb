@@ -1,3 +1,8 @@
+/* XXX: Is it OK?
+ * due to use of strndup() 
+ */
+#define _GNU_SOURCE
+
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>
@@ -8,6 +13,7 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/notification.h"
+#include "il_notification.h"
 #include "lbs_db.h"
 #include "query.h"
 
@@ -375,6 +381,7 @@ int edg_wll_NotifDropServer(
 	free(stmt);
 	trio_asprintf(&stmt, "delete from notif_jobs where notifid='%|Ss'", nid_s);
 	edg_wll_ExecStmt(ctx, stmt, NULL);
+	edg_wll_NotifCancelRegId(ctx, nid);
 
 cleanup:
 	if ( nid_s ) free(nid_s);
@@ -568,9 +575,10 @@ static int update_notif(
 	const char					   *dest,
 	const char					   *valid)
 {
-	char	   *nid_s	= NULL,
+	char	   *nid_s = NULL,
+			   *host = NULL,
 			   *stmt, *aux;
-	int			ret;
+	int			ret, port;
 
 
 	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
@@ -586,6 +594,13 @@ static int update_notif(
 	}
 	if ( dest )
 	{
+		host = strchr(dest, ':');
+		port = atoi(host+1);
+		if ( !(host = strndup(dest, host-dest)) )
+		{
+			edg_wll_SetError(ctx, errno, "updating notification records");
+			goto cleanup;
+		}
 		trio_asprintf(&aux, "%s destination='%|Ss'", stmt, dest);
 		free(stmt);
 		stmt = aux;
@@ -625,9 +640,16 @@ static int update_notif(
 		 */
 	}
 
+	if ( host ) {
+		fprintf(stderr, "edg_wll_NotifChangeDestination(ctx, nid, %s, %d);\n", host, port);
+		edg_wll_NotifChangeDestination(ctx, nid, host, port);
+	}
+
+
 cleanup:
 	if ( nid_s ) free(nid_s);
 	if ( stmt ) free(stmt);
+	if ( host ) free(host);
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
