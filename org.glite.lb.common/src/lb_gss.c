@@ -811,6 +811,7 @@ edg_wll_gss_read(edg_wll_GssConnection *connection, void *buf, size_t bufsize,
 
       maj_stat = gss_unwrap(&min_stat, connection->context, &input_token,
 	  		    &output_token, NULL, NULL);
+      gss_release_buffer(&min_stat, &input_token);
       if (GSS_ERROR(maj_stat)) {
 	 /* XXX cleanup */
 	 return EDG_WLL_GSS_ERROR_GSS;
