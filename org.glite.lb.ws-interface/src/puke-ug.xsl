@@ -13,9 +13,9 @@
 		<title><xsl:value-of select="@name"/></title>
 		<para> <xsl:value-of select="text()"/> </para>
 		<sect1>
-			<title>Operation summary</title>
+			<title>Operations</title>
 				<itemizedlist>
-					<xsl:apply-templates select="op" mode="summary"/>
+					<xsl:apply-templates select="op"/>
 				</itemizedlist>
 		</sect1>
 	
@@ -24,16 +24,13 @@
 			<xsl:apply-templates select="types"/>
 		</sect1>
 	
-		<sect1>
-			<title>Operation detail</title>
-			<xsl:apply-templates select="op" mode="detail"/>
-		</sect1>
 	</chapter>
 	
 </xsl:template>
 
-<xsl:template match="op" mode="summary">
+<xsl:template match="op" >
 	<listitem>
+		<para>
 		<funcsynopsis>
 			<funcprototype>
 				<funcdef>
@@ -50,6 +47,8 @@
 				</xsl:for-each>
 			</funcprototype>
 		</funcsynopsis>
+		</para>
+		<para> <xsl:value-of select="text()"/> </para>
 	</listitem>
 </xsl:template>
 
@@ -59,24 +58,42 @@
 <xsl:template match="types">
 	<xsl:for-each select="flags|enum|struct">
 		<xsl:sort select="@name"/>
-		<xsl:choose>
-			<xsl:when test="name(.)='struct'">
-				<variablelist>
-					<title>Complex type <classname><xsl:value-of select="@name"/></classname></title>
-					<xsl:for-each select="elem">
-						<varlistentry>
-							<term>
-								<type><xsl:value-of select="@type"/></type>
-								<structfield><xsl:value-of select="@name"/></structfield>
-							</term>
-							<listitem>
-								<para><xsl:value-of select="text()"/></para>
-							</listitem>
-						</varlistentry>
-					</xsl:for-each>
-				</variablelist>
-			</xsl:when>
-		</xsl:choose>
+		<sect2>
+			<title> <xsl:value-of select="@name"/> </title>
+			<xsl:choose>
+				<xsl:when test="name(.)='struct'">
+					<para> <emphasis>Structure</emphasis> (sequence complex type in WSDL)</para>
+				</xsl:when>
+				<xsl:when test="name(.)='enum'">
+					<para> <emphasis>Enumeration</emphasis> (restriction of xsd:string in WSDL)</para>
+				</xsl:when>
+				<xsl:when test="name(.)='flags'">
+					<para> <emphasis>Flags</emphasis> (sequence of restricted xsd:string in WSDL)</para>
+				</xsl:when>
+			</xsl:choose>
+			<para> <xsl:value-of select="text()"/> </para>
+			<variablelist>
+				<xsl:for-each select="elem|val">
+					<varlistentry>
+						<term>
+							<xsl:choose>
+								<xsl:when test="name(.)='elem'">
+									<type><xsl:value-of select="@type"/></type>
+									<xsl:value-of select="' '"/>
+									<structfield><xsl:value-of select="@name"/></structfield>
+								</xsl:when>
+								<xsl:otherwise>
+									<constant><xsl:value-of select="@name"/></constant>
+								</xsl:otherwise>
+							</xsl:choose>
+						</term>
+						<listitem>
+							<simpara><xsl:value-of select="text()"/></simpara>
+						</listitem>
+					</varlistentry>
+				</xsl:for-each>
+			</variablelist>
+		</sect2>
 	</xsl:for-each>
 </xsl:template>
 

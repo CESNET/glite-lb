@@ -59,5 +59,9 @@ clean:
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
-${WSDL}: LB.xml
+${WSDL}: LB.xml puke-wsdl.xsl
 	${XSLTPROC} ../src/puke-wsdl.xsl LB.xml >$@
+
+
+LB-ug.xml: LB.xml puke-ug.xsl
+	${XSLTPROC} ../src/puke-ug.xsl LB.xml >$@

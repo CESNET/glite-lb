@@ -90,13 +90,15 @@
 		</struct>
 
 		<struct name="tagValue">
-			<elem name="tag" type="xsd:string"/>
-			<elem name="value" type="xsd:string" optional="yes"/>
+			Value of a single user tag.
+			<elem name="tag" type="xsd:string">Tag name</elem>
+			<elem name="value" type="xsd:string" optional="yes">Tag value</elem>
 		</struct>
 
 		<struct name="timeval">
-			<elem name="tvSec" type="xsd:long"/>
-			<elem name="tvUsec" type="xsd:long"/>
+			UNIX time representation.
+			<elem name="tvSec" type="xsd:long">Seconds since Jan 1 1970</elem>
+			<elem name="tvUsec" type="xsd:long">Microseconds</elem>
 		</struct>
 
 
