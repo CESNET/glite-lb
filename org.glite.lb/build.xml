@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.17  2004/09/09 21:05:29  dimeglio
+	Moved tag target to targets-common
+	
 	Revision 1.16  2004/08/27 03:03:12  dimeglio
 	Preserve original timestamp when copying file and overwrite when new
 	
@@ -245,8 +248,8 @@
 			</then>
 			<else>
 				<ant dir="${lb.subsystem.dir}.client-interface"
-                        target="${target}"
-                        inheritall="false" />
+                        	     target="${target}"
+                        	     inheritall="false" />
 			</else>
 		</if>
 	</target>
@@ -261,8 +264,8 @@
 			</then>
 			<else>
 				<ant dir="${lb.subsystem.dir}.common"
-                        target="${target}"
-                        inheritall="false" />
+                        	     target="${target}"
+                        	     inheritall="false" />
 			</else>
 		</if>
 	</target>
@@ -277,8 +280,8 @@
 			</then>
 			<else>
 				<ant dir="${lb.subsystem.dir}.client"
-                        target="${target}"
-                        inheritall="false" />
+                        	     target="${target}"
+                        	     inheritall="false" />
 			</else>
 		</if>
 	</target>
@@ -293,8 +296,8 @@
 			</then>
 			<else>
 				<ant dir="${lb.subsystem.dir}.server"
-                        target="${target}"
-                        inheritall="false" />
+                        	     target="${target}"
+                        	     inheritall="false" />
 			</else>
 		</if>
 	</target>
@@ -309,18 +312,18 @@
 			</then>
 			<else>
 				<ant dir="${lb.subsystem.dir}.logger"
-	                    target="${target}"
-	                    inheritall="false" />
+	                    	     target="${target}"
+	                    	     inheritall="false" />
 			</else>
 		</if>
 	</target>
 
 	<!-- Main proxy -->
 	<target name="buildmodules" depends="client-interface,
-										 client,
-										 common,
-										 server,
-										 logger">
+					     client,
+					     common,
+					     server,
+					     logger">
 		<echo append="true" file="${global.project.dir}/cruisecontrol-stub.xml">
 	&lt;project name="${subsystem.name}" type="post-subsystem" packageName="${global.prefix}-${subsystem.prefix}"/&gt;
 		</echo>
