@@ -23,7 +23,7 @@ CXX:=g++
 -include Makefile.inc
 
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples
+VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 GENSAM=${top_srcdir}/examples/gen_sample_job
 
@@ -138,6 +138,9 @@ TOOLS:=dump load purge
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job
 FAKE_EXAMPLES:=job_log_fake
 
+MAN_GZ:=glite-lb-logevent.1.gz
+MAN = $(MAN_GZ:.gz=)
+
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
 ${LIB}: ${LIBOBJS}
@@ -187,6 +190,11 @@ ${LIBTHROBJS} ${FAKELIBTHROBJS}: %.thr.o: %.c
 logevent_fake.o: logevent.c
 	${COMPILE} ${GLOBUSINC} -c $< -o $@
 
+${MAN_GZ}: ${MAN}
+	cp $? .
+	gzip $(notdir $?)
+
+
 # catches $TOOLS and logevent compilation
 %.o: %.c 
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
@@ -209,7 +217,7 @@ logevent_fake.o: logevent.c
 default: all
 
 
-compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples
+compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
 
 examples: ${EXAMPLES} ${sh_PROGS}
 
@@ -225,8 +233,10 @@ producer_test: producer_test.o prod_proto_test.o
 
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${TEST_INC} ${GLOBUSINC} $<
+
+man: ${MAN_GZ}
 	
-stage: compile ${FAKELIB} ${FAKETHRLIB} 
+stage:  compile ${FAKELIB} ${FAKETHRLIB} 
 	$(MAKE) install PREFIX=${stagedir}
 	${INSTALL} -m 644 ${FAKELIB} ${FAKETHRLIB} ${stagedir}/lib
 
@@ -247,6 +257,7 @@ install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	mkdir -p ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
@@ -257,6 +268,7 @@ install:
 	for p in ${TOOLS} logevent ${EXAMPLES} ${sh_PROGS}; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
+	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 clean:
 
