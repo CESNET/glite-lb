@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.19  2004/10/15 12:30:01  akrenek
+	build with lb.sever-bones
+	
 	Revision 1.18  2004/09/29 13:35:39  flammer
 	Only update of line formatting.
 	
@@ -305,7 +308,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="globus,expat,ares,mysql,gsoap,client-interface,common">
+	<target name="server" unless="setenvonly" depends="globus,expat,ares,mysql,gsoap,client-interface,common,logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
