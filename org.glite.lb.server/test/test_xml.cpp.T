@@ -200,7 +200,7 @@ void XMLParseTest::protoStatusTest()
 
 }
 
-CPPUNIT_TEST_SUITE_REGISTRATION( XMLParseTest );
+CPPUNIT_TEST_SUITE_REGISTRATION(XMLParseTest);
 
 int main (int ac,const char *av[])
 {

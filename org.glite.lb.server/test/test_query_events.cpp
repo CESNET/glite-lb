@@ -13,6 +13,8 @@
 
 using namespace std;
 
+static const char *test_dir;
+
 class QueryEventsTest: public CppUnit::TestFixture
 {
 	CPPUNIT_TEST_SUITE(QueryEventsTest);
@@ -49,7 +51,9 @@ void QueryEventsTest::oneJob()
 		&job[0].value.j);
 	job[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 	
-	qry_file.open("../test/oneJob.qry");
+	string file(test_dir);
+	file += "/oneJob.qry";
+	qry_file.open(file.c_str());
 	
 	while (!qry_file.eof()) {
 		string	query,line;
@@ -140,6 +144,8 @@ int main (int ac,const char *av[])
 {
 	CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 	CppUnit::TextUi::TestRunner runner;
+
+	test_dir = ac >= 2 ? av[1] : "../test";
 
 	runner.addTest(suite);
 	return runner.run() ? 0 : 1;
