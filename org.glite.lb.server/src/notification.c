@@ -9,6 +9,7 @@
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/notification.h"
 #include "lbs_db.h"
+#include "query.h"
 
 
 static char *get_user(edg_wll_Context ctx, int create);
@@ -107,7 +108,7 @@ int edg_wll_NotifNewServer(
 	if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 )
 		goto cleanup;
 
-	for ( i = 0; jobs[i]; i++ )
+	if (jobs) for ( i = 0; jobs[i]; i++ )
 	{
 		free(q);
 		trio_asprintf(&q,
@@ -126,6 +127,12 @@ int edg_wll_NotifNewServer(
 			edg_wll_ExecStmt(ctx, q, NULL);
 			goto cleanup;
 		}
+	}
+	else {
+		trio_asprintf(&q,"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
+				nid_s,NOTIF_ALL_JOBS);
+		if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 ) goto cleanup;
+
 	}
 
 
@@ -496,10 +503,10 @@ static int split_cond_list(
 	int					i, j, jobs_ct, nconds_ct;
 
 
-	if ( !conditions || !conditions[0] )
-		return edg_wll_SetError(ctx, EINVAL, "Empty condition list");
-
-	for ( nconds_ct = jobs_ct = i = 0; conditions[i]; i++ )
+	if ( !conditions || !conditions[0] ) {
+		if (ctx->noAuth) nconds_ct = jobs_ct = 0;
+		else return edg_wll_SetError(ctx, EINVAL, "Empty condition list");
+	} else for ( nconds_ct = jobs_ct = i = 0; conditions[i]; i++ )
 	{
 		if ( conditions[i][0].attr && conditions[i][0].attr != EDG_WLL_QUERY_ATTR_JOBID )
 			nconds_ct++;

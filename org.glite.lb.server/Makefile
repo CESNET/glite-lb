@@ -189,7 +189,7 @@ test_ws_plugin.o: ws_plugin.c
 doc:
 
 stage: compile
-	$(MAKE) install PREFIX=${stagedir}
+	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 dist: distsrc distbin
 
@@ -217,6 +217,10 @@ install:
 	done
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
+
+	if [ x${DOSTAGE} != xyes ]; then \
+		${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; \
+	fi
 
 clean:
 

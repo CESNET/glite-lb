@@ -17,8 +17,6 @@
 #include "query.h"
 #include "il_notification.h"
 
-
-
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const char *);
 static int notif_check_acl(edg_wll_Context,const edg_wll_JobStat *,const char *);
 
@@ -43,7 +41,8 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 		"select distinct n.notifid,n.destination,n.valid,u.cert_subj,n.conditions "
 		"from notif_jobs j,users u,notif_registrations n "
 		"where j.notifid=n.notifid and n.userid=u.userid "
-		"   and j.jobid = '%|Ss'",ju = edg_wlc_JobIdGetUnique(stat->jobId));
+		"   and (j.jobid = '%|Ss' or j.jobid = '%|Ss')",
+		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS);
 
 	free(ju);
 
