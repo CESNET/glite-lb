@@ -36,6 +36,7 @@
 #include "glite/lb/context.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"
+#include "glite/lb/lb_gss.h"
 
 #include "lb_http.h"
 #include "lb_proto.h"
@@ -207,7 +208,7 @@ static void clnt_reject(void *mycred, int conn)
 	if (fcntl(conn, F_SETFL, flags | O_NONBLOCK) < 0) 
 		return;
 
-	edg_wll_ssl_reject(mycred, conn);
+	edg_wll_gss_reject(conn);
 	return;
 }
 
@@ -454,7 +455,7 @@ static int parse_limits(char *opt, int *j_limit, int *e_limit, int *size_limit)
 }
 
 static unsigned long	clnt_dispatched=0, clnt_accepted=0;
-static void	*mycred;
+static gss_cred_id_t	mycred = GSS_C_NO_CREDENTIAL;
 static int	server_sock,store_sock;
 
 static int check_mkdir(const char *);
@@ -474,6 +475,8 @@ int main(int argc,char *argv[])
 	key_t	semkey;
 	time_t	cert_mtime = 0,key_mtime = 0;
 	edg_wll_Context	ctx;
+	OM_uint32	min_stat;
+	edg_wll_GssStatus gss_code;
 
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
@@ -662,9 +665,9 @@ int main(int argc,char *argv[])
 	if (!cert || !key) fprintf(stderr,"%s: key or certificate file not specified - unable to watch them for changes!\n",argv[0]);
 
 	if (cadir) setenv("X509_CERT_DIR",cadir,1);
-	mycred = edg_wll_ssl_init(SSL_VERIFY_PEER,1,cert,key,0,0);
-	edg_wll_ssl_get_my_subject_base(mycred,&mysubj);
-	if (mysubj) {
+	if (edg_wll_gss_acquire_cred_gsi(cert, &mycred, &mysubj, &gss_code)) {
+	   dprintf(("Running unauthenticated\n"));
+	} else {
 		int	i;
 		dprintf(("Server identity: %s\n",mysubj));
 
@@ -673,7 +676,6 @@ int main(int argc,char *argv[])
 		super_users[i] = mysubj;
 		super_users[i+1] = NULL;
 	}
-	else dprintf(("Running unauthenticated\n"));
 
 	if (noAuth) dprintf(("Promiscuous mode\n"));
 	dprintf(("Listening at %d,%d (accepting protocols: " COMP_PROTO " and compatible) ...\n",atoi(port),atoi(port)+1));
@@ -733,6 +735,8 @@ int main(int argc,char *argv[])
 		fd_set	fds;
 		int	ret,mx;
 		struct timeval	watch_to = { WATCH_TIMEOUT, 0 };
+		gss_cred_id_t	newcred = GSS_C_NO_CREDENTIAL;
+		edg_wll_GssStatus	gss_code;
 		
 
 		FD_ZERO(&fds);
@@ -740,13 +744,13 @@ int main(int argc,char *argv[])
 		FD_SET(store_sock,&fds);
 		FD_SET(sock_slave[0],&fds);
 
-		switch (edg_wll_ssl_watch_creds(key,cert,&key_mtime,&cert_mtime)) {
-			void	*newcred;
+		switch (edg_wll_gss_watch_creds(cert,&cert_mtime)) {
 			case 0: break;
-			case 1: newcred = edg_wll_ssl_init(SSL_VERIFY_PEER,1,cert,key,0,0);
-				if (newcred) {
+			case 1: 
+				ret = edg_wll_gss_acquire_cred_gsi(cert, &newcred, NULL, &gss_code);
+				if (ret == 0) {
 					dprintf(("reloading credentials"));
-					edg_wll_ssl_free(mycred);
+					gss_release_cred(&min_stat, &mycred);
 					mycred = newcred;
 					kill(0,SIGUSR1);
 				}
@@ -809,7 +813,7 @@ int main(int argc,char *argv[])
 	semctl(semset,0,IPC_RMID,0);
 	unlink(pidfile);
 	free(port);
-	edg_wll_ssl_free(mycred);
+	gss_release_cred(&min_stat, &mycred);
 	return 0;
 }
 
@@ -949,13 +953,13 @@ static int slave(void *mycred,int sock)
 		int	alen,store,max = sock,newconn = -1;
 		int	connflags,kick_client = 0;
 		unsigned long	seq;
-		X509	*peer;
 		struct 	timeval dns_to = {DNS_TIMEOUT, 0},
 				check_to = {SLAVE_CHECK_SIGNALS, 0},
 				total_to = { TOTAL_CLNT_TIMEOUT,0 },
 				client_to = { CLNT_TIMEOUT,0 }, now;
 		char 	*name = NULL;
 		struct 	sockaddr_in	a;
+		edg_wll_GssStatus	gss_code;
 
 
 		FD_ZERO(&fds);
@@ -1004,14 +1008,13 @@ static int slave(void *mycred,int sock)
 				switch (edg_wll_Error(ctx,&errt,&errd)) {
 					case ETIMEDOUT:
 						/* fallthrough */
-					case EDG_WLL_ERROR_SSL:
+					case EDG_WLL_ERROR_GSS:
 					case EPIPE:
 						dprintf(("[%d] %s (%s)\n",getpid(),errt,errd));
 						if (!debug) syslog(LOG_ERR,"%s (%s)",errt,errd);
 						/* fallthrough */
 					case ENOTCONN:
-						edg_wll_ssl_close(ctx->connPool[ctx->connToUse].ssl);
-						ctx->connPool[ctx->connToUse].ssl = NULL;	/* XXX: is it necessary ? */
+						edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, NULL);
 						edg_wll_FreeContext(ctx);
 						ctx = NULL;
 						close(conn);
@@ -1059,10 +1062,9 @@ static int slave(void *mycred,int sock)
 		}
 
 		if (kick_client && conn >= 0) {
-			if (ctx->connPool[ctx->connToUse].ssl) {
+			if (ctx->connPool[ctx->connToUse].gss.context != GSS_C_NO_CONTEXT) {
 				struct timeval	to = { 0, CLNT_REJECT_TIMEOUT };
-				edg_wll_ssl_close_timeout(ctx->connPool[ctx->connToUse].ssl,&to);
-				ctx->connPool[ctx->connToUse].ssl = NULL;
+				edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss,&to);
 			}
 			edg_wll_FreeContext(ctx);
 			close(conn); /* XXX: should not harm */
@@ -1071,6 +1073,10 @@ static int slave(void *mycred,int sock)
 		}
 
 		if (newconn >= 0) {
+			OM_uint32       min_stat, maj_stat;
+			gss_name_t      client_name = GSS_C_NO_NAME;
+			gss_buffer_desc token = GSS_C_EMPTY_BUFFER;
+
 			conn = newconn;
 			gettimeofday(&client_start,NULL);
 			client_done.tv_sec = client_start.tv_sec;
@@ -1194,36 +1200,48 @@ static int slave(void *mycred,int sock)
 				ctx->srvPort = ntohs(a.sin_port);
 			}
 	
-			if (!(ctx->connPool[ctx->connToUse].ssl = edg_wll_ssl_accept(mycred,conn,&ctx->p_tmp_timeout))) {
-				dprintf(("[%d] SSL hanshake failed, closing.\n",getpid()));
-				if (!debug) syslog(LOG_ERR,"SSL hanshake failed");
+			if (edg_wll_gss_accept(mycred, conn, &ctx->p_tmp_timeout, &ctx->connPool[ctx->connToUse].gss, &gss_code)) {
+				dprintf(("[%d] Client authentication failed, closing.\n",getpid()));
+				if (!debug) syslog(LOG_ERR,"Client authentication failed");
 	
 				close(conn);
 				conn = -1;
 				edg_wll_FreeContext(ctx);
 				continue;
-			} else if ((peer = SSL_get_peer_certificate(ctx->connPool[ctx->connToUse].ssl)) != NULL) {
-				X509_NAME	*s = X509_get_subject_name(peer);
-	
-				proxy_get_base_name(s);
-				free(ctx->peerName);
-				ctx->peerName = X509_NAME_oneline(s,NULL,0);
+			} 
+			maj_stat = gss_inquire_context(&min_stat, ctx->connPool[ctx->connToUse].gss.context, &client_name, NULL, NULL, NULL, NULL, NULL, NULL);
+			if (!GSS_ERROR(maj_stat))
+				maj_stat = gss_display_name(&min_stat, client_name, &token, NULL);
+
+			if (!GSS_ERROR(maj_stat)) {
+				if (ctx->peerName) free(ctx->peerName);
+				ctx->peerName = (char *)token.value;
+				memset(&token, 0, sizeof(token));
+/* XXX DK: pujde pouzit lifetime z inquire_context()?
 				ctx->peerProxyValidity = ASN1_UTCTIME_mktime(X509_get_notAfter(peer));
-				X509_free(peer);
-	
+*/
+  
 				dprintf(("[%d] client DN: %s\n",getpid(),ctx->peerName));
-				edg_wll_GetVomsGroups(ctx, vomsdir, cadir);
-				if (debug && ctx->vomsGroups.len > 0) {
-				   int i;
-	
-				   dprintf(("[%d] client's VOMS groups:\n",getpid()));
-				   for (i = 0; i < ctx->vomsGroups.len; i++)
-				      dprintf(("\t%s:%s\n", 
-					       ctx->vomsGroups.val[i].vo,
-					       ctx->vomsGroups.val[i].name));
-				}
-	
-			} else dprintf(("[%d] annonymous client\n",getpid()));
+			} else {
+				/* XXX DK: Check if the ANONYMOUS flag is set ? */
+				dprintf(("[%d] annonymous client\n",getpid()));
+			}
+		  
+			if (client_name != GSS_C_NO_NAME)
+			     gss_release_name(&min_stat, &client_name);
+			if (token.value)
+			     gss_release_buffer(&min_stat, &token);
+
+			edg_wll_SetVomsGroups(ctx, &ctx->connPool[ctx->connToUse].gss, vomsdir, cadir);
+			if (debug && ctx->vomsGroups.len > 0) {
+			    int i;
+  
+			    dprintf(("[%d] client's VOMS groups:\n",getpid()));
+			    for (i = 0; i < ctx->vomsGroups.len; i++)
+				 dprintf(("\t%s:%s\n", 
+					 ctx->vomsGroups.val[i].vo,
+					 ctx->vomsGroups.val[i].name));
+			}
 	
 			/* used also to reset start_time after edg_wll_ssl_accept! */
 			/* gettimeofday(&start_time,0); */
@@ -1237,7 +1255,6 @@ static int slave(void *mycred,int sock)
 			}
 			ctx->strict_locking = strict_locking;
 		}
-
 	}
 
 	if (die) {

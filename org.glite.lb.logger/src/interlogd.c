@@ -15,7 +15,7 @@
 #include "glite/wmsutils/tls/ssl_helpers/ssl_pthreads.h"
 #include "interlogd.h"
 #include "glite/lb/consumer.h"
-#include "glite/lb/dgssl.h"
+#include "glite/lb/lb_gss.h"
 
 #define EXIT_FAILURE 1
 #if defined(IL_NOTIFICATIONS)
@@ -33,7 +33,7 @@ static int killflg = 0;
 
 int TIMEOUT = DEFAULT_TIMEOUT;
 
-proxy_cred_desc *cred_handle;
+gss_cred_id_t cred_handle = GSS_C_NO_CREDENTIAL;
 pthread_mutex_t cred_handle_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static void usage (int status)
@@ -174,7 +174,9 @@ int
 main (int argc, char **argv)
 {
   int i;
-  char *dummy = NULL,*p;
+  char *p;
+  edg_wll_GssStatus gss_stat;
+  int ret;
 
   program_name = argv[0];
 
@@ -217,24 +219,32 @@ main (int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  /* try to get default credential file names from globus */
-  if(proxy_get_filenames(NULL,0, &dummy, &CAcert_dir, &dummy, &cert_file, &key_file) < 0) {
-    il_log(LOG_CRIT, "Failed to acquire credential file names. Exiting.\n");
-    exit(EXIT_FAILURE);
-  }
+  if (CAcert_dir)
+     setenv("X509_CERT_DIR", CAcert_dir, 1);
 
+  /* XXX DK: still needed? */
   il_log(LOG_INFO, "Initializing SSL...\n");
   if(edg_wlc_SSLInitialization() < 0) {
     il_log(LOG_CRIT, "Failed to initialize SSL. Exiting.\n");
     exit(EXIT_FAILURE);
   }
 
-  cred_handle = edg_wll_ssl_init(SSL_VERIFY_FAIL_IF_NO_PEER_CERT, 0, cert_file, key_file, 0, 0);
-  if(cred_handle == NULL) {
-    il_log(LOG_CRIT, "Failed to initialize SSL certificates. Exiting.\n");
-    exit(EXIT_FAILURE);
-  }
+  ret = edg_wll_gss_acquire_cred_gsi(cert_file, &cred_handle, NULL, &gss_stat);
+  if (ret) {
+     char *gss_err = NULL;
+     char *str;
 
+     if (ret == EDG_WLL_GSS_ERROR_GSS)
+	edg_wll_gss_get_error(&gss_stat, "edg_wll_gss_acquire_cred_gsi()", &gss_err);
+     asprintf(&str, "Failed to load GSI credential: %s\n",
+	      (gss_err) ? gss_err : "edg_wll_gss_acquire_cred_gsi() failed"); 
+     il_log(LOG_CRIT, str);
+     free(str);
+     if (gss_err)
+	free(gss_err);
+     exit(EXIT_FAILURE);
+  }
+  
   if(!debug &&
      (daemon(0,0) < 0)) {
     perror("daemon");
@@ -246,6 +256,7 @@ main (int argc, char **argv)
   	exit(EXIT_FAILURE);
   }
 
+  /* XXX DK: needed? */
   if (edg_wlc_SSLLockingInit() != 0) {
   	il_log(LOG_CRIT, "Failed to initialize SSL locking. Exiting.\n");
   	exit(EXIT_FAILURE);

@@ -9,12 +9,9 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#include "globus_config.h"
-#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
-
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/dgssl.h"
+#include "glite/lb/lb_gss.h"
 #include "glite/lb/mini_http.h"
 
 
@@ -22,10 +19,11 @@
 static void CloseConnection(edg_wll_Context ctx, int conn_index)
 {
 	/* close connection ad free its structures */
-	if (ctx->connPool[conn_index].ssl) 
-		edg_wll_ssl_close_timeout(ctx->connPool[conn_index].ssl,&ctx->p_tmp_timeout);
+	OM_uint32 min_stat;
+
+	edg_wll_gss_close(&ctx->connPool[conn_index].gss, &ctx->p_tmp_timeout);
 	if (ctx->connPool[conn_index].gsiCred) 
-		edg_wll_ssl_free(ctx->connPool[conn_index].gsiCred);
+		gss_release_cred(&min_stat, &ctx->connPool[conn_index].gsiCred);
 	free(ctx->connPool[conn_index].peerName);
 	free(ctx->connPool[conn_index].buf);
 	
@@ -110,6 +108,7 @@ int edg_wll_close(edg_wll_Context ctx)
 int edg_wll_open(edg_wll_Context ctx)
 {
 	int index;
+	edg_wll_GssStatus gss_stat;
 	
 
 	edg_wll_ResetError(ctx);
@@ -126,48 +125,47 @@ int edg_wll_open(edg_wll_Context ctx)
 	
 	ctx->connToUse = index;
 	
-	if (!ctx->connPool[index].gsiCred) { 
-		if (!(ctx->connPool[index].gsiCred = edg_wll_ssl_init(SSL_VERIFY_PEER,0,
-			ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
-			ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-			0, 0)))
-		{
-			edg_wll_SetError(ctx,EDG_WLL_ERROR_SSL,
-				ERR_error_string(ERR_get_error(), NULL));
-			goto err;
-		}
-		
+	/* XXX support anonymous connections, perhaps add a flag to the connPool
+	 * struct specifying whether or not this connection shall be authenticated
+	 * to prevent from repeated calls to edg_wll_gss_acquire_cred_gsi() */
+	if (!ctx->connPool[index].gsiCred && 
+	    edg_wll_gss_acquire_cred_gsi(ctx->p_proxy_filename,
+		                         &ctx->connPool[index].gsiCred,
+					 NULL,
+					 &gss_stat)) {
+	    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
+	    goto err;
 	}
 
-	if (!ctx->connPool[index].ssl) {	
-		switch (edg_wll_ssl_connect(ctx->connPool[index].gsiCred,
+	if (ctx->connPool[index].gss.context == GSS_C_NO_CONTEXT) {	
+		switch (edg_wll_gss_connect(ctx->connPool[index].gsiCred,
 				ctx->connPool[index].peerName, ctx->connPool[index].peerPort,
-				&ctx->p_tmp_timeout,&ctx->connPool[index].ssl)) {
+				&ctx->p_tmp_timeout,&ctx->connPool[index].gss,
+				&gss_stat)) {
 		
-			case EDG_WLL_SSL_OK: 
+			case EDG_WLL_GSS_OK: 
 				goto ok;
-			case EDG_WLL_SSL_ERROR_ERRNO:
-				edg_wll_SetError(ctx,errno,"edg_wll_ssl_connect()");
+			case EDG_WLL_GSS_ERROR_ERRNO:
+				edg_wll_SetError(ctx,errno,"edg_wll_gss_connect()");
 				break;
-			case EDG_WLL_SSL_ERROR_SSL:
-				edg_wll_SetError(ctx,EDG_WLL_ERROR_SSL,
-						ERR_error_string(ERR_get_error(), NULL));
+			case EDG_WLL_GSS_ERROR_GSS:
+				edg_wll_SetErrorGss(ctx, "failed to authenticate to server", &gss_stat);
 				break;
-			case EDG_WLL_SSL_ERROR_HERRNO:
+			case EDG_WLL_GSS_ERROR_HERRNO:
         	                { const char *msg1;
                 	          char *msg2;
                         	  msg1 = hstrerror(errno);
-	                          asprintf(&msg2, "edg_wll_ssl_connect(): %s", msg1);
+	                          asprintf(&msg2, "edg_wll_gss_connect(): %s", msg1);
         	                  edg_wll_SetError(ctx,EDG_WLL_ERROR_DNS, msg2);
                 	          free(msg2);
                         	}
 				break;
-			case EDG_WLL_SSL_ERROR_EOF:
-				edg_wll_SetError(ctx,ECONNREFUSED,"edg_wll_ssl_connect():"
+			case EDG_WLL_GSS_ERROR_EOF:
+				edg_wll_SetError(ctx,ECONNREFUSED,"edg_wll_gss_connect():"
 					       " server closed the connection, probably due to overload");
 				break;
-			case EDG_WLL_SSL_ERROR_TIMEOUT:
-				edg_wll_SetError(ctx,ETIMEDOUT,"edg_wll_ssl_connect()");
+			case EDG_WLL_GSS_ERROR_TIMEOUT:
+				edg_wll_SetError(ctx,ETIMEDOUT,"edg_wll_gss_connect()");
 				break;
 		}
 	}
@@ -203,11 +201,11 @@ int http_check_status(
 		case HTTP_UNAVAIL: /* EAGAIN */
 		case HTTP_INVALID: /* EINVAL */
 			break;
-		case EDG_WLL_SSL_ERROR_HERRNO:
+		case EDG_WLL_GSS_ERROR_HERRNO:
                         { const char *msg1;
                           char *msg2;
                           msg1 = hstrerror(errno);
-                          asprintf(&msg2, "edg_wll_ssl_connect(): %s", msg1);
+                          asprintf(&msg2, "edg_wll_gss_connect(): %s", msg1);
                           edg_wll_SetError(ctx,EDG_WLL_ERROR_DNS, msg2);
                           free(msg2);
                         }

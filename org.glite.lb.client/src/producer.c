@@ -5,21 +5,18 @@
 
 #ident "$Header$"
 
-#include <globus_gss_assist.h>
-#include <globus_config.h>
-
 #include <syslog.h>
 #include <string.h>
 #include <unistd.h>
 #include <netdb.h>
 
-#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/ulm_parse.h"
 #include "glite/lb/trio.h"
+#include "glite/lb/lb_gss.h"
 
 #include "prod_proto.h"
 
@@ -38,74 +35,64 @@ static int edg_wll_DoLogEvent(
 	edg_wll_LogLine logline)
 {
 	int	ret,answer;
-	void	*cred_handle = NULL;
-	SSL	*ssl = NULL;
-#ifdef EDG_WLL_LOG_STUB
 	char	*my_subject_name = NULL;
-#endif
+	edg_wll_GssStatus	gss_stat;
+	edg_wll_GssConnection	con;
+	gss_cred_id_t	cred = GSS_C_NO_CREDENTIAL;
+	OM_uint32	min_stat;
 
 	edg_wll_ResetError(context);
 	ret = answer = 0;
+	memset(&con, 0, sizeof(con));
 
-   /* open a SSL connection to the local-logger: */
+   /* open an authenticated connection to the local-logger: */
 
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"Logging to host %s, port %d\n",
 			context->p_destination, context->p_dest_port);
 #endif
-	
-	if ((cred_handle=edg_wll_ssl_init(SSL_VERIFY_PEER, 0,
-			context->p_proxy_filename ? context->p_proxy_filename : context->p_cert_filename,
-			context->p_proxy_filename ? context->p_proxy_filename : context->p_key_filename,
-			0, 0)) == NULL) {
-		edg_wll_SetError(context,EDG_WLL_ERROR_SSL,"edg_wll_ssl_init()"); 
-		goto edg_wll_DoLogEvent_end; 
-	}
-#ifdef EDG_WLL_LOG_STUB
-	edg_wll_ssl_get_my_subject(cred_handle,&my_subject_name);
-	if (my_subject_name != NULL) {
-		fprintf(stderr,"Using certificate: %s\n",my_subject_name);
-		free(my_subject_name);
-	} else {
-		edg_wll_SetError(context,ECONNREFUSERD,"edg_wll_ssl_get_my_subject()");
+	ret = edg_wll_gss_acquire_cred_gsi(context->p_proxy_filename, &cred,
+	      				   &my_subject_name, &gss_stat);
+	/* Give up if unable to prescribed credentials, otherwise go on anonymously */
+	if (ret && context->p_proxy_filename) {
+		edg_wll_SetErrorGss(context, "failed to load GSI credentials", &gss_stat);
 		goto edg_wll_DoLogEvent_end;
 	}
+	      				   
+	if (my_subject_name != NULL) {
+#ifdef EDG_WLL_LOG_STUB
+		fprintf(stderr,"Using certificate: %s\n",my_subject_name);
 #endif
-	if ((answer = edg_wll_ssl_connect(cred_handle,
+		free(my_subject_name);
+	}
+	if ((answer = edg_wll_gss_connect(cred,
 			context->p_destination, context->p_dest_port, 
-			&context->p_tmp_timeout, &ssl)) < 0) {
+			&context->p_tmp_timeout, &con, &gss_stat)) < 0) {
 		switch(answer) {
-                case EDG_WLL_SSL_ERROR_EOF:
-			edg_wll_SetError(context,ENOTCONN,"edg_wll_ssl_connect()");
+                case EDG_WLL_GSS_ERROR_EOF:
+			edg_wll_SetError(context,ENOTCONN,"edg_wll_gss_connect()");
 			break;
-                case EDG_WLL_SSL_ERROR_TIMEOUT:
-			edg_wll_SetError(context,ETIMEDOUT,"edg_wll_ssl_connect()");
+                case EDG_WLL_GSS_ERROR_TIMEOUT:
+			edg_wll_SetError(context,ETIMEDOUT,"edg_wll_gss_connect()");
 			break;
-                case EDG_WLL_SSL_ERROR_ERRNO:
-			edg_wll_SetError(context,errno,"edg_wll_ssl_connect()");
+                case EDG_WLL_GSS_ERROR_ERRNO:
+			edg_wll_SetError(context,errno,"edg_wll_gss_connect()");
 			break;
-                case EDG_WLL_SSL_ERROR_SSL: 
-			{
-				const char *msg1;
-				char *msg2;
-				msg1 = ERR_reason_error_string(ERR_get_error());
-				asprintf(&msg2, "edg_wll_ssl_connect(): %s", msg1);
-				edg_wll_SetError(context,EDG_WLL_ERROR_SSL,msg2);
-				free(msg2);
-		    	}
+                case EDG_WLL_GSS_ERROR_GSS: 
+			edg_wll_SetErrorGss(context, "failed to authenticate to server",&gss_stat);
 			break;
-		case EDG_WLL_SSL_ERROR_HERRNO:
+		case EDG_WLL_GSS_ERROR_HERRNO:
 			{ 
 				const char *msg1;
 				char *msg2;
 				msg1 = hstrerror(errno);
-				asprintf(&msg2, "edg_wll_ssl_connect(): %s", msg1);
+				asprintf(&msg2, "edg_wll_gss_connect(): %s", msg1);
 				edg_wll_SetError(context,EDG_WLL_ERROR_DNS, msg2);
 				free(msg2);
 			}
                         break;
 		default:
-			edg_wll_SetError(context,ECONNREFUSED,"edg_wll_ssl_connect(): unknown");
+			edg_wll_SetError(context,ECONNREFUSED,"edg_wll_gss_connect(): unknown");
 			break;
 		}
 		goto edg_wll_DoLogEvent_end;
@@ -113,14 +100,14 @@ static int edg_wll_DoLogEvent(
 
    /* and send the message to the local-logger: */
 
-	answer = edg_wll_log_proto_client(context,ssl,logline/*,priority*/);
+	answer = edg_wll_log_proto_client(context,&con,logline/*,priority*/);
 
 	switch(answer) {
 		case 0:
 		case EINVAL:
 		case ENOSPC:
 		case ENOMEM:
-		case EDG_WLL_ERROR_SSL:
+		case EDG_WLL_ERROR_GSS:
 		case EDG_WLL_ERROR_DNS:
 		case ENOTCONN:
 		case ECONNREFUSED:
@@ -146,8 +133,10 @@ static int edg_wll_DoLogEvent(
 	}
 
 edg_wll_DoLogEvent_end:
-	if (ssl) edg_wll_ssl_close_timeout(ssl,&context->p_tmp_timeout);
-	if (cred_handle) edg_wll_ssl_free(cred_handle);
+	if (con.context != GSS_C_NO_CONTEXT)
+		edg_wll_gss_close(&con,&context->p_tmp_timeout);
+	if (cred != GSS_C_NO_CREDENTIAL)
+		gss_release_cred(&min_stat, &cred);
 
 	return edg_wll_Error(context, NULL, NULL);
 }

@@ -24,10 +24,8 @@ AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
 SUFFIXES = .T 
 
-GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour} \
-	-I${globus_prefix}/include/${nothrflavour}/openssl
-GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour} \
-	-I${globus_prefix}/include/${thrflavour}/openssl
+GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
+GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
 DEBUG:=-g -O0 
 CFLAGS:=${DEBUG} \
@@ -43,11 +41,11 @@ HELPERS:=-L${glite_location}/lib -lglite_wmsutils_tls_ssl_helpers
 
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
-	-lssl_${nothrflavour}
+	-lglobus_gssapi_gsi_${nothrflavour} \
 
 GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
 	-lglobus_common_${thrflavour} \
-	-lssl_${thrflavour}
+	-lglobus_gssapi_gsi_${thrflavour}
 
 EXPAT_LIBS:=-L${expat_prefix}/lib \
 	-lexpat
@@ -143,7 +141,6 @@ check:
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
-
 dist: distsrc distbin
 
 distsrc:

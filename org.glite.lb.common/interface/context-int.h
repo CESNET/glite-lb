@@ -4,7 +4,7 @@
 #ident "$Header$"
 
 #include "glite/lb/consumer.h"
-#include "dgssl.h"
+#include "lb_gss.h"
 #include "authz.h"
 
 #ifdef __cplusplus
@@ -24,8 +24,8 @@ typedef struct _edg_wll_ConnPool {
 	unsigned int	peerPort;
 	
 /* http(s) stream */
-	void		*gsiCred;
-	SSL		*ssl;
+	gss_cred_id_t	gsiCred;
+	edg_wll_GssConnection	gss;
 	char		*buf;
 	int		bufUse,bufSize;
 
@@ -125,6 +125,12 @@ extern int edg_wll_SetError(
 	edg_wll_Context,	/* context */
 	int,			/* error code */
 	const char *		/* error description */
+);
+
+extern int edg_wll_SetErrorGss(
+	edg_wll_Context,
+	const char *,
+	edg_wll_GssStatus *
 );
 
 /** update errDesc and errCode */

@@ -8,9 +8,10 @@
 #include <pthread.h>
 #include <stdlib.h>
 
-#include <err.h> // SSL header file
+/* XXX DK: */
+#include <err.h> // SSL header file 
 
-#include "glite/lb/dgssl.h"
+#include "glite/lb/lb_gss.h"
 
 #include "il_error.h"
 
@@ -99,30 +100,31 @@ set_error(int code, long minor, char *msg)
     snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, hstrerror(err->code_min));
     break;
 
+  /* XXX DK: je tahle hodnota k necemu potreba? */
   case IL_AUTH:
     snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, ERR_error_string(err->code_min, NULL));
     break;
 
-  case IL_DGSSL:
+  case IL_DGGSS:
     switch(err->code_min) {
 
-    case EDG_WLL_SSL_ERROR_SSL:
-      snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, ERR_error_string(ERR_get_error(), NULL));
+    case EDG_WLL_GSS_ERROR_GSS:
+      snprintf(err->msg, IL_ERR_MSG_LEN, "%s", msg);
       break;
 
-    case EDG_WLL_SSL_ERROR_TIMEOUT:
-      snprintf(err->msg, IL_ERR_MSG_LEN, "%s: Timeout in SSL connection.", msg);
+    case EDG_WLL_GSS_ERROR_TIMEOUT:
+      snprintf(err->msg, IL_ERR_MSG_LEN, "%s: Timeout in GSS connection.", msg);
       break;
 
-    case EDG_WLL_SSL_ERROR_EOF:
+    case EDG_WLL_GSS_ERROR_EOF:
       snprintf(err->msg, IL_ERR_MSG_LEN, "%s: Connection lost.", msg);
       break;
 
-    case EDG_WLL_SSL_ERROR_ERRNO:
+    case EDG_WLL_GSS_ERROR_ERRNO:
       snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, strerror(errno));
       break;
       
-    case EDG_WLL_SSL_ERROR_HERRNO:
+    case EDG_WLL_GSS_ERROR_HERRNO:
       snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, hstrerror(errno));
       break;
     }

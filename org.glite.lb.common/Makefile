@@ -25,10 +25,8 @@ AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
-GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour} \
-	-I${globus_prefix}/include/${nothrflavour}/openssl
-GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour} \
-	-I${globus_prefix}/include/${thrflavour}/openssl
+GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
+GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
@@ -51,7 +49,7 @@ COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
-OBJS:=dgssl.o escape.o events.o mini_http.o query_rec.o status.o \
+OBJS:=lb_gss.o escape.o events.o mini_http.o query_rec.o status.o \
 	xml_conversions.o xml_parse.o ulm_parse.o param.o \
 	events_parse.o il_string.o il_int.o notifid.o \
 	il_log.o il_msg.o context.o trio.o strio.o
@@ -60,7 +58,7 @@ LOBJS:=${OBJS:.o=.lo}
 THROBJS:=${OBJS:.o=.thr.o}
 THRLOBJS:=${OBJS:.o=.thr.lo}
 
-HDRS:=context-int.h  dgssl.h  mini_http.h authz.h xml_parse.h \
+HDRS:=context-int.h  lb_gss.h  mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h escape.h \
 	ulm_parse.h trio.h
 
@@ -83,12 +81,12 @@ ${THRSTATICLIB}: ${THROBJS}
 
 ${LTLIB}: ${OBJS}
 	${LINK} -o $@ ${LOBJS} \
-		-lglobus_ssl_utils -lglite_wmsutils_cjobid \
+		-lglite_wmsutils_cjobid \
 		-lm
 
 ${THRLTLIB}: ${THROBJS}
 	${LINK} -o $@ ${THRLOBJS} \
-		-lglobus_ssl_utils -lglite_wmsutils_cjobid \
+		-lglite_wmsutils_cjobid \
 		-lm
 
 stage: compile

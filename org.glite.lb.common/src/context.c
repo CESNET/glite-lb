@@ -7,7 +7,6 @@
 #include <assert.h>
 
 #include <globus_config.h>
-#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/wmsutils/jobid/cjobid.h"
@@ -40,6 +39,7 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 void edg_wll_FreeContext(edg_wll_Context ctx)
 {
 	struct timeval close_timeout = {0, 50000};
+	OM_uint32 min_stat;
 
 	if (!ctx) return;
 
@@ -49,9 +49,9 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		
 		for (i=0; i<ctx->poolSize; i++) {
 			if (ctx->connPool[i].peerName) free(ctx->connPool[i].peerName);
-			if (ctx->connPool[i].ssl) 
-				edg_wll_ssl_close_timeout(ctx->connPool[i].ssl,&close_timeout);
-			if (ctx->connPool[i].gsiCred) edg_wll_ssl_free(ctx->connPool[i].gsiCred);
+			edg_wll_gss_close(&ctx->connPool[i].gss,&close_timeout);
+			if (ctx->connPool[i].gsiCred)
+				gss_release_cred(&min_stat, &ctx->connPool[i].gsiCred);
 			if (ctx->connPool[i].buf) free(ctx->connPool[i].buf);
 		}	
 		free(ctx->connPool);
@@ -95,7 +95,7 @@ static const char* const errTexts[] = {
 	"Database call failed",
 	"Bad URL format",
 	"MD5 key clash",
-	"SSL Error",
+	"GSSAPI Error",
 	"DNS resolver error",
 	"No JobId specified in context",
 	"No indexed condition in query",
@@ -416,4 +416,14 @@ free_voms_groups(edg_wll_VomsGroups *groups)
       if (groups->val[len].name)
 	 free(groups->val[len].name);
    }
+}
+
+int edg_wll_SetErrorGss(edg_wll_Context ctx, const char *desc, edg_wll_GssStatus *gss_code)
+{
+   char *err_msg;
+
+   edg_wll_gss_get_error(gss_code, desc, &err_msg);
+   edg_wll_SetError(ctx,EDG_WLL_ERROR_GSS, err_msg);
+   free(err_msg);
+   return ctx->errCode;
 }

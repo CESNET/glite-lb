@@ -25,11 +25,9 @@ VERSION=-DVERSION=\"GLite-${version}\"
 
 SUFFIXES=.no
 
-GLOBUSINC=-I${globus_prefix}/include/${nothrflavour} \
-	-I${globus_prefix}/include/${nothrflavour}/openssl
+GLOBUSINC=-I${globus_prefix}/include/${nothrflavour}
 
-GLOBUSTHRINC=-I${globus_prefix}/include/${thrflavour} \
-	-I${globus_prefix}/include/${thrflavour}/openssl
+GLOBUSTHRINC=-I${globus_prefix}/include/${thrflavour}
 
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
@@ -43,11 +41,11 @@ INSTALL:=libtool --mode=install install
 
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
-	-lssl_${nothrflavour}
+	-lglobus_gssapi_gsi_${nothrflavour}
 
 GLOBUS_THRLIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${thrflavour} \
-	-lssl_${thrflavour}
+	-lglobus_gssapi_gsi_${thrflavour}
 
 EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	-L${expat_prefix}/lib -lexpat

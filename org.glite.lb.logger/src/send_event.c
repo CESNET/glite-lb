@@ -103,17 +103,24 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
   char buffer[17];
   char *msg, *p;
   int len, code, l;
-  SSL *ssl;
+  edg_wll_GssConnection *gss;
   struct timeval tv;
+  edg_wll_GssStatus gss_stat;
 
-  ssl = eq->ssl;
+  gss = &eq->gss;
 
   /* get message header */
   tv.tv_sec = TIMEOUT;
   tv.tv_usec = 0;
-  code = edg_wll_ssl_read_full(ssl, buffer, 17, &tv, &len);
+  code = edg_wll_gss_read_full(gss, buffer, 17, &tv, &len, &gss_stat);
   if(code < 0) {
-    set_error(IL_DGSSL, code, "get_reply (header)");
+    char *gss_err = NULL;
+
+    if (code == EDG_WLL_GSS_ERROR_GSS)
+       edg_wll_gss_get_error(&gss_stat, "get_reply (header)", &gss_err);
+    set_error(IL_DGGSS, code,
+	      (code == EDG_WLL_GSS_ERROR_GSS) ? gss_err : "get_reply (header)");
+    if (gss_err) free(gss_err);
     return(-1);
   }
     
@@ -134,9 +141,15 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
   /* read all the data */
   tv.tv_sec = TIMEOUT;
   tv.tv_usec = 0;
-  code = edg_wll_ssl_read_full(ssl, msg, len, &tv, &l);
+  code = edg_wll_gss_read_full(gss, msg, len, &tv, &l, &gss_stat);
   if(code < 0) {
-    set_error(IL_DGSSL, code, "get_reply (body)");
+    char *gss_err = NULL;
+
+    if (code == EDG_WLL_GSS_ERROR_GSS)
+       edg_wll_gss_get_error(&gss_stat, "get_reply (body)", &gss_err);
+    set_error(IL_DGGSS, code,
+	      (code == EDG_WLL_GSS_ERROR_GSS) ? gss_err : "get_reply (body)"); 
+    if (gss_err) free(gss_err);
     return(-1);
   }
 
@@ -177,22 +190,29 @@ event_queue_connect(struct event_queue *eq)
 {
   int ret;
   struct timeval tv;
+  edg_wll_GssStatus gss_stat;
 
   assert(eq != NULL);
 
-  if(eq->ssl == NULL) {
+  if(eq->gss.context == GSS_C_NO_CONTEXT) {
 
     tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
 	    abort();
     il_log(LOG_DEBUG, "    trying to connect to %s:%d\n", eq->dest_name, eq->dest_port);
-    ret = edg_wll_ssl_connect(cred_handle, eq->dest_name, eq->dest_port, &tv, &eq->ssl);
+    ret = edg_wll_gss_connect(cred_handle, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
     if(pthread_mutex_unlock(&cred_handle_lock) < 0)
 	    abort();
     if(ret < 0) {
-      set_error(IL_DGSSL, ret, "event_queue_connect: edg_wll_ssl_connect");
-      eq->ssl = NULL;
+      char *gss_err = NULL;
+
+      if (ret == EDG_WLL_GSS_ERROR_GSS)
+	 edg_wll_gss_get_error(&gss_stat, "event_queue_connect: edg_wll_gss_connect", &gss_err);
+      set_error(IL_DGGSS, ret,
+	        (ret == EDG_WLL_GSS_ERROR_GSS) ? gss_err : "event_queue_connect: edg_wll_gss_connect");
+      if (gss_err) free(gss_err);
+      eq->gss.context = GSS_C_NO_CONTEXT;
       eq->timeout = TIMEOUT;
       return(0);
     }
@@ -207,9 +227,9 @@ event_queue_close(struct event_queue *eq)
 {
   assert(eq != NULL);
 
-  if(eq->ssl != NULL) {
-    edg_wll_ssl_close(eq->ssl);
-    eq->ssl = NULL;
+  if(eq->gss.context != GSS_C_NO_CONTEXT) {
+    edg_wll_gss_close(&eq->gss, NULL);
+    eq->gss.context = GSS_C_NO_CONTEXT;
   }
   return(0);
 }
@@ -224,7 +244,7 @@ event_queue_send(struct event_queue *eq)
 {
   assert(eq != NULL);
 
-  if(eq->ssl == NULL)
+  if(eq->gss.context == GSS_C_NO_CONTEXT)
     return(0);
 
   /* feed the server with events */
@@ -233,6 +253,7 @@ event_queue_send(struct event_queue *eq)
     char *rep;
     int  ret, code, code_min, bytes_sent;
     struct timeval tv;
+    edg_wll_GssStatus gss_stat;
 
     clear_error();
 
@@ -241,7 +262,7 @@ event_queue_send(struct event_queue *eq)
 
     tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;
-    ret = edg_wll_ssl_write_full(eq->ssl, msg->msg, msg->len, &tv, &bytes_sent);
+    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
     if(ret < 0) {
       eq->timeout = TIMEOUT;
       return(0);

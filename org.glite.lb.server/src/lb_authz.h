@@ -22,6 +22,7 @@ typedef struct _edg_wll_Acl *edg_wll_Acl;
 #include <stdio.h>
 
 #include "glite/lb/context-int.h"
+#include "glite/lb/lb_gss.h"
 
 extern int
 edg_wll_InitAcl(edg_wll_Acl *);
@@ -47,7 +48,7 @@ edg_wll_GetACL(edg_wll_Context, edg_wlc_JobId, edg_wll_Acl *);
 #endif /* NO_GACL */
 
 extern int
-edg_wll_GetVomsGroups(edg_wll_Context, char *, char *);
+edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *);
 
 extern void
 edg_wll_FreeVomsGroups(edg_wll_VomsGroups *);

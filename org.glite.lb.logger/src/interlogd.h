@@ -4,7 +4,7 @@
 #ident "$Header$"
 
 #include "il_error.h"
-#include "glite/lb/dgssl.h"
+#include "glite/lb/lb_gss.h"
 
 #include <pthread.h>
 #include <sys/time.h>
@@ -58,8 +58,7 @@ extern int TIMEOUT;
 #define INPUT_TIMEOUT (60)
 
 
-/* extern SSL_CTX *sslContext; */
-extern proxy_cred_desc *cred_handle;
+extern gss_cred_id_t cred_handle;
 extern pthread_mutex_t cred_handle_lock;
 extern char *cert_file;
 extern char *key_file;
@@ -105,7 +104,7 @@ struct server_msg {
 
 
 struct event_queue {
-	SSL                    *ssl;            /* SSL connection */
+	edg_wll_GssConnection   gss;            /* GSS connection */
 	char                   *dest_name;
 	int                     dest_port;
 	int                     timeout;        /* queue timeout */

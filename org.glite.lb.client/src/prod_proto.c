@@ -3,6 +3,7 @@
 #include "prod_proto.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/escape.h"
+#include "glite/lb/lb_gss.h"
 
 #include <signal.h>
 #include <string.h>
@@ -21,7 +22,7 @@
  *
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_client(edg_wll_Context context, SSL *ssl, edg_wll_LogLine logline/*, int priority,*/)
+int edg_wll_log_proto_client(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline/*, int priority,*/)
 {
 	char	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1];
 	int	err;
@@ -30,6 +31,7 @@ int edg_wll_log_proto_client(edg_wll_Context context, SSL *ssl, edg_wll_LogLine 
 	int	count;
 	int	size;
 	u_int8_t size_end[4];
+	edg_wll_GssStatus gss_code;
 
 	errno = err = answer = count = 0;
 	size = strlen(logline)+1;
@@ -46,8 +48,8 @@ int edg_wll_log_proto_client(edg_wll_Context context, SSL *ssl, edg_wll_LogLine 
 #endif
 	sprintf(header,"%s",EDG_WLL_LOG_SOCKET_HEADER);
 	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH]='\0';
-	if ((err = edg_wll_ssl_write_full(ssl, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &context->p_tmp_timeout, &count)) < 0) {
-		answer = edg_wll_log_proto_client_failure(context,err,"send header");
+	if ((err = edg_wll_gss_write_full(con, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &context->p_tmp_timeout, &count, &gss_code)) < 0) {
+		answer = edg_wll_log_proto_client_failure(context,err,&gss_code,"send header");
 		goto edg_wll_log_proto_client_end;
 	}
 
@@ -56,8 +58,8 @@ int edg_wll_log_proto_client(edg_wll_Context context, SSL *ssl, edg_wll_LogLine 
 	fprintf(stderr,"Sending message priority...\n");
 #endif
 	count = 0;
-        if ((err = edg_wll_ssl_write_full(ssl, &priority, sizeof(priority), &context->p_tmp_timeout, &count)) < 0) {
-                answer = edg_wll_log_proto_client_failure(context,err,"send message priority");
+        if ((err = edg_wll_gss_write_full(con, &priority, sizeof(priority), &context->p_tmp_timeout, &count, &gss_code)) < 0) {
+                answer = edg_wll_log_proto_client_failure(context,err,&gss_code,"send message priority");
                 goto edg_wll_log_proto_client_end;
         }
 */
@@ -66,8 +68,8 @@ int edg_wll_log_proto_client(edg_wll_Context context, SSL *ssl, edg_wll_LogLine 
 	fprintf(stderr,"Sending message size...\n");
 #endif
 	count = 0;
-	if ((err = edg_wll_ssl_write_full(ssl, size_end, 4, &context->p_tmp_timeout, &count)) < 0) {
-                answer = edg_wll_log_proto_client_failure(context,err,"send message size");
+	if ((err = edg_wll_gss_write_full(con, size_end, 4, &context->p_tmp_timeout, &count, &gss_code)) < 0) {
+                answer = edg_wll_log_proto_client_failure(context,err,&gss_code,"send message size");
                 goto edg_wll_log_proto_client_end;
         }
 
@@ -76,8 +78,8 @@ int edg_wll_log_proto_client(edg_wll_Context context, SSL *ssl, edg_wll_LogLine 
 	fprintf(stderr,"Sending message to socket...\n");
 #endif
 	count = 0;
-	if (( err = edg_wll_ssl_write_full(ssl, logline, size, &context->p_tmp_timeout, &count)) < 0) {
-		answer = edg_wll_log_proto_client_failure(context,err,"send message");
+	if (( err = edg_wll_gss_write_full(con, logline, size, &context->p_tmp_timeout, &count, &gss_code)) < 0) {
+		answer = edg_wll_log_proto_client_failure(context,err,&gss_code,"send message");
 		goto edg_wll_log_proto_client_end;
 	}
 
@@ -86,8 +88,8 @@ int edg_wll_log_proto_client(edg_wll_Context context, SSL *ssl, edg_wll_LogLine 
 	fprintf(stderr,"Reading answer from server...\n");
 #endif
 	count = 0;
-	if ((err = edg_wll_ssl_read_full(ssl, answer_end, 4, &context->p_tmp_timeout, &count)) < 0 ) {
-		answer = edg_wll_log_proto_client_failure(context,err,"get answer");
+	if ((err = edg_wll_gss_read_full(con, answer_end, 4, &context->p_tmp_timeout, &count, &gss_code)) < 0 ) {
+		answer = edg_wll_log_proto_client_failure(context,err,&gss_code,"get answer");
 /* FIXME: update the answer (in context?) to EAGAIN or not?
 		answer = EAGAIN;
 */
@@ -116,11 +118,12 @@ edg_wll_log_proto_client_end:
  *
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_client_failure(edg_wll_Context context, int code, const char *text)
+int edg_wll_log_proto_client_failure(edg_wll_Context context, int code, edg_wll_GssStatus *gss_code, const char *text)
 {
 	const char	*func="edg_wll_log_proto_client()";
         static char     err[256];
         int             ret = 0;
+	char		*gss_err;
 
 	edg_wll_ResetError(context);
 
@@ -128,22 +131,23 @@ int edg_wll_log_proto_client_failure(edg_wll_Context context, int code, const ch
                 return(0);
 
 	switch(code) {
-                case EDG_WLL_SSL_ERROR_EOF: 
+                case EDG_WLL_GSS_ERROR_EOF: 
 			snprintf(err, sizeof(err), "%s: Error %s, EOF occured;", func, text);	
 			ret = edg_wll_SetError(context,ENOTCONN,err);
 			break;
-                case EDG_WLL_SSL_ERROR_TIMEOUT: 
+                case EDG_WLL_GSS_ERROR_TIMEOUT: 
 			snprintf(err, sizeof(err), "%s: Error %s, timeout expired;", func, text);	
 			ret = edg_wll_SetError(context,ENOTCONN,err);
 			break;
-		case EDG_WLL_SSL_ERROR_ERRNO: // XXX: perror("edg_wll_ssl_read()"); break;
+		case EDG_WLL_GSS_ERROR_ERRNO: // XXX: perror("edg_wll_ssl_read()"); break;
 			snprintf(err, sizeof(err), "%s: Error %s, system error occured;", func, text);	
 			ret = edg_wll_SetError(context,ENOTCONN,err);
 			break;
-                case EDG_WLL_SSL_ERROR_SSL:
-			snprintf(err, sizeof(err), "%s: Error %s, SSL error occured; %s;", func, text,
-				 ERR_reason_error_string(ERR_get_error()));
-			ret = edg_wll_SetError(context,ENOTCONN,err);
+                case EDG_WLL_GSS_ERROR_GSS:
+			snprintf(err, sizeof(err), "%s: Error %s, GSS error occured", func, text);
+			edg_wll_gss_get_error(gss_code, err, &gss_err);
+			ret = edg_wll_SetError(context,ENOTCONN,gss_err);
+			free(gss_err);
                         break;
 		default:
 			break;

@@ -11,10 +11,9 @@
 #include <syslog.h>
 
 #include "globus_config.h"
-#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 
 #include "mini_http.h"
-#include "dgssl.h"
+#include "lb_gss.h"
 #include "context-int.h"
 
 #define min(x,y)	((x) < (y) ? (x) : (y))
@@ -26,6 +25,7 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 	enum	{ FIRST, HEAD, BODY, DONE }	pstat = FIRST;
 	int	len, nhdr = 0,rdmore = 0,clen = 0,blen = 0;
 	int	sock;
+	edg_wll_GssStatus gss_code;
 
 #define bshift(shift) {\
 	memmove(ctx->connPool[ctx->connToUse].buf,ctx->connPool[ctx->connToUse].buf+(shift),ctx->connPool[ctx->connToUse].bufUse-(shift));\
@@ -33,9 +33,9 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 }
 	edg_wll_ResetError(ctx);
 
-
-	if (ctx->connPool[ctx->connToUse].ssl) sock = SSL_get_fd(ctx->connPool[ctx->connToUse].ssl);
-	else { 
+	if (ctx->connPool[ctx->connToUse].gss.context != GSS_C_NO_CONTEXT)
+   		sock = ctx->connPool[ctx->connToUse].gss.sock;
+	else {
 		edg_wll_SetError(ctx,ENOTCONN,NULL);
 		goto error;
 	}
@@ -43,22 +43,22 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 	if (!ctx->connPool[ctx->connToUse].buf) ctx->connPool[ctx->connToUse].buf = malloc(ctx->connPool[ctx->connToUse].bufSize = BUFSIZ);
 
 	do {
-		len = edg_wll_ssl_read(ctx->connPool[ctx->connToUse].ssl,
-			ctx->connPool[ctx->connToUse].buf+ctx->connPool[ctx->connToUse].bufUse,ctx->connPool[ctx->connToUse].bufSize-ctx->connPool[ctx->connToUse].bufUse,&ctx->p_tmp_timeout);
+		len = edg_wll_gss_read(&ctx->connPool[ctx->connToUse].gss,
+			ctx->connPool[ctx->connToUse].buf+ctx->connPool[ctx->connToUse].bufUse,ctx->connPool[ctx->connToUse].bufSize-ctx->connPool[ctx->connToUse].bufUse,&ctx->p_tmp_timeout, &gss_code);
 
 		switch (len) {
-			case EDG_WLL_SSL_OK:
-			case EDG_WLL_SSL_ERROR_SSL:
-				edg_wll_SetError(ctx,EDG_WLL_ERROR_SSL,
-					ERR_error_string(ERR_get_error(), NULL));
+			case EDG_WLL_GSS_OK:
+				break;
+			case EDG_WLL_GSS_ERROR_GSS:
+				edg_wll_SetErrorGss(ctx, "receving HTTP request", &gss_code);
 				goto error;
-			case EDG_WLL_SSL_ERROR_ERRNO:
-				edg_wll_SetError(ctx,errno,"edg_wll_ssl_read()");
+			case EDG_WLL_GSS_ERROR_ERRNO:
+				edg_wll_SetError(ctx,errno,"edg_wll_gss_read()");
 				goto error;
-			case EDG_WLL_SSL_ERROR_TIMEOUT:
+			case EDG_WLL_GSS_ERROR_TIMEOUT:
 				edg_wll_SetError(ctx,ETIMEDOUT,NULL);
 				goto error; 
-			case EDG_WLL_SSL_ERROR_EOF:
+			case EDG_WLL_GSS_ERROR_EOF:
 				edg_wll_SetError(ctx,ENOTCONN,NULL);
 				goto error; 
 			/* default: fallthrough */
@@ -144,66 +144,60 @@ error:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int real_write(edg_wll_Context ctx, SSL *ssl,int fd,const char *data,int len)
+static int real_write(edg_wll_Context ctx, edg_wll_GssConnection *con,const char *data,int len)
 {
-	int	once,total = 0;
+	int	total = 0;
 	struct sigaction	sa,osa;
+	edg_wll_GssStatus	gss_code;
+	int	ret;
 
 	memset(&sa,0,sizeof(sa)); assert(sa.sa_handler == NULL);
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGPIPE,&sa,&osa);
 
-	while (total < len) {
-		int	sslerr;
-
-		switch (once = edg_wll_ssl_write(ssl,(void*)(data+total),len-total,&ctx->p_tmp_timeout)) {
-			case EDG_WLL_SSL_ERROR_EOF:
-				errno = ENOTCONN;
-				total = -1;
-				goto end;
-			case EDG_WLL_SSL_ERROR_TIMEOUT:
-				errno = ETIMEDOUT;
-				total = -1;
-				goto end;
-			case EDG_WLL_SSL_ERROR_ERRNO:
-				if (errno == EPIPE) errno = ENOTCONN;
-				total = -1;
-				goto end;
-			case EDG_WLL_SSL_OK:
-			case EDG_WLL_SSL_ERROR_SSL:
-				sslerr = SSL_get_error(ssl,once);
-				if (sslerr == SSL_ERROR_SYSCALL) {
-				       	if (errno == EPIPE) errno = ENOTCONN;
-				}
-				else errno = EDG_WLL_ERROR_SSL;
-				total = -1;
-				goto end;
-			default:
-				total += once;
-		}
-	}
-end:
+	ret = edg_wll_gss_write_full(con, (void*)data, len, &ctx->p_tmp_timeout,
+	                             &total, &gss_code);
 	sigaction(SIGPIPE,&osa,NULL);
-	return total;
+
+	switch(ret) {
+	   case EDG_WLL_GSS_OK:
+	      return 0;
+	   case EDG_WLL_GSS_ERROR_EOF:
+	      errno = ENOTCONN;
+	      return -1;
+	   case EDG_WLL_GSS_ERROR_TIMEOUT:
+	      errno = ETIMEDOUT;
+	      return -1;
+	   case EDG_WLL_GSS_ERROR_ERRNO:
+	      if (errno == EPIPE) errno = ENOTCONN;
+	      return -1;
+	   case EDG_WLL_GSS_ERROR_GSS:
+	      errno = EDG_WLL_ERROR_GSS;
+	      return -1;
+	   default:
+	      /* XXX DK: */
+	      errno = ENOTCONN;
+	      return -1;
+	}
 }
 
 edg_wll_ErrorCode edg_wll_http_send(edg_wll_Context ctx,const char *first,const char * const *head,const char *body)
 {
 	const char* const *h;
-	int	len = 0, blen, sock;
+	int	len = 0, blen;
 
 	edg_wll_ResetError(ctx);
 
-        if (ctx->connPool[ctx->connToUse].ssl) sock = SSL_get_fd(ctx->connPool[ctx->connToUse].ssl);
-        else return edg_wll_SetError(ctx,ENOTCONN,NULL);
+	if (ctx->connPool[ctx->connToUse].gss.context == GSS_C_NO_CONTEXT)
+	   return edg_wll_SetError(ctx,ENOTCONN,NULL);
 
-	if (real_write(ctx,ctx->connPool[ctx->connToUse].ssl,sock,first,strlen(first)) < 0 ||
-		real_write(ctx,ctx->connPool[ctx->connToUse].ssl,sock,"\r\n",2) < 0) 
+	if (real_write(ctx,&ctx->connPool[ctx->connToUse].gss,first,strlen(first)) < 0 ||
+		real_write(ctx,&ctx->connPool[ctx->connToUse].gss,"\r\n",2) < 0) 
 		return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
 
 	if (head) for (h=head; *h; h++) 
-		if (real_write(ctx,ctx->connPool[ctx->connToUse].ssl,sock,*h,strlen(*h)) < 0 ||
-			real_write(ctx,ctx->connPool[ctx->connToUse].ssl,sock,"\r\n",2) < 0) 
+		if (real_write(ctx,&ctx->connPool[ctx->connToUse].gss,*h,strlen(*h)) < 0 ||
+			real_write(ctx,&ctx->connPool[ctx->connToUse].gss,"\r\n",2) < 0) 
 			return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
 
 	if (body) {
@@ -211,13 +205,13 @@ edg_wll_ErrorCode edg_wll_http_send(edg_wll_Context ctx,const char *first,const 
 
 		len = strlen(body);
 		blen = sprintf(buf,CONTENT_LENGTH " %d\r\n",len);
-		if (real_write(ctx,ctx->connPool[ctx->connToUse].ssl,sock,buf,blen) < 0) 
+		if (real_write(ctx,&ctx->connPool[ctx->connToUse].gss,buf,blen) < 0) 
 			return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
 	}
 
-	if (real_write(ctx,ctx->connPool[ctx->connToUse].ssl,sock,"\r\n",2) < 0) 
+	if (real_write(ctx,&ctx->connPool[ctx->connToUse].gss,"\r\n",2) < 0) 
 		return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
-	if (body && real_write(ctx,ctx->connPool[ctx->connToUse].ssl,sock,body,len) < 0)  
+	if (body && real_write(ctx,&ctx->connPool[ctx->connToUse].gss,body,len) < 0)  
 		return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
 
 	return edg_wll_Error(ctx,NULL,NULL);

@@ -18,6 +18,7 @@
 #include "glite/lb/events_parse.h"
 #include "glite/lb/il_string.h"
 #include "glite/lb/escape.h"
+#include "glite/lb/lb_gss.h"
 
 #include "connection.h"
 
@@ -451,6 +452,7 @@ static int recv_notif(edg_wll_Context ctx)
 	int 	ret, len;
 	char 	fbuf[17];
 	size_t  total;
+	edg_wll_GssStatus  gss_code;
 
 	
 	if (ctx->connPool[ctx->connToUse].buf) {
@@ -460,16 +462,18 @@ static int recv_notif(edg_wll_Context ctx)
 	ctx->connPool[ctx->connToUse].bufUse = 0;
 	ctx->connPool[ctx->connToUse].bufSize = 0;
 
-	
-	if ((ret=edg_wll_ssl_read_full(ctx->connPool[ctx->connToUse].ssl,
-					fbuf,17,&ctx->p_tmp_timeout,&total)) < 0) 
+	ret = edg_wll_gss_read_full(&ctx->connPool[ctx->connToUse].gss,
+	      			    fbuf,17, &ctx->p_tmp_timeout,&total, &gss_code);
+	if (ret < 0) 
 		switch (ret) {
-			case EDG_WLL_SSL_ERROR_TIMEOUT: 
+			case EDG_WLL_GSS_ERROR_TIMEOUT: 
 				return edg_wll_SetError(ctx,ETIMEDOUT,"read message header");
-			case EDG_WLL_SSL_ERROR_EOF: 
+			case EDG_WLL_GSS_ERROR_EOF: 
 				return edg_wll_SetError(ctx,ENOTCONN,NULL);
+			case EDG_WLL_GSS_ERROR_GSS:
+				return edg_wll_SetErrorGss(ctx, "read message header", &gss_code);
 			default: 
-				return edg_wll_SetError(ctx,EDG_WLL_ERROR_SSL,"read message header");
+				return edg_wll_SetError(ctx,EDG_WLL_ERROR_GSS,"read message header"); /* XXX */
 	}
 
 	if ((len = atoi(fbuf)) <= 0) {
@@ -486,16 +490,16 @@ static int recv_notif(edg_wll_Context ctx)
 	}
 	
 
-	if ((ret=edg_wll_ssl_read_full(ctx->connPool[ctx->connToUse].ssl,
-					ctx->connPool[ctx->connToUse].buf,
-					len,
-					&ctx->p_tmp_timeout,&total)) < 0) {
+	ret = edg_wll_gss_read_full(&ctx->connPool[ctx->connToUse].gss,
+	                            ctx->connPool[ctx->connToUse].buf, len,
+				    &ctx->p_tmp_timeout,&total, &gss_code);
+	if (ret < 0) {
 		free(ctx->connPool[ctx->connToUse].buf);
 		ctx->connPool[ctx->connToUse].bufUse = 0;
 		ctx->connPool[ctx->connToUse].bufSize = 0;
 		return edg_wll_SetError(ctx,
-			ret == EDG_WLL_SSL_ERROR_TIMEOUT ?
-				ETIMEDOUT : EDG_WLL_ERROR_SSL,
+			ret == EDG_WLL_GSS_ERROR_TIMEOUT ?
+				ETIMEDOUT : EDG_WLL_ERROR_GSS,
 			"read message");
 	}
 
@@ -514,6 +518,7 @@ static int send_reply(const edg_wll_Context ctx)
 	int	ret, len, err_code, err_code_min = 0, max_len = 256;
 	char	*p, *err_msg = NULL, buf[max_len];
 	size_t  total;
+	edg_wll_GssStatus  gss_code;
 
 	
 	err_code = edg_wll_Error(ctx,NULL,&err_msg);
@@ -532,12 +537,12 @@ static int send_reply(const edg_wll_Context ctx)
 	p = put_int(p, err_code_min);
 	p = put_string(p, err_msg);
 
-	
-	if ((ret = edg_wll_ssl_write_full(ctx->connPool[ctx->connToUse].ssl,
-					buf,len,&ctx->p_tmp_timeout,&total)) < 0) {
+	ret = edg_wll_gss_write_full(&ctx->connPool[ctx->connToUse].gss,
+	                             buf,len,&ctx->p_tmp_timeout,&total, &gss_code);
+	if (ret < 0) {
 		edg_wll_SetError(ctx,
-				ret == EDG_WLL_SSL_ERROR_TIMEOUT ? 
-					ETIMEDOUT : EDG_WLL_ERROR_SSL,
+				ret == EDG_WLL_GSS_ERROR_TIMEOUT ? 
+					ETIMEDOUT : EDG_WLL_ERROR_GSS,
 					"write reply");
 		goto err;
 	}
@@ -563,6 +568,8 @@ int edg_wll_NotifReceive(
 	struct timeval 		start_time,check_time,tv;
 	char 			*p = NULL, *ucs = NULL,
        				*event_char = NULL, *jobstat_char = NULL;
+	int			ret;
+	edg_wll_GssStatus	gss_code;
 	
 	
 
@@ -612,12 +619,11 @@ int edg_wll_NotifReceive(
 		goto err;
 	}
 
+	ret = edg_wll_gss_accept(ctx->connPool[ctx->connToUse].gsiCred, recv_sock,
+				 &tv, &ctx->connPool[ctx->connToUse].gss, &gss_code);
 
-	ctx->connPool[ctx->connToUse].ssl =
-		edg_wll_ssl_accept(ctx->connPool[ctx->connToUse].gsiCred,recv_sock,&tv);
-	
-	if (ctx->connPool[ctx->connToUse].ssl == NULL) {
-		edg_wll_SetError(ctx, errno, "SSL hanshake failed.");
+	if (ret) {
+		edg_wll_SetError(ctx, errno, "GSS authentication failed.");
 		goto err;	
 	}
 	
@@ -703,8 +709,8 @@ err:
 
 	// XXX
 	// konzultovat s Danem
-	edg_wll_ssl_close(ctx->connPool[ctx->connToUse].ssl);
-	ctx->connPool[ctx->connToUse].ssl = NULL;
+	/* Dan: ??? */
+	edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, NULL);
 	
 	return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -728,9 +734,8 @@ int edg_wll_NotifCloseFd(
 	int err;
 	
 	if (ctx->notifSock >= 0) {
-		if (ctx->connPool[ctx->connToUse].ssl) {
-			edg_wll_ssl_close(ctx->connPool[ctx->connToUse].ssl);
-			ctx->connPool[ctx->connToUse].ssl = NULL;
+		if (ctx->connPool[ctx->connToUse].gss.context != GSS_C_NO_CONTEXT) {
+			edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, NULL);
 		}
 		err = close(ctx->notifSock);
 		ctx->notifSock = -1;

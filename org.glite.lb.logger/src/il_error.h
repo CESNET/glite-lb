@@ -12,7 +12,7 @@ enum err_code_maj { /* minor =                   */
   IL_AUTH,          /*     0 (SSL error)         */
   IL_PROTO,         /*     LB_*                  */
   IL_LBAPI,         /*     dgLBErrCode           */
-  IL_DGSSL,         /*     EDG_WLL_SSL_*         */
+  IL_DGGSS,         /*     EDG_WLL_GSS_*         */
   IL_HOST           /*     h_errno               */
 };
 

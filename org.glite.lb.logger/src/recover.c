@@ -35,18 +35,15 @@ recover_thread(void *q)
 		il_log(LOG_INFO, "Checking for new certificate...\n");
 		if(pthread_mutex_lock(&cred_handle_lock) < 0)
 			abort();
-		if (edg_wll_ssl_watch_creds(key_file,
-					    cert_file,
-					    &key_mtime,
-					    &cert_mtime) > 0) {
-			void * new_cred_handle = edg_wll_ssl_init(SSL_VERIFY_FAIL_IF_NO_PEER_CERT, 
-								  0,
-								  cert_file,
-								  key_file,
-								  0,
-								  0);
-			if (new_cred_handle) {
-				edg_wll_ssl_free(cred_handle);
+		if (edg_wll_gss_watch_creds(cert_file, &cert_mtime) > 0) {
+			gss_cred_id_t new_cred_handle = GSS_C_NO_CREDENTIAL;
+			OM_uint32 min_stat;
+			int ret;
+
+			ret = edg_wll_gss_acquire_cred_gsi(cert_file, 
+				&new_cred_handle, NULL, NULL);
+			if (new_cred_handle != GSS_C_NO_CREDENTIAL) {
+				gss_release_cred(&min_stat, &cred_handle);
 				cred_handle = new_cred_handle;
 				il_log(LOG_INFO, "New certificate found and deployed.\n");
 			}

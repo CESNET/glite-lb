@@ -37,20 +37,21 @@ int edg_wll_ll_log_level;
  *                     
  *----------------------------------------------------------------------
  */
-static int send_answer_back(SSL *ssl, int answer, struct timeval *timeout) {
+static int send_answer_back(edg_wll_GssConnection *con, int answer, struct timeval *timeout) {
 	int count = 0;
 	int err = 0;
 	int ans = answer;
 	u_int8_t ans_end[4];
+	edg_wll_GssStatus	gss_stat;
 
 	edg_wll_ll_log(LOG_INFO,"Sending answer \"%d\" back to client...",answer);
         ans_end[0] = ans & 0xff; ans >>= 8;
         ans_end[1] = ans & 0xff; ans >>= 8;
         ans_end[2] = ans & 0xff; ans >>= 8;
         ans_end[3] = ans;
-	if ((err = edg_wll_ssl_write_full(ssl,ans_end,4,timeout,&count)) < 0 ) {
+	if ((err = edg_wll_gss_write_full(con,ans_end,4,timeout,&count, &gss_stat)) < 0 ) {
 		edg_wll_ll_log(LOG_INFO,"error.\n");
-		return edg_wll_log_proto_server_failure(err,"Error sending answer");
+		return edg_wll_log_proto_server_failure(err,&gss_stat,"Error sending answer");
 	} else {
 		edg_wll_ll_log(LOG_INFO,"o.k.\n");
 		return 0;
@@ -304,7 +305,7 @@ static ssize_t edg_wll_socket_write_full(int sock,void *buf,size_t bufsize,struc
  *
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_server(SSL *ssl, char *name, char *prefix, int noipc, int noparse)
+int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefix, int noipc, int noparse)
 {
 	char	*buf,*dglllid,*dguser,*jobId,*name_esc;
 	char	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1];
@@ -326,6 +327,7 @@ int edg_wll_log_proto_server(SSL *ssl, char *name, char *prefix, int noipc, int 
 	int	err;
 	edg_wll_Context	context;
 	edg_wll_Event	*event;
+	edg_wll_GssStatus	gss_stat;
                 
 	errno = i = answer = answer_sent = size = msg_size = dglllid_size = dguser_size = count = count_total = msg_sock = filedesc = filelock_status = /* priority */ unique = err = 0;     
         buf = dglllid = dguser = jobId = name_esc = msg = msg_begin = NULL;
@@ -370,9 +372,9 @@ int edg_wll_log_proto_server(SSL *ssl, char *name, char *prefix, int noipc, int 
 	/* receive socket header */
 	edg_wll_ll_log(LOG_INFO,"Reading socket header...");
 	memset(header, 0, EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1);
-	if ((err = edg_wll_ssl_read_full(ssl, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &timeout, &count)) < 0) {
+	if ((err = edg_wll_gss_read_full(con, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &timeout, &count, &gss_stat)) < 0) {
 		edg_wll_ll_log(LOG_INFO,"error.\n");
-		answer = edg_wll_log_proto_server_failure(err,"Error receiving header");
+		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving header");
 		goto edg_wll_log_proto_server_end;
 	} else {
 		edg_wll_ll_log(LOG_INFO,"o.k.\n");
@@ -394,9 +396,9 @@ int edg_wll_log_proto_server(SSL *ssl, char *name, char *prefix, int noipc, int 
 /*
 	edg_wll_ll_log(LOG_DEBUG,"Reading message priority...");
 	count = 0;
-	if ((err = edg_wll_ssl_read_full(ssl, &priority, sizeof(priority), &timeout, &count)) < 0) {
+	if ((err = edg_wll_gss_read_full(con, &priority, sizeof(priority), &timeout, &count, &gss_stat)) < 0) {
 		edg_wll_ll_log(LOG_DEBUG,"error.\n");
-		answer = edg_wll_log_proto_server_failure(err,"Error receiving message priority");
+		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving message priority");
                 goto edg_wll_log_proto_server_end;
         } else {
 		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
@@ -405,9 +407,9 @@ int edg_wll_log_proto_server(SSL *ssl, char *name, char *prefix, int noipc, int 
 
         edg_wll_ll_log(LOG_DEBUG,"Reading message size...");
 	count = 0;
-	if ((err = edg_wll_ssl_read_full(ssl, size_end, 4, &timeout, &count)) < 0) {
+	if ((err = edg_wll_gss_read_full(con, size_end, 4, &timeout, &count,&gss_stat)) < 0) {
 		edg_wll_ll_log(LOG_DEBUG,"error.\n");
-		answer = edg_wll_log_proto_server_failure(err,"Error receiving message size");
+		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving message size");
                 goto edg_wll_log_proto_server_end;
 	} else {
 		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
@@ -464,9 +466,9 @@ int edg_wll_log_proto_server(SSL *ssl, char *name, char *prefix, int noipc, int 
 	edg_wll_ll_log(LOG_INFO,"Reading message from socket...");
 	buf = msg_begin + dguser_size;
 	count = 0;
-	if ((err = edg_wll_ssl_read_full(ssl, buf, size, &timeout, &count)) < 0) {
+	if ((err = edg_wll_gss_read_full(con, buf, size, &timeout, &count, &gss_stat)) < 0) {
 		edg_wll_ll_log(LOG_INFO,"error.\n");
-		answer = edg_wll_log_proto_server_failure(err,"Error receiving message");
+		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving message");
 		goto edg_wll_log_proto_server_end;
 	} else {
 		edg_wll_ll_log(LOG_INFO,"o.k.\n");
@@ -625,7 +627,7 @@ open_event_file:
 
 	/* if not priority send now the answer back to client */
 	if (!event->any.priority) {
-		if (!send_answer_back(ssl,answer,&timeout)) { 
+		if (!send_answer_back(con,answer,&timeout)) { 
 			answer_sent = 1;
 		}
 	} 
@@ -743,7 +745,7 @@ open_event_file:
 edg_wll_log_proto_server_end:
 	/* if not sent already, send the answer back to client */
 	if (!answer_sent) {
-		answer = send_answer_back(ssl,answer,&timeout);
+		answer = send_answer_back(con,answer,&timeout);
 	} 
 	/* clean */
 	edg_wll_FreeContext(context);
@@ -768,7 +770,7 @@ edg_wll_log_proto_server_end:
  *
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_server_failure(int code, const char *text)
+int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, const char *text)
 {
 	const char	*func = "edg_wll_log_proto_server()";
         int             ret = 0;
@@ -777,56 +779,34 @@ int edg_wll_log_proto_server_failure(int code, const char *text)
                 return(0);
 	}
 	switch(code) {
-		case EDG_WLL_SSL_ERROR_EOF: 
+		case EDG_WLL_GSS_ERROR_EOF: 
 			edg_wll_ll_log(LOG_ERR,"%s: %s, EOF occured\n", func, text);	
 			ret = EAGAIN;
 			break;
-		case EDG_WLL_SSL_ERROR_TIMEOUT: 
+		case EDG_WLL_GSS_ERROR_TIMEOUT: 
 			edg_wll_ll_log(LOG_ERR,"%s: %s, timeout expired\n", func, text);	
 			ret = EAGAIN;
 			break;
-		case EDG_WLL_SSL_ERROR_ERRNO: perror("edg_wll_ssl_read()"); break;
+		/* XXX DK: co tenhle break??: */
+		case EDG_WLL_GSS_ERROR_ERRNO: perror("edg_wll_gss_read()"); break;
 			edg_wll_ll_log(LOG_ERR,"%s: %s, system error occured\n", func, text);	
 			ret = EAGAIN;
 			break;
-		case EDG_WLL_SSL_ERROR_SSL:
-			edg_wll_ll_log(LOG_ERR,"%s: %s, SSL error occured: %s\n", func, text,
-				 ERR_reason_error_string(ERR_get_error()));
-			ret = EAGAIN;
-			break;
+		case EDG_WLL_GSS_ERROR_GSS:
+			{
+			   char *gss_err;
+
+			   edg_wll_gss_get_error(gss_code, "GSS error occured", &gss_err);
+			   edg_wll_ll_log(LOG_ERR,"%s: %s, %s\n", func, text, gss_err);
+			   free(gss_err);
+			   ret = EAGAIN;
+			   break;
+			}
 		default:
 			edg_wll_ll_log(LOG_ERR,"%s: %s, unknown error occured\n");
 			break;
 	}
 	return ret;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * edg_wll_set_environment - set X509 environment variables form given args
- *
- * Calls: setenv
- *
- * Algorithm:
- *
- *----------------------------------------------------------------------
- */
-void edg_wll_set_environment(char *user_cert,
-                    char *user_key,
-                    char *user_proxy,
-                    char *CAcert_file,
-                    char *CAcert_dir,
-                    char *gridmap)
-{
-	if (user_cert) setenv("X509_USER_CERT", user_cert, 1);
-	if (user_key) setenv("X509_USER_KEY", user_key, 1);
-	if (user_proxy) setenv("X509_USER_PROXY", user_proxy, 1);
-	if (CAcert_file) setenv("X509_CERT_FILE", CAcert_file, 1);
-	if (CAcert_dir) setenv("X509_CERT_DIR", CAcert_dir, 1);
-	if (gridmap) setenv("GRIDMAP", gridmap, 1);
-
-	return;
 }
 
 /*

@@ -16,10 +16,10 @@ extern "C" {
 
 #include "glite/lb/log_proto.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/dgssl.h"
+#include "glite/lb/lb_gss.h"
 
-int edg_wll_log_proto_client(edg_wll_Context context, SSL *ssl, edg_wll_LogLine logline/*, int priority,*/);
-int edg_wll_log_proto_client_failure(edg_wll_Context context, int code, const char *text);
+int edg_wll_log_proto_client(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline/*, int priority,*/);
+int edg_wll_log_proto_client_failure(edg_wll_Context context, int code, edg_wll_GssStatus *gss_code, const char *text);
 
 #ifdef __cplusplus
 }

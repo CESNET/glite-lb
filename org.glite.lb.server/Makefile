@@ -38,8 +38,7 @@ CFLAGS:= -DNO_VOMS -DNO_GACL \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
 	-I${mysql_prefix}/include \
-	-I${globus_prefix}/include/${nothrflavour} \
-	-I${globus_prefix}/include/${nothrflavour}/openssl
+	-I${globus_prefix}/include/${nothrflavour}
 
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
@@ -50,7 +49,7 @@ INSTALL:=libtool --mode=install install
 
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
-	-lssl_${nothrflavour}
+	-lglobus_gssapi_gsi_${nothrflavour}
 
 
 # XXX: our vomsc.la depends on badly installed expat
@@ -118,7 +117,8 @@ install:
 	done
 
 	for f in dbsetup.sql index.conf.template; do \
-		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$p" ${PREFIX}/etc
+		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${PREFIX}/etc; \
+	done
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
 

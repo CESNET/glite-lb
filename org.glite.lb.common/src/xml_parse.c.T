@@ -8,7 +8,6 @@
 #include <expat.h> 	// Expat header file
 
 #include "globus_config.h"
-#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 
 #include "trio.h"
 #include "glite/lb/producer.h"

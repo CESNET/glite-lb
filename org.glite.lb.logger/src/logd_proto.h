@@ -17,23 +17,16 @@ extern "C" {
 #include <syslog.h>
 
 #include "glite/lb/log_proto.h"
-#include "glite/lb/dgssl.h"
+#include "glite/lb/lb_gss.h"
 
-int edg_wll_log_proto_server(SSL *ssl, char *name, char *prefix, int noipc, int noparse);
-int edg_wll_log_proto_server_failure(int code, const char *text);
+int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefix, int noipc, int noparse);
+int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, const char *text);
 
 #define SYSTEM_ERROR(my_err) { \
 	if (errno !=0 ) \
 		edg_wll_ll_log(LOG_ERR,"%s: %s\n",my_err,strerror(errno)); \
 	else \
 		edg_wll_ll_log(LOG_ERR,"%s\n",my_err); }
-
-void edg_wll_set_environment(char *user_cert,
-                    char *user_key,
-	     	    char *user_proxy,
-	            char *CAcert_file,
-		    char *CAcert_dir,
-		    char *gridmapfile);
 
 /* locallogger daemon error handling */
 

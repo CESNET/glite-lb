@@ -19,7 +19,6 @@
 
 #include <globus_config.h>
 
-#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 #include "glite/wmsutils/jobid/strmd5.h"
 
 #include "glite/lb/events_parse.h"

@@ -72,8 +72,82 @@ get_groups(edg_wll_Context ctx, struct vomsdata *voms_info,
    return 0;
 }
 
+static int
+get_peer_cred(edg_wll_GssConnection *gss, STACK_OF(X509) **chain, X509 **cert)
+{
+   OM_uint32 maj_stat, min_stat;
+   gss_buffer_desc buffer = GSS_C_EMPTY_BUFFER;
+   BIO *bio = NULL;
+   SSL_SESSION *session = NULL;
+   unsigned char int_buffer[4];
+   long length;
+   int ret, index;
+   STACK_OF(X509) *cert_chain = NULL;
+   X509 *peer_cert = NULL;
+   X509 *p_cert;
+
+   maj_stat = gss_export_sec_context(&min_stat, gss->context, &buffer);
+   if (GSS_ERROR(maj_stat))
+      return -1; /* XXX */
+
+   bio = BIO_new(BIO_s_mem());
+   if (bio == NULL) {
+      ret = -1;
+      goto end;
+   }
+   
+   /* Store exported context to memory, skipping the version number and and cred_usage fields */
+   BIO_write(bio, buffer.value + 8 , buffer.length - 8);
+
+   /* decode the session data in order to skip at the start of the cert chain */
+   session = d2i_SSL_SESSION_bio(bio, NULL);
+   if (session == NULL) {
+      ret = -1; /* XXX */
+      goto end;
+   }
+   if (session->peer)
+      peer_cert = X509_dup(session->peer);
+
+   SSL_SESSION_free(session);
+
+   BIO_read(bio, (char *) int_buffer, 4);
+   length  = (((size_t) int_buffer[0]) << 24) & 0xffff;
+   length |= (((size_t) int_buffer[1]) << 16) & 0xffff;
+   length |= (((size_t) int_buffer[2]) <<  8) & 0xffff;
+   length |= (((size_t) int_buffer[3])      ) & 0xffff;
+
+   if (length == 0) {
+      ret = 0;
+      goto end;
+   }
+
+   cert_chain = sk_X509_new_null();
+   for(index = 0; index < length; index++) {
+      p_cert = d2i_X509_bio(bio, NULL);
+      if (p_cert == NULL) {
+	 ret = -1; /* XXX */
+	 sk_X509_pop_free(cert_chain, X509_free);
+	 goto end;
+      }
+
+      sk_X509_push(cert_chain, p_cert);
+   }
+
+   *chain = cert_chain;
+   *cert = peer_cert;
+   peer_cert = NULL;
+   ret = 0;
+
+end:
+   if (peer_cert)
+      X509_free(peer_cert);
+   gss_release_buffer(&min_stat, &buffer);
+
+   return ret;
+}
+
 int
-edg_wll_GetVomsGroups(edg_wll_Context ctx, char *voms_dir, char *ca_dir)
+edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *voms_dir, char *ca_dir)
 {
    STACK_OF(X509) *p_chain = NULL;
    X509 *cert = NULL;
@@ -81,11 +155,15 @@ edg_wll_GetVomsGroups(edg_wll_Context ctx, char *voms_dir, char *ca_dir)
    int err = 0;
    struct vomsdata *voms_info = NULL;
 
+   /* XXX DK: correct cleanup ?? */
    memset (&ctx->vomsGroups, 0, sizeof(ctx->vomsGroups));
    edg_wll_ResetError(ctx);
 
-   p_chain = SSL_get_peer_cert_chain(ctx->connPool[ctx->connToUse].ssl);
-   cert = SSL_get_peer_certificate(ctx->connPool[ctx->connToUse].ssl);
+   ret = get_peer_cred(gss, &p_chain, &cert);
+   if (ret) {
+      ret = 0;
+      goto end;
+   }
 
    /* exit if peer's credentials are not available */
    if (p_chain == NULL || cert == NULL) {
@@ -104,7 +182,10 @@ edg_wll_GetVomsGroups(edg_wll_Context ctx, char *voms_dir, char *ca_dir)
    ret = VOMS_Retrieve(cert, p_chain, RECURSE_CHAIN, voms_info, &err);
    if (ret == 0) {
       if (err == VERR_NOEXT)
+	 /* XXX DK:
 	 edg_wll_SetError(ctx, EINVAL, "no client VOMS certificates found");
+	 */
+	 ret = 0;
       else {
 	 edg_wll_SetError(ctx, -1, "failed to retrieve VOMS info");
 	 ret = -1; /* XXX VOMS Error */
@@ -142,7 +223,7 @@ edg_wll_FreeVomsGroups(edg_wll_VomsGroups *groups)
 #else /* NO_VOMS */
 
 int
-edg_wll_GetVomsGroups() { return 0; }
+edg_wll_SetVomsGroups() { return 0; }
 
 void edg_wll_FreeVomsGroups() {}
 
