@@ -91,6 +91,33 @@ confirm_msg(struct server_msg *msg, int code, int code_min)
 #endif
 
 
+static edg_wll_GssConnection *tmp_gss;
+
+static
+int
+gss_reader(char *buffer, int max_len)
+{
+  int ret, len;
+  struct timeval tv;
+  edg_wll_GssStatus gss_stat;
+
+  tv.tv_sec = TIMEOUT;
+  tv.tv_usec = 0;
+  ret = edg_wll_gss_read_full(tmp_gss, buffer, max_len, &tv, &len, &gss_stat);
+  if(ret < 0) {
+    char *gss_err = NULL;
+
+    if(ret == EDG_WLL_GSS_ERROR_GSS) {
+      edg_wll_gss_get_error(&gss_stat, "get_reply", &gss_err);
+      set_error(IL_DGGSS, ret, gss_err);
+      free(gss_err);
+    } else 
+      set_error(IL_DGGSS, ret, "get_reply");
+  }
+  return(ret);
+}
+
+
 /*
  * Read reply from server.
  *  Returns: -1 - error reading message, 
@@ -100,85 +127,21 @@ static
 int 
 get_reply(struct event_queue *eq, char **buf, int *code_min)
 {
-  char buffer[17];
-  char *msg, *p;
-  int inlen, code;
+  char *msg;
+  int ret, code;
   size_t len, l;
-  edg_wll_GssConnection *gss;
-  struct timeval tv;
-  edg_wll_GssStatus gss_stat;
 
-  gss = &eq->gss;
-
-  /* get message header */
-  tv.tv_sec = TIMEOUT;
-  tv.tv_usec = 0;
-  code = edg_wll_gss_read_full(gss, buffer, 17, &tv, &len, &gss_stat);
-  if(code < 0) {
-    char *gss_err = NULL;
-
-    if (code == EDG_WLL_GSS_ERROR_GSS)
-       edg_wll_gss_get_error(&gss_stat, "get_reply (header)", &gss_err);
-    set_error(IL_DGGSS, code,
-	      (code == EDG_WLL_GSS_ERROR_GSS) ? gss_err : "get_reply (header)");
-    if (gss_err) free(gss_err);
+  tmp_gss = &eq->gss;
+  len = read_il_data(&msg, gss_reader);
+  if(len < 0) 
     return(-1);
-  }
-    
-  buffer[16] = 0;
 
-  sscanf(buffer, "%d", &inlen);
-  if(inlen < 0 || inlen > MAXLEN) {
-    set_error(IL_PROTO, LB_NOMEM, "get_reply: error reading reply length");
-    return(-1);
-  }
-  len = (size_t) inlen;
-
-  /* allocate room for message body */
-  if((msg = malloc(len)) == NULL) {
-    set_error(IL_NOMEM, ENOMEM, "get_reply: no room for message body");
-    return(-1);
-  }
-
-  /* read all the data */
-  tv.tv_sec = TIMEOUT;
-  tv.tv_usec = 0;
-  code = edg_wll_gss_read_full(gss, msg, len, &tv, &l, &gss_stat);
-  if(code < 0) {
-    char *gss_err = NULL;
-
-    if (code == EDG_WLL_GSS_ERROR_GSS)
-       edg_wll_gss_get_error(&gss_stat, "get_reply (body)", &gss_err);
-    set_error(IL_DGGSS, code,
-	      (code == EDG_WLL_GSS_ERROR_GSS) ? gss_err : "get_reply (body)"); 
-    if (gss_err) free(gss_err);
-    return(-1);
-  }
-
-  p = msg;
-  p = get_int(p, &code);
-  if(p == NULL) {
-    set_error(IL_PROTO, LB_PROTO, "get_reply: error receiving result code");
-    free(msg);
-    return(-1);
-  }
-  p = get_int(p, code_min);
-  if(p == NULL) {
-    set_error(IL_PROTO, LB_PROTO, "get_reply: error receiving result code minor");
-    free(msg);
-    return(-1);
-  }
-  p = get_string(p, buf);
-  if(p == NULL) {
-    if(*buf) {
-      free(*buf);
-      *buf = NULL;
-    }
-    free(msg);
-    set_error(IL_PROTO, LB_PROTO, "get_reply: error receiving result string");
-    return(-1);
-  }
+  ret = decode_il_reply(&code, code_min, buf, msg);
   free(msg);
+  if(ret < 0) {
+    set_error(IL_PROTO, LB_PROTO, "get_reply: error decoding server reply");
+    return(-1);
+  }
   return(code);
 }
 

@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "interlogd.h"
-#include "glite/lb/il_string.h"
+#include "glite/lb/il_msg.h" 
 #include "glite/lb/events_parse.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context.h"
@@ -15,7 +15,6 @@ int
 create_msg(char *event, char **buffer, long *receipt)
 {
   char *p;  int  len;
-  char *ucs = "michal";
   
   *receipt = 0;
 
@@ -57,25 +56,12 @@ create_msg(char *event, char **buffer, long *receipt)
   }
 #endif
 
-  /* allocate enough room to hold the message */
-  len = 17 + len_string(ucs) + len_string(event);
-  if((*buffer = malloc(len)) == NULL) {
+  len = encode_il_msg(buffer, event);
+  if(len < 0) {
     set_error(IL_NOMEM, ENOMEM, "create_msg: out of memory allocating message");
     return(-1);
   }
-
-  p = *buffer;
-
-  /* write header */
-  sprintf(p, "%16d\n", len - 17);
-  p += 17;
-
-  /* write rest of the message */
-  p = put_string(p, ucs);
-  p = put_string(p, event);
-
-  return(p - *buffer);
-
+  return(len);
 }
 
 
