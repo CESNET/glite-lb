@@ -31,6 +31,7 @@
 #define DEFAULT_SOCKET          "/tmp/notif_interlogger.sock"
 
 char *notif_ilog_socket_path = DEFAULT_SOCKET;
+char *notif_ilog_file_prefix = FILE_PREFIX;
 
 #define tv_sub(a,b) {\
 	(a).tv_usec -= (b).tv_usec;\
@@ -312,7 +313,7 @@ edg_wll_NotifSend(edg_wll_Context       context,
 		goto out;
 	}
 
-	asprintf(&event_file, "%s.%s", FILE_PREFIX, reg_id_s);
+	asprintf(&event_file, "%s.%s", notif_ilog_file_prefix, reg_id_s);
 	if(event_file == NULL) {
 		edg_wll_SetError(context, ret=ENOMEM, "asprintf()");
 		goto out;

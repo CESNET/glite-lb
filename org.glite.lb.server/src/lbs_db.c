@@ -53,7 +53,10 @@ edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx,char *cs)
 	pw = slash+1;
 	db = colon+1;
 
-	if (!mysql_real_connect((MYSQL *) ctx->mysql,host,user,pw,db,0,NULL,0)) {
+	/* ljocha: CLIENT_FOUND_ROWS added to make authorization check
+	 * working in update_notif(). 
+	 * Hope it does not break anything else */ 
+	if (!mysql_real_connect((MYSQL *) ctx->mysql,host,user,pw,db,0,NULL,CLIENT_FOUND_ROWS)) {
 		free(buf);
 		return my_err();
 	}

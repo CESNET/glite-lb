@@ -13,6 +13,7 @@
 #endif
 
 extern char *notif_ilog_socket_path;
+extern char *notif_ilog_file_prefix;
 
 /** Send ULM notification string to interlogger.
  * Stores notification to file according to registration id and send it

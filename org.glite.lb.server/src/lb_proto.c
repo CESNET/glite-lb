@@ -633,6 +633,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		else if (!strncmp(requestPTR,KEY_PURGE_REQUEST,sizeof(KEY_PURGE_REQUEST)-1)) {
 			edg_wll_PurgeRequest    request;
 
+			ctx->p_tmp_timeout.tv_sec = 86400;  
+
 			if ( !parsePurgeRequest(ctx,messageBody,(int (*)()) edg_wll_StringToStat,&request) )
 				edg_wll_PurgeServer(ctx, (const edg_wll_PurgeRequest *)&request);
 
@@ -656,6 +658,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			edg_wll_DumpRequest	request;
 			edg_wll_DumpResult	result;
 		
+			ctx->p_tmp_timeout.tv_sec = 86400;  
+
 			memset(&request,0,sizeof(request));	
 			memset(&result,0,sizeof(result));
 			
@@ -686,6 +690,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			edg_wll_LoadRequest	request;
 			edg_wll_LoadResult	result;
 		
+			ctx->p_tmp_timeout.tv_sec = 86400;  
+
 			memset(&request,0,sizeof(request));	
 			memset(&result,0,sizeof(result));
 			

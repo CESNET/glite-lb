@@ -148,6 +148,7 @@ static struct option opts[] = {
 	{"limits",	1, NULL,	'L'},
 	{"notif-dur",	1, NULL,	'N'},
 	{"notif-il-sock",	1, NULL,	'X'},
+	{"notif-il-fprefix",	1, NULL,	'Y'},
 	{NULL,0,NULL,0}
 };
 
@@ -177,6 +178,7 @@ static void usage(char *me)
 		"\t          =2\t don't enforce indices at all\n"
 		"\t--strict-locking=1\t lock jobs also on storing events (may be slow)\n"
 		"\t--notif-il-sock\t socket to send notifications\n"
+		"\t--notif-il-fprefix\t file prefix for notifications\n"
 	,me);
 }
 
@@ -504,7 +506,7 @@ int main(int argc,char *argv[])
 	if (geteuid()) snprintf(pidfile,sizeof pidfile,"%s/edg-bkserverd.pid",
 			getenv("HOME"));
 
-	while ((opt = getopt_long(argc,argv,"a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:",opts,NULL)) != EOF) switch (opt) {
+	while ((opt = getopt_long(argc,argv,"a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:",opts,NULL)) != EOF) switch (opt) {
 		case 'a': fake_host = strdup(optarg); break;
 		case 'c': cert = optarg; break;
 		case 'k': key = optarg; break;
@@ -528,6 +530,7 @@ int main(int argc,char *argv[])
 			break;
 		case 'N': notif_duration = atoi(optarg) * (60*60); break;
 		case 'X': notif_ilog_socket_path = strdup(optarg); break;
+		case 'Y': notif_ilog_file_prefix = strdup(optarg); break;
 		case 'i': strcpy(pidfile,optarg); break;
 		case 'R': if (super_users) {
 				  fprintf(stderr,"%s: super-users already defined, second occurence ignored\n",
@@ -662,6 +665,7 @@ int main(int argc,char *argv[])
 	if (!cert || !key) fprintf(stderr,"%s: key or certificate file not specified - unable to watch them for changes!\n",argv[0]);
 
 	if (cadir) setenv("X509_CERT_DIR",cadir,1);
+	edg_wll_gss_watch_creds(cert,&cert_mtime);
 	if (edg_wll_gss_acquire_cred_gsi(cert, &mycred, &mysubj, &gss_code)) {
 	   dprintf(("Running unauthenticated\n"));
 	} else {
@@ -1125,6 +1129,7 @@ static int slave(void *mycred,int sock)
 			ctx->p_tmp_timeout.tv_sec = SLAVE_TIMEOUT;
 	
 			ctx->poolSize = 1;
+			free(ctx->connPool);
 			ctx->connPool = calloc(1,sizeof(edg_wll_ConnPool));
 			ctx->connToUse = 0;
 	
