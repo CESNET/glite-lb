@@ -93,11 +93,19 @@ ifneq (${expat_prefix},/usr)
 	expatlib := -L${expat_prefix}/lib
 endif
 
+vomsflavour := _${nothrflavour}
+ifeq (${nothrflavour},gcc32) 
+	vomsflavour :=
+endif 
+ifeq (${nothrflavour},gcc32dbg)
+	vomsflavour :=
+endif
+
 EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	${myslqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
 	${GRIDSITE_LIBS} \
-	-lvomsc_${nothrflavour} \
+	-lvomsc${vomsflavour} \
 	${GLOBUS_LIBS}
 
 GSOAP_LIBS:= -L${gsoap_prefix}/lib -lgsoap
