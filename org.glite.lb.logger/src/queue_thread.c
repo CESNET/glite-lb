@@ -32,7 +32,7 @@ void *
 queue_thread(void *q)
 {
 	struct event_queue *eq = (struct event_queue *)q;
-	int ret, exit, flushing;
+	int ret, exit;
 
 	if(init_errors(0) < 0) {
 		il_log(LOG_ERR, "Error initializing thread specific data, exiting!");
@@ -54,7 +54,7 @@ queue_thread(void *q)
 		ret = 0;
 		while (event_queue_empty(eq) 
 #if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
-		       && ((flushing=eq->flushing) != 1)
+		       && (eq->flushing != 1)
 #endif
 			) {
 			ret = event_queue_wait(eq, 0);
@@ -117,7 +117,7 @@ queue_thread(void *q)
 		event_queue_cond_lock(eq);
 
 		/* Check if we are flushing and if we are, report status to master */
-		if(flushing == 1) {
+		if(eq->flushing == 1) {
 			il_log(LOG_DEBUG, "    flushing mode detected, reporting status\n");
 			/* 0 - events waiting, 1 - events sent, < 0 - some error */
 			eq->flush_result = ret;
