@@ -46,7 +46,7 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 # major version more frequently. This variable specifies how many steps ahead
 # we are.
 
-VERSION_AHEAD=0
+VERSION_AHEAD=1
 
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${nothrflavour} \
