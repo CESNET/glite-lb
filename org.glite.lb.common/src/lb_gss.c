@@ -390,62 +390,164 @@ end:
    return ret;
 }
 
+static int
+create_proxy(char *cert_file, char *key_file, char **proxy_file)
+{
+   char buf[4096];
+   int in, out;
+   char *name = NULL;
+   int ret, len;
+
+   *proxy_file = NULL;
+
+   asprintf(&name, "%s/%d.lb.XXXXXX", P_tmpdir, getpid());
+
+   out = mkstemp(name);
+   if (out < 0)
+      return EDG_WLL_GSS_ERROR_ERRNO;
+
+   in = open(cert_file, O_RDONLY);
+   if (in < 0) {
+      ret = EDG_WLL_GSS_ERROR_ERRNO;
+      goto end;
+   }
+   while ((ret = read(in, buf, sizeof(buf))) > 0) {
+      len = write(out, buf, ret);
+      if (len != ret) {
+	 ret = -1;
+	 break;
+      }
+   }
+   close(in);
+   if (ret < 0) {
+      ret = EDG_WLL_GSS_ERROR_ERRNO;
+      goto end;
+   }
+
+   in = open(key_file, O_RDONLY);
+   if (in < 0) {
+      ret = EDG_WLL_GSS_ERROR_ERRNO;
+      goto end;
+   }
+   while ((ret = read(in, buf, sizeof(buf))) > 0) {
+      len = write(out, buf, ret);
+      if (len != ret) {
+	 ret = -1;
+	 break;
+      }
+   }
+   close(in);
+   if (ret < 0) {
+      ret = EDG_WLL_GSS_ERROR_ERRNO;
+      goto end;
+   }
+
+   ret = 0;
+   *proxy_file = name;
+
+end:
+   close(out);
+   if (ret) {
+      unlink(name);
+      free(name);
+   }
+
+   return ret;
+}
+
+static int
+destroy_proxy(char *proxy_file)
+{
+   /* XXX we should erase the contents safely (i.e. overwrite with 0's) */
+   unlink(proxy_file);
+   return 0;
+}
+
 int
-edg_wll_gss_acquire_cred_gsi(char *proxy_file, gss_cred_id_t *cred,
+edg_wll_gss_acquire_cred_gsi(char *cert_file, char *key_file, gss_cred_id_t *cred,
       			     char **name, edg_wll_GssStatus* gss_code)
 {
-   OM_uint32 major_status, minor_status, minor_status2;
+   OM_uint32 major_status = 0, minor_status, minor_status2;
    gss_cred_id_t gss_cred = GSS_C_NO_CREDENTIAL;
    gss_buffer_desc buffer = GSS_C_EMPTY_BUFFER;
    gss_name_t gss_name = GSS_C_NO_NAME;
    OM_uint32 lifetime;
+   char *proxy_file = NULL;
+   int ret;
 
-   if (proxy_file == NULL) {
+   if ((cert_file == NULL && key_file != NULL) ||
+       (cert_file != NULL && key_file == NULL))
+      return EINVAL;
+
+   if (cert_file == NULL) {
       major_status = gss_acquire_cred(&minor_status, GSS_C_NO_NAME, 0,
 	    			      GSS_C_NO_OID_SET, GSS_C_BOTH,
 				      &gss_cred, NULL, NULL);
-      if (GSS_ERROR(major_status))
+      if (GSS_ERROR(major_status)) {
+	 ret = EDG_WLL_GSS_ERROR_GSS;
 	 goto end;
+      }
    } else {
+      proxy_file = cert_file;
+      if (strcmp(cert_file, key_file) != 0 &&
+	  (ret = create_proxy(cert_file, key_file, &proxy_file))) {
+	 proxy_file = NULL;
+	 goto end;
+      }
+      
       asprintf((char**)&buffer.value, "X509_USER_PROXY=%s", proxy_file);
       if (buffer.value == NULL) {
 	 errno = ENOMEM;
-	 return EDG_WLL_GSS_ERROR_ERRNO;
+	 ret = EDG_WLL_GSS_ERROR_ERRNO;
+	 goto end;
       }
       buffer.length = strlen(proxy_file);
 
       major_status = gss_import_cred(&minor_status, &gss_cred, GSS_C_NO_OID, 1,
 				     &buffer, 0, NULL);
       free(buffer.value);
-      if (GSS_ERROR(major_status))
+      if (GSS_ERROR(major_status)) {
+	 ret = EDG_WLL_GSS_ERROR_GSS;
 	 goto end;
+      }
    }
 
    /* gss_import_cred() doesn't check validity of credential loaded, so let's
     * verify it now */
     major_status = gss_inquire_cred(&minor_status, gss_cred, &gss_name,
 	  			    &lifetime, NULL, NULL);
-    if (GSS_ERROR(major_status))
+    if (GSS_ERROR(major_status)) {
+       ret = EDG_WLL_GSS_ERROR_GSS;
        goto end;
+    }
 
     if (lifetime == 0) {
        major_status = GSS_S_CREDENTIALS_EXPIRED;
        minor_status = 0; /* XXX */
+       ret = EDG_WLL_GSS_ERROR_GSS;
        goto end;
     }
 
     if (name) {
        major_status = gss_display_name(&minor_status, gss_name, &buffer, NULL);
-       if (GSS_ERROR(major_status))
+       if (GSS_ERROR(major_status)) {
+	  ret = EDG_WLL_GSS_ERROR_GSS;
 	  goto end;
+       }
        *name = buffer.value;
        memset(&buffer, 0, sizeof(buffer));
     }
     
    *cred = gss_cred;
    gss_cred = GSS_C_NO_CREDENTIAL;
+   ret = 0;
 
 end:
+   if (cert_file && key_file && proxy_file && strcmp(cert_file, key_file) != 0) {
+      destroy_proxy(proxy_file);
+      free(proxy_file);
+   }
+
    if (gss_name != GSS_C_NO_NAME)
       gss_release_name(&minor_status2, &gss_name);
 
@@ -457,10 +559,10 @@ end:
 	 gss_code->major_status = major_status;
 	 gss_code->minor_status = minor_status;
       }
-      return EDG_WLL_GSS_ERROR_GSS;
+      ret = EDG_WLL_GSS_ERROR_GSS;
    }
 
-   return 0;
+   return ret;
 }
 
 int 

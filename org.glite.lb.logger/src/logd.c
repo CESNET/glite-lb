@@ -342,7 +342,7 @@ Copyright (c) 2002 CERN, INFN and CESNET on behalf of the EU DataGrid.\n");
 
    edg_wll_gss_watch_creds(cert_file,&cert_mtime);
    /* XXX DK: support noAuth */
-   ret = edg_wll_gss_acquire_cred_gsi(cert_file, &cred, &my_subject_name,
+   ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &my_subject_name,
 	 			      &gss_stat);
    if (ret) {
       /* XXX DK: call edg_wll_gss_get_error() */
@@ -394,7 +394,7 @@ Copyright (c) 2002 CERN, INFN and CESNET on behalf of the EU DataGrid.\n");
 	  gss_cred_id_t newcred;
 	  case 0: break;
 	  case 1:
-	     ret = edg_wll_gss_acquire_cred_gsi(cert_file,&newcred,NULL,&gss_stat);
+	     ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,NULL,&gss_stat);
 	     if (ret) {
 		edg_wll_ll_log(LOG_WARNING, "Reloading credentials failed, continue with older\n");
 	     } else {

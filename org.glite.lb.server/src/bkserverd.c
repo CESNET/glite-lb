@@ -666,7 +666,7 @@ int main(int argc,char *argv[])
 
 	if (cadir) setenv("X509_CERT_DIR",cadir,1);
 	edg_wll_gss_watch_creds(cert,&cert_mtime);
-	if (edg_wll_gss_acquire_cred_gsi(cert, &mycred, &mysubj, &gss_code)) {
+	if (edg_wll_gss_acquire_cred_gsi(cert, key, &mycred, &mysubj, &gss_code)) {
 	   dprintf(("Running unauthenticated\n"));
 	} else {
 		int	i;
@@ -748,7 +748,7 @@ int main(int argc,char *argv[])
 		switch (edg_wll_gss_watch_creds(cert,&cert_mtime)) {
 			case 0: break;
 			case 1: 
-				ret = edg_wll_gss_acquire_cred_gsi(cert, &newcred, NULL, &gss_code);
+				ret = edg_wll_gss_acquire_cred_gsi(cert, key, &newcred, NULL, &gss_code);
 				if (ret == 0) {
 					dprintf(("reloading credentials"));
 					gss_release_cred(&min_stat, &mycred);

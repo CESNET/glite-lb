@@ -40,7 +40,7 @@ recover_thread(void *q)
 			OM_uint32 min_stat;
 			int ret;
 
-			ret = edg_wll_gss_acquire_cred_gsi(cert_file, 
+			ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file, 
 				&new_cred_handle, NULL, NULL);
 			if (new_cred_handle != GSS_C_NO_CREDENTIAL) {
 				gss_release_cred(&min_stat, &cred_handle);

@@ -51,8 +51,10 @@ static int edg_wll_DoLogEvent(
 	fprintf(stderr,"Logging to host %s, port %d\n",
 			context->p_destination, context->p_dest_port);
 #endif
-	ret = edg_wll_gss_acquire_cred_gsi(context->p_proxy_filename, &cred,
-	      				   &my_subject_name, &gss_stat);
+	ret = edg_wll_gss_acquire_cred_gsi(
+	      context->p_proxy_filename ? context->p_proxy_filename : context->p_cert_filename,
+	      context->p_proxy_filename ? context->p_proxy_filename : context->p_key_filename,
+	      &cred, &my_subject_name, &gss_stat);
 	/* Give up if unable to prescribed credentials, otherwise go on anonymously */
 	if (ret && context->p_proxy_filename) {
 		edg_wll_SetErrorGss(context, "failed to load GSI credentials", &gss_stat);

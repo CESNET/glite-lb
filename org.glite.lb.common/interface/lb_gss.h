@@ -34,7 +34,8 @@ typedef struct _edg_wll_GssStatus {
  * anonymous servers as well. */
 
 int
-edg_wll_gss_acquire_cred_gsi(char *proxy_file,
+edg_wll_gss_acquire_cred_gsi(char *cert_file,
+		             char *key_file,
 		             gss_cred_id_t *cred,
 		             char **name,
 			     edg_wll_GssStatus* gss_code);

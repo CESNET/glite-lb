@@ -129,10 +129,10 @@ int edg_wll_open(edg_wll_Context ctx)
 	 * struct specifying whether or not this connection shall be authenticated
 	 * to prevent from repeated calls to edg_wll_gss_acquire_cred_gsi() */
 	if (!ctx->connPool[index].gsiCred && 
-	    edg_wll_gss_acquire_cred_gsi(ctx->p_proxy_filename,
-		                         &ctx->connPool[index].gsiCred,
-					 NULL,
-					 &gss_stat)) {
+	    edg_wll_gss_acquire_cred_gsi(
+	       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
+	       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+	       &ctx->connPool[index].gsiCred, NULL, &gss_stat)) {
 	    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
 	    goto err;
 	}

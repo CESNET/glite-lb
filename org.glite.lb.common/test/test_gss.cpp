@@ -62,14 +62,15 @@ void GSSTest::setUp(void) {
 	struct sockaddr_in      a;
 	socklen_t 		alen = sizeof(a);
 	char *			cred_file = NULL;
+	char *			key_file = NULL;
 
 	timeout.tv_sec = 10;
 	timeout.tv_usec = 0;
 	
-	cred_file = getenv("X509_USER_PROXY");
+	key_file = cred_file = getenv("X509_USER_PROXY");
 	CPPUNIT_ASSERT_MESSAGE("credential file", cred_file);
 	
-	if (edg_wll_gss_acquire_cred_gsi(cred_file, &my_cred, &my_subject, &stat))
+	if (edg_wll_gss_acquire_cred_gsi(cred_file, key_file, &my_cred, &my_subject, &stat))
 		CPPUNIT_ASSERT_MESSAGE("gss_acquire_cred", 0);
 	
         sock = socket(PF_INET,SOCK_STREAM,0);
