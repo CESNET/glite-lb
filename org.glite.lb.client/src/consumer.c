@@ -35,7 +35,6 @@ int edg_wll_QueryEventsExt(
 		const edg_wll_QueryRec **event_conditions,
 		edg_wll_Event **eventsOut)
 {
-	int	error		= 0;
 	char	*response	= NULL,
 		*message	= NULL,
 		*send_mess	= NULL;
@@ -48,14 +47,22 @@ int edg_wll_QueryEventsExt(
 		goto err;
 	}
 
-	if ((error = set_server_name_and_port(ctx,job_conditions)))
-		goto err; // XXX is it fatal??
-
 	ctx->p_tmp_timeout = ctx->p_query_timeout;
-	error = edg_wll_http_send_recv(ctx, "POST /queryEvents HTTP/1.1",request_headers,send_mess,
-								  &response,NULL,&message);
-	if ( error != 0 )
-		goto err;
+	
+	if (ctx->isProxy) {
+		ctx->isProxy = 0;
+		if (edg_wll_http_send_recv_proxy(ctx, "POST /queryEvents HTTP/1.1",
+				request_headers,send_mess, &response,NULL,&message))
+			goto err;
+	}
+	else {
+		if (set_server_name_and_port(ctx,job_conditions))
+			goto err; // XXX is it fatal??
+
+		if (edg_wll_http_send_recv(ctx, "POST /queryEvents HTTP/1.1",
+				request_headers,send_mess, &response,NULL,&message))
+			goto err;
+	}
 
 	if (http_check_status(ctx,response))
 		goto err;
@@ -150,14 +157,22 @@ int edg_wll_QueryJobsExt(
 		goto err;
 	}
 
-	if (set_server_name_and_port(ctx, conditions))
-		goto err;
-
 	ctx->p_tmp_timeout = ctx->p_query_timeout;
 
-	if (edg_wll_http_send_recv(ctx, "POST /queryJobs HTTP/1.1",request_headers,send_mess,
-			&response,NULL,&message)) 
-		goto err;
+	if (ctx->isProxy){
+		ctx->isProxy = 0;
+		if (edg_wll_http_send_recv_proxy(ctx, "POST /queryJobs HTTP/1.1",
+				request_headers,send_mess,&response,NULL,&message))
+			goto err;
+	}
+	else {				
+		if (set_server_name_and_port(ctx, conditions))
+			goto err;
+
+		if (edg_wll_http_send_recv(ctx, "POST /queryJobs HTTP/1.1",
+					request_headers,send_mess,&response,NULL,&message)) 
+			goto err;
+	}
          
 	if (http_check_status(ctx,response))
 		goto err;
@@ -381,7 +396,7 @@ int edg_wll_QuerySequenceCode(edg_wll_Context ctx, edg_wlc_JobId jobId, char **c
 		goto err;
 	}
 
-	// ctx->p_tmp_timeout = ctx->p_query_timeout; // not used
+	ctx->p_tmp_timeout = ctx->p_query_timeout; 
 	
 	error = edg_wll_http_send_recv_proxy(ctx, "POST /querySequenceCode HTTP/1.1",
 			request_headers, send_mess, &response, NULL, &message);
@@ -462,4 +477,108 @@ int set_server_name_and_port(edg_wll_Context ctx, const edg_wll_QueryRec **job_c
 	}
 		
 	return(error);
+}
+
+
+/******************************************************************
+ * Proxy wrappers
+ */
+
+
+int edg_wll_QueryEventsExtProxy(
+		edg_wll_Context ctx,
+		const edg_wll_QueryRec **job_conditions,
+		const edg_wll_QueryRec **event_conditions,
+		edg_wll_Event **eventsOut)
+{
+	ctx->isProxy = 1;
+
+	return edg_wll_QueryEventsExt(ctx, job_conditions, event_conditions, eventsOut);
+}
+
+
+
+int edg_wll_QueryEventsProxy(
+		edg_wll_Context ctx,
+		const edg_wll_QueryRec *job_conditions,
+		const edg_wll_QueryRec *event_conditions,
+	       	edg_wll_Event **eventsOut)
+{
+	ctx->isProxy = 1;
+	
+	return edg_wll_QueryEvents(ctx, job_conditions, event_conditions, eventsOut);
+}
+
+
+
+int edg_wll_QueryJobsExtProxy(
+		edg_wll_Context         ctx,
+		const edg_wll_QueryRec **        conditions,
+		int                     flags,
+		edg_wlc_JobId **        jobsOut,
+		edg_wll_JobStat **      statesOut)
+{	
+	ctx->isProxy = 1;
+	
+	return edg_wll_QueryJobsExt(ctx, conditions, flags, jobsOut, statesOut);
+}
+
+
+
+int edg_wll_QueryJobsProxy(
+        	edg_wll_Context         ctx,
+	        const edg_wll_QueryRec *        conditions,
+        	int                     flags,
+	        edg_wlc_JobId **        jobsOut,
+        	edg_wll_JobStat **      statesOut)
+{
+	ctx->isProxy = 1;
+	
+	return edg_wll_QueryJobs(ctx, conditions, flags, jobsOut, statesOut);
+}
+
+
+int edg_wll_UserJobsProxy(
+		edg_wll_Context ctx,
+		edg_wlc_JobId **jobsOut,
+		edg_wll_JobStat	**statesOut)
+{
+	ctx->isProxy = 1;
+	
+	return edg_wll_UserJobs(ctx, jobsOut, statesOut);
+}
+
+int edg_wll_JobLogProxy(
+	edg_wll_Context ctx,
+	edg_wlc_JobId	job,
+	edg_wll_Event **eventsOut)
+{
+	ctx->isProxy = 1;
+
+	return edg_wll_JobLog(ctx, job, eventsOut);
+}
+
+int edg_wll_JobStatusProxy(
+                edg_wll_Context ctx,
+                edg_wlc_JobId job,
+                int flags,
+                edg_wll_JobStat *stat)
+{
+	ctx->isProxy = 1;
+		
+	return edg_wll_JobStatus(ctx, job, flags, stat);
+}
+
+
+	
+int edg_wll_QueryListenerProxy(
+		edg_wll_Context ctx,
+		edg_wlc_JobId job,
+		const char *name,
+		char** host,
+		uint16_t *port) 
+{
+	ctx->isProxy = 1;
+
+	return edg_wll_QueryListener(ctx, job, name, host, port);
 }
