@@ -103,7 +103,7 @@ void XMLParseTest::protoEventTest()
 	char		*message, *et, *ed;
 
 	edg_wll_InitContext(&ctx);
-	e1 = edg_wll_InitEvent(EDG_WLL_EVENT_REGJOB);
+	e1 = (edg_wll_Event *) calloc(2,sizeof *e1);
 	e1->any.type = EDG_WLL_EVENT_REGJOB;
 
 	e1->regJob.jdl = strdup("very long job = \"blabla\" \\\\ \n hugh\t;");

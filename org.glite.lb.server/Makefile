@@ -62,7 +62,7 @@ CFLAGS:= -DNO_VOMS -DNO_GACL \
 	-I${ares_prefix}/include \
 	-I${gsoap_prefix}/include \
 	${COVERAGE_FLAGS} \
-	-I${mysql_prefix}/include \
+	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
 	-I${gridsite_prefix}/include -I${globus_prefix}/include/${nothrflavour}/openssl
 
@@ -79,9 +79,17 @@ GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
 	-lglobus_gssapi_gsi_${nothrflavour} \
 
+ifneq (${mysql_prefix},/usr)
+	myslqlib := -L${mysql_prefix}/lib
+endif
+
+ifneq (${expat_prefix},/usr)
+	expatlib := -L${expat_prefix}/lib
+endif
+
 EXT_LIBS:= -L${ares_prefix}/lib -lares \
-	-L${mysql_prefix}/lib -lmysqlclient -lz\
-	-L${expat_prefix}/lib -lexpat \
+	${myslqlib} -lmysqlclient -lz\
+	${expatlib} -lexpat \
 	${GLOBUS_LIBS}
 
 GSOAP_LIBS:= -L${gsoap_prefix}/lib -lgsoap
