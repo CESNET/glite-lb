@@ -50,7 +50,7 @@ SUFFIXES = .T
 DEBUG:=-g -O0 -Wall
 
 GRIDSITE_CFLAGS = `xml2-config --cflags`
-GRIDSITE_LIBS = -lgridsite `xml2-config --libs`
+GRIDSITE_LIBS = -lgridsite_globus `xml2-config --libs`
 
 CFLAGS:= ${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
