@@ -22,9 +22,12 @@ gsoap_prefix=/opt/gsoap
 -include ../Makefile.inc
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
-	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS
+	gsoap_version=`${gsoap_prefix}/bin/soapcpp2 -version 2>&1 | cut -d' ' -f4 | perl -F\\\\. -nae '$$F[2] =~ s/\D*$$//; print $$F[2]+100*$$F[1]+10000*$$F[0]'`
+	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS -DGSOAP_VERSION=${gsoap_version}
+	STDSOAP2C=${top_srcdir}/examples/stdsoap2_`${gsoap_prefix}/bin/soapcpp2 -version 2>&1 | cut -d' ' -f4`c
 else
 	WS_CFLAGS=
+	STDSOAP2C=
 endif
 
 CC=gcc
@@ -105,8 +108,8 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o
 
-WS_CLIENT_OBJS:= test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
-WS_CLIENT_LIBS:= ${GSOAP_LIBS} -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
+WS_CLIENT_OBJS:= stdsoap2_patched.o test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
+WS_CLIENT_LIBS:= -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
 
 
 glite_lb_bkserverd: ${SERVER_OBJS} ${SERVER_SOAP_OBJS}
@@ -176,6 +179,9 @@ ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
 
 ws_query_ext: ws_query_ext.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_query_ext.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
+
+stdsoap2_patched.o:
+	${CC} ${CFLAGS} -c -o $@ ${STDSOAP2C}
 
 test_ws_plugin.o: ws_plugin.c
 	${CC} ${CFLAGS} -DPLUGIN_TEST -c -o $@ ${top_srcdir}/src/ws_plugin.c

@@ -4,6 +4,7 @@
 #include <stdsoap2.h>
 
 #include "bk_ws_H.h"
+#include "ws_typemap.h"
 
 #include "glite/lb/consumer.h"
 /* XXX: references only, src and dest share pointers */

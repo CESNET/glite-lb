@@ -24,7 +24,11 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 	free(ed);
 
 	detail->__type = SOAP_TYPE__GenericLBFault;
+#if GSOAP_VERSION >= 20700
+	detail->fault = f;
+#else
 	detail->value = f;
+#endif
 	detail->__any = NULL;
 
 	soap_receiver_fault(soap,"shit",NULL);
@@ -41,8 +45,13 @@ void edg_wll_FaultToErr(const struct soap *soap,edg_wll_Context ctx)
 	struct edgwll__GenericLBFaultType	*f;
 
 	if (detail->__type == SOAP_TYPE__GenericLBFault) {
-       		f = ((struct _GenericLBFault *) detail->value)
+#if GSOAP_VERSION >= 20700
+		f = ((struct _GenericLBFault *) detail->fault)
 			->edgwll__GenericLBFault;
+#else
+		f = ((struct _GenericLBFault *) detail->value)
+			->edgwll__GenericLBFault;
+#endif
 		edg_wll_SetError(ctx,f->code,f->description);
 	}
 	else {
