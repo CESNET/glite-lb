@@ -69,8 +69,32 @@ extern "C" {
 #define EDG_WLL_LOG_CONNECTIONS_DEFAULT		4
 
 	
+
 #ifdef __cplusplus
 }
 #endif
+
+/*
+ * Functions which manage communication with interlogger.
+ * (especially used in local logger when sending events to ilogd)
+ */
+extern int
+edg_wll_log_event_write(
+	edg_wll_Context     ctx,
+	const char         *event_file,
+	const char         *msg,
+	unsigned int        fcntl_attempts,
+	unsigned int        fcntl_timeout,
+	long               *filepos);
+
+extern int
+edg_wll_log_event_send(
+	edg_wll_Context     ctx,
+	const char         *socket_path,
+	long                filepos,
+	const char         *msg,
+	int                 msg_size,
+	int                 conn_attempts,
+	struct timeval     *timeout);
 
 #endif /* __EDG_WORKLOAD_LOGGING_COMMON_LOG_PROTO_H__ */
