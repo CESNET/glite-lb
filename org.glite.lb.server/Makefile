@@ -21,6 +21,8 @@ gsoap_prefix=/opt/gsoap
 -include Makefile.inc
 -include ../Makefile.inc
 
+CC=gcc
+
 GSOAP_FILES_PREFIX:= bk_ws_
 
 YACC=bison -y
@@ -58,20 +60,9 @@ LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 
-# assisst & gss due to VOMS only
-#	-lglobus_gss_assist_${nothrflavour} \
-#	-lglobus_gssapi_gsi_${nothrflavour} \
-
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
 	-lglobus_gssapi_gsi_${nothrflavour}
-
-
-# XXX: our vomsc.la depends on badly installed expat
-
-# not yet
-#	-L${repository}/${gacl}/lib -lgacl \
-#	${repository}/${voms}/lib/libvomsc.a \
 
 EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	-L${mysql_prefix}/lib -lmysqlclient -lz\
@@ -94,10 +85,13 @@ SERVER_OBJS:= bkserverd.o get_events.o index.o jobstat.o jobstat_supp.o \
 SERVER_SOAP_OBJS:=${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
 	ws_plugin.o ws_query.o ws_fault.o ws_typeref.o
 
-
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o
+
+WS_CLIENT_OBJS:= test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
+WS_CLIENT_LIBS:= ${GSOAP_LIBS} -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
+
 
 glite_lb_bkserverd: ${SERVER_OBJS} ${SERVER_SOAP_OBJS}
 	${LINK} -o $@ ${SERVER_OBJS} ${SERVER_SOAP_OBJS} ${COMMON_LIB} ${SRVBONES_LIB} ${GSOAP_LIBS} ${EXT_LIBS}
@@ -109,7 +103,7 @@ default all: compile
 
 compile: glite_lb_bkserverd glite_lb_bkindex
 
-check: compile test.xml
+check: compile test.soapconv
 	-echo check.query not complete yet
 
 test_coverage:
@@ -117,19 +111,12 @@ test_coverage:
 	cd coverage && $(MAKE) -f ../Makefile top_srcdir=../../ COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage" check
 	cd coverage && for i in `echo ${INDEX_OBJS} ${SERVER_OBJS} | tr ' ' '\012' | sort -u`; do gcov $$i ; done
 
-test.xml: test_xml
-	./test_xml
-
-test_xml: test_xml.cpp
-	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIB} ${TEST_LIBS}
-
 lb_xml_parse.c: lb_xml_parse.c.T
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
-${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c: LB.xh
+${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c: LB.xh
 	${gsoap_prefix}/bin/soapcpp2 -w -c -p ${GSOAP_FILES_PREFIX} LB.xh
 
 LB.xh: LB.wsdl ws_typemap.dat
@@ -137,6 +124,12 @@ LB.xh: LB.wsdl ws_typemap.dat
 	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ LB.wsdl
 	rm LB.wsdl
 
+test.xml: test_xml
+	./test_xml
+
+test_xml: test_xml.cpp
+	${CXX} -c ${CFLAGS} ${TEST_INC} $<
+	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIB} ${TEST_LIBS}
 
 check.query: test_query_events
 	./test_query_events
@@ -147,9 +140,12 @@ test_query_events: test_query_events.o
 	${LINKXX} -o $@ test_query_events.o ${query_events_objs} \
 	${TEST_LIBS} ${COMMON_LIB} ${EXT_LIBS}
 
-WS_CLIENT_OBJS:= test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
-WS_CLIENT_LIBS:= ${GSOAP_LIBS} -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
+test.soapconv: test_soap_conv
+	./test_soap_conv
 
+test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
+	${CXX} -c ${CFLAGS} ${TEST_INC} $<
+	${LINKXX} -o $@ test_soap_conv.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${COMMON_LIB} ${TEST_LIBS}
 
 ws_jobstat: ws_jobstat.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_jobstat.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
@@ -157,7 +153,10 @@ ws_jobstat: ws_jobstat.o ${WS_CLIENT_OBJS}
 ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_query_ex.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
 
-test_ws_plugin.o: ${top_srcdir}/src/ws_plugin.c
+ws_query_ext: ws_query_ext.o ${WS_CLIENT_OBJS}
+	${LINK} -o $@ ws_query_ext.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
+
+test_ws_plugin.o: ws_plugin.c
 	${CC} ${CFLAGS} -DPLUGIN_TEST -c -o $@ ${top_srcdir}/src/ws_plugin.c
 
 doc:

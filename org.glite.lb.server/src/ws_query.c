@@ -7,6 +7,10 @@
 #include "query.h"
 #include "ws_plugin.h"
 #include "bk_ws_H.h"
+#include "get_events.h"
+#include "ws_fault.h"
+#include "ws_typeref.h"
+
 
 int edgwll2__JobStatus(
         struct soap						   *soap,
@@ -18,8 +22,6 @@ int edgwll2__JobStatus(
 	edg_wlc_JobId		j;
 	edg_wll_JobStat		s;
 
-
-	out->status = soap_malloc(soap, sizeof *out->status);
 
 	if ( edg_wlc_JobIdParse(jobid, &j) )
 	{
@@ -34,7 +36,7 @@ int edgwll2__JobStatus(
 		return SOAP_FAULT;
 	}
 
-	edg_wll_StatusToSoap(soap, &s, out->status);
+	edg_wll_StatusToSoap(soap, &s, &(out->status));
 
 	return SOAP_OK;
 }
@@ -62,12 +64,12 @@ int edgwll2__QueryJobs(
 
 	edg_wll_ResetError(ctx);
 	edg_wll_SoapToJobStatFlags(flags, &fl);
-	if ( !edg_wll_SoapToQueryCondsExt(conditions, &qr) ) {
+	if ( edg_wll_SoapToQueryCondsExt(conditions, &qr) ) {
 		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
 		goto cleanup;
 	}
 	if ( edg_wll_QueryJobsServer(ctx, qr, fl, &jobsOut, &statesOut) ) goto cleanup;
-	if ( edg_wll_JobsQueryResToSoap(jobsOut, statesOut, out) ) goto cleanup;
+	if ( edg_wll_JobsQueryResToSoap(soap, jobsOut, statesOut, out) ) goto cleanup;
 	ret = SOAP_OK;
 
 cleanup:

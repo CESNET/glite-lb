@@ -63,8 +63,6 @@ extern edg_wll_ErrorCode edg_wll_Close(edg_wll_Context);
 #define SLAVE_CONNS_MAX		500	/* commit suicide after that many connections */
 #define MASTER_TIMEOUT		30 	/* maximal time of one-round of master network communication */
 #define SLAVE_TIMEOUT		30 	/* maximal time of one-round of slave network communication */
-#define SLAVE_CHECK_SIGNALS	2 	/* how often to check signals while waiting for recv_mesg */
-#define WATCH_TIMEOUT		1800	/* wake up to check updated credentials */
 
 #ifndef EDG_PURGE_STORAGE
 #define EDG_PURGE_STORAGE	"/tmp/purge"
@@ -236,6 +234,7 @@ int main(int argc, char *argv[])
 	edg_wll_Context		ctx;
 	OM_uint32			min_stat;
 	edg_wll_GssStatus	gss_code;
+	struct timeval		to;
 
 
 
@@ -499,10 +498,18 @@ a.sin_addr.s_addr = INADDR_ANY;
 	}
 
 
-	glite_srvbones_run(slaves, bk_clnt_data_init, service_table, sizofa(service_table), debug);
+	glite_srvbones_set_param(GLITE_SBPARAM_SLAVES_CT, slaves);
+	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_OVERLOAD, SLAVE_OVERLOAD);
+	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_CONNS_MAX, SLAVE_CONNS_MAX);
+	to = (struct timeval){CLNT_TIMEOUT, 0};
+	glite_srvbones_set_param(GLITE_SBPARAM_CLNT_TIMEOUT, &to);
+	to = (struct timeval){TOTAL_CLNT_TIMEOUT, 0};
+	glite_srvbones_set_param(GLITE_SBPARAM_TOTAL_CLNT_TIMEOUT, &to);
+
+	glite_srvbones_run(bk_clnt_data_init, service_table, sizofa(service_table), debug);
 
 
-	semctl(semset,0,IPC_RMID,0);
+	semctl(semset, 0, IPC_RMID, 0);
 	unlink(pidfile);
 	free(port);
 	gss_release_cred(&min_stat, &mycred);
