@@ -5,7 +5,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <unistd.h>
-
+#include <errno.h>
 
 int 
 encode_il_msg(char **buffer, const char *event)
@@ -15,7 +15,7 @@ encode_il_msg(char **buffer, const char *event)
 
 
   /* allocate enough room to hold the message */
-  len = 17 + len_string(event);
+  len = 17 + len_string((char*)event);
   if((*buffer = malloc(len)) == NULL) {
     return(-1);
   }
@@ -27,7 +27,7 @@ encode_il_msg(char **buffer, const char *event)
   p += 17;
 
   /* write rest of the message */
-  p = put_string(p, event);
+  p = put_string(p, (char*)event);
 
   return(p - *buffer);
 }
@@ -38,7 +38,10 @@ encode_il_reply(char **buffer,
 		int err_code, int err_code_min, 
 		const char *err_msg)
 {
-  len = 17 + len_int(err_code) + len_int(err_code_min) + len_string(err_msg);
+  int len;
+  char *p;
+
+  len = 17 + len_int(err_code) + len_int(err_code_min) + len_string((char*)err_msg);
   if((*buffer = malloc(len)) == NULL) {
     return(-1);
   }
@@ -47,7 +50,7 @@ encode_il_reply(char **buffer,
   p = *buffer + 17;
   p = put_int(p, err_code);
   p = put_int(p, err_code_min);
-  p = put_string(p, err_msg);
+  p = put_string(p, (char*)err_msg);
   return(p - *buffer);
 }
 
@@ -57,7 +60,7 @@ decode_il_msg(char **event, const char *buf)
 {
   char *p;
 
-  p = get_string(buf, event);
+  p = get_string((char*)buf, event);
   if(p == NULL) {
     if(*event) { free(*event); *event = NULL; };
     return(EINVAL);
@@ -88,15 +91,15 @@ int
 read_il_data(char **buffer, 
 	     int (*reader)(char *, const int))
 {
-  char buffer[17];
+  char buf[17];
   int ret, len;
 
   /* read 17 byte header */
-  len = (*reader)(buffer, 17);
+  len = (*reader)(buf, 17);
   if(len < 0) {
     goto err;
   }
-  if((len=atoi(buffer)) <= 0) {
+  if((len=atoi(buf)) <= 0) {
     len = EINVAL;
     goto err;
   }
