@@ -74,13 +74,33 @@ ${LTLIB}: ${OBJS}
 		-lm
 
 stage: compile
-	${INSTALL} -m 644 ${STATICLIB} ${stagelib}
-	${INSTALL} -m 644 ${LTLIB} ${stagelib}
-	cd ${interface} && install -m 644 ${HDRS} ${stageinc}/${globalprefix}/${lbprefix}
-
+	$(MAKE) install PREFIX=${stagedir}
 
 check:
 	echo Unit tests missing
+
+dist: distsrc distbin
+
+distsrc:
+	mkdir -p ${top_srcdir}/${package}-${version}
+	cd ${top_srcdir} && GLOBIGNORE="${package}-${version}" && cp -Rf * ${package}-${version}
+	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${version}
+	rm -rf ${top_srcdir}/${package}-${version}
+
+distbin:
+	$(MAKE) install PREFIX=`pwd`/tmpbuilddir
+	cd tmpbuilddir && tar -czf ../${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *
+	rm -rf tmpbuilddir
+	
+install:
+	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
+	mkdir -p ${PREFIX}/lib
+	${INSTALL} -m 644 ${STATICLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LTLIB} ${PREFIX}/lib
+	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}
+
+clean:
+
 
 %.o: %.c
 	${COMPILE} -c $<
