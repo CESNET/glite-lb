@@ -35,135 +35,135 @@
 	_optional_
 	string	job		Job description in receiver's language.
 	int     result          Result code of the transfer attempt (START, OK, REFUSED or FAIL).
-	_code_  START           the sending component has started or is about to start the transfer
-	_code_  OK              job was sent successfully
-	_code_  REFUSED         job was refused by the other component
-	_code_  FAIL            transfer failed for other reason than explicit refusal (eg. network timeout)
+	_code_  START           The sending component has started or is about to start the transfer.
+	_code_  OK              The job was sent successfully.
+	_code_  REFUSED         The job was refused by the other component.
+	_code_  FAIL            The transfer failed for other reason than explicit refusal (eg. network timeout).
 	string	reason		Detailed description of the transfer, especially reason of failure.
 	_optional_
 	string	dest_jobid	Job id as assigned by the receiving software component.
 	_optional_
 
-@type Accepted		Accepting job (successful couterpart to Transfer)
+@type Accepted		Accepting job (successful counterpart to Transfer).
 	logsrc	from		The software component  the job was received from.
 	string	from_host	Hostname of the component the job was received from.
 	string	from_instance	Instance of the component the job was received from.
 	_optional_
 	string	local_jobid	New job id as assigned by the receiving component.
 
-@type Refused		Refusing job (unsuccessful couterpart to Transfer)
+@type Refused		Refusing job (unsuccessful counterpart to Transfer).
 	logsrc	from		The software component that tried to send the job.
 	string	from_host	Hostname of the component that tried to send the job.
 	string	from_instance	Instance of the component that tried to send the job.
 	_optional_
 	string	reason		Description of the reason why the job was refused.
 
-@type EnQueued		The job has been enqueued in an inter-component queue
+@type EnQueued		The job has been enqueued in an inter-component queue.
 	string	queue		Queue into which the job has been stored for retrieval by another component.
 	string	job		Job description in the receiver's language.
 	int     result          Result code of the attempt to put job into the queue (START, OK, REFUSED or FAIL).
-	_code_  START           the sending component has started or is about to start the transfer
-	_code_  OK              job was sent successfully
-	_code_  REFUSED         job was refused by the other component
-	_code_  FAIL            transfer failed for other reason than explicit refusal (eg. network timeout)
+	_code_  START           The sending component has started or is about to start enqueuing the job.
+	_code_  OK              The job was enqueued successfully.
+	_code_  REFUSED         The job was refused by the other component.
+	_code_  FAIL            The transfer failed for other reason than explicit refusal.
 	string	reason		Detailed description of the attempt to enqueue the job, especially the reason of failure.
 
 @type DeQueued		The job has been dequeued from an inter-component queue.
 	string	queue		Name of the queue the job was obtained from.
 	string	local_jobid	New job id as assigned by the retreiving component.
 
-@type HelperCall	Helper component is called
+@type HelperCall	Helper component is called.
 	string	helper_name	Name of the called helper component.
 	string	helper_params	Parameters of the call to the helper component.
 	int	src_role	The role the event sender is playing in the helper call (CALLING or CALLEE).
-	_code_	CALLING		the logging component is caller
-	_code_	CALLED		the logging component is callee
+	_code_	CALLING		The logging component is caller.
+	_code_	CALLED		The logging component is callee.
 
-@type HelperReturn	Helper component is returning the control
+@type HelperReturn	Helper component is returning the control.
 	string	helper_name	Name of the called helper component.
 	string	retval		Data returned by the call to the helper component.
 	int	src_role	The role the event sender is playing in the helper call (CALLING or CALLEE).
-	_code_	CALLING		the logging component is caller
-	_code_	CALLED		the logging component is callee
+	_code_	CALLING		The logging component is caller.
+	_code_	CALLED		The logging component is callee.
 
-@type Running		Executable started
+@type Running		Executable started.
 	string	node		Worker node on which the job executable is being run.
 
-@type Resubmission	Result of resubmission decision
-	int	result		Result code of the resubmission decision (WILLRESUB or WONTRESUB)
-	_code_	WILLRESUB	will be resubmitted
-	_code_	WONTRESUB	will not be resubmitted
+@type Resubmission	Result of resubmission decision.
+	int	result		Result code of the resubmission decision (WILLRESUB or WONTRESUB).
+	_code_	WILLRESUB	The job will be resubmitted.
+	_code_	WONTRESUB	The job will not be resubmitted.
 	string	reason		Reason why the job will or will not be resubmitted.
 	string	tag		Value of the attribute on which the decision to resubmit the job was based.
 
-@type Done		Execution terminated (normally or abnormally)
+@type Done		Execution terminated (normally or abnormally).
 	int	status_code	Reason code for the termination of the job (OK, FAILED or CANCELLED).
-	_code_	OK		terminated by itself
-	_code_	FAILED		disappeared from LRMS
-	_code_	CANCELLED	cancelled by user request
+	_code_	OK		The job terminated by itself.
+	_code_	FAILED		The job disappeared from LRMS.
+	_code_	CANCELLED	The job was cancelled by user request.
 	string	reason		Detailed description why the job was terminated.
 	int	exit_code	Exit code of the job's process.
 	_null_	-1
 
-@type Cancel		Cancel operation has been attempted on the job
+@type Cancel		Cancel operation has been attempted on the job.
 	int	status_code	Classification of the attempt to cancel the job (REQ, REFUSE, DONE or ABORT).
-	_code_	REQ		request acknowledged
-	_code_	REFUSE		request declined by this component
-	_code_	DONE		request completed by whole WMS
-	_code_	ABORT		request refused by whole WMS
+	_code_	REQ		The request was acknowledged.
+	_code_	REFUSE		The request was declined by this component.
+	_code_	DONE		The request was completed by whole WMS.
+	_code_	ABORT		The request was refused by whole WMS.
 	string	reason		Detailed description of the attempt to cancel the job, especially the reason of failure.
 
-@type Abort		Job aborted by system
+@type Abort		Job aborted by system.
 	string	reason		Reason why the job was aborted by the system.
 
 @type Clear		Job cleared, output sandbox removed
 	int	reason		Description of the reason why the job was cleared and the output sandbox removed (USER, TIMEOUT or NOOUTPUT).
-	_code_	USER		user retrieved output sandbox
-	_code_	TIMEOUT		timed out, resource purge forced
-	_code_	NOOUTPUT	no output was generated
+	_code_	USER		User retrieved output sandbox.
+	_code_	TIMEOUT		Timed out, resource forced purge of the sandbox.
+	_code_	NOOUTPUT	No output was generated.
 
-@type Purge		Job is purged from bookkepping server
+@type Purge		Job is purged from bookkepping server.
 
-@type Match		Matching CE found
+@type Match		Matching CE found.
 	string	dest_id		Identification of the queue on the CE that the job could be send to.
 	
-@type Pending		No match found yet
+@type Pending		No matching CE found yet.
 	string	reason		Description why the matching CE for the job was not found (yet).
 
-@type RegJob		New job registration
+@type RegJob		New job registration.
 	string	jdl		Job description of the job being registered.
 	string	ns		NetworkServer handling the newly registered job.
 	jobid	parent		Grid job id of the parent job registering this new one.
 	_optional_
 
 	int	jobtype		Type of the job being registered (SIMPLE, DAG, PARTITIONABLE or PARTITIONED).
-	_code_	SIMPLE		simple job
-	_code_	DAG		dag (containing static set of subjobs)
-	_code_	PARTITIONABLE	partitionable (may become partitioned)
-	_code_	PARTITIONED	partitioned (dynamically created dag)
+	_code_	SIMPLE		The job is simple job.
+	_code_	DAG		The job is dag (containing static set of subjobs).
+	_code_	PARTITIONABLE	The job is partitionable (may become partitioned).
+	_code_	PARTITIONED	The job is partitioned (dynamically created dag).
 	
 	int	nsubjobs	Number of subjobs this job plans to spawn.
 	_optional_
 	string	seed		Seed for subjob id generation.
 	_optional_
 
-@type Chkpt		Application-specific checkpoint record
+@type Chkpt		Application-specific checkpoint record.
 	string	tag		Application specific checkpoint tag.
 	string	classad		Application specific checkpoint value.
 
-@type Listener 		Listening network port for interactive control
+@type Listener 		Listening network port for interactive control.
 	string	svc_name	Name of the port instance for interactive job control.
 	string	svc_host	Hostname of the interactive job controller.
 	port	svc_port	Port number of the interactive job controller.
 
-@type CurDescr		current state of job processing (optional event)
+@type CurDescr		Current state of job processing (optional event).
 	string	descr		Description of the current job transformation (output of the helper).
 
-@type UserTag		user tag -- arbitrary name=value pair
+@type UserTag		User tag -- arbitrary name=value pair.
 	string	name	Arbitrary user tag name.
 	string	value	Arbitrary user tag value.
 
-@type ChangeACL		Management of ACL stored on bookkepping server
+@type ChangeACL		Management of ACL stored on bookkepping server.
 	string	user_id		DN or VOMS parameter (in format VO:group).
 	int	user_id_type	Type of information given in user_id (DN or VOMS).
 	_null_	-1
@@ -174,7 +174,7 @@
 	int	operation	Operation requested to perform with ACL (add, remove).
 	_null_	-1
 
-@type Notification	Management of notification service
+@type Notification	Management of notification service.
 	notifid	notifId		Notification id.
 	string	owner		Identification of the job owner (certificate subject).
 	string	dest_host	Hostname the notification is sent to.
