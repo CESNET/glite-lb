@@ -13,8 +13,6 @@
 #include "lock.h"
 #include "il_lbproxy.h"
 
-extern int debug;
-
 /* XXX */
 #define use_db	1
 
@@ -55,8 +53,6 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
     if(edg_wll_StoreEvent(ctx, ev,&seq))
       goto err;
   }
-
-  if (debug) { fputs(event,stderr); fputc('\n',stderr); }
 
   if (!ctx->strict_locking && edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
 

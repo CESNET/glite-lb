@@ -22,12 +22,6 @@
 #include "get_events.h"
 
 
-extern int debug;
-#ifndef dprintf
-#define dprintf(x) { if (debug) printf x; }
-#endif
-
-
 /* TBD: share in whole logging or workload */
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))
@@ -624,7 +618,7 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&c[EDG_WLL_SOURCE_APPLICATION]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
-		dprintf(( "unparsable sequence code %s\n", a));
+		fprintf(stderr, "unparsable sequence code %s\n", a);
 		return -1;
 	}
 
@@ -639,7 +633,7 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&d[EDG_WLL_SOURCE_APPLICATION]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", b);
-		dprintf(( "unparsable sequence code %s\n", b));
+		fprintf(stderr, "unparsable sequence code %s\n", b);
 		return 1;
 	}
 

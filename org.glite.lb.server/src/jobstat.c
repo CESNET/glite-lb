@@ -22,13 +22,7 @@
 #include "lb_authz.h"
 
 
-extern int debug;
-
 #define DAG_ENABLE	1
-
-#ifndef dprintf
-#define dprintf(x) { if (debug) printf x; }
-#endif
 
 /* TBD: share in whole logging or workload */
 #ifdef __GNUC__

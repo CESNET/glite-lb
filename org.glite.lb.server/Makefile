@@ -146,17 +146,14 @@ WS_CLIENT_LIBS:= -L${stagedir}/lib \
 
 HDRS=index.h lb_authz.h lbs_db.h store.h
 
-LIB_OBJS_PS:=ws_fault.o lb_authz.o lbs_db.o
-L_LIB_OBJS_PS:=${LIB_OBJS_PS:.o=.lo}
-LIB_OBJS_BK:=lb_authz.o lbs_db.o query.o jobstat.o lb_xml_parse.o \
-	il_notification.o notif_match.o il_lbproxy.o lock.o \
-	jobstat_supp.o write2rgma.o get_events.o store.o \
-	db_store.o stats.o openserver.o index.o
-L_LIB_OBJS_BK:=${LIB_OBJS_BK:.o=.lo}
-STATIC_LIB_PS:=libglite_lb_server_misc_ps_${nothrflavour}.a
-LT_LIB_PS:=libglite_lb_server_misc_ps_${nothrflavour}.la
-STATIC_LIB_BK:=libglite_lb_server_misc_bk_${nothrflavour}.a
-LT_LIB_BK:=libglite_lb_server_misc_bk_${nothrflavour}.la
+LIB_OBJS_BK:= \
+	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
+	seqcode.o write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	lb_xml_parse_V21.o \
+	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
+	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
+	notification.o il_notification.o notif_match.o stats.o
+STATIC_LIB_BK:=libglite_lb_bkserver.a
 
 glite_lb_bkserverd: LoggingAndBookkeeping.nsmap ${BKSERVER_OBJS}
 	${LINK} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
@@ -166,7 +163,7 @@ glite_lb_bkindex: ${INDEX_OBJS}
 
 default all: compile
 
-compile: glite_lb_bkserverd glite_lb_bkindex ${LT_LIB_PS} ${LT_LIB_BK}
+compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK}
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -224,15 +221,6 @@ ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
 ws_query_ext: ws_query_ext.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_query_ext.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
-${LT_LIB_PS}: ${LIB_OBJS_PS}
-	${LINK} -o $@ ${L_LIB_OBJS_PS}
-
-${STATIC_LIB_PS}: ${LIB_OBJS_PS}
-	ar crv $@ ${LIB_OBJS_PS}
-	ranlib $@
-
-${LT_LIB_BK}: ${L_LIB_OBJS_BK}
-	${LINK} -o $@ ${L_LIB_OBJS_BK}
 
 ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 	ar crv $@ ${LIB_OBJS_BK}
@@ -277,10 +265,7 @@ install:
 	if [ x${DOSTAGE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
-	fi
-	if [ x${DOSTAGE} = xyes ]; then \
-		${INSTALL} -m 644 ${LT_LIB_PS} ${PREFIX}/lib; \
-		${INSTALL} -m 644 ${LT_LIB_BK} ${PREFIX}/lib; \
+		install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib; \
 	fi
 
 clean:
