@@ -35,8 +35,8 @@ PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
 PUB_HDRS:=CountRef.h Event.h JobJobStatus.h Notification.h ServerConnection.h \
 	LoggingExceptions.h
 
-LIBLOBJS:=`echo ${LIBOBJS} | sed 's/\.o/\.lo/g'`
-PLUSLOBJS:=`echo ${PLUSOBJS} | sed 's/\.o/\.lo/g'`
+LIBLOBJS:=${LIBOBJS:.o=.lo}
+PLUSLOBJS:=${PLUSOBJS:.o=.lo}
 HELPERS:=-L${stagelib} -lglite_wms_tls_ssl_helpers
 
 LIB:=libglite_lb_client.la
