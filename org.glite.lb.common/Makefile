@@ -82,7 +82,7 @@ INSTALL:=libtool --mode=install install
 
 OBJS:=lb_gss.o lb_plain_io.o escape.o events.o mini_http.o query_rec.o \
 	status.o xml_conversions.o xml_parse.o ulm_parse.o param.o \
-	events_parse.o il_string.o il_int.o il_msg.o notifid.o \
+	events_parse.o il_string.o il_int.o notifid.o \
 	il_log.o il_msg.o context.o trio.o strio.o
 LOBJS:=${OBJS:.o=.lo}
 
