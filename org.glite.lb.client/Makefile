@@ -71,6 +71,7 @@ INSTALL:=libtool --mode=install install
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 	producer.o uiwrap.o
+TESTLIBOBJS:=consumer_fake.o
 
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
 PUB_HDRS:=CountRef.h Event.h JobJobStatus.h Notification.h ServerConnection.h \
@@ -84,8 +85,14 @@ PLUSTHROBJS:=${PLUSOBJS:.o=.thr.o}
 PLUSLOBJS:=${PLUSOBJS:.o=.lo}
 PLUSTHRLOBJS:=${PLUSOBJS:.o=.thr.lo}
 
+TESTLIBTHROBJS:=${TESTLIBOBJS:.o=.thr.o}
+TESTLIBLOBJS:=${TESTLIBOBJS:.o=.lo}
+TESTLIBTHRLOBJS:=${TESTLIBOBJS:.o=.thr.lo}
+
 LIB:=libglite_lb_client_${nothrflavour}.la
 THRLIB:=libglite_lb_client_${thrflavour}.la
+TESTLIB:=libglite_lb_client_test_${nothrflavour}.la
+TESTTHRLIB:=libglite_lb_client_test_${thrflavour}.la
 
 PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
@@ -93,12 +100,19 @@ THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 TOOLS:=dump load purge
 #EXAMPLES:=log_usertag_proxy job_reg feed_shark notify
 EXAMPLES:=job_reg feed_shark notify
+FAKE_EXAMPLES:=jog_log_fake
 
 ${LIB}: ${LIBOBJS}
 	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
 	${LINK} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
+
+${TESTLIB}: ${TESTLIBOBJS}
+	${LINK} -o $@ ${TESTLIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
+
+${TESTTHRLIB}: ${TESTLIBTHROBJS}
+	${LINK} -o $@ ${TESTLIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS}
 	${LINK} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
@@ -112,7 +126,13 @@ logevent: logevent.o args.o
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
+${FAKE_EXAMPLES}: job_log_fake.o ${TESTLIB}
+	${LINK} -o $@ $< ${TESTLIB} ${EXT_LIB} ${GLOBUS_LIBS}
+
 ${TOOLS}: ${LIB}
+
+job_log_fake.o: job_log.c
+	${COMPILE} ${GLOBUSINC} -c $< -o $@
 
 ${PLUSOBJS}: %.o: %.cpp
 	${CXXCOMPILE} ${GLOBUSINC} -c $<
@@ -120,10 +140,10 @@ ${PLUSOBJS}: %.o: %.cpp
 ${PLUSTHROBJS}: %.thr.o: %.cpp
 	${CXXCOMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
-${LIBOBJS}: %.o: %.c
+${LIBOBJS} ${TESTLIBOBJS}: %.o: %.c
 	${COMPILE} ${GLOBUSINC} -c $<
 
-${LIBTHROBJS}: %.thr.o: %.c
+${LIBTHROBJS} ${TESTLIBTHROBJS}: %.thr.o: %.c
 	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
 # catches $TOOLS and logevent compilation
@@ -143,7 +163,7 @@ ${LIBTHROBJS}: %.thr.o: %.c
 default: all
 
 
-compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${EXAMPLES} ${PLUSLIB} ${THRPLUSLIB}
+compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${EXAMPLES} ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} ${FAKE_EXAMPLES}
 
 examples: ${EXAMPLES}
 
@@ -177,9 +197,9 @@ install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	for p in ${TOOLS} logevent; do \
+	for p in ${TOOLS} logevent ${FAKE_EXAMPLES}; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 
