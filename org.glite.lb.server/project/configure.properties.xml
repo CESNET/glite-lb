@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.4  2004/10/15 11:03:03  jskrabal
+	- merge fixes
+	
 	Revision 1.3  2004/10/06 08:14:36  dkouril
 	Support for VOMS and GACL (gridsite) from SCM CVS
 	- legacy names of GACL routines changed to new ones, which also prevents from
@@ -73,6 +76,7 @@ mysql_prefix=${with.mysql.prefix}
 cppunit=${with.cppunit.prefix}
 gridsite_prefix=${with.gridsite.prefix}
 gsoap_prefix=${with.gsoap.prefix}
+voms_prefix=${with.voms.prefix}
 			</echo>
 	    </target>
 	</project>
