@@ -24,7 +24,7 @@ start()
 
 	echo -n Starting glite-lb-bkserver ...
 	su $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
-		$creds -i $pidfile" && echo " done"
+		$creds -i $pidfile $port" && echo " done"
 }
 
 stop()
