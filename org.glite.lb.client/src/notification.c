@@ -460,13 +460,13 @@ static int gss_reader(char *buffer, int max_len)
   if(ret < 0)
     switch(ret) {
     case EDG_WLL_GSS_ERROR_TIMEOUT:
-      ret = edg_wll_SetError(tmp_ctx, ETIMEDOUT, "read message");
+      edg_wll_SetError(tmp_ctx, ETIMEDOUT, "read message");
       break;
     case EDG_WLL_GSS_ERROR_EOF:
-      ret = edg_wll_SetError(tmp_ctx, ENOTCONN, NULL);
+      edg_wll_SetError(tmp_ctx, ENOTCONN, NULL);
       break;
     default:
-      ret = edg_wll_SetError(tmp_ctx, EDG_WLL_ERROR_GSS, "read message");
+      edg_wll_SetError(tmp_ctx, EDG_WLL_ERROR_GSS, "read message");
       break;
     }
 
