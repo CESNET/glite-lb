@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "glite/lb/il_string.h"
+#include "glite/lb/il_msg.h"
 #include "glite/lb/context-int.h"
 
 #include "store.h"
@@ -16,28 +17,21 @@
 #endif
     
 int 
-handle_request(edg_wll_Context ctx,char *buf, int len UNUSED_VAR)
+handle_request(edg_wll_Context ctx,char *buf)
 {
-  char *p = buf;
-  char *event, *ucs;
+  char *event;
   int ret;
 
   edg_wll_ResetError(ctx);
 
-  p = get_string(p, &ucs);
-  if(p == NULL) return edg_wll_SetError(ctx,EDG_WLL_IL_PROTO,"reading UCS");
-
-  p = get_string(p, &event);
-  if(p == NULL) {
+  ret = decode_il_msg(&event, buf);
+  if(ret < 0) {
     edg_wll_SetError(ctx,EDG_WLL_IL_PROTO,"reading event string");
-    if(ucs) free(ucs);
     return EDG_WLL_IL_PROTO;
   }
 
-  ret = db_store(ctx,ucs, event);
+  ret = db_store(ctx, "NOT USED", event);
 
-  if(ucs)
-    free(ucs);
   if(event)
     free(event);
 
@@ -46,10 +40,9 @@ handle_request(edg_wll_Context ctx,char *buf, int len UNUSED_VAR)
 
 
 int 
-create_reply(const edg_wll_Context ctx,char *buf, int max_len)
+create_reply(const edg_wll_Context ctx, char **buf)
 {
   int len, err_code, err_code_min;
-  char *p;
   char *err_msg;
 
   err_code_min = 0;
@@ -77,19 +70,8 @@ create_reply(const edg_wll_Context ctx,char *buf, int max_len)
 
   if (!err_msg) err_msg=strdup("OK");
   
-  len = 17 + len_int(err_code) + len_int(err_code_min) + len_string(err_msg);
-  if(len > max_len) {
-    free(err_msg);
-    return(0);
-  }
-
-  snprintf(buf, max_len, "%16d\n", len - 17);
-  p = buf + 17;
-  p = put_int(p, err_code);
-  p = put_int(p, err_code_min);
-  p = put_string(p, err_msg);
+  len = encode_il_reply(buf, err_code, err_code_min, err_msg);
   free(err_msg);
-  
   return(len);
 }
 

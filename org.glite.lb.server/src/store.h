@@ -34,8 +34,8 @@ edg_wll_ErrorCode edg_wll_StepIntState(
 );
 
 int db_store(edg_wll_Context,char *,char *);
-int handle_request(edg_wll_Context,char *, int);
-int create_reply(const edg_wll_Context,char *,int);
+int handle_request(edg_wll_Context,char *);
+int create_reply(const edg_wll_Context,char **);
 
 int edg_wll_delete_event(edg_wll_Context,const char *, int);
 
