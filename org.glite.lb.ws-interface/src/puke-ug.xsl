@@ -11,12 +11,11 @@
 
 	<chapter>
 		<title><xsl:value-of select="@name"/></title>
-		<para> <xsl:value-of select="text()"/> </para>
 		<sect1>
 			<title>Operations</title>
-				<itemizedlist>
-					<xsl:apply-templates select="op"/>
-				</itemizedlist>
+				<xsl:apply-templates select="op">
+					<xsl:sort select="@name"/>
+				</xsl:apply-templates>
 		</sect1>
 	
 		<sect1>
@@ -28,57 +27,92 @@
 	
 </xsl:template>
 
-<xsl:template match="op" >
-	<listitem>
-		<para>
-		<funcsynopsis>
-			<funcprototype>
-				<funcdef>
-					<xsl:value-of select="./output/@type"/>
-					<function>
-						<xsl:value-of select="@name"/>
-					</function>
-				</funcdef>
-				<xsl:for-each select="./input">
-					<paramdef>
-						<xsl:value-of select="@type "/>
-						<parameter><xsl:value-of select="@name"/></parameter>
-					</paramdef>
-				</xsl:for-each>
-			</funcprototype>
-		</funcsynopsis>
-		</para>
-		<para> <xsl:value-of select="text()"/> </para>
-	</listitem>
+<xsl:template match="input|output|fault">
+	<varlistentry>
+		<term>
+			<type>
+				<xsl:choose>
+					<xsl:when test="@type!='string' and @type!='int'">
+						<link linkend="type:{@type}">
+							<xsl:value-of select="@type "/>
+						</link>
+					</xsl:when>
+					<xsl:otherwise>xsd:<xsl:value-of select="@type "/></xsl:otherwise>
+				</xsl:choose>
+			</type>
+			<parameter><xsl:value-of select="@name"/></parameter>
+		</term>
+		<listitem>
+			<simpara><xsl:value-of select="text()"/></simpara>
+		</listitem>
+	</varlistentry>
 </xsl:template>
 
-<xsl:template match="op" mode="detail">
+<xsl:template match="op" >
+	<sect2 id="op:{@name}">
+		<title><xsl:value-of select="@name"/></title>
+		<para><xsl:value-of select="text()"/></para>
+		<para>
+			Inputs:
+			<xsl:choose>
+				<xsl:when test="count(./input)>0">
+					<variablelist>
+						<xsl:apply-templates select="./input"/>
+					</variablelist>
+				</xsl:when>
+				<xsl:otherwise>N/A</xsl:otherwise>
+			</xsl:choose>
+		</para>
+		<para>
+			Outputs:
+			<variablelist>
+				<xsl:apply-templates select="./output"/>
+			</variablelist>
+		</para>
+	</sect2>
 </xsl:template>
 
 <xsl:template match="types">
 	<xsl:for-each select="flags|enum|struct">
 		<xsl:sort select="@name"/>
-		<sect2>
+		<sect2 id="type:{@name}">
 			<title> <xsl:value-of select="@name"/> </title>
+			<para> <xsl:value-of select="text()"/> </para>
 			<xsl:choose>
 				<xsl:when test="name(.)='struct'">
 					<para> <emphasis>Structure</emphasis> (sequence complex type in WSDL)</para>
+					<para> Fields: ( <type>type </type> <structfield>name</structfield> description )</para>
 				</xsl:when>
 				<xsl:when test="name(.)='enum'">
-					<para> <emphasis>Enumeration</emphasis> (restriction of xsd:string in WSDL)</para>
+					<para> <emphasis>Enumeration</emphasis> (restriction of xsd:string in WSDL),
+						exactly one of the values must be specified.
+					</para>
+					<para> Values: </para>
 				</xsl:when>
 				<xsl:when test="name(.)='flags'">
-					<para> <emphasis>Flags</emphasis> (sequence of restricted xsd:string in WSDL)</para>
+					<para> <emphasis>Flags</emphasis> (sequence of restricted xsd:string in WSDL),
+						any number of values can be specified together.
+					</para>
+					<para> Values: </para>
 				</xsl:when>
 			</xsl:choose>
-			<para> <xsl:value-of select="text()"/> </para>
 			<variablelist>
 				<xsl:for-each select="elem|val">
 					<varlistentry>
 						<term>
 							<xsl:choose>
 								<xsl:when test="name(.)='elem'">
-									<type><xsl:value-of select="@type"/></type>
+									<type>
+										<xsl:choose>
+											<xsl:when test="@type!='string' and @type!='int' and @type!='xsd:string' and @type!='xsd:int' and @type!='xsd:boolean' and @type!='xsd:long'">
+												<link linkend="type:{@type}">
+													<xsl:value-of select="@type "/> 
+												</link>
+											</xsl:when>
+											<xsl:otherwise><xsl:value-of select="@type "/></xsl:otherwise>
+										</xsl:choose>
+									</type>
+									<!-- <type><xsl:value-of select="@type"/></type> -->
 									<xsl:value-of select="' '"/>
 									<structfield><xsl:value-of select="@name"/></structfield>
 								</xsl:when>
@@ -88,7 +122,11 @@
 							</xsl:choose>
 						</term>
 						<listitem>
-							<simpara><xsl:value-of select="text()"/></simpara>
+							<simpara>
+								<xsl:if test="@optional = 'yes'"> (optional) </xsl:if>
+								<xsl:if test="@list = 'yes'"> (multiple occurence) </xsl:if>
+								<xsl:value-of select=" text()"/>
+							</simpara>
 						</listitem>
 					</varlistentry>
 				</xsl:for-each>
