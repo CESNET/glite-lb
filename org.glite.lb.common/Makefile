@@ -18,6 +18,7 @@ expat_prefix=/opt/expat
 ares_prefix=/opt/ares
 
 -include Makefile.inc
+-include ../Makefile.inc
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
@@ -104,11 +105,14 @@ ${THRLTLIB}: ${THROBJS}
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
-check: check.parse check.gss check.il
+check: compile check.parse check.gss check.il
 
-check.parse: parse.cpp
+check.parse: test_parse
+	./test_parse
+
+test_parse: parse.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ parse.o ${LTLIB} ${TEST_LIBS}
+	${LINKXX} -o test_parse parse.o ${LTLIB} ${TEST_LIBS}
 
 check.gss: test_gss
 	# ./test_gss
@@ -120,8 +124,13 @@ check.il: il_test
 test_gss: test_gss.o
 	${LINKXX} -o $@ test_gss.o ${LTLIB} ${TEST_LIBS}
 
-il_test: il_test.o il_int_test.o il_string_test.o il_string.o il_int.o
+il_test: il_test.o il_int_test.o il_string_test.o
 	${LINKXX} -o $@ ${LTLIB} ${TEST_LIBS} $+
+
+test_coverage:
+	-mkdir coverage
+	cd coverage && $(MAKE) -f ../Makefile top_srcdir=../../ COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage" check
+	cd coverage && for i in ${OBJS}; do gcov -o .libs/ $$i ; done
 
 dist: distsrc distbin
 

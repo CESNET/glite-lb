@@ -29,6 +29,7 @@ public:
 		int d;
 		get_int("17\n", &d);
 		CPPUNIT_ASSERT(d == 17);
+		CPPUNIT_ASSERT(get_int("17 \n", &d) == NULL);
 	}
 
 	void testLenInt() {

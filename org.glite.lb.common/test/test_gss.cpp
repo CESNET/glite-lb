@@ -61,12 +61,13 @@ void GSSTest::setUp(void) {
 	edg_wll_GssStatus stat;
 	struct sockaddr_in      a;
 	socklen_t 		alen = sizeof(a);
-	char *			cred_file = getenv("X509_USER_PROXY");
+	char *			cred_file = NULL;
 
 	timeout.tv_sec = 10;
 	timeout.tv_usec = 0;
 	
-	CPPUNIT_ASSERT(cred_file);
+	cred_file = getenv("X509_USER_PROXY");
+	CPPUNIT_ASSERT_MESSAGE("credential file", cred_file);
 	
 	if (edg_wll_gss_acquire_cred_gsi(cred_file, &my_cred, &my_subject, &stat))
 		CPPUNIT_ASSERT_MESSAGE("gss_acquire_cred", 0);
