@@ -15,14 +15,25 @@ typedef struct _edg_wll_Acl {
 } _edg_wll_Acl;
 typedef struct _edg_wll_Acl *edg_wll_Acl;
 
-#ifndef NO_VOMS
-
 # ifndef NO_GACL
 
-#include <stdio.h>
+extern int
+edg_wll_DecodeACL(char *, GRSTgaclAcl **);
 
-#include "glite/lb/context-int.h"
-#include "glite/lb/lb_gss.h"
+extern int
+edg_wll_EncodeACL(GRSTgaclAcl *, char **);
+
+#else
+
+extern int
+edg_wll_DecodeACL(char *, void **);
+
+extern int
+edg_wll_EncodeACL(void *, char **);
+
+#endif /* NO_GACL */
+
+/* we have NO_VOMS||NO_GACL placeholders for following routines */
 
 extern int
 edg_wll_InitAcl(edg_wll_Acl *);
@@ -37,22 +48,12 @@ extern int
 edg_wll_CheckACL(edg_wll_Context, edg_wll_Acl, int);
 
 extern int
-edg_wll_DecodeACL(char *, GRSTgaclAcl **);
-
-extern int
-edg_wll_EncodeACL(GRSTgaclAcl *, char **);
-
-extern int
 edg_wll_GetACL(edg_wll_Context, edg_wlc_JobId, edg_wll_Acl *);
-
-#endif /* NO_GACL */
 
 extern int
 edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *, char *, char *);
 
 extern void
 edg_wll_FreeVomsGroups(edg_wll_VomsGroups *);
-
-#endif /* NO_VOMS */
 
 #endif
