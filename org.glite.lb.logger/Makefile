@@ -117,5 +117,3 @@ ${INTERLOG_OBJS}: %.o: %.c
 ${LOGD_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
 
-logd_proto_test.o: logd_proto_test.cpp
-	${CXX} ${CFLAGS} ${GLOBUSINC} ${TEST_INC} -c $< -o $@
