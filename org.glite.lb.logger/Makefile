@@ -87,7 +87,7 @@ stage: compile
 
 check: check.ll
 
-check.ll: logd_proto_test.o ll_test.cpp
+check.ll: logd_proto_test.o ll_test.o
 	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS} ${TEST_LIBS} $<
 	./check.ll
 
@@ -119,3 +119,6 @@ ${LOGD_OBJS}: %.o: %.c
 
 logd_proto_test.o: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
+
+ll_test.o: ll_test.cpp
+	${CXX} ${CFLAGS} -c $< -0 $@

@@ -5,6 +5,10 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
+extern "C" {
+#define DEFAULT_SOCKET "/tmp/interlogger.sock"
+char *socket_path = DEFAULT_SOCKET;
+}
 
 class LLTest: public  CppUnit::TestFixture
 {
@@ -15,20 +19,26 @@ class LLTest: public  CppUnit::TestFixture
 public:
 
   void setUp() {
+    pipe(pd);
   }
 
   void tearDown() {
+    close(pd[0]);
+    close(pd[1]);
   }
 
   void testProtoServer() {
   }
 
+private:
+  int  pd[2];
 };
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION( LLTest );
 
-int main (int ac,const char *av[])
+int 
+main (int ac,const char *av[])
 {
 	CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 	CppUnit::TextUi::TestRunner runner;
