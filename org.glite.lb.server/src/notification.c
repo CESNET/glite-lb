@@ -362,7 +362,7 @@ int edg_wll_NotifDropServer(
 	edg_wll_NotifId				   *nid)
 {
 	char	   *nid_s = NULL,
-			   *stmt;
+			   *stmt = NULL;
 	int			ret;
 
 
