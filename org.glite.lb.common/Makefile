@@ -25,7 +25,7 @@ SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
-	-I${top_srcdir}/${stagedir}/include \
+	-I${stagedir}/include \
 	-I${glite_location}/include \
     -I${globus_prefix}/include/${globusflavour} \
 	-I${globus_prefix}/include/${globusflavour}/openssl \
@@ -37,14 +37,14 @@ GLITE_LIBS:=-L${glite_location}/lib
 GLOBUS_LIBS:=-L${globus_prefix}/lib
 EXPAT_LIBS:=-L${expat_prefix}/lib
 ARES_LIBS:=-L${ares_prefix}/lib
-LDFLAGS:=-L${top_srcdir}/${stagedir}/lib \
+LDFLAGS:=-L${stagedir}/lib \
     ${GLITE_LIBS} \
     ${GLOBUS_LIBS} \
     ${EXPAT_LIBS} \
     ${ARES_LIBS}
     
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${top_srcdir}/${stagedir}/lib ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 OBJS:=dgssl.o escape.o events.o mini_http.o query_rec.o status.o \
@@ -73,7 +73,7 @@ ${LTLIB}: ${OBJS}
 		-lglobus_ssl_utils -lglite_wms_cjobid \
 		-lm
 
-stage export all: compile
+stage: compile
 	${INSTALL} -m 644 ${STATICLIB} ${stagelib}
 	${INSTALL} -m 644 ${LTLIB} ${stagelib}
 	cd ${interface} && install -m 644 ${HDRS} ${stageinc}/${globalprefix}/${lbprefix}
