@@ -1,7 +1,3 @@
-CREATE DATABASE  lbserver20;
-GRANT ALL PRIVILEGES ON lbserver20.* TO lbserver@localhost IDENTIFIED BY '';
-USE lbserver20;
-
 create table jobs (
 	jobid		char(32)	binary not null,
 	dg_jobid	varchar(255)	binary not null,
