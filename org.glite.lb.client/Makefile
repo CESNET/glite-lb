@@ -107,7 +107,7 @@ LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
-	producer.o uiwrap.o
+	producer.o uiwrap.o statistics.o
 FAKELIBOBJS:=consumer_fake.o producer_fake.o
 
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
@@ -135,7 +135,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge
-EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code
+EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats
 FAKE_EXAMPLES:=job_log_fake
 
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
