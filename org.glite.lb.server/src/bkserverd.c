@@ -969,9 +969,6 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 			/*	fallthrough
 			 */
 		case ENOTCONN:
-			edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, NULL);
-			edg_wll_FreeContext(ctx);
-			ctx = NULL;
 			free(errt); free(errd);
 			dprintf(("[%d] Connection closed\n", getpid()));
 			/*
@@ -1039,9 +1036,6 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 			/*	fallthrough
 			 */
 		case ENOTCONN:
-			edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, NULL);
-			edg_wll_FreeContext(ctx);
-			ctx = NULL;
 			free(errt); free(errd);
 			dprintf(("[%d] Connection closed\n", getpid()));
 			/*
@@ -1159,12 +1153,9 @@ int bk_clnt_disconnect(int conn, struct timeval *timeout, void *cdata)
 
 
 	if ( ctx->connPool[ctx->connToUse].gss.context != GSS_C_NO_CONTEXT)
-	{
-		struct timeval	to = { 0, CLNT_REJECT_TIMEOUT };
-
-		edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, &to);
-	}
+		edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, timeout);
 	edg_wll_FreeContext(ctx);
+	ctx = NULL;
 
 	return 0;
 }
