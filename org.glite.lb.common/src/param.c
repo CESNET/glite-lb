@@ -34,13 +34,13 @@ static const char *myenv[] = {
 	"EDG_WL_NOTIF_SERVER",
 	"EDG_WL_NOTIF_SERVER",
 	"EDG_WL_NOTIF_TIMEOUT",
-	"EDG_WL_LBPROXY_STORE_SOCK",
-	"EDG_WL_LBPROXY_SERVE_SOCK",
-	"EDG_WL_LBPROXY_USER",
 /* don't care about X509_USER_*, GSI looks at them anyway */
 	NULL,
 	NULL,
 	NULL,
+	"EDG_WL_LBPROXY_STORE_SOCK",
+	"EDG_WL_LBPROXY_SERVE_SOCK",
+	"EDG_WL_LBPROXY_USER",
 };
 
 /* XXX: does not parse URL, just hostname[:port] */

@@ -40,6 +40,13 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
 	-DDATAGRID_EXTENSION
 
+# We must follow major version changes of org.glite.lb.client-interface due to
+# binary compatibility. However, we may live a life of our own, changing our
+# major version more frequently. This variable specifies how many steps ahead
+# we are.
+
+VERSION_AHEAD=0
+
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${nothrflavour} \
         -lglobus_gssapi_gsi_${nothrflavour} \
@@ -86,7 +93,9 @@ THRLTLIB:=libglite_lb_common_${thrflavour}.la
 
 default: all
 
-all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
+all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
+
+version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
 ${STATICLIB}: ${OBJS}
 	ar crv $@ ${OBJS}
@@ -97,12 +106,12 @@ ${THRSTATICLIB}: ${THROBJS}
 	ranlib $@
 
 ${LTLIB}: ${OBJS}
-	${LINK} -o $@ ${LOBJS} \
+	${LINK} ${version_info} -o $@ ${LOBJS} \
 		-lglite_wmsutils_cjobid \
 		-lm
 
 ${THRLTLIB}: ${THROBJS}
-	${LINK} -o $@ ${THRLOBJS} \
+	${LINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_wmsutils_cjobid \
 		-lm
 
@@ -190,3 +199,13 @@ il_int_test.o il_string_test.o il_test.o: %.o: %.cpp
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
+
+check_version:
+	@perl -ne '/#define GLITE_LB_CLIENT_INTERFACE "(\d+)\.\d+\.\d+"/; \
+		$$iface=$$1; \
+		$$_="${version}"; /(\d+)\.\d+\.\d+/; \
+		if ($$iface + ${VERSION_AHEAD} != $$1) { \
+			print "error: Major version of the interface ($$iface+${VERSION_AHEAD}) does not match implementation ($$1)\n" ;\
+			exit 1;  \
+		} \
+		' ${stagedir}/include/glite/lb/interface_version.h

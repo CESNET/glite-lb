@@ -100,7 +100,6 @@ static const char* const errTexts[] = {
 	"Duplicate ULM key",
 	"Misuse of ULM key",
 	"Warning: extra ULM fields",
-	"Compared events differ",
 	"XML Parse error",
 	"Server response error",
 	"Bad JobId format",
@@ -108,12 +107,13 @@ static const char* const errTexts[] = {
 	"Bad URL format",
 	"MD5 key clash",
 	"GSSAPI Error",
+	"DNS resolver error",
 	"No JobId specified in context",
 	"No indexed condition in query",
 	"Interlogger protocol error",
 	"Interlogger internal error",
-	"Interlogger has events pending"
-	"DNS resolver error",
+	"Interlogger has events pending",
+	"Compared events differ",
 };
 
 const char *edg_wll_GetErrorText(int code) {
