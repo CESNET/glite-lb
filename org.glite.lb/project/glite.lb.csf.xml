@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.1  2004/06/18 23:05:53  dimeglio
+	Added/upgraded default build scripts
+	
 -->
 
 
@@ -115,6 +118,12 @@
 		<condition property="common.head">
 			<equals arg1="${org.glite.lb.common.version}" arg2="HEAD" />
 		</condition>
+		<condition property="client-interface.head">
+			<equals arg1="${org.glite.lb.client-interface.version}" arg2="HEAD" />
+		</condition>
+		<condition property="client.head">
+			<equals arg1="${org.glite.lb.client.version}" arg2="HEAD" />
+		</condition>
     </target>
 
     <presetdef name="cvs-co">
@@ -174,7 +183,9 @@
 		 ===================================================== -->
 	
 	<!-- All project modules -->
- 	<target name="project" depends=""/>
+ 	<target name="project" depends="common,
+ 									client-interface,
+ 									client"/>
 
 	<!-- common -->
  	<target name="common" depends="get.common.head, get.common.tag"/>
@@ -184,6 +195,26 @@
 	<target name="get.common.tag" unless="common.head">
 		<cvs-co package="org.glite.lb.common"
 			tag="${org.glite.lb.common.version}" />
+	</target>
+
+	<!-- client-interface -->
+ 	<target name="client-interface" depends="get.client-interface.head, get.client-interface.tag"/>
+	<target name="get.client-interface.head" if="client-interface.head">
+		<cvs-co package="org.glite.lb.client-interface" />
+	</target>
+	<target name="get.client-interface.tag" unless="client-interface.head">
+		<cvs-co package="org.glite.lb.client-interface"
+			tag="${org.glite.lb.client-interface.version}" />
+	</target>
+
+	<!-- client -->
+ 	<target name="client" depends="get.client.head, get.client.tag"/>
+	<target name="get.client.head" if="client.head">
+		<cvs-co package="org.glite.lb.client" />
+	</target>
+	<target name="get.client.tag" unless="client.head">
+		<cvs-co package="org.glite.lb.client"
+			tag="${org.glite.lb.client.version}" />
 	</target>
 
 	<!-- ====================================================
