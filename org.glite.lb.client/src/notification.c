@@ -880,11 +880,10 @@ select:
 		goto err;
 	}
 	
-	if ( id_out ) {
+	if (id_out) { 
 		*id_out = event->notification.notifId;
 		event->notification.notifId = NULL;
 	}
-	
 	
 err:
 	if (event) { 
