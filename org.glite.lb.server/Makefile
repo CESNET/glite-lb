@@ -97,7 +97,7 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	${myslqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
 	${GRIDSITE_LIBS} \
-	-lvomsc \
+	-lvomsc_${nothrflavour} \
 	${GLOBUS_LIBS}
 
 GSOAP_LIBS:= -L${gsoap_prefix}/lib -lgsoap
@@ -224,10 +224,10 @@ ws_query_ext: ws_query_ext.o ${WS_CLIENT_OBJS}
 stdsoap2_patched.o:
 	${CC} ${CFLAGS} -c -o $@ ${STDSOAP2C}
 
-test_ws_plugin.o test_ws_plugin.lo: ws_plugin.c
-	${CC} ${CFLAGS} -DPLUGIN_TEST -c -o $@ ${top_srcdir}/src/ws_plugin.c
+test_ws_plugin.o: ws_plugin.c
+	${COMPILE} ${CFLAGS} -DPLUGIN_TEST -c -o $@ ${top_srcdir}/src/ws_plugin.c
 
-${LT_LIB_PS}: ${L_LIB_OBJS_PS}
+${LT_LIB_PS}: ${LIB_OBJS_PS}
 	${LINK} -o $@ ${L_LIB_OBJS_PS}
 
 ${STATIC_LIB_PS}: ${LIB_OBJS_PS}
