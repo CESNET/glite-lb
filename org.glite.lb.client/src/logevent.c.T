@@ -19,7 +19,6 @@
 #include "glite/lb/notifid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/events.h"
-#include "glite/wmsutils/tls/ssl_helpers/ssl_inits.h"
 
 #include "args.h"
 

@@ -18,7 +18,6 @@
 #include "glite/lb/ulm_parse.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/mini_http.h"
-#include "glite/wmsutils/tls/ssl_helpers/ssl_inits.h"
 
 #define dprintf(x) { if (debug) printf x; }
 
