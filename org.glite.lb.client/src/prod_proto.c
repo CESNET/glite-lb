@@ -247,11 +247,10 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_Connection *
 {
 	char *p;  int  len;
 	char *ucs = "honik6";
-	char *buffer,*answer;
+	char *buffer,*answer = NULL;
 	int	err;
 	int	code;
 	int	count;
-	int	size;
 
 	errno = err = code = count = 0;
 	edg_wll_ResetError(context);
@@ -276,7 +275,7 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_Connection *
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"Sending message to socket...\n");
 #endif
-	if (( count = edg_wll_plain_write_full(conn, buffer, size, &context->p_tmp_timeout)) < 0) {
+	if (( count = edg_wll_plain_write_full(conn, buffer, len, &context->p_tmp_timeout)) < 0) {
 		edg_wll_SetError(context,LB_PROTO,"edg_wll_log_proto_client_proxy(): error sending message to socket");
 		goto edg_wll_log_proto_client_proxy_end;
 	}
