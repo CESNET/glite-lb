@@ -27,7 +27,9 @@
 
 #include <globus_common.h>
 
+#ifdef GLITE_LB_SERVER_WITH_WS
 #include <stdsoap2.h>
+#endif /* GLITE_LB_SERVER_WITH_WS */
 
 #include "glite/lb/srvbones.h"
 #include "glite/lb/consumer.h"
@@ -43,7 +45,10 @@
 #include "lbs_db.h"
 #include "lb_authz.h"
 #include "il_notification.h"
+
+#ifdef GLITE_LB_SERVER_WITH_WS
 #include "ws_plugin.h"
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 
 extern int edg_wll_StoreProto(edg_wll_Context ctx);
 extern edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs);
@@ -116,7 +121,9 @@ static struct option opts[] = {
 	{"CAdir",	1, NULL,	'C'},
 	{"VOMSdir",	1, NULL,	'V'},
 	{"port",	1, NULL,	'p'},
+#ifdef GLITE_LB_SERVER_WITH_WS
 	{"wsport",  1, NULL,    'w'},
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 	{"address",	1, NULL,	'a'},
 	{"debug",	0, NULL,	'd'},
 	{"rgmaexport",	0, NULL,	'r'},
@@ -138,6 +145,12 @@ static struct option opts[] = {
 	{NULL,0,NULL,0}
 };
 
+#ifdef GLITE_LB_SERVER_WITH_WS
+static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:";
+#else
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:";
+#endif	/* GLITE_LB_SERVER_WITH_WS */
+
 static void usage(char *me) 
 {
 	fprintf(stderr,"usage: %s [option]\n"
@@ -147,7 +160,9 @@ static void usage(char *me)
 		"\t-C, --CAdir\t trusted certificates directory\n"
 		"\t-V, --VOMSdir\t trusted VOMS servers certificates directory\n"
 		"\t-p, --port\t port to listen\n"
+#ifdef GLITE_LB_SERVER_WITH_WS
 		"\t-w, --wsport\t port to serve the web services requests\n"
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 		"\t-m, --mysql\t database connect string\n"
 		"\t-d, --debug\t don't run as daemon, additional diagnostics\n"
 		"\t-r, --rgmaexport write state info to RGMA interface\n"
@@ -192,6 +207,7 @@ int bk_accept_serve(int, void *);
 int bk_accept_store(int, void *);
 int bk_clnt_disconnect(int, void *);
 
+#ifdef GLITE_LB_SERVER_WITH_WS
 	/*
 	 *	WS handlers
 	 */
@@ -199,20 +215,26 @@ int bk_handle_ws_connection(int, struct timeval, void *);
 int bk_accept_ws(int, void *);
 int bk_ws_clnt_reject(int);
 int bk_ws_clnt_disconnect(int, void *);
-
+#endif 	/*GLITE_LB_SERVER_WITH_WS */
 
 #define SRV_SERVE		0
 #define SRV_STORE		1
+#ifdef GLITE_LB_SERVER_WITH_WS
 #define SRV_WS			2
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 static struct glite_srvbones_service service_table[] = {
 	{ "serve",	-1, bk_handle_connection, bk_accept_serve, bk_clnt_reject, bk_clnt_disconnect },
 	{ "store",	-1, bk_handle_connection, bk_accept_store, bk_clnt_reject, bk_clnt_disconnect },
+#ifdef GLITE_LB_SERVER_WITH_WS
 	{ "WS",		-1, bk_handle_ws_connection, bk_accept_ws, bk_ws_clnt_reject, bk_ws_clnt_disconnect }
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 };
 
 struct clnt_data_t {
 	edg_wll_Context			ctx;
+#ifdef GLITE_LB_SERVER_WITH_WS
 	struct soap			   *soap;
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 	void				   *mysql;
 	edg_wll_QueryRec	  **job_index;
 	edg_wll_IColumnRec	   *job_index_cols;
@@ -227,9 +249,12 @@ int main(int argc, char *argv[])
 	char			   *mysubj = NULL;
 	int					opt;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
-					   *port, *ws_port,
+					   *port,
 					   *name,
 					   *cert, *key;
+#ifdef GLITE_LB_SERVER_WITH_WS
+	char			   *ws_port;
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 	FILE			   *fpid;
 	key_t				semkey;
 	edg_wll_Context		ctx;
@@ -243,7 +268,9 @@ int main(int argc, char *argv[])
 	if (name) name++; else name = argv[0];
 
 	asprintf(&port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT);
+#ifdef GLITE_LB_SERVER_WITH_WS
 	asprintf(&ws_port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT+2);
+#endif 	/* GLITE_LB_SERVER_WITH_WS */
 	cert = key = cadir = vomsdir = NULL;
 
 /* no magic here: 1 month, 3 and 7 days */
@@ -267,14 +294,16 @@ int main(int argc, char *argv[])
 	if (geteuid()) snprintf(pidfile,sizeof pidfile,"%s/edg-bkserverd.pid",
 			getenv("HOME"));
 
-	while ((opt = getopt_long(argc,argv,"a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:",opts,NULL)) != EOF) switch (opt) {
+	while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
 		case 'a': fake_host = strdup(optarg); break;
 		case 'c': cert = optarg; break;
 		case 'k': key = optarg; break;
 		case 'C': cadir = optarg; break;
 		case 'V': vomsdir = optarg; break;
 		case 'p': free(port); port = strdup(optarg); break;
+#ifdef GLITE_LB_SERVER_WITH_WS
 		case 'w': free(ws_port); ws_port = strdup(optarg); break;
+#endif /* GLITE_LB_SERVER_WITH_WS */
 		case 'd': debug = 1; break;
 		case 'r': rgma_export = 1; break;
 		case 'm': dbstring = optarg; break;
@@ -427,6 +456,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 	}
 	if ( listen(service_table[SRV_STORE].conn, CON_QUEUE) ) { perror("listen()"); return 1; }
 
+#ifdef GLITE_LB_SERVER_WITH_WS
 	service_table[SRV_WS].conn = socket(PF_INET, SOCK_STREAM, 0);
 	if ( service_table[SRV_WS].conn < 0) { perror("socket()"); return 1; }
 	a.sin_family = AF_INET;
@@ -442,6 +472,8 @@ a.sin_addr.s_addr = INADDR_ANY;
 		return 1;
 	}
 	if ( listen(service_table[SRV_WS].conn, CON_QUEUE) ) { perror("listen()"); return 1; }
+
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 
 	if (!cert || !key)
 		fprintf(stderr, "%s: key or certificate file not specified"
@@ -462,7 +494,10 @@ a.sin_addr.s_addr = INADDR_ANY;
 
 	if ( noAuth ) dprintf(("Promiscuous mode\n"));
 	dprintf(("Listening at %d,%d (accepting protocols: " COMP_PROTO " and compatible) ...\n",atoi(port),atoi(port)+1));
+
+#ifdef GLITE_LB_SERVER_WITH_WS
 	dprintf(("Listening at %d (accepting web service protocol) ...\n", atoi(ws_port)));
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 
 	if (!dbstring) dbstring = getenv("LBDB");
 
@@ -799,6 +834,7 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 	return 0;
 }
 
+#ifdef GLITE_LB_SERVER_WITH_WS
 int bk_handle_ws_connection(int conn, struct timeval client_start, void *data)
 {
     struct clnt_data_t	   *cdata = (struct clnt_data_t *) data;
@@ -827,6 +863,7 @@ int bk_handle_ws_connection(int conn, struct timeval client_start, void *data)
 
 	return 0;
 }
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 
 int bk_accept_store(int conn, void *cdata)
 {
@@ -951,6 +988,7 @@ int bk_accept_serve(int conn, void *cdata)
 }
 
 
+#ifdef GLITE_LB_SERVER_WITH_WS
 int bk_accept_ws(int conn, void *cdata)
 {
 	struct soap		   *soap = ((struct clnt_data_t *) cdata)->soap;
@@ -1018,6 +1056,7 @@ int bk_accept_ws(int conn, void *cdata)
 
 	return 0;
 }
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 
 
 int bk_clnt_disconnect(int conn, void *cdata)
@@ -1036,6 +1075,7 @@ int bk_clnt_disconnect(int conn, void *cdata)
 	return 0;
 }
 
+#ifdef GLITE_LB_SERVER_WITH_WS
 int bk_ws_clnt_disconnect(int conn, void *cdata)
 {
 	int		rv;
@@ -1048,6 +1088,7 @@ int bk_ws_clnt_disconnect(int conn, void *cdata)
 
 	return 0;
 }
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 
 int bk_clnt_reject(int conn)
 {
@@ -1061,10 +1102,12 @@ int bk_clnt_reject(int conn)
 	return 0;
 }
 
+#ifdef GLITE_LB_SERVER_WITH_WS
 int bk_ws_clnt_reject(int conn)
 {
 	return bk_clnt_reject(conn);
 }
+#endif	/* GLITE_LB_SERVER_WITH_WS */
 
 
 static void wait_for_open(edg_wll_Context ctx, const char *dbstring)
