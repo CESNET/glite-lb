@@ -46,7 +46,7 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 # major version more frequently. This variable specifies how many steps ahead
 # we are.
 
-VERSION_AHEAD=1
+VERSION_AHEAD=0
 
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${nothrflavour} \
@@ -99,8 +99,8 @@ THRLTLIB:=libglite_lb_common_${thrflavour}.la
 
 default: all
 
-#all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
-all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
+all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
+# all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
 
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
