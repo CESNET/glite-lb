@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.1.1.1  2004/11/25 15:20:10  akrenek
+	initial import
+	
 	Revision 1.5  2004/07/20 16:08:30  flammer
 	Changed incorrect my_... instead of .._template entries for subsystem and component.
 	
@@ -102,6 +105,13 @@
 	
 	<target name="localinit"
 		description="Module specific initialization tasks">
+		<copy toDir="${module.project.dir}">
+			<fileset dir="${subsystem.project.dir}">
+				<include name="at3" />
+				<include name="*.T" />
+				<include name="*.pm" />
+			</fileset>
+		</copy>
 		<antcall target="lbmakefiles" />
 	</target>
 	
