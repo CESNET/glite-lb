@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.16  2004/08/27 03:03:12  dimeglio
+	Preserve original timestamp when copying file and overwrite when new
+	
 	Revision 1.15  2004/08/27 02:46:52  dimeglio
 	Added logic to create the tagged dependencies properties file
 	
@@ -193,65 +196,6 @@
 		<antcall target="buildmodules">
 			<param name="target" value="doc"/>
 		</antcall>
-	</target>
-
-	<target name="tag" if="do.cvs.tag"
-		description="Apply tags.">
-
-		<antcall target="buildmodules">
-			<param name="target" value="tag"/>
-		</antcall>
-
-		<!-- Get global glite tag -->
-		<var name="module.build" unset="true"/>
-    	<property file="${global.project.dir}/version.properties" />
-		<property name="global.cvs.label" value="${global.prefix}_B_${module.build}" />
-
-		<!-- Increment build number -->
-		<propertyfile file="${module.version.file}">
-		  <entry  key="module.version" value="${module.version}"/>
-		  <entry  key="module.build" type="int" default="1" operation="+"/>
-		  <entry  key="module.age" value="${module.age}"/>
-		</propertyfile>
-		<exec dir="${module.project.dir}" executable="cvs">
-			<arg line="ci -m &quot;Incremented build number [GLBUILDER]&quot; version.properties" />
-		</exec>
-		<var name="module.build" unset="true"/>
-    	<property file="${module.version.file}" />
-    	
-		<!-- CVS Label -->
-		<property name="cvs.label" value="${module.package.name}_B_${module.build}" />
-
-		<!-- Update dependencies.properties file with new components tags -->
-		<echo file="${subsystem.project.dir}/modules.list.xml" append="true">
-	&lt;system name=&quot;${global.name}&quot; value=&quot;${global.cvs.label}&quot;/&gt;
-	&lt;subsystem name=&quot;${subsystem.name}&quot; value=&quot;${cvs.label}&quot;/&gt;
-
-&lt;/moduleslist&gt;
-		</echo>
-		<copy file="${module.project.dir}/dependencies.properties"
-			  tofile="${module.project.dir}/dependencies.properties.HEAD"
-			  preservelastmodified="true"
-			  overwrite="true" />
-		<xslt style="${global.project.dir}/tagged.dependencies.properties.xsl"
-			 in="${module.project.dir}/modules.list.xml"
-			 out="${module.project.dir}/dependencies.properties"
-		/>
-		<exec dir="${module.project.dir}" executable="cvs">
-			<arg line="ci -m &quot;Tagged dependencies properties file [GLBUILDER]&quot; dependencies.properties" />
-		</exec>
-		<copy file="${module.project.dir}/dependencies.properties.HEAD"
-			  tofile="${module.project.dir}/dependencies.properties"
-			  preservelastmodified="true"
-			  overwrite="true" />
-		<delete file="${module.project.dir}/dependencies.properties.HEAD"/>
-		<delete file="${module.project.dir}/modules.list.xml"/>
-		
-		<!-- Appy the tag -->
-		<exec dir="${workspace.abs.dir}" executable="cvs">
-			<arg line="tag -aFR ${cvs.label} ${module.name}" />
-		</exec>
-	
 	</target>
 
 	<target name="all" depends="localinit">
