@@ -12,6 +12,15 @@
 #include "ws_typeref.h"
 
 
+int edgwll2__GetVersion(
+        struct soap						   *soap,
+		struct edgwll2__GetVersionResponse *out)
+{
+	out->version = strdup(VERSION);
+
+	return SOAP_OK;
+}
+
 int edgwll2__JobStatus(
         struct soap						   *soap,
         char							   *jobid,

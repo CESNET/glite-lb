@@ -198,6 +198,11 @@
 			<element name="GenericLBFault" type="glitenstypes:GenericLBFaultType"/>
 		</schema>
 	</WSDL:types>
+	<message name="GetVersionRequest">
+	</message>
+	<message name="GetVersionResponse">
+		<part name="version" type="xsd:string"/>
+	</message>
 	<message name="JobStatusRequest">
 		<part name="jobid" type="xsd:string"/>
 		<part name="flags" type="glitenstypes:JobStatFlags"/>
@@ -225,6 +230,19 @@
 	</message>
 
 	<portType name="LoggingAndBookkeeping_PortType">
+		<operation name="GetVersion">
+			<documentation>Query the version of LB servere
+
+Input: no input
+
+Output: Version of LB server
+
+Faults: GenericLBFault
+			</documentation>
+			<input name="i" message="tns:GetVersionRequest"/>
+			<output name="o" message="tns:GetVersionResponse"/>
+			<fault name="f" message="tns:GenericLBFault"/>
+		</operation>
 		<operation name="JobStatus">
 			<documentation>Retrieve state of a single job.
 
@@ -280,6 +298,18 @@ Faults: GenericLBFault
 	</portType>
 	<binding name="LoggingAndBookkeeping" type="tns:LoggingAndBookkeeping_PortType">
 		<SOAP:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<operation name="GetVersion">
+			<SOAP:operation style="rpc"/>
+			<input name="i">
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</input>
+			<output name="o">
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</output>
+			<fault name="f">
+				<SOAP:fault name="f" use="literal"/>
+			</fault>
+		</operation>
 		<operation name="JobStatus">
 			<SOAP:operation style="rpc"/>
 			<input name="i">

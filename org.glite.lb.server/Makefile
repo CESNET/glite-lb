@@ -49,8 +49,10 @@ DEBUG:=-g -O0 -Wall
 #	-I/usr/include/libxml2 \
 
 # -DNO_VOMS -DNO_GACL to be removed when voms/gridsite are available
-CFLAGS:= -DNO_VOMS -DNO_GACL ${WS_CFLAGS} \
-	${DEBUG} -I${stagedir}/include -I${top_srcdir}/src -I. \
+CFLAGS:= -DNO_VOMS -DNO_GACL \
+	${WS_CFLAGS} ${DEBUG} \
+	-DVERSION=\"${version}\" \
+	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
 	-I${gsoap_prefix}/include \
@@ -161,7 +163,10 @@ test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 	${LINKXX} -o $@ test_soap_conv.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${COMMON_LIB} ${TEST_LIBS}
 
-examples: ws_jobstat ws_query_ex 
+examples: ws_getversion ws_jobstat ws_query_ex
+
+ws_getversion: ws_getversion.o ${WS_CLIENT_OBJS}
+	${LINK} -o $@ ws_getversion.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
 
 ws_jobstat: ws_jobstat.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_jobstat.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${EXT_LIBS}
