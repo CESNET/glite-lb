@@ -264,6 +264,7 @@ event_queue_remove(struct event_queue *eq)
 }
 
 #if defined(IL_NOTIFICATIONS)
+
 int
 event_queue_move_events(struct event_queue *eq_s, struct event_queue *eq_d, char *notif_id)
 {
@@ -276,15 +277,15 @@ event_queue_move_events(struct event_queue *eq_s, struct event_queue *eq_d, char
 	if(eq_d) {
 		event_queue_lock(eq_d);
 		/* dest tail is set to point to the last (NULL) pointer in the list */
-		dest_tail = (eq_d->tail == NULL) ? &(eq_d->tail) : &(eq_d->tail->prev);
+		dest_tail = (eq_d->head == NULL) ? &(eq_d->head) : &(eq_d->tail->prev);
 	}
 	source_prev = &(eq_s->head);
 	p = *source_prev;
-	eq_s = NULL;
+	eq_s->tail = NULL;
 	while(p) {
 		if(strcmp(p->msg->job_id_s, notif_id) == 0) {
-			il_log(LOG_DEBUG, "  moving event with notif id %s from %s to %s\n",
-			       notif_id, eq_s->dest_name, eq_d ? eq_d->dest_name : "trash");
+			il_log(LOG_DEBUG, "  moving event with notif id %s from %s:%d to %s:%d\n",
+			       notif_id, eq_s->dest_name,eq_s->dest_port, eq_d ? eq_d->dest_name : "trash",eq_d ? eq_d->dest_port : -1);
 			/* remove the message from the source list */
 			*source_prev = p->prev;
 			if(eq_d) {

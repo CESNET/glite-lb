@@ -90,6 +90,7 @@ struct event_store {
 
 struct server_msg {
 	char                   *job_id_s;       /* necessary for commit */
+	long                    offset;         /* just for printing more information to debug */
 	char                   *msg;
 	int                     len;
 	int                     ev_len;
@@ -128,7 +129,7 @@ struct event_queue {
 
 
 /* server msg methods */
-struct server_msg *server_msg_create(char *);
+struct server_msg *server_msg_create(char *, long);
 struct server_msg *server_msg_copy(struct server_msg *);
 int server_msg_init(struct server_msg *, char *);
 #if defined(INTERLOGD_EMS)

@@ -29,17 +29,19 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 		if(eq_known != NULL) 
 			event_queue_move_events(eq_known, eq, msg->job_id_s);
 	}
+#endif
 
+	/* fire thread to take care of this queue */
+	if(event_queue_create_thread(eq) < 0) 
+		return(-1);
+	
+#if defined(IL_NOTIFICATIONS)
 	/* if there are no data to send, do not send anything 
 	   (messsage was just to change the delivery address) */
 	if(msg->len == 0) 
 		return(0);
 
 #endif
-	/* fire thread to take care of this queue */
-	if(event_queue_create_thread(eq) < 0) 
-		return(-1);
-	
 	/* avoid losing signal to thread */
 	event_queue_cond_lock(eq);
 
@@ -309,7 +311,7 @@ handle_msg(char *event, long offset)
 	int ret;
 
 	/* convert event to message for server */
-	if((msg = server_msg_create(event)) == NULL) {
+	if((msg = server_msg_create(event, offset)) == NULL) {
 		il_log(LOG_ERR, "    handle_msg: error parsing event '%s':\n      %s\n", event, error_get_msg());
 		return(0);
 	}

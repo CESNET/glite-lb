@@ -183,7 +183,7 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
 
 
 /*
- *  Returns: -1 - internal error, 0 - not connected, timeout set, 1 - OK
+ *  Returns: 0 - not connected, timeout set, 1 - OK
  */
 int 
 event_queue_connect(struct event_queue *eq)
@@ -259,6 +259,8 @@ event_queue_send(struct event_queue *eq)
 
     if(event_queue_get(eq, &msg) < 0) 
       return(-1);
+
+    il_log(LOG_DEBUG, "    trying to deliver event at offset %d for job %s\n", msg->offset, msg->job_id_s);
 
     tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;

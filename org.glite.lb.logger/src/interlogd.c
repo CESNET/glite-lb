@@ -11,8 +11,6 @@
 
 #include <globus_common.h>
 
-#include "glite/wmsutils/tls/ssl_helpers/ssl_inits.h"
-#include "glite/wmsutils/tls/ssl_helpers/ssl_pthreads.h"
 #include "interlogd.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/lb_gss.h"
@@ -35,6 +33,8 @@ int TIMEOUT = DEFAULT_TIMEOUT;
 
 gss_cred_id_t cred_handle = GSS_C_NO_CREDENTIAL;
 pthread_mutex_t cred_handle_lock = PTHREAD_MUTEX_INITIALIZER;
+
+time_t key_mtime = 0, cert_mtime = 0;
 
 static void usage (int status)
 {
@@ -222,6 +222,7 @@ main (int argc, char **argv)
   if (CAcert_dir)
      setenv("X509_CERT_DIR", CAcert_dir, 1);
 
+  edg_wll_gss_watch_creds(cert_file,&cert_mtime);
   ret = edg_wll_gss_acquire_cred_gsi(cert_file, &cred_handle, NULL, &gss_stat);
   if (ret) {
      char *gss_err = NULL;

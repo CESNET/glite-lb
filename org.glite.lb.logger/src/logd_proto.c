@@ -682,19 +682,27 @@ open_event_file:
 		}	  
 
 		edg_wll_ll_log(LOG_DEBUG,"Connecting to UNIX socket...");
-		if(connect(msg_sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
-			if(errno != EISCONN) {
-				edg_wll_ll_log(LOG_DEBUG,"error.\n");
-				SYSTEM_ERROR("connect"); 
-				answer = errno; 
-				close(msg_sock); 
-				goto edg_wll_log_proto_server_end;
-			} else {
+		for (i=0; i < CONNECT_ATTEMPTS; i++) {
+			if(connect(msg_sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
+				if ((errno == EAGAIN) || (errno == ETIMEDOUT)) {
+					edg_wll_ll_log(LOG_DEBUG,"."); 
+					sleep(CONNECT_TIMEOUT);
+					continue;
+				} else if (errno == EISCONN) {
 					edg_wll_ll_log(LOG_DEBUG,"warning.\n");
-				edg_wll_ll_log(LOG_ERR,"The socket is already connected!\n");
+					edg_wll_ll_log(LOG_ERR,"The socket is already connected!\n");
+					break;
+				} else {
+					edg_wll_ll_log(LOG_DEBUG,"error.\n");
+					SYSTEM_ERROR("connect"); 
+					answer = errno; 
+					close(msg_sock); 
+					goto edg_wll_log_proto_server_end_1;
+				}
+			} else {
+				edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+				break;
 			}
-		} else {
-			edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 		}
 
 		edg_wll_ll_log(LOG_DEBUG,"Sending via IPC the message position %ld (%d bytes)...", filepos, sizeof(filepos));
@@ -704,7 +712,7 @@ open_event_file:
 			edg_wll_ll_log(LOG_ERR,"edg_wll_socket_write_full(): error,\n");
 			answer = errno; 
 			close(msg_sock); 
-			goto edg_wll_log_proto_server_end;
+			goto edg_wll_log_proto_server_end_1;
 		} else {
 			edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 		}
@@ -715,7 +723,7 @@ open_event_file:
 			edg_wll_ll_log(LOG_ERR,"edg_wll_socket_write_full(): error."); 
 			answer = errno; 
 			close(msg_sock); 
-			goto edg_wll_log_proto_server_end;
+			goto edg_wll_log_proto_server_end_1;
 		} else {
 			edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 		}
@@ -759,6 +767,13 @@ edg_wll_log_proto_server_end:
 	edg_wll_ll_log(LOG_INFO,"Done.\n");
 
 	return answer;
+
+edg_wll_log_proto_server_end_1:
+	if (event->any.priority) {
+		close(confirm_sock);
+		unlink(confirm_sock_name);
+	}	
+	goto edg_wll_log_proto_server_end;
 }
 
 /*
@@ -837,7 +852,7 @@ void edg_wll_ll_log(int level, const char *fmt, ...) {
     va_end(fmt_args);
 
 	if(level <= edg_wll_ll_log_level) 
-		fprintf(stderr, err_text);
+		fprintf(stderr, "[%d] %s", (int) getpid(), err_text);
 	if(level <= LOG_ERR) {
         openlog("edg-wl-logd", LOG_PID | LOG_CONS, LOG_DAEMON);
 		syslog(level, "%s", err_text);

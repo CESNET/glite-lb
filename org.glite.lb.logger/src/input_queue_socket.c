@@ -11,7 +11,7 @@
 #include "interlogd.h"
 
 
-static const int   SOCK_QUEUE_MAX = 5;
+static const int   SOCK_QUEUE_MAX = 50;
 extern char *socket_path;
 
 static int sock;

@@ -80,7 +80,7 @@ create_msg(char *event, char **buffer, long *receipt)
 
 
 struct server_msg *
-server_msg_create(char *event)
+server_msg_create(char *event, long offset)
 {
   struct server_msg *msg;
 
@@ -94,6 +94,7 @@ server_msg_create(char *event)
     server_msg_free(msg);
     return(NULL);
   }
+  msg->offset = offset;
 
   return(msg);
 }
@@ -123,6 +124,7 @@ server_msg_copy(struct server_msg *src)
   msg->ev_len = src->ev_len;
   msg->es = src->es;
   msg->receipt_to = src->receipt_to;
+  msg->offset = src->offset;
 #if defined(IL_NOTIFICATIONS)
   msg->dest_name = strdup(src->dest_name);
   msg->dest_port = src->dest_port;

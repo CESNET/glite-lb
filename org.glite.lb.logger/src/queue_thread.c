@@ -32,7 +32,7 @@ void *
 queue_thread(void *q)
 {
 	struct event_queue *eq = (struct event_queue *)q;
-	int ret, exit;
+	int ret, exit, flushing;
 
 	if(init_errors(0) < 0) {
 		il_log(LOG_ERR, "Error initializing thread specific data, exiting!");
@@ -52,7 +52,7 @@ queue_thread(void *q)
 		ret = 0;
 		while (event_queue_empty(eq) 
 #if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
-		       && !eq->flushing
+		       && ((flushing=eq->flushing) != 1)
 #endif
 			) {
 			ret = event_queue_wait(eq, 0);
@@ -70,75 +70,69 @@ queue_thread(void *q)
 		 * we are sending or request flush operation
 		 */
 		event_queue_cond_unlock(eq);
-    
+		
 		/* connect to server */
-		if((ret=event_queue_connect(eq)) < 0) {
-			/* internal error */
-			il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
-			/* this allows for collecting status when flushing; 
-			   immediate exit would not do */
-			exit = 1;
-			break;
-		} else if(ret == 0) {
+		if((ret=event_queue_connect(eq)) == 0) {
 			/* not connected */
 			if(error_get_maj() != IL_OK)
 				il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
-			il_log(LOG_INFO, "    could not connect to server %s, waiting for retry\n", eq->dest_name);
+#if defined(IL_NOTIFICATIONS)
+			il_log(LOG_INFO, "    could not connect to client %s, waiting for retry\n", eq->dest_name);
+#else
+			il_log(LOG_INFO, "    could not connect to bookkeeping server %s, waiting for retry\n", eq->dest_name);
+#endif
 		} else {
 			/* connected, send events */
 			switch(ret=event_queue_send(eq)) {
-      
+				
 			case 0:
 				/* there was an error and we still have events to send */
 				if(error_get_maj() != IL_OK)
 					il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
 				il_log(LOG_DEBUG, "  events still waiting\n");
 				break;
-      
+				
 			case 1:
 				/* hey, we are done for now */
 				il_log(LOG_DEBUG, "  all events for %s sent\n", eq->dest_name);
 				break;
-
+				
 			default:
 				/* internal error */
 				il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
 				exit = 1;      
 				break;
-
+				
 			} /* switch */
+			
+			/* we are done for now anyway, so close the queue */
+				event_queue_close(eq);
 		} 
 
-		/* we are done for now anyway, so close the queue */
-		event_queue_close(eq);
-
+#if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
+		if(pthread_mutex_lock(&flush_lock) < 0)
+			abort();
 		event_queue_cond_lock(eq);
 
-#if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
 		/* Check if we are flushing and if we are, report status to master */
-		if(eq->flushing == 1) {
+		if(flushing == 1) {
 			il_log(LOG_DEBUG, "    flushing mode detected, reporting status\n");
 			/* 0 - events waiting, 1 - events sent, < 0 - some error */
 			eq->flush_result = ret;
 			eq->flushing = 2;
-			if(pthread_mutex_lock(&flush_lock) < 0)
-				abort();
 			if(pthread_cond_signal(&flush_cond) < 0)
 				abort();
-			if(pthread_mutex_unlock(&flush_lock) < 0)
-				abort();
 		}
+		if(pthread_mutex_unlock(&flush_lock) < 0)
+			abort();
+#else
+		event_queue_cond_lock(eq);
 #endif
 
 		/* if there was some error with server, sleep for a while */
 		/* iff !event_queue_empty() */
-		if(ret == 0) {
-			if(event_queue_sleep(eq) < 0) {
-				il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
-				event_queue_cond_unlock(eq);
-				pthread_exit((void*)-1);
-			}
-		}
+		if(ret == 0) 
+			event_queue_sleep(eq);
 
 		if(exit) {
 			/* we have to clean up before exiting */

@@ -104,7 +104,9 @@ all compile: glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
-check: check.ll check.il
+check: 
+# do nothing until test/ is really added to CVS
+# check.ll check.il
 
 #check.ll: logd_proto_test.o ll_test.o
 #	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS} ${TEST_LIBS} $+

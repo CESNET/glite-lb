@@ -8,11 +8,11 @@
 
 extern char *file_prefix;
 
+extern time_t cert_mtime, key_mtime;
+
 void *
 recover_thread(void *q)
 {
-	time_t cert_mtime = 0, key_mtime = 0;
-
 	if(init_errors(0) < 0) {
 		il_log(LOG_ERR, "Error initializing thread specific data, exiting!");
 		pthread_exit(NULL);

@@ -287,7 +287,7 @@ event_store_write_ctl(struct event_store *es)
 int
 event_store_recover(struct event_store *es)
 {
-  struct event_queue *eq_l, *eq_b;
+  struct event_queue *eq_l = NULL, *eq_b, *eq_b_new;
   struct server_msg *msg;
   char *event_s;
   int fd, ret;
@@ -380,7 +380,7 @@ event_store_recover(struct event_store *es)
     ret = -1;
 
     /* create message for server */
-    msg = server_msg_create(event_s);
+    msg = server_msg_create(event_s, last);
     free(event_s);
     if(msg == NULL) {
       break;
@@ -397,6 +397,15 @@ event_store_recover(struct event_store *es)
 	break;
 #endif
       }
+
+#ifdef IL_NOTIFICATIONS
+    eq_b_new = queue_list_get(msg->dest);
+    if (eq_b_new != eq_b) {
+	    free(es->dest);
+	    es->dest = strdup(msg->dest);
+	    eq_b = eq_b_new;
+    }
+#endif
 
     /* now enqueue to the BS, if neccessary */
     if((eq_b != eq_l) && 

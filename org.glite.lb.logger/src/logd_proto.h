@@ -34,10 +34,18 @@ extern int edg_wll_ll_log_level;
 void edg_wll_ll_log_init(int level);
 void edg_wll_ll_log(int level, const char *fmt, ...);
 
+
 /* fcntl defaults */
 
 #define FCNTL_ATTEMPTS		5
 #define FCNTL_TIMEOUT		1
+
+
+/* connect defaults */
+
+#define CONNECT_ATTEMPTS	50
+#define CONNECT_TIMEOUT		10
+
 
 /* locallogger daemon listen and connect functions prototypes */
 
