@@ -1,3 +1,5 @@
+<!-- $Header$ -->
+
 <WSDL:definitions
 	xmlns:tns="http://glite.org/wsdl/services/lb"
 	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
