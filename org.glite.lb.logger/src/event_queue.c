@@ -217,7 +217,6 @@ event_queue_remove(struct event_queue *eq)
 
   /* this is critical section */
   event_queue_lock(eq);
-  assert((eq->head != NULL) || (eq->tail == NULL));
 #if defined(INTERLOGD_EMS)
   el = eq->mark_this;
   prev = eq->mark_prev;
