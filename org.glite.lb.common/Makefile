@@ -25,6 +25,8 @@ AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
 SUFFIXES = .T
 
+CC=gcc
+
 DEBUG:=-g -O0 -Wall
 GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
@@ -54,10 +56,9 @@ LDFLAGS:=-L${stagedir}/lib \
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include
 
-    
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 OBJS:=lb_gss.o escape.o events.o mini_http.o query_rec.o status.o \
@@ -103,7 +104,7 @@ ${THRLTLIB}: ${THROBJS}
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
-check: check.parse check.gss
+check: check.parse check.gss check.il
 
 check.parse: parse.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
@@ -112,9 +113,13 @@ check.parse: parse.cpp
 check.gss: test_gss
 	test_gss
 
+check.il: il_test
+
 test_gss: test_gss.o
 	${LINKXX} -o $@ test_gss.o ${LTLIB} ${TEST_LIBS}
 
+il_test: il_test.o il_int_test.o il_string_test.o il_string.o il_int.o
+	${LINKXX} -o $@ ${LTLIB} ${TEST_LIBS} $+
 
 dist: distsrc distbin
 
@@ -128,7 +133,7 @@ distbin:
 	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
 	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
-	
+
 install:
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	mkdir -p ${PREFIX}/lib
@@ -144,6 +149,9 @@ clean:
 
 test_gss.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${GLOBUSINC} ${TEST_INC} $<
+
+il_int_test.o il_string_test.o il_test.o: %.o: %.cpp
+	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 
 %.thr.o: %.c
 	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<

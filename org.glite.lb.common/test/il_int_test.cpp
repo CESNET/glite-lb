@@ -2,7 +2,7 @@
 
 
 extern "C" {
-#include "edg/workload/logging/common/il_string.h"
+#include "il_string.h"
 }
 
 class IlIntTest: public CppUnit::TestFixture
