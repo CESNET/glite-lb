@@ -17,7 +17,11 @@ thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 ares_prefix=/opt/ares
 
+CC:=gcc
+CXX:=g++
+
 -include Makefile.inc
+
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
@@ -78,8 +82,10 @@ GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
 	-lglobus_common_${thrflavour} \
 	-lglobus_gssapi_gsi_${thrflavour}
 
-EXPAT_LIBS:=-L${expat_prefix}/lib \
-	-lexpat
+ifneq (${expat_prefix},/usr)
+	EXPAT_LIBS:=-L${expat_prefix}/lib
+endif
+EXPAT_LIBS := ${EXPAT_LIBS} -lexpat
 
 ARES_LIBS:=-L${ares_prefix}/lib \
 	-lares
