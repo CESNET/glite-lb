@@ -20,13 +20,16 @@
 	
 	Revision history:
 	$Log$
+	Revision 1.2  2004/06/23 00:30:55  dimeglio
+	First version of this file
+	
 -->
 
 <project name="LB Client component common properties">
 
 	<!-- Include build properties to allow overwriting 
 	     of properties for subsystem                    -->
-	<property file="build.properties" />	
+	<property file="project/build.properties" />	
 
 	<!-- ======================================================
           Define corresponding subsystem properties

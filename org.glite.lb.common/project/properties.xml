@@ -20,13 +20,16 @@
 	
 	Revision history:
 	$Log$
+	Revision 1.2  2004/06/22 22:05:23  dimeglio
+	Added configuration options
+	
 -->
 
 <project name="LB Common component common properties">
 
 	<!-- Include build properties to allow overwriting 
 	     of properties for subsystem                    -->
-	<property file="build.properties" />	
+	<property file="project/build.properties" />	
 
 	<!-- ======================================================
           Define corresponding subsystem properties
