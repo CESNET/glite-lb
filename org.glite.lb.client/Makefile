@@ -91,7 +91,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge
-EXAMPLES:=log_usertag_proxy job_reg feed_shark
+EXAMPLES:=log_usertag_proxy job_reg feed_shark notify
 
 ${LIB}: ${LIBOBJS}
 	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
