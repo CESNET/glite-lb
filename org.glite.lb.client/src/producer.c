@@ -21,6 +21,7 @@
 #include "glite/lb/ulm_parse.h"
 #include "glite/lb/trio.h"
 #include "glite/lb/lb_gss.h"
+#include "glite/lb/lb_plain_io.h"
 #include "glite/lb/escape.h"
 
 #include "prod_proto.h"
@@ -180,7 +181,6 @@ static int edg_wll_DoLogEventProxy(
 	fprintf(stderr,"Logging to L&B Proxy at socket %s\n",
 		context->p_lbproxy_store_sock? context->p_lbproxy_store_sock: socket_path);
 #endif
-	memset(&conn, 0, sizeof(conn));
 	conn.sock = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (conn.sock < 0) {
 		edg_wll_SetError(context,answer = errno,"socket() error");
@@ -713,35 +713,36 @@ int edg_wll_SetLoggingJobProxy(
         int flags)
 {
         int     err;
-	char	*code_loc;
+	char	*code_loc = NULL;
 
         edg_wll_ResetError(context);
-
-/* XXX: add user credentials somewhere - to context? */
-	edg_wll_SetParamString(context, EDG_WLL_PARAM_LBPROXY_USER, user);
 
         if (!job) return edg_wll_SetError(context,EINVAL,"jobid is null");
 
         edg_wlc_JobIdFree(context->p_jobid);
         if ((err = edg_wlc_JobIdDup(job,&context->p_jobid))) {
                 edg_wll_SetError(context,err,"edg_wll_SetLoggingJob(): edg_wlc_JobIdDup() error");
-		goto err;
+		goto edg_wll_setloggingjobproxy_end;
 	}
 
+	/* add user credentials to context */
+	edg_wll_SetParamString(context, EDG_WLL_PARAM_LBPROXY_USER, user);
+
 	/* query LBProxyServer for sequence code if not user-suplied */
+/* FIXME: doesn't work yet
 	if (!code) {
 		edg_wll_QuerySequenceCodeProxy(context, job, &code_loc);
-		goto err;	
-	}
-	else
+		goto edg_wll_setloggingjobproxy_end;	
+	} else {
 		code_loc = strdup(code);
+	}
 	
-	if (!edg_wll_SetSequenceCode(context,code_loc,flags))
-/* XXX: ask proxy for last known sequence code */
+	if (!edg_wll_SetSequenceCode(context,code_loc,flags)) */ {
 		edg_wll_IncSequenceCode(context);
-	free(code_loc);
+	}
 	
-err:
+edg_wll_setloggingjobproxy_end:
+	if (code_loc) free(code_loc);
         return edg_wll_Error(context,NULL,NULL);
 }
 
@@ -786,6 +787,54 @@ static int edg_wll_RegisterJobMaster(
 	if (err == 0 &&
 		edg_wll_SetLoggingJob(context,job,NULL,EDG_WLL_SEQ_NORMAL) == 0)
 			edg_wll_LogEventMaster(context,pri,
+				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
+				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
+
+	free(type_s); free(intseed); free(parent_s);
+	return edg_wll_Error(context,NULL,NULL);
+}
+
+/**
+ *-----------------------------------------------------------------------
+ * Register job with L&B Proxy service.
+ *-----------------------------------------------------------------------
+ */
+static int edg_wll_RegisterJobMasterProxy(
+        edg_wll_Context         context,
+        const edg_wlc_JobId     job,
+        enum edg_wll_RegJobJobtype	type,
+	const char *		user,
+        const char *            jdl,
+        const char *            ns,
+	edg_wlc_JobId		parent,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs)
+{
+	char	*type_s = NULL,*intseed = NULL, *seq = NULL;
+	char	*parent_s = NULL;
+	int	err = 0;
+
+	edg_wll_ResetError(context);
+
+	intseed = seed ? strdup(seed) : 
+		str2md5base64(seq = edg_wll_GetSequenceCode(context));
+
+	free(seq);
+
+	type_s = edg_wll_RegJobJobtypeToString(type);
+	if (!type_s) return edg_wll_SetError(context,EINVAL,"edg_wll_RegisterJobMaster(): no jobtype specified");
+
+	if ((type == EDG_WLL_REGJOB_DAG || type == EDG_WLL_REGJOB_PARTITIONED)
+		&& num_subjobs > 0) 
+			err = edg_wll_GenerateSubjobIds(context,job,
+					num_subjobs,intseed,subjobs);
+
+	parent_s = parent ? edg_wlc_JobIdUnparse(parent) : strdup("");
+
+	if (err == 0 &&
+		edg_wll_SetLoggingJobProxy(context,job,NULL,user,EDG_WLL_SEQ_NORMAL) == 0)
+			edg_wll_LogEventMasterProxy(context,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
 
@@ -856,6 +905,20 @@ int edg_wll_RegisterSubjobs(edg_wll_Context ctx,const edg_wlc_JobId parent,
 	edg_wll_SetLoggingJob(ctx, oldctxjob, oldctxseq, EDG_WLL_SEQ_NORMAL);
 
 	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int edg_wll_RegisterJobProxy(
+        edg_wll_Context         context,
+        const edg_wlc_JobId     job,
+        enum edg_wll_RegJobJobtype	type,
+	const char *		user,
+        const char *            jdl,
+        const char *            ns,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs)
+{
+	return edg_wll_RegisterJobMasterProxy(context,job,type,user,jdl,ns, NULL, num_subjobs,seed,subjobs);
 }
 
 int edg_wll_ChangeACL(
