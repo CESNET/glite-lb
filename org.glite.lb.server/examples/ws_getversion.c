@@ -27,7 +27,7 @@ int main(int argc,char** argv)
 {
     edg_wll_Context						ctx;
     glite_gsplugin_Context				gsplugin_ctx;
-    struct soap						   *mydlo = soap_new();
+    struct soap							soap;
     struct edgwll2__GetVersionResponse	out;
     int									opt, err;
 	char							   *server = "http://localhost:8999/",
@@ -46,16 +46,18 @@ int main(int argc,char** argv)
 
     edg_wll_InitContext(&ctx);
     glite_gsplugin_init_context(&gsplugin_ctx);
-	
-	if ( soap_register_plugin_arg(mydlo, glite_gsplugin, (void *)gsplugin_ctx) )
+
+	soap_init(&soap);
+
+	if ( soap_register_plugin_arg(&soap, glite_gsplugin, (void *)gsplugin_ctx) )
 	{
-		soap_print_fault(mydlo, stderr);
+		soap_print_fault(&soap, stderr);
 		return 1;
 	}
 
-	glite_gsplugin_set_udata(mydlo, gsplugin_ctx);
+	glite_gsplugin_set_udata(&soap, gsplugin_ctx);
 
-    switch (err = soap_call_edgwll2__GetVersion(mydlo, server, "", &out))
+    switch (err = soap_call_edgwll2__GetVersion(&soap, server, "", &out))
 	{
 	case SOAP_OK: printf("Server version: %s\n", out.version); break;
 	case SOAP_FAULT: 
