@@ -74,7 +74,7 @@ get_groups(edg_wll_Context ctx, struct vomsdata *voms_info,
 }
 
 static int
-get_peer_cred(edg_wll_GssConnection *gss, STACK_OF(X509) **chain, X509 **cert)
+get_peer_cred(edg_wll_GssConnection *gss, char *server_cert, char *server_key, STACK_OF(X509) **chain, X509 **cert)
 {
    OM_uint32 maj_stat, min_stat;
    gss_buffer_desc buffer = GSS_C_EMPTY_BUFFER;
@@ -91,11 +91,44 @@ get_peer_cred(edg_wll_GssConnection *gss, STACK_OF(X509) **chain, X509 **cert)
    if (GSS_ERROR(maj_stat))
       return -1; /* XXX */
 
-   /* The GSSAPI specs requires gss_export_sec_context() to destroy the context
-    * after exporting. So we have to resurrect the context here by importing
-    * from just generated buffer. I'm eagerly waiting for adaptations in the
-    * VOMS API to avoid these hacks */
-   maj_stat = gss_import_sec_context(&min_stat, &buffer, &gss->context);
+   {
+      /* The GSSAPI specs requires gss_export_sec_context() to destroy the
+       * context after exporting. So we have to resurrect the context here by
+       * importing from just generated buffer. gss_import_sec_context() must be
+       * able to read valid credential before it loads the exported context
+       * so we set the environment temporarily to point to the ones used by
+       * the server.
+       *
+       * I'm eagerly waiting for adaptations in the VOMS API to avoid these
+       * hacks */
+
+      char *orig_cert = NULL, *orig_key = NULL;
+
+      orig_cert = getenv("X509_USER_CERT");
+      orig_key = getenv("X509_USER_KEY");
+
+      if (server_cert)
+	 setenv("X509_USER_CERT", server_cert, 1);
+      if (server_key)
+	 setenv("X509_USER_KEY", server_key, 1);
+   
+      maj_stat = gss_import_sec_context(&min_stat, &buffer, &gss->context);
+
+      if (orig_cert)
+	 setenv("X509_USER_CERT", orig_cert, 1);
+      else
+	 unsetenv("X509_USER_CERT");
+
+      if (orig_key) 
+	 setenv("X509_USER_KEY", orig_key, 1);
+      else 
+	 unsetenv("X509_USER_KEY");
+
+      if (GSS_ERROR(maj_stat)) {
+	  ret = -1;
+	  goto end;
+      }
+   }
 
    bio = BIO_new(BIO_s_mem());
    if (bio == NULL) {
@@ -154,7 +187,7 @@ end:
 }
 
 int
-edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *voms_dir, char *ca_dir)
+edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *server_cert, char *server_key, char *voms_dir, char *ca_dir)
 {
    STACK_OF(X509) *p_chain = NULL;
    X509 *cert = NULL;
@@ -166,7 +199,7 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *vom
    memset (&ctx->vomsGroups, 0, sizeof(ctx->vomsGroups));
    edg_wll_ResetError(ctx);
 
-   ret = get_peer_cred(gss, &p_chain, &cert);
+   ret = get_peer_cred(gss, server_cert, server_key, &p_chain, &cert);
    if (ret) {
       ret = 0;
       goto end;
@@ -292,8 +325,10 @@ parse_creds(edg_wll_VomsGroups *groups, char *subject, GRSTgaclUser **gacl_user)
 fail:
    if (cred)
       /* XXX GRSTgaclCredFree(cred); */
+      ;
    if (user)
       /* XXX GRSTgaclUserFree(user); */
+      ;
 
    return ret;
 }

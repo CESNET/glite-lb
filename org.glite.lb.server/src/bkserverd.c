@@ -112,7 +112,9 @@ static time_t			notif_duration = 60*60*24*7;
 
 static gss_cred_id_t	mycred = GSS_C_NO_CREDENTIAL;
 char				   *cadir = NULL,
-					   *vomsdir = NULL;
+					   *vomsdir = NULL,
+					*server_key = NULL,
+					*server_cert = NULL;
 
 
 static struct option opts[] = {
@@ -250,8 +252,7 @@ int main(int argc, char *argv[])
 	int					opt;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *port,
-					   *name,
-					   *cert, *key;
+					   *name;
 #ifdef GLITE_LB_SERVER_WITH_WS
 	char			   *ws_port;
 #endif	/* GLITE_LB_SERVER_WITH_WS */
@@ -271,7 +272,7 @@ int main(int argc, char *argv[])
 #ifdef GLITE_LB_SERVER_WITH_WS
 	asprintf(&ws_port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT+2);
 #endif 	/* GLITE_LB_SERVER_WITH_WS */
-	cert = key = cadir = vomsdir = NULL;
+	server_cert = server_key = cadir = vomsdir = NULL;
 
 /* no magic here: 1 month, 3 and 7 days */
 	purge_timeout[EDG_WLL_PURGE_JOBSTAT_OTHER] = 60*60*24*31;	
@@ -296,8 +297,8 @@ int main(int argc, char *argv[])
 
 	while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
 		case 'a': fake_host = strdup(optarg); break;
-		case 'c': cert = optarg; break;
-		case 'k': key = optarg; break;
+		case 'c': server_cert = optarg; break;
+		case 'k': server_key = optarg; break;
 		case 'C': cadir = optarg; break;
 		case 'V': vomsdir = optarg; break;
 		case 'p': free(port); port = strdup(optarg); break;
@@ -475,12 +476,12 @@ a.sin_addr.s_addr = INADDR_ANY;
 
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
-	if (!cert || !key)
+	if (!server_cert || !server_key)
 		fprintf(stderr, "%s: key or certificate file not specified"
 						" - unable to watch them for changes!\n", argv[0]);
 
 	if ( cadir ) setenv("X509_CERT_DIR", cadir, 1);
-	if ( !edg_wll_gss_acquire_cred_gsi(cert, key, &mycred, &mysubj, &gss_code) )
+	if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &mysubj, &gss_code) )
 	{
 		int	i;
 
@@ -808,7 +809,7 @@ int bk_handle_connection(int conn, struct timeval client_start, void *data)
 	if ( token.value )
 		gss_release_buffer(&min_stat, &token);
 
-	edg_wll_SetVomsGroups(ctx, &ctx->connPool[ctx->connToUse].gss, vomsdir, cadir);
+	edg_wll_SetVomsGroups(ctx, &ctx->connPool[ctx->connToUse].gss, server_cert, server_key, vomsdir, cadir);
 	if (debug && ctx->vomsGroups.len > 0)
 	{
 		int i;

@@ -48,7 +48,7 @@ edg_wll_GetACL(edg_wll_Context, edg_wlc_JobId, edg_wll_Acl *);
 #endif /* NO_GACL */
 
 extern int
-edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *);
+edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *, char *, char *);
 
 extern void
 edg_wll_FreeVomsGroups(edg_wll_VomsGroups *);
