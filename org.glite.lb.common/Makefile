@@ -6,13 +6,13 @@ stagedir=.
 distdir=.
 globalprefix=glite
 lbprefix=lb
-package=glite-lb-client
+package=glite-lb-common
 version=0.0.0
 PREFIX=/opt/glite
 
 glite_location=/opt/glite
 globus_prefix=/opt/globus
-globus_prefix=/opt/globus
+globus_flavour=gcc32
 expat_prefix=/opt/expat
 ares_prefix=/opt/ares
 
