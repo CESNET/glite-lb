@@ -20,7 +20,7 @@ extern "C" {
 
 int edg_wll_log_proto_client(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline/*, int priority,*/);
 int edg_wll_log_proto_client_failure(edg_wll_Context context, int code, edg_wll_GssStatus *gss_code, const char *text);
-int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_Connection *conn, edg_wll_LogLine logline);
+int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnection *conn, edg_wll_LogLine logline);
 
 #ifdef __cplusplus
 }

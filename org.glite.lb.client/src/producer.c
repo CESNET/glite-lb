@@ -170,7 +170,7 @@ static int edg_wll_DoLogEventProxy(
 	int	answer;
 	struct sockaddr_un saddr;
 	int 	flags;
-	edg_wll_Connection conn;
+	edg_wll_PlainConnection conn;
 
 	edg_wll_ResetError(context);
 	answer = 0;
@@ -208,7 +208,7 @@ static int edg_wll_DoLogEventProxy(
 
 	answer = edg_wll_log_proto_client_proxy(context,&conn,logline);
 	
-	close(conn.sock);
+	edg_wll_plain_close(&conn);
 
 edg_wll_DoLogEventProxy_end:
 

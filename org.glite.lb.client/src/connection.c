@@ -106,10 +106,9 @@ int edg_wll_close(edg_wll_Context ctx)
 
 int edg_wll_close_proxy(edg_wll_Context ctx)
 {
-	close(ctx->connPlain->sock);
-	ctx->connPlain->sock = 0;
-		
-	return edg_wll_Error(ctx,NULL,NULL);
+	edg_wll_plain_close(&ctx->connProxy->conn);
+
+	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 
@@ -196,8 +195,8 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 	int			flags;
 	
 
-	ctx->connPlain->sock = socket(PF_UNIX, SOCK_STREAM, 0);
-	if (ctx->connPlain->sock < 0) {
+	ctx->connProxy->conn.sock = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (ctx->connProxy->conn.sock < 0) {
 		edg_wll_SetError(ctx, errno, "socket() error");
 		goto err;
 	}
@@ -216,13 +215,13 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 	}
 	strcpy(saddr.sun_path, ctx->p_lbproxy_serve_sock);
 
-	if ((flags = fcntl(ctx->connPlain->sock, F_GETFL, 0)) < 0 || 
-			fcntl(ctx->connPlain->sock, F_SETFL, flags | O_NONBLOCK) < 0) {
+	if ((flags = fcntl(ctx->connProxy->conn.sock, F_GETFL, 0)) < 0 || 
+			fcntl(ctx->connProxy->conn.sock, F_SETFL, flags | O_NONBLOCK) < 0) {
 		edg_wll_SetError(ctx, errno, "fcntl()");
 		goto err;
 	}
 
-	if (connect(ctx->connPlain->sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
+	if (connect(ctx->connProxy->conn.sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
 		edg_wll_SetError(ctx, errno, "connect()");
 		goto err;
 	}

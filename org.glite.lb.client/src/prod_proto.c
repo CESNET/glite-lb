@@ -165,7 +165,7 @@ int edg_wll_log_proto_client_failure(edg_wll_Context context, int code, edg_wll_
  */
 static
 int
-get_reply(edg_wll_Context context, edg_wll_Connection *conn, char **buf, int *code_min)
+get_reply(edg_wll_Context context, edg_wll_PlainConnection *conn, char **buf, int *code_min)
 {
 	char buffer[17];
 	char *msg, *p;
@@ -243,7 +243,7 @@ get_reply_end:
  *
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_Connection *conn, edg_wll_LogLine logline)
+int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnection *conn, edg_wll_LogLine logline)
 {
 	char *p;  int  len;
 	char *ucs = "honik6";
