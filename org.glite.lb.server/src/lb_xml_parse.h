@@ -9,6 +9,10 @@
 #include "glite/lb/dump.h"
 #include "glite/lb/load.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+	
 /* function for parsing/unparsing XML requests from client */
 
 int parseJobQueryRec(edg_wll_Context ctx, const char *messageBody, long len, edg_wll_QueryRec ***conditions);
@@ -28,4 +32,8 @@ int edg_wll_LoadResultToXML(edg_wll_Context ctx, edg_wll_LoadResult *result, cha
 int edg_wll_IndexedAttrsToXML(edg_wll_Context ctx, char **message);
 int edg_wll_NotifResultToXML(edg_wll_Context ctx, time_t validity, char **message);
 
+#ifdef __cplusplus
+}
+#endif
+	
 #endif
