@@ -51,10 +51,17 @@ DEBUG:=-g -O0 -Wall
 # not yet
 #	-I${voms}/include \
 #	-I${gacl}/include \
-#	-I/usr/include/libxml2 \
+#	-I/usr/include/libxml2
+
+GRIDSITE_CFLAGS = `xml2-config --cflags` \
+		  -I${gridsite_prefix}/include \
+		  -I${globus_prefix}/include/${nothrflavour}
+GRIDSITE_LIBS = -lgridsite `xml2-config --libs`
 
 # -DNO_VOMS -DNO_GACL to be removed when voms/gridsite are available
-CFLAGS:= -DNO_VOMS -DNO_GACL \
+#CFLAGS:= -DNO_VOMS -DNO_GACL 
+
+CFLAGS:= \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
@@ -64,9 +71,8 @@ CFLAGS:= -DNO_VOMS -DNO_GACL \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
-	-I${gridsite_prefix}/include -I${globus_prefix}/include/${nothrflavour}/openssl \
+	$(GRIDSITE_CFLAGS) \
 	-D_GNU_SOURCE
-
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include
@@ -91,6 +97,8 @@ endif
 EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	${myslqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
+	${GRIDSITE_LIBS} \
+	-lvomsc \
 	${GLOBUS_LIBS}
 
 GSOAP_LIBS:= -L${gsoap_prefix}/lib -lgsoap
