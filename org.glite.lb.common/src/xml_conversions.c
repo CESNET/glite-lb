@@ -810,7 +810,7 @@ char *edg_wll_query_attrToString(edg_wll_QueryAttr query_attrConst)
 /* Functions for conversion of NOTIFICATION CHANGE OPERATORS */ 
 
 static const char * const notifChangeOpConsts[] = {
-	"EDG_WLL_NOTIF_NOOP"
+	"EDG_WLL_NOTIF_NOOP",
 	"EDG_WLL_NOTIF_REPLACE",
 	"EDG_WLL_NOTIF_ADD",
 	"EDG_WLL_NOTIF_REMOVE",
