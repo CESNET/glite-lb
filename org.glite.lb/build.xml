@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.13  2004/08/09 04:56:14  dimeglio
+	Replaced rtag with tag
+	
 	Revision 1.12  2004/08/09 04:36:44  dimeglio
 	Fixed inheritance of do.cvs.tag property
 	
@@ -337,6 +340,10 @@
 										 client,
 										 common,
 										 server,
-										 logger"/>
+										 logger">
+		<echo append="true" file="${global.project.dir}/cruisecontrol-stub.xml">
+	&lt;project name="${subsystem.name}" type="post-subsystem" packageName="${global.prefix}-${subsystem.prefix}"/&gt;
+		</echo>
+	</target>
 
 </project>
