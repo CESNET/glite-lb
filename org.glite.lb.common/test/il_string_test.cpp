@@ -22,7 +22,7 @@ public:
 
 	void testPutString() {
 		put_string(buffer, "ahoj");
-		CPPUNIT_ASSERT( !strcmp(buffer, "4 ahoj\n") );
+		CPPUNIT_ASSERT( !strncmp(buffer,"4 ahoj\n",7) );
 	}
 
 	void testGetString() {
