@@ -12,8 +12,8 @@
 #include <libxml/parser.h> 
 #undef WITHOUT_TRIO
 
-#include "glite/wms/jobid/strmd5.h"
-#include "glite/wms/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/trio.h"
 #include "lb_authz.h"

@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "glite/wms/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/consumer.h"
 
 /*

@@ -6,7 +6,7 @@
 
 #include <globus_common.h>
 
-#include "glite/wms/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/notification.h"
 #include "context-int.h"

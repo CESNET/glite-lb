@@ -14,8 +14,8 @@
 
 #include <expat.h>
 
-#include "glite/wms/jobid/JobId.h"
-#include "glite/wms/jobid/JobIdExceptions.h"
+#include "glite/wmsutils/jobid/JobId.h"
+#include "glite/wmsutils/jobid/JobIdExceptions.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
 
@@ -89,7 +89,7 @@ QueryRecord::QueryRecord(const Attr a,
 
 QueryRecord::QueryRecord(const Attr a, 
 			 const Op o, 
-			 const glite::wms::jobid::JobId& v)
+			 const glite::wmsutils::jobid::JobId& v)
 	: attr(a), oper(o), state(EDG_WLL_JOB_UNDEF), jobid_value(v)
 {
 	switch(a) {
@@ -831,7 +831,7 @@ ServerConnection::queryEvents(const std::vector<std::vector<QueryRecord> >& job_
 
 
 void ServerConnection::queryJobs(const std::vector<QueryRecord>& query,
-				 std::vector<glite::wms::jobid::JobId> & ids) const
+				 std::vector<glite::wmsutils::jobid::JobId> & ids) const
 {
 	edg_wll_QueryRec *cond = NULL;
 	edg_wlc_JobId *jobs, *j;
@@ -857,7 +857,7 @@ void ServerConnection::queryJobs(const std::vector<QueryRecord>& query,
 		}
 
 		for(j = jobs; *j; j++) 
-			ids.push_back(glite::wms::jobid::JobId(*j));
+			ids.push_back(glite::wmsutils::jobid::JobId(*j));
 
 		if (result) {
 			edg_wll_SetError(context, result, errstr);
@@ -881,10 +881,10 @@ void ServerConnection::queryJobs(const std::vector<QueryRecord>& query,
 }
 
 
-const std::vector<glite::wms::jobid::JobId>
+const std::vector<glite::wmsutils::jobid::JobId>
 ServerConnection::queryJobs(const std::vector<QueryRecord>& query) const
 {
-	std::vector<glite::wms::jobid::JobId> jobList;
+	std::vector<glite::wmsutils::jobid::JobId> jobList;
   
 	queryJobs(query, jobList);
 	return jobList;
@@ -893,7 +893,7 @@ ServerConnection::queryJobs(const std::vector<QueryRecord>& query) const
 
 void 
 ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query,
-			    std::vector<glite::wms::jobid::JobId>& ids) const
+			    std::vector<glite::wmsutils::jobid::JobId>& ids) const
 {
 	edg_wll_QueryRec **cond = NULL;
 	edg_wlc_JobId *jobs, *j;
@@ -920,7 +920,7 @@ ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query,
 		}
 
 		for(j = jobs; *j; j++) 
-			ids.push_back(glite::wms::jobid::JobId(*j));
+			ids.push_back(glite::wmsutils::jobid::JobId(*j));
 
 		if (result) {
 			edg_wll_SetError(context, result, errstr);
@@ -956,10 +956,10 @@ ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query,
 
   
 const 
-std::vector<glite::wms::jobid::JobId>
+std::vector<glite::wmsutils::jobid::JobId>
 ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query) const
 {
-	std::vector<glite::wms::jobid::JobId> jobList;
+	std::vector<glite::wmsutils::jobid::JobId> jobList;
   
 	queryJobs(query, jobList);
 	return jobList;
@@ -1129,7 +1129,7 @@ ServerConnection::queryJobStates(const std::vector<std::vector<QueryRecord> >& q
 }
 
 
-void ServerConnection::userJobs(std::vector<glite::wms::jobid::JobId> & ids) const
+void ServerConnection::userJobs(std::vector<glite::wmsutils::jobid::JobId> & ids) const
 {
 	edg_wlc_JobId *jobs, *j;
 	int     result, qresults_param;
@@ -1152,7 +1152,7 @@ void ServerConnection::userJobs(std::vector<glite::wms::jobid::JobId> & ids) con
 		}
 
 		for(j = jobs; *j; j++) 
-			ids.push_back(glite::wms::jobid::JobId(*j));
+			ids.push_back(glite::wmsutils::jobid::JobId(*j));
 
 		if (result) {
 			edg_wll_SetError(context, result, errstr);
@@ -1170,10 +1170,10 @@ void ServerConnection::userJobs(std::vector<glite::wms::jobid::JobId> & ids) con
 }
 
 
-const std::vector<glite::wms::jobid::JobId>
+const std::vector<glite::wmsutils::jobid::JobId>
 ServerConnection::userJobs() const
 {
-	std::vector<glite::wms::jobid::JobId> jobList;
+	std::vector<glite::wmsutils::jobid::JobId> jobList;
   
 	userJobs(jobList);
 	return jobList;

@@ -8,7 +8,7 @@
 #include <sysexits.h>
 #include <assert.h>
 
-#include "glite/wms/jobid/strmd5.h"
+#include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "index.h"

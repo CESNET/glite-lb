@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "glite/wms/jobid/strmd5.h"
+#include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/trio.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"

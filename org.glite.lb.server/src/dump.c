@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #include "glite/lb/trio.h"
-#include "glite/wms/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"

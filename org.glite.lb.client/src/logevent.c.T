@@ -15,11 +15,11 @@
 
 #include <globus_common.h>
 
-#include "glite/wms/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/events.h"
-#include "glite/wms/tls/ssl_helpers/ssl_inits.h"
+#include "glite/wmsutils/tls/ssl_helpers/ssl_inits.h"
 
 #include "args.h"
 

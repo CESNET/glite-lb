@@ -12,7 +12,7 @@
 
 #include <string>
 
-#include "glite/wms/jobid/JobIdExceptions.h"
+#include "glite/wmsutils/jobid/JobIdExceptions.h"
 
 #include "glite/lb/Job.h"
 #include "glite/lb/LoggingExceptions.h"
@@ -32,7 +32,7 @@ Job::Job(void)
 }
 
 
-Job::Job(const glite::wms::jobid::JobId &in) 
+Job::Job(const glite::wmsutils::jobid::JobId &in) 
 {
   try {
     jobId = in;
@@ -48,7 +48,7 @@ Job::~Job(void)
 }
 
 
-Job & Job::operator= (const glite::wms::jobid::JobId &in) 
+Job & Job::operator= (const glite::wmsutils::jobid::JobId &in) 
 {
   try {
     jobId = in;

@@ -9,10 +9,10 @@
 
 #include <errno.h>
 
-#include "glite/wms/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 
 #include "glite/lb/Event.h"
-#include "glite/wms/jobid/JobIdExceptions.h"
+#include "glite/wmsutils/jobid/JobIdExceptions.h"
 #include "glite/lb/LoggingExceptions.h"
 
 #include "glite/lb/consumer.h"
@@ -220,13 +220,13 @@ badattr:
 }
 
 const 
-glite::wms::jobid::JobId 
+glite::wmsutils::jobid::JobId 
 Event::getValJobId(Attr attr) const
 {
 	edg_wll_Event const *cev = (edg_wll_Event *) flesh->ptr;
 	try {
 		edg_wlc_JobId job_id = get_val_jobid(cev,attr);
-		return(glite::wms::jobid::JobId(job_id));
+		return(glite::wmsutils::jobid::JobId(job_id));
 	} 
 	catch (Exception &e) {
 		STACK_ADD;

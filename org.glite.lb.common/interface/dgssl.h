@@ -9,7 +9,7 @@
 
 /* openssl headers */
 #include <globus_config.h>
-#include "glite/wms/thirdparty/globus_ssl_utils/sslutils.h"
+#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 
 #include <ssl.h>
 #include <err.h>

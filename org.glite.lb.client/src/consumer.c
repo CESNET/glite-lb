@@ -10,7 +10,7 @@
 #include <expat.h>
 
 #include "globus_config.h"
-#include "glite/wms/thirdparty/globus_ssl_utils/sslutils.h"
+#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"

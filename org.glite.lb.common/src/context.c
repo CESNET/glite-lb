@@ -7,10 +7,10 @@
 #include <assert.h>
 
 #include <globus_config.h>
-#include "glite/wms/thirdparty/globus_ssl_utils/sslutils.h"
+#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 
-#include "glite/wms/jobid/strmd5.h"
-#include "glite/wms/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 #include "context-int.h"
 #include "glite/lb/producer.h"
 

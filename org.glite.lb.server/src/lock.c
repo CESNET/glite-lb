@@ -3,7 +3,7 @@
 #include <sys/sem.h>
 #include <errno.h>
 
-#include "glite/wms/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/context-int.h"
 #include "lock.h"
 

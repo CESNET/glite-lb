@@ -30,7 +30,7 @@
 
 #include <globus_common.h>
 
-#include "glite/wms/tls/ssl_helpers/ssl_inits.h"
+#include "glite/wmsutils/tls/ssl_helpers/ssl_inits.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/purge.h"
 #include "glite/lb/context.h"

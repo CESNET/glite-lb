@@ -11,8 +11,8 @@
 
 #include <globus_common.h>
 
-#include "glite/wms/tls/ssl_helpers/ssl_inits.h"
-#include "glite/wms/tls/ssl_helpers/ssl_pthreads.h"
+#include "glite/wmsutils/tls/ssl_helpers/ssl_inits.h"
+#include "glite/wmsutils/tls/ssl_helpers/ssl_pthreads.h"
 #include "interlogd.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/dgssl.h"

@@ -15,7 +15,7 @@
 #include "ulm_parse.h"
 #include "context-int.h"
 #include "escape.h"
-#include "glite/wms/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 
 #include "trio.h"
 

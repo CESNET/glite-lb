@@ -14,7 +14,7 @@
 #include <ares.h>
 
 #include "globus_config.h"
-#include "glite/wms/thirdparty/globus_ssl_utils/sslutils.h"
+#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 
 #include "dgssl.h"
 

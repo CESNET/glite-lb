@@ -15,7 +15,7 @@
 
 #include "logd_proto.h"
 #include "glite/lb/consumer.h"
-#include "glite/wms/tls/ssl_helpers/ssl_inits.h"
+#include "glite/wmsutils/tls/ssl_helpers/ssl_inits.h"
 
 static const char rcsid[] = "@(#)$Id$";
 static int verbose = 0;

@@ -11,7 +11,7 @@
 #include <syslog.h>
 
 #include "globus_config.h"
-#include "glite/wms/thirdparty/globus_ssl_utils/sslutils.h"
+#include "glite/wmsutils/thirdparty/globus_ssl_utils/sslutils.h"
 
 #include "mini_http.h"
 #include "dgssl.h"
