@@ -91,6 +91,12 @@ get_peer_cred(edg_wll_GssConnection *gss, STACK_OF(X509) **chain, X509 **cert)
    if (GSS_ERROR(maj_stat))
       return -1; /* XXX */
 
+   /* The GSSAPI specs requires gss_export_sec_context() to destroy the context
+    * after exporting. So we have to resurrect the context here by importing
+    * from just generated buffer. I'm eagerly waiting for adaptations in the
+    * VOMS API to avoid these hacks */
+   maj_stat = gss_import_sec_context(&min_stat, &buffer, &gss->context);
+
    bio = BIO_new(BIO_s_mem());
    if (bio == NULL) {
       ret = -1;
@@ -491,7 +497,7 @@ edg_wll_CheckACL(edg_wll_Context ctx, edg_wll_Acl acl, int requested_perm)
 
    perm = GRSTgaclAclTestUser(acl->value, user);
 
-   GRSTgaclUserFree(user);
+   /* XXX GRSTgaclUserFree(user); */
    
    if (perm & requested_perm) return edg_wll_ResetError(ctx);
    else return edg_wll_SetError(ctx,EPERM,"CheckACL");
@@ -626,7 +632,7 @@ edg_wll_InitAcl(edg_wll_Acl *acl)
 void
 edg_wll_FreeAcl(edg_wll_Acl acl)
 {
-   if ( acl->value ) GRSTgaclAclFree(acl->value);
+   /* XXX if ( acl->value ) GRSTgaclAclFree(acl->value); */
    if ( acl->string ) free(acl->string);
    free(acl);
 }
