@@ -31,14 +31,6 @@
 char *notif_ilog_socket_path = DEFAULT_SOCKET;
 char *notif_ilog_file_prefix = FILE_PREFIX;
 
-#define tv_sub(a,b) {\
-	(a).tv_usec -= (b).tv_usec;\
-	(a).tv_sec -= (b).tv_sec;\
-	if ((a).tv_usec < 0) {\
-		(a).tv_sec--;\
-		(a).tv_usec += 1000000;\
-	}\
-}
 
 static
 int
@@ -93,202 +85,6 @@ out:
 }
 
 
-static
-int
-notif_save_to_file(edg_wll_Context     context,
-		   const char         *event_file,
-		   const char         *ulm_data,
-		   long               *filepos)
-{
-	int ret;
-	FILE *outfile;
-	int filedesc;
-	struct flock filelock;
-	int i, filelock_status=-1;
-
-	for(i=0; i < FCNTL_ATTEMPTS; i++) {
-		/* fopen and properly handle the filelock */
-		if ((outfile = fopen(event_file,"a")) == NULL) {
-			edg_wll_SetError(context, ret = errno, "fopen()");
-			goto out;
-		}
-		if ((filedesc = fileno(outfile)) == -1) {
-			edg_wll_SetError(context, ret = errno, "fileno()");
-			goto out1;
-		}
-		filelock.l_type = F_WRLCK;
-		filelock.l_whence = SEEK_SET;
-		filelock.l_start = 0;
-		filelock.l_len = 0;
-		filelock_status=fcntl(filedesc, F_SETLK, &filelock);
-		if(filelock_status < 0) {
-			switch(errno) {
-			case EAGAIN:
-			case EACCES:
-			case EINTR:
-				/* lock is held by someone else */
-				sleep(FCNTL_TIMEOUT);
-				break;
-			default:
-				/* other error */
-				edg_wll_SetError(context, ret=errno, "fcntl()");
-				goto out1;
-			}
-		} else {
-			/* lock acquired, break out of the loop */
-			break;
-		}
-	}
-	if (fseek(outfile, 0, SEEK_END) == -1) {
-		edg_wll_SetError(context, ret = errno, "fseek()");
-		goto out1;
-	}
-	if ((*filepos=ftell(outfile)) == -1) {
-		edg_wll_SetError(context, ret = errno, "ftell()");
-		goto out1;
-	}
-	/* write, flush and sync */
-	if (fputs(ulm_data, outfile) == EOF) {
-		edg_wll_SetError(context, ret = errno, "fputs()");
-		goto out1;
-	}       
-	if (fflush(outfile) == EOF) {
-		edg_wll_SetError(context, ret = errno, "fflush()");
-		goto out1;
-	}
-	if (fsync(filedesc) < 0) { /* synchronize */
-		edg_wll_SetError(context, ret = errno, "fsync()");
-		goto out1;
-	} 
-
-	ret = 0;
-out1:
-	/* close and unlock */
-	fclose(outfile); 
-out:
-	if(ret) edg_wll_UpdateError(context, ret, "notif_save_to_file()");
-	return(ret);
-}
-
-
-static 
-ssize_t 
-socket_write_full(edg_wll_Context  context,
-		  int              sock,
-		  void            *buf,
-		  size_t           bufsize,
-		  struct timeval  *timeout,
-		  ssize_t         *total)
-{
-	int ret = 0;
-        ssize_t	len;
-
-        *total = 0;
-        while (bufsize > 0) {
-
-		fd_set	fds;
-		struct timeval	to,before,after;
-		
-		if (timeout) {
-			memcpy(&to, timeout, sizeof(to));
-			gettimeofday(&before, NULL);
-		}
-
-		len = write(sock, buf, bufsize);
-		while (len <= 0) {
-			FD_ZERO(&fds);
-			FD_SET(sock, &fds);
-			if (select(sock+1, &fds, NULL, NULL, timeout ? &to : NULL) < 0) {
-				edg_wll_SetError(context, ret = errno, "select()");
-				goto out;
-			}
-			len = write(sock, buf, bufsize);
-		}
-		if (timeout) {
-			gettimeofday(&after,NULL);
-			tv_sub(after, before);
-			tv_sub(*timeout,after);
-			if (timeout->tv_sec < 0) {
-				timeout->tv_sec = 0;
-				timeout->tv_usec = 0;
-			}
-		}
-		
-                if (len < 0) {
-			edg_wll_SetError(context, ret = errno, "write()");
-			goto out;
-		}
-
-		bufsize -= len;
-		buf += len;
-                *total += len;
-        }
-
-	ret = 0;
-out:
-	if(ret) edg_wll_UpdateError(context, ret, "socket_write_full()");
-        return ret;
-}
-
-
-static 
-int
-notif_send_socket(edg_wll_Context       context,
-		  long                  filepos,
-		  const char           *ulm_data)
-{
-	int ret;
-	struct sockaddr_un saddr;
-	int msg_sock, flags;
-	size_t count;
-	struct timeval timeout;
-
-	timeout.tv_sec = EDG_WLL_LOG_TIMEOUT_MAX;
-        timeout.tv_usec = 0;	
-
-	msg_sock = socket(PF_UNIX, SOCK_STREAM, 0);
-	if(msg_sock < 0) {
-		edg_wll_SetError(context, ret = errno, "socket()");
-		goto out;
-	}
-
-	memset(&saddr, 0, sizeof(saddr));
-	saddr.sun_family = AF_UNIX;
-	strcpy(saddr.sun_path, notif_ilog_socket_path);
-
-	if ((flags = fcntl(msg_sock, F_GETFL, 0)) < 0 ||
-	    fcntl(msg_sock, F_SETFL, flags | O_NONBLOCK) < 0) {
-		edg_wll_SetError(context, ret = errno, "fcntl()");
-		goto out1;
-	}
-
-	if(connect(msg_sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
-		if(errno != EISCONN) {
-			edg_wll_SetError(context, ret = errno, "connect()");
-			goto out1;
-		}
-	}
-
-	if (socket_write_full(context, msg_sock, &filepos, sizeof(filepos), &timeout, &count) < 0) {
-		ret = errno; 
-		goto out1;
-	}
-
-	if (socket_write_full(context, msg_sock, (void*)ulm_data, strlen(ulm_data), &timeout, &count) < 0) {
-		ret = errno; 
-		goto out1;
-	}
-
-	ret = 0;
-
-out1:
-	close(msg_sock);
-out:
-	if(ret) edg_wll_UpdateError(context, ret, "notif_send_socket()");
-	return(ret);
-}
-
-
 int
 edg_wll_NotifSend(edg_wll_Context       context,
 	          edg_wll_NotifId       reg_id,
@@ -297,9 +93,12 @@ edg_wll_NotifSend(edg_wll_Context       context,
 		  const char           *owner,
                   const char           *notif_data)
 {
-	int ret;
-	long filepos;
-	char *ulm_data, *reg_id_s, *event_file;
+	struct timeval	timeout;
+	int				ret;
+	long			filepos;
+	char		   *ulm_data,
+				   *reg_id_s,
+				   *event_file;
 
 	if((ret=notif_create_ulm(context, 
 				 reg_id, 
@@ -318,18 +117,18 @@ edg_wll_NotifSend(edg_wll_Context       context,
 		goto out;
 	}
 
-	if((ret=notif_save_to_file(context,
-				   event_file,
-				   ulm_data,
-				   &filepos))) {
+	if ( (ret = edg_wll_log_event_write(context, event_file, ulm_data,
+					FCNTL_ATTEMPTS, FCNTL_TIMEOUT, &filepos)) ) {
+		edg_wll_UpdateError(context, 0, "edg_wll_log_event_write()");
 		goto out;
 	}
 
-	if((ret=notif_send_socket(context,
-				  filepos,
-				  ulm_data))) {
+	if ( (ret = edg_wll_log_event_send(context, notif_ilog_socket_path,
+					filepos, ulm_data, strlen(ulm_data), 1, &timeout)) ) {
+		edg_wll_UpdateError(context, 0, "edg_wll_log_event_send()");
 		goto out;
 	}
+
 	ret = 0;
 
 out:
