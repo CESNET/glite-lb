@@ -143,6 +143,8 @@ error:
 	}
 
 	return edg_wll_Error(ctx,NULL,NULL);
+
+#undef bshift
 }
 
 edg_wll_ErrorCode edg_wll_http_recv_proxy(edg_wll_Context ctx,char **firstOut,char ***hdrOut,char **bodyOut)
@@ -165,7 +167,7 @@ edg_wll_ErrorCode edg_wll_http_recv_proxy(edg_wll_Context ctx,char **firstOut,ch
 	}
 
 	do {
-		len = edg_wll_plain_read(&ctx->connPlain->sock,
+		len = edg_wll_plain_read(ctx->connPlain,
 				ctx->connPlain->buf+ctx->connPlain->bufUse,
 				ctx->connPlain->bufSize-ctx->connPlain->bufUse,
 				&ctx->p_tmp_timeout);
@@ -248,6 +250,8 @@ error:
 	}
 
 	return edg_wll_Error(ctx,NULL,NULL);
+
+#undef bshift
 }
 
 static int real_write(edg_wll_Context ctx, edg_wll_GssConnection *con,const char *data,int len)
@@ -331,16 +335,16 @@ edg_wll_ErrorCode edg_wll_http_send_proxy(edg_wll_Context ctx, const char *first
 
 	edg_wll_ResetError(ctx);
 
-	if (   edg_wll_plain_write_full(&ctx->connPlain->sock,
+	if (   edg_wll_plain_write_full(ctx->connPlain,
 							first, strlen(first), &ctx->p_tmp_timeout) < 0
-		|| edg_wll_plain_write_full(&ctx->connPlain->sock,
+		|| edg_wll_plain_write_full(ctx->connPlain,
 							"\r\n", 2, &ctx->p_tmp_timeout) < 0 ) 
 		return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
 
 	if ( head ) for ( h = head; *h; h++ )
-		if (   edg_wll_plain_write_full(&ctx->connPlain->sock,
+		if (   edg_wll_plain_write_full(ctx->connPlain,
 							*h, strlen(*h), &ctx->p_tmp_timeout) < 0
-			|| edg_wll_plain_write_full(&ctx->connPlain->sock,
+			|| edg_wll_plain_write_full(ctx->connPlain,
 							"\r\n", 2, &ctx->p_tmp_timeout) < 0 )
 			return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
 
@@ -349,15 +353,15 @@ edg_wll_ErrorCode edg_wll_http_send_proxy(edg_wll_Context ctx, const char *first
 
 		len = strlen(body);
 		blen = sprintf(buf, CONTENT_LENGTH " %d\r\n",len);
-		if (edg_wll_plain_write_full(&ctx->connPlain->sock,
+		if (edg_wll_plain_write_full(ctx->connPlain,
 							buf, blen, &ctx->p_tmp_timeout) < 0) 
 			return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
 	}
 
-	if ( edg_wll_plain_write_full(&ctx->connPlain->sock,
+	if ( edg_wll_plain_write_full(ctx->connPlain,
 							"\r\n", 2, &ctx->p_tmp_timeout) < 0) 
 		return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
-	if ( body && edg_wll_plain_write_full(&ctx->connPlain->sock,
+	if ( body && edg_wll_plain_write_full(ctx->connPlain,
 							body, len, &ctx->p_tmp_timeout) < 0)  
 		return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
 
