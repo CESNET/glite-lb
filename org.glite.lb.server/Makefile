@@ -143,7 +143,7 @@ glite_lb_bkindex: ${INDEX_OBJS}
 
 default all: compile
 
-compile: glite_lb_bkserverd glite_lb_bkindex
+compile: glite_lb_bkserverd glite_lb_bkindex glite_lb_proxy
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
