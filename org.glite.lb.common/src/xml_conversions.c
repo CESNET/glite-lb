@@ -58,6 +58,9 @@ void edg_wll_initXMLCtx(edg_wll_XML_ctx *c) {
 	c->notifId = NULL;
 	c->notifChangeOp = EDG_WLL_NOTIF_NOOP;
 	c->notifValidity = -1;
+	c->jobId = NULL;
+	c->source = NULL;
+	c->seqCode = NULL;
 	c->attrsGlobal	= NULL;
 	c->errCode = 0;
 	c->bound = 0;
@@ -834,3 +837,4 @@ char *edg_wll_NotifChangeOpToString(edg_wll_NotifChangeOp notifChangeOpConst)
         if (notifChangeOpConst < 0 || (notifChangeOpConst) > sizeof(notifChangeOpConsts)/sizeof(notifChangeOpConsts[0])) return (char *) NULL;
         return strdup(notifChangeOpConsts[(int) notifChangeOpConst]);
 }
+

@@ -365,6 +365,43 @@ int edg_wll_QueryListener(edg_wll_Context ctx, edg_wlc_JobId job, const char *na
 
 
 
+int edg_wll_QuerySequenceCode(edg_wll_Context ctx, edg_wlc_JobId jobId, char **code) 
+{
+	int	error		= 0;
+	char	*response	= NULL,
+		*message	= NULL,
+		*send_mess	= NULL;
+	
+	
+	edg_wll_ResetError(ctx);
+
+	if ( edg_wll_QuerySequenceCodeToXML(ctx, jobId, &send_mess) != 0 )
+	{
+		edg_wll_SetError(ctx , (edg_wll_ErrorCode) EINVAL, "Invalid query record.");
+		goto err;
+	}
+
+	// ctx->p_tmp_timeout = ctx->p_query_timeout; // not used
+	
+	error = edg_wll_http_send_recv_proxy(ctx, "POST /querySequenceCode HTTP/1.1",
+			request_headers, send_mess, &response, NULL, &message);
+	if ( error != 0 )
+		goto err;
+
+	if (http_check_status(ctx,response))
+		goto err;
+
+	edg_wll_ParseQuerySequenceCodeResult(ctx,message,code);
+
+err:
+	free(response);
+	free(message);
+	free(send_mess);
+	return edg_wll_Error(ctx,NULL,NULL);
+
+}
+
+
 int set_server_name_and_port(edg_wll_Context ctx, const edg_wll_QueryRec **job_conditions)
 {
 	int				i = 0, j,

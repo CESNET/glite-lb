@@ -1,18 +1,15 @@
 #ifndef __EDG_WORKLOAD_LOGGING_COMMON_LB_PLAIN_IO_H__
 #define __EDG_WORKLOAD_LOGGING_COMMON_LB_PLAIN_IO_H__
 
+
+#include "context-int.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _edg_wll_Connection {
-	int	sock;
-	char   *buffer;
-	size_t	bufsz;
-	size_t	bufuse;
-} edg_wll_Connection;
 
-
+	
 int edg_wll_plain_accept(
 	int sock,
 	edg_wll_Connection *conn);

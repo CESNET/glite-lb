@@ -712,23 +712,34 @@ int edg_wll_SetLoggingJobProxy(
         int flags)
 {
         int     err;
+	char	*code_loc;
 
         edg_wll_ResetError(context);
+
+/* XXX: add user credentials somewhere - to context? */
+	edg_wll_SetParamString(context, EDG_WLL_PARAM_LBPROXY_USER, user);
 
         if (!job) return edg_wll_SetError(context,EINVAL,"jobid is null");
 
         edg_wlc_JobIdFree(context->p_jobid);
-        if ((err = edg_wlc_JobIdDup(job,&context->p_jobid)))
+        if ((err = edg_wlc_JobIdDup(job,&context->p_jobid))) {
                 edg_wll_SetError(context,err,"edg_wll_SetLoggingJob(): edg_wlc_JobIdDup() error");
+		goto err;
+	}
 
-        else {
-                if (!edg_wll_SetSequenceCode(context,code,flags))
+	/* query LBProxyServer for sequence code if not user-suplied *?
+	if (!code) {
+		edg_wll_QuerySequenceCode(context, job, &code_loc);
+		goto err;	
+	}
+	else
+		code_loc = code;
+	
+	if (!edg_wll_SetSequenceCode(context,code_loc,flags))
 /* XXX: ask proxy for last known sequence code */
-                        edg_wll_IncSequenceCode(context);
-        }
-/* XXX: add user credentials somewhere - to context? */
-	edg_wll_SetParamString(context, EDG_WLL_PARAM_LBPROXY_USER, user);
-
+		edg_wll_IncSequenceCode(context);
+	
+err:
         return edg_wll_Error(context,NULL,NULL);
 }
 

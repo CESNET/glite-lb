@@ -32,6 +32,7 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 
 	out->connPool = (edg_wll_ConnPool *) calloc(out->poolSize, sizeof(edg_wll_ConnPool));
 	out->connPoolNotif = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
+	out->connPlain = (edg_wll_Connection *) calloc(1, sizeof(edg_wll_Connection));
 
 	*ctx = out;
 	return 0;
@@ -52,7 +53,7 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 			if (ctx->connPool[i].peerName) free(ctx->connPool[i].peerName);
 
 			close(ctx->connPool[i].conn.sock);
-			if (ctx->connPool[i].conn.buffer) free(ctx->connPool[i].conn.buffer);
+			if (ctx->connPool[i].conn.buf) free(ctx->connPool[i].conn.buf);
 
 			edg_wll_gss_close(&ctx->connPool[i].gss,&close_timeout);
 			if (ctx->connPool[i].gsiCred)
@@ -60,6 +61,10 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 			if (ctx->connPool[i].buf) free(ctx->connPool[i].buf);
 		}	
 		free(ctx->connPool);
+	}
+	if (ctx->connPlain) {
+	       if (ctx->connPlain->buf)	free(ctx->connPlain->buf);
+	       free(ctx->connPlain);
 	}
 	if (ctx->notifSock >=0) close(ctx->notifSock);
 	if (ctx->srvName) free(ctx->srvName);
@@ -215,10 +220,7 @@ static const char* const srcNames[] = {
 edg_wll_Source edg_wll_StringToSource(const char *name)
 {
 	int	i;
-/* XXX: remove
-	for (i=1; srcNames[i] && strcmp(name,srcNames[i]); i++);
-	return srcNames[i] ? i : EDG_WLL_SOURCE_NONE;
-*/
+	
         for (i=1; i<sizeof(srcNames)/sizeof(srcNames[0]); i++)
                 if (strcasecmp(srcNames[i],name) == 0) return (edg_wll_Source) i;
         return EDG_WLL_SOURCE_NONE;

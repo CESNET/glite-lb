@@ -93,12 +93,21 @@ static void ReleaseConnection(edg_wll_Context ctx, char *name, int port)
 			
 
 
-
 int edg_wll_close(edg_wll_Context ctx)
 {
 	edg_wll_ResetError(ctx);
 
 	CloseConnection(ctx, ctx->connToUse);
+		
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+
+int edg_wll_close_proxy(edg_wll_Context ctx)
+{
+	close(ctx->connPlain->sock);
+	ctx->connPlain->sock = 0;
 		
 	return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -181,6 +190,55 @@ ok:
 
 
 
+int edg_wll_open_proxy(edg_wll_Context ctx)
+{
+	struct sockaddr_un	saddr;
+	int			flags;
+	
+
+	ctx->connPlain->sock = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (ctx->connPlain->sock < 0) {
+		edg_wll_SetError(ctx, errno, "socket() error");
+		goto err;
+	}
+
+	memset(&saddr, 0, sizeof(saddr));
+	saddr.sun_family = AF_UNIX;
+	if (!ctx->p_proxy_filename) {
+		edg_wll_SetError(ctx, EINVAL, "Proxy socket path not set!");
+		goto err;
+	}
+	
+	if (strlen(ctx->p_proxy_filename) > 108) {	// UNIX_PATH_MAX (def. in linux/un.h)
+							// but not defined in sys/un.h
+		 edg_wll_SetError(ctx, EINVAL, "proxy_filename too long!");
+		 goto err;
+	}
+	strcpy(saddr.sun_path, ctx->p_proxy_filename);
+
+	if ((flags = fcntl(ctx->connPlain->sock, F_GETFL, 0)) < 0 || 
+			fcntl(ctx->connPlain->sock, F_SETFL, flags | O_NONBLOCK) < 0) {
+		edg_wll_SetError(ctx, errno, "fcntl()");
+		goto err;
+	}
+
+	if (connect(ctx->connPlain->sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
+		edg_wll_SetError(ctx, errno, "connect()");
+		goto err;
+	}
+
+	return edg_wll_Error(ctx,NULL,NULL);	
+	
+err:
+	/* some error occured; close created connection */
+
+	edg_wll_close_proxy(ctx);
+		
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+	
+
+
 /* transform HTTP error code to ours */
 int http_check_status(
 	edg_wll_Context ctx,
@@ -256,6 +314,40 @@ int edg_wll_http_send_recv(
 	}
 	
 	gettimeofday(&ctx->connPool[ctx->connToUse].lastUsed, NULL);
+	
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+
+int edg_wll_http_send_recv_proxy(
+	edg_wll_Context ctx,
+	char *request,
+	const char * const *req_head,
+	char *req_body,
+	char **response,
+	char ***resp_head,
+	char **resp_body)
+{
+	if (edg_wll_open_proxy(ctx)) return edg_wll_Error(ctx,NULL,NULL);
+	
+	switch (edg_wll_http_send_proxy(ctx,request,req_head,req_body)) {
+		case ENOTCONN:
+			edg_wll_close_proxy(ctx);
+			if (edg_wll_open_proxy(ctx)
+				|| edg_wll_http_send_proxy(ctx,request,req_head,req_body))
+					return edg_wll_Error(ctx,NULL,NULL);
+			/* fallthrough */
+		case 0: break;
+		default: return edg_wll_Error(ctx,NULL,NULL);
+	}
+
+	if (edg_wll_http_recv_proxy(ctx,response,resp_head,resp_body) == ENOTCONN) {
+		edg_wll_close_proxy(ctx);
+		(void) (edg_wll_open_proxy(ctx)
+			|| edg_wll_http_send_proxy(ctx,request,req_head,req_body)
+			|| edg_wll_http_recv_proxy(ctx,response,resp_head,resp_body));
+	}
 	
 	return edg_wll_Error(ctx,NULL,NULL);
 }

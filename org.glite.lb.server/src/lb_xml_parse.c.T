@@ -26,21 +26,22 @@
 #define UNUSED_VAR
 #endif
 
-#define QUERY_EVENTS_BEGIN	"<edg_wll_QueryEventsResult"
-#define QUERY_EVENTS_END	"</edg_wll_QueryEventsResult>\r\n"
-#define QUERY_JOBS_BEGIN	"<edg_wll_QueryJobsResult"
-#define QUERY_JOBS_END		"</edg_wll_QueryJobsResult>\r\n"
-#define PURGE_RESULT_BEGIN	"<edg_wll_PurgeResult"
-#define PURGE_RESULT_END	"</edg_wll_PurgeResult>\r\n"
-#define DUMP_RESULT_BEGIN	"<edg_wll_DumpResult"
-#define DUMP_RESULT_END		"</edg_wll_DumpResult>\r\n"
-#define LOAD_RESULT_BEGIN	"<edg_wll_LoadResult"
-#define LOAD_RESULT_END		"</edg_wll_LoadResult>\r\n"
-#define INDEXED_ATTRS_BEGIN	"<edg_wll_GetIndexedAttributesResult"
-#define INDEXED_ATTRS_END	"</edg_wll_GetIndexedAttributesResult>\r\n"
-#define NOTIF_RESULT_BEGIN	"<edg_wll_NotifResult"
-#define NOTIF_RESULT_END	"</edg_wll_NotifResult>\r\n"
-
+#define QUERY_EVENTS_BEGIN			"<edg_wll_QueryEventsResult"
+#define QUERY_EVENTS_END			"</edg_wll_QueryEventsResult>\r\n"
+#define QUERY_JOBS_BEGIN			"<edg_wll_QueryJobsResult"
+#define QUERY_JOBS_END				"</edg_wll_QueryJobsResult>\r\n"
+#define PURGE_RESULT_BEGIN			"<edg_wll_PurgeResult"
+#define PURGE_RESULT_END			"</edg_wll_PurgeResult>\r\n"
+#define DUMP_RESULT_BEGIN			"<edg_wll_DumpResult"
+#define DUMP_RESULT_END				"</edg_wll_DumpResult>\r\n"
+#define LOAD_RESULT_BEGIN			"<edg_wll_LoadResult"
+#define LOAD_RESULT_END				"</edg_wll_LoadResult>\r\n"
+#define INDEXED_ATTRS_BEGIN			"<edg_wll_GetIndexedAttributesResult"
+#define INDEXED_ATTRS_END			"</edg_wll_GetIndexedAttributesResult>\r\n"
+#define NOTIF_RESULT_BEGIN			"<edg_wll_NotifResult"
+#define NOTIF_RESULT_END			"</edg_wll_NotifResult>\r\n"
+#define QUERY_SEQUENCE_CODE_RESULT_BEGIN	"<edg_wll_QuerySequenceCodeResult"
+#define QUERY_SEQUENCE_CODE_RESULT_END		"</edg_wll_QuerySequenceCodeResult>\r\n"
 
 
 // XXX will be redundant soon
@@ -372,6 +373,26 @@ static void startNotifRequest(void *data, const char *el, const char **attr)
 		case 2: /* fall through */
 		case 3: /* do not check xml tags, processed in startJobQueryRec */
 		case 4: break;
+		default: unexp() 
+			 break;
+	}
+	XMLCtx->level++;
+}
+
+
+
+static void startQuerySequenceCodeRequest(void *data, const char *el, const char **attr)
+{
+	edg_wll_XML_ctx *XMLCtx = data;
+
+	
+	strcpy(XMLCtx->element, el);
+
+	switch (XMLCtx->level) {
+		case 0:	if (strcasecmp(el,"edg_wll_QuerySequenceCodeRequest")) unexp()
+			break;
+		case 1: if ( (strcasecmp(el,"jobId")) && (strcasecmp(el,"source")) ) unexp()
+			break;
 		default: unexp() 
 			 break;
 	}
@@ -788,6 +809,27 @@ static void endNotifRequest(void *data, const char *el UNUSED_VAR)
 
 
 
+static void endQuerySequenceCodeRequest(void *data, const char *el UNUSED_VAR)
+{
+        edg_wll_XML_ctx *XMLCtx = data;
+
+        if (XMLCtx->level == 2) {
+                if (!strcmp(XMLCtx->element,"jobId")) {
+			XMLCtx->jobId = edg_wll_from_string_to_jobid(XMLCtx);
+		}
+		else if (!strcmp(XMLCtx->element,"source")) {
+			XMLCtx->source = edg_wll_from_string_to_string(XMLCtx);
+		}
+	}
+
+	XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
+	XMLCtx->level--;
+}
+
+
+
+
 int parseJobQueryRec(edg_wll_Context ctx, const char *messageBody, long len, edg_wll_QueryRec ***conditions)
 {
 	int	ret;
@@ -1198,6 +1240,60 @@ int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 	edg_wll_freeXMLCtx(&XMLCtx);
 	return ret;
 }
+
+
+
+/* parse Sequence Code request from client */
+int parseQuerySequenceCodeRequest(edg_wll_Context ctx, char *messageBody, edg_wlc_JobId *jobId, char **source)
+{
+	int	ret;
+	edg_wll_XML_ctx 	XMLCtx;
+	XML_Char *encoding = "ISO-8859-1";
+
+	errno = 0;
+	edg_wll_initXMLCtx(&XMLCtx);
+	XMLCtx.ctx = ctx;
+	edg_wll_ResetError(ctx);
+
+
+        /* initialize parser */
+        XMLCtx.p = XML_ParserCreate(encoding);
+        XML_SetElementHandler(XMLCtx.p, startQuerySequenceCodeRequest, endQuerySequenceCodeRequest);
+        XML_SetCharacterDataHandler(XMLCtx.p, char_handler);
+        XML_SetUserData(XMLCtx.p, (void *) &XMLCtx);
+
+
+        if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
+                char *errorMessage;
+
+                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+
+                edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
+                free(errorMessage);
+        } else if (XMLCtx.errtxt) edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, XMLCtx.errtxt);
+
+
+	if ((ret = edg_wll_Error(ctx,NULL,NULL))) {
+		if (XMLCtx.jobId)
+			 edg_wlc_JobIdFree(XMLCtx.jobId);
+
+		*jobId = NULL;
+		*source = NULL;
+	}
+	else {
+		*jobId = XMLCtx.jobId;
+		*source = XMLCtx.source;
+	}
+	
+	
+        XML_ParserFree(XMLCtx.p);
+	edg_wll_freeXMLCtx(&XMLCtx);
+	return ret;
+}
+
+
 
 
 int edg_wll_QueryEventsToXML(edg_wll_Context ctx, edg_wll_Event *eventsOut, char **message)
@@ -1722,6 +1818,33 @@ int edg_wll_NotifResultToXML(
 			NOTIF_RESULT_BEGIN, ctx->errCode, ctx->errDesc, pomA, NOTIF_RESULT_END);
 	else
 		trio_asprintf(&pomB,"%s>\r\n%s%s", NOTIF_RESULT_BEGIN, pomA, NOTIF_RESULT_END);
+	free(pomA);
+
+        *message = pomB;
+        return 0;
+}
+
+
+
+/* construct Message-Body of Request-Line for edg_wll_Notif */
+int edg_wll_QuerySequenceCodeResultToXML(
+                edg_wll_Context ctx,
+		char *seqCode,
+                char **message)
+{
+        char *pomA, *pomB;
+
+
+	pomA = strdup("");
+	edg_wll_add_string_to_XMLBody(&pomA, seqCode, "sequence_code", NULL);
+
+	if (ctx->errDesc || ctx->errCode)
+		trio_asprintf(&pomB,"%s code=\"%d\" desc=\"%|Xs\">\r\n%s%s",
+			QUERY_SEQUENCE_CODE_RESULT_BEGIN, ctx->errCode, 
+			ctx->errDesc, pomA, QUERY_SEQUENCE_CODE_RESULT_END);
+	else
+		trio_asprintf(&pomB,"%s>\r\n%s%s", QUERY_SEQUENCE_CODE_RESULT_BEGIN, 
+			pomA, QUERY_SEQUENCE_CODE_RESULT_END);
 	free(pomA);
 
         *message = pomB;

@@ -67,6 +67,9 @@ typedef struct _edg_wll_XML_ctx {
 	edg_wll_NotifId		notifId;
 	edg_wll_NotifChangeOp	notifChangeOp;
 	time_t			notifValidity;
+	edg_wlc_JobId		jobId;
+	char			*source;
+	char			*seqCode;
 	int			errCode;
 	int			bound;		/* marks 2nd value of within operator */
 	char			*errDesc;

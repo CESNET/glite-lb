@@ -24,8 +24,8 @@
 }
 
 #define bufshift(conn, shift) { \
-	memmove((conn)->buffer, (conn)->buffer+(shift), (conn)->bufuse-(shift)); \
-	(conn)->bufuse -= (shift); \
+	memmove((conn)->buf, (conn)->buf+(shift), (conn)->bufUse-(shift)); \
+	(conn)->bufUse -= (shift); \
 }
 
 int edg_wll_plain_connect(
@@ -46,7 +46,7 @@ int edg_wll_plain_accept(
 
 	/* Do not free the buffer here - just reuse the memmory
 	 */
-	conn->bufuse = 0;
+	conn->bufUse = 0;
 	/*
 	if ( (conn->sock = accept(sock, (struct sockaddr *)&a, &alen)) )
 		return -1;
@@ -65,10 +65,10 @@ int edg_wll_plain_read(
 	struct timeval	timeout, before, after;
 
 
-	if ( conn->bufsz == 0 ) {
-		if ( !(conn->buffer = malloc(BUFSIZ)) ) return -1;
-		conn->bufsz = BUFSIZ;
-		conn->bufuse = 0;
+	if ( conn->bufSize == 0 ) {
+		if ( !(conn->buf = malloc(BUFSIZ)) ) return -1;
+		conn->bufSize = BUFSIZ;
+		conn->bufUse = 0;
 	}
 
 	if ( to ) {
@@ -78,7 +78,7 @@ int edg_wll_plain_read(
 
 	errno = 0;
 
-	if ( conn->bufuse > 0 ) goto cleanup;
+	if ( conn->bufUse > 0 ) goto cleanup;
 
 	toread = 0;
 	do {
@@ -89,24 +89,24 @@ int edg_wll_plain_read(
 		case -1: goto cleanup; break;
 		}
 
-		if ( conn->bufuse == conn->bufsz ) {
-			char *tmp = realloc(conn->buffer, conn->bufsz+BUFSIZ);
+		if ( conn->bufUse == conn->bufSize ) {
+			char *tmp = realloc(conn->buf, conn->bufSize+BUFSIZ);
 			if ( !tmp ) return -1;
-			conn->buffer = tmp;
-			conn->bufsz += BUFSIZ;
+			conn->buf = tmp;
+			conn->bufSize += BUFSIZ;
 		}
-		toread = conn->bufsz - conn->bufuse;
-		if ( (ct = read(conn->sock, conn->buffer+conn->bufuse, toread)) < 0 ) {
+		toread = conn->bufSize - conn->bufUse;
+		if ( (ct = read(conn->sock, conn->buf+conn->bufUse, toread)) < 0 ) {
 			if ( errno == EINTR ) continue;
 			goto cleanup;
 		}
 
-		if ( ct == 0 && conn->bufuse == 0 && errno == 0 ) {
+		if ( ct == 0 && conn->bufUse == 0 && errno == 0 ) {
 			errno = ENOTCONN;
 			goto cleanup;
 		}
 
-		conn->bufuse += ct;
+		conn->bufUse += ct;
 	} while ( ct == toread );
 
 
@@ -120,9 +120,9 @@ cleanup:
 
 	if ( errno ) return -1;
 
-	if ( conn->bufuse > 0 ) {
-		size_t len = (conn->bufuse < outbufsz) ? conn->bufuse : outbufsz;
-		memcpy(outbuf, conn->buffer, len);
+	if ( conn->bufUse > 0 ) {
+		size_t len = (conn->bufUse < outbufsz) ? conn->bufUse : outbufsz;
+		memcpy(outbuf, conn->buf, len);
 		outbufsz = len;
 		bufshift(conn, len);
 		return len;
@@ -141,9 +141,9 @@ int edg_wll_plain_read_full(
 	size_t		total = 0;
 
 
-	if ( conn->bufuse > 0 ) {
-		size_t len = (conn->bufuse < outbufsz) ? conn->bufuse : outbufsz;
-		memcpy(outbuf, conn->buffer, len);
+	if ( conn->bufUse > 0 ) {
+		size_t len = (conn->bufUse < outbufsz) ? conn->bufUse : outbufsz;
+		memcpy(outbuf, conn->buf, len);
 		outbufsz = len;
 		bufshift(conn, len);
 		total += len;
