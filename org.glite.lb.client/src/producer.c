@@ -730,7 +730,7 @@ int edg_wll_SetLoggingJobProxy(
 	edg_wll_SetParamString(context, EDG_WLL_PARAM_LBPROXY_USER, user);
 
 	/* query LBProxyServer for sequence code if not user-suplied */
-/* FIXME: doesn't work yet
+/* FIXME: doesn't work yet */
 	if (!code) {
 		edg_wll_QuerySequenceCodeProxy(context, job, &code_loc);
 		goto edg_wll_setloggingjobproxy_end;	
@@ -738,7 +738,7 @@ int edg_wll_SetLoggingJobProxy(
 		code_loc = strdup(code);
 	}
 	
-	if (!edg_wll_SetSequenceCode(context,code_loc,flags)) */ {
+	if (!edg_wll_SetSequenceCode(context,code_loc,flags)) {
 		edg_wll_IncSequenceCode(context);
 	}
 	
@@ -824,7 +824,7 @@ static int edg_wll_RegisterJobMasterProxy(
 	free(seq);
 
 	type_s = edg_wll_RegJobJobtypeToString(type);
-	if (!type_s) return edg_wll_SetError(context,EINVAL,"edg_wll_RegisterJobMaster(): no jobtype specified");
+	if (!type_s) return edg_wll_SetError(context,EINVAL,"edg_wll_RegisterJobMasterProxy(): no jobtype specified");
 
 	if ((type == EDG_WLL_REGJOB_DAG || type == EDG_WLL_REGJOB_PARTITIONED)
 		&& num_subjobs > 0) 
@@ -919,7 +919,13 @@ int edg_wll_RegisterJobProxy(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMasterProxy(context,job,type,user,jdl,ns, NULL, num_subjobs,seed,subjobs);
+	int ret = edg_wll_RegisterJobSync(context,job,type,jdl,ns,num_subjobs,seed,subjobs);
+	if (ret) {
+		edg_wll_UpdateError(context,0,"edg_wll_RegisterJobProxy(): unable to register with bkserver");
+		return edg_wll_Error(context,NULL,NULL);
+	}
+
+	return edg_wll_RegisterJobMasterProxy(context,job,type,user,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_ChangeACL(

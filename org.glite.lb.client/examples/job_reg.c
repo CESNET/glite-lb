@@ -13,14 +13,15 @@ extern int opterr,optind;
 
 static void usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S]]\n", me);
+	fprintf(stderr,"usage: %s [-m bkserver] [-x lbproxy_user] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S]]\n", me);
 }
 
 int main(int argc, char *argv[])
 {
-	char		   *src = NULL,*job = NULL,*server = NULL,*seq;
-	int				done = 0,num_subjobs = 0,i;
-	int				reg_subjobs = 0;
+	char *src = NULL,*job = NULL,*server = NULL,*seq;
+	char *lbproxy = NULL;
+	int  done = 0,num_subjobs = 0,i;
+	int  reg_subjobs = 0;
 	edg_wll_Context	ctx;
 	edg_wlc_JobId	jobid,*subjobs;
 
@@ -29,7 +30,8 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"Sj:s:n:m:")) {
+		switch (getopt(argc,argv,"x:s:j:m:n:S")) {
+			case 'x': lbproxy = (char *) strdup(optarg); break;
 			case 's': src = (char *) strdup(optarg); break;
 			case 'j': job = (char *) strdup(optarg); break;
 			case 'm': server = strdup(optarg); break;
@@ -63,15 +65,33 @@ int main(int argc, char *argv[])
 	}
 
 	edg_wll_SetParam(ctx,EDG_WLL_PARAM_SOURCE,edg_wll_StringToSource(src));
-	if (edg_wll_RegisterJobSync(ctx,jobid,
-		num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
-		"blabla", "NNNSSSS",
-		num_subjobs,NULL,&subjobs))
-	{
-		char 	*et,*ed;
-		edg_wll_Error(ctx,&et,&ed);
-		fprintf(stderr,"edg_wll_RegisterJobSync(%s): %s (%s)\n",job,et,ed);
-		exit(1);
+	if (lbproxy) {
+		/*
+		fprintf(stderr,"EDG_WL_LBPROXY_STORE_SOCK = %s\n", ctx->p_lbproxy_store_sock);
+		fprintf(stderr,"EDG_WL_LBPROXY_SERVE_SOCK = %s\n", ctx->p_lbproxy_serve_sock);
+		*/
+		if (edg_wll_RegisterJobProxy(ctx,jobid,
+			num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
+			lbproxy,
+			"blabla", "NNNSSSS",
+			num_subjobs,NULL,&subjobs))
+		{
+			char 	*et,*ed;
+			edg_wll_Error(ctx,&et,&ed);
+			fprintf(stderr,"edg_wll_RegisterJobProxy(%s): %s (%s)\n",job,et,ed);
+			exit(1);
+		}
+	} else {
+		if (edg_wll_RegisterJobSync(ctx,jobid,
+			num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
+			"blabla", "NNNSSSS",
+			num_subjobs,NULL,&subjobs))
+		{
+			char 	*et,*ed;
+			edg_wll_Error(ctx,&et,&ed);
+			fprintf(stderr,"edg_wll_RegisterJobSync(%s): %s (%s)\n",job,et,ed);
+			exit(1);
+		}
 	}
 
 	seq = edg_wll_GetSequenceCode(ctx);
@@ -88,6 +108,11 @@ int main(int argc, char *argv[])
 
 	if (reg_subjobs) {
 		char ** jdls = (char**) malloc(num_subjobs*sizeof(char*));
+
+		if (lbproxy) {
+			fprintf(stderr,"edg_wll_RegisterSubjobsProxy(): not implemented yet.\n");
+			exit(1);
+		}
 
 		for (i=0; subjobs[i]; i++) {
 			asprintf(jdls+i, "JDL of subjob #%d\n", i+1);
