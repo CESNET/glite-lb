@@ -724,7 +724,6 @@ static int edg_wll_RegisterJobMaster(
 	int			flags,
         const edg_wlc_JobId     job,
         enum edg_wll_RegJobJobtype	type,
-	const char *		user,
         const char *            jdl,
         const char *            ns,
 	edg_wlc_JobId		parent,
@@ -732,10 +731,13 @@ static int edg_wll_RegisterJobMaster(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	char	*seq,*type_s,*intseed,*parent_s;
+	char	*seq,*type_s,*intseed,*parent_s,*user_dn;
 	int	err = 0;
+        edg_wll_GssStatus       gss_stat;
+        gss_cred_id_t   cred = GSS_C_NO_CREDENTIAL;
+	OM_uint32       min_stat;
 
-	seq = type_s = intseed = parent_s = NULL;
+	seq = type_s = intseed = parent_s = user_dn = NULL;
 
 	edg_wll_ResetError(context);
 
@@ -758,13 +760,25 @@ static int edg_wll_RegisterJobMaster(
 	parent_s = parent ? edg_wlc_JobIdUnparse(parent) : strdup("");
 
 	if (flags & LOGFLAG_DIRECT) {
+		/* SetLoggingJob and log directly the message */
 		if (edg_wll_SetLoggingJob(context,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
 			edg_wll_LogEventMaster(context,LOGFLAG_DIRECT | LOGFLAG_SYNC,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
 		}
 	} else if (flags & LOGFLAG_PROXY) {
-		if (edg_wll_SetLoggingJobProxy(context,job,NULL,user,EDG_WLL_SEQ_NORMAL) == 0) {
+		/* first obtain the certiicate */
+		err = edg_wll_gss_acquire_cred_gsi(
+		      context->p_proxy_filename ? context->p_proxy_filename : context->p_cert_filename,
+		      context->p_proxy_filename ? context->p_proxy_filename : context->p_key_filename,
+		      &cred, &user_dn, &gss_stat);
+		/* Give up if unable to obtain credentials */
+		if (err && context->p_proxy_filename) {
+			edg_wll_SetErrorGss(context, "failed to load GSI credentials", &gss_stat);
+			goto edg_wll_registerjobmaster_end;
+		}
+		/* SetLoggingJobProxy and and log to proxy */
+		if (edg_wll_SetLoggingJobProxy(context,job,NULL,user_dn,EDG_WLL_SEQ_NORMAL) == 0) {
 			edg_wll_LogEventMaster(context,LOGFLAG_PROXY | LOGFLAG_SYNC,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
@@ -777,6 +791,8 @@ static int edg_wll_RegisterJobMaster(
 	}
 
 edg_wll_registerjobmaster_end:
+        if (cred != GSS_C_NO_CREDENTIAL)
+                gss_release_cred(&min_stat, &cred);
 	if (seq) free(seq);
 	if (type_s) free(type_s); 
 	if (intseed) free(intseed); 
@@ -794,7 +810,7 @@ int edg_wll_RegisterJobSync(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,NULL,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterJob(
@@ -807,7 +823,7 @@ int edg_wll_RegisterJob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,NULL,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterSubjob(
@@ -821,7 +837,7 @@ int edg_wll_RegisterSubjob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,NULL,jdl,ns,parent,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterSubjobs(edg_wll_Context ctx,const edg_wlc_JobId parent,
@@ -853,7 +869,6 @@ int edg_wll_RegisterJobProxy(
         edg_wll_Context         context,
         const edg_wlc_JobId     job,
         enum edg_wll_RegJobJobtype	type,
-	const char *		user,
         const char *            jdl,
         const char *            ns,
         int                     num_subjobs,
@@ -867,7 +882,7 @@ int edg_wll_RegisterJobProxy(
 		return edg_wll_Error(context,NULL,NULL);
 	}
 	/* and then with L&B Proxy */
-	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,user,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_ChangeACL(
