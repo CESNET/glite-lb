@@ -43,6 +43,7 @@ typedef struct _edg_wll_XML_ctx {
 	edg_wll_QueryRec	**job_conditions;	/* temporal results */
 	edg_wll_QueryRec	**event_conditions;
 	enum edg_wll_QueryType	type;	
+	edg_wll_QueryRec        **conditions;
 	int		    	flags;
         edg_wlc_JobId 	    	*jobsOutGlobal;   
         edg_wll_Event       	*eventsOutGlobal;

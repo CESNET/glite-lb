@@ -16,9 +16,8 @@
 
 #include "glite/lb/purge.h"
 #include "glite/lb/dump.h"
-#include "glite/lb/load.h"
 
-#include "lb_xml_parse.h"
+#include "lb_xml_parse_V21.h"
 
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))
@@ -34,21 +33,13 @@
 #define PURGE_RESULT_END	"</edg_wll_PurgeResult>\r\n"
 #define DUMP_RESULT_BEGIN	"<edg_wll_DumpResult"
 #define DUMP_RESULT_END		"</edg_wll_DumpResult>\r\n"
-#define LOAD_RESULT_BEGIN	"<edg_wll_LoadResult"
-#define LOAD_RESULT_END		"</edg_wll_LoadResult>\r\n"
-#define INDEXED_ATTRS_BEGIN	"<edg_wll_GetIndexedAttributesResult"
-#define INDEXED_ATTRS_END	"</edg_wll_GetIndexedAttributesResult>\r\n"
-#define NOTIF_RESULT_BEGIN	"<edg_wll_NotifResult"
-#define NOTIF_RESULT_END	"</edg_wll_NotifResult>\r\n"
-
-
 
 // XXX will be redundant soon
 #define USERJOBS_BEGIN		"<edg_wll_UserJobs"
 #define USERJOBS_END		"</edg_wll_UserJobs>\r\n"
 
 
-static char	*ops[] = { "equal","less","greater","within","unequal" },
+static char	*ops[] = { "equal","less","greater","within" },
 		*attrs[] = {	"jobid","owner","status","location","destination",
 				"donecode","usertag","time","level","host","source",
 				"instance","type","chkpt_tag", "resubmitted", "parent_job", "exitcode" };
@@ -68,67 +59,10 @@ static const struct timeval null_timeval = {0,0};
 }
 
 
-
-static void startJobQueryRec(void *data, const char *el, const char **attr)
-{
-	unsigned int	i;
-	edg_wll_XML_ctx *XMLCtx = data;
-
-	
-	strcpy(XMLCtx->element, el);
-
-	switch (XMLCtx->level) {
-		case 0: if (strcasecmp(el,"and")) unexp()
-			break;
-		case 1: if (strcasecmp(el,"orJobConditions")) unexp()
-			else {
-				XMLCtx->position = -1;
-				XMLCtx->job_conditions = realloc(XMLCtx->job_conditions,
-					(++XMLCtx->row+2)*sizeof(*XMLCtx->job_conditions));
-				XMLCtx->job_conditions[XMLCtx->row] = NULL;
-				XMLCtx->job_conditions[XMLCtx->row+1] = NULL;
-			}
-			break;
-		case 2:
-			for (i=0; i<sizeof(ops)/sizeof(ops[0]); i++)
-				if (!strcasecmp(el,ops[i])) break;
-			if (i == sizeof(ops)/sizeof(ops[0])) unexp()
-			else {
-				if (!XMLCtx->job_conditions) break;
-
-				/* malloc also terminator and set it to 0 (= EDG_WLL_QUERY_ATTR_UNDEF) */
-				XMLCtx->job_conditions[XMLCtx->row] = realloc(XMLCtx->job_conditions[XMLCtx->row],
-					(++XMLCtx->position+2)*sizeof(**XMLCtx->job_conditions));
-				memset(&XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position],0,2*sizeof(**XMLCtx->job_conditions));
-				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].op = i;
-				XMLCtx->bound = 0;
-			}
-			break;
-		case 3: for (i=0; i<sizeof(attrs)/sizeof(attrs[0]) && 
-				strcasecmp(el,attrs[i]); i++);
-			if (i == sizeof(attrs)/sizeof(attrs[0])) unexp()
-			else {
-				if (!XMLCtx->job_conditions) break;
-				if (!XMLCtx->job_conditions[XMLCtx->row]) break;
-
-				if ( (i+1) == EDG_WLL_QUERY_ATTR_USERTAG) {
-					if (!attr[0] || !attr[1]) { unexp() break;}
-	                                if (strcmp(attr[0],"name")) { unexp() break;}
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
-				} 
-				else if ( (i+1) == EDG_WLL_QUERY_ATTR_TIME) {
-					if (!attr[0] || !attr[1]) { unexp() break;}
-                                        if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
-				}
-				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr = i+1;
-			}		
-			break;
-		default: unexp(); break;
-	}
-	XMLCtx->level++;
+/* Dummy function, returns only const string "el"; just for compatibility */
+static char *return_string_el(edg_wll_JobStatCode statCode) {
+	return("el");
 }
-
 
 
 static void startQueryJobsRequest(void *data, const char *el, const char **attr)
@@ -150,16 +84,47 @@ static void startQueryJobsRequest(void *data, const char *el, const char **attr)
 				else { unexp() break; }
 			}
 			break;
-		case 1: if (!strcasecmp(el,"and")) {
-				XMLCtx->jobQueryRec_begin = XML_GetCurrentByteIndex(XMLCtx->p);
-				break;
-			}
-			else if (!strcasecmp(el,"flags")) break;
-			else unexp()
+		case 1: if (strcasecmp(el,"and") && strcasecmp(el,"flags")) unexp()
 			break;
-		case 2: /* fall through */
-		case 3: /* do not check xml tags, processed in startJobQueryRec */
-		case 4: break;
+		case 2: if (strcasecmp(el,"or")) unexp()
+			else {
+				XMLCtx->position = -1;
+				XMLCtx->conditions = realloc(XMLCtx->conditions,
+					(++XMLCtx->row+2)*sizeof(*XMLCtx->conditions));
+				XMLCtx->conditions[XMLCtx->row] = NULL;
+				XMLCtx->conditions[XMLCtx->row+1] = NULL;
+			}
+			break;
+		case 3:
+			for (i=0; i<sizeof(ops)/sizeof(ops[0]); i++)
+				if (!strcasecmp(el,ops[i])) break;
+			if (i == sizeof(ops)/sizeof(ops[0])) unexp()
+			else {
+				/* malloc also terminator and set it to 0 (= EDG_WLL_QUERY_ATTR_UNDEF) */
+				XMLCtx->conditions[XMLCtx->row] = realloc(XMLCtx->conditions[XMLCtx->row],
+					(++XMLCtx->position+2)*sizeof(**XMLCtx->conditions));
+				memset(&XMLCtx->conditions[XMLCtx->row][XMLCtx->position],0,2*sizeof(**XMLCtx->conditions));
+				XMLCtx->conditions[XMLCtx->row][XMLCtx->position].op = i;
+				XMLCtx->bound = 0;
+			}
+			break;
+		case 4: for (i=0; i<sizeof(attrs)/sizeof(attrs[0]) && 
+				strcasecmp(el,attrs[i]); i++);
+			if (i == sizeof(attrs)/sizeof(attrs[0])) unexp()
+			else {
+				if ( (i+1) == EDG_WLL_QUERY_ATTR_USERTAG) {
+					if (!attr[0] || !attr[1]) { unexp() break;}
+	                                if (strcmp(attr[0],"name")) { unexp() break;}
+					XMLCtx->conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
+				} 
+				else if ( (i+1) == EDG_WLL_QUERY_ATTR_TIME) {
+					if (!attr[0] || !attr[1]) { unexp() break;}
+                                        if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
+					XMLCtx->conditions[XMLCtx->row][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
+				}
+				XMLCtx->conditions[XMLCtx->row][XMLCtx->position].attr = i+1;
+			}		
+			break;
 		default: unexp(); break;
 	}
 	XMLCtx->level++;
@@ -211,8 +176,6 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 				if (!strcasecmp(el,ops[i])) break;
 			if (i == sizeof(ops)/sizeof(ops[0])) unexp()
 			else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_JOB_CONDITION) {
-				if (!XMLCtx->job_conditions) break;
-
 				/* malloc also terminator and set it to 0 (= EDG_WLL_QUERY_ATTR_UNDEF) */
 				XMLCtx->job_conditions[XMLCtx->row] = realloc(XMLCtx->job_conditions[XMLCtx->row],
 					(++XMLCtx->position+2)*sizeof(**XMLCtx->job_conditions));
@@ -221,7 +184,6 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 				XMLCtx->bound = 0;
 			}
 			else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_EVENT_CONDITION) {
-				if (!XMLCtx->event_conditions) break;
 				/* malloc also terminator and set it to 0 (= EDG_WLL_QUERY_ATTR_UNDEF) */
 				XMLCtx->event_conditions[XMLCtx->row2] = realloc(XMLCtx->event_conditions[XMLCtx->row2],
 					(++XMLCtx->position2+2)*sizeof(**XMLCtx->event_conditions));
@@ -235,7 +197,6 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 				strcasecmp(el,attrs[i]); i++);
 			if (i == sizeof(attrs)/sizeof(attrs[0])) unexp()
 			else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_JOB_CONDITION) { 
-				if (!XMLCtx->job_conditions[XMLCtx->row]) break;
 				if ( (i+1) == EDG_WLL_QUERY_ATTR_USERTAG) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
 	                                if (attr[0] && strcmp(attr[0],"name")) { unexp() break;}
@@ -250,7 +211,6 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr = i+1;
 			}
 			else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_EVENT_CONDITION) {
-				if (!XMLCtx->event_conditions[XMLCtx->row2]) break;
 				if ( (i+1) == EDG_WLL_QUERY_ATTR_USERTAG) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
 	                                if (attr[0] && strcmp(attr[0],"name")) { unexp() break;}
@@ -296,7 +256,7 @@ static void startPurgeRequest(void *data, const char *el, const char **attr)
 				}
                                 XMLCtx->purgeRequestGlobal.jobs[XMLCtx->position+1] = NULL;
 			}
-			else if (XMLCtx->tagToIndex(el) >= 0 ) {
+			else if (!strcasecmp(el,"time")) {
 				/* static array, no need to initialize & allocate anything */
 			}
 			else 
@@ -321,57 +281,6 @@ static void startDumpRequest(void *data, const char *el, const char **attr)
 			break;
 		case 1: if (strcasecmp(el,"from") && strcasecmp(el,"to")) unexp()
 			break;
-		default: unexp() 
-			 break;
-	}
-	XMLCtx->level++;
-}
-
-
-
-static void startLoadRequest(void *data, const char *el, const char **attr)
-{
-	edg_wll_XML_ctx *XMLCtx = data;
-
-	
-	strcpy(XMLCtx->element, el);
-
-	switch (XMLCtx->level) {
-		case 0:	if (strcasecmp(el,"edg_wll_LoadRequest")) unexp()
-			break;
-		case 1: if (strcasecmp(el,"server_file")) unexp()
-			break;
-		default: unexp() 
-			 break;
-	}
-	XMLCtx->level++;
-}
-
-
-
-static void startNotifRequest(void *data, const char *el, const char **attr)
-{
-	edg_wll_XML_ctx *XMLCtx = data;
-
-	
-	strcpy(XMLCtx->element, el);
-
-	switch (XMLCtx->level) {
-		case 0:	if (!strcasecmp(el,"edg_wll_NotifRequest") && attr[0] && attr[1]) {
-				if (strcmp(attr[0],"function")) { unexp() break;}
-				else XMLCtx->notifFunction = strdup(attr[1]);
-			}
-			else unexp()
-			break;
-		case 1: if (!strcasecmp(el,"and")) {
-				XMLCtx->jobQueryRec_begin = XML_GetCurrentByteIndex(XMLCtx->p);
-			}
-			else if ( (strcasecmp(el,"notifId")) && (strcasecmp(el,"clientAddress")) && 
-				(strcasecmp(el,"notifChangeOp")) ) unexp()
-			break;
-		case 2: /* fall through */
-		case 3: /* do not check xml tags, processed in startJobQueryRec */
-		case 4: break;
 		default: unexp() 
 			 break;
 	}
@@ -413,19 +322,23 @@ static void char_handler(void *data, const char *s, int len)
 
 
 
-static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
+static void endQueryJobsRequest(void *data, const char *el UNUSED_VAR)
 {
 	edg_wll_XML_ctx *XMLCtx = data;
 	char *e;
 
 
-	if (XMLCtx->level == 4 &&
-		XMLCtx->job_conditions != NULL &&
-		XMLCtx->job_conditions[XMLCtx->row] != NULL) {
-		switch (XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr) {
+	if (XMLCtx->level == 2) {
+		if (!strcmp(XMLCtx->element,"flags") && XMLCtx->char_buf) {
+// XXX: check if it works
+			 XMLCtx->flags = edg_wll_string_to_stat_flags(XMLCtx->char_buf);
+		}
+	}
+	else if (XMLCtx->level == 5) {
+		switch (XMLCtx->conditions[XMLCtx->row][XMLCtx->position].attr) {
 			case EDG_WLL_QUERY_ATTR_JOBID:
 			case EDG_WLL_QUERY_ATTR_PARENT:
-				if ( (XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.j = 
+				if ( (XMLCtx->conditions[XMLCtx->row][XMLCtx->position].value.j = 
 					edg_wll_from_string_to_jobid(XMLCtx)) == NULL )
 				{
 					if (XMLCtx->errtxt) {
@@ -441,51 +354,40 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 			case EDG_WLL_QUERY_ATTR_OWNER:
 			// XXX - this is way how to pass NULL, user will be extracted from ssl partner later
 				if (XMLCtx->char_buf != NULL && !strcmp(XMLCtx->char_buf,"NULL")) {  
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.c = NULL; 
+					XMLCtx->conditions[XMLCtx->row][XMLCtx->position].value.c = NULL; 
 					break; 
 				}
 				else /* fall through */
 			case EDG_WLL_QUERY_ATTR_LOCATION:
 			case EDG_WLL_QUERY_ATTR_DESTINATION:
 			case EDG_WLL_QUERY_ATTR_USERTAG:
-				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.c = 
+				XMLCtx->conditions[XMLCtx->row][XMLCtx->position].value.c = 
 					edg_wll_from_string_to_string(XMLCtx);
 				break;
 			case EDG_WLL_QUERY_ATTR_STATUS:
-				if ( !XMLCtx->bound )
-				{
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.i = 
-						edg_wll_from_string_to_edg_wll_JobStatCode(XMLCtx);
-					XMLCtx->bound++;
-				}
-				else
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value2.i = 
-						edg_wll_from_string_to_edg_wll_JobStatCode(XMLCtx);
-
-				break;
 			case EDG_WLL_QUERY_ATTR_DONECODE:
 			case EDG_WLL_QUERY_ATTR_EXITCODE:
 			case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 				if ( !XMLCtx->bound )
 				{
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.i = 
+					XMLCtx->conditions[XMLCtx->row][XMLCtx->position].value.i = 
 						edg_wll_from_string_to_int(XMLCtx);
 					XMLCtx->bound++;
 				}
 				else
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value2.i = 
+					XMLCtx->conditions[XMLCtx->row][XMLCtx->position].value2.i = 
 						edg_wll_from_string_to_int(XMLCtx);
 
 				break;
 			case EDG_WLL_QUERY_ATTR_TIME:
 				if ( !XMLCtx->bound )
 				{
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.t.tv_sec = 
+					XMLCtx->conditions[XMLCtx->row][XMLCtx->position].value.t.tv_sec = 
 						edg_wll_from_string_to_time_t(XMLCtx);
 					XMLCtx->bound++;
 				}
 				else
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value2.t.tv_sec =
+					XMLCtx->conditions[XMLCtx->row][XMLCtx->position].value2.t.tv_sec =
 						edg_wll_from_string_to_time_t(XMLCtx);
 				break;
 			default: 
@@ -500,31 +402,6 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 					XMLCtx->char_buf,XML_GetCurrentLineNumber(XMLCtx->p));
 				XMLCtx->errtxt = e;
 				break;
-		}
-	}
-        XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
-	XMLCtx->level--;
-}
-
-
-
-static void endQueryJobsRequest(void *data, const char *el UNUSED_VAR)
-{
-	edg_wll_XML_ctx *XMLCtx = data;
-
-
-	if (XMLCtx->level == 2) {
-		if (!strcmp(XMLCtx->element,"flags") && XMLCtx->char_buf) {
-			// XXX: check if it works
-			 XMLCtx->flags = edg_wll_string_to_stat_flags(XMLCtx->char_buf);
-		}
-		else if (!strcmp(el,"and")) {
-			long len = (XML_GetCurrentByteIndex(XMLCtx->p) + XML_GetCurrentByteCount(XMLCtx->p))
-					-  XMLCtx->jobQueryRec_begin;
-
-			parseJobQueryRec(XMLCtx->ctx, XMLCtx->message_body + XMLCtx->jobQueryRec_begin, len,
-                        	&XMLCtx->job_conditions);
 		}
 	}
         XMLCtx->char_buf = NULL;
@@ -553,9 +430,7 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
                 }
 	}
 	else if (XMLCtx->level == 5) {
-		if (XMLCtx->type == EDG_WLL_QUERY_TYPE_JOB_CONDITION &&
-			XMLCtx->job_conditions != NULL &&
-			XMLCtx->job_conditions[XMLCtx->row] !=NULL) {
+		if (XMLCtx->type == EDG_WLL_QUERY_TYPE_JOB_CONDITION) {
 			switch (XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr) {
 				case EDG_WLL_QUERY_ATTR_JOBID:
 				case EDG_WLL_QUERY_ATTR_PARENT:
@@ -618,9 +493,7 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 					break;
 			}
 		}
-		else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_EVENT_CONDITION &&
-			XMLCtx->event_conditions != NULL &&
-			XMLCtx->event_conditions[XMLCtx->row2] != NULL) {
+		else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_EVENT_CONDITION) {
 			switch (XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position2].attr) {
 				case EDG_WLL_QUERY_ATTR_TIME:
 					if ( !XMLCtx->bound )
@@ -678,14 +551,13 @@ static void endPurgeRequest(void *data, const char *el UNUSED_VAR)
 {
         edg_wll_XML_ctx *XMLCtx = data;
         char *e;
-	int index;
 
         if (XMLCtx->level == 2) {
                 if (!strcmp(XMLCtx->element,"flags")) 
-			XMLCtx->purgeRequestGlobal.flags = edg_wll_string_to_purge_flags(XMLCtx->char_buf);
+			XMLCtx->purgeRequestGlobal.flags = edg_wll_from_string_to_int(XMLCtx);
 	}
 	else if (XMLCtx->level == 3) {
-		if (!strcmp(XMLCtx->element,"jobId") && XMLCtx->purgeRequestGlobal.jobs != NULL) {
+		if (!strcmp(XMLCtx->element,"jobId")) {
 			if ( (XMLCtx->purgeRequestGlobal.jobs[XMLCtx->position++] = 
 				edg_wll_from_string_to_string(XMLCtx)) == NULL )
 			{
@@ -699,8 +571,8 @@ static void endPurgeRequest(void *data, const char *el UNUSED_VAR)
 				XMLCtx->errtxt = e;
 			}
 		}
-		else if ( ((index = XMLCtx->tagToIndex(XMLCtx->element)) >= 0 ) && XMLCtx->char_buf ) {
-			XMLCtx->purgeRequestGlobal.timeout[index] = 
+		else if (!strcmp(XMLCtx->element,"time") && XMLCtx->char_buf) {
+			XMLCtx->purgeRequestGlobal.timeout[XMLCtx->position++] = 
 				edg_wll_from_string_to_time_t(XMLCtx);
 		}
 	}
@@ -716,18 +588,10 @@ static void endDumpRequest(void *data, const char *el UNUSED_VAR)
         edg_wll_XML_ctx *XMLCtx = data;
 
         if (XMLCtx->level == 2) {
-                if (!strcmp(XMLCtx->element,"from")) {
-			if (isdigit(XMLCtx->char_buf[0]))
+                if (!strcmp(XMLCtx->element,"from")) 
 			XMLCtx->dumpRequestGlobal.from = edg_wll_from_string_to_time_t(XMLCtx);
-			else
-				XMLCtx->dumpRequestGlobal.from = edg_wll_StringToDumpConst(XMLCtx->char_buf);
-		}
-		else if (!strcmp(XMLCtx->element,"to")) {
-			if (isdigit(XMLCtx->char_buf[0]))
+		else if (!strcmp(XMLCtx->element,"to")) 
                         XMLCtx->dumpRequestGlobal.to = edg_wll_from_string_to_time_t(XMLCtx);
-			else
-				XMLCtx->dumpRequestGlobal.to = edg_wll_StringToDumpConst(XMLCtx->char_buf);
-		}
 	}
 
 	XMLCtx->char_buf = NULL;
@@ -735,60 +599,8 @@ static void endDumpRequest(void *data, const char *el UNUSED_VAR)
 	XMLCtx->level--;
 }
 
-
-
-static void endLoadRequest(void *data, const char *el UNUSED_VAR)
-{
-        edg_wll_XML_ctx *XMLCtx = data;
-
-        if (XMLCtx->level == 2) {
-                if (!strcmp(XMLCtx->element,"server_file")) 
-			XMLCtx->loadRequestGlobal.server_file = edg_wll_from_string_to_string(XMLCtx);
-	}
-
-	XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
-	XMLCtx->level--;
-}
-
-
-
-static void endNotifRequest(void *data, const char *el UNUSED_VAR)
-{
-        edg_wll_XML_ctx *XMLCtx = data;
-	char *pom;
-
-        if (XMLCtx->level == 2) {
-                if (!strcmp(XMLCtx->element,"notifId")) {
-			pom = edg_wll_from_string_to_string(XMLCtx);
-			edg_wll_NotifIdParse(pom, &XMLCtx->notifId);
-			free(pom);
-		}
-		else if (!strcmp(XMLCtx->element,"clientAddress")) {
-			XMLCtx->notifClientAddress = edg_wll_from_string_to_string(XMLCtx);
-		}
-		else if (!strcmp(XMLCtx->element,"notifChangeOp")) {
-			pom = edg_wll_from_string_to_string(XMLCtx);
-			XMLCtx->notifChangeOp = edg_wll_StringToNotifChangeOp(pom);
-			free(pom);
-		}
-		else if (!strcmp(el,"and")) {
-			long len = (XML_GetCurrentByteIndex(XMLCtx->p) + XML_GetCurrentByteCount(XMLCtx->p))
-					-  XMLCtx->jobQueryRec_begin;
-	
-			parseJobQueryRec(XMLCtx->ctx, XMLCtx->message_body + XMLCtx->jobQueryRec_begin, len,
-				&XMLCtx->job_conditions);
-		}
-	}
-
-	XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
-	XMLCtx->level--;
-}
-
-
-
-int parseJobQueryRec(edg_wll_Context ctx, const char *messageBody, long len, edg_wll_QueryRec ***conditions)
+/* parse queryJobs request from client */
+int parseQueryJobsRequestV21(edg_wll_Context ctx, char *messageBody, edg_wll_QueryRec ***conditions, int *flags)
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -798,65 +610,6 @@ int parseJobQueryRec(edg_wll_Context ctx, const char *messageBody, long len, edg
 	edg_wll_initXMLCtx(&XMLCtx);
 	XMLCtx.row = -1;
 	XMLCtx.ctx = ctx;
-	edg_wll_ResetError(ctx);
-
-
-        /* initialize parser */
-        XMLCtx.p = XML_ParserCreate(encoding);
-        XML_SetElementHandler(XMLCtx.p, startJobQueryRec, endJobQueryRec);
-        XML_SetCharacterDataHandler(XMLCtx.p, char_handler);
-        XML_SetUserData(XMLCtx.p, (void *) &XMLCtx);
-
-
-        if (! XML_Parse(XMLCtx.p, messageBody, len, 1)) {
-                char *errorMessage;
-
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
-
-                edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
-                free(errorMessage);
-        } else if (XMLCtx.errtxt) edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, XMLCtx.errtxt);
-
-
-	if ((ret = edg_wll_Error(ctx,NULL,NULL))) {
-		int i,j;
-
-		if (XMLCtx.job_conditions) {
-			for (j = 0; XMLCtx.job_conditions[j]; j++) {
-				for (i = 0; (XMLCtx.job_conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
-					edg_wll_QueryRecFree(&XMLCtx.job_conditions[j][i]);
-				free(XMLCtx.job_conditions[j]);
-			}
-			free(XMLCtx.job_conditions);
-		}
-
-		/* empty list terminators */
-		conditions[0] = NULL;
-	} else {
-		*conditions = XMLCtx.job_conditions;
-	}
-
-	
-        XML_ParserFree(XMLCtx.p);
-	edg_wll_freeXMLCtx(&XMLCtx);
-	return ret;
-}
-
-
-/* parse queryJobs request from client */
-int parseQueryJobsRequest(edg_wll_Context ctx, char *messageBody, edg_wll_QueryRec ***conditions, int *flags)
-{
-	int	ret;
-	edg_wll_XML_ctx 	XMLCtx;
-	XML_Char *encoding = "ISO-8859-1";
-
-	errno = 0;
-	edg_wll_initXMLCtx(&XMLCtx);
-	XMLCtx.ctx = ctx;
-	XMLCtx.message_body = messageBody;
-	XMLCtx.position = 0;
 	edg_wll_ResetError(ctx);
 
 
@@ -882,20 +635,20 @@ int parseQueryJobsRequest(edg_wll_Context ctx, char *messageBody, edg_wll_QueryR
 	if ((ret = edg_wll_Error(ctx,NULL,NULL))) {
 		int i,j;
 
-		if (XMLCtx.job_conditions) {
-			for (j = 0; XMLCtx.job_conditions[j]; j++) {
-				for (i = 0; (XMLCtx.job_conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
-					edg_wll_QueryRecFree(&XMLCtx.job_conditions[j][i]);
-				free(XMLCtx.job_conditions[j]);
+		if (XMLCtx.conditions) {
+			for (j = 0; XMLCtx.conditions[j]; j++) {
+				for (i = 0; (XMLCtx.conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
+					edg_wll_QueryRecFree(&XMLCtx.conditions[j][i]);
+				free(XMLCtx.conditions[j]);
 			}
-			free(XMLCtx.job_conditions);
+			free(XMLCtx.conditions);
 		}
 
 		/* empty list terminators */
 		conditions[0] = NULL;
 		*flags = 0;
 	} else {
-		*conditions = XMLCtx.job_conditions;
+		*conditions = XMLCtx.conditions;
 		*flags = XMLCtx.flags;
 	}
 
@@ -907,7 +660,7 @@ int parseQueryJobsRequest(edg_wll_Context ctx, char *messageBody, edg_wll_QueryR
 
 
 /* parse queryEvents request from client */
-int parseQueryEventsRequest(edg_wll_Context ctx, char *messageBody, edg_wll_QueryRec ***job_conditions, edg_wll_QueryRec ***event_conditions)
+int parseQueryEventsRequestV21(edg_wll_Context ctx, char *messageBody, edg_wll_QueryRec ***job_conditions, edg_wll_QueryRec ***event_conditions)
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -977,7 +730,7 @@ int parseQueryEventsRequest(edg_wll_Context ctx, char *messageBody, edg_wll_Quer
 
 
 /* parse purge request from client */
-int parsePurgeRequest(edg_wll_Context ctx, char *messageBody, int (*tagToIndex)(), edg_wll_PurgeRequest *request)
+int parsePurgeRequestV21(edg_wll_Context ctx, char *messageBody, edg_wll_PurgeRequest *request)
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -987,7 +740,6 @@ int parsePurgeRequest(edg_wll_Context ctx, char *messageBody, int (*tagToIndex)(
 	edg_wll_initXMLCtx(&XMLCtx);
 	XMLCtx.ctx = ctx;
 	edg_wll_ResetError(ctx);
-	XMLCtx.tagToIndex = tagToIndex;
 
 
         /* initialize parser */
@@ -1032,7 +784,7 @@ int parsePurgeRequest(edg_wll_Context ctx, char *messageBody, int (*tagToIndex)(
 
 
 /* parse dump request from client */
-int parseDumpRequest(edg_wll_Context ctx, char *messageBody, edg_wll_DumpRequest *request)
+int parseDumpRequestV21(edg_wll_Context ctx, char *messageBody, edg_wll_DumpRequest *request)
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -1076,131 +828,9 @@ int parseDumpRequest(edg_wll_Context ctx, char *messageBody, edg_wll_DumpRequest
 	return ret;
 }
 
-/* parse load request from client */
-int parseLoadRequest(edg_wll_Context ctx, char *messageBody, edg_wll_LoadRequest *request)
-{
-	int	ret;
-	edg_wll_XML_ctx 	XMLCtx;
-	XML_Char *encoding = "ISO-8859-1";
-
-	errno = 0;
-	edg_wll_initXMLCtx(&XMLCtx);
-	XMLCtx.ctx = ctx;
-	edg_wll_ResetError(ctx);
 
 
-        /* initialize parser */
-        XMLCtx.p = XML_ParserCreate(encoding);
-        XML_SetElementHandler(XMLCtx.p, startLoadRequest, endLoadRequest);
-        XML_SetCharacterDataHandler(XMLCtx.p, char_handler);
-        XML_SetUserData(XMLCtx.p, (void *) &XMLCtx);
-
-
-        if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
-                char *errorMessage;
-
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
-
-                edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
-                free(errorMessage);
-        } else if (XMLCtx.errtxt) edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, XMLCtx.errtxt);
-
-
-	if ((ret = edg_wll_Error(ctx,NULL,NULL))) 
-		memset(request,0,sizeof(*request));
-		
-	else {
-		memcpy(request, &XMLCtx.loadRequestGlobal, sizeof(XMLCtx.loadRequestGlobal));
-	}
-
-	
-        XML_ParserFree(XMLCtx.p);
-	edg_wll_freeXMLCtx(&XMLCtx);
-	return ret;
-}
-
-
-
-/* parse Notif request from client */
-int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, edg_wll_QueryRec ***conditions) 
-{
-	int	ret;
-	edg_wll_XML_ctx 	XMLCtx;
-	XML_Char *encoding = "ISO-8859-1";
-
-	
-	/* returns emty variables as default; only some variables will be filled in */
-	/* depending on vaule of XMLCtx.notifFunction */
-	*function = NULL;
-	*notifId = NULL;
-	*address = NULL;
-	*op = EDG_WLL_NOTIF_NOOP;
-	*conditions = NULL;
-
-	errno = 0;
-	edg_wll_initXMLCtx(&XMLCtx);
-	XMLCtx.ctx = ctx;
-	XMLCtx.message_body = messageBody;
-	edg_wll_ResetError(ctx);
-
-
-        /* initialize parser */
-        XMLCtx.p = XML_ParserCreate(encoding);
-        XML_SetElementHandler(XMLCtx.p, startNotifRequest, endNotifRequest);
-        XML_SetCharacterDataHandler(XMLCtx.p, char_handler);
-        XML_SetUserData(XMLCtx.p, (void *) &XMLCtx);
-
-
-        if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
-                char *errorMessage;
-
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
-
-                edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
-                free(errorMessage);
-        } else if (XMLCtx.errtxt) edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, XMLCtx.errtxt);
-
-
-	if ((ret = edg_wll_Error(ctx,NULL,NULL))) {
-		int i,j;
-
-		if (XMLCtx.job_conditions) {
-			for (j = 0; XMLCtx.job_conditions[j]; j++) {
-				for (i = 0; (XMLCtx.job_conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
-					edg_wll_QueryRecFree(&XMLCtx.job_conditions[j][i]);
-				free(XMLCtx.job_conditions[j]);
-			}
-			free(XMLCtx.job_conditions);
-		}
-		free(XMLCtx.notifFunction);
-		edg_wll_NotifIdFree(&XMLCtx.notifId);
-		free(XMLCtx.notifClientAddress);
-
-		*function = NULL;
-		*notifId = NULL;
-		*address = NULL;
-		*op = EDG_WLL_NOTIF_NOOP;
-		*conditions = NULL;
-	} else {
-		*function = XMLCtx.notifFunction;
-		*notifId = XMLCtx.notifId;
-		*address = XMLCtx.notifClientAddress;
-		*op = XMLCtx.notifChangeOp;
-		*conditions = XMLCtx.job_conditions;
-	}
-
-	
-        XML_ParserFree(XMLCtx.p);
-	edg_wll_freeXMLCtx(&XMLCtx);
-	return ret;
-}
-
-
-int edg_wll_QueryEventsToXML(edg_wll_Context ctx, edg_wll_Event *eventsOut, char **message)
+int edg_wll_QueryEventsToXMLV21(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut, char **message)
 {
         char *pomA, *pomB;
 	char **list = NULL;
@@ -1300,7 +930,7 @@ int edg_wll_QueryEventsToXML(edg_wll_Context ctx, edg_wll_Event *eventsOut, char
         return 0;
 }
 
-int edg_wll_QueryJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wll_JobStat *statesIn, char **message) 
+int edg_wll_QueryJobsToXMLV21(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wll_JobStat *statesIn, char **message) 
 {
         char *pomA, *pomB, *pomC;
         char **list = NULL;
@@ -1324,7 +954,7 @@ int edg_wll_QueryJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wll_J
 		}
 
 		if (statesIn) {
-			edg_wll_JobStatusToXML(ctx, statesIn[i], &pomC);	
+			edg_wll_JobStatusToXMLV21(ctx, statesIn[i], &pomC);	
 			trio_asprintf(&pomA,"%s\t\t%s",pomB,pomC);
 		}
 		else {
@@ -1392,7 +1022,7 @@ int edg_wll_QueryJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wll_J
 }
 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
+int edg_wll_UserJobsToXMLV21(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, char **message)
 {
         char *pomA, *pomB;
         char **list = NULL;
@@ -1459,7 +1089,7 @@ int edg_wll_UserJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **me
         return 0;
 }
 
-static void edg_wll_add_stslist_to_XMLBody(edg_wll_Context ctx, char **body, const edg_wll_JobStat *toAdd, const char *tag, const char *UNUSED_subTag, const int null)
+static void edg_wll_add_stslist_to_XMLBodyV21(edg_wll_Context ctx, char **body, const edg_wll_JobStat *toAdd, const char *tag, const char *UNUSED_subTag, const int null)
 {
         char *pomA, *pomB, *newBody;
         char **list = NULL;
@@ -1468,7 +1098,7 @@ static void edg_wll_add_stslist_to_XMLBody(edg_wll_Context ctx, char **body, con
 
 
         while (toAdd[i].state != null) {
-                edg_wll_JobStatusToXML(ctx, toAdd[i], &pomA);
+                edg_wll_JobStatusToXMLV21(ctx, toAdd[i], &pomA);
                 len = strlen(pomA);
 
                 i++;
@@ -1510,9 +1140,8 @@ static void edg_wll_add_stslist_to_XMLBody(edg_wll_Context ctx, char **body, con
 }
 
 
-
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
-int edg_wll_JobStatusToXML(edg_wll_Context ctx, edg_wll_JobStat stat, char **message)
+int edg_wll_JobStatusToXMLV21(edg_wll_Context ctx, edg_wll_JobStat stat, char **message)
 {
         char *pomA, *pomB, *pomC;
 
@@ -1530,10 +1159,10 @@ int edg_wll_JobStatusToXML(edg_wll_Context ctx, edg_wll_JobStat stat, char **mes
         }
 @@@}
 	if (stat.children) edg_wll_add_strlist_to_XMLBody(&pomB, stat.children, "children", "jobId", "\t\t\t", NULL);
-	if (stat.children_hist) edg_wll_add_intlist_to_XMLBody(&pomB, stat.children_hist, "children_hist", edg_wll_StatToString, "\t\t\t", 1, stat.children_hist[0]);
-	if (stat.children_states) edg_wll_add_stslist_to_XMLBody(ctx, &pomB, stat.children_states, "children_states", "", EDG_WLL_JOB_UNDEF);
+	if (stat.children_hist) edg_wll_add_intlist_to_XMLBody(&pomB, stat.children_hist, "children_hist", return_string_el, "\t\t\t", 1, stat.children_hist[0]);
+	if (stat.children_states) edg_wll_add_stslist_to_XMLBodyV21(ctx, &pomB, stat.children_states, "children_states", "", EDG_WLL_JOB_UNDEF);
 	if (stat.user_tags) edg_wll_add_taglist_to_XMLBody(&pomB, stat.user_tags, "user_tags", "tag", "name", "\t\t\t", NULL);
-	if (stat.stateEnterTimes) edg_wll_add_intlist_to_XMLBody(&pomB, stat.stateEnterTimes, "stateEnterTimes", edg_wll_StatToString, "\t\t\t",1, stat.stateEnterTimes[0]);
+	if (stat.stateEnterTimes) edg_wll_add_intlist_to_XMLBody(&pomB, stat.stateEnterTimes, "stateEnterTimes", return_string_el, "\t\t\t",1, stat.stateEnterTimes[0]);
 
 	pomC = edg_wll_StatToString(stat.state);
 
@@ -1555,7 +1184,7 @@ int edg_wll_JobStatusToXML(edg_wll_Context ctx, edg_wll_JobStat stat, char **mes
 
 
 /* construct Message-Body of Request-Line for edg_wll_Purge */
-int edg_wll_PurgeResultToXML(
+int edg_wll_PurgeResultToXMLV21(
                 edg_wll_Context ctx,
 		edg_wll_PurgeResult *result,
                 char **message)
@@ -1570,7 +1199,7 @@ int edg_wll_PurgeResultToXML(
 	edg_wll_add_string_to_XMLBody(&pomA, result->server_file, "server_file", NULL); 
 
 	if (ctx->errDesc || ctx->errCode)
-                trio_asprintf(&pomB,"%s code=\"%d\" desc=\"%|Xs\">\r\n%s%s",
+                trio_asprintf(&pomA,"%s code=\"%d\" desc=\"%|Xs\">\r\n%s%s",
 			PURGE_RESULT_BEGIN, ctx->errCode, ctx->errDesc, pomA, PURGE_RESULT_END);
 	else
 		trio_asprintf(&pomB,"%s>\r\n%s%s", PURGE_RESULT_BEGIN, pomA, PURGE_RESULT_END);
@@ -1583,7 +1212,7 @@ int edg_wll_PurgeResultToXML(
 
 
 /* construct Message-Body of Request-Line for edg_wll_Dump */
-int edg_wll_DumpResultToXML(
+int edg_wll_DumpResultToXMLV21(
                 edg_wll_Context ctx,
 		edg_wll_DumpResult *result,
                 char **message)
@@ -1595,15 +1224,7 @@ int edg_wll_DumpResultToXML(
 
 	pomA = strdup("");
 	edg_wll_add_string_to_XMLBody(&pomA, result->server_file, "server_file", NULL);
-        if (result->from < 0)
-                edg_wll_add_string_to_XMLBody(&pomA,
-                        edg_wll_DumpConstToString(result->from), "from", NULL);
-        else
 	edg_wll_add_time_t_to_XMLBody(&pomA, result->from, "from", 0);
-        if (result->to < 0)
-                edg_wll_add_string_to_XMLBody(&pomA,
-                        edg_wll_DumpConstToString(result->to), "to", NULL);
-        else
 	edg_wll_add_time_t_to_XMLBody(&pomA, result->to, "to", 0);
 
 	if (ctx->errDesc || ctx->errCode)
@@ -1616,116 +1237,3 @@ int edg_wll_DumpResultToXML(
         *message = pomB;
         return 0;
 }
-
-
-/* construct Message-Body of Request-Line for edg_wll_Load */
-int edg_wll_LoadResultToXML(
-                edg_wll_Context ctx,
-		edg_wll_LoadResult *result,
-                char **message)
-{
-        char *pomA, *pomB;
-
-
-	if (!result) { *message = NULL; return(-1); }
-
-	pomA = strdup("");
-	edg_wll_add_string_to_XMLBody(&pomA, result->server_file, "server_file", NULL);
-	edg_wll_add_time_t_to_XMLBody(&pomA, result->from, "from", 0);
-	edg_wll_add_time_t_to_XMLBody(&pomA, result->to, "to", 0);
-
-	if (ctx->errDesc || ctx->errCode)
-		trio_asprintf(&pomB,"%s code=\"%d\" desc=\"%|Xs\">\r\n%s%s",
-			LOAD_RESULT_BEGIN, ctx->errCode, ctx->errDesc, pomA, LOAD_RESULT_END);
-	else
-		trio_asprintf(&pomB,"%s>\r\n%s%s", LOAD_RESULT_BEGIN, pomA, LOAD_RESULT_END);
-	free(pomA);
-
-        *message = pomB;
-        return 0;
-}
-
-
-/* construct Message-Body of Request-Line for edg_wll_GetIndexedAttrs */
-int edg_wll_IndexedAttrsToXML(
-                edg_wll_Context ctx,
-                char **message)
-{
-	int i,j;
-	char *pomA, *pomB;
-
-	pomA = strdup("");
-	if (ctx->job_index) {
-		for (i=0; ctx->job_index[i]; i++) {
-			asprintf(&pomB, "%s\t%s\r\n",pomA,"<index>");
-			free(pomA);
-			pomA = pomB;
-
-			for (j=0; ctx->job_index[i][j].attr != EDG_WLL_QUERY_ATTR_UNDEF; j++) {
-				asprintf(&pomB, "%s\t\t%s\r\n",pomA,"<QueryRec>");
-				free(pomA);
-				pomA = pomB;
-
-				edg_wll_add_string_to_XMLBody(&pomA, 
-					edg_wll_query_attrToString(ctx->job_index[i][j].attr), 
-					"attribute", NULL);
-
-				if (ctx->job_index[i][j].attr == EDG_WLL_QUERY_ATTR_TIME)
-					edg_wll_add_string_to_XMLBody(&pomA,
-						edg_wll_StatToString(ctx->job_index[i][j].attr_id.state),
-						"state", NULL);
-
-				if (ctx->job_index[i][j].attr == EDG_WLL_QUERY_ATTR_USERTAG)
-					 edg_wll_add_string_to_XMLBody(&pomA,
-						ctx->job_index[i][j].attr_id.tag,
-						"name", NULL);
-
-				asprintf(&pomB, "%s\t\t%s\r\n",pomA,"</QueryRec>");
-				free(pomA);
-				pomA = pomB;
-			}
-			
-			asprintf(&pomB, "%s\t%s\r\n",pomA,"</index>");
-			free(pomA);
-			pomA = pomB;
-		}
-	}
-
-	if (ctx->errDesc || ctx->errCode)
-		trio_asprintf(&pomB,"%s code=\"%d\" desc=\"%|Xs\">\r\n%s%s",
-			INDEXED_ATTRS_BEGIN, ctx->errCode, ctx->errDesc, pomA, INDEXED_ATTRS_END);
-	else
-		trio_asprintf(&pomB,"%s>\r\n%s%s", INDEXED_ATTRS_BEGIN, pomA, INDEXED_ATTRS_END);
-	free(pomA);
-
-
-        *message = pomB;
-        return 0;
-}
-
-
-
-/* construct Message-Body of Request-Line for edg_wll_Notif */
-int edg_wll_NotifResultToXML(
-                edg_wll_Context ctx,
-		time_t validity,
-                char **message)
-{
-        char *pomA, *pomB;
-
-
-	pomA = strdup("");
-	edg_wll_add_time_t_to_XMLBody(&pomA, validity, "validity", -1);
-
-	if (ctx->errDesc || ctx->errCode)
-		trio_asprintf(&pomB,"%s code=\"%d\" desc=\"%|Xs\">\r\n%s%s",
-			NOTIF_RESULT_BEGIN, ctx->errCode, ctx->errDesc, pomA, NOTIF_RESULT_END);
-	else
-		trio_asprintf(&pomB,"%s>\r\n%s%s", NOTIF_RESULT_BEGIN, pomA, NOTIF_RESULT_END);
-	free(pomA);
-
-        *message = pomB;
-        return 0;
-}
-
-

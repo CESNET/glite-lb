@@ -8,10 +8,12 @@
 /* XXX: not a good place for the folowing #def's but we ain't got better currently */
 /** protocol version */
 #define PROTO_VERSION           "3.0"
+#define PROTO_VERSION_V21      "2.1"
 /** backward protocol compatibility     */
 /* version separated by comma           */
 /* e.g. "1.0,1.2,1.3"                   */
 #define COMP_PROTO              "3.0"
+#define COMP_PROTO_V21         "2.0,2.1"
 
 
 /* subset of HTTP codes we return */

@@ -21,12 +21,12 @@
 #include "get_events.h"
 #include "purge.h"
 #include "lb_xml_parse.h"
+#include "lb_xml_parse_V21.h"
 
 
 #define METHOD_GET      "GET "
 #define METHOD_POST     "POST "
 
-#define KEY_JOBS        	"/userJobs/"
 #define KEY_QUERY_JOBS		"/queryJobs "
 #define KEY_QUERY_EVENTS	"/queryEvents "
 #define KEY_PURGE_REQUEST	"/purgeRequest "
@@ -84,6 +84,47 @@ char *edg_wll_HTTPErrorMessage(int errCode)
 
 	return msg;
 }
+
+
+/* returns non-zero if old style (V21) protocols incompatible */
+static int is_protocol_incompatibleV21(char *user_agent)
+{
+        char *version, *comp_proto, *needle;
+        double  v, c, my_v = strtod(PROTO_VERSION_V21, (char **) NULL), my_c;
+
+
+	/* get version od the other side */
+        if ((version = strstr(user_agent,"/")) == NULL) return(-1);
+        else v = strtod(++version, &needle);
+
+	/* sent the other side list of compatible protocols? */
+	if ( needle[0] == '\0' ) return(-2);
+
+	/* test compatibility if server newer*/
+        if (my_v > v) {
+                comp_proto=COMP_PROTO_V21;
+                do {
+                        my_c = strtod(comp_proto, &needle);
+                        if (my_c == v) return(0);
+                        comp_proto = needle + 1;
+                } while (needle[0] != '\0');
+                return(1);
+        }
+
+	/* test compatibility if server is older */
+        else if (my_v < v) {
+                do {
+                        comp_proto = needle + 1;
+                        c = strtod(comp_proto, &needle);
+                        if (my_v == c) return(0);
+                } while (needle[0] != '\0');
+                return(1);
+        }
+
+	/* version match */
+        return(0);
+}
+
 
 /* returns non-zero if protocols incompatible */
 static int is_protocol_incompatible(char *user_agent)
@@ -144,11 +185,199 @@ static int outputHTML(char **headers)
 
 
 
+
+edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
+	char *request,char **headers,char *messageBody,
+	char **response,char ***headersOut,char **bodyOut)
+{
+	char *requestPTR, *message = NULL;
+	int	ret = HTTP_OK;
+	int 	html = outputHTML(headers);
+	int	i;
+
+	edg_wll_ResetError(ctx);
+
+	for (i=0; headers[i]; i++) /* find line with version number in headers */
+		if ( strstr(headers[i], KEY_AGENT) ) break;
+  
+	if (headers[i] == NULL) { ret = HTTP_BADREQ; goto errV21; } /* if not present */
+	switch (is_protocol_incompatibleV21(headers[i])) { 
+		case 0  : /* protocols compatible */
+			  ctx->is_V21 = 1;
+			  break;
+		case -1 : /* malformed 'User Agent:' line */
+			  ret = HTTP_BADREQ;
+			  goto errV21;
+			  break;
+		case -2 : /* version of one protocol unknown */
+			  /* fallthrough */
+		case 1  : /* protocols incompatible */
+			  /* fallthrough */
+		default : ret = HTTP_UNSUPPORTED; 
+			  edg_wll_SetError(ctx,ENOTSUP,"Protocol versions are incompatible.");
+			  goto errV21; 
+			  break;
+	}
+
+
+/* GET */
+	if (!strncmp(request, METHOD_GET, sizeof(METHOD_GET)-1)) {
+		// Not supported
+		ret = HTTP_BADREQ;
+/* POST */
+	} else if (!strncmp(request,METHOD_POST,sizeof(METHOD_POST)-1)) {
+
+		requestPTR = request + sizeof(METHOD_POST)-1;
+	
+		if (!strncmp(requestPTR,KEY_QUERY_EVENTS,sizeof(KEY_QUERY_EVENTS)-1)) { 
+        	        edg_wll_Event *eventsOut = NULL;
+			edg_wll_QueryRec **job_conditions = NULL, **event_conditions = NULL;
+			int i,j;
+
+        	        if (parseQueryEventsRequestV21(ctx, messageBody, &job_conditions, &event_conditions)) 
+				ret = HTTP_BADREQ;
+				
+	                else {
+				int	fatal = 0;
+
+				switch (edg_wll_QueryEventsServer(ctx,ctx->noAuth,
+				    (const edg_wll_QueryRec **)job_conditions, 
+				    (const edg_wll_QueryRec **)event_conditions, &eventsOut)) {
+
+					case 0: if (html) ret = HTTP_NOTIMPL;
+						else      ret = HTTP_OK; 
+						break;
+					case ENOENT: ret = HTTP_NOTFOUND; break;
+					case EPERM : ret = HTTP_UNAUTH; break;
+					case EDG_WLL_ERROR_NOINDEX: ret = HTTP_UNAUTH; break;
+					case ENOMEM: fatal = 1; ret = HTTP_INTERNAL; break;
+					default: ret = HTTP_INTERNAL; break;
+				}
+				/* glue errors (if eny) to XML responce */ 
+				if (!html && !fatal)
+					if (edg_wll_QueryEventsToXMLV21(ctx, eventsOut, &message))
+						ret = HTTP_INTERNAL;
+			}
+
+			if (job_conditions) {
+	                        for (j = 0; job_conditions[j]; j++) {
+	                                for (i = 0 ; (job_conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
+        	                                edg_wll_QueryRecFree(&job_conditions[j][i]);
+                	                free(job_conditions[j]);
+                        	}
+	                        free(job_conditions);
+        	        }
+
+	                if (event_conditions) {
+        	                for (j = 0; event_conditions[j]; j++) {
+                	                for (i = 0 ; (event_conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
+                        	                edg_wll_QueryRecFree(&event_conditions[j][i]);
+                                	free(event_conditions[j]);
+	                        }
+        	                free(event_conditions);
+        	        }
+	
+			if (eventsOut != NULL) {
+	                	for (i=0; eventsOut[i].type != EDG_WLL_EVENT_UNDEF; i++) 
+					edg_wll_FreeEvent(&(eventsOut[i]));
+	                	edg_wll_FreeEvent(&(eventsOut[i])); /* free last line */
+				free(eventsOut);
+			}
+        	}
+		else if (!strncmp(requestPTR,KEY_QUERY_JOBS,sizeof(KEY_QUERY_JOBS)-1)) { 
+        	        edg_wlc_JobId *jobsOut = NULL;
+			edg_wll_JobStat *statesOut = NULL;
+			edg_wll_QueryRec **conditions = NULL;
+			int i,j, flags = 0;
+
+        	        if (parseQueryJobsRequestV21(ctx, messageBody, &conditions, &flags))
+				ret = HTTP_BADREQ;
+
+	                else { 
+				int		fatal = 0,
+						retCode;
+ 
+				if (flags & EDG_WLL_STAT_NO_JOBS) { 
+					flags -= EDG_WLL_STAT_NO_JOBS;
+					jobsOut = NULL;
+					if (flags & EDG_WLL_STAT_NO_STATES) {
+						flags -= EDG_WLL_STAT_NO_STATES;
+						statesOut = NULL;
+						retCode = edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, NULL, NULL);
+					}
+					else
+						retCode = edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, NULL, &statesOut);
+				}
+				else {
+					if (flags & EDG_WLL_STAT_NO_STATES) {
+						flags -= EDG_WLL_STAT_NO_STATES;
+						statesOut = NULL;
+						retCode = edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, &jobsOut, NULL);
+					}
+					else
+						retCode = edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, &jobsOut, &statesOut);
+				}
+				
+				switch ( retCode ) {
+					// case EPERM : ret = HTTP_UNAUTH;
+					//              /* soft-error fall through */
+					case 0: if (html) ret =  HTTP_NOTIMPL;
+						else ret = HTTP_OK;
+
+						break;
+					case ENOENT: ret = HTTP_NOTFOUND; break;
+					case EPERM: ret = HTTP_UNAUTH; break;
+					case EDG_WLL_ERROR_NOINDEX: ret = HTTP_UNAUTH; break;
+					case ENOMEM: fatal = 1; ret = HTTP_INTERNAL; break;
+					default: ret = HTTP_INTERNAL; break;
+				}
+				if (!html && !fatal)
+					if (edg_wll_QueryJobsToXMLV21(ctx, jobsOut, statesOut, &message))
+						ret = HTTP_INTERNAL;
+			}
+
+	                if (conditions) {
+        	                for (j = 0; conditions[j]; j++) {
+                	                for (i = 0; (conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
+                        	                edg_wll_QueryRecFree(&conditions[j][i]);
+                                	free(conditions[j]);
+	                        }
+        	                free(conditions);
+                	}
+
+			if (jobsOut) {
+				for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
+				free(jobsOut);
+			}
+			if (statesOut) {
+	                	for (i=0; statesOut[i].state != EDG_WLL_JOB_UNDEF; i++) 
+					edg_wll_FreeStatus(&(statesOut[i]));
+	                	edg_wll_FreeStatus(&(statesOut[i])); /* free last line */
+				free(statesOut);
+			}
+        	}
+        /* POST [something else]: not understood */
+		else ret = HTTP_BADREQ;
+
+/* other HTTP methods */
+	} else ret = HTTP_NOTALLOWED;
+
+errV21:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
+	*headersOut = (char **) response_headers;
+	if ((ret != HTTP_OK) && html)
+		*bodyOut = edg_wll_ErrorToHTML(ctx,ret);
+	else
+		*bodyOut = message;
+
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+
 edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	char *request,char **headers,char *messageBody,
 	char **response,char ***headersOut,char **bodyOut)
 {
-	//char *requestPTR, *pom, *message = NULL; Ely 16/10 unused variable `pom'
 	char *requestPTR, *message = NULL;
 	int	ret = HTTP_OK;
 	int 	html = outputHTML(headers);
@@ -162,14 +391,21 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	if (headers[i] == NULL) { ret = HTTP_BADREQ; goto err; } /* if not present */
 	switch (is_protocol_incompatible(headers[i])) { 
 		case 0  : /* protocols compatible */
+			  ctx->is_V21 = 0;
 			  break;
 		case -1 : /* malformed 'User Agent:' line */
 			  ret = HTTP_BADREQ;
 			  goto err;
 			  break;
-		case -2 : /* version of one protocol unknown */
-			  /* fallthrough */
 		case 1  : /* protocols incompatible */
+			  /* try old (V21) version compatibility */
+			  edg_wll_ProtoV21(ctx, request, headers, messageBody, 
+					  response, headersOut, bodyOut);
+					  
+			  /* and propagate errors or results */
+			  return edg_wll_Error(ctx,NULL,NULL);
+			  break;
+		case -2 : /* version of one protocol unknown */
 			  /* fallthrough */
 		default : ret = HTTP_UNSUPPORTED; 
 			  edg_wll_SetError(ctx,ENOTSUP,"Protocol versions are incompatible.");
@@ -552,9 +788,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	} else ret = HTTP_NOTALLOWED;
 
 err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
-	//(*headersOut) = malloc(2*sizeof(**headersOut));
-	//(*headersOut)[0] = strdup("Cache-Control: no-cache");
-	//(*headersOut)[1] = NULL;
 	*headersOut = (char **) response_headers;
 	if ((ret != HTTP_OK) && html)
 		*bodyOut = edg_wll_ErrorToHTML(ctx,ret);

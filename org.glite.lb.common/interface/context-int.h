@@ -59,6 +59,7 @@ struct _edg_wll_Context {
 	int		rgma_export;
 	int		strict_locking;	/* lock jobs for storing event too */
 
+	int             is_V21;         /* true if old (V21) request arrived */
 	
 /* server limits */
 	int		softLimit;

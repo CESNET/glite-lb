@@ -27,6 +27,5 @@ int edg_wll_DumpResultToXML(edg_wll_Context ctx, edg_wll_DumpResult *result, cha
 int edg_wll_LoadResultToXML(edg_wll_Context ctx, edg_wll_LoadResult *result, char **message);
 int edg_wll_IndexedAttrsToXML(edg_wll_Context ctx, char **message);
 int edg_wll_NotifResultToXML(edg_wll_Context ctx, time_t validity, char **message);
-void edg_wll_ErrorToXML(edg_wll_Context, char **);
 
 #endif

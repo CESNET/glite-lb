@@ -35,6 +35,7 @@ void edg_wll_initXMLCtx(edg_wll_XML_ctx *c) {
 	c->job_conditions = NULL;
 	c->event_conditions = NULL;
 	c->type = EDG_WLL_QUERY_TYPE_UNDEF;
+	c->conditions = NULL;
 	c->flags = 0;
         c->jobsOutGlobal = NULL;
         c->eventsOutGlobal = NULL;
