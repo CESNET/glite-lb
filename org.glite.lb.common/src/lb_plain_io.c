@@ -23,12 +23,146 @@
 	}\
 }
 
+#define bufshift(conn, shift) { \
+	memmove((conn)->buffer, (conn)->buffer+(shift), (conn)->bufuse-(shift)); \
+	(conn)->bufuse -= (shift); \
+}
+
+int edg_wll_plain_connect(
+	char const		   *hostname,
+	int					port,
+	struct timeval	   *to,
+	edg_wll_Connection *conn)
+{
+	return 0;
+}
+
+int edg_wll_plain_accept(
+	int					sock,
+	edg_wll_Connection *conn)
+{
+	struct sockaddr_in	a;
+	int					alen = sizeof(a);
+
+	/* Do not free the buffer here - just reuse the memmory
+	 */
+	conn->bufuse = 0;
+	/*
+	if ( (conn->sock = accept(sock, (struct sockaddr *)&a, &alen)) )
+		return -1;
+	*/
+	return 0;
+}
+
+int edg_wll_plain_read(
+	edg_wll_Connection	   *conn,
+	void				   *outbuf,
+	size_t					outbufsz,
+	struct timeval		   *to)
+{
+	size_t			ct, toread = 0;
+	fd_set			fds;
+	struct timeval	timeout, before, after;
+
+
+	if ( conn->bufsz == 0 ) {
+		if ( !(conn->buffer = malloc(BUFSIZ)) ) return -1;
+		conn->bufsz = BUFSIZ;
+		conn->bufuse = 0;
+	}
+
+	if ( to ) {
+		memcpy(&timeout, to, sizeof(timeout));
+		gettimeofday(&before, NULL);
+	}
+
+	errno = 0;
+
+	if ( conn->bufuse > 0 ) goto cleanup;
+
+	toread = 0;
+	do {
+		FD_ZERO(&fds);
+		FD_SET(conn->sock, &fds);
+		switch (select(conn->sock+1, &fds, NULL, NULL, to ? &timeout : NULL)) {
+		case 0: errno = ETIMEDOUT; goto cleanup; break;
+		case -1: goto cleanup; break;
+		}
+
+		if ( conn->bufuse == conn->bufsz ) {
+			char *tmp = realloc(conn->buffer, conn->bufsz+BUFSIZ);
+			if ( !tmp ) return -1;
+			conn->buffer = tmp;
+			conn->bufsz += BUFSIZ;
+		}
+		toread = conn->bufsz - conn->bufuse;
+		if ( (ct = read(conn->sock, conn->buffer+conn->bufuse, toread)) < 0 ) {
+			if ( errno == EINTR ) continue;
+			goto cleanup;
+		}
+
+		if ( ct == 0 && conn->bufuse == 0 && errno == 0 ) {
+			errno = ENOTCONN;
+			goto cleanup;
+		}
+
+		conn->bufuse += ct;
+	} while ( ct == toread );
+
+
+cleanup:
+	if ( to ) {
+		gettimeofday(&after, NULL);
+		tv_sub(after, before);
+		tv_sub(*to, after);
+		if ( to->tv_sec < 0 ) to->tv_sec = to->tv_usec = 0;
+	}
+
+	if ( errno ) return -1;
+
+	if ( conn->bufuse > 0 ) {
+		size_t len = (conn->bufuse < outbufsz) ? conn->bufuse : outbufsz;
+		memcpy(outbuf, conn->buffer, len);
+		outbufsz = len;
+		bufshift(conn, len);
+		return len;
+	}
+
+	return 0;
+}
+
+
+int edg_wll_plain_read_full(
+	edg_wll_Connection *conn,
+	void			   *outbuf,
+	size_t				outbufsz,
+	struct timeval	   *to)
+{
+	size_t		total = 0;
+
+
+	if ( conn->bufuse > 0 ) {
+		size_t len = (conn->bufuse < outbufsz) ? conn->bufuse : outbufsz;
+		memcpy(outbuf, conn->buffer, len);
+		outbufsz = len;
+		bufshift(conn, len);
+		total += len;
+	}
+
+	while ( total < outbufsz ) {
+		size_t ct = edg_wll_plain_read(conn, outbuf+total, outbufsz-total, to);
+		if ( ct < 0) return ct;
+		total += ct;
+	}
+
+	return total;
+}
 
 int edg_wll_plain_write_full(
-	int				conn,
-	const void	   *buf,
-	size_t			bufsz,
-	struct timeval *to)
+	edg_wll_Connection *conn,
+	const void		   *buf,
+	size_t				bufsz,
+	struct timeval	   *to)
 {
 	size_t			written = 0;
 	ssize_t			ct = -1;
@@ -44,13 +178,13 @@ int edg_wll_plain_write_full(
 	errno = 0;
 	while ( written < bufsz ) {
 		FD_ZERO(&fds);
-		FD_SET(conn, &fds);
+		FD_SET(conn->sock, &fds);
 
-		switch ( select(conn+1, NULL, &fds, NULL, to ? &timeout : NULL) ) {
+		switch ( select(conn->sock+1, NULL, &fds, NULL, to? &timeout: NULL) ) {
 			case 0: errno = ETIMEDOUT; goto end; break;
 			case -1: goto end; break;
 		}
-		if ( (ct = write(conn, ((char*)buf)+written, bufsz-written)) < 0 ) {
+		if ( (ct=write(conn->sock, ((char*)buf)+written, bufsz-written)) < 0 ) {
 			if ( errno == EINTR ) { errno = 0; continue; }
 			else goto end;
 		}
@@ -66,116 +200,4 @@ end:
 	}
 
 	return (errno)? -1: written;
-}
-
-
-int edg_wll_plain_read_full(
-	int					conn,
-	void			  **out,
-	size_t				outsz,
-	struct timeval	   *to)
-{
-	ssize_t			ct, sz, total = 0;
-	char			buf[4098],
-				   *tmp = NULL;
-	fd_set			fds;
-	struct timeval	timeout, before, after;
-
-
-	if ( to ) {
-		memcpy(&timeout, to, sizeof(timeout));
-		gettimeofday(&before, NULL);
-	}
-
-	errno = 0;
-	sz = sizeof(buf);
-	do {
-		FD_ZERO(&fds);
-		FD_SET(conn, &fds);
-		switch (select(conn+1, &fds, NULL, NULL, to ? &timeout : NULL)) {
-		case 0: errno = ETIMEDOUT; goto cleanup; break;
-		case -1: goto cleanup; break;
-		}
-
-		if ( sz > outsz-total ) sz = outsz-total;
-		if ( (ct = read(conn, buf, sz)) < 0 ) {
-			if ( errno == EINTR ) continue;
-			goto cleanup;
-		}
-
-		if ( ct > 0 ) {
-			char *t = realloc(tmp, total+ct);
-
-			if ( !t ) goto cleanup;
-			tmp = t;
-			memcpy(tmp+total, buf, ct);
-			total += ct;
-		}
-		else if ( total == 0 && errno == 0 ) { errno = ENOTCONN; goto cleanup; }
-	} while ( total < outsz );
-
-
-cleanup:
-	if ( to ) {
-		gettimeofday(&after, NULL);
-		tv_sub(after, before);
-		tv_sub(*to, after);
-		if ( to->tv_sec < 0 ) to->tv_sec = to->tv_usec = 0;
-	}
-
-	if ( errno ) { free(tmp); return -1; }
-
-	*out = tmp;
-	return total;
-}
-
-int edg_wll_plain_read_fullbuf(
-	int					conn,
-	void			   *outbuf,
-	size_t				outbufsz,
-	struct timeval	   *to)
-{
-	ssize_t			ct, sz, total = 0;
-	char			buf[4098];
-	fd_set			fds;
-	struct timeval	timeout, before, after;
-
-
-	if ( to ) {
-		memcpy(&timeout, to, sizeof(timeout));
-		gettimeofday(&before, NULL);
-	}
-
-	errno = 0;
-	sz = sizeof(buf);
-	do {
-		FD_ZERO(&fds);
-		FD_SET(conn, &fds);
-		switch (select(conn+1, &fds, NULL, NULL, to ? &timeout : NULL)) {
-		case 0: errno = ETIMEDOUT; goto cleanup; break;
-		case -1: goto cleanup; break;
-		}
-
-		if ( sz > outbufsz-total ) sz = outbufsz-total;
-		if ( (ct = read(conn, buf, sz)) < 0 ) {
-			if ( errno == EINTR ) continue;
-			goto cleanup;
-		}
-
-		if ( ct > 0 ) {
-			memcpy(outbuf+total, buf, ct);
-			total += ct;
-		}
-		else if ( total == 0 && errno == 0 ) { errno = ENOTCONN; goto cleanup; }
-	} while ( total < outbufsz );
-
-cleanup:
-	if ( to ) {
-		gettimeofday(&after, NULL);
-		tv_sub(after, before);
-		tv_sub(*to, after);
-		if ( to->tv_sec < 0 ) to->tv_sec = to->tv_usec = 0;
-	}
-
-	return errno? -1: total;
 }

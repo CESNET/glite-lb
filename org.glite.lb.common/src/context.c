@@ -50,6 +50,10 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		
 		for (i=0; i<ctx->poolSize; i++) {
 			if (ctx->connPool[i].peerName) free(ctx->connPool[i].peerName);
+
+			close(ctx->connPool[i].conn.sock);
+			if (ctx->connPool[i].conn.buffer) free(ctx->connPool[i].conn.buffer);
+
 			edg_wll_gss_close(&ctx->connPool[i].gss,&close_timeout);
 			if (ctx->connPool[i].gsiCred)
 				gss_release_cred(&min_stat, &ctx->connPool[i].gsiCred);

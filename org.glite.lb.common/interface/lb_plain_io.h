@@ -5,20 +5,32 @@
 extern "C" {
 #endif
 
-int edg_wll_plain_read_fullbuf(
-	int conn,
+typedef struct _edg_wll_Connection {
+	int	sock;
+	char   *buffer;
+	size_t	bufsz;
+	size_t	bufuse;
+} edg_wll_Connection;
+
+
+int edg_wll_plain_accept(
+	int sock,
+	edg_wll_Connection *conn);
+
+int edg_wll_plain_read(
+	edg_wll_Connection *conn,
 	void *outbuf,
 	size_t outbufsz,
 	struct timeval *timeout);
 
 int edg_wll_plain_read_full(
-	int conn,
-	void **out,
-	size_t outsz,
+	edg_wll_Connection *conn,
+	void *outbuf,
+	size_t outbufsz,
 	struct timeval *timeout);
 
 int edg_wll_plain_write_full(
-	int conn,
+	edg_wll_Connection *conn,
 	const void *buf,
 	size_t bufsz,
 	struct timeval *timeout);

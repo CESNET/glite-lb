@@ -42,4 +42,18 @@ extern edg_wll_ErrorCode edg_wll_http_send(
 	const char *		/* IN: message body */
 );
 
+extern edg_wll_ErrorCode edg_wll_http_recv_proxy(
+	edg_wll_Context,	/* INOUT: context */
+	char **,	/* OUT: first line */
+	char ***,	/* OUT: null terminated array of headers */
+	char **		/* OUT: message body */
+);
+
+extern edg_wll_ErrorCode edg_wll_http_send_proxy(
+	edg_wll_Context,	/* INOUT: context */
+	const char *,		/* IN: first line */
+	char const * const *,	/* IN: headers */
+	const char *		/* IN: message body */
+);
+
 #endif /* __EDG_WORKLOAD_LOGGING_COMMON_MINI_HTTP_H__ */

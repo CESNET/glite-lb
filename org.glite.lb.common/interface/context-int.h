@@ -5,6 +5,7 @@
 
 #include "glite/lb/consumer.h"
 #include "lb_gss.h"
+#include "lb_plain_io.h"
 #include "authz.h"
 
 #ifdef __cplusplus
@@ -26,9 +27,9 @@ typedef struct _edg_wll_ConnPool {
 /* http(s) stream */
 	gss_cred_id_t	gsiCred;
 	edg_wll_GssConnection	gss;
+	edg_wll_Connection	conn;	/* for plain (non-gss) connections - i.e. lbproxy */
 	char		*buf;
 	int		bufUse,bufSize;
-	int		conn;		/* for plain (non-gss) connections - i.e. lbproxy */
 
 /* timestamp of usage of this entry in ctx.connPool */
 	struct timeval	lastUsed;
@@ -103,6 +104,8 @@ struct _edg_wll_Context {
 	enum edg_wll_Level	p_level;
 	char		*p_destination;
 	int		p_dest_port;
+	char		*p_lbproxy_store_sock;
+	char		*p_lbproxy_serve_sock;
 	char		*p_user_lbproxy;
 	struct timeval	p_log_timeout,p_sync_timeout,p_query_timeout, p_notif_timeout, p_tmp_timeout;
 	char		*p_query_server;

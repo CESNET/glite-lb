@@ -144,6 +144,14 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 			if (!val) val = "no";
 			ctx->p_query_server_override = !strcasecmp(val,"yes");
 			break;
+		case EDG_WLL_PARAM_LBPROXY_STORE_SOCK:      
+			free(ctx->p_lbproxy_store_sock);
+			ctx->p_lbproxy_store_sock = val ? strdup(val): NULL;
+			break;
+		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:      
+			free(ctx->p_lbproxy_serve_sock);
+			ctx->p_lbproxy_serve_sock = val ? strdup(val): NULL;
+			break;
 		default:
 			return edg_wll_SetError(ctx,EINVAL,"unknown parameter");
 	}
@@ -281,6 +289,8 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_X509_PROXY:       
 		case EDG_WLL_PARAM_X509_KEY:         
 		case EDG_WLL_PARAM_X509_CERT:        
+		case EDG_WLL_PARAM_LBPROXY_STORE_SOCK:
+		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:
 			return edg_wll_SetParamString(ctx,param,va_arg(ap,char *));
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 		case EDG_WLL_PARAM_LOG_SYNC_TIMEOUT: 
@@ -381,6 +391,14 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_X509_CERT:        
 			p_string = va_arg(ap, char **);
 			*p_string = estrdup(ctx->p_cert_filename);
+			break;
+		case EDG_WLL_PARAM_LBPROXY_STORE_SOCK:      
+			p_string = va_arg(ap, char **);
+			*p_string = estrdup(ctx->p_lbproxy_store_sock);
+			break;
+		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:      
+			p_string = va_arg(ap, char **);
+			*p_string = estrdup(ctx->p_lbproxy_serve_sock);
 			break;
 
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
