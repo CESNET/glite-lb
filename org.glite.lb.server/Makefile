@@ -65,7 +65,7 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 
 COMMON_LIB:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}
 
-HELPERS:= -L${stagedir}/lib -lglite_wms_tls_ssl_helpers
+HELPERS:= -L${stagedir}/lib -lglite_wmsutils_tls_ssl_helpers
 
 
 SERVER_OBJS:= bkserverd.o get_events.o index.o jobstat.o jobstat_supp.o \

@@ -52,8 +52,8 @@ GLOBUS_THRLIBS:= -L${globus_prefix}/lib \
 EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	-L${expat_prefix}/lib -lexpat
 
-HELPERS:=-lglite_wms_tls_ssl_helpers
-PHELPERS:=-lglite_wms_tls_ssl_pthr_helpers
+HELPERS:=-lglite_wmsutils_tls_ssl_helpers
+PHELPERS:=-lglite_wmsutils_tls_ssl_pthr_helpers
 	
 COMMON_LIB:=-lglite_lb_common
 

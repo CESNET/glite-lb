@@ -39,7 +39,7 @@ CFLAGS:=${DEBUG} \
 
 CXXFLAGS:=${CFLAGS}
 
-HELPERS:=-L${glite_location}/lib -lglite_wms_tls_ssl_helpers
+HELPERS:=-L${glite_location}/lib -lglite_wmsutils_tls_ssl_helpers
 
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
