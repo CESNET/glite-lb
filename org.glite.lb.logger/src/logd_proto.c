@@ -10,10 +10,11 @@
 #include <syslog.h>
 #include <fcntl.h>
 
-#include "logd_proto.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/escape.h"
 #include "glite/lb/events_parse.h"
+
+#include "logd_proto.h"
 
 static const int one = 1;
 

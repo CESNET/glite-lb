@@ -13,6 +13,7 @@
 
 #include <globus_common.h>
 
+#include "glite/lb/context-int.h"
 #include "logd_proto.h"
 #include "glite/lb/consumer.h"
 #include "glite/security/glite_gss.h"
