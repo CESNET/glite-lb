@@ -99,7 +99,8 @@ THRLTLIB:=libglite_lb_common_${thrflavour}.la
 
 default: all
 
-all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
+#all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
+all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
 
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
