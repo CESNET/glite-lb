@@ -74,7 +74,8 @@ CFLAGS:= \
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include
 
-LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
+COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS} 
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
@@ -136,6 +137,14 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 WS_CLIENT_OBJS:= stdsoap2_patched.o test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
 
+LIB_OBJS_PS:=test_ws_plugin.o ws_fault.o lb_authz.o lbs_db.o
+L_LIB_OBJS_PS:=${LIB_OBJS_PS:.o=.lo}
+LIB_OBJS_BK:=lb_authz.o lbs_db.o stats.o openserver.o index.o
+L_LIB_OBJS_BK:=${LIB_OBJS_BK:.o=.lo}
+STATIC_LIB_PS:=libglite_lb_server_misc_ps_${nothrflavour}.a
+LT_LIB_PS:=libglite_lb_server_misc_ps_${nothrflavour}.la
+STATIC_LIB_BK:=libglite_lb_server_misc_bk_${nothrflavour}.a
+LT_LIB_BK:=libglite_lb_server_misc_bk_${nothrflavour}.la
 
 glite_lb_proxy: ${LB_PROXY_OBJS}
 	${LINK} -o $@ ${LB_PROXY_OBJS} ${COMMON_LIB} ${SRVBONES_LIB} ${EXT_LIBS}
@@ -148,7 +157,7 @@ glite_lb_bkindex: ${INDEX_OBJS}
 
 default all: compile
 
-compile: glite_lb_bkserverd glite_lb_bkindex glite_lb_proxy
+compile: glite_lb_bkserverd glite_lb_bkindex glite_lb_proxy ${LT_LIB_PS} ${LT_LIB_BK}
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -209,8 +218,22 @@ ws_query_ext: ws_query_ext.o ${WS_CLIENT_OBJS}
 stdsoap2_patched.o:
 	${CC} ${CFLAGS} -c -o $@ ${STDSOAP2C}
 
-test_ws_plugin.o: ws_plugin.c
+test_ws_plugin.o test_ws_plugin.lo: ws_plugin.c
 	${CC} ${CFLAGS} -DPLUGIN_TEST -c -o $@ ${top_srcdir}/src/ws_plugin.c
+
+${LT_LIB_PS}: ${L_LIB_OBJS_PS}
+	${LINK} -o $@ ${L_LIB_OBJS_PS}
+
+${STATIC_LIB_PS}: ${LIB_OBJS_PS}
+	ar crv $@ ${LIB_OBJS_PS}
+	ranlib $@
+
+${LT_LIB_BK}: ${L_LIB_OBJS_BK}
+	${LINK} -o $@ ${L_LIB_OBJS_BK}
+
+${STATIC_LIB_BK}: ${LIB_OBJS_BK}
+	ar crv $@ ${LIB_OBJS_BK}
+	ranlib $@
 
 doc:
 
@@ -233,6 +256,7 @@ distbin:
 install:
 	-mkdir -p ${PREFIX}/bin ${PREFIX}/etc ${PREFIX}/etc/init.d
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	for p in bkserverd bkindex; do \
 		${INSTALL} -m 755 "glite_lb_$$p" "${PREFIX}/bin/glite-lb-$$p"; \
@@ -246,6 +270,10 @@ install:
 
 	if [ x${DOSTAGE} != xyes ]; then \
 		${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; \
+	fi
+	if [ x${DOSTAGE} = xyes ]; then \
+		${INSTALL} -m 644 ${LT_LIB_PS} ${PREFIX}/lib; \
+		${INSTALL} -m 644 ${LT_LIB_BK} ${PREFIX}/lib; \
 	fi
 
 clean:
@@ -266,6 +294,9 @@ clean:
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
+
+%.o: %.c
+	${COMPILE} -c $<
 
 
 test_query_events.o: %.o: %.cpp
