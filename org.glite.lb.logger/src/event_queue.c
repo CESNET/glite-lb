@@ -110,7 +110,6 @@ event_queue_empty(struct event_queue *eq)
   assert(eq != NULL);
 
   event_queue_lock_ro(eq);
-  assert((eq->head != NULL) || (eq->tail == NULL));
   ret = (eq->head == NULL);
   event_queue_unlock(eq);
 
@@ -173,8 +172,6 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
     eq->mark_prev = el;
 #endif
 
-  assert(eq->head != NULL);
-
   event_queue_unlock(eq);
   /* end of critical section */
 
@@ -191,7 +188,6 @@ event_queue_get(struct event_queue *eq, struct server_msg **msg)
   assert(msg != NULL);
   
   event_queue_lock(eq);
-  assert((eq->head != NULL) || (eq->tail == NULL));
   el = eq->head;
 #if defined(INTERLOGD_EMS)
   /* this message is marked for removal, it is first on the queue */
@@ -238,13 +234,13 @@ event_queue_remove(struct event_queue *eq)
     /* removing from middle of the queue */
     prev->prev = el->prev;
   }
-  if(eq->head == NULL) {
+  if(el == eq->tail) {
     /* we are removing the last message */
-    eq->tail = NULL;
+    eq->tail = prev;
   }
   if(el == eq->tail_ems) {
     /* we are removing last priority message */
-    eq->tail_ems = NULL;
+    eq->tail_ems = prev;
   }
 
   eq->mark_this = NULL;
@@ -260,7 +256,6 @@ event_queue_remove(struct event_queue *eq)
 	  eq->tail = NULL;
   }
 #endif
-  assert((eq->head != NULL) || (eq->tail == NULL));
   event_queue_unlock(eq);
   /* end of critical section */
     
