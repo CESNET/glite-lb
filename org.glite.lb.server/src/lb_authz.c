@@ -291,9 +291,9 @@ parse_creds(edg_wll_VomsGroups *groups, char *subject, GRSTgaclUser **gacl_user)
 
 fail:
    if (cred)
-      GRSTgaclCredFree(cred);
+      /* XXX GRSTgaclCredFree(cred); */
    if (user)
-      GRSTgaclUserFree(user);
+      /* XXX GRSTgaclUserFree(user); */
 
    return ret;
 }
@@ -365,7 +365,7 @@ delEntry(GRSTgaclAcl *acl, GRSTgaclEntry *entry)
 	    prev->next = cur->next;
 	 else
 	    acl->firstentry = cur->next;
-	 GRSTgaclEntryFree(cur);
+	 /* XXX GRSTgaclEntryFree(cur); */
 	 found = 1;
 	 break;
       }
@@ -387,7 +387,7 @@ create_cred(char *userid, int user_type, GRSTgaclCred **cred)
       if (c == NULL)
 	 return ENOMEM;
       if (!GRSTgaclCredAddValue(c, "dn", userid)) {
-	 GRSTgaclCredFree(c);
+	 /* XXX GRSTgaclCredFree(c); */
 	 return -1; /* GACL_ERR */
       }
    } else if(user_type == EDG_WLL_USER_VOMS_GROUP) {
@@ -400,7 +400,7 @@ create_cred(char *userid, int user_type, GRSTgaclCred **cred)
       *group++ = '\0';
       if (!GRSTgaclCredAddValue(c, "vo", userid) ||
 	  !GRSTgaclCredAddValue(c, "group", group)) {
-	 GRSTgaclCredFree(c);
+	 /* XXX GRSTgaclCredFree(c); */
 	 return -1; /* GACL_ERR */
       }
    } else
@@ -599,7 +599,7 @@ edg_wll_DecodeACL(char *buf, GRSTgaclAcl **result_acl)
          entry = GACLparseEntry(cur);
          if (entry == NULL)
            {
-             GRSTgaclAclFree(acl);
+             /* XXX GRSTgaclAclFree(acl); */
              xmlFreeDoc(doc);
              return EINVAL;
            }
@@ -859,7 +859,7 @@ end:
 	if (stmt) edg_wll_FreeStmt(&stmt);
 	if (acl_id) free(acl_id);
 	if (acl_str) free(acl_str);
-	if (gacl) GRSTgaclAclFree(gacl);
+	/* XXX if (gacl) GRSTgaclAclFree(gacl); */
 	if (jobstr) free(jobstr);
 
 	return edg_wll_Error(ctx, NULL, NULL);
