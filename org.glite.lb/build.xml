@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.6  2004/07/16 16:25:43  flammer
+	Added tags for automated adding of components.
+	
 	Revision 1.5  2004/07/06 17:43:33  flammer
 	Update of classpath definitions, targets & configure file.
 	
@@ -86,28 +89,10 @@
 		 Load version file 
 	     ========================================= -->
 	<property file="${module.version.file}"/>
-		
-	
+			
 	<!-- ===============================================
 		  Public common targets
 	     =============================================== -->
-
-	<target name="envinfo">
-		<!-- Workspace paths -->
-		<echo>*****************************************************************</echo>
-		<echo>*****************************************************************</echo>
-		<echo>****** ${subsystem.name}	</echo>
-		<echo>*****************************************************************</echo>
-		<echo>*****************************************************************</echo>
-		<echo>  </echo>
-		<echo>Global project path:	${global.dir}</echo>
-		<echo>Global project name:	${global.name}</echo>
-		<echo>Subsystem name:		${subsystem.name}</echo>
-	</target>
-
-	<target name="envcheck" depends="envinfo,defaultenvchecks" 
-		description="Check environment configuration">
-	</target>
 
 	<target name="localinit" depends="envcheck">
 
