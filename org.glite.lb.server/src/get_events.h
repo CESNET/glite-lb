@@ -3,6 +3,10 @@
 /* Internal functions for getting event sets from the LB database */
 #include "lbs_db.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if 0	/* rel 1 */
 char *edg_wll_jobid_to_user( edg_wll_Context, char *);
 void edg_wll_set_event_field_warn( edg_wll_Event *, char *, char *);
@@ -21,4 +25,8 @@ int edg_wll_QueryJobsServer(edg_wll_Context, const edg_wll_QueryRec **, int, edg
 
 void edg_wll_SortEvents(edg_wll_Event *);
 int edg_wll_compare_seq(const char *, const char *);
+
+#ifdef __cplusplus
+}
+#endif
 

@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.1  2004/07/07 12:08:09  akrenek
+	*** empty log message ***
+	
 	Revision 1.2  2004/07/06 20:47:11  flammer
 	Moved to configure.properties.xml
 	
@@ -52,6 +55,7 @@ nothrflavour=${with.globus.nothr.flavor}
 expat_prefix=${with.expat.prefix}
 ares_prefix=${with.ares.prefix}
 mysql_prefix=${with.mysql.prefix}
+cppunit=${with.cppunit.prefix}
 			</echo>
 	    </target>
 	</project>

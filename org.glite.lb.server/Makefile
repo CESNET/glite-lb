@@ -21,8 +21,11 @@ ares_prefix=/opt/ares
 
 YACC=bison -y
 
-VPATH=${top_srcdir}/src
+VPATH=${top_srcdir}/src:${top_srcdir}/test
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
+
+TEST_LIBS:=-L${cppunit}/lib -lcppunit
+TEST_INC:=-I${cppunit}/include
 
 SUFFIXES = .T 
 
@@ -41,6 +44,7 @@ CFLAGS:= -DNO_VOMS -DNO_GACL \
 	-I${globus_prefix}/include/${nothrflavour}
 
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 # assisst & gss due to VOMS only
@@ -86,8 +90,17 @@ default all: compile
 
 compile: glite_lb_bkserverd glite_lb_bkindex
 
-check:
-	echo No unit tests so far.
+check: 
+	-echo check.query not complete yet
+
+check.query: test_query_events
+	./test_query_events
+
+query_events_objs:=`echo ${SERVER_OBJS} | sed 's/lbs_db\.o//;s/bkserverd\.o//'`
+
+test_query_events: test_query_events.o
+	${LINKXX} -o $@ test_query_events.o ${query_events_objs} \
+	${TEST_LIBS} ${COMMON_LIB} ${EXT_LIBS}
 
 doc:
 
@@ -132,3 +145,8 @@ clean:
 	mv y.tab.h $*.h
 	${CC} -c ${CFLAGS} $*.c
 	rm $*.c
+
+
+test_query_events.o: %.o: %.cpp
+	${CXX} -c ${CFLAGS} ${GLOBUSINC} ${TEST_INC} $<
+
