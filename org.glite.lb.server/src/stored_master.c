@@ -28,19 +28,21 @@ gss_reader(char *buffer, int max_len)
 			      buffer, max_len,
 			      &tmp_ctx->p_tmp_timeout,
 			      &len, &gss_code);
-  if(ret < 0) switch(ret) {
+  if(ret < 0) {
+	  switch(ret) {
 
-  case EDG_WLL_GSS_ERROR_TIMEOUT: 
-    ret = edg_wll_SetError(tmp_ctx, ETIMEDOUT, "read message");
-    break;
+	  case EDG_WLL_GSS_ERROR_TIMEOUT: 
+		  edg_wll_SetError(tmp_ctx, ETIMEDOUT, "read message");
+		  break;
+		  
+	  case EDG_WLL_GSS_ERROR_EOF:
+		  edg_wll_SetError(tmp_ctx, ENOTCONN, NULL);
+		  break;
 
-  case EDG_WLL_GSS_ERROR_EOF:
-    ret = edg_wll_SetError(tmp_ctx, ENOTCONN, NULL);
-    break;
-
-  default:
-    ret = edg_wll_SetError(tmp_ctx, EDG_WLL_ERROR_GSS, "read message");
-    break;
+	  default:
+		  edg_wll_SetError(tmp_ctx, EDG_WLL_ERROR_GSS, "read message");
+		  break;
+	  }
   }
 
   return(ret);
@@ -85,7 +87,8 @@ gss_plain_reader(char *buffer, int max_len)
 
   ret = edg_wll_plain_read_full(&tmp_ctx->connProxy->conn, buffer, max_len,
 				&tmp_ctx->p_tmp_timeout);
-  if(ret < 0) return(edg_wll_SetError(tmp_ctx, errno, "StoreProtoProxy() - reading data"));
+  if(ret < 0)
+	  edg_wll_SetError(tmp_ctx, errno, "StoreProtoProxy() - reading data");
 
   return(ret);
 }
