@@ -97,6 +97,8 @@ THRSTATICLIB:=libglite_lb_common_${thrflavour}.a
 LTLIB:=libglite_lb_common_${nothrflavour}.la
 THRLTLIB:=libglite_lb_common_${thrflavour}.la
 
+REPORTS:=${top_srcdir}/reports
+
 default: all
 
 all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
@@ -125,7 +127,10 @@ ${THRLTLIB}: ${THROBJS}
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
-check: compile check.parse check.gss check.il
+check: compile mkreports check.parse check.gss check.il
+
+mkreports:
+	-mkdir ${REPORTS}
 
 check.parse: test_parse
 	echo "XXX: nyk -> fixed build interrupt :)"
@@ -140,7 +145,7 @@ check.gss: test_gss
 	echo test_gss not run automatically util we have got some credentials
 
 check.il: il_test
-	./il_test
+	./il_test ${REPORTS}/il.xml
 
 test_gss: test_gss.o
 	${LINKXX} -o $@ test_gss.o ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
