@@ -595,7 +595,7 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 				rep(js->pub.reason, e->enQueued.reason);
 
 				free(js->pub.location);
-				if (e->transfer.result == EDG_WLL_ENQUEUED_OK) {
+				if (e->enQueued.result == EDG_WLL_ENQUEUED_OK) {
 					js->pub.location = location_string(
 						e->enQueued.queue,
 						e->enQueued.host,
