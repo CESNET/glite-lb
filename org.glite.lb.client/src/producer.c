@@ -352,7 +352,6 @@ edg_wll_logeventmaster_end:
  * Formats a logging message and sends it to L&B Proxy
  * \brief master proxy logging event function
  * \param context	INOUT context to work with,
- * \param priority	IN priority flag (0 for async, 1 for sync)
  * \param event		IN type of the event,
  * \param fmt		IN printf()-like format string,
  * \param ...		IN event specific values/data according to fmt.
@@ -360,7 +359,6 @@ edg_wll_logeventmaster_end:
  */
 static int edg_wll_LogEventMasterProxy(
 	edg_wll_Context context,
-	int priority,
 	edg_wll_EventCode event,
 	char *fmt, ...)
 {
@@ -388,70 +386,63 @@ static int edg_wll_LogEventMasterProxy(
 	gettimeofday(&start_time,0);
 	if (edg_wll_ULMTimevalToDate(start_time.tv_sec,start_time.tv_usec,date) != 0) {
 		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMasterProxy(): edg_wll_ULMTimevalToDate() error"); 
-		goto edg_wll_logeventmaster_end; 
+		goto edg_wll_logeventmasterproxy_end; 
 	}
  	source = edg_wll_SourceToString(context->p_source);
 	lvl = edg_wll_LevelToString(context->p_level);
 	eventName = edg_wll_EventToString(event);
 	if (!eventName) { 
 		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMasterProxy(): event name not specified"); 
-		goto edg_wll_logeventmaster_end; 
+		goto edg_wll_logeventmasterproxy_end; 
 	}
 	if (!(fullid = edg_wlc_JobIdUnparse(context->p_jobid))) { 
 		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMasterProxy(): edg_wlc_JobIdUnparse() error"); 
-		goto edg_wll_logeventmaster_end;
+		goto edg_wll_logeventmasterproxy_end;
 	}
 	seq = edg_wll_GetSequenceCode(context);
 	if (edg_wll_IncSequenceCode(context)) {
 		ret = EINVAL;
-		goto edg_wll_logeventmaster_end;
+		goto edg_wll_logeventmasterproxy_end;
 	}
 	if (trio_asprintf(&fix,EDG_WLL_FORMAT_COMMON,
-			date,context->p_host,lvl,priority,
+			date,context->p_host,lvl,1,
 			source,context->p_instance ? context->p_instance : "",
 			eventName,fullid,seq) == -1) {
 		edg_wll_SetError(context,ret = ENOMEM,"edg_wll_LogEventMasterProxy(): trio_asprintf() error"); 
-		goto edg_wll_logeventmaster_end; 
+		goto edg_wll_logeventmasterproxy_end; 
 	}
 	if (trio_vasprintf(&var,fmt,fmt_args) == -1) { 
 		edg_wll_SetError(context,ret = ENOMEM,"edg_wll_LogEventMasterProxy(): trio_vasprintf() error"); 
-		goto edg_wll_logeventmaster_end; 
+		goto edg_wll_logeventmasterproxy_end; 
 	}
         /* format the DG.USER string */
 /* XXX: put user credentials here probably from context */
         name_esc = edg_wll_LogEscape("User credentials should go here");
         if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
 		edg_wll_SetError(context,ret = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
-		goto edg_wll_logeventmaster_end; 
+		goto edg_wll_logeventmasterproxy_end; 
         }
 	if (asprintf(&out,"%s%s%s\n",dguser,fix,var) == -1) { 
 		edg_wll_SetError(context,ret = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
-		goto edg_wll_logeventmaster_end; 
+		goto edg_wll_logeventmasterproxy_end; 
 	}
 	size = strlen(out);
 
-	if (priority && (size > EDG_WLL_LOG_SYNC_MAXMSGSIZE)) {
+	if (size > EDG_WLL_LOG_SYNC_MAXMSGSIZE) {
 		edg_wll_SetError(context,ret = ENOSPC,"edg_wll_LogEventMasterProxy(): Message size too large for synchronous transfer");
-		goto edg_wll_logeventmaster_end;
+		goto edg_wll_logeventmasterproxy_end;
 	}
 
 #ifdef EDG_WLL_LOG_STUB
 //	fprintf(stderr,"edg_wll_LogEvent (%d chars): %s",size,out);
 #endif
 	
-	context->p_tmp_timeout.tv_sec = 0;
-	context->p_tmp_timeout.tv_usec = 0;
-	if (priority) {
-		context->p_tmp_timeout = context->p_sync_timeout;
-	}
-	else {
-		context->p_tmp_timeout = context->p_log_timeout;
-	}
+	context->p_tmp_timeout = context->p_sync_timeout;
 
    /* and send the message to the L&B Proxy: */
-	ret = edg_wll_DoLogEventProxy(context, /* priority,*/ out);
+	ret = edg_wll_DoLogEventProxy(context, out);
 
-edg_wll_logeventmaster_end:
+edg_wll_logeventmasterproxy_end:
 	va_end(fmt_args);
 	if (seq) free(seq); 
 	if (fix) free(fix); 
@@ -561,7 +552,7 @@ int edg_wll_LogEventProxy(
                 goto edg_wll_logevent_end;
         }
 
-        ret=edg_wll_LogEventMasterProxy(context,0,event,"%s",list);
+        ret=edg_wll_LogEventMasterProxy(context,event,"%s",list);
 
 edg_wll_logevent_end:
         va_end(fmt_args);

@@ -4,6 +4,8 @@
 #include "glite/lb/producer.h"
 #include "glite/lb/escape.h"
 #include "glite/lb/lb_gss.h"
+#include "glite/lb/lb_plain_io.h"
+#include "glite/lb/il_string.h"
 
 #include <signal.h>
 #include <string.h>
@@ -12,7 +14,8 @@
 /*
  *----------------------------------------------------------------------
  *
- * edg_wll_log_proto_client - handle outgoing data
+ * edg_wll_log_proto_client - client part of the logging protocol
+ *   used when sending messages to local logger
  *
  * Returns: 0 if done properly or errno
  *
@@ -154,3 +157,148 @@ int edg_wll_log_proto_client_failure(edg_wll_Context context, int code, edg_wll_
 	}
 	return ret;
 }
+
+/*
+ * Read reply from server.
+ *  Returns: -1       - error reading message, 
+ *           code > 0 - error code from server
+ */
+static
+int
+get_reply(edg_wll_Context context, int sock, char **buf, int *code_min)
+{
+	char buffer[17];
+	char *msg, *p;
+	int len, code;
+
+	code = 0;
+	/* get message header */
+	len = edg_wll_plain_read_fullbuf(sock, buffer, 17, &context->p_tmp_timeout);
+	if(len < 0) {
+		edg_wll_SetError(context,LB_PROTO,"get_reply(): error reading message header");
+		goto get_reply_end;
+	}
+
+	buffer[16] = 0;
+
+	sscanf(buffer, "%d", &len);
+	if(len > MAXLEN) {
+		edg_wll_SetError(context,LB_PROTO,"get_reply(): error reading message body length");
+		goto get_reply_end;
+	}
+
+	/* allocate room for message body */
+	if((msg = malloc(len)) == NULL) {
+		edg_wll_SetError(context,ENOMEM,"get_reply(): no room for message body");
+		goto get_reply_end;
+	}
+
+	/* read all the data */
+	len = edg_wll_plain_read_fullbuf(sock, msg, len, &context->p_tmp_timeout);
+	if(len < 0) {
+		edg_wll_SetError(context,LB_PROTO,"get_reply(): error reading message body");
+		goto get_reply_end;
+	}
+
+	p = msg;
+	p = get_int(p, &code);
+	if(p == NULL) {
+		edg_wll_SetError(context,LB_PROTO,"get_reply(): error reading result code");
+		free(msg);
+		goto get_reply_end;
+	}
+	p = get_int(p, code_min);
+	if(p == NULL) {
+		edg_wll_SetError(context,LB_PROTO,"get_reply(): error reading result code minor");
+		free(msg);
+		goto get_reply_end;
+	}
+	p = get_string(p, buf);
+	if(p == NULL) {
+		if(*buf) {
+			free(*buf);
+			*buf = NULL;
+		}
+		edg_wll_SetError(context,LB_PROTO,"get_reply(): error reading result string");
+		free(msg);
+		goto get_reply_end;
+	}
+
+get_reply_end:
+	if(msg) free(msg);
+	return edg_wll_Error(context,NULL,NULL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * edg_wll_log_proto_client_proxy - client part of the logging protocol
+ *   used when sending messages to L&B Proxy
+ *
+ * Returns: 0 if done properly or errno
+ *
+ * Calls:
+ *
+ * Algorithm:
+ *
+ *----------------------------------------------------------------------
+ */
+int edg_wll_log_proto_client_proxy(edg_wll_Context context, int socket, edg_wll_LogLine logline)
+{
+	char *p;  int  len;
+	char *ucs = "honik6";
+	char *buffer,*answer;
+	int	err;
+	int	code;
+	int	count;
+	int	size;
+
+	errno = err = code = count = 0;
+	edg_wll_ResetError(context);
+
+	/* allocate enough room to hold the message */
+	len = 17 + len_string(ucs) + len_string(logline);
+	if((buffer = malloc(len)) == NULL) {
+		edg_wll_SetError(context,ENOMEM,"get_reply(): no room for message body");
+		goto edg_wll_log_proto_client_proxy_end;
+	}
+	p = buffer;
+
+	/* write header */
+	sprintf(p, "%16d\n", len - 17);
+	p += 17;
+
+	/* write rest of the message */
+	p = put_string(p, ucs);
+	p = put_string(p, logline);
+
+	/* send message */
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"Sending message to socket...\n");
+#endif
+	if (( count = edg_wll_plain_write_full(socket, buffer, size, &context->p_tmp_timeout)) < 0) {
+		edg_wll_SetError(context,LB_PROTO,"edg_wll_log_proto_client_proxy(): error sending message to socket");
+		goto edg_wll_log_proto_client_proxy_end;
+	}
+
+	/* get answer */
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"Reading answer from server...\n");
+#endif
+	count = 0;
+	if ((err = get_reply(context, socket, &answer, &code)) < 0 ) {
+		edg_wll_SetError(context,LB_PROTO,"edg_wll_log_proto_client_proxy(): error reading answer from L&B proxy server");
+	} else {
+#ifdef EDG_WLL_LOG_STUB
+		fprintf(stderr,"Read answer \"%d: %s\"\n",code,answer);
+#endif
+		edg_wll_SetError(context,code,"answer read from L&B proxy server");
+	}
+
+edg_wll_log_proto_client_proxy_end:
+
+	if (buffer) free(buffer);
+	if (answer) free(answer);
+	return edg_wll_Error(context,NULL,NULL);
+}
+
