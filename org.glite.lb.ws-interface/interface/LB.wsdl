@@ -1,0 +1,358 @@
+<!-- $Header$ -->
+
+<WSDL:definitions
+	xmlns:tns="http://glite.org/wsdl/services/lb"
+	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:glitensservices="http://glite.org/wsdl/services/lb"
+	xmlns:glitenstypes="http://glite.org/wsdl/types/lb"
+	xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:WSDL="http://schemas.xmlsoap.org/wsdl/"
+	xmlns="http://schemas.xmlsoap.org/wsdl/"
+	targetNamespace="http://glite.org/wsdl/services/lb"
+	name="LoggingAndBookkeeping">
+
+	<WSDL:types>
+		<schema
+			targetNamespace="http://glite.org/wsdl/types/lb"
+			xmlns="http://www.w3.org/2001/XMLSchema"
+			elementFormDefault="unqualified"
+			attributeFormDefault="unqualified">
+
+			<import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+			<simpleType name="QueryAttr">
+				<restriction base="xsd:string">
+					<enumeration value="UNDEF"/>
+					<enumeration value="JOBID"/>
+					<enumeration value="OWNER"/>
+					<enumeration value="STATUS"/>
+					<enumeration value="LOCATION"/>
+					<enumeration value="DESTINATION"/>
+					<enumeration value="DONECODE"/>
+					<enumeration value="USERTAG"/>
+					<enumeration value="TIME"/>
+					<enumeration value="LEVEL"/>
+					<enumeration value="HOST"/>
+					<enumeration value="SOURCE"/>
+					<enumeration value="INSTANCE"/>
+					<enumeration value="EVENT-TYPE"/>
+					<enumeration value="CHKPT-TAG"/>
+					<enumeration value="RESUBMITTED"/>
+					<enumeration value="PARENT"/>
+					<enumeration value="EXITCODE"/>
+				</restriction>
+			</simpleType>
+			<simpleType name="QueryOp">
+				<restriction base="xsd:string">
+					<enumeration value="EQUAL"/>
+					<enumeration value="LESS"/>
+					<enumeration value="GREATER"/>
+					<enumeration value="WITHIN"/>
+					<enumeration value="UNEQUAL"/>
+				</restriction>
+			</simpleType>
+			<simpleType name="JobStatCode">
+				<restriction base="xsd:string">
+					<enumeration value="UNDEF"/>
+					<enumeration value="SUBMITTED"/>
+					<enumeration value="WAITING"/>
+					<enumeration value="READY"/>
+					<enumeration value="SCHEDULED"/>
+					<enumeration value="RUNNING"/>
+					<enumeration value="DONE"/>
+					<enumeration value="CLEARED"/>
+					<enumeration value="ABORTED"/>
+					<enumeration value="CANCELLED"/>
+					<enumeration value="UNKNOWN"/>
+					<enumeration value="PURGED"/>
+				</restriction>
+			</simpleType>
+			<simpleType name="StatJobType">
+				<restriction base="xsd:string">
+					<enumeration value="SIMPLE"/>
+					<enumeration value="DAG"/>
+				</restriction>
+			</simpleType>
+			<simpleType name="StatDoneCode">
+				<restriction base="xsd:string">
+					<enumeration value="OK"/>
+					<enumeration value="FAILED"/>
+					<enumeration value="CANCELLED"/>
+				</restriction>
+			</simpleType>
+			<complexType name="timeval">
+				<sequence>
+					<element name="tvSec" type="xsd:long" minOccurs="1" maxOccurs="1"/>
+					<element name="tvUsec" type="xsd:long" minOccurs="1" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+			<complexType name="QueryRecAttrId">
+				<sequence>
+					<element name="tag" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="state" type="glitenstypes:JobStatCode" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+			<complexType name="QueryRecValue">
+				<sequence>
+					<element name="i" type="xsd:int" minOccurs="0" maxOccurs="1"/>
+					<element name="c" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="t" type="glitenstypes:timeval" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+			<complexType name="QueryRec">
+				<sequence>
+					<element name="op" type="glitenstypes:QueryOp" minOccurs="1" maxOccurs="1"/>
+					<element name="attrid" type="glitenstypes:QueryRecAttrId" minOccurs="0" maxOccurs="1"/>
+					<element name="value1" type="glitenstypes:QueryRecValue" minOccurs="1" maxOccurs="1"/>
+					<element name="value2" type="glitenstypes:QueryRecValue" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+			<complexType name="QueryCondition">
+				<sequence>
+					<element name="attr" type="glitenstypes:QueryAttr" minOccurs="1" maxOccurs="1"/>
+					<element name="records" type="glitenstypes:QueryRec" minOccurs="1" maxOccurs="unbounded"/>
+				</sequence>
+			</complexType>
+			<complexType name="QueryConditions">
+				<sequence>
+					<element name="condition" type="glitenstypes:QueryCondition" minOccurs="1" maxOccurs="unbounded"/>
+				</sequence>
+			</complexType>
+			<complexType  name="TagValue">
+				<sequence>
+					<element name="tag" type="xsd:string" minOccurs="1" maxOccurs="1" />
+					<element name="value" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+			<simpleType name="JobStatFlag">
+				<restriction base="xsd:string">
+					<enumeration value="CLASSADS"/>
+					<enumeration value="CHILDREN"/>
+					<enumeration value="CHILDSTAT"/>
+				</restriction>
+			</simpleType>
+			<complexType name="JobStatFlags">
+				<sequence>
+					<element name="flag" type="glitenstypes:JobStatFlag" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</complexType>
+			<complexType name="JobStat">
+				<sequence>
+					<element name="state" type="glitenstypes:JobStatCode" minOccurs="1" maxOccurs="1"/>
+					<element name="jobId" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+					<element name="owner" type="xsd:string" minOccurs="0" maxOccurs="1" nillable="true"/>
+					<element name="jobtype" type="glitenstypes:StatJobType" minOccurs="1" maxOccurs="1"/>
+					<element name="parentJob" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="seed" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="childrenNum" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+					<element name="children" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="childrenHist" type="xsd:int" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="childrenStates" type="glitenstypes:JobStat" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="condorId" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="globusId" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="localId" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="jdl" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="matchedJdl" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="destination" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="condorJdl" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="rsl" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="reason" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="location" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="ceNode" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="networkServer" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="subjobFailed" type="xsd:boolean" minOccurs="1" maxOccurs="1"/>
+					<element name="doneCode" type="glitenstypes:StatDoneCode" minOccurs="1" maxOccurs="1"/>
+					<element name="exitCode" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+					<element name="resubmitted" type="xsd:boolean" minOccurs="1" maxOccurs="1"/>
+					<element name="cancelling" type="xsd:boolean" minOccurs="1" maxOccurs="1"/>
+					<element name="cancelReason" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="cpuTime" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+					<element name="userTags" type="glitenstypes:TagValue" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="stateEnterTime" type="glitenstypes:timeval" minOccurs="1" maxOccurs="1"/>
+					<element name="lastUpdateTime" type="glitenstypes:timeval" minOccurs="1" maxOccurs="1"/>
+					<element name="stateEnterTimes" type="xsd:int" minOccurs="0" maxOccurs="unbounded" nillable="true"/>
+					<element name="expectUpdate" type="xsd:boolean" minOccurs="1" maxOccurs="1"/>
+					<element name="expectFrom" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="acl" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+			<complexType  name="jobsOut">
+				<sequence>
+					<element name="jobs" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+				</sequence>
+			</complexType>
+			<complexType  name="statesOut">
+				<sequence>
+					<element name="states" type="glitenstypes:JobStat" minOccurs="0" maxOccurs="unbounded" />
+				</sequence>
+			</complexType>
+			<complexType name="GenericLBFaultType">
+				<sequence>
+					<element name="source" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+					<element name="code" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+					<element name="text" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+					<element name="description" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+					<element name="reason" type="glitenstypes:GenericLBFaultType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+			<element name="GenericLBFault" type="glitenstypes:GenericLBFaultType"/>
+		</schema>
+	</WSDL:types>
+	<message name="GetVersionRequest">
+	</message>
+	<message name="GetVersionResponse">
+		<part name="version" type="xsd:string"/>
+	</message>
+	<message name="JobStatusRequest">
+		<part name="jobid" type="xsd:string"/>
+		<part name="flags" type="glitenstypes:JobStatFlags"/>
+	</message>
+	<message name="JobStatusResponse">
+		<part name="status" type="glitenstypes:JobStat"/>
+	</message>
+	<message name="QueryJobsRequest">
+		<part name="conditions" type="glitenstypes:QueryConditions"/>
+		<part name="flags" type="glitenstypes:JobStatFlags"/>
+	</message>
+	<message name="QueryJobsResponse">
+		<part name="jobs" type="glitenstypes:jobsOut"/>
+		<part name="states" type="glitenstypes:statesOut"/>
+	</message>
+	<message name="UserJobsRequest">
+	</message>
+	<message name="UserJobsResponse">
+		<part name="jobs" type="xsd:string"/>
+		<part name="states" type="glitenstypes:JobStat"/>
+	</message>
+
+	<message name="GenericLBFault">
+		<part name="fault" element="glitenstypes:GenericLBFault"/>
+	</message>
+
+	<portType name="LoggingAndBookkeeping_PortType">
+		<operation name="GetVersion">
+			<documentation>Query the version of LB servere
+
+Input: no input
+
+Output: Version of LB server
+
+Faults: GenericLBFault
+			</documentation>
+			<input name="i" message="tns:GetVersionRequest"/>
+			<output name="o" message="tns:GetVersionResponse"/>
+			<fault name="f" message="tns:GenericLBFault"/>
+		</operation>
+		<operation name="JobStatus">
+			<documentation>Retrieve state of a single job.
+
+Given a job id queries LB for detailed state of the job.
+
+
+Input:
+
+jobid: Id of the job
+
+flags: Which fields of the job state should be retrieved: zero or more of CLASSADS, CHILDREN, CHILDSTAT
+
+Output: state of the job
+
+Faults: GenericLBFault
+			</documentation>
+			<input name="i" message="tns:JobStatusRequest"/>
+			<output name="o" message="tns:JobStatusResponse"/>
+			<fault name="f" message="tns:GenericLBFault"/>
+		</operation>
+		<operation name="QueryJobs">
+			<documentation>Query for jobs satisfying set of conditions.
+
+Intput:
+
+conditions: list of lists of query conditions. 
+	Elements of the inner lists refer to a single job attribute, the conditions are or-ed.
+	Elements of the outer list may refer to different job attributes, they are and-ed.
+
+flags: Which fields of the job state should be retrieved: see JobStatus
+
+Output: list of mathching jobs, including their states
+
+Faults: GenericLBFault
+			</documentation>
+			<input name="i" message="tns:QueryJobsRequest"/>
+			<output name="o" message="tns:QueryJobsResponse"/>
+			<fault name="f" message="tns:GenericLBFault"/>
+		</operation>
+		<operation name="UserJobs">
+			<documentation>Query all jobs of the current user.
+
+Input: no input
+
+Output: list of all user's jobs, including their states
+
+Faults: GenericLBFault
+			</documentation>
+			<input name="i" message="tns:UserJobsRequest"/>
+			<output name="o" message="tns:UserJobsResponse"/>
+			<fault name="f" message="tns:GenericLBFault"/>
+		</operation>
+	</portType>
+	<binding name="LoggingAndBookkeeping" type="tns:LoggingAndBookkeeping_PortType">
+		<SOAP:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<operation name="GetVersion">
+			<SOAP:operation style="rpc"/>
+			<input name="i">
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</input>
+			<output name="o">
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</output>
+			<fault name="f">
+				<SOAP:fault name="f" use="literal"/>
+			</fault>
+		</operation>
+		<operation name="JobStatus">
+			<SOAP:operation style="rpc"/>
+			<input name="i">
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</input>
+			<output name="o">
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</output>
+			<fault name="f">
+				<SOAP:fault name="f" use="literal"/>
+			</fault>
+		</operation>
+		<operation name="QueryJobs">
+			<SOAP:operation style="rpc"/>
+			<input>
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</input>
+			<output>
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</output>
+			<fault name="f">
+				<SOAP:fault name="f" use="literal"/>
+			</fault>
+		</operation>
+		<operation name="UserJobs">
+			<SOAP:operation style="rpc"/>
+			<input>
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</input>
+			<output>
+				<SOAP:body use="literal" namespace="http://glite.org/wsdl/services/lb"/>
+			</output>
+			<fault name="f">
+				<SOAP:fault name="f" use="literal"/>
+			</fault>
+		</operation>
+	</binding>
+	<service name="LoggingAndBookkeeping">
+		<documentation>Logging and Bookkeeping service</documentation>
+		<port name="LoggingAndBookkeeping" binding="tns:LoggingAndBookkeeping">
+			<SOAP:address location="http://test.glite.org/lb:8080"/>
+		</port>
+	</service>
+</WSDL:definitions>
