@@ -12,7 +12,8 @@ PREFIX=/opt/glite
 
 glite_location=/opt/glite
 globus_prefix=/opt/globus
-globus_flavour=gcc32
+nothrflavour=gcc32
+thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 ares_prefix=/opt/ares
 
@@ -24,11 +25,14 @@ AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
+GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour} \
+	-I${globus_prefix}/include/${nothrflavour}/openssl
+GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour} \
+	-I${globus_prefix}/include/${thrflavour}/openssl
+
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	-I${glite_location}/include \
-    -I${globus_prefix}/include/${globusflavour} \
-	-I${globus_prefix}/include/${globusflavour}/openssl \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
 	-DDATAGRID_EXTENSION
@@ -51,25 +55,39 @@ OBJS:=dgssl.o escape.o events.o mini_http.o query_rec.o status.o \
 	xml_conversions.o xml_parse.o ulm_parse.o param.o \
 	events_parse.o il_string.o il_int.o notifid.o \
 	il_log.o il_msg.o context.o trio.o strio.o
-LOBJS:=`echo ${OBJS} | sed 's/\.o/\.lo/g'`
+LOBJS:=${OBJS:.o=.lo}
+
+THROBJS:=${OBJS:.o=.thr.o}
+THRLOBJS:=${OBJS:.o=.thr.lo}
 
 HDRS:=context-int.h  dgssl.h  mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h escape.h \
 	ulm_parse.h trio.h
 
-STATICLIB:=libglite_lb_common.a
-LTLIB:=libglite_lb_common.la
+STATICLIB:=libglite_lb_common_${nothrflavour}.a
+THRSTATICLIB:=libglite_lb_common_${thrflavour}.a
+LTLIB:=libglite_lb_common_${nothrflavour}.la
+THRLTLIB:=libglite_lb_common_${thrflavour}.la
 
 default: all
 
-all compile: ${STATICLIB} ${LTLIB}
+all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
 
 ${STATICLIB}: ${OBJS}
 	ar crv $@ ${OBJS}
 	ranlib $@
 
+${THRSTATICLIB}: ${THROBJS}
+	ar crv $@ ${THROBJS}
+	ranlib $@
+
 ${LTLIB}: ${OBJS}
 	${LINK} -o $@ ${LOBJS} \
+		-lglobus_ssl_utils -lglite_wms_cjobid \
+		-lm
+
+${THRLTLIB}: ${THROBJS}
+	${LINK} -o $@ ${THRLOBJS} \
 		-lglobus_ssl_utils -lglite_wms_cjobid \
 		-lm
 
@@ -95,16 +113,18 @@ distbin:
 install:
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	mkdir -p ${PREFIX}/lib
-	${INSTALL} -m 644 ${STATICLIB} ${PREFIX}/lib
-	${INSTALL} -m 644 ${LTLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${STATICLIB} ${THRSTATICLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${PREFIX}/lib
 	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}
 
 clean:
 
 
 %.o: %.c
-	${COMPILE} -c $<
+	${COMPILE} ${GLOBUSINC} -c $<
 
+%.thr.o: %.c
+	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
 %.h: %.h.T
 	rm -f $@

@@ -12,7 +12,8 @@ PREFIX=/opt/glite
 
 glite_location=/opt/glite
 globus_prefix=/opt/globus
-globusflavour=gcc32
+nothrflavour=gcc32
+thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 ares_prefix=/opt/ares
 
@@ -23,13 +24,16 @@ AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
 SUFFIXES = .T 
 
+GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour} \
+	-I${globus_prefix}/include/${nothrflavour}/openssl
+GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour} \
+	-I${globus_prefix}/include/${thrflavour}/openssl
+
 DEBUG:=-g -O0 
 CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	-I${glite_location}/include \
-	-I${globus_prefix}/include/${globusflavour} \
-    -I${globus_prefix}/include/${globusflavour}/openssl \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include
 
@@ -38,8 +42,12 @@ CXXFLAGS:=${CFLAGS}
 HELPERS:=-L${glite_location}/lib -lglite_wms_tls_ssl_helpers
 
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
-	-lglobus_common_${globusflavour} \
-	-lssl_${globusflavour}
+	-lglobus_common_${nothrflavour} \
+	-lssl_${nothrflavour}
+
+GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
+	-lglobus_common_${thrflavour} \
+	-lssl_${thrflavour}
 
 EXPAT_LIBS:=-L${expat_prefix}/lib \
 	-lexpat
@@ -49,8 +57,7 @@ ARES_LIBS:=-L${ares_prefix}/lib \
 
 LDFLAGS:=-L${stagedir}/lib
 
-EXT_LIB:=${GLOBUS_LIBS} \
-    ${EXPAT_LIBS} \
+EXT_LIB:= ${EXPAT_LIBS} \
     ${ARES_LIBS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
@@ -64,32 +71,45 @@ PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
 PUB_HDRS:=CountRef.h Event.h JobJobStatus.h Notification.h ServerConnection.h \
 	LoggingExceptions.h
 
+LIBTHROBJS:=${LIBOBJS:.o=.thr.o}
 LIBLOBJS:=${LIBOBJS:.o=.lo}
+LIBTHRLOBJS:=${LIBOBJS:.o=.thr.lo}
+
 PLUSLOBJS:=${PLUSOBJS:.o=.lo}
 
-LIB:=libglite_lb_client.la
+LIB:=libglite_lb_client_${nothrflavour}.la
+THRLIB:=libglite_lb_client_${thrflavour}.la
+
 PLUSLIB:=libglite_lb_clientpp.la
 
 TOOLS:=dump load purge
 
 ${LIB}: ${LIBOBJS}
-	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common ${HELPERS}
+	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour} ${HELPERS}
+
+${THRLIB}: ${LIBTHROBJS}
+	${LINK} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour} ${HELPERS}
 
 ${PLUSLIB}: ${PLUSOBJS}
 	${LINK} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
+
 logevent: logevent.o args.o
-	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB}
+	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
 ${TOOLS}: %: %.o
-	${LINK} -o $@ $< ${LIB} ${EXT_LIB}
+	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
 ${TOOLS}: ${LIB}
 
 ${LIBOBJS}: %.o: %.c
-	${COMPILE} -c $<
+	${COMPILE} ${GLOBUSINC} -c $<
 
+${LIBTHROBJS}: %.thr.o: %.c
+	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<
+
+# catches $TOOLS and logevent compilation
 %.o: %.c 
-	${CC} ${CFLAGS} -c $<
+	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
 
 %.c: %.c.T
 	rm -f $@
@@ -103,7 +123,7 @@ ${LIBOBJS}: %.o: %.c
 
 default: all
 
-compile all: ${LIB} ${TOOLS} logevent
+compile all: ${LIB} ${THRLIB} ${TOOLS} logevent
 
 check:
 	echo No unit tests so far.
