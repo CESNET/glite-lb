@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.5  2004/07/06 17:43:33  flammer
+	Update of classpath definitions, targets & configure file.
+	
 	Revision 1.4  2004/06/23 00:24:03  dimeglio
 	Added common and client modules
 	
@@ -223,6 +226,8 @@
 	<!-- ===============================================
 		 Modules proxy targets
 	     =============================================== -->
+
+	<!-- component targets definitions tag = do not remove = -->
 
 	<target name="client-interface" unless="setenvonly">
 		<ant dir="${workspace.dir}/${subsystem.name}.client-interface"

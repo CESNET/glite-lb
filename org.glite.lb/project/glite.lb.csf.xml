@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.2  2004/06/23 00:22:11  dimeglio
+	Added client and client-interface components
+	
 	Revision 1.1  2004/06/18 23:05:53  dimeglio
 	Added/upgraded default build scripts
 	
@@ -76,7 +79,7 @@
 		 Evaluate CVS tags
 		 =============================================== -->
 
-    <target name="evaluate.cvs.tags" description="Figure out if we need tagged CVS checkout">
+    	<target name="evaluate.cvs.tags" description="Figure out if we need tagged CVS checkout">
 		<condition property="glite.head">
 			<and>
 				<equals arg1="${org.glite.version}" arg2="HEAD" />
@@ -115,20 +118,26 @@
 				<istrue value="${update}" />
 			</and>
 		</condition>
+	
+		<!-- condition property tag = do not remove = -->
+
 		<condition property="common.head">
 			<equals arg1="${org.glite.lb.common.version}" arg2="HEAD" />
 		</condition>
+
 		<condition property="client-interface.head">
 			<equals arg1="${org.glite.lb.client-interface.version}" arg2="HEAD" />
 		</condition>
+
 		<condition property="client.head">
 			<equals arg1="${org.glite.lb.client.version}" arg2="HEAD" />
 		</condition>
-    </target>
 
-    <presetdef name="cvs-co">
+    	</target>
+
+    	<presetdef name="cvs-co">
 		<cvs command="checkout" dest="${workspace.dir}" />
-    </presetdef>
+    	</presetdef>
 
 	<!-- =====================================================
 		 Self-update if required
@@ -181,12 +190,9 @@
 	<!-- =====================================================
 		 GLite Middleware R-GMA modules
 		 ===================================================== -->
-	
-	<!-- All project modules -->
- 	<target name="project" depends="common,
- 									client-interface,
- 									client"/>
 
+	<!-- component targets tag = do not remove = -->
+	
 	<!-- common -->
  	<target name="common" depends="get.common.head, get.common.tag"/>
 	<target name="get.common.head" if="common.head">
@@ -216,6 +222,12 @@
 		<cvs-co package="org.glite.lb.client"
 			tag="${org.glite.lb.client.version}" />
 	</target>
+
+	<!-- All project modules -->
+ 	<target name="project" depends="common,
+ 						client-interface,
+ 						client"/>
+
 
 	<!-- ====================================================
 		 Checkout all
