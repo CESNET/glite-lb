@@ -46,7 +46,7 @@ TOOLS:=dump load purge
 
 default: all
 
-compile: ${LIB} ${PLUSLIB} ${TOOLS} logevent
+compile: ${LIB} ${TOOLS} logevent
 
 check:
 	echo No unit tests so far.
