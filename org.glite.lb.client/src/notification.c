@@ -695,8 +695,10 @@ int edg_wll_NotifReceive(
 		goto err;
 	}
 	
-	*id_out = event->notification.notifId;
-	event->notification.notifId = NULL;
+	if ( id_out ) {
+		*id_out = event->notification.notifId;
+		event->notification.notifId = NULL;
+	}
 	
 	
 err:
@@ -878,8 +880,10 @@ select:
 		goto err;
 	}
 	
-	*id_out = event->notification.notifId;
-	event->notification.notifId = NULL;
+	if ( id_out ) {
+		*id_out = event->notification.notifId;
+		event->notification.notifId = NULL;
+	}
 	
 	
 err:
