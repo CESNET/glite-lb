@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.3  2004/07/16 16:25:43  flammer
+	Added tags for automated adding of components.
+	
 	Revision 1.2  2004/06/23 00:22:11  dimeglio
 	Added client and client-interface components
 	
@@ -133,6 +136,14 @@
 			<equals arg1="${org.glite.lb.client.version}" arg2="HEAD" />
 		</condition>
 
+		<condition property="server.head">
+			<equals arg1="${org.glite.lb.server.version}" arg2="HEAD" />
+		</condition>
+
+		<condition property="logger.head">
+			<equals arg1="${org.glite.lb.logger.version}" arg2="HEAD" />
+		</condition>
+
     	</target>
 
     	<presetdef name="cvs-co">
@@ -223,10 +234,32 @@
 			tag="${org.glite.lb.client.version}" />
 	</target>
 
+	<!-- server -->
+ 	<target name="server" depends="get.server.head, get.server.tag"/>
+	<target name="get.server.head" if="server.head">
+		<cvs-co package="org.glite.lb.server" />
+	</target>
+	<target name="get.server.tag" unless="server.head">
+		<cvs-co package="org.glite.lb.server"
+			tag="${org.glite.lb.server.version}" />
+	</target>
+
+	<!-- logger -->
+ 	<target name="logger" depends="get.logger.head, get.logger.tag"/>
+	<target name="get.logger.head" if="logger.head">
+		<cvs-co package="org.glite.lb.logger" />
+	</target>
+	<target name="get.logger.tag" unless="logger.head">
+		<cvs-co package="org.glite.lb.logger"
+			tag="${org.glite.lb.logger.version}" />
+	</target>
+
 	<!-- All project modules -->
  	<target name="project" depends="common,
  						client-interface,
- 						client"/>
+ 						client,
+ 						server,
+ 						logger"/>
 
 
 	<!-- ====================================================
