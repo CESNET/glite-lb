@@ -27,6 +27,10 @@
 
 static const char* socket_path="/tmp/lb_proxy_store.sock";
 
+#ifdef FAKE_VERSION
+int edg_wll_DoLogEvent(edg_wll_Context context, edg_wll_LogLine logline);
+int edg_wll_DoLogEventProxy(edg_wll_Context context, edg_wll_LogLine logline);
+#else
 /**
  *----------------------------------------------------------------------
  * Connects to local-logger and sends already formatted ULM string
@@ -234,6 +238,7 @@ edg_wll_DoLogEventProxy_end:
 
 	return edg_wll_Error(context, NULL, NULL);
 }
+#endif /* FAKE_VERSION */
 
 
 /**

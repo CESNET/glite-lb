@@ -21,8 +21,38 @@ ares_prefix=/opt/ares
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
+GENSAM=${top_srcdir}/examples/gen_sample_job
 
-SUFFIXES = .T 
+SUFFIXES = .T .l
+
+l_SRC = \
+	chkpt.l \
+	cleared.l \
+	done.l \
+	done_dag.l \
+	done_subjob.l \
+	ready.l \
+	ready_dag.l \
+	ready_subjob.l \
+	running.l \
+	running_dag.l \
+	running_subjob.l \
+	scheduled.l \
+	scheduled_dag.l \
+	scheduled_subjob.l \
+	submitted.l \
+	submitted_dag.l \
+	submitted_subjob.l \
+	waiting.l \
+	waiting_dag.l \
+	waiting_subjob.l \
+	failed_dag.l \
+	failed_subjob.l \
+	aborted.l \
+	cancelled.l 
+
+sh_PROGS = $(l_SRC:.l=.sh)
+
 
 DEBUG:=-g -O0 -Wall
 
@@ -71,7 +101,7 @@ INSTALL:=libtool --mode=install install
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 	producer.o uiwrap.o
-TESTLIBOBJS:=consumer_fake.o
+TESTLIBOBJS:=consumer_fake.o producer_fake.o
 
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
 PUB_HDRS:=CountRef.h Event.h JobJobStatus.h Notification.h ServerConnection.h \
@@ -100,7 +130,8 @@ THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 TOOLS:=dump load purge
 #EXAMPLES:=log_usertag_proxy job_reg feed_shark notify
 EXAMPLES:=job_reg feed_shark notify
-FAKE_EXAMPLES:=jog_log_fake
+FAKE_EXAMPLES:=job_log_fake job_reg_fake
+FAKE_EXAMPLES_SOURCES:=job_log.c job_reg.c
 
 ${LIB}: ${LIBOBJS}
 	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
@@ -123,16 +154,19 @@ ${THRPLUSLIB}: ${PLUSTHROBJS}
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
+logevent_fake: logevent_fake.o args.o
+	${LINK} -o $@ logevent_fake.o args.o ${TESTLIB} ${EXT_LIB} ${GLOBUS_LIBS}
+
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
-${FAKE_EXAMPLES}: job_log_fake.o ${TESTLIB}
+${FAKE_EXAMPLES}: %: %.o ${TESTLIB}
 	${LINK} -o $@ $< ${TESTLIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
 ${TOOLS}: ${LIB}
 
-job_log_fake.o: job_log.c
-	${COMPILE} ${GLOBUSINC} -c $< -o $@
+${FAKE_EXAMPLES:=.o}: ${FAKE_EXAMPLES_SOURCES}
+	${COMPILE} ${GLOBUSINC} -DUSE_CALLBACKS -c $< -o $@
 
 ${PLUSOBJS}: %.o: %.cpp
 	${CXXCOMPILE} ${GLOBUSINC} -c $<
@@ -145,6 +179,9 @@ ${LIBOBJS} ${TESTLIBOBJS}: %.o: %.c
 
 ${LIBTHROBJS} ${TESTLIBTHROBJS}: %.thr.o: %.c
 	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<
+
+logevent_fake.o: logevent.c
+	${COMPILE} ${GLOBUSINC} -DFAKE -c $< -o $@
 
 # catches $TOOLS and logevent compilation
 %.o: %.c 
@@ -160,12 +197,17 @@ ${LIBTHROBJS} ${TESTLIBTHROBJS}: %.thr.o: %.c
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
+%.sh: %.l gen_begin gen_sample_job
+	rm -f $@
+	$(GENSAM) $< >$@ || rm -f $@
+	chmod -w,+x $@ > /dev/null
+
 default: all
 
 
-compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${EXAMPLES} ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} ${FAKE_EXAMPLES}
+compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} examples
 
-examples: ${EXAMPLES}
+examples: ${EXAMPLES} ${FAKE_EXAMPLES} ${sh_PROGS} logevent_fake
 
 check: compile check.producer
 
@@ -199,7 +241,7 @@ install:
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	for p in ${TOOLS} logevent ${FAKE_EXAMPLES}; do \
+	for p in ${TOOLS} logevent ${EXAMPLES} ${FAKE_EXAMPLES} logevent_fake ${sh_PROGS}; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 
