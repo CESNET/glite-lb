@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<project name="lb" default="dist">
+	
+	<import file="../org.glite/project/baseline.properties.xml" />
+	<import file="./project/properties.xml"/>
+	<import file="${subsystem.properties.file}"/>
+	<import file="${global.properties.file}" />
+
+	<property file="${user.dependencies.file}"/>
+	<property file="${component.dependencies.file}" />
+	<property file="${subsystem.dependencies.file}" />
+	<property file="${global.dependencies.file}"/>
+	
+	<import file="${subsystem.taskdefs.file}" />
+	<import file="${global.taskdefs.file}" />
+
+	<import file="${global.targets-external-dependencies.file}"/>	
+	<import file="${global.targets-make.file}" />
+		
+	<property file="${module.version.file}"/>
+
+	<target name="localinit"
+		description="Module specific initialization tasks">
+		<antcall target="lbmakefiles"/>
+	</target>
+
+	<target name="localcompile"
+		description="Module specific compile tasks">
+	</target>
+	
+	<target name="localclean"
+		description="Module specific cleaning tasks">
+	</target>
+	
+</project>		

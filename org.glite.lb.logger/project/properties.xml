@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="LB logger component common properties">
+
+	<property file="build.properties" />	
+	<property name="subsystem.name" value="${lb.subsystem.name}"/>
+	<property name="subsystem.prefix" value="${lb.subsystem.prefix}"/>
+	<property name="component.prefix" value="logger" />
+
+	<import file="${component.general.properties.file}" />
+
+</project>
