@@ -17,7 +17,7 @@
 #include "escape.h"
 #include "glite/wms/jobid/cjobid.h"
 
-#include "glite/lb/trio.h"
+#include "trio.h"
 
 static const struct timeval null_timeval = {0,0};
 

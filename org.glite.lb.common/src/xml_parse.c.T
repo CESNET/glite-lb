@@ -10,7 +10,7 @@
 #include "globus_config.h"
 #include "glite/wms/thirdparty/globus_ssl_utils/sslutils.h"
 
-#include "glite/lb/trio.h"
+#include "trio.h"
 #include "glite/lb/producer.h"
 #include "glite/wms/jobid/cjobid.h"
 

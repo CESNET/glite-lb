@@ -3,7 +3,7 @@
 #include <string.h>
 #include <expat.h>
 
-#include "glite/lb/trio.h"
+#include "trio.h"
 
 #include "xml_conversions.h"
 
