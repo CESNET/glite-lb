@@ -12,16 +12,16 @@
 
 #include <string>
 
-#include "Job.h"
 #include "glite/wms/jobid/JobIdExceptions.h"
-#include "LoggingExceptions.h"
 
+#include "glite/lb/Job.h"
+#include "glite/lb/LoggingExceptions.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 
 EWL_BEGIN_NAMESPACE;
 
-#define CLASS_PREFIX "edg::workload::logging::Job::"
+#define CLASS_PREFIX "glite::lb::Job::"
 
 const int Job::STAT_CLASSADS = EDG_WLL_STAT_CLASSADS;
 const int Job::STAT_CHILDREN = EDG_WLL_STAT_CHILDREN;
@@ -32,7 +32,7 @@ Job::Job(void)
 }
 
 
-Job::Job(const edg::workload::common::jobid::JobId &in) 
+Job::Job(const glite::wms::jobid::JobId &in) 
 {
   try {
     jobId = in;
@@ -48,7 +48,7 @@ Job::~Job(void)
 }
 
 
-Job & Job::operator= (const edg::workload::common::jobid::JobId &in) 
+Job & Job::operator= (const glite::wms::jobid::JobId &in) 
 {
   try {
     jobId = in;

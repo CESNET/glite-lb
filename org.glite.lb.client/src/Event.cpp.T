@@ -11,9 +11,9 @@
 
 #include "glite/wms/jobid/cjobid.h"
 
-#include "Event.h"
+#include "glite/lb/Event.h"
 #include "glite/wms/jobid/JobIdExceptions.h"
-#include "LoggingExceptions.h"
+#include "glite/lb/LoggingExceptions.h"
 
 #include "glite/lb/consumer.h"
 #include "glite/lb/events.h"
@@ -21,7 +21,7 @@
 
 EWL_BEGIN_NAMESPACE;
 
-#define CLASS_PREFIX "edg::workload::logging::Event::"
+#define CLASS_PREFIX "glite::lb::Event::"
 
 @@@{
 sub typeswitch {
@@ -220,13 +220,13 @@ badattr:
 }
 
 const 
-edg::workload::common::jobid::JobId 
+glite::wms::jobid::JobId 
 Event::getValJobId(Attr attr) const
 {
 	edg_wll_Event const *cev = (edg_wll_Event *) flesh->ptr;
 	try {
 		edg_wlc_JobId job_id = get_val_jobid(cev,attr);
-		return(edg::workload::common::jobid::JobId(job_id));
+		return(glite::wms::jobid::JobId(job_id));
 	} 
 	catch (Exception &e) {
 		STACK_ADD;

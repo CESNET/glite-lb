@@ -19,17 +19,15 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
 
-#include "ServerConnection.h"
-#include "LoggingExceptions.h"
-
-///using namespace edg::workload::logging;
+#include "glite/lb/ServerConnection.h"
+#include "glite/lb/LoggingExceptions.h"
 
 EWL_BEGIN_NAMESPACE;
 
 /**
  * definitions of QueryRecord class
  */
-#define CLASS_PREFIX "edg::workload::logging::QueryRecord::"
+#define CLASS_PREFIX "glite::lb::QueryRecord::"
 
 
 QueryRecord::QueryRecord(const Attr a, 
@@ -91,7 +89,7 @@ QueryRecord::QueryRecord(const Attr a,
 
 QueryRecord::QueryRecord(const Attr a, 
 			 const Op o, 
-			 const edg::workload::common::jobid::JobId& v)
+			 const glite::wms::jobid::JobId& v)
 	: attr(a), oper(o), state(EDG_WLL_JOB_UNDEF), jobid_value(v)
 {
 	switch(a) {
@@ -423,7 +421,7 @@ const std::string QueryRecord::AttrName(const QueryRecord::Attr attr)
  * definitions of ServerConnection class 
  */
 #undef CLASS_PREFIX
-#define CLASS_PREFIX "edg::workload::logging::ServerConnection::"
+#define CLASS_PREFIX "glite::lb::ServerConnection::"
 
 ServerConnection::ServerConnection()
 {
@@ -833,7 +831,7 @@ ServerConnection::queryEvents(const std::vector<std::vector<QueryRecord> >& job_
 
 
 void ServerConnection::queryJobs(const std::vector<QueryRecord>& query,
-				 std::vector<edg::workload::common::jobid::JobId> & ids) const
+				 std::vector<glite::wms::jobid::JobId> & ids) const
 {
 	edg_wll_QueryRec *cond = NULL;
 	edg_wlc_JobId *jobs, *j;
@@ -859,7 +857,7 @@ void ServerConnection::queryJobs(const std::vector<QueryRecord>& query,
 		}
 
 		for(j = jobs; *j; j++) 
-			ids.push_back(edg::workload::common::jobid::JobId(*j));
+			ids.push_back(glite::wms::jobid::JobId(*j));
 
 		if (result) {
 			edg_wll_SetError(context, result, errstr);
@@ -883,10 +881,10 @@ void ServerConnection::queryJobs(const std::vector<QueryRecord>& query,
 }
 
 
-const std::vector<edg::workload::common::jobid::JobId>
+const std::vector<glite::wms::jobid::JobId>
 ServerConnection::queryJobs(const std::vector<QueryRecord>& query) const
 {
-	std::vector<edg::workload::common::jobid::JobId> jobList;
+	std::vector<glite::wms::jobid::JobId> jobList;
   
 	queryJobs(query, jobList);
 	return jobList;
@@ -895,7 +893,7 @@ ServerConnection::queryJobs(const std::vector<QueryRecord>& query) const
 
 void 
 ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query,
-			    std::vector<edg::workload::common::jobid::JobId>& ids) const
+			    std::vector<glite::wms::jobid::JobId>& ids) const
 {
 	edg_wll_QueryRec **cond = NULL;
 	edg_wlc_JobId *jobs, *j;
@@ -922,7 +920,7 @@ ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query,
 		}
 
 		for(j = jobs; *j; j++) 
-			ids.push_back(edg::workload::common::jobid::JobId(*j));
+			ids.push_back(glite::wms::jobid::JobId(*j));
 
 		if (result) {
 			edg_wll_SetError(context, result, errstr);
@@ -958,10 +956,10 @@ ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query,
 
   
 const 
-std::vector<edg::workload::common::jobid::JobId>
+std::vector<glite::wms::jobid::JobId>
 ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query) const
 {
-	std::vector<edg::workload::common::jobid::JobId> jobList;
+	std::vector<glite::wms::jobid::JobId> jobList;
   
 	queryJobs(query, jobList);
 	return jobList;
@@ -1131,7 +1129,7 @@ ServerConnection::queryJobStates(const std::vector<std::vector<QueryRecord> >& q
 }
 
 
-void ServerConnection::userJobs(std::vector<edg::workload::common::jobid::JobId> & ids) const
+void ServerConnection::userJobs(std::vector<glite::wms::jobid::JobId> & ids) const
 {
 	edg_wlc_JobId *jobs, *j;
 	int     result, qresults_param;
@@ -1154,7 +1152,7 @@ void ServerConnection::userJobs(std::vector<edg::workload::common::jobid::JobId>
 		}
 
 		for(j = jobs; *j; j++) 
-			ids.push_back(edg::workload::common::jobid::JobId(*j));
+			ids.push_back(glite::wms::jobid::JobId(*j));
 
 		if (result) {
 			edg_wll_SetError(context, result, errstr);
@@ -1172,10 +1170,10 @@ void ServerConnection::userJobs(std::vector<edg::workload::common::jobid::JobId>
 }
 
 
-const std::vector<edg::workload::common::jobid::JobId>
+const std::vector<glite::wms::jobid::JobId>
 ServerConnection::userJobs() const
 {
-	std::vector<edg::workload::common::jobid::JobId> jobList;
+	std::vector<glite::wms::jobid::JobId> jobList;
   
 	userJobs(jobList);
 	return jobList;

@@ -4,16 +4,16 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "JobStatus.h"
-#include "LoggingExceptions.h"
 #include "glite/wms/jobid/JobId.h"
 
+#include "glite/lb/JobStatus.h"
+#include "glite/lb/LoggingExceptions.h"
 #include "glite/lb/consumer.h"
 
 
 EWL_BEGIN_NAMESPACE;
 
-#define CLASS_PREFIX "edg::workload::logging::JobStatus::"
+#define CLASS_PREFIX "glite::lb::JobStatus::"
 
 @@@{
 sub typeswitch {
@@ -231,14 +231,14 @@ get_val_jobid(edg_wll_JobStat const *cstat, JobStatus::Attr attr)
 
 
 const 
-edg::workload::common::jobid::JobId  
+glite::wms::jobid::JobId  
 JobStatus::getValJobId(Attr attr) const
 {
   edg_wll_JobStat const *cstat = (edg_wll_JobStat *) flesh->ptr;
 
   try {
 	  edg_wlc_JobId job_id = get_val_jobid(cstat, attr);
-	  return(edg::workload::common::jobid::JobId(job_id));
+	  return(glite::wms::jobid::JobId(job_id));
   }
   catch(Exception &e) {
 	  STACK_ADD;

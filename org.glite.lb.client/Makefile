@@ -61,6 +61,7 @@ EXT_LIB:= ${EXPAT_LIBS} \
     ${ARES_LIBS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
+CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
@@ -75,12 +76,15 @@ LIBTHROBJS:=${LIBOBJS:.o=.thr.o}
 LIBLOBJS:=${LIBOBJS:.o=.lo}
 LIBTHRLOBJS:=${LIBOBJS:.o=.thr.lo}
 
+PLUSTHROBJS:=${PLUSOBJS:.o=.thr.o}
 PLUSLOBJS:=${PLUSOBJS:.o=.lo}
+PLUSTHRLOBJS:=${PLUSOBJS:.o=.thr.lo}
 
 LIB:=libglite_lb_client_${nothrflavour}.la
 THRLIB:=libglite_lb_client_${thrflavour}.la
 
-PLUSLIB:=libglite_lb_clientpp.la
+PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
+THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge
 
@@ -93,6 +97,9 @@ ${THRLIB}: ${LIBTHROBJS}
 ${PLUSLIB}: ${PLUSOBJS}
 	${LINK} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
 
+${THRPLUSLIB}: ${PLUSTHROBJS}
+	${LINK} -o $@ ${PLUSTHRLOBJS} -rpath ${glite_location}/lib ${THRLIB}
+
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
@@ -100,6 +107,12 @@ ${TOOLS}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
 ${TOOLS}: ${LIB}
+
+${PLUSOBJS}: %.o: %.cpp
+	${CXXCOMPILE} ${GLOBUSINC} -c $<
+
+${PLUSTHROBJS}: %.thr.o: %.cpp
+	${CXXCOMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
 ${LIBOBJS}: %.o: %.c
 	${COMPILE} ${GLOBUSINC} -c $<
@@ -123,7 +136,7 @@ ${LIBTHROBJS}: %.thr.o: %.c
 
 default: all
 
-compile all: ${LIB} ${THRLIB} ${TOOLS} logevent
+compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB}
 
 check:
 	echo No unit tests so far.
@@ -147,7 +160,7 @@ distbin:
 install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/lib
-	${INSTALL} -m 644 ${LIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 	for p in ${TOOLS} logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done

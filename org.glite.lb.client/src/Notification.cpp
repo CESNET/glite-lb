@@ -12,21 +12,21 @@
 #include <string>
 #include <vector>
 
-#include "Notification.h"
-#include "JobStatus.h"
-#include "LoggingExceptions.h"
-#include "ServerConnection.h"
+#include "glite/lb/Notification.h"
+#include "glite/lb/JobStatus.h"
+#include "glite/lb/LoggingExceptions.h"
+#include "glite/lb/ServerConnection.h"
 
 #include "glite/lb/notifid.h"
 #include "glite/lb/notification.h"
 
 EWL_BEGIN_NAMESPACE;
 
-#define CLASS_PREFIX "edg::workload::logging::Notification::"
+#define CLASS_PREFIX "glite::lb::Notification::"
 
 /* external prototypes */
 extern edg_wll_QueryRec **
-convertQueryVectorExt(const std::vector<std::vector<edg::workload::logging::client::QueryRecord> > &);
+convertQueryVectorExt(const std::vector<std::vector<glite::lb::QueryRecord> > &);
 
 extern void
 freeQueryRecVector(edg_wll_QueryRec *);
@@ -115,9 +115,9 @@ Notification::getFd(void) const
 }
 
 void
-Notification::addJob(const edg::workload::common::jobid::JobId &jobId)
+Notification::addJob(const glite::wms::jobid::JobId &jobId)
 {
-   std::vector<edg::workload::common::jobid::JobId>::iterator it;
+   std::vector<glite::wms::jobid::JobId>::iterator it;
 
    try {
 	for( it = jobs.begin(); it != jobs.end(); it++ ) {
@@ -135,9 +135,9 @@ Notification::addJob(const edg::workload::common::jobid::JobId &jobId)
 }
 
 void
-Notification::removeJob(const edg::workload::common::jobid::JobId &jobId)
+Notification::removeJob(const glite::wms::jobid::JobId &jobId)
 {
-   std::vector<edg::workload::common::jobid::JobId>::iterator it;
+   std::vector<glite::wms::jobid::JobId>::iterator it;
    int removed = 0;
 
    try {
@@ -162,7 +162,7 @@ Notification::removeJob(const edg::workload::common::jobid::JobId &jobId)
 std::string 
 Notification::getJobs(void)
 {
-   std::vector<edg::workload::common::jobid::JobId>::iterator it;
+   std::vector<glite::wms::jobid::JobId>::iterator it;
    std::string ret="";
 
    try {
@@ -179,7 +179,7 @@ Notification::getJobs(void)
 }
 
 void
-Notification::setStates(const std::vector<edg::workload::logging::client::JobStatus::Code> &jobStates)
+Notification::setStates(const std::vector<glite::lb::JobStatus::Code> &jobStates)
 {
 	states = jobStates;	
 }
@@ -187,7 +187,7 @@ Notification::setStates(const std::vector<edg::workload::logging::client::JobSta
 std::string 
 Notification::getStates(void)
 {
-   std::vector<edg::workload::logging::client::JobStatus::Code>::iterator it;
+   std::vector<glite::lb::JobStatus::Code>::iterator it;
    JobStatus js;
    std::string ret="";
 
@@ -209,16 +209,16 @@ void
 Notification::Register(void)
 {
    int ret = 0;
-   std::vector<edg::workload::common::jobid::JobId>::iterator it;
-   std::vector<edg::workload::logging::client::JobStatus::Code>::iterator its;
-   std::vector<std::vector<edg::workload::logging::client::QueryRecord> > query;
+   std::vector<glite::wms::jobid::JobId>::iterator it;
+   std::vector<glite::lb::JobStatus::Code>::iterator its;
+   std::vector<std::vector<glite::lb::QueryRecord> > query;
    edg_wll_QueryRec **conditions = NULL;
    unsigned i;
 
    try {
 	/* fill in the query: */
 	for( it = jobs.begin(); it != jobs.end(); it++ ) {
-		std::vector<edg::workload::logging::client::QueryRecord> queryjob;
+		std::vector<glite::lb::QueryRecord> queryjob;
 
 		QueryRecord r0(QueryRecord::JOBID,QueryRecord::EQUAL,*it);
 		queryjob.push_back(r0);
@@ -259,7 +259,7 @@ Notification::Register(void)
    }
 }
 
-int Notification::receive(edg::workload::logging::client::JobStatus &jobStatus,timeval &timeout)
+int Notification::receive(glite::lb::JobStatus &jobStatus,timeval &timeout)
 {
 	int ret = 0;
 	edg_wll_JobStat *status = (edg_wll_JobStat *) calloc(1,sizeof(edg_wll_JobStat));
