@@ -25,11 +25,9 @@ start()
 		creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
 
 	if test -z "$creds"; then
-		if su - $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem"; then
+		if su - $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem"; then
 			echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
-			echo "$0:          creating $cred_copy from it"
-			su - $GLITE_USER -c "umask 077; cat /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem >$cred_copy"
-			creds="-c $cred_copy -k $cred_copy"
+			creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
 		fi
 	fi
 
