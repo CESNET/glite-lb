@@ -50,6 +50,8 @@ ARES_LIBS:=-L${ares_prefix}/lib -lares
 LDFLAGS:=-L${stagedir}/lib \
     ${COVERAGE_FLAGS}
 
+EXT_LIBS:= ${EXPAT_LIBS} ${ARES_LIBS} ${GLOBUS_LIBS}
+
 # breaks linking when not installed in /opt, /home/dimeglio etc.
 #    ${GLITE_LIBS} \
 #    ${GLOBUS_LIBS} \
@@ -114,7 +116,7 @@ check.parse: test_parse
 
 test_parse: parse.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o test_parse parse.o ${LTLIB} ${TEST_LIBS}
+	${LINKXX} -o test_parse parse.o ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
 
 check.gss: test_gss
 	# ./test_gss
@@ -124,10 +126,10 @@ check.il: il_test
 	./il_test
 
 test_gss: test_gss.o
-	${LINKXX} -o $@ test_gss.o ${LTLIB} ${TEST_LIBS}
+	${LINKXX} -o $@ test_gss.o ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
 
 il_test: il_test.o il_int_test.o il_string_test.o
-	${LINKXX} -o $@ ${LTLIB} ${TEST_LIBS} $+
+	${LINKXX} -o $@ $+ ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
 
 test_coverage:
 	-mkdir coverage
