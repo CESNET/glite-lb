@@ -35,6 +35,8 @@ edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx,char *cs)
 	if (!(ctx->mysql = (void *) mysql_init(NULL))) 
 		return edg_wll_SetError(ctx,ENOMEM,NULL);
 
+	mysql_options(ctx->mysql, MYSQL_READ_DEFAULT_FILE, "my");
+
 	host = user = pw = db = NULL;
 
 	buf = strdup(cs);
