@@ -142,12 +142,13 @@ default: all
 
 compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB}
 
-check: check.producer
+check: compile check.producer
 
 check.producer: producer_test
+	./producer_test
 
 producer_test: producer_test.o prod_proto_test.o
-	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+
+	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+ ${EXT_LIB} ${GLOBUS_LIBS}
 
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${TEST_INC} $<
