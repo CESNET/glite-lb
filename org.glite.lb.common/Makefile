@@ -134,7 +134,7 @@ mkreports:
 
 check.parse: test_parse
 	echo "XXX: nyk -> fixed build interrupt :)"
-	# ./test_parse
+	./test_parse ${REPORTS}/parse.xml
 
 test_parse: parse.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
