@@ -154,6 +154,9 @@ ${THRPLUSLIB}: ${PLUSTHROBJS}
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
+log_usertag_proxy: log_usertag_proxy.o
+	${LINK} -o $@ log_usertag_proxy.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+
 logevent_fake: logevent_fake.o args.o
 	${LINK} -o $@ logevent_fake.o args.o ${TESTLIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
