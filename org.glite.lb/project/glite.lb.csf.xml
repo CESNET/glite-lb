@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.9  2004/11/29 15:16:26  zsalvet
+	Add ws-interface to checkout/build machinery.
+	
 	Revision 1.8  2004/10/18 22:55:14  dimeglio
 	Added oscheck to various targets
 	
@@ -178,7 +181,7 @@
 		 ===================================================== -->
 		
 	<!-- Update main GLite module -->
- 	<target name="org.glite" depends="get.glite.head, get.glite.tag"/>
+ 	<target name="org.glite" depends="evaluate.cvs.tags, get.glite.head, get.glite.tag"/>
 	<target name="get.glite.head" if="glite.head">
 		<cvs-co package="org.glite" />
 	</target>
@@ -188,7 +191,7 @@
 	</target>
 
 	<!-- Update the current module -->
- 	<target name="org.glite.lb" depends="get.glite-lb.head, get.glite-lb.tag"/>
+ 	<target name="org.glite.lb" depends="evaluate.cvs.tags, get.glite-lb.head, get.glite-lb.tag"/>
 	<target name="get.glite-lb.head" if="glite-lb.head">
 		<cvs-co package="org.glite.lb" />
 		<fail>The org.glite and org.glite.lb modules have been updated, please rerun the configuration file</fail>
@@ -205,6 +208,7 @@
 	
 	<!-- All development tools -->
  	<target name="devtools" depends="oscheck,
+					evaluate.cvs.tags,
  					 				 junitcheck,
 					 				 junit,
  									 chkstyle,
@@ -219,7 +223,7 @@
 		 ===================================================== -->
 	
 	<!--  All external libraries -->
- 	<target name="external" depends="oscheck,globus"
+ 	<target name="external" depends="oscheck, evaluate.cvs.tags, globus"
  			description="Install external packages"/>
  	
 	<!-- =====================================================
@@ -229,7 +233,7 @@
 	<!-- component targets tag = do not remove = -->
 	
 	<!-- common -->
- 	<target name="common" depends="get.common.head, get.common.tag"/>
+ 	<target name="common" depends="evaluate.cvs.tags, get.common.head, get.common.tag"/>
 	<target name="get.common.head" if="common.head">
 		<cvs-co package="org.glite.lb.common" />
 	</target>
@@ -239,7 +243,7 @@
 	</target>
 
 	<!-- server-bones -->
- 	<target name="server-bones" depends="get.server-bones.head, get.server-bones.tag"/>
+ 	<target name="server-bones" depends="evaluate.cvs.tags, get.server-bones.head, get.server-bones.tag"/>
 	<target name="get.server-bones.head" if="server-bones.head">
 		<cvs-co package="org.glite.lb.server-bones" />
 	</target>
@@ -249,7 +253,7 @@
 	</target>
 
 	<!-- client-interface -->
- 	<target name="client-interface" depends="get.client-interface.head, get.client-interface.tag"/>
+ 	<target name="client-interface" depends="evaluate.cvs.tags, get.client-interface.head, get.client-interface.tag"/>
 	<target name="get.client-interface.head" if="client-interface.head">
 		<cvs-co package="org.glite.lb.client-interface" />
 	</target>
@@ -259,7 +263,7 @@
 	</target>
 
 	<!-- WS interface -->
- 	<target name="ws-interface" depends="get.ws-interface.head, get.ws-interface.tag"/>
+ 	<target name="ws-interface" depends="evaluate.cvs.tags, get.ws-interface.head, get.ws-interface.tag"/>
 	<target name="get.ws-interface.head" if="ws-interface.head">
 		<cvs-co package="org.glite.lb.ws-interface" />
 	</target>
@@ -269,7 +273,7 @@
 	</target>
 
 	<!-- client -->
- 	<target name="client" depends="get.client.head, get.client.tag"/>
+ 	<target name="client" depends="evaluate.cvs.tags, get.client.head, get.client.tag"/>
 	<target name="get.client.head" if="client.head">
 		<cvs-co package="org.glite.lb.client" />
 	</target>
@@ -279,7 +283,7 @@
 	</target>
 
 	<!-- server -->
- 	<target name="server" depends="get.server.head, get.server.tag"/>
+ 	<target name="server" depends="evaluate.cvs.tags, get.server.head, get.server.tag"/>
 	<target name="get.server.head" if="server.head">
 		<cvs-co package="org.glite.lb.server" />
 	</target>
@@ -289,7 +293,7 @@
 	</target>
 
 	<!-- logger -->
- 	<target name="logger" depends="get.logger.head, get.logger.tag"/>
+ 	<target name="logger" depends="evaluate.cvs.tags, get.logger.head, get.logger.tag"/>
 	<target name="get.logger.head" if="logger.head">
 		<cvs-co package="org.glite.lb.logger" />
 	</target>
