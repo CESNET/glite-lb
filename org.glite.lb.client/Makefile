@@ -12,7 +12,7 @@ PREFIX=/opt/glite
 
 glite_location=/opt/glite
 globus_prefix=/opt/globus
-globusflavour=gcc32dbg
+globusflavour=gcc32
 expat_prefix=/opt/expat
 ares_prefix=/opt/ares
 
