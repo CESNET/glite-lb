@@ -68,6 +68,7 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
         if (ctx->p_host) free(ctx->p_host);
         if (ctx->p_instance) free(ctx->p_instance);
         if (ctx->p_destination) free(ctx->p_destination);
+        if (ctx->p_user_lbproxy) free(ctx->p_user_lbproxy);
         if (ctx->p_query_server) free(ctx->p_query_server);
         if (ctx->p_notif_server) free(ctx->p_notif_server);
         if (ctx->p_proxy_filename) free(ctx->p_proxy_filename);

@@ -417,7 +417,7 @@ static int edg_wll_LogEventMasterProxy(
 	}
         /* format the DG.USER string */
 /* XXX: put user credentials here probably from context */
-        name_esc = edg_wll_LogEscape("User credentials should go here");
+        name_esc = edg_wll_LogEscape(context->p_user_lbproxy);
         if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
 		edg_wll_SetError(context,ret = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
 		goto edg_wll_logeventmasterproxy_end; 
@@ -720,6 +720,7 @@ int edg_wll_SetLoggingJobProxy(
                         edg_wll_IncSequenceCode(context);
         }
 /* XXX: add user credentials somewhere - to context? */
+	edg_wll_SetParamString(context, EDG_WLL_PARAM_USER_LBPROXY, user);
 
         return edg_wll_Error(context,NULL,NULL);
 }

@@ -103,6 +103,7 @@ struct _edg_wll_Context {
 	enum edg_wll_Level	p_level;
 	char		*p_destination;
 	int		p_dest_port;
+	char		*p_user_lbproxy;
 	struct timeval	p_log_timeout,p_sync_timeout,p_query_timeout, p_notif_timeout, p_tmp_timeout;
 	char		*p_query_server;
 	int		p_query_server_port;
