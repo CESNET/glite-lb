@@ -24,7 +24,7 @@ static void help(const char* n)
 int main(int argc,char **argv)
 {
 	edg_wll_Context	ctx;
-	char		*errt,*errd,*e;
+	char		*errt,*errd,*e,a;
 	edg_wll_Event	*events;
 	int		i;
 	edg_wll_QueryRec	jq[2],eq[2];
@@ -32,6 +32,20 @@ int main(int argc,char **argv)
 	edg_wll_Source	src;
 
 	if (argc != 3) help(argv[0]);
+
+	puts(
+"*\n"
+"* USE WITH CARE, AT YOUR OWN RISK, UNDER ABNORMAL CONDITIONS ONLY,\n"
+"* AND BE ALWAYS SURE WHAT YOU ARE DOING.\n"
+"* \n"
+"* THIS PROGRAM IS A PERFECT EXAMPLE HOW L&B SEQENCE CODES SHOULD NOT BE USED\n"
+"* IN NORMAL OPERATION.\n"
+"\n"
+"Do you want to proceed?"
+	);
+
+	scanf("%c",&a);
+	if (a != 'y' && a != 'Y') return 1;
 
 	edg_wll_InitContext(&ctx);
 
