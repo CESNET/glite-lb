@@ -103,11 +103,18 @@ ${THRLTLIB}: ${THROBJS}
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
-check: check.parse
+check: check.parse check.gss
 
 check.parse: parse.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 	${LINKXX} -o $@ parse.o ${LTLIB} ${TEST_LIBS}
+
+check.gss: test_gss
+	test_gss
+
+test_gss: test_gss.o
+	${LINKXX} -o $@ test_gss.o ${LTLIB} ${TEST_LIBS}
+
 
 dist: distsrc distbin
 
@@ -134,6 +141,9 @@ clean:
 
 %.o: %.c
 	${COMPILE} ${GLOBUSINC} -c $<
+
+test_gss.o: %.o: %.cpp
+	${CXX} -c ${CFLAGS} ${GLOBUSINC} ${TEST_INC} $<
 
 %.thr.o: %.c
 	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<

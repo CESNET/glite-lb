@@ -92,20 +92,19 @@ void EventParseTest::regJob()
 
 	line = edg_wll_UnparseEvent(ctx,e1);
 	std::cerr << line << std::endl;
+	
 	if (!line) {
 		edg_wll_Error(ctx,&et,&ed);
-		std::cerr << "UnparseEvent(): " << et << " " << ed << std::endl;
-		CPPUNIT_ASSERT(0);
+		CPPUNIT_ASSERT_MESSAGE(std::string("UnparseEvent():") + et + " " + ed, line);
 	}
+
 	if (edg_wll_ParseEvent(ctx,line,&e2)) {
 		edg_wll_Error(ctx,&et,&ed);
-		std::cerr << "ParseEvent(): " << et << " " << ed << std::endl;
-		CPPUNIT_ASSERT(0);
+		CPPUNIT_ASSERT_MESSAGE(std::string("ParseEvent():") + et + " " + ed, 0);
 	}
 
 	if ((et = compare_events(e1,e2))) {
-		std::cerr << et << std::endl;
-		CPPUNIT_ASSERT(0);
+		CPPUNIT_ASSERT_MESSAGE(std::string("compare_events():") + et, 0);
 	}
 }
 
