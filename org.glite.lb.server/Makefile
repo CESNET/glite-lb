@@ -62,6 +62,7 @@ CFLAGS:= \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
+	-I${top_srcdir}/interface \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
 	-I${gsoap_prefix}/include \
@@ -136,6 +137,8 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 
 WS_CLIENT_OBJS:= stdsoap2_patched.o test_ws_plugin.o $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= -L${stagedir}/lib -lglite_lb_client_${nothrflavour}
+
+HDRS=index.h ws_plugin.h lb_authz.h lbs_db.h
 
 LIB_OBJS_PS:=test_ws_plugin.o ws_fault.o lb_authz.o lbs_db.o
 L_LIB_OBJS_PS:=${LIB_OBJS_PS:.o=.lo}
@@ -270,6 +273,10 @@ install:
 
 	if [ x${DOSTAGE} != xyes ]; then \
 		${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; \
+	fi
+	if [ x${DOSTAGE} = xyes ]; then \
+		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
+		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
 	fi
 	if [ x${DOSTAGE} = xyes ]; then \
 		${INSTALL} -m 644 ${LT_LIB_PS} ${PREFIX}/lib; \
