@@ -33,6 +33,7 @@ GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
+	-I${top_srcdir}/test \
 	-I${stagedir}/include \
 	-I${glite_location}/include \
 	-I${expat_prefix}/include \
@@ -133,7 +134,6 @@ mkreports:
 	-mkdir ${REPORTS}
 
 check.parse: test_parse
-	echo "XXX: nyk -> fixed build interrupt :)"
 	./test_parse ${REPORTS}/parse.xml
 
 test_parse: parse.cpp
@@ -142,7 +142,7 @@ test_parse: parse.cpp
 
 check.gss: test_gss
 	# ./test_gss
-	echo test_gss not run automatically util we have got some credentials
+	@echo test_gss not run automatically util we have got some credentials
 
 check.il: il_test
 	./il_test ${REPORTS}/il.xml

@@ -1,13 +1,17 @@
 #include <iostream>
+#include <fstream>
+
+#include <assert.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/CompilerOutputter.h>
-#include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunit/ui/text/TestRunner.h>
 
+#include <cppunit/TestRunner.h>
+#include <cppunit/TestResult.h>
+#include <cppunit/TestResultCollector.h>
 
 #include "lb_gss.h"
 
@@ -139,11 +143,5 @@ void GSSTest::errorTest()
 
 CPPUNIT_TEST_SUITE_REGISTRATION( GSSTest );
 
-int main (int ac,const char *av[])
-{
-	CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
-	CppUnit::TextUi::TestRunner runner;
-	
-	runner.addTest(suite);
-	return runner.run() ? 0 : 1;
-}
+
+#include "test_main.cpp"
