@@ -117,3 +117,5 @@ ${INTERLOG_OBJS}: %.o: %.c
 ${LOGD_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
 
+logd_proto_test.o: %.o: %.c
+	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
