@@ -73,6 +73,19 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 	 */
   	if (   ev->any.type != EDG_WLL_EVENT_REGJOB
 		&& edg_wll_EventSendProxy(ctx, ev->any.jobId, event) ) goto err;
+
+	/* LB proxy purge
+	 * XXX: Set propper set of states!
+	 * TODO: Do the set of states configurable? 
+	 */
+	switch ( ev->any.type ) {
+	case EDG_WLL_EVENT_CLEAR:
+	case EDG_WLL_EVENT_ABORT:
+	case EDG_WLL_EVENT_CANCEL:
+	case EDG_WLL_EVENT_DONE:
+		edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
+		break;
+	}
   } else if ( newstat.state ) {
 	  edg_wll_NotifMatch(ctx, &newstat);
 	  edg_wll_FreeStatus(&newstat);

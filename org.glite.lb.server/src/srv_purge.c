@@ -182,6 +182,19 @@ int edg_wll_CreateFileStorage(edg_wll_Context ctx, char *file_type, char *prefix
 	return retfd;
 }
 
+int edg_wll_PurgeServerProxy(edg_wll_Context ctx, edg_wlc_JobId job)
+{
+	switch ( purge_one(ctx, job, -1, 1) ) {
+	case 0:
+	case ENOENT:
+		edg_wll_ResetError(ctx);
+		return 0;
+
+	default:
+		return -1;
+	}
+}
+
 int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 {
 	int	i,parse = 0,dumpfile = -1;

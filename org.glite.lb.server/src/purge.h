@@ -10,6 +10,14 @@ int edg_wll_PurgeServer(
 	const edg_wll_PurgeRequest *request
 );
 
+/** LB Proxy purge implementation
+ *	it gives no output - purge only one job from LB Proxy DB
+ */
+int edg_wll_PurgeServerProxy(
+	edg_wll_Context ctx,
+	edg_wlc_JobId job
+);
+
 #define		FILE_TYPE_ANY		""
 #define		FILE_TYPE_PURGE		"purge"
 #define		FILE_TYPE_DUMP		"dump"
