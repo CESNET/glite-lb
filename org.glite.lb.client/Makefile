@@ -107,7 +107,7 @@ INSTALL:=libtool --mode=install install
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 	producer.o uiwrap.o
-TESTLIBOBJS:=consumer_fake.o producer_fake.o
+FAKELIBOBJS:=consumer_fake.o producer_fake.o
 
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
 PUB_HDRS:=CountRef.h Event.h JobJobStatus.h Notification.h ServerConnection.h \
@@ -121,22 +121,21 @@ PLUSTHROBJS:=${PLUSOBJS:.o=.thr.o}
 PLUSLOBJS:=${PLUSOBJS:.o=.lo}
 PLUSTHRLOBJS:=${PLUSOBJS:.o=.thr.lo}
 
-TESTLIBTHROBJS:=${TESTLIBOBJS:.o=.thr.o}
-TESTLIBLOBJS:=${TESTLIBOBJS:.o=.lo}
-TESTLIBTHRLOBJS:=${TESTLIBOBJS:.o=.thr.lo}
+FAKELIBTHROBJS:=${FAKELIBOBJS:.o=.thr.o}
+FAKELIBLOBJS:=${FAKELIBOBJS:.o=.lo}
+FAKELIBTHRLOBJS:=${FAKELIBOBJS:.o=.thr.lo}
 
 LIB:=libglite_lb_client_${nothrflavour}.la
 THRLIB:=libglite_lb_client_${thrflavour}.la
-TESTLIB:=libglite_lb_client_test_${nothrflavour}.la
-TESTTHRLIB:=libglite_lb_client_test_${thrflavour}.la
+FAKELIB:=libglite_lb_client_fake_${nothrflavour}.la
+FAKETHRLIB:=libglite_lb_client_fake_${thrflavour}.la
 
 PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge
-#EXAMPLES:=log_usertag_proxy job_reg feed_shark notify
-EXAMPLES:=job_reg feed_shark notify
-FAKE_EXAMPLES:=job_log_fake job_reg_fake
+EXAMPLES:=log_usertag_proxy job_reg feed_shark notify
+FAKE_EXAMPLES:=job_log_fake job_reg_fake logevent_fake
 FAKE_EXAMPLES_SOURCES:=job_log.c job_reg.c
 
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
@@ -147,11 +146,11 @@ ${LIB}: ${LIBOBJS}
 ${THRLIB}: ${LIBTHROBJS}
 	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
 
-${TESTLIB}: ${TESTLIBOBJS}
-	${LINK} ${version_info} -o $@ ${TESTLIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
+${FAKELIB}: ${FAKELIBOBJS}
+	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
 
-${TESTTHRLIB}: ${TESTLIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${TESTLIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
+${FAKETHRLIB}: ${FAKELIBTHROBJS}
+	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS}
 	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
@@ -162,21 +161,18 @@ ${THRPLUSLIB}: ${PLUSTHROBJS}
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
-log_usertag_proxy: log_usertag_proxy.o
-	${LINK} -o $@ log_usertag_proxy.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
-
 logevent_fake: logevent_fake.o args.o
-	${LINK} -o $@ logevent_fake.o args.o ${TESTLIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINK} -o $@ logevent_fake.o args.o ${FAKELIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
-${FAKE_EXAMPLES}: %: %.o ${TESTLIB}
-	${LINK} -o $@ $< ${TESTLIB} ${EXT_LIB} ${GLOBUS_LIBS}
+${FAKE_EXAMPLES_SOURCES:.c=_fake}: %: %.o ${FAKELIB}
+	${LINK} -o $@ $< ${FAKELIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
 ${TOOLS}: ${LIB}
 
-${FAKE_EXAMPLES:=.o}: ${FAKE_EXAMPLES_SOURCES}
+${FAKE_EXAMPLES_SOURCES:.c=_fake.o}: ${FAKE_EXAMPLES_SOURCES}
 	${COMPILE} ${GLOBUSINC} -DUSE_CALLBACKS -c $< -o $@
 
 ${PLUSOBJS}: %.o: %.cpp
@@ -185,10 +181,10 @@ ${PLUSOBJS}: %.o: %.cpp
 ${PLUSTHROBJS}: %.thr.o: %.cpp
 	${CXXCOMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
-${LIBOBJS} ${TESTLIBOBJS}: %.o: %.c
+${LIBOBJS} ${FAKELIBOBJS}: %.o: %.c
 	${COMPILE} ${GLOBUSINC} -c $<
 
-${LIBTHROBJS} ${TESTLIBTHROBJS}: %.thr.o: %.c
+${LIBTHROBJS} ${FAKELIBTHROBJS}: %.thr.o: %.c
 	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
 logevent_fake.o: logevent.c
@@ -216,9 +212,11 @@ logevent_fake.o: logevent.c
 default: all
 
 
-compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} examples
+compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples
 
-examples: ${EXAMPLES} ${FAKE_EXAMPLES} ${sh_PROGS} logevent_fake
+examples: ${EXAMPLES} ${sh_PROGS}
+
+fake: ${FAKE_EXAMPLES}
 
 check: compile check.producer
 
@@ -231,8 +229,10 @@ producer_test: producer_test.o prod_proto_test.o
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${TEST_INC} $<
 	
-stage: compile
+stage: compile ${FAKELIB} ${FAKETHRLIB} 
 	$(MAKE) install PREFIX=${stagedir}
+	${INSTALL} -m 644 ${FAKELIB} ${FAKETHRLIB} ${stagedir}/lib
+
 dist: distsrc distbin
 
 distsrc:
@@ -250,7 +250,7 @@ install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TESTLIB} ${TESTTHRLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/examples
 	for p in ${TOOLS} logevent; do \
@@ -271,3 +271,5 @@ check_version:
 			exit 1;  \
 		} \
 		' ${stagedir}/include/glite/lb/interface_version.h
+
+.PHONY: default all compile examples fake check stage dist distsrc distbin install clean check_version
