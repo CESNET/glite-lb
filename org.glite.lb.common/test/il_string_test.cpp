@@ -23,6 +23,7 @@ public:
 	void testPutString() {
 		put_string(buffer, "ahoj");
 		CPPUNIT_ASSERT( !strncmp(buffer,"4 ahoj\n",7) );
+		CPPUNIT_ASSERT(buffer[7] == 0);
 	}
 
 	void testGetString() {
