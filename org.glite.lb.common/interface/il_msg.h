@@ -33,6 +33,6 @@ int encode_il_msg(char **, const char *);
 int encode_il_reply(char **, int, int, const char *);
 int decode_il_msg(char **, const char *);
 int decode_il_reply(int *, int *, char **, const char *);
-int read_il_data(char **,  int (*)(char *, const int))
+int read_il_data(char **,  int (*)(char *, const int));
 
 #endif
