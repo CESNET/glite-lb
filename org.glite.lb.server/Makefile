@@ -25,10 +25,8 @@ GLITE_LB_SERVER_WITH_WS=yes
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	gsoap_version=`${gsoap_prefix}/bin/soapcpp2 -version 2>&1 | cut -d' ' -f4 | perl -F\\\\. -nae '$$F[2] =~ s/\D*$$//; print $$F[2]+100*$$F[1]+10000*$$F[0]'`
 	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS -DGSOAP_VERSION=${gsoap_version}
-	STDSOAP2C=${top_srcdir}/examples/stdsoap2_`${gsoap_prefix}/bin/soapcpp2 -version 2>&1 | cut -d' ' -f4`c
 else
 	WS_CFLAGS=
-	STDSOAP2C=
 endif
 
 GSOAP_FILES_PREFIX:= bk_ws_
