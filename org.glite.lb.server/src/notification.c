@@ -1,7 +1,4 @@
-/* XXX: Is it OK?
- * due to use of strndup() 
- */
-#define _GNU_SOURCE
+#ident "$Header"
 
 #include <string.h>
 #include <time.h>
