@@ -858,7 +858,15 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	if ( token.value )
 		gss_release_buffer(&min_stat, &token);
 
-	edg_wll_SetVomsGroups(ctx, &ctx->connPool[ctx->connToUse].gss, server_cert, server_key, vomsdir, cadir);
+	if ( edg_wll_SetVomsGroups(ctx, &ctx->connPool[ctx->connToUse].gss, server_cert, server_key, vomsdir, cadir) )
+	{
+		char *errt, *errd;
+
+		edg_wll_Error(ctx, &errt, &errd);
+		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
+		free(errt); free(errd);
+		edg_wll_ResetError(ctx);
+	}
 	if (debug && ctx->vomsGroups.len > 0)
 	{
 		int i;
