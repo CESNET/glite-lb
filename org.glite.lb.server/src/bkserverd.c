@@ -35,6 +35,8 @@
 #include "glite/lb/purge.h"
 #include "glite/lb/context.h"
 #include "glite/lb/mini_http.h"
+#include "glite/lb/context-int.h"
+
 #include "lb_http.h"
 #include "lb_proto.h"
 #include "index.h"

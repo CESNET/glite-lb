@@ -1,8 +1,8 @@
 #ident "$Header$"
 
-#include "mysql/mysql.h"	// MySql header file
-#include "mysql/mysqld_error.h"
-#include "mysql/errmsg.h"
+#include "mysql.h"	// MySql header file
+#include "mysqld_error.h"
+#include "errmsg.h"
 
 #include <stdio.h>
 #include <string.h>

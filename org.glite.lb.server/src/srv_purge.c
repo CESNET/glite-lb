@@ -8,11 +8,12 @@
 #include <assert.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
 
 #include "glite/wms/jobid/cjobid.h"
 
 #include "glite/lb/trio.h"
-#include "glite/lb/context.h"
+#include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/ulm_parse.h"

@@ -1,45 +1,71 @@
-include Makefile.inc
+# defaults
+top_srcdir=.
+builddir=build
+top_builddir=${top_srcdir}/${builddir}
+stagedir=.
+distdir=.
+globalprefix=glite
+lbprefix=lb
+package=glite-lb-client
+version=0.0.0
+PREFIX=/opt/glite
+
+glite_location=/opt/glite
+globus_prefix=/opt/globus
+nothrflavour=gcc32
+thrflavour=gcc32pthr
+expat_prefix=/opt/expat
+ares_prefix=/opt/ares
+
+-include Makefile.inc
 
 YACC=bison -y
 
-VPATH:=${src} 
-AT3:=perl -I${lbconfig} ${lbproject}/at3
+VPATH=${top_srcdir}/src
+AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
+
 SUFFIXES = .T 
 
 DEBUG:=-g -O0 
-CFLAGS:=${DEBUG} -I${stageinc} -I${src} -I. \
-	-I${repository}/${voms}/include \
-	-I${repository}/${gacl}/include \
-	-I${repository}/${expat}/include \
-	-I${repository}/${mysql}/include \
-	-I/usr/include/libxml2 \
-	-I${repository}/${globus}/include/${globusflavour} \
-	-I${repository}/${globus}/include/${globusflavour}/openssl
+# not yet
+#	-I${voms}/include \
+#	-I${gacl}/include \
+#	-I/usr/include/libxml2 \
+
+# -DNO_VOMS -DNO_GACL to be removed when voms/gridsite are available
+CFLAGS:= -DNO_VOMS -DNO_GACL \
+	${DEBUG} -I${stagedir}/include -I${top_srcdir}/src -I. \
+	-I${expat_prefix}/include \
+	-I${mysql_prefix}/include \
+	-I${globus_prefix}/include/${nothrflavour} \
+	-I${globus_prefix}/include/${nothrflavour}/openssl
 
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 # assisst & gss due to VOMS only
+#	-lglobus_gss_assist_${nothrflavour} \
+#	-lglobus_gssapi_gsi_${nothrflavour} \
 
-GLOBUS_LIBS:= -L${repository}/${globus}/lib \
-	-lglobus_gss_assist_${globusflavour} \
-	-lglobus_gssapi_gsi_${globusflavour} \
-	-lglobus_common_${globusflavour} \
-	-lssl_${globusflavour}
+GLOBUS_LIBS:= -L${globus_prefix}/lib \
+	-lglobus_common_${nothrflavour} \
+	-lssl_${nothrflavour}
 
 
 # XXX: our vomsc.la depends on badly installed expat
 
-EXT_LIBS:= -L${repository}/${ares}/lib -lares \
-	-L${repository}/${mysql}/lib -lmysqlclient \
-	-L${repository}/${gacl}/lib -lgacl \
-	${repository}/${voms}/lib/libvomsc.a \
-	-L${repository}/${expat}/lib -lexpat \
+# not yet
+#	-L${repository}/${gacl}/lib -lgacl \
+#	${repository}/${voms}/lib/libvomsc.a \
+
+EXT_LIBS:= -L${ares_prefix}/lib -lares \
+	-L${mysql_prefix}/lib -lmysqlclient -lz\
+	-L${expat_prefix}/lib -lexpat \
 	${GLOBUS_LIBS}
 
-COMMON_LIB:= -L${stagelib} -lglite_lb_common
+COMMON_LIB:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}
 
-HELPERS:= -L${stagelib} -lglite_wms_tls_ssl_helpers
+HELPERS:= -L${stagedir}/lib -lglite_wms_tls_ssl_helpers
 
 
 SERVER_OBJS:= bkserverd.o get_events.o index.o jobstat.o jobstat_supp.o \
@@ -63,7 +89,7 @@ glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${COMMON_LIB} ${HELPERS} ${EXT_LIBS}
 
 all stage export: compile
-	${INSTALL} -m 755 glite_lb_bkserverd glite_lb_bkindex ${stagebin}
+	${INSTALL} -m 755 glite_lb_bkserverd glite_lb_bkindex ${stagedir}/bin
 
 
 %.c: %.c.T

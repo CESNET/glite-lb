@@ -8,7 +8,7 @@
 
 #include "glite/lb/producer.h"
 #include "glite/lb/consumer.h"
-#include "glite/lb/context.h"
+#include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
 
 #include "lbs_db.h"
@@ -142,7 +142,8 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *sta
 static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip)
 {
 	edg_wll_Acl	acl = calloc(1,sizeof *acl);
-	GACLacl		*gacl;
+/* XXX: NO_GACL	GACLacl		*gacl; */
+	void		*gacl;
 	int		ret;
 
 	edg_wll_ResetError(ctx);

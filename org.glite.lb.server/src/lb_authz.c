@@ -5,6 +5,8 @@
 #include <errno.h>
 #include <syslog.h>
 
+#ifndef NO_VOMS
+
 #include <voms_apic.h>
 #include <openssl/ssl.h>
 #include <libxml/parser.h> 
@@ -137,6 +139,17 @@ edg_wll_FreeVomsGroups(edg_wll_VomsGroups *groups)
    }
 }
 
+#else /* NO_VOMS */
+
+int
+edg_wll_GetVomsGroups() { return 0; }
+
+void edg_wll_FreeVomsGroups() {}
+
+#endif
+
+
+#if !defined(NO_VOMS) && !defined(NO_GACL)
 
 static int
 parse_creds(edg_wll_VomsGroups *groups, char *subject, GACLuser **gacl_user)
@@ -763,3 +776,19 @@ end:
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
+
+#else /* VOMS & GACL */
+
+
+int edg_wll_CheckACL() { return EPERM; }
+int edg_wll_EncodeACL() { return 0; }
+int edg_wll_DecodeACL() { return 0; }
+int edg_wll_InitAcl() { return 0; }
+int edg_wll_FreeAcl() { return 0; }
+int edg_wll_HandleCounterACL() { return 0; }
+int edg_wll_UpdateACL() { return 0; }
+int edg_wll_GetACL() { return 0; }
+
+
+#endif
+
