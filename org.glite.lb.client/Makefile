@@ -19,7 +19,7 @@ ares_prefix=/opt/ares
 
 -include Makefile.inc
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test
+VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
 SUFFIXES = .T 
@@ -91,6 +91,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge
+EXAMPLES:=feed_shark
 
 ${LIB}: ${LIBOBJS}
 	${LINK} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib -lglite_lb_common_${nothrflavour}
@@ -107,7 +108,7 @@ ${THRPLUSLIB}: ${PLUSTHROBJS}
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
-${TOOLS}: %: %.o
+${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
 
 ${TOOLS}: ${LIB}
@@ -140,7 +141,7 @@ ${LIBTHROBJS}: %.thr.o: %.c
 
 default: all
 
-compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB}
+compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${EXAMPLES} ${PLUSLIB} ${THRPLUSLIB}
 
 check: compile check.producer
 
