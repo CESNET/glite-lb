@@ -69,6 +69,23 @@ INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 
 INTERLOG_NOBJS:=${INTERLOG_OBJS:.o=.no}
 
+INTERLOG_TEST_OBJS:= \
+	il_error.o \
+	server_msg.o \
+	server_msgTest.o \
+	queue_thread.o \
+	event_store.o \
+	event_storeTest.o \
+	queue_mgr.o \
+	il_master.o \
+	input_queue_socket.o \
+	input_queue_socketTest.o \
+	send_event.o \
+	event_queue.o \
+	event_queueTest.o \
+	IlTestBase.o \
+	il_test.o 
+
 glite_lb_logd: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS}
 
@@ -87,14 +104,17 @@ all compile: glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
-check: check.ll
+check: check.ll check.il
 
 #check.ll: logd_proto_test.o ll_test.o
-#	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS} ${TEST_LIBS} logd_proto_test.o ll_test.o
+#	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS} ${TEST_LIBS} $+
 #	./check.ll
 
 check.ll:
 	-echo commented out -- fix needed
+
+check.il: ${INTERLOG_TEST_OBJS}
+	${LINKXX} -o $@ ${COMMON_LIB}_${thrflavour} ${EXT_LIBS} ${GLOBUS_THRLIBS} ${TEST_LIBS} -lpthread $+
 
 dist: distsrc distbin
 
@@ -125,5 +145,8 @@ ${LOGD_OBJS}: %.o: %.c
 logd_proto_test.o: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
 
-ll_test.o: ll_test.cpp
+ll_test.o: %.o: %.cpp
 	${CXX} ${CFLAGS} ${TEST_INC} -c $< -o $@
+
+il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest.o event_storeTest.o: %.o: %.cpp
+	${CXX} ${CFLAGS} ${GLOBUSTHRINC} ${TEST_INC} -c $< -o $@
