@@ -10,10 +10,11 @@
 #include <fcntl.h>
 #include <syslog.h>
 
+#include "glite/security/glite_gss.h"
+
 #include "globus_config.h"
 
 #include "mini_http.h"
-#include "lb_gss.h"
 #include "lb_plain_io.h"
 #include "context-int.h"
 

@@ -3,8 +3,8 @@
 
 #ident "$Header$"
 
+#include "glite/security/glite_gss.h"
 #include "glite/lb/consumer.h"
-#include "lb_gss.h"
 #include "lb_plain_io.h"
 #include "authz.h"
 
