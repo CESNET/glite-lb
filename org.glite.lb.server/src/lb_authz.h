@@ -2,12 +2,12 @@
 #define LB_AUTHZ_H
 
 #ifndef NO_GACL
-#include <gacl.h>
+#include <gridsite.h>
 #endif 
 
 typedef struct _edg_wll_Acl {
 #ifndef NO_GACL
-	GACLacl	*value;
+	GRSTgaclAcl	*value;
 #else
 	void	*value;	/* XXX */
 #endif
@@ -37,10 +37,10 @@ extern int
 edg_wll_CheckACL(edg_wll_Context, edg_wll_Acl, int);
 
 extern int
-edg_wll_DecodeACL(char *, GACLacl **);
+edg_wll_DecodeACL(char *, GRSTgaclAcl **);
 
 extern int
-edg_wll_EncodeACL(GACLacl *, char **);
+edg_wll_EncodeACL(GRSTgaclAcl *, char **);
 
 extern int
 edg_wll_GetACL(edg_wll_Context, edg_wlc_JobId, edg_wll_Acl *);

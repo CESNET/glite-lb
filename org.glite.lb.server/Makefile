@@ -43,7 +43,8 @@ CFLAGS:= -DNO_VOMS -DNO_GACL \
 	-I${ares_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include \
-	-I${globus_prefix}/include/${nothrflavour}
+	-I${globus_prefix}/include/${nothrflavour} \
+	-I${gridsite_prefix}/include -I${globus_prefix}/include/${nothrflavour}/openssl
 
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
@@ -74,7 +75,11 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	-L${expat_prefix}/lib -lexpat \
 	${GLOBUS_LIBS}
 
+# -L${gridsite_prefix}/lib -lgridsite -lxml2
+
 COMMON_LIB:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}
+
+#	-lvomsc
 
 SERVER_OBJS:= bkserverd.o get_events.o index.o jobstat.o jobstat_supp.o \
 	write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
