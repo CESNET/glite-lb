@@ -29,34 +29,38 @@
 }
 
 int edg_wll_plain_connect(
-	char const		   *hostname,
-	int					port,
-	struct timeval	   *to,
-	edg_wll_Connection *conn)
+	char const				   *hostname,
+	int							port,
+	struct timeval			   *to,
+	edg_wll_PlainConnection	   *conn)
 {
 	return 0;
 }
 
 int edg_wll_plain_accept(
-	int					sock,
-	edg_wll_Connection *conn)
+	int							sock,
+	edg_wll_PlainConnection	   *conn)
 {
-	struct sockaddr_in	a;
-	int					alen = sizeof(a);
-
 	/* Do not free the buffer here - just reuse the memmory
 	 */
 	conn->bufUse = 0;
-	/*
-	if ( (conn->sock = accept(sock, (struct sockaddr *)&a, &alen)) )
-		return -1;
-	*/
 	conn->sock = sock;
 	return 0;
 }
 
+int edg_wll_plain_close(edg_wll_PlainConnection *conn)
+{
+	errno = 0;
+	if ( conn->buf ) free(conn->buf);
+	if ( conn->sock > -1 ) close(conn->sock);
+	memset(conn, 0, sizeof(*conn));
+	conn->sock = -1;
+
+	return errno? -1: 0;
+}
+
 int edg_wll_plain_read(
-	edg_wll_Connection	   *conn,
+	edg_wll_PlainConnection	   *conn,
 	void				   *outbuf,
 	size_t					outbufsz,
 	struct timeval		   *to)
@@ -134,10 +138,10 @@ cleanup:
 
 
 int edg_wll_plain_read_full(
-	edg_wll_Connection *conn,
-	void			   *outbuf,
-	size_t				outbufsz,
-	struct timeval	   *to)
+	edg_wll_PlainConnection	   *conn,
+	void					   *outbuf,
+	size_t						outbufsz,
+	struct timeval			   *to)
 {
 	size_t		total = 0;
 
@@ -160,10 +164,10 @@ int edg_wll_plain_read_full(
 }
 
 int edg_wll_plain_write_full(
-	edg_wll_Connection *conn,
-	const void		   *buf,
-	size_t				bufsz,
-	struct timeval	   *to)
+	edg_wll_PlainConnection	   *conn,
+	const void				   *buf,
+	size_t						bufsz,
+	struct timeval			   *to)
 {
 	size_t			written = 0;
 	int				ct = -1;

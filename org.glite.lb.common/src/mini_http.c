@@ -154,49 +154,50 @@ edg_wll_ErrorCode edg_wll_http_recv_proxy(edg_wll_Context ctx,char **firstOut,ch
 	int		len, nhdr = 0,rdmore = 0,clen = 0,blen = 0;
 
 #define bshift(shift) {\
-	memmove(ctx->connPlain->buf,\
-			ctx->connPlain->buf+(shift),\
-			ctx->connPlain->bufUse-(shift));\
-	ctx->connPlain->bufUse -= (shift);\
+	memmove(ctx->connProxy->buf,\
+			ctx->connProxy->buf+(shift),\
+			ctx->connProxy->bufUse-(shift));\
+	ctx->connProxy->bufUse -= (shift);\
 }
 	edg_wll_ResetError(ctx);
 
-	if ( !ctx->connPlain->buf ) {
-		ctx->connPlain->bufSize = BUFSIZ;
-		ctx->connPlain->buf = malloc(BUFSIZ);
+	if ( !ctx->connProxy->buf ) {
+		ctx->connProxy->bufSize = BUFSIZ;
+		ctx->connProxy->bufUse = 0;
+		ctx->connProxy->buf = malloc(BUFSIZ);
 	}
 
 	do {
-		len = edg_wll_plain_read(ctx->connPlain,
-				ctx->connPlain->buf+ctx->connPlain->bufUse,
-				ctx->connPlain->bufSize-ctx->connPlain->bufUse,
+		len = edg_wll_plain_read(&ctx->connProxy->conn,
+				ctx->connProxy->buf+ctx->connProxy->bufUse,
+				ctx->connProxy->bufSize-ctx->connProxy->bufUse,
 				&ctx->p_tmp_timeout);
 		if ( len < 0 ) {
 			edg_wll_SetError(ctx, errno, "edg_wll_plain_read()");
 			goto error;
 		}
 
-		ctx->connPlain->bufUse += len;
+		ctx->connProxy->bufUse += len;
 		rdmore = 0;
 
 		while (!rdmore && pstat != DONE) switch (pstat) {
 			char	*cr; 
 
 			case FIRST:
-				if ((cr = memchr(ctx->connPlain->buf,'\r',ctx->connPlain->bufUse)) &&
-					ctx->connPlain->bufUse >= cr-ctx->connPlain->buf+2 && cr[1] == '\n')
+				if ((cr = memchr(ctx->connProxy->buf,'\r',ctx->connProxy->bufUse)) &&
+					ctx->connProxy->bufUse >= cr-ctx->connProxy->buf+2 && cr[1] == '\n')
 				{
 					*cr = 0;
-					first = strdup(ctx->connPlain->buf);
-					bshift(cr-ctx->connPlain->buf+2);
+					first = strdup(ctx->connProxy->buf);
+					bshift(cr-ctx->connProxy->buf+2);
 					pstat = HEAD;
 				} else rdmore = 1;
 				break;
 			case HEAD:
-				if ((cr = memchr(ctx->connPlain->buf,'\r',ctx->connPlain->bufUse)) &&
-					ctx->connPlain->bufUse >= cr-ctx->connPlain->buf+2 && cr[1] == '\n')
+				if ((cr = memchr(ctx->connProxy->buf,'\r',ctx->connProxy->bufUse)) &&
+					ctx->connProxy->bufUse >= cr-ctx->connProxy->buf+2 && cr[1] == '\n')
 				{
-					if (cr == ctx->connPlain->buf) {
+					if (cr == ctx->connProxy->buf) {
 						bshift(2);
 						pstat = clen ? BODY : DONE;
 						if (clen) body = malloc(clen+1);
@@ -205,19 +206,19 @@ edg_wll_ErrorCode edg_wll_http_recv_proxy(edg_wll_Context ctx,char **firstOut,ch
 
 					*cr = 0;
 					hdr = realloc(hdr,(nhdr+2) * sizeof(*hdr));
-					hdr[nhdr] = strdup(ctx->connPlain->buf);
+					hdr[nhdr] = strdup(ctx->connProxy->buf);
 					hdr[++nhdr] = NULL;
 
-					if (!strncasecmp(ctx->connPlain->buf,CONTENT_LENGTH,sizeof(CONTENT_LENGTH)-1))
-						clen = atoi(ctx->connPlain->buf+sizeof(CONTENT_LENGTH)-1);
+					if (!strncasecmp(ctx->connProxy->buf,CONTENT_LENGTH,sizeof(CONTENT_LENGTH)-1))
+						clen = atoi(ctx->connProxy->buf+sizeof(CONTENT_LENGTH)-1);
 	
-					bshift(cr-ctx->connPlain->buf+2);
+					bshift(cr-ctx->connProxy->buf+2);
 				} else rdmore = 1;
 				break;
 			case BODY:
-				if (ctx->connPlain->bufUse) {
-					int	m = min(ctx->connPlain->bufUse,clen-blen);
-					memcpy(body+blen,ctx->connPlain->buf,m);
+				if (ctx->connProxy->bufUse) {
+					int	m = min(ctx->connProxy->bufUse,clen-blen);
+					memcpy(body+blen,ctx->connProxy->buf,m);
 					blen += m;
 					bshift(m);
 				}
@@ -338,16 +339,16 @@ edg_wll_ErrorCode edg_wll_http_send_proxy(edg_wll_Context ctx, const char *first
 
 	edg_wll_ResetError(ctx);
 
-	if (   edg_wll_plain_write_full(ctx->connPlain,
+	if (   edg_wll_plain_write_full(&ctx->connProxy->conn,
 							first, strlen(first), &ctx->p_tmp_timeout) < 0
-		|| edg_wll_plain_write_full(ctx->connPlain,
+		|| edg_wll_plain_write_full(&ctx->connProxy->conn,
 							"\r\n", 2, &ctx->p_tmp_timeout) < 0 ) 
 		return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
 
 	if ( head ) for ( h = head; *h; h++ )
-		if (   edg_wll_plain_write_full(ctx->connPlain,
+		if (   edg_wll_plain_write_full(&ctx->connProxy->conn,
 							*h, strlen(*h), &ctx->p_tmp_timeout) < 0
-			|| edg_wll_plain_write_full(ctx->connPlain,
+			|| edg_wll_plain_write_full(&ctx->connProxy->conn,
 							"\r\n", 2, &ctx->p_tmp_timeout) < 0 )
 			return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
 
@@ -356,15 +357,15 @@ edg_wll_ErrorCode edg_wll_http_send_proxy(edg_wll_Context ctx, const char *first
 
 		len = strlen(body);
 		blen = sprintf(buf, CONTENT_LENGTH " %d\r\n",len);
-		if (edg_wll_plain_write_full(ctx->connPlain,
+		if (edg_wll_plain_write_full(&ctx->connProxy->conn,
 							buf, blen, &ctx->p_tmp_timeout) < 0) 
 			return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
 	}
 
-	if ( edg_wll_plain_write_full(ctx->connPlain,
+	if ( edg_wll_plain_write_full(&ctx->connProxy->conn,
 							"\r\n", 2, &ctx->p_tmp_timeout) < 0) 
 		return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
-	if ( body && edg_wll_plain_write_full(ctx->connPlain,
+	if ( body && edg_wll_plain_write_full(&ctx->connProxy->conn,
 							body, len, &ctx->p_tmp_timeout) < 0)  
 		return edg_wll_SetError(ctx, errno, "edg_wll_http_send()");
 

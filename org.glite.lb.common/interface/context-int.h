@@ -5,7 +5,7 @@
 
 #include "glite/lb/consumer.h"
 #include "lb_gss.h"
-//#include "lb_plain_io.h"
+#include "lb_plain_io.h"
 #include "authz.h"
 
 #ifdef __cplusplus
@@ -18,13 +18,13 @@ typedef struct _edg_wll_SeqCode {
 
 
 
-/* non-gsi one-element analogy of connPool */
-typedef struct _edg_wll_Connection {
-        int     sock;
-        char   *buf;
-        size_t  bufSize;
-        size_t  bufUse;
-} edg_wll_Connection;
+/* non-gsi one-element analogy of connPool for L&B Proxy server */
+typedef struct _edg_wll_ConnProxy {
+	edg_wll_PlainConnection	conn;
+	char   *buf;
+	size_t  bufSize;
+	size_t  bufUse;
+} edg_wll_ConnProxy;
 
 
 
@@ -55,8 +55,7 @@ struct _edg_wll_Context {
 	void		*mysql;
 	edg_wll_ConnPool	*connPool;
 	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
-
-	edg_wll_Connection	*connPlain;		/* holds one plain connection */
+	edg_wll_ConnProxy	*connProxy;		/* holds one plain connection */
 
 	int		semaphores,semset;
 	edg_wll_QueryRec	**job_index;

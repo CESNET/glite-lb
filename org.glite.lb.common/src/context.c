@@ -32,7 +32,8 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 
 	out->connPool = (edg_wll_ConnPool *) calloc(out->poolSize, sizeof(edg_wll_ConnPool));
 	out->connPoolNotif = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
-	out->connPlain = (edg_wll_Connection *) calloc(1, sizeof(edg_wll_Connection));
+	out->connProxy = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnProxy));
+	out->connProxy->conn.sock = -1;
 
 	*ctx = out;
 	return 0;
@@ -58,10 +59,10 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		}	
 		free(ctx->connPool);
 	}
-	if ( ctx->connPlain ) {
-		if ( ctx->connPlain->buf ) free(ctx->connPlain->buf);
-		close(ctx->connPlain->sock);
-		free(ctx->connPlain);
+	if ( ctx->connProxy ) {
+		if ( ctx->connProxy->buf ) free(ctx->connProxy->buf);
+		edg_wll_plain_close(&ctx->connProxy->conn);
+		free(ctx->connProxy);
 	}
 	if (ctx->notifSock >=0) close(ctx->notifSock);
 	if (ctx->srvName) free(ctx->srvName);
