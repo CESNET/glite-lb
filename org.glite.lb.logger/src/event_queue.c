@@ -171,10 +171,12 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
   if(eq->mark_this && (el->prev == eq->mark_this)) 
     eq->mark_prev = el;
 #endif
+
+  assert(eq->head != NULL);
+
   event_queue_unlock(eq);
   /* end of critical section */
 
-  assert(eq->head != NULL);
   return(0);
 }
 
