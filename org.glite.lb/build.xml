@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.15  2004/08/27 02:46:52  dimeglio
+	Added logic to create the tagged dependencies properties file
+	
 	Revision 1.14  2004/08/26 23:48:26  dimeglio
 	Added generation of cruisecontrol config file entry
 	
@@ -227,7 +230,9 @@
 &lt;/moduleslist&gt;
 		</echo>
 		<copy file="${module.project.dir}/dependencies.properties"
-			  tofile="${module.project.dir}/dependencies.properties.HEAD" />
+			  tofile="${module.project.dir}/dependencies.properties.HEAD"
+			  preservelastmodified="true"
+			  overwrite="true" />
 		<xslt style="${global.project.dir}/tagged.dependencies.properties.xsl"
 			 in="${module.project.dir}/modules.list.xml"
 			 out="${module.project.dir}/dependencies.properties"
@@ -236,7 +241,9 @@
 			<arg line="ci -m &quot;Tagged dependencies properties file [GLBUILDER]&quot; dependencies.properties" />
 		</exec>
 		<copy file="${module.project.dir}/dependencies.properties.HEAD"
-			  tofile="${module.project.dir}/dependencies.properties" />
+			  tofile="${module.project.dir}/dependencies.properties"
+			  preservelastmodified="true"
+			  overwrite="true" />
 		<delete file="${module.project.dir}/dependencies.properties.HEAD"/>
 		<delete file="${module.project.dir}/modules.list.xml"/>
 		
