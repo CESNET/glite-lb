@@ -117,8 +117,8 @@ LB_PROXY_OBJS:= lbproxy.o il_lbproxy.o get_events.o index.o jobstat.o seqcode.o 
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o
 
-SERVER_OBJS:= bkserverd.o get_events.o index.o jobstat.o jobstat_supp.o seqcode.o \
-	write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+SERVER_OBJS:= bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
+	seqcode.o write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \

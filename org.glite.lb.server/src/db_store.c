@@ -11,6 +11,7 @@
 #include "store.h"
 #include "lbs_db.h"
 #include "lock.h"
+#include "il_lbproxy.h"
 
 extern int debug;
 
@@ -65,13 +66,19 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 			ev->changeACL.permission, ev->changeACL.permission_type,
 			ev->changeACL.operation);
   else
-    err = edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq,&newstat);
+    err = edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, ctx->isProxy? NULL: &newstat);
 
   if (edg_wll_UnlockJob(ctx,ev->any.jobId)) goto err;
   if (err) goto err;
 
-  if (!ctx->isProxy && newstat.state) {
-	  edg_wll_NotifMatch(ctx,&newstat);
+  if ( ctx->isProxy ) {
+	/*
+	 *	send event to the proper BK server
+	 */
+  	if (   ev->any.type != EDG_WLL_EVENT_REGJOB
+		&& edg_wll_EventSendProxy(ctx, ev->any.jobId, event) ) goto err;
+  } else if ( newstat.state ) {
+	  edg_wll_NotifMatch(ctx, &newstat);
 	  edg_wll_FreeStatus(&newstat);
   }
 
