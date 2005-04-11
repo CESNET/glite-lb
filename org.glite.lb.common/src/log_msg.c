@@ -112,18 +112,18 @@ int edg_wll_log_event_write(
 					i, filelock_status=-1;
 
 
+	if ( (outfile = fopen(event_file, "a")) == NULL ) {
+		edg_wll_SetError(ctx, errno, "fopen()");
+		goto event_write_end;
+	}
+
+	if ( (filedesc = fileno(outfile)) == -1 ) {
+		edg_wll_SetError(ctx, errno, "fileno()");
+		fclose(outfile); 
+		goto cleanup;
+	}
+
 	for ( i = 0; i < fcntl_attempts; i++ ) {
-		if ( (outfile = fopen(event_file, "a")) == NULL ) {
-			edg_wll_SetError(ctx, errno, "fopen()");
-			goto event_write_end;
-		}
-
-		if ( (filedesc = fileno(outfile)) == -1 ) {
-			edg_wll_SetError(ctx, errno, "fileno()");
-			fclose(outfile); 
-			goto cleanup;
-		}
-
 		filelock.l_type = F_WRLCK;
 		filelock.l_whence = SEEK_SET;
 		filelock.l_start = 0;
@@ -140,7 +140,7 @@ int edg_wll_log_event_write(
 				edg_wll_SetError(ctx, errno, "fcntl()");
 				goto cleanup;
 			}
-		}
+		} else break;
 	}
 
 	if ( fseek(outfile, 0, SEEK_END) == -1 ) {	
