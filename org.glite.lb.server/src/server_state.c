@@ -32,14 +32,14 @@ int edg_wll_SetServerState(edg_wll_Context ctx,const char *name,const char *val)
 	char	*stmt = NULL;
 
 	trio_asprintf(&stmt,"insert into server_state (prefix,name,value) "
-			"values ('https://%|Ss:%d','%|Ss','%|Ss')",
+			"values ('https://%|Ss:%d','%|Ss',%s)",
 			ctx->srvName,ctx->srvPort,name,val);
 
 	switch(edg_wll_ExecStmt(ctx,stmt,NULL)) {
 		case 1: break;
 		case -1: if (edg_wll_Error(ctx,NULL,NULL) == EEXIST) {
 				 free(stmt);
-				 trio_asprintf(&stmt,"update server_state set value = '%|Ss' "
+				 trio_asprintf(&stmt,"update server_state set value = %s "
 						 "where prefix = 'https://%|Ss:%d' "
 						 "and name = '%|Ss'",
 						 val,ctx->srvName,ctx->srvPort,name);

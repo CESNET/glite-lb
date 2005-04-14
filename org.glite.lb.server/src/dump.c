@@ -64,7 +64,7 @@ int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wl
 			"where u.userid=e.userid "
 			"and j.jobid = e.jobid "
 			"and j.dg_jobid like 'https://%|Ss:%d%%' "
-			"and arrived > '%|Ss' and arrived <= '%|Ss' "
+			"and arrived > %s and arrived <= %s "
 			"order by arrived",
 			ctx->srvName,ctx->srvPort,
 			from_s,to_s);
@@ -130,15 +130,12 @@ int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wl
 	}
 
 	time(&end);
-/* XXX: get rid of apostrophes returned by edg_wll_TimeToDB() */
 	time_s = strdup(edg_wll_TimeToDB(start));
-	time_s[strlen(time_s)-1] = 0;
-	edg_wll_SetServerState(ctx,EDG_WLL_STATE_DUMP_START,time_s+1);
+	edg_wll_SetServerState(ctx,EDG_WLL_STATE_DUMP_START,time_s);
 	free(time_s);
 	
 	time_s = strdup(edg_wll_TimeToDB(end));
-	time_s[strlen(time_s)-1] = 0;
-	edg_wll_SetServerState(ctx,EDG_WLL_STATE_DUMP_END,time_s+1);
+	edg_wll_SetServerState(ctx,EDG_WLL_STATE_DUMP_END,time_s);
 	free(time_s);
 
 	result->from = from;
