@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <syslog.h>
+#include <pthread.h>
 
 int log_level;
 
@@ -17,9 +18,11 @@ il_log(int level, char *fmt, ...)
 	vasprintf(&err_text, fmt, fmt_args);
 	va_end(fmt_args);
 	
-	if(level <= log_level) 
+	if(level <= log_level) {
+		fprintf(stderr, "[%6d] ", pthread_self());
 		fprintf(stderr, err_text);
-	
+	}
+
 	if(level <= LOG_ERR) {
 		openlog("edg-wl-interlogd", LOG_PID | LOG_CONS, LOG_DAEMON);
 		syslog(level, "%s", err_text);

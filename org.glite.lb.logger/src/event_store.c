@@ -473,14 +473,25 @@ event_store_sync(struct event_store *es, long offset)
      * 2) es->offset is set only by recover() and next().
      * 3) Additional recover can not do much harm.
      * 4) And next() is only called by the same thread as sync().
-     * => no one is messing with us right now */
+     * 5) use_lock is in place, so no cleanup possible
+      * => no one is messing with us right now */
     event_store_lock_ro(es);
     if(ret < 0)
       ret = -1;
     else 
-      /* somehow we suppose that now es->offset >= offset */
-      /* in fact it must be es->offset > offset, anything else would be weird */
-      ret = (es->offset > offset) ? 0 : 1;
+	    if(es->offset <= offset) {
+		    /* Apparently there is something wrong - we are receiving an event
+		     * which is beyond the end of file. Someone must have removed the file
+		     * when we were not looking. The question is - what should we do with the event?
+		     * We have to send it, as this is the only one occasion when we see it.
+		     * However, we must not allow the es->offset to be set using this event,
+		     * as it would point after the end of file. Sort this out in event_store_next().
+		     */
+		    ret = 1;
+	    } else if(es->offset > offset) {
+		    /* we have seen at least this event */
+		    ret = 0;
+	    }
   }
   event_store_unlock(es);
   return(ret);
@@ -488,12 +499,20 @@ event_store_sync(struct event_store *es, long offset)
 
 
 int
-event_store_next(struct event_store *es, int len)
+event_store_next(struct event_store *es, long offset, int len)
 {
   assert(es != NULL);
   
   event_store_lock(es);
-  es->offset += len;
+  /* Whoa, be careful now. The es->offset points right after the last enqueued event,
+   * but it may not be the offset of the event WE have just enqueued, because:!    
+   *  1) someone could have removed the event file behind our back
+   *  2) the file could have been recover()ed and more events read
+   * In either case the offset should not be moved.
+   */
+  if(es->offset == offset) {
+	  es->offset += len;
+  }
   event_store_unlock(es);
 
   return(0);

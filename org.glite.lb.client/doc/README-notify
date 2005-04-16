@@ -1,0 +1,72 @@
+LB notifications
+----------------
+
+LB infrastructure enables its users to be notified when something interesting happens on a bookkeeping server.
+
+User registers to infrastructure via client API (notification.h) or he/she can use example program glite-lb-notify (see bellow). He/she  must specify a condition under which the notification is sent. The condition(s) is(are) stored in edg_wll_QueryRec data structure. Currently one or more JOBID's are required in it and only a single occurence of a specific attribute is allowed among ANDed conditions.
+
+The request for notification is then delivered to a bookkeeping server. Whenever a new event arrives to the bookkeeping server, the notification condition is tested. Always when it is true, the notification is sent to the user. Notifications are incomming until the user cancels notification registration on the server. 
+
+For a notification deliveriy, a special deamon, notification interlogger is used. It stores registrations in files until they are delivered. 
+
+
+
+Notification example
+--------------------
+
+In next steps, you will be instucted how to register for a notification and how to triger this registration on the bookkeeping server in order to receive registration. Our example program 'glite-lb-notify' is used for this purpose. It uses mentioned client API calls to manipulate with registrations. 
+
+
+1) Set up LB environment
+
+	a) Download, compile and install LB module from SCM CVS
+	b) Install it from RPMs
+
+	See instructions at section 'Installation & Configuration'
+	from EGEE JRA1 web site. It was located at (Jan 2005) :
+
+	http://egee-jra1-wm.mi.infn.it/egee-jra1-wm/lb_install.shtml 
+
+
+2) Get globus proxy certificate
+	./grid-proxy-init -key PATH_TO_YOUR_KEY -cert PATH_TO_YOUR_CERT
+
+
+3) Start LB deamons
+
+	Substitute KEY with location server private key, CERT with location 
+	of server certificate, and CERTS_DIR directory containing CA 
+	certificates. 
+
+	./glite-lb-logd -k KEY -c CERT  -C CERTS_DIR -d -v
+
+	./glite-lb-interlogd -k KEY -c CERT -C CERTS_DIR -b -d -v
+
+	./glite-lb-bkserverd -d -k KEY -c CERT -C CERTS_DIR
+
+	./glite-lb-notif-interlogd -k KEY -c CERT -C CERTS_DIR -d -v 
+
+
+4) Register a job
+	export EDG_WL_LOG_DESTINATION=HOSTNAME:9002 
+	./glite-lb-job_reg -m HOSTNAME:9000 -s UserInterface
+
+	-> returns JOBID - used in the next steps
+
+
+5) Register notification
+	export EDG_WL_NOTIF_SERVER=HOSTNAME:9000
+	./glite-lb-notify test JOBID
+
+
+6) Change status of your job
+	export EDG_WL_LOG_DESTINATION=HOSTNAME:9002
+	./glite-lb-running.sh -j JOBID
+
+
+7) Watch incomming notifications
+
+
+Warning: Try to destroy all your registrations when you finish, otherwise the system will still try to deliver you your notifications to nonexistent destinations (ports which nobody listens at).
+
+TIP: If you are stucked, try to clean up notif-interlogger's cache files. They are by default stored at /tmp/notif_events*, or wherever you set by -f option. 
