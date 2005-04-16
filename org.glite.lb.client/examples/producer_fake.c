@@ -12,7 +12,6 @@
 
 
 static edg_wll_Logging_cb_f *Logging_cb = NULL;
-static edg_wll_Logging_cb_f *LoggingProxy_cb = NULL;
 
 
 /* register the logging callback */
@@ -24,24 +23,9 @@ int edg_wll_RegisterTestLogging(edg_wll_Logging_cb_f *cb) {
 }
 
 
-/* register the proxy logging callback */
-int edg_wll_RegisterTestLoggingProxy(edg_wll_Logging_cb_f *cb) {
-  if (LoggingProxy_cb) return 0;
-
-  LoggingProxy_cb = cb;
-  return 1;
-}
-
-
 /* unregister the logging callback */
 void edg_wll_UnregisterTestLogging() {
   Logging_cb = NULL;
-}
-
-
-/* unregister the proxy logging callback */
-void edg_wll_UnregisterTestLoggingProxy() {
-  LoggingProxy_cb = NULL;
 }
 
 
@@ -53,11 +37,3 @@ int edg_wll_DoLogEvent(edg_wll_Context context, edg_wll_LogLine logLine) {
     return edg_wll_Error(context, NULL, NULL);
 }
 
-
-/* "fake" implementation of function sending formated ULM string */
-int edg_wll_DoLogEventProxy(edg_wll_Context context, edg_wll_LogLine logline) {
-  if (Logging_cb)
-    return Logging_cb(context);
-  else
-    return edg_wll_Error(context, NULL, NULL);
-}
