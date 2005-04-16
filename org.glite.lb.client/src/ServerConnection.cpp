@@ -547,36 +547,69 @@ ServerConnection::setQueryJobsLimit(int max) {
 std::pair<std::string, int>
 ServerConnection::getQueryServer() const
 {
-	/* FIXME: not implemented in C API */
-	STACK_ADD;
-	throw Exception(EXCEPTION_MANDATORY, 0, "method not implemented");
+	char *hostname;
+	int  port;
+
+	check_result(edg_wll_GetParam(context, 
+				      EDG_WLL_PARAM_QUERY_SERVER,
+				      &hostname),
+		     context,
+		     "getting query server address");
+	check_result(edg_wll_GetParam(context,
+				      EDG_WLL_PARAM_QUERY_SERVER_PORT,
+				      &port),
+		     context,
+		     "getting query server port");
+	return std::pair<std::string,int>(std::string(strdup(hostname)), port);
 }
 
 
 int
 ServerConnection::getQueryTimeout() const
 {
-	/* FIXME: not implemented in C API */
-	STACK_ADD;
-	throw Exception(EXCEPTION_MANDATORY, 0, "method not implemented");
+	int timeout;
+
+	check_result(edg_wll_GetParam(context,
+				      EDG_WLL_PARAM_QUERY_TIMEOUT,
+				      &timeout),
+		     context,
+		     "getting query timeout");
+	return timeout;
 }
 
 
 std::string
 ServerConnection::getX509Proxy() const
 {
-	/* FIXME: not implemented in C API */
-	STACK_ADD;
-	throw Exception(EXCEPTION_MANDATORY, 0, "method not implemented");
+	char *proxy;
+
+	check_result(edg_wll_GetParam(context,
+				      EDG_WLL_PARAM_X509_PROXY,
+				      &proxy),
+		     context,
+		     "getting X509 proxy");
+	return std::string(strdup(proxy));
 }
 
 
 std::pair<std::string, std::string>
 ServerConnection::getX509Cert() const
 {
-	/* FIXME: not implemented in C API */
-	STACK_ADD;
-	throw Exception(EXCEPTION_MANDATORY, 0, "method not implemented");
+	char *cert, *key;
+
+	check_result(edg_wll_GetParam(context,
+				      EDG_WLL_PARAM_X509_CERT,
+				      &cert),
+		     context,
+		     "getting X509 cert");
+	check_result(edg_wll_GetParam(context,
+				      EDG_WLL_PARAM_X509_KEY,
+				      &key),
+		     context,
+		     "getting X509 key");
+
+	return std::pair<std::string, std::string>(std::string(strdup(cert)),
+						   std::string(strdup(key)));
 }
 
 // static
@@ -650,7 +683,7 @@ edg_wll_QueryRec **
 convertQueryVectorExt(const std::vector<std::vector<QueryRecord> > &in)
 {
 	unsigned i;
-	edg_wll_QueryRec **out = new (edg_wll_QueryRec*)[in.size() + 1];
+	edg_wll_QueryRec **out = new edg_wll_QueryRec*[in.size() + 1];
 
 	if(out == NULL) {
 		STACK_ADD;
@@ -1253,7 +1286,7 @@ void ServerConnection::setParam(edg_wll_ContextParam par, int val)
 		"edg_wll_SetParamInt()");
 }
 
-void ServerConnection::setParam(edg_wll_ContextParam par, const std::string val)
+void ServerConnection::setParam(edg_wll_ContextParam par, const std::string &val)
 {
 	check_result(edg_wll_SetParamString(context,par,val.c_str()),
 		context,

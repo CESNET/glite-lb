@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.28  2004/11/29 15:16:26  zsalvet
+	Add ws-interface to checkout/build machinery.
+	
 	Revision 1.27  2004/11/29 13:55:02  akrenek
 	added dependence on ws-interface
 	
@@ -152,6 +155,7 @@
 		 Load version file 
 	     ========================================= -->
 	<property file="${module.version.file}"/>
+		<property file="${module.build.file}"/>
 			
 	<!-- ===============================================
 		  Public common targets

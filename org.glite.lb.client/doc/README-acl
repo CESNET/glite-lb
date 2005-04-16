@@ -1,0 +1,66 @@
+By default, information about a job stored in the LB server is only available
+to the user who submitted the job, i.e. the job owner. When requesting any
+information about a job from the LB server, the users must authenticate
+properly using their PKI certificates so the LB server can verify that they are
+allowed to access this information (i.e. they submitted the job in question).
+
+Besides this default functionality, the LB server also allows the job owner to
+share job information with another users. Each job can be assigned an access
+control list (ACL) that specifies another users who are also allowed to access
+the job information. The management of ACL's is entirely under control of the
+job owner so she can modify the ACL arbitrarily, specifying the set of users
+who have access to the job information. The users in the ACL's can be specified
+using either the subject names from their X.509 certificates or names of VOMS
+groups.
+
+Current ACL for a job is returned as part of the job status information
+returned by the job_status command. The commands output ACL's in the original
+XML format as specified by GACL/GridSite. 
+
+Example of an ACL:
+<?xml version="1.0"?><gacl version="0.0.1">
+  <entry>
+    <voms-cred><vo>VOCE</vo><group>/VOCE</group></voms-cred>
+    <allow><read/></allow>
+  </entry>
+  <entry>
+    <person><dn>/O=CESNET/O=Masaryk University/CN=Daniel Kouril</dn></person>
+    <deny><read/></deny>
+  </entry>
+</gacl>
+
+this ACL allows all people in the VOMS /VOCE in the VO VOCE, but deny access to
+user Daniel Kouril (even if he was a member of the /VOCE group).
+
+The job owner herself is not specified in the ACL as she is always allowed to
+access the information regardles the content of the job ACL.
+
+An ACL for a job can be changed using the change_acl command-line program
+provided in the example subdirectory. In order to use change_acl, the LB
+daemons locallogger and interlogger must be running. The usage of the command
+is as follows:
+
+change_acl [-r] [-g] [-d] jobid user_id
+
+  jobid		specifies the job to change 
+  user_id	specifies the user to use, it can be either an X.500 name
+		(subject name) or a VOMS group (if the -g option is specified).
+
+  -r	Remove user/group from the ACL.
+  -g	If this option is given, the user_id is handled as a VOMS group. It
+	must of the form VO:group, where VO is name of the VO (as printed out
+	by voms-proxy-info in the VO: field) and group is name of the group.
+  -d	The user specified by the user_id parameter will be denied to access
+  	information about job.
+
+Examples (resulting in the ACL above):
+  change_acl -g https://scientific.civ.zcu.cz:9000/PC8Y6jBitHt_fKMTEKFnVw VOCE:/VOCE
+  change_acl -d https://scientific.civ.zcu.cz:9000/PC8Y6jBitHt_fKMTEKFnVw '/O=CESNET/O=Masaryk University/CN=Daniel Kouril'
+
+LB server configuration
+In order to support the VOMS groups in the ACL's, glite_lb_bkserverd must be
+able to verify client's VOMS proxy certificate using a trusted VOMS service
+certificate stored on a local disk. Default directory with trusted VOMS
+certificates is /etc/grid-security/vomsdir, another location can be
+specified using by either the -V option to glite_lb_bkserverd or setting the
+VOMS_CERT_DIR environment variable.
