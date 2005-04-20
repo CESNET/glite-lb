@@ -66,6 +66,7 @@ TEST_INC:=-I${cppunit}/include
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS} 
+SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
@@ -159,9 +160,12 @@ glite_lb_bkserverd: LoggingAndBookkeeping.nsmap ${BKSERVER_OBJS}
 glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}
 
+glite_lb_plugin.la: lb_plugin.lo
+	${SOLINK} -o $@ lb_plugin.lo
+
 default all: compile
 
-compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK}
+compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} glite_lb_plugin.la
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -291,4 +295,8 @@ clean:
 
 test_query_events.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${GLOBUSINC} ${TEST_INC} $<
+
+
+%.lo: %.c
+	${COMPILE} -o $@ -c $<
 
