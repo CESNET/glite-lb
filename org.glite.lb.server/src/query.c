@@ -846,7 +846,7 @@ static char *jc_to_head_where(
 		for ( n = 0; jc[m][n].attr; n++ ) switch (jc[m][n].attr)
 		{
 		case EDG_WLL_QUERY_ATTR_TIME:
-			if (   (!ctx->isProxy && !is_indexed(&(jc[m][n]), ctx))
+			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 				break;
 
@@ -895,7 +895,7 @@ static char *jc_to_head_where(
 			break;
 
 		case EDG_WLL_QUERY_ATTR_PARENT:
-			if (   (!ctx->isProxy && !is_indexed(&(jc[m][n]), ctx))
+			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 				break;
 
@@ -912,7 +912,7 @@ static char *jc_to_head_where(
 			break;
 
 		case EDG_WLL_QUERY_ATTR_OWNER:
-			if (   (!ctx->isProxy && !is_indexed(&(jc[m][n]), ctx))
+			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 				break;
 
@@ -944,7 +944,7 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_DONECODE:
 		case EDG_WLL_QUERY_ATTR_EXITCODE:
 		case EDG_WLL_QUERY_ATTR_STATUS:
-			if (   (!ctx->isProxy && !is_indexed(&(jc[m][n]), ctx))
+			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 				break;
 
@@ -970,7 +970,7 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_LOCATION:
 		case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 		case EDG_WLL_QUERY_ATTR_USERTAG:
-			if (   (!ctx->isProxy && !is_indexed(&(jc[m][n]), ctx))
+			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 				break;
 
