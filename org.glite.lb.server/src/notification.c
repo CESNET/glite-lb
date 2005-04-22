@@ -84,7 +84,6 @@ int edg_wll_NotifNewServer(
 		edg_wll_SetError(ctx, errno, NULL);
 		goto cleanup;
 	}
-	time_s[strlen(time_s)-1] = 0;
 
 	/*	Format the address
 	 */
@@ -105,8 +104,8 @@ int edg_wll_NotifNewServer(
 	 */
 	trio_asprintf(&q,
 				"insert into notif_registrations(notifid,destination,valid,userid,conditions) "
-				"values ('%|Ss','%|Ss','%|Ss','%|Ss', '<and>%|Ss</and>')",
-				nid_s, addr_s? addr_s: address_override, time_s+1, owner, xml_conds);
+				"values ('%|Ss','%|Ss',%s,'%|Ss', '<and>%|Ss</and>')",
+				nid_s, addr_s? addr_s: address_override, time_s, owner, xml_conds);
 
 	if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 )
 		goto cleanup;
@@ -191,7 +190,6 @@ int edg_wll_NotifBindServer(
 		edg_wll_SetError(ctx, errno, "Formating validity time");
 		goto cleanup;
 	}
-	time_s[strlen(time_s)-1] = 0;
 
 	/*	Format the address
 	 */
@@ -209,7 +207,7 @@ int edg_wll_NotifBindServer(
 	}
 
 
-	update_notif(ctx, nid, NULL, addr_s? addr_s: address_override, (const char *)(time_s+1));
+	update_notif(ctx, nid, NULL, addr_s? addr_s: address_override, (const char *)(time_s));
 
 cleanup:
 	if ( time_s ) free(time_s);
@@ -347,9 +345,8 @@ int edg_wll_NotifRefreshServer(
 		edg_wll_SetError(ctx, errno, "Formating validity time");
 		goto cleanup;
 	}
-	time_s[strlen(time_s)-1] = 0;
 
-	update_notif(ctx, nid, NULL, NULL, time_s+1);
+	update_notif(ctx, nid, NULL, NULL, time_s);
 
 cleanup:
 	if ( time_s ) free(time_s);
@@ -604,7 +601,7 @@ static int update_notif(
 	}
 	if ( valid )
 	{
-		trio_asprintf(&aux, "%s %svalid='%|Ss'", stmt, dest? ",": "", valid);
+		trio_asprintf(&aux, "%s %svalid=%s", stmt, dest? ",": "", valid);
 		free(stmt);
 		stmt = aux;
 	}
