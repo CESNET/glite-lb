@@ -172,14 +172,60 @@ static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrv
 
 	switch (attr.type) {
 		case GLITE_JP_ATTR_OWNER:
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].value.s = strdup(h->status.owner);
+			if (h->events)
+			{
+				i = 0;
+				while (h->events[i])
+				{
+					if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) 
+					{
+						av = calloc(2, sizeof(glite_jp_attrval_t));
+						av[0].attr.type = GLITE_JP_ATTR_OWNER;
+						av[0].value.s = strdup(h->events[i]->any.user);
+
+						break;
+					}
+					i++;
+				}
+			}
+			//av = calloc(2, sizeof(glite_jp_attrval_t));
+			//av[0].value.s = strdup(h->status.owner);
 			break;
 		case GLITE_JP_ATTR_TIME:
+			if (edg_wll_StringToStat(attr.name) == EDG_WLL_JOB_SUBMITTED)
+			{
+				if (h->events)
+				{
+					i = 0;
+					while (h->events[i])
+					{
+						if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) 
+						{
+							av = calloc(2, sizeof(glite_jp_attrval_t));
+							av[0].attr.type = GLITE_JP_ATTR_TIME;
+							av[0].value.time.tv_sec = 
+								strdup(h->events[i]->any.timestamp.tv_sec);
+							av[0].value.time.tv_usec = 
+								strdup(h->events[i]->any.timestamp.tv_usec);
+
+							break;
+						}
+						i++;
+					}
+				}
+			} 
+			else	// state need to be counted (not impl. yet)
+			{
+				*attrval = NULL;
+	                	err.code = ENOSYS;
+		                err.desc = "Not implemented yet.";
+        		        return glite_jp_stack_error(ctx,&err);
+			}
 			// XXX - not clear yet how to care about this
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].value.time.tv_sec = h->status.stateEnterTime.tv_sec;
-			av[0].value.time.tv_usec = h->status.stateEnterTime.tv_usec;
+			//av = calloc(2, sizeof(glite_jp_attrval_t));
+			//av[0].value.time.tv_sec = h->status.stateEnterTime.tv_sec;
+			//av[0].value.time.tv_usec = h->status.stateEnterTime.tv_usec;
+
 			break;
 		case GLITE_JP_ATTR_TAG:
 			if (h->events)
