@@ -162,7 +162,7 @@ static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrv
 	lb_handle		*h = (lb_handle *) handle;
 	glite_jp_context_t	ctx = (glite_jp_context_t) fpctx;
 	glite_jp_error_t 	err; 
-	glite_jp_attrval_t	*av;
+	glite_jp_attrval_t	*av = NULL;
 	int			i, n_tags;
 
 
@@ -204,9 +204,9 @@ static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrv
 							av = calloc(2, sizeof(glite_jp_attrval_t));
 							av[0].attr.type = GLITE_JP_ATTR_TIME;
 							av[0].value.time.tv_sec = 
-								strdup(h->events[i]->any.timestamp.tv_sec);
+								h->events[i]->any.timestamp.tv_sec;
 							av[0].value.time.tv_usec = 
-								strdup(h->events[i]->any.timestamp.tv_usec);
+								h->events[i]->any.timestamp.tv_usec;
 
 							break;
 						}
@@ -235,7 +235,8 @@ static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrv
 
 				while (h->events[i])
 				{
-					if (h->events[i]->type == EDG_WLL_EVENT_USERTAG)
+					if ((h->events[i]->type == EDG_WLL_EVENT_USERTAG) &&
+						!(strcmp(h->events[i]->userTag.name, attr.name)) )
 					{
 						av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
 
