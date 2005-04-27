@@ -100,6 +100,8 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
 COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
+PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
+	${expatlib} -lexpat\
 
 BKSERVER_BASE_OBJS:= \
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
@@ -161,7 +163,7 @@ glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}
 
 glite_lb_plugin.la: lb_plugin.lo
-	${SOLINK} -o $@ lb_plugin.lo ${COMMON_LIBS} -lexpat -lglite_jp_common
+	${SOLINK} -o $@ lb_plugin.lo ${PLUGIN_LIBS}
 
 default all: compile
 
