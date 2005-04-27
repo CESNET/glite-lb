@@ -161,7 +161,7 @@ glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}
 
 glite_lb_plugin.la: lb_plugin.lo
-	${SOLINK} -o $@ lb_plugin.lo
+	${SOLINK} -o $@ lb_plugin.lo ${COMMON_LIBS} -lexpat -lglite_jp_common
 
 default all: compile
 

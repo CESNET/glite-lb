@@ -37,7 +37,7 @@ typedef struct _lb_handle {
 
 
 static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrval_t **attrval);
-static int lb_open(void *,void *,void **);
+static int lb_open(void *,void *, const char *uri, void **);
 static int lb_close(void *,void *);
 /*static int lb_status(edg_wll_Event *event, edg_wll_JobStat *status);*/
 static int read_line(glite_jp_context_t  ctx, void *handle, lb_buffer_t *buffer, char **line);
@@ -73,7 +73,7 @@ int init(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data)
 
 
 
-static int lb_open(void *fpctx, void *bhandle, void **handle)
+static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle)
 {
 	lb_handle           *h;
 	lb_buffer_t         buffer;
