@@ -257,16 +257,16 @@ static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrv
 					{
 						av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
 
-						av[i].value.tag.name = strdup(h->events[i]->userTag.name);
-						av[i].value.tag.sequence = -1;
-						av[i].value.tag.timestamp = 
+						av[n_tags].value.tag.name = strdup(h->events[i]->userTag.name);
+						av[n_tags].value.tag.sequence = -1;
+						av[n_tags].value.tag.timestamp = 
 							h->events[i]->any.timestamp.tv_sec;
-						av[i].value.tag.binary = 0;
-						av[i].value.tag.size = -1;
-						av[i].value.tag.value = strdup(h->events[i]->userTag.value);
-						av[i].attr.type	= GLITE_JP_ATTR_TAG;
+						av[n_tags].value.tag.binary = 0;
+						av[n_tags].value.tag.size = -1;
+						av[n_tags].value.tag.value = strdup(h->events[i]->userTag.value);
+						av[n_tags].attr.type	= GLITE_JP_ATTR_TAG;
 
-						av[i+1].attr.type = GLITE_JP_ATTR_UNDEF;
+						av[n_tags+1].attr.type = GLITE_JP_ATTR_UNDEF;
 
 						n_tags++;
 					}
