@@ -26,7 +26,7 @@
 typedef struct _lb_buffer_t {
 	char *buf;
 	size_t pos, size;
-	ssize_t offset;
+	off_t offset;
 } lb_buffer_t;
 
 typedef struct _lb_handle {
@@ -89,7 +89,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle)
 
 	// read the file given by bhandle
 	// parse events into h->events array
-	memset(&buffer, sizeof(buffer), 0);
+	memset(&buffer, 0, sizeof(buffer));
 	buffer.buf = malloc(BUFSIZ);
 	maxnevents = INITIAL_NUMBER_EVENTS;
 	nevents = 0;
@@ -97,25 +97,40 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle)
 
 	if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) goto fail;
 	while (line) {
-		printf("(DEBUG)lb plugin: '%s'\n", line);
+//		printf("(DEBUG)lb plugin: '%s'\n", line);
 
-		if (nevents >= maxnevents) {
-			maxnevents <<= 1;
-			h->events = realloc(h->events, maxnevents * sizeof(edg_wll_Event *));
+		if (line[0]) {
+			if (nevents >= maxnevents) {
+				maxnevents <<= 1;
+				h->events = realloc(h->events, maxnevents * sizeof(edg_wll_Event *));
+			}
+			if ((retval = edg_wll_ParseEvent(context, line, &h->events[nevents])) != 0) {
+				free(line);
+				goto fail;
+			}
+			nevents++;
 		}
-		if ((retval = edg_wll_ParseEvent(context, line, &h->events[nevents])) != 0) goto fail;
-		nevents++;
 		free(line);
 
 		if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) goto fail;
 	}
+	free(line);
 
 	free(buffer.buf);
+	edg_wll_FreeContext(context);
+
+	if (nevents >= maxnevents) {
+		maxnevents <<= 1;
+		h->events = realloc(h->events, maxnevents * sizeof(edg_wll_Event *));
+	}
+	h->events[nevents] = NULL;
+
+	printf("lb open %d events\n", nevents);
 
 	// compute state of the job - still unclear if needed
 	// TODO
 
-	handle = (void **) &h;
+	*handle = (void *)h;
 
 	return 0;
 
@@ -124,6 +139,8 @@ fail:
 	free(h->events);
 	free(buffer.buf);
 	edg_wll_FreeContext(context);
+	free(h);
+	*handle = NULL;
 	return retval;
 }
 
@@ -307,7 +324,7 @@ err:
 int check_realloc_line(char **line, size_t *maxlen, size_t len) {
 	void *tmp;
 
-	if (len >= *maxlen) {
+	if (len > *maxlen) {
 		*maxlen <<= 1;
 		tmp = realloc(*line, *maxlen);
 		if (!tmp) return 0;
@@ -323,15 +340,16 @@ int check_realloc_line(char **line, size_t *maxlen, size_t len) {
  *
  * /return error code
  */
-static int read_line(glite_jp_context_t  ctx, void *handle, lb_buffer_t *buffer, char **line) {
+static int read_line(glite_jp_context_t ctx, void *handle, lb_buffer_t *buffer, char **line) {
 	size_t maxlen, len, i;
 	ssize_t nbytes;
-	int retval;
+	int retval, z, end;
 
 	maxlen = BUFSIZ;
 	i = 0;
 	len = 0;
 	*line = malloc(maxlen);
+	end = 0;
 
 	do {
 		/* read next portion */
@@ -343,26 +361,35 @@ static int read_line(glite_jp_context_t  ctx, void *handle, lb_buffer_t *buffer,
 					retval = EINVAL;
 					goto fail;
 				} else {
-					buffer->size = (size_t)nbytes;
-					buffer->offset += nbytes;
+					if (nbytes) {
+						buffer->size = (size_t)nbytes;
+						buffer->offset += nbytes;
+					} else end = 1;
 				}
 			} else goto fail;
 		}
 
 		/* we have buffer->size - buffer->pos bytes */
 		i = buffer->pos;
-		while (i < buffer->size && buffer->buf[i] != '\n' && buffer->buf[i] != '\0') {
+		do {
+			if (i >= buffer->size) z = '\0';
+			else {
+				z = buffer->buf[i];
+				if (z == '\n') z = '\0';
+			}
+			len++;
+			
 			if (!check_realloc_line(line, &maxlen, len)) {
 				retval = ENOMEM;
 				goto fail;
 			}
-			*line[len++] = buffer->buf[i++];
-		}
+			(*line)[len - 1] = z;
+			i++;
+		} while (z && i < buffer->size);
 		buffer->pos = i;
-	} while (len && *line[len - 1] != '\n' && *line[len - 1] != '\0');
+	} while (len && (*line)[len - 1] != '\0');
 
-	if (len) *line[len - 1] = '\0';
-	else {
+	if ((!len || !(*line)[0]) && end) {
 		free(*line);
 		*line = NULL;
 	}
