@@ -249,9 +249,8 @@ static ssize_t edg_wll_socket_write(int sock,const void *buf,size_t bufsize,stru
 		if ((ret=select(sock+1,NULL, &fds ,NULL,timeout?&to:NULL)) < 0) {
 			edg_wll_ll_log(LOG_ERR,"edg_wll_socket_write(): error selecting socket\n");
 			SYSTEM_ERROR("select"); 
-			break;
-		}
-                len = write(sock,buf,bufsize);
+		} else
+		   	len = write(sock,buf,bufsize);
         }
         if (timeout) {
            gettimeofday(&after,NULL);
