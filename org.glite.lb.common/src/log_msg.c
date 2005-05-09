@@ -41,11 +41,14 @@ edg_wll_socket_write(
 		gettimeofday(&before, NULL);
 	}
 	len = write(sock, buf, bufsize);
-	while ( len <= 0 ) {
+	if ( len <= 0  && errno == EAGAIN ) {
 		FD_ZERO(&fds);
 		FD_SET(sock,&fds);
-		if ( select(sock+1, &fds,NULL,NULL, timeout? &to: NULL) < 0 ) return -1;
-		len = write(sock, buf, bufsize);
+		if ( select(sock+1, NULL, &fds, NULL, timeout? &to: NULL) < 0 ) {
+			len = -1;
+		} else {
+			len = write(sock, buf, bufsize);
+		}
 	}
 	if ( timeout ) {
 		gettimeofday(&after, NULL);
