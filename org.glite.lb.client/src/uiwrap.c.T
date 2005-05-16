@@ -13,7 +13,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	my $tu = uc $t;
 	my $a = "(edg_wll_Context context";
 	my $b = "(context,EDG_WLL_EVENT_$tu,EDG_WLL_FORMAT_$tu";
-	my $decl = "";
+	my $decl = "\tint ret;\n";
 	my $free = "";
 	my $doc = qq{
  * \\param context\tcontext to work with,
@@ -55,7 +55,9 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 int edg_wll_Log$t$a
 \{
 $decl
-	return edg_wll_LogEvent$b;
+	ret = edg_wll_LogEvent$b;
+$free
+	return ret;
 \}\n
 };
 #	gen qq{
@@ -99,7 +101,9 @@ $decl
 int edg_wll_Log$t$code$c
 \{
 $decl
-	return edg_wll_LogEvent$d;
+	ret = edg_wll_LogEvent$d;
+$free
+	return ret;
 \}\n
 };
 #				gen qq{
