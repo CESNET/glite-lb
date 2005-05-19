@@ -64,6 +64,12 @@ bool	expectUpdate	Some logged information has not arrived yet
 string	expectFrom	Sources of the missing information
 string	acl		ACL of the job
 
+bool	payload_running	User payload started
+strlist	possible_destinations	Possible job destinations
+	_special_	XMLstructured
+strlist possible_ce_nodes	CE nodes matching to possible_destinations
+	_special_	XMLstructured
+
 @type Submitted		entered by the user to the User Interface or registered by Job Partitioner
 @type Waiting		Accepted by WMS, waiting for resource allocation
 @type Ready		Matching resources found

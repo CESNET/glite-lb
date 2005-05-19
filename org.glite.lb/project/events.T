@@ -86,13 +86,14 @@
 	_code_	CALLING		the logging component is caller
 	_code_	CALLED		the logging component is callee
 
-@type Running		Executable started
+@type Running		Job wrapper started
 	string	node		worker node where the executable is run
 
 @type Resubmission	Result of resubmission decision
 	int	result		result code
-	_code_	WILLRESUB	will be resubmitted
+	_code_	WILLRESUB	will be resubmitted (deep resubmission)
 	_code_	WONTRESUB	will not be resubmitted
+	_code_	SHALLOW		shallow resubmission (user payload has not started yet)
 	string	reason		reason for the decision
 	string	tag		value of the attribute on which the decision is based
 
@@ -181,3 +182,6 @@
 	port	dest_port	destination port
 	string	jobstat		job status
 
+@type ReallyRunning	User payload started
+	_optional_
+	string	wn_seq		sequence code on the worker node
