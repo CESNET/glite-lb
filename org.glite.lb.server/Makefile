@@ -21,6 +21,8 @@ gsoap_prefix=/opt/gsoap
 -include Makefile.inc
 -include ../Makefile.inc
 
+default all: compile
+
 GLITE_LB_SERVER_WITH_WS=yes
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
@@ -142,8 +144,6 @@ glite_lb_bkserverd: ${SERVER_OBJS} ${SERVER_SOAP_OBJS}
 
 glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${COMMON_LIB} ${EXT_LIBS}
-
-default all: compile
 
 compile: glite_lb_bkserverd glite_lb_bkindex glite_lb_proxy
 
