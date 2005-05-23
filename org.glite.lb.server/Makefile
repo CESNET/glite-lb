@@ -167,7 +167,7 @@ glite_lb_plugin.la: lb_plugin.lo
 
 default all: compile
 
-compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} glite_lb_plugin.la
+compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK}
 
 check: compile test.xml test.query
 	-echo check.query not complete yet

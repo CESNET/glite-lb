@@ -116,3 +116,73 @@ int edgwll2__UserJobs(
 
 	return SOAP_OK;
 }
+
+
+/*
+int edgwll2__QueryEvents(
+	struct soap				*soap,
+	struct edgwll__QueryConditions		*jc,
+	struct edgwll__QueryConditions		*ec,
+	struct edgwll2__QueryEventsResponse	*out)
+{
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
+	edg_wll_Event		*eventsOut = NULL;
+	edg_wll_QueryRec	**qrj = NULL,
+				**qre = NULL;
+
+	int			fl,
+				i, j,
+				ret = SOAP_FAULT;
+
+
+x	out->states = soap_malloc(soap, sizeof(*out->states));
+x	out->jobs = soap_malloc(soap, sizeof(*out->jobs));
+x	if ( !out->states || !out->jobs ) goto cleanup;
+x	memset(out->states, 0, sizeof(*(out->states)));
+x	memset(out->jobs, 0, sizeof(*(out->jobs)));
+
+	edg_wll_ResetError(ctx);
+	if ( edg_wll_SoapToQueryCondsExt(jc, &qrj) ) {
+		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
+		goto cleanup;
+	}
+	if ( edg_wll_SoapToQueryCondsExt(ec, &qre) ) {
+		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
+		goto cleanup;
+	}
+
+	if ( edg_wll_QueryEventsServer( ctx, ctx->noAuth, (const edg_wll_QueryRec **) jc, 
+					(const edg_wll_QueryRec **) ec, &eventsOut) )
+		goto cleanup;
+
+	if ( edg_wll_EventsQueryResToSoap(soap, eventsOut, out) ) goto cleanup;
+	ret = SOAP_OK;
+
+cleanup:
+	if ( qrj ) {
+		for ( i = 0; qrj[i]; i++ ) {
+			for ( j = 0; qrj[i][j].attr; j++ )
+				edg_wll_QueryRecFree(&qrj[i][j]);
+			free(qrj[i]);
+		}
+		free(qrj);
+	}
+
+	if ( qre ) {
+		for ( i = 0; qre[i]; i++ ) {
+			for ( j = 0; qre[i][j].attr; j++ )
+				edg_wll_QueryRecFree(&qre[i][j]);
+			free(qre[i]);
+		}
+		free(qr);
+	}
+	if ( eventsOut ) {
+		for ( i = 0; eventsOut[i].type; i++ )
+			edg_wll_FreeEvent(&eventsOut[i]);
+		free(eventssOut);
+	}
+	if ( ret == SOAP_FAULT ) edg_wll_ErrToFault(ctx, soap);
+
+	return ret;
+}
+*/
