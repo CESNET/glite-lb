@@ -118,17 +118,17 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 		ws_query.o ws_fault.o ws_typeref.o 
 
 	BKSERVER_LIBS= \
-		${EXT_LIBS} \
 		${SRVBONES_LIB} \
 		-lglite_lb_common_${nothrflavour} \
 		-L${gsoap_prefix}/lib -lgsoap \
-		-lglite_security_gsoap_plugin_${nothrflavour}
+		-lglite_security_gsoap_plugin_${nothrflavour} \
+		${EXT_LIBS}
 else
 	BKSERVER_LIBS= \
-		${EXT_LIBS} \
 		${SRVBONES_LIB} \
 		-lglite_lb_common_${nothrflavour} \
-		-lglite_security_gss_${nothrflavour}
+		-lglite_security_gss_${nothrflavour} \
+		${EXT_LIBS}
 endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
@@ -139,11 +139,11 @@ INDEX_LIBS:= ${EXT_LIBS} ${SRVBONES_LIB} ${COMMON_LIBS}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= -L${stagedir}/lib \
-		${EXT_LIBS} \
 		-lglite_lb_client_${nothrflavour} \
 		-lglite_lb_common_${nothrflavour} \
 		-L${gsoap_prefix}/lib -lgsoap \
-		-lglite_security_gsoap_plugin_${nothrflavour}
+		-lglite_security_gsoap_plugin_${nothrflavour} \
+		${EXT_LIBS}
 
 HDRS=index.h lb_authz.h lbs_db.h store.h
 
