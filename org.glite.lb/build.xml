@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.30  2005/03/17 09:59:31  zsalvet
+	Add proxy target.
+	
 	Revision 1.29  2005/03/16 10:02:52  zsalvet
 	proxy component added
 	
@@ -158,6 +161,7 @@
 		 Load version file 
 	     ========================================= -->
 	<property file="${module.version.file}"/>
+	<property file="${module.build.file}"/>
 			
 	<!-- ===============================================
 		  Public common targets

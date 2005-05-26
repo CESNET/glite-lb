@@ -20,6 +20,14 @@
 
 	Revision history:
 	$Log$
+	Revision 1.2  2005/02/17 15:40:48  akrenek
+	First attempt to generate LB.wsdl from LB's internal .T structure definitions
+	- only JobStatus operation implemented so far
+	- passes through wsdl2h
+	- untested otherwise
+	- breaks LB server compilation (obviously)
+	- install & stage still uses hand-written LB.wsdl
+	
 	Revision 1.1.1.1  2004/11/25 15:20:10  akrenek
 	initial import
 	
@@ -98,6 +106,7 @@
 		 Load version file 
 	     ========================================= -->
 	<property file="${module.version.file}"/>
+	<property file="${module.build.file}"/>
 	
 	<!-- ==============================================
 		 Local private targets
