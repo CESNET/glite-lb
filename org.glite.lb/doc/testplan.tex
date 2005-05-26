@@ -16,11 +16,13 @@
 \def\how{\noindent\textbf{How to run:}}
 \def\result{\noindent\textbf{Expected result:}}
 
-\def\path#1{\textsf{#1}}
-\def\code#1{\textsf{#1}}
+\def\path#1{{\normalfont\textsf{#1}}}
+\def\code#1{\texttt{#1}}
+
+\def\todo#1{\textbf{TODO:} #1}
 
 
-\specialcomment{hints}{\par\noindent\textbf{Hints: }\begingroup\itshape}{\endgroup}
+\specialcomment{hints}{\par\noindent\textbf{Hints: }\begingroup\slshape}{\endgroup}
 %\includecomment{hints}
 
 \begin{document}
@@ -29,6 +31,12 @@
 \newpage
 \tableofcontents
 \newpage
+
+\section{Rationale}
+\todo{}
+
+\section{Test Coverage}
+\todo{}
 
 \section{Test Cases}
 
@@ -99,10 +107,14 @@ format as the locallogger files.
 \req\ all \LB\ daemons running (\path{glite-lb-logd}, \path{glite-lb-interlogd},
 \path{glite-lb-bkserverd}
 
-\how\ Register jobs with \code{edg\_wll\_RegsterJob} and log reasonable
-sequences of events with \code{edg\_wll\_Log*}.
-Check with \code{edg\_wll\_JobLog}
+\how\
+\begin{enumerate}
+
+\item Register jobs with \code{edg\_wll\_RegsterJob} 
+\item Log reasonable sequences of events with \code{edg\_wll\_Log*}.
+\item Check with \code{edg\_wll\_JobLog}
 that the events got delivered afterwards (approx. 10s).
+\end{enumerate}
 
 \result\ API calls should return 0. The same events that were logged must be returned.
 
@@ -136,31 +148,124 @@ in the job state same as the `*' part of the script name.
 
 
 \subsubsection{DAG job states}
-\textbf{TODO}
+\todo{}
 
 % specialni stav DAGu, histogram potomku
 
 \subsection{LB proxy}
-\textbf{TODO}
-% proxy -- honik
+\todo{honik}
 
 \subsection{Notifications}
 
 % notifikace 
 % regjob, reg notifikace na vsechno, poslat udalosti, hlidat notif
+\subsubsection{Single job, any state change}
+\label{notif1}
+\req\ All \LB\ services running
+
+\how
+\begin{enumerate}
+\item Register a job. 
+\item Start a~notification client (preferably on another machine),
+register with \code{edg\_wll\_NotifNew} for any state changes of the job, 
+and repeatedly invoke \code{edg\_wll\_NotifReceive}.
+\item One by one send events triggering job state change. 
+\end{enumerate}
+
+\result\ All the events should trigger notification reported by the running
+notification client.
+
+\begin{hints}
+\path{glite-lb-notify} example can be used with its \path{test} command.
+\end{hints}
+
+\subsubsection{Additional notification criteria}
+\label{notif-complex}
+\req\ All \LB\ services running
+
+\how\ Like~\ref{notif1} but include additional criteria,
+e.g. job is scheduled for a~specific destination.
+
+\result\ Only notifications matching the criteria should be delivered.
 
 % rozsireni dotazu o dalsi job
+\subsubsection{Include another job}
+\label{notif2}
+\req\ All \LB\ services running, notification from \ref{notif1} still active
+
+\how\ 
+\begin{enumerate}
+\item Register another job.
+\item Augment the notification registration with the new jobid using
+\code{edg\_wll\_NotifChange}.
+\item Start notification client, bind to the registration with
+\code{edg\_wll\_NotifBind}.
+\item Send events for the new job.
+\end{enumerate}
+
+\result\ Notifications should be received by the client.
+
+\begin{hints}
+Commands \path{change} and \path{receive} of \path{glite-lb-notify}
+can be used.
+\end{hints}
 
 % notifikace -- zmena adresy/portu
 % pak poslat udalost, musi dojit
+% uz je v predchozim implicitne
 
+\subsubsection{Delayed delivery}
 % notifikace -- zpozdene doruceni
 % registrovat, odpojit, poslat udalosti, pripojit se
 
+\req\ All \LB\ services running
+
+\how\ 
+\begin{enumerate}
+\item Register another job.
+\item Register a~notification as in~\ref{notif1} but terminate the client
+immediately.
+\item Log events for the job.
+\item Restart the client, binding to the notification and call
+\code{edg\_wll\_NotifReceive} repeatedly.
+\end{enumerate}
+
+\result\ Delayed notifications should be received by the client almost
+immediately.
+
 \subsection{Server purge}
 
-% purge
+\textbf{WARNING: This test is destructive, it destroys ALL data in an
+existing \LB\ database.} 
+
+The test is fairly complex but it does not make too much sense to split it
+artificially.
+
+\req\ All \LB services running, preferably a~dedicated server for this test.
+
+\how
+\begin{enumerate}
+\item Purge all data on the server with \path{glite-lb-purge}
+\item Log two sets of jobs, separated with delay of at least 60s so
+that the sets can be distinguished from each other.
+\item \label{purgel}
+Using \code{edg\_wll\_JobLog} retrieve events of all the jobs
+\item \label{purge1}
+Purge the first set of jobs (by specifying appropriate timestamp),
+letting the server dump the purged events.
+\item \label{purge2} Purge the other set of jobs, also dumping the events.
+\item \label{purge3} Run purge once more.
+\end{enumerate}
+
+\result\ The data dumped in steps \ref{purge1}, \ref{purge2} should be the
+same as retrieved in~\ref{purgel}. The final purge invocation should
+do nothing (i.e. nothing was left in the database).
+
 % test_purge
+\begin{hints}
+The example \path{glite-lb-test\_purge} does exactly this sequence of steps,
+including the checks.
+\end{hints}
 
 
 \end{document}
