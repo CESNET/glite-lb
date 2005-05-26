@@ -1,0 +1,166 @@
+\documentclass{egee}
+\usepackage{comment}
+
+\def\LB{L\&B}
+
+\title{\LB\ Test Plan}
+\author{CESNET EGEE JRA1 team}
+\DocIdentifier{EGEE-JRA1-??}
+\Date{\today}
+\Activity{JRA1: Middleware Engineering and Integration}
+\DocStatus{DRAFT}
+\Dissemination{PUBLIC}
+\DocumentLink{}
+
+\def\req{\noindent\textbf{Prerequisities:}}
+\def\how{\noindent\textbf{How to run:}}
+\def\result{\noindent\textbf{Expected result:}}
+
+\def\path#1{\textsf{#1}}
+\def\code#1{\textsf{#1}}
+
+
+\specialcomment{hints}{\par\noindent\textbf{Hints: }\begingroup\itshape}{\endgroup}
+%\includecomment{hints}
+
+\begin{document}
+
+\input{frontmatter}
+\newpage
+\tableofcontents
+\newpage
+
+\section{Test Cases}
+
+\subsection{Event delivery}
+
+% locallogger
+% bez dalsich demonu, registrovat job, vrati EAGAIN, objevi se fajly
+\subsubsection{Standalone locallogger -- job registration}
+\label{reg}
+\req\ running \path{glite-lb-logd} on the test node, don't start either
+\path{glite-lb-interlogd} or \path{glite-lb-bkserverd}
+
+\how\ call \code{edg\_wll\_RegisterJob}. Jobid's should preferably point
+to a~remote \LB\ server.
+
+\result\ The API call returns EAGAIN, but locallogger creates an event file
+in its storage.
+The file should contain single line RegJob event.
+
+\begin{hints}
+\path{glite-lb-regjob} example can be used. It generates a~unique jobid,
+prints it and calls \LB\ API appropriately.
+\end{hints}
+
+% async -- prida do fajlu, OK
+% logevent
+\subsubsection{Standalone locallogger -- log event}
+\label{log}
+\req\ running \path{glite-lb-logd} only, files generated in test~\ref{reg}.
+
+\how\ call \code{edg\_wll\_Log*} for various event types in a~sequence
+resebmling real \LB\ usage, using the same jobid's as in test~\ref{reg}
+
+\result\ API calls return 0, events are added one per line to the locallogger files
+
+\begin{hints}
+\path{glite-lb-logev} client program can be used.
+
+\path{glite-lb-*.sh} examples may be adapted to produce reasonable seqences
+of events.
+\end{hints}
+
+\subsubsection{Interlogger recovery}
+\label{recover}
+% recover interloggeru
+% il & server (remote)
+% spustit, protlaci soubory na server, soubory zmizi, lze se dotazat na stav
+\req\ running \path{glite-lb-bkserverd} on the machine and port where 
+jobid's from \ref{reg} point to; files generated in~\ref{log}.
+
+\how\ Make a~copy of the files created in~\ref{log}, then start
+\path{glite-lb-interlogd}. After approx. 10s check the jobs
+with \code{edg\_wll\_JobLog} call. 
+
+\result \code{edg\_wll\_JobLog} should return the same events that were
+contained in the locallogger files. The files should be removed by 
+interlogger after approx. 1 min.
+
+\begin{hints}
+\path{glite-lb-joblog} example outputs the events in (almost) the same
+format as the locallogger files.
+\end{hints}
+
+% event delivery
+% poslat .sh, job log vrati to, co bylo ve fajlech
+\subsubsection{Normal event delivery}
+\label{normal}
+\req\ all \LB\ daemons running (\path{glite-lb-logd}, \path{glite-lb-interlogd},
+\path{glite-lb-bkserverd}
+
+\how\ Register jobs with \code{edg\_wll\_RegsterJob} and log reasonable
+sequences of events with \code{edg\_wll\_Log*}.
+Check with \code{edg\_wll\_JobLog}
+that the events got delivered afterwards (approx. 10s).
+
+\result\ API calls should return 0. The same events that were logged must be returned.
+
+\begin{hints}
+\path{glite-lb-*.sh} scripts produce reasonable seqences of events, including
+the job initial registration.
+
+There is approx. 1min time window in which the locallogger files exist.
+They can be grabbed and used for comparing the events as in~\ref{recover}.
+
+\end{hints}
+
+\subsection{Job state computation}
+
+% normal event delivery & job state machine
+% .sh, dotaz na stav
+\subsubsection{Normal job states}
+\label{state}
+\req\ \path{glite-lb-bkserverd} running, events from \ref{normal} logged.
+
+\how\ Check state of the jobs with \code{edg\_wll\_JobStatus}.
+
+\result\ The API call should return 0, the jobs should be in the expected
+states. Thorough tests may also cross check the values supplied in the
+events (e.g. destination computing element) wrt. the values reported in the job states.
+
+\begin{hints}
+\path{glite-lb-*.sh} scripts produce sequences of events resultning
+in the job state same as the `*' part of the script name.
+\end{hints}
+
+
+\subsubsection{DAG job states}
+\textbf{TODO}
+
+% specialni stav DAGu, histogram potomku
+
+\subsection{LB proxy}
+\textbf{TODO}
+% proxy -- honik
+
+\subsection{Notifications}
+
+% notifikace 
+% regjob, reg notifikace na vsechno, poslat udalosti, hlidat notif
+
+% rozsireni dotazu o dalsi job
+
+% notifikace -- zmena adresy/portu
+% pak poslat udalost, musi dojit
+
+% notifikace -- zpozdene doruceni
+% registrovat, odpojit, poslat udalosti, pripojit se
+
+\subsection{Server purge}
+
+% purge
+% test_purge
+
+
+\end{document}
