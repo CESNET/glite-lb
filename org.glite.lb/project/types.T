@@ -35,6 +35,9 @@
 		jobstat=>'"jobStatus"',
 		usertag=>'"tagValue"',
 		timeval=>'"timeval"',
+		logsrc=>'"eventSource"',
+		notifid=>'"xsd:string"',
+		port=>'"xsd:int"',
 	}
 );
 
