@@ -17,18 +17,19 @@ SUFFIXES = .T
 VPATH=${top_srcdir}/src
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 XSLTPROC=xsltproc
+TIDY=tidy
 
 STAGETO=interface
 
-WSDL=LB.wsdl
+WSDL=LB.wsdl LBTypes.wsdl
 
-all compile:
+all compile: ${WSDL}
 
 check: 
 	@echo No unit test required for interface-only module.
 
-stage:
-	$(MAKE) install PREFIX=${stagedir}
+stage: compile
+	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 dist: distsrc distbin
 
@@ -47,8 +48,15 @@ install:
 	-mkdir -p ${PREFIX}/${STAGETO}
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	install -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
-#	install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
+# install the generated stuff instead
+#	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
+	install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
+
+# JP has its own version anyway
+#	if [ x${DOSTAGE} = xyes ]; then \
+#		mkdir -p ${PREFIX}/share/lb; \
+#		install -m 644 ${top_srcdir}/src/puke-wsdl.xsl ${top_srcdir}/src/puke-ug.xsl ${PREFIX}/share/lb; \
+#	fi
 
 clean:
 	rm -f *.h
@@ -59,5 +67,10 @@ clean:
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
-${WSDL}: LB.xml
-	${XSLTPROC} ../src/puke-wsdl.xsl LB.xml >$@
+${WSDL}: %.wsdl: %.xml puke-wsdl.xsl
+	${XSLTPROC} ../src/puke-wsdl.xsl $< >$@
+	-${TIDY} -wrap 10000 -xml -m -i -q $@
+	-perl -i -n -e 'if (/^\s*$$/) { $$empty .= "\n"; } elsif (/^\s*<(xsd:)?(enumeration|element|input|output|fault)/) { print $$_; $$empty = "";} else { print "$$empty$$_"; $$empty=""; }; ' $@
+
+LB-ug.xml: LB.xml puke-ug.xsl
+	${XSLTPROC} ../src/puke-ug.xsl $< >$@
