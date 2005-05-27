@@ -20,7 +20,7 @@ gsoap_prefix=/opt/gsoap
 
 -include Makefile.inc
 
-GLITE_LB_SERVER_WITH_WS=yes
+GLITE_LB_SERVER_WITH_WS=no
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	gsoap_version=`${gsoap_prefix}/bin/soapcpp2 -version 2>&1 | cut -d' ' -f4 | perl -F\\\\. -nae '$$F[2] =~ s/\D*$$//; print $$F[2]+100*$$F[1]+10000*$$F[0]'`
@@ -124,6 +124,8 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 		-lglite_security_gsoap_plugin_${nothrflavour} \
 		${EXT_LIBS}
 else
+	BKSERVER_OBJS:= ${BKSERVER_BASE_OBJS}
+		
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
 		-lglite_lb_common_${nothrflavour} \
@@ -135,7 +137,7 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o
 
-INDEX_LIBS:= ${EXT_LIBS} ${SRVBONES_LIB} ${COMMON_LIBS}
+INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} 
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= -L${stagedir}/lib \
@@ -185,8 +187,18 @@ lb_xml_parse.c: lb_xml_parse.c.T
 ${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c ${GSOAP_FILES_PREFIX}ServerLib.c ${GSOAP_FILES_PREFIX}ClientLib.c LoggingAndBookkeeping.nsmap: LB.xh
 	${gsoap_prefix}/bin/soapcpp2 -w -c -p ${GSOAP_FILES_PREFIX} LB.xh
 
-LB.xh: ws_typemap.dat
+# try several times -- LB.wsdl downloads BaseFault.xsd from www.ibm.com which may be failing
+# not used right now but may be useful one day
+# LB.xh: ws_typemap.dat
+#	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl || \
+#	{ sleep 1 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; } || \
+#	{ sleep 4 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; } || \
+#	{ sleep 16 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; }
+
+LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
+	cp ${stagedir}/interface/LBTypes.wsdl .
 	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl
+	rm -f LBTypes.wsdl
 
 test.xml: test_xml
 	./test_xml

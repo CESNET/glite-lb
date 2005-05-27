@@ -13,6 +13,7 @@
 #include "ws_typeref.h"
 
 
+#if 0
 int edgwll2__GetVersion(
         struct soap						   *soap,
 		struct edgwll2__GetVersionResponse *out)
@@ -21,21 +22,28 @@ int edgwll2__GetVersion(
 
 	return SOAP_OK;
 }
+#endif
 
+/*
 int edgwll2__JobStatus(
         struct soap						   *soap,
         char							   *jobid,
         struct edgwll__JobStatFlags		   *flags,
         struct edgwll2__JobStatusResponse  *out)
+*/
+SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
+	struct soap	*soap,
+	struct _lbe__JobStatus *in,
+	struct _lbe__JobStatusResponse *out);
 {
 	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	edg_wlc_JobId		j;
 	edg_wll_JobStat		s;
 
 
-	if ( edg_wlc_JobIdParse(jobid, &j) )
+	if ( edg_wlc_JobIdParse(in->jobid, &j) )
 	{
-		edg_wll_SetError(ctx, EINVAL, jobid);
+		edg_wll_SetError(ctx, EINVAL, in->jobid);
 		edg_wll_ErrToFault(ctx, soap);
 		return SOAP_FAULT;
 	}
@@ -51,6 +59,7 @@ int edgwll2__JobStatus(
 	return SOAP_OK;
 }
 
+#if 0
 int edgwll2__QueryJobs(
 	struct soap						   *soap,
 	struct edgwll__QueryConditions	   *conditions,
@@ -116,7 +125,6 @@ int edgwll2__UserJobs(
 
 	return SOAP_OK;
 }
-
 
 /*
 int edgwll2__QueryEvents(
@@ -186,3 +194,4 @@ cleanup:
 	return ret;
 }
 */
+#endif
