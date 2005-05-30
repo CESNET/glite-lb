@@ -258,9 +258,10 @@ install:
 	for p in logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
-	for p in ${EXAMPLES} ${sh_PROGS} purge_test; do \
+	for p in ${EXAMPLES} ${sh_PROGS}; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
+	${INSTALL} -m 755 ${top_srcdir}/examples/purge_test "${PREFIX}/examples/glite-lb-purge_test"
 
 clean:
 
