@@ -146,14 +146,43 @@ events (e.g. destination computing element) wrt. the values reported in the job 
 in the job state same as the `*' part of the script name.
 \end{hints}
 
-
 \subsubsection{DAG job states}
 \todo{}
-
 % specialni stav DAGu, histogram potomku
 
 \subsection{LB proxy}
-\todo{honik}
+\req\ running \path{glite-lb-proxy}, \path{glite-lb-interlogd} and
+\path{glite-lb-bkserverd}
+
+\how\ Register jobs with \code{edg\_wll\_RegisterJobProxy}, log events
+using \code{edg\_wll\_LogEventProxy} and check the job states against
+both lbproxy (using \code{edg\_wll\_JobStatusProxy}) and bkserver
+(using \code{edg\_wll\_JobStatus}).
+
+\result\ A new job state should be available immediately at the
+lbproxy and probably with a small delay also at the bkserver.
+
+\begin{hints}
+There is already a script \path{test.sh} in
+\path{org.glite.lb.proxy/examples} that can be used together with
+above mentioned scripts \path{glite-lb-*.sh} (they are called from
+\path{test.sh}) to test all this.
+\end{hints}
+
+\subsection{WS interface}
+\req\ \path{glite-lb-bkserverd} running, events from \ref{normal} logged
+
+\how\ retrieve both events and job states with the \LB\ WS interface
+(operations \code{JobStatus}, \code{QueryEvents}).
+
+\result\ the returened data should match those returned by the legacy
+API calls.
+
+\begin{hints}
+Examples \path{org.glite.lb.server/examples/ws\_*.c} convert the WS
+responses back to the legacy \LB\ data structures and print them in
+the same form as e.g. \path{glite-lb-jobstat}.
+\end{hints}
 
 \subsection{Notifications}
 
