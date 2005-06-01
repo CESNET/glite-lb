@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "glite/lb/context-int.h"
+#include "soap_version.h"
 
 #include "bk_ws_H.h"
 #include "bk_ws_Stub.h"
@@ -10,20 +11,20 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 {
 	char	*et,*ed;
 	struct SOAP_ENV__Detail	*detail = soap_malloc(soap,sizeof *detail);
-	struct _GenericLBFault *f = soap_malloc(soap,sizeof *f);
+	struct _genericFault *f = soap_malloc(soap,sizeof *f);
 
 
-	f->edgwll__GenericLBFault = soap_malloc(soap,sizeof *f->edgwll__GenericLBFault);
+	f->lbe__genericFault = soap_malloc(soap,sizeof *f->lbe__genericFault);
 
-	f->edgwll__GenericLBFault->code = edg_wll_Error(ctx,&et,&ed);
-	f->edgwll__GenericLBFault->text = soap_malloc(soap,strlen(et)+1);
-	strcpy(f->edgwll__GenericLBFault->text,et); 
+	f->lbe__genericFault->code = edg_wll_Error(ctx,&et,&ed);
+	f->lbe__genericFault->text = soap_malloc(soap,strlen(et)+1);
+	strcpy(f->lbe__genericFault->text,et); 
 	free(et);
-	f->edgwll__GenericLBFault->description = soap_malloc(soap,strlen(ed)+1);
-	strcpy(f->edgwll__GenericLBFault->description,ed); 
+	f->lbe__genericFault->description = soap_malloc(soap,strlen(ed)+1);
+	strcpy(f->lbe__genericFault->description,ed); 
 	free(ed);
 
-	detail->__type = SOAP_TYPE__GenericLBFault;
+	detail->__type = SOAP_TYPE__genericFault;
 #if GSOAP_VERSION >= 20700
 	detail->fault = f;
 #else
@@ -42,15 +43,15 @@ void edg_wll_FaultToErr(const struct soap *soap,edg_wll_Context ctx)
 	struct SOAP_ENV__Detail	*detail = soap->version == 2 ?
 		soap->fault->SOAP_ENV__Detail : soap->fault->detail;
 
-	struct edgwll__GenericLBFaultType	*f;
+	struct lbt__genericFault	*f;
 
-	if (detail->__type == SOAP_TYPE__GenericLBFault) {
+	if (detail->__type == SOAP_TYPE__genericFault) {
 #if GSOAP_VERSION >= 20700
-		f = ((struct _GenericLBFault *) detail->fault)
-			->edgwll__GenericLBFault;
+		f = ((struct _genericFault *) detail->fault)
+			->lbe__genericFault;
 #else
-		f = ((struct _GenericLBFault *) detail->value)
-			->edgwll__GenericLBFault;
+		f = ((struct _genericFault *) detail->value)
+			->lbe__genericFault;
 #endif
 		edg_wll_SetError(ctx,f->code,f->description);
 	}

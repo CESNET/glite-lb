@@ -5,61 +5,61 @@
 extern "C" {
 #endif
 
-extern void edg_wll_JobStatCodeToSoap(edg_wll_JobStatCode, enum edgwll__JobStatCode *);
-extern void edg_wll_SoapToJobStatCode(enum edgwll__JobStatCode, edg_wll_JobStatCode *);
+extern void edg_wll_JobStatCodeToSoap(edg_wll_JobStatCode, enum lbt__statName *);
+extern void edg_wll_SoapToJobStatCode(enum lbt__statName, edg_wll_JobStatCode *);
 
-extern void edg_wll_StatusToSoap(struct soap *, edg_wll_JobStat const *, struct edgwll__JobStat **);
-extern void edg_wll_SoapToStatus(struct soap *, struct edgwll__JobStat const *, edg_wll_JobStat **);
+extern void edg_wll_StatusToSoap(struct soap *, edg_wll_JobStat const *, struct lbt__jobStatus **);
+extern void edg_wll_SoapToStatus(struct soap *, struct lbt__jobStatus const *, edg_wll_JobStat *);
 
-extern void edg_wll_SoapToJobStatFlags(const struct edgwll__JobStatFlags *, int *);
-extern int edg_wll_JobStatFlagsToSoap(struct soap *, const int, struct edgwll__JobStatFlags *);
+extern void edg_wll_SoapToJobStatFlags(struct lbt__jobFlags const *, int *);
+extern int edg_wll_JobStatFlagsToSoap(struct soap *, const int, struct lbt__jobFlags *);
 
-extern void edg_wll_SoapToAttr(const enum edgwll__QueryAttr, edg_wll_QueryAttr *);
-extern void edg_wll_AttrToSoap(const edg_wll_QueryAttr, enum edgwll__QueryAttr *);
+extern void edg_wll_SoapToAttr(const enum lbt__queryAttr, edg_wll_QueryAttr *);
+extern void edg_wll_AttrToSoap(const edg_wll_QueryAttr, enum lbt__queryAttr *);
 
 extern void edg_wll_SoapToQueryOp(
-			const enum edgwll__QueryOp,
+			const enum lbt__queryOp,
 			edg_wll_QueryOp *);
 extern void edg_wll_QueryOpToSoap(
 			const edg_wll_QueryOp,
-			enum edgwll__QueryOp *);
+			enum lbt__queryOp *);
 
 extern int edg_wll_SoapToQueryVal(
 			const edg_wll_QueryAttr,
-			const struct edgwll__QueryRecValue *,
+			const struct lbt__queryRecValue *,
 			union edg_wll_QueryVal *);
 extern int edg_wll_QueryValToSoap(struct soap *,
 			const edg_wll_QueryAttr,
 			const union edg_wll_QueryVal *,
-			struct edgwll__QueryRecValue *);
+			struct lbt__queryRecValue *);
 
 extern int edg_wll_SoapToQueryRec(
-			const enum edgwll__QueryAttr,
-			const struct edgwll__QueryRec *,
+			const enum lbt__queryAttr,
+			const struct lbt__queryRecord *,
 			edg_wll_QueryRec *);
 extern int edg_wll_QueryRecToSoap(struct soap *,
 			const edg_wll_QueryRec *,
-			struct edgwll__QueryRec *);
+			struct lbt__queryRecord *);
 
 
 extern int edg_wll_SoapToQueryConds(
-			const struct edgwll__QueryCondition *,
+			const struct lbt__queryConditions *,
 			edg_wll_QueryRec **);
 extern int edg_wll_QueryCondsToSoap(struct soap *,
 			const edg_wll_QueryRec *,
-			struct edgwll__QueryCondition **);
+			struct lbt__queryConditions **);
 
 extern int edg_wll_SoapToQueryCondsExt(
-			const struct edgwll__QueryConditions *,
+			const struct lbt__queryConditions *,
 			edg_wll_QueryRec ***);
 extern int edg_wll_QueryCondsExtToSoap(struct soap *,
 			const edg_wll_QueryRec **,
-			struct edgwll__QueryConditions **);
+			struct lbt__queryConditions **);
 
 extern int edg_wll_JobsQueryResToSoap(struct soap *,
 			edg_wlc_JobId *,
 			edg_wll_JobStat *,
-			struct edgwll2__QueryJobsResponse *);
+			struct _lbe__QueryJobsResponse *);
 
 #ifdef __cplusplus
 }

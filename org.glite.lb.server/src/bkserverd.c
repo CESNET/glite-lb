@@ -28,6 +28,7 @@
 #include <globus_common.h>
 
 #ifdef GLITE_LB_SERVER_WITH_WS
+#include "soap_version.h"
 #include <stdsoap2.h>
 #include "glite/security/glite_gsplugin.h"
 #endif /* GLITE_LB_SERVER_WITH_WS */
@@ -861,7 +862,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		char *errt, *errd;
 
 		edg_wll_Error(ctx, &errt, &errd);
-		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
+		dprintf(("[%d] %s (%s)\n[%d]\tignored, continuing without VOMS\n", getpid(), errt, errd,getpid()));
 		free(errt); free(errd);
 		edg_wll_ResetError(ctx);
 	}

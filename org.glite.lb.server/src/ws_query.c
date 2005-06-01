@@ -24,21 +24,22 @@ int edgwll2__GetVersion(
 }
 #endif
 
-/*
-int edgwll2__JobStatus(
-        struct soap						   *soap,
-        char							   *jobid,
-        struct edgwll__JobStatFlags		   *flags,
-        struct edgwll2__JobStatusResponse  *out)
-*/
+SOAP_FMAC5 int SOAP_FMAC6 __lb__GetVersion(
+	struct soap* soap,
+	struct _lbe__GetVersion *in,
+	struct _lbe__GetVersionResponse *out)
+{
+}
+
 SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	struct soap	*soap,
 	struct _lbe__JobStatus *in,
-	struct _lbe__JobStatusResponse *out);
+	struct _lbe__JobStatusResponse *out)
 {
 	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	edg_wlc_JobId		j;
 	edg_wll_JobStat		s;
+	int	flags;
 
 
 	if ( edg_wlc_JobIdParse(in->jobid, &j) )
@@ -48,16 +49,26 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 		return SOAP_FAULT;
 	}
 
-	if ( edg_wll_JobStatus(ctx, j, 0, &s) )
+	edg_wll_SoapToJobStatFlags(in->flags, &flags);
+
+	if ( edg_wll_JobStatus(ctx, j, flags, &s) )
 	{
 		edg_wll_ErrToFault(ctx, soap);
 		return SOAP_FAULT;
 	}
 
-	edg_wll_StatusToSoap(soap, &s, &(out->status));
+	edg_wll_StatusToSoap(soap, &s, &(out->stat));
 
 	return SOAP_OK;
 }
+
+SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
+	struct soap *soap,
+	struct _lbe__QueryJobs *in,
+	struct _lbe__QueryJobsResponse *out)
+{
+}
+
 
 #if 0
 int edgwll2__QueryJobs(
@@ -195,3 +206,20 @@ cleanup:
 }
 */
 #endif
+
+
+/* TODO */
+SOAP_FMAC5 int SOAP_FMAC6 __lb__UserJobs(
+	struct soap *soap,
+	struct _lbe__UserJobs *in,
+	struct _lbe__UserJobsResponse *out)
+{
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
+	struct soap *soap,
+	struct _lbe__QueryEvents *in,
+	struct _lbe__QueryEventsResponse *out)
+{
+}
+

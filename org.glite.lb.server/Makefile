@@ -20,11 +20,10 @@ gsoap_prefix=/opt/gsoap
 
 -include Makefile.inc
 
-GLITE_LB_SERVER_WITH_WS=no
+GLITE_LB_SERVER_WITH_WS=yes
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
-	gsoap_version=`${gsoap_prefix}/bin/soapcpp2 -version 2>&1 | cut -d' ' -f4 | perl -F\\\\. -nae '$$F[2] =~ s/\D*$$//; print $$F[2]+100*$$F[1]+10000*$$F[0]'`
-	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS -DGSOAP_VERSION=${gsoap_version}
+	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS 
 else
 	WS_CFLAGS=
 endif
@@ -314,3 +313,9 @@ test_query_events.o: %.o: %.cpp
 %.lo: %.c
 	${COMPILE} -o $@ -c $<
 
+soap_version.h:
+	${gsoap_prefix}/bin/soapcpp2 /dev/null
+	perl -ne '$$. == 2 && /.*([0-9])\.([0-9])\.([0-9]).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n",$$1,$$2,$$3' soapH.h >$@
+	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
+
+bkserverd.o ws_fault.o: soap_version.h

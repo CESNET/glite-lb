@@ -1,52 +1,50 @@
 #if GSOAP_VERSION >= 20700
 
-#define UNDEF		edgwll__QueryAttr__UNDEF
+#define JOBID		lbt__queryAttr__JOBID
+#define OWNER		lbt__queryAttr__OWNER
+#define STATUS		lbt__queryAttr__STATUS
+#define LOCATION	lbt__queryAttr__LOCATION
+#define DESTINATION	lbt__queryAttr__DESTINATION
+#define DONECODE	lbt__queryAttr__DONECODE
+#define USERTAG		lbt__queryAttr__USERTAG
+#define TIME		lbt__queryAttr__TIME
+#define LEVEL		lbt__queryAttr__LEVEL
+#define HOST		lbt__queryAttr__HOST
+#define SOURCE		lbt__queryAttr__SOURCE
+#define INSTANCE	lbt__queryAttr__INSTANCE
+#define EVENTTYPE	lbt__queryAttr__EVENTTYPE
+#define CHKPTTAG	lbt__queryAttr__CHKPTTAG
+#define RESUBMITTED	lbt__queryAttr__RESUBMITTED
+#define PARENT		lbt__queryAttr__PARENT
+#define EXITCODE	lbt__queryAttr__EXITCODE
 
-#define JOBID		edgwll__QueryAttr__JOBID
-#define OWNER		edgwll__QueryAttr__OWNER
-#define STATUS		edgwll__QueryAttr__STATUS
-#define LOCATION	edgwll__QueryAttr__LOCATION
-#define DESTINATION	edgwll__QueryAttr__DESTINATION
-#define DONECODE	edgwll__QueryAttr__DONECODE
-#define USERTAG		edgwll__QueryAttr__USERTAG
-#define TIME		edgwll__QueryAttr__TIME
-#define LEVEL		edgwll__QueryAttr__LEVEL
-#define HOST		edgwll__QueryAttr__HOST
-#define SOURCE		edgwll__QueryAttr__SOURCE
-#define INSTANCE	edgwll__QueryAttr__INSTANCE
-#define EVENT_TYPE	edgwll__QueryAttr__EVENT_TYPE
-#define CHKPT_TAG	edgwll__QueryAttr__CHKPT_TAG
-#define RESUBMITTED	edgwll__QueryAttr__RESUBMITTED
-#define PARENT		edgwll__QueryAttr__PARENT
-#define EXITCODE	edgwll__QueryAttr__EXITCODE
+#define EQUAL		lbt__queryOp__EQUAL
+#define UNEQUAL		lbt__queryOp__UNEQUAL
+#define LESS		lbt__queryOp__LESS
+#define GREATER		lbt__queryOp__GREATER
+#define WITHIN		lbt__queryOp__WITHIN
 
-#define EQUAL		edgwll__QueryOp__EQUAL
-#define UNEQUAL		edgwll__QueryOp__UNEQUAL
-#define LESS		edgwll__QueryOp__LESS
-#define GREATER		edgwll__QueryOp__GREATER
-#define WITHIN		edgwll__QueryOp__WITHIN
+#define SUBMITTED	lbt__statName__SUBMITTED
+#define WAITING		lbt__statName__WAITING
+#define READY		lbt__statName__READY
+#define SCHEDULED	lbt__statName__SCHEDULED
+#define RUNNING		lbt__statName__RUNNING
+#define DONE		lbt__statName__DONE
+#define CLEARED		lbt__statName__CLEARED
+#define ABORTED		lbt__statName__ABORTED
+#define CANCELLED	lbt__statName__CANCELLED
+#define UNKNOWN		lbt__statName__UNKNOWN
+#define PURGED		lbt__statName__PURGED
 
-#define SUBMITTED	edgwll__JobStatCode__SUBMITTED
-#define WAITING		edgwll__JobStatCode__WAITING
-#define READY		edgwll__JobStatCode__READY
-#define SCHEDULED	edgwll__JobStatCode__SCHEDULED
-#define RUNNING		edgwll__JobStatCode__RUNNING
-#define DONE		edgwll__JobStatCode__DONE
-#define CLEARED		edgwll__JobStatCode__CLEARED
-#define ABORTED		edgwll__JobStatCode__ABORTED
-#define CANCELLED	edgwll__JobStatCode__CANCELLED
-#define UNKNOWN		edgwll__JobStatCode__UNKNOWN
-#define PURGED		edgwll__JobStatCode__PURGED
+#define SIMPLE		lbt__jobtype__SIMPLE
+#define DAG		lbt__jobtype__DAG
 
-#define SIMPLE		edgwll__StatJobType__SIMPLE
-#define DAG		edgwll__StatJobType__DAG
+#define OK		lbt__doneCode__OK
+#define FAILED		lbt__doneCode__FAILED
+#define CANCELLED_	lbt__doneCode__CANCELLED
 
-#define OK		edgwll__StatDoneCode__OK
-#define FAILED		edgwll__StatDoneCode__FAILED
-#define CANCELLED_	edgwll__StatDoneCode__CANCELLED
-
-#define CLASSADS	edgwll__JobStatFlag__CLASSADS
-#define CHILDREN	edgwll__JobStatFlag__CHILDREN
-#define CHILDSTAT	edgwll__JobStatFlag__CHILDSTAT
+#define CLASSADS	lbt__jobFlagsValue__CLASSADS
+#define CHILDREN	lbt__jobFlagsValue__CHILDREN
+#define CHILDSTAT	lbt__jobFlagsValue__CHILDSTAT
 
 #endif

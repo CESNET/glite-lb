@@ -5,6 +5,7 @@
 #include "glite/lb/consumer.h"
 
 #include "bk_ws_H.h"
+#include "ws_typeref.h"
 
 #include "LoggingAndBookkeeping.nsmap"
 
@@ -30,9 +31,11 @@ int main(int argc,char** argv)
     edg_wll_Context						ctx;
     glite_gsplugin_Context				gsplugin_ctx;
     struct soap						   *mydlo = soap_new();
-    struct edgwll2__JobStatusResponse	out;
+    struct _lbe__JobStatusResponse	out;
+    struct _lbe__JobStatus		in;	
+    struct lbt__jobFlags	flags = { 0, NULL };
     int									opt, err;
-	char							   *server = "http://localhost:8999/",
+	char							   *server = "http://localhost:9003/",
 									   *jobid = NULL,
 									   *name = NULL;
 
@@ -66,14 +69,17 @@ int main(int argc,char** argv)
 
     glite_gsplugin_set_udata(mydlo, ctx);
 
+    in.jobid = jobid;
+    in.flags = &flags;
 
-    switch (err = soap_call_edgwll2__JobStatus(mydlo, server, "", jobid,0,&out))
+
+    switch (err = soap_call___lb__JobStatus(mydlo, server, "",&in,&out))
 	{
 	case SOAP_OK:
 		{
 		edg_wll_JobStat s;
 
-		edg_wll_SoapToStatus(mydlo,out.status,&s);
+		edg_wll_SoapToStatus(mydlo,out.stat,&s);
 		printstat(s, 0);
 		}
 		break;
@@ -99,6 +105,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 {
     char        *s, *j, ind[10];
     int         i;
+    time_t	t;
 
 
     for (i=0; i < level; i++)
@@ -153,12 +160,13 @@ static void printstat(edg_wll_JobStat stat, int level)
                               stat.user_tags[i].tag,stat.user_tags[i].value);
     printf("%sstateEnterTime : %ld.%06ld\n", ind, stat.stateEnterTime.tv_sec,stat.stateEnterTime.tv_usec);
     printf("%sstateEnterTimes : \n",ind);
-    if (stat.stateEnterTimes)
-                for (i=1; i<=stat.stateEnterTimes[0]; i++)
-            printf("%s%14s  %s", ind, edg_wll_StatToString(i-1), (stat.stateEnterTimes[i] == 0) ?
-            "    - not available -\n" : ctime((time_t *) &stat.stateEnterTimes[i]));
+    if (stat.stateEnterTimes) for (i=1; i<=stat.stateEnterTimes[0]; i++) {
+	time_t	t = stat.stateEnterTimes[i];
+        printf("%s%14s  %s", ind, edg_wll_StatToString(i-1), (stat.stateEnterTimes[i] == 0) ?
+            "    - not available -\n" : ctime(&t));
+    }
     printf("%slastUpdateTime : %ld.%06ld\n", ind, stat.lastUpdateTime.tv_sec,stat.lastUpdateTime.tv_usec);
-	printf("%sexpectUpdate : %d\n", ind, stat.expectUpdate);
+    printf("%sexpectUpdate : %d\n", ind, stat.expectUpdate);
     printf("%sexpectFrom : %s\n", ind, stat.expectFrom);
     printf("%sacl : %s\n", ind, stat.acl);
     printf("\n");
