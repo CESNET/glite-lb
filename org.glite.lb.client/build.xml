@@ -20,9 +20,6 @@
 
 	Revision history:
 	$Log$
-	Revision 1.5  2004/10/18 19:16:09  zsalvet
-	RPM descriptions
-	
 	Revision 1.4  2004/07/28 12:18:12  dimeglio
 	Changed default target from compile to dist
 	
@@ -90,7 +87,6 @@
 		 Load version file 
 	     ========================================= -->
 	<property file="${module.version.file}"/>
-	<property file="${module.build.file}"/>
 		
 	<!-- ==============================================
 		 Local private targets
