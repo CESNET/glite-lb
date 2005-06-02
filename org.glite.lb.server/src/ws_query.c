@@ -12,6 +12,14 @@
 #include "ws_fault.h"
 #include "ws_typeref.h"
 
+#if GSOAP_VERSION <= 20602
+#define __lb__GetVersion __ns1__GetVersion
+#define __lb__JobStatus __ns1__JobStatus
+#define __lb__UserJobs __ns1__UserJobs
+#define __lb__QueryJobs __ns1__QueryJobs
+#define __lb__QueryEvents __ns1__QueryEvents
+#endif
+
 
 #if 0
 int edgwll2__GetVersion(
