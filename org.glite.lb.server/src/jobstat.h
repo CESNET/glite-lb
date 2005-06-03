@@ -13,6 +13,7 @@ typedef struct _intJobStat {
 		int		wontresub;
 		char		*last_seqcode;
 		char		*last_cancel_seqcode;
+		char		*wn_seqcode;
 
 /*		int		expect_mask; */
 	} intJobStat;

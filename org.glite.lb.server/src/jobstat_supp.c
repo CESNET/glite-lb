@@ -412,6 +412,7 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	if (ret) ret = enc_int(ret, stat->wontresub);
 	if (ret) ret = enc_string(ret, stat->last_seqcode);
 	if (ret) ret = enc_string(ret, stat->last_cancel_seqcode);
+	if (ret) ret = enc_string(ret, stat->wn_seqcode);
 	return ret;
 }
 
@@ -434,6 +435,9 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 		}
 		if (tmp_in != NULL) {
 			stat->last_cancel_seqcode = dec_string(tmp_in, &tmp_in);
+		}
+		if (tmp_in != NULL) {
+			stat->wn_seqcode = dec_string(tmp_in, &tmp_in);
 		}
 	} else if (tmp_in != NULL) {
 		edg_wll_FreeStatus(pubstat);
@@ -596,6 +600,77 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 	}
 	edg_wll_FreeStmt(&sh);
 	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+
+/* compare events taking into account shallow resubmission */
+int edg_wll_compare_seq_full(const char *a, const char *b, const char *wn)
+{
+	unsigned int    c[EDG_WLL_SOURCE__LAST];
+	unsigned int    d[EDG_WLL_SOURCE__LAST];
+	unsigned int    w[EDG_WLL_SOURCE__LAST];
+	int		res, i;
+
+	assert(EDG_WLL_SOURCE__LAST == 9);
+
+	if (wn == NULL) return(edg_wll_compare_seq(a,b));
+
+	res =  sscanf(a, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+			&c[EDG_WLL_SOURCE_USER_INTERFACE],
+			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
+			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
+			&c[EDG_WLL_SOURCE_BIG_HELPER],
+			&c[EDG_WLL_SOURCE_JOB_SUBMISSION],
+			&c[EDG_WLL_SOURCE_LOG_MONITOR],
+			&c[EDG_WLL_SOURCE_LRMS],
+			&c[EDG_WLL_SOURCE_APPLICATION]);
+	if (res != EDG_WLL_SOURCE__LAST-1) {
+		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
+		fprintf(stderr, "unparsable sequence code %s\n", a);
+		return -1;
+	}
+
+	res =  sscanf(b, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+			&d[EDG_WLL_SOURCE_USER_INTERFACE],
+			&d[EDG_WLL_SOURCE_NETWORK_SERVER],
+			&d[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
+			&d[EDG_WLL_SOURCE_BIG_HELPER],
+			&d[EDG_WLL_SOURCE_JOB_SUBMISSION],
+			&d[EDG_WLL_SOURCE_LOG_MONITOR],
+			&d[EDG_WLL_SOURCE_LRMS],
+			&d[EDG_WLL_SOURCE_APPLICATION]);
+	if (res != EDG_WLL_SOURCE__LAST-1) {
+		syslog(LOG_ERR, "unparsable sequence code %s\n", b);
+		fprintf(stderr, "unparsable sequence code %s\n", b);
+		return 1;
+	}
+
+	res =  sscanf(wn, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+			&w[EDG_WLL_SOURCE_USER_INTERFACE],
+			&w[EDG_WLL_SOURCE_NETWORK_SERVER],
+			&w[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
+			&w[EDG_WLL_SOURCE_BIG_HELPER],
+			&w[EDG_WLL_SOURCE_JOB_SUBMISSION],
+			&w[EDG_WLL_SOURCE_LOG_MONITOR],
+			&w[EDG_WLL_SOURCE_LRMS],
+			&w[EDG_WLL_SOURCE_APPLICATION]);
+	if (res != EDG_WLL_SOURCE__LAST-1) {
+		syslog(LOG_ERR, "unparsable sequence code %s\n", wn);
+		fprintf(stderr, "unparsable sequence code %s\n", wn);
+		return 1;
+	}
+
+
+	if ( (c[EDG_WLL_SOURCE_WORKLOAD_MANAGER] == w[EDG_WLL_SOURCE_WORKLOAD_MANAGER]) &&
+	     (d[EDG_WLL_SOURCE_WORKLOAD_MANAGER] != w[EDG_WLL_SOURCE_WORKLOAD_MANAGER]) )
+		return	1;
+
+	
+	if ( (c[EDG_WLL_SOURCE_WORKLOAD_MANAGER] != w[EDG_WLL_SOURCE_WORKLOAD_MANAGER]) &&
+	     (d[EDG_WLL_SOURCE_WORKLOAD_MANAGER] == w[EDG_WLL_SOURCE_WORKLOAD_MANAGER]) )
+		return	-1;
+
+	return(edg_wll_compare_seq(a,b));
 }
 
 

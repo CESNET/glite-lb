@@ -48,6 +48,7 @@ static void warn (const char* format, ...) UNUSED_VAR ;
 static char *job_owner(edg_wll_Context,char *);
 static char* location_string(const char*, const char*, const char*);
 static int add_stringlist(char ***, const char *) UNUSED_VAR;
+static void free_stringlist(char ***);
 static int add_taglist(edg_wll_TagValue **, const char *, const char *);
 
 
@@ -428,7 +429,7 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 	}
 
 	if (js->last_seqcode != NULL &&
-		edg_wll_compare_seq(e->any.seqcode, js->last_seqcode) < 0) {
+		edg_wll_compare_seq_full(e->any.seqcode, js->last_seqcode, js->wn_seqcode) < 0) {
 		res = RET_LATE;
 	}
 
@@ -672,8 +673,16 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 			}
 			if (USABLE_DATA(res, strict)) {
 				rep(js->pub.ce_node, e->running.node);
+				if (e->running.node)
+					add_stringlist(&js->pub.possible_ce_nodes, e->running.node);
 			}
 			break;
+		case EDG_WLL_EVENT_REALLYRUNNING:
+			if (USABLE_DATA(res, strict)) {
+				rep(js->wn_seqcode, e->reallyRunning.wn_seq);
+			}
+			break;
+
 		case EDG_WLL_EVENT_RESUBMISSION:
 			if (USABLE(res, strict)) {
 				if (e->resubmission.result == EDG_WLL_RESUBMISSION_WONTRESUB) {
@@ -683,6 +692,16 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 			if (USABLE_DATA(res, strict)) {
 				if (e->resubmission.result == EDG_WLL_RESUBMISSION_WONTRESUB) {
 					js->wontresub = 1;
+				}
+			}
+			if (USABLE_DATA(res, strict)) {
+				if (e->resubmission.result == EDG_WLL_RESUBMISSION_WILLRESUB) {
+					free_stringlist(&js->pub.possible_destinations);
+					free_stringlist(&js->pub.possible_ce_nodes);
+					if (js->wn_seqcode) { 
+						free(js->wn_seqcode);
+						js->wn_seqcode = NULL;
+					}
 				}
 			}
 			break;
@@ -726,7 +745,7 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 			break;
 		case EDG_WLL_EVENT_CANCEL:
 			if (js->last_cancel_seqcode != NULL &&
-				edg_wll_compare_seq(e->any.seqcode, js->last_cancel_seqcode) < 0) {
+				edg_wll_compare_seq_full(e->any.seqcode, js->last_cancel_seqcode, js->wn_seqcode) < 0) {
 				res = RET_LATE;
 			} 
 			if (USABLE(res, strict)) {
@@ -792,6 +811,8 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 			}
 			if (USABLE_DATA(res, strict)) {
 				rep(js->pub.destination, e->match.dest_id);
+				if (e->match.dest_id) 
+					add_stringlist(&js->pub.possible_destinations, e->match.dest_id);
 			}
 			break;
 		case EDG_WLL_EVENT_PENDING:
@@ -1006,6 +1027,19 @@ static int add_stringlist(char ***lptr, const char *new_item)
 		} else {
 			return 0;
 		}
+	}
+}
+
+static void free_stringlist(char ***lptr)
+{
+	char **itptr;
+	int i;
+
+	if (*lptr) {
+		for (i = 0, itptr = *lptr; itptr[i] != NULL; i++) 
+			free(itptr[i]);
+		free(itptr);
+		*lptr = NULL;
 	}
 }
 
