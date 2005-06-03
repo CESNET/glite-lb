@@ -86,6 +86,9 @@ OBJS:=lb_plain_io.o escape.o events.o mini_http.o query_rec.o \
 	il_log.o il_msg.o log_msg.o context.o trio.o strio.o
 LOBJS:=${OBJS:.o=.lo}
 
+TRIO_OBJS:=escape.o trio.o strio.o
+TRIO_LIB:=libglite_lb_trio.a
+
 THROBJS:=${OBJS:.o=.thr.o}
 THRLOBJS:=${OBJS:.o=.thr.lo}
 
@@ -102,13 +105,17 @@ REPORTS:=${top_srcdir}/reports
 
 default: all
 
-all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
+all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB}
 # all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
 
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
 ${STATICLIB}: ${OBJS}
 	ar crv $@ ${OBJS}
+	ranlib $@
+
+${TRIO_LIB}: ${TRIO_OBJS}
+	ar crv $@ ${TRIO_OBJS}
 	ranlib $@
 
 ${THRSTATICLIB}: ${THROBJS}
@@ -174,7 +181,7 @@ install:
 	if [ x${DOSTAGE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
-		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${PREFIX}/lib; \
+		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${PREFIX}/lib; \
 	fi
 
 clean:
