@@ -354,6 +354,8 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_timeval(ret, stat->lastUpdateTime);
 	if (ret) ret = enc_int(ret, stat->expectUpdate);
 	if (ret) ret = enc_string(ret, stat->expectFrom);
+	if (ret) ret = enc_strlist(ret, stat->possible_destinations);
+	if (ret) ret = enc_strlist(ret, stat->possible_ce_nodes);
 
 	return ret;
 }
@@ -399,6 +401,10 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->lastUpdateTime = dec_timeval(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->expectUpdate = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->expectFrom = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->possible_destinations = dec_strlist(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->possible_ce_nodes = dec_strlist(tmp_in, &tmp_in);
+
+
 	
 	*rest = tmp_in;
 	return stat;
