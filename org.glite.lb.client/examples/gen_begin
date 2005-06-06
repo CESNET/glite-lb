@@ -4,9 +4,12 @@
 if test ! -z "$FAKE"; then
 	SUFFIX="_fake"
 fi
+if [ `echo $(basename $0) | grep 'glite-lb-' | wc -l` = "1" ]; then
+	PREFIX=glite-lb-
+fi
 LOGFD=${LOGFD:-2}
-LOGEV=glite-lb-logevent${SUFFIX}
-JOB_REG=${JOB_REG:-`dirname $0`/glite-lb-job_reg}${SUFFIX}
+LOGEV=${LOGEV:-`dirname $0`/${PREFIX}logevent}${SUFFIX}
+JOB_REG=${JOB_REG:-`dirname $0`/${PREFIX}job_reg}${SUFFIX}
 EDG_JOBID=
 LBPROXY=
 
