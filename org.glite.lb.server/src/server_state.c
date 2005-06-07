@@ -32,7 +32,7 @@ int edg_wll_SetServerState(edg_wll_Context ctx,const char *name,const char *val)
 	char	*stmt = NULL;
 
 	trio_asprintf(&stmt,"insert into server_state (prefix,name,value) "
-			"values ('https://%|Ss:%d','%|Ss',%s)",
+			"values ('https://%|Ss:%d','%|Ss','%|Ss')",
 			ctx->srvName,ctx->srvPort,name,val);
 
 	switch(edg_wll_ExecStmt(ctx,stmt,NULL)) {
