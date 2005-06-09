@@ -12,7 +12,7 @@
 -s WorkloadManager,-e HelperCall, --helper_name="name of the called component",--helper_params="parameters of the call", --src_role=CALLING
 #-s Helper,-e HelperCall, --helper_name="name of the called component",--helper_params="parameters of the call", --src_role=CALLED
 #-s Helper,-e HelperReturn, --helper_name="name of the called component",--retval="returned data", --src_role=CALLED
--s WorkloadManager,-e Match,--dest_id="Id of the destination CE/queue"
+-s WorkloadManager,-e Match,--dest_id="${DESTINATION:-destination CE/queue}"
 -s WorkloadManager,-e HelperReturn, --helper_name="name of the called component",--retval="returned data", --src_role=CALLING
 -s WorkloadManager,-e EnQueued, --queue="destination queue", --job="job description in receiver language", --result=OK, --reason="detailed description of transfer"
 
