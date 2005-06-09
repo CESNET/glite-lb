@@ -83,7 +83,7 @@ static void destroy_intJobStat_extension(intJobStat *p)
 {
 	free(p->last_seqcode); p->last_seqcode = NULL;
 	free(p->last_cancel_seqcode); p->last_cancel_seqcode = NULL;
-			       p->resubmit_type = 0;
+			       p->resubmit_type = EDG_WLL_RESUBMISSION_UNDEFINED;
 }
 
 void destroy_intJobStat(intJobStat *p)
@@ -644,8 +644,8 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 					case EDG_WLL_SOURCE_WORKLOAD_MANAGER:
 						if (USABLE_BRANCH(res)) {
 							rep(js->pub.matched_jdl, e->enQueued.job);
-							break;
 						}
+						break;
 					case EDG_WLL_SOURCE_LOG_MONITOR:
 						/* no interim JDL here */
 						break;
@@ -723,6 +723,12 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 			break;
 		case EDG_WLL_EVENT_REALLYRUNNING:
 			if (USABLE_DATA(res, strict)) {
+				js->pub.state = EDG_WLL_JOB_RUNNING;
+				free(js->pub.location);
+				js->pub.location = location_string(
+						edg_wll_SourceToString(EDG_WLL_SOURCE_LRMS),
+						"worknode",
+						e->running.node);
 				js->pub.payload_running = 1;
 				if (e->any.source == EDG_WLL_SOURCE_LRMS) {
 					rep(js->branch_tag_seqcode, e->any.seqcode);
@@ -772,9 +778,9 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_DONE;
 				rep(js->pub.reason, e->done.reason);
-				if (fine_res == RET_GOODBRANCH)
+				if (fine_res == RET_GOODBRANCH) {
 					js->pub.payload_running = 0;
-
+				}
 				switch (e->done.status_code) {
 					case EDG_WLL_DONE_CANCELLED:
 						js->pub.state = EDG_WLL_JOB_CANCELLED;
@@ -871,8 +877,10 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 						e->match.host,
 						e->match.src_instance);
 			}
-			if (USABLE_DATA(res, strict) && USABLE_BRANCH(fine_res)) {
-				rep(js->pub.destination, e->match.dest_id);
+			if (USABLE_DATA(res, strict)) {
+				if (USABLE_BRANCH(fine_res)) {
+					rep(js->pub.destination, e->match.dest_id);
+				}
 				if (e->match.dest_id) {
 					update_branch_state(e->any.seqcode, e->match.dest_id,
 						NULL, NULL, &js->branch_states);
@@ -958,8 +966,10 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 		rep(js->last_cancel_seqcode, e->any.seqcode);
 	} else {
 		rep(js->last_seqcode, e->any.seqcode);
-		if (fine_res == RET_GOODBRANCH)    
-			rep(js->last_branch_seqcode,  e->any.seqcode);
+	}
+
+	if (fine_res == RET_GOODBRANCH) {
+		rep(js->last_branch_seqcode, e->any.seqcode);
 	}
 
 	return res;
@@ -1228,6 +1238,9 @@ static void load_branch_state(intJobStat *js)
 	}
 	
 	// copy this and two before branches data to final state
+	// (each field - dest,ce,jdl - comes from different event)
+	// (and these events have most likely different WM seq.codes)
+	// (even belonging into one logical branch)
 	// (the newer the more important - so i-th element is copied as last)
 	// (and may overwrite data from previous elements)
 	for (j = i - 2; j <= i; j++) {
