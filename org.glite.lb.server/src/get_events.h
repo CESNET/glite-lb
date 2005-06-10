@@ -25,7 +25,6 @@ int edg_wll_QueryJobsServer(edg_wll_Context, const edg_wll_QueryRec **, int, edg
 
 void edg_wll_SortEvents(edg_wll_Event *);
 int edg_wll_compare_seq(const char *, const char *);
-int edg_wll_compare_seq_full(const char *, const char *, const char *);
 
 #ifdef __cplusplus
 }

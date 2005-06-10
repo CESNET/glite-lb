@@ -5,14 +5,17 @@
  * (includes edg_wll_JobStat API structure)
  */
 
-#define INTSTAT_VERSION "release-2.0"
+#define INTSTAT_VERSION "release-3.0_shallow"
 
-typedef struct _sr_container {		// shallow resubmission container
+// shallow resubmission container - holds state of each branch
+// (useful when state restore is needed after ReallyRunning event)
+//
+typedef struct _branch_state {
 	int	branch;
 	char	*destination;
 	char	*ce_node;
 	char	*jdl;
-} sr_container;
+} branch_state;
 
 
 typedef struct _intJobStat {
@@ -23,7 +26,7 @@ typedef struct _intJobStat {
 		char		*branch_tag_seqcode;		
 		char		*last_branch_seqcode;
 		char		*deep_resubmit_seqcode;
-		sr_container	*branch_states;		// branch zero terminated array
+		branch_state	*branch_states;		// branch zero terminated array
 
 /*		int		expect_mask; */
 	} intJobStat;

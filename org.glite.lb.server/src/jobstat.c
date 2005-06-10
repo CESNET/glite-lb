@@ -53,8 +53,8 @@ static char* location_string(const char*, const char*, const char*);
 static int add_stringlist(char ***, const char *) UNUSED_VAR;
 static void free_stringlist(char ***);
 static int add_taglist(edg_wll_TagValue **, const char *, const char *);
-static void update_branch_state(char *, char *, char *, char *, sr_container **);
-static void free_branch_state(sr_container **);
+static void update_branch_state(char *, char *, char *, char *, branch_state **);
+static void free_branch_state(branch_state **);
 static void load_branch_state(intJobStat *);
 
 
@@ -444,8 +444,7 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 		res = RET_LATE;
 		fine_res = RET_TOOOLD;
 	}
-
-	if (js->branch_tag_seqcode) {		// ReallyRunning ev. arrived
+	else if (js->branch_tag_seqcode) {		// ReallyRunning ev. arrived
 		if (same_branch(e->any.seqcode, js->branch_tag_seqcode)) {
 			if ((js->last_seqcode != NULL) &&
 				edg_wll_compare_seq(e->any.seqcode, js->last_branch_seqcode) < 0) {
@@ -753,7 +752,8 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 					js->resubmit_type = EDG_WLL_RESUBMISSION_WONTRESUB;
 				}
 				else 
-				if (e->resubmission.result == EDG_WLL_RESUBMISSION_WILLRESUB) {
+				if (e->resubmission.result == EDG_WLL_RESUBMISSION_WILLRESUB &&
+						e->any.source == EDG_WLL_SOURCE_WORKLOAD_MANAGER) {
 					js->resubmit_type = EDG_WLL_RESUBMISSION_WILLRESUB;
 					free_stringlist(&js->pub.possible_destinations);
 					free_stringlist(&js->pub.possible_ce_nodes);
@@ -811,10 +811,15 @@ static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 			}
 			break;
 		case EDG_WLL_EVENT_CANCEL:
-			if (js->last_cancel_seqcode != NULL &&
-				edg_wll_compare_seq_full(e->any.seqcode, js->last_cancel_seqcode, js->branch_tag_seqcode) < 0) {
-				res = RET_LATE;
+			if (fine_res != RET_BADBRANCH) {
+				if (js->last_cancel_seqcode != NULL &&
+					edg_wll_compare_seq(e->any.seqcode, js->last_cancel_seqcode) < 0) {
+					res = RET_LATE;
+				}
 			} 
+			else {
+				res = RET_LATE;
+			}
 			if (USABLE(res, strict)) {
 				switch (e->cancel.status_code) {
 					case EDG_WLL_CANCEL_REQ:
@@ -1154,7 +1159,7 @@ static int add_taglist(edg_wll_TagValue **lptr, const char *new_item, const char
 	}
 }
 
-static void update_branch_state(char *b, char *d, char *c, char *j, sr_container **bs)
+static void update_branch_state(char *b, char *d, char *c, char *j, branch_state **bs)
 {
 	int 	i = 0, branch;
 
@@ -1177,8 +1182,8 @@ static void update_branch_state(char *b, char *d, char *c, char *j, sr_container
 		}
 	}
 
-	*bs = (sr_container *) realloc(*bs, (i+2)*sizeof(sr_container));
-	memset(&((*bs)[i]), 0, 2*sizeof(sr_container));
+	*bs = (branch_state *) realloc(*bs, (i+2)*sizeof(branch_state));
+	memset(&((*bs)[i]), 0, 2*sizeof(branch_state));
 
 	(*bs)[i].branch = branch;
 	rep((*bs)[i].destination, d);
@@ -1187,7 +1192,7 @@ static void update_branch_state(char *b, char *d, char *c, char *j, sr_container
 }
 
 
-static void free_branch_state(sr_container **bs)
+static void free_branch_state(branch_state **bs)
 {
 	int i = 0;
 	
@@ -1205,8 +1210,8 @@ static void free_branch_state(sr_container **bs)
 
 static int compare_branch_states(const void *a, const void *b)
 {
-	sr_container *c = (sr_container *) a;
-	sr_container *d = (sr_container *) b;
+	branch_state *c = (branch_state *) a;
+	branch_state *d = (branch_state *) b;
 
 	if (c->branch < d->branch) return -1;
 	if (c->branch == d->branch) return 0;
@@ -1227,7 +1232,7 @@ static void load_branch_state(intJobStat *js)
 	while (js->branch_states[i].branch) i++;
 	
 	// sort them
-	qsort(js->branch_states, (size_t) i, sizeof(sr_container),
+	qsort(js->branch_states, (size_t) i, sizeof(branch_state),
 		compare_branch_states);
 	
 	// find row corresponding to ReallyRunning WM seq.code (aka branch)	
