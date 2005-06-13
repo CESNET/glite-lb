@@ -20,11 +20,11 @@ gsoap_prefix=/opt/gsoap
 
 -include Makefile.inc
 
-GLITE_LB_SERVER_WITH_WS=yes
+GLITE_LB_SERVER_WITH_WS=no
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
-	gsoap_version=`${gsoap_prefix}/bin/soapcpp2 -version 2>&1 | cut -d' ' -f4 | perl -F\\\\. -nae '$$F[2] =~ s/\D*$$//; print $$F[2]+100*$$F[1]+10000*$$F[0]'`
-	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS -DGSOAP_VERSION=${gsoap_version}
+	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS 
+	NSMAP=LoggingAndBookkeeping.nsmap
 else
 	WS_CFLAGS=
 endif
@@ -76,7 +76,7 @@ GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_gssapi_gsi_${nothrflavour} \
 
 ifneq (${mysql_prefix},/usr)
-	myslqlib := -L${mysql_prefix}/lib
+	myslqlib := -L${mysql_prefix}/lib/mysql
 endif
 
 ifneq (${expat_prefix},/usr)
@@ -118,32 +118,34 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 		ws_query.o ws_fault.o ws_typeref.o 
 
 	BKSERVER_LIBS= \
-		${EXT_LIBS} \
 		${SRVBONES_LIB} \
 		-lglite_lb_common_${nothrflavour} \
 		-L${gsoap_prefix}/lib -lgsoap \
-		-lglite_security_gsoap_plugin_${nothrflavour}
+		-lglite_security_gsoap_plugin_${nothrflavour} \
+		${EXT_LIBS}
 else
+	BKSERVER_OBJS:= ${BKSERVER_BASE_OBJS}
+		
 	BKSERVER_LIBS= \
-		${EXT_LIBS} \
 		${SRVBONES_LIB} \
 		-lglite_lb_common_${nothrflavour} \
-		-lglite_security_gss_${nothrflavour}
+		-lglite_security_gss_${nothrflavour} \
+		${EXT_LIBS}
 endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
 	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o
 
-INDEX_LIBS:= ${EXT_LIBS} ${SRVBONES_LIB} ${COMMON_LIBS}
+INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} 
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= -L${stagedir}/lib \
-		${EXT_LIBS} \
 		-lglite_lb_client_${nothrflavour} \
 		-lglite_lb_common_${nothrflavour} \
 		-L${gsoap_prefix}/lib -lgsoap \
-		-lglite_security_gsoap_plugin_${nothrflavour}
+		-lglite_security_gsoap_plugin_${nothrflavour} \
+		${EXT_LIBS}
 
 HDRS=index.h lb_authz.h lbs_db.h store.h
 
@@ -156,7 +158,7 @@ LIB_OBJS_BK:= \
 	notification.o il_notification.o notif_match.o stats.o
 STATIC_LIB_BK:=libglite_lb_bkserver.a
 
-glite_lb_bkserverd: LoggingAndBookkeeping.nsmap ${BKSERVER_OBJS}
+glite_lb_bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINK} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
 glite_lb_bkindex: ${INDEX_OBJS}
@@ -167,7 +169,7 @@ glite_lb_plugin.la: lb_plugin.lo
 
 default all: compile
 
-compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} glite_lb_plugin.la
+compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK}
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -185,8 +187,18 @@ lb_xml_parse.c: lb_xml_parse.c.T
 ${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c ${GSOAP_FILES_PREFIX}ServerLib.c ${GSOAP_FILES_PREFIX}ClientLib.c LoggingAndBookkeeping.nsmap: LB.xh
 	${gsoap_prefix}/bin/soapcpp2 -w -c -p ${GSOAP_FILES_PREFIX} LB.xh
 
-LB.xh: ws_typemap.dat
+# try several times -- LB.wsdl downloads BaseFault.xsd from www.ibm.com which may be failing
+# not used right now but may be useful one day
+# LB.xh: ws_typemap.dat
+#	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl || \
+#	{ sleep 1 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; } || \
+#	{ sleep 4 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; } || \
+#	{ sleep 16 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; }
+
+LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
+	cp ${stagedir}/interface/LBTypes.wsdl .
 	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl
+	rm -f LBTypes.wsdl
 
 test.xml: test_xml
 	./test_xml
@@ -302,3 +314,11 @@ test_query_events.o: %.o: %.cpp
 %.lo: %.c
 	${COMPILE} -o $@ -c $<
 
+soap_version.h:
+	${gsoap_prefix}/bin/soapcpp2 /dev/null
+	perl -ne '$$. == 2 && /.*([0-9])\.([0-9])\.([0-9]).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n",$$1,$$2,$$3' soapH.h >$@
+	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
+
+ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
+bkserverd.o ws_fault.o: soap_version.h
+endif

@@ -240,6 +240,18 @@ static void printstat(edg_wll_JobStat stat, int level)
 	printf("%sexpectUpdate : %d\n", ind, stat.expectUpdate);
 	printf("%sexpectFrom : %s\n", ind, stat.expectFrom);
 	printf("%sacl : %s\n", ind, stat.acl);
+	printf("%spayload_running: %d\n", ind, stat.payload_running);
+	if (stat.possible_destinations) {
+		printf("%spossible_destinations : \n", ind);
+		for (i=0; stat.possible_destinations[i]; i++) 
+			printf("%s\t%s \n", ind, stat.possible_destinations[i]);
+	}
+	if (stat.possible_ce_nodes) {
+		printf("%spossible_ce_nodes : \n", ind);
+		for (i=0; stat.possible_ce_nodes[i]; i++) 
+			printf("%s\t%s \n", ind, stat.possible_ce_nodes[i]);
+	}
+
 	printf("\n");	
 	
 	free(j);

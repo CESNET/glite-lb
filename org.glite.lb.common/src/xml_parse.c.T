@@ -320,6 +320,8 @@ static void startJobStatus(void *data, const char *el, const char **attr)
 
 		case 1 : if (!strcmp("user_tags", el) || !strcmp("user_values", el) 
 				|| !strcmp("children_hist", el) ||  !strcmp("stateEnterTimes", el)
+				|| !strcmp("possible_destinations", el) 
+				|| !strcmp("possible_ce_nodes", el)
 				|| !strcmp("children_states", el) || !strcmp("children", el)) {
 				XMLCtx->stat_begin = XML_GetCurrentByteIndex(XMLCtx->p);
 			 }
@@ -937,6 +939,22 @@ static void endJobStat(void *data, const char *el)
 			"children_hist",(int (*)()) edg_wll_StringToStat, &XMLCtx->jobStatSingleGlobal.children_hist);
 		XMLCtx->stat_begin = 0;
 	    }
+       	    else if (!strcmp(el,"possible_destinations")) {
+		long len = (XML_GetCurrentByteIndex(XMLCtx->p) + XML_GetCurrentByteCount(XMLCtx->p))
+				-  XMLCtx->stat_begin;
+
+		edg_wll_ParseStrList(XMLCtx->ctx, XMLCtx->message_body + XMLCtx->stat_begin, len,
+			"possible_destinations", "name", &XMLCtx->jobStatSingleGlobal.possible_destinations);
+		XMLCtx->stat_begin = 0;
+            }
+       	    else if (!strcmp(el,"possible_ce_nodes")) {
+		long len = (XML_GetCurrentByteIndex(XMLCtx->p) + XML_GetCurrentByteCount(XMLCtx->p))
+				-  XMLCtx->stat_begin;
+
+		edg_wll_ParseStrList(XMLCtx->ctx, XMLCtx->message_body + XMLCtx->stat_begin, len,
+			"possible_ce_nodes", "name", &XMLCtx->jobStatSingleGlobal.possible_ce_nodes);
+		XMLCtx->stat_begin = 0;
+            }
        	    else if (!strcmp(el,"children")) {
 		long len = (XML_GetCurrentByteIndex(XMLCtx->p) + XML_GetCurrentByteCount(XMLCtx->p))
 				-  XMLCtx->stat_begin;

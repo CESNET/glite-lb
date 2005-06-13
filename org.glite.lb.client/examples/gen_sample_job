@@ -93,6 +93,12 @@ awk -F, $NESTED \
 /-e UserTag/	{ if (checkNOP(4) == 0) logit(); 
 		  next;}
 
+/-e ReallyRunning/	{ if (checkNOP(3) == 0) logit(); 
+		  	next;}
+
+# shell escape (for sequence number branching)
+
+/^!/		{ print substr($0,2,(length($0) - 1)); }
 
 # macro processing - macro name starts and ends with ':'
 # in a file gen_MACRONAME.txt is the macro describtion

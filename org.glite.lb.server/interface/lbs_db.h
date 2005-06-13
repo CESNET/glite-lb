@@ -65,8 +65,11 @@ void edg_wll_FreeStmt(
 );
 
 
-/* convert time_t into database-specific time string 
- * returns pointer to static area that is changed by subsequent calls */
+/**
+ * convert time_t into database-specific time string
+ *
+ * returns pointer to dynamic area which should be freed 
+ */
 char *edg_wll_TimeToDB(time_t);
 time_t edg_wll_DBToTime(char *);
 
