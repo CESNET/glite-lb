@@ -12,6 +12,8 @@
 #include "ws_fault.h"
 #include "ws_typeref.h"
 
+#include "soap_version.h"
+
 #if GSOAP_VERSION <= 20602
 #define __lb__GetVersion __ns1__GetVersion
 #define __lb__JobStatus __ns1__JobStatus
