@@ -292,6 +292,9 @@ int edg_wll_http_send_recv(
 	char ***resp_head,
 	char **resp_body)
 {
+	int	ec;
+	char	*ed = NULL;
+
 	if (edg_wll_open(ctx)) return edg_wll_Error(ctx,NULL,NULL);
 	
 	switch (edg_wll_http_send(ctx,request,req_head,req_body)) {
@@ -299,22 +302,33 @@ int edg_wll_http_send_recv(
 			edg_wll_close(ctx);
 			if (edg_wll_open(ctx)
 				|| edg_wll_http_send(ctx,request,req_head,req_body))
-					return edg_wll_Error(ctx,NULL,NULL);
+					goto err;
 			/* fallthrough */
 		case 0: break;
-		default: return edg_wll_Error(ctx,NULL,NULL);
+		default: goto err;
 	}
 
-	if (edg_wll_http_recv(ctx,response,resp_head,resp_body) == ENOTCONN) {
-		edg_wll_close(ctx);
-		(void) (edg_wll_open(ctx)
-			|| edg_wll_http_send(ctx,request,req_head,req_body)
-			|| edg_wll_http_recv(ctx,response,resp_head,resp_body));
+	switch (edg_wll_http_recv(ctx,response,resp_head,resp_body)) {
+		case ENOTCONN:
+			edg_wll_close(ctx);
+			if (edg_wll_open(ctx)
+				|| edg_wll_http_send(ctx,request,req_head,req_body)
+				|| edg_wll_http_recv(ctx,response,resp_head,resp_body))
+					goto err;
+			/* fallthrough */
+		case 0: break;
+		default: goto err;
 	}
 	
 	gettimeofday(&ctx->connPool[ctx->connToUse].lastUsed, NULL);
-	
-	return edg_wll_Error(ctx,NULL,NULL);
+	return 0;
+
+err:
+	ec = edg_wll_Error(ctx,NULL,&ed);
+	edg_wll_close(ctx);
+	edg_wll_SetError(ctx,ec,ed);
+	free(ed);
+	return ec;
 }
 
 
