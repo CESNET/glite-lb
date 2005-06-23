@@ -181,3 +181,8 @@
 	port	dest_port	destination port
 	string	jobstat		job status
 
+
+@type ResourceUsage	Resource (CPU, memory etc.) consumption
+	string	resource	which resource
+	int	quantity	how much
+	string	unit		units (sec, kB, etc.)
