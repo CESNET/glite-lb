@@ -21,14 +21,14 @@ static void usage(char *me)
 		, me);
 }
 
-static void printstat(edg_wll_JobStat stat, int level);
+//static void printstat(edg_wll_JobStat stat, int level);
 
 int main(int argc,char** argv)
 {
     edg_wll_Context						ctx;
     glite_gsplugin_Context				gsplugin_ctx;
     struct soap							soap;
-    struct edgwll2__GetVersionResponse	out;
+    struct _lbe__GetVersionResponse	out;
     int									opt, err;
 	char							   *server = "http://localhost:8999/",
 									   *name = NULL;
@@ -57,12 +57,14 @@ int main(int argc,char** argv)
 
 	glite_gsplugin_set_udata(&soap, gsplugin_ctx);
 
-    switch (err = soap_call_edgwll2__GetVersion(&soap, server, "", &out))
+    switch (err = soap_call___lb__GetVersion(&soap, server, "", NULL, &out))
 	{
 	case SOAP_OK: printf("Server version: %s\n", out.version); break;
 	case SOAP_FAULT: 
-	default: printf("???\n");
+	default: printf("???, err=%d\n", err);
     }
+
+    soap_done(&soap);
 
     return 0;
 }

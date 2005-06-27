@@ -238,7 +238,6 @@ int edg_wll_JobStatFlagsToSoap(struct soap *soap, const int in, struct lbt__jobF
 	return SOAP_OK;
 }
 
-#if 0
 void edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 {
 	switch ( in )
@@ -385,20 +384,20 @@ int edg_wll_QueryValToSoap(
 }
 
 int edg_wll_SoapToQueryRec(
-	const edg_wll_QueryAttr	attr,
+	const struct lbt__queryConditions *collection,
 	const struct lbt__queryRecord  *in,
 	edg_wll_QueryRec			   *out)
 {
-	assert(attr); assert(in); assert(out);
+	assert(collection); assert(in); assert(out);
 	memset(out, 0, sizeof(*out));
-	edg_wll_SoapToAttr(attr, &out->attr);
+	edg_wll_SoapToAttr(collection->attr, &out->attr);
 	switch ( out->attr )
 	{
 	case EDG_WLL_QUERY_ATTR_TIME:
-		edg_wll_SoapToJobStatCode(*(in->attrid->state), &(out->attr_id.state));
+		edg_wll_SoapToJobStatCode(*(collection->statName), &(out->attr_id.state));
 		break;
 	case EDG_WLL_QUERY_ATTR_USERTAG:
-		out->attr_id.tag = strdup(in->attrid->tag);
+		out->attr_id.tag = strdup(collection->tagName);
 		break;
 	default:
 		break;
@@ -418,6 +417,7 @@ err:
 	edg_wll_QueryRecFree(out);
 	return -1;
 }
+#if 0
 
 int edg_wll_QueryRecToSoap(
 	struct soap				   *soap,
@@ -460,17 +460,23 @@ ret:
 	*out = qr;
 	return SOAP_OK;
 }
+#endif
 
+/**
+ * Translate query conditions from Soap form to query rec structure
+ *
+ * \param IN in pointer to soap query condition
+ * \param OUT out target array of queryRec
+ */
 int edg_wll_SoapToQueryConds(const struct lbt__queryConditions *in, edg_wll_QueryRec **out)
 {
 	int					i;
 	edg_wll_QueryRec   *qr;
 
-
 	assert(in); assert(out);
-	if ( !(qr = calloc(in->__sizerecords+1, sizeof(*qr))) ) goto err;
-	for ( i = 0; i < in->__sizerecords; i++ )
-		if ( edg_wll_SoapToQueryRec(in->attr, in->records[i], qr+i) ) goto err;
+	if ( !(qr = calloc(in->__sizerecord+1, sizeof(*qr))) ) goto err;
+	for ( i = 0; i < in->__sizerecord; i++ )
+		if ( edg_wll_SoapToQueryRec(in, in->record[i], qr+i) ) goto err;
 	*out = qr;
 	return 0;
 
@@ -482,6 +488,7 @@ err:
 	return -1;
 }
 
+#if 0
 int edg_wll_QueryCondsToSoap(
 	struct soap					   *soap,
 	const edg_wll_QueryRec		   *in,
@@ -508,17 +515,24 @@ ret:
 	*out = qc;
 	return SOAP_OK;
 }
+#endif
 
-int edg_wll_SoapToQueryCondsExt(const struct lbt__queryConditions *in, edg_wll_QueryRec ***out)
+/**
+ * Translate extended query conditions from Soap form to query rec structure
+ *
+ * \param IN in array of soap query condition
+ * \param OUT out target array of queryRec
+ */
+int edg_wll_SoapToQueryCondsExt(const struct lbt__queryConditions *in, int __sizecondition, edg_wll_QueryRec ***out)
 {
 	int					i;
 	edg_wll_QueryRec  **qr;
 
 
 	assert(in); assert(out);
-	if ( !(qr = calloc(in->__sizecondition+1, sizeof(*qr))) ) return -1;
-	for ( i = 0; i < in->__sizecondition; i++ )
-		if ( edg_wll_SoapToQueryConds(in->condition[i], qr+i) ) goto err;
+	if ( !(qr = calloc(__sizecondition, sizeof(*qr))) ) return -1;
+	for ( i = 0; i < __sizecondition; i++ )
+		if ( edg_wll_SoapToQueryConds(&in[i], qr+i) ) goto err;
 
 	*out = qr;
 	return 0;
@@ -536,6 +550,7 @@ err:
 	return -1;
 }
 
+#if 0
 int edg_wll_QueryCondsExtToSoap(
 	struct soap							   *soap,
 	const edg_wll_QueryRec				  **in,
@@ -561,44 +576,45 @@ ret:
 	*out = qc;
 	return SOAP_OK;
 }
+#endif
 
 int edg_wll_JobsQueryResToSoap(
-	struct soap						   *soap,
-	const edg_wlc_JobId				   *jobs,
-	const edg_wll_JobStat			   *states,
-	struct _lbe__QueryJobsResponse  *out)
+	struct soap           *soap,
+	const edg_wlc_JobId   *jobs,
+	const edg_wll_JobStat *states,
+	struct _lbe__QueryJobsResponse *out)
 {
 	int							i;
 
 
-	assert(out); assert(out->states); assert(out->jobs);
-	memset(out->jobs, 0, sizeof(*(out->jobs)));
-	memset(out->states, 0, sizeof(*(out->states)));
+	assert(out); //assert(out->states); assert(out->jobs);
+	out->jobs = NULL;
+	out->states = NULL;
+	out->__sizejobs = 0;
+	out->__sizestates = 0;
 
 	if ( jobs ) {
 		for ( i = 0; jobs[i]; i++ ) ;
-		out->jobs->jobs = soap_malloc(soap, sizeof(*(out->jobs->jobs))*i);
-		if ( !out->jobs->jobs ) return SOAP_FAULT;
-		out->jobs->__sizejobs = i;
+		out->jobs = soap_malloc(soap, sizeof(*(out->jobs))*i);
+		if ( !out->jobs ) return SOAP_FAULT;
+		out->__sizejobs = i;
 		for ( i = 0; jobs[i]; i++ ) {
 			char	   *s;
 			if ( !(s = edg_wlc_JobIdUnparse(jobs[i])) ) return SOAP_FAULT;
-			if ( !(out->jobs->jobs[i] = soap_strdup(soap, s)) ) return SOAP_FAULT;
+			if ( !(out->jobs[i] = soap_strdup(soap, s)) ) return SOAP_FAULT;
 			free(s);
 		}
 	}
 	if ( states ) {
 		for ( i = 0; states[i].state; i++ ) ;
-		out->states->states = soap_malloc(soap, sizeof(*(out->states->states))*i);
-		if ( !out->states->states ) return SOAP_FAULT;
-		out->states->__sizestates = i;
+		out->states = soap_malloc(soap, sizeof(*(out->states))*i);
+		if ( !out->states ) return SOAP_FAULT;
+		out->__sizestates = i;
 
 		for ( i = 0; states[i].state; i++ )
-			if ( edg_wll_StatusToSoap(soap, states+i, out->states->states+i) )
+			if ( edg_wll_StatusToSoap(soap, states+i, out->states+i) )
 				return SOAP_FAULT;
 	}
 
 	return SOAP_OK;
 }
-
-#endif

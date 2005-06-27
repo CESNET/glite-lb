@@ -34,9 +34,9 @@ extern int edg_wll_QueryValToSoap(struct soap *,
 			struct lbt__queryRecValue *);
 
 extern int edg_wll_SoapToQueryRec(
-			const enum lbt__queryAttr,
-			const struct lbt__queryRecord *,
-			edg_wll_QueryRec *);
+			const struct lbt__queryConditions *collection,
+			const struct lbt__queryRecord *in,
+			edg_wll_QueryRec *out);
 extern int edg_wll_QueryRecToSoap(struct soap *,
 			const edg_wll_QueryRec *,
 			struct lbt__queryRecord *);
@@ -51,6 +51,7 @@ extern int edg_wll_QueryCondsToSoap(struct soap *,
 
 extern int edg_wll_SoapToQueryCondsExt(
 			const struct lbt__queryConditions *,
+			int __sizecondition,
 			edg_wll_QueryRec ***);
 extern int edg_wll_QueryCondsExtToSoap(struct soap *,
 			const edg_wll_QueryRec **,
