@@ -16,8 +16,10 @@ SUFFIXES = .T
 
 VPATH=${top_srcdir}/src
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
-XSLTPROC=xsltproc
+XSLTPROC:=xsltproc
 TIDY=tidy
+XMLLINT:=xmllint
+docbookxls:=http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl
 
 STAGETO=interface
 
@@ -72,5 +74,7 @@ ${WSDL}: %.wsdl: %.xml puke-wsdl.xsl
 	-${TIDY} -wrap 10000 -xml -m -i -q $@
 	-perl -i -n -e 'if (/^\s*$$/) { $$empty .= "\n"; } elsif (/^\s*<(xsd:)?(enumeration|element|input|output|fault)/) { print $$_; $$empty = "";} else { print "$$empty$$_"; $$empty=""; }; ' $@
 
-LB-ug.xml: LB.xml puke-ug.xsl
-	${XSLTPROC} ../src/puke-ug.xsl $< >$@
+LB.html: doc.xml LBTypes.xml LB.xml puke-ug.xsl
+	${XSLTPROC} --novalid ../src/puke-ug.xsl $< >doc-html.xml
+	${XMLLINT} --valid --noout doc-html.xml
+	${XSLTPROC} --stringparam  chapter.autolabel 0 ${docbookxls} doc-html.xml >$@
