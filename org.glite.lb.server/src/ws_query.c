@@ -26,6 +26,7 @@
 static void freeQueryRecsExt(edg_wll_QueryRec **qr);
 static void freeJobIds(edg_wlc_JobId *jobs);
 static void freeJobStats(edg_wll_JobStat *stats);
+static void freeEvents(edg_wll_Event *events);
 
 
 SOAP_FMAC5 int SOAP_FMAC6 __lb__GetVersion(
@@ -118,6 +119,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__UserJobs(
 	struct _lbe__UserJobs *in,
 	struct _lbe__UserJobsResponse *out)
 {
+	return SOAP_OK;
 }
 
 #if 0
@@ -139,6 +141,55 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 	struct _lbe__QueryEvents *in,
 	struct _lbe__QueryEventsResponse *out)
 {
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
+	edg_wll_QueryRec 	**job_conditions;
+	edg_wll_QueryRec 	**event_conditions;
+	edg_wll_Event 		*events;
+	int			ret = SOAP_OK;
+
+
+	edg_wll_ResetError(ctx);
+	if ( edg_wll_SoapToQueryCondsExt(*in->jobConditions, in->__sizejobConditions, 
+		&job_conditions) )
+	{
+		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
+		edg_wll_ErrToFault(ctx, soap);
+		ret = SOAP_FAULT;
+		goto cleanup;
+	}
+
+	if ( edg_wll_SoapToQueryCondsExt(*in->eventConditions, in->__sizeeventConditions, 
+		&event_conditions) )
+	{
+		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
+		edg_wll_ErrToFault(ctx, soap);
+		ret = SOAP_FAULT;
+		goto cleanup;
+	}
+
+
+	if (edg_wll_QueryEventsServer(ctx, ctx->noAuth, 
+        	(const edg_wll_QueryRec **)job_conditions,
+		(const edg_wll_QueryRec **)event_conditions,
+        	&events))
+	{
+		edg_wll_ErrToFault(ctx, soap);
+		ret = SOAP_FAULT;
+		goto cleanup;
+	}
+
+	if (edg_wll_EventsQueryResToSoap(soap, events, out) != SOAP_OK) 
+	{
+		ret = SOAP_FAULT;
+		goto cleanup;
+	}
+
+cleanup:
+	freeQueryRecsExt(job_conditions);
+	freeQueryRecsExt(event_conditions);
+	freeEvents(events);
+
+	return ret;
 }
 
 
@@ -175,5 +226,18 @@ static void freeJobStats(edg_wll_JobStat *stats) {
 		for ( i = 0; stats[i].state; i++ )
 			edg_wll_FreeStatus(&stats[i]);
 		free(stats);
+	}
+}
+
+
+static void freeEvents(edg_wll_Event *events)
+{
+	int i;
+
+	if (events != NULL) {
+		for (i=0; events[i].type != EDG_WLL_EVENT_UNDEF; i++)
+			edg_wll_FreeEvent(&(events[i]));
+		edg_wll_FreeEvent(&(events[i])); /* free last line */
+		free(events);
 	}
 }

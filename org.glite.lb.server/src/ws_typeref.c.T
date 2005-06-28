@@ -618,3 +618,14 @@ int edg_wll_JobsQueryResToSoap(
 
 	return SOAP_OK;
 }
+
+int edg_wll_EventsQueryResToSoap(
+	struct soap *soap,
+	edg_wll_Event *events,
+        struct _lbe__QueryEventsResponse *out)
+{
+
+	//XXX: needs flash
+
+	return SOAP_OK;
+}

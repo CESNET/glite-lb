@@ -62,6 +62,10 @@ extern int edg_wll_JobsQueryResToSoap(struct soap *,
 			edg_wll_JobStat *,
 			struct _lbe__QueryJobsResponse *);
 
+extern int edg_wll_EventsQueryResToSoap(struct soap *,
+			edg_wll_Event *,
+			struct _lbe__QueryEventsResponse *);
+
 #ifdef __cplusplus
 }
 #endif
