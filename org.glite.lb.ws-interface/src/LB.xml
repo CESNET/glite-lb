@@ -8,6 +8,7 @@
 	elemNs="http://glite.org/wsdl/elements/lb"
 	elemPrefix="lbe">
 
+<!--
 	<para>Logging and Bookkeeping (L&amp;B) service keeps track of grid jobs.</para>
 
 	<para>The service receives job events
@@ -24,6 +25,8 @@
 	Besides querying for the job state actively the user may also register for
 	receiving notifications on particular job state changes.
 	This functionality is supported only in the legacy C/C++ interface.
+
+-->
 
 	<import namespace="http://glite.org/wsdl/services/lb" location="LBTypes.wsdl"/>
 
