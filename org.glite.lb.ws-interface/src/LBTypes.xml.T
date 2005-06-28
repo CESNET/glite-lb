@@ -9,7 +9,7 @@
 	ns="http://glite.org/wsdl/services/lb"
 	typePrefix="lbt">
 
-	<version><![CDATA[ $Header$ ]]></version>
+	<version>CVS revision: <![CDATA[ $Header$ ]]></version>
 
 	<types ns="http://glite.org/wsdl/types/lb">
 		<flags name="jobFlags">

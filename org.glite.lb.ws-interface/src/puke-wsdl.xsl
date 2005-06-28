@@ -18,7 +18,10 @@
 		xmlns="http://schemas.xmlsoap.org/wsdl/"
 		name="{@name}"
 		targetNamespace="{@ns}">
-  	<documentation> <xsl:value-of select="text()"/> </documentation>
+  	<documentation>
+			<xsl:value-of select="version"/>
+			<xsl:value-of select="text()"/> 
+		</documentation>
 
 		<xsl:apply-templates select="import"/>
 
