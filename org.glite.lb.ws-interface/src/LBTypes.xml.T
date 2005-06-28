@@ -9,6 +9,8 @@
 	ns="http://glite.org/wsdl/services/lb"
 	typePrefix="lbt">
 
+	<version><![CDATA[ $Header$ ]]></version>
+
 	<types ns="http://glite.org/wsdl/types/lb">
 		<flags name="jobFlags">
 			Flags determining which fields of job status should be retrieved.

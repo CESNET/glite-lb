@@ -8,25 +8,26 @@
 	elemNs="http://glite.org/wsdl/elements/lb"
 	elemPrefix="lbe">
 
-<!--
+	<version>CVS revision: <![CDATA[ $Header$ ]]> </version>
+
+	<doc>
 	<para>Logging and Bookkeeping (L&amp;B) service keeps track of grid jobs.</para>
 
 	<para>The service receives job events
 	from various components of the Workload Management System, stores
 	them, and derives then the corresponding job states.</para>
 	
-	Job information is fed into LB through a~logging interface
-	(<link linkend="">legacy C and shell API</link>)
-	and it is not exposed as a web service yet.
+	<para>Job information is fed into LB through a logging interface
+	(<ulink url="https://edms.cern.ch/file/571273/1/LB-guide.pdf">legacy C and shell API</ulink>)
+	and it is not exposed as a web service yet.</para>
 
-	The users may query job states or retrieve LB events either via the same C/C++
-	interface or via this web-service interface.
+	<para>The users may query job states or retrieve LB events either via the same C/C++
+	interface or via this web-service interface.</para>
 
-	Besides querying for the job state actively the user may also register for
+	<para>Besides querying for the job state actively the user may also register for
 	receiving notifications on particular job state changes.
-	This functionality is supported only in the legacy C/C++ interface.
-
--->
+	This functionality is supported only in the legacy C/C++ interface.</para>
+	</doc>
 
 	<import namespace="http://glite.org/wsdl/services/lb" location="LBTypes.wsdl"/>
 
