@@ -496,13 +496,13 @@ int edg_wll_QueryCondsToSoap(
 		if ( !qc->statName ) return SOAP_FAULT;
 		edg_wll_JobStatCodeToSoap(in->attr_id.state, qc->statName);
 	}
-	else {
+	else if ( in->attr == EDG_WLL_QUERY_ATTR_USERTAG) {
 		qc->tagName = soap_strdup(soap, in->attr_id.tag);
 		if ( !qc->tagName ) return SOAP_FAULT;
 	}
 
-	i = 0;
-	while ( in[i].attr ) qc->__sizerecord++;
+	qc->__sizerecord = 0;
+	while ( in[qc->__sizerecord++].attr );
 
 	if ( !qc->__sizerecord )
 		goto ret;
@@ -532,7 +532,7 @@ int edg_wll_SoapToQueryCondsExt(const struct lbt__queryConditions **in, int __si
 	edg_wll_QueryRec  **qr;
 
 
-	assert(in); assert(out);
+	assert(out);
 	if ( !(qr = calloc(__sizecondition, sizeof(*qr))) ) return -1;
 	for ( i = 0; i < __sizecondition; i++ )
 		if ( edg_wll_SoapToQueryConds(in[i], qr+i) ) goto err;
@@ -573,8 +573,8 @@ int edg_wll_QueryCondsExtToSoap(
 
 	assert(in); assert(out);
 
-	i = 0;
-	while ( in[i] ) size++;
+	size = 0;
+	while ( in[size] ) size++;
 
 	if ( !size ) 
 		goto ret;
@@ -583,7 +583,7 @@ int edg_wll_QueryCondsExtToSoap(
 	if ( !qc ) return SOAP_FAULT;
 
 	for ( i = 0; in[i]; i++ )
-		if ( edg_wll_QueryCondsToSoap(soap, in[i], qc[i]) )
+		if ( edg_wll_QueryCondsToSoap(soap, in[i], &qc[i]) )
 			return SOAP_FAULT;
 
 ret:

@@ -41,8 +41,10 @@ int main(int argc,char** argv)
 	struct soap				*mydlo = soap_new();
 	struct _lbe__QueryEventsResponse	out;
 	struct _lbe__QueryEvents		in;	
+	edg_wll_QueryRec			**jconds = NULL,
+						**econds = NULL;
 	edg_wll_QueryRec			j[2], e[1];
-	int					opt, err;
+	int					opt, err, i;
 	edg_wlc_JobId				job;
 	char					*server = "http://localhost:9003/",
 						*jobid = NULL,
@@ -92,22 +94,47 @@ int main(int argc,char** argv)
 	j[0].op = EDG_WLL_QUERY_OP_EQUAL;
 	j[0].value.j = job;
 
-	edg_wll_QueryCondsExtToSoap(mydlo, (const edg_wll_QueryRec **)j,
-		&in.__sizejobConditions, &in.jobConditions);
-	edg_wll_QueryCondsExtToSoap(mydlo, (const edg_wll_QueryRec **)e,
-		&in.__sizeeventConditions, &in.eventConditions);
+	
+	jconds = (edg_wll_QueryRec **) calloc(2, sizeof(edg_wll_QueryRec *));
+	for ( i = 0; i < 2; i++ )
+	{
+		jconds[i] = (edg_wll_QueryRec *) calloc(2, sizeof(edg_wll_QueryRec));
+		jconds[i][0] = j[i];
+	}
+
+	econds = (edg_wll_QueryRec **) calloc(1, sizeof(edg_wll_QueryRec *));
+	for ( i = 0; i < 1; i++ )
+	{
+		econds[i] = (edg_wll_QueryRec *) calloc(1, sizeof(edg_wll_QueryRec));
+		econds[i][0] = e[i];
+	}
+
+
+	if (edg_wll_QueryCondsExtToSoap(mydlo, (const edg_wll_QueryRec **)jconds,
+			&in.__sizejobConditions, &in.jobConditions) != SOAP_OK) {
+		printf("Error converting QueryConds to Soap!\n");
+		return(1);
+	}
+
+	//edg_wll_QueryCondsExtToSoap(mydlo, (const edg_wll_QueryRec **)econds,
+	//	&in.__sizeeventConditions, &in.eventConditions);
+
+	//in.jobConditions = NULL;
+	//in.__sizejobConditions = 0;
+	in.eventConditions = NULL;
+	in.__sizeeventConditions = 0;
 
 	switch (err = soap_call___lb__QueryEvents(mydlo, server, "",&in,&out))
 	{
 	case SOAP_OK:
 		{
-		edg_wll_Event 	*events;
+		edg_wll_Event 	*events = NULL;
 		int		i;
 
 
 		edg_wll_SoapToEvents(mydlo,out,&events);
 
-		for ( i = 0; events[i].type != EDG_WLL_EVENT_UNDEF; i++ )
+		for ( i = 0; events && events[i].type != EDG_WLL_EVENT_UNDEF; i++ )
 		{
 			char	*e = edg_wll_UnparseEvent(ctx,events+i);
 			fputs(e,stdout);

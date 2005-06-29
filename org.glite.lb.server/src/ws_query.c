@@ -144,12 +144,12 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	edg_wll_QueryRec 	**job_conditions;
 	edg_wll_QueryRec 	**event_conditions;
-	edg_wll_Event 		*events;
+	edg_wll_Event 		*events = NULL;
 	int			ret = SOAP_OK;
 
 
 	edg_wll_ResetError(ctx);
-	if ( edg_wll_SoapToQueryCondsExt(*in->jobConditions, in->__sizejobConditions, 
+	if ( edg_wll_SoapToQueryCondsExt(in->jobConditions, in->__sizejobConditions, 
 		&job_conditions) )
 	{
 		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
@@ -158,7 +158,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 		goto cleanup;
 	}
 
-	if ( edg_wll_SoapToQueryCondsExt(*in->eventConditions, in->__sizeeventConditions, 
+	if ( edg_wll_SoapToQueryCondsExt(in->eventConditions, in->__sizeeventConditions, 
 		&event_conditions) )
 	{
 		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
