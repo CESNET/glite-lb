@@ -15,6 +15,7 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 
 
 	f->lbe__genericFault = soap_malloc(soap,sizeof *f->lbe__genericFault);
+	memset(f->lbe__genericFault, 0, sizeof(*f->lbe__genericFault));
 
 	f->lbe__genericFault->code = edg_wll_Error(ctx,&et,&ed);
 	f->lbe__genericFault->text = soap_malloc(soap,strlen(et)+1);
