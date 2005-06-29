@@ -222,7 +222,7 @@ test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 	${LINKXX} -o $@ test_soap_conv.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${TEST_LIBS}
 
-examples: ws_getversion ws_jobstat ws_query_ex
+examples: ws_getversion ws_jobstat ws_query_ex ws_joblog
 
 ws_getversion: ws_getversion.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_getversion.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} 
@@ -235,6 +235,9 @@ ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
 
 ws_query_ext: ws_query_ext.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_query_ext.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
+
+ws_joblog: ws_joblog.o ${WS_CLIENT_OBJS}
+	${LINK} -o $@ ws_joblog.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
 
 ${STATIC_LIB_BK}: ${LIB_OBJS_BK}

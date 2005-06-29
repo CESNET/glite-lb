@@ -39,7 +39,7 @@ extern int edg_wll_SoapToQueryRec(
 			edg_wll_QueryRec *out);
 extern int edg_wll_QueryRecToSoap(struct soap *,
 			const edg_wll_QueryRec *,
-			struct lbt__queryRecord *);
+			struct lbt__queryRecord **);
 
 
 extern int edg_wll_SoapToQueryConds(
@@ -50,12 +50,13 @@ extern int edg_wll_QueryCondsToSoap(struct soap *,
 			struct lbt__queryConditions **);
 
 extern int edg_wll_SoapToQueryCondsExt(
-			const struct lbt__queryConditions *,
+			const struct lbt__queryConditions **,
 			int __sizecondition,
 			edg_wll_QueryRec ***);
 extern int edg_wll_QueryCondsExtToSoap(struct soap *,
 			const edg_wll_QueryRec **,
-			struct lbt__queryConditions **);
+			int *,
+			struct lbt__queryConditions ***);
 
 extern int edg_wll_JobsQueryResToSoap(struct soap *,
 			edg_wlc_JobId *,
@@ -65,6 +66,11 @@ extern int edg_wll_JobsQueryResToSoap(struct soap *,
 extern int edg_wll_EventsQueryResToSoap(struct soap *,
 			edg_wll_Event *,
 			struct _lbe__QueryEventsResponse *);
+extern int edg_wll_SoapToEvents(
+        		struct soap *,
+	        	struct _lbe__QueryEventsResponse,
+        		edg_wll_Event **);
+
 
 #ifdef __cplusplus
 }
