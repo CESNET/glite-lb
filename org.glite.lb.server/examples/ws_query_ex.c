@@ -94,7 +94,11 @@ int main(int argc,char** argv)
 		printf("Query succesfull...\n");
 		printf("%-65s%s\n\n", "jobid", "state");
 		for ( i = 0; i < out.__sizejobs; i++ ) {
-			char *s = edg_wll_StatToString(out.states[i]->state);
+			edg_wll_JobStatCode statCode;
+
+
+			edg_wll_SoapToJobStatCode(out.states[i]->state, &statCode);
+			char *s = edg_wll_StatToString(statCode);
 			printf("%-65s%s\n", out.jobs[i], s);
 			free(s);
 		}
