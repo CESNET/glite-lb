@@ -64,13 +64,15 @@ extern int edg_wll_JobsQueryResToSoap(struct soap *,
 			struct _lbe__QueryJobsResponse *);
 
 extern int edg_wll_EventsQueryResToSoap(struct soap *,
-			edg_wll_Event *,
+			const edg_wll_Event *,
 			struct _lbe__QueryEventsResponse *);
 extern int edg_wll_SoapToEvents(
         		struct soap *,
 	        	struct _lbe__QueryEventsResponse,
         		edg_wll_Event **);
 
+extern int edg_wll_EventToSoap(struct soap*, const edg_wll_Event *, struct lbt__event **);
+extern void edg_wll_FreeSoapEvent(struct soap *, struct lbt__event *);
 
 #ifdef __cplusplus
 }

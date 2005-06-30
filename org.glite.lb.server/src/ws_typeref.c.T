@@ -531,7 +531,6 @@ int edg_wll_SoapToQueryCondsExt(const struct lbt__queryConditions **in, int __si
 	int					i;
 	edg_wll_QueryRec  **qr;
 
-
 	assert(out);
 	if ( !(qr = calloc(__sizecondition, sizeof(*qr))) ) return -1;
 	for ( i = 0; i < __sizecondition; i++ )
@@ -592,6 +591,7 @@ ret:
 	return SOAP_OK;
 }
 
+
 int edg_wll_JobsQueryResToSoap(
 	struct soap           *soap,
 	const edg_wlc_JobId   *jobs,
@@ -633,16 +633,106 @@ int edg_wll_JobsQueryResToSoap(
 	return SOAP_OK;
 }
 
+
+/**
+ * TODO: dodelat
+ * Translate event structure to Soap event.
+ *
+ * \param INOUT soap instance to work with
+ * \param IN event source event
+ * \param OUT sevent target Soap event
+ */
+int edg_wll_EventToSoap(struct soap* soap, const edg_wll_Event *event, struct lbt__event **sevent) {
+	*sevent = soap_malloc(soap, sizeof(*sevent));
+	memset(*sevent, 0, sizeof(*sevent));
+	if (!*sevent) return 0;
+
+	switch (event->any.type) {
+@@@{
+	for my $e (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
+			$event->getTypes) {
+		my $u = uc $e;
+gen qq {
+!		case EDG_WLL_EVENT_$u:
+!			break;
+!
+};
+	}
+@@@}
+		default:
+			break;
+	}
+
+	return 1;
+}
+
+
+/** 
+ * TODO: dodelat
+ * Free Soap event.
+ *
+ * \param INOUT soap instance to work with
+ * \param INOUT sevent released Soap event
+ */
+void edg_wll_FreeSoapEvent(struct soap *soap, struct lbt__event *sevent) {
+@@@{
+	# code from LBTypes.xml.T
+	for my $name (sort { $event->{order}->{$a} <=> $event->{order}->{$b} } getTypes $event) {
+		my $comment = getTypeComment $event $name;
+		$name = $1.ucfirst $2 while $name =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+gen qq {
+!	if (sevent->$name) {
+!		soap_dealloc(soap, sevent->$name);
+!	}
+};
+}
+@@@}
+	soap_dealloc(soap, sevent);
+}
+
+
+/**
+ * Translate event array to Soap event array for eventsQueryResponse.
+ *
+ * \param INOUT soap instance to work with
+ * \param IN events source array of the events
+ * \param OUT out result Soap structure
+ */
 int edg_wll_EventsQueryResToSoap(
 	struct soap *soap,
-	edg_wll_Event *events,
+	const edg_wll_Event *events,
         struct _lbe__QueryEventsResponse *out)
 {
+	int memsize, i;
+	struct lbt__event *event;
 
-	//XXX: needs flash
+	/* alloc the events array */
+	assert(out != NULL);
+	memset(out, 0, sizeof(*out));
+	for (out->__sizeevents = 0; events[out->__sizeevents].any.type != EDG_WLL_EVENT_UNDEF; out->__sizeevents++);
+	if (!out->__sizeevents) return SOAP_OK;
+	memsize = out->__sizeevents * sizeof(*out->events);
+	out->events = soap_malloc(soap, memsize);
+	memset(out->events, 0, memsize);
+	if (!out->events) return SOAP_FAULT;
+
+	for (i = 0; i < out->__sizeevents; i++) {
+		if (!edg_wll_EventToSoap(soap, &events[i], &out->events[i])) goto err;
+	}
 
 	return SOAP_OK;
+
+err:
+	event = out->events[0];
+	while (event) {
+		edg_wll_FreeSoapEvent(soap, event);
+		event++;
+	}
+	soap_dealloc(soap, out->events);
+
+	return SOAP_FAULT;
 }
+
 
 int edg_wll_SoapToEvents(
 	struct soap *soap,
@@ -652,4 +742,4 @@ int edg_wll_SoapToEvents(
 	//XXX: needs flash
 
 	return 0;
-}	
+}
