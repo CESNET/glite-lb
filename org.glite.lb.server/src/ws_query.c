@@ -39,6 +39,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__GetVersion(
 	return out->version ? SOAP_OK : SOAP_FAULT;
 }
 
+
 SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	struct soap	*soap,
 	struct _lbe__JobStatus *in,
@@ -70,6 +71,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	return SOAP_OK;
 }
 
+
 SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	struct soap *soap,
 	struct _lbe__QueryJobs *in,
@@ -92,7 +94,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	ret = SOAP_FAULT;
 
 	edg_wll_ResetError(ctx);
-	if ( edg_wll_SoapToQueryCondsExt(*in->conditions, in->__sizeconditions, &conditions) ) {
+	if ( edg_wll_SoapToQueryCondsExt(in->conditions, in->__sizeconditions, &conditions) ) {
 		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
 		goto cleanup;
 	}

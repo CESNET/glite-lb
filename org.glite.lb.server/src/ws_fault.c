@@ -21,9 +21,11 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 	f->lbe__genericFault->text = soap_malloc(soap,strlen(et)+1);
 	strcpy(f->lbe__genericFault->text,et); 
 	free(et);
-	f->lbe__genericFault->description = soap_malloc(soap,strlen(ed)+1);
-	strcpy(f->lbe__genericFault->description,ed); 
-	free(ed);
+	if (ed) {
+		f->lbe__genericFault->description = soap_malloc(soap,strlen(ed)+1);
+		strcpy(f->lbe__genericFault->description,ed); 
+		free(ed);
+	}
 
 	detail->__type = SOAP_TYPE__genericFault;
 #if GSOAP_VERSION >= 20700

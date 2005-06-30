@@ -5,7 +5,7 @@
 #include "glite/lb/consumer.h"
 
 #include "bk_ws_H.h"
-
+#include "ws_fault.h"
 #include "ws_typeref.h"
 
 #include "LoggingAndBookkeeping.nsmap"
@@ -28,17 +28,15 @@ static void printstat(edg_wll_JobStat stat, int level);
 
 int main(int argc,char** argv)
 {
-    edg_wll_Context						ctx;
-    glite_gsplugin_Context				gsplugin_ctx;
-	edg_wll_QueryRec				  **conditions = NULL;
-    struct soap						   *soap = soap_new();
-	struct edgwll__QueryConditions	   *jconds = NULL;
-	struct edgwll__JobStatFlags			flags;
-    struct edgwll2__QueryJobsResponse	out;
-    int									opt, err;
-	char							   *server = "http://localhost:8999/",
-									   *name = NULL;
-
+	edg_wll_Context				ctx;
+	glite_gsplugin_Context			gsplugin_ctx;
+	edg_wll_QueryRec			**conditions = NULL;
+	struct soap				*soap = soap_new();
+	struct _lbe__QueryJobs			*qjobs = NULL;
+	struct _lbe__QueryJobsResponse		out;
+	int					opt, err;
+	char					*server = "http://localhost:9003/",
+					 	*name = NULL;
 
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
@@ -50,8 +48,8 @@ int main(int argc,char** argv)
 	case '?': usage(name); return 1;
 	}
 
-    edg_wll_InitContext(&ctx);
-    glite_gsplugin_init_context(&gsplugin_ctx);
+	edg_wll_InitContext(&ctx);
+	glite_gsplugin_init_context(&gsplugin_ctx);
 
 	if ( soap_register_plugin_arg(soap, glite_gsplugin, (void *)gsplugin_ctx) )
 	{
@@ -73,8 +71,12 @@ int main(int argc,char** argv)
 	conditions[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
 	conditions[1][0].value.c = NULL;
 
-	if (   edg_wll_QueryCondsExtToSoap(soap, (const edg_wll_QueryRec **)conditions, &jconds)
-		|| edg_wll_JobStatFlagsToSoap(soap, 0, &flags) ) {
+	qjobs = soap_malloc(soap, sizeof(*qjobs));
+	memset(qjobs, 0, sizeof(*qjobs));
+	qjobs->flags = soap_malloc(soap, sizeof(*qjobs->flags));
+	memset(qjobs->flags, 0, sizeof(*qjobs->flags));
+	if (!qjobs->flags || edg_wll_QueryCondsExtToSoap(soap, (const edg_wll_QueryRec **)conditions, &qjobs->__sizeconditions, &qjobs->conditions)
+		|| edg_wll_JobStatFlagsToSoap(soap, 0, qjobs->flags) ) {
 		char	*et,*ed;
 
 		fprintf(stderr, "%s: soap types conversion error...\n", argv[0]);
@@ -84,16 +86,16 @@ int main(int argc,char** argv)
 		exit(1);
 	}
 
-    err = soap_call_edgwll2__QueryJobs(soap, server, "", jconds, &flags, &out);
+    err = soap_call___lb__QueryJobs(soap, server, "", qjobs, &out);
     switch ( err ) {
 	case SOAP_OK: {
 		int		i;
 
 		printf("Query succesfull...\n");
 		printf("%-65s%s\n\n", "jobid", "state");
-		for ( i = 0; i < out.jobs->__sizejobs; i++ ) {
-			char *s = edg_wll_StatToString(out.states->states[i]->state);
-			printf("%-65s%s\n", out.jobs->jobs[i], s);
+		for ( i = 0; i < out.__sizejobs; i++ ) {
+			char *s = edg_wll_StatToString(out.states[i]->state);
+			printf("%-65s%s\n", out.jobs[i], s);
 			free(s);
 		}
 		}

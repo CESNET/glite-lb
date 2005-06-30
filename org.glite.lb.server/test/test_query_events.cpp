@@ -127,11 +127,13 @@ void edg_wll_FreeStmt(edg_wll_Stmt *) {}
 
 int debug;
 
-int edg_wll_QueryColumns(edg_wll_Stmt stmt, char**cols) {}
-char *edg_wll_TimeToDB(long t) {}
+int edg_wll_QueryColumns(edg_wll_Stmt stmt, char**cols) { return 0; }
+char *edg_wll_TimeToDB(long t) { return NULL; }
 
-time_t edg_wll_DBToTime(char *c) {}
-edg_wll_ErrorCode  edg_wll_DBConnect(edg_wll_Context ctx, char*str) {}
+time_t edg_wll_DBToTime(char *c) { return (time_t)-1; }
+edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx, char*str) { 
+  return (edg_wll_ErrorCode)0;
+}
 
 
 

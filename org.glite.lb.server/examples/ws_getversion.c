@@ -25,13 +25,14 @@ static void usage(char *me)
 
 int main(int argc,char** argv)
 {
-    edg_wll_Context						ctx;
-    glite_gsplugin_Context				gsplugin_ctx;
-    struct soap							soap;
-    struct _lbe__GetVersionResponse	out;
-    int									opt, err;
-	char							   *server = "http://localhost:8999/",
-									   *name = NULL;
+	edg_wll_Context			ctx;
+	glite_gsplugin_Context		gsplugin_ctx;
+	struct soap			soap;
+	struct _lbe__GetVersion		in;
+	struct _lbe__GetVersionResponse	out;
+	int				opt, err;
+	char				*server = "http://localhost:9003/",
+					*name = NULL;
 
 
 	name = strrchr(argv[0],'/');
@@ -55,13 +56,24 @@ int main(int argc,char** argv)
 		return 1;
 	}
 
-	glite_gsplugin_set_udata(&soap, gsplugin_ctx);
-
-    switch (err = soap_call___lb__GetVersion(&soap, server, "", NULL, &out))
+/*    memset(&in, 0, sizeof(in));*/
+    memset(&out, 0, sizeof(out));
+    switch (err = soap_call___lb__GetVersion(&soap, server, "", &in, &out))
 	{
 	case SOAP_OK: printf("Server version: %s\n", out.version); break;
 	case SOAP_FAULT: 
-	default: printf("???, err=%d\n", err);
+	case SOAP_SVR_FAULT:
+		{
+		char	*et,*ed;
+
+		edg_wll_FaultToErr(&soap,ctx);
+		edg_wll_Error(ctx,&et,&ed);
+		fprintf(stderr,"%s: %s (%s)\n",argv[0],et,ed);
+		exit(1);
+		}
+	default: 
+		printf("???, err=%d\n", err);
+		soap_print_fault(&soap, stderr);
     }
 
     soap_done(&soap);
