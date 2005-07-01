@@ -1090,14 +1090,22 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 	/*	soap->max_keep_alive must be higher tha 0,
 	 *	because on 0 value soap closes the connection
 	 */
-	soap->max_keep_alive = 1;
+	soap->max_keep_alive = 10;
+	soap->keep_alive = 1;
 	soap_begin(soap);
 	err = 0;
 	if ( soap_begin_recv(soap) ) {
 		if ( soap->error == SOAP_EOF ) return ENOTCONN;
 		if ( soap->error < SOAP_STOP ) err = soap_send_fault(soap);
 		else soap_closesock(soap);	/*	XXX: Do close the socket here? */
-	} else if (   soap_envelope_begin_in(soap)
+	} else {
+		/* XXX: An ugly hack!
+		 * soap->keep_alive is reset to 0 by soap->fparse (http_parse)
+		 * handler
+		 * Disabling http_parse function would be nice :)
+		 */
+		soap->keep_alive = 1;
+		if (   soap_envelope_begin_in(soap)
 			   || soap_recv_header(soap)
 			   || soap_body_begin_in(soap)
 			   || soap_serve_request(soap)
@@ -1107,6 +1115,7 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 #endif
 			   )
 		err = soap_send_fault(soap);
+	}
 
 	if ( err ) {
 		char    *errt, *errd;
