@@ -10,6 +10,113 @@
 #include "glite/lb/consumer.h"
 /* XXX: references only, src and dest share pointers */
 
+@@@{
+#
+# generate the command for move native data to soap web services structures
+#
+# if the field is optional, is ALWAYS assigned!
+#
+sub eventFieldAssign {
+	my ($src, $dst, $e, $f) = @_;
+	my ($tn, $soap_en, $soap_fn, $native_en, $native_fn);
+
+	$tn = $f->{type};
+	$native_en = lcfirst $e;
+	$native_fn = $f->{name};
+	$soap_en = $e;
+	while ($soap_en =~ /([[:alpha:]]*)_([[:alpha:]_]*)/) {
+		$soap_en = $1.ucfirst($2);
+	};
+	$soap_fn = $native_fn;
+	while ($soap_fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/) {
+		$soap_fn = $1.ucfirst($2);
+	};
+#	print STDERR "$src, $dst, $soap_en, $soap_fn, $native_fn, $tn, $usuc\n";
+
+	if ($tn eq 'int' || $tn eq 'port' || $tn eq 'bool' || $tn eq 'logsrc') {
+		if ($f->{optional}) {
+gen qq {
+!			$dst->$soap_en->$soap_fn = soap_malloc(soap, sizeof(*$dst->$soap_en->$soap_fn));
+!			*$dst->$soap_en->$soap_fn = $src->$native_en.$native_fn;
+};
+		} else {
+gen qq {
+!			$dst->$soap_en->$soap_fn = $src->$native_en.$native_fn;
+};
+		}
+	} elsif ($tn eq 'string' || $tn eq 'notifid') {
+gen qq {
+!			$dst->$soap_en->$soap_fn = soap_strdup(soap, $src->$native_en.$native_fn);
+};
+	} elsif ($tn eq 'jobstat') {
+gen qq {
+!			edg_wll_StatusToSoap(soap, $src->$native_en.$native_fn, &$dst->$soap_en->$soap_fn);
+};
+	} elsif ($tn eq 'timeval') {
+gen qq {
+!			$dst->$soap_en->$soap_fn = soap_malloc(soap, sizeof(struct lbt__timeval));
+!			$dst->$soap_en->$soap_fn->tvSec = $src->$native_en.$native_fn.tv_sec;
+!			$dst->$soap_en->$soap_fn->tvUsec = $src->$native_en.$native_fn.tv_usec;
+};
+	} elsif ($tn eq 'jobid') {
+gen qq {
+!			s = edg_wlc_JobIdUnparse($src->$native_en.$native_fn);
+!			$dst->$soap_en->$soap_fn = soap_strdup(soap, s);
+};
+	} elsif ($tn eq 'usertag') {
+gen qq {
+!			$dst->$soap_en->$soap_fn = soap_malloc(soap, sizeof(*$dst->$soap_fn));
+!			$dst->$soap_en->$soap_fn->tag = soap_strdup(soap, $src->$native_en.$native_fn.tag);
+!			$dst->$soap_en->$soap_fn->value = soap_strdup(soap, $src->$native_en.$native_fn.value);
+};
+	} else {
+		die "Unknown type $tn";
+	}
+}
+
+
+sub eventFieldFree {
+	my ($dst, $e, $f) = @_;
+	my ($tn, $soap_fn);
+
+	$tn = $f->{type};
+	$soap_en = $e;
+	while ($soap_en =~ /([[:alpha:]]*)_([[:alpha:]_]*)/) {
+		$soap_en = $1.ucfirst($2);
+	};
+	$soap_fn = $f->{name};
+	while ($soap_fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/) {
+		$soap_fn = $1.ucfirst($2);
+	};
+
+	if ($tn eq 'int' || $tn eq 'port' || $tn eq 'bool' || $tn eq 'logsrc') {
+		if ($f->{optional}) {
+gen qq {
+!		if ($dst->$soap_en->$soap_fn) soap_dealloc(soap, $dst->$soap_en->$soap_fn);
+};
+		}
+	} elsif ($tn eq 'jobstat') {
+gen qq {
+!		/* TODO: free($dst->$soap_en->$soap_fn); */
+};
+	} elsif ($tn eq 'string' || $tn eq 'notifid' || $tn eq 'jobid' || $tn eq 'timeval') {
+gen qq {
+!		if ($dst->$soap_en->$soap_fn) soap_dealloc(soap, $dst->$soap_en->$soap_fn);
+};
+	} elsif ($tn eq 'usertag') {
+gen qq {
+!		if ($dst->$soap_en->$soap_fn) {
+!			if ($dst->$soap_en->$soap_fn->tag) soap_dealloc(soap, $dst->$soap_en->$soap_fn->tag);
+!			if ($dst->$soap_en->$soap_fn->value) soap_dealloc(soap, $dst->$soap_en->$soap_fn->value);
+!			soap_dealloc(soap, $dst->$soap_en->$soap_fn);
+!		}
+};
+	} else {
+		die "Unknown type $tn";
+	}
+}
+@@@}
+
 void edg_wll_JobStatCodeToSoap(edg_wll_JobStatCode in, enum lbt__statName *out)
 {
 	switch ( in )
@@ -635,7 +742,7 @@ int edg_wll_JobsQueryResToSoap(
 
 
 /**
- * TODO: dodelat
+ * TODO: not tested
  * Translate event structure to Soap event.
  *
  * \param INOUT soap instance to work with
@@ -643,17 +750,47 @@ int edg_wll_JobsQueryResToSoap(
  * \param OUT sevent target Soap event
  */
 int edg_wll_EventToSoap(struct soap* soap, const edg_wll_Event *event, struct lbt__event **sevent) {
+	char *s;
+
 	*sevent = soap_malloc(soap, sizeof(*sevent));
 	memset(*sevent, 0, sizeof(*sevent));
 	if (!*sevent) return 0;
 
 	switch (event->any.type) {
 @@@{
+	my ($soap_en);
+
 	for my $e (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 			$event->getTypes) {
-		my $u = uc $e;
+		my ($u);
+
+		$u = uc $e;
+		$soap_en = $e;
+		while ($soap_en =~ /([[:alpha:]]*)_([[:alpha:]_]*)/) {
+			$soap_en = $1.ucfirst($2);
+		};
 gen qq {
 !		case EDG_WLL_EVENT_$u:
+!			(*sevent)->$soap_en = soap_malloc(soap, sizeof(struct lbt__event$soap_en));
+};
+		selectType $event '_common_';
+		for (getFieldsOrdered $event) {
+			my ($f);
+
+			$f = selectField $event $_;
+			eventFieldAssign("event", "(*sevent)", $e, $f);
+		}
+
+		gen "\n";
+
+		selectType $event $e;
+		for (getFieldsOrdered $event) {
+			my ($f);
+
+			$f = selectField $event $_;
+			eventFieldAssign("event", "(*sevent)", $e, $f);
+		}
+gen qq {
 !			break;
 !
 };
@@ -668,7 +805,7 @@ gen qq {
 
 
 /** 
- * TODO: dodelat
+ * TODO: not tested
  * Free Soap event.
  *
  * \param INOUT soap instance to work with
@@ -676,15 +813,31 @@ gen qq {
  */
 void edg_wll_FreeSoapEvent(struct soap *soap, struct lbt__event *sevent) {
 @@@{
-	# code from LBTypes.xml.T
-	for my $name (sort { $event->{order}->{$a} <=> $event->{order}->{$b} } getTypes $event) {
-		my $comment = getTypeComment $event $name;
-		$name = $1.ucfirst $2 while $name =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
-gen qq {
-!	if (sevent->$name) {
-!		soap_dealloc(soap, sevent->$name);
-!	}
-};
+	my ($soap_en);
+
+	for my $e (sort { $event->{order}->{$a} <=> $event->{order}->{$b} } getTypes $event) {
+		$soap_en = $e;
+		$soap_en = $1.ucfirst $2 while $soap_en =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+
+		gen "\tif (sevent->$soap_en) {\n";
+
+		selectType $event '_common_';
+		for (getFieldsOrdered $event) {
+			my ($f);
+
+			$f = selectField $event $_;
+			eventFieldFree("sevent", $e, $f);
+		}
+
+		selectType $event $e;
+		for (getFieldsOrdered $event) {
+			my ($f);
+
+			$f = selectField $event $_;
+			eventFieldFree("sevent", $e, $f);
+		}
+		gen qq "\t\tsoap_dealloc(soap, sevent->$soap_en);\n";
+		gen qq "\t}\n";
 }
 @@@}
 	soap_dealloc(soap, sevent);
