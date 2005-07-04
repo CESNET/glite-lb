@@ -740,6 +740,24 @@ int edg_wll_JobsQueryResToSoap(
 	return SOAP_OK;
 }
 
+/*
+void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
+{
+	switch (in) {
+	case UNDEF: *out = EDG_WLL_SOURCE_NONE; break; 
+        case userInterface: *out = EDG_WLL_SOURCE_USER_INTERFACE; break;
+        case networkServer: *out = EDG_WLL_SOURCE_NETWORK_SERVER; break;
+        case workloadManager: *out = EDG_WLL_SOURCE_WORKLOAD_MANAGER; break;
+        case bigHelper: *out = EDG_WLL_SOURCE_BIG_HELPER; break;
+        case jobSubmission: *out = EDG_WLL_SOURCE_JOB_SUBMISSION; break;  
+        case logMonitor: *out = EDG_WLL_SOURCE_LOG_MONITOR; break;
+        case LRMS: *out = EDG_WLL_SOURCE_LRMS; break;
+        case application: *out = EDG_WLL_SOURCE_APPLICATION; break;
+//        case : *out = EDG_WLL_SOURCE__LAST; break;
+        default: *out = in; break;
+        }
+}
+*/
 
 /**
  * TODO: not tested
@@ -752,8 +770,8 @@ int edg_wll_JobsQueryResToSoap(
 int edg_wll_EventToSoap(struct soap* soap, const edg_wll_Event *event, struct lbt__event **sevent) {
 	char *s;
 
-	*sevent = soap_malloc(soap, sizeof(*sevent));
-	memset(*sevent, 0, sizeof(*sevent));
+	*sevent = soap_malloc(soap, sizeof(**sevent));
+	memset(*sevent, 0, sizeof(**sevent));
 	if (!*sevent) return 0;
 
 	switch (event->any.type) {
@@ -844,6 +862,20 @@ void edg_wll_FreeSoapEvent(struct soap *soap, struct lbt__event *sevent) {
 }
 
 
+static void free_events(edg_wll_Event *events)
+{
+        int     i;
+
+        if (events) {
+                for (i=0; events[i].type != EDG_WLL_EVENT_UNDEF; i++)
+                        edg_wll_FreeEvent(&(events[i]));
+                edg_wll_FreeEvent(&(events[i])); /* free last line */
+                free(events);
+                events = NULL;
+        }
+}
+
+
 /**
  * Translate event array to Soap event array for eventsQueryResponse.
  *
@@ -887,12 +919,98 @@ err:
 }
 
 
-int edg_wll_SoapToEvents(
+int edg_wll_SoapToEvent(
 	struct soap *soap,
-	struct _lbe__QueryEventsResponse in,
-	edg_wll_Event **out)
+	struct lbt__event *in,
+	edg_wll_Event *out)
 {
 	//XXX: needs flash
 
+@@@{
+        for my $name (sort { $event->{order}->{$a} <=> $event->{order}->{$b} } getTypes $event)
+	{
+                my $comment = getTypeComment $event $name;
+                $name = $1.ucfirst $2 while $name =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+		gen "\t\tif (in->$name) {\n";
+		my $event_type = uc $name;
+		gen "\t\t\tout->type = EDG_WLL_EVENT_$event_type;\n";
+
+		for ('_common_',$name) {
+			my $type = $_;
+			selectType $event $type;
+			for ($event->getFieldsOrdered) {
+				my $f = selectField $event $_;
+				my $fn = $f->{name};
+				my $ft = $f->{type};
+				my $tn = $f->getType;
+				my $act;
+				if ($type eq '_common_') {
+					$act = 'any';
+				} else {
+					$act = lcfirst $name;
+				}
+				my $usuc = $fn;
+				$usuc = $1.uc($2).$3 while ($usuc =~ /([^_]*)_([a-z])(.*)/);
+
+				if ($ft eq 'jobid') {
+
+					gen "\t\t\tif (in->$name->$usuc)\n";
+					gen "\t\t\t\tedg_wlc_JobIdParse(in->$name->$usuc,&out->$act.$fn);\n";
+				} elsif ($ft eq 'timeval') {
+					gen "\t\t\tout->$act.$fn.tv_sec = in->$name->$usuc->tvSec;\n";
+					gen "\t\t\tout->$act.$fn.tv_usec = in->$name->$usuc->tvUsec;\n";
+				} elsif ($ft eq 'string') {
+					gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
+					gen "\t\t\tsoap_unlink(soap,in->$name->$usuc);\n";
+				} elsif ($ft eq 'int') {
+					if ($f->{optional}) {
+						gen "\t\t\tout->$act.$fn = *in->$name->$usuc;\n";
+					}
+					else {
+						gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
+					}
+				}
+				else {
+					gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
+				}
+			}	
+		}
+		gen "\n\t\t\treturn SOAP_OK;\n";
+		gen "\t\t}\n";
+	}
+@@@}
+
 	return 0;
 }
+
+
+/**
+ * Translate Soap event array of eventsQueryResponse to event array.
+ *
+ * \param INOUT soap instance to work with
+ * \param IN in result Soap structure
+ * \param OUT out source array of the events
+ */ 
+int edg_wll_SoapToEventsQueryRes(
+        struct soap *soap,
+        struct _lbe__QueryEventsResponse in,
+        edg_wll_Event **out)
+{
+	edg_wll_Event 	*events;
+	int 		i;
+
+
+	events = calloc(in.__sizeevents + 1, sizeof(*events));
+	if (!events) return SOAP_FAULT;
+
+	for (i=0; i < in.__sizeevents; i++) {
+		if (edg_wll_SoapToEvent(soap, in.events[i], &events[i]) != SOAP_OK) {
+			free_events(events);
+			return SOAP_FAULT;
+		}
+	}
+
+	*out = events;
+	return SOAP_OK;
+}
+

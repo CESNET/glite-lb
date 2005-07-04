@@ -132,7 +132,7 @@ int main(int argc,char** argv)
 		int		i;
 
 
-		edg_wll_SoapToEvents(mydlo,out,&events);
+		edg_wll_SoapToEventsQueryRes(mydlo,out,&events);
 
 		for ( i = 0; events && events[i].type != EDG_WLL_EVENT_UNDEF; i++ )
 		{
