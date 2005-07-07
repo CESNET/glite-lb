@@ -74,7 +74,7 @@ EXT_LIBS:= ${EXPAT_LIBS} ${ARES_LIBS} ${GLOBUS_LIBS}
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include
 
-COMPILE:=libtool --mode=compile ${CC}
+COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
@@ -180,7 +180,7 @@ clean:
 
 
 %.o: %.c
-	${COMPILE} ${GLOBUSINC} ${CFLAGS} -c $<
+	${COMPILE} ${GLOBUSINC} -c $<
 
 test_gss.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${GLOBUSINC} ${TEST_INC} $<
@@ -189,7 +189,7 @@ il_int_test.o il_string_test.o il_test.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 
 %.thr.o: %.c
-	${COMPILE} ${GLOBUSTHRINC} ${CFLAGS} -o $@ -c $<
+	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
 %.h: %.h.T
 	rm -f $@
