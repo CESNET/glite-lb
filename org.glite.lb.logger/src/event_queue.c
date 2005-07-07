@@ -110,7 +110,7 @@ event_queue_empty(struct event_queue *eq)
   assert(eq != NULL);
 
   event_queue_lock_ro(eq);
-  ret = eq->head == NULL;
+  ret = (eq->head == NULL);
   event_queue_unlock(eq);
 
   return(ret);
@@ -171,6 +171,7 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
   if(eq->mark_this && (el->prev == eq->mark_this)) 
     eq->mark_prev = el;
 #endif
+
   event_queue_unlock(eq);
   /* end of critical section */
 
@@ -186,7 +187,7 @@ event_queue_get(struct event_queue *eq, struct server_msg **msg)
   assert(eq != NULL);
   assert(msg != NULL);
   
-  event_queue_lock_ro(eq);
+  event_queue_lock(eq);
   el = eq->head;
 #if defined(INTERLOGD_EMS)
   /* this message is marked for removal, it is first on the queue */
@@ -234,11 +235,11 @@ event_queue_remove(struct event_queue *eq)
   }
   if(el == eq->tail) {
     /* we are removing the last message */
-    eq->tail = NULL;
+    eq->tail = prev;
   }
   if(el == eq->tail_ems) {
     /* we are removing last priority message */
-    eq->tail_ems = NULL;
+    eq->tail_ems = prev;
   }
 
   eq->mark_this = NULL;
@@ -284,8 +285,9 @@ event_queue_move_events(struct event_queue *eq_s, struct event_queue *eq_d, char
 	eq_s->tail = NULL;
 	while(p) {
 		if(strcmp(p->msg->job_id_s, notif_id) == 0) {
-			il_log(LOG_DEBUG, "  moving event with notif id %s from %s:%d to %s:%d\n",
-			       notif_id, eq_s->dest_name,eq_s->dest_port, eq_d ? eq_d->dest_name : "trash",eq_d ? eq_d->dest_port : -1);
+			il_log(LOG_DEBUG, "  moving event at offset %d from %s:%d to %s:%d\n",
+			       p->msg->offset, eq_s->dest_name,eq_s->dest_port, eq_d ? eq_d->dest_name : "trash",eq_d ? eq_d->dest_port : -1);
+			il_log(LOG_DEBUG, "  current: %x, next: %x\n", p, p->prev);
 			/* remove the message from the source list */
 			*source_prev = p->prev;
 			if(eq_d) {

@@ -243,15 +243,14 @@ static ssize_t edg_wll_socket_write(int sock,const void *buf,size_t bufsize,stru
 		gettimeofday(&before,NULL);
 	}
         len = write(sock,buf,bufsize);
-        while (len <= 0) {
+        if (len <= 0 && errno == EAGAIN) {
 		FD_ZERO(&fds);
 		FD_SET(sock,&fds);
-		if ((ret=select(sock+1,&fds,NULL,NULL,timeout?&to:NULL)) < 0) {
+		if ((ret=select(sock+1,NULL, &fds ,NULL,timeout?&to:NULL)) < 0) {
 			edg_wll_ll_log(LOG_ERR,"edg_wll_socket_write(): error selecting socket\n");
 			SYSTEM_ERROR("select"); 
-			break;
-		}
-                len = write(sock,buf,bufsize);
+		} else
+		   	len = write(sock,buf,bufsize);
         }
         if (timeout) {
            gettimeofday(&after,NULL);

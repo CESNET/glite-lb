@@ -21,6 +21,8 @@ gsoap_prefix=/opt/gsoap
 -include Makefile.inc
 -include ../Makefile.inc
 
+default all: compile
+
 GLITE_LB_SERVER_WITH_WS=yes
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
@@ -48,14 +50,11 @@ TEST_INC:=-I${cppunit}/include
 SUFFIXES = .T 
 
 DEBUG:=-g -O0 -Wall
-# not yet
-#	-I${voms}/include \
-#	-I${gacl}/include \
-#	-I/usr/include/libxml2 \
 
-# -DNO_VOMS -DNO_GACL to be removed when voms/gridsite are available
-CFLAGS:= -DNO_VOMS -DNO_GACL \
-	${WS_CFLAGS} ${DEBUG} \
+GRIDSITE_CFLAGS = `xml2-config --cflags`
+GRIDSITE_LIBS = -lgridsite_globus `xml2-config --libs`
+
+CFLAGS:= ${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${expat_prefix}/include \
@@ -64,9 +63,8 @@ CFLAGS:= -DNO_VOMS -DNO_GACL \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
-	-I${gridsite_prefix}/include -I${globus_prefix}/include/${nothrflavour}/openssl \
+	$(GRIDSITE_CFLAGS) \
 	-D_GNU_SOURCE
-
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include
@@ -81,7 +79,11 @@ GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_gssapi_gsi_${nothrflavour} \
 
 ifneq (${mysql_prefix},/usr)
-	myslqlib := -L${mysql_prefix}/lib
+	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
+		mysqlib := -L${mysql_prefix}/lib/mysql
+	else
+		mysqlib := -L${mysql_prefix}/lib
+	endif
 endif
 
 ifneq (${expat_prefix},/usr)
@@ -89,8 +91,10 @@ ifneq (${expat_prefix},/usr)
 endif
 
 EXT_LIBS:= -L${ares_prefix}/lib -lares \
-	${myslqlib} -lmysqlclient -lz\
+	${mysqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
+	${GRIDSITE_LIBS} \
+	-lvomsc \
 	${GLOBUS_LIBS}
 
 GSOAP_LIBS:= -L${gsoap_prefix}/lib -lgsoap
@@ -140,8 +144,6 @@ glite_lb_bkserverd: ${SERVER_OBJS} ${SERVER_SOAP_OBJS}
 
 glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${COMMON_LIB} ${EXT_LIBS}
-
-default all: compile
 
 compile: glite_lb_bkserverd glite_lb_bkindex glite_lb_proxy
 
