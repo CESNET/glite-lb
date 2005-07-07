@@ -109,7 +109,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	 * with readers */
 		trio_asprintf(&stmt,
 			"insert into events(jobid,event,code,prog,host,time_stamp,usec,arrived,level,userid) "
-			"values ('%|Ss',%d,%d,'%|Ss','%|Ss',%s,%d,'%|Ss',%d,'%|Ss')",
+			"values ('%|Ss',%d,%d,'%|Ss','%|Ss',%s,%d,%s,%d,'%|Ss')",
 			jobid,next,EDG_WLL_EVENT_UNDEF,ssrc,e->any.host,
 			edg_wll_TimeToDB(e->any.timestamp.tv_sec),e->any.timestamp.tv_usec,
 			now_s, e->any.level,userid);

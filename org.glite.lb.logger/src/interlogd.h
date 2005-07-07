@@ -190,7 +190,7 @@ int event_store_cleanup();
 int event_store_recover_all(void);
 struct event_store *event_store_find(char *);
 int event_store_sync(struct event_store *, long);
-int event_store_next(struct event_store *, int);
+int event_store_next(struct event_store *, long, int);
 int event_store_commit(struct event_store *, int, int);
 int event_store_recover(struct event_store *);
 int event_store_release(struct event_store *);
