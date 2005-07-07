@@ -32,13 +32,15 @@ void *
 queue_thread(void *q)
 {
 	struct event_queue *eq = (struct event_queue *)q;
-	int ret, exit, flushing;
+	int ret, exit;
 
 	if(init_errors(0) < 0) {
 		il_log(LOG_ERR, "Error initializing thread specific data, exiting!");
 		pthread_exit(NULL);
 	}
   
+	il_log(LOG_DEBUG, "  started new thread for delivery to %s:%d\n", eq->dest_name, eq->dest_port);
+
 	pthread_cleanup_push(queue_thread_cleanup, q); 
 
 	event_queue_cond_lock(eq);
@@ -52,7 +54,7 @@ queue_thread(void *q)
 		ret = 0;
 		while (event_queue_empty(eq) 
 #if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
-		       && ((flushing=eq->flushing) != 1)
+		       && (eq->flushing != 1)
 #endif
 			) {
 			ret = event_queue_wait(eq, 0);
@@ -115,7 +117,7 @@ queue_thread(void *q)
 		event_queue_cond_lock(eq);
 
 		/* Check if we are flushing and if we are, report status to master */
-		if(flushing == 1) {
+		if(eq->flushing == 1) {
 			il_log(LOG_DEBUG, "    flushing mode detected, reporting status\n");
 			/* 0 - events waiting, 1 - events sent, < 0 - some error */
 			eq->flush_result = ret;
@@ -152,19 +154,26 @@ event_queue_create_thread(struct event_queue *eq)
 {
 	assert(eq != NULL);
 
+	event_queue_lock(eq);
+
 	/* if there is a thread already, just return */
-	if(eq->thread_id > 0)
+	if(eq->thread_id > 0) {
+		event_queue_unlock(eq);
 		return(0);
+	}
 
 	/* create the thread itself */
 	if(pthread_create(&eq->thread_id, NULL, queue_thread, eq) < 0) {
 		eq->thread_id = 0;
 		set_error(IL_SYS, errno, "event_queue_create_thread: error creating new thread");
+		event_queue_unlock(eq);
 		return(-1);
 	}
 
 	/* the thread is never going to be joined */
 	pthread_detach(eq->thread_id);
+	
+	event_queue_unlock(eq);
 
 	return(1);
 }

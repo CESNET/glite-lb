@@ -39,7 +39,7 @@ int edg_wll_SetServerState(edg_wll_Context ctx,const char *name,const char *val)
 		case 1: break;
 		case -1: if (edg_wll_Error(ctx,NULL,NULL) == EEXIST) {
 				 free(stmt);
-				 trio_asprintf(&stmt,"update server_state set value = '%|Ss' "
+				 trio_asprintf(&stmt,"update server_state set value = %s "
 						 "where prefix = 'https://%|Ss:%d' "
 						 "and name = '%|Ss'",
 						 val,ctx->srvName,ctx->srvPort,name);
