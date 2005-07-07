@@ -8,6 +8,7 @@
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <assert.h>
 
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
@@ -20,6 +21,9 @@ static void CloseConnection(edg_wll_Context ctx, int conn_index)
 {
 	/* close connection ad free its structures */
 	OM_uint32 min_stat;
+
+	assert(ctx->connOpened);
+	assert(conn_index < ctx->connOpened);
 
 	edg_wll_gss_close(&ctx->connPool[conn_index].gss, &ctx->p_tmp_timeout);
 	if (ctx->connPool[conn_index].gsiCred) 
@@ -96,9 +100,11 @@ static void ReleaseConnection(edg_wll_Context ctx, char *name, int port)
 int edg_wll_close(edg_wll_Context ctx)
 {
 	edg_wll_ResetError(ctx);
+	if (ctx->connToUse == -1) return 0;
 
 	CloseConnection(ctx, ctx->connToUse);
 		
+	ctx->connToUse = -1;
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
@@ -183,6 +189,7 @@ err:
 	/* some error occured; close created connection
 	 * and free all fields in connPool[index] */
 	CloseConnection(ctx, index);
+	ctx->connToUse = -1;
 ok:	
 	return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -320,6 +327,7 @@ int edg_wll_http_send_recv(
 		default: goto err;
 	}
 	
+	assert(ctx->connToUse >= 0);
 	gettimeofday(&ctx->connPool[ctx->connToUse].lastUsed, NULL);
 	return 0;
 
