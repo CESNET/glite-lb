@@ -9,6 +9,8 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <syslog.h>
 #include <string.h>

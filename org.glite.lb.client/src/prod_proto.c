@@ -9,6 +9,7 @@
 #include "glite/lb/il_string.h"
 
 #include <signal.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/types.h>
 
