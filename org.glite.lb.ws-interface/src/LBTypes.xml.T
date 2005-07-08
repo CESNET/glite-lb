@@ -111,6 +111,28 @@
 		my $tn = $type;
 		$tn = $1.ucfirst $2 while $tn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
 
+		selectType $event $type;
+		for ($event->getFieldsOrdered) {
+			my $f = selectField $event $_;
+			if ($f->{codes}) {
+				my $n = $tn . '_' . getName $f;
+				$n = $1.ucfirst $2 while $n =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+				gen qq{
+!		<enum name="$n">
+};
+				for (@{$f->{codes}}) {
+					my $uc = uc $_->{name};
+					gen qq{
+!			<val name="$uc">$_->{comment}</val>
+};
+				}
+				gen qq{
+!		</enum>
+};
+
+			}
+		}
+
 		gen qq{
 !			<struct name="event$tn">
 };
@@ -136,8 +158,12 @@
 			my $fn = $f->{name};
 			my $ftn = $f->getType;
 
+
 			$fn = $1.ucfirst $2 while $fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+			$ftn = $tn . '_' . $fn if ($f->{codes});
+
 			$ftn = $1.ucfirst $2 while $ftn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+
 
 			my $comment = getComment $f;
 			my $opt = $f->{optional} ? 'yes' : 'no';
@@ -151,14 +177,14 @@
 
 		<enum name="eventSource">
 			Possible sources of LB events.
-			<val name="userInterface"/>
-			<val name="networkServer"/>
-			<val name="workloadManager"/>
-			<val name="bigHelper"/>
-			<val name="jobSubmission"/>
-			<val name="logMonitor"/>
+			<val name="UserInterface"/>
+			<val name="NetworkServer"/>
+			<val name="WorkloadManager"/>
+			<val name="BigHelper"/>
+			<val name="JobSubmission"/>
+			<val name="LogMonitor"/>
 			<val name="LRMS"/>
-			<val name="application"/>
+			<val name="Application"/>
 		</enum>
 
 		<struct name="stateEnterTimesItem">
