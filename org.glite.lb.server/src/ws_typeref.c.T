@@ -740,23 +740,245 @@ int edg_wll_JobsQueryResToSoap(
 	return SOAP_OK;
 }
 
-/*
-void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
+static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
 {
-	switch (in) {
-	case UNDEF: *out = EDG_WLL_SOURCE_NONE; break; 
-        case userInterface: *out = EDG_WLL_SOURCE_USER_INTERFACE; break;
-        case networkServer: *out = EDG_WLL_SOURCE_NETWORK_SERVER; break;
-        case workloadManager: *out = EDG_WLL_SOURCE_WORKLOAD_MANAGER; break;
-        case bigHelper: *out = EDG_WLL_SOURCE_BIG_HELPER; break;
-        case jobSubmission: *out = EDG_WLL_SOURCE_JOB_SUBMISSION; break;  
-        case logMonitor: *out = EDG_WLL_SOURCE_LOG_MONITOR; break;
+	switch ( in ) {
+        case UserInterface: *out = EDG_WLL_SOURCE_USER_INTERFACE; break;
+        case NetworkServer: *out = EDG_WLL_SOURCE_NETWORK_SERVER; break;
+        case WorkloadManager: *out = EDG_WLL_SOURCE_WORKLOAD_MANAGER; break;
+        case BigHelper: *out = EDG_WLL_SOURCE_BIG_HELPER; break;
+        case JobSubmission: *out = EDG_WLL_SOURCE_JOB_SUBMISSION; break;  
+        case LogMonitor: *out = EDG_WLL_SOURCE_LOG_MONITOR; break;
         case LRMS: *out = EDG_WLL_SOURCE_LRMS; break;
-        case application: *out = EDG_WLL_SOURCE_APPLICATION; break;
-//        case : *out = EDG_WLL_SOURCE__LAST; break;
-        default: *out = in; break;
+        case Application: *out = EDG_WLL_SOURCE_APPLICATION; break;
+        default: assert(0); break;
         }
 }
+
+/*
+static void edg_wll_SoapToTransferResult(enum in, edg_wll_TransferResult *out)
+{
+	switch ( in ) {
+        case : *out = EDG_WLL_TRANSFER_UNDEFINED,; break;
+        case : *out = EDG_WLL_TRANSFER_START,; break;
+        case : *out = EDG_WLL_TRANSFER_OK,; break;
+        case : *out = EDG_WLL_TRANSFER_REFUSED,; break;
+        case : *out = EDG_WLL_TRANSFER_FAIL,; break;
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_SoapToEnQueuedResult(enum in, edg_wll_EnQueuedResult *out)
+{
+	switch ( in ) {
+        case : *out = EDG_WLL_ENQUEUED_UNDEFINED,; break;
+        case : *out = EDG_WLL_ENQUEUED_START,; break;
+        case : *out = EDG_WLL_ENQUEUED_OK,; break;
+        case : *out = EDG_WLL_ENQUEUED_REFUSED,; break;
+        case : *out = EDG_WLL_ENQUEUED_FAIL,; break;
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_SoapToHelperCallSrc_role(enum in, edg_wll_HelperCallSrc_role *out)
+{
+	switch ( in ) {
+        case : *out = EDG_WLL_HELPERCALL_UNDEFINED,; break;
+        case : *out = EDG_WLL_HELPERCALL_CALLING,; break;
+        case : *out = EDG_WLL_HELPERCALL_CALLED,; break;
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_SoapToHelperReturnSrc_role(enum in, edg_wll_HelperReturnSrc_role *out)
+{
+	switch ( in ) {
+        case : *out = EDG_WLL_HELPERRETURN_UNDEFINED,; break;
+        case : *out = EDG_WLL_HELPERRETURN_CALLING,; break;
+        case : *out = EDG_WLL_HELPERRETURN_CALLED,; break;
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_SoapToResubmissionResult(enum in, edg_wll_ResubmissionResult *out)
+{
+	switch ( in ) {
+        case : *out = EDG_WLL_RESUBMISSION_UNDEFINED,; break;
+        case : *out = EDG_WLL_RESUBMISSION_WILLRESUB,; break;
+        case : *out = EDG_WLL_RESUBMISSION_WONTRESUB,; break;
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_SoapToDoneStatus_code(enum in, edg_wll_DoneStatus_code *out)
+{
+	switch ( in ) {
+        case : *out = EDG_WLL_DONE_UNDEFINED,; break;
+        case : *out = EDG_WLL_DONE_OK,; break;
+        case : *out = EDG_WLL_DONE_FAILED,; break;
+        case : *out = EDG_WLL_DONE_CANCELLED,; break;
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_SoapToCancelStatus_code(enum in, edg_wll_CancelStatus_code *out)
+{
+	switch ( in ) {
+        case : *out = EDG_WLL_CANCEL_UNDEFINED,; break;
+        case : *out = EDG_WLL_CANCEL_REQ,; break;
+        case : *out = EDG_WLL_CANCEL_REFUSE,; break;
+        case : *out = EDG_WLL_CANCEL_DONE,; break;
+        case : *out = EDG_WLL_CANCEL_ABORT,; break;
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_SoapToClearReason(enum in, edg_wll_ClearReason *out)
+{
+	switch ( in ) {
+        case : *out = EDG_WLL_CLEAR_UNDEFINED,; break;
+        case : *out = EDG_WLL_CLEAR_USER,; break;
+        case : *out = EDG_WLL_CLEAR_TIMEOUT,; break;
+        case : *out = EDG_WLL_CLEAR_NOOUTPUT,; break;
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_SoapToRegJobJobtype(enum in, edg_wll_RegJobJobtype *out)
+{
+	switch ( in ) {
+        case : *out = EDG_WLL_REGJOB_UNDEFINED,; break;
+        case : *out = EDG_WLL_REGJOB_SIMPLE,; break;
+        case : *out = EDG_WLL_REGJOB_DAG,; break;
+        case : *out = EDG_WLL_REGJOB_PARTITIONABLE,; break;
+        case : *out = EDG_WLL_REGJOB_PARTITIONED,; break;
+	default: assert(0); break;
+	}
+}
+
+*/
+
+
+
+
+
+static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
+{
+	switch ( in ) {
+	        case EDG_WLL_SOURCE_USER_INTERFACE: *out = UserInterface; break;
+        	case EDG_WLL_SOURCE_NETWORK_SERVER: *out = NetworkServer; break;
+	        case EDG_WLL_SOURCE_WORKLOAD_MANAGER: *out = WorkloadManager; break;
+        	case EDG_WLL_SOURCE_BIG_HELPER: *out = BigHelper; break;
+	        case EDG_WLL_SOURCE_JOB_SUBMISSION: *out = JobSubmission; break;  
+        	case EDG_WLL_SOURCE_LOG_MONITOR: *out = LogMonitor; break;
+	        case EDG_WLL_SOURCE_LRMS: *out = LRMS; break;
+        	case EDG_WLL_SOURCE_APPLICATION: *out = Application; break;
+	        default: assert(0); break;
+        }
+}
+
+/*
+static void edg_wll_TransferResultToSoap(edg_wll_TransferResult in, enum *out)
+{
+	switch ( in ) {
+	case EDG_WLL_TRANSFER_UNDEFINED,: *out = ; break; 
+	case EDG_WLL_TRANSFER_START,: *out = ; break; 
+	case EDG_WLL_TRANSFER_OK,: *out = ; break; 
+	case EDG_WLL_TRANSFER_REFUSED,: *out = ; break; 
+	case EDG_WLL_TRANSFER_FAIL,: *out = ; break; 
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_EnQueuedResultToSoap(edg_wll_EnQueuedResult in, enum *out)
+{
+	switch ( in ) {
+	case EDG_WLL_ENQUEUED_UNDEFINED,: *out = ; break; 
+	case EDG_WLL_ENQUEUED_START,: *out = ; break; 
+	case EDG_WLL_ENQUEUED_OK,: *out = ; break; 
+	case EDG_WLL_ENQUEUED_REFUSED,: *out = ; break; 
+	case EDG_WLL_ENQUEUED_FAIL,: *out = ; break; 
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_HelperCallSrc_roleToSoap(edg_wll_HelperCallSrc_role in, enum *out)
+{
+	switch ( in ) {
+	case EDG_WLL_HELPERCALL_UNDEFINED,: *out = ; break; 
+	case EDG_WLL_HELPERCALL_CALLING,: *out = ; break; 
+	case EDG_WLL_HELPERCALL_CALLED,: *out = ; break; 
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_HelperReturnSrc_roleToSoap(edg_wll_HelperReturnSrc_role in, enum *out)
+{
+	switch ( in ) {
+	case EDG_WLL_HELPERRETURN_UNDEFINED,: *out = ; break; 
+	case EDG_WLL_HELPERRETURN_CALLING,: *out = ; break; 
+	case EDG_WLL_HELPERRETURN_CALLED,: *out = ; break; 
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_ResubmissionResultToSoap(edg_wll_ResubmissionResult in, enum *out)
+{
+	switch ( in ) {
+	case EDG_WLL_RESUBMISSION_UNDEFINED,: *out = ; break; 
+	case EDG_WLL_RESUBMISSION_WILLRESUB,: *out = ; break; 
+	case EDG_WLL_RESUBMISSION_WONTRESUB,: *out = ; break; 
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_DoneStatus_codeToSoap(edg_wll_DoneStatus_code in, enum *out)
+{
+	switch ( in ) {
+	case EDG_WLL_DONE_UNDEFINED,: *out = ; break; 
+	case EDG_WLL_DONE_OK,: *out = ; break; 
+	case EDG_WLL_DONE_FAILED,: *out = ; break; 
+	case EDG_WLL_DONE_CANCELLED,: *out = ; break; 
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_CancelStatus_codeToSoap(edg_wll_CancelStatus_code in, enum *out)
+{
+	switch ( in ) {
+	case EDG_WLL_CANCEL_UNDEFINED,: *out = ; break; 
+	case EDG_WLL_CANCEL_REQ,: *out = ; break; 
+	case EDG_WLL_CANCEL_REFUSE,: *out = ; break; 
+	case EDG_WLL_CANCEL_DONE,: *out = ; break; 
+	case EDG_WLL_CANCEL_ABORT,: *out = ; break; 
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_ClearReasonToSoap(edg_wll_ClearReason in, enum *out)
+{
+	switch ( in ) {
+	case EDG_WLL_CLEAR_UNDEFINED,: *out = ; break; 
+	case EDG_WLL_CLEAR_USER,: *out = ; break; 
+	case EDG_WLL_CLEAR_TIMEOUT,: *out = ; break; 
+	case EDG_WLL_CLEAR_NOOUTPUT,: *out = ; break; 
+	default: assert(0); break;
+	}
+}
+
+static void edg_wll_RegJobJobtypeToSoap(edg_wll_RegJobJobtype in, enum *out)
+{
+	switch ( in ) {
+	case EDG_WLL_REGJOB_UNDEFINED,: *out = ; break; 
+	case EDG_WLL_REGJOB_SIMPLE,: *out = ; break; 
+	case EDG_WLL_REGJOB_DAG,: *out = ; break; 
+	case EDG_WLL_REGJOB_PARTITIONABLE,: *out = ; break; 
+	case EDG_WLL_REGJOB_PARTITIONED,: *out = ; break; 
+	default: assert(0); break;
+	}
+}
+
+
 */
 
 /**
@@ -919,7 +1141,7 @@ err:
 }
 
 
-int edg_wll_SoapToEvent(
+static int edg_wll_SoapToEvent(
 	struct soap *soap,
 	struct lbt__event *in,
 	edg_wll_Event *out)
@@ -969,6 +1191,9 @@ int edg_wll_SoapToEvent(
 					else {
 						gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
 					}
+				}
+				elsif ($ft eq 'logsrc') {
+					gen "\t\t\tedg_wll_SoapToSource(in->$name->$usuc, &(out->$act.$fn));\n";
 				}
 				else {
 					gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";

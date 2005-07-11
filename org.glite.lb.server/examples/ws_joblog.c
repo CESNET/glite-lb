@@ -161,6 +161,7 @@ int main(int argc,char** argv)
 		soap_print_fault(mydlo,stderr);
 	}
 
+	soap_dealloc(mydlo, out.events);
 	return 0;
 }
 

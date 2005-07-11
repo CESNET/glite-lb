@@ -47,4 +47,13 @@
 #define CHILDREN	lbt__jobFlagsValue__CHILDREN
 #define CHILDSTAT	lbt__jobFlagsValue__CHILDSTAT
 
+#define UserInterface	lbt__eventSource__UserInterface
+#define NetworkServer	lbt__eventSource__NetworkServer
+#define WorkloadManager	lbt__eventSource__WorkloadManager
+#define BigHelper	lbt__eventSource__BigHelper
+#define JobSubmission	lbt__eventSource__JobSubmission
+#define LogMonitor	lbt__eventSource__LogMonitor
+#define LRMS		lbt__eventSource__LRMS
+#define Application	lbt__eventSource__Application
+
 #endif
