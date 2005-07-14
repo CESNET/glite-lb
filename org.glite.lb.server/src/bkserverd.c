@@ -85,6 +85,10 @@ extern edg_wll_ErrorCode edg_wll_Close(edg_wll_Context);
 #define EDG_DUMP_STORAGE	"/tmp/dump"
 #endif
 
+#ifndef JPREG_DEF_DIR
+#define JPREG_DEF_DIR		"/tmp/jpreg"
+#endif
+
 /* file to store pid and generate semaphores key */
 #ifndef EDG_BKSERVERD_PIDFILE
 #define EDG_BKSERVERD_PIDFILE	"/var/run/edg-bkserverd.pid"
@@ -115,6 +119,7 @@ static int				slaves = 10,
 						semset;
 static char			   *purgeStorage = EDG_PURGE_STORAGE;
 static char			   *dumpStorage = EDG_DUMP_STORAGE;
+static char			   *jpregDir = JPREG_DEF_DIR;
 
 
 static time_t			purge_timeout[EDG_WLL_NUMBER_OF_STATCODES];
@@ -147,6 +152,7 @@ static struct option opts[] = {
 	{"pidfile",	1, NULL,	'i'},
 	{"purge-prefix",	1, NULL,	'S'},
 	{"dump-prefix",	1, NULL,	'D'},
+	{"jpreg-dir",	1, NULL,	'J'},
 	{"super-user",	1, NULL,	'R'},
 	{"super-users-file",	1, NULL,'F'},
 	{"no-index",	1, NULL,	'x'},
@@ -160,9 +166,9 @@ static struct option opts[] = {
 };
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:";
+static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:J:";
 #else
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:";
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:J:";
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 static void usage(char *me) 
@@ -188,6 +194,7 @@ static void usage(char *me)
 		"\t-N, --notif-dur\t Maximal duration of notification registrations in hours\n"
 		"\t-S, --purge-prefix\t purge files full-path prefix\n"
 		"\t-D, --dump-prefix\t dump files full-path prefix\n"
+		"\t-J, --jpreg-dir\t JP registration temporary files prefix\n"
 		"\t--super-user\t user allowed to bypass authorization and indexing\n"
 		"\t--super-users-file\t the same but read the subjects from a file\n"
 		"\t--no-index=1\t don't enforce indices for superusers\n"
@@ -266,7 +273,8 @@ int main(int argc, char *argv[])
 	int					opt;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *port,
-					   *name;
+					   *name,
+					   *tmps;
 #ifdef GLITE_LB_SERVER_WITH_WS
 	char			   *ws_port;
 #endif	/* GLITE_LB_SERVER_WITH_WS */
@@ -327,6 +335,7 @@ int main(int argc, char *argv[])
 		case 'l': semaphores = atoi(optarg); break;
 		case 'S': purgeStorage = optarg; break;
 		case 'D': dumpStorage = optarg; break;
+		case 'J': jpregDir = optarg; break;
 		case 'L':
 			if ( !parse_limits(optarg, &hardJobsLimit, &hardEventsLimit, &hardRespSizeLimit) )
 			{
@@ -397,6 +406,12 @@ int main(int argc, char *argv[])
 
 	if (check_mkdir(dumpStorage)) exit(1);
 	if (check_mkdir(purgeStorage)) exit(1);
+	if ( edg_wll_MaildirInit(jpregDir, &tmps) ) {
+		dprintf(("[%d] %s\n", getpid(), tmps));
+		if (!debug) syslog(LOG_CRIT, tmps);
+		exit(1);
+	}
+
 
 	if (semaphores == -1) semaphores = slaves;
 	semset = semget(semkey, 0, 0);
@@ -712,6 +727,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->notifDuration = notif_duration;
 	ctx->purgeStorage = strdup(purgeStorage);
 	ctx->dumpStorage = strdup(dumpStorage);
+	ctx->jpreg_dir = strdup(jpregDir);
 	ctx->hardJobsLimit = hardJobsLimit;
 	ctx->hardEventsLimit = hardEventsLimit;
 	ctx->semset = semset;

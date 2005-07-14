@@ -8,6 +8,9 @@
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
+#include "glite/lb/lb_maildir.h"
+#include "glite/lb/purge.h"
+#include "purge.h"
 #include "store.h"
 #include "lbs_db.h"
 #include "lock.h"
@@ -85,10 +88,34 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 	case EDG_WLL_EVENT_DONE:
 		edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
 		break;
+	default: break;
 	}
-  } else if ( newstat.state ) {
-	  edg_wll_NotifMatch(ctx, &newstat);
-	  edg_wll_FreeStatus(&newstat);
+  } else {
+	if ( newstat.state ) {
+		edg_wll_NotifMatch(ctx, &newstat);
+		edg_wll_FreeStatus(&newstat);
+	}
+	if ( ev->any.type == EDG_WLL_EVENT_REGJOB ) {
+		char *jids, *msg;
+		
+		if ( !(jids = edg_wlc_JobIdUnparse(ev->any.jobId)) ) {
+			edg_wll_SetError(ctx, errno, "Can't unparse jobid when registering to JP");
+			goto err;
+		}
+		if ( !(msg = realloc(jids, strlen(jids)+strlen(ev->any.user)+2)) ) {
+			free(jids);
+			edg_wll_SetError(ctx, errno, "Can't allocate buffer when registering to JP");
+			goto err;
+		}
+		strcat(msg, "\n");
+		strcat(msg, ev->any.user);
+		if ( edg_wll_MaildirStoreMsg(ctx->jpreg_dir, ctx->srvName, msg) ) {
+			free(msg);
+			edg_wll_SetError(ctx, errno, lbm_errdesc);
+			goto err;
+		}
+		free(msg);
+	}
   }
 
   edg_wll_FreeEvent(ev);
