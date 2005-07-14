@@ -73,7 +73,7 @@ struct _edg_wll_Context {
 
 	int             is_V21;         /* true if old (V21) request arrived */
 	int		isProxy;	/* LBProxy */
-	
+
 /* server limits */
 	int		softLimit;
 	int		hardJobsLimit;
@@ -84,6 +84,9 @@ struct _edg_wll_Context {
 /* purge and dump files storage */
 	char		*dumpStorage;
 	char		*purgeStorage;
+
+/* maildir location */
+	char	*jpreg_dir;
 
 /* flag for function store_event
  * if set then event are loaded from dump file

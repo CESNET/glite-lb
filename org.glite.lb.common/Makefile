@@ -83,18 +83,21 @@ INSTALL:=libtool --mode=install install
 OBJS:=lb_plain_io.o escape.o events.o mini_http.o query_rec.o \
 	status.o xml_conversions.o xml_parse.o ulm_parse.o param.o \
 	events_parse.o il_string.o il_int.o notifid.o \
-	il_log.o il_msg.o log_msg.o context.o trio.o strio.o
+	il_log.o il_msg.o log_msg.o context.o trio.o strio.o lb_maildir.o
 LOBJS:=${OBJS:.o=.lo}
 
 TRIO_OBJS:=escape.o trio.o strio.o
 TRIO_LIB:=libglite_lb_trio.a
+
+MAILDIR_OBJS:=lb_maildir.o
+MAILDIR_LIB:=libglite_lb_maildir.a
 
 THROBJS:=${OBJS:.o=.thr.o}
 THRLOBJS:=${OBJS:.o=.thr.lo}
 
 HDRS:=context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h il_msg.h \
-	escape.h ulm_parse.h trio.h
+	escape.h ulm_parse.h trio.h lb_maildir.h
 
 STATICLIB:=libglite_lb_common_${nothrflavour}.a
 THRSTATICLIB:=libglite_lb_common_${thrflavour}.a
@@ -105,7 +108,7 @@ REPORTS:=${top_srcdir}/reports
 
 default: all
 
-all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB}
+all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
 # all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
 
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
@@ -116,6 +119,10 @@ ${STATICLIB}: ${OBJS}
 
 ${TRIO_LIB}: ${TRIO_OBJS}
 	ar crv $@ ${TRIO_OBJS}
+	ranlib $@
+
+${MAILDIR_LIB}: ${MAILDIR_OBJS}
+	ar crv $@ ${MAILDIR_OBJS}
 	ranlib $@
 
 ${THRSTATICLIB}: ${THROBJS}
@@ -181,7 +188,7 @@ install:
 	if [ x${DOSTAGE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
-		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${PREFIX}/lib; \
+		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${MAILDIR_LIB} ${PREFIX}/lib; \
 	fi
 
 clean:

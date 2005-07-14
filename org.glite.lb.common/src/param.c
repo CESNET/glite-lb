@@ -41,6 +41,7 @@ static const char *myenv[] = {
 	"EDG_WL_LBPROXY_STORE_SOCK",
 	"EDG_WL_LBPROXY_SERVE_SOCK",
 	"EDG_WL_LBPROXY_USER",
+	"EDG_WL_JPREG_TMPDIR",
 };
 
 /* XXX: does not parse URL, just hostname[:port] */
@@ -159,6 +160,11 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 			if (!val) val = getenv(myenv[param]);
 			free(ctx->p_user_lbproxy);
 			ctx->p_user_lbproxy = val ? strdup(val) : NULL;
+			break;
+		case EDG_WLL_PARAM_JPREG_TMPDIR:
+			if (!val) val = getenv(myenv[param]);
+			free(ctx->jpreg_dir);
+			ctx->jpreg_dir = val ? strdup(val) : NULL;
 			break;
 		default:
 			return edg_wll_SetError(ctx,EINVAL,"unknown parameter");
@@ -299,6 +305,7 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_LBPROXY_STORE_SOCK:
 		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:
 		case EDG_WLL_PARAM_LBPROXY_USER:
+		case EDG_WLL_PARAM_JPREG_TMPDIR:
 			return edg_wll_SetParamString(ctx,param,va_arg(ap,char *));
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 		case EDG_WLL_PARAM_LOG_SYNC_TIMEOUT: 
@@ -407,6 +414,10 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_LBPROXY_USER:
 			p_string = va_arg(ap, char **);
 			*p_string = estrdup(ctx->p_user_lbproxy);
+			break;
+		case EDG_WLL_PARAM_JPREG_TMPDIR:
+			p_string = va_arg(ap, char **);
+			*p_string = estrdup(ctx->jpreg_dir);
 			break;
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 			p_tv = va_arg(ap,struct timeval *);
