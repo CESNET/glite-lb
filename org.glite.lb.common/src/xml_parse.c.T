@@ -2889,10 +2889,10 @@ int edg_wll_StatsRequestToXML(
                 char **message)
 {
 	char *pomA=NULL, *pomB=NULL, *pomC=NULL;
-	edg_wll_QueryRec **conditions;
+	const edg_wll_QueryRec **conditions;
 
 	
-        conditions = (edg_wll_QueryRec **) malloc(2 * sizeof(edg_wll_QueryRec *));
+        conditions = (const edg_wll_QueryRec **) malloc(2 * sizeof(edg_wll_QueryRec *));
         conditions[1] = NULL;
 
 	conditions[0] = cond;
