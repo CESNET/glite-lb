@@ -780,7 +780,7 @@ static void edg_wll_SoapToEnQueuedResult(enum in, edg_wll_EnQueuedResult *out)
 	}
 }
 
-static void edg_wll_SoapToHelperCallSrc_role(enum in, edg_wll_HelperCallSrc_role *out)
+static void edg_wll_SoapToHelperCallSrcRole(enum in, edg_wll_HelperCallSrc_role *out)
 {
 	switch ( in ) {
         case : *out = EDG_WLL_HELPERCALL_UNDEFINED,; break;
@@ -790,7 +790,7 @@ static void edg_wll_SoapToHelperCallSrc_role(enum in, edg_wll_HelperCallSrc_role
 	}
 }
 
-static void edg_wll_SoapToHelperReturnSrc_role(enum in, edg_wll_HelperReturnSrc_role *out)
+static void edg_wll_SoapToHelperReturnSrcRole(enum in, edg_wll_HelperReturnSrc_role *out)
 {
 	switch ( in ) {
         case : *out = EDG_WLL_HELPERRETURN_UNDEFINED,; break;
@@ -810,7 +810,7 @@ static void edg_wll_SoapToResubmissionResult(enum in, edg_wll_ResubmissionResult
 	}
 }
 
-static void edg_wll_SoapToDoneStatus_code(enum in, edg_wll_DoneStatus_code *out)
+static void edg_wll_SoapToDoneStatusCode(enum in, edg_wll_DoneStatus_code *out)
 {
 	switch ( in ) {
         case : *out = EDG_WLL_DONE_UNDEFINED,; break;
@@ -821,7 +821,7 @@ static void edg_wll_SoapToDoneStatus_code(enum in, edg_wll_DoneStatus_code *out)
 	}
 }
 
-static void edg_wll_SoapToCancelStatus_code(enum in, edg_wll_CancelStatus_code *out)
+static void edg_wll_SoapToCancelStatusCode(enum in, edg_wll_CancelStatus_code *out)
 {
 	switch ( in ) {
         case : *out = EDG_WLL_CANCEL_UNDEFINED,; break;
@@ -902,7 +902,7 @@ static void edg_wll_EnQueuedResultToSoap(edg_wll_EnQueuedResult in, enum *out)
 	}
 }
 
-static void edg_wll_HelperCallSrc_roleToSoap(edg_wll_HelperCallSrc_role in, enum *out)
+static void edg_wll_HelperCallSrcRoleToSoap(edg_wll_HelperCallSrc_role in, enum *out)
 {
 	switch ( in ) {
 	case EDG_WLL_HELPERCALL_UNDEFINED,: *out = ; break; 
@@ -912,7 +912,7 @@ static void edg_wll_HelperCallSrc_roleToSoap(edg_wll_HelperCallSrc_role in, enum
 	}
 }
 
-static void edg_wll_HelperReturnSrc_roleToSoap(edg_wll_HelperReturnSrc_role in, enum *out)
+static void edg_wll_HelperReturnSrcRoleToSoap(edg_wll_HelperReturnSrc_role in, enum *out)
 {
 	switch ( in ) {
 	case EDG_WLL_HELPERRETURN_UNDEFINED,: *out = ; break; 
@@ -932,7 +932,7 @@ static void edg_wll_ResubmissionResultToSoap(edg_wll_ResubmissionResult in, enum
 	}
 }
 
-static void edg_wll_DoneStatus_codeToSoap(edg_wll_DoneStatus_code in, enum *out)
+static void edg_wll_DoneStatusCodeToSoap(edg_wll_DoneStatus_code in, enum *out)
 {
 	switch ( in ) {
 	case EDG_WLL_DONE_UNDEFINED,: *out = ; break; 
@@ -943,7 +943,7 @@ static void edg_wll_DoneStatus_codeToSoap(edg_wll_DoneStatus_code in, enum *out)
 	}
 }
 
-static void edg_wll_CancelStatus_codeToSoap(edg_wll_CancelStatus_code in, enum *out)
+static void edg_wll_CancelStatusCodeToSoap(edg_wll_CancelStatus_code in, enum *out)
 {
 	switch ( in ) {
 	case EDG_WLL_CANCEL_UNDEFINED,: *out = ; break; 
@@ -966,7 +966,7 @@ static void edg_wll_ClearReasonToSoap(edg_wll_ClearReason in, enum *out)
 	}
 }
 
-static void edg_wll_RegJobJobtypeToSoap(edg_wll_RegJobJobtype in, enum *out)
+static void edg_wll_RegJobtypeToSoap(edg_wll_RegJobJobtype in, enum *out)
 {
 	switch ( in ) {
 	case EDG_WLL_REGJOB_UNDEFINED,: *out = ; break; 
@@ -1173,6 +1173,7 @@ static int edg_wll_SoapToEvent(
 				}
 				my $usuc = $fn;
 				$usuc = $1.uc($2).$3 while ($usuc =~ /([^_]*)_([a-z])(.*)/);
+				my $fuc = ucfirst($usuc);
 
 				if ($ft eq 'jobid') {
 
@@ -1188,6 +1189,15 @@ static int edg_wll_SoapToEvent(
 					if ($f->{optional}) {
 						gen "\t\t\tout->$act.$fn = *in->$name->$usuc;\n";
 					}
+# XXX: comment out when tranform functions ready...
+#					elsif ($f->{codes}) {
+#						if ($type eq '_common_') {
+#							gen "\t\t\tedg_wll_SoapTo$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
+#						}
+#						else {
+#							gen "\t\t\tedg_wll_SoapTo$name$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
+#						}
+#					}
 					else {
 						gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
 					}
