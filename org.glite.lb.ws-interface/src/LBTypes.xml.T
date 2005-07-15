@@ -107,6 +107,28 @@
 		</choice>
 
 @@@{
+	selectType $event '_common_';
+	for ($event->getFieldsOrdered) {
+		my $f = selectField $event $_;
+		if ($f->{codes}) {
+			my $n = ucfirst getName $f;
+			$n = $1.ucfirst $2 while $n =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+			gen qq{
+!		<enum name="$n">
+};
+			for (@{$f->{codes}}) {
+				my $uc = uc $_->{name};
+				gen qq{
+!			<val name="$uc">$_->{comment}</val>
+};
+			}
+			gen qq{
+!		</enum>
+!
+};
+		}
+	}
+
 	for my $type (sort { $event->{order}->{$a} <=> $event->{order}->{$b} } getTypes $event) {
 		my $tn = $type;
 		$tn = $1.ucfirst $2 while $tn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
@@ -128,8 +150,8 @@
 				}
 				gen qq{
 !		</enum>
+!
 };
-
 			}
 		}
 
@@ -143,13 +165,13 @@
 			my $ftn = $f->getType;
 
 			$fn = $1.ucfirst $2 while $fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+			$ftn = ucfirst $fn if ($f->{codes});
 			$ftn = $1.ucfirst $2 while $ftn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
 
 			my $comment = getComment $f;
 			my $opt = $f->{optional} ? 'yes' : 'no';
-			gen qq{
-				<elem name="$fn" type="$ftn" optional="$opt">$comment</elem>
-			};
+			gen qq{\t\t\t\t<elem name="$fn" type="$ftn" optional="$opt">$comment</elem>
+};
 		}
 
 		selectType $event $type;
@@ -161,15 +183,13 @@
 
 			$fn = $1.ucfirst $2 while $fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
 			$ftn = $tn . '_' . $fn if ($f->{codes});
-
 			$ftn = $1.ucfirst $2 while $ftn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
 
 
 			my $comment = getComment $f;
 			my $opt = $f->{optional} ? 'yes' : 'no';
-			gen qq{
-				<elem name="$fn" type="$ftn" optional="$opt">$comment</elem>
-			};
+			gen qq{\t\t\t\t<elem name="$fn" type="$ftn" optional="$opt">$comment</elem>
+};
 		}
 		gen "</struct>\n\n";
 	}
