@@ -51,10 +51,11 @@
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 #  if GSOAP_VERSION < 20700
-	 /*	STATUS - defined in <arpa/nameser.h> and it's includes
-	  *	brake the build
+	 /*	defined in <arpa/nameser.h> and it's includes
+	  *	break the build
 	  */
 #    undef STATUS
+#    undef REFUSED
 #  endif
 #include "LoggingAndBookkeeping.nsmap"
 #endif /* GLITE_LB_SERVER_WITH_WS */
