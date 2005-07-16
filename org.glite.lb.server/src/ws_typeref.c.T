@@ -742,6 +742,8 @@ int edg_wll_JobsQueryResToSoap(
 
 static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
 {
+	assert(EDG_WLL_SOURCE_APPLICATION + 1 == EDG_WLL_SOURCE__LAST);
+
 	switch ( in ) {
         case UserInterface: *out = EDG_WLL_SOURCE_USER_INTERFACE; break;
         case NetworkServer: *out = EDG_WLL_SOURCE_NETWORK_SERVER; break;
@@ -754,6 +756,64 @@ static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
         default: assert(0); break;
         }
 }
+
+
+@@@{
+foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } getTypes $event) {
+	my ($e, $upper_en, $soap_en, $en);
+
+	$e = $_;
+	if ($e eq '_common_') {
+		$en = '';
+		$upper_en = '';
+		$soap_en = '';
+	} else {
+		$en = ucfirst $e;
+		$upper_en = uc $e;
+		$soap_en = $en;
+		$soap_en = $1.ucfirst $2 while $soap_en =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+	}
+
+	selectType $event $_;
+	foreach ($event->getFieldsOrdered) {
+		my $f = selectField $event $_;
+
+		if ($f->{codes}) {
+			my ($fn, $enum_name, $func_name);
+
+			$fn = ucfirst $f->{name};
+			$upper_fn = uc $f->{name};
+			$soap_fn = $fn;
+			$soap_fn = $1.ucfirst $2 while $soap_fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
+
+			$enum_name = $e eq '_common_' && $fn eq 'Level' ? "int": "enum edg_wll_${en}${fn}";
+			$soap_enum_name = "lbt__$soap_en$soap_fn";
+			$func_name = "edg_wll_SoapTo$soap_en$soap_fn";
+			gen "static void $func_name(const enum $soap_enum_name in, $enum_name *out) {\n";
+			gen "\tswitch(in) {\n";
+			foreach $code (@{$f->{codes}}) {
+				my ($enum_value, $soap_enum_name);
+
+				$upper_cn = $code->{name};
+
+				if ($e eq '_common_') {
+					$enum_value = "EDG_WLL_${upper_fn}_${upper_cn}";
+				} else {
+					$enum_value = "EDG_WLL_${upper_en}_${upper_cn}";
+				}
+				$soap_enum_name = "lbt__${soap_en}${soap_fn}__${upper_cn}";
+				gen "\tcase $soap_enum_name: *out = $enum_value; break;\n"
+			}
+			gen "\tdefault: assert(0);\n";
+			gen "\t};\n";
+			gen "}\n";
+			gen "\n";
+			gen "\n";
+		} # if code
+	} # fields
+} # _common_, types
+@@@}
+
 
 /*
 static void edg_wll_SoapToTransferResult(enum in, edg_wll_TransferResult *out)
@@ -860,10 +920,10 @@ static void edg_wll_SoapToRegJobJobtype(enum in, edg_wll_RegJobJobtype *out)
 
 
 
-
-
 static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 {
+	assert(EDG_WLL_SOURCE_APPLICATION + 1 == EDG_WLL_SOURCE__LAST);
+
 	switch ( in ) {
 	        case EDG_WLL_SOURCE_USER_INTERFACE: *out = UserInterface; break;
         	case EDG_WLL_SOURCE_NETWORK_SERVER: *out = NetworkServer; break;
@@ -876,6 +936,7 @@ static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 	        default: assert(0); break;
         }
 }
+
 
 /*
 static void edg_wll_TransferResultToSoap(edg_wll_TransferResult in, enum *out)
