@@ -17,8 +17,8 @@
 # if the field is optional, is ALWAYS assigned!
 #
 sub eventFieldAssign {
-	my ($src, $dst, $e, $f) = @_;
-	my ($tn, $soap_en, $soap_fn, $native_en, $native_fn);
+	my ($indent, $src, $dst, $e, $f, $is_common) = @_;
+	my ($tn, $soap_en, $soap_fn, $native_en, $native_fn, $func_name, $source, $dest);
 
 	$tn = $f->{type};
 	$native_en = lcfirst $e;
@@ -31,44 +31,47 @@ sub eventFieldAssign {
 	while ($soap_fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/) {
 		$soap_fn = $1.ucfirst($2);
 	};
+	$source = "$src->$native_en.$native_fn";
+	$dest = "$dst->$soap_en->$soap_fn";
 #	print STDERR "$src, $dst, $soap_en, $soap_fn, $native_fn, $tn, $usuc\n";
 
-	if ($tn eq 'int' || $tn eq 'port' || $tn eq 'bool' || $tn eq 'logsrc') {
-		if ($f->{optional}) {
-gen qq {
-!			$dst->$soap_en->$soap_fn = soap_malloc(soap, sizeof(*$dst->$soap_en->$soap_fn));
-!			*$dst->$soap_en->$soap_fn = $src->$native_en.$native_fn;
-};
+	if ($tn eq 'int') {
+		if ($f->{codes}) {
+			$soap_En = ucfirst $soap_en;
+			$soap_Fn = ucfirst $soap_fn;
+			$func_name = $is_common ? "edg_wll_${soap_Fn}ToSoap" : "edg_wll_${soap_En}${soap_Fn}ToSoap";
+			gen $indent."$func_name(soap, $source, &$dest);\n";
+		} elsif ($f->{optional}) {
+			gen $indent."$dest = soap_malloc(soap, sizeof(*$dest));\n";
+			gen $indent."*$dest = $source;\n";
 		} else {
-gen qq {
-!			$dst->$soap_en->$soap_fn = $src->$native_en.$native_fn;
-};
+			gen $indent."$dest = $source;\n";
 		}
+	}
+	elsif ($tn eq 'port' || $tn eq 'bool') {
+		if ($f->{optional}) {
+			gen $indent."$dest = soap_malloc(soap, sizeof(*$dest));\n";
+			gen $indent."*$dest = $source;\n";
+		} else {
+			gen $indent."$dest = $source;\n";
+		}
+	} elsif ($tn eq 'logsrc') {
+			gen $indent."edg_wll_SourceToSoap($source, &$dest);\n";
 	} elsif ($tn eq 'string' || $tn eq 'notifid') {
-gen qq {
-!			$dst->$soap_en->$soap_fn = soap_strdup(soap, $src->$native_en.$native_fn);
-};
+			gen $indent."$dest = soap_strdup(soap, $source);\n";
 	} elsif ($tn eq 'jobstat') {
-gen qq {
-!			edg_wll_StatusToSoap(soap, $src->$native_en.$native_fn, &$dst->$soap_en->$soap_fn);
-};
+			gen $indent."edg_wll_StatusToSoap(soap, $source, &$dest);\n";
 	} elsif ($tn eq 'timeval') {
-gen qq {
-!			$dst->$soap_en->$soap_fn = soap_malloc(soap, sizeof(struct lbt__timeval));
-!			$dst->$soap_en->$soap_fn->tvSec = $src->$native_en.$native_fn.tv_sec;
-!			$dst->$soap_en->$soap_fn->tvUsec = $src->$native_en.$native_fn.tv_usec;
-};
+			gen $indent."$dest = soap_malloc(soap, sizeof(struct lbt__timeval));\n";
+			gen $indent."$dest->tvSec = $source.tv_sec;\n";
+			gen $indent."$dest->tvUsec = $source.tv_usec;\n";
 	} elsif ($tn eq 'jobid') {
-gen qq {
-!			s = edg_wlc_JobIdUnparse($src->$native_en.$native_fn);
-!			$dst->$soap_en->$soap_fn = soap_strdup(soap, s);
-};
+			gen $indent."s = edg_wlc_JobIdUnparse($source);\n";
+			gen $indent."$dest = soap_strdup(soap, s);\n";
 	} elsif ($tn eq 'usertag') {
-gen qq {
-!			$dst->$soap_en->$soap_fn = soap_malloc(soap, sizeof(*$dst->$soap_fn));
-!			$dst->$soap_en->$soap_fn->tag = soap_strdup(soap, $src->$native_en.$native_fn.tag);
-!			$dst->$soap_en->$soap_fn->value = soap_strdup(soap, $src->$native_en.$native_fn.value);
-};
+			gen $indent."$dest = soap_malloc(soap, sizeof(*$dst->$soap_fn));\n";
+			gen $indent."$dest->tag = soap_strdup(soap, $source.tag);\n";
+			gen $indent."$dest->value = soap_strdup(soap, $source.value);\n";
 	} else {
 		die "Unknown type $tn";
 	}
@@ -76,8 +79,8 @@ gen qq {
 
 
 sub eventFieldFree {
-	my ($dst, $e, $f) = @_;
-	my ($tn, $soap_fn);
+	my ($indent, $dst, $e, $f) = @_;
+	my ($tn, $soap_fn, $dest);
 
 	$tn = $f->{type};
 	$soap_en = $e;
@@ -88,29 +91,20 @@ sub eventFieldFree {
 	while ($soap_fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/) {
 		$soap_fn = $1.ucfirst($2);
 	};
+	$dest = "$dst->$soap_en->$soap_fn";
 
 	if ($tn eq 'int' || $tn eq 'port' || $tn eq 'bool' || $tn eq 'logsrc') {
 		if ($f->{optional}) {
-gen qq {
-!		if ($dst->$soap_en->$soap_fn) soap_dealloc(soap, $dst->$soap_en->$soap_fn);
-};
+			gen $indent."if ($dest) soap_dealloc(soap, $dest);\n";
 		}
-	} elsif ($tn eq 'jobstat') {
-gen qq {
-!		/* TODO: free($dst->$soap_en->$soap_fn); */
-};
 	} elsif ($tn eq 'string' || $tn eq 'notifid' || $tn eq 'jobid' || $tn eq 'timeval') {
-gen qq {
-!		if ($dst->$soap_en->$soap_fn) soap_dealloc(soap, $dst->$soap_en->$soap_fn);
-};
+		gen $indent."if ($dest) soap_dealloc(soap, $dest);\n";
 	} elsif ($tn eq 'usertag') {
-gen qq {
-!		if ($dst->$soap_en->$soap_fn) {
-!			if ($dst->$soap_en->$soap_fn->tag) soap_dealloc(soap, $dst->$soap_en->$soap_fn->tag);
-!			if ($dst->$soap_en->$soap_fn->value) soap_dealloc(soap, $dst->$soap_en->$soap_fn->value);
-!			soap_dealloc(soap, $dst->$soap_en->$soap_fn);
-!		}
-};
+		gen $indent."if ($dest) {\n";
+		gen $indent."	if ($dest->tag) soap_dealloc(soap, $dest->tag);\n";
+		gen $indent."	if ($dest->value) soap_dealloc(soap, $dest->value);\n";
+		gen $indent."	soap_dealloc(soap, $dest);\n";
+		gen $indent."}\n";
 	} else {
 		die "Unknown type $tn";
 	}
@@ -758,6 +752,10 @@ static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
 }
 
 
+/*
+ * Soap to C and C to Soap enumeration translate functions.
+ */
+
 @@@{
 foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } getTypes $event) {
 	my ($e, $upper_en, $soap_en, $en);
@@ -779,7 +777,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 		my $f = selectField $event $_;
 
 		if ($f->{codes}) {
-			my ($fn, $enum_name, $func_name);
+			my ($fn, $enum_name, $enum_value_prefix, $func2C_name, $func2S_name);
 
 			$fn = ucfirst $f->{name};
 			$upper_fn = uc $f->{name};
@@ -787,138 +785,72 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 			$soap_fn = $1.ucfirst $2 while $soap_fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
 
 			$enum_name = $e eq '_common_' && $fn eq 'Level' ? "int": "enum edg_wll_${en}${fn}";
-			$soap_enum_name = "lbt__$soap_en$soap_fn";
-			$func_name = "edg_wll_SoapTo$soap_en$soap_fn";
-			gen "static void $func_name(const enum $soap_enum_name in, $enum_name *out) {\n";
-			gen "\tswitch(in) {\n";
+			$enum_value_prefix = $e eq '_common_' ? "EDG_WLL_${upper_fn}_" : "EDG_WLL_${upper_en}_";
+			$soap_enum_name = "enum lbt__$soap_en$soap_fn ";
+			if ($f->{optional}) {$soap_enum_name .= "*";}
+
+			# Soap to C function
+			$func2C_name = "edg_wll_SoapTo$soap_en$soap_fn";
+			gen "\n";
+			gen "static void $func2C_name(const ${soap_enum_name}in, $enum_name *out) {\n";
+			if ($f->{optional}) {
+				gen "\tif (in == NULL) {\n";
+				gen "\t\t*out = ${enum_value_prefix}UNDEFINED;\n";
+				gen "\t\treturn;\n";
+				gen "\t}\n";
+				gen "\n";
+				gen "\tswitch(*in) {\n";
+			} else {
+				gen "\tswitch(in) {\n";
+			}
 			foreach $code (@{$f->{codes}}) {
-				my ($enum_value, $soap_enum_name);
+				my ($enum_value, $soap_enum_value);
 
 				$upper_cn = $code->{name};
-
-				if ($e eq '_common_') {
-					$enum_value = "EDG_WLL_${upper_fn}_${upper_cn}";
-				} else {
-					$enum_value = "EDG_WLL_${upper_en}_${upper_cn}";
-				}
-				$soap_enum_name = "lbt__${soap_en}${soap_fn}__${upper_cn}";
-				gen "\tcase $soap_enum_name: *out = $enum_value; break;\n"
+				$enum_value = "${enum_value_prefix}${upper_cn}";
+				$soap_enum_value = "lbt__${soap_en}${soap_fn}__${upper_cn}";
+				gen "\tcase $soap_enum_value: *out = $enum_value; break;\n"
 			}
 			gen "\tdefault: assert(0);\n";
 			gen "\t};\n";
 			gen "}\n";
 			gen "\n";
+
+			# C to Soap function
+			my $target;
+
+			$func2S_name = "edg_wll_${soap_en}${soap_fn}ToSoap";
 			gen "\n";
+			gen "static void $func2S_name(struct soap *soap, const $enum_name in, ${soap_enum_name}*out) {\n";
+			if ($f->{optional}) {
+				gen "\tif (in == ${enum_value_prefix}UNDEFINED) {\n";
+				gen "\t\t*out = NULL;\n";
+				gen "\t\treturn;\n";
+				gen "\t}\n";
+				gen "\n";
+				gen "\t*out = soap_malloc(soap, sizeof(**out));\n";
+				$target = "**out";
+			} else {
+				$target = "*out";
+			}
+			gen "\tswitch(in) {\n";
+			foreach $code (@{$f->{codes}}) {
+				my ($enum_value, $soap_enum_value);
+
+				$upper_cn = $code->{name};
+				$enum_value = "${enum_value_prefix}${upper_cn}";
+				$soap_enum_value = "lbt__${soap_en}${soap_fn}__${upper_cn}";
+				gen "\tcase $enum_value: $target = $soap_enum_value; break;\n"
+			}
+			gen "\tdefault: assert(0);\n";
+			gen "\t};\n";
+			gen "}\n";
+			gen "\n";
+
 		} # if code
 	} # fields
 } # _common_, types
 @@@}
-
-
-/*
-static void edg_wll_SoapToTransferResult(enum in, edg_wll_TransferResult *out)
-{
-	switch ( in ) {
-        case : *out = EDG_WLL_TRANSFER_UNDEFINED,; break;
-        case : *out = EDG_WLL_TRANSFER_START,; break;
-        case : *out = EDG_WLL_TRANSFER_OK,; break;
-        case : *out = EDG_WLL_TRANSFER_REFUSED,; break;
-        case : *out = EDG_WLL_TRANSFER_FAIL,; break;
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_SoapToEnQueuedResult(enum in, edg_wll_EnQueuedResult *out)
-{
-	switch ( in ) {
-        case : *out = EDG_WLL_ENQUEUED_UNDEFINED,; break;
-        case : *out = EDG_WLL_ENQUEUED_START,; break;
-        case : *out = EDG_WLL_ENQUEUED_OK,; break;
-        case : *out = EDG_WLL_ENQUEUED_REFUSED,; break;
-        case : *out = EDG_WLL_ENQUEUED_FAIL,; break;
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_SoapToHelperCallSrcRole(enum in, edg_wll_HelperCallSrc_role *out)
-{
-	switch ( in ) {
-        case : *out = EDG_WLL_HELPERCALL_UNDEFINED,; break;
-        case : *out = EDG_WLL_HELPERCALL_CALLING,; break;
-        case : *out = EDG_WLL_HELPERCALL_CALLED,; break;
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_SoapToHelperReturnSrcRole(enum in, edg_wll_HelperReturnSrc_role *out)
-{
-	switch ( in ) {
-        case : *out = EDG_WLL_HELPERRETURN_UNDEFINED,; break;
-        case : *out = EDG_WLL_HELPERRETURN_CALLING,; break;
-        case : *out = EDG_WLL_HELPERRETURN_CALLED,; break;
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_SoapToResubmissionResult(enum in, edg_wll_ResubmissionResult *out)
-{
-	switch ( in ) {
-        case : *out = EDG_WLL_RESUBMISSION_UNDEFINED,; break;
-        case : *out = EDG_WLL_RESUBMISSION_WILLRESUB,; break;
-        case : *out = EDG_WLL_RESUBMISSION_WONTRESUB,; break;
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_SoapToDoneStatusCode(enum in, edg_wll_DoneStatus_code *out)
-{
-	switch ( in ) {
-        case : *out = EDG_WLL_DONE_UNDEFINED,; break;
-        case : *out = EDG_WLL_DONE_OK,; break;
-        case : *out = EDG_WLL_DONE_FAILED,; break;
-        case : *out = EDG_WLL_DONE_CANCELLED,; break;
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_SoapToCancelStatusCode(enum in, edg_wll_CancelStatus_code *out)
-{
-	switch ( in ) {
-        case : *out = EDG_WLL_CANCEL_UNDEFINED,; break;
-        case : *out = EDG_WLL_CANCEL_REQ,; break;
-        case : *out = EDG_WLL_CANCEL_REFUSE,; break;
-        case : *out = EDG_WLL_CANCEL_DONE,; break;
-        case : *out = EDG_WLL_CANCEL_ABORT,; break;
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_SoapToClearReason(enum in, edg_wll_ClearReason *out)
-{
-	switch ( in ) {
-        case : *out = EDG_WLL_CLEAR_UNDEFINED,; break;
-        case : *out = EDG_WLL_CLEAR_USER,; break;
-        case : *out = EDG_WLL_CLEAR_TIMEOUT,; break;
-        case : *out = EDG_WLL_CLEAR_NOOUTPUT,; break;
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_SoapToRegJobJobtype(enum in, edg_wll_RegJobJobtype *out)
-{
-	switch ( in ) {
-        case : *out = EDG_WLL_REGJOB_UNDEFINED,; break;
-        case : *out = EDG_WLL_REGJOB_SIMPLE,; break;
-        case : *out = EDG_WLL_REGJOB_DAG,; break;
-        case : *out = EDG_WLL_REGJOB_PARTITIONABLE,; break;
-        case : *out = EDG_WLL_REGJOB_PARTITIONED,; break;
-	default: assert(0); break;
-	}
-}
-
-*/
-
-
 
 static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 {
@@ -937,110 +869,6 @@ static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
         }
 }
 
-
-/*
-static void edg_wll_TransferResultToSoap(edg_wll_TransferResult in, enum *out)
-{
-	switch ( in ) {
-	case EDG_WLL_TRANSFER_UNDEFINED,: *out = ; break; 
-	case EDG_WLL_TRANSFER_START,: *out = ; break; 
-	case EDG_WLL_TRANSFER_OK,: *out = ; break; 
-	case EDG_WLL_TRANSFER_REFUSED,: *out = ; break; 
-	case EDG_WLL_TRANSFER_FAIL,: *out = ; break; 
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_EnQueuedResultToSoap(edg_wll_EnQueuedResult in, enum *out)
-{
-	switch ( in ) {
-	case EDG_WLL_ENQUEUED_UNDEFINED,: *out = ; break; 
-	case EDG_WLL_ENQUEUED_START,: *out = ; break; 
-	case EDG_WLL_ENQUEUED_OK,: *out = ; break; 
-	case EDG_WLL_ENQUEUED_REFUSED,: *out = ; break; 
-	case EDG_WLL_ENQUEUED_FAIL,: *out = ; break; 
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_HelperCallSrcRoleToSoap(edg_wll_HelperCallSrc_role in, enum *out)
-{
-	switch ( in ) {
-	case EDG_WLL_HELPERCALL_UNDEFINED,: *out = ; break; 
-	case EDG_WLL_HELPERCALL_CALLING,: *out = ; break; 
-	case EDG_WLL_HELPERCALL_CALLED,: *out = ; break; 
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_HelperReturnSrcRoleToSoap(edg_wll_HelperReturnSrc_role in, enum *out)
-{
-	switch ( in ) {
-	case EDG_WLL_HELPERRETURN_UNDEFINED,: *out = ; break; 
-	case EDG_WLL_HELPERRETURN_CALLING,: *out = ; break; 
-	case EDG_WLL_HELPERRETURN_CALLED,: *out = ; break; 
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_ResubmissionResultToSoap(edg_wll_ResubmissionResult in, enum *out)
-{
-	switch ( in ) {
-	case EDG_WLL_RESUBMISSION_UNDEFINED,: *out = ; break; 
-	case EDG_WLL_RESUBMISSION_WILLRESUB,: *out = ; break; 
-	case EDG_WLL_RESUBMISSION_WONTRESUB,: *out = ; break; 
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_DoneStatusCodeToSoap(edg_wll_DoneStatus_code in, enum *out)
-{
-	switch ( in ) {
-	case EDG_WLL_DONE_UNDEFINED,: *out = ; break; 
-	case EDG_WLL_DONE_OK,: *out = ; break; 
-	case EDG_WLL_DONE_FAILED,: *out = ; break; 
-	case EDG_WLL_DONE_CANCELLED,: *out = ; break; 
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_CancelStatusCodeToSoap(edg_wll_CancelStatus_code in, enum *out)
-{
-	switch ( in ) {
-	case EDG_WLL_CANCEL_UNDEFINED,: *out = ; break; 
-	case EDG_WLL_CANCEL_REQ,: *out = ; break; 
-	case EDG_WLL_CANCEL_REFUSE,: *out = ; break; 
-	case EDG_WLL_CANCEL_DONE,: *out = ; break; 
-	case EDG_WLL_CANCEL_ABORT,: *out = ; break; 
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_ClearReasonToSoap(edg_wll_ClearReason in, enum *out)
-{
-	switch ( in ) {
-	case EDG_WLL_CLEAR_UNDEFINED,: *out = ; break; 
-	case EDG_WLL_CLEAR_USER,: *out = ; break; 
-	case EDG_WLL_CLEAR_TIMEOUT,: *out = ; break; 
-	case EDG_WLL_CLEAR_NOOUTPUT,: *out = ; break; 
-	default: assert(0); break;
-	}
-}
-
-static void edg_wll_RegJobtypeToSoap(edg_wll_RegJobJobtype in, enum *out)
-{
-	switch ( in ) {
-	case EDG_WLL_REGJOB_UNDEFINED,: *out = ; break; 
-	case EDG_WLL_REGJOB_SIMPLE,: *out = ; break; 
-	case EDG_WLL_REGJOB_DAG,: *out = ; break; 
-	case EDG_WLL_REGJOB_PARTITIONABLE,: *out = ; break; 
-	case EDG_WLL_REGJOB_PARTITIONED,: *out = ; break; 
-	default: assert(0); break;
-	}
-}
-
-
-*/
 
 /**
  * TODO: not tested
@@ -1079,7 +907,7 @@ gen qq {
 			my ($f);
 
 			$f = selectField $event $_;
-			eventFieldAssign("event", "(*sevent)", $e, $f);
+			eventFieldAssign("\t\t\t", "event", "(*sevent)", $e, $f, 1);
 		}
 
 		gen "\n";
@@ -1089,7 +917,7 @@ gen qq {
 			my ($f);
 
 			$f = selectField $event $_;
-			eventFieldAssign("event", "(*sevent)", $e, $f);
+			eventFieldAssign("\t\t\t", "event", "(*sevent)", $e, $f, 0);
 		}
 gen qq {
 !			break;
@@ -1127,7 +955,7 @@ void edg_wll_FreeSoapEvent(struct soap *soap, struct lbt__event *sevent) {
 			my ($f);
 
 			$f = selectField $event $_;
-			eventFieldFree("sevent", $e, $f);
+			eventFieldFree("\t\t", "sevent", $e, $f);
 		}
 
 		selectType $event $e;
@@ -1135,7 +963,7 @@ void edg_wll_FreeSoapEvent(struct soap *soap, struct lbt__event *sevent) {
 			my ($f);
 
 			$f = selectField $event $_;
-			eventFieldFree("sevent", $e, $f);
+			eventFieldFree("\t\t", "sevent", $e, $f);
 		}
 		gen qq "\t\tsoap_dealloc(soap, sevent->$soap_en);\n";
 		gen qq "\t}\n";
@@ -1250,15 +1078,14 @@ static int edg_wll_SoapToEvent(
 					if ($f->{optional}) {
 						gen "\t\t\tout->$act.$fn = *in->$name->$usuc;\n";
 					}
-# XXX: comment out when tranform functions ready...
-#					elsif ($f->{codes}) {
-#						if ($type eq '_common_') {
-#							gen "\t\t\tedg_wll_SoapTo$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
-#						}
-#						else {
-#							gen "\t\t\tedg_wll_SoapTo$name$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
-#						}
-#					}
+					elsif ($f->{codes}) {
+						if ($type eq '_common_') {
+							gen "\t\t\tedg_wll_SoapTo$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
+						}
+						else {
+							gen "\t\t\tedg_wll_SoapTo$name$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
+						}
+					}
 					else {
 						gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
 					}
