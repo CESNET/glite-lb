@@ -1075,16 +1075,16 @@ static int edg_wll_SoapToEvent(
 					gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
 					gen "\t\t\tsoap_unlink(soap,in->$name->$usuc);\n";
 				} elsif ($ft eq 'int') {
-					if ($f->{optional}) {
-						gen "\t\t\tout->$act.$fn = *in->$name->$usuc;\n";
-					}
-					elsif ($f->{codes}) {
+					if ($f->{codes}) {
 						if ($type eq '_common_') {
 							gen "\t\t\tedg_wll_SoapTo$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
 						}
 						else {
 							gen "\t\t\tedg_wll_SoapTo$name$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
 						}
+					}
+					elsif ($f->{optional}) {
+						gen "\t\t\tout->$act.$fn = *in->$name->$usuc;\n";
 					}
 					else {
 						gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
