@@ -90,7 +90,6 @@ int edg_wll_MaildirStoreMsg(
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Maximum tries limit reached with unsuccessful file creation");
 			return -1;
 		}
-		if ( fname ) free(fname);
 		snprintf(fname, PATH_MAX, "%s/%s/%ld.%d.%s", root, dirs[LBMD_DIR_TMP], time(NULL), getpid(), srvname);
 		if ( (fhnd = open(fname, O_CREAT|O_EXCL|O_WRONLY, 00600)) < 0 ) {
 			if ( errno == EEXIST ) { sleep(2); continue; }
