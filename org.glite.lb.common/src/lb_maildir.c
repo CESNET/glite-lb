@@ -241,6 +241,7 @@ int edg_wll_MaildirTransStart(
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't read file '%s'", newfname);
 			goto err;
 		}
+		if ( ct == 0 ) break;
 		bufuse += ct;
 	} while ( ct == toread );
 	close(fhnd);
