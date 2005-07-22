@@ -72,6 +72,14 @@ int init(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data)
 }
 
 
+void done(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data) {
+	free(data->uris[0]);
+	free(data->classes[0]);
+	free(data->uris);
+	free(data->classes);
+	memset(data, 0, sizeof(*data));
+}
+
 
 static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle)
 {
@@ -135,7 +143,10 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle)
 	return 0;
 
 fail:
-	for (i = 0; i < nevents; i++) edg_wll_FreeEvent(h->events[i]);
+	for (i = 0; i < nevents; i++) {
+		edg_wll_FreeEvent(h->events[i]);
+		free(h->events[i]);
+	}
 	free(h->events);
 	free(buffer.buf);
 	edg_wll_FreeContext(context);
@@ -158,7 +169,8 @@ static int lb_close(void *fpctx,void *handle)
 		i = 0;
 		while (h->events[i])
 		{
-			edg_wll_FreeEvent(h->events[i]); 
+			edg_wll_FreeEvent(h->events[i]);
+			free(h->events[i]);
 			i++;
 		}
 		free(h->events);
@@ -257,6 +269,7 @@ static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrv
 					{
 						av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
 
+						av[n_tags].attr.name = strdup(h->events[i]->userTag.name);
 						av[n_tags].value.tag.name = strdup(h->events[i]->userTag.name);
 						av[n_tags].value.tag.sequence = -1;
 						av[n_tags].value.tag.timestamp = 
