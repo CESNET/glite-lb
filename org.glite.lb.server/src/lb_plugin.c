@@ -22,6 +22,7 @@
 #include "glite/jp/backend.h"
 
 #define INITIAL_NUMBER_EVENTS 100
+#define LB_PLUGIN_NAMESPACE "urn:org.glite.lb"
 
 typedef struct _lb_buffer_t {
 	char *buf;
@@ -268,8 +269,10 @@ static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrv
 						!(strcmp(h->events[i]->userTag.name, attr.name)) )
 					{
 						av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
+						memset(&av[n_tags], 0, 2 * sizeof(glite_jp_attrval_t));
 
 						av[n_tags].attr.name = strdup(h->events[i]->userTag.name);
+						av[n_tags].attr.namespace = strdup(LB_PLUGIN_NAMESPACE);
 						av[n_tags].value.tag.name = strdup(h->events[i]->userTag.name);
 						av[n_tags].value.tag.sequence = -1;
 						av[n_tags].value.tag.timestamp = 
