@@ -23,13 +23,14 @@
 #include "server_state.h"
 #include "purge.h"
 
+static char *time_to_string(time_t t, char **ptr);
 static int handle_specials(edg_wll_Context,time_t *);
 
 #define sizofa(a) (sizeof(a)/sizeof((a)[0]))
 
 int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wll_DumpResult *result)
 {
-	char	*from_s, *to_s, *stmt, *time_s;
+	char	*from_s, *to_s, *stmt, *time_s, *ptr;
 	char	*tmpfname;
 	time_t	start,end;
 	edg_wll_Stmt	q = NULL;
@@ -64,7 +65,7 @@ int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wl
 			"where u.userid=e.userid "
 			"and j.jobid = e.jobid "
 			"and j.dg_jobid like 'https://%|Ss:%d%%' "
-			"and arrived > '%|Ss' and arrived <= '%|Ss' "
+			"and arrived > %s and arrived <= %s "
 			"order by arrived",
 			ctx->srvName,ctx->srvPort,
 			from_s,to_s);
@@ -130,16 +131,13 @@ int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wl
 	}
 
 	time(&end);
-/* XXX: get rid of apostrophes returned by edg_wll_TimeToDB() */
-	time_s = strdup(edg_wll_TimeToDB(start));
-	time_s[strlen(time_s)-1] = 0;
-	edg_wll_SetServerState(ctx,EDG_WLL_STATE_DUMP_START,time_s+1);
-	free(time_s);
+	time_s = time_to_string(start, &ptr);
+	edg_wll_SetServerState(ctx,EDG_WLL_STATE_DUMP_START,time_s);
+	free(ptr);
 	
-	time_s = strdup(edg_wll_TimeToDB(end));
-	time_s[strlen(time_s)-1] = 0;
-	edg_wll_SetServerState(ctx,EDG_WLL_STATE_DUMP_END,time_s+1);
-	free(time_s);
+	time_s = time_to_string(end, &ptr);
+	edg_wll_SetServerState(ctx,EDG_WLL_STATE_DUMP_END,time_s);
+	free(ptr);
 
 	result->from = from;
 	result->to = to;
@@ -190,3 +188,12 @@ static int handle_specials(edg_wll_Context ctx,time_t *t)
 }
 
 
+static char *time_to_string(time_t t, char **ptr) {
+	char *s;
+
+	s = edg_wll_TimeToDB(t);
+	s[strlen(s) - 1] = '\0';
+	*ptr = s;
+
+	return s + 1;
+}

@@ -343,29 +343,74 @@ event_store_recover(struct event_store *es)
 	  return(-1);
   }
 
-  /* get the position in file to be sought */
-  if(es->offset)
-    last = es->offset;
-  else {
+  while(1) { /* try, try, try */
+
+	  /* get the position in file to be sought */
+	  if(es->offset)
+		  last = es->offset;
+	  else {
 #if !defined(IL_NOTIFICATIONS)
-    if(eq_b == eq_l) 
-      last = es->last_committed_ls;
-    else
+		  if(eq_b == eq_l) 
+			  last = es->last_committed_ls;
+		  else
 #endif
-      /* last = min(ls, bs) */
-      last = (es->last_committed_bs < es->last_committed_ls) ? es->last_committed_bs : es->last_committed_ls;
-  }
+			  /* last = min(ls, bs) */
+			  /* I took the liberty to optimize this,
+			     since LS is not used. */
+			  /* last = (es->last_committed_bs <
+			     es->last_committed_ls) ? es->last_committed_bs :
+			     es->last_committed_ls; */
+			  last = es->last_committed_bs;
+	  }
 
-  il_log(LOG_DEBUG, "    setting starting file position to  %ld\n", last);
-  il_log(LOG_DEBUG, "    bytes sent to logging server: %d\n", es->last_committed_ls);
-  il_log(LOG_DEBUG, "    bytes sent to bookkeeping server: %d\n", es->last_committed_bs);
+	  il_log(LOG_DEBUG, "    setting starting file position to  %ld\n", last);
+	  il_log(LOG_DEBUG, "    bytes sent to logging server: %d\n", es->last_committed_ls);
+	  il_log(LOG_DEBUG, "    bytes sent to bookkeeping server: %d\n", es->last_committed_bs);
 
-  /* skip all committed or already enqueued events */
-  if(fseek(ef, last, SEEK_SET) < 0) {
-    set_error(IL_SYS, errno, "event_store_recover: error setting position for read");
-    event_store_unlock(es);
-    fclose(ef);
-    return(-1);
+	  if(last > 0) {
+		  int c;
+
+		  /* skip all committed or already enqueued events */
+		  /* be careful - check, if the offset really points to the
+		     beginning of event string */
+		  if(fseek(ef, last-1, SEEK_SET) < 0) {
+			  set_error(IL_SYS, errno, "event_store_recover: error setting position for read");
+			  event_store_unlock(es);
+			  fclose(ef);
+			  return(-1);
+		  }
+		  /* the last enqueued event MUST end with EVENT_SEPARATOR,
+		     even if the offset points at EOF */
+		  if((c=fgetc(ef)) != EVENT_SEPARATOR) {
+			  /* Houston, we have got a problem */
+			  il_log(LOG_WARNING, 
+				 "    file position %ld does not point at the beginning of event string, backing off!\n",
+				 last);
+			  /* now, where were we? */
+			  if(es->offset) {
+				  /* next try will be with
+				     last_commited_bs */
+				  es->offset = 0;
+			  } else {
+				  /* this is really weird... back off completely */
+				  es->last_committed_ls = es->last_committed_bs = 0;
+			  }
+		  } else {
+			  /* OK, break out of the loop */
+			  break;
+		  }
+	  } else {
+		  /* this breaks out of the loop, we are starting at
+		   * the beginning of file
+		   */
+		  if(fseek(ef, 0, SEEK_SET) < 0) {
+			  set_error(IL_SYS, errno, "event_store_recover: error setting position for read");
+			  event_store_unlock(es);
+			  fclose(ef);
+			  return(-1);
+		  }
+		  break;
+	  }
   }
 
   /* enqueue all remaining events */
@@ -383,7 +428,8 @@ event_store_recover(struct event_store *es)
     msg = server_msg_create(event_s, last);
     free(event_s);
     if(msg == NULL) {
-      break;
+	    il_log(LOG_ALERT, "    event file corrupted! Please move it to quarantine (ie. somewhere else) and restart interlogger.\n");
+	    break;
     }
     msg->es = es;
 
@@ -473,14 +519,25 @@ event_store_sync(struct event_store *es, long offset)
      * 2) es->offset is set only by recover() and next().
      * 3) Additional recover can not do much harm.
      * 4) And next() is only called by the same thread as sync().
-     * => no one is messing with us right now */
+     * 5) use_lock is in place, so no cleanup possible
+      * => no one is messing with us right now */
     event_store_lock_ro(es);
     if(ret < 0)
       ret = -1;
     else 
-      /* somehow we suppose that now es->offset >= offset */
-      /* in fact it must be es->offset > offset, anything else would be weird */
-      ret = (es->offset > offset) ? 0 : 1;
+	    if(es->offset <= offset) {
+		    /* Apparently there is something wrong - we are receiving an event
+		     * which is beyond the end of file. Someone must have removed the file
+		     * when we were not looking. The question is - what should we do with the event?
+		     * We have to send it, as this is the only one occasion when we see it.
+		     * However, we must not allow the es->offset to be set using this event,
+		     * as it would point after the end of file. Sort this out in event_store_next().
+		     */
+		    ret = 1;
+	    } else if(es->offset > offset) {
+		    /* we have seen at least this event */
+		    ret = 0;
+	    }
   }
   event_store_unlock(es);
   return(ret);
@@ -488,12 +545,20 @@ event_store_sync(struct event_store *es, long offset)
 
 
 int
-event_store_next(struct event_store *es, int len)
+event_store_next(struct event_store *es, long offset, int len)
 {
   assert(es != NULL);
   
   event_store_lock(es);
-  es->offset += len;
+  /* Whoa, be careful now. The es->offset points right after the last enqueued event,
+   * but it may not be the offset of the event WE have just enqueued, because:!    
+   *  1) someone could have removed the event file behind our back
+   *  2) the file could have been recover()ed and more events read
+   * In either case the offset should not be moved.
+   */
+  if(es->offset == offset) {
+	  es->offset += len;
+  }
   event_store_unlock(es);
 
   return(0);

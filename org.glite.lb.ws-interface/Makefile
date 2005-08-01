@@ -12,7 +12,12 @@ PREFIX=/opt/glite
 
 -include Makefile.inc
 
-VPATH=${top_srcdir}/interface
+SUFFIXES = .T
+
+VPATH=${top_srcdir}/src
+AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
+XSLTPROC=xsltproc
+
 STAGETO=interface
 
 WSDL=LB.wsdl
@@ -43,7 +48,20 @@ install:
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	install -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
+#	install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
 
 clean:
 	rm -f *.h
 	
+
+%.xml: %.xml.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
+
+${WSDL}: LB.xml puke-wsdl.xsl
+	${XSLTPROC} ../src/puke-wsdl.xsl LB.xml >$@
+
+
+LB-ug.xml: LB.xml puke-ug.xsl
+	${XSLTPROC} ../src/puke-ug.xsl LB.xml >$@

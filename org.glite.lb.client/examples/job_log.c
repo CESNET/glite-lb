@@ -44,7 +44,7 @@ int main(int argc,char **argv)
 {
 	edg_wll_Context	ctx;
 	char		*errt,*errd;
-	edg_wll_Event	*events;
+	edg_wll_Event	*events = NULL;
 	edg_wlc_JobId	job;
 	int		i,opt,delay = 1,count = 0;
 
@@ -71,13 +71,10 @@ int main(int argc,char **argv)
 	
 	if ( edg_wll_JobLog(ctx,job,&events) )
 	{
-		if ( edg_wll_Error(ctx, &errt, &errd) != E2BIG )
-			goto err;
-
 		fprintf(stderr,"%s: %s (%s)\n",argv[0],errt,errd);
 	}
 
-	for ( i = 0; events[i].type != EDG_WLL_EVENT_UNDEF; i++ )
+	for ( i = 0; events && events[i].type != EDG_WLL_EVENT_UNDEF; i++ )
 	{
 		char	*e = edg_wll_UnparseEvent(ctx,events+i);
 		fputs(e,stdout);

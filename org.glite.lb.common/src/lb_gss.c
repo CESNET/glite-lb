@@ -760,7 +760,7 @@ edg_wll_gss_write(edg_wll_GssConnection *connection, const void *buf, size_t buf
    input_token.value = (void*)buf;
    input_token.length = bufsize;
 
-   maj_stat = gss_wrap (&min_stat, connection->context, 0, GSS_C_QOP_DEFAULT,
+   maj_stat = gss_wrap (&min_stat, connection->context, 1, GSS_C_QOP_DEFAULT,
 			&input_token, NULL, &output_token);
    if (GSS_ERROR(maj_stat)) {
       if (gss_code) {
@@ -793,11 +793,14 @@ edg_wll_gss_read(edg_wll_GssConnection *connection, void *buf, size_t bufsize,
       
       len = (connection->bufsize < bufsize) ? connection->bufsize : bufsize;
       memcpy(buf, connection->buffer, len);
-      connection->bufsize -= len;
-      if (connection->bufsize > 0) {
-	 for (i = 0; i < sizeof(connection->buffer) - len; i++)
+      if (connection->bufsize - len == 0) {
+	 free(connection->buffer);
+	 connection->buffer = NULL;
+      } else {
+	 for (i = 0; i < connection->bufsize - len; i++)
 	    connection->buffer[i] = connection->buffer[i+len];
       }
+      connection->bufsize -= len;
 
       return len;
    }
@@ -811,6 +814,7 @@ edg_wll_gss_read(edg_wll_GssConnection *connection, void *buf, size_t bufsize,
 
       maj_stat = gss_unwrap(&min_stat, connection->context, &input_token,
 	  		    &output_token, NULL, NULL);
+      gss_release_buffer(&min_stat, &input_token);
       if (GSS_ERROR(maj_stat)) {
 	 /* XXX cleanup */
 	 return EDG_WLL_GSS_ERROR_GSS;
@@ -818,15 +822,24 @@ edg_wll_gss_read(edg_wll_GssConnection *connection, void *buf, size_t bufsize,
    } while (maj_stat == 0 && output_token.length == 0 && output_token.value == NULL);
 
    if (output_token.length > bufsize) {
-      if (output_token.length - bufsize > sizeof(connection->buffer))
-	 return EINVAL;
       connection->bufsize = output_token.length - bufsize;
+      connection->buffer = malloc(connection->bufsize);
+      if (connection->buffer == NULL) {
+	 connection->bufsize = 0;
+	 ret = EDG_WLL_GSS_ERROR_ERRNO;
+	 goto end;
+      }
       memcpy(connection->buffer, output_token.value + bufsize, connection->bufsize);
       output_token.length = bufsize;
    }
-   memcpy(buf, output_token.value, output_token.length);
 
-   return output_token.length;
+   memcpy(buf, output_token.value, output_token.length);
+   ret = output_token.length;
+
+end:
+   gss_release_buffer(&min_stat, &output_token);
+
+   return ret;
 }
 
 int
@@ -840,14 +853,16 @@ edg_wll_gss_read_full(edg_wll_GssConnection *connection, void *buf,
    if (connection->bufsize > 0) {
       size_t len;
 
-
       len = (connection->bufsize < bufsize) ? connection->bufsize : bufsize;
       memcpy(buf, connection->buffer, len);
-      connection->bufsize -= len;
-      if (connection->bufsize > 0) {
-         for (i = 0; i < sizeof(connection->buffer) - len; i++)
+      if (connection->bufsize - len == 0) {
+	 free(connection->buffer);
+	 connection->buffer = NULL;
+      } else {
+         for (i = 0; i < connection->bufsize - len; i++)
             connection->buffer[i] = connection->buffer[i+len];
       }
+      connection->bufsize -= len;
       *total = len;
    }
 
@@ -906,6 +921,8 @@ edg_wll_gss_close(edg_wll_GssConnection *con, struct timeval *timeout)
       if (con->sock >= 0)
 	 close(con->sock);
    }
+   if (con->buffer)
+      free(con->buffer);
    memset(con, 0, sizeof(*con));
    con->context = GSS_C_NO_CONTEXT;
    con->sock = -1;
