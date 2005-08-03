@@ -20,8 +20,14 @@
 
 	Revision history:
 	$Log$
+	Revision 1.6  2005/01/21 11:27:44  jpospi
+	completely remove gridsite.prefix and voms.prefix
+	
 	Revision 1.5  2005/01/20 11:43:00  jpospi
 	handle correctly gridsite_prefix and voms_prefix
+	
+	Revision 1.4.2.1  2005/05/19 13:41:22  akrenek
+	fix build with mysql 4.1.x
 	
 	Revision 1.4  2004/10/15 11:03:03  jskrabal
 	- merge fixes
@@ -76,6 +82,7 @@ nothrflavour=${with.globus.nothr.flavor}
 expat_prefix=${with.expat.prefix}
 ares_prefix=${with.ares.prefix}
 mysql_prefix=${with.mysql.prefix}
+mysql_version=${ext.mysql.version}
 cppunit=${with.cppunit.prefix}
 gsoap_prefix=${with.gsoap.prefix}
 			</echo>

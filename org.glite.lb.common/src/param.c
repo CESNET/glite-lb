@@ -19,57 +19,70 @@ static const char *myenv[] = {
 	NULL,
 	NULL,
 	NULL,
-	"EDG_WL_LOG_DESTINATION",
-	"EDG_WL_LOG_DESTINATION",
-	"EDG_WL_LOG_TIMEOUT",
-	"EDG_WL_LOG_SYNC_TIMEOUT",
-	"EDG_WL_QUERY_SERVER",
-	"EDG_WL_QUERY_SERVER",
-	"EDG_WL_QUERY_SERVER_OVERRIDE",
-	"EDG_WL_QUERY_TIMEOUT",
-	"EDG_WL_QUERY_JOBS_LIMIT",
-	"EDG_WL_QUERY_EVENTS_LIMIT",
-	"EDG_WL_QUERY_RESULTS",
-	"EDG_WL_QUERY_CONNECTIONS",
-	"EDG_WL_NOTIF_SERVER",
-	"EDG_WL_NOTIF_SERVER",
-	"EDG_WL_NOTIF_TIMEOUT",
+	"%sLOG_DESTINATION",
+	"%sLOG_DESTINATION",
+	"%sLOG_TIMEOUT",
+	"%sLOG_SYNC_TIMEOUT",
+	"%sQUERY_SERVER",
+	"%sQUERY_SERVER",
+	"%sQUERY_SERVER_OVERRIDE",
+	"%sQUERY_TIMEOUT",
+	"%sQUERY_JOBS_LIMIT",
+	"%sQUERY_EVENTS_LIMIT",
+	"%sQUERY_RESULTS",
+	"%sQUERY_CONNECTIONS",
+	"%sNOTIF_SERVER",
+	"%sNOTIF_SERVER",
+	"%sNOTIF_TIMEOUT",
 /* don't care about X509_USER_*, GSI looks at them anyway */
 	NULL,
 	NULL,
 	NULL,
-	"EDG_WL_LBPROXY_STORE_SOCK",
-	"EDG_WL_LBPROXY_SERVE_SOCK",
-	"EDG_WL_LBPROXY_USER",
-	"EDG_WL_JPREG_TMPDIR",
+	"%sLBPROXY_STORE_SOCK",
+	"%sLBPROXY_SERVE_SOCK",
+	"%sLBPROXY_USER",
+	"%sJPREG_TMPDIR",
 };
 
 /* XXX: does not parse URL, just hostname[:port] */
 
+static char *mygetenv(int param)
+{
+	char	*s = NULL;
+
+	if (myenv[param]) {
+		char	varname[100];
+
+		sprintf(varname,myenv[param],"GLITE_WMS_");
+		s = getenv(varname);
+
+		if (!s) {
+			sprintf(varname,myenv[param],"EDG_WL_");
+			s = getenv(varname);
+		}
+	}
+	return s;
+}
+
 static int extract_port(edg_wll_ContextParam param,int dflt)
 {
-	char	*p = NULL,*s = NULL;
-	if (myenv[param]) {
-		s = getenv(myenv[param]);
-        	if (s) p = strchr(s,':');
-	}
+	char	*p = NULL,*s = mygetenv(param);
+
+        if (s) p = strchr(s,':');
 	return	p ? atoi(p+1) : dflt;
 }
 
 static int extract_num(edg_wll_ContextParam param,int dflt)
 {
-	if (myenv[param]) {
-		char *s = getenv(myenv[param]);
-        	if (s) return(atoi(s));
-	}
-	return dflt;
+	char *s = mygetenv(param);
+	return s ? atoi(s) : dflt;
 }
 
 static char *extract_host(edg_wll_ContextParam param,const char *dflt)
 {
 	char	*p,*s = NULL;
 
-	if (myenv[param]) s = getenv(myenv[param]);
+	s = mygetenv(param);
 	if (!s && !dflt) return NULL;
 	s = strdup(s?s:dflt),
 	p = strchr(s,':');
@@ -82,7 +95,7 @@ static void extract_time(edg_wll_ContextParam param,double dflt,struct timeval *
 	char	*s = NULL;
 	double	d;
 
-	if (myenv[param]) s = getenv(myenv[param]);
+	s = mygetenv(param);
 	d = s ? atof(s) : dflt;
 	t->tv_sec = (long) d;
 	t->tv_usec = (long) ((d-t->tv_sec)*1e6);
@@ -93,8 +106,7 @@ static char *extract_split(edg_wll_ContextParam param,char by,int index)
 	int	i;
 	char	*s,*e;
 
-	if (!myenv[param]) return NULL;
-	if (!(s = getenv(myenv[param]))) return NULL;
+	if (!(s = mygetenv(param))) return NULL;
 	for (i=0; i<index && (s=strchr(s,by));i++) s++;
 	return i==index ? ( (e = strchr(s,by)) ? strndup(s,e-s) : strdup(s))
 			: NULL;
@@ -140,7 +152,7 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 			ctx->p_cert_filename = val ? strdup(val) : NULL;
 			break;
 		case EDG_WLL_PARAM_QUERY_SERVER_OVERRIDE:
-			if (!val) val = getenv(myenv[param]);
+			if (!val) val = mygetenv(param);
 			if (!val) val = "no";
 			ctx->p_query_server_override = !strcasecmp(val,"yes");
 			break;
@@ -218,7 +230,7 @@ int edg_wll_SetParamInt(edg_wll_Context ctx,edg_wll_ContextParam param,int val)
 			break;
 		case EDG_WLL_PARAM_QUERY_CONNECTIONS:
 			{
-				char *s = getenv(myenv[param]);
+				char *s = mygetenv(param);
 				
 				if (!val && s) val = atoi(s);
 				ctx->poolSize = val ? val : EDG_WLL_LOG_CONNECTIONS_DEFAULT;

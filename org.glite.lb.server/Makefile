@@ -20,6 +20,8 @@ gsoap_prefix=/opt/gsoap
 
 -include Makefile.inc
 
+default all: compile
+
 GLITE_LB_SERVER_WITH_WS=yes
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
@@ -75,7 +77,11 @@ GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_gssapi_gsi_${nothrflavour} \
 
 ifneq (${mysql_prefix},/usr)
-	myslqlib := -L${mysql_prefix}/lib/mysql
+	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
+		mysqlib := -L${mysql_prefix}/lib/mysql
+	else
+		mysqlib := -L${mysql_prefix}/lib
+	endif
 endif
 
 ifneq (${expat_prefix},/usr)
@@ -91,7 +97,7 @@ ifeq (${nothrflavour},gcc32dbg)
 endif
 
 EXT_LIBS:= -L${ares_prefix}/lib -lares \
-	${myslqlib} -lmysqlclient -lz\
+	${mysqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
 	${GRIDSITE_LIBS} \
 	-lvomsc${vomsflavour} \

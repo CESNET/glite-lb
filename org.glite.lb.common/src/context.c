@@ -34,6 +34,7 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	out->connPoolNotif = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
 	out->connProxy = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnProxy));
 	out->connProxy->conn.sock = -1;
+	out->connToUse = -1;
 
 	*ctx = out;
 	return 0;

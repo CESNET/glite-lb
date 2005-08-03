@@ -20,6 +20,12 @@
 
 	Revision history:
 	$Log$
+	Revision 1.7  2005/05/26 15:13:46  zurek
+	inserted module.build.file
+	
+	Revision 1.6.2.1  2005/02/12 01:39:00  glbuild
+	Changed start time
+	
 	Revision 1.6  2004/10/18 19:16:09  zsalvet
 	RPM descriptions
 	

@@ -3,7 +3,6 @@
 
 #ident "$Header$"
 
-
 /**
  * \file edg/workload/logging/common/log_proto.h
  * \brief common part of the logging protocol

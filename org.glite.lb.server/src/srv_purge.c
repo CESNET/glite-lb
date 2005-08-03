@@ -65,7 +65,8 @@ int edg_wll_CreateTmpFileStorage(edg_wll_Context ctx, char *prefix, char **fname
 				char buff[100];
 
 				sprintf(buff, "couldn't create temporary server file");
-				return edg_wll_SetError(ctx, errno, buff);
+				edg_wll_SetError(ctx, errno, buff);
+				return -1;
 			}
 		}
 		else
