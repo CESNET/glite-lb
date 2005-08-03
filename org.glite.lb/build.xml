@@ -20,11 +20,17 @@
 
 	Revision history:
 	$Log$
+	Revision 1.31  2005/05/26 15:13:37  zurek
+	inserted module.build.file
+	
 	Revision 1.30  2005/03/17 09:59:31  zsalvet
 	Add proxy target.
 	
 	Revision 1.29  2005/03/16 10:02:52  zsalvet
 	proxy component added
+	
+	Revision 1.28.2.1  2005/02/12 01:38:13  glbuild
+	Changed start time
 	
 	Revision 1.28  2004/11/29 15:16:26  zsalvet
 	Add ws-interface to checkout/build machinery.
