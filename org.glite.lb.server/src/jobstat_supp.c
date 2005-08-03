@@ -175,6 +175,79 @@ static char **dec_strlist(char *in, char **rest)
 	return out;
 }
 
+static char *enc_branch_states(char *old, branch_state *item)
+{
+	char *ret;
+
+	if (item == NULL) {
+		asprintf(&ret,"%s-1 ", old);
+		free(old);
+		return ret;
+	} else {
+		asprintf(&ret,"%s1 ",old);
+		free(old);
+		if (ret == NULL) return ret;
+	}
+	do {
+		ret = enc_int(ret, (*item).branch);
+		ret = enc_string(ret, (*item).destination);
+		ret = enc_string(ret, (*item).ce_node);
+		ret = enc_string(ret, (*item).jdl);
+	} while ((*(item++)).branch != 0);
+	return ret;
+}
+
+static branch_state *dec_branch_states(char *in, char **rest)
+{
+	branch_state *out;
+	int len = -1, b = 0;
+	char *tmp_in, *tmp_ret;
+	int scret;
+
+	scret = sscanf(in, "%d", &len);
+	if (scret < 1) {
+		*rest = NULL;
+		return NULL;
+	}
+	if (len == -1) {
+		*rest = strchr(in, ' ') ? strchr(in, ' ') + 1 : NULL;
+		return NULL;
+	}
+
+	len = 0;
+	tmp_in = in = strchr(in, ' ') + 1 ;
+	do {
+		b = dec_int(tmp_in, &tmp_in);
+		tmp_ret = dec_string(tmp_in, &tmp_in); free(tmp_ret);
+		if (!tmp_in) { *rest = tmp_in; return NULL; }
+		tmp_ret = dec_string(tmp_in, &tmp_in); free(tmp_ret);
+		if (!tmp_in) { *rest = tmp_in; return NULL; }
+		tmp_ret = dec_string(tmp_in, &tmp_in); free(tmp_ret);
+		if (!tmp_in) { *rest = tmp_in; return NULL; }
+		len++;
+	}  while (b != 0);
+
+	out = (branch_state *) calloc(len+1, sizeof(branch_state));
+
+	if (out) {
+		len = 0;
+		tmp_in = in;
+
+		do {
+			out[len].branch = dec_int(tmp_in, &tmp_in);
+			out[len].destination = dec_string(tmp_in, &tmp_in);
+			out[len].ce_node = dec_string(tmp_in, &tmp_in);
+			out[len].jdl = dec_string(tmp_in, &tmp_in);
+		} while  (out[len++].branch != 0);
+		*rest = tmp_in;
+	}
+	else 
+		*rest = 0;
+
+	return out;
+
+}
+
 static char* enc_taglist(char *old, edg_wll_TagValue *item)
 {
 	char *ret;
@@ -199,8 +272,8 @@ static edg_wll_TagValue *dec_taglist(char *in, char **rest)
 {
 	edg_wll_TagValue *out;
 	int len = -1;
-	char *tmp_in, *tmp_ret, *tmp_ret2;
-	int scret;
+	char *tmp_in, *tmp_ret;
+	int scret, end = 0;
 
 	scret = sscanf(in, "%d", &len);
 	if (scret < 1) {
@@ -215,12 +288,15 @@ static edg_wll_TagValue *dec_taglist(char *in, char **rest)
 	len = 0;
 	tmp_in = in = strchr(in, ' ') + 1 ;
 	do {
-		tmp_ret2 = dec_string(tmp_in, &tmp_in);
-		if (!tmp_in) { *rest = tmp_in; return NULL; }
 		tmp_ret = dec_string(tmp_in, &tmp_in);
+		if (tmp_ret) free(tmp_ret); 
+		else end = 1;
+		if (!tmp_in) { *rest = tmp_in; return NULL; }
+		tmp_ret = dec_string(tmp_in, &tmp_in); 
+		free(tmp_ret);
 		if (!tmp_in) { *rest = tmp_in; return NULL; }
 		len++;
-	}  while (tmp_ret2 != NULL);
+	}  while (!end);
 
 	out = (edg_wll_TagValue *) malloc(len*sizeof(edg_wll_TagValue));
 
@@ -354,6 +430,9 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_timeval(ret, stat->lastUpdateTime);
 	if (ret) ret = enc_int(ret, stat->expectUpdate);
 	if (ret) ret = enc_string(ret, stat->expectFrom);
+	if (ret) ret = enc_int(ret, stat->payload_running);
+	if (ret) ret = enc_strlist(ret, stat->possible_destinations);
+	if (ret) ret = enc_strlist(ret, stat->possible_ce_nodes);
 
 	return ret;
 }
@@ -399,6 +478,9 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->lastUpdateTime = dec_timeval(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->expectUpdate = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->expectFrom = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->payload_running = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->possible_destinations = dec_strlist(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->possible_ce_nodes = dec_strlist(tmp_in, &tmp_in);
 	
 	*rest = tmp_in;
 	return stat;
@@ -409,9 +491,13 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	char *ret;
 
 	ret = enc_JobStat(old, &stat->pub);
-	if (ret) ret = enc_int(ret, stat->wontresub);
+	if (ret) ret = enc_int(ret, stat->resubmit_type);
 	if (ret) ret = enc_string(ret, stat->last_seqcode);
 	if (ret) ret = enc_string(ret, stat->last_cancel_seqcode);
+	if (ret) ret = enc_string(ret, stat->branch_tag_seqcode);
+	if (ret) ret = enc_string(ret, stat->last_branch_seqcode);
+	if (ret) ret = enc_string(ret, stat->deep_resubmit_seqcode);
+	if (ret) ret = enc_branch_states(ret, stat->branch_states);
 	return ret;
 }
 
@@ -428,12 +514,24 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 	if (stat != NULL) {
 		stat->pub = *pubstat;
 		free(pubstat);
-		stat->wontresub = dec_int(tmp_in, &tmp_in);
+		stat->resubmit_type = dec_int(tmp_in, &tmp_in);
 		if (tmp_in != NULL) {
 			stat->last_seqcode = dec_string(tmp_in, &tmp_in);
 		}
 		if (tmp_in != NULL) {
 			stat->last_cancel_seqcode = dec_string(tmp_in, &tmp_in);
+		}
+		if (tmp_in != NULL) {
+			stat->branch_tag_seqcode = dec_string(tmp_in, &tmp_in);
+		}
+		if (tmp_in != NULL) {
+			stat->last_branch_seqcode = dec_string(tmp_in, &tmp_in);
+		}
+		if (tmp_in != NULL) {
+			stat->deep_resubmit_seqcode = dec_string(tmp_in, &tmp_in);
+		}
+		if (tmp_in != NULL) {
+			stat->branch_states = dec_branch_states(tmp_in, &tmp_in);
 		}
 	} else if (tmp_in != NULL) {
 		edg_wll_FreeStatus(pubstat);
@@ -598,6 +696,47 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
+int component_seqcode(const char *a, edg_wll_Source index)
+{
+	unsigned int    c[EDG_WLL_SOURCE__LAST];
+	int		res;
+
+	res =  sscanf(a, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+			&c[EDG_WLL_SOURCE_USER_INTERFACE],
+			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
+			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
+			&c[EDG_WLL_SOURCE_BIG_HELPER],
+			&c[EDG_WLL_SOURCE_JOB_SUBMISSION],
+			&c[EDG_WLL_SOURCE_LOG_MONITOR],
+			&c[EDG_WLL_SOURCE_LRMS],
+			&c[EDG_WLL_SOURCE_APPLICATION]);
+	if (res != EDG_WLL_SOURCE__LAST-1) {
+		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
+		fprintf(stderr, "unparsable sequence code %s\n", a);
+		return -1;
+	}
+
+	return(c[index]);	
+}
+
+int before_deep_resubmission(const char *a, const char *b)
+{
+	if (component_seqcode(a, EDG_WLL_SOURCE_WORKLOAD_MANAGER) < 
+	    component_seqcode(b, EDG_WLL_SOURCE_WORKLOAD_MANAGER) )
+		return(1);
+	else
+		return(0);
+
+}
+
+int same_branch(const char *a, const char *b) 
+{
+	if (component_seqcode(a, EDG_WLL_SOURCE_WORKLOAD_MANAGER) == 
+	    component_seqcode(b, EDG_WLL_SOURCE_WORKLOAD_MANAGER) )
+		return(1);
+	else
+		return(0);
+}
 
 int edg_wll_compare_seq(const char *a, const char *b)
 {

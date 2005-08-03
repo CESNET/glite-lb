@@ -26,6 +26,7 @@ GLITE_LB_SERVER_WITH_WS=yes
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS 
+	NSMAP=LoggingAndBookkeeping.nsmap
 else
 	WS_CFLAGS=
 endif
@@ -163,7 +164,7 @@ LIB_OBJS_BK:= \
 	notification.o il_notification.o notif_match.o stats.o
 STATIC_LIB_BK:=libglite_lb_bkserver.a
 
-glite_lb_bkserverd: LoggingAndBookkeeping.nsmap ${BKSERVER_OBJS}
+glite_lb_bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINK} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
 glite_lb_bkindex: ${INDEX_OBJS}
@@ -327,4 +328,6 @@ soap_version.h:
 	perl -ne '$$. == 2 && /.*([0-9])\.([0-9])\.([0-9]).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n",$$1,$$2,$$3' soapH.h >$@
 	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
 
+ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 bkserverd.o ws_fault.o: soap_version.h
+endif

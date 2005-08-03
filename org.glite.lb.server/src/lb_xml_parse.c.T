@@ -1625,6 +1625,8 @@ int edg_wll_JobStatusToXML(edg_wll_Context ctx, edg_wll_JobStat stat, char **mes
                 gen "edg_wll_add_$ft\_to_XMLBody(&pomB, stat.$_, \"$_\", $n);\n";
         }
 @@@}
+	if (stat.possible_destinations) edg_wll_add_strlist_to_XMLBody(&pomB, stat.possible_destinations, "possible_destinations", "name", "\t\t\t", NULL);
+	if (stat.possible_ce_nodes) edg_wll_add_strlist_to_XMLBody(&pomB, stat.possible_ce_nodes, "possible_ce_nodes", "name", "\t\t\t", NULL);
 	if (stat.children) edg_wll_add_strlist_to_XMLBody(&pomB, stat.children, "children", "jobId", "\t\t\t", NULL);
 	if (stat.children_hist) edg_wll_add_intlist_to_XMLBody(&pomB, stat.children_hist, "children_hist", edg_wll_StatToString, "\t\t\t", 1, stat.children_hist[0]);
 	if (stat.children_states) edg_wll_add_stslist_to_XMLBody(ctx, &pomB, stat.children_states, "children_states", "", EDG_WLL_JOB_UNDEF);
