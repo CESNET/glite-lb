@@ -233,9 +233,12 @@ static void printstat(edg_wll_JobStat stat, int level)
 	printf("%sstateEnterTime : %ld.%06ld\n", ind, stat.stateEnterTime.tv_sec,stat.stateEnterTime.tv_usec);
 	printf("%sstateEnterTimes : \n",ind);
 	if (stat.stateEnterTimes)  
-                for (i=1; i<=stat.stateEnterTimes[0]; i++) 
-			printf("%s%14s  %s", ind, edg_wll_StatToString(i-1), (stat.stateEnterTimes[i] == 0) ? 
-			"    - not available -\n" : ctime((time_t *) &stat.stateEnterTimes[i]));
+                for (i=1; i<=stat.stateEnterTimes[0]; i++) {
+			time_t	st = stat.stateEnterTimes[i];
+
+			printf("%s%14s  %s", ind, edg_wll_StatToString(i-1), st == 0 ? 
+			"    - not available -\n" : ctime(&st));
+		}
 	printf("%slastUpdateTime : %ld.%06ld\n", ind, stat.lastUpdateTime.tv_sec,stat.lastUpdateTime.tv_usec);
 	printf("%sexpectUpdate : %d\n", ind, stat.expectUpdate);
 	printf("%sexpectFrom : %s\n", ind, stat.expectFrom);
