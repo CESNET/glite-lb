@@ -53,7 +53,10 @@ l_SRC = \
 	failed_dag.l \
 	failed_subjob.l \
 	aborted.l \
-	cancelled.l 
+	cancelled.l \
+	shallow_resub_complex.l shallow_resub_simple.l shallow_resub_simple2.l \
+	resubmission.l resubmitted.l
+
 
 sh_PROGS = $(l_SRC:.l=.sh)
 
