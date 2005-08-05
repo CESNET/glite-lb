@@ -219,7 +219,7 @@ int edg_wll_log_event_send(
 				sleep(timeout->tv_sec);
 				continue;
 			} else {
-				edg_wll_SetError(ctx, errno, "connect()"); 
+				edg_wll_SetError(ctx, errno, "Can't connect to the interlogger"); 
 				goto cleanup;
 			}
 		} else break;
