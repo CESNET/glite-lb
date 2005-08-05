@@ -96,25 +96,34 @@ gss_plain_reader(char *buffer, int max_len)
 
 int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
 {
-	char	*buf;
-	int		len, ret;
+	char	*buf,
+			*errd = NULL;
+	int		len, ret,
+			err = 0;
 
 
 	edg_wll_ResetError(ctx);
 	tmp_ctx = ctx;
 	ret = read_il_data(&buf, gss_plain_reader);
-	if(ret < 0)
-	  return(ret);
+	if ( ret < 0 ) return(ret);
 
-	handle_request(ctx, buf);
+	if ( !(ret = handle_request(ctx, buf)) ) {
+		if ( (err = edg_wll_Error(ctx, NULL, &errd)) ) edg_wll_ResetError(ctx);
+	}
 	free(buf);
 
 	if ( (len = create_reply(ctx, &buf)) > 0 ) {
-		if ( edg_wll_plain_write_full(&ctx->connProxy->conn, buf, len, &ctx->p_tmp_timeout) < 0 )
+		if ( edg_wll_plain_write_full(&ctx->connProxy->conn, buf, len, &ctx->p_tmp_timeout) < 0 ) {
+			if ( errd ) free(errd);
 			return edg_wll_SetError(ctx, errno, "StoreProtoProxy() - sending reply");
+		}
 		free(buf);
 	}
-	else edg_wll_SetError(ctx, E2BIG, "create_reply()");
+	else ret = edg_wll_SetError(ctx, E2BIG, "create_reply()");
 
-	return edg_wll_Error(ctx, NULL, NULL);
+	if ( err ) {
+		edg_wll_SetError(ctx, err, errd);
+		free(errd);
+	}
+	return ret? edg_wll_Error(ctx, NULL, NULL): 0;
 }
