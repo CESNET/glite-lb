@@ -273,6 +273,7 @@ distbin:
 	
 install:
 	mkdir -p ${PREFIX}/bin
+	mkdir -p ${PREFIX}/sbin
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/share/man/man1
@@ -280,10 +281,13 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/examples
-	for p in ${TOOLS} logevent; do \
+	for p in logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
-	for p in ${TOOLS} logevent ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}; do \
+	for p in ${TOOLS} ; do \
+		${INSTALL} -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
+	done
+	for p in ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
