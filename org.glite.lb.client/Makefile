@@ -139,7 +139,7 @@ FAKETHRLIB:=libglite_lb_client_fake_${thrflavour}.la
 PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
-TOOLS:=dump load purge
+TOOLS:=dump load purge lb_dump_exporter
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl
 
 EXAMPLES_CL=user_jobs job_status
