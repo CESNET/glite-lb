@@ -121,6 +121,7 @@ static int				slaves = 10,
 static char			   *purgeStorage = EDG_PURGE_STORAGE;
 static char			   *dumpStorage = EDG_DUMP_STORAGE;
 static char			   *jpregDir = JPREG_DEF_DIR;
+static int				jpreg = 0;
 
 
 static time_t			purge_timeout[EDG_WLL_NUMBER_OF_STATCODES];
@@ -154,6 +155,7 @@ static struct option opts[] = {
 	{"purge-prefix",	1, NULL,	'S'},
 	{"dump-prefix",	1, NULL,	'D'},
 	{"jpreg-dir",	1, NULL,	'J'},
+	{"enable-jpreg-export",	1, NULL,	'j'},
 	{"super-user",	1, NULL,	'R'},
 	{"super-users-file",	1, NULL,'F'},
 	{"no-index",	1, NULL,	'x'},
@@ -167,9 +169,9 @@ static struct option opts[] = {
 };
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:J:";
+static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:J:j";
 #else
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:J:";
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:J:j";
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 static void usage(char *me) 
@@ -195,7 +197,8 @@ static void usage(char *me)
 		"\t-N, --notif-dur\t Maximal duration of notification registrations in hours\n"
 		"\t-S, --purge-prefix\t purge files full-path prefix\n"
 		"\t-D, --dump-prefix\t dump files full-path prefix\n"
-		"\t-J, --jpreg-dir\t JP registration temporary files prefix\n"
+		"\t-J, --jpreg-dir\t JP registration temporary files prefix (implies '-j')\n"
+		"\t-j, --enable-jpreg-export\t enable JP registration export (disabled by default)\n"
 		"\t--super-user\t user allowed to bypass authorization and indexing\n"
 		"\t--super-users-file\t the same but read the subjects from a file\n"
 		"\t--no-index=1\t don't enforce indices for superusers\n"
@@ -336,7 +339,8 @@ int main(int argc, char *argv[])
 		case 'l': semaphores = atoi(optarg); break;
 		case 'S': purgeStorage = optarg; break;
 		case 'D': dumpStorage = optarg; break;
-		case 'J': jpregDir = optarg; break;
+		case 'J': jpregDir = optarg; jpreg = 1; break;
+		case 'j': jpreg = 1; break;
 		case 'L':
 			if ( !parse_limits(optarg, &hardJobsLimit, &hardEventsLimit, &hardRespSizeLimit) )
 			{
@@ -407,10 +411,12 @@ int main(int argc, char *argv[])
 
 	if (check_mkdir(dumpStorage)) exit(1);
 	if (check_mkdir(purgeStorage)) exit(1);
-	if ( edg_wll_MaildirInit(jpregDir, &tmps) ) {
-		dprintf(("[%d] %s\n", getpid(), tmps));
-		if (!debug) syslog(LOG_CRIT, tmps);
-		exit(1);
+	if ( jpreg ) {
+		if ( edg_wll_MaildirInit(jpregDir, &tmps) ) {
+			dprintf(("[%d] %s\n", getpid(), tmps));
+			if (!debug) syslog(LOG_CRIT, tmps);
+			exit(1);
+		}
 	}
 
 
@@ -728,7 +734,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->notifDuration = notif_duration;
 	ctx->purgeStorage = strdup(purgeStorage);
 	ctx->dumpStorage = strdup(dumpStorage);
-	ctx->jpreg_dir = strdup(jpregDir);
+	if ( jpreg ) ctx->jpreg_dir = strdup(jpregDir); else ctx->jpreg_dir = NULL;
 	ctx->hardJobsLimit = hardJobsLimit;
 	ctx->hardEventsLimit = hardEventsLimit;
 	ctx->semset = semset;

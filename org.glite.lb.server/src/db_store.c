@@ -95,7 +95,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 		edg_wll_NotifMatch(ctx, &newstat);
 		edg_wll_FreeStatus(&newstat);
 	}
-	if ( ev->any.type == EDG_WLL_EVENT_REGJOB ) {
+	if ( ctx->jpreg_dir && ev->any.type == EDG_WLL_EVENT_REGJOB ) {
 		char *jids, *msg;
 		
 		if ( !(jids = edg_wlc_JobIdUnparse(ev->any.jobId)) ) {
