@@ -19,19 +19,12 @@
 int 
 handle_request(edg_wll_Context ctx,char *buf)
 {
-  char *event,*start = buf,y[1000];
-  int ret,x;
+  char *event;
+  int ret;
 
   edg_wll_ResetError(ctx);
 
-/* XXX: discard legacy header */
-  ret = sscanf(buf,"%d %999s\n%d",&x,y,&x);
-  if (ret == 3) {
-	start = strchr(buf,'\n');
-	start++;
-  }
-
-  ret = decode_il_msg(&event, start);
+  ret = decode_il_msg(&event, buf);
   if(ret < 0) {
     edg_wll_SetError(ctx,EDG_WLL_IL_PROTO,"reading event string");
     return EDG_WLL_IL_PROTO;
