@@ -81,7 +81,7 @@ GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
 	-lglobus_gssapi_gsi_${nothrflavour} \
 
-ifeq ($(shell ls ${gsoap_prefix}/bin/soapcpp2}),${gsoap_prefix}/bin/soapcpp2)
+ifeq ($(shell ls ${gsoap_prefix}/bin/soapcpp2),${gsoap_prefix}/bin/soapcpp2)
 	gsoap_bin_prefix := ${gsoap_prefix}/bin
 else
 	gsoap_bin_prefix := ${gsoap_prefix}
