@@ -16,15 +16,23 @@
 #define UNUSED_VAR
 #endif
     
+/* XXX: is it OK to assume buf always contains the whole message? */
 int 
 handle_request(edg_wll_Context ctx,char *buf)
 {
-  char *event;
-  int ret;
+  char *event,*start = buf,y[1000];
+  int ret,x;
 
   edg_wll_ResetError(ctx);
 
-  ret = decode_il_msg(&event, buf);
+/* XXX: detect interlogger <= 1.1.1 */
+  ret = sscanf(buf,"%d %999s\n%d",&x,y,&x);
+  if (ret == 3) {
+	start = strchr(buf,'\n');
+	start++;
+  }
+
+  ret = decode_il_msg(&event, start);
   if(ret < 0) {
     edg_wll_SetError(ctx,EDG_WLL_IL_PROTO,"reading event string");
     return EDG_WLL_IL_PROTO;
