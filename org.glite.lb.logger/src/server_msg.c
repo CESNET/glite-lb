@@ -123,6 +123,7 @@ server_msg_copy(struct server_msg *src)
 int
 server_msg_init(struct server_msg *msg, char *event)
 {
+	char	*myevent = NULL;
 #if defined(IL_NOTIFICATIONS)
 	edg_wll_Context context;
 	edg_wll_Event *notif_event;
@@ -133,6 +134,7 @@ server_msg_init(struct server_msg *msg, char *event)
 
 	memset(msg, 0, sizeof(*msg));
 
+	trio_asprintf(&myevent,"6 michal\n%d %s",strlen(event),event);
 
 #if defined(IL_NOTIFICATIONS)
 	edg_wll_InitContext(&context);
@@ -140,6 +142,7 @@ server_msg_init(struct server_msg *msg, char *event)
 	/* parse the notification event */
 	if((ret=edg_wll_ParseNotifEvent(context, event, &notif_event))) {
 		set_error(IL_LBAPI, ret, "server_msg_init: error parsing notification event");
+		free(myevent);
 		return(-1);
 	}
 	/* FIXME: check for allocation error */
@@ -157,10 +160,12 @@ server_msg_init(struct server_msg *msg, char *event)
 	edg_wll_FreeEvent(notif_event);
 	free(notif_event);
 	if(msg->len < 0) {
+		free(myevent);
 		return(-1);
 	}
 #else
-	msg->len = create_msg(event, &msg->msg, &msg->receipt_to);
+	msg->len = create_msg(myevent, &msg->msg, &msg->receipt_to);
+	free(myevent);
 	if(msg->len < 0) {
 		return(-1);
 	}
