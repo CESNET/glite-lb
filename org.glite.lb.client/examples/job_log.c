@@ -68,9 +68,10 @@ int main(int argc,char **argv)
 #ifdef USE_CALLBACKS
 	edg_wll_RegisterTestQueryEvents(query_events_cb);
 #endif
-	
+
 	if ( edg_wll_JobLog(ctx,job,&events) )
 	{
+		edg_wll_Error(ctx,&errt,&errd);
 		fprintf(stderr,"%s: %s (%s)\n",argv[0],errt,errd);
 	}
 
