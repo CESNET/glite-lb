@@ -16,7 +16,6 @@
 #define UNUSED_VAR
 #endif
     
-/* XXX: is it OK to assume buf always contains the whole message? */
 int 
 handle_request(edg_wll_Context ctx,char *buf)
 {
@@ -25,7 +24,7 @@ handle_request(edg_wll_Context ctx,char *buf)
 
   edg_wll_ResetError(ctx);
 
-/* XXX: detect interlogger <= 1.1.1 */
+/* XXX: discard legacy header */
   ret = sscanf(buf,"%d %999s\n%d",&x,y,&x);
   if (ret == 3) {
 	start = strchr(buf,'\n');
