@@ -127,7 +127,7 @@ static int edg_wll_DoLogEvent(
 	if ((answer = edg_wll_gss_connect(cred,
 			context->p_destination, context->p_dest_port, 
 			&context->p_tmp_timeout, &con, &gss_stat)) < 0) {
-		edg_wll_log_proto_handle_gss_failures(context,answer,&gss_stat,"edg_wll_gss_connect()");
+		answer = edg_wll_log_proto_handle_gss_failures(context,answer,&gss_stat,"edg_wll_gss_connect()");
 		goto edg_wll_DoLogEvent_end;
 	}
 
@@ -274,7 +274,7 @@ static int edg_wll_DoLogEventDirect(
 #endif
 	if ((answer = edg_wll_gss_connect(cred,host,port,
 			&context->p_tmp_timeout, &con, &gss_stat)) < 0) {
-		edg_wll_log_proto_handle_gss_failures(context,answer,&gss_stat,"edg_wll_gss_connect()");
+		answer = edg_wll_log_proto_handle_gss_failures(context,answer,&gss_stat,"edg_wll_gss_connect()");
 		goto edg_wll_DoLogEventDirect_end;
 	}
 
