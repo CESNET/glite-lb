@@ -28,7 +28,7 @@ public:
 	}
 
 	void testEncodeMsg() {
-		CPPUNIT_ASSERT_EQUAL(len_msg, 26);
+		CPPUNIT_ASSERT_EQUAL(len_msg, 35);
 		CPPUNIT_ASSERT(buffer_msg != NULL);
 		CPPUNIT_ASSERT(!strncmp(buffer_msg, msg, len_msg));
 	}
@@ -68,9 +68,9 @@ public:
 		char *s;
 
 		l = read_il_data(&s, test_reader);
-		CPPUNIT_ASSERT_EQUAL(l, 9);
+		CPPUNIT_ASSERT_EQUAL(l, 18);
 		CPPUNIT_ASSERT(s != NULL);
-		CPPUNIT_ASSERT(!strcmp(s, "6 zprava\n"));
+		CPPUNIT_ASSERT(!strcmp(s, "6 michal\n6 zprava\n"));
 		free(s);
 	}
 
@@ -87,7 +87,7 @@ private:
 	}
 };
 
-const char *IlMsgTest::msg = "               9\n6 zprava\n";
+const char *IlMsgTest::msg = "              18\n6 michal\n6 zprava\n";
 const char *IlMsgTest::rep = "              14\n10\n20\n5 chyba\n";
 int IlMsgTest::pos;
 

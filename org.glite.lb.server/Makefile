@@ -36,7 +36,11 @@ GSOAP_FILES_PREFIX:= bk_ws_
 YACC=bison -y
 CC=gcc
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project
+ifeq ($(gsoap_version),2.7.0)
+	VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project:${gsoap_prefix}
+else
+	VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project
+endif
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
@@ -56,7 +60,7 @@ CFLAGS:= \
 	-I${top_srcdir}/interface \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
-	-I${gsoap_prefix}/include \
+	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
@@ -76,6 +80,12 @@ LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
 	-lglobus_gssapi_gsi_${nothrflavour} \
+
+ifeq ($(shell ls ${gsoap_prefix}/bin/soapcpp2),${gsoap_prefix}/bin/soapcpp2)
+	gsoap_bin_prefix := ${gsoap_prefix}/bin
+else
+	gsoap_bin_prefix := ${gsoap_prefix}
+endif
 
 ifneq (${mysql_prefix},/usr)
 	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
@@ -115,20 +125,33 @@ BKSERVER_BASE_OBJS:= \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o stats.o
+	notification.o il_notification.o notif_match.o stats.o 
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
-	BKSERVER_OBJS:= \
-		${BKSERVER_BASE_OBJS} \
-		${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
-		ws_query.o ws_fault.o ws_typeref.o 
+	ifeq ($(gsoap_version),2.7.0)
+		BKSERVER_OBJS:= \
+			${BKSERVER_BASE_OBJS} \
+			${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
+			ws_query.o ws_fault.o ws_typeref.o stdsoap2.o
 
-	BKSERVER_LIBS= \
-		${SRVBONES_LIB} \
-		-lglite_lb_common_${nothrflavour} \
-		-L${gsoap_prefix}/lib -lgsoap \
-		-lglite_security_gsoap_plugin_${nothrflavour} \
-		${EXT_LIBS}
+		BKSERVER_LIBS= \
+			${SRVBONES_LIB} \
+			-lglite_lb_common_${nothrflavour} \
+			-lglite_security_gsoap_plugin_${nothrflavour} \
+			${EXT_LIBS}
+	else
+		BKSERVER_OBJS:= \
+			${BKSERVER_BASE_OBJS} \
+			${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
+			ws_query.o ws_fault.o ws_typeref.o 
+
+		BKSERVER_LIBS= \
+			${SRVBONES_LIB} \
+			-lglite_lb_common_${nothrflavour} \
+			-L${gsoap_prefix}/lib -lgsoap \
+			-lglite_security_gsoap_plugin_${nothrflavour} \
+			${EXT_LIBS}
+	endif
 else
 	BKSERVER_OBJS:= ${BKSERVER_BASE_OBJS}
 		
@@ -191,7 +214,7 @@ lb_xml_parse.c: lb_xml_parse.c.T
 	chmod -w $@ >/dev/null
 
 ${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c ${GSOAP_FILES_PREFIX}ServerLib.c ${GSOAP_FILES_PREFIX}ClientLib.c LoggingAndBookkeeping.nsmap: LB.xh
-	${gsoap_prefix}/bin/soapcpp2 -w -c -p ${GSOAP_FILES_PREFIX} LB.xh
+	${gsoap_bin_prefix}/soapcpp2 -w -c -p ${GSOAP_FILES_PREFIX} LB.xh
 
 # try several times -- LB.wsdl downloads BaseFault.xsd from www.ibm.com which may be failing
 # not used right now but may be useful one day
@@ -203,7 +226,7 @@ ${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c 
 
 LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 	cp ${stagedir}/interface/LBTypes.wsdl .
-	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl
+	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl
 	rm -f LBTypes.wsdl
 
 test.xml: test_xml
@@ -324,7 +347,7 @@ test_query_events.o: %.o: %.cpp
 	${COMPILE} -o $@ -c $<
 
 soap_version.h:
-	${gsoap_prefix}/bin/soapcpp2 /dev/null
+	${gsoap_bin_prefix}/soapcpp2 /dev/null
 	perl -ne '$$. == 2 && /.*([0-9])\.([0-9])\.([0-9]).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n",$$1,$$2,$$3' soapH.h >$@
 	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
 
