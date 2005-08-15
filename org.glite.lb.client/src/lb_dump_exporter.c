@@ -232,6 +232,7 @@ static dump_storage_t *dump_storage_add(dump_storage_t **st, char *job, char *fn
 	if ( !(tmp->job = strdup(job)) ) return NULL;
 	if ( !(tmp->fname = strdup(fname)) ) { free(tmp->job); return NULL; }
 	tmp->fhnd = fhnd;
+	(tmp+1)->job = NULL;
 
 	return tmp;
 }
