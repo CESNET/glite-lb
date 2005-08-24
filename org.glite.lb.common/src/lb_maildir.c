@@ -16,10 +16,11 @@
 enum {
 	LBMD_DIR_TMP = 0,
 	LBMD_DIR_NEW,
-	LBMD_DIR_WORK
+	LBMD_DIR_WORK,
+	LBMD_DIR_POST
 };
 
-static const char *dirs[] = { "tmp", "new", "work" };
+static const char *dirs[] = { "tmp", "new", "work", "post" };
 
 
 #define MAX_ERR_LEN		1024
@@ -149,18 +150,126 @@ int edg_wll_MaildirTransEnd(
 		return 0;
 	}
 
+	if ( tstate == LBMD_TRANS_FAILED ) return 0;
+
 	if ( stat(origfname, &st) ) {
 		snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't stat file '%s'", origfname);
 		return -1;
 	}
 
-	snprintf(newfname, PATH_MAX, "%s/%s/%s", root, dirs[LBMD_DIR_NEW], fname);
+	snprintf(newfname, PATH_MAX, "%s/%s/%s", root, dirs[LBMD_DIR_POST], fname);
 	if ( link(origfname, newfname) ) {
 		snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't link new file %s", newfname);
 		return -1;
 	}
 
 	return 0;
+}
+
+
+int edg_wll_MaildirRetryTransStart(
+	const char		   *root,
+	time_t				tm,
+	char              **msg,
+	char			  **fname)
+{
+	static DIR	   *dir = NULL;
+	struct dirent  *ent;
+	time_t			tlimit;
+	struct stat		st;
+	char			newfname[PATH_MAX],
+					oldfname[PATH_MAX],
+				   *buf = NULL;
+	int				fhnd,
+					toread, ct,
+					bufsz, bufuse;
+
+
+	if ( !root ) root = DEFAULT_ROOT;
+
+	if ( !dir ) {
+		char	dirname[PATH_MAX];
+		snprintf(dirname, PATH_MAX, "%s/%s", root, dirs[LBMD_DIR_POST]);
+		if ( !(dir = opendir(dirname)) ) {
+			snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't open directory '%s'", root);
+			goto err;
+		}
+	}
+
+	tlimit = time(NULL) - tm;
+	do {
+		errno = 0;
+		if ( !(ent = readdir(dir)) ) {
+			if ( errno == EBADF ) {
+				snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't read directory '%s'", root);
+				dir = NULL;
+				goto err;
+			} else {
+				closedir(dir);
+				dir = NULL;
+				return 0;
+			}
+		}
+		if ( ent->d_name[0] == '.' ) continue;
+
+		snprintf(oldfname, PATH_MAX, "%s/%s/%s", root, dirs[LBMD_DIR_POST], ent->d_name);
+		snprintf(newfname, PATH_MAX, "%s/%s/%s", root, dirs[LBMD_DIR_WORK], ent->d_name);
+
+		if ( stat(oldfname, &st) < 0 ) {
+			snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't stat file '%s'", oldfname);
+			goto err;
+		}
+
+		if ( st.st_ctime > tlimit ) continue;
+
+		if ( rename(oldfname, newfname) ) {
+			if ( errno == ENOENT ) {
+				/* maybe some other instance moved this file away... */
+				continue;
+			} else {
+				snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't move file '%s'", oldfname);
+				goto err;
+			}
+		} else {
+			/* we have found and moved the file with which we will work now */
+			break;
+		}
+	} while ( 1 );
+
+	if ( (fhnd = open(newfname, O_RDONLY)) < 0 ) {
+		snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't open file '%s'", newfname);
+		goto err;
+	}
+
+	bufuse = bufsz = toread = ct = 0;
+	do {
+		errno = 0;
+		if ( bufuse == bufsz ) {
+			char *tmp = realloc(buf, bufsz+BUFSIZ);
+			if ( !tmp ) goto err;
+			buf = tmp;
+			bufsz += BUFSIZ;
+		}
+		toread = bufsz - bufuse;
+		if ( (ct = read(fhnd, buf+bufuse, toread)) < 0 ) {
+			if ( errno == EINTR ) continue;
+			snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't read file '%s'", newfname);
+			goto err;
+		}
+		if ( ct == 0 ) break;
+		bufuse += ct;
+	} while ( ct == toread );
+	close(fhnd);
+
+	if ( !(*fname = strdup(ent->d_name)) ) goto err;
+	*msg = buf;
+	return 1;
+
+
+err:
+	if ( buf ) free(buf);
+
+	return -1;
 }
 
 
