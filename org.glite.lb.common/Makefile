@@ -75,7 +75,7 @@ EXT_LIBS:= ${EXPAT_LIBS} ${ARES_LIBS} ${GLOBUS_LIBS}
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include
 
-COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
+COMPILE:=libtool --mode=compile ${CC}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
@@ -111,6 +111,14 @@ default: all
 all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
 # all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
 
+# FIXME: to use libtool versioning correcty, we should have:
+#
+# current = major + minor + offset
+# revision = patch
+# age = minor
+#
+# where offset is a sum of maximal released minor's of all previous major's
+# 
 version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
 ${STATICLIB}: ${OBJS}
@@ -195,13 +203,13 @@ clean:
 
 
 %.o: %.c
-	${COMPILE} ${GLOBUSINC} -c $<
+	${COMPILE} ${GLOBUSINC} ${CFLAGS} -c $<
 
 il_int_test.o il_string_test.o il_test.o il_msg_test.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 
 %.thr.o: %.c
-	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<
+	${COMPILE} ${GLOBUSTHRINC} ${CFLAGS} -o $@ -c $<
 
 %.h: %.h.T
 	rm -f $@
