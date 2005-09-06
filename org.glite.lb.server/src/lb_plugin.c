@@ -20,6 +20,7 @@
 #include "glite/jp/file_plugin.h"
 #include "glite/jp/builtin_plugins.h"
 #include "glite/jp/backend.h"
+#include "glite/jp/known_attr.h"
 
 #define INITIAL_NUMBER_EVENTS 100
 #define LB_PLUGIN_NAMESPACE "urn:org.glite.lb"
@@ -37,7 +38,7 @@ typedef struct _lb_handle {
 
 
 
-static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrval_t **attrval);
+static int lb_query(void *fpctx,void *handle,const char * attr,glite_jp_attrval_t **attrval);
 static int lb_open(void *,void *, const char *uri, void **);
 static int lb_close(void *,void *);
 /*static int lb_status(edg_wll_Event *event, edg_wll_JobStat *status);*/
@@ -187,115 +188,95 @@ static int lb_close(void *fpctx,void *handle)
 
 
 
-static int lb_query(void *fpctx,void *handle,glite_jp_attr_t attr,glite_jp_attrval_t **attrval)
+static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t **attrval)
 {
 	lb_handle		*h = (lb_handle *) handle;
 	glite_jp_context_t	ctx = (glite_jp_context_t) fpctx;
 	glite_jp_error_t 	err; 
 	glite_jp_attrval_t	*av = NULL;
 	int			i, n_tags;
+	const char             *tag;
 
 
         glite_jp_clear_error(ctx); 
         memset(&err,0,sizeof err);
         err.source = __FUNCTION__;
 
-	switch (attr.type) {
-		case GLITE_JP_ATTR_OWNER:
-			if (h->events)
+	if (strcmp(attr, GLITE_JP_ATTR_OWNER) == 0) {
+		if (h->events)
+		{
+			i = 0;
+			while (h->events[i])
 			{
-				i = 0;
-				while (h->events[i])
+				if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) 
 				{
-					if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) 
-					{
-						av = calloc(2, sizeof(glite_jp_attrval_t));
-						av[0].attr.type = GLITE_JP_ATTR_OWNER;
-						av[0].value.s = strdup(h->events[i]->any.user);
+					av = calloc(2, sizeof(glite_jp_attrval_t));
+					av[0].name = strdup(GLITE_JP_ATTR_OWNER);
+					av[0].value = strdup(h->events[i]->any.user);
+					av[0].size = -1;
 
-						break;
-					}
-					i++;
+					break;
 				}
+				i++;
 			}
-			//av = calloc(2, sizeof(glite_jp_attrval_t));
-			//av[0].value.s = strdup(h->status.owner);
-			break;
-		case GLITE_JP_ATTR_TIME:
-			if (edg_wll_StringToStat(attr.name) == EDG_WLL_JOB_SUBMITTED)
+		}
+	} else if (strcmp(attr, GLITE_JP_LB_SUBMITTED) == 0) {
+		if (h->events)
+		{
+			i = 0;
+			while (h->events[i])
 			{
-				if (h->events)
+				if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) 
 				{
-					i = 0;
-					while (h->events[i])
-					{
-						if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) 
-						{
-							av = calloc(2, sizeof(glite_jp_attrval_t));
-							av[0].attr.type = GLITE_JP_ATTR_TIME;
-							av[0].value.time.tv_sec = 
-								h->events[i]->any.timestamp.tv_sec;
-							av[0].value.time.tv_usec = 
-								h->events[i]->any.timestamp.tv_usec;
+					av = calloc(2, sizeof(glite_jp_attrval_t));
+					av[0].name = strdup(GLITE_JP_LB_SUBMITTED);
+					av[0].timestamp = 
+						h->events[i]->any.timestamp.tv_sec;
 
-							break;
-						}
-						i++;
-					}
+					break;
 				}
-			} 
-			else	// state need to be counted (not impl. yet)
-			{
-				*attrval = NULL;
-	                	err.code = ENOSYS;
-		                err.desc = "Not implemented yet.";
-        		        return glite_jp_stack_error(ctx,&err);
+				i++;
 			}
-			// XXX - not clear yet how to care about this
-			//av = calloc(2, sizeof(glite_jp_attrval_t));
-			//av[0].value.time.tv_sec = h->status.stateEnterTime.tv_sec;
-			//av[0].value.time.tv_usec = h->status.stateEnterTime.tv_usec;
-
-			break;
-		case GLITE_JP_ATTR_TAG:
-			if (h->events)
-			{
-				i = 0;
-				n_tags = 0;
-
-				while (h->events[i])
-				{
-					if ((h->events[i]->type == EDG_WLL_EVENT_USERTAG) &&
-						!(strcmp(h->events[i]->userTag.name, attr.name)) )
-					{
-						av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
-						memset(&av[n_tags], 0, 2 * sizeof(glite_jp_attrval_t));
-
-						av[n_tags].attr.name = strdup(h->events[i]->userTag.name);
-						av[n_tags].attr.namespace = strdup(LB_PLUGIN_NAMESPACE);
-						av[n_tags].value.tag.name = strdup(h->events[i]->userTag.name);
-						av[n_tags].value.tag.sequence = -1;
-						av[n_tags].value.tag.timestamp = 
-							h->events[i]->any.timestamp.tv_sec;
-						av[n_tags].value.tag.binary = 0;
-						av[n_tags].value.tag.size = -1;
-						av[n_tags].value.tag.value = strdup(h->events[i]->userTag.value);
-						av[n_tags].attr.type	= GLITE_JP_ATTR_TAG;
-
-						av[n_tags+1].attr.type = GLITE_JP_ATTR_UNDEF;
-
-						n_tags++;
-					}
-					i++;
-				}
-			}
-			break;
-		default: 
+		}
+	} else if (strcmp(attr, GLITE_JP_LB_TERMINATED) == 0 || strcmp(attr, GLITE_JP_LB_FINALSTATE) == 0) {
+		{
 			*attrval = NULL;
-                	err.code = ENOENT;
-	                err.desc = "No such attriburte.";
-        	        return glite_jp_stack_error(ctx,&err);
-			break;
+                	err.code = ENOSYS;
+	                err.desc = "Not implemented yet.";
+       		        return glite_jp_stack_error(ctx,&err);
+		}
+	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, strlen(GLITE_JP_LBTAG_NS)) == 0) {
+		tag = strrchr(attr, ':');
+		if (h->events && tag)
+		{
+			tag++;
+			i = 0;
+			n_tags = 0;
+
+			while (h->events[i])
+			{
+				if ((h->events[i]->type == EDG_WLL_EVENT_USERTAG) &&
+					(strcmp(h->events[i]->userTag.name, tag) == 0) )
+				{
+					av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
+					memset(&av[n_tags], 0, 2 * sizeof(glite_jp_attrval_t));
+
+					av[n_tags].name = strdup(attr);
+					av[n_tags].value = strdup(h->events[i]->userTag.value);
+					av[n_tags].timestamp = 
+						h->events[i]->any.timestamp.tv_sec;
+					av[n_tags].size = -1;
+
+					n_tags++;
+				}
+				i++;
+			}
+		}
+	} else {
+		*attrval = NULL;
+        	err.code = ENOENT;
+                err.desc = "No such attribute.";
+	        return glite_jp_stack_error(ctx,&err);
 	}
 
 	*attrval = av;
