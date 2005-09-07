@@ -357,7 +357,7 @@ abort:
 	}
 	
 	if (ret != HTTP_INTERNAL) {
-		if ( request->flags & EDG_WLL_PURGE_SERVER_DUMP )
+		if ( request->flags & EDG_WLL_PURGE_SERVER_DUMP && tmpfname )
 		{
 			edg_wll_CreatePurgeFileFromTmp(ctx, tmpfname, &(result.server_file));
 			unlink(tmpfname);
