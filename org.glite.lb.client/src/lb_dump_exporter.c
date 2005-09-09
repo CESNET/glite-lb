@@ -20,6 +20,10 @@
 #define DUMP_FILE_STORE_PREFIX	"/tmp"
 #define LB_MAILDIR_PATH			"/tmp/dumpinfo_lbmd"
 
+#define KEYNAME_JOBID			"jobid  "
+#define KEYNAME_FILE			"file   "
+#define KEYNAME_JPPS			"jpps   "
+
 typedef struct _buffer_t {
 	char   *str;
 	char   *eol;
@@ -33,12 +37,13 @@ typedef struct _dump_storage_t {
 	int		fhnd;
 } dump_storage_t;
 
-static const char *optstr = "d:s:m:h";
+static const char *optstr = "d:s:j:m:h";
 
 static struct option opts[] = {
 	{ "help",		0,	NULL,	'h'},
 	{ "dump",		0,	NULL,	'd'},
 	{ "store",		0,	NULL,	's'},
+	{ "jpps",		0,	NULL,	'j'},
 	{ "lbmaildir",	0,	NULL,	'm'},
 	{ NULL,			0,	NULL,	0}
 };
@@ -49,6 +54,7 @@ void usage(char *me)
 			"\t-h, --help              Shows this screen.\n"
 			"\t-d, --dump <file>       Dump file location.\n"
 			"\t-s, --store <prefix>    New dump files storage.\n"
+			"\t-j, --jpps <host:port>  Target JPPS.\n"
 			"\t-m, --lbmaildir <path>  LB maildir path.\n"
 			, me);
 }
@@ -69,11 +75,13 @@ int main(int argc, char **argv)
 	buffer_t			buf;
 	char			   *store_pref = DUMP_FILE_STORE_PREFIX,
 					   *lb_maildir = LB_MAILDIR_PATH,
+					   *jpps = NULL,
 					   *name,
 					   *fname,
 					   *ln;
 	int					fhnd,
-						opt, ret;
+						opt, ret,
+						msg_format_sz;
 
 
 	name = strrchr(argv[0], '/');
@@ -84,10 +92,15 @@ int main(int argc, char **argv)
 		switch ( opt ) {
 		case 'd': fname = optarg; break;
 		case 's': store_pref = optarg; break;
+		case 'j': jpps = optarg; break;
 		case 'm': lb_maildir = optarg; break;
 		case 'h': usage(name); return 0;
 		case '?': usage(name); return 1;
 		}
+
+	msg_format_sz = sizeof(KEYNAME_JOBID) + 1 +
+				sizeof(KEYNAME_FILE) + 1 +
+				(jpps? sizeof(KEYNAME_JPPS) + 1: 0);
 
 	if ( fname ) {
 		if ( (fhnd = open(fname, O_RDONLY)) < 0 ) {
@@ -182,11 +195,16 @@ int main(int argc, char **argv)
 	/* store info in lb_maildir */
 	for ( st = dstorage; st && st->job; st++ ) {
 		char *msg;
-		if ( !(msg = malloc(strlen(st->fname) + strlen(st->job) + 2)) ) {
+		if ( !(msg = malloc(msg_format_sz + strlen(st->fname) + strlen(st->job))) ) {
 			perror("allocating message");
 			cleanup(1);
 		}
-		sprintf(msg, "%s\n%s", st->job, st->fname);
+		if ( jpps ) 
+			sprintf(msg, "%s%s\n%s%s%s%s%s",
+					KEYNAME_JOBID, st->job, KEYNAME_FILE, st->fname, KEYNAME_JPPS, jpps);
+		else 
+			sprintf(msg, "%s%s\n%s%s",
+					KEYNAME_JOBID, st->job, KEYNAME_FILE, st->fname);
 		if ( edg_wll_MaildirStoreMsg(lb_maildir, "localhost", msg) < 0 ) {
 			perror(lbm_errdesc);
 			exit(1);
