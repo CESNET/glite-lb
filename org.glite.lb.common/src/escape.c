@@ -5,8 +5,11 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include "ulm_parse.h"
 #include "escape.h"
+
+#define ULM_QM  '"'
+#define ULM_BS  '\\'
+#define ULM_LF  '\n'
 
 /*
  *----------------------------------------------------------------------
