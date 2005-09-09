@@ -13,6 +13,8 @@
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
 
+#include "glite/lb/trio.h"
+
 //#include "jobstat.h"
 
 #include "glite/jp/types.h"
@@ -214,6 +216,8 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 					av[0].name = strdup(GLITE_JP_ATTR_OWNER);
 					av[0].value = strdup(h->events[i]->any.user);
 					av[0].size = -1;
+					av[0].timestamp = 
+						h->events[i]->any.timestamp.tv_sec;
 
 					break;
 				}
@@ -230,6 +234,9 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 				{
 					av = calloc(2, sizeof(glite_jp_attrval_t));
 					av[0].name = strdup(GLITE_JP_LB_SUBMITTED);
+					trio_asprintf(&av[0].value,"%ld.%06ld",
+						h->events[i]->any.timestamp.tv_sec,
+						h->events[i]->any.timestamp.tv_usec);
 					av[0].timestamp = 
 						h->events[i]->any.timestamp.tv_sec;
 
