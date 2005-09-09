@@ -58,7 +58,9 @@
 
 
 
-	<xs:element name="user" type="xs:string" />
+	<xs:element name="user" type="xs:string">
+		<xs:documentation>Job owner according to LB</xs:documentation>
+	</xs:element>
 
 	<!-- the following 6 elements have to be retrieved from JDL -->
 	<xs:element name="VO" type="xs:string" />
