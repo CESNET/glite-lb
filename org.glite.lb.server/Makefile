@@ -36,7 +36,7 @@ GSOAP_FILES_PREFIX:= bk_ws_
 YACC=bison -y
 CC=gcc
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project
+VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
@@ -72,6 +72,7 @@ SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
+XSLTPROC:=xsltproc
 
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
@@ -251,6 +252,9 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 	ar crv $@ ${LIB_OBJS_BK}
 	ranlib $@
 
+jp_job_attrs.h: job-attrs.xsd jp_job_attrs.xsl 
+	${XSLTPROC} ../src/jp_job_attrs.xsl $< >$@
+
 doc:
 
 stage: compile
@@ -270,7 +274,7 @@ distbin:
 	rm -rf tmpbuilddir
         
 install:
-	-mkdir -p ${PREFIX}/bin ${PREFIX}/etc ${PREFIX}/etc/init.d
+	-mkdir -p ${PREFIX}/bin ${PREFIX}/etc ${PREFIX}/etc/init.d ${PREFIX}/interface
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
@@ -283,6 +287,8 @@ install:
 	done
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
+	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
+	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
 
 	if [ x${DOSTAGE} != xyes ]; then \
 		${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; \
