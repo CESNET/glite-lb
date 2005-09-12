@@ -105,14 +105,15 @@ decode_il_reply(int *maj, int *min, char **err, const char * buf)
 
 
 int
-read_il_data(char **buffer, 
-	     int (*reader)(char *, const int))
+read_il_data(void *user_data,
+	     char **buffer, 
+	     int (*reader)(void *, char *, const int))
 {
   char buf[17];
   int ret, len;
 
   /* read 17 byte header */
-  len = (*reader)(buf, 17);
+  len = (*reader)(user_data, buf, 17);
   if(len < 0) {
     goto err;
   }
@@ -130,7 +131,7 @@ read_il_data(char **buffer,
   }
 
   /* read body */
-  ret = (*reader)(*buffer, len);
+  ret = (*reader)(user_data, *buffer, len);
   if(ret < 0) {
     free(*buffer);
     *buffer = NULL;
