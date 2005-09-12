@@ -329,6 +329,9 @@ test_query_events.o: %.o: %.cpp
 %.lo: %.c
 	${COMPILE} -o $@ -c $<
 
+lb_plugin.lo: lb_plugin.c jp_job_attrs.h
+	${COMPILE} -o $@ -c $<
+
 soap_version.h:
 	${gsoap_prefix}/bin/soapcpp2 /dev/null
 	perl -ne '$$. == 2 && /.*([0-9])\.([0-9])\.([0-9]).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n",$$1,$$2,$$3' soapH.h >$@

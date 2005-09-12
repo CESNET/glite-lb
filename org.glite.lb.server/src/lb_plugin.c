@@ -23,6 +23,7 @@
 #include "glite/jp/builtin_plugins.h"
 #include "glite/jp/backend.h"
 #include "glite/jp/known_attr.h"
+#include "jp_job_attrs.h"
 
 #define INITIAL_NUMBER_EVENTS 100
 #define LB_PLUGIN_NAMESPACE "urn:org.glite.lb"
@@ -204,34 +205,28 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
         memset(&err,0,sizeof err);
         err.source = __FUNCTION__;
 
-	if (strcmp(attr, GLITE_JP_ATTR_OWNER) == 0) {
-		if (h->events)
-		{
+	if (strncmp(attr, GLITE_JP_ATTR_OWNER, strlen(GLITE_JP_ATTR_OWNER)) == 0 ||
+            strncmp(attr, GLITE_JP_LB_user, strlen(GLITE_JP_LB_user)) == 0) {
+		if (h->events) {
 			i = 0;
-			while (h->events[i])
-			{
-				if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) 
-				{
+			while (h->events[i]) {
+				if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
 					av = calloc(2, sizeof(glite_jp_attrval_t));
 					av[0].name = strdup(GLITE_JP_ATTR_OWNER);
 					av[0].value = strdup(h->events[i]->any.user);
 					av[0].size = -1;
 					av[0].timestamp = 
 						h->events[i]->any.timestamp.tv_sec;
-
 					break;
 				}
 				i++;
 			}
 		}
-	} else if (strcmp(attr, GLITE_JP_LB_SUBMITTED) == 0) {
-		if (h->events)
-		{
+	} else if (strncmp(attr, GLITE_JP_LB_SUBMITTED, strlen(GLITE_JP_LB_SUBMITTED)) == 0) {
+		if (h->events) {
 			i = 0;
-			while (h->events[i])
-			{
-				if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) 
-				{
+			while (h->events[i]) {
+				if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
 					av = calloc(2, sizeof(glite_jp_attrval_t));
 					av[0].name = strdup(GLITE_JP_LB_SUBMITTED);
 					trio_asprintf(&av[0].value,"%ld.%06ld",
@@ -239,13 +234,35 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 						h->events[i]->any.timestamp.tv_usec);
 					av[0].timestamp = 
 						h->events[i]->any.timestamp.tv_sec;
-
 					break;
 				}
 				i++;
 			}
 		}
-	} else if (strcmp(attr, GLITE_JP_LB_TERMINATED) == 0 || strcmp(attr, GLITE_JP_LB_FINALSTATE) == 0) {
+	} else if (strncmp(attr, GLITE_JP_LB_TERMINATED, strlen(GLITE_JP_LB_TERMINATED)) == 0 || 
+                   strncmp(attr, GLITE_JP_LB_VO, strlen(GLITE_JP_LB_VO)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_aTag, strlen(GLITE_JP_LB_aTag)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_rQType, strlen(GLITE_JP_LB_rQType)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_eDuration, strlen(GLITE_JP_LB_eDuration)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_eNodes, strlen(GLITE_JP_LB_eNodes)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_eProc, strlen(GLITE_JP_LB_eProc)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_RB, strlen(GLITE_JP_LB_RB)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_CE, strlen(GLITE_JP_LB_CE)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_host, strlen(GLITE_JP_LB_host)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_UIHost, strlen(GLITE_JP_LB_UIHost)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_CPUTime, strlen(GLITE_JP_LB_CPUTime)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_NProc, strlen(GLITE_JP_LB_NProc)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_finalStatus, strlen(GLITE_JP_LB_finalStatus)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_finalStatusDate, strlen(GLITE_JP_LB_finalStatusDate)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_finalStatusReason, strlen(GLITE_JP_LB_finalStatusReason)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_LRMSDoneStatus, strlen(GLITE_JP_LB_LRMSDoneStatus)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_LRMSStatusReason, strlen(GLITE_JP_LB_LRMSStatusReason)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_retryCount, strlen(GLITE_JP_LB_retryCount)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_additionalReason, strlen(GLITE_JP_LB_additionalReason)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_jobType, strlen(GLITE_JP_LB_jobType)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_nsubjobs, strlen(GLITE_JP_LB_nsubjobs)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_lastStatusHistory, strlen(GLITE_JP_LB_lastStatusHistory)) == 0 ||
+                   strncmp(attr, GLITE_JP_LB_fullStatusHistory, strlen(GLITE_JP_LB_fullStatusHistory)) == 0 ) {
 		{
 			*attrval = NULL;
                 	err.code = ENOSYS;
@@ -254,14 +271,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		}
 	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, strlen(GLITE_JP_LBTAG_NS)) == 0) {
 		tag = strrchr(attr, ':');
-		if (h->events && tag)
-		{
+		if (h->events && tag) {
 			tag++;
 			i = 0;
 			n_tags = 0;
 
-			while (h->events[i])
-			{
+			while (h->events[i]) {
 				if ((h->events[i]->type == EDG_WLL_EVENT_USERTAG) &&
 					(strcmp(h->events[i]->userTag.name, tag) == 0) )
 				{
