@@ -67,7 +67,7 @@ public:
 		int l;
 		char *s;
 
-		l = read_il_data(&s, test_reader);
+		l = read_il_data(/*user data*/NULL, &s, test_reader);
 		CPPUNIT_ASSERT_EQUAL(l, 18);
 		CPPUNIT_ASSERT(s != NULL);
 		CPPUNIT_ASSERT(!strcmp(s, "6 michal\n6 zprava\n"));
@@ -80,7 +80,7 @@ private:
 	static const char *msg, *rep;
 
 	static int pos;
-	static int test_reader(char *buf, int len) {
+	static int test_reader(void *user_data, char *buf, int len) {
 		strncpy(buf, msg+pos, len);
 		pos += len;
 		return(len);
