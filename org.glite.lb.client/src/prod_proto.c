@@ -66,55 +66,22 @@ int edg_wll_log_proto_handle_gss_failures(edg_wll_Context context, int code, edg
 }
 
 
-static int
-read_il_data_thr(char **buffer, 
-	     int (*reader)(char *, const int,edg_wll_Context,void *),edg_wll_Context ctx,void *conn)
-{
-  char buf[17];
-  int ret, len;
 
-  /* read 17 byte header */
-  len = (*reader)(buf, 17,ctx,conn);
-  if(len < 0) {
-    goto err;
-  }
-  buf[16] = 0;
-  if((len=atoi(buf)) <= 0) {
-    len = -1;
-    goto err;
-  }
-
-  /* allocate room for the body */
-  *buffer = malloc(len+1);
-  if(*buffer == NULL) {
-    len = -1;
-    goto err;
-  }
-
-  /* read body */
-  ret = (*reader)(*buffer, len,ctx,conn);
-  if(ret < 0) {
-    free(*buffer);
-    *buffer = NULL;
-    len = ret;
-    goto err;
-  }
-
-  (*buffer)[len] = 0;
-
- err:
-  return(len);
-}
+struct reader_data {
+	edg_wll_Context ctx;
+	void *conn;
+};
 
 static 
 int
-plain_reader(char *buffer, int max_len,edg_wll_Context ctx,void *conn)
+plain_reader(void *user_data, char *buffer, int max_len)
 {
+	struct reader_data *data = (struct reader_data *)user_data;
 	int len;
 
-	len = edg_wll_plain_read_full(conn, buffer, max_len, &ctx->p_tmp_timeout);
+	len = edg_wll_plain_read_full(data->conn, buffer, max_len, &data->ctx->p_tmp_timeout);
 	if(len < 0) 
-		edg_wll_SetError(ctx, LB_PROTO, "get_reply_plain(): error reading message data");
+		edg_wll_SetError(data->ctx, LB_PROTO, "get_reply_plain(): error reading message data");
 
 	return(len);
 }
@@ -133,9 +100,12 @@ get_reply_plain(edg_wll_Context context, edg_wll_PlainConnection *conn, char **b
 {
 	char *msg;
 	int len, code;
+	struct reader_data data;
 
+	data.ctx = context;
+	data.conn = conn;
 	code = 0;
-	len = read_il_data_thr(&msg, plain_reader,context,conn);
+	len = read_il_data(&data, &msg, plain_reader);
 	if(len < 0)
 		goto get_reply_plain_end;
 
@@ -153,16 +123,17 @@ get_reply_plain_end:
 
 static 
 int
-gss_reader(char *buffer, int max_len,edg_wll_Context ctx,void *conn)
+gss_reader(void *user_data, char *buffer, int max_len)
 {
+	struct reader_data *data = (struct reader_data *)user_data;
 	int ret, len;
 	edg_wll_GssStatus gss_code;
 
-	ret = edg_wll_gss_read_full(conn, buffer, max_len, &ctx->p_tmp_timeout,
+	ret = edg_wll_gss_read_full(data->conn, buffer, max_len, &data->ctx->p_tmp_timeout,
 				    &len, &gss_code);
 	if(ret < 0) {
-		edg_wll_log_proto_handle_gss_failures(ctx, ret, &gss_code, "edg_wll_gss_read_full");
-		edg_wll_UpdateError(ctx, LB_PROTO, "get_reply_gss(): error reading message");
+		edg_wll_log_proto_handle_gss_failures(data->ctx, ret, &gss_code, "edg_wll_gss_read_full");
+		edg_wll_UpdateError(data->ctx, LB_PROTO, "get_reply_gss(): error reading message");
 	}
 
 	return(ret);
@@ -175,8 +146,11 @@ get_reply_gss(edg_wll_Context context, edg_wll_GssConnection *conn, char **buf, 
 {
 	char *msg;
 	int code;
+	struct reader_data data;
 
-	code = read_il_data_thr(&msg, gss_reader,context, conn);
+	data.ctx = context;
+	data.conn = conn;
+	code = read_il_data(&data, &msg, gss_reader);
 	if(code < 0)
 		goto get_reply_gss_end;
 

@@ -446,11 +446,11 @@ err:
 }
 
 
-static edg_wll_Context tmp_ctx;
 
-static int gss_reader(char *buffer, int max_len)
+static int gss_reader(void *user_data, char *buffer, int max_len)
 {
   edg_wll_GssStatus gss_code;
+  edg_wll_Context tmp_ctx = (edg_wll_Context)user_data;
   int ret, len;
 
   ret = edg_wll_gss_read_full(&tmp_ctx->connPoolNotif[0].gss,
@@ -485,8 +485,7 @@ static int recv_notif(edg_wll_Context ctx)
 	ctx->connPoolNotif[0].bufUse = 0;
 	ctx->connPoolNotif[0].bufSize = 0;
 	
-	tmp_ctx = ctx;
-	len = read_il_data(&ctx->connPoolNotif[0].buf, gss_reader);
+	len = read_il_data(ctx, &ctx->connPoolNotif[0].buf, gss_reader);
 	if(len < 0)
 	  return(len);
 	
