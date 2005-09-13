@@ -15,7 +15,7 @@
 
 #include "glite/lb/trio.h"
 
-//#include "jobstat.h"
+#include "jobstat.h"
 
 #include "glite/jp/types.h"
 #include "glite/jp/context.h"
@@ -40,11 +40,12 @@ typedef struct _lb_handle {
 } lb_handle;
 
 
+extern int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
 
 static int lb_query(void *fpctx,void *handle,const char * attr,glite_jp_attrval_t **attrval);
 static int lb_open(void *,void *, const char *uri, void **);
 static int lb_close(void *,void *);
-/*static int lb_status(edg_wll_Event *event, edg_wll_JobStat *status);*/
+static int lb_status(edg_wll_Event **event, edg_wll_JobStat *status);
 static int read_line(glite_jp_context_t  ctx, void *handle, lb_buffer_t *buffer, char **line);
 
 
@@ -140,8 +141,8 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle)
 
 	printf("lb open %d events\n", nevents);
 
-	// compute state of the job - still unclear if needed
-	// TODO
+	/* count state of job given by loaded events */
+	if ( (retval = lb_status(h->events, &(h->status))) ) goto fail;
 
 	*handle = (void *)h;
 
@@ -306,32 +307,39 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 }
 
 
-/*
- * not finished - not clear if needed 
-static int lb_status(edg_wll_Event *event, edg_wll_JobStat *status)
+static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status)
 {
         intJobStat	*js;
         int		i, be_strict = 0;
 	char		*errstring;
         
 
-        calloc(1, sizeof(intJobStat));
+        js = calloc(1, sizeof(intJobStat));
         
 	i = 0;
         while (events[i])  
         {
-		processEvent(js, events[i], 0, be_strict, &errstring);
+		if (!processEvent(js, events[i], 0, be_strict, &errstring)) {
+			// XXX: better way would be to export definitions
+			//      of intermal job_status error codes and test 
+			//      it againts RET_FATAL
+			goto err;
+		}
 		i++;
 	}
 
 	memcpy(status, &js->pub, sizeof(edg_wll_JobStat));
+
+	// XXX: awful, hopefully working
+	memset(&js->pub, 0, sizeof(edg_wll_JobStat));
+	destroy_intJobStat(js);
+
 	return 0;
 
 err:
 	destroy_intJobStat(js);
 	return -1;
 }
-*/
 
 
 /*
