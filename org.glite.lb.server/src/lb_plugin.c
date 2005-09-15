@@ -381,10 +381,7 @@ static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status) {
 	i = 0;
         while (events[i])  
         {
-		if (!processEvent(js, events[i], 0, be_strict, &errstring)) {
-			// XXX: better way would be to export definitions
-			//      of intermal job_status error codes and test 
-			//      it againts RET_FATAL
+		if (processEvent(js, events[i], 0, be_strict, &errstring) == RET_FATAL) {
 			goto err;
 		}
 		i++;

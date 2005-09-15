@@ -31,18 +31,6 @@
 #define UNUSED_VAR
 #endif
   
-#define RET_FAIL	0
-#define RET_OK		1
-#define RET_FATAL	RET_FAIL
-#define RET_SOON	2
-#define RET_LATE	3
-#define RET_BADSEQ	4
-#define RET_SUSPECT	5
-#define RET_IGNORE	6
-#define RET_BADBRANCH	7
-#define RET_GOODBRANCH	8
-#define RET_TOOOLD	9
-#define RET_INTERNAL	100
 
 #define rep(a,b) { free(a); a = (b == NULL) ? NULL : strdup(b); }
 #define mov(a,b) { free(a); a = b; b = NULL; }
@@ -96,8 +84,6 @@ void destroy_intJobStat(intJobStat *p)
 #if 0
 static int eval_expect_update(intJobStat *, int *, char **);
 #endif
-
-static int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
 
 static char* matched_substr(char *, regmatch_t) UNUSED_VAR;
 
@@ -422,7 +408,7 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 #define LRMS_STATE(state) ((state) == EDG_WLL_JOB_RUNNING || (state) == EDG_WLL_JOB_DONE)
 
 
-static int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
+int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
 
 	edg_wll_JobStatCode	old_state = js->pub.state;
