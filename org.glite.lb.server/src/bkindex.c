@@ -303,3 +303,65 @@ static void usage(const char *me)
 			"	[file] is applicable only without -d and -R\n",
 			me);
 }
+
+/*
+ * Set values of index columns in state table (after index reconfiguration)
+ */
+
+edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_cols) {
+
+	edg_wll_Stmt sh, sh2;
+	int njobs, ret = -1;
+	intJobStat *stat;
+	edg_wlc_JobId jobid;
+	char *res[5];
+	char *rest;
+	char *icvalues, *stmt;
+	int i;
+
+	edg_wll_ResetError(ctx);
+	if (!job_index_cols) return 0;
+
+	if ((njobs = edg_wll_ExecStmt(ctx, "select s.jobid,s.int_status,s.seq,s.version,j.dg_jobid"
+				       " from states s, jobs j where s.jobid=j.jobid",&sh)) < 0) {
+		edg_wll_FreeStmt(&sh);
+		return edg_wll_Error(ctx, NULL, NULL);
+	}
+	while ((ret=edg_wll_FetchRow(sh,res)) >0) {
+		if (strcmp(res[3], INTSTAT_VERSION)) {
+			stat = NULL;
+			if (!edg_wlc_JobIdParse(res[4], &jobid)) {
+				if ((stat = malloc(sizeof(intJobStat))) != NULL) {
+					if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1)) {
+						free(stat);
+						stat = NULL;
+					}
+				}
+				edg_wlc_JobIdFree(jobid);
+			}
+		} else {
+			stat = dec_intJobStat(res[1], &rest);
+			if (rest == NULL) stat = NULL;
+		}
+		if (stat == NULL) {
+			edg_wll_FreeStmt(&sh);
+			return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE,
+				"cannot decode int_status from states DB table");
+		}
+
+		edg_wll_IColumnsSQLPart(ctx, job_index_cols, stat, 0, NULL, &icvalues);
+		trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
+		ret = edg_wll_ExecStmt(ctx, stmt, &sh2);
+		edg_wll_FreeStmt(&sh2);
+
+		for (i = 0; i < 5; i++) free(res[i]);
+		destroy_intJobStat(stat); free(stat);
+		free(stmt); free(icvalues);
+
+		if (ret < 0) return edg_wll_Error(ctx, NULL, NULL);
+		
+	}
+	edg_wll_FreeStmt(&sh);
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+

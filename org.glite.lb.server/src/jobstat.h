@@ -49,6 +49,8 @@ typedef struct _intJobStat {
 	} intJobStat;
 
 void destroy_intJobStat(intJobStat *);
+void destroy_intJobStat_extension(intJobStat *p);
+
 
 edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context, void *, intJobStat *, int , char **, char **);
 edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context, void *);
@@ -63,3 +65,7 @@ int before_deep_resubmission(const char *, const char *);
 int same_branch(const char *, const char *);
 int component_seqcode(const char *a, edg_wll_Source index);
 int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
+
+int add_stringlist(char ***, const char *);
+int edg_wll_compare_seq(const char *, const char *);
+

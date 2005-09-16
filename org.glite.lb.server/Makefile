@@ -108,11 +108,14 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
 COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
+	${GRIDSITE_LIBS} -lvomsc${vomsflavour} \
 	${expatlib} -lexpat\
 
+PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo lbs_db_supp.lo
+
 BKSERVER_BASE_OBJS:= \
-	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
-	seqcode.o write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o \
+	seqcode.o write2rgma.o lbs_db.o lbs_db_supp.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
@@ -140,8 +143,8 @@ else
 		${EXT_LIBS}
 endif
 
-INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o openserver.o \
-	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
+INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o lbs_db_supp.o openserver.o \
+	jobstat.o process_event.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o
 
 INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} 
@@ -157,8 +160,8 @@ WS_CLIENT_LIBS:= -L${stagedir}/lib \
 HDRS=index.h lb_authz.h lbs_db.h store.h
 
 LIB_OBJS_BK:= \
-	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
-	seqcode.o write2rgma.o lbs_db.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o \
+	seqcode.o write2rgma.o lbs_db.o lbs_db_supp.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
@@ -171,8 +174,8 @@ glite_lb_bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}
 
-glite_lb_plugin.la: lb_plugin.lo
-	${SOLINK} -o $@ lb_plugin.lo ${PLUGIN_LIBS}
+glite_lb_plugin.la: ${PLUGIN_LOBJS}
+	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
 
 default all: compile
 
@@ -318,9 +321,8 @@ clean:
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
-%.o: %.c
+%.o %.lo: %.c
 	${COMPILE} -c $<
-
 
 test_query_events.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${GLOBUSINC} ${TEST_INC} $<
