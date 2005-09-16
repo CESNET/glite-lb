@@ -382,6 +382,10 @@ static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status) {
 	i = 0;
         while (events[i])  
         {
+		/* XXX: job owner not filled from events normally */
+		if (events[i]->any.type == EDG_WLL_EVENT_REGJOB)
+			js->pub.owner = strdup(events[i]->any.user);
+
 		if (processEvent(js, events[i], 0, be_strict, &errstring) == RET_FATAL) {
 			goto err;
 		}
