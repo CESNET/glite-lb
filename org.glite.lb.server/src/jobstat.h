@@ -69,3 +69,4 @@ int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
 int add_stringlist(char ***, const char *);
 int edg_wll_compare_seq(const char *, const char *);
 
+void init_intJobStat(intJobStat *p);

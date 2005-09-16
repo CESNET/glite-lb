@@ -739,3 +739,16 @@ void edg_wll_SortEvents(edg_wll_Event *e)
 	for (n=0; e[n].type; n++);
 	qsort(e,n,sizeof *e,compare_events_by_seq);
 }
+
+
+void init_intJobStat(intJobStat *p)
+{
+	memset(p, 0, sizeof(intJobStat));
+	p->pub.jobtype = EDG_WLL_STAT_SIMPLE;
+	p->pub.children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
+	p->pub.children_hist[0] = EDG_WLL_NUMBER_OF_STATCODES;
+	p->pub.stateEnterTimes = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
+	p->pub.stateEnterTimes[0] = EDG_WLL_NUMBER_OF_STATCODES;
+	/* TBD: generate */
+}
+

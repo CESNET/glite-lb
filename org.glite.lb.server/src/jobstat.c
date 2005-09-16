@@ -47,17 +47,6 @@ int js_enable_store = 1;
  * Basic manipulations with the internal representation of job state
  */
 
-static void init_intJobStat(intJobStat *p)
-{
-	memset(p, 0, sizeof(intJobStat));
-	p->pub.jobtype = EDG_WLL_STAT_SIMPLE;
-	p->pub.children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
-	p->pub.children_hist[0] = EDG_WLL_NUMBER_OF_STATCODES;
-	p->pub.stateEnterTimes = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
-	p->pub.stateEnterTimes[0] = EDG_WLL_NUMBER_OF_STATCODES;
-	/* TBD: generate */
-}
-
 #if 0
 static int eval_expect_update(intJobStat *, int *, char **);
 #endif

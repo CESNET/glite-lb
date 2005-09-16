@@ -377,6 +377,7 @@ static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status) {
 	char		*errstring;
         
         js = calloc(1, sizeof(intJobStat));
+	init_intJobStat(js);
         
 	i = 0;
         while (events[i])  
