@@ -93,7 +93,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	char *line;
 	int retval;
 	edg_wll_Context     context;
-	size_t              nevents, maxnevents, i;
+	int              nevents, maxnevents, i;
 	
 	h = calloc(1, sizeof(lb_handle));
 
