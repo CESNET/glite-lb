@@ -108,7 +108,6 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
 COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
-	${GRIDSITE_LIBS} -lvomsc${vomsflavour} \
 	${expatlib} -lexpat\
 
 PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo lbs_db_supp.lo
