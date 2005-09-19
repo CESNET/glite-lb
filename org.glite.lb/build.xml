@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.32  2005/08/03 11:58:25  akrenek
+	Merged the release 1.0 branch
+	
 	Revision 1.31  2005/05/26 15:13:37  zurek
 	inserted module.build.file
 	
@@ -280,6 +283,60 @@
 
 	<!-- component targets definitions tag = do not remove = -->
 
+	<target name="security.gsoap-plugin" unless="setenvonly" depends="envset">
+		<if>
+			<isset property="small.memory"/>
+			<then>
+				<exec dir="${security.subsystem.dir}" executable="${antExec}" failonerror="${failonerror}">
+					<arg line="gsoap-plugin -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${security.subsystem.dir}"
+        				target="gsoap-plugin"
+        				inheritall="false" >
+        				<property name="target" value="${target}"/>
+				</ant>
+			</else>
+		</if>
+ 	</target>
+
+	<target name="security.voms" unless="setenvonly" depends="envset">
+		<if>
+			<isset property="small.memory"/>
+			<then>
+				<exec dir="${security.subsystem.dir}" executable="${antExec}" failonerror="${failonerror}">
+					<arg line="voms -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${security.subsystem.dir}"
+        				target="voms"
+        				inheritall="false" >
+        				<property name="target" value="${target}"/>
+				</ant>
+			</else>
+		</if>
+ 	</target>
+
+	<target name="wms-utils.jobid" unless="setenvonly" depends="envset">
+		<if>
+			<isset property="small.memory"/>
+			<then>
+				<exec dir="${wms-utils.subsystem.dir}" executable="${antExec}" failonerror="${failonerror}">
+					<arg line="jobid -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${wms-utils.subsystem.dir}"
+        				target="jobid"
+        				inheritall="false" >
+        				<property name="target" value="${target}"/>
+				</ant>
+			</else>
+		</if>
+ 	</target>
+
 	<target name="client-interface" unless="setenvonly" depends="envset">
 		<if>
 			<isset property="small.memory" />
@@ -328,7 +385,7 @@
 		</if>
 	</target>
 
-	<target name="common" unless="setenvonly" depends="envset, globus,expat,ares,client-interface">
+	<target name="common" unless="setenvonly" depends="envset, globus, expat, ares, wms-utils.jobid, security.gsoap-plugin, client-interface">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -360,7 +417,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus,expat,ares,mysql,gsoap,client-interface,ws-interface,common,logger">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms, client-interface, ws-interface, common, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
