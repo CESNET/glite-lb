@@ -7,15 +7,18 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#define IL_PROTOCOL_MAGIC_WORD "michal"
+
 int 
 encode_il_msg(char **buffer, const char *event)
 {
   int len;
   char *p;
+  char *protocol_magic_word = IL_PROTOCOL_MAGIC_WORD;
 
 
   /* allocate enough room to hold the message */
-  len = 17 + len_string((char*)event);
+  len = 17 + len_string(protocol_magic_word) + len_string((char*)event);
   if((*buffer = malloc(len)) == NULL) {
     return(-1);
   }
@@ -27,6 +30,7 @@ encode_il_msg(char **buffer, const char *event)
   p += 17;
 
   /* write rest of the message */
+  p = put_string(p, protocol_magic_word);
   p = put_string(p, (char*)event);
 
   return(p - *buffer);
@@ -59,8 +63,21 @@ int
 decode_il_msg(char **event, const char *buf)
 {
   char *p;
+  char *protocol_magic_word=NULL;
+  int magic_word_check_failed = 0;
 
-  p = get_string((char*)buf, event);
+  /* First check that the protocol 'magic' word is there */
+  p = get_string((char*)buf, &protocol_magic_word);
+  if (protocol_magic_word) {
+    if (strcmp (protocol_magic_word, IL_PROTOCOL_MAGIC_WORD) != 0) {
+      magic_word_check_failed = 1;
+    }
+    free(protocol_magic_word);
+  }
+
+  if (magic_word_check_failed != 0) return (-1);
+
+  p = get_string(p, event);
   if(p == NULL) {
     if(*event) { free(*event); *event = NULL; };
     return(-1);
@@ -88,14 +105,15 @@ decode_il_reply(int *maj, int *min, char **err, const char * buf)
 
 
 int
-read_il_data(char **buffer, 
-	     int (*reader)(char *, const int))
+read_il_data(void *user_data,
+	     char **buffer, 
+	     int (*reader)(void *, char *, const int))
 {
   char buf[17];
   int ret, len;
 
   /* read 17 byte header */
-  len = (*reader)(buf, 17);
+  len = (*reader)(user_data, buf, 17);
   if(len < 0) {
     goto err;
   }
@@ -113,7 +131,7 @@ read_il_data(char **buffer,
   }
 
   /* read body */
-  ret = (*reader)(*buffer, len);
+  ret = (*reader)(user_data, *buffer, len);
   if(ret < 0) {
     free(*buffer);
     *buffer = NULL;

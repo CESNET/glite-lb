@@ -91,19 +91,22 @@ confirm_msg(struct server_msg *msg, int code, int code_min)
 #endif
 
 
-static edg_wll_GssConnection *tmp_gss;
+
+struct reader_data {
+	edg_wll_GssConnection *gss;
+	struct timeval *timeout;
+};
+
 
 static
 int
-gss_reader(char *buffer, int max_len)
+gss_reader(void *user_data, char *buffer, int max_len)
 {
   int ret, len;
-  struct timeval tv;
+  struct reader_data *data = (struct reader_data *)user_data;
   edg_wll_GssStatus gss_stat;
 
-  tv.tv_sec = TIMEOUT;
-  tv.tv_usec = 0;
-  ret = edg_wll_gss_read_full(tmp_gss, buffer, max_len, &tv, &len, &gss_stat);
+  ret = edg_wll_gss_read_full(data->gss, buffer, max_len, data->timeout, &len, &gss_stat);
   if(ret < 0) {
     char *gss_err = NULL;
 
@@ -130,9 +133,14 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
   char *msg;
   int ret, code;
   size_t len, l;
+  struct timeval tv;
+  struct reader_data data;
 
-  tmp_gss = &eq->gss;
-  len = read_il_data(&msg, gss_reader);
+  tv.tv_sec = TIMEOUT;
+  tv.tv_usec = 0;
+  data.gss = &eq->gss;
+  data.timeout = &tv;
+  len = read_il_data(&data, &msg, gss_reader);
   if(len < 0) 
     return(-1);
 

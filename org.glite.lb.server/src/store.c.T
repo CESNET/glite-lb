@@ -52,6 +52,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	char		*select_max,*ssrc;
 	edg_wll_Stmt	sh = NULL;
 	int		next = 0xDEAD;
+	int		lbproxy_notreg = 0;
 	char		*now_s = NULL;
 
 	ssrc = jobid = stmt = select_max = NULL;
@@ -63,7 +64,11 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	edg_wll_ResetError(ctx);
 	switch (err = check_auth(ctx,e)) {
 		case 0: break;
-		case ENOENT: goto clean;
+		case ENOENT: 
+			if ( !ctx->isProxy ) goto clean;
+			edg_wll_ResetError(ctx);
+			lbproxy_notreg = 1;
+			break;
 		case EPERM:
 			if (!ctx->noAuth) goto clean;
 			edg_wll_ResetError(ctx);
@@ -80,8 +85,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
 
 /* only REGJOB events determine job owner now */
-	if (e->type == EDG_WLL_EVENT_REGJOB && 
-		(err = store_job(ctx,e->any.jobId,userid))) goto clean;
+	if (   (e->type == EDG_WLL_EVENT_REGJOB || lbproxy_notreg)
+		&& (err = store_job(ctx,e->any.jobId,userid))) goto clean;
 
 
 /* obtain next event sequence number */
@@ -425,7 +430,14 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 	) goto clean;
 
 	if (!owner) {
-		edg_wll_SetError(ctx,ENOENT,"job not registered");
+		if ( ctx->isProxy && !e->any.seqcode )
+			edg_wll_SetError(ctx, EINVAL, "Job not registered - sequence code needed");
+		else
+			/* We have to let the calling function know what happened here
+			 * even if it hapens inside the LB Proxy which shouldn't consider
+			 * this as an error
+			 */
+			edg_wll_SetError(ctx, ENOENT, "job not registered");
 		goto clean;
 	}
 
