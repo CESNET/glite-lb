@@ -49,9 +49,9 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 
 VERSION_AHEAD=0
 
-GLOBUS_LIBS:=-L${globus_prefix}/lib \
-        -lglobus_common_${nothrflavour} \
-        -lglobus_gssapi_gsi_${nothrflavour} \
+#GLOBUS_LIBS:=-L${globus_prefix}/lib \
+#        -lglobus_common_${nothrflavour} \
+#        -lglobus_gssapi_gsi_${nothrflavour} \
 
 GLITE_LIBS:=-L${glite_location}/lib
 
@@ -79,6 +79,8 @@ COMPILE:=libtool --mode=compile ${CC}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
+
+LTSPLIT:=${top_srcdir}/project/libtool-paths-split.pl
 
 OBJS:=lb_plain_io.o escape.o events.o mini_http.o query_rec.o \
 	status.o xml_conversions.o xml_parse.o ulm_parse.o param.o \
@@ -141,12 +143,14 @@ ${LTLIB}: ${OBJS}
 	${LINK} ${version_info} -o $@ ${LOBJS} \
 		-lglite_security_gss_${nothrflavour} \
 		-lglite_wmsutils_cjobid \
+		${EXT_LIBS} \
 		-lm
 
 ${THRLTLIB}: ${THROBJS}
 	${LINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss_${thrflavour} \
 		-lglite_wmsutils_cjobid \
+		${EXT_LIBS} \
 		-lm
 
 stage: compile
@@ -192,6 +196,7 @@ install:
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${PREFIX}/lib
+	${LTSPLIT} ${PREFIX}/lib/${LTLIB} ${PREFIX}/lib/${THRLTLIB}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	if [ x${DOSTAGE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \

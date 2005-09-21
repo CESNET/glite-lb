@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.8  2005/08/03 09:30:17  akrenek
+	Merged the release 1.0 branch
+	
 	Revision 1.7  2005/05/26 15:13:46  zurek
 	inserted module.build.file
 	
@@ -114,8 +117,12 @@
 				<include name="at3" />
 				<include name="*.T" />
 				<include name="*.pm" />
+				<include name="libtool-paths-split.pl" />
 			</fileset>
 		</copy>	
+		<exec dir="${module.project.dir}" executable="chmod">
+			<arg line="+x libtool-paths-split.pl"/>
+		</exec>
 		<antcall target="lbmakefiles" />
 	</target>
 		
