@@ -78,25 +78,25 @@ CFLAGS:=${DEBUG} \
 
 CXXFLAGS:=${CFLAGS}
 
-GLOBUS_LIBS:=-L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour} \
-
-GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
-	-lglobus_common_${thrflavour} \
-	-lglobus_gssapi_gsi_${thrflavour}
-
-ifneq (${expat_prefix},/usr)
-	EXPAT_LIBS:=-L${expat_prefix}/lib
-endif
-EXPAT_LIBS := ${EXPAT_LIBS} -lexpat
-
-ARES_LIBS:=-L${ares_prefix}/lib \
-	-lares
-
-EXT_LIB:= ${EXPAT_LIBS} \
-    ${ARES_LIBS}
-
+# GLOBUS_LIBS:=-L${globus_prefix}/lib \
+# 	-lglobus_common_${nothrflavour} \
+# 	-lglobus_gssapi_gsi_${nothrflavour} \
+# 
+# GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
+# 	-lglobus_common_${thrflavour} \
+# 	-lglobus_gssapi_gsi_${thrflavour}
+# 
+# ifneq (${expat_prefix},/usr)
+# 	EXPAT_LIBS:=-L${expat_prefix}/lib
+# endif
+# EXPAT_LIBS := ${EXPAT_LIBS} -lexpat
+# 
+# ARES_LIBS:=-L${ares_prefix}/lib \
+# 	-lares
+# 
+# EXT_LIB:= ${EXPAT_LIBS} \
+#     ${ARES_LIBS}
+# 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
@@ -110,6 +110,7 @@ CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
+LTSPLIT:=${top_srcdir}/project/libtool-paths-split.pl
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 	producer.o uiwrap.o statistics.o
@@ -154,27 +155,33 @@ ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib \
 			-lglite_lb_common_${nothrflavour} \
 			-lglite_security_gss_${nothrflavour}
+	${LTSPLIT} $@
 
 ${THRLIB}: ${LIBTHROBJS}
 	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib \
 			-lglite_lb_common_${thrflavour} \
 			-lglite_security_gss_${thrflavour}
+	${LTSPLIT} $@
 
 ${FAKELIB}: ${FAKELIBOBJS}
 	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${glite_location}/lib \
 			-lglite_lb_common_${nothrflavour} \
 			-lglite_security_gss_${nothrflavour}
+	${LTSPLIT} $@
 
 ${FAKETHRLIB}: ${FAKELIBTHROBJS}
 	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${glite_location}/lib \
 			-lglite_lb_common_${thrflavour} \
 			-lglite_security_gss_${thrflavour}
+	${LTSPLIT} $@
 
 ${PLUSLIB}: ${PLUSOBJS}
 	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
+	${LTSPLIT} $@
 
 ${THRPLUSLIB}: ${PLUSTHROBJS}
 	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${glite_location}/lib ${THRLIB}
+	${LTSPLIT} $@
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
@@ -278,6 +285,7 @@ install:
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
+	${LTSPLIT} ${PREFIX}/lib/${LIB} ${PREFIX}/lib/${THRLIB} ${PREFIX}/lib/${PLUSLIB} ${PREFIX}/lib/${THRPLUSLIB}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/examples
