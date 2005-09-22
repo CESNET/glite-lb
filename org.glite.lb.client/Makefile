@@ -110,7 +110,7 @@ CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
-LTSPLIT:=${top_srcdir}/project/libtool-paths-split.pl
+CHRPATH:=${chrpath}/bin/chrpath
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 	producer.o uiwrap.o statistics.o
@@ -154,46 +154,46 @@ version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib \
 			-lglite_lb_common_${nothrflavour} \
-			-lglite_security_gss_${nothrflavour}
-	${LTSPLIT} $@
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${THRLIB}: ${LIBTHROBJS}
 	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib \
 			-lglite_lb_common_${thrflavour} \
-			-lglite_security_gss_${thrflavour}
-	${LTSPLIT} $@
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${FAKELIB}: ${FAKELIBOBJS}
 	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${glite_location}/lib \
 			-lglite_lb_common_${nothrflavour} \
-			-lglite_security_gss_${nothrflavour}
-	${LTSPLIT} $@
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${FAKETHRLIB}: ${FAKELIBTHROBJS}
 	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${glite_location}/lib \
 			-lglite_lb_common_${thrflavour} \
-			-lglite_security_gss_${thrflavour}
-	${LTSPLIT} $@
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${PLUSLIB}: ${PLUSOBJS}
 	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
-	${LTSPLIT} $@
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS}
 	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${glite_location}/lib ${THRLIB}
-	${LTSPLIT} $@
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${EXAMPLES_CL}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${COMMON_LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${FAKE_EXAMPLES}: %: %.o ${FAKELIB}
 	${LINK} -o $@ $< ${FAKELIB} ${TEST_LIBS} ${EXT_LIB} ${GLOBUS_LIBS}
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${TOOLS}: ${LIB}
 
@@ -285,7 +285,6 @@ install:
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
-	${LTSPLIT} ${PREFIX}/lib/${LIB} ${PREFIX}/lib/${THRLIB} ${PREFIX}/lib/${PLUSLIB} ${PREFIX}/lib/${THRPLUSLIB}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/examples

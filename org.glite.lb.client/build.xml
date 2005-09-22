@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.6.6.1  2005/09/21 12:13:26  akrenek
+	the first attempt to fix #9701
+	
 	Revision 1.6  2005/05/26 15:13:40  zurek
 	inserted module.build.file
 	
@@ -110,9 +113,6 @@
 				<include name="libtool-paths-split.pl" />
 			</fileset>
 		</copy>	
-		<exec dir="${module.project.dir}" executable="chmod">
-			<arg line="+x libtool-paths-split.pl"/>
-		</exec>
 		<antcall target="lbmakefiles" />
 	</target>
 		
