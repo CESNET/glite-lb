@@ -80,7 +80,7 @@ LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS}
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
-LTSPLIT:=${top_srcdir}/project/libtool-paths-split.pl
+CHRPATH:=${chrpath}/bin/chrpath
 
 OBJS:=lb_plain_io.o escape.o events.o mini_http.o query_rec.o \
 	status.o xml_conversions.o xml_parse.o ulm_parse.o param.o \
@@ -145,6 +145,7 @@ ${LTLIB}: ${OBJS}
 		-lglite_wmsutils_cjobid \
 		${EXT_LIBS} \
 		-lm
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 ${THRLTLIB}: ${THROBJS}
 	${LINK} ${version_info} -o $@ ${THRLOBJS} \
@@ -152,6 +153,7 @@ ${THRLTLIB}: ${THROBJS}
 		-lglite_wmsutils_cjobid \
 		${EXT_LIBS} \
 		-lm
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
@@ -196,7 +198,6 @@ install:
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${PREFIX}/lib
-	${LTSPLIT} ${PREFIX}/lib/${LTLIB} ${PREFIX}/lib/${THRLTLIB}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	if [ x${DOSTAGE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
