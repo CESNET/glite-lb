@@ -43,21 +43,22 @@ LDFLAGS:=-L${stagedir}/lib \
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
+CHRPATH:=${chrpath}/bin/chrpath
 
-GLOBUS_LIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour}
+#GLOBUS_LIBS:= -L${globus_prefix}/lib \
+#	-lglobus_common_${nothrflavour} \
+#	-lglobus_gssapi_gsi_${nothrflavour}
 
-GLOBUS_THRLIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${thrflavour} \
-	-lglobus_gssapi_gsi_${thrflavour}
+#GLOBUS_THRLIBS:= -L${globus_prefix}/lib \
+#	-lglobus_common_${thrflavour} \
+#	-lglobus_gssapi_gsi_${thrflavour}
 
-ifneq (${expat_prefix},/usr)
-	EXPAT_LIBS:=-L${expat_prefix}/lib
-endif
-EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
+#ifneq (${expat_prefix},/usr)
+#	EXPAT_LIBS:=-L${expat_prefix}/lib
+#endif
+#EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 
-EXT_LIBS:= -L${ares_prefix}/lib -lares ${EXPAT_LIBS}
+#EXT_LIBS:= -L${ares_prefix}/lib -lares ${EXPAT_LIBS}
 
 COMMON_LIB:=-lglite_lb_common
 GLITE_GSS_LIB:=-lglite_security_gss
@@ -93,18 +94,21 @@ INTERLOG_TEST_OBJS:= \
 
 glite_lb_logd: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${GLITE_GSS_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS}
+	${CHRPATH} -d $@
 
 glite_lb_interlogd: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} \
 		${COMMON_LIB}_${thrflavour} \
 		${GLITE_GSS_LIB}_${nothrflavour} \
 		${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
+	${CHRPATH} -d $@
 
 glite_lb_notif_interlogd: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} \
 		${COMMON_LIB}_${thrflavour} \
 		${GLITE_GSS_LIB}_${nothrflavour} \
 		${EXT_LIBS} ${GLOBUS_THRLIBS} -lpthread
+	${CHRPATH} -d $@
 
 default: all
 
