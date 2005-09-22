@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.7  2005/08/03 09:30:28  akrenek
+	Merged the release 1.0 branch
+	
 	Revision 1.6  2005/01/21 11:27:44  jpospi
 	completely remove gridsite.prefix and voms.prefix
 	
@@ -85,6 +88,7 @@ mysql_prefix=${with.mysql.prefix}
 mysql_version=${ext.mysql.version}
 cppunit=${with.cppunit.prefix}
 gsoap_prefix=${with.gsoap.prefix}
+chrpath=${with.chrpath.prefix}
 			</echo>
 	    </target>
 	</project>

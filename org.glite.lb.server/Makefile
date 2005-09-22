@@ -72,10 +72,11 @@ SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
+CHRPATH:=${chrpath}/bin/chrpath
 
-GLOBUS_LIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour} \
+#GLOBUS_LIBS:= -L${globus_prefix}/lib \
+#	-lglobus_common_${nothrflavour} \
+#	-lglobus_gssapi_gsi_${nothrflavour} \
 
 ifneq (${mysql_prefix},/usr)
 	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
@@ -97,15 +98,18 @@ ifeq (${nothrflavour},gcc32dbg)
 	vomsflavour :=
 endif
 
-EXT_LIBS:= -L${ares_prefix}/lib -lares \
+#	-L${ares_prefix}/lib -lares \
+#	${expatlib} -lexpat \
+#	${GLOBUS_LIBS}
+EXT_LIBS:= \
 	${mysqlib} -lmysqlclient -lz\
-	${expatlib} -lexpat \
 	${GRIDSITE_LIBS} \
 	-lvomsc${vomsflavour} \
-	${GLOBUS_LIBS}
 
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
-COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
+COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} 
+#-lglite_security_gss_${nothrflavour}
+
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
 	${expatlib} -lexpat\
 
@@ -166,12 +170,15 @@ STATIC_LIB_BK:=libglite_lb_bkserver.a
 
 glite_lb_bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINK} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
+	${CHRPATH} -d $@
 
 glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}
+	${CHRPATH} -d $@
 
 glite_lb_plugin.la: lb_plugin.lo
 	${SOLINK} -o $@ lb_plugin.lo ${PLUGIN_LIBS}
+	${CHRPATH} -d .libs/${@:.la=.so}
 
 default all: compile
 
@@ -233,18 +240,23 @@ examples: ws_getversion ws_jobstat ws_query_ex ws_joblog
 
 ws_getversion: ws_getversion.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_getversion.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} 
+	${CHRPATH} -d $@
 
 ws_jobstat: ws_jobstat.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_jobstat.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
+	${CHRPATH} -d $@
 
 ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_query_ex.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
+	${CHRPATH} -d $@
 
 ws_query_ext: ws_query_ext.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_query_ext.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
+	${CHRPATH} -d $@
 
 ws_joblog: ws_joblog.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_joblog.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
+	${CHRPATH} -d $@
 
 
 ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
