@@ -9,12 +9,12 @@
 
 ! DESTINATION=CE2/queue2
 ! CE_NODE=worker2
-:resubmission:
+:resubmission_deep:
 
 -s LogMonitor, -e Done, --status_code=FAILED, --reason="reason for the change", --exit_code=141
 -s LogMonitor, -e Resubmission, --result=WILLRESUB, --reason="let's try again", --tag=none
 
 ! DESTINATION=CE3/queue3
 ! CE_NODE=worker3
-:resubmission:
+:resubmission_deep:
 
