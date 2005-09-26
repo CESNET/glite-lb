@@ -20,6 +20,7 @@
 #include "index.h"
 #include "jobstat.h"
 #include "lb_authz.h"
+#include "stats.h"
 
 
 #define DAG_ENABLE	1
@@ -628,24 +629,36 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 	int		be_strict = 0;
 	char		*errstring = NULL;
 	intJobStat	jobstat;
+	edg_wll_JobStat	oldstat;
 
+	memset(&oldstat,0,sizeof oldstat);
 	if (seq != 0) {
 		intErr = edg_wll_LoadIntState(ctx, job, seq - 1, &ijsp);
 	}
 	if (seq != 0 && !intErr) {
+		edg_wll_CpyStatus(&ijsp->pub,&oldstat);
 		res = processEvent(ijsp, e, seq, be_strict, &errstring);
 		if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
+			edg_wll_FreeStatus(&oldstat);
 			return edg_wll_SetError(ctx, EINVAL, errstring);
 		}
 		edg_wll_StoreIntState(ctx, ijsp, seq);
+		edg_wll_UpdateStatistics(ctx,&oldstat,e,&ijsp->pub);
 		if (stat_out) {
 			memcpy(stat_out,&ijsp->pub,sizeof *stat_out);
 			destroy_intJobStat_extension(ijsp);
 		}
 		else destroy_intJobStat(ijsp);
 		free(ijsp);
-	} else {
-		edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store);
+		edg_wll_FreeStatus(&oldstat);
+	}
+	else if (!edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store)) 
+	{
+		/* FIXME: we miss state change in the case of seq != 0 
+		 * Does anybody care? */
+
+		edg_wll_UpdateStatistics(ctx,NULL,e,&jobstat.pub);
+
 		if (stat_out) {
 			memcpy(stat_out,&jobstat.pub,sizeof *stat_out);
 			destroy_intJobStat_extension(&jobstat);

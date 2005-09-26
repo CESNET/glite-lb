@@ -18,6 +18,7 @@
 
 #include "lb_proto.h"
 #include "lb_html.h"
+#include "stats.h"
 #include "get_events.h"
 #include "purge.h"
 #include "lb_xml_parse.h"
@@ -35,6 +36,7 @@
 #define KEY_INDEXED_ATTRS	"/indexedAttrs "
 #define KEY_NOTIF_REQUEST	"/notifRequest "
 #define KEY_QUERY_SEQUENCE_CODE	"/querySequenceCode "
+#define KEY_STATS_REQUEST	"/statsRequest "
 #define KEY_HTTP        	"HTTP/1.1"
 
 
@@ -820,6 +822,63 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			if ( source ) free(source);
 			if ( seqCode ) free(seqCode);
 			edg_wlc_JobIdFree(jobId);
+		}
+		else if (!strncmp(requestPTR,KEY_STATS_REQUEST,sizeof(KEY_STATS_REQUEST)-1)) {
+			char *function;
+			edg_wll_QueryRec **conditions;
+			edg_wll_JobStatCode major = EDG_WLL_JOB_UNDEF;
+			time_t from, to;
+			int i, j, minor, res_from, res_to;
+			float rate = 0, duration = 0;
+			
+			
+			
+        	        if (parseStatsRequest(ctx, messageBody, &function, &conditions, 
+						&major, &minor, &from, &to))
+				ret = HTTP_BADREQ;
+			else {
+				int     fatal = 0, err = 0;
+				
+				// XXX presne poradi parametru zatim neni znamo
+				// navratove chyby nejsou zname, nutno predelat dle aktualni situace
+				if (!strcmp(function,"Rate")) 
+					err = edg_wll_StateRateServer(ctx,
+						conditions[0], major, minor, 
+						&from, &to, &rate, &res_from, &res_to); 
+				else if (!strcmp(function,"Duration"))
+					err = edg_wll_StateDurationServer(ctx,
+						conditions[0], major, minor, 
+						&from, &to, &duration, &res_from, &res_to); 
+				
+				switch (err) {
+					case 0: if (html) ret = HTTP_NOTIMPL;
+						else      ret = HTTP_OK; 
+						break;
+					case ENOSYS: ret = HTTP_NOTIMPL; break;
+					case EEXIST: ret = HTTP_OK; break;
+					case EINVAL: ret = HTTP_INVALID; break;
+					case ENOENT: ret = HTTP_NOTFOUND; break;
+					case EPERM : ret = HTTP_UNAUTH; break;
+					case EDG_WLL_ERROR_NOINDEX: ret = HTTP_UNAUTH; break;
+					case ENOMEM: fatal = 1; ret = HTTP_INTERNAL; break;
+					default: ret = HTTP_INTERNAL; break;
+				}
+				/* glue errors (if eny) to XML responce */ 
+				if (!html && !fatal)
+					if (edg_wll_StatsResultToXML(ctx, from, to, rate, 
+							duration, res_from, res_to, &message))
+						ret = HTTP_INTERNAL;
+			}
+			
+			free(function);
+	                if (conditions) {
+        	                for (j = 0; conditions[j]; j++) {
+                	                for (i = 0; (conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
+                        	                edg_wll_QueryRecFree(&conditions[j][i]);
+                                	free(conditions[j]);
+	                        }
+        	                free(conditions);
+                	}
 		}
 
 			
