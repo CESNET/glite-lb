@@ -167,7 +167,7 @@ endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o lbs_db_supp.o openserver.o \
 	jobstat.o process_event.o query.o lock.o get_events.o write2rgma.o index_lex.o \
-	lb_authz.o store.o bkindex.o
+	lb_authz.o store.o bkindex.o stats.o
 
 INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} 
 
