@@ -106,14 +106,15 @@ get_reply_plain(edg_wll_Context context, edg_wll_PlainConnection *conn, char **b
 	data.conn = conn;
 	code = 0;
 	len = read_il_data(&data, &msg, plain_reader);
-	if(len < 0)
+	if(len < 0) {
+		edg_wll_SetError(context, LB_PROTO, "get_reply_plain(): error reading message");
 		goto get_reply_plain_end;
+	}
 
 	if(decode_il_reply(&code, code_min, buf, msg) < 0) {
 		edg_wll_SetError(context, LB_PROTO, "get_reply_plain(): error decoding message");
 		goto get_reply_plain_end;
 	}
-
 
 get_reply_plain_end:
 	if(msg) free(msg);
@@ -151,8 +152,10 @@ get_reply_gss(edg_wll_Context context, edg_wll_GssConnection *conn, char **buf, 
 	data.ctx = context;
 	data.conn = conn;
 	code = read_il_data(&data, &msg, gss_reader);
-	if(code < 0)
+	if(code < 0) {
+		edg_wll_SetError(context, LB_PROTO, "get_reply_gss(): error reading reply");
 		goto get_reply_gss_end;
+	}
 
 	if(decode_il_reply(&code, code_min, buf, msg) < 0) {
 		edg_wll_SetError(context, LB_PROTO, "get_reply_gss(): error decoding reply");
