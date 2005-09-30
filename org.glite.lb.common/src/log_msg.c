@@ -1,5 +1,6 @@
 #include <sys/un.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "context-int.h"
 
@@ -194,6 +195,7 @@ int edg_wll_log_event_send(
 	struct sockaddr_un	saddr;
 	int					msg_sock,
 						flags,
+						conn_timeout,
 						i, count = 0;
 
 
@@ -212,11 +214,13 @@ int edg_wll_log_event_send(
 		goto cleanup;
 	}
 
+	conn_timeout = floor(timeout->tv_sec/(conn_attempts + 1));
 	for ( i = 0; i < conn_attempts; i++) {
 		if ( connect(msg_sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0 ) {
 			if ( errno == EISCONN ) break;
 			else if ((errno == EAGAIN) || (errno == ETIMEDOUT)) {
-				sleep(timeout->tv_sec);
+				sleep(conn_timeout);
+				timeout->tv_sec -= conn_timeout;
 				continue;
 			} else {
 				edg_wll_SetError(ctx, errno, "Can't connect to the interlogger"); 
