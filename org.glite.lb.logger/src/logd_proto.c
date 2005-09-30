@@ -261,9 +261,12 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	errno = i = answer = answer_sent = size = msg_size = dglllid_size = dguser_size = count = count_total = msg_sock = filedesc = filelock_status = /* priority */ unique = err = 0;     
         buf = dglllid = dguser = jobId = name_esc = msg = msg_begin = NULL;
 	event = NULL;
-	if (EDG_WLL_LOG_TIMEOUT_MAX > EDG_WLL_LOG_SYNC_TIMEOUT_MAX) timeout.tv_sec = EDG_WLL_LOG_TIMEOUT_MAX;
-	else timeout.tv_sec = EDG_WLL_LOG_SYNC_TIMEOUT_MAX;
-        timeout.tv_usec = 0;
+	if (EDG_WLL_LOG_TIMEOUT_MAX > EDG_WLL_LOG_SYNC_TIMEOUT_MAX) {
+		timeout.tv_sec = EDG_WLL_LOG_TIMEOUT_MAX;
+	} else { 
+		timeout.tv_sec = EDG_WLL_LOG_SYNC_TIMEOUT_MAX;
+	}
+        	timeout.tv_usec = 0;
 	if (edg_wll_InitContext(&context) != 0) {
 		edg_wll_ll_log(LOG_ERR,"edg_wll_InitContex(): error.\n");
 		answer = ENOMEM; 

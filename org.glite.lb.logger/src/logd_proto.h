@@ -43,8 +43,7 @@ void edg_wll_ll_log(int level, const char *fmt, ...);
 
 /* connect defaults */
 
-#define CONNECT_ATTEMPTS	50
-#define CONNECT_TIMEOUT		10
+#define CONNECT_ATTEMPTS	5
 
 
 /* locallogger daemon listen and connect functions prototypes */
