@@ -98,7 +98,7 @@ static
 int
 get_reply_plain(edg_wll_Context context, edg_wll_PlainConnection *conn, char **buf, int *code_min)
 {
-	char *msg;
+	char *msg=NULL;
 	int len, code;
 	struct reader_data data;
 
