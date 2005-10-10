@@ -145,7 +145,7 @@ static
 int
 get_reply_gss(edg_wll_Context context, edg_wll_GssConnection *conn, char **buf, int *code_min)
 {
-	char *msg;
+	char *msg = NULL;
 	int code;
 	struct reader_data data;
 
