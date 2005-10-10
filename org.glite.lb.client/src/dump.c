@@ -100,22 +100,22 @@ int main(int argc,char *argv[])
 	if (debug) {
 		printf("Dump request:\n");
 		if (request->from < 0) {
-			printf("- from: %ld.\n",request->from);
+			printf("- from: %ld.\n",(long) request->from);
 		} else {
 			if (edg_wll_ULMTimevalToDate(request->from,0,date) != 0) {
 				fprintf(stderr,"Error parsing 'from' argument.\n");
 				goto main_end;
 			}
-			printf("- from: %ld (i.e. %s).\n",request->from,date);
+			printf("- from: %ld (i.e. %s).\n",(long) request->from,date);
 		}
 		if (request->to < 0) {
-			printf("- to: %ld.\n",request->to);
+			printf("- to: %ld.\n",(long) request->to);
 		} else {
 			if (edg_wll_ULMTimevalToDate(request->to,0,date) != 0) {
 				fprintf(stderr,"Error parsing 'to' argument.\n");
 				goto main_end;
 			}
-			printf("- to: %ld (i.e. %s).\n",request->to,date);
+			printf("- to: %ld (i.e. %s).\n",(long) request->to,date);
 		}
 	}
 
@@ -160,12 +160,12 @@ int main(int argc,char *argv[])
 		fprintf(stderr,"Error parsing 'from' argument.\n");
 		goto main_end;
 	}
-	printf("- from: %ld (i.e. %s).\n",result->from,date);
+	printf("- from: %ld (i.e. %s).\n",(long) result->from,date);
 	if (edg_wll_ULMTimevalToDate(result->to,0,date) != 0) {
 		fprintf(stderr,"Error parsing 'to' argument.\n");
 		goto main_end;
 	}
-	printf("- to: %ld (i.e. %s).\n",result->to,date);
+	printf("- to: %ld (i.e. %s).\n",(long) result->to,date);
 
 main_end:
 	dprintf(("End.\n"));

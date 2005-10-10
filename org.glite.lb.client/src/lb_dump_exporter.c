@@ -8,7 +8,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
-#include <malloc.h>
 #include <limits.h>
 
 #include "glite/lb/context.h"
@@ -158,7 +157,7 @@ int main(int argc, char **argv)
 					perror("Can't create dump file - max tries limit reached ");
 					cleanup(1);
 				}
-				snprintf(fname, PATH_MAX, "%s/%s.%ld", store_pref, unique, time(NULL));
+				snprintf(fname, PATH_MAX, "%s/%s.%ld", store_pref, unique, (long) time(NULL));
 				if ( (fd = open(fname, O_CREAT|O_EXCL|O_RDWR, 00600)) < 0 ) {
 					if ( errno == EEXIST ) { sleep(2); continue; }
 					perror(fname);
@@ -200,7 +199,8 @@ int main(int argc, char **argv)
 			cleanup(1);
 		}
 		if ( jpps ) 
-			sprintf(msg, "%s%s\n%s%s%s%s%s",
+			/* XXX: used to be 5x %s here, God knows why ... */
+			sprintf(msg, "%s%s\n%s%s%s%s",
 					KEYNAME_JOBID, st->job, KEYNAME_FILE, st->fname, KEYNAME_JPPS, jpps);
 		else 
 			sprintf(msg, "%s%s\n%s%s",
