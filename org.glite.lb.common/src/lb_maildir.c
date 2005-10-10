@@ -1,4 +1,3 @@
-#include <malloc.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -91,7 +90,7 @@ int edg_wll_MaildirStoreMsg(
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Maximum tries limit reached with unsuccessful file creation");
 			return -1;
 		}
-		snprintf(fname, PATH_MAX, "%s/%s/%ld.%d.%s", root, dirs[LBMD_DIR_TMP], time(NULL), getpid(), srvname);
+		snprintf(fname, PATH_MAX, "%s/%s/%ld.%d.%s", root, dirs[LBMD_DIR_TMP], (long) time(NULL), getpid(), srvname);
 		if ( (fhnd = open(fname, O_CREAT|O_EXCL|O_WRONLY, 00600)) < 0 ) {
 			if ( errno == EEXIST ) { sleep(2); continue; }
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't create file %s", fname);
