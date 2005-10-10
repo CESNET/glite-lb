@@ -101,6 +101,16 @@ static void extract_time(edg_wll_ContextParam param,double dflt,struct timeval *
 	t->tv_usec = (long) ((d-t->tv_sec)*1e6);
 }
 
+static char *my_strndup(const char *s,size_t len)
+{
+	int	l = strlen(s);
+	char	*r = malloc(l < len ? l+1 : len+1);
+
+	strncpy(r,s,len);
+	if (l >= len) r[len] = 0;
+	return r;
+}
+
 static char *extract_split(edg_wll_ContextParam param,char by,int index)
 {
 	int	i;
@@ -108,7 +118,7 @@ static char *extract_split(edg_wll_ContextParam param,char by,int index)
 
 	if (!(s = mygetenv(param))) return NULL;
 	for (i=0; i<index && (s=strchr(s,by));i++) s++;
-	return i==index ? ( (e = strchr(s,by)) ? strndup(s,e-s) : strdup(s))
+	return i==index ? ( (e = strchr(s,by)) ? my_strndup(s,e-s) : strdup(s))
 			: NULL;
 }
 
