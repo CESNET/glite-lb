@@ -141,12 +141,14 @@ ${LTLIB}: ${OBJS}
 	${LINK} ${version_info} -o $@ ${LOBJS} \
 		-lglite_security_gss_${nothrflavour} \
 		-lglite_wmsutils_cjobid \
+		${EXT_LIBS} \
 		-lm
 
 ${THRLTLIB}: ${THROBJS}
 	${LINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss_${thrflavour} \
 		-lglite_wmsutils_cjobid \
+		${EXT_LIBS} \
 		-lm
 
 stage: compile
