@@ -1370,7 +1370,7 @@ int check_strict_jobid(edg_wll_Context ctx, const edg_wlc_JobId job)
 	edg_wll_ResetError(ctx);
 
 	/* Allow all jobids when server name is not set. */
-	if (ctx->srvName == NULL) return edg_wll_Error(ctx,NULL,NULL);
+	if ( (ctx->srvName == NULL) || (ctx->isProxy)) return edg_wll_Error(ctx,NULL,NULL);
 
 	edg_wlc_JobIdGetServerParts(job,&job_host,&job_port);
 
