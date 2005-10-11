@@ -789,8 +789,12 @@ static int edg_wll_RegisterJobMaster(
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
 		}
 	} else if (flags & LOGFLAG_NORMAL) {
-		edg_wll_SetError(context,EINVAL,
-			"edg_wll_RegisterJobMaster(): register via interlogger is no more supported");
+		/* SetLoggingJob and log normally the message through the locallogger */
+		if (edg_wll_SetLoggingJob(context,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
+			edg_wll_LogEventMaster(context, LOGFLAG_NORMAL,
+				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
+				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
+		}
 	} else {
 		edg_wll_SetError(context,EINVAL,"edg_wll_RegisterJobMaster(): wrong flag specified");
 	}
@@ -831,6 +835,26 @@ int edg_wll_RegisterJob(
 	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
+int edg_wll_RegisterJobProxy(
+        edg_wll_Context         context,
+        const edg_wlc_JobId     job,
+        enum edg_wll_RegJobJobtype	type,
+        const char *            jdl,
+        const char *            ns,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs)
+{
+	/* first register with bkserver */
+	int ret = edg_wll_RegisterJob(context,job,type,jdl,ns,num_subjobs,seed,subjobs);
+	if (ret) {
+		edg_wll_UpdateError(context,0,"edg_wll_RegisterJobProxy(): unable to register with bkserver");
+		return edg_wll_Error(context,NULL,NULL);
+	}
+	/* and then with L&B Proxy */
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+}
+
 int edg_wll_RegisterSubjob(
         edg_wll_Context         context,
         const edg_wlc_JobId     job,
@@ -842,11 +866,29 @@ int edg_wll_RegisterSubjob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_NORMAL,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
 }
 
-int edg_wll_RegisterSubjobs(edg_wll_Context ctx,const edg_wlc_JobId parent,
-		char const * const * jdls, const char * ns, edg_wlc_JobId const * subjobs)
+int edg_wll_RegisterSubjobProxy(
+        edg_wll_Context         context,
+        const edg_wlc_JobId     job,
+        enum edg_wll_RegJobJobtype	type,
+        const char *            jdl,
+        const char *            ns,
+	edg_wlc_JobId		parent,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs)
+{
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
+}
+
+int edg_wll_RegisterSubjobs(
+	edg_wll_Context 	ctx,
+	const edg_wlc_JobId 	parent,
+	char const * const * 	jdls, 
+	const char * 		ns, 
+	edg_wlc_JobId const * 	subjobs)
 {
 	char const * const	*pjdl;
 	edg_wlc_JobId const	*psubjob;
@@ -870,24 +912,33 @@ int edg_wll_RegisterSubjobs(edg_wll_Context ctx,const edg_wlc_JobId parent,
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
-int edg_wll_RegisterJobProxy(
-        edg_wll_Context         context,
-        const edg_wlc_JobId     job,
-        enum edg_wll_RegJobJobtype	type,
-        const char *            jdl,
-        const char *            ns,
-        int                     num_subjobs,
-        const char *            seed,
-        edg_wlc_JobId **        subjobs)
+int edg_wll_RegisterSubjobsProxy(
+	edg_wll_Context 	ctx,
+	const edg_wlc_JobId 	parent,
+	char const * const * 	jdls, 
+	const char * 		ns, 
+	edg_wlc_JobId const * 	subjobs)
 {
-	/* first register with bkserver */
-	int ret = edg_wll_RegisterJob(context,job,type,jdl,ns,num_subjobs,seed,subjobs);
-	if (ret) {
-		edg_wll_UpdateError(context,0,"edg_wll_RegisterJobProxy(): unable to register with bkserver");
-		return edg_wll_Error(context,NULL,NULL);
+	char const * const	*pjdl;
+	edg_wlc_JobId const	*psubjob;
+	edg_wlc_JobId		oldctxjob;
+	char *			oldctxseq;
+
+	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
+	oldctxseq = edg_wll_GetSequenceCode(ctx);
+
+	pjdl = jdls;
+	psubjob = subjobs;
+	
+	while (*pjdl != NULL) {
+		if (edg_wll_RegisterSubjobProxy(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
+						ns, parent, 0, NULL, NULL) != 0) break;
+		pjdl++; psubjob++;
 	}
-	/* and then with L&B Proxy */
-	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+
+	edg_wll_SetLoggingJobProxy(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL);
+
+	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 int edg_wll_ChangeACL(
