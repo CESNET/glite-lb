@@ -82,11 +82,13 @@ GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
 	-lglobus_gssapi_gsi_${nothrflavour} \
 
-ifeq ($(shell ls ${gsoap_prefix}/bin/soapcpp2),${gsoap_prefix}/bin/soapcpp2)
-	gsoap_bin_prefix := ${gsoap_prefix}/bin
-else
-	gsoap_bin_prefix := ${gsoap_prefix}
-endif
+#ifeq ($(shell ls ${gsoap_prefix}/bin/soapcpp2),${gsoap_prefix}/bin/soapcpp2)
+#	gsoap_bin_prefix := ${gsoap_prefix}/bin
+#else
+#	gsoap_bin_prefix := ${gsoap_prefix}
+#endif
+
+gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${gsoap_prefix}/bin; else echo ${gsoap_prefix}; fi }
 
 ifneq (${mysql_prefix},/usr)
 	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
@@ -108,12 +110,17 @@ ifeq (${nothrflavour},gcc32dbg)
 	vomsflavour :=
 endif
 
-EXT_LIBS:= -L${ares_prefix}/lib -lares \
+#EXT_LIBS:= -L${ares_prefix}/lib -lares \
+#	${mysqlib} -lmysqlclient -lz\
+#	${expatlib} -lexpat \
+#	${GRIDSITE_LIBS} \
+#	-lvomsc${vomsflavour} \
+#	${GLOBUS_LIBS}
+
+EXT_LIBS:=  \
 	${mysqlib} -lmysqlclient -lz\
-	${expatlib} -lexpat \
 	${GRIDSITE_LIBS} \
-	-lvomsc${vomsflavour} \
-	${GLOBUS_LIBS}
+	-lvomsc${vomsflavour}
 
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
 COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
@@ -130,31 +137,20 @@ BKSERVER_BASE_OBJS:= \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o 
 
+dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
+GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}
+
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
-	ifeq ($(gsoap_version),2.7.0)
-		BKSERVER_OBJS:= \
-			${BKSERVER_BASE_OBJS} \
-			${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
-			ws_query.o ws_fault.o ws_typeref.o stdsoap2.o
+	BKSERVER_OBJS:= \
+		${BKSERVER_BASE_OBJS} \
+		${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
+		ws_query.o ws_fault.o ws_typeref.o stdsoap2.o
 
-		BKSERVER_LIBS= \
-			${SRVBONES_LIB} \
-			-lglite_lb_common_${nothrflavour} \
-			-lglite_security_gsoap_plugin_${nothrflavour} \
-			${EXT_LIBS}
-	else
-		BKSERVER_OBJS:= \
-			${BKSERVER_BASE_OBJS} \
-			${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
-			ws_query.o ws_fault.o ws_typeref.o 
-
-		BKSERVER_LIBS= \
-			${SRVBONES_LIB} \
-			-lglite_lb_common_${nothrflavour} \
-			-L${gsoap_prefix}/lib -lgsoap \
-			-lglite_security_gsoap_plugin_${nothrflavour} \
-			${EXT_LIBS}
-	endif
+	BKSERVER_LIBS= \
+		${SRVBONES_LIB} \
+		-lglite_lb_common_${nothrflavour} \
+		${GSOAP_LIB} \
+		${EXT_LIBS}
 else
 	BKSERVER_OBJS:= ${BKSERVER_BASE_OBJS}
 		
@@ -172,12 +168,16 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o lbs_db_supp.o openser
 INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} 
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
-WS_CLIENT_LIBS:= -L${stagedir}/lib \
-		-lglite_lb_client_${nothrflavour} \
-		-lglite_lb_common_${nothrflavour} \
-		-L${gsoap_prefix}/lib -lgsoap \
-		-lglite_security_gsoap_plugin_${nothrflavour} \
-		${EXT_LIBS}
+WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
+	-lglite_lb_common_${nothrflavour}
+
+# WS_CLIENT_LIBS:= -L${stagedir}/lib \
+#                 -lglite_lb_client_${nothrflavour} \
+#                 -lglite_lb_common_${nothrflavour} \
+#                 -L${gsoap_prefix}/lib -lgsoap \
+#                 -lglite_security_gsoap_plugin_${nothrflavour} \
+#                 ${EXT_LIBS}
+# 
 
 HDRS=index.h lb_authz.h lbs_db.h store.h
 
