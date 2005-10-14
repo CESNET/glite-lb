@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.34  2005/10/14 11:02:06  akrenek
+	depends on jp.primary
+	
 	Revision 1.33  2005/09/19 15:23:45  akrenek
 	"The gigantic merge"; from release 1.4 branch to HEAD
 	
@@ -454,6 +457,22 @@
 		</if>
 	</target>
 
+	<target name="utils" unless="setenvonly" depends="envset, globus, expat, ares, common, server">
+		<if>
+			<isset property="small.memory" />
+			<then>
+				<exec dir="${lb.subsystem.dir}.utils" executable="${antExec}" failonerror="${failonerror}">
+					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.utils"
+                        	     target="${target}"
+                        	     inheritall="false" />
+			</else>
+		</if>
+	</target>
+
 	<target name="proxy" unless="setenvonly" depends="envset,globus,expat,ares,client-interface,common,server">
 		<if>
 			<isset property="small.memory" />
@@ -495,6 +514,7 @@
 					     common,
 					     server,
 					     proxy,
+							 utils,
 					     logger">
 		<echo append="true" file="${global.project.dir}/cruisecontrol-stub.xml">
 	&lt;project name="${subsystem.name}" type="post-subsystem" packageName="${global.prefix}-${subsystem.prefix}"/&gt;
