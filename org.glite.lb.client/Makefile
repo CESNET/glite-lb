@@ -148,7 +148,10 @@ FAKE_EXAMPLES:=job_log_fake
 MAN_GZ:=glite-lb-logevent.1.gz
 MAN = $(MAN_GZ:.gz=)
 
-version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
+# version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
+offset=2
+version_info:=-version-info ${shell \
+	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib \
