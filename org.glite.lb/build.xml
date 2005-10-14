@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.33  2005/09/19 15:23:45  akrenek
+	"The gigantic merge"; from release 1.4 branch to HEAD
+	
 	Revision 1.32  2005/08/03 11:58:25  akrenek
 	Merged the release 1.0 branch
 	
@@ -337,6 +340,24 @@
 		</if>
  	</target>
 
+	<target name="jp.primary" unless="setenvonly" depends="envset">
+		<if>
+			<isset property="small.memory"/>
+			<then>
+				<exec dir="${jp.subsystem.dir}" executable="${antExec}" failonerror="${failonerror}">
+					<arg line="primary -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${jp.subsystem.dir}"
+        				target="primary"
+        				inheritall="false" >
+        				<property name="target" value="${target}"/>
+				</ant>
+			</else>
+		</if>
+ 	</target>
+
 	<target name="client-interface" unless="setenvonly" depends="envset">
 		<if>
 			<isset property="small.memory" />
@@ -417,7 +438,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms, client-interface, ws-interface, common, logger">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms, jp.primary, client-interface, ws-interface, common, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
