@@ -128,7 +128,7 @@ cleanup:
 	if ( conn->bufUse > 0 ) {
 		size_t len = (conn->bufUse < outbufsz) ? conn->bufUse : outbufsz;
 		memcpy(outbuf, conn->buf, len);
-		outbufsz = len;
+/* no use	outbufsz = len;	*/
 		bufshift(conn, len);
 		return len;
 	}
@@ -149,7 +149,7 @@ int edg_wll_plain_read_full(
 	if ( conn->bufUse > 0 ) {
 		size_t len = (conn->bufUse < outbufsz) ? conn->bufUse : outbufsz;
 		memcpy(outbuf, conn->buf, len);
-		outbufsz = len;
+/* fuj		outbufsz = len; */
 		bufshift(conn, len);
 		total += len;
 	}
