@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.1.1.1  2005/09/30 15:17:04  jpospi
+	New org.glite.lb.utils component
+	
 	
 -->
 
@@ -98,5 +101,12 @@
 	<target name="localclean"
 		description="Module specific cleaning tasks">
 	</target>
-	
+
+	<!-- =========================================
+		RPM settings
+	     ========================================= -->
+
+	<property name="build.package.summary" value="L&amp;B utils" />
+	<property name="build.package.description" value="L&amp;B Statistics tool." />
+
 </project>		

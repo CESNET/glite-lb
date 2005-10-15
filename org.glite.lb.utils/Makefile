@@ -20,7 +20,7 @@ gsoap_prefix=/opt/gsoap
 
 -include Makefile.inc
 
-default all: compile
+VPATH=${top_srcdir}/src:${top_srcdir}/test
 
 CC=gcc
 DEBUG:=-g -O0 -Wall
@@ -37,7 +37,9 @@ CFLAGS:= \
 	-I${globus_prefix}/include/${nothrflavour} \
 	$(GRIDSITE_CFLAGS) \
 	-D_GNU_SOURCE
+LDFLAGS:=-L${stagedir}/lib
 
+JP_LIBS:=-lglite_jp_common -lglite_jp_trio
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include
 
@@ -77,12 +79,16 @@ EXT_LIBS:= -L${ares_prefix}/lib -lares \
 	${mysqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
 	${GRIDSITE_LIBS} \
-	-lvomsc${vomsflavour} \
 	${GLOBUS_LIBS}
+
+STATISTICS_OBJS:=lb_statistics.o
 
 default all: compile
 
-compile: 
+compile: glite_lb_statistics
+
+glite_lb_statistics: ${STATISTICS_OBJS}
+	${LINK} -o $@ ${STATISTICS_OBJS} ${JP_LIBS} ${EXT_LIBS} ${GLOBUS_LIBS}
 
 check: compile 
 
@@ -113,13 +119,15 @@ install:
 	-mkdir -p ${PREFIX}/bin 
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/lib
+	${INSTALL} -m 755 glite_lb_statistics ${PREFIX}/bin
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+
+	if [ x${DOSTAGE} != xyes ]; then \
+		${INSTALL} -m 755 ${stagedir}/lib/glite_lb_plugin.so ${PREFIX}/lib; \
+	fi
 
 clean:
 
-%.o %.lo: %.c
+%.o: %.c
 	${COMPILE} -c $<
-
-%.lo: %.c
-	${COMPILE} -o $@ -c $<
 
