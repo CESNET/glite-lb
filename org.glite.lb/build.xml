@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.35  2005/10/14 17:19:08  akrenek
+	build also lb.utils
+	
 	Revision 1.34  2005/10/14 11:02:06  akrenek
 	depends on jp.primary
 	
@@ -425,7 +428,7 @@
 		</if>
 	</target>
 
-	<target name="client" unless="setenvonly" depends="envset, globus,expat,ares,client-interface,common">
+	<target name="client" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -457,23 +460,7 @@
 		</if>
 	</target>
 
-	<target name="utils" unless="setenvonly" depends="envset, globus, expat, ares, common, server">
-		<if>
-			<isset property="small.memory" />
-			<then>
-				<exec dir="${lb.subsystem.dir}.utils" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
-				</exec>
-			</then>
-			<else>
-				<ant dir="${lb.subsystem.dir}.utils"
-                        	     target="${target}"
-                        	     inheritall="false" />
-			</else>
-		</if>
-	</target>
-
-	<target name="proxy" unless="setenvonly" depends="envset,globus,expat,ares,client-interface,common,server">
+	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -489,7 +476,7 @@
 		</if>
 	</target>
 
-	<target name="logger" unless="setenvonly" depends="envset, globus,expat,ares,client-interface,common">
+	<target name="logger" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -505,8 +492,25 @@
 		</if>
 	</target>
 
+	<target name="utils" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server">
+		<if>
+			<isset property="small.memory"/>
+			<then>
+				<exec dir="${lb.subsystem.dir}.utils" executable="${antExec}" failonerror="${failonerror}">
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.utils"
+        				target="${target}"
+        				inheritall="false" />
+			</else>
+		</if>
+ 	</target>
+
 	<!-- Main proxy -->
-	<target name="buildmodules" depends="envset, 
+	<target name="buildmodules" depends="envset,
+					     utils, 
 					     client-interface,
 					     ws-interface,
 					     client,

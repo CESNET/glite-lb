@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.12  2005/03/16 10:02:52  zsalvet
+	proxy component added
+	
 	Revision 1.11  2004/12/01 18:01:55  zsalvet
 	LB here, not R-GMA
 	
@@ -148,6 +151,10 @@
 	
 		<!-- condition property tag = do not remove = -->
 
+		<condition property="utils.head">
+			<equals arg1="${org.glite.lb.utils.version}" arg2="HEAD" />
+		</condition>
+
 		<condition property="common.head">
 			<equals arg1="${org.glite.lb.common.version}" arg2="HEAD" />
 		</condition>
@@ -241,6 +248,17 @@
 		 ===================================================== -->
 
 	<!-- component targets tag = do not remove = -->
+
+	<!-- utils component -->
+	<target name="utils" depends="get.utils.head, get.utils.tag"/>
+	<target name="get.utils.head" if="utils.head">
+        	<cvs-co package="org.glite.lb.utils" />
+        </target>
+
+	<target name="get.utils.tag" unless="utils.head">
+		<cvs-co package="org.glite.lb.utils"
+			tag="${org.glite.lb.utils.version}" />
+	</target>
 	
 	<!-- common -->
  	<target name="common" depends="evaluate.cvs.tags, get.common.head, get.common.tag"/>
@@ -322,15 +340,26 @@
 			tag="${org.glite.lb.logger.version}" />
 	</target>
 
+	<!-- utils -->
+ 	<target name="utils" depends="evaluate.cvs.tags, get.utils.head, get.utils.tag"/>
+	<target name="get.utils.head" if="utils.head">
+		<cvs-co package="org.glite.lb.utils" />
+	</target>
+	<target name="get.utils.tag" unless="utils.head">
+		<cvs-co package="org.glite.lb.utils"
+			tag="${org.glite.lb.utils.version}" />
+	</target>
+
 	<!-- All project modules -->
- 	<target name="project" depends="client-interface,
-						ws-interface,
- 						common,
- 						server-bones,
- 						client,
- 						server,
- 						proxy,
- 						logger"/>
+ 	<target name="project" depends="utils,
+					client-interface,
+					ws-interface,
+ 					common,
+ 					server-bones,
+ 					client,
+ 					server,
+ 					proxy,
+ 					logger"/>
 
 
 	<!-- ====================================================
