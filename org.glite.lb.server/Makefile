@@ -357,7 +357,7 @@ test_query_events.o: %.o: %.cpp
 	${COMPILE} -o $@ -c $<
 
 lb_plugin.lo: lb_plugin.c jp_job_attrs.h
-	${COMPILE} -o $@ -c $<
+	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<
 
 soap_version.h:
 	${gsoap_bin_prefix}/soapcpp2 /dev/null
