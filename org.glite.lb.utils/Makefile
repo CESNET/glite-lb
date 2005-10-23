@@ -85,10 +85,10 @@ STATISTICS_OBJS:=lb_statistics.o
 
 default all: compile
 
-compile: glite_lb_statistics
+compile: glite-lb-statistics
 
-glite_lb_statistics: ${STATISTICS_OBJS}
-	${LINK} -o $@ ${STATISTICS_OBJS} ${JP_LIBS} ${EXT_LIBS} ${GLOBUS_LIBS}
+glite-lb-statistics: ${STATISTICS_OBJS}
+	${LINK} -rdynamic -o $@ ${STATISTICS_OBJS} ${JP_LIBS} ${EXT_LIBS} ${GLOBUS_LIBS}
 
 check: compile 
 
@@ -119,7 +119,7 @@ install:
 	-mkdir -p ${PREFIX}/bin 
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/lib
-	${INSTALL} -m 755 glite_lb_statistics ${PREFIX}/bin
+	${INSTALL} -m 755 glite-lb-statistics ${PREFIX}/bin
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 
 	if [ x${DOSTAGE} != xyes ]; then \
