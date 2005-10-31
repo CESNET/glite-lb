@@ -130,9 +130,9 @@ static
 int 
 get_reply(struct event_queue *eq, char **buf, int *code_min)
 {
-  char *msg;
+  char *msg = NULL;
   int ret, code;
-  size_t len, l;
+  int len, l;
   struct timeval tv;
   struct reader_data data;
 
