@@ -20,6 +20,14 @@
 
 	Revision history:
 	$Log$
+	Revision 1.32.2.1  2005/08/18 10:36:05  eronchie
+	Added cross-subsystem dependencies feature in org.glite.lb subsystem.
+	Added wms-utils.jobid and security.gsoap-plugin among common dependencies.
+	Added security.voms among server dependencies.
+	At the moment I have not consider gridsite.core component.
+	Once built gridsiste component, run ant in org.glite.lb to build the whole lb
+	and its external gLite dependencies.
+	
 	Revision 1.32  2005/08/03 11:58:25  akrenek
 	Merged the release 1.0 branch
 	
@@ -283,7 +291,14 @@
 
 	<!-- component targets definitions tag = do not remove = -->
 
-	<target name="security.gsoap-plugin" unless="setenvonly" depends="envset">
+	<if>
+		<isset property="setenvonly"/>
+		<then>
+			<property name="lbonly" value="yes"/>
+		</then>
+	</if>
+
+	<target name="security.gsoap-plugin" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
@@ -301,7 +316,7 @@
 		</if>
  	</target>
 
-	<target name="security.voms" unless="setenvonly" depends="envset">
+	<target name="security.voms" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
@@ -319,7 +334,7 @@
 		</if>
  	</target>
 
-	<target name="wms-utils.jobid" unless="setenvonly" depends="envset">
+	<target name="wms-utils.jobid" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
