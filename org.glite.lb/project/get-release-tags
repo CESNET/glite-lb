@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+
+use Getopt::Std;
+
+sub HELP_MESSAGE {
+	$h = shift;
+
+	print $h "usage: $0: {-r x.y.z | -t tag_name } -s subsystem\n";
+}
+
+sub VERSION_MESSAGE {}
+
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+getopts('r:t:s:');
+
+if (($opt_r && $opt_t) || (!$opt_r && !$opt_t) || !$opt_s) {
+	Getopt::Std::help_mess 'r:t:s:','main';
+	exit 1;
+}
+
+$opt_r =~ s/\./_/g;
+$tag = $opt_t ? $opt_t : "glite_R_${opt_r}";
+
+chdir "../org.glite" or die "chdir ../org.glite: $!\n";
+
+open CVS,"cvs update -p -r $tag project/global.dependencies.properties 2>/dev/null |"
+	or die "cvs update -p -r $tag project/global.dependencies.properties|: $!";
+
+while (($_=<CVS>) && !$stag) {
+	next unless /^${opt_s}\.version/;
+	@v = split;
+	$stag = $v[2];
+}
+
+close CVS;
+
+print "$opt_s: $stag\n";
+
+chdir "../$opt_s" or die "chdir ../$opt_s: $!\n";
+
+system "cvs update -p -r $stag project/dependencies.properties";
+
