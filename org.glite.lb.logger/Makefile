@@ -15,7 +15,6 @@ globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
 expat_prefix=/opt/expat
-ares_prefix=/opt/ares
 
 -include Makefile.inc
 
@@ -57,7 +56,7 @@ ifneq (${expat_prefix},/usr)
 endif
 EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 
-EXT_LIBS:= -L${ares_prefix}/lib -lares ${EXPAT_LIBS}
+EXT_LIBS:= ${EXPAT_LIBS}
 
 COMMON_LIB:=-lglite_lb_common
 GLITE_GSS_LIB:=-lglite_security_gss
