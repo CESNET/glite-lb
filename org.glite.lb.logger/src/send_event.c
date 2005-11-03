@@ -127,7 +127,7 @@ static
 int 
 get_reply(struct event_queue *eq, char **buf, int *code_min)
 {
-  char *msg;
+  char *msg=NULL;
   int ret, code;
   size_t len, l;
 
@@ -137,7 +137,7 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
     return(-1);
 
   ret = decode_il_reply(&code, code_min, buf, msg);
-  free(msg);
+  if(msg) free(msg);
   if(ret < 0) {
     set_error(IL_PROTO, LB_PROTO, "get_reply: error decoding server reply");
     return(-1);
