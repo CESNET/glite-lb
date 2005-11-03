@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.36  2005/10/15 13:36:26  akrenek
+	added lb.utils
+	
 	Revision 1.35  2005/10/14 17:19:08  akrenek
 	build also lb.utils
 	
@@ -412,7 +415,7 @@
 		</if>
 	</target>
 
-	<target name="common" unless="setenvonly" depends="envset, globus, expat, ares, wms-utils.jobid, security.gsoap-plugin, client-interface">
+	<target name="common" unless="setenvonly" depends="envset, globus, expat, wms-utils.jobid, security.gsoap-plugin, client-interface">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -428,7 +431,7 @@
 		</if>
 	</target>
 
-	<target name="client" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common">
+	<target name="client" unless="setenvonly" depends="envset, globus, expat, client-interface, common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -444,7 +447,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms, jp.primary, client-interface, ws-interface, common, logger">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, c-ares, mysql, gsoap, security.voms, jp.primary, client-interface, ws-interface, common, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -460,7 +463,7 @@
 		</if>
 	</target>
 
-	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server">
+	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, c-ares, client-interface, common, server">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -476,7 +479,7 @@
 		</if>
 	</target>
 
-	<target name="logger" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common">
+	<target name="logger" unless="setenvonly" depends="envset, globus, expat, client-interface, common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -492,7 +495,7 @@
 		</if>
 	</target>
 
-	<target name="utils" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server">
+	<target name="utils" unless="setenvonly" depends="envset, globus, expat, client-interface, common, server">
 		<if>
 			<isset property="small.memory"/>
 			<then>
