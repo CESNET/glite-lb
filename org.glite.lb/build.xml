@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.36  2005/10/15 13:36:26  akrenek
+	added lb.utils
+	
 	Revision 1.35  2005/10/14 17:19:08  akrenek
 	build also lb.utils
 	
@@ -28,6 +31,17 @@
 	
 	Revision 1.33  2005/09/19 15:23:45  akrenek
 	"The gigantic merge"; from release 1.4 branch to HEAD
+	
+	Revision 1.32.2.2  2005/10/31 12:45:10  akrenek
+	conditional disabling of cross-subsystem builds via "lbonly" property
+	
+	Revision 1.32.2.1  2005/08/18 10:36:05  eronchie
+	Added cross-subsystem dependencies feature in org.glite.lb subsystem.
+	Added wms-utils.jobid and security.gsoap-plugin among common dependencies.
+	Added security.voms among server dependencies.
+	At the moment I have not consider gridsite.core component.
+	Once built gridsiste component, run ant in org.glite.lb to build the whole lb
+	and its external gLite dependencies.
 	
 	Revision 1.32  2005/08/03 11:58:25  akrenek
 	Merged the release 1.0 branch
@@ -292,7 +306,7 @@
 
 	<!-- component targets definitions tag = do not remove = -->
 
-	<target name="security.gsoap-plugin" unless="setenvonly" depends="envset">
+	<target name="security.gsoap-plugin" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
@@ -310,7 +324,7 @@
 		</if>
  	</target>
 
-	<target name="security.voms" unless="setenvonly" depends="envset">
+	<target name="security.voms" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
@@ -328,7 +342,7 @@
 		</if>
  	</target>
 
-	<target name="wms-utils.jobid" unless="setenvonly" depends="envset">
+	<target name="wms-utils.jobid" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
@@ -346,7 +360,7 @@
 		</if>
  	</target>
 
-	<target name="jp.primary" unless="setenvonly" depends="envset">
+	<target name="jp.primary" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
@@ -363,6 +377,13 @@
 			</else>
 		</if>
  	</target>
+
+	<if>
+		<isset property="setenvonly"/>
+		<then>
+			<property name="lbonly" value="yes"/>
+		</then>
+	</if>
 
 	<target name="client-interface" unless="setenvonly" depends="envset">
 		<if>
