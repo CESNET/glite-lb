@@ -191,3 +191,11 @@
 @type ReallyRunning	User payload started
 	_optional_
 	string	wn_seq		sequence code on the worker node
+
+@type Suspend		Job execution (queuing) was suspended
+	_optional_
+	string	reason		reason for the suspend
+
+@type Resume		Job execution (queuing) was resumed
+	_optional_
+	string	reason		reason for the resume

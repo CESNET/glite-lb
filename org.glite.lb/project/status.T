@@ -70,6 +70,9 @@ strlist	possible_destinations	Possible job destinations
 strlist possible_ce_nodes	CE nodes matching to possible_destinations
 	_special_	XMLstructured
 
+bool	suspended	Job is suspended
+string	suspend_reason	Reason for the suspend
+
 @type Submitted		entered by the user to the User Interface or registered by Job Partitioner
 @type Waiting		Accepted by WMS, waiting for resource allocation
 @type Ready		Matching resources found
