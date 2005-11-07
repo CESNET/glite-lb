@@ -351,6 +351,7 @@ int edg_wll_MaildirTransStart(
 		if ( ct == 0 ) break;
 		bufuse += ct;
 	} while ( ct == toread );
+	buf[bufuse] = '\0';
 	close(fhnd);
 
 	if ( !(*fname = strdup(ent->d_name)) ) goto err;
