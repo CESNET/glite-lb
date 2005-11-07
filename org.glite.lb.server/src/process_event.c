@@ -190,7 +190,7 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 #define USABLE_DATA(res,strict) ((res) == RET_OK || ( (res) != RET_FATAL && !strict))
 #define USABLE_BRANCH(fine_res) ((fine_res) != RET_TOOOLD && (fine_res) != RET_BADBRANCH)
 #define LRMS_STATE(state) ((state) == EDG_WLL_JOB_RUNNING || (state) == EDG_WLL_JOB_DONE)
-
+#define PARSABLE_SEQCODE(code) (component_seqcode((code),0) >= 0)
 
 int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
@@ -504,10 +504,19 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 					rep(js->last_branch_seqcode, e->any.seqcode);
 				}
 				if (e->any.source == EDG_WLL_SOURCE_LOG_MONITOR) {
-					rep(js->branch_tag_seqcode, e->reallyRunning.wn_seq);
-					rep(js->last_branch_seqcode, e->reallyRunning.wn_seq);
+					if (!js->branch_tag_seqcode) {
+						if (PARSABLE_SEQCODE(e->reallyRunning.wn_seq)) { 
+							rep(js->branch_tag_seqcode, e->reallyRunning.wn_seq);
+						} else
+							goto bad_event;
+					}
+					if (!js->last_branch_seqcode) {
+						if (PARSABLE_SEQCODE(e->reallyRunning.wn_seq)) {
+							rep(js->last_branch_seqcode, e->reallyRunning.wn_seq);
+						} else
+							goto bad_event;
+					}
 				}
-
 				load_branch_state(js);
 			}
 			break;
