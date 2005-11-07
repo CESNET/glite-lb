@@ -134,6 +134,8 @@ int main(int argc, char **argv)
 		}
 		if ( !ln ) break;
 
+		if (*ln == 0) continue;
+
 		if ( edg_wll_ParseEvent(ctx, ln, &ev) != 0 ) {
 			cleanup(1);
 		}
