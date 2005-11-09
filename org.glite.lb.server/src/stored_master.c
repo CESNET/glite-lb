@@ -15,12 +15,12 @@
 
 #include "store.h"
 
-static edg_wll_Context tmp_ctx;
 
 static
 int
-gss_reader(char *buffer, int max_len)
+gss_reader(void *user_data, char *buffer, int max_len)
 {
+  edg_wll_Context tmp_ctx = (edg_wll_Context)user_data;
   int ret, len;
   edg_wll_GssStatus gss_code;
 
@@ -57,10 +57,9 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 	edg_wll_GssStatus	gss_code;
 
 	edg_wll_ResetError(ctx);
-	tmp_ctx = ctx;
-	ret = read_il_data(&buf, gss_reader);
+	ret = read_il_data(ctx, &buf, gss_reader);
 	if(ret < 0) 
-	  return(ret);
+	  return edg_wll_SetError(ctx,EIO,"interlogger protocol");
 
 	handle_request(ctx,buf);
 	free(buf);
@@ -81,8 +80,9 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 
 static
 int
-gss_plain_reader(char *buffer, int max_len)
+gss_plain_reader(void *user_data, char *buffer, int max_len)
 {
+  edg_wll_Context tmp_ctx = (edg_wll_Context)user_data;
   int ret;
 
   ret = edg_wll_plain_read_full(&tmp_ctx->connProxy->conn, buffer, max_len,
@@ -103,8 +103,7 @@ int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
 
 
 	edg_wll_ResetError(ctx);
-	tmp_ctx = ctx;
-	ret = read_il_data(&buf, gss_plain_reader);
+	ret = read_il_data(ctx, &buf, gss_plain_reader);
 	if ( ret < 0 ) return(ret);
 
 	if ( !(ret = handle_request(ctx, buf)) ) {
