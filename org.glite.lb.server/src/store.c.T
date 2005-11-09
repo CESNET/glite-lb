@@ -128,7 +128,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		free(stmt);
 	}
 
-	free(stmt);
+	free(stmt); stmt = NULL;
 	if ((err = store_seq(ctx,e,next)) ||
 		(err = store_flesh(ctx,e,jobid,next))) {
 	/* attempt to cleanup, ignore new errors */
