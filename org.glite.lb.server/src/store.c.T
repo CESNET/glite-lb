@@ -333,11 +333,13 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
 	for (i=0; i<sizeof(f)/sizeof(f[0]); i++) free(f[i].val);
 
 /* XXX: hardcoded, no other suitable place to store it */
-	trio_asprintf(&stmt,"insert into short_fields(jobid,event,name,value) "
-		"values ('%|Ss',%d,'SRC_INSTANCE','%|Ss')",
-		jobid,no,e->any.src_instance);
-	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
-	free(stmt);
+	if (!err) {
+		trio_asprintf(&stmt,"insert into short_fields(jobid,event,name,value) "
+			"values ('%|Ss',%d,'SRC_INSTANCE','%|Ss')",
+			jobid,no,e->any.src_instance);
+		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
+		free(stmt);
+	}
 
 	return err;
 }
