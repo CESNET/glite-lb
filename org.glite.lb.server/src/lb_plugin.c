@@ -430,10 +430,10 @@ static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status) {
 		i++;
 	}
 
-	memcpy(status, &js->pub, sizeof(edg_wll_JobStat));
+	memcpy(status, &(js->pub), sizeof(edg_wll_JobStat));
 
 	// XXX: awful, hopefully working
-	memset(&js->pub, 0, sizeof(edg_wll_JobStat));
+	memset(&(js->pub), 0, sizeof(edg_wll_JobStat));
 	destroy_intJobStat(js);
 
 	return 0;
