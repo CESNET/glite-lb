@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.37  2005/11/04 14:39:20  akrenek
+	merge in the "lbonly" hack
+	
 	Revision 1.36  2005/10/15 13:36:26  akrenek
 	added lb.utils
 	
@@ -539,7 +542,6 @@
 					     common,
 					     server,
 					     proxy,
-							 utils,
 					     logger">
 		<echo append="true" file="${global.project.dir}/cruisecontrol-stub.xml">
 	&lt;project name="${subsystem.name}" type="post-subsystem" packageName="${global.prefix}-${subsystem.prefix}"/&gt;
