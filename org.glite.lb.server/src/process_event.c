@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <syslog.h>
 
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
@@ -186,11 +187,15 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 	return RET_FATAL;
 }
 
+// (?) || (0 && 1)  =>  true if (res == RET_OK)
 #define USABLE(res,strict) ((res) == RET_OK || ( (res) == RET_SOON && !strict))
+
+// (?) || (1 && 1)  =>  always true
 #define USABLE_DATA(res,strict) ((res) == RET_OK || ( (res) != RET_FATAL && !strict))
+
 #define USABLE_BRANCH(fine_res) ((fine_res) != RET_TOOOLD && (fine_res) != RET_BADBRANCH)
 #define LRMS_STATE(state) ((state) == EDG_WLL_JOB_RUNNING || (state) == EDG_WLL_JOB_DONE)
-
+#define PARSABLE_SEQCODE(code) (component_seqcode((code),0) >= 0)
 
 int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
@@ -216,7 +221,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 	}
 	else if (js->branch_tag_seqcode) {		// ReallyRunning ev. arrived
 		if (same_branch(e->any.seqcode, js->branch_tag_seqcode)) {
-			if ((js->last_seqcode != NULL) &&
+			if ((js->last_branch_seqcode != NULL) &&
 				edg_wll_compare_seq(e->any.seqcode, js->last_branch_seqcode) < 0) {
 				res = RET_LATE;
 			}
@@ -480,17 +485,62 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 				if (USABLE_BRANCH(fine_res)) {
 					rep(js->pub.ce_node, e->running.node);
 				}
-				if (e->any.source == EDG_WLL_SOURCE_LOG_MONITOR) {
+				/* why? if (e->any.source == EDG_WLL_SOURCE_LOG_MONITOR) { */
 					if (e->running.node) {
 						update_branch_state(e->any.seqcode, NULL,
 							e->running.node, NULL, &js->branch_states);
 						add_stringlist(&js->pub.possible_ce_nodes,
 							e->running.node);
 					}
-				}
+				/* } */
 			}
 			break;
 		case EDG_WLL_EVENT_REALLYRUNNING:
+			/* consistence check -- should not receive two contradicting ReallyRunning's within single
+			   deep resub cycle */
+			if (fine_res == RET_BADBRANCH) {
+				syslog(LOG_ERR,"ReallyRunning on bad branch %s",
+						e->any.source == EDG_WLL_SOURCE_LOG_MONITOR ? e->reallyRunning.wn_seq : e->any.seqcode);
+				break;
+			}
+			/* select the branch unless TOOOLD, i.e. before deep resubmission */
+			if (!(res == RET_LATE && fine_res == RET_TOOOLD)) {
+				if (e->any.source == EDG_WLL_SOURCE_LRMS) {
+					rep(js->branch_tag_seqcode, e->any.seqcode);
+					if (res == RET_OK) {
+						rep(js->last_branch_seqcode, e->any.seqcode);
+						js->pub.state = EDG_WLL_JOB_RUNNING;
+					}
+				}
+				if (e->any.source == EDG_WLL_SOURCE_LOG_MONITOR) {
+					if (!js->branch_tag_seqcode) {
+						if (PARSABLE_SEQCODE(e->reallyRunning.wn_seq)) { 
+							rep(js->branch_tag_seqcode, e->reallyRunning.wn_seq);
+						} else
+							goto bad_event;
+					}
+					if (!js->last_branch_seqcode) {
+						if (PARSABLE_SEQCODE(e->reallyRunning.wn_seq)) {
+							if (res == RET_OK) {
+								rep(js->last_branch_seqcode, e->reallyRunning.wn_seq);
+								js->pub.state = EDG_WLL_JOB_RUNNING;
+							}
+						} else
+							goto bad_event;
+					}
+				}
+
+				/* XXX: best effort -- if we are lucky, ReallyRunning is on the last shallow cycle,
+				   	so we take in account events processed so far */
+				if (res == RET_LATE && !js->last_branch_seqcode) {
+					if (same_branch(js->last_seqcode,js->branch_tag_seqcode))
+						rep(js->last_branch_seqcode,js->last_seqcode);
+				}
+
+				js->pub.payload_running = 1;
+				load_branch_state(js);
+			}
+#if 0
 			if (USABLE_DATA(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_RUNNING;
 				free(js->pub.location);
@@ -504,12 +554,22 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 					rep(js->last_branch_seqcode, e->any.seqcode);
 				}
 				if (e->any.source == EDG_WLL_SOURCE_LOG_MONITOR) {
-					rep(js->branch_tag_seqcode, e->reallyRunning.wn_seq);
-					rep(js->last_branch_seqcode, e->reallyRunning.wn_seq);
+					if (!js->branch_tag_seqcode) {
+						if (PARSABLE_SEQCODE(e->reallyRunning.wn_seq)) { 
+							rep(js->branch_tag_seqcode, e->reallyRunning.wn_seq);
+						} else
+							goto bad_event;
+					}
+					if (!js->last_branch_seqcode) {
+						if (PARSABLE_SEQCODE(e->reallyRunning.wn_seq)) {
+							rep(js->last_branch_seqcode, e->reallyRunning.wn_seq);
+						} else
+							goto bad_event;
+					}
 				}
-
 				load_branch_state(js);
 			}
+#endif
 			break;
 		case EDG_WLL_EVENT_RESUBMISSION:
 			if (USABLE(res, strict)) {
@@ -535,7 +595,8 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 				else
 				if (e->resubmission.result == EDG_WLL_RESUBMISSION_SHALLOW) {
 					js->resubmit_type = EDG_WLL_RESUBMISSION_SHALLOW;
-					rep(js->deep_resubmit_seqcode, NULL);
+					// deep resubmit stays forever deadline for events
+					// rep(js->deep_resubmit_seqcode, NULL);
 				}
 			}
 			break;
@@ -723,6 +784,11 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			js->pub.stateEnterTimes[1 + js->pub.state]
 				= (int)js->pub.lastUpdateTime.tv_sec;
 		}
+		if (e->any.type == EDG_WLL_EVENT_CANCEL) {
+			rep(js->last_cancel_seqcode, e->any.seqcode);
+		} else {
+			rep(js->last_seqcode, e->any.seqcode);
+		}
 	}
 
 	if (USABLE_DATA(res,strict)) {
@@ -737,12 +803,6 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 		}
 	}
 	
-	if (e->any.type == EDG_WLL_EVENT_CANCEL) {
-		rep(js->last_cancel_seqcode, e->any.seqcode);
-	} else {
-		rep(js->last_seqcode, e->any.seqcode);
-	}
-
 	if (fine_res == RET_GOODBRANCH) {
 		rep(js->last_branch_seqcode, e->any.seqcode);
 	}
