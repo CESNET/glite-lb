@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.36.4.1  2005/11/24 12:32:02  akrenek
+	merged in "lbonly"
+	
 	Revision 1.37  2005/11/04 14:39:20  akrenek
 	merge in the "lbonly" hack
 	
@@ -468,7 +471,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms, jp.primary, client-interface, ws-interface, common, logger">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms, jp.primary, client-interface, ws-interface, common, server-bones">
 		<if>
 			<isset property="small.memory" />
 			<then>
