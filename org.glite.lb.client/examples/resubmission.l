@@ -3,6 +3,7 @@
 -s LogMonitor,-e EnQueued, --queue="wm_input.fl", --job="job description in receiver language", --result=OK, --reason="detailed description of transfer"
 
 -s WorkloadManager,-e DeQueued, --queue="wm_input.fl", --local_jobid="WM_ID" 
+-s WorkloadManager, -e Resubmission, --result=${RESUB:-WILLRESUB}, --reason="let's try again", --tag=none
 -s WorkloadManager,-e HelperCall, --helper_name="name of the called component",--helper_params="parameters of the call", --src_role=CALLING
 -s WorkloadManager,-e Match,--dest_id="${DESTINATION:-destination CE/queue}"
 -s WorkloadManager,-e HelperReturn, --helper_name="name of the called component",--retval="returned data", --src_role=CALLING
