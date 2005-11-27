@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.38  2005/11/22 12:13:47  eronchie
+	Removed one utils
+	
 	Revision 1.37  2005/11/04 14:39:20  akrenek
 	merge in the "lbonly" hack
 	
@@ -327,17 +330,17 @@
 		</if>
  	</target>
 
-	<target name="security.voms" unless="lbonly" depends="envset">
+	<target name="security.voms-api-c" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
 				<exec dir="${security.subsystem.dir}" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="voms -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+					<arg line="voms-api-c -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
 			<else>
 				<ant dir="${security.subsystem.dir}"
-        				target="voms"
+        				target="voms-api-c"
         				inheritall="false" >
         				<property name="target" value="${target}"/>
 				</ant>
@@ -468,7 +471,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms, jp.primary, client-interface, ws-interface, common, logger">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms-api-c, jp.primary, client-interface, ws-interface, common, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
