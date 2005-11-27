@@ -20,6 +20,10 @@
 
 	Revision history:
 	$Log$
+	Revision 1.36.2.2  2005/11/27 20:19:35  eronchie
+	Changed security.voms in security.voms-api-c
+	Fix bug 13928
+	
 	Revision 1.36.2.1  2005/11/03 17:46:50  mmulac
 	ares to c-ares migration
 	 - use dynamic library of c-ares, instead of ares static lib
@@ -326,7 +330,7 @@
                         <isset property="small.memory"/>
                         <then>
                                 <exec dir="${security.subsystem.dir}" executable="${antExec}" failonerror="${failonerror}">
-                                        <arg line="voms -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+                                        <arg line="voms-api-c -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
                                 </exec>
                         </then>
                         <else>
