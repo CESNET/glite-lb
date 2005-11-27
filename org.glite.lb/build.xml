@@ -20,6 +20,14 @@
 
 	Revision history:
 	$Log$
+	Revision 1.36.2.1  2005/11/03 17:46:50  mmulac
+	ares to c-ares migration
+	 - use dynamic library of c-ares, instead of ares static lib
+	 - ares clean up (now should be mentioned only in modules that really need it)
+	 - patch for security.gsoap-plugin not yet in CVS (sent to interation list)
+	   I do not know what will happen when one try to mix ares with c-ares libs
+	   => weird things may arise!
+	
 	Revision 1.36  2005/10/15 13:36:26  akrenek
 	added lb.utils
 	
@@ -313,23 +321,23 @@
 		</if>
  	</target>
 
-	<target name="security.voms" unless="setenvonly" depends="envset">
-		<if>
-			<isset property="small.memory"/>
-			<then>
-				<exec dir="${security.subsystem.dir}" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="voms -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
-				</exec>
-			</then>
-			<else>
-				<ant dir="${security.subsystem.dir}"
-        				target="voms"
-        				inheritall="false" >
-        				<property name="target" value="${target}"/>
-				</ant>
-			</else>
-		</if>
- 	</target>
+         <target name="security.voms-api-c" unless="setenvonly" depends="envset">
+                <if>
+                        <isset property="small.memory"/>
+                        <then>
+                                <exec dir="${security.subsystem.dir}" executable="${antExec}" failonerror="${failonerror}">
+                                        <arg line="voms -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+                                </exec>
+                        </then>
+                        <else>
+                                <ant dir="${security.subsystem.dir}"
+                                        target="voms-api-c"
+                                        inheritall="false" >
+                                        <property name="target" value="${target}"/>
+                                </ant>
+                        </else>
+                </if>
+        </target>
 
 	<target name="wms-utils.jobid" unless="setenvonly" depends="envset">
 		<if>
@@ -447,7 +455,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus, expat, c-ares, mysql, gsoap, security.voms, jp.primary, client-interface, ws-interface, common, logger">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, c-ares, mysql, gsoap, security.voms-api-c, jp.primary, client-interface, ws-interface, common, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
