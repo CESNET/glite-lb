@@ -74,8 +74,13 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 	/*
 	 *	send event to the proper BK server
 	 */
-  	if (   ev->any.type != EDG_WLL_EVENT_REGJOB
-		&& edg_wll_EventSendProxy(ctx, ev->any.jobId, event) ) goto err;
+	/* XXX: RegJob events, which were logged also directly, are duplicated at server,
+		but it should not harm */
+
+	if (edg_wll_EventSendProxy(ctx, ev->any.jobId, event) )  {
+		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_EventSendProxy() error.");
+		goto err;
+	}
 
 	/* LB proxy purge
 	 * XXX: Set propper set of states!
