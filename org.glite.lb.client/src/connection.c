@@ -253,7 +253,7 @@ int http_check_status(
 	char *response)
 
 {
-	int	code,len;
+	int	code = HTTP_INTERNAL,len = 0;
 
 	edg_wll_ResetError(ctx);
 	sscanf(response,"HTTP/%*f %n%d",&len,&code);
