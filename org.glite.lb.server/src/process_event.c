@@ -175,6 +175,12 @@ static char* location_string(const char *source, const char *host, const char *i
 	return ret;
 }
 
+static int after_enter_wm(const char *es,const char *js)
+{
+	return component_seqcode(es,EDG_WLL_SOURCE_NETWORK_SERVER) >
+		component_seqcode(js,EDG_WLL_SOURCE_NETWORK_SERVER);
+}
+
 
 static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUSED_VAR)
 {
@@ -205,7 +211,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 	int			res = RET_OK,
 				fine_res = RET_OK;
 				
-
+	int	lm_favour_lrms = 0;
 
 	if (old_state == EDG_WLL_JOB_ABORTED ||
 		old_state == EDG_WLL_JOB_CANCELLED ||
@@ -213,6 +219,15 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 		res = RET_LATE;
 	}
 
+/* new event coming from NS => forget about any resubmission loops */
+	if (e->type != EDG_WLL_EVENT_CANCEL && 
+		js->last_seqcode &&
+		after_enter_wm(e->any.seqcode,js->last_seqcode))
+	{
+		rep(js->branch_tag_seqcode,NULL); 
+		rep(js->deep_resubmit_seqcode,NULL); 
+		rep(js->last_branch_seqcode,NULL); 
+	}
 
 	if (js->deep_resubmit_seqcode && 
 			before_deep_resubmission(e->any.seqcode, js->deep_resubmit_seqcode)) {
@@ -253,7 +268,9 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 								e->any.timestamp.tv_sec;
 							res = RET_LATE;
 						}
-						new_state = EDG_WLL_JOB_SCHEDULED; break;
+						new_state = EDG_WLL_JOB_SCHEDULED;
+						lm_favour_lrms = 1;
+						break;
 					default:
 						goto bad_event; break;
 				}
@@ -312,7 +329,9 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 					new_state = EDG_WLL_JOB_WAITING; break;
 				case EDG_WLL_SOURCE_LOG_MONITOR:
 					if (LRMS_STATE(old_state)) res = RET_LATE;
-					new_state = EDG_WLL_JOB_READY; break;
+					new_state = EDG_WLL_JOB_READY; 
+					lm_favour_lrms = 1;
+					break;
 				case EDG_WLL_SOURCE_LRMS:
 					new_state = EDG_WLL_JOB_SCHEDULED; break;
 				default:
@@ -787,7 +806,20 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 		if (e->any.type == EDG_WLL_EVENT_CANCEL) {
 			rep(js->last_cancel_seqcode, e->any.seqcode);
 		} else {
-			rep(js->last_seqcode, e->any.seqcode);
+
+/* the first set of LM events (Accept, Transfer/* -> LRMS)
+   should not should shift the state (to Ready, Scheduled) but NOT to
+   update js->last_seqcode completely, in order not to block following
+   LRMS events which are likely to arrive later but should still affect
+   job state (as there may be no more LM events due to the Condor bug).
+   However, don't ignore the incoming seqcode completely, to catch up
+   with possibly delayed WM/JSS events */
+
+			if (lm_favour_lrms) {
+				free(js->last_seqcode);
+				js->last_seqcode = set_component_seqcode(e->any.seqcode,EDG_WLL_SOURCE_LOG_MONITOR,0);
+			}
+			else rep(js->last_seqcode, e->any.seqcode);
 		}
 	}
 
