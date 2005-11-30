@@ -985,6 +985,7 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 		case ETIMEDOUT:
 		case EDG_WLL_ERROR_GSS:
 		case EPIPE:
+		case EIO:
 			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
 			if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
 			/*	fallthrough
