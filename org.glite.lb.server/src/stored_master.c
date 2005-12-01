@@ -58,6 +58,8 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 
 	edg_wll_ResetError(ctx);
 	ret = read_il_data(ctx, &buf, gss_reader);
+	if (ret == EDG_WLL_GSS_ERROR_EOF) 
+	  return edg_wll_SetError(ctx,ENOTCONN,"client side");
 	if(ret < 0) 
 	  return edg_wll_SetError(ctx,EIO,"interlogger protocol");
 
