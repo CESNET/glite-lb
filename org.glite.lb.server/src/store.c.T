@@ -492,9 +492,11 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 		e2.any.host = strdup(ctx->srvName);
 		e2.any.level = e->level;
 		e2.any.priority = e->priority;
-		e2.any.seqcode = NULL;		/* XXX: I'm not sure :-( */
+		e2.any.seqcode = strdup(EDG_WLL_SEQ_NULL);
 		e2.any.user = strdup(e->user);
 		e2.any.source = e->source;
+		e2.any.src_instance = strdup(ctx->isProxy ? 
+			"L&B proxy" : "L&B server");
 		e2.regJob.ns = strdup(e->ns);
 		edg_wlc_JobIdDup(e->jobId,&e2.regJob.parent);
 		e2.regJob.jobtype = EDG_WLL_REGJOB_SIMPLE;
