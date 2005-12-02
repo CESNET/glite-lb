@@ -845,14 +845,15 @@ int edg_wll_RegisterJobProxy(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
+#define	MY_SEED	"edg_wll_RegisterJobProxy()"
 	/* first register with bkserver */
-	int ret = edg_wll_RegisterJob(context,job,type,jdl,ns,num_subjobs,seed,subjobs);
+	int ret = edg_wll_RegisterJob(context,job,type,jdl,ns,num_subjobs,seed ? seed : MY_SEED,subjobs);
 	if (ret) {
 		edg_wll_UpdateError(context,0,"edg_wll_RegisterJobProxy(): unable to register with bkserver");
 		return edg_wll_Error(context,NULL,NULL);
 	}
 	/* and then with L&B Proxy */
-	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
 }
 
 int edg_wll_RegisterSubjob(
