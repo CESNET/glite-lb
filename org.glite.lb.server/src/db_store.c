@@ -90,7 +90,6 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 	case EDG_WLL_EVENT_CLEAR:
 	case EDG_WLL_EVENT_ABORT:
 	case EDG_WLL_EVENT_CANCEL:
-	case EDG_WLL_EVENT_DONE:
 		edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
 		break;
 	default: break;
