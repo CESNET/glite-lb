@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.36.4.3  2005/11/28 10:39:08  akrenek
+	merge bug #13928 fix on the pre_cares branch
+	
 	Revision 1.36.4.2  2005/11/24 12:59:36  akrenek
 	server depends on bones
 	
@@ -480,7 +483,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms-api-c, jp.primary, client-interface, ws-interface, common, server-bones">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms-api-c, jp.primary, client-interface, ws-interface, common, logger, server-bones">
 		<if>
 			<isset property="small.memory" />
 			<then>
