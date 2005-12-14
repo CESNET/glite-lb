@@ -89,8 +89,8 @@ LOBJS:=${OBJS:.o=.lo}
 TRIO_OBJS:=escape.o trio.o strio.o
 TRIO_LIB:=libglite_lb_trio.a
 
-MAILDIR_OBJS:=lb_maildir.o
-MAILDIR_LIB:=libglite_lb_maildir.a
+MAILDIR_OBJS:=lb_maildir.lo
+MAILDIR_LIB:=libglite_lb_maildir.la
 
 THROBJS:=${OBJS:.o=.thr.o}
 THRLOBJS:=${OBJS:.o=.thr.lo}
@@ -134,8 +134,7 @@ ${TRIO_LIB}: ${TRIO_OBJS}
 	ranlib $@
 
 ${MAILDIR_LIB}: ${MAILDIR_OBJS}
-	ar crv $@ ${MAILDIR_OBJS}
-	ranlib $@
+	${LINK} ${version_info} -o $@ ${MAILDIR_OBJS}
 
 ${THRSTATICLIB}: ${THROBJS}
 	ar crv $@ ${THROBJS}
@@ -197,12 +196,12 @@ distbin:
 install:
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${MAILDIR_LIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	if [ x${DOSTAGE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
-		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${MAILDIR_LIB} ${PREFIX}/lib; \
+		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${PREFIX}/lib; \
 	fi
 
 clean:
