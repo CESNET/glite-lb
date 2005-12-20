@@ -167,6 +167,17 @@ static void load_branch_state(intJobStat *js)
 	}
 }
 
+// clear branches (deep resub. or abort)
+static void reset_branch(intJobStat *js, edg_wll_Event *e) 
+{
+	js->resubmit_type = EDG_WLL_RESUBMISSION_WILLRESUB;
+	free_stringlist(&js->pub.possible_destinations);
+	free_stringlist(&js->pub.possible_ce_nodes);
+	free_branch_state(&js->branch_states);
+	js->pub.payload_running = 0;
+	rep(js->branch_tag_seqcode, NULL);
+	rep(js->deep_resubmit_seqcode, e->any.seqcode);
+}
 
 static char* location_string(const char *source, const char *host, const char *instance)
 {
@@ -603,13 +614,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 				else 
 				if (e->resubmission.result == EDG_WLL_RESUBMISSION_WILLRESUB &&
 						e->any.source == EDG_WLL_SOURCE_WORKLOAD_MANAGER) {
-					js->resubmit_type = EDG_WLL_RESUBMISSION_WILLRESUB;
-					free_stringlist(&js->pub.possible_destinations);
-					free_stringlist(&js->pub.possible_ce_nodes);
-					free_branch_state(&js->branch_states);
-					js->pub.payload_running = 0;
-					rep(js->branch_tag_seqcode, NULL);
-					rep(js->deep_resubmit_seqcode, e->any.seqcode);
+					reset_branch(js, e);
 				}
 				else
 				if (e->resubmission.result == EDG_WLL_RESUBMISSION_SHALLOW) {
@@ -693,11 +698,15 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			}
 			break;
 		case EDG_WLL_EVENT_ABORT:
+			// XXX: accept Abort from WM in every case
+			//	setting res make USABLE macro true (awful !!)
+			if (e->any.source == EDG_WLL_SOURCE_WORKLOAD_MANAGER) res = RET_OK;
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_ABORTED;
 				rep(js->pub.reason, e->abort.reason);
 				rep(js->pub.location, "none");
-				js->pub.payload_running = 0;
+
+				reset_branch(js, e);
 			}
 			break;
 
