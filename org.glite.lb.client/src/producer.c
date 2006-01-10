@@ -904,12 +904,15 @@ int edg_wll_RegisterSubjobs(
 	
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjob(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
-						ns, parent, 0, NULL, NULL) != 0) break;
+						ns, parent, 0, NULL, NULL) != 0) {
+			goto edg_wll_registersubjobs_end;
+		}
 		pjdl++; psubjob++;
 	}
 
 	edg_wll_SetLoggingJob(ctx, oldctxjob, oldctxseq, EDG_WLL_SEQ_NORMAL);
 
+edg_wll_registersubjobs_end:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -933,12 +936,15 @@ int edg_wll_RegisterSubjobsProxy(
 	
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjobProxy(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
-						ns, parent, 0, NULL, NULL) != 0) break;
+						ns, parent, 0, NULL, NULL) != 0) {
+			goto edg_wll_registersubjobsproxy_end;
+		}
 		pjdl++; psubjob++;
 	}
 
 	edg_wll_SetLoggingJobProxy(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL);
 
+edg_wll_registersubjobsproxy_end:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
