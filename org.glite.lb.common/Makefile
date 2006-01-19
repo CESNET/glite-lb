@@ -53,6 +53,10 @@ GLOBUS_LIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${nothrflavour} \
         -lglobus_gssapi_gsi_${nothrflavour} \
 
+GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
+        -lglobus_common_${thrflavour} \
+        -lglobus_gssapi_gsi_${thrflavour} \
+
 GLITE_LIBS:=-L${glite_location}/lib
 
 ifneq (${expat_prefix},/usr)
@@ -65,6 +69,7 @@ LDFLAGS:=-L${stagedir}/lib \
     ${COVERAGE_FLAGS}
 
 EXT_LIBS:= ${EXPAT_LIBS} ${ARES_LIBS} ${GLOBUS_LIBS}
+EXT_THRLIBS:= ${EXPAT_LIBS} ${ARES_LIBS} ${GLOBUS_THRLIBS}
 
 # breaks linking when not installed in /opt, /home/dimeglio etc.
 #    ${GLITE_LIBS} \
@@ -151,7 +156,7 @@ ${THRLTLIB}: ${THROBJS}
 	${LINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss_${thrflavour} \
 		-lglite_wmsutils_cjobid \
-		${EXT_LIBS} \
+		${EXT_THRLIBS} \
 		-lm
 
 stage: compile
