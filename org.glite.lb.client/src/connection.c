@@ -204,12 +204,14 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 	int			flags;
 	
 
-	if (!(ctx->connProxy->conn.sock == -1)) {
-		ctx->connProxy->conn.sock = socket(PF_UNIX, SOCK_STREAM, 0);
-		if (ctx->connProxy->conn.sock < 0) {
-			edg_wll_SetError(ctx, errno, "socket() error");
-			goto err;
-		}
+	if (ctx->connProxy->conn.sock > -1) {
+		// XXX: test path socket here?
+		return edg_wll_Error(ctx,NULL,NULL);
+	}
+	ctx->connProxy->conn.sock = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (ctx->connProxy->conn.sock < 0) {
+		edg_wll_SetError(ctx, errno, "socket() error");
+		goto err;
 	}
 
 	memset(&saddr, 0, sizeof(saddr));
