@@ -15,6 +15,10 @@
 
 static void free_voms_groups(edg_wll_VomsGroups *);
 
+/* uncomment to get the trace
+#define CTXTRACE "/tmp/lb-context-trace"
+*/
+
 int edg_wll_InitContext(edg_wll_Context *ctx)
 {
 	int i;
@@ -37,6 +41,18 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	out->connToUse = -1;
 
 	*ctx = out;
+
+#ifdef CTXTRACE
+{
+	int	trc = open(CTXTRACE,O_WRONLY|O_CREAT,0644);
+	char	buf[200];
+	sprintf(buf,"%p init\n",out);
+	lseek(trc,0,SEEK_END);
+	write(trc,buf,strlen(buf));
+	close(trc);
+}
+#endif
+
 	return 0;
 }
 
@@ -46,7 +62,16 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 	OM_uint32 min_stat;
 
 	if (!ctx) return;
-
+#ifdef CTXTRACE
+{
+	int	trc = open(CTXTRACE,O_WRONLY|O_CREAT,0644);
+	char	buf[200];
+	sprintf(buf,"%p free\n",ctx);
+	lseek(trc,0,SEEK_END);
+	write(trc,buf,strlen(buf));
+	close(trc);
+}
+#endif
 	if (ctx->errDesc) free(ctx->errDesc);
 	if (ctx->connPool) {
 		int i;
