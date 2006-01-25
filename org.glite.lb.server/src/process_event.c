@@ -832,6 +832,10 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			}
 			else rep(js->last_seqcode, e->any.seqcode);
 		}
+
+		if (fine_res == RET_GOODBRANCH) {
+			rep(js->last_branch_seqcode, e->any.seqcode);
+		}
 	}
 
 	if (USABLE_DATA(res,strict)) {
@@ -846,10 +850,6 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 		}
 	}
 	
-	if (fine_res == RET_GOODBRANCH) {
-		rep(js->last_branch_seqcode, e->any.seqcode);
-	}
-
 	return res;
 
 bad_event:
