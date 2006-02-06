@@ -204,6 +204,10 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 	int			flags;
 	
 
+	if (ctx->connProxy->conn.sock > -1) {
+		// XXX: test path socket here?
+		return edg_wll_ResetError(ctx);
+	}
 	ctx->connProxy->conn.sock = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (ctx->connProxy->conn.sock < 0) {
 		edg_wll_SetError(ctx, errno, "socket() error");
@@ -253,7 +257,7 @@ int http_check_status(
 	char *response)
 
 {
-	int	code,len;
+	int	code = HTTP_INTERNAL,len = 0;
 
 	edg_wll_ResetError(ctx);
 	sscanf(response,"HTTP/%*f %n%d",&len,&code);

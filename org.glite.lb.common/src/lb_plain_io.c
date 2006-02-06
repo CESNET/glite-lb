@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <time.h>
+#include <signal.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -173,7 +175,11 @@ int edg_wll_plain_write_full(
 	int				ct = -1;
 	fd_set			fds;
 	struct timeval	timeout, before, after;
+	struct sigaction        sa,osa;
 
+	memset(&sa,0,sizeof(sa)); assert(sa.sa_handler == NULL);
+	sa.sa_handler = SIG_IGN;
+	sigaction(SIGPIPE,&sa,&osa);
 
 	if ( to ) {
 		memcpy(&timeout, to, sizeof(timeout));
@@ -204,5 +210,7 @@ end:
 		if (to->tv_sec < 0) to->tv_sec = to->tv_usec = 0;
 	}
 
+	sigaction(SIGPIPE,&osa,NULL);
+	if (errno == EPIPE) errno = ENOTCONN;
 	return (errno)? -1: written;
 }

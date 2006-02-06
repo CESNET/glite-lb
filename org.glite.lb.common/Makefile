@@ -47,11 +47,15 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 # major version more frequently. This variable specifies how many steps ahead
 # we are.
 
-VERSION_AHEAD=0
+VERSION_AHEAD=1
 
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${nothrflavour} \
         -lglobus_gssapi_gsi_${nothrflavour} \
+
+GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
+        -lglobus_common_${thrflavour} \
+        -lglobus_gssapi_gsi_${thrflavour} \
 
 GLITE_LIBS:=-L${glite_location}/lib
 
@@ -65,6 +69,7 @@ LDFLAGS:=-L${stagedir}/lib \
     ${COVERAGE_FLAGS}
 
 EXT_LIBS:= ${EXPAT_LIBS} ${ARES_LIBS} ${GLOBUS_LIBS}
+EXT_THRLIBS:= ${EXPAT_LIBS} ${ARES_LIBS} ${GLOBUS_THRLIBS}
 
 # breaks linking when not installed in /opt, /home/dimeglio etc.
 #    ${GLITE_LIBS} \
@@ -89,8 +94,8 @@ LOBJS:=${OBJS:.o=.lo}
 TRIO_OBJS:=escape.o trio.o strio.o
 TRIO_LIB:=libglite_lb_trio.a
 
-MAILDIR_OBJS:=lb_maildir.o
-MAILDIR_LIB:=libglite_lb_maildir.a
+MAILDIR_OBJS:=lb_maildir.lo
+MAILDIR_LIB:=libglite_lb_maildir.la
 
 THROBJS:=${OBJS:.o=.thr.o}
 THRLOBJS:=${OBJS:.o=.thr.lo}
@@ -134,8 +139,7 @@ ${TRIO_LIB}: ${TRIO_OBJS}
 	ranlib $@
 
 ${MAILDIR_LIB}: ${MAILDIR_OBJS}
-	ar crv $@ ${MAILDIR_OBJS}
-	ranlib $@
+	${LINK} ${version_info} -o $@ ${MAILDIR_OBJS}
 
 ${THRSTATICLIB}: ${THROBJS}
 	ar crv $@ ${THROBJS}
@@ -152,7 +156,7 @@ ${THRLTLIB}: ${THROBJS}
 	${LINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss_${thrflavour} \
 		-lglite_wmsutils_cjobid \
-		${EXT_LIBS} \
+		${EXT_THRLIBS} \
 		-lm
 
 stage: compile
@@ -197,12 +201,12 @@ distbin:
 install:
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${MAILDIR_LIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	if [ x${DOSTAGE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
-		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${MAILDIR_LIB} ${PREFIX}/lib; \
+		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${PREFIX}/lib; \
 	fi
 
 clean:

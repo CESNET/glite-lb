@@ -384,13 +384,14 @@ void edg_wll_ULMSplitDate( const char *s,
 int edg_wll_ULMTimevalToDate( long sec, long usec, char *dstr )
 {
   char *func = "edg_wll_ULMTimevalToDate";
+  struct tm tms;
   struct tm *tp;
   int        len;
 
   if ( sec < 0 || usec < 0 || usec > 999999 )
     return 1;
 
-  tp = gmtime( (const time_t *) &sec );
+  tp = gmtime_r( (const time_t *) &sec, &tms );
   if ( tp == NULL )
     return 1;
 

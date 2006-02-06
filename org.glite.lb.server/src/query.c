@@ -78,7 +78,8 @@ int edg_wll_QueryEventsServer(
        	goto cleanup;
 
 	if (event_conditions && *event_conditions && (*event_conditions)->attr &&
-		!(event_where = ec_to_head_where(ctx,event_conditions)))
+		!(event_where = ec_to_head_where(ctx,event_conditions)) &&
+		edg_wll_Error(ctx,NULL,NULL) != 0)
 		goto cleanup;
 
 	if ( job_conditions && *job_conditions && (*job_conditions)->attr &&
