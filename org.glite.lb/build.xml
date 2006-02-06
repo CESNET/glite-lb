@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.36.4.5  2005/12/02 11:15:33  akrenek
+	resolved logger dependency conflict
+	
 	Revision 1.36.4.4  2005/12/02 10:04:14  jpospi
 	server depends on logger
 	
@@ -502,7 +505,7 @@
 		</if>
 	</target>
 
-	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server">
+	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
