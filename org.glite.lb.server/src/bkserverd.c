@@ -1142,51 +1142,10 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 	}
 
 	if ( err ) {
-		char    *errt, *errd;
-		int		ret;
-
-		
-		errt = errd = NULL;
-		switch ( (ret = edg_wll_Error(ctx, &errt, &errd)) ) {
-		case ETIMEDOUT:
-		case EDG_WLL_ERROR_GSS:
-		case EPIPE:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
-			/*	"recoverable" error - return (>0)
-			 *	fallthrough
-			 */
-		case ENOTCONN:
-			/*	"recoverable" error - return (>0)
-			 *	return ENOTCONN to tell bones to clean up
-			 */
-			free(errt); free(errd);
-			return ret;
-			break;
-
-		case ENOENT:
-		case EINVAL:
-		case EPERM:
-		case EEXIST:
-		case EDG_WLL_ERROR_NOINDEX:
-		case E2BIG:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if ( !debug ) syslog(LOG_ERR,"%s (%s)", errt, errd);
-			/*
-			 *	no action for non-fatal errors
-			 */
-			break;
-			
-		default:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if (!debug) syslog(LOG_CRIT,"%s (%s)",errt,errd);
-			/*
-			 *	unknown error - do rather return (<0) (slave will be killed)
-			 */
-			return -1;
-		} 
-		free(errt); free(errd);
-		return 1;
+		// soap_print_fault(struct soap *soap, FILE *fd) maybe useful here
+		dprintf(("[%d] SOAP error (bk_accept_ws) \n", getpid()));
+		if (!debug) syslog(LOG_CRIT,"SOAP error (bk_accept_ws)");
+		return ECANCELED;
 	}
 
 	return 0;
