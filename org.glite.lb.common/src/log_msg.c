@@ -143,13 +143,17 @@ int edg_wll_log_event_write(
 			case EAGAIN:
 			case EACCES:
 			case EINTR:
-				sleep(fcntl_timeout);
+				if ((i+1) < fcntl_attempts) sleep(fcntl_timeout);
 				break;
 			default:
 				edg_wll_SetError(ctx, errno, "fcntl()");
 				goto cleanup;
 			}
 		} else break;
+	}
+	if (i == fcntl_attempts) {
+		edg_wll_SetError(ctx, ETIMEDOUT, "timed out trying to lock event file");
+		goto cleanup;
 	}
 
 	if ( fseek(outfile, 0, SEEK_END) == -1 ) {	
