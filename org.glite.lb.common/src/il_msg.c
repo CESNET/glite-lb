@@ -109,7 +109,7 @@ read_il_data(void *user_data,
 	     char **buffer, 
 	     int (*reader)(void *, char *, const int))
 {
-  char buf[17];
+	char buf[17], *p;
   int ret, len;
 
   /* read 17 byte header */
@@ -117,7 +117,23 @@ read_il_data(void *user_data,
   if(len < 0) {
     goto err;
   }
+
+  /* perform some sanity checks on the received header */
+  if(buf[16] != '\n') {
+	  len = -1;
+	  goto err;
+  }
   buf[16] = 0;
+  /* skip leading spaces */
+  for(p = buf; *p == ' '; p++);
+  /* skip digits */
+  for(; (*p >= '0') && (*p <= '9'); p++);
+  /* this must be the end of string */
+  if(*p != 0) {
+	  len = -1;
+	  goto err;
+  }
+
   if((len=atoi(buf)) <= 0) {
     len = -1;
     goto err;
