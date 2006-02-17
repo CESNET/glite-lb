@@ -40,6 +40,7 @@
 #include "glite/lb/context.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"
+#include "glite/lb/lb_maildir.h"
 
 #include "lb_http.h"
 #include "lb_proto.h"
@@ -69,14 +70,12 @@ extern edg_wll_ErrorCode edg_wll_Close(edg_wll_Context);
 
 #define CON_QUEUE		20	/* accept() */
 #define SLAVE_OVERLOAD		10	/* queue items per slave */
-#define CLNT_TIMEOUT		10	/* keep idle connection that many seconds */
-#define TOTAL_CLNT_TIMEOUT	60	/* one client may ask one slave multiple times */
+#define CONNECT_TIMEOUT		30
+#define IDLE_TIMEOUT		10	/* keep idle connection that many seconds */
+#define REQUEST_TIMEOUT		120	/* one client may ask one slave multiple times */
 					/* but only limited time to avoid DoS attacks */
-#define CLNT_REJECT_TIMEOUT	100000	/* time limit for client rejection in !usec! */
 #define DNS_TIMEOUT      	5	/* how long wait for DNS lookup */
 #define SLAVE_CONNS_MAX		500	/* commit suicide after that many connections */
-#define MASTER_TIMEOUT		30 	/* maximal time of one-round of master network communication */
-#define SLAVE_TIMEOUT		30 	/* maximal time of one-round of slave network communication */
 
 #ifndef EDG_PURGE_STORAGE
 #define EDG_PURGE_STORAGE	"/tmp/purge"
@@ -277,8 +276,7 @@ int main(int argc, char *argv[])
 	int					opt;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *port,
-					   *name,
-					   *tmps;
+					   *name;
 #ifdef GLITE_LB_SERVER_WITH_WS
 	char			   *ws_port;
 #endif	/* GLITE_LB_SERVER_WITH_WS */
@@ -412,9 +410,9 @@ int main(int argc, char *argv[])
 	if (check_mkdir(dumpStorage)) exit(1);
 	if (check_mkdir(purgeStorage)) exit(1);
 	if ( jpreg ) {
-		if ( edg_wll_MaildirInit(jpregDir, &tmps) ) {
-			dprintf(("[%d] %s\n", getpid(), tmps));
-			if (!debug) syslog(LOG_CRIT, tmps);
+		if ( edg_wll_MaildirInit(jpregDir) ) {
+			dprintf(("[%d] edg_wll_MaildirInit failed: %s\n", getpid(), lbm_errdesc));
+			if (!debug) syslog(LOG_CRIT, "edg_wll_MaildirInit failed: %s", lbm_errdesc);
 			exit(1);
 		}
 	}
@@ -577,14 +575,12 @@ a.sin_addr.s_addr = INADDR_ANY;
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVES_COUNT, slaves);
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_OVERLOAD, SLAVE_OVERLOAD);
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_CONNS_MAX, SLAVE_CONNS_MAX);
-	/* XXX
-	 * not final version - yet!
-	 */
-	to = (struct timeval){CLNT_TIMEOUT, 0};
+
+	to = (struct timeval){CONNECT_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_CONNECT_TIMEOUT, &to);
-	to = (struct timeval){CLNT_TIMEOUT, 0};
+	to = (struct timeval){REQUEST_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_REQUEST_TIMEOUT, &to);
-	to = (struct timeval){TOTAL_CLNT_TIMEOUT, 0};
+	to = (struct timeval){IDLE_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_IDLE_TIMEOUT, &to);
 
 	glite_srvbones_run(bk_clnt_data_init, service_table, sizofa(service_table), debug);
@@ -694,7 +690,6 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	OM_uint32			min_stat,
 						maj_stat;
 	struct timeval		dns_to = {DNS_TIMEOUT, 0},
-						total_to = { TOTAL_CLNT_TIMEOUT,0 },
 						conn_start, now;
 	struct sockaddr_in	a;
 	int					alen;
@@ -743,13 +738,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->rgma_export = rgma_export;
 	memcpy(ctx->purge_timeout, purge_timeout, sizeof(ctx->purge_timeout));
 
-	ctx->p_tmp_timeout.tv_sec = SLAVE_TIMEOUT;
-	ctx->p_tmp_timeout.tv_usec = 0;
-	if ( total_to.tv_sec < ctx->p_tmp_timeout.tv_sec )
-	{
-		ctx->p_tmp_timeout.tv_sec = total_to.tv_sec;
-		ctx->p_tmp_timeout.tv_usec = total_to.tv_usec;
-	}
+	ctx->p_tmp_timeout.tv_sec = timeout->tv_sec;
+	ctx->p_tmp_timeout.tv_usec = timeout->tv_usec;
 	
 	ctx->poolSize = 1;
 	ctx->connPool = calloc(1, sizeof(edg_wll_ConnPool));
@@ -763,7 +753,6 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 	gettimeofday(&conn_start, 0);
 
-	/* not a critical operation, do not waste all SLAVE_TIMEOUT */
 	h_errno = asyn_gethostbyaddr(&name, (char *)&a.sin_addr.s_addr,sizeof(a.sin_addr.s_addr), AF_INET, &dns_to);
 	switch ( h_errno )
 	{
