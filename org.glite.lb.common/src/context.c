@@ -36,7 +36,7 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 
 	out->connPool = (edg_wll_ConnPool *) calloc(out->poolSize, sizeof(edg_wll_ConnPool));
 	out->connPoolNotif = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
-	out->connProxy = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnProxy));
+	out->connProxy = (edg_wll_ConnProxy *) calloc(1, sizeof(edg_wll_ConnProxy));
 	out->connProxy->conn.sock = -1;
 	out->connToUse = -1;
 
@@ -128,7 +128,7 @@ static const char* const errTexts[] = {
 	"DNS resolver error",
 	"No JobId specified in context",
 	"No indexed condition in query",
-	"Interlogger protocol error",
+	"Lbserver (proxy) store protocol error",
 	"Interlogger internal error",
 	"Interlogger has events pending",
 	"Compared events differ",
