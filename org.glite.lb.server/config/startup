@@ -1,7 +1,7 @@
 #!/bin/sh
 
 GLITE_LOCATION=${GLITE_LOCATION:-/opt/glite}
-GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-${GLITE_LOCATION}/var}
+GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-/var/glite}
 
 [ -f /etc/glite.conf ] && . /etc/glite.conf
 [ -f $GLITE_LOCATION/etc/glite-wms.conf ] && . $GLITE_LOCATION/etc/glite-wms.conf
