@@ -17,7 +17,6 @@ thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 ares_prefix=/opt/ares
 gsoap_prefix=/opt/gsoap
-classads_prefix=/opt/classads
 
 -include Makefile.inc
 
@@ -62,7 +61,6 @@ CFLAGS:= \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
 	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
-	-I${classads_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
@@ -119,14 +117,9 @@ endif
 #	-lvomsc${vomsflavour} \
 #	${GLOBUS_LIBS}
 
-ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/lib -lclassad
-endif
-
 EXT_LIBS:=  \
 	${mysqlib} -lmysqlclient -lz\
 	${GRIDSITE_LIBS} \
-	${classadslib} \
 	-lvomsc${vomsflavour}
 
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones

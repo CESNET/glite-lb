@@ -95,7 +95,6 @@ mysql_version=${ext.mysql.version}
 cppunit=${with.cppunit.prefix}
 gsoap_prefix=${with.gsoap.prefix}
 gsoap_version=${ext.gsoap.version}
-classads_prefix=${with.classads.prefix}
 			</echo>
 	    </target>
 	</project>
