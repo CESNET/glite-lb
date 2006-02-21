@@ -864,7 +864,7 @@ static char *jc_to_head_where(
 					free(aux);
 				}
 				else
-					trio_asprintf(&tmps, "%s OR s.%s %s s.%s", conds, cname, opToString(jc[m][n].op), dbt);
+					trio_asprintf(&tmps, "%s OR s.%s %s %s", conds, cname, opToString(jc[m][n].op), dbt);
 
 				free(conds);
 				conds = tmps;
@@ -873,7 +873,7 @@ static char *jc_to_head_where(
 			{
 				trio_asprintf(&aux, "%s", dbt);
 				dbt = edg_wll_TimeToDB(jc[m][n].value2.t.tv_sec);
-				trio_asprintf(&conds, "(%s >= s.%s AND s.%s <= %s)", cname, aux, cname, dbt);
+				trio_asprintf(&conds, "(s.%s >= %s AND s.%s <= %s)", cname, aux, cname, dbt);
 				free(aux);
 			}
 			else
