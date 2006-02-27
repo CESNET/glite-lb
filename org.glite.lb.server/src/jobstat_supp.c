@@ -658,6 +658,41 @@ int component_seqcode(const char *a, edg_wll_Source index)
 	return(c[index]);	
 }
 
+char * set_component_seqcode(char *s,edg_wll_Source index,int val)
+{
+	unsigned int    c[EDG_WLL_SOURCE__LAST];
+	int		res;
+	char 		*ret;
+
+	res =  sscanf(s, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+			&c[EDG_WLL_SOURCE_USER_INTERFACE],
+			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
+			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
+			&c[EDG_WLL_SOURCE_BIG_HELPER],
+			&c[EDG_WLL_SOURCE_JOB_SUBMISSION],
+			&c[EDG_WLL_SOURCE_LOG_MONITOR],
+			&c[EDG_WLL_SOURCE_LRMS],
+			&c[EDG_WLL_SOURCE_APPLICATION]);
+	if (res != EDG_WLL_SOURCE__LAST-1) {
+		syslog(LOG_ERR, "unparsable sequence code %s\n", s);
+		fprintf(stderr, "unparsable sequence code %s\n", s);
+		return NULL;
+	}
+
+	c[index] = val;
+	trio_asprintf(&ret,"UI=%06d:NS=%010d:WM=%06d:BH=%010d:JSS=%06d"
+                                ":LM=%06d:LRMS=%06d:APP=%06d",
+                        c[EDG_WLL_SOURCE_USER_INTERFACE],
+                        c[EDG_WLL_SOURCE_NETWORK_SERVER],
+                        c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
+                        c[EDG_WLL_SOURCE_BIG_HELPER],
+                        c[EDG_WLL_SOURCE_JOB_SUBMISSION],
+                        c[EDG_WLL_SOURCE_LOG_MONITOR],
+                        c[EDG_WLL_SOURCE_LRMS],
+                        c[EDG_WLL_SOURCE_APPLICATION]);
+	return ret;
+}
+
 int before_deep_resubmission(const char *a, const char *b)
 {
 	if (component_seqcode(a, EDG_WLL_SOURCE_WORKLOAD_MANAGER) < 

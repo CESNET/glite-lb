@@ -64,9 +64,11 @@ void write2rgma_status(edg_wll_JobStat *);
 int before_deep_resubmission(const char *, const char *);
 int same_branch(const char *, const char *);
 int component_seqcode(const char *a, edg_wll_Source index);
+char * set_component_seqcode(char *s,edg_wll_Source index,int val);
 int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
 
 int add_stringlist(char ***, const char *);
 int edg_wll_compare_seq(const char *, const char *);
 
 void init_intJobStat(intJobStat *p);
+

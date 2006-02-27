@@ -845,14 +845,15 @@ int edg_wll_RegisterJobProxy(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
+#define	MY_SEED	"edg_wll_RegisterJobProxy()"
 	/* first register with bkserver */
-	int ret = edg_wll_RegisterJob(context,job,type,jdl,ns,num_subjobs,seed,subjobs);
+	int ret = edg_wll_RegisterJob(context,job,type,jdl,ns,num_subjobs,seed ? seed : MY_SEED,subjobs);
 	if (ret) {
 		edg_wll_UpdateError(context,0,"edg_wll_RegisterJobProxy(): unable to register with bkserver");
 		return edg_wll_Error(context,NULL,NULL);
 	}
 	/* and then with L&B Proxy */
-	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
 }
 
 int edg_wll_RegisterSubjob(
@@ -903,12 +904,15 @@ int edg_wll_RegisterSubjobs(
 	
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjob(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
-						ns, parent, 0, NULL, NULL) != 0) break;
+						ns, parent, 0, NULL, NULL) != 0) {
+			goto edg_wll_registersubjobs_end; 
+		}
 		pjdl++; psubjob++;
 	}
 
 	edg_wll_SetLoggingJob(ctx, oldctxjob, oldctxseq, EDG_WLL_SEQ_NORMAL);
 
+edg_wll_registersubjobs_end:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -932,10 +936,13 @@ int edg_wll_RegisterSubjobsProxy(
 	
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjobProxy(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
-						ns, parent, 0, NULL, NULL) != 0) break;
+						ns, parent, 0, NULL, NULL) != 0) {
+			goto edg_wll_registersubjobsproxy_end;
+		}
 		pjdl++; psubjob++;
 	}
 
+edg_wll_registersubjobsproxy_end:
 	edg_wll_SetLoggingJobProxy(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL);
 
 	return edg_wll_Error(ctx, NULL, NULL);
