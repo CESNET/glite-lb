@@ -123,20 +123,24 @@ int main(int argc, char *argv[])
 	if (reg_subjobs) {
 		char ** jdls = (char**) malloc(num_subjobs*sizeof(char*));
 
-		if (lbproxy) {
-			fprintf(stderr,"edg_wll_RegisterSubjobsProxy(): not implemented yet.\n");
-			exit(1);
-		}
-
 		for (i=0; subjobs[i]; i++) {
 			asprintf(jdls+i, "JDL of subjob #%d\n", i+1);
 		}
 
-		if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
-			char 	*et,*ed;
-			edg_wll_Error(ctx,&et,&ed);
-			fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);
-			exit(1);
+		if (lbproxy) {
+			if (edg_wll_RegisterSubjobsProxy(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
+				char 	*et,*ed;
+				edg_wll_Error(ctx,&et,&ed);
+				fprintf(stderr,"edg_wll_RegisterSubjobsProxy: %s (%s)\n", et, ed);
+				exit(1);
+			}
+		} else {
+			if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
+				char 	*et,*ed;
+				edg_wll_Error(ctx,&et,&ed);
+				fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);
+				exit(1);
+			}
 		}
 
 		for (i=0; subjobs[i]; i++) free(jdls[i]);
