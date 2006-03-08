@@ -72,11 +72,20 @@ CFLAGS:=${DEBUG} \
 	-I${glite_location}/include \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
+	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
 
 
 CXXFLAGS:=${CFLAGS}
+
+ifneq (${mysql_prefix},/usr)
+	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
+		mysqlib := -L${mysql_prefix}/lib/mysql
+	else
+		mysqlib := -L${mysql_prefix}/lib
+	endif
+endif
 
 ifneq (${expat_prefix},/usr)
 	EXPAT_LIBS:=-L${expat_prefix}/lib
@@ -86,8 +95,9 @@ EXPAT_LIBS := ${EXPAT_LIBS} -lexpat
 ARES_LIBS:=-L${ares_prefix}/lib \
 	-lares
 
-EXT_LIB:= ${EXPAT_LIBS} \
-    ${ARES_LIBS}
+EXT_LIB:= ${mysqlib} -lmysqlclient -lz\
+	${EXPAT_LIBS} \
+	${ARES_LIBS}
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
