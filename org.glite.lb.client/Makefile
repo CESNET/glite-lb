@@ -132,9 +132,9 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge lb_dump_exporter
-EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl lbmon
+EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl lbmon stresslog
 
-EXAMPLES_CL=user_jobs job_status
+EXAMPLES_CL=user_jobs job_status 
 FAKE_EXAMPLES:=job_log_fake
 
 MAN_GZ:=glite-lb-logevent.1.gz
@@ -173,6 +173,9 @@ ${THRPLUSLIB}: ${PLUSTHROBJS}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
+
+lbmon-db: lbmon-db.o
+	${LINK} -o $@ lbmon-db.o -lmysqlclient -lglite_lb_bkserver ${LIB} ${EXT_LIB} 
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
@@ -230,7 +233,7 @@ ${MAN_GZ}: ${MAN}
 default: all
 
 
-compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
+compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent lbmon-db ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
 
 examples: ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}
 
@@ -276,13 +279,13 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/examples
-	for p in logevent; do \
+	for p in logevent ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 	for p in ${TOOLS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
 	done
-	for p in ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}; do \
+	for p in ${EXAMPLES} lbmon-db ${EXAMPLES_CL} ${sh_PROGS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
