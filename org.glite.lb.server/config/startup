@@ -34,6 +34,13 @@ start()
 		fi
 	fi
 
+	[ -z "$GLITE_LB_EXPORT_DUMPDIR" ] && GLITE_LB_EXPORT_DUMPDIR=/tmp/dump
+	purgedir="--dump-prefix $GLITE_LB_EXPORT_DUMPDIR"
+	[ -d "$GLITE_LB_EXPORT_DUMPDIR" ] || mkdir "$GLITE_LB_EXPORT_DUMPDIR" && chown $GLITE_USER:$GLITE_GROUP "$GLITE_LB_EXPORT_DUMPDIR"
+
+	[ -z "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] && GLITE_LB_EXPORT_JPREG_MAILDIR=/tmp/jpreg
+	maildir="--jpreg-dir $GLITE_LB_EXPORT_JPREG_MAILDIR"
+	[ -d "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] || mkdir "$GLITE_LB_EXPORT_JPREG_MAILDIR" && chown $GLITE_USER:$GLITE_GROUP "$GLITE_LB_EXPORT_JPREG_MAILDIR"
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
@@ -43,7 +50,8 @@ start()
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=/tmp/glite-lb-notif.sock \
 		--notif-il-fprefix=/var/tmp/glite-lb-notif \
-		$creds -i $pidfile $port" && echo " done" || echo " FAILED"
+		$creds -i $pidfile $port $purgedir $maildir" \
+	&& echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-notif-interlogd ...
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
