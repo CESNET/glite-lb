@@ -8,7 +8,12 @@ if [ `echo $(basename $0) | grep 'glite-lb-' | wc -l` = "1" ]; then
 	PREFIX=glite-lb-
 fi
 LOGFD=${LOGFD:-2}
-LOGEV=${LOGEV:-`dirname $0`/${PREFIX}logevent}${SUFFIX}
+if [ -d `dirname $0`/../bin ]; then
+	BINDIR=`dirname $0`/../bin
+else
+	BINDIR=`dirname $0`
+fi
+LOGEV=${LOGEV:-${BINDIR}/${PREFIX}logevent}${SUFFIX}
 JOB_REG=${JOB_REG:-`dirname $0`/${PREFIX}job_reg}${SUFFIX}
 EDG_JOBID=
 LBPROXY=

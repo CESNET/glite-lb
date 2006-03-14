@@ -134,6 +134,8 @@ int main(int argc, char **argv)
 		}
 		if ( !ln ) break;
 
+		if (*ln == 0) continue;
+
 		if ( edg_wll_ParseEvent(ctx, ln, &ev) != 0 ) {
 			cleanup(1);
 		}
@@ -158,7 +160,7 @@ int main(int argc, char **argv)
 					cleanup(1);
 				}
 				snprintf(fname, PATH_MAX, "%s/%s.%ld", store_pref, unique, (long) time(NULL));
-				if ( (fd = open(fname, O_CREAT|O_EXCL|O_RDWR, 00600)) < 0 ) {
+				if ( (fd = open(fname, O_CREAT|O_EXCL|O_RDWR, 00640)) < 0 ) {
 					if ( errno == EEXIST ) { sleep(2); continue; }
 					perror(fname);
 					cleanup(1);
