@@ -15,7 +15,6 @@ globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
 expat_prefix=/opt/expat
-ares_prefix=/opt/ares
 
 -include Makefile.inc
 -include ../Makefile.inc
@@ -37,7 +36,6 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	-I${glite_location}/include \
 	-I${expat_prefix}/include \
-	-I${ares_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
 	-DDATAGRID_EXTENSION
@@ -64,18 +62,16 @@ ifneq (${expat_prefix},/usr)
 endif
 EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 
-ARES_LIBS:=-L${ares_prefix}/lib -lares
 LDFLAGS:=-L${stagedir}/lib \
     ${COVERAGE_FLAGS}
 
-EXT_LIBS:= ${EXPAT_LIBS} ${ARES_LIBS} ${GLOBUS_LIBS}
-EXT_THRLIBS:= ${EXPAT_LIBS} ${ARES_LIBS} ${GLOBUS_THRLIBS}
+EXT_LIBS:= ${EXPAT_LIBS} ${GLOBUS_LIBS}
+EXT_THRLIBS:= ${EXPAT_LIBS} ${GLOBUS_THRLIBS}
 
 # breaks linking when not installed in /opt, /home/dimeglio etc.
 #    ${GLITE_LIBS} \
 #    ${GLOBUS_LIBS} \
-#    ${EXPAT_LIBS} \
-#    ${ARES_LIBS} \
+#    ${EXPAT_LIBS}
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include
