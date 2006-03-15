@@ -20,6 +20,9 @@
 
         Revision history:
         $Log$
+        Revision 1.1.1.1  2005/09/30 15:17:04  jpospi
+        New org.glite.lb.utils component
+
 
 -->
 <project name="LB Utils configuration properties">
@@ -42,7 +45,6 @@ globus_prefix=${with.globus.prefix}
 thrflavour=${with.globus.thr.flavor}
 nothrflavour=${with.globus.nothr.flavor}
 expat_prefix=${with.expat.prefix}
-ares_prefix=${with.ares.prefix}
 mysql_prefix=${with.mysql.prefix}
 mysql_version=${ext.mysql.version}
 cppunit=${with.cppunit.prefix}
