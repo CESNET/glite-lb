@@ -9,7 +9,8 @@
 
 ! DESTINATION=CE2/queue2
 ! CE_NODE=worker2
-:resubmission_shallow:
+! RESUB=SHALLOW
+:resubmission:
 ! BRANCH_SEQUENCE="$EDG_WL_SEQUENCE"
 
 -s LogMonitor, -e Done, --status_code=FAILED, --reason="reason for the change", --exit_code=141
@@ -17,7 +18,8 @@
 
 ! DESTINATION=CE3/queue3
 ! CE_NODE=worker3
-:resubmission_shallow:
+! RESUB=SHALLOW
+:resubmission:
 
 -s LogMonitor, -e ReallyRunning, --wn_seq="$BRANCH_SEQUENCE"
 

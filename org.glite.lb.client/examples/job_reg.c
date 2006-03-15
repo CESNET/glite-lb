@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/producer.h"
@@ -18,7 +19,7 @@ static void usage(char *me)
 
 int main(int argc, char *argv[])
 {
-	char *src = NULL,*job = NULL,*server = NULL,*seq;
+	char *src = NULL,*job = NULL,*server = NULL,*seq,*jdl = NULL;
 	int lbproxy = 0;
 	int done = 0,num_subjobs = 0,reg_subjobs = 0,i;
 	edg_wll_Context	ctx;
@@ -29,13 +30,14 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xs:j:m:n:S")) {
+		switch (getopt(argc,argv,"xs:j:m:n:Sl:")) {
 			case 'x': lbproxy = 1; break;
 			case 's': src = (char *) strdup(optarg); break;
 			case 'j': job = (char *) strdup(optarg); break;
 			case 'm': server = strdup(optarg); break;
 			case 'n': num_subjobs = atoi(optarg); break;
 			case 'S': if (num_subjobs>0) { reg_subjobs = 1; break; }
+			case 'l': jdl = (char *) strdup(optarg); break;
 			case '?': usage(argv[0]); exit(EINVAL);
 			case -1: done = 1; break;
 		}
@@ -63,11 +65,29 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	if (jdl) {
+		int	f = open(jdl,O_RDONLY,0);
+		off_t	l,p,c;
+
+		if (f<0) { perror(jdl); exit(1); }
+		l = lseek(f,0,SEEK_END);
+		lseek(f,0,SEEK_SET);
+
+		jdl = malloc(l+1);
+
+		for (p=0; p < l && (c = read(f,jdl+p,l-p)) > 0; p += c);
+		if (c<0) {
+			perror("read()");
+			exit (1);
+		}
+		jdl[p] = 0;
+	}
+
 	edg_wll_SetParam(ctx,EDG_WLL_PARAM_SOURCE,edg_wll_StringToSource(src));
 	if (lbproxy) {
 		if (edg_wll_RegisterJobProxy(ctx,jobid,
 			num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
-			"blabla", "NNNSSSS",
+			jdl ? jdl : "blabla", "NNNSSSS",
 			num_subjobs,NULL,&subjobs))
 		{
 			char 	*et,*ed;
@@ -78,7 +98,7 @@ int main(int argc, char *argv[])
 	} else {
 		if (edg_wll_RegisterJobSync(ctx,jobid,
 			num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
-			"blabla", "NNNSSSS",
+			jdl ? jdl : "blabla", "NNNSSSS",
 			num_subjobs,NULL,&subjobs))
 		{
 			char 	*et,*ed;
@@ -103,20 +123,24 @@ int main(int argc, char *argv[])
 	if (reg_subjobs) {
 		char ** jdls = (char**) malloc(num_subjobs*sizeof(char*));
 
-		if (lbproxy) {
-			fprintf(stderr,"edg_wll_RegisterSubjobsProxy(): not implemented yet.\n");
-			exit(1);
-		}
-
 		for (i=0; subjobs[i]; i++) {
 			asprintf(jdls+i, "JDL of subjob #%d\n", i+1);
 		}
 
-		if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
-			char 	*et,*ed;
-			edg_wll_Error(ctx,&et,&ed);
-			fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);
-			exit(1);
+		if (lbproxy) {
+			if (edg_wll_RegisterSubjobsProxy(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
+				char 	*et,*ed;
+				edg_wll_Error(ctx,&et,&ed);
+				fprintf(stderr,"edg_wll_RegisterSubjobsProxy: %s (%s)\n", et, ed);
+				exit(1);
+			}
+		} else {
+			if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
+				char 	*et,*ed;
+				edg_wll_Error(ctx,&et,&ed);
+				fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);
+				exit(1);
+			}
 		}
 
 		for (i=0; subjobs[i]; i++) free(jdls[i]);
