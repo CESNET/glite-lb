@@ -26,7 +26,7 @@ handle_request(edg_wll_Context ctx,char *buf)
 
   ret = decode_il_msg(&event, buf);
   if(ret < 0) {
-    edg_wll_SetError(ctx,EDG_WLL_IL_PROTO,"reading event string");
+    edg_wll_SetError(ctx,EDG_WLL_IL_PROTO,"decoding event string failed");
     return EDG_WLL_IL_PROTO;
   }
 

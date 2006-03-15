@@ -78,7 +78,8 @@ int edg_wll_QueryEventsServer(
        	goto cleanup;
 
 	if (event_conditions && *event_conditions && (*event_conditions)->attr &&
-		!(event_where = ec_to_head_where(ctx,event_conditions)))
+		!(event_where = ec_to_head_where(ctx,event_conditions)) &&
+		edg_wll_Error(ctx,NULL,NULL) != 0)
 		goto cleanup;
 
 	if ( job_conditions && *job_conditions && (*job_conditions)->attr &&
@@ -863,7 +864,7 @@ static char *jc_to_head_where(
 					free(aux);
 				}
 				else
-					trio_asprintf(&tmps, "%s OR s.%s %s s.%s", conds, cname, opToString(jc[m][n].op), dbt);
+					trio_asprintf(&tmps, "%s OR s.%s %s %s", conds, cname, opToString(jc[m][n].op), dbt);
 
 				free(conds);
 				conds = tmps;
@@ -872,7 +873,7 @@ static char *jc_to_head_where(
 			{
 				trio_asprintf(&aux, "%s", dbt);
 				dbt = edg_wll_TimeToDB(jc[m][n].value2.t.tv_sec);
-				trio_asprintf(&conds, "(%s >= s.%s AND s.%s <= %s)", cname, aux, cname, dbt);
+				trio_asprintf(&conds, "(s.%s >= %s AND s.%s <= %s)", cname, aux, cname, dbt);
 				free(aux);
 			}
 			else

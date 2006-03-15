@@ -89,9 +89,11 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 	switch ( ev->any.type ) {
 	case EDG_WLL_EVENT_CLEAR:
 	case EDG_WLL_EVENT_ABORT:
-	case EDG_WLL_EVENT_CANCEL:
-	case EDG_WLL_EVENT_DONE:
 		edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
+		break;
+	case EDG_WLL_EVENT_CANCEL:
+		if (ev->cancel.status_code == EDG_WLL_CANCEL_DONE) 
+			edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
 		break;
 	default: break;
 	}
