@@ -942,7 +942,6 @@ int edg_wll_RegisterSubjobsProxy(
 		pjdl++; psubjob++;
 	}
 
-edg_wll_registersubjobsproxy_end:
 	edg_wll_SetLoggingJobProxy(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL);
 
 edg_wll_registersubjobsproxy_end:
