@@ -20,6 +20,36 @@
 
 	Revision history:
 	$Log$
+	Revision 1.39  2005/11/27 21:51:18  eronchie
+	Applied fix for bug 13928
+	
+	Revision 1.38  2005/11/22 12:13:47  eronchie
+	Removed one utils
+	
+	Revision 1.37  2005/11/04 14:39:20  akrenek
+	merge in the "lbonly" hack
+	
+	Revision 1.36.4.6  2006/02/06 12:10:00  akrenek
+	make proxy depend on logger explicitely
+	
+	Revision 1.36.4.5  2005/12/02 11:15:33  akrenek
+	resolved logger dependency conflict
+	
+	Revision 1.36.4.4  2005/12/02 10:04:14  jpospi
+	server depends on logger
+	
+	Revision 1.36.4.3  2005/11/28 10:39:08  akrenek
+	merge bug #13928 fix on the pre_cares branch
+	
+	Revision 1.36.4.2  2005/11/24 12:59:36  akrenek
+	server depends on bones
+	
+	Revision 1.36.4.1  2005/11/24 12:32:02  akrenek
+	merged in "lbonly"
+
+	Revision 1.39  2005/11/27 21:51:18  eronchie
+	Applied fix for bug 13928
+	
 	Revision 1.38  2005/11/22 12:13:47  eronchie
 	Removed one utils
 	
@@ -471,7 +501,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms-api-c, jp.primary, client-interface, ws-interface, common, logger">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms-api-c, jp.primary, client-interface, ws-interface, common, server-bones, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -487,7 +517,7 @@
 		</if>
 	</target>
 
-	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server">
+	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>

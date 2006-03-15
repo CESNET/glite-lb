@@ -22,6 +22,21 @@
 
 	Revision history:
 	$Log$
+	Revision 1.15  2005/11/27 21:51:18  eronchie
+	Applied fix for bug 13928
+	
+	Revision 1.14  2005/10/15 20:14:55  jpospi
+	remove duplicate lb.utils section
+	
+	Revision 1.13.2.1.2.1  2005/11/28 10:39:08  akrenek
+	merge bug #13928 fix on the pre_cares branch
+	
+	Revision 1.13.2.1  2005/10/17 16:27:48  akrenek
+	merged in the duplicate utils targed patch
+	
+	Revision 1.15  2005/11/27 21:51:18  eronchie
+	Applied fix for bug 13928
+	
 	Revision 1.14  2005/10/15 20:14:55  jpospi
 	remove duplicate lb.utils section
 	
