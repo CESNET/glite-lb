@@ -88,7 +88,7 @@ int handle_answers(edg_wll_Context context, int code, const char *text)
  * \param logline	IN formated ULM string
  *----------------------------------------------------------------------
  */
-static int edg_wll_DoLogEvent(
+int edg_wll_DoLogEvent(
 	edg_wll_Context context,
 	edg_wll_LogLine logline)
 {
@@ -151,7 +151,7 @@ edg_wll_DoLogEvent_end:
  * \param logline	IN formated ULM string
  *----------------------------------------------------------------------
  */
-static int edg_wll_DoLogEventProxy(
+int edg_wll_DoLogEventProxy(
 	edg_wll_Context context,
 	edg_wll_LogLine logline)
 {
@@ -227,7 +227,7 @@ edg_wll_DoLogEventProxy_end:
  * \param logline	IN formated ULM string
  *----------------------------------------------------------------------
  */
-static int edg_wll_DoLogEventDirect(
+int edg_wll_DoLogEventDirect(
 	edg_wll_Context context,
 	edg_wll_LogLine logline)
 {
@@ -942,6 +942,7 @@ int edg_wll_RegisterSubjobsProxy(
 		pjdl++; psubjob++;
 	}
 
+edg_wll_registersubjobsproxy_end:
 	edg_wll_SetLoggingJobProxy(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL);
 
 edg_wll_registersubjobsproxy_end:

@@ -72,19 +72,20 @@ CFLAGS:=${DEBUG} \
 	-I${glite_location}/include \
 	-I${expat_prefix}/include \
 	-I${ares_prefix}/include \
+	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
 
 
 CXXFLAGS:=${CFLAGS}
 
-GLOBUS_LIBS:=-L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour} \
-
-GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
-	-lglobus_common_${thrflavour} \
-	-lglobus_gssapi_gsi_${thrflavour}
+ifneq (${mysql_prefix},/usr)
+	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
+		mysqlib := -L${mysql_prefix}/lib/mysql
+	else
+		mysqlib := -L${mysql_prefix}/lib
+	endif
+endif
 
 ifneq (${expat_prefix},/usr)
 	EXPAT_LIBS:=-L${expat_prefix}/lib
@@ -94,8 +95,9 @@ EXPAT_LIBS := ${EXPAT_LIBS} -lexpat
 ARES_LIBS:=-L${ares_prefix}/lib \
 	-lares
 
-EXT_LIB:= ${EXPAT_LIBS} \
-    ${ARES_LIBS}
+EXT_LIB:= ${mysqlib} -lmysqlclient -lz\
+	${EXPAT_LIBS} \
+	${ARES_LIBS}
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
@@ -140,9 +142,9 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge lb_dump_exporter
-EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl lbmon
+EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl lbmon stresslog
 
-EXAMPLES_CL=user_jobs job_status
+EXAMPLES_CL=user_jobs job_status 
 FAKE_EXAMPLES:=job_log_fake
 
 MAN_GZ:=glite-lb-logevent.1.gz
@@ -183,16 +185,19 @@ ${THRPLUSLIB}: ${PLUSTHROBJS}
 	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${glite_location}/lib ${THRLIB}
 
 logevent: logevent.o args.o
-	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
+
+lbmon-db: lbmon-db.o
+	${LINK} -o $@ lbmon-db.o -lmysqlclient -lglite_lb_bkserver ${LIB} ${EXT_LIB} 
 
 ${TOOLS} ${EXAMPLES}: %: %.o
-	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
 
 ${EXAMPLES_CL}: %: %.o
-	${LINK} -o $@ $< ${LIB} ${COMMON_LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINK} -o $@ $< ${LIB} ${COMMON_LIB} ${EXT_LIB} 
 
 ${FAKE_EXAMPLES}: %: %.o ${FAKELIB}
-	${LINK} -o $@ $< ${FAKELIB} ${TEST_LIBS} ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINK} -o $@ $< ${FAKELIB} ${TEST_LIBS} ${EXT_LIB} 
 
 ${TOOLS}: ${LIB}
 
@@ -241,7 +246,7 @@ ${MAN_GZ}: ${MAN}
 default: all
 
 
-compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
+compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent lbmon-db ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
 
 examples: ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}
 
@@ -253,7 +258,7 @@ check.producer: producer_test
 	./producer_test
 
 producer_test: producer_test.o prod_proto_test.o
-	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+ ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+ ${EXT_LIB}
 
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${TEST_INC} ${GLOBUSINC} $<
@@ -287,15 +292,16 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/examples
-	for p in logevent; do \
+	for p in logevent ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 	for p in ${TOOLS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
 	done
-	for p in ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}; do \
+	for p in ${EXAMPLES} lbmon-db ${EXAMPLES_CL} ${sh_PROGS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
+	${INSTALL} -m 755 ${top_srcdir}/examples/export.sh "${PREFIX}/examples/glite-lb-export.sh"
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 clean:

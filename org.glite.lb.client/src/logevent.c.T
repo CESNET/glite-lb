@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	char	*ff = NULL, *jobid_s = NULL;
 	char	*src_instance = NULL;
 	int	err = 0/*,i,done = 0,fmtlen*/;
-	int     pri = 0;
+	int     pri = 0, noinc = 0;
 	int		use_lbproxy = 0;
 	char	*lbproxy_user = NULL;
 	char	*lbproxy_store_sock = NULL;
@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
 	    { EDG_WLL_ARGS_BOOL, "d", "debug mode", "enable debug mode", &deb },
 #ifdef ENABLE_REASON_LENGTH
 	    { EDG_WLL_ARGS_INT, "l", "reason-length", "extend 'reason' string to length (debug only)", &elength, 0, 1000000000 },
+	    { EDG_WLL_ARGS_BOOL, "I", "dont-increment", "don't increment initial seqence code", &noinc },
 #endif
 @@@{
     my %typetab = (
@@ -186,6 +187,8 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 	}
+
+	if (noinc) edg_wll_SetSequenceCode(ctx,code,EDG_WLL_SEQ_NORMAL);
 
 #ifdef ENABLE_REASON_LENGTH
 	if (elength > 200000000) {
