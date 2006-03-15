@@ -20,9 +20,6 @@
 
 	Revision history:
 	$Log$
-	Revision 1.40  2006/03/15 17:33:24  akrenek
-	merge of 1.5 branch
-	
 	Revision 1.39  2005/11/27 21:51:18  eronchie
 	Applied fix for bug 13928
 	
@@ -472,7 +469,7 @@
 		</if>
 	</target>
 
-	<target name="common" unless="setenvonly" depends="envset, globus, expat, c-ares, wms-utils.jobid, security.gsoap-plugin, client-interface">
+	<target name="common" unless="setenvonly" depends="envset, globus, expat, ares, wms-utils.jobid, security.gsoap-plugin, client-interface">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -488,7 +485,7 @@
 		</if>
 	</target>
 
-	<target name="client" unless="setenvonly" depends="envset, globus, expat, c-ares, client-interface, common">
+	<target name="client" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -504,7 +501,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus, expat, c-ares, mysql, gsoap, security.voms-api-c, jp.primary, client-interface, ws-interface, common, server-bones, logger">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms-api-c, jp.primary, client-interface, ws-interface, common, server-bones, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -520,7 +517,7 @@
 		</if>
 	</target>
 
-	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, c-ares, client-interface, common, server, logger">
+	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -536,7 +533,7 @@
 		</if>
 	</target>
 
-	<target name="logger" unless="setenvonly" depends="envset, globus, expat, c-ares, client-interface, common">
+	<target name="logger" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -552,7 +549,7 @@
 		</if>
 	</target>
 
-	<target name="utils" unless="setenvonly" depends="envset, globus, expat, c-ares, client-interface, common, server">
+	<target name="utils" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server">
 		<if>
 			<isset property="small.memory"/>
 			<then>

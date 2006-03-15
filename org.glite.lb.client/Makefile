@@ -15,6 +15,7 @@ globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
 expat_prefix=/opt/expat
+ares_prefix=/opt/ares
 
 CC:=gcc
 CXX:=g++
@@ -70,6 +71,7 @@ CFLAGS:=${DEBUG} \
 	-I${stagedir}/include \
 	-I${glite_location}/include \
 	-I${expat_prefix}/include \
+	-I${ares_prefix}/include \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
@@ -90,8 +92,12 @@ ifneq (${expat_prefix},/usr)
 endif
 EXPAT_LIBS := ${EXPAT_LIBS} -lexpat
 
+ARES_LIBS:=-L${ares_prefix}/lib \
+	-lares
+
 EXT_LIB:= ${mysqlib} -lmysqlclient -lz\
-	${EXPAT_LIBS}
+	${EXPAT_LIBS} \
+	${ARES_LIBS}
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include

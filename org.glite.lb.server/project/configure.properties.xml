@@ -20,9 +20,6 @@
 
 	Revision history:
 	$Log$
-	Revision 1.9  2006/03/15 18:12:21  akrenek
-	merge 1.5
-	
 	Revision 1.8.4.2  2006/02/20 09:14:30  zsalvet
 	Revert unfinished changes committed by mistake.
 	
@@ -95,7 +92,7 @@ globus_prefix=${with.globus.prefix}
 thrflavour=${with.globus.thr.flavor}
 nothrflavour=${with.globus.nothr.flavor}
 expat_prefix=${with.expat.prefix}
-cares_prefix=${with.c-ares.prefix}
+ares_prefix=${with.ares.prefix}
 mysql_prefix=${with.mysql.prefix}
 mysql_version=${ext.mysql.version}
 cppunit=${with.cppunit.prefix}

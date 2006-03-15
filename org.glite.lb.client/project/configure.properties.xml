@@ -20,9 +20,6 @@
 
 	Revision history:
 	$Log$
-	Revision 1.4  2006/03/15 17:59:04  akrenek
-	merge 1.5
-	
 	Revision 1.3.14.1  2006/03/08 11:49:31  jpospi
 	added mysql dependency
 	
@@ -59,6 +56,7 @@ globus_prefix=${with.globus.prefix}
 thrflavour=${with.globus.thr.flavor}
 nothrflavour=${with.globus.nothr.flavor}
 expat_prefix=${with.expat.prefix}
+ares_prefix=${with.ares.prefix}
 mysql_prefix=${with.mysql.prefix}
 mysql_version=${ext.mysql.version}
 cppunit_prefix=${with.cppunit.prefix}
