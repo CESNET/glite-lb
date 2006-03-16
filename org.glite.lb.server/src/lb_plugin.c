@@ -387,6 +387,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	}
 
 	if (av[0].value) {
+		for (i=0; av[i].name; i++) av[i].origin = GLITE_JP_ATTR_ORIG_FILE;
 		*attrval = av;
 		return 0;
 	}
