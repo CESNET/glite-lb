@@ -209,17 +209,10 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
         memset(&err,0,sizeof err);
         err.source = __FUNCTION__;
 
-        if (strcmp(attr, GLITE_JP_LB_user) == 0 ||
-	    strcmp(attr, GLITE_JP_ATTR_OWNER) == 0) {
+        if (strcmp(attr, GLITE_JP_LB_user) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
 		av[0].value = check_strdup(h->status.owner);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	} else if (strcmp(attr, GLITE_JP_ATTR_JOBID) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = edg_wlc_JobIdUnparse(h->status.jobId);
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_VO) == 0 ||
