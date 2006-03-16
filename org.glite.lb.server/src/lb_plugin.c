@@ -354,7 +354,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 //		err.desc = "Not implemented yet.";
 		trio_asprintf(&err.desc,"Attribute '%s' not implemented yet.",attr);
 		return glite_jp_stack_error(ctx,&err);
-	} else if (strncmp(attr, sizeof(GLITE_JP_LBTAG_NS)-1, GLITE_JP_LBTAG_NS) == 0) {
+	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, sizeof(GLITE_JP_LBTAG_NS)-1) == 0) {
 		tag = strrchr(attr, ':');
 		if (h->events && tag) {
 			tag++;
