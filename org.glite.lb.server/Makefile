@@ -17,6 +17,7 @@ thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 cares_prefix=/opt/c-ares
 gsoap_prefix=/opt/gsoap
+classads_prefix=/opt/classads
 
 -include Makefile.inc
 
@@ -61,6 +62,7 @@ CFLAGS:= \
 	-I${expat_prefix}/include \
 	-I${cares_prefix}/include \
 	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
+	-I${classads_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
@@ -117,9 +119,14 @@ endif
 #	-lvomsc${vomsflavour} \
 #	${GLOBUS_LIBS}
 
+ifneq (${classads_prefix},/usr)
+	classadslib := -L${classads_prefix}/lib -lclassad
+endif
+
 EXT_LIBS:=  \
 	${mysqlib} -lmysqlclient -lz\
 	${GRIDSITE_LIBS} \
+	${classadslib} \
 	-lvomsc${vomsflavour}
 
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
@@ -191,7 +198,7 @@ LIB_OBJS_BK:= \
 STATIC_LIB_BK:=libglite_lb_bkserver.a
 
 glite_lb_bkserverd: ${NSMAP} ${BKSERVER_OBJS}
-	${LINK} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
+	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
 glite_lb_bkindex: ${INDEX_OBJS}
 	${LINK} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}

@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.10  2006/03/15 18:13:51  akrenek
+	cares
+	
 	Revision 1.9  2006/03/15 18:12:21  akrenek
 	merge 1.5
 	
@@ -101,6 +104,7 @@ mysql_version=${ext.mysql.version}
 cppunit=${with.cppunit.prefix}
 gsoap_prefix=${with.gsoap.prefix}
 gsoap_version=${ext.gsoap.version}
+classads_prefix=${with.classads.prefix}
 			</echo>
 	    </target>
 	</project>
