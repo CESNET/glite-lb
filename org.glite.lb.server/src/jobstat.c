@@ -546,8 +546,6 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto cleanup;
 	}
 
-	if (ctx->rgma_export) write2rgma_status(&stat->pub);
-
 cleanup:
 	free(stmt); 
 	free(jobid_md5); free(stat_enc);
@@ -630,6 +628,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 	char		*errstring = NULL;
 	intJobStat	jobstat;
 	edg_wll_JobStat	oldstat;
+	char 		*oldstat_rgmaline = NULL;
 
 	memset(&oldstat,0,sizeof oldstat);
 	if (seq != 0) {
@@ -637,6 +636,9 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 	}
 	if (seq != 0 && !intErr) {
 		edg_wll_CpyStatus(&ijsp->pub,&oldstat);
+
+		if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(&ijsp->pub);
+
 		res = processEvent(ijsp, e, seq, be_strict, &errstring);
 		if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
 			edg_wll_FreeStatus(&oldstat);
@@ -644,6 +646,9 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		}
 		edg_wll_StoreIntState(ctx, ijsp, seq);
 		edg_wll_UpdateStatistics(ctx,&oldstat,e,&ijsp->pub);
+
+		if (ctx->rgma_export) write2rgma_chgstatus(&ijsp->pub, oldstat_rgmaline);
+
 		if (stat_out) {
 			memcpy(stat_out,&ijsp->pub,sizeof *stat_out);
 			destroy_intJobStat_extension(ijsp);
@@ -658,6 +663,8 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		 * Does anybody care? */
 
 		edg_wll_UpdateStatistics(ctx,NULL,e,&jobstat.pub);
+
+		if (ctx->rgma_export) write2rgma_status(&jobstat.pub);
 
 		if (stat_out) {
 			memcpy(stat_out,&jobstat.pub,sizeof *stat_out);

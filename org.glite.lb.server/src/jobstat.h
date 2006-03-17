@@ -60,6 +60,8 @@ intJobStat* dec_intJobStat(char *, char **);
 char *enc_intJobStat(char *, intJobStat* );
 
 void write2rgma_status(edg_wll_JobStat *);
+void write2rgma_chgstatus(edg_wll_JobStat *, char *);
+char* write2rgma_statline(edg_wll_JobStat *);
 
 int before_deep_resubmission(const char *, const char *);
 int same_branch(const char *, const char *);
