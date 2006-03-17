@@ -630,7 +630,7 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 				free(aux);
 			}
 			else if (ec[m][n].op == EDG_WLL_QUERY_OP_EQUAL) {
-				trio_asprintf(&out, "(e.time_stamp = %s AND e.usec = %d)",
+				trio_asprintf(&conds, "(e.time_stamp = %s AND e.usec = %d)",
 						dbt, ec[m][n].value.t.tv_usec);
 			}
 			else
