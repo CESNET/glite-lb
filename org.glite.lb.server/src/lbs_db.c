@@ -84,6 +84,10 @@ int edg_wll_ExecStmt(edg_wll_Context ctx,char *txt,edg_wll_Stmt *stmt)
 	if (stmt) {
 		*stmt = NULL;
 	}
+/* 
+fputs(txt,stderr);
+putc(10,stderr);
+*/
 
 	while (retry_nr == 0 || do_reconnect) {
 		do_reconnect = 0;
