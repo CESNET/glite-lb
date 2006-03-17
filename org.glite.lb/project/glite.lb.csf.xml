@@ -22,6 +22,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.16  2006/03/15 17:33:24  akrenek
+	merge of 1.5 branch
+	
 	Revision 1.15  2005/11/27 21:51:18  eronchie
 	Applied fix for bug 13928
 	
@@ -247,13 +250,13 @@
 	<!-- All development tools -->
  	<target name="devtools" depends="oscheck,
 					evaluate.cvs.tags,
- 					 				 junitcheck,
-					 				 junit,
- 									 chkstyle,
- 									 jalopy,
- 									 ant-contrib,
- 									 cpptasks,
- 									 egee-ant-ext"
+					junitcheck,
+					junit,
+					chkstyle,
+					jalopy,
+					ant-contrib,
+					cpptasks,
+					egee-ant-ext"
  			description="Get development tools into repository."/>		
 
 	<!-- =====================================================
@@ -261,7 +264,10 @@
 		 ===================================================== -->
 	
 	<!--  All external libraries -->
- 	<target name="external" depends="oscheck, evaluate.cvs.tags, globus"
+ 	<target name="external" depends="oscheck, 
+					evaluate.cvs.tags, 
+					classads, 
+					globus"
  			description="Install external packages"/>
  	
 	<!-- =====================================================
