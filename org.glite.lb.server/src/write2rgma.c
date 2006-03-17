@@ -149,15 +149,12 @@ static void write2rgma_line(char *line, int old_style)
 	return;
 }
 
-void write2rgma_status(edg_wll_JobStat *stat)
+
+char* write2rgma_statline(edg_wll_JobStat *stat)
 {
 	char *stmt = NULL;
 	char *string_jobid, *string_stat, *string_server;
 	char *string_vo = NULL;
-	int lcgmon = 0;
-
-	if (rgma_fd < -1) return;
-	if (getenv("GLITE_WMS_LCGMON_FILE")) lcgmon = 1;
 
 	string_jobid = edg_wlc_JobIdUnparse(stat->jobId);
 	string_stat = edg_wll_StatToString(stat->state);
@@ -204,13 +201,46 @@ void write2rgma_status(edg_wll_JobStat *stat)
 		(stat->reason) ? (stat->reason) : ""
 	);
 				
-	if (stmt) write2rgma_line(stmt, !lcgmon);
-
 	free(string_vo);
 	free(string_jobid);
 	free(string_stat);
 	free(string_server);
-	free(stmt);
+	
+	return stmt;
+}
+
+void write2rgma_status(edg_wll_JobStat *stat)
+{
+	char *line;
+	int lcgmon = 0;
+	
+	if (rgma_fd < -1) return;
+
+	line = write2rgma_statline(stat);
+	if (line) {
+		if (getenv("GLITE_WMS_LCGMON_FILE")) lcgmon = 1;
+		write2rgma_line(line, !lcgmon);
+	}
+	free(line);
+}
+
+/* Export status record only if new status line is different from
+   previous one. free() prev_statline parameter. */
+
+void write2rgma_chgstatus(edg_wll_JobStat *stat, char *prev_statline)
+{
+	char *line;
+	int lcgmon = 0;
+	
+	if (rgma_fd < -1) return;
+
+	line = write2rgma_statline(stat);
+	if (line && (!prev_statline || strcmp(line, prev_statline))) {
+		if (getenv("GLITE_WMS_LCGMON_FILE")) lcgmon = 1;
+		write2rgma_line(line, !lcgmon);
+	}
+	free(line);
+	free(prev_statline);
 }
 
 #ifdef TEST
