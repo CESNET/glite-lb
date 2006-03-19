@@ -58,6 +58,8 @@
 
 
 
+	<xs:element name="jobId" type="xs:string" />
+
 	<xs:element name="user" type="xs:string">
 		<xs:documentation>Job owner according to LB</xs:documentation>
 	</xs:element>
