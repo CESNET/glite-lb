@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 		fprintf(stdout,"<lbd:jobRecord\n");
 		fprintf(stdout,"\txmlns:lbd=\"http://glite.org/wsdl/types/lbdump\"\n");
 		
-		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_ATTR_JOBID, &attrval);
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_jobId, &attrval);
 		if (attrval) {
 			fprintf(stdout,"\tjobid=\"%s\"\n", attrval->value);
 			free_attrs(attrval);
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 		fprintf(stdout,">\n");
 		/* /header */
 		
-		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_ATTR_OWNER, &attrval);
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_user, &attrval);
 		if (attrval) {
 			fprintf(stdout,"\t<user>%s</user>\n", attrval->value);
 			free_attrs(attrval);
