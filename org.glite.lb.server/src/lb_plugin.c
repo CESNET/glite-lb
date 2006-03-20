@@ -416,14 +416,19 @@ static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status) {
         
         js = calloc(1, sizeof(intJobStat));
 	init_intJobStat(js);
-        
+
+	/* TODO:
+	edg_wll_SortEvents(events);
+        */
+
 	i = 0;
         while (events[i])  
         {
-		/* XXX: job owner not filled from events normally */
-		if (events[i]->any.type == EDG_WLL_EVENT_REGJOB)
+		/* XXX: job owner and jobId not filled from events normally */
+		if (events[i]->any.type == EDG_WLL_EVENT_REGJOB) {
 			js->pub.owner = check_strdup(events[i]->any.user);
-
+			js->pub.jobId = events[i]->any.jobId;
+		}
 		if (processEvent(js, events[i], 0, be_strict, &errstring) == RET_FATAL) {
 			goto err;
 		}
