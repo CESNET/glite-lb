@@ -594,8 +594,8 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 		 * with all conditions in same "or clause"
 	 	 */
 		for ( n = 0; ec[m][n].attr; n++ )
-			if (	(ec[m][n].attr == EDG_WLL_QUERY_ATTR_USERTAG)
-				 || (ec[m][n].attr == EDG_WLL_QUERY_ATTR_INSTANCE) )
+			if ( 	/* (ec[m][n].attr == EDG_WLL_QUERY_ATTR_USERTAG) || */
+				(ec[m][n].attr == EDG_WLL_QUERY_ATTR_INSTANCE) )
 				break;
 		if ( ec[m][n].attr )
 			continue;
@@ -675,6 +675,15 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 				trio_asprintf(&conds, "e.host %s '%|Ss'", opToString(ec[m][n].op), ec[m][n].value.c);
 			break;
 
+		case EDG_WLL_QUERY_ATTR_USERTAG:
+			if ( conds )
+			{
+				trio_asprintf(&out, "%s OR e.code = %d", conds, EDG_WLL_EVENT_USERTAG);
+				free(conds); conds = out;
+			}
+			else
+				trio_asprintf(&conds, "e.code = %d", EDG_WLL_EVENT_USERTAG);
+			break;
 		case EDG_WLL_QUERY_ATTR_EVENT_TYPE:
 			if ( conds )
 			{
@@ -1082,7 +1091,8 @@ static int match_flesh_conditions(const edg_wll_Event *e,const edg_wll_QueryRec 
 			}
 			else if ( ec[i][j].attr == EDG_WLL_QUERY_ATTR_USERTAG )
 			{
-				if (	!strcmp(ec[i][j].attr_id.tag,e->userTag.name) 
+				if ( e->any.type == EDG_WLL_EVENT_USERTAG && 
+					!strcmp(ec[i][j].attr_id.tag,e->userTag.name) 
 					 && cmp_string(e->userTag.value,ec[i][j].op,ec[i][j].value.c))
 					break;
 			}
