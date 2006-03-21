@@ -427,7 +427,9 @@ static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status) {
 		/* XXX: job owner and jobId not filled from events normally */
 		if (events[i]->any.type == EDG_WLL_EVENT_REGJOB) {
 			js->pub.owner = check_strdup(events[i]->any.user);
-			js->pub.jobId = events[i]->any.jobId;
+			if (edg_wlc_JobIdDup(events[i]->any.jobId,&js->pub.jobId)) {
+				goto err;
+			}
 		}
 		if (processEvent(js, events[i], 0, be_strict, &errstring) == RET_FATAL) {
 			goto err;
