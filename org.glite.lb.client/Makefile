@@ -136,7 +136,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge lb_dump_exporter
-EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl lbmon stresslog
+EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog
 
 EXAMPLES_CL=user_jobs job_status 
 FAKE_EXAMPLES:=job_log_fake
@@ -180,9 +180,6 @@ ${THRPLUSLIB}: ${PLUSTHROBJS}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
-
-lbmon-db: lbmon-db.o
-	${LINK} -o $@ lbmon-db.o -lmysqlclient -lglite_lb_bkserver ${LIB} ${EXT_LIB} 
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
@@ -292,7 +289,7 @@ install:
 	for p in ${TOOLS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
 	done
-	for p in ${EXAMPLES} lbmon-db ${EXAMPLES_CL} ${sh_PROGS} ; do \
+	for p in ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
 	${INSTALL} -m 755 ${top_srcdir}/examples/export.sh "${PREFIX}/examples/glite-lb-export.sh"
