@@ -37,10 +37,6 @@ CFLAGS:= \
 	-D_GNU_SOURCE
 LDFLAGS:=-L${stagedir}/lib
 
-JP_LIBS:=-lglite_jp_common -lglite_jp_trio
-TEST_LIBS:=-L${cppunit}/lib -lcppunit
-TEST_INC:=-I${cppunit}/include
-
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS} 
 SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
@@ -65,35 +61,35 @@ ifneq (${expat_prefix},/usr)
 	expatlib := -L${expat_prefix}/lib
 endif
 
-vomsflavour := _${nothrflavour}
-ifeq (${nothrflavour},gcc32) 
-	vomsflavour :=
-endif 
-ifeq (${nothrflavour},gcc32dbg)
-	vomsflavour :=
-endif
-
 EXT_LIBS:= \
 	${mysqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
 	${GRIDSITE_LIBS} \
 	${GLOBUS_LIBS}
+COMMON_LIB:=-lglite_lb_common_${nothrflavour}
+CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
+BKSERVER_LIB:=-lglite_lb_bkserver 
+JP_LIBS:=-lglite_jp_common -lglite_jp_trio
 
-STATISTICS_OBJS:=lb_statistics.o
+UTILS:=statistics mon mon-db
 
-default all: compile
+default: all
 
-compile: glite-lb-statistics
+compile all: ${UTILS}
 
-glite-lb-statistics: ${STATISTICS_OBJS}
-	${LINK} -rdynamic -o $@ ${STATISTICS_OBJS} ${JP_LIBS} ${EXT_LIBS} ${GLOBUS_LIBS}
+%.o: %.c 
+	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
+
+mon: mon.o
+	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} 
+
+mon-db: mon-db.o
+	${LINK} -o $@ $< ${COMMON_LIB} ${BKSERVER_LIB} ${EXT_LIBS} 
+
+statistics: statistics.o
+	${LINK} -rdynamic -o $@ $< ${JP_LIBS} ${EXT_LIBS}
 
 check: compile 
-
-test_coverage:
-	-mkdir coverage
-	cd coverage && $(MAKE) -f ../Makefile top_srcdir=../../ COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage" check
-	cd coverage && for i in `echo ${INDEX_OBJS} ${BKSERVER_OBJS} | tr ' ' '\012' | sort -u`; do gcov $$i ; done
 
 doc:
 
@@ -117,8 +113,11 @@ install:
 	-mkdir -p ${PREFIX}/bin 
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/lib
-	${INSTALL} -m 755 glite-lb-statistics ${PREFIX}/bin
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+
+	for p in ${UTILS} ; do \
+		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
+	done
 
 	if [ x${DOSTAGE} != xyes ]; then \
 		${INSTALL} -m 755 ${stagedir}/lib/glite_lb_plugin.so ${PREFIX}/lib; \

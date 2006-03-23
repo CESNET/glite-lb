@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.2  2005/10/15 00:59:34  jpospi
+	Added LB Statistics
+	
 	Revision 1.1.1.1  2005/09/30 15:17:04  jpospi
 	New org.glite.lb.utils component
 	
@@ -107,6 +110,6 @@
 	     ========================================= -->
 
 	<property name="build.package.summary" value="L&amp;B utils" />
-	<property name="build.package.description" value="L&amp;B Statistics tool." />
+	<property name="build.package.description" value="L&amp;B Statistics and L&amp;B Monitoring utilities." />
 
 </project>		
