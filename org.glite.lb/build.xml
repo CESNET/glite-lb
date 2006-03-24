@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.41  2006/03/15 17:35:35  akrenek
+	cares
+	
 	Revision 1.40  2006/03/15 17:33:24  akrenek
 	merge of 1.5 branch
 	
@@ -552,7 +555,7 @@
 		</if>
 	</target>
 
-	<target name="utils" unless="setenvonly" depends="envset, globus, expat, c-ares, client-interface, common, server">
+	<target name="utils" unless="setenvonly" depends="envset, globus, expat, c-ares, client, server">
 		<if>
 			<isset property="small.memory"/>
 			<then>
