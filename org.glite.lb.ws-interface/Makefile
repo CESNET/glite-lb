@@ -16,16 +16,16 @@ SUFFIXES = .T
 
 VPATH=${top_srcdir}/src
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
-XSLTPROC:=xsltproc
+XSLTPROC:=xsltproc --nonet
 TIDY=tidy
-XMLLINT:=xmllint
+XMLLINT:=xmllint --nonet
 docbookxls:=http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl
 
 STAGETO=interface
 
 WSDL=LB.wsdl LBTypes.wsdl
 
-all compile: ${WSDL}
+all compile: ${WSDL} LB.html
 
 check: 
 	@echo No unit test required for interface-only module.
@@ -50,6 +50,7 @@ install:
 	-mkdir -p ${PREFIX}/${STAGETO}
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	install -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	install -m 644 LB.html ${PREFIX}/share/doc/${package}-${version}
 # install the generated stuff instead
 #	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
 	install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
