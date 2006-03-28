@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
@@ -9,12 +10,14 @@
 
 #include "glite/lb/consumer.h"
 
+#define DEFAULT_QUERY_TIME	3600
+
 static void usage(char *);
-static int query_all(edg_wll_Context, int, struct timeval, edg_wll_JobStat **, edg_wlc_JobId **);
+static int query_all(edg_wll_Context, int, struct timeval, edg_wll_JobStat **);
 static void dgerr(edg_wll_Context,char *);
 
 static char 	*myname = NULL;
-static int	debug = 0, verbose = 0, seconds = 3600, lbproxy = 0;
+static int	debug = 0, verbose = 0, seconds = DEFAULT_QUERY_TIME, lbproxy = 0;
 static const char rcsid[] = "@(#)$Id$";
 
 static struct option const long_options[] = {
@@ -30,9 +33,8 @@ static struct option const long_options[] = {
 int main(int argc,char *argv[]) {
 	edg_wll_Context		ctx;
 	edg_wll_JobStat		*statesOut = NULL;
-	edg_wlc_JobId		*jobsOut = NULL;
 	struct timeval time_now;
-	int state[3] = { EDG_WLL_JOB_CLEARED, EDG_WLL_JOB_ABORTED, EDG_WLL_JOB_CANCELLED };
+	int state[4] = { EDG_WLL_JOB_CLEARED, EDG_WLL_JOB_ABORTED, EDG_WLL_JOB_CANCELLED, EDG_WLL_JOB_SUBMITTED };
 
 	int i, j, result, opt;
 	result = opt = 0;
@@ -45,7 +47,7 @@ int main(int argc,char *argv[]) {
 		"V"  /* version */
 		"v"  /* verbose */
 		"d"  /* debug */
-		"t"  /* time [in seconds] */
+		"t:" /* time [in seconds] */
 		"x", /* lbproxy */ 
 		long_options, (int *) 0)) != EOF) {
 
@@ -69,37 +71,40 @@ int main(int argc,char *argv[]) {
 
 	for ( j = 0; j < sizeof(state)/sizeof(state[0]); j++) {
 		char *status = edg_wll_StatToString(state[j]);
-		int min,avg,max,nJobs;
+		int min,avg,max,nJobs,nStates;
 		
-		min = avg = max = nJobs = 0;
+		avg = max = nJobs = nStates = 0;
+		min = INT_MAX;
 		
 		fprintf(stdout,"Jobs that entered state %s in the last %d seconds: \n",status,seconds);
 
-		if ( (result = query_all(ctx, state[j], time_now, &statesOut, &jobsOut)) ) {
+		if ( (result = query_all(ctx, state[j], time_now, &statesOut)) ) {
 			dgerr(ctx, "edg_wll_QueryJobs");
 		} else {
-
-			if ( jobsOut ) {
-				for (i=0; jobsOut[i]; i++) { 
-					if (jobsOut[i]) edg_wlc_JobIdFree(jobsOut[i]); 
+			if ( statesOut ) {
+				for (i=0; statesOut[i].state; i++) {
+					int val = statesOut[0].stateEnterTime.tv_sec - statesOut[0].stateEnterTimes[1+EDG_WLL_JOB_SUBMITTED];
+					avg += val;
+					if (val < min) min = val;
+					if (val > max) max = val;
+					
+/* FIXME:
+					if (statesOut[i].state) edg_wll_FreeStatus(&statesOut[i]);
+*/
 				}
 				nJobs = i;
-				free(jobsOut);
-			}
-			if ( statesOut ) {
-/* FIXME:
-				for (i=0; statesOut[i].state; i++) {
-					if (statesOut[i].state) edg_wll_FreeStatus(&statesOut[i]);
-				}
-*/
 				free(statesOut);
 			}
 
 		}
+		if (nJobs > 0) avg = avg / nJobs;
+		if (min == INT_MAX) min = 0;
 		fprintf(stdout,"number of jobs: %d\n",nJobs);
-		fprintf(stdout,"minimum time spent in the system: %d\n",min);
-		fprintf(stdout,"average time spent in the system: %d\n",avg);
-		fprintf(stdout,"maximum time spent in the system: %d\n",max);
+		if (state[j] != EDG_WLL_JOB_SUBMITTED) {
+			fprintf(stdout,"minimum time spent in the system: %d seconds\n",min);
+			fprintf(stdout,"average time spent in the system: %d seconds\n",avg);
+			fprintf(stdout,"maximum time spent in the system: %d seconds\n",max);
+		}
 		fprintf(stdout,"\n\n");
 
 		if (status) free(status);
@@ -113,11 +118,14 @@ int main(int argc,char *argv[]) {
 
 static void
 usage(char *name) {
-	fprintf(stderr,"Usage: %s [-x]\n", name);
+	fprintf(stdout, "Usage: %s [-x] [-t time]\n"
+			"-h, --help		display this help and exit\n"
+			"-t, --time		querying time in seconds from now to the past [deault %d]\n",
+			name, DEFAULT_QUERY_TIME);
 }
 
 static int
-query_all(edg_wll_Context ctx, int query_status, struct timeval query_time, edg_wll_JobStat **statesOut, edg_wlc_JobId **jobsOut) {
+query_all(edg_wll_Context ctx, int query_status, struct timeval query_time, edg_wll_JobStat **statesOut) {
 	edg_wll_QueryRec        jc[3];
 	int			ret;
 
@@ -136,7 +144,7 @@ query_all(edg_wll_Context ctx, int query_status, struct timeval query_time, edg_
 	jc[1].value2.t.tv_usec = query_time.tv_usec;
 	jc[2].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 
-	if ( (ret = edg_wll_QueryJobs(ctx, jc, 0, jobsOut, statesOut)) ) {
+	if ( (ret = edg_wll_QueryJobs(ctx, jc, 0, NULL, statesOut)) ) {
 		if ( ret == E2BIG ) {
 			int r;
 			if ( edg_wll_GetParam(ctx, EDG_WLL_PARAM_QUERY_RESULTS, &r) ) return ret;
