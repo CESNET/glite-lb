@@ -71,9 +71,9 @@ int main(int argc,char *argv[]) {
 
 	for ( j = 0; j < sizeof(state)/sizeof(state[0]); j++) {
 		char *status = edg_wll_StatToString(state[j]);
-		int min,avg,max,nJobs,nStates;
+		int min,avg,max,nJobs;
 		
-		avg = max = nJobs = nStates = 0;
+		avg = max = nJobs = 0;
 		min = INT_MAX;
 		
 		fprintf(stdout,"Jobs that entered state %s in the last %d seconds: \n",status,seconds);
@@ -83,29 +83,29 @@ int main(int argc,char *argv[]) {
 		} else {
 			if ( statesOut ) {
 				for (i=0; statesOut[i].state; i++) {
-					int val = statesOut[0].stateEnterTime.tv_sec - statesOut[0].stateEnterTimes[1+EDG_WLL_JOB_SUBMITTED];
+					int val = statesOut[0].stateEnterTime.tv_sec 
+						- statesOut[0].stateEnterTimes[1+EDG_WLL_JOB_SUBMITTED];
+
 					avg += val;
 					if (val < min) min = val;
 					if (val > max) max = val;
 					
-/* FIXME:
-					if (statesOut[i].state) edg_wll_FreeStatus(&statesOut[i]);
-*/
+					edg_wll_FreeStatus(&statesOut[i]);
 				}
 				nJobs = i;
 				free(statesOut);
 			}
+			if (nJobs > 0) avg = avg / nJobs;
+			if (min == INT_MAX) min = 0;
 
+			fprintf(stdout,"number of jobs: %d\n",nJobs);
+			if (state[j] != EDG_WLL_JOB_SUBMITTED) {
+				fprintf(stdout,"minimum time spent in the system: %d seconds\n",min);
+				fprintf(stdout,"average time spent in the system: %d seconds\n",avg);
+				fprintf(stdout,"maximum time spent in the system: %d seconds\n",max);
+			}
+			fprintf(stdout,"\n\n");
 		}
-		if (nJobs > 0) avg = avg / nJobs;
-		if (min == INT_MAX) min = 0;
-		fprintf(stdout,"number of jobs: %d\n",nJobs);
-		if (state[j] != EDG_WLL_JOB_SUBMITTED) {
-			fprintf(stdout,"minimum time spent in the system: %d seconds\n",min);
-			fprintf(stdout,"average time spent in the system: %d seconds\n",avg);
-			fprintf(stdout,"maximum time spent in the system: %d seconds\n",max);
-		}
-		fprintf(stdout,"\n\n");
 
 		if (status) free(status);
 
