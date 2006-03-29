@@ -19,7 +19,7 @@ gsoap_prefix=/opt/gsoap
 
 -include Makefile.inc
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test
+VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
 CC=gcc
 DEBUG:=-g -O0 -Wall
@@ -73,9 +73,13 @@ JP_LIBS:=-lglite_jp_common -lglite_jp_trio
 
 UTILS:=statistics mon mon-db
 
+MAN_GZ:=glite-lb-mon.1.gz glite-lb-mon-db.1.gz
+MAN = $(MAN_GZ:.gz=)
+
+
 default: all
 
-compile all: ${UTILS}
+compile all: ${UTILS} ${MAN_GZ}
 
 %.o: %.c 
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
@@ -91,7 +95,11 @@ statistics: statistics.o
 
 check: compile 
 
-doc:
+doc: ${MAN_GZ}
+
+${MAN_GZ}: ${MAN}
+	cp $? .
+	gzip -f $(notdir $?)
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
@@ -111,9 +119,12 @@ distbin:
         
 install:
 	-mkdir -p ${PREFIX}/bin 
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/lib
+	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/doc/README* ${PREFIX}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 	for p in ${UTILS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
@@ -124,6 +135,7 @@ install:
 	fi
 
 clean:
+	rm -fv ${UTILS} ${MAN_GZ} *.{lo,o}
 
 %.o: %.c
 	${COMPILE} -c $<

@@ -1,0 +1,65 @@
+LB monitoring tools
+===================
+
+GLITE-LB-MON
+------------
+NAME
+       glite-lb-mon - program for monitoring the number of jobs on the LB server and their several statistics
+
+
+SYNOPSIS
+       glite-lb-mon [-t time]
+
+DESCRIPTION
+       glite-lb-mon is a low-level program for monitoring the the number of jobs on the LB server and their several statistics.
+       Values like minimum, average and maximum time spent in the system are calulated for jobs that entered  the  final  state
+       (Aborted,  Cleared,  Cancelled) in specific time (default last hour). Also number of jobs that entered the system during
+       this time is calculated.
+
+OPTIONS
+       -t time, --time=time
+              querying time in seconds from now to the past [deault 3600]
+
+ENVIRONMENT
+       EDG_WL_QUERY_SERVER
+              set this environment variable to specify the LB server address to query
+
+FILES
+       A special bkindex configuration needed. The following time indices must be defined:
+
+            [ type = "time"; name = "submitted" ],
+            [ type = "time"; name = "cleared" ],
+            [ type = "time"; name = "aborted" ],
+            [ type = "time"; name = "cancelled" ],
+
+
+GLITE-LB-MON-DB
+---------------
+NAME
+       glite-lb-mon-db - program for monitoring the number of jobs in the LB system
+
+SYNOPSIS
+       glite-lb-mon-db [-m dbstring]
+
+DESCRIPTION
+       glite-lb-mon-db  is a low-level program for monitoring the the number of jobs in the LB system.  Using the LB internals,
+       it connects directly to the underlying MySQL database and reads the number of jobs in each state.
+
+OPTIONS
+       -m dbstring, --mysql=dbstring
+              use non-default database connection string
+
+EXAMPLES
+       glite-lb-mon-db
+              this is the default usage
+
+       glite-lb-mon-db -m lbserver/@localhost:lbproxy
+              use this dbstring to query the LB Proxy database. WARNING: the data in the LB Proxy may be incomplete!
+
+ENVIRONMENT
+       MYSQL_UNIX_PORT
+              set this environment variable to specify the path to the non-default MySQL socket path
+
+       LBDB   you can set this environment variable as an alternative to specify the non-default database connection string
+
+
