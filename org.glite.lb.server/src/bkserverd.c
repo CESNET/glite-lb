@@ -164,13 +164,14 @@ static struct option opts[] = {
 	{"notif-il-sock",	1, NULL,	'X'},
 	{"notif-il-fprefix",	1, NULL,	'Y'},
 	{"count-statistics",	1, NULL,	'T'},
+	{"request-timeout",	1, NULL,	't'},
 	{NULL,0,NULL,0}
 };
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:J:j";
+static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:j";
 #else
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:J:j";
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:j";
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 static void usage(char *me) 
@@ -286,6 +287,7 @@ int main(int argc, char *argv[])
 	OM_uint32			min_stat;
 	edg_wll_GssStatus	gss_code;
 	struct timeval		to;
+	int 			request_timeout = REQUEST_TIMEOUT;
 
 
 
@@ -372,6 +374,8 @@ int main(int argc, char *argv[])
 		case 'P': strict_locking = 1;
 			  break;
 		case 'T': count_statistics = atoi(optarg);
+			  break;
+		case 't': request_timeout = atoi(optarg);
 			  break;
 		case '?': usage(name); return 1;
 	}
@@ -578,7 +582,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 
 	to = (struct timeval){CONNECT_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_CONNECT_TIMEOUT, &to);
-	to = (struct timeval){REQUEST_TIMEOUT, 0};
+	to.tv_sec = request_timeout;
 	glite_srvbones_set_param(GLITE_SBPARAM_REQUEST_TIMEOUT, &to);
 	to = (struct timeval){IDLE_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_IDLE_TIMEOUT, &to);
