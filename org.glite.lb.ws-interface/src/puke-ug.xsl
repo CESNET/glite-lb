@@ -5,8 +5,8 @@
 <xsl:stylesheet version="1.0"
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-<xsl:output indent="yes" doctype-public="-//OASIS//DTD DocBook XML V4.4//EN"
-      doctype-system="http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"/>
+<xsl:output indent="yes" doctype-public="-//OASIS//DTD DocBook XML V4.2//EN"
+      doctype-system="http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"/>
 
 <xsl:template match="book">
 	<chapter>
