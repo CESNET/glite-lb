@@ -1,13 +1,11 @@
-Patch to LB deployment modul (with build workarounds, for using).
-
 Index: org.glite.deployment.lb/config/scripts/glite-lb-config.py
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite.deployment.lb/config/scripts/glite-lb-config.py,v
 retrieving revision 1.63.2.8
-diff -u -r1.63.2.8 glite-lb-config.py
+diff -u -p -r1.63.2.8 glite-lb-config.py
 --- org.glite.deployment.lb/config/scripts/glite-lb-config.py	22 Feb 2006 00:12:59 -0000	1.63.2.8
-+++ org.glite.deployment.lb/config/scripts/glite-lb-config.py	3 Apr 2006 18:59:49 -0000
-@@ -120,7 +120,12 @@
++++ org.glite.deployment.lb/config/scripts/glite-lb-config.py	4 Apr 2006 09:49:35 -0000
+@@ -120,7 +120,12 @@ python %s-config [OPTION...]""" % (self.
  
          if not os.path.exists('/tmp/mysql.sock'):
              os.symlink('/var/lib/mysql/mysql.sock', '/tmp/mysql.sock')
@@ -21,7 +19,7 @@ diff -u -r1.63.2.8 glite-lb-config.py
          pid = glib.getPID('bkserverd')
          if pid != 0:
              print 'The gLite LB Server service is already running. Restarting...'
-@@ -133,7 +138,7 @@
+@@ -133,7 +138,7 @@ python %s-config [OPTION...]""" % (self.
          pid = glib.getPID('bkserverd')
  
          if (pid != 0):
@@ -30,7 +28,7 @@ diff -u -r1.63.2.8 glite-lb-config.py
              glib.printOkMessage()
          else:
              glib.printErrorMessage("Could not start the gLite LB Server service")
-@@ -142,6 +147,36 @@
+@@ -142,6 +147,36 @@ python %s-config [OPTION...]""" % (self.
              return 1
          
          #-------------------------------------------------------------------
@@ -67,7 +65,7 @@ diff -u -r1.63.2.8 glite-lb-config.py
          # Start Servicetool
          #-------------------------------------------------------------------
  
-@@ -161,6 +196,10 @@
+@@ -161,6 +196,10 @@ python %s-config [OPTION...]""" % (self.
          if (pid != 0):
              os.system('%s/etc/init.d/glite-lb-bkserverd stop' % os.environ['GLITE_LOCATION'])
  
@@ -78,7 +76,7 @@ diff -u -r1.63.2.8 glite-lb-config.py
          pid = glib.getPID('bkserverd')
          if (pid != 0):
              print 'Could not stop the LB Server service            ',
-@@ -171,6 +210,25 @@
+@@ -171,6 +210,25 @@ python %s-config [OPTION...]""" % (self.
              glib.printOkMessage()
          
          #-------------------------------------------------------------------
@@ -104,7 +102,7 @@ diff -u -r1.63.2.8 glite-lb-config.py
          # MySQL
          #-------------------------------------------------------------------
  
-@@ -195,6 +253,10 @@
+@@ -195,6 +253,10 @@ python %s-config [OPTION...]""" % (self.
          if retval != 0:
              error_level = 1
  
@@ -115,7 +113,7 @@ diff -u -r1.63.2.8 glite-lb-config.py
          #-------------------------------------------------------------------
          # Servicetool
          #-------------------------------------------------------------------
-@@ -325,7 +387,29 @@
+@@ -325,7 +387,29 @@ python %s-config [OPTION...]""" % (self.
              print "\n==> MySQL database %s already exist\n" % params['lb.database.name']
              
          self.mysql.stop()
@@ -146,7 +144,7 @@ diff -u -r1.63.2.8 glite-lb-config.py
          #-------------------------------------------------------------------
          # RGMA servicetool: configure servicetool
          #-------------------------------------------------------------------
-@@ -411,6 +495,17 @@
+@@ -411,6 +495,17 @@ def set_env():
      # Perl
      glib.addEnvPath("PERL5LIB", "%s/lib/perl:%s/lib/perl5" % (os.environ['GPT_LOCATION'],os.environ['GLITE_LOCATION']))
  
@@ -168,9 +166,9 @@ Index: org.glite.deployment.lb/config/templates/glite-lb.cfg.xml
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite.deployment.lb/config/templates/glite-lb.cfg.xml,v
 retrieving revision 1.20.2.5
-diff -u -r1.20.2.5 glite-lb.cfg.xml
+diff -u -p -r1.20.2.5 glite-lb.cfg.xml
 --- org.glite.deployment.lb/config/templates/glite-lb.cfg.xml	22 Feb 2006 00:12:58 -0000	1.20.2.5
-+++ org.glite.deployment.lb/config/templates/glite-lb.cfg.xml	3 Apr 2006 18:59:49 -0000
++++ org.glite.deployment.lb/config/templates/glite-lb.cfg.xml	4 Apr 2006 09:49:35 -0000
 @@ -17,9 +17,16 @@
  			parameter. Leave it empty of comment it out to use the same as 'glite.user.name'"
  			value="changeme"/>
@@ -221,29 +219,29 @@ diff -u -r1.20.2.5 glite-lb.cfg.xml
 +			value="/tmp/jpdump"/>
 +
 +		<lb.export.dump
-+			description="Dump directory for purged jobs.
++			description="Temporary directory for dumps of purged jobs.
 +				[Type: string]"
 +			value="/tmp/dump"/>
 +
 +		<lb.export.dump.keep
-+			description="Dump directory for handled purged jobs.
++			description="Directory for dumps of jobs that were already handled (sent to JPPS).
 +				[Example: /tmp/dump.keep][Type: string]"
 +			value=""/>
 +
 +		<lb.export.jobs
-+			description="Exported events divided to file per job before delivered to JPPS.
++			description="Exported events in file per job form before delivered to JPPS.
 +				[Type: string]"
-+			value="/tmp/lb_export"/>
++			value="/tmp/lbexport"/>
 +
 +		<lb.export.jobs.keep
-+			description="Keep the exported events.
++			description="Keep the already handled exported events in file per job form.
 +				[Example: /tmp/lb_export.keep][Type: string]"
 +			value=""/>
 +
 +		<lb.export.purgeargs
-+			description="Purge arguments (with timeouts).
++			description="Arguments for LB purge process (a job in a given terminal state will be exported from the LB after timeouts defined here). See also glite-lb-purge documentation.
 +				[Example: -a 1h -c 1h -n 1h -o 1d][Type: string]"
-+			value="--aborted 1d --cleared 1d --cancelled 1d --other 7d"/>
++			value="--cleared 2d --aborted 2w --cancelled 2w --other 2m"/>
 +
  	</parameters>
  
@@ -252,9 +250,9 @@ Index: org.glite.deployment.lb/project/glite-lb.sdf.xml.template
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite.deployment.lb/project/glite-lb.sdf.xml.template,v
 retrieving revision 1.37.2.3
-diff -u -r1.37.2.3 glite-lb.sdf.xml.template
+diff -u -p -r1.37.2.3 glite-lb.sdf.xml.template
 --- org.glite.deployment.lb/project/glite-lb.sdf.xml.template	8 Jan 2006 16:44:58 -0000	1.37.2.3
-+++ org.glite.deployment.lb/project/glite-lb.sdf.xml.template	3 Apr 2006 18:59:49 -0000
++++ org.glite.deployment.lb/project/glite-lb.sdf.xml.template	4 Apr 2006 09:49:35 -0000
 @@ -57,6 +57,12 @@
  					build="@org.glite.lb.server-bones.info.build@"
  					arch="i386"/>
@@ -285,9 +283,9 @@ Index: org.glite.deployment.lb/project/properties.xml
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite.deployment.lb/project/properties.xml,v
 retrieving revision 1.2.4.1
-diff -u -r1.2.4.1 properties.xml
+diff -u -p -r1.2.4.1 properties.xml
 --- org.glite.deployment.lb/project/properties.xml	27 Nov 2005 16:16:17 -0000	1.2.4.1
-+++ org.glite.deployment.lb/project/properties.xml	3 Apr 2006 18:59:49 -0000
++++ org.glite.deployment.lb/project/properties.xml	4 Apr 2006 09:49:35 -0000
 @@ -65,5 +65,7 @@
  %attr(644,root,root) %{prefix}/share/doc/glite-lb/release_notes/release_notes.pdf\n
  %attr(644,root,root) %{prefix}/share/doc/glite-lb/release_notes/release_notes.html\n"
@@ -300,9 +298,9 @@ Index: org.glite.deployment.rgma-servicetool/project/properties.xml
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite.deployment.rgma-servicetool/project/properties.xml,v
 retrieving revision 1.3.4.1
-diff -u -r1.3.4.1 properties.xml
+diff -u -p -r1.3.4.1 properties.xml
 --- org.glite.deployment.rgma-servicetool/project/properties.xml	17 Nov 2005 16:15:16 -0000	1.3.4.1
-+++ org.glite.deployment.rgma-servicetool/project/properties.xml	3 Apr 2006 18:59:49 -0000
++++ org.glite.deployment.rgma-servicetool/project/properties.xml	4 Apr 2006 09:49:35 -0000
 @@ -71,5 +71,7 @@
  %attr(644,root,root) %{prefix}/share/doc/glite-rgma-servicetool/release_notes/release_notes.doc\n
  %attr(644,root,root) %{prefix}/share/doc/glite-rgma-servicetool/release_notes/release_notes.pdf\n
