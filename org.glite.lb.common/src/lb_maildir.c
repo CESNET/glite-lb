@@ -261,6 +261,7 @@ int edg_wll_MaildirRetryTransStart(
 	close(fhnd);
 
 	if ( !(*fname = strdup(ent->d_name)) ) goto err;
+	buf[bufuse] = 0;
 	*msg = buf;
 	return 1;
 
@@ -354,6 +355,7 @@ int edg_wll_MaildirTransStart(
 	close(fhnd);
 
 	if ( !(*fname = strdup(ent->d_name)) ) goto err;
+	buf[bufuse] = 0;
 	*msg = buf;
 	return 1;
 
