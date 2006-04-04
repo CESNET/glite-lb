@@ -1,3 +1,2 @@
-deploy_lb - against glite-deployment-lb_R_2_1_2 (with not commited changes to
-            LB/JP and deployment build workarounds)
+deploy_lb - against glite-deployment-lb_R_2_1_2 (with build workarounds)
 deploy_jp - against HEAD
