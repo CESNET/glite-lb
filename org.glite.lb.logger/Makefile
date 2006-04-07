@@ -17,6 +17,9 @@ thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 
 -include Makefile.inc
+-include ../project/version.properties
+
+version=${module.version}
 
 CC=gcc
 

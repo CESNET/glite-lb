@@ -20,7 +20,9 @@ CC:=gcc
 CXX:=g++
 
 -include Makefile.inc
+-include ../project/version.properties
 
+version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3

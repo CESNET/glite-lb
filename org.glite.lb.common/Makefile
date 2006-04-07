@@ -17,11 +17,12 @@ thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 
 -include Makefile.inc
--include ../Makefile.inc
+-include ../project/version.properties
+
+version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
-
 
 SUFFIXES = .T
 
@@ -109,8 +110,8 @@ REPORTS:=${top_srcdir}/reports
 
 default: all
 
-all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
-# all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
+#all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
+all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
 
 # FIXME: to use libtool versioning correcty, we should have:
 #

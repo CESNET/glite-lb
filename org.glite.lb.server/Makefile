@@ -20,6 +20,9 @@ gsoap_prefix=/opt/gsoap
 classads_prefix=/opt/classads
 
 -include Makefile.inc
+-include ../project/version.properties
+
+version=${module.version}
 
 default all: compile
 
@@ -240,7 +243,7 @@ LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 	rm -f LBTypes.wsdl
 
 test.xml: test_xml
-	./test_xml
+#	./test_xml
 
 test_xml: test_xml.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<

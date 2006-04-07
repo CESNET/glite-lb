@@ -11,6 +11,9 @@ version=0.0.0
 PREFIX=/opt/glite
 
 -include Makefile.inc
+-include ../project/version.properties
+
+version=${module.version}
 
 SUFFIXES = .T
 

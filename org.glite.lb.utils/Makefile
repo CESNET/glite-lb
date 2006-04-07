@@ -18,6 +18,9 @@ expat_prefix=/opt/expat
 gsoap_prefix=/opt/gsoap
 
 -include Makefile.inc
+-include ../project/version.properties
+
+version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
@@ -61,6 +64,10 @@ ifneq (${expat_prefix},/usr)
 	expatlib := -L${expat_prefix}/lib
 endif
 
+ifneq (${classads_prefix},/usr)
+        classadslib := -L${classads_prefix}/lib -lclassad
+endif
+
 EXT_LIBS:= \
 	${mysqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
@@ -91,7 +98,8 @@ mon-db: mon-db.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${BKSERVER_LIB} ${EXT_LIBS} 
 
 statistics: statistics.o
-	${LINK} -rdynamic -o $@ $< ${JP_LIBS} ${EXT_LIBS}
+	${LINK} -rdynamic -o $@ $< ${JP_LIBS} ${EXT_LIBS} 
+#${classadslib}
 
 check: compile 
 
