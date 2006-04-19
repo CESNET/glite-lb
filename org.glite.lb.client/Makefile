@@ -67,6 +67,10 @@ DEBUG:=-g -O0 -Wall
 GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
+ifeq (${LB_STANDALONE},yes)
+        LB_STANDALONE_FLAGS:=-DLB_STANDALONE
+endif
+
 CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
@@ -74,8 +78,7 @@ CFLAGS:=${DEBUG} \
 	-I${expat_prefix}/include \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	${COVERAGE_FLAGS} \
-	-D_GNU_SOURCE
-
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS}
 
 CXXFLAGS:=${CFLAGS}
 
