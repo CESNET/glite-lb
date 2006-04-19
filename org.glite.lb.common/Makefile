@@ -19,6 +19,8 @@ expat_prefix=/opt/expat
 -include Makefile.inc
 -include ../project/version.properties
 
+jobiddir=${top_srcdir}/../org.glite.wms-utils.jobid
+
 version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test
@@ -32,14 +34,22 @@ DEBUG:=-g -O0 -Wall
 GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
+ifneq (${LB_STANDALONE},yes)
+	JOBID_LIB:=-lglite_wmsutils_cjobid
+else
+	JOBID_OBJS:=cjobid.o strmd5.o
+	LB_STANDALONE_FLAGS:=-DLB_STANDALONE
+endif
+
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
+	-I. \
 	-I${top_srcdir}/test \
 	-I${stagedir}/include \
 	-I${glite_location}/include \
 	-I${expat_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
-	-DDATAGRID_EXTENSION
+	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS}
 
 # We must follow major version changes of org.glite.lb.client-interface due to
 # binary compatibility. However, we may live a life of our own, changing our
@@ -66,13 +76,8 @@ EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 LDFLAGS:=-L${stagedir}/lib \
     ${COVERAGE_FLAGS}
 
-EXT_LIBS:= ${EXPAT_LIBS} ${GLOBUS_LIBS}
-EXT_THRLIBS:= ${EXPAT_LIBS} ${GLOBUS_THRLIBS}
-
-# breaks linking when not installed in /opt, /home/dimeglio etc.
-#    ${GLITE_LIBS} \
-#    ${GLOBUS_LIBS} \
-#    ${EXPAT_LIBS}
+EXT_LIBS:= ${EXPAT_LIBS} ${GLOBUS_LIBS} ${JOBID_LIB}
+EXT_THRLIBS:= ${EXPAT_LIBS} ${GLOBUS_THRLIBS} ${JOBID_LIB}
 
 TEST_LIBS:=-L${cppunit}/lib -lcppunit
 TEST_INC:=-I${cppunit}/include
@@ -82,10 +87,10 @@ LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS}
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
-OBJS:=lb_plain_io.o escape.o events.o mini_http.o query_rec.o \
+OBJS:=${JOBID_OBJS} lb_plain_io.o escape.o events.o mini_http.o query_rec.o \
 	status.o xml_conversions.o xml_parse.o ulm_parse.o param.o \
 	events_parse.o il_string.o il_int.o notifid.o \
-	il_log.o il_msg.o log_msg.o context.o trio.o strio.o lb_maildir.o
+	il_log.o il_msg.o log_msg.o context.o trio.o strio.o lb_maildir.o 
 LOBJS:=${OBJS:.o=.lo}
 
 TRIO_OBJS:=escape.o trio.o strio.o
@@ -148,14 +153,12 @@ ${THRSTATICLIB}: ${THROBJS}
 ${LTLIB}: ${OBJS}
 	${LINK} ${version_info} -o $@ ${LOBJS} \
 		-lglite_security_gss_${nothrflavour} \
-		-lglite_wmsutils_cjobid \
 		${EXT_LIBS} \
 		-lm
 
 ${THRLTLIB}: ${THROBJS}
 	${LINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss_${thrflavour} \
-		-lglite_wmsutils_cjobid \
 		${EXT_THRLIBS} \
 		-lm
 
@@ -198,6 +201,14 @@ distbin:
 	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
 
+cjobid.c strmd5.c:
+	if [ ! -d ${jobiddir} ]; then echo "Directory ${jobiddir} not found"; exit 1; fi
+	mkdir -p glite/wmsutils/jobid
+	rm -f jobid && ln -fs . jobid
+	cp -rv ${jobiddir}/interface/glite/wmsutils/jobid/cjobid.h glite/wmsutils/jobid/
+	cp -rv ${jobiddir}/src/jobid/*.h glite/wmsutils/jobid/
+	cp -rv ${jobiddir}/src/jobid/*.[ch] .
+
 install:
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
@@ -207,6 +218,10 @@ install:
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
 		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${PREFIX}/lib; \
+		if [ x${LB_STANDALONE} = xyes ]; then \
+			mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
+			install -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
+		fi \
 	fi
 
 clean:
