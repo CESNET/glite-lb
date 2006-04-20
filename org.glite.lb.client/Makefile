@@ -67,7 +67,7 @@ DEBUG:=-g -O0 -Wall
 GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
-ifeq (${LB_STANDALONE},yes)
+ifdef LB_STANDALONE
         LB_STANDALONE_FLAGS:=-DLB_STANDALONE
 endif
 
@@ -242,7 +242,11 @@ ${MAN_GZ}: ${MAN}
 default: all
 
 
+ifdef LB_STANDALONE
+compile all: ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
+else
 compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
+endif
 
 examples: ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}
 
@@ -284,7 +288,11 @@ install:
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/share/man/man1
+ifdef LB_STANDALONE
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
+else
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
+endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/examples

@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.5  2006/03/15 18:02:37  akrenek
+	cares
+
 	Revision 1.4  2006/03/15 17:59:04  akrenek
 	merge 1.5
 	
@@ -56,12 +59,12 @@ PREFIX=${install.dir}
 version=${module.version}
 glite_location=${with.glite.location}
 globus_prefix=${with.globus.prefix}
-thrflavour=${with.globus.thr.flavor}
-nothrflavour=${with.globus.nothr.flavor}
 expat_prefix=${with.expat.prefix}
 mysql_prefix=${with.mysql.prefix}
 mysql_version=${ext.mysql.version}
 cppunit_prefix=${with.cppunit.prefix}
+thrflavour=${with.globus.thr.flavor}
+nothrflavour=${with.globus.nothr.flavor}
 			</echo>
 	    </target>
 	</project>

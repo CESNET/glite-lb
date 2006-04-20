@@ -20,6 +20,11 @@
 
 	Revision history:
 	$Log$
+	Revision 1.11  2006/03/17 11:47:02  zsalvet
+	Adapt RGMA export file format and file handling to lcg-mon-job-status
+	use. Socket notification code is still available and is nonblocking now.
+	C ClassAd API is used to retrieve VO from JDL.
+
 	Revision 1.10  2006/03/15 18:13:51  akrenek
 	cares
 	
@@ -95,16 +100,16 @@ PREFIX=${install.dir}
 version=${module.version}
 glite_location=${with.glite.location}
 globus_prefix=${with.globus.prefix}
-thrflavour=${with.globus.thr.flavor}
-nothrflavour=${with.globus.nothr.flavor}
 expat_prefix=${with.expat.prefix}
 cares_prefix=${with.c-ares.prefix}
 mysql_prefix=${with.mysql.prefix}
 mysql_version=${ext.mysql.version}
-cppunit=${with.cppunit.prefix}
+cppunit_prefix=${with.cppunit.prefix}
 gsoap_prefix=${with.gsoap.prefix}
 gsoap_version=${ext.gsoap.version}
 classads_prefix=${with.classads.prefix}
+thrflavour=${with.globus.thr.flavor}
+nothrflavour=${with.globus.nothr.flavor}
 			</echo>
 	    </target>
 	</project>

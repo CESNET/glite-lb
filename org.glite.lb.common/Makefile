@@ -34,11 +34,11 @@ DEBUG:=-g -O0 -Wall
 GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
-ifneq (${LB_STANDALONE},yes)
-	JOBID_LIB:=-lglite_wmsutils_cjobid
-else
+ifdef LB_STANDALONE
 	JOBID_OBJS:=cjobid.o strmd5.o
 	LB_STANDALONE_FLAGS:=-DLB_STANDALONE
+else
+	JOBID_LIB:=-lglite_wmsutils_cjobid
 endif
 
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
@@ -79,8 +79,8 @@ LDFLAGS:=-L${stagedir}/lib \
 EXT_LIBS:= ${EXPAT_LIBS} ${GLOBUS_LIBS} ${JOBID_LIB}
 EXT_THRLIBS:= ${EXPAT_LIBS} ${GLOBUS_THRLIBS} ${JOBID_LIB}
 
-TEST_LIBS:=-L${cppunit}/lib -lcppunit
-TEST_INC:=-I${cppunit}/include
+TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
+TEST_INC:=-I${cppunit_prefix}/include
 
 COMPILE:=libtool --mode=compile ${CC}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 

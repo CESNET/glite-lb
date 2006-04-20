@@ -18,6 +18,7 @@ expat_prefix=/opt/expat
 cares_prefix=/opt/c-ares
 gsoap_prefix=/opt/gsoap
 classads_prefix=/opt/classads
+voms_prefix=/opt/voms
 
 -include Makefile.inc
 -include ../project/version.properties
@@ -27,6 +28,11 @@ version=${module.version}
 default all: compile
 
 GLITE_LB_SERVER_WITH_WS=yes
+
+ifdef LB_STANDALONE
+	LB_STANDALONE_FLAGS:=-DLB_STANDALONE
+	GLITE_LB_SERVER_WITH_WS=no
+endif
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS 
@@ -47,9 +53,6 @@ else
 endif
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
-TEST_LIBS:=-L${cppunit}/lib -lcppunit
-TEST_INC:=-I${cppunit}/include
-
 SUFFIXES = .T 
 
 DEBUG:=-g -O0 -Wall
@@ -66,14 +69,15 @@ CFLAGS:= \
 	-I${cares_prefix}/include \
 	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${classads_prefix}/include \
+	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
 	$(GRIDSITE_CFLAGS) \
-	-D_GNU_SOURCE
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS}
 
-TEST_LIBS:=-L${cppunit}/lib -lcppunit
-TEST_INC:=-I${cppunit}/include
+TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
+TEST_INC:=-I${cppunit_prefix}/include
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS} 
@@ -114,6 +118,7 @@ endif
 ifeq (${nothrflavour},gcc32dbg)
 	vomsflavour :=
 endif
+VOMS_LIBS:=-L${voms_prefix}/lib -lvomsc${vomsflavour}
 
 #EXT_LIBS:= \
 #	${mysqlib} -lmysqlclient -lz\
@@ -130,7 +135,7 @@ EXT_LIBS:=  \
 	${mysqlib} -lmysqlclient -lz\
 	${GRIDSITE_LIBS} \
 	${classadslib} \
-	-lvomsc${vomsflavour}
+	${VOMS_LIBS}
 
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
 COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}

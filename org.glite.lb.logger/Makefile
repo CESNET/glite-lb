@@ -33,12 +33,16 @@ GLOBUSINC=-I${globus_prefix}/include/${nothrflavour}
 
 GLOBUSTHRINC=-I${globus_prefix}/include/${thrflavour}
 
+ifdef LB_STANDALONE
+	LB_STANDALONE_FLAGS:=-DLB_STANDALONE
+endif
+
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
-	${VERSION}
+	${VERSION} ${LB_STANDALONE_FLAGS}
 
 LDFLAGS:=-L${stagedir}/lib \
 	${COVERAGE_FLAGS} 
