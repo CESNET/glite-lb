@@ -13,8 +13,11 @@ if [ ! -f ${LB4VDTDIR}/Makefile.inc ]; then
    exit 1
 fi
 
-export CVSROOT=:pserver:anonymous@jra1mw.cvs.cern.ch:/cvs/jra1mw
-#export CVSROOT=:ext:jpospi@jra1mw.cvs.cern.ch:/cvs/jra1mw
+if [ -z "${CVSROOT}" ]; then
+	echo "XXX"
+	export CVSROOT=:pserver:anonymous@jra1mw.cvs.cern.ch:/cvs/jra1mw
+#	export CVSROOT=:ext:jpospi@jra1mw.cvs.cern.ch:/cvs/jra1mw
+fi
 
 dep_modules="org.glite.wms-utils.jobid
 org.gridsite.core"
@@ -82,7 +85,7 @@ do
         mkdir -p build
         echo "Entering directory ${TOPDIR}/$i/build"
         cd build 
-        ln -fsv ../Makefile Makefile
+        ln -fsv ../Makefile 
 #        ln -fsv ../../Makefile.inc Makefile.inc
         ln -fsv ${LB4VDTDIR}/Makefile.inc 
         echo "Building"    
