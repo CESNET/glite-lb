@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+TOPDIR=${PWD}
+source ./Makefile.inc
+cd org.gridsite.core/src
+make build OPENSSL_FLAGS=-I${globus_prefix}/include/gcc32 OPENSSL_LIBS=-L${globus_prefix}/lib FLAVOR_EXT=_gcc32
+make install prefix=${STAGEDIR} 
+cd ${TOPDIR}
+
