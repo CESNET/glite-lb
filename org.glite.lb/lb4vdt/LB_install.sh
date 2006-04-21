@@ -4,14 +4,14 @@ set -e
 
 #OFFLINE=true
 TOPDIR=${PWD}
-LB4VDTDIR=${TOPDIR}/org.glite.lb/project/lb4vdt
+
+export LB4VDTDIR=${TOPDIR}/org.glite.lb/lb4vdt
 export STAGEDIR=${TOPDIR}/stage
 
 if [ ! -f ${LB4VDTDIR}/Makefile.inc ]; then
    echo "Error: There is no ${LB4VDTDIR}/Makefile.inc. Exiting."
    exit 1
 fi
-
 
 export CVSROOT=:pserver:anonymous@jra1mw.cvs.cern.ch:/cvs/jra1mw
 #export CVSROOT=:ext:jpospi@jra1mw.cvs.cern.ch:/cvs/jra1mw
