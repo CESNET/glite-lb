@@ -216,7 +216,14 @@ glite_lb_plugin.la: ${PLUGIN_LOBJS}
 
 default all: compile
 
-compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} glite_lb_plugin.la
+ifdef LB_STANDALONE
+	PLUGIN_LIB=
+else
+	PLUGIN_LIB=glite_lb_plugin.la
+endif
+
+compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB}
+
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -339,7 +346,9 @@ install:
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
 		install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib; \
-		${INSTALL} -m 755 glite_lb_plugin.la ${PREFIX}/lib; \
+		if [ x${LB_STANDALONE} = x ]; then \
+			${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
+		fi; \
 	fi
 
 clean:
