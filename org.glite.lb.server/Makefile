@@ -217,9 +217,9 @@ glite_lb_plugin.la: ${PLUGIN_LOBJS}
 default all: compile
 
 ifdef LB_STANDALONE
-	PLUGIN_LIB=
+    PLUGIN_LIB=
 else
-	PLUGIN_LIB=glite_lb_plugin.la
+    PLUGIN_LIB=glite_lb_plugin.la
 endif
 
 compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB}
