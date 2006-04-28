@@ -428,7 +428,14 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	} else if (strcmp(attr, GLITE_JP_LB_jobType) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
-		av[0].value = edg_wll_RegJobJobtypeToString(h->status.jobtype);
+		switch (h->status.jobtype) {
+			case EDG_WLL_STAT_SIMPLE:
+				av[0].value = strdup("SIMPLE"); break;
+			case EDG_WLL_STAT_DAG:
+				av[0].value = strdup("DAG"); break;
+			default:
+				av[0].value = strdup("UNKNOWN"); break;
+		}
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_nsubjobs) == 0) {
