@@ -249,7 +249,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                         }
                 }
 		if (!av[0].value) {
-			av[0].value = "UNKNOWN";
+			av[0].value = strdup("UNKNOWN");
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
         } else if (strcmp(attr, GLITE_JP_LB_eNodes) == 0) {
@@ -278,7 +278,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                         }
                 }
 		if (!av[0].value) {
-			av[0].value = "UNKNOWN";
+			av[0].value = strdup("UNKNOWN");
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
         } else if (strcmp(attr, GLITE_JP_LB_eProc) == 0) {
@@ -307,7 +307,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                         }
                 }
 		if (!av[0].value) {
-			av[0].value = "UNKNOWN";
+			av[0].value = strdup("UNKNOWN");
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_aTag) == 0 ||
@@ -408,7 +408,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		if (!av) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
 			av[0].name = strdup(attr);
-			av[0].value = "UNKNOWN";
+			av[0].value = strdup("UNKNOWN");
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_retryCount) == 0) {
