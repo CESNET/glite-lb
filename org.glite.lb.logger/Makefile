@@ -37,12 +37,16 @@ ifdef LB_STANDALONE
 	LB_STANDALONE_FLAGS:=-DLB_STANDALONE
 endif
 
+ifdef LB_PERF
+	LB_PERF_FLAGS:=-DLB_PERF
+endif
+
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
-	${VERSION} ${LB_STANDALONE_FLAGS}
+	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
 
 LDFLAGS:=-L${stagedir}/lib \
 	${COVERAGE_FLAGS} 
@@ -71,7 +75,19 @@ GLITE_GSS_LIB:=-lglite_security_gss
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
+ifdef LB_PERF
+	LOGD:=glite_lb_logd_perf glite_lb_logd_perf_nofile
+	INTERLOGD:=glite_lb_interlogd_perf
+	NOTIF_INTERLOGD:=glite_lb_notif_interlogd_perf
+else
+	LOGD:=glite_lb_logd
+	INTERLOGD:=glite_lb_interlogd
+	NOTIF_INTERLOGD:=glite_lb_notif_interlogd
+endif
+
 LOGD_OBJS:= logd_proto.o logd.o
+
+LOGD_NOBJS:=${LOGD_OBJS:.o=.no}
 
 INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 	recover.o send_event.o \
@@ -97,20 +113,27 @@ INTERLOG_TEST_OBJS:= \
 	IlTestBase.o \
 	il_test.o 
 
-glite_lb_logd: ${LOGD_OBJS}
+glite_lb_logd glite_lb_logd_perf: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} 
 
-glite_lb_interlogd: ${INTERLOG_OBJS}
+glite_lb_logd_nofile glite_lb_logd_perf_nofile: ${LOGD_NOBJS}
+	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} 
+
+glite_lb_interlogd glite_lb_interlogd_perf: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} \
 		${COMMON_LIB}_${thrflavour} 
 
-glite_lb_notif_interlogd: ${INTERLOG_NOBJS}
+glite_lb_notif_interlogd glite_lb_notif_interlogd_perf: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} \
 		${COMMON_LIB}_${thrflavour}
 
-default: all
+default: all 
 
-all compile: glite_lb_logd glite_lb_interlogd glite_lb_notif_interlogd
+ifdef LB_PERF
+all compile: glite_lb_logd_perf glite_lb_logd_perf_nofile glite_lb_interlogd_perf
+else
+all compile: glite_lb_logd glite_lb_logd_nofile glite_lb_interlogd glite_lb_notif_interlogd
+endif
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
@@ -154,11 +177,14 @@ install:
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 
-%.no: %.c
+${INTERLOG_NOBJS}: %.no: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DIL_NOTIFICATIONS -c $< -o $@
 
 ${INTERLOG_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -c $< -o $@
+
+${LOGD_NOBJS}: %.no: %.c
+	${CC} ${CFLAGS} ${GLOBUSINC} -DLOGD_NOFILE -c $< -o $@
 
 ${LOGD_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
