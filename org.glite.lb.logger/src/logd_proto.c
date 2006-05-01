@@ -472,6 +472,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 		strncpy(outfilename+count_total,jobId,count); count_total+=count;
 		outfilename[count_total]='\0';
 //		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+#ifndef LOGD_NOFILE
 		edg_wll_ll_log(LOG_INFO,"Writing message to \"%s\"...",outfilename);
 
 		i = 0;
@@ -486,6 +487,7 @@ open_event_file:
 			free(errd);
 			goto edg_wll_log_proto_server_end;
 		} else edg_wll_ll_log(LOG_INFO,"o.k.");
+#endif
 	} else {
 		filepos = 0;
 	}
