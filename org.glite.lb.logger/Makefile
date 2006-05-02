@@ -113,6 +113,14 @@ INTERLOG_TEST_OBJS:= \
 	IlTestBase.o \
 	il_test.o 
 
+default: all 
+
+ifdef LB_PERF
+all compile: glite_lb_logd_perf glite_lb_logd_perf_nofile glite_lb_interlogd_perf
+else
+all compile: glite_lb_logd glite_lb_logd_nofile glite_lb_interlogd glite_lb_notif_interlogd
+endif
+
 glite_lb_logd glite_lb_logd_perf: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} 
 
@@ -126,14 +134,6 @@ glite_lb_interlogd glite_lb_interlogd_perf: ${INTERLOG_OBJS}
 glite_lb_notif_interlogd glite_lb_notif_interlogd_perf: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} \
 		${COMMON_LIB}_${thrflavour}
-
-default: all 
-
-ifdef LB_PERF
-all compile: glite_lb_logd_perf glite_lb_logd_perf_nofile glite_lb_interlogd_perf
-else
-all compile: glite_lb_logd glite_lb_logd_nofile glite_lb_interlogd glite_lb_notif_interlogd
-endif
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
