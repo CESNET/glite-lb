@@ -29,14 +29,14 @@
 #include "get_events.h"
 #include "server_state.h"
 
-
-static int read_line(char **buff, int fd);
+static int read_line(char **buff, size_t *maxsize, int fd);
 
 int edg_wll_LoadEvents(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wll_LoadResult *result)
 {
 	int					fd,
 						reject_fd = -1,
 						readret, i;
+	size_t					maxsize;
 	char			   *line = NULL,
 						buff[30];
 	edg_wll_Event	   *event;
@@ -57,7 +57,7 @@ int edg_wll_LoadEvents(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wl
 	{
 		/*	Read one line
 		 */
-		if ( (readret = read_line(&line, fd)) == -1 )
+		if ( (readret = read_line(&line, &maxsize, fd)) == -1 )
 			return edg_wll_SetError(ctx, errno, "reading dump file");
 
 		if ( readret == 0 )
@@ -169,21 +169,28 @@ cycle_clean:
 
 #define BUFFSZ			1024
 
-static int read_line(char **buff, int fd)
+static int read_line(char **buff, size_t *maxsize, int fd)
 {
 	int		ct, i;
+	void		*tmp;
 
 
 	if ( *buff == NULL )
 	{
-		*buff = malloc(BUFFSZ);	
+		*buff = malloc(BUFFSZ);
 		if ( *buff == NULL )
 			return -1;
+		*maxsize = BUFFSZ;
 	}
 
 	i = 0;
 	while ( 1 )
 	{
+		if (i >= *maxsize) {
+			(*maxsize) *= 2;
+			if ((tmp = realloc(*buff, *maxsize)) == NULL) return -1;
+			*buff = (char *)tmp;
+		}
 		if ( (ct = read(fd, (*buff)+i, 1)) == -1 )
 			return -1;
 

@@ -36,26 +36,30 @@ start()
 
 	[ -z "$GLITE_LB_EXPORT_DUMPDIR" ] && GLITE_LB_EXPORT_DUMPDIR=/tmp/dump
 	purgedir="--dump-prefix $GLITE_LB_EXPORT_DUMPDIR"
-	[ -d "$GLITE_LB_EXPORT_DUMPDIR" ] || mkdir "$GLITE_LB_EXPORT_DUMPDIR" && chown $GLITE_USER:$GLITE_GROUP "$GLITE_LB_EXPORT_DUMPDIR"
+	[ -d "$GLITE_LB_EXPORT_DUMPDIR" ] || mkdir -p "$GLITE_LB_EXPORT_DUMPDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_DUMPDIR"
 
 	[ -z "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] && GLITE_LB_EXPORT_JPREG_MAILDIR=/tmp/jpreg
 	maildir="--jpreg-dir $GLITE_LB_EXPORT_JPREG_MAILDIR"
-	[ -d "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] || mkdir "$GLITE_LB_EXPORT_JPREG_MAILDIR" && chown $GLITE_USER:$GLITE_GROUP "$GLITE_LB_EXPORT_JPREG_MAILDIR"
+	[ -d "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] || mkdir -p "$GLITE_LB_EXPORT_JPREG_MAILDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_JPREG_MAILDIR"
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
 	[ -n "$GLITE_LB_SERVER_PORT" ] && port="-p $GLITE_LB_SERVER_PORT"
+	[ -n "$GLITE_LB_SERVER_WPORT" ] && wport="-w $GLITE_LB_SERVER_WPORT"
+
+	[ -z "$GLITE_LB_NOTIF_SOCK" ] && GLITE_LB_NOTIF_SOCK="/tmp/glite-lb-notif.sock"
+	[ -z "$GLITE_LB_NOTIF_FPREFIX" ] && GLITE_LB_NOTIF_FPREFIX="/var/tmp/glite-lb-notif"
 
 	echo -n Starting glite-lb-bkserver ...
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
-		--notif-il-sock=/tmp/glite-lb-notif.sock \
-		--notif-il-fprefix=/var/tmp/glite-lb-notif \
-		$creds -i $pidfile $port $purgedir $maildir" \
+		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
+		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
+		$creds -i $pidfile $port $wport $purgedir $maildir" \
 	&& echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-notif-interlogd ...
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
-		-f /var/tmp/glite-lb-notif -s /tmp/glite-lb-notif.sock \
+		-f $GLITE_LB_NOTIF_FPREFIX -s $GLITE_LB_NOTIF_SOCK \
 		$creds" && echo " done" || echo " FAILED"
 }
 
@@ -89,7 +93,7 @@ status()
 {
 	retval=0
 
-	if netstat -an --unix | grep "^unix .* LISTEN.* /tmp/glite-lb-notif.sock$" >/dev/null 2>&1 ;then
+	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_NOTIF_SOCK}$" >/dev/null 2>&1 ;then
 		echo glite-lb-notif-interlogd running
 	else
 		echo glite-lb-notif-interlogd not running
