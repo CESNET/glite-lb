@@ -7,6 +7,12 @@
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/events.h"
 
+#define PERFTEST_END_TAG_NAME "lb_perftest"
+#define PERFTEST_END_TAG_VALUE "+++ konec testu +++"
+
+int
+glite_wll_perftest_init();
+
 int
 glite_wll_perftest_consumeEvent(edg_wll_Event *event);
 
