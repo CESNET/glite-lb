@@ -11,6 +11,10 @@
 
 #include "interlogd.h"
 
+#ifdef LB_PERF
+#include "glite/lb/lb_perftest.h"
+#endif
+
 int 
 enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 {
@@ -392,7 +396,9 @@ loop()
 			if(error_get_maj() == IL_PROTO) {
 				il_log(LOG_DEBUG, "  premature EOF while receiving event\n");
 				/* problems with socket input, try to catch up from files */
+#ifndef PERF_EMPTY
 				event_store_recover_all();
+#endif
 				continue;
 			} else 
 				return(-1);
@@ -400,6 +406,12 @@ loop()
 		else if(ret == 0) {
 			continue;
 		}
+
+#ifdef PERF_EMPTY
+		glite_wll_perftest_consumeEventString(msg);
+		free(msg);
+		continue;
+#endif
 
 #ifdef INTERLOGD_HANDLE_CMD		
 		ret = handle_cmd(msg, offset);

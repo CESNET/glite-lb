@@ -14,6 +14,9 @@
 #include "interlogd.h"
 #include "glite/lb/consumer.h"
 #include "glite/security/glite_gss.h"
+#ifdef LB_PERF
+#include "glite/lb/lb_perftest.h"
+#endif
 
 #define EXIT_FAILURE 1
 #if defined(IL_NOTIFICATIONS)
@@ -206,6 +209,11 @@ main (int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
+#ifdef LB_PERF
+  /* this must be called after installing signal handlers */
+  glite_wll_perftest_init();
+#endif
+
   il_log(LOG_INFO, "Initializing input queue...\n");
   if(input_queue_attach() < 0) {
     il_log(LOG_CRIT, "Failed to initialize input queue: %s\n", error_get_msg());
@@ -250,6 +258,7 @@ main (int argc, char **argv)
   	exit(EXIT_FAILURE);
   }
 
+#ifndef PERF_EMPTY
   /* find all unsent events waiting in files */
   { 
 	  pthread_t rid;
@@ -261,6 +270,7 @@ main (int argc, char **argv)
 	  }
 	  pthread_detach(rid);
   }
+#endif
 
   il_log(LOG_INFO, "Entering main loop...\n");
 
