@@ -44,8 +44,8 @@ glite_wll_perftest_consumeEvent(edg_wll_Event *event)
 	   (strcmp(event->userTag.name, PERFTEST_END_TAG_NAME) == 0) &&
 	   (strcmp(event->userTag.value, PERFTEST_END_TAG_VALUE) == 0)) {
 		/* print the timestamp */
-		fprintf(stderr, "PERFTEST_END_TIMESTAMP: %ld\n",
-			endtime.tv_sec + 1000000L*endtime.tv_usec);
+		fprintf(stderr, "PERFTEST_END_TIMESTAMP: %lu\n",
+			1000000L*(unsigned long)endtime.tv_sec + (unsigned long)endtime.tv_usec); 
 		ret = 1;
 	}
 
@@ -71,8 +71,8 @@ glite_wll_perftest_consumeEventString(const char *event_string)
 	/* check for the termination event */
 	if(strstr(event_string, termination_string) != NULL) {
 		/* print the timestamp */
-		fprintf(stderr, "PERFTEST_END_TIMESTAMP: %ld\n",
-			endtime.tv_sec + 1000000L*endtime.tv_usec);
+		fprintf(stderr, "PERFTEST_END_TIMESTAMP: %lu\n",
+			1000000L*(unsigned long)endtime.tv_sec + (unsigned long)endtime.tv_usec);
 		ret = 1;
 	}
 
