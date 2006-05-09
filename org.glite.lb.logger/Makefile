@@ -76,7 +76,7 @@ TEST_INC:=-I${cppunit_prefix}/include
 ifdef LB_PERF
 	LOGD:=glite_lb_logd_perf glite_lb_logd_perf_nofile
 	INTERLOGD:=glite_lb_interlogd_perf glite_lb_interlogd_perf_empty
-	NOTIF_INTERLOGD:=
+	NOTIF_INTERLOGD:=glite_lb_notif_interlogd
 else
 	LOGD:=glite_lb_logd
 	INTERLOGD:=glite_lb_interlogd
@@ -173,10 +173,10 @@ install:
 	-mkdir -p ${PREFIX}/bin
 	-mkdir -p ${PREFIX}/etc/init.d
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 755 glite_lb_logd ${PREFIX}/bin/glite-lb-logd
-	${INSTALL} -m 755 glite_lb_interlogd ${PREFIX}/bin/glite-lb-interlogd
+	${INSTALL} -m 755 ${LOGD} ${PREFIX}/bin
+	${INSTALL} -m 755 ${INTERLOGD} ${PREFIX}/bin
 	if [ x${DOSTAGE} = xyes ]; then \
-		${INSTALL} -m 755 glite_lb_notif_interlogd ${PREFIX}/bin/glite-lb-notif-interlogd; \
+		${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin; \
 	fi
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
@@ -188,10 +188,10 @@ ${INTERLOG_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -c $< -o $@
 
 ${INTERLOG_EMPTY_OBJS}: %.eo: %.c
-	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DPERF_EMPTY -c $< -o $@
+	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -DPERF_EMPTY -c $< -o $@
 
 ${LOGD_NOBJS}: %.no: %.c
-	${CC} ${CFLAGS} ${GLOBUSINC} -DLOGD_NOFILE -c $< -o $@
+	${CC} ${CFLAGS} ${GLOBUSINC} -DLB_PERF -DLOGD_NOFILE -c $< -o $@
 
 ${LOGD_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
