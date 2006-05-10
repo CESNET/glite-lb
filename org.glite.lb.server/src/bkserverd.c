@@ -1112,7 +1112,10 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 	soap_begin(soap);
 	err = 0;
 	if ( soap_begin_recv(soap) ) {
-		if ( soap->error == SOAP_EOF ) return ENOTCONN;
+		if ( soap->error == SOAP_EOF ) {
+			soap_send_fault(soap);
+			return ENOTCONN;
+		}
 		if ( soap->error < SOAP_STOP ) err = soap_send_fault(soap);
 		else soap_closesock(soap);	/*	XXX: Do close the socket here? */
 	} else {
