@@ -229,6 +229,7 @@ event_queue_send(struct event_queue *eq)
     size_t bytes_sent;
     struct timeval tv;
     edg_wll_GssStatus gss_stat;
+    int events_sent = 0;
 
     clear_error();
 
@@ -241,7 +242,10 @@ event_queue_send(struct event_queue *eq)
     tv.tv_usec = 0;
     ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
     if(ret < 0) {
-      eq->timeout = TIMEOUT;
+      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && events_sent > 0)
+        eq->timeout = 0;
+      else
+        eq->timeout = TIMEOUT;
       return(0);
     }
     
@@ -288,6 +292,7 @@ event_queue_send(struct event_queue *eq)
 	  il_log(LOG_ERR, "send_event: %s\n", error_get_msg());
 	
       event_queue_remove(eq);
+      events_sent++;
       break;
       
     } /* switch */
