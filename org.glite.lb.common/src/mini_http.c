@@ -55,6 +55,7 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 				edg_wll_SetErrorGss(ctx, "receving HTTP request", &gss_code);
 				goto error;
 			case EDG_WLL_GSS_ERROR_ERRNO:
+	      			if (errno == ECONNRESET) errno = ENOTCONN;
 				edg_wll_SetError(ctx,errno,"edg_wll_gss_read()");
 				goto error;
 			case EDG_WLL_GSS_ERROR_TIMEOUT:
