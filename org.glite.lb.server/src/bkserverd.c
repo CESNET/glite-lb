@@ -404,8 +404,8 @@ int main(int argc, char *argv[])
 
 	fpid = fopen(pidfile, "w");
 	if (!fpid) { perror(pidfile); return 1; }
-	fprintf(fpid, "%d", getpid());
-	fclose(fpid);
+	if (fprintf(fpid, "%d", getpid()) <= 0) { perror(pidfile); return 1; }
+	if (fclose(fpid) != 0) { perror(pidfile); return 1; }
 
 	semkey = ftok(pidfile,0);
 
