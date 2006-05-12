@@ -9,6 +9,7 @@
 #include "lb_perftest.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/trio.h"
+#include "il_msg.h"
 
 #ident "$Header$"
 
@@ -83,18 +84,54 @@ glite_wll_perftest_consumeEventString(const char *event_string)
 }
 
 
+int
+glite_wll_perftest_consumeEventIlMsg(const char *msg, int len)
+{
+	int ret = 0;
+	char *event;
+
+	assert(msg != NULL);
+
+	if(pthread_mutex_lock(&perftest_lock) < 0)
+		abort();
+
+	gettimeofday(&endtime, NULL);
+
+	/* decode event */
+	if(decode_il_msg(&event, msg+17) < 0) {
+		fprintf(stderr, "PERFTEST: error decoding consumed event, aborting!\n");
+		abort();
+	}
+		
+	/* check for the termination event */
+	if(strstr(event, termination_string) != NULL) {
+		/* print the timestamp */
+		fprintf(stderr, "PERFTEST_END_TIMESTAMP: %lu\n",
+			1000000L*(unsigned long)endtime.tv_sec + (unsigned long)endtime.tv_usec);
+		ret = 1;
+	}
+
+	if(pthread_mutex_unlock(&perftest_lock) < 0)
+		abort();
+
+	free(event);
+
+	return(ret);
+}
+
+
 int 
 glite_wll_perftest_createJobId(const char *bkserver,
 			       int port,
 			       const char *test_user,
-			       int test_num,
+			       const char *test_name,
 			       int job_num,
 			       edg_wlc_JobId *jobid)
 {
 	char unique[256];
 
-	if(snprintf(unique, sizeof(unique), "%s_%d_%d", 
-		    test_user, test_num, job_num) >= sizeof(unique)) 
+	if(snprintf(unique, sizeof(unique), "%s_%s_%d", 
+		    test_user, test_name, job_num) >= sizeof(unique)) 
 		return(E2BIG);
 
 	return(edg_wlc_JobIdRecreate(bkserver, port, unique, jobid));
