@@ -19,11 +19,14 @@ glite_wll_perftest_consumeEvent(edg_wll_Event *event);
 int
 glite_wll_perftest_consumeEventString(const char *event_string);
 
+int
+glite_wll_perftest_consumeEventIlMsg(const char *msg, int len);
+
 int 
 glite_wll_perftest_createJobId(const char *bkserver,
 			       int port,
 			       const char *test_user,
-			       int test_num,
+			       const char *test_name,
 			       int job_num,
 			       edg_wlc_JobId *jobid);
 
