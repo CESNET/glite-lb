@@ -371,10 +371,7 @@ static int edg_wll_LogEventMaster(
 		goto edg_wll_logeventmaster_end;
 	}
 	seq = edg_wll_GetSequenceCode(context);
-	if (edg_wll_IncSequenceCode(context)) {
-		ret = EINVAL;
-		goto edg_wll_logeventmaster_end;
-	}
+
 	if (trio_asprintf(&fix,EDG_WLL_FORMAT_COMMON,
 			date,context->p_host,lvl,priority,
 			source,context->p_instance ? context->p_instance : "",
@@ -434,6 +431,10 @@ edg_wll_logeventmaster_end:
 	if (lvl) free(lvl);
 	if (eventName) free(eventName);
 	if (fullid) free(fullid);
+
+	if (!ret) if(edg_wll_IncSequenceCode(context)) {
+		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMaster(): edg_wll_IncSequenceCode failed");
+	}
 
 	if (ret) edg_wll_UpdateError(context,0,"Logging library ERROR: ");
 
