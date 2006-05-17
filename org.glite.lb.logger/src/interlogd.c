@@ -56,6 +56,12 @@ static void usage (int status)
 	       "  -b, --book                 send events to bookkeeping server only\n"
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
+#ifdef LB_PERF
+	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
+#ifdef PERF_EVENTS_INLINE
+	       "  -e, --event_file <file>    PERFTEST: file to read test jobs from\n"
+#endif
+#endif
 	       , program_name, program_name);
 	exit(status);
 }
@@ -66,6 +72,15 @@ static int debug;
 static int verbose = 0;
 char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
+#ifdef LB_PERF
+int nosend = 0;
+char *dest_host = NULL;
+int dest_port = 0;
+char *user = NULL;
+char *testname = NULL;
+char *event_source = NULL;
+int njobs = 0;
+#endif
 
 char *cert_file = NULL;
 char *key_file  = NULL;
@@ -86,6 +101,12 @@ static struct option const long_options[] =
   {"CAdir", required_argument, 0, 'C'},
   {"log-server", required_argument, 0, 'l'},
   {"socket", required_argument, 0, 's'},
+#ifdef LB_PERF
+  {"nosend", no_argument, 0, 'n'},
+#ifdef PERF_EVENTS_INLINE
+  {"event_file", required_argument, 0, 'e'},
+#endif
+#endif
   {NULL, 0, NULL, 0}
 };
 
@@ -111,6 +132,12 @@ decode_switches (int argc, char **argv)
 			   "b"  /* only bookeeping */
                            "l:" /* log server */
 			   "d" /* debug */
+#ifdef LB_PERF
+			   "n" /* nosend */
+#ifdef PERF_EVENTS_INLINE
+			   "e:" /* event file */
+#endif
+#endif			   
 			   "s:", /* socket */
 			   long_options, (int *) 0)) != EOF)
     {
@@ -158,6 +185,18 @@ decode_switches (int argc, char **argv)
 	case 's':
 	  socket_path = strdup(optarg);
 	  break;
+
+#ifdef LB_PERF
+	case 'n':
+		nosend = 1;
+		break;
+
+#ifdef PERF_EVENTS_INLINE
+	case 'e':
+		event_source = strdup(optarg);
+		break;
+#endif
+#endif
 
 	default:
 	  usage (EXIT_FAILURE);
@@ -211,7 +250,12 @@ main (int argc, char **argv)
 
 #ifdef LB_PERF
   /* this must be called after installing signal handlers */
-  glite_wll_perftest_init();
+  glite_wll_perftest_init(dest_host,
+			  dest_port,
+			  user,
+			  testname,
+			  event_source,
+			  njobs);
 #endif
 
   il_log(LOG_INFO, "Initializing input queue...\n");

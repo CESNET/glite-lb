@@ -26,6 +26,10 @@
 #define DEFAULT_LOG_SERVER "localhost"
 #define DEFAULT_TIMEOUT 60
 
+#ifdef LB_PERF
+#include "glite/lb/lb_perftest.h"
+#endif
+
 #if defined(IL_NOTIFICATIONS)
 
 #include "glite/lb/notifid.h"
@@ -64,7 +68,12 @@ extern char *cert_file;
 extern char *key_file;
 extern char *CAcert_dir;
 extern int bs_only;
-
+#ifdef LB_PERF
+extern int nosend;
+#ifdef PERF_EVENTS_INLINE
+extern char *event_source;
+#endif
+#endif
 
 /* shared data for thread communication */
 #ifdef INTERLOGD_FLUSH
