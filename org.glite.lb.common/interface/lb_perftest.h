@@ -11,7 +11,12 @@
 #define PERFTEST_END_TAG_VALUE "+++ konec testu +++"
 
 int
-glite_wll_perftest_init();
+glite_wll_perftest_init(const char *host,         /** hostname */
+			int port,                 /** port number */
+			const char *user,         /** user running this test */
+			const char *testname,     /** name of the test */
+			const char *filename,     /** file with events for job source */
+			int n);                   /** number of jobs for job source */
 
 int
 glite_wll_perftest_consumeEvent(edg_wll_Event *event);
