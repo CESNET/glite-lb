@@ -24,6 +24,10 @@ static int nevents;
 static int njobs = 0;
 static int cur_event = 0;
 static int cur_job = 0;
+static char *test_user;
+static char *test_name;
+static char *dest_host;
+static int dest_port;
 
 #define EVENTS_BUFSIZ 16
 #define BUFFSZ        1024
@@ -143,7 +147,7 @@ glite_wll_perftest_init(const char *host,
 			return(-1);
 		}
 		
-		if((nevents=read_events(&events)) < 0)
+		if((nevents=read_events(fd,&events)) < 0)
 			return(-1);
 
 		close(fd);
@@ -152,6 +156,10 @@ glite_wll_perftest_init(const char *host,
 		cur_event = cur_job = 0;
 
 		njobs = n;
+		dest_host = host;
+		dest_port = port;
+		test_user = user;
+		test_name = testname;
 	}
 
 	return(0);
@@ -200,8 +208,8 @@ glite_wll_perftest_produceEventString(char **event)
 							  cur_job,
 							  &jobid) != 0) {
 				fprintf(stderr, "produceEventString: error creating jobid\n");
-				return(-1)
-					}
+				return(-1);
+			}
 			if((cur_jobid=edg_wlc_JobIdUnparse(jobid)) == NULL) {
 				fprintf(stderr, "produceEventString: error unparsing jobid\n");
 				return(-1);
