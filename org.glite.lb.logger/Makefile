@@ -75,13 +75,16 @@ TEST_INC:=-I${cppunit_prefix}/include
 
 ifdef LB_PERF
 	LOGD:=glite_lb_logd_perf glite_lb_logd_perf_nofile
-	INTERLOGD:=glite_lb_interlogd_perf glite_lb_interlogd_perf_empty
+	INTERLOGD:=glite_lb_interlogd_perf \
+		   glite_lb_interlogd_perf_empty \
+		   glite_lb_interlogd_perf_inline_empty
 	NOTIF_INTERLOGD:=glite_lb_notif_interlogd
 else
 	LOGD:=glite_lb_logd
 	INTERLOGD:=glite_lb_interlogd
 	NOTIF_INTERLOGD:=glite_lb_notif_interlogd
 endif
+
 
 LOGD_OBJS:= logd_proto.o logd.o
 
@@ -93,8 +96,9 @@ INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 	queue_mgr.o server_msg.o queue_thread.o
 
 INTERLOG_NOBJS:=${INTERLOG_OBJS:.o=.no}
-
+INTERLOG_PERF_OBJS:=${INTERLOG_OBJS:.o=.po}
 INTERLOG_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.eo}
+INTERLOG_INLINE_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.io}
 
 INTERLOG_TEST_OBJS:= \
 	il_error.o \
@@ -131,12 +135,16 @@ glite_lb_notif_interlogd: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} \
 		${COMMON_LIB}_${thrflavour}
 
-glite_lb_interlogd_perf: ${INTERLOG_OBJS}
-	${LINK} -o $@ ${INTERLOG_OBJS} \
+glite_lb_interlogd_perf: ${INTERLOG_PERF_OBJS}
+	${LINK} -o $@ ${INTERLOG_PERF_OBJS} \
 		${COMMON_LIB}_perf_${thrflavour}
 
 glite_lb_interlogd_perf_empty: ${INTERLOG_EMPTY_OBJS}
 	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} \
+		${COMMON_LIB}_perf_${thrflavour}
+
+glite_lb_interlogd_perf_inline_empty: ${INTERLOG_INLINE_EMPTY_OBJS}
+	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
 		${COMMON_LIB}_perf_${thrflavour}
 
 stage: compile
@@ -189,6 +197,12 @@ ${INTERLOG_OBJS}: %.o: %.c
 
 ${INTERLOG_EMPTY_OBJS}: %.eo: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -DPERF_EMPTY -c $< -o $@
+
+${INTERLOG_PERF_OBJS}: %.po: %.c
+	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -c $< -o $@
+
+${INTERLOG_INLINE_EMPTY_OBJS}: %.io: %.c
+	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -DPERF_EMPTY -DPERF_EVENTS_INLINE -c $< -o $@
 
 ${LOGD_NOBJS}: %.no: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -DLB_PERF -DLOGD_NOFILE -c $< -o $@
