@@ -168,6 +168,10 @@ event_queue_connect(struct event_queue *eq)
 
   assert(eq != NULL);
 
+#ifdef LB_PERF
+  if(!nosend) {
+#endif
+
   if(eq->gss.context == GSS_C_NO_CONTEXT) {
 
     tv.tv_sec = TIMEOUT;
@@ -192,6 +196,10 @@ event_queue_connect(struct event_queue *eq)
     }
   }
 
+#ifdef LB_PERF
+  }
+#endif
+
   return(1);
 }
 
@@ -201,10 +209,17 @@ event_queue_close(struct event_queue *eq)
 {
   assert(eq != NULL);
 
+#ifdef LB_PERF
+  if(!nosend) {
+#endif
+
   if(eq->gss.context != GSS_C_NO_CONTEXT) {
     edg_wll_gss_close(&eq->gss, NULL);
     eq->gss.context = GSS_C_NO_CONTEXT;
   }
+#ifdef LB_PERF
+  }
+#endif
   return(0);
 }
 
@@ -218,8 +233,14 @@ event_queue_send(struct event_queue *eq)
 {
   assert(eq != NULL);
 
+#ifdef LB_PERF
+  if(!nosend) {
+#endif
   if(eq->gss.context == GSS_C_NO_CONTEXT)
     return(0);
+#ifdef LB_PERF
+  }
+#endif
 
   /* feed the server with events */
   while (!event_queue_empty(eq)) {
@@ -237,20 +258,29 @@ event_queue_send(struct event_queue *eq)
 
     il_log(LOG_DEBUG, "    trying to deliver event at offset %d for job %s\n", msg->offset, msg->job_id_s);
 
-    tv.tv_sec = TIMEOUT;
-    tv.tv_usec = 0;
-    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
-    if(ret < 0) {
-      eq->timeout = TIMEOUT;
-      return(0);
+#ifdef LB_PERF
+    if(!nosend) {
+#endif
+	    tv.tv_sec = TIMEOUT;
+	    tv.tv_usec = 0;
+	    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
+	    if(ret < 0) {
+		    eq->timeout = TIMEOUT;
+		    return(0);
+	    }
+	    
+	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
+		    /* could not get the reply properly, so try again later */
+		    il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
+		    eq->timeout = TIMEOUT;
+		    return(0);
+	    }
+#ifdef LB_PERF
+    } else {
+	    glite_wll_perftest_consumeEventIlMsg(msg->msg, msg->len);
+	    code = LB_OK;
     }
-    
-    if((code = get_reply(eq, &rep, &code_min)) < 0) {
-      /* could not get the reply properly, so try again later */
-      il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
-      eq->timeout = TIMEOUT;
-      return(0);
-    }
+#endif
     
     il_log(LOG_DEBUG, "    event sent, server %s replied with %d, %s\n", eq->dest_name, code, rep);
     free(rep);
