@@ -73,6 +73,12 @@ endif
 
 ifdef LB_PERF
 	LB_PERF_FLAGS:=-DLB_PERF -DLB_PERF_DROP
+	LB_PERF_TOOLS:=perftest_logjobs
+	COMMON_LIB:=-lglite_lb_common_perf_${nothrflavour}
+	COMMON_LIB_THR:=-lglite_lb_common_perf_${thrflavour}
+else
+	COMMON_LIB:=-lglite_lb_common_${nothrflavour}
+	COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
 endif
 
 CFLAGS:=${DEBUG} \
@@ -105,7 +111,6 @@ EXT_LIB:= ${mysqlib} -lmysqlclient -lz\
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
-COMMON_LIB=-lglite_lb_common_${nothrflavour}
 
 LDFLAGS:=-L${stagedir}/lib \
 	${COVERAGE_FLAGS}
@@ -144,7 +149,7 @@ FAKETHRLIB:=libglite_lb_client_fake_${thrflavour}.la
 PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
-TOOLS:=dump load purge lb_dump_exporter
+TOOLS:=dump load purge lb_dump_exporter ${LB_PERF_TOOLS}
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog
 
 EXAMPLES_CL=user_jobs job_status 
@@ -163,22 +168,22 @@ version_info:=-version-info ${shell \
 
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib \
-			-lglite_lb_common_${nothrflavour} \
+			${COMMON_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
 	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib \
-			-lglite_lb_common_${thrflavour} \
+			${COMMON_LIB_THR} \
 			-lglite_security_gss_${thrflavour}
 
 ${FAKELIB}: ${FAKELIBOBJS}
 	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${glite_location}/lib \
-			-lglite_lb_common_${nothrflavour} \
+			${COMMON_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${FAKETHRLIB}: ${FAKELIBTHROBJS}
 	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${glite_location}/lib \
-			-lglite_lb_common_${thrflavour} \
+			${COMMON_LIB_THR} \
 			-lglite_security_gss_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS}
