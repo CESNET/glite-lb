@@ -59,7 +59,8 @@ static void usage (int status)
 #ifdef LB_PERF
 	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
 #ifdef PERF_EVENTS_INLINE
-	       "  -e, --event_file <file>    PERFTEST: file to read test jobs from\n"
+	       "  -e, --event_file <file>    PERFTEST: file to read test events from\n"
+	       "  -j, --njobs <n>            PERFTEST: number of jobs to send\n"
 #endif
 #endif
 	       , program_name, program_name);
@@ -74,10 +75,6 @@ char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
 #ifdef LB_PERF
 int nosend = 0;
-char *dest_host = NULL;
-int dest_port = 0;
-char *user = NULL;
-char *testname = NULL;
 char *event_source = NULL;
 int njobs = 0;
 #endif
@@ -105,6 +102,7 @@ static struct option const long_options[] =
   {"nosend", no_argument, 0, 'n'},
 #ifdef PERF_EVENTS_INLINE
   {"event_file", required_argument, 0, 'e'},
+  {"njobs", required_argument, NULL, 'j'},
 #endif
 #endif
   {NULL, 0, NULL, 0}
@@ -136,6 +134,7 @@ decode_switches (int argc, char **argv)
 			   "n" /* nosend */
 #ifdef PERF_EVENTS_INLINE
 			   "e:" /* event file */
+			   "j:" /* num jobs */
 #endif
 #endif			   
 			   "s:", /* socket */
@@ -195,6 +194,10 @@ decode_switches (int argc, char **argv)
 	case 'e':
 		event_source = strdup(optarg);
 		break;
+
+	case 'j':
+		njobs = atoi(optarg);
+		break;
 #endif
 #endif
 
@@ -250,10 +253,9 @@ main (int argc, char **argv)
 
 #ifdef LB_PERF
   /* this must be called after installing signal handlers */
-  glite_wll_perftest_init(dest_host,
-			  dest_port,
-			  user,
-			  testname,
+  glite_wll_perftest_init(NULL, /* host */
+			  NULL, /* user */
+			  NULL, /* test name */
 			  event_source,
 			  njobs);
 #endif

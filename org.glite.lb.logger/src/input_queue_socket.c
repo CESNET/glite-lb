@@ -159,6 +159,23 @@ read_event(int sock, long *offset)
  * Returns: -1 on error, 0 if no message available, message length otherwise
  *
  */
+#ifdef PERF_EVENTS_INLINE
+int
+input_queue_get(char **buffer, long *offset, int timeout)
+{
+	static long o = 0;
+	int len;
+
+	len = glite_wll_perftest_produceEventString(buffer);
+	if(len) {
+		o += len;
+		*offset = o;
+	} else if (len == 0) {
+		sleep(timeout);
+	}
+	return(len);
+}
+#else
 int
 input_queue_get(char **buffer, long *offset, int timeout)
 {
@@ -205,3 +222,4 @@ input_queue_get(char **buffer, long *offset, int timeout)
     
   return(strlen(*buffer));
 }
+#endif
