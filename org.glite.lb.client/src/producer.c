@@ -699,10 +699,9 @@ int edg_wll_SetLoggingJobProxy(
 	edg_wll_SetParamString(context, EDG_WLL_PARAM_LBPROXY_USER, user);
 
 	/* query LBProxyServer for sequence code if not user-suplied */
-/* FIXME: doesn't work yet */
 	if (!code) {
-		edg_wll_QuerySequenceCodeProxy(context, job, &code_loc);
-		goto edg_wll_setloggingjobproxy_end;	
+		if (edg_wll_QuerySequenceCodeProxy(context, job, &code_loc))
+			goto edg_wll_setloggingjobproxy_end;	
 	} else {
 		code_loc = strdup(code);
 	}
