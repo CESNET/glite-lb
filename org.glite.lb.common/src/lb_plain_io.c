@@ -135,6 +135,7 @@ cleanup:
 		if ( to->tv_sec < 0 ) to->tv_sec = to->tv_usec = 0;
 	}
 
+	if ( errno == ECONNRESET) errno = ENOTCONN;
 	if ( errno ) return -1;
 
 	if ( conn->bufUse > 0 ) {
