@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <ctype.h>
 
 #include "lb_perftest.h"
 #include "glite/lb/producer.h"
@@ -19,7 +21,7 @@
 static pthread_mutex_t perftest_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct timeval endtime;
 static char *termination_string;
-static char *events[];
+static char **events; /* in fact it is *events[] */
 static int nevents;
 static int njobs = 0;
 static int cur_event = 0;
@@ -93,7 +95,7 @@ read_line(int fd, char **buff, size_t *maxsize)
  */
 static 
 int 
-read_events(int fd, char *(*events[])) 
+read_events(int fd, char ***evts /* *(*evts)[] */) 
 {
 	void *tmp;
 	size_t maxlinesize;
@@ -113,7 +115,7 @@ read_events(int fd, char *(*events[]))
 		i++;
 	}
 
-	*events = e;
+	*evts = e;
 	return i;
 
 nomem:
@@ -126,7 +128,6 @@ nomem:
 
 int 
 glite_wll_perftest_init(const char *host,
-			int port,
 			const char *user,
 			const char *testname,
 			const char *filename, 
@@ -136,6 +137,40 @@ glite_wll_perftest_init(const char *host,
 	if(trio_asprintf(&termination_string, EDG_WLL_FORMAT_USERTAG,
 		    PERFTEST_END_TAG_NAME, PERFTEST_END_TAG_VALUE) < 0)
 		return(-1);
+
+	/* set parameters */
+	if(user) 
+		test_user = strdup(user);
+	else {
+		test_user = getenv("PERFTEST_USER");
+		if(test_user == NULL) 
+			test_user = "anonymous";
+	}
+	if(testname)
+		test_name = strdup(testname);
+	else {
+		test_name = getenv("PERFTEST_NAME");
+		if(test_name == NULL)
+			test_name = "unspecified";
+	}
+	if(host == NULL) {
+		host = getenv("PERFTEST_HOST");
+		if(host == NULL)
+			host = "localhost";
+	}
+	{
+		char *p;
+
+		p = strchr(host, ':');
+  		if(p) 
+			*p = 0;
+		dest_host = strdup(host);
+		if(p) {
+			*p++ = ':';
+			dest_port = atoi(p)+1;
+		} else 
+			dest_port = GLITE_WMSC_JOBID_DEFAULT_PORT+1;
+	}
 
 	/* if we are asked to read events in, read them */
 	if(filename) {
@@ -147,7 +182,7 @@ glite_wll_perftest_init(const char *host,
 			return(-1);
 		}
 		
-		if((nevents=read_events(fd,&events)) < 0)
+		if((nevents=read_events(fd, &events)) < 0)
 			return(-1);
 
 		close(fd);
@@ -156,17 +191,15 @@ glite_wll_perftest_init(const char *host,
 		cur_event = cur_job = 0;
 
 		njobs = n;
-		dest_host = host;
-		dest_port = port;
-		test_user = user;
-		test_name = testname;
+
+		fprintf(stderr, "PERFTEST_JOB_SIZE=%d\n", nevents);
+		fprintf(stderr, "PERFTEST_NUM_JOBS=%d\n", njobs);
 	}
 
 	return(0);
 }
 
 
-static char *cur_jobid;
 
 /**
  * This produces (njobs*nevents + 1) events, one event for each call.
@@ -176,6 +209,7 @@ static char *cur_jobid;
 int
 glite_wll_perftest_produceEventString(char **event)
 {
+	static char *cur_jobid = NULL;
 	char *e;
 
 	assert(event != NULL);
@@ -183,15 +217,39 @@ glite_wll_perftest_produceEventString(char **event)
 	if(pthread_mutex_lock(&perftest_lock) < 0)
 		abort();
 
+	/* is there anything to send? */
+	if(cur_job < 0) {
+		if(pthread_mutex_unlock(&perftest_lock) < 0)
+			abort();
+		return(0);
+	}
 
 	/* did we send all jobs? */
 	if(cur_job >= njobs) {
 		
 		/* construct termination event */
-		
-		/* and reset counters back to beginning */
-		cur_job = 0;
-		cur_event = 0;
+		if(trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USER EDG_WLL_FORMAT_USERTAG,
+				 "now", /* date */
+				 "localhost", /* host */
+				 "highest", /* level */
+				 0, /* priority */
+				 "me", /* source */
+				 "me again", /* source instance */
+				 "UserTag", /* event */
+				 cur_jobid, /* jobid */
+				 "last", /* sequence */
+				 test_user, /* user */
+				 PERFTEST_END_TAG_NAME,
+				 PERFTEST_END_TAG_VALUE) < 0) {
+			fprintf(stderr, "produceEventString: error creating termination event\n");
+			if(pthread_mutex_unlock(&perftest_lock) < 0)
+				abort();
+			return(-1);
+		}
+
+		/* and refuse to produce more */
+		cur_job = -1;
+		cur_event = -1;
 
 	} else {
 
@@ -199,8 +257,19 @@ glite_wll_perftest_produceEventString(char **event)
 		if(cur_event == 0) {
 			edg_wlc_JobId jobid;
 			
+			/* is this the first event? */
+			if(cur_jobid) {
+				free(cur_jobid);
+			} else {
+				struct timeval now;
+
+				gettimeofday(&now, NULL);
+				fprintf(stderr, "PERFTEST_BEGIN_TIMESTAMP=%lu.%lu\n",
+					(unsigned long)now.tv_sec,(unsigned long)now.tv_usec);
+
+			}
+
 			/* generate new jobid */
-			if(cur_jobid) free(cur_jobid);
 			if(glite_wll_perftest_createJobId(dest_host,
 							  dest_port,
 							  test_user,
@@ -208,10 +277,14 @@ glite_wll_perftest_produceEventString(char **event)
 							  cur_job,
 							  &jobid) != 0) {
 				fprintf(stderr, "produceEventString: error creating jobid\n");
+				if(pthread_mutex_unlock(&perftest_lock) < 0)
+					abort();
 				return(-1);
 			}
 			if((cur_jobid=edg_wlc_JobIdUnparse(jobid)) == NULL) {
 				fprintf(stderr, "produceEventString: error unparsing jobid\n");
+				if(pthread_mutex_unlock(&perftest_lock) < 0)
+					abort();
 				return(-1);
 			}
 		}
@@ -219,6 +292,8 @@ glite_wll_perftest_produceEventString(char **event)
 		/* return current event with jobid filled in */
 		if(trio_asprintf(&e, "DG.JOBID=\"%s\" %s", cur_jobid, events[cur_event]) < 0) {
 			fprintf(stderr, "produceEventString: error generating event\n");
+			if(pthread_mutex_unlock(&perftest_lock) < 0)
+				abort();
 			return(-1);
 		}
 	}
@@ -234,7 +309,7 @@ glite_wll_perftest_produceEventString(char **event)
 	if(pthread_mutex_unlock(&perftest_lock) < 0)
 		abort();
 
-	return(0);
+	return(strlen(e));
 }
 
 
@@ -255,8 +330,8 @@ glite_wll_perftest_consumeEvent(edg_wll_Event *event)
 	   (strcmp(event->userTag.name, PERFTEST_END_TAG_NAME) == 0) &&
 	   (strcmp(event->userTag.value, PERFTEST_END_TAG_VALUE) == 0)) {
 		/* print the timestamp */
-		fprintf(stderr, "PERFTEST_END_TIMESTAMP: %lu\n",
-			1000000L*(unsigned long)endtime.tv_sec + (unsigned long)endtime.tv_usec); 
+		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%lu\n",
+			(unsigned long)endtime.tv_sec,(unsigned long)endtime.tv_usec);
 		ret = 1;
 	}
 
@@ -282,8 +357,8 @@ glite_wll_perftest_consumeEventString(const char *event_string)
 	/* check for the termination event */
 	if(strstr(event_string, termination_string) != NULL) {
 		/* print the timestamp */
-		fprintf(stderr, "PERFTEST_END_TIMESTAMP: %lu\n",
-			1000000L*(unsigned long)endtime.tv_sec + (unsigned long)endtime.tv_usec);
+		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%lu\n",
+			(unsigned long)endtime.tv_sec,(unsigned long)endtime.tv_usec);
 		ret = 1;
 	}
 
@@ -316,8 +391,8 @@ glite_wll_perftest_consumeEventIlMsg(const char *msg, int len)
 	/* check for the termination event */
 	if(strstr(event, termination_string) != NULL) {
 		/* print the timestamp */
-		fprintf(stderr, "PERFTEST_END_TIMESTAMP: %lu\n",
-			1000000L*(unsigned long)endtime.tv_sec + (unsigned long)endtime.tv_usec);
+		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%lu\n",
+			endtime.tv_sec, endtime.tv_usec);
 		ret = 1;
 	}
 
