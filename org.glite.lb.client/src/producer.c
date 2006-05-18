@@ -895,6 +895,8 @@ int edg_wll_RegisterSubjobs(
 	edg_wlc_JobId const	*psubjob;
 	edg_wlc_JobId		oldctxjob;
 	char *			oldctxseq;
+	int			errcode = 0;
+	char *			errdesc = NULL;
 
 	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
 	oldctxseq = edg_wll_GetSequenceCode(ctx);
@@ -905,14 +907,19 @@ int edg_wll_RegisterSubjobs(
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjob(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
 						ns, parent, 0, NULL, NULL) != 0) {
+			errcode = edg_wll_Error(ctx, NULL, &errdesc);
 			goto edg_wll_registersubjobs_end; 
 		}
 		pjdl++; psubjob++;
 	}
 
+edg_wll_registersubjobs_end:
 	edg_wll_SetLoggingJob(ctx, oldctxjob, oldctxseq, EDG_WLL_SEQ_NORMAL);
 
-edg_wll_registersubjobs_end:
+	if (errcode) {
+		edg_wll_SetError(ctx, errcode, errdesc);
+		free(errdesc);
+	}
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -927,6 +934,8 @@ int edg_wll_RegisterSubjobsProxy(
 	edg_wlc_JobId const	*psubjob;
 	edg_wlc_JobId		oldctxjob;
 	char *			oldctxseq;
+	int			errcode = 0;
+	char *			errdesc = NULL;
 
 	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
 	oldctxseq = edg_wll_GetSequenceCode(ctx);
@@ -937,6 +946,7 @@ int edg_wll_RegisterSubjobsProxy(
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjobProxy(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
 						ns, parent, 0, NULL, NULL) != 0) {
+			errcode = edg_wll_Error(ctx, NULL, &errdesc);
 			goto edg_wll_registersubjobsproxy_end;
 		}
 		pjdl++; psubjob++;
@@ -945,6 +955,10 @@ int edg_wll_RegisterSubjobsProxy(
 edg_wll_registersubjobsproxy_end:
 	edg_wll_SetLoggingJobProxy(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL);
 
+	if (errcode) {
+		edg_wll_SetError(ctx, errcode, errdesc);
+		free(errdesc);
+	}
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
