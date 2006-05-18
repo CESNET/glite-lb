@@ -408,6 +408,7 @@ static int edg_wll_LogEventMaster(
 	}
 
    /* and send the message */ 
+#ifndef LB_PERF_DROP
 	if (flags & LOGFLAG_NORMAL) {
 		/* to the local-logger: */
 		ret = edg_wll_DoLogEvent(context, out);
@@ -420,6 +421,7 @@ static int edg_wll_LogEventMaster(
 	} else {
 		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMaster(): wrong flag specified");
 	}
+#endif
 
 edg_wll_logeventmaster_end:
 	va_end(fmt_args);

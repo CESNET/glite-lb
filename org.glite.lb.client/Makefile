@@ -71,6 +71,10 @@ ifdef LB_STANDALONE
         LB_STANDALONE_FLAGS:=-DLB_STANDALONE
 endif
 
+ifdef LB_PERF
+	LB_PERF_FLAGS:=-DLB_PERF -DLB_PERF_DROP
+endif
+
 CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
@@ -78,7 +82,7 @@ CFLAGS:=${DEBUG} \
 	-I${expat_prefix}/include \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	${COVERAGE_FLAGS} \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS}
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS}
 
 CXXFLAGS:=${CFLAGS}
 
