@@ -18,6 +18,9 @@ glite_wll_perftest_init(const char *host,         /** hostname */
 			int n);                   /** number of jobs for job source */
 
 int
+glite_wll_perftest_produceEventString(char **event);
+
+int
 glite_wll_perftest_consumeEvent(edg_wll_Event *event);
 
 int
