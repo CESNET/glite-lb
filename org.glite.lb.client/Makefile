@@ -74,12 +74,9 @@ endif
 ifdef LB_PERF
 	LB_PERF_FLAGS:=-DLB_PERF -DLB_PERF_DROP
 	LB_PERF_TOOLS:=perftest_logjobs
-	COMMON_LIB:=-lglite_lb_common_perf_${nothrflavour}
-	COMMON_LIB_THR:=-lglite_lb_common_perf_${thrflavour}
-else
-	COMMON_LIB:=-lglite_lb_common_${nothrflavour}
-	COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
 endif
+COMMON_LIB:=-lglite_lb_common_${nothrflavour}
+COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
 
 CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
@@ -315,6 +312,7 @@ endif
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
 	${INSTALL} -m 755 ${top_srcdir}/examples/export.sh "${PREFIX}/examples/glite-lb-export.sh"
+	${INSTALL} -m 755 ${top_srcdir}/examples/log_dag.sh "${PREFIX}/examples/glite-lb-log_dag.sh"
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 clean:

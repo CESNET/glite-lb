@@ -125,13 +125,13 @@ glite_lb_logd: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} 
 
 glite_lb_logd_perf: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_perf_${nothrflavour} 
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} 
 
 glite_lb_logd_nofile: ${LOGD_NOBJS}
 	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} 
 
 glite_lb_logd_perf_nofile: ${LOGD_NOBJS}
-	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_perf_${nothrflavour} 
+	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} 
 
 glite_lb_interlogd: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour} 
@@ -140,14 +140,14 @@ glite_lb_notif_interlogd: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} ${COMMON_LIB}_${thrflavour}
 
 glite_lb_interlogd_perf: ${INTERLOG_OBJS}
-	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_perf_${thrflavour}
+	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour}
 
 glite_lb_interlogd_perf_empty: ${INTERLOG_EMPTY_OBJS}
-	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}_perf_${thrflavour}
+	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}_${thrflavour}
 
 glite_lb_interlogd_perf_inline_empty: ${INTERLOG_INLINE_EMPTY_OBJS}
 	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
-		${COMMON_LIB}_perf_${thrflavour}
+		${COMMON_LIB}_${thrflavour}
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes

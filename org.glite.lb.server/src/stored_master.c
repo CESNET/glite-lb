@@ -107,12 +107,16 @@ int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
 	edg_wll_ResetError(ctx);
 	ret = read_il_data(ctx, &buf, gss_plain_reader);
 	if ( ret < 0 ) return(ret);
-
+#ifdef LB_PERF
+	glite_wll_perftest_consumeEventIlMsg(buf);
+#else
 	if ( !(ret = handle_request(ctx, buf)) ) {
 		if ( (err = edg_wll_Error(ctx, NULL, &errd)) ) edg_wll_ResetError(ctx);
 	}
+#endif
 	free(buf);
 
+	
 	if ( (len = create_reply(ctx, &buf)) > 0 ) {
 		if ( edg_wll_plain_write_full(&ctx->connProxy->conn, buf, len, &ctx->p_tmp_timeout) < 0 ) {
 			if ( errd ) free(errd);

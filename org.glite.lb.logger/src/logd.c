@@ -17,6 +17,9 @@
 #include "logd_proto.h"
 #include "glite/lb/consumer.h"
 #include "glite/security/glite_gss.h"
+#ifdef LB_PERF
+#include "glite/lb/lb_perftest.h"
+#endif
 
 static const char rcsid[] = "@(#)$Id$";
 static int verbose = 0;
@@ -326,6 +329,10 @@ Copyright (c) 2002 CERN, INFN and CESNET on behalf of the EU DataGrid.\n");
    if (mysignal(SIGTERM, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGCHLD, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
 
+#ifdef LB_PERF
+   glite_wll_perftest_init(NULL, NULL, NULL, NULL, 0);
+#endif
+ 
    edg_wll_gss_watch_creds(cert_file,&cert_mtime);
    /* XXX DK: support noAuth */
    ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &my_subject_name,

@@ -34,6 +34,13 @@ ifdef LB_STANDALONE
 #	GLITE_LB_SERVER_WITH_WS=no
 endif
 
+ifdef LB_PERF
+	STATIC_LIB_BK:=libglite_lb_bkserver_perf.a
+	LB_PERF_FLAGS:=-DLB_PERF
+else
+	STATIC_LIB_BK:=libglite_lb_bkserver.a
+endif
+
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS 
 	NSMAP=LoggingAndBookkeeping.nsmap
@@ -74,7 +81,7 @@ CFLAGS:= \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
 	$(GRIDSITE_CFLAGS) \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS}
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS}
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
@@ -203,7 +210,6 @@ LIB_OBJS_BK:= \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o
-STATIC_LIB_BK:=libglite_lb_bkserver.a
 
 glite_lb_bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}

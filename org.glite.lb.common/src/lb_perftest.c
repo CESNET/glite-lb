@@ -370,7 +370,7 @@ glite_wll_perftest_consumeEventString(const char *event_string)
 
 
 int
-glite_wll_perftest_consumeEventIlMsg(const char *msg, int len)
+glite_wll_perftest_consumeEventIlMsg(const char *msg)
 {
 	int ret = 0;
 	char *event;
@@ -383,7 +383,7 @@ glite_wll_perftest_consumeEventIlMsg(const char *msg, int len)
 	gettimeofday(&endtime, NULL);
 
 	/* decode event */
-	if(decode_il_msg(&event, msg+17) < 0) {
+	if(decode_il_msg(&event, msg) < 0) {
 		fprintf(stderr, "PERFTEST: error decoding consumed event, aborting!\n");
 		abort();
 	}

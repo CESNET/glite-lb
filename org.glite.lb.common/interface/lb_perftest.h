@@ -27,7 +27,7 @@ int
 glite_wll_perftest_consumeEventString(const char *event_string);
 
 int
-glite_wll_perftest_consumeEventIlMsg(const char *msg, int len);
+glite_wll_perftest_consumeEventIlMsg(const char *msg);
 
 int 
 glite_wll_perftest_createJobId(const char *bkserver,

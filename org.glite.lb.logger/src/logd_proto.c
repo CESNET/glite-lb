@@ -463,16 +463,21 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 
 
 	/* if not command, save message to file */
+#ifdef LOGD_NOFILE
+		edg_wll_ll_log(LOG_DEBUG,"Calling perftest\n");
+		glite_wll_perftest_consumeEventString(msg);
+		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+		filepos = 0;
+#else
 	if(strstr(msg, "DG.TYPE=\"command\"") == NULL) {
 		/* compose the name of the log file */
-//		edg_wll_ll_log(LOG_DEBUG,"Composing filename from prefix \"%s\" and jobId \"%s\"...",prefix,jobId);
+		edg_wll_ll_log(LOG_DEBUG,"Composing filename from prefix \"%s\" and jobId \"%s\"...",prefix,jobId);
 		count = strlen(prefix);
 		strncpy(outfilename,prefix,count); count_total=count;
 		strncpy(outfilename+count_total,".",1); count_total+=1; count=strlen(jobId);
 		strncpy(outfilename+count_total,jobId,count); count_total+=count;
 		outfilename[count_total]='\0';
-//		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
-#ifndef LOGD_NOFILE
+		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 		edg_wll_ll_log(LOG_INFO,"Writing message to \"%s\"...",outfilename);
 
 		i = 0;
@@ -487,10 +492,10 @@ open_event_file:
 			free(errd);
 			goto edg_wll_log_proto_server_end;
 		} else edg_wll_ll_log(LOG_INFO,"o.k.");
-#endif
 	} else {
 		filepos = 0;
 	}
+#endif
 
 
 	/* if not priority send now the answer back to client */

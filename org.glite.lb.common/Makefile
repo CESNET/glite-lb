@@ -41,10 +41,8 @@ else
 	JOBID_LIB:=-lglite_wmsutils_cjobid
 endif
 
-ifdef LB_PERF
-	PERF_HDRS:=lb_perftest.h
-	PERF_OBJS:=lb_perftest.o
-endif
+PERF_HDRS:=lb_perftest.h
+PERF_OBJS:=lb_perftest.o
 
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
@@ -111,17 +109,10 @@ HDRS:=context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h il_msg.h \
 	escape.h ulm_parse.h trio.h lb_maildir.h ${PERF_HDRS}
 
-ifdef LB_PERF
-STATICLIB:=libglite_lb_common_perf_${nothrflavour}.a
-THRSTATICLIB:=libglite_lb_common_perf_${thrflavour}.a
-LTLIB:=libglite_lb_common_perf_${nothrflavour}.la
-THRLTLIB:=libglite_lb_common_perf_${thrflavour}.la
-else
 STATICLIB:=libglite_lb_common_${nothrflavour}.a
 THRSTATICLIB:=libglite_lb_common_${thrflavour}.a
 LTLIB:=libglite_lb_common_${nothrflavour}.la
 THRLTLIB:=libglite_lb_common_${thrflavour}.la
-endif
 
 REPORTS:=${top_srcdir}/reports
 

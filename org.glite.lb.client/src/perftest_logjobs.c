@@ -3,8 +3,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
-
+#include "glite/lb/context-int.h"
 #include "glite/lb/lb_perftest.h"
+
+extern int edg_wll_DoLogEvent(edg_wll_Context context, edg_wll_LogLine logline);
+extern int edg_wll_DoLogEventProxy(edg_wll_Context context, edg_wll_LogLine logline);
 
 /*
 extern char *optarg;
@@ -68,8 +71,12 @@ main(int argc, char *argv[])
 {
 
 	char 	*destname= NULL,*testname = NULL,*filename = NULL;
+	char	*event;
 	int 	lbproxy = 0, num_jobs = 1;
 	int 	opt;
+	edg_wll_Context ctx;
+
+	edg_wll_InitContext(&ctx);
 
 	opterr = 0;
 
@@ -104,6 +111,27 @@ main(int argc, char *argv[])
 		fprintf(stderr,"%s: glite_wll_perftest_init failed\n",argv[0]);
 	}
 
+	while (glite_wll_perftest_produceEventString(&event)) {
+		 if (lbproxy) {
+			ctx->p_tmp_timeout = ctx->p_sync_timeout;
+			if (edg_wll_DoLogEventProxy(ctx,event)) {
+				char    *et,*ed;
+				edg_wll_Error(ctx,&et,&ed);
+				fprintf(stderr,"edg_wll_DoLogEvent(): %s (%s)\n",et,ed);
+				exit(1);
+			}
+		} else {
+			ctx->p_tmp_timeout = ctx->p_log_timeout;
+			if (edg_wll_DoLogEvent(ctx,event)) {
+				char    *et,*ed;
+				edg_wll_Error(ctx,&et,&ed);
+				fprintf(stderr,"edg_wll_DoLogEvent(): %s (%s)\n",et,ed);
+				exit(1);
+			}
+
+		}
+	}
+	edg_wll_FreeContext(ctx);
 	return 0;
 
 }
