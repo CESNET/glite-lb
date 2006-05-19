@@ -277,7 +277,7 @@ event_queue_send(struct event_queue *eq)
 	    }
 #ifdef LB_PERF
     } else {
-	    glite_wll_perftest_consumeEventIlMsg(msg->msg, msg->len);
+	    glite_wll_perftest_consumeEventIlMsg(msg->msg);
 	    code = LB_OK;
     }
 #endif
