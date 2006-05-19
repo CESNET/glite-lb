@@ -276,7 +276,11 @@ Copyright (c) 2002 CERN, INFN and CESNET on behalf of the EU DataGrid.\n");
 			usage(argv[0]); exit(0);
 	}
    }
+#ifdef LB_PERF
+   edg_wll_ll_log_init(verbose ? LOG_INFO : LOG_ERR);
+#else
    edg_wll_ll_log_init(verbose ? LOG_DEBUG : LOG_INFO);
+#endif
    edg_wll_ll_log(LOG_INFO,"Initializing...\n");
 
    /* check noParse */
