@@ -7,6 +7,7 @@
 #include "glite/lb/context-int.h"
 #include "lock.h"
 
+extern int debug;
 
 int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const edg_wlc_JobId job,int lock)
 {
@@ -21,7 +22,7 @@ int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const edg_wlc_JobId job,int 
 	for (i=0; i<sizeof b64 && b64[i] != un[1]; i++);
 	n += i<<6;
 
-	fprintf(stderr,"[%d] semop(%d,%d) \n",getpid(),n % ctx->semaphores,lock);
+	if (debug) fprintf(stderr,"[%d] semop(%d,%d) \n",getpid(),n % ctx->semaphores,lock);
 
 	s.sem_num = n % ctx->semaphores;
 	s.sem_op = lock;

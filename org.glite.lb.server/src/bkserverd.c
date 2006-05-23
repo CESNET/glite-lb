@@ -165,13 +165,14 @@ static struct option opts[] = {
 	{"notif-il-fprefix",	1, NULL,	'Y'},
 	{"count-statistics",	1, NULL,	'T'},
 	{"request-timeout",	1, NULL,	't'},
+	{"silent",	0, NULL, 'z' },
 	{NULL,0,NULL,0}
 };
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:j";
+static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jz";
 #else
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:j";
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jz";
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 static void usage(char *me) 
@@ -208,6 +209,7 @@ static void usage(char *me)
 		"\t--notif-il-fprefix\t file prefix for notifications\n"
 		"\t--count-statistics=1\t count certain statistics on jobs\n"
 		"\t                  =2\t ... and allow anonymous access\n"
+		"\t--silent\t don't print diagnostic, even if -d is on\n"
 	,me);
 }
 
@@ -288,6 +290,7 @@ int main(int argc, char *argv[])
 	edg_wll_GssStatus	gss_code;
 	struct timeval		to;
 	int 			request_timeout = REQUEST_TIMEOUT;
+	int	silent = 0;
 
 
 
@@ -332,6 +335,7 @@ int main(int argc, char *argv[])
 		case 'w': free(ws_port); ws_port = strdup(optarg); break;
 #endif /* GLITE_LB_SERVER_WITH_WS */
 		case 'd': debug = 1; break;
+		case 'z': silent = 1; break;
 		case 'r': rgma_export = 1; break;
 		case 'm': dbstring = optarg; break;
 		case 'n': noAuth = 1; break;
@@ -575,6 +579,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 		setpgid(0, getpid());
 	}
 
+	if (silent) debug = 0;
 
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVES_COUNT, slaves);
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_OVERLOAD, SLAVE_OVERLOAD);

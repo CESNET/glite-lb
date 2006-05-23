@@ -13,7 +13,8 @@
 #include "lb_http.h"
 #include "lb_proto.h"
 
-#define dprintf(x) printf x
+extern int debug;
+#define dprintf(x) if (debug) printf x
 
 
 int edg_wll_ServerHTTP(edg_wll_Context ctx)
