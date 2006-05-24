@@ -116,6 +116,13 @@ THRLTLIB:=libglite_lb_common_${thrflavour}.la
 
 REPORTS:=${top_srcdir}/reports
 
+ifdef LB_PERF
+STAGE_PERFTEST_EXAMPLES=mkdir -p ${PREFIX}/examples/perftest; \
+		install -m 644 ${top_srcdir}/examples/*.log ${PREFIX}/examples/perftest 
+else
+STAGE_PERFTEST_EXAMPLES=true
+endif
+
 default: all
 
 #all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
@@ -224,7 +231,8 @@ install:
 		if [ x${LB_STANDALONE} = xyes ]; then \
 			mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
 			install -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
-		fi \
+		fi ; \
+		${STAGE_PERFTEST_EXAMPLES} ; \
 	fi
 
 clean:
