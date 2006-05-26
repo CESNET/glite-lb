@@ -228,17 +228,16 @@ glite_wll_perftest_produceEventString(char **event)
 	if(cur_job >= njobs) {
 		
 		/* construct termination event */
-		if(trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USER EDG_WLL_FORMAT_USERTAG,
+		if(trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USERTAG,
 				 "now", /* date */
 				 "localhost", /* host */
 				 "highest", /* level */
 				 0, /* priority */
-				 "me", /* source */
+				 "UserInterface", /* source */
 				 "me again", /* source instance */
 				 "UserTag", /* event */
 				 cur_jobid, /* jobid */
 				 "last", /* sequence */
-				 test_user, /* user */
 				 PERFTEST_END_TAG_NAME,
 				 PERFTEST_END_TAG_VALUE) < 0) {
 			fprintf(stderr, "produceEventString: error creating termination event\n");
