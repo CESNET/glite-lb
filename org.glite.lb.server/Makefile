@@ -355,6 +355,7 @@ install:
 		if [ x${LB_STANDALONE} = x ]; then \
 			${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
 		fi; \
+		${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}; \
 	fi
 
 clean:

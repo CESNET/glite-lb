@@ -16,6 +16,12 @@
 #include "lock.h"
 #include "il_lbproxy.h"
 
+#ifdef LB_PERF
+#include "glite/lb/lb_perftest.h"
+#include "glite/lb/srv_perf.h"
+#endif
+
+
 /* XXX */
 #define use_db	1
 
@@ -36,6 +42,16 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 
   if(edg_wll_ParseEvent(ctx, event, &ev))
     goto err;
+
+#ifdef LB_PERF
+  if (sink_mode == GLITE_LB_SINK_STORE) {
+	  glite_wll_perftest_consumeEvent(ev);
+	  edg_wll_FreeEvent(ev);
+	  free(ev);
+	  return 0;
+  }
+#endif
+
 
   /* XXX: if event type is user tag, convert the tag name to lowercase!
    * 	  (not sure whether to convert a value too is reasonable
@@ -64,8 +80,17 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 			ev->changeACL.user_id, ev->changeACL.user_id_type,
 			ev->changeACL.permission, ev->changeACL.permission_type,
 			ev->changeACL.operation);
-  else
+  else {
+#ifdef LB_PERF
+    if(sink_mode == GLITE_LB_SINK_STATE) {
+	     glite_wll_perftest_consumeEvent(ev);
+	     edg_wll_UnlockJob(ctx,ev->any.jobId);
+	     goto err;
+    }
+#endif
+
     err = edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, ctx->isProxy? NULL: &newstat);
+  }
 
   if (edg_wll_UnlockJob(ctx,ev->any.jobId)) goto err;
   if (err) goto err;

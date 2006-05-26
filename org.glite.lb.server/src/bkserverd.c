@@ -42,6 +42,13 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/lb_maildir.h"
 
+#ifdef LB_PERF
+#include "glite/lb/lb_perftest.h"
+#include "glite/lb/srv_perf.h"
+
+enum lb_srv_perf_sink sink_mode;
+#endif
+
 #include "lb_http.h"
 #include "lb_proto.h"
 #include "index.h"
@@ -166,14 +173,20 @@ static struct option opts[] = {
 	{"count-statistics",	1, NULL,	'T'},
 	{"request-timeout",	1, NULL,	't'},
 	{"silent",	0, NULL, 'z' },
+#ifdef LB_PERF
+	{"perf-sink",           1, NULL,        'K'},
+#endif
 	{NULL,0,NULL,0}
 };
 
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jz"
 #ifdef GLITE_LB_SERVER_WITH_WS
-static const char *get_opt_string = "a:c:k:C:V:p:w:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jz";
-#else
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jz";
-#endif	/* GLITE_LB_SERVER_WITH_WS */
+	"w:"
+#endif
+#ifdef LB_PERF
+	"K:"
+#endif
+;
 
 static void usage(char *me) 
 {
@@ -210,6 +223,10 @@ static void usage(char *me)
 		"\t--count-statistics=1\t count certain statistics on jobs\n"
 		"\t                  =2\t ... and allow anonymous access\n"
 		"\t--silent\t don't print diagnostic, even if -d is on\n"
+#ifdef LB_PERF
+		"\t--perf-sink\t where to sink events\n"
+#endif
+
 	,me);
 }
 

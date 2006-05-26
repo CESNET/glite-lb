@@ -15,6 +15,10 @@
 
 #include "store.h"
 
+#ifdef LB_PERF
+#include "srv_perf.h"
+#endif
+
 
 static
 int
@@ -108,12 +112,12 @@ int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
 	ret = read_il_data(ctx, &buf, gss_plain_reader);
 	if ( ret < 0 ) return(ret);
 #ifdef LB_PERF
-	glite_wll_perftest_consumeEventIlMsg(buf);
-#else
+	if (sink_mode == GLITE_LB_SINK_PARSE) glite_wll_perftest_consumeEventIlMsg(buf);
+	else
+#endif
 	if ( !(ret = handle_request(ctx, buf)) ) {
 		if ( (err = edg_wll_Error(ctx, NULL, &errd)) ) edg_wll_ResetError(ctx);
 	}
-#endif
 	free(buf);
 
 	
