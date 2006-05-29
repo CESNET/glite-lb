@@ -263,7 +263,7 @@ glite_wll_perftest_produceEventString(char **event)
 				struct timeval now;
 
 				gettimeofday(&now, NULL);
-				fprintf(stderr, "PERFTEST_BEGIN_TIMESTAMP=%lu.%lu\n",
+				fprintf(stderr, "PERFTEST_BEGIN_TIMESTAMP=%lu.%06lu\n",
 					(unsigned long)now.tv_sec,(unsigned long)now.tv_usec);
 
 			}
@@ -329,7 +329,7 @@ glite_wll_perftest_consumeEvent(edg_wll_Event *event)
 	   (strcmp(event->userTag.name, PERFTEST_END_TAG_NAME) == 0) &&
 	   (strcmp(event->userTag.value, PERFTEST_END_TAG_VALUE) == 0)) {
 		/* print the timestamp */
-		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%lu\n",
+		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%06lu\n",
 			(unsigned long)endtime.tv_sec,(unsigned long)endtime.tv_usec);
 		ret = 1;
 	}
@@ -356,7 +356,7 @@ glite_wll_perftest_consumeEventString(const char *event_string)
 	/* check for the termination event */
 	if(strstr(event_string, termination_string) != NULL) {
 		/* print the timestamp */
-		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%lu\n",
+		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%06lu\n",
 			(unsigned long)endtime.tv_sec,(unsigned long)endtime.tv_usec);
 		ret = 1;
 	}
@@ -390,7 +390,7 @@ glite_wll_perftest_consumeEventIlMsg(const char *msg)
 	/* check for the termination event */
 	if(strstr(event, termination_string) != NULL) {
 		/* print the timestamp */
-		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%lu\n",
+		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%06lu\n",
 			endtime.tv_sec, endtime.tv_usec);
 		ret = 1;
 	}
