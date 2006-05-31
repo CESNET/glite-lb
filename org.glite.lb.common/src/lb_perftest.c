@@ -80,8 +80,18 @@ read_line(int fd, char **buff, size_t *maxsize)
                                 i = 0;
                                 continue;
                         }
-                        else
+                        else {
+				/* i points to the last nonspace, nonnull character in line */
+				/* add \n - we need it later */
+				(*buff)[++i] = '\n'; /* now we are at \0 or at space */
+				if(i >= *maxsize) {
+					(*maxsize) += 1;
+					if((tmp = realloc(*buff, *maxsize)) == NULL) return -1;
+					*buff = (char *)tmp;
+				}
+				(*buff)[++i] = '\0';
                                 return 1;
+			}
                 }
 
                 i++;
@@ -172,6 +182,10 @@ glite_wll_perftest_init(const char *host,
 			dest_port = GLITE_WMSC_JOBID_DEFAULT_PORT+1;
 	}
 
+	/* reset event source */
+	cur_event = cur_job = 0;
+	njobs = n;
+
 	/* if we are asked to read events in, read them */
 	if(filename) {
 		int fd;
@@ -187,10 +201,6 @@ glite_wll_perftest_init(const char *host,
 
 		close(fd);
 
-		/* reset event source */
-		cur_event = cur_job = 0;
-
-		njobs = n;
 
 		fprintf(stderr, "PERFTEST_JOB_SIZE=%d\n", nevents);
 		fprintf(stderr, "PERFTEST_NUM_JOBS=%d\n", njobs);
@@ -199,6 +209,51 @@ glite_wll_perftest_init(const char *host,
 	return(0);
 }
 
+
+/** 
+ * This produces njobs+1 jobids, one for each call.
+ *
+ * WARNING: do not mix calls to this function with calls to produceEventString!
+ */
+char *
+glite_wll_perftest_produceJobId()
+{
+	edg_wlc_JobId jobid;
+	char *jobids;
+
+	if(pthread_mutex_lock(&perftest_lock) < 0)
+		abort();
+
+	/* is there anything to send? */
+	if(cur_job < 0) {
+		if(pthread_mutex_unlock(&perftest_lock) < 0)
+			abort();
+		return(NULL);
+	}
+
+	if(glite_wll_perftest_createJobId(dest_host,
+					  dest_port,
+					  test_user,
+					  test_name,
+					  cur_job,
+					  &jobid) != 0) {
+		fprintf(stderr, "produceJobId: error creating jobid\n");
+		if(pthread_mutex_unlock(&perftest_lock) < 0)
+			abort();
+		return(NULL);
+	}
+	if((jobids=edg_wlc_JobIdUnparse(jobid)) == NULL) {
+		fprintf(stderr, "produceJobId: error unparsing jobid\n");
+		if(pthread_mutex_unlock(&perftest_lock) < 0)
+			abort();
+		return(NULL);
+	}
+
+	if(cur_job++ >= njobs) 
+		cur_job = -1;
+		
+	return(jobids);
+}
 
 
 /**
@@ -228,7 +283,7 @@ glite_wll_perftest_produceEventString(char **event)
 	if(cur_job >= njobs) {
 		
 		/* construct termination event */
-		if(trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USERTAG,
+		if(trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USERTAG "\n",
 				 "now", /* date */
 				 "localhost", /* host */
 				 "highest", /* level */
@@ -418,5 +473,5 @@ glite_wll_perftest_createJobId(const char *bkserver,
 		    test_user, test_name, job_num) >= sizeof(unique)) 
 		return(E2BIG);
 
-	return(edg_wlc_JobIdRecreate(bkserver, port, unique, jobid));
+	return(edg_wlc_JobIdRecreate(bkserver, port, str2md5base64(unique), jobid));
 }
