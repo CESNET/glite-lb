@@ -117,10 +117,11 @@ THRLTLIB:=libglite_lb_common_${thrflavour}.la
 REPORTS:=${top_srcdir}/reports
 
 ifdef LB_PERF
-STAGE_PERFTEST_EXAMPLES=mkdir -p ${PREFIX}/examples/perftest; \
-		install -m 644 ${top_srcdir}/examples/*.log ${PREFIX}/examples/perftest 
+STAGE_PERFTEST=mkdir -p ${PREFIX}/examples/perftest; \
+		install -m 644 ${top_srcdir}/examples/*.log ${PREFIX}/examples/perftest; \
+		install -m 755 ${top_srcdir}/src/perftest_common.sh ${PREFIX}/sbin
 else
-STAGE_PERFTEST_EXAMPLES=true
+STAGE_PERFTEST=true
 endif
 
 default: all
@@ -232,7 +233,7 @@ install:
 			mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
 			install -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
 		fi ; \
-		${STAGE_PERFTEST_EXAMPLES} ; \
+		${STAGE_PERFTEST} ; \
 	fi
 
 clean:
