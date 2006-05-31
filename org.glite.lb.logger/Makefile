@@ -74,15 +74,15 @@ TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
 ifdef LB_PERF
-	LOGD:=glite_lb_logd_perf glite_lb_logd_perf_nofile
-	INTERLOGD:=glite_lb_interlogd_perf \
-		   glite_lb_interlogd_perf_empty \
-		   glite_lb_interlogd_perf_inline_empty
-	NOTIF_INTERLOGD:=glite_lb_notif_interlogd
+	LOGD:=glite-lb-logd-perf glite-lb-logd-perf-nofile
+	INTERLOGD:=glite-lb-interlogd-perf \
+		   glite-lb-interlogd-perf-empty 
+#		   glite-lb-interlogd-perf-inline-empty
+	NOTIF_INTERLOGD:=glite-lb-notif-interlogd
 else
-	LOGD:=glite_lb_logd
-	INTERLOGD:=glite_lb_interlogd
-	NOTIF_INTERLOGD:=glite_lb_notif_interlogd
+	LOGD:=glite-lb-logd
+	INTERLOGD:=glite-lb-interlogd
+	NOTIF_INTERLOGD:=glite-lb-notif-interlogd
 endif
 
 
@@ -98,7 +98,7 @@ INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 INTERLOG_NOBJS:=${INTERLOG_OBJS:.o=.no}
 INTERLOG_PERF_OBJS:=${INTERLOG_OBJS:.o=.po}
 INTERLOG_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.eo}
-INTERLOG_INLINE_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.io}
+#INTERLOG_INLINE_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.io}
 
 INTERLOG_TEST_OBJS:= \
 	il_error.o \
@@ -121,33 +121,33 @@ default: all
 
 all compile: $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD)
 
-glite_lb_logd: ${LOGD_OBJS}
+glite-lb-logd: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} 
 
-glite_lb_logd_perf: ${LOGD_OBJS}
+glite-lb-logd-perf: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} 
 
-glite_lb_logd_nofile: ${LOGD_NOBJS}
+glite-lb-logd-nofile: ${LOGD_NOBJS}
 	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} 
 
-glite_lb_logd_perf_nofile: ${LOGD_NOBJS}
+glite-lb-logd-perf-nofile: ${LOGD_NOBJS}
 	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} 
 
-glite_lb_interlogd: ${INTERLOG_OBJS}
+glite-lb-interlogd: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour} 
 
-glite_lb_notif_interlogd: ${INTERLOG_NOBJS}
+glite-lb-notif-interlogd: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} ${COMMON_LIB}_${thrflavour}
 
-glite_lb_interlogd_perf: ${INTERLOG_OBJS}
+glite-lb-interlogd-perf: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour}
 
-glite_lb_interlogd_perf_empty: ${INTERLOG_EMPTY_OBJS}
+glite-lb-interlogd-perf-empty: ${INTERLOG_EMPTY_OBJS}
 	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}_${thrflavour}
 
-glite_lb_interlogd_perf_inline_empty: ${INTERLOG_INLINE_EMPTY_OBJS}
-	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
-		${COMMON_LIB}_${thrflavour}
+#glite-lb-interlogd-perf-inline-empty: ${INTERLOG_INLINE_EMPTY_OBJS}
+#	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
+#		${COMMON_LIB}_${thrflavour}
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
@@ -203,8 +203,8 @@ ${INTERLOG_EMPTY_OBJS}: %.eo: %.c
 ${INTERLOG_PERF_OBJS}: %.po: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -c $< -o $@
 
-${INTERLOG_INLINE_EMPTY_OBJS}: %.io: %.c
-	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -DPERF_EMPTY -DPERF_EVENTS_INLINE -c $< -o $@
+#${INTERLOG_INLINE_EMPTY_OBJS}: %.io: %.c
+#	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -DPERF_EMPTY -DPERF_EVENTS_INLINE -c $< -o $@
 
 ${LOGD_NOBJS}: %.no: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -DLB_PERF -DLOGD_NOFILE -c $< -o $@
