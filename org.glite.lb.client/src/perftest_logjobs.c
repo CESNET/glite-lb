@@ -3,11 +3,16 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
+#include <time.h>
 #include "glite/lb/context-int.h"
 #include "glite/lb/lb_perftest.h"
+#include "glite/lb/log_proto.h"
 
 extern int edg_wll_DoLogEvent(edg_wll_Context context, edg_wll_LogLine logline);
 extern int edg_wll_DoLogEventProxy(edg_wll_Context context, edg_wll_LogLine logline);
+extern int edg_wll_DoLogEventDirect(edg_wll_Context context, edg_wll_LogLine logline);
+
+#define DEFAULT_SOCKET "/tmp/interlogger.sock"
 
 /*
 extern char *optarg;
@@ -47,7 +52,7 @@ static struct option const long_options[] = {
 	{ "test", required_argument, NULL, 't' },
 	{ "file", required_argument, NULL, 'f'},
 	{ "num", required_argument, NULL, 'n'},
-	{ "lbproxy", no_argument, 0, 'x'},
+	{ "machine", required_argument, NULL, 'm'},
 	{ NULL, 0, NULL, 0}
 };
 
@@ -55,14 +60,31 @@ static struct option const long_options[] = {
 void
 usage(char *program_name)
 {
-	fprintf(stderr, "Usage: %s [-x] [-d destname] [-t testname] -f filename -n numjobs \n"
-		"-h, --help            display this help and exit\n"
-                "-d, --dst <destname>  destination host name\n"
-		"-t, --test <testname> name of the test\n"
-		"-f, --file <filename> name of the file with prototyped job events\n"
-		"-n, --num <numjobs>   number of jobs to generate\n"
-		"-x, --lbproxy         feed to LB Proxy\n",
+	fprintf(stderr, "Usage: %s [-d destname] [-t testname] -f filename -n numjobs \n"
+		"-h, --help               display this help and exit\n"
+                "-d, --dst <destname>     destination component\n"
+		"-m, --machine <hostname> destination host\n"
+		"-t, --test <testname>    name of the test\n"
+		"-f, --file <filename>    name of the file with prototyped job events\n"
+		"-n, --num <numjobs>      number of jobs to generate\n",
 	program_name);
+}
+
+
+int edg_wll_DoLogEventIl(
+	edg_wll_Context context,
+	edg_wll_LogLine logline)
+{
+	static int filepos = 0;
+	int ret = 0;
+	struct timeval timeout;
+	
+	timeout.tv_sec = 1;
+	timeout.tv_usec = 0;
+	ret = edg_wll_log_event_send(context, DEFAULT_SOCKET, filepos, logline, strlen(logline), 1, &timeout);
+	filepos += strlen(logline);
+
+	return(ret);
 }
 
 
@@ -70,11 +92,19 @@ int
 main(int argc, char *argv[])
 {
 
-	char 	*destname= NULL,*testname = NULL,*filename = NULL;
+	char 	*destname= NULL,*hostname=NULL,*testname = NULL,*filename = NULL;
 	char	*event;
-	int 	lbproxy = 0, num_jobs = 1;
+	int 	num_jobs = 1;
 	int 	opt;
 	edg_wll_Context ctx;
+	enum {
+		DEST_UNDEF = 0,
+		DEST_LL,
+		DEST_IL,
+		DEST_PROXY,
+		DEST_BKSERVER
+	} dest = 0;
+
 
 	edg_wll_InitContext(&ctx);
 
@@ -84,16 +114,27 @@ main(int argc, char *argv[])
 		long_options, (int *) 0)) != EOF) {
 
 		switch (opt) {
-			case 'd': destname = (char *) strdup(optarg); break;
-			case 't': testname = (char *) strdup(optarg); break;
-			case 'f': filename = (char *) strdup(optarg); break;
-			case 'n': num_jobs = atoi(optarg); break;
-			case 'x': lbproxy = 1; break;
-			case 'h': 
-			default:
-				usage(argv[0]); exit(0);
+		case 'd': destname = (char *) strdup(optarg); break;
+		case 't': testname = (char *) strdup(optarg); break;
+		case 'f': filename = (char *) strdup(optarg); break;
+		case 'm': hostname = (char *) strdup(optarg); break;
+		case 'n': num_jobs = atoi(optarg); break;
+		case 'h': 
+		default:
+			usage(argv[0]); exit(0);
 		}
 	} 
+
+	if(destname) {
+		if(!strncasecmp(destname, "pr", 2)) 
+			dest=DEST_PROXY;
+		else if(!strncasecmp(destname, "lo", 2))
+			dest=DEST_LL;
+		else if(!strncasecmp(destname, "in", 2) || !strncasecmp(destname, "il", 2))
+			dest=DEST_IL;
+		else if(!strncasecmp(destname, "bk", 2) || !strncasecmp(destname, "se", 2))
+			dest=DEST_BKSERVER;
+	}
 
 	if (num_jobs <= 0) {
 		fprintf(stderr,"%s: wrong number of jobs\n",argv[0]);
@@ -101,34 +142,69 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if (!filename) {
+	if (!filename && destname) {
 		fprintf(stderr,"%s: -f required\n",argv[0]);
 		usage(argv[0]);
 		exit(1);
 	}
 
-	if (glite_wll_perftest_init(destname, NULL, testname, filename, num_jobs) < 0) {
+	if (glite_wll_perftest_init(hostname, NULL, testname, filename, num_jobs) < 0) {
 		fprintf(stderr,"%s: glite_wll_perftest_init failed\n",argv[0]);
 	}
 
-	while (glite_wll_perftest_produceEventString(&event)) {
-		 if (lbproxy) {
-			ctx->p_tmp_timeout = ctx->p_sync_timeout;
-			if (edg_wll_DoLogEventProxy(ctx,event)) {
-				char    *et,*ed;
-				edg_wll_Error(ctx,&et,&ed);
-				fprintf(stderr,"edg_wll_DoLogEvent(): %s (%s)\n",et,ed);
-				exit(1);
-			}
-		} else {
-			ctx->p_tmp_timeout = ctx->p_log_timeout;
-			if (edg_wll_DoLogEvent(ctx,event)) {
-				char    *et,*ed;
-				edg_wll_Error(ctx,&et,&ed);
-				fprintf(stderr,"edg_wll_DoLogEvent(): %s (%s)\n",et,ed);
-				exit(1);
-			}
+	if(dest) {
+		while (glite_wll_perftest_produceEventString(&event)) {
+			switch(dest) {
+			case DEST_PROXY:
+				ctx->p_tmp_timeout = ctx->p_sync_timeout;
+				if (edg_wll_DoLogEventProxy(ctx,event)) {
+					char    *et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_DoLogEventProxy(): %s (%s)\n",et,ed);
+					exit(1);
+				}
+				break;
+				
+			case DEST_LL:
+				ctx->p_tmp_timeout = ctx->p_log_timeout;
+				if (edg_wll_DoLogEvent(ctx,event)) {
+					char    *et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_DoLogEvent(): %s (%s)\n",et,ed);
+					exit(1);
+				}
+				break;
 
+			case DEST_BKSERVER:
+				ctx->p_tmp_timeout = ctx->p_log_timeout;
+				if (edg_wll_DoLogEventDirect(ctx, event)) {
+					char    *et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_DoLogEventDirect(): %s (%s)\n",et,ed);
+					exit(1);
+				}
+
+			case DEST_IL:
+				ctx->p_tmp_timeout = ctx->p_log_timeout;
+				if (edg_wll_DoLogEventIl(ctx, event)) {
+					char    *et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_DoLogEventIl(): %s (%s)\n",et,ed);
+					exit(1);
+				}
+
+			default:
+				break;
+			}
+			free(event);
+		}
+	} else {
+		/* no destination - only print jobid's that would be used */
+		char *jobid;
+
+		while(jobid = glite_wll_perftest_produceJobId()) {
+			fprintf(stdout, "%s\n", jobid);
+			free(jobid);
 		}
 	}
 	edg_wll_FreeContext(ctx);
