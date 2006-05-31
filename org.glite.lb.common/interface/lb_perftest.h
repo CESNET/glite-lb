@@ -17,6 +17,9 @@ glite_wll_perftest_init(const char *host,         /** hostname */
 			const char *filename,     /** file with events for job source */
 			int n);                   /** number of jobs for job source */
 
+char *
+glite_wll_perftest_produceJobId();
+
 int
 glite_wll_perftest_produceEventString(char **event);
 
