@@ -772,7 +772,10 @@ static int edg_wll_RegisterJobMaster(
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
 		}
 	} else if (flags & LOGFLAG_PROXY) {
-		/* first obtain the certiicate */
+		/* first obtain the certificate				*/
+		/* used in edg_wll_DoLogEventProxy() for field DG.USER	*/
+		/* not mandatory now					*/
+
 		err = edg_wll_gss_acquire_cred_gsi(
 		      context->p_proxy_filename ? context->p_proxy_filename : context->p_cert_filename,
 		      context->p_proxy_filename ? context->p_proxy_filename : context->p_key_filename,
