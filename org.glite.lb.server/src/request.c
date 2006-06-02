@@ -19,7 +19,7 @@
 int 
 handle_request(edg_wll_Context ctx,char *buf)
 {
-  char *event;
+	il_octet_string_t event;
   int ret;
 
   edg_wll_ResetError(ctx);
@@ -30,10 +30,10 @@ handle_request(edg_wll_Context ctx,char *buf)
     return EDG_WLL_IL_PROTO;
   }
 
-  ret = db_store(ctx, "NOT USED", event);
+  ret = db_store(ctx, "NOT USED", event.data);
 
-  if(event)
-    free(event);
+  if(event.data)
+    free(event.data);
 
   return(ret);
 }
