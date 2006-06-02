@@ -19,6 +19,8 @@ expat_prefix=/opt/expat
 CC:=gcc
 CXX:=g++
 
+LB_PERF=yes
+
 -include Makefile.inc
 -include ../project/version.properties
 
@@ -72,8 +74,8 @@ ifdef LB_STANDALONE
 endif
 
 ifdef LB_PERF
-	LB_PERF_FLAGS:=-DLB_PERF -DLB_PERF_DROP
-	LB_PERF_TOOLS:=perftest_logjobs
+	LB_PERF_FLAGS:=-DLB_PERF
+	LB_PERF_TOOLS:=perftest_logjobs perftest_jobreg
 endif
 COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
@@ -225,6 +227,9 @@ ${MAN_GZ}: ${MAN}
 	cp $? .
 	gzip $(notdir $?)
 
+
+perftest_logjobs.o: perftest_logjobs.c
+	${CC} ${CFLAGS} -DLB_PERF_DROP ${GLOBUSINC} -c $<
 
 # catches $TOOLS and logevent compilation
 %.o: %.c 
