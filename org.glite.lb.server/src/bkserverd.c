@@ -326,18 +326,6 @@ int main(int argc, char *argv[])
 	purge_timeout[EDG_WLL_JOB_ABORTED] = 60*60*24*7;
 	purge_timeout[EDG_WLL_JOB_CANCELLED] = 60*60*24*7;
 
-/* no magic here: 1 month, 3 and 7 days */
-	purge_timeout[EDG_WLL_PURGE_JOBSTAT_OTHER] = 60*60*24*31;	
-	purge_timeout[EDG_WLL_JOB_CLEARED] = 60*60*24*3;
-	purge_timeout[EDG_WLL_JOB_ABORTED] = 60*60*24*7;
-	purge_timeout[EDG_WLL_JOB_CANCELLED] = 60*60*24*7;
-
-/* no magic here: 1 month, 3 and 7 days */
-	purge_timeout[EDG_WLL_PURGE_JOBSTAT_OTHER] = 60*60*24*31;	
-	purge_timeout[EDG_WLL_JOB_CLEARED] = 60*60*24*3;
-	purge_timeout[EDG_WLL_JOB_ABORTED] = 60*60*24*7;
-	purge_timeout[EDG_WLL_JOB_CANCELLED] = 60*60*24*7;
-
 	if (geteuid()) snprintf(pidfile,sizeof pidfile,"%s/edg-bkserverd.pid",
 			getenv("HOME"));
 
