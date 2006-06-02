@@ -167,24 +167,24 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 			ctx->p_query_server_override = !strcasecmp(val,"yes");
 			break;
 		case EDG_WLL_PARAM_LBPROXY_STORE_SOCK:      
-			if (!val) val = getenv(myenv[param]);
+			if (!val) val = mygetenv(param);
 			if (!val) val = "/tmp/lb_proxy_store.sock";
 			free(ctx->p_lbproxy_store_sock);
 			ctx->p_lbproxy_store_sock = val ? strdup(val): NULL;
 			break;
 		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:      
-			if (!val) val = getenv(myenv[param]);
+			if (!val) val = mygetenv(param);
 			if (!val) val = "/tmp/lb_proxy_serve.sock";
 			free(ctx->p_lbproxy_serve_sock);
 			ctx->p_lbproxy_serve_sock = val ? strdup(val): NULL;
 			break;
 		case EDG_WLL_PARAM_LBPROXY_USER:
-			if (!val) val = getenv(myenv[param]);
+			if (!val) val = mygetenv(param);
 			free(ctx->p_user_lbproxy);
 			ctx->p_user_lbproxy = val ? strdup(val) : NULL;
 			break;
 		case EDG_WLL_PARAM_JPREG_TMPDIR:
-			if (!val) val = getenv(myenv[param]);
+			if (!val) val = mygetenv(param);
 			free(ctx->jpreg_dir);
 			ctx->jpreg_dir = val ? strdup(val) : NULL;
 			break;
