@@ -859,6 +859,26 @@ int edg_wll_RegisterJobProxy(
 	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
 }
 
+
+#ifdef LB_PERF
+// function for loggin only to LBProxy
+// useful for performace measuring
+int edg_wll_RegisterJobProxyOnly(
+        edg_wll_Context         context,
+        const edg_wlc_JobId     job,
+        enum edg_wll_RegJobJobtype	type,
+        const char *            jdl,
+        const char *            ns,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs)
+{
+#define	MY_SEED	"edg_wll_RegisterJobProxy()"
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
+}
+
+#endif
+
 int edg_wll_RegisterSubjob(
         edg_wll_Context         context,
         const edg_wlc_JobId     job,
