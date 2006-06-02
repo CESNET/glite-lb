@@ -5,6 +5,7 @@
 
 #include "il_error.h"
 #include "glite/security/glite_gss.h"
+#include "glite/lb/il_msg.h"
 
 #include <pthread.h>
 #include <sys/time.h>
@@ -68,6 +69,7 @@ extern char *cert_file;
 extern char *key_file;
 extern char *CAcert_dir;
 extern int bs_only;
+extern int killflg;
 #ifdef LB_PERF
 extern int nosend;
 #ifdef PERF_EVENTS_INLINE
@@ -138,9 +140,9 @@ struct event_queue {
 
 
 /* server msg methods */
-struct server_msg *server_msg_create(char *, long);
+struct server_msg *server_msg_create(il_octet_string_t *, long);
 struct server_msg *server_msg_copy(struct server_msg *);
-int server_msg_init(struct server_msg *, char *);
+int server_msg_init(struct server_msg *, il_octet_string_t *);
 #if defined(INTERLOGD_EMS)
 int server_msg_is_priority(struct server_msg *);
 #endif
@@ -178,7 +180,7 @@ int event_queue_cond_unlock(struct event_queue *);
 /* input queue */
 int input_queue_attach();
 void input_queue_detach();
-int input_queue_get(char **, long *, int);
+int input_queue_get(il_octet_string_t *, long *, int);
 
 /* queue management functions */
 int queue_list_init(char *);

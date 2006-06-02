@@ -30,7 +30,7 @@
 
 /* The name the program was run with, stripped of any leading path. */
 char *program_name;
-static int killflg = 0;
+int killflg = 0;
 
 int TIMEOUT = DEFAULT_TIMEOUT;
 

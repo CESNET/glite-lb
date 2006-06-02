@@ -12,10 +12,11 @@
 
 static
 int 
-create_msg(char *event, char **buffer, long *receipt)
+create_msg(il_octet_string_t *ev, char **buffer, long *receipt)
 {
   char *p;  int  len;
-  
+  char *event = ev->data;
+
   *receipt = 0;
 
 #if defined(INTERLOGD_EMS)
@@ -56,7 +57,7 @@ create_msg(char *event, char **buffer, long *receipt)
   }
 #endif
 
-  len = encode_il_msg(buffer, event);
+  len = encode_il_msg(buffer, ev);
   if(len < 0) {
     set_error(IL_NOMEM, ENOMEM, "create_msg: out of memory allocating message");
     return(-1);
@@ -66,7 +67,7 @@ create_msg(char *event, char **buffer, long *receipt)
 
 
 struct server_msg *
-server_msg_create(char *event, long offset)
+server_msg_create(il_octet_string_t *event, long offset)
 {
   struct server_msg *msg;
 
@@ -121,7 +122,7 @@ server_msg_copy(struct server_msg *src)
 
 
 int
-server_msg_init(struct server_msg *msg, char *event)
+server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 {
 #if defined(IL_NOTIFICATIONS)
 	edg_wll_Context context;
@@ -130,6 +131,7 @@ server_msg_init(struct server_msg *msg, char *event)
 #endif
 
 	assert(msg != NULL);
+	assert(event != NULL);
 
 	memset(msg, 0, sizeof(*msg));
 
@@ -164,10 +166,10 @@ server_msg_init(struct server_msg *msg, char *event)
 	if(msg->len < 0) {
 		return(-1);
 	}
-	msg->job_id_s = edg_wll_GetJobId(event);
+	msg->job_id_s = edg_wll_GetJobId(event->data);
 #endif
 	/* remember to add event separator to the length */
-	msg->ev_len = strlen(event) + 1;
+	msg->ev_len = event->len + 1;
 
 	if(msg->job_id_s == NULL) {
 		set_error(IL_LBAPI, EDG_WLL_ERROR_PARSE_BROKEN_ULM, "server_msg_init: error getting id");

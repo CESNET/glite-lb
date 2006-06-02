@@ -128,7 +128,7 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 
 static 
 int 
-handle_cmd(char *event, long offset)
+handle_cmd(il_octet_string_t *event, long offset)
 {
 	char *job_id_s;
 	struct event_queue *eq;
@@ -139,7 +139,7 @@ handle_cmd(char *event, long offset)
 	struct timeval  tv;
 
 	/* parse command */
-	if(parse_cmd(event, &job_id_s, &receipt, &timeout) < 0) 
+	if(parse_cmd(event->data, &job_id_s, &receipt, &timeout) < 0) 
 		return(0);
 
 #if defined(INTERLOGD_FLUSH)
@@ -304,7 +304,7 @@ cmd_error:
 
 static 
 int
-handle_msg(char *event, long offset)
+handle_msg(il_octet_string_t *event, long offset)
 { 
 	struct server_msg *msg = NULL;
 #if !defined(IL_NOTIFICATIONS)
@@ -386,10 +386,13 @@ loop()
 {
 	/* receive events */
 	while(1) {
-		char *msg;
+		il_octet_string_t msg;
 		long offset;
 		int ret;
     
+		if(killflg)
+			exit(0);
+
 		clear_error();
 		if((ret = input_queue_get(&msg, &offset, INPUT_TIMEOUT)) < 0) 
 		{
@@ -408,17 +411,17 @@ loop()
 		}
 
 #ifdef PERF_EMPTY
-		glite_wll_perftest_consumeEventString(msg);
-		free(msg);
+		glite_wll_perftest_consumeEventString(msg.data);
+		free(msg.data);
 		continue;
 #endif
 
 #ifdef INTERLOGD_HANDLE_CMD		
-		ret = handle_cmd(msg, offset);
+		ret = handle_cmd(&msg, offset);
 		if(ret == 0)
 #endif
-			ret = handle_msg(msg, offset);
-		free(msg);
+			ret = handle_msg(&msg, offset);
+		free(msg.data);
 		if(ret < 0)
 			switch (error_get_maj()) {
 				case IL_SYS:

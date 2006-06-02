@@ -22,10 +22,17 @@ run_test il $numjobs
 j=0
 while [[ $j -lt 4 ]]
 do
-    echo -e -n "\t ${PERFTEST_EV_THROUGHPUT[$j]}"	
+    echo -e -n "\t ${PERFTEST_THROUGHPUT[$j]}"	
     j=$((j+1))
 done
 echo ""
+#j=0
+#while [[ $j -lt 4 ]]
+#do
+#    echo -e -n "\t (${PERFTEST_EV_THROUGHPUT[$j]})"	
+#    j=$((j+1))
+#done
+#echo ""
 
 
 #

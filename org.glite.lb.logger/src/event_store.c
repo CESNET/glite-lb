@@ -426,8 +426,14 @@ event_store_recover(struct event_store *es)
     ret = -1;
 
     /* create message for server */
-    msg = server_msg_create(event_s, last);
-    free(event_s);
+    {
+	    il_octet_string_t e;
+
+	    e.data = event_s;
+	    e.len = strlen(event_s);
+	    msg = server_msg_create(&e, last);
+	    free(event_s);
+    }
     if(msg == NULL) {
 	    il_log(LOG_ALERT, "    event file corrupted! Please move it to quarantine (ie. somewhere else) and restart interlogger.\n");
 	    break;
