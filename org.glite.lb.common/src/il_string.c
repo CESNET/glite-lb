@@ -7,54 +7,54 @@
 #include "il_string.h"
 
 char *
-put_string(char *p, char *s)
+put_string(char *p, il_octet_string_t *s)
 {
-  int len = strlen(s);
-  
   assert( p != NULL );
+  assert( s != NULL );
 
-  p = _put_int(p, len);
+  p = _put_int(p, s->len);
   *p++ = ' ';
-  strncpy(p, s, len);
-  p += len;
+  /* strncpy(p, s->data, s->len); */
+  memcpy(p, s->data, s->len);
+  p += s->len;
   *p++ = '\n';
   return(p);
 }
 
 
 int
-len_string(char *s)
+len_string(il_octet_string_t *s)
 {
-  int len, slen;
+  int len;
 
   assert( s != NULL );
 
-  slen = strlen(s);
-  len = len_int(slen);
-
-  return(len + slen + 1);
+  len = len_int(s->len);
+  return(len + s->len + 1);
 }
 
 
 char *
-get_string(char *p, char **s)
+get_string(char *p, il_octet_string_t *s)
 {
   int len;
 
   assert( p != NULL );
+  assert( s != NULL );
 
-  *s = NULL;
+  s->data = NULL;
 
   p = _get_int(p, &len);
   if(*p != ' ')
     return(NULL);
   else
     {
-      *s = malloc(len + 1);
-      if(*s == NULL)
+      s->data = malloc(len + 1);
+      if(s->data == NULL)
 	return(NULL);
-      strncpy(*s, ++p, len);
-      (*s)[len] = '\0';
+      /* strncpy(s->data, ++p, len); */
+      memcpy(s->data, ++p, len);
+      (s->data)[len] = '\0';
       p += len;
       return( *p++ == '\n' ? p : NULL );
     }

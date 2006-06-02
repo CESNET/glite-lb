@@ -6,19 +6,23 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 
 #define IL_PROTOCOL_MAGIC_WORD "michal"
 
 int 
-encode_il_msg(char **buffer, const char *event)
+encode_il_msg(char **buffer, const il_octet_string_t *event)
 {
   int len;
   char *p;
-  char *protocol_magic_word = IL_PROTOCOL_MAGIC_WORD;
-
+  il_octet_string_t protocol_magic_word;
+  
+  protocol_magic_word.data = IL_PROTOCOL_MAGIC_WORD;
+  protocol_magic_word.len = strlen(IL_PROTOCOL_MAGIC_WORD);
 
   /* allocate enough room to hold the message */
-  len = 17 + len_string(protocol_magic_word) + len_string((char*)event);
+  len = 17 + len_string(&protocol_magic_word) + len_string((il_octet_string_t*)event);
   if((*buffer = malloc(len)) == NULL) {
     return(-1);
   }
@@ -30,8 +34,8 @@ encode_il_msg(char **buffer, const char *event)
   p += 17;
 
   /* write rest of the message */
-  p = put_string(p, protocol_magic_word);
-  p = put_string(p, (char*)event);
+  p = put_string(p, &protocol_magic_word);
+  p = put_string(p, (il_octet_string_t*)event);
 
   return(p - *buffer);
 }
@@ -44,8 +48,11 @@ encode_il_reply(char **buffer,
 {
   int len;
   char *p;
+  il_octet_string_t emsg;
 
-  len = 17 + len_int(err_code) + len_int(err_code_min) + len_string((char*)err_msg);
+  emsg.data = (char*)err_msg;
+  emsg.len = strlen(err_msg);
+  len = 17 + len_int(err_code) + len_int(err_code_min) + len_string(&emsg);
   if((*buffer = malloc(len)) == NULL) {
     return(-1);
   }
@@ -54,32 +61,34 @@ encode_il_reply(char **buffer,
   p = *buffer + 17;
   p = put_int(p, err_code);
   p = put_int(p, err_code_min);
-  p = put_string(p, (char*)err_msg);
+  p = put_string(p, &emsg);
   return(p - *buffer);
 }
 
 
 int 
-decode_il_msg(char **event, const char *buf)
+decode_il_msg(il_octet_string_t *event, const char *buf)
 {
   char *p;
-  char *protocol_magic_word=NULL;
+  il_octet_string_t protocol_magic_word;
   int magic_word_check_failed = 0;
+
+  assert( event != NULL );
 
   /* First check that the protocol 'magic' word is there */
   p = get_string((char*)buf, &protocol_magic_word);
-  if (protocol_magic_word) {
-    if (strcmp (protocol_magic_word, IL_PROTOCOL_MAGIC_WORD) != 0) {
+  if (protocol_magic_word.data) {
+    if (strcmp (protocol_magic_word.data, IL_PROTOCOL_MAGIC_WORD) != 0) {
       magic_word_check_failed = 1;
     }
-    free(protocol_magic_word);
+    free(protocol_magic_word.data);
   }
 
   if (magic_word_check_failed != 0) return (-1);
 
   p = get_string(p, event);
   if(p == NULL) {
-    if(*event) { free(*event); *event = NULL; };
+    if(event->data) { free(event->data); event->data = NULL; };
     return(-1);
   }
   return(p - buf);
@@ -89,17 +98,19 @@ decode_il_msg(char **event, const char *buf)
 int
 decode_il_reply(int *maj, int *min, char **err, const char * buf)
 {
-  char *p = buf;
+	char *p = (char*)buf;
+  il_octet_string_t e;
 
   p = get_int(p, maj);
   if(p == NULL) return(-1);
   p = get_int(p, min);
   if(p == NULL) return(-1);
-  p = get_string(p, err);
+  p = get_string(p, &e);
   if(p == NULL) {
-    if(*err) { free(*err); *err = NULL; };
+    if(e.data) { free(e.data); e.data = NULL; };
     return(-1);
   }
+  *err = e.data;
   return(p - buf);
 }
 

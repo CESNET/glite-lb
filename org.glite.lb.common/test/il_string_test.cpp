@@ -1,6 +1,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 extern "C" {
+#include <string.h>
 #include "il_string.h"
 }
 
@@ -20,21 +21,29 @@ public:
 	}
 
 	void testPutString() {
-		put_string(buffer, "ahoj");
+		il_octet_string_t s;
+		s.data = "ahoj";
+		s.len = strlen(s.data);
+		put_string(buffer, &s);
 		CPPUNIT_ASSERT( !strncmp(buffer,"4 ahoj\n",7) );
 	}
 
 	void testGetString() {
-		char *s;
+		il_octet_string_t s;
 		get_string("4 ahoj\n", &s);
-		CPPUNIT_ASSERT( s != NULL );
-		CPPUNIT_ASSERT( !strcmp(s, "ahoj") );
-		CPPUNIT_ASSERT( s[4] == 0 );
-		free(s);
+		CPPUNIT_ASSERT( s.data != NULL );
+		CPPUNIT_ASSERT( !strcmp(s.data, "ahoj") );
+		CPPUNIT_ASSERT( s.data[4] == 0 );
+		free(s.data);
 	}
 
 	void testLenString() {
-		int d = len_string("ahoj");
+		il_octet_string_t s;
+		int d;
+
+		s.data = "ahoj";
+		s.len = strlen(s.data);
+		d = len_string(&s);
 		CPPUNIT_ASSERT( d == 7);
 	}
 

@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 extern "C" {
+#include <string.h>
 #include "il_string.h"
 #include "il_msg.h"
 }
@@ -18,7 +19,11 @@ class IlMsgTest : public CppUnit::TestFixture
 
 public:
 	void setUp() {
-		len_msg = encode_il_msg(&buffer_msg, "zprava");
+		il_octet_string_t s;
+
+		s.data = "zprava";
+		s.len = strlen(s.data);
+		len_msg = encode_il_msg(&buffer_msg, &s);
 		len_rep = encode_il_reply(&buffer_rep, 10, 20, "chyba");
 	}
 
@@ -34,14 +39,14 @@ public:
 	}
 
 	void testDecodeMsg() {
-		char *s;
+		il_octet_string_t s;
 		int  l;
 
 		l = decode_il_msg(&s, buffer_msg + 17);
 		CPPUNIT_ASSERT_EQUAL(l, len_msg - 17);
-		CPPUNIT_ASSERT(s != NULL);
-		CPPUNIT_ASSERT( !strcmp(s, "zprava") );
-		free(s);
+		CPPUNIT_ASSERT(s.data != NULL);
+		CPPUNIT_ASSERT( !strcmp(s.data, "zprava") );
+		free(s.data);
 	}
 
 	void testEncodeReply() {

@@ -111,11 +111,13 @@ run_test()
 	if [[ $linesbefore -eq $linesafter ]]
 	then
 	    echo "Test failed - consumer did not report timestamp."
+	    PERFTEST_THROUGHPUT[$i]=0
+	    PERFTEST_EV_THROUGHPUT[$i]=0
 	else
 	    get_result
 	    [[ $DEBUG -gt 0 ]] && echo Result: $PERFTEST_DAY_JOB_THROUGHPUT
 	    PERFTEST_THROUGHPUT[$i]=$PERFTEST_DAY_JOB_THROUGHPUT
-	    PERFTEST_EVENT_THROUGHPUT[$i]=$PERFTEST_EVENT_THROUGHPUT
+	    PERFTEST_EV_THROUGHPUT[$i]=$PERFTEST_EVENT_THROUGHPUT
 	fi
 	i=$(($i + 1))
     done

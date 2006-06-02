@@ -35,6 +35,33 @@ static int dest_port;
 #define BUFFSZ        1024
 
 
+/*
+ * strnstr - look only in first n characters
+ * (taken from NSPR)
+ */
+static
+char *
+_strnstr(const char *big, const char *little, size_t max)
+{
+    size_t ll;
+
+    if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
+    if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
+
+    ll = strlen(little);
+    if( ll > (size_t)max ) return (char *)0;
+    max -= ll;
+    max++;
+
+    for( ; max && *big; big++, max-- )
+        if( *little == *big )
+            if( 0 == strncmp(big, little, ll) )
+                return (char *)big;
+
+    return (char *)0;
+}
+
+
 /* 
  * reading lines (pasted from load.c)
  */
@@ -409,7 +436,8 @@ glite_wll_perftest_consumeEventString(const char *event_string)
 	gettimeofday(&endtime, NULL);
 
 	/* check for the termination event */
-	if(strstr(event_string, termination_string) != NULL) {
+	/* if it is not in the first 1k chars, it is not there */
+	if(_strnstr(event_string, termination_string, 1024) != NULL) {
 		/* print the timestamp */
 		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%06lu\n",
 			(unsigned long)endtime.tv_sec,(unsigned long)endtime.tv_usec);
@@ -427,7 +455,7 @@ int
 glite_wll_perftest_consumeEventIlMsg(const char *msg)
 {
 	int ret = 0;
-	char *event;
+	il_octet_string_t event;
 
 	assert(msg != NULL);
 
@@ -443,7 +471,7 @@ glite_wll_perftest_consumeEventIlMsg(const char *msg)
 	}
 		
 	/* check for the termination event */
-	if(strstr(event, termination_string) != NULL) {
+	if(_strnstr(event.data, termination_string, 1024) != NULL) {
 		/* print the timestamp */
 		fprintf(stderr, "PERFTEST_END_TIMESTAMP=%lu.%06lu\n",
 			endtime.tv_sec, endtime.tv_usec);
@@ -453,7 +481,7 @@ glite_wll_perftest_consumeEventIlMsg(const char *msg)
 	if(pthread_mutex_unlock(&perftest_lock) < 0)
 		abort();
 
-	free(event);
+	free(event.data);
 
 	return(ret);
 }
