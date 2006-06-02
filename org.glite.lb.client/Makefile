@@ -275,7 +275,7 @@ producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${TEST_INC} ${GLOBUSINC} $<
 
 man: ${MAN_GZ}
-	
+
 stage:  compile ${FAKELIB} ${FAKETHRLIB} 
 	$(MAKE) install PREFIX=${stagedir}
 	${INSTALL} -m 644 ${FAKELIB} ${FAKETHRLIB} ${stagedir}/lib
@@ -292,7 +292,7 @@ distbin:
 	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
 	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
-	
+
 install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/sbin

@@ -288,7 +288,13 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnect
 	lbproto_code = 0;
 	edg_wll_ResetError(context);
 
-	len = encode_il_msg(&buffer, logline);
+	{ 
+		il_octet_string_t ll;
+
+		ll.len = strlen(logline);
+		ll.data = logline;
+		len = encode_il_msg(&buffer, &ll);
+	}
 	if(len < 0) {
 		edg_wll_SetError(context,ENOMEM,"edg_wll_log_proto_client_proxy(): error encoding message");
 		goto edg_wll_log_proto_client_proxy_end;
@@ -364,7 +370,12 @@ int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnecti
 	edg_wll_ResetError(context);
 
 	/* encode message */
-	len = encode_il_msg(&buffer, logline);
+	{ 
+		il_octet_string_t ll;
+		
+		ll.len=strlen(logline); ll.data=logline;
+		len = encode_il_msg(&buffer, &ll);
+	}
 	if(len < 0) {
 		edg_wll_SetError(context, ENOMEM, "edg_wll_log_proto_client_direct(): error encoding message");
 		goto edg_wll_log_proto_client_direct_end;

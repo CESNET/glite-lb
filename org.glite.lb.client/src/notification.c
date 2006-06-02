@@ -818,9 +818,13 @@ select:
 		goto err;		/* error set in send_reply() */
 	}
 	
-	if(decode_il_msg(&event_char, ctx->connPoolNotif[0].buf) < 0)
-	  return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "decoding event string");
-	
+	{
+		il_octet_string_t ev;
+
+		if(decode_il_msg(&ev, ctx->connPoolNotif[0].buf) < 0)
+			return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "decoding event string");
+		event_char = ev.data;
+	}
 	/****************************************************************/
 	/* end of  notif-interlogger message exchange			*/
 	/****************************************************************/
