@@ -317,7 +317,7 @@ endif
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
 	${INSTALL} -m 755 ${top_srcdir}/examples/export.sh "${PREFIX}/examples/glite-lb-export.sh"
-	${INSTALL} -m 755 ${top_srcdir}/examples/log_dag.sh "${PREFIX}/examples/glite-lb-log_dag.sh"
+#	${INSTALL} -m 755 ${top_srcdir}/examples/log_dag.sh "${PREFIX}/examples/glite-lb-log_dag.sh"
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 clean:
