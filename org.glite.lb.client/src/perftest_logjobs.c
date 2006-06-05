@@ -128,13 +128,18 @@ main(int argc, char *argv[])
 	if(destname) {
 		if(!strncasecmp(destname, "pr", 2)) 
 			dest=DEST_PROXY;
-		else if(!strncasecmp(destname, "lo", 2))
+		else if(!strncasecmp(destname, "lo", 2) || !strncasecmp(destname, "ll", 2))
 			dest=DEST_LL;
 		else if(!strncasecmp(destname, "in", 2) || !strncasecmp(destname, "il", 2))
 			dest=DEST_IL;
 		else if(!strncasecmp(destname, "bk", 2) || !strncasecmp(destname, "se", 2))
 			dest=DEST_BKSERVER;
-	}
+		else {
+			fprintf(stderr,"%s: wrong destination\n",argv[0]);
+			usage(argv[0]);
+			exit(1);
+		}
+	} 
 
 	if (num_jobs <= 0) {
 		fprintf(stderr,"%s: wrong number of jobs\n",argv[0]);
