@@ -27,7 +27,7 @@ run_test ll $numjobs
 j=0
 while [[ $j -lt 4 ]]
 do
-    echo -e -n "\t ${PERFTEST_EV_THROUGHPUT[$j]}"	
+    echo -e -n "\t ${PERFTEST_EVENT_THROUGHPUT[$j]}"	
     j=$((j+1))
 done
 echo ""
