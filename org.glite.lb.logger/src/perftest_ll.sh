@@ -19,8 +19,8 @@ DEBUG=${DEBUG:-0}
 
 check_test_files || exit 1
 
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf
-CONSUMER_ARGS="-d -v"
+PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf-nofile
+CONSUMER_ARGS="-d -v --noIPC --noParse"
 
 echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
 run_test ll $numjobs
