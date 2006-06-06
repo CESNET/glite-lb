@@ -757,6 +757,9 @@ static int edg_wll_RegisterJobMaster(
 	if ((type == EDG_WLL_REGJOB_DAG || type == EDG_WLL_REGJOB_PARTITIONED)
 		&& num_subjobs > 0) {
 		err = edg_wll_GenerateSubjobIds(context,job,num_subjobs,intseed,subjobs);
+		/* increase log timeout on client (the same as on BK server) */
+		context->p_sync_timeout.tv_sec += num_subjobs;
+		if (context->p_sync_timeout.tv_sec > 86400) context->p_sync_timeout.tv_sec = 86400;
 	}
 	if (err) {
 		edg_wll_UpdateError(context,EINVAL,"edg_wll_RegisterJobMaster(): edg_wll_GenerateSubjobIds() error");
