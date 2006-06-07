@@ -204,9 +204,9 @@ glite_wll_perftest_init(const char *host,
 		dest_host = strdup(host);
 		if(p) {
 			*p++ = ':';
-			dest_port = atoi(p)+1;
+			dest_port = atoi(p);
 		} else 
-			dest_port = GLITE_WMSC_JOBID_DEFAULT_PORT+1;
+			dest_port = GLITE_WMSC_JOBID_DEFAULT_PORT;
 	}
 
 	/* reset event source */
