@@ -15,6 +15,7 @@ LOGJOBS=${LOGJOBS:-$STAGEDIR/sbin/glite-lb-perftest_logjobs}
 # some defaults for log files
 CONSUMER_LOG=/tmp/perftest_consumer.log
 PRODUCER_LOG=/tmp/perftest_producer.log
+COMPONENT_LOG=/tmp/perftest_component.log
 
 
 check_file_readable()
@@ -87,12 +88,13 @@ shutdown()
 run_test()
 {
     local i file lj_flags linesbefore linesafter CONSUMER_PID COMPONENT_PID
-    rm -f $CONSUMER_LOG $PRODUCER_LOG
-    touch $CONSUMER_LOG $PRODUCER_LOG
+    rm -f $CONSUMER_LOG $PRODUCER_LOG $COMPONENT_LOG
+    touch $CONSUMER_LOG $PRODUCER_LOG $COMPONENT_LOG
     if [[ $DEBUG -gt 1 ]]
     then 
 	tail -f $CONSUMER_LOG &
 	tail -f $PRODUCER_LOG &
+	tail -f $COMPONENT_LOG &
     fi
     # set args to logjobs
     lj_flags="$LOGJOBS_ARGS -d $1 -n $2"
@@ -104,7 +106,7 @@ run_test()
     # Start component (if specified)
     if [[ -n $PERFTEST_COMPONENT ]]
     then
-	$PERFTEST_COMPONENT $COMPONENT_ARGS &
+	$PERFTEST_COMPONENT $COMPONENT_ARGS > $COMPONENT_LOG 2>&1 &
 	COMPONENT_PID=$!
     fi
     # wait for components to come up
