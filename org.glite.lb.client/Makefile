@@ -19,8 +19,6 @@ expat_prefix=/opt/expat
 CC:=gcc
 CXX:=g++
 
-LB_PERF=yes
-
 -include Makefile.inc
 -include ../project/version.properties
 
