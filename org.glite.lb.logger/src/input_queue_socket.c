@@ -241,7 +241,7 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
  * Returns: -1 on error, 0 if no message available, message length otherwise
  *
  */
-#ifdef PERF_EVENTS_INLINE
+#if 0 && defined(PERF_EVENTS_INLINE)
 int
 input_queue_get(il_octet_string *buffer, long *offset, int timeout)
 {

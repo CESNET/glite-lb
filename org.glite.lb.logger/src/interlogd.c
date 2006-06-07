@@ -58,6 +58,9 @@ static void usage (int status)
 	       "  -s, --socket <path>        non-default path of local socket\n"
 #ifdef LB_PERF
 	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
+	       "  -S, --nosync               PERFTEST: do not check logd files for lost events\n"
+	       "  -R, --norecover            PERFTEST: do not start recovery thread\n"
+	       "  -P, --noparse              PERFTEST: do not parse messages, use built-in server address\n"
 #ifdef PERF_EVENTS_INLINE
 	       "  -e, --event_file <file>    PERFTEST: file to read test events from\n"
 	       "  -j, --njobs <n>            PERFTEST: number of jobs to send\n"
@@ -74,7 +77,7 @@ static int verbose = 0;
 char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
 #ifdef LB_PERF
-int nosend = 0;
+int nosend = 0, norecover=0, nosync=0, noparse=0;
 char *event_source = NULL;
 int njobs = 0;
 #endif
@@ -100,6 +103,9 @@ static struct option const long_options[] =
   {"socket", required_argument, 0, 's'},
 #ifdef LB_PERF
   {"nosend", no_argument, 0, 'n'},
+  {"nosync", no_argument, 0, 'S'},
+  {"norecover", no_argument, 0, 'R'},
+  {"noparse", no_argument, 0, 'P'},
 #ifdef PERF_EVENTS_INLINE
   {"event_file", required_argument, 0, 'e'},
   {"njobs", required_argument, NULL, 'j'},
@@ -132,6 +138,9 @@ decode_switches (int argc, char **argv)
 			   "d" /* debug */
 #ifdef LB_PERF
 			   "n" /* nosend */
+			   "S" /* nosync */
+			   "R" /* norecover */
+			   "P" /* noparse */
 #ifdef PERF_EVENTS_INLINE
 			   "e:" /* event file */
 			   "j:" /* num jobs */
@@ -188,6 +197,18 @@ decode_switches (int argc, char **argv)
 #ifdef LB_PERF
 	case 'n':
 		nosend = 1;
+		break;
+
+	case 'R':
+		norecover = 1;
+		break;
+
+	case 'S':
+		nosync = 1;
+		break;
+
+	case 'P':
+		noparse = 1;
 		break;
 
 #ifdef PERF_EVENTS_INLINE
@@ -306,6 +327,14 @@ main (int argc, char **argv)
 
 #ifndef PERF_EMPTY
   /* find all unsent events waiting in files */
+#ifdef LB_PERF
+  if(norecover) {
+	  if(event_store_init(file_prefix) < 0) {
+		  il_log(LOG_CRIT, "Failed to init event stores: %s\n", error_get_msg());
+		  exit(EXIT_FAILURE);
+	  }
+  } else
+#endif
   { 
 	  pthread_t rid;
 

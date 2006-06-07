@@ -14,59 +14,90 @@ DEBUG=${DEBUG:-0}
 
 check_test_files || exit 1
 
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
-CONSUMER_ARGS="-d -v"
+
+echo "-------------------------------------------"
+echo "Logging test:"
+echo "  - events sent through IPC and/or files"
+echo "  - events discarded by IL immediately"
+echo "-------------------------------------------"
 
 echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+
+
+PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
+CONSUMER_ARGS="-d"
+
+LOGJOBS_ARGS="--nofile"
+echo "Only IPC"
 run_test il $numjobs
-j=0
-while [[ $j -lt 4 ]]
-do
-    echo -e -n "\t ${PERFTEST_THROUGHPUT[$j]}"	
-    j=$((j+1))
-done
-echo ""
-#j=0
-#while [[ $j -lt 4 ]]
-#do
-#    echo -e -n "\t (${PERFTEST_EV_THROUGHPUT[$j]})"	
-#    j=$((j+1))
-#done
-#echo ""
+print_result
+LOGJOBS_ARGS=""
+echo "IPC & files"
+run_test il $numjobs
+print_result
+rm -f /tmp/dglogd.log.*
 
+echo "--------------------------------"
+echo "Interlogger test:"
+echo "  - events sent through IPC only"
+echo "  - events discarded in IL"
+echo "--------------------------------"
+echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
 
-#
-#    dst=il
-#
-## i)1)
-#
-#    glite_lb_interlogd_perf_noparse --nosend
-#    run_test()
-#
-#    glite_lb_interlogd_perf_nosync --nosend
-#    run_test()
-#
-#    glite_lb_interlogd_perf_norecover --nosend
-#    run_test()
-#
-#    glite_lb_interlogd_perf --nosend
-#    run_test()
-#
-## ii)1)
-#
-#glite_lb_bkserverd_perf_empty
-#
-#    glite_lb_interlogd_perf_noparse
-#    run_test()
-#
-#    glite_lb_interlogd_perf_nosync
-#    run_test()
-#    
-#    glite_lb_interlogd_perf_norecover
-#    run_test()
-#
-#    glite_lb_interlogd_perf_lazy
-#    run_test()
-#
-#    glite_lb_interlogd_perf
-#    run_test()
+PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf
+LOGJOBS_ARGS="--nofile"
+
+CONSUMER_ARGS="-d --nosend --noparse"
+echo "No event parsing"
+run_test il $numjobs
+print_result
+
+CONSUMER_ARGS="-d --nosend --nosync"
+echo "No checking of event files"
+run_test il $numjobs
+print_result
+
+CONSUMER_ARGS="-d --nosend --norecover"
+echo "No recovery thread"
+run_test il $numjobs
+print_result
+
+CONSUMER_ARGS="-d --nosend"
+echo "Normal operation:"
+run_test il $numjobs
+print_result
+
+echo "-----------------------------------"
+echo "Interlogger test:"
+echo "  - events sent through IPC & files"
+echo "  - events discarded in IL"
+echo "-----------------------------------"
+echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+
+PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf
+LOGJOBS_ARGS=""
+
+CONSUMER_ARGS="-d --nosend --noparse"
+echo "No event parsing"
+run_test il $numjobs
+print_result
+rm -f /tmp/dglogd.log.*
+
+CONSUMER_ARGS="-d --nosend --nosync"
+echo "No checking of event files"
+run_test il $numjobs
+print_result
+rm -f /tmp/dglogd.log.*
+
+CONSUMER_ARGS="-d --nosend --norecover"
+echo "No recovery thread"
+run_test il $numjobs
+print_result
+rm -f /tmp/dglogd.log.*
+
+CONSUMER_ARGS="-d --nosend"
+echo "Normal operation:"
+run_test il $numjobs
+print_result
+rm -f /tmp/dglogd.log.*
+

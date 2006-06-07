@@ -95,8 +95,8 @@ INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 	queue_mgr.o server_msg.o queue_thread.o
 
 INTERLOG_NOBJS:=${INTERLOG_OBJS:.o=.no}
-INTERLOG_PERF_OBJS:=${INTERLOG_OBJS:.o=.po}
-INTERLOG_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.eo}
+INTERLOG_PERF_OBJS:=${INTERLOG_OBJS:.o=.perf.o}
+INTERLOG_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.empty.o}
 #INTERLOG_INLINE_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.io}
 
 INTERLOG_TEST_OBJS:= \
@@ -138,8 +138,8 @@ glite-lb-interlogd: ${INTERLOG_OBJS}
 glite-lb-notif-interlogd: ${INTERLOG_NOBJS}
 	${LINK} -o $@ ${INTERLOG_NOBJS} ${COMMON_LIB}_${thrflavour}
 
-glite-lb-interlogd-perf: ${INTERLOG_OBJS}
-	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour}
+glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
+	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}_${thrflavour}
 
 glite-lb-interlogd-perf-empty: ${INTERLOG_EMPTY_OBJS}
 	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}_${thrflavour}
@@ -187,6 +187,9 @@ install:
 	if [ x${DOSTAGE} = xyes ]; then \
 		${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin; \
 	fi
+ifdef LB_PERF
+	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${PREFIX}/sbin
+endif
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 
@@ -196,17 +199,17 @@ ${INTERLOG_NOBJS}: %.no: %.c
 ${INTERLOG_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -c $< -o $@
 
-${INTERLOG_EMPTY_OBJS}: %.eo: %.c
+${INTERLOG_EMPTY_OBJS}: %.empty.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DPERF_EMPTY -c $< -o $@
 
-${INTERLOG_PERF_OBJS}: %.po: %.c
+${INTERLOG_PERF_OBJS}: %.perf.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -c $< -o $@
 
 #${INTERLOG_INLINE_EMPTY_OBJS}: %.io: %.c
 #	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -DPERF_EMPTY -DPERF_EVENTS_INLINE -c $< -o $@
 
 ${LOGD_NOBJS}: %.no: %.c
-	${CC} ${CFLAGS} ${GLOBUSINC} -DLB_PERF -DLOGD_NOFILE -c $< -o $@
+	${CC} ${CFLAGS} ${GLOBUSINC} -DLOGD_NOFILE -c $< -o $@
 
 ${LOGD_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@

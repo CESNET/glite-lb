@@ -71,7 +71,7 @@ extern char *CAcert_dir;
 extern int bs_only;
 extern int killflg;
 #ifdef LB_PERF
-extern int nosend;
+extern int nosend, nosync, norecover, noparse;
 #ifdef PERF_EVENTS_INLINE
 extern char *event_source;
 #endif

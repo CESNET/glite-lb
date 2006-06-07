@@ -327,12 +327,24 @@ handle_msg(il_octet_string_t *event, long offset)
 		return(-1);
 	msg->es = es;
 
-	ret = event_store_sync(es, offset);
+#ifdef LB_PERF
+	if(nosync) 
+		ret = 1;
+	else 
+		ret = event_store_sync(es, offset);
+#endif
 	il_log(LOG_DEBUG, "  syncing event store at %d with event at %d, result %d\n", es->offset, offset, ret);
 	if(ret < 0) {
 		il_log(LOG_ERR, "    handle_msg: error syncing event store:\n      %s\n", error_get_msg());
-		event_store_release(es);
-		return(0);
+		/* XXX should error during event store recovery cause us to drop the message? */
+		/* Probably no, because the attempt to recover means we have missed some events,
+		   and delivery of this one will not move offset ahead. So try our best and deliver it
+		   even if it may cause duplicates on server. */
+		/* COMMENTED OUT:
+		   server_msg_free(msg);
+		   event_store_release(es);
+		   return(0);
+		*/
 	} else if(ret == 0) {
 		/* we have seen this event already */
 		server_msg_free(msg);

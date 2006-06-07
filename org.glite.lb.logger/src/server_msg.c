@@ -166,7 +166,12 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 	if(msg->len < 0) {
 		return(-1);
 	}
-	msg->job_id_s = edg_wll_GetJobId(event->data);
+#ifdef LB_PERF
+	if(noparse) {
+		msg->job_id_s = strdup("https://localhost:9001/not_so_unique_string");
+	} else 
+#endif
+		msg->job_id_s = edg_wll_GetJobId(event->data);
 #endif
 	/* remember to add event separator to the length */
 	msg->ev_len = event->len + 1;
