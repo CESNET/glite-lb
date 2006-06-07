@@ -288,7 +288,7 @@ glite_wll_perftest_produceJobId()
  * For every nevents (one job) new jobid is generated and inserted into 
  * event. The last event is termination - usertag.
  */
-int
+const char *
 glite_wll_perftest_produceEventString(char **event)
 {
 	static char *cur_jobid = NULL;
@@ -303,7 +303,7 @@ glite_wll_perftest_produceEventString(char **event)
 	if(cur_job < 0) {
 		if(pthread_mutex_unlock(&perftest_lock) < 0)
 			abort();
-		return(0);
+		return(NULL);
 	}
 
 	/* did we send all jobs? */
@@ -325,7 +325,7 @@ glite_wll_perftest_produceEventString(char **event)
 			fprintf(stderr, "produceEventString: error creating termination event\n");
 			if(pthread_mutex_unlock(&perftest_lock) < 0)
 				abort();
-			return(-1);
+			return(NULL);
 		}
 
 		/* and refuse to produce more */
@@ -360,13 +360,13 @@ glite_wll_perftest_produceEventString(char **event)
 				fprintf(stderr, "produceEventString: error creating jobid\n");
 				if(pthread_mutex_unlock(&perftest_lock) < 0)
 					abort();
-				return(-1);
+				return(NULL);
 			}
 			if((cur_jobid=edg_wlc_JobIdUnparse(jobid)) == NULL) {
 				fprintf(stderr, "produceEventString: error unparsing jobid\n");
 				if(pthread_mutex_unlock(&perftest_lock) < 0)
 					abort();
-				return(-1);
+				return(NULL);
 			}
 		}
 		
@@ -375,7 +375,7 @@ glite_wll_perftest_produceEventString(char **event)
 			fprintf(stderr, "produceEventString: error generating event\n");
 			if(pthread_mutex_unlock(&perftest_lock) < 0)
 				abort();
-			return(-1);
+			return(NULL);
 		}
 	}
 
@@ -390,7 +390,7 @@ glite_wll_perftest_produceEventString(char **event)
 	if(pthread_mutex_unlock(&perftest_lock) < 0)
 		abort();
 
-	return(strlen(e));
+	return(cur_jobid);
 }
 
 
