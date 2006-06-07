@@ -37,6 +37,18 @@ ifdef LB_STANDALONE
 	LB_STANDALONE_FLAGS:=-DLB_STANDALONE
 endif
 
+ifdef LB_PERF
+	LOGD:=glite-lb-logd-perf glite-lb-logd-perf-nofile
+	INTERLOGD:=glite-lb-interlogd-perf \
+		   glite-lb-interlogd-perf-empty 
+#		   glite-lb-interlogd-perf-inline-empty
+	NOTIF_INTERLOGD:=glite-lb-notif-interlogd
+	LB_PERF_FLAGS:=-DLB_PERF
+else
+	LOGD:=glite-lb-logd
+	INTERLOGD:=glite-lb-interlogd
+	NOTIF_INTERLOGD:=glite-lb-notif-interlogd
+endif
 
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
@@ -72,19 +84,6 @@ GLITE_GSS_LIB:=-lglite_security_gss
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
-
-ifdef LB_PERF
-	LOGD:=glite-lb-logd-perf glite-lb-logd-perf-nofile
-	INTERLOGD:=glite-lb-interlogd-perf \
-		   glite-lb-interlogd-perf-empty 
-#		   glite-lb-interlogd-perf-inline-empty
-	NOTIF_INTERLOGD:=glite-lb-notif-interlogd
-else
-	LOGD:=glite-lb-logd
-	INTERLOGD:=glite-lb-interlogd
-	NOTIF_INTERLOGD:=glite-lb-notif-interlogd
-endif
-
 
 LOGD_OBJS:= logd_proto.o logd.o
 
@@ -198,10 +197,10 @@ ${INTERLOG_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} ${GLOBUSTHRINC} -c $< -o $@
 
 ${INTERLOG_EMPTY_OBJS}: %.eo: %.c
-	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -DPERF_EMPTY -c $< -o $@
+	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DPERF_EMPTY -c $< -o $@
 
 ${INTERLOG_PERF_OBJS}: %.po: %.c
-	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -c $< -o $@
+	${CC} ${CFLAGS} ${GLOBUSTHRINC} -c $< -o $@
 
 #${INTERLOG_INLINE_EMPTY_OBJS}: %.io: %.c
 #	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -DPERF_EMPTY -DPERF_EVENTS_INLINE -c $< -o $@

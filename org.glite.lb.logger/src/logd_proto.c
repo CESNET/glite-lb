@@ -463,12 +463,6 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 
 
 	/* if not command, save message to file */
-#ifdef LOGD_NOFILE
-		edg_wll_ll_log(LOG_DEBUG,"Calling perftest\n");
-		glite_wll_perftest_consumeEventString(msg);
-		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
-		filepos = 0;
-#else
 	if(strstr(msg, "DG.TYPE=\"command\"") == NULL) {
 		/* compose the name of the log file */
 		edg_wll_ll_log(LOG_DEBUG,"Composing filename from prefix \"%s\" and jobId \"%s\"...",prefix,jobId);
@@ -478,12 +472,13 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 		strncpy(outfilename+count_total,jobId,count); count_total+=count;
 		outfilename[count_total]='\0';
 		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
-		edg_wll_ll_log(LOG_INFO,"Writing message to \"%s\"...",outfilename);
-
-		i = 0;
-open_event_file:
 
 		/* fopen and properly handle the filelock */
+#ifdef LOGD_NOFILE
+		edg_wll_ll_log(LOG_NOTICE,"NOT writing message to \"%s\".\n",outfilename);
+		filepos = 0;
+#else
+		edg_wll_ll_log(LOG_INFO,"Writing message to \"%s\"...",outfilename);
 		if ( edg_wll_log_event_write(context, outfilename, msg, FCNTL_ATTEMPTS, FCNTL_TIMEOUT, &filepos) ) {
 			char *errd;
 			answer = edg_wll_Error(context, NULL, &errd);
@@ -491,12 +486,17 @@ open_event_file:
 			SYSTEM_ERROR(errd);
 			free(errd);
 			goto edg_wll_log_proto_server_end;
-		} else edg_wll_ll_log(LOG_INFO,"o.k.");
+		} else edg_wll_ll_log(LOG_INFO,"o.k.\n");
+#endif
 	} else {
 		filepos = 0;
 	}
-#endif
 
+#ifdef LB_PERF
+	edg_wll_ll_log(LOG_INFO,"Calling perftest");
+	glite_wll_perftest_consumeEventString(msg);
+	edg_wll_ll_log(LOG_INFO,"o.k.\n");
+#endif
 
 	/* if not priority send now the answer back to client */
 	if (!event->any.priority) {
@@ -549,7 +549,7 @@ open_event_file:
 			}
 		}
 	} else {
-		edg_wll_ll_log(LOG_NOTICE,"Not sending via IPC.\n");
+		edg_wll_ll_log(LOG_NOTICE,"NOT sending via IPC.\n");
 	}
 
 edg_wll_log_proto_server_end:
