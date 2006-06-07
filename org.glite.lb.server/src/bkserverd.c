@@ -386,6 +386,10 @@ int main(int argc, char *argv[])
 			  break;
 		case 't': request_timeout = atoi(optarg);
 			  break;
+#ifdef LB_PERF
+		case 'K': sink_mode = atoi(optarg);
+			  break;
+#endif
 		case '?': usage(name); return 1;
 	}
 
