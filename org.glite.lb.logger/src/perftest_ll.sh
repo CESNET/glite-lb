@@ -1,6 +1,6 @@
 #!/bin/bash
 
-numjobs=$1
+numjobs=${1:-1}
 
 # XXX - there must be better way to find stage
 if [ -z "${GLITE_LOCATION}" ]; then
@@ -15,20 +15,57 @@ DEBUG=${DEBUG:-0}
 # CONSUMER_ARGS=
 # PERFTEST_COMPONENT=
 # COMPONENT_ARGS=
-#LOGJOBS_ARGS="" 
+# LOGJOBS_ARGS="" 
 
 check_test_files || exit 1
 
+echo "----------------
+Locallogger test
+----------------
+a) glite_lb_logd_perf_nofile --noParse --noIPC
+b) glite_lb_logd_perf_nofile --noIPC
+c) glite_lb_logd_perf --noIPC
+d) glite_lb_logd_perf
+
+Number of jobs: $numjobs
+"
+echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+
+# a)
+echo -n "a)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf-nofile
 CONSUMER_ARGS="-d -v --noIPC --noParse"
-
-echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+init_result
 run_test ll $numjobs
-j=0
-while [[ $j -lt 4 ]]
-do
-    echo -e -n "\t ${PERFTEST_EVENT_THROUGHPUT[$j]}"	
-    j=$((j+1))
-done
-echo ""
+print_result_ev
+print_result
+
+# b)
+echo -n "b)"
+PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf-nofile
+CONSUMER_ARGS="-d -v --noIPC"
+init_result
+run_test ll $numjobs
+print_result_ev
+print_result
+
+# c)
+echo -n "c)"
+PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf
+CONSUMER_ARGS="-d -v --noIPC"
+init_result
+run_test ll $numjobs
+print_result_ev
+print_result
+
+# d)
+echo -n "d)"
+PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
+CONSUMER_ARGS="-d -v"
+PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-logd-perf
+COMPONENT_ARGS="-d"
+init_result
+run_test ll $numjobs
+print_result_ev
+print_result
 
