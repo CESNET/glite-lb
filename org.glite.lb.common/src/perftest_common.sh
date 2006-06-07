@@ -61,16 +61,37 @@ get_result()
     PERFTEST_DAY_JOB_THROUGHPUT=`echo "scale=6; $PERFTEST_NUM_JOBS / $total * 3600 * 24" |bc`
 }
 
+init_result()
+{
+    j=0
+    while [[ $j -lt 4 ]]
+    do
+	PERFTEST_THROUGHPUT[$j]=0
+	PERFTEST_EV_THROUGHPUT[$j]=0
+        j=$((j+1))
+    done
+}
+
 print_result()
 {
-j=0
-while [[ $j -lt 4 ]]
-do
-    echo -e -n "\t ${PERFTEST_THROUGHPUT[$j]}"  
-    j=$((j+1))
-done
-echo ""
+    j=0
+    while [[ $j -lt 4 ]]
+    do
+        echo -e -n "\t ${PERFTEST_THROUGHPUT[$j]}"  
+        j=$((j+1))
+    done
+    echo -e "\t [jobs/day]"
+}
 
+print_result_ev()
+{
+    j=0
+    while [[ $j -lt 4 ]]
+    do
+        echo -e -n "\t ${PERFTEST_EV_THROUGHPUT[$j]}"  
+        j=$((j+1))
+    done
+    echo -e "\t [events/sec]"
 }
 
 shutdown()
