@@ -53,9 +53,13 @@ static struct option const long_options[] = {
 	{ "file", required_argument, NULL, 'f'},
 	{ "num", required_argument, NULL, 'n'},
 	{ "machine", required_argument, NULL, 'm'},
+	{ "nofile", no_argument, NULL, 'N'},
+	{ "skip", optional_argument, NULL, 's'},
 	{ NULL, 0, NULL, 0}
 };
 
+
+int nofile = 0;
 
 void
 usage(char *program_name)
@@ -66,23 +70,66 @@ usage(char *program_name)
 		"-m, --machine <hostname> destination host\n"
 		"-t, --test <testname>    name of the test\n"
 		"-f, --file <filename>    name of the file with prototyped job events\n"
-		"-n, --num <numjobs>      number of jobs to generate\n",
+		"-n, --num <numjobs>      number of jobs to generate\n"
+		"-s, --skip [<numevents>] number of events to skip when sending to IL by IPC\n"
+		"-N, --nofile             do not store events in file for interlogger (if dst==IL)\n",
 	program_name);
 }
 
 
+#define FCNTL_ATTEMPTS          5
+#define FCNTL_TIMEOUT           1
+
 int edg_wll_DoLogEventIl(
 	edg_wll_Context context,
-	edg_wll_LogLine logline)
+	edg_wll_LogLine logline,
+	const char *jobid,
+	int skip)
 {
-	static int filepos = 0;
+	static long filepos = 0;
 	int ret = 0;
-	struct timeval timeout;
-	
-	timeout.tv_sec = 1;
-	timeout.tv_usec = 0;
-	ret = edg_wll_log_event_send(context, DEFAULT_SOCKET, filepos, logline, strlen(logline), 1, &timeout);
-	filepos += strlen(logline);
+	edg_wlc_JobId jid;
+	char *unique, *event_file;
+	static int num_event = 0;
+
+	if(!nofile) {
+		ret = edg_wlc_JobIdParse(jobid, &jid);
+		if(ret != 0) 
+			return(edg_wll_SetError(context, ret, "edg_wlc_JobIdParse()"));
+		unique = edg_wlc_JobIdGetUnique(jid);
+		if(unique == NULL) {
+			edg_wlc_JobIdFree(jid);
+			return(edg_wll_SetError(context, ENOMEM, "edg_wlc_JobIdGetUnique()"));
+		}
+		asprintf(&event_file, "/tmp/dglogd.log.%s", unique);
+		if(!event_file) {
+			free(unique);
+			edg_wlc_JobIdFree(jid);
+			return(edg_wll_SetError(context, ENOMEM, "asprintf()"));
+		}
+		if(edg_wll_log_event_write(context, event_file, logline,
+					   context->p_tmp_timeout.tv_sec > FCNTL_ATTEMPTS ? context->p_tmp_timeout.tv_sec : FCNTL_ATTEMPTS,
+					   FCNTL_TIMEOUT,
+					   &filepos)) {
+			edg_wll_UpdateError(context, 0, "edg_wll_log_event_write()");
+			free(unique);
+			edg_wlc_JobIdFree(jid);
+			free(event_file);
+		}
+	}
+	if(nofile || 
+	   (skip < 0) || 
+	   ((skip > 0) && (++num_event % skip == 0)))
+		ret = edg_wll_log_event_send(context, DEFAULT_SOCKET, filepos, 
+					     logline, strlen(logline), 1, 
+					     &context->p_tmp_timeout);
+	if(!nofile) {
+		free(unique);
+		edg_wlc_JobIdFree(jid);
+		free(event_file);
+	} else {
+		filepos += strlen(logline);
+	}
 
 	return(ret);
 }
@@ -96,6 +143,7 @@ main(int argc, char *argv[])
 	char	*event;
 	int 	num_jobs = 1;
 	int 	opt;
+	int     skip = -1;
 	edg_wll_Context ctx;
 	enum {
 		DEST_UNDEF = 0,
@@ -110,7 +158,7 @@ main(int argc, char *argv[])
 
 	opterr = 0;
 
-	while ((opt = getopt_long(argc,argv,"hd:t:f:n:x",
+	while ((opt = getopt_long(argc,argv,"hd:t:f:n:xNs:",
 		long_options, (int *) 0)) != EOF) {
 
 		switch (opt) {
@@ -119,6 +167,8 @@ main(int argc, char *argv[])
 		case 'f': filename = (char *) strdup(optarg); break;
 		case 'm': hostname = (char *) strdup(optarg); break;
 		case 'n': num_jobs = atoi(optarg); break;
+		case 'N': nofile = 1; break;
+		case 's': skip = optarg ? atoi(optarg) : 0; break;
 		case 'h': 
 		default:
 			usage(argv[0]); exit(0);
@@ -158,7 +208,8 @@ main(int argc, char *argv[])
 	}
 
 	if(dest) {
-		while (glite_wll_perftest_produceEventString(&event)) {
+		const char *jobid;
+		while (jobid=glite_wll_perftest_produceEventString(&event)) {
 			switch(dest) {
 			case DEST_PROXY:
 				ctx->p_tmp_timeout = ctx->p_sync_timeout;
@@ -191,7 +242,7 @@ main(int argc, char *argv[])
 
 			case DEST_IL:
 				ctx->p_tmp_timeout = ctx->p_log_timeout;
-				if (edg_wll_DoLogEventIl(ctx, event)) {
+				if (edg_wll_DoLogEventIl(ctx, event, jobid, skip)) {
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
 					fprintf(stderr,"edg_wll_DoLogEventIl(): %s (%s)\n",et,ed);
