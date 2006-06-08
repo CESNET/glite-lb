@@ -686,6 +686,10 @@ int bk_clnt_data_init(void **data)
 		cdata->job_index_cols = job_index_cols;
 	}
 
+#ifdef LB_PERF
+	glite_wll_perftest_init(NULL, NULL, NULL, NULL, 0);
+#endif
+
 	*data = cdata;
 	return 0;
 }

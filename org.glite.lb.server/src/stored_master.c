@@ -66,6 +66,10 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 	  return edg_wll_SetError(ctx,ENOTCONN,"client side");
 	if(ret < 0) 
 	  return edg_wll_SetError(ctx,EIO,"interlogger protocol");
+#ifdef LB_PERF
+	if (sink_mode == GLITE_LB_SINK_PARSE) glite_wll_perftest_consumeEventIlMsg(buf);
+	else
+#endif
 
 	handle_request(ctx,buf);
 	free(buf);
