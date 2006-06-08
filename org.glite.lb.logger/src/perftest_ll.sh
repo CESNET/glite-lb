@@ -22,10 +22,10 @@ check_test_files || exit 1
 echo "----------------
 Locallogger test
 ----------------
-a) glite_lb_logd_perf_nofile --noParse --noIPC
-b) glite_lb_logd_perf_nofile --noIPC
-c) glite_lb_logd_perf --noIPC
-d) glite_lb_logd_perf
+a) glite-lb-logd-perf-nofile --noParse --noIPC
+b) glite-lb-logd-perf-nofile --noIPC
+c) glite-lb-logd-perf --noIPC
+d) glite-lb-logd-perf
 
 Number of jobs: $numjobs
 "
