@@ -21,6 +21,7 @@
         }\
 }
 
+#define dprintf(x)              { if (verbose) printf x; }
 
 
 extern char *optarg;
@@ -34,14 +35,15 @@ static void usage(char *me)
 		"	-n <num_subjobs>	number of subjobs of DAG\n"
 		"	-S			register subjobs\n"
 		"	-l <jdl_file>		file with JDL\n"
-		"	-N <num_repeat>		repeat whole registration N-times\n",
+		"	-N <num_repeat>		repeat whole registration N-times\n"
+		"	-v			verbose output\n",
 		me);
 }
 
 int main(int argc, char *argv[])
 {
 	char 		*server = NULL,*jdl = NULL;
-	int 		lbproxy = 0, N = 1;
+	int 		lbproxy = 0, N = 1, verbose = 0;
 	int 		done = 0,num_subjobs = 0,reg_subjobs = 0, i, j;
 	edg_wll_Context	ctx;
 	edg_wlc_JobId	*jobids,*subjobs;
@@ -52,13 +54,14 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xm:n:Sl:N:")) {
+		switch (getopt(argc,argv,"xm:n:Sl:N:v")) {
 			case 'x': lbproxy = 1; break;
 			case 'm': server = strdup(optarg); break;
 			case 'n': num_subjobs = atoi(optarg); break;
 			case 'S': if (num_subjobs>0) { reg_subjobs = 1; break; }
 			case 'l': jdl = (char *) strdup(optarg); break;
 			case 'N': N = atoi(optarg); break;
+			case 'v': verbose = 1; break;
 			case '?': usage(argv[0]); exit(EINVAL);
 			case -1: done = 1; break;
 		}
@@ -71,7 +74,7 @@ int main(int argc, char *argv[])
 
 	/* prepare set of N jobid before starting timer */
 	jobids = (edg_wlc_JobId *) malloc(N * sizeof(edg_wlc_JobId));
-	printf("generating jobids...");
+	dprintf(("generating jobids..."));
 	{
 		char *name=server?server:strdup(PROXY_SERVER);
 		char *p = strchr(name,':');
@@ -82,7 +85,7 @@ int main(int argc, char *argv[])
 		for (i=0; i<N; i++)
 			edg_wlc_JobIdCreate(name,port,&(jobids[i]));
 	}
-	printf("done.\n");
+	dprintf(("done.\n"));
 
 	/* probably not useful now, but can be handy with register subjobs */
 	if (jdl) {
@@ -170,7 +173,8 @@ int main(int argc, char *argv[])
 
 		tv_sub(stop,start);
 		sum=stop.tv_sec + (float) stop.tv_usec/1000000;
-		printf("Test duration %6.6f\n", sum); 
+		dprintf(("Test duration (seconds) "));
+		printf("%6.6f\n", sum); 
 	}
 
 	for (i=0; i<N; i++) 
