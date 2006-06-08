@@ -256,6 +256,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	int	err;
 	edg_wll_Context	context;
 	edg_wll_Event	*event;
+	edg_wlc_JobId	j;
 	edg_wll_GssStatus	gss_stat;
                 
 	errno = i = answer = answer_sent = size = msg_size = dglllid_size = dguser_size = count = count_total = msg_sock = filedesc = filelock_status = /* priority */ unique = err = 0;     
@@ -325,7 +326,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 	}
 
-/*
+/* XXX: obsolete
 	edg_wll_ll_log(LOG_DEBUG,"Reading message priority...");
 	count = 0;
 	if ((err = edg_wll_gss_read_full(con, &priority, sizeof(priority), &timeout, &count, &gss_stat)) < 0) {
@@ -427,19 +428,11 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 		event->any.priority = priority;
 		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 	} else {
-/* FIXME: what if edg_wll_InitEvent fails? should be checked somehow -> nomem etc.  */
-		event = edg_wll_InitEvent(EDG_WLL_EVENT_UNDEF);
-/* XXX:
-		event = calloc(1,sizeof(*event));
-		if(event == NULL) {
-			edg_wll_ll_log(LOG_ERR, "out of memory\n");
+		if ((event = edg_wll_InitEvent(EDG_WLL_EVENT_UNDEF)) == NULL) {
+			edg_wll_ll_log(LOG_ERR, "edg_wll_InitEvent(): out of memory\n");
 			answer = ENOMEM;
 			goto edg_wll_log_proto_server_end;
 		}
-*/
-
-/* XXX: obsolete, logd now doesn't need jobId for 'command' messages,
- * it will be probably needed for writing 'command' messages to some files
 		edg_wll_ll_log(LOG_DEBUG,"Getting jobId from message...");
 		jobId = edg_wll_GetJobId(msg);
 		if (!jobId || edg_wlc_JobIdParse(jobId,&j)) {
@@ -453,7 +446,6 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 		free(jobId);
 		jobId = edg_wlc_JobIdGetUnique(j);
 		edg_wlc_JobIdFree(j);
-*/
 
 /* FIXME: get the priority from message some better way */
 		if (strstr(msg, "DG.PRIORITY=1") != NULL)
@@ -465,7 +457,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	/* if not command, save message to file */
 	if(strstr(msg, "DG.TYPE=\"command\"") == NULL) {
 		/* compose the name of the log file */
-		edg_wll_ll_log(LOG_DEBUG,"Composing filename from prefix \"%s\" and jobId \"%s\"...",prefix,jobId);
+		edg_wll_ll_log(LOG_DEBUG,"Composing filename from prefix \"%s\" and unique jobId \"%s\"...",prefix,jobId);
 		count = strlen(prefix);
 		strncpy(outfilename,prefix,count); count_total=count;
 		strncpy(outfilename+count_total,".",1); count_total+=1; count=strlen(jobId);
@@ -493,7 +485,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	}
 
 #ifdef LB_PERF
-	edg_wll_ll_log(LOG_INFO,"Calling perftest");
+	edg_wll_ll_log(LOG_INFO,"Calling perftest\n");
 	glite_wll_perftest_consumeEventString(msg);
 	edg_wll_ll_log(LOG_INFO,"o.k.\n");
 #endif
