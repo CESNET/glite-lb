@@ -288,11 +288,12 @@ glite_wll_perftest_produceJobId()
  * For every nevents (one job) new jobid is generated and inserted into 
  * event. The last event is termination - usertag.
  */
-const char *
-glite_wll_perftest_produceEventString(char **event)
+int
+glite_wll_perftest_produceEventString(char **event, char **jobid)
 {
 	static char *cur_jobid = NULL;
 	char *e;
+	int len;
 
 	assert(event != NULL);
 
@@ -303,29 +304,29 @@ glite_wll_perftest_produceEventString(char **event)
 	if(cur_job < 0) {
 		if(pthread_mutex_unlock(&perftest_lock) < 0)
 			abort();
-		return(NULL);
+		return(0);
 	}
 
 	/* did we send all jobs? */
 	if(cur_job >= njobs) {
 		
 		/* construct termination event */
-		if(trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USERTAG "\n",
-				 "now", /* date */
-				 "localhost", /* host */
-				 "highest", /* level */
-				 0, /* priority */
-				 "UserInterface", /* source */
-				 "me again", /* source instance */
-				 "UserTag", /* event */
-				 cur_jobid, /* jobid */
-				 "last", /* sequence */
-				 PERFTEST_END_TAG_NAME,
-				 PERFTEST_END_TAG_VALUE) < 0) {
+		if((len=trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USERTAG "\n",
+				      "now", /* date */
+				      "localhost", /* host */
+				      "highest", /* level */
+				      0, /* priority */
+				      "UserInterface", /* source */
+				      "me again", /* source instance */
+				      "UserTag", /* event */
+				      cur_jobid, /* jobid */
+				      "last", /* sequence */
+				      PERFTEST_END_TAG_NAME,
+				      PERFTEST_END_TAG_VALUE)) < 0) {
 			fprintf(stderr, "produceEventString: error creating termination event\n");
 			if(pthread_mutex_unlock(&perftest_lock) < 0)
 				abort();
-			return(NULL);
+			return(-1);
 		}
 
 		/* and refuse to produce more */
@@ -360,22 +361,22 @@ glite_wll_perftest_produceEventString(char **event)
 				fprintf(stderr, "produceEventString: error creating jobid\n");
 				if(pthread_mutex_unlock(&perftest_lock) < 0)
 					abort();
-				return(NULL);
+				return(-1);
 			}
 			if((cur_jobid=edg_wlc_JobIdUnparse(jobid)) == NULL) {
 				fprintf(stderr, "produceEventString: error unparsing jobid\n");
 				if(pthread_mutex_unlock(&perftest_lock) < 0)
 					abort();
-				return(NULL);
+				return(-1);
 			}
 		}
 		
 		/* return current event with jobid filled in */
-		if(trio_asprintf(&e, "DG.JOBID=\"%s\" %s", cur_jobid, events[cur_event]) < 0) {
+		if((len=trio_asprintf(&e, "DG.JOBID=\"%s\" %s", cur_jobid, events[cur_event])) < 0) {
 			fprintf(stderr, "produceEventString: error generating event\n");
 			if(pthread_mutex_unlock(&perftest_lock) < 0)
 				abort();
-			return(NULL);
+			return(-1);
 		}
 	}
 
@@ -390,7 +391,8 @@ glite_wll_perftest_produceEventString(char **event)
 	if(pthread_mutex_unlock(&perftest_lock) < 0)
 		abort();
 
-	return(cur_jobid);
+	*jobid = cur_jobid;
+	return(len);
 }
 
 

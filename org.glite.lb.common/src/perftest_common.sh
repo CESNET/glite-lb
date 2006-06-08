@@ -13,9 +13,9 @@ JOB_MAX_DAG=${JOB_MAX_DAG:-$STAGEDIR/examples/perftest/perf_dag_max_events.log}
 LOGJOBS=${LOGJOBS:-$STAGEDIR/sbin/glite-lb-perftest_logjobs}
 
 # some defaults for log files
-CONSUMER_LOG=/tmp/perftest_consumer.log
-PRODUCER_LOG=/tmp/perftest_producer.log
-COMPONENT_LOG=/tmp/perftest_component.log
+CONSUMER_LOG=/tmp/perftest_${USER}_consumer.log
+PRODUCER_LOG=/tmp/perftest_${USER}_producer.log
+COMPONENT_LOG=/tmp/perftest_${USER}_component.log
 
 
 check_file_readable()

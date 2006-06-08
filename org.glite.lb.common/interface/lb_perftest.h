@@ -20,8 +20,8 @@ glite_wll_perftest_init(const char *host,         /** hostname */
 char *
 glite_wll_perftest_produceJobId();
 
-const char *
-glite_wll_perftest_produceEventString(char **event);
+int
+glite_wll_perftest_produceEventString(char **event, char **jobid);
 
 int
 glite_wll_perftest_consumeEvent(edg_wll_Event *event);
