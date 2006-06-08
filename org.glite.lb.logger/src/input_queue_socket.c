@@ -241,14 +241,15 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
  * Returns: -1 on error, 0 if no message available, message length otherwise
  *
  */
-#if 0 && defined(PERF_EVENTS_INLINE)
+#ifdef PERF_EVENTS_INLINE
 int
 input_queue_get(il_octet_string *buffer, long *offset, int timeout)
 {
 	static long o = 0;
 	int len;
+	char *jobid;
 
-	len = glite_wll_perftest_produceEventString(&buffer->data);
+	len = glite_wll_perftest_produceEventString(&buffer->data, &jobid);
 	buffer->len = len;
 	if(len) {
 		o += len;

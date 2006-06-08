@@ -33,6 +33,7 @@ queue_thread(void *q)
 {
 	struct event_queue *eq = (struct event_queue *)q;
 	int ret, exit;
+	int retrycnt;
 
 	if(init_errors(0) < 0) {
 		il_log(LOG_ERR, "Error initializing thread specific data, exiting!");
@@ -46,6 +47,7 @@ queue_thread(void *q)
 	event_queue_cond_lock(eq);
 
 	exit = 0;
+	retrycnt = 0;
 	while(!exit) {
     
 		clear_error();
@@ -83,7 +85,9 @@ queue_thread(void *q)
 #else
 			il_log(LOG_INFO, "    could not connect to bookkeeping server %s, waiting for retry\n", eq->dest_name);
 #endif
+			retrycnt++;
 		} else {
+			retrycnt = 0;
 			/* connected, send events */
 			switch(ret=event_queue_send(eq)) {
 				
@@ -133,8 +137,12 @@ queue_thread(void *q)
 
 		/* if there was some error with server, sleep for a while */
 		/* iff !event_queue_empty() */
-		if(ret == 0) 
+		/* also allow for one more try immediately after server disconnect,
+		   which may cure server kicking us out after given number of connections */
+#ifndef LB_PERF
+		if((ret == 0) && (retrycnt == 0)) 
 			event_queue_sleep(eq);
+#endif
 
 		if(exit) {
 			/* we have to clean up before exiting */
