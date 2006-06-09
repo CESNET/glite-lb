@@ -110,7 +110,7 @@ shutdown()
     kill -0 $1 > /dev/null 2>&1 && kill $1
     if kill -0 $1 >/dev/null 2>&1
     then
-	sleep 10
+	sleep 2
 	kill -9 $1 >/dev/null 2>&1
     fi
 }
