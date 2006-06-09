@@ -102,6 +102,11 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 	/* XXX: RegJob events, which were logged also directly, are duplicated at server,
 		but it should not harm */
 
+#ifdef LB_PERF
+	if( sink_mode == GLITE_LB_SINK_SEND ) {
+		glite_wll_perftest_consumeEvent(ev);
+	} else
+#endif
 	if (edg_wll_EventSendProxy(ctx, ev->any.jobId, event) )  {
 		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_EventSendProxy() error.");
 		goto err;
