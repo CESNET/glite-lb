@@ -49,6 +49,7 @@ int main(int argc,char** argv)
     glite_gsplugin_init_context(&gsplugin_ctx);
 
 	soap_init(&soap);
+	soap_set_namespaces(&soap, namespaces);
 
 	if ( soap_register_plugin_arg(&soap, glite_gsplugin, (void *)gsplugin_ctx) )
 	{

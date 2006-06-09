@@ -65,6 +65,7 @@ int main(int argc,char** argv)
 	}
 		
     edg_wll_InitContext(&ctx);
+    soap_set_namespaces(mydlo, namespaces);
     glite_gsplugin_init_context(&gsplugin_ctx);
 
 	if ( soap_register_plugin_arg(mydlo, glite_gsplugin, (void *)gsplugin_ctx) )
