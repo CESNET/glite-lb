@@ -64,7 +64,7 @@ static struct option const long_options[] = {
 
 int nofile = 0;
 char *logfile_prefix = DEFAULT_PREFIX;
-char *il_socket = DEFAULT_SOCKET;
+char *il_socket = NULL;
 
 void
 usage(char *program_name)
@@ -213,6 +213,16 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 	} 
+
+	if((dest == DEST_IL) && (il_socket == NULL)) 
+		il_socket = DEFAULT_SOCKET;
+	if((dest == DEST_PROXY) && il_socket) {
+		char store_sock[256], serve_sock[256];
+		sprintf(store_sock, "%s%s", il_socket, "store.sock");
+		sprintf(serve_sock, "%s%s", il_socket, "serve.sock");
+		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, store_sock);
+		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, serve_sock);
+	}
 
 	if (num_jobs <= 0) {
 		fprintf(stderr,"%s: wrong number of jobs\n",argv[0]);
