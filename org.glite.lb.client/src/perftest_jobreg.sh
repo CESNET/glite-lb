@@ -160,37 +160,37 @@ test_ai()
 	#
 	my_echo "-n single registration ..."
 	ai_sr_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest`
-	mega_actions=`echo "scale=6; 86400/$ai_sr_lb/1000000" | bc`
-	my_echo ". $ai_sr_lb seconds ($mega_actions Ma)"
+	mega_actions_per_day=`echo "scale=6; 86400/$ai_sr_lb/1000000" | bc`
+	my_echo ". $ai_sr_lb seconds ($mega_actions_per_day GU)"
 
 	# average single registration (100 samples)
 	#
 	my_echo "-n average single registration (100 samples) ..."
 	ai_100sr_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest -N 100`
 	ai_avg_sr_lb=`echo "scale=6; $ai_100sr_lb/100" |bc`
-	mega_actions=`echo "scale=6; 86400/$ai_avg_sr_lb/1000000" | bc`
-	my_echo ". $ai_avg_sr_lb seconds ($mega_actions Ma)"
+	mega_actions_per_day=`echo "scale=6; 86400/$ai_avg_sr_lb/1000000" | bc`
+	my_echo ". $ai_avg_sr_lb seconds ($mega_actions_per_day GU)"
 
 	# 1000 nodes DAG registration
 	#
 	my_echo "-n 1000 nodes DAG registration ..."
 	ai_dag1000_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest -n 1000`
-	mega_actions=`echo "scale=6; 86400/$ai_dag1000_lb/1000000*1001" | bc`
-	my_echo ". $ai_dag1000_lb seconds ($mega_actions Ma)"
+	mega_actions_per_day=`echo "scale=6; 86400/$ai_dag1000_lb/1000000*1001" | bc`
+	my_echo ". $ai_dag1000_lb seconds ($mega_actions_per_day GU)"
 
 	# 5000 nodes DAG registration
 	#
 	my_echo "-n 5000 nodes DAG registration ..."
 	ai_dag5000_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest -n 5000`
-	mega_actions=`echo "scale=6; 86400/$ai_dag5000_lb/1000000*5001" | bc`
-	my_echo ". $ai_dag5000_lb seconds ($mega_actions Ma)"
+	mega_actions_per_day=`echo "scale=6; 86400/$ai_dag5000_lb/1000000*5001" | bc`
+	my_echo ". $ai_dag5000_lb seconds ($mega_actions_per_day GU)"
 
 	# 10000 nodes DAG registration
 	#
 	my_echo "-n 10000 nodes DAG registration ..."
 	ai_dag10000_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest -n 10000`
-	mega_actions=`echo "scale=6; 86400/$ai_dag10000_lb/1000000*10001" | bc`
-	my_echo ". $ai_dag10000_lb seconds ($mega_actions Ma)"
+	mega_actions_per_day=`echo "scale=6; 86400/$ai_dag10000_lb/1000000*10001" | bc`
+	my_echo ". $ai_dag10000_lb seconds ($mega_actions_per_day GU)"
 
 }
 
@@ -205,7 +205,6 @@ sink_mode[2]=GLITE_LB_SINK_STORE
 sink_mode[3]=GLITE_LB_SINK_STATE
 sink_mode[4]=GLITE_LB_SINK_SEND
 
-test_glite_location;
 
 for i in 1 2 3 0; do
 
@@ -218,3 +217,7 @@ for i in 1 2 3 0; do
 	stop_bkserver;
 done
 
+echo "__________
+echo "GU (goal units) are millons of registrations per day, where registration is"
+echo "registration of job or subjob by client or server"
+echo
