@@ -74,24 +74,34 @@ init_result()
 
 print_result()
 {
-    j=0
-    while [[ $j -lt 4 ]]
-    do
-        echo -e -n "\t ${PERFTEST_THROUGHPUT[$j]}"  
-        j=$((j+1))
-    done
-    echo -e "\t [jobs/day]"
+    printf " %16.6f  %16.6f  %16.6f  %16.6f\t [jobs/day]\n" \
+    ${PERFTEST_THROUGHPUT[0]} \
+    ${PERFTEST_THROUGHPUT[1]} \
+    ${PERFTEST_THROUGHPUT[2]} \
+    ${PERFTEST_THROUGHPUT[3]} 
+#    j=0
+#    while [[ $j -lt 4 ]]
+#    do
+#        echo -e -n "\t ${PERFTEST_THROUGHPUT[$j]}"  
+#        j=$((j+1))
+#    done
+#    echo -e "\t [jobs/day]"
 }
 
 print_result_ev()
 {
-    j=0
-    while [[ $j -lt 4 ]]
-    do
-        echo -e -n "\t ${PERFTEST_EV_THROUGHPUT[$j]}"  
-        j=$((j+1))
-    done
-    echo -e "\t [events/sec]"
+    printf " %16.6f  %16.6f  %16.6f  %16.6f\t [events/sec]\n" \
+    ${PERFTEST_EV_THROUGHPUT[0]} \
+    ${PERFTEST_EV_THROUGHPUT[1]} \
+    ${PERFTEST_EV_THROUGHPUT[2]} \
+    ${PERFTEST_EV_THROUGHPUT[3]} 
+#    j=0
+#    while [[ $j -lt 4 ]]
+#    do
+#        echo -e -n "\t ${PERFTEST_EV_THROUGHPUT[$j]}"  
+#        j=$((j+1))
+#    done
+#    echo -e "\t [events/sec]"
 }
 
 shutdown()
@@ -101,7 +111,7 @@ shutdown()
     if kill -0 $1 >/dev/null 2>&1
     then
 	sleep 10
-	kill -9 $1
+	kill -9 $1 >/dev/null 2>&1
     fi
 }
 
@@ -145,7 +155,7 @@ run_test()
 	linesafter=`grep PERFTEST $CONSUMER_LOG|wc -l`
 	if [[ $linesbefore -eq $linesafter ]]
 	then
-	    echo "Test failed - consumer did not report timestamp."
+	    [[ $DEBUG -gt 0 ]] && echo "Test failed - consumer did not report timestamp."
 	    PERFTEST_THROUGHPUT[$i]=0
 	    PERFTEST_EV_THROUGHPUT[$i]=0
 	else
