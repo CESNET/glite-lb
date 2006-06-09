@@ -168,7 +168,7 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 	}
 #ifdef LB_PERF
 	if(noparse) {
-		msg->job_id_s = strdup("https://localhost:9001/not_so_unique_string");
+		msg->job_id_s = strdup("https://localhost:9000/not_so_unique_string");
 	} else 
 #endif
 		msg->job_id_s = edg_wll_GetJobId(event->data);
