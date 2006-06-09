@@ -78,6 +78,7 @@ int edg_wll_MaildirStoreMsg(
 				written,
 				msgsz,
 				ct, i;
+	struct timeval 	tv;
 
 
 	if ( !root ) root = DEFAULT_ROOT;
@@ -90,9 +91,11 @@ int edg_wll_MaildirStoreMsg(
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Maximum tries limit reached with unsuccessful file creation");
 			return -1;
 		}
-		snprintf(fname, PATH_MAX, "%s/%s/%ld.%d.%s", root, dirs[LBMD_DIR_TMP], (long) time(NULL), getpid(), srvname);
+		gettimeofday(&tv,NULL);
+		snprintf(fname, PATH_MAX, "%s/%s/%ld.%ld_%d.%s", root, dirs[LBMD_DIR_TMP], 
+			(long) tv.tv_sec, (long) tv.tv_usec, getpid(), srvname);
 		if ( (fhnd = open(fname, O_CREAT|O_EXCL|O_WRONLY, 00600)) < 0 ) {
-			if ( errno == EEXIST ) { sleep(2); continue; }
+			if ( errno == EEXIST ) { /* hypothetic error */ continue; }
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't create file %s", fname);
 			return -1;
 		}
