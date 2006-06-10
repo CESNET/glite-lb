@@ -41,36 +41,84 @@ print_result
 rm -f /tmp/perftest.log.*
 
 
-echo "--------------------------------"
+# echo "--------------------------------"
+# echo "Interlogger test:"
+# echo "  - events sent through IPC only"
+# echo "  - events discarded in IL"
+# echo "--------------------------------"
+# echo "a) disabled event parsing, the server address (jobid) is hardcoded"
+# echo "b) disabled event synchronization from files"
+# echo "c) disabled recovery thread"
+# echo "d) lazy bkserver connection close"
+# echo "e) normal operation"
+# echo ""
+# echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+
+# PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf
+# LOGJOBS_ARGS="--nofile $COMM_ARGS"
+
+# CONSUMER_ARGS="-d --nosend --noparse $COMM_ARGS"
+# echo -n "a)"
+# run_test il $numjobs
+# print_result
+
+# CONSUMER_ARGS="-d --nosend --nosync $COMM_ARGS"
+# echo -n "b)"
+# run_test il $numjobs
+# print_result
+
+# CONSUMER_ARGS="-d --nosend --norecover $COMM_ARGS"
+# echo -n "c)"
+# run_test il $numjobs
+# print_result
+
+# echo "d)  this test is not yet implemented"
+
+# CONSUMER_ARGS="-d --nosend $COMM_ARGS"
+# echo -n "e)"
+# run_test il $numjobs
+# print_result
+
+echo "-----------------------------------"
 echo "Interlogger test:"
-echo "  - events sent through IPC only"
+echo "  - events sent through IPC & files"
 echo "  - events discarded in IL"
-echo "--------------------------------"
+echo "-----------------------------------"
 echo "a) disabled event parsing, the server address (jobid) is hardcoded"
-echo "b) disabled event synchornization from files"
+echo "b) disabled event synchronization from files"
 echo "c) disabled recovery thread"
+echo "x) disabled sync and recovery"
 echo "d) lazy bkserver connection close"
 echo "e) normal operation"
 echo ""
 echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf
-LOGJOBS_ARGS="--nofile $COMM_ARGS"
+LOGJOBS_ARGS=" $COMM_ARGS"
 
 CONSUMER_ARGS="-d --nosend --noparse $COMM_ARGS"
 echo -n "a)"
 run_test il $numjobs
 print_result
+rm -f /tmp/perftest.log.*
 
 CONSUMER_ARGS="-d --nosend --nosync $COMM_ARGS"
 echo -n "b)"
 run_test il $numjobs
 print_result
+rm -f /tmp/perftest.log.*
 
 CONSUMER_ARGS="-d --nosend --norecover $COMM_ARGS"
 echo -n "c)"
 run_test il $numjobs
 print_result
+rm -f /tmp/perftest.log.*
+
+CONSUMER_ARGS="-d --nosend --nosync --norecover $COMM_ARGS"
+echo -n "x)"
+run_test il $numjobs
+print_result
+rm -f /tmp/perftest.log.*
 
 echo "d)  this test is not yet implemented"
 
@@ -78,94 +126,53 @@ CONSUMER_ARGS="-d --nosend $COMM_ARGS"
 echo -n "e)"
 run_test il $numjobs
 print_result
-
-echo "-----------------------------------"
-echo "Interlogger test:"
-echo "  - events sent through IPC & files"
-echo "  - events discarded in IL"
-echo "-----------------------------------"
-echo "a) disabled event parsing, the server address (jobid) is hardcoded"
-echo "b) disabled event synchornization from files"
-echo "c) disabled recovery thread"
-echo "d) lazy bkserver connection close"
-echo "e) normal operation"
-echo ""
-echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
-
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf
-LOGJOBS_ARGS=" $COMM_ARGS"
-
-CONSUMER_ARGS="-d --nosend --noparse $COMM_ARGS"
-echo -n "a)"
-run_test il $numjobs
-print_result
-rm -f /tmp/perftest.log.*
-
-CONSUMER_ARGS="-d --nosend --nosync $COMM_ARGS"
-echo -n "b)"
-run_test il $numjobs
-print_result
-rm -f /tmp/perftest.log.*
-
-CONSUMER_ARGS="-d --nosend --norecover $COMM_ARGS"
-echo -n "c)"
-run_test il $numjobs
-print_result
-rm -f /tmp/perftest.log.*
-
-echo "d)  this test is not yet imlemented"
-
-CONSUMER_ARGS="-d --nosend $COMM_ARGS"
-echo -n "e)"
-run_test il $numjobs
-print_result
 rm -f /tmp/perftest.log.*
 
 
-echo "-------------------------------"
-echo "Interlogger test:"
-echo "  - events sent through IPC"
-echo "  - events consumed by empty BS"
-echo "-------------------------------"
-echo "a) disabled event parsing, the server address (jobid) is hardcoded"
-echo "b) disabled event synchornization from files"
-echo "c) disabled recovery thread"
-echo "d) lazy bkserver connection close"
-echo "e) normal operation"
-echo ""
-echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+# echo "-------------------------------"
+# echo "Interlogger test:"
+# echo "  - events sent through IPC"
+# echo "  - events consumed by empty BS"
+# echo "-------------------------------"
+# echo "a) disabled event parsing, the server address (jobid) is hardcoded"
+# echo "b) disabled event synchronization from files"
+# echo "c) disabled recovery thread"
+# echo "d) lazy bkserver connection close"
+# echo "e) normal operation"
+# echo ""
+# echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
 
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
-CONSUMER_ARGS="-d --perf-sink=1"
-PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-interlogd-perf
-LOGJOBS_ARGS="--nofile $COMM_ARGS"
+# PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
+# CONSUMER_ARGS="-d --perf-sink=1"
+# PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-interlogd-perf
+# LOGJOBS_ARGS="--nofile $COMM_ARGS"
 
 
-COMPONENT_ARGS="-d  --noparse $COMM_ARGS"
-echo -n "a)"
-run_test il $numjobs
-print_result
-rm -f /tmp/perftest.log.*
+# COMPONENT_ARGS="-d  --noparse $COMM_ARGS"
+# echo -n "a)"
+# run_test il $numjobs
+# print_result
+# rm -f /tmp/perftest.log.*
 
-COMPONENT_ARGS="-d  --nosync $COMM_ARGS"
-echo -n "b)"
-run_test il $numjobs
-print_result
-rm -f /tmp/perftest.log.*
+# COMPONENT_ARGS="-d  --nosync $COMM_ARGS"
+# echo -n "b)"
+# run_test il $numjobs
+# print_result
+# rm -f /tmp/perftest.log.*
 
-COMPONENT_ARGS="-d  --norecover $COMM_ARGS"
-echo -n "c)"
-run_test il $numjobs
-print_result
-rm -f /tmp/perftest.log.*
+# COMPONENT_ARGS="-d  --norecover $COMM_ARGS"
+# echo -n "c)"
+# run_test il $numjobs
+# print_result
+# rm -f /tmp/perftest.log.*
 
-echo "d) this test is not yet implemented"
+# echo "d) this test is not yet implemented"
 
-COMPONENT_ARGS="-d $COMM_ARGS"
-echo -n "e)"
-run_test il $numjobs
-print_result
-rm -f /tmp/perftest.log.*
+# COMPONENT_ARGS="-d $COMM_ARGS"
+# echo -n "e)"
+# run_test il $numjobs
+# print_result
+# rm -f /tmp/perftest.log.*
 
 
 echo "-----------------------------------"
@@ -174,8 +181,9 @@ echo "  - events sent through IPC & files"
 echo "  - events consumed by empty BS"
 echo "-----------------------------------"
 echo "a) disabled event parsing, the server address (jobid) is hardcoded"
-echo "b) disabled event synchornization from files"
+echo "b) disabled event synchronization from files"
 echo "c) disabled recovery thread"
+echo "x) disabled sync and recovery"
 echo "d) lazy bkserver connection close"
 echo "e) normal operation"
 echo ""
@@ -201,6 +209,12 @@ rm -f /tmp/perftest.log.*
 
 COMPONENT_ARGS="-d  --norecover $COMM_ARGS"
 echo -n "c)"
+run_test il $numjobs
+print_result
+rm -f /tmp/perftest.log.*
+
+COMPONENT_ARGS="-d  --nosync --norecover $COMM_ARGS"
+echo -n "x)"
 run_test il $numjobs
 print_result
 rm -f /tmp/perftest.log.*
