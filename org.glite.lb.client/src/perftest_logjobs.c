@@ -238,6 +238,7 @@ main(int argc, char *argv[])
 
 	if (glite_wll_perftest_init(hostname, NULL, testname, filename, num_jobs) < 0) {
 		fprintf(stderr,"%s: glite_wll_perftest_init failed\n",argv[0]);
+		exit(1);
 	}
 
 	if(dest) {
@@ -273,6 +274,7 @@ main(int argc, char *argv[])
 					fprintf(stderr,"edg_wll_DoLogEventDirect(): %s (%s)\n",et,ed);
 					exit(1);
 				}
+				break;
 
 			case DEST_IL:
 				ctx->p_tmp_timeout = ctx->p_log_timeout;
@@ -282,6 +284,7 @@ main(int argc, char *argv[])
 					fprintf(stderr,"edg_wll_DoLogEventIl(): %s (%s)\n",et,ed);
 					exit(1);
 				}
+				break;
 
 			default:
 				break;
@@ -294,7 +297,6 @@ main(int argc, char *argv[])
 
 		while(jobid = glite_wll_perftest_produceJobId()) {
 			fprintf(stdout, "%s\n", jobid);
-			free(jobid);
 		}
 	}
 	edg_wll_FreeContext(ctx);
