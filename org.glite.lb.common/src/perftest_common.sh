@@ -58,7 +58,7 @@ get_result()
     total=`echo "scale=6; $PERFTEST_END_TIMESTAMP - $PERFTEST_BEGIN_TIMESTAMP" | bc`
     PERFTEST_EVENT_THROUGHPUT=`echo "scale=6; $PERFTEST_NUM_JOBS * $PERFTEST_JOB_SIZE / $total" |bc`
     PERFTEST_JOB_THROUGPUT=`echo "scale=6; $PERFTEST_NUM_JOBS / $total" |bc`
-    PERFTEST_DAY_JOB_THROUGHPUT=`echo "scale=6; $PERFTEST_NUM_JOBS / $total * 3600 * 24" |bc`
+    PERFTEST_DAY_JOB_THROUGHPUT=`echo "scale=6; t=$PERFTEST_NUM_JOBS / $total * 3600 * 24; scale=0; 2*t/2" |bc`
 }
 
 init_result()
@@ -74,7 +74,7 @@ init_result()
 
 print_result()
 {
-    printf " %16.6f  %16.6f  %16.6f  %16.6f\t [jobs/day]\n" \
+    printf " %14d  %14d  %14d  %14d  [jobs/day]\n" \
     ${PERFTEST_THROUGHPUT[0]} \
     ${PERFTEST_THROUGHPUT[1]} \
     ${PERFTEST_THROUGHPUT[2]} \

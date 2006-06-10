@@ -22,6 +22,7 @@ static pthread_mutex_t perftest_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct timeval endtime;
 static char *termination_string;
 static char **events; /* in fact it is *events[] */
+static char **jobids;
 static int nevents;
 static int njobs = 0;
 static int cur_event = 0;
@@ -233,20 +234,46 @@ glite_wll_perftest_init(const char *host,
 		fprintf(stderr, "PERFTEST_NUM_JOBS=%d\n", njobs);
 	}
 
+	/* generate jobids[0..njobs-1] */
+	jobids = calloc(njobs, sizeof(char*));
+	if(jobids == NULL) {
+		fprintf(stderr, "glite_wll_perftest_init: not enough memory for job id's\n");
+		return(-1);
+	}
+        while (--n >= 0) {
+		edg_wlc_JobId jobid;
+
+		if(glite_wll_perftest_createJobId(dest_host,
+						  dest_port,
+						  test_user,
+						  test_name,
+						  n,
+						  &jobid) != 0) {
+			fprintf(stderr, "produceJobId: error creating jobid\n");
+			if(pthread_mutex_unlock(&perftest_lock) < 0)
+				abort();
+			return(-1);
+		}
+		if((jobids[n]=edg_wlc_JobIdUnparse(jobid)) == NULL) {
+			fprintf(stderr, "produceJobId: error unparsing jobid\n");
+			if(pthread_mutex_unlock(&perftest_lock) < 0)
+				abort();
+			return(-1);
+		}
+	};
 	return(0);
 }
 
 
 /** 
- * This produces njobs+1 jobids, one for each call.
+ * This produces njobs jobids, one for each call.
  *
  * WARNING: do not mix calls to this function with calls to produceEventString!
  */
 char *
 glite_wll_perftest_produceJobId()
 {
-	edg_wlc_JobId jobid;
-	char *jobids;
+	char *jobid;
 
 	if(pthread_mutex_lock(&perftest_lock) < 0)
 		abort();
@@ -258,28 +285,12 @@ glite_wll_perftest_produceJobId()
 		return(NULL);
 	}
 
-	if(glite_wll_perftest_createJobId(dest_host,
-					  dest_port,
-					  test_user,
-					  test_name,
-					  cur_job,
-					  &jobid) != 0) {
-		fprintf(stderr, "produceJobId: error creating jobid\n");
-		if(pthread_mutex_unlock(&perftest_lock) < 0)
-			abort();
-		return(NULL);
-	}
-	if((jobids=edg_wlc_JobIdUnparse(jobid)) == NULL) {
-		fprintf(stderr, "produceJobId: error unparsing jobid\n");
-		if(pthread_mutex_unlock(&perftest_lock) < 0)
-			abort();
-		return(NULL);
-	}
+	jobid = jobids[cur_job++];
 
-	if(cur_job++ >= njobs) 
+	if(cur_job >= njobs) 
 		cur_job = -1;
 		
-	return(jobids);
+	return(jobid);
 }
 
 
@@ -291,7 +302,7 @@ glite_wll_perftest_produceJobId()
 int
 glite_wll_perftest_produceEventString(char **event, char **jobid)
 {
-	static char *cur_jobid = NULL;
+	static int first = 1;
 	char *e;
 	int len;
 
@@ -301,14 +312,14 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 		abort();
 
 	/* is there anything to send? */
-	if(cur_job < 0) {
+	if(cur_event < 0) {
 		if(pthread_mutex_unlock(&perftest_lock) < 0)
 			abort();
 		return(0);
 	}
 
-	/* did we send all jobs? */
-	if(cur_job >= njobs) {
+	/* did we send all events? */
+	if(cur_event >= nevents) {
 		
 		/* construct termination event */
 		if((len=trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USERTAG "\n",
@@ -319,7 +330,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 				      "UserInterface", /* source */
 				      "me again", /* source instance */
 				      "UserTag", /* event */
-				      cur_jobid, /* jobid */
+				      jobids[cur_job], /* jobid */
 				      "last", /* sequence */
 				      PERFTEST_END_TAG_NAME,
 				      PERFTEST_END_TAG_VALUE)) < 0) {
@@ -328,6 +339,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 				abort();
 			return(-1);
 		}
+		*jobid = jobids[cur_job];
 
 		/* and refuse to produce more */
 		cur_job = -1;
@@ -335,63 +347,38 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 
 	} else {
 
-		/* are we starting new job? */
-		if(cur_event == 0) {
-			edg_wlc_JobId jobid;
+		/* is this the first event? */
+		if(first) {
+			struct timeval now;
 			
-			/* is this the first event? */
-			if(cur_jobid) {
-				free(cur_jobid);
-			} else {
-				struct timeval now;
-
-				gettimeofday(&now, NULL);
-				fprintf(stderr, "PERFTEST_BEGIN_TIMESTAMP=%lu.%06lu\n",
-					(unsigned long)now.tv_sec,(unsigned long)now.tv_usec);
-
-			}
-
-			/* generate new jobid */
-			if(glite_wll_perftest_createJobId(dest_host,
-							  dest_port,
-							  test_user,
-							  test_name,
-							  cur_job,
-							  &jobid) != 0) {
-				fprintf(stderr, "produceEventString: error creating jobid\n");
-				if(pthread_mutex_unlock(&perftest_lock) < 0)
-					abort();
-				return(-1);
-			}
-			if((cur_jobid=edg_wlc_JobIdUnparse(jobid)) == NULL) {
-				fprintf(stderr, "produceEventString: error unparsing jobid\n");
-				if(pthread_mutex_unlock(&perftest_lock) < 0)
-					abort();
-				return(-1);
-			}
+			gettimeofday(&now, NULL);
+			fprintf(stderr, "PERFTEST_BEGIN_TIMESTAMP=%lu.%06lu\n",
+				(unsigned long)now.tv_sec,(unsigned long)now.tv_usec);
+			first = 0;
 		}
 		
 		/* return current event with jobid filled in */
-		if((len=trio_asprintf(&e, "DG.JOBID=\"%s\" %s", cur_jobid, events[cur_event])) < 0) {
+		if((len=trio_asprintf(&e, "DG.JOBID=\"%s\" %s", 
+				      jobids[cur_job], events[cur_event])) < 0) {
 			fprintf(stderr, "produceEventString: error generating event\n");
 			if(pthread_mutex_unlock(&perftest_lock) < 0)
 				abort();
 			return(-1);
 		}
+		*jobid = jobids[cur_job];
 	}
 
 	*event = e;
 
-	/* advance to the next event */
-	if(++cur_event >= nevents) {
-		cur_job++;
-		cur_event = 0;
+	/* advance to the next job and/or event */
+	if(++cur_job >= njobs) {
+		cur_event++;
+		cur_job = 0;
 	}
 
 	if(pthread_mutex_unlock(&perftest_lock) < 0)
 		abort();
 
-	*jobid = cur_jobid;
 	return(len);
 }
 
