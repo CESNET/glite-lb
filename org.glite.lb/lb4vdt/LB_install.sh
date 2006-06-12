@@ -14,9 +14,9 @@ if [ ! -f ${LB4VDTDIR}/Makefile.inc ]; then
 fi
 
 if [ -z "${CVSROOT}" ]; then
-	echo "XXX"
 	export CVSROOT=:pserver:anonymous@jra1mw.cvs.cern.ch:/cvs/jra1mw
 #	export CVSROOT=:ext:jpospi@jra1mw.cvs.cern.ch:/cvs/jra1mw
+	echo "Using CVSROOT=${CVSROOT}"
 fi
 
 dep_modules="org.glite.wms-utils.jobid
@@ -51,10 +51,13 @@ do
 	touch .$i.patched
     fi
     if [ -d $i ]; then
+	touch .$i.timestamp
         if  [ -f ${LB4VDTDIR}/scripts/$i.build ]; then
     	echo "Building"
             sh -x ${LB4VDTDIR}/scripts/$i.build 
         fi
+	cd ${TOPDIR}
+	find ${STAGEDIR} -newer .$i.timestamp > .$i.filelist
     else
         echo "WARNING: directory $i not found"
     fi
@@ -78,6 +81,7 @@ do
 	touch .$i.patched
     fi
     if [ -d $i ]; then
+	touch .$i.timestamp
         echo "Entering directory ${TOPDIR}/$i"
         cd ${TOPDIR}/$i
         echo "Copying supporting files"
@@ -91,6 +95,8 @@ do
         echo "Building"    
 	make LB_STANDALONE=yes
         make stage LB_STANDALONE=yes
+	cd ${TOPDIR}
+	find ${STAGEDIR} -newer .$i.timestamp > .$i.filelist
     else
         echo "WARNING: directory $i not found"
     fi
@@ -98,3 +104,9 @@ do
 done
 
 cd ${TOPDIR}
+echo "Creating filelists"
+cat .org.glite.wms-utils.jobid.filelist .org.gridsite.core.filelist .org.glite.security.gsoap-plugin.filelist .org.glite.lb.common.filelist | sort | uniq > LB-common.filelist
+cat .org.glite.lb.client-interface.filelist .org.glite.lb.client.filelist | sort | uniq > LB-client.filelist
+cat .org.glite.lb.logger.filelist | sort | uniq > LB-logger.filelist
+cat .org.glite.lb.logger.filelist .org.glite.lb.server-bones.filelist .org.glite.lb.proxy.filelist | sort | uniq > LB-proxy.filelist
+cat .org.glite.lb.ws-interface.filelist .org.glite.lb.server-bones.filelist .org.glite.lb.server.filelist | sort | uniq > LB-server.filelist
