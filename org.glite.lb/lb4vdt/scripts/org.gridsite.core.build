@@ -5,7 +5,7 @@ set -e
 TOPDIR=${PWD}
 source ${LB4VDTDIR}/Makefile.inc
 cd org.gridsite.core/src
-make build OPENSSL_FLAGS=-I${globus_prefix}/include/gcc32 OPENSSL_LIBS=-L${globus_prefix}/lib FLAVOR_EXT=_gcc32
-make install prefix=${STAGEDIR} 
+make build-lib OPENSSL_FLAGS=-I${globus_prefix}/include/${nothrflavour} OPENSSL_LIBS=-L${globus_prefix}/lib FLAVOR_EXT=_${nothrflavour}
+make install-lib prefix=${STAGEDIR} 
 cd ${TOPDIR}
 
