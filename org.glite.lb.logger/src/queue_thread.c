@@ -34,6 +34,7 @@ queue_thread(void *q)
 	struct event_queue *eq = (struct event_queue *)q;
 	int ret, exit;
 	int retrycnt;
+	int close_timeout;
 
 	if(init_errors(0) < 0) {
 		il_log(LOG_ERR, "Error initializing thread specific data, exiting!");
@@ -59,7 +60,16 @@ queue_thread(void *q)
 		       && (eq->flushing != 1)
 #endif
 			) {
-			ret = event_queue_wait(eq, 0);
+			if(lazy_close && close_timeout) {
+				ret = event_queue_wait(eq, close_timeout);
+				if(ret == 1) {/* timeout? */
+					event_queue_close(eq);
+					il_log(LOG_DEBUG, "  connection to %s:%d closed\n",
+					       eq->dest_name, eq->dest_port);
+				}
+				close_timeout = 0;
+			} else 
+				ret = event_queue_wait(eq, 0);
 			if(ret < 0) {
 				/* error waiting */
 				il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
@@ -112,7 +122,13 @@ queue_thread(void *q)
 			} /* switch */
 			
 			/* we are done for now anyway, so close the queue */
+			if((ret == 1) && lazy_close)
+				close_timeout = default_close_timeout;
+			else {
 				event_queue_close(eq);
+				il_log(LOG_DEBUG, "  connection to %s:%d closed\n",
+				       eq->dest_name, eq->dest_port);
+			}
 		} 
 
 #if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)

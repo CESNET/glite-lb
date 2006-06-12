@@ -8,6 +8,11 @@
 #include <pthread.h>
 #include <stdlib.h>
 
+#ifdef LB_PROF
+#include <sys/gmon.h>
+extern void _start (void), etext (void);
+#endif
+
 /* XXX DK: */
 #include <err.h> // SSL header file 
 
@@ -49,6 +54,7 @@ error_get_err ()
   return(err);
 }
 
+
 int
 init_errors(int level)
 {
@@ -76,6 +82,10 @@ init_errors(int level)
 
   if(level)
     log_level = level;
+
+#ifdef LB_PROF
+  monstartup((u_long)&_start, (u_long)&etext);
+#endif
 
   return(0);
 }

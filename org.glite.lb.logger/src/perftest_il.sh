@@ -120,7 +120,7 @@ run_test il $numjobs
 print_result
 rm -f /tmp/perftest.log.*
 
-echo "d)  this test is not yet implemented"
+echo "d)  this test is not applicable"
 
 CONSUMER_ARGS="-d --nosend $COMM_ARGS"
 echo -n "e)"
@@ -219,7 +219,11 @@ run_test il $numjobs
 print_result
 rm -f /tmp/perftest.log.*
 
-echo "d) this test is not yet implemented"
+COMPONENT_ARGS="-d  --lazy=10 --nosync --norecover $COMM_ARGS"
+echo -n "d)"
+run_test il $numjobs
+print_result
+rm -f /tmp/perftest.log.*
 
 COMPONENT_ARGS="-d $COMM_ARGS"
 echo -n "e)"

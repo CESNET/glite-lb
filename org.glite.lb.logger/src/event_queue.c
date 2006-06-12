@@ -172,6 +172,9 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
     eq->mark_prev = el;
 #endif
 
+  if(++eq->cur_len > eq->max_len)
+	  eq->max_len = eq->cur_len;
+
   event_queue_unlock(eq);
   /* end of critical section */
 
@@ -255,6 +258,9 @@ event_queue_remove(struct event_queue *eq)
 	  eq->tail = NULL;
   }
 #endif
+  if(--eq->cur_len == 0) 
+	  eq->times_empty++;
+
   event_queue_unlock(eq);
   /* end of critical section */
     

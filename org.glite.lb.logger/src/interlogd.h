@@ -70,6 +70,8 @@ extern char *key_file;
 extern char *CAcert_dir;
 extern int bs_only;
 extern int killflg;
+extern int lazy_close;
+extern int default_close_timeout;
 #ifdef LB_PERF
 extern int nosend, nosync, norecover, noparse;
 #ifdef PERF_EVENTS_INLINE
@@ -136,6 +138,10 @@ struct event_queue {
 	int                     flush_result;   /* result of flush operation */
 	pthread_cond_t          flush_cond;     /* condition variable for flush operation */
 #endif
+	/* statistics */
+	int                     times_empty;    /* number of times the queue was emptied */
+	int                     max_len;        /* max queue length */
+	int                     cur_len;        /* current length */
 };
 
 

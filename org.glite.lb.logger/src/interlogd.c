@@ -56,6 +56,7 @@ static void usage (int status)
 	       "  -b, --book                 send events to bookkeeping server only\n"
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
+	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers\n"
 #ifdef LB_PERF
 	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
 	       "  -S, --nosync               PERFTEST: do not check logd files for lost events\n"
@@ -76,6 +77,8 @@ static int debug;
 static int verbose = 0;
 char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
+int lazy_close = 0;
+int default_close_timeout;
 #ifdef LB_PERF
 int nosend = 0, norecover=0, nosync=0, noparse=0;
 char *event_source = NULL;
@@ -101,6 +104,7 @@ static struct option const long_options[] =
   {"CAdir", required_argument, 0, 'C'},
   {"log-server", required_argument, 0, 'l'},
   {"socket", required_argument, 0, 's'},
+  {"lazy", optional_argument, 0, 'L'},
 #ifdef LB_PERF
   {"nosend", no_argument, 0, 'n'},
   {"nosync", no_argument, 0, 'S'},
@@ -146,6 +150,7 @@ decode_switches (int argc, char **argv)
 			   "j:" /* num jobs */
 #endif
 #endif			   
+			   "L::" /* lazy */
 			   "s:", /* socket */
 			   long_options, (int *) 0)) != EOF)
     {
@@ -193,6 +198,14 @@ decode_switches (int argc, char **argv)
 	case 's':
 	  socket_path = strdup(optarg);
 	  break;
+
+	case 'L':
+		lazy_close = 1;
+		if(optarg) 
+		        default_close_timeout = atoi(optarg);
+		else
+			default_close_timeout = TIMEOUT;
+		break;
 
 #ifdef LB_PERF
 	case 'n':
@@ -249,9 +262,9 @@ main (int argc, char **argv)
   setlinebuf(stdout);
   setlinebuf(stderr);
 
-  i = decode_switches (argc, argv);
-
   if ((p = getenv("EDG_WL_INTERLOG_TIMEOUT"))) TIMEOUT = atoi(p);
+
+  i = decode_switches (argc, argv);
 
   /* force -b if we do not have log server */
   if(log_server == NULL) {
@@ -293,6 +306,9 @@ main (int argc, char **argv)
     il_log(LOG_CRIT, "Failed to initialize output event queues: %s\n", error_get_msg());
     exit(EXIT_FAILURE);
   }
+  if(lazy_close)
+	  il_log(LOG_DEBUG, "  using lazy mode when closing connections, timeout %d\n",
+		 default_close_timeout);
 
   if (CAcert_dir)
      setenv("X509_CERT_DIR", CAcert_dir, 1);
