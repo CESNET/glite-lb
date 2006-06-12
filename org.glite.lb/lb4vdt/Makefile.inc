@@ -53,6 +53,8 @@ distdir=${STAGEDIR}/../dist
 stagedir=${STAGEDIR}
 top_srcdir=..
 
+#thrflavour=gcc64dbgpthr
+#nothrflavour=gcc64dbg
 thrflavour=gcc32dbgpthr
 nothrflavour=gcc32dbg
 
