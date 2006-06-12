@@ -7,6 +7,7 @@ TOPDIR=${PWD}
 
 export LB4VDTDIR=${TOPDIR}/org.glite.lb/lb4vdt
 export STAGEDIR=${TOPDIR}/stage
+mkdir -p ${STAGEDIR}
 
 if [ ! -f ${LB4VDTDIR}/Makefile.inc ]; then
    echo "Error: There is no ${LB4VDTDIR}/Makefile.inc. Exiting."
