@@ -248,10 +248,6 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                                 i++;
                         }
                 }
-		if (!av[0].value) {
-			av[0].value = "UNKNOWN";
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
         } else if (strcmp(attr, GLITE_JP_LB_eNodes) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
@@ -277,10 +273,6 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                                 i++;
                         }
                 }
-		if (!av[0].value) {
-			av[0].value = "UNKNOWN";
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
         } else if (strcmp(attr, GLITE_JP_LB_eProc) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
@@ -306,10 +298,6 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                                 i++;
                         }
                 }
-		if (!av[0].value) {
-			av[0].value = "UNKNOWN";
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
 	} else if (strcmp(attr, GLITE_JP_LB_aTag) == 0 ||
                    strcmp(attr, GLITE_JP_LB_rQType) == 0 ||
                    strcmp(attr, GLITE_JP_LB_eDuration) == 0) {
@@ -405,12 +393,6 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                                 i++;
                         }
                 }
-		if (!av) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = "UNKNOWN";
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
 	} else if (strcmp(attr, GLITE_JP_LB_retryCount) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
@@ -428,7 +410,14 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	} else if (strcmp(attr, GLITE_JP_LB_jobType) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
-		av[0].value = edg_wll_RegJobJobtypeToString(h->status.jobtype);
+		switch (h->status.jobtype) {
+			case EDG_WLL_STAT_SIMPLE:
+				av[0].value = strdup("SIMPLE"); break;
+			case EDG_WLL_STAT_DAG:
+				av[0].value = strdup("DAG"); break;
+			default:
+				av[0].value = strdup("UNKNOWN"); break;
+		}
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_nsubjobs) == 0) {
