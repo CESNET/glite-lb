@@ -83,6 +83,16 @@ CFLAGS:= \
 	$(GRIDSITE_CFLAGS) \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS}
 
+ifdef LB_PROF
+	SRVBONES_LIB:= ${stagedir}/lib/libglite_lb_server_bones.la
+	LB_COMMON_LIB:=${stagedir}/lib/libglite_lb_common_${nothrflavour}.la
+	CFLAGS:=${CFLAGS} -pg -g
+	LDFLAGS:=${LDFLAGS} -pg
+else
+	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
+	LB_COMMON_LIB:=-lglite_lb_common_${nothrflavour}
+endif
+
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
@@ -144,8 +154,7 @@ EXT_LIBS:=  \
 	${classadslib} \
 	${VOMS_LIBS}
 
-SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
-COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
+COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
 	${classadslib} ${expatlib} -lexpat\
 
@@ -170,7 +179,7 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
-		-lglite_lb_common_${nothrflavour} \
+		${LB_COMMON_LIB} \
 		${GSOAP_LIB} \
 		${EXT_LIBS}
 else
@@ -178,7 +187,7 @@ else
 		
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
-		-lglite_lb_common_${nothrflavour} \
+		${LB_COMMON_LIB} \
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS}
 endif

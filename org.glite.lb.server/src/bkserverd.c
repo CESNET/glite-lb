@@ -72,8 +72,9 @@ extern int edg_wll_StoreProto(edg_wll_Context ctx);
 extern edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs);
 extern edg_wll_ErrorCode edg_wll_Close(edg_wll_Context);
 
-
-
+#ifdef LB_PERF
+extern void _start (void), etext (void);
+#endif
 
 #define CON_QUEUE		20	/* accept() */
 #define SLAVE_OVERLOAD		10	/* queue items per slave */
@@ -577,6 +578,9 @@ a.sin_addr.s_addr = INADDR_ANY;
 			perror("deamon()");
 			exit(1);
 		}
+#ifdef LB_PERF
+		monstartup((u_long)&_start, (u_long)&etext);
+#endif
 
 		fpid = fopen(pidfile,"w");
 		if (!fpid) { perror(pidfile); return 1; }
@@ -1416,10 +1420,11 @@ static int parse_limits(char *opt, int *j_limit, int *e_limit, int *size_limit)
 	return (sscanf(opt, "%d:%d:%d", j_limit, e_limit, size_limit) == 3);
 }
 
+
 static int check_mkdir(const char *dir)
 {
 	struct stat	sbuf;
-	
+
 	if ( stat(dir, &sbuf) )
 	{
 		if ( errno == ENOENT )
