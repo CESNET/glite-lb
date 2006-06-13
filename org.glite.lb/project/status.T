@@ -73,14 +73,14 @@ strlist possible_ce_nodes	CE nodes matching to possible_destinations
 bool	suspended	Job is suspended
 string	suspend_reason	Reason for the suspend
 
-@type Submitted		entered by the user to the User Interface or registered by Job Partitioner
-@type Waiting		Accepted by WMS, waiting for resource allocation
-@type Ready		Matching resources found
-@type Scheduled		Accepted by LRMS queue
-@type Running		Executable is running
-@type Done		Execution finished, output is available
-@type Cleared		Output transfered back to user and freed
-@type Aborted		Aborted by system (at any stage)
-@type Cancelled		Cancelled by user
-@type Unknown		Status cannot be determined
-@type Purged		Job has been purged from bookkeeping server (for LB->RGMA interface)
+@type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.
+@type Waiting		Accepted by WMS, waiting for resource allocation.
+@type Ready		Matching resources found.
+@type Scheduled		Accepted by LRMS queue.
+@type Running		Executable is running.
+@type Done		Execution finished, output is available.
+@type Cleared		Output transfered back to user and freed.
+@type Aborted		Aborted by system (at any stage).
+@type Cancelled		Cancelled by user.
+@type Unknown		Status cannot be determined.
+@type Purged		Job has been purged from bookkeeping server (for LB->RGMA interface).
