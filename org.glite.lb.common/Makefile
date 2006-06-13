@@ -77,13 +77,18 @@ endif
 EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 
 LDFLAGS:=-L${stagedir}/lib \
-    ${COVERAGE_FLAGS}
+	${COVERAGE_FLAGS}
 
 EXT_LIBS:= ${EXPAT_LIBS} ${GLOBUS_LIBS} ${JOBID_LIB}
 EXT_THRLIBS:= ${EXPAT_LIBS} ${GLOBUS_THRLIBS} ${JOBID_LIB}
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
+
+ifdef LB_PROF
+        CFLAGS:= ${CFLAGS} -pg -g
+        LDFLAGS:= ${LDFLAGS} -pg
+endif
 
 COMPILE:=libtool --mode=compile ${CC}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
