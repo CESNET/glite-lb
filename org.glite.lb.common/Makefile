@@ -23,7 +23,7 @@ jobiddir=${top_srcdir}/../org.glite.wms-utils.jobid
 
 version=${module.version}
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test
+VPATH=${top_srcdir}/src:${top_srcdir}/test::${top_srcdir}/doc
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
 SUFFIXES = .T
@@ -220,6 +220,8 @@ cjobid.c strmd5.c:
 	cp -rv ${jobiddir}/src/jobid/*.h glite/wmsutils/jobid/
 	cp -rv ${jobiddir}/src/jobid/*.[ch] .
 
+doc: events.tex status.tex
+
 install:
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
@@ -259,6 +261,11 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o: %.o: %.cpp
 	chmod -w $@ >/dev/null
 
 %.cpp: %.cpp.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
+
+%.tex: %.tex.T
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
