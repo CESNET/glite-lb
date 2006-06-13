@@ -183,19 +183,19 @@
 	string	jobstat		Status of the job (the notification content).
 
 
-@type ResourceUsage	Resource (CPU, memory etc.) consumption
-	string	resource	which resource
-	int	quantity	how much
-	string	unit		units (sec, kB, etc.)
+@type ResourceUsage	Resource (CPU, memory etc.) consumption.
+	string	resource	Resource's name.
+	int	quantity	Resources's quantity (how much).
+	string	unit		Units (sec, kB, etc.).
 
-@type ReallyRunning	User payload started
+@type ReallyRunning	User payload started.
 	_optional_
-	string	wn_seq		sequence code on the worker node
+	string	wn_seq		Sequence code on the worker node.
 
-@type Suspend		Job execution (queuing) was suspended
+@type Suspend		Job execution (queuing) was suspended.
 	_optional_
-	string	reason		reason for the suspend
+	string	reason		Reason for the suspend.
 
-@type Resume		Job execution (queuing) was resumed
+@type Resume		Job execution (queuing) was resumed.
 	_optional_
-	string	reason		reason for the resume
+	string	reason		Reason for the resume.
