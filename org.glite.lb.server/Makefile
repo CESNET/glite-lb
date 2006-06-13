@@ -93,6 +93,10 @@ else
 	LB_COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 endif
 
+ifdef LBS_DB_PROFILE
+	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE
+endif
+
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
