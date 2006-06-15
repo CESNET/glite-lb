@@ -379,12 +379,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_LRMSStatusReason) == 0) {
+		av = calloc(2, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
                 if (h->events) {
                         i = 0;
                         while (h->events[i]) {
                                 if (h->events[i]->type == EDG_WLL_EVENT_DONE) {
-                                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                                        av[0].name = strdup(attr);
 					av[0].value = check_strdup(h->events[i]->done.reason);
                                         av[0].timestamp =
                                                 h->events[i]->any.timestamp.tv_sec;
