@@ -76,7 +76,7 @@ int glite_jppsbe_pread(glite_jp_context_t ctx, void *handle, void *buf, size_t n
 
 
 int glite_jp_stack_error(glite_jp_context_t ctx, const glite_jp_error_t *jperror) {
-	fprintf(stderr,"lb_statistics: JP backend error %d: %s\n", jperror->code, jperror->desc);
+	if (verbose) fprintf(stderr,"lb_statistics: JP backend error %d: %s\n", jperror->code, jperror->desc);
 	return 0;
 }
 
