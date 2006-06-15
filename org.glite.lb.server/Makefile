@@ -160,7 +160,7 @@ EXT_LIBS:=  \
 
 COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
-	${classadslib} ${expatlib} -lexpat\
+	${classadslib} -lstdc++ ${expatlib} -lexpat\
 
 PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo lbs_db_supp.lo
 

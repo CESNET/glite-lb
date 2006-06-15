@@ -204,7 +204,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	glite_jp_context_t	ctx = (glite_jp_context_t) fpctx;
 	glite_jp_error_t 	err; 
 	glite_jp_attrval_t	*av = NULL;
-	int			i, n_tags;
+	int			i, j, n_tags;
 	const char             *tag;
 
         glite_jp_clear_error(ctx); 
@@ -430,11 +430,17 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	} else if (strcmp(attr, GLITE_JP_LB_lastStatusHistory) == 0 ||
 		   strcmp(attr, GLITE_JP_LB_fullStatusHistory) == 0) {
 		/* complex types */
-		*attrval = NULL;
-		err.code = ENOSYS;
-//		err.desc = "Not implemented yet.";
-		trio_asprintf(&err.desc,"Attribute '%s' not implemented yet.",attr);
-		return glite_jp_stack_error(ctx,&err);
+		av = calloc(1 + EDG_WLL_NUMBER_OF_STATCODES, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
+		av[0].value = check_strdup(h->status.reason);
+		av[0].timestamp = h->status.stateEnterTime.tv_sec;
+		av[0].size = -1;
+		for (i=1; i<EDG_WLL_NUMBER_OF_STATCODES; i++) {
+			av[i].name = strdup(attr);
+			if (i == h->status.state) av[i].value = check_strdup(h->status.reason);
+			av[i].timestamp = h->status.stateEnterTimes[i];
+			av[i].size = -1;
+		}
 	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, sizeof(GLITE_JP_LBTAG_NS)-1) == 0) {
 		tag = strrchr(attr, ':');
 		if (h->events && tag) {
