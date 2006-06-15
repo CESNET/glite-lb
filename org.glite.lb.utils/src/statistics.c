@@ -7,11 +7,15 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <time.h>
 #include <dlfcn.h>
 #include <malloc.h>
 #include <unistd.h>
 #include <getopt.h>
+
+#include "glite/lb/context.h"
+#include "glite/lb/jobstat.h"
 
 #include "glite/jp/types.h"
 #include "glite/jp/context.h"
@@ -108,7 +112,7 @@ int main(int argc, char *argv[])
 	char *err;
 	init_f *plugin_init;
 	done_f *plugin_done;
-	int opt;
+	int i,opt;
 
 	/* get arguments */
 	while ((opt = getopt_long(argc,argv,
@@ -295,13 +299,33 @@ int main(int argc, char *argv[])
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_lastStatusHistory, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<lastStatusHistory>%s</lastStatusHistory>\n", attrval->value);
+			fprintf(stdout,"\t<lastStatusHistory>\n");
+			for (i = 1; i < EDG_WLL_NUMBER_OF_STATCODES; i++) {
+				char *stat = edg_wll_StatToString(i);
+				fprintf(stdout,"\t<status>\n");
+				fprintf(stdout,"\t\t<status>%s</status>\n", stat);
+				fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
+				fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
+				fprintf(stdout,"\t</status>\n");
+				if (stat) free(stat);
+			}
+			fprintf(stdout,"\t</lastStatusHistory>\n");
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_fullStatusHistory, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<fullStatusHistory>%s</fullStatusHistory>\n", attrval->value);
+			fprintf(stdout,"\t<fullStatusHistory>\n");
+			for (i = 1; i < EDG_WLL_NUMBER_OF_STATCODES; i++) {
+				char *stat = edg_wll_StatToString(i);
+				fprintf(stdout,"\t<status>\n");
+				fprintf(stdout,"\t\t<status>%s</status>\n", stat);
+				fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
+				fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
+				fprintf(stdout,"\t</status>\n");
+				if (stat) free(stat);
+			}
+			fprintf(stdout,"\t</fullStatusHistory>\n");
 			free_attrs(attrval);
 		}
 

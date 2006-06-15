@@ -64,10 +64,6 @@ ifneq (${expat_prefix},/usr)
 	expatlib := -L${expat_prefix}/lib
 endif
 
-ifneq (${classads_prefix},/usr)
-        classadslib := -L${classads_prefix}/lib -lclassad
-endif
-
 EXT_LIBS:= \
 	${mysqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
@@ -98,8 +94,7 @@ mon-db: mon-db.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${BKSERVER_LIB} ${EXT_LIBS} 
 
 statistics: statistics.o
-	${LINK} -rdynamic -o $@ $< ${JP_LIBS} ${EXT_LIBS} 
-#${classadslib}
+	${LINK} -rdynamic -o $@ $< ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
 
 check: compile 
 
