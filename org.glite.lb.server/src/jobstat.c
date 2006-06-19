@@ -40,6 +40,7 @@ static char *job_owner(edg_wll_Context,char *);
 
 int edg_wll_intJobStatus(edg_wll_Context, const edg_wlc_JobId, int, intJobStat *, int);
 edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context, intJobStat *, int);
+static edg_wll_ErrorCode edg_wll_StoreIntStateEmbriotic(edg_wll_Context, intJobStat *);
 edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context , edg_wlc_JobId , int, intJobStat **);
 
 int js_enable_store = 1;
@@ -66,6 +67,18 @@ static char* matched_substr(char *in, regmatch_t match)
 	}
 
 	return s;
+}
+
+
+/*
+ * Returns encoded instatus for embrio DAG subjob
+ */
+
+static char *states_values_embryotic(
+	edg_wlc_JobId jobid, 
+	edg_wlc_JobId parent_job)
+{
+	return 0;
 }
 
 
@@ -358,6 +371,65 @@ int edg_wll_intJobStatus(
 
 }
 
+static int edg_wll_intJobStatusEmbriotic(
+	edg_wll_Context		ctx,
+	edg_wll_Event 		*e,
+	intJobStat		*intstat,
+	int			update_db)
+{
+
+/* Local variables */
+	char		*string_jobid;
+
+	int		intErr = 0;
+	int		res;
+	int		be_strict = 0;
+	char		*errstring = NULL;
+
+
+/* Processing */
+	edg_wll_ResetError(ctx);
+	init_intJobStat(intstat);
+
+/* XXX: integrity check ?? can we skip? */
+	string_jobid = edg_wlc_JobIdUnparse(e->any.jobId);
+	if (string_jobid == NULL || intstat == NULL)
+		return edg_wll_SetError(ctx,EINVAL, NULL);
+	free(string_jobid);
+
+	intstat->pub.owner = strdup(e->any.user); 
+	
+	res = processEvent(intstat, e, 0, be_strict, &errstring);
+	if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
+		intErr = 1;
+	}
+
+	if (intstat->pub.state == EDG_WLL_JOB_UNDEF) {
+		intstat->pub.state = EDG_WLL_JOB_UNKNOWN;
+	}
+
+	if (intErr) {
+		destroy_intJobStat(intstat);
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, NULL);
+	} else {
+		/* XXX intstat->pub.expectUpdate = eval_expect_update(intstat, &intstat->pub.expectFrom); */
+		intErr = edg_wlc_JobIdDup(e->any.jobId, &intstat->pub.jobId);
+		if (!intErr) {
+			if (update_db) {
+				edg_wll_StoreIntStateEmbriotic(ctx, intstat);
+				/* recheck
+				 * intJobStat *reread;
+				 * edg_wll_LoadIntState(ctx, job, tsq, &reread);
+				 * destroy_intJobStat(reread);
+				*/
+			}
+		}
+		return edg_wll_SetError(ctx, intErr, NULL);
+	}
+
+}
+
+
 /*
  * Helper for warning printouts
  */
@@ -553,6 +625,42 @@ cleanup:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+
+static edg_wll_ErrorCode edg_wll_StoreIntStateEmbriotic(edg_wll_Context ctx,
+				     intJobStat *stat)
+{
+	char *jobid_md5, *stat_enc, *parent_md5 = NULL;
+	char *stmt;
+	char *icnames, *icvalues;
+
+	jobid_md5 = edg_wlc_JobIdGetUnique(stat->pub.jobId);
+	stat_enc = states_values_embryotic(stat->pub.jobId, stat->pub.parent_job);;
+
+	parent_md5 = edg_wlc_JobIdGetUnique(stat->pub.parent_job);
+	if (parent_md5 == NULL) parent_md5 = strdup("*no parent job*");
+
+
+	edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, stat, 1, &icnames, &icvalues);
+	trio_asprintf(&stmt,
+		"insert into states"
+		"(jobid,status,seq,int_status,version"
+			",parent_job%s) "
+		"values ('%|Ss',%d,%d,'%|Ss','%|Ss','%|Ss'%s)",
+		icnames,
+		jobid_md5, stat->pub.state, 0, stat_enc,
+		INTSTAT_VERSION, parent_md5, icvalues);
+	free(icnames); free(icvalues);
+
+	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto cleanup;
+
+
+cleanup:
+	free(stmt); 
+	free(jobid_md5); free(stat_enc);
+	free(parent_md5);
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
 /*
  * Retrieve stored job state from states and status_tags DB tables.
  * Should be called with the job locked.
@@ -672,5 +780,26 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		}
 		else destroy_intJobStat(&jobstat);
 	}
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+
+/* 
+ * store embriotic state of DAGs' subjob 
+ */
+
+edg_wll_ErrorCode edg_wll_StepIntStateEmbriotic(edg_wll_Context ctx,
+					edg_wll_Event *e)
+{
+	intJobStat	jobstat;
+
+	
+	if (!edg_wll_intJobStatusEmbriotic(ctx, e, &jobstat, js_enable_store))
+	{
+		edg_wll_UpdateStatistics(ctx, NULL, e, &jobstat.pub);
+		if (ctx->rgma_export) write2rgma_status(&jobstat.pub);
+		destroy_intJobStat(&jobstat);
+	}
+
 	return edg_wll_Error(ctx, NULL, NULL);
 }

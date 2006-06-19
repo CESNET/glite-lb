@@ -40,6 +40,7 @@ static int store_seq(edg_wll_Context,edg_wll_Event *,int);
 static int check_dup(edg_wll_Context,edg_wll_Event *);
 static int check_auth(edg_wll_Context,edg_wll_Event *e); 
 static int register_subjobs(edg_wll_Context,const edg_wll_RegJobEvent *);
+static int register_subjobs_embriotic(edg_wll_Context,const edg_wll_RegJobEvent *);
 
 void edg_wll_StoreAnonymous(edg_wll_Context ctx,int anon) {
 	ctx->allowAnonymous = anon;
@@ -537,6 +538,68 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 
 		edg_wll_UnlockJob(ctx,e2.any.jobId);
 		edg_wll_ResetError(ctx);
+
+		if (err) {
+			job_s = edg_wlc_JobIdUnparse(e2.any.jobId);
+			fprintf(stderr,"%s: %s (%s)\n",job_s,et,ed);
+			syslog(LOG_ERR,"%s: %s (%s)",job_s,et,ed);
+			free(job_s); free(et); free(ed);
+			edg_wll_ResetError(ctx);
+		}
+
+		edg_wll_FreeEvent(&e2);
+	}
+
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+static int register_subjobs_embriotic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
+{
+	int	i,err;
+	edg_wlc_JobId	*subjobs;
+	struct timeval	now;
+
+	edg_wll_ResetError(ctx);
+	if (e->nsubjobs == 0) return 0;
+	if (e->nsubjobs < 0) return edg_wll_SetError(ctx,EINVAL,"negative number of subjobs");
+
+	if ((err = edg_wll_GenerateSubjobIds(ctx,e->jobId,e->nsubjobs,e->seed,&subjobs)))
+		return err;
+
+	gettimeofday(&now,NULL);
+
+/* XXX: increase the overall request timeout. */
+/* XXX: smaller incerease may be added - e->nsubjobs/100 ? */
+	ctx->p_tmp_timeout.tv_sec += e->nsubjobs;
+	if (ctx->p_tmp_timeout.tv_sec > 86400) ctx->p_tmp_timeout.tv_sec = 86400;
+
+	for (i=0; i<e->nsubjobs; i++) {
+		edg_wll_Event	e2;
+		int		seq;
+		char		*et,*ed,*job_s;
+
+/* XXX: shloud be possible to move all static stuff out of the cycle
+ *	and free event after the whole loop */
+		memset(&e2,0,sizeof e2);
+		e2.type = EDG_WLL_EVENT_REGJOB;
+		e2.any.jobId = subjobs[i]; subjobs[i] = NULL;
+		memcpy(&e2.regJob.timestamp,&now,sizeof now);
+		e2.any.host = strdup(ctx->srvName);
+		e2.any.level = e->level;
+		e2.any.priority = e->priority;
+		e2.any.seqcode = strdup(EDG_WLL_SEQ_NULL);
+		e2.any.user = strdup(e->user);
+		e2.any.source = e->source;
+		e2.any.src_instance = strdup(ctx->isProxy ? 
+			"L&B proxy" : "L&B server");
+		e2.regJob.ns = strdup(e->ns);
+		edg_wlc_JobIdDup(e->jobId,&e2.regJob.parent);
+		e2.regJob.jobtype = EDG_WLL_REGJOB_SIMPLE;
+		e2.regJob.jdl = strdup("");
+
+
+		if ((err = edg_wll_StepIntStateEmbriotic(ctx, &e2)))
+			edg_wll_Error(ctx,&et,&ed);
 
 		if (err) {
 			job_s = edg_wlc_JobIdUnparse(e2.any.jobId);

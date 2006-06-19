@@ -33,6 +33,13 @@ edg_wll_ErrorCode edg_wll_StepIntState(
 	edg_wll_JobStat *
 );
 
+/* create embriotic job state for DAGs' subjob */
+
+edg_wll_ErrorCode edg_wll_StepIntStateEmbriotic(
+	edg_wll_Context ctx,	/* INOUT */
+        edg_wll_Event *e	/* IN */
+);
+
 int db_store(edg_wll_Context,char *,char *);
 int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
