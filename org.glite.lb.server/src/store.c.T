@@ -558,6 +558,8 @@ static int register_subjobs_embriotic(edg_wll_Context ctx,const edg_wll_RegJobEv
 	int	i,err;
 	edg_wlc_JobId	*subjobs;
 	struct timeval	now;
+	edg_wll_Event	e2;
+
 
 	edg_wll_ResetError(ctx);
 	if (e->nsubjobs == 0) return 0;
@@ -573,30 +575,29 @@ static int register_subjobs_embriotic(edg_wll_Context ctx,const edg_wll_RegJobEv
 	ctx->p_tmp_timeout.tv_sec += e->nsubjobs;
 	if (ctx->p_tmp_timeout.tv_sec > 86400) ctx->p_tmp_timeout.tv_sec = 86400;
 
+	memset(&e2,0,sizeof e2);
+	e2.type = EDG_WLL_EVENT_REGJOB;
+	memcpy(&e2.regJob.timestamp,&now,sizeof now);
+	e2.any.host = strdup(ctx->srvName);
+	e2.any.level = e->level;
+	e2.any.priority = e->priority;
+	e2.any.seqcode = strdup(EDG_WLL_SEQ_NULL);
+	e2.any.user = strdup(e->user);
+	e2.any.source = e->source;
+	e2.any.src_instance = strdup(ctx->isProxy ? 
+		"L&B proxy" : "L&B server");
+	e2.regJob.ns = strdup(e->ns);
+	edg_wlc_JobIdDup(e->jobId,&e2.regJob.parent);
+	e2.regJob.jobtype = EDG_WLL_REGJOB_SIMPLE;
+	e2.regJob.jdl = strdup("");
+
 	for (i=0; i<e->nsubjobs; i++) {
-		edg_wll_Event	e2;
 		int		seq;
 		char		*et,*ed,*job_s;
 
-/* XXX: shloud be possible to move all static stuff out of the cycle
- *	and free event after the whole loop */
-		memset(&e2,0,sizeof e2);
-		e2.type = EDG_WLL_EVENT_REGJOB;
-		e2.any.jobId = subjobs[i]; subjobs[i] = NULL;
-		memcpy(&e2.regJob.timestamp,&now,sizeof now);
-		e2.any.host = strdup(ctx->srvName);
-		e2.any.level = e->level;
-		e2.any.priority = e->priority;
-		e2.any.seqcode = strdup(EDG_WLL_SEQ_NULL);
-		e2.any.user = strdup(e->user);
-		e2.any.source = e->source;
-		e2.any.src_instance = strdup(ctx->isProxy ? 
-			"L&B proxy" : "L&B server");
-		e2.regJob.ns = strdup(e->ns);
-		edg_wlc_JobIdDup(e->jobId,&e2.regJob.parent);
-		e2.regJob.jobtype = EDG_WLL_REGJOB_SIMPLE;
-		e2.regJob.jdl = strdup("");
 
+		e2.any.jobId = subjobs[i]; subjobs[i] = NULL;
+		// XXX: timespamp each subjob with actual time??
 
 		if ((err = edg_wll_StepIntStateEmbriotic(ctx, &e2)))
 			edg_wll_Error(ctx,&et,&ed);
@@ -608,9 +609,11 @@ static int register_subjobs_embriotic(edg_wll_Context ctx,const edg_wll_RegJobEv
 			free(job_s); free(et); free(ed);
 			edg_wll_ResetError(ctx);
 		}
-
-		edg_wll_FreeEvent(&e2);
+		edg_wlc_JobIdFree(e2.any.jobId);
 	}
+
+	edg_wll_FreeEvent(&e2);
+	free(subjobs);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
