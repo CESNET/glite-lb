@@ -550,6 +550,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 		edg_wll_FreeEvent(&e2);
 	}
 
+	free(subjobs);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
@@ -592,7 +593,6 @@ static int register_subjobs_embriotic(edg_wll_Context ctx,const edg_wll_RegJobEv
 	e2.regJob.jdl = strdup("");
 
 	for (i=0; i<e->nsubjobs; i++) {
-		int		seq;
 		char		*et,*ed,*job_s;
 
 
