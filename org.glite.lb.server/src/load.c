@@ -51,14 +51,19 @@ int edg_wll_LoadEvents(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wl
 	if ( (fd = open(req->server_file, O_RDONLY)) == -1 )
 		return edg_wll_SetError(ctx, errno, "Server can not open the file");
 
+	if (edg_wll_Transaction(ctx) != 0) 
+		return edg_wll_Error(ctx, NULL, NULL);
+
 	memset(result,0,sizeof(*result));
 	i = 0;
 	while ( 1 )
 	{
 		/*	Read one line
 		 */
-		if ( (readret = read_line(&line, &maxsize, fd)) == -1 )
+		if ( (readret = read_line(&line, &maxsize, fd)) == -1 ) {
+			edg_wll_Rollback(ctx);
 			return edg_wll_SetError(ctx, errno, "reading dump file");
+		}
 
 		if ( readret == 0 )
 			break;
@@ -84,11 +89,13 @@ int edg_wll_LoadEvents(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wl
 		ctx->event_load = 1;
 		if ( edg_wll_StoreEvent(ctx, event, NULL) )
 		{
+			char		*errdesc;
 			int		len = strlen(line),
 					total = 0,
 					written;
 
-			fprintf(stderr, "Can't store event\n");
+			edg_wll_Error(ctx, NULL, &errdesc);
+			fprintf(stderr, "Can't store event: %s\n", errdesc);
 			if ( reject_fd == -1 )
 			{
 				char   *s, *s1;
@@ -163,6 +170,9 @@ cycle_clean:
 
 	if ( reject_fd != -1 )
 		close(reject_fd);
+
+	if (edg_wll_Commit(ctx) != 0)
+		return edg_wll_Error(ctx, NULL, NULL);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }

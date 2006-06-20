@@ -80,6 +80,9 @@ extern edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs);
  */
 int edg_wll_DBCheckVersion(edg_wll_Context);
 
+int edg_wll_Transaction(edg_wll_Context ctx);
+int edg_wll_Commit(edg_wll_Context ctx);
+int edg_wll_Rollback(edg_wll_Context ctx);
 
 #ifdef __cplusplus
 }

@@ -7,7 +7,7 @@ create table jobs (
 	primary key (jobid),
 	unique (dg_jobid),
 	index (userid)
-);
+) engine=innodb;
 
 create table users (
 	userid		char(32)	binary not null,
@@ -15,7 +15,7 @@ create table users (
 
 	primary key (userid),
 	unique (cert_subj)
-);
+) engine=innodb;
 
 create table events (
 	jobid		char(32)	binary not null,
@@ -35,7 +35,7 @@ create table events (
 	index (time_stamp),
 	index (host),
 	index (arrived)
-);
+) engine=innodb;
 
 create table short_fields (
 	jobid		char(32)	binary not null,
@@ -44,7 +44,7 @@ create table short_fields (
 	value		varchar(255)	binary null,
 
 	primary key (jobid,event,name)
-);
+) engine=innodb;
 
 create table long_fields (
 	jobid		char(32)	binary not null,
@@ -53,7 +53,7 @@ create table long_fields (
 	value		mediumblob	null,
 
 	primary key (jobid,event,name)
-);
+) engine=innodb;
 
 create table states (
 	jobid		char(32)	binary not null,
@@ -66,7 +66,7 @@ create table states (
 	primary key (jobid),
 	index (parent_job)
 	
-);
+) engine=innodb;
 
 create table status_tags (
 	jobid		char(32)	binary not null,
@@ -75,7 +75,7 @@ create table status_tags (
 	value		varchar(255)	binary null,
 
 	primary key (jobid,seq,name)
-);
+) engine=innodb;
 
 create table server_state (
 	prefix		varchar(100)	not null,
@@ -83,7 +83,7 @@ create table server_state (
 	value		varchar(255)	binary not null,
 
 	primary key (prefix,name)
-);
+) engine=innodb;
 
 create table acls (
 	aclid		char(32)	binary not null,
@@ -91,7 +91,7 @@ create table acls (
 	refcnt		int		not null,
 
 	primary key (aclid)
-);
+) engine=innodb;
 
 create table notif_registrations (
 	notifid		char(32)	binary not null,
@@ -101,7 +101,7 @@ create table notif_registrations (
 	conditions	mediumblob	not null,
 
 	primary key (notifid)
-);
+) engine=innodb;
 
 create table notif_jobs (
 	notifid		char(32)	binary not null,
@@ -109,4 +109,4 @@ create table notif_jobs (
 
 	primary key (notifid,jobid),
 	index (jobid)
-);
+) engine=innodb;

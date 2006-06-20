@@ -64,6 +64,9 @@ edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx,char *cs)
 	}
 
 	free(buf);
+#ifdef LBS_DB_PROFILE
+	fprintf(stderr, "[%d] use_transactions = %d\n", getpid(), ctx->use_transactions);
+#endif
 	return edg_wll_ResetError(ctx);
 }
 
@@ -78,9 +81,10 @@ int edg_wll_ExecStmt(edg_wll_Context ctx,char *txt,edg_wll_Stmt *stmt)
 	int	err;
 	int	retry_nr = 0;
 	int	do_reconnect = 0;
+#ifdef LBS_DB_PROFILE
 	struct timeval	start,end;
 	int	pid;
-#ifdef LBS_DB_PROFILE
+
 	static struct timeval sum = {
 		tv_sec: 0,
 		tv_usec: 0
@@ -222,4 +226,43 @@ int edg_wll_DBCheckVersion(edg_wll_Context ctx)
 	}
 
 	return edg_wll_ResetError(ctx);
+}
+
+
+int edg_wll_Transaction(edg_wll_Context ctx) {
+	int err = 0;
+
+	if (ctx->use_transactions) {
+		err = edg_wll_ExecStmt(ctx, "set autocommit=0", NULL);
+		if (!err)
+			return edg_wll_ExecStmt(ctx, "begin", NULL);
+	}
+
+	return err;
+}
+
+
+int edg_wll_Commit(edg_wll_Context ctx) {
+	int err = 0;
+
+	if (ctx->use_transactions) {
+		err = edg_wll_ExecStmt(ctx, "commit", NULL);
+		if (!err)
+			return edg_wll_ExecStmt(ctx, "set autocommit=1", NULL);
+	}
+
+	return err;
+}
+
+
+int edg_wll_Rollback(edg_wll_Context ctx) {
+	int err = 0;
+
+	if (ctx->use_transactions) { 
+		err = edg_wll_ExecStmt(ctx, "rollback", NULL);
+		if (!err)
+			return edg_wll_ExecStmt(ctx, "set autocommit=1", NULL);
+	}
+
+	return err;
 }

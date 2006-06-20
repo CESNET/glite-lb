@@ -135,6 +135,9 @@ edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx, char*str) {
   return (edg_wll_ErrorCode)0;
 }
 
+int edg_wll_Transaction(edg_wll_Context ctx) { return 0; }
+int edg_wll_Commit(edg_wll_Context ctx) { return 0; }
+int edg_wll_Rollback(edg_wll_Context ctx) { return 0; }
 
 
 	

@@ -177,10 +177,11 @@ static struct option opts[] = {
 #ifdef LB_PERF
 	{"perf-sink",           1, NULL,        'K'},
 #endif
+	{"transactions",	0,	NULL,	'b'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jz"
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jzb"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -193,6 +194,7 @@ static void usage(char *me)
 {
 	fprintf(stderr,"usage: %s [option]\n"
 		"\t-a, --address\t use this server address (may be faked for debugging)\n"
+		"\t-b, --transactions\t use transactions\n"
 		"\t-k, --key\t private key file\n"
 		"\t-c, --cert\t certificate file\n"
 		"\t-C, --CAdir\t trusted certificates directory\n"
@@ -223,6 +225,7 @@ static void usage(char *me)
 		"\t--notif-il-fprefix\t file prefix for notifications\n"
 		"\t--count-statistics=1\t count certain statistics on jobs\n"
 		"\t                  =2\t ... and allow anonymous access\n"
+		"\t-t, --request-timeout\t request timeout for one client\n"
 		"\t--silent\t don't print diagnostic, even if -d is on\n"
 #ifdef LB_PERF
 		"\t--perf-sink\t where to sink events\n"
@@ -308,7 +311,8 @@ int main(int argc, char *argv[])
 	edg_wll_GssStatus	gss_code;
 	struct timeval		to;
 	int 			request_timeout = REQUEST_TIMEOUT;
-	int	silent = 0;
+	int			silent = 0;
+	int			transactions = 0;
 
 
 
@@ -332,6 +336,7 @@ int main(int argc, char *argv[])
 
 	while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
 		case 'a': fake_host = strdup(optarg); break;
+		case 'b': transactions = 1; break;
 		case 'c': server_cert = optarg; break;
 		case 'k': server_key = optarg; break;
 		case 'C': cadir = optarg; break;
@@ -559,6 +564,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 
 	/* Just check the database and let it be. The slaves do the job. */
 	edg_wll_InitContext(&ctx);
+	ctx->use_transactions = transactions;
 	wait_for_open(ctx, dbstring);
 
 	if (edg_wll_DBCheckVersion(ctx))
@@ -1394,7 +1400,7 @@ static int read_roots(const char *file)
 		nl = strchr(buf,'\n');
 		if (nl) *nl = 0;
 
-		super_users = realloc(super_users, (cnt+1) * sizeof super_users[0]);
+		super_users = realloc(super_users, (cnt+2) * sizeof super_users[0]);
 		super_users[cnt] = strdup(buf);
 		super_users[++cnt] = NULL;
 	}

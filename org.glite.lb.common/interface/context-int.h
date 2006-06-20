@@ -137,6 +137,9 @@ struct _edg_wll_Context {
 	edg_wlc_JobId	p_jobid;
 	edg_wll_SeqCode	p_seqcode;
 	int		count_statistics;
+
+	/* TODO: belongs to database part */
+	int use_transactions;
 };
 
 /* to be used internally: set, update and and clear the error information in 

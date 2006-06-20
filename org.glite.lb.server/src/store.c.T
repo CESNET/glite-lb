@@ -111,12 +111,20 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		
 		next = max && *max ? atoi(max)+1 : 0;
 		
-	/* store an UNDEF event first in order to prevent race condition
-	 * with readers */
+	/* 
+	 * 1) when using transactions:
+	 *   Store the whole event right now.
+	 *
+	 * 2) when not using transaction:
+	 *   Store an UNDEF event first in order to prevent race condition
+	 *   with readers and update event code later.
+	 */
 		trio_asprintf(&stmt,
 			"insert into events(jobid,event,code,prog,host,time_stamp,usec,arrived,level,userid) "
 			"values ('%|Ss',%d,%d,'%|Ss','%|Ss',%s,%d,%s,%d,'%|Ss')",
-			jobid,next,EDG_WLL_EVENT_UNDEF,ssrc,e->any.host,
+			jobid,next,
+			ctx->use_transactions ? (int) e->any.type : EDG_WLL_EVENT_UNDEF,
+			ssrc,e->any.host,
 			edg_wll_TimeToDB(e->any.timestamp.tv_sec),e->any.timestamp.tv_usec,
 			now_s, e->any.level,userid);
 
@@ -139,8 +147,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		edg_wll_delete_event(ctx,jobid,next);
 		edg_wll_SetError(ctx,oerr,desc);
 		free(desc);
-	}
-	else {
+	} else
+	if (!ctx->use_transactions) {
 	/* emulate commit, i.e. swith to a real event type to make
 	 * the record valid */
 		trio_asprintf(&stmt,
@@ -184,7 +192,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 				"more event records, what is that?");
 				break;
 		}
-	}
+	} /* if !ctx->use_transactions */
 
 	if (err == 0 && 
 		e->any.type == EDG_WLL_EVENT_REGJOB &&
