@@ -741,10 +741,12 @@ static int edg_wll_RegisterJobMaster(
         edg_wll_GssStatus       gss_stat;
         gss_cred_id_t   cred = GSS_C_NO_CREDENTIAL;
 	OM_uint32       min_stat;
+	struct timeval sync_to;
 
 	seq = type_s = intseed = parent_s = user_dn = NULL;
 
 	edg_wll_ResetError(context);
+	memcpy(&sync_to, &context->p_sync_timeout, sizeof sync_to);
 
 	intseed = seed ? strdup(seed) : 
 		str2md5base64(seq = edg_wll_GetSequenceCode(context));
@@ -809,8 +811,9 @@ static int edg_wll_RegisterJobMaster(
 	}
 
 edg_wll_registerjobmaster_end:
-        if (cred != GSS_C_NO_CREDENTIAL)
-                gss_release_cred(&min_stat, &cred);
+	memcpy(&context->p_sync_timeout, &sync_to, sizeof sync_to);
+	if (cred != GSS_C_NO_CREDENTIAL)
+		gss_release_cred(&min_stat, &cred);
 	if (seq) free(seq);
 	if (type_s) free(type_s); 
 	if (intseed) free(intseed); 
