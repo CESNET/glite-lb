@@ -331,7 +331,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 				      "me again", /* source instance */
 				      "UserTag", /* event */
 				      jobids[cur_job], /* jobid */
-				      "last", /* sequence */
+				      "UI=999980:NS=9999999980:WM=999980:BH=9999999980:JSS=999980:LM=999980:LRMS=999980:APP=999980", /* sequence */
 				      PERFTEST_END_TAG_NAME,
 				      PERFTEST_END_TAG_VALUE)) < 0) {
 			fprintf(stderr, "produceEventString: error creating termination event\n");
