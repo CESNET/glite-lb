@@ -80,7 +80,7 @@ usage(char *program_name) {
 		"-c, --cert <file>          location of server certificate\n"
 		"-k, --key  <file>          location of server private key\n"
 		"-C, --CAdir <dir>          directory containing CA certificates\n"
-		"-s, --socket <dir>         socket to send messages (NOT IMPLEMENTED YET)\n"
+		"-s, --socket <dir>         interlogger's socket to send messages to\n"
 		"--noAuth                   do not check caller's identity\n"
 		"--noIPC                    do not send messages to inter-logger\n"
 		"--noParse                  do not parse messages for correctness\n",
