@@ -331,8 +331,8 @@ handle_msg(il_octet_string_t *event, long offset)
 	if(nosync) 
 		ret = 1;
 	else 
-		ret = event_store_sync(es, offset);
 #endif
+		ret = event_store_sync(es, offset);
 	il_log(LOG_DEBUG, "  syncing event store at %d with event at %d, result %d\n", es->offset, offset, ret);
 	if(ret < 0) {
 		il_log(LOG_ERR, "    handle_msg: error syncing event store:\n      %s\n", error_get_msg());
