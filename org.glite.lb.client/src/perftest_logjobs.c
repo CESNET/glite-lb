@@ -179,7 +179,7 @@ main(int argc, char *argv[])
 
 	opterr = 0;
 
-	while ((opt = getopt_long(argc,argv,"hd:t:f:n:xNs:P:p:",
+	while ((opt = getopt_long(argc,argv,"hd:t:f:m:n:Ns:P::p:",
 		long_options, (int *) 0)) != EOF) {
 
 		switch (opt) {
