@@ -127,7 +127,13 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 		break;
 	default: break;
 	}
-  } else {
+  } else 
+#ifdef LB_PERF
+	if( sink_mode == GLITE_LB_SINK_SEND ) {
+		glite_wll_perftest_consumeEvent(ev);
+	} else 
+#endif
+  {
 	if ( newstat.state ) {
 		edg_wll_NotifMatch(ctx, &newstat);
 		edg_wll_FreeStatus(&newstat);
