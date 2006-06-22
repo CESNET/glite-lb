@@ -268,6 +268,7 @@ main(int argc, char *argv[])
 
 			case DEST_BKSERVER:
 				ctx->p_tmp_timeout = ctx->p_log_timeout;
+				edg_wlc_JobIdParse(jobid, &ctx->p_jobid);
 				if (edg_wll_DoLogEventDirect(ctx, event)) {
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
