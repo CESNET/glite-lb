@@ -156,8 +156,10 @@ queue_thread(void *q)
 		/* also allow for one more try immediately after server disconnect,
 		   which may cure server kicking us out after given number of connections */
 #ifndef LB_PERF
-		if((ret == 0) && (retrycnt > 0)) 
+		if((ret == 0) && (retrycnt > 0)) {
+			il_log(LOG_WARNING, "    sleeping\n");
 			event_queue_sleep(eq);
+		}
 #endif
 
 		if(exit) {
