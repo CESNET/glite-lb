@@ -10,9 +10,12 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <time.h>
+#include <assert.h>
+#include <stdarg.h>
 
 #include "lbs_db.h"
 #include "glite/lb/context-int.h"
+#include "glite/lb/trio.h"
 
 
 #define DEFAULTCS	"lbserver/@localhost:lbserver20"
@@ -266,3 +269,154 @@ int edg_wll_Rollback(edg_wll_Context ctx) {
 
 	return err;
 }
+
+
+int edg_wll_bufferedInsertInit(edg_wll_Context ctx, edg_wll_bufInsert *bi, void *mysql, char *table_name, long size_limit, long record_limit, int num_cols, ...)
+{
+	va_list l;
+	long	i;
+
+
+	assert(num_cols != 1);	// XXX: I do not know one column multi-row insert :(
+	va_start(l, num_cols);
+	
+	bi->ctx = ctx;
+	bi->table_name = strdup(table_name);
+	bi->num_cols = num_cols;
+	bi->columns = calloc(num_cols, sizeof(*(bi->columns)) );
+	bi->rec_num = 0;
+	bi->rec_size = 0;
+	bi->row_len = calloc(num_cols, sizeof(*(bi->row_len)) );
+	bi->row_alloc = calloc(num_cols, sizeof(*(bi->row_alloc)) );
+	bi->values = calloc(num_cols, sizeof(*(bi->values)) );
+	bi->size_limit = size_limit;
+	bi->record_limit = record_limit;
+
+	for (i=0; i < num_cols; i++) {
+		bi->columns[i] = strdup(va_arg(l,char *));	
+		bi->row_len[i] = 0;
+		bi->row_alloc[i] = 0;
+	}
+
+	va_end(l);
+	return 0;
+}
+
+
+
+static int string_add(char *what, long *used_size, long *alloc_size, char **where)
+{
+	long	what_len = strlen(what);
+	int	reall = 0;
+
+	while (*used_size + what_len >= *alloc_size) {
+		*alloc_size += BUF_INSERT_ROW_ALLOC_BLOCK;
+		reall = 1;
+	}
+
+	if (reall) 
+		*where = realloc(*where, *alloc_size * sizeof(char));
+
+	what_len = sprintf(*where + *used_size, "%s", what);
+	if (what_len < 0) /* ENOMEM? */ return -1;
+
+	*used_size += what_len;
+
+	return 0;
+}
+
+
+static int flush_bufferd_insert(edg_wll_bufInsert *bi)
+{
+	char *stmt, *cols, *vals, *temp;
+	long i;
+
+	asprintf(&cols,"%s", bi->columns[0]);
+	asprintf(&vals,"%s", bi->values[0]);
+	for (i=1; i < bi->num_cols; i++) {
+		asprintf(&temp,"%s,%s", cols, bi->columns[i]);
+		free(cols); cols = temp; temp = NULL;
+		asprintf(&temp,"%s),(%s", vals, bi->values[i]);
+		free(vals); vals = temp; temp = NULL;
+		
+	}
+	
+	trio_asprintf(&stmt, "insert into %|Ss(%|Ss) values (%|Ss);",
+		bi->table_name, cols, vals);
+
+	// XXX:fire statement, check result, check errors
+	printf("\n%s\n",stmt);
+
+	/* reset bi counters */
+	bi->rec_size = 0;
+	bi->rec_num = 0;
+	for (i=0; i < bi->num_cols; i++) 
+		bi->row_len[i] = 0;
+	
+	free(cols);
+	free(vals);
+	free(stmt);
+
+	return 0;
+}
+
+
+/*
+ * adds row of n values into n columns into an insert buffer
+ * if num. of rows or size of data oversteps the limits, real
+ * multi-row insert is done
+ */
+edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, ...)
+{
+	va_list l;
+	long	i;
+
+
+	va_start(l, bi);
+
+	bi->rec_size = 0;
+	for (i=0; i < bi->num_cols; i++) {
+		if (bi->rec_num) { 
+			if (string_add(",", &bi->row_len[i], &bi->row_alloc[i], &bi->values[i]))
+				return edg_wll_SetError(bi->ctx,ENOMEM,NULL);;
+		}
+		if (string_add(va_arg(l,char *), &bi->row_len[i], &bi->row_alloc[i], &bi->values[i]))
+			return edg_wll_SetError(bi->ctx,ENOMEM,NULL);;
+		bi->rec_size += bi->row_len[i];
+	}
+	bi->rec_num++;
+
+	if ((bi->size_limit && bi->rec_size >= bi->size_limit) ||
+		(bi->record_limit && bi->rec_num >= bi->record_limit))
+	{
+		if (flush_bufferd_insert(bi))
+			return -1;	// XXX use edg_wll_SetError(something)
+	}
+
+	va_end(l);
+	return edg_wll_ResetError(bi->ctx);
+}
+
+static void free_buffered_insert(edg_wll_bufInsert *bi) {
+	long i;
+	
+	free(bi->table_name);
+	for (i=0; i < bi->num_cols; i++) {
+		free(bi->columns[i]);
+		free(bi->values[i]);
+	}
+	free(bi->columns);
+	free(bi->values);
+	free(bi->row_len);
+	free(bi->row_alloc);
+}
+
+edg_wll_ErrorCode edg_wll_bufferedInsertClose(edg_wll_bufInsert *bi)
+{
+	if (flush_bufferd_insert(bi))
+		return -1;	// XXX use edg_wll_SetError(something)
+	free_buffered_insert(bi);
+
+	return edg_wll_ResetError(bi->ctx);
+}
+
