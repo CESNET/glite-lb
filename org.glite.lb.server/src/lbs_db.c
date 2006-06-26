@@ -344,8 +344,13 @@ static int flush_bufferd_insert(edg_wll_bufInsert *bi)
 	trio_asprintf(&stmt, "insert into %|Ss(%|Ss) values (%|Ss);",
 		bi->table_name, cols, vals);
 
-	// XXX:fire statement, check result, check errors
-	printf("\n%s\n",stmt);
+	// XXX: remove after testing
+	fprintf(stderr,"\n%s\n",stmt);
+
+	if (edg_wll_ExecStmt(bi->ctx,stmt,NULL) < 0) {
+                if (edg_wll_Error(bi->ctx,NULL,NULL) == EEXIST)
+                        edg_wll_ResetError(bi->ctx);
+        }
 
 	/* reset bi counters */
 	bi->rec_size = 0;
@@ -357,7 +362,7 @@ static int flush_bufferd_insert(edg_wll_bufInsert *bi)
 	free(vals);
 	free(stmt);
 
-	return 0;
+	return edg_wll_Error(bi->ctx,NULL,NULL);
 }
 
 
@@ -390,7 +395,7 @@ edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, ...)
 		(bi->record_limit && bi->rec_num >= bi->record_limit))
 	{
 		if (flush_bufferd_insert(bi))
-			return -1;	// XXX use edg_wll_SetError(something)
+			return edg_wll_Error(bi->ctx,NULL,NULL);
 	}
 
 	va_end(l);
@@ -414,7 +419,7 @@ static void free_buffered_insert(edg_wll_bufInsert *bi) {
 edg_wll_ErrorCode edg_wll_bufferedInsertClose(edg_wll_bufInsert *bi)
 {
 	if (flush_bufferd_insert(bi))
-		return -1;	// XXX use edg_wll_SetError(something)
+		return edg_wll_Error(bi->ctx,NULL,NULL);
 	free_buffered_insert(bi);
 
 	return edg_wll_ResetError(bi->ctx);
