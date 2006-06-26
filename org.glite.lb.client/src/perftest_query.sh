@@ -10,10 +10,10 @@ if [ -z "${GLITE_LOCATION}" ]; then
 else
         STAGEDIR=${GLITE_LOCATION}
 fi
-JOBSTAT:=$STAGEDIR/examples/glite-lb-job_status
+JOBSTAT=$STAGEDIR/examples/glite-lb-job_status
 
 ask() {
-	$JOBSTAT `cat $jpbs`
+	$JOBSTAT `cat $jobs`
 }
 
 do_ask() {
