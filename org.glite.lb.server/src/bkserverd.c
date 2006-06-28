@@ -1172,7 +1172,7 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 		return ECANCELED;
 	}
 
-	return 0;
+	return ENOTCONN;
 }
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
