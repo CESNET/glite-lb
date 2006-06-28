@@ -1,14 +1,15 @@
 Index: org.glite/project/global.dependencies.properties
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite/project/global.dependencies.properties,v
-retrieving revision 1.486
-diff -u -r1.486 global.dependencies.properties
---- org.glite/project/global.dependencies.properties	17 Mar 2006 18:19:31 -0000	1.486
-+++ org.glite/project/global.dependencies.properties	30 Mar 2006 11:32:58 -0000
-@@ -1352,6 +1352,25 @@
- ext.globus-sdk.rpm.version 	= ${ext.vdt.version}
- ext.globus-sdk.rpm.age		= 1
- 					  				
+retrieving revision 1.493
+diff -u -r1.493 global.dependencies.properties
+--- org.glite/project/global.dependencies.properties	21 Jun 2006 13:24:58 -0000	1.493
++++ org.glite/project/global.dependencies.properties	28 Jun 2006 09:53:25 -0000
+@@ -1337,6 +1337,24 @@
+ ext.globus-sdk.rpm.name    = vdt_globus_sdk
+ ext.globus-sdk.rpm.version = ${ext.vdt.version}
+ ext.globus-sdk.rpm.age     = 1
++
 +# Globus vdt data server - grid ftp server
 +ext.globus-data-server.name		= ${ext.globus.name}
 +ext.globus-data-server.vendor		= ${ext.globus.vendor}
@@ -26,11 +27,9 @@ diff -u -r1.486 global.dependencies.properties
 +ext.globus-data-server.rpm.name    	= vdt_globus_data_server
 +ext.globus-data-server.rpm.version 	= ${ext.vdt.version}
 +ext.globus-data-server.rpm.age		= 1
-+					  				
-+
+                                       
  # GPT
- ext.gpt.name		= gpt
- ext.gpt.vendor		= gpt
+ ext.gpt.name        = gpt
 Index: org.glite.deployment/build.xml
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite.deployment/build.xml,v
@@ -94,7 +93,7 @@ retrieving revision 1.528
 diff -u -r1.528 dependencies.properties
 --- org.glite.deployment/project/dependencies.properties	22 Aug 2005 17:00:02 -0000	1.528
 +++ org.glite.deployment/project/dependencies.properties	30 Mar 2006 11:32:58 -0000
-@@ -38,6 +38,8 @@
+@@ -33,6 +33,8 @@
  org.glite.deployment.wn.version 				= HEAD
  org.glite.deployment.wms.version 				= HEAD
  org.glite.deployment.lb.version 				= HEAD
@@ -154,3 +153,4 @@ diff -u -r1.45 glite.deployment.csf.xml
  	<!-- io-server component -->
  	<target name="io-server" depends="get.io-server.head, get.io-server.tag"/>
  	<target name="get.io-server.head" if="io-server.head">
+

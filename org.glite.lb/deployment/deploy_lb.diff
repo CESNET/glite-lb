@@ -277,3 +277,23 @@ diff -u -r1.38 glite-lb.sdf.xml.template
                  <component name="gridsite"
                      version="@org.gridsite.core.info.version@"
                      age="@org.gridsite.core.info.age@"
+Index: org.glite.deployment.lb/project/properties.xml
+===================================================================
+RCS file: /cvs/jra1mw/org.glite.deployment.lb/project/properties.xml,v
+retrieving revision 1.3
+diff -u -r1.3 properties.xml
+--- org.glite.deployment.lb/project/properties.xml	13 Mar 2006 15:19:21 -0000	1.3
++++ org.glite.deployment.lb/project/properties.xml	28 Jun 2006 10:38:15 -0000
+@@ -68,9 +68,9 @@
+ 	<property name="build.package.files" value="
+ %attr(755,root,root) %{prefix}/etc/config/scripts/glite-lb-config.py\n
+ %attr(600,root,root) %{prefix}/etc/config/templates/glite-lb.cfg.xml\n
+-%attr(644,root,root) %{prefix}/share/doc/glite-LB/release_notes/release_notes.doc\n
+-%attr(644,root,root) %{prefix}/share/doc/glite-LB/release_notes/release_notes.pdf\n
+-%attr(644,root,root) %{prefix}/share/doc/glite-LB/release_notes/release_notes.html\n"/>
++%attr(644,root,root) %{prefix}/share/doc/glite-lb/release_notes/release_notes.doc\n
++%attr(644,root,root) %{prefix}/share/doc/glite-lb/release_notes/release_notes.pdf\n
++%attr(644,root,root) %{prefix}/share/doc/glite-lb/release_notes/release_notes.html\n"/>
+ 	<property name="build.package.obsolete" value="glite-lb-config"/>
+ 
+ </project>
