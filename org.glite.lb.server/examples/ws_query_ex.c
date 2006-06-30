@@ -8,6 +8,12 @@
 #include "ws_fault.h"
 #include "ws_typeref.h"
 
+#include "soap_version.h"
+
+#if GSOAP_VERSION <= 20602
+#define soap_call___lb__QueryJobs soap_call___ns1__QueryJobs
+#endif
+
 #include "LoggingAndBookkeeping.nsmap"
 
 
@@ -37,6 +43,7 @@ int main(int argc,char** argv)
 	int					opt, err;
 	char					*server = "http://localhost:9003/",
 					 	*name = NULL;
+	int					i, j;
 
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
@@ -44,7 +51,7 @@ int main(int argc,char** argv)
 	while ((opt = getopt_long(argc, argv, "hm:", opts, NULL)) != EOF) switch (opt)
 	{
 	case 'h': usage(name); return 0;
-	case 'm': server = strdup(optarg); break;
+	case 'm': server = optarg; break;
 	case '?': usage(name); return 1;
 	}
 
@@ -86,6 +93,9 @@ int main(int argc,char** argv)
 		exit(1);
 	}
 
+	for (i = 0; conditions[i]; i++) free(conditions[i]);
+	free(conditions);
+
     err = soap_call___lb__QueryJobs(soap, server, "", qjobs, &out);
     switch ( err ) {
 	case SOAP_OK: {
@@ -117,6 +127,12 @@ int main(int argc,char** argv)
 		fprintf(stderr,"err = %d\n",err);
 		soap_print_fault(soap,stderr);
     }
+
+    soap_end(soap);
+    soap_done(soap);
+    free(soap);
+    glite_gsplugin_free_context(gsplugin_ctx);
+    edg_wll_FreeContext(ctx);
 
     return 0;
 }

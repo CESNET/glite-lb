@@ -5,6 +5,12 @@
 #include "glite/lb/consumer.h"
 
 #include "bk_ws_H.h"
+#include "ws_fault.h"
+
+#include "soap_version.h"
+#if GSOAP_VERSION <= 20602
+#define soap_call___lb__GetVersion soap_call___ns1__GetVersion
+#endif
 
 #include "LoggingAndBookkeeping.nsmap"
 
@@ -41,7 +47,7 @@ int main(int argc,char** argv)
 	while ((opt = getopt_long(argc, argv, "hm:", opts, NULL)) != EOF) switch (opt)
 	{
 	case 'h': usage(name); return 0;
-	case 'm': server = strdup(optarg); break;
+	case 'm': server = optarg; break;
 	case '?': usage(name); return 1;
 	}
 
@@ -57,7 +63,7 @@ int main(int argc,char** argv)
 		return 1;
 	}
 
-/*    memset(&in, 0, sizeof(in));*/
+    memset(&in, 0, sizeof(in));
     memset(&out, 0, sizeof(out));
     switch (err = soap_call___lb__GetVersion(&soap, server, "", &in, &out))
 	{
@@ -77,7 +83,10 @@ int main(int argc,char** argv)
 		soap_print_fault(&soap, stderr);
     }
 
+    soap_end(&soap);
     soap_done(&soap);
+    glite_gsplugin_free_context(gsplugin_ctx);
+    edg_wll_FreeContext(ctx);
 
     return 0;
 }

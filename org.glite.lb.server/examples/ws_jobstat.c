@@ -6,6 +6,7 @@
 
 #include "bk_ws_H.h"
 #include "ws_typeref.h"
+#include "ws_fault.h"
 
 #include "soap_version.h"
 
@@ -52,8 +53,8 @@ int main(int argc,char** argv)
 	while ((opt = getopt_long(argc, argv, "hm:j:", opts, NULL)) != EOF) switch (opt)
 	{
 	case 'h': usage(name); return 0;
-	case 'm': server = strdup(optarg); break;
-	case 'j': jobid = strdup(optarg); break;
+	case 'm': server = optarg; break;
+	case 'j': jobid = optarg; break;
 	case '?': usage(name); return 1;
 	}
 
@@ -88,6 +89,7 @@ int main(int argc,char** argv)
 
 		edg_wll_SoapToStatus(mydlo,out.stat,&s);
 		printstat(s, 0);
+		edg_wll_FreeStatus(&s);
 		}
 		break;
 	case SOAP_FAULT: 
@@ -105,12 +107,18 @@ int main(int argc,char** argv)
 		soap_print_fault(mydlo,stderr);
     }
 
+    soap_end(mydlo);
+    soap_done(mydlo);
+    free(mydlo);
+    glite_gsplugin_free_context(gsplugin_ctx);
+    edg_wll_FreeContext(ctx);
+
     return 0;
 }
 
 static void printstat(edg_wll_JobStat stat, int level)
 {
-    char        *s, *j, ind[10];
+    char        *s, *j1, *j2, ind[10];
     int         i;
     time_t	t;
 
@@ -122,11 +130,11 @@ static void printstat(edg_wll_JobStat stat, int level)
     s = edg_wll_StatToString(stat.state);
 /* print whole flat structure */
     printf("%sstate : %s\n", ind, s);
-    printf("%sjobId : %s\n", ind, j = edg_wlc_JobIdUnparse(stat.jobId));
+    printf("%sjobId : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.jobId));
     printf("%sowner : %s\n", ind, stat.owner);
     printf("%sjobtype : %s\n", ind, (stat.jobtype ? "DAG" : "SIMPLE") );
     printf("%sparent_job : %s\n", ind,
-            j = edg_wlc_JobIdUnparse(stat.parent_job));
+            j2 = edg_wlc_JobIdUnparse(stat.parent_job));
     if (stat.jobtype) {;
         printf("%sseed : %s\n", ind, stat.seed);
         printf("%schildren_num : %d\n", ind, stat.children_num);
@@ -168,9 +176,13 @@ static void printstat(edg_wll_JobStat stat, int level)
     printf("%sstateEnterTime : %ld.%06ld\n", ind, stat.stateEnterTime.tv_sec,stat.stateEnterTime.tv_usec);
     printf("%sstateEnterTimes : \n",ind);
     if (stat.stateEnterTimes) for (i=1; i<=stat.stateEnterTimes[0]; i++) {
-	time_t	t = stat.stateEnterTimes[i];
-        printf("%s%14s  %s", ind, edg_wll_StatToString(i-1), (stat.stateEnterTimes[i] == 0) ?
+	char *s;
+
+	s = edg_wll_StatToString(i-1);
+	t = stat.stateEnterTimes[i];
+        printf("%s%14s  %s", ind, s, (stat.stateEnterTimes[i] == 0) ?
             "    - not available -\n" : ctime(&t));
+	free(s);
     }
     printf("%slastUpdateTime : %ld.%06ld\n", ind, stat.lastUpdateTime.tv_sec,stat.lastUpdateTime.tv_usec);
     printf("%sexpectUpdate : %d\n", ind, stat.expectUpdate);
@@ -178,6 +190,7 @@ static void printstat(edg_wll_JobStat stat, int level)
     printf("%sacl : %s\n", ind, stat.acl);
     printf("\n");
 
-    free(j);
+    free(j1);
+    free(j2);
     free(s);
 }

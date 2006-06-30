@@ -57,8 +57,8 @@ int main(int argc,char** argv)
 	while ((opt = getopt_long(argc, argv, "hm:j:", opts, NULL)) != EOF) switch (opt)
 	{
 	case 'h': usage(name); return 0;
-	case 'm': server = strdup(optarg); break;
-	case 'j': jobid = strdup(optarg); break;
+	case 'm': server = optarg; break;
+	case 'j': jobid = optarg; break;
 	case '?': usage(name); return 1;
 	}
 
@@ -87,7 +87,7 @@ int main(int argc,char** argv)
 	glite_gsplugin_set_udata(mydlo, ctx);
 
 
-	/* prepare job log quary */
+	/* prepare job log query */
 	memset(j,0,sizeof j);
 	memset(e,0,sizeof e);
 
@@ -97,25 +97,33 @@ int main(int argc,char** argv)
 
 	
 	jconds = (edg_wll_QueryRec **) calloc(2, sizeof(edg_wll_QueryRec *));
-	for ( i = 0; i < 2; i++ )
+	for ( i = 0; i < 1; i++ )
 	{
 		jconds[i] = (edg_wll_QueryRec *) calloc(2, sizeof(edg_wll_QueryRec));
 		jconds[i][0] = j[i];
 	}
 
-	econds = (edg_wll_QueryRec **) calloc(1, sizeof(edg_wll_QueryRec *));
+/*	econds = (edg_wll_QueryRec **) calloc(1, sizeof(edg_wll_QueryRec *));
 	for ( i = 0; i < 1; i++ )
 	{
 		econds[i] = (edg_wll_QueryRec *) calloc(1, sizeof(edg_wll_QueryRec));
 		econds[i][0] = e[i];
-	}
+	}*/
 
+	memset(&in, 0, sizeof in);
+	memset(&out, 0, sizeof out);
 
 	if (edg_wll_QueryCondsExtToSoap(mydlo, (const edg_wll_QueryRec **)jconds,
 			&in.__sizejobConditions, &in.jobConditions) != SOAP_OK) {
 		printf("Error converting QueryConds to Soap!\n");
 		return(1);
 	}
+
+	for (i = 0; jconds[i]; i++) {
+		if (jconds[i]) edg_wlc_JobIdFree(jconds[i][0].value.j);
+		free(jconds[i]);
+	}
+	free(jconds);
 
 	//edg_wll_QueryCondsExtToSoap(mydlo, (const edg_wll_QueryRec **)econds,
 	//	&in.__sizeeventConditions, &in.eventConditions);
@@ -155,6 +163,7 @@ int main(int argc,char** argv)
 		edg_wll_FaultToErr(mydlo,ctx);
 		edg_wll_Error(ctx,&et,&ed);
 		fprintf(stderr,"%s: %s (%s)\n",argv[0],et,ed);
+		soap_done(mydlo);
 		exit(1);
 		}
 	default:
@@ -162,7 +171,11 @@ int main(int argc,char** argv)
 		soap_print_fault(mydlo,stderr);
 	}
 
-	soap_dealloc(mydlo, out.events);
+	soap_end(mydlo/*, out.events*/);
+	soap_done(mydlo);
+	free(mydlo);
+	glite_gsplugin_free_context(gsplugin_ctx);
+	edg_wll_FreeContext(ctx);
 	return 0;
 }
 

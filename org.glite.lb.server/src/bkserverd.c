@@ -1265,7 +1265,7 @@ static void wait_for_open(edg_wll_Context ctx, const char *dbstring)
 	}
 
 	if (!ctx->use_transactions && transactions != 0) {
-		fprintf(stderr, "[%d]: transaction aren't supported!\n", getpid());
+		fprintf(stderr, "[%d]: transactions aren't supported!\n", getpid());
 	}
 	if (transactions >= 0) {
 		ctx->use_transactions = transactions;

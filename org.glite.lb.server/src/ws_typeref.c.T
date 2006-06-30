@@ -603,7 +603,7 @@ int edg_wll_QueryCondsToSoap(
 	}
 
 	qc->__sizerecord = 0;
-	while ( in[qc->__sizerecord++].attr );
+	while ( in[qc->__sizerecord].attr ) qc->__sizerecord++;
 
 	if ( !qc->__sizerecord )
 		goto ret;
@@ -633,7 +633,7 @@ int edg_wll_SoapToQueryCondsExt(const struct lbt__queryConditions **in, int __si
 	edg_wll_QueryRec  **qr;
 
 	assert(out);
-	if ( !(qr = calloc(__sizecondition, sizeof(*qr))) ) return -1;
+	if ( !(qr = calloc(__sizecondition + 1, sizeof(*qr))) ) return -1;
 	for ( i = 0; i < __sizecondition; i++ )
 		if ( edg_wll_SoapToQueryConds(in[i], qr+i) ) goto err;
 
