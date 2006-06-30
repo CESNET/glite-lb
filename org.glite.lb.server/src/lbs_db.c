@@ -27,7 +27,8 @@ struct _edg_wll_Stmt {
 	edg_wll_Context	ctx;
 };
 
-edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx,char *cs)
+
+static edg_wll_ErrorCode db_connect(edg_wll_Context ctx, const char *cs, MYSQL **mysql)
 {
 	char	*buf = NULL;
 	char	*host,*user,*pw,*db; 
@@ -35,10 +36,10 @@ edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx,char *cs)
 
 	if (!cs) cs = DEFAULTCS;
 
-	if (!(ctx->mysql = (void *) mysql_init(NULL))) 
+	if (!(*mysql = mysql_init(NULL))) 
 		return edg_wll_SetError(ctx,ENOMEM,NULL);
 
-	mysql_options(ctx->mysql, MYSQL_READ_DEFAULT_FILE, "my");
+	mysql_options(*mysql, MYSQL_READ_DEFAULT_FILE, "my");
 
 	host = user = pw = db = NULL;
 
@@ -61,23 +62,80 @@ edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx,char *cs)
 	/* ljocha: CLIENT_FOUND_ROWS added to make authorization check
 	 * working in update_notif(). 
 	 * Hope it does not break anything else */ 
-	if (!mysql_real_connect((MYSQL *) ctx->mysql,host,user,pw,db,0,NULL,CLIENT_FOUND_ROWS)) {
+	if (!mysql_real_connect(*mysql,host,user,pw,db,0,NULL,CLIENT_FOUND_ROWS)) {
 		free(buf);
 		return my_err();
 	}
 
 	free(buf);
-#ifdef LBS_DB_PROFILE
-	fprintf(stderr, "[%d] use_transactions = %d\n", getpid(), ctx->use_transactions);
-#endif
 	return edg_wll_ResetError(ctx);
 }
 
+
+static void db_close(MYSQL *mysql) {
+	mysql_close(mysql);
+}
+
+
+static int transaction_test(edg_wll_Context ctx, MYSQL *m2) {
+	MYSQL *m1;
+	char *desc;
+	int retval;
+	edg_wll_ErrorCode err;
+
+	ctx->use_transactions = 1;
+
+	m1 = (MYSQL *)ctx->mysql;
+	edg_wll_ExecStmt(ctx, "drop table test", NULL);
+	if (edg_wll_ExecStmt(ctx, "create table test (item int)", NULL) != 0) goto err1;
+	if (edg_wll_Transaction(ctx) != 0) goto err2;
+	if (edg_wll_ExecStmt(ctx, "insert into test (item) values (1)", NULL) != 1) goto err2;
+
+	ctx->mysql = (void *)m2;
+	if ((retval = edg_wll_ExecStmt(ctx, "select item from test", NULL)) == -1) goto err2;
+	ctx->use_transactions = (retval == 0);
+
+	ctx->mysql = (void *)m1;
+	if (edg_wll_Commit(ctx) != 0) goto err2;
+	if (edg_wll_ExecStmt(ctx, "drop table test", NULL) != 0) goto err1;
+
+#ifdef LBS_DB_PROFILE
+	fprintf(stderr, "[%d] use_transactions = %d\n", getpid(), ctx->use_transactions);
+#endif
+
+	return 0;
+err2:
+	edg_wll_Error(ctx, &err, &desc);
+	edg_wll_ExecStmt(ctx, "drop table test", NULL);
+	edg_wll_SetError(ctx, err, desc);
+err1:
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+
+edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx, const char *cs)
+{
+	MYSQL *m2;
+	int errcode;
+
+	if ((errcode = db_connect(ctx, cs, (MYSQL **)&ctx->mysql)) == 0) {
+		if ((errcode = db_connect(ctx, cs, (MYSQL **)&m2)) == 0) {
+			errcode = transaction_test(ctx, m2);
+			db_close(m2);
+		}
+		if (errcode) edg_wll_DBClose(ctx);
+	}
+
+	return errcode;
+}
+
+
 void edg_wll_DBClose(edg_wll_Context ctx)
 {
-	mysql_close((MYSQL *) ctx->mysql);
+	db_close((MYSQL *) ctx->mysql);
 	ctx->mysql = NULL;
 }
+
 
 int edg_wll_ExecStmt(edg_wll_Context ctx,char *txt,edg_wll_Stmt *stmt)
 {
@@ -233,41 +291,32 @@ int edg_wll_DBCheckVersion(edg_wll_Context ctx)
 
 
 int edg_wll_Transaction(edg_wll_Context ctx) {
-	int err = 0;
-
 	if (ctx->use_transactions) {
-		err = edg_wll_ExecStmt(ctx, "set autocommit=0", NULL);
-		if (!err)
-			return edg_wll_ExecStmt(ctx, "begin", NULL);
+		if (edg_wll_ExecStmt(ctx, "set autocommit=0", NULL) < 0) goto err;
+		if (edg_wll_ExecStmt(ctx, "begin", NULL) < 0) goto err;
 	}
-
-	return err;
+err:
+	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 
 int edg_wll_Commit(edg_wll_Context ctx) {
-	int err = 0;
-
 	if (ctx->use_transactions) {
-		err = edg_wll_ExecStmt(ctx, "commit", NULL);
-		if (!err)
-			return edg_wll_ExecStmt(ctx, "set autocommit=1", NULL);
+		if (edg_wll_ExecStmt(ctx, "commit", NULL) < 0) goto err;
+		if (edg_wll_ExecStmt(ctx, "set autocommit=1", NULL) < 0) goto err;
 	}
-
-	return err;
+err:
+	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 
 int edg_wll_Rollback(edg_wll_Context ctx) {
-	int err = 0;
-
 	if (ctx->use_transactions) { 
-		err = edg_wll_ExecStmt(ctx, "rollback", NULL);
-		if (!err)
-			return edg_wll_ExecStmt(ctx, "set autocommit=1", NULL);
+		if (edg_wll_ExecStmt(ctx, "rollback", NULL) < 0) goto err;
+		if (edg_wll_ExecStmt(ctx, "set autocommit=1", NULL) < 0) goto err;
 	}
-
-	return err;
+err:
+	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 

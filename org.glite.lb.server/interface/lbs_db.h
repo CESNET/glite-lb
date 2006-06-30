@@ -20,7 +20,7 @@ typedef struct _edg_wll_Stmt *edg_wll_Stmt;
 
 edg_wll_ErrorCode edg_wll_DBConnect(
 	edg_wll_Context,	/* INOUT: */
-	char *		/* IN: connect string user/password@host:database */
+	const char *		/* IN: connect string user/password@host:database */
 );
 
 

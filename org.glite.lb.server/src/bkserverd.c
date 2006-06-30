@@ -120,6 +120,7 @@ static int				hardJobsLimit = 0;
 static int				hardEventsLimit = 0;
 static int				hardRespSizeLimit = 0;
 static char			   *dbstring = NULL,*fake_host = NULL;
+int        				transactions = -1;
 static int				fake_port = 0;
 static char			  **super_users = NULL;
 static int				slaves = 10,
@@ -177,11 +178,11 @@ static struct option opts[] = {
 #ifdef LB_PERF
 	{"perf-sink",           1, NULL,        'K'},
 #endif
-	{"transactions",	0,	NULL,	'b'},
+	{"transactions",	1,	NULL,	'b'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jzb"
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jzb:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -194,7 +195,7 @@ static void usage(char *me)
 {
 	fprintf(stderr,"usage: %s [option]\n"
 		"\t-a, --address\t use this server address (may be faked for debugging)\n"
-		"\t-b, --transactions\t use transactions\n"
+		"\t-b, --transactions\t transactions switch\n"
 		"\t-k, --key\t private key file\n"
 		"\t-c, --cert\t certificate file\n"
 		"\t-C, --CAdir\t trusted certificates directory\n"
@@ -285,6 +286,7 @@ struct clnt_data_t {
 #ifdef GLITE_LB_SERVER_WITH_WS
 	struct soap			   *soap;
 #endif	/* GLITE_LB_SERVER_WITH_WS */
+	int                         use_transactions;
 	void				   *mysql;
 	edg_wll_QueryRec	  **job_index;
 	edg_wll_IColumnRec	   *job_index_cols;
@@ -312,7 +314,6 @@ int main(int argc, char *argv[])
 	struct timeval		to;
 	int 			request_timeout = REQUEST_TIMEOUT;
 	int			silent = 0;
-	int			transactions = 0;
 
 
 
@@ -336,7 +337,7 @@ int main(int argc, char *argv[])
 
 	while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
 		case 'a': fake_host = strdup(optarg); break;
-		case 'b': transactions = 1; break;
+		case 'b': transactions = atoi(optarg); break;
 		case 'c': server_cert = optarg; break;
 		case 'k': server_key = optarg; break;
 		case 'C': cadir = optarg; break;
@@ -564,7 +565,6 @@ a.sin_addr.s_addr = INADDR_ANY;
 
 	/* Just check the database and let it be. The slaves do the job. */
 	edg_wll_InitContext(&ctx);
-	ctx->use_transactions = transactions;
 	wait_for_open(ctx, dbstring);
 
 	if (edg_wll_DBCheckVersion(ctx))
@@ -645,6 +645,7 @@ int bk_clnt_data_init(void **data)
 	if ( !dbstring ) dbstring = getenv("LBDB");
 	wait_for_open(ctx, dbstring);
 	cdata->mysql = ctx->mysql;
+	cdata->use_transactions = ctx->use_transactions;
 
 	if ( edg_wll_QueryJobIndices(ctx, &job_index, NULL) )
 	{
@@ -753,6 +754,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	/* Shared structures (pointers)
 	 */
 	ctx->mysql = cdata->mysql;
+	ctx->use_transactions = cdata->use_transactions;
 	ctx->job_index_cols = cdata->job_index_cols;
 	ctx->job_index = cdata->job_index; 
 	
@@ -1260,6 +1262,14 @@ static void wait_for_open(edg_wll_Context ctx, const char *dbstring)
 		free(dbfail_string2);
 		dprintf(("[%d]: DB connection established\n",getpid()));
 		if (!debug) syslog(LOG_INFO,"DB connection established\n");
+	}
+
+	if (!ctx->use_transactions && transactions != 0) {
+		fprintf(stderr, "[%d]: transaction aren't supported!\n", getpid());
+	}
+	if (transactions >= 0) {
+		ctx->use_transactions = transactions;
+		fprintf(stderr, "[%d]: transactions forced from %d to %d\n", getpid(), ctx->use_transactions, transactions);
 	}
 }
 
