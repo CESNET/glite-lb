@@ -76,7 +76,7 @@ int main(int argc,char **argv)
 
 	edg_wll_InitContext(&ctx);
 	if (edg_wll_Open(ctx,dbstring)) do_exit(ctx,EX_UNAVAILABLE);
-	if (edg_wll_DBCheckVersion(ctx)) do_exit(ctx,EX_SOFTWARE);
+	if (edg_wll_DBCheckVersion(ctx,dbstring)) do_exit(ctx,EX_SOFTWARE);
 	if (edg_wll_QueryJobIndices(ctx,&old_indices,&index_names)) do_exit(ctx,EX_SOFTWARE);
 
 	if (dump) {

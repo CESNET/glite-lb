@@ -79,54 +79,55 @@ static void db_close(MYSQL *mysql) {
 
 static int transaction_test(edg_wll_Context ctx, MYSQL *m2) {
 	MYSQL *m1;
-	char *desc;
+	char *desc, *cmd_create, *cmd_insert, *cmd_select, *cmd_drop;
 	int retval;
 	edg_wll_ErrorCode err;
+	pid_t pid;
 
 	ctx->use_transactions = 1;
+	pid = getpid();
+
+	asprintf(&cmd_create, "create table test%d (item int)", pid);
+	asprintf(&cmd_insert, "insert into test%d (item) values (1)", pid);
+	asprintf(&cmd_select, "select item from test%d", pid);
+	asprintf(&cmd_drop, "drop table test%d", pid);
 
 	m1 = (MYSQL *)ctx->mysql;
-	edg_wll_ExecStmt(ctx, "drop table test", NULL);
-	if (edg_wll_ExecStmt(ctx, "create table test (item int)", NULL) != 0) goto err1;
+	edg_wll_ExecStmt(ctx, cmd_drop, NULL);
+	if (edg_wll_ExecStmt(ctx, cmd_create, NULL) != 0) goto err1;
 	if (edg_wll_Transaction(ctx) != 0) goto err2;
-	if (edg_wll_ExecStmt(ctx, "insert into test (item) values (1)", NULL) != 1) goto err2;
+	if (edg_wll_ExecStmt(ctx, cmd_insert, NULL) != 1) goto err2;
 
 	ctx->mysql = (void *)m2;
-	if ((retval = edg_wll_ExecStmt(ctx, "select item from test", NULL)) == -1) goto err2;
+	if ((retval = edg_wll_ExecStmt(ctx, cmd_select, NULL)) == -1) goto err2;
 	ctx->use_transactions = (retval == 0);
 
 	ctx->mysql = (void *)m1;
 	if (edg_wll_Commit(ctx) != 0) goto err2;
-	if (edg_wll_ExecStmt(ctx, "drop table test", NULL) != 0) goto err1;
+	if (edg_wll_ExecStmt(ctx, cmd_drop, NULL) != 0) goto err1;
 
 #ifdef LBS_DB_PROFILE
 	fprintf(stderr, "[%d] use_transactions = %d\n", getpid(), ctx->use_transactions);
 #endif
 
-	return 0;
+	goto ok;
 err2:
-	edg_wll_Error(ctx, &err, &desc);
-	edg_wll_ExecStmt(ctx, "drop table test", NULL);
+	err = edg_wll_Error(ctx, NULL, &desc);
+	edg_wll_ExecStmt(ctx, cmd_drop, NULL);
 	edg_wll_SetError(ctx, err, desc);
 err1:
+ok:
+	free(cmd_create);
+	free(cmd_insert);
+	free(cmd_select);
+	free(cmd_drop);
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 
 edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx, const char *cs)
 {
-	MYSQL *m2;
-	int errcode;
-
-	if ((errcode = db_connect(ctx, cs, (MYSQL **)&ctx->mysql)) == 0) {
-		if ((errcode = db_connect(ctx, cs, (MYSQL **)&m2)) == 0) {
-			errcode = transaction_test(ctx, m2);
-			db_close(m2);
-		}
-		if (errcode) edg_wll_DBClose(ctx);
-	}
-
-	return errcode;
+	return db_connect(ctx, cs, (MYSQL **)&ctx->mysql);
 }
 
 
@@ -268,9 +269,10 @@ void edg_wll_FreeStmt(edg_wll_Stmt *stmt)
 	}
 }
 
-int edg_wll_DBCheckVersion(edg_wll_Context ctx)
+int edg_wll_DBCheckVersion(edg_wll_Context ctx, const char *cs)
 {
 	MYSQL	*m = (MYSQL *) ctx->mysql;
+	MYSQL	*m2;
 	const   char *ver_s = mysql_get_server_info(m);
 	int	major,minor,sub,version;
 
@@ -286,7 +288,14 @@ int edg_wll_DBCheckVersion(edg_wll_Context ctx)
 		return edg_wll_SetError(ctx,EINVAL,msg);
 	}
 
-	return edg_wll_ResetError(ctx);
+	edg_wll_ResetError(ctx);
+
+	if (db_connect(ctx, cs, &m2) == 0) {
+		transaction_test(ctx, m2);
+		db_close(m2);
+	}
+
+	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 

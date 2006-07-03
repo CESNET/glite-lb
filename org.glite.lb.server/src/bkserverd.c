@@ -120,7 +120,7 @@ static int				hardJobsLimit = 0;
 static int				hardEventsLimit = 0;
 static int				hardRespSizeLimit = 0;
 static char			   *dbstring = NULL,*fake_host = NULL;
-int        				transactions = -1;
+int        				transactions = -1, use_transactions = -1;
 static int				fake_port = 0;
 static char			  **super_users = NULL;
 static int				slaves = 10,
@@ -567,7 +567,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 	edg_wll_InitContext(&ctx);
 	wait_for_open(ctx, dbstring);
 
-	if (edg_wll_DBCheckVersion(ctx))
+	if (edg_wll_DBCheckVersion(ctx, dbstring))
 	{
 		char	*et,*ed;
 		edg_wll_Error(ctx,&et,&ed);
@@ -576,6 +576,14 @@ a.sin_addr.s_addr = INADDR_ANY;
 		return 1;
 	}
 	if (count_statistics) edg_wll_InitStatistics(ctx);
+	if (!ctx->use_transactions && transactions != 0) {
+		fprintf(stderr, "[%d]: transactions aren't supported!\n", getpid());
+	}
+	if (transactions >= 0) {
+		fprintf(stderr, "[%d]: transactions forced from %d to %d\n", getpid(), ctx->use_transactions, transactions);
+		ctx->use_transactions = transactions;
+	}
+	use_transactions = ctx->use_transactions;
 	edg_wll_Close(ctx);
 	edg_wll_FreeContext(ctx);
 
@@ -1264,13 +1272,7 @@ static void wait_for_open(edg_wll_Context ctx, const char *dbstring)
 		if (!debug) syslog(LOG_INFO,"DB connection established\n");
 	}
 
-	if (!ctx->use_transactions && transactions != 0) {
-		fprintf(stderr, "[%d]: transactions aren't supported!\n", getpid());
-	}
-	if (transactions >= 0) {
-		ctx->use_transactions = transactions;
-		fprintf(stderr, "[%d]: transactions forced from %d to %d\n", getpid(), ctx->use_transactions, transactions);
-	}
+	ctx->use_transactions = use_transactions;
 }
 
 static void free_hostent(struct hostent *h){
