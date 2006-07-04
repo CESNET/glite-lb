@@ -46,7 +46,7 @@ int main(int argc,char **argv)
 	edg_wll_InitContext(&ctx);
 	for (i = 1; i<EDG_WLL_NUMBER_OF_STATCODES; i++) jobs[i] = 0; 
 	if (edg_wll_Open(ctx,dbstring)) do_exit(ctx,EX_UNAVAILABLE);
-	if (edg_wll_DBCheckVersion(ctx)) do_exit(ctx,EX_SOFTWARE);
+	if (edg_wll_DBCheckVersion(ctx,dbstring)) do_exit(ctx,EX_SOFTWARE);
 	if (asprintf(&stmt,"SELECT status,count(status) FROM states GROUP BY status;") < 0) do_exit(ctx,EX_OSERR);
 	if (verbose) fprintf(stderr,"mysql query: %s\n",stmt);
 	if ((rows = edg_wll_ExecStmt(ctx,stmt,&sh)) < 0) do_exit(ctx,EX_SOFTWARE);
