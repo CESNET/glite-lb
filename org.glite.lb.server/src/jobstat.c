@@ -582,7 +582,7 @@ static edg_wll_ErrorCode states_values_embryonic(
 	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
 	parent_md5 = edg_wlc_JobIdGetUnique(parent_job);
 	stat_enc = enc_intJobStat(strdup(""), stat);
-	if (jobid_md5 || parent_md5 == NULL || stat_enc == NULL) goto err;
+	if (jobid_md5 == NULL || parent_md5 == NULL || stat_enc == NULL) goto err;
 
 
 	if (edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, stat, 1, icnames, &icvalues)) goto err;
@@ -594,7 +594,8 @@ static edg_wll_ErrorCode states_values_embryonic(
 
 err:
 	destroy_intJobStat(stat);
-	free(jobid_md5); free(stat_enc);
+	free(jobid_md5);
+	free(stat_enc);
 	free(parent_md5);
 	*values = stmt;
 	return edg_wll_Error(ctx,NULL,NULL);
@@ -605,8 +606,8 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
         edg_wlc_JobId parent_job)
 {
 	char *values = NULL;
-	char *stmt;
-	char *icnames, *icvalues;
+	char *stmt = NULL;
+	char *icnames = NULL;
 
 	if (states_values_embryonic(ctx, jobid, parent_job, &icnames, &values))
 		goto cleanup;
@@ -621,14 +622,15 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 			",parent_job%s) "
 		"values %s",
 		icnames, values);
-	free(icnames); free(icvalues);
 
 	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto cleanup;
 
 
 cleanup:
-	free(stmt); 
+	free(icnames);
 	free(values);
+	free(stmt); 
+
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 

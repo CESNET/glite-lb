@@ -41,6 +41,10 @@ else
 	STATIC_LIB_BK:=libglite_lb_bkserver.a
 endif
 
+ifdef LB_DAG_EMBRIONIC
+	LB_DAG_FLAGS:=-DLB_DAG_EMBRIONIC
+endif
+
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS 
 	NSMAP=LoggingAndBookkeeping.nsmap
@@ -81,7 +85,7 @@ CFLAGS:= \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
 	$(GRIDSITE_CFLAGS) \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS}
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} ${LB_DAG_FLAGS}
 
 ifdef LB_PROF
 	SRVBONES_LIB:= ${stagedir}/lib/libglite_lb_server_bones.la

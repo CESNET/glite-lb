@@ -40,7 +40,7 @@ static int store_seq(edg_wll_Context,edg_wll_Event *,int);
 static int check_dup(edg_wll_Context,edg_wll_Event *);
 static int check_auth(edg_wll_Context,edg_wll_Event *e); 
 static int register_subjobs(edg_wll_Context,const edg_wll_RegJobEvent *);
-static int register_subjobs_embriotic(edg_wll_Context,const edg_wll_RegJobEvent *);
+static int register_subjobs_embrionic(edg_wll_Context,const edg_wll_RegJobEvent *);
 
 void edg_wll_StoreAnonymous(edg_wll_Context ctx,int anon) {
 	ctx->allowAnonymous = anon;
@@ -198,7 +198,13 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		e->any.type == EDG_WLL_EVENT_REGJOB &&
 		(e->regJob.jobtype == EDG_WLL_REGJOB_DAG ||
 		 e->regJob.jobtype == EDG_WLL_REGJOB_PARTITIONED) &&
-		e->regJob.nsubjobs > 0) err = register_subjobs(ctx,&e->regJob);
+		e->regJob.nsubjobs > 0)  
+
+#ifdef LB_DAG_EMBRIONIC
+			err = register_subjobs_embrionic(ctx,&e->regJob);
+#else
+			err = register_subjobs(ctx,&e->regJob);
+#endif
 
 
 clean:
@@ -562,7 +568,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int register_subjobs_embriotic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
+static int register_subjobs_embrionic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 {
 	int	i,err;
 	edg_wlc_JobId	*subjobs;
