@@ -24,7 +24,7 @@ echo "-------------------------------------------"
 echo "a) events sent only by IPC"
 echo "b) events stored to files and sent by IPC"
 echo ""
-echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
@@ -52,7 +52,7 @@ rm -f /tmp/perftest.log.*
 # echo "d) lazy bkserver connection close"
 # echo "e) normal operation"
 # echo ""
-# echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+# echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 
 # PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf
 # LOGJOBS_ARGS="--nofile $COMM_ARGS"
@@ -91,7 +91,7 @@ echo "x) disabled sync and recovery"
 echo "d) lazy bkserver connection close"
 echo "e) normal operation"
 echo ""
-echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf
 LOGJOBS_ARGS=" $COMM_ARGS"
@@ -140,7 +140,7 @@ rm -f /tmp/perftest.log.*
 # echo "d) lazy bkserver connection close"
 # echo "e) normal operation"
 # echo ""
-# echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+# echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 
 # PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
 # CONSUMER_ARGS="-d --perf-sink=1"
@@ -187,7 +187,7 @@ echo "x) disabled sync and recovery"
 echo "d) lazy bkserver connection close"
 echo "e) normal operation"
 echo ""
-echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
 CONSUMER_ARGS="-d --perf-sink=1"

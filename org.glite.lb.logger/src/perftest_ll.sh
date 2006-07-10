@@ -29,7 +29,7 @@ d) glite-lb-logd-perf
 
 Number of jobs: $numjobs
 "
-echo -e "\tsmall_job \t big_job \t small_dag \t big_dag"
+echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 
 # a)
 echo -n "a)"
@@ -52,20 +52,23 @@ print_result
 # c)
 echo -n "c)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf
-CONSUMER_ARGS="-d -v --noIPC"
+CONSUMER_ARGS="-d -v --noIPC --file-prefix=/tmp/perftest.log"
 init_result
 run_test ll $numjobs
 print_result_ev
 print_result
+
+rm -f /tmp/perftest.log.*
 
 # d)
 echo -n "d)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
-CONSUMER_ARGS="-d -v"
+CONSUMER_ARGS="-d -v  -s /tmp/perftest.sock --file-prefix=/tmp/perftest.log"
 PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-logd-perf
-COMPONENT_ARGS="-d"
+COMPONENT_ARGS="-d -s /tmp/perftest.sock"
 init_result
 run_test ll $numjobs
 print_result_ev
 print_result
 
+rm -f /tmp/perftest.log.*
