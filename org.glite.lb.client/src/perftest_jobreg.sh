@@ -49,6 +49,7 @@ start_bkserver()
 
 	[ -n "$GLITE_LB_SERVER_PORT" ] && port="-p $GLITE_LB_SERVER_PORT"
         [ -n "$GLITE_LB_SERVER_WPORT" ] && wport="-w $GLITE_LB_SERVER_WPORT"
+        [ -n "$GLITE_LB_SERVER_TRANSACTION" ] && trans="-b $GLITE_LB_SERVER_TRANSACTION"
 
 	if [ -n "$1" ]; then
 		sink="--perf-sink $1"
@@ -58,7 +59,7 @@ start_bkserver()
 
 	echo -n "Starting glite-lb-bkserver ..."
 	$GLITE_LOCATION/bin/glite-lb-bkserverd \
-		$creds -i $pidfile $port $wport $maildir $sink\
+		$creds -i $pidfile $port $wport $maildir $sink $trans\
 		&& echo " done" || echo " FAILED"
 	echo
 }
@@ -205,8 +206,9 @@ sink_mode[2]=GLITE_LB_SINK_STORE
 sink_mode[3]=GLITE_LB_SINK_STATE
 sink_mode[4]=GLITE_LB_SINK_SEND
 
+test_glite_location;
 
-for i in 1 2 3 0; do
+for i in 1 2 3 4; do
 
 	start_proxy $i
 	test_ai proxy $i;
@@ -217,7 +219,7 @@ for i in 1 2 3 0; do
 	stop_bkserver;
 done
 
-echo "__________
+echo "__________"
 echo "GU (goal units) are millons of registrations per day, where registration is"
 echo "registration of job or subjob by client or server"
 echo
