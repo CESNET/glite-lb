@@ -16,6 +16,8 @@ DEBUG=${DEBUG:-0}
 # PERFTEST_COMPONENT=
 # COMPONENT_ARGS=
 # LOGJOBS_ARGS="" 
+COMM_ARGS="--file-prefix /tmp/perftest.log -p 45678"
+export EDG_WL_LOG_DESTINATION="localhost:45678"
 
 check_test_files || exit 1
 
@@ -34,28 +36,28 @@ echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 # a)
 echo -n "a)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf-nofile
-CONSUMER_ARGS="-d -v --noIPC --noParse"
+CONSUMER_ARGS="-d --noIPC --noParse $COMM_ARGS"
 init_result
 run_test ll $numjobs
-print_result_ev
+#print_result_ev
 print_result
 
 # b)
 echo -n "b)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf-nofile
-CONSUMER_ARGS="-d -v --noIPC"
+CONSUMER_ARGS="-d --noIPC $COMM_ARGS"
 init_result
 run_test ll $numjobs
-print_result_ev
+#print_result_ev
 print_result
 
 # c)
 echo -n "c)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf
-CONSUMER_ARGS="-d -v --noIPC --file-prefix=/tmp/perftest.log"
+CONSUMER_ARGS="-d --noIPC $COMM_ARGS"
 init_result
 run_test ll $numjobs
-print_result_ev
+#print_result_ev
 print_result
 
 rm -f /tmp/perftest.log.*
@@ -63,12 +65,12 @@ rm -f /tmp/perftest.log.*
 # d)
 echo -n "d)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
-CONSUMER_ARGS="-d -v  -s /tmp/perftest.sock --file-prefix=/tmp/perftest.log"
+CONSUMER_ARGS="-d -s /tmp/perftest.sock"
 PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-logd-perf
-COMPONENT_ARGS="-d -s /tmp/perftest.sock"
+COMPONENT_ARGS="-d -s /tmp/perftest.sock $COMM_ARGS"
 init_result
 run_test ll $numjobs
-print_result_ev
+#print_result_ev
 print_result
 
 rm -f /tmp/perftest.log.*
