@@ -32,6 +32,7 @@
 #include "lbs_db.h"
 #include "lock.h"
 #include "lb_authz.h"
+#include "jobstat.h"
 
 static int store_user(edg_wll_Context,const char *,const char *); 
 static int store_job(edg_wll_Context,const edg_wlc_JobId,const char *);
@@ -40,7 +41,7 @@ static int store_seq(edg_wll_Context,edg_wll_Event *,int);
 static int check_dup(edg_wll_Context,edg_wll_Event *);
 static int check_auth(edg_wll_Context,edg_wll_Event *e); 
 static int register_subjobs(edg_wll_Context,const edg_wll_RegJobEvent *);
-static int register_subjobs_embrionic(edg_wll_Context,const edg_wll_RegJobEvent *);
+static int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *);
 
 void edg_wll_StoreAnonymous(edg_wll_Context ctx,int anon) {
 	ctx->allowAnonymous = anon;
@@ -201,7 +202,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		e->regJob.nsubjobs > 0)  
 
 #ifdef LB_DAG_EMBRIONIC
-			err = register_subjobs_embrionic(ctx,&e->regJob);
+			err = register_subjobs_embryonic(ctx,&e->regJob);
 #else
 			err = register_subjobs(ctx,&e->regJob);
 #endif
@@ -568,11 +569,12 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int register_subjobs_embrionic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
+static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 {
-	int	i,err;
+	int		i, err = 0;
 	edg_wlc_JobId	*subjobs;
 	struct timeval	now;
+	char		*userid = strdup(strmd5(e->user,NULL));
 
 
 	edg_wll_ResetError(ctx);
@@ -592,9 +594,16 @@ static int register_subjobs_embrionic(edg_wll_Context ctx,const edg_wll_RegJobEv
 	for (i=0; i<e->nsubjobs; i++) {
 		char		*et,*ed,*job_s;
 
-
-		if ((err = edg_wll_StoreIntStateEmbryonic(ctx, subjobs[i], e->jobId)))
+		/* save jobid-userid relation into jobs table */
+	        if ((err = store_job(ctx, subjobs[i], userid)))
 			edg_wll_Error(ctx,&et,&ed);
+
+		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, subjobs[i], e)))
+			edg_wll_Error(ctx,&et,&ed);
+
+job_s = edg_wlc_JobIdUnparse(subjobs[i]);
+printf("%s\n", job_s);
+free(job_s);
 
 		if (err) {
 			job_s = edg_wlc_JobIdUnparse(subjobs[i]);

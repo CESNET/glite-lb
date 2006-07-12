@@ -38,11 +38,7 @@
 static void warn (const char* format, ...) UNUSED_VAR ;
 static char *job_owner(edg_wll_Context,char *);
 
-int edg_wll_intJobStatus(edg_wll_Context, const edg_wlc_JobId, int, intJobStat *, int);
-edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context, intJobStat *, int);
-edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context, edg_wlc_JobId, edg_wlc_JobId);
-static edg_wll_ErrorCode states_values_embryonic(edg_wll_Context, edg_wlc_JobId, edg_wlc_JobId, char **, char**);
-edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context , edg_wlc_JobId , int, intJobStat **);
+static edg_wll_ErrorCode states_values_embryonic(edg_wll_Context, edg_wlc_JobId,  const edg_wll_RegJobEvent *e, char **, char**);
 
 int js_enable_store = 1;
 
@@ -564,7 +560,7 @@ cleanup:
 static edg_wll_ErrorCode states_values_embryonic(
 	edg_wll_Context ctx,
 	edg_wlc_JobId jobid,
-	edg_wlc_JobId parent_job,
+	const edg_wll_RegJobEvent *e,
 	char **icnames,
 	char **values)
 {
@@ -576,11 +572,13 @@ static edg_wll_ErrorCode states_values_embryonic(
 
 	init_intJobStat(stat);
 	if (edg_wlc_JobIdDup(jobid, &stat->pub.jobId) ||
-		edg_wlc_JobIdDup(parent_job, &stat->pub.parent_job)) goto err;
+		edg_wlc_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
 	stat->pub.state = EDG_WLL_JOB_SUBMITTED;
+	stat->pub.owner = strdup(e->user);
+	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
 
 	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
-	parent_md5 = edg_wlc_JobIdGetUnique(parent_job);
+	parent_md5 = edg_wlc_JobIdGetUnique(e->jobId);
 	stat_enc = enc_intJobStat(strdup(""), stat);
 	if (jobid_md5 == NULL || parent_md5 == NULL || stat_enc == NULL) goto err;
 
@@ -603,13 +601,13 @@ err:
 
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
         edg_wlc_JobId jobid,
-        edg_wlc_JobId parent_job)
+        const edg_wll_RegJobEvent *e)
 {
 	char *values = NULL;
 	char *stmt = NULL;
 	char *icnames = NULL;
 
-	if (states_values_embryonic(ctx, jobid, parent_job, &icnames, &values))
+	if (states_values_embryonic(ctx, jobid, e, &icnames, &values))
 		goto cleanup;
 
 /* TODO
