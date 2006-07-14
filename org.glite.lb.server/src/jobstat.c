@@ -18,10 +18,10 @@
 #include "store.h"
 #include "lock.h"
 #include "index.h"
+#include "lbs_db.h"
 #include "jobstat.h"
 #include "lb_authz.h"
 #include "stats.h"
-
 
 #define DAG_ENABLE	1
 
@@ -585,7 +585,7 @@ static edg_wll_ErrorCode states_values_embryonic(
 
 	if (edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, stat, 1, icnames, &icvalues)) goto err;
 	trio_asprintf(&stmt,
-		"('%|Ss',%d,%d,'%|Ss','%|Ss','%|Ss'%s)",
+		"'%|Ss',%d,%d,'%|Ss','%|Ss','%|Ss'%s",
 		jobid_md5, stat->pub.state, 1, stat_enc,
 		INTSTAT_VERSION, parent_md5, icvalues);
 	free(icvalues);
@@ -601,7 +601,8 @@ err:
 
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
         edg_wlc_JobId jobid,
-        const edg_wll_RegJobEvent *e)
+        const edg_wll_RegJobEvent *e,
+	edg_wll_bufInsert *bi)
 {
 	char *values = NULL;
 	char *stmt = NULL;
@@ -614,15 +615,21 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 		edg_wll_UpdateStatistics(ctx, NULL, e, &jobstat.pub);
 		if (ctx->rgma_export) write2rgma_status(&jobstat.pub);
 */
+
+#ifdef LB_BUF
+	if (edg_wll_bufferedInsert(bi, &values))
+		goto cleanup;
+#else
+
 	trio_asprintf(&stmt,
 		"insert into states"
 		"(jobid,status,seq,int_status,version"
 			",parent_job%s) "
-		"values %s",
+		"values (%s)",
 		icnames, values);
 
 	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto cleanup;
-
+#endif
 
 cleanup:
 	free(icnames);

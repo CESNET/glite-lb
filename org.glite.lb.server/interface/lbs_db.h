@@ -30,15 +30,12 @@ edg_wll_ErrorCode edg_wll_DBConnect(
 typedef struct _edg_wll_bufInsert {
 	edg_wll_Context ctx;
 	char	*table_name;
-	int	num_cols;
-	char	**columns;	/* names of columns to be inserted into */
+	char	*columns;	/* names of columns to be inserted into 
+				 * (values separated with commas) */
+	char	**rows;		/* each row hold string of one row to be inserted
+				 * (values separated with commas) */
 	long	rec_num, 	/* actual number of rows in structure */
 		rec_size;	/* approx. size of a real insert string */
-	long	*row_len;	/* array holding length of each row */
-	long	*row_alloc;	/* size of allocated space for each row */
-	char	**values;	/* each row hold long string with values
-				 * inserting into one column separated with 
-				 * commas */
 	long	size_limit, 	/* size and # of records limit which trigger */
 		record_limit;	/* real insert; zero means unlimitted */
 } edg_wll_bufInsert;
@@ -110,18 +107,18 @@ int edg_wll_Rollback(edg_wll_Context ctx);
 /**
  * Init data structure for buffered insert
  *
- * takes num_cols string parameters as names of columns to be inserted into
+ * takes table_name and columns string for future multirow insert
  * when insert string oversize size_limit or number of rows to be inserted
  * overcome record_limit, the real insert is triggered
  */
-int edg_wll_bufferedInsertInit(edg_wll_Context ctx, edg_wll_bufInsert *bi, void *mysql, char *table_name, long size_limit, long record_limit, int num_cols, ...);
+edg_wll_ErrorCode edg_wll_bufferedInsertInit(edg_wll_Context ctx, edg_wll_bufInsert *bi, void *mysql, char *table_name, long size_limit, long record_limit, char * columns);
 
 /**
  * adds row of n values into n columns into an insert buffer
  * if num. of rows or size of data oversteps the limits, real
  * multi-row insert is done
  */
-edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, ...);
+edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, char **row);
 
 /**
  * flush buffered data and free bi structure

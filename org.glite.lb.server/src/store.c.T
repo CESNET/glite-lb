@@ -36,6 +36,7 @@
 
 static int store_user(edg_wll_Context,const char *,const char *); 
 static int store_job(edg_wll_Context,const edg_wlc_JobId,const char *);
+static int store_job_block(edg_wll_Context, const edg_wlc_JobId, const char *, edg_wll_bufInsert *);
 static int store_flesh(edg_wll_Context,edg_wll_Event *,char *,int);
 static int store_seq(edg_wll_Context,edg_wll_Event *,int);
 static int check_dup(edg_wll_Context,edg_wll_Event *);
@@ -256,6 +257,27 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 			edg_wll_ResetError(ctx);
 	}
 	free(stmt);
+	free(jobstr);
+	free(jobid);
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const char *userid, edg_wll_bufInsert *bi)
+{
+	char *jobstr = edg_wlc_JobIdUnparse(job);
+	char *jobid = edg_wlc_JobIdGetUnique(job);
+	char *row;
+
+/* debug Duplicate key on index: Duplicate entry '(nil)' for key 1
+ */
+	if (jobid == NULL || jobstr == NULL) 
+		return edg_wll_SetError(ctx,EINVAL,"store_jobi_block()");
+
+	edg_wll_ResetError(ctx);
+
+	trio_asprintf(&row, "'%|Ss','%|Ss','%|Ss'", jobid,jobstr,userid);
+	edg_wll_bufferedInsert(bi, &row); // no need to free row
+
 	free(jobstr);
 	free(jobid);
 	return edg_wll_Error(ctx,NULL,NULL);
@@ -571,13 +593,32 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 
 static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 {
-	int		i, err = 0;
-	edg_wlc_JobId	*subjobs;
-	struct timeval	now;
-	char		*userid = strdup(strmd5(e->user,NULL));
+	int			i, err = 0;
+	edg_wlc_JobId		*subjobs;
+	struct timeval		now;
+	char			*userid = strdup(strmd5(e->user,NULL));
+	edg_wll_bufInsert	bi_j, bi_s;
+	edg_wll_bufInsert	*bi_jobs = &bi_j, *bi_states = &bi_s;
 
 
 	edg_wll_ResetError(ctx);
+
+#ifdef LB_BUF
+	/* init multirows insert mechanism for tables used here */
+	if (edg_wll_bufferedInsertInit(ctx, bi_jobs, NULL, "jobs", 100000, 1000,
+		"jobid, dg_jobid, userid"))
+	{
+		return edg_wll_SetError(ctx, EINVAL, "edg_wll_bufferedInsertInit()");
+	}
+	if (edg_wll_bufferedInsertInit(ctx, bi_states, NULL, "states", 1000000, 1000, 
+		"jobid, status, seq,int_status, version, parent_job, `STD_location`,"
+		"`STD_owner`, `STD_destination`, `TIME_Cleared`, `TIME_Aborted`,"
+		"`TIME_Cancelled`, `TIME_Submitted`"))
+	{
+                return edg_wll_SetError(ctx, EINVAL, "edg_wll_bufferedInsertInit()");
+	}
+#endif		
+
 	if (e->nsubjobs == 0) return 0;
 	if (e->nsubjobs < 0) return edg_wll_SetError(ctx,EINVAL,"negative number of subjobs");
 
@@ -595,15 +636,19 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 		char		*et,*ed,*job_s;
 
 		/* save jobid-userid relation into jobs table */
+#ifdef LB_BUF
+	        if ((err = store_job_block(ctx, subjobs[i], userid, bi_jobs)))
+#else
 	        if ((err = store_job(ctx, subjobs[i], userid)))
+#endif
 			edg_wll_Error(ctx,&et,&ed);
 
-		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, subjobs[i], e)))
+		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, subjobs[i], e, bi_states)))
 			edg_wll_Error(ctx,&et,&ed);
 
-job_s = edg_wlc_JobIdUnparse(subjobs[i]);
-printf("%s\n", job_s);
-free(job_s);
+//job_s = edg_wlc_JobIdUnparse(subjobs[i]);
+//printf("%s\n", job_s);
+//free(job_s);
 
 		if (err) {
 			job_s = edg_wlc_JobIdUnparse(subjobs[i]);
@@ -616,6 +661,12 @@ free(job_s);
 	}
 
 	free(subjobs);
+
+#ifdef LB_BUF
+	/* commit the rest of multirows insert and clean structures */
+	edg_wll_bufferedInsertClose(bi_jobs);
+	edg_wll_bufferedInsertClose(bi_states);
+#endif
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
