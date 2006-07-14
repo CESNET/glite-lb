@@ -139,7 +139,7 @@ int edg_wll_Transaction(edg_wll_Context ctx) { return 0; }
 int edg_wll_Commit(edg_wll_Context ctx) { return 0; }
 int edg_wll_Rollback(edg_wll_Context ctx) { return 0; }
 
-
+edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, char **row)  { return (edg_wll_ErrorCode) 0; };
 	
 }
 
