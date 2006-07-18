@@ -250,7 +250,7 @@ else
     PLUGIN_LIB=glite_lb_plugin.la
 endif
 
-compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB}
+compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c
 
 
 check: compile test.xml test.query

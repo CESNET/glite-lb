@@ -408,13 +408,11 @@ static int flush_bufferd_insert(edg_wll_bufInsert *bi)
  * adds row of n values into n columns into an insert buffer
  * if num. of rows or size of data oversteps the limits, real
  * multi-row insert is done
- * Eats the row! No need to free it after the call :)
  */
-edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, char **row)
+edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, char *row)
 {
-	bi->rows[bi->rec_num++] = *row;
-	bi->rec_size += strlen(*row);
-	*row = NULL;	// just to avoid freeing by caller function
+	bi->rows[bi->rec_num++] = strdup(row);
+	bi->rec_size += strlen(row);
 
 	if ((bi->size_limit && bi->rec_size >= bi->size_limit) ||
 		(bi->record_limit && bi->rec_num >= bi->record_limit))
@@ -442,7 +440,6 @@ edg_wll_ErrorCode edg_wll_bufferedInsertClose(edg_wll_bufInsert *bi)
 	if (flush_bufferd_insert(bi))
 		return edg_wll_Error(bi->ctx,NULL,NULL);
 	free_buffered_insert(bi);
-
 
 	return edg_wll_ResetError(bi->ctx);
 }

@@ -38,7 +38,6 @@
 static void warn (const char* format, ...) UNUSED_VAR ;
 static char *job_owner(edg_wll_Context,char *);
 
-static edg_wll_ErrorCode states_values_embryonic(edg_wll_Context, edg_wlc_JobId,  const edg_wll_RegJobEvent *e, char **, char**);
 
 int js_enable_store = 1;
 
@@ -553,63 +552,13 @@ cleanup:
 }
 
 
-/*
- * Returns encoded SQL table states record for embryonic DAG subjob
- */
-
-static edg_wll_ErrorCode states_values_embryonic(
-	edg_wll_Context ctx,
-	edg_wlc_JobId jobid,
-	const edg_wll_RegJobEvent *e,
-	char **icnames,
-	char **values)
-{
-	char *jobid_md5, *stat_enc, *parent_md5;
-	char *stmt = NULL;
-	char *icvalues;
-	intJobStat stat_rec;
-	intJobStat *stat = &stat_rec;
-
-	init_intJobStat(stat);
-	if (edg_wlc_JobIdDup(jobid, &stat->pub.jobId) ||
-		edg_wlc_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
-	stat->pub.state = EDG_WLL_JOB_SUBMITTED;
-	stat->pub.owner = strdup(e->user);
-	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
-
-	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
-	parent_md5 = edg_wlc_JobIdGetUnique(e->jobId);
-	stat_enc = enc_intJobStat(strdup(""), stat);
-	if (jobid_md5 == NULL || parent_md5 == NULL || stat_enc == NULL) goto err;
-
-
-	if (edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, stat, 1, icnames, &icvalues)) goto err;
-	trio_asprintf(&stmt,
-		"'%|Ss',%d,%d,'%|Ss','%|Ss','%|Ss'%s",
-		jobid_md5, stat->pub.state, 1, stat_enc,
-		INTSTAT_VERSION, parent_md5, icvalues);
-	free(icvalues);
-
-err:
-	destroy_intJobStat(stat);
-	free(jobid_md5);
-	free(stat_enc);
-	free(parent_md5);
-	*values = stmt;
-	return edg_wll_Error(ctx,NULL,NULL);
-}
-
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
         edg_wlc_JobId jobid,
-        const edg_wll_RegJobEvent *e,
+        char *icnames, 
+	char *values,
 	edg_wll_bufInsert *bi)
 {
-	char *values = NULL;
 	char *stmt = NULL;
-	char *icnames = NULL;
-
-	if (states_values_embryonic(ctx, jobid, e, &icnames, &values))
-		goto cleanup;
 
 /* TODO
 		edg_wll_UpdateStatistics(ctx, NULL, e, &jobstat.pub);
@@ -617,7 +566,7 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 */
 
 #ifdef LB_BUF
-	if (edg_wll_bufferedInsert(bi, &values))
+	if (edg_wll_bufferedInsert(bi, values))
 		goto cleanup;
 #else
 
@@ -632,8 +581,6 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 #endif
 
 cleanup:
-	free(icnames);
-	free(values);
 	free(stmt); 
 
 	return edg_wll_Error(ctx,NULL,NULL);

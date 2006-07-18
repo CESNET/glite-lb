@@ -118,7 +118,7 @@ edg_wll_ErrorCode edg_wll_bufferedInsertInit(edg_wll_Context ctx, edg_wll_bufIns
  * if num. of rows or size of data oversteps the limits, real
  * multi-row insert is done
  */
-edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, char **row);
+edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, char *row);
 
 /**
  * flush buffered data and free bi structure
