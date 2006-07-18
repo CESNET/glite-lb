@@ -644,7 +644,7 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 	edg_wlc_JobId		*subjobs;
 	struct timeval		now;
 	char			*userid = strdup(strmd5(e->user,NULL));
-	char			*jobid_md5, *jobid_md5_old;
+	char			*jobid_md5, *jobid_md5_old, *states_cols;
 	size_t			jobid_len;
 	edg_wll_bufInsert	bi_j, bi_s;
 	edg_wll_bufInsert	*bi_jobs = &bi_j, *bi_states = &bi_s;
@@ -673,15 +673,12 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 		return edg_wll_SetError(ctx, EINVAL, "edg_wll_bufferedInsertInit()");
 	}
 
-// XXX: use icnames here
-
-	if (edg_wll_bufferedInsertInit(ctx, bi_states, NULL, "states", 4000, 1000,
-		"jobid, status, seq,int_status, version, parent_job, `STD_location`,"
-		"`STD_owner`, `STD_destination`, `TIME_Cleared`, `TIME_Aborted`,"
-		"`TIME_Cancelled`, `TIME_Submitted`"))
+	asprintf(&states_cols,"jobid, status, seq,int_status, version, parent_job%s", icnames);
+	if (edg_wll_bufferedInsertInit(ctx, bi_states, NULL, "states", 4000, 1000, states_cols))
 	{
                 return edg_wll_SetError(ctx, EINVAL, "edg_wll_bufferedInsertInit()");
 	}
+	free(states_cols);
 #endif		
 
 
