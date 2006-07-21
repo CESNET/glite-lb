@@ -1,0 +1,473 @@
+Index: org.glite/project/global.dependencies.properties
+===================================================================
+RCS file: /cvs/jra1mw/org.glite/project/global.dependencies.properties,v
+retrieving revision 1.479.2.77.2.4.2.1.4.2.2.6.2.1.2.4
+diff -u -r1.479.2.77.2.4.2.1.4.2.2.6.2.1.2.4 global.dependencies.properties
+--- org.glite/project/global.dependencies.properties	14 Jul 2006 14:29:45 -0000	1.479.2.77.2.4.2.1.4.2.2.6.2.1.2.4
++++ org.glite/project/global.dependencies.properties	21 Jul 2006 09:57:26 -0000
+@@ -1617,7 +1617,26 @@
+ ext.globus-sdk.rpm.name    = vdt_globus_sdk
+ ext.globus-sdk.rpm.version = ${ext.vdt.version}
+ ext.globus-sdk.rpm.age     = 1
+-                                      
++  
++# Globus vdt data server - grid ftp server
++ext.globus-data-server.name           = ${ext.globus.name}
++ext.globus-data-server.vendor         = ${ext.globus.vendor}
++ext.globus-data-server.version                = ${ext.globus.version}
++ext.globus-data-server.platform               = ${platform}
++ext.globus-data-server.subdir         = ${ext.globus-data-server.name}/${ext.globus-data-server.version}/${ext.globus-data-server.platform}
++ext.globus-data-server.rep.base               = ${jra1.rep.base}
++ext.globus-data-server.rep.file               =
++ext.globus-data-server.rep.subdir     =
++ext.globus-data-server.rep.url                = ${ext.globus-data-server.rep.base}/${ext.globus-data-server.subdir}/${ext.globus-data-server.rep.subdir}/${ext.globus-data-server.rep.file}
++ext.globus-data-server.files          =
++ext.globus-data-server.download               = http://www.cs.wisc.edu/vdt/releases/1.2.2/installing-rpms.html
++ext.globus-data-server.homepage               = http://www.cs.wisc.edu/vdt//index.html
++ext.globus-data-server.description    = The Globus Toolkit(R). This is the version packaged by VDT.
++ext.globus-data-server.rpm.name       = vdt_globus_data_server
++ext.globus-data-server.rpm.version    = ${ext.vdt.version}
++ext.globus-data-server.rpm.age                = 1
++
++                                    
+ # GPT
+ ext.gpt.name        = gpt
+ ext.gpt.vendor      = gpt
+@@ -3338,7 +3357,7 @@
+ org.glite.dgas.version                          = glite-dgas_R_1_1_16
+ org.glite.gpbox.version                         = glite-gpbox_R_1_0_15
+ org.glite.jdl.version                           = glite-jdl_R_1_0_0
+-org.glite.jp.version                            = glite-jp_R_1_1_3
++org.glite.jp.version                            = glite-jp_R_1_3_0
+ org.glite.lb.version                            = glite-lb_R_1_2_11
+ org.glite.rgma.version                          = glite-rgma_R_5_0_43
+ org.glite.security.version                      = glite-security_R_3_0_21
+Index: org.glite.deployment/build.xml
+===================================================================
+RCS file: /cvs/jra1mw/org.glite.deployment/build.xml,v
+retrieving revision 1.61.2.2.2.12.2.26
+diff -u -r1.61.2.2.2.12.2.26 build.xml
+--- org.glite.deployment/build.xml	24 Apr 2006 13:39:27 -0000	1.61.2.2.2.12.2.26
++++ org.glite.deployment/build.xml	21 Jul 2006 09:57:26 -0000
+@@ -1619,6 +1619,39 @@
+ 		</if>
+  	</target>
+ 
++	<target name="jpps" unless="setenvonly" depends="envset,config">
++		<if>
++			<isset property="small.memory"/>
++			<then>
++				<exec dir="${deployment.subsystem.dir}.jpps" executable="${antExec}" failonerror="${failonerror}">
++					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot; &quot;-Dbuild.name=${build.name}&quot;"/>
++				</exec>
++			</then>
++			<else>
++				<ant dir="${deployment.subsystem.dir}.jpps"
++        				target="${target}"
++        				inheritall="false" />
++			</else>
++		</if>
++ 	</target>
++
++
++	<target name="jpis" unless="setenvonly" depends="envset,config">
++		<if>
++			<isset property="small.memory"/>
++			<then>
++				<exec dir="${deployment.subsystem.dir}.jpis" executable="${antExec}" failonerror="${failonerror}">
++					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot; &quot;-Dbuild.name=${build.name}&quot;"/>
++				</exec>
++			</then>
++			<else>
++				<ant dir="${deployment.subsystem.dir}.jpis"
++        				target="${target}"
++        				inheritall="false" />
++			</else>
++		</if>
++ 	</target>
++
+ 	<target name="io-server" unless="setenvonly" depends="envset,config">
+ 		<if>
+ 			<isset property="small.memory"/>
+@@ -1730,6 +1763,8 @@
+ 					wn,
+ 					wms,
+ 					lb,
++					jpps,
++					jpis,
+ 					io-server,
+ 					io-client,
+ 					ce,
+Index: org.glite.deployment/project/dependencies.properties
+===================================================================
+RCS file: /cvs/jra1mw/org.glite.deployment/project/dependencies.properties,v
+retrieving revision 1.526.2.5.2.127.2.415.2.118
+diff -u -r1.526.2.5.2.127.2.415.2.118 dependencies.properties
+--- org.glite.deployment/project/dependencies.properties	27 Jun 2006 10:35:43 -0000	1.526.2.5.2.127.2.415.2.118
++++ org.glite.deployment/project/dependencies.properties	21 Jul 2006 09:57:26 -0000
+@@ -80,6 +80,10 @@
+ 				
+ 	org.glite.deployment.lb.version				= glite-deployment-lb_R_2_2_4
+ 				
++	org.glite.deployment.jpis.version				= HEAD
++
++	org.glite.deployment.jpps.version				= HEAD
++
+ 	org.glite.deployment.glite-WMSLB.version				= glite-deployment-glite-WMSLB_R_2_4_2
+ 				
+ 	org.glite.deployment.wn.version				= glite-deployment-wn_R_2_3_8
+Index: org.glite.deployment/project/glite.deployment.csf.xml
+===================================================================
+RCS file: /cvs/jra1mw/org.glite.deployment/project/glite.deployment.csf.xml,v
+retrieving revision 1.44.2.1.2.11.2.24
+diff -u -r1.44.2.1.2.11.2.24 glite.deployment.csf.xml
+--- org.glite.deployment/project/glite.deployment.csf.xml	18 Apr 2006 15:42:14 -0000	1.44.2.1.2.11.2.24
++++ org.glite.deployment/project/glite.deployment.csf.xml	21 Jul 2006 09:57:26 -0000
+@@ -667,6 +667,14 @@
+ 			<equals arg1="${org.glite.deployment.lb.version}" arg2="HEAD" />
+ 		</condition>
+ 
++		<condition property="jpps.head">
++			<equals arg1="${org.glite.deployment.jpps.version}" arg2="HEAD" />
++		</condition>
++
++		<condition property="jpis.head">
++			<equals arg1="${org.glite.deployment.jpis.version}" arg2="HEAD" />
++		</condition>
++
+ 		<condition property="io-server.head">
+ 			<equals arg1="${org.glite.deployment.io-server.version}" arg2="HEAD" />
+ 		</condition>
+@@ -1571,6 +1579,28 @@
+ 			tag="${org.glite.deployment.lb.version}" />
+ 	</target>
+ 
++	<!-- jpps component -->
++	<target name="jpps" depends="get.jpps.head, get.jpps.tag"/>
++	<target name="get.jpps.head" if="jpps.head">
++        	<cvs-co package="org.glite.deployment.jpps" />
++        </target>
++
++	<target name="get.jpps.tag" unless="jpps.head">
++		<cvs-co package="org.glite.deployment.jpps"
++			tag="${org.glite.deployment.jpps.version}" />
++	</target>
++
++	<!-- jpis component -->
++	<target name="jpis" depends="get.jpis.head, get.jpis.tag"/>
++	<target name="get.jpis.head" if="jpis.head">
++        	<cvs-co package="org.glite.deployment.jpis" />
++        </target>
++
++	<target name="get.jpis.tag" unless="jpis.head">
++		<cvs-co package="org.glite.deployment.jpis"
++			tag="${org.glite.deployment.jpis.version}" />
++	</target>
++
+ 	<!-- io-server component -->
+ 	<target name="io-server" depends="get.io-server.head, get.io-server.tag"/>
+ 	<target name="get.io-server.head" if="io-server.head">
+@@ -1667,6 +1697,8 @@
+ 					wn,
+ 					wms,
+ 					lb,
++					jpis,
++					jpps,
+ 					io-server,
+ 					io-client,
+ 					ce" />
+Index: org.glite.deployment.lb/config/scripts/glite-lb-config.py
+===================================================================
+RCS file: /cvs/jra1mw/org.glite.deployment.lb/config/scripts/glite-lb-config.py,v
+retrieving revision 1.65.2.4
+diff -u -r1.65.2.4 glite-lb-config.py
+--- org.glite.deployment.lb/config/scripts/glite-lb-config.py	26 May 2006 12:24:22 -0000	1.65.2.4
++++ org.glite.deployment.lb/config/scripts/glite-lb-config.py	21 Jul 2006 09:57:26 -0000
+@@ -129,7 +129,12 @@
+     
+             if not os.path.exists('/tmp/mysql.sock'):
+                 os.symlink('/var/lib/mysql/mysql.sock', '/tmp/mysql.sock')
+-            
++
++
++        #-------------------------------------------------------------------
++        # start bkserver
++        #-------------------------------------------------------------------
++
+         pid = glib.getPID('bkserverd')
+         if pid != 0:
+             print 'The gLite LB Server service is already running. Restarting...'
+@@ -142,7 +147,7 @@
+         pid = glib.getPID('bkserverd')
+ 
+         if (pid != 0):
+-            print "The gLite LB Server service has been started               ",
++            print "The gLite LB Server service has been started              ",
+             glib.printOkMessage()
+         else:
+             glib.printErrorMessage("Could not start the gLite LB Server service")
+@@ -151,6 +156,36 @@
+             return 1
+         
+         #-------------------------------------------------------------------
++        # start jp-importer, if enabled
++        #-------------------------------------------------------------------
++
++        lb_export = 0
++        if params.has_key('lb.export.enabled'):
++            if params['lb.export.enabled'] == "true":
++                lb_export = 1
++
++        if lb_export:
++            pid = glib.getPID('jp-importer')
++            if pid != 0:
++                print 'The gLite JP Importer service is already running. Restarting...'
++                os.system('%s/etc/init.d/glite-jp-importer stop' % os.environ['GLITE_LOCATION'])
++            else:
++                print 'Starting the gLite JP Importer service...'
++
++            os.system('%s/etc/init.d/glite-jp-importer start' % os.environ['GLITE_LOCATION'])
++
++            pid = glib.getPID('jp-importer')
++
++            if (pid != 0):
++                print "The gLite JP Importer service has been started            ",
++                glib.printOkMessage()
++            else:
++                glib.printErrorMessage("Could not start the gLite JP Importer service")
++                glib.printErrorMessage("Please verify and re-run the script                        "),
++                glib.printFailedMessage()
++                return 1
++        
++        #-------------------------------------------------------------------
+         # Start Servicetool
+         #-------------------------------------------------------------------
+ 
+@@ -170,6 +205,10 @@
+         if (pid != 0):
+             os.system('%s/etc/init.d/glite-lb-bkserverd stop' % os.environ['GLITE_LOCATION'])
+ 
++        #-------------------------------------------------------------------
++        # Book Keeping Server
++        #-------------------------------------------------------------------
++
+         pid = glib.getPID('bkserverd')
+         if (pid != 0):
+             print 'Could not stop the LB Server service            ',
+@@ -180,6 +219,25 @@
+             glib.printOkMessage()
+         
+         #-------------------------------------------------------------------
++        # JP Importer
++        #-------------------------------------------------------------------
++
++        pid = glib.getPID('jp-importer')
++        if (pid != 0):
++            os.system('%s/etc/init.d/glite-jp-importer stop' % os.environ['GLITE_LOCATION'])
++
++        pid = glib.getPID('jp-importer')
++        if (pid != 0):
++            print 'Could not stop the JP Importer service                  ',
++            glib.printFailedMessage()
++            error_level = 1
++        else:
++            if params.has_key('lb.export.enabled'):
++                if params['lb.export.enabled'] == "true":
++                    print 'The JP Importer service has been stopped                  ',
++                    glib.printOkMessage()
++        
++        #-------------------------------------------------------------------
+         # MySQL
+         #-------------------------------------------------------------------
+ 
+@@ -204,6 +262,10 @@
+         if retval != 0:
+             error_level = 1
+ 
++        retval = os.system('%s/etc/init.d/glite-jp-importer status' % os.environ['GLITE_LOCATION'])
++        if retval != 0:
++            error_level = 1
++
+         #-------------------------------------------------------------------
+         # Servicetool
+         #-------------------------------------------------------------------
+@@ -334,7 +396,27 @@
+             print "\n==> MySQL database %s already exist\n" % params['lb.database.name']
+             
+         self.mysql.stop()
+-    
++
++        # ------------------------------------------------------------------
++        # export from bkserver to cron
++        # ------------------------------------------------------------------
++	if params['GLITE_LB_EXPORT_ENABLED'] == "true":
++	    file = open('%s/etc/glite-lb-export-cron-wrapper.sh' % os.environ['GLITE_LOCATION'], 'w')
++	    file.write('#! /bin/sh\n')
++	    file.write('. %s\n' % glib.getInstallerExportFile())
++            file.write('$GLITE_LOCATION/examples/glite-lb-export.sh\n')
++	    file.close()
++            os.system('/bin/chmod 0755 %s/etc/glite-lb-export-cron-wrapper.sh' % os.environ['GLITE_LOCATION'])
++
++	    file = open('/etc/cron.d/glite-lb-export.cron', 'w')
++	    file.write('# periodically run purge and export jobs from bkserver\n')
++	    file.write('00,30 * * * * %s %s/etc/glite-lb-export-cron-wrapper.sh\n' % (params['glite.user.name'], os.environ['GLITE_LOCATION']))
++	    file.close()
++            os.system('/bin/chmod 0755 /etc/cron.d/glite-lb-export.cron')
++
++            # Touch cron spool directory to cause reloading of the crontabs
++            os.system("/bin/touch /var/spool/cron")
++
+         #-------------------------------------------------------------------
+         # RGMA servicetool: configure servicetool
+         #-------------------------------------------------------------------
+@@ -420,6 +502,17 @@
+     # Perl
+     glib.addEnvPath("PERL5LIB", "%s/lib/perl:%s/lib/perl5" % (os.environ['GPT_LOCATION'],os.environ['GLITE_LOCATION']))
+ 
++    # LB export
++    glib.export('GLITE_LB_EXPORT_ENABLED', params['lb.export.enabled']);
++    glib.export('GLITE_LB_EXPORT_BKSERVER', params['lb.export.bkserver']);
++    glib.export('GLITE_LB_EXPORT_JPPS', params['lb.export.jpps']);
++    glib.export('GLITE_LB_EXPORT_JPREG_MAILDIR', params['lb.export.jpreg']);
++    glib.export('GLITE_LB_EXPORT_JPDUMP_MAILDIR', params['lb.export.jpdump']);
++    glib.export('GLITE_LB_EXPORT_DUMPDIR', params['lb.export.dump']);
++    glib.export('GLITE_LB_EXPORT_DUMPDIR_OLD', params['lb.export.dump.old']);
++    glib.export('GLITE_LB_EXPORT_EXPORTDIR', params['lb.export.export']);
++    glib.export('GLITE_LB_EXPORT_PURGE_ARGS', '"%s"' % params['lb.export.purgeargs']);
++
+     # Set environment
+     glib.setUserEnv()
+     
+Index: org.glite.deployment.lb/config/templates/glite-lb.cfg.xml
+===================================================================
+RCS file: /cvs/jra1mw/org.glite.deployment.lb/config/templates/glite-lb.cfg.xml,v
+retrieving revision 1.21
+diff -u -r1.21 glite-lb.cfg.xml
+--- org.glite.deployment.lb/config/templates/glite-lb.cfg.xml	13 Mar 2006 15:19:21 -0000	1.21
++++ org.glite.deployment.lb/config/templates/glite-lb.cfg.xml	21 Jul 2006 09:57:26 -0000
+@@ -17,9 +17,16 @@
+ 			parameter. Leave it empty of comment it out to use the same as 'glite.user.name'"
+ 			value="changeme"/>
+              	
+-	    <mysql.root.password
+-	        description="The mysql root password"
+-	        value="changeme"/>
++		<mysql.root.password
++		        description="The mysql root password"
++	        	value="changeme"/>
++
++		<lb.export.jpps
++			description="Job Provenance Primary Storage.
++				[Example: localhost:8901][Type: string]"
++			value="changeme"/>
++
++
+ 	
+ 		<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+ 		<!-- Advanced parameters - Change them if you know what you're doing -->
+@@ -55,6 +62,12 @@
+ 				[Example: 17M][Type: Integer][Unit: MB]"
+ 			value="17M"/>
+ 
++		<lb.export.enabled
++			description="Enables exports to Job Provenance.
++				[Example: true][Type: boolean]"
++			value="true"/>
++
++
+ 		<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+ 		<!-- System parameters - You should leave these alone -->
+ 		<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->		
+@@ -67,7 +80,42 @@
+ 			<value>destination</value>
+ 
+ 		</lb.index.list>
+-			
++
++		<lb.export.bkserver
++			description="Book Keeping Server service when differs from default port on localhost.
++				[Example: localhost:9000][Type: string]"
++			value=""/>
++
++		<lb.export.jpreg
++			description="Maildir for job registrations.
++				[Example: /tmp/jpreg][Type: string]"
++			value=""/>
++
++		<lb.export.jpdump
++			description="Maildir for job dumps.
++				[Example: /tmp/jpdump][Type: string]"
++			value=""/>
++
++		<lb.export.dump
++			description="Dump directory for purged jobs.
++				[Example: /tmp/dump][Type: string]"
++			value=""/>
++
++		<lb.export.dump.old
++			description="Dump directory for handled purged jobs.
++				[Example: /tmp/dump.old][Type: string]"
++			value=""/>
++
++		<lb.export.export
++			description="Exported events divided to file per job.
++				[Example: /tmp/lb_export][Type: string]"
++			value=""/>
++
++		<lb.export.purgeargs
++			description="Purge arguments (with timeouts).
++				[Example: -a 1h -c 1h -n 1h -o 1d][Type: string]"
++			value="-a 1d -c 1d -n 1d -o 7d"/>
++
+ 	</parameters>
+ 
+ </config>
+Index: org.glite.deployment.lb/project/glite-lb.sdf.xml.template
+===================================================================
+RCS file: /cvs/jra1mw/org.glite.deployment.lb/project/glite-lb.sdf.xml.template,v
+retrieving revision 1.38.2.2
+diff -u -r1.38.2.2 glite-lb.sdf.xml.template
+--- org.glite.deployment.lb/project/glite-lb.sdf.xml.template	2 May 2006 10:36:19 -0000	1.38.2.2
++++ org.glite.deployment.lb/project/glite-lb.sdf.xml.template	21 Jul 2006 09:57:26 -0000
+@@ -57,6 +57,12 @@
+ 					build="@org.glite.lb.server-bones.info.build@"
+ 					arch="i386"/>
+ 					   
++				<component name="glite-lb-client"
++					version="@org.glite.lb.client.info.version@"
++					age="@org.glite.lb.client.info.age@"
++					build="@org.glite.lb.client.info.build@"
++					arch="i386"/>
++					   
+ 				<component name="glite-wms-utils-jobid"
+ 					version="@org.glite.wms-utils.jobid.info.version@"
+ 					age="@org.glite.wms-utils.jobid.info.age@"
+@@ -105,6 +111,12 @@
+                     build="@org.glite.jp.ws-interface.info.build@"
+                     arch="i386"/>
+ 
++				<component name="glite-jp-client"
++                    version="@org.glite.jp.client.info.version@"
++                    age="@org.glite.jp.client.info.age@"
++                    build="@org.glite.jp.client.info.build@"
++                    arch="i386"/>
++
+                 <component name="gridsite"
+                     version="@org.gridsite.core.info.version@"
+                     age="@org.gridsite.core.info.age@"
+Index: org.glite.security/project/dependencies.properties
+===================================================================
+RCS file: /cvs/jra1mw/org.glite.security/project/dependencies.properties,v
+retrieving revision 1.313.2.317.2.55
+diff -u -r1.313.2.317.2.55 dependencies.properties
+--- org.glite.security/project/dependencies.properties	14 Jun 2006 10:26:21 -0000	1.313.2.317.2.55
++++ org.glite.security/project/dependencies.properties	21 Jul 2006 09:57:27 -0000
+@@ -42,7 +42,7 @@
+ org.glite.security.lcas-plugins-check-executable.version = glite-security-lcas-plugins-check-executable_R_1_2_0
+ org.glite.security.lcas-interface.version               = glite-security-lcas-interface_R_1_3_1
+ org.glite.security.lcas.version                         = glite-security-lcas_R_1_3_1
+-org.glite.security.gsoap-plugin.version                 = glite-security-gsoap-plugin_R_1_2_3
++org.glite.security.gsoap-plugin.version                 = glite-security-gsoap-plugin_R_1_3_1
+ org.glite.security.cgsi-gsoap.version                   = glite-security-cgsi-gsoap_R_1_1_15_6
+ org.glite.security.proxyrenewal.version                 = glite-security-proxyrenewal_R_1_0_19
+ org.glite.security.jobrepository.version                = glite-security-jobrepository_R_1_2_2
