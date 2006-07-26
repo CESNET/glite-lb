@@ -38,10 +38,12 @@ diff -u -r1.479.2.77.2.4.2.1.4.2.2.6.2.1.2.4 global.dependencies.properties
  org.glite.gpbox.version                         = glite-gpbox_R_1_0_15
  org.glite.jdl.version                           = glite-jdl_R_1_0_0
 -org.glite.jp.version                            = glite-jp_R_1_1_3
+-org.glite.lb.version                            = glite-lb_R_1_2_11
 +org.glite.jp.version                            = glite-jp_R_1_3_0
- org.glite.lb.version                            = glite-lb_R_1_2_11
++org.glite.lb.version                            = glite-lb_R_1_3_1
  org.glite.rgma.version                          = glite-rgma_R_5_0_43
  org.glite.security.version                      = glite-security_R_3_0_21
+ org.glite.service-discovery.version             = glite-service-discovery_R_2_0_12
 Index: org.glite.deployment/build.xml
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite.deployment/build.xml,v
