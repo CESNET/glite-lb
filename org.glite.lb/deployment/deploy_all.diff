@@ -306,7 +306,7 @@ diff -u -r1.65.2.4 glite-lb-config.py
 +	    file = open('%s/etc/glite-lb-export-cron-wrapper.sh' % os.environ['GLITE_LOCATION'], 'w')
 +	    file.write('#! /bin/sh\n')
 +	    file.write('. %s\n' % glib.getInstallerExportFile())
-+            file.write('$GLITE_LOCATION/examples/glite-lb-export.sh\n')
++            file.write('$GLITE_LOCATION/sbin/glite-lb-export.sh\n')
 +	    file.close()
 +            os.system('/bin/chmod 0755 %s/etc/glite-lb-export-cron-wrapper.sh' % os.environ['GLITE_LOCATION'])
 +
