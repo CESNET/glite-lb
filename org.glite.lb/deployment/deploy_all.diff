@@ -39,8 +39,8 @@ diff -u -r1.479.2.77.2.4.2.1.4.2.2.6.2.1.2.4 global.dependencies.properties
  org.glite.jdl.version                           = glite-jdl_R_1_0_0
 -org.glite.jp.version                            = glite-jp_R_1_1_3
 -org.glite.lb.version                            = glite-lb_R_1_2_11
-+org.glite.jp.version                            = glite-jp_R_1_3_0
-+org.glite.lb.version                            = glite-lb_R_1_3_1
++org.glite.jp.version                            = glite-jp_R_1_3_1
++org.glite.lb.version                            = glite-lb_R_1_3_2
  org.glite.rgma.version                          = glite-rgma_R_5_0_43
  org.glite.security.version                      = glite-security_R_3_0_21
  org.glite.service-discovery.version             = glite-service-discovery_R_2_0_12
@@ -314,7 +314,7 @@ diff -u -r1.65.2.4 glite-lb-config.py
 +	    file.write('# periodically run purge and export jobs from bkserver\n')
 +	    file.write('00,30 * * * * %s %s/etc/glite-lb-export-cron-wrapper.sh\n' % (params['glite.user.name'], os.environ['GLITE_LOCATION']))
 +	    file.close()
-+            os.system('/bin/chmod 0755 /etc/cron.d/glite-lb-export.cron')
++            os.system('/bin/chmod 0644 /etc/cron.d/glite-lb-export.cron')
 +
 +            # Touch cron spool directory to cause reloading of the crontabs
 +            os.system("/bin/touch /var/spool/cron")
@@ -335,7 +335,7 @@ diff -u -r1.65.2.4 glite-lb-config.py
 +    glib.export('GLITE_LB_EXPORT_DUMPDIR', params['lb.export.dump']);
 +    glib.export('GLITE_LB_EXPORT_DUMPDIR_OLD', params['lb.export.dump.old']);
 +    glib.export('GLITE_LB_EXPORT_EXPORTDIR', params['lb.export.export']);
-+    glib.export('GLITE_LB_EXPORT_PURGE_ARGS', '"%s"' % params['lb.export.purgeargs']);
++    glib.export('GLITE_LB_EXPORT_PURGE_ARGS', '%s' % params['lb.export.purgeargs']);
 +
      # Set environment
      glib.setUserEnv()
