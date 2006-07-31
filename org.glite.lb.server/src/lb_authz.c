@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <syslog.h>
+#include <assert.h>
 
 #include "glite/lb/context-int.h"
 #include "lb_authz.h"
@@ -203,7 +204,10 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
 
    ret = get_peer_cred(gss, server_cert, server_key, &p_chain, &cert);
    if (ret) {
-      ret = 0;
+//      ret = 0;
+//	XXX (MM): I do not know whether this error may be triggered by other
+//		bugs too... The error message may be incomplete.
+      edg_wll_SetError(ctx, errno, "cert/key file not owned by process owner");
       goto end;
    }
 
