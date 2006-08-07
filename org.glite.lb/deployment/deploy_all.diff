@@ -312,7 +312,7 @@ diff -u -r1.65.2.4 glite-lb-config.py
 +
 +	    file = open('/etc/cron.d/glite-lb-export.cron', 'w')
 +	    file.write('# periodically run purge and export jobs from bkserver\n')
-+	    file.write('00,30 * * * * %s %s/etc/glite-lb-export-cron-wrapper.sh\n' % (params['glite.user.name'], os.environ['GLITE_LOCATION']))
++	    file.write('00,30 * * * * %s %s/etc/glite-lb-export-cron-wrapper.sh 1>/dev/null\n' % (params['glite.user.name'], os.environ['GLITE_LOCATION']))
 +	    file.close()
 +            os.system('/bin/chmod 0644 /etc/cron.d/glite-lb-export.cron')
 +
