@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include <cclassad.h>
+
 #include "glite/lb/context.h"
 #include "glite/lb/jobstat.h"
 
@@ -221,12 +223,84 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		av[0].value = edg_wlc_JobIdUnparse(h->status.jobId);
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	} else if (strcmp(attr, GLITE_JP_LB_VO) == 0 ||
-                   strcmp(attr, GLITE_JP_LB_aTag) == 0 ||
+	} else if (strcmp(attr, GLITE_JP_LB_VO) == 0) {
+		av = calloc(2, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
+                if (h->events) {
+                        i = 0;
+                        while (h->events[i]) {
+                                if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
+					struct cclassad *ad;
+					char *string_vo = NULL; 
+
+					ad = cclassad_create(h->events[i]->regJob.jdl);
+					if (ad) {
+						if (!cclassad_evaluate_to_string(ad, "VirtualOrganisation", &string_vo))
+							string_vo = NULL;
+						
+						av[0].value = check_strdup(string_vo);
+						cclassad_delete(ad);
+						if (string_vo) free(string_vo);
+					}
+                                        av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
+                                        break;
+                                }
+                                i++;
+                        }
+                }
+        } else if (strcmp(attr, GLITE_JP_LB_eNodes) == 0) {
+		av = calloc(2, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
+                if (h->events) {
+                        i = 0;
+                        while (h->events[i]) {
+                                if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
+					struct cclassad *ad;
+					char *string_nodes = NULL; 
+
+					ad = cclassad_create(h->events[i]->regJob.jdl);
+					if (ad) {
+						if (!cclassad_evaluate_to_string(ad, "max_nodes_running", &string_nodes))
+							string_nodes = NULL;
+						
+						av[0].value = check_strdup(string_nodes);
+						cclassad_delete(ad);
+						if (string_nodes) free(string_nodes);
+					}
+                                        av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
+                                        break;
+                                }
+                                i++;
+                        }
+                }
+        } else if (strcmp(attr, GLITE_JP_LB_eProc) == 0) {
+		av = calloc(2, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
+                if (h->events) {
+                        i = 0;
+                        while (h->events[i]) {
+                                if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
+					struct cclassad *ad;
+					char *string_nodes = NULL; 
+
+					ad = cclassad_create(h->events[i]->regJob.jdl);
+					if (ad) {
+						if (!cclassad_evaluate_to_string(ad, "NodeNumber", &string_nodes))
+							string_nodes = NULL;
+						
+						av[0].value = check_strdup(string_nodes);
+						cclassad_delete(ad);
+						if (string_nodes) free(string_nodes);
+					}
+                                        av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
+                                        break;
+                                }
+                                i++;
+                        }
+                }
+	} else if (strcmp(attr, GLITE_JP_LB_aTag) == 0 ||
                    strcmp(attr, GLITE_JP_LB_rQType) == 0 ||
-                   strcmp(attr, GLITE_JP_LB_eDuration) == 0 ||
-                   strcmp(attr, GLITE_JP_LB_eNodes) == 0 ||
-                   strcmp(attr, GLITE_JP_LB_eProc) == 0) {
+                   strcmp(attr, GLITE_JP_LB_eDuration) == 0) {
 		/* have to be retrieved from JDL */
 /*
 		av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -319,12 +393,6 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                                 i++;
                         }
                 }
-		if (!av) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = "UNKNOWN";
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
 	} else if (strcmp(attr, GLITE_JP_LB_retryCount) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
@@ -342,7 +410,14 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	} else if (strcmp(attr, GLITE_JP_LB_jobType) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
-		av[0].value = edg_wll_RegJobJobtypeToString(h->status.jobtype);
+		switch (h->status.jobtype) {
+			case EDG_WLL_STAT_SIMPLE:
+				av[0].value = strdup("SIMPLE"); break;
+			case EDG_WLL_STAT_DAG:
+				av[0].value = strdup("DAG"); break;
+			default:
+				av[0].value = strdup("UNKNOWN"); break;
+		}
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_nsubjobs) == 0) {

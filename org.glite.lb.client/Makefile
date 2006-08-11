@@ -292,7 +292,7 @@ install:
 	for p in ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
-	${INSTALL} -m 755 ${top_srcdir}/examples/export.sh "${PREFIX}/examples/glite-lb-export.sh"
+	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${PREFIX}/sbin/glite-lb-export.sh"
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 clean:

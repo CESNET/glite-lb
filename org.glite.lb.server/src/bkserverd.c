@@ -404,8 +404,8 @@ int main(int argc, char *argv[])
 
 	fpid = fopen(pidfile, "w");
 	if (!fpid) { perror(pidfile); return 1; }
-	fprintf(fpid, "%d", getpid());
-	fclose(fpid);
+	if (fprintf(fpid, "%d", getpid()) <= 0) { perror(pidfile); return 1; }
+	if (fclose(fpid) != 0) { perror(pidfile); return 1; }
 
 	semkey = ftok(pidfile,0);
 
@@ -1398,7 +1398,7 @@ static int parse_limits(char *opt, int *j_limit, int *e_limit, int *size_limit)
 static int check_mkdir(const char *dir)
 {
 	struct stat	sbuf;
-	
+
 	if ( stat(dir, &sbuf) )
 	{
 		if ( errno == ENOENT )
@@ -1417,12 +1417,21 @@ static int check_mkdir(const char *dir)
 			return 1;
 		}
 	}
-	else if (S_ISDIR(sbuf.st_mode)) return 0;
-	else {
+
+	if (!S_ISDIR(sbuf.st_mode))
+	{
 		dprintf(("[%d] %s: not a directory\n", getpid(),dir));
 		if (!debug) syslog(LOG_CRIT,"%s: not a directory",dir);
 		return 1;
 	}
+
+	if (access(dir, R_OK | W_OK))
+	{
+		dprintf(("[%d] %s: dircectory is not readable/writable\n", getpid(),dir));
+		if (!debug) syslog(LOG_CRIT,"%s: dircectory is not readable/writable",dir);
+		return 1;
+	}
+		
 
 	return 0;
 }

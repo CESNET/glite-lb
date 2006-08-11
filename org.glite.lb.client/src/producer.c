@@ -371,10 +371,7 @@ static int edg_wll_LogEventMaster(
 		goto edg_wll_logeventmaster_end;
 	}
 	seq = edg_wll_GetSequenceCode(context);
-	if (edg_wll_IncSequenceCode(context)) {
-		ret = EINVAL;
-		goto edg_wll_logeventmaster_end;
-	}
+
 	if (trio_asprintf(&fix,EDG_WLL_FORMAT_COMMON,
 			date,context->p_host,lvl,priority,
 			source,context->p_instance ? context->p_instance : "",
@@ -434,6 +431,10 @@ edg_wll_logeventmaster_end:
 	if (lvl) free(lvl);
 	if (eventName) free(eventName);
 	if (fullid) free(fullid);
+
+	if (!ret) if(edg_wll_IncSequenceCode(context)) {
+		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMaster(): edg_wll_IncSequenceCode failed");
+	}
 
 	if (ret) edg_wll_UpdateError(context,0,"Logging library ERROR: ");
 
@@ -698,10 +699,9 @@ int edg_wll_SetLoggingJobProxy(
 	edg_wll_SetParamString(context, EDG_WLL_PARAM_LBPROXY_USER, user);
 
 	/* query LBProxyServer for sequence code if not user-suplied */
-/* FIXME: doesn't work yet */
 	if (!code) {
-		edg_wll_QuerySequenceCodeProxy(context, job, &code_loc);
-		goto edg_wll_setloggingjobproxy_end;	
+		if (edg_wll_QuerySequenceCodeProxy(context, job, &code_loc))
+			goto edg_wll_setloggingjobproxy_end;	
 	} else {
 		code_loc = strdup(code);
 	}
@@ -895,6 +895,8 @@ int edg_wll_RegisterSubjobs(
 	edg_wlc_JobId const	*psubjob;
 	edg_wlc_JobId		oldctxjob;
 	char *			oldctxseq;
+	int                     errcode = 0;
+	char *                  errdesc = NULL;
 
 	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
 	oldctxseq = edg_wll_GetSequenceCode(ctx);
@@ -905,14 +907,19 @@ int edg_wll_RegisterSubjobs(
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjob(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
 						ns, parent, 0, NULL, NULL) != 0) {
+			errcode = edg_wll_Error(ctx, NULL, &errdesc);
 			goto edg_wll_registersubjobs_end;
 		}
 		pjdl++; psubjob++;
 	}
 
+edg_wll_registersubjobs_end:
 	edg_wll_SetLoggingJob(ctx, oldctxjob, oldctxseq, EDG_WLL_SEQ_NORMAL);
 
-edg_wll_registersubjobs_end:
+	if (errcode) {
+                edg_wll_SetError(ctx, errcode, errdesc);
+                free(errdesc);
+        }
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -927,6 +934,8 @@ int edg_wll_RegisterSubjobsProxy(
 	edg_wlc_JobId const	*psubjob;
 	edg_wlc_JobId		oldctxjob;
 	char *			oldctxseq;
+	int                     errcode = 0;
+	char *                  errdesc = NULL;
 
 	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
 	oldctxseq = edg_wll_GetSequenceCode(ctx);
@@ -937,14 +946,19 @@ int edg_wll_RegisterSubjobsProxy(
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjobProxy(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
 						ns, parent, 0, NULL, NULL) != 0) {
+			errcode = edg_wll_Error(ctx, NULL, &errdesc);
 			goto edg_wll_registersubjobsproxy_end;
 		}
 		pjdl++; psubjob++;
 	}
 
+edg_wll_registersubjobsproxy_end:
 	edg_wll_SetLoggingJobProxy(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL);
 
-edg_wll_registersubjobsproxy_end:
+	if (errcode) {
+                edg_wll_SetError(ctx, errcode, errdesc);
+                free(errdesc);
+        }
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 

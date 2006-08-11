@@ -204,6 +204,8 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 	int			flags;
 	
 
+	edg_wll_ResetError(ctx);
+
 	if (ctx->connProxy->conn.sock > -1) {
 		// XXX: test path socket here?
 		return edg_wll_ResetError(ctx);

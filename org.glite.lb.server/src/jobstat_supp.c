@@ -762,8 +762,16 @@ static int compare_events_by_seq(const void *a, const void *b)
 {
         const edg_wll_Event *e = (edg_wll_Event *)a;
         const edg_wll_Event *f = (edg_wll_Event *)b;
+	int ret;
 
-	return edg_wll_compare_seq(e->any.seqcode, f->any.seqcode);
+	ret = edg_wll_compare_seq(e->any.seqcode, f->any.seqcode);
+	if (ret) return ret;
+	
+	if (e->any.timestamp.tv_sec < f->any.timestamp.tv_sec) return -1;
+	if (e->any.timestamp.tv_sec > f->any.timestamp.tv_sec) return 1;
+	if (e->any.timestamp.tv_usec < f->any.timestamp.tv_usec) return -1;
+	if (e->any.timestamp.tv_usec > f->any.timestamp.tv_usec) return 1;
+	return 0;
 }
 
 void edg_wll_SortEvents(edg_wll_Event *e)

@@ -235,8 +235,7 @@ int main(int argc, char *argv[])
 
    /* welcome */
    fprintf(stdout,"\
-This is LocalLogger, part of Workload Management System in EU DataGrid.\
-Copyright (c) 2002 CERN, INFN and CESNET on behalf of the EU DataGrid.\n");
+This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n");
 
    /* get arguments */
    while ((opt = getopt_long(argc,argv,
