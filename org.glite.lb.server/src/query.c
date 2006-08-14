@@ -78,7 +78,8 @@ int edg_wll_QueryEventsServer(
        	goto cleanup;
 
 	if (event_conditions && *event_conditions && (*event_conditions)->attr &&
-		!(event_where = ec_to_head_where(ctx,event_conditions)))
+		!(event_where = ec_to_head_where(ctx,event_conditions)) &&
+		edg_wll_Error(ctx,NULL,NULL) != 0)
 		goto cleanup;
 
 	if ( job_conditions && *job_conditions && (*job_conditions)->attr &&
@@ -612,6 +613,10 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 					trio_asprintf(&out, "%s OR (e.time_stamp >= %s AND e.time_stamp <= %s)", conds, aux, dbt);
 					free(aux);
 				}
+				else if (ec[m][n].op == EDG_WLL_QUERY_OP_EQUAL) {
+					trio_asprintf(&out, "%s OR (e.time_stamp = %s AND e.usec = %d)",
+							conds, dbt, ec[m][n].value.t.tv_usec);
+				}
 				else
 					trio_asprintf(&out, "%s OR e.time_stamp %s %s", conds, opToString(ec[m][n].op), dbt);
 				free(conds);
@@ -623,6 +628,10 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 				dbt = edg_wll_TimeToDB(ec[m][n].value2.t.tv_sec);
 				trio_asprintf(&conds, "(e.time_stamp >= %s AND e.time_stamp <= %s)", aux, dbt);
 				free(aux);
+			}
+			else if (ec[m][n].op == EDG_WLL_QUERY_OP_EQUAL) {
+				trio_asprintf(&conds, "(e.time_stamp = %s AND e.usec = %d)",
+						dbt, ec[m][n].value.t.tv_usec);
 			}
 			else
 				trio_asprintf(&conds, "e.time_stamp %s %s", opToString(ec[m][n].op), dbt);
@@ -863,7 +872,7 @@ static char *jc_to_head_where(
 					free(aux);
 				}
 				else
-					trio_asprintf(&tmps, "%s OR s.%s %s s.%s", conds, cname, opToString(jc[m][n].op), dbt);
+					trio_asprintf(&tmps, "%s OR s.%s %s %s", conds, cname, opToString(jc[m][n].op), dbt);
 
 				free(conds);
 				conds = tmps;
@@ -872,7 +881,7 @@ static char *jc_to_head_where(
 			{
 				trio_asprintf(&aux, "%s", dbt);
 				dbt = edg_wll_TimeToDB(jc[m][n].value2.t.tv_sec);
-				trio_asprintf(&conds, "(%s >= s.%s AND s.%s <= %s)", cname, aux, cname, dbt);
+				trio_asprintf(&conds, "(s.%s >= %s AND s.%s <= %s)", cname, aux, cname, dbt);
 				free(aux);
 			}
 			else

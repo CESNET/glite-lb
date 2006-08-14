@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <poll.h>
 
 #include "glite/security/glite_gss.h"
 #include "glite/lb/notification.h"
@@ -707,7 +708,7 @@ err:
 #endif
 /* NotifReceive */
 {
-	fd_set 			fds;	
+	struct pollfd		pollfds[1];
 	struct sockaddr_in	a;
 	int 			recv_sock, alen;
 	edg_wll_Event 		*event = NULL;
@@ -731,8 +732,8 @@ err:
 		}
 	}
 	
-	FD_ZERO(&fds);
-	FD_SET(fd,&fds);
+	pollfds[0].fd = fd;
+	pollfds[0].events = POLLIN;
 	tv.tv_sec = timeout->tv_sec;
 	tv.tv_usec = timeout->tv_usec;
 	
@@ -750,14 +751,18 @@ select:
 	if (ctx->connPoolNotif[0].gss.context == GSS_C_NO_CONTEXT) 
 	{	
 		int 	ret;
-		switch(select(fd+1, &fds, NULL, NULL, &tv)) {
+		switch(poll(pollfds, 1, tv.tv_sec*1000+tv.tv_usec/1000)) {
 			case -1:
-				edg_wll_SetError(ctx, errno, "select() failed");
+				edg_wll_SetError(ctx, errno, "edg_wll_NotifReceive: poll() failed");
 				goto err;
 			case 0:
-				edg_wll_SetError(ctx, ETIMEDOUT, "select() timeouted");
+				edg_wll_SetError(ctx, ETIMEDOUT, "edg_wll_NotifReceive: poll() timed out");
 				goto err;
 			default:
+				if (!(pollfds[0].revents & POLLIN)) {
+					edg_wll_SetError(ctx, errno, "edg_wll_NotifReceive: error on filedescriptor");
+					goto err;
+				}
 				break;
 		}
 

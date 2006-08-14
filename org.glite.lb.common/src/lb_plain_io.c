@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <time.h>
+#include <signal.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -11,6 +13,10 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include <poll.h>
+#ifndef INFTIM
+#define INFTIM (-1)
+#endif
 
 #include "lb_plain_io.h"
 
@@ -66,7 +72,8 @@ int edg_wll_plain_read(
 	struct timeval		   *to)
 {
 	int				ct, toread = 0;
-	fd_set			fds;
+	struct pollfd			pollfds[1];
+	int				polltime = 0;
 	struct timeval	timeout, before, after;
 
 
@@ -87,11 +94,16 @@ int edg_wll_plain_read(
 
 	toread = 0;
 	do {
-		FD_ZERO(&fds);
-		FD_SET(conn->sock, &fds);
-		switch (select(conn->sock+1, &fds, NULL, NULL, to ? &timeout : NULL)) {
-		case 0: errno = ETIMEDOUT; goto cleanup; break;
-		case -1: goto cleanup; break;
+		pollfds[0].fd = conn->sock;
+		pollfds[0].events = POLLIN;
+		polltime = to ? (timeout.tv_sec*1000+timeout.tv_usec/1000) : INFTIM;
+		switch (poll(pollfds, 1, polltime)) {
+			case 0: errno = ETIMEDOUT; goto cleanup; break;
+			case -1: goto cleanup; break;
+			default: if (!(pollfds[0].revents & POLLIN)) {
+					errno = EIO;
+					goto cleanup; break;
+				}
 		}
 
 		if ( conn->bufUse == conn->bufSize ) {
@@ -123,6 +135,7 @@ cleanup:
 		if ( to->tv_sec < 0 ) to->tv_sec = to->tv_usec = 0;
 	}
 
+	if ( errno == ECONNRESET) errno = ENOTCONN;
 	if ( errno ) return -1;
 
 	if ( conn->bufUse > 0 ) {
@@ -171,9 +184,14 @@ int edg_wll_plain_write_full(
 {
 	size_t			written = 0;
 	int				ct = -1;
-	fd_set			fds;
+	struct pollfd			pollfds[1];
+	int				polltime = 0;
 	struct timeval	timeout, before, after;
+	struct sigaction        sa,osa;
 
+	memset(&sa,0,sizeof(sa)); assert(sa.sa_handler == NULL);
+	sa.sa_handler = SIG_IGN;
+	sigaction(SIGPIPE,&sa,&osa);
 
 	if ( to ) {
 		memcpy(&timeout, to, sizeof(timeout));
@@ -182,12 +200,18 @@ int edg_wll_plain_write_full(
 
 	errno = 0;
 	while ( written < bufsz ) {
-		FD_ZERO(&fds);
-		FD_SET(conn->sock, &fds);
 
-		switch ( select(conn->sock+1, NULL, &fds, NULL, to? &timeout: NULL) ) {
+		pollfds[0].fd = conn->sock;
+		pollfds[0].events = POLLOUT;
+		polltime = to ? (timeout.tv_sec*1000+timeout.tv_usec/1000) : INFTIM;
+
+		switch (poll(pollfds, 1, polltime)) {
 			case 0: errno = ETIMEDOUT; goto end; break;
 			case -1: goto end; break;
+			default: if (!(pollfds[0].revents & POLLOUT)) {
+					errno = ENOTCONN;
+					goto end; break;
+				}
 		}
 		if ( (ct=write(conn->sock, ((char*)buf)+written, bufsz-written)) < 0 ) {
 			if ( errno == EINTR ) { errno = 0; continue; }
@@ -204,5 +228,7 @@ end:
 		if (to->tv_sec < 0) to->tv_sec = to->tv_usec = 0;
 	}
 
+	sigaction(SIGPIPE,&osa,NULL);
+	if (errno == EPIPE) errno = ENOTCONN;
 	return (errno)? -1: written;
 }

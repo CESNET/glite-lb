@@ -128,7 +128,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		free(stmt);
 	}
 
-	free(stmt);
+	free(stmt); stmt = NULL;
 	if ((err = store_seq(ctx,e,next)) ||
 		(err = store_flesh(ctx,e,jobid,next))) {
 	/* attempt to cleanup, ignore new errors */
@@ -333,11 +333,13 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
 	for (i=0; i<sizeof(f)/sizeof(f[0]); i++) free(f[i].val);
 
 /* XXX: hardcoded, no other suitable place to store it */
-	trio_asprintf(&stmt,"insert into short_fields(jobid,event,name,value) "
-		"values ('%|Ss',%d,'SRC_INSTANCE','%|Ss')",
-		jobid,no,e->any.src_instance);
-	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
-	free(stmt);
+	if (!err) {
+		trio_asprintf(&stmt,"insert into short_fields(jobid,event,name,value) "
+			"values ('%|Ss',%d,'SRC_INSTANCE','%|Ss')",
+			jobid,no,e->any.src_instance);
+		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
+		free(stmt);
+	}
 
 	return err;
 }
@@ -478,6 +480,10 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 
 	gettimeofday(&now,NULL);
 
+/* XXX: increase the overall request timeout. */
+	ctx->p_tmp_timeout.tv_sec += e->nsubjobs;
+	if (ctx->p_tmp_timeout.tv_sec > 86400) ctx->p_tmp_timeout.tv_sec = 86400;
+
 	for (i=0; i<e->nsubjobs; i++) {
 		edg_wll_Event	e2;
 		int		seq;
@@ -490,9 +496,11 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 		e2.any.host = strdup(ctx->srvName);
 		e2.any.level = e->level;
 		e2.any.priority = e->priority;
-		e2.any.seqcode = NULL;		/* XXX: I'm not sure :-( */
+		e2.any.seqcode = strdup(EDG_WLL_SEQ_NULL);
 		e2.any.user = strdup(e->user);
 		e2.any.source = e->source;
+		e2.any.src_instance = strdup(ctx->isProxy ? 
+			"L&B proxy" : "L&B server");
 		e2.regJob.ns = strdup(e->ns);
 		edg_wlc_JobIdDup(e->jobId,&e2.regJob.parent);
 		e2.regJob.jobtype = EDG_WLL_REGJOB_SIMPLE;
