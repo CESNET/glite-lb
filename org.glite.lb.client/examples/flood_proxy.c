@@ -14,7 +14,7 @@ static void slave();
 
 int main(int argc,char **argv)
 {
-	int	i,njobs,nproc;
+	int	i,nproc;
 
 	if (argc != 2) {
 		fprintf(stderr,"usage: %s nproc\n",argv[0]);
@@ -67,6 +67,8 @@ static void slave()
 				ed);
 
 		if (err == ENOENT) noent++;
+
+		edg_wll_LogUserTagProxy(ctx,"test","x");
 
 		edg_wll_FreeContext(ctx);
 	}
