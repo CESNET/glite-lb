@@ -206,6 +206,8 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 	char	*ed = NULL;
 	int	retries = 0;
 
+	edg_wll_ResetError(ctx);
+
 	if (ctx->connProxy->conn.sock > -1) {
 		// XXX: test path socket here?
 		return edg_wll_ResetError(ctx);
@@ -267,7 +269,7 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 		goto err;
 	}
 
-	return edg_wll_ResetError(ctx);	
+	return 0;
 	
 err:
 	/* some error occured; close created connection */
