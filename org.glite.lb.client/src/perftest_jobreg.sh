@@ -15,6 +15,20 @@ test_glite_location()
 	fi
 }
 
+test_credentials()
+{
+	[ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
+                creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
+
+        if test -z "$creds"; then
+                if [ -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem ]; then
+                        creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
+                fi
+        fi
+        [ -z "$creds" ] && \
+                echo WARNING: No credentials specified. Using default lookup which is dangerous. >&2
+}
+
 my_echo()
 {
 	echo $1 1>&2
@@ -29,17 +43,6 @@ start_bkserver()
 	# workaround
 	[ -n "$GLITE_LB_SERVER_PIDFILE" ] && pidfile=$GLITE_LB_SERVER_PIDFILE ||
 	        pidfile=$GLITE_LOCATION_VAR/glite-lb-bkserverd.pid
-
-	[ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
-                creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
-
-	if test -z "$creds"; then
-                if [ -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem ]; then
-                        creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
-                fi
-        fi
-	[ -z "$creds" ] && \
-		echo WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
 	[ -z "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] && \
 		GLITE_LB_EXPORT_JPREG_MAILDIR=/tmp/jpreg
@@ -136,6 +139,27 @@ stop_proxy()
         fi
 }
 
+start_il()
+{
+	[ -n "$GLITE_LB_IL_SOCK" ] && il_sock="-s $GLITE_LB_PROXY_SOCK" ||
+		il_sock=""
+
+	[ -n "$GLITE_LB_IL_PREFIX" ] && il_prefix="-f $GLITE_LB_IL_PREFIX" ||
+		il_prefix=""
+	
+	echo -n Starting glite-lb-interlogger ...
+	$GLITE_LOCATION/bin/glite-lb-interlogger \
+                $creds $il_sock $il_prefix \
+		&& echo " done" || echo " FAILED"	
+	echo
+
+}
+
+stop_il()
+{
+	killall glite-lb-interlogger
+}
+
 
 #  - Test types -
 #
@@ -207,6 +231,7 @@ sink_mode[3]=GLITE_LB_SINK_STATE
 sink_mode[4]=GLITE_LB_SINK_SEND
 
 test_glite_location;
+test_credentials;
 
 for i in 1 2 3 4; do
 
