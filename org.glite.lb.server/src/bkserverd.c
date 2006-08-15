@@ -1461,12 +1461,21 @@ static int check_mkdir(const char *dir)
 			return 1;
 		}
 	}
-	else if (S_ISDIR(sbuf.st_mode)) return 0;
-	else {
+
+	if (!S_ISDIR(sbuf.st_mode))
+	{
 		dprintf(("[%d] %s: not a directory\n", getpid(),dir));
 		if (!debug) syslog(LOG_CRIT,"%s: not a directory",dir);
 		return 1;
 	}
+
+	if (access(dir, R_OK | W_OK))
+	{
+		dprintf(("[%d] %s: directory is not readable/writable\n", getpid(),dir));
+		if (!debug) syslog(LOG_CRIT,"%s: directory is not readable/writable",dir);
+		return 1;
+	}
+		
 
 	return 0;
 }
