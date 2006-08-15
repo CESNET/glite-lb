@@ -57,7 +57,7 @@ notif_create_ulm(
 	event->any.level = context->p_level;
 	event->any.source = context->p_source;
 	if (context->p_instance) event->notification.src_instance = strdup(context->p_instance);
-	event->notification.notifId = reg_id;
+	event->notification.notifId = edg_wll_NotifIdDup(reg_id);
 	if (owner) event->notification.owner = strdup(owner);
 	if (host) event->notification.dest_host = strdup(host);
 	event->notification.dest_port = port;
