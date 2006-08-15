@@ -86,3 +86,20 @@ char* edg_wll_NotifIdGetUnique(const edg_wll_NotifId notifid)
 	free(id);
 	return NULL;
 }
+
+edg_wll_NotifId *
+edg_wll_NotifIdDup(const edg_wll_NotifId src)
+{
+   char *str;
+   edg_wll_NotifId id = NULL;
+   int ret;
+
+   str = edg_wll_NotifIdUnparse(src);
+   if (str == NULL)
+      return NULL;
+
+   ret = edg_wll_NotifIdParse((const char *)str, &id);
+   free(str);
+
+   return id;
+}
