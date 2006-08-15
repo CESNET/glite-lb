@@ -36,8 +36,10 @@ static int check_mkdir(const char *dir)
 		}
 		else return 1;
 	}
-	else if (S_ISDIR(sbuf.st_mode)) return 0;
-	else return 1;
+
+	if (!S_ISDIR(sbuf.st_mode)) return 1;
+
+	if (access(dir, R_OK | W_OK)) return 1;
 
 	return 0;
 }
