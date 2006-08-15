@@ -36,8 +36,10 @@ static int check_mkdir(const char *dir)
 		}
 		else return 1;
 	}
-	else if (S_ISDIR(sbuf.st_mode)) return 0;
-	else return 1;
+	
+	if (!S_ISDIR(sbuf.st_mode)) return 1;
+
+	if (access(dir, R_OK | W_OK)) return 1;
 
 	return 0;
 }
@@ -261,6 +263,7 @@ int edg_wll_MaildirRetryTransStart(
 	close(fhnd);
 
 	if ( !(*fname = strdup(ent->d_name)) ) goto err;
+	buf[bufuse] = 0;
 	*msg = buf;
 	return 1;
 
@@ -354,6 +357,7 @@ int edg_wll_MaildirTransStart(
 	close(fhnd);
 
 	if ( !(*fname = strdup(ent->d_name)) ) goto err;
+	buf[bufuse] = 0;
 	*msg = buf;
 	return 1;
 

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -942,6 +943,59 @@ event_store_init(char *prefix)
       }
 
       free(s);
+    }
+    closedir(event_dir);
+
+    /* one more pass - this time remove stale .ctl files */
+    event_dir = opendir(dir);
+    if(event_dir == NULL) {
+      free(dir);
+      set_error(IL_SYS, errno, "event_store_init: error opening event directory");
+      return(-1);
+    }
+    
+    while((entry=readdir(event_dir))) {
+      char *s;
+
+      /* skip all files that do not match prefix */
+      if(strncmp(entry->d_name, p, len) != 0) 
+	continue;
+
+      /* find all control files */
+      if((s=strstr(entry->d_name, ".ctl")) != NULL &&
+	 s[4] == '\0') {
+	      char *ef;
+	      struct stat st;
+
+	      /* is there corresponding event file? */
+	      ef = malloc(strlen(dir) + strlen(entry->d_name) + 2);
+	      if(ef == NULL) {
+		      free(dir);
+		      set_error(IL_NOMEM, ENOMEM, "event_store_init: no room for event file name");
+		      return(-1);
+	      }
+
+	      s[0] = 0;
+	      *ef = '\0';
+	      strcat(ef, dir);
+	      strcat(ef, "/");
+	      strcat(ef, entry->d_name);
+	      s[0] = '.';
+
+	      if(stat(ef, &st) == 0) {
+		      /* something is there */
+		      /* XXX - it could be something else than event file, but do not bother now */
+	      } else {
+		      /* could not stat file, remove ctl */
+		      strcat(ef, s);
+		      il_log(LOG_DEBUG, "  removing stale file %s\n", ef);
+		      if(unlink(ef)) 
+			      il_log(LOG_ERR, "  could not remove file %s: %s\n", ef, strerror(errno));
+		      
+	      }
+	      free(ef);
+
+      }
     }
     closedir(event_dir);
     free(dir);
