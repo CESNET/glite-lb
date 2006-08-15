@@ -17,7 +17,7 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/mini_http.h"
 
-
+#include "connection.h"
 
 static void CloseConnection(edg_wll_Context ctx, int conn_index)
 {
@@ -116,7 +116,7 @@ int edg_wll_close_proxy(edg_wll_Context ctx)
 {
 	edg_wll_plain_close(&ctx->connProxy->conn);
 
-	return edg_wll_Error(ctx, NULL, NULL);
+	return edg_wll_ResetError(ctx);
 }
 
 
@@ -202,7 +202,11 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 {
 	struct sockaddr_un	saddr;
 	int			flags;
-	
+	int	err;
+	char	*ed = NULL;
+	int	retries = 0;
+
+	edg_wll_ResetError(ctx);
 
 	edg_wll_ResetError(ctx);
 
@@ -236,19 +240,48 @@ int edg_wll_open_proxy(edg_wll_Context ctx)
 		goto err;
 	}
 
-	if (connect(ctx->connProxy->conn.sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
-		edg_wll_SetError(ctx, errno, "connect()");
+	while ((err = connect(ctx->connProxy->conn.sock, (struct sockaddr *)&saddr, sizeof(saddr))) < 0 &&
+			errno == EAGAIN &&
+			ctx->p_tmp_timeout.tv_sec >= 0 && ctx->p_tmp_timeout.tv_usec >= 0 &&
+			!(ctx->p_tmp_timeout.tv_sec == 0 && ctx->p_tmp_timeout.tv_usec == 0)
+			)
+	{
+		struct timespec ns = { 0, PROXY_CONNECT_RETRY * 1000000 /* 10 ms */ },rem;
+
+		nanosleep(&ns,&rem);
+
+		ctx->p_tmp_timeout.tv_usec -= ns.tv_nsec/1000;
+		ctx->p_tmp_timeout.tv_usec += rem.tv_nsec/1000;
+
+		ctx->p_tmp_timeout.tv_sec -= ns.tv_sec;
+		ctx->p_tmp_timeout.tv_sec += rem.tv_sec;
+
+		if (ctx->p_tmp_timeout.tv_usec < 0) {
+			ctx->p_tmp_timeout.tv_usec += 1000000;
+			ctx->p_tmp_timeout.tv_sec--;
+		}
+		retries++;
+	}
+
+	/* printf("retries %d\n",retries); */
+
+	if (err) {
+		if (errno == EAGAIN) edg_wll_SetError(ctx,ETIMEDOUT, "edg_wll_open_proxy()");
+		else edg_wll_SetError(ctx, errno, "connect()");
 		goto err;
 	}
 
-	return edg_wll_Error(ctx,NULL,NULL);	
+	return 0;
 	
 err:
 	/* some error occured; close created connection */
 
+	err = edg_wll_Error(ctx,NULL,&ed);
 	edg_wll_close_proxy(ctx);
+	edg_wll_SetError(ctx,err,ed);
+	free(ed);
 		
-	return edg_wll_Error(ctx,NULL,NULL);
+	return err;
 }
 	
 

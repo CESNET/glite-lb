@@ -27,6 +27,7 @@
 #include "glite/lb/escape.h"
 
 #include "prod_proto.h"
+#include "connection.h"
 
 static const char* socket_path="/tmp/lb_proxy_store.sock";
 
@@ -156,7 +157,7 @@ int edg_wll_DoLogEventProxy(
 	edg_wll_LogLine logline)
 {
 	int	answer;
-	int 	flags;
+	int 	flags,retries;
 	char	*name_esc,*dguser;
 	struct sockaddr_un saddr;
 	edg_wll_PlainConnection conn;
@@ -187,6 +188,10 @@ int edg_wll_DoLogEventProxy(
 		close(conn.sock);
 		goto edg_wll_DoLogEventProxy_end;
 	}
+
+/* non-retry variant (pre bug #18994)
+ * XXX: what is the EISCONN case good for? conn.sock is created above.
+ *
 	if (connect(conn.sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
 		if(errno != EISCONN) {
 			edg_wll_SetError(context,answer = errno,"connect()");
@@ -194,6 +199,40 @@ int edg_wll_DoLogEventProxy(
 			goto edg_wll_DoLogEventProxy_end;
 		}
 	}
+*/
+
+	retries = 0;
+	while ((answer = connect(conn.sock, (struct sockaddr *)&saddr, sizeof(saddr))) < 0 &&
+			errno == EAGAIN &&
+			context->p_tmp_timeout.tv_sec >= 0 && context->p_tmp_timeout.tv_usec >= 0 &&
+			!(context->p_tmp_timeout.tv_sec == 0 && context->p_tmp_timeout.tv_usec == 0)
+			)
+	{
+		struct timespec ns = { 0, PROXY_CONNECT_RETRY * 1000000 /* 10 ms */ },rem;
+
+		nanosleep(&ns,&rem);
+
+		context->p_tmp_timeout.tv_usec -= ns.tv_nsec/1000;
+		context->p_tmp_timeout.tv_usec += rem.tv_nsec/1000;
+
+		context->p_tmp_timeout.tv_sec -= ns.tv_sec;
+		context->p_tmp_timeout.tv_sec += rem.tv_sec;
+
+		if (context->p_tmp_timeout.tv_usec < 0) {
+			context->p_tmp_timeout.tv_usec += 1000000;
+			context->p_tmp_timeout.tv_sec--;
+		}
+		retries++;
+	}
+
+	if (answer) {
+		if (errno == EAGAIN) edg_wll_SetError(context,answer = ETIMEDOUT,"edg_wll_DoLogEventProxy connect()");
+		else edg_wll_SetError(context,answer = errno,"connect()");
+		close(conn.sock);
+		goto edg_wll_DoLogEventProxy_end;
+	}
+
+/* just debug 	if (retries) printf("edg_wll_DoLogEventProxy connect retries %d\n",retries); */
 
    /* add DG.USER to the message: */
         name_esc = edg_wll_LogEscape(context->p_user_lbproxy);
