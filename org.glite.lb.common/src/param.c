@@ -6,7 +6,7 @@
 
 #include <globus_common.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/notification.h"
 #include "context-int.h"
@@ -467,7 +467,7 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 }
 
 void edg_wll_FreeParams(edg_wll_Context ctx) {
-	if (ctx->p_jobid) edg_wlc_JobIdFree(ctx->p_jobid);
+	if (ctx->p_jobid) glite_lbu_JobIdFree(ctx->p_jobid);
 	if (ctx->p_host) free(ctx->p_host);
 	if (ctx->p_instance) free(ctx->p_instance);
 	if (ctx->p_destination) free(ctx->p_destination);

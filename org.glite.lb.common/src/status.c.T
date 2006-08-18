@@ -19,7 +19,7 @@ void edg_wll_FreeStatus(edg_wll_JobStat *stat)
                 my $f = selectField $status $_;
                 my $ft = $f->{type};
                 if ($ft eq 'jobid') {
-                        gen "\tedg_wlc_JobIdFree(stat->$_);\n";
+                        gen "\tglite_lbu_JobIdFree(stat->$_);\n";
                 }
                 if ($ft eq 'string') {
                         gen "\tif (stat->$_ != NULL )    \tfree(stat->$_);\n";
@@ -73,7 +73,7 @@ edg_wll_JobStat *edg_wll_CpyStatus(const edg_wll_JobStat *src, edg_wll_JobStat *
 			my $f = selectField $status $_;
 			my $ft = $f->{type};
 			if ($ft eq 'jobid') {
-				gen "\tif ( edg_wlc_JobIdDup(src->$_, &(dest->$_)) ) goto err;\n";
+				gen "\tif ( glite_lbu_JobIdDup(src->$_, &(dest->$_)) ) goto err;\n";
 			}
 			if ($ft eq 'string') {
 				gen "\tif ( src->$_ != NULL )\n";

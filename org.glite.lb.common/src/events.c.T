@@ -9,7 +9,7 @@
 #include <time.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/producer.h"
 #include "ulm_parse.h"
 
@@ -308,7 +308,7 @@ void edg_wll_FreeEvent(
 edg_wll_EventCode eventcode=event->type;
 
 /* free the common fields */
-        if (event->any.jobId) edg_wlc_JobIdFree(event->any.jobId);
+        if (event->any.jobId) glite_lbu_JobIdFree(event->any.jobId);
 @@@{
 $indent = "\t";
 selectType $event '_common_';
@@ -340,7 +340,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 			gen $indent."\tif (event->$tl.$fn) free(event->$tl.$fn);\n"
 		}
 		if ($ft eq 'jobid') {
-			gen $indent."\tif (event->$tl.$fn) edg_wlc_JobIdFree(event->$tl.$fn);\n"
+			gen $indent."\tif (event->$tl.$fn) glite_lbu_JobIdFree(event->$tl.$fn);\n"
 		}
 		if ($ft eq 'notifid') {
 			gen $indent."\tif (event->$tl.$fn) edg_wll_NotifIdFree(event->$tl.$fn);\n"

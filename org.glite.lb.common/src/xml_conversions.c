@@ -182,13 +182,13 @@ void edg_wll_add_timeval_to_XMLBody(char **body, struct timeval toAdd, const cha
 
 /* edg_wll_add_jobid_to_XMLBody(&body, eventsOut[i].any.jobId, "jobId", NULL) */
 
-void edg_wll_add_jobid_to_XMLBody(char **body, edg_wlc_JobId toAdd, const char *tag, const void *null)
+void edg_wll_add_jobid_to_XMLBody(char **body, glite_lbu_JobId toAdd, const char *tag, const void *null)
 {
-	if (toAdd != (edg_wlc_JobId) null) {
+	if (toAdd != (glite_lbu_JobId) null) {
                 char *newBody, *pom;
 
                 trio_asprintf(&newBody,"%s\t\t\t<%s>%|Xs</%s>\r\n",
-                *body, tag, pom = edg_wlc_JobIdUnparse(toAdd), tag);
+                *body, tag, pom = glite_lbu_JobIdUnparse(toAdd), tag);
 
                 free(*body);
 		free(pom);
@@ -520,11 +520,11 @@ char *edg_wll_from_string_to_string(edg_wll_XML_ctx *XMLCtx)
 
 
 /* XMLCtx->eventsOutGlobal[XMLCtx->position].any.jobId = edg_wll_from_string_to_dgJobId(XMLCtx); */
-edg_wlc_JobId edg_wll_from_string_to_jobid(edg_wll_XML_ctx *XMLCtx)
+glite_lbu_JobId edg_wll_from_string_to_jobid(edg_wll_XML_ctx *XMLCtx)
 {
-	edg_wlc_JobId out;
+	glite_lbu_JobId out;
 
-	edg_wlc_JobIdParse(XMLCtx->char_buf, &out);
+	glite_lbu_JobIdParse(XMLCtx->char_buf, &out);
 	edg_wll_freeBuf(XMLCtx); 
 
 	return(out);

@@ -8,8 +8,8 @@
 
 #include <globus_config.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/strmd5.h"
+#include "glite/lb-utils/cjobid.h"
 #include "context-int.h"
 #include "glite/lb/producer.h"
 
@@ -353,23 +353,23 @@ int edg_wll_IncSequenceCode(edg_wll_Context ctx)
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
-int edg_wll_GetLoggingJob(const edg_wll_Context ctx,edg_wlc_JobId *out)
+int edg_wll_GetLoggingJob(const edg_wll_Context ctx,glite_lbu_JobId *out)
 {
-	return edg_wlc_JobIdDup(ctx->p_jobid,out);
+	return glite_lbu_JobIdDup(ctx->p_jobid,out);
 }
 
 int edg_wll_GenerateSubjobIds(
 	edg_wll_Context	ctx,
-	const edg_wlc_JobId	parent,
+	const glite_lbu_JobId	parent,
 	int			num_subjobs,
 	const char *		seed,
-	edg_wlc_JobId **	subjobs)
+	glite_lbu_JobId **	subjobs)
 {
 	int subjob, ret;
 	char *p_unique, *p_bkserver, *intseed;
 	char *unhashed, *hashed;
 	unsigned int p_port;
-	edg_wlc_JobId *retjobs;
+	glite_lbu_JobId *retjobs;
 
 
 	if (num_subjobs < 1)
@@ -380,10 +380,10 @@ int edg_wll_GenerateSubjobIds(
 	else
 		intseed = strdup(seed);
 
-	p_unique = edg_wlc_JobIdGetUnique(parent);
-	edg_wlc_JobIdGetServerParts(parent, &p_bkserver, &p_port);
+	p_unique = glite_lbu_JobIdGetUnique(parent);
+	glite_lbu_JobIdGetServerParts(parent, &p_bkserver, &p_port);
 
-	retjobs = calloc(num_subjobs+1, sizeof(edg_wlc_JobId));
+	retjobs = calloc(num_subjobs+1, sizeof(glite_lbu_JobId));
 
 	if (p_unique == NULL ||
 		intseed == NULL ||
@@ -406,10 +406,10 @@ int edg_wll_GenerateSubjobIds(
 			goto handle_error;
 		}
 
-		ret = edg_wlc_JobIdRecreate(p_bkserver, p_port, hashed, &retjobs[subjob]);
+		ret = glite_lbu_JobIdRecreate(p_bkserver, p_port, hashed, &retjobs[subjob]);
 		free(hashed);
 		if (ret != 0) {
-			edg_wll_SetError(ctx, ret, "edg_wll_GenerateSubjobIds(): edg_wlc_JobIdRecreate() error");
+			edg_wll_SetError(ctx, ret, "edg_wll_GenerateSubjobIds(): glite_lbu_JobIdRecreate() error");
 			goto handle_error;
 		}
 	}
@@ -426,7 +426,7 @@ int edg_wll_GenerateSubjobIds(
 	free(p_unique);
 	free(p_bkserver);
 	for ( subjob-- ;subjob >= 0; subjob--)
-		edg_wlc_JobIdFree(retjobs[subjob]);
+		glite_lbu_JobIdFree(retjobs[subjob]);
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 

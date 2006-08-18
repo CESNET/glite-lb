@@ -14,10 +14,9 @@
 #include "events_parse.h"
 #include "ulm_parse.h"
 #include "context-int.h"
-#include "escape.h"
-#include "glite/wmsutils/jobid/cjobid.h"
-
-#include "trio.h"
+#include "glite/lb-utils/cjobid.h"
+#include "glite/lb-utils/trio.h"
+#include "glite/lb-utils/escape.h"
 
 static const struct timeval null_timeval = {0,0};
 
@@ -29,7 +28,7 @@ char *my_edg_wll_ULMGetValueAt( p_edg_wll_ULMFields, int );
  * Calls: calloc, free, sprintf, strdup
  *        edg_wll_ULMNewParseTable, edg_wll_ULMFreeParseTable, edg_wll_ULMProcessParseTable,
  *        edg_wll_ULMGetNameAt, my_edg_wll_ULMGetValueAt, edg_wll_ULMDateToTimeval (edg_wll_ULMDateToDouble),
- *        edg_wll_StringToEvent, edg_wll_StringToKeyName, edg_wll_StringToLevel, edg_wlc_jobid_tParse,
+ *        edg_wll_StringToEvent, edg_wll_StringToKeyName, edg_wll_StringToLevel, glite_lbu_jobid_tParse,
  *        edg_wll_EventToString, edg_wll_KeyNameToString, edg_wll_SetError (or edg_wll_ResetError)
  * Algorithm: break ULM string into fields and then according the event type
  *            fill in the proper structures
@@ -196,7 +195,7 @@ end:
  * Calls: malloc, free, strlen, strcmp, asprintf, trio_asprintf
  *        edg_wll_ULMTimevalToDate,
  *        edg_wll_EventToString, edg_wll_KeyNameToString, edg_wll_LevelToString, 
- *        edg_wlc_jobid_tUnparse, 
+ *        glite_lbu_jobid_tUnparse, 
  * Algorithm: format values from internal structures into a ULM string
  */
 #define NOMEM { if (logline) free(logline); logline = NULL; edg_wll_SetError(context,ENOMEM,NULL); goto clean; }
@@ -231,7 +230,7 @@ memcpy(&nonulls,event,sizeof nonulls);
 
 e = edg_wll_EventToString(eventcode);
 l = edg_wll_LevelToString(event->any.level);
-j = edg_wlc_JobIdUnparse(event->any.jobId);
+j = glite_lbu_JobIdUnparse(event->any.jobId);
 s = edg_wll_SourceToString(event->any.source);
 if (trio_asprintf(&common,EDG_WLL_FORMAT_COMMON, \
 	date, event->any.host, l, event->any.priority, s, nonulls.any.src_instance, \
@@ -271,7 +270,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 			$free = $free . "free($fn\_code); ";
 		}
 		if ($f->{type} eq 'jobid') {
-			gen "\tchar \*$fn\_str = edg_wlc_JobIdUnparse(event->$tl.$fn);\n";
+			gen "\tchar \*$fn\_str = glite_lbu_JobIdUnparse(event->$tl.$fn);\n";
 			$free .= "free($fn\_str); ";
 		}
 		if ($f->{type} eq 'notifid') {
@@ -474,7 +473,7 @@ edg_wll_ErrorCode edg_wll_CompareEvents(
  * my_edg_wll_ULMGetValueAt - get value at index, but also
  *                - remove surrounding quotes if any
  *                - and unescape the string
- *                - the new string will be allocated (by edg_wll_LogUnescape)
+ *                - the new string will be allocated (by edg_wll_LogUnetrioscape)
  * Calls: edg_wll_ULMGetValueAt, edg_wll_LogUnescape, calloc and strncpy or strdup
  */
 char *my_edg_wll_ULMGetValueAt( p_edg_wll_ULMFields table, int index )
@@ -501,7 +500,7 @@ if ((*first == ULM_QM) && (*last == ULM_QM)) {
 else tmp = strdup(str);
 
 if (len > 2) {
-	ret = edg_wll_LogUnescape(tmp);
+	ret = glite_lbu_UnescapeULM(tmp);
 	if (tmp) free(tmp);
 }
 else ret = tmp;
@@ -512,9 +511,9 @@ return ret;
 
 /**
  * edg_wll_GetJobId - parse jobId from ULM message
- * Returns: edg_wlc_jobid_t string or NULL
+ * Returns: glite_lbu_jobid_t string or NULL
  * Calls: edg_wll_ULMNewParseTable, edg_wll_ULMFreeParseTable, edg_wll_ULMProcessParseTable,
- *        edg_wll_ULMGetNameAt, my_edg_wll_ULMGetValueAt, edg_wlc_jobid_tParse, strdup
+ *        edg_wll_ULMGetNameAt, my_edg_wll_ULMGetValueAt, glite_lbu_jobid_tParse, strdup
  * Algorithm: break ULM string into fields and then look for jobId
  */
 char *edg_wll_GetJobId(edg_wll_LogLine logline)
@@ -523,7 +522,7 @@ p_edg_wll_ULMFields table = edg_wll_ULMNewParseTable(logline);
 int i;
 char *ret=NULL,*fullid=NULL;
 edg_wll_KeyNameCode keycode=UNDEFINED;
-edg_wlc_JobId jobId = NULL;
+glite_lbu_JobId jobId = NULL;
 
 /* break ULM string into fields */
 if ( edg_wll_ULMProcessParseTable(table) != 0 ) goto clean;
@@ -535,13 +534,13 @@ for (i=0; i<table->num; i++) {
 }
 if ( fullid == NULL ) goto clean;
 
-if (edg_wlc_JobIdParse(fullid, &jobId)) goto clean;
+if (glite_lbu_JobIdParse(fullid, &jobId)) goto clean;
 
 ret = strdup(fullid);
 
 clean:
    if (fullid) free(fullid);
-   if (jobId) edg_wlc_JobIdFree(jobId);
+   if (jobId) glite_lbu_JobIdFree(jobId);
    edg_wll_ULMFreeParseTable(table);
    return ret;
 }
@@ -707,7 +706,7 @@ if (trio_asprintf(&common,EDG_WLL_FORMAT_NOTIFICATION_COMMON, \
 if (l) free(l);
 if (s) free(s);
 
-// n = edg_wlc_NotifIdUnparse(event->notification.notifId);
+// n = glite_lbu_NotifIdUnparse(event->notification.notifId);
 
 /* format the rest of the logline */
 @@@{
@@ -729,7 +728,7 @@ $indent = "   ";
 			$free = $free . "free($fn\_code); ";
 		}
 		if ($f->{type} eq 'jobid') {
-			gen "\tchar \*$fn\_str = edg_wlc_JobIdUnparse(event->$tl.$fn);\n";
+			gen "\tchar \*$fn\_str = glite_lbu_JobIdUnparse(event->$tl.$fn);\n";
 			$free .= "free($fn\_str); ";
 		}
 		if ($f->{type} eq 'notifid') {

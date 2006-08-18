@@ -3,8 +3,8 @@
 
 #ident "$Header$"
 
-#include "glite/wmsutils/jobid/cjobid.h"
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/lb-utils/cjobid.h"
+#include "glite/lb-utils/strmd5.h"
 #include "glite/lb/events.h"
 
 #define PERFTEST_END_TAG_NAME "lb_perftest"
@@ -38,6 +38,6 @@ glite_wll_perftest_createJobId(const char *bkserver,
 			       const char *test_user,
 			       const char *test_name,
 			       int job_num,
-			       edg_wlc_JobId *jobid);
+			       glite_lbu_JobId *jobid);
 
 #endif

@@ -11,9 +11,9 @@
 
 #include "trio.h"
 #include "glite/lb/producer.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
+#include "glite/lb-utils/escape.h"
 
-#include "escape.h"
 #include "context-int.h"
 #include "xml_parse.h"
 #include "xml_conversions.h"    
@@ -161,7 +161,7 @@ static void startQueryJobs(void *data, const char *el, const char **attr)
                   	 break;
 
 		case 2 : if (!strcmp("jobId", el)) {
-				/* allocates space only for pointers to structures edg_wlc_jobid_t */
+				/* allocates space only for pointers to structures glite_lbu_jobid_t */
 				/* space for structures allocate characterUserJobs         */
    				XMLCtx->jobsOutGlobal = realloc(XMLCtx->jobsOutGlobal,
                                                         (XMLCtx->position+1)*sizeof(*XMLCtx->jobsOutGlobal));
@@ -265,7 +265,7 @@ static void startUserJobs(void *data, const char *el, const char **attr UNUSED_V
 
 		case 1 : if (strcmp("jobId", el)) unexpError()
 			 else {
-				/* allocates space only for pointers to structures edg_wlc_jobid_t */
+				/* allocates space only for pointers to structures glite_lbu_jobid_t */
 				/* space for structures allocate endUserJobs                       */
    				XMLCtx->jobsOutGlobal = realloc(XMLCtx->jobsOutGlobal,
                                                         (XMLCtx->position+1)*sizeof(XMLCtx->jobsOutGlobal));
@@ -742,7 +742,7 @@ static void char_handler(void *data, const char *s, int len)
         /* otherwise use them */
         memcpy(temp_s,s,len);
         temp_s[len] = 0;
-        temp_s1 = edg_wll_UnescapeXML((const char *) temp_s);
+        temp_s1 = glite_lbu_UnescapeXML((const char *) temp_s);
         temp_len1 = strlen(temp_s1);
 
         if (XMLCtx->char_buf_len) 
@@ -1332,7 +1332,7 @@ static void endStatsResult(void *data, const char *el UNUSED_VAR)
 
 
 
-edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context ctx, char *messageBody, edg_wlc_JobId **jobsOut, edg_wll_JobStat **statesOut)
+edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context ctx, char *messageBody, glite_lbu_JobId **jobsOut, edg_wll_JobStat **statesOut)
 {
 	int i;
 	edg_wll_XML_ctx XMLCtx;
@@ -1364,7 +1364,7 @@ edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context ctx, char *messageBody,
 	}  else if (XMLCtx.errtxt) edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, XMLCtx.errtxt);
 
         if ((errorCode = edg_wll_Error(ctx,NULL,NULL))) {
-		for (i=0; i<XMLCtx.position; i++)  edg_wlc_JobIdFree( (XMLCtx.jobsOutGlobal)[i] );
+		for (i=0; i<XMLCtx.position; i++)  glite_lbu_JobIdFree( (XMLCtx.jobsOutGlobal)[i] );
 		free(XMLCtx.jobsOutGlobal);
 		XMLCtx.jobsOutGlobal = NULL;
 		XMLCtx.position = 0;
@@ -1401,7 +1401,7 @@ edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context ctx, char *messageBody,
 		if (jobsOut) 
 	        	*jobsOut = XMLCtx.jobsOutGlobal;
 		else {
-			for (i=0; i<XMLCtx.position; i++)  edg_wlc_JobIdFree( (XMLCtx.jobsOutGlobal)[i] );
+			for (i=0; i<XMLCtx.position; i++)  glite_lbu_JobIdFree( (XMLCtx.jobsOutGlobal)[i] );
 			free(XMLCtx.jobsOutGlobal); 
 		}
 		XMLCtx.jobsOutGlobal = NULL; 
@@ -1538,7 +1538,7 @@ edg_wll_ErrorCode edg_wll_ParseQueryEvents(edg_wll_Context ctx, char *messageBod
 
 
 
-edg_wll_ErrorCode edg_wll_ParseUserJobs(edg_wll_Context ctx, char *messageBody, edg_wlc_JobId **jobsOut)
+edg_wll_ErrorCode edg_wll_ParseUserJobs(edg_wll_Context ctx, char *messageBody, glite_lbu_JobId **jobsOut)
 {
 	int i;
 	edg_wll_XML_ctx XMLCtx;
@@ -1571,7 +1571,7 @@ edg_wll_ErrorCode edg_wll_ParseUserJobs(edg_wll_Context ctx, char *messageBody, 
 
         if ((errorCode = edg_wll_Error(ctx,NULL,NULL))) {
                 *jobsOut = NULL;
-		for (i=0; i<XMLCtx.position; i++)  edg_wlc_JobIdFree( (XMLCtx.jobsOutGlobal)[i] );
+		for (i=0; i<XMLCtx.position; i++)  glite_lbu_JobIdFree( (XMLCtx.jobsOutGlobal)[i] );
 		free(XMLCtx.jobsOutGlobal);
 		XMLCtx.jobsOutGlobal = NULL;
         } else {
@@ -2874,7 +2874,7 @@ int edg_wll_NotifRequestToXML(
 /* construct Message-Body of Request-Line for edg_wll_QuerySequeceCode function */
 int edg_wll_QuerySequenceCodeToXML(
 		edg_wll_Context ctx,
-		edg_wlc_JobId jobId,
+		glite_lbu_JobId jobId,
                 char **message)
 {
 	char *pomA=NULL, *pomC=NULL;

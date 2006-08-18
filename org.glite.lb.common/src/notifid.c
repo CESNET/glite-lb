@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/notifid.h"
 
 int edg_wll_NotifIdParse(const char *s,edg_wll_NotifId *n)
 {
-	edg_wlc_JobId	j;
-	int		ret = edg_wlc_JobIdParse(s,&j);
+	glite_lbu_JobId	j;
+	int		ret = glite_lbu_JobIdParse(s,&j);
 
 	if (!ret) *n = (edg_wll_NotifId) j; 
 	return ret;
@@ -16,22 +16,22 @@ int edg_wll_NotifIdParse(const char *s,edg_wll_NotifId *n)
 
 char* edg_wll_NotifIdUnparse(const edg_wll_NotifId n)
 {
-	return edg_wlc_JobIdUnparse((edg_wlc_JobId) n);
+	return glite_lbu_JobIdUnparse((glite_lbu_JobId) n);
 }
 
 int edg_wll_NotifIdCreate(const char *server,int port,edg_wll_NotifId *n)
 {
-	edg_wlc_JobId	j,j2;
-	int 	ret = edg_wlc_JobIdCreate(server,port,&j);
+	glite_lbu_JobId	j,j2;
+	int 	ret = glite_lbu_JobIdCreate(server,port,&j);
 	char	*u,*u2;
 
 	if (!ret) {
-		u = edg_wlc_JobIdGetUnique(j);
+		u = glite_lbu_JobIdGetUnique(j);
 		asprintf(&u2,"NOTIF:%s",u);
 		free(u);
-		ret = edg_wlc_JobIdRecreate(server,port,u2,&j2);
+		ret = glite_lbu_JobIdRecreate(server,port,u2,&j2);
 		free(u2);
-		edg_wlc_JobIdFree(j);
+		glite_lbu_JobIdFree(j);
 		if (!ret) *n = (edg_wll_NotifId) j2;
 	}
 
@@ -49,8 +49,8 @@ int edg_wll_NotifIdSetUnique(edg_wll_NotifId *n, const char *un)
 	if ( !aux )
 		return -1;
 
-	edg_wll_NotifIdGetServerParts(*((edg_wlc_JobId *)n), &srv, &port);
-	ret = edg_wlc_JobIdRecreate(srv, port, aux, (edg_wlc_JobId *)n);
+	edg_wll_NotifIdGetServerParts(*((glite_lbu_JobId *)n), &srv, &port);
+	ret = glite_lbu_JobIdRecreate(srv, port, aux, (glite_lbu_JobId *)n);
 	free(aux);
 	free(srv);
 
@@ -59,17 +59,17 @@ int edg_wll_NotifIdSetUnique(edg_wll_NotifId *n, const char *un)
 
 void edg_wll_NotifIdFree(edg_wll_NotifId n)
 {
-	edg_wlc_JobIdFree((edg_wlc_JobId) n);
+	glite_lbu_JobIdFree((glite_lbu_JobId) n);
 }
 
 void edg_wll_NotifIdGetServerParts(const edg_wll_NotifId notifId, char **srvName, unsigned int *srvPort)
 {
-	edg_wlc_JobIdGetServerParts((edg_wlc_JobId) notifId, srvName, srvPort);
+	glite_lbu_JobIdGetServerParts((glite_lbu_JobId) notifId, srvName, srvPort);
 }
 
 char* edg_wll_NotifIdGetUnique(const edg_wll_NotifId notifid)
 {
-	char	   *id = edg_wlc_JobIdGetUnique((edg_wlc_JobId)notifid);
+	char	   *id = glite_lbu_JobIdGetUnique((glite_lbu_JobId)notifid);
 
 	if ( id )
 	{

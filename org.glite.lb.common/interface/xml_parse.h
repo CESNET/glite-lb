@@ -18,9 +18,9 @@ extern "C" {
 
 extern edg_wll_ErrorCode edg_wll_ParseQueryEvents(edg_wll_Context, char *, edg_wll_Event **);
 
-extern edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context, char *, edg_wlc_JobId **, edg_wll_JobStat **);
+extern edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context, char *, glite_lbu_JobId **, edg_wll_JobStat **);
 
-extern edg_wll_ErrorCode edg_wll_ParseUserJobs(edg_wll_Context, char *, edg_wlc_JobId **); 
+extern edg_wll_ErrorCode edg_wll_ParseUserJobs(edg_wll_Context, char *, glite_lbu_JobId **); 
 
 extern edg_wll_ErrorCode edg_wll_ParseJobStat(edg_wll_Context ctx, char *messageBody, long len, edg_wll_JobStat *stat);
 
@@ -60,7 +60,7 @@ extern int edg_wll_IndexedAttrsRequestToXML(edg_wll_Context ctx, char **message)
 
 extern int edg_wll_NotifRequestToXML( edg_wll_Context ctx, const char *function, const edg_wll_NotifId notifId, const char *address, edg_wll_NotifChangeOp op, edg_wll_QueryRec const * const *conditions, char **message);
 
-extern int edg_wll_QuerySequenceCodeToXML(edg_wll_Context ctx, edg_wlc_JobId jobId, char **message);
+extern int edg_wll_QuerySequenceCodeToXML(edg_wll_Context ctx, glite_lbu_JobId jobId, char **message);
 	
 
 #ifdef __cplusplus

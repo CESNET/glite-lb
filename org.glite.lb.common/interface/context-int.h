@@ -134,7 +134,7 @@ struct _edg_wll_Context {
 	char		*p_key_filename;
 	time_t		purge_timeout[EDG_WLL_NUMBER_OF_STATCODES];
 /* producer part */
-	edg_wlc_JobId	p_jobid;
+	glite_lbu_JobId	p_jobid;
 	edg_wll_SeqCode	p_seqcode;
 	int		count_statistics;
 

@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/consumer.h"
 
 /*
@@ -31,7 +31,7 @@ void edg_wll_QueryRecFree(edg_wll_QueryRec *prec)
 			break;
 		case EDG_WLL_QUERY_ATTR_JOBID:
 		case EDG_WLL_QUERY_ATTR_PARENT:
-			edg_wlc_JobIdFree(prec->value.j);
+			glite_lbu_JobIdFree(prec->value.j);
 			break;
 		case EDG_WLL_QUERY_ATTR_STATUS:
 		case EDG_WLL_QUERY_ATTR_DONECODE:
