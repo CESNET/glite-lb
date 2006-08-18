@@ -12,7 +12,6 @@
 #include "glite/lb/purge.h"
 #include "purge.h"
 #include "store.h"
-#include "lbs_db.h"
 #include "lock.h"
 #include "il_lbproxy.h"
 

@@ -12,17 +12,18 @@
 
 #include "glite/wmsutils/jobid/cjobid.h"
 
+#include "glite/lb-utils/db.h"
 #include "glite/lb/trio.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/ulm_parse.h"
 
+#include "db_supp.h"
 #include "lb_html.h"
 #include "lb_proto.h"
 #include "store.h"
 #include "lock.h"
-#include "lbs_db.h"
 #include "query.h"
 #include "get_events.h"
 #include "glite/lb/purge.h"
@@ -264,7 +265,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 		}
 	}
 	else {
-		edg_wll_Stmt	s;
+		glite_lbu_Statement	s;
 		char		*job_s;
 		int		res;
 		time_t		timeout[EDG_WLL_NUMBER_OF_STATCODES],
@@ -273,8 +274,11 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 		for (i=0; i<EDG_WLL_NUMBER_OF_STATCODES; i++)
 			timeout[i] = request->timeout[i] < 0 ? ctx->purge_timeout[i] : request->timeout[i];
 
-		if (edg_wll_ExecStmt(ctx,"select dg_jobid from jobs",&s) < 0) goto abort;
-		while ((res = edg_wll_FetchRow(s,&job_s)) > 0) {
+		if (glite_lbu_ExecSQL(ctx->dbctx,"select dg_jobid from jobs",&s) < 0) {
+			edg_wll_SetErrorDB(ctx);
+			goto abort;
+		}
+		while ((res = glite_lbu_FetchRow(s,1,NULL,&job_s)) > 0) {
 			if (edg_wlc_JobIdParse(job_s,&job)) {
 				fprintf(stderr,"%s: parse error (internal inconsistency !)\n",job_s);
 				parse = 1;
@@ -322,10 +326,8 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 				free(job_s);
 			}
 		}
-		edg_wll_FreeStmt(&s);
 abort:
-                // just for escaping from nested cycles
-	        ;       /* prevent compiler to complain */
+		glite_lbu_FreeStmt(&s);
 	}
 
 	if (parse && !edg_wll_Error(ctx,NULL,NULL))
@@ -406,7 +408,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 {
 	char	*dbjob;
 	char	*stmt = NULL;
-	edg_wll_Stmt	q;
+	glite_lbu_Statement	q;
 	int		ret,dumped = 0;
 
 	edg_wll_ResetError(ctx);
@@ -418,7 +420,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 	if ( purge )
 	{
 		trio_asprintf(&stmt,"delete from jobs where jobid = '%|Ss'",dbjob);
-		ret = edg_wll_ExecStmt(ctx,stmt,NULL);
+		ret = glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL);
 		if (ret <= 0) {
 			unlock_and_check(ctx,job);
 			if (ret == 0) {
@@ -430,7 +432,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 		free(stmt); stmt = NULL;
 
 		trio_asprintf(&stmt,"delete from states where jobid = '%|Ss'",dbjob);
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+		if (glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL) < 0) {
 			unlock_and_check(ctx,job);
 			goto clean;
 		}
@@ -438,7 +440,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 
 /* Why on earth ?
 		trio_asprintf(&stmt,"delete from states where jobid = '%|Ss'",dbjob);
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+		if (glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL) < 0) {
 			unlock_and_check(ctx,job);
 			goto clean;
 		}
@@ -452,7 +454,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 	if ( purge )
 	{
 		trio_asprintf(&stmt,"delete from status_tags where jobid = '%|Ss'",dbjob);
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto unlock;
+		if (glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL) < 0) goto unlock;
 		free(stmt); stmt = NULL;
 	}
 
@@ -469,11 +471,11 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 			"order by event", dbjob);
 
 /* check for events repeatedly -- new one may have arrived in the meantime */
-	while ((ret = edg_wll_ExecStmt(ctx,stmt,&q)) > 0) {
+	while ((ret = glite_lbu_ExecSQL(ctx->dbctx,stmt,&q)) > 0) {
 		char	*res[9];
 
 		dumped = 1;
-		while ((ret = edg_wll_FetchRow(q,res)) > 0) {
+		while ((ret = glite_lbu_FetchRow(q,dump >= 0 ? 9 : 1,NULL,res)) > 0) {
 			int	event;
 
 			event = atoi(res[0]);
@@ -515,6 +517,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 						written = write(dump,arr_s+total,len-total);
 						if (written < 0 && errno != EAGAIN) {
 							edg_wll_SetError(ctx,errno,"writing dump file");
+							glite_lbu_FreeStmt(&q);
 							free(event_s);
 							goto clean;
 						}
@@ -554,17 +557,20 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 				}
 			}
 		}
-		edg_wll_FreeStmt(&q);
-		if (ret < 0 || !purge) break;
+		glite_lbu_FreeStmt(&q);
+		if (ret < 0 || !purge) {
+			edg_wll_SetErrorDB(ctx);
+			break;
+		}
 	}
 
-	edg_wll_FreeStmt(&q);
 	if (ret == 0 && dumped == 0) {
 		if (ctx->strict_locking) unlock_and_check(ctx,job);
 		fprintf(stderr,"%s: no events, i.e. no such job or internal inconsistency\n",dbjob);
 		edg_wll_SetError(ctx,ENOENT,dbjob);
 		goto clean;
 	}
+	if (ret < 0) edg_wll_SetErrorDB(ctx);
 
 unlock:
 	if (ctx->strict_locking) unlock_and_check(ctx,job);

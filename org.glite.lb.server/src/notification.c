@@ -5,13 +5,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "glite/lb-utils/db.h"
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/trio.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/notification.h"
+#include "db_supp.h"
 #include "il_notification.h"
-#include "lbs_db.h"
 #include "query.h"
 
 
@@ -78,8 +79,9 @@ int edg_wll_NotifNewServer(
 		*valid = ctx->peerProxyValidity;
 	else
 		*valid += ctx->notifDuration;
-	
-	if ( !(time_s = strdup(edg_wll_TimeToDB(*valid))) )
+
+	glite_lbu_TimeToDB(*valid, &time_s);
+	if ( !time_s )
 	{
 		edg_wll_SetError(ctx, errno, NULL);
 		goto cleanup;
@@ -107,8 +109,10 @@ int edg_wll_NotifNewServer(
 				"values ('%|Ss','%|Ss',%s,'%|Ss', '<and>%|Ss</and>')",
 				nid_s, addr_s? addr_s: address_override, time_s, owner, xml_conds);
 
-	if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 )
+	if ( glite_lbu_ExecSQL(ctx->dbctx, q, NULL) < 0 ) {
+		edg_wll_SetErrorDB(ctx);
 		goto cleanup;
+	}
 
 	if (jobs) for ( i = 0; jobs[i]; i++ )
 	{
@@ -116,25 +120,28 @@ int edg_wll_NotifNewServer(
 		trio_asprintf(&q,
 				"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
 				nid_s, jobs[i]);
-		if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 )
+		if ( glite_lbu_ExecSQL(ctx->dbctx, q, NULL) < 0 )
 		{
 			/*	XXX: Remove uncoplete registration?
 			 *		 Which error has to be returned?
 			 */
 			free(q);
 			trio_asprintf(&q, "delete from notif_jobs where notifid='%|Ss'", nid_s);
-			edg_wll_ExecStmt(ctx, q, NULL);
+			glite_lbu_ExecSQL(ctx->dbctx, q, NULL);
 			free(q);
 			trio_asprintf(&q, "delete from notif_registrations where notifid='%|Ss'", nid_s);
-			edg_wll_ExecStmt(ctx, q, NULL);
+			glite_lbu_ExecSQL(ctx->dbctx, q, NULL);
+			edg_wll_SetErrorDB(ctx);
 			goto cleanup;
 		}
 	}
 	else {
 		trio_asprintf(&q,"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
 				nid_s,NOTIF_ALL_JOBS);
-		if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 ) goto cleanup;
-
+		if ( glite_lbu_ExecSQL(ctx->dbctx, q, NULL) < 0 ) {
+			edg_wll_SetErrorDB(ctx);
+			goto cleanup;
+		}
 	}
 
 
@@ -185,7 +192,8 @@ int edg_wll_NotifBindServer(
 	else
 		*valid += ctx->notifDuration;
 
-	if ( !(time_s = strdup(edg_wll_TimeToDB(*valid))) )
+	glite_lbu_TimeToDB(*valid, &time_s);
+	if ( !time_s )
 	{
 		edg_wll_SetError(ctx, errno, "Formating validity time");
 		goto cleanup;
@@ -271,8 +279,10 @@ int edg_wll_NotifChangeServer(
 			/*	Format DB insert statement
 			 */
 			trio_asprintf(&q, "delete from  notif_jobs where notifid='%|Ss'", nid_s);
-			if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 )
+			if ( glite_lbu_ExecSQL(ctx->dbctx, q, NULL) < 0 ) {
+				edg_wll_SetErrorDB(ctx);
 				goto cleanup;
+			}
 
 			for ( i = 0; jobs[i]; i++ )
 			{
@@ -280,17 +290,18 @@ int edg_wll_NotifChangeServer(
 				trio_asprintf(&q,
 						"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
 						nid_s, jobs[i]);
-				if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 )
+				if ( glite_lbu_ExecSQL(ctx->dbctx, q, NULL) < 0 )
 				{
 					/*	XXX: Remove uncoplete registration?
 					 *		 Which error has to be returned?
 					 */
 					free(q);
 					trio_asprintf(&q, "delete from notif_jobs where notifid='%|Ss'", nid_s);
-					edg_wll_ExecStmt(ctx, q, NULL);
+					glite_lbu_ExecSQL(ctx->dbctx, q, NULL);
 					free(q);
 					trio_asprintf(&q,"delete from notif_registrations where notifid='%|Ss'", nid_s);
-					edg_wll_ExecStmt(ctx, q, NULL);
+					glite_lbu_ExecSQL(ctx->dbctx, q, NULL);
+					edg_wll_SetErrorDB(ctx);
 					goto cleanup;
 				}
 			}
@@ -340,7 +351,8 @@ int edg_wll_NotifRefreshServer(
 	else
 		*valid += ctx->notifDuration;
 
-	if ( !(time_s = strdup(edg_wll_TimeToDB(*valid))) )
+	glite_lbu_TimeToDB(*valid, &time_s);
+	if ( !time_s )
 	{
 		edg_wll_SetError(ctx, errno, "Formating validity time");
 		goto cleanup;
@@ -370,11 +382,14 @@ int edg_wll_NotifDropServer(
 		goto cleanup;
 
 	trio_asprintf(&stmt, "delete from notif_registrations where notifid='%|Ss'", nid_s);
-	if ( (ret = edg_wll_ExecStmt(ctx, stmt, NULL)) < 0 )
+	if ( (ret = glite_lbu_ExecSQL(ctx->dbctx, stmt, NULL)) < 0 ) {
+		edg_wll_SetErrorDB(ctx);
 		goto cleanup;
+	}
 	free(stmt);
 	trio_asprintf(&stmt, "delete from notif_jobs where notifid='%|Ss'", nid_s);
-	edg_wll_ExecStmt(ctx, stmt, NULL);
+	glite_lbu_ExecSQL(ctx->dbctx, stmt, NULL);
+	edg_wll_SetErrorDB(ctx);
 	edg_wll_NotifCancelRegId(ctx, nid);
 
 cleanup:
@@ -387,7 +402,7 @@ cleanup:
 
 static char *get_user(edg_wll_Context ctx, int create)
 {
-	edg_wll_Stmt	stmt	= NULL;
+	glite_lbu_Statement	stmt	= NULL;
 	char		   *userid	= NULL,
 				   *q		= NULL;
 	int				ret;
@@ -399,7 +414,7 @@ static char *get_user(edg_wll_Context ctx, int create)
 		goto cleanup;
 	}
 	trio_asprintf(&q, "select userid from users where cert_subj='%|Ss'", ctx->peerName);
-	if ( edg_wll_ExecStmt(ctx, q, &stmt) < 0 )
+	if ( glite_lbu_ExecSQL(ctx->dbctx, q, &stmt) < 0 )
 		goto cleanup;
 
 	/*	returned value:
@@ -407,8 +422,10 @@ static char *get_user(edg_wll_Context ctx, int create)
 	 *	>0		user found - return selected value
 	 *	<0		SQL error
 	 */
-	if ( ((ret = edg_wll_FetchRow(stmt, &userid)) != 0) || !create )
+	if ( ((ret = glite_lbu_FetchRow(stmt, 1, NULL, &userid)) != 0) || !create ) {
+		edg_wll_SetErrorDB(ctx);
 		goto cleanup;
+	}
 
 	if ( !(userid = strdup(strmd5(ctx->peerName, NULL))) )
 	{
@@ -418,9 +435,9 @@ static char *get_user(edg_wll_Context ctx, int create)
 	free(q);
 	trio_asprintf(&q, "insert into users(userid,cert_subj) values ('%|Ss','%|Ss')",
 			userid, ctx->peerName);
-	if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 )
+	if ( glite_lbu_ExecSQL(ctx->dbctx, q, NULL) < 0 )
 	{
-		if ( edg_wll_Error(ctx,NULL,NULL) != EEXIST )
+		if ( edg_wll_SetErrorDB(ctx) != EEXIST )
 		{
 			free(userid);
 			userid = NULL;
@@ -431,7 +448,7 @@ static char *get_user(edg_wll_Context ctx, int create)
 
 cleanup:
 	if ( q ) free(q);
-	if ( stmt ) edg_wll_FreeStmt(&stmt);
+	if ( stmt ) glite_lbu_FreeStmt(&stmt);
 
 	return userid;
 }
@@ -463,18 +480,22 @@ static int check_notif_request(
 				"where notifid='%|Ss' and userid='%|Ss'",
 				nid_s, user);
 
-	if ( (ret = edg_wll_ExecStmt(ctx, stmt, NULL)) < 0 )
+	if ( (ret = glite_lbu_ExecSQL(ctx->dbctx, stmt, NULL)) < 0 ) {
+		edg_wll_SetErrorDB(ctx);
 		goto cleanup;
+	}
 	if ( ret == 0 )
 	{
 		free(stmt);
 		trio_asprintf(&stmt,
 					"select notifid from notif_registrations where notifid='%|Ss'", nid_s);
-		ret = edg_wll_ExecStmt(ctx, stmt, NULL);
+		ret = glite_lbu_ExecSQL(ctx->dbctx, stmt, NULL);
 		if ( ret == 0 )
 			edg_wll_SetError(ctx, ENOENT, "Unknown notification ID");
 		else if ( ret > 0 )
 			edg_wll_SetError(ctx, EPERM, "Only owner could access the notification");
+		else
+			edg_wll_SetErrorDB(ctx);
 	}
 
 cleanup:
@@ -616,14 +637,16 @@ static int update_notif(
 	free(stmt);
 	stmt = aux;
 
-	if ( (ret = edg_wll_ExecStmt(ctx, stmt, NULL)) < 0 )
+	if ( (ret = glite_lbu_ExecSQL(ctx->dbctx, stmt, NULL)) < 0 ) {
+		edg_wll_SetErrorDB(ctx);
 		goto cleanup;
+	}
 	if ( ret == 0 )
 	{
 		free(stmt);
 		trio_asprintf(&stmt,
 				"select notifid from notif_registrations where notifid='%|Ss'", nid_s);
-		ret = edg_wll_ExecStmt(ctx, stmt, NULL);
+		ret = glite_lbu_ExecSQL(ctx->dbctx, stmt, NULL);
 		if ( ret == 0 )
 			edg_wll_SetError(ctx, ENOENT, "Unknown notification ID");
 		/*
@@ -632,6 +655,8 @@ static int update_notif(
 		else if ( ret > 0 )
 			edg_wll_SetError(ctx, EPERM, "Updating notification records");
 		 */
+		else if (ret < 0)
+			edg_wll_SetErrorDB(ctx);
 	}
 
 	if ( host ) {

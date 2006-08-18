@@ -10,6 +10,7 @@
 #include <regex.h>
 #include <syslog.h>
 
+#include "glite/lb-utils/db.h"
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
@@ -17,7 +18,6 @@
 
 #include "store.h"
 #include "index.h"
-#include "lbs_db.h"
 #include "jobstat.h"
 #include "get_events.h"
 
@@ -599,8 +599,7 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 				break;
 			case EDG_WLL_QUERY_ATTR_TIME:
 				if (stat->pub.stateEnterTimes)
-					data = strdup(edg_wll_TimeToDB(stat->pub.stateEnterTimes[
-							job_index_cols[i].qrec.attr_id.state+1]));
+					glite_lbu_TimeToDB(stat->pub.stateEnterTimes[job_index_cols[i].qrec.attr_id.state+1], &data);
 				else data = strdup("0");
 				break;
 			case EDG_WLL_QUERY_ATTR_RESUBMITTED:

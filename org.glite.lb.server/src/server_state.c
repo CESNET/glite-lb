@@ -1,30 +1,31 @@
 #ident "$Header$"
 
+#include "glite/lb-utils/db.h"
 #include "glite/lb/trio.h"
 #include "glite/lb/context-int.h"
 
-#include "lbs_db.h"
+#include "db_supp.h"
 #include "server_state.h"
 
 int edg_wll_GetServerState(edg_wll_Context ctx,const char *name,char **val)
 {
 	char	*stmt = NULL;
-	edg_wll_Stmt	q = NULL;
+	glite_lbu_Statement q = NULL;
 
-
+	*val = NULL;
 	trio_asprintf(&stmt,"select value from server_state "
 			"where prefix = 'https://%|Ss:%d' and name = '%|Ss'",
 			ctx->srvName,ctx->srvPort,name);
 
-	switch (edg_wll_ExecStmt(ctx,stmt,&q)) {
+	switch (glite_lbu_ExecSQL(ctx->dbctx,stmt,&q)) {
 		case 0: edg_wll_SetError(ctx,ENOENT,name); break;
-		case -1: break;
-		default: edg_wll_FetchRow(q,val); break;
+		case -1: edg_wll_SetErrorDB(ctx); break;
+		default: glite_lbu_FetchRow(q,1,NULL,val); break;
 	}
 
-	edg_wll_FreeStmt(&q);
+	glite_lbu_FreeStmt(&q);
 	free(stmt);
-	return edg_wll_Error(ctx,NULL,NULL);
+	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 int edg_wll_SetServerState(edg_wll_Context ctx,const char *name,const char *val)
@@ -35,7 +36,7 @@ int edg_wll_SetServerState(edg_wll_Context ctx,const char *name,const char *val)
 			"values ('https://%|Ss:%d','%|Ss','%|Ss')",
 			ctx->srvName,ctx->srvPort,name,val);
 
-	switch(edg_wll_ExecStmt(ctx,stmt,NULL)) {
+	switch(glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL)) {
 		case 1: break;
 		case -1: if (edg_wll_Error(ctx,NULL,NULL) == EEXIST) {
 				 free(stmt);
@@ -43,12 +44,12 @@ int edg_wll_SetServerState(edg_wll_Context ctx,const char *name,const char *val)
 						 "where prefix = 'https://%|Ss:%d' "
 						 "and name = '%|Ss'",
 						 val,ctx->srvName,ctx->srvPort,name);
-				 edg_wll_ExecStmt(ctx,stmt,NULL);
+				 glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL);
 			 }
 			 break;
 
 		default: abort();
 	}
 	free(stmt);
-	return edg_wll_Error(ctx,NULL,NULL);
+	return edg_wll_SetErrorDB(ctx);
 }

@@ -1,8 +1,10 @@
 #include <errno.h>
 
+#include "glite/lb-utils/db.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
 
+#include "db_supp.h"
 #include "get_events.h"
 #include "store.h"
 #include "lock.h"
@@ -15,7 +17,7 @@
 
 int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, const char *source, char **seqcode)
 {
-	edg_wll_Stmt	sh;
+	glite_lbu_Statement	sh;
 	intJobStat	   *istat = NULL;
 	char		   *jobid_md5 = NULL,
 				   *stmt = NULL,
@@ -34,12 +36,18 @@ int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, co
 
 	if ( stmt == NULL ) return edg_wll_SetError(ctx, ENOMEM, NULL);
 
-	if ( (nstates = edg_wll_ExecStmt(ctx, stmt, &sh)) < 0 ) goto cleanup;
+	if ( (nstates = glite_lbu_ExecSQL(ctx->dbctx, stmt, &sh)) < 0 ) {
+		edg_wll_SetErrorDB(ctx);
+		goto cleanup;
+	}
 	if ( nstates == 0 ) {
 		edg_wll_SetError(ctx, ENOENT, "no state in DB");
 		goto cleanup;
 	}
-	if ( edg_wll_FetchRow(sh, &res) < 0 ) goto cleanup;
+	if ( glite_lbu_FetchRow(sh, 1,NULL,&res) < 0 ) {
+		edg_wll_SetErrorDB(ctx);
+		goto cleanup;
+	}
 
 	istat = dec_intJobStat(res, &res_rest);
 	if ( res_rest  && istat ) {
@@ -53,7 +61,7 @@ cleanup:
 	free(res);
 	free(jobid_md5);
 	free(stmt);
-	edg_wll_FreeStmt(&sh);
+	glite_lbu_FreeStmt(&sh);
 	if ( istat ) {
 		destroy_intJobStat(istat);
 		free(istat);

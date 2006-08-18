@@ -17,10 +17,12 @@
 #include <errno.h>
 #include <syslog.h>
 
+#include "glite/lb-utils/db.h"
 #include "get_events.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
 #include "glite/lb/events_parse.h"
+#include "db_supp.h"
 
 static void edg_wll_set_event_field(edg_wll_Event *,char *,char *);
 static void edg_wll_set_event_field_warn(edg_wll_Event *,char *,char *);
@@ -29,7 +31,7 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 {
 	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId),
 		*q = NULL,*nameval[2];
-	edg_wll_Stmt	sh;
+	glite_lbu_Statement	sh;
 	int	ret,t;
 	const char	*tables[] = { "short_fields","long_fields" };
 
@@ -40,9 +42,12 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 				"where jobid = '%|Ss' and event = %d ",
 				tables[t],jobid,n);
 
-		if ((ret=edg_wll_ExecStmt(ctx,q,&sh)) < 0) goto cleanup;
+		if ((ret=glite_lbu_ExecSQL(ctx->dbctx,q,&sh)) < 0) {
+			edg_wll_SetErrorDB(ctx);
+			goto cleanup;
+		}
 
-		while ((ret=edg_wll_FetchRow(sh,nameval)) > 0) {
+		while ((ret=glite_lbu_FetchRow(sh,2,NULL,nameval)) > 0) {
 			edg_wll_set_event_field(e,nameval[0],nameval[1]);
 			free(nameval[0]);
 			/* XXX: nameval[1] freed in edg_wll_set_event_field
@@ -50,15 +55,17 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 			 */
 		}
 
-		if (ret<0) goto cleanup;
-		edg_wll_FreeStmt(&sh);
+		glite_lbu_FreeStmt(&sh);
+		if (ret<0) {
+			ret = edg_wll_SetErrorDB(ctx);
+			goto cleanup;
+		}
 		free(q); q=NULL;
 	}
 
 	ret=edg_wll_CheckEvent(ctx,e);
 
 cleanup:
-	if (sh) edg_wll_FreeStmt(&sh);
 	free(jobid);
 	free(q);
 

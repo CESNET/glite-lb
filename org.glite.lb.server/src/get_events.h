@@ -1,7 +1,8 @@
 #ident "$Header$"
 
-/* Internal functions for getting event sets from the LB database */
-#include "lbs_db.h"
+#include "glite/lb/events.h"
+#include "glite/lb/context.h"
+#include "glite/lb/consumer.h"
 
 #ifdef __cplusplus
 extern "C" {
