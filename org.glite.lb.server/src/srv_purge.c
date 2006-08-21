@@ -380,7 +380,7 @@ abort:
 
 	asprintf(&response, "HTTP/1.1 %d %s", ret, edg_wll_HTTPErrorMessage(ret));
 
-	edg_wll_http_send(ctx, response, resp_headers, message);
+	edg_wll_http_send(ctx, response, resp_headers, message,ctx->connections->serverConnection);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }

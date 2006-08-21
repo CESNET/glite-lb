@@ -243,7 +243,8 @@ int edg_wll_SetParamInt(edg_wll_Context ctx,edg_wll_ContextParam param,int val)
 				char *s = mygetenv(param);
 				
 				if (!val && s) val = atoi(s);
-				ctx->poolSize = val ? val : EDG_WLL_LOG_CONNECTIONS_DEFAULT;
+//				ctx->connections->poolSize = val ? val : EDG_WLL_LOG_CONNECTIONS_DEFAULT;
+				connectionsHandle.poolSize = val ? val : EDG_WLL_LOG_CONNECTIONS_DEFAULT;
 			}
 			break;
 		case EDG_WLL_PARAM_SOURCE:           
@@ -380,7 +381,7 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 			break;
 		case EDG_WLL_PARAM_QUERY_CONNECTIONS:
 			p_int = va_arg(ap, int *);
-			*p_int = ctx->poolSize;
+			*p_int = ctx->connections->poolSize;
 			break;
 		case EDG_WLL_PARAM_SOURCE:           
 			p_int = va_arg(ap, int *);

@@ -72,8 +72,9 @@ extern int edg_wll_StoreProto(edg_wll_Context ctx);
 extern edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs);
 extern edg_wll_ErrorCode edg_wll_Close(edg_wll_Context);
 
-
-
+#ifdef LB_PERF
+extern void _start (void), etext (void);
+#endif
 
 #define CON_QUEUE		20	/* accept() */
 #define SLAVE_OVERLOAD		10	/* queue items per slave */
@@ -573,6 +574,9 @@ a.sin_addr.s_addr = INADDR_ANY;
 			perror("deamon()");
 			exit(1);
 		}
+#ifdef LB_PERF
+		monstartup((u_long)&_start, (u_long)&etext);
+#endif
 
 		fpid = fopen(pidfile,"w");
 		if (!fpid) { perror(pidfile); return 1; }
@@ -755,14 +759,15 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->p_tmp_timeout.tv_sec = timeout->tv_sec;
 	ctx->p_tmp_timeout.tv_usec = timeout->tv_usec;
 	
-	ctx->poolSize = 1;
-	ctx->connPool = calloc(1, sizeof(edg_wll_ConnPool));
-	ctx->connToUse = 0;
+//	ctx->connections->poolSize = 0;
+//	ctx->connections->connPool = calloc(1, sizeof(edg_wll_ConnPool));
+//	ctx->connToUse = 0;
+	edg_wll_initConnections();
 
 	alen = sizeof(a);
 	getpeername(conn, (struct sockaddr *)&a, &alen);
-	ctx->connPool[ctx->connToUse].peerName = strdup(inet_ntoa(a.sin_addr));
-	ctx->connPool[ctx->connToUse].peerPort = ntohs(a.sin_port);
+	ctx->connections->serverConnection->peerName = strdup(inet_ntoa(a.sin_addr));
+	ctx->connections->serverConnection->peerPort = ntohs(a.sin_port);
 	ctx->count_statistics = count_statistics;
 
 	gettimeofday(&conn_start, 0);
@@ -773,8 +778,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	case NETDB_SUCCESS:
 		if (name) dprintf(("[%d] connection from %s:%d (%s)\n",
 					getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port), name));
-		free(ctx->connPool[ctx->connToUse].peerName);
-		ctx->connPool[ctx->connToUse].peerName = name;
+		free(ctx->connections->serverConnection->peerName);
+		ctx->connections->serverConnection->peerName = name;
 		name = NULL;
 		break;
 
@@ -839,7 +844,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		ctx->srvPort = ntohs(a.sin_port);
 	}
 
-	if ( (ret = edg_wll_gss_accept(mycred, conn, timeout, &ctx->connPool[ctx->connToUse].gss, &gss_code)) )
+	if ( (ret = edg_wll_gss_accept(mycred, conn, timeout, &ctx->connections->serverConnection->gss, &gss_code)) )
 	{
 		if ( ret == EDG_WLL_GSS_ERROR_TIMEOUT )
 		{
@@ -856,7 +861,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		return 1;
 	} 
 
-	maj_stat = gss_inquire_context(&min_stat, ctx->connPool[ctx->connToUse].gss.context,
+	maj_stat = gss_inquire_context(&min_stat, ctx->connections->serverConnection->gss.context,
 							&client_name, NULL, NULL, NULL, NULL, NULL, NULL);
 	if ( !GSS_ERROR(maj_stat) )
 		maj_stat = gss_display_name(&min_stat, client_name, &token, NULL);
@@ -883,7 +888,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	if ( token.value )
 		gss_release_buffer(&min_stat, &token);
 
-	if ( edg_wll_SetVomsGroups(ctx, &ctx->connPool[ctx->connToUse].gss, server_cert, server_key, vomsdir, cadir) )
+	if ( edg_wll_SetVomsGroups(ctx, &ctx->connections->serverConnection->gss, server_cert, server_key, vomsdir, cadir) )
 	{
 		char *errt, *errd;
 
@@ -951,7 +956,7 @@ int bk_handle_ws_connection(int conn, struct timeval *timeout, void *data)
 		soap_done(soap);
 		goto err;
 	}
-	gsplugin_ctx->connection = &cdata->ctx->connPool[cdata->ctx->connToUse].gss;
+	gsplugin_ctx->connection = &cdata->ctx->connections->serverConnection->gss;
 	gsplugin_ctx->cred = mycred;
 	cdata->soap = soap;
 
@@ -1164,8 +1169,8 @@ int bk_clnt_disconnect(int conn, struct timeval *timeout, void *cdata)
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
 
 
-	if ( ctx->connPool[ctx->connToUse].gss.context != GSS_C_NO_CONTEXT)
-		edg_wll_gss_close(&ctx->connPool[ctx->connToUse].gss, timeout);
+	if ( ctx->connections->serverConnection->gss.context != GSS_C_NO_CONTEXT)
+		edg_wll_gss_close(&ctx->connections->serverConnection->gss, timeout);
 	edg_wll_FreeContext(ctx);
 	ctx = NULL;
 
@@ -1408,10 +1413,11 @@ static int parse_limits(char *opt, int *j_limit, int *e_limit, int *size_limit)
 	return (sscanf(opt, "%d:%d:%d", j_limit, e_limit, size_limit) == 3);
 }
 
+
 static int check_mkdir(const char *dir)
 {
 	struct stat	sbuf;
-	
+
 	if ( stat(dir, &sbuf) )
 	{
 		if ( errno == ENOENT )

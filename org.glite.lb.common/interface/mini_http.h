@@ -4,6 +4,7 @@
 #ident "$Header$"
 
 #include "glite/lb/consumer.h"
+#include "connpool.h"
 
 /* XXX: not a good place for the folowing #def's but we ain't got better currently */
 /** protocol version */
@@ -30,16 +31,18 @@
 
 extern edg_wll_ErrorCode edg_wll_http_recv(
 	edg_wll_Context,	/* INOUT: context */
-	char **,	/* OUT: first line */
-	char ***,	/* OUT: null terminated array of headers */
-	char **		/* OUT: message body */
+	char **,		/* OUT: first line */
+	char ***,		/* OUT: null terminated array of headers */
+	char **,		/* OUT: message body */
+        edg_wll_ConnPool *connPTR /* IN: Pointer to the connection to use */
 );
 
 extern edg_wll_ErrorCode edg_wll_http_send(
 	edg_wll_Context,	/* INOUT: context */
 	const char *,		/* IN: first line */
 	char const * const *,	/* IN: headers */
-	const char *		/* IN: message body */
+	const char *,		/* IN: message body */
+        edg_wll_ConnPool *connPTR /* IN: Pointer to the connection to use */
 );
 
 extern edg_wll_ErrorCode edg_wll_http_recv_proxy(

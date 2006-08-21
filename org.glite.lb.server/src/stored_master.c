@@ -28,7 +28,7 @@ gss_reader(void *user_data, char *buffer, int max_len)
   int ret, len;
   edg_wll_GssStatus gss_code;
 
-  ret = edg_wll_gss_read_full(&tmp_ctx->connPool[tmp_ctx->connToUse].gss,
+  ret = edg_wll_gss_read_full(&tmp_ctx->connections->serverConnection->gss,
 			      buffer, max_len,
 			      &tmp_ctx->p_tmp_timeout,
 			      &len, &gss_code);
@@ -71,7 +71,7 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 	free(buf);
 
 	if ((len = create_reply(ctx,&buf)) > 0) {
-		if ((ret = edg_wll_gss_write_full(&ctx->connPool[ctx->connToUse].gss,buf,len,&ctx->p_tmp_timeout,&total,&gss_code)) < 0)
+		if ((ret = edg_wll_gss_write_full(&ctx->connections->serverConnection->gss,buf,len,&ctx->p_tmp_timeout,&total,&gss_code)) < 0)
 			edg_wll_SetError(ctx,
 				ret == EDG_WLL_GSS_ERROR_TIMEOUT ? 
 					ETIMEDOUT : EDG_WLL_ERROR_GSS,

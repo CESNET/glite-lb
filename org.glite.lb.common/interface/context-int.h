@@ -7,6 +7,7 @@
 #include "glite/lb/consumer.h"
 #include "lb_plain_io.h"
 #include "authz.h"
+#include "connpool.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,20 +30,20 @@ typedef struct _edg_wll_ConnProxy {
 
 
 
-typedef struct _edg_wll_ConnPool {
+/* typedef struct _edg_wll_ConnPool { */
 /* address and port where we are connected to */
-	char		*peerName;
-	unsigned int	peerPort;
-	
-/* http(s) stream */
-	gss_cred_id_t	gsiCred;
-	edg_wll_GssConnection	gss;
-	char		*buf;
-	int		bufUse,bufSize;
+/* 	char		*peerName; */
+/* 	unsigned int	peerPort; */
+ 	
+ /* http(s) stream */
+/*	gss_cred_id_t	gsiCred; */
+/*	edg_wll_GssConnection	gss; */
+/*	char		*buf; */
+/*	int		bufUse,bufSize; */
 
 /* timestamp of usage of this entry in ctx.connPool */
-	struct timeval	lastUsed;
-} edg_wll_ConnPool;
+/*	struct timeval	lastUsed; */
+/* } edg_wll_ConnPool; */
 
 
 
@@ -54,7 +55,7 @@ struct _edg_wll_Context {
 /* server part */
 
 	void		*mysql;
-	edg_wll_ConnPool	*connPool;
+	edg_wll_Connections	*connections;
 	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
 	edg_wll_ConnProxy	*connProxy;		/* holds one plain connection */
 
@@ -99,10 +100,10 @@ struct _edg_wll_Context {
 	unsigned int	srvPort;
 	
 /* pool of connections from client */
-	int		poolSize;
-	int		connOpened;	/* number of opened connections  */
-	int		connToUse;	/* index of connection that will *
-					 *  be used by low-level f-cions */
+//	int		poolSize;
+//	int		connOpened;	/* number of opened connections  */
+//	int		connToUse;	/* index of connection that will *
+//					 *  be used by low-level f-cions */
 	// XXX similar variables will be needed for connPoolNotif
 
 	

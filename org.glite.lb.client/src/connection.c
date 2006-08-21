@@ -16,32 +16,37 @@
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/mini_http.h"
+#include "glite/lb/connpool.h"
 
 
-
-static void CloseConnection(edg_wll_Context ctx, int conn_index)
+static void CloseConnection(edg_wll_Context ctx, int* conn_index)
 {
 	/* close connection ad free its structures */
 	OM_uint32 min_stat;
+	int cIndex;
 
-	assert(ctx->connOpened);
-	assert(conn_index < ctx->connOpened);
+        cIndex = conn_index[0];
 
-	edg_wll_gss_close(&ctx->connPool[conn_index].gss, &ctx->p_tmp_timeout);
-	if (ctx->connPool[conn_index].gsiCred) 
-		gss_release_cred(&min_stat, &ctx->connPool[conn_index].gsiCred);
-	free(ctx->connPool[conn_index].peerName);
-	free(ctx->connPool[conn_index].buf);
+	assert(ctx->connections->connOpened);
+	assert(cIndex < ctx->connections->connOpened);
+
+	edg_wll_gss_close(&ctx->connections->connPool[cIndex].gss, &ctx->p_tmp_timeout);
+	if (ctx->connections->connPool[cIndex].gsiCred) 
+		gss_release_cred(&min_stat, &ctx->connections->connPool[cIndex].gsiCred);
+	free(ctx->connections->connPool[cIndex].peerName);
+	free(ctx->connections->connPool[cIndex].buf);
 	
-	memset(ctx->connPool + conn_index, 0, sizeof(edg_wll_ConnPool));
+	memset(ctx->connections->connPool + cIndex, 0, sizeof(edg_wll_ConnPool));
 	
 	/* if deleted conn was not the last one -> there is a 'hole' and then 	*/
 	/* 'shake' together connections in pool, no holes are allowed		*/
-	if (conn_index < ctx->connOpened - 1) {	
-		ctx->connPool[conn_index] = ctx->connPool[ctx->connOpened - 1];
-		memset(ctx->connPool + ctx->connOpened  - 1 , 0, sizeof(edg_wll_ConnPool));
+	if (cIndex < ctx->connections->connOpened - 1) {	
+		ctx->connections->connPool[cIndex] = ctx->connections->connPool[ctx->connections->connOpened - 1];
+		memset(ctx->connections->connPool + ctx->connections->connOpened  - 1 , 0, sizeof(edg_wll_ConnPool));
 	}
-	ctx->connOpened--;
+	ctx->connections->connOpened--;
+
+        conn_index[0] = cIndex;
 }
 
 
@@ -50,9 +55,19 @@ static int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
 {
 	int i;
 
-        for (i=0; i<ctx->connOpened;i++) 
-		if (!strcmp(name, ctx->connPool[i].peerName) &&
-		    (port == ctx->connPool[i].peerPort)) return i;
+        for (i=0; i<ctx->connections->connOpened;i++) 
+		/* TryLock (next line) is in fact used only to check the mutex status */
+		if (EBUSY & edg_wll_connectionTryLock(ctx, i)) {
+			/* Connection locked. Do not consider it */
+		}
+		else {
+			/* Connection was not locked but now it is. Since we do not
+			   really know wheter we are interested in that connection, we
+			   are simply unlocking it now. */
+			edg_wll_connectionUnlock(ctx, i);
+			if (!strcmp(name, ctx->connections->connPool[i].peerName) &&
+			    (port == ctx->connections->connPool[i].peerPort)) return i;
+		}
 						
 	return -1;
 }
@@ -61,12 +76,12 @@ static int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
 
 static int AddConnection(edg_wll_Context ctx, char *name, int port)
 {
-	int index = ctx->connOpened;
+	int index = ctx->connections->connOpened;
 	
-	free(ctx->connPool[index].peerName);	// should be empty; just to be sure
-	ctx->connPool[index].peerName = strdup(ctx->srvName);
-	ctx->connPool[index].peerPort = ctx->srvPort;
-	ctx->connOpened++;
+	free(ctx->connections->connPool[index].peerName);	// should be empty; just to be sure
+	ctx->connections->connPool[index].peerName = strdup(ctx->srvName);
+	ctx->connections->connPool[index].peerPort = ctx->srvPort;
+	ctx->connections->connOpened++;
 
 	return index;
 }
@@ -79,34 +94,36 @@ static void ReleaseConnection(edg_wll_Context ctx, char *name, int port)
 	long min;
 
 
-	if (ctx->connOpened == 0) return;	/* nothing to release */
+	if (ctx->connections->connOpened == 0) return;	/* nothing to release */
 	
 	if (name) {
 		if ((index = ConnectionIndex(ctx, name, port)) >= 0)
-			CloseConnection(ctx, index);
+			CloseConnection(ctx, &index);
 	}
 	else {					/* free the oldest connection*/
-		min = ctx->connPool[0].lastUsed.tv_sec;
-		for (i=0; i<ctx->connOpened; i++) {
-			if (ctx->connPool[i].lastUsed.tv_sec < min) {
-				min = ctx->connPool[i].lastUsed.tv_sec;
+		min = ctx->connections->connPool[0].lastUsed.tv_sec;
+		for (i=0; i<ctx->connections->connOpened; i++) {
+			if (ctx->connections->connPool[i].lastUsed.tv_sec < min) {
+				min = ctx->connections->connPool[i].lastUsed.tv_sec;
 				index = i;
 			}
 		}
-		CloseConnection(ctx, index);
+		CloseConnection(ctx, &index);
 	}
 }
 			
 
 
-int edg_wll_close(edg_wll_Context ctx)
+int edg_wll_close(edg_wll_Context ctx, int* connToUse)
 {
 	edg_wll_ResetError(ctx);
-	if (ctx->connToUse == -1) return 0;
+	if (*connToUse == -1) return 0;
 
-	CloseConnection(ctx, ctx->connToUse);
+	CloseConnection(ctx, connToUse);
+
+        edg_wll_connectionUnlock(ctx, *connToUse); /* Forgetting the conn. Unlocking is safe. */
 		
-	ctx->connToUse = -1;
+	*connToUse = -1;
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
@@ -121,7 +138,7 @@ int edg_wll_close_proxy(edg_wll_Context ctx)
 
 
 
-int edg_wll_open(edg_wll_Context ctx)
+int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 {
 	int index;
 	edg_wll_GssStatus gss_stat;
@@ -129,9 +146,11 @@ int edg_wll_open(edg_wll_Context ctx)
 
 	edg_wll_ResetError(ctx);
 
+        edg_wll_poolLock(); /* We are going to search the pool, it has better be locked */
+
 	if ( (index = ConnectionIndex(ctx, ctx->srvName, ctx->srvPort)) == -1 ) {
 		/* no such open connection in pool */
-		if (ctx->connOpened == ctx->poolSize)
+		if (ctx->connections->connOpened == ctx->connections->poolSize)
 			ReleaseConnection(ctx, NULL, 0);
 		
 		index = AddConnection(ctx, ctx->srvName, ctx->srvPort);
@@ -139,24 +158,24 @@ int edg_wll_open(edg_wll_Context ctx)
 	}
 	/* else - there is cached open connection, reuse it */
 	
-	ctx->connToUse = index;
+	*connToUse = index;
 	
 	/* XXX support anonymous connections, perhaps add a flag to the connPool
 	 * struct specifying whether or not this connection shall be authenticated
 	 * to prevent from repeated calls to edg_wll_gss_acquire_cred_gsi() */
-	if (!ctx->connPool[index].gsiCred && 
+	if (!ctx->connections->connPool[index].gsiCred && 
 	    edg_wll_gss_acquire_cred_gsi(
 	       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 	       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-	       &ctx->connPool[index].gsiCred, NULL, &gss_stat)) {
+	       &ctx->connections->connPool[index].gsiCred, NULL, &gss_stat)) {
 	    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
 	    goto err;
 	}
 
-	if (ctx->connPool[index].gss.context == GSS_C_NO_CONTEXT) {	
-		switch (edg_wll_gss_connect(ctx->connPool[index].gsiCred,
-				ctx->connPool[index].peerName, ctx->connPool[index].peerPort,
-				&ctx->p_tmp_timeout,&ctx->connPool[index].gss,
+	if (ctx->connections->connPool[index].gss.context == GSS_C_NO_CONTEXT) {	
+		switch (edg_wll_gss_connect(ctx->connections->connPool[index].gsiCred,
+				ctx->connections->connPool[index].peerName, ctx->connections->connPool[index].peerPort,
+				&ctx->p_tmp_timeout,&ctx->connections->connPool[index].gss,
 				&gss_stat)) {
 		
 			case EDG_WLL_GSS_OK: 
@@ -190,9 +209,16 @@ int edg_wll_open(edg_wll_Context ctx)
 err:
 	/* some error occured; close created connection
 	 * and free all fields in connPool[index] */
-	CloseConnection(ctx, index);
-	ctx->connToUse = -1;
+	CloseConnection(ctx, &index);
+	*connToUse = -1;
 ok:	
+
+        if (*connToUse>-1) edg_wll_connectionLock(ctx, *connToUse); /* Lock the connection */
+
+	edg_wll_poolUnlock(); /* One way or the other, there are no more pool-wide operations */
+
+//	xxxxx
+
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
@@ -307,39 +333,40 @@ int edg_wll_http_send_recv(
 {
 	int	ec;
 	char	*ed = NULL;
+	int	connToUse = -1; //Index of the connection to use. Used to be a context member.
 
-	if (edg_wll_open(ctx)) return edg_wll_Error(ctx,NULL,NULL);
+	if (edg_wll_open(ctx,&connToUse)) return edg_wll_Error(ctx,NULL,NULL);
 	
-	switch (edg_wll_http_send(ctx,request,req_head,req_body)) {
+	switch (edg_wll_http_send(ctx,request,req_head,req_body,&ctx->connections->connPool[connToUse])) {
 		case ENOTCONN:
-			edg_wll_close(ctx);
-			if (edg_wll_open(ctx)
-				|| edg_wll_http_send(ctx,request,req_head,req_body))
+			edg_wll_close(ctx,&connToUse);
+			if (edg_wll_open(ctx,&connToUse)
+				|| edg_wll_http_send(ctx,request,req_head,req_body,&ctx->connections->connPool[connToUse]))
 					goto err;
 			/* fallthrough */
 		case 0: break;
 		default: goto err;
 	}
 
-	switch (edg_wll_http_recv(ctx,response,resp_head,resp_body)) {
+	switch (edg_wll_http_recv(ctx,response,resp_head,resp_body,&ctx->connections->connPool[connToUse])) {
 		case ENOTCONN:
-			edg_wll_close(ctx);
-			if (edg_wll_open(ctx)
-				|| edg_wll_http_send(ctx,request,req_head,req_body)
-				|| edg_wll_http_recv(ctx,response,resp_head,resp_body))
+			edg_wll_close(ctx,&connToUse);
+			if (edg_wll_open(ctx,&connToUse)
+				|| edg_wll_http_send(ctx,request,req_head,req_body,&ctx->connections->connPool[connToUse])
+				|| edg_wll_http_recv(ctx,response,resp_head,resp_body,&ctx->connections->connPool[connToUse]))
 					goto err;
 			/* fallthrough */
 		case 0: break;
 		default: goto err;
 	}
 	
-	assert(ctx->connToUse >= 0);
-	gettimeofday(&ctx->connPool[ctx->connToUse].lastUsed, NULL);
+	assert(connToUse >= 0);
+	gettimeofday(&ctx->connections->connPool[connToUse].lastUsed, NULL);
 	return 0;
 
 err:
 	ec = edg_wll_Error(ctx,NULL,&ed);
-	edg_wll_close(ctx);
+	edg_wll_close(ctx,&connToUse);
 	edg_wll_SetError(ctx,ec,ed);
 	free(ed);
 	return ec;

@@ -34,11 +34,12 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	/* XXX */
 	for (i=0; i<EDG_WLL_PARAM__LAST; i++) edg_wll_SetParam(out,i,NULL);
 
-	out->connPool = (edg_wll_ConnPool *) calloc(out->poolSize, sizeof(edg_wll_ConnPool));
+        out->connections = edg_wll_initConnections();
+//	out->connections->connPool = (edg_wll_ConnPool *) calloc(out->connections->poolSize, sizeof(edg_wll_ConnPool));
 	out->connPoolNotif = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
 	out->connProxy = (edg_wll_ConnProxy *) calloc(1, sizeof(edg_wll_ConnProxy));
 	out->connProxy->conn.sock = -1;
-	out->connToUse = -1;
+//	out->connToUse = -1;
 
 	*ctx = out;
 
@@ -73,17 +74,26 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 }
 #endif
 	if (ctx->errDesc) free(ctx->errDesc);
-	if (ctx->connPool) {
+	if (ctx->connections->connPool) {
 		int i;
-		
-		for (i=0; i<ctx->poolSize; i++) {
-			if (ctx->connPool[i].peerName) free(ctx->connPool[i].peerName);
-			edg_wll_gss_close(&ctx->connPool[i].gss,&close_timeout);
-			if (ctx->connPool[i].gsiCred)
-				gss_release_cred(&min_stat, &ctx->connPool[i].gsiCred);
-			if (ctx->connPool[i].buf) free(ctx->connPool[i].buf);
+
+                /* Since the introduction of a shared connection pool, the pool cannot freed here.
+                   We only need to unlock connections locked using this context. */
+		for (i=0; i<ctx->connections->poolSize; i++) {
+			if (ctx->connections->locked_by[i]==ctx) {
+				edg_wll_connectionUnlock(ctx, i);
+			}
+		}
+
+/*		
+		for (i=0; i<ctx->connections->poolSize; i++) {
+			if (ctx->connections->connPool[i].peerName) free(ctx->connections->connPool[i].peerName);
+			edg_wll_gss_close(&ctx->connections->connPool[i].gss,&close_timeout);
+			if (ctx->connections->connPool[i].gsiCred)
+				gss_release_cred(&min_stat, &ctx->connections->connPool[i].gsiCred);
+			if (ctx->connections->connPool[i].buf) free(ctx->connections->connPool[i].buf);
 		}	
-		free(ctx->connPool);
+		free(ctx->connections->connPool);*/
 	}
  	if (ctx->connPoolNotif) {
  		if (ctx->connPoolNotif[0].peerName) free(ctx->connPoolNotif[0].peerName);
