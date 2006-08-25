@@ -2,7 +2,7 @@
 #include "glite/lb/consumer.h"
 #include "lb_plain_io.h"
 #include "authz.h"
-#include "glite/lb/log_proto.h"
+#include "log_proto.h"
 #include <pthread.h>
 
 #ifdef __cplusplus
