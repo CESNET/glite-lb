@@ -100,7 +100,9 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	int retval;
 	edg_wll_Context     context;
 	int              nevents, maxnevents, i;
+	glite_jp_error_t	err;
 	
+	glite_jp_clear_error(ctx);
 	h = calloc(1, sizeof(lb_handle));
 
 	if ((retval = edg_wll_InitContext(&context)) != 0) return retval;
@@ -113,7 +115,12 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	nevents = 0;
 	h->events = malloc(maxnevents * sizeof(edg_wll_Event *));
 
-	if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) goto fail;
+	if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) {
+		err.code = retval;
+		err.desc = "reading LB logline";
+		glite_jp_stack_error(ctx,&err);
+		goto fail;
+	}
 	while (line) {
 #ifdef PLUGIN_DEBUG
 //		fprintf(stderr,"lb_plugin: line read '%s'\n", line);
@@ -125,14 +132,26 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 				h->events = realloc(h->events, maxnevents * sizeof(edg_wll_Event *));
 			}
 			if ((retval = edg_wll_ParseEvent(context, line, &h->events[nevents])) != 0) {
+				char	*ed;
 				free(line);
+				err.code = retval;
+				edg_wll_Error(context,NULL,&ed);
+				err.desc = ed;
+				glite_jp_stack_error(ctx,&err);
+				free(ed);
 				goto fail;
 			}
 			nevents++;
 		}
 		free(line);
 
-		if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) goto fail;
+		if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) {
+			err.code = retval;
+			err.desc = "reading LB logline";
+			glite_jp_stack_error(ctx,&err);
+
+			goto fail;
+		}
 	}
 	free(line);
 
@@ -166,6 +185,10 @@ fail:
 	edg_wll_FreeContext(context);
 	free(h);
 	*handle = NULL;
+	err.code = EIO;
+	err.desc = NULL;
+	glite_jp_stack_error(ctx,&err);
+
 	return retval;
 }
 
