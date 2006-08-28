@@ -118,6 +118,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) {
 		err.code = retval;
 		err.desc = "reading LB logline";
+		err.source = "lb_plugin.c:read_line()";
 		glite_jp_stack_error(ctx,&err);
 		goto fail;
 	}
@@ -137,6 +138,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 				err.code = retval;
 				edg_wll_Error(context,NULL,&ed);
 				err.desc = ed;
+				err.source = "edg_wll_ParseEvent()";
 				glite_jp_stack_error(ctx,&err);
 				free(ed);
 				goto fail;
@@ -148,6 +150,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 		if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) {
 			err.code = retval;
 			err.desc = "reading LB logline";
+			err.source = "lb_plugin.c:read_line()";
 			glite_jp_stack_error(ctx,&err);
 
 			goto fail;
@@ -187,6 +190,7 @@ fail:
 	*handle = NULL;
 	err.code = EIO;
 	err.desc = NULL;
+	err.source = __FUNCTION__;
 	glite_jp_stack_error(ctx,&err);
 
 	return retval;
