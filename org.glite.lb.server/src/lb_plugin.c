@@ -459,6 +459,17 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 				i++;
 			}
 		}
+	} else if (strcmp(attr, GLITE_JP_LB_JDL) == 0) {
+		for (i=0; h->events[i]; i++) if (h->events[i]->type == EDG_WLL_EVENT_REGJOB 
+			&& h->events[i]->regJob.jdl)
+		{
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = check_strdup(h->events[i]->regJob.jdl);
+			av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
+			av[0].size = -1;
+			break;
+		}
 	} else {
 		*attrval = NULL;
         	err.code = EINVAL;
