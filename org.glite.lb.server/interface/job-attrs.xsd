@@ -64,6 +64,9 @@
 		<xs:documentation>Job owner according to LB</xs:documentation>
 	</xs:element>
 
+	<!-- Parent jobId of DAG -->
+	<xs:element name="parent" type="xs:string" />
+
 	<!-- the following 6 elements have to be retrieved from JDL -->
 	<xs:element name="VO" type="xs:string" />
 	<xs:element name="aTag" type="xs:string" />
