@@ -43,7 +43,7 @@ SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
-XSLTPROC:=xsltproc
+XSLTPROC:=xsltproc --valid
 
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
