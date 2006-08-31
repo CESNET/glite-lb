@@ -63,6 +63,7 @@ start_bkserver()
 	echo -n "Starting glite-lb-bkserver ..."
 	$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		$creds -i $pidfile $port $wport $maildir $sink $trans\
+		--purge-prefix /tmp/purge_new --dump-prefix /tmp/dump_new -s 1\
 		&& echo " done" || echo " FAILED"
 	echo
 }
@@ -80,6 +81,10 @@ stop_bkserver()
                         sleep 1;
 			kill $pid 2>/dev/null
                         try=`expr $try + 1`
+			if [ $try = 19 ]; then
+                                echo "bkserver jammed - sending kill -9"
+                                kill -9 $pid 2>/dev/null
+                        fi
                         if [ $try = 20 ]; then
                                 echo " giving up after $try retries"
                                 return 1
@@ -179,7 +184,7 @@ test_ai()
 	[ -z "$dest" ] && echo "test_ai() - wrong params" && return
 	
 	my_echo "================================================================"
-	my_echo "Testing LB $1 with sink_mode ${sink_mode[$i]}"
+	my_echo "Testing LB $1 with sink_mode ${sink_mode[$2]}"
 
 	# single registration
 	#
@@ -219,6 +224,25 @@ test_ai()
 
 }
 
+quick_test()
+{
+        dest=
+        [ -z "$1" ] && echo "test_ai() - wrong params" && return
+        [ "$1" = "proxy" ] && dest="-x"
+        [ "$1" = "server" ] && dest="-m $HOST:$PORT"
+        [ -z "$dest" ] && echo "test_ai() - wrong params" && return
+
+
+        # 1000 nodes DAG registration
+        #
+        my_echo "-n 1000 nodes DAG registration ..."
+        ai_dag1000_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest -n 1000`
+        mega_actions_per_day=`echo "scale=6; 86400/$ai_dag1000_lb/1000000*1001" | bc`
+        my_echo ". $ai_dag1000_lb seconds ($mega_actions_per_day GU)"
+
+}
+
+
 ################################################################################
 
 unset creds port
@@ -233,16 +257,30 @@ sink_mode[4]=GLITE_LB_SINK_SEND
 test_glite_location;
 test_credentials;
 
-for i in 1 2 3 4; do
+start_bkserver 0;
+my_echo "================================================================"
+my_echo "Testing LB server with sink_mode ${sink_mode[0]}"
 
-	start_proxy $i
-	test_ai proxy $i;
-	stop_proxy
+sleep 5
+sync
+sleep 5
 
-	start_bkserver $i;
-	test_ai server $i;
-	stop_bkserver;
+for i in `seq 1 10000`; do
+	quick_test server 0;
 done
+stop_bkserver;
+
+
+#for i in 1 2 3 4; do
+
+#	start_proxy $i
+#	test_ai proxy $i;
+#	stop_proxy
+
+#	start_bkserver $i;
+#	test_ai server $i;
+#	stop_bkserver;
+#done
 
 echo "__________"
 echo "GU (goal units) are millons of registrations per day, where registration is"
