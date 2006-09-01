@@ -438,7 +438,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		for (i=1; i<EDG_WLL_NUMBER_OF_STATCODES; i++) {
 			av[i].name = strdup(attr);
 			if (i == h->status.state) av[i].value = check_strdup(h->status.reason);
-			av[i].timestamp = h->status.stateEnterTimes[i];
+			av[i].timestamp = h->status.stateEnterTimes[i+1];
 			av[i].size = -1;
 		}
 	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, sizeof(GLITE_JP_LBTAG_NS)-1) == 0) {
