@@ -1,2 +1,2 @@
-deploy_lb - against glite-deployment-lb_R_2_1_2
-deploy_jp - against HEAD
+deploy_all.diff - against RC31
+deploy_lb, deploy_jp - older patches

@@ -1,3 +1,5 @@
+This patch was merged to deploy_all.diff, don't use it anymore
+
 Index: org.glite/project/global.dependencies.properties
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite/project/global.dependencies.properties,v
@@ -14,6 +16,10 @@ diff -u -r1.479.2.70.2.3.2.3.2.1 global.dependencies.properties
  # 
  # Revision history:
  # $Log$
+ # Revision 1.3  2006/06/30 11:30:28  mmulac
+ # actualized patches
+ # - against org.glite a org.glite.deployment from glite_R_3_0_0
+ #
 @@ -1562,7 +1562,26 @@
  ext.globus-sdk.rpm.name    = vdt_globus_sdk
  ext.globus-sdk.rpm.version = ${ext.vdt.version}
@@ -70,6 +76,10 @@ diff -u -r1.61.2.2.2.12.2.26 build.xml
  
  	Revision history:
  	$Log$
+ 	Revision 1.3  2006/06/30 11:30:28  mmulac
+ 	actualized patches
+ 	- against org.glite a org.glite.deployment from glite_R_3_0_0
+
 @@ -1619,6 +1619,39 @@
  		</if>
   	</target>
@@ -153,6 +163,10 @@ diff -u -r1.44.2.1.2.11.2.24 glite.deployment.csf.xml
  
  	Revision history:
  	$Log$
+ 	Revision 1.3  2006/06/30 11:30:28  mmulac
+ 	actualized patches
+ 	- against org.glite a org.glite.deployment from glite_R_3_0_0
+
 @@ -667,6 +667,14 @@
  			<equals arg1="${org.glite.deployment.lb.version}" arg2="HEAD" />
  		</condition>

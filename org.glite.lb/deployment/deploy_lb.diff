@@ -1,3 +1,5 @@
+This patch was merged to deploy_all.diff, don't use it anymore.
+
 Index: org.glite.deployment.lb/config/scripts/glite-lb-config.py
 ===================================================================
 RCS file: /cvs/jra1mw/org.glite.deployment.lb/config/scripts/glite-lb-config.py,v
