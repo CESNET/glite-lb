@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include <time.h>
 #include <fcntl.h>
+#include <sys/time.h>
+
 
 #include "context-int.h"
 #include "lb_maildir.h"
@@ -71,16 +73,17 @@ int edg_wll_MaildirInit(
 
 
 int edg_wll_MaildirStoreMsg(
-	const char		   *root,
-	const char		   *srvname,
-	const char         *msg)
+	const char	*root,
+	const char	*srvname,
+	const char	*msg)
 {
-	char		fname[PATH_MAX],
-				newfname[PATH_MAX];
-	int			fhnd,
-				written,
-				msgsz,
-				ct, i;
+	char	fname[PATH_MAX],
+		newfname[PATH_MAX];
+	int	fhnd,
+		written,
+		msgsz,
+		ct, i;
+	struct  timeval  tv;
 
 
 	if ( !root ) root = DEFAULT_ROOT;
@@ -93,9 +96,10 @@ int edg_wll_MaildirStoreMsg(
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Maximum tries limit reached with unsuccessful file creation");
 			return -1;
 		}
-		snprintf(fname, PATH_MAX, "%s/%s/%ld.%d.%s", root, dirs[LBMD_DIR_TMP], (long) time(NULL), getpid(), srvname);
+		gettimeofday(&tv, NULL);
+		snprintf(fname, PATH_MAX, "%s/%s/%ld_%ld.%s", root, dirs[LBMD_DIR_TMP], tv.tv_sec, tv.tv_usec, srvname);
 		if ( (fhnd = open(fname, O_CREAT|O_EXCL|O_WRONLY, 00600)) < 0 ) {
-			if ( errno == EEXIST ) { sleep(2); continue; }
+			if ( errno == EEXIST ) { usleep(1000); continue; }
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't create file %s", fname);
 			return -1;
 		}
