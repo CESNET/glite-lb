@@ -760,8 +760,8 @@ int edg_wll_compare_seq(const char *a, const char *b)
 
 static int compare_events_by_seq(const void *a, const void *b)
 {
-        const edg_wll_Event *e = (edg_wll_Event *)a;
-        const edg_wll_Event *f = (edg_wll_Event *)b;
+        const edg_wll_Event *e = (edg_wll_Event *) a;
+        const edg_wll_Event *f = (edg_wll_Event *) b;
 	int ret;
 
 	ret = edg_wll_compare_seq(e->any.seqcode, f->any.seqcode);
@@ -774,13 +774,33 @@ static int compare_events_by_seq(const void *a, const void *b)
 	return 0;
 }
 
+static int compare_pevents_by_seq(const void *a, const void *b)
+{
+        const edg_wll_Event **e = (edg_wll_Event **) a;
+        const edg_wll_Event **f = (edg_wll_Event **) b;
+	return compare_events_by_seq(*e,*f);
+}
+
 void edg_wll_SortEvents(edg_wll_Event *e)
 {
 	int	n;
 
 	if (!e) return;
 	for (n=0; e[n].type; n++);
-	qsort(e,n,sizeof *e,compare_events_by_seq);
+	qsort(e,n,sizeof(*e),compare_events_by_seq);
+}
+
+void edg_wll_SortPEvents(edg_wll_Event **e)
+{
+	edg_wll_Event **p;
+	int	n;
+
+	if (!e) return;
+	p = e;
+	for (n=0; *p; n++) {
+		p++;
+	}
+	qsort(e,n,sizeof(*e),compare_pevents_by_seq);
 }
 
 

@@ -19,11 +19,14 @@ int compare_events_by_tv(const void *, const void *);
 #endif
 
 int edg_wll_get_event_flesh(edg_wll_Context,int,edg_wll_Event *);
+
 int edg_wll_QueryEventsServer(edg_wll_Context,int,const edg_wll_QueryRec **,const edg_wll_QueryRec **,edg_wll_Event **);
 
 int edg_wll_QueryJobsServer(edg_wll_Context, const edg_wll_QueryRec **, int, edg_wlc_JobId **, edg_wll_JobStat **);
 
 void edg_wll_SortEvents(edg_wll_Event *);
+
+void edg_wll_SortPEvents(edg_wll_Event **);
 
 #ifdef __cplusplus
 }

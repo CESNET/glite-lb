@@ -498,9 +498,7 @@ static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status) {
         js = calloc(1, sizeof(intJobStat));
 	init_intJobStat(js);
 
-	/* TODO:
-	edg_wll_SortEvents(events);
-        */
+	edg_wll_SortPEvents(events);
 
 	i = 0;
         while (events[i])  
