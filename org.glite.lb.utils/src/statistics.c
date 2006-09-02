@@ -300,6 +300,7 @@ int main(int argc, char *argv[])
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_lastStatusHistory, &attrval);
 		if (attrval) {
 			fprintf(stdout,"\t<lastStatusHistory>\n");
+/* 
 			for (i = 1; i < EDG_WLL_NUMBER_OF_STATCODES; i++) {
 				char *stat = edg_wll_StatToString(i);
 				fprintf(stdout,"\t<status>\n");
@@ -309,6 +310,16 @@ int main(int argc, char *argv[])
 				fprintf(stdout,"\t</status>\n");
 				if (stat) free(stat);
 			}
+*/
+                        i = 1;
+                        while (attrval[i].name) {
+                                fprintf(stdout,"\t<status>\n");
+                                fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].name);
+                                fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
+                                fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
+                                fprintf(stdout,"\t</status>\n");
+                                i++;
+                        }
 			fprintf(stdout,"\t</lastStatusHistory>\n");
 			free_attrs(attrval);
 		}
@@ -316,14 +327,14 @@ int main(int argc, char *argv[])
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_fullStatusHistory, &attrval);
 		if (attrval) {
 			fprintf(stdout,"\t<fullStatusHistory>\n");
-			for (i = 1; i < EDG_WLL_NUMBER_OF_STATCODES; i++) {
-				char *stat = edg_wll_StatToString(i);
+			i = 1;
+			while (attrval[i].name) {
 				fprintf(stdout,"\t<status>\n");
-				fprintf(stdout,"\t\t<status>%s</status>\n", stat);
+				fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].name);
 				fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
 				fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
 				fprintf(stdout,"\t</status>\n");
-				if (stat) free(stat);
+				i++;
 			}
 			fprintf(stdout,"\t</fullStatusHistory>\n");
 			free_attrs(attrval);
