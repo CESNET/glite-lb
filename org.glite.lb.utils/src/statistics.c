@@ -182,6 +182,12 @@ int main(int argc, char *argv[])
 			free_attrs(attrval);
 		}
 
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_VO, &attrval);
+		if (attrval) {
+			fprintf(stdout,"\t<VO>%s</VO>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_aTag, &attrval);
 		if (attrval) {
 			fprintf(stdout,"\t<aTag>%s</aTag>\n", attrval->value);
