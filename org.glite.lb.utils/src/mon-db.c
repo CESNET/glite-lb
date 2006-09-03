@@ -28,11 +28,12 @@ int main(int argc,char **argv)
 {
 	int	opt;
 	char	*dbstring = getenv("LBDB");
-	int	verbose = 0, rows = 0, fields = 0, jobs = 0, i;
+	int	verbose = 0, rows = 0, fields = 0, njobs = 0, i;
 	edg_wll_Context	ctx;
 	char	*stmt = NULL, *status = NULL;
 	char	*str[2];
 	edg_wll_Stmt sh;
+	int	jobs[EDG_WLL_NUMBER_OF_STATCODES];
 
 	me = strdup(argv[0]);
 
@@ -43,6 +44,7 @@ int main(int argc,char **argv)
 	}
 
 	edg_wll_InitContext(&ctx);
+	for (i = 1; i<EDG_WLL_NUMBER_OF_STATCODES; i++) jobs[i] = 0;
 	if (edg_wll_Open(ctx,dbstring)) do_exit(ctx,EX_UNAVAILABLE);
 	if (edg_wll_DBCheckVersion(ctx)) do_exit(ctx,EX_SOFTWARE);
 	if (asprintf(&stmt,"SELECT status,count(status) FROM states GROUP BY status;") < 0) do_exit(ctx,EX_OSERR);
@@ -56,14 +58,17 @@ int main(int argc,char **argv)
 			edg_wll_FreeStmt(&sh);
 			do_exit(ctx,EX_SOFTWARE);
 		}
-		status = edg_wll_StatToString((edg_wll_JobStatCode) atoi(str[0]));
-		jobs += atoi(str[1]);
-		fprintf(stdout,"%s: %s\n",status,str[1]);
+		jobs[atoi(str[0])] = atoi(str[1]);
 		if (str[0]) free(str[0]);
 		if (str[1]) free(str[1]);
+	}
+	for (i = 1; i<EDG_WLL_NUMBER_OF_STATCODES; i++) {
+		status = edg_wll_StatToString((edg_wll_JobStatCode) i);
+		fprintf(stdout,"%d \t %s \t %d\n",i,status,jobs[i]);
+		njobs += jobs[i];
 		if (status) free(status);
 	}
-	fprintf(stdout,"Total number of jobs: %d\n",jobs);
+	fprintf(stdout,"Total number of jobs: %d\n",njobs);
 
 	if (stmt) free(stmt);
 	edg_wll_FreeStmt(&sh);
