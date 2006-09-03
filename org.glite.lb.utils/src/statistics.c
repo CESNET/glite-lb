@@ -1,6 +1,6 @@
+#ident "$Header$"
 /*
- * load and test L&B plugin
- *
+ * loads L&B plugin to obtain statistics data from a dump file
  * (requires -rdynamic to use fake JP backend symbols)
  */
 
@@ -29,7 +29,7 @@
 typedef int init_f(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data);
 typedef void done_f(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data);
 
-static const char rcsid[] = "@(#)$$";
+static const char rcsid[] = "@(#)$Id$";
 static int verbose = 0;
 static char *file = NULL;
 static int jdl = 0;
@@ -49,15 +49,15 @@ static struct option const long_options[] = {
 static void
 usage(char *program_name) {
         fprintf(stdout,"LB statistics\n"
-                "- reads a dump file (one job only) \n"
-                "- and outputs an XML with statistics to stdout \n\n"
-                "Usage: %s [option]\n"
-                "-h, --help                 display this help and exit\n"
-                "-V, --version              output version information and exit\n"
-                "-v, --verbose              print extensive debug output to stderr\n"
-                "-f, --file <file>          dump file to process\n"
+		"- reads a dump file (one job only) \n"
+		"- and outputs an XML with statistics to stdout \n\n"
+		"Usage: %s [option]\n"
+		"-h, --help                 display this help and exit\n"
+		"-V, --version              output version information and exit\n"
+		"-v, --verbose              print extensive debug output to stderr\n"
+		"-f, --file <file>          dump file to process\n"
 		"-j, --jdl                  prit also JDL in the XML\n\n",
-                program_name);
+		program_name);
 }
 
 /* 
