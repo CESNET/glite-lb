@@ -32,9 +32,11 @@ typedef void done_f(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data);
 static const char rcsid[] = "@(#)$$";
 static int verbose = 0;
 static char *file = NULL;
+static int jdl = 0;
 
 static struct option const long_options[] = {
 	{ "file", required_argument, 0, 'f' },
+	{ "jdl", no_argument, 0, 'j' },
         { "help", no_argument, 0, 'h' },
         { "verbose", no_argument, 0, 'v' },
         { "version", no_argument, 0, 'V' },
@@ -53,7 +55,8 @@ usage(char *program_name) {
                 "-h, --help                 display this help and exit\n"
                 "-V, --version              output version information and exit\n"
                 "-v, --verbose              print extensive debug output to stderr\n"
-                "-f, --file <file>          dump file to process\n\n",
+                "-f, --file <file>          dump file to process\n"
+		"-j, --jdl                  prit also JDL in the XML\n\n",
                 program_name);
 }
 
@@ -117,6 +120,7 @@ int main(int argc, char *argv[])
 	/* get arguments */
 	while ((opt = getopt_long(argc,argv,
 		"f:" /* file */
+		"j"  /* jdl */
 		"h"  /* help */
 		"v"  /* verbose */
 		"V",  /* version */
@@ -126,6 +130,7 @@ int main(int argc, char *argv[])
 			case 'V': fprintf(stdout,"%s:\t%s\n",argv[0],rcsid); return(0);
 			case 'v': verbose = 1; break;
 			case 'f': file = optarg; break;
+			case 'j': jdl = 1; break;
 			case 'h':
 			default:
 				usage(argv[0]); return(0);
@@ -338,6 +343,13 @@ int main(int argc, char *argv[])
 			}
 			fprintf(stdout,"\t</fullStatusHistory>\n");
 			free_attrs(attrval);
+		}
+		if (jdl) {
+			plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_JDL, &attrval);
+			if (attrval) {
+				fprintf(stdout,"\t<JDL>%s</JDL>\n", attrval->value);
+				free_attrs(attrval);
+			}
 		}
 
 		fprintf(stdout,"</lbd:jobRecord>\n");
