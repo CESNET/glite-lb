@@ -1,3 +1,5 @@
+#ident "$Header$"
+
 #include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
