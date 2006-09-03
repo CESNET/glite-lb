@@ -1,3 +1,5 @@
+#ident "$Header$"
+
 #include <errno.h>
 
 #include "glite/lb/context-int.h"

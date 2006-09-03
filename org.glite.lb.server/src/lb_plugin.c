@@ -1,4 +1,4 @@
-#ident "$Header: "
+#ident "$Header$"
 
 #include <stdlib.h>
 #include <assert.h>
