@@ -105,6 +105,8 @@
 	<!-- timestamps of the whole state history, including all resubmission cycles -->
 	<xs:element name="fullStatusHistory" type="a:statusSequenceType" />
 
+	<xs:element name="JDL" type="xs:string" />
+
 <!-- No idea where to get these from:
 
    ENVIRONMENT
