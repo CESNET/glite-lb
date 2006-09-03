@@ -1,17 +1,21 @@
+#ident "$Header$"
 /*
- * load and test L&B plugin
- *
+ * loads L&B plugin to obtain statistics data from a dump file
  * (requires -rdynamic to use fake JP backend symbols)
  */
 
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <time.h>
 #include <dlfcn.h>
 #include <malloc.h>
 #include <unistd.h>
 #include <getopt.h>
+
+#include "glite/lb/context.h"
+#include "glite/lb/jobstat.h"
 
 #include "glite/jp/types.h"
 #include "glite/jp/context.h"
@@ -25,12 +29,14 @@
 typedef int init_f(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data);
 typedef void done_f(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data);
 
-static const char rcsid[] = "@(#)$$";
+static const char rcsid[] = "@(#)$Id$";
 static int verbose = 0;
 static char *file = NULL;
+static int jdl = 0;
 
 static struct option const long_options[] = {
 	{ "file", required_argument, 0, 'f' },
+	{ "jdl", no_argument, 0, 'j' },
         { "help", no_argument, 0, 'h' },
         { "verbose", no_argument, 0, 'v' },
         { "version", no_argument, 0, 'V' },
@@ -43,14 +49,15 @@ static struct option const long_options[] = {
 static void
 usage(char *program_name) {
         fprintf(stdout,"LB statistics\n"
-                "- reads a dump file (one job only) \n"
-                "- and outputs an XML with statistics to stdout \n\n"
-                "Usage: %s [option]\n"
-                "-h, --help                 display this help and exit\n"
-                "-V, --version              output version information and exit\n"
-                "-v, --verbose              print extensive debug output to stderr\n"
-                "-f, --file <file>          dump file to process\n\n",
-                program_name);
+		"- reads a dump file (one job only) \n"
+		"- and outputs an XML with statistics to stdout \n\n"
+		"Usage: %s [option]\n"
+		"-h, --help                 display this help and exit\n"
+		"-V, --version              output version information and exit\n"
+		"-v, --verbose              print extensive debug output to stderr\n"
+		"-f, --file <file>          dump file to process\n"
+		"-j, --jdl                  prit also JDL in the XML\n\n",
+		program_name);
 }
 
 /* 
@@ -72,7 +79,7 @@ int glite_jppsbe_pread(glite_jp_context_t ctx, void *handle, void *buf, size_t n
 
 
 int glite_jp_stack_error(glite_jp_context_t ctx, const glite_jp_error_t *jperror) {
-	fprintf(stderr,"lb_statistics: JP backend error %d: %s\n", jperror->code, jperror->desc);
+	if (verbose) fprintf(stderr,"lb_statistics: JP backend error %d: %s\n", jperror->code, jperror->desc);
 	return 0;
 }
 
@@ -108,11 +115,12 @@ int main(int argc, char *argv[])
 	char *err;
 	init_f *plugin_init;
 	done_f *plugin_done;
-	int opt;
+	int i,opt;
 
 	/* get arguments */
 	while ((opt = getopt_long(argc,argv,
 		"f:" /* file */
+		"j"  /* jdl */
 		"h"  /* help */
 		"v"  /* verbose */
 		"V",  /* version */
@@ -122,6 +130,7 @@ int main(int argc, char *argv[])
 			case 'V': fprintf(stdout,"%s:\t%s\n",argv[0],rcsid); return(0);
 			case 'v': verbose = 1; break;
 			case 'f': file = optarg; break;
+			case 'j': jdl = 1; break;
 			case 'h':
 			default:
 				usage(argv[0]); return(0);
@@ -170,6 +179,12 @@ int main(int argc, char *argv[])
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_user, &attrval);
 		if (attrval) {
 			fprintf(stdout,"\t<user>%s</user>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_VO, &attrval);
+		if (attrval) {
+			fprintf(stdout,"\t<VO>%s</VO>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
@@ -295,14 +310,52 @@ int main(int argc, char *argv[])
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_lastStatusHistory, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<lastStatusHistory>%s</lastStatusHistory>\n", attrval->value);
+			fprintf(stdout,"\t<lastStatusHistory>\n");
+/* 
+			for (i = 1; i < EDG_WLL_NUMBER_OF_STATCODES; i++) {
+				char *stat = edg_wll_StatToString(i);
+				fprintf(stdout,"\t<status>\n");
+				fprintf(stdout,"\t\t<status>%s</status>\n", stat);
+				fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
+				fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
+				fprintf(stdout,"\t</status>\n");
+				if (stat) free(stat);
+			}
+*/
+                        i = 1;
+                        while (attrval[i].name) {
+                                fprintf(stdout,"\t<status>\n");
+                                fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].name);
+                                fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
+                                fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
+                                fprintf(stdout,"\t</status>\n");
+                                i++;
+                        }
+			fprintf(stdout,"\t</lastStatusHistory>\n");
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_fullStatusHistory, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<fullStatusHistory>%s</fullStatusHistory>\n", attrval->value);
+			fprintf(stdout,"\t<fullStatusHistory>\n");
+			i = 1;
+			while (attrval[i].name) {
+				fprintf(stdout,"\t<status>\n");
+				fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].name);
+				fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
+				fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
+				fprintf(stdout,"\t</status>\n");
+				i++;
+			}
+			fprintf(stdout,"\t</fullStatusHistory>\n");
 			free_attrs(attrval);
+		}
+		if (jdl) {
+			plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_JDL, &attrval);
+			if (attrval) {
+				fprintf(stdout,"\t<JDL>%s</JDL>\n", attrval->value);
+				free_attrs(attrval);
+			}
 		}
 
 		fprintf(stdout,"</lbd:jobRecord>\n");

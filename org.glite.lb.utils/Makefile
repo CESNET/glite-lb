@@ -43,7 +43,7 @@ SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
-XSLTPROC:=xsltproc --valid
+XSLTPROC:=xsltproc
 
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
@@ -91,7 +91,7 @@ mon-db: mon-db.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${BKSERVER_LIB} ${EXT_LIBS} 
 
 statistics: statistics.o
-	${LINK} -rdynamic -o $@ $< ${JP_LIBS} ${EXT_LIBS}
+	${LINK} -rdynamic -o $@ $< ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
 
 check: compile 
 
