@@ -106,7 +106,9 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	int retval;
 	edg_wll_Context     context;
 	int              nevents, maxnevents, i;
+	glite_jp_error_t	err;
 	
+	glite_jp_clear_error(ctx);
 	h = calloc(1, sizeof(lb_handle));
 
 	if ((retval = edg_wll_InitContext(&context)) != 0) return retval;
@@ -119,7 +121,13 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	nevents = 0;
 	h->events = malloc(maxnevents * sizeof(edg_wll_Event *));
 
-	if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) goto fail;
+	if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) {
+		err.code = retval;
+		err.desc = "reading LB logline";
+		err.source = "lb_plugin.c:read_line()";
+		glite_jp_stack_error(ctx,&err);
+		goto fail;
+	}
 	while (line) {
 #ifdef PLUGIN_DEBUG
 //		fprintf(stderr,"lb_plugin: line read '%s'\n", line);
@@ -131,14 +139,27 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 				h->events = realloc(h->events, maxnevents * sizeof(edg_wll_Event *));
 			}
 			if ((retval = edg_wll_ParseEvent(context, line, &h->events[nevents])) != 0) {
+				char 	*ed;
 				free(line);
+				err.code = retval;
+				edg_wll_Error(context,NULL,&ed);
+				err.desc = ed;
+				err.source = "edg_wll_ParseEvent()";
+				glite_jp_stack_error(ctx,&err);
+				free(ed);
 				goto fail;
 			}
 			nevents++;
 		}
 		free(line);
 
-		if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) goto fail;
+		if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) {
+			err.code = retval;
+			err.desc = "reading LB logline";
+			err.source = "lb_plugin.c:read_line()";
+			glite_jp_stack_error(ctx,&err);
+			goto fail;
+		}
 	}
 	free(line);
 
@@ -172,6 +193,11 @@ fail:
 	edg_wll_FreeContext(context);
 	free(h);
 	*handle = NULL;
+	err.code = EIO;
+	err.desc = NULL;
+	err.source = __FUNCTION__;
+	glite_jp_stack_error(ctx,&err);
+
 	return retval;
 }
 
@@ -219,152 +245,156 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	glite_jp_context_t	ctx = (glite_jp_context_t) fpctx;
 	glite_jp_error_t 	err; 
 	glite_jp_attrval_t	*av = NULL;
-	int			i, j, n_tags;
+	int			i, n_tags;
 	const char             *tag;
 
         glite_jp_clear_error(ctx); 
         memset(&err,0,sizeof err);
         err.source = __FUNCTION__;
 
+	if ((h->events == NULL) || 
+	    (h->status.state == EDG_WLL_JOB_UNDEF) ||
+	    (h->fullStatusHistory == NULL) ) {
+                *attrval = NULL;
+                err.code = ENOENT;
+                trio_asprintf(&err.desc,"There is no job information to query.");
+                return glite_jp_stack_error(ctx,&err);
+	}
+
         if (strcmp(attr, GLITE_JP_LB_user) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = check_strdup(h->status.owner);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		if (h->status.owner) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(h->status.owner);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_jobId) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = edg_wlc_JobIdUnparse(h->status.jobId);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		if (h->status.jobId) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = edg_wlc_JobIdUnparse(h->status.jobId);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_VO) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-                if (h->events) {
-                        i = 0;
-                        while (h->events[i]) {
-                                if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
-					struct cclassad *ad;
-					char *string_vo = NULL; 
+		i = 0;
+		while (h->events[i]) {
+			if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
+				struct cclassad *ad;
+				char *string_vo = NULL; 
 
-					ad = cclassad_create(h->events[i]->regJob.jdl);
-					if (ad) {
-						if (!cclassad_evaluate_to_string(ad, "VirtualOrganisation", &string_vo))
-							string_vo = NULL;
-						
+				ad = cclassad_create(h->events[i]->regJob.jdl);
+				if (ad) {
+					if (cclassad_evaluate_to_string(ad, "VirtualOrganisation", &string_vo)) {
+						av = calloc(2, sizeof(glite_jp_attrval_t));
+						av[0].name = strdup(attr);
 						av[0].value = check_strdup(string_vo);
-						cclassad_delete(ad);
-						if (string_vo) free(string_vo);
+						av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
 					}
-                                        av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
-                                        break;
-                                }
-                                i++;
-                        }
-                }
+					cclassad_delete(ad);
+					if (string_vo) free(string_vo);
+				}
+				break;
+			}
+			i++;
+		}
         } else if (strcmp(attr, GLITE_JP_LB_eNodes) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-                if (h->events) {
-                        i = 0;
-                        while (h->events[i]) {
-                                if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
-					struct cclassad *ad;
-					char *string_nodes = NULL; 
+		i = 0;
+		while (h->events[i]) {
+			if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
+				struct cclassad *ad;
+				char *string_nodes = NULL; 
 
-					ad = cclassad_create(h->events[i]->regJob.jdl);
-					if (ad) {
-						if (!cclassad_evaluate_to_string(ad, "max_nodes_running", &string_nodes))
-							string_nodes = NULL;
-						
+				ad = cclassad_create(h->events[i]->regJob.jdl);
+				if (ad) {
+					if (cclassad_evaluate_to_string(ad, "max_nodes_running", &string_nodes)) {
+						av = calloc(2, sizeof(glite_jp_attrval_t));
+						av[0].name = strdup(attr);
 						av[0].value = check_strdup(string_nodes);
-						cclassad_delete(ad);
-						if (string_nodes) free(string_nodes);
+						av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
 					}
-                                        av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
-                                        break;
-                                }
-                                i++;
-                        }
-                }
+					cclassad_delete(ad);
+					if (string_nodes) free(string_nodes);
+				}
+				break;
+			}
+			i++;
+		}
         } else if (strcmp(attr, GLITE_JP_LB_eProc) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-                if (h->events) {
-                        i = 0;
-                        while (h->events[i]) {
-                                if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
-					struct cclassad *ad;
-					char *string_nodes = NULL; 
+		i = 0;
+		while (h->events[i]) {
+			if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
+				struct cclassad *ad;
+				char *string_nodes = NULL; 
 
-					ad = cclassad_create(h->events[i]->regJob.jdl);
-					if (ad) {
-						if (!cclassad_evaluate_to_string(ad, "NodeNumber", &string_nodes))
-							string_nodes = NULL;
-						
+				ad = cclassad_create(h->events[i]->regJob.jdl);
+				if (ad) {
+					if (cclassad_evaluate_to_string(ad, "NodeNumber", &string_nodes)) {
+						av = calloc(2, sizeof(glite_jp_attrval_t));
+						av[0].name = strdup(attr);
 						av[0].value = check_strdup(string_nodes);
-						cclassad_delete(ad);
-						if (string_nodes) free(string_nodes);
+						av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
 					}
-                                        av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
-                                        break;
-                                }
-                                i++;
-                        }
-                }
+					cclassad_delete(ad);
+					if (string_nodes) free(string_nodes);
+				}
+				break;
+			}
+			i++;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_aTag) == 0 ||
                    strcmp(attr, GLITE_JP_LB_rQType) == 0 ||
                    strcmp(attr, GLITE_JP_LB_eDuration) == 0) {
-		/* have to be retrieved from JDL */
-/*
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = "Not implemented yet.";
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-*/
+		/* have to be retrieved from JDL, but probably obsolete and not needed at all */
 		*attrval = NULL;
 		err.code = ENOSYS;
-//		err.desc = "Not implemented yet.";
 		trio_asprintf(&err.desc,"Attribute '%s' not implemented yet.",attr);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_RB) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = check_strdup(h->status.network_server);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		if (h->status.network_server) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(h->status.network_server);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_CE) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = check_strdup(h->status.destination);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		if (h->status.destination) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(h->status.destination);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_host) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = check_strdup(h->status.ce_node);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		if (h->status.ce_node) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(h->status.ce_node);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_UIHost) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = check_strdup(h->status.location);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		if (h->status.location) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(h->status.location);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_CPUTime) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d",
-			h->status.cpuTime);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		if (h->status.cpuTime) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			trio_asprintf(&av[0].value,"%d", h->status.cpuTime);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_NProc) == 0) {
 		/* currently LB hasn't got the info */
 		*attrval = NULL;
 		err.code = ENOSYS;
-//		err.desc = "Not implemented yet.";
 		trio_asprintf(&err.desc,"Attribute '%s' not implemented yet.",attr);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_finalStatus) == 0) {
@@ -382,11 +412,13 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_finalStatusReason) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = check_strdup(h->status.reason);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		if (h->status.reason) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(h->status.reason);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_LRMSDoneStatus) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
@@ -394,32 +426,30 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_LRMSStatusReason) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-                if (h->events) {
-                        i = 0;
-                        while (h->events[i]) {
-                                if (h->events[i]->type == EDG_WLL_EVENT_DONE) {
-					av[0].value = check_strdup(h->events[i]->done.reason);
-                                        av[0].timestamp =
-                                                h->events[i]->any.timestamp.tv_sec;
-                                        break;
-                                }
-                                i++;
-                        }
-                }
+		i = 0;
+		while (h->events[i]) {
+			if (h->events[i]->type == EDG_WLL_EVENT_DONE) {
+				if (h->events[i]->done.reason) {
+					av = calloc(2, sizeof(glite_jp_attrval_t));
+					av[0].name = strdup(attr);
+					av[0].value = strdup(h->events[i]->done.reason);
+					av[0].size = -1;
+					av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
+				}
+				break;
+			}
+			i++;
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_retryCount) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d",
-			h->status.resubmitted);
+		trio_asprintf(&av[0].value,"%d", h->status.resubmitted);
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_additionalReason) == 0) {
 		/* what is it? */
 		*attrval = NULL;
 		err.code = ENOSYS;
-//		err.desc = "Not implemented yet.";
 		trio_asprintf(&err.desc,"Attribute '%s' not implemented yet.",attr);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_jobType) == 0) {
@@ -438,8 +468,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	} else if (strcmp(attr, GLITE_JP_LB_nsubjobs) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d",
-			h->status.children_num);
+		trio_asprintf(&av[0].value,"%d", h->status.children_num);
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_lastStatusHistory) == 0) {
@@ -476,7 +505,6 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                         av[i+2].size = -1;
                         i++;
                 }
-
 	} else if (strcmp(attr, GLITE_JP_LB_fullStatusHistory) == 0) {
 		i = 0; while (h->fullStatusHistory[i]) i++;
 		av = calloc(i+1, sizeof(glite_jp_attrval_t));
@@ -516,31 +544,41 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 				i++;
 			}
 		}
+	} else if (strcmp(attr, GLITE_JP_LB_JDL) == 0) {
+                i = 0;
+                while (h->events[i]) {
+                        if ((h->events[i]->type == EDG_WLL_EVENT_REGJOB) &&
+			    (h->events[i]->regJob.jdl) ) {
+				av = calloc(2, sizeof(glite_jp_attrval_t));
+				av[0].name = strdup(attr);
+				av[0].value = strdup(h->events[i]->regJob.jdl);
+				av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
+				av[0].size = -1;
+				break;
+			}
+			i++;
+		}
 	} else {
 		*attrval = NULL;
         	err.code = EINVAL;
-//              err.desc = "No such attribute.";
 		trio_asprintf(&err.desc,"No such attribute '%s'.",attr);
 	        return glite_jp_stack_error(ctx,&err);
 	}
 
-	if (av[0].value) {
+	if (av && av[0].value) {
 		for (i=0; av[i].name; i++) av[i].origin = GLITE_JP_ATTR_ORIG_FILE;
 		*attrval = av;
 		return 0;
-	}
-	else {
+	} else {
 		*attrval = NULL;
 		err.code = ENOENT;
-//		err.desc = "Value unknown";
-		trio_asprintf(&err.desc,"Value unknown for attribute '%s'.",av[0].name);
-		glite_jp_attrval_free(av,1);
+		trio_asprintf(&err.desc,"Value unknown for attribute '%s'.",attr);
+		if (av) glite_jp_attrval_free(av,1); // probably not needed
 		return glite_jp_stack_error(ctx,&err);
 	}
 }
 
 
-// static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status) {
 static int lb_status(void *handle) {
 
 	lb_handle       *h = (lb_handle *) handle;
@@ -597,7 +635,7 @@ static int lb_status(void *handle) {
 
 	memcpy(&h->status, &js->pub, sizeof(edg_wll_JobStat));
 
-	// XXX: awful, hopefully working
+	// not very clean, but working
 	memset(&js->pub, 0, sizeof(edg_wll_JobStat));
 	destroy_intJobStat(js);
 
