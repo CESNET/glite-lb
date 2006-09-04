@@ -58,7 +58,6 @@ int main(int argc,char **argv)
 			edg_wll_FreeStmt(&sh);
 			do_exit(ctx,EX_SOFTWARE);
 		}
-		
 		jobs[atoi(str[0])] = atoi(str[1]);
 		if (str[0]) free(str[0]);
 		if (str[1]) free(str[1]);
