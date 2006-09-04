@@ -247,7 +247,7 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 
 %.thr.o: %.c
-	${COMPILE} ${GLOBUSTHRINC} ${CFLAGS} -o $@ -c $<
+	${COMPILE} ${GLOBUSTHRINC} ${CFLAGS} -D_REENTRANT -DGLITE_LB_THREADED -o $@ -c $<
 
 %.h: %.h.T
 	rm -f $@

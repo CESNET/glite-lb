@@ -77,13 +77,15 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 	if (ctx->connections->connPool) {
 		int i;
 
-                /* Since the introduction of a shared connection pool, the pool cannot freed here.
-                   We only need to unlock connections locked using this context. */
+#ifdef GLITE_LB_THREADED
+                /* Since the introduction of a shared connection pool, the pool cannot be freed here.
+                   We only need to unlock connections that may have been locked using this context. */
 		for (i=0; i<ctx->connections->poolSize; i++) {
 			if (ctx->connections->locked_by[i]==ctx) {
 				edg_wll_connectionUnlock(ctx, i);
 			}
 		}
+#endif
 
 /*		
 		for (i=0; i<ctx->connections->poolSize; i++) {
