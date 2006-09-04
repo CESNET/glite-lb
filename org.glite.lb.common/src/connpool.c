@@ -1,19 +1,37 @@
 #include "connpool.h"
 
+#ifdef GLITE_LB_THREADED
 edg_wll_Connections connectionsHandle = 
   { NULL , NULL , EDG_WLL_LOG_CONNECTIONS_DEFAULT , 0 , PTHREAD_MUTEX_INITIALIZER , NULL , NULL};
+#endif
 
+#ifndef GLITE_LB_THREADED
+edg_wll_Connections connectionsHandle =
+  { NULL , NULL , EDG_WLL_LOG_CONNECTIONS_DEFAULT , 0 , NULL};
+#endif
 
 /** Lock (try) the pool */
 int edg_wll_poolTryLock() {
 int RetVal;
 
-  #ifdef THR
-    RetVal = pthread_mutex_trylock(&edg_wll_Connections.poolLock);
+  #ifdef GLITE_LB_THREADED  /* Threaded version */
+    RetVal =
+        pthread_mutex_trylock(
+           &connectionsHandle.poolLock
+        );
+
+    #ifdef EDG_WLL_CONNPOOL_DEBUG
+      printf("Thread %d tring to lock the pool - result %d\n",pthread_self(),RetVal);
+    #endif
   #endif
 
-  #ifndef THR
+
+  #ifndef GLITE_LB_THREADED  /* Single-thread version */
     RetVal = 0;
+
+    #ifdef EDG_WLL_CONNPOOL_DEBUG
+      printf("Dummy - Locking the pool (pthreads not included)\n");
+    #endif
   #endif
 
 
@@ -25,11 +43,16 @@ int RetVal;
 int edg_wll_poolLock() {
 int RetVal;
 
-  #ifdef THR
-    RetVal = pthread_mutex_lock(&edg_wll_Connections.poolLock);
+  #ifdef GLITE_LB_THREADED
+    RetVal = pthread_mutex_lock(&connectionsHandle.poolLock);
+    printf("Debug out edg_wll_poolLock #2\n");
+
+    #ifdef EDG_WLL_CONNPOOL_DEBUG
+      printf("Thread %d tring to lock the pool - result %d\n",pthread_self(),RetVal);
+    #endif
   #endif
 
-  #ifndef THR
+  #ifndef GLITE_LB_THREADED
     RetVal = 0;
   #endif
 
@@ -42,11 +65,11 @@ int RetVal;
 int edg_wll_poolUnlock() {
 int RetVal;
 
-  #ifdef THR
-    RetVal = pthread_mutex_unlock(&edg_wll_Connections.poolLock);
+  #ifdef GLITE_LB_THREADED
+    RetVal = pthread_mutex_unlock(&connectionsHandle.poolLock);
   #endif
 
-  #ifndef THR
+  #ifndef GLITE_LB_THREADED
     RetVal = 0;
   #endif
 
@@ -59,13 +82,13 @@ int RetVal;
 int edg_wll_connectionTryLock(edg_wll_Context ctx, int index) {
 int RetVal;
 
-  #ifdef THR
-    RetVal = pthread_mutex_trylock(&edg_wll_Connections.connectionLock[index]); /* Try to lock the connection */
+  #ifdef GLITE_LB_THREADED
+    RetVal = pthread_mutex_trylock(&connectionsHandle.connectionLock[index]); /* Try to lock the connection */
     if (!RetVal) connectionsHandle.locked_by[index] = (void*)ctx;		/* If lock succeeded, store the
 										   locking context address */
   #endif
 
-  #ifndef THR
+  #ifndef GLITE_LB_THREADED
     RetVal = 0;
   #endif
 
@@ -78,14 +101,14 @@ int RetVal;
 int edg_wll_connectionLock(edg_wll_Context ctx, int index) {
 int RetVal;
 
-  #ifdef THR
-    RetVal = pthread_mutex_lock(&edg_wll_Connections.connectionLock[index]);	/* Lock the connection (wait if
+  #ifdef GLITE_LB_THREADED
+    RetVal = pthread_mutex_lock(&connectionsHandle.connectionLock[index]);	/* Lock the connection (wait if
 										   not available)*/
     if (!RetVal) connectionsHandle.locked_by[index] = (void*)ctx;               /* If lock succeeded, store the
                                                                          	   locking context address */
   #endif
 
-  #ifndef THR
+  #ifndef GLITE_LB_THREADED
     RetVal = 0;
   #endif
 
@@ -98,12 +121,12 @@ int RetVal;
 int edg_wll_connectionUnlock(edg_wll_Context ctx, int index) {
 int RetVal;
 
-  #ifdef THR
-    RetVal = pthread_mutex_unlock(&edg_wll_Connections.connectionLock[index]);
+  #ifdef GLITE_LB_THREADED
+    RetVal = pthread_mutex_unlock(&connectionsHandle.connectionLock[index]);
     if (!RetVal) connectionsHandle.locked_by[index] = NULL;
   #endif
 
-  #ifndef THR
+  #ifndef GLITE_LB_THREADED
     RetVal = 0;
   #endif
 
@@ -131,11 +154,13 @@ void edg_wll_poolFree() {
         }
 
 	edg_wll_poolLock();
+#ifdef GLITE_LB_THREADED
 	free(connectionsHandle.connectionLock);
+	connectionsHandle.connectionLock = NULL;
+#endif
 	free(connectionsHandle.serverConnection);
 	free(connectionsHandle.connPool);
 	free(connectionsHandle.locked_by);
-	connectionsHandle.connectionLock = NULL;
 	connectionsHandle.serverConnection = NULL;
         connectionsHandle.connPool = NULL;
         connectionsHandle.locked_by = NULL;
@@ -150,7 +175,9 @@ edg_wll_Connections* edg_wll_initConnections() {
   if((connectionsHandle.connPool == NULL) &&
      (connectionsHandle.poolSize > 0)) { /* We need to allocate memory for the connPool and connectionLock arrays */ 
     connectionsHandle.connPool = (edg_wll_ConnPool *) calloc(connectionsHandle.poolSize, sizeof(edg_wll_ConnPool));
+#ifdef GLITE_LB_THREADED
     connectionsHandle.connectionLock = (pthread_mutex_t *) calloc(connectionsHandle.poolSize, sizeof(pthread_mutex_t));
+#endif
     connectionsHandle.locked_by = (edg_wll_Context) calloc(connectionsHandle.poolSize, sizeof(edg_wll_Context));
 
   }

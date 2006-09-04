@@ -2,12 +2,16 @@
 #include "glite/lb/consumer.h"
 #include "lb_plain_io.h"
 #include "authz.h"
-#include "log_proto.h"
-#include <pthread.h>
+#include "glite/lb/log_proto.h"
+#ifdef GLITE_LB_THREADED
+  #include <pthread.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define EDG_WLL_CONNPOOL_DEBUG
 
 #ifndef EDG_WLL_CONNPOOL_DECLARED
 #define EDG_WLL_CONNPOOL_DECLARED 1
@@ -43,15 +47,18 @@ typedef struct _edg_wll_Connections {
         int             connOpened;     /* number of opened connections  */
 
 /* Connection pool locks & accessories.*/
+#ifdef GLITE_LB_THREADED
         pthread_mutex_t poolLock;       /* Global pool lock (to be used for pool-wide operations carried out locally) */
         pthread_mutex_t *connectionLock;      /* Per-connection lock (used to lock out connections that are in use) */
+#endif 
 	edg_wll_Context	*locked_by;	/* identifies contexts that have been used to lock a connection since they
                                            do probably have a connToUse value stored in them*/
+
 } edg_wll_Connections;
 #endif
+
+
 /* Connections Global Handle */
-
-
 extern edg_wll_Connections connectionsHandle;
 
 /** ** Locking Functions (wrappers) **/
