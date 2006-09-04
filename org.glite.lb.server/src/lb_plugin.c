@@ -479,6 +479,16 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		trio_asprintf(&av[0].value,"%d", h->status.children_num);
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+	} else if (strcmp(attr, GLITE_JP_LB_subjobs) == 0) {
+		if (h->status.children_num > 0) {
+			av = calloc(1+h->status.children_num, sizeof(glite_jp_attrval_t));
+			for (i=0; i<h->status.children_num; i++) {
+				av[i].name = strdup(attr);
+				av[i].value = check_strdup(h->status.children[i]);
+				av[i].size = -1;
+				av[i].timestamp = h->status.lastUpdateTime.tv_sec;
+			}
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_lastStatusHistory) == 0) {
 /*
 		av = calloc(1 + EDG_WLL_NUMBER_OF_STATCODES, sizeof(glite_jp_attrval_t));
@@ -495,25 +505,22 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 */
 		int j;
                 i = 0; while (h->lastStatusHistory[i]) i++;
-                av = calloc(i+2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                av[0].value = check_strdup(h->status.reason);
-                av[0].timestamp = h->status.stateEnterTime.tv_sec;
-                av[0].size = -1;
 		if ((h->fullStatusHistory[0] && 
                     (h->fullStatusHistory[0]->state == EDG_WLL_JOB_SUBMITTED)) ) {
-			av[1].name = edg_wll_StatToString(h->fullStatusHistory[0]->state);
-			av[1].value = check_strdup(h->fullStatusHistory[0]->reason);
-			av[1].timestamp = h->fullStatusHistory[0]->timestamp.tv_sec;
-			av[1].size = -1;	
-			j = 2;
-		} else {
+			av = calloc(i+2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = edg_wll_StatToString(h->fullStatusHistory[0]->state);
+			av[0].timestamp = h->fullStatusHistory[0]->timestamp.tv_sec;
+			av[0].size = -1;	
 			j = 1;
+		} else {
+			av = calloc(i+1, sizeof(glite_jp_attrval_t));
+			j = 0;
 		}
                 i = 0;
                 while (h->lastStatusHistory[i]) {
-                        av[j].name = edg_wll_StatToString(h->lastStatusHistory[i]->state);
-                        av[j].value = check_strdup(h->lastStatusHistory[i]->reason);
+			av[j].name = strdup(attr);
+			av[j].value = edg_wll_StatToString(h->lastStatusHistory[i]->state);
                         av[j].timestamp = h->lastStatusHistory[i]->timestamp.tv_sec;
                         av[j].size = -1;
                         i++;
@@ -522,16 +529,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	} else if (strcmp(attr, GLITE_JP_LB_fullStatusHistory) == 0) {
 		i = 0; while (h->fullStatusHistory[i]) i++;
 		av = calloc(i+1, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = check_strdup(h->status.reason);
-		av[0].timestamp = h->status.stateEnterTime.tv_sec;
-		av[0].size = -1;
 		i = 0;
 		while (h->fullStatusHistory[i]) {
-			av[i+1].name = edg_wll_StatToString(h->fullStatusHistory[i]->state);
-			av[i+1].value = check_strdup(h->fullStatusHistory[i]->reason);
-			av[i+1].timestamp = h->fullStatusHistory[i]->timestamp.tv_sec;
-			av[i+1].size = -1;	
+			av[i].name = strdup(attr);
+			av[i].value = edg_wll_StatToString(h->fullStatusHistory[i]->state);
+			av[i].timestamp = h->fullStatusHistory[i]->timestamp.tv_sec;
+			av[i].size = -1;	
 			i++;
 		}
 	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, sizeof(GLITE_JP_LBTAG_NS)-1) == 0) {

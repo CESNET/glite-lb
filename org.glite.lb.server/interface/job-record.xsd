@@ -18,6 +18,7 @@
 
 			<xs:element ref="a:jobId" minOccurs="1" maxOccurs="1"/>
 			<xs:element ref="a:user" minOccurs="1" maxOccurs="1"/>
+			<xs:element ref="a:parent" minOccurs="0" maxOccurs="1"/>
 
 	<!-- the following 6 elements have to be retrieved from JDL -->
 			<xs:element ref="a:VO" minOccurs="0" maxOccurs="1"/>
@@ -51,6 +52,7 @@
 
 			<xs:element ref="a:jobType" minOccurs="1" maxOccurs="1"/>
 			<xs:element ref="a:nsubjobs" minOccurs="0" maxOccurs="1"/>
+			<xs:element ref="a:subjobs" minOccurs="0" maxOccurs="1"/>
 
 			<!-- timestamps of the state history of the last resubmission cycle,
 				i.e. it is guaranteed that each state apears here only once.
@@ -60,6 +62,8 @@
 
 			<!-- timestamps of the whole state history, including all resubmission cycles -->
 			<xs:element ref="a:fullStatusHistory" minOccurs="1" maxOccurs="1"/>
+
+			<xs:element ref="a:JDL" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 
 		<!-- No idea where to get these from:
