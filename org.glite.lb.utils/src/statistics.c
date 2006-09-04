@@ -182,6 +182,12 @@ int main(int argc, char *argv[])
 			free_attrs(attrval);
 		}
 
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_parent, &attrval);
+		if (attrval) {
+			fprintf(stdout,"\t<parent>%s</parent>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_VO, &attrval);
 		if (attrval) {
 			fprintf(stdout,"\t<VO>%s</VO>\n", attrval->value);
@@ -308,6 +314,17 @@ int main(int argc, char *argv[])
 			free_attrs(attrval);
 		}
 
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_subjobs, &attrval);
+		if (attrval) {
+			fprintf(stdout,"\t<subjobs>\n");
+			i = 0;
+			while (attrval[i].value) {
+				fprintf(stdout,"\t<jobid>%s</jobid>",attrval[i].value ? attrval[i].value : "");
+				i++;
+			}
+			fprintf(stdout,"\t</subjobs>\n");
+		}
+
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_lastStatusHistory, &attrval);
 		if (attrval) {
 			fprintf(stdout,"\t<lastStatusHistory>\n");
@@ -322,12 +339,12 @@ int main(int argc, char *argv[])
 				if (stat) free(stat);
 			}
 */
-                        i = 1;
-                        while (attrval[i].name) {
+                        i = 0;
+                        while (attrval[i].value) {
                                 fprintf(stdout,"\t<status>\n");
-                                fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].name);
+                                fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].value ? attrval[i].value : "");
                                 fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
-                                fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
+//                                fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
                                 fprintf(stdout,"\t</status>\n");
                                 i++;
                         }
@@ -338,12 +355,12 @@ int main(int argc, char *argv[])
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_fullStatusHistory, &attrval);
 		if (attrval) {
 			fprintf(stdout,"\t<fullStatusHistory>\n");
-			i = 1;
-			while (attrval[i].name) {
+			i = 0;
+			while (attrval[i].value) {
 				fprintf(stdout,"\t<status>\n");
-				fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].name);
+				fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].value ? attrval[i].value : "");
 				fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
-				fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
+//				fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
 				fprintf(stdout,"\t</status>\n");
 				i++;
 			}
