@@ -546,7 +546,8 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 
 			while (h->events[i]) {
 				if ((h->events[i]->type == EDG_WLL_EVENT_USERTAG) &&
-				    (strcmp(h->events[i]->userTag.name, tag) == 0) ) {
+/* XXX: LB tag names are case-insensitive */
+				    (strcasecmp(h->events[i]->userTag.name, tag) == 0) ) {
 					av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
 					memset(&av[n_tags], 0, 2 * sizeof(glite_jp_attrval_t));
 
