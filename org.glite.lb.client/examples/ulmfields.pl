@@ -26,6 +26,6 @@ for $f (@F) {
 $f{$P[0]} = $P[1];
 
 for $f (@pf) {
-	print "$f=$f{$f}\n";
+	print "$f=$f{$f}\n" if $f{$f};
 }
 print "\n";
