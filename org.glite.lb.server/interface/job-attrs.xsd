@@ -35,11 +35,13 @@
 	</xs:simpleType>
 
 	<xs:complexType name="historyStatusType">
-		<xs:sequence>
-			<xs:element name="status" type="a:statusType" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="timestamp" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="reason" type="xs:string"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:restriction base="xs:anyType">
+				<xs:attribute name="name" type="a:statusType" use="required"/>
+				<xs:attribute name="timestamp" type="xs:dateTime" use="required"/>
+				<xs:attribute name="reason" type="xs:string" use="optional"/>
+			</xs:restriction>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:simpleType name="jobTypeType">
@@ -66,7 +68,7 @@
 	<xs:element name="jobId" type="xs:string" />
 
 	<xs:element name="user" type="xs:string">
-		<xs:documentation>Job owner according to LB</xs:documentation>
+		<xs:annotation> <xs:documentation>Job owner according to LB</xs:documentation> </xs:annotation>
 	</xs:element>
 
 	<!-- Parent jobId of DAG -->
