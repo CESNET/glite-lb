@@ -31,11 +31,13 @@ typedef void done_f(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data);
 
 static const char rcsid[] = "@(#)$Id$";
 static int verbose = 0;
-static char *file = NULL;
+static char *infilename = NULL;
+static char *outfilename = NULL;
 static int jdl = 0;
 
 static struct option const long_options[] = {
 	{ "file", required_argument, 0, 'f' },
+	{ "outfile", required_argument, 0, 'o' },
 	{ "jdl", no_argument, 0, 'j' },
         { "help", no_argument, 0, 'h' },
         { "verbose", no_argument, 0, 'v' },
@@ -49,13 +51,14 @@ static struct option const long_options[] = {
 static void
 usage(char *program_name) {
         fprintf(stdout,"LB statistics\n"
-		"- reads a dump file (one job only) \n"
+		"- reads a dump file (one job only!) \n"
 		"- and outputs an XML with statistics to stdout \n\n"
 		"Usage: %s [option]\n"
 		"-h, --help                 display this help and exit\n"
 		"-V, --version              output version information and exit\n"
 		"-v, --verbose              print extensive debug output to stderr\n"
 		"-f, --file <file>          dump file to process\n"
+		"-o, --outfile <file>       output filename\n"	
 		"-j, --jdl                  prit also JDL in the XML\n\n",
 		program_name);
 }
@@ -110,16 +113,17 @@ int main(int argc, char *argv[])
 	glite_jp_context_t jpctx;
 	glite_jpps_fplug_data_t plugin_data;
 	void *data_handle, *lib_handle;
-	FILE *f;
+	FILE *infile,*outfile = NULL;
 	glite_jp_attrval_t *attrval;
 	char *err;
 	init_f *plugin_init;
 	done_f *plugin_done;
-	int i,opt;
+	int opt;
 
 	/* get arguments */
 	while ((opt = getopt_long(argc,argv,
-		"f:" /* file */
+		"f:" /* input file */
+		"o:" /* output file */
 		"j"  /* jdl */
 		"h"  /* help */
 		"v"  /* verbose */
@@ -129,7 +133,8 @@ int main(int argc, char *argv[])
 		switch (opt) {
 			case 'V': fprintf(stdout,"%s:\t%s\n",argv[0],rcsid); return(0);
 			case 'v': verbose = 1; break;
-			case 'f': file = optarg; break;
+			case 'f': infilename = optarg; break;
+			case 'o': outfilename = optarg; break;
 			case 'j': jdl = 1; break;
 			case 'h':
 			default:
@@ -147,245 +152,223 @@ int main(int argc, char *argv[])
 	    (plugin_done = dlsym(lib_handle, "done")) == NULL) {
 		err = dlerror() ? : "unknown error";
 		fprintf(stderr,"lb_statistics: can't find symbol 'init' or 'done' (%s)\n", err);
-		goto err;
+		dlclose(lib_handle);
+		return 1;
 	}
 
 	/* dump file with events */
-	if ((f = fopen(file, "rt")) == NULL) {
-		fprintf(stderr,"lb_statistics: Error: %s\n", strerror(errno));
-		goto err;
+	if ((infile = fopen(infilename, "rt")) == NULL) {
+		fprintf(stderr,"lb_statistics: Error opening file %s: %s\n", infilename, strerror(errno));
+		dlclose(lib_handle);
+		return 1;
+	}
+
+	/* output filename */
+	if (outfilename) {
+		if ((outfile = fopen(outfilename, "wt")) == NULL) {
+			fprintf(stderr,"lb_statistics: Error opening file %s: %s\n", outfilename, strerror(errno));
+			dlclose(lib_handle);
+			fclose(infile);
+		}
+	} else {
+		outfile = stdout;
 	}
 
 	/* use the plugin */
 	plugin_init(jpctx, &plugin_data);
-	plugin_data.ops.open(jpctx, f, "uri://", &data_handle);
+	plugin_data.ops.open(jpctx, infile, "uri://", &data_handle);
 
 	if (data_handle) {
-		/* header */
-		fprintf(stdout,"<?xml version=\"1.0\"?>\n\n");
-		fprintf(stdout,"<lbd:jobRecord\n");
-		fprintf(stdout,"\txmlns:lbd=\"http://glite.org/wsdl/types/lbdump\"\n");
+		/* <header> */
+		fprintf(outfile,"<?xml version=\"1.0\"?>\n\n");
+		fprintf(outfile,"<lbd:jobRecord\n");
+		fprintf(outfile,"\txmlns:lbd=\"http://glite.org/wsdl/types/lbdump\"\n");
 		
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_jobId, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\tjobid=\"%s\"\n", attrval->value);
+			fprintf(outfile,"\tjobid=\"%s\"\n", attrval->value);
 			free_attrs(attrval);
 		} else {
-			fprintf(stdout,"\tjobid=\"default\"\n");
+			fprintf(outfile,"\tjobid=\"default\"\n");
 		}
-		fprintf(stdout,">\n");
-		/* /header */
+		fprintf(outfile,">\n");
+		/* </header> */
 		
+		/* <body> */
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_user, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<user>%s</user>\n", attrval->value);
+			fprintf(outfile,"\t<user>%s</user>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_parent, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<parent>%s</parent>\n", attrval->value);
+			fprintf(outfile,"\t<parent>%s</parent>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_VO, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<VO>%s</VO>\n", attrval->value);
+			fprintf(outfile,"\t<VO>%s</VO>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_aTag, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<aTag>%s</aTag>\n", attrval->value);
+			fprintf(outfile,"\t<aTag>%s</aTag>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_rQType, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<rQType>%s</rQType>\n", ctime(&attrval->timestamp));
+			fprintf(outfile,"\t<rQType>%s</rQType>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_eDuration, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<eDuration>%s</eDuration>\n", attrval->value);
+			fprintf(outfile,"\t<eDuration>%s</eDuration>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_eNodes, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<eNodes>%s</eNodes>\n", attrval->value);
+			fprintf(outfile,"\t<eNodes>%s</eNodes>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_eProc, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<eProc>%s</eProc>\n", attrval->value);
+			fprintf(outfile,"\t<eProc>%s</eProc>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_RB, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<RB>%s</RB>\n", attrval->value);
+			fprintf(outfile,"\t<RB>%s</RB>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_CE, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<CE>%s</CE>\n", attrval->value);
+			fprintf(outfile,"\t<CE>%s</CE>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_host, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<host>%s</host>\n", attrval->value);
+			fprintf(outfile,"\t<host>%s</host>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_UIHost, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<UIHost>%s</UIHost>\n", attrval->value);
+			fprintf(outfile,"\t<UIHost>%s</UIHost>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_CPUTime, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<CPUTime>%s</CPUTime>\n", attrval->value);
+			fprintf(outfile,"\t<CPUTime>%s</CPUTime>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_NProc, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<NProc>%s</NProc>\n", attrval->value);
+			fprintf(outfile,"\t<NProc>%s</NProc>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_finalStatus, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<finalStatus>%s</finalStatus>\n", attrval->value);
+			fprintf(outfile,"\t<finalStatus>%s</finalStatus>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_finalStatusDate, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<finalStatusDate>%s</finalStatusDate>\n", attrval->value);
+			fprintf(outfile,"\t<finalStatusDate>%s</finalStatusDate>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_finalStatusReason, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<finalStatusReason>%s</finalStatusReason>\n", attrval->value);
+			fprintf(outfile,"\t<finalStatusReason>%s</finalStatusReason>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_LRMSDoneStatus, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<LRMSDoneStatus>%s</LRMSDoneStatus>\n", attrval->value);
+			fprintf(outfile,"\t<LRMSDoneStatus>%s</LRMSDoneStatus>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_LRMSStatusReason, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<LRMSStatusReason>%s</LRMSStatusReason>\n", attrval->value);
+			fprintf(outfile,"\t<LRMSStatusReason>%s</LRMSStatusReason>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_retryCount, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<retryCount>%s</retryCount>\n", attrval->value);
+			fprintf(outfile,"\t<retryCount>%s</retryCount>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_additionalReason, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<additionalReason>%s</additionalReason>\n", attrval->value);
+			fprintf(outfile,"\t<additionalReason>%s</additionalReason>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_jobType, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<jobType>%s</jobType>\n", attrval->value);
+			fprintf(outfile,"\t<jobType>%s</jobType>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_nsubjobs, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<nsubjobs>%s</nsubjobs>\n", attrval->value);
+			fprintf(outfile,"\t<nsubjobs>%s</nsubjobs>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_subjobs, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<subjobs>\n");
-			i = 0;
-			while (attrval[i].value) {
-				fprintf(stdout,"\t<jobid>%s</jobid>",attrval[i].value ? attrval[i].value : "");
-				i++;
-			}
-			fprintf(stdout,"\t</subjobs>\n");
+			fprintf(outfile,"\t<subjobs>\n%s\t</subjobs>\n", attrval->value);
+			free_attrs(attrval);
 		}
 
+/* FIXME: */
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_lastStatusHistory, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<lastStatusHistory>\n");
-/* 
-			for (i = 1; i < EDG_WLL_NUMBER_OF_STATCODES; i++) {
-				char *stat = edg_wll_StatToString(i);
-				fprintf(stdout,"\t<status>\n");
-				fprintf(stdout,"\t\t<status>%s</status>\n", stat);
-				fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
-				fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
-				fprintf(stdout,"\t</status>\n");
-				if (stat) free(stat);
-			}
-*/
-                        i = 0;
-                        while (attrval[i].value) {
-                                fprintf(stdout,"\t<status>\n");
-                                fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].value ? attrval[i].value : "");
-                                fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
-//                                fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
-                                fprintf(stdout,"\t</status>\n");
-                                i++;
-                        }
-			fprintf(stdout,"\t</lastStatusHistory>\n");
+			fprintf(outfile,"\t<lastStatusHistory>\n%s\t</lastStatusHistory>\n",attrval->value);
 			free_attrs(attrval);
 		}
 
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_fullStatusHistory, &attrval);
 		if (attrval) {
-			fprintf(stdout,"\t<fullStatusHistory>\n");
-			i = 0;
-			while (attrval[i].value) {
-				fprintf(stdout,"\t<status>\n");
-				fprintf(stdout,"\t\t<status>%s</status>\n", attrval[i].value ? attrval[i].value : "");
-				fprintf(stdout,"\t\t<timestamp>%ld.%06ld</timestamp>\n", attrval[i].timestamp,0);
-//				fprintf(stdout,"\t\t<reason>%s</reason>\n", attrval[i].value ? attrval[i].value : "");
-				fprintf(stdout,"\t</status>\n");
-				i++;
-			}
-			fprintf(stdout,"\t</fullStatusHistory>\n");
+			fprintf(outfile,"\t<fullStatusHistory>\n%s\t</fullStatusHistory>\n",attrval->value);
 			free_attrs(attrval);
 		}
+
 		if (jdl) {
 			plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_JDL, &attrval);
 			if (attrval) {
-				fprintf(stdout,"\t<JDL>%s</JDL>\n", attrval->value);
+				fprintf(outfile,"\t<JDL>%s</JDL>\n", attrval->value);
 				free_attrs(attrval);
 			}
 		}
 
-		fprintf(stdout,"</lbd:jobRecord>\n");
+		fprintf(outfile,"</lbd:jobRecord>\n");
 
+		/* </body> */
 		plugin_data.ops.close(jpctx, data_handle);
 	}
 	plugin_done(jpctx, &plugin_data);
 
-	fclose(f);
+	fclose(infile);
+	if (outfile) fclose(outfile);
 	dlclose(lib_handle);
 	return 0;
-
-err:
-	dlclose(lib_handle);
-	return 1;
 }
