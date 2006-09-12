@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <time.h>
+#include <ctype.h>
 
 #include <cclassad.h>
 
@@ -218,6 +220,7 @@ static int lb_close(void *fpctx,void *handle) {
 		free(h->events);
 	}
 
+	// FIXME: Fails here on corrupted jobId
 	if (h->status.state != EDG_WLL_JOB_UNDEF) 
 		edg_wll_FreeStatus(&h->status);
 
@@ -257,7 +260,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	    (h->fullStatusHistory == NULL) ) {
                 *attrval = NULL;
                 err.code = ENOENT;
-                trio_asprintf(&err.desc,"There is no job information to query.");
+		err.desc = strdup("There is no job information to query.");
                 return glite_jp_stack_error(ctx,&err);
 	}
 
@@ -278,7 +281,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_parent) == 0) {
-		if (h->status.jobId) {
+		if (h->status.parent_job) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
 			av[0].name = strdup(attr);
 			av[0].value = edg_wlc_JobIdUnparse(h->status.parent_job);
@@ -355,9 +358,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                    strcmp(attr, GLITE_JP_LB_rQType) == 0 ||
                    strcmp(attr, GLITE_JP_LB_eDuration) == 0) {
 		/* have to be retrieved from JDL, but probably obsolete and not needed at all */
+		char *et;
 		*attrval = NULL;
 		err.code = ENOSYS;
-		trio_asprintf(&err.desc,"Attribute '%s' not implemented yet.",attr);
+		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
+		err.desc = strdup(et);
+		free(et);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_RB) == 0) {
 		if (h->status.network_server) {
@@ -401,9 +407,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_NProc) == 0) {
 		/* currently LB hasn't got the info */
+		char *et;
 		*attrval = NULL;
 		err.code = ENOSYS;
-		trio_asprintf(&err.desc,"Attribute '%s' not implemented yet.",attr);
+		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
+		err.desc = strdup(et);
+		free(et);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_finalStatus) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -412,13 +421,18 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_finalStatusDate) == 0) {
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%ld.%06ld",  
-			h->status.lastUpdateTime.tv_sec,
-			h->status.lastUpdateTime.tv_usec);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+                struct tm *t = NULL;
+                if ((t = gmtime(&h->status.lastUpdateTime.tv_sec)) != NULL) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			/* dateTime format: yyyy-mm-ddThh:mm:ss:uuuuuu */
+                        trio_asprintf(&av[0].value,"%04d-%02d-%02dT%02d:%02d:%02d:%06d",
+                                1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+				t->tm_hour, t->tm_min, t->tm_sec,
+				h->status.lastUpdateTime.tv_usec);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+                }
 	} else if (strcmp(attr, GLITE_JP_LB_finalStatusReason) == 0) {
 		if (h->status.reason) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -456,9 +470,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_additionalReason) == 0) {
 		/* what is it? */
+		char *et;
 		*attrval = NULL;
 		err.code = ENOSYS;
-		trio_asprintf(&err.desc,"Attribute '%s' not implemented yet.",attr);
+		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
+		err.desc = strdup(et);
+		free(et);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_jobType) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -481,61 +498,137 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_subjobs) == 0) {
 		if (h->status.children_num > 0) {
-			av = calloc(1+h->status.children_num, sizeof(glite_jp_attrval_t));
+			char *val = NULL, *old_val;
+
+			old_val = strdup ("");			
 			for (i=0; i<h->status.children_num; i++) {
-				av[i].name = strdup(attr);
-				av[i].value = check_strdup(h->status.children[i]);
-				av[i].size = -1;
-				av[i].timestamp = h->status.lastUpdateTime.tv_sec;
+				trio_asprintf(&val,"%s\t\t<jobId>%s</jobId>\n",
+					old_val, "");
+// FIXME:					h->status.children[i] ? h->status.children[i] : "");
+				if (old_val) free(old_val);
+				old_val = val; val = NULL; 
 			}
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = check_strdup(old_val);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		} else {
+			char *et;
+			*attrval = NULL;
+			err.code = 0;
+			trio_asprintf(&et,"Value unknown for attribute '%s', there are no subjobs.",attr);
+			err.desc = strdup(et);
+			free(et);
+			return glite_jp_stack_error(ctx,&err);
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_lastStatusHistory) == 0) {
-/*
-		av = calloc(1 + EDG_WLL_NUMBER_OF_STATCODES, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = check_strdup(h->status.reason);
-		av[0].timestamp = h->status.stateEnterTime.tv_sec;
-		av[0].size = -1;
-		for (i=1; i<EDG_WLL_NUMBER_OF_STATCODES; i++) {
-			av[i].name = strdup(attr);
-			if (i == h->status.state) av[i].value = check_strdup(h->status.reason);
-			av[i].timestamp = h->status.stateEnterTimes[i+1];
-			av[i].size = -1;
-		}
-*/
-		int j;
-                i = 0; while (h->lastStatusHistory[i]) i++;
+		int i,j;
+		char *val = NULL, *old_val;
+                struct tm *t;
+
+		t = calloc(1, sizeof(t));
+		old_val = strdup("");
 		if ((h->fullStatusHistory[0] && 
-                    (h->fullStatusHistory[0]->state == EDG_WLL_JOB_SUBMITTED)) ) {
-			av = calloc(i+2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = edg_wll_StatToString(h->fullStatusHistory[0]->state);
-			av[0].timestamp = h->fullStatusHistory[0]->timestamp.tv_sec;
-			av[0].size = -1;	
-			j = 1;
-		} else {
-			av = calloc(i+1, sizeof(glite_jp_attrval_t));
-			j = 0;
+			(h->fullStatusHistory[0]->state == EDG_WLL_JOB_SUBMITTED)) ) {
+			char *s_str = NULL, *t_str = NULL, *r_str = NULL;
+
+			s_str = edg_wll_StatToString(h->fullStatusHistory[0]->state);
+			for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
+			if (gmtime_r(&h->fullStatusHistory[0]->timestamp.tv_sec,t) != NULL) {
+				/* dateTime format: yyyy-mm-ddThh:mm:ss:uuuuuu */
+				trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d:%06d\" ",
+					1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+					t->tm_hour, t->tm_min, t->tm_sec,
+					h->fullStatusHistory[0]->timestamp.tv_usec);
+			} 
+			if (h->fullStatusHistory[0]->reason) {
+				trio_asprintf(&r_str,"reason=\"%s\" ",h->fullStatusHistory[0]->reason);
+			}
+			trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
+				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
+			if (s_str) free(s_str);
+			if (t_str) free(t_str);
+			if (r_str) free(t_str);
+			if (old_val) free(old_val);
+			old_val = val; val = NULL;
 		}
-                i = 0;
-                while (h->lastStatusHistory[i]) {
-			av[j].name = strdup(attr);
-			av[j].value = edg_wll_StatToString(h->lastStatusHistory[i]->state);
-                        av[j].timestamp = h->lastStatusHistory[i]->timestamp.tv_sec;
-                        av[j].size = -1;
-                        i++;
-			j++;
-                }
+		if (h->lastStatusHistory) {
+			i = 0;
+			while (h->lastStatusHistory[i]) {
+				char *s_str = NULL, *t_str = NULL, *r_str = NULL;
+
+				s_str = edg_wll_StatToString(h->lastStatusHistory[i]->state);
+				for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
+				if (gmtime_r(&h->lastStatusHistory[i]->timestamp.tv_sec,t) != NULL) {
+					/* dateTime format: yyyy-mm-ddThh:mm:ss:uuuuuu */
+					trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d:%06d\" ",
+						1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+						t->tm_hour, t->tm_min, t->tm_sec,
+						h->lastStatusHistory[i]->timestamp.tv_usec);
+				} 
+				if (h->lastStatusHistory[i]->reason) {
+					trio_asprintf(&r_str,"reason=\"%s\" ",h->lastStatusHistory[i]->reason);
+				}
+				trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
+					old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
+				if (s_str) free(s_str);
+				if (t_str) free(t_str);
+				if (r_str) free(r_str);
+// FIXME:				if (old_val) free(old_val);
+				old_val = val; val = NULL;
+				i++;
+			}
+		}
+		val = old_val; old_val = NULL;
+		if (val) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(val);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+			free(val);
+		}
 	} else if (strcmp(attr, GLITE_JP_LB_fullStatusHistory) == 0) {
-		i = 0; while (h->fullStatusHistory[i]) i++;
-		av = calloc(i+1, sizeof(glite_jp_attrval_t));
+		int i,j;
+		char *val = NULL, *old_val;
+                struct tm *t;
+
+		t = calloc(1,sizeof(t));
+		old_val = strdup("");
 		i = 0;
 		while (h->fullStatusHistory[i]) {
-			av[i].name = strdup(attr);
-			av[i].value = edg_wll_StatToString(h->fullStatusHistory[i]->state);
-			av[i].timestamp = h->fullStatusHistory[i]->timestamp.tv_sec;
-			av[i].size = -1;	
+			char *s_str = NULL, *t_str = NULL, *r_str = NULL;
+
+			s_str = edg_wll_StatToString(h->fullStatusHistory[i]->state);
+			for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
+			if (gmtime_r(&h->fullStatusHistory[i]->timestamp.tv_sec,t) != NULL) {
+				/* dateTime format: yyyy-mm-ddThh:mm:ss:uuuuuu */
+				trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d:%06d\" ",
+					1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+					t->tm_hour, t->tm_min, t->tm_sec,
+					h->fullStatusHistory[i]->timestamp.tv_usec);
+			} 
+			if (h->fullStatusHistory[i]->reason) {
+				trio_asprintf(&r_str,"reason=\"%s\" ",h->fullStatusHistory[i]->reason);
+			}
+			trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
+				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
+			if (s_str) free(s_str);
+			if (t_str) free(t_str);
+			if (r_str) free(r_str);
+// FIXME:			if (old_val) free(old_val);
+			old_val = val; val = NULL;
 			i++;
+		}
+		val = old_val; old_val = NULL;
+		if (val) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(val);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+			free(val);
 		}
 	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, sizeof(GLITE_JP_LBTAG_NS)-1) == 0) {
 		tag = strrchr(attr, ':');
@@ -577,9 +670,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			i++;
 		}
 	} else {
+		char *et;
 		*attrval = NULL;
         	err.code = EINVAL;
-		trio_asprintf(&err.desc,"No such attribute '%s'.",attr);
+		trio_asprintf(&et,"No such attribute '%s'.",attr);
+		err.desc = strdup(et);
+		free(et);
 	        return glite_jp_stack_error(ctx,&err);
 	}
 
@@ -588,10 +684,13 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		*attrval = av;
 		return 0;
 	} else {
+		char *et;
 		*attrval = NULL;
 		err.code = ENOENT;
-		trio_asprintf(&err.desc,"Value unknown for attribute '%s'.",attr);
-		if (av) glite_jp_attrval_free(av,1); // probably not needed
+		trio_asprintf(&et,"Value unknown for attribute '%s'.",attr);
+		err.desc = strdup(et);
+		free(et);
+		if (av) glite_jp_attrval_free(av,1); // XXX: probably not needed
 		return glite_jp_stack_error(ctx,&err);
 	}
 }
@@ -613,6 +712,7 @@ static int lb_status(void *handle) {
 	maxnstates = INITIAL_NUMBER_STATES;
 	nstates = 0;
 	h->fullStatusHistory = calloc(maxnstates, sizeof(lb_historyStatus *));
+	h->lastStatusHistory = NULL;
 	i = 0;
         while (h->events[i])  
         {
@@ -642,7 +742,7 @@ static int lb_status(void *handle) {
 			h->fullStatusHistory[nstates]->timestamp.tv_usec = js->pub.stateEnterTime.tv_usec;
 			h->fullStatusHistory[nstates]->reason = check_strdup(js->pub.reason);		
 			if (js->pub.state == EDG_WLL_JOB_WAITING) {
-				h->lastStatusHistory = &h->fullStatusHistory[nstates];
+				h->lastStatusHistory = &(h->fullStatusHistory[nstates]);
 			}
 			old_state = js->pub.state;
 			nstates++;
@@ -650,6 +750,7 @@ static int lb_status(void *handle) {
 
 		i++;
 	}
+	h->fullStatusHistory[nstates] = NULL;
 
 	memcpy(&h->status, &js->pub, sizeof(edg_wll_JobStat));
 
