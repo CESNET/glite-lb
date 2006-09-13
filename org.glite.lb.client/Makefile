@@ -69,29 +69,22 @@ CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	-I${glite_location}/include \
-	-I${expat_prefix}/include \
-	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
 
+#	-I${expat_prefix}/include \
+#	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 
 CXXFLAGS:=${CFLAGS}
 
-ifneq (${mysql_prefix},/usr)
-	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
-		mysqlib := -L${mysql_prefix}/lib/mysql
-	else
-		mysqlib := -L${mysql_prefix}/lib
-	endif
-endif
+#ifneq (${expat_prefix},/usr)
+#	EXPAT_LIBS:=-L${expat_prefix}/lib
+#endif
+#EXPAT_LIBS := ${EXPAT_LIBS} -lexpat
 
-ifneq (${expat_prefix},/usr)
-	EXPAT_LIBS:=-L${expat_prefix}/lib
-endif
-EXPAT_LIBS := ${EXPAT_LIBS} -lexpat
-
-EXT_LIB:= ${mysqlib} -lmysqlclient -lz\
-	${EXPAT_LIBS}
+EXT_LIB:= 
+#${mysqlib} -lmysqlclient -lz\
+#	${EXPAT_LIBS}
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
@@ -136,9 +129,9 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge lb_dump_exporter
-EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog
+EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog lbmon flood_proxy dagids
 
-EXAMPLES_CL=user_jobs job_status 
+EXAMPLES_CL=user_jobs job_status
 FAKE_EXAMPLES:=job_log_fake
 
 MAN_GZ:=glite-lb-logevent.1.gz
@@ -237,7 +230,7 @@ ${MAN_GZ}: ${MAN}
 default: all
 
 
-compile all: ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
+compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
 
 examples: ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}
 
@@ -283,7 +276,7 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/examples
-	for p in logevent ; do \
+	for p in logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 	for p in ${TOOLS} ; do \
@@ -292,7 +285,7 @@ install:
 	for p in ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
-	${INSTALL} -m 755 ${top_srcdir}/examples/export.sh "${PREFIX}/examples/glite-lb-export.sh"
+	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${PREFIX}/sbin/glite-lb-export.sh"
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 clean:

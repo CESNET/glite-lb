@@ -1,3 +1,5 @@
+#ident "$Header$"
+
 #include "glite/lb/context-int.h"
 #include "glite/lb/log_proto.h"
 

@@ -91,7 +91,7 @@ mon-db: mon-db.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${BKSERVER_LIB} ${EXT_LIBS} 
 
 statistics: statistics.o
-	${LINK} -rdynamic -o $@ $< ${JP_LIBS} ${EXT_LIBS}
+	${LINK} -rdynamic -o $@ $< ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
 
 check: compile 
 

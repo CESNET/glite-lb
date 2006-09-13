@@ -14,12 +14,12 @@ extern int opterr,optind;
 
 static void usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-x] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S]]\n", me);
+	fprintf(stderr,"usage: %s [-m bkserver] [-x] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S]] [-e seed]\n", me);
 }
 
 int main(int argc, char *argv[])
 {
-	char *src = NULL,*job = NULL,*server = NULL,*seq,*jdl = NULL;
+	char *src = NULL,*job = NULL,*server = NULL,*seq,*jdl = NULL, *seed = NULL;
 	int lbproxy = 0;
 	int done = 0,num_subjobs = 0,reg_subjobs = 0,i;
 	edg_wll_Context	ctx;
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xs:j:m:n:Sl:")) {
+		switch (getopt(argc,argv,"xs:j:m:n:Sl:e:")) {
 			case 'x': lbproxy = 1; break;
 			case 's': src = (char *) strdup(optarg); break;
 			case 'j': job = (char *) strdup(optarg); break;
@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
 			case 'n': num_subjobs = atoi(optarg); break;
 			case 'S': if (num_subjobs>0) { reg_subjobs = 1; break; }
 			case 'l': jdl = (char *) strdup(optarg); break;
+			case 'e': seed = strdup(optarg); break;
 			case '?': usage(argv[0]); exit(EINVAL);
 			case -1: done = 1; break;
 		}
@@ -88,7 +89,7 @@ int main(int argc, char *argv[])
 		if (edg_wll_RegisterJobProxy(ctx,jobid,
 			num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
 			jdl ? jdl : "blabla", "NNNSSSS",
-			num_subjobs,NULL,&subjobs))
+			num_subjobs,seed,&subjobs))
 		{
 			char 	*et,*ed;
 			edg_wll_Error(ctx,&et,&ed);
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
 		if (edg_wll_RegisterJobSync(ctx,jobid,
 			num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
 			jdl ? jdl : "blabla", "NNNSSSS",
-			num_subjobs,NULL,&subjobs))
+			num_subjobs,seed,&subjobs))
 		{
 			char 	*et,*ed;
 			edg_wll_Error(ctx,&et,&ed);
