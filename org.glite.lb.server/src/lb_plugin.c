@@ -524,14 +524,15 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_lastStatusHistory) == 0) {
 		int i,j;
-		char *val = NULL, *old_val;
+		char *val, *old_val, *s_str, *t_str, *r_str;
                 struct tm *t;
 
-		t = calloc(1, sizeof(t));
+		val = s_str = t_str = r_str = NULL;
 		old_val = strdup("");
+		t = calloc(1, sizeof(t));
+		/* first record is Submitted - hopefully in fullStatusHistory[0] */
 		if ((h->fullStatusHistory[0] && 
 			(h->fullStatusHistory[0]->state == EDG_WLL_JOB_SUBMITTED)) ) {
-			char *s_str = NULL, *t_str = NULL, *r_str = NULL;
 
 			s_str = edg_wll_StatToString(h->fullStatusHistory[0]->state);
 			for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
@@ -553,11 +554,10 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			if (old_val) free(old_val);
 			old_val = val; val = NULL;
 		}
+		/* and the rest is from last Waiting to the end - i.e. all lastStatusHistory[] */
 		if (h->lastStatusHistory) {
 			i = 0;
 			while (h->lastStatusHistory[i]) {
-				char *s_str = NULL, *t_str = NULL, *r_str = NULL;
-
 				s_str = edg_wll_StatToString(h->lastStatusHistory[i]->state);
 				for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
 				if (gmtime_r(&h->lastStatusHistory[i]->timestamp.tv_sec,t) != NULL) {
@@ -570,11 +570,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 				if (h->lastStatusHistory[i]->reason) {
 					trio_asprintf(&r_str,"reason=\"%s\" ",h->lastStatusHistory[i]->reason);
 				}
+// FIXME: fails here for Dan's dumpfile, no idea why, all data are correct :(
 				trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
 					old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
-				if (s_str) free(s_str);
-				if (t_str) free(t_str);
-				if (r_str) free(r_str);
+				if (s_str) free(s_str); s_str = NULL;
+				if (t_str) free(t_str); t_str = NULL;
+				if (r_str) free(r_str); r_str = NULL;
 // FIXME:				if (old_val) free(old_val);
 				old_val = val; val = NULL;
 				i++;
@@ -587,19 +588,18 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].value = strdup(val);
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-			free(val);
+// FIXME:			free(val);
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_fullStatusHistory) == 0) {
 		int i,j;
-		char *val = NULL, *old_val;
+		char *val, *old_val, *s_str, *t_str, *r_str;
                 struct tm *t;
 
-		t = calloc(1,sizeof(t));
+		val = s_str = t_str = r_str = NULL;
 		old_val = strdup("");
+		t = calloc(1, sizeof(t));
 		i = 0;
 		while (h->fullStatusHistory[i]) {
-			char *s_str = NULL, *t_str = NULL, *r_str = NULL;
-
 			s_str = edg_wll_StatToString(h->fullStatusHistory[i]->state);
 			for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
 			if (gmtime_r(&h->fullStatusHistory[i]->timestamp.tv_sec,t) != NULL) {
@@ -612,11 +612,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			if (h->fullStatusHistory[i]->reason) {
 				trio_asprintf(&r_str,"reason=\"%s\" ",h->fullStatusHistory[i]->reason);
 			}
+// FIXME: fails here for Dan's dumpfile, no idea why, all data are correct :(
 			trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
 				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
-			if (s_str) free(s_str);
-			if (t_str) free(t_str);
-			if (r_str) free(r_str);
+			if (s_str) free(s_str); s_str = NULL;
+			if (t_str) free(t_str); t_str = NULL;
+			if (r_str) free(r_str); r_str = NULL;
 // FIXME:			if (old_val) free(old_val);
 			old_val = val; val = NULL;
 			i++;
@@ -628,7 +629,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].value = strdup(val);
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-			free(val);
+// FIXME:			free(val);
 		}
 	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, sizeof(GLITE_JP_LBTAG_NS)-1) == 0) {
 		tag = strrchr(attr, ':');
