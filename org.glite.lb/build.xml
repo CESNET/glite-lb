@@ -20,11 +20,52 @@
 
 	Revision history:
 	$Log$
+	Revision 1.36.4.5  2005/12/02 11:15:33  akrenek
+	resolved logger dependency conflict
+	
+	Revision 1.36.4.4  2005/12/02 10:04:14  jpospi
+	server depends on logger
+	
+	Revision 1.36.4.3  2005/11/28 10:39:08  akrenek
+	merge bug #13928 fix on the pre_cares branch
+	
+	Revision 1.36.4.2  2005/11/24 12:59:36  akrenek
+	server depends on bones
+	
+	Revision 1.36.4.1  2005/11/24 12:32:02  akrenek
+	merged in "lbonly"
+
+	Revision 1.39  2005/11/27 21:51:18  eronchie
+	Applied fix for bug 13928
+	
+	Revision 1.38  2005/11/22 12:13:47  eronchie
+	Removed one utils
+	
+	Revision 1.37  2005/11/04 14:39:20  akrenek
+	merge in the "lbonly" hack
+	
+	Revision 1.36  2005/10/15 13:36:26  akrenek
+	added lb.utils
+	
+	Revision 1.35  2005/10/14 17:19:08  akrenek
+	build also lb.utils
+	
 	Revision 1.34  2005/10/14 11:02:06  akrenek
 	depends on jp.primary
 	
 	Revision 1.33  2005/09/19 15:23:45  akrenek
 	"The gigantic merge"; from release 1.4 branch to HEAD
+	
+	Revision 1.32.2.2  2005/10/31 12:45:10  akrenek
+	conditional disabling of cross-subsystem builds via "lbonly" property
+	
+	Revision 1.32.2.1  2005/08/18 10:36:05  eronchie
+	Added cross-subsystem dependencies feature in org.glite.lb subsystem.
+	Added wms-utils.jobid and security.gsoap-plugin among common dependencies.
+	Added security.voms among server dependencies.
+	At the moment I have not consider gridsite.core component.
+	Once built gridsiste component, run ant in org.glite.lb to build the whole lb
+	and its external gLite dependencies.
 	
 	Revision 1.32  2005/08/03 11:58:25  akrenek
 	Merged the release 1.0 branch
@@ -289,7 +330,7 @@
 
 	<!-- component targets definitions tag = do not remove = -->
 
-	<target name="security.gsoap-plugin" unless="setenvonly" depends="envset">
+	<target name="security.gsoap-plugin" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
@@ -307,17 +348,17 @@
 		</if>
  	</target>
 
-	<target name="security.voms" unless="setenvonly" depends="envset">
+	<target name="security.voms-api-c" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
 				<exec dir="${security.subsystem.dir}" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="voms -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+					<arg line="voms-api-c -Dtarget=${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
 				</exec>
 			</then>
 			<else>
 				<ant dir="${security.subsystem.dir}"
-        				target="voms"
+        				target="voms-api-c"
         				inheritall="false" >
         				<property name="target" value="${target}"/>
 				</ant>
@@ -325,7 +366,7 @@
 		</if>
  	</target>
 
-	<target name="wms-utils.jobid" unless="setenvonly" depends="envset">
+	<target name="wms-utils.jobid" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
@@ -343,7 +384,7 @@
 		</if>
  	</target>
 
-	<target name="jp.primary" unless="setenvonly" depends="envset">
+	<target name="jp.primary" unless="lbonly" depends="envset">
 		<if>
 			<isset property="small.memory"/>
 			<then>
@@ -360,6 +401,13 @@
 			</else>
 		</if>
  	</target>
+
+	<if>
+		<isset property="setenvonly"/>
+		<then>
+			<property name="lbonly" value="yes"/>
+		</then>
+	</if>
 
 	<target name="client-interface" unless="setenvonly" depends="envset">
 		<if>
@@ -425,7 +473,7 @@
 		</if>
 	</target>
 
-	<target name="client" unless="setenvonly" depends="envset, globus,expat,ares,client-interface,common">
+	<target name="client" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -441,7 +489,7 @@
 		</if>
 	</target>
 
-	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms, jp.primary, client-interface, ws-interface, common, logger">
+	<target name="server" unless="setenvonly" depends="envset, globus, expat, ares, mysql, gsoap, security.voms-api-c, jp.primary, client-interface, ws-interface, common, server-bones, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -457,23 +505,7 @@
 		</if>
 	</target>
 
-	<target name="utils" unless="setenvonly" depends="envset, globus, expat, ares, common, server">
-		<if>
-			<isset property="small.memory" />
-			<then>
-				<exec dir="${lb.subsystem.dir}.utils" executable="${antExec}" failonerror="${failonerror}">
-					<arg line="${target} &quot;-Dsmall.memory=true&quot; &quot;-Dbootstrap=${bootstrap}&quot; &quot;-Dfailonerror=${failonerror}&quot; &quot;-Ddo.cvs.tag=${do.cvs.tag}&quot;"/>
-				</exec>
-			</then>
-			<else>
-				<ant dir="${lb.subsystem.dir}.utils"
-                        	     target="${target}"
-                        	     inheritall="false" />
-			</else>
-		</if>
-	</target>
-
-	<target name="proxy" unless="setenvonly" depends="envset,globus,expat,ares,client-interface,common,server">
+	<target name="proxy" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server, logger">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -489,7 +521,7 @@
 		</if>
 	</target>
 
-	<target name="logger" unless="setenvonly" depends="envset, globus,expat,ares,client-interface,common">
+	<target name="logger" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common">
 		<if>
 			<isset property="small.memory" />
 			<then>
@@ -505,8 +537,25 @@
 		</if>
 	</target>
 
+	<target name="utils" unless="setenvonly" depends="envset, globus, expat, ares, client-interface, common, server">
+		<if>
+			<isset property="small.memory"/>
+			<then>
+				<exec dir="${lb.subsystem.dir}.utils" executable="${antExec}" failonerror="${failonerror}">
+					<arg line="${target} -Dsmall.memory=true -Dbootstrap=${bootstrap} -Dfailonerror=${failonerror} -Ddo.cvs.tag=${do.cvs.tag}"/>
+				</exec>
+			</then>
+			<else>
+				<ant dir="${lb.subsystem.dir}.utils"
+        				target="${target}"
+        				inheritall="false" />
+			</else>
+		</if>
+ 	</target>
+
 	<!-- Main proxy -->
-	<target name="buildmodules" depends="envset, 
+	<target name="buildmodules" depends="envset,
+					     utils, 
 					     client-interface,
 					     ws-interface,
 					     client,

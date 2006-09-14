@@ -27,6 +27,7 @@
 #include "glite/lb/escape.h"
 
 #include "prod_proto.h"
+#include "connection.h"
 
 static const char* socket_path="/tmp/lb_proxy_store.sock";
 
@@ -88,7 +89,7 @@ int handle_answers(edg_wll_Context context, int code, const char *text)
  * \param logline	IN formated ULM string
  *----------------------------------------------------------------------
  */
-static int edg_wll_DoLogEvent(
+int edg_wll_DoLogEvent(
 	edg_wll_Context context,
 	edg_wll_LogLine logline)
 {
@@ -151,12 +152,12 @@ edg_wll_DoLogEvent_end:
  * \param logline	IN formated ULM string
  *----------------------------------------------------------------------
  */
-static int edg_wll_DoLogEventProxy(
+int edg_wll_DoLogEventProxy(
 	edg_wll_Context context,
 	edg_wll_LogLine logline)
 {
 	int	answer;
-	int 	flags;
+	int 	flags,retries;
 	char	*name_esc,*dguser;
 	struct sockaddr_un saddr;
 	edg_wll_PlainConnection conn;
@@ -187,6 +188,10 @@ static int edg_wll_DoLogEventProxy(
 		close(conn.sock);
 		goto edg_wll_DoLogEventProxy_end;
 	}
+
+/* non-retry variant (pre bug #18994)
+ * XXX: what is the EISCONN case good for? conn.sock is created above.
+ *
 	if (connect(conn.sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
 		if(errno != EISCONN) {
 			edg_wll_SetError(context,answer = errno,"connect()");
@@ -194,6 +199,40 @@ static int edg_wll_DoLogEventProxy(
 			goto edg_wll_DoLogEventProxy_end;
 		}
 	}
+*/
+
+	retries = 0;
+	while ((answer = connect(conn.sock, (struct sockaddr *)&saddr, sizeof(saddr))) < 0 &&
+			errno == EAGAIN &&
+			context->p_tmp_timeout.tv_sec >= 0 && context->p_tmp_timeout.tv_usec >= 0 &&
+			!(context->p_tmp_timeout.tv_sec == 0 && context->p_tmp_timeout.tv_usec == 0)
+			)
+	{
+		struct timespec ns = { 0, PROXY_CONNECT_RETRY * 1000000 /* 10 ms */ },rem;
+
+		nanosleep(&ns,&rem);
+
+		context->p_tmp_timeout.tv_usec -= ns.tv_nsec/1000;
+		context->p_tmp_timeout.tv_usec += rem.tv_nsec/1000;
+
+		context->p_tmp_timeout.tv_sec -= ns.tv_sec;
+		context->p_tmp_timeout.tv_sec += rem.tv_sec;
+
+		if (context->p_tmp_timeout.tv_usec < 0) {
+			context->p_tmp_timeout.tv_usec += 1000000;
+			context->p_tmp_timeout.tv_sec--;
+		}
+		retries++;
+	}
+
+	if (answer) {
+		if (errno == EAGAIN) edg_wll_SetError(context,answer = ETIMEDOUT,"edg_wll_DoLogEventProxy connect()");
+		else edg_wll_SetError(context,answer = errno,"connect()");
+		close(conn.sock);
+		goto edg_wll_DoLogEventProxy_end;
+	}
+
+/* just debug 	if (retries) printf("edg_wll_DoLogEventProxy connect retries %d\n",retries); */
 
    /* add DG.USER to the message: */
         name_esc = edg_wll_LogEscape(context->p_user_lbproxy);
@@ -227,7 +266,7 @@ edg_wll_DoLogEventProxy_end:
  * \param logline	IN formated ULM string
  *----------------------------------------------------------------------
  */
-static int edg_wll_DoLogEventDirect(
+int edg_wll_DoLogEventDirect(
 	edg_wll_Context context,
 	edg_wll_LogLine logline)
 {
@@ -371,10 +410,7 @@ static int edg_wll_LogEventMaster(
 		goto edg_wll_logeventmaster_end;
 	}
 	seq = edg_wll_GetSequenceCode(context);
-	if (edg_wll_IncSequenceCode(context)) {
-		ret = EINVAL;
-		goto edg_wll_logeventmaster_end;
-	}
+
 	if (trio_asprintf(&fix,EDG_WLL_FORMAT_COMMON,
 			date,context->p_host,lvl,priority,
 			source,context->p_instance ? context->p_instance : "",
@@ -434,6 +470,10 @@ edg_wll_logeventmaster_end:
 	if (lvl) free(lvl);
 	if (eventName) free(eventName);
 	if (fullid) free(fullid);
+
+	if (!ret) if(edg_wll_IncSequenceCode(context)) {
+		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMaster(): edg_wll_IncSequenceCode failed");
+	}
 
 	if (ret) edg_wll_UpdateError(context,0,"Logging library ERROR: ");
 
@@ -698,10 +738,9 @@ int edg_wll_SetLoggingJobProxy(
 	edg_wll_SetParamString(context, EDG_WLL_PARAM_LBPROXY_USER, user);
 
 	/* query LBProxyServer for sequence code if not user-suplied */
-/* FIXME: doesn't work yet */
 	if (!code) {
-		edg_wll_QuerySequenceCodeProxy(context, job, &code_loc);
-		goto edg_wll_setloggingjobproxy_end;	
+		if (edg_wll_QuerySequenceCodeProxy(context, job, &code_loc))
+			goto edg_wll_setloggingjobproxy_end;	
 	} else {
 		code_loc = strdup(code);
 	}
@@ -845,14 +884,15 @@ int edg_wll_RegisterJobProxy(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
+#define	MY_SEED	"edg_wll_RegisterJobProxy()"
 	/* first register with bkserver */
-	int ret = edg_wll_RegisterJob(context,job,type,jdl,ns,num_subjobs,seed,subjobs);
+	int ret = edg_wll_RegisterJob(context,job,type,jdl,ns,num_subjobs,seed ? seed : MY_SEED,subjobs);
 	if (ret) {
 		edg_wll_UpdateError(context,0,"edg_wll_RegisterJobProxy(): unable to register with bkserver");
 		return edg_wll_Error(context,NULL,NULL);
 	}
 	/* and then with L&B Proxy */
-	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
 }
 
 int edg_wll_RegisterSubjob(
@@ -894,6 +934,8 @@ int edg_wll_RegisterSubjobs(
 	edg_wlc_JobId const	*psubjob;
 	edg_wlc_JobId		oldctxjob;
 	char *			oldctxseq;
+	int			errcode = 0;
+	char *			errdesc = NULL;
 
 	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
 	oldctxseq = edg_wll_GetSequenceCode(ctx);
@@ -903,12 +945,20 @@ int edg_wll_RegisterSubjobs(
 	
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjob(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
-						ns, parent, 0, NULL, NULL) != 0) break;
+						ns, parent, 0, NULL, NULL) != 0) {
+			errcode = edg_wll_Error(ctx, NULL, &errdesc);
+			goto edg_wll_registersubjobs_end; 
+		}
 		pjdl++; psubjob++;
 	}
 
+edg_wll_registersubjobs_end:
 	edg_wll_SetLoggingJob(ctx, oldctxjob, oldctxseq, EDG_WLL_SEQ_NORMAL);
 
+	if (errcode) {
+		edg_wll_SetError(ctx, errcode, errdesc);
+		free(errdesc);
+	}
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -923,6 +973,8 @@ int edg_wll_RegisterSubjobsProxy(
 	edg_wlc_JobId const	*psubjob;
 	edg_wlc_JobId		oldctxjob;
 	char *			oldctxseq;
+	int			errcode = 0;
+	char *			errdesc = NULL;
 
 	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
 	oldctxseq = edg_wll_GetSequenceCode(ctx);
@@ -932,12 +984,20 @@ int edg_wll_RegisterSubjobsProxy(
 	
 	while (*pjdl != NULL) {
 		if (edg_wll_RegisterSubjobProxy(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
-						ns, parent, 0, NULL, NULL) != 0) break;
+						ns, parent, 0, NULL, NULL) != 0) {
+			errcode = edg_wll_Error(ctx, NULL, &errdesc);
+			goto edg_wll_registersubjobsproxy_end;
+		}
 		pjdl++; psubjob++;
 	}
 
+edg_wll_registersubjobsproxy_end:
 	edg_wll_SetLoggingJobProxy(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL);
 
+	if (errcode) {
+		edg_wll_SetError(ctx, errcode, errdesc);
+		free(errdesc);
+	}
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
