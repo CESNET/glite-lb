@@ -1,6 +1,6 @@
 #!/bin/bash
 
-numjobs=${1:-1}
+numjobs=1
 
 # XXX - there must be better way to find stage
 if [ -z "${GLITE_LOCATION}" ]; then
@@ -10,6 +10,22 @@ else
 fi
 
 . $STAGEDIR/sbin/perftest_common.sh
+
+SILENT=0
+while getopts "t:n:s" OPTION 
+do
+    case "$OPTION" in 
+    "t") TEST_VARIANT=$OPTARG
+    ;;
+
+    "n") numjobs=$OPTARG
+    ;;
+
+    "s") SILENT=1
+    ;;
+
+    esac
+done
 
 DEBUG=${DEBUG:-0}
 # CONSUMER_ARGS=
@@ -21,6 +37,7 @@ export EDG_WL_LOG_DESTINATION="localhost:45678"
 
 check_test_files || exit 1
 
+group_a () {
 echo "----------------
 Locallogger test
 ----------------
@@ -31,9 +48,12 @@ d) glite-lb-logd-perf
 
 Number of jobs: $numjobs
 "
-echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
+}
+
 
 # a)
+group_a_test_a ()
+{
 echo -n "a)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf-nofile
 CONSUMER_ARGS="-d --noIPC --noParse $COMM_ARGS"
@@ -41,8 +61,11 @@ init_result
 run_test ll $numjobs
 #print_result_ev
 print_result
+}
 
 # b)
+group_a_test_b ()
+{
 echo -n "b)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf-nofile
 CONSUMER_ARGS="-d --noIPC $COMM_ARGS"
@@ -50,8 +73,11 @@ init_result
 run_test ll $numjobs
 #print_result_ev
 print_result
+}
 
 # c)
+group_a_test_c () 
+{
 echo -n "c)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf
 CONSUMER_ARGS="-d --noIPC $COMM_ARGS"
@@ -59,10 +85,12 @@ init_result
 run_test ll $numjobs
 #print_result_ev
 print_result
-
 rm -f /tmp/perftest.log.*
+}
 
 # d)
+group_a_test_d ()
+{
 echo -n "d)"
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
 CONSUMER_ARGS="-d -s /tmp/perftest.sock"
@@ -72,5 +100,29 @@ init_result
 run_test ll $numjobs
 #print_result_ev
 print_result
-
 rm -f /tmp/perftest.log.*
+}
+
+group="a"
+
+group_$group
+
+if [[ $SILENT -eq 0 ]]
+then
+    while [[ -z $TEST_VARIANT ]]
+    do
+	echo -n "Your choice: "
+	read -e TEST_VARIANT
+    done
+    echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
+fi
+
+if [[ "x$TEST_VARIANT" = "x*" ]]
+then
+   TEST_VARIANT="a b c d"
+fi
+
+for variant in $TEST_VARIANT
+do
+    group_${group}_test_${variant}
+done
