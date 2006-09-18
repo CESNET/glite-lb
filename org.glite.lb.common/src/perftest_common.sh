@@ -4,10 +4,13 @@
 #   LB_PERF=1 make stage (or ant equivalent)
 # in org.glite.lb.common
 
-JOB_AVG_SIMPLE=${JOB_AVG_SIMPLE:-$STAGEDIR/examples/perftest/perf_simple_avg_events.log}
-JOB_MAX_SIMPLE=${JOB_MAX_SIMPLE:-$STAGEDIR/examples/perftest/perf_simple_max_events.log}
-JOB_AVG_DAG=${JOB_AVG_DAG:-$STAGEDIR/examples/perftest/perf_dag_avg_events.log}
-JOB_MAX_DAG=${JOB_MAX_DAG:-$STAGEDIR/examples/perftest/perf_dag_max_events.log}
+if [[ -z $JOB_FILE ]]
+then
+    JOB_FILE[0]=$STAGEDIR/examples/perftest/perf_simple_avg_events.log
+    JOB_FILE[1]=$STAGEDIR/examples/perftest/perf_simple_max_events.log
+    JOB_FILE[2]=$STAGEDIR/examples/perftest/perf_dag_avg_events.log
+    JOB_FILE[3]=$STAGEDIR/examples/perftest/perf_dag_max_events.log
+fi
 
 # path to the job event producer
 LOGJOBS=${LOGJOBS:-$STAGEDIR/sbin/glite-lb-perftest_logjobs}
@@ -38,10 +41,10 @@ check_file_executable()
 
 check_test_files()
 {
-    check_file_readable $JOB_AVG_SIMPLE && \
-    check_file_readable $JOB_MAX_SIMPLE && \
-    check_file_readable $JOB_AVG_DAG && \
-    check_file_readable $JOB_MAX_DAG && \
+    for file in ${JOB_FILE[*]} 
+    do
+	check_file_readable $file || return 1
+    done
     check_file_executable $LOGJOBS 
 }
 
@@ -64,7 +67,7 @@ get_result()
 init_result()
 {
     j=0
-    while [[ $j -lt 4 ]]
+    while [[ $j -lt ${#JOB_FILE[*]} ]]
     do
 	PERFTEST_THROUGHPUT[$j]=0
 	PERFTEST_EV_THROUGHPUT[$j]=0
@@ -74,27 +77,20 @@ init_result()
 
 print_result()
 {
-    printf " %14d  %14d  %14d  %14d  [jobs/day]\n" \
-    ${PERFTEST_THROUGHPUT[0]} \
-    ${PERFTEST_THROUGHPUT[1]} \
-    ${PERFTEST_THROUGHPUT[2]} \
-    ${PERFTEST_THROUGHPUT[3]} 
-#    j=0
-#    while [[ $j -lt 4 ]]
-#    do
-#        echo -e -n "\t ${PERFTEST_THROUGHPUT[$j]}"  
-#        j=$((j+1))
-#    done
-#    echo -e "\t [jobs/day]"
+    for res in ${PERFTEST_THROUGHPUT[*]}
+    do
+      printf " %14d " $res
+    done
+    printf " [jobs/day]\n"
 }
 
-print_result_ev()
-{
-    printf " %16.6f  %16.6f  %16.6f  %16.6f\t [events/sec]\n" \
-    ${PERFTEST_EV_THROUGHPUT[0]} \
-    ${PERFTEST_EV_THROUGHPUT[1]} \
-    ${PERFTEST_EV_THROUGHPUT[2]} \
-    ${PERFTEST_EV_THROUGHPUT[3]} 
+#print_result_ev()
+#{
+#    printf " %16.6f  %16.6f  %16.6f  %16.6f\t [events/sec]\n" \
+#    ${PERFTEST_EV_THROUGHPUT[0]} \
+#    ${PERFTEST_EV_THROUGHPUT[1]} \
+#    ${PERFTEST_EV_THROUGHPUT[2]} \
+#    ${PERFTEST_EV_THROUGHPUT[3]} 
 #    j=0
 #    while [[ $j -lt 4 ]]
 #    do
@@ -102,7 +98,7 @@ print_result_ev()
 #        j=$((j+1))
 #    done
 #    echo -e "\t [events/sec]"
-}
+#}
 
 shutdown()
 {
@@ -144,7 +140,7 @@ run_test()
     sleep 2
     # feed the beast
     i=0
-    for file in $JOB_AVG_SIMPLE $JOB_MAX_SIMPLE $JOB_AVG_DAG $JOB_MAX_DAG
+    for file in ${JOB_FILE[*]}
     do
 	[[ $DEBUG -gt 0 ]] && echo -e "\n\nRunning test with input $file"
 	linesbefore=`grep PERFTEST $CONSUMER_LOG|wc -l`
