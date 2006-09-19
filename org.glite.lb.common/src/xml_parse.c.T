@@ -728,8 +728,8 @@ static void startStatsResult(void *data, const char *el, const char **attr)
 static void char_handler(void *data, const char *s, int len)
 {
 	edg_wll_XML_ctx *XMLCtx = data;
-        int i, found = -1, temp_len1;
-        char *temp_s, *temp_s1;
+        int i, found = -1;
+        char *temp_s;
 
 
         /* if date are only spaces, t\, \r, \n ... don't bother with them */
@@ -737,23 +737,15 @@ static void char_handler(void *data, const char *s, int len)
                         if (!isspace(s[i])) { found = i; break; }
         if (found == -1) return;
 
-        temp_s = malloc((len+1) * sizeof(char));
-
-        /* otherwise use them */
-        memcpy(temp_s,s,len);
-        temp_s[len] = 0;
-        temp_s1 = edg_wll_UnescapeXML((const char *) temp_s);
-        temp_len1 = strlen(temp_s1);
-
-        if (XMLCtx->char_buf_len) 
-		XMLCtx->char_buf = realloc(XMLCtx->char_buf,XMLCtx->char_buf_len+temp_len1 + 1);
-        else  
-		XMLCtx->char_buf = (char *) malloc(temp_len1 + 1);
-
-	memcpy(XMLCtx->char_buf+XMLCtx->char_buf_len,temp_s1,temp_len1 + 1);
-       	XMLCtx->char_buf_len += temp_len1;
-        free(temp_s1);
-        free(temp_s);
+	temp_s = realloc(XMLCtx->char_buf, XMLCtx->char_buf_len + len + 1);
+	if (temp_s == NULL) {
+	   /* XXX propagate ENOMEM somehow */
+	   return;
+	}
+	XMLCtx->char_buf = temp_s;
+	memcpy(XMLCtx->char_buf + XMLCtx->char_buf_len, s, len);
+	XMLCtx->char_buf[XMLCtx->char_buf_len + len] = '\0';
+	XMLCtx->char_buf_len += len;
 }
 
 
@@ -891,6 +883,7 @@ static void endUserJobs(void *data, const char *el UNUSED_VAR)
 			break;
 		default:
 			/* only level 2 tags should contain  text fields    */
+			/* XXX is it necessary to unescape the data first? */
 	    		for (i=0; i < XMLCtx->char_buf_len; i++) 
 				if (!isspace(XMLCtx->char_buf[i])) unexpWarning()
 			edg_wll_freeBuf(XMLCtx);
@@ -1162,6 +1155,7 @@ static void endPurgeResult(void *data, const char *el UNUSED_VAR)
 			if ( (XMLCtx->purgeResultGlobal.jobs[XMLCtx->position++] = 
 				edg_wll_from_string_to_string(XMLCtx)) == NULL )
 			{
+				/* XXX char_buf contains an escaped value, unescaping is done within edg_wll_from_string_to_string(), which failed */
 				if (XMLCtx->errtxt) {
 					asprintf(&e,"%s\n%s: invalid JobId at line %d",
 						XMLCtx->errtxt, XMLCtx->char_buf,

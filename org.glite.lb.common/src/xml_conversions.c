@@ -7,6 +7,7 @@
 #include "trio.h"
 
 #include "xml_conversions.h"
+#include "escape.h"
 
 
 
@@ -515,16 +516,25 @@ void edg_wll_add_time_t_list_to_XMLBody(char **body, const time_t *toAdd, const 
 /* XMLCtx->eventsOutGlobal[XMLCtx->position].any.prog = edg_wll_from_string_to_string(XMLCtx); */
 char *edg_wll_from_string_to_string(edg_wll_XML_ctx *XMLCtx)
 {
-	return(XMLCtx->char_buf);
+	char *s;
+
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	edg_wll_freeBuf(XMLCtx);
+	return ret;
 } 
 
 
 /* XMLCtx->eventsOutGlobal[XMLCtx->position].any.jobId = edg_wll_from_string_to_dgJobId(XMLCtx); */
 edg_wlc_JobId edg_wll_from_string_to_jobid(edg_wll_XML_ctx *XMLCtx)
 {
-	edg_wlc_JobId out;
+	edg_wlc_JobId out = NULL;
+	char *s;
 
-	edg_wlc_JobIdParse(XMLCtx->char_buf, &out);
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	if (s) {
+	   edg_wlc_JobIdParse(s, &out);
+	   free(s);
+	}
 	edg_wll_freeBuf(XMLCtx); 
 
 	return(out);
@@ -534,9 +544,14 @@ edg_wlc_JobId edg_wll_from_string_to_jobid(edg_wll_XML_ctx *XMLCtx)
 
 edg_wll_NotifId edg_wll_from_string_to_notifid(edg_wll_XML_ctx *XMLCtx)
 {
-	edg_wll_NotifId out;
+	edg_wll_NotifId out = NULL;
+	char *s;
 
-	edg_wll_NotifIdParse(XMLCtx->char_buf, &out);
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	if (s) {
+	   edg_wll_NotifIdParse(s, &out);
+	   free(s);
+	}
 	edg_wll_freeBuf(XMLCtx); 
 
 	return(out);
@@ -546,9 +561,14 @@ edg_wll_NotifId edg_wll_from_string_to_notifid(edg_wll_XML_ctx *XMLCtx)
 
 edg_wll_JobStatCode edg_wll_from_string_to_edg_wll_JobStatCode(edg_wll_XML_ctx *XMLCtx)
 {
-	edg_wll_JobStatCode out;
+	edg_wll_JobStatCode out = EDG_WLL_JOB_UNDEF;
+	char *s;
 	
-	out = edg_wll_StringToStat(XMLCtx->char_buf);
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	if (s) {
+	   out = edg_wll_StringToStat(s);
+	   free(s);
+	}
 	edg_wll_freeBuf(XMLCtx); 
 
 	return(out);
@@ -561,9 +581,14 @@ edg_wll_JobStatCode edg_wll_from_string_to_edg_wll_JobStatCode(edg_wll_XML_ctx *
 	edg_wll_from_string_to_int(XMLCtx); 				*/
 int edg_wll_from_string_to_int(edg_wll_XML_ctx *XMLCtx)
 {
-        int out;
+        int out = -1;
+	char *s;
 
-        out = atoi(XMLCtx->char_buf);
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	if (s) {
+	   out = atoi(s);
+	   free(s);
+	}
         edg_wll_freeBuf(XMLCtx);
 
         return(out);
@@ -575,9 +600,14 @@ int edg_wll_from_string_to_int(edg_wll_XML_ctx *XMLCtx)
 	edg_wll_from_string_to_int(XMLCtx); 				*/
 float edg_wll_from_string_to_float(edg_wll_XML_ctx *XMLCtx)
 {
-        float out;
+        float out = -1;
+	char *s;
 
-        out = strtof(XMLCtx->char_buf, (char **) NULL);
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	if (s) {
+	   out = strtof(s, (char **) NULL);
+	   free(s);
+	}
         edg_wll_freeBuf(XMLCtx);
 
         return(out);
@@ -587,9 +617,14 @@ float edg_wll_from_string_to_float(edg_wll_XML_ctx *XMLCtx)
 
 long edg_wll_from_string_to_long(edg_wll_XML_ctx *XMLCtx)
 {
-        long out;
+        long out = -1;
+	char *s;
 
-        out = atol(XMLCtx->char_buf);
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	if (s) {
+	   out = atol(s);
+	   free(s);
+	}
         edg_wll_freeBuf(XMLCtx);
 
         return(out);
@@ -604,11 +639,16 @@ uint16_t edg_wll_from_string_to_uint16_t(edg_wll_XML_ctx *XMLCtx)
 
 struct timeval edg_wll_from_string_to_timeval(edg_wll_XML_ctx *XMLCtx)
 {
-	struct timeval out;
+	struct timeval out = {0,0};
 	char *needle, *nil;
+	char *s;
 
-	out.tv_sec  = strtol(XMLCtx->char_buf, &needle, 10);
-	out.tv_usec = strtol(needle+1, &nil, 10);
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	if (s) {
+	   out.tv_sec  = strtol(s, &needle, 10);
+   	   out.tv_usec = strtol(needle+1, &nil, 10);
+	   free(s);
+	}
 	edg_wll_freeBuf(XMLCtx);
 
 	return(out);
@@ -623,8 +663,14 @@ time_t edg_wll_from_string_to_time_t(edg_wll_XML_ctx *XMLCtx)
 
 edg_wll_Source edg_wll_from_string_to_logsrc(edg_wll_XML_ctx *XMLCtx)
 {
-	edg_wll_Source	out = edg_wll_StringToSource(XMLCtx->char_buf);
-	
+	edg_wll_Source	out = EDG_WLL_SOURCE_NONE;
+	char *s;
+
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	if (s) {
+	   out = edg_wll_StringToSource(s);
+	   free(s);
+	}
 	edg_wll_freeBuf(XMLCtx);
 	return(out);
 }
