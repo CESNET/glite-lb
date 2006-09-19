@@ -25,6 +25,8 @@ int edg_wll_QueryJobsServer(edg_wll_Context, const edg_wll_QueryRec **, int, edg
 
 void edg_wll_SortEvents(edg_wll_Event *);
 
+void edg_wll_SortPEvents(edg_wll_Event **);
+
 #ifdef __cplusplus
 }
 #endif

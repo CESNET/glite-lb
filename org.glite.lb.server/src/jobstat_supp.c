@@ -17,8 +17,8 @@
 
 #include "store.h"
 #include "index.h"
-#include "jobstat.h"
 #include "lbs_db.h"
+#include "jobstat.h"
 #include "get_events.h"
 
 
@@ -760,10 +760,25 @@ int edg_wll_compare_seq(const char *a, const char *b)
 
 static int compare_events_by_seq(const void *a, const void *b)
 {
-        const edg_wll_Event *e = (edg_wll_Event *)a;
-        const edg_wll_Event *f = (edg_wll_Event *)b;
+        const edg_wll_Event *e = (edg_wll_Event *) a;
+        const edg_wll_Event *f = (edg_wll_Event *) b;
+	int ret;
 
-	return edg_wll_compare_seq(e->any.seqcode, f->any.seqcode);
+	ret = edg_wll_compare_seq(e->any.seqcode, f->any.seqcode);
+	if (ret) return ret;
+	
+	if (e->any.timestamp.tv_sec < f->any.timestamp.tv_sec) return -1;
+	if (e->any.timestamp.tv_sec > f->any.timestamp.tv_sec) return 1;
+	if (e->any.timestamp.tv_usec < f->any.timestamp.tv_usec) return -1;
+	if (e->any.timestamp.tv_usec > f->any.timestamp.tv_usec) return 1;
+	return 0;
+}
+
+static int compare_pevents_by_seq(const void *a, const void *b)
+{
+        const edg_wll_Event **e = (edg_wll_Event **) a;
+        const edg_wll_Event **f = (edg_wll_Event **) b;
+	return compare_events_by_seq(*e,*f);
 }
 
 void edg_wll_SortEvents(edg_wll_Event *e)
@@ -772,7 +787,20 @@ void edg_wll_SortEvents(edg_wll_Event *e)
 
 	if (!e) return;
 	for (n=0; e[n].type; n++);
-	qsort(e,n,sizeof *e,compare_events_by_seq);
+	qsort(e,n,sizeof(*e),compare_events_by_seq);
+}
+
+void edg_wll_SortPEvents(edg_wll_Event **e)
+{
+	edg_wll_Event **p;
+	int	n;
+
+	if (!e) return;
+	p = e;
+	for (n=0; *p; n++) {
+		p++;
+	}
+	qsort(e,n,sizeof(*e),compare_pevents_by_seq);
 }
 
 

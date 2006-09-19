@@ -1,4 +1,4 @@
-#ident "$Header"
+#ident "$Header$"
 
 #include <string.h>
 #include <time.h>

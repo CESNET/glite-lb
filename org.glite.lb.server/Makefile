@@ -78,7 +78,7 @@ SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
-XSLTPROC:=xsltproc
+XSLTPROC:=xsltproc --novalid
 
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${nothrflavour} \
@@ -132,7 +132,7 @@ EXT_LIBS:=  \
 SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
 COMMON_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
-	${expatlib} -lexpat\
+	${classadslib} -lstdc++ ${expatlib} -lexpat\
 
 PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo lbs_db_supp.lo
 

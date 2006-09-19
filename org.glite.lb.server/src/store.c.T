@@ -480,6 +480,10 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 
 	gettimeofday(&now,NULL);
 
+/* XXX: increase the overall request timeout. */
+	ctx->p_tmp_timeout.tv_sec += e->nsubjobs;
+	if (ctx->p_tmp_timeout.tv_sec > 86400) ctx->p_tmp_timeout.tv_sec = 86400;
+
 	for (i=0; i<e->nsubjobs; i++) {
 		edg_wll_Event	e2;
 		int		seq;
