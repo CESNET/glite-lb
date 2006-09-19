@@ -3,7 +3,12 @@
 numjobs=10
 
 # XXX - there must be better way to find stage
-STAGEDIR=/home/michal/shared/egee/jra1-head/stage
+if [ -z "${GLITE_LOCATION}" ]; then
+	STAGEDIR=/home/michal/shared/egee/jra1-head/stage
+else
+	STAGEDIR=${GLITE_LOCATION}
+fi
+
 . $STAGEDIR/sbin/perftest_common.sh
 
 DEBUG=${DEBUG:-0}

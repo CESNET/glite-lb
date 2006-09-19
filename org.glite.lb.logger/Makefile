@@ -188,6 +188,7 @@ install:
 		${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin; \
 	fi
 ifdef LB_PERF
+	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${PREFIX}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${PREFIX}/sbin
 endif
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
