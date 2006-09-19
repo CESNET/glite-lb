@@ -520,7 +520,7 @@ char *edg_wll_from_string_to_string(edg_wll_XML_ctx *XMLCtx)
 
 	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
 	edg_wll_freeBuf(XMLCtx);
-	return ret;
+	return s;
 } 
 
 
