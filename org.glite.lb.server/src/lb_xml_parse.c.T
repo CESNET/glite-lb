@@ -439,8 +439,8 @@ static void startStatsRequest(void *data, const char *el, const char **attr)
 static void char_handler(void *data, const char *s, int len)
 {
         edg_wll_XML_ctx *XMLCtx = data;
-        int i, found = -1, temp_len1;
-	char *temp_s, *temp_s1;
+        int i, found = -1;
+	char *temp_s;
 
 
 	/* if date are only spaces, t\, \r, \n ... don't bother with them */
@@ -448,22 +448,15 @@ static void char_handler(void *data, const char *s, int len)
         	        if (!isspace(s[i])) { found = i; break; }
         if (found == -1) return;
 
-	temp_s = malloc(len+1);
-
-	/* otherwise use them */
-	memcpy(temp_s,s,len);
-	temp_s[len] = 0;	
-	temp_s1 = edg_wll_UnescapeXML((const char *) temp_s);
-	temp_len1 = strlen(temp_s1);
-
-        if (XMLCtx->char_buf_len) XMLCtx->char_buf =
-		realloc(XMLCtx->char_buf,XMLCtx->char_buf_len+temp_len1 + 1);
-        else XMLCtx->char_buf = malloc(temp_len1 + 1);
-
-        memcpy(XMLCtx->char_buf+XMLCtx->char_buf_len,temp_s1,temp_len1 + 1);
-        XMLCtx->char_buf_len += temp_len1;
-	free(temp_s1);
-	free(temp_s);
+	temp_s = realloc(XMLCtx->char_buf, XMLCtx->char_buf_len + len + 1);
+	if (temp_s == NULL) {
+	   /* XXX propagate ENOMEM somehow */
+	   return;
+	}
+	XMLCtx->char_buf = temp_s;
+	memcpy(XMLCtx->char_buf + XMLCtx->char_buf_len, s, len);
+	XMLCtx->char_buf[XMLCtx->char_buf_len + len] = '\0';
+	XMLCtx->char_buf_len += len;
 }
 
 
@@ -472,6 +465,7 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 {
 	edg_wll_XML_ctx *XMLCtx = data;
 	char *e;
+	char *s;
 
 
 	if (XMLCtx->level == 4 &&
@@ -483,18 +477,21 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 				if ( (XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.j = 
 					edg_wll_from_string_to_jobid(XMLCtx)) == NULL )
 				{
+					s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
 					if (XMLCtx->errtxt) {
 						asprintf(&e,"%s\n%s: invalid JobId at line %d",
-							XMLCtx->errtxt, XMLCtx->char_buf,
+							XMLCtx->errtxt, s,
 							XML_GetCurrentLineNumber(XMLCtx->p));
 						free(XMLCtx->errtxt);
 					} else asprintf(&e,"%s: invalid JobId at line %d",
-						XMLCtx->char_buf,XML_GetCurrentLineNumber(XMLCtx->p));
+						s,XML_GetCurrentLineNumber(XMLCtx->p));
 					XMLCtx->errtxt = e;
+					free(s);
 				}
 				break;
 			case EDG_WLL_QUERY_ATTR_OWNER:
 			// XXX - this is way how to pass NULL, user will be extracted from ssl partner later
+				/* XXX char_buf contains an escaped value, however there's nothing to escape in 'NULL' so we're fine */
 				if (XMLCtx->char_buf != NULL && !strcmp(XMLCtx->char_buf,"NULL")) {  
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.c = NULL; 
 					break; 
@@ -546,14 +543,16 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 			default: 
 				edg_wll_freeBuf(XMLCtx);
 				XMLCtx->level--;
+				s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
 				if (XMLCtx->errtxt) {
 					asprintf(&e,"%s\n%s: invalid attribute type at line %d",
-						XMLCtx->errtxt, XMLCtx->char_buf,
+						XMLCtx->errtxt, s,
 						XML_GetCurrentLineNumber(XMLCtx->p));
 					free(XMLCtx->errtxt);
 				} else asprintf(&e,"%s: invalid attribute type at line %d",
-					XMLCtx->char_buf,XML_GetCurrentLineNumber(XMLCtx->p));
+					s,XML_GetCurrentLineNumber(XMLCtx->p));
 				XMLCtx->errtxt = e;
+				free(s);
 				break;
 		}
 	}
@@ -567,12 +566,15 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 static void endQueryJobsRequest(void *data, const char *el UNUSED_VAR)
 {
 	edg_wll_XML_ctx *XMLCtx = data;
+	char *s;
 
 
 	if (XMLCtx->level == 2) {
 		if (!strcmp(XMLCtx->element,"flags") && XMLCtx->char_buf) {
+			s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
 			// XXX: check if it works
-			 XMLCtx->flags = edg_wll_string_to_stat_flags(XMLCtx->char_buf);
+			XMLCtx->flags = edg_wll_string_to_stat_flags(s);
+			free(s);
 		}
 		else if (!strcmp(el,"and")) {
 			long len = (XML_GetCurrentByteIndex(XMLCtx->p) + XML_GetCurrentByteCount(XMLCtx->p))
@@ -592,6 +594,7 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 {
 	edg_wll_XML_ctx *XMLCtx = data;
 	char *e;
+	char *s;
 
         if (XMLCtx->level == 2) {
                 if (!strcmp(XMLCtx->element,"orJobConditions")) {
@@ -617,14 +620,16 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 					if ( (XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.j = 
 						edg_wll_from_string_to_jobid(XMLCtx)) == NULL )
 					{
+						s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
 						if (XMLCtx->errtxt) {
 							asprintf(&e,"%s\n%s: invalid JobId at line %d",
-								XMLCtx->errtxt, XMLCtx->char_buf,
+								XMLCtx->errtxt, s,
 								XML_GetCurrentLineNumber(XMLCtx->p));
 							free(XMLCtx->errtxt);
 						} else asprintf(&e,"%s: invalid JobId at line %d",
-							XMLCtx->char_buf,XML_GetCurrentLineNumber(XMLCtx->p));
+							s,XML_GetCurrentLineNumber(XMLCtx->p));
 						XMLCtx->errtxt = e;
+						free(s);
 					}
 					break;
 				case EDG_WLL_QUERY_ATTR_OWNER:
@@ -662,14 +667,16 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 				default: 
 					edg_wll_freeBuf(XMLCtx);
 					XMLCtx->level--;
+					s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
 					if (XMLCtx->errtxt) {
 						asprintf(&e,"%s\n%s: invalid attribute type at line %d",
-							XMLCtx->errtxt, XMLCtx->char_buf,
+							XMLCtx->errtxt, s,
 							XML_GetCurrentLineNumber(XMLCtx->p));
 						free(XMLCtx->errtxt);
 					} else asprintf(&e,"%s: invalid attribute type at line %d",
-						XMLCtx->char_buf,XML_GetCurrentLineNumber(XMLCtx->p));
+						s,XML_GetCurrentLineNumber(XMLCtx->p));
 					XMLCtx->errtxt = e;
+					free(s);
 					break;
 			}
 		}
@@ -710,14 +717,16 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 				default: 
 					edg_wll_freeBuf(XMLCtx);
 					XMLCtx->level--;
+					s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
 					if (XMLCtx->errtxt) {
 						asprintf(&e,"%s\n%s: invalid attribute type at line %d",
-							XMLCtx->errtxt, XMLCtx->char_buf,
+							XMLCtx->errtxt, s,
 							XML_GetCurrentLineNumber(XMLCtx->p));
 						free(XMLCtx->errtxt);
 					} else asprintf(&e,"%s: invalid attribute type at line %d",
-						XMLCtx->char_buf,XML_GetCurrentLineNumber(XMLCtx->p));
+						s,XML_GetCurrentLineNumber(XMLCtx->p));
 					XMLCtx->errtxt = e;
+					free(s);
 					break;
 			}
 		} 
@@ -732,18 +741,22 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 static void endPurgeRequest(void *data, const char *el UNUSED_VAR)
 {
         edg_wll_XML_ctx *XMLCtx = data;
-        char *e;
+        char *e, *s;
 	int index;
 
         if (XMLCtx->level == 2) {
-                if (!strcmp(XMLCtx->element,"flags")) 
-			XMLCtx->purgeRequestGlobal.flags = edg_wll_string_to_purge_flags(XMLCtx->char_buf);
+                if (!strcmp(XMLCtx->element,"flags")) {
+			s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+			XMLCtx->purgeRequestGlobal.flags = edg_wll_string_to_purge_flags(s);
+			free(s);
+		}
 	}
 	else if (XMLCtx->level == 3) {
 		if (!strcmp(XMLCtx->element,"jobId") && XMLCtx->purgeRequestGlobal.jobs != NULL) {
 			if ( (XMLCtx->purgeRequestGlobal.jobs[XMLCtx->position++] = 
 				edg_wll_from_string_to_string(XMLCtx)) == NULL )
 			{
+				/* XXX char_buf contains an escaped value, unescaping is done within edg_wll_from_string_to_string(), which failed */
 				if (XMLCtx->errtxt) {
 					asprintf(&e,"%s\n%s: invalid JobId at line %d",
 						XMLCtx->errtxt, XMLCtx->char_buf,
@@ -769,20 +782,23 @@ static void endPurgeRequest(void *data, const char *el UNUSED_VAR)
 static void endDumpRequest(void *data, const char *el UNUSED_VAR)
 {
         edg_wll_XML_ctx *XMLCtx = data;
+	char *s;
 
         if (XMLCtx->level == 2) {
+		s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
                 if (!strcmp(XMLCtx->element,"from")) {
-			if (isdigit(XMLCtx->char_buf[0]))
+			if (isdigit(s[0]))
 			XMLCtx->dumpRequestGlobal.from = edg_wll_from_string_to_time_t(XMLCtx);
 			else
-				XMLCtx->dumpRequestGlobal.from = edg_wll_StringToDumpConst(XMLCtx->char_buf);
+				XMLCtx->dumpRequestGlobal.from = edg_wll_StringToDumpConst(s);
 		}
 		else if (!strcmp(XMLCtx->element,"to")) {
-			if (isdigit(XMLCtx->char_buf[0]))
+			if (isdigit(s))
                         XMLCtx->dumpRequestGlobal.to = edg_wll_from_string_to_time_t(XMLCtx);
 			else
-				XMLCtx->dumpRequestGlobal.to = edg_wll_StringToDumpConst(XMLCtx->char_buf);
+				XMLCtx->dumpRequestGlobal.to = edg_wll_StringToDumpConst(s);
 		}
+		free(s);
 	}
 
 	XMLCtx->char_buf = NULL;
