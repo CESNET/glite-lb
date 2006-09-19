@@ -250,6 +250,7 @@ event_queue_send(struct event_queue *eq)
     size_t bytes_sent;
     struct timeval tv;
     edg_wll_GssStatus gss_stat;
+    int events_sent = 0;
 
     clear_error();
 
@@ -268,7 +269,14 @@ event_queue_send(struct event_queue *eq)
 		    eq->timeout = TIMEOUT;
 		    return(0);
 	    }
-	    
+	    if(ret < 0) {
+	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && events_sent > 0)
+	        eq->timeout = 0;
+	      else
+	        eq->timeout = TIMEOUT;
+	      return(0);
+	    }
+ 	    
 	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
 		    il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
@@ -319,6 +327,7 @@ event_queue_send(struct event_queue *eq)
 	  il_log(LOG_ERR, "send_event: %s\n", error_get_msg());
 	
       event_queue_remove(eq);
+      events_sent++;
       break;
       
     } /* switch */

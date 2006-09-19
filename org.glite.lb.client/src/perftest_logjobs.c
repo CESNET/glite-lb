@@ -13,7 +13,7 @@ extern int edg_wll_DoLogEventProxy(edg_wll_Context context, edg_wll_LogLine logl
 extern int edg_wll_DoLogEventDirect(edg_wll_Context context, edg_wll_LogLine logline);
 
 #define DEFAULT_SOCKET "/tmp/interlogger.sock"
-#define DEFAULT_PREFIX "/tmp/dglogd.log"
+#define DEFAULT_PREFIX EDG_WLL_LOG_PREFIX_DEFAULT
 
 /*
 extern char *optarg;

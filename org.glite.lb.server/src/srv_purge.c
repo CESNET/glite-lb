@@ -201,7 +201,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 	int	i,parse = 0,dumpfile = -1;
 	edg_wlc_JobId	job;
 	char	*message = NULL, *response = NULL;
-	char	*tmpfname;
+	char	*tmpfname = NULL;
 	int	naffected_jobs = 0;
 	edg_wll_PurgeResult result;
 	int		ret = HTTP_OK;

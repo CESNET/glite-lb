@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include <time.h>
 #include <fcntl.h>
+#include <sys/time.h>
+
 
 #include "context-int.h"
 #include "lb_maildir.h"
@@ -16,10 +18,11 @@ enum {
 	LBMD_DIR_TMP = 0,
 	LBMD_DIR_NEW,
 	LBMD_DIR_WORK,
-	LBMD_DIR_POST
+	LBMD_DIR_POST,
+	LBMD_DIR_UNDELIVERABLE
 };
 
-static const char *dirs[] = { "tmp", "new", "work", "post" };
+static const char *dirs[] = { "tmp", "new", "work", "post", "undeliverable" };
 
 
 #define MAX_ERR_LEN		1024
@@ -70,17 +73,17 @@ int edg_wll_MaildirInit(
 
 
 int edg_wll_MaildirStoreMsg(
-	const char		   *root,
-	const char		   *srvname,
-	const char         *msg)
+	const char	*root,
+	const char	*srvname,
+	const char	*msg)
 {
-	char		fname[PATH_MAX],
-				newfname[PATH_MAX];
-	int			fhnd,
-				written,
-				msgsz,
-				ct, i;
-	struct timeval 	tv;
+	char	fname[PATH_MAX],
+		newfname[PATH_MAX];
+	int	fhnd,
+		written,
+		msgsz,
+		ct, i;
+	struct  timeval  tv;
 
 
 	if ( !root ) root = DEFAULT_ROOT;
@@ -93,11 +96,10 @@ int edg_wll_MaildirStoreMsg(
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Maximum tries limit reached with unsuccessful file creation");
 			return -1;
 		}
-		gettimeofday(&tv,NULL);
-		snprintf(fname, PATH_MAX, "%s/%s/%ld.%ld_%d.%s", root, dirs[LBMD_DIR_TMP], 
-			(long) tv.tv_sec, (long) tv.tv_usec, getpid(), srvname);
+		gettimeofday(&tv, NULL);
+		snprintf(fname, PATH_MAX, "%s/%s/%ld_%ld.%s", root, dirs[LBMD_DIR_TMP], tv.tv_sec, tv.tv_usec, srvname);
 		if ( (fhnd = open(fname, O_CREAT|O_EXCL|O_WRONLY, 00600)) < 0 ) {
-			if ( errno == EEXIST ) { /* hypothetic error */ continue; }
+			if ( errno == EEXIST ) { usleep(1000); continue; }
 			snprintf(lbm_errdesc, MAX_ERR_LEN, "Can't create file %s", fname);
 			return -1;
 		}
@@ -172,21 +174,22 @@ int edg_wll_MaildirTransEnd(
 
 
 int edg_wll_MaildirRetryTransStart(
-	const char		   *root,
-	time_t				tm,
-	char              **msg,
-	char			  **fname)
+	const char	*root,
+	time_t		retry,
+	time_t		remove,
+	char		**msg,
+	char		**fname)
 {
-	static DIR	   *dir = NULL;
-	struct dirent  *ent;
-	time_t			tlimit;
-	struct stat		st;
-	char			newfname[PATH_MAX],
-					oldfname[PATH_MAX],
-				   *buf = NULL;
-	int				fhnd,
-					toread, ct,
-					bufsz, bufuse;
+	static DIR	*dir = NULL;
+	struct dirent	*ent;
+	time_t		tlimit_retry, tlimit_remove;
+	struct stat	st;
+	char		newfname[PATH_MAX],
+			oldfname[PATH_MAX],
+			*buf = NULL;
+	int		fhnd,
+			toread, ct,
+			bufsz, bufuse;
 
 
 	if ( !root ) root = DEFAULT_ROOT;
@@ -200,7 +203,8 @@ int edg_wll_MaildirRetryTransStart(
 		}
 	}
 
-	tlimit = time(NULL) - tm;
+	tlimit_retry = time(NULL) - retry;
+	tlimit_remove = time(NULL) - remove;
 	do {
 		errno = 0;
 		if ( !(ent = readdir(dir)) ) {
@@ -224,7 +228,15 @@ int edg_wll_MaildirRetryTransStart(
 			goto err;
 		}
 
-		if ( st.st_ctime > tlimit ) continue;
+		/* if we cannot deliver the file for 'remove' time limit, */
+		/* it is moved to undeliverable folder and forgotten      */
+		if ( st.st_mtime < tlimit_remove ) {
+			snprintf(newfname, PATH_MAX, "%s/%s/%s",
+				 root, dirs[LBMD_DIR_UNDELIVERABLE], ent->d_name);
+		}
+		/* try to deliver file every 'retry' seconds */
+		else if ( st.st_ctime > tlimit_retry ) continue;
+
 
 		if ( rename(oldfname, newfname) ) {
 			if ( errno == ENOENT ) {
@@ -235,8 +247,17 @@ int edg_wll_MaildirRetryTransStart(
 				goto err;
 			}
 		} else {
-			/* we have found and moved the file with which we will work now */
-			break;
+			if (st.st_mtime < tlimit_remove) {
+				/* we have moved undeliverable file to undeliverable folder */
+				/* no other action needed */
+				snprintf(oldfname, PATH_MAX, "%s/%s/%s", root, dirs[LBMD_DIR_TMP], ent->d_name);
+				unlink(oldfname);
+				continue;
+			} else {
+				/* we have found and moved the file  to work folder */
+				/* going to process it */
+				break;
+			}
 		}
 	} while ( 1 );
 
@@ -266,6 +287,7 @@ int edg_wll_MaildirRetryTransStart(
 	close(fhnd);
 
 	if ( !(*fname = strdup(ent->d_name)) ) goto err;
+	buf[bufuse] = 0;
 	*msg = buf;
 	return 1;
 

@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <time.h>
 #include <limits.h>
+#include <sys/time.h>
+
 
 #include "glite/lb/context.h"
 #include "glite/lb/events.h"
@@ -149,8 +151,9 @@ int main(int argc, char **argv)
 		}
 
 		if ( !(st = dump_storage_find(dstorage, jobid)) ) {
-			int		fd, i;
+			int	fd, i;
 			char	fname[PATH_MAX];
+			struct	timeval  tv;
 
 			i = 0;
 			while ( 1 ) {
@@ -159,9 +162,10 @@ int main(int argc, char **argv)
 					perror("Can't create dump file - max tries limit reached ");
 					cleanup(1);
 				}
-				snprintf(fname, PATH_MAX, "%s/%s.%ld", store_pref, unique, (long) time(NULL));
+				gettimeofday(&tv, NULL);
+				snprintf(fname, PATH_MAX, "%s/%s.%ld_%ld", store_pref, unique, tv.tv_sec, tv.tv_usec);
 				if ( (fd = open(fname, O_CREAT|O_EXCL|O_RDWR, 00640)) < 0 ) {
-					if ( errno == EEXIST ) { sleep(2); continue; }
+					if ( errno == EEXIST ) { usleep(1000); continue; }
 					perror(fname);
 					cleanup(1);
 				}

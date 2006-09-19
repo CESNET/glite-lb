@@ -27,7 +27,7 @@ extern "C" {
  * default prefix for names of log files 
  */
 /** default prefix */
-#define EDG_WLL_LOG_PREFIX_DEFAULT              "/tmp/dglogd.log"
+#define EDG_WLL_LOG_PREFIX_DEFAULT              "/var/glite/log/dglogd.log"
 
 
 /** 

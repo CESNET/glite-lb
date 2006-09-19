@@ -35,6 +35,8 @@ start()
 
 	[ -n "$GLITE_LB_LOGGER_PORT" ] && port="-p $GLITE_LB_LOGGER_PORT"
 
+	mkdir -p /var/glite/log 
+	chown $GLITE_USER /var/glite/log
 	echo -n Starting glite-lb-logd ...
         (cd /tmp && ls -f /tmp |fgrep ^dglogd_sock_ |xargs rm -f)
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-logd \

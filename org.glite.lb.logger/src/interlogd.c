@@ -13,6 +13,7 @@
 
 #include "interlogd.h"
 #include "glite/lb/consumer.h"
+#include "glite/lb/log_proto.h"
 #include "glite/security/glite_gss.h"
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -23,7 +24,7 @@
 #define DEFAULT_PREFIX "/tmp/notif_events"
 #define DEFAULT_SOCKET "/tmp/notif_interlogger.sock"
 #else
-#define DEFAULT_PREFIX "/tmp/dglogd.log"
+#define DEFAULT_PREFIX EDG_WLL_LOG_PREFIX_DEFAULT
 #define DEFAULT_SOCKET "/tmp/interlogger.sock"
 #endif
 
