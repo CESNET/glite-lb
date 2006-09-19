@@ -358,7 +358,7 @@ install:
 		${INSTALL} -m 755 "glite_lb_$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 
-	for f in dbsetup.sql index.conf.template; do \
+	for f in dbsetup.sql dbsetup-migrate2transactions.sql index.conf.template; do \
 		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${PREFIX}/etc; \
 	done
 

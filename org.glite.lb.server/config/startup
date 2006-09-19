@@ -93,6 +93,7 @@ status()
 {
 	retval=0
 
+	LC_ALL=C
 	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_NOTIF_SOCK}$" >/dev/null 2>&1 ;then
 		echo glite-lb-notif-interlogd running
 	else
