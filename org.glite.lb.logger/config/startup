@@ -33,18 +33,20 @@ start()
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
-	[ -n "$GLITE_LB_LOGGER_PORT" ] && port="-p $GLITE_LB_LOGGER_PORT"
+	[ -n "$GLITE_LB_LOGGER_PORT" ] && port="--port $GLITE_LB_LOGGER_PORT"
+	[ -n "$GLITE_LB_IL_SOCK" ] && sock="--socket $GLITE_LB_IL_SOCK"
+	[ -n "$GLITE_LB_IL_FPREFIX" ] && fprefix="--file-prefix $GLITE_LB_IL_FPREFIX"
 
 	mkdir -p /var/glite/log 
 	chown $GLITE_USER /var/glite/log
 	echo -n Starting glite-lb-logd ...
         (cd /tmp && ls -f /tmp |fgrep ^dglogd_sock_ |xargs rm -f)
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-logd \
-		$creds $port" && echo " done" || echo " FAILED"
+		$creds $port $sock $fprefix" && echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-interlogd ...
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-interlogd \
-		$creds" && echo " done" || echo " FAILED"
+		$creds $sock $fprefix" && echo " done" || echo " FAILED"
 }
 
 stop()
@@ -59,13 +61,14 @@ stop()
 
 status()
 {
+	LC_ALL=C
 	if netstat -an --inet | grep "^tcp .* 0.0.0.0:${GLITE_LB_LOGGER_PORT:-9002} .*LISTEN" >/dev/null 2>&1 ;then
 	echo glite-lb-logd running
 	else
 	echo glite-lb-logd not running
 	return 1
 	fi
-	if netstat -an --unix | grep "^unix .* LISTEN.* /tmp/interlogger.sock$" >/dev/null 2>&1 ;then
+	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_IL_SOCK:-/tmp/interlogger.sock}$" >/dev/null 2>&1 ;then
 	echo glite-lb-interlogd running
 	else
 	echo glite-lb-interlogd not running
