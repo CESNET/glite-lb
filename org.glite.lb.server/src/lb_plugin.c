@@ -220,7 +220,6 @@ static int lb_close(void *fpctx,void *handle) {
 		free(h->events);
 	}
 
-	// FIXME: Fails here on corrupted jobId
 	if (h->status.state != EDG_WLL_JOB_UNDEF) 
 		edg_wll_FreeStatus(&h->status);
 
@@ -570,13 +569,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 				if (h->lastStatusHistory[i]->reason) {
 					trio_asprintf(&r_str,"reason=\"%s\" ",h->lastStatusHistory[i]->reason);
 				}
-// FIXME: fails here for Dan's dumpfile, no idea why, all data are correct :(
 				trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
 					old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 				if (s_str) free(s_str); s_str = NULL;
 				if (t_str) free(t_str); t_str = NULL;
 				if (r_str) free(r_str); r_str = NULL;
-// FIXME:				if (old_val) free(old_val);
+				if (old_val) free(old_val);
 				old_val = val; val = NULL;
 				i++;
 			}
@@ -588,7 +586,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].value = strdup(val);
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-// FIXME:			free(val);
+			free(val);
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_fullStatusHistory) == 0) {
 		int i,j;
@@ -612,13 +610,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			if (h->fullStatusHistory[i]->reason) {
 				trio_asprintf(&r_str,"reason=\"%s\" ",h->fullStatusHistory[i]->reason);
 			}
-// FIXME: fails here for Dan's dumpfile, no idea why, all data are correct :(
 			trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
 				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 			if (s_str) free(s_str); s_str = NULL;
 			if (t_str) free(t_str); t_str = NULL;
 			if (r_str) free(r_str); r_str = NULL;
-// FIXME:			if (old_val) free(old_val);
+			if (old_val) free(old_val);
 			old_val = val; val = NULL;
 			i++;
 		}
@@ -629,7 +626,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].value = strdup(val);
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-// FIXME:			free(val);
+			free(val);
 		}
 	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, sizeof(GLITE_JP_LBTAG_NS)-1) == 0) {
 		tag = strrchr(attr, ':');
