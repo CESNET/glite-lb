@@ -20,15 +20,12 @@
 
 	Revision history:
 	$Log$
-<<<<<<< configure.properties.xml
+	Revision 1.7  2006/09/19 20:27:40  akrenek
+	Builds after merge _RC31
+
 	Revision 1.6  2006/04/20 07:06:31  jpospi
 	lb4vdt stuff and cleanup
 
-=======
-	Revision 1.5.2.1  2006/08/15 20:06:05  akrenek
-	merge of changes betwen merge_for_3_1_src and merge_30_31_src
-
->>>>>>> 1.5.2.1
 	Revision 1.5  2006/03/15 18:02:37  akrenek
 	cares
 
