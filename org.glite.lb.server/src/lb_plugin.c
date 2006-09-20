@@ -529,7 +529,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 
 		val = s_str = t_str = r_str = NULL;
 		old_val = strdup("");
-		t = calloc(1, sizeof(t));
+		t = calloc(1, sizeof(*t));
 		/* first record is Submitted - hopefully in fullStatusHistory[0] */
 		if ((h->fullStatusHistory[0] && 
 			(h->fullStatusHistory[0]->state == EDG_WLL_JOB_SUBMITTED)) ) {
@@ -597,7 +597,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 
 		val = s_str = t_str = r_str = NULL;
 		old_val = strdup("");
-		t = calloc(1, sizeof(t));
+		t = calloc(1, sizeof(*t));
 		i = 0;
 		while (h->fullStatusHistory[i]) {
 			s_str = edg_wll_StatToString(h->fullStatusHistory[i]->state);
