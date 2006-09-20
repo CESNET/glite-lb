@@ -11,8 +11,6 @@
 
 #include <cclassad.h>
 
-#include <cclassad.h>
-
 #include "glite/lb/context.h"
 #include "glite/lb/jobstat.h"
 #include "glite/lb/events.h"
@@ -222,7 +220,6 @@ static int lb_close(void *fpctx,void *handle) {
 		free(h->events);
 	}
 
-	// FIXME: Fails here on corrupted jobId
 	if (h->status.state != EDG_WLL_JOB_UNDEF) 
 		edg_wll_FreeStatus(&h->status);
 
@@ -358,15 +355,14 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_aTag) == 0 ||
                    strcmp(attr, GLITE_JP_LB_rQType) == 0 ||
-                   strcmp(attr, GLITE_JP_LB_eDuration) == 0)
-	{
+                   strcmp(attr, GLITE_JP_LB_eDuration) == 0) {
 		/* have to be retrieved from JDL, but probably obsolete and not needed at all */
-		char et[BUFSIZ];
+		char *et;
 		*attrval = NULL;
 		err.code = ENOSYS;
-		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
-		et[BUFSIZ-1] = 0;
-		err.desc = et;
+		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
+		err.desc = strdup(et);
+		free(et);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_RB) == 0) {
 		if (h->status.network_server) {
@@ -410,12 +406,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_NProc) == 0) {
 		/* currently LB hasn't got the info */
-		char et[BUFSIZ];
+		char *et;
 		*attrval = NULL;
 		err.code = ENOSYS;
-		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
-		et[BUFSIZ-1] = 0;
-		err.desc = et;
+		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
+		err.desc = strdup(et);
+		free(et);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_finalStatus) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -473,12 +469,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_additionalReason) == 0) {
 		/* what is it? */
-		char et[BUFSIZ];
+		char *et;
 		*attrval = NULL;
 		err.code = ENOSYS;
-		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
-		et[BUFSIZ-1] = 0;
-		err.desc = et;
+		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
+		err.desc = strdup(et);
+		free(et);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_jobType) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -517,12 +513,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		} else {
-			char et[BUFSIZ];
+			char *et;
 			*attrval = NULL;
 			err.code = 0;
-			snprintf(et,sizeof et,"Value unknown for attribute '%s', there are no subjobs.",attr);
-			et[BUFSIZ-1] = 0;
-			err.desc = et;
+			trio_asprintf(&et,"Value unknown for attribute '%s', there are no subjobs.",attr);
+			err.desc = strdup(et);
+			free(et);
 			return glite_jp_stack_error(ctx,&err);
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_lastStatusHistory) == 0) {
@@ -532,7 +528,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 
 		val = s_str = t_str = r_str = NULL;
 		old_val = strdup("");
-		t = calloc(1, sizeof(t));
+		t = calloc(1, sizeof(*t));
 		/* first record is Submitted - hopefully in fullStatusHistory[0] */
 		if ((h->fullStatusHistory[0] && 
 			(h->fullStatusHistory[0]->state == EDG_WLL_JOB_SUBMITTED)) ) {
@@ -573,13 +569,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 				if (h->lastStatusHistory[i]->reason) {
 					trio_asprintf(&r_str,"reason=\"%s\" ",h->lastStatusHistory[i]->reason);
 				}
-// FIXME: fails here for Dan's dumpfile, no idea why, all data are correct :(
 				trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
 					old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 				if (s_str) free(s_str); s_str = NULL;
 				if (t_str) free(t_str); t_str = NULL;
 				if (r_str) free(r_str); r_str = NULL;
-// FIXME:				if (old_val) free(old_val);
+				if (old_val) free(old_val);
 				old_val = val; val = NULL;
 				i++;
 			}
@@ -591,7 +586,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].value = strdup(val);
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-// FIXME:			free(val);
+			free(val);
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_fullStatusHistory) == 0) {
 		int i,j;
@@ -600,7 +595,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 
 		val = s_str = t_str = r_str = NULL;
 		old_val = strdup("");
-		t = calloc(1, sizeof(t));
+		t = calloc(1, sizeof(*t));
 		i = 0;
 		while (h->fullStatusHistory[i]) {
 			s_str = edg_wll_StatToString(h->fullStatusHistory[i]->state);
@@ -615,13 +610,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			if (h->fullStatusHistory[i]->reason) {
 				trio_asprintf(&r_str,"reason=\"%s\" ",h->fullStatusHistory[i]->reason);
 			}
-// FIXME: fails here for Dan's dumpfile, no idea why, all data are correct :(
 			trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
 				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 			if (s_str) free(s_str); s_str = NULL;
 			if (t_str) free(t_str); t_str = NULL;
 			if (r_str) free(r_str); r_str = NULL;
-// FIXME:			if (old_val) free(old_val);
+			if (old_val) free(old_val);
 			old_val = val; val = NULL;
 			i++;
 		}
@@ -632,7 +626,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].value = strdup(val);
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-// FIXME:			free(val);
+			free(val);
 		}
 	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, sizeof(GLITE_JP_LBTAG_NS)-1) == 0) {
 		tag = strrchr(attr, ':');
@@ -674,12 +668,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			i++;
 		}
 	} else {
-		char et[BUFSIZ];
+		char *et;
 		*attrval = NULL;
         	err.code = EINVAL;
-		snprintf(et,sizeof et,"No such attribute '%s'.",attr);
-		et[BUFSIZ-1] = 0;
-		err.desc = et;
+		trio_asprintf(&et,"No such attribute '%s'.",attr);
+		err.desc = strdup(et);
+		free(et);
 	        return glite_jp_stack_error(ctx,&err);
 	}
 
@@ -688,12 +682,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		*attrval = av;
 		return 0;
 	} else {
-		char et[BUFSIZ];
+		char *et;
 		*attrval = NULL;
 		err.code = ENOENT;
-		snprintf(et,sizeof et,"Value unknown for attribute '%s'.",attr);
-		et[BUFSIZ-1] = 0;
-		err.desc = et;
+		trio_asprintf(&et,"Value unknown for attribute '%s'.",attr);
+		err.desc = strdup(et);
+		free(et);
 		if (av) glite_jp_attrval_free(av,1); // XXX: probably not needed
 		return glite_jp_stack_error(ctx,&err);
 	}
