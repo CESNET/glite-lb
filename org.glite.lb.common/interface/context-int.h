@@ -3,6 +3,7 @@
 
 #ident "$Header$"
 
+#include "glite/lb-utils/db.h"
 #include "glite/security/glite_gss.h"
 #include "glite/lb/consumer.h"
 #include "lb_plain_io.h"
@@ -53,7 +54,7 @@ struct _edg_wll_Context {
 
 /* server part */
 
-	void		*mysql;
+	glite_lbu_DBContext	 dbctx;
 	edg_wll_ConnPool	*connPool;
 	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
 	edg_wll_ConnProxy	*connProxy;		/* holds one plain connection */
@@ -137,9 +138,6 @@ struct _edg_wll_Context {
 	glite_lbu_JobId	p_jobid;
 	edg_wll_SeqCode	p_seqcode;
 	int		count_statistics;
-
-	/* TODO: belongs to database part */
-	int use_transactions;
 };
 
 /* to be used internally: set, update and and clear the error information in 
