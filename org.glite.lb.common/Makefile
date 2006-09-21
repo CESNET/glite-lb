@@ -19,8 +19,6 @@ expat_prefix=/opt/expat
 -include Makefile.inc
 -include ../project/version.properties
 
-jobiddir=${top_srcdir}/../org.glite.wms-utils.jobid
-
 version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test::${top_srcdir}/doc
@@ -212,14 +210,6 @@ distbin:
 	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
 
-cjobid.c strmd5.c:
-	if [ ! -d ${jobiddir} ]; then echo "Directory ${jobiddir} not found"; exit 1; fi
-	mkdir -p glite/wmsutils/jobid
-	rm -f jobid && ln -fs . jobid
-	cp -rv ${jobiddir}/interface/glite/wmsutils/jobid/cjobid.h glite/wmsutils/jobid/
-	cp -rv ${jobiddir}/src/jobid/*.h glite/wmsutils/jobid/
-	cp -rv ${jobiddir}/src/jobid/*.[ch] .
-
 doc: events.tex status.tex
 
 install:
@@ -231,10 +221,6 @@ install:
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
 		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${PREFIX}/lib; \
-		if [ x${LB_STANDALONE} = xyes ]; then \
-			mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
-			install -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
-		fi ; \
 		${STAGE_PERFTEST} ; \
 	fi
 
