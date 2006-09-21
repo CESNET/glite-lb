@@ -55,20 +55,32 @@ static int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
 {
 	int i;
 
-        for (i=0; i<ctx->connections->connOpened;i++) 
-		/* TryLock (next line) is in fact used only to check the mutex status */
-		if (EBUSY & edg_wll_connectionTryLock(ctx, i)) {
-			/* Connection locked. Do not consider it */
+        for (i=0; i<ctx->connections->connOpened;i++) { 
+		if (!strcmp(name, ctx->connections->connPool[i].peerName) &&
+		   (port == ctx->connections->connPool[i].peerPort)) {
+
+			/* TryLock (next line) is in fact used only 
+			   to check the mutex status */
+			switch (edg_wll_connectionTryLock(ctx, i)) {
+			case 0: 
+				/* Connection was not locked but now it is. Since we do not
+				   really know wheter we are interested in that connection, we
+				   are simply unlocking it now. */
+				edg_wll_connectionUnlock(ctx, i);
+				return i;
+
+			case EBUSY:
+				/* Connection locked. Do not consider it */
+				// try to find another free connection
+				break;
+			default:
+				/* Some obscure error occured. Need inspection */
+				perror("ConnectionIndex() - locking problem \n");
+				assert(0);
+			}
 		}
-		else {
-			/* Connection was not locked but now it is. Since we do not
-			   really know wheter we are interested in that connection, we
-			   are simply unlocking it now. */
-			edg_wll_connectionUnlock(ctx, i);
-			if (!strcmp(name, ctx->connections->connPool[i].peerName) &&
-			    (port == ctx->connections->connPool[i].peerPort)) return i;
-		}
-						
+	}
+	
 	return -1;
 }
 
