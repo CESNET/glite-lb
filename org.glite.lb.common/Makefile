@@ -60,6 +60,7 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 # we are.
 
 VERSION_AHEAD=2
+CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${top_srcdir}/project/check_version.pl
 
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${nothrflavour} \
@@ -273,11 +274,4 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o: %.o: %.cpp
 	chmod -w $@ >/dev/null
 
 check_version:
-	@perl -ne '/#define GLITE_LB_CLIENT_INTERFACE "(\d+)\.\d+\.\d+"/; \
-		$$iface=$$1; \
-		$$_="${version}"; /(\d+)\.\d+\.\d+/; \
-		if ($$iface + ${VERSION_AHEAD} != $$1) { \
-			print "error: Major version of the interface ($$iface+${VERSION_AHEAD}) does not match implementation ($$1)\n" ;\
-			exit 1;  \
-		} \
-		' ${stagedir}/include/glite/lb/interface_version.h
+	${CHECK_VERSION} ${stagedir}/include/glite/lb/interface_version.h

@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.8  2005/08/03 09:30:17  akrenek
+	Merged the release 1.0 branch
+
 	Revision 1.7  2005/05/26 15:13:46  zurek
 	inserted module.build.file
 	
@@ -114,6 +117,7 @@
 				<include name="at3" />
 				<include name="*.T" />
 				<include name="*.pm" />
+				<include name="check_version.pl" />
 			</fileset>
 		</copy>	
 		<antcall target="lbmakefiles" />
