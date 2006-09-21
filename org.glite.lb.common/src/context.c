@@ -78,13 +78,28 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		int i;
 
 #ifdef GLITE_LB_THREADED
-                /* Since the introduction of a shared connection pool, the pool cannot be freed here.
-                   We only need to unlock connections that may have been locked using this context. */
+                /* Since the introduction of a shared connection pool, the pool
+                   cannot be freed here. We only need to unlock connections that
+                   may have been locked using this context. */
+
+                #ifdef EDG_WLL_CONNPOOL_DEBUG
+                     printf("Running edg_wll_FreeContext - checking for connections locked by the current context.\n");
+		#endif
+
+                edg_wll_poolLock();
+
 		for (i=0; i<ctx->connections->poolSize; i++) {
-			if (ctx->connections->locked_by[i]==ctx) {
+	
+                        if (ctx->connections->locked_by[i]==ctx) {
+                                #ifdef EDG_WLL_CONNPOOL_DEBUG
+                                    printf("Unlocking connection No. %d...",i);
+                                #endif
 				edg_wll_connectionUnlock(ctx, i);
+
 			}
 		}
+
+                edg_wll_poolUnlock();
 #endif
 
 /*		
