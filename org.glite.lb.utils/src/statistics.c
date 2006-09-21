@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 	char *err;
 	init_f *plugin_init;
 	done_f *plugin_done;
-	int i,opt;
+	int opt;
 
 	/* get arguments */
 	while ((opt = getopt_long(argc,argv,
@@ -204,12 +204,6 @@ int main(int argc, char *argv[])
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_parent, &attrval);
 		if (attrval) {
 			fprintf(outfile,"\t<parent>%s</parent>\n", attrval->value);
-			free_attrs(attrval);
-		}
-
-		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_VO, &attrval);
-		if (attrval) {
-			fprintf(outfile,"\t<VO>%s</VO>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
@@ -345,7 +339,6 @@ int main(int argc, char *argv[])
 			free_attrs(attrval);
 		}
 
-/* FIXME: */
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_lastStatusHistory, &attrval);
 		if (attrval) {
 			fprintf(outfile,"\t<lastStatusHistory>\n%s\t</lastStatusHistory>\n",attrval->value);
