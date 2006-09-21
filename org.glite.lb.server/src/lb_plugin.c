@@ -16,6 +16,7 @@
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/trio.h"
+#include "glite/lb/producer.h"
 
 #include "jobstat.h"
 #include "get_events.h"
@@ -107,8 +108,9 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	char *line;
 	int retval;
 	edg_wll_Context     context;
-	int              nevents, maxnevents, i;
-	glite_jp_error_t	err;
+	int                 nevents, maxnevents, i;
+	glite_jp_error_t    err;
+	char                *id0 = NULL,*id = NULL;
 	
 	glite_jp_clear_error(ctx);
 	h = calloc(1, sizeof(lb_handle));
@@ -151,6 +153,24 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 				free(ed);
 				goto fail;
 			}
+			if (nevents == 0) {
+				id0 = edg_wlc_JobIdGetUnique(h->events[nevents]->any.jobId );
+			} else {
+				id = edg_wlc_JobIdGetUnique(h->events[nevents]->any.jobId );
+				if (strcmp(id0,id) != 0) {
+					char et[BUFSIZ];
+					retval = EINVAL;
+					err.code = retval;
+					snprintf(et,sizeof et,"Attempt to process different jobs. Id '%s' (event n.%d) differs from '%s'",id,nevents,id0);
+					et[BUFSIZ-1] = 0;
+					err.desc = et;
+					err.source = "lb_plugin.c:edg_wlc_JobIdGetUnique()";
+					glite_jp_stack_error(ctx,&err);
+					goto fail;
+				}
+			}
+
+			if (id) free(id); id = NULL;
 			nevents++;
 		}
 		free(line);
@@ -178,7 +198,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	fprintf(stderr,"lb_plugin: opened %d events\n", nevents);
 #endif
 
-	/* count state and status hiftory of the job given by the loaded events */
+	/* count state and status history of the job given by the loaded events */
 	if ((retval = lb_status(h)) != 0) goto fail;
 
 	*handle = (void *)h;
@@ -186,12 +206,17 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	return 0;
 
 fail:
+#ifdef PLUGIN_DEBUG
+	fprintf(stderr,"lb_plugin: open ERROR\n");
+#endif
 	for (i = 0; i < nevents; i++) {
 		edg_wll_FreeEvent(h->events[i]);
 		free(h->events[i]);
 	}
 	free(h->events);
 	free(buffer.buf);
+	if (id0) free(id0);
+	if (id) free(id);
 	edg_wll_FreeContext(context);
 	free(h);
 	*handle = NULL;
@@ -357,12 +382,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                    strcmp(attr, GLITE_JP_LB_rQType) == 0 ||
                    strcmp(attr, GLITE_JP_LB_eDuration) == 0) {
 		/* have to be retrieved from JDL, but probably obsolete and not needed at all */
-		char *et;
+		char et[BUFSIZ];
 		*attrval = NULL;
 		err.code = ENOSYS;
-		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
-		err.desc = strdup(et);
-		free(et);
+		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
+		et[BUFSIZ-1] = 0;
+		err.desc = et;
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_RB) == 0) {
 		if (h->status.network_server) {
@@ -406,12 +431,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_NProc) == 0) {
 		/* currently LB hasn't got the info */
-		char *et;
+		char et[BUFSIZ];
 		*attrval = NULL;
 		err.code = ENOSYS;
-		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
-		err.desc = strdup(et);
-		free(et);
+		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
+		et[BUFSIZ-1] = 0;
+		err.desc = et;
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_finalStatus) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -469,12 +494,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_additionalReason) == 0) {
 		/* what is it? */
-		char *et;
+		char et[BUFSIZ];
 		*attrval = NULL;
 		err.code = ENOSYS;
-		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
-		err.desc = strdup(et);
-		free(et);
+		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
+		et[BUFSIZ-1] = 0;
+		err.desc = et;
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_jobType) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -513,12 +538,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		} else {
-			char *et;
+			char et[BUFSIZ];
 			*attrval = NULL;
 			err.code = 0;
-			trio_asprintf(&et,"Value unknown for attribute '%s', there are no subjobs.",attr);
-			err.desc = strdup(et);
-			free(et);
+			snprintf(et,sizeof et,"Value unknown for attribute '%s', there are no subjobs.",attr);
+			et[BUFSIZ-1] = 0;
+			err.desc = et;
 			return glite_jp_stack_error(ctx,&err);
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_lastStatusHistory) == 0) {
@@ -668,12 +693,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			i++;
 		}
 	} else {
-		char *et;
+		char et[BUFSIZ];
 		*attrval = NULL;
         	err.code = EINVAL;
-		trio_asprintf(&et,"No such attribute '%s'.",attr);
-		err.desc = strdup(et);
-		free(et);
+		snprintf(et,sizeof et,"No such attribute '%s'.",attr);
+		et[BUFSIZ-1] = 0;
+		err.desc = et;
 	        return glite_jp_stack_error(ctx,&err);
 	}
 
@@ -682,12 +707,12 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		*attrval = av;
 		return 0;
 	} else {
-		char *et;
+		char et[BUFSIZ];
 		*attrval = NULL;
 		err.code = ENOENT;
-		trio_asprintf(&et,"Value unknown for attribute '%s'.",attr);
-		err.desc = strdup(et);
-		free(et);
+		snprintf(et,sizeof et,"Value unknown for attribute '%s'.",attr);
+		et[BUFSIZ-1] = 0;
+		err.desc = et;
 		if (av) glite_jp_attrval_free(av,1); // XXX: probably not needed
 		return glite_jp_stack_error(ctx,&err);
 	}
@@ -698,12 +723,13 @@ static int lb_status(void *handle) {
 
 	lb_handle       *h = (lb_handle *) handle;
         intJobStat	*js;
-        int		maxnstates, nstates, i, be_strict = 0;
+        int		maxnstates, nstates, i, be_strict = 0, retval;
 	char		*errstring;
 	edg_wll_JobStatCode old_state = EDG_WLL_JOB_UNDEF;
         
         js = calloc(1, sizeof(intJobStat));
 	init_intJobStat(js);
+
 
 	edg_wll_SortPEvents(h->events);
 
@@ -749,6 +775,27 @@ static int lb_status(void *handle) {
 		i++;
 	}
 	h->fullStatusHistory[nstates] = NULL;
+
+/* TODO: fill in also subjobs
+	if (js->pub.children_num > 0) {	
+		edg_wll_Context context;
+		edg_wlc_JobId *subjobs;
+
+		if ((retval = edg_wll_InitContext(&context)) != 0) return retval;
+		subjobs = calloc(js->pub.children_num, sizeof (edg_wlc_JobId));
+		
+		if ((retval = edg_wll_GenerateSubjobIds(context, 
+			js->pub.jobId, js->pub.children_num, js->pub.seed, &subjobs) ) != 0 ) {
+			goto err;
+		}
+
+		for (i=0; i<js->pub.children_num; i++) {
+			js->pub.children[i] = edg_wlc_JobIdUnparse(subjobs[i]);
+		}
+		edg_wll_FreeContext(context);
+		free(subjobs);
+	}
+*/
 
 	memcpy(&h->status, &js->pub, sizeof(edg_wll_JobStat));
 
