@@ -424,8 +424,8 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                 if ((t = gmtime(&h->status.lastUpdateTime.tv_sec)) != NULL) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
 			av[0].name = strdup(attr);
-			/* dateTime format: yyyy-mm-ddThh:mm:ss:uuuuuu */
-                        trio_asprintf(&av[0].value,"%04d-%02d-%02dT%02d:%02d:%02d:%06d",
+			/* dateTime format: yyyy-mm-ddThh:mm:ss.uuuuuu */
+                        trio_asprintf(&av[0].value,"%04d-%02d-%02dT%02d:%02d:%02d.%06d",
                                 1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
 				t->tm_hour, t->tm_min, t->tm_sec,
 				h->status.lastUpdateTime.tv_usec);
@@ -536,8 +536,8 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			s_str = edg_wll_StatToString(h->fullStatusHistory[0]->state);
 			for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
 			if (gmtime_r(&h->fullStatusHistory[0]->timestamp.tv_sec,t) != NULL) {
-				/* dateTime format: yyyy-mm-ddThh:mm:ss:uuuuuu */
-				trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d:%06d\" ",
+				/* dateTime format: yyyy-mm-ddThh:mm:ss.uuuuuu */
+				trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d.%06d\" ",
 					1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
 					t->tm_hour, t->tm_min, t->tm_sec,
 					h->fullStatusHistory[0]->timestamp.tv_usec);
@@ -560,8 +560,8 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 				s_str = edg_wll_StatToString(h->lastStatusHistory[i]->state);
 				for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
 				if (gmtime_r(&h->lastStatusHistory[i]->timestamp.tv_sec,t) != NULL) {
-					/* dateTime format: yyyy-mm-ddThh:mm:ss:uuuuuu */
-					trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d:%06d\" ",
+					/* dateTime format: yyyy-mm-ddThh:mm:ss.uuuuuu */
+					trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d.%06d\" ",
 						1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
 						t->tm_hour, t->tm_min, t->tm_sec,
 						h->lastStatusHistory[i]->timestamp.tv_usec);
@@ -602,7 +602,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
 			if (gmtime_r(&h->fullStatusHistory[i]->timestamp.tv_sec,t) != NULL) {
 				/* dateTime format: yyyy-mm-ddThh:mm:ss:uuuuuu */
-				trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d:%06d\" ",
+				trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d.%06d\" ",
 					1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
 					t->tm_hour, t->tm_min, t->tm_sec,
 					h->fullStatusHistory[i]->timestamp.tv_usec);
