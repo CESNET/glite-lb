@@ -141,8 +141,8 @@ MAN = $(MAN_GZ:.gz=)
 
 # version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
-# counted minor versions: 2.1
-offset=1
+# counted minor versions: 
+offset=0
 
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
