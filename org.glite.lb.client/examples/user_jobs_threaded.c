@@ -6,6 +6,8 @@
 
 #include <expat.h>
 
+#include <pthread.h>
+
 #include "glite/lb/context.h"
 #include "glite/lb/xml_conversions.h"
 #include "glite/lb/consumer.h"
@@ -21,32 +23,28 @@ usage(char *me)
 	fprintf(stderr,"usage: %s [-h] [-x] [userid]\n", me);
 }
 
-int main(int argc,char **argv)
-{
+typedef struct {
+    char *owner;
+    int proxy;
+    char *argv_0;} thread_code_args;
+
+void *thread_code(thread_code_args *arguments) {
+
 	edg_wll_Context	ctx;
 	char		*errt,*errd;
 	edg_wlc_JobId		*jobs = NULL;
 	edg_wll_JobStat		*states = NULL;
 	int		i,j;
-	char 		*owner = NULL;
 
 	user_jobs = edg_wll_UserJobs;
-	for ( i = 1; i < argc; i++ ) {
-		if ( !strcmp(argv[i], "-h") || !strcmp(argv[i], "--help") ) {
-			usage(argv[0]);
-			exit(0);
-		} else if ( !strcmp(argv[i], "-x") ) {
-			user_jobs = edg_wll_UserJobsProxy;
-			continue;
-		}
 
-		owner = strdup(argv[i]);
-		break; 	
-	}
+       if (arguments->proxy) {
+            user_jobs = edg_wll_UserJobsProxy;
+        }
 
 	edg_wll_InitContext(&ctx);
-	if ( user_jobs == edg_wll_UserJobsProxy  && owner )
-		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, owner);
+	if ( user_jobs == edg_wll_UserJobsProxy  && arguments->owner )
+		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, arguments->owner);
 
 	if (user_jobs(ctx,&jobs,&states)) goto err;
  	for (i=0; states[i].state != EDG_WLL_JOB_UNDEF; i++) {	
@@ -84,7 +82,7 @@ int main(int argc,char **argv)
 	printf("\nFound %d jobs\n",i);
 
 err:
-	free(owner);
+	free(arguments->owner);
 	if  (jobs) {
 		for (i=0; jobs[i]; i++)  edg_wlc_JobIdFree(jobs[i]);	
 		free(jobs);
@@ -96,12 +94,77 @@ err:
 	}
 
 	if (edg_wll_Error(ctx,&errt,&errd)) {
-		fprintf(stderr,"%s: %s (%s)\n",argv[0],errt,errd);
+		fprintf(stderr,"%s: %s (%s)\n",arguments->argv_0,errt,errd);
 		edg_wll_FreeContext(ctx);
-		return 1;
+                pthread_exit(NULL);
 	}
 
 	edg_wll_FreeContext(ctx);
-	return 0;
+
+        printf("Thread %d exitting\n",(int)pthread_self());
+
+        pthread_exit(NULL);
+
+        printf("Thread %d out !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n",(int)pthread_self());
+//        return 0;
+}
+
+int main(int argc,char **argv)
+{
+
+        #define NUM_THREADS 10
+
+        thread_code_args arguments = { NULL , 0 , NULL };
+	int	i,rc,status;
+        pthread_t threads[NUM_THREADS];
+	pthread_attr_t attr;
+
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+	for ( i = 1; i < argc; i++ ) {
+		if ( !strcmp(argv[i], "-h") || !strcmp(argv[i], "--help") ) {
+			usage(argv[0]);
+			exit(0);
+		}
+                else if ( !strcmp(argv[i], "-x") ) {
+                    arguments.proxy = 1;
+         	}
+
+		arguments.owner = strdup(argv[i]);
+	}
+
+        arguments.argv_0 = argv[0];
+
+
+        for (i=0;i<NUM_THREADS;i++) {
+            printf("Running thread %d\n",i);
+            rc = pthread_create(&threads[i], &attr, (void*)thread_code, &arguments );
+            if (rc){
+                printf("ERROR; return code from pthread_create() is %d\n", rc);
+                exit(-1);
+            }
+        }
+
+
+
+//        thread_code(&arguments);
+
+//        pthread_exit(NULL)
+
+        pthread_attr_destroy(&attr);
+
+        for (i=0;i<NUM_THREADS;i++) {
+            printf("*** Joining thread %d.\n",i);
+            rc=pthread_join(threads[i],(void **)&status);
+            printf("*** Thread %d joined. (status %d ret. code %d)\n",i,status,rc);
+
+        }
+
+        printf("Threaded example main() exitting\n");
+
+
+//        exit(0);
+//        pthread_exit(NULL);
 }
 

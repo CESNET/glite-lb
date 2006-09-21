@@ -25,7 +25,7 @@ static void CloseConnection(edg_wll_Context ctx, int* conn_index)
 	OM_uint32 min_stat;
 	int cIndex;
 
-        cIndex = conn_index[0];
+        cIndex = *conn_index;
 
 	assert(ctx->connections->connOpened);
 	assert(cIndex < ctx->connections->connOpened);
@@ -40,13 +40,18 @@ static void CloseConnection(edg_wll_Context ctx, int* conn_index)
 	
 	/* if deleted conn was not the last one -> there is a 'hole' and then 	*/
 	/* 'shake' together connections in pool, no holes are allowed		*/
-	if (cIndex < ctx->connections->connOpened - 1) {	
+	/* */
+	/* This principle is unsuitable for multi-threaded applications. Too much waiting for connections */
+	/* to unlock. We need to allow "holes" in the pool. */
+
+/*	if (cIndex < ctx->connections->connOpened - 1) {	
 		ctx->connections->connPool[cIndex] = ctx->connections->connPool[ctx->connections->connOpened - 1];
 		memset(ctx->connections->connPool + ctx->connections->connOpened  - 1 , 0, sizeof(edg_wll_ConnPool));
-	}
+	}*/
+
 	ctx->connections->connOpened--;
 
-        conn_index[0] = cIndex;
+        *conn_index = cIndex;
 }
 
 
@@ -55,8 +60,9 @@ static int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
 {
 	int i;
 
-        for (i=0; i<ctx->connections->connOpened;i++) { 
-		if (!strcmp(name, ctx->connections->connPool[i].peerName) &&
+        for (i=0; i<ctx->connections->poolSize;i++) { 
+		if ((ctx->connections->connPool[i].peerName != NULL) &&
+                    !strcmp(name, ctx->connections->connPool[i].peerName) &&
 		   (port == ctx->connections->connPool[i].peerPort)) {
 
 			/* TryLock (next line) is in fact used only 
@@ -88,8 +94,19 @@ static int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
 
 static int AddConnection(edg_wll_Context ctx, char *name, int port)
 {
-	int index = ctx->connections->connOpened;
-	
+	int i,index = -1;
+
+        for (i = 0; i < ctx->connections->poolSize; i++) {
+            if (ctx->connections->connPool[i].peerName == NULL) {
+                if (!edg_wll_connectionTryLock(ctx, i)) {
+		    index = i;	// This connection is free and was not locked. We may lock it and use it.
+		    break;
+                }
+	    }
+	}
+
+	if (index < 0) return -1;
+
 	free(ctx->connections->connPool[index].peerName);	// should be empty; just to be sure
 	ctx->connections->connPool[index].peerName = strdup(ctx->srvName);
 	ctx->connections->connPool[index].peerPort = ctx->srvPort;
@@ -112,9 +129,11 @@ static void ReleaseConnection(edg_wll_Context ctx, char *name, int port)
 		if ((index = ConnectionIndex(ctx, name, port)) >= 0)
 			CloseConnection(ctx, &index);
 	}
-	else {					/* free the oldest connection*/
+	else {					/* free the oldest (unlocked) connection */
+		assert(ctx->connections->connPool[0].peerName);	 // Full pool expected - accept non-NULL values only
 		min = ctx->connections->connPool[0].lastUsed.tv_sec;
-		for (i=0; i<ctx->connections->connOpened; i++) {
+		for (i=0; i<ctx->connections->poolSize; i++) {
+			assert(ctx->connections->connPool[i].peerName); // Full pool expected - accept non-NULL values only
 			if (ctx->connections->connPool[i].lastUsed.tv_sec < min) {
 				min = ctx->connections->connPool[i].lastUsed.tv_sec;
 				index = i;
@@ -166,10 +185,16 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 			ReleaseConnection(ctx, NULL, 0);
 		
 		index = AddConnection(ctx, ctx->srvName, ctx->srvPort);
+                #ifdef EDG_WLL_CONNPOOL_DEBUG	
+                    printf("Connection to %s:%d opened as No. %d in the pool\n",ctx->srvName,ctx->srvPort,index);
+                #endif
 		
 	}
 	/* else - there is cached open connection, reuse it */
-	
+        #ifdef EDG_WLL_CONNPOOL_DEBUG	
+            else printf("Connection to %s:%d exists (No. %d in the pool) - reusing\n",ctx->srvName,ctx->srvPort,index);
+        #endif
+
 	*connToUse = index;
 	
 	/* XXX support anonymous connections, perhaps add a flag to the connPool
@@ -225,7 +250,7 @@ err:
 	*connToUse = -1;
 ok:	
 
-        if (*connToUse>-1) edg_wll_connectionLock(ctx, *connToUse); /* Lock the connection */
+        if (*connToUse>-1) edg_wll_connectionTryLock(ctx, *connToUse); /* Just to be sure we have not forgotten to lock it */
 
 	edg_wll_poolUnlock(); /* One way or the other, there are no more pool-wide operations */
 
@@ -374,6 +399,7 @@ int edg_wll_http_send_recv(
 	
 	assert(connToUse >= 0);
 	gettimeofday(&ctx->connections->connPool[connToUse].lastUsed, NULL);
+        edg_wll_connectionUnlock(ctx, connToUse);
 	return 0;
 
 err:
