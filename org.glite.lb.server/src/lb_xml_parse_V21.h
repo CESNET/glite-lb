@@ -12,9 +12,9 @@ int parseQueryEventsRequestV21(edg_wll_Context ctx, char *messageBody, edg_wll_Q
 int parsePurgeRequestV21(edg_wll_Context ctx, char *messageBody, edg_wll_PurgeRequest *request);
 int parseDumpRequestV21(edg_wll_Context ctx, char *messageBody, edg_wll_DumpRequest *request);
 int edg_wll_QueryEventsToXMLV21(edg_wll_Context, edg_wll_Event *, char **);
-int edg_wll_QueryJobsToXMLV21(edg_wll_Context, edg_wlc_JobId *, edg_wll_JobStat *, char **);
+int edg_wll_QueryJobsToXMLV21(edg_wll_Context, glite_lbu_JobId *, edg_wll_JobStat *, char **);
 int edg_wll_JobStatusToXMLV21(edg_wll_Context, edg_wll_JobStat, char **);
-int edg_wll_UserJobsToXMLV21(edg_wll_Context, edg_wlc_JobId *, char **);
+int edg_wll_UserJobsToXMLV21(edg_wll_Context, glite_lbu_JobId *, char **);
 int edg_wll_PurgeResultToXMLV21(edg_wll_Context ctx, edg_wll_PurgeResult *result, char **message);
 int edg_wll_DumpResultToXMLV21(edg_wll_Context ctx, edg_wll_DumpResult *result, char **message);
 

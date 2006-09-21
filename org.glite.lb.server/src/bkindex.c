@@ -8,9 +8,9 @@
 #include <sysexits.h>
 #include <assert.h>
 
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 #include "glite/lb-utils/db.h"
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/lb-utils/strmd5.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "db_supp.h"
@@ -330,7 +330,7 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 	glite_lbu_Statement sh, sh2;
 	int njobs, ret = -1;
 	intJobStat *stat;
-	edg_wlc_JobId jobid;
+	glite_lbu_JobId jobid;
 	char *res[5];
 	char *rest;
 	char *icvalues, *stmt;
@@ -347,14 +347,14 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 	while ((ret=glite_lbu_FetchRow(sh,5,NULL,res)) >0) {
 		if (strcmp(res[3], INTSTAT_VERSION)) {
 			stat = NULL;
-			if (!edg_wlc_JobIdParse(res[4], &jobid)) {
+			if (!glite_lbu_JobIdParse(res[4], &jobid)) {
 				if ((stat = malloc(sizeof(intJobStat))) != NULL) {
 					if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1)) {
 						free(stat);
 						stat = NULL;
 					}
 				}
-				edg_wlc_JobIdFree(jobid);
+				glite_lbu_JobIdFree(jobid);
 			}
 		} else {
 			stat = dec_intJobStat(res[1], &rest);

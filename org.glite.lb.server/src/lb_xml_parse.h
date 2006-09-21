@@ -22,11 +22,11 @@ int parsePurgeRequest(edg_wll_Context ctx, char *messageBody, int (*tagToIndex)(
 int parseDumpRequest(edg_wll_Context ctx, char *messageBody, edg_wll_DumpRequest *request);
 int parseLoadRequest(edg_wll_Context ctx, char *messageBody, edg_wll_LoadRequest *request);
 int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, edg_wll_QueryRec ***conditions);
-int parseQuerySequenceCodeRequest(edg_wll_Context ctx, char *messageBody, edg_wlc_JobId *jobId, char **source);
+int parseQuerySequenceCodeRequest(edg_wll_Context ctx, char *messageBody, glite_lbu_JobId *jobId, char **source);
 int edg_wll_QueryEventsToXML(edg_wll_Context, edg_wll_Event *, char **);
-int edg_wll_QueryJobsToXML(edg_wll_Context, edg_wlc_JobId *, edg_wll_JobStat *, char **);
+int edg_wll_QueryJobsToXML(edg_wll_Context, glite_lbu_JobId *, edg_wll_JobStat *, char **);
 int edg_wll_JobStatusToXML(edg_wll_Context, edg_wll_JobStat, char **);
-int edg_wll_UserJobsToXML(edg_wll_Context, edg_wlc_JobId *, char **);
+int edg_wll_UserJobsToXML(edg_wll_Context, glite_lbu_JobId *, char **);
 int edg_wll_PurgeResultToXML(edg_wll_Context ctx, edg_wll_PurgeResult *result, char **message);
 int edg_wll_DumpResultToXML(edg_wll_Context ctx, edg_wll_DumpResult *result, char **message);
 int edg_wll_LoadResultToXML(edg_wll_Context ctx, edg_wll_LoadResult *result, char **message);

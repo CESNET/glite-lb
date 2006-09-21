@@ -15,10 +15,10 @@
 #undef WITHOUT_TRIO
 
 #include "glite/security/voms/voms_apic.h"
-#include "glite/wmsutils/jobid/strmd5.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/strmd5.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/producer.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 /* XXX should be defined in gridsite-gacl.h */
 GRSTgaclEntry *GACLparseEntry(xmlNodePtr cur);
@@ -748,7 +748,7 @@ end:
 }
 
 int
-edg_wll_UpdateACL(edg_wll_Context ctx, edg_wlc_JobId job, 
+edg_wll_UpdateACL(edg_wll_Context ctx, glite_lbu_JobId job, 
       		  char *user_id, int user_id_type,
 		  int permission, int perm_type, int operation)
 {
@@ -761,7 +761,7 @@ edg_wll_UpdateACL(edg_wll_Context ctx, edg_wlc_JobId job,
 
    edg_wll_ResetError(ctx);
 
-   md5_jobid = edg_wlc_JobIdGetUnique(job);
+   md5_jobid = glite_lbu_JobIdGetUnique(job);
 
    do {
       if (acl)
@@ -785,7 +785,7 @@ edg_wll_UpdateACL(edg_wll_Context ctx, edg_wlc_JobId job,
       if ( !acl && (ret = edg_wll_InitAcl(&acl)) )
 	 goto end;
 	 
-      old_aclid = acl->string? strdup(strmd5(acl->string, NULL)): NULL;
+      old_aclid = acl->string? str2md5(acl->string): NULL;
 
       ret = edg_wll_change_acl(acl, user_id, user_id_type, 
 	    		       permission, perm_type, operation);
@@ -801,7 +801,7 @@ edg_wll_UpdateACL(edg_wll_Context ctx, edg_wlc_JobId job,
 	 goto end;
       }
 
-      new_aclid = strdup(strmd5(acl->string, NULL));
+      new_aclid = str2md5(acl->string);
 
       /* store new ACL or increment its counter if already present in db */
       ret = edg_wll_HandleCounterACL(ctx, acl, new_aclid, 1);
@@ -843,7 +843,7 @@ end:
    return ret;
 }
 
-int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl)
+int edg_wll_GetACL(edg_wll_Context ctx, glite_lbu_JobId jobid, edg_wll_Acl *acl)
 {
 	char	*q = NULL;
 	char	*acl_id = NULL;
@@ -851,7 +851,7 @@ int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl)
 	glite_lbu_Statement    stmt = NULL;
 	int	ret;
 	GRSTgaclAcl	*gacl = NULL;
-	char	*jobstr = edg_wlc_JobIdGetUnique(jobid);
+	char	*jobstr = glite_lbu_JobIdGetUnique(jobid);
 
 	if (jobid == NULL || jobstr == NULL)
 	   return edg_wll_SetError(ctx,EINVAL,"edg_wll_GetACL()");
@@ -928,10 +928,10 @@ int edg_wll_InitAcl(edg_wll_Acl *acl) { return 0; }
 void edg_wll_FreeAcl(edg_wll_Acl acl) { }
 int edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
                          char *aclid, int incr) { return 0; }
-int edg_wll_UpdateACL(edg_wll_Context ctx, edg_wlc_JobId job,
+int edg_wll_UpdateACL(edg_wll_Context ctx, glite_lbu_JobId job,
                   char *user_id, int user_id_type,
                   int permission, int perm_type, int operation) { return 0; }
-int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl) { return 0; }
+int edg_wll_GetACL(edg_wll_Context ctx, glite_lbu_JobId jobid, edg_wll_Acl *acl) { return 0; }
 
 
 #endif

@@ -2,7 +2,7 @@
 
 #include "glite/lb-utils/db.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 #include "db_supp.h"
 #include "get_events.h"
@@ -15,7 +15,7 @@
 
 
 
-int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, const char *source, char **seqcode)
+int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, glite_lbu_JobId jobid, const char *source, char **seqcode)
 {
 	glite_lbu_Statement	sh;
 	intJobStat	   *istat = NULL;
@@ -27,7 +27,7 @@ int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, co
 
 
 	edg_wll_ResetError(ctx);
-	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
+	jobid_md5 = glite_lbu_JobIdGetUnique(jobid);
 
 	trio_asprintf(&stmt,
 				"select int_status from states "

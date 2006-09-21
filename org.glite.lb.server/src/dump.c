@@ -8,8 +8,8 @@
 #include <unistd.h>
 
 #include "glite/lb-utils/db.h"
-#include "glite/lb/trio.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/trio.h"
+#include "glite/lb-utils/cjobid.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"

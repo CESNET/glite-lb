@@ -174,7 +174,8 @@ EXT_LIBS:=  \
 	${classadslib} \
 	${VOMS_LIBS}
 
-COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
+COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} \
+	-lglite_security_gss_${nothrflavour} -lglite_lbu_trio -lglite_lbu_jobid
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
 	${classadslib} -lstdc++ ${expatlib} -lexpat\
 

@@ -56,10 +56,10 @@ void destroy_intJobStat_extension(intJobStat *p);
 
 edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context, void *, intJobStat *, int , char **, char **);
 edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context, void *);
-int edg_wll_intJobStatus( edg_wll_Context, const edg_wlc_JobId, int, intJobStat *, int);
+int edg_wll_intJobStatus( edg_wll_Context, const glite_lbu_JobId, int, intJobStat *, int);
 edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context, intJobStat *, int);
-edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context, edg_wlc_JobId, char *icnames, char *values, glite_lbu_bufInsert bi);
-edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context , edg_wlc_JobId , int, intJobStat **);
+edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context, glite_lbu_JobId, char *icnames, char *values, glite_lbu_bufInsert bi);
+edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context , glite_lbu_JobId , int, intJobStat **);
 
 
 intJobStat* dec_intJobStat(char *, char **);

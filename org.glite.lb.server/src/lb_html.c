@@ -23,7 +23,7 @@ int edg_wll_QueryToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 }
 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserJobsToHTML(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
+int edg_wll_UserJobsToHTML(edg_wll_Context ctx, glite_lbu_JobId *jobsOut, char **message)
 {
         char *pomA, *pomB;
         int i = 0;
@@ -32,7 +32,7 @@ int edg_wll_UserJobsToHTML(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **m
 	pomB = strdup("");	
 
         while (jobsOut[i]) {
-		char	*chid = edg_wlc_JobIdUnparse(jobsOut[i]);
+		char	*chid = glite_lbu_JobIdUnparse(jobsOut[i]);
 
                 asprintf(&pomA,"%s\t\t <li> <a href=\"%s\">%s</a>\r\n",
                         pomB, chid,chid);
@@ -68,7 +68,7 @@ int edg_wll_JobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 	
 	pomB = strdup("");
 
-        chid = edg_wlc_JobIdUnparse(stat.jobId);
+        chid = glite_lbu_JobIdUnparse(stat.jobId);
 
 #define TR(name,type,field) 		\
 	if (field) {		\

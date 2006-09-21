@@ -6,22 +6,22 @@
 #include <errno.h>
 
 #include "glite/lb-utils/db.h"
-#include "glite/wmsutils/jobid/cjobid.h"
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/lb-utils/cjobid.h"
+#include "glite/lb-utils/strmd5.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 #include "db_supp.h"
 
 int edg_wll_UserJobs(
 	edg_wll_Context ctx,
-	edg_wlc_JobId	**jobs,
+	glite_lbu_JobId	**jobs,
 	edg_wll_JobStat	**states)
 {
-	char	*userid = strmd5(ctx->peerName,NULL),*stmt = NULL,
+	char	*userid = str2md5(ctx->peerName),*stmt = NULL,
 		*res = NULL;
 	int	njobs = 0,ret,i;
-	edg_wlc_JobId	*out = NULL;
+	glite_lbu_JobId	*out = NULL;
 	glite_lbu_Statement	sth = NULL;
 	edg_wll_ErrorCode	err = 0;
 
@@ -61,7 +61,7 @@ int edg_wll_UserJobs(
 			edg_wll_SetErrorDB(ctx);
 			goto err;
 		}
-		if ((ret = edg_wlc_JobIdParse(res,out+i))) {
+		if ((ret = glite_lbu_JobIdParse(res,out+i))) {
 			edg_wll_SetError(ctx,errno,res);
 			goto err;
 		}
@@ -71,11 +71,12 @@ int edg_wll_UserJobs(
 err:
 	free(res);
 	free(stmt);
+	free(userid);
 	glite_lbu_FreeStmt(&sth);
 	if ((err = edg_wll_Error(ctx,NULL,NULL))) {
 		if (out) {
 		    for (i=0; i<njobs; i++)
-			edg_wlc_JobIdFree(out[i]);
+			glite_lbu_JobIdFree(out[i]);
 		    free(out);
 		}
 	} else *jobs = out;

@@ -51,7 +51,7 @@ void QueryEventsTest::oneJob()
 
 	job[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
 	job[0].op = EDG_WLL_QUERY_OP_EQUAL ;
-	edg_wlc_JobIdParse("https://lhun.ics.muni.cz:4850/WrCEKje9QTXFiSOZuPMLtw",
+	glite_lbu_JobIdParse("https://lhun.ics.muni.cz:4850/WrCEKje9QTXFiSOZuPMLtw",
 		&job[0].value.j);
 	job[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 	
@@ -81,7 +81,7 @@ void QueryEventsTest::oneJob()
 
 	CPPUNIT_ASSERT(!edg_wll_QueryEventsServer(ctx,1,jobs,NULL,&events));
 
-	edg_wlc_JobIdFree(job[0].value.j);
+	glite_lbu_JobIdFree(job[0].value.j);
 	for (i = 0; events[i].type; i++) edg_wll_FreeEvent(&events[i]);
 	free(events);
 }

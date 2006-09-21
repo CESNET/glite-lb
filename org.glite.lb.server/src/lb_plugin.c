@@ -15,7 +15,7 @@
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
 
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 #include "jobstat.h"
 
@@ -220,7 +220,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 	} else if (strcmp(attr, GLITE_JP_LB_jobId) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
-		av[0].value = edg_wlc_JobIdUnparse(h->status.jobId);
+		av[0].value = glite_lbu_JobIdUnparse(h->status.jobId);
 		av[0].size = -1;
 		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_VO) == 0) {
@@ -508,7 +508,7 @@ static int lb_status(edg_wll_Event **events, edg_wll_JobStat *status) {
 		/* XXX: job owner and jobId not filled from events normally */
 		if (events[i]->any.type == EDG_WLL_EVENT_REGJOB) {
 			js->pub.owner = check_strdup(events[i]->any.user);
-			if (edg_wlc_JobIdDup(events[i]->any.jobId,&js->pub.jobId)) {
+			if (glite_lbu_JobIdDup(events[i]->any.jobId,&js->pub.jobId)) {
 				goto err;
 			}
 		}

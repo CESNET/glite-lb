@@ -288,7 +288,7 @@ edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
 			}
         	}
 		else if (!strncmp(requestPTR,KEY_QUERY_JOBS,sizeof(KEY_QUERY_JOBS)-1)) { 
-        	        edg_wlc_JobId *jobsOut = NULL;
+        	        glite_lbu_JobId *jobsOut = NULL;
 			edg_wll_JobStat *statesOut = NULL;
 			edg_wll_QueryRec **conditions = NULL;
 			int i,j, flags = 0;
@@ -349,7 +349,7 @@ edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
                 	}
 
 			if (jobsOut) {
-				for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
+				for (i=0; jobsOut[i]; i++) glite_lbu_JobIdFree(jobsOut[i]);
 				free(jobsOut);
 			}
 			if (statesOut) {
@@ -425,7 +425,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 	/* GET /: Current User Jobs */
 		if (requestPTR[0]=='/' && (requestPTR[1]==' ' || requestPTR[1]=='?')) {
-                	edg_wlc_JobId *jobsOut = NULL;
+                	glite_lbu_JobId *jobsOut = NULL;
 			int	i, flags;
 			
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
@@ -447,14 +447,14 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					ret = HTTP_INTERNAL;
 
 			if (jobsOut) {
-				for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
+				for (i=0; jobsOut[i]; i++) glite_lbu_JobIdFree(jobsOut[i]);
 				free(jobsOut);
 			}
 	        } 
 
 	/* GET /[jobId]: Job Status */
 		else if (*requestPTR=='/') {
-			edg_wlc_JobId jobId = NULL;
+			glite_lbu_JobId jobId = NULL;
 			char *pom1,*fullid = NULL;
 			edg_wll_JobStat stat;
 			char *pomCopy;
@@ -473,7 +473,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			asprintf(&fullid,GLITE_WMSC_JOBID_PROTO_PREFIX"%s:%u/%s",ctx->srvName,ctx->srvPort,pomCopy);
 			free(pomCopy);	
 
-			if (edg_wlc_JobIdParse(fullid, &jobId)) {
+			if (glite_lbu_JobIdParse(fullid, &jobId)) {
 				edg_wll_SetError(ctx,EDG_WLL_ERROR_JOBID_FORMAT,fullid);
 				ret = HTTP_BADREQ;
 			}
@@ -491,7 +491,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					ret = HTTP_INTERNAL;
 
 			free(fullid);
-			edg_wlc_JobIdFree(jobId);
+			glite_lbu_JobIdFree(jobId);
 			edg_wll_FreeStatus(&stat);
 
 	/* GET [something else]: not understood */
@@ -560,7 +560,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			}
         	}
 		else if (!strncmp(requestPTR,KEY_QUERY_JOBS,sizeof(KEY_QUERY_JOBS)-1)) { 
-        	        edg_wlc_JobId *jobsOut = NULL;
+        	        glite_lbu_JobId *jobsOut = NULL;
 			edg_wll_JobStat *statesOut = NULL;
 			edg_wll_QueryRec **conditions = NULL;
 			int i,j, flags = 0;
@@ -623,7 +623,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                 	}
 
 			if (jobsOut) {
-				for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
+				for (i=0; jobsOut[i]; i++) glite_lbu_JobIdFree(jobsOut[i]);
 				free(jobsOut);
 			}
 			if (statesOut) {
@@ -792,7 +792,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		else if (!strncmp(requestPTR,KEY_QUERY_SEQUENCE_CODE,sizeof(KEY_QUERY_SEQUENCE_CODE)-1)) {
 			char		*source = NULL;
 			char		*seqCode = NULL;
-			edg_wlc_JobId	jobId = NULL;
+			glite_lbu_JobId	jobId = NULL;
 			
 
 			if (parseQuerySequenceCodeRequest(ctx, messageBody, &jobId, &source))
@@ -821,7 +821,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 			if ( source ) free(source);
 			if ( seqCode ) free(seqCode);
-			edg_wlc_JobIdFree(jobId);
+			glite_lbu_JobIdFree(jobId);
 		}
 		else if (!strncmp(requestPTR,KEY_STATS_REQUEST,sizeof(KEY_STATS_REQUEST)-1)) {
 			char *function;

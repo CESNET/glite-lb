@@ -10,7 +10,7 @@
 #include "glite/lb/producer.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 #include "db_supp.h"
 #include "lb_authz.h"
@@ -43,7 +43,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 		"from notif_jobs j,users u,notif_registrations n "
 		"where j.notifid=n.notifid and n.userid=u.userid "
 		"   and (j.jobid = '%|Ss' or j.jobid = '%|Ss')",
-		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS);
+		ju = glite_lbu_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS);
 
 	free(ju);
 
@@ -62,7 +62,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 			int					port;
 
 			fprintf(stderr,"NOTIFY: %s, job %s\n",jobc[0],
-					ju = edg_wlc_JobIdGetUnique(stat->jobId));
+					ju = glite_lbu_JobIdGetUnique(stat->jobId));
 			free(ju);
 
 			dest = strdup(jobc[1]);

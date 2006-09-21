@@ -1,7 +1,7 @@
 #ident "$Header$"
 
 #include "glite/lb-utils/db.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 #include "glite/lb/context-int.h"
 
 #include "db_supp.h"

@@ -45,7 +45,7 @@ int main(int argc,char** argv)
 						**econds = NULL;
 	edg_wll_QueryRec			j[2], e[1];
 	int					opt, err, i;
-	edg_wlc_JobId				job;
+	glite_lbu_JobId				job;
 	char					*server = "http://localhost:9003/",
 						*jobid = NULL,
 						*name = NULL;
@@ -68,7 +68,7 @@ int main(int argc,char** argv)
 		usage(name);
 		return 1;
 	}
-	else if (edg_wlc_JobIdParse(jobid,&job)) {
+	else if (glite_lbu_JobIdParse(jobid,&job)) {
                 fprintf(stderr,"%s: can't parse job ID\n",argv[1]);
                 return 1;
         }
@@ -120,7 +120,7 @@ int main(int argc,char** argv)
 	}
 
 	for (i = 0; jconds[i]; i++) {
-		if (jconds[i]) edg_wlc_JobIdFree(jconds[i][0].value.j);
+		if (jconds[i]) glite_lbu_JobIdFree(jconds[i][0].value.j);
 		free(jconds[i]);
 	}
 	free(jconds);

@@ -6,8 +6,8 @@
 #include <stdio.h>
 
 #include "glite/lb-utils/db.h"
-#include "glite/wmsutils/jobid/strmd5.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/strmd5.h"
+#include "glite/lb-utils/trio.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/notification.h"
@@ -427,7 +427,7 @@ static char *get_user(edg_wll_Context ctx, int create)
 		goto cleanup;
 	}
 
-	if ( !(userid = strdup(strmd5(ctx->peerName, NULL))) )
+	if ( !(userid = str2md5(ctx->peerName)) )
 	{
 		edg_wll_SetError(ctx, errno, "Creating user ID");
 		goto cleanup;
@@ -554,7 +554,7 @@ static int split_cond_list(
 	if ( jobs ) for ( jobs_ct = i = 0; conditions[i]; i++ )
 		for ( j = 0; conditions[i][j].attr; j++ )
 			if ( conditions[i][j].attr == EDG_WLL_QUERY_ATTR_JOBID )
-				if ( !(jobs[jobs_ct++] = edg_wlc_JobIdGetUnique(conditions[i][j].value.j)) )
+				if ( !(jobs[jobs_ct++] = glite_lbu_JobIdGetUnique(conditions[i][j].value.j)) )
 				{
 					edg_wll_SetError(ctx, errno, NULL);
 					goto cleanup;

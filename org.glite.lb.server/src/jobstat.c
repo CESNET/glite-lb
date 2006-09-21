@@ -13,7 +13,7 @@
 #include "glite/lb-utils/db.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 #include "db_supp.h"
 #include "get_events.h"
@@ -69,7 +69,7 @@ static char* matched_substr(char *in, regmatch_t match)
 
 int edg_wll_JobStatus(
 	edg_wll_Context	ctx,
-	const edg_wlc_JobId		job,
+	const glite_lbu_JobId		job,
 	int		flags,
 	edg_wll_JobStat	*stat)
 {
@@ -89,10 +89,10 @@ int edg_wll_JobStatus(
 
 	edg_wll_ResetError(ctx);
 
-	string_jobid = edg_wlc_JobIdUnparse(job);
+	string_jobid = glite_lbu_JobIdUnparse(job);
 	if (string_jobid == NULL || stat == NULL)
 		return edg_wll_SetError(ctx,EINVAL, NULL);
-	md5_jobid = edg_wlc_JobIdGetUnique(job);
+	md5_jobid = glite_lbu_JobIdGetUnique(job);
 
 	if ( !(jobstat.pub.owner = job_owner(ctx,md5_jobid)) ) {
 		free(md5_jobid);
@@ -252,7 +252,7 @@ dag_enomem:
 
 int edg_wll_intJobStatus(
 	edg_wll_Context	ctx,
-	const edg_wlc_JobId	job,
+	const glite_lbu_JobId	job,
 	int			flags,
 	intJobStat	*intstat,
 	int		update_db)
@@ -277,13 +277,13 @@ int edg_wll_intJobStatus(
 	edg_wll_ResetError(ctx);
 	init_intJobStat(intstat);
 
-	string_jobid = edg_wlc_JobIdUnparse(job);
+	string_jobid = glite_lbu_JobIdUnparse(job);
 	if (string_jobid == NULL || intstat == NULL)
 		return edg_wll_SetError(ctx,EINVAL, NULL);
 
 	/* can be already filled by public edg_wll_JobStat() */
 	if (intstat->pub.owner == NULL) {
-		md5_jobid = edg_wlc_JobIdGetUnique(job);
+		md5_jobid = glite_lbu_JobIdGetUnique(job);
 		if ( !(intstat->pub.owner = job_owner(ctx,md5_jobid)) ) {
 			free(md5_jobid);
 			free(string_jobid);
@@ -339,7 +339,7 @@ int edg_wll_intJobStatus(
 		return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, NULL);
 	} else {
 		/* XXX intstat->pub.expectUpdate = eval_expect_update(intstat, &intstat->pub.expectFrom); */
-		intErr = edg_wlc_JobIdDup(job, &intstat->pub.jobId);
+		intErr = glite_lbu_JobIdDup(job, &intstat->pub.jobId);
 		if (!intErr) {
 			if (update_db) {
 				int tsq = num_events - 1;
@@ -477,7 +477,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 	char *icnames, *icvalues;
 
 	update = (seq > 0);
-	jobid_md5 = edg_wlc_JobIdGetUnique(stat->pub.jobId);
+	jobid_md5 = glite_lbu_JobIdGetUnique(stat->pub.jobId);
 	stat_enc = enc_intJobStat(strdup(""), stat);
 
 	tagp = stat->pub.user_tags;
@@ -501,7 +501,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 		}
 	}
 
-	parent_md5 = edg_wlc_JobIdGetUnique(stat->pub.parent_job);
+	parent_md5 = glite_lbu_JobIdGetUnique(stat->pub.parent_job);
 	if (parent_md5 == NULL) parent_md5 = strdup("*no parent job*");
 
 
@@ -558,7 +558,7 @@ cleanup:
 
 
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
-        edg_wlc_JobId jobid,
+        glite_lbu_JobId jobid,
         char *icnames, 
 	char *values,
 	glite_lbu_bufInsert bi)
@@ -597,7 +597,7 @@ cleanup:
  */
 
 edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
-				    edg_wlc_JobId jobid,
+				    glite_lbu_JobId jobid,
 				    int seq,
 				    intJobStat **stat)
 {
@@ -608,7 +608,7 @@ edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
 	int nstates;
 
 	edg_wll_ResetError(ctx);
-	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
+	jobid_md5 = glite_lbu_JobIdGetUnique(jobid);
 
 	if (seq == -1) {
 		/* any sequence number */
@@ -656,7 +656,7 @@ cleanup:
  */
 
 edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
-					edg_wlc_JobId job,
+					glite_lbu_JobId job,
 					edg_wll_Event *e,
 					int seq,
 					edg_wll_JobStat	*stat_out)

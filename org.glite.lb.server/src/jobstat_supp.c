@@ -11,10 +11,10 @@
 #include <syslog.h>
 
 #include "glite/lb-utils/db.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 #include "store.h"
 #include "index.h"
@@ -97,24 +97,24 @@ static int dec_int(char* in, char **rest)
 	return out;
 }
 
-static char* enc_jobid(char *old, edg_wlc_JobId item)
+static char* enc_jobid(char *old, glite_lbu_JobId item)
 {
 	char *str;
 	char *out;
 
-	str = edg_wlc_JobIdUnparse(item);
+	str = glite_lbu_JobIdUnparse(item);
 	out = enc_string(old, str);
 	free(str);
 	return out;
 }
-static edg_wlc_JobId dec_jobid(char *in, char **rest)
+static glite_lbu_JobId dec_jobid(char *in, char **rest)
 {
 	char *str;
-	edg_wlc_JobId jobid;
+	glite_lbu_JobId jobid;
 	
 	str = dec_string(in, rest);
 	if (str == NULL) return NULL;
-	edg_wlc_JobIdParse(str, &jobid);
+	glite_lbu_JobIdParse(str, &jobid);
 	free(str);
 	return jobid;
 }

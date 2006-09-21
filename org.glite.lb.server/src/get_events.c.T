@@ -18,9 +18,9 @@
 #include <syslog.h>
 
 #include "glite/lb-utils/db.h"
+#include "glite/lb-utils/trio.h"
 #include "get_events.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
 #include "glite/lb/events_parse.h"
 #include "db_supp.h"
 
@@ -29,7 +29,7 @@ static void edg_wll_set_event_field_warn(edg_wll_Event *,char *,char *);
 
 int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 {
-	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId),
+	char	*jobid = glite_lbu_JobIdGetUnique(e->any.jobId),
 		*q = NULL,*nameval[2];
 	glite_lbu_Statement	sh;
 	int	ret,t;

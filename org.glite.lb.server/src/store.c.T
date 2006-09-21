@@ -19,14 +19,14 @@
 
 #include <globus_config.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/lb-utils/strmd5.h"
 
 #include "glite/lb-utils/db.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/log_proto.h"	/* for EDG_WLL_LOG_USER_DEFAULT */
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 #include "db_supp.h"
 #include "store.h"
@@ -36,14 +36,19 @@
 #include "jobstat.h"
 
 static int store_user(edg_wll_Context,const char *,const char *); 
-static int store_job(edg_wll_Context,const edg_wlc_JobId,const char *);
-static int store_job_block(edg_wll_Context, const edg_wlc_JobId, const char *, glite_lbu_bufInsert);
+static int store_job(edg_wll_Context,const glite_lbu_JobId,const char *);
+#ifdef LB_BUF
+static int store_job_block(edg_wll_Context, const glite_lbu_JobId, const char *, glite_lbu_bufInsert);
+#endif
 static int store_flesh(edg_wll_Context,edg_wll_Event *,char *,int);
 static int store_seq(edg_wll_Context,edg_wll_Event *,int);
 static int check_dup(edg_wll_Context,edg_wll_Event *);
 static int check_auth(edg_wll_Context,edg_wll_Event *e); 
-static int register_subjobs(edg_wll_Context,const edg_wll_RegJobEvent *);
+#ifdef LB_DAG_EMBRIONIC
 static int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *);
+#else
+static int register_subjobs(edg_wll_Context,const edg_wll_RegJobEvent *);
+#endif
 
 void edg_wll_StoreAnonymous(edg_wll_Context ctx,int anon) {
 	ctx->allowAnonymous = anon;
@@ -81,12 +86,12 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	}
 	if ((err = check_dup(ctx,e))) goto clean;
 
-	userid = strdup(strmd5(e->any.user,NULL));
+	userid = str2md5(e->any.user);
 
 /* make sure user record is there */
 	if ((err = store_user(ctx,userid,e->any.user))) goto clean;
 
-	jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
+	jobid = glite_lbu_JobIdGetUnique(e->any.jobId);
 
 /* only REGJOB events determine job owner now */
 	if (   (e->type == EDG_WLL_EVENT_REGJOB || lbproxy_notreg)
@@ -239,10 +244,10 @@ static int store_user(edg_wll_Context ctx,const char *userid,const char *subj)
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *userid)
+static int store_job(edg_wll_Context ctx,const glite_lbu_JobId job,const char *userid)
 {
-	char *jobstr = edg_wlc_JobIdUnparse(job);
-	char *jobid = edg_wlc_JobIdGetUnique(job);
+	char *jobstr = glite_lbu_JobIdUnparse(job);
+	char *jobid = glite_lbu_JobIdGetUnique(job);
 	char *stmt;
 
 /* debug Duplicate key on index: Duplicate entry '(nil)' for key 1
@@ -264,10 +269,11 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const char *userid, glite_lbu_bufInsert bi)
+#ifdef LB_BUF
+static int store_job_block(edg_wll_Context ctx,const glite_lbu_JobId job,const char *userid, glite_lbu_bufInsert bi)
 {
-	char *jobstr = edg_wlc_JobIdUnparse(job);
-	char *jobid = edg_wlc_JobIdGetUnique(job);
+	char *jobstr = glite_lbu_JobIdUnparse(job);
+	char *jobid = glite_lbu_JobIdGetUnique(job);
 	char *row;
 
 /* debug Duplicate key on index: Duplicate entry '(nil)' for key 1
@@ -285,6 +291,7 @@ static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const cha
 	free(jobid);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
+#endif
 
 /*
  * XXX: store it in SHORT_FIELDS for now despite it should go to dedicated
@@ -297,7 +304,7 @@ static int store_seq(edg_wll_Context ctx,edg_wll_Event *e,int no)
 {
 	int	ret;
 	char	*stmt;
-	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
+	char	*jobid = glite_lbu_JobIdGetUnique(e->any.jobId);
 
 	edg_wll_ResetError(ctx);
 	trio_asprintf(&stmt,"insert into short_fields(jobid,event,name,value) "
@@ -457,7 +464,7 @@ static int check_dup(edg_wll_Context ctx,edg_wll_Event *e)
 
 static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 {
-	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
+	char	*jobid = glite_lbu_JobIdGetUnique(e->any.jobId);
 	char	*q = NULL,*owner = NULL;
 	glite_lbu_Statement	stmt = NULL;
 	char	*user;
@@ -493,8 +500,9 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 		case EDG_WLL_SOURCE_USER_INTERFACE:
 		case EDG_WLL_SOURCE_LRMS:
 		case EDG_WLL_SOURCE_APPLICATION:
-			user = strmd5(e->any.user,NULL);
+			user = str2md5(e->any.user);
 			if (strcmp(owner,user)) edg_wll_SetError(ctx,EPERM,"check_auth()");
+			free(user);
 			break;
 		default:
 			/* XXX: just don't allow anonymous */
@@ -511,10 +519,11 @@ clean:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+#ifndef LB_DAG_EMBRIONIC
 static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 {
 	int	i,err;
-	edg_wlc_JobId	*subjobs;
+	glite_lbu_JobId	*subjobs;
 	struct timeval	now;
 
 	edg_wll_ResetError(ctx);
@@ -548,7 +557,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 		e2.any.src_instance = strdup(ctx->isProxy ? 
 			"L&B proxy" : "L&B server");
 		e2.regJob.ns = strdup(e->ns);
-		edg_wlc_JobIdDup(e->jobId,&e2.regJob.parent);
+		glite_lbu_JobIdDup(e->jobId,&e2.regJob.parent);
 		e2.regJob.jobtype = EDG_WLL_REGJOB_SIMPLE;
 		e2.regJob.jdl = strdup("");
 
@@ -559,7 +568,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 
 			default: 
 				edg_wll_Error(ctx,&et,&ed);
-				job_s = edg_wlc_JobIdUnparse(e2.any.jobId);
+				job_s = glite_lbu_JobIdUnparse(e2.any.jobId);
 				fprintf(stderr,"register subjob %s: %s (%s)\n",job_s,et,ed);
 				syslog(LOG_ERR,"register subjob %s: %s (%s)",job_s,et,ed);
 				free(job_s); free(et); free(ed);
@@ -569,7 +578,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 		}
 
 		if (edg_wll_LockJob(ctx,e2.any.jobId)) {
-			job_s = edg_wlc_JobIdUnparse(e2.any.jobId);
+			job_s = glite_lbu_JobIdUnparse(e2.any.jobId);
 			fprintf(stderr,"lock job %s: %s (%s)\n",job_s,et,ed);
 			syslog(LOG_ERR,"lock job %s: %s (%s)",job_s,et,ed);
 			free(job_s); free(et); free(ed);
@@ -585,7 +594,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 		edg_wll_ResetError(ctx);
 
 		if (err) {
-			job_s = edg_wlc_JobIdUnparse(e2.any.jobId);
+			job_s = glite_lbu_JobIdUnparse(e2.any.jobId);
 			fprintf(stderr,"%s: %s (%s)\n",job_s,et,ed);
 			syslog(LOG_ERR,"%s: %s (%s)",job_s,et,ed);
 			free(job_s); free(et); free(ed);
@@ -598,6 +607,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 	free(subjobs);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
+#endif
 
 
 /*
@@ -606,7 +616,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 
 static edg_wll_ErrorCode states_values_embryonic(
 	edg_wll_Context ctx,
-	edg_wlc_JobId jobid,
+	glite_lbu_JobId jobid,
 	const edg_wll_RegJobEvent *e,
 	char **icnames,
 	char **values)
@@ -618,14 +628,14 @@ static edg_wll_ErrorCode states_values_embryonic(
 	intJobStat *stat = &stat_rec;
 
 	init_intJobStat(stat);
-	if (edg_wlc_JobIdDup(jobid, &stat->pub.jobId) ||
-		edg_wlc_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
+	if (glite_lbu_JobIdDup(jobid, &stat->pub.jobId) ||
+		glite_lbu_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
 	stat->pub.state = EDG_WLL_JOB_SUBMITTED;
 	stat->pub.owner = strdup(e->user);
 	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
 
-	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
-	parent_md5 = edg_wlc_JobIdGetUnique(e->jobId);
+	jobid_md5 = glite_lbu_JobIdGetUnique(jobid);
+	parent_md5 = glite_lbu_JobIdGetUnique(e->jobId);
 	stat_enc = enc_intJobStat(strdup(""), stat);
 	if (jobid_md5 == NULL || parent_md5 == NULL || stat_enc == NULL) goto err;
 
@@ -649,9 +659,9 @@ err:
 static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 {
 	int			i, err = 0;
-	edg_wlc_JobId		*subjobs;
+	glite_lbu_JobId		*subjobs;
 	struct timeval		now;
-	char			*userid = strdup(strmd5(e->user,NULL));
+	char			*userid = str2md5(e->user);
 	char			*jobid_md5, *jobid_md5_old;
 	size_t			jobid_len;
 	char			*icnames, *values;
@@ -671,7 +681,7 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 	/* find out icnames and values once, then only change jobids */ 
 	if (states_values_embryonic(ctx, subjobs[0], e, &icnames, &values))
 		edg_wll_Error(ctx, NULL, NULL);
-	jobid_md5_old = edg_wlc_JobIdGetUnique(subjobs[0]);
+	jobid_md5_old = glite_lbu_JobIdGetUnique(subjobs[0]);
 	jobid_len = strlen(jobid_md5_old);
 		
 
@@ -711,7 +721,7 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 
 		/* interchange variable parts (jobids) in values */
 		/* there are only two occurences of subjob jobid */
-		jobid_md5 = edg_wlc_JobIdGetUnique(subjobs[i]);
+		jobid_md5 = glite_lbu_JobIdGetUnique(subjobs[i]);
 		if (i) {
 			p = strstr(values, jobid_md5_old);		
 			assert(p);
@@ -727,18 +737,18 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, subjobs[i], icnames, values, bi_states)))
 			edg_wll_Error(ctx,&et,&ed);
 
-//job_s = edg_wlc_JobIdUnparse(subjobs[i]);
+//job_s = glite_lbu_JobIdUnparse(subjobs[i]);
 //printf("%s\n", job_s);
 //free(job_s);
 
 		if (err) {
-			job_s = edg_wlc_JobIdUnparse(subjobs[i]);
+			job_s = glite_lbu_JobIdUnparse(subjobs[i]);
 			fprintf(stderr,"%s: %s (%s)\n",job_s,et,ed);
 			syslog(LOG_ERR,"%s: %s (%s)",job_s,et,ed);
 			free(job_s); free(et); free(ed);
 			edg_wll_ResetError(ctx);
 		}
-		edg_wlc_JobIdFree(subjobs[i]);
+		glite_lbu_JobIdFree(subjobs[i]);
 	}
 
 	free(jobid_md5_old);	//free the last one

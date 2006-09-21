@@ -140,7 +140,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 	if ( ctx->jpreg_dir && ev->any.type == EDG_WLL_EVENT_REGJOB ) {
 		char *jids, *msg;
 		
-		if ( !(jids = edg_wlc_JobIdUnparse(ev->any.jobId)) ) {
+		if ( !(jids = glite_lbu_JobIdUnparse(ev->any.jobId)) ) {
 			edg_wll_SetError(ctx, errno, "Can't unparse jobid when registering to JP");
 			goto err;
 		}

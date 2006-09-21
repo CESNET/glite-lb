@@ -15,7 +15,7 @@ char *lbproxy_ilog_file_prefix = FILE_PREFIX;
 int
 edg_wll_EventSendProxy(
 	edg_wll_Context			ctx,
-	const edg_wlc_JobId		jobid,
+	const glite_lbu_JobId		jobid,
 	const char			   *event)
 {
 	long			filepos;
@@ -27,9 +27,9 @@ edg_wll_EventSendProxy(
 
 	edg_wll_ResetError(ctx);
 
-	jobid_s = edg_wlc_JobIdGetUnique(jobid);
+	jobid_s = glite_lbu_JobIdGetUnique(jobid);
 	if ( !jobid_s ) {
-		edg_wll_SetError(ctx, ENOMEM, "edg_wlc_JobIdGetUnique()");
+		edg_wll_SetError(ctx, ENOMEM, "glite_lbu_JobIdGetUnique()");
 		_err(1);
 	}
 

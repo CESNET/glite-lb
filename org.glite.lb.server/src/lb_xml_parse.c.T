@@ -6,12 +6,12 @@
 #include <ctype.h>
 #include <expat.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 
+#include "glite/lb-utils/escape.h"
+#include "glite/lb-utils/trio.h"
 #include "glite/lb/consumer.h"
-#include "glite/lb/escape.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
 #include "glite/lb/xml_conversions.h"
 
 #include "glite/lb/purge.h"
@@ -453,7 +453,7 @@ static void char_handler(void *data, const char *s, int len)
 	/* otherwise use them */
 	memcpy(temp_s,s,len);
 	temp_s[len] = 0;	
-	temp_s1 = edg_wll_UnescapeXML((const char *) temp_s);
+	temp_s1 = glite_lbu_UnescapeXML((const char *) temp_s);
 	temp_len1 = strlen(temp_s1);
 
         if (XMLCtx->char_buf_len) XMLCtx->char_buf =
@@ -1389,7 +1389,7 @@ int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 
 
 /* parse Sequence Code request from client */
-int parseQuerySequenceCodeRequest(edg_wll_Context ctx, char *messageBody, edg_wlc_JobId *jobId, char **source)
+int parseQuerySequenceCodeRequest(edg_wll_Context ctx, char *messageBody, glite_lbu_JobId *jobId, char **source)
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -1422,7 +1422,7 @@ int parseQuerySequenceCodeRequest(edg_wll_Context ctx, char *messageBody, edg_wl
 
 	if ((ret = edg_wll_Error(ctx,NULL,NULL))) {
 		if (XMLCtx.jobId)
-			 edg_wlc_JobIdFree(XMLCtx.jobId);
+			 glite_lbu_JobIdFree(XMLCtx.jobId);
 
 		*jobId = NULL;
 		*source = NULL;
@@ -1541,7 +1541,7 @@ int edg_wll_QueryEventsToXML(edg_wll_Context ctx, edg_wll_Event *eventsOut, char
         return 0;
 }
 
-int edg_wll_QueryJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wll_JobStat *statesIn, char **message) 
+int edg_wll_QueryJobsToXML(edg_wll_Context ctx, glite_lbu_JobId *jobsIn, edg_wll_JobStat *statesIn, char **message) 
 {
         char *pomA, *pomB, *pomC;
         char **list = NULL;
@@ -1558,7 +1558,7 @@ int edg_wll_QueryJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wll_J
 		
 		if (jobsIn) {
 			trio_asprintf(&pomA,"%s\t\t<jobId>%|Xs</jobId>\r\n",
-        	                pomB, pomC=edg_wlc_JobIdUnparse(jobsIn[i]));
+        	                pomB, pomC=glite_lbu_JobIdUnparse(jobsIn[i]));
 			free(pomC);
 			free(pomB);
 			pomB = pomA;
@@ -1633,7 +1633,7 @@ int edg_wll_QueryJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wll_J
 }
 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
+int edg_wll_UserJobsToXML(edg_wll_Context ctx, glite_lbu_JobId *jobsOut, char **message)
 {
         char *pomA, *pomB;
         char **list = NULL;
@@ -1643,7 +1643,7 @@ int edg_wll_UserJobsToXML(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **me
 
         while (jobsOut[i]) {
 		len = trio_asprintf(&pomA,"      <jobId>%|Xs</jobId>\r\n",
-			pomB=edg_wlc_JobIdUnparse(jobsOut[i]));
+			pomB=glite_lbu_JobIdUnparse(jobsOut[i]));
 
                 free(pomB);
 

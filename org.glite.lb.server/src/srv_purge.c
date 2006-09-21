@@ -10,10 +10,10 @@
 #include <time.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 
 #include "glite/lb-utils/db.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/mini_http.h"
@@ -45,7 +45,7 @@ static const char* const resp_headers[] = {
 	NULL
 };
 
-static int purge_one(edg_wll_Context ctx,const edg_wlc_JobId,int,int);
+static int purge_one(edg_wll_Context ctx,const glite_lbu_JobId,int,int);
 
 int edg_wll_CreateTmpFileStorage(edg_wll_Context ctx, char *prefix, char **fname)
 {
@@ -184,7 +184,7 @@ int edg_wll_CreateFileStorage(edg_wll_Context ctx, char *file_type, char *prefix
 	return retfd;
 }
 
-int edg_wll_PurgeServerProxy(edg_wll_Context ctx, edg_wlc_JobId job)
+int edg_wll_PurgeServerProxy(edg_wll_Context ctx, glite_lbu_JobId job)
 {
 	switch ( purge_one(ctx, job, -1, 1) ) {
 	case 0:
@@ -200,7 +200,7 @@ int edg_wll_PurgeServerProxy(edg_wll_Context ctx, edg_wlc_JobId job)
 int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 {
 	int	i,parse = 0,dumpfile = -1;
-	edg_wlc_JobId	job;
+	glite_lbu_JobId	job;
 	char	*message = NULL, *response = NULL;
 	char	*tmpfname;
 	int	naffected_jobs = 0;
@@ -236,7 +236,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 	}
 
 	if (request->jobs) for (i=0; request->jobs[i]; i++) {
-		if (edg_wlc_JobIdParse(request->jobs[i],&job)) {
+		if (glite_lbu_JobIdParse(request->jobs[i],&job)) {
 			fprintf(stderr,"%s: parse error\n",request->jobs[i]);
 			parse = 1;
 		}
@@ -261,7 +261,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 				}
 
 			}
-			edg_wlc_JobIdFree(job);
+			glite_lbu_JobIdFree(job);
 		}
 	}
 	else {
@@ -279,7 +279,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 			goto abort;
 		}
 		while ((res = glite_lbu_FetchRow(s,1,NULL,&job_s)) > 0) {
-			if (edg_wlc_JobIdParse(job_s,&job)) {
+			if (glite_lbu_JobIdParse(job_s,&job)) {
 				fprintf(stderr,"%s: parse error (internal inconsistency !)\n",job_s);
 				parse = 1;
 			}
@@ -287,7 +287,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 				edg_wll_JobStat	stat;
 
 				if (check_strict_jobid(ctx,job)) {
-					edg_wlc_JobIdFree(job);
+					glite_lbu_JobIdFree(job);
 					free(job_s);
 					parse = 1;
 					continue;
@@ -321,7 +321,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 					naffected_jobs++;
 				}
 
-				edg_wlc_JobIdFree(job);
+				glite_lbu_JobIdFree(job);
 				edg_wll_FreeStatus(&stat);
 				free(job_s);
 			}
@@ -387,12 +387,12 @@ abort:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static void unlock_and_check(edg_wll_Context ctx,edg_wlc_JobId job)
+static void unlock_and_check(edg_wll_Context ctx,glite_lbu_JobId job)
 {
 	char	*job_s,*et,*ed;
 
 	if (edg_wll_UnlockJob(ctx,job)) {
-		job_s = edg_wlc_JobIdUnparse(job);
+		job_s = glite_lbu_JobIdUnparse(job);
 
 		edg_wll_Error(ctx,&et,&ed);
 		fprintf(stderr,"%s: edg_wll_UnlockJob(): %s (%s) -- expect bogus things\n",
@@ -404,7 +404,7 @@ static void unlock_and_check(edg_wll_Context ctx,edg_wlc_JobId job)
 }
 
 
-int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
+int purge_one(edg_wll_Context ctx,const glite_lbu_JobId job,int dump, int purge)
 {
 	char	*dbjob;
 	char	*stmt = NULL;
@@ -414,7 +414,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 	edg_wll_ResetError(ctx);
 	if ( !purge && dump < 0 ) return 0;
 
-	dbjob = edg_wlc_JobIdGetUnique(job);	/* XXX: strict jobid already checked */
+	dbjob = glite_lbu_JobIdGetUnique(job);	/* XXX: strict jobid already checked */
 	if (edg_wll_LockJob(ctx,job)) goto clean;
 
 	if ( purge )
@@ -485,7 +485,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 				edg_wll_Event	e;
 
 				assert(ret == 9);
-				res[0] = edg_wlc_JobIdUnparse(job);
+				res[0] = glite_lbu_JobIdUnparse(job);
 				if (convert_event_head(ctx,res,&e) || edg_wll_get_event_flesh(ctx,event,&e))
 				{
 					char	*et,*ed;
