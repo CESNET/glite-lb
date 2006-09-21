@@ -26,6 +26,7 @@ version=${module.version}
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 GENSAM=${top_srcdir}/examples/gen_sample_job
+CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=0 perl ${top_srcdir}/project/check_version.pl
 
 SUFFIXES = .T .l
 
@@ -304,13 +305,6 @@ endif
 clean:
 
 check_version:
-	@perl -ne '/#define GLITE_LB_CLIENT_INTERFACE "(\d+)\.\d+\.\d+"/; \
-		$$iface=$$1; \
-		$$_="${version}"; /(\d+)\.\d+\.\d+/; \
-		if ($$iface != $$1) { \
-			print "error: Major version of the interface ($$iface) does not match implementation ($$1)\n" ;\
-			exit 1;  \
-		} \
-		' ${stagedir}/include/glite/lb/interface_version.h
+	${CHECK_VERSION} ${stagedir}/include/glite/lb/interface_version.h
 
 .PHONY: default all compile examples fake check stage dist distsrc distbin install clean check_version
