@@ -10,8 +10,8 @@
 #include <syslog.h>
 #include <fcntl.h>
 
+#include "glite/lb-utils/escape.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/escape.h"
 #include "glite/lb/events_parse.h"
 
 #include "logd_proto.h"
@@ -256,7 +256,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	int	err;
 	edg_wll_Context	context;
 	edg_wll_Event	*event;
-	edg_wlc_JobId	j;
+	glite_lbu_JobId	j;
 	edg_wll_GssStatus	gss_stat;
                 
 	errno = i = answer = answer_sent = size = msg_size = dglllid_size = dguser_size = count = count_total = msg_sock = filedesc = filelock_status = /* priority */ unique = err = 0;     
@@ -374,7 +374,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	dglllid_size = strlen(dglllid);
 
 	/* format the DG.USER string */
-	name_esc = edg_wll_LogEscape(name);
+	name_esc = glite_lbu_EscapeULM(name);
 	if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
 		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): nomem for DG.USER\n");
 		SYSTEM_ERROR("asprintf");
@@ -422,7 +422,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 			edg_wll_ll_log(LOG_INFO,"o.k.\n");
 		}
 		edg_wll_ll_log(LOG_DEBUG,"Getting jobId from message...");
-		jobId = edg_wlc_JobIdGetUnique(event->any.jobId);
+		jobId = glite_lbu_JobIdGetUnique(event->any.jobId);
 		priority = event->any.priority;
 		edg_wll_FreeEvent(event);
 		event->any.priority = priority;
@@ -435,7 +435,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 		}
 		edg_wll_ll_log(LOG_DEBUG,"Getting jobId from message...");
 		jobId = edg_wll_GetJobId(msg);
-		if (!jobId || edg_wlc_JobIdParse(jobId,&j)) {
+		if (!jobId || glite_lbu_JobIdParse(jobId,&j)) {
 			edg_wll_ll_log(LOG_DEBUG,"error.\n");
 			edg_wll_ll_log(LOG_ERR,"ParseJobId(%s)\n",jobId?jobId:"NULL");
 			answer = EINVAL;
@@ -444,8 +444,8 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 			edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 		}
 		free(jobId);
-		jobId = edg_wlc_JobIdGetUnique(j);
-		edg_wlc_JobIdFree(j);
+		jobId = glite_lbu_JobIdGetUnique(j);
+		glite_lbu_JobIdFree(j);
 
 /* FIXME: get the priority from message some better way */
 		if (strstr(msg, "DG.PRIORITY=1") != NULL)

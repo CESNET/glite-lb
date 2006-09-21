@@ -112,7 +112,7 @@ queue_list_remove(struct queue_list *el, struct queue_list *prev)
 #if !defined(IL_NOTIFICATIONS)
 static
 char *
-jobid2dest(edg_wlc_JobId jobid)
+jobid2dest(glite_lbu_JobId jobid)
 {
   char *server_name,*out;
   unsigned int	server_port;
@@ -121,7 +121,7 @@ jobid2dest(edg_wlc_JobId jobid)
     set_error(IL_PROTO, EDG_WLL_ERROR_PARSE_BROKEN_ULM, "jobid2dest: invalid job id");
     return(NULL);
   }
-  edg_wlc_JobIdGetServerParts(jobid,&server_name,&server_port);
+  glite_lbu_JobIdGetServerParts(jobid,&server_name,&server_port);
 
   asprintf(&out,"%s:%d",server_name,server_port);
   free(server_name);
@@ -143,13 +143,13 @@ queue_list_get(char *job_id_s)
   if(job_id_s == NULL || strcmp(job_id_s, "default") == 0)
     return(log_queue);
 
-  if(edg_wlc_JobIdParse(job_id_s, &job_id)) {
+  if(glite_lbu_JobIdParse(job_id_s, &job_id)) {
     set_error(IL_LBAPI, EDG_WLL_ERROR_PARSE_BROKEN_ULM, "queue_list_get: invalid job id");
     return(NULL);
   }
 
   dest = jobid2dest(job_id);
-  edg_wlc_JobIdFree(job_id);
+  glite_lbu_JobIdFree(job_id);
 #else
   dest = job_id_s;
 #endif

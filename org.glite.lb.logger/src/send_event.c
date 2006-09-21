@@ -15,7 +15,6 @@
  *   - L/B server protocol handling routines 
  */
 
-#include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/il_string.h"
 #include "glite/lb/context.h"
 

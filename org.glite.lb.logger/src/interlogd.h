@@ -48,10 +48,10 @@
 #define INTERLOGD_HANDLE_CMD
 #define INTERLOGD_FLUSH
 #define INTERLOGD_EMS
-#define IL_EVENT_ID_T          edg_wlc_JobId
-#define IL_EVENT_GET_UNIQUE(a) edg_wlc_JobIdGetUnique((a))
-#define IL_EVENT_ID_FREE(a)    edg_wlc_JobIdFree((a))
-#define IL_EVENT_ID_PARSE(a,b) edg_wlc_JobIdParse((a),(b))
+#define IL_EVENT_ID_T          glite_lbu_JobId
+#define IL_EVENT_GET_UNIQUE(a) glite_lbu_JobIdGetUnique((a))
+#define IL_EVENT_ID_FREE(a)    glite_lbu_JobIdFree((a))
+#define IL_EVENT_ID_PARSE(a,b) glite_lbu_JobIdParse((a),(b))
 
 #endif
 
