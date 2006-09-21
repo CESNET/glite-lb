@@ -12,7 +12,7 @@
 
 int use_proxy = 0;
 
-int (*user_jobs)(edg_wll_Context, edg_wlc_JobId **, edg_wll_JobStat **);
+int (*user_jobs)(edg_wll_Context, glite_lbu_JobId **, edg_wll_JobStat **);
 
 
 void
@@ -25,7 +25,7 @@ int main(int argc,char **argv)
 {
 	edg_wll_Context	ctx;
 	char		*errt,*errd;
-	edg_wlc_JobId		*jobs = NULL;
+	glite_lbu_JobId		*jobs = NULL;
 	edg_wll_JobStat		*states = NULL;
 	int		i,j;
 	char 		*owner = NULL;
@@ -50,7 +50,7 @@ int main(int argc,char **argv)
 
 	if (user_jobs(ctx,&jobs,&states)) goto err;
  	for (i=0; states[i].state != EDG_WLL_JOB_UNDEF; i++) {	
-		char *id = edg_wlc_JobIdUnparse(states[i].jobId),
+		char *id = glite_lbu_JobIdUnparse(states[i].jobId),
 		     *st = edg_wll_StatToString(states[i].state);
 		
 		if (!states[i].parent_job) {
@@ -61,10 +61,10 @@ int main(int argc,char **argv)
 				printf("DAG   %s .... %s %s\n", id, st, (states[i].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[i].done_code) : "");
 				for (j=0; states[j].state != EDG_WLL_JOB_UNDEF; j++) {
 					if (states[j].parent_job) {
-						char *par_id = edg_wlc_JobIdUnparse(states[j].parent_job);
+						char *par_id = glite_lbu_JobIdUnparse(states[j].parent_job);
 						
 						if (!strcmp(id,par_id)) {
-							char *sub_id = edg_wlc_JobIdUnparse(states[j].jobId),
+							char *sub_id = glite_lbu_JobIdUnparse(states[j].jobId),
 							     *sub_st = edg_wll_StatToString(states[j].state);
 							
 							printf(" `-       %s .... %s %s\n", sub_id, sub_st, (states[j].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[j].done_code) : "");
@@ -86,7 +86,7 @@ int main(int argc,char **argv)
 err:
 	free(owner);
 	if  (jobs) {
-		for (i=0; jobs[i]; i++)  edg_wlc_JobIdFree(jobs[i]);	
+		for (i=0; jobs[i]; i++)  glite_lbu_JobIdFree(jobs[i]);	
 		free(jobs);
 	}
 

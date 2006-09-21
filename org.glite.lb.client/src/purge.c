@@ -300,7 +300,7 @@ static int read_jobIds(const char *file, char ***jobs_out)
 		}
                 nl = strchr(buf,'\n');
                 if (nl) *nl = 0;
-		/* TODO: check if it is really jobId, e.g. by edg_wlc_JobIdParse() */
+		/* TODO: check if it is really jobId, e.g. by glite_lbu_JobIdParse() */
 
 		if ( !(jobs = realloc(jobs, (cnt+2)*sizeof(*jobs))) )
 		{

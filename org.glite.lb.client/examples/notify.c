@@ -91,10 +91,10 @@ int main(int argc,char **argv)
 	}
 	else if ( !strcmp(argv[1], "test") ) {
 		edg_wll_NotifId		nid = NULL;
-		edg_wlc_JobId		jid = NULL;
+		glite_lbu_JobId		jid = NULL;
 		edg_wll_JobStat		stat;
 
-		if ( (argc < 3) || edg_wlc_JobIdParse(argv[2], &jid) ) {
+		if ( (argc < 3) || glite_lbu_JobIdParse(argv[2], &jid) ) {
 			printf("Job ID parameter not set propperly!\n");
 			usage("new");
 			goto cleanup;
@@ -132,7 +132,7 @@ int main(int argc,char **argv)
 			
 			printf("Notification received:\n");
 			printf("  - notification ID: %s\n", edg_wll_NotifIdUnparse(recv_nid));
-			printf("  - job ID: %s\n", edg_wlc_JobIdUnparse(stat.jobId));
+			printf("  - job ID: %s\n", glite_lbu_JobIdUnparse(stat.jobId));
 			
 			if (stat.state != EDG_WLL_JOB_UNDEF) {
 				printf("  - job status is: %s\n\n", edg_wll_StatToString(stat.state));
@@ -148,14 +148,14 @@ err:
 			edg_wll_NotifCloseFd(ctx);
 		}
 		if (stat.state != EDG_WLL_JOB_UNDEF) edg_wll_FreeStatus(&stat);
-		if (jid) edg_wlc_JobIdFree(jid);
+		if (jid) glite_lbu_JobIdFree(jid);
 	}
 	else if ( !strcmp(argv[1], "new") )
 	{
-		edg_wlc_JobId		jid;
+		glite_lbu_JobId		jid;
 		edg_wll_NotifId		id_out;
 
-		if ( (argc < 3) || edg_wlc_JobIdParse(argv[2], &jid) ) {
+		if ( (argc < 3) || glite_lbu_JobIdParse(argv[2], &jid) ) {
 			printf("Job ID parameter not set propperly!\n");
 			usage("new");
 			goto cleanup;
@@ -176,7 +176,7 @@ err:
 					TimeToStr(valid),
 					valid);
 		edg_wll_NotifIdFree(id_out);
-		edg_wlc_JobIdFree(jid);
+		glite_lbu_JobIdFree(jid);
 	}
 	else if ( !strcmp(argv[1], "bind") )
 	{
@@ -274,7 +274,7 @@ receive_err:
 	}
 	else if ( !strcmp(argv[1], "change") )
 	{
-		edg_wlc_JobId		jid;
+		glite_lbu_JobId		jid;
 		edg_wll_NotifId		nid;
 
 		if ( (argc < 3) || edg_wll_NotifIdParse(argv[2], &nid) )
@@ -283,7 +283,7 @@ receive_err:
 			usage("bind");
 			return 1;
 		}
-		if ( (argc < 4) || edg_wlc_JobIdParse(argv[3], &jid) )
+		if ( (argc < 4) || glite_lbu_JobIdParse(argv[3], &jid) )
 		{
 			printf("Job ID parameter not set propperly!\n");
 			usage("change");
@@ -309,7 +309,7 @@ receive_err:
 		edg_wll_NotifChange(ctx, nid,
 						(edg_wll_QueryRec const * const *) conditions,
 						EDG_WLL_NOTIF_REPLACE);
-		edg_wlc_JobIdFree(jid);
+		glite_lbu_JobIdFree(jid);
 		edg_wll_NotifIdFree(nid);
 	}
 	else if ( !strcmp(argv[1], "refresh") )

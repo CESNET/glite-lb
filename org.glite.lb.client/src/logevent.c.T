@@ -16,7 +16,7 @@
 #include <globus_common.h>
 
 #include "glite/security/glite_gss.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/events.h"
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	edg_wll_Context	ctx;
         edg_wll_Source src;
 	edg_wll_EventCode event = EDG_WLL_EVENT_UNDEF;
-	edg_wlc_JobId jobid = 0;
+	glite_lbu_JobId jobid = 0;
         int (*logev)(edg_wll_Context context,
 		     edg_wll_EventCode event,
 		     char *fmt, ...);
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     my %typetab = (
 	"char *", "EDG_WLL_ARGS_STRING",
 	"int", "EDG_WLL_ARGS_INT",
-	"edg_wlc_JobId", "EDG_WLL_ARGS_JOBID",
+	"glite_lbu_JobId", "EDG_WLL_ARGS_JOBID",
 	"edg_wll_NotifId", "EDG_WLL_ARGS_NOTIFID",
 	"edg_wll_Source", "EDG_WLL_ARGS_SOURCE",
 	"uint16_t", "EDG_WLL_ARGS_UINT16"
@@ -144,11 +144,11 @@ int main(int argc, char *argv[])
 		    err = 1; // result fail if used normaly
 		} else
 		    s = server;
-		edg_wlc_JobIdCreate(s, 0, &jobid);
-		jobid_s = edg_wlc_JobIdUnparse(jobid);
+		glite_lbu_JobIdCreate(s, 0, &jobid);
+		jobid_s = glite_lbu_JobIdUnparse(jobid);
 		fprintf(stderr, "JobId not given: created %s (server: %s)\n",jobid_s, s);
 	}
-	else if ((errno = edg_wlc_JobIdParse(jobid_s,&jobid))) {
+	else if ((errno = glite_lbu_JobIdParse(jobid_s,&jobid))) {
 		perror(jobid_s);
 		exit(1);
 	}
@@ -273,7 +273,7 @@ gen qq{\t    //edg_wll_Log$t();
 	    fprintf(stderr, "unknown event\n");
 	}
 
-	edg_wlc_JobIdFree(jobid);
+	glite_lbu_JobIdFree(jobid);
 	if (jobid_s) free(jobid_s); // add all strings
 
 	if (err) {

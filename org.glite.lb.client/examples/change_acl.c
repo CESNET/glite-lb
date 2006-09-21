@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/authz.h"
 
@@ -26,7 +26,7 @@ main(int argc, char *argv[])
    int permission = EDG_WLL_PERM_READ;
    int permission_type = EDG_WLL_PERM_ALLOW;
    int user_id_type = EDG_WLL_USER_SUBJECT;
-   edg_wlc_JobId jobid;
+   glite_lbu_JobId jobid;
    int opt;
    int ret;
 
@@ -48,7 +48,7 @@ main(int argc, char *argv[])
 
    edg_wll_InitContext(&ctx);
 
-   if (edg_wlc_JobIdParse(argv[optind], &jobid)) {
+   if (glite_lbu_JobIdParse(argv[optind], &jobid)) {
       fprintf(stderr,"can't parse job ID\n");
 	  goto err;
    }

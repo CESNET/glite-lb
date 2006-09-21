@@ -143,7 +143,7 @@ int edg_wll_QueryJobsExt(
 		edg_wll_Context         ctx,
 		const edg_wll_QueryRec **        conditions,
 		int                     flags,
-		edg_wlc_JobId **        jobsOut,
+		glite_lbu_JobId **        jobsOut,
 		edg_wll_JobStat **      statesOut)
 {
 	char			*response = NULL, *message = NULL, *send_mess = NULL;
@@ -191,7 +191,7 @@ int edg_wll_QueryJobs(
         	edg_wll_Context         ctx,
 	        const edg_wll_QueryRec *        conditions,
         	int                     flags,
-	        edg_wlc_JobId **        jobsOut,
+	        glite_lbu_JobId **        jobsOut,
         	edg_wll_JobStat **      statesOut)
 {
 	edg_wll_QueryRec	**conds;
@@ -261,7 +261,7 @@ err:
 
 int edg_wll_UserJobs(
 		edg_wll_Context ctx,
-		edg_wlc_JobId **jobsOut,
+		glite_lbu_JobId **jobsOut,
 		edg_wll_JobStat	**statesOut)
 {
 	edg_wll_QueryRec        j[2];
@@ -277,7 +277,7 @@ int edg_wll_UserJobs(
 
 int edg_wll_JobLog(
 	edg_wll_Context ctx,
-	edg_wlc_JobId	job,
+	glite_lbu_JobId	job,
 	edg_wll_Event **eventsOut)
 {
 	edg_wll_QueryRec	j[2], e[2];
@@ -298,7 +298,7 @@ int edg_wll_JobLog(
 
 int edg_wll_JobStatus(
                 edg_wll_Context ctx,
-                edg_wlc_JobId job,
+                glite_lbu_JobId job,
                 int flags,
                 edg_wll_JobStat *stat)
 {
@@ -338,7 +338,7 @@ int edg_wll_JobStatus(
 
 
 	
-int edg_wll_QueryListener(edg_wll_Context ctx, edg_wlc_JobId job, const char *name, char** host, uint16_t *port) {
+int edg_wll_QueryListener(edg_wll_Context ctx, glite_lbu_JobId job, const char *name, char** host, uint16_t *port) {
 
 	int 		i;
 	edg_wll_Event      	*events = NULL;
@@ -394,7 +394,7 @@ int set_server_name_and_port(edg_wll_Context ctx, const edg_wll_QueryRec **job_c
 		for ( i = 0; (job_conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
 			if ( job_conditions[j][i].attr == EDG_WLL_QUERY_ATTR_JOBID)
 			{
-				edg_wlc_JobIdGetServerParts(job_conditions[j][i].value.j,&srvNameTmp,&srvPortTmp);
+				glite_lbu_JobIdGetServerParts(job_conditions[j][i].value.j,&srvNameTmp,&srvPortTmp);
 				if ( found )
 				{
 					if ( strcmp(srvName, srvNameTmp) || (srvPort != srvPortTmp) )
@@ -441,7 +441,7 @@ int set_server_name_and_port(edg_wll_Context ctx, const edg_wll_QueryRec **job_c
 	return(error);
 }
 
-int edg_wll_QuerySequenceCodeProxy(edg_wll_Context ctx, edg_wlc_JobId jobId, char **code) 
+int edg_wll_QuerySequenceCodeProxy(edg_wll_Context ctx, glite_lbu_JobId jobId, char **code) 
 {
 	int		error = 0;
 	char   *response = NULL,
@@ -514,7 +514,7 @@ int edg_wll_QueryJobsExtProxy(
 		edg_wll_Context         ctx,
 		const edg_wll_QueryRec **        conditions,
 		int                     flags,
-		edg_wlc_JobId **        jobsOut,
+		glite_lbu_JobId **        jobsOut,
 		edg_wll_JobStat **      statesOut)
 {	
 	ctx->isProxy = 1;
@@ -528,7 +528,7 @@ int edg_wll_QueryJobsProxy(
         	edg_wll_Context         ctx,
 	        const edg_wll_QueryRec *        conditions,
         	int                     flags,
-	        edg_wlc_JobId **        jobsOut,
+	        glite_lbu_JobId **        jobsOut,
         	edg_wll_JobStat **      statesOut)
 {
 	ctx->isProxy = 1;
@@ -539,7 +539,7 @@ int edg_wll_QueryJobsProxy(
 
 int edg_wll_UserJobsProxy(
 		edg_wll_Context ctx,
-		edg_wlc_JobId **jobsOut,
+		glite_lbu_JobId **jobsOut,
 		edg_wll_JobStat	**statesOut)
 {
 	ctx->isProxy = 1;
@@ -550,7 +550,7 @@ int edg_wll_UserJobsProxy(
 
 int edg_wll_JobLogProxy(
 	edg_wll_Context ctx,
-	edg_wlc_JobId	job,
+	glite_lbu_JobId	job,
 	edg_wll_Event **eventsOut)
 {
 	ctx->isProxy = 1;
@@ -560,7 +560,7 @@ int edg_wll_JobLogProxy(
 
 int edg_wll_JobStatusProxy(
                 edg_wll_Context ctx,
-                edg_wlc_JobId job,
+                glite_lbu_JobId job,
                 int flags,
                 edg_wll_JobStat *stat)
 {
@@ -573,7 +573,7 @@ int edg_wll_JobStatusProxy(
 	
 int edg_wll_QueryListenerProxy(
 		edg_wll_Context ctx,
-		edg_wlc_JobId job,
+		glite_lbu_JobId job,
 		const char *name,
 		char** host,
 		uint16_t *port) 

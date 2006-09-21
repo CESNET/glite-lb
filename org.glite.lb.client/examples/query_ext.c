@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <time.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/consumer.h"
 
 #define BUFF_LEN		1024
@@ -62,7 +62,7 @@ int main(int argc,char *argv[])
 	edg_wll_QueryRec	  **jc			= NULL,
 						  **ec			= NULL;
 	edg_wll_JobStat		   *statesOut	= NULL;
-	edg_wlc_JobId		   *jobsOut		= NULL;
+	glite_lbu_JobId		   *jobsOut		= NULL;
 	edg_wll_Event		   *eventsOut	= NULL;
 	char				   *fname		= NULL,
 						   *server		= NULL,
@@ -219,10 +219,10 @@ int main(int argc,char *argv[])
 
 		if ( query_jobs && jobsOut && !stdisp ) {
 			for ( i = 0; jobsOut[i]; i++ ) {
-				s = edg_wlc_JobIdUnparse(jobsOut[i]);
-				printf("jobId: %s\n", edg_wlc_JobIdUnparse(jobsOut[i]));
+				s = glite_lbu_JobIdUnparse(jobsOut[i]);
+				printf("jobId: %s\n", glite_lbu_JobIdUnparse(jobsOut[i]));
 				free(s);
-				edg_wlc_JobIdFree(jobsOut[i]);
+				glite_lbu_JobIdFree(jobsOut[i]);
 			}
 			free(jobsOut);
 			jobsOut = NULL;
@@ -235,7 +235,7 @@ int main(int argc,char *argv[])
 		}
 		if ( query_events && eventsOut ) {
 			for ( i = 0; eventsOut[i].type; i++ ) {
-				s = edg_wlc_JobIdUnparse(eventsOut[i].any.jobId);
+				s = glite_lbu_JobIdUnparse(eventsOut[i].any.jobId);
 				printf("event: %-11s (jobid %s)\n", edg_wll_EventToString(eventsOut[i].type), s);
 				free(s);
 			}
@@ -274,7 +274,7 @@ static void free_QueryRec(edg_wll_QueryRec *qr)
 	{
 	case EDG_WLL_QUERY_ATTR_JOBID:
 	case EDG_WLL_QUERY_ATTR_PARENT:
-		edg_wlc_JobIdFree(qr->value.j);
+		glite_lbu_JobIdFree(qr->value.j);
 		break;
 
 	case EDG_WLL_QUERY_ATTR_STATUS:
@@ -407,7 +407,7 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 	{
 	case EDG_WLL_QUERY_ATTR_JOBID:
 	case EDG_WLL_QUERY_ATTR_PARENT:
-		if ( edg_wlc_JobIdParse(tmps, &cond->value.j) )
+		if ( glite_lbu_JobIdParse(tmps, &cond->value.j) )
 		{
 			fprintf(stderr,"%s: %s: cannot parse jobId\n", myname, tmps);
 			return NULL;
@@ -741,7 +741,7 @@ static void printconds(edg_wll_QueryRec **cond)
 			{
 			case EDG_WLL_QUERY_ATTR_JOBID:
 			case EDG_WLL_QUERY_ATTR_PARENT:
-				s = edg_wlc_JobIdUnparse(cond[i][j].value.j);
+				s = glite_lbu_JobIdUnparse(cond[i][j].value.j);
 				printf("%s", s);
 				free(s);
 				break;
@@ -791,7 +791,7 @@ static void printstat(edg_wll_JobStat stat)
 	printf("STATUS:\t%s\n\n",s);
 /* print whole flat structure */
 	printf("state : %s\n", s);
-	printf("jobId : %s\n", j = edg_wlc_JobIdUnparse(stat.jobId));
+	printf("jobId : %s\n", j = glite_lbu_JobIdUnparse(stat.jobId));
 	printf("owner : %s\n", stat.owner);
 	printf("jobtype : %d\n", stat.jobtype);
 	if (stat.jobtype) {;

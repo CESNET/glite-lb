@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/events.h"
 
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	int 		lbproxy = 0, N = 1, verbose = 0;
 	int 		done = 0,num_subjobs = 0,reg_subjobs = 0, i, j;
 	edg_wll_Context	ctx;
-	edg_wlc_JobId	*jobids,*subjobs;
+	glite_lbu_JobId	*jobids,*subjobs;
 	struct timeval 	start, stop;
 
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* prepare set of N jobid before starting timer */
-	jobids = (edg_wlc_JobId *) malloc(N * sizeof(edg_wlc_JobId));
+	jobids = (glite_lbu_JobId *) malloc(N * sizeof(glite_lbu_JobId));
 	dprintf(("generating jobids..."));
 	{
 		char *name=server?server:strdup(PROXY_SERVER);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 		if (p)  { *p=0; port = atoi(p+1); }
 		else  port = 0;
 		for (i=0; i<N; i++)
-			edg_wlc_JobIdCreate(name,port,&(jobids[i]));
+			glite_lbu_JobIdCreate(name,port,&(jobids[i]));
 	}
 	dprintf(("done.\n"));
 
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 	}
 
 	for (i=0; i<N; i++) 
-		edg_wlc_JobIdFree(jobids[i]);
+		glite_lbu_JobIdFree(jobids[i]);
 	free(jobids);
 
 	edg_wll_FreeContext(ctx);

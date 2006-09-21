@@ -10,6 +10,7 @@
 #include <netdb.h>
 
 #include "glite/security/glite_gss.h"
+#include "glite/lb-utils/escape.h"
 #include "glite/lb/notification.h"
 #include "glite/lb/events.h"
 #include "glite/lb/log_proto.h"
@@ -18,7 +19,6 @@
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/il_msg.h"
-#include "glite/lb/escape.h"
 
 #include "connection.h"
 
@@ -662,9 +662,9 @@ int edg_wll_NotifReceive(
 		goto err;
 	}
 
-	jobstat_char = edg_wll_UnescapeXML((const char *) event->notification.jobstat);
+	jobstat_char = glite_lbu_UnescapeXML((const char *) event->notification.jobstat);
 	if (jobstat_char == NULL) {
-		edg_wll_SetError(ctx, EINVAL, "edg_wll_UnescapeXML()");
+		edg_wll_SetError(ctx, EINVAL, "glite_lbu_UnescapeXML()");
 		goto err;
 	}
 		
@@ -842,9 +842,9 @@ select:
 		goto err;
 	}
 
-	jobstat_char = edg_wll_UnescapeXML((const char *) event->notification.jobstat);
+	jobstat_char = glite_lbu_UnescapeXML((const char *) event->notification.jobstat);
 	if (jobstat_char == NULL) {
-		edg_wll_SetError(ctx, EINVAL, "edg_wll_UnescapeXML()");
+		edg_wll_SetError(ctx, EINVAL, "glite_lbu_UnescapeXML()");
 		goto err;
 	}
 		

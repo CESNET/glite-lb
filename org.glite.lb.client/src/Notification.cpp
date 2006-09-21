@@ -132,9 +132,9 @@ Notification::getFd(void) const
 }
 
 void
-Notification::addJob(const glite::wmsutils::jobid::JobId &jobId)
+Notification::addJob(const glite::lb_utils::jobid::JobId &jobId)
 {
-   std::vector<glite::wmsutils::jobid::JobId>::iterator it;
+   std::vector<glite::lb_utils::jobid::JobId>::iterator it;
 
    try {
 	if (this->notifId != NULL) {
@@ -156,9 +156,9 @@ Notification::addJob(const glite::wmsutils::jobid::JobId &jobId)
 }
 
 void
-Notification::removeJob(const glite::wmsutils::jobid::JobId &jobId)
+Notification::removeJob(const glite::lb_utils::jobid::JobId &jobId)
 {
-   std::vector<glite::wmsutils::jobid::JobId>::iterator it;
+   std::vector<glite::lb_utils::jobid::JobId>::iterator it;
    int removed = 0;
 
    try {
@@ -189,7 +189,7 @@ Notification::removeJob(const glite::wmsutils::jobid::JobId &jobId)
 std::string 
 Notification::getJobs(void)
 {
-   std::vector<glite::wmsutils::jobid::JobId>::iterator it;
+   std::vector<glite::lb_utils::jobid::JobId>::iterator it;
    std::string ret="";
 
    try {
@@ -240,7 +240,7 @@ void
 Notification::Register(void)
 {
    int ret = 0;
-   std::vector<glite::wmsutils::jobid::JobId>::iterator it;
+   std::vector<glite::lb_utils::jobid::JobId>::iterator it;
    std::vector<glite::lb::JobStatus::Code>::iterator its;
    std::vector<std::vector<glite::lb::QueryRecord> > queryExt;
    edg_wll_QueryRec **conditions = NULL;

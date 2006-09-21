@@ -11,7 +11,7 @@
 
 #include "glite/lb/events_parse.h"
 #include "glite/lb/consumer.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #ifdef USE_CALLBACKS
   #include "glite/lb/consumer_fake.h"
 #endif
@@ -45,7 +45,7 @@ int main(int argc,char **argv)
 	edg_wll_Context	ctx;
 	char		*errt,*errd;
 	edg_wll_Event	*events = NULL;
-	edg_wlc_JobId	job;
+	glite_lbu_JobId	job;
 	int		i,opt,delay = 1,count = 0;
 
 	if (argc < 2)
@@ -60,7 +60,7 @@ int main(int argc,char **argv)
 	    }
 
 	edg_wll_InitContext(&ctx);
-	if (edg_wlc_JobIdParse(argv[optind],&job)) {
+	if (glite_lbu_JobIdParse(argv[optind],&job)) {
 		fprintf(stderr,"%s: can't parse job ID\n",argv[1]);
 		return 1;
 	}
@@ -98,7 +98,7 @@ int main(int argc,char **argv)
 		else puts("OK");
 	}
 
-	edg_wlc_JobIdFree(job);
+	glite_lbu_JobIdFree(job);
 	edg_wll_FreeContext(ctx); 
 
 #ifdef USE_CALLBACKS
@@ -121,7 +121,7 @@ err:
 			return 1;
 	}
 
-	edg_wlc_JobIdFree(job);
+	glite_lbu_JobIdFree(job);
 	edg_wll_FreeContext(ctx); 
 
 	return 0;

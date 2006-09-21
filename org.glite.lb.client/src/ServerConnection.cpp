@@ -14,8 +14,8 @@
 
 #include <expat.h>
 
-#include "glite/wmsutils/jobid/JobId.h"
-#include "glite/wmsutils/jobid/JobIdExceptions.h"
+#include "glite/lb-utils/JobId.h"
+#include "glite/lb-utils/JobIdExceptions.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
 
@@ -89,7 +89,7 @@ QueryRecord::QueryRecord(const Attr a,
 
 QueryRecord::QueryRecord(const Attr a, 
 			 const Op o, 
-			 const glite::wmsutils::jobid::JobId& v)
+			 const glite::lb_utils::jobid::JobId& v)
 	: attr(a), oper(o), state(EDG_WLL_JOB_UNDEF), jobid_value(v)
 {
 	switch(a) {
@@ -866,10 +866,10 @@ ServerConnection::queryEvents(const std::vector<std::vector<QueryRecord> >& job_
 
 
 void ServerConnection::queryJobs(const std::vector<QueryRecord>& query,
-				 std::vector<glite::wmsutils::jobid::JobId> & ids) const
+				 std::vector<glite::lb_utils::jobid::JobId> & ids) const
 {
 	edg_wll_QueryRec *cond = NULL;
-	edg_wlc_JobId *jobs, *j;
+	glite_lbu_JobId *jobs, *j;
 	int	result, qresults_param;
 	char	*errstr = NULL;
 
@@ -892,7 +892,7 @@ void ServerConnection::queryJobs(const std::vector<QueryRecord>& query,
 		}
 
 		for(j = jobs; *j; j++) 
-			ids.push_back(glite::wmsutils::jobid::JobId(*j));
+			ids.push_back(glite::lb_utils::jobid::JobId(*j));
 
 		if (result) {
 			edg_wll_SetError(context, result, errstr);
@@ -916,10 +916,10 @@ void ServerConnection::queryJobs(const std::vector<QueryRecord>& query,
 }
 
 
-const std::vector<glite::wmsutils::jobid::JobId>
+const std::vector<glite::lb_utils::jobid::JobId>
 ServerConnection::queryJobs(const std::vector<QueryRecord>& query) const
 {
-	std::vector<glite::wmsutils::jobid::JobId> jobList;
+	std::vector<glite::lb_utils::jobid::JobId> jobList;
   
 	queryJobs(query, jobList);
 	return jobList;
@@ -928,10 +928,10 @@ ServerConnection::queryJobs(const std::vector<QueryRecord>& query) const
 
 void 
 ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query,
-			    std::vector<glite::wmsutils::jobid::JobId>& ids) const
+			    std::vector<glite::lb_utils::jobid::JobId>& ids) const
 {
 	edg_wll_QueryRec **cond = NULL;
-	edg_wlc_JobId *jobs, *j;
+	glite_lbu_JobId *jobs, *j;
 	int	result, qresults_param;
         char    *errstr = NULL;
 
@@ -955,7 +955,7 @@ ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query,
 		}
 
 		for(j = jobs; *j; j++) 
-			ids.push_back(glite::wmsutils::jobid::JobId(*j));
+			ids.push_back(glite::lb_utils::jobid::JobId(*j));
 
 		if (result) {
 			edg_wll_SetError(context, result, errstr);
@@ -991,10 +991,10 @@ ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query,
 
   
 const 
-std::vector<glite::wmsutils::jobid::JobId>
+std::vector<glite::lb_utils::jobid::JobId>
 ServerConnection::queryJobs(const std::vector<std::vector<QueryRecord> >& query) const
 {
-	std::vector<glite::wmsutils::jobid::JobId> jobList;
+	std::vector<glite::lb_utils::jobid::JobId> jobList;
   
 	queryJobs(query, jobList);
 	return jobList;
@@ -1164,9 +1164,9 @@ ServerConnection::queryJobStates(const std::vector<std::vector<QueryRecord> >& q
 }
 
 
-void ServerConnection::userJobs(std::vector<glite::wmsutils::jobid::JobId> & ids) const
+void ServerConnection::userJobs(std::vector<glite::lb_utils::jobid::JobId> & ids) const
 {
-	edg_wlc_JobId *jobs, *j;
+	glite_lbu_JobId *jobs, *j;
 	int     result, qresults_param;
 	char    *errstr = NULL;
 
@@ -1187,7 +1187,7 @@ void ServerConnection::userJobs(std::vector<glite::wmsutils::jobid::JobId> & ids
 		}
 
 		for(j = jobs; *j; j++) 
-			ids.push_back(glite::wmsutils::jobid::JobId(*j));
+			ids.push_back(glite::lb_utils::jobid::JobId(*j));
 
 		if (result) {
 			edg_wll_SetError(context, result, errstr);
@@ -1205,10 +1205,10 @@ void ServerConnection::userJobs(std::vector<glite::wmsutils::jobid::JobId> & ids
 }
 
 
-const std::vector<glite::wmsutils::jobid::JobId>
+const std::vector<glite::lb_utils::jobid::JobId>
 ServerConnection::userJobs() const
 {
-	std::vector<glite::wmsutils::jobid::JobId> jobList;
+	std::vector<glite::lb_utils::jobid::JobId> jobList;
   
 	userJobs(jobList);
 	return jobList;

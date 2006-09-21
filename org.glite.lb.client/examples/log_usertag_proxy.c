@@ -7,7 +7,7 @@
 
 #include <globus_common.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/events.h"
@@ -40,7 +40,7 @@ static void usage(char *me)
 int main(int argc, char *argv[])
 {
 	edg_wll_Context		ctx;
-	edg_wlc_JobId		jobid = NULL;
+	glite_lbu_JobId		jobid = NULL;
 	char			   *server, *code, *jobid_s, *user, *name, *value;
 	int					opt, err = 0;
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	if ( !name ) { fprintf(stderr, "Tag name not given\n"); return 1; }
 	if ( !value ) { fprintf(stderr, "Tag value not given\n"); return 1; }
 
-	if ( (errno = edg_wlc_JobIdParse(jobid_s, &jobid)) ) { perror(jobid_s); return 1; }
+	if ( (errno = glite_lbu_JobIdParse(jobid_s, &jobid)) ) { perror(jobid_s); return 1; }
 
 	if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS) {
 		fprintf(stderr, "Cannot initialize Globus common module\n");

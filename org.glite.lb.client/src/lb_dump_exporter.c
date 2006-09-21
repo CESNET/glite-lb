@@ -139,11 +139,11 @@ int main(int argc, char **argv)
 		if ( edg_wll_ParseEvent(ctx, ln, &ev) != 0 ) {
 			cleanup(1);
 		}
-		if ( !(jobid = edg_wlc_JobIdUnparse(ev->any.jobId)) ) {
+		if ( !(jobid = glite_lbu_JobIdUnparse(ev->any.jobId)) ) {
 			perror("Can't unparse jobid from event");
 			cleanup(1);
 		}
-		if ( !(unique = edg_wlc_JobIdGetUnique(ev->any.jobId)) ) {
+		if ( !(unique = glite_lbu_JobIdGetUnique(ev->any.jobId)) ) {
 			perror("Can't unparse jobid from event");
 			cleanup(1);
 		}

@@ -136,7 +136,7 @@ static int set_server_name_and_port(edg_wll_Context ctx, const edg_wll_QueryRec 
 		for ( i = 0; (job_conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
 			if ( job_conditions[j][i].attr == EDG_WLL_QUERY_ATTR_JOBID)
 			{
-				edg_wlc_JobIdGetServerParts(job_conditions[j][i].value.j,&srvNameTmp,&srvPortTmp);
+				glite_lbu_JobIdGetServerParts(job_conditions[j][i].value.j,&srvNameTmp,&srvPortTmp);
 				if ( found )
 				{
 					if ( strcmp(srvName, srvNameTmp) || (srvPort != srvPortTmp) )

@@ -4,7 +4,7 @@
 */
 @@@LANG: C
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/producer.h"
 
 @@@{

@@ -67,7 +67,7 @@ int edg_wll_QueryEvents(
 ) {
   edg_wll_EventCode event_code;
   int i, j, err;
-  edg_wlc_JobId jobid;
+  glite_lbu_JobId jobid;
   
   edg_wll_ResetError(context);
 
@@ -94,7 +94,7 @@ int edg_wll_QueryEvents(
     if (job_conditions[i].attr == EDG_WLL_QUERY_ATTR_JOBID && job_conditions[i].op == EDG_WLL_QUERY_OP_EQUAL) {
       jobid = job_conditions[i].value.j;
       for (j = 0; j < NUM_EVENTS; j++) {
-         if ((err = edg_wlc_JobIdDup(jobid, &(*events)[i].any.jobId)) != 0) goto error;
+         if ((err = glite_lbu_JobIdDup(jobid, &(*events)[i].any.jobId)) != 0) goto error;
       }
       break;
     }
@@ -122,7 +122,7 @@ error:
 /* fake implementation of QueryListener() */
 int edg_wll_QueryListener(
   edg_wll_Context context,
-  edg_wlc_JobId    jobId,
+  glite_lbu_JobId    jobId,
   const char      *name,
   char           **host,
   uint16_t        *port
@@ -142,7 +142,7 @@ int edg_wll_QueryListener(
 /* cut'nd pasted from consumer.c */
 int edg_wll_JobLog(
 	edg_wll_Context ctx,
-	edg_wlc_JobId	job,
+	glite_lbu_JobId	job,
 	edg_wll_Event **eventsOut)
 {
 	edg_wll_QueryRec	j[2], e[2];

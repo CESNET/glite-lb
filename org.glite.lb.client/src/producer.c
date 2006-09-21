@@ -16,15 +16,15 @@
 #include <string.h>
 #include <netdb.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/lb-utils/strmd5.h"
+#include "glite/lb-utils/escape.h"
 #include "glite/security/glite_gss.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/ulm_parse.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 #include "glite/lb/lb_plain_io.h"
-#include "glite/lb/escape.h"
 
 #include "prod_proto.h"
 
@@ -196,7 +196,7 @@ int edg_wll_DoLogEventProxy(
 	}
 
    /* add DG.USER to the message: */
-        name_esc = edg_wll_LogEscape(context->p_user_lbproxy);
+        name_esc = glite_lbu_EscapeULM(context->p_user_lbproxy);
         if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
 		edg_wll_SetError(context,answer = ENOMEM,"edg_wll_LogEventMasterProxy(): asprintf() error"); 
 		goto edg_wll_DoLogEventProxy_end; 
@@ -248,7 +248,7 @@ int edg_wll_DoLogEventDirect(
 	edg_wll_ResetError(context);
 
    /* get bkserver location: */
-	edg_wlc_JobIdGetServerParts(context->p_jobid,&host,&port);
+	glite_lbu_JobIdGetServerParts(context->p_jobid,&host,&port);
 	port +=1;
 
    /* open an authenticated connection to the bkserver: */
@@ -279,7 +279,7 @@ int edg_wll_DoLogEventDirect(
 	}
 
    /* add DG.USER to the message: */
-        name_esc = edg_wll_LogEscape(my_subject_name);
+        name_esc = glite_lbu_EscapeULM(my_subject_name);
         if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
 		edg_wll_SetError(context,answer = ENOMEM,"edg_wll_DoLogEventDirect(): asprintf() error"); 
 		goto edg_wll_DoLogEventDirect_end; 
@@ -366,8 +366,8 @@ static int edg_wll_LogEventMaster(
 		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMaster(): event name not specified"); 
 		goto edg_wll_logeventmaster_end; 
 	}
-	if (!(fullid = edg_wlc_JobIdUnparse(context->p_jobid))) { 
-		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMaster(): edg_wlc_JobIdUnparse() error"); 
+	if (!(fullid = glite_lbu_JobIdUnparse(context->p_jobid))) { 
+		edg_wll_SetError(context,ret = EINVAL,"edg_wll_LogEventMaster(): glite_lbu_JobIdUnparse() error"); 
 		goto edg_wll_logeventmaster_end;
 	}
 	seq = edg_wll_GetSequenceCode(context);
@@ -572,8 +572,8 @@ int edg_wll_LogFlush(
 		edg_wll_SetError(context,ret = EINVAL,"edg_wll_ULMTimevalToDate()"); 
 		goto edg_wll_logflush_end; 
 	}
-	if (!(fullid = edg_wlc_JobIdUnparse(context->p_jobid))) { 
-		ret = edg_wll_SetError(context,EINVAL,"edg_wlc_JobIdUnparse()");
+	if (!(fullid = glite_lbu_JobIdUnparse(context->p_jobid))) { 
+		ret = edg_wll_SetError(context,EINVAL,"glite_lbu_JobIdUnparse()");
 		goto edg_wll_logflush_end;
 	}
 
@@ -651,7 +651,7 @@ edg_wll_logflushall_end:
  */
 int edg_wll_SetLoggingJob(
 	edg_wll_Context context,
-	const edg_wlc_JobId job,
+	const glite_lbu_JobId job,
 	const char *code,
 	int flags)
 {
@@ -661,9 +661,9 @@ int edg_wll_SetLoggingJob(
 
 	if (!job) return edg_wll_SetError(context,EINVAL,"jobid is null");
 
-	edg_wlc_JobIdFree(context->p_jobid);
-	if ((err = edg_wlc_JobIdDup(job,&context->p_jobid))) {
-		edg_wll_SetError(context,err,"edg_wll_SetLoggingJob(): edg_wlc_JobIdDup() error");
+	glite_lbu_JobIdFree(context->p_jobid);
+	if ((err = glite_lbu_JobIdDup(job,&context->p_jobid))) {
+		edg_wll_SetError(context,err,"edg_wll_SetLoggingJob(): glite_lbu_JobIdDup() error");
 	} else if (!edg_wll_SetSequenceCode(context,code,flags)) {
 		edg_wll_IncSequenceCode(context);
 	}
@@ -679,7 +679,7 @@ int edg_wll_SetLoggingJob(
  */
 int edg_wll_SetLoggingJobProxy(
         edg_wll_Context context,
-        const edg_wlc_JobId job,
+        const glite_lbu_JobId job,
         const char *code,
 	const char *user,
         int flags)
@@ -691,9 +691,9 @@ int edg_wll_SetLoggingJobProxy(
 
         if (!job) return edg_wll_SetError(context,EINVAL,"jobid is null");
 
-        edg_wlc_JobIdFree(context->p_jobid);
-        if ((err = edg_wlc_JobIdDup(job,&context->p_jobid))) {
-                edg_wll_SetError(context,err,"edg_wll_SetLoggingJob(): edg_wlc_JobIdDup() error");
+        glite_lbu_JobIdFree(context->p_jobid);
+        if ((err = glite_lbu_JobIdDup(job,&context->p_jobid))) {
+                edg_wll_SetError(context,err,"edg_wll_SetLoggingJob(): glite_lbu_JobIdDup() error");
 		goto edg_wll_setloggingjobproxy_end;
 	}
 
@@ -727,14 +727,14 @@ edg_wll_setloggingjobproxy_end:
 static int edg_wll_RegisterJobMaster(
         edg_wll_Context         context,
 	int			flags,
-        const edg_wlc_JobId     job,
+        const glite_lbu_JobId     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
-	edg_wlc_JobId		parent,
+	glite_lbu_JobId		parent,
         int                     num_subjobs,
         const char *            seed,
-        edg_wlc_JobId **        subjobs)
+        glite_lbu_JobId **        subjobs)
 {
 	char	*seq,*type_s,*intseed,*parent_s,*user_dn;
 	int	err = 0;
@@ -767,7 +767,7 @@ static int edg_wll_RegisterJobMaster(
 		edg_wll_UpdateError(context,EINVAL,"edg_wll_RegisterJobMaster(): edg_wll_GenerateSubjobIds() error");
 		goto edg_wll_registerjobmaster_end;
 	}
-	parent_s = parent ? edg_wlc_JobIdUnparse(parent) : strdup("");
+	parent_s = parent ? glite_lbu_JobIdUnparse(parent) : strdup("");
 
 	if (flags & LOGFLAG_DIRECT) {
 		/* SetLoggingJob and log directly the message */
@@ -823,39 +823,39 @@ edg_wll_registerjobmaster_end:
 
 int edg_wll_RegisterJobSync(
         edg_wll_Context         context,
-        const edg_wlc_JobId     job,
+        const glite_lbu_JobId     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
         int                     num_subjobs,
         const char *            seed,
-        edg_wlc_JobId **        subjobs)
+        glite_lbu_JobId **        subjobs)
 {
 	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterJob(
         edg_wll_Context         context,
-        const edg_wlc_JobId     job,
+        const glite_lbu_JobId     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
         int                     num_subjobs,
         const char *            seed,
-        edg_wlc_JobId **        subjobs)
+        glite_lbu_JobId **        subjobs)
 {
 	return edg_wll_RegisterJobMaster(context,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterJobProxy(
         edg_wll_Context         context,
-        const edg_wlc_JobId     job,
+        const glite_lbu_JobId     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
         int                     num_subjobs,
         const char *            seed,
-        edg_wlc_JobId **        subjobs)
+        glite_lbu_JobId **        subjobs)
 {
 #define	MY_SEED	"edg_wll_RegisterJobProxy()"
 	/* first register with bkserver */
@@ -874,13 +874,13 @@ int edg_wll_RegisterJobProxy(
 // useful for performace measuring
 int edg_wll_RegisterJobProxyOnly(
         edg_wll_Context         context,
-        const edg_wlc_JobId     job,
+        const glite_lbu_JobId     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
         int                     num_subjobs,
         const char *            seed,
-        edg_wlc_JobId **        subjobs)
+        glite_lbu_JobId **        subjobs)
 {
 #define	MY_SEED	"edg_wll_RegisterJobProxy()"
 	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
@@ -890,42 +890,42 @@ int edg_wll_RegisterJobProxyOnly(
 
 int edg_wll_RegisterSubjob(
         edg_wll_Context         context,
-        const edg_wlc_JobId     job,
+        const glite_lbu_JobId     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
-	edg_wlc_JobId		parent,
+	glite_lbu_JobId		parent,
         int                     num_subjobs,
         const char *            seed,
-        edg_wlc_JobId **        subjobs)
+        glite_lbu_JobId **        subjobs)
 {
 	return edg_wll_RegisterJobMaster(context,LOGFLAG_NORMAL,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterSubjobProxy(
         edg_wll_Context         context,
-        const edg_wlc_JobId     job,
+        const glite_lbu_JobId     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
-	edg_wlc_JobId		parent,
+	glite_lbu_JobId		parent,
         int                     num_subjobs,
         const char *            seed,
-        edg_wlc_JobId **        subjobs)
+        glite_lbu_JobId **        subjobs)
 {
 	return edg_wll_RegisterJobMaster(context,LOGFLAG_PROXY,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
 }
 
 int edg_wll_RegisterSubjobs(
 	edg_wll_Context 	ctx,
-	const edg_wlc_JobId 	parent,
+	const glite_lbu_JobId 	parent,
 	char const * const * 	jdls, 
 	const char * 		ns, 
-	edg_wlc_JobId const * 	subjobs)
+	glite_lbu_JobId const * 	subjobs)
 {
 	char const * const	*pjdl;
-	edg_wlc_JobId const	*psubjob;
-	edg_wlc_JobId		oldctxjob;
+	glite_lbu_JobId const	*psubjob;
+	glite_lbu_JobId		oldctxjob;
 	char *			oldctxseq;
 
 	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
@@ -950,14 +950,14 @@ edg_wll_registersubjobs_end:
 
 int edg_wll_RegisterSubjobsProxy(
 	edg_wll_Context 	ctx,
-	const edg_wlc_JobId 	parent,
+	const glite_lbu_JobId 	parent,
 	char const * const * 	jdls, 
 	const char * 		ns, 
-	edg_wlc_JobId const * 	subjobs)
+	glite_lbu_JobId const * 	subjobs)
 {
 	char const * const	*pjdl;
-	edg_wlc_JobId const	*psubjob;
-	edg_wlc_JobId		oldctxjob;
+	glite_lbu_JobId const	*psubjob;
+	glite_lbu_JobId		oldctxjob;
 	char *			oldctxseq;
 
 	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
@@ -982,7 +982,7 @@ edg_wll_registersubjobsproxy_end:
 
 int edg_wll_ChangeACL(
 		edg_wll_Context			ctx,
-		const edg_wlc_JobId		jobid,
+		const glite_lbu_JobId		jobid,
 		const char			*user_id,
 		enum edg_wll_UserIdType		user_id_type,
 		enum edg_wll_Permission		permission,

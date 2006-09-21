@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/events.h"
 
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	int 	lbproxy = 0, num_subjobs = 0;
 	int 	done = 0, njobs = 1,i;
 	edg_wll_Context	ctx;
-	edg_wlc_JobId	jobid,*subjobs;
+	glite_lbu_JobId	jobid,*subjobs;
 	FILE	*f;
 
 	edg_wll_InitContext(&ctx);
@@ -80,11 +80,11 @@ int main(int argc, char *argv[])
 	if (!job) {
 		char *p = strchr(server,':');
 		if (p) *p=0;
-		edg_wlc_JobIdCreate(server,p?atoi(p+1):0,&jobid);
-		job = edg_wlc_JobIdUnparse(jobid);
+		glite_lbu_JobIdCreate(server,p?atoi(p+1):0,&jobid);
+		job = glite_lbu_JobIdUnparse(jobid);
 		// fprintf(stdout,"new jobid: %s\n",job);
 	}
-	else if ((errno = edg_wlc_JobIdParse(job,&jobid))) {
+	else if ((errno = glite_lbu_JobIdParse(job,&jobid))) {
 		perror(job);
 		exit(1);
 	}
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 	free(job);
 
 	if (num_subjobs) for (i=0; subjobs[i]; i++) {
-		char	*job_s = edg_wlc_JobIdUnparse(subjobs[i]);
+		char	*job_s = glite_lbu_JobIdUnparse(subjobs[i]);
 		fprintf(stdout,"EDG_WL_SUB_JOBID[%d]=\"%s\"\n",i,job_s);
 		free(job_s);
 	}

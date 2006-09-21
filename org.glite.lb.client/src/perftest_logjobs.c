@@ -96,7 +96,7 @@ int edg_wll_DoLogEventIl(
 {
 	static long filepos = 0;
 	int ret = 0;
-	edg_wlc_JobId jid;
+	glite_lbu_JobId jid;
 	char *unique, *event_file;
 	static int num_event = 0;
 	char *event;
@@ -114,18 +114,18 @@ int edg_wll_DoLogEventIl(
 	len += strlen(user) - 1;
 
 	if(!nofile) {
-		ret = edg_wlc_JobIdParse(jobid, &jid);
+		ret = glite_lbu_JobIdParse(jobid, &jid);
 		if(ret != 0) 
-			return(edg_wll_SetError(context, ret, "edg_wlc_JobIdParse()"));
-		unique = edg_wlc_JobIdGetUnique(jid);
+			return(edg_wll_SetError(context, ret, "glite_lbu_JobIdParse()"));
+		unique = glite_lbu_JobIdGetUnique(jid);
 		if(unique == NULL) {
-			edg_wlc_JobIdFree(jid);
-			return(edg_wll_SetError(context, ENOMEM, "edg_wlc_JobIdGetUnique()"));
+			glite_lbu_JobIdFree(jid);
+			return(edg_wll_SetError(context, ENOMEM, "glite_lbu_JobIdGetUnique()"));
 		}
 		asprintf(&event_file, "%s.%s", logfile_prefix, unique);
 		if(!event_file) {
 			free(unique);
-			edg_wlc_JobIdFree(jid);
+			glite_lbu_JobIdFree(jid);
 			return(edg_wll_SetError(context, ENOMEM, "asprintf()"));
 		}
 		if(edg_wll_log_event_write(context, event_file, event,
@@ -134,7 +134,7 @@ int edg_wll_DoLogEventIl(
 					   &filepos)) {
 			edg_wll_UpdateError(context, 0, "edg_wll_log_event_write()");
 			free(unique);
-			edg_wlc_JobIdFree(jid);
+			glite_lbu_JobIdFree(jid);
 			free(event_file);
 		}
 	}
@@ -146,7 +146,7 @@ int edg_wll_DoLogEventIl(
 					     &context->p_tmp_timeout);
 	if(!nofile) {
 		free(unique);
-		edg_wlc_JobIdFree(jid);
+		glite_lbu_JobIdFree(jid);
 		free(event_file);
 	} else {
 		filepos += len;
@@ -268,7 +268,7 @@ main(int argc, char *argv[])
 
 			case DEST_BKSERVER:
 				ctx->p_tmp_timeout = ctx->p_log_timeout;
-				edg_wlc_JobIdParse(jobid, &ctx->p_jobid);
+				glite_lbu_JobIdParse(jobid, &ctx->p_jobid);
 				if (edg_wll_DoLogEventDirect(ctx, event)) {
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);

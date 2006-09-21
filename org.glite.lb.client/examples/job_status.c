@@ -20,7 +20,7 @@ static void printstat(edg_wll_JobStat,int);
 static char 	*myname;
 
 static void usage(char *);
-static int query_all(edg_wll_Context, edg_wll_JobStat **, edg_wlc_JobId **);
+static int query_all(edg_wll_Context, edg_wll_JobStat **, glite_lbu_JobId **);
 
 int main(int argc,char *argv[])
 {
@@ -41,7 +41,7 @@ int main(int argc,char *argv[])
 
 	if ( !strcmp(argv[1], "-all" ) ) {
 		edg_wll_JobStat		*statesOut;
-		edg_wlc_JobId		*jobsOut;
+		glite_lbu_JobId		*jobsOut;
 
 		jobsOut = NULL;
 		statesOut = NULL;
@@ -49,7 +49,7 @@ int main(int argc,char *argv[])
 		else for ( i = 0; statesOut[i].state; i++ ) printstat(statesOut[i],0);
 
 		if ( jobsOut ) {
-			for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
+			for (i=0; jobsOut[i]; i++) glite_lbu_JobIdFree(jobsOut[i]);
 			free(jobsOut);
 		}
 		if ( statesOut ) {
@@ -62,7 +62,7 @@ int main(int argc,char *argv[])
 	} 
 
 	if ( !strcmp(argv[1], "-x") ) {
-		edg_wlc_JobId 	job;		
+		glite_lbu_JobId 	job;		
 		edg_wll_JobStat status;
 
 		if ( argc < 3 ) { usage(argv[0]); return 1; }
@@ -73,7 +73,7 @@ int main(int argc,char *argv[])
 		edg_wll_SetParam(sctx[0], EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, argv[2]);
 		for ( i = 3; i < argc; i++ ) {
 			memset(&status, 0, sizeof status);
-			if (edg_wlc_JobIdParse(argv[i],&job)) {
+			if (glite_lbu_JobIdParse(argv[i],&job)) {
 				fprintf(stderr,"%s: %s: cannot parse jobId\n", myname, argv[i]);
 				continue;
 			}
@@ -81,7 +81,7 @@ int main(int argc,char *argv[])
 				dgerr(sctx[0], "edg_wll_JobStatusProxy"); result = 1;
 			} else printstat(status, 0);
 
-			if ( job ) edg_wlc_JobIdFree(job);
+			if ( job ) glite_lbu_JobIdFree(job);
 			if ( status.state ) edg_wll_FreeStatus(&status);
 		}
 		edg_wll_FreeContext(sctx[0]);
@@ -93,20 +93,20 @@ int main(int argc,char *argv[])
 	for ( i = 1; i < argc; i++ ) {
 		int		j;
 		char		*bserver;
-		edg_wlc_JobId 	job;		
+		glite_lbu_JobId 	job;		
 		edg_wll_JobStat status;
 
 		memset(&status,0,sizeof status);
 
 
-		if (edg_wlc_JobIdParse(argv[i],&job)) {
+		if (glite_lbu_JobIdParse(argv[i],&job)) {
 			fprintf(stderr,"%s: %s: cannot parse jobId\n", myname,argv[i]);
 			continue;
 		}
-                bserver = edg_wlc_JobIdGetServer(job);
+                bserver = glite_lbu_JobIdGetServer(job);
                 if (!bserver) {
                         fprintf(stderr,"%s: %s: cannot extract bookkeeping server address\n", myname,argv[i]);
-			edg_wlc_JobIdFree(job);
+			glite_lbu_JobIdFree(job);
                         continue;
                 }
                 for ( j = 0; j < nsrv && strcmp(bserver, servers[j]); j++ );
@@ -120,7 +120,7 @@ int main(int argc,char *argv[])
 			dgerr(sctx[j],"edg_wll_JobStatus"); result = 1; 
 		} else printstat(status,0);
 
-		if (job) edg_wlc_JobIdFree(job);
+		if (job) glite_lbu_JobIdFree(job);
 		if (status.state) edg_wll_FreeStatus(&status);
 	}
 	for ( i = 0; i < nsrv; i++ ) edg_wll_FreeContext(sctx[i]);
@@ -136,7 +136,7 @@ usage(char *name)
 }
 
 static int
-query_all(edg_wll_Context ctx, edg_wll_JobStat **statesOut, edg_wlc_JobId **jobsOut)
+query_all(edg_wll_Context ctx, edg_wll_JobStat **statesOut, glite_lbu_JobId **jobsOut)
 {
 	edg_wll_QueryRec        jc[2];
 	int			ret;
@@ -186,11 +186,11 @@ static void printstat(edg_wll_JobStat stat, int level)
 	s = edg_wll_StatToString(stat.state); 
 /* print whole flat structure */
 	printf("%sstate : %s\n", ind, s);
-	printf("%sjobId : %s\n", ind, j = edg_wlc_JobIdUnparse(stat.jobId));
+	printf("%sjobId : %s\n", ind, j = glite_lbu_JobIdUnparse(stat.jobId));
 	printf("%sowner : %s\n", ind, stat.owner);
 	printf("%sjobtype : %s\n", ind, (stat.jobtype ? "DAG" : "SIMPLE") );
 	printf("%sparent_job : %s\n", ind,
-			j = edg_wlc_JobIdUnparse(stat.parent_job));
+			j = glite_lbu_JobIdUnparse(stat.parent_job));
 	if (stat.jobtype) {;
 		printf("%sseed : %s\n", ind, stat.seed);
 		printf("%schildren_num : %d\n", ind, stat.children_num);

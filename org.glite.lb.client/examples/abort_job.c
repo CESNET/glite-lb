@@ -11,7 +11,7 @@
 
 #include "glite/lb/events_parse.h"
 #include "glite/lb/consumer.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 
 static void free_events(edg_wll_Event *);
 
@@ -28,7 +28,7 @@ int main(int argc,char **argv)
 	edg_wll_Event	*events;
 	int		i;
 	edg_wll_QueryRec	jq[2],eq[2];
-	edg_wlc_JobId	job;
+	glite_lbu_JobId	job;
 	edg_wll_Source	src;
 
 	if (argc != 3) help(argv[0]);
@@ -49,7 +49,7 @@ int main(int argc,char **argv)
 
 	edg_wll_InitContext(&ctx);
 
-	if (edg_wlc_JobIdParse(argv[1],&job)) {
+	if (glite_lbu_JobIdParse(argv[1],&job)) {
 		fprintf(stderr,"%s: can't parse job ID\n",argv[1]);
 		return 1;
 	}
