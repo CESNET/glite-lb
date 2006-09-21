@@ -59,7 +59,7 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 # major version more frequently. This variable specifies how many steps ahead
 # we are.
 
-VERSION_AHEAD=1
+VERSION_AHEAD=2
 
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${nothrflavour} \
@@ -131,10 +131,9 @@ endif
 
 default: all
 
-#all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
-all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
+all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
 
-# FIXME: to use libtool versioning correcty, we should have:
+# In order to use libtool versioning correcty, we must have:
 #
 # current = major + minor + offset
 # revision = patch
@@ -142,11 +141,9 @@ all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAI
 #
 # where offset is a sum of maximal released minor's of all previous major's
 # 
-# version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
-
-# counted minors: 1.1
-offset=1
+# counted minors: 1.1, 3.1
+offset=2
 
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
