@@ -161,7 +161,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 					char et[BUFSIZ];
 					retval = EINVAL;
 					err.code = retval;
-					snprintf(et,sizeof et,"Attempt to process different jobs. Id '%s' (event n.%d) differs from '%s'",id,nevents,id0);
+					snprintf(et,sizeof et,"Attempt to process different jobs. Id '%s' (event n.%d) differs from '%s'",id,nevents+1,id0);
 					et[BUFSIZ-1] = 0;
 					err.desc = et;
 					err.source = "lb_plugin.c:edg_wlc_JobIdGetUnique()";
@@ -527,8 +527,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			old_val = strdup ("");			
 			for (i=0; i<h->status.children_num; i++) {
 				trio_asprintf(&val,"%s\t\t<jobId>%s</jobId>\n",
-					old_val, "");
-// FIXME:					h->status.children[i] ? h->status.children[i] : "");
+					old_val, h->status.children[i] ? h->status.children[i] : "");
 				if (old_val) free(old_val);
 				old_val = val; val = NULL; 
 			}
@@ -776,26 +775,24 @@ static int lb_status(void *handle) {
 	}
 	h->fullStatusHistory[nstates] = NULL;
 
-/* TODO: fill in also subjobs
+/* TODO: fill in also subjobs */
 	if (js->pub.children_num > 0) {	
 		edg_wll_Context context;
 		edg_wlc_JobId *subjobs;
 
 		if ((retval = edg_wll_InitContext(&context)) != 0) return retval;
-		subjobs = calloc(js->pub.children_num, sizeof (edg_wlc_JobId));
-		
+		subjobs = calloc(js->pub.children_num, sizeof (*subjobs));
 		if ((retval = edg_wll_GenerateSubjobIds(context, 
 			js->pub.jobId, js->pub.children_num, js->pub.seed, &subjobs) ) != 0 ) {
 			goto err;
 		}
-
+		js->pub.children = calloc(js->pub.children_num + 1, sizeof (*js->pub.children));
 		for (i=0; i<js->pub.children_num; i++) {
 			js->pub.children[i] = edg_wlc_JobIdUnparse(subjobs[i]);
 		}
 		edg_wll_FreeContext(context);
 		free(subjobs);
 	}
-*/
 
 	memcpy(&h->status, &js->pub, sizeof(edg_wll_JobStat));
 
