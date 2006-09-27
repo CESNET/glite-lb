@@ -11,6 +11,7 @@
 #include "glite/lb/context-int.h"
 
 #include "jobstat.h"
+#include "lock.h"
 
 /* TBD: share in whole logging or workload */
 #ifdef __GNUC__
@@ -206,6 +207,99 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 	return RET_FATAL;
 }
 
+static edg_wll_ErrorCode update_parent_status(edg_wll_JobStatCode old_state, enum edg_wll_StatDone_code old_done_code, intJobStat *cis)
+{
+	edg_wll_Context ctx;
+	intJobStat	*pis;
+	int		ret, update_hist = 0;
+
+
+	edg_wll_InitContext(&ctx);
+
+	if (edg_wll_LockJob(ctx,cis->pub.parent_job)) 
+		goto err;
+
+	if (edg_wll_LoadIntState(ctx, cis->pub.parent_job, - 1, &pis))
+		goto err;
+
+	/* Easy version, where the whole histogram is evolving... 
+	 * not used because of performance reasons 
+	 *
+		pis->pub.children_hist[cis->pub.state]++;
+		if (cis->pub.state == EDG_WLL_JOB_DONE) 
+			pis->children_done_hist[cis->pub.done_code]++;
+		pis->pub.children_hist[old_state]--;
+		if (old_state == EDG_WLL_JOB_DONE)
+			pis->children_done_hist[old_done_code]--;
+		edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
+	*/
+
+	/* Increment histogram for interesting states and 
+	 * cook artificial events to enable parent job state shift 
+	 */
+	switch (cis->pub.state) {
+		case EDG_WLL_JOB_RUNNING:
+				pis->pub.children_hist[cis->pub.state]++;
+				update_hist = 1;			
+
+				/* not RUNNING yet? */
+				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
+					//XXX cook artificial event for parent job
+					//    and call db_store
+			}
+			break;
+		case EDG_WLL_JOB_DONE:
+			// edg_wll_GetSubjobHistogram(ctx, cis->pub.parent_job, &pis);
+			// not needed, load by edg_wll_LoadIntState()
+
+			pis->pub.children_hist[cis->pub.state]++;
+			update_hist = 1;			
+
+			pis->children_done_hist[cis->pub.done_code]++;
+			if (pis->pub.children_hist[cis->pub.state] == pis->pub.children_num) {
+				// XXX cook artificial event for parent job
+				//    and call db_store
+			}
+			break;
+		// XXX: more cases to bo added...
+		case EDG_WLL_JOB_CLEARED:
+			break;
+		default:
+			break;
+	}
+	
+
+	/* Decrement histogram for interesting states
+	 */
+	switch (old_state) {
+		case EDG_WLL_JOB_RUNNING:
+			pis->pub.children_hist[old_state]--;
+			update_hist = 1;
+			break;
+		case EDG_WLL_JOB_DONE:
+			pis->pub.children_hist[old_state]--;
+			pis->children_done_hist[old_done_code]--;
+			update_hist = 1;
+			break;
+		// XXX: more cases to bo added...
+		default:
+			break;
+	}
+
+	if (update_hist)
+		edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
+	
+err:
+	edg_wll_UnlockJob(ctx,cis->pub.parent_job);
+	destroy_intJobStat(pis);
+	ret = edg_wll_Error(ctx,NULL,NULL);
+	edg_wll_FreeContext(ctx);
+
+	return ret;
+}
+
+
+
 // (?) || (0 && 1)  =>  true if (res == RET_OK)
 #define USABLE(res,strict) ((res) == RET_OK || ( (res) == RET_SOON && !strict))
 
@@ -218,8 +312,8 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 
 int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
-
 	edg_wll_JobStatCode	old_state = js->pub.state;
+	enum edg_wll_StatDone_code	old_done_code = js->pub.done_code;
 	edg_wll_JobStatCode	new_state = EDG_WLL_JOB_UNKNOWN;
 	int			res = RET_OK,
 				fine_res = RET_OK;
@@ -850,6 +944,13 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 		}
 	}
 	
+	/* check whether subjob state change does not change parent state */
+	if ((js->pub.parent_job) && (old_state != js->pub.state)) { 
+		if (update_parent_status(old_state, old_done_code, js))
+			// XXX: is it good error code? (hard one)
+			res = RET_INTERNAL;
+	}
+
 	return res;
 
 bad_event:

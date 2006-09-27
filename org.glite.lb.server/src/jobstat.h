@@ -48,6 +48,7 @@ typedef struct _intJobStat {
 		branch_state	*branch_states;		// branch zero terminated array
 
 /*		int		expect_mask; */
+		enum edg_wll_StatDone_code 	children_done_hist[EDG_WLL_NUMBER_OF_DONE_CODES];
 	} intJobStat;
 
 void destroy_intJobStat(intJobStat *);
@@ -79,4 +80,7 @@ int add_stringlist(char ***, const char *);
 int edg_wll_compare_seq(const char *, const char *);
 
 void init_intJobStat(intJobStat *p);
+
+edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context, edg_wlc_JobId parent_jobid, intJobStat **ijs);
+edg_wll_ErrorCode edg_wll_SetSubjobHistogram(edg_wll_Context, edg_wlc_JobId parent_jobid, intJobStat *ijs);
 

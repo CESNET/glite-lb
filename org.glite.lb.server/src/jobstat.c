@@ -708,3 +708,14 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
+
+edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, intJobStat **ijs)
+{
+	// XXX: to be done
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+edg_wll_ErrorCode edg_wll_SetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, intJobStat *ijs)
+{
+	// XXX: to be done
+	return edg_wll_Error(ctx, NULL, NULL);
+}
