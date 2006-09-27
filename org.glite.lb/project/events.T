@@ -142,6 +142,7 @@
 	_code_	DAG		The job is dag (containing static set of subjobs).
 	_code_	PARTITIONABLE	The job is partitionable (may become partitioned).
 	_code_	PARTITIONED	The job is partitioned (dynamically created dag).
+	_code_	COLLECTION	The job is collection (containing static set of subjobs).
 	
 	int	nsubjobs	Number of subjobs this job plans to spawn.
 	_optional_
