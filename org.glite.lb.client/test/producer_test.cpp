@@ -55,14 +55,14 @@ private:
 
   void log_proto_server(int con, char *logline) {
     int i;
-    char b[4];
+    char b[5];
     char *buf;
     ssize_t size, retsize;
 
     // read DGLOG
     retsize = read(con, b, 5);
     CPPUNIT_ASSERT(retsize == 5);
-    CPPUNIT_ASSERT(b[0] = 'D' && b[1] == 'G' && b[2] == 'L' && b[3] == 'O' && b[4] == 'G');
+    CPPUNIT_ASSERT(b[0] == 'D' && b[1] == 'G' && b[2] == 'L' && b[3] == 'O' && b[4] == 'G');
 
     // read size (including '\0', little endian)
     for (i = 0; i < 4; i++)
