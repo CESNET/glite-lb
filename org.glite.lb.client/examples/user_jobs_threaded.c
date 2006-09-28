@@ -7,6 +7,7 @@
 #include <expat.h>
 
 #include <pthread.h>
+#include <globus_common.h>
 
 #include "glite/lb/context.h"
 #include "glite/lb/xml_conversions.h"
@@ -118,6 +119,11 @@ int main(int argc,char **argv)
 	int	i,rc,status;
         pthread_t threads[NUM_THREADS];
 	pthread_attr_t attr;
+
+	if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS)   {
+		fputs("globus_module_activate()\n",stderr);
+		return 1;
+	}
 
         pthread_attr_init(&attr);
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);

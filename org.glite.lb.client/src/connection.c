@@ -185,6 +185,8 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 			ReleaseConnection(ctx, NULL, 0);
 		
 		index = AddConnection(ctx, ctx->srvName, ctx->srvPort);
+		if (index < 0) return edg_wll_SetError(ctx,EAGAIN,"connection pool size exceeded");
+
                 #ifdef EDG_WLL_CONNPOOL_DEBUG	
                     printf("Connection to %s:%d opened as No. %d in the pool\n",ctx->srvName,ctx->srvPort,index);
                 #endif
