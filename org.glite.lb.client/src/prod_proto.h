@@ -19,8 +19,14 @@ extern "C" {
 #include "glite/lb/context-int.h"
 
 int edg_wll_log_proto_client(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline);
-int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline);
+
 int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnection *conn, edg_wll_LogLine logline);
+int edg_wll_log_write_proxy(edg_wll_Context context, edg_wll_PlainConnection *conn, edg_wll_LogLine logline);
+int edg_wll_log_read_proxy(edg_wll_Context context, edg_wll_PlainConnection *conn);
+
+int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline);
+int edg_wll_log_write_direct(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline);
+int edg_wll_log_read_direct(edg_wll_Context context, edg_wll_GssConnection *con);
 
 int edg_wll_log_proto_handle_gss_failures(edg_wll_Context context, int code, edg_wll_GssStatus *gss_code, const char *text);
 int edg_wll_log_proto_handle_plain_failures(edg_wll_Context context, int code, const char *text);
