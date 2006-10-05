@@ -102,18 +102,16 @@ err:
 
 	edg_wll_FreeContext(ctx);
 
-        printf("Thread %d exitting\n",(int)pthread_self());
+//        printf("Thread %d exitting\n",(int)pthread_self());
 
         pthread_exit(NULL);
 
-        printf("Thread %d out !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n",(int)pthread_self());
-//        return 0;
 }
 
 int main(int argc,char **argv)
 {
 
-        #define NUM_THREADS 10
+        #define NUM_THREADS 60
 
         thread_code_args arguments = { NULL , 0 , NULL };
 	int	i,rc,status;
@@ -161,9 +159,9 @@ int main(int argc,char **argv)
         pthread_attr_destroy(&attr);
 
         for (i=0;i<NUM_THREADS;i++) {
-            printf("*** Joining thread %d.\n",i);
+//            printf("*** Joining thread %d.\n",i);
             rc=pthread_join(threads[i],(void **)&status);
-            printf("*** Thread %d joined. (status %d ret. code %d)\n",i,status,rc);
+//            printf("*** Thread %d joined. (status %d ret. code %d)\n",i,status,rc);
 
         }
 

@@ -28,7 +28,7 @@ static void CloseConnection(edg_wll_Context ctx, int* conn_index)
         cIndex = *conn_index;
 
 	assert(ctx->connections->connOpened);
-	assert(cIndex < ctx->connections->connOpened);
+//	assert(cIndex < ctx->connections->connOpened); // Assertion no longer valid. "Holes" in the pool are permitted.
 
 	edg_wll_gss_close(&ctx->connections->connPool[cIndex].gss, &ctx->p_tmp_timeout);
 	if (ctx->connections->connPool[cIndex].gsiCred) 
@@ -423,7 +423,7 @@ int edg_wll_http_send_recv(
 	assert(connToUse >= 0);
 	gettimeofday(&ctx->connections->connPool[connToUse].lastUsed, NULL);
  
-        sleep(3); //Just for testing
+//        sleep(3); //Just for testing
 
         edg_wll_connectionUnlock(ctx, connToUse);
 	return 0;
