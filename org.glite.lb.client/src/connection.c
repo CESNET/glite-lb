@@ -117,9 +117,9 @@ static int AddConnection(edg_wll_Context ctx, char *name, int port)
 
 
 
-static void ReleaseConnection(edg_wll_Context ctx, char *name, int port)
+static int ReleaseConnection(edg_wll_Context ctx, char *name, int port)
 {
-	int i, index = 0;
+	int i, index = 0, foundConnToDrop = 0;
 	long min;
 
 
@@ -130,17 +130,31 @@ static void ReleaseConnection(edg_wll_Context ctx, char *name, int port)
 			CloseConnection(ctx, &index);
 	}
 	else {					/* free the oldest (unlocked) connection */
-		assert(ctx->connections->connPool[0].peerName);	 // Full pool expected - accept non-NULL values only
-		min = ctx->connections->connPool[0].lastUsed.tv_sec;
+/*		assert(ctx->connections->connPool[0].peerName);	 // Full pool expected - accept non-NULL values only
+		min = ctx->connections->connPool[0].lastUsed.tv_sec;*/
 		for (i=0; i<ctx->connections->poolSize; i++) {
 			assert(ctx->connections->connPool[i].peerName); // Full pool expected - accept non-NULL values only
-			if (ctx->connections->connPool[i].lastUsed.tv_sec < min) {
-				min = ctx->connections->connPool[i].lastUsed.tv_sec;
-				index = i;
+			if (!edg_wll_connectionTryLock(ctx, i)) {
+				edg_wll_connectionUnlock(ctx, i);	// Connection unlocked. Consider releasing it
+				if (foundConnToDrop) {		// This is not the first unlocked connection
+					if (ctx->connections->connPool[i].lastUsed.tv_sec < min) {
+						min = ctx->connections->connPool[i].lastUsed.tv_sec;
+						index = i;
+						foundConnToDrop++;
+					}
+				}
+				else {	// This is the first unlocked connection we have found.
+					foundConnToDrop++;
+					index = i;
+					min = ctx->connections->connPool[i].lastUsed.tv_sec;
+				}
 			}
 		}
+//		printf("Connections to drop: %d\nDropping connection No. %d\n",foundConnToDrop,index);
+		if (!foundConnToDrop) return edg_wll_SetError(ctx,EAGAIN,"all connections in the connection pool are locked");
 		CloseConnection(ctx, &index);
 	}
+	return edg_wll_Error(ctx,NULL,NULL);
 }
 			
 
@@ -182,10 +196,13 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 	if ( (index = ConnectionIndex(ctx, ctx->srvName, ctx->srvPort)) == -1 ) {
 		/* no such open connection in pool */
 		if (ctx->connections->connOpened == ctx->connections->poolSize)
-			ReleaseConnection(ctx, NULL, 0);
+			if(ReleaseConnection(ctx, NULL, 0)) goto end;
 		
 		index = AddConnection(ctx, ctx->srvName, ctx->srvPort);
-		if (index < 0) return edg_wll_SetError(ctx,EAGAIN,"connection pool size exceeded");
+		if (index < 0) {
+                    edg_wll_SetError(ctx,EAGAIN,"connection pool size exceeded");
+		    goto end;
+		}
 
                 #ifdef EDG_WLL_CONNPOOL_DEBUG	
                     printf("Connection to %s:%d opened as No. %d in the pool\n",ctx->srvName,ctx->srvPort,index);
@@ -248,11 +265,13 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 err:
 	/* some error occured; close created connection
 	 * and free all fields in connPool[index] */
-	CloseConnection(ctx, &index);
+	if (index >= 0) CloseConnection(ctx, &index);
 	*connToUse = -1;
 ok:	
 
         if (*connToUse>-1) edg_wll_connectionTryLock(ctx, *connToUse); /* Just to be sure we have not forgotten to lock it */
+
+end:
 
 	edg_wll_poolUnlock(); /* One way or the other, there are no more pool-wide operations */
 
@@ -375,6 +394,8 @@ int edg_wll_http_send_recv(
 	int	connToUse = -1; //Index of the connection to use. Used to be a context member.
 
 	if (edg_wll_open(ctx,&connToUse)) return edg_wll_Error(ctx,NULL,NULL);
+
+        edg_wll_connectionTryLock(ctx, connToUse);
 	
 	switch (edg_wll_http_send(ctx,request,req_head,req_body,&ctx->connections->connPool[connToUse])) {
 		case ENOTCONN:
@@ -401,6 +422,9 @@ int edg_wll_http_send_recv(
 	
 	assert(connToUse >= 0);
 	gettimeofday(&ctx->connections->connPool[connToUse].lastUsed, NULL);
+ 
+        sleep(3); //Just for testing
+
         edg_wll_connectionUnlock(ctx, connToUse);
 	return 0;
 
