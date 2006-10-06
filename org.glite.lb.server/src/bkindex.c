@@ -79,9 +79,11 @@ int main(int argc,char **argv)
 	}
 
 	edg_wll_InitContext(&ctx);
+	glite_lbu_InitDBContext(&ctx->dbctx);
 	if (!dbstring) dbstring = DEFAULTCS;
-	if (glite_lbu_DBConnect(&ctx->dbctx, dbstring) != 0) {
-		edg_wll_SetError(ctx, ENOTCONN, "can't create DB context");
+	if (glite_lbu_DBConnect(ctx->dbctx, dbstring) != 0) {
+		edg_wll_SetErrorDB(ctx);
+		glite_lbu_FreeDBContext(ctx->dbctx);
 		do_exit(ctx, EX_SOFTWARE);
 	}
 	if ((caps = glite_lbu_DBQueryCaps(ctx->dbctx)) == -1) do_exit_db(ctx,EX_SOFTWARE);
@@ -249,6 +251,7 @@ int main(int argc,char **argv)
 	}
 
 	glite_lbu_DBClose(ctx->dbctx);
+	glite_lbu_FreeDBContext(ctx->dbctx);
 
 	return 0;
 }
@@ -304,6 +307,7 @@ static void do_exit_db(edg_wll_Context ctx,int code)
 {
 	edg_wll_SetErrorDB(ctx);
 	glite_lbu_DBClose(ctx->dbctx);
+	glite_lbu_FreeDBContext(ctx->dbctx);
 	do_exit(ctx,code);
 }
 

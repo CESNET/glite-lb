@@ -239,7 +239,7 @@ static void usage(char *me)
 	,me);
 }
 
-static void wait_for_open(edg_wll_Context,const char *,glite_lbu_DBContext *);
+static void wait_for_open(edg_wll_Context,const char *,glite_lbu_DBContext);
 static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
 static int read_roots(const char *);
 static int asyn_gethostbyaddr(char **, const char *, int, int, struct timeval *);
@@ -570,7 +570,8 @@ a.sin_addr.s_addr = INADDR_ANY;
 
 	/* Just check the database and let it be. The slaves do the job. */
 	edg_wll_InitContext(&ctx);
-	wait_for_open(ctx, dbstring, &dbctx);
+	glite_lbu_InitDBContext(&dbctx);
+	wait_for_open(ctx, dbstring, dbctx);
 
 	if ((dbcaps = glite_lbu_DBQueryCaps(dbctx)) == -1)
 	{
@@ -584,6 +585,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 		return 1;
 	}
 	glite_lbu_DBClose(dbctx);
+	glite_lbu_FreeDBContext(dbctx);
 	if ((dbcaps & GLITE_LBU_DB_CAP_INDEX) == 0) {
 		fprintf(stderr,"%s: missing index support in DB layer\n",argv[0]);
 		return 1;
@@ -663,8 +665,9 @@ int bk_clnt_data_init(void **data)
 	}
 
 	dprintf(("[%d] opening database ...\n", getpid()));
+	glite_lbu_InitDBContext(&cdata->dbctx);
 	if ( !dbstring ) dbstring = getenv("LBDB");
-	wait_for_open(ctx, dbstring, &cdata->dbctx);
+	wait_for_open(ctx, dbstring, cdata->dbctx);
 	glite_lbu_DBSetCaps(cdata->dbctx, dbcaps);
 	ctx->dbctx = cdata->dbctx;
 
@@ -1257,7 +1260,7 @@ int bk_ws_clnt_reject(int conn)
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 
-static void wait_for_open(edg_wll_Context ctx, const char *dbstring, glite_lbu_DBContext *dbctx)
+static void wait_for_open(edg_wll_Context ctx, const char *dbstring, glite_lbu_DBContext dbctx)
 {
 	char	*dbfail_string1, *dbfail_string2;
 
@@ -1267,10 +1270,7 @@ static void wait_for_open(edg_wll_Context ctx, const char *dbstring, glite_lbu_D
 		char	*errt,*errd;
 
 		if (dbfail_string1) free(dbfail_string1);
-#warning FIXME: get the DB error
-//		edg_wll_Error(ctx,&errt,&errd);
-		errt = "DB error";
-		errd = "couldn't create DB context";
+		glite_lbu_DBError(dbctx,&errt,&errd);
 		asprintf(&dbfail_string1,"%s (%s)\n",errt,errd);
 		if (dbfail_string1 != NULL) {
 			if (dbfail_string2 == NULL || strcmp(dbfail_string1,dbfail_string2)) {
