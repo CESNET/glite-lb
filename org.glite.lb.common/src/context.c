@@ -128,7 +128,7 @@ static const char* const errTexts[] = {
 	"DNS resolver error",
 	"No JobId specified in context",
 	"No indexed condition in query",
-	"Lbserver (proxy) store protocol error",
+	"LB server (bkserver,lbproxy) store protocol error",
 	"Interlogger internal error",
 	"Interlogger has events pending",
 	"Compared events differ",
@@ -204,7 +204,7 @@ int edg_wll_UpdateError(edg_wll_Context ctx,int code,const char *desc)
 	/* update errDesc */
         if (old_desc) {
                 if (desc) {
-                        asprintf(&new_desc,"%s;; %s",desc,old_desc);
+                        asprintf(&new_desc,"%s\n%s",desc,old_desc);
                         ctx->errDesc = (char *) strdup(new_desc);
                 } else {
                         ctx->errDesc = (char *) strdup(old_desc);
