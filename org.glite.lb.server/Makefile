@@ -162,7 +162,7 @@ ifneq (${classads_prefix},/usr)
 endif
 
 EXT_LIBS:=  \
-	${mysqlib} -lmysqlclient -lz\
+	${mysqlib} -lmysqlclient -lz -lcares\
 	${GRIDSITE_LIBS} \
 	${classadslib} \
 	${VOMS_LIBS}
