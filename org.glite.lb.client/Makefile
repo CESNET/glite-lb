@@ -60,11 +60,14 @@ l_SRC = \
 
 sh_PROGS = $(l_SRC:.l=.sh)
 
-
-DEBUG:=-g -O0 -Wall
-
 GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
+
+ifdef DEBUG
+	DEBUG:=-g -O0 -Wall -DEDG_WLL_LOG_STUB
+else
+	DEBUG:=-g -O0 -Wall
+endif
 
 ifdef LB_STANDALONE
         LB_STANDALONE_FLAGS:=-DLB_STANDALONE
