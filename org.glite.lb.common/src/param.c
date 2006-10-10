@@ -30,7 +30,7 @@ static const char *myenv[] = {
 	"%sQUERY_JOBS_LIMIT",
 	"%sQUERY_EVENTS_LIMIT",
 	"%sQUERY_RESULTS",
-	"%sQUERY_CONNECTIONS",
+	"%sCONNPOOL_SIZE",
 	"%sNOTIF_SERVER",
 	"%sNOTIF_SERVER",
 	"%sNOTIF_TIMEOUT",
@@ -238,13 +238,12 @@ int edg_wll_SetParamInt(edg_wll_Context ctx,edg_wll_ContextParam param,int val)
 				return edg_wll_SetError(ctx,EINVAL,"can't parse query result parameter name");
 			}
 			break;
-		case EDG_WLL_PARAM_QUERY_CONNECTIONS:
+		case EDG_WLL_PARAM_CONNPOOL_SIZE:
 			{
 				char *s = mygetenv(param);
 				
 				if (!val && s) val = atoi(s);
-//				ctx->connections->poolSize = val ? val : EDG_WLL_LOG_CONNECTIONS_DEFAULT;
-				connectionsHandle.poolSize = val ? val : EDG_WLL_LOG_CONNECTIONS_DEFAULT;
+				connectionsHandle.poolSize = val ? val : GLITE_LB_COMMON_CONNPOOL_SIZE;
 			}
 			break;
 		case EDG_WLL_PARAM_SOURCE:           
@@ -313,7 +312,7 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_QUERY_JOBS_LIMIT:      
 		case EDG_WLL_PARAM_QUERY_EVENTS_LIMIT:      
 		case EDG_WLL_PARAM_QUERY_RESULTS:
-		case EDG_WLL_PARAM_QUERY_CONNECTIONS:
+		case EDG_WLL_PARAM_CONNPOOL_SIZE:
 		case EDG_WLL_PARAM_SOURCE:           
 			return edg_wll_SetParamInt(ctx,param,va_arg(ap,int));
 		case EDG_WLL_PARAM_HOST:             
@@ -379,9 +378,9 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 			p_int = va_arg(ap, int *);
 			*p_int = ctx->p_query_results;
 			break;
-		case EDG_WLL_PARAM_QUERY_CONNECTIONS:
+		case EDG_WLL_PARAM_CONNPOOL_SIZE:
 			p_int = va_arg(ap, int *);
-			*p_int = ctx->connections->poolSize;
+			*p_int = connectionsHandle.poolSize;
 			break;
 		case EDG_WLL_PARAM_SOURCE:           
 			p_int = va_arg(ap, int *);

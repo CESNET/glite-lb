@@ -16,6 +16,9 @@ extern "C" {
 #ifndef EDG_WLL_CONNPOOL_DECLARED
 #define EDG_WLL_CONNPOOL_DECLARED 1
 
+#define	GLITE_LB_COMMON_CONNPOOL_SIZE	4
+
+
 typedef struct _edg_wll_ConnPool {
 /* address and port where we are connected to */
         char            *peerName;
