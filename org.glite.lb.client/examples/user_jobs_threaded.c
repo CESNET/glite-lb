@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <getopt.h>
 
 #include <expat.h>
 
@@ -18,15 +20,39 @@ int use_proxy = 0;
 int (*user_jobs)(edg_wll_Context, edg_wlc_JobId **, edg_wll_JobStat **);
 
 
-void
-usage(char *me)
+
+static const char *get_opt_string = "hpj:t:s:w:";
+
+static struct option opts[] = {
+	{"help",	0, NULL,	'h'},
+	{"proxy",       0, NULL,	'x'},
+	{"owner",	1, NULL,	'o'},
+	{"num-threads",	1, NULL,	't'},
+	{"rand-start",	1, NULL,	's'},
+//	{"rand-work",	1, NULL,	'w'},
+	{NULL,		0, NULL,	0}
+};
+
+
+
+static void usage(char *me) 
 {
-	fprintf(stderr,"usage: %s [-h] [-x] [userid]\n", me);
+	fprintf(stderr,"usage: %s [option]\n"
+		"\t-h, --help\t show this help\n"
+		"\t-p, --proxy\t contact proxy (not implemented yet)\n"
+		"\t-o, --owner DN\t show jobs of user with this DN\n"
+		"\t-t, --num-threads N\t number fo threads to create\n"
+		"\t-s, --rand-start N\t start threads in random interval <0,N> sec\n"
+//		"\t-w, --rand-work N\t simulate random server respose time <0,N> sec\n"
+		"\n"
+	,me);
 }
+
 
 typedef struct {
     char *owner;
     int proxy;
+    int rand_start;
     char *argv_0;} thread_code_args;
 
 void *thread_code(thread_code_args *arguments) {
@@ -36,10 +62,16 @@ void *thread_code(thread_code_args *arguments) {
 	edg_wlc_JobId		*jobs = NULL;
 	edg_wll_JobStat		*states = NULL;
 	int		i,j;
+	long		sl;
+
+
+	sl = (unsigned long) ((double) random()/ RAND_MAX * arguments->rand_start * 1000000);
+	printf("Thread [%d] - sleeping for %ld us\n",pthread_self(),sl);
+	usleep( sl );
 
 	user_jobs = edg_wll_UserJobs;
 
-       if (arguments->proxy) {
+	if (arguments->proxy) {
             user_jobs = edg_wll_UserJobsProxy;
         }
 
@@ -110,60 +142,58 @@ err:
 
 int main(int argc,char **argv)
 {
+        thread_code_args arguments = { NULL, 0, 0, NULL };
+	int	i,rc,status,opt;
+	int	thr_num = 10;	// default
 
-        #define NUM_THREADS 60
 
-        thread_code_args arguments = { NULL , 0 , NULL };
-	int	i,rc,status;
-        pthread_t threads[NUM_THREADS];
-	pthread_attr_t attr;
-
-	if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS)   {
-		fputs("globus_module_activate()\n",stderr);
-		return 1;
-	}
-
-        pthread_attr_init(&attr);
-        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
-	for ( i = 1; i < argc; i++ ) {
-		if ( !strcmp(argv[i], "-h") || !strcmp(argv[i], "--help") ) {
-			usage(argv[0]);
-			exit(0);
-		}
-                else if ( !strcmp(argv[i], "-x") ) {
-                    arguments.proxy = 1;
-         	}
-
-		arguments.owner = strdup(argv[i]);
-	}
+        while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
+                case 'x': arguments.proxy = 1; break;
+                case 'o': arguments.owner = optarg; break;
+                case 't': thr_num = atoi(optarg); break;
+                case 's': arguments.rand_start = atoi(optarg); break;
+                default : usage(argv[0]); exit(0); break;
+        }
 
         arguments.argv_0 = argv[0];
 
+	/* Do a thready work */
+	{
+        	pthread_t threads[thr_num];
+		pthread_attr_t attr;
 
-        for (i=0;i<NUM_THREADS;i++) {
-            printf("Running thread %d\n",i);
-            rc = pthread_create(&threads[i], &attr, (void*)thread_code, &arguments );
-            if (rc){
-                printf("ERROR; return code from pthread_create() is %d\n", rc);
-                exit(-1);
-            }
-        }
+		if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS)   {
+			fputs("globus_module_activate()\n",stderr);
+			return 1;
+		}
+
+        	pthread_attr_init(&attr);
+	        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+	
+		for (i=0;i<thr_num;i++) {
+		    printf("Running thread %d\n",i);
+		    rc = pthread_create(&threads[i], &attr, (void*)thread_code, &arguments );
+		    if (rc){
+			printf("ERROR; return code from pthread_create() is %d\n", rc);
+			exit(-1);
+		    }
+		}
 
 
 
-//        thread_code(&arguments);
+		//        thread_code(&arguments);
 
-//        pthread_exit(NULL)
+		//        pthread_exit(NULL)
 
-        pthread_attr_destroy(&attr);
+		pthread_attr_destroy(&attr);
 
-        for (i=0;i<NUM_THREADS;i++) {
-//            printf("*** Joining thread %d.\n",i);
-            rc=pthread_join(threads[i],(void **)&status);
-//            printf("*** Thread %d joined. (status %d ret. code %d)\n",i,status,rc);
+		for (i=0;i<thr_num;i++) {
+		//            printf("*** Joining thread %d.\n",i);
+		    rc=pthread_join(threads[i],(void **)&status);
+		//            printf("*** Thread %d joined. (status %d ret. code %d)\n",i,status,rc);
 
-        }
+		}
+	}
 
         printf("Threaded example main() exitting\n");
 
