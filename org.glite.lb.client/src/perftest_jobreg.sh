@@ -22,7 +22,7 @@ test_credentials()
 
         if test -z "$creds"; then
                 if [ -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem ]; then
-                        creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
+                        creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem -C /etc/grid-security/certificates"
                 fi
         fi
         [ -z "$creds" ] && \
@@ -242,6 +242,59 @@ quick_test()
 
 }
 
+proxy_test()
+{
+	echo "----------------------------------------------------------------
+Scenarios:
+0) registration only to bkserver (edg_wll_RegisterJobSync)
+1) dual registration (edg_wll_RegisterJobProxy)	
+2) old (not dual) registration (edg_wll_RegisterJobProxyOld)
+3) two separate registrations (edg_wll_RegisterJobSync + edg_wll_RegisterJobProxyOnly)
+
+"
+        if [ -n "$1" ]; then
+                repeat="-N $1"
+                repeated="repeated $1 times"
+		scale=$1
+        else
+                repeat=""
+                repeated=""
+		scale=1
+        fi
+
+	# single registration
+	#
+	for i in 0 1 2 3; do
+		dest="-m $HOST:$PORT -x $i"
+		my_echo "-n single registration $repeated (scenario $i)..."
+		ai_sr_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest $repeat`
+		mega_actions_per_day=`echo "scale=6; 86400/$ai_sr_lb/1000000*$scale" | bc`
+		my_echo ". $ai_sr_lb seconds ($mega_actions_per_day GU)"
+	done
+
+	# 1000 nodes DAG registration
+	#
+	for i in 0 1 2 3; do
+		dest="-m $HOST:$PORT -x $i"
+		my_echo "-n 1000 nodes DAG registration $repeated (scenario $i)..."
+		ai_dag1000_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest $repeat -n 1000`
+		mega_actions_per_day=`echo "scale=6; 86400/$ai_dag1000_lb/1000000*1001*$scale" | bc`
+		my_echo ". $ai_dag1000_lb seconds ($mega_actions_per_day GU)"
+	done
+
+	# 10000 nodes DAG registration
+	#
+	for i in 0 1 2 3; do
+		dest="-m $HOST:$PORT -x $i"
+		my_echo "-n 10000 nodes DAG registration $repeated (scenario $i)..."
+		ai_dag10000_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest $repeat -n 10000`
+		mega_actions_per_day=`echo "scale=6; 86400/$ai_dag10000_lb/1000000*10001*$scale" | bc`
+		my_echo ". $ai_dag10000_lb seconds ($mega_actions_per_day GU)"
+	done
+
+
+}
+
 
 ################################################################################
 
@@ -257,30 +310,54 @@ sink_mode[4]=GLITE_LB_SINK_SEND
 test_glite_location;
 test_credentials;
 
-start_bkserver 0;
-my_echo "================================================================"
-my_echo "Testing LB server with sink_mode ${sink_mode[0]}"
+#
+# QUICK TEST
+#
+#start_bkserver 0;
+#start_proxy 0;
+#my_echo "================================================================"
+#my_echo "Testing LB server with sink_mode ${sink_mode[0]}"
+#my_echo "Testing LB proxy with sink_mode ${sink_mode[0]}"
+#sleep 5
+#sync
+#sleep 5
+#for i in `seq 1 10000`; do
+#	quick_test server 0;
+##	quick_test proxy 0;
+#done
+#stop_bkserver;
+#stop_proxy;
 
-sleep 5
-sync
-sleep 5
-
-for i in `seq 1 10000`; do
-	quick_test server 0;
-done
-stop_bkserver;
-
-
+#
+# SINK TEST
+#
 #for i in 1 2 3 4; do
-
+#	my_echo "================================================================"
+#
+#	my_echo "Testing LB proxy with sink_mode ${sink_mode[$i]}"
 #	start_proxy $i
 #	test_ai proxy $i;
 #	stop_proxy
-
+#
+#	my_echo "Testing LB server with sink_mode ${sink_mode[$i]}"
 #	start_bkserver $i;
 #	test_ai server $i;
 #	stop_bkserver;
 #done
+
+#
+# PROXY TEST
+#
+start_bkserver 0;
+start_proxy 0;
+my_echo "================================================================"
+my_echo "Testing LB server with sink_mode ${sink_mode[0]}"
+my_echo "Testing LB proxy with sink_mode ${sink_mode[0]}"
+sleep 5
+proxy_test 1000;
+stop_bkserver;
+stop_proxy;
+
 
 echo "__________"
 echo "GU (goal units) are millons of registrations per day, where registration is"

@@ -29,9 +29,13 @@ extern int opterr,optind;
 
 static void usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-x] [-n num_subjobs [-S]] [-l jdl_file] [-N num_repeat]\n"
+	fprintf(stderr,"usage: %s [-m bkserver] [-x scenario] [-n num_subjobs [-S]] [-l jdl_file] [-N num_repeat]\n"
 		"	-m <bkserver>		address:port of bkserver\n"
-		"	-x  	           	use LBProxy\n"
+		"	-x <scenario>   	use LBProxy\n"
+		"	   1                   	use one call (RegisterJobProxy - dual registration) \n"
+		"	   2	           	use one call (RegisterJobProxyOld - sequence registration) \n"
+		"	   3	           	use two separate calls (RegisterJob and RegisterJobProxyOnly) \n"
+		"	   0 (or anything else) do not register to lbproxy at all\n"
 		"	-n <num_subjobs>	number of subjobs of DAG\n"
 		"	-S			register subjobs\n"
 		"	-l <jdl_file>		file with JDL\n"
@@ -54,8 +58,8 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xm:n:Sl:N:v")) {
-			case 'x': lbproxy = 1; break;
+		switch (getopt(argc,argv,"x:m:n:Sl:N:v")) {
+			case 'x': lbproxy = optarg ? atoi(optarg):1; break;
 			case 'm': server = strdup(optarg); break;
 			case 'n': num_subjobs = atoi(optarg); break;
 			case 'S': if (num_subjobs>0) { reg_subjobs = 1; break; }
@@ -66,6 +70,8 @@ int main(int argc, char *argv[])
 			case -1: done = 1; break;
 		}
 	} while (!done);
+
+	if ((lbproxy > 3) || (lbproxy < 0)) lbproxy = 1;
 
 	if (!server && !lbproxy) {
 		fprintf(stderr,"%s: either -m server or -x has to be specified\n",argv[0]);
@@ -112,30 +118,66 @@ int main(int argc, char *argv[])
 	gettimeofday(&start, NULL);
 
 	for (i=0; i<N; i++) {
-		if (server) {
-			if (edg_wll_RegisterJobSync(ctx,jobids[i],
-				num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
-				jdl ? jdl : "blabla", "NNNSSSS",
-				num_subjobs,NULL,&subjobs))
-			{
-				char 	*et,*ed;
-				edg_wll_Error(ctx,&et,&ed);
-				fprintf(stderr,"edg_wll_RegisterJobSync(): %s (%s)\n",et,ed);
-				exit(1);
-			}
-		}
-		if (lbproxy) {
-			if (edg_wll_RegisterJobProxyOnly(ctx,jobids[i],
-				num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
-				jdl ? jdl : "blabla", "NNNSSSS",
-				num_subjobs,NULL,&subjobs))
-			{
-				char 	*et,*ed;
-				edg_wll_Error(ctx,&et,&ed);
-				fprintf(stderr,"edg_wll_RegisterJobProxyOnly(): %s (%s)\n",et,ed);
-				exit(1);
-			}
-		} 
+		switch (lbproxy) {
+			case 0: /* register to bkserver only */
+				if (edg_wll_RegisterJobSync(ctx,jobids[i],
+					num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
+					jdl ? jdl : "blabla", "NNNSSSS",
+					num_subjobs,NULL,&subjobs))
+				{
+					char 	*et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_RegisterJobSync(): %s (%s)\n",et,ed);
+					exit(1);
+				}
+				break;
+			case 1: /* dual registration */
+				if (edg_wll_RegisterJobProxy(ctx,jobids[i],
+					num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
+					jdl ? jdl : "blabla", "NNNSSSS",
+					num_subjobs,NULL,&subjobs))
+				{
+					char 	*et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_RegisterJobProxy(): %s (%s)\n",et,ed);
+					exit(1);
+				}
+				break;
+			case 2: /* old (not dual) registration */
+				if (edg_wll_RegisterJobProxyOld(ctx,jobids[i],
+					num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
+					jdl ? jdl : "blabla", "NNNSSSS",
+					num_subjobs,NULL,&subjobs))
+				{
+					char 	*et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_RegisterJobProxyOld(): %s (%s)\n",et,ed);
+					exit(1);
+				}
+				break;
+			case 3: /* two calls: register to bkserver and then to lbproxy only */
+				if (edg_wll_RegisterJobSync(ctx,jobids[i],
+					num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
+					jdl ? jdl : "blabla", "NNNSSSS",
+					num_subjobs,NULL,&subjobs))
+				{
+					char 	*et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_RegisterJobSync(): %s (%s)\n",et,ed);
+					exit(1);
+				}
+				if (edg_wll_RegisterJobProxyOnly(ctx,jobids[i],
+					num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
+					jdl ? jdl : "blabla", "NNNSSSS",
+					num_subjobs,NULL,&subjobs))
+				{
+					char 	*et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_RegisterJobProxyOnly(): %s (%s)\n",et,ed);
+					exit(1);
+				}
+				break;
+		}	
 
 		if (reg_subjobs) {
 			char ** jdls = (char**) malloc(num_subjobs*sizeof(char*));
@@ -144,14 +186,6 @@ int main(int argc, char *argv[])
 				asprintf(jdls+j, "JDL of subjob #%d\n", j+1);
 			}
 
-			if (server) {
-				if (edg_wll_RegisterSubjobs(ctx, jobids[i], (const char **) jdls, NULL, subjobs)) {
-					char 	*et,*ed;
-					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);
-					exit(1);
-				}
-			}
 			if (lbproxy) {
 				if (edg_wll_RegisterSubjobsProxy(ctx, jobids[i], (const char **) jdls, NULL, subjobs)) {
 					char 	*et,*ed;
@@ -159,7 +193,14 @@ int main(int argc, char *argv[])
 					fprintf(stderr,"edg_wll_RegisterSubjobsProxy: %s (%s)\n", et, ed);
 					exit(1);
 				}
-			} 
+			} else {
+				if (edg_wll_RegisterSubjobs(ctx, jobids[i], (const char **) jdls, NULL, subjobs)) {
+					char 	*et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);
+					exit(1);
+				}
+			}
 
 			for (j=0; subjobs[j]; j++) free(jdls[j]);
 		}
