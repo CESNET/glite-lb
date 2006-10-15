@@ -1021,6 +1021,35 @@ edg_wll_registerjobproxy_end:
 #undef MY_SEED
 }
 
+/**
+ *-----------------------------------------------------------------------
+ * Register one job with L&B Proxy service 
+ * \note simple wrapper around edg_wll_RegisterJobMaster()
+ * this is original edg_wll_RegisterJobProxy 
+ *-----------------------------------------------------------------------
+ */
+int edg_wll_RegisterJobProxyOld(
+        edg_wll_Context         ctx,
+        const edg_wlc_JobId     job,
+        enum edg_wll_RegJobJobtype	type,
+        const char *            jdl,
+        const char *            ns,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs)
+{
+#define	MY_SEED	"edg_wll_RegisterJobProxyOld()"
+	/* first register with bkserver */
+	int ret = edg_wll_RegisterJobMaster(ctx,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
+	if (ret) {
+		edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobProxyOld(): unable to register with bkserver");
+		return edg_wll_Error(ctx,NULL,NULL);
+	}
+	/* and then with L&B Proxy */
+	return edg_wll_RegisterJobMaster(ctx,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
+#undef MY_SEED
+}
+
 #else /* LB_PERF */
 
 /**
