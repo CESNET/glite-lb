@@ -21,13 +21,15 @@ int (*user_jobs)(edg_wll_Context, edg_wlc_JobId **, edg_wll_JobStat **);
 
 
 
-static const char *get_opt_string = "hpj:t:s:w:";
+static const char *get_opt_string = "hxj:t:p:r:s:w:";
 
 static struct option opts[] = {
 	{"help",	0, NULL,	'h'},
 	{"proxy",       0, NULL,	'x'},
 	{"owner",	1, NULL,	'o'},
 	{"num-threads",	1, NULL,	't'},
+	{"port_range",	1, NULL,	'p'},
+	{"repeat",	1, NULL,	'r'},
 	{"rand-start",	1, NULL,	's'},
 //	{"rand-work",	1, NULL,	'w'},
 	{NULL,		0, NULL,	0}
@@ -39,9 +41,12 @@ static void usage(char *me)
 {
 	fprintf(stderr,"usage: %s [option]\n"
 		"\t-h, --help\t show this help\n"
-		"\t-p, --proxy\t contact proxy (not implemented yet)\n"
+		"\t-x, --proxy\t contact proxy (not implemented yet)\n"
 		"\t-o, --owner DN\t show jobs of user with this DN\n"
-		"\t-t, --num-threads N\t number fo threads to create\n"
+		"\t-t, --num-threads N\t number for threads to create\n"
+		"\t-p, --port-range N\t connect to server:port, server:port+10, \n"
+		"\t\t\t ... server:port+N*10 bkservers\n"
+		"\t-r, --repeat N\t repeat query in each slave N-times \n"
 		"\t-s, --rand-start N\t start threads in random interval <0,N> sec\n"
 //		"\t-w, --rand-work N\t simulate random server respose time <0,N> sec\n"
 		"\n"
@@ -53,6 +58,8 @@ typedef struct {
     char *owner;
     int proxy;
     int rand_start;
+    int port_range;
+    int repeat;
     char *argv_0;} thread_code_args;
 
 void *thread_code(thread_code_args *arguments) {
@@ -61,7 +68,7 @@ void *thread_code(thread_code_args *arguments) {
 	char		*errt,*errd;
 	edg_wlc_JobId		*jobs = NULL;
 	edg_wll_JobStat		*states = NULL;
-	int		i,j;
+	int		i,j,k,port;
 	long		sl;
 
 
@@ -79,41 +86,53 @@ void *thread_code(thread_code_args *arguments) {
 	if ( user_jobs == edg_wll_UserJobsProxy  && arguments->owner )
 		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, arguments->owner);
 
-	if (user_jobs(ctx,&jobs,&states)) goto err;
- 	for (i=0; states[i].state != EDG_WLL_JOB_UNDEF; i++) {	
-		char *id = edg_wlc_JobIdUnparse(states[i].jobId),
-		     *st = edg_wll_StatToString(states[i].state);
-		
-		if (!states[i].parent_job) {
-			if (states[i].jobtype == EDG_WLL_STAT_SIMPLE) { 
-				printf("      %s .... %s %s\n", id, st, (states[i].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[i].done_code) : "" );
-			}
-			else if (states[i].jobtype == EDG_WLL_STAT_DAG) {
-				printf("DAG   %s .... %s %s\n", id, st, (states[i].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[i].done_code) : "");
-				for (j=0; states[j].state != EDG_WLL_JOB_UNDEF; j++) {
-					if (states[j].parent_job) {
-						char *par_id = edg_wlc_JobIdUnparse(states[j].parent_job);
-						
-						if (!strcmp(id,par_id)) {
-							char *sub_id = edg_wlc_JobIdUnparse(states[j].jobId),
-							     *sub_st = edg_wll_StatToString(states[j].state);
+	edg_wll_GetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER_PORT, &port);
+	// pthread_self tend to return even number, so /7 makes some odd numbers...
+	edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER_PORT, 
+		port + ((long) pthread_self()/7 % arguments->port_range)*10 );
+
+	for (k=0; k<arguments->repeat; k++) {
+		if (user_jobs(ctx,&jobs,&states)) goto err;
+		for (i=0; states[i].state != EDG_WLL_JOB_UNDEF; i++) {	
+			char *id = edg_wlc_JobIdUnparse(states[i].jobId),
+			     *st = edg_wll_StatToString(states[i].state);
+			
+			if (!states[i].parent_job) {
+				if (states[i].jobtype == EDG_WLL_STAT_SIMPLE) { 
+					printf("      %s .... %s %s\n", id, st, 
+						(states[i].state==EDG_WLL_JOB_DONE) ? 
+						edg_wll_done_codeToString(states[i].done_code) : "" );
+				}
+				else if (states[i].jobtype == EDG_WLL_STAT_DAG) {
+					printf("DAG   %s .... %s %s\n", id, st, 
+						(states[i].state==EDG_WLL_JOB_DONE) ?
+						edg_wll_done_codeToString(states[i].done_code) : "");
+					for (j=0; states[j].state != EDG_WLL_JOB_UNDEF; j++) {
+						if (states[j].parent_job) {
+							char *par_id = edg_wlc_JobIdUnparse(states[j].parent_job);
 							
-							printf(" `-       %s .... %s %s\n", sub_id, sub_st, (states[j].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[j].done_code) : "");
-							free(sub_id);
-							free(sub_st);
-						}
-						free(par_id);
-					}	
+							if (!strcmp(id,par_id)) {
+								char *sub_id = edg_wlc_JobIdUnparse(states[j].jobId),
+								     *sub_st = edg_wll_StatToString(states[j].state);
+								
+								printf(" `-       %s .... %s %s\n", sub_id, sub_st, 
+									(states[j].state==EDG_WLL_JOB_DONE) ? 
+									edg_wll_done_codeToString(states[j].done_code) : "");
+								free(sub_id);
+								free(sub_st);
+							}
+							free(par_id);
+						}	
+					}
 				}
 			}
+				
+			free(id);
+			free(st);
 		}
-			
-		free(id);
-		free(st);
+
+		printf("\nFound %d jobs\n",i);
 	}
-
-	printf("\nFound %d jobs\n",i);
-
 err:
 	free(arguments->owner);
 	if  (jobs) {
@@ -142,7 +161,7 @@ err:
 
 int main(int argc,char **argv)
 {
-        thread_code_args arguments = { NULL, 0, 0, NULL };
+        thread_code_args arguments = { NULL, 0, 0, 1, 1,NULL };
 	int	i,rc,status,opt;
 	int	thr_num = 10;	// default
 
@@ -151,6 +170,8 @@ int main(int argc,char **argv)
                 case 'x': arguments.proxy = 1; break;
                 case 'o': arguments.owner = optarg; break;
                 case 't': thr_num = atoi(optarg); break;
+                case 'p': arguments.port_range = atoi(optarg); break;
+                case 'r': arguments.repeat = atoi(optarg); break;
                 case 's': arguments.rand_start = atoi(optarg); break;
                 default : usage(argv[0]); exit(0); break;
         }
