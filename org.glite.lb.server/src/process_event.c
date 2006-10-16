@@ -245,7 +245,8 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_JobStatCode old_state, enu
 				/* not RUNNING yet? */
 				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
 					//XXX cook artificial event for parent job
-					//    and call db_store
+					//    and call db_store (see handle_request() 
+					//    for usage!! )
 			}
 			break;
 		case EDG_WLL_JOB_DONE:
@@ -943,13 +944,15 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 				inst != NULL ? inst : "");
 		}
 	}
-	
+
+#if 0	//not ready yet...
 	/* check whether subjob state change does not change parent state */
 	if ((js->pub.parent_job) && (old_state != js->pub.state)) { 
 		if (update_parent_status(old_state, old_done_code, js))
 			// XXX: is it good error code? (hard one)
 			res = RET_INTERNAL;
 	}
+#endif
 
 	return res;
 
