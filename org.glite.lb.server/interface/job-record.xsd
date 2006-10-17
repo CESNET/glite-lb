@@ -6,7 +6,7 @@
 <xs:schema 
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	xmlns:jr="http://egee.cesnet.cz/en/Schema/LB/JobRecord"
-	xmlns:a="http://egee.cesnet.cz/en/Schema/LB/Attributes"
+	xmlns:a="http://egee.cesnet.cz/en/Schema/LB/Attributes-Statistics"
 	targetNamespace="http://egee.cesnet.cz/en/Schema/LB/JobRecord"
 	version="1.0"
 	elementFormDefault="unqualified"

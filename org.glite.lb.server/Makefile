@@ -73,7 +73,7 @@ else
 endif
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
-SUFFIXES = .T 
+SUFFIXES = .T .xsd
 
 DEBUG:=-g -O0 -Wall
 
@@ -260,7 +260,8 @@ else
     PLUGIN_LIB=glite_lb_plugin.la
 endif
 
-compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c
+compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c \
+	job-attrs-common.xsd job-attrs-native.xsd
 
 
 check: compile test.xml test.query
@@ -374,6 +375,8 @@ install:
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
+	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs-native.xsd ${PREFIX}/interface
+	${INSTALL} -m 644 ${top_srcdir}/interface/job-attris-common.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix}
 
@@ -393,6 +396,11 @@ install:
 clean:
 
 %.c: %.c.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
+
+%.xsd: %.xsd.T
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null

@@ -1152,7 +1152,7 @@ int edg_wll_JobStatusToXMLV21(edg_wll_Context ctx, edg_wll_JobStat stat, char **
 	selectType $status '_common_';
         for (getFieldsOrdered $status) {
                 my $f = selectField $status $_;
-		next if defined($f->{special}) && $f->{special} eq 'XMLstructured';
+		next if defined($f->{special}) && $f->{special}->{XMLstructured};
                 my $ft = $f->{type};
 		my $n = $f->{null};
                 gen "edg_wll_add_$ft\_to_XMLBody(&pomB, stat.$_, \"$_\", $n);\n";
