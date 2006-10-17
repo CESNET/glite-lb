@@ -11,18 +11,33 @@
 
 extern int debug;
 
-int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const edg_wlc_JobId job,int lock)
+int edg_wll_GetSemID(const edg_wll_Context ctx, const edg_wlc_JobId job)
 {
-	struct sembuf	s;
 	char	*un = edg_wlc_JobIdGetUnique(job);
 	int	n,i;
 	static const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-	
-	if (!un) return edg_wll_SetError(ctx,EINVAL,"jobid");
+
+
+	if (!un) {
+		edg_wll_SetError(ctx,EINVAL,"jobid");
+		return -1;
+	}
 
 	for (n=0; n<sizeof b64 && b64[n] != un[0]; n++);
 	for (i=0; i<sizeof b64 && b64[i] != un[1]; i++);
 	n += i<<6;
+
+	free(un);
+	return(n);
+}
+
+int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const edg_wlc_JobId job,int lock)
+{
+	struct sembuf	s;
+	int 		n;
+
+		
+	if ((n=edg_wll_GetSemID(ctx, job)) == -1) return edg_wll_Error(ctx,NULL,NULL);
 
 	if (debug) fprintf(stderr,"[%d] semop(%d,%d) \n",getpid(),n % ctx->semaphores,lock);
 
