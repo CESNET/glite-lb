@@ -200,3 +200,10 @@
 @type Resume		Job execution (queuing) was resumed.
 	_optional_
 	string	reason		Reason for the resume.
+
+@type CollectionState	State of the collection.
+	int	state		New collection state.
+	_optional_
+	string	histogram	User readable histogram; useful for debugging.
+	jobid   child		JobId of subjob, which triggered the state change.	
+	int	child_event	Event which triggered the state change.	
