@@ -25,7 +25,9 @@ sub addCode {
 sub addSpecial {
 	my $self = shift;
 	my $special = shift;
-	$self->{special} = $special;
+	my $val = shift;
+	$val = 1 unless $val;
+	$self->{special}->{$special} = $val;
 	1;
 }
 

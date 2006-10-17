@@ -80,7 +80,7 @@ sub load {
 		}
 		elsif ($ftype eq '_special_') {
 			my $f = $self->getField();
-			addSpecial $f $fname;
+			addSpecial $f $fname,$comment;
 		}
 		elsif ($ftype eq '_null_') {
 			my $f = $self->getField();
