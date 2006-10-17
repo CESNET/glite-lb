@@ -921,7 +921,7 @@ static void endJobStat(void *data, const char *el)
         for my $t (getFieldsOrdered $status) {
 	        my $f = selectField $status $t;
 	        my $ft = $f->{type};
-		next if defined($f->{special}) && $f->{special} eq 'XMLstructured';
+		next if defined($f->{special}) && $f->{special}->{XMLstructured};
                 if ($i == 1)
                         { gen "$bi if (!strcmp(XMLCtx->element,\"$t\"))\n"; }
                 else
