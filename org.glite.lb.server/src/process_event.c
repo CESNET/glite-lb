@@ -214,8 +214,8 @@ static int dependent_parent_lock(edg_wll_Context ctx, edg_wlc_JobId p,edg_wlc_Jo
 {
 	int     p_id, c_id;
 
-	if ((p_id=edg_wll_GetSemID(ctx, p)) == -1) return -1;
-	if ((c_id=edg_wll_GetSemID(ctx, c)) == -1) return -1;
+	if ((p_id=edg_wll_JobSemaphore(ctx, p)) == -1) return -1;
+	if ((c_id=edg_wll_JobSemaphore(ctx, c)) == -1) return -1;
 
 	if (p_id == c_id) return 1;
 	else return 0;

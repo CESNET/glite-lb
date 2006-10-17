@@ -11,7 +11,7 @@
 
 extern int debug;
 
-int edg_wll_GetSemID(const edg_wll_Context ctx, const edg_wlc_JobId job)
+int edg_wll_JobSemaphore(const edg_wll_Context ctx, const edg_wlc_JobId job)
 {
 	char	*un = edg_wlc_JobIdGetUnique(job);
 	int	n,i;
@@ -28,7 +28,7 @@ int edg_wll_GetSemID(const edg_wll_Context ctx, const edg_wlc_JobId job)
 	n += i<<6;
 
 	free(un);
-	return(n);
+	return(n % ctx->semaphores);
 }
 
 int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const edg_wlc_JobId job,int lock)
@@ -37,11 +37,11 @@ int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const edg_wlc_JobId job,int 
 	int 		n;
 
 		
-	if ((n=edg_wll_GetSemID(ctx, job)) == -1) return edg_wll_Error(ctx,NULL,NULL);
+	if ((n=edg_wll_JobSemaphore(ctx, job)) == -1) return edg_wll_Error(ctx,NULL,NULL);
 
-	if (debug) fprintf(stderr,"[%d] semop(%d,%d) \n",getpid(),n % ctx->semaphores,lock);
+	if (debug) fprintf(stderr,"[%d] semop(%d,%d) \n",getpid(),n,lock);
 
-	s.sem_num = n % ctx->semaphores;
+	s.sem_num = n;
 	s.sem_op = lock;
 	s.sem_flg = SEM_UNDO;
 
