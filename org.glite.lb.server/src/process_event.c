@@ -207,24 +207,55 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 	return RET_FATAL;
 }
 
+
+/* checks whether parent jobid would generate the same sem.num. */
+/* as children jobid 						*/
+static int dependent_parent_lock(edg_wll_Context ctx, edg_wlc_JobId p,edg_wlc_JobId c)
+{
+	int     p_id, c_id;
+
+	if ((p_id=edg_wll_GetSemID(ctx, p)) == -1) return -1;
+	if ((c_id=edg_wll_GetSemID(ctx, c)) == -1) return -1;
+
+	if (p_id == c_id) return 1;
+	else return 0;
+}
+
+
+static edg_wll_ErrorCode load_parent_intJobStat(edg_wll_Context ctx, intJobStat *cis, intJobStat **pis)
+{
+	if (*pis) return edg_wll_Error(ctx, NULL, NULL); // already loaded
+
+	/* goes to err when id's are equal too; it just do nothing... */	
+	if (dependent_parent_lock(ctx, cis->pub.parent_job, cis->pub.jobId)) goto err;
+
+	/* lock parent job only if semaphore id is different from children sem id */
+	/* otherwise because children job is already locked, parent is also locked */
+	if (edg_wll_LockJob(ctx,cis->pub.parent_job)) goto err;
+	
+	if (edg_wll_LoadIntState(ctx, cis->pub.parent_job, - 1, pis))
+		goto err;
+
+err:
+	return edg_wll_Error(ctx, NULL, NULL);
+
+}
+
 static edg_wll_ErrorCode update_parent_status(edg_wll_JobStatCode old_state, enum edg_wll_StatDone_code old_done_code, intJobStat *cis)
 {
 	edg_wll_Context ctx;
-	intJobStat	*pis;
-	int		ret, update_hist = 0;
+	intJobStat	*pis = NULL;
+	int		ret;
 
 
 	edg_wll_InitContext(&ctx);
 
-	if (edg_wll_LockJob(ctx,cis->pub.parent_job)) 
-		goto err;
-
-	if (edg_wll_LoadIntState(ctx, cis->pub.parent_job, - 1, &pis))
-		goto err;
 
 	/* Easy version, where the whole histogram is evolving... 
 	 * not used because of performance reasons 
 	 *
+		if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+
 		pis->pub.children_hist[cis->pub.state]++;
 		if (cis->pub.state == EDG_WLL_JOB_DONE) 
 			pis->children_done_hist[cis->pub.done_code]++;
@@ -239,22 +270,22 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_JobStatCode old_state, enu
 	 */
 	switch (cis->pub.state) {
 		case EDG_WLL_JOB_RUNNING:
-				pis->pub.children_hist[cis->pub.state]++;
-				update_hist = 1;			
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[cis->pub.state]++;
 
-				/* not RUNNING yet? */
-				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
-					//XXX cook artificial event for parent job
-					//    and call db_store (see handle_request() 
-					//    for usage!! )
+			/* not RUNNING yet? */
+			if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
+				//XXX cook artificial event for parent job
+				//    and call db_store (see handle_request() 
+				//    for usage!! )
 			}
 			break;
 		case EDG_WLL_JOB_DONE:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			// edg_wll_GetSubjobHistogram(ctx, cis->pub.parent_job, &pis);
 			// not needed, load by edg_wll_LoadIntState()
 
 			pis->pub.children_hist[cis->pub.state]++;
-			update_hist = 1;			
 
 			pis->children_done_hist[cis->pub.done_code]++;
 			if (pis->pub.children_hist[cis->pub.state] == pis->pub.children_num) {
@@ -274,24 +305,25 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_JobStatCode old_state, enu
 	 */
 	switch (old_state) {
 		case EDG_WLL_JOB_RUNNING:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[old_state]--;
-			update_hist = 1;
 			break;
 		case EDG_WLL_JOB_DONE:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[old_state]--;
 			pis->children_done_hist[old_done_code]--;
-			update_hist = 1;
 			break;
 		// XXX: more cases to bo added...
 		default:
 			break;
 	}
 
-	if (update_hist)
+	if (pis)
 		edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
 	
 err:
-	edg_wll_UnlockJob(ctx,cis->pub.parent_job);
+	if (!dependent_parent_lock(ctx, cis->pub.parent_job, cis->pub.jobId))
+		edg_wll_UnlockJob(ctx,cis->pub.parent_job);
 	destroy_intJobStat(pis);
 	ret = edg_wll_Error(ctx,NULL,NULL);
 	edg_wll_FreeContext(ctx);
