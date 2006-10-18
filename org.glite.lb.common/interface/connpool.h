@@ -11,8 +11,6 @@
 extern "C" {
 #endif
 
-#define EDG_WLL_CONNPOOL_DEBUG
-
 #ifndef EDG_WLL_CONNPOOL_DECLARED
 #define EDG_WLL_CONNPOOL_DECLARED 1
 
@@ -93,25 +91,6 @@ void edg_wll_poolFree();
 /** Allocate memory for the edg_wll_Connections structure and its properties and return a pointer.
     in case memory has been already allocated, just return a pointer */
 edg_wll_Connections* edg_wll_initConnections();
-
-
-/** Set parameters */
-
-/* Not yet defined */
-
-/** Make connection (+ establish a lock) */
-
-/* Not yet defined */
-
-/** Unlock connection after use */
-
-/* Not yet defined */
-
-/** Forcibly drop the connection */
-
-/* Not yet defined */
-
-
 
 #ifdef __cplusplus
 }

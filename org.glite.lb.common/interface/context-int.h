@@ -30,23 +30,6 @@ typedef struct _edg_wll_ConnProxy {
 
 
 
-/* typedef struct _edg_wll_ConnPool { */
-/* address and port where we are connected to */
-/* 	char		*peerName; */
-/* 	unsigned int	peerPort; */
- 	
- /* http(s) stream */
-/*	gss_cred_id_t	gsiCred; */
-/*	edg_wll_GssConnection	gss; */
-/*	char		*buf; */
-/*	int		bufUse,bufSize; */
-
-/* timestamp of usage of this entry in ctx.connPool */
-/*	struct timeval	lastUsed; */
-/* } edg_wll_ConnPool; */
-
-
-
 struct _edg_wll_Context {
 /* Error handling */
 	int		errCode;	/* recent error code */
@@ -98,14 +81,6 @@ struct _edg_wll_Context {
 /* address and port we are listening at */
 	char		*srvName;
 	unsigned int	srvPort;
-	
-/* pool of connections from client */
-//	int		poolSize;
-//	int		connOpened;	/* number of opened connections  */
-//	int		connToUse;	/* index of connection that will *
-//					 *  be used by low-level f-cions */
-	// XXX similar variables will be needed for connPoolNotif
-
 	
 /* other client stuff */
 	int		notifSock;		/* default client socket	*

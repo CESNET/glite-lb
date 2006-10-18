@@ -759,9 +759,6 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->p_tmp_timeout.tv_sec = timeout->tv_sec;
 	ctx->p_tmp_timeout.tv_usec = timeout->tv_usec;
 	
-//	ctx->connections->poolSize = 0;
-//	ctx->connections->connPool = calloc(1, sizeof(edg_wll_ConnPool));
-//	ctx->connToUse = 0;
 	edg_wll_initConnections();
 
 	alen = sizeof(a);
