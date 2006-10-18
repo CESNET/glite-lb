@@ -380,11 +380,6 @@ int edg_wll_http_send_recv(
 
 	if (edg_wll_open(ctx,&connToUse)) return edg_wll_Error(ctx,NULL,NULL);
 
-        // XXX: why??
-	// it is locked in edg_wll_open and even more I believe that it cannot be locked
-	// from unlocked pool !! 
-	// edg_wll_connectionTryLock(ctx, connToUse);
-	
 	switch (edg_wll_http_send(ctx,request,req_head,req_body,&ctx->connections->connPool[connToUse])) {
 		case ENOTCONN:
 			edg_wll_close(ctx,&connToUse);
