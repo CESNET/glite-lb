@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 	}
 
 	seq = edg_wll_GetSequenceCode(ctx);
-	printf("\n%s=\"%s\"\n",num_subjobs?"EDG_WL_DAG_JOBID":"EDG_JOBID",job);
+	printf("\n%s=\"%s\"\n",num_subjobs?(collection?"EDG_WL_COLLECTION_JOBID":"EDG_WL_DAG_JOBID"):"EDG_JOBID",job);
 	printf("EDG_WL_SEQUENCE=\"%s\"\n",seq);
 	free(seq);
 	free(job);
