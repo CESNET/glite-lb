@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (reg_subjobs) {
-		char ** jdls = (char**) malloc(num_subjobs*sizeof(char*));
+		char ** jdls = (char**) calloc(num_subjobs+1, sizeof(char*));
 
 		for (i=0; subjobs[i]; i++) {
 			asprintf(jdls+i, "JDL of subjob #%d\n", i+1);
