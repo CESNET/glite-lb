@@ -163,7 +163,7 @@ int edg_wll_JobStatus(
 	}
 
 #if DAG_ENABLE
-	if (stat->jobtype == EDG_WLL_STAT_DAG) {
+	if (stat->jobtype == EDG_WLL_STAT_DAG || stat->jobtype == EDG_WLL_STAT_COLLECTION) {
 		if (1) {
 			char *out[2];
 			edg_wll_Stmt sh;
