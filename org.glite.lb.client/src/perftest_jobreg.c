@@ -32,9 +32,9 @@ static void usage(char *me)
 	fprintf(stderr,"usage: %s [-m bkserver] [-x scenario] [-n num_subjobs [-S]] [-l jdl_file] [-N num_repeat]\n"
 		"	-m <bkserver>		address:port of bkserver\n"
 		"	-x <scenario>   	use LBProxy\n"
-		"	   1                   	use one call (RegisterJobProxy - dual registration) \n"
+		"	   1	           	use one call (RegisterJobProxyOnly - register only with lbproxy) \n"
 		"	   2	           	use one call (RegisterJobProxyOld - sequence registration) \n"
-		"	   3	           	use two separate calls (RegisterJob and RegisterJobProxyOnly) \n"
+		"	   3                   	use one call (RegisterJobProxy - dual registration) \n"
 		"	   0 (or anything else) do not register to lbproxy at all\n"
 		"	-n <num_subjobs>	number of subjobs of DAG\n"
 		"	-S			register subjobs\n"
@@ -131,15 +131,15 @@ int main(int argc, char *argv[])
 					exit(1);
 				}
 				break;
-			case 1: /* dual registration */
-				if (edg_wll_RegisterJobProxy(ctx,jobids[i],
+			case 1: /* register to lbproxy only */
+				if (edg_wll_RegisterJobProxyOnly(ctx,jobids[i],
 					num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
 					jdl ? jdl : "blabla", "NNNSSSS",
 					num_subjobs,NULL,&subjobs))
 				{
 					char 	*et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"edg_wll_RegisterJobProxy(): %s (%s)\n",et,ed);
+					fprintf(stderr,"edg_wll_RegisterJobProxyOnly(): %s (%s)\n",et,ed);
 					exit(1);
 				}
 				break;
@@ -155,25 +155,15 @@ int main(int argc, char *argv[])
 					exit(1);
 				}
 				break;
-			case 3: /* two calls: register to bkserver and then to lbproxy only */
-				if (edg_wll_RegisterJobSync(ctx,jobids[i],
+			case 3: /* dual registration */
+				if (edg_wll_RegisterJobProxy(ctx,jobids[i],
 					num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
 					jdl ? jdl : "blabla", "NNNSSSS",
 					num_subjobs,NULL,&subjobs))
 				{
 					char 	*et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"edg_wll_RegisterJobSync(): %s (%s)\n",et,ed);
-					exit(1);
-				}
-				if (edg_wll_RegisterJobProxyOnly(ctx,jobids[i],
-					num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
-					jdl ? jdl : "blabla", "NNNSSSS",
-					num_subjobs,NULL,&subjobs))
-				{
-					char 	*et,*ed;
-					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"edg_wll_RegisterJobProxyOnly(): %s (%s)\n",et,ed);
+					fprintf(stderr,"edg_wll_RegisterJobProxy(): %s (%s)\n",et,ed);
 					exit(1);
 				}
 				break;

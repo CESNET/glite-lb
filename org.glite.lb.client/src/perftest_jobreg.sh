@@ -153,7 +153,7 @@ start_il()
 		il_prefix=""
 	
 	echo -n Starting glite-lb-interlogger ...
-	$GLITE_LOCATION/bin/glite-lb-interlogger \
+	$GLITE_LOCATION/bin/glite-lb-interlogd \
                 $creds $il_sock $il_prefix \
 		&& echo " done" || echo " FAILED"	
 	echo
@@ -180,7 +180,7 @@ test_ai()
 	dest=
 	[ -z "$1" ] && echo "test_ai() - wrong params" && return
 	[ "$1" = "proxy" ] && dest="-x"
-	[ "$1" = "server" ] && dest="-m $HOST:$PORT"
+	[ "$1" = "server" ] && dest="-m $BKSERVER_HOST"
 	[ -z "$dest" ] && echo "test_ai() - wrong params" && return
 	
 	my_echo "================================================================"
@@ -229,7 +229,7 @@ quick_test()
         dest=
         [ -z "$1" ] && echo "test_ai() - wrong params" && return
         [ "$1" = "proxy" ] && dest="-x"
-        [ "$1" = "server" ] && dest="-m $HOST:$PORT"
+        [ "$1" = "server" ] && dest="-m $BKSERVER_HOST"
         [ -z "$dest" ] && echo "test_ai() - wrong params" && return
 
 
@@ -244,14 +244,14 @@ quick_test()
 
 proxy_test()
 {
-	echo "----------------------------------------------------------------
-Scenarios:
-0) registration only to bkserver (edg_wll_RegisterJobSync)
-1) dual registration (edg_wll_RegisterJobProxy)	
-2) old (not dual) registration (edg_wll_RegisterJobProxyOld)
-3) two separate registrations (edg_wll_RegisterJobSync + edg_wll_RegisterJobProxyOnly)
+	my_echo "----------------------------------------------------------------"
+	my_echo "Scenarios:"
+	my_echo "0) registration only to bkserver (edg_wll_RegisterJobSync)"
+	my_echo "1) registration only to lbproxy (edg_wll_RegisterJobProxyOnly)"
+	my_echo "2) old (not dual) registration (edg_wll_RegisterJobProxyOld)"
+	my_echo "3) dual registration (edg_wll_RegisterJobProxy)"
+	my_echo ""
 
-"
         if [ -n "$1" ]; then
                 repeat="-N $1"
                 repeated="repeated $1 times"
@@ -265,31 +265,53 @@ Scenarios:
 	# single registration
 	#
 	for i in 0 1 2 3; do
-		dest="-m $HOST:$PORT -x $i"
+		dest="-m $BKSERVER_HOST -x $i"
 		my_echo "-n single registration $repeated (scenario $i)..."
 		ai_sr_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest $repeat`
 		mega_actions_per_day=`echo "scale=6; 86400/$ai_sr_lb/1000000*$scale" | bc`
 		my_echo ". $ai_sr_lb seconds ($mega_actions_per_day GU)"
+		sleep 3
+		sync
+		sleep 3
+	done
+
+	# 1 node DAG registration
+	#
+	for i in 0 1 2 3; do
+		dest="-m $BKSERVER_HOST -x $i"
+		my_echo "-n 1 node DAG registration $repeated (scenario $i)..."
+		ai_dag1_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest $repeat -n 1`
+		mega_actions_per_day=`echo "scale=6; 86400/$ai_dag1_lb/1000000*2*$scale" | bc`
+		my_echo ". $ai_dag1_lb seconds ($mega_actions_per_day GU)"
+		sleep 3
+		sync
+		sleep 3
 	done
 
 	# 1000 nodes DAG registration
 	#
 	for i in 0 1 2 3; do
-		dest="-m $HOST:$PORT -x $i"
+		dest="-m $BKSERVER_HOST -x $i"
 		my_echo "-n 1000 nodes DAG registration $repeated (scenario $i)..."
 		ai_dag1000_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest $repeat -n 1000`
 		mega_actions_per_day=`echo "scale=6; 86400/$ai_dag1000_lb/1000000*1001*$scale" | bc`
 		my_echo ". $ai_dag1000_lb seconds ($mega_actions_per_day GU)"
+		sleep 10
+		sync
+		sleep 10
 	done
 
 	# 10000 nodes DAG registration
 	#
 	for i in 0 1 2 3; do
-		dest="-m $HOST:$PORT -x $i"
+		dest="-m $BKSERVER_HOST -x $i"
 		my_echo "-n 10000 nodes DAG registration $repeated (scenario $i)..."
 		ai_dag10000_lb=`$GLITE_LOCATION/sbin/glite-lb-perftest_jobreg $dest $repeat -n 10000`
 		mega_actions_per_day=`echo "scale=6; 86400/$ai_dag10000_lb/1000000*10001*$scale" | bc`
 		my_echo ". $ai_dag10000_lb seconds ($mega_actions_per_day GU)"
+		sleep 10
+		sync
+		sleep 10
 	done
 
 
@@ -299,8 +321,11 @@ Scenarios:
 ################################################################################
 
 unset creds port
-HOST=`hostname -f`
-PORT=${GLITE_LB_SERVER_PORT:-9000}; 
+if [ -z ${BKSERVER_HOST} ]; then
+	HOST=`hostname -f`
+	PORT=${GLITE_LB_SERVER_PORT:-9000}; 
+	BKSERVER_HOST=$HOST:$PORT
+fi
 sink_mode[0]=GLITE_LB_SINK_NONE
 sink_mode[1]=GLITE_LB_SINK_PARSE
 sink_mode[2]=GLITE_LB_SINK_STORE
@@ -348,16 +373,16 @@ test_credentials;
 #
 # PROXY TEST
 #
-start_bkserver 0;
-start_proxy 0;
+#start_proxy 0;
+#start_il;
 my_echo "================================================================"
-my_echo "Testing LB server with sink_mode ${sink_mode[0]}"
-my_echo "Testing LB proxy with sink_mode ${sink_mode[0]}"
-sleep 5
-proxy_test 1000;
-stop_bkserver;
-stop_proxy;
-
+my_echo "Testing registrations to bkserver ($BKSERVER_HOST) and to lbproxy"
+#sleep 5
+for i in 1 10 100 1000; do
+	proxy_test $i;
+done
+#stop_proxy;
+#stop_il;
 
 echo "__________"
 echo "GU (goal units) are millons of registrations per day, where registration is"
