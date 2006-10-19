@@ -188,7 +188,19 @@ static void printstat(edg_wll_JobStat stat, int level)
 	printf("%sstate : %s\n", ind, s);
 	printf("%sjobId : %s\n", ind, j = edg_wlc_JobIdUnparse(stat.jobId));
 	printf("%sowner : %s\n", ind, stat.owner);
-	printf("%sjobtype : %s\n", ind, (stat.jobtype ? "DAG" : "SIMPLE") );
+	switch (stat.jobtype) {
+		case EDG_WLL_STAT_SIMPLE:
+			printf("%sjobtype : SIMPLE\n", ind);
+			break;
+		case EDG_WLL_STAT_DAG:
+			printf("%sjobtype : DAG\n", ind);
+                        break;
+		case EDG_WLL_STAT_COLLECTION:
+			printf("%sjobtype : COLLECTION\n", ind);
+                        break;
+		default:
+			break;
+	}
 	printf("%sparent_job : %s\n", ind,
 			j = edg_wlc_JobIdUnparse(stat.parent_job));
 	if (stat.jobtype) {;
