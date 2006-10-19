@@ -57,8 +57,9 @@ int main(int argc,char **argv)
 			if (states[i].jobtype == EDG_WLL_STAT_SIMPLE) { 
 				printf("      %s .... %s %s\n", id, st, (states[i].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[i].done_code) : "" );
 			}
-			else if (states[i].jobtype == EDG_WLL_STAT_DAG) {
-				printf("DAG   %s .... %s %s\n", id, st, (states[i].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[i].done_code) : "");
+			else if ((states[i].jobtype == EDG_WLL_STAT_DAG) || 
+				(states[i].jobtype == EDG_WLL_STAT_COLLECTION)) {
+				printf("%s  %s .... %s %s\n", (states[i].jobtype==EDG_WLL_STAT_DAG)?"DAG ":"COLL",id, st, (states[i].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[i].done_code) : "");
 				for (j=0; states[j].state != EDG_WLL_JOB_UNDEF; j++) {
 					if (states[j].parent_job) {
 						char *par_id = edg_wlc_JobIdUnparse(states[j].parent_job);

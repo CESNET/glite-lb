@@ -903,9 +903,16 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 							&js->pub.parent_job);
 				rep(js->pub.network_server, e->regJob.ns);
 				js->pub.children_num = e->regJob.nsubjobs;
-				if (e->regJob.jobtype == EDG_WLL_REGJOB_DAG
-					|| e->regJob.jobtype == EDG_WLL_REGJOB_PARTITIONED) {
-					js->pub.jobtype = EDG_WLL_STAT_DAG;
+				switch (e->regJob.jobtype) {
+					case EDG_WLL_REGJOB_DAG:
+					case EDG_WLL_REGJOB_PARTITIONED:
+						js->pub.jobtype = EDG_WLL_STAT_DAG;
+						break;
+					case EDG_WLL_REGJOB_COLLECTION:
+						js->pub.jobtype = EDG_WLL_STAT_COLLECTION;
+						break;
+					default:
+						break;
 				}
 				rep(js->pub.seed, e->regJob.seed);
 			}

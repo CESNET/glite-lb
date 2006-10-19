@@ -199,7 +199,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	if (err == 0 && 
 		e->any.type == EDG_WLL_EVENT_REGJOB &&
 		(e->regJob.jobtype == EDG_WLL_REGJOB_DAG ||
-		 e->regJob.jobtype == EDG_WLL_REGJOB_PARTITIONED) &&
+		 e->regJob.jobtype == EDG_WLL_REGJOB_PARTITIONED ||
+		 e->regJob.jobtype == EDG_WLL_REGJOB_COLLECTION) &&
 		e->regJob.nsubjobs > 0)  
 
 #ifdef LB_DAG_EMBRIONIC
