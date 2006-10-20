@@ -82,6 +82,16 @@ static char *enc_int(char *old, int item)
         return out;
 }
 
+static char *enc_int_array(char *old, int *item, int itemsNo)
+{
+        char *out;
+	int index;
+	for (index=0; index <= itemsNo; index++) asprintf(&out,"%s%d%s", out, item[index],index==itemsNo?"":";");
+        asprintf(&out,"%s%s ", old, out);
+        free(old);
+        return out;
+}
+
 static int dec_int(char* in, char **rest)
 {
 	int scret;
@@ -96,6 +106,49 @@ static int dec_int(char* in, char **rest)
 	}
 	return out;
 }
+
+static int dec_int_array(char* in, char **rest, int *out)
+{
+	int charNo, itemsNo = 0, cindex, iindex = 0;
+	char *tempstr;
+
+        /* Find out the number of items in the field first */
+
+	for (charNo = 0;charNo<strlen(in);charNo++)	{
+		if (in[charNo] == ' ') {	/* Only ' ' (space) is accepted as a separator. Should not be a broblem. */
+			itemsNo++;
+			break;
+		}
+		if (in[charNo] == ';') {
+			itemsNo++;
+		}
+	}
+	if (!itemsNo) {		/* No separator has been found. This is the last input string */
+		itemsNo = 1;	/* - consider it an one-item array */
+		*rest = NULL;
+	}
+	else *rest = charNo + 1;
+
+//	out = (int*)calloc(itemsNo,sizeof(int));
+	tempstr = (char*)calloc(charNo+1,sizeof(char));
+
+	strcpy(tempstr,"");
+
+	for (cindex = 0; cindex<charNo; cindex++) {
+		if ((in[cindex] == ';') || (in[cindex] == ' ')) {
+			out[iindex] = atoi(tempstr);
+			strcpy(tempstr,"");
+			iindex++;
+		}
+		else tempstr = strcat(tempstr, in[cindex]); 
+	}
+	if (in[cindex] != ' ') out[iindex] = atoi(tempstr);	/* string not terminated with a separator */
+
+	free(tempstr);
+
+        return out;
+}
+
 
 static char* enc_jobid(char *old, edg_wlc_JobId item)
 {
@@ -404,7 +457,7 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_jobid(ret, stat->parent_job);
 	if (ret) ret = enc_string(ret, stat->seed);
 	if (ret) ret = enc_int(ret, stat->children_num);
-		/* children data are not stored in DB */
+		/* children histogram also stored in the DB, see bellow. Other children data not stored. */
 	if (ret) ret = enc_string(ret, stat->condorId);
 	if (ret) ret = enc_string(ret, stat->globusId);
 	if (ret) ret = enc_string(ret, stat->localId);
@@ -433,6 +486,7 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_int(ret, stat->payload_running);
 	if (ret) ret = enc_strlist(ret, stat->possible_destinations);
 	if (ret) ret = enc_strlist(ret, stat->possible_ce_nodes);
+	if (ret) ret = enc_int_array(ret, stat->children_hist, EDG_WLL_NUMBER_OF_STATCODES);
 
 	return ret;
 }
@@ -452,7 +506,7 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->parent_job = dec_jobid(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->seed = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->children_num = dec_int(tmp_in, &tmp_in);
-                /* children data are not stored in DB */
+                /* children histogram also stored in the DB, see bellow. Other children data not stored. */
         if (tmp_in != NULL) stat->condorId = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->globusId = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->localId = dec_string(tmp_in, &tmp_in);
@@ -481,7 +535,10 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->payload_running = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->possible_destinations = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->possible_ce_nodes = dec_strlist(tmp_in, &tmp_in);
-	
+        if (tmp_in != NULL) {
+			    stat->children_hist = (int*)calloc(EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
+			    dec_int_array(tmp_in, &tmp_in, stat->children_hist); }
+
 	*rest = tmp_in;
 	return stat;
 }
@@ -498,6 +555,7 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	if (ret) ret = enc_string(ret, stat->last_branch_seqcode);
 	if (ret) ret = enc_string(ret, stat->deep_resubmit_seqcode);
 	if (ret) ret = enc_branch_states(ret, stat->branch_states);
+	if (ret) ret = enc_int_array(ret, stat->children_done_hist, EDG_WLL_NUMBER_OF_DONE_CODES-1);
 	return ret;
 }
 
@@ -532,6 +590,9 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 		}
 		if (tmp_in != NULL) {
 			stat->branch_states = dec_branch_states(tmp_in, &tmp_in);
+		}
+		if (tmp_in != NULL) {
+			dec_int_array(tmp_in, &tmp_in, &stat->children_done_hist);
 		}
 	} else if (tmp_in != NULL) {
 		edg_wll_FreeStatus(pubstat);

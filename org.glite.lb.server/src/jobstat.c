@@ -711,11 +711,68 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 
 edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, intJobStat **ijs)
 {
-	// XXX: to be done
+
+        char    *stmt = NULL,*out = NULL;
+        edg_wll_Stmt    sh;
+        int     f = -1;
+
+        edg_wll_ResetError(ctx);
+        trio_asprintf(&stmt,"select int_status from states where jobid='%|Ss'", parent_jobid);
+
+        if (stmt==NULL) {
+                return edg_wll_SetError(ctx,ENOMEM, NULL);
+        }
+
+/* XXX: Untested  */
+
+/* XXX: This positively does not work, needs finishing: */
+
+        if (edg_wll_ExecStmt(ctx,stmt,&sh) >= 0) {
+                f=edg_wll_FetchRow(sh,&out);
+                if (f == 0) {
+                        if (out) free(out);
+                        out = NULL;
+                        edg_wll_SetError(ctx, ENOENT, NULL);
+                }
+        }
+        edg_wll_FreeStmt(&sh);
+        free(stmt);
+
 	return edg_wll_Error(ctx, NULL, NULL);
 }
+
+/* Make a histogram of all subjobs belonging to the parent job */
+
 edg_wll_ErrorCode edg_wll_SetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, intJobStat *ijs)
 {
-	// XXX: to be done
+        char *stat_enc = NULL;
+        char *stmt;
+        int dbret;
+
+        stat_enc = enc_intJobStat(strdup(""), ijs);
+
+        trio_asprintf(&stmt,
+                "update states set "
+                "status=%d,int_status='%|Ss',version='%|Ss'"
+                "where jobid='%|Ss'",
+                ijs->pub.state, stat_enc, INTSTAT_VERSION, parent_jobid);
+
+	if (stmt==NULL) {
+		return edg_wll_SetError(ctx,ENOMEM, NULL);
+	}
+
+/* XXX: Untested  */
+
+//printf ("Would like to run SQL statament: %s\n", stmt);
+
+        if ((dbret = edg_wll_ExecStmt(ctx,stmt,NULL)) < 0) goto cleanup;
+
+	assert(dbret);	/* update should come through OK as the record exists */
+
+cleanup:
+        free(stmt);
+        free(stat_enc);
+
 	return edg_wll_Error(ctx, NULL, NULL);
+
 }
