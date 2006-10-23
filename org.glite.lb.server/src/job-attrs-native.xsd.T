@@ -6,7 +6,7 @@
 
 <xsd:schema
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	xmlsns:a="http://egee.cesnet.cz/en/Schema/LB/Attributes-Native"
+	xmlns:a="http://egee.cesnet.cz/en/Schema/LB/Attributes-Native"
 	version="1.0"
 	targetNamespace="http://egee.cesnet.cz/en/Schema/LB/Attributes-Native"
 	elementFormDefault="unqualified"

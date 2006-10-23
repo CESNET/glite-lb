@@ -19,6 +19,8 @@
 		<xs:documentation>Job owner according to LB</xs:documentation>
 	</xs:element>
 
+	<xs:element name="parent" type="xs:string" />
+
 	<!-- the following 6 elements have to be retrieved from JDL -->
 	<xs:element name="VO" type="xs:string" />
 	<xs:element name="aTag" type="xs:string" />
@@ -51,6 +53,7 @@
 
 	<xs:element name="jobType" type="a:jobtypeType" />
 	<xs:element name="nsubjobs" type="xs:int" />
+	<xs:element name="subjobs" type="a:jobIdSequenceType" />
 
 	<!-- timestamps of the state history of the last resubmission cycle,
 		i.e. it is guaranteed that each state apears here only once.
@@ -59,6 +62,8 @@
 
 	<!-- timestamps of the whole state history, including all resubmission cycles -->
 	<xs:element name="fullStatusHistory" type="a:statusSequenceType" />
+
+	<xs:element name="JDL" type="xs:string" />
 
 <!-- No idea where to get these from:
 

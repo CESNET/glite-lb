@@ -341,6 +341,9 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 jp_job_attrs.h: job-attrs.xsd jp_job_attrs.xsl 
 	${XSLTPROC} ../src/jp_job_attrs.xsl $< >$@
 
+jp_job_attrs_native.h: job-attrs-native.xsd jp_job_attrs_native.xsl 
+	${XSLTPROC} ../src/jp_job_attrs_native.xsl $< >$@
+
 doc:
 
 stage: compile
@@ -427,7 +430,7 @@ test_query_events.o: %.o: %.cpp
 %.lo: %.c
 	${COMPILE} -o $@ -c $<
 
-lb_plugin.lo: lb_plugin.c jp_job_attrs.h
+lb_plugin.lo: lb_plugin.c jp_job_attrs.h jp_job_attrs_native.h
 	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<
 
 soap_version.h:

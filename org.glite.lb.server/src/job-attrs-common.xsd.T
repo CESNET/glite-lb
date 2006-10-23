@@ -54,5 +54,11 @@
 		</xs:sequence>
 	</xs:complexType>
 
+	<xs:complexType name="jobIdSequenceType">
+		<xs:sequence>
+			<xs:element name="jobId" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
 
 </xs:schema>
