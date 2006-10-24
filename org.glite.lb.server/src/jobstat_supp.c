@@ -86,9 +86,16 @@ static char *enc_int_array(char *old, int *item, int itemsNo)
 {
         char *out;
 	int index;
-	for (index=0; index <= itemsNo; index++) asprintf(&out,"%s%d%s", out, item[index],index==itemsNo?"":";");
-        asprintf(&out,"%s%s ", old, out);
+	char *strpom;
+
+	strpom=(char*)calloc(strlen(old)+1,sizeof(char));
+
+	for (index=0; index <= itemsNo; index++) sprintf(strpom,"%s%d%s", strpom, item[index],index==itemsNo?"":";");
+
+        asprintf(&out,"%s%s ", old, strpom);
+	free(strpom);
         free(old);
+
         return out;
 }
 
@@ -109,7 +116,7 @@ static int dec_int(char* in, char **rest)
 
 static int dec_int_array(char* in, char **rest, int *out)
 {
-	int charNo, itemsNo = 0, cindex, iindex = 0;
+	int charNo, itemsNo = 0, cindex, iindex = 0, lenindex;
 	char *tempstr;
 
         /* Find out the number of items in the field first */
@@ -129,7 +136,6 @@ static int dec_int_array(char* in, char **rest, int *out)
 	}
 	else *rest = charNo + 1;
 
-//	out = (int*)calloc(itemsNo,sizeof(int));
 	tempstr = (char*)calloc(charNo+1,sizeof(char));
 
 	strcpy(tempstr,"");
@@ -140,11 +146,16 @@ static int dec_int_array(char* in, char **rest, int *out)
 			strcpy(tempstr,"");
 			iindex++;
 		}
-		else tempstr = strcat(tempstr, in[cindex]); 
+		else {
+			lenindex=strlen(tempstr);
+			tempstr[lenindex]=in[cindex];
+			tempstr[lenindex+1]=0;
+		}
 	}
 	if (in[cindex] != ' ') out[iindex] = atoi(tempstr);	/* string not terminated with a separator */
 
 	free(tempstr);
+	*rest = in + charNo + 1;
 
         return out;
 }
@@ -497,8 +508,8 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
 
 	stat = (edg_wll_JobStat *) calloc(1,sizeof(edg_wll_JobStat));
 	if (!stat) return stat;
-
 	tmp_in = in;
+
         stat->state = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->jobId = dec_jobid(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->owner = dec_string(tmp_in, &tmp_in);
@@ -540,6 +551,7 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
 			    dec_int_array(tmp_in, &tmp_in, stat->children_hist); }
 
 	*rest = tmp_in;
+
 	return stat;
 }
 
@@ -566,6 +578,7 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 	char *tmp_in;
 
 	pubstat = dec_JobStat(in, &tmp_in);
+
 	if (tmp_in != NULL) {
 		stat = (intJobStat *)calloc(1,sizeof(intJobStat));
 	} 
