@@ -712,7 +712,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, intJobStat **ijs)
 {
 
-        char    *stmt = NULL,*out = NULL;
+        char    *stmt = NULL,*out = NULL, *res_rest;
         edg_wll_Stmt    sh;
         int     f = -1;
 
@@ -723,20 +723,25 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
                 return edg_wll_SetError(ctx,ENOMEM, NULL);
         }
 
-/* XXX: Untested  */
-
-/* XXX: This positively does not work, needs finishing: */
-
         if (edg_wll_ExecStmt(ctx,stmt,&sh) >= 0) {
                 f=edg_wll_FetchRow(sh,&out);
                 if (f == 0) {
                         if (out) free(out);
                         out = NULL;
-                        edg_wll_SetError(ctx, ENOENT, NULL);
+                        return edg_wll_SetError(ctx, ENOENT, NULL);
                 }
         }
         edg_wll_FreeStmt(&sh);
         free(stmt);
+
+/* XXX: Untested  */
+
+        *ijs = dec_intJobStat(out, &res_rest);
+        if (res_rest == NULL) {
+                edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_CALL,
+                                "error decoding DB intJobStatus");
+        }
+
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
@@ -760,10 +765,6 @@ edg_wll_ErrorCode edg_wll_SetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
 	if (stmt==NULL) {
 		return edg_wll_SetError(ctx,ENOMEM, NULL);
 	}
-
-/* XXX: Untested  */
-
-//printf ("Would like to run SQL statament: %s\n", stmt);
 
         if ((dbret = edg_wll_ExecStmt(ctx,stmt,NULL)) < 0) goto cleanup;
 
