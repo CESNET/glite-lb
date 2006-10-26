@@ -41,9 +41,8 @@ else
 	STATIC_LIB_BK:=libglite_lb_bkserver.a
 endif
 
-ifdef LB_DAG_EMBRIONIC
-	LB_DAG_FLAGS:=-DLB_DAG_EMBRIONIC
-endif
+# Use embrionic DAG registration implicitely
+LB_DAG_FLAGS:=-DLB_DAG_EMBRIONIC
 
 ifdef LB_BUF
 	LB_BUF_FLAGS:=-DLB_BUF
@@ -207,7 +206,8 @@ endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o lbs_db_supp.o openserver.o \
 	jobstat.o process_event.o query.o lock.o get_events.o write2rgma.o index_lex.o \
-	lb_authz.o store.o bkindex.o stats.o
+	lb_authz.o store.o bkindex.o stats.o\
+	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o
 
 INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} 
 
@@ -292,7 +292,8 @@ test_xml: test_xml.cpp
 test.query: test_query_events
 	./test_query_events
 
-query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/request\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
+#query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
+query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;'`
 
 test_query_events: test_query_events.o
 	${LINKXX} -o $@ test_query_events.o ${query_events_objs} \
