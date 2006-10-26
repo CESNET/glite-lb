@@ -206,4 +206,4 @@
 	_optional_
 	string	histogram	User readable histogram; useful for debugging.
 	jobid   child		JobId of subjob, which triggered the state change.	
-	int	child_event	Event which triggered the state change.	
+	string	child_event	Event which triggered the state change.	
