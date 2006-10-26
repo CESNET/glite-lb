@@ -833,6 +833,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 	edg_wll_JobStat	oldstat;
 	char 		*oldstat_rgmaline = NULL;
 
+
 	memset(&oldstat,0,sizeof oldstat);
 	if (seq != 0) {
 		intErr = edg_wll_LoadIntState(ctx, job, seq - 1, &ijsp);
@@ -891,9 +892,14 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
         char    *stmt = NULL,*out = NULL;
         edg_wll_Stmt    sh;
         int     f = -1;
+	char *string_jobid;
+
+	string_jobid = edg_wlc_JobIdUnparse(parent_jobid);
 
         edg_wll_ResetError(ctx);
         trio_asprintf(&stmt,"select int_status from states where (jobid='%|Ss') AND (version='%|Ss')", parent_jobid, INTSTAT_VERSION);
+
+	free(string_jobid);
 
         if (stmt==NULL) {
                 return edg_wll_SetError(ctx,ENOMEM, NULL);
@@ -924,14 +930,19 @@ edg_wll_ErrorCode edg_wll_SetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
         char *stat_enc = NULL;
         char *stmt;
         int dbret;
+	char *string_jobid;
 
         stat_enc = enc_intJobStat(strdup(""), ijs);
+
+	string_jobid = edg_wlc_JobIdUnparse(parent_jobid);
 
         trio_asprintf(&stmt,
                 "update states set "
                 "status=%d,int_status='%|Ss',version='%|Ss'"
                 "where jobid='%|Ss'",
-                ijs->pub.state, stat_enc, INTSTAT_VERSION, parent_jobid);
+                ijs->pub.state, stat_enc, INTSTAT_VERSION, string_jobid);
+
+	free(string_jobid);
 
 	if (stmt==NULL) {
 		return edg_wll_SetError(ctx,ENOMEM, NULL);
@@ -939,7 +950,7 @@ edg_wll_ErrorCode edg_wll_SetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
 
 /* XXX: Untested  */
 
-//printf ("Would like to run SQL statament: %s\n", stmt);
+//printf ("\n\n\n Would like to run SQL statament: %s\n\n\n\n", stmt);
 
         if ((dbret = edg_wll_ExecStmt(ctx,stmt,NULL)) < 0) goto cleanup;
 
