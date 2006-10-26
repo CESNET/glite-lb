@@ -642,6 +642,176 @@ cleanup:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+
+static char* hist_to_string(int * hist)
+{
+	int i;
+	char *s, *s1;
+
+
+	assert(hist[0] == EDG_WLL_NUMBER_OF_STATCODES);
+	asprintf(&s, "%s=%d", edg_wll_StatToString(i), hist[1]);
+
+	for (i=1; i<hist[0] ; i++) {
+		asprintf(&s1, "%s, %s=%d", s, edg_wll_StatToString(i), hist[i+1]);
+		free(s); s=s1; s1=NULL;
+	}
+
+	return s;
+}
+
+
+/* checks whether parent jobid would generate the same sem.num. */
+/* as children jobid 						*/
+static int dependent_parent_lock(edg_wll_Context ctx, edg_wlc_JobId p,edg_wlc_JobId c)
+{
+	int     p_id, c_id;
+
+	if ((p_id=edg_wll_JobSemaphore(ctx, p)) == -1) return -1;
+	if ((c_id=edg_wll_JobSemaphore(ctx, c)) == -1) return -1;
+
+	if (p_id == c_id) return 1;
+	else return 0;
+}
+
+
+static edg_wll_ErrorCode load_parent_intJobStat(edg_wll_Context ctx, intJobStat *cis, intJobStat **pis)
+{
+	if (*pis) return edg_wll_Error(ctx, NULL, NULL); // already loaded
+
+	/* goes to err when id's are equal too; it just do nothing... */	
+	switch (dependent_parent_lock(ctx, cis->pub.parent_job, cis->pub.jobId)) {
+	case 0:
+		/* lock parent job only if semaphore id is different from children sem id */
+		/* otherwise because children job is already locked, parent is also locked */
+		if (edg_wll_LockJob(ctx,cis->pub.parent_job)) goto err;
+		break;
+	case 1: 	// already locked, load the state
+		break;	
+	case -1:	// fall through
+	default:
+		goto err;
+		break;
+	}
+	
+	if (edg_wll_LoadIntState(ctx, cis->pub.parent_job, - 1, pis))
+		goto err;
+
+err:
+	return edg_wll_Error(ctx, NULL, NULL);
+
+}
+
+static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobStatCode old_state, enum edg_wll_StatDone_code old_done_code, intJobStat *cis, edg_wll_Event *ce)
+{
+	intJobStat	*pis = NULL;
+	int		ret;
+
+
+	/* Easy version, where the whole histogram is evolving... 
+	 * not used because of performance reasons 
+	 *
+		if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+
+		pis->pub.children_hist[cis->pub.state]++;
+		if (cis->pub.state == EDG_WLL_JOB_DONE) 
+			pis->children_done_hist[cis->pub.done_code]++;
+		pis->pub.children_hist[old_state]--;
+		if (old_state == EDG_WLL_JOB_DONE)
+			pis->children_done_hist[old_done_code]--;
+		edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
+	*/
+
+	/* Increment histogram for interesting states and 
+	 * cook artificial events to enable parent job state shift 
+	 */
+	switch (cis->pub.state) {
+		case EDG_WLL_JOB_RUNNING:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[cis->pub.state]++;
+
+			/* not RUNNING yet? */
+			if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
+				//XXX cook artificial event for parent job
+				//    and call db_store (see handle_request() 
+				//    for usage!! )
+				edg_wll_Event  *event = 
+					edg_wll_InitEvent(EDG_WLL_EVENT_COLLECTIONSTATE);
+
+				// XXX: fill in event->any part of event...
+				event->any.user = strdup(pis->pub.owner);	// XXX: use this identity?
+				event->any.seqcode = strdup(ce->any.seqcode);	// XXX: nonsense, just something..
+				edg_wlc_JobIdDup(pis->pub.jobId, &(event->any.jobId));
+				gettimeofday(&event->any.timestamp,0);
+			        if (ctx->p_host) event->any.host = strdup(ctx->p_host);
+				event->any.level = ctx->p_level;
+				event->any.source = EDG_WLL_SOURCE_USER_INTERFACE; // XXX: is it meaningfull?
+	
+				
+				event->collectionState.state = EDG_WLL_JOB_RUNNING;
+				event->collectionState.histogram = hist_to_string(pis->pub.children_hist);
+				event->collectionState.child = cis->pub.jobId;
+				event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
+
+				trans_db_store(ctx, NULL, event);
+
+				edg_wll_FreeEvent(event);
+				free(event);	
+			}
+			break;
+		case EDG_WLL_JOB_DONE:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			// edg_wll_GetSubjobHistogram(ctx, cis->pub.parent_job, &pis);
+			// not needed, load by edg_wll_LoadIntState()
+
+			pis->pub.children_hist[cis->pub.state]++;
+
+			pis->children_done_hist[cis->pub.done_code]++;
+			if (pis->pub.children_hist[cis->pub.state] == pis->pub.children_num) {
+				// XXX cook artificial event for parent job
+				//    and call db_store
+			}
+			break;
+		// XXX: more cases to bo added...
+		case EDG_WLL_JOB_CLEARED:
+			break;
+		default:
+			break;
+	}
+	
+
+	/* Decrement histogram for interesting states
+	 */
+	switch (old_state) {
+		case EDG_WLL_JOB_RUNNING:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[old_state]--;
+			break;
+		case EDG_WLL_JOB_DONE:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[old_state]--;
+			pis->children_done_hist[old_done_code]--;
+			break;
+		// XXX: more cases to bo added...
+		default:
+			break;
+	}
+
+	if (pis)
+		edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
+	
+err:
+	if (!dependent_parent_lock(ctx, cis->pub.parent_job, cis->pub.jobId))
+		edg_wll_UnlockJob(ctx,cis->pub.parent_job);
+	if (pis)
+		destroy_intJobStat(pis);
+
+
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+
 /*
  * update stored state according to the new event
  * (must be called with the job locked)
@@ -679,6 +849,12 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		}
 		edg_wll_StoreIntState(ctx, ijsp, seq);
 		edg_wll_UpdateStatistics(ctx,&oldstat,e,&ijsp->pub);
+
+		/* check whether subjob state change does not change parent state */
+		if ((ijsp->pub.parent_job) && (oldstat.state != ijsp->pub.state)) { 
+			if (update_parent_status(ctx, oldstat.state, oldstat.done_code, ijsp, e))
+				return edg_wll_SetError(ctx, EINVAL, "update_parent_status()");
+		}
 
 		if (ctx->rgma_export) write2rgma_chgstatus(&ijsp->pub, oldstat_rgmaline);
 
