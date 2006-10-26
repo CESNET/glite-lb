@@ -16,6 +16,27 @@
 #else
 #define UNUSED_VAR
 #endif
+
+
+int
+trans_db_store(edg_wll_Context ctx, char *event_data, edg_wll_Event *e)
+{
+  int ret;
+
+  if ((ret = edg_wll_Transaction(ctx) != 0)) goto err;
+
+  if (e) ret = db_parent_store(ctx, e);
+  else ret = db_store(ctx, "NOT USED", event_data);
+
+  if (ret == 0) {
+    if ((ret = edg_wll_Commit(ctx)) != 0) goto err;
+  } else {
+    edg_wll_Rollback(ctx);
+  }
+
+err:
+  return(ret);
+}
     
 int 
 handle_request(edg_wll_Context ctx,char *buf)
@@ -31,15 +52,8 @@ handle_request(edg_wll_Context ctx,char *buf)
     return EDG_WLL_IL_PROTO;
   }
 
-  if ((ret = edg_wll_Transaction(ctx) != 0)) goto err;
-  ret = db_store(ctx, "NOT USED", event.data);
-  if (ret == 0) {
-    if ((ret = edg_wll_Commit(ctx)) != 0) goto err;
-  } else {
-    edg_wll_Rollback(ctx);
-  }
+  ret = trans_db_store(ctx, event.data, NULL);
 
-err:
   if(event.data)
     free(event.data);
 

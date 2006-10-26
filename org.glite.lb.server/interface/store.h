@@ -40,7 +40,8 @@ edg_wll_ErrorCode edg_wll_StepIntStateEmbriotic(
         edg_wll_Event *e	/* IN */
 );
 
-int db_store(edg_wll_Context,char *,char *);
+int db_store(edg_wll_Context,char *, char *);
+int db_parent_store(edg_wll_Context, edg_wll_Event *);
 int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
 
