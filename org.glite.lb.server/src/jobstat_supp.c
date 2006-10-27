@@ -547,7 +547,7 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->possible_destinations = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->possible_ce_nodes = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) {
-			    stat->children_hist = (int*)calloc(EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
+			    stat->children_hist = (int*)calloc(EDG_WLL_NUMBER_OF_STATCODES+1, sizeof(int));
 			    dec_int_array(tmp_in, &tmp_in, stat->children_hist); }
 
 	*rest = tmp_in;

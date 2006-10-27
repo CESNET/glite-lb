@@ -650,10 +650,10 @@ static char* hist_to_string(int * hist)
 
 
 	assert(hist[0] == EDG_WLL_NUMBER_OF_STATCODES);
-	asprintf(&s, "%s=%d", edg_wll_StatToString(i), hist[1]);
+	asprintf(&s, "%s=%d", edg_wll_StatToString(1), hist[1]);
 
 	for (i=1; i<hist[0] ; i++) {
-		asprintf(&s1, "%s, %s=%d", s, edg_wll_StatToString(i), hist[i+1]);
+		asprintf(&s1, "%s, %s=%d", s, edg_wll_StatToString(i), hist[i]);
 		free(s); s=s1; s1=NULL;
 	}
 
@@ -750,7 +750,7 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 				
 				event->collectionState.state = EDG_WLL_JOB_RUNNING;
 				event->collectionState.histogram = hist_to_string(pis->pub.children_hist);
-				event->collectionState.child = cis->pub.jobId;
+				edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
 				event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
 
 				trans_db_store(ctx, NULL, event);
@@ -824,7 +824,6 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 					edg_wll_JobStat	*stat_out)
 {
 	intJobStat 	*ijsp;
-	int		intErr = 0;
 	int		flags = 0;
 	int		res;
 	int		be_strict = 0;
@@ -835,10 +834,8 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 
 
 	memset(&oldstat,0,sizeof oldstat);
-	if (seq != 0) {
-		intErr = edg_wll_LoadIntState(ctx, job, seq - 1, &ijsp);
-	}
-	if (seq != 0 && !intErr) {
+
+	if (!edg_wll_LoadIntState(ctx, job, seq - 1, &ijsp)) {
 		edg_wll_CpyStatus(&ijsp->pub,&oldstat);
 
 		if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(&ijsp->pub);
