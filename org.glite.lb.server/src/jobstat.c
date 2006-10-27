@@ -897,7 +897,7 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
 	string_jobid = edg_wlc_JobIdUnparse(parent_jobid);
 
         edg_wll_ResetError(ctx);
-        trio_asprintf(&stmt,"select int_status from states where (jobid='%|Ss') AND (version='%|Ss')", parent_jobid, INTSTAT_VERSION);
+        trio_asprintf(&stmt,"select int_status from states where (jobid='%|Ss') AND (version='%|Ss')", string_jobid, INTSTAT_VERSION);
 
 	free(string_jobid);
 
