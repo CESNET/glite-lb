@@ -167,12 +167,19 @@ int edg_wll_JobStatus(
 		if (1) {
 			char *out[2];
 			edg_wll_Stmt sh;
-			int num_sub, num_f;
+			int num_sub, num_f, i;
 
 			if (stat->children_hist == NULL) {
 				stat->children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
 				stat->children_hist[0] = EDG_WLL_NUMBER_OF_STATCODES;
 			}
+			else {
+				/* If hist is loaded, it probably contain only incomplete histogram
+				 * builded in update_parent_status. Count it from scratch...
+				 */
+				for (i=1; i<=EDG_WLL_NUMBER_OF_STATCODES; i++)
+					stat->children_hist[i] = 0;
+			}	
 			if ((flags & EDG_WLL_STAT_CHILDREN) == 0) {
 				trio_asprintf(&stmt, "SELECT status FROM states "
 							"WHERE parent_job='%|Ss' AND version='%|Ss'",
