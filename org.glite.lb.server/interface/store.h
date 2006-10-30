@@ -42,6 +42,7 @@ edg_wll_ErrorCode edg_wll_StepIntStateEmbriotic(
 
 int db_store(edg_wll_Context,char *, char *);
 int db_parent_store(edg_wll_Context, edg_wll_Event *);
+int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat);
 int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
 
