@@ -95,14 +95,10 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   if (edg_wll_UnlockJob(ctx,ev->any.jobId)) goto err;
   if (err) goto err;
 
-  if (db_actual_store(ctx, event, ev, &newstat)!=0) goto err;
+  db_actual_store(ctx, event, ev, &newstat);
 
-  edg_wll_FreeEvent(ev);
-  free(ev);
+err:
 
-  return(0);
-
- err:
   if(ev) {
     edg_wll_FreeEvent(ev);
     free(ev);
@@ -171,16 +167,15 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev)
 
   if (err) goto err;
 
-  event = edg_wll_UnparseEvent(ctx, ev);
-  assert(event);
+  if ( ctx->isProxy ) {
+    event = edg_wll_UnparseEvent(ctx, ev);
+    assert(event);
+  }
 
-  if (db_actual_store(ctx, event, ev, &newstat)!=0) goto err;
+  db_actual_store(ctx, event, ev, &newstat);
 
-  free(event);
+err:
 
-  return(0);
-
- err:
   free(event);
   
   return edg_wll_Error(ctx,NULL,NULL);
@@ -235,7 +230,7 @@ int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll
 		char *jids, *msg;
 		
 		if ( !(jids = edg_wlc_JobIdUnparse(ev->any.jobId)) ) {
-			return edg_wll_SetError(ctx, errno, "Can'tnunparse jobid when registering to JP");
+			return edg_wll_SetError(ctx, errno, "Can't unparse jobid when registering to JP");
 		}
 		if ( !(msg = realloc(jids, strlen(jids)+strlen(ev->any.user)+2)) ) {
 			free(jids);
@@ -250,5 +245,5 @@ int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll
 		free(msg);
 	}
   }
-
+  return edg_wll_Error(ctx,NULL,NULL);
 }
