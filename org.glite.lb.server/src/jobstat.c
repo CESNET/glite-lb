@@ -737,33 +737,33 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[cis->pub.state+1]++;
 
-			/* not RUNNING yet? */
-			if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
-				//XXX cook artificial event for parent job
-				//    and call db_store (see handle_request() 
-				//    for usage!! )
-				edg_wll_Event  *event = 
-					edg_wll_InitEvent(EDG_WLL_EVENT_COLLECTIONSTATE);
+			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
+				/* not RUNNING yet? */
+				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
+					// XXX: move this section to separate function to be reusable
+					edg_wll_Event  *event = 
+						edg_wll_InitEvent(EDG_WLL_EVENT_COLLECTIONSTATE);
 
-				// XXX: fill in event->any part of event...
-				event->any.user = strdup(pis->pub.owner);	// XXX: use this identity?
-				event->any.seqcode = strdup(ce->any.seqcode);	// XXX: nonsense, just something..
-				edg_wlc_JobIdDup(pis->pub.jobId, &(event->any.jobId));
-				gettimeofday(&event->any.timestamp,0);
-			        if (ctx->p_host) event->any.host = strdup(ctx->p_host);
-				event->any.level = ctx->p_level;
-				event->any.source = EDG_WLL_SOURCE_USER_INTERFACE; // XXX: is it meaningfull?
-	
-				
-				event->collectionState.state = EDG_WLL_JOB_RUNNING;
-				event->collectionState.histogram = hist_to_string(pis->pub.children_hist);
-				edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
-				event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
+					// XXX: fill in event->any part of event...
+					event->any.user = strdup(pis->pub.owner);	// XXX: use this identity?
+					event->any.seqcode = strdup(ce->any.seqcode);	// XXX: nonsense, just something..
+					edg_wlc_JobIdDup(pis->pub.jobId, &(event->any.jobId));
+					gettimeofday(&event->any.timestamp,0);
+					if (ctx->p_host) event->any.host = strdup(ctx->p_host);
+					event->any.level = ctx->p_level;
+					event->any.source = EDG_WLL_SOURCE_USER_INTERFACE; // XXX: is it meaningfull?
+		
+					
+					event->collectionState.state = EDG_WLL_JOB_RUNNING;
+					event->collectionState.histogram = hist_to_string(pis->pub.children_hist);
+					edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
+					event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
 
-				trans_db_store(ctx, NULL, event);
+					trans_db_store(ctx, NULL, event);
 
-				edg_wll_FreeEvent(event);
-				free(event);	
+					edg_wll_FreeEvent(event);
+					free(event);	
+				}
 			}
 			break;
 		case EDG_WLL_JOB_DONE:
