@@ -713,10 +713,10 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 	 *
 		if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 
-		pis->pub.children_hist[cis->pub.state]++;
+		pis->pub.children_hist[cis->pub.state+1]++;
 		if (cis->pub.state == EDG_WLL_JOB_DONE) 
 			pis->children_done_hist[cis->pub.done_code]++;
-		pis->pub.children_hist[old_state]--;
+		pis->pub.children_hist[old_state+1]--;
 		if (old_state == EDG_WLL_JOB_DONE)
 			pis->children_done_hist[old_done_code]--;
 		edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
@@ -728,7 +728,7 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 	switch (cis->pub.state) {
 		case EDG_WLL_JOB_RUNNING:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[cis->pub.state]++;
+			pis->pub.children_hist[cis->pub.state+1]++;
 
 			/* not RUNNING yet? */
 			if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
@@ -764,10 +764,10 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			// edg_wll_GetSubjobHistogram(ctx, cis->pub.parent_job, &pis);
 			// not needed, load by edg_wll_LoadIntState()
 
-			pis->pub.children_hist[cis->pub.state]++;
+			pis->pub.children_hist[cis->pub.state+1]++;
 
 			pis->children_done_hist[cis->pub.done_code]++;
-			if (pis->pub.children_hist[cis->pub.state] == pis->pub.children_num) {
+			if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
 				// XXX cook artificial event for parent job
 				//    and call db_store
 			}
@@ -785,11 +785,11 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 	switch (old_state) {
 		case EDG_WLL_JOB_RUNNING:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[old_state]--;
+			pis->pub.children_hist[old_state+1]--;
 			break;
 		case EDG_WLL_JOB_DONE:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[old_state]--;
+			pis->pub.children_hist[old_state+1]--;
 			pis->children_done_hist[old_done_code]--;
 			break;
 		// XXX: more cases to bo added...
