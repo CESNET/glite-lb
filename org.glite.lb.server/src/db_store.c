@@ -27,6 +27,9 @@
 
 extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *);
 
+static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat);
+
+
 int
 db_store(edg_wll_Context ctx,char *ucs, char *event)
 {
@@ -181,7 +184,7 @@ err:
   return edg_wll_Error(ctx,NULL,NULL);
 }
 
-int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat) {
+static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat) {
 
   if ( ctx->isProxy ) {
 	/*
