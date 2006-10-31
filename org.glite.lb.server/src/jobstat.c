@@ -37,6 +37,7 @@
 
 static void warn (const char* format, ...) UNUSED_VAR ;
 static char *job_owner(edg_wll_Context,char *);
+static int set_job_state(edg_wll_Context ctx, edg_wll_JobStatCode state, intJobStat *cis, intJobStat *pis, edg_wll_Event *ce); 
 
 
 int js_enable_store = 1;
@@ -712,7 +713,7 @@ err:
 static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobStatCode old_state, enum edg_wll_StatDone_code old_done_code, intJobStat *cis, edg_wll_Event *ce)
 {
 	intJobStat	*pis = NULL;
-	int		ret;
+//	int		ret;
 
 
 	/* Easy version, where the whole histogram is evolving... 
@@ -740,29 +741,7 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
 				/* not RUNNING yet? */
 				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
-					// XXX: move this section to separate function to be reusable
-					edg_wll_Event  *event = 
-						edg_wll_InitEvent(EDG_WLL_EVENT_COLLECTIONSTATE);
-
-					// XXX: fill in event->any part of event...
-					event->any.user = strdup(pis->pub.owner);	// XXX: use this identity?
-					event->any.seqcode = strdup(ce->any.seqcode);	// XXX: nonsense, just something..
-					edg_wlc_JobIdDup(pis->pub.jobId, &(event->any.jobId));
-					gettimeofday(&event->any.timestamp,0);
-					if (ctx->p_host) event->any.host = strdup(ctx->p_host);
-					event->any.level = ctx->p_level;
-					event->any.source = EDG_WLL_SOURCE_USER_INTERFACE; // XXX: is it meaningfull?
-		
-					
-					event->collectionState.state = EDG_WLL_JOB_RUNNING;
-					event->collectionState.histogram = hist_to_string(pis->pub.children_hist);
-					edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
-					event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
-
-					trans_db_store(ctx, NULL, event);
-
-					edg_wll_FreeEvent(event);
-					free(event);	
+					set_job_state(ctx, cis->pub.state, cis, pis, ce);
 				}
 			}
 			break;
@@ -960,4 +939,29 @@ cleanup:
 
 	return edg_wll_Error(ctx, NULL, NULL);
 
+}
+
+static int set_job_state(edg_wll_Context ctx, edg_wll_JobStatCode state, intJobStat *cis, intJobStat *pis, edg_wll_Event *ce) {
+	edg_wll_Event  *event = 
+		edg_wll_InitEvent(EDG_WLL_EVENT_COLLECTIONSTATE);
+
+	// XXX: fill in event->any part of event...
+	event->any.user = strdup(pis->pub.owner);	// XXX: use this identity?
+	event->any.seqcode = strdup(ce->any.seqcode);	// XXX: nonsense, just something..
+	edg_wlc_JobIdDup(pis->pub.jobId, &(event->any.jobId));
+	gettimeofday(&event->any.timestamp,0);
+	if (ctx->p_host) event->any.host = strdup(ctx->p_host);
+	event->any.level = ctx->p_level;
+	event->any.source = EDG_WLL_SOURCE_USER_INTERFACE; // XXX: is it meaningfull?
+		
+					
+	event->collectionState.state = state;
+	event->collectionState.histogram = hist_to_string(pis->pub.children_hist);
+	edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
+	event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
+
+	trans_db_store(ctx, NULL, event);
+
+	edg_wll_FreeEvent(event);
+	free(event);	
 }
