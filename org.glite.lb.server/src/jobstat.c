@@ -710,7 +710,10 @@ err:
 }
 
 
-static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode state, intJobStat *cis, intJobStat *pis, edg_wll_Event *ce) {
+static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode state, intJobStat *cis, intJobStat *pis, edg_wll_Event *ce) 
+{
+	int	ret = 0;
+
 	edg_wll_Event  *event = 
 		edg_wll_InitEvent(EDG_WLL_EVENT_COLLECTIONSTATE);
 
@@ -729,10 +732,12 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 	edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
 	event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
 
-	trans_db_store(ctx, NULL, event, pis);
+	ret = trans_db_store(ctx, NULL, event, pis);
 
 	edg_wll_FreeEvent(event);
-	free(event);	
+	free(event);
+
+	return ret;	
 }
 
 
@@ -753,7 +758,7 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 		pis->pub.children_hist[old_state+1]--;
 		if (old_state == EDG_WLL_JOB_DONE)
 			pis->children_done_hist[old_done_code]--;
-		edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
+		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
 	*/
 
 	/* Increment histogram for interesting states and 
@@ -767,19 +772,24 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
 				/* not RUNNING yet? */
 				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
-					log_collectionState_event(ctx, cis->pub.state, cis, pis, ce);
+					if (log_collectionState_event(ctx, cis->pub.state, cis, pis, ce))
+						goto err;
 				}
 			}
 			break;
 		case EDG_WLL_JOB_DONE:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-
 			pis->pub.children_hist[cis->pub.state+1]++;
-
 			pis->children_done_hist[cis->pub.done_code]++;
-			if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
-				// XXX cook artificial event for parent job
-				//    and call db_store
+
+			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
+				if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
+					/* not DONE yet? */
+					if (pis->pub.state < EDG_WLL_JOB_DONE) {
+						if (log_collectionState_event(ctx, cis->pub.state, cis, pis, ce))
+							goto err;
+					}
+				}
 			}
 			break;
 		// XXX: more cases to bo added...
@@ -832,11 +842,9 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
 					intJobStat *ijsp,
 					edg_wll_JobStat	*stat_out)
 {
-	int		flags = 0;
 	int		res;
 	int		be_strict = 0;
 	char		*errstring = NULL;
-	intJobStat	jobstat;
 	edg_wll_JobStat	oldstat;
 	char 		*oldstat_rgmaline = NULL;
 

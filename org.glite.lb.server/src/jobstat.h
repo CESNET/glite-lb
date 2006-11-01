@@ -86,6 +86,6 @@ int edg_wll_compare_seq(const char *, const char *);
 void init_intJobStat(intJobStat *p);
 
 edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context, edg_wlc_JobId parent_jobid, intJobStat **ijs);
-edg_wll_ErrorCode edg_wll_SetSubjobHistogram(edg_wll_Context, edg_wlc_JobId parent_jobid, intJobStat *ijs);
+edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context, edg_wlc_JobId parent_jobid, intJobStat *ijs);
 
 #endif
