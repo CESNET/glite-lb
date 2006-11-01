@@ -19,13 +19,13 @@
 
 
 int
-trans_db_store(edg_wll_Context ctx, char *event_data, edg_wll_Event *e)
+trans_db_store(edg_wll_Context ctx, char *event_data, edg_wll_Event *e, intJobStat *is)
 {
   int ret;
 
   if ((ret = edg_wll_Transaction(ctx) != 0)) goto err;
 
-  if (e) ret = db_parent_store(ctx, e);
+  if (e) ret = db_parent_store(ctx, e, is);
   else ret = db_store(ctx, "NOT USED", event_data);
 
   if (ret == 0) {
@@ -52,7 +52,7 @@ handle_request(edg_wll_Context ctx,char *buf)
     return EDG_WLL_IL_PROTO;
   }
 
-  ret = trans_db_store(ctx, event.data, NULL);
+  ret = trans_db_store(ctx, event.data, NULL, NULL);
 
   if(event.data)
     free(event.data);

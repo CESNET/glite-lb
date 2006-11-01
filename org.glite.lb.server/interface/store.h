@@ -4,6 +4,7 @@
 #ident "$Header$"
 
 #include "glite/lb/consumer.h"
+#include "jobstat.h"
 #include "lb_authz.h"
 
 #ifdef __cplusplus
@@ -41,7 +42,7 @@ edg_wll_ErrorCode edg_wll_StepIntStateEmbriotic(
 );
 
 int db_store(edg_wll_Context,char *, char *);
-int db_parent_store(edg_wll_Context, edg_wll_Event *);
+int db_parent_store(edg_wll_Context, edg_wll_Event *, intJobStat *);
 int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
 

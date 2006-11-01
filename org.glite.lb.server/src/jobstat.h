@@ -1,5 +1,9 @@
 /* $Header$ */
 
+#ifndef _LBS_JOBSTAT_H
+#define _LBS_JOBSTAT_H
+
+
 #include "lbs_db.h"
 
 /*
@@ -84,3 +88,4 @@ void init_intJobStat(intJobStat *p);
 edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context, edg_wlc_JobId parent_jobid, intJobStat **ijs);
 edg_wll_ErrorCode edg_wll_SetSubjobHistogram(edg_wll_Context, edg_wlc_JobId parent_jobid, intJobStat *ijs);
 
+#endif

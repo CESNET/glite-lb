@@ -112,7 +112,7 @@ err:
 
 
 int
-db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev)
+db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
 {
   char  *event = NULL;
   int	seq;
@@ -165,7 +165,7 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev)
     }
 #endif
 
-    err = edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, ctx->isProxy? NULL: &newstat);
+    err = edg_wll_StepIntStateParent(ctx,ev->any.jobId, ev, seq, is, ctx->isProxy? NULL: &newstat);
   }
 
   if (err) goto err;

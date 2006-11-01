@@ -810,7 +810,13 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 		case EDG_WLL_EVENT_CHANGEACL:
 			/* ignore, only for event log */
 			break;
-		
+		case EDG_WLL_EVENT_COLLECTIONSTATE:
+			new_state = e->collectionState.state;
+//XXX: will be usefull with some meaningfull seq. code from COLLECTIONSTATE event
+// 			if (USABLE(res, strict)) {
+                                js->pub.state = new_state;
+//			}
+			break;
 		default:
 			goto bad_event;
 			break;
