@@ -796,13 +796,13 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 		case EDG_WLL_JOB_RUNNING:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[old_state+1]--;
-			edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
+			edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
 			break;
 		case EDG_WLL_JOB_DONE:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[old_state+1]--;
 			pis->children_done_hist[old_done_code]--;
-			edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
+			edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
 			break;
 		// XXX: more cases to bo added...
 		default:
@@ -975,7 +975,7 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
 
 /* Make a histogram of all subjobs belonging to the parent job */
 
-edg_wll_ErrorCode edg_wll_SetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, intJobStat *ijs)
+edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, intJobStat *ijs)
 {
         char *stat_enc = NULL;
         char *stmt;
