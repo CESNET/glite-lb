@@ -773,8 +773,6 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			break;
 		case EDG_WLL_JOB_DONE:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			// edg_wll_GetSubjobHistogram(ctx, cis->pub.parent_job, &pis);
-			// not needed, load by edg_wll_LoadIntState()
 
 			pis->pub.children_hist[cis->pub.state+1]++;
 
@@ -798,20 +796,19 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 		case EDG_WLL_JOB_RUNNING:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[old_state+1]--;
+			edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
 			break;
 		case EDG_WLL_JOB_DONE:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[old_state+1]--;
 			pis->children_done_hist[old_done_code]--;
+			edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
 			break;
 		// XXX: more cases to bo added...
 		default:
 			break;
 	}
 
-	if (pis)
-		edg_wll_SetSubjobHistogram(ctx, cis->pub.parent_job, pis);
-	
 err:
 	if (!dependent_parent_lock(ctx, cis->pub.parent_job, cis->pub.jobId))
 		edg_wll_UnlockJob(ctx,cis->pub.parent_job);
