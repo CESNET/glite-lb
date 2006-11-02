@@ -132,6 +132,7 @@ static char			   *purgeStorage = EDG_PURGE_STORAGE;
 static char			   *dumpStorage = EDG_DUMP_STORAGE;
 static char			   *jpregDir = JPREG_DEF_DIR;
 static int				jpreg = 0;
+static char				*server_subject = NULL;
 
 
 static time_t			purge_timeout[EDG_WLL_NUMBER_OF_STATCODES];
@@ -549,12 +550,16 @@ a.sin_addr.s_addr = INADDR_ANY;
 		int	i;
 
 		dprintf(("Server identity: %s\n",mysubj));
+		server_subject = strdup(mysubj);
 		for ( i = 0; super_users && super_users[i]; i++ ) ;
 		super_users = realloc(super_users, (i+2)*sizeof(*super_users));
 		super_users[i] = mysubj;
 		super_users[i+1] = NULL;
 	}
-	else dprintf(("Running unauthenticated\n"));
+	else {
+		dprintf(("Running unauthenticated\n"));
+		server_subject = strdup("anonymous LB");
+	}
 
 	if ( noAuth ) dprintf(("Promiscuous mode\n"));
 	dprintf(("Listening at %d,%d (accepting protocols: " COMP_PROTO " and compatible) ...\n",atoi(port),atoi(port)+1));
@@ -794,6 +799,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->connPool[ctx->connToUse].peerName = strdup(inet_ntoa(a.sin_addr));
 	ctx->connPool[ctx->connToUse].peerPort = ntohs(a.sin_port);
 	ctx->count_statistics = count_statistics;
+
+	ctx->serverIdentity = strdup(server_subject);
 
 	gettimeofday(&conn_start, 0);
 

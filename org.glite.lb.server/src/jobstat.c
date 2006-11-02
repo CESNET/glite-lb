@@ -717,8 +717,7 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 	edg_wll_Event  *event = 
 		edg_wll_InitEvent(EDG_WLL_EVENT_COLLECTIONSTATE);
 
-	// XXX: fill in event->any part of event...
-	event->any.user = strdup(pis->pub.owner);	// XXX: use this identity?
+	event->any.user = strdup(ctx->serverIdentity);	
 	event->any.seqcode = strdup(ce->any.seqcode);	// XXX: nonsense, just something..
 	edg_wlc_JobIdDup(pis->pub.jobId, &(event->any.jobId));
 	gettimeofday(&event->any.timestamp,0);

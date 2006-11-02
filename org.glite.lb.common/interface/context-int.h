@@ -64,6 +64,7 @@ struct _edg_wll_Context {
 	
 	time_t		peerProxyValidity;
 	char		*peerName;
+	char		*serverIdentity;		/* DN of server certificate or "anonymous" */
 	edg_wll_VomsGroups	vomsGroups;
 	int		allowAnonymous;
 	int		noAuth;		/* if set, you can obtain info about events 	*/
