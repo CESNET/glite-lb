@@ -710,7 +710,7 @@ err:
 }
 
 
-static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode state, intJobStat *cis, intJobStat *pis, edg_wll_Event *ce) 
+static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode state, enum edg_wll_StatDone_code done_code, intJobStat *cis, intJobStat *pis, edg_wll_Event *ce) 
 {
 	int	ret = 0;
 
@@ -727,6 +727,7 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 		
 					
 	event->collectionState.state = state;
+	event->collectionState.done_code = done_code;
 	event->collectionState.histogram = hist_to_string(pis->pub.children_hist);
 	edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
 	event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
@@ -771,7 +772,7 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
 				/* not RUNNING yet? */
 				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
-					if (log_collectionState_event(ctx, cis->pub.state, cis, pis, ce))
+					if (log_collectionState_event(ctx, cis->pub.state, 0, cis, pis, ce))
 						goto err;
 				}
 			}
@@ -785,7 +786,8 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 				if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
 					/* not DONE yet? */
 					if (pis->pub.state < EDG_WLL_JOB_DONE) {
-						if (log_collectionState_event(ctx, cis->pub.state, cis, pis, ce))
+						if (log_collectionState_event(ctx, cis->pub.state, 
+								cis->pub.done_code, cis, pis, ce))
 							goto err;
 					}
 				}

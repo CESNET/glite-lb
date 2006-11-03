@@ -815,6 +815,8 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 //XXX: will be usefull with some meaningfull seq. code from COLLECTIONSTATE event
 // 			if (USABLE(res, strict)) {
                                 js->pub.state = new_state;
+				if (new_state == EDG_WLL_JOB_DONE)
+					js->pub.done_code = e->collectionState.done_code;
 //			}
 			break;
 		default:
