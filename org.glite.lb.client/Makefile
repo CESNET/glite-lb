@@ -154,25 +154,25 @@ ${LIB}: ${LIBOBJS}
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB_THR} \
 			-lglite_security_gss_${thrflavour}
 
 ${FAKELIB}: ${FAKELIBOBJS}
-	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${glite_location}/lib \
+	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${FAKETHRLIB}: ${FAKELIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${glite_location}/lib \
+	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB_THR} \
 			-lglite_security_gss_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS}
-	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
+	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS}
-	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${glite_location}/lib ${THRLIB}
+	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/lib ${THRLIB}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
