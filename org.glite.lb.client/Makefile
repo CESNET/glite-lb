@@ -149,7 +149,7 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ${LIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
