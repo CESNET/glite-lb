@@ -3,7 +3,6 @@
 
 #include "prod_proto.h"
 #include "glite/lb/producer.h"
-#include "glite/lb/escape.h"
 
 /* virtual read will return all zeroes (answer from logger always without error) */
 int

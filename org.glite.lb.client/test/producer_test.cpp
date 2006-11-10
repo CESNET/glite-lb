@@ -19,6 +19,10 @@
 extern "C" {
 int edg_wll_log_write(edg_wll_Context, int *,char *);
 int edg_wll_log_read(edg_wll_Context, int *);
+int edg_wll_log_proxy_write(edg_wll_Context, int *,char *);
+int edg_wll_log_proxy_read(edg_wll_Context, int *);
+int edg_wll_log_direct_write(edg_wll_Context, int *,char *);
+int edg_wll_log_direct_read(edg_wll_Context, int *);
 }
 
 class ProducerTest: public  CppUnit::TestFixture
@@ -41,7 +45,7 @@ public:
   void testProtoClient() {
     edg_wll_Context context;
     int err;
-    char *tst_msg = "DATE=20040831150159.702224 HOST=\"some.host\" PROG=edg-wms LVL=USAGE DG.PRIORITY=0 DG.SOURCE=\"UserInterface\" DG.SRC_INSTANCE=\"\" DG.EVNT=\"RegJob\" DG.JOBID=\"https://some.host:1234/x67qr549qc\" DG.SEQCODE=\"UI=2:NS=0:WM=0:BH=1:JSS=0:LM=0:LRMS=0:APP=0\" DG.REGJOB.JDL=\"\" DG.REGJOB.NS=\"ns address\" DG.REGJOB.PARENT=\"\" DG.REGJOB.JOBTYPE=\"SIMPLE\" DG.REGJOB.NSUBJOBS=\"0\" DG.REGJOB.SEED=\"\"";
+    static char *tst_msg = "DATE=20040831150159.702224 HOST=\"some.host\" PROG=edg-wms LVL=USAGE DG.PRIORITY=0 DG.SOURCE=\"UserInterface\" DG.SRC_INSTANCE=\"\" DG.EVNT=\"RegJob\" DG.JOBID=\"https://some.host:1234/x67qr549qc\" DG.SEQCODE=\"UI=2:NS=0:WM=0:BH=1:JSS=0:LM=0:LRMS=0:APP=0\" DG.REGJOB.JDL=\"\" DG.REGJOB.NS=\"ns address\" DG.REGJOB.PARENT=\"\" DG.REGJOB.JOBTYPE=\"SIMPLE\" DG.REGJOB.NSUBJOBS=\"0\" DG.REGJOB.SEED=\"\"";
     int size = strlen(tst_msg)+1+EDG_WLL_LOG_SOCKET_HEADER_LENGTH+sizeof(size);
 
     err = edg_wll_InitContext(&context);

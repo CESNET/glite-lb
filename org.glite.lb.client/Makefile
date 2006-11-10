@@ -248,9 +248,9 @@ examples: ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}
 
 fake: ${FAKE_EXAMPLES}
 
-#check: compile check.producer
+check: compile check.producer
 
- check.producer: producer_test
+check.producer: producer_test
 	./producer_test
 
 producer_test: producer_test.o prod_proto_test.o
