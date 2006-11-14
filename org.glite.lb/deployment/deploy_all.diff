@@ -364,7 +364,7 @@ diff -u -p -u -r1.21 glite-lb.cfg.xml
 +		<lb.export.enabled
 +			description="Enables exports to Job Provenance.
 +				[Example: true][Type: boolean]"
-+			value="true"/>
++			value="false"/>
 +
 +
  		<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
