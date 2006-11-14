@@ -136,7 +136,8 @@ TOOLS:=dump load purge lb_dump_exporter ${LB_PERF_TOOLS}
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog lbmon flood_proxy dagids stress_context
 
-EXAMPLES_CL=user_jobs job_status
+EXAMPLES_CL=user_jobs job_status 
+EXAMPLES_CL_THR=user_jobs_threaded
 FAKE_EXAMPLES:=job_log_fake
 
 MAN_GZ:=glite-lb-logevent.1.gz
@@ -184,6 +185,9 @@ ${TOOLS} ${EXAMPLES}: %: %.o
 
 ${EXAMPLES_CL}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${COMMON_LIB} ${EXT_LIB} 
+
+${EXAMPLES_CL_THR}: %: %.o
+	${LINK} -o $@ $< ${THRLIB} ${COMMON_LIB_THR} ${EXT_LIB} 
 
 ${FAKE_EXAMPLES}: %: %.o ${FAKELIB}
 	${LINK} -o $@ $< ${FAKELIB} ${TEST_LIBS} ${EXT_LIB} 
@@ -244,7 +248,7 @@ else
 compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
 endif
 
-examples: ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS}
+examples: ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 
 fake: ${FAKE_EXAMPLES}
 
@@ -298,7 +302,7 @@ endif
 	for p in ${TOOLS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
 	done
-	for p in ${EXAMPLES} ${EXAMPLES_CL} ${sh_PROGS} ; do \
+	for p in ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
 	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${PREFIX}/sbin/glite-lb-export.sh"

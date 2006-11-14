@@ -68,7 +68,7 @@ extern "C" {
 /**
  * default maximal number of simultaneously open connections from one client
  */
-#define EDG_WLL_LOG_CONNECTIONS_DEFAULT		4
+// XXX: not used? #define EDG_WLL_LOG_CONNECTIONS_DEFAULT		4
 
 
 #ifdef __cplusplus

@@ -97,7 +97,7 @@ int edg_wll_NotifNewServer(
 			goto cleanup;
 		}
 		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) )
-			trio_asprintf(&addr_s, "%s:%s", ctx->connPool[ctx->connToUse].peerName, aux+1);
+			trio_asprintf(&addr_s, "%s:%s", ctx->connections->serverConnection->peerName, aux+1);
 	}
 
 	/*	Format DB insert statement
@@ -203,7 +203,7 @@ int edg_wll_NotifBindServer(
 			goto cleanup;
 		}
 		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) )
-			trio_asprintf(&addr_s, "%s:%s", ctx->connPool[ctx->connToUse].peerName, aux+1);
+			trio_asprintf(&addr_s, "%s:%s", ctx->connections->serverConnection->peerName, aux+1);
 	}
 
 

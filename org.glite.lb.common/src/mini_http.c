@@ -21,7 +21,7 @@
 #define min(x,y)	((x) < (y) ? (x) : (y))
 #define CONTENT_LENGTH	"Content-Length:"
 
-edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***hdrOut,char **bodyOut)
+edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***hdrOut,char **bodyOut, edg_wll_ConnPool *connPTR)
 {
 	char	**hdr = NULL,*first = NULL,*body = NULL;
 	enum	{ FIRST, HEAD, BODY, DONE }	pstat = FIRST;
@@ -30,23 +30,23 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 	edg_wll_GssStatus gss_code;
 
 #define bshift(shift) {\
-	memmove(ctx->connPool[ctx->connToUse].buf,ctx->connPool[ctx->connToUse].buf+(shift),ctx->connPool[ctx->connToUse].bufUse-(shift));\
-	ctx->connPool[ctx->connToUse].bufUse -= (shift);\
+	memmove(connPTR->buf,connPTR->buf+(shift),connPTR->bufUse-(shift));\
+	connPTR->bufUse -= (shift);\
 }
 	edg_wll_ResetError(ctx);
 
-	if (ctx->connPool[ctx->connToUse].gss.context != GSS_C_NO_CONTEXT)
-   		sock = ctx->connPool[ctx->connToUse].gss.sock;
+	if (connPTR->gss.context != GSS_C_NO_CONTEXT)
+   		sock = connPTR->gss.sock;
 	else {
 		edg_wll_SetError(ctx,ENOTCONN,NULL);
 		goto error;
 	}
 
-	if (!ctx->connPool[ctx->connToUse].buf) ctx->connPool[ctx->connToUse].buf = malloc(ctx->connPool[ctx->connToUse].bufSize = BUFSIZ);
+	if (!connPTR->buf) connPTR->buf = malloc(connPTR->bufSize = BUFSIZ);
 
 	do {
-		len = edg_wll_gss_read(&ctx->connPool[ctx->connToUse].gss,
-			ctx->connPool[ctx->connToUse].buf+ctx->connPool[ctx->connToUse].bufUse,ctx->connPool[ctx->connToUse].bufSize-ctx->connPool[ctx->connToUse].bufUse,&ctx->p_tmp_timeout, &gss_code);
+		len = edg_wll_gss_read(&connPTR->gss,
+			connPTR->buf+connPTR->bufUse,connPTR->bufSize-connPTR->bufUse,&ctx->p_tmp_timeout, &gss_code);
 
 		switch (len) {
 			case EDG_WLL_GSS_OK:
@@ -68,27 +68,27 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 		}
 
 
-		ctx->connPool[ctx->connToUse].bufUse += len;
+		connPTR->bufUse += len;
 		rdmore = 0;
 
 		while (!rdmore && pstat != DONE) switch (pstat) {
 			char	*cr; 
 
 			case FIRST:
-				if ((cr = memchr(ctx->connPool[ctx->connToUse].buf,'\r',ctx->connPool[ctx->connToUse].bufUse)) &&
-					ctx->connPool[ctx->connToUse].bufUse >= cr-ctx->connPool[ctx->connToUse].buf+2 && cr[1] == '\n')
+				if ((cr = memchr(connPTR->buf,'\r',connPTR->bufUse)) &&
+					connPTR->bufUse >= cr-connPTR->buf+2 && cr[1] == '\n')
 				{
 					*cr = 0;
-					first = strdup(ctx->connPool[ctx->connToUse].buf);
-					bshift(cr-ctx->connPool[ctx->connToUse].buf+2);
+					first = strdup(connPTR->buf);
+					bshift(cr-connPTR->buf+2);
 					pstat = HEAD;
 				} else rdmore = 1;
 				break;
 			case HEAD:
-				if ((cr = memchr(ctx->connPool[ctx->connToUse].buf,'\r',ctx->connPool[ctx->connToUse].bufUse)) &&
-					ctx->connPool[ctx->connToUse].bufUse >= cr-ctx->connPool[ctx->connToUse].buf+2 && cr[1] == '\n')
+				if ((cr = memchr(connPTR->buf,'\r',connPTR->bufUse)) &&
+					connPTR->bufUse >= cr-connPTR->buf+2 && cr[1] == '\n')
 				{
-					if (cr == ctx->connPool[ctx->connToUse].buf) {
+					if (cr == connPTR->buf) {
 						bshift(2);
 						pstat = clen ? BODY : DONE;
 						if (clen) body = malloc(clen+1);
@@ -97,19 +97,19 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 
 					*cr = 0;
 					hdr = realloc(hdr,(nhdr+2) * sizeof(*hdr));
-					hdr[nhdr] = strdup(ctx->connPool[ctx->connToUse].buf);
+					hdr[nhdr] = strdup(connPTR->buf);
 					hdr[++nhdr] = NULL;
 
-					if (!strncasecmp(ctx->connPool[ctx->connToUse].buf,CONTENT_LENGTH,sizeof(CONTENT_LENGTH)-1))
-						clen = atoi(ctx->connPool[ctx->connToUse].buf+sizeof(CONTENT_LENGTH)-1);
+					if (!strncasecmp(connPTR->buf,CONTENT_LENGTH,sizeof(CONTENT_LENGTH)-1))
+						clen = atoi(connPTR->buf+sizeof(CONTENT_LENGTH)-1);
 	
-					bshift(cr-ctx->connPool[ctx->connToUse].buf+2);
+					bshift(cr-connPTR->buf+2);
 				} else rdmore = 1;
 				break;
 			case BODY:
-				if (ctx->connPool[ctx->connToUse].bufUse) {
-					int	m = min(ctx->connPool[ctx->connToUse].bufUse,clen-blen);
-					memcpy(body+blen,ctx->connPool[ctx->connToUse].buf,m);
+				if (connPTR->bufUse) {
+					int	m = min(connPTR->bufUse,clen-blen);
+					memcpy(body+blen,connPTR->buf,m);
 					blen += m;
 					bshift(m);
 				}
@@ -297,23 +297,23 @@ static int real_write(edg_wll_Context ctx, edg_wll_GssConnection *con,const char
 	}
 }
 
-edg_wll_ErrorCode edg_wll_http_send(edg_wll_Context ctx,const char *first,const char * const *head,const char *body)
+edg_wll_ErrorCode edg_wll_http_send(edg_wll_Context ctx,const char *first,const char * const *head,const char *body, edg_wll_ConnPool *connPTR)
 {
 	const char* const *h;
 	int	len = 0, blen;
 
 	edg_wll_ResetError(ctx);
 
-	if (ctx->connPool[ctx->connToUse].gss.context == GSS_C_NO_CONTEXT)
+	if (connPTR->gss.context == GSS_C_NO_CONTEXT)
 	   return edg_wll_SetError(ctx,ENOTCONN,NULL);
 
-	if (real_write(ctx,&ctx->connPool[ctx->connToUse].gss,first,strlen(first)) < 0 ||
-		real_write(ctx,&ctx->connPool[ctx->connToUse].gss,"\r\n",2) < 0) 
+	if (real_write(ctx,&connPTR->gss,first,strlen(first)) < 0 ||
+		real_write(ctx,&connPTR->gss,"\r\n",2) < 0) 
 		return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
 
 	if (head) for (h=head; *h; h++) 
-		if (real_write(ctx,&ctx->connPool[ctx->connToUse].gss,*h,strlen(*h)) < 0 ||
-			real_write(ctx,&ctx->connPool[ctx->connToUse].gss,"\r\n",2) < 0) 
+		if (real_write(ctx,&connPTR->gss,*h,strlen(*h)) < 0 ||
+			real_write(ctx,&connPTR->gss,"\r\n",2) < 0) 
 			return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
 
 	if (body) {
@@ -321,13 +321,13 @@ edg_wll_ErrorCode edg_wll_http_send(edg_wll_Context ctx,const char *first,const 
 
 		len = strlen(body);
 		blen = sprintf(buf,CONTENT_LENGTH " %d\r\n",len);
-		if (real_write(ctx,&ctx->connPool[ctx->connToUse].gss,buf,blen) < 0) 
+		if (real_write(ctx,&connPTR->gss,buf,blen) < 0) 
 			return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
 	}
 
-	if (real_write(ctx,&ctx->connPool[ctx->connToUse].gss,"\r\n",2) < 0) 
+	if (real_write(ctx,&connPTR->gss,"\r\n",2) < 0) 
 		return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
-	if (body && real_write(ctx,&ctx->connPool[ctx->connToUse].gss,body,len) < 0)  
+	if (body && real_write(ctx,&connPTR->gss,body,len) < 0)  
 		return edg_wll_SetError(ctx,errno,"edg_wll_http_send()");
 
 	return edg_wll_Error(ctx,NULL,NULL);
