@@ -2,7 +2,6 @@
 #include "glite/lb/consumer.h"
 #include "lb_plain_io.h"
 #include "authz.h"
-#include "glite/lb/log_proto.h"
 #ifdef GLITE_LB_THREADED
   #include <pthread.h>
 #endif
