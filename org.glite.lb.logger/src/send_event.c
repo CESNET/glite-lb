@@ -231,6 +231,7 @@ event_queue_close(struct event_queue *eq)
 int 
 event_queue_send(struct event_queue *eq)
 {
+  int events_sent = 0;
   assert(eq != NULL);
 
 #ifdef LB_PERF
@@ -250,7 +251,6 @@ event_queue_send(struct event_queue *eq)
     size_t bytes_sent;
     struct timeval tv;
     edg_wll_GssStatus gss_stat;
-    int events_sent = 0;
 
     clear_error();
 
@@ -280,7 +280,10 @@ event_queue_send(struct event_queue *eq)
 	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
 		    il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
-		    eq->timeout = TIMEOUT;
+		    if (events_sent>0) 
+			eq->timeout = 1;
+		    else
+			eq->timeout = TIMEOUT;
 		    return(0);
 	    }
 #ifdef LB_PERF
