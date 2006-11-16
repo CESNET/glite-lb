@@ -720,6 +720,24 @@ char *edg_wll_stat_flags_to_string(int flags)
                 else asprintf(&cflags,"%s","no_states");
         }
 
+        if (flags & EDG_WLL_STAT_CHILDHIST_FAST) {
+                if (cflags) {
+                        asprintf(&temp_cflags,"%s+%s",cflags,"childhist_fast");
+                        free(cflags);
+                        cflags=temp_cflags;
+                }
+                else asprintf(&cflags,"%s","childhist_fast");
+        }
+
+        if (flags & EDG_WLL_STAT_CHILDHIST_THOROUGH) {
+                if (cflags) {
+                        asprintf(&temp_cflags,"%s+%s",cflags,"childhist_thorough");
+                        free(cflags);
+                        cflags=temp_cflags;
+                }
+                else asprintf(&cflags,"%s","childhist_thorough");
+        }
+
         if (!cflags) cflags = strdup("");
 
         return(cflags);
@@ -740,6 +758,8 @@ int edg_wll_string_to_stat_flags(char *cflags)
 		if (!strcmp(sflag,"childstat")) flags = flags | EDG_WLL_STAT_CHILDSTAT;
 		if (!strcmp(sflag,"no_jobs")) flags = flags | EDG_WLL_STAT_NO_JOBS;
 		if (!strcmp(sflag,"no_states")) flags = flags | EDG_WLL_STAT_NO_STATES;
+                if (!strcmp(sflag,"childhist_fast")) flags = flags | EDG_WLL_STAT_CHILDHIST_FAST;
+                if (!strcmp(sflag,"childhist_thorough")) flags = flags | EDG_WLL_STAT_CHILDHIST_THOROUGH;
 		sflag = strtok_r(NULL, "+", &last);
 	} 
 
