@@ -741,10 +741,12 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 }
 
 
+/* called only when childen state changed 
+ */
 static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobStatCode old_state, enum edg_wll_StatDone_code old_done_code, intJobStat *cis, edg_wll_Event *ce)
 {
 	intJobStat	*pis = NULL;
-//	int		ret;
+	int		update_hist = 0;
 
 
 	/* Easy version, where the whole histogram is evolving... 
@@ -760,6 +762,10 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			pis->children_done_hist[old_done_code]--;
 		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
 	*/
+
+
+	// XXX: if load_parent_intJobStat occure (and survives in future) in each subcase
+	//	load parent status at the beginning of this function
 
 	/* Increment histogram for interesting states and 
 	 * cook artificial events to enable parent job state shift 
@@ -794,9 +800,11 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			}
 			break;
 		// XXX: more cases to bo added...
-		case EDG_WLL_JOB_CLEARED:
-			break;
+		case EDG_WLL_JOB_CLEARED: // to be added...
 		default:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[EDG_WLL_JOB_UNDEF+1]++;
+			// update_hist = 1; - triggered by the next case or not needed
 			break;
 	}
 	
@@ -807,18 +815,24 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 		case EDG_WLL_JOB_RUNNING:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[old_state+1]--;
-			edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
+			update_hist = 1;
 			break;
 		case EDG_WLL_JOB_DONE:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[old_state+1]--;
 			pis->children_done_hist[old_done_code]--;
-			edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
+			update_hist = 1;
 			break;
 		// XXX: more cases to bo added...
 		default:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[EDG_WLL_JOB_UNDEF+1]--;
+			// update_hist = 1; - triggered by the previous case or not needed
 			break;
 	}
+
+	if (update_hist) 
+		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
 
 err:
 	if (!dependent_parent_lock(ctx, cis->pub.parent_job, cis->pub.jobId))
