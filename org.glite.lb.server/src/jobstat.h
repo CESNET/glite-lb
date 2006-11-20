@@ -52,7 +52,7 @@ typedef struct _intJobStat {
 		branch_state	*branch_states;		// branch zero terminated array
 
 /*		int		expect_mask; */
-		enum edg_wll_StatDone_code 	children_done_hist[EDG_WLL_NUMBER_OF_DONE_CODES];
+		int 		children_done_hist[EDG_WLL_NUMBER_OF_DONE_CODES];
 	} intJobStat;
 
 void destroy_intJobStat(intJobStat *);

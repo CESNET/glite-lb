@@ -114,7 +114,7 @@ static int dec_int(char* in, char **rest)
 	return out;
 }
 
-static int dec_int_array(char* in, char **rest, int *out)
+static int dec_int_array(char* in, char **rest, int *out)	// Returns the number of items found in the array
 {
 	int charNo, itemsNo = 0, cindex, iindex = 0, lenindex;
 	char *tempstr;
@@ -134,7 +134,7 @@ static int dec_int_array(char* in, char **rest, int *out)
 		itemsNo = 1;	/* - consider it an one-item array */
 		*rest = NULL;
 	}
-	else *rest = charNo + 1;
+	else *rest = in + charNo + 1;
 
 	tempstr = (char*)calloc(charNo+1,sizeof(char));
 
@@ -157,7 +157,7 @@ static int dec_int_array(char* in, char **rest, int *out)
 	free(tempstr);
 	*rest = in + charNo + 1;
 
-        return out;
+        return itemsNo;
 }
 
 
@@ -605,7 +605,7 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 			stat->branch_states = dec_branch_states(tmp_in, &tmp_in);
 		}
 		if (tmp_in != NULL) {
-			dec_int_array(tmp_in, &tmp_in, &stat->children_done_hist);
+			dec_int_array(tmp_in, &tmp_in, stat->children_done_hist);
 		}
 	} else if (tmp_in != NULL) {
 		edg_wll_FreeStatus(pubstat);
