@@ -46,28 +46,22 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	struct _lbe__JobStatusResponse *out)
 {
 	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
-	glite_lbu_JobId		j;
-	edg_wll_JobStat		s;
+	glite_lb_Status		*s = NULL;
+	glite_lb_StatusOpts	*opts = NULL;
 	int	flags;
 
-
-	if ( glite_lbu_JobIdParse(in->jobid, &j) )
+	if (glite_lb_Legacy_SoapToJobStatOpts(in->flags, &opts) ||
+		glite_lb_JobStatus(ctx, in->jobid, opts, &s) || 
+		glite_lb_Legacy_StatusToSoap(soap, s, &(out->stat)) )
 	{
-		edg_wll_SetError(ctx, EINVAL, in->jobid);
 		edg_wll_ErrToFault(ctx, soap);
+		if (s) glite_lb_FreeStatus(ctx,s);
+		if (opts) glite_lb_FreeStatusOpts(ctx,opts);
 		return SOAP_FAULT;
 	}
 
-	edg_wll_SoapToJobStatFlags(in->flags, &flags);
-
-	if ( edg_wll_JobStatus(ctx, j, flags, &s) )
-	{
-		edg_wll_ErrToFault(ctx, soap);
-		return SOAP_FAULT;
-	}
-
-	edg_wll_StatusToSoap(soap, &s, &(out->stat));
-
+	glite_lb_FreeStatusOpts(ctx,opts);
+	glite_lb_FreeStatus(ctx,s);
 	return SOAP_OK;
 }
 
