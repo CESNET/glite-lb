@@ -1,6 +1,12 @@
 #ident "$Header$"
 
-#include "prod_proto.h"
+#include <sys/types.h>
+#include <sys/un.h>
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <string.h>
 
 #include "glite/lb-utils/escape.h"
 #include "glite/lb/producer.h"
@@ -8,24 +14,23 @@
 #include "glite/lb/il_msg.h"
 #include "glite/lb/il_string.h"
 
-#include <signal.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
+#include "prod_proto.h"
+#include "connection.h"
 
-/*
+static const char* socket_path="/tmp/lb_proxy_store.sock";
+
+/**
  *----------------------------------------------------------------------
- * edg_wll_log_proto_handle_gss_failures - handle GSS failures on the client side
- *
- * Returns: errno
+ * Handle GSS failures on the client side
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_handle_gss_failures(edg_wll_Context context, int code, edg_wll_GssStatus *gss_code, const char *text)
+static
+int handle_gss_failures(edg_wll_Context ctx, int code, edg_wll_GssStatus *gss_code, const char *text)
 {
         static char     err[256];
         int             ret = 0;
 
-	edg_wll_ResetError(context);
+	edg_wll_ResetError(ctx);
 
 	if(code>0)
                 return(0);
@@ -33,19 +38,19 @@ int edg_wll_log_proto_handle_gss_failures(edg_wll_Context context, int code, edg
 	switch(code) {
                 case EDG_WLL_GSS_ERROR_EOF: 
 			snprintf(err, sizeof(err), "%s;; GSS Error: EOF occured;", text);	
-			ret = edg_wll_SetError(context,ENOTCONN,err);
+			ret = edg_wll_SetError(ctx,ENOTCONN,err);
 			break;
                 case EDG_WLL_GSS_ERROR_TIMEOUT: 
 			snprintf(err, sizeof(err), "%s;; GSS Error: timeout expired;", text);	
-			ret = edg_wll_SetError(context,ENOTCONN,err);
+			ret = edg_wll_SetError(ctx,ENOTCONN,err);
 			break;
 		case EDG_WLL_GSS_ERROR_ERRNO: 
 			snprintf(err, sizeof(err), "%s;; GSS Error: system error occured;", text);	
-			ret = edg_wll_SetError(context,ENOTCONN,err);
+			ret = edg_wll_SetError(ctx,ENOTCONN,err);
 			break;
                 case EDG_WLL_GSS_ERROR_GSS:
 			snprintf(err, sizeof(err), "%s;; GSS Error: GSS failure occured", text);
-			ret = edg_wll_SetErrorGss(context,err,gss_code);
+			ret = edg_wll_SetErrorGss(ctx,err,gss_code);
                         break;
                 case EDG_WLL_GSS_ERROR_HERRNO:
                         { 
@@ -53,28 +58,44 @@ int edg_wll_log_proto_handle_gss_failures(edg_wll_Context context, int code, edg
                                 char *msg2;
                                 msg1 = hstrerror(errno);
                                 asprintf(&msg2, "%s;; GSS Error: %s", text, msg1);
-                                ret = edg_wll_SetError(context,EDG_WLL_ERROR_DNS, msg2);
+                                ret = edg_wll_SetError(ctx,EDG_WLL_ERROR_DNS, msg2);
                                 free(msg2);
                         }
                         break;
                 default:
 			snprintf(err, sizeof(err), "%s;; GSS Error: unknown failure", text);
-                        ret = edg_wll_SetError(context,ECONNREFUSED,err);
+                        ret = edg_wll_SetError(ctx,ECONNREFUSED,err);
                         break;
 	}
 	return ret;
 }
 
+/**
+ *----------------------------------------------------------------------
+ * Handle UNIX socket failures on the client side
+ *----------------------------------------------------------------------
+ */
+static
+int edg_wll_log_proto_handle_plain_failures(edg_wll_Context ctx, int code, const char *text)
+{
+	return 0;
+}
 
-
+/*
+ *----------------------------------------------------------------------
+ * get_reply_plain, get_reply_gss  - read reply from server
+ *
+ *  Returns: -1       - error reading message, 
+ *           code > 0 - error code from server
+ *----------------------------------------------------------------------
+ */
 struct reader_data {
 	edg_wll_Context ctx;
 	void *conn;
 };
 
 static 
-int
-plain_reader(void *user_data, char *buffer, int max_len)
+int plain_reader(void *user_data, char *buffer, int max_len)
 {
 	struct reader_data *data = (struct reader_data *)user_data;
 	int len;
@@ -86,44 +107,34 @@ plain_reader(void *user_data, char *buffer, int max_len)
 	return(len);
 }
 
-/*
- *----------------------------------------------------------------------
- * get_reply_plain, get_reply_gss  - read reply from server
- *
- *  Returns: -1       - error reading message, 
- *           code > 0 - error code from server
- *----------------------------------------------------------------------
- */
 static
-int
-get_reply_plain(edg_wll_Context context, edg_wll_PlainConnection *conn, char **buf, int *code_maj, int *code_min)
+int get_reply_plain(edg_wll_Context ctx, edg_wll_PlainConnection *conn, char **buf, int *code_maj, int *code_min)
 {
 	char *msg=NULL;
 	int len;
 	struct reader_data data;
 
-	data.ctx = context;
+	data.ctx = ctx;
 	data.conn = conn;
 	len = read_il_data(&data, &msg, plain_reader);
 	if(len < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error reading message");
+		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "get_reply_plain(): error reading message");
 		goto get_reply_plain_end;
 	}
 
 	if(decode_il_reply(code_maj, code_min, buf, msg) < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error decoding message");
+		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "get_reply_plain(): error decoding message");
 		goto get_reply_plain_end;
 	}
 
 get_reply_plain_end:
 	if(msg) free(msg);
-	return edg_wll_Error(context,NULL,NULL);
+	return edg_wll_Error(ctx,NULL,NULL);
 }
 
 
 static 
-int
-gss_reader(void *user_data, char *buffer, int max_len)
+int gss_reader(void *user_data, char *buffer, int max_len)
 {
 	struct reader_data *data = (struct reader_data *)user_data;
 	int ret, len;
@@ -132,7 +143,7 @@ gss_reader(void *user_data, char *buffer, int max_len)
 	ret = edg_wll_gss_read_full(data->conn, buffer, max_len, &data->ctx->p_tmp_timeout,
 				    &len, &gss_code);
 	if(ret < 0) {
-		edg_wll_log_proto_handle_gss_failures(data->ctx, ret, &gss_code, "edg_wll_gss_read_full");
+		handle_gss_failures(data->ctx, ret, &gss_code, "edg_wll_gss_read_full");
 		edg_wll_UpdateError(data->ctx, EDG_WLL_IL_PROTO, "gss_reader(): error reading message");
 	}
 
@@ -141,153 +152,304 @@ gss_reader(void *user_data, char *buffer, int max_len)
 
 
 static
-int
-get_reply_gss(edg_wll_Context context, edg_wll_GssConnection *conn, char **buf, int *code_maj, int *code_min)
+int get_reply_gss(edg_wll_Context ctx, edg_wll_GssConnection *conn, char **buf, int *code_maj, int *code_min)
 {
 	char *msg = NULL;
 	int code;
 	struct reader_data data;
 
-	data.ctx = context;
+	data.ctx = ctx;
 	data.conn = conn;
 	code = read_il_data(&data, &msg, gss_reader);
 	if(code < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_gss(): error reading reply");
+		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "get_reply_gss(): error reading reply");
 		goto get_reply_gss_end;
 	}
 
 	if(decode_il_reply(code_maj, code_min, buf, msg) < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_gss(): error decoding reply");
+		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "get_reply_gss(): error decoding reply");
 		goto get_reply_gss_end;
 	}
 
 get_reply_gss_end:
 	if(msg) free(msg);
-	return edg_wll_Error(context,NULL,NULL);
+	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-/*
+/**
  *----------------------------------------------------------------------
- *
- * edg_wll_log_proto_client - client part of the logging protocol
- *   used when sending messages to local logger
- *
- * Returns: 0 if done properly or errno
- *
- * Calls:
- *
- * Algorithm:
- *
+ * connect to locallogger
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_client(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline)
+int edg_wll_log_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn) 
+{
+	int	ret,answer;
+	char	*my_subject_name = NULL;
+	edg_wll_GssStatus	gss_stat;
+	gss_cred_id_t	cred = GSS_C_NO_CREDENTIAL;
+	OM_uint32	min_stat;
+
+	edg_wll_ResetError(ctx);
+
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_connect: setting connection to local-logger (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+	/* acquire gss credentials */
+	ret = edg_wll_gss_acquire_cred_gsi(
+	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
+	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+	      &cred, &my_subject_name, &gss_stat);
+	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
+	if (ret && ctx->p_proxy_filename) {
+		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
+		goto edg_wll_log_connect_end;
+	}
+#ifdef EDG_WLL_LOG_STUB
+	if (my_subject_name != NULL) {
+		fprintf(stderr,"edg_wll_log_connect: using certificate: %s\n",my_subject_name);
+	} else {
+		fprintf(stderr,"edg_wll_log_connect: going on anonymously!\n");
+	}
+#endif
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_connect: opening connection to local-logger (host '%s', port '%d')\n",
+			ctx->p_destination, ctx->p_dest_port);
+#endif
+	if ((answer = edg_wll_gss_connect(cred,
+			ctx->p_destination, ctx->p_dest_port, 
+			&ctx->p_tmp_timeout, conn, &gss_stat)) < 0) {
+		answer = handle_gss_failures(ctx,answer,&gss_stat,"edg_wll_gss_connect()");
+		goto edg_wll_log_connect_end;
+	}
+
+edg_wll_log_connect_end:
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_connect: done (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+	if (cred != GSS_C_NO_CREDENTIAL)
+		gss_release_cred(&min_stat, &cred);
+	if (my_subject_name) free(my_subject_name);
+
+	return answer;
+}
+
+/**
+ *----------------------------------------------------------------------
+ * close connection to locallogger
+ *----------------------------------------------------------------------
+ */
+int edg_wll_log_close(edg_wll_Context ctx, edg_wll_GssConnection *conn) 
+{
+	return edg_wll_gss_close(conn,&ctx->p_tmp_timeout);
+}
+
+/**
+ *----------------------------------------------------------------------
+ * write/send to locallogger
+ *----------------------------------------------------------------------
+ */
+int edg_wll_log_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_LogLine logline)
 {
 	char	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1];
 	int	err;
 	int	answer;
-	u_int8_t answer_end[4];
-	size_t	count;
+	size_t	count,sent;
 	int	size;
 	u_int8_t size_end[4];
 	edg_wll_GssStatus gss_code;
 
-	errno = err = answer = count = 0;
+	errno = err = answer = count = sent = 0;
 	size = strlen(logline)+1;
 	size_end[0] = size & 0xff; size >>= 8;
 	size_end[1] = size & 0xff; size >>= 8;
 	size_end[2] = size & 0xff; size >>= 8;
 	size_end[3] = size;
 	size = strlen(logline)+1;
-	edg_wll_ResetError(context);
 
-	/* send header */
+	edg_wll_ResetError(ctx);
+
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"log_proto_client: sending header...\n");
+	fprintf(stderr,"edg_wll_log_write: sending header\n");
 #endif
 	sprintf(header,"%s",EDG_WLL_LOG_SOCKET_HEADER);
 	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH]='\0';
-	if ((err = edg_wll_gss_write_full(con, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &context->p_tmp_timeout, &count, &gss_code)) < 0) {
-		answer = edg_wll_log_proto_handle_gss_failures(context,err,&gss_code,"edg_wll_gss_write_full(}");
-		edg_wll_UpdateError(context,answer,"edg_wll_log_proto_client(): error sending header");
-		goto edg_wll_log_proto_client_end;
+	if ((err = edg_wll_gss_write_full(conn, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
+		answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
+		edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending header");
+		return -1;
 	}
+	sent += count;
 
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"log_proto_client: sending message size...\n");
+	fprintf(stderr,"edg_wll_log_write: sending message size\n");
 #endif
 	count = 0;
-	if ((err = edg_wll_gss_write_full(con, size_end, 4, &context->p_tmp_timeout, &count, &gss_code)) < 0) {
-                answer = edg_wll_log_proto_handle_gss_failures(context,err,&gss_code,"edg_wll_gss_write_full()");
-                edg_wll_UpdateError(context,answer,"edg_wll_log_proto_client(): error sending message size");
-                goto edg_wll_log_proto_client_end;
+	if ((err = edg_wll_gss_write_full(conn, size_end, 4, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
+                answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
+                edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message size");
+                return -1;
         }
+	sent += count;
 
-	/* send message */
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"log_proto_client: sending message...\n");
+	fprintf(stderr,"edg_wll_log_write: sending message...\n");
 #endif
 	count = 0;
-	if (( err = edg_wll_gss_write_full(con, logline, size, &context->p_tmp_timeout, &count, &gss_code)) < 0) {
-		answer = edg_wll_log_proto_handle_gss_failures(context,err,&gss_code,"edg_wll_gss_write_full()");
-		edg_wll_UpdateError(context,answer,"edg_wll_log_proto_client(): error sending message");
-		goto edg_wll_log_proto_client_end;
+	if (( err = edg_wll_gss_write_full(conn, logline, size, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
+		answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
+		edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message");
+		return -1;
 	}
+	sent += count;
 
-	/* get answer */
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"log_proto_client: reading answer from server...\n");
+	fprintf(stderr,"edg_wll_log_write: done (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+	return sent;
+}
+
+/**
+ *----------------------------------------------------------------------
+ * read/receive from locallogger
+ *----------------------------------------------------------------------
+ */
+int edg_wll_log_read(edg_wll_Context ctx, edg_wll_GssConnection *conn)
+{
+	int	err;
+	int	answer;
+	u_int8_t answer_end[4];
+	size_t	count;
+	edg_wll_GssStatus gss_code;
+
+	errno = err = answer = count = 0;
+
+	edg_wll_ResetError(ctx);
+
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_read: reading answer from local-logger\n");
 #endif
 	count = 0;
-	if ((err = edg_wll_gss_read_full(con, answer_end, 4, &context->p_tmp_timeout, &count, &gss_code)) < 0 ) {
-		answer = edg_wll_log_proto_handle_gss_failures(context,err,&gss_code,"edg_wll_gss_read_full()");
-/* FIXME: update the answer (in context?) to EAGAIN or not?
-		answer = EAGAIN;
-*/
-		edg_wll_UpdateError(context,answer,"edg_wll_log_proto_client(): error getting answer");
+	if ((err = edg_wll_gss_read_full(conn, answer_end, 4, &ctx->p_tmp_timeout, &count, &gss_code)) < 0 ) {
+		answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_read_full()");
+		edg_wll_UpdateError(ctx,answer,"edg_wll_log_read(): error reading answer from local-logger");
+		return -1;
 	} else {
 		answer = answer_end[3]; answer <<=8;
 		answer |= answer_end[2]; answer <<=8;
 		answer |= answer_end[1]; answer <<=8;
 		answer |= answer_end[0];
 #ifdef EDG_WLL_LOG_STUB
-		fprintf(stderr,"log_proto_client: read answer \"%d\"\n",answer);
+		fprintf(stderr,"edg_wll_log_read: read answer \"%d\"\n",answer);
 #endif
-		edg_wll_SetError(context,answer,"answer read from locallogger");
+		edg_wll_SetError(ctx,answer,"edg_wll_log_read(): answer read from locallogger");
 	}
 
-edg_wll_log_proto_client_end:
-
-	return edg_wll_Error(context,NULL,NULL);
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_read: done (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+        return count;
 }
 
-/*
+
+/**
  *----------------------------------------------------------------------
- *
- * edg_wll_log_proto_client_proxy - client part of the logging protocol
- *   used when sending messages to L&B Proxy
- *
- * Returns: 0 if done properly or errno
- *
- * Calls:
- *
- * Algorithm:
- *
+ * connect to lbproxy
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnection *conn, edg_wll_LogLine logline)
+int edg_wll_log_proxy_connect(edg_wll_Context ctx, edg_wll_PlainConnection *conn)
 {
-	int  len;
-	char *buffer,*answer = NULL;
-	static char et[256];
-	int	err;
-	int	code;
-	int	lbproto_code;
-	int	count;
+	int	answer = 0, retries;
+	int 	flags;
+	struct sockaddr_un saddr;
 
-	errno = err = code = count = 0;
-	lbproto_code = 0;
-	edg_wll_ResetError(context);
+	edg_wll_ResetError(ctx);
 
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_proxy_connect: setting connection to lbroxy (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+	conn->sock = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (conn->sock < 0) {
+		edg_wll_SetError(ctx,answer = errno,"edg_wll_log_proxy_connect(): socket() error");
+		goto edg_wll_log_proxy_connect_end;
+	}
+	memset(&saddr, 0, sizeof(saddr));
+	saddr.sun_family = AF_UNIX;
+	strcpy(saddr.sun_path, ctx->p_lbproxy_store_sock?
+				ctx->p_lbproxy_store_sock: socket_path);
+	if ((flags = fcntl(conn->sock, F_GETFL, 0)) < 0 || fcntl(conn->sock, F_SETFL, flags | O_NONBLOCK) < 0) {
+		edg_wll_SetError(ctx,answer = errno,"edg_wll_log_proxy_connect(): fcntl() error");
+		close(conn->sock);
+		goto edg_wll_log_proxy_connect_end;
+	}
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_proxy_connect: opening connection to lbproxy (socket '%s')\n",
+		ctx->p_lbproxy_store_sock? ctx->p_lbproxy_store_sock: socket_path);
+#endif
+	retries = 0;
+	while ((answer = connect(conn->sock, (struct sockaddr *)&saddr, sizeof(saddr))) < 0 &&
+			errno == EAGAIN &&
+			ctx->p_tmp_timeout.tv_sec >= 0 && ctx->p_tmp_timeout.tv_usec >= 0 &&
+			!(ctx->p_tmp_timeout.tv_sec == 0 && ctx->p_tmp_timeout.tv_usec == 0)
+			)
+	{
+		struct timespec ns = { 0, PROXY_CONNECT_RETRY * 1000000 /* 10 ms */ },rem;
+
+		nanosleep(&ns,&rem);
+
+		ctx->p_tmp_timeout.tv_usec -= ns.tv_nsec/1000;
+		ctx->p_tmp_timeout.tv_usec += rem.tv_nsec/1000;
+
+		ctx->p_tmp_timeout.tv_sec -= ns.tv_sec;
+		ctx->p_tmp_timeout.tv_sec += rem.tv_sec;
+
+		if (ctx->p_tmp_timeout.tv_usec < 0) {
+			ctx->p_tmp_timeout.tv_usec += 1000000;
+			ctx->p_tmp_timeout.tv_sec--;
+		}
+		retries++;
+	}
+#ifdef EDG_WLL_LOG_STUB
+	if (retries) fprintf(stderr,"edg_wll_log_proxy_connect: there were %d connect retries\n",retries);
+#endif
+
+edg_wll_log_proxy_connect_end:
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_proxy_connect: done (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+	return answer;
+}
+
+/**
+ *----------------------------------------------------------------------
+ * close connection to lbproxy
+ *----------------------------------------------------------------------
+ */
+int edg_wll_log_proxy_close(edg_wll_Context ctx, edg_wll_PlainConnection *conn)
+{
+	return edg_wll_plain_close(conn);
+}
+
+/**
+ *----------------------------------------------------------------------
+ * write/send to lbproxy
+ *----------------------------------------------------------------------
+ */
+int edg_wll_log_proxy_write(edg_wll_Context ctx, edg_wll_PlainConnection *conn, edg_wll_LogLine logline)
+{
+	int  len,count = 0;
+	char *buffer;
+
+	edg_wll_ResetError(ctx);
+
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_proxy_write: encoding message\n");
+#endif
 	{ 
 		il_octet_string_t ll;
 
@@ -296,80 +458,173 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnect
 		len = encode_il_msg(&buffer, &ll);
 	}
 	if(len < 0) {
-		edg_wll_SetError(context,ENOMEM,"edg_wll_log_proto_client_proxy(): error encoding message");
-		goto edg_wll_log_proto_client_proxy_end;
+		edg_wll_SetError(ctx,ENOMEM,"edg_wll_log_proxy_write(): error encoding message");
+		return -1;
 	}
 
-	/* send message */
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"log_proto_client_proxy: sending message...\n");
+	fprintf(stderr,"edg_wll_log_proxy_write: sending message\n");
 #endif
-	if (( count = edg_wll_plain_write_full(conn, buffer, len, &context->p_tmp_timeout)) < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_proxy(): error sending message to socket");
-		goto edg_wll_log_proto_client_proxy_end;
+	if ((count = edg_wll_plain_write_full(conn, buffer, len, &ctx->p_tmp_timeout)) < 0) {
+		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO,"edg_wll_log_proxy_write(): error sending message to socket");
+		return -1;
 	}
 
-	/* get answer */
+	if (buffer) free(buffer);
+
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"log_proto_client_proxy: reading answer from server...\n");
+	fprintf(stderr,"edg_wll_log_proxy_write: done (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
 #endif
-	if ((err = get_reply_plain(context, conn, &answer, &lbproto_code, &code)) != 0 ) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_proxy(): error reading answer from L&B Proxy server");
+	return count;
+}
+
+/**
+ *----------------------------------------------------------------------
+ * read/receive from lbproxy
+ *----------------------------------------------------------------------
+ */
+int edg_wll_log_proxy_read(edg_wll_Context ctx, edg_wll_PlainConnection *conn)
+{
+	char *answer = NULL;
+	static char et[256];
+	int	err;
+	int	code;
+	int	lbproto_code;
+	int	count;
+
+	errno = err = code = count = 0;
+	lbproto_code = 0;
+
+	edg_wll_ResetError(ctx);
+
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_proxy_read: reading answer from lbproxy\n");
+#endif
+	if ((err = get_reply_plain(ctx, conn, &answer, &lbproto_code, &code)) != 0 ) {
+		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO,"edg_wll_log_proxy_read(): error reading answer from lbproxy");
+		return -1;
 	} else {
 #ifdef EDG_WLL_LOG_STUB
-		fprintf(stderr,"log_proto_client_proxy: read answer \"%d:%d: %s\"\n",lbproto_code,code,answer);
+		fprintf(stderr,"edg_wll_log_proxy_read: read answer \"%d:%d: %s\"\n",lbproto_code,code,answer);
 #endif
 		switch (lbproto_code) {
 			case LB_OK: break;
 			case LB_NOMEM: 
-				edg_wll_SetError(context, ENOMEM, "edg_wll_log_proto_client_proxy(): proxy out of memory"); 
+				edg_wll_SetError(ctx, ENOMEM, "edg_wll_log_proxy_read(): proxy out of memory"); 
 				break;
 			case LB_PROTO:
-				edg_wll_SetError(context, EDG_WLL_IL_PROTO, "edg_wll_log_proto_client_proxy(): received protocol error response"); 
+				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_proxy_read(): received protocol error response"); 
 				break;
 			case LB_DBERR:
-				snprintf(et, sizeof(et), "error details from L&B Proxy server: %s", answer);
-				edg_wll_SetError(context, code, et);
+				snprintf(et, sizeof(et), "edg_wll_log_proxy_read(): error details from L&B Proxy server: %s", answer);
+				edg_wll_SetError(ctx, code, et);
 				break;
 			default:
-				edg_wll_SetError(context, EDG_WLL_IL_PROTO, "edg_wll_log_proto_client_proxy(): received unknown protocol response"); 
+				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_proxy_read(): received unknown protocol response"); 
 				break;
 		}
 	}
 
-edg_wll_log_proto_client_proxy_end:
-
-	if (buffer) free(buffer);
-	if (answer) free(answer);
-	return edg_wll_Error(context,NULL,NULL);
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_proxy_read: done (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+	return 0;
 }
-/*
+
+
+/** 
  *----------------------------------------------------------------------
- *
- * edg_wll_log_proto_client_direct - client part of the logging protocol
- *   used when sending messages directly to bkserver
- *
- * Returns: 0 if done properly or errno                                                                                 *
- * Calls:
- *
- * Algorithm:
- *
+ * connect to bkserver
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline)
-{       
-	int  len;
-	char *buffer,*answer = NULL;
-	static char et[256];
-	int	err;
-	int	code, lbproto_code;
-	int	count;
+int edg_wll_log_direct_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn) 
+{
+	int	ret,answer;
+	char	*my_subject_name = NULL;
+	edg_wll_GssStatus	gss_stat;
+	gss_cred_id_t	cred = GSS_C_NO_CREDENTIAL;
+	OM_uint32	min_stat;
+	char	*host;
+	int	port;
+
+	ret = answer = 0;
+
+	edg_wll_ResetError(ctx);
+
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_direct_connect: setting connection to bkserver (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+	/* get bkserver location: */
+	edg_wlc_JobIdGetServerParts(ctx->p_jobid,&host,&port);
+	port +=1;
+	/* acquire gss credentials */
+	ret = edg_wll_gss_acquire_cred_gsi(
+	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
+	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+	      &cred, &my_subject_name, &gss_stat);
+	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
+	if (ret && ctx->p_proxy_filename) {
+		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
+		goto edg_wll_log_direct_connect_end;
+	}
+#ifdef EDG_WLL_LOG_STUB
+	if (my_subject_name) {
+		// XXX: shouldn't be probably ctx->p_user_lbproxy but some new parameter, eg. ctx->p_user
+		edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, my_subject_name);
+		fprintf(stderr,"edg_wll_log_direct_connect: using certificate: %s\n",my_subject_name);
+	} else {
+		fprintf(stderr,"edg_wll_log_direct_connect: going on anonymously\n");
+	}
+	fprintf(stderr,"edg_wll_log_direct_connect: opening connection to bkserver (host '%s', port '%d')\n", host, port);
+#endif
+	if ((answer = edg_wll_gss_connect(cred,host,port,
+			&ctx->p_tmp_timeout, conn, &gss_stat)) < 0) {
+		answer = handle_gss_failures(ctx,answer,&gss_stat,"edg_wll_gss_connect()");
+		goto edg_wll_log_direct_connect_end;
+	}
+
+edg_wll_log_direct_connect_end:
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_direct_connect: done (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+	if (cred != GSS_C_NO_CREDENTIAL)
+		gss_release_cred(&min_stat, &cred);
+	if (my_subject_name) free(my_subject_name);
+	if (host) free(host);
+
+	return answer;
+}
+
+/**
+ *----------------------------------------------------------------------
+ * close connection to bkserver
+ *----------------------------------------------------------------------
+ */
+int edg_wll_log_direct_close(edg_wll_Context ctx, edg_wll_GssConnection *conn) 
+{
+	return edg_wll_gss_close(conn,&ctx->p_tmp_timeout);
+}
+
+/**
+ *----------------------------------------------------------------------
+ * write/send to bkserver
+ *----------------------------------------------------------------------
+ */ 
+int edg_wll_log_direct_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_LogLine logline)
+{
+	int  len,count = 0,err;
+	char *buffer;
 	edg_wll_GssStatus gss_code;
 
-	errno = err = code = count = 0;
-	edg_wll_ResetError(context);
+	edg_wll_ResetError(ctx);
 
-	/* encode message */
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_direct_write: encoding message\n");
+#endif
 	{ 
 		il_octet_string_t ll;
 		
@@ -377,52 +632,74 @@ int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnecti
 		len = encode_il_msg(&buffer, &ll);
 	}
 	if(len < 0) {
-		edg_wll_SetError(context, ENOMEM, "edg_wll_log_proto_client_direct(): error encoding message");
-		goto edg_wll_log_proto_client_direct_end;
+		edg_wll_SetError(ctx, ENOMEM, "edg_wll_log_direct_write(): error encoding message");
+		return -1;
 	}
-		
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"log_proto_client_direct: sending message...\n");
+	fprintf(stderr,"edg_wll_log_direct_write: sending message\n");
 #endif
 	count = 0;
-	if (( err = edg_wll_gss_write_full(con, buffer, len, &context->p_tmp_timeout,  &count, &gss_code)) < 0) {
-		edg_wll_log_proto_handle_gss_failures(context,err,&gss_code,"edg_wll_gss_write_full()");
-		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_direct(): error sending message");
-		goto edg_wll_log_proto_client_direct_end;
+	if (( err = edg_wll_gss_write_full(conn, buffer, len, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
+		handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
+		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO,"edg_wll_log_direct_write(): error sending message");
+		return -1;
 	}
-
-	/* get answer */
+	if (buffer) free(buffer);
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"log_proto_client_direct: reading answer from server...\n");
+	fprintf(stderr,"edg_wll_log_direct_write: done (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
 #endif
-	if ((err = get_reply_gss(context, con, &answer, &lbproto_code, &code)) != 0 ) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_direct(): error reading answer from L&B direct server");
+	return count;
+}
+
+/**
+ *----------------------------------------------------------------------
+ * read/receive from bkserver
+ *----------------------------------------------------------------------
+ */
+int edg_wll_log_direct_read(edg_wll_Context ctx, edg_wll_GssConnection *con)
+{
+	char *answer = NULL;
+	static char et[256];
+	int	err;
+	int	code, lbproto_code;
+	int	count;
+
+	errno = err = code = count = 0;
+
+	edg_wll_ResetError(ctx);
+
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_direct_read: reading answer from bkserver\n");
+#endif
+	if ((err = get_reply_gss(ctx, con, &answer, &lbproto_code, &code)) != 0 ) {
+		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO,"edg_wll_log_direct_read(): error reading answer from bkserver");
+		if (answer) free(answer);
+		return -1;
 	} else {
 #ifdef EDG_WLL_LOG_STUB
-		fprintf(stderr,"log_proto_client_direct: read answer \"%d:%d: %s\"\n",lbproto_code,code,answer);
+		fprintf(stderr,"edg_wll_log_direct_read: read answer \"%d:%d: %s\"\n",lbproto_code,code,answer);
 #endif
 		switch (lbproto_code) {
 			case LB_OK: break;
 			case LB_NOMEM: 
-				edg_wll_SetError(context, ENOMEM, "log_proto_client_direct(): server out of memory"); 
+				edg_wll_SetError(ctx, ENOMEM, "edg_wll_log_direct_read(): server out of memory"); 
 				break;
 			case LB_PROTO:
-				edg_wll_SetError(context, EDG_WLL_IL_PROTO, "log_proto_client_direct(): received protocol error response"); 
+				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_direct_read(): received protocol error response"); 
 				break;
 			case LB_DBERR:
-				snprintf(et, sizeof(et), "error details from L&B server: %s", answer);
-				edg_wll_SetError(context, code, et);
+				snprintf(et, sizeof(et), "edg_wll_log_direct_read: error details from L&B server: %s", answer);
+				edg_wll_SetError(ctx, code, et);
 				break;
 			default:
-				edg_wll_SetError(context, EDG_WLL_IL_PROTO, "log_proto_client_direct(): received unknown protocol response"); 
+				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_direct_read(): received unknown protocol response"); 
 				break;
 		}
 	}
-
-edg_wll_log_proto_client_direct_end:
-
-	if (buffer) free(buffer);
-	if (answer) free(answer);
-	return edg_wll_Error(context,NULL,NULL);
+#ifdef EDG_WLL_LOG_STUB
+	fprintf(stderr,"edg_wll_log_direct_read: done (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+#endif
+	return 0;
 }
-

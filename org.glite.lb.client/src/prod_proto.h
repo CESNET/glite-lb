@@ -3,12 +3,6 @@
 
 #ident "$Header$"
 
-/**
- * \file edg/workload/logging/client/prod_proto.h
- * \brief client (producer) part of the logging protocol
- * \note private
- */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,12 +12,106 @@ extern "C" {
 #include "glite/lb/log_proto.h"
 #include "glite/lb/context-int.h"
 
-int edg_wll_log_proto_client(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline);
-int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnection *con, edg_wll_LogLine logline);
-int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnection *conn, edg_wll_LogLine logline);
+/**
+ * connect to local-logger
+ * \param[in,out] ctx		context to work with
+ * \param[out] conn		opened connection
+ * \return errno
+ */
+int edg_wll_log_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn);
 
-int edg_wll_log_proto_handle_gss_failures(edg_wll_Context context, int code, edg_wll_GssStatus *gss_code, const char *text);
-int edg_wll_log_proto_handle_plain_failures(edg_wll_Context context, int code, const char *text);
+/**
+ * close connection to local-logger
+ * \param[in,out] ctx		context to work with
+ * \param[out] conn		opened connection
+ * \return errno
+ */
+int edg_wll_log_close(edg_wll_Context ctx, edg_wll_GssConnection *conn);
+
+/**
+ * write/send to local-logger
+ * \param[in,out] ctx		context to work with
+ * \param[in] conn		connection to use
+ * \param[in] logline		message to send
+ * \return 	the number of bytes written (zero indicates nothing was written) or -1 on error
+ */
+int edg_wll_log_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_LogLine logline);
+
+/**
+ * read/receive from local-logger
+ * \param[in,out] ctx		context to work with
+ * \param[in] conn		connection to use
+ * \return 	the number of bytes read (zero indicates nothing was read) or -1 on error
+ */
+int edg_wll_log_read(edg_wll_Context ctx, edg_wll_GssConnection *conn);
+
+
+/**
+ * connect to lbproxy
+ * \param[in,out] ctx		context to work with
+ * \param[out] conn		opened connection
+ * \return errno
+ */
+int edg_wll_log_proxy_connect(edg_wll_Context ctx, edg_wll_PlainConnection *conn);
+
+/**
+ * close connection to lbproxy
+ * \param[in,out] ctx		context to work with
+ * \param[out] conn		opened connection
+ * \return errno
+ */
+int edg_wll_log_proxy_close(edg_wll_Context ctx, edg_wll_PlainConnection *conn);
+
+/**
+ * write/send to lbproxy
+ * \param[in,out] ctx		context to work with
+ * \param[in] conn		connection to use
+ * \param[in] logline		message to send
+ * \return 	the number of bytes written (zero indicates nothing was written) or -1 on error
+ */
+int edg_wll_log_proxy_write(edg_wll_Context ctx, edg_wll_PlainConnection *conn, edg_wll_LogLine logline);
+
+/**
+ * read/receive from lbproxy
+ * \param[in,out] ctx		context to work with
+ * \param[in] conn		connection to use
+ * \return 	the number of bytes read (zero indicates nothing was read) or -1 on error
+ */
+int edg_wll_log_proxy_read(edg_wll_Context ctx, edg_wll_PlainConnection *conn);
+
+
+/** 
+ * connect to bkserver
+ * \param[in,out] ctx		context to work with
+ * \param[out] conn		opened connection
+ * \return errno
+ */
+int edg_wll_log_direct_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn);
+
+/**
+ * close connection to bkserver
+ * \param[in,out] ctx		context to work with
+ * \param[out] conn		opened connection
+ * \return errno
+ */
+int edg_wll_log_direct_close(edg_wll_Context ctx, edg_wll_GssConnection *conn);
+
+/**
+ * write/send to bkserver
+ * \param[in,out] ctx		context to work with
+ * \param[in] conn		connection to use
+ * \param[in] logline		message to send
+ * \return 	the number of bytes written (zero indicates nothing was written) or -1 on error
+ */
+int edg_wll_log_direct_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_LogLine logline);
+
+/**
+ * read/receive from bkserver
+ * \param[in,out] ctx		context to work with
+ * \param[in] conn		connection to use
+ * \return 	the number of bytes read (zero indicates nothing was read) or -1 on error
+ */
+int edg_wll_log_direct_read(edg_wll_Context ctx, edg_wll_GssConnection *conn);
 
 #ifdef __cplusplus
 }
