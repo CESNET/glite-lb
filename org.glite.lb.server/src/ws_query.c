@@ -49,6 +49,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	glite_lb_Status		*s = NULL;
 	glite_lb_StatusOpts	*opts = NULL;
 	int	flags;
+	
+	glite_lb_Legacy_SetFlesh(ctx);
 
 	if (glite_lb_Legacy_SoapToJobStatOpts(in->flags, &opts) ||
 		glite_lb_JobStatus(ctx, in->jobid, opts, &s) || 

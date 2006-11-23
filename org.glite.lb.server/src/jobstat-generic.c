@@ -66,193 +66,112 @@ static char* matched_substr(char *in, regmatch_t match)
 	return s;
 }
 
-#if 0
-	if ((flags & EDG_WLL_STAT_CLASSADS) == 0) {
-		char *null = NULL;
-
-		mov(stat->jdl, null);
-		mov(stat->matched_jdl, null);
-		mov(stat->condor_jdl, null);
-		mov(stat->rsl, null);
-	}
-
-#if DAG_ENABLE
-	if (stat->jobtype == EDG_WLL_STAT_DAG) {
-		if (1) {
-			char *out[2];
-			glite_lbu_Statement sh;
-			int num_sub, num_f;
-
-			if (stat->children_hist == NULL) {
-				stat->children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
-				stat->children_hist[0] = EDG_WLL_NUMBER_OF_STATCODES;
-			}
-			if ((flags & EDG_WLL_STAT_CHILDREN) == 0) {
-				trio_asprintf(&stmt, "SELECT status FROM states "
-							"WHERE parent_job='%|Ss' AND version='%|Ss'",
-					md5_jobid, INTSTAT_VERSION);
-				out[1] = NULL;
-			} else {
-				trio_asprintf(&stmt, "SELECT s.status,j.dg_jobid FROM states s,jobs j "
-						"WHERE s.parent_job='%|Ss' AND s.version='%|Ss' AND s.jobid=j.jobid",
-					md5_jobid, INTSTAT_VERSION);
-			}
-			if (stmt != NULL) {
-				num_sub = glite_lbu_ExecSQL(ctx->dbctx, stmt, &sh);
-				if (num_sub >=0 ) {
-					while ((num_f = glite_lbu_FetchRow(sh, 2, NULL, out)) == 1
-							|| (num_f == 2)) {
-						num_f = atoi(out[0]);
-						if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
-							stat->children_hist[num_f+1]++;
-						if (out[1] !=NULL) add_stringlist(&stat->children, out[1]);
-						free(out[0]); free(out[1]);
-					}
-					glite_lbu_FreeStmt(&sh);
-				}
-				free(stmt);
-			} else goto dag_enomem;
-		}
-		if (flags & EDG_WLL_STAT_CHILDSTAT) {
-			char *stat_str, *s_out;
-			glite_lbu_Statement sh;
-			int num_sub, num_f, i;
-			intJobStat *js;
-
-			trio_asprintf(&stmt, "SELECT int_status FROM states WHERE parent_job='%|Ss'"
-						" AND version='%|Ss'",
-					md5_jobid, INTSTAT_VERSION);
-			if (stmt != NULL) {
-				num_sub = glite_lbu_ExecSQL(ctx->dbctx, stmt, &sh);
-				if (num_sub >=0 ) {
-					i = 0;
-					stat->children_states = calloc(num_sub+1, sizeof(edg_wll_JobStat));
-					if (stat->children_states == NULL) {
-						glite_lbu_FreeStmt(&sh);
-						goto dag_enomem;
-					}
-					while ((num_f = glite_lbu_FetchRow(sh, 1, NULL, &stat_str)) == 1
-						&& i < num_sub) {
-						js = dec_intJobStat(stat_str, &s_out);
-						if (s_out != NULL && js != NULL) {
-							stat->children_states[i] = js->pub;
-							destroy_intJobStat_extension(js);
-							free(js);
-							i++;
-						}
-						free(stat_str);
-					}
-					glite_lbu_FreeStmt(&sh);
-				}
-				free(stmt);
-			} else goto dag_enomem;
-		}
-	}
-#endif
-	free(string_jobid);
-	free(md5_jobid);
-	return edg_wll_SetErrorDB(ctx);
-
-#if DAG_ENABLE
-dag_enomem:
-	free(string_jobid);
-	free(md5_jobid);
-	edg_wll_FreeStatus(stat);
-	free(stmt);
-	return edg_wll_SetError(ctx, ENOMEM, NULL);
-#endif
-}
-
-#endif /* 0 */
-
-int glite_lb_Legacy_ComputeStateFull(
-	glite_lb_SrvContext ctx,
-	const char *jobid,
-	const glite_lb_StateOpts *opts,
-	glite_lb_State **state_out,
-	glite_lbu_Blob *blob_out)
+int glite_lb_JobStatus(
+	glite_lb_SrvContext	ctx,
+	const char		*job,
+	const glite_lb_StateOpts	*opts,
+	glite_lb_State	**stat)
 {
+	glite_lbu_Blob	state_blob;
 
 /* Local variables */
 	char		*md5_jobid;
 
-	int		num_events;
-	glite_lb_Event	**events = NULL;
+	intJobStat	jobstat;
+	intJobStat	*ijsp;
+	int		intErr = 0;
+	int		lockErr;
+	edg_wll_Acl	acl = NULL;
+#if DAG_ENABLE	
+	char		*stmt = NULL;
+#endif	
 
-	int		i, intErr = 0;
-	int		res;
-	int		be_strict = 0;
-	char		*errstring = NULL;
+	enum { OK, ERR_DECODE, ERR_COMP } bad_blob = OK;
 
-	glite_lb_QueryRec	jqr[2];
-	glite_lb_QueryRec        **jqra;
-
-/* Processing */
 	edg_wll_ResetError(ctx);
-	init_intJobStat(intstat);
 
-	md5_jobid = ctx->flesh->JobIdGetUnique(jobid);
-	if ( !(intstat->pub.owner = job_owner(ctx,md5_jobid)) ) {
+	/* XXX: unused md5_jobid = ctx->flesh->JobIdGetUnique(job); */
+
+/* XXX: authz */
+#if 0
+	if ( !(jobstat.pub.owner = job_owner(ctx,md5_jobid)) ) {
 		free(md5_jobid);
+		free(string_jobid);
 		return edg_wll_Error(ctx,NULL,NULL);
 	}
-	free(md5_jobid);
-	
-        jqr[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
-        jqr[0].op = EDG_WLL_QUERY_OP_EQUAL;
-        jqr[0].value.s = jobid;
-        jqr[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 
-	jqra = (glite_lb_QueryRec **) malloc (2 * sizeof(glite_lb_QueryRec **));
-	jqra[0] = jqr;
-	jqra[1] = NULL;
-
-	if (glite_lb_QueryEventsServer(ctx,1, (const glite_lb_QueryRec **)jqra, NULL, &events, &num_events)) {
-		free(jqra);
-                return edg_wll_Error(ctx, NULL, NULL);
-	}
-	free(jqra);
-
-	if (num_events == 0) return edg_wll_SetError(ctx,ENOENT,NULL);
-
-/* XXX: nema byt v kostech? */
-	edg_wll_SortEvents(events);
-
-	for (i = 0; i < num_events; i++) {
-		res = glite_lb_Legacy_ProcessEvent(intstat, events[i], i, be_strict, &errstring);
-		if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
-			intErr = 1; break;
-		}
-	}
-	if (intstat->pub.state == EDG_WLL_JOB_UNDEF) {
-		intstat->pub.state = EDG_WLL_JOB_UNKNOWN;
-	}
-
-	for (i=0; i < num_events ; i++) glite_lb_FreeEvent(events[i]);
-	free(events);
-
+	intErr = edg_wll_GetACL(ctx, job, &acl);
 	if (intErr) {
-		destroy_intJobStat(intstat);
-		return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, NULL);
-	} else {
-		/* XXX intstat->pub.expectUpdate = eval_expect_update(intstat, &intstat->pub.expectFrom); */
-		intErr = glite_lbu_JobIdDup(job, &intstat->pub.jobId);
-		if (!intErr) {
-			if (update_db) {
-				int tsq = num_events - 1;
-				edg_wll_StoreIntState(ctx, intstat, tsq);
-				/* recheck
-				 * intJobStat *reread;
-				 * edg_wll_LoadIntState(ctx, job, tsq, &reread);
-				 * destroy_intJobStat(reread);
-				*/
-			}
-		}
-		return edg_wll_SetError(ctx, intErr, NULL);
+		free(md5_jobid);
+		free(string_jobid);
+		return edg_wll_Error(ctx,NULL,NULL);
 	}
 
-}
+	/* authorization check */
+	if ( !(ctx->noAuth) &&
+	    (!(ctx->peerName) ||  strcmp(ctx->peerName, jobstat.pub.owner))) {
+	      	intErr = (acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
+	      if (intErr) {
+		 free(string_jobid);
+		 free(md5_jobid);
+		 free(jobstat.pub.owner); jobstat.pub.owner = NULL;
+	 	 if (acl) {
+			edg_wll_FreeAcl(acl);
+		 	return edg_wll_Error(ctx, NULL, NULL);
+		 } else {
+			return edg_wll_SetError(ctx,EPERM, "not owner, no ACL is set");
+		 }
+	      }
+	}
+#endif 
 
+	intErr = glite_lb_LoadStateBlob(ctx,job,&state_blob);
+       
+	if (!intErr) {
+		if (ctx->flesh->ComputeStateBlob(ctx,&state_blob,opts,stat)) {
+			glite_lbu_FreeBlob(&state_blob);
+			bad_blob = ERR_DECODE;
+		}
+	}
+	if (intErr == ENOENT || bad_blob) {
+		lockErr = edg_wll_LockJob(ctx,job);
+		if (ctx->flesh->ComputeStateFull(ctx,job,opts,stat,&state_blob) == 0) bad_blob = OK;
+		else { 
+			bad_blob = ERR_COMP; 
+			compErr = edg_wll_Error(ctx,NULL,&compDesc);
+		}
+		if (!lockErr) {
+			switch (bad_blob) {
+				case OK: glite_lb_StoreStateBlob(ctx,job,&state_blob);
+					 break;
+				case ERR_DECODE: glite_lb_DeleteStateBlob(ctx,job);
+				case ERR_COMP: break;
+			}
+			edg_wll_UnlockJob(ctx,job); /* TODO: WARN */
+		}
+		else {
+			/* TODO: syslog WARN */
+		}
+
+		if (bad_blob == ERR_COMP) {
+			edg_wll_SetError(ctx,compErr,compDesc);
+			free(compDesc);
+		}
+
+	}
+
+	glite_lbu_FreeBlob(&state_blob);
+	
+/* TODO */
+#if 0
+	if (acl) {
+		stat->acl = strdup(acl->string);
+		edg_wll_FreeAcl(acl);
+	}
+#endif
+
+	return edg_wll_Error(ctx);
+}
 
 /*
  * Helper for warning printouts
