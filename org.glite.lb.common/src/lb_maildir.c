@@ -36,6 +36,7 @@ static int check_mkdir(const char *dir)
 	if ( stat(dir, &sbuf) ) {
 		if ( errno == ENOENT ) {
 			if ( mkdir(dir, S_IRWXU) ) return 1;
+			if ( stat(dir, &sbuf) )  return 1;
 		}
 		else return 1;
 	}
