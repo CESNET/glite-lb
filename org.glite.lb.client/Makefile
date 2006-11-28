@@ -8,18 +8,20 @@ globalprefix=glite
 lbprefix=lb
 package=glite-lb-client
 version=0.0.0
-PREFIX=/opt/glite
 
 glite_location=/opt/glite
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
 
+
 CC:=gcc
 CXX:=g++
 
 -include Makefile.inc
 -include ../project/version.properties
+
+PREFIX?=${glite_location}
 
 version=${module.version}
 
