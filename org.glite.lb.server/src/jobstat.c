@@ -164,7 +164,20 @@ int edg_wll_JobStatus(
 
 #if DAG_ENABLE
 	if (stat->jobtype == EDG_WLL_STAT_DAG || stat->jobtype == EDG_WLL_STAT_COLLECTION) {
-		if (1) {
+
+//		printf("edg_wll_JobStatus:i EDG_WLL_STAT_DAG || EDG_WLL_STAT_COLLECTION\n");
+//		printf("flags: %d",flags);
+
+                if (flags & EDG_WLL_STAT_CHILDHIST_FAST) { /* Fast Histogram */
+//			printf("edg_wll_JobStatus: EDG_WLL_STAT_CHILDHIST_FAST\n");
+
+			edg_wll_GetSubjobHistogram(ctx, job, stat);
+
+		}
+
+		if (flags & EDG_WLL_STAT_CHILDHIST_THOROUGH) { /* Full (thorough) Histogram */
+//			printf("edg_wll_JobStatus: EDG_WLL_STAT_CHILDHIST_THOROUGH\n");
+
 			char *out[2];
 			edg_wll_Stmt sh;
 			int num_sub, num_f, i;

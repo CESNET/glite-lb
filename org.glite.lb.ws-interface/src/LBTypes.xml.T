@@ -18,6 +18,8 @@
 			<val name="CLASSADS">Include also long job descriptions (JDL).</val>
 			<val name="CHILDREN">Return list of subjobs of a DAG.</val>
 			<val name="CHILDSTAT">Return state of the subjobs, i.e. apply other flags recursively </val>
+			<val name="CHILDHIST_FAST">Return a histogram of subjob states (fast computation method, certain subjobs will be in an "unknown" state)</val>
+			<val name="CHILDHIST_THOROUGH">Return a full histogram of subjob states.</vol>
 		</flags>
 
 		<enum name="statName">
