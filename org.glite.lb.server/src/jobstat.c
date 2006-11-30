@@ -730,7 +730,7 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 	event->any.source = EDG_WLL_SOURCE_LB_SERVER; 
 		
 					
-	event->collectionState.state = state;
+	event->collectionState.state = edg_wll_StatToString(state);
 	event->collectionState.done_code = done_code;
 	event->collectionState.histogram = hist_to_string(pis->pub.children_hist);
 	edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));

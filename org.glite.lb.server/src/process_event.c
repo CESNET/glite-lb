@@ -811,7 +811,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			/* ignore, only for event log */
 			break;
 		case EDG_WLL_EVENT_COLLECTIONSTATE:
-			new_state = e->collectionState.state;
+			new_state = edg_wll_StringToStat(e->collectionState.state);
  			if (USABLE(res, strict)) {
                                 js->pub.state = new_state;
 				if (new_state == EDG_WLL_JOB_DONE)
