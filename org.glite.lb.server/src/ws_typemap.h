@@ -55,5 +55,6 @@
 #define LogMonitor	lbt__eventSource__LogMonitor
 #define LRMS		lbt__eventSource__LRMS
 #define Application	lbt__eventSource__Application
+#define LBServer	lbt__eventSource__LBServer
 
 #endif

@@ -714,7 +714,7 @@ int component_seqcode(const char *a, edg_wll_Source index)
 	unsigned int    c[EDG_WLL_SOURCE__LAST];
 	int		res;
 
-	res =  sscanf(a, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+	res =  sscanf(a, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -722,7 +722,8 @@ int component_seqcode(const char *a, edg_wll_Source index)
 			&c[EDG_WLL_SOURCE_JOB_SUBMISSION],
 			&c[EDG_WLL_SOURCE_LOG_MONITOR],
 			&c[EDG_WLL_SOURCE_LRMS],
-			&c[EDG_WLL_SOURCE_APPLICATION]);
+			&c[EDG_WLL_SOURCE_APPLICATION],
+			&c[EDG_WLL_SOURCE_LB_SERVER]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
 		fprintf(stderr, "unparsable sequence code %s\n", a);
@@ -738,7 +739,7 @@ char * set_component_seqcode(char *s,edg_wll_Source index,int val)
 	int		res;
 	char 		*ret;
 
-	res =  sscanf(s, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+	res =  sscanf(s, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -746,7 +747,8 @@ char * set_component_seqcode(char *s,edg_wll_Source index,int val)
 			&c[EDG_WLL_SOURCE_JOB_SUBMISSION],
 			&c[EDG_WLL_SOURCE_LOG_MONITOR],
 			&c[EDG_WLL_SOURCE_LRMS],
-			&c[EDG_WLL_SOURCE_APPLICATION]);
+			&c[EDG_WLL_SOURCE_APPLICATION],
+			&c[EDG_WLL_SOURCE_LB_SERVER]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", s);
 		fprintf(stderr, "unparsable sequence code %s\n", s);
@@ -755,7 +757,7 @@ char * set_component_seqcode(char *s,edg_wll_Source index,int val)
 
 	c[index] = val;
 	trio_asprintf(&ret,"UI=%06d:NS=%010d:WM=%06d:BH=%010d:JSS=%06d"
-                                ":LM=%06d:LRMS=%06d:APP=%06d",
+                                ":LM=%06d:LRMS=%06d:APP=%06d:LBS=%06d",
                         c[EDG_WLL_SOURCE_USER_INTERFACE],
                         c[EDG_WLL_SOURCE_NETWORK_SERVER],
                         c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -763,7 +765,8 @@ char * set_component_seqcode(char *s,edg_wll_Source index,int val)
                         c[EDG_WLL_SOURCE_JOB_SUBMISSION],
                         c[EDG_WLL_SOURCE_LOG_MONITOR],
                         c[EDG_WLL_SOURCE_LRMS],
-                        c[EDG_WLL_SOURCE_APPLICATION]);
+                        c[EDG_WLL_SOURCE_APPLICATION],
+                        c[EDG_WLL_SOURCE_LB_SERVER]);
 	return ret;
 }
 
@@ -792,9 +795,9 @@ int edg_wll_compare_seq(const char *a, const char *b)
 	unsigned int    d[EDG_WLL_SOURCE__LAST];
 	int		res, i;
 
-	assert(EDG_WLL_SOURCE__LAST == 9);
+	assert(EDG_WLL_SOURCE__LAST == 10);
 
-	res =  sscanf(a, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+	res =  sscanf(a, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -802,14 +805,15 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&c[EDG_WLL_SOURCE_JOB_SUBMISSION],
 			&c[EDG_WLL_SOURCE_LOG_MONITOR],
 			&c[EDG_WLL_SOURCE_LRMS],
-			&c[EDG_WLL_SOURCE_APPLICATION]);
+			&c[EDG_WLL_SOURCE_APPLICATION],
+			&c[EDG_WLL_SOURCE_LB_SERVER]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
 		fprintf(stderr, "unparsable sequence code %s\n", a);
 		return -1;
 	}
 
-	res =  sscanf(b, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+	res =  sscanf(b, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&d[EDG_WLL_SOURCE_USER_INTERFACE],
 			&d[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&d[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -817,7 +821,8 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&d[EDG_WLL_SOURCE_JOB_SUBMISSION],
 			&d[EDG_WLL_SOURCE_LOG_MONITOR],
 			&d[EDG_WLL_SOURCE_LRMS],
-			&d[EDG_WLL_SOURCE_APPLICATION]);
+			&d[EDG_WLL_SOURCE_APPLICATION],
+			&d[EDG_WLL_SOURCE_LB_SERVER]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", b);
 		fprintf(stderr, "unparsable sequence code %s\n", b);

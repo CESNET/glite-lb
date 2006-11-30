@@ -736,7 +736,7 @@ int edg_wll_JobsQueryResToSoap(
 
 static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
 {
-	assert(EDG_WLL_SOURCE_APPLICATION + 1 == EDG_WLL_SOURCE__LAST);
+	assert(EDG_WLL_SOURCE_LB_SERVER + 1 == EDG_WLL_SOURCE__LAST);
 
 	switch ( in ) {
         case UserInterface: *out = EDG_WLL_SOURCE_USER_INTERFACE; break;
@@ -747,6 +747,7 @@ static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
         case LogMonitor: *out = EDG_WLL_SOURCE_LOG_MONITOR; break;
         case LRMS: *out = EDG_WLL_SOURCE_LRMS; break;
         case Application: *out = EDG_WLL_SOURCE_APPLICATION; break;
+        case LBServer: *out = EDG_WLL_SOURCE_LB_SERVER; break;
         default: assert(0); break;
         }
 }
@@ -854,7 +855,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 
 static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 {
-	assert(EDG_WLL_SOURCE_APPLICATION + 1 == EDG_WLL_SOURCE__LAST);
+	assert(EDG_WLL_SOURCE_LB_SERVER + 1 == EDG_WLL_SOURCE__LAST);
 
 	switch ( in ) {
 	        case EDG_WLL_SOURCE_USER_INTERFACE: *out = UserInterface; break;
@@ -865,6 +866,7 @@ static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
         	case EDG_WLL_SOURCE_LOG_MONITOR: *out = LogMonitor; break;
 	        case EDG_WLL_SOURCE_LRMS: *out = LRMS; break;
         	case EDG_WLL_SOURCE_APPLICATION: *out = Application; break;
+        	case EDG_WLL_SOURCE_LB_SERVER: *out = LBServer; break;
 	        default: assert(0); break;
         }
 }

@@ -205,6 +205,7 @@
 			<val name="LogMonitor"/>
 			<val name="LRMS"/>
 			<val name="Application"/>
+			<val name="LBServer"/>
 		</enum>
 
 		<struct name="stateEnterTimesItem">

@@ -205,6 +205,7 @@
 	int	state		New collection state.
 	_optional_
 	int	done_code	In case of (state == Done) contains done code 
+	_null_	-1
 	string	histogram	User readable histogram; useful for debugging.
 	jobid   child		JobId of subjob, which triggered the state change.	
 	string	child_event	Event which triggered the state change.	

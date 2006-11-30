@@ -261,6 +261,7 @@ static const char* const srcNames[] = {
 	"LogMonitor",
 	"LRMS",
 	"Application",
+	"LBServer",
 };
 
 edg_wll_Source edg_wll_StringToSource(const char *name)
@@ -312,7 +313,7 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 
 	c = &ctx->p_seqcode.c[0];
 	asprintf(&ret, "UI=%06d:NS=%010d:WM=%06d:BH=%010d:JSS=%06d"
-				":LM=%06d:LRMS=%06d:APP=%06d",
+				":LM=%06d:LRMS=%06d:APP=%06d:LBS=%06d",
 			c[EDG_WLL_SOURCE_USER_INTERFACE],
 			c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -320,7 +321,8 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 			c[EDG_WLL_SOURCE_JOB_SUBMISSION],
 			c[EDG_WLL_SOURCE_LOG_MONITOR],
 			c[EDG_WLL_SOURCE_LRMS],
-			c[EDG_WLL_SOURCE_APPLICATION]);
+			c[EDG_WLL_SOURCE_APPLICATION],
+			c[EDG_WLL_SOURCE_LB_SERVER]);
 	return ret;
 }
 
@@ -345,7 +347,7 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 	}
 
 	c = &ctx->p_seqcode.c[0];
-	res =  sscanf(seqcode_str, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d",
+	res =  sscanf(seqcode_str, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -353,9 +355,10 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			&c[EDG_WLL_SOURCE_JOB_SUBMISSION],
 			&c[EDG_WLL_SOURCE_LOG_MONITOR],
 			&c[EDG_WLL_SOURCE_LRMS],
-			&c[EDG_WLL_SOURCE_APPLICATION]);
+			&c[EDG_WLL_SOURCE_APPLICATION],
+			&c[EDG_WLL_SOURCE_LB_SERVER]);
 
-	assert(EDG_WLL_SOURCE__LAST == 9);
+	assert(EDG_WLL_SOURCE__LAST == 10);
 	if (res != EDG_WLL_SOURCE__LAST-1)
 		return edg_wll_SetError(ctx, EINVAL, "edg_wll_SetSequenceCode(): syntax error in sequence code");
 

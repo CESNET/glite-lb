@@ -718,12 +718,16 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 		edg_wll_InitEvent(EDG_WLL_EVENT_COLLECTIONSTATE);
 
 	event->any.user = strdup(ctx->serverIdentity);	
-	event->any.seqcode = strdup(ce->any.seqcode);	// XXX: nonsense, just something..
+	if (!edg_wll_SetSequenceCode(ctx,pis->last_seqcode,EDG_WLL_SEQ_NORMAL)) {
+		ctx->p_source = EDG_WLL_SOURCE_LB_SERVER;
+                edg_wll_IncSequenceCode(ctx);
+        }
+	event->any.seqcode = edg_wll_GetSequenceCode(ctx);
 	edg_wlc_JobIdDup(pis->pub.jobId, &(event->any.jobId));
 	gettimeofday(&event->any.timestamp,0);
 	if (ctx->p_host) event->any.host = strdup(ctx->p_host);
 	event->any.level = ctx->p_level;
-	event->any.source = EDG_WLL_SOURCE_USER_INTERFACE; // XXX: is it meaningfull?
+	event->any.source = EDG_WLL_SOURCE_LB_SERVER; 
 		
 					
 	event->collectionState.state = state;
