@@ -803,8 +803,21 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 				}
 			}
 			break;
-		// XXX: more cases to bo added...
-		case EDG_WLL_JOB_CLEARED: // to be added...
+		case EDG_WLL_JOB_CLEARED: 
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[cis->pub.state+1]++;
+
+			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
+				if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
+					/* not CLEARED yet? */
+					if (pis->pub.state < EDG_WLL_JOB_CLEARED) {
+						if (log_collectionState_event(ctx, cis->pub.state, 
+								cis->pub.done_code, cis, pis, ce))
+							goto err;
+					}
+				}
+			}
+			break;
 		default:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[EDG_WLL_JOB_UNDEF+1]++;
@@ -827,7 +840,11 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			pis->children_done_hist[old_done_code]--;
 			update_hist = 1;
 			break;
-		// XXX: more cases to bo added...
+		case EDG_WLL_JOB_CLEARED:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[old_state+1]--;
+			update_hist = 1;
+			break;
 		default:
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[EDG_WLL_JOB_UNDEF+1]--;
