@@ -83,15 +83,6 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 	userid = strdup(strmd5(e->any.user,NULL));
 
-/* if old seq. code arrives, add LBS part to it */
-	if (!strstr(e->any.seqcode, "LBS")) {
-		char *new_seqcode;
-
-		asprintf(&new_seqcode,"%s:LBS=000000",e->any.seqcode);
-		free(e->any.seqcode);
-		e->any.seqcode = new_seqcode;
-	}
-
 /* make sure user record is there */
 	if ((err = store_user(ctx,userid,e->any.user))) goto clean;
 

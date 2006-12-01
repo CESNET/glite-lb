@@ -713,8 +713,12 @@ int component_seqcode(const char *a, edg_wll_Source index)
 {
 	unsigned int    c[EDG_WLL_SOURCE__LAST];
 	int		res;
+	char		sc[EDG_WLL_SEQ_SIZE];
 
-	res =  sscanf(a, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+	if (!strstr(a, "LBS")) snprintf(sc,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",a);
+	else snprintf(sc,EDG_WLL_SEQ_SIZE,"%s",a);
+
+	res =  sscanf(sc, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -725,21 +729,25 @@ int component_seqcode(const char *a, edg_wll_Source index)
 			&c[EDG_WLL_SOURCE_APPLICATION],
 			&c[EDG_WLL_SOURCE_LB_SERVER]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
-		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
-		fprintf(stderr, "unparsable sequence code %s\n", a);
+		syslog(LOG_ERR, "unparsable sequence code %s\n", sc);
+		fprintf(stderr, "unparsable sequence code %s\n", sc);
 		return -1;
 	}
 
 	return(c[index]);	
 }
 
-char * set_component_seqcode(char *s,edg_wll_Source index,int val)
+char * set_component_seqcode(char *a,edg_wll_Source index,int val)
 {
 	unsigned int    c[EDG_WLL_SOURCE__LAST];
 	int		res;
 	char 		*ret;
+	char		sc[EDG_WLL_SEQ_SIZE];
 
-	res =  sscanf(s, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+	if (!strstr(a, "LBS")) snprintf(sc,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",a);
+	else snprintf(sc,EDG_WLL_SEQ_SIZE,"%s",a);
+
+	res =  sscanf(sc, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -750,8 +758,8 @@ char * set_component_seqcode(char *s,edg_wll_Source index,int val)
 			&c[EDG_WLL_SOURCE_APPLICATION],
 			&c[EDG_WLL_SOURCE_LB_SERVER]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
-		syslog(LOG_ERR, "unparsable sequence code %s\n", s);
-		fprintf(stderr, "unparsable sequence code %s\n", s);
+		syslog(LOG_ERR, "unparsable sequence code %s\n", sc);
+		fprintf(stderr, "unparsable sequence code %s\n", sc);
 		return NULL;
 	}
 
@@ -794,10 +802,16 @@ int edg_wll_compare_seq(const char *a, const char *b)
 	unsigned int    c[EDG_WLL_SOURCE__LAST];
 	unsigned int    d[EDG_WLL_SOURCE__LAST];
 	int		res, i;
+	char		sca[EDG_WLL_SEQ_SIZE], scb[EDG_WLL_SEQ_SIZE];
+
+	if (!strstr(a, "LBS")) snprintf(sca,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",a);
+	else snprintf(sca,EDG_WLL_SEQ_SIZE,"%s",a);
+	if (!strstr(b, "LBS")) snprintf(scb,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",b);
+	else snprintf(scb,EDG_WLL_SEQ_SIZE,"%s",b);
 
 	assert(EDG_WLL_SOURCE__LAST == 10);
 
-	res =  sscanf(a, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+	res =  sscanf(sca, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -808,12 +822,12 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&c[EDG_WLL_SOURCE_APPLICATION],
 			&c[EDG_WLL_SOURCE_LB_SERVER]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
-		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
-		fprintf(stderr, "unparsable sequence code %s\n", a);
+		syslog(LOG_ERR, "unparsable sequence code %s\n", sca);
+		fprintf(stderr, "unparsable sequence code %s\n", sca);
 		return -1;
 	}
 
-	res =  sscanf(b, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+	res =  sscanf(scb, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&d[EDG_WLL_SOURCE_USER_INTERFACE],
 			&d[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&d[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -824,8 +838,8 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&d[EDG_WLL_SOURCE_APPLICATION],
 			&d[EDG_WLL_SOURCE_LB_SERVER]);
 	if (res != EDG_WLL_SOURCE__LAST-1) {
-		syslog(LOG_ERR, "unparsable sequence code %s\n", b);
-		fprintf(stderr, "unparsable sequence code %s\n", b);
+		syslog(LOG_ERR, "unparsable sequence code %s\n", scb);
+		fprintf(stderr, "unparsable sequence code %s\n", scb);
 		return 1;
 	}
 
