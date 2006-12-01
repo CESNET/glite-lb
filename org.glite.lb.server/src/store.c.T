@@ -63,7 +63,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	if ( ctx->event_load )
 		now_s = strdup(edg_wll_TimeToDB(e->any.arrived.tv_sec));
 	else
-	now_s = strdup(edg_wll_TimeToDB(time(NULL)));
+		now_s = strdup(edg_wll_TimeToDB(time(NULL)));
+
 	edg_wll_ResetError(ctx);
 	switch (err = check_auth(ctx,e)) {
 		case 0: break;
@@ -81,6 +82,15 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	if ((err = check_dup(ctx,e))) goto clean;
 
 	userid = strdup(strmd5(e->any.user,NULL));
+
+/* if old seq. code arrives, add LBS part to it */
+	if (!strstr(e->any.seqcode, "LBS")) {
+		char *new_seqcode;
+
+		asprintf(&new_seqcode,"%s:LBS=000000",e->any.seqcode);
+		free(e->any.seqcode);
+		e->any.seqcode = new_seqcode;
+	}
 
 /* make sure user record is there */
 	if ((err = store_user(ctx,userid,e->any.user))) goto clean;
