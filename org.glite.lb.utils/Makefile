@@ -72,7 +72,7 @@ EXT_LIBS:= \
 COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
 BKSERVER_LIB:=-lglite_lb_bkserver 
-JP_LIBS:=-lglite_jp_common_${nothrflavour} -lglite_jp_trio
+JP_LIBS:=-lglite_jp_common -lglite_jp_trio
 
 UTILS:=statistics mon mon-db
 
