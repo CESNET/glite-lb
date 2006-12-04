@@ -26,7 +26,7 @@ int main(int argc,char *argv[])
 {
 	edg_wll_Context	sctx[MAX_SERVERS];
 	char		*servers[MAX_SERVERS];
-	int		i, result=0, nsrv=0;
+	int		i, result=0, nsrv=0, wasaflag, histflags = 0;
 
 	
 	myname = argv[0];
@@ -98,30 +98,43 @@ int main(int argc,char *argv[])
 
 		memset(&status,0,sizeof status);
 
+		wasaflag = 0; // Indicates that the argument was a flag
 
-		if (edg_wlc_JobIdParse(argv[i],&job)) {
-			fprintf(stderr,"%s: %s: cannot parse jobId\n", myname,argv[i]);
-			continue;
+		if ( !strcmp(argv[i], "-fullhist") ) { 
+			wasaflag = 1;
+			histflags = EDG_WLL_STAT_CHILDHIST_THOROUGH;
 		}
-                bserver = edg_wlc_JobIdGetServer(job);
-                if (!bserver) {
-                        fprintf(stderr,"%s: %s: cannot extract bookkeeping server address\n", myname,argv[i]);
-			edg_wlc_JobIdFree(job);
-                        continue;
-                }
-                for ( j = 0; j < nsrv && strcmp(bserver, servers[j]); j++ );
-                if ( j == nsrv ) {
-                        if ( i > 0 ) edg_wll_InitContext(&sctx[j]);
-                        nsrv++;
-                        servers[j] = bserver;
-                }
 
-		if (edg_wll_JobStatus(sctx[j], job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT, &status)) {
-			dgerr(sctx[j],"edg_wll_JobStatus"); result = 1; 
-		} else printstat(status,0);
+		if ( !strcmp(argv[i], "-fasthist") ) { 
+			wasaflag = 1;
+                        histflags = EDG_WLL_STAT_CHILDHIST_FAST;
+		}
 
-		if (job) edg_wlc_JobIdFree(job);
-		if (status.state) edg_wll_FreeStatus(&status);
+		if (!wasaflag) {
+			if (edg_wlc_JobIdParse(argv[i],&job)) {
+				fprintf(stderr,"%s: %s: cannot parse jobId\n", myname,argv[i]);
+				continue;
+			}
+        	        bserver = edg_wlc_JobIdGetServer(job);
+                	if (!bserver) {
+                        	fprintf(stderr,"%s: %s: cannot extract bookkeeping server address\n", myname,argv[i]);
+				edg_wlc_JobIdFree(job);
+        	                continue;
+                	}
+	                for ( j = 0; j < nsrv && strcmp(bserver, servers[j]); j++ );
+        	        if ( j == nsrv ) {
+                	        if ( i > 0 ) edg_wll_InitContext(&sctx[j]);
+                        	nsrv++;
+	                        servers[j] = bserver;
+        	        }
+
+			if (edg_wll_JobStatus(sctx[j], job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT | histflags, &status)) {
+				dgerr(sctx[j],"edg_wll_JobStatus"); result = 1; 
+			} else printstat(status,0);
+
+			if (job) edg_wlc_JobIdFree(job);
+			if (status.state) edg_wll_FreeStatus(&status);
+		}
 	}
 	for ( i = 0; i < nsrv; i++ ) edg_wll_FreeContext(sctx[i]);
 
@@ -131,7 +144,7 @@ int main(int argc,char *argv[])
 static void
 usage(char *name)
 {
-	fprintf(stderr,"Usage: %s job_id [-x lb_proxy_serve_sock] [job_id [...]]\n", name);
+	fprintf(stderr,"Usage: %s job_id [-x lb_proxy_serve_sock] [-fasthist|-fullhist] [job_id [...]]\n", name);
 	fprintf(stderr,"       %s -all\n", name);
 }
 

@@ -165,18 +165,26 @@ int edg_wll_JobStatus(
 #if DAG_ENABLE
 	if (stat->jobtype == EDG_WLL_STAT_DAG || stat->jobtype == EDG_WLL_STAT_COLLECTION) {
 
-//		printf("edg_wll_JobStatus:i EDG_WLL_STAT_DAG || EDG_WLL_STAT_COLLECTION\n");
-//		printf("flags: %d",flags);
+//	XXX: The users does not want any histogram. What do we do about it? 
+//		if ((!(flags & EDG_WLL_STAT_CHILDHIST_FAST))&&(!(flags & EDG_WLL_STAT_CHILDHIST_THOROUGH))) { /* No Histogram */
+//                        if (stat->children_hist != NULL) {	/* No histogram will be sent even if there was one */
+//
+//				printf("\nNo Histogram required\n\n");
+//
+//                              free(stat->children_hist);
+//			}
+//			
+//		}
 
                 if (flags & EDG_WLL_STAT_CHILDHIST_FAST) { /* Fast Histogram */
-//			printf("edg_wll_JobStatus: EDG_WLL_STAT_CHILDHIST_FAST\n");
-
-			edg_wll_GetSubjobHistogram(ctx, job, stat);
-
+                        if (stat->children_hist == NULL) {
+				// If the histogram exists, assume that it was already filled during job state retrieval
+                                stat->children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
+				edg_wll_GetSubjobHistogram(ctx, job, stat->children_hist);
+			}
 		}
 
 		if (flags & EDG_WLL_STAT_CHILDHIST_THOROUGH) { /* Full (thorough) Histogram */
-//			printf("edg_wll_JobStatus: EDG_WLL_STAT_CHILDHIST_THOROUGH\n");
 
 			char *out[2];
 			edg_wll_Stmt sh;
@@ -188,7 +196,7 @@ int edg_wll_JobStatus(
 			}
 			else {
 				/* If hist is loaded, it probably contain only incomplete histogram
-				 * builded in update_parent_status. Count it from scratch...
+				 * built in update_parent_status. Count it from scratch...
 				 */
 				for (i=1; i<=EDG_WLL_NUMBER_OF_STATCODES; i++)
 					stat->children_hist[i] = 0;
@@ -997,13 +1005,14 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 }
 
 
-edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, intJobStat **ijs)
+edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, int *hist)
 {
 
-        char    *stmt = NULL,*out = NULL;
+        char    *stmt = NULL,*out = NULL, *rest = NULL;
         edg_wll_Stmt    sh;
-        int     f = -1;
+        int     f = -1, i;
 	char *jobid_md5;
+	intJobStat *ijs = NULL;
 
 	jobid_md5 = edg_wlc_JobIdGetUnique(parent_jobid);
 
@@ -1023,9 +1032,19 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
                         out = NULL;
                         edg_wll_SetError(ctx, ENOENT, NULL);
                 }
+		else {
+			// Ready to read the histogram from the record returned
+			rest = (char *)calloc(1,strlen(out));	
+			ijs = dec_intJobStat(out, &rest);
+			for (i=0;i<=EDG_WLL_NUMBER_OF_STATCODES;i++) hist[i] = ijs->pub.children_hist[i];
+		}
         }
         edg_wll_FreeStmt(&sh);
         free(stmt);
+	if (rest==NULL) free(rest);
+	if (ijs==NULL) free(rest);
+
+
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
