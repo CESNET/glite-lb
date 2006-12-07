@@ -54,7 +54,7 @@ static void usage (int status)
 	       "  -b, --book                 send events to bookkeeping server only\n"
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
-	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers\n"
+	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers (default, timeout==0 means turn lazy off)\n"
 	       , program_name, program_name);
 	exit(status);
 }
@@ -65,7 +65,7 @@ static int debug;
 static int verbose = 0;
 char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
-int lazy_close = 0;
+int lazy_close = 1;
 int default_close_timeout;
 
 char *cert_file = NULL;
@@ -166,6 +166,10 @@ decode_switches (int argc, char **argv)
 		lazy_close = 1;
 		if(optarg) 
 		        default_close_timeout = atoi(optarg);
+			if(default_close_timeout == 0) {
+				lazy_close = 0;
+				default_close_timeout = TIMEOUT;
+			}
 		else
 			default_close_timeout = TIMEOUT;
 		break;
