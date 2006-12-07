@@ -119,13 +119,23 @@ int edg_wll_close_proxy(edg_wll_Context ctx)
 	return edg_wll_ResetError(ctx);
 }
 
+/* XXX XXX This is black magics. "Sometimes" server refuses the client with SSL
+ * alert "certificate expired" even if it is not true. In this case the server
+ * slave terminates (which helps, usually), and we can reconnect transparently.
+ */
 
+
+/* This string appears in the error message in this case */
+#define _EXPIRED_ALERT_MESSAGE "function SSL3_READ_BYTES: sslv3 alert certificate expired"
+#define _EXPIRED_ALERT_RETRY_COUNT 10	/* default number of slaves, hope that not all
+					   are in the bad state */
+#define _EXPIRED_ALERT_RETRY_DELAY 10	/* ms */
 
 int edg_wll_open(edg_wll_Context ctx)
 {
 	int index;
 	edg_wll_GssStatus gss_stat;
-	
+	int retry = _EXPIRED_ALERT_RETRY_COUNT,do_retry = 1;
 
 	edg_wll_ResetError(ctx);
 
@@ -154,19 +164,26 @@ int edg_wll_open(edg_wll_Context ctx)
 	}
 
 	if (ctx->connPool[index].gss.context == GSS_C_NO_CONTEXT) {	
-		switch (edg_wll_gss_connect(ctx->connPool[index].gsiCred,
+		while (retry) switch (edg_wll_gss_connect(ctx->connPool[index].gsiCred,
 				ctx->connPool[index].peerName, ctx->connPool[index].peerPort,
 				&ctx->p_tmp_timeout,&ctx->connPool[index].gss,
 				&gss_stat)) {
-		
+
 			case EDG_WLL_GSS_OK: 
+				edg_wll_ResetError(ctx);
 				goto ok;
 			case EDG_WLL_GSS_ERROR_ERRNO:
 				edg_wll_SetError(ctx,errno,"edg_wll_gss_connect()");
-				break;
+				goto err;
 			case EDG_WLL_GSS_ERROR_GSS:
 				edg_wll_SetErrorGss(ctx, "failed to authenticate to server", &gss_stat);
-				break;
+				if (strstr(ctx->errDesc,_EXPIRED_ALERT_MESSAGE)) {
+					retry--;
+					edg_wll_ResetError(ctx);
+					usleep(_EXPIRED_ALERT_RETRY_DELAY);
+					continue;
+				}
+				goto err;
 			case EDG_WLL_GSS_ERROR_HERRNO:
         	                { const char *msg1;
                 	          char *msg2;
@@ -175,15 +192,18 @@ int edg_wll_open(edg_wll_Context ctx)
         	                  edg_wll_SetError(ctx,EDG_WLL_ERROR_DNS, msg2);
                 	          free(msg2);
                         	}
-				break;
+				goto err;
 			case EDG_WLL_GSS_ERROR_EOF:
 				edg_wll_SetError(ctx,ECONNREFUSED,"edg_wll_gss_connect():"
 					       " server closed the connection, probably due to overload");
-				break;
+				goto err;
 			case EDG_WLL_GSS_ERROR_TIMEOUT:
 				edg_wll_SetError(ctx,ETIMEDOUT,"edg_wll_gss_connect()");
-				break;
+				goto err;
 		}
+		edg_wll_SetError(ctx,ECONNREFUSED,"edg_wll_gss_connect(): exhausted retry count on "
+				_EXPIRED_ALERT_MESSAGE " -- server in very bad state");
+		goto err;
 	}
 	else goto ok;
 
