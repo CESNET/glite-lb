@@ -64,7 +64,9 @@ extern char *cert_file;
 extern char *key_file;
 extern char *CAcert_dir;
 extern int bs_only;
-
+extern int killflg;
+extern int lazy_close;
+extern int default_close_timeout;
 
 /* shared data for thread communication */
 #ifdef INTERLOGD_FLUSH

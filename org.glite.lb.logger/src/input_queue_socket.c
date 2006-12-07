@@ -109,8 +109,21 @@ read_event(int sock, long *offset)
     }
 
     /* copy all relevant bytes from buffer */
-    for(i=0; (i < len) && (buf[i] != EVENT_SEPARATOR); i++) 
-      *p++ = buf[i];
+    n = (char*)memccpy(p, buf, EVENT_SEPARATOR, len);
+    if(n) {
+	    /* separator found */
+	    n--; /* but do not preserve it */
+	    i = n - p;
+	    p = n;
+    } else {
+	    /* separator not found */
+	    i = len;
+	    p += len;
+    }
+   /* This was definitely slowing us down:
+    *    for(i=0; (i < len) && (buf[i] != EVENT_SEPARATOR); i++) 
+    *    *p++ = buf[i];
+    */
 
     /* remove the data from queue */
     if(i > 0) 
@@ -140,6 +153,7 @@ read_event(int sock, long *offset)
     return(NULL);
   }
 
+#if 0
   /* this is probably not necessary at all:
      either len <=0, which was covered before,
      or 0 <= i < len => p > buffer;
@@ -150,6 +164,7 @@ read_event(int sock, long *offset)
     free(buffer);
     return(NULL);
   }
+#endif
 
   return(buffer);
 }
@@ -181,11 +196,17 @@ input_queue_get(char **buffer, long *offset, int timeout)
     return(0);
     
   case -1: /* error */
-    set_error(IL_SYS, errno, "input_queue_get: error waiting for event");
-    return(-1);
-    
+	  switch(errno) {
+	  case EINTR:
+		  il_log(LOG_DEBUG, "  interrupted while waiting for event!\n");
+		  return(0);
+
+	  default:
+		  set_error(IL_SYS, errno, "input_queue_get: error waiting for event");
+		  return(-1);
+	  }
   default:
-    break;
+	  break;
   }
   
   if((accepted=accept(sock, NULL, NULL)) < 0) {
