@@ -12,6 +12,7 @@
 #include "glite/lb/lb_plain_io.h"
 #include "glite/lb/il_msg.h"
 #include "glite/lb/il_string.h"
+#include "glite/lb/connpool.h"
 
 #include "prod_proto.h"
 #include "connection.h"
@@ -180,29 +181,51 @@ get_reply_gss_end:
  * connect to locallogger
  *----------------------------------------------------------------------
  */
-int edg_wll_log_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn) 
+int edg_wll_log_connect(edg_wll_Context ctx, int *conn) 
 {
-	int	ret,answer;
+	int	ret,answer,index;
 	char	*my_subject_name = NULL;
 	edg_wll_GssStatus	gss_stat;
-	gss_cred_id_t	cred = GSS_C_NO_CREDENTIAL;
-	OM_uint32	min_stat;
 
 	edg_wll_ResetError(ctx);
+	edg_wll_poolLock(); 
 
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"edg_wll_log_connect: setting connection to local-logger (remaining timeout %d.%06d sec)\n",
+	fprintf(stderr,"edg_wll_log_connect: setting connection to local-logger %s:%d (remaining timeout %d.%06d sec)\n",
+		ctx->p_destination,ctx->p_dest_port,
 		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
 #endif
+	/* check if connection already in pool */
+	if ( (index = ConnectionIndex(ctx, ctx->p_destination, ctx->p_dest_port)) == -1 ) {
+		if (ctx->connections->connOpened == ctx->connections->poolSize)
+			if (ReleaseConnection(ctx, NULL, 0)) 
+				goto edg_wll_log_connect_end;
+		index = AddConnection(ctx, ctx->p_destination, ctx->p_dest_port);
+		if (index < 0) {
+                    edg_wll_SetError(ctx,EAGAIN,"connection pool size exceeded");
+		    goto edg_wll_log_connect_end;
+		}
+#ifdef EDG_WLL_LOG_STUB	
+		fprintf(stderr,"edg_wll_log_connect: connection to local-logger %s:%d added as No. %d in the pool\n",
+			ctx->connections->connPool[index].peerName,
+			ctx->connections->connPool[index].peerPort,index);
+#endif
+	}
+#ifdef EDG_WLL_LOG_STUB   
+	else fprintf(stderr,"edg_wll_log_connect: connection to %s:%d exists (No. %d in the pool) - reusing\n",
+			ctx->connections->connPool[index].peerName,
+			ctx->connections->connPool[index].peerPort,index);
+#endif  
+
 	/* acquire gss credentials */
 	ret = edg_wll_gss_acquire_cred_gsi(
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-	      &cred, &my_subject_name, &gss_stat);
+	      &ctx->connections->connPool[index].gsiCred, &my_subject_name, &gss_stat);
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {
 		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
-		goto edg_wll_log_connect_end;
+		goto edg_wll_log_connect_err;
 	}
 #ifdef EDG_WLL_LOG_STUB
 	if (my_subject_name != NULL) {
@@ -212,25 +235,40 @@ int edg_wll_log_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn)
 	}
 #endif
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"edg_wll_log_connect: opening connection to local-logger (host '%s', port '%d')\n",
-			ctx->p_destination, ctx->p_dest_port);
+	fprintf(stderr,"edg_wll_log_connect: opening connection to local-logger %s:%d\n",
+			ctx->connections->connPool[index].peerName,
+			ctx->connections->connPool[index].peerPort);
 #endif
-	if ((answer = edg_wll_gss_connect(cred,
-			ctx->p_destination, ctx->p_dest_port, 
-			&ctx->p_tmp_timeout, conn, &gss_stat)) < 0) {
-		answer = handle_gss_failures(ctx,answer,&gss_stat,"edg_wll_gss_connect()");
-		goto edg_wll_log_connect_end;
-	}
+	/* gss_connect */
+	if (ctx->connections->connPool[index].gss.context == GSS_C_NO_CONTEXT) {
+
+		if ((answer = edg_wll_gss_connect(
+				ctx->connections->connPool[index].gsiCred,
+				ctx->connections->connPool[index].peerName,
+				ctx->connections->connPool[index].peerPort,
+				&ctx->p_tmp_timeout, 
+				&ctx->connections->connPool[index].gss,
+				&gss_stat)) < 0) {
+			answer = handle_gss_failures(ctx,answer,&gss_stat,"edg_wll_gss_connect()");
+			goto edg_wll_log_connect_err;
+		}
+	} else goto edg_wll_log_connect_end;
+
+edg_wll_log_connect_err:
+	if (index >= 0) CloseConnection(ctx, &index);
+	index = -1;
 
 edg_wll_log_connect_end:
+	if (index >= 0) edg_wll_connectionTryLock(ctx, index);
+	if (my_subject_name) free(my_subject_name);
+
+	edg_wll_poolUnlock();
+
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"edg_wll_log_connect: done (remaining timeout %d.%06d sec)\n",
 		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
 #endif
-	if (cred != GSS_C_NO_CREDENTIAL)
-		gss_release_cred(&min_stat, &cred);
-	if (my_subject_name) free(my_subject_name);
-
+	*conn = index;
 	return answer;
 }
 
@@ -239,9 +277,14 @@ edg_wll_log_connect_end:
  * close connection to locallogger
  *----------------------------------------------------------------------
  */
-int edg_wll_log_close(edg_wll_Context ctx, edg_wll_GssConnection *conn) 
+int edg_wll_log_close(edg_wll_Context ctx, int conn) 
 {
-	return edg_wll_gss_close(conn,&ctx->p_tmp_timeout);
+	int ret = 0;
+
+	if (conn == -1) return 0;
+	ret = CloseConnection(ctx,&conn);
+	edg_wll_connectionUnlock(ctx,conn);
+	return ret;
 }
 
 /**
@@ -249,7 +292,7 @@ int edg_wll_log_close(edg_wll_Context ctx, edg_wll_GssConnection *conn)
  * write/send to locallogger
  *----------------------------------------------------------------------
  */
-int edg_wll_log_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_LogLine logline)
+int edg_wll_log_write(edg_wll_Context ctx, int conn, edg_wll_LogLine logline)
 {
 	char	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1];
 	int	err;
@@ -274,7 +317,7 @@ int edg_wll_log_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_
 #endif
 	sprintf(header,"%s",EDG_WLL_LOG_SOCKET_HEADER);
 	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH]='\0';
-	if ((err = edg_wll_gss_write_full(conn, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
+	if ((err = edg_wll_gss_write_full(&ctx->connections->connPool[conn].gss, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
 		answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
 		edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending header");
 		return -1;
@@ -285,7 +328,7 @@ int edg_wll_log_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_
 	fprintf(stderr,"edg_wll_log_write: sending message size\n");
 #endif
 	count = 0;
-	if ((err = edg_wll_gss_write_full(conn, size_end, 4, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
+	if ((err = edg_wll_gss_write_full(&ctx->connections->connPool[conn].gss, size_end, 4, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
                 answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
                 edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message size");
                 return -1;
@@ -296,7 +339,7 @@ int edg_wll_log_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_
 	fprintf(stderr,"edg_wll_log_write: sending message...\n");
 #endif
 	count = 0;
-	if (( err = edg_wll_gss_write_full(conn, logline, size, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
+	if (( err = edg_wll_gss_write_full(&ctx->connections->connPool[conn].gss, logline, size, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
 		answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
 		edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message");
 		return -1;
@@ -315,7 +358,7 @@ int edg_wll_log_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_
  * read/receive from locallogger
  *----------------------------------------------------------------------
  */
-int edg_wll_log_read(edg_wll_Context ctx, edg_wll_GssConnection *conn)
+int edg_wll_log_read(edg_wll_Context ctx, int conn)
 {
 	int	err;
 	int	answer;
@@ -331,7 +374,7 @@ int edg_wll_log_read(edg_wll_Context ctx, edg_wll_GssConnection *conn)
 	fprintf(stderr,"edg_wll_log_read: reading answer from local-logger\n");
 #endif
 	count = 0;
-	if ((err = edg_wll_gss_read_full(conn, answer_end, 4, &ctx->p_tmp_timeout, &count, &gss_code)) < 0 ) {
+	if ((err = edg_wll_gss_read_full(&ctx->connections->connPool[conn].gss, answer_end, 4, &ctx->p_tmp_timeout, &count, &gss_code)) < 0 ) {
 		answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_read_full()");
 		edg_wll_UpdateError(ctx,answer,"edg_wll_log_read(): error reading answer from local-logger");
 		return -1;

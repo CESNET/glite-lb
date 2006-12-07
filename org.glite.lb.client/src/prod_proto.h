@@ -7,26 +7,27 @@
 extern "C" {
 #endif
 
-
 #include "glite/security/glite_gss.h"
 #include "glite/lb/log_proto.h"
 #include "glite/lb/context-int.h"
 
+#define PROXY_CONNECT_RETRY 10 /* ms */
+
 /**
  * connect to local-logger
  * \param[in,out] ctx		context to work with
- * \param[out] conn		opened connection
+ * \param[out] conn		opened connection (index in the connection pool)
  * \return errno
  */
-int edg_wll_log_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn);
+int edg_wll_log_connect(edg_wll_Context ctx, int *conn);
 
 /**
  * close connection to local-logger
  * \param[in,out] ctx		context to work with
- * \param[out] conn		opened connection
+ * \param[in] conn		opened connection
  * \return errno
  */
-int edg_wll_log_close(edg_wll_Context ctx, edg_wll_GssConnection *conn);
+int edg_wll_log_close(edg_wll_Context ctx, int conn);
 
 /**
  * write/send to local-logger
@@ -35,15 +36,15 @@ int edg_wll_log_close(edg_wll_Context ctx, edg_wll_GssConnection *conn);
  * \param[in] logline		message to send
  * \return 	the number of bytes written (zero indicates nothing was written) or -1 on error
  */
-int edg_wll_log_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_LogLine logline);
+int edg_wll_log_write(edg_wll_Context ctx, int conn, edg_wll_LogLine logline);
 
 /**
- * read/receive from local-logger
+ * read/receive answer (stored in context) from local-logger
  * \param[in,out] ctx		context to work with
  * \param[in] conn		connection to use
  * \return 	the number of bytes read (zero indicates nothing was read) or -1 on error
  */
-int edg_wll_log_read(edg_wll_Context ctx, edg_wll_GssConnection *conn);
+int edg_wll_log_read(edg_wll_Context ctx, int conn);
 
 
 /**

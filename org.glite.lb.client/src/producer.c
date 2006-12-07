@@ -83,7 +83,7 @@ int edg_wll_DoLogEvent(
 	edg_wll_LogLine logline)
 {
 	int	ret = 0, answer = EAGAIN;
-        edg_wll_GssConnection   conn;
+        int	conn;
 
         edg_wll_ResetError(ctx);
         memset(&conn,0,sizeof(conn));
@@ -94,21 +94,22 @@ int edg_wll_DoLogEvent(
 		goto edg_wll_DoLogEvent_end;
 	}
 
+	sleep(3);
 	/* send message */
-	if ((ret = edg_wll_log_write(ctx,&conn,logline)) == -1) {
+	if ((ret = edg_wll_log_write(ctx,conn,logline)) == -1) {
 		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_write error");
 		goto edg_wll_DoLogEvent_end;
 	}
 
 	/* get answer */
-	if ((ret = edg_wll_log_read(ctx,&conn)) == -1) {
+	if ((ret = edg_wll_log_read(ctx,conn)) == -1) {
 		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_read error");
 	} else {
 		answer = edg_wll_Error(ctx, NULL, NULL);
 	}
 
 edg_wll_DoLogEvent_end:
-	edg_wll_log_close(ctx,&conn);
+// XXX: no close if using connpool:	edg_wll_log_close(ctx,&conn);
 
 	return handle_errors(ctx,answer,"edg_wll_DoLogEvent()");
 }
