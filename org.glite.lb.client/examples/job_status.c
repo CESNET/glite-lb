@@ -26,7 +26,7 @@ int main(int argc,char *argv[])
 {
 	edg_wll_Context	sctx[MAX_SERVERS];
 	char		*servers[MAX_SERVERS];
-	int		i, result=0, nsrv=0, wasaflag, histflags = 0;
+	int		i, result=0, nsrv=0, histflags = 0;
 
 	
 	myname = argv[0];
@@ -89,6 +89,17 @@ int main(int argc,char *argv[])
 		return result;
 	}
 
+	for ( i = 1; i < argc; i++ ) {
+                if ( !strcmp(argv[i], "-fullhist") ) {
+                        histflags = EDG_WLL_STAT_CHILDHIST_THOROUGH;
+                        printf("\nFound a FULLHIST flag\n\n");
+                }
+
+                if ( !strcmp(argv[i], "-fasthist") ) {
+                        histflags = EDG_WLL_STAT_CHILDHIST_FAST;
+                        printf("\nFound a FASTHIST flag\n\n");
+                }    
+	}
 
 	for ( i = 1; i < argc; i++ ) {
 		int		j;
@@ -97,20 +108,8 @@ int main(int argc,char *argv[])
 		edg_wll_JobStat status;
 
 		memset(&status,0,sizeof status);
-
-		wasaflag = 0; // Indicates that the argument was a flag
-
-		if ( !strcmp(argv[i], "-fullhist") ) { 
-			wasaflag = 1;
-			histflags = EDG_WLL_STAT_CHILDHIST_THOROUGH;
-		}
-
-		if ( !strcmp(argv[i], "-fasthist") ) { 
-			wasaflag = 1;
-                        histflags = EDG_WLL_STAT_CHILDHIST_FAST;
-		}
-
-		if (!wasaflag) {
+	
+		if ((strcmp(argv[i], "-fullhist"))&&(strcmp(argv[i], "-fasthist"))) {
 			if (edg_wlc_JobIdParse(argv[i],&job)) {
 				fprintf(stderr,"%s: %s: cannot parse jobId\n", myname,argv[i]);
 				continue;
