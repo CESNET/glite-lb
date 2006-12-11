@@ -845,6 +845,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		else if (ret == EDG_WLL_GSS_ERROR_GSS) {
 			edg_wll_SetErrorGss(ctx,"Client authentication",&gss_code);
 			if (strstr(ctx->errDesc,_EXPIRED_CERTIFICATE_MESSAGE)) {
+				dprintf(("[%d] false expired certificate: %s\n",ctx->errDesc));
+				if (!debug) syslog(LOG_ERR,"false expired certificate: %s",ctx->errDesc);
 				edg_wll_FreeContext(ctx);
 				return -1;
 			}
