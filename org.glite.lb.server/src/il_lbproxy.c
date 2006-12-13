@@ -5,7 +5,7 @@
 
 #define FCNTL_ATTEMPTS		5
 #define FCNTL_TIMEOUT		1
-#define FILE_PREFIX			"/tmp/dglogd.log"
+#define FILE_PREFIX			EDG_WLL_LOG_PREFIX_DEFAULT
 #define DEFAULT_SOCKET		"/tmp/interlogger.sock"
 
 char *lbproxy_ilog_socket_path = DEFAULT_SOCKET;
