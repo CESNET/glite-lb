@@ -16,6 +16,7 @@ typedef struct _edg_wll_SeqCode {
 	unsigned int	c[EDG_WLL_SOURCE__LAST];
 } edg_wll_SeqCode;
 
+#define EDG_WLL_SEQ_NULL "UI=000000:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000"
 
 
 /* non-gsi one-element analogy of connPool for L&B Proxy server */

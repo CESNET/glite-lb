@@ -5,7 +5,7 @@
 
 #define FCNTL_ATTEMPTS		5
 #define FCNTL_TIMEOUT		1
-#define FILE_PREFIX			"/tmp/dglogd.log"
+#define FILE_PREFIX			EDG_WLL_LOG_PREFIX_DEFAULT
 #define DEFAULT_SOCKET		"/tmp/interlogger.sock"
 
 char *lbproxy_ilog_socket_path = DEFAULT_SOCKET;
@@ -18,7 +18,6 @@ edg_wll_EventSendProxy(
 	const edg_wlc_JobId		jobid,
 	const char			   *event)
 {
-	struct timeval	timeout;
 	long			filepos;
 	char		   *jobid_s,
 				   *event_file = NULL;
@@ -27,9 +26,6 @@ edg_wll_EventSendProxy(
 #define _err(n)		{ err = n; goto out; }
 
 	edg_wll_ResetError(ctx);
-
-	timeout.tv_sec = EDG_WLL_LOG_TIMEOUT_MAX;
-	timeout.tv_usec = 0;	
 
 	jobid_s = edg_wlc_JobIdGetUnique(jobid);
 	if ( !jobid_s ) {
@@ -44,13 +40,16 @@ edg_wll_EventSendProxy(
 	}
 
 	if ( edg_wll_log_event_write(ctx, event_file, event,
-						FCNTL_ATTEMPTS, FCNTL_TIMEOUT, &filepos) ) {
+					(ctx->p_tmp_timeout.tv_sec > FCNTL_ATTEMPTS ?
+						ctx->p_tmp_timeout.tv_sec : FCNTL_ATTEMPTS),
+					FCNTL_TIMEOUT, &filepos) ) {
+
 		edg_wll_UpdateError(ctx, 0, "edg_wll_log_event_write()");
 		_err(1);
 	}
 
 	if ( edg_wll_log_event_send(ctx, lbproxy_ilog_socket_path, filepos,
-						event, strlen(event), 1, &timeout) ) {
+						event, strlen(event), 1, &ctx->p_tmp_timeout) ) {
 		edg_wll_UpdateError(ctx, 0, "edg_wll_log_event_send()");
 		_err(-1);
 	}

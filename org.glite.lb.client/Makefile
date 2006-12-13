@@ -78,14 +78,6 @@ CFLAGS:=${DEBUG} \
 
 CXXFLAGS:=${CFLAGS}
 
-GLOBUS_LIBS:=-L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour} \
-
-GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
-	-lglobus_common_${thrflavour} \
-	-lglobus_gssapi_gsi_${thrflavour}
-
 ifneq (${expat_prefix},/usr)
 	EXPAT_LIBS:=-L${expat_prefix}/lib
 endif
@@ -140,7 +132,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge lb_dump_exporter
-EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl
+EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl lbmon flood_proxy stress_context
 
 EXAMPLES_CL=user_jobs job_status
 FAKE_EXAMPLES:=job_log_fake
@@ -180,16 +172,16 @@ ${THRPLUSLIB}: ${PLUSTHROBJS}
 	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${glite_location}/lib ${THRLIB}
 
 logevent: logevent.o args.o
-	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
 
 ${TOOLS} ${EXAMPLES}: %: %.o
-	${LINK} -o $@ $< ${LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
 
 ${EXAMPLES_CL}: %: %.o
-	${LINK} -o $@ $< ${LIB} ${COMMON_LIB} ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINK} -o $@ $< ${LIB} ${COMMON_LIB} ${EXT_LIB} 
 
 ${FAKE_EXAMPLES}: %: %.o ${FAKELIB}
-	${LINK} -o $@ $< ${FAKELIB} ${TEST_LIBS} ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINK} -o $@ $< ${FAKELIB} ${TEST_LIBS} ${EXT_LIB} 
 
 ${TOOLS}: ${LIB}
 
@@ -250,7 +242,7 @@ check.producer: producer_test
 	./producer_test
 
 producer_test: producer_test.o prod_proto_test.o
-	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+ ${EXT_LIB} ${GLOBUS_LIBS}
+	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+ ${EXT_LIB}
 
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${TEST_INC} ${GLOBUSINC} $<

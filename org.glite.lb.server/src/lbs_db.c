@@ -78,12 +78,18 @@ int edg_wll_ExecStmt(edg_wll_Context ctx,char *txt,edg_wll_Stmt *stmt)
 	int	err;
 	int	retry_nr = 0;
 	int	do_reconnect = 0;
+	struct timeval	start,end;
+	int	pid;
 
 	edg_wll_ResetError(ctx);
 
 	if (stmt) {
 		*stmt = NULL;
 	}
+
+#ifdef LBS_DB_PROFILE
+	gettimeofday(&start,NULL);
+#endif
 
 	while (retry_nr == 0 || do_reconnect) {
 		do_reconnect = 0;
@@ -128,6 +134,15 @@ int edg_wll_ExecStmt(edg_wll_Context ctx,char *txt,edg_wll_Stmt *stmt)
 		MYSQL_RES	*r = mysql_store_result((MYSQL *) ctx->mysql);
 		mysql_free_result(r);
 	}
+#ifdef LBS_DB_PROFILE
+	gettimeofday(&end,NULL);
+	end.tv_usec -= start.tv_usec;
+	end.tv_sec -= start.tv_sec;
+	if (end.tv_usec < 0) { end.tv_sec--; end.tv_usec += 1000000; }
+
+	pid = getpid();
+	fprintf(stderr,"[%d] %s\n[%d] %3ld.%06ld\n",pid,txt,pid,end.tv_sec,end.tv_usec);
+#endif
 	
 	return mysql_affected_rows((MYSQL *) ctx->mysql);
 }

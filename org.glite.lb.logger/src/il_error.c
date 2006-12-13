@@ -20,7 +20,7 @@ extern int log_level;
 
 static pthread_key_t err_key;
 
-static int IL_ERR_MSG_LEN = 128;
+static int IL_ERR_MSG_LEN = 1024;
 
 static
 void
@@ -132,6 +132,8 @@ set_error(int code, long minor, char *msg)
   default:
 	  strncpy(err->msg, msg, IL_ERR_MSG_LEN);
   }
+
+  err->msg[IL_ERR_MSG_LEN] = 0; /* OK, malloc()ed IL_ERR_MSG_LEN + 1 */
 
   return(code);
 }

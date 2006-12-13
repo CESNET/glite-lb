@@ -13,6 +13,7 @@
 
 #include "interlogd.h"
 #include "glite/lb/consumer.h"
+#include "glite/lb/log_proto.h"
 #include "glite/security/glite_gss.h"
 
 #define EXIT_FAILURE 1
@@ -20,14 +21,14 @@
 #define DEFAULT_PREFIX "/tmp/notif_events"
 #define DEFAULT_SOCKET "/tmp/notif_interlogger.sock"
 #else
-#define DEFAULT_PREFIX "/tmp/dglogd.log"
+#define DEFAULT_PREFIX EDG_WLL_LOG_PREFIX_DEFAULT
 #define DEFAULT_SOCKET "/tmp/interlogger.sock"
 #endif
 
 
 /* The name the program was run with, stripped of any leading path. */
 char *program_name;
-static int killflg = 0;
+int killflg = 0;
 
 int TIMEOUT = DEFAULT_TIMEOUT;
 
@@ -53,6 +54,7 @@ static void usage (int status)
 	       "  -b, --book                 send events to bookkeeping server only\n"
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
+	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers (default, timeout==0 means turn lazy off)\n"
 	       , program_name, program_name);
 	exit(status);
 }
@@ -63,6 +65,8 @@ static int debug;
 static int verbose = 0;
 char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
+int lazy_close = 1;
+int default_close_timeout;
 
 char *cert_file = NULL;
 char *key_file  = NULL;
@@ -83,6 +87,7 @@ static struct option const long_options[] =
   {"CAdir", required_argument, 0, 'C'},
   {"log-server", required_argument, 0, 'l'},
   {"socket", required_argument, 0, 's'},
+  {"lazy", optional_argument, 0, 'L'},
   {NULL, 0, NULL, 0}
 };
 
@@ -108,6 +113,7 @@ decode_switches (int argc, char **argv)
 			   "b"  /* only bookeeping */
                            "l:" /* log server */
 			   "d" /* debug */
+			   "L::" /* lazy */
 			   "s:", /* socket */
 			   long_options, (int *) 0)) != EOF)
     {
@@ -156,6 +162,18 @@ decode_switches (int argc, char **argv)
 	  socket_path = strdup(optarg);
 	  break;
 
+	case 'L':
+		lazy_close = 1;
+		if(optarg) 
+		        default_close_timeout = atoi(optarg);
+			if(default_close_timeout == 0) {
+				lazy_close = 0;
+				default_close_timeout = TIMEOUT;
+			}
+		else
+			default_close_timeout = TIMEOUT;
+		break;
+
 	default:
 	  usage (EXIT_FAILURE);
 	}
@@ -183,9 +201,9 @@ main (int argc, char **argv)
   setlinebuf(stdout);
   setlinebuf(stderr);
 
-  i = decode_switches (argc, argv);
-
   if ((p = getenv("EDG_WL_INTERLOG_TIMEOUT"))) TIMEOUT = atoi(p);
+
+  i = decode_switches (argc, argv);
 
   /* force -b if we do not have log server */
   if(log_server == NULL) {
@@ -218,6 +236,9 @@ main (int argc, char **argv)
     il_log(LOG_CRIT, "Failed to initialize output event queues: %s\n", error_get_msg());
     exit(EXIT_FAILURE);
   }
+  if(lazy_close)
+	  il_log(LOG_DEBUG, "  using lazy mode when closing connections, timeout %d\n",
+		 default_close_timeout);
 
   if (CAcert_dir)
      setenv("X509_CERT_DIR", CAcert_dir, 1);

@@ -22,6 +22,21 @@
 
 	Revision history:
 	$Log$
+	Revision 1.13.2.1  2005/10/17 16:27:48  akrenek
+	merged in the duplicate utils targed patch
+	
+	Revision 1.15  2005/11/27 21:51:18  eronchie
+	Applied fix for bug 13928
+	
+	Revision 1.14  2005/10/15 20:14:55  jpospi
+	remove duplicate lb.utils section
+	
+	Revision 1.13  2005/10/15 13:36:26  akrenek
+	added lb.utils
+	
+	Revision 1.12  2005/03/16 10:02:52  zsalvet
+	proxy component added
+	
 	Revision 1.11  2004/12/01 18:01:55  zsalvet
 	LB here, not R-GMA
 	
@@ -148,6 +163,10 @@
 	
 		<!-- condition property tag = do not remove = -->
 
+		<condition property="utils.head">
+			<equals arg1="${org.glite.lb.utils.version}" arg2="HEAD" />
+		</condition>
+
 		<condition property="common.head">
 			<equals arg1="${org.glite.lb.common.version}" arg2="HEAD" />
 		</condition>
@@ -241,7 +260,7 @@
 		 ===================================================== -->
 
 	<!-- component targets tag = do not remove = -->
-	
+
 	<!-- common -->
  	<target name="common" depends="evaluate.cvs.tags, get.common.head, get.common.tag"/>
 	<target name="get.common.head" if="common.head">
@@ -322,15 +341,26 @@
 			tag="${org.glite.lb.logger.version}" />
 	</target>
 
+	<!-- utils -->
+ 	<target name="utils" depends="get.utils.head, get.utils.tag"/>
+	<target name="get.utils.head" if="utils.head">
+		<cvs-co package="org.glite.lb.utils" />
+	</target>
+	<target name="get.utils.tag" unless="utils.head">
+		<cvs-co package="org.glite.lb.utils"
+			tag="${org.glite.lb.utils.version}" />
+	</target>
+
 	<!-- All project modules -->
- 	<target name="project" depends="client-interface,
-						ws-interface,
- 						common,
- 						server-bones,
- 						client,
- 						server,
- 						proxy,
- 						logger"/>
+ 	<target name="project" depends="utils,
+					client-interface,
+					ws-interface,
+ 					common,
+ 					server-bones,
+ 					client,
+ 					server,
+ 					proxy,
+ 					logger"/>
 
 
 	<!-- ====================================================
