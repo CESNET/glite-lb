@@ -43,6 +43,7 @@
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/lb_maildir.h"
+#include "glite/lb-utils/db.h"
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -51,13 +52,17 @@
 enum lb_srv_perf_sink sink_mode;
 #endif
 
+#include "db_supp.h"
 #include "lb_http.h"
 #include "lb_proto.h"
 #include "index.h"
-#include "lbs_db.h"
 #include "lb_authz.h"
 #include "il_notification.h"
 #include "stats.h"
+
+#ifdef DEBUG_INDEX
+void edg_wll_dump_QueryRecs(FILE *, edg_wll_QueryRec **job_index);
+#endif
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 #  if GSOAP_VERSION < 20700
@@ -71,8 +76,6 @@ enum lb_srv_perf_sink sink_mode;
 #endif /* GLITE_LB_SERVER_WITH_WS */
 
 extern int edg_wll_StoreProto(edg_wll_Context ctx);
-extern edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs);
-extern edg_wll_ErrorCode edg_wll_Close(edg_wll_Context);
 
 #ifdef LB_PERF
 extern void _start (void), etext (void);
@@ -122,7 +125,8 @@ static int				hardJobsLimit = 0;
 static int				hardEventsLimit = 0;
 static int				hardRespSizeLimit = 0;
 static char			   *dbstring = NULL,*fake_host = NULL;
-int        				transactions = -1, use_transactions = -1;
+int					transactions = -1;
+int        				dbcaps = 0;
 static int				fake_port = 0;
 static char			  **super_users = NULL;
 static int				slaves = 10,
@@ -238,7 +242,7 @@ static void usage(char *me)
 	,me);
 }
 
-static void wait_for_open(edg_wll_Context,const char *);
+static void wait_for_open(edg_wll_Context,const char *,glite_lbu_DBContext);
 static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
 static int read_roots(const char *);
 static int asyn_gethostbyaddr(char **, const char *, int, int, struct timeval *);
@@ -289,8 +293,7 @@ struct clnt_data_t {
 #ifdef GLITE_LB_SERVER_WITH_WS
 	struct soap			   *soap;
 #endif	/* GLITE_LB_SERVER_WITH_WS */
-	int                         use_transactions;
-	void				   *mysql;
+	glite_lbu_DBContext	    dbctx;
 	edg_wll_QueryRec	  **job_index;
 	edg_wll_IColumnRec	   *job_index_cols;
 };
@@ -317,6 +320,7 @@ int main(int argc, char *argv[])
 	struct timeval		to;
 	int 			request_timeout = REQUEST_TIMEOUT;
 	int			silent = 0;
+	glite_lbu_DBContext     dbctx;
 
 
 
@@ -569,29 +573,40 @@ a.sin_addr.s_addr = INADDR_ANY;
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 	if (!dbstring) dbstring = getenv("LBDB");
+	if (!dbstring) dbstring = DEFAULTCS;
 
 	/* Just check the database and let it be. The slaves do the job. */
 	edg_wll_InitContext(&ctx);
-	wait_for_open(ctx, dbstring);
+	glite_lbu_InitDBContext(&dbctx);
+	wait_for_open(ctx, dbstring, dbctx);
 
-	if (edg_wll_DBCheckVersion(ctx, dbstring))
+	if ((dbcaps = glite_lbu_DBQueryCaps(dbctx)) == -1)
 	{
 		char	*et,*ed;
-		edg_wll_Error(ctx,&et,&ed);
+		glite_lbu_DBError(dbctx,&et,&ed);
 
 		fprintf(stderr,"%s: open database: %s (%s)\n",argv[0],et,ed);
+
+		free(et);
+		free(ed);
 		return 1;
 	}
-	if (count_statistics) edg_wll_InitStatistics(ctx);
-	if (!ctx->use_transactions && transactions != 0) {
+	glite_lbu_DBClose(dbctx);
+	glite_lbu_FreeDBContext(dbctx);
+	if ((dbcaps & GLITE_LBU_DB_CAP_INDEX) == 0) {
+		fprintf(stderr,"%s: missing index support in DB layer\n",argv[0]);
+		return 1;
+	}
+	if ((dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS))
 		fprintf(stderr, "[%d]: transactions aren't supported!\n", getpid());
-	}
 	if (transactions >= 0) {
-		fprintf(stderr, "[%d]: transactions forced from %d to %d\n", getpid(), ctx->use_transactions, transactions);
-		ctx->use_transactions = transactions;
+		fprintf(stderr, "[%d]: transactions forced from %d to %d\n", getpid(), dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS ? 1 : 0, transactions);
+		dbcaps &= ~GLITE_LBU_DB_CAP_TRANSACTIONS;
+		dbcaps |= transactions ? GLITE_LBU_DB_CAP_TRANSACTIONS : 0;
 	}
-	use_transactions = ctx->use_transactions;
-	edg_wll_Close(ctx);
+	
+	if (count_statistics) edg_wll_InitStatistics(ctx);
+//	edg_wll_Close(ctx);
 	edg_wll_FreeContext(ctx);
 
 	if ( !debug ) {
@@ -657,10 +672,11 @@ int bk_clnt_data_init(void **data)
 	}
 
 	dprintf(("[%d] opening database ...\n", getpid()));
+	glite_lbu_InitDBContext(&cdata->dbctx);
 	if ( !dbstring ) dbstring = getenv("LBDB");
-	wait_for_open(ctx, dbstring);
-	cdata->mysql = ctx->mysql;
-	cdata->use_transactions = ctx->use_transactions;
+	wait_for_open(ctx, dbstring, cdata->dbctx);
+	glite_lbu_DBSetCaps(cdata->dbctx, dbcaps);
+	ctx->dbctx = cdata->dbctx;
 
 	if ( edg_wll_QueryJobIndices(ctx, &job_index, NULL) )
 	{
@@ -674,6 +690,10 @@ int bk_clnt_data_init(void **data)
 	}
 	edg_wll_FreeContext(ctx);
 	cdata->job_index = job_index;
+
+#ifdef DEBUG_INDEX
+	edg_wll_dump_QueryRecs(stdout, job_index);
+#endif
 
 	if ( job_index )
 	{
@@ -768,8 +788,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 	/* Shared structures (pointers)
 	 */
-	ctx->mysql = cdata->mysql;
-	ctx->use_transactions = cdata->use_transactions;
+	ctx->dbctx = cdata->dbctx;
 	ctx->job_index_cols = cdata->job_index_cols;
 	ctx->job_index = cdata->job_index; 
 	
@@ -1248,17 +1267,17 @@ int bk_ws_clnt_reject(int conn)
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 
-static void wait_for_open(edg_wll_Context ctx, const char *dbstring)
+static void wait_for_open(edg_wll_Context ctx, const char *dbstring, glite_lbu_DBContext dbctx)
 {
 	char	*dbfail_string1, *dbfail_string2;
 
 	dbfail_string1 = dbfail_string2 = NULL;
 
-	while (edg_wll_Open(ctx, (char *) dbstring)) {
+	while (glite_lbu_DBConnect(dbctx, dbstring)) {
 		char	*errt,*errd;
 
 		if (dbfail_string1) free(dbfail_string1);
-		edg_wll_Error(ctx,&errt,&errd);
+		glite_lbu_DBError(dbctx,&errt,&errd);
 		asprintf(&dbfail_string1,"%s (%s)\n",errt,errd);
 		if (dbfail_string1 != NULL) {
 			if (dbfail_string2 == NULL || strcmp(dbfail_string1,dbfail_string2)) {
@@ -1278,8 +1297,6 @@ static void wait_for_open(edg_wll_Context ctx, const char *dbstring)
 		dprintf(("[%d]: DB connection established\n",getpid()));
 		if (!debug) syslog(LOG_INFO,"DB connection established\n");
 	}
-
-	ctx->use_transactions = use_transactions;
 }
 
 static void free_hostent(struct hostent *h){

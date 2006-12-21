@@ -13,7 +13,7 @@
 
 #include <cclassad.h>
 
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/jobstat.h"
@@ -156,9 +156,9 @@ char* write2rgma_statline(edg_wll_JobStat *stat)
 	char *string_jobid, *string_stat, *string_server;
 	char *string_vo = NULL;
 
-	string_jobid = edg_wlc_JobIdUnparse(stat->jobId);
+	string_jobid = glite_lbu_JobIdUnparse(stat->jobId);
 	string_stat = edg_wll_StatToString(stat->state);
-	string_server = edg_wlc_JobIdGetServer(stat->jobId);
+	string_server = glite_lbu_JobIdGetServer(stat->jobId);
 
 	if (stat->jdl != NULL) {
 		struct cclassad *ad;

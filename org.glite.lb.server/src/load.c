@@ -11,7 +11,8 @@
 #include <fcntl.h>
 #include <ctype.h>
 
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/db.h"
+#include "glite/lb-utils/trio.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
@@ -22,9 +23,9 @@
 #include "glite/lb/dump.h"
 #include "glite/lb/load.h"
 
+#include "db_supp.h"
 #include "store.h"
 #include "purge.h"
-#include "lbs_db.h"
 #include "query.h"
 #include "get_events.h"
 #include "server_state.h"
@@ -40,7 +41,7 @@ int edg_wll_LoadEvents(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wl
 	char			   *line = NULL,
 						buff[30];
 	edg_wll_Event	   *event;
-	edg_wlc_JobId		jobid = NULL;
+	glite_lbu_JobId		jobid = NULL;
 
 
 	edg_wll_ResetError(ctx);
@@ -51,8 +52,8 @@ int edg_wll_LoadEvents(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wl
 	if ( (fd = open(req->server_file, O_RDONLY)) == -1 )
 		return edg_wll_SetError(ctx, errno, "Server can not open the file");
 
-	if (edg_wll_Transaction(ctx) != 0) 
-		return edg_wll_Error(ctx, NULL, NULL);
+	if (glite_lbu_Transaction(ctx->dbctx) != 0) 
+		return edg_wll_SetErrorDB(ctx);
 
 	memset(result,0,sizeof(*result));
 	i = 0;
@@ -61,8 +62,9 @@ int edg_wll_LoadEvents(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wl
 		/*	Read one line
 		 */
 		if ( (readret = read_line(&line, &maxsize, fd)) == -1 ) {
-			edg_wll_Rollback(ctx);
-			return edg_wll_SetError(ctx, errno, "reading dump file");
+			edg_wll_SetError(ctx, errno, "reading dump file");
+			glite_lbu_Rollback(ctx->dbctx);
+			return edg_wll_Error(ctx, NULL, NULL);
 		}
 
 		if ( readret == 0 )
@@ -135,22 +137,22 @@ int edg_wll_LoadEvents(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wl
 			result->to = event->any.arrived.tv_sec;
 			if ( jobid )
 			{
-				char *md5_jobid = edg_wlc_JobIdGetUnique(jobid);
+				char *md5_jobid = glite_lbu_JobIdGetUnique(jobid);
 				
-				if ( strcmp(md5_jobid, edg_wlc_JobIdGetUnique(event->any.jobId)) )
+				if ( strcmp(md5_jobid, glite_lbu_JobIdGetUnique(event->any.jobId)) )
 				{
 					edg_wll_JobStat st;
 
 					edg_wll_JobStatus(ctx, jobid, 0, &st);
 					edg_wll_FreeStatus(&st);
 
-					edg_wlc_JobIdFree(jobid);
-					edg_wlc_JobIdDup(event->any.jobId, &jobid);
+					glite_lbu_JobIdFree(jobid);
+					glite_lbu_JobIdDup(event->any.jobId, &jobid);
 				}
 				free(md5_jobid);
 			}
 			else
-				edg_wlc_JobIdDup(event->any.jobId, &jobid);
+				glite_lbu_JobIdDup(event->any.jobId, &jobid);
 		}
 
 
@@ -165,14 +167,14 @@ cycle_clean:
 
 		edg_wll_JobStatus(ctx, jobid, 0, &st);
 		edg_wll_FreeStatus(&st);
-		edg_wlc_JobIdFree(jobid);
+		glite_lbu_JobIdFree(jobid);
 	}
 
 	if ( reject_fd != -1 )
 		close(reject_fd);
 
-	if (edg_wll_Commit(ctx) != 0)
-		return edg_wll_Error(ctx, NULL, NULL);
+	if (glite_lbu_Commit(ctx->dbctx) != 0)
+		return edg_wll_SetErrorDB(ctx);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }

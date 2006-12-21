@@ -66,7 +66,7 @@ sub eventFieldAssign {
 			gen $indent."$dest->tvSec = $source.tv_sec;\n";
 			gen $indent."$dest->tvUsec = $source.tv_usec;\n";
 	} elsif ($tn eq 'jobid') {
-			gen $indent."s = edg_wlc_JobIdUnparse($source);\n";
+			gen $indent."s = glite_lbu_JobIdUnparse($source);\n";
 			gen $indent."$dest = soap_strdup(soap, s);\n";
 	} elsif ($tn eq 'usertag') {
 			gen $indent."$dest = soap_malloc(soap, sizeof(*$dst->$soap_fn));\n";
@@ -164,7 +164,7 @@ int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt
 		my $usuc = $_;
 		$usuc = $1.uc($2).$3 while ($usuc =~ /([^_]*)_([a-z])(.*)/);
 		if ($ft eq 'jobid') {
-			gen "\ts = edg_wlc_JobIdUnparse(src->$_);\n";
+			gen "\ts = glite_lbu_JobIdUnparse(src->$_);\n";
 			gen "\tjs->$usuc = soap_strdup(soap,s); free(s);\n";
 		}
 		elsif ($ft eq 'strlist') {
@@ -251,7 +251,7 @@ void edg_wll_SoapToStatus(struct soap *soap,struct lbt__jobStatus const *src,edg
 		$usuc = $1.uc($2).$3 while ($usuc =~ /([^_]*)_([a-z])(.*)/);
 
 		if ($ft eq 'jobid') {
-			gen "\tif (src->$usuc) edg_wlc_JobIdParse(src->$usuc,&dest->$_);\n";
+			gen "\tif (src->$usuc) glite_lbu_JobIdParse(src->$usuc,&dest->$_);\n";
 		} elsif ($ft eq 'strlist') {
 			gen "\tfor (i=0; i<src->__size$usuc; i++) soap_unlink(soap,src->$usuc\[i]);\n";
 			gen "\tsoap_unlink(soap,src->$usuc);\n";
@@ -423,7 +423,7 @@ int edg_wll_SoapToQueryVal(
 	assert(in); assert(out);
 	if ( in->c ) {
 		if ( attr == EDG_WLL_QUERY_ATTR_JOBID || attr == EDG_WLL_QUERY_ATTR_PARENT ) {
-			if ( edg_wlc_JobIdParse(in->c, &(out->j)) ) return -1;
+			if ( glite_lbu_JobIdParse(in->c, &(out->j)) ) return -1;
 		} else {
 			if ( !(out->c = strdup(in->c)) ) return -1;
 		}
@@ -456,7 +456,7 @@ int edg_wll_QueryValToSoap(
 		break;
 	case EDG_WLL_QUERY_ATTR_JOBID:
 	case EDG_WLL_QUERY_ATTR_PARENT: {
-			char *s = edg_wlc_JobIdUnparse(in->j);
+			char *s = glite_lbu_JobIdUnparse(in->j);
 			out->c = soap_strdup(soap, s);
 			free(s);
 			if ( !out->c ) return SOAP_FAULT;
@@ -695,7 +695,7 @@ ret:
 
 int edg_wll_JobsQueryResToSoap(
 	struct soap           *soap,
-	const edg_wlc_JobId   *jobs,
+	const glite_lbu_JobId   *jobs,
 	const edg_wll_JobStat *states,
 	struct _lbe__QueryJobsResponse *out)
 {
@@ -715,7 +715,7 @@ int edg_wll_JobsQueryResToSoap(
 		out->__sizejobs = i;
 		for ( i = 0; jobs[i]; i++ ) {
 			char	   *s;
-			if ( !(s = edg_wlc_JobIdUnparse(jobs[i])) ) return SOAP_FAULT;
+			if ( !(s = glite_lbu_JobIdUnparse(jobs[i])) ) return SOAP_FAULT;
 			if ( !(out->jobs[i] = soap_strdup(soap, s)) ) return SOAP_FAULT;
 			free(s);
 		}
@@ -1069,7 +1069,7 @@ static int edg_wll_SoapToEvent(
 				if ($ft eq 'jobid') {
 
 					gen "\t\t\tif (in->$name->$usuc)\n";
-					gen "\t\t\t\tedg_wlc_JobIdParse(in->$name->$usuc,&out->$act.$fn);\n";
+					gen "\t\t\t\tglite_lbu_JobIdParse(in->$name->$usuc,&out->$act.$fn);\n";
 				} elsif ($ft eq 'timeval') {
 					gen "\t\t\tout->$act.$fn.tv_sec = in->$name->$usuc->tvSec;\n";
 					gen "\t\t\tout->$act.$fn.tv_usec = in->$name->$usuc->tvUsec;\n";

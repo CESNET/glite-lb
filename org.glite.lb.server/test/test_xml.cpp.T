@@ -116,7 +116,7 @@ void XMLParseTest::protoEventTest()
 	e1->any.host = strdup("some.host");
 	e1->any.level = 7;
 	e1->any.priority = 0;
-	edg_wlc_JobIdParse("https://some.host:1234/x67qr549qc",&e1->any.jobId);
+	glite_lbu_JobIdParse("https://some.host:1234/x67qr549qc",&e1->any.jobId);
 	e1->any.seqcode = EDG_WLL_SEQ_BIGHELPER_INITIAL;
 	e1->any.user = strdup("/O=Grid/CN=This User");
 	e1->any.source = EDG_WLL_SOURCE_USER_INTERFACE;
@@ -151,7 +151,7 @@ void XMLParseTest::protoStatusTest()
 	edg_wll_InitStatus(&s1);
 
 	s1.state = EDG_WLL_JOB_SUBMITTED;
-	edg_wlc_JobIdParse("https://some.host:1234/x67qr549qc",&s1.jobId);
+	glite_lbu_JobIdParse("https://some.host:1234/x67qr549qc",&s1.jobId);
 	s1.owner = strdup("/O=Grid/CN=This User");
 	s1.jobtype = EDG_WLL_STAT_SIMPLE;
 	s1.seed = strdup("4321");

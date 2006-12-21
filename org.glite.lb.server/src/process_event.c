@@ -773,8 +773,8 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			}
 			if (USABLE_DATA(res, strict)) {
 				rep(js->pub.jdl, e->regJob.jdl);
-				edg_wlc_JobIdFree(js->pub.parent_job);
-				edg_wlc_JobIdDup(e->regJob.parent,
+				glite_lbu_JobIdFree(js->pub.parent_job);
+				glite_lbu_JobIdDup(e->regJob.parent,
 							&js->pub.parent_job);
 				rep(js->pub.network_server, e->regJob.ns);
 				js->pub.children_num = e->regJob.nsubjobs;

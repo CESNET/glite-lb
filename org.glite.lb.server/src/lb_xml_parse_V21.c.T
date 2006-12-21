@@ -6,12 +6,12 @@
 #include <ctype.h>
 #include <expat.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 
+#include "glite/lb-utils/escape.h"
+#include "glite/lb-utils/trio.h"
 #include "glite/lb/consumer.h"
-#include "glite/lb/escape.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
 #include "glite/lb/xml_conversions.h"
 
 #include "glite/lb/purge.h"
@@ -937,7 +937,7 @@ int edg_wll_QueryEventsToXMLV21(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *e
         return 0;
 }
 
-int edg_wll_QueryJobsToXMLV21(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wll_JobStat *statesIn, char **message) 
+int edg_wll_QueryJobsToXMLV21(edg_wll_Context ctx, glite_lbu_JobId *jobsIn, edg_wll_JobStat *statesIn, char **message) 
 {
         char *pomA, *pomB, *pomC;
         char **list = NULL;
@@ -954,7 +954,7 @@ int edg_wll_QueryJobsToXMLV21(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wl
 		
 		if (jobsIn) {
 			trio_asprintf(&pomA,"%s\t\t<jobId>%|Xs</jobId>\r\n",
-        	                pomB, pomC=edg_wlc_JobIdUnparse(jobsIn[i]));
+        	                pomB, pomC=glite_lbu_JobIdUnparse(jobsIn[i]));
 			free(pomC);
 			free(pomB);
 			pomB = pomA;
@@ -1029,7 +1029,7 @@ int edg_wll_QueryJobsToXMLV21(edg_wll_Context ctx, edg_wlc_JobId *jobsIn, edg_wl
 }
 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserJobsToXMLV21(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, char **message)
+int edg_wll_UserJobsToXMLV21(edg_wll_Context ctx UNUSED_VAR, glite_lbu_JobId *jobsOut, char **message)
 {
         char *pomA, *pomB;
         char **list = NULL;
@@ -1039,7 +1039,7 @@ int edg_wll_UserJobsToXMLV21(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobs
 
         while (jobsOut[i]) {
 		len = trio_asprintf(&pomA,"      <jobId>%|Xs</jobId>\r\n",
-			pomB=edg_wlc_JobIdUnparse(jobsOut[i]));
+			pomB=glite_lbu_JobIdUnparse(jobsOut[i]));
 
                 free(pomB);
 
@@ -1159,7 +1159,7 @@ int edg_wll_JobStatusToXMLV21(edg_wll_Context ctx, edg_wll_JobStat stat, char **
 	selectType $status '_common_';
         for (getFieldsOrdered $status) {
                 my $f = selectField $status $_;
-		next if defined($f->{special}) && $f->{special} eq 'XMLstructured';
+		next if defined($f->{special}) && $f->{special}->{XMLstructured};
                 my $ft = $f->{type};
 		my $n = $f->{null};
                 gen "edg_wll_add_$ft\_to_XMLBody(&pomB, stat.$_, \"$_\", $n);\n";

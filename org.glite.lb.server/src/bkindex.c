@@ -8,11 +8,13 @@
 #include <sysexits.h>
 #include <assert.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/lb-utils/trio.h"
+#include "glite/lb-utils/db.h"
+#include "glite/lb-utils/strmd5.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
+#include "db_supp.h"
 #include "index.h"
-#include "lbs_db.h"
 #include "jobstat.h"
 
 static struct option opts[] = {
@@ -26,6 +28,7 @@ static struct option opts[] = {
 
 static void usage(const char *);
 static void do_exit(edg_wll_Context,int);
+static void do_exit_db(edg_wll_Context,int);
 static char *col_list(const edg_wll_QueryRec *);
 static char *db_col_type(const edg_wll_QueryRec *);
 
@@ -51,6 +54,7 @@ int main(int argc,char **argv)
 	int	i,j,k;
 	int	nnew,nold,nadd,ndrop;
 	char	*stmt;
+	int caps;
 
 	for (i=0; i<CI_MAX; i++) add_indices[i] = drop_indices[i] = -1;
 	memset(new_columns,0,sizeof new_columns);
@@ -75,8 +79,14 @@ int main(int argc,char **argv)
 	}
 
 	edg_wll_InitContext(&ctx);
-	if (edg_wll_Open(ctx,dbstring)) do_exit(ctx,EX_UNAVAILABLE);
-	if (edg_wll_DBCheckVersion(ctx,dbstring)) do_exit(ctx,EX_SOFTWARE);
+	glite_lbu_InitDBContext(&ctx->dbctx);
+	if (!dbstring) dbstring = DEFAULTCS;
+	if (glite_lbu_DBConnect(ctx->dbctx, dbstring) != 0) {
+		edg_wll_SetErrorDB(ctx);
+		glite_lbu_FreeDBContext(ctx->dbctx);
+		do_exit(ctx, EX_SOFTWARE);
+	}
+	if ((caps = glite_lbu_DBQueryCaps(ctx->dbctx)) == -1) do_exit_db(ctx,EX_SOFTWARE);
 	if (edg_wll_QueryJobIndices(ctx,&old_indices,&index_names)) do_exit(ctx,EX_SOFTWARE);
 
 	if (dump) {
@@ -89,7 +99,7 @@ int main(int argc,char **argv)
 		for (i=0; index_names && index_names[i]; i++) {
 			asprintf(&stmt,"alter table states drop index `%s`",index_names[i]);
 			if (verbose) putchar('.');
-			if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+			if (glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL) < 0) do_exit_db(ctx,EX_SOFTWARE);
 			free(stmt);
 		}
 		if (verbose) puts(" done");
@@ -98,7 +108,7 @@ int main(int argc,char **argv)
 			char *cname = edg_wll_QueryRecToColumn(old_indices[i]);
 			asprintf(&stmt,"alter table states drop column `%s`",cname);
 			if (verbose) putchar('.');
-			if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+			if (glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL) < 0) do_exit_db(ctx,EX_SOFTWARE);
 			free(stmt);
 			free(cname);
 		}
@@ -169,7 +179,7 @@ int main(int argc,char **argv)
 		}
 		if (really) {
 			asprintf(&stmt,"alter table states drop index `%s`",index_names[drop_indices[i]]);
-			if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+			if (glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL) < 0) do_exit_db(ctx,EX_SOFTWARE);
 			free(stmt);
 		}
 		if (verbose) puts(really ? "done" : "");
@@ -183,7 +193,7 @@ int main(int argc,char **argv)
 			if (verbose) printf("\t%s\n",cname); 
 			if (really) {
 				asprintf(&stmt,"alter table states drop column `%s`",cname);
-				if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+				if (glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL) < 0) do_exit_db(ctx,EX_SOFTWARE);
 				free(stmt);
 			}
 			free(cname);
@@ -201,7 +211,7 @@ int main(int argc,char **argv)
 			if (really) {
 				char	*ctype = db_col_type(new_columns[i]);
 				asprintf(&stmt,"alter table states add `%s` %s",cname,ctype);
-				if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+				if (glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL) < 0) do_exit_db(ctx,EX_SOFTWARE);
 				free(stmt);
 			}
 			memcpy(&added_icols[nadd_icols].qrec, new_columns[i], sizeof(edg_wll_QueryRec));
@@ -234,11 +244,14 @@ int main(int argc,char **argv)
 		if (really) {
 			asprintf(&stmt,"create index `%s` on states(%s)",n,l);
 			free(n); free(l);
-			if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+			if (glite_lbu_ExecSQL(ctx->dbctx,stmt,NULL) < 0) do_exit_db(ctx,EX_SOFTWARE);
 			free(stmt);
 		}
 		if (verbose) puts(really ? "done" : "");
 	}
+
+	glite_lbu_DBClose(ctx->dbctx);
+	glite_lbu_FreeDBContext(ctx->dbctx);
 
 	return 0;
 }
@@ -290,6 +303,14 @@ static void do_exit(edg_wll_Context ctx,int code)
 	exit(code);
 }
 
+static void do_exit_db(edg_wll_Context ctx,int code)
+{
+	edg_wll_SetErrorDB(ctx);
+	glite_lbu_DBClose(ctx->dbctx);
+	glite_lbu_FreeDBContext(ctx->dbctx);
+	do_exit(ctx,code);
+}
+
 static void usage(const char *me)
 {
 	fprintf(stderr,"usage: %s <options> [file]\n"
@@ -310,10 +331,10 @@ static void usage(const char *me)
 
 edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_cols) {
 
-	edg_wll_Stmt sh, sh2;
+	glite_lbu_Statement sh, sh2;
 	int njobs, ret = -1;
 	intJobStat *stat;
-	edg_wlc_JobId jobid;
+	glite_lbu_JobId jobid;
 	char *res[5];
 	char *rest;
 	char *icvalues, *stmt;
@@ -322,46 +343,49 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 	edg_wll_ResetError(ctx);
 	if (!job_index_cols) return 0;
 
-	if ((njobs = edg_wll_ExecStmt(ctx, "select s.jobid,s.int_status,s.seq,s.version,j.dg_jobid"
+	if ((njobs = glite_lbu_ExecSQL(ctx->dbctx, "select s.jobid,s.int_status,s.seq,s.version,j.dg_jobid"
 				       " from states s, jobs j where s.jobid=j.jobid",&sh)) < 0) {
-		edg_wll_FreeStmt(&sh);
-		return edg_wll_Error(ctx, NULL, NULL);
+		glite_lbu_FreeStmt(&sh);
+		return edg_wll_SetErrorDB(ctx);
 	}
-	while ((ret=edg_wll_FetchRow(sh,res)) >0) {
+	while ((ret=glite_lbu_FetchRow(sh,5,NULL,res)) >0) {
 		if (strcmp(res[3], INTSTAT_VERSION)) {
 			stat = NULL;
-			if (!edg_wlc_JobIdParse(res[4], &jobid)) {
+			if (!glite_lbu_JobIdParse(res[4], &jobid)) {
 				if ((stat = malloc(sizeof(intJobStat))) != NULL) {
 					if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1)) {
 						free(stat);
 						stat = NULL;
 					}
 				}
-				edg_wlc_JobIdFree(jobid);
+				glite_lbu_JobIdFree(jobid);
 			}
 		} else {
 			stat = dec_intJobStat(res[1], &rest);
 			if (rest == NULL) stat = NULL;
 		}
 		if (stat == NULL) {
-			edg_wll_FreeStmt(&sh);
+			glite_lbu_FreeStmt(&sh);
 			return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE,
 				"cannot decode int_status from states DB table");
 		}
 
 		edg_wll_IColumnsSQLPart(ctx, job_index_cols, stat, 0, NULL, &icvalues);
 		trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
-		ret = edg_wll_ExecStmt(ctx, stmt, &sh2);
-		edg_wll_FreeStmt(&sh2);
+		ret = glite_lbu_ExecSQL(ctx->dbctx, stmt, &sh2);
+#warning FIXME: not needed
+		glite_lbu_FreeStmt(&sh2);
 
 		for (i = 0; i < 5; i++) free(res[i]);
 		destroy_intJobStat(stat); free(stat);
 		free(stmt); free(icvalues);
 
-		if (ret < 0) return edg_wll_Error(ctx, NULL, NULL);
+		if (ret < 0) {
+			glite_lbu_FreeStmt(&sh);
+			return edg_wll_SetErrorDB(ctx);
+		}
 		
 	}
-	edg_wll_FreeStmt(&sh);
-	return edg_wll_Error(ctx, NULL, NULL);
+	glite_lbu_FreeStmt(&sh);
+	return edg_wll_SetErrorDB(ctx);
 }
-

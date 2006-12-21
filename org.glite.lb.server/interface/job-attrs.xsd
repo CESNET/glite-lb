@@ -5,12 +5,15 @@
 
 <xs:schema 
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
-	xmlns:a="http://egee.cesnet.cz/en/Schema/LB/Attributes"
-	targetNamespace="http://egee.cesnet.cz/en/Schema/LB/Attributes"
+	xmlns:a="http://egee.cesnet.cz/en/Schema/LB/Attributes-Statistics"
+	targetNamespace="http://egee.cesnet.cz/en/Schema/LB/Attributes-Statistics"
 	version="1.0"
 	elementFormDefault="unqualified"
 	attributeFormDefault="unqualified"
 >
+
+<!-- XXX: from HEAD
+
 	<xs:simpleType name="statusType">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="SUBMITTED" />
@@ -63,10 +66,11 @@
 		</xs:sequence>
 	</xs:complexType>
 
+-->
 
+	<xs:include location="job-attrs-common.xsd"/>
 
 	<xs:element name="jobId" type="xs:string" />
-
 	<xs:element name="user" type="xs:string">
 		<xs:annotation> <xs:documentation>Job owner according to LB</xs:documentation> </xs:annotation>
 	</xs:element>
@@ -98,13 +102,13 @@
 	<xs:element name="finalStatus" type="a:statusType" />
 	<xs:element name="finalStatusDate" type="xs:dateTime" />
 	<xs:element name="finalStatusReason" type="xs:string" />
-	<xs:element name="LRMSDoneStatus" type="a:doneType" />
+	<xs:element name="LRMSDoneStatus" type="a:doneCodeType" />
 	<xs:element name="LRMSStatusReason" type="xs:string" />
 
 	<xs:element name="retryCount" type="xs:int" />
 	<xs:element name="additionalReason" type="xs:string" />
 
-	<xs:element name="jobType" type="a:jobTypeType" />
+	<xs:element name="jobType" type="a:jobtypeType" />
 	<xs:element name="nsubjobs" type="xs:int" />
 	<xs:element name="subjobs" type="a:jobIdSequenceType" />
 

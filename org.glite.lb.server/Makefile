@@ -48,6 +48,11 @@ ifdef LB_BUF
 	LB_BUF_FLAGS:=-DLB_BUF
 endif
 
+ifdef DEBUG_INDEX
+	LB_DEBUG_INDEX_FLAGS:=-DDEBUG_INDEX
+	BKSERVER_BASE_OBJS:=index_debug.o
+endif
+
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS 
 	NSMAP=LoggingAndBookkeeping.nsmap
@@ -67,7 +72,7 @@ else
 endif
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
-SUFFIXES = .T 
+SUFFIXES = .T .xsd
 
 DEBUG:=-g -O0 -Wall
 
@@ -89,16 +94,18 @@ CFLAGS:= \
 	-I${globus_prefix}/include/${nothrflavour} \
 	$(GRIDSITE_CFLAGS) \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} ${LB_DAG_FLAGS} \
-	${LB_BUF_FLAGS}
+	${LB_BUF_FLAGS} ${LB_DEBUG_INDEX_FLAGS}
 
 ifdef LB_PROF
 	SRVBONES_LIB:= ${stagedir}/lib/libglite_lb_server_bones.la
 	LB_COMMON_LIB:=${stagedir}/lib/libglite_lb_common_${nothrflavour}.la
+	LB_UTILS_DB_LIB:=${stagedir}/lib/libglite_lbu_db.la
 	CFLAGS:=${CFLAGS} -pg -g
 	LDFLAGS:=${LDFLAGS} -pg
 else
 	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
 	LB_COMMON_LIB:=-lglite_lb_common_${nothrflavour}
+	LB_UTILS_DB_LIB:=-lglite_lbu_db
 endif
 
 ifdef LBS_DB_PROFILE
@@ -166,19 +173,20 @@ EXT_LIBS:=  \
 	${classadslib} \
 	${VOMS_LIBS}
 
-COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
+COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} \
+	-lglite_security_gss_${nothrflavour} -lglite_lbu_trio -lglite_lbu_jobid
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
 	${classadslib} -lstdc++ ${expatlib} -lexpat\
 
-PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo lbs_db_supp.lo
+PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo
 
-BKSERVER_BASE_OBJS:= \
+BKSERVER_BASE_OBJS:= ${BKSERVER_BASE_OBJS}\
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o \
-	seqcode.o write2rgma.o lbs_db.o lbs_db_supp.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	seqcode.o write2rgma.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
-	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
+	lock.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o stats.o 
+	notification.o il_notification.o notif_match.o stats.o db_supp.o
 
 dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
 GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}
@@ -192,6 +200,7 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
 		${LB_COMMON_LIB} \
+		${LB_UTILS_DB_LIB} \
 		${GSOAP_LIB} \
 		${EXT_LIBS}
 else
@@ -200,16 +209,23 @@ else
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
 		${LB_COMMON_LIB} \
+		${LB_UTILS_DB_LIB} \
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS}
 endif
 
-INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o lbs_db_supp.o openserver.o \
-	jobstat.o process_event.o query.o lock.o get_events.o write2rgma.o index_lex.o \
-	lb_authz.o store.o bkindex.o stats.o\
-	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o
+# for some reason added on HEAD
+#<<<<<<< Makefile
+#	lb_authz.o store.o bkindex.o stats.o\
+#	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o
+#=======
+#
 
-INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} 
+INDEX_OBJS:= index.o index_parse.o jobstat_supp.o \
+	jobstat.o process_event.o query.o lock.o get_events.o write2rgma.o index_lex.o \
+	lb_authz.o store.o bkindex.o stats.o db_supp.o
+
+INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
@@ -223,13 +239,13 @@ WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
 #                 ${EXT_LIBS}
 # 
 
-HDRS=index.h lb_authz.h lbs_db.h store.h
+HDRS=index.h lb_authz.h store.h
 
 LIB_OBJS_BK:= \
 	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o \
-	seqcode.o lbs_db.o lbs_db_supp.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	seqcode.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
-	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
+	lock.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o
 
@@ -251,7 +267,8 @@ else
 endif
 
 compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c
-
+compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c \
+	job-attrs-common.xsd job-attrs-native.xsd
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -292,8 +309,13 @@ test_xml: test_xml.cpp
 test.query: test_query_events
 	./test_query_events
 
-#query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
-query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;'`
+# XXX: very strange
+#<<<<<<< Makefile
+##query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
+#query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;'`
+#=======
+#query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/request\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
+#>>>>>>> 1.90.2.5
 
 test_query_events: test_query_events.o
 	${LINKXX} -o $@ test_query_events.o ${query_events_objs} \
@@ -331,6 +353,9 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 jp_job_attrs.h: job-attrs.xsd jp_job_attrs.xsl 
 	${XSLTPROC} ../src/jp_job_attrs.xsl $< >$@
 
+jp_job_attrs_native.h: job-attrs-native.xsd jp_job_attrs_native.xsl 
+	${XSLTPROC} ../src/jp_job_attrs_native.xsl $< >$@
+
 doc:
 
 stage: compile
@@ -365,6 +390,8 @@ install:
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
+	${INSTALL} -m 644 job-attrs-native.xsd ${PREFIX}/interface
+	${INSTALL} -m 644 attrs-common.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix}
 
@@ -384,6 +411,11 @@ install:
 clean:
 
 %.c: %.c.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
+
+%.xsd: %.xsd.T
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
@@ -410,7 +442,7 @@ test_query_events.o: %.o: %.cpp
 %.lo: %.c
 	${COMPILE} -o $@ -c $<
 
-lb_plugin.lo: lb_plugin.c jp_job_attrs.h
+lb_plugin.lo: lb_plugin.c jp_job_attrs.h jp_job_attrs_native.h
 	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<
 
 soap_version.h:

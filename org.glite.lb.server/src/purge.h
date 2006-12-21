@@ -15,7 +15,7 @@ int edg_wll_PurgeServer(
  */
 int edg_wll_PurgeServerProxy(
 	edg_wll_Context ctx,
-	edg_wlc_JobId job
+	glite_lbu_JobId job
 );
 
 #define		FILE_TYPE_ANY		""

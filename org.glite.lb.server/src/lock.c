@@ -5,15 +5,15 @@
 #include <sys/sem.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/context-int.h"
 #include "lock.h"
 
 extern int debug;
 
-int edg_wll_JobSemaphore(const edg_wll_Context ctx, const edg_wlc_JobId job)
+int edg_wll_JobSemaphore(const edg_wll_Context ctx, const glite_lbu_JobId job)
 {
-	char	*un = edg_wlc_JobIdGetUnique(job);
+	char	*un = glite_lbu_JobIdGetUnique(job);
 	int	n,i;
 	static const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
@@ -31,7 +31,7 @@ int edg_wll_JobSemaphore(const edg_wll_Context ctx, const edg_wlc_JobId job)
 	return(n % ctx->semaphores);
 }
 
-int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const edg_wlc_JobId job,int lock)
+int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const glite_lbu_JobId job,int lock)
 {
 	struct sembuf	s;
 	int 		n;

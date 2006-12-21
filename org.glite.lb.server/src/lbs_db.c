@@ -15,7 +15,7 @@
 
 #include "lbs_db.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 #define DEFAULTCS	"lbserver/@localhost:lbserver20"
 

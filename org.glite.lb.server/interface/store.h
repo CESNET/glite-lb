@@ -28,7 +28,7 @@ void edg_wll_StoreAnonymous(
 
 edg_wll_ErrorCode edg_wll_StepIntState(
 	edg_wll_Context,	/* INOUT */
-	edg_wlc_JobId,		/* IN */
+	glite_lbu_JobId,		/* IN */
 	edg_wll_Event *,	/* IN */
 	int,			/* IN */
 	edg_wll_JobStat *

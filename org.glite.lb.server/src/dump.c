@@ -7,8 +7,9 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include "glite/lb/trio.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/db.h"
+#include "glite/lb-utils/trio.h"
+#include "glite/lb-utils/cjobid.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
@@ -17,7 +18,7 @@
 #include "glite/lb/purge.h"
 #include "glite/lb/dump.h"
 
-#include "lbs_db.h"
+#include "db_supp.h"
 #include "query.h"
 #include "get_events.h"
 #include "server_state.h"
@@ -33,7 +34,7 @@ int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wl
 	char	*from_s, *to_s, *stmt, *time_s, *ptr;
 	char	*tmpfname;
 	time_t	start,end;
-	edg_wll_Stmt	q = NULL;
+	glite_lbu_Statement	q = NULL;
 	char		*res[10];
 	int	event;
 	edg_wll_Event	e;
@@ -56,8 +57,8 @@ int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wl
 		return edg_wll_Error(ctx,NULL,NULL);
 	}
 
-	from_s = strdup(edg_wll_TimeToDB(from));
-	to_s = strdup(edg_wll_TimeToDB(to));
+	glite_lbu_TimeToDB(from, &from_s);
+	glite_lbu_TimeToDB(to, &to_s);
 
 	trio_asprintf(&stmt,
 			"select event,dg_jobid,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived "
@@ -70,9 +71,12 @@ int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wl
 			ctx->srvName,ctx->srvPort,
 			from_s,to_s);
 
-	if (edg_wll_ExecStmt(ctx,stmt,&q) < 0) goto clean;
+	if (glite_lbu_ExecSQL(ctx->dbctx,stmt,&q) < 0) {
+		edg_wll_SetErrorDB(ctx);
+		goto clean;
+	}
 
-	while ((ret = edg_wll_FetchRow(q,res)) > 0) {
+	while ((ret = glite_lbu_FetchRow(q,10,NULL,res)) > 0) {
 		assert(ret == sizofa(res));
 		event = atoi(res[0]); free(res[0]); res[0] = NULL;
 
@@ -129,6 +133,7 @@ int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wl
 		}
 		edg_wll_FreeEvent(&e); memset(&e,0,sizeof e);
 	}
+	if (ret < 0) edg_wll_SetErrorDB(ctx);
 
 	time(&end);
 	time_s = time_to_string(start, &ptr);
@@ -147,7 +152,7 @@ int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wl
 
 clean:
 	edg_wll_FreeEvent(&e);
-	edg_wll_FreeStmt(&q);
+	glite_lbu_FreeStmt(&q);
 
 	free(stmt);
 	free(from_s);
@@ -157,7 +162,7 @@ clean:
 
 static int handle_specials(edg_wll_Context ctx,time_t *t)
 {
-	char	*time_s;
+	char	*time_s = NULL;
 	int	ret;
 
 	edg_wll_ResetError(ctx);
@@ -176,7 +181,8 @@ static int handle_specials(edg_wll_Context ctx,time_t *t)
 				case ENOENT: *t = 0; 
 					     edg_wll_ResetError(ctx);
 					     break;
-				case 0: *t = edg_wll_DBToTime(time_s); 
+				case 0: *t = glite_lbu_DBToTime(time_s); 
+printf("time_s: %s\n", time_s);
 					assert(*t >= 0);
 					break;
 				default: break;
@@ -191,7 +197,7 @@ static int handle_specials(edg_wll_Context ctx,time_t *t)
 static char *time_to_string(time_t t, char **ptr) {
 	char *s;
 
-	s = edg_wll_TimeToDB(t);
+	glite_lbu_TimeToDB(t, &s);
 	s[strlen(s) - 1] = '\0';
 	*ptr = s;
 

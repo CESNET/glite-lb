@@ -7,14 +7,15 @@
 #include <time.h>
 #include <assert.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/lb-utils/strmd5.h"
+#include "glite/lb-utils/db.h"
 
 #include "glite/lb/consumer.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
-
+#include "db_supp.h"
 #include "get_events.h"
 #include "index.h"
 #include "query.h"
@@ -53,7 +54,7 @@ int edg_wll_QueryEventsServer(
 				   *q = NULL,
 				   *res[11];
 	edg_wll_Event  *out = NULL;
-	edg_wll_Stmt	sh = NULL;
+	glite_lbu_Statement	sh = NULL;
 	int				i = 0,
 					ret = 0,
 					offset = 0, limit = 0,
@@ -124,12 +125,13 @@ int edg_wll_QueryEventsServer(
 			q = qbase;
 
 //		printf("\nquery: %s\n\n", q);
-		ret = edg_wll_ExecStmt(ctx, q, &sh);
+		ret = glite_lbu_ExecSQL(ctx->dbctx, q, &sh);
 		if ( limit )
 			free(q);
 		if ( ret < 0 )
 		{
-			edg_wll_FreeStmt(&sh);
+			edg_wll_SetErrorDB(ctx);
+			glite_lbu_FreeStmt(&sh);
 			goto cleanup;
 		}
 		if ( ret == 0 )
@@ -141,7 +143,7 @@ int edg_wll_QueryEventsServer(
 			limit_loop = 0;
 
 		offset += ret;
-		while ( (ret = edg_wll_FetchRow(sh, res)) == sizofa(res) )
+		while ( (ret = glite_lbu_FetchRow(sh, sizofa(res), NULL, res)) == sizofa(res) )
 		{
 			int	n = atoi(res[0]);
 			free(res[0]);
@@ -150,7 +152,7 @@ int edg_wll_QueryEventsServer(
 			{
 				free(res[1]);
 				memset(out+i, 0, sizeof(*out));
-				edg_wll_FreeStmt(&sh);
+				glite_lbu_FreeStmt(&sh);
 				goto cleanup;
 			}
 
@@ -163,10 +165,14 @@ int edg_wll_QueryEventsServer(
 
 			if ( !noAuth )
 			{
-				if (!ctx->peerName || strcmp(res[1],strmd5(ctx->peerName,NULL))) {
+				char *s;
+
+				s = str2md5(ctx->peerName);
+				if (!ctx->peerName || strcmp(res[1],s)) {
 					edg_wll_Acl	acl = NULL;
 					char		*jobid = NULL;
 
+					free(s);
 					ret = edg_wll_GetACL(ctx, out[i].any.jobId, &acl);
 					free(jobid);
 					if (ret || acl == NULL) {
@@ -184,7 +190,7 @@ int edg_wll_QueryEventsServer(
 						edg_wll_ResetError(ctx); /* XXX: should be reported somewhere at least in debug mode */
 						goto fetch_cycle_cleanup;
 					}
-				}
+				} else free(s);
 			}
 			
 			if ( (ctx->p_query_results != EDG_WLL_QUERYRES_ALL) && limit && (i+1 > limit) )
@@ -207,8 +213,9 @@ fetch_cycle_cleanup:
 			memset(out+i, 0, sizeof(*out));
 			free(res[1]);
 		}
+		if (ret < 0) edg_wll_SetErrorDB(ctx);
 limit_cycle_cleanup:
-		edg_wll_FreeStmt(&sh);
+		glite_lbu_FreeStmt(&sh);
 	} while ( limit_loop );
 
 	if ( i == 0 && eperm )
@@ -240,7 +247,7 @@ int edg_wll_QueryJobsServer(
 		edg_wll_Context ctx,
 		const edg_wll_QueryRec **conditions,
 		int	flags,
-		edg_wlc_JobId **jobs,
+		glite_lbu_JobId **jobs,
 		edg_wll_JobStat **states)
 {
 	char			   *job_where = NULL,
@@ -249,9 +256,9 @@ int edg_wll_QueryJobsServer(
 					   *q = NULL,
 					   *qbase = NULL,
 					   *res[3];
-	edg_wlc_JobId	   *jobs_out = NULL;
+	glite_lbu_JobId	   *jobs_out = NULL;
 	edg_wll_JobStat	   *states_out = NULL;
-	edg_wll_Stmt		sh;
+	glite_lbu_Statement sh;
 	int					i = 0,
 						ret = 0,
 						eperm = 0,
@@ -313,12 +320,13 @@ int edg_wll_QueryJobsServer(
 			q = qbase;
 
 //		printf("\nquery: %s\n\n", q);
-		ret = edg_wll_ExecStmt(ctx, q, &sh);
+		ret = glite_lbu_ExecSQL(ctx->dbctx, q, &sh);
 		if ( limit )
 			free(q);
 		if ( ret < 0 )
 		{
-			edg_wll_FreeStmt(&sh);
+			edg_wll_SetErrorDB(ctx);
+			glite_lbu_FreeStmt(&sh);
 			goto cleanup;
 		}
 		if ( ret == 0 )
@@ -330,9 +338,9 @@ int edg_wll_QueryJobsServer(
 			limit_loop = 0;
 
 		offset += ret;
-		while ( (ret=edg_wll_FetchRow(sh,res)) > 0 )
+		while ( (ret=glite_lbu_FetchRow(sh,sizofa(res),NULL,res)) > 0 )
 		{
-			if ( (ret = edg_wlc_JobIdParse(res[0], jobs_out+i)) )
+			if ( (ret = glite_lbu_JobIdParse(res[0], jobs_out+i)) )
 			{	/* unlikely to happen, internal inconsistency */
 				char	buf[200];
 				snprintf(buf,sizeof buf,"JobIdParse(%s)",res[0]);
@@ -344,20 +352,20 @@ int edg_wll_QueryJobsServer(
 
 			if ( check_strict_jobid(ctx, jobs_out[i]) )
 			{
-				edg_wlc_JobIdFree(jobs_out[i]);
+				glite_lbu_JobIdFree(jobs_out[i]);
 				goto fetch_cycle_cleanup;
 			}
 
 			if ( edg_wll_JobStatus(ctx, jobs_out[i], flags, &states_out[i]) )
 			{
-				edg_wlc_JobIdFree(jobs_out[i]);
+				glite_lbu_JobIdFree(jobs_out[i]);
 				if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
 				goto fetch_cycle_cleanup;
 			}
 
 			if ( !match_status(ctx, states_out+i, conditions) )
 			{
-				edg_wlc_JobIdFree(jobs_out[i]);
+				glite_lbu_JobIdFree(jobs_out[i]);
 				edg_wll_FreeStatus(states_out+i);
 				edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
 				goto fetch_cycle_cleanup;
@@ -367,7 +375,7 @@ int edg_wll_QueryJobsServer(
 			if ( !ctx->noAuth && (!ctx->peerName || strcmp(res[1], strmd5(ctx->peerName, NULL))) )
 			{
 				eperm = 1;
-				edg_wlc_JobIdFree(jobs_out[i]);
+				glite_lbu_JobIdFree(jobs_out[i]);
 				edg_wll_FreeStatus(states_out+i);
 				goto fetch_cycle_cleanup;
 			}
@@ -388,7 +396,7 @@ int edg_wll_QueryJobsServer(
 			}
 
 			i++;
-			jobs_out	= (edg_wlc_JobId *) realloc(jobs_out, (i+1) * sizeof(*jobs_out));
+			jobs_out	= (glite_lbu_JobId *) realloc(jobs_out, (i+1) * sizeof(*jobs_out));
 			states_out	= (edg_wll_JobStat *) realloc(states_out, (i+1) * sizeof(*states_out));
 
 fetch_cycle_cleanup:
@@ -396,8 +404,9 @@ fetch_cycle_cleanup:
 			memset(states_out+i, 0, sizeof(*states_out));
 			jobs_out[i]	= NULL;
 		}
+		if (ret < 0) edg_wll_SetErrorDB(ctx);
 limit_cycle_cleanup:
-		edg_wll_FreeStmt(&sh);
+		glite_lbu_FreeStmt(&sh);
 	} while ( limit_loop );
 
 	if ( eperm && !*jobs_out )
@@ -427,7 +436,7 @@ cleanup:
 	if (jobs_out)
 	{
 		for ( i = 0; jobs_out[i]; i++ )
-			edg_wlc_JobIdFree(jobs_out[i]);
+			glite_lbu_JobIdFree(jobs_out[i]);
 		free(jobs_out);
 	}
 
@@ -603,13 +612,14 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 		for ( n = 0; ec[m][n].attr; n++ ) switch ( ec[m][n].attr )
 		{
 		case EDG_WLL_QUERY_ATTR_TIME:
-			dbt = edg_wll_TimeToDB(ec[m][n].value.t.tv_sec);
+			glite_lbu_TimeToDB(ec[m][n].value.t.tv_sec, &dbt);
 			if ( conds )
 			{
 				if ( ec[m][n].op == EDG_WLL_QUERY_OP_WITHIN )
 				{
 					trio_asprintf(&aux, "%s", dbt);
-					dbt = edg_wll_TimeToDB(ec[m][n].value2.t.tv_sec);
+					free(dbt);
+					glite_lbu_TimeToDB(ec[m][n].value2.t.tv_sec, &dbt);
 					trio_asprintf(&out, "%s OR (e.time_stamp >= %s AND e.time_stamp <= %s)", conds, aux, dbt);
 					free(aux);
 				}
@@ -625,7 +635,8 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 			else if ( ec[m][n].op == EDG_WLL_QUERY_OP_WITHIN )
 			{
 				trio_asprintf(&aux, "%s", dbt);
-				dbt = edg_wll_TimeToDB(ec[m][n].value2.t.tv_sec);
+				free(dbt);
+				glite_lbu_TimeToDB(ec[m][n].value2.t.tv_sec, &dbt);
 				trio_asprintf(&conds, "(e.time_stamp >= %s AND e.time_stamp <= %s)", aux, dbt);
 				free(aux);
 			}
@@ -635,6 +646,8 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 			}
 			else
 				trio_asprintf(&conds, "e.time_stamp %s %s", opToString(ec[m][n].op), dbt);
+
+			free(dbt);
 			break;
 
 		case EDG_WLL_QUERY_ATTR_LEVEL:
@@ -870,13 +883,13 @@ static char *jc_to_head_where(
 
 			*where_flags |= FL_SEL_STATUS;
 
-			dbt = edg_wll_TimeToDB(jc[m][n].value.t.tv_sec);
+			glite_lbu_TimeToDB(jc[m][n].value.t.tv_sec, &dbt);
 			if ( conds )
 			{
 				if ( jc[m][n].op == EDG_WLL_QUERY_OP_WITHIN )
 				{
 					trio_asprintf(&aux, "%s", dbt);
-					dbt = edg_wll_TimeToDB(jc[m][n].value2.t.tv_sec);
+					glite_lbu_TimeToDB(jc[m][n].value2.t.tv_sec, &dbt);
 					trio_asprintf(&tmps, "%s OR (s.%s >= %s AND s.%s <= %s)", conds, cname, aux, cname, dbt);
 					free(aux);
 				}
@@ -889,7 +902,7 @@ static char *jc_to_head_where(
 			else if ( jc[m][n].op == EDG_WLL_QUERY_OP_WITHIN )
 			{
 				trio_asprintf(&aux, "%s", dbt);
-				dbt = edg_wll_TimeToDB(jc[m][n].value2.t.tv_sec);
+				glite_lbu_TimeToDB(jc[m][n].value2.t.tv_sec, &dbt);
 				trio_asprintf(&conds, "(s.%s >= %s AND s.%s <= %s)", cname, aux, cname, dbt);
 				free(aux);
 			}
@@ -901,7 +914,7 @@ static char *jc_to_head_where(
 
 		case EDG_WLL_QUERY_ATTR_JOBID:
 			*where_flags |= FL_SEL_JOB;
-			aux = edg_wlc_JobIdGetUnique(jc[m][n].value.j);
+			aux = glite_lbu_JobIdGetUnique(jc[m][n].value.j);
 			if ( conds )
 			{
 				trio_asprintf(&tmps, "%s OR j.jobid%s'%|Ss'", conds, opToString(jc[m][n].op), aux);
@@ -918,7 +931,7 @@ static char *jc_to_head_where(
 				break;
 
 			*where_flags |= FL_SEL_STATUS;
-			aux = edg_wlc_JobIdGetUnique(jc[m][n].value.j);
+			aux = glite_lbu_JobIdGetUnique(jc[m][n].value.j);
 			if ( conds )
 			{
 				trio_asprintf(&tmps, "%s OR s.%s%s'%|Ss'", conds, cname, opToString(jc[m][n].op), aux);
@@ -1124,10 +1137,11 @@ int convert_event_head(edg_wll_Context ctx,char **f,edg_wll_Event *e)
 	edg_wll_ResetError(ctx);
 
 
-	if ((ret=edg_wlc_JobIdParse(f[0],&e->any.jobId))) {
-		edg_wll_SetError(ctx,-ret,"edg_wlc_JobIdParse()");
+	if ((ret=glite_lbu_JobIdParse(f[0],&e->any.jobId))) {
+		edg_wll_SetError(ctx,-ret,"glite_lbu_JobIdParse()");
 		goto err;
 	}
+	free(f[0]);
 
 	e->type = atoi(f[1]);
 	free(f[1]); f[1] = NULL;
@@ -1141,7 +1155,7 @@ int convert_event_head(edg_wll_Context ctx,char **f,edg_wll_Event *e)
 	e->any.user = f[4];
 	f[4] = NULL;
 	
-	e->any.timestamp.tv_sec = edg_wll_DBToTime(f[5]);
+	e->any.timestamp.tv_sec = glite_lbu_DBToTime(f[5]);
 	free(f[5]); f[5] = NULL;
 	
 	e->any.timestamp.tv_usec = atoi(f[6]);
@@ -1150,7 +1164,7 @@ int convert_event_head(edg_wll_Context ctx,char **f,edg_wll_Event *e)
 	e->any.level = atoi(f[7]); 
 	free(f[7]); f[7] = NULL;
 
-	e->any.arrived.tv_sec = edg_wll_DBToTime(f[8]); 
+	e->any.arrived.tv_sec = glite_lbu_DBToTime(f[8]); 
 	e->any.arrived.tv_usec = 0;
 	free(f[8]); f[8] = NULL;
 
@@ -1283,8 +1297,8 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *stat, const edg_wll
 			case EDG_WLL_QUERY_ATTR_JOBID:
 				if ( !stat->jobId )
 					break;
-				s = edg_wlc_JobIdUnparse(stat->jobId);
-				s1 = edg_wlc_JobIdUnparse(conds[i][j].value.j);
+				s = glite_lbu_JobIdUnparse(stat->jobId);
+				s1 = glite_lbu_JobIdUnparse(conds[i][j].value.j);
 				if ( s && s1 )
 				{
 					int r = strcmp(s1, s);
@@ -1297,8 +1311,8 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *stat, const edg_wll
 			case EDG_WLL_QUERY_ATTR_PARENT:
 				if ( !stat->parent_job )
 					break;
-				s = edg_wlc_JobIdUnparse(stat->parent_job);
-				s1 = edg_wlc_JobIdUnparse(conds[i][j].value.j);
+				s = glite_lbu_JobIdUnparse(stat->parent_job);
+				s1 = glite_lbu_JobIdUnparse(conds[i][j].value.j);
 				if ( s && s1 )
 				{
 					int r = strcmp(s1, s);
@@ -1381,7 +1395,7 @@ static int cmp_string(const char *s1,edg_wll_QueryOp op,const char *s2)
 }
 
 
-int check_strict_jobid(edg_wll_Context ctx, const edg_wlc_JobId job)
+int check_strict_jobid(edg_wll_Context ctx, const glite_lbu_JobId job)
 {
 	char	*job_host;
 	unsigned int	job_port;
@@ -1391,13 +1405,13 @@ int check_strict_jobid(edg_wll_Context ctx, const edg_wlc_JobId job)
 	/* Allow all jobids when server name is not set. */
 	if ( (ctx->srvName == NULL) || (ctx->isProxy)) return edg_wll_Error(ctx,NULL,NULL);
 
-	edg_wlc_JobIdGetServerParts(job,&job_host,&job_port);
+	glite_lbu_JobIdGetServerParts(job,&job_host,&job_port);
 
 	if (strcasecmp(job_host,ctx->srvName) || job_port != ctx->srvPort)
 	{
 		char	*jobid,msg[300];
 
-		jobid = edg_wlc_JobIdUnparse(job);
+		jobid = glite_lbu_JobIdUnparse(job);
 		snprintf(msg,sizeof msg,"%s: does not match server address",jobid);
 		msg[sizeof msg - 1] = 0;
 		edg_wll_SetError(ctx,EINVAL,msg);

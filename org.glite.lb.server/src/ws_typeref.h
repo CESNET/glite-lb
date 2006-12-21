@@ -59,7 +59,7 @@ extern int edg_wll_QueryCondsExtToSoap(struct soap *,
 			struct lbt__queryConditions ***);
 
 extern int edg_wll_JobsQueryResToSoap(struct soap *,
-			edg_wlc_JobId *,
+			glite_lbu_JobId *,
 			edg_wll_JobStat *,
 			struct _lbe__QueryJobsResponse *);
 

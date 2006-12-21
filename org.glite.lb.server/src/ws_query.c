@@ -24,7 +24,7 @@
 
 
 static void freeQueryRecsExt(edg_wll_QueryRec **qr);
-static void freeJobIds(edg_wlc_JobId *jobs);
+static void freeJobIds(glite_lbu_JobId *jobs);
 static void freeJobStats(edg_wll_JobStat *stats);
 static void freeEvents(edg_wll_Event *events);
 
@@ -46,28 +46,24 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	struct _lbe__JobStatusResponse *out)
 {
 	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
-	edg_wlc_JobId		j;
-	edg_wll_JobStat		s;
+	glite_lb_Status		*s = NULL;
+	glite_lb_StatusOpts	*opts = NULL;
 	int	flags;
+	
+	glite_lb_Legacy_SetFlesh(ctx);
 
-
-	if ( edg_wlc_JobIdParse(in->jobid, &j) )
+	if (glite_lb_Legacy_SoapToJobStatOpts(in->flags, &opts) ||
+		glite_lb_JobStatus(ctx, in->jobid, opts, &s) || 
+		glite_lb_Legacy_StatusToSoap(soap, s, &(out->stat)) )
 	{
-		edg_wll_SetError(ctx, EINVAL, in->jobid);
 		edg_wll_ErrToFault(ctx, soap);
+		if (s) glite_lb_FreeStatus(ctx,s);
+		if (opts) glite_lb_FreeStatusOpts(ctx,opts);
 		return SOAP_FAULT;
 	}
 
-	edg_wll_SoapToJobStatFlags(in->flags, &flags);
-
-	if ( edg_wll_JobStatus(ctx, j, flags, &s) )
-	{
-		edg_wll_ErrToFault(ctx, soap);
-		return SOAP_FAULT;
-	}
-
-	edg_wll_StatusToSoap(soap, &s, &(out->stat));
-
+	glite_lb_FreeStatusOpts(ctx,opts);
+	glite_lb_FreeStatus(ctx,s);
 	return SOAP_OK;
 }
 
@@ -80,7 +76,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	edg_wll_Context    ctx;
 	edg_wll_QueryRec **conditions;
 	int                flags;
-	edg_wlc_JobId	  *jobs;
+	glite_lbu_JobId	  *jobs;
 	edg_wll_JobStat	  *states;
 	int                ret;
 
@@ -210,12 +206,12 @@ static void freeQueryRecsExt(edg_wll_QueryRec **qr) {
 }
 
 
-static void freeJobIds(edg_wlc_JobId *jobs) {
+static void freeJobIds(glite_lbu_JobId *jobs) {
 	int i;
 
 	if ( jobs ) {
 		for ( i = 0; jobs[i]; i++ )
-			edg_wlc_JobIdFree(jobs[i]);
+			glite_lbu_JobIdFree(jobs[i]);
 		free(jobs);
 	}
 }

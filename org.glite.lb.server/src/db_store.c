@@ -12,7 +12,6 @@
 #include "glite/lb/purge.h"
 #include "purge.h"
 #include "store.h"
-#include "lbs_db.h"
 #include "lock.h"
 #include "il_lbproxy.h"
 
@@ -232,7 +231,7 @@ static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, 
 	if ( ctx->jpreg_dir && ev->any.type == EDG_WLL_EVENT_REGJOB ) {
 		char *jids, *msg;
 		
-		if ( !(jids = edg_wlc_JobIdUnparse(ev->any.jobId)) ) {
+		if ( !(jids = glite_lbu_JobIdUnparse(ev->any.jobId)) ) {
 			return edg_wll_SetError(ctx, errno, "Can't unparse jobid when registering to JP");
 		}
 		if ( !(msg = realloc(jids, strlen(jids)+strlen(ev->any.user)+2)) ) {

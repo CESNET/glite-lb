@@ -6,12 +6,13 @@
 #include <stdio.h>
 #include <syslog.h>
 
+#include "glite/lb-utils/db.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
-#include "lbs_db.h"
+#include "db_supp.h"
 #include "lb_authz.h"
 #include "lb_xml_parse.h"
 #include "query.h"
@@ -26,7 +27,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 {
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[5];
-	edg_wll_Stmt	jobs = NULL;
+	glite_lbu_Statement	jobs = NULL;
 	int	ret,i;
 	time_t	now = time(NULL);
 
@@ -42,14 +43,17 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 		"from notif_jobs j,users u,notif_registrations n "
 		"where j.notifid=n.notifid and n.userid=u.userid "
 		"   and (j.jobid = '%|Ss' or j.jobid = '%|Ss')",
-		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS);
+		ju = glite_lbu_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS);
 
 	free(ju);
 
-	if (edg_wll_ExecStmt(ctx,jobq,&jobs) < 0) goto err;
+	if (glite_lbu_ExecSQL(ctx->dbctx,jobq,&jobs) < 0) {
+		edg_wll_SetErrorDB(ctx);
+		goto err;
+	}
 
-	while ((ret = edg_wll_FetchRow(jobs,jobc)) > 0) {
-		if (now > edg_wll_DBToTime(jobc[2]))
+	while ((ret = glite_lbu_FetchRow(jobs,5,NULL,jobc)) > 0) {
+		if (now > glite_lbu_DBToTime(jobc[2]))
 			edg_wll_NotifExpired(ctx,jobc[0]);
 		else if (notif_match_conditions(ctx,stat,jobc[4]) &&
 				notif_check_acl(ctx,stat,jobc[3]))
@@ -58,7 +62,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 			int					port;
 
 			fprintf(stderr,"NOTIFY: %s, job %s\n",jobc[0],
-					ju = edg_wlc_JobIdGetUnique(stat->jobId));
+					ju = glite_lbu_JobIdGetUnique(stat->jobId));
 			free(ju);
 
 			dest = strdup(jobc[1]);
@@ -92,12 +96,15 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 		
 		for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
 	}
-	if (ret < 0) goto err;
+	if (ret < 0) {
+		edg_wll_SetErrorDB(ctx);
+		goto err;
+	}
 	
 err:
 	if ( nid ) edg_wll_NotifIdFree(nid);
 	free(jobq);
-	edg_wll_FreeStmt(&jobs);
+	glite_lbu_FreeStmt(&jobs);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
@@ -142,7 +149,7 @@ static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const
 {
 	edg_wll_Acl	acl = calloc(1,sizeof *acl);
 /* XXX: NO_GACL	GACLacl		*gacl; */
-	void		*gacl;
+	GRSTgaclAcl		*gacl;
 	int		ret;
 
 	edg_wll_ResetError(ctx);

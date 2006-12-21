@@ -10,14 +10,14 @@
 #include <regex.h>
 #include <syslog.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb-utils/db.h"
+#include "glite/lb-utils/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
+#include "glite/lb-utils/trio.h"
 
 #include "store.h"
 #include "index.h"
-#include "lbs_db.h"
 #include "jobstat.h"
 #include "get_events.h"
 
@@ -161,24 +161,24 @@ static int dec_int_array(char* in, char **rest, int *out)	// Returns the number 
 }
 
 
-static char* enc_jobid(char *old, edg_wlc_JobId item)
+static char* enc_jobid(char *old, glite_lbu_JobId item)
 {
 	char *str;
 	char *out;
 
-	str = edg_wlc_JobIdUnparse(item);
+	str = glite_lbu_JobIdUnparse(item);
 	out = enc_string(old, str);
 	free(str);
 	return out;
 }
-static edg_wlc_JobId dec_jobid(char *in, char **rest)
+static glite_lbu_JobId dec_jobid(char *in, char **rest)
 {
 	char *str;
-	edg_wlc_JobId jobid;
+	glite_lbu_JobId jobid;
 	
 	str = dec_string(in, rest);
 	if (str == NULL) return NULL;
-	edg_wlc_JobIdParse(str, &jobid);
+	glite_lbu_JobIdParse(str, &jobid);
 	free(str);
 	return jobid;
 }
@@ -673,8 +673,7 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 				break;
 			case EDG_WLL_QUERY_ATTR_TIME:
 				if (stat->pub.stateEnterTimes)
-					data = strdup(edg_wll_TimeToDB(stat->pub.stateEnterTimes[
-							job_index_cols[i].qrec.attr_id.state+1]));
+					glite_lbu_TimeToDB(stat->pub.stateEnterTimes[job_index_cols[i].qrec.attr_id.state+1], &data);
 				else data = strdup("0");
 				break;
 			case EDG_WLL_QUERY_ATTR_RESUBMITTED:
