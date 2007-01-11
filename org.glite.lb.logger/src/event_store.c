@@ -280,6 +280,65 @@ event_store_write_ctl(struct event_store *es)
 
 
 /*
+ * event_store_qurantine() 
+ *   - rename damaged event store file 
+ *   - essentially does the same actions as cleanup, but the event store 
+ *     does not have to be empty
+ * returns 0 on success, -1 on error
+ */
+static
+int
+event_store_quarantine(struct event_store *es) 
+{
+	int num;
+	char newname[MAXPATHLEN+1];
+
+	/* find available qurantine name */
+	/* we give it at most 1024 tries */
+	for(num = 0; num < 1024; num++) {
+		struct stat st;
+
+		snprintf(newname, MAXPATHLEN, "%s.quarantine.%d", es->event_file_name, num);
+		newname[MAXPATHLEN] = 0;
+		if(stat(newname, &st) < 0) {
+			if(errno == ENOENT) {
+				/* file not found */
+				break;
+			} else {
+				/* some other error with name, probably permanent */
+				set_error(IL_SYS, errno, "event_store_qurantine: error looking for qurantine filename");
+				return(-1);
+				
+			}
+		} else {
+			/* the filename is used already */
+		}
+	}
+	if(num >= 1024) {
+		/* new name not found */
+		/* XXX - is there more suitable error? */
+		set_error(IL_SYS, ENOSPC, "event_store_quarantine: exhausted number of retries looking for quarantine filename");
+		return(-1);
+	}
+
+	/* actually rename the file */
+	il_log(LOG_DEBUG, "    renaming damaged event file from %s to %s\n",
+	       es->event_file_name, newname);
+	if(rename(es->event_file_name, newname) < 0) {
+		set_error(IL_SYS, errno, "event_store_quarantine: error renaming event file");
+		return(-1);
+	}
+
+	/* clear the counters */
+	es->last_committed_ls = 0;
+	es->last_committed_bs = 0;
+	es->offset = 0;
+
+	return(0);
+}
+
+
+/*
  * event_store_recover()
  *   - recover after restart or catch up when events missing in IPC
  *   - if offset > 0, read everything behind it
@@ -435,8 +494,12 @@ event_store_recover(struct event_store *es)
 	    free(event_s);
     }
     if(msg == NULL) {
-	    il_log(LOG_ALERT, "    event file corrupted! Please move it to quarantine (ie. somewhere else) and restart interlogger.\n");
-	    break;
+	    il_log(LOG_ALERT, "    event file corrupted! I will try to move it to quarantine (ie. rename it).\n");
+	    /* actually do not bother if quarantine succeeded or not - we could not do more */
+	    event_store_quarantine(es);
+	    fclose(ef);
+	    event_store_unlock(es);
+	    return(-1);
     }
     msg->es = es;
 
@@ -711,7 +774,6 @@ event_store_clean(struct event_store *es)
 }
 
 
-
 /* --------------------------------
  * event store management functions
  * --------------------------------
@@ -805,6 +867,11 @@ event_store_from_file(char *filename)
 	
 	il_log(LOG_INFO, "  attaching to event file: %s\n", filename);
 	
+	if(strstr(filename, "quarantine") != NULL) {
+		il_log(LOG_INFO, "  file name belongs to quarantine, not touching that.\n");
+		return(0);
+	}
+
 	event_file = fopen(filename, "r");
 	if(event_file == NULL) {
 		set_error(IL_SYS, errno, "event_store_from_file: error opening event file");
@@ -1129,7 +1196,7 @@ event_store_cleanup()
 	  case -1:
 		  il_log(LOG_ERR, "  error removing event store %s (file %s):\n    %s\n", 
 			 sl->es->job_id_s, sl->es->event_file_name, error_get_msg());
-		  event_store_release(sl->es);
+		  /* event_store_release(sl->es); */
 		  clear_error();
 		  /* go on to the next */
 		  

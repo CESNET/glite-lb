@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.6  2005/05/26 15:13:40  zurek
+	inserted module.build.file
+
 	Revision 1.5  2004/10/18 19:16:09  zsalvet
 	RPM descriptions
 	
@@ -104,6 +107,7 @@
 				<include name="at3" />
 				<include name="*.T" />
 				<include name="*.pm" />
+				<include name="check_version.pl" />
 			</fileset>
 		</copy>	
 		<antcall target="lbmakefiles" />

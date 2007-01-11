@@ -13,6 +13,7 @@ GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-/var/glite}
 
 [ -n "$GLITE_LB_SERVER_PIDFILE" ] && pidfile=$GLITE_LB_SERVER_PIDFILE ||
 	pidfile=$GLITE_LOCATION_VAR/glite-lb-bkserverd.pid
+[ -z "$GLITE_LB_NOTIF_SOCK" ] && GLITE_LB_NOTIF_SOCK="/tmp/glite-lb-notif.sock"
 
 unset creds port
 
@@ -46,8 +47,6 @@ start()
 
 	[ -n "$GLITE_LB_SERVER_PORT" ] && port="-p $GLITE_LB_SERVER_PORT"
 	[ -n "$GLITE_LB_SERVER_WPORT" ] && wport="-w $GLITE_LB_SERVER_WPORT"
-
-	[ -z "$GLITE_LB_NOTIF_SOCK" ] && GLITE_LB_NOTIF_SOCK="/tmp/glite-lb-notif.sock"
 	[ -z "$GLITE_LB_NOTIF_FPREFIX" ] && GLITE_LB_NOTIF_FPREFIX="/var/tmp/glite-lb-notif"
 
 	echo -n Starting glite-lb-bkserver ...
