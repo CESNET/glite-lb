@@ -41,9 +41,8 @@ else
 	STATIC_LIB_BK:=libglite_lb_bkserver.a
 endif
 
-ifdef LB_DAG_EMBRIONIC
-	LB_DAG_FLAGS:=-DLB_DAG_EMBRIONIC
-endif
+# Use embrionic DAG registration implicitely
+LB_DAG_FLAGS:=-DLB_DAG_EMBRIONIC
 
 ifdef LB_BUF
 	LB_BUF_FLAGS:=-DLB_BUF

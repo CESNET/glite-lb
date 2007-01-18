@@ -400,8 +400,10 @@ limit_cycle_cleanup:
 		edg_wll_FreeStmt(&sh);
 	} while ( limit_loop );
 
-	if ( eperm && !*jobs_out )
-		edg_wll_SetError(ctx, EPERM, "matching jobs found but authorization failed");
+	if ( !*jobs_out ) {
+		if (eperm) edg_wll_SetError(ctx, EPERM, "matching jobs found but authorization failed");
+		  else     edg_wll_SetError(ctx, ENOENT, "no matching jobs found");
+	}
 
 	if ( i && (ret == 0) )
 	{

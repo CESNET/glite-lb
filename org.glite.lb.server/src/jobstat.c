@@ -654,7 +654,6 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 					edg_wll_JobStat	*stat_out)
 {
 	intJobStat 	*ijsp;
-	int		intErr = 0;
 	int		flags = 0;
 	int		res;
 	int		be_strict = 0;
@@ -663,11 +662,10 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 	edg_wll_JobStat	oldstat;
 	char 		*oldstat_rgmaline = NULL;
 
+
 	memset(&oldstat,0,sizeof oldstat);
-	if (seq != 0) {
-		intErr = edg_wll_LoadIntState(ctx, job, seq - 1, &ijsp);
-	}
-	if (seq != 0 && !intErr) {
+
+	if (!edg_wll_LoadIntState(ctx, job, seq - 1, &ijsp)) {
 		edg_wll_CpyStatus(&ijsp->pub,&oldstat);
 
 		if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(&ijsp->pub);

@@ -20,8 +20,8 @@ SUFFIXES = .T
 VPATH=${top_srcdir}/src
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 XSLTPROC:=xsltproc --nonet
-TIDY=tidy
 XMLLINT:=xmllint --nonet
+TIDY=tidy -i -q --show-warnings no --tidy-mark no --wrap 0
 docbookxls:=http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl
 
 STAGETO=interface
@@ -75,10 +75,13 @@ clean:
 
 ${WSDL}: %.wsdl: %.xml puke-wsdl.xsl
 	${XSLTPROC} ../src/puke-wsdl.xsl $< >$@
-	-${TIDY} -wrap 10000 -xml -m -i -q $@
-	-perl -i -n -e 'if (/^\s*$$/) { $$empty .= "\n"; } elsif (/^\s*<(xsd:)?(enumeration|element|input|output|fault)/) { print $$_; $$empty = "";} else { print "$$empty$$_"; $$empty=""; }; ' $@
+	-${TIDY} -xml -m $@
+# XXX: obsolete:
+#	-perl -i -n -e 'if (/^\s*$$/) { $$empty .= "\n"; } elsif (/^\s*<(xsd:)?(enumeration|element|input|output|fault)/) { print $$_; $$empty = "";} else { print "$$empty$$_"; $$empty=""; }; ' $@
 
 LB.html: doc.xml LBTypes.xml LB.xml puke-ug.xsl
 	${XSLTPROC} --novalid ../src/puke-ug.xsl $< >doc-html.xml
+	-${TIDY} -xml -m doc-html.xml
 	${XMLLINT} --valid --noout doc-html.xml
 	${XSLTPROC} --stringparam  chapter.autolabel 0 ${docbookxls} doc-html.xml >$@
+	-${TIDY} -asxhtml -m $@

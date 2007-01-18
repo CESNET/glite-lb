@@ -143,6 +143,8 @@ set_error(int code, long minor, char *msg)
 	  strncpy(err->msg, msg, IL_ERR_MSG_LEN);
   }
 
+  err->msg[IL_ERR_MSG_LEN] = 0; /* OK, malloc()ed IL_ERR_MSG_LEN + 1 */
+
   return(code);
 }
 
