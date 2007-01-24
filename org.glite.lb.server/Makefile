@@ -170,10 +170,10 @@ COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_secur
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
 	${classadslib} -lstdc++ ${expatlib} -lexpat\
 
-PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo lbs_db_supp.lo
+PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo lbs_db_supp.lo process_event_pbs.lo
 
 BKSERVER_BASE_OBJS:= \
-	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o \
+	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o process_event_pbs.o \
 	seqcode.o write2rgma.o lbs_db.o lbs_db_supp.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
@@ -205,7 +205,7 @@ else
 endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o lbs_db_supp.o openserver.o \
-	jobstat.o process_event.o query.o lock.o get_events.o write2rgma.o index_lex.o \
+	jobstat.o process_event.o process_event_pbs.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o stats.o\
 	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o
 
@@ -226,7 +226,7 @@ WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
 HDRS=index.h lb_authz.h lbs_db.h store.h
 
 LIB_OBJS_BK:= \
-	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o \
+	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o process_event_pbs.o \
 	seqcode.o lbs_db.o lbs_db_supp.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \

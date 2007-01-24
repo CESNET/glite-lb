@@ -20,6 +20,44 @@
 #define UNUSED_VAR
 #endif
 
+static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
+
+int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
+{
+	if (js->pub.jobtype == -1 && e->type == EDG_WLL_EVENT_REGJOB)
+		switch (e->regJob.jobtype) {
+			case EDG_WLL_REGJOB_SIMPLE:
+				js->pub.jobtype = EDG_WLL_STAT_SIMPLE;
+				break;
+			case EDG_WLL_REGJOB_DAG: 
+			case EDG_WLL_REGJOB_PARTITIONABLE:
+			case EDG_WLL_REGJOB_PARTITIONED:
+				js->pub.jobtype = EDG_WLL_STAT_DAG;
+				break;
+			case EDG_WLL_REGJOB_COLLECTION:
+				js->pub.jobtype = EDG_WLL_STAT_COLLECTION;
+				break;
+			case EDG_WLL_REGJOB_PBS:
+				js->pub.jobtype = EDG_WLL_STAT_PBS;
+				break;
+			default:
+				asprintf(errstring,"unknown job type %d in registration",e->regJob.jobtype);
+				return RET_FAIL;
+	}
+
+	switch (js->pub.jobtype) {
+		case EDG_WLL_STAT_SIMPLE:
+		case EDG_WLL_STAT_DAG:
+		case EDG_WLL_STAT_COLLECTION:
+			return processEvent_glite(js,e,ev_seq,strict,errstring);
+		case EDG_WLL_STAT_PBS: 
+			return processEvent_PBS(js,e,ev_seq,strict,errstring);
+		default: 
+			asprintf(errstring,"undefined job type %d",js->pub.jobtype);
+			return RET_FAIL;
+	}
+}
+
 #define rep(a,b) { free(a); a = (b == NULL) ? NULL : strdup(b); }
 
 static void free_stringlist(char ***lptr)
@@ -218,7 +256,7 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 #define LRMS_STATE(state) ((state) == EDG_WLL_JOB_RUNNING || (state) == EDG_WLL_JOB_DONE)
 #define PARSABLE_SEQCODE(code) (component_seqcode((code),0) >= 0)
 
-int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
+static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
 	edg_wll_JobStatCode	old_state = js->pub.state;
 	enum edg_wll_StatDone_code	old_done_code = js->pub.done_code;

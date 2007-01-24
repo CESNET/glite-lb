@@ -79,6 +79,7 @@ int same_branch(const char *, const char *);
 int component_seqcode(const char *a, edg_wll_Source index);
 char * set_component_seqcode(char *s,edg_wll_Source index,int val);
 int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
+int processEvent_PBS(intJobStat *, edg_wll_Event *, int, int, char **);
 
 int add_stringlist(char ***, const char *);
 int edg_wll_compare_seq(const char *, const char *);
