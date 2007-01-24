@@ -70,6 +70,7 @@ int handle_gss_failures(edg_wll_Context ctx, int code, edg_wll_GssStatus *gss_co
 	return ret;
 }
 
+#if 0	/* unused */
 /**
  *----------------------------------------------------------------------
  * Handle UNIX socket failures on the client side
@@ -80,6 +81,7 @@ int edg_wll_log_proto_handle_plain_failures(edg_wll_Context ctx, int code, const
 {
 	return 0;
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -137,7 +139,8 @@ static
 int gss_reader(void *user_data, char *buffer, int max_len)
 {
 	struct reader_data *data = (struct reader_data *)user_data;
-	int ret, len;
+	int ret; 
+	size_t len;
 	edg_wll_GssStatus gss_code;
 
 	ret = edg_wll_gss_read_full(data->conn, buffer, max_len, &data->ctx->p_tmp_timeout,
@@ -252,6 +255,7 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 			answer = handle_gss_failures(ctx,answer,&gss_stat,"edg_wll_gss_connect()");
 			goto edg_wll_log_connect_err;
 		}
+		goto edg_wll_log_connect_end;
 	} else goto edg_wll_log_connect_end;
 
 edg_wll_log_connect_err:
@@ -658,7 +662,8 @@ int edg_wll_log_direct_close(edg_wll_Context ctx, edg_wll_GssConnection *conn)
  */ 
 int edg_wll_log_direct_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, edg_wll_LogLine logline)
 {
-	int  len,count = 0,err;
+	size_t  len,count=0;
+	int	err;
 	char *buffer;
 	edg_wll_GssStatus gss_code;
 
