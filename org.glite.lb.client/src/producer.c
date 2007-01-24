@@ -94,7 +94,7 @@ int edg_wll_DoLogEvent(
 		goto edg_wll_DoLogEvent_end;
 	}
 
-	sleep(3);
+	/* why?  sleep(3); */
 	/* send message */
 	if ((ret = edg_wll_log_write(ctx,conn,logline)) == -1) {
 		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_write error");
