@@ -46,16 +46,17 @@ typedef struct _lb_historyStatus {
 } lb_historyStatus;
 
 typedef struct _lb_handle {
-	edg_wll_Event		**events;
-	edg_wll_JobStat		status;
-	lb_historyStatus	**fullStatusHistory, **lastStatusHistory;
+	edg_wll_Event			**events;
+	edg_wll_JobStat			status;
+	lb_historyStatus		**fullStatusHistory, **lastStatusHistory;
+	glite_jpps_fplug_data_t*	classad_plugin;
 } lb_handle;
 
 #define check_strdup(s) ((s) ? strdup(s) : NULL)
 
 extern int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
 
-static int lb_query(void *fpctx, void *handle, const char *attr, glite_jp_attrval_t **attrval);
+static int lb_query(void *fpctx, void *handle, const char *ns, const char *attr, glite_jp_attrval_t **attrval);
 static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle);
 static int lb_close(void *fpctx, void *handle);
 static int lb_status(void *handle);
@@ -76,6 +77,10 @@ int init(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data) {
 
 	data->classes = calloc(2,sizeof *data->classes);
 	data->classes[0] = strdup("lb");
+
+	data->namespaces = calloc(3, sizeof *data->namespaces);
+	data->namespaces[0] = strdup(GLITE_JP_LB_NS);
+	data->namespaces[1] = strdup(GLITE_JP_LB_JDL_NS);
 
 	data->ops.open 	= lb_open;
 	data->ops.close = lb_close;
@@ -132,7 +137,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	}
 	while (line) {
 #ifdef PLUGIN_DEBUG
-//		fprintf(stderr,"lb_plugin: line read '%s'\n", line);
+		//fprintf(stderr,"lb_plugin opened\n", line);
 #endif
 
 		if (line[0]) {
@@ -177,6 +182,20 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 #ifdef PLUGIN_DEBUG
 	fprintf(stderr,"lb_plugin: opened %d events\n", nevents);
 #endif
+
+	// find classad plugin, if it is loaded
+	int j;
+        h->classad_plugin = NULL;
+        for (i=0; ctx->plugins[i]; i++){
+		glite_jpps_fplug_data_t *pd = ctx->plugins[i];
+                if (pd->namespaces)
+                        for (j=0; pd->classes[j]; j++)
+                                if (! strcmp(pd->classes[j], "classad")){
+                                        h->classad_plugin = pd;
+                                        goto cont;
+                                }
+	}
+cont:
 
 	/* count state and status hiftory of the job given by the loaded events */
 	if ((retval = lb_status(h)) != 0) goto fail;
@@ -240,8 +259,41 @@ static int lb_close(void *fpctx,void *handle) {
 	return 0;
 }
 
+static int get_classad_attr(char* attr, glite_jp_context_t ctx, lb_handle *h, glite_jp_attrval_t **av){
+	printf("attr = %s\n", attr);
+	glite_jp_error_t err;
+	glite_jp_clear_error(ctx);
+        memset(&err,0,sizeof err);
+        err.source = __FUNCTION__;
 
-static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t **attrval) {
+	if (! h->classad_plugin){
+        	err.code = ENOENT;
+        	err.desc = strdup("Classad plugin has not been loaded.");
+                return glite_jp_stack_error(ctx,&err);
+	}
+        // Get the attribute from JDL
+        int i = 0;
+        while (h->events[i]){
+        	if (h->events[i]->type == EDG_WLL_EVENT_REGJOB){
+                	void *beh;
+                        if (! h->classad_plugin->ops.open_str(h->classad_plugin->fpctx, h->events[i]->regJob.jdl, "", "", &beh)){
+                        	if (! h->classad_plugin->ops.attr(h->classad_plugin->fpctx, beh, "", attr, av))
+                                	(*av)[0].timestamp = h->events[i]->any.timestamp.tv_sec;
+                                else{
+                                	h->classad_plugin->ops.close(h->classad_plugin->fpctx, beh);
+                                        err.code = ENOENT;
+                                        err.desc = strdup("Classad attribute not found.");
+                                        return glite_jp_stack_error(ctx,&err);
+                                }
+                        h->classad_plugin->ops.close(h->classad_plugin->fpctx, beh);
+                        }
+                }
+                i++;
+        }
+	return 0;
+}
+
+static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,glite_jp_attrval_t **attrval) {
 
 	lb_handle		*h = (lb_handle *) handle;
 	glite_jp_context_t	ctx = (glite_jp_context_t) fpctx;
@@ -263,7 +315,15 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
                 return glite_jp_stack_error(ctx,&err);
 	}
 
-        if (strcmp(attr, GLITE_JP_LB_user) == 0) {
+        if (strcmp(ns, GLITE_JP_LB_JDL_NS) == 0){
+		if (get_classad_attr(attr, ctx, h, &av)){
+			*attrval = NULL;
+                        err.code = ENOENT;
+                        err.desc = strdup("Cannot get attribute from classad.");
+                        return glite_jp_stack_error(ctx,&err);
+		}
+	}	
+	else if (strcmp(attr, GLITE_JP_LB_user) == 0) {
 		if (h->status.owner) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
 			av[0].name = strdup(attr);
@@ -288,71 +348,29 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_VO) == 0) {
-		i = 0;
-		while (h->events[i]) {
-			if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
-				struct cclassad *ad;
-				char *string_vo = NULL; 
-
-				ad = cclassad_create(h->events[i]->regJob.jdl);
-				if (ad) {
-					if (cclassad_evaluate_to_string(ad, "VirtualOrganisation", &string_vo)) {
-						av = calloc(2, sizeof(glite_jp_attrval_t));
-						av[0].name = strdup(attr);
-						av[0].value = check_strdup(string_vo);
-						av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
-					}
-					cclassad_delete(ad);
-					if (string_vo) free(string_vo);
-				}
-				break;
-			}
-			i++;
-		}
+		if (get_classad_attr(":VirtualOrganisation", ctx, h, &av)){
+			printf("error");
+                        *attrval = NULL;
+                        err.code = ENOENT;
+                        err.desc = strdup("Cannot get attribute from classad.");
+                        return glite_jp_stack_error(ctx,&err);
+                }
         } else if (strcmp(attr, GLITE_JP_LB_eNodes) == 0) {
-		i = 0;
-		while (h->events[i]) {
-			if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
-				struct cclassad *ad;
-				char *string_nodes = NULL; 
-
-				ad = cclassad_create(h->events[i]->regJob.jdl);
-				if (ad) {
-					if (cclassad_evaluate_to_string(ad, "max_nodes_running", &string_nodes)) {
-						av = calloc(2, sizeof(glite_jp_attrval_t));
-						av[0].name = strdup(attr);
-						av[0].value = check_strdup(string_nodes);
-						av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
-					}
-					cclassad_delete(ad);
-					if (string_nodes) free(string_nodes);
-				}
-				break;
-			}
-			i++;
-		}
+		if (get_classad_attr(":max_nodes_running", ctx, h, &av)){
+                        printf("error");
+                        *attrval = NULL;
+                        err.code = ENOENT;
+                        err.desc = strdup("Cannot get attribute from classad.");
+                        return glite_jp_stack_error(ctx,&err);
+                }
         } else if (strcmp(attr, GLITE_JP_LB_eProc) == 0) {
-		i = 0;
-		while (h->events[i]) {
-			if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
-				struct cclassad *ad;
-				char *string_nodes = NULL; 
-
-				ad = cclassad_create(h->events[i]->regJob.jdl);
-				if (ad) {
-					if (cclassad_evaluate_to_string(ad, "NodeNumber", &string_nodes)) {
-						av = calloc(2, sizeof(glite_jp_attrval_t));
-						av[0].name = strdup(attr);
-						av[0].value = check_strdup(string_nodes);
-						av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
-					}
-					cclassad_delete(ad);
-					if (string_nodes) free(string_nodes);
-				}
-				break;
-			}
-			i++;
-		}
+		if (get_classad_attr(":NodeNumber", ctx, h, &av)){
+                        printf("error");
+                        *attrval = NULL;
+                        err.code = ENOENT;
+                        err.desc = strdup("Cannot get attribute from classad.");
+                        return glite_jp_stack_error(ctx,&err);
+                }
 	} else if (strcmp(attr, GLITE_JP_LB_aTag) == 0 ||
                    strcmp(attr, GLITE_JP_LB_rQType) == 0 ||
                    strcmp(attr, GLITE_JP_LB_eDuration) == 0) {
