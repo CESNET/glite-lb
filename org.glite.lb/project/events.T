@@ -143,6 +143,7 @@
 	_code_	PARTITIONABLE	The job is partitionable (may become partitioned).
 	_code_	PARTITIONED	The job is partitioned (dynamically created dag).
 	_code_	COLLECTION	The job is collection (containing static set of subjobs).
+	_code_	PBS
 	
 	int	nsubjobs	Number of subjobs this job plans to spawn.
 	_optional_
@@ -209,3 +210,33 @@
 	string	histogram	User readable histogram; useful for debugging.
 	jobid   child		JobId of subjob, which triggered the state change.	
 	string	child_event	Event which triggered the state change.	
+
+
+@type PBSReg		Job seen by PBS
+	string	queue		Queue name
+
+@type PBSQueued		Job enqued
+	string	queue		Queue name
+	string	owner		Job owner
+	string	name		Job name
+
+@type PBSPlan		Job considered for running
+
+@type PBSRun		Job attempted to be run by the logging component
+	string	scheduler	Scheduler ID
+	_optional_
+	string	dest_host	Where to run the job
+	_optional_
+	int	pid		Actual process ID
+	_optional_
+
+@type PBSDone		Job terminated
+	int	exit_status	Exit status
+
+@type PBSResourceUsage	Resources requested/consumed
+	int	usage		Type of record
+	_code_	REQUESTED	Requested value
+	_code_	USED		Consumed quantity
+	string	name		Name of resource
+	int	quantity	The quantity
+	string	unit		Units (sec, kB, etc.)

@@ -8,6 +8,7 @@ int	jobtype		Type of job
 	_code_ SIMPLE		simple job
 	_code_ DAG		composite job
 	_code_ COLLECTION	parent of collection of jobs
+	_code_ PBS		PBS job
 jobid	parent_job	parent job of subjob
 
 string	seed		string used for generation of subjob IDs
