@@ -646,17 +646,18 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 			free(val);
 		}
-	} else if (strncmp(attr, GLITE_JP_LBTAG_NS, sizeof(GLITE_JP_LBTAG_NS)-1) == 0) {
-		tag = strrchr(attr, ':');
-		if (h->events && tag) {
-			tag++;
+	} else if (strcmp(ns, GLITE_JP_LBTAG_NS) == 0) {
+		if (h->events) {
 			i = 0;
 			n_tags = 0;
 
 			while (h->events[i]) {
-				if ((h->events[i]->type == EDG_WLL_EVENT_USERTAG) &&
+				if (h->events[i]->type == EDG_WLL_EVENT_USERTAG &&
+	/* unqualified LB tags only */
+				    !strchr(h->events[i]->userTag.name,':') &&
 /* XXX: LB tag names are case-insensitive */
-				    (strcasecmp(h->events[i]->userTag.name, tag) == 0) ) {
+				    strcasecmp(h->events[i]->userTag.name, attr) == 0 )
+				{
 					av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
 					memset(&av[n_tags], 0, 2 * sizeof(glite_jp_attrval_t));
 
