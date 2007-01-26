@@ -59,6 +59,7 @@ extern int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
 static int lb_query(void *fpctx, void *handle, const char *ns, const char *attr, glite_jp_attrval_t **attrval);
 static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle);
 static int lb_close(void *fpctx, void *handle);
+static int lb_filecom(void *fpctx, void *handle);
 static int lb_status(void *handle);
 static int read_line(glite_jp_context_t ctx, void *handle, lb_buffer_t *buffer, char **line);
 
@@ -84,6 +85,7 @@ int init(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data) {
 
 	data->ops.open 	= lb_open;
 	data->ops.close = lb_close;
+	data->ops.filecom = lb_filecom;
 	data->ops.attr 	= lb_query;
 	data->ops.generic = lb_dummy;
 	
@@ -300,7 +302,7 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 	glite_jp_error_t 	err; 
 	glite_jp_attrval_t	*av = NULL;
 	int			i, n_tags;
-	const char             *tag;
+	//const char             *tag;
 
         glite_jp_clear_error(ctx); 
         memset(&err,0,sizeof err);
@@ -712,6 +714,34 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 	}
 }
 
+static int lb_filecom(void *fpctx, void *handle){
+	glite_jp_context_t      ctx = (glite_jp_context_t) fpctx;
+	lb_handle               *h = (lb_handle *) handle;
+	glite_jp_attrval_t      attr[2];
+	memset(attr, 0, 2 * sizeof(glite_jp_attrval_t));
+
+	if (h->events) {
+        	int i = 0;
+                while (h->events[i]) {
+                	if (h->events[i]->type == EDG_WLL_EVENT_USERTAG &&
+                        strchr(h->events[i]->userTag.name,':')) 
+                        {
+				printf("%s, %s\n", edg_wlc_JobIdUnparse(h->status.jobId), h->status.jobId);
+				attr[0].name = h->events[i]->userTag.name;
+                		attr[0].value = h->events[i]->userTag.value;
+                		attr[0].binary = 0;
+        			attr[0].origin = GLITE_JP_ATTR_ORIG_USER;
+        			attr[0].timestamp = time(NULL);
+        			attr[0].origin_detail = NULL;   /* XXX */
+        			attr[1].name = NULL;
+				glite_jppsbe_append_tag(ctx, edg_wlc_JobIdUnparse(h->status.jobId), attr);
+                        }
+                        i++;
+                }
+	}
+
+	return 0;
+}
 
 static int lb_status(void *handle) {
 
