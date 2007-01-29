@@ -97,11 +97,13 @@ int init(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data) {
 
 
 void done(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data) {
-
 	free(data->uris[0]);
 	free(data->classes[0]);
+	free(data->namespaces[0]);
+	free(data->namespaces[1]);
 	free(data->uris);
 	free(data->classes);
+	free(data->namespaces);
 	memset(data, 0, sizeof(*data));
 }
 
