@@ -26,6 +26,7 @@
 #include "glite/jp/builtin_plugins.h"
 #include "glite/jp/backend.h"
 #include "glite/jp/attr.h"
+#include "glite/jp/utils.h"
 #include "glite/jp/known_attr.h"
 #include "jp_job_attrs.h"
 
@@ -33,11 +34,11 @@
 #define INITIAL_NUMBER_STATES EDG_WLL_NUMBER_OF_STATCODES
 #define LB_PLUGIN_NAMESPACE "urn:org.glite.lb"
 
-typedef struct _lb_buffer_t {
+/*typedef struct _lb_buffer_t {
 	char 			*buf;
 	size_t 			pos, size;
 	off_t 			offset;
-} lb_buffer_t;
+} lb_buffer_t;*/
 
 typedef struct _lb_historyStatus {
 	edg_wll_JobStatCode 	state;
@@ -56,18 +57,17 @@ typedef struct _lb_handle {
 
 extern int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
 
-static int lb_query(void *fpctx, void *handle, const char *ns, const char *attr, glite_jp_attrval_t **attrval);
+static int lb_query(void *fpctx, void *handle, const char *attr, glite_jp_attrval_t **attrval);
 static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle);
 static int lb_close(void *fpctx, void *handle);
 static int lb_filecom(void *fpctx, void *handle);
 static int lb_status(void *handle);
-static int read_line(glite_jp_context_t ctx, void *handle, lb_buffer_t *buffer, char **line);
+//static int read_line(glite_jp_context_t ctx, void *handle, lb_buffer_t *buffer, char **line);
 
 static int lb_dummy(void *fpctx, void *handle, int oper, ...) {
 	puts("lb_dummy() - generic call not used; for testing purposes only...");
 	return -1;
 }
-
 
 int init(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data) {
 
@@ -79,9 +79,10 @@ int init(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data) {
 	data->classes = calloc(2,sizeof *data->classes);
 	data->classes[0] = strdup("lb");
 
-	data->namespaces = calloc(3, sizeof *data->namespaces);
+	data->namespaces = calloc(4, sizeof *data->namespaces);
 	data->namespaces[0] = strdup(GLITE_JP_LB_NS);
 	data->namespaces[1] = strdup(GLITE_JP_LB_JDL_NS);
+	data->namespaces[2] = strdup(GLITE_JP_LBTAG_NS);
 
 	data->ops.open 	= lb_open;
 	data->ops.close = lb_close;
@@ -101,6 +102,7 @@ void done(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data) {
 	free(data->classes[0]);
 	free(data->namespaces[0]);
 	free(data->namespaces[1]);
+	free(data->namespaces[2]);
 	free(data->uris);
 	free(data->classes);
 	free(data->namespaces);
@@ -111,7 +113,7 @@ void done(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data) {
 static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 
 	lb_handle           *h;
-	lb_buffer_t         buffer;
+	rl_buffer_t         buffer;
 	glite_jp_context_t  ctx = (glite_jp_context_t) fpctx;
 	char *line;
 	int retval;
@@ -132,7 +134,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 	nevents = 0;
 	h->events = malloc(maxnevents * sizeof(edg_wll_Event *));
 
-	if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) {
+	if ((retval = glite_jppsbe_readline(ctx, bhandle, &buffer, &line)) != 0) {
 		err.code = retval;
 		err.desc = "reading LB logline";
 		err.source = "lb_plugin.c:read_line()";
@@ -164,7 +166,7 @@ static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle) {
 		}
 		free(line);
 
-		if ((retval = read_line(ctx, bhandle, &buffer, &line)) != 0) {
+		if ((retval = glite_jppsbe_readline(ctx, bhandle, &buffer, &line)) != 0) {
 			err.code = retval;
 			err.desc = "reading LB logline";
 			err.source = "lb_plugin.c:read_line()";
@@ -263,7 +265,7 @@ static int lb_close(void *fpctx,void *handle) {
 	return 0;
 }
 
-static int get_classad_attr(char* attr, glite_jp_context_t ctx, lb_handle *h, glite_jp_attrval_t **av){
+static int get_classad_attr(const char* attr, glite_jp_context_t ctx, lb_handle *h, glite_jp_attrval_t **av){
 	printf("attr = %s\n", attr);
 	glite_jp_error_t err;
 	glite_jp_clear_error(ctx);
@@ -281,7 +283,7 @@ static int get_classad_attr(char* attr, glite_jp_context_t ctx, lb_handle *h, gl
         	if (h->events[i]->type == EDG_WLL_EVENT_REGJOB){
                 	void *beh;
                         if (! h->classad_plugin->ops.open_str(h->classad_plugin->fpctx, h->events[i]->regJob.jdl, "", "", &beh)){
-                        	if (! h->classad_plugin->ops.attr(h->classad_plugin->fpctx, beh, "", attr, av))
+                        	if (! h->classad_plugin->ops.attr(h->classad_plugin->fpctx, beh, attr, av))
                                 	(*av)[0].timestamp = h->events[i]->any.timestamp.tv_sec;
                                 else{
                                 	h->classad_plugin->ops.close(h->classad_plugin->fpctx, beh);
@@ -297,14 +299,14 @@ static int get_classad_attr(char* attr, glite_jp_context_t ctx, lb_handle *h, gl
 	return 0;
 }
 
-static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,glite_jp_attrval_t **attrval) {
-
+static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_t **attrval) {
 	lb_handle		*h = (lb_handle *) handle;
 	glite_jp_context_t	ctx = (glite_jp_context_t) fpctx;
 	glite_jp_error_t 	err; 
 	glite_jp_attrval_t	*av = NULL;
 	int			i, n_tags;
-	//const char             *tag;
+	char 			*ns = glite_jpps_get_namespace(attr);
+	char			*tag;
 
         glite_jp_clear_error(ctx); 
         memset(&err,0,sizeof err);
@@ -324,6 +326,7 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 			*attrval = NULL;
                         err.code = ENOENT;
                         err.desc = strdup("Cannot get attribute from classad.");
+			free(ns);
                         return glite_jp_stack_error(ctx,&err);
 		}
 	}	
@@ -357,6 +360,7 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
                         *attrval = NULL;
                         err.code = ENOENT;
                         err.desc = strdup("Cannot get attribute from classad.");
+			free(ns);
                         return glite_jp_stack_error(ctx,&err);
                 }
         } else if (strcmp(attr, GLITE_JP_LB_eNodes) == 0) {
@@ -365,6 +369,7 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
                         *attrval = NULL;
                         err.code = ENOENT;
                         err.desc = strdup("Cannot get attribute from classad.");
+			free(ns);
                         return glite_jp_stack_error(ctx,&err);
                 }
         } else if (strcmp(attr, GLITE_JP_LB_eProc) == 0) {
@@ -373,6 +378,7 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
                         *attrval = NULL;
                         err.code = ENOENT;
                         err.desc = strdup("Cannot get attribute from classad.");
+			free(ns);
                         return glite_jp_stack_error(ctx,&err);
                 }
 	} else if (strcmp(attr, GLITE_JP_LB_aTag) == 0 ||
@@ -385,6 +391,7 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
 		err.desc = strdup(et);
 		free(et);
+		free(ns);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_RB) == 0) {
 		if (h->status.network_server) {
@@ -434,6 +441,7 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
 		err.desc = strdup(et);
 		free(et);
+		free(ns);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_finalStatus) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -497,6 +505,7 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 		trio_asprintf(&et,"Attribute '%s' not implemented yet.",attr);
 		err.desc = strdup(et);
 		free(et);
+		free(ns);
 		return glite_jp_stack_error(ctx,&err);
 	} else if (strcmp(attr, GLITE_JP_LB_jobType) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -541,6 +550,7 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 			trio_asprintf(&et,"Value unknown for attribute '%s', there are no subjobs.",attr);
 			err.desc = strdup(et);
 			free(et);
+			free(ns);
 			return glite_jp_stack_error(ctx,&err);
 		}
 	} else if (strcmp(attr, GLITE_JP_LB_lastStatusHistory) == 0) {
@@ -651,17 +661,16 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 			free(val);
 		}
 	} else if (strcmp(ns, GLITE_JP_LBTAG_NS) == 0) {
-		if (h->events) {
+		tag = strrchr(attr, ':');
+                if (h->events && tag) {
+                	tag++;
 			i = 0;
 			n_tags = 0;
 
 			while (h->events[i]) {
-				if (h->events[i]->type == EDG_WLL_EVENT_USERTAG &&
-	/* unqualified LB tags only */
-				    !strchr(h->events[i]->userTag.name,':') &&
+				if ((h->events[i]->type == EDG_WLL_EVENT_USERTAG) &&
+				(strcasecmp(h->events[i]->userTag.name, tag) == 0) ) {
 /* XXX: LB tag names are case-insensitive */
-				    strcasecmp(h->events[i]->userTag.name, attr) == 0 )
-				{
 					av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
 					memset(&av[n_tags], 0, 2 * sizeof(glite_jp_attrval_t));
 
@@ -697,8 +706,11 @@ static int lb_query(void *fpctx,void *handle,const char* ns, const char *attr,gl
 		trio_asprintf(&et,"No such attribute '%s'.",attr);
 		err.desc = strdup(et);
 		free(et);
+		free(ns);
 	        return glite_jp_stack_error(ctx,&err);
 	}
+
+	free(ns);
 
 	if (av && av[0].value) {
 		for (i=0; av[i].name; i++) av[i].origin = GLITE_JP_ATTR_ORIG_FILE;
@@ -728,7 +740,7 @@ static int lb_filecom(void *fpctx, void *handle){
                 	if (h->events[i]->type == EDG_WLL_EVENT_USERTAG &&
                         strchr(h->events[i]->userTag.name,':')) 
                         {
-				printf("%s, %s\n", edg_wlc_JobIdUnparse(h->status.jobId), h->status.jobId);
+				//printf("%s, %s\n", edg_wlc_JobIdUnparse(h->status.jobId), h->status.jobId);
 				attr[0].name = h->events[i]->userTag.name;
                 		attr[0].value = h->events[i]->userTag.value;
                 		attr[0].binary = 0;
@@ -821,7 +833,7 @@ err:
  * \return 0 if failed, did nothing
  * \return 1 if success
  */
-int check_realloc_line(char **line, size_t *maxlen, size_t len) {
+/*int check_realloc_line(char **line, size_t *maxlen, size_t len) {
 	void *tmp;
 
 	if (len > *maxlen) {
@@ -833,14 +845,14 @@ int check_realloc_line(char **line, size_t *maxlen, size_t len) {
 
 	return 1;
 }
-
+*/
 
 /*
  * read next line from stream
  *
  * \return error code
  */
-static int read_line(glite_jp_context_t ctx, void *handle, lb_buffer_t *buffer, char **line) {
+/*static int read_line(glite_jp_context_t ctx, void *handle, lb_buffer_t *buffer, char **line) {
 
 	size_t maxlen, len, i;
 	ssize_t nbytes;
@@ -853,7 +865,7 @@ static int read_line(glite_jp_context_t ctx, void *handle, lb_buffer_t *buffer, 
 	end = 0;
 
 	do {
-		/* read next portion */
+		// read next portion 
 		if (buffer->pos >= buffer->size) {
 			buffer->pos = 0;
 			buffer->size = 0;
@@ -870,7 +882,7 @@ static int read_line(glite_jp_context_t ctx, void *handle, lb_buffer_t *buffer, 
 			} else goto fail;
 		}
 
-		/* we have buffer->size - buffer->pos bytes */
+		// we have buffer->size - buffer->pos bytes 
 		i = buffer->pos;
 		do {
 			if (i >= buffer->size) z = '\0';
@@ -902,4 +914,4 @@ fail:
 	*line = NULL;
 	return retval;
 }
-
+*/
