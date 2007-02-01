@@ -75,6 +75,15 @@ strlist possible_ce_nodes	CE nodes matching to possible_destinations
 bool	suspended	Job is suspended
 string	suspend_reason	Reason for the suspend
 
+string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
+string  pbs_queue	Name of queue in which is job queued
+string  pbs_owner	Owner of job
+string  pbs_name	Name of job
+string  pbs_scheduler	Name of pbs scheduler
+string  pbs_dest_host	Hostname of node whre job is running
+int	pbs_pid		PID of running job
+int	pbs_exit_status	Job exit status
+
 @type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.
 @type Waiting		Accepted by WMS, waiting for resource allocation.
 @type Ready		Matching resources found.

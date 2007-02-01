@@ -498,6 +498,14 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_strlist(ret, stat->possible_destinations);
 	if (ret) ret = enc_strlist(ret, stat->possible_ce_nodes);
 	if (ret) ret = enc_int_array(ret, stat->children_hist, EDG_WLL_NUMBER_OF_STATCODES);
+	if (ret) ret = enc_string(ret, stat->pbs_state);
+	if (ret) ret = enc_string(ret, stat->pbs_queue);
+	if (ret) ret = enc_string(ret, stat->pbs_owner);
+	if (ret) ret = enc_string(ret, stat->pbs_name);
+	if (ret) ret = enc_string(ret, stat->pbs_scheduler);
+	if (ret) ret = enc_string(ret, stat->pbs_dest_host);
+	if (ret) ret = enc_int(ret, stat->pbs_pid);
+	if (ret) ret = enc_int(ret, stat->pbs_exit_status);
 
 	return ret;
 }
@@ -548,7 +556,16 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->possible_ce_nodes = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) {
 			    stat->children_hist = (int*)calloc(EDG_WLL_NUMBER_OF_STATCODES+1, sizeof(int));
-			    dec_int_array(tmp_in, &tmp_in, stat->children_hist); }
+			    dec_int_array(tmp_in, &tmp_in, stat->children_hist);
+	}
+        if (tmp_in != NULL) stat->pbs_state = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_queue = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_owner = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_name = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_scheduler = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_dest_host = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_pid = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_exit_status = dec_int(tmp_in, &tmp_in);
 
 	*rest = tmp_in;
 
@@ -568,6 +585,7 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	if (ret) ret = enc_string(ret, stat->deep_resubmit_seqcode);
 	if (ret) ret = enc_branch_states(ret, stat->branch_states);
 	if (ret) ret = enc_int_array(ret, stat->children_done_hist, EDG_WLL_NUMBER_OF_DONE_CODES-1);
+	if (ret) ret = enc_timeval(ret, stat->last_pbs_event_timestamp);
 	return ret;
 }
 
@@ -606,6 +624,9 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 		}
 		if (tmp_in != NULL) {
 			dec_int_array(tmp_in, &tmp_in, stat->children_done_hist);
+		}
+		if (tmp_in != NULL) {
+			stat->last_pbs_event_timestamp = dec_timeval(tmp_in, &tmp_in);
 		}
 	} else if (tmp_in != NULL) {
 		edg_wll_FreeStatus(pubstat);

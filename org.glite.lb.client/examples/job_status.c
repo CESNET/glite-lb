@@ -198,6 +198,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 	s = edg_wll_StatToString(stat.state); 
 /* print whole flat structure */
 	printf("%sstate : %s\n", ind, s);
+	if (stat.pbs_state) printf("%sPBS state : %s\n", ind, stat.pbs_state);
 	printf("%sjobId : %s\n", ind, j = edg_wlc_JobIdUnparse(stat.jobId));
 	printf("%sowner : %s\n", ind, stat.owner);
 	switch (stat.jobtype) {
@@ -209,6 +210,9 @@ static void printstat(edg_wll_JobStat stat, int level)
                         break;
 		case EDG_WLL_STAT_COLLECTION:
 			printf("%sjobtype : COLLECTION\n", ind);
+                        break;
+		case EDG_WLL_STAT_PBS:
+			printf("%sjobtype : PBS\n", ind);
                         break;
 		default:
 			break;
@@ -227,7 +231,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 		 	for  (i=0; stat.children_states[i].state; i++)
 		 		printstat(stat.children_states[i], level+1);
 		printf("%schildren_hist :\n",ind);
-		if (stat.children_hist) 
+		if (stat.children && stat.children_hist) 
 			for (i=1; i<=stat.children_hist[0]; i++) 
 				printf("%s%14s  %d\n", ind, edg_wll_StatToString(i-1),stat.children_hist[i]);
 	}
