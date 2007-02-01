@@ -11,7 +11,7 @@
  * (includes edg_wll_JobStat API structure)
  */
 
-#define INTSTAT_VERSION "release-3.2_histogram"
+#define INTSTAT_VERSION "release-3.2.1_pbs"
 
 
 // Internal error codes 
@@ -53,6 +53,7 @@ typedef struct _intJobStat {
 
 /*		int		expect_mask; */
 		int 		children_done_hist[EDG_WLL_NUMBER_OF_DONE_CODES];
+		struct timeval	last_pbs_event_timestamp;
 	} intJobStat;
 
 void destroy_intJobStat(intJobStat *);
