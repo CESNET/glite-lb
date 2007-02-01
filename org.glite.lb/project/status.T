@@ -9,6 +9,7 @@ int	jobtype		Type of job
 	_code_ DAG		composite job
 	_code_ COLLECTION	parent of collection of jobs
 	_code_ PBS		PBS job
+	_code_ CONDOR		Condor job
 jobid	parent_job	parent job of subjob
 
 string	seed		string used for generation of subjob IDs
@@ -83,6 +84,16 @@ string  pbs_scheduler	Name of pbs scheduler
 string  pbs_dest_host	Hostname of node whre job is running
 int	pbs_pid		PID of running job
 int	pbs_exit_status	Job exit status
+
+string	condor_status	Condor job status 
+string	condor_universe	Condor job Universe (in job ClassAds)
+string	condor_owner	Job owner
+string	condor_pid	PID of running job
+int	condor_notification	Condor notification 
+int	condor_job_exit_status	Job exit status
+int	condor_starter_exit_status	Condor starter exit status
+int	condor_shadow_exit_status	Condor shadow exit status (see h/exit.h)
+
 
 @type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.
 @type Waiting		Accepted by WMS, waiting for resource allocation.

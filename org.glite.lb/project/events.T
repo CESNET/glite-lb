@@ -143,7 +143,8 @@
 	_code_	PARTITIONABLE	The job is partitionable (may become partitioned).
 	_code_	PARTITIONED	The job is partitioned (dynamically created dag).
 	_code_	COLLECTION	The job is collection (containing static set of subjobs).
-	_code_	PBS
+	_code_	PBS		PBS job
+	_code_	CONDOR		Condor job
 	
 	int	nsubjobs	Number of subjobs this job plans to spawn.
 	_optional_
@@ -240,3 +241,70 @@
 	string	name		Name of resource
 	int	quantity	The quantity
 	string	unit		Units (sec, kB, etc.)
+
+
+@type CondorSubmit		Job SUBMITTED to Condor
+	string	universe	Condor Universe
+	string	host		Submitting machine
+	string	condor_id	Condor ID
+
+@type CondorMatch		
+	string	condor_id
+	string	owner
+	string	host
+	string	node
+
+@type CondorExecute
+	string	node		node
+
+@type CondorChkpt
+	string	info	
+
+@type CondorEvict
+	int	shadow_exit_status	Condor shadow exit status
+	string	reason		reason
+
+@type CondorTerminate
+	int	shadow_exit_status	Condor shadow exit status
+	string	reason		reason
+
+@type CondorAbort
+	int	shadow_exit_status	Condor shadow exit status
+	string	reason		reason
+
+@type CondorSuspend
+	int	shadow_exit_status	Condor shadow exit status
+	string	reason		reason
+
+@type CondorUnsuspend
+	int	shadow_exit_status	Condor shadow exit status
+	string	reason		reason
+
+@type CondorHold
+	int	shadow_exit_status	Condor shadow exit status
+	string	reason		reason
+
+@type CondorRelease
+	int	shadow_exit_status	Condor shadow exit status
+	string	reason		reason
+
+@type CondorNodeExecute
+	string	info	
+
+@type CondorNodeTerminate
+	string	info	
+
+@type CondorPostSctiptTerminate
+	string	info	
+
+@type CondorGlobusSubmit
+	int	status_code
+	_code_  OK              The job was submitted successfully
+	_code_  FAIL            Job submission failed
+	string	info
+
+@type CondorGlobusResource
+	int	status_code
+	_code_	UP
+	_code_	DOWN
+	string	info
