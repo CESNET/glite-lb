@@ -245,20 +245,20 @@
 
 @type CondorSubmit		Job SUBMITTED to Condor
 	string	universe	Condor Universe
-	string	host		Submitting machine
+	string	submit_host	Submitting machine
 	string	condor_id	Condor ID
 
-@type CondorMatch		
-	string	condor_id
-	string	owner
-	string	host
-	string	node
+@type CondorMatch		Job MATCHED
+	string	condor_id	Condor ID
+	string	owner		Owner
+	string	matched_host	Matched host
+	string	node		Node
 
-@type CondorExecute
+@type CondorExecute		Condor execute
 	string	node		node
 
 @type CondorChkpt
-	string	info	
+	string	info		Some useful info
 
 @type CondorEvict
 	int	shadow_exit_status	Condor shadow exit status
@@ -289,22 +289,22 @@
 	string	reason		reason
 
 @type CondorNodeExecute
-	string	info	
+	string	info		Some useful info
 
 @type CondorNodeTerminate
-	string	info	
+	string	info		Some useful info
 
 @type CondorPostSctiptTerminate
-	string	info	
+	string	info		Some useful info
 
 @type CondorGlobusSubmit
 	int	status_code
 	_code_  OK              The job was submitted successfully
 	_code_  FAIL            Job submission failed
-	string	info
+	string	info		Some useful info
 
 @type CondorGlobusResource
-	int	status_code
-	_code_	UP
-	_code_	DOWN
-	string	info
+	int	status_code	Status code
+	_code_	UP		Resource UP
+	_code_	DOWN		Resource DOWM
+	string	info		Some useful info
