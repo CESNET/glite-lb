@@ -80,8 +80,10 @@ plain_reader(void *user_data, char *buffer, int max_len)
 	int len;
 
 	len = edg_wll_plain_read_full(data->conn, buffer, max_len, &data->ctx->p_tmp_timeout);
-	if(len < 0) 
-		edg_wll_SetError(data->ctx, EDG_WLL_IL_PROTO, "plain_reader(): error reading message data");
+	if(len < 0) {
+		edg_wll_SetError(data->ctx, errno, "edg_wll_plain_read_full()");
+		edg_wll_UpdateError(data->ctx, EDG_WLL_IL_PROTO, "plain_reader(): error reading message data");
+	}
 
 	return(len);
 }
@@ -106,12 +108,14 @@ get_reply_plain(edg_wll_Context context, edg_wll_PlainConnection *conn, char **b
 	data.conn = conn;
 	len = read_il_data(&data, &msg, plain_reader);
 	if(len < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error reading message");
+		edg_wll_SetError(context, errno, "read_il_data()");
+		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error reading message");
 		goto get_reply_plain_end;
 	}
 
 	if(decode_il_reply(code_maj, code_min, buf, msg) < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error decoding message");
+		edg_wll_SetError(context, errno, "decode_il_reply()");
+		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error decoding message");
 		goto get_reply_plain_end;
 	}
 
@@ -152,12 +156,14 @@ get_reply_gss(edg_wll_Context context, edg_wll_GssConnection *conn, char **buf, 
 	data.conn = conn;
 	code = read_il_data(&data, &msg, gss_reader);
 	if(code < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_gss(): error reading reply");
+		edg_wll_SetError(context, errno, "read_il_data()");
+		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO, "get_reply_gss(): error reading reply");
 		goto get_reply_gss_end;
 	}
 
 	if(decode_il_reply(code_maj, code_min, buf, msg) < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_gss(): error decoding reply");
+		edg_wll_SetError(context, errno, "decode_il_reply()");
+		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO, "get_reply_gss(): error decoding reply");
 		goto get_reply_gss_end;
 	}
 
@@ -290,7 +296,8 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnect
 
 	len = encode_il_msg(&buffer, logline);
 	if(len < 0) {
-		edg_wll_SetError(context,ENOMEM,"edg_wll_log_proto_client_proxy(): error encoding message");
+		edg_wll_SetError(context,errno,"encode_il_msg()");
+		edg_wll_UpdateError(context,ENOMEM,"edg_wll_log_proto_client_proxy(): error encoding message");
 		goto edg_wll_log_proto_client_proxy_end;
 	}
 
@@ -299,7 +306,8 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnect
 	fprintf(stderr,"log_proto_client_proxy: sending message...\n");
 #endif
 	if (( count = edg_wll_plain_write_full(conn, buffer, len, &context->p_tmp_timeout)) < 0) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_proxy(): error sending message to socket");
+		edg_wll_SetError(context, errno, "edg_wll_plain_write_full()");
+		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_proxy(): error sending message to socket");
 		goto edg_wll_log_proto_client_proxy_end;
 	}
 
@@ -308,7 +316,8 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnect
 	fprintf(stderr,"log_proto_client_proxy: reading answer from server...\n");
 #endif
 	if ((err = get_reply_plain(context, conn, &answer, &lbproto_code, &code)) != 0 ) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_proxy(): error reading answer from L&B Proxy server");
+		edg_wll_SetError(context, errno, "get_reply_plain()");
+		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_proxy(): error reading answer from L&B Proxy server");
 	} else {
 #ifdef EDG_WLL_LOG_STUB
 		fprintf(stderr,"log_proto_client_proxy: read answer \"%d:%d: %s\"\n",lbproto_code,code,answer);
@@ -366,7 +375,8 @@ int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnecti
 	/* encode message */
 	len = encode_il_msg(&buffer, logline);
 	if(len < 0) {
-		edg_wll_SetError(context, ENOMEM, "edg_wll_log_proto_client_direct(): error encoding message");
+		edg_wll_SetError(context, errno, "encode_il_msg()");
+		edg_wll_UpdateError(context, ENOMEM, "edg_wll_log_proto_client_direct(): error encoding message");
 		goto edg_wll_log_proto_client_direct_end;
 	}
 		
@@ -385,7 +395,8 @@ int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnecti
 	fprintf(stderr,"log_proto_client_direct: reading answer from server...\n");
 #endif
 	if ((err = get_reply_gss(context, con, &answer, &lbproto_code, &code)) != 0 ) {
-		edg_wll_SetError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_direct(): error reading answer from L&B direct server");
+		edg_wll_SetError(context, errno, "get_reply_gss()");
+		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_direct(): error reading answer from L&B direct server");
 	} else {
 #ifdef EDG_WLL_LOG_STUB
 		fprintf(stderr,"log_proto_client_direct: read answer \"%d:%d: %s\"\n",lbproto_code,code,answer);
