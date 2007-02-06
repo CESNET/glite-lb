@@ -15,6 +15,7 @@ class EventParseTest: public  CppUnit::TestFixture
 @@@{
         for my $e ($event->getTypesOrdered) {
                 my $u = lcfirst $e;
+		if ($u =~ m/^pBS/) { $u = ucfirst $u; }
                 my $c = getTypeComment $event $e;
                 gen "\tCPPUNIT_TEST($u);\n";
         }
@@ -28,6 +29,7 @@ public:
 @@@{
         for my $e ($event->getTypesOrdered) {
                 my $u = lcfirst $e;
+		if ($u =~ m/^pBS/) { $u = ucfirst $u; }
                 my $c = getTypeComment $event $e;
                 gen "\tvoid $u();\n";
         }
@@ -84,6 +86,7 @@ void EventParseTest::regJob()
 @@@{
         for my $e ($event->getTypesOrdered) {
                 my $l = lcfirst $e;
+		if ($l =~ m/^pBS/) { $l = ucfirst $l; }
                 my $u = uc $e;
                 my $c = getTypeComment $event $e;
                 gen "

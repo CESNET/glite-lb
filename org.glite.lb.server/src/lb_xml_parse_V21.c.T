@@ -872,6 +872,7 @@ int edg_wll_QueryEventsToXMLV21(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *e
                                 my $ft = $f->{type};
 				my $n = $f->{null};
 				$t = lcfirst $t;
+				if ($t =~ m/^pBS/) { $t = ucfirst $t; }
                                 gen "\t\tedg_wll_add_$ft\_to_XMLBody(&pomB, eventsOut[i].$t.$_, \"$_\", $n);\n";
                         }
                 	gen "\t\tbreak;\n";

@@ -121,6 +121,7 @@ static void edg_wll_set_event_field(
 			my $fucname = ucfirst $n;
 			my $uctype = uc $_;
 			my $flctype = lcfirst $_;
+			if ($flctype =~ m/^pBS/) { $flctype = ucfirst $flctype; }
 			my $frs = $f->{codes} ?
 				"event->$flctype.$name = edg_wll_StringTo$_${fucname}(value);" :
 				fromString $f 'value',"event->$flctype.$name";

@@ -278,6 +278,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		$event->getTypes) {
 	my $tu = uc $t;
 	my $tl = lcfirst $t;
+	if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
 	gen $indent."case EDG_WLL_EVENT_$tu : \n";
 	selectType $event $t;
 	for ($event->getFieldsOrdered) {
@@ -330,6 +331,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		$event->getTypes) {
 	my $tu = uc $t;
 	my $tl = lcfirst $t;
+	if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
 	gen $indent."case EDG_WLL_EVENT_$tu :\n";
 	selectType $event $t;
 	for ($event->getFieldsOrdered) {

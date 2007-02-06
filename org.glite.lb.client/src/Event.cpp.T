@@ -39,6 +39,7 @@ sub typeswitch {
 		my $f = selectField $event $_;
 		if($ctype{$f->{type}}) {
   		  my $cstr = $ftype eq '_common_' ? 'any' : lcfirst $ftype;
+		  if ($cstr =~ m/^pBS/) { $cstr = ucfirst $cstr; }
 		  my $cname = getName $f 'C';
 		  gen "$indent\tcase Event::".uc($f->{name}).": return(cev->$cstr.$cname);\n";
 		} elsif (($f->{type} eq "int") && 
@@ -46,6 +47,7 @@ sub typeswitch {
 			 $f->{codes}) {
 		  # conversion from int to string (well, enum to string)
   		  my $cstr = $ftype eq '_common_' ? 'any' : lcfirst $ftype;
+		  if ($cstr =~ m/^pBS/) { $cstr = ucfirst $cstr; }
 		  my $cname = getName $f 'C';
 		  my $fn = $ftype eq '_common_' ? "" : ucfirst $ftype;
 		  my $c =  $fn . ucfirst $f->{name}; 

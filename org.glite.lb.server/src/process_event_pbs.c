@@ -60,7 +60,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				rep(js->pub.pbs_state, "Q");
 			}
 			if (USABLE_DATA(res)) {
-				js->pub.pbs_queue = strdup(e->pBSReg.queue);
+				js->pub.pbs_queue = strdup(e->PBSReg.queue);
 			}
 			break;
 		case EDG_WLL_EVENT_PBSQUEUED:
@@ -70,10 +70,10 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			}
 			if (USABLE_DATA(res)) {
 				if (!js->pub.pbs_queue)
-					strdup(e->pBSQueued.queue);
-				assert(!strcmp(js->pub.pbs_queue, e->pBSQueued.queue));
-				rep(js->pub.pbs_owner,e->pBSQueued.owner);
-				rep(js->pub.pbs_name,e->pBSQueued.name);
+					strdup(e->PBSQueued.queue);
+				assert(!strcmp(js->pub.pbs_queue, e->PBSQueued.queue));
+				rep(js->pub.pbs_owner,e->PBSQueued.owner);
+				rep(js->pub.pbs_name,e->PBSQueued.name);
 			}
 			break;
 		case EDG_WLL_EVENT_PBSPLAN:
@@ -90,9 +90,9 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				rep(js->pub.pbs_state, "R");
 			}
 			if (USABLE_DATA(res)) {
-				rep(js->pub.pbs_scheduler, e->pBSRun.scheduler);
-				rep(js->pub.pbs_dest_host, e->pBSRun.dest_host);
-				js->pub.pbs_pid = e->pBSRun.pid;
+				rep(js->pub.pbs_scheduler, e->PBSRun.scheduler);
+				rep(js->pub.pbs_dest_host, e->PBSRun.dest_host);
+				js->pub.pbs_pid = e->PBSRun.pid;
 			}
 			break;
 		case EDG_WLL_EVENT_PBSDONE:
@@ -101,7 +101,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				rep(js->pub.pbs_state, "C");
 			}
 			if (USABLE_DATA(res)) {
-				js->pub.pbs_exit_status =  e->pBSDone.exit_status;	
+				js->pub.pbs_exit_status =  e->PBSDone.exit_status;	
 			}
 			break;
 		default:

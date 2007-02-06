@@ -814,6 +814,7 @@ static void endQueryEvents(void *data, const char *el UNUSED_VAR)
                         my $f = selectField $event $t;
                         my $ft = $f->{type};
 			$fo[0] = $fo[0] eq '_common_' ? 'any' : lcfirst $fo[0];
+			if ($fo[0] =~ m/^pBS/) { $fo[0] = ucfirst $fo[0]; }
                         gen "$bi   XMLCtx->eventsOutGlobal[XMLCtx->position].$fo[0].$t =\n";
                         gen "$bi \tedg_wll_from_string_to_$ft(XMLCtx);\n";
                 }
@@ -826,6 +827,7 @@ static void endQueryEvents(void *data, const char *el UNUSED_VAR)
 	                        $t = 'any' if $_ eq '_common_';
         	                my $u = uc $_;
 				$_ = lcfirst $_;
+				if ($_ =~ m/^pBS/) { $_ = ucfirst $_; }
                 	        gen "$bi     case EDG_WLL_EVENT_$u :\n";
                         	gen "$bi \t  XMLCtx->eventsOutGlobal[XMLCtx->position].$_.$t =\n";
 	                        gen "$bi \t    edg_wll_from_string_to_$ft(XMLCtx);\n";
