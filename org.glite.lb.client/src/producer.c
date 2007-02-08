@@ -342,7 +342,7 @@ static int edg_wll_LogEventMaster(
 	va_list	fmt_args;
 	int	priority;
 	int	ret;
-	edg_wll_LogLine in,out;
+	edg_wll_LogLine in = NULL, out = NULL;
 
 	priority = flags & LOGFLAG_SYNC;
 
