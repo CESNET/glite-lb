@@ -223,6 +223,12 @@
 
 @type PBSPlan		Job considered for running
 
+@type PBSMatch		Scheduler created exec_host
+	string	dest_host	Aka exec_host
+
+@type PBSPending	Scheduler is not able to find exec_host, or some error occured
+	string	reason		Reasons of job pendation or errors
+
 @type PBSRun		Job attempted to be run by the logging component
 	string	scheduler	Scheduler ID
 	_optional_
@@ -241,6 +247,9 @@
 	string	name		Name of resource
 	int	quantity	The quantity
 	string	unit		Units (sec, kB, etc.)
+
+@type PBSError		Any error occured
+	string	reason		Error reason
 
 
 @type CondorSubmit		Job SUBMITTED to Condor
