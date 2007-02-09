@@ -502,10 +502,12 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_string(ret, stat->pbs_queue);
 	if (ret) ret = enc_string(ret, stat->pbs_owner);
 	if (ret) ret = enc_string(ret, stat->pbs_name);
+	if (ret) ret = enc_string(ret, stat->pbs_reason);
 	if (ret) ret = enc_string(ret, stat->pbs_scheduler);
 	if (ret) ret = enc_string(ret, stat->pbs_dest_host);
 	if (ret) ret = enc_int(ret, stat->pbs_pid);
 	if (ret) ret = enc_int(ret, stat->pbs_exit_status);
+	if (ret) ret = enc_string(ret, stat->pbs_error);
 
 	return ret;
 }
@@ -562,10 +564,12 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->pbs_queue = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_owner = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_name = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_reason = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_scheduler = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_dest_host = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_pid = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_exit_status = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_error = dec_string(tmp_in, &tmp_in);
 
 	*rest = tmp_in;
 

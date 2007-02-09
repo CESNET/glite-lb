@@ -80,10 +80,13 @@ string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
 string  pbs_queue	Name of queue in which is job queued
 string  pbs_owner	Owner of job
 string  pbs_name	Name of job
+string  pbs_reason	Glued reasons/errors leading to pending events
+string  pbs_name	Name of job
 string  pbs_scheduler	Name of pbs scheduler
-string  pbs_dest_host	Hostname of node whre job is running
+string  pbs_dest_host	Hostname of node where job is running
 int	pbs_pid		PID of running job
 int	pbs_exit_status	Job exit status
+string	pbs_error	Glued error descriptions from error events
 
 string	condor_status	Condor job status 
 string	condor_universe	Condor job Universe (in job ClassAds)
