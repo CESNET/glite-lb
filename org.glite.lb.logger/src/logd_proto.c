@@ -301,8 +301,14 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	edg_wll_ll_log(LOG_INFO,"Reading socket header...");
 	memset(header, 0, EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1);
 	if ((err = edg_wll_gss_read_full(con, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, timeout, &count, &gss_stat)) < 0) {
-		edg_wll_ll_log(LOG_INFO,"error.\n");
-		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving header");
+		if (err == EDG_WLL_GSS_ERROR_EOF) {
+			edg_wll_ll_log(LOG_INFO,"no data available.\n");
+			answer = err;
+			answer_sent = 1; /* i.e. do not try to send answer back */
+		} else {
+			edg_wll_ll_log(LOG_INFO,"error.\n");
+			answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving header");
+		}
 		goto edg_wll_log_proto_server_end;
 	} else {
 		edg_wll_ll_log(LOG_INFO,"o.k.\n");
@@ -453,7 +459,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	/* if not command, save message to file */
 	if(strstr(msg, "DG.TYPE=\"command\"") == NULL) {
 		/* compose the name of the log file */
-		edg_wll_ll_log(LOG_DEBUG,"Composing filename from prefix \"%s\" and unique jobId \"%s\"...",prefix,jobId);
+//		edg_wll_ll_log(LOG_DEBUG,"Composing filename from prefix \"%s\" and unique jobId \"%s\"...",prefix,jobId);
 		count = strlen(prefix);
 		strncpy(outfilename,prefix,count); count_total=count;
 		strncpy(outfilename+count_total,".",1); count_total+=1; count=strlen(jobId);
@@ -553,7 +559,7 @@ edg_wll_log_proto_server_end:
 	if (msg) free(msg);
 	if (event) free(event);
 
-	edg_wll_ll_log(LOG_INFO,"Done.\n");
+//	edg_wll_ll_log(LOG_INFO,"Done.\n");
 
 	return answer;
 

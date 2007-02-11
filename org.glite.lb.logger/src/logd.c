@@ -236,10 +236,14 @@ doit(int socket, gss_cred_id_t cred_handle, char *file_name_prefix, int noipc, i
 		break;
 	}
 	if (FD_ISSET(con.sock,&fdset)) {
-		if ((ret = edg_wll_log_proto_server(&con,&timeout,subject,file_name_prefix,noipc,noparse)) != 0) {
+		ret = edg_wll_log_proto_server(&con,&timeout,subject,file_name_prefix,noipc,noparse);
+		if (ret != 0) {
 			edg_wll_ll_log(LOG_DEBUG,"timeout after edg_wll_log_proto_server is %d.%06d sec\n",
 				(int)timeout.tv_sec, (int) timeout.tv_usec);
-			edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server() error\n");
+			if (ret != EDG_WLL_GSS_ERROR_EOF) 
+				edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): Error\n");
+			else if (count == 1)
+				edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): Error. EOF occured.\n");
 			timeout.tv_sec = 0;
 			timeout.tv_usec = 0;
 			break;
