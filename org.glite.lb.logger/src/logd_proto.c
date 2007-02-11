@@ -82,8 +82,8 @@ int init_confirmation()
 
 	/* create socket */
 	if((confirm_sock=socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
-		edg_wll_ll_log(LOG_ERR,"init_confirmation(): error creating socket\n");
 		SYSTEM_ERROR("socket");
+		edg_wll_ll_log(LOG_ERR,"init_confirmation(): error creating socket\n");
 		return(-1);
 	}
 
@@ -94,8 +94,8 @@ int init_confirmation()
 
 	/* bind the socket */
 	if(bind(confirm_sock, (struct sockaddr *)&saddr, sizeof(saddr.sun_path)) < 0) {
-		edg_wll_ll_log(LOG_ERR,"init_confirmation(): error binding socket\n");
 		SYSTEM_ERROR("bind");
+		edg_wll_ll_log(LOG_ERR,"init_confirmation(): error binding socket\n");
 		close(confirm_sock);
 		unlink(confirm_sock_name);
 		return(-1);
@@ -103,8 +103,8 @@ int init_confirmation()
 
 	/* and listen */
 	if(listen(confirm_sock, 5) < 0) {
-		edg_wll_ll_log(LOG_ERR,"init_confirmation(): error listening on socket\n");
 		SYSTEM_ERROR("listen");
+		edg_wll_ll_log(LOG_ERR,"init_confirmation(): error listening on socket\n");
 		close(confirm_sock);
 		unlink(confirm_sock_name);
 		return(-1);
@@ -133,8 +133,8 @@ int wait_for_confirmation(struct timeval *timeout, int *code)
 
 	/* wait for confirmation at most timeout seconds */
 	if ((tmp=select(confirm_sock+1, &fds, NULL, NULL, timeout?&to:NULL)) < 0) {
-		edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error selecting socket\n");
 		SYSTEM_ERROR("select");
+		edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error selecting socket\n");
 		ret = -1;
 	} else {
 		if (tmp == 0)
@@ -143,13 +143,13 @@ int wait_for_confirmation(struct timeval *timeout, int *code)
 			int nsd = accept(confirm_sock, NULL, NULL);
 			ret = 1;
 			if(nsd < 0) {
-				edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error accepting a connection on a socket\n");
 				SYSTEM_ERROR("accept");
+				edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error accepting a connection on a socket\n");
 				ret = -1;
 			} else {
 				if(recv(nsd, code, sizeof(*code), MSG_NOSIGNAL) < 0) {
-					edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error receiving a message from a socket\n");
 					SYSTEM_ERROR("recv");
+					edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error receiving a message from a socket\n");
 					ret = -1;
 				}
 				close(nsd);
@@ -196,23 +196,23 @@ int do_listen(int port)
 
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sock == -1) { 
-		edg_wll_ll_log(LOG_ERR,"do_listen(): error creating socket\n");
 		SYSTEM_ERROR("socket"); 
+		edg_wll_ll_log(LOG_ERR,"do_listen(): error creating socket\n");
 		return -1; 
 	}
 
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 	ret = bind(sock, (struct sockaddr *)&my_addr, sizeof(my_addr));
 	if (ret == -1) { 
-		edg_wll_ll_log(LOG_ERR,"do_listen(): error binding socket\n");
 		SYSTEM_ERROR("bind"); 
+		edg_wll_ll_log(LOG_ERR,"do_listen(): error binding socket\n");
 		return -1; 
 	}
 
 	ret = listen(sock, 5);
 	if (ret == -1) { 
-		edg_wll_ll_log(LOG_ERR,"do_listen(): error listening on socket\n");
 		SYSTEM_ERROR("listen"); 
+		edg_wll_ll_log(LOG_ERR,"do_listen(): error listening on socket\n");
 		close(sock); 
 		return -1; 
 	}
@@ -233,7 +233,7 @@ int do_listen(int port)
  *
  *----------------------------------------------------------------------
  */
-int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefix, int noipc, int noparse)
+int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout, char *name, char *prefix, int noipc, int noparse)
 {
 	char	*buf,*dglllid,*dguser,*jobId,*name_esc;
 	char	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1];
@@ -252,7 +252,6 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	int	priority;
 	long	lllid;
 	int	unique;
-	struct timeval timeout;
 	int	err;
 	edg_wll_Context	context;
 	edg_wll_Event	*event;
@@ -262,12 +261,8 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	errno = i = answer = answer_sent = size = msg_size = dglllid_size = dguser_size = count = count_total = msg_sock = filedesc = filelock_status = /* priority */ unique = err = 0;     
         buf = dglllid = dguser = jobId = name_esc = msg = msg_begin = NULL;
 	event = NULL;
-	if (EDG_WLL_LOG_TIMEOUT_MAX > EDG_WLL_LOG_SYNC_TIMEOUT_MAX) {
-		timeout.tv_sec = EDG_WLL_LOG_TIMEOUT_MAX;
-	} else { 
-		timeout.tv_sec = EDG_WLL_LOG_SYNC_TIMEOUT_MAX;
-	}
-        	timeout.tv_usec = 0;
+
+	/* init */
 	if (edg_wll_InitContext(&context) != 0) {
 		edg_wll_ll_log(LOG_ERR,"edg_wll_InitContex(): error.\n");
 		answer = ENOMEM; 
@@ -305,13 +300,14 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	/* receive socket header */
 	edg_wll_ll_log(LOG_INFO,"Reading socket header...");
 	memset(header, 0, EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1);
-	if ((err = edg_wll_gss_read_full(con, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &timeout, &count, &gss_stat)) < 0) {
+	if ((err = edg_wll_gss_read_full(con, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, timeout, &count, &gss_stat)) < 0) {
 		edg_wll_ll_log(LOG_INFO,"error.\n");
 		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving header");
 		goto edg_wll_log_proto_server_end;
 	} else {
 		edg_wll_ll_log(LOG_INFO,"o.k.\n");
 	}
+
 	edg_wll_ll_log(LOG_DEBUG,"Checking socket header...");
 	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH] = '\0';
 	if (strncmp(header,EDG_WLL_LOG_SOCKET_HEADER,EDG_WLL_LOG_SOCKET_HEADER_LENGTH)) {
@@ -329,7 +325,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 /* XXX: obsolete
 	edg_wll_ll_log(LOG_DEBUG,"Reading message priority...");
 	count = 0;
-	if ((err = edg_wll_gss_read_full(con, &priority, sizeof(priority), &timeout, &count, &gss_stat)) < 0) {
+	if ((err = edg_wll_gss_read_full(con, &priority, sizeof(priority), timeout, &count, &gss_stat)) < 0) {
 		edg_wll_ll_log(LOG_DEBUG,"error.\n");
 		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving message priority");
                 goto edg_wll_log_proto_server_end;
@@ -340,7 +336,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 
         edg_wll_ll_log(LOG_DEBUG,"Reading message size...");
 	count = 0;
-	if ((err = edg_wll_gss_read_full(con, size_end, 4, &timeout, &count,&gss_stat)) < 0) {
+	if ((err = edg_wll_gss_read_full(con, size_end, 4, timeout, &count,&gss_stat)) < 0) {
 		edg_wll_ll_log(LOG_DEBUG,"error.\n");
 		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving message size");
                 goto edg_wll_log_proto_server_end;
@@ -366,8 +362,8 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 
 	/* format the DG.LLLID string */
 	if (asprintf(&dglllid,"DG.LLLID=%ld ",lllid) == -1) {
-		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): nomem for DG.LLLID\n");
 		SYSTEM_ERROR("asprintf");
+		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): nomem for DG.LLLID\n");
 		answer = ENOMEM;
 		goto edg_wll_log_proto_server_end;
 	}
@@ -376,8 +372,8 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	/* format the DG.USER string */
 	name_esc = edg_wll_LogEscape(name);
 	if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
-		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): nomem for DG.USER\n");
 		SYSTEM_ERROR("asprintf");
+		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): nomem for DG.USER\n");
 		answer = ENOMEM;
 		goto edg_wll_log_proto_server_end;
 	}
@@ -386,8 +382,8 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	/* allocate enough memory for all data */
 	msg_size = dglllid_size + dguser_size + size + 1;
 	if ((msg = malloc(msg_size)) == NULL) {
-		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): out of memory for allocating message\n");
 		SYSTEM_ERROR("malloc");
+		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): out of memory for allocating message\n");
 		answer = ENOMEM;
 		goto edg_wll_log_proto_server_end;
 	}
@@ -399,7 +395,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 	edg_wll_ll_log(LOG_INFO,"Reading message from socket...");
 	buf = msg_begin + dguser_size;
 	count = 0;
-	if ((err = edg_wll_gss_read_full(con, buf, size, &timeout, &count, &gss_stat)) < 0) {
+	if ((err = edg_wll_gss_read_full(con, buf, size, timeout, &count, &gss_stat)) < 0) {
 		edg_wll_ll_log(LOG_INFO,"error.\n");
 		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving message");
 		goto edg_wll_log_proto_server_end;
@@ -447,7 +443,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 		jobId = edg_wlc_JobIdGetUnique(j);
 		edg_wlc_JobIdFree(j);
 
-/* FIXME: get the priority from message some better way */
+/* TODO: get the priority from message some better way */
 		if (strstr(msg, "DG.PRIORITY=1") != NULL)
 			event->any.priority = 1;
 		else event->any.priority = 0;
@@ -473,9 +469,9 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 		edg_wll_ll_log(LOG_INFO,"Writing message to \"%s\"...",outfilename);
 		if ( edg_wll_log_event_write(context, outfilename, msg, FCNTL_ATTEMPTS, FCNTL_TIMEOUT, &filepos) ) {
 			char *errd;
+			SYSTEM_ERROR("edg_wll_log_event_write");
 			answer = edg_wll_Error(context, NULL, &errd);
-			edg_wll_ll_log(LOG_INFO,"error.\n");
-			SYSTEM_ERROR(errd);
+			edg_wll_ll_log(LOG_ERR,"edg_wll_log_event_write error: %s\n",errd);
 			free(errd);
 			goto edg_wll_log_proto_server_end;
 		} else edg_wll_ll_log(LOG_INFO,"o.k.\n");
@@ -492,20 +488,15 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 
 	/* if not priority send now the answer back to client */
 	if (!event->any.priority) {
-		if (!send_answer_back(con,answer,&timeout)) { 
+		if (!send_answer_back(con,answer,timeout)) { 
 			answer_sent = 1;
 		}
 	} 
 
 	/* send message via IPC (UNIX socket) */
 	if (!noipc) {
-		edg_wll_ll_log(LOG_DEBUG,
-					"Sending via IPC (UNIX socket \"%s\")\n\t"
-					"the message position %ld (%d bytes)...",
-					outfilename, filepos, sizeof(filepos));
-
 		if (event->any.priority) {
-			edg_wll_ll_log(LOG_DEBUG,"- Initializing 2nd UNIX socket for priority messages confirmation...");
+			edg_wll_ll_log(LOG_DEBUG,"Initializing 2nd UNIX socket (%s) for priority messages confirmation...",confirm_sock_name);
 			if(init_confirmation() < 0) { 
 				edg_wll_ll_log(LOG_DEBUG,"error.\n");
 				answer = errno; 
@@ -515,18 +506,22 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 			}
 		}	  
 
-		if ( edg_wll_log_event_send(context, socket_path, filepos, msg, msg_size, CONNECT_ATTEMPTS, &timeout) ) {
+		edg_wll_ll_log(LOG_DEBUG,
+			"Sending via IPC (UNIX socket \"%s\")\n\t"
+			"the message position %ld (%d bytes)",
+			socket_path, filepos, sizeof(filepos));
+		if ( edg_wll_log_event_send(context, socket_path, filepos, msg, msg_size, CONNECT_ATTEMPTS, timeout) ) {
 			char *errd;
+			SYSTEM_ERROR("edg_wll_log_event_send");
 			answer = edg_wll_Error(context, NULL, &errd);
-			edg_wll_ll_log(LOG_INFO,"error.\n");
-			SYSTEM_ERROR(errd);
+			edg_wll_ll_log(LOG_ERR,"edg_wll_log_event_send error: %s\n",errd);
 			free(errd);
 			goto edg_wll_log_proto_server_end_1;
-		} else edg_wll_ll_log(LOG_INFO,"o.k.");
+		} else edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 
 		if (event->any.priority) {
 			edg_wll_ll_log(LOG_INFO,"Waiting for confirmation...");
-			if ((count = wait_for_confirmation(&timeout, &answer)) < 0) {
+			if ((count = wait_for_confirmation(timeout, &answer)) < 0) {
 				edg_wll_ll_log(LOG_INFO,"error.\n");
 				edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error.\n"); 
 				answer = errno;
@@ -541,13 +536,13 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefi
 			}
 		}
 	} else {
-		edg_wll_ll_log(LOG_NOTICE,"NOT sending via IPC.\n");
+		edg_wll_ll_log(LOG_DEBUG,"NOT sending via IPC.\n");
 	}
 
 edg_wll_log_proto_server_end:
 	/* if not sent already, send the answer back to client */
 	if (!answer_sent) {
-		answer = send_answer_back(con,answer,&timeout);
+		answer = send_answer_back(con,answer,timeout);
 	} 
 	/* clean */
 	edg_wll_FreeContext(context);
@@ -596,8 +591,8 @@ int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, cons
 			edg_wll_ll_log(LOG_ERR,"%s: %s, timeout expired\n", func, text);	
 			ret = EAGAIN;
 			break;
-		/* XXX DK: co tenhle break??: */
-		case EDG_WLL_GSS_ERROR_ERRNO: perror("edg_wll_gss_read()"); break;
+		case EDG_WLL_GSS_ERROR_ERRNO: 
+			SYSTEM_ERROR(func);
 			edg_wll_ll_log(LOG_ERR,"%s: %s, system error occured\n", func, text);	
 			ret = EAGAIN;
 			break;
@@ -638,22 +633,20 @@ void edg_wll_ll_log_init(int level) {
  *----------------------------------------------------------------------
  */
 void edg_wll_ll_log(int level, const char *fmt, ...) {
-    char *err_text;
+	char *err_text;
 	va_list fmt_args;
 
 	va_start(fmt_args, fmt);
-    vasprintf(&err_text, fmt, fmt_args);
-    va_end(fmt_args);
+	vasprintf(&err_text, fmt, fmt_args);
+	va_end(fmt_args);
 
 	if(level <= edg_wll_ll_log_level) 
 		fprintf(stderr, "[%d] %s", (int) getpid(), err_text);
 	if(level <= LOG_ERR) {
-        openlog("edg-wl-logd", LOG_PID | LOG_CONS, LOG_DAEMON);
+		openlog("edg-wl-logd", LOG_PID | LOG_CONS, LOG_DAEMON);
 		syslog(level, "%s", err_text);
 		closelog();
 	}
 
-    if(err_text) free(err_text);
-
-    return;
+	if (err_text) free(err_text);
 }

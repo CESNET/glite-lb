@@ -19,7 +19,7 @@ extern "C" {
 #include "glite/lb/log_proto.h"
 #include "glite/security/glite_gss.h"
 
-int edg_wll_log_proto_server(edg_wll_GssConnection *con, char *name, char *prefix, int noipc, int noparse);
+int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout, char *name, char *prefix, int noipc, int noparse);
 int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, const char *text);
 
 #define SYSTEM_ERROR(my_err) { \
@@ -29,25 +29,25 @@ int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, cons
 		edg_wll_ll_log(LOG_ERR,"%s\n",my_err); }
 
 /* locallogger daemon error handling */
-
 extern int edg_wll_ll_log_level;
 void edg_wll_ll_log_init(int level);
 void edg_wll_ll_log(int level, const char *fmt, ...);
 
 
 /* fcntl defaults */
-
 #define FCNTL_ATTEMPTS		5
 #define FCNTL_TIMEOUT		1
 
-
 /* connect defaults */
-
 #define CONNECT_ATTEMPTS	5
 
+/* accept defaults */
+#define ACCEPT_TIMEOUT		30
+
+/* connection defaults */
+#define CONNECTION_TIMEOUT	EDG_WLL_LOG_SYNC_TIMEOUT_MAX
 
 /* locallogger daemon listen and connect functions prototypes */
-
 int do_listen(int port);
 int do_connect(char *hostname, int port);
 
