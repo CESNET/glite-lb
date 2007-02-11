@@ -23,7 +23,10 @@
 int edg_wll_log_proto_handle_gss_failures(edg_wll_Context context, int code, edg_wll_GssStatus *gss_code, const char *text)
 {
         static char     err[256];
-        int             ret = 0;
+        int             myerrno, ret;
+
+	myerrno = errno;
+	ret = 0;
 
 	edg_wll_ResetError(context);
 
@@ -40,8 +43,14 @@ int edg_wll_log_proto_handle_gss_failures(edg_wll_Context context, int code, edg
 			ret = edg_wll_SetError(context,ENOTCONN,err);
 			break;
 		case EDG_WLL_GSS_ERROR_ERRNO: 
-			snprintf(err, sizeof(err), "%s;; GSS Error: system error occured;", text);	
-			ret = edg_wll_SetError(context,ENOTCONN,err);
+			{
+				const char *msg1;
+				char *msg2;
+				msg1 = strerror(myerrno);
+				asprintf(&msg2, "%s;; System Error: %s", text, msg1);
+				ret = edg_wll_SetError(context,ENOTCONN,msg2);
+				free(msg2);
+			}
 			break;
                 case EDG_WLL_GSS_ERROR_GSS:
 			snprintf(err, sizeof(err), "%s;; GSS Error: GSS failure occured", text);
@@ -51,7 +60,7 @@ int edg_wll_log_proto_handle_gss_failures(edg_wll_Context context, int code, edg
                         { 
                                 const char *msg1;
                                 char *msg2;
-                                msg1 = hstrerror(errno);
+                                msg1 = hstrerror(myerrno);
                                 asprintf(&msg2, "%s;; GSS Error: %s", text, msg1);
                                 ret = edg_wll_SetError(context,EDG_WLL_ERROR_DNS, msg2);
                                 free(msg2);
@@ -108,14 +117,12 @@ get_reply_plain(edg_wll_Context context, edg_wll_PlainConnection *conn, char **b
 	data.conn = conn;
 	len = read_il_data(&data, &msg, plain_reader);
 	if(len < 0) {
-		edg_wll_SetError(context, errno, "read_il_data()");
-		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error reading message");
+		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error reading message");
 		goto get_reply_plain_end;
 	}
 
 	if(decode_il_reply(code_maj, code_min, buf, msg) < 0) {
-		edg_wll_SetError(context, errno, "decode_il_reply()");
-		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error decoding message");
+		edg_wll_SetError(context, EDG_WLL_IL_PROTO, "get_reply_plain(): error decoding message");
 		goto get_reply_plain_end;
 	}
 
@@ -156,14 +163,15 @@ get_reply_gss(edg_wll_Context context, edg_wll_GssConnection *conn, char **buf, 
 	data.conn = conn;
 	code = read_il_data(&data, &msg, gss_reader);
 	if(code < 0) {
-		edg_wll_SetError(context, errno, "read_il_data()");
 		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO, "get_reply_gss(): error reading reply");
 		goto get_reply_gss_end;
 	}
 
 	if(decode_il_reply(code_maj, code_min, buf, msg) < 0) {
-		edg_wll_SetError(context, errno, "decode_il_reply()");
-		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO, "get_reply_gss(): error decoding reply");
+		char *et;
+		asprintf(&et,"get_reply_gss(): error decoding reply \"%s\"", msg);
+		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO, et);
+		if (et) free(et);
 		goto get_reply_gss_end;
 	}
 
@@ -316,7 +324,6 @@ int edg_wll_log_proto_client_proxy(edg_wll_Context context, edg_wll_PlainConnect
 	fprintf(stderr,"log_proto_client_proxy: reading answer from server...\n");
 #endif
 	if ((err = get_reply_plain(context, conn, &answer, &lbproto_code, &code)) != 0 ) {
-		edg_wll_SetError(context, errno, "get_reply_plain()");
 		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_proxy(): error reading answer from L&B Proxy server");
 	} else {
 #ifdef EDG_WLL_LOG_STUB
@@ -395,7 +402,6 @@ int edg_wll_log_proto_client_direct(edg_wll_Context context, edg_wll_GssConnecti
 	fprintf(stderr,"log_proto_client_direct: reading answer from server...\n");
 #endif
 	if ((err = get_reply_gss(context, con, &answer, &lbproto_code, &code)) != 0 ) {
-		edg_wll_SetError(context, errno, "get_reply_gss()");
 		edg_wll_UpdateError(context, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_direct(): error reading answer from L&B direct server");
 	} else {
 #ifdef EDG_WLL_LOG_STUB
