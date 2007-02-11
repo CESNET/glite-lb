@@ -148,63 +148,120 @@ static int
 doit(int socket, gss_cred_id_t cred_handle, char *file_name_prefix, int noipc, int noparse)
 {
     char 	*subject;
-    int 	ret;
-    struct timeval timeout = {10,0};
+    int 	ret,fd,count;
+    struct timeval timeout;
     edg_wll_GssConnection	con;
     edg_wll_GssStatus	gss_stat;
     gss_buffer_desc	gss_token = GSS_C_EMPTY_BUFFER;
     gss_name_t	client_name = GSS_C_NO_NAME;
     OM_uint32	min_stat;
     gss_OID	name_type = GSS_C_NO_OID;
+    fd_set fdset;
 
-    /* authentication */
-    edg_wll_ll_log(LOG_INFO,"Processing authentication:\n");
-// FIXME - put here some meaningfull value of timeout + do somthing if timeouted
-    ret = edg_wll_gss_accept(cred_handle,socket,&timeout,&con, &gss_stat);
-    if (ret) {
-	    edg_wll_ll_log(LOG_ERR,"edg_wll_gss_accept() failed\n");
-	    return(-1);
+    ret = count = 0;
+    FD_ZERO(&fdset);
+
+    /* accept */
+    timeout.tv_sec = ACCEPT_TIMEOUT;
+    timeout.tv_usec = 0;
+    edg_wll_ll_log(LOG_DEBUG,"Accepting connection (remaining timeout %d.%06d sec)\n",
+		(int)timeout.tv_sec, (int) timeout.tv_usec);
+    if ((ret = edg_wll_gss_accept(cred_handle,socket,&timeout,&con, &gss_stat)) < 0) {
+	edg_wll_ll_log(LOG_DEBUG,"timeout after gss_accept is %d.%06d sec\n",
+		(int)timeout.tv_sec, (int) timeout.tv_usec);
+	return edg_wll_log_proto_server_failure(ret,&gss_stat,"edg_wll_gss_accept() failed\n");
     }
 
+    /* authenticate */
+    edg_wll_ll_log(LOG_INFO,"Processing authentication:\n");
     gss_stat.major_status = gss_inquire_context(&gss_stat.minor_status, con.context,
 	                                        &client_name, NULL, NULL, NULL, NULL,
 						NULL, NULL);
     if (GSS_ERROR(gss_stat.major_status)) {
-       char *gss_err;
-       edg_wll_gss_get_error(&gss_stat, "Cannot read client identification", &gss_err);
-       edg_wll_ll_log(LOG_WARNING, "%s\n", gss_err);
-       free(gss_err);
+	char *gss_err;
+	edg_wll_gss_get_error(&gss_stat, "Cannot read client identification", &gss_err);
+	edg_wll_ll_log(LOG_WARNING, "%s\n", gss_err);
+	free(gss_err);
     } else {
-       gss_stat.major_status = gss_display_name(&gss_stat.minor_status, client_name,
-	                                        &gss_token, &name_type);
-       if (GSS_ERROR(gss_stat.major_status)) {
-	  char *gss_err;
-	  edg_wll_gss_get_error(&gss_stat, "Cannot process client identification", &gss_err);
-	  edg_wll_ll_log(LOG_WARNING, "%s\n", gss_err);
-	  free(gss_err);
+	gss_stat.major_status = gss_display_name(&gss_stat.minor_status, client_name,
+	                                         &gss_token, &name_type);
+	if (GSS_ERROR(gss_stat.major_status)) {
+		char *gss_err;
+		edg_wll_gss_get_error(&gss_stat, "Cannot process client identification", &gss_err);
+		edg_wll_ll_log(LOG_WARNING, "%s\n", gss_err);
+		free(gss_err);
        }
     }
 
-    if (GSS_ERROR(gss_stat.major_status) ||
-        edg_wll_gss_oid_equal(name_type, GSS_C_NT_ANONYMOUS)) {
-       edg_wll_ll_log(LOG_INFO,"  User not authenticated, setting as \"%s\". \n",EDG_WLL_LOG_USER_DEFAULT);
-       subject=strdup(EDG_WLL_LOG_USER_DEFAULT);
+    if (GSS_ERROR(gss_stat.major_status) || edg_wll_gss_oid_equal(name_type, GSS_C_NT_ANONYMOUS)) {
+	edg_wll_ll_log(LOG_INFO,"  User not authenticated, setting as \"%s\". \n",EDG_WLL_LOG_USER_DEFAULT);
+	subject=strdup(EDG_WLL_LOG_USER_DEFAULT);
     } else {
-       edg_wll_ll_log(LOG_INFO,"  User successfully authenticated as:\n");
-       edg_wll_ll_log(LOG_INFO, "   %s\n", (char *)gss_token.value);
-       subject=gss_token.value;
-       memset(&gss_token.value, 0, sizeof(gss_token.value));
+	edg_wll_ll_log(LOG_INFO,"  User successfully authenticated as:\n");
+	edg_wll_ll_log(LOG_INFO, "   %s\n", (char *)gss_token.value);
+	subject=gss_token.value;
+	memset(&gss_token.value, 0, sizeof(gss_token.value));
     }
 
-    ret = edg_wll_log_proto_server(&con,subject,file_name_prefix,noipc,noparse);
+    /* get and process the data */
+    timeout.tv_sec = CONNECTION_TIMEOUT;
+    timeout.tv_usec = 0;
+    
+    while (timeout.tv_sec > 0) {
+	count++;
+	edg_wll_ll_log(LOG_DEBUG,"Waiting for data delivery no. %d (remaining timeout %d.%06d sec)\n",
+		count, (int)timeout.tv_sec, (int) timeout.tv_usec);
+	FD_SET(con.sock,&fdset);
+	fd = select(con.sock+1,&fdset,NULL,NULL,&timeout);
+	switch (fd) {
+	case 0: /* timeout */
+		edg_wll_ll_log(LOG_DEBUG,"Connection timeout expired\n");
+		timeout.tv_sec = 0; 
+		break;
+	case -1: /* error */
+		switch(errno) {
+		case EINTR:
+			edg_wll_ll_log(LOG_DEBUG,"XXX: Waking up (remaining timeout %d.%06d sec)\n",
+				(int)timeout.tv_sec, (int) timeout.tv_usec);
+			continue;
+		default:
+			SYSTEM_ERROR("select");
+			timeout.tv_sec = 0;
+			break;
+		}
+		break;
+	default:
+		edg_wll_ll_log(LOG_DEBUG,"Waking up (remaining timeout %d.%06d sec)\n",
+			(int)timeout.tv_sec, (int) timeout.tv_usec);
+		break;
+	}
+	if (FD_ISSET(con.sock,&fdset)) {
+		if ((ret = edg_wll_log_proto_server(&con,&timeout,subject,file_name_prefix,noipc,noparse)) != 0) {
+			edg_wll_ll_log(LOG_DEBUG,"timeout after edg_wll_log_proto_server is %d.%06d sec\n",
+				(int)timeout.tv_sec, (int) timeout.tv_usec);
+			edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server() error\n");
+			timeout.tv_sec = 0;
+			timeout.tv_usec = 0;
+			break;
+		} else {
+			timeout.tv_sec = CONNECTION_TIMEOUT;
+			timeout.tv_usec = 0;
+		}
+	}
 
-    edg_wll_gss_close(&con, NULL);
-    if (subject) free(subject);
-    if (gss_token.length)
-       gss_release_buffer(&min_stat, &gss_token);
-    if (client_name != GSS_C_NO_NAME)
-       gss_release_name(&min_stat, &client_name);
-    return ret;
+    }
+
+doit_end:
+	edg_wll_ll_log(LOG_DEBUG, "Closing descriptor '%d'...",con.sock);
+	edg_wll_gss_close(&con, NULL);
+	if (con.sock == -1) 
+		edg_wll_ll_log(LOG_DEBUG, "o.k.\n");
+	if (subject) free(subject);
+	if (gss_token.length)
+		gss_release_buffer(&min_stat, &gss_token);
+	if (client_name != GSS_C_NO_NAME)
+		gss_release_name(&min_stat, &client_name);
+	return ret;
 }
 
 /*
@@ -283,44 +340,41 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    edg_wll_ll_log(LOG_INFO,"Initializing...\n");
 
    /* check noParse */
-   edg_wll_ll_log(LOG_INFO,"Parse messages for correctness...");
    if (noParse) {
-       edg_wll_ll_log(LOG_INFO,"no.\n");
+	edg_wll_ll_log(LOG_INFO,"Parse messages for correctness... [no]\n");
    } else {
-       edg_wll_ll_log(LOG_INFO,"yes.\n");
+	edg_wll_ll_log(LOG_INFO,"Parse messages for correctness... [yes]\n");
    }
 
    /* check noIPC */
-   edg_wll_ll_log(LOG_INFO,"Send messages also to inter-logger...");
    if (noIPC) {
-       edg_wll_ll_log(LOG_INFO,"no.\n");
+	edg_wll_ll_log(LOG_INFO,"Send messages also to inter-logger... [no]\n");
    } else {
-       edg_wll_ll_log(LOG_INFO,"yes.\n");
+	edg_wll_ll_log(LOG_INFO,"Send messages also to inter-logger... [yes]\n");
    }
 
    /* check prefix correctness */
-/* XXX: check probably also write permisions */
-   edg_wll_ll_log(LOG_INFO,"Store messages with the filename prefix \"%s\"...",prefix);
    if (strlen(prefix) > FILENAME_MAX - 34) {
-	edg_wll_ll_log(LOG_INFO,"no.\n");
-	edg_wll_ll_log(LOG_CRIT,"Too long prefix for file names, would not be able to write to log files. Exiting.\n");
+	edg_wll_ll_log(LOG_CRIT,"Too long prefix (%s) for file names, would not be able to write to log files. Exiting.\n",prefix);
+	exit(1);
+   }
+   /* TODO: check for write permisions */
+   edg_wll_ll_log(LOG_INFO,"Messages will be stored with the filename prefix \"%s\".\n",prefix);
+
+   if (CAcert_dir)
+	setenv("X509_CERT_DIR", CAcert_dir, 1);
+
+   /* initialize Globus common module */
+/* XXX: obsolete?
+   edg_wll_ll_log(LOG_INFO,"Initializing Globus common module...");
+   if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS) {
+	edg_wll_ll_log(LOG_NOTICE,"no.\n");
+	edg_wll_ll_log(LOG_CRIT, "Failed to initialize Globus common module. Exiting.\n");
 	exit(1);
    } else {
 	edg_wll_ll_log(LOG_INFO,"yes.\n");
    }
-
-   if (CAcert_dir)
-      setenv("X509_CERT_DIR", CAcert_dir, 1);
-
-   /* initialize Globus common module */
-   edg_wll_ll_log(LOG_INFO,"Initializing Globus common module...");
-   if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS) {
-       edg_wll_ll_log(LOG_NOTICE,"no.\n");
-       edg_wll_ll_log(LOG_CRIT, "Failed to initialize Globus common module. Exiting.\n");
-       exit(1);
-   } else {
-       edg_wll_ll_log(LOG_INFO,"yes.\n");
-   }
+*/
 
    /* initialize signal handling */
    if (mysignal(SIGUSR1, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
@@ -338,24 +392,24 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
  
    edg_wll_gss_watch_creds(cert_file,&cert_mtime);
    /* XXX DK: support noAuth */
-   ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &my_subject_name,
-	 			      &gss_stat);
+   ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &my_subject_name, 
+		&gss_stat);
    if (ret) {
-      /* XXX DK: call edg_wll_gss_get_error() */
-      edg_wll_ll_log(LOG_CRIT, "Failed to get GSI credentials. Exiting.\n");
-      exit(1);
+	/* XXX DK: call edg_wll_gss_get_error() */
+	edg_wll_ll_log(LOG_CRIT,"Failed to get GSI credentials. Exiting.\n");
+	exit(1);
    }
 
    if (my_subject_name!=NULL) {
-       edg_wll_ll_log(LOG_INFO,"  server running with certificate: %s\n",my_subject_name);
-       free(my_subject_name);
+	edg_wll_ll_log(LOG_INFO,"Server running with certificate: %s\n",my_subject_name);
+	free(my_subject_name);
    } else if (noAuth) {
-       edg_wll_ll_log(LOG_INFO,"  running without certificate\n");
+	edg_wll_ll_log(LOG_INFO,"Server running without certificate\n");
 #if 0
    /* XXX DK: */    
    } else {
-       edg_wll_ll_log(LOG_CRIT,"No server credential found. Exiting.\n");
-       exit(1);
+	edg_wll_ll_log(LOG_CRIT,"No server credential found. Exiting.\n");
+	exit(1);
 #endif
    }
 
@@ -363,85 +417,86 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    edg_wll_ll_log(LOG_INFO,"Listening on port %d\n",port);
    listener_fd = do_listen(port);
    if (listener_fd == -1) {
-       edg_wll_ll_log(LOG_CRIT,"Failed to listen on port %d\n",port);
-       gss_release_cred(&min_stat, &cred);
-       exit(-1);
+	edg_wll_ll_log(LOG_CRIT,"Failed to listen on port %d\n",port);
+	gss_release_cred(&min_stat, &cred);
+	exit(-1);
+   } else {
+	edg_wll_ll_log(LOG_DEBUG,"Listener's socket descriptor is '%d'\n",listener_fd);
    }
 
    client_addr_len = sizeof(client_addr);
    bzero((char *) &client_addr, client_addr_len);
 
    /* daemonize */
-   edg_wll_ll_log(LOG_INFO,"Running as daemon...");
    if (debug) {
-       edg_wll_ll_log(LOG_NOTICE,"no.\n");
-   }
-   else if (daemon(0,0) < 0) {
-       edg_wll_ll_log(LOG_CRIT,"Failed to run as daemon. Exiting.\n");
-       perror("daemon");
-       exit(1);
-   }
-   else {
-       edg_wll_ll_log(LOG_INFO,"yes.\n");
+	edg_wll_ll_log(LOG_INFO,"Running as daemon... [no]\n");
+   } else {
+	edg_wll_ll_log(LOG_INFO,"Running as daemon... [yes]\n");
+	if (daemon(0,0) < 0) {
+		edg_wll_ll_log(LOG_CRIT,"Failed to run as daemon. Exiting.\n");
+		SYSTEM_ERROR("daemon");
+		exit(1);
+	}
    }
 
    /*
     * Main loop
     */
    while (1) {
-       edg_wll_ll_log(LOG_INFO,"Accepting incomming connections...\n");
-       client_fd = accept(listener_fd, (struct sockaddr *) &client_addr,
-                          &client_addr_len);
-       if (client_fd < 0) {
-          close(listener_fd);
-          edg_wll_ll_log(LOG_CRIT,"Failed to accept incomming connections\n");
-          perror("accept");
-          gss_release_cred(&min_stat, &cred);
-          exit(-1);
-       }
-
-       switch (edg_wll_gss_watch_creds(cert_file,&cert_mtime)) {
-	  gss_cred_id_t newcred;
-	  case 0: break;
-	  case 1:
-	     ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,NULL,&gss_stat);
-	     if (ret) {
-		edg_wll_ll_log(LOG_WARNING, "Reloading credentials failed, continue with older\n");
-	     } else {
-		edg_wll_ll_log(LOG_INFO, "Reloading credentials\n");
+	edg_wll_ll_log(LOG_INFO,"Accepting incomming connections...\n");
+	client_fd = accept(listener_fd, (struct sockaddr *) &client_addr,
+			&client_addr_len);
+	if (client_fd < 0) {
+		close(listener_fd);
+		edg_wll_ll_log(LOG_CRIT,"Failed to accept incomming connections\n");
+		SYSTEM_ERROR("accept");
 		gss_release_cred(&min_stat, &cred);
-		cred = newcred;
-	     }
-	     break;
-	  case -1:
-	     edg_wll_ll_log(LOG_WARNING, "edg_wll_gss_watch_creds failed\n");
-	     break;
-       }
+		exit(-1);
+	} else {
+		edg_wll_ll_log(LOG_DEBUG,"Incomming connection on socket '%d'\n",client_fd);
+	}
 
-    /* FORK - change next line if fork() is not needed (for debugging for
-     * example
-     */
+	switch (edg_wll_gss_watch_creds(cert_file,&cert_mtime)) {
+	gss_cred_id_t newcred;
+	case 0: break;
+	case 1:
+		ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,NULL,&gss_stat);
+		if (ret) {
+			edg_wll_ll_log(LOG_WARNING,"Reloading credentials failed, continue with older\n");
+		} else {
+			edg_wll_ll_log(LOG_INFO,"Reloading credentials\n");
+			gss_release_cred(&min_stat, &cred);
+			cred = newcred;
+		}
+		break;
+	case -1:
+		edg_wll_ll_log(LOG_WARNING,"edg_wll_gss_watch_creds failed\n");
+		break;
+	}
+
+	/* FORK - change next line if fork() is not needed (for debugging for example) */
 #if 1
-       if ((childpid = fork()) < 0) {
-             perror("fork()");
-             close(client_fd);
-       }
-       if (childpid == 0) {
-             ret=doit(client_fd,cred,prefix,noIPC,noParse);
-             close(client_fd);
-             goto end;
-       }
-       if (childpid > 0) {
-             close(client_fd);
-       }
+	if ((childpid = fork()) < 0) {
+		SYSTEM_ERROR("fork");
+		if (client_fd) close(client_fd);
+	}
+	if (childpid == 0) {
+		ret = doit(client_fd,cred,prefix,noIPC,noParse);
+		if (client_fd) close(client_fd);
+	}
+	if (childpid > 0) {
+		edg_wll_ll_log(LOG_DEBUG,"Forked a new child with PID %d\n",childpid);
+		if (client_fd) close(client_fd);
+	}
 #else
-       ret=doit(client_fd,cred,prefix,noIPC,noParse);
-       close(client_fd);
+	ret = doit(client_fd,cred,prefix,noIPC,noParse);
+	if (client_fd) close(client_fd);
+
 #endif
     } /* while */
 
 end:
-   close(listener_fd);
-   gss_release_cred(&min_stat, &cred);
-   exit(ret);
+	if (listener_fd) close(listener_fd);
+	gss_release_cred(&min_stat, &cred);
+	exit(ret);
 }
