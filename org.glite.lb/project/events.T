@@ -240,6 +240,8 @@
 @type PBSDone		Job terminated
 	int	exit_status	Exit status
 
+@type PBSDequeued	Job dequeued
+
 @type PBSResourceUsage	Resources requested/consumed
 	int	usage		Type of record
 	_code_	REQUESTED	Requested value
