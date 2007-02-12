@@ -198,7 +198,6 @@ static void printstat(edg_wll_JobStat stat, int level)
 	s = edg_wll_StatToString(stat.state); 
 /* print whole flat structure */
 	printf("%sstate : %s\n", ind, s);
-	if (stat.pbs_state) printf("%sPBS state : %s\n", ind, stat.pbs_state);
 	printf("%sjobId : %s\n", ind, j = edg_wlc_JobIdUnparse(stat.jobId));
 	printf("%sowner : %s\n", ind, stat.owner);
 	switch (stat.jobtype) {
@@ -281,6 +280,19 @@ static void printstat(edg_wll_JobStat stat, int level)
 		printf("%spossible_ce_nodes : \n", ind);
 		for (i=0; stat.possible_ce_nodes[i]; i++) 
 			printf("%s\t%s \n", ind, stat.possible_ce_nodes[i]);
+	}
+	/* PBS state section */
+	if (stat.jobtype == EDG_WLL_STAT_PBS) {
+		printf("%spbs_state : %s\n", ind, stat.pbs_state);
+		printf("%spbs_queue : %s\n", ind, stat.pbs_queue);
+		printf("%spbs_owner : %s\n", ind, stat.pbs_owner);
+		printf("%spbs_name : %s\n", ind, stat.pbs_name);
+		printf("%spbs_reason : %s\n", ind, stat.pbs_reason);
+		printf("%spbs_scheduler : %s\n", ind, stat.pbs_scheduler);
+		printf("%spbs_dest_host : %s\n", ind, stat.pbs_dest_host);
+		printf("%spbs_pid : %d\n", ind, stat.pbs_pid);
+		printf("%spbs_exit_status : %d\n", ind, stat.pbs_exit_status);
+		printf("%spbs_error : %s\n", ind, stat.pbs_error);
 	}
 
 	printf("\n");	
