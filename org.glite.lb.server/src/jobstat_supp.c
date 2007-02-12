@@ -507,7 +507,7 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_string(ret, stat->pbs_dest_host);
 	if (ret) ret = enc_int(ret, stat->pbs_pid);
 	if (ret) ret = enc_int(ret, stat->pbs_exit_status);
-	if (ret) ret = enc_string(ret, stat->pbs_error);
+	if (ret) ret = enc_string(ret, stat->pbs_error_desc);
 
 	return ret;
 }
@@ -569,7 +569,7 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->pbs_dest_host = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_pid = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_exit_status = dec_int(tmp_in, &tmp_in);
-        if (tmp_in != NULL) stat->pbs_error = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_error_desc = dec_string(tmp_in, &tmp_in);
 
 	*rest = tmp_in;
 

@@ -251,7 +251,7 @@
 	string	unit		Units (sec, kB, etc.)
 
 @type PBSError		Any error occured
-	string	reason		Error reason
+	string	error_desc	Error reason
 
 
 @type CondorSubmit		Job SUBMITTED to Condor

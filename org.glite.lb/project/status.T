@@ -85,7 +85,7 @@ string  pbs_scheduler	Name of pbs scheduler
 string  pbs_dest_host	Hostname of node where job is running
 int	pbs_pid		PID of running job
 int	pbs_exit_status	Job exit status
-string	pbs_error	Glued error descriptions from error events
+string	pbs_error_desc	Glued error descriptions from error events
 
 string	condor_status	Condor job status 
 string	condor_universe	Condor job Universe (in job ClassAds)

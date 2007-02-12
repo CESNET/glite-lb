@@ -33,6 +33,7 @@ static int compare_timestamps(struct timeval a, struct timeval b)
 #define USABLE(res) ((res) == RET_OK)
 #define USABLE_DATA(res) (1)
 #define rep(a,b) { free(a); a = (b == NULL) ? NULL : strdup(b); }
+#define rep_cond(a,b) { if (b) { free(a); a = strdup(b); } }
 
 int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
@@ -54,13 +55,14 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			if (USABLE_DATA(res)) {
 			}
 			break;
+		// XXX - do we need this event ??
 		case EDG_WLL_EVENT_PBSREG:
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_SUBMITTED;
 				rep(js->pub.pbs_state, "Q");
 			}
 			if (USABLE_DATA(res)) {
-				js->pub.pbs_queue = strdup(e->PBSReg.queue);
+				rep_cond(js->pub.pbs_queue, e->PBSReg.queue);
 			}
 			break;
 		case EDG_WLL_EVENT_PBSQUEUED:
@@ -72,10 +74,11 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				if (!js->pub.pbs_queue)
 					js->pub.pbs_queue = strdup(e->PBSQueued.queue);
 				assert(!strcmp(js->pub.pbs_queue, e->PBSQueued.queue));
-				rep(js->pub.pbs_owner,e->PBSQueued.owner);
-				rep(js->pub.pbs_name,e->PBSQueued.name);
+				rep_cond(js->pub.pbs_owner,e->PBSQueued.owner);
+				rep_cond(js->pub.pbs_name,e->PBSQueued.name);
 			}
 			break;
+		// XXX - do we need this event ??
 		case EDG_WLL_EVENT_PBSPLAN:
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_READY;
@@ -84,26 +87,87 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			if (USABLE_DATA(res)) {
 			}
 			break;
+		case EDG_WLL_EVENT_PBSMATCH:
+			if (USABLE(res)) {
+				js->pub.state = EDG_WLL_JOB_READY;
+				rep(js->pub.pbs_state, "Q");
+			}
+			if (USABLE_DATA(res)) {
+				rep_cond(js->pub.pbs_dest_host,e->PBSMatch.dest_host);
+			}
+			break;
+		case EDG_WLL_EVENT_PBSPENDING:
+			if (USABLE(res)) {
+				js->pub.state = EDG_WLL_JOB_WAITING;
+				rep(js->pub.pbs_state, "Q");
+			}
+			if (USABLE_DATA(res)) {
+				rep_cond(js->pub.pbs_reason,e->PBSPending.reason);
+			}
+			break;
 		case EDG_WLL_EVENT_PBSRUN:
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_RUNNING;
 				rep(js->pub.pbs_state, "R");
 			}
 			if (USABLE_DATA(res)) {
-				rep(js->pub.pbs_scheduler, e->PBSRun.scheduler);
-				rep(js->pub.pbs_dest_host, e->PBSRun.dest_host);
+				rep_cond(js->pub.pbs_scheduler, e->PBSRun.scheduler);
+				rep_cond(js->pub.pbs_dest_host, e->PBSRun.dest_host);
 				js->pub.pbs_pid = e->PBSRun.pid;
 			}
 			break;
 		case EDG_WLL_EVENT_PBSDONE:
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_DONE;
+				js->pub.done_code = EDG_WLL_STAT_OK;
 				rep(js->pub.pbs_state, "C");
 			}
 			if (USABLE_DATA(res)) {
 				js->pub.pbs_exit_status =  e->PBSDone.exit_status;	
 			}
 			break;
+		case EDG_WLL_EVENT_PBSRESOURCEUSAGE:
+			if (USABLE(res)) {
+				// signalize state done, done_code uknown
+				js->pub.state = EDG_WLL_JOB_DONE;
+				rep(js->pub.pbs_state, "C");
+			}
+			if (USABLE_DATA(res)) {
+				/*
+				XXX: do we want this info in status?
+				char *new_resource_usage;
+	
+				asprintf(&new_resource_usage,"%s%s%s = %d [%s]",
+					(js->pub.pbs_resource_usage) ? js->pub.pbs_resource_usage : "",
+					(js->pub.pbs_resource_usage) ? "\n": "",
+					e->PBSResourceUsage.name,
+					e->PBSResourceUsage.quantity,
+					e->PBSResourceUsage.unit);
+
+				if (js->pub.pbs_resource_usage) free(js->pub.pbs_resource_usage);
+				js->pub.pbs_resource_usage = new_resource_usage;
+				*/
+			}
+			break;
+		case EDG_WLL_EVENT_PBSERROR:
+			if (USABLE(res)) {
+				js->pub.state = EDG_WLL_JOB_DONE;
+				js->pub.done_code = EDG_WLL_STAT_FAILED;
+				rep(js->pub.pbs_state, "C");
+			}
+			if (USABLE_DATA(res)) {
+				char *new_error_desc;
+
+				asprintf(&new_error_desc,"%s%s%s",
+					(js->pub.pbs_error_desc) ? js->pub.pbs_error_desc : "",
+					(js->pub.pbs_error_desc) ? "\n" : "",
+					e->PBSError.error_desc);
+				
+				if (js->pub.pbs_error_desc) free(js->pub.pbs_error_desc);
+				js->pub.pbs_error_desc = new_error_desc;	
+			}
+			break;
+
 		default:
 			break;
 	}
