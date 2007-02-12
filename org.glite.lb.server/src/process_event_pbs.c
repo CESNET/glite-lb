@@ -70,7 +70,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			}
 			if (USABLE_DATA(res)) {
 				if (!js->pub.pbs_queue)
-					strdup(e->PBSQueued.queue);
+					js->pub.pbs_queue = strdup(e->PBSQueued.queue);
 				assert(!strcmp(js->pub.pbs_queue, e->PBSQueued.queue));
 				rep(js->pub.pbs_owner,e->PBSQueued.owner);
 				rep(js->pub.pbs_name,e->PBSQueued.name);
