@@ -81,7 +81,6 @@ string  pbs_queue	Name of queue in which is job queued
 string  pbs_owner	Owner of job
 string  pbs_name	Name of job
 string  pbs_reason	Glued reasons/errors leading to pending events
-string  pbs_name	Name of job
 string  pbs_scheduler	Name of pbs scheduler
 string  pbs_dest_host	Hostname of node where job is running
 int	pbs_pid		PID of running job
