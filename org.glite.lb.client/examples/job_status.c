@@ -230,7 +230,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 		 	for  (i=0; stat.children_states[i].state; i++)
 		 		printstat(stat.children_states[i], level+1);
 		printf("%schildren_hist :\n",ind);
-		if (stat.children && stat.children_hist) 
+		if (stat.children_hist) 
 			for (i=1; i<=stat.children_hist[0]; i++) 
 				printf("%s%14s  %d\n", ind, edg_wll_StatToString(i-1),stat.children_hist[i]);
 	}
