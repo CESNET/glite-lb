@@ -617,6 +617,7 @@ static edg_wll_ErrorCode states_values_embryonic(
 		edg_wlc_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
 	stat->pub.state = EDG_WLL_JOB_SUBMITTED;
 	stat->pub.owner = strdup(e->user);
+	stat->pub.jobtype = EDG_WLL_STAT_SIMPLE;
 	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
 
 	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
