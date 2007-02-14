@@ -34,6 +34,7 @@ start()
 		fi
 	fi
 
+	super="--super-users-file $GLITE_LOCATION/etc/LB-super-users"
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
@@ -43,7 +44,7 @@ start()
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=/tmp/glite-lb-notif.sock \
 		--notif-il-fprefix=/var/tmp/glite-lb-notif \
-		$creds -i $pidfile $port" && echo " done" || echo " FAILED"
+		$super $creds -i $pidfile $port" && echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-notif-interlogd ...
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \

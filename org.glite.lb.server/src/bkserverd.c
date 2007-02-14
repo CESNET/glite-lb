@@ -1376,8 +1376,9 @@ static int read_roots(const char *file)
 	int	cnt = 0;
 
 	if (!roots) {
-		perror(file);
-		return 1;
+		syslog(LOG_WARNING,"%s: %m, continuing without --super-users-file",file);
+		dprintf(("%s: %s, continuing without --super-users-file\n",file,strerror(errno)));
+		return 0;
 	}
 
 	while (!feof(roots)) {
