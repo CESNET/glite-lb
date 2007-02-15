@@ -84,7 +84,14 @@ int edg_wll_JobStatus(
 	edg_wll_Acl	acl = NULL;
 #if DAG_ENABLE	
 	char		*stmt = NULL;
-#endif	
+#endif
+	//The following declarations have originally been positioned in the funcion's code
+	//That was rather messy and lead to redeclaratios :-(
+	char *stat_str, *s_out;
+	intJobStat *js;
+	char *out[1];
+	edg_wll_Stmt sh;
+	int num_sub, num_f, i, ii;
 
 	edg_wll_ResetError(ctx);
 
@@ -178,10 +185,6 @@ int edg_wll_JobStatus(
 
 
 		if (flags & EDG_WLL_STAT_CHILDSTAT) {
-			char *stat_str, *s_out;
-			edg_wll_Stmt sh;
-			int num_sub, num_f, i;
-			intJobStat *js;
 
 			trio_asprintf(&stmt, "SELECT int_status FROM states WHERE parent_job='%|Ss'"
 						" AND version='%|Ss'",
@@ -202,7 +205,7 @@ int edg_wll_JobStatus(
 							stat->children_states[i] = js->pub;
 							destroy_intJobStat_extension(js);
 							free(js);
-							i++;
+							i++; // Careful, this value will also be used further
 						}
 						free(stat_str);
 					}
@@ -215,9 +218,6 @@ int edg_wll_JobStatus(
 
 		if (flags & EDG_WLL_STAT_CHILDHIST_THOROUGH) { /* Full (thorough) Histogram */
 
-			char *out[1];
-			edg_wll_Stmt sh;
-			int num_sub, num_f, i;
 
 			if (stat->children_hist == NULL) {
 				stat->children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
@@ -225,28 +225,35 @@ int edg_wll_JobStatus(
 			}
 			else {
 				/* If hist is loaded, it probably contain only incomplete histogram
-				 * built in update_parent_status. Count it from scratch...
-				 */
-				for (i=1; i<=EDG_WLL_NUMBER_OF_STATCODES; i++)
-					stat->children_hist[i] = 0;
-			}	
-			trio_asprintf(&stmt, "SELECT status FROM states "
-						"WHERE parent_job='%|Ss' AND version='%|Ss'",
-						md5_jobid, INTSTAT_VERSION);
-			out[1] = NULL;
-			if (stmt != NULL) {
-				num_sub = edg_wll_ExecStmt(ctx, stmt, &sh);
-				if (num_sub >=0 ) {
-					while ((num_f = edg_wll_FetchRow(sh, out)) == 1 ) {
-						num_f = atoi(out[0]);
-						if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
-							stat->children_hist[num_f+1]++;
-						free(out[0]); 
-					}
-					edg_wll_FreeStmt(&sh);
+				 * built in update_parent_status. Count it from scratch...*/
+				for (ii=1; ii<=EDG_WLL_NUMBER_OF_STATCODES; ii++)
+					stat->children_hist[ii] = 0;
+			}
+
+			if (flags & EDG_WLL_STAT_CHILDSTAT) { // Job states have already been loaded
+				for ( ii = 0 ; ii < i ; ii++ ) {
+					stat->children_hist[(stat->children_states[ii].state)+1]++;
 				}
-				free(stmt);
-			} else goto dag_enomem;
+			}
+			else {
+				// Get child states from the database
+				trio_asprintf(&stmt, "SELECT status FROM states WHERE parent_job='%|Ss' AND version='%|Ss'",
+							md5_jobid, INTSTAT_VERSION);
+				out[1] = NULL;
+				if (stmt != NULL) {
+					num_sub = edg_wll_ExecStmt(ctx, stmt, &sh);
+					if (num_sub >=0 ) {
+						while ((num_f = edg_wll_FetchRow(sh, out)) == 1 ) {
+							num_f = atoi(out[0]);
+							if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
+								stat->children_hist[num_f+1]++;
+							free(out[0]); 
+						}
+						edg_wll_FreeStmt(&sh);
+					}
+					free(stmt);
+				} else goto dag_enomem;
+			}
 		}
 		else {
 	                if (flags & EDG_WLL_STAT_CHILDHIST_FAST) { /* Fast Histogram */
@@ -268,9 +275,6 @@ int edg_wll_JobStatus(
 
 
 		if (flags & EDG_WLL_STAT_CHILDREN) {
-			char *out[1];
-			edg_wll_Stmt sh;
-			int num_sub, i;
 
 			trio_asprintf(&stmt, "SELECT j.dg_jobid FROM states s,jobs j "
 					"WHERE s.parent_job='%|Ss' AND s.version='%|Ss' AND s.jobid=j.jobid",
