@@ -43,9 +43,11 @@ start()
 	purgedir="--purge-prefix $GLITE_LB_EXPORT_PURGEDIR"
 	[ -d "$GLITE_LB_EXPORT_PURGEDIR" ] || mkdir -p "$GLITE_LB_EXPORT_PURGEDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_PURGEDIR"
 
-	[ -z "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] && GLITE_LB_EXPORT_JPREG_MAILDIR=/tmp/jpreg
-	maildir="--jpreg-dir $GLITE_LB_EXPORT_JPREG_MAILDIR"
-	[ -d "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] || mkdir -p "$GLITE_LB_EXPORT_JPREG_MAILDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_JPREG_MAILDIR"
+	if [ x"$GLITE_LB_EXPORT_ENABLED" = x"true" ]; then
+		[ -z "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] && GLITE_LB_EXPORT_JPREG_MAILDIR=/tmp/jpreg
+		[ -d "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] || mkdir -p "$GLITE_LB_EXPORT_JPREG_MAILDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_JPREG_MAILDIR"
+		maildir="--jpreg-dir $GLITE_LB_EXPORT_JPREG_MAILDIR"
+	fi
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
