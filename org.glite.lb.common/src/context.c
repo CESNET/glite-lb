@@ -348,12 +348,12 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 
 	edg_wll_ResetError(ctx);
 
+	ctx->p_seqcode.type = seq_type;
+
 	switch (seq_type) {
 		case EDG_WLL_SEQ_DUPLICATE:
-			ctx->p_seqcode.type = EDG_WLL_SEQ_DUPLICATE;
 			/* fall through */
 		case EDG_WLL_SEQ_NORMAL:
-			ctx->p_seqcode.type = EDG_WLL_SEQ_NORMAL;
 			if (!seqcode_str) {
 				memset(&ctx->p_seqcode,0,sizeof ctx->p_seqcode);
 				return 0;
@@ -376,7 +376,7 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 				return edg_wll_SetError(ctx, EINVAL,
 					"edg_wll_SetSequenceCode(): syntax error in sequence code");
 
-			if (ctx->p_seqcode.type == EDG_WLL_SEQ_DUPLICATE) {
+			if (seq_type == EDG_WLL_SEQ_DUPLICATE) {
 				if (ctx->p_source <= EDG_WLL_SOURCE_NONE || 
 						ctx->p_source >= EDG_WLL_SOURCE__LAST) 
 				{
@@ -388,12 +388,12 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			break;
 		case EDG_WLL_SEQ_PBS:
 			strncpy(ctx->p_seqcode.pbs, seqcode_str, sizeof(ctx->p_seqcode.pbs));
-			ctx->p_seqcode.type = EDG_WLL_SEQ_PBS;
 			break;
 		default:
 			return edg_wll_SetError(ctx, EINVAL,
 				"edg_wll_SetSequenceCode(): unrecognized value of seq_type parameter");
 	}
+
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
