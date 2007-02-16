@@ -14,7 +14,10 @@ extern "C" {
 #endif
 	
 typedef struct _edg_wll_SeqCode {
-	unsigned int	c[EDG_WLL_SOURCE__LAST];
+	unsigned int	type;				/* seq code type    */
+	unsigned int	c[EDG_WLL_SOURCE__LAST];	/* glite seq. code  */
+	char		pbs[18];			/* PBS seq. code    */
+				/* 0-7 date YYYYMMDD, 8-17 byte in log file */
 } edg_wll_SeqCode;
 
 #define EDG_WLL_SEQ_NULL "UI=000000:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000"

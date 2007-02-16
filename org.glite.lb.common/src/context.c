@@ -311,18 +311,31 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 	unsigned int *c;
 	char *ret = NULL;
 
-	c = &ctx->p_seqcode.c[0];
-	asprintf(&ret, "UI=%06d:NS=%010d:WM=%06d:BH=%010d:JSS=%06d"
-				":LM=%06d:LRMS=%06d:APP=%06d:LBS=%06d",
-			c[EDG_WLL_SOURCE_USER_INTERFACE],
-			c[EDG_WLL_SOURCE_NETWORK_SERVER],
-			c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
-			c[EDG_WLL_SOURCE_BIG_HELPER],
-			c[EDG_WLL_SOURCE_JOB_SUBMISSION],
-			c[EDG_WLL_SOURCE_LOG_MONITOR],
-			c[EDG_WLL_SOURCE_LRMS],
-			c[EDG_WLL_SOURCE_APPLICATION],
-			c[EDG_WLL_SOURCE_LB_SERVER]);
+	switch (ctx->p_seqcode.type) {
+		case EDG_WLL_SEQ_DUPLICATE:
+			/* fall through */
+		case EDG_WLL_SEQ_NORMAL:
+			c = &ctx->p_seqcode.c[0];
+			asprintf(&ret, "UI=%06d:NS=%010d:WM=%06d:BH=%010d:JSS=%06d"
+						":LM=%06d:LRMS=%06d:APP=%06d:LBS=%06d",
+					c[EDG_WLL_SOURCE_USER_INTERFACE],
+					c[EDG_WLL_SOURCE_NETWORK_SERVER],
+					c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
+					c[EDG_WLL_SOURCE_BIG_HELPER],
+					c[EDG_WLL_SOURCE_JOB_SUBMISSION],
+					c[EDG_WLL_SOURCE_LOG_MONITOR],
+					c[EDG_WLL_SOURCE_LRMS],
+					c[EDG_WLL_SOURCE_APPLICATION],
+					c[EDG_WLL_SOURCE_LB_SERVER]);
+			break;
+		case EDG_WLL_SEQ_PBS:
+			ret = strdup(ctx->p_seqcode.pbs);
+			break;
+		default:
+			assert(0);	/* seq. number type  was not correctly set */
+			break;
+	}
+	
 	return ret;
 }
 
@@ -331,54 +344,82 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 {
 	int res;
 	unsigned int *c;
-	int duplicate = 0;
+
 
 	edg_wll_ResetError(ctx);
 
-	if (seq_type == EDG_WLL_SEQ_DUPLICATE) {
-		duplicate = 1;
-	} else if (seq_type != EDG_WLL_SEQ_NORMAL)
-		return edg_wll_SetError(ctx, EINVAL,
-			"edg_wll_SetSequenceCode(): unrecognized value of seq_type parameter");
-	
-	if (!seqcode_str) {
-		memset(&ctx->p_seqcode,0,sizeof ctx->p_seqcode);
-		return 0;
+	switch (seq_type) {
+		case EDG_WLL_SEQ_DUPLICATE:
+			ctx->p_seqcode.type = EDG_WLL_SEQ_DUPLICATE;
+			/* fall through */
+		case EDG_WLL_SEQ_NORMAL:
+			ctx->p_seqcode.type = EDG_WLL_SEQ_NORMAL;
+			if (!seqcode_str) {
+				memset(&ctx->p_seqcode,0,sizeof ctx->p_seqcode);
+				return 0;
+			}
+
+			c = &ctx->p_seqcode.c[0];
+			res =  sscanf(seqcode_str, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+					&c[EDG_WLL_SOURCE_USER_INTERFACE],
+					&c[EDG_WLL_SOURCE_NETWORK_SERVER],
+					&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
+					&c[EDG_WLL_SOURCE_BIG_HELPER],
+					&c[EDG_WLL_SOURCE_JOB_SUBMISSION],
+					&c[EDG_WLL_SOURCE_LOG_MONITOR],
+					&c[EDG_WLL_SOURCE_LRMS],
+					&c[EDG_WLL_SOURCE_APPLICATION],
+					&c[EDG_WLL_SOURCE_LB_SERVER]);
+
+			assert(EDG_WLL_SOURCE__LAST == 10);
+			if (res != EDG_WLL_SOURCE__LAST-1)
+				return edg_wll_SetError(ctx, EINVAL,
+					"edg_wll_SetSequenceCode(): syntax error in sequence code");
+
+			if (ctx->p_seqcode.type == EDG_WLL_SEQ_DUPLICATE) {
+				if (ctx->p_source <= EDG_WLL_SOURCE_NONE || 
+						ctx->p_source >= EDG_WLL_SOURCE__LAST) 
+				{
+					return edg_wll_SetError(ctx,EINVAL,
+						"edg_wll_SetSequenceCode(): context param: source missing");
+				}
+				c[ctx->p_source] = time(NULL);
+			}
+			break;
+		case EDG_WLL_SEQ_PBS:
+			strncpy(ctx->p_seqcode.pbs, seqcode_str, sizeof(ctx->p_seqcode.pbs));
+			ctx->p_seqcode.type = EDG_WLL_SEQ_PBS;
+			break;
+		default:
+			return edg_wll_SetError(ctx, EINVAL,
+				"edg_wll_SetSequenceCode(): unrecognized value of seq_type parameter");
 	}
-
-	c = &ctx->p_seqcode.c[0];
-	res =  sscanf(seqcode_str, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
-			&c[EDG_WLL_SOURCE_USER_INTERFACE],
-			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
-			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
-			&c[EDG_WLL_SOURCE_BIG_HELPER],
-			&c[EDG_WLL_SOURCE_JOB_SUBMISSION],
-			&c[EDG_WLL_SOURCE_LOG_MONITOR],
-			&c[EDG_WLL_SOURCE_LRMS],
-			&c[EDG_WLL_SOURCE_APPLICATION],
-			&c[EDG_WLL_SOURCE_LB_SERVER]);
-
-	assert(EDG_WLL_SOURCE__LAST == 10);
-	if (res != EDG_WLL_SOURCE__LAST-1)
-		return edg_wll_SetError(ctx, EINVAL, "edg_wll_SetSequenceCode(): syntax error in sequence code");
-
-	if (duplicate) {
-		if (ctx->p_source <= EDG_WLL_SOURCE_NONE || ctx->p_source >= EDG_WLL_SOURCE__LAST)
-			return edg_wll_SetError(ctx,EINVAL,"edg_wll_SetSequenceCode(): context param: source missing");
-		c[ctx->p_source] = time(NULL);
-	}
-
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 int edg_wll_IncSequenceCode(edg_wll_Context ctx)
 {
 	edg_wll_ResetError(ctx);
-	
-	if (ctx->p_source <= EDG_WLL_SOURCE_NONE || ctx->p_source >= EDG_WLL_SOURCE__LAST)
-		return edg_wll_SetError(ctx,EINVAL,"edg_wll_IncSequenceCode(): context param: source missing");
 
-	ctx->p_seqcode.c[ctx->p_source]++;
+	switch (ctx->p_seqcode.type) {
+		case EDG_WLL_SEQ_DUPLICATE:
+			/* fall through */
+		case EDG_WLL_SEQ_NORMAL:
+			if (ctx->p_source <= EDG_WLL_SOURCE_NONE || 
+					ctx->p_source >= EDG_WLL_SOURCE__LAST) 
+			{
+				return edg_wll_SetError(ctx,EINVAL,
+					"edg_wll_IncSequenceCode(): context param: source missing");
+			}
+
+			ctx->p_seqcode.c[ctx->p_source]++;
+			break;
+		case EDG_WLL_SEQ_PBS:
+			/* no action */
+			break;
+		default:
+			break;
+	}
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
