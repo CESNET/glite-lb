@@ -213,15 +213,10 @@
 	string	child_event	Event which triggered the state change.	
 
 
-@type PBSReg		Job seen by PBS
-	string	queue		Queue name
-
 @type PBSQueued		Job enqued
 	string	queue		Queue name
 	string	owner		Job owner
 	string	name		Job name
-
-@type PBSPlan		Job considered for running
 
 @type PBSMatch		Scheduler created exec_host
 	string	dest_host	Aka exec_host

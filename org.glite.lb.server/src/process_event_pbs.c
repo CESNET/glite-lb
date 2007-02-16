@@ -55,16 +55,6 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			if (USABLE_DATA(res)) {
 			}
 			break;
-		// XXX - do we need this event ??
-		case EDG_WLL_EVENT_PBSREG:
-			if (USABLE(res)) {
-				js->pub.state = EDG_WLL_JOB_SUBMITTED;
-				rep(js->pub.pbs_state, "Q");
-			}
-			if (USABLE_DATA(res)) {
-				rep_cond(js->pub.pbs_queue, e->PBSReg.queue);
-			}
-			break;
 		case EDG_WLL_EVENT_PBSQUEUED:
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_WAITING;
@@ -76,15 +66,6 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				assert(!strcmp(js->pub.pbs_queue, e->PBSQueued.queue));
 				rep_cond(js->pub.pbs_owner,e->PBSQueued.owner);
 				rep_cond(js->pub.pbs_name,e->PBSQueued.name);
-			}
-			break;
-		// XXX - do we need this event ??
-		case EDG_WLL_EVENT_PBSPLAN:
-			if (USABLE(res)) {
-				js->pub.state = EDG_WLL_JOB_READY;
-				rep(js->pub.pbs_state, "Q");
-			}
-			if (USABLE_DATA(res)) {
 			}
 			break;
 		case EDG_WLL_EVENT_PBSMATCH:
