@@ -36,8 +36,12 @@ start()
 	fi
 
 	[ -z "$GLITE_LB_EXPORT_DUMPDIR" ] && GLITE_LB_EXPORT_DUMPDIR=/tmp/dump
-	purgedir="--dump-prefix $GLITE_LB_EXPORT_DUMPDIR"
+	dumpdir="--dump-prefix $GLITE_LB_EXPORT_DUMPDIR"
 	[ -d "$GLITE_LB_EXPORT_DUMPDIR" ] || mkdir -p "$GLITE_LB_EXPORT_DUMPDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_DUMPDIR"
+
+	[ -z "$GLITE_LB_EXPORT_PURGEDIR" ] && GLITE_LB_EXPORT_PURGEDIR=/tmp/purge
+	purgedir="--purge-prefix $GLITE_LB_EXPORT_PURGEDIR"
+	[ -d "$GLITE_LB_EXPORT_PURGEDIR" ] || mkdir -p "$GLITE_LB_EXPORT_PURGEDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_PURGEDIR"
 
 	[ -z "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] && GLITE_LB_EXPORT_JPREG_MAILDIR=/tmp/jpreg
 	maildir="--jpreg-dir $GLITE_LB_EXPORT_JPREG_MAILDIR"
@@ -53,7 +57,7 @@ start()
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
 		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
-		$creds -i $pidfile $port $wport $purgedir $maildir" \
+		$creds -i $pidfile $port $wport $dumpdir $purgedir $maildir" \
 	&& echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-notif-interlogd ...
