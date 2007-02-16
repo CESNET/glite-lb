@@ -20,6 +20,8 @@
 #define UNUSED_VAR
 #endif
 
+// XXX: maybe not needed any more
+// if not, remove also last_pbs_event_timestamp from intJobStat
 static int compare_timestamps(struct timeval a, struct timeval b)
 {
 	if ( (a.tv_sec > b.tv_sec) || 
@@ -27,6 +29,11 @@ static int compare_timestamps(struct timeval a, struct timeval b)
 	if ( (a.tv_sec < b.tv_sec) ||
                 ((a.tv_sec == b.tv_sec) && (a.tv_usec < b.tv_usec)) ) return -1;
 	return 0;
+}
+
+static int compare_pbs_seqcodes(char *a, char *b) 
+{
+	return (strcmp(a,b));	// simple minded, but should work
 }
 
 // XXX move this defines into some common place to be reusable
@@ -43,8 +50,11 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 
 	fputs("processEvent_PBS()",stderr);
 
-	if (compare_timestamps(js->last_pbs_event_timestamp, e->any.timestamp) > 0)
+	//if (compare_timestamps(js->last_pbs_event_timestamp, e->any.timestamp) > 0)
+	if ((js->last_seqcode != NULL) &&
+			(compare_pbs_seqcodes(js->last_seqcode, e->any.seqcode) > 0) ) {
 		res = RET_LATE;	
+	}
 
 	switch (e->any.type) {
 		case EDG_WLL_EVENT_REGJOB:
@@ -154,6 +164,8 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 	}
 
 	if (USABLE(res)) {
+		rep(js->last_seqcode, e->any.seqcode);
+
 		js->pub.lastUpdateTime = e->any.timestamp;
 		if (old_state != js->pub.state) {
 			js->pub.stateEnterTime = js->pub.lastUpdateTime;
