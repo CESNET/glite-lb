@@ -31,10 +31,6 @@ static int compare_timestamps(struct timeval a, struct timeval b)
 	return 0;
 }
 
-static int compare_pbs_seqcodes(char *a, char *b) 
-{
-	return (strcmp(a,b));	// simple minded, but should work
-}
 
 // XXX move this defines into some common place to be reusable
 #define USABLE(res) ((res) == RET_OK)
@@ -52,7 +48,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 
 	//if (compare_timestamps(js->last_pbs_event_timestamp, e->any.timestamp) > 0)
 	if ((js->last_seqcode != NULL) &&
-			(compare_pbs_seqcodes(js->last_seqcode, e->any.seqcode) > 0) ) {
+			(edg_wll_compare_pbs_seq(js->last_seqcode, e->any.seqcode) > 0) ) {
 		res = RET_LATE;	
 	}
 

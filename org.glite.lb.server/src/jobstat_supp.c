@@ -822,12 +822,64 @@ int same_branch(const char *a, const char *b)
 		return(0);
 }
 
+int edg_wll_compare_pbs_seq(const char *a, const char *b)
+{
+	char	timestamp_a[14], pos_a[10], src_a;
+	char	timestamp_b[14], pos_b[10], src_b;
+	int	res;
+
+	res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:SRC=%c", &timestamp_a, &pos_a, &src_a);	
+
+	if (res != 3) {
+		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
+		fprintf(stderr, "unparsable sequence code %s\n", a);
+		return -1;
+	}
+
+	res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:SRC=%c", &timestamp_b, &pos_b, &src_b);	
+
+	if (res != 3) {
+		syslog(LOG_ERR, "unparsable sequence code %s\n", b);
+		fprintf(stderr, "unparsable sequence code %s\n", b);
+		return -1;
+	}
+
+
+	/* sort event w.t.r. to timestamps */
+	if ((res = strcmp(timestamp_a,timestamp_b)) != 0) {
+		return res;
+	}
+	else {
+		/* if timestamps equal, sort if w.t.r. to file position */
+		/* if you both events come from the same log file	*/
+		if (src_a == src_b) {
+			/* zero mean in fact duplicate events in log	*/
+			return strcmp(pos_a,pos_b);
+		}
+		/* if the events come from diffrent log files		*/
+		/* it is possible to prioritize some src log file	*/
+		else	{
+			/* prioritize events from pbs_mom */
+			if (src_a == 'm') return 1;
+			if (src_b == 'm') return -1;
+
+			/* other priorities comes here... */
+		}	
+	}
+
+	return 0;
+}
+
 int edg_wll_compare_seq(const char *a, const char *b)
 {
 	unsigned int    c[EDG_WLL_SOURCE__LAST];
 	unsigned int    d[EDG_WLL_SOURCE__LAST];
 	int		res, i;
 	char		sca[EDG_WLL_SEQ_SIZE], scb[EDG_WLL_SEQ_SIZE];
+
+
+	if ( (strstr(a,"TIMESTAMP=") == a) && (strstr(b,"TIMESTAMP=") == b) )
+		return edg_wll_compare_pbs_seq(a,b);
 
 	if (!strstr(a, "LBS")) snprintf(sca,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",a);
 	else snprintf(sca,EDG_WLL_SEQ_SIZE,"%s",a);
