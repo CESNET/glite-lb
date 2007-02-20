@@ -546,7 +546,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 		} else {
 			char *et;
 			*attrval = NULL;
-			err.code = 0;
+			err.code = ENOENT;
 			trio_asprintf(&et,"Value unknown for attribute '%s', there are no subjobs.",attr);
 			err.desc = strdup(et);
 			free(et);
