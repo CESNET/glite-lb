@@ -570,7 +570,7 @@ static int lb_query(void *fpctx,void *handle,const char *attr,glite_jp_attrval_t
 		} else {
 			char et[BUFSIZ];
 			*attrval = NULL;
-			err.code = 0;
+			err.code = ENOENT;
 			snprintf(et,sizeof et,"Value unknown for attribute '%s', there are no subjobs.",attr);
 			et[BUFSIZ-1] = 0;
 			err.desc = et;
