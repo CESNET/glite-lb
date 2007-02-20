@@ -23,17 +23,17 @@
 	<!-- the following 6 elements have to be retrieved from JDL -->
 			<xs:element ref="a:VO" minOccurs="0" maxOccurs="1"/>
 			<xs:element ref="a:aTag" minOccurs="0" maxOccurs="1"/>
-			<xs:element ref="a:rQType" minOccurs="1" maxOccurs="1"/>
-			<xs:element ref="a:eDuration" minOccurs="1" maxOccurs="1"/>
-			<xs:element ref="a:eNodes" minOccurs="1" maxOccurs="1"/>
-			<xs:element ref="a:eProc" minOccurs="1" maxOccurs="1"/>
+			<xs:element ref="a:rQType" minOccurs="0" maxOccurs="1"/>
+			<xs:element ref="a:eDuration" minOccurs="0" maxOccurs="1"/>
+			<xs:element ref="a:eNodes" minOccurs="0" maxOccurs="1"/>
+			<xs:element ref="a:eProc" minOccurs="0" maxOccurs="1"/>
 
 			<xs:element ref="a:RB" minOccurs="1" maxOccurs="1"/>
-			<xs:element ref="a:CE" minOccurs="1" maxOccurs="1"/>
+			<xs:element ref="a:CE" minOccurs="0" maxOccurs="1"/>
 			<xs:element ref="a:host" minOccurs="0" maxOccurs="1"/> <!-- worker node -->
 
 	<!-- Genevieve's spec has "site" and "country" here, but I've got no idea how to retrieve them -->
-			<xs:element ref="a:UIHost" minOccurs="1" maxOccurs="1"/>
+			<xs:element ref="a:UIHost" minOccurs="0" maxOccurs="1"/>
 
 	<!-- not mandatory, currently LB hasn't got the info -->
 			<xs:element ref="a:CPUTime" minOccurs="0" maxOccurs="1"/>
@@ -44,7 +44,7 @@
 			<xs:element ref="a:finalStatus" minOccurs="1" maxOccurs="1"/>
 			<xs:element ref="a:finalStatusDate" minOccurs="1" maxOccurs="1"/>
 			<xs:element ref="a:finalStatusReason" minOccurs="0" maxOccurs="1"/>
-			<xs:element ref="a:LRMSDoneStatus" minOccurs="1" maxOccurs="1"/>
+			<xs:element ref="a:LRMSDoneStatus" minOccurs="0" maxOccurs="1"/>
 			<xs:element ref="a:LRMSStatusReason" minOccurs="0" maxOccurs="1"/>
 
 			<xs:element ref="a:retryCount" minOccurs="1" maxOccurs="1"/>
