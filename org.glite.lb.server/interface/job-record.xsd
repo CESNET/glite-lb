@@ -13,6 +13,11 @@
 	attributeFormDefault="unqualified"
 >
 
+  <xs:import
+		namespace="http://egee.cesnet.cz/en/Schema/LB/Attributes"
+		schemaLocation="http://egee.cesnet.cz/en/Schema/LB/Attributes"
+	/>
+
 	<xs:complexType name="jobRecordType">
 		<xs:sequence>
 
