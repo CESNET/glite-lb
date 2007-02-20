@@ -280,7 +280,10 @@ static int get_classad_attr(const char* attr, glite_jp_context_t ctx, lb_handle 
         // Get the attribute from JDL
         int i = 0;
         while (h->events[i]){
-        	if (h->events[i]->type == EDG_WLL_EVENT_REGJOB){
+        	if (h->events[i]->type == EDG_WLL_EVENT_REGJOB
+			&& h->events[i]->regJob.jdl 
+			&& h->events[i]->regJob.jdl[0])
+		{
                 	void *beh;
                         if (! h->classad_plugin->ops.open_str(h->classad_plugin->fpctx, h->events[i]->regJob.jdl, "", "", &beh)){
                         	if (! h->classad_plugin->ops.attr(h->classad_plugin->fpctx, beh, attr, av))
