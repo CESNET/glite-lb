@@ -9,7 +9,7 @@
 	xmlns:a="http://egee.cesnet.cz/en/Schema/LB/Attributes"
 	targetNamespace="http://egee.cesnet.cz/en/Schema/LB/JobRecord"
 	version="1.0"
-	elementFormDefault="unqualified"
+	elementFormDefault="qualified"
 	attributeFormDefault="unqualified"
 >
 
