@@ -14,8 +14,8 @@
 #define VALUE1(X, V) ((X)->union_1.V)
 #define VALUE2(X, V) ((X)->union_2.V)
 #else
-#define VALUE1(X, V) ((X)->(V))
-#define VALUE2(X, V) ((X)->(V))
+#define VALUE1(X, V) ((X)->V)
+#define VALUE2(X, V) ((X)->V)
 #endif
 
 @@@{
