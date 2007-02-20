@@ -7,27 +7,40 @@
 #include "bk_ws_Stub.h"
 
 
+#if GSOAP_VERSION >= 20709
+  #define GFTYPE lbt__genericFault
+  #define GFITEM reason
+  #define GFNUM SOAP_TYPE_lbt__genericFault
+  #define GFREASON(SOAP) ((SOAP)->fault->SOAP_ENV__Reason ? (SOAP)->fault->SOAP_ENV__Reason->SOAP_ENV__Text : "(no reason)")
+#else
+  #define GFTYPE _genericFault
+  #define GFITEM lbe__genericFault
+  #define GFNUM SOAP_TYPE__genericFault
+  #define GFREASON(SOAP) ((SOAP)->fault->SOAP_ENV__Reason)
+#endif
+
+
 void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 {
 	char	*et,*ed;
 	struct SOAP_ENV__Detail	*detail = soap_malloc(soap,sizeof *detail);
-	struct _genericFault *f = soap_malloc(soap,sizeof *f);
+	struct GFTYPE *f = soap_malloc(soap,sizeof *f);
 
 
-	f->lbe__genericFault = soap_malloc(soap,sizeof *f->lbe__genericFault);
-	memset(f->lbe__genericFault, 0, sizeof(*f->lbe__genericFault));
+	f->GFITEM = soap_malloc(soap,sizeof *f->GFITEM);
+	memset(f->GFITEM, 0, sizeof(*f->GFITEM));
 
-	f->lbe__genericFault->code = edg_wll_Error(ctx,&et,&ed);
-	f->lbe__genericFault->text = soap_malloc(soap,strlen(et)+1);
-	strcpy(f->lbe__genericFault->text,et); 
+	f->GFITEM->code = edg_wll_Error(ctx,&et,&ed);
+	f->GFITEM->text = soap_malloc(soap,strlen(et)+1);
+	strcpy(f->GFITEM->text,et); 
 	free(et);
 	if (ed) {
-		f->lbe__genericFault->description = soap_malloc(soap,strlen(ed)+1);
-		strcpy(f->lbe__genericFault->description,ed); 
+		f->GFITEM->description = soap_malloc(soap,strlen(ed)+1);
+		strcpy(f->GFITEM->description,ed); 
 		free(ed);
 	}
 
-	detail->__type = SOAP_TYPE__genericFault;
+	detail->__type = GFNUM;
 #if GSOAP_VERSION >= 20700
 	detail->fault = f;
 #else
@@ -48,8 +61,10 @@ void edg_wll_FaultToErr(const struct soap *soap,edg_wll_Context ctx)
 
 	struct lbt__genericFault	*f;
 
-	if (detail->__type == SOAP_TYPE__genericFault) {
-#if GSOAP_VERSION >= 20700
+	if (detail->__type == GFNUM) {
+#if GSOAP_VERSION >= 20709
+		f = detail->lbe__genericFault;
+#elif GSOAP_VERSION >= 20700
 		f = ((struct _genericFault *) detail->fault)
 			->lbe__genericFault;
 #else
@@ -62,7 +77,7 @@ void edg_wll_FaultToErr(const struct soap *soap,edg_wll_Context ctx)
 		char	*s;
 
 		asprintf(&s,"SOAP: %s", soap->version == 2 ?
-			soap->fault->SOAP_ENV__Reason : soap->fault->faultstring);
+			GFREASON(soap) : soap->fault->faultstring);
 		edg_wll_SetError(ctx,EINVAL,s);
 		free(s);
 	}

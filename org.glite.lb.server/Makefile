@@ -77,11 +77,11 @@ GRIDSITE_LIBS = -lgridsite_globus `xml2-config --libs`
 CFLAGS:= \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
+	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	-I${expat_prefix}/include \
 	-I${cares_prefix}/include \
-	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${classads_prefix}/include \
 	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
