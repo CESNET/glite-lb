@@ -577,7 +577,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			if (h->fullStatusHistory[0]->reason) {
 				trio_asprintf(&r_str,"reason=\"%s\" ",h->fullStatusHistory[0]->reason);
 			}
-			trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
+			trio_asprintf(&val,"%s\t\t<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
 				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 			if (s_str) free(s_str);
 			if (t_str) free(t_str);
@@ -601,7 +601,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 				if (h->lastStatusHistory[i]->reason) {
 					trio_asprintf(&r_str,"reason=\"%s\" ",h->lastStatusHistory[i]->reason);
 				}
-				trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
+				trio_asprintf(&val,"%s\t\t<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
 					old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 				if (s_str) free(s_str); s_str = NULL;
 				if (t_str) free(t_str); t_str = NULL;
@@ -642,7 +642,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			if (h->fullStatusHistory[i]->reason) {
 				trio_asprintf(&r_str,"reason=\"%s\" ",h->fullStatusHistory[i]->reason);
 			}
-			trio_asprintf(&val,"%s\t\t<status name=\"%s\" %s%s/>\n", 
+			trio_asprintf(&val,"%s\t\t<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
 				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 			if (s_str) free(s_str); s_str = NULL;
 			if (t_str) free(t_str); t_str = NULL;
