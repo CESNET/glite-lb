@@ -234,6 +234,7 @@
 
 @type PBSDone		Job terminated
 	int	exit_status	Exit status
+	_optional_		Bypass need of 'null value'
 
 @type PBSDequeued	Job dequeued
 
@@ -243,11 +244,11 @@
 	_code_	USED		Consumed quantity
 	string	name		Name of resource
 	int	quantity	The quantity
+	_optional_		Bypass need of 'null value'
 	string	unit		Units (sec, kB, etc.)
 
 @type PBSError		Any error occured
 	string	error_desc	Error reason
-
 
 @type CondorSubmit		Job SUBMITTED to Condor
 	string	universe	Condor Universe
