@@ -824,26 +824,30 @@ int same_branch(const char *a, const char *b)
 
 int edg_wll_compare_pbs_seq(const char *a,const char *b)
 {
-	char	timestamp_a[14], pos_a[10], src_a;
-	char	timestamp_b[14], pos_b[10], src_b;
+	char	timestamp_a[14], pos_a[10], ev_code_a, src_a;
+	char	timestamp_b[14], pos_b[10], ev_code_b, src_b;
 	int	res;
 
-	res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:SRC=%c", &timestamp_a, &pos_a, &src_a);	
+	res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", &timestamp_a, &pos_a, &ev_code_a, &src_a);	
 
-	if (res != 3) {
+	if (res != 4) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
 		fprintf(stderr, "unparsable sequence code %s\n", a);
 		return -1;
 	}
 
-	res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:SRC=%c", &timestamp_b, &pos_b, &src_b);	
+	res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", &timestamp_b, &pos_b, &ev_code_b, &src_b);	
 
-	if (res != 3) {
+	if (res != 4) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", b);
 		fprintf(stderr, "unparsable sequence code %s\n", b);
 		return -1;
 	}
 
+	/* wild card for PBSJobReg - this event should always come as firt one 		*/
+	/* bacause it hold job.type, which is necessary for further event processing	*/
+	if (ev_code_a == EDG_WLL_EVENT_REGJOB) return -1;
+	if (ev_code_b == EDG_WLL_EVENT_REGJOB) return 1;
 
 	/* sort event w.t.r. to timestamps */
 	if ((res = strcmp(timestamp_a,timestamp_b)) != 0) {

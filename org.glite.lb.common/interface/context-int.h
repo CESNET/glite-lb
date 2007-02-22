@@ -14,8 +14,9 @@ extern "C" {
 #endif
 	
 #define EDG_WLL_SEQ_NULL "UI=000000:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000"
+#define EDG_WLL_SEQ_PBS_NULL "TIMESTAMP=00000000000000:POS=0000000000:EV.CODE=000:SRC=?" 
 #define EDG_WLL_SEQ_SIZE        103	/* strlen(EDG_WLL_SEQ_NULL)+1 */
-#define EDG_WLL_SEQ_PBS_SIZE	45	/* strlen(EDG_WLL_SEQ_PBS_NULL)+1 */
+#define EDG_WLL_SEQ_PBS_SIZE	57	/* strlen(EDG_WLL_SEQ_PBS_NULL)+1 */
 
 typedef struct _edg_wll_SeqCode {
 	unsigned int	type;				/* seq code type    */
@@ -23,7 +24,8 @@ typedef struct _edg_wll_SeqCode {
 	char		pbs[EDG_WLL_SEQ_PBS_SIZE];	/* PBS seq. code    */
 				/* 0-24 TIMESTAMP=YYYYMMDDHHMMSS: */
 				/* 25-39 POS=%010u: */
-				/* 40-44 SRC=%c */
+				/* 40-51 EV.CODE=%03d: */
+				/* 53-56 SRC=%c */
 				
 } edg_wll_SeqCode;
 
