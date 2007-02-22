@@ -822,7 +822,7 @@ int same_branch(const char *a, const char *b)
 		return(0);
 }
 
-int edg_wll_compare_pbs_seq(const char *a, const char *b)
+int edg_wll_compare_pbs_seq(const char *a,const char *b)
 {
 	char	timestamp_a[14], pos_a[10], src_a;
 	char	timestamp_b[14], pos_b[10], src_b;
@@ -863,11 +863,25 @@ int edg_wll_compare_pbs_seq(const char *a, const char *b)
 			if (src_a == 'm') return 1;
 			if (src_b == 'm') return -1;
 
+			/* then prioritize events from pbs_server */
+			if (src_a == 's') return 1;
+			if (src_b == 's') return -1;
+
 			/* other priorities comes here... */
 		}	
 	}
 
 	return 0;
+}
+
+edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num) {
+	switch (pbs_seq_num[EDG_WLL_SEQ_PBS_SIZE-1]) {
+		case 'c': return(EDG_WLL_PBS_EVENT_SOURCE_SCHEDULER);
+		case 's': return(EDG_WLL_PBS_EVENT_SOURCE_SERVER);
+		case 'm': return(EDG_WLL_PBS_EVENT_SOURCE_MOM);
+		case 'a': return(EDG_WLL_PBS_EVENT_SOURCE_ACCOUNTING);
+		default: return(EDG_WLL_PBS_EVENT_SOURCE_UNDEF);
+	}
 }
 
 int edg_wll_compare_seq(const char *a, const char *b)
@@ -878,7 +892,7 @@ int edg_wll_compare_seq(const char *a, const char *b)
 	char		sca[EDG_WLL_SEQ_SIZE], scb[EDG_WLL_SEQ_SIZE];
 
 
-	if ( (strstr(a,"TIMESTAMP=") == a) && (strstr(b,"TIMESTAMP=") == b) )
+	if ( (strstr(a,"TIMESTAMP=") == a) && (strstr(b,"TIMESTAMP=") == b) ) 
 		return edg_wll_compare_pbs_seq(a,b);
 
 	if (!strstr(a, "LBS")) snprintf(sca,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",a);
@@ -933,6 +947,7 @@ static int compare_events_by_seq(const void *a, const void *b)
         const edg_wll_Event *e = (edg_wll_Event *) a;
         const edg_wll_Event *f = (edg_wll_Event *) b;
 	int ret;
+
 
 	ret = edg_wll_compare_seq(e->any.seqcode, f->any.seqcode);
 	if (ret) return ret;

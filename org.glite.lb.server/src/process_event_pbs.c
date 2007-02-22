@@ -44,13 +44,12 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 	int			res = RET_OK;
 
 
-	fputs("processEvent_PBS()",stderr);
-
-	//if (compare_timestamps(js->last_pbs_event_timestamp, e->any.timestamp) > 0)
 	if ((js->last_seqcode != NULL) &&
 			(edg_wll_compare_pbs_seq(js->last_seqcode, e->any.seqcode) > 0) ) {
 		res = RET_LATE;	
 	}
+
+	printf("processEvent_PBS(): %s, %s\n\t %s, old_state=%s, ", edg_wll_EventToString(e->any.type), e->any.seqcode, (res == RET_LATE) ? "RET_LATE" : "RET_OK", edg_wll_StatToString(old_state));
 
 	switch (e->any.type) {
 		case EDG_WLL_EVENT_REGJOB:
@@ -94,8 +93,19 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			break;
 		case EDG_WLL_EVENT_PBSRUN:
 			if (USABLE(res)) {
-				js->pub.state = EDG_WLL_JOB_RUNNING;
-				rep(js->pub.pbs_state, "R");
+				switch (get_pbs_event_source(e->any.seqcode)) {
+					case EDG_WLL_PBS_EVENT_SOURCE_SERVER:
+						js->pub.state = EDG_WLL_JOB_SCHEDULED;
+						rep(js->pub.pbs_state, "Q");
+						break;
+					case EDG_WLL_PBS_EVENT_SOURCE_MOM:
+						js->pub.state = EDG_WLL_JOB_RUNNING;
+						rep(js->pub.pbs_state, "R");
+						break;
+					default:
+						assert(0); // running event from strande source
+						break;
+				}
 			}
 			if (USABLE_DATA(res)) {
 				rep_cond(js->pub.pbs_scheduler, e->PBSRun.scheduler);
@@ -170,6 +180,9 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 		}
 	}
 	if (! js->pub.location) js->pub.location = strdup("this is PBS");
+
+	printf("new_state=%s\n", edg_wll_StatToString(js->pub.state));
+
 	return RET_OK;
 }
 

@@ -56,6 +56,15 @@ typedef struct _intJobStat {
 		struct timeval	last_pbs_event_timestamp;
 	} intJobStat;
 
+typedef enum _edg_wll_PBSEventSource {
+	EDG_WLL_PBS_EVENT_SOURCE_UNDEF = 0,
+	EDG_WLL_PBS_EVENT_SOURCE_SCHEDULER,
+	EDG_WLL_PBS_EVENT_SOURCE_SERVER,
+	EDG_WLL_PBS_EVENT_SOURCE_MOM,
+	EDG_WLL_PBS_EVENT_SOURCE_ACCOUNTING,
+	EDG_WLL_PBS_EVENT_SOURCE__LAST
+} edg_wll_PBSEventSource;
+
 void destroy_intJobStat(intJobStat *);
 void destroy_intJobStat_extension(intJobStat *p);
 
@@ -84,6 +93,8 @@ int processEvent_PBS(intJobStat *, edg_wll_Event *, int, int, char **);
 
 int add_stringlist(char ***, const char *);
 int edg_wll_compare_seq(const char *, const char *);
+int edg_wll_compare_pbs_seq(const char *,const char *);
+edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num);
 
 void init_intJobStat(intJobStat *p);
 

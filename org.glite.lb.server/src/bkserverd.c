@@ -925,7 +925,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		edg_wll_Error(ctx, &errt, &errd);
 		dprintf(("[%d] %s (%s)\n[%d]\tignored, continuing without VOMS\n", getpid(), errt, errd,getpid()));
 		free(errt); free(errd);
-		edg_wll_ResetError(ctx);
+		edg_wll_ResetError(ctx); 
 	}
 	if (debug && ctx->vomsGroups.len > 0)
 	{
