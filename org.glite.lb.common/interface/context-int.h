@@ -15,15 +15,15 @@ extern "C" {
 	
 #define EDG_WLL_SEQ_NULL "UI=000000:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000"
 #define EDG_WLL_SEQ_SIZE        103	/* strlen(EDG_WLL_SEQ_NULL)+1 */
-#define EDG_WLL_SEQ_PBS_SIZE	47	/* strlen(EDG_WLL_SEQ_PBS_NULL)+1 */
+#define EDG_WLL_SEQ_PBS_SIZE	45	/* strlen(EDG_WLL_SEQ_PBS_NULL)+1 */
 
 typedef struct _edg_wll_SeqCode {
 	unsigned int	type;				/* seq code type    */
 	unsigned int	c[EDG_WLL_SOURCE__LAST];	/* glite seq. code  */
 	char		pbs[EDG_WLL_SEQ_PBS_SIZE];	/* PBS seq. code    */
-				/* 0-25 TIMESTAMP=YYYYMMDDHHMMSS: */
-				/* 26-41 POS=%010u: */
-				/* 42-46 SRC=%c */
+				/* 0-24 TIMESTAMP=YYYYMMDDHHMMSS: */
+				/* 25-39 POS=%010u: */
+				/* 40-44 SRC=%c */
 				
 } edg_wll_SeqCode;
 
