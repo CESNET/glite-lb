@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 {
 	char *src = NULL,*job = NULL,*server = NULL,*seq,*jdl = NULL, *seed = NULL;
 	int lbproxy = 0;
-	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0;
+	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0, pbs=0;
 	edg_wll_Context	ctx;
 	edg_wlc_JobId	jobid,*subjobs;
 
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xs:j:m:n:SCl:e:")) {
+		switch (getopt(argc,argv,"xs:j:m:n:SCl:e:P")) {
 			case 'x': lbproxy = 1; break;
 			case 's': src = (char *) strdup(optarg); break;
 			case 'j': job = (char *) strdup(optarg); break;
@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
 			case 'n': num_subjobs = atoi(optarg); break;
 			case 'S': if (num_subjobs>0) { reg_subjobs = 1; break; }
 			case 'C': if (num_subjobs>0) { collection = 1; break; }
+			case 'P': pbs = 1; break;
 			case 'l': jdl = (char *) strdup(optarg); break;
 			case 'e': seed = strdup(optarg); break;
 			case '?': usage(argv[0]); exit(EINVAL);
@@ -88,7 +89,11 @@ int main(int argc, char *argv[])
 	edg_wll_SetParam(ctx,EDG_WLL_PARAM_SOURCE,edg_wll_StringToSource(src));
 	if (lbproxy) {
 		if (edg_wll_RegisterJobProxy(ctx,jobid,
-			num_subjobs?(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG):EDG_WLL_REGJOB_SIMPLE,
+			pbs ? EDG_WLL_REGJOB_PBS
+			    : (num_subjobs ? 
+				(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG) 
+				:EDG_WLL_REGJOB_SIMPLE
+				),
 			jdl ? jdl : "blabla", "NNNSSSS",
 			num_subjobs,seed,&subjobs))
 		{
@@ -99,7 +104,11 @@ int main(int argc, char *argv[])
 		}
 	} else {
 		if (edg_wll_RegisterJobSync(ctx,jobid,
-			num_subjobs?(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG):EDG_WLL_REGJOB_SIMPLE,
+			pbs ? EDG_WLL_REGJOB_PBS
+			    : (num_subjobs ? 
+				(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG) 
+				:EDG_WLL_REGJOB_SIMPLE
+				),
 			jdl ? jdl : "blabla", "NNNSSSS",
 			num_subjobs,seed,&subjobs))
 		{
