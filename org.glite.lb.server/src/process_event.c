@@ -52,6 +52,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			return processEvent_glite(js,e,ev_seq,strict,errstring);
 		case EDG_WLL_STAT_PBS: 
 			return processEvent_PBS(js,e,ev_seq,strict,errstring);
+		case -1: return RET_UNREG;
 		default: 
 			asprintf(errstring,"undefined job type %d",js->pub.jobtype);
 			return RET_FAIL;

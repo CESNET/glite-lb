@@ -36,12 +36,17 @@
 
 static int store_user(edg_wll_Context,const char *,const char *); 
 static int store_job(edg_wll_Context,const edg_wlc_JobId,const char *);
+#ifdef LB_BUF
 static int store_job_block(edg_wll_Context, const edg_wlc_JobId, const char *, edg_wll_bufInsert *);
+#endif
+static int store_job_grey(edg_wll_Context,const edg_wlc_JobId,time_t);
 static int store_flesh(edg_wll_Context,edg_wll_Event *,char *,int);
 static int store_seq(edg_wll_Context,edg_wll_Event *,int);
 static int check_dup(edg_wll_Context,edg_wll_Event *);
 static int check_auth(edg_wll_Context,edg_wll_Event *e); 
+#ifndef LB_DAG_EMBRIONIC
 static int register_subjobs(edg_wll_Context,const edg_wll_RegJobEvent *);
+#endif
 static int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *);
 
 void edg_wll_StoreAnonymous(edg_wll_Context ctx,int anon) {
@@ -69,7 +74,16 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	switch (err = check_auth(ctx,e)) {
 		case 0: break;
 		case ENOENT: 
-			if ( !ctx->isProxy ) goto clean;
+			if ( !ctx->isProxy ) {
+				if (ctx->greyjobs) {
+					edg_wll_ResetError(ctx);
+					if (store_job_grey(ctx,e->any.jobId,e->any.timestamp.tv_sec))
+						goto clean;
+					break;
+				} 
+		       		else goto clean;
+			}
+
 			edg_wll_ResetError(ctx);
 			lbproxy_notreg = 1;
 			break;
@@ -79,6 +93,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 			break;
 		default: goto clean;
 	}
+
+/* FIXME: does not work for grey jobs due to "select from jobs" -- I don't care for the time being */
 	if ((err = check_dup(ctx,e))) goto clean;
 
 	userid = strdup(strmd5(e->any.user,NULL));
@@ -259,11 +275,19 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 			edg_wll_ResetError(ctx);
 	}
 	free(stmt);
+
+	if (ctx->greyjobs) {
+		trio_asprintf(&stmt,"delete from grey_jobs where jobid = '%|Ss'",jobid);
+		edg_wll_ExecStmt(ctx,stmt,NULL); /* XXX: error propagates */
+		free(stmt);
+	}
+
 	free(jobstr);
 	free(jobid);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+#ifdef LB_BUF
 static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const char *userid, edg_wll_bufInsert *bi)
 {
 	char *jobstr = edg_wlc_JobIdUnparse(job);
@@ -272,6 +296,9 @@ static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const cha
 
 /* debug Duplicate key on index: Duplicate entry '(nil)' for key 1
  */
+
+	assert(!ctx->greyjobs);	/* XXX: should not happen */
+
 	if (jobid == NULL || jobstr == NULL) 
 		return edg_wll_SetError(ctx,EINVAL,"store_jobi_block()");
 
@@ -280,6 +307,32 @@ static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const cha
 	trio_asprintf(&row, "'%|Ss','%|Ss','%|Ss'", jobid,jobstr,userid);
 	edg_wll_bufferedInsert(bi, row); // no need to free row
 
+	free(jobstr);
+	free(jobid);
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+#endif
+
+static int store_job_grey(edg_wll_Context ctx,const edg_wlc_JobId job,time_t etime)
+{
+	char *jobstr = edg_wlc_JobIdUnparse(job);
+	char *jobid = edg_wlc_JobIdGetUnique(job);
+	char *stmt;
+
+	if (jobid == NULL || jobstr == NULL)
+		return edg_wll_SetError(ctx,EINVAL,"store_job_grey()");
+
+	edg_wll_ResetError(ctx);
+	trio_asprintf(&stmt,"insert into grey_jobs(jobid,dg_jobid,time_stamp) "
+			"values ('%|Ss','%|Ss',%s)",
+			jobid,jobstr,edg_wll_TimeToDB(etime));
+
+	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST)
+			edg_wll_ResetError(ctx);
+	}
+
+	free(stmt);
 	free(jobstr);
 	free(jobid);
 	return edg_wll_Error(ctx,NULL,NULL);
@@ -506,6 +559,7 @@ clean:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+#ifndef LB_DAG_EMBRIONIC
 static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 {
 	int	i,err;
@@ -593,6 +647,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 	free(subjobs);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
+#endif
 
 
 /*
@@ -648,10 +703,14 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 	edg_wlc_JobId		*subjobs;
 	struct timeval		now;
 	char			*userid = strdup(strmd5(e->user,NULL));
-	char			*jobid_md5, *jobid_md5_old, *states_cols;
+	char			*jobid_md5, *jobid_md5_old;
 	size_t			jobid_len;
-	edg_wll_bufInsert	bi_j, bi_s;
-	edg_wll_bufInsert	*bi_jobs = &bi_j, *bi_states = &bi_s;
+#ifdef LB_BUF
+	edg_wll_bufInsert	bi_j;
+	edg_wll_bufInsert	*bi_jobs = &bi_j;
+       	char			*states_cols;
+#endif
+	edg_wll_bufInsert	bi_s, *bi_states = &bi_s;
 	char			*icnames, *values;
 
 

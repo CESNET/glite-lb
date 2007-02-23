@@ -117,6 +117,7 @@ static const int		one = 1;
 static int				noAuth = 0;
 static int				noIndex = 0;
 static int				strict_locking = 0;
+static int greyjobs = 0;
 static int count_statistics = 0;
 static int				hardJobsLimit = 0;
 static int				hardEventsLimit = 0;
@@ -182,10 +183,11 @@ static struct option opts[] = {
 	{"perf-sink",           1, NULL,        'K'},
 #endif
 	{"transactions",	1,	NULL,	'b'},
+	{"greyjobs",	0,	NULL,	'g'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jzb:"
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jzb:g"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -234,6 +236,7 @@ static void usage(char *me)
 #ifdef LB_PERF
 		"\t--perf-sink\t where to sink events\n"
 #endif
+		"\t-g,--greyjobs\t allow delayed registration (grey jobs), implies --strict-locking\n"
 
 	,me);
 }
@@ -400,6 +403,8 @@ int main(int argc, char *argv[])
 		case 'K': sink_mode = atoi(optarg);
 			  break;
 #endif
+		case 'g': greyjobs = strict_locking = 1;
+			  break;
 		case '?': usage(name); return 1;
 	}
 
@@ -947,6 +952,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	case 2: ctx->noIndex = 1; break;
 	}
 	ctx->strict_locking = strict_locking;
+	ctx->greyjobs = greyjobs;
 
 
 	return 0;

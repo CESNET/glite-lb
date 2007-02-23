@@ -9,6 +9,15 @@ create table jobs (
 	index (userid)
 ) engine=innodb;
 
+create table grey_jobs (
+	jobid		char(32)	binary not null,
+	dg_jobid	varchar(255)	binary not null,
+	time_stamp	datetime	not null,
+
+	primary key (jobid),
+	unique (dg_jobid)
+) engine=innodb;
+
 create table users (
 	userid		char(32)	binary not null,
 	cert_subj	varchar(255)	binary not null,

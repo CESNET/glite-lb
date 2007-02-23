@@ -27,6 +27,7 @@
 #define RET_BADBRANCH   7
 #define RET_GOODBRANCH  8
 #define RET_TOOOLD      9
+#define RET_UNREG	10
 #define RET_INTERNAL    100
 
 
