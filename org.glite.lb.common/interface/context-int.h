@@ -126,6 +126,8 @@ struct _edg_wll_Context {
 
 	/* TODO: belongs to database part */
 	int use_transactions;
+
+	int		greyjobs;
 };
 
 /* to be used internally: set, update and and clear the error information in 
