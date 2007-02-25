@@ -250,19 +250,27 @@
 @type PBSError		Any error occured
 	string	error_desc	Error reason
 
-@type CondorSubmit		Job SUBMITTED to Condor
+@type CondorSubmit		Job SUBMITed to Condor
 	string	universe	Condor Universe
 	string	submit_host	Submitting machine
 	string	condor_id	Condor ID
 
-@type CondorMatch		Job MATCHED
+@type CondorMatch		Job MATCHed
 	string	condor_id	Condor ID
 	string	owner		Owner
 	string	matched_host	Matched host
-	string	node		Node
+	string	preempting	Preempting
+	_optional_
 
-@type CondorExecute		Condor execute
-	string	node		node
+@type CondorRun		Condor EXECUTEed
+	string  condor_id       Condor ID
+	string  universe        Condor Universe
+	string	scheduler	Scheduler ID
+	_optional_
+	string	dest_host	Where to run the job
+	_optional_
+	int	pid		Actual process ID
+	_optional_
 
 @type CondorChkpt
 	string	info		Some useful info
