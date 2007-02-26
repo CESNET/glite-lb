@@ -1387,7 +1387,7 @@ static int read_roots(const char *file)
 		nl = strchr(buf,'\n');
 		if (nl) *nl = 0;
 
-		super_users = realloc(super_users, (cnt+1) * sizeof super_users[0]);
+		super_users = realloc(super_users, (cnt+2) * sizeof super_users[0]);
 		super_users[cnt] = strdup(buf);
 		super_users[++cnt] = NULL;
 	}
