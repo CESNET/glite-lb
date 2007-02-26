@@ -10,6 +10,14 @@
 #include "glite/lb/consumer.h"
 /* XXX: references only, src and dest share pointers */
 
+#if GSOAP_VERSION >= 20706
+#define VALUE1(X, V) ((X)->union_1.V)
+#define VALUE2(X, V) ((X)->union_2.V)
+#else
+#define VALUE1(X, V) ((X)->V)
+#define VALUE2(X, V) ((X)->V)
+#endif
+
 @@@{
 #
 # generate the command for move native data to soap web services structures
@@ -32,7 +40,7 @@ sub eventFieldAssign {
 		$soap_fn = $1.ucfirst($2);
 	};
 	$source = "$src->$native_en.$native_fn";
-	$dest = "$dst->$soap_en->$soap_fn";
+	$dest = "VALUE1($dst, $soap_en)->$soap_fn";
 #	print STDERR "$src, $dst, $soap_en, $soap_fn, $native_fn, $tn, $usuc\n";
 
 	if ($tn eq 'int') {
@@ -91,7 +99,7 @@ sub eventFieldFree {
 	while ($soap_fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/) {
 		$soap_fn = $1.ucfirst($2);
 	};
-	$dest = "$dst->$soap_en->$soap_fn";
+	$dest = "VALUE1($dst, $soap_en)->$soap_fn";
 
 	if ($tn eq 'int' || $tn eq 'port' || $tn eq 'bool' || $tn eq 'logsrc') {
 		if ($f->{optional}) {
@@ -421,18 +429,18 @@ int edg_wll_SoapToQueryVal(
 	union edg_wll_QueryVal			   *out)
 {
 	assert(in); assert(out);
-	if ( in->c ) {
+	if ( VALUE2(in, c) ) {
 		if ( attr == EDG_WLL_QUERY_ATTR_JOBID || attr == EDG_WLL_QUERY_ATTR_PARENT ) {
-			if ( edg_wlc_JobIdParse(in->c, &(out->j)) ) return -1;
+			if ( edg_wlc_JobIdParse(VALUE2(in, c), &(out->j)) ) return -1;
 		} else {
-			if ( !(out->c = strdup(in->c)) ) return -1;
+			if ( !(out->c = strdup(VALUE2(in, c))) ) return -1;
 		}
 	}
-	else if ( in->t ) {
-		out->t.tv_sec = in->t->tvSec;
-		out->t.tv_usec = in->t->tvUsec;
+	else if ( VALUE2(in, t) ) {
+		out->t.tv_sec = VALUE2(in, t)->tvSec;
+		out->t.tv_usec = VALUE2(in, t)->tvUsec;
 	}
-	else if ( in->i ) out->i = *(in->i);
+	else if ( VALUE2(in, i) ) out->i = *(VALUE2(in, i));
 
 	return 0;
 }
@@ -452,21 +460,21 @@ int edg_wll_QueryValToSoap(
 	case EDG_WLL_QUERY_ATTR_DESTINATION:
 	case EDG_WLL_QUERY_ATTR_HOST:
 	case EDG_WLL_QUERY_ATTR_INSTANCE:
-		if ( in->c && !(out->c = soap_strdup(soap, in->c)) ) return SOAP_FAULT;
+		if ( in->c && !(VALUE2(out, c) = soap_strdup(soap, in->c)) ) return SOAP_FAULT;
 		break;
 	case EDG_WLL_QUERY_ATTR_JOBID:
 	case EDG_WLL_QUERY_ATTR_PARENT: {
 			char *s = edg_wlc_JobIdUnparse(in->j);
-			out->c = soap_strdup(soap, s);
+			VALUE2(out, c) = soap_strdup(soap, s);
 			free(s);
-			if ( !out->c ) return SOAP_FAULT;
+			if ( !VALUE2(out, c) ) return SOAP_FAULT;
 		}
 		break;
 	case EDG_WLL_QUERY_ATTR_TIME:
-		out->t = soap_malloc(soap, sizeof(*(out->t)));
-		if ( !out->t ) return SOAP_FAULT;
-		out->t->tvSec = in->t.tv_sec;
-		out->t->tvUsec = in->t.tv_usec;
+		VALUE2(out, t) = soap_malloc(soap, sizeof(*(VALUE2(out, t))));
+		if ( !VALUE2(out, t) ) return SOAP_FAULT;
+		VALUE2(out, t)->tvSec = in->t.tv_sec;
+		VALUE2(out, t)->tvUsec = in->t.tv_usec;
 		break;
 	case EDG_WLL_QUERY_ATTR_STATUS:
 	case EDG_WLL_QUERY_ATTR_DONECODE:
@@ -475,9 +483,9 @@ int edg_wll_QueryValToSoap(
 	case EDG_WLL_QUERY_ATTR_EVENT_TYPE:
 	case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 	default:
-		out->i = soap_malloc(soap, sizeof(*(out->i)));
-		if ( !out->i ) return SOAP_FAULT;
-		*(out->i) = in->i;
+		VALUE2(out, i) = soap_malloc(soap, sizeof(*(VALUE2(out, i))));
+		if ( !VALUE2(out, i) ) return SOAP_FAULT;
+		*(VALUE2(out, i)) = in->i;
 		break;
 	}
 
@@ -900,7 +908,7 @@ int edg_wll_EventToSoap(struct soap* soap, const edg_wll_Event *event, struct lb
 		};
 gen qq {
 !		case EDG_WLL_EVENT_$u:
-!			(*sevent)->$soap_en = soap_malloc(soap, sizeof(struct lbt__event$soap_en));
+!			VALUE1((*sevent), $soap_en) = soap_malloc(soap, sizeof(struct lbt__event$soap_en));
 };
 		selectType $event '_common_';
 		for (getFieldsOrdered $event) {
@@ -948,7 +956,7 @@ void edg_wll_FreeSoapEvent(struct soap *soap, struct lbt__event *sevent) {
 		$soap_en = $e;
 		$soap_en = $1.ucfirst $2 while $soap_en =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
 
-		gen "\tif (sevent->$soap_en) {\n";
+		gen "\tif (VALUE1(sevent, $soap_en)) {\n";
 
 		selectType $event '_common_';
 		for (getFieldsOrdered $event) {
@@ -965,7 +973,7 @@ void edg_wll_FreeSoapEvent(struct soap *soap, struct lbt__event *sevent) {
 			$f = selectField $event $_;
 			eventFieldFree("\t\t", "sevent", $e, $f);
 		}
-		gen qq "\t\tsoap_dealloc(soap, sevent->$soap_en);\n";
+		gen qq "\t\tsoap_dealloc(soap, VALUE1(sevent, $soap_en));\n";
 		gen qq "\t}\n";
 }
 @@@}
@@ -1042,7 +1050,7 @@ static int edg_wll_SoapToEvent(
 	{
                 my $comment = getTypeComment $event $name;
                 $name = $1.ucfirst $2 while $name =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
-		gen "\t\tif (in->$name) {\n";
+		gen "\t\tif (VALUE1(in, $name)) {\n";
 		my $event_type = uc $name;
 		gen "\t\t\tout->type = EDG_WLL_EVENT_$event_type;\n";
 
@@ -1064,37 +1072,38 @@ static int edg_wll_SoapToEvent(
 				$usuc = $1.uc($2).$3 while ($usuc =~ /([^_]*)_([a-z])(.*)/);
 				my $fuc = ucfirst($usuc);
 
+				my $src = "VALUE1(in, $name)->$usuc";
 				if ($ft eq 'jobid') {
 
-					gen "\t\t\tif (in->$name->$usuc)\n";
-					gen "\t\t\t\tedg_wlc_JobIdParse(in->$name->$usuc,&out->$act.$fn);\n";
+					gen "\t\t\tif ($src)\n";
+					gen "\t\t\t\tedg_wlc_JobIdParse($src,&out->$act.$fn);\n";
 				} elsif ($ft eq 'timeval') {
-					gen "\t\t\tout->$act.$fn.tv_sec = in->$name->$usuc->tvSec;\n";
-					gen "\t\t\tout->$act.$fn.tv_usec = in->$name->$usuc->tvUsec;\n";
+					gen "\t\t\tout->$act.$fn.tv_sec = $src->tvSec;\n";
+					gen "\t\t\tout->$act.$fn.tv_usec = $src->tvUsec;\n";
 				} elsif ($ft eq 'string') {
-					gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
-					gen "\t\t\tsoap_unlink(soap,in->$name->$usuc);\n";
+					gen "\t\t\tout->$act.$fn = $src;\n";
+					gen "\t\t\tsoap_unlink(soap,$src);\n";
 				} elsif ($ft eq 'int') {
 					if ($f->{codes}) {
 						if ($type eq '_common_') {
-							gen "\t\t\tedg_wll_SoapTo$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
+							gen "\t\t\tedg_wll_SoapTo$fuc($src,&(out->$act.$fn));\n";
 						}
 						else {
-							gen "\t\t\tedg_wll_SoapTo$name$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
+							gen "\t\t\tedg_wll_SoapTo$name$fuc($src,&(out->$act.$fn));\n";
 						}
 					}
 					elsif ($f->{optional}) {
-						gen "\t\t\tout->$act.$fn = *in->$name->$usuc;\n";
+						gen "\t\t\tout->$act.$fn = *$src;\n";
 					}
 					else {
-						gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
+						gen "\t\t\tout->$act.$fn = $src;\n";
 					}
 				}
 				elsif ($ft eq 'logsrc') {
-					gen "\t\t\tedg_wll_SoapToSource(in->$name->$usuc, &(out->$act.$fn));\n";
+					gen "\t\t\tedg_wll_SoapToSource($src, &(out->$act.$fn));\n";
 				}
 				else {
-					gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
+					gen "\t\t\tout->$act.$fn = $src;\n";
 				}
 			}	
 		}
