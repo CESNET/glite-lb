@@ -815,6 +815,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	default:
 		if (debug) fprintf(stderr, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
 		dprintf(("[%d] connection from %s:%d\n", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port)));
+		free(ctx->connPool[ctx->connToUse].peerName);
+		ctx->connPool[ctx->connToUse].peerName = strdup(inet_ntoa(a.sin_addr));
 		break;
 	}
 	
@@ -883,22 +885,22 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	{
 		if ( ret == EDG_WLL_GSS_ERROR_TIMEOUT )
 		{
-			dprintf(("[%d] Client authentication failed - timeout reached, closing.\n", getpid()));
-			if (!debug) syslog(LOG_ERR, "Client authentication failed - timeout reached");
+			dprintf(("[%d] %s: Client authentication failed - timeout reached, closing.\n", getpid(),ctx->connPool[ctx->connToUse].peerName));
+			if (!debug) syslog(LOG_ERR, "%s: Client authentication failed - timeout reached",ctx->connPool[ctx->connToUse].peerName);
 		}
 		else if (ret == EDG_WLL_GSS_ERROR_GSS) {
 			edg_wll_SetErrorGss(ctx,"Client authentication",&gss_code);
 			if (strstr(ctx->errDesc,_EXPIRED_CERTIFICATE_MESSAGE)) {
-				dprintf(("[%d] false expired certificate: %s\n",ctx->errDesc));
-				if (!debug) syslog(LOG_ERR,"false expired certificate: %s",ctx->errDesc);
+				dprintf(("[%d] %s: false expired certificate: %s\n",getpid(),ctx->connPool[ctx->connToUse].peerName,ctx->errDesc));
+				if (!debug) syslog(LOG_ERR,"[%d] %s: false expired certificate: %s",getpid(),ctx->connPool[ctx->connToUse].peerName,ctx->errDesc);
 				edg_wll_FreeContext(ctx);
 				return -1;
 			}
 		}
 		else
 		{
-			dprintf(("[%d] Client authentication failed, closing.\n", getpid()));
-			if (!debug) syslog(LOG_ERR, "Client authentication failed");
+			dprintf(("[%d] %s: Client authentication failed, closing.\n", getpid(),ctx->connPool[ctx->connToUse].peerName));
+			if (!debug) syslog(LOG_ERR, "%s: Client authentication failed",ctx->connPool[ctx->connToUse].peerName);
 
 		}
 		edg_wll_FreeContext(ctx);
@@ -1423,8 +1425,9 @@ static int read_roots(const char *file)
 	int	cnt = 0;
 
 	if (!roots) {
-		perror(file);
-		return 1;
+		syslog(LOG_WARNING,"%s: %m, continuing without --super-users-file",file);
+		dprintf(("%s: %s, continuing without --super-users-file\n",file,strerror(errno)));
+		return 0;
 	}
 
 	while (!feof(roots)) {
