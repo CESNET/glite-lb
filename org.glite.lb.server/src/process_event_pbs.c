@@ -49,8 +49,6 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 		res = RET_LATE;	
 	}
 
-	printf("processEvent_PBS(): %s, %s\n\t %s, old_state=%s, ", edg_wll_EventToString(e->any.type), e->any.seqcode, (res == RET_LATE) ? "RET_LATE" : "RET_OK", edg_wll_StatToString(old_state));
-
 	switch (e->any.type) {
 		case EDG_WLL_EVENT_REGJOB:
 			if (USABLE(res)) {
@@ -155,7 +153,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			if (USABLE_DATA(res)) {
 				char *new_error_desc;
 
-				asprintf(&new_error_desc,"%s%s%s",
+				asprintf(&new_error_desc,"%s%s\t%s",
 					(js->pub.pbs_error_desc) ? js->pub.pbs_error_desc : "",
 					(js->pub.pbs_error_desc) ? "\n" : "",
 					e->PBSError.error_desc);
@@ -169,6 +167,18 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			break;
 	}
 
+/* XXX : just debug output - remove */
+
+	printf("processEvent_PBS(): %s (%s), state: %s --> %s\n ", 
+		edg_wll_EventToString(e->any.type), 
+		(res == RET_LATE) ? "RET_LATE" : "RET_OK", 
+		edg_wll_StatToString(old_state), 
+		edg_wll_StatToString(js->pub.state) );
+	printf("\t%s\n",e->any.seqcode);
+	printf("\t(last=%s)\n",js->last_seqcode);
+
+/*----------------------------------*/
+
 	if (USABLE(res)) {
 		rep(js->last_seqcode, e->any.seqcode);
 
@@ -181,7 +191,6 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 	}
 	if (! js->pub.location) js->pub.location = strdup("this is PBS");
 
-	printf("new_state=%s\n", edg_wll_StatToString(js->pub.state));
 
 	return RET_OK;
 }
