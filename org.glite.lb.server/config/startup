@@ -1,7 +1,7 @@
 #!/bin/sh
 
 GLITE_LOCATION=${GLITE_LOCATION:-/opt/glite}
-GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-${GLITE_LOCATION}/var}
+GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-/var/glite}
 
 [ -f /etc/glite.conf ] && . /etc/glite.conf
 [ -f $GLITE_LOCATION/etc/glite-wms.conf ] && . $GLITE_LOCATION/etc/glite-wms.conf
@@ -34,6 +34,7 @@ start()
 		fi
 	fi
 
+	super="--super-users-file $GLITE_LOCATION/etc/LB-super-users"
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
@@ -43,7 +44,7 @@ start()
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=/tmp/glite-lb-notif.sock \
 		--notif-il-fprefix=/var/tmp/glite-lb-notif \
-		$creds -i $pidfile $port" && echo " done" || echo " FAILED"
+		$super $creds -i $pidfile $port" && echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-notif-interlogd ...
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
@@ -79,23 +80,29 @@ stop()
 
 status()
 {
+	retval=0
+
 	if netstat -an --unix | grep "^unix .* LISTEN.* /tmp/glite-lb-notif.sock$" >/dev/null 2>&1 ;then
 		echo glite-lb-notif-interlogd running
 	else
 		echo glite-lb-notif-interlogd not running
-		return 1
+		retval=1
 	fi
 
 	if [ -f $pidfile ]; then
 		pid=`cat $pidfile`
 		if ps p $pid >/dev/null 2>&1; then
 			echo glite-lb-bkserverd running as $pid 
-			return 0
+		else
+			echo glite-lb-bkserverd not running
+			retval=1
 		fi
+	else
+		echo glite-lb-bkserverd not running
+		retval=1
 	fi
 
-	echo glite-lb-bkserverd not running
-	return 1
+	return $retval
 }
 
 case x$1 in

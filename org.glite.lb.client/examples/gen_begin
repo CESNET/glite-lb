@@ -8,15 +8,21 @@ if [ `echo $(basename $0) | grep 'glite-lb-' | wc -l` = "1" ]; then
 	PREFIX=glite-lb-
 fi
 LOGFD=${LOGFD:-2}
-LOGEV=${LOGEV:-`dirname $0`/${PREFIX}logevent}${SUFFIX}
+if [ -d `dirname $0`/../bin ]; then
+	BINDIR=`dirname $0`/../bin
+else
+	BINDIR=`dirname $0`
+fi
+LOGEV=${LOGEV:-${BINDIR}/${PREFIX}logevent}${SUFFIX}
 JOB_REG=${JOB_REG:-`dirname $0`/${PREFIX}job_reg}${SUFFIX}
 EDG_JOBID=
 LBPROXY=
 LBPROXY_STORE_SOCK=
+LARGE_STRESS=
 
 usage()
 {
-	echo "Usage : $0 [-x | -X store_socket_path] [-m bkserver_machine_name][-j job_id]" 
+	echo "Usage : $0 [-x | -X store_socket_path] [-m bkserver_machine_name][-j job_id][-l size_of_random_data]" 
 	exit 4
 }
 
@@ -28,6 +34,7 @@ do
 	"-x") LBPROXY="-x -S $1" ;;
 	"-X") shift; LBPROXY="-x"; LBPROXY_STORE_SOCK="-S $1" ;;
 	"-j") shift; EDG_JOBID="$1" ;;
+	"-l") shift; LARGE_STRESS="-l $1" ;;
 	"*") usage ;;
 	esac
 	shift
@@ -50,7 +57,7 @@ fi
 send_log_ev()
 {
 	echo $LOGEV $LBPROXY $LBPROXY_STORE_SOCK -j "$EDG_JOBID" -c "$EDG_WL_SEQUENCE" "$@" 1>&$LOGFD
-	EDG_WL_SEQUENCE=`$LOGEV $LBPROXY $LBPROXY_STORE_SOCK -j $EDG_JOBID -c $EDG_WL_SEQUENCE "$@" 2>/dev/null`
+	EDG_WL_SEQUENCE=`$LOGEV $LARGE_STRESS $LBPROXY $LBPROXY_STORE_SOCK -j $EDG_JOBID -c $EDG_WL_SEQUENCE "$@" 2>/dev/null`
 	test $? -ne 0 -o -z "$EDG_WL_SEQUENCE" && exit 4
 	true
 }

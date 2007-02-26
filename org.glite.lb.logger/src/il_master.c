@@ -385,7 +385,10 @@ loop()
 		char *msg;
 		long offset;
 		int ret;
-    
+
+		if(killflg)
+			return(0);
+
 		clear_error();
 		if((ret = input_queue_get(&msg, &offset, INPUT_TIMEOUT)) < 0) 
 		{

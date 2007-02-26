@@ -132,7 +132,7 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
 {
   char *msg=NULL;
   int ret, code;
-  size_t len, l;
+  int len, l;
   struct timeval tv;
   struct reader_data data;
 
@@ -216,6 +216,7 @@ event_queue_close(struct event_queue *eq)
 int 
 event_queue_send(struct event_queue *eq)
 {
+  int events_sent = 0;
   assert(eq != NULL);
 
   if(eq->gss.context == GSS_C_NO_CONTEXT)
@@ -241,15 +242,25 @@ event_queue_send(struct event_queue *eq)
     tv.tv_usec = 0;
     ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
     if(ret < 0) {
-      eq->timeout = TIMEOUT;
-      return(0);
+	    eq->timeout = TIMEOUT;
+	    return(0);
+    }
+    if(ret < 0) {
+	    if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && events_sent > 0)
+		    eq->timeout = 0;
+	    else
+		    eq->timeout = TIMEOUT;
+	    return(0);
     }
     
     if((code = get_reply(eq, &rep, &code_min)) < 0) {
-      /* could not get the reply properly, so try again later */
-      il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
-      eq->timeout = TIMEOUT;
-      return(0);
+	    /* could not get the reply properly, so try again later */
+	    il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
+	    if (events_sent>0) 
+		    eq->timeout = 1;
+	    else
+		    eq->timeout = TIMEOUT;
+	    return(0);
     }
     
     il_log(LOG_DEBUG, "    event sent, server %s replied with %d, %s\n", eq->dest_name, code, rep);
@@ -288,6 +299,7 @@ event_queue_send(struct event_queue *eq)
 	  il_log(LOG_ERR, "send_event: %s\n", error_get_msg());
 	
       event_queue_remove(eq);
+      events_sent++;
       break;
       
     } /* switch */

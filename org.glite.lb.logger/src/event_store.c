@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -279,6 +280,65 @@ event_store_write_ctl(struct event_store *es)
 
 
 /*
+ * event_store_qurantine() 
+ *   - rename damaged event store file 
+ *   - essentially does the same actions as cleanup, but the event store 
+ *     does not have to be empty
+ * returns 0 on success, -1 on error
+ */
+static
+int
+event_store_quarantine(struct event_store *es) 
+{
+	int num;
+	char newname[MAXPATHLEN+1];
+
+	/* find available qurantine name */
+	/* we give it at most 1024 tries */
+	for(num = 0; num < 1024; num++) {
+		struct stat st;
+
+		snprintf(newname, MAXPATHLEN, "%s.quarantine.%d", es->event_file_name, num);
+		newname[MAXPATHLEN] = 0;
+		if(stat(newname, &st) < 0) {
+			if(errno == ENOENT) {
+				/* file not found */
+				break;
+			} else {
+				/* some other error with name, probably permanent */
+				set_error(IL_SYS, errno, "event_store_qurantine: error looking for qurantine filename");
+				return(-1);
+				
+			}
+		} else {
+			/* the filename is used already */
+		}
+	}
+	if(num >= 1024) {
+		/* new name not found */
+		/* XXX - is there more suitable error? */
+		set_error(IL_SYS, ENOSPC, "event_store_quarantine: exhausted number of retries looking for quarantine filename");
+		return(-1);
+	}
+
+	/* actually rename the file */
+	il_log(LOG_DEBUG, "    renaming damaged event file from %s to %s\n",
+	       es->event_file_name, newname);
+	if(rename(es->event_file_name, newname) < 0) {
+		set_error(IL_SYS, errno, "event_store_quarantine: error renaming event file");
+		return(-1);
+	}
+
+	/* clear the counters */
+	es->last_committed_ls = 0;
+	es->last_committed_bs = 0;
+	es->offset = 0;
+
+	return(0);
+}
+
+
+/*
  * event_store_recover()
  *   - recover after restart or catch up when events missing in IPC
  *   - if offset > 0, read everything behind it
@@ -428,8 +488,12 @@ event_store_recover(struct event_store *es)
     msg = server_msg_create(event_s, last);
     free(event_s);
     if(msg == NULL) {
-	    il_log(LOG_ALERT, "    event file corrupted! Please move it to quarantine (ie. somewhere else) and restart interlogger.\n");
-	    break;
+	    il_log(LOG_ALERT, "    event file corrupted! I will try to move it to quarantine (ie. rename it).\n");
+	    /* actually do not bother if quarantine succeeded or not - we could not do more */
+	    event_store_quarantine(es);
+	    fclose(ef);
+	    event_store_unlock(es);
+	    return(-1);
     }
     msg->es = es;
 
@@ -704,7 +768,6 @@ event_store_clean(struct event_store *es)
 }
 
 
-
 /* --------------------------------
  * event store management functions
  * --------------------------------
@@ -798,6 +861,11 @@ event_store_from_file(char *filename)
 	
 	il_log(LOG_INFO, "  attaching to event file: %s\n", filename);
 	
+	if(strstr(filename, "quarantine") != NULL) {
+		il_log(LOG_INFO, "  file name belongs to quarantine, not touching that.\n");
+		return(0);
+	}
+
 	event_file = fopen(filename, "r");
 	if(event_file == NULL) {
 		set_error(IL_SYS, errno, "event_store_from_file: error opening event file");
@@ -942,6 +1010,59 @@ event_store_init(char *prefix)
       }
 
       free(s);
+    }
+    closedir(event_dir);
+
+    /* one more pass - this time remove stale .ctl files */
+    event_dir = opendir(dir);
+    if(event_dir == NULL) {
+      free(dir);
+      set_error(IL_SYS, errno, "event_store_init: error opening event directory");
+      return(-1);
+    }
+    
+    while((entry=readdir(event_dir))) {
+      char *s;
+
+      /* skip all files that do not match prefix */
+      if(strncmp(entry->d_name, p, len) != 0) 
+	continue;
+
+      /* find all control files */
+      if((s=strstr(entry->d_name, ".ctl")) != NULL &&
+	 s[4] == '\0') {
+	      char *ef;
+	      struct stat st;
+
+	      /* is there corresponding event file? */
+	      ef = malloc(strlen(dir) + strlen(entry->d_name) + 2);
+	      if(ef == NULL) {
+		      free(dir);
+		      set_error(IL_NOMEM, ENOMEM, "event_store_init: no room for event file name");
+		      return(-1);
+	      }
+
+	      s[0] = 0;
+	      *ef = '\0';
+	      strcat(ef, dir);
+	      strcat(ef, "/");
+	      strcat(ef, entry->d_name);
+	      s[0] = '.';
+
+	      if(stat(ef, &st) == 0) {
+		      /* something is there */
+		      /* XXX - it could be something else than event file, but do not bother now */
+	      } else {
+		      /* could not stat file, remove ctl */
+		      strcat(ef, s);
+		      il_log(LOG_DEBUG, "  removing stale file %s\n", ef);
+		      if(unlink(ef)) 
+			      il_log(LOG_ERR, "  could not remove file %s: %s\n", ef, strerror(errno));
+		      
+	      }
+	      free(ef);
+
+      }
     }
     closedir(event_dir);
     free(dir);

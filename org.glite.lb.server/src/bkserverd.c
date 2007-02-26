@@ -40,6 +40,7 @@
 #include "glite/lb/context.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"
+#include "glite/lb/lb_maildir.h"
 
 #include "lb_http.h"
 #include "lb_proto.h"
@@ -69,14 +70,12 @@ extern edg_wll_ErrorCode edg_wll_Close(edg_wll_Context);
 
 #define CON_QUEUE		20	/* accept() */
 #define SLAVE_OVERLOAD		10	/* queue items per slave */
-#define CLNT_TIMEOUT		10	/* keep idle connection that many seconds */
-#define TOTAL_CLNT_TIMEOUT	60	/* one client may ask one slave multiple times */
+#define CONNECT_TIMEOUT		30
+#define IDLE_TIMEOUT		10	/* keep idle connection that many seconds */
+#define REQUEST_TIMEOUT		120	/* one client may ask one slave multiple times */
 					/* but only limited time to avoid DoS attacks */
-#define CLNT_REJECT_TIMEOUT	100000	/* time limit for client rejection in !usec! */
 #define DNS_TIMEOUT      	5	/* how long wait for DNS lookup */
 #define SLAVE_CONNS_MAX		500	/* commit suicide after that many connections */
-#define MASTER_TIMEOUT		30 	/* maximal time of one-round of master network communication */
-#define SLAVE_TIMEOUT		30 	/* maximal time of one-round of slave network communication */
 
 #ifndef EDG_PURGE_STORAGE
 #define EDG_PURGE_STORAGE	"/tmp/purge"
@@ -277,8 +276,7 @@ int main(int argc, char *argv[])
 	int					opt;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *port,
-					   *name,
-					   *tmps;
+					   *name;
 #ifdef GLITE_LB_SERVER_WITH_WS
 	char			   *ws_port;
 #endif	/* GLITE_LB_SERVER_WITH_WS */
@@ -412,9 +410,9 @@ int main(int argc, char *argv[])
 	if (check_mkdir(dumpStorage)) exit(1);
 	if (check_mkdir(purgeStorage)) exit(1);
 	if ( jpreg ) {
-		if ( edg_wll_MaildirInit(jpregDir, &tmps) ) {
-			dprintf(("[%d] %s\n", getpid(), tmps));
-			if (!debug) syslog(LOG_CRIT, tmps);
+		if ( edg_wll_MaildirInit(jpregDir) ) {
+			dprintf(("[%d] edg_wll_MaildirInit failed: %s\n", getpid(), lbm_errdesc));
+			if (!debug) syslog(LOG_CRIT, "edg_wll_MaildirInit failed: %s", lbm_errdesc);
 			exit(1);
 		}
 	}
@@ -577,14 +575,12 @@ a.sin_addr.s_addr = INADDR_ANY;
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVES_COUNT, slaves);
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_OVERLOAD, SLAVE_OVERLOAD);
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_CONNS_MAX, SLAVE_CONNS_MAX);
-	/* XXX
-	 * not final version - yet!
-	 */
-	to = (struct timeval){CLNT_TIMEOUT, 0};
+
+	to = (struct timeval){CONNECT_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_CONNECT_TIMEOUT, &to);
-	to = (struct timeval){CLNT_TIMEOUT, 0};
+	to = (struct timeval){REQUEST_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_REQUEST_TIMEOUT, &to);
-	to = (struct timeval){TOTAL_CLNT_TIMEOUT, 0};
+	to = (struct timeval){IDLE_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_IDLE_TIMEOUT, &to);
 
 	glite_srvbones_run(bk_clnt_data_init, service_table, sizofa(service_table), debug);
@@ -694,7 +690,6 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	OM_uint32			min_stat,
 						maj_stat;
 	struct timeval		dns_to = {DNS_TIMEOUT, 0},
-						total_to = { TOTAL_CLNT_TIMEOUT,0 },
 						conn_start, now;
 	struct sockaddr_in	a;
 	int					alen;
@@ -704,17 +699,21 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 
 
+/* don't care :-( 
 	switch ( edg_wll_gss_watch_creds(server_cert, &cert_mtime) ) {
 	case 0: break;
 	case 1:
+*/
 		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, NULL, &gss_code) ) {
 			dprintf(("[%d] reloading credentials\n", getpid()));
 			gss_release_cred(&min_stat, &mycred);
 			mycred = newcred;
-		} else { dprintf(("[%d] reloading credentials failed\n", getpid())); }
+		} else { dprintf(("[%d] reloading credentials failed, using old ones\n", getpid())); }
+/* 
 		break;
 	case -1: dprintf(("[%d] edg_wll_gss_watch_creds failed\n", getpid())); break;
 	}
+*/
 
 	if ( edg_wll_InitContext(&ctx) )
 	{
@@ -743,13 +742,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->rgma_export = rgma_export;
 	memcpy(ctx->purge_timeout, purge_timeout, sizeof(ctx->purge_timeout));
 
-	ctx->p_tmp_timeout.tv_sec = SLAVE_TIMEOUT;
-	ctx->p_tmp_timeout.tv_usec = 0;
-	if ( total_to.tv_sec < ctx->p_tmp_timeout.tv_sec )
-	{
-		ctx->p_tmp_timeout.tv_sec = total_to.tv_sec;
-		ctx->p_tmp_timeout.tv_usec = total_to.tv_usec;
-	}
+	ctx->p_tmp_timeout.tv_sec = timeout->tv_sec;
+	ctx->p_tmp_timeout.tv_usec = timeout->tv_usec;
 	
 	ctx->poolSize = 1;
 	ctx->connPool = calloc(1, sizeof(edg_wll_ConnPool));
@@ -763,7 +757,6 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 	gettimeofday(&conn_start, 0);
 
-	/* not a critical operation, do not waste all SLAVE_TIMEOUT */
 	h_errno = asyn_gethostbyaddr(&name, (char *)&a.sin_addr.s_addr,sizeof(a.sin_addr.s_addr), AF_INET, &dns_to);
 	switch ( h_errno )
 	{
@@ -778,6 +771,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	default:
 		if (debug) fprintf(stderr, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
 		dprintf(("[%d] connection from %s:%d\n", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port)));
+		free(ctx->connPool[ctx->connToUse].peerName);
+		ctx->connPool[ctx->connToUse].peerName = strdup(inet_ntoa(a.sin_addr));
 		break;
 	}
 	
@@ -836,17 +831,32 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		ctx->srvPort = ntohs(a.sin_port);
 	}
 
+/* XXX: ugly workaround, we may detect false expired certificated
+ * probably due to bug in Globus GSS/SSL. Treated as fatal,
+ * restarting the server solves the problem */ 
+ 
+#define _EXPIRED_CERTIFICATE_MESSAGE "certificate has expired"
+
 	if ( (ret = edg_wll_gss_accept(mycred, conn, timeout, &ctx->connPool[ctx->connToUse].gss, &gss_code)) )
 	{
 		if ( ret == EDG_WLL_GSS_ERROR_TIMEOUT )
 		{
-			dprintf(("[%d] Client authentication failed - timeout reached, closing.\n", getpid()));
-			if (!debug) syslog(LOG_ERR, "Client authentication failed - timeout reached");
+			dprintf(("[%d] %s: Client authentication failed - timeout reached, closing.\n", getpid(),ctx->connPool[ctx->connToUse].peerName));
+			if (!debug) syslog(LOG_ERR, "%s: Client authentication failed - timeout reached",ctx->connPool[ctx->connToUse].peerName);
+		}
+		else if (ret == EDG_WLL_GSS_ERROR_GSS) {
+			edg_wll_SetErrorGss(ctx,"Client authentication",&gss_code);
+			if (strstr(ctx->errDesc,_EXPIRED_CERTIFICATE_MESSAGE)) {
+				dprintf(("[%d] %s: false expired certificate: %s\n",getpid(),ctx->connPool[ctx->connToUse].peerName,ctx->errDesc));
+				if (!debug) syslog(LOG_ERR,"[%d] %s: false expired certificate: %s",getpid(),ctx->connPool[ctx->connToUse].peerName,ctx->errDesc);
+				edg_wll_FreeContext(ctx);
+				return -1;
+			}
 		}
 		else
 		{
-			dprintf(("[%d] Client authentication failed, closing.\n", getpid()));
-			if (!debug) syslog(LOG_ERR, "Client authentication failed");
+			dprintf(("[%d] %s: Client authentication failed, closing.\n", getpid(),ctx->connPool[ctx->connToUse].peerName));
+			if (!debug) syslog(LOG_ERR, "%s: Client authentication failed",ctx->connPool[ctx->connToUse].peerName);
 
 		}
 		edg_wll_FreeContext(ctx);
@@ -985,6 +995,7 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 		case ETIMEDOUT:
 		case EDG_WLL_ERROR_GSS:
 		case EPIPE:
+		case EIO:
 			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
 			if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
 			/*	fallthrough
@@ -1141,51 +1152,10 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 	}
 
 	if ( err ) {
-		char    *errt, *errd;
-		int		ret;
-
-		
-		errt = errd = NULL;
-		switch ( (ret = edg_wll_Error(ctx, &errt, &errd)) ) {
-		case ETIMEDOUT:
-		case EDG_WLL_ERROR_GSS:
-		case EPIPE:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
-			/*	"recoverable" error - return (>0)
-			 *	fallthrough
-			 */
-		case ENOTCONN:
-			/*	"recoverable" error - return (>0)
-			 *	return ENOTCONN to tell bones to clean up
-			 */
-			free(errt); free(errd);
-			return ret;
-			break;
-
-		case ENOENT:
-		case EINVAL:
-		case EPERM:
-		case EEXIST:
-		case EDG_WLL_ERROR_NOINDEX:
-		case E2BIG:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if ( !debug ) syslog(LOG_ERR,"%s (%s)", errt, errd);
-			/*
-			 *	no action for non-fatal errors
-			 */
-			break;
-			
-		default:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if (!debug) syslog(LOG_CRIT,"%s (%s)",errt,errd);
-			/*
-			 *	unknown error - do rather return (<0) (slave will be killed)
-			 */
-			return -1;
-		} 
-		free(errt); free(errd);
-		return 1;
+		// soap_print_fault(struct soap *soap, FILE *fd) maybe useful here
+		dprintf(("[%d] SOAP error (bk_accept_ws) \n", getpid()));
+		if (!debug) syslog(LOG_CRIT,"SOAP error (bk_accept_ws)");
+		return ECANCELED;
 	}
 
 	return 0;
@@ -1406,8 +1376,9 @@ static int read_roots(const char *file)
 	int	cnt = 0;
 
 	if (!roots) {
-		perror(file);
-		return 1;
+		syslog(LOG_WARNING,"%s: %m, continuing without --super-users-file",file);
+		dprintf(("%s: %s, continuing without --super-users-file\n",file,strerror(errno)));
+		return 0;
 	}
 
 	while (!feof(roots)) {
@@ -1416,7 +1387,7 @@ static int read_roots(const char *file)
 		nl = strchr(buf,'\n');
 		if (nl) *nl = 0;
 
-		super_users = realloc(super_users, (cnt+1) * sizeof super_users[0]);
+		super_users = realloc(super_users, (cnt+2) * sizeof super_users[0]);
 		super_users[cnt] = strdup(buf);
 		super_users[++cnt] = NULL;
 	}
