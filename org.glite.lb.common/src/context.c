@@ -355,8 +355,7 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			/* fall through */
 		case EDG_WLL_SEQ_NORMAL:
 			if (!seqcode_str) {
-				memset(&ctx->p_seqcode,0,sizeof ctx->p_seqcode);
-				ctx->p_seqcode.type = seq_type;
+				memset(&ctx->p_seqcode.c, 0, sizeof ctx->p_seqcode.c);
 				return 0;
 			}
 
@@ -388,7 +387,10 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			}
 			break;
 		case EDG_WLL_SEQ_PBS:
-			strncpy(ctx->p_seqcode.pbs, seqcode_str, sizeof(ctx->p_seqcode.pbs));
+			if (!seqcode_str) 
+				memset(&ctx->p_seqcode.pbs, 0, sizeof ctx->p_seqcode.pbs);
+			else
+				strncpy(ctx->p_seqcode.pbs, seqcode_str, sizeof(ctx->p_seqcode.pbs));
 			break;
 		default:
 			return edg_wll_SetError(ctx, EINVAL,
