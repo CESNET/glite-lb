@@ -760,9 +760,6 @@ static int edg_wll_RegisterJobMaster(
 	edg_wll_ResetError(ctx);
 	memcpy(&sync_to, &ctx->p_sync_timeout, sizeof sync_to);
 
-	intseed = seed ? strdup(seed) : 
-		str2md5base64(seq = edg_wll_GetSequenceCode(ctx));
-
 	type_s = edg_wll_RegJobJobtypeToString(type);
 	if (!type_s) {
 		edg_wll_SetError(ctx,EINVAL,"edg_wll_RegisterJobMaster(): no jobtype specified");
@@ -786,6 +783,8 @@ static int edg_wll_RegisterJobMaster(
 	if (flags & LOGFLAG_DIRECT) {
 		/* SetLoggingJob and log directly the message */
 		if (edg_wll_SetLoggingJob(ctx,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
+			intseed = seed ? strdup(seed) : 
+				str2md5base64(seq = edg_wll_GetSequenceCode(ctx));
 			edg_wll_LogEventMaster(ctx,LOGFLAG_DIRECT | LOGFLAG_SYNC,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
@@ -796,6 +795,8 @@ static int edg_wll_RegisterJobMaster(
 		if (seq) free(seq);
 		seq = edg_wll_GetSequenceCode(ctx);
 		if (edg_wll_SetLoggingJobProxy(ctx,job,seq,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
+			intseed = seed ? strdup(seed) : 
+				str2md5base64(seq = edg_wll_GetSequenceCode(ctx));
 			edg_wll_LogEventMaster(ctx,LOGFLAG_PROXY | LOGFLAG_SYNC,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
@@ -803,6 +804,8 @@ static int edg_wll_RegisterJobMaster(
 	} else if (flags & LOGFLAG_NORMAL) {
 		/* SetLoggingJob and log normally the message through the local-logger */
 		if (edg_wll_SetLoggingJob(ctx,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
+			intseed = seed ? strdup(seed) : 
+				str2md5base64(seq = edg_wll_GetSequenceCode(ctx));
 			edg_wll_LogEventMaster(ctx, LOGFLAG_NORMAL,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
 				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);

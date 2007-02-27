@@ -356,6 +356,7 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 		case EDG_WLL_SEQ_NORMAL:
 			if (!seqcode_str) {
 				memset(&ctx->p_seqcode,0,sizeof ctx->p_seqcode);
+				ctx->p_seqcode.type = seq_type;
 				return 0;
 			}
 
