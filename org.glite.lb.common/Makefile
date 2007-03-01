@@ -1,7 +1,5 @@
 # Default values
 top_srcdir=.
-builddir=build
-top_builddir=${top_srcdir}/${builddir}
 stagedir=.
 distdir=.
 globalprefix=glite
@@ -10,7 +8,6 @@ package=glite-lb-common
 version=0.0.0
 PREFIX=/opt/glite
 
-glite_location=/opt/glite
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
@@ -48,7 +45,6 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
 	-I${top_srcdir}/test \
 	-I${stagedir}/include \
-	-I${glite_location}/include \
 	-I${expat_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
@@ -69,8 +65,6 @@ GLOBUS_LIBS:=-L${globus_prefix}/lib \
 GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${thrflavour} \
         -lglobus_gssapi_gsi_${thrflavour} \
-
-GLITE_LIBS:=-L${glite_location}/lib
 
 ifneq (${expat_prefix},/usr)
 	EXPAT_LIBS:=-L${expat_prefix}/lib
@@ -242,6 +236,7 @@ install:
 	fi
 
 clean:
+	rm -rf *.o *.lo .libs lib*
 
 
 %.o: %.c
