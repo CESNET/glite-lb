@@ -84,6 +84,7 @@ string  pbs_reason	Glued reasons/errors leading to pending events
 string  pbs_scheduler	Name of pbs scheduler
 string  pbs_dest_host	Hostname of node where job is running
 int	pbs_pid		PID of running job
+string	pbs_resource_usage	Glued resource usage
 int	pbs_exit_status	Job exit status
 string	pbs_error_desc	Glued error descriptions from error events
 

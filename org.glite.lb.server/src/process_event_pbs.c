@@ -128,11 +128,9 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				rep(js->pub.pbs_state, "C");
 			}
 			if (USABLE_DATA(res)) {
-				/*
-				XXX: do we want this info in status?
 				char *new_resource_usage;
 	
-				asprintf(&new_resource_usage,"%s%s%s = %d [%s]",
+				asprintf(&new_resource_usage,"%s%s\t%s = %d [%s]",
 					(js->pub.pbs_resource_usage) ? js->pub.pbs_resource_usage : "",
 					(js->pub.pbs_resource_usage) ? "\n": "",
 					e->PBSResourceUsage.name,
@@ -141,7 +139,6 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 
 				if (js->pub.pbs_resource_usage) free(js->pub.pbs_resource_usage);
 				js->pub.pbs_resource_usage = new_resource_usage;
-				*/
 			}
 			break;
 		case EDG_WLL_EVENT_PBSERROR:
