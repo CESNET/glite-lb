@@ -1,7 +1,5 @@
 # defaults
 top_srcdir=.
-builddir=build
-top_builddir=${top_srcdir}/${builddir}
 stagedir=.
 distdir=.
 globalprefix=glite
@@ -14,7 +12,6 @@ glite_location=/opt/glite
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
-expat_prefix=/opt/expat
 
 -include Makefile.inc
 -include ../project/version.properties
@@ -71,12 +68,12 @@ GLOBUS_THRLIBS:= -L${globus_prefix}/lib \
 	-lglobus_common_${thrflavour} \
 	-lglobus_gssapi_gsi_${thrflavour}
 
-ifneq (${expat_prefix},/usr)
-	EXPAT_LIBS:=-L${expat_prefix}/lib
-endif
-EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
-
-EXT_LIBS:= ${EXPAT_LIBS}
+#ifneq (${expat_prefix},/usr)
+#	EXPAT_LIBS:=-L${expat_prefix}/lib
+#endif
+#EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
+#
+#EXT_LIBS:= ${EXPAT_LIBS}
 
 COMMON_LIB:=-lglite_lb_common
 
