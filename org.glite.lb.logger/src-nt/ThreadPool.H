@@ -19,6 +19,11 @@ public:
 		WorkDescription(int afd) 
 			: fd(afd), event(NONE) {}
 
+
+	protected:
+		enum Event { NONE, READY, TIMEOUT, ERROR } event;
+		void doWork();
+
 		virtual void onReady() 
 			{}
 
@@ -27,10 +32,6 @@ public:
 
 		virtual void onError() 
 			{}
-
-	protected:
-		enum Event { NONE, READY, TIMEOUT, ERROR } event;
-		void doWork();
 	};
 
 public:

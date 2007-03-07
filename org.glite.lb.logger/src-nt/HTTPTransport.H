@@ -25,26 +25,32 @@ public:
 	HTTPTransport(Connection *conn) 
 		: Transport(conn),
 		  state(NONE),
-		  request(), headers(), body(NULL), pos(NULL)
+		  request(), headers(), body(NULL), pos(NULL),
+		  content_length(0)
 		{}
 
 	virtual ~HTTPTransport();
 
+
+protected:
 	// from ThreadPool::WorkDescription
 	virtual void onReady();
 	virtual void onTimeout();
 	virtual void onError();
 
-protected:
+private:
 	enum { NONE, 
 	       IN_REQUEST,
 	       IN_HEADERS,
 	       IN_BODY } state;
-	string request;
-	string headers;
+	std::string request;
+	std::string headers;
 	char *body;
 	char buffer[256];
 	char *pos;
+	unsigned int content_length;
+
+	int parseHeader(const char *s, unsigned int len);
 };
 
 
