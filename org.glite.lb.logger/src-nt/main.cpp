@@ -5,7 +5,7 @@
 #include "HTTPTransport.H"
 
 const int num_threads = 2;
-const char *sock_path = "il_sock";
+const char *sock_path = "/tmp/il_sock";
 
 int main(int argc, char *argv[])
 {

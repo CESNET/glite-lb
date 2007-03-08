@@ -57,7 +57,9 @@ HTTPTransport::onReady()
 						p = cr + 2;
 					} else {
 						// headers continue. parse the current one
+						*cr = 0;
 						parseHeader(s, cr - s);
+						*cr = '\r';
 					}
 					if(crlf_seen && (s == cr)) {
 						// found CRLFCRLF
@@ -170,23 +172,14 @@ int
 HTTPTransport::parseHeader(const char *s, unsigned int len)
 {
 	char *p;
-	char tmp[256];
 
 	std::cout << "header: ";
 	std::cout.write(s, len);
 	std::cout << std::endl;
 	std::cout.flush();
 	if(!strncasecmp(s, "Content-Length", 14)) {
-		int l;
-
 		p = (char*)memccpy((void*)s, (void*)s, ':', len);
-		if(p) { 
-			l = (p - s < sizeof(tmp) - 1) ? p - s : sizeof(tmp) - 1;
-			memcpy(tmp, p, l);
-			tmp[l] = 0;
-			std::cout << "length " << tmp << std::endl;
-			content_length = atoi(tmp);
-		}
+		content_length = p ? atoi(p) : 0 ;
 	}
 	return(0);
 }
