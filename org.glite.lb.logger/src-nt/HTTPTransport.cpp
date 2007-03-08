@@ -1,4 +1,5 @@
 #include "HTTPTransport.H"
+#include "Exception.H"
 
 #include <iostream>
 #include <string.h>
@@ -28,8 +29,10 @@ HTTPTransport::onReady()
 		len = conn->read(pos, sizeof(buffer) - (pos - buffer));
 		if(len < 0) {
 			// error during request
+			state = NONE;
 		} else if(len == 0) {
 			// other side closed connection
+			state = NONE;
 		} else {
 			char *cr = NULL, *p = buffer, *s = buffer;
 			bool crlf_seen = false;
@@ -104,9 +107,13 @@ HTTPTransport::onReady()
 					if(s < buffer + len) {
 						memmove(body, s, buffer + len - s);
 						pos = body + (buffer + len - s);
+					} else {
+						pos = body;
 					}
 				} else {
 					// report error
+					std::cout << "Wrong content length" << std::endl;
+					throw new Exception();
 				}
 			} else {
 				// move the trailing characters to the front
@@ -119,7 +126,29 @@ HTTPTransport::onReady()
 		break;
 
 	case IN_BODY:
+		len = conn->read(pos, content_length - (pos - body));
+		if(len < 0) {
+			// error reading
+			state = NONE;
+		} else if(len == 0) {
+			// no more data
+			state = NONE;
+		} else {
+			pos += len;
+			if(pos - body == content_length) {
+				// finished reading
+				state = NONE;
+			}
+		}
 		break;
+	}
+
+	if(state != NONE) 
+		ThreadPool::theThreadPool.queueWorkRead(this);
+	else {
+		std::cout << request << std::endl << headers << std::endl;
+		std::cout.write(body, content_length);
+		std::cout.flush();
 	}
 
 }
@@ -140,6 +169,24 @@ HTTPTransport::onError()
 int
 HTTPTransport::parseHeader(const char *s, unsigned int len)
 {
+	char *p;
+	char tmp[256];
+
+	std::cout << "header: ";
 	std::cout.write(s, len);
+	std::cout << std::endl;
+	std::cout.flush();
+	if(!strncasecmp(s, "Content-Length", 14)) {
+		int l;
+
+		p = (char*)memccpy((void*)s, (void*)s, ':', len);
+		if(p) { 
+			l = (p - s < sizeof(tmp) - 1) ? p - s : sizeof(tmp) - 1;
+			memcpy(tmp, p, l);
+			tmp[l] = 0;
+			std::cout << "length " << tmp << std::endl;
+			content_length = atoi(tmp);
+		}
+	}
 	return(0);
 }
