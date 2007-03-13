@@ -1,7 +1,5 @@
 # Default values
 top_srcdir=.
-builddir=build
-top_builddir=${top_srcdir}/${builddir}
 stagedir=.
 distdir=.
 globalprefix=glite
