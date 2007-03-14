@@ -131,7 +131,7 @@ int main(int argc,char *argv[])
 static void
 usage(char *name)
 {
-	fprintf(stderr,"Usage: %s job_id [-x lb_proxy_serve_sock] [job_id [...]]\n", name);
+	fprintf(stderr,"Usage: %s [-x lb_proxy_serve_sock] job_id [job_id...]\n", name);
 	fprintf(stderr,"       %s -all\n", name);
 }
 
