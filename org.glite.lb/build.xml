@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.42  2006/03/24 08:26:11  akrenek
+	missing utils->client dependency (should fix nightly build)
+
 	Revision 1.41  2006/03/15 17:35:35  akrenek
 	cares
 	
@@ -555,7 +558,7 @@
 		</if>
 	</target>
 
-	<target name="utils" unless="setenvonly" depends="envset, globus, expat, c-ares, client, server">
+	<target name="utils" unless="setenvonly" depends="envset, globus, expat, c-ares, client, server, jp.primary">
 		<if>
 			<isset property="small.memory"/>
 			<then>
