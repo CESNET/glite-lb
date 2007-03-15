@@ -7,7 +7,10 @@
 
 #include <list>
 
-class ThreadPool {
+#include "Singleton.H"
+
+class ThreadPool : public Singleton<ThreadPool> {
+	friend class Singleton<ThreadPool>;
 public:
 	const static int default_timeout = 5;
 
@@ -35,11 +38,6 @@ public:
 	};
 
 public:
-	static ThreadPool theThreadPool;
-
-	static ThreadPool *getThreadPool() 
-		{ return &theThreadPool; }
-
 	void startWorkers(unsigned int n);
 	void stopWorkers();
 

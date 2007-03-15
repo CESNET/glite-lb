@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 	SocketInput *input;
 	
 	// initialize plugins
-	PluginManager::thePluginManager.initialize();
+	PluginManager::instance()->initialize();
 
 	// create unix socket with plain IO and HTTP transport
 	input = new SocketInput(sock_path, 
@@ -20,14 +20,14 @@ int main(int argc, char *argv[])
 				&HTTPTransport::theFactory);
 
 	// start worker threads
-	ThreadPool::theThreadPool.startWorkers(num_threads);
+	ThreadPool::instance()->startWorkers(num_threads);
 
 	// run the main loop
-	ThreadPool::theThreadPool.run();
+	ThreadPool::instance()->run();
 
 	// cleanup & exit
 	delete input;
-	PluginManager::thePluginManager.cleanup();
+	PluginManager::instance()->cleanup();
 
 	return 0;
 }

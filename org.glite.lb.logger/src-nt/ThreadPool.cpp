@@ -10,7 +10,6 @@
 #include "ThreadPool.H"
 #include "Exception.H"
 
-ThreadPool ThreadPool::theThreadPool;
 
 static inline
 void
@@ -231,7 +230,7 @@ ThreadPool::getWork()
 void
 ThreadPool::threadCleanup(void *data)
 {
-	ThreadPool *pool = ThreadPool::getThreadPool();
+	ThreadPool *pool = ThreadPool::instance();
 
 	pthread_mutex_unlock(&(pool->work_queue_mutex));
 }
@@ -240,7 +239,7 @@ ThreadPool::threadCleanup(void *data)
 void *
 ThreadPool::threadMain(void *data)
 {
-	ThreadPool *pool  = ThreadPool::getThreadPool();
+	ThreadPool *pool  = ThreadPool::instance();
 	WorkDescription *work_unit;
 
 	pthread_cleanup_push(ThreadPool::threadCleanup, NULL); 

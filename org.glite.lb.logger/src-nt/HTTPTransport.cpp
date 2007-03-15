@@ -146,7 +146,7 @@ HTTPTransport::onReady()
 	}
 
 	if(state != NONE) 
-		ThreadPool::theThreadPool.queueWorkRead(this);
+		ThreadPool::instance()->queueWorkRead(this);
 	else {
 		std::cout << request << std::endl << headers << std::endl;
 		std::cout.write(body, content_length);

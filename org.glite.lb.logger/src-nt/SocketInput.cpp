@@ -31,7 +31,7 @@ SocketInput::SocketInput(const char *path,
 	}
 	bind(fd, (struct sockaddr *)&saddr, sizeof(saddr));
 	listen(fd, SOCK_QUEUE_MAX);
-	ThreadPool::theThreadPool.setWorkAccept(this);
+	ThreadPool::instance()->setWorkAccept(this);
 }
 
 
@@ -49,7 +49,7 @@ SocketInput::onReady()
 {
 	Connection *conn = cFactory->accept(fd);
 	Transport  *trans = tFactory->newTransport(conn);
-	ThreadPool::theThreadPool.queueWorkRead(trans);
+	ThreadPool::instance()->queueWorkRead(trans);
 }
 
 

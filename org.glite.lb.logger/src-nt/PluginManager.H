@@ -2,14 +2,13 @@
 #define _PLUGIN_MANAGER_H
 
 #include <list>
-
 #include <iostream>
 
-class PluginManager {
+#include "Singleton.H"
+
+class PluginManager: public Singleton<PluginManager> {
+	friend class Singleton<PluginManager>;
 public:
-	// the plugin manager instance
-	static PluginManager thePluginManager;
-	
 	
 	// base class for plugins
 	class Plugin {
@@ -17,7 +16,7 @@ public:
 		const char *name;
 
 		Plugin(const char *aname) : name(aname) { 
-			PluginManager::thePluginManager.registerPlugin(this, aname); 
+			PluginManager::instance()->registerPlugin(this, aname); 
 		}
 
 		virtual bool initialize() = 0;
@@ -53,13 +52,15 @@ public:
 	}
 		
 
+protected:
+	//  default constructor
+	PluginManager() : pluginList()
+		{};
+
 private:
 	// list of registered plugins
 	std::list<Plugin *> pluginList;
 
-	// singleton class with private default constructor
-	PluginManager() : pluginList()
-		{};
 };
 
 
