@@ -232,6 +232,8 @@
 	int	pid		Actual process ID
 	_optional_
 
+@type PBSRerun            Job rerun requested
+
 @type PBSDone		Job terminated
 	int	exit_status	Exit status
 	_optional_		Bypass need of 'null value'

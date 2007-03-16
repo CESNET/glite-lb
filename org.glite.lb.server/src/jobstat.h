@@ -55,6 +55,7 @@ typedef struct _intJobStat {
 /*		int		expect_mask; */
 		int 		children_done_hist[EDG_WLL_NUMBER_OF_DONE_CODES];
 		struct timeval	last_pbs_event_timestamp;
+		int		pbs_reruning;		// true if rerun event arrived
 	} intJobStat;
 
 typedef enum _edg_wll_PBSEventSource {

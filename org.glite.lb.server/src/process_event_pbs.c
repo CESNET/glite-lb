@@ -84,6 +84,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_WAITING;
 				rep(js->pub.pbs_state, "Q");
+				js->pbs_reruning = 0;		// reset possible reruning flag
 			}
 			if (USABLE_DATA(res)) {
 				rep_cond(js->pub.pbs_reason,e->PBSPending.reason);
@@ -111,11 +112,45 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				js->pub.pbs_pid = e->PBSRun.pid;
 			}
 			break;
+		case EDG_WLL_EVENT_PBSRERUN:
+			if (USABLE(res)) {
+				switch (get_pbs_event_source(e->any.seqcode)) {
+					case EDG_WLL_PBS_EVENT_SOURCE_SERVER:
+						js->pub.state = EDG_WLL_JOB_WAITING;
+						rep(js->pub.pbs_state, "Q");
+						break;
+					case EDG_WLL_PBS_EVENT_SOURCE_MOM:
+						js->pub.state = EDG_WLL_JOB_WAITING;
+						rep(js->pub.pbs_state, "E");
+						js->pbs_reruning = 1;
+						break;
+					default:
+						assert(0); // running event from strande source
+						break;
+				}
+			}
+			if (USABLE_DATA(res)) {
+			}
+			break;
 		case EDG_WLL_EVENT_PBSDONE:
 			if (USABLE(res)) {
-				js->pub.state = EDG_WLL_JOB_DONE;
-				js->pub.done_code = EDG_WLL_STAT_OK;
-				rep(js->pub.pbs_state, "C");
+				switch (get_pbs_event_source(e->any.seqcode)) {
+					case EDG_WLL_PBS_EVENT_SOURCE_SERVER:
+						js->pub.state = EDG_WLL_JOB_DONE;
+						js->pub.done_code = EDG_WLL_STAT_OK;
+						rep(js->pub.pbs_state, "C");
+						break;
+					case EDG_WLL_PBS_EVENT_SOURCE_MOM:
+						if (!js->pbs_reruning) {
+							js->pub.state = EDG_WLL_JOB_DONE;
+							js->pub.done_code = EDG_WLL_STAT_OK;
+							rep(js->pub.pbs_state, "C");
+						}
+						break;
+					default:
+						assert(0); //done event from strange source
+						break;
+				}
 			}
 			if (USABLE_DATA(res)) {
 				js->pub.pbs_exit_status =  e->PBSDone.exit_status;	
