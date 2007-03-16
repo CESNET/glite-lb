@@ -32,7 +32,7 @@ public:
 		
 		r = read(fd, buf, 1);
 		buf[1] = 0;
-		ThreadPool::getThreadPool()->exit();
+		ThreadPool::instance()->exit();
 	}
 
 	virtual void onTimeout() {
@@ -65,7 +65,7 @@ public:
 	virtual void onReady() {
 		
 		int len = recv(fd, buffer, sizeof(buffer), MSG_NOSIGNAL);
-		ThreadPool::getThreadPool()->exit();
+		ThreadPool::instance()->exit();
 	}
 
 	virtual void onError() {
@@ -122,7 +122,7 @@ public:
 		nfd = accept(fd, NULL, NULL);
 		if(nfd < 0) { 
 		} else {
-			ThreadPool *pool = ThreadPool::getThreadPool();
+			ThreadPool *pool = ThreadPool::instance();
 
 			reader  = new TestSocketRead(nfd);
 			pool->queueWorkRead(reader);
@@ -141,7 +141,7 @@ class ThreadPoolTest: public CppUnit::TestFixture
 
 public:
 	void setUp() {
-		pool = ThreadPool::getThreadPool();
+		pool = ThreadPool::instance();
 		unlink("/tmp/smazat.sock");
 		pool->startWorkers(2);
 	}
@@ -176,7 +176,7 @@ public:
 
 		pool->queueWorkAccept(consumer);
 		producer = new TestSocketWrite("/tmp/smazat.sock");
-		ThreadPool::getThreadPool()->queueWorkWrite(producer);
+		ThreadPool::instance()->queueWorkWrite(producer);
 		pool->run();
 		CPPUNIT_ASSERT(consumer->reader != NULL);
 		CPPUNIT_ASSERT(strcmp(consumer->reader->buffer, TestSocketWrite::buffer) == 0);

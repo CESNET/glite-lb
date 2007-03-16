@@ -42,12 +42,12 @@ public:
 	}
 
 	void testInit() {
-		PluginManager::thePluginManager.initialize();
+		PluginManager::instance()->initialize();
 		CPPUNIT_ASSERT(TestPlugin::theTestPlugin.inited);
 	}
 	
 	void testClean() {
-		PluginManager::thePluginManager.cleanup();
+		PluginManager::instance()->cleanup();
 		CPPUNIT_ASSERT(TestPlugin::theTestPlugin.cleaned);
 	}
 };
