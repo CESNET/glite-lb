@@ -186,11 +186,11 @@ static void printstat(edg_wll_JobStat stat, int level)
 	s = edg_wll_StatToString(stat.state); 
 /* print whole flat structure */
 	printf("%sstate : %s\n", ind, s);
-	printf("%sjobId : %s\n", ind, j = edg_wlc_JobIdUnparse(stat.jobId));
+	printf("%sjobId : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.jobId));
 	printf("%sowner : %s\n", ind, stat.owner);
 	printf("%sjobtype : %s\n", ind, (stat.jobtype ? "DAG" : "SIMPLE") );
 	printf("%sparent_job : %s\n", ind,
-			j = edg_wlc_JobIdUnparse(stat.parent_job));
+			j2 = edg_wlc_JobIdUnparse(stat.parent_job));
 	if (stat.jobtype) {;
 		printf("%sseed : %s\n", ind, stat.seed);
 		printf("%schildren_num : %d\n", ind, stat.children_num);
@@ -257,7 +257,8 @@ static void printstat(edg_wll_JobStat stat, int level)
 
 	printf("\n");	
 	
-	free(j);
+	free(j1);
+	free(j2);
 	free(s);
 }
 
