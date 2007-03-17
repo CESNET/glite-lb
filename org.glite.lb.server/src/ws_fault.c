@@ -56,11 +56,15 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 
 void edg_wll_FaultToErr(const struct soap *soap,edg_wll_Context ctx)
 {
-	struct SOAP_ENV__Detail	*detail = soap->version == 2 ?
-		soap->fault->SOAP_ENV__Detail : soap->fault->detail;
-
+	struct SOAP_ENV__Detail	*detail;
 	struct lbt__genericFault	*f;
 
+	if (!soap->fault) {
+		edg_wll_SetError(ctx,EINVAL,"SOAP: (no error info)");
+		return;
+	}
+
+	detail = soap->version == 2 ? soap->fault->SOAP_ENV__Detail : soap->fault->detail;
 	if (detail->__type == GFNUM) {
 #if GSOAP_VERSION >= 20709
 		f = detail->lbe__genericFault;

@@ -1,14 +1,15 @@
 #include <getopt.h>
 #include <stdsoap2.h>
 
-#include "glite/security/glite_gsplugin.h"
 #include "glite/lb/consumer.h"
+
+#include "soap_version.h"
+#include "glite/security/glite_gsplugin.h"
+#include "glite/security/glite_gscompat.h"
 
 #include "bk_ws_H.h"
 #include "ws_fault.h"
 #include "ws_typeref.h"
-
-#include "soap_version.h"
 
 #if GSOAP_VERSION <= 20602
 #define soap_call___lb__QueryJobs soap_call___ns1__QueryJobs
@@ -43,7 +44,7 @@ int main(int argc,char** argv)
 	int					opt, err;
 	char					*server = "http://localhost:9003/",
 					 	*name = NULL;
-	int					i, j;
+	int					i;
 
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
@@ -75,15 +76,18 @@ int main(int argc,char** argv)
 
 	conditions[1] = (edg_wll_QueryRec *)calloc(2, sizeof(edg_wll_QueryRec));
 	conditions[1][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
-	conditions[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
-	conditions[1][0].value.c = NULL;
+#warning FIXME: NULL should work, use optional in WSDL?
+//	conditions[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
+//	conditions[1][0].value.c = NULL;
+	conditions[1][0].op = EDG_WLL_QUERY_OP_UNEQUAL;
+	conditions[1][0].value.c = "x";
 
 	qjobs = soap_malloc(soap, sizeof(*qjobs));
 	memset(qjobs, 0, sizeof(*qjobs));
 	qjobs->flags = soap_malloc(soap, sizeof(*qjobs->flags));
 	memset(qjobs->flags, 0, sizeof(*qjobs->flags));
 	if (!qjobs->flags || edg_wll_QueryCondsExtToSoap(soap, (const edg_wll_QueryRec **)conditions, &qjobs->__sizeconditions, &qjobs->conditions)
-		|| edg_wll_JobStatFlagsToSoap(soap, 0, qjobs->flags) ) {
+		|| edg_wll_JobStatFlagsToSoap(soap, EDG_WLL_STAT_CLASSADS || EDG_WLL_STAT_CHILDREN || EDG_WLL_STAT_CHILDSTAT, qjobs->flags) ) {
 		char	*et,*ed;
 
 		fprintf(stderr, "%s: soap types conversion error...\n", argv[0]);
@@ -107,7 +111,7 @@ int main(int argc,char** argv)
 			edg_wll_JobStatCode statCode;
 
 
-			edg_wll_SoapToJobStatCode(out.states[i]->state, &statCode);
+			edg_wll_SoapToJobStatCode(GLITE_SECURITY_GSOAP_LIST_GET(out.states, i)->state, &statCode);
 			char *s = edg_wll_StatToString(statCode);
 			printf("%-65s%s\n", out.jobs[i], s);
 			free(s);

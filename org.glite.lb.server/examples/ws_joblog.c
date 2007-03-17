@@ -1,15 +1,16 @@
 #include <getopt.h>
 #include <stdsoap2.h>
 
-#include "glite/security/glite_gsplugin.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/events_parse.h"
+
+#include "soap_version.h"
+#include "glite/security/glite_gsplugin.h"
+#include "glite/security/glite_gscompat.h"
 
 #include "bk_ws_H.h"
 #include "ws_typeref.h"
 #include "ws_fault.h"
-
-#include "soap_version.h"
 
 #if GSOAP_VERSION <= 20602
 #define soap_call___lb__QueryEvents soap_call___ns1__QueryEvents
@@ -41,8 +42,7 @@ int main(int argc,char** argv)
 	struct soap				*mydlo = soap_new();
 	struct _lbe__QueryEventsResponse	out;
 	struct _lbe__QueryEvents		in;	
-	edg_wll_QueryRec			**jconds = NULL,
-						**econds = NULL;
+	edg_wll_QueryRec			**jconds = NULL;
 	edg_wll_QueryRec			j[2], e[1];
 	int					opt, err, i;
 	edg_wlc_JobId				job;
@@ -85,7 +85,6 @@ int main(int argc,char** argv)
 	}
 
 	glite_gsplugin_set_udata(mydlo, ctx);
-
 
 	/* prepare job log query */
 	memset(j,0,sizeof j);

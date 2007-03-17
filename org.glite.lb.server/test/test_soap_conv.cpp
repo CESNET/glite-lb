@@ -287,10 +287,12 @@ void SoapConvTest::Conditions()
 	struct edgwll__QueryConditions	   *soapConds, *soapConds2;
 	edg_wll_QueryRec				  **stdConds2;
 	int									ret;
+	int size;
+	void *tmp1;
 
 	ret = edg_wll_QueryCondsExtToSoap(soap, (const edg_wll_QueryRec**)stdConds, &soapConds);
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_QueryCondsExtToSoap()", ret == SOAP_OK);
-	ret = edg_wll_SoapToQueryCondsExt(soapConds, &stdConds2);
+	ret = edg_wll_SoapToQueryCondsExt(soapConds, &stdConds2, &size, &tmp);
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_SoapToQueryCondsExt()", !ret);
 
 	CPPUNIT_ASSERT_MESSAGE("Converted std results differs", !stdCondsCmp(stdConds, stdConds2));
