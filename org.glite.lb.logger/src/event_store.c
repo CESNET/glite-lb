@@ -355,6 +355,7 @@ event_store_recover(struct event_store *es)
   FILE *ef;
   struct flock efl;
   char err_msg[128];
+  struct stat stbuf;
 
   assert(es != NULL);
   
@@ -401,6 +402,18 @@ event_store_recover(struct event_store *es)
 	  event_store_unlock(es);
 	  fclose(ef);
 	  return(-1);
+  }
+
+  /* check the file modification time and size to avoid unnecessary operations */
+  if(fstat(fd, &stbuf) < 0) {
+	  il_log(LOG_WARNING, "    could not stat event file %s: %s\n    continuing anyway\n", es->event_file_name, strerror(errno));
+  } else {
+	  if((es->offset == stbuf.st_size) && (es->last_modified == stbuf.st_mtime)) {
+		  il_log(LOG_DEBUG, "  event file not modified since last visit, skipping\n");
+		  fclose(ef);
+		  event_store_unlock(es);
+		  return(0);
+	  }
   }
 
   while(1) { /* try, try, try */
@@ -572,6 +585,16 @@ event_store_sync(struct event_store *es, long offset)
 
   assert(es != NULL);
 
+  /* Commented out due to the fact that offset as received on socket
+   * has little to do with the real event file at the moment. The
+   * event will be read from file, socket now serves only to notify
+   * about possible event file change.
+   */
+  ret = event_store_recover(es);
+  ret = (ret < 0) ? ret : 0;
+  return(ret);
+
+#if 0
   event_store_lock_ro(es);
   if(es->offset == offset) 
     /* we are up to date */
@@ -611,6 +634,7 @@ event_store_sync(struct event_store *es, long offset)
   }
   event_store_unlock(es);
   return(ret);
+#endif
 }
 
 
@@ -619,6 +643,12 @@ event_store_next(struct event_store *es, long offset, int len)
 {
   assert(es != NULL);
   
+  /* Commented out due to the fact that offset as received on socket
+   * has little to do with real event file at the moment. es->offset
+   * handling is left solely to the event_store_recover().
+   */
+   
+#if 0
   event_store_lock(es);
   /* Whoa, be careful now. The es->offset points right after the last enqueued event,
    * but it may not be the offset of the event WE have just enqueued, because:!    
@@ -630,6 +660,7 @@ event_store_next(struct event_store *es, long offset, int len)
 	  es->offset += len;
   }
   event_store_unlock(es);
+#endif
 
   return(0);
 }
@@ -749,6 +780,11 @@ event_store_clean(struct event_store *es)
     return(0);
   } else if( es->last_committed_ls > last) {
 	  il_log(LOG_WARNING, "  warning: event file seems to shrink!\n");
+	  /* XXX - in that case we can not continue because there may be
+	     some undelivered events referring to that event store */
+	  fclose(ef);
+	  event_store_unlock(es);
+	  return(0);
   }
   
   /* now we are sure that all events were sent and the event queues are empty */
