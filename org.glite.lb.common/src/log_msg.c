@@ -6,6 +6,8 @@
 #include <sys/un.h>
 #include <stdio.h>
 #include <math.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "context-int.h"
 
@@ -119,7 +121,7 @@ int edg_wll_log_event_write(
 	struct flock	filelock;
 	int				filedesc,
 					i, filelock_status=-1;
-
+	struct stat statbuf;
 
 	if ( (outfile = fopen(event_file, "a")) == NULL ) {
 		edg_wll_SetError(ctx, errno, "fopen()");
@@ -128,7 +130,6 @@ int edg_wll_log_event_write(
 
 	if ( (filedesc = fileno(outfile)) == -1 ) {
 		edg_wll_SetError(ctx, errno, "fileno()");
-		fclose(outfile); 
 		goto cleanup;
 	}
 
@@ -149,7 +150,33 @@ int edg_wll_log_event_write(
 				edg_wll_SetError(ctx, errno, "fcntl()");
 				goto cleanup;
 			}
-		} else break;
+		} else {
+			/* check that the file still exists */
+			if(stat(event_file, &statbuf)) {
+				if(errno == ENOENT) {
+					/* not there anymore - reopen it */
+					fclose(outfile);
+					if ( (outfile = fopen(event_file, "a")) == NULL ) {
+						edg_wll_SetError(ctx, errno, "fopen()");
+						goto event_write_end;
+					}
+
+					if ( (filedesc = fileno(outfile)) == -1 ) {
+						edg_wll_SetError(ctx, errno, "fileno()");
+						goto cleanup;
+					}
+					/* now it is time to try to lock it again */
+					/* XXX - should we do that?: i = 0; */
+				} else {
+					/* could not stat the output file */
+					edg_wll_SetError(ctx, errno, "stat()");
+					goto cleanup;
+				}
+			} else {
+				/* file exists and is locked */
+				break;
+			}
+		}
 	}
 	if (i == fcntl_attempts) {
 		edg_wll_SetError(ctx, ETIMEDOUT, "timed out trying to lock event file");
