@@ -27,6 +27,9 @@ version=${module.version}
 
 default all: compile
 
+# disable lb plugin in order to build also with 3.1 JP
+#BUILD_PLUGIN=yes
+
 GLITE_LB_SERVER_WITH_WS=yes
 
 ifdef LB_STANDALONE
@@ -247,7 +250,11 @@ default all: compile
 ifdef LB_STANDALONE
     PLUGIN_LIB=
 else
+ifndef BUILD_PLUGIN
+    PLUGIN_LIB=
+else
     PLUGIN_LIB=glite_lb_plugin.la
+endif
 endif
 
 compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c
