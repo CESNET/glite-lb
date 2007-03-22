@@ -92,6 +92,7 @@ struct event_store {
 	long      last_committed_bs;       /* offset behind event that was last committed by BS */
 	long      last_committed_ls;       /*  -"-                                           LS */
 	long      offset;                  /* expected file position of next event */
+	time_t    last_modified;           /* time of the last file modification */
 	int       recovering;              /* flag for recovery mode */
 	pthread_rwlock_t update_lock;      /* lock to prevent simultaneous updates */
 	pthread_rwlock_t use_lock;         /* lock to prevent struct deallocation */

@@ -10,6 +10,16 @@
 #include "glite/lb/consumer.h"
 /* XXX: references only, src and dest share pointers */
 
+#include "glite/security/glite_gscompat.h"
+
+#define VALUEEV_GET(X, V) GLITE_SECURITY_GSOAP_CHOICE_GET((X), V, event, 1)
+#define VALUEEV_SET(X, V, VALUE) GLITE_SECURITY_GSOAP_CHOICE_SET((X), V, lbt, event, 1, VALUE)
+#define VALUEEV_ISTYPE(X, V) GLITE_SECURITY_GSOAP_CHOICE_ISTYPE((X), V, lbt, event, 1)
+#define VALUEQR_GET(X, V) GLITE_SECURITY_GSOAP_CHOICE_GET((X), V, queryRecValue, 2)
+#define VALUEQR_SETTYPE(X, V) GLITE_SECURITY_GSOAP_CHOICE_SETTYPE((X), V, lbt, queryRecValue, 2)
+#define VALUEQR_SET(X, V, VALUE) GLITE_SECURITY_GSOAP_CHOICE_SET((X), V, lbt, queryRecValue, 2, VALUE)
+#define VALUEQR_ISTYPE(X, V) GLITE_SECURITY_GSOAP_CHOICE_ISTYPE((X), V, lbt, queryRecValue, 2)
+
 @@@{
 #
 # generate the command for move native data to soap web services structures
@@ -32,7 +42,7 @@ sub eventFieldAssign {
 		$soap_fn = $1.ucfirst($2);
 	};
 	$source = "$src->$native_en.$native_fn";
-	$dest = "$dst->$soap_en->$soap_fn";
+	$dest = "VALUEEV_GET($dst, $soap_en)->$soap_fn";
 #	print STDERR "$src, $dst, $soap_en, $soap_fn, $native_fn, $tn, $usuc\n";
 
 	if ($tn eq 'int') {
@@ -60,7 +70,8 @@ sub eventFieldAssign {
 	} elsif ($tn eq 'string' || $tn eq 'notifid') {
 			gen $indent."$dest = soap_strdup(soap, $source);\n";
 	} elsif ($tn eq 'jobstat') {
-			gen $indent."edg_wll_StatusToSoap(soap, $source, &$dest);\n";
+			gen $indent."$dest = soap_malloc(soap, sizeof(struct lbt__jobStatus))";
+			gen $indent."edg_wll_StatusToSoap(soap, $source, $dest);\n";
 	} elsif ($tn eq 'timeval') {
 			gen $indent."$dest = soap_malloc(soap, sizeof(struct lbt__timeval));\n";
 			gen $indent."$dest->tvSec = $source.tv_sec;\n";
@@ -91,7 +102,7 @@ sub eventFieldFree {
 	while ($soap_fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/) {
 		$soap_fn = $1.ucfirst($2);
 	};
-	$dest = "$dst->$soap_en->$soap_fn";
+	$dest = "VALUEEV_GET($dst, $soap_en)->$soap_fn";
 
 	if ($tn eq 'int' || $tn eq 'port' || $tn eq 'bool' || $tn eq 'logsrc') {
 		if ($f->{optional}) {
@@ -147,13 +158,11 @@ void edg_wll_SoapToJobStatCode(enum lbt__statName in, edg_wll_JobStatCode *out)
 	}
 }
 
-int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt__jobStatus **dest)
+int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt__jobStatus *js)
 {
 	int	i,j;
 	char	*s;
-	struct lbt__jobStatus *js;
 
-	if ( !(js = soap_malloc(soap, sizeof(*js))) ) return SOAP_FAULT;
 	memset(js, 0, sizeof(*js));
 	edg_wll_JobStatCodeToSoap(src->state, &(js->state));
 @@@{
@@ -179,14 +188,14 @@ int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt
 			gen qq{
 !	/* XXX: don't count UNDEF */
 !	if (src->$_) {
-!		struct lbt__${usuc}Item	**h = soap_malloc(soap,sizeof *h * (EDG_WLL_NUMBER_OF_STATCODES-1));
-!		js->__size$usuc = EDG_WLL_NUMBER_OF_STATCODES-1;
+!		GLITE_SECURITY_GSOAP_LIST_TYPE(lbt, ${usuc}Item) h;
+!
+!		GLITE_SECURITY_GSOAP_LIST_CREATE(soap, js, ${usuc}, struct lbt__${usuc}Item, EDG_WLL_NUMBER_OF_STATCODES-1);
+!		h = js->${usuc};
 !		for (i=1; i<EDG_WLL_NUMBER_OF_STATCODES; i++) {
-!			h[i-1] = soap_malloc(soap, sizeof **h);
-!			edg_wll_JobStatCodeToSoap(i,&h[i-1]->state);
-!			h[i-1]->$fmap{$_} = src->$_\[i];
+!			edg_wll_JobStatCodeToSoap(i,&GLITE_SECURITY_GSOAP_LIST_GET(h, i-1)->state);
+!			GLITE_SECURITY_GSOAP_LIST_GET(h, i-1)->$fmap{$_} = src->$_\[i];
 !		}
-!		js->$usuc = h;
 !	}
 !	else {
 !		js->__size$usuc = 0;
@@ -196,30 +205,22 @@ int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt
 		} elsif ($ft eq 'taglist') {
 			gen qq{
 !	{
-!		struct lbt__tagValue	*t,**tl = NULL;
+!		struct lbt__tagValue	*t;
+!
+!		for (i=0; src->$_ && src->$_\[i].tag; i++);
+!		GLITE_SECURITY_GSOAP_LIST_CREATE(soap, js, $usuc, struct lbt__tagValue, i);
 !		for (i=0; src->$_ && src->$_\[i].tag; i++) {
-!			t = soap_malloc(soap,sizeof *t);
-!			tl = realloc(tl,(i+1) * sizeof *tl);
+!			t = GLITE_SECURITY_GSOAP_LIST_GET(js->$usuc, i);
 !			t->tag = soap_strdup(soap,src->$_\[i].tag);
 !			t->value = soap_strdup(soap,src->$_\[i].value);
-!			tl[i] = t;
 !		}
-!		js->__size$usuc = i;
-!		if (i) {
-!			js->$usuc = soap_malloc(soap,i * sizeof *tl);
-!			memcpy(js->$usuc,tl,i * sizeof *tl);
-!			free(tl);
-!		} else js->$usuc = NULL;
 !	}
 };
 		} elsif ($ft eq 'stslist') {
 			gen qq{
 !	for (i=0; src->$_ && src->$_\[i].state; i++);
-!	if ((js->__size$usuc = i)) {
-!		js->$usuc = soap_malloc(soap,i * sizeof *js->$usuc);
-!		for (j=0; j<i; i++) edg_wll_StatusToSoap(soap,src->$_+j,&js->$usuc\[j]);
-!	}
-!	else js->$usuc = NULL;
+!	GLITE_SECURITY_GSOAP_LIST_CREATE(soap, js, $usuc, struct lbt__jobStatus, i);
+!	for (j=0; j<i; j++) edg_wll_StatusToSoap(soap,src->$_+j,GLITE_SECURITY_GSOAP_LIST_GET(js->$usuc, j));
 };
 		} elsif ($ft eq 'timeval') {
 			gen "\tjs->$usuc = soap_malloc(soap,sizeof *js->$usuc);\n";
@@ -231,7 +232,6 @@ int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt
 	}
 @@@}
 
-	*dest = js;
 	return SOAP_OK;
 }
 
@@ -266,9 +266,9 @@ void edg_wll_SoapToStatus(struct soap *soap,struct lbt__jobStatus const *src,edg
 !		dest->$_\[0] = src->__size$usuc;
 !		for (i=0; i<src->__size$usuc; i++) {
 !			edg_wll_JobStatCode	s;
-!			edg_wll_SoapToJobStatCode(src->$usuc\[i]->state,&s);
+!			edg_wll_SoapToJobStatCode(GLITE_SECURITY_GSOAP_LIST_GET(src->$usuc, i)->state,&s);
 !			assert(s>=0); assert(s<EDG_WLL_NUMBER_OF_STATCODES);
-!			dest->$_\[s+1] = src->$usuc\[i]->$fmap{$_};
+!			dest->$_\[s+1] = GLITE_SECURITY_GSOAP_LIST_GET(src->$usuc, i)->$fmap{$_};
 !		}
 !	}
 !	else dest->$_ = NULL;
@@ -277,7 +277,7 @@ void edg_wll_SoapToStatus(struct soap *soap,struct lbt__jobStatus const *src,edg
 			gen qq{
 !	if (src->__size$usuc) {
 !		dest->$_ = calloc(src->__size$usuc + 1,sizeof *dest->$_);
-!		for (i=0; i<src->__size$usuc; i++) edg_wll_SoapToStatus(soap,src->$usuc\[i],dest->$_ + i);
+!		for (i=0; i<src->__size$usuc; i++) edg_wll_SoapToStatus(soap,GLITE_SECURITY_GSOAP_LIST_GET(src->$usuc, i),dest->$_ + i);
 !	}
 !	else dest->$_ = NULL;
 };
@@ -286,8 +286,8 @@ void edg_wll_SoapToStatus(struct soap *soap,struct lbt__jobStatus const *src,edg
 	if (src->__size$usuc) {
 		dest->$_ = calloc(src->__size$usuc + 1,sizeof *dest->$_);
 		for (i=0; i<src->__size$usuc; i++) {
-			soap_unlink(soap,dest->$_\[i].tag = src->$usuc\[i]->tag);
-			soap_unlink(soap,dest->$_\[i].tag = src->$usuc\[i]->tag);
+			soap_unlink(soap,dest->$_\[i].tag = GLITE_SECURITY_GSOAP_LIST_GET(src->$usuc, i)->tag);
+			soap_unlink(soap,dest->$_\[i].tag = GLITE_SECURITY_GSOAP_LIST_GET(src->$usuc, i)->tag);
 		}
 	}
 	else dest->$_ = NULL;
@@ -421,18 +421,18 @@ int edg_wll_SoapToQueryVal(
 	union edg_wll_QueryVal			   *out)
 {
 	assert(in); assert(out);
-	if ( in->c ) {
+	if ( VALUEQR_ISTYPE(in, c) ) {
 		if ( attr == EDG_WLL_QUERY_ATTR_JOBID || attr == EDG_WLL_QUERY_ATTR_PARENT ) {
-			if ( edg_wlc_JobIdParse(in->c, &(out->j)) ) return -1;
+			if ( edg_wlc_JobIdParse(VALUEQR_GET(in, c), &(out->j)) ) return -1;
 		} else {
-			if ( !(out->c = strdup(in->c)) ) return -1;
+			if ( !(out->c = strdup(VALUEQR_GET(in, c))) ) return -1;
 		}
 	}
-	else if ( in->t ) {
-		out->t.tv_sec = in->t->tvSec;
-		out->t.tv_usec = in->t->tvUsec;
+	else if ( VALUEQR_ISTYPE(in, t) ) {
+		out->t.tv_sec = VALUEQR_GET(in, t)->tvSec;
+		out->t.tv_usec = VALUEQR_GET(in, t)->tvUsec;
 	}
-	else if ( in->i ) out->i = *(in->i);
+	else if ( VALUEQR_ISTYPE(in, i) ) out->i = *(VALUEQR_GET(in, i));
 
 	return 0;
 }
@@ -452,21 +452,23 @@ int edg_wll_QueryValToSoap(
 	case EDG_WLL_QUERY_ATTR_DESTINATION:
 	case EDG_WLL_QUERY_ATTR_HOST:
 	case EDG_WLL_QUERY_ATTR_INSTANCE:
-		if ( in->c && !(out->c = soap_strdup(soap, in->c)) ) return SOAP_FAULT;
+		VALUEQR_SET(out, c, in->c ? soap_strdup(soap, in->c) : NULL);
+		if (in->c && !VALUEQR_GET(out, c) ) return SOAP_FAULT;
 		break;
 	case EDG_WLL_QUERY_ATTR_JOBID:
 	case EDG_WLL_QUERY_ATTR_PARENT: {
 			char *s = edg_wlc_JobIdUnparse(in->j);
-			out->c = soap_strdup(soap, s);
+			VALUEQR_SET(out, c, soap_strdup(soap, s));
 			free(s);
-			if ( !out->c ) return SOAP_FAULT;
+			if ( !VALUEQR_GET(out, c) ) return SOAP_FAULT;
 		}
 		break;
 	case EDG_WLL_QUERY_ATTR_TIME:
-		out->t = soap_malloc(soap, sizeof(*(out->t)));
-		if ( !out->t ) return SOAP_FAULT;
-		out->t->tvSec = in->t.tv_sec;
-		out->t->tvUsec = in->t.tv_usec;
+		VALUEQR_SET(out, t, soap_malloc(soap, sizeof(*(VALUEQR_GET(out, t)))));
+		if ( !VALUEQR_GET(out, t) ) return SOAP_FAULT;
+		VALUEQR_SETTYPE(out, t);
+		VALUEQR_GET(out, t)->tvSec = in->t.tv_sec;
+		VALUEQR_GET(out, t)->tvUsec = in->t.tv_usec;
 		break;
 	case EDG_WLL_QUERY_ATTR_STATUS:
 	case EDG_WLL_QUERY_ATTR_DONECODE:
@@ -475,9 +477,9 @@ int edg_wll_QueryValToSoap(
 	case EDG_WLL_QUERY_ATTR_EVENT_TYPE:
 	case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 	default:
-		out->i = soap_malloc(soap, sizeof(*(out->i)));
-		if ( !out->i ) return SOAP_FAULT;
-		*(out->i) = in->i;
+		VALUEQR_SET(out, i, soap_malloc(soap, sizeof(*(VALUEQR_GET(out, i)))));
+		if ( !VALUEQR_GET(out, i) ) return SOAP_FAULT;
+		*(VALUEQR_GET(out, i)) = in->i;
 		break;
 	}
 
@@ -522,13 +524,9 @@ err:
 int edg_wll_QueryRecToSoap(
 	struct soap			*soap,
 	const edg_wll_QueryRec	   	*in,
-	struct lbt__queryRecord		**out)
+	struct lbt__queryRecord *qr)
 {
-	struct lbt__queryRecord	   	*qr;
-
-
-	assert(in); assert(out);
-	if ( !(qr = soap_malloc(soap, sizeof(*qr))) ) return SOAP_FAULT;
+	assert(in); assert(qr);
 	memset(qr, 0, sizeof(*qr));
 	if ( !in ) goto ret;
 	edg_wll_QueryOpToSoap(in->op, &(qr->op));
@@ -544,7 +542,6 @@ int edg_wll_QueryRecToSoap(
 	}
 
 ret:
-	*out = qr;
 	return SOAP_OK;
 }
 
@@ -562,7 +559,7 @@ int edg_wll_SoapToQueryConds(const struct lbt__queryConditions *in, edg_wll_Quer
 	assert(in); assert(out);
 	if ( !(qr = calloc(in->__sizerecord+1, sizeof(*qr))) ) goto err;
 	for ( i = 0; i < in->__sizerecord; i++ )
-		if ( edg_wll_SoapToQueryRec(in, in->record[i], qr+i) ) goto err;
+		if ( edg_wll_SoapToQueryRec(in, GLITE_SECURITY_GSOAP_LIST_GET(in->record, i), qr+i) ) goto err;
 	*out = qr;
 	return 0;
 
@@ -577,15 +574,12 @@ err:
 int edg_wll_QueryCondsToSoap(
 	struct soap			*soap,
 	const edg_wll_QueryRec		*in,
-	struct lbt__queryConditions	**out)
+	struct lbt__queryConditions		*qc)
 {
 	int				i;
-	struct lbt__queryConditions	*qc;
 
 
-	assert(out);
-	if ( !(qc = soap_malloc(soap, sizeof(*qc))) )
-		return SOAP_FAULT;
+	assert(qc);
 	memset(qc, 0, sizeof(*qc));
 	if ( !in )
 		goto ret;
@@ -602,22 +596,21 @@ int edg_wll_QueryCondsToSoap(
 		if ( !qc->tagName ) return SOAP_FAULT;
 	}
 
-	qc->__sizerecord = 0;
-	while ( in[qc->__sizerecord].attr ) qc->__sizerecord++;
+	i = 0;
+	while ( in[i].attr ) i++;
 
-	if ( !qc->__sizerecord )
+	if ( !i )
 		goto ret;
 
-	qc->record = soap_malloc(soap, sizeof(*(qc->record)) * qc->__sizerecord);
+	GLITE_SECURITY_GSOAP_LIST_CREATE(soap, qc, record, struct lbt__queryRecord, i);
 	if ( !qc->record )
 		return SOAP_FAULT;
 
 	for ( i = 0; in[i].attr; i++ )
-		if ( edg_wll_QueryRecToSoap(soap, &in[i], &(qc->record[i])) )
+		if ( edg_wll_QueryRecToSoap(soap, &in[i], GLITE_SECURITY_GSOAP_LIST_GET(qc->record, i)) )
 			return SOAP_FAULT;
 
 ret:
-	*out = qc;
 	return SOAP_OK;
 }
 
@@ -627,7 +620,7 @@ ret:
  * \param IN in array of soap query condition
  * \param OUT out target array of queryRec
  */
-int edg_wll_SoapToQueryCondsExt(const struct lbt__queryConditions **in, int __sizecondition, edg_wll_QueryRec ***out)
+int edg_wll_SoapToQueryCondsExt(GLITE_SECURITY_GSOAP_LIST_TYPE(lbt, queryConditions) in, int __sizecondition, edg_wll_QueryRec ***out)
 {
 	int					i;
 	edg_wll_QueryRec  **qr;
@@ -635,7 +628,7 @@ int edg_wll_SoapToQueryCondsExt(const struct lbt__queryConditions **in, int __si
 	assert(out);
 	if ( !(qr = calloc(__sizecondition + 1, sizeof(*qr))) ) return -1;
 	for ( i = 0; i < __sizecondition; i++ )
-		if ( edg_wll_SoapToQueryConds(in[i], qr+i) ) goto err;
+		if ( edg_wll_SoapToQueryConds(GLITE_SECURITY_GSOAP_LIST_GET(in, i), qr+i) ) goto err;
 
 	*out = qr;
 	return 0;
@@ -665,12 +658,10 @@ int edg_wll_QueryCondsExtToSoap(
 	struct soap			*soap,
 	const edg_wll_QueryRec		**in,
 	int				*out_size,
-	struct lbt__queryConditions	***out)
+	GLITE_SECURITY_GSOAP_LIST_TYPE(lbt, queryConditions) *out)
 {
 	int				i, size;
-	struct lbt__queryConditions	**qc;
-
-
+	GLITE_SECURITY_GSOAP_LIST_TYPE(lbt, queryConditions) qc;
 	assert(in); assert(out);
 
 	size = 0;
@@ -678,12 +669,11 @@ int edg_wll_QueryCondsExtToSoap(
 
 	if ( !size ) 
 		goto ret;
-
-	qc = soap_malloc(soap, sizeof(*qc) * size);
+	GLITE_SECURITY_GSOAP_LIST_CREATE0(soap, qc, size, struct lbt__queryConditions, size);
 	if ( !qc ) return SOAP_FAULT;
 
 	for ( i = 0; in[i]; i++ )
-		if ( edg_wll_QueryCondsToSoap(soap, in[i], &qc[i]) )
+		if ( edg_wll_QueryCondsToSoap(soap, in[i], GLITE_SECURITY_GSOAP_LIST_GET(qc, i)) )
 			return SOAP_FAULT;
 
 ret:
@@ -722,12 +712,11 @@ int edg_wll_JobsQueryResToSoap(
 	}
 	if ( states ) {
 		for ( i = 0; states[i].state; i++ ) ;
-		out->states = soap_malloc(soap, sizeof(*(out->states))*i);
+		GLITE_SECURITY_GSOAP_LIST_CREATE(soap, out, states, struct lbt__jobStatus, i);
 		if ( !out->states ) return SOAP_FAULT;
-		out->__sizestates = i;
 
 		for ( i = 0; states[i].state; i++ )
-			if ( edg_wll_StatusToSoap(soap, states+i, out->states+i) )
+			if ( edg_wll_StatusToSoap(soap, states+i, GLITE_SECURITY_GSOAP_LIST_GET(out->states, i)) )
 				return SOAP_FAULT;
 	}
 
@@ -878,12 +867,8 @@ static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
  * \param IN event source event
  * \param OUT sevent target Soap event
  */
-int edg_wll_EventToSoap(struct soap* soap, const edg_wll_Event *event, struct lbt__event **sevent) {
+int edg_wll_EventToSoap(struct soap* soap, const edg_wll_Event *event, struct lbt__event *sevent) {
 	char *s;
-
-	*sevent = soap_malloc(soap, sizeof(**sevent));
-	memset(*sevent, 0, sizeof(**sevent));
-	if (!*sevent) return 0;
 
 	switch (event->any.type) {
 @@@{
@@ -900,14 +885,14 @@ int edg_wll_EventToSoap(struct soap* soap, const edg_wll_Event *event, struct lb
 		};
 gen qq {
 !		case EDG_WLL_EVENT_$u:
-!			(*sevent)->$soap_en = soap_malloc(soap, sizeof(struct lbt__event$soap_en));
+!			VALUEEV_SET(sevent, $soap_en, soap_malloc(soap, sizeof(struct lbt__event$soap_en)));
 };
 		selectType $event '_common_';
 		for (getFieldsOrdered $event) {
 			my ($f);
 
 			$f = selectField $event $_;
-			eventFieldAssign("\t\t\t", "event", "(*sevent)", $e, $f, 1);
+			eventFieldAssign("\t\t\t", "event", "sevent", $e, $f, 1);
 		}
 
 		gen "\n";
@@ -917,7 +902,7 @@ gen qq {
 			my ($f);
 
 			$f = selectField $event $_;
-			eventFieldAssign("\t\t\t", "event", "(*sevent)", $e, $f, 0);
+			eventFieldAssign("\t\t\t", "event", "sevent", $e, $f, 0);
 		}
 gen qq {
 !			break;
@@ -948,7 +933,7 @@ void edg_wll_FreeSoapEvent(struct soap *soap, struct lbt__event *sevent) {
 		$soap_en = $e;
 		$soap_en = $1.ucfirst $2 while $soap_en =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
 
-		gen "\tif (sevent->$soap_en) {\n";
+		gen "\tif (VALUEEV_ISTYPE(sevent, $soap_en)) {\n";
 
 		selectType $event '_common_';
 		for (getFieldsOrdered $event) {
@@ -965,11 +950,14 @@ void edg_wll_FreeSoapEvent(struct soap *soap, struct lbt__event *sevent) {
 			$f = selectField $event $_;
 			eventFieldFree("\t\t", "sevent", $e, $f);
 		}
-		gen qq "\t\tsoap_dealloc(soap, sevent->$soap_en);\n";
+		gen qq "\t\tsoap_dealloc(soap, VALUEEV_GET(sevent, $soap_en));\n";
 		gen qq "\t}\n";
 }
 @@@}
+	// XXX: element dealocation belongs to higher layer
+#if GSOAP_VERSION <= 20706
 	soap_dealloc(soap, sevent);
+#endif
 }
 
 
@@ -999,7 +987,7 @@ int edg_wll_EventsQueryResToSoap(
 	const edg_wll_Event *events,
         struct _lbe__QueryEventsResponse *out)
 {
-	int memsize, i;
+	int i;
 	struct lbt__event *event;
 
 	/* alloc the events array */
@@ -1007,23 +995,27 @@ int edg_wll_EventsQueryResToSoap(
 	memset(out, 0, sizeof(*out));
 	for (out->__sizeevents = 0; events[out->__sizeevents].any.type != EDG_WLL_EVENT_UNDEF; out->__sizeevents++);
 	if (!out->__sizeevents) return SOAP_OK;
-	memsize = out->__sizeevents * sizeof(*out->events);
-	out->events = soap_malloc(soap, memsize);
-	memset(out->events, 0, memsize);
+	GLITE_SECURITY_GSOAP_LIST_CREATE(soap, out, events, struct lbt__event, out->__sizeevents);
+	for (i = 0; i < out->__sizeevents; i++)
+		memset(GLITE_SECURITY_GSOAP_LIST_GET(out->events, i), 0, sizeof(struct lbt__event));
 	if (!out->events) return SOAP_FAULT;
 
 	for (i = 0; i < out->__sizeevents; i++) {
-		if (!edg_wll_EventToSoap(soap, &events[i], &out->events[i])) goto err;
+		if (!edg_wll_EventToSoap(soap, &events[i], GLITE_SECURITY_GSOAP_LIST_GET(out->events, i))) goto err;
 	}
 
 	return SOAP_OK;
 
 err:
-	event = out->events[0];
+	event = GLITE_SECURITY_GSOAP_LIST_GET(out->events, 0);
 	while (event) {
 		edg_wll_FreeSoapEvent(soap, event);
 		event++;
 	}
+	/*
+	 * XXX: better list destroy here w/o deallocstion in
+	 * edg_wll_FreeSoapEvent
+	 */
 	soap_dealloc(soap, out->events);
 
 	return SOAP_FAULT;
@@ -1042,7 +1034,7 @@ static int edg_wll_SoapToEvent(
 	{
                 my $comment = getTypeComment $event $name;
                 $name = $1.ucfirst $2 while $name =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
-		gen "\t\tif (in->$name) {\n";
+		gen "\t\tif (VALUEEV_ISTYPE(in, $name)) {\n";
 		my $event_type = uc $name;
 		gen "\t\t\tout->type = EDG_WLL_EVENT_$event_type;\n";
 
@@ -1064,37 +1056,38 @@ static int edg_wll_SoapToEvent(
 				$usuc = $1.uc($2).$3 while ($usuc =~ /([^_]*)_([a-z])(.*)/);
 				my $fuc = ucfirst($usuc);
 
+				my $src = "VALUEEV_GET(in, $name)->$usuc";
 				if ($ft eq 'jobid') {
 
-					gen "\t\t\tif (in->$name->$usuc)\n";
-					gen "\t\t\t\tedg_wlc_JobIdParse(in->$name->$usuc,&out->$act.$fn);\n";
+					gen "\t\t\tif ($src)\n";
+					gen "\t\t\t\tedg_wlc_JobIdParse($src,&out->$act.$fn);\n";
 				} elsif ($ft eq 'timeval') {
-					gen "\t\t\tout->$act.$fn.tv_sec = in->$name->$usuc->tvSec;\n";
-					gen "\t\t\tout->$act.$fn.tv_usec = in->$name->$usuc->tvUsec;\n";
+					gen "\t\t\tout->$act.$fn.tv_sec = $src->tvSec;\n";
+					gen "\t\t\tout->$act.$fn.tv_usec = $src->tvUsec;\n";
 				} elsif ($ft eq 'string') {
-					gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
-					gen "\t\t\tsoap_unlink(soap,in->$name->$usuc);\n";
+					gen "\t\t\tout->$act.$fn = $src;\n";
+					gen "\t\t\tsoap_unlink(soap,$src);\n";
 				} elsif ($ft eq 'int') {
 					if ($f->{codes}) {
 						if ($type eq '_common_') {
-							gen "\t\t\tedg_wll_SoapTo$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
+							gen "\t\t\tedg_wll_SoapTo$fuc($src,&(out->$act.$fn));\n";
 						}
 						else {
-							gen "\t\t\tedg_wll_SoapTo$name$fuc(in->$name->$usuc,&(out->$act.$fn));\n";
+							gen "\t\t\tedg_wll_SoapTo$name$fuc($src,&(out->$act.$fn));\n";
 						}
 					}
 					elsif ($f->{optional}) {
-						gen "\t\t\tout->$act.$fn = *in->$name->$usuc;\n";
+						gen "\t\t\tout->$act.$fn = *$src;\n";
 					}
 					else {
-						gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
+						gen "\t\t\tout->$act.$fn = $src;\n";
 					}
 				}
 				elsif ($ft eq 'logsrc') {
-					gen "\t\t\tedg_wll_SoapToSource(in->$name->$usuc, &(out->$act.$fn));\n";
+					gen "\t\t\tedg_wll_SoapToSource($src, &(out->$act.$fn));\n";
 				}
 				else {
-					gen "\t\t\tout->$act.$fn = in->$name->$usuc;\n";
+					gen "\t\t\tout->$act.$fn = $src;\n";
 				}
 			}	
 		}
@@ -1127,7 +1120,7 @@ int edg_wll_SoapToEventsQueryRes(
 	if (!events) return SOAP_FAULT;
 
 	for (i=0; i < in.__sizeevents; i++) {
-		if (edg_wll_SoapToEvent(soap, in.events[i], &events[i]) != SOAP_OK) {
+		if (edg_wll_SoapToEvent(soap, GLITE_SECURITY_GSOAP_LIST_GET(in.events, i), &events[i]) != SOAP_OK) {
 			free_events(events);
 			return SOAP_FAULT;
 		}

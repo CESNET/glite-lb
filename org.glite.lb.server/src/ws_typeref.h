@@ -8,7 +8,7 @@ extern "C" {
 extern void edg_wll_JobStatCodeToSoap(edg_wll_JobStatCode, enum lbt__statName *);
 extern void edg_wll_SoapToJobStatCode(enum lbt__statName, edg_wll_JobStatCode *);
 
-extern void edg_wll_StatusToSoap(struct soap *, edg_wll_JobStat const *, struct lbt__jobStatus **);
+extern void edg_wll_StatusToSoap(struct soap *, edg_wll_JobStat const *, struct lbt__jobStatus *);
 extern void edg_wll_SoapToStatus(struct soap *, struct lbt__jobStatus const *, edg_wll_JobStat *);
 
 extern void edg_wll_SoapToJobStatFlags(struct lbt__jobFlags const *, int *);
@@ -39,7 +39,7 @@ extern int edg_wll_SoapToQueryRec(
 			edg_wll_QueryRec *out);
 extern int edg_wll_QueryRecToSoap(struct soap *,
 			const edg_wll_QueryRec *,
-			struct lbt__queryRecord **);
+			struct lbt__queryRecord *);
 
 
 extern int edg_wll_SoapToQueryConds(
@@ -47,16 +47,16 @@ extern int edg_wll_SoapToQueryConds(
 			edg_wll_QueryRec **);
 extern int edg_wll_QueryCondsToSoap(struct soap *,
 			const edg_wll_QueryRec *,
-			struct lbt__queryConditions **);
+			struct lbt__queryConditions *);
 
 extern int edg_wll_SoapToQueryCondsExt(
-			const struct lbt__queryConditions **,
+			GLITE_SECURITY_GSOAP_LIST_TYPE(lbt, queryConditions) in,
 			int __sizecondition,
 			edg_wll_QueryRec ***);
 extern int edg_wll_QueryCondsExtToSoap(struct soap *,
 			const edg_wll_QueryRec **,
 			int *,
-			struct lbt__queryConditions ***);
+			GLITE_SECURITY_GSOAP_LIST_TYPE(lbt, queryConditions) *);
 
 extern int edg_wll_JobsQueryResToSoap(struct soap *,
 			edg_wlc_JobId *,
@@ -72,7 +72,7 @@ extern int edg_wll_SoapToEventsQueryRes(
         		edg_wll_Event **);
 
 
-extern int edg_wll_EventToSoap(struct soap*, const edg_wll_Event *, struct lbt__event **);
+extern int edg_wll_EventToSoap(struct soap*, const edg_wll_Event *, struct lbt__event *);
 extern void edg_wll_FreeSoapEvent(struct soap *, struct lbt__event *);
 
 #ifdef __cplusplus

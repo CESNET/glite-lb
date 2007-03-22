@@ -1,9 +1,11 @@
 #include <stdsoap2.h>
 
-#include "glite/security/glite_gsplugin.h"
-
 #include "glite/lb/context-int.h"
 #include "glite/lb/consumer.h"
+
+#include "soap_version.h"
+#include "glite/security/glite_gsplugin.h"
+#include "glite/security/glite_gscompat.h"
 
 #include "jobstat.h"
 #include "query.h"
@@ -11,8 +13,6 @@
 #include "get_events.h"
 #include "ws_fault.h"
 #include "ws_typeref.h"
-
-#include "soap_version.h"
 
 #if GSOAP_VERSION <= 20602
 #define __lb__GetVersion __ns1__GetVersion
@@ -66,7 +66,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 		return SOAP_FAULT;
 	}
 
-	edg_wll_StatusToSoap(soap, &s, &(out->stat));
+	out->stat = soap_malloc(soap, sizeof(*out->stat));
+	edg_wll_StatusToSoap(soap, &s, out->stat);
 
 	return SOAP_OK;
 }

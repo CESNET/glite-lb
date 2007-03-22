@@ -1,14 +1,14 @@
 #include <getopt.h>
 #include <stdsoap2.h>
 
+#include "soap_version.h"
 #include "glite/security/glite_gsplugin.h"
+#include "glite/security/glite_gscompat.h"
 #include "glite/lb/consumer.h"
 
 #include "bk_ws_H.h"
 #include "ws_typeref.h"
 #include "ws_fault.h"
-
-#include "soap_version.h"
 
 #if GSOAP_VERSION <= 20602
 #define soap_call___lb__JobStatus soap_call___ns1__JobStatus
@@ -40,7 +40,6 @@ int main(int argc,char** argv)
     struct soap						   *mydlo = soap_new();
     struct _lbe__JobStatusResponse	out;
     struct _lbe__JobStatus		in;	
-    struct lbt__jobFlags	flags = { 0, NULL };
     int									opt, err;
 	char							   *server = "http://localhost:9003/",
 									   *jobid = NULL,
@@ -77,9 +76,9 @@ int main(int argc,char** argv)
 
     glite_gsplugin_set_udata(mydlo, ctx);
 
-    in.jobid = jobid;
-    in.flags = &flags;
-
+    in.jobid = soap_strdup(mydlo, jobid);
+    in.flags = soap_malloc(mydlo, sizeof(*in.flags));
+    edg_wll_JobStatFlagsToSoap(mydlo, 0, in.flags);
 
     switch (err = soap_call___lb__JobStatus(mydlo, server, "",&in,&out))
 	{
@@ -162,7 +161,9 @@ static void printstat(edg_wll_JobStat stat, int level)
     printf("%srsl : %s\n", ind, stat.rsl);
     printf("%sreason : %s\n", ind, stat.reason);
     printf("%slocation : %s\n", ind, stat.location);
-	printf("%ssubjob_failed : %d\n", ind, stat.subjob_failed);
+    printf("%sce_node : %s\n", ind, stat.ce_node);
+    printf("%ssubjob_failed : %d\n", ind, stat.subjob_failed);
+//    printf("%sdone_code : %d\n", ind, edg_wll_done_codeToString(stat.done_code));
     printf("%sdone_code : %d\n", ind, stat.done_code);
     printf("%sexit_code : %d\n", ind, stat.exit_code);
     printf("%sresubmitted : %d\n", ind, stat.resubmitted);
@@ -188,6 +189,17 @@ static void printstat(edg_wll_JobStat stat, int level)
     printf("%sexpectUpdate : %d\n", ind, stat.expectUpdate);
     printf("%sexpectFrom : %s\n", ind, stat.expectFrom);
     printf("%sacl : %s\n", ind, stat.acl);
+    printf("%spayload_running: %d\n", ind, stat.payload_running);
+    if (stat.possible_destinations) {
+	printf("%spossible_destinations : \n", ind);
+	for (i=0; stat.possible_destinations[i]; i++) 
+		printf("%s\t%s \n", ind, stat.possible_destinations[i]);
+    }
+    if (stat.possible_ce_nodes) {
+		printf("%spossible_ce_nodes : \n", ind);
+		for (i=0; stat.possible_ce_nodes[i]; i++) 
+			printf("%s\t%s \n", ind, stat.possible_ce_nodes[i]);
+    }
     printf("\n");
 
     free(j1);

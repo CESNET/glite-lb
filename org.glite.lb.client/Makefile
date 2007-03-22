@@ -1,19 +1,17 @@
 # Default values
 top_srcdir=.
-builddir=build
-top_builddir=${top_srcdir}/${builddir}
 stagedir=.
 distdir=.
 globalprefix=glite
 lbprefix=lb
 package=glite-lb-client
 version=0.0.0
-PREFIX=/opt/glite
 
 glite_location=/opt/glite
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
+
 
 CC:=gcc
 CXX:=g++
@@ -21,11 +19,14 @@ CXX:=g++
 -include Makefile.inc
 -include ../project/version.properties
 
+PREFIX?=${glite_location}
+
 version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 GENSAM=${top_srcdir}/examples/gen_sample_job
+CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=0 perl ${top_srcdir}/project/check_version.pl
 
 SUFFIXES = .T .l
 
@@ -60,8 +61,11 @@ l_SRC = \
 
 sh_PROGS = $(l_SRC:.l=.sh)
 
-
-DEBUG:=-g -O0 -Wall
+ifdef DEBUG
+        DEBUG:=-g -O0 -Wall -DEDG_WLL_LOG_STUB
+else
+        DEBUG:=-g -O0 -Wall
+endif
 
 GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
@@ -141,37 +145,37 @@ MAN = $(MAN_GZ:.gz=)
 
 # version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
-# counted minor versions: 2.1
-offset=1
+# counted minor versions: 
+offset=0
 
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ${LIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${glite_location}/lib \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${glite_location}/lib \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB_THR} \
 			-lglite_security_gss_${thrflavour}
 
 ${FAKELIB}: ${FAKELIBOBJS}
-	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${glite_location}/lib \
+	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${FAKETHRLIB}: ${FAKELIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${glite_location}/lib \
+	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB_THR} \
 			-lglite_security_gss_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS}
-	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${glite_location}/lib ${LIB}
+	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS}
-	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${glite_location}/lib ${THRLIB}
+	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/lib ${THRLIB}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
@@ -304,13 +308,6 @@ endif
 clean:
 
 check_version:
-	@perl -ne '/#define GLITE_LB_CLIENT_INTERFACE "(\d+)\.\d+\.\d+"/; \
-		$$iface=$$1; \
-		$$_="${version}"; /(\d+)\.\d+\.\d+/; \
-		if ($$iface != $$1) { \
-			print "error: Major version of the interface ($$iface) does not match implementation ($$1)\n" ;\
-			exit 1;  \
-		} \
-		' ${stagedir}/include/glite/lb/interface_version.h
+	${CHECK_VERSION} ${stagedir}/include/glite/lb/interface_version.h
 
 .PHONY: default all compile examples fake check stage dist distsrc distbin install clean check_version

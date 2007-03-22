@@ -1,7 +1,5 @@
 # Default values
 top_srcdir=.
-builddir=build
-top_builddir=${top_srcdir}/${builddir}
 stagedir=.
 distdir=.
 globalprefix=glite
@@ -10,7 +8,6 @@ package=glite-lb-common
 version=0.0.0
 PREFIX=/opt/glite
 
-glite_location=/opt/glite
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
@@ -48,7 +45,6 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
 	-I${top_srcdir}/test \
 	-I${stagedir}/include \
-	-I${glite_location}/include \
 	-I${expat_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
@@ -59,7 +55,8 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 # major version more frequently. This variable specifies how many steps ahead
 # we are.
 
-VERSION_AHEAD=1
+VERSION_AHEAD=2
+CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${top_srcdir}/project/check_version.pl
 
 GLOBUS_LIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${nothrflavour} \
@@ -68,8 +65,6 @@ GLOBUS_LIBS:=-L${globus_prefix}/lib \
 GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
         -lglobus_common_${thrflavour} \
         -lglobus_gssapi_gsi_${thrflavour} \
-
-GLITE_LIBS:=-L${glite_location}/lib
 
 ifneq (${expat_prefix},/usr)
 	EXPAT_LIBS:=-L${expat_prefix}/lib
@@ -131,10 +126,9 @@ endif
 
 default: all
 
-#all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
-all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
+all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
 
-# FIXME: to use libtool versioning correcty, we should have:
+# In order to use libtool versioning correcty, we must have:
 #
 # current = major + minor + offset
 # revision = patch
@@ -142,11 +136,9 @@ all compile: ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAI
 #
 # where offset is a sum of maximal released minor's of all previous major's
 # 
-# version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
-
-# counted minors: 1.1
-offset=1
+# counted minors: 1.1, 3.1
+offset=2
 
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
@@ -244,6 +236,7 @@ install:
 	fi
 
 clean:
+	rm -rf *.o *.lo .libs lib*
 
 
 %.o: %.c
@@ -276,11 +269,4 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o: %.o: %.cpp
 	chmod -w $@ >/dev/null
 
 check_version:
-	@perl -ne '/#define GLITE_LB_CLIENT_INTERFACE "(\d+)\.\d+\.\d+"/; \
-		$$iface=$$1; \
-		$$_="${version}"; /(\d+)\.\d+\.\d+/; \
-		if ($$iface + ${VERSION_AHEAD} != $$1) { \
-			print "error: Major version of the interface ($$iface+${VERSION_AHEAD}) does not match implementation ($$1)\n" ;\
-			exit 1;  \
-		} \
-		' ${stagedir}/include/glite/lb/interface_version.h
+	${CHECK_VERSION} ${stagedir}/include/glite/lb/interface_version.h
