@@ -123,6 +123,7 @@ int edg_wll_log_event_write(
 					i, filelock_status=-1;
 	struct stat statbuf;
 
+try_again:
 	if ( (outfile = fopen(event_file, "a")) == NULL ) {
 		edg_wll_SetError(ctx, errno, "fopen()");
 		goto event_write_end;
@@ -156,17 +157,7 @@ int edg_wll_log_event_write(
 				if(errno == ENOENT) {
 					/* not there anymore - reopen it */
 					fclose(outfile);
-					if ( (outfile = fopen(event_file, "a")) == NULL ) {
-						edg_wll_SetError(ctx, errno, "fopen()");
-						goto event_write_end;
-					}
-
-					if ( (filedesc = fileno(outfile)) == -1 ) {
-						edg_wll_SetError(ctx, errno, "fileno()");
-						goto cleanup;
-					}
-					/* now it is time to try to lock it again */
-					/* XXX - should we do that?: i = 0; */
+					goto try_again;
 				} else {
 					/* could not stat the output file */
 					edg_wll_SetError(ctx, errno, "stat()");
