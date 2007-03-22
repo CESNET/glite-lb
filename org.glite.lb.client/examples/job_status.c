@@ -175,7 +175,7 @@ dgerr(edg_wll_Context ctx,char *where)
 
 static void printstat(edg_wll_JobStat stat, int level)
 {
-	char		*s, *j, ind[10];
+	char		*s, *j1,*j2, ind[10];
 	int 		i;
 
 
