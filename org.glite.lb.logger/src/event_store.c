@@ -558,6 +558,7 @@ event_store_recover(struct event_store *es)
 
   /* due to this little assignment we had to lock the event_store for writing */
   es->offset = last;
+  es->last_modified = stbuf.st_mtime;
   il_log(LOG_DEBUG, "  event store offset set to %ld\n", last);
 
   if(msg) 
