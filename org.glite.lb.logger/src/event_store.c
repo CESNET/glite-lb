@@ -407,7 +407,10 @@ event_store_recover(struct event_store *es)
   /* check the file modification time and size to avoid unnecessary operations */
   memset(&stbuf, 0, sizeof(stbuf));
   if(fstat(fd, &stbuf) < 0) {
-	  il_log(LOG_WARNING, "    could not stat event file %s: %s\n    continuing anyway\n", es->event_file_name, strerror(errno));
+	  il_log(LOG_ERR, "    could not stat event file %s: %s\n", es->event_file_name, strerror(errno));
+	  fclose(ef);
+	  event_store_unlock(es);
+	  return -1;
   } else {
 	  if((es->offset == stbuf.st_size) && (es->last_modified == stbuf.st_mtime)) {
 		  il_log(LOG_DEBUG, "  event file not modified since last visit, skipping\n");
