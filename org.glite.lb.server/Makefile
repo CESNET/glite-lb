@@ -80,11 +80,11 @@ GRIDSITE_LIBS = -lgridsite_globus `xml2-config --libs`
 CFLAGS:= \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
+	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	-I${expat_prefix}/include \
 	-I${cares_prefix}/include \
-	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${classads_prefix}/include \
 	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
@@ -316,16 +316,13 @@ test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
 examples: ws_getversion ws_jobstat ws_query_ex ws_joblog
 
 ws_getversion: ws_getversion.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ ws_getversion.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} 
+	${LINK} -o $@ ws_getversion.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
 ws_jobstat: ws_jobstat.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_jobstat.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
 ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_query_ex.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
-
-ws_query_ext: ws_query_ext.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ ws_query_ext.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
 ws_joblog: ws_joblog.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_joblog.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
@@ -373,7 +370,6 @@ install:
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
-	${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix}
 
 	if [ x${DOSTAGE} != xyes ]; then \
 		${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; \
@@ -384,6 +380,7 @@ install:
 		install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib; \
 		if [ x${LB_STANDALONE} = x -a x${PLUGIN_LIB} != x ]; then \
 			${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
+			${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		fi; \
 		${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}; \
 	fi

@@ -752,17 +752,21 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 
 
+/* don't care :-( 
 	switch ( edg_wll_gss_watch_creds(server_cert, &cert_mtime) ) {
 	case 0: break;
 	case 1:
+*/
 		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, NULL, &gss_code) ) {
 			dprintf(("[%d] reloading credentials\n", getpid()));
 			gss_release_cred(&min_stat, &mycred);
 			mycred = newcred;
-		} else { dprintf(("[%d] reloading credentials failed\n", getpid())); }
+		} else { dprintf(("[%d] reloading credentials failed, using old ones\n", getpid())); }
+/* 
 		break;
 	case -1: dprintf(("[%d] edg_wll_gss_watch_creds failed\n", getpid())); break;
 	}
+*/
 
 	if ( edg_wll_InitContext(&ctx) )
 	{
@@ -821,6 +825,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	default:
 		if (debug) fprintf(stderr, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
 		dprintf(("[%d] connection from %s:%d\n", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port)));
+		free(ctx->connections->serverConnection->peerName);
+		ctx->connections->serverConnection->peerName = strdup(inet_ntoa(a.sin_addr));
 		break;
 	}
 	
@@ -879,17 +885,32 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		ctx->srvPort = ntohs(a.sin_port);
 	}
 
+/* XXX: ugly workaround, we may detect false expired certificated
+ * probably due to bug in Globus GSS/SSL. Treated as fatal,
+ * restarting the server solves the problem */ 
+ 
+#define _EXPIRED_CERTIFICATE_MESSAGE "certificate has expired"
+
 	if ( (ret = edg_wll_gss_accept(mycred, conn, timeout, &ctx->connections->serverConnection->gss, &gss_code)) )
 	{
 		if ( ret == EDG_WLL_GSS_ERROR_TIMEOUT )
 		{
-			dprintf(("[%d] Client authentication failed - timeout reached, closing.\n", getpid()));
-			if (!debug) syslog(LOG_ERR, "Client authentication failed - timeout reached");
+			dprintf(("[%d] %s: Client authentication failed - timeout reached, closing.\n", getpid(),ctx->connections->serverConnection->peerName));
+			if (!debug) syslog(LOG_ERR, "%s: Client authentication failed - timeout reached",ctx->connections->serverConnection->peerName);
+		}
+		else if (ret == EDG_WLL_GSS_ERROR_GSS) {
+			edg_wll_SetErrorGss(ctx,"Client authentication",&gss_code);
+			if (strstr(ctx->errDesc,_EXPIRED_CERTIFICATE_MESSAGE)) {
+				dprintf(("[%d] %s: false expired certificate: %s\n",getpid(),ctx->connections->serverConnection->peerName,ctx->errDesc));
+				if (!debug) syslog(LOG_ERR,"[%d] %s: false expired certificate: %s",getpid(),ctx->connections->serverConnection->peerName,ctx->errDesc);
+				edg_wll_FreeContext(ctx);
+				return -1;
+			}
 		}
 		else
 		{
-			dprintf(("[%d] Client authentication failed, closing.\n", getpid()));
-			if (!debug) syslog(LOG_ERR, "Client authentication failed");
+			dprintf(("[%d] %s: Client authentication failed, closing.\n", getpid(),ctx->connections->serverConnection->peerName));
+			if (!debug) syslog(LOG_ERR, "%s: Client authentication failed",ctx->connections->serverConnection->peerName);
 
 		}
 		edg_wll_FreeContext(ctx);
@@ -1415,8 +1436,9 @@ static int read_roots(const char *file)
 	int	cnt = 0;
 
 	if (!roots) {
-		perror(file);
-		return 1;
+		syslog(LOG_WARNING,"%s: %m, continuing without --super-users-file",file);
+		dprintf(("%s: %s, continuing without --super-users-file\n",file,strerror(errno)));
+		return 0;
 	}
 
 	while (!feof(roots)) {
