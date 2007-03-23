@@ -587,6 +587,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 		fprintf(stderr,"%s: open database: %s (%s)\n",argv[0],et,ed);
 		return 1;
 	}
+	fprintf(stderr, "[%d]: DB '%s'\n", getpid(), dbstring);
 	if (count_statistics) edg_wll_InitStatistics(ctx);
 	if (!ctx->use_transactions && transactions != 0) {
 		fprintf(stderr, "[%d]: transactions aren't supported!\n", getpid());

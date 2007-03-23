@@ -86,7 +86,7 @@ static int transaction_test(edg_wll_Context ctx, MYSQL *m2) {
 	ctx->use_transactions = 1;
 	pid = getpid();
 
-	asprintf(&cmd_create, "create table test%d (item int)", pid);
+	asprintf(&cmd_create, "create table test%d (item int) engine='innodb'", pid);
 	asprintf(&cmd_insert, "insert into test%d (item) values (1)", pid);
 	asprintf(&cmd_select, "select item from test%d", pid);
 	asprintf(&cmd_drop, "drop table test%d", pid);
@@ -115,6 +115,7 @@ err2:
 	edg_wll_ExecStmt(ctx, cmd_drop, NULL);
 	edg_wll_SetError(ctx, err, desc);
 err1:
+	ctx->use_transactions = 0;
 ok:
 	free(cmd_create);
 	free(cmd_insert);
