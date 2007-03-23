@@ -31,7 +31,7 @@ while test -n "$1"
 do
 	case "$1" in 
 	"-m") shift; BKSERVER_HOST="$1" ;;
-	"-x") LBPROXY="-x -S $1" ;;
+	"-x") LBPROXY="-x" ;;
 	"-X") shift; LBPROXY="-x"; LBPROXY_STORE_SOCK="-S $1" ;;
 	"-j") shift; EDG_JOBID="$1" ;;
 	"-l") shift; LARGE_STRESS="-l $1" ;;

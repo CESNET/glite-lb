@@ -28,7 +28,10 @@ static
 int handle_gss_failures(edg_wll_Context ctx, int code, edg_wll_GssStatus *gss_code, const char *text)
 {
         static char     err[256];
-        int             ret = 0;
+        int             myerrno, ret;
+
+	myerrno = errno;
+	ret = 0;
 
 	edg_wll_ResetError(ctx);
 
@@ -45,8 +48,14 @@ int handle_gss_failures(edg_wll_Context ctx, int code, edg_wll_GssStatus *gss_co
 			ret = edg_wll_SetError(ctx,ENOTCONN,err);
 			break;
 		case EDG_WLL_GSS_ERROR_ERRNO: 
-			snprintf(err, sizeof(err), "%s;; GSS Error: system error occured;", text);	
-			ret = edg_wll_SetError(ctx,ENOTCONN,err);
+			{
+				const char *msg1;
+				char *msg2;
+				msg1 = strerror(myerrno);
+				asprintf(&msg2, "%s;; System Error: %s", text, msg1);
+				ret = edg_wll_SetError(ctx,ENOTCONN,msg2);
+				free(msg2);
+			}
 			break;
                 case EDG_WLL_GSS_ERROR_GSS:
 			snprintf(err, sizeof(err), "%s;; GSS Error: GSS failure occured", text);
@@ -56,7 +65,7 @@ int handle_gss_failures(edg_wll_Context ctx, int code, edg_wll_GssStatus *gss_co
                         { 
                                 const char *msg1;
                                 char *msg2;
-                                msg1 = hstrerror(errno);
+                                msg1 = hstrerror(myerrno);
                                 asprintf(&msg2, "%s;; GSS Error: %s", text, msg1);
                                 ret = edg_wll_SetError(ctx,EDG_WLL_ERROR_DNS, msg2);
                                 free(msg2);
@@ -103,8 +112,10 @@ int plain_reader(void *user_data, char *buffer, int max_len)
 	int len;
 
 	len = edg_wll_plain_read_full(data->conn, buffer, max_len, &data->ctx->p_tmp_timeout);
-	if(len < 0) 
-		edg_wll_SetError(data->ctx, EDG_WLL_IL_PROTO, "plain_reader(): error reading message data");
+	if(len < 0) {
+		edg_wll_SetError(data->ctx, errno, "edg_wll_plain_read_full()");
+		edg_wll_UpdateError(data->ctx, EDG_WLL_IL_PROTO, "plain_reader(): error reading message data");
+	}
 
 	return(len);
 }
@@ -165,12 +176,15 @@ int get_reply_gss(edg_wll_Context ctx, edg_wll_GssConnection *conn, char **buf, 
 	data.conn = conn;
 	code = read_il_data(&data, &msg, gss_reader);
 	if(code < 0) {
-		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "get_reply_gss(): error reading reply");
+		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO, "get_reply_gss(): error reading reply");
 		goto get_reply_gss_end;
 	}
 
 	if(decode_il_reply(code_maj, code_min, buf, msg) < 0) {
-		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "get_reply_gss(): error decoding reply");
+		char *et;
+		asprintf(&et,"get_reply_gss(): error decoding reply \"%s\"", msg);
+		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO, et);
+		if (et) free(et);
 		goto get_reply_gss_end;
 	}
 
@@ -504,7 +518,8 @@ int edg_wll_log_proxy_write(edg_wll_Context ctx, edg_wll_PlainConnection *conn, 
 		len = encode_il_msg(&buffer, &ll);
 	}
 	if(len < 0) {
-		edg_wll_SetError(ctx,ENOMEM,"edg_wll_log_proxy_write(): error encoding message");
+		edg_wll_SetError(ctx,errno,"encode_il_msg()");
+		edg_wll_UpdateError(ctx,ENOMEM,"edg_wll_log_proto_client_proxy(): error encoding message");
 		return -1;
 	}
 
@@ -512,7 +527,8 @@ int edg_wll_log_proxy_write(edg_wll_Context ctx, edg_wll_PlainConnection *conn, 
 	fprintf(stderr,"edg_wll_log_proxy_write: sending message\n");
 #endif
 	if ((count = edg_wll_plain_write_full(conn, buffer, len, &ctx->p_tmp_timeout)) < 0) {
-		edg_wll_SetError(ctx, EDG_WLL_IL_PROTO,"edg_wll_log_proxy_write(): error sending message to socket");
+		edg_wll_SetError(ctx, errno, "edg_wll_plain_write_full()");
+		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_proxy(): error sending message to socket");
 		return -1;
 	}
 
@@ -679,7 +695,8 @@ int edg_wll_log_direct_write(edg_wll_Context ctx, edg_wll_GssConnection *conn, e
 		len = encode_il_msg(&buffer, &ll);
 	}
 	if(len < 0) {
-		edg_wll_SetError(ctx, ENOMEM, "edg_wll_log_direct_write(): error encoding message");
+		edg_wll_SetError(ctx, errno, "encode_il_msg()");
+		edg_wll_UpdateError(ctx, ENOMEM, "edg_wll_log_proto_client_direct(): error encoding message");
 		return -1;
 	}
 #ifdef EDG_WLL_LOG_STUB
@@ -720,7 +737,7 @@ int edg_wll_log_direct_read(edg_wll_Context ctx, edg_wll_GssConnection *con)
 	fprintf(stderr,"edg_wll_log_direct_read: reading answer from bkserver\n");
 #endif
 	if ((err = get_reply_gss(ctx, con, &answer, &lbproto_code, &code)) != 0 ) {
-		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO,"edg_wll_log_direct_read(): error reading answer from bkserver");
+		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO,"edg_wll_log_proto_client_direct(): error reading answer from L&B direct server");
 		if (answer) free(answer);
 		return -1;
 	} else {

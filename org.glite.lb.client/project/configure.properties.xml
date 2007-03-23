@@ -20,6 +20,14 @@
 
 	Revision history:
 	$Log$
+	Revision 1.8.2.1  2006/11/28 20:24:00  akrenek
+	PREFIX is set to stage by default
+	- fix build in the old glite fashion
+	- should not break build in etics
+
+	Revision 1.8  2006/09/20 10:50:08  zsalvet
+	Remove CVS conflict section.
+
 	Revision 1.7  2006/09/19 20:27:40  akrenek
 	Builds after merge _RC31
 
@@ -61,7 +69,7 @@ distdir=${dist.dir}
 globalprefix=${global.prefix}
 lbprefix=${subsystem.prefix}
 package=${module.package.name}
-PREFIX=${install.dir}
+# PREFIX=${install.dir}
 version=${module.version}
 glite_location=${with.glite.location}
 globus_prefix=${with.globus.prefix}
