@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <signal.h>
 #include <unistd.h> 
 #include <string.h>
@@ -157,6 +158,8 @@ doit(int socket, gss_cred_id_t cred_handle, char *file_name_prefix, int noipc, i
     OM_uint32	min_stat;
     gss_OID	name_type = GSS_C_NO_OID;
     fd_set fdset;
+    struct sockaddr_in	peer;
+    socklen_t	alen = sizeof peer;
 
     ret = count = 0;
     FD_ZERO(&fdset);
@@ -164,11 +167,13 @@ doit(int socket, gss_cred_id_t cred_handle, char *file_name_prefix, int noipc, i
     /* accept */
     timeout.tv_sec = ACCEPT_TIMEOUT;
     timeout.tv_usec = 0;
+    getpeername(socket,(struct sockaddr *) &peer,&alen);
     edg_wll_ll_log(LOG_DEBUG,"Accepting connection (remaining timeout %d.%06d sec)\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
     if ((ret = edg_wll_gss_accept(cred_handle,socket,&timeout,&con, &gss_stat)) < 0) {
 	edg_wll_ll_log(LOG_DEBUG,"timeout after gss_accept is %d.%06d sec\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
+        edg_wll_ll_log(LOG_ERR,"%s: edg_wll_gss_accept() failed\n",inet_ntoa(peer.sin_addr));
 	return edg_wll_log_proto_server_failure(ret,&gss_stat,"edg_wll_gss_accept() failed\n");
     }
 
@@ -178,18 +183,18 @@ doit(int socket, gss_cred_id_t cred_handle, char *file_name_prefix, int noipc, i
 	                                        &client_name, NULL, NULL, NULL, NULL,
 						NULL, NULL);
     if (GSS_ERROR(gss_stat.major_status)) {
-	char *gss_err;
-	edg_wll_gss_get_error(&gss_stat, "Cannot read client identification", &gss_err);
-	edg_wll_ll_log(LOG_WARNING, "%s\n", gss_err);
-	free(gss_err);
+       char *gss_err;
+       edg_wll_gss_get_error(&gss_stat, "Cannot read client identification", &gss_err);
+       edg_wll_ll_log(LOG_WARNING, "%s: %s\n", inet_ntoa(peer.sin_addr),gss_err);
+       free(gss_err);
     } else {
-	gss_stat.major_status = gss_display_name(&gss_stat.minor_status, client_name,
-	                                         &gss_token, &name_type);
-	if (GSS_ERROR(gss_stat.major_status)) {
-		char *gss_err;
-		edg_wll_gss_get_error(&gss_stat, "Cannot process client identification", &gss_err);
-		edg_wll_ll_log(LOG_WARNING, "%s\n", gss_err);
-		free(gss_err);
+       gss_stat.major_status = gss_display_name(&gss_stat.minor_status, client_name,
+	                                        &gss_token, &name_type);
+       if (GSS_ERROR(gss_stat.major_status)) {
+	  char *gss_err;
+	  edg_wll_gss_get_error(&gss_stat, "Cannot process client identification", &gss_err);
+	  edg_wll_ll_log(LOG_WARNING, "%s: %s\n",inet_ntoa(peer.sin_addr),gss_err);
+	  free(gss_err);
        }
     }
 

@@ -57,7 +57,7 @@ static void usage (int status)
 	       "  -b, --book                 send events to bookkeeping server only\n"
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
-	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers\n"
+	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers (default, timeout==0 means turn lazy off)\n"
 #ifdef LB_PERF
 	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
 	       "  -S, --nosync               PERFTEST: do not check logd files for lost events\n"
@@ -78,7 +78,7 @@ static int debug;
 static int verbose = 0;
 char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
-int lazy_close = 0;
+int lazy_close = 1;
 int default_close_timeout;
 #ifdef LB_PERF
 int nosend = 0, norecover=0, nosync=0, noparse=0;
@@ -204,6 +204,10 @@ decode_switches (int argc, char **argv)
 		lazy_close = 1;
 		if(optarg) 
 		        default_close_timeout = atoi(optarg);
+			if(default_close_timeout == 0) {
+				default_close_timeout = TIMEOUT;
+				lazy_close = 0;
+			}
 		else
 			default_close_timeout = TIMEOUT;
 		break;

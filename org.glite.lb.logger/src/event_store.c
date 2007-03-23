@@ -280,6 +280,65 @@ event_store_write_ctl(struct event_store *es)
 
 
 /*
+ * event_store_qurantine() 
+ *   - rename damaged event store file 
+ *   - essentially does the same actions as cleanup, but the event store 
+ *     does not have to be empty
+ * returns 0 on success, -1 on error
+ */
+static
+int
+event_store_quarantine(struct event_store *es) 
+{
+	int num;
+	char newname[MAXPATHLEN+1];
+
+	/* find available qurantine name */
+	/* we give it at most 1024 tries */
+	for(num = 0; num < 1024; num++) {
+		struct stat st;
+
+		snprintf(newname, MAXPATHLEN, "%s.quarantine.%d", es->event_file_name, num);
+		newname[MAXPATHLEN] = 0;
+		if(stat(newname, &st) < 0) {
+			if(errno == ENOENT) {
+				/* file not found */
+				break;
+			} else {
+				/* some other error with name, probably permanent */
+				set_error(IL_SYS, errno, "event_store_qurantine: error looking for qurantine filename");
+				return(-1);
+				
+			}
+		} else {
+			/* the filename is used already */
+		}
+	}
+	if(num >= 1024) {
+		/* new name not found */
+		/* XXX - is there more suitable error? */
+		set_error(IL_SYS, ENOSPC, "event_store_quarantine: exhausted number of retries looking for quarantine filename");
+		return(-1);
+	}
+
+	/* actually rename the file */
+	il_log(LOG_DEBUG, "    renaming damaged event file from %s to %s\n",
+	       es->event_file_name, newname);
+	if(rename(es->event_file_name, newname) < 0) {
+		set_error(IL_SYS, errno, "event_store_quarantine: error renaming event file");
+		return(-1);
+	}
+
+	/* clear the counters */
+	es->last_committed_ls = 0;
+	es->last_committed_bs = 0;
+	es->offset = 0;
+
+	return(0);
+}
+
+
+/*
  * event_store_recover()
  *   - recover after restart or catch up when events missing in IPC
  *   - if offset > 0, read everything behind it
@@ -296,6 +355,7 @@ event_store_recover(struct event_store *es)
   FILE *ef;
   struct flock efl;
   char err_msg[128];
+  struct stat stbuf;
 
   assert(es != NULL);
   
@@ -342,6 +402,22 @@ event_store_recover(struct event_store *es)
 	  event_store_unlock(es);
 	  fclose(ef);
 	  return(-1);
+  }
+
+  /* check the file modification time and size to avoid unnecessary operations */
+  memset(&stbuf, 0, sizeof(stbuf));
+  if(fstat(fd, &stbuf) < 0) {
+	  il_log(LOG_ERR, "    could not stat event file %s: %s\n", es->event_file_name, strerror(errno));
+	  fclose(ef);
+	  event_store_unlock(es);
+	  return -1;
+  } else {
+	  if((es->offset == stbuf.st_size) && (es->last_modified == stbuf.st_mtime)) {
+		  il_log(LOG_DEBUG, "  event file not modified since last visit, skipping\n");
+		  fclose(ef);
+		  event_store_unlock(es);
+		  return(0);
+	  }
   }
 
   while(1) { /* try, try, try */
@@ -435,8 +511,12 @@ event_store_recover(struct event_store *es)
 	    free(event_s);
     }
     if(msg == NULL) {
-	    il_log(LOG_ALERT, "    event file corrupted! Please move it to quarantine (ie. somewhere else) and restart interlogger.\n");
-	    break;
+	    il_log(LOG_ALERT, "    event file corrupted! I will try to move it to quarantine (ie. rename it).\n");
+	    /* actually do not bother if quarantine succeeded or not - we could not do more */
+	    event_store_quarantine(es);
+	    fclose(ef);
+	    event_store_unlock(es);
+	    return(-1);
     }
     msg->es = es;
 
@@ -482,6 +562,7 @@ event_store_recover(struct event_store *es)
 
   /* due to this little assignment we had to lock the event_store for writing */
   es->offset = last;
+  es->last_modified = stbuf.st_mtime;
   il_log(LOG_DEBUG, "  event store offset set to %ld\n", last);
 
   if(msg) 
@@ -509,6 +590,16 @@ event_store_sync(struct event_store *es, long offset)
 
   assert(es != NULL);
 
+  /* Commented out due to the fact that offset as received on socket
+   * has little to do with the real event file at the moment. The
+   * event will be read from file, socket now serves only to notify
+   * about possible event file change.
+   */
+  ret = event_store_recover(es);
+  ret = (ret < 0) ? ret : 0;
+  return(ret);
+
+#if 0
   event_store_lock_ro(es);
   if(es->offset == offset) 
     /* we are up to date */
@@ -548,6 +639,7 @@ event_store_sync(struct event_store *es, long offset)
   }
   event_store_unlock(es);
   return(ret);
+#endif
 }
 
 
@@ -556,6 +648,12 @@ event_store_next(struct event_store *es, long offset, int len)
 {
   assert(es != NULL);
   
+  /* Commented out due to the fact that offset as received on socket
+   * has little to do with real event file at the moment. es->offset
+   * handling is left solely to the event_store_recover().
+   */
+   
+#if 0
   event_store_lock(es);
   /* Whoa, be careful now. The es->offset points right after the last enqueued event,
    * but it may not be the offset of the event WE have just enqueued, because:!    
@@ -567,6 +665,7 @@ event_store_next(struct event_store *es, long offset, int len)
 	  es->offset += len;
   }
   event_store_unlock(es);
+#endif
 
   return(0);
 }
@@ -686,6 +785,11 @@ event_store_clean(struct event_store *es)
     return(0);
   } else if( es->last_committed_ls > last) {
 	  il_log(LOG_WARNING, "  warning: event file seems to shrink!\n");
+	  /* XXX - in that case we can not continue because there may be
+	     some undelivered events referring to that event store */
+	  fclose(ef);
+	  event_store_unlock(es);
+	  return(0);
   }
   
   /* now we are sure that all events were sent and the event queues are empty */
@@ -709,7 +813,6 @@ event_store_clean(struct event_store *es)
   /* indicate that it is safe to remove this event_store */
   return(1);
 }
-
 
 
 /* --------------------------------
@@ -805,6 +908,11 @@ event_store_from_file(char *filename)
 	
 	il_log(LOG_INFO, "  attaching to event file: %s\n", filename);
 	
+	if(strstr(filename, "quarantine") != NULL) {
+		il_log(LOG_INFO, "  file name belongs to quarantine, not touching that.\n");
+		return(0);
+	}
+
 	event_file = fopen(filename, "r");
 	if(event_file == NULL) {
 		set_error(IL_SYS, errno, "event_store_from_file: error opening event file");
@@ -1129,7 +1237,7 @@ event_store_cleanup()
 	  case -1:
 		  il_log(LOG_ERR, "  error removing event store %s (file %s):\n    %s\n", 
 			 sl->es->job_id_s, sl->es->event_file_name, error_get_msg());
-		  event_store_release(sl->es);
+		  /* event_store_release(sl->es); */
 		  clear_error();
 		  /* go on to the next */
 		  
