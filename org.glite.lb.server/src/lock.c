@@ -39,12 +39,17 @@ int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const edg_wlc_JobId job,int 
 		
 	if ((n=edg_wll_JobSemaphore(ctx, job)) == -1) return edg_wll_Error(ctx,NULL,NULL);
 
-	if (debug) fprintf(stderr,"[%d] semop(%d,%d) \n",getpid(),n,lock);
+	if (debug) fprintf(stderr,"[%d] try semop(%d,%d) \n",getpid(),n,lock);
 
 	s.sem_num = n;
 	s.sem_op = lock;
 	s.sem_flg = SEM_UNDO;
 
-	if (semop(ctx->semset,&s,1)) return edg_wll_SetError(ctx,errno,"edg_wll_LockUnlockJob()");
+	if (semop(ctx->semset,&s,1)) { 
+		if (debug) fprintf(stderr,"[%d] failed semop(%d,%d) \n",getpid(),n,lock);
+		return edg_wll_SetError(ctx,errno,"edg_wll_LockUnlockJob()");
+	}
+
+	if (debug) fprintf(stderr,"[%d] got semop(%d,%d) \n",getpid(),n,lock);
 	return edg_wll_ResetError(ctx);
 }
