@@ -769,6 +769,7 @@ static int edg_wll_RegisterJobMaster(
 	     type == EDG_WLL_REGJOB_PARTITIONED ||
 	     type == EDG_WLL_REGJOB_COLLECTION)
 		&& num_subjobs > 0) {
+		edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
 		err = edg_wll_GenerateSubjobIds(ctx,job,num_subjobs,intseed,subjobs);
 		/* increase log timeout on client (the same as on BK server) */
 		ctx->p_sync_timeout.tv_sec += num_subjobs;
@@ -907,6 +908,7 @@ int edg_wll_RegisterJobProxy(
 	     type == EDG_WLL_REGJOB_PARTITIONED ||
 	     type == EDG_WLL_REGJOB_COLLECTION)
 		&& num_subjobs > 0) {
+		edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
 		ret = edg_wll_GenerateSubjobIds(ctx,job,num_subjobs,seed ? seed : MY_SEED,subjobs);
 		/* increase log timeout on client (the same as on BK server) */
 		ctx->p_sync_timeout.tv_sec += num_subjobs;
