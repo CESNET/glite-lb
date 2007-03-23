@@ -15,6 +15,7 @@
 #include "lbs_db.h"
 #include "lock.h"
 #include "il_lbproxy.h"
+#include "jobstat.h"
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -95,7 +96,9 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
     err = edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, ctx->isProxy? NULL: &newstat);
   }
 
-  if (edg_wll_UnlockJob(ctx,ev->any.jobId)) goto err;
+  /* XXX: in edg_wll_StepIntState() 
+   * if (edg_wll_UnlockJob(ctx,ev->any.jobId)) goto err;
+   */
   if (err) goto err;
 
   db_actual_store(ctx, event, ev, &newstat);

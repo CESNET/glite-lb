@@ -382,7 +382,7 @@ install:
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
 		install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib; \
-		if [ x${LB_STANDALONE} = x ]; then \
+		if [ x${LB_STANDALONE} = x -a x${PLUGIN_LIB} != x ]; then \
 			${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
 		fi; \
 		${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}; \

@@ -45,6 +45,8 @@ int db_store(edg_wll_Context,char *, char *);
 int db_parent_store(edg_wll_Context, edg_wll_Event *, intJobStat *);
 int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
+int trans_db_store(edg_wll_Context,char *,edg_wll_Event *,intJobStat *);
+
 
 int edg_wll_delete_event(edg_wll_Context,const char *, int);
 

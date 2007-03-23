@@ -78,6 +78,9 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context, intJobStat *, int);
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context, edg_wlc_JobId, char *icnames, char *values, edg_wll_bufInsert *bi);
 edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context , edg_wlc_JobId , int, intJobStat **);
 
+edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context,edg_wlc_JobId,edg_wll_Event *,int,intJobStat *,edg_wll_JobStat *);
+
+
 
 intJobStat* dec_intJobStat(char *, char **);
 char *enc_intJobStat(char *, intJobStat* );

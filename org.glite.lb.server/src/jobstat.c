@@ -972,6 +972,8 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
 /*
  * update stored state according to the new event
  * (must be called with the job locked)
+
+ * XXX: job is locked on entry, unlocked in this function
  */
 
 edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
@@ -1000,9 +1002,12 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		res = processEvent(ijsp, e, seq, be_strict, &errstring);
 		if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
 			edg_wll_FreeStatus(&oldstat);
+			edg_wll_UnlockJob(ctx,job); /* XXX: error lost */
 			return edg_wll_SetError(ctx, EINVAL, errstring);
 		}
 		edg_wll_StoreIntState(ctx, ijsp, seq);
+		if (edg_wll_UnlockJob(ctx,job)) goto err;
+
 		edg_wll_UpdateStatistics(ctx,&oldstat,e,&ijsp->pub);
 
 		/* check whether subjob state change does not change parent state */
@@ -1026,6 +1031,12 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		/* FIXME: we miss state change in the case of seq != 0 
 		 * Does anybody care? */
 
+		/* FIXME: collection parent status is wrong in this case.
+		   However, it should not happen (frequently).
+		   Right approach is computing parent status from scratch.
+		*/
+
+		if (edg_wll_UnlockJob(ctx,job)) goto err;
 		edg_wll_UpdateStatistics(ctx,NULL,e,&jobstat.pub);
 
 		if (ctx->rgma_export) write2rgma_status(&jobstat.pub);
@@ -1036,6 +1047,8 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		}
 		else destroy_intJobStat(&jobstat);
 	}
+	else edg_wll_UnlockJob(ctx,job);
+err:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
