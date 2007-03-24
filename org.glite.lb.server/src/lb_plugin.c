@@ -50,7 +50,7 @@ typedef struct _lb_historyStatus {
 typedef struct _lb_handle {
 	edg_wll_Event			**events;
 	edg_wll_JobStat			status;
-	lb_historyStatus		**fullStatusHistory, **lastStatusHistory*finalStatus;
+	lb_historyStatus		**fullStatusHistory, **lastStatusHistory, *finalStatus;
 	glite_jpps_fplug_data_t*	classad_plugin;
 } lb_handle;
 
@@ -335,7 +335,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 	glite_jp_context_t	ctx = (glite_jp_context_t) fpctx;
 	glite_jp_error_t 	err; 
 	glite_jp_attrval_t	*av = NULL;
-	int			i, n_tags;
+	int			i, j, n_tags;
 	char 			*ns = glite_jpps_get_namespace(attr);
 	char			*tag;
 

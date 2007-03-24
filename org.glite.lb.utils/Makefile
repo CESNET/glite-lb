@@ -1,7 +1,5 @@
 # defaults
 top_srcdir=.
-builddir=build
-top_builddir=${top_srcdir}/${builddir}
 stagedir=.
 distdir=.
 globalprefix=glite
@@ -36,7 +34,6 @@ CFLAGS:= \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-I${globus_prefix}/include/${nothrflavour} \
-	$(GRIDSITE_CFLAGS) \
 	-D_GNU_SOURCE
 LDFLAGS:=-L${stagedir}/lib
 
@@ -47,10 +44,6 @@ LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
-
-GLOBUS_LIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour} \
 
 ifneq (${mysql_prefix},/usr)
 	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
@@ -67,7 +60,6 @@ endif
 EXT_LIBS:= \
 	${mysqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
-	${GRIDSITE_LIBS} \
 	${GLOBUS_LIBS}
 COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
