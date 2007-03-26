@@ -720,6 +720,7 @@ static char* hist_to_string(int * hist)
 	return s;
 }
 
+#if 0	// should not be needed anymore
 
 /* checks whether parent jobid would generate the same sem.num. */
 /* as children jobid 						*/
@@ -733,29 +734,19 @@ static int dependent_parent_lock(edg_wll_Context ctx, edg_wlc_JobId p,edg_wlc_Jo
 	if (p_id == c_id) return 1;
 	else return 0;
 }
+#endif
 
 
 static edg_wll_ErrorCode load_parent_intJobStat(edg_wll_Context ctx, intJobStat *cis, intJobStat **pis)
 {
-	if (*pis) return edg_wll_Error(ctx, NULL, NULL); // already loaded
+	if (*pis) return edg_wll_Error(ctx, NULL, NULL); // already loaded and locked
 
-	/* goes to err when id's are equal too; it just do nothing... */	
-	switch (dependent_parent_lock(ctx, cis->pub.parent_job, cis->pub.jobId)) {
-	case 0:
-		/* lock parent job only if semaphore id is different from children sem id */
-		/* otherwise because children job is already locked, parent is also locked */
-		if (edg_wll_LockJob(ctx,cis->pub.parent_job)) goto err;
-		break;
-	case 1: 	// already locked, load the state
-		break;	
-	case -1:	// fall through
-	default:
-		goto err;
-		break;
-	}
+	if (edg_wll_LockJob(ctx,cis->pub.parent_job)) goto err;
 	
 	if (edg_wll_LoadIntState(ctx, cis->pub.parent_job, - 1, pis))
 		goto err;
+
+	assert(*pis);	// deadlock would happen with next call of this function
 
 err:
 	return edg_wll_Error(ctx, NULL, NULL);
@@ -912,8 +903,8 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
 
 err:
-	if (!dependent_parent_lock(ctx, cis->pub.parent_job, cis->pub.jobId))
-		edg_wll_UnlockJob(ctx,cis->pub.parent_job);
+	edg_wll_UnlockJob(ctx,cis->pub.parent_job);
+
 	if (pis)
 		destroy_intJobStat(pis);
 
