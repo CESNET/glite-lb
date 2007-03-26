@@ -492,6 +492,9 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	if (childpid == 0) {
 		ret = doit(client_fd,cred,prefix,noIPC,noParse);
 		if (client_fd) close(client_fd);
+		edg_wll_ll_log(LOG_DEBUG,"Exiting.\n", 
+			CONNECTION_TIMEOUT);
+		exit(0);
 	}
 	if (childpid > 0) {
 		edg_wll_ll_log(LOG_DEBUG,"Forked a new child with PID %d\n",childpid);
