@@ -896,6 +896,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 				edg_wll_FreeContext(ctx);
 				return -1;
 			}
+			dprintf(("[%d] %s: GSS error: %s, closing.\n", getpid(),ctx->connPool[ctx->connToUse].peerName,ctx->errDesc));
+			if (!debug) syslog(LOG_ERR, "%s: GSS error: %s",ctx->connPool[ctx->connToUse].peerName,ctx->errDesc);
 		}
 		else
 		{
