@@ -200,7 +200,7 @@ get_reply_gss_end:
  */
 int edg_wll_log_connect(edg_wll_Context ctx, int *conn) 
 {
-	int	ret,answer,index;
+	int	ret, answer=0, index;
 	char	*my_subject_name = NULL;
 	edg_wll_GssStatus	gss_stat;
 

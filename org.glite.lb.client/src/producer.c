@@ -89,7 +89,7 @@ int edg_wll_DoLogEvent(
         memset(&conn,0,sizeof(conn));
 
 	/* connect to local-logger */
-	if ((ret = edg_wll_log_connect(ctx,&conn)) < 0) {
+	if ((ret = edg_wll_log_connect(ctx,&conn))) {
 		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_connect error");
 		goto edg_wll_DoLogEvent_end;
 	}
