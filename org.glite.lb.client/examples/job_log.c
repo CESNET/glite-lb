@@ -20,7 +20,7 @@ static void free_events(edg_wll_Event *);
 
 static void help(const char* n)
 {
-    fprintf(stderr,"usage: %s [-r repeat] [-d delay] <jobid>\n", n);
+    fprintf(stderr,"usage: %s [-r repeat] [-d delay] [ -x ] <jobid>\n", n);
     exit(1);
 }
 
@@ -46,15 +46,16 @@ int main(int argc,char **argv)
 	char		*errt,*errd;
 	edg_wll_Event	*events = NULL;
 	edg_wlc_JobId	job;
-	int		i,opt,delay = 1,count = 0;
+	int		i,opt,delay = 1,count = 0, proxy = 0;
 
 	if (argc < 2)
 	    help(argv[0]);
 
-	while ((opt=getopt(argc,argv,"r:d:")) != -1)
+	while ((opt=getopt(argc,argv,"r:d:x")) != -1)
 	    switch (opt) {
 	    case 'd': delay = atoi(optarg); break;
 	    case 'r': count = atoi(optarg); break;
+	    case 'x': proxy = 1; break;
 	    default:
                 help(argv[0]);
 	    }
@@ -69,7 +70,7 @@ int main(int argc,char **argv)
 	edg_wll_RegisterTestQueryEvents(query_events_cb);
 #endif
 
-	if ( edg_wll_JobLog(ctx,job,&events) )
+	if ( proxy ? edg_wll_JobLogProxy(ctx,job,&events) : edg_wll_JobLog(ctx,job,&events) )
 	{
 		edg_wll_Error(ctx,&errt,&errd);
 		fprintf(stderr,"%s: %s (%s)\n",argv[0],errt,errd);
@@ -89,7 +90,7 @@ int main(int argc,char **argv)
 	while (count--) {
 		puts("Sleeping ...");
 		sleep(delay);
-		if (edg_wll_JobLog(ctx,job,&events)) {
+		if (proxy ? edg_wll_JobLogProxy(ctx,job,&events) : edg_wll_JobLog(ctx,job,&events)) {
 			edg_wll_Error(ctx,&errt,&errd);
 			fprintf(stderr,"%s: %s (%s)\n",argv[0],errt,errd);
 			free(errt); free(errd); errt = errd = NULL;
