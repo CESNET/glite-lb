@@ -20,7 +20,7 @@ static void free_events(edg_wll_Event *);
 
 static void help(const char* n)
 {
-    fprintf(stderr,"usage: %s [-r repeat] [-d delay] <jobid>\n", n);
+    fprintf(stderr,"usage: %s [-r repeat] [-d delay] [-x [local socket]] <jobid>\n", n);
     exit(1);
 }
 
@@ -43,18 +43,22 @@ static int query_events_cb(edg_wll_Context context, edg_wll_Event **events) {
 int main(int argc,char **argv)
 {
 	edg_wll_Context	ctx;
-	char		*errt,*errd;
+	char		*errt,*errd, *sock = NULL;
 	edg_wll_Event	*events = NULL;
 	edg_wlc_JobId	job;
-	int		i,opt,delay = 1,count = 0;
+	int		i,opt,delay = 1,count = 0, ret = 0;
 
 	if (argc < 2)
 	    help(argv[0]);
 
-	while ((opt=getopt(argc,argv,"r:d:")) != -1)
+	while ((opt=getopt(argc,argv,"r:d:x::")) != -1)
 	    switch (opt) {
 	    case 'd': delay = atoi(optarg); break;
 	    case 'r': count = atoi(optarg); break;
+	    case 'x':
+		if (optarg) sock=strdup(count);
+		else sock=strdup("/tmp/lb_proxy_serve.sock");
+		break;
 	    default:
                 help(argv[0]);
 	    }
@@ -68,8 +72,14 @@ int main(int argc,char **argv)
 #ifdef USE_CALLBACKS
 	edg_wll_RegisterTestQueryEvents(query_events_cb);
 #endif
+	if (sock) {
+		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, sock);
+		ret = edg_wll_JobLogProxy(ctx,job,&events);
+	}
+	else
+		ret = edg_wll_JobLog(ctx,job,&events);
 
-	if ( edg_wll_JobLog(ctx,job,&events) )
+	if (ret)
 	{
 		edg_wll_Error(ctx,&errt,&errd);
 		fprintf(stderr,"%s: %s (%s)\n",argv[0],errt,errd);
