@@ -46,7 +46,10 @@ int main(int argc,char **argv)
 	char		*errt,*errd, *sock = NULL;
 	edg_wll_Event	*events = NULL;
 	edg_wlc_JobId	job;
-	int		i,opt,delay = 1,count = 0, ret = 0;
+	int		i,opt,delay = 0,count = 0;
+	int 		(*jobLog)(edg_wll_Context,
+        			edg_wlc_JobId,
+	        		edg_wll_Event **);
 
 	if (argc < 2)
 	    help(argv[0]);
@@ -74,12 +77,10 @@ int main(int argc,char **argv)
 #endif
 	if (sock) {
 		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, sock);
-		ret = edg_wll_JobLogProxy(ctx,job,&events);
 	}
-	else
-		ret = edg_wll_JobLog(ctx,job,&events);
+	jobLog = (sock) ? edg_wll_JobLogProxy : edg_wll_JobLog;
 
-	if (ret)
+	if ( jobLog(ctx,job,&events) )
 	{
 		edg_wll_Error(ctx,&errt,&errd);
 		fprintf(stderr,"%s: %s (%s)\n",argv[0],errt,errd);
@@ -99,7 +100,7 @@ int main(int argc,char **argv)
 	while (count--) {
 		puts("Sleeping ...");
 		sleep(delay);
-		if (edg_wll_JobLog(ctx,job,&events)) {
+		if (jobLog(ctx,job,&events)) {
 			edg_wll_Error(ctx,&errt,&errd);
 			fprintf(stderr,"%s: %s (%s)\n",argv[0],errt,errd);
 			free(errt); free(errd); errt = errd = NULL;
