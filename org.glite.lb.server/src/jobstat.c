@@ -761,7 +761,11 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 	edg_wll_Event  *event = 
 		edg_wll_InitEvent(EDG_WLL_EVENT_COLLECTIONSTATE);
 
-	event->any.user = strdup(ctx->serverIdentity);	
+	if (ctx->serverIdentity) 
+		event->any.user = strdup(ctx->serverIdentity);	
+	else
+		event->any.user = strdup("LBProxy");
+
 	if (!edg_wll_SetSequenceCode(ctx,pis->last_seqcode,EDG_WLL_SEQ_NORMAL)) {
 		ctx->p_source = EDG_WLL_SOURCE_LB_SERVER;
                 edg_wll_IncSequenceCode(ctx);
