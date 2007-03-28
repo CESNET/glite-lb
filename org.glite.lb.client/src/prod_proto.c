@@ -443,7 +443,7 @@ int edg_wll_log_proxy_connect(edg_wll_Context ctx, edg_wll_PlainConnection *conn
 				ctx->p_lbproxy_store_sock: socket_path);
 	if ((flags = fcntl(conn->sock, F_GETFL, 0)) < 0 || fcntl(conn->sock, F_SETFL, flags | O_NONBLOCK) < 0) {
 		edg_wll_SetError(ctx,answer = errno,"edg_wll_log_proxy_connect(): fcntl() error");
-		close(conn->sock);
+		close(conn->sock); conn->sock = -1;
 		goto edg_wll_log_proxy_connect_end;
 	}
 #ifdef EDG_WLL_LOG_STUB
@@ -473,6 +473,12 @@ int edg_wll_log_proxy_connect(edg_wll_Context ctx, edg_wll_PlainConnection *conn
 		}
 		retries++;
 	}
+
+	if (answer) {
+		edg_wll_SetError(ctx,answer = (errno == EAGAIN ? ETIMEDOUT : errno),"edg_wll_log_proxy_connect()");
+		close(conn->sock); conn->sock = -1;
+	}
+
 #ifdef EDG_WLL_LOG_STUB
 	if (retries) fprintf(stderr,"edg_wll_log_proxy_connect: there were %d connect retries\n",retries);
 #endif
