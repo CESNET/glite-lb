@@ -99,15 +99,23 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 	userid = strdup(strmd5(e->any.user,NULL));
 
-/* make sure user record is there */
-	if ((err = store_user(ctx,userid,e->any.user))) goto clean;
+	if ((e->type == EDG_WLL_EVENT_REGJOB || lbproxy_notreg)) {
+		/* Register the job and owner. For LBproxy, contant "lbproxy"
+                   is used as the name - it's harmless as the job is already
+		   registered with LBserver */
+		char *username;
+
+		username = (ctx->isProxy) ? "lbproxy" : ctx->peerName;
+		userid = strdup(strmd5(username, NULL));
+		if ((err = store_user(ctx,userid, username))) goto clean;
+		if ((err = store_job(ctx,e->any.jobId,userid))) goto clean;
+	} else {
+		/* for other events just make sure user record is there */
+		userid = strdup(strmd5(e->any.user,NULL));
+		if ((err = store_user(ctx,userid,e->any.user))) goto clean;
+	}
 
 	jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
-
-/* only REGJOB events determine job owner now */
-	if (   (e->type == EDG_WLL_EVENT_REGJOB || lbproxy_notreg)
-		&& (err = store_job(ctx,e->any.jobId,userid))) goto clean;
-
 
 /* obtain next event sequence number */
 	trio_asprintf(&select_max,
