@@ -18,6 +18,11 @@
 
 #include "prod_proto.h"
 
+/* XXX: paralel registration is disabled until the race condition (via proxy first)
+ * job owner assignment is solved */
+
+#define LB_SERIAL_REG
+
 #ifdef FAKE_VERSION
 int edg_wll_DoLogEvent(edg_wll_Context ctx, edg_wll_LogLine logline);
 int edg_wll_DoLogEventProxy(edg_wll_Context ctx, edg_wll_LogLine logline);
@@ -862,13 +867,13 @@ int edg_wll_RegisterJob(
 	return edg_wll_RegisterJobMaster(ctx,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
-#ifdef LB_PERF
+#ifndef LB_SERIAL_REG
 
 /**
  *-----------------------------------------------------------------------
  * Register one job with L&B Proxy service 
  * \note simple wrapper around edg_wll_RegisterJobMaster()
- * this is new (LB_PERF) edg_wll_RegisterJobProxy 
+ * this is new (!LB_SERIAL_REG) edg_wll_RegisterJobProxy 
  *-----------------------------------------------------------------------
  */
 int edg_wll_RegisterJobProxy(
@@ -1056,7 +1061,7 @@ int edg_wll_RegisterJobProxyOld(
 #undef MY_SEED
 }
 
-#else /* LB_PERF */
+#else /* LB_SERIAL_REG */
 
 /**
  *-----------------------------------------------------------------------
@@ -1087,10 +1092,10 @@ int edg_wll_RegisterJobProxy(
 #undef MY_SEED
 }
 
-#endif /* LB_PERF */
+#endif /* LB_SERIAL_REG */
 
 
-#ifdef LB_PERF
+#ifndef LB_SERIAL_REG
 
 /**
  *-----------------------------------------------------------------------
@@ -1114,7 +1119,7 @@ int edg_wll_RegisterJobProxyOnly(
 #undef	MY_SEED
 }
 
-#endif /* LB_PERF */
+#endif /* LB_SERIAL_REG */
 
 /**
  *-----------------------------------------------------------------------
@@ -1134,6 +1139,7 @@ int edg_wll_RegisterSubjob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
+/* XXX: what is that ? */
 #ifdef LB_PERF
 	return edg_wll_RegisterJobMaster(ctx,LOGFLAG_DIRECT,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
 #else
