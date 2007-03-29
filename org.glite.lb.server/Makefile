@@ -255,7 +255,7 @@ else
 endif
 endif
 
-compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c
+compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c jp_job_attrs.h
 
 
 check: compile test.xml test.query
