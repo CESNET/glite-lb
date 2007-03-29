@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.43  2007/03/21 13:10:38  akrenek
+	utils -> jp.primary (sync with 3.1)
+
 	Revision 1.42  2006/03/24 08:26:11  akrenek
 	missing utils->client dependency (should fix nightly build)
 
@@ -575,8 +578,8 @@
  	</target>
 
 	<!-- Main proxy -->
+<!--XXX: until JP from head is included					     utils, -->
 	<target name="buildmodules" depends="envset,
-					     utils, 
 					     client-interface,
 					     ws-interface,
 					     client,
