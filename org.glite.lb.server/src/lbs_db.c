@@ -93,7 +93,10 @@ static int transaction_test(edg_wll_Context ctx, MYSQL *m2) {
 
 	m1 = (MYSQL *)ctx->mysql;
 	edg_wll_ExecStmt(ctx, cmd_drop, NULL);
-	if (edg_wll_ExecStmt(ctx, cmd_create, NULL) != 0) goto err1;
+	if (edg_wll_ExecStmt(ctx, cmd_create, NULL) != 0) {
+		edg_wll_ResetError(ctx);
+		goto err1;
+	}
 	if (edg_wll_Transaction(ctx) != 0) goto err2;
 	if (edg_wll_ExecStmt(ctx, cmd_insert, NULL) != 1) goto err2;
 
