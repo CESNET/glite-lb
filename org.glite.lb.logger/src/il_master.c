@@ -340,11 +340,11 @@ handle_msg(il_octet_string_t *event, long offset)
 		/* Probably no, because the attempt to recover means we have missed some events,
 		   and delivery of this one will not move offset ahead. So try our best and deliver it
 		   even if it may cause duplicates on server. */
-		/* COMMENTED OUT:
-		   server_msg_free(msg);
-		   event_store_release(es);
-		   return(0);
-		*/
+		/* COMMENTED OUT: uncommented again */
+		server_msg_free(msg);
+		event_store_release(es);
+		return(0);
+		/* */
 	} else if(ret == 0) {
 		/* we have seen this event already */
 		server_msg_free(msg);
