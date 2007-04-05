@@ -347,6 +347,9 @@ abort:
 		case EPERM:
 			ret = HTTP_UNAUTH;
 			break;
+		case ENOENT:
+			ret = HTTP_NOTFOUND;
+			break;
 		
 		/* fatal errors */
 		case ENOMEM:
@@ -559,12 +562,6 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 	}
 
 	edg_wll_FreeStmt(&q);
-	if (ret == 0 && dumped == 0) {
-		if (ctx->strict_locking) unlock_and_check(ctx,job);
-		fprintf(stderr,"%s: no events, i.e. no such job or internal inconsistency\n",dbjob);
-		edg_wll_SetError(ctx,ENOENT,dbjob);
-		goto clean;
-	}
 
 unlock:
 	if (ctx->strict_locking) unlock_and_check(ctx,job);
