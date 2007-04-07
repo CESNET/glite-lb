@@ -46,6 +46,8 @@
 #define CLASSADS	lbt__jobFlagsValue__CLASSADS
 #define CHILDREN	lbt__jobFlagsValue__CHILDREN
 #define CHILDSTAT	lbt__jobFlagsValue__CHILDSTAT
+#define CHILDHIST_FAST lbt__jobFlagsValue__CHILDHIST_USCOREFAST
+#define CHILDHIST_THOROUGH lbt__jobFlagsValue__CHILDHIST_USCORETHOROUGH
 
 #define UserInterface	lbt__eventSource__UserInterface
 #define NetworkServer	lbt__eventSource__NetworkServer

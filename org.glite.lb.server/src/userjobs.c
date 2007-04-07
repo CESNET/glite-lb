@@ -19,7 +19,7 @@ int edg_wll_UserJobs(
 {
 	char	*userid = strmd5(ctx->peerName,NULL),*stmt = NULL,
 		*res = NULL;
-	int	njobs = 0,ret,i;
+	int	njobs = 0,ret,i,j;
 	edg_wlc_JobId	*out = NULL;
 	edg_wll_Stmt	sth = NULL;
 	edg_wll_ErrorCode	err = 0;
@@ -61,6 +61,13 @@ int edg_wll_UserJobs(
 		free(res); res = NULL;
 	}
 
+	*states = calloc(njobs, sizeof(**states));
+	for (i = 0; i < njobs; i++) {
+		if (edg_wll_JobStatus(ctx, out[i], -1, &(*states)[i]) != 0) {
+			for (j = 0; j < i; j++) edg_wll_FreeStatus(&(*states)[j]);
+			*states = NULL;
+		}
+	}
 err:
 	free(res);
 	free(stmt);

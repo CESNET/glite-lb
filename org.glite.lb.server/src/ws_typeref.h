@@ -63,6 +63,12 @@ extern int edg_wll_JobsQueryResToSoap(struct soap *,
 			edg_wll_JobStat *,
 			struct _lbe__QueryJobsResponse *);
 
+extern int edg_wll_UserJobsResToSoap(
+	struct soap *,
+	const edg_wlc_JobId *,
+	const edg_wll_JobStat *,
+	struct _lbe__UserJobsResponse *);
+
 extern int edg_wll_EventsQueryResToSoap(struct soap *,
 			const edg_wll_Event *,
 			struct _lbe__QueryEventsResponse *);

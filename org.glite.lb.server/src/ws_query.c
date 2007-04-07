@@ -122,21 +122,27 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__UserJobs(
 	struct _lbe__UserJobs *in,
 	struct _lbe__UserJobsResponse *out)
 {
+	edg_wll_Context ctx;
+	edg_wlc_JobId	*jobs;
+	edg_wll_JobStat	*states;
+
+	ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
+	memset(out, 0, sizeof *out);
+	if (edg_wll_UserJobs(ctx, &jobs, &states) != 0) goto fault;
+	if (edg_wll_UserJobsResToSoap(soap, jobs, states, out) != SOAP_OK) {
+		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
+		goto freefault;
+	}
+	freeJobIds(jobs);
+	freeJobStats(states);
 	return SOAP_OK;
+freefault:
+	freeJobIds(jobs);
+	freeJobStats(states);
+fault:
+	edg_wll_ErrToFault(ctx, soap);
+	return SOAP_FAULT;
 }
-
-#if 0
-int edgwll2__UserJobs(
-	struct soap						   *soap,
-	struct edgwll2__UserJobsResponse   *out)
-{
-	out->jobs = NULL;
-	out->states = NULL;
-
-	return SOAP_OK;
-}
-
-#endif
 
 
 SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(

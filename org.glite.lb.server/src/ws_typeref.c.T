@@ -317,6 +317,8 @@ void edg_wll_SoapToJobStatFlags(const struct lbt__jobFlags *in, int *out)
 	case CLASSADS: *out |= EDG_WLL_STAT_CLASSADS; break;
 	case CHILDREN: *out |= EDG_WLL_STAT_CHILDREN; break;
 	case CHILDSTAT: *out |= EDG_WLL_STAT_CHILDSTAT; break;
+	case CHILDHIST_FAST: *out |= EDG_WLL_STAT_CHILDHIST_FAST; break;
+	case CHILDHIST_THOROUGH: *out |= EDG_WLL_STAT_CHILDHIST_THOROUGH; break;
 	}
 }
 
@@ -329,6 +331,8 @@ int edg_wll_JobStatFlagsToSoap(struct soap *soap, const int in, struct lbt__jobF
 	if ( in & EDG_WLL_STAT_CLASSADS ) out->__sizeflag++;
 	if ( in & EDG_WLL_STAT_CHILDREN ) out->__sizeflag++;
 	if ( in & EDG_WLL_STAT_CHILDSTAT ) out->__sizeflag++;
+	if ( in & EDG_WLL_STAT_CHILDHIST_FAST ) out->__sizeflag++;
+	if ( in & EDG_WLL_STAT_CHILDHIST_THOROUGH ) out->__sizeflag++;
 	if ( !out->__sizeflag ) return SOAP_OK;
 	out->flag = soap_malloc(soap, sizeof(*(out->flag))*out->__sizeflag);
 	if ( !out->flag ) return SOAP_FAULT;
@@ -336,15 +340,18 @@ int edg_wll_JobStatFlagsToSoap(struct soap *soap, const int in, struct lbt__jobF
 	if ( in & EDG_WLL_STAT_CLASSADS ) out->flag[i++] = CLASSADS;
 	if ( in & EDG_WLL_STAT_CHILDREN ) out->flag[i++] = CHILDREN;
 	if ( in & EDG_WLL_STAT_CHILDSTAT ) out->flag[i++] = CHILDSTAT;
+	if ( in & EDG_WLL_STAT_CHILDHIST_FAST ) out->flag[i++] = CHILDHIST_FAST;
+	if ( in & EDG_WLL_STAT_CHILDHIST_THOROUGH ) out->flag[i++] = CHILDHIST_THOROUGH;
 
 	return SOAP_OK;
 }
 
-void edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
+int edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 {
+	assert(EDG_WLL_QUERY_ATTR_EXITCODE + 1 == EDG_WLL_QUERY_ATTR__LAST);
+
 	switch ( in )
 	{
-//	case UNDEF: *out = EDG_WLL_QUERY_ATTR_UNDEF; break;
 	case JOBID: *out = EDG_WLL_QUERY_ATTR_JOBID; break;
 	case OWNER: *out = EDG_WLL_QUERY_ATTR_OWNER; break;
 	case STATUS: *out = EDG_WLL_QUERY_ATTR_STATUS; break;
@@ -362,15 +369,18 @@ void edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 	case RESUBMITTED: *out = EDG_WLL_QUERY_ATTR_RESUBMITTED; break;
 	case PARENT: *out = EDG_WLL_QUERY_ATTR_PARENT; break;
 	case EXITCODE: *out = EDG_WLL_QUERY_ATTR_EXITCODE; break;
-	default: *out = in; break;
+	default: return 0;
 	}
+
+	return 1;
 }
 
-void edg_wll_AttrToSoap(const edg_wll_QueryAttr in, enum lbt__queryAttr *out)
+int edg_wll_AttrToSoap(const edg_wll_QueryAttr in, enum lbt__queryAttr *out)
 {
+	assert(EDG_WLL_QUERY_ATTR_EXITCODE + 1 == EDG_WLL_QUERY_ATTR__LAST);
+
 	switch ( in )
 	{
-	case EDG_WLL_QUERY_ATTR_UNDEF: *out = -1; break;
 	case EDG_WLL_QUERY_ATTR_JOBID: *out = JOBID; break;
 	case EDG_WLL_QUERY_ATTR_OWNER: *out = OWNER; break;
 	case EDG_WLL_QUERY_ATTR_STATUS: *out = STATUS; break;
@@ -388,8 +398,10 @@ void edg_wll_AttrToSoap(const edg_wll_QueryAttr in, enum lbt__queryAttr *out)
 	case EDG_WLL_QUERY_ATTR_RESUBMITTED: *out = RESUBMITTED; break;
 	case EDG_WLL_QUERY_ATTR_PARENT: *out = PARENT; break;
 	case EDG_WLL_QUERY_ATTR_EXITCODE: *out = EXITCODE; break;
-	default: *out = in; break;
+	default: return 0;
 	}
+
+	return 1;
 }
 
 void edg_wll_SoapToQueryOp(const enum lbt__queryOp in, edg_wll_QueryOp *out)
@@ -397,10 +409,10 @@ void edg_wll_SoapToQueryOp(const enum lbt__queryOp in, edg_wll_QueryOp *out)
 	switch ( in )
 	{
 	case EQUAL: *out = EDG_WLL_QUERY_OP_EQUAL; break;
+	case UNEQUAL: *out = EDG_WLL_QUERY_OP_UNEQUAL; break;
 	case LESS: *out = EDG_WLL_QUERY_OP_LESS; break;
 	case GREATER: *out = EDG_WLL_QUERY_OP_GREATER; break;
 	case WITHIN: *out = EDG_WLL_QUERY_OP_WITHIN; break;
-	default: *out = in; break;
 	}
 }
 
@@ -409,10 +421,11 @@ void edg_wll_QueryOpToSoap(const edg_wll_QueryOp in, enum lbt__queryOp *out)
 	switch ( in )
 	{
 	case EDG_WLL_QUERY_OP_EQUAL: *out = EQUAL; break;
+	case EDG_WLL_QUERY_OP_UNEQUAL: *out = UNEQUAL; break;
 	case EDG_WLL_QUERY_OP_LESS: *out = LESS; break;
 	case EDG_WLL_QUERY_OP_GREATER: *out = GREATER; break;
 	case EDG_WLL_QUERY_OP_WITHIN: *out = WITHIN; break;
-	default: *out = in; break;
+	default: assert(0);
 	}
 }
 
@@ -453,6 +466,7 @@ int edg_wll_QueryValToSoap(
 	case EDG_WLL_QUERY_ATTR_DESTINATION:
 	case EDG_WLL_QUERY_ATTR_HOST:
 	case EDG_WLL_QUERY_ATTR_INSTANCE:
+	case EDG_WLL_QUERY_ATTR_CHKPT_TAG:
 		VALUEQR_SET(out, c, in->c ? soap_strdup(soap, in->c) : NULL);
 		if (in->c && !VALUEQR_GET(out, c) ) return SOAP_FAULT;
 		break;
@@ -477,11 +491,13 @@ int edg_wll_QueryValToSoap(
 	case EDG_WLL_QUERY_ATTR_SOURCE:
 	case EDG_WLL_QUERY_ATTR_EVENT_TYPE:
 	case EDG_WLL_QUERY_ATTR_RESUBMITTED:
-	default:
+	case EDG_WLL_QUERY_ATTR_EXITCODE:
 		VALUEQR_SET(out, i, soap_malloc(soap, sizeof(*(VALUEQR_GET(out, i)))));
 		if ( !VALUEQR_GET(out, i) ) return SOAP_FAULT;
 		*(VALUEQR_GET(out, i)) = in->i;
 		break;
+	default:
+		return SOAP_FAULT;
 	}
 
 	return SOAP_OK;
@@ -494,7 +510,7 @@ int edg_wll_SoapToQueryRec(
 {
 	assert(collection); assert(in); assert(out);
 	memset(out, 0, sizeof(*out));
-	edg_wll_SoapToAttr(collection->attr, &out->attr);
+	if (!edg_wll_SoapToAttr(collection->attr, &out->attr)) return -1;
 	switch ( out->attr )
 	{
 	case EDG_WLL_QUERY_ATTR_TIME:
@@ -585,7 +601,7 @@ int edg_wll_QueryCondsToSoap(
 	if ( !in )
 		goto ret;
 
-	edg_wll_AttrToSoap(in[0].attr, &(qc->attr));
+	if (!edg_wll_AttrToSoap(in[0].attr, &(qc->attr))) return SOAP_FAULT;
 
 	if ( in->attr == EDG_WLL_QUERY_ATTR_TIME ) {
 		qc->statName = soap_malloc(soap, sizeof(*(qc->statName)));
@@ -684,45 +700,61 @@ ret:
 }
 
 
+#define edg_wll_CommonJobsResponseToSoap do { \
+	int	i; \
+\
+	assert(out); \
+	out->__sizejobs = 0; \
+	out->jobs = NULL; \
+	out->__sizestates = 0; \
+	out->states = NULL; \
+\
+	if ( jobs ) { \
+		for ( i = 0; jobs[i]; i++ ) ; \
+		out->jobs = soap_malloc(soap, sizeof(*(out->jobs))*i); \
+		if ( !out->jobs ) return SOAP_FAULT; \
+		out->__sizejobs = i; \
+		for ( i = 0; jobs[i]; i++ ) { \
+			char	   *s; \
+			if ( !(s = edg_wlc_JobIdUnparse(jobs[i])) ) return SOAP_FAULT; \
+			if ( !(out->jobs[i] = soap_strdup(soap, s)) ) return SOAP_FAULT; \
+			free(s); \
+		} \
+	} \
+	if ( states ) { \
+		for ( i = 0; states[i].state; i++ ) ; \
+		GLITE_SECURITY_GSOAP_LIST_CREATE(soap, out, states, struct lbt__jobStatus, i); \
+		if ( !out->states ) return SOAP_FAULT; \
+\
+		for ( i = 0; states[i].state; i++ ) \
+			if ( edg_wll_StatusToSoap(soap, states+i, GLITE_SECURITY_GSOAP_LIST_GET(out->states, i)) ) \
+				return SOAP_FAULT; \
+	} \
+\
+} while(0)
+
+
 int edg_wll_JobsQueryResToSoap(
 	struct soap           *soap,
 	const edg_wlc_JobId   *jobs,
 	const edg_wll_JobStat *states,
 	struct _lbe__QueryJobsResponse *out)
 {
-	int							i;
-
-
-	assert(out); //assert(out->states); assert(out->jobs);
-	out->jobs = NULL;
-	out->states = NULL;
-	out->__sizejobs = 0;
-	out->__sizestates = 0;
-
-	if ( jobs ) {
-		for ( i = 0; jobs[i]; i++ ) ;
-		out->jobs = soap_malloc(soap, sizeof(*(out->jobs))*i);
-		if ( !out->jobs ) return SOAP_FAULT;
-		out->__sizejobs = i;
-		for ( i = 0; jobs[i]; i++ ) {
-			char	   *s;
-			if ( !(s = edg_wlc_JobIdUnparse(jobs[i])) ) return SOAP_FAULT;
-			if ( !(out->jobs[i] = soap_strdup(soap, s)) ) return SOAP_FAULT;
-			free(s);
-		}
-	}
-	if ( states ) {
-		for ( i = 0; states[i].state; i++ ) ;
-		GLITE_SECURITY_GSOAP_LIST_CREATE(soap, out, states, struct lbt__jobStatus, i);
-		if ( !out->states ) return SOAP_FAULT;
-
-		for ( i = 0; states[i].state; i++ )
-			if ( edg_wll_StatusToSoap(soap, states+i, GLITE_SECURITY_GSOAP_LIST_GET(out->states, i)) )
-				return SOAP_FAULT;
-	}
-
+	edg_wll_CommonJobsResponseToSoap;
 	return SOAP_OK;
 }
+
+
+int edg_wll_UserJobsResToSoap(
+	struct soap           *soap,
+	const edg_wlc_JobId   *jobs,
+	const edg_wll_JobStat *states,
+	struct _lbe__UserJobsResponse *out)
+{
+	edg_wll_CommonJobsResponseToSoap;
+	return SOAP_OK;
+}
+
 
 static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
 {
@@ -833,6 +865,9 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 				$soap_enum_value = "lbt__${soap_en}${soap_fn}__${upper_cn}";
 				gen "\tcase $enum_value: $target = $soap_enum_value; break;\n"
 			}
+			if (not $e eq '_common_') {
+				gen "\tcase EDG_WLL_${upper_en}_UNDEFINED: assert(0);\n";
+			}
 			gen "\tdefault: assert(0);\n";
 			gen "\t};\n";
 			gen "}\n";
@@ -856,8 +891,11 @@ static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
         	case EDG_WLL_SOURCE_LOG_MONITOR: *out = LogMonitor; break;
 	        case EDG_WLL_SOURCE_LRMS: *out = LRMS; break;
         	case EDG_WLL_SOURCE_APPLICATION: *out = Application; break;
-        	case EDG_WLL_SOURCE_LB_SERVER: *out = LBServer; break;
-	        default: assert(0); break;
+		case EDG_WLL_SOURCE_LB_SERVER: *out = LBServer; break;
+        	case EDG_WLL_SOURCE_NONE:
+        	case EDG_WLL_SOURCE__LAST:
+		default:
+			assert(0);
         }
 }
 
@@ -914,7 +952,7 @@ gen qq {
 	}
 @@@}
 		default:
-			break;
+			return 0;
 	}
 
 	return 1;
@@ -1133,4 +1171,3 @@ int edg_wll_SoapToEventsQueryRes(
 	*out = events;
 	return SOAP_OK;
 }
-

@@ -9,10 +9,8 @@
 
 
 #if GSOAP_VERSION >= 20709
-  #define GFITEM reason
   #define GFNUM SOAP_TYPE_lbt__genericFault
 #else
-  #define GFITEM lbe__genericFault
   #define GFNUM SOAP_TYPE__genericFault
 #endif
 
@@ -23,20 +21,21 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 	struct SOAP_ENV__Detail	*detail = soap_malloc(soap,sizeof *detail);
 #if GSOAP_VERSION >= 20709
 	struct lbt__genericFault *f = soap_malloc(soap,sizeof *f);
+	struct lbt__genericFault *item = f;
 #else
 	struct _genericFault *f = soap_malloc(soap,sizeof *f);
+	struct lbt__genericFault *item = f->lbe__genericFault = soap_malloc(soap, sizeof *item);
 #endif
 
-	f->GFITEM = soap_malloc(soap,sizeof *f->GFITEM);
-	memset(f->GFITEM, 0, sizeof(*f->GFITEM));
+	memset(item, 0, sizeof(*item));
 
-	f->GFITEM->code = edg_wll_Error(ctx,&et,&ed);
-	f->GFITEM->text = soap_malloc(soap,strlen(et)+1);
-	strcpy(f->GFITEM->text,et); 
+	item->code = edg_wll_Error(ctx,&et,&ed);
+	item->text = soap_malloc(soap,strlen(et)+1);
+	strcpy(item->text, et); 
 	free(et);
 	if (ed) {
-		f->GFITEM->description = soap_malloc(soap,strlen(ed)+1);
-		strcpy(f->GFITEM->description,ed); 
+		item->description = soap_malloc(soap,strlen(ed)+1);
+		strcpy(item->description,ed); 
 		free(ed);
 	}
 
