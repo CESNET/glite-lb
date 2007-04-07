@@ -66,6 +66,7 @@ int edg_wll_UserJobs(
 		if (edg_wll_JobStatus(ctx, out[i], -1, &(*states)[i]) != 0) {
 			for (j = 0; j < i; j++) edg_wll_FreeStatus(&(*states)[j]);
 			*states = NULL;
+			break;
 		}
 	}
 err:
