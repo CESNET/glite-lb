@@ -332,8 +332,8 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 			ret = strdup(ctx->p_seqcode.pbs);
 			break;
 		default:
-			assert(0);	/* seq. number type  was not correctly set */
-			break;
+			edg_wll_SetError(ctx,EINVAL,"edg_wll_GetSequenceCode(): sequence code type");
+			return NULL;
 	}
 	
 	return ret;
