@@ -414,7 +414,7 @@ static std::string const attr_names[JobStatus::ATTR_MAX] = {
 };
 
 const std::string & 
-JobStatus::getAttrName(JobStatus::Attr attr) const
+JobStatus::getAttrName(JobStatus::Attr attr)
 {
   if (attr<0 || attr>=ATTR_MAX) {
     STACK_ADD;

@@ -269,9 +269,8 @@ std::string const attr_names[Event::ATTR_MAX] = {
 @@@}
 };
 
-
 const std::string & 
-Event::getAttrName(Attr attr) const
+Event::getAttrName(Attr attr)
 {
   if (attr<0 || attr>=ATTR_MAX) {
     STACK_ADD;
