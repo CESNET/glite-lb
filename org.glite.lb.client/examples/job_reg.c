@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
 			case 'j': job = (char *) strdup(optarg); break;
 			case 'm': server = strdup(optarg); break;
 			case 'n': num_subjobs = atoi(optarg); break;
-			case 'S': if (num_subjobs>0) { reg_subjobs = 1; break; }
-			case 'C': if (num_subjobs>0) { collection = 1; break; }
+			case 'S': reg_subjobs = 1; break;
+			case 'C': collection = 1; break;
 			case 'P': pbs = 1; break;
 			case 'l': jdl = (char *) strdup(optarg); break;
 			case 'e': seed = strdup(optarg); break;
@@ -45,6 +45,11 @@ int main(int argc, char *argv[])
 			case -1: done = 1; break;
 		}
 	} while (!done);
+
+	if ((num_subjobs <= 0) && (reg_subjobs || collection) ) {
+		usage(argv[0]);
+		exit(EINVAL);
+	}	
 
 	if (!job && !server) {
 		fprintf(stderr,"%s: either -m server or -j jobid has to be specified\n",argv[0]);
