@@ -468,6 +468,19 @@ JobStatus::getAttrs(void) const
   return attrs;
 }
 
+const std::string &
+JobStatus::getStateName(Code state)
+{
+  if (state<0 || state>=CODE_MAX) {
+    STACK_ADD;
+    throw(Exception(EXCEPTION_MANDATORY, 
+		    EINVAL,
+		    "status code invalid"));
+  }
+  return names[state];
+}
+
+
 void 
 JobStatus::destroyFlesh(void *p)
 {
