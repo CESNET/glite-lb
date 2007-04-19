@@ -330,10 +330,18 @@ abort:
 
 	if (parse && !edg_wll_Error(ctx,NULL,NULL))
 	{
-		if ( naffected_jobs )
-			edg_wll_SetError(ctx,EINVAL,"Invalid JobId(s) but other jobs purged");
-		else
-			edg_wll_SetError(ctx,EINVAL,"Invalid JobId(s)");
+		if ( naffected_jobs ) {
+			fprintf(stderr,"[%d] Found some jobs not matching server address/port;"\
+				" these were not purged but other jobs purged.\n", getpid());
+			syslog(LOG_INFO,"Found some jobs not matching server address/port;"\
+				" these were not purged but other jobs purged");
+		}
+		else {
+			fprintf(stderr,"[%d] Found only jobs not matching server address/port;"\
+				" these were not purged.\n", getpid());
+			syslog(LOG_INFO,"Found only jobs not matching server address/port;"\
+				" these were not purged.");
+		}
 	}
 
 	switch ( edg_wll_Error(ctx,NULL,NULL) )
