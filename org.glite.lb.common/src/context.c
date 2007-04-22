@@ -34,6 +34,9 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	/* XXX */
 	for (i=0; i<EDG_WLL_PARAM__LAST; i++) edg_wll_SetParam(out,i,NULL);
 
+	out->p_tmp_timeout.tv_sec = out->p_log_timeout.tv_sec;
+	out->p_tmp_timeout.tv_usec = out->p_log_timeout.tv_usec;
+
         out->connections = edg_wll_initConnections();
 //	out->connections->connPool = (edg_wll_ConnPool *) calloc(out->connections->poolSize, sizeof(edg_wll_ConnPool));
 	out->connPoolNotif = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
