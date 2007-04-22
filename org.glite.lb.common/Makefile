@@ -237,7 +237,7 @@ install:
 	fi
 
 clean:
-	rm -rf *.o *.lo .libs lib*
+	rm -rf *.o *.lo .libs lib* *.c test_parse il_test
 
 
 %.o: %.c
