@@ -18,7 +18,7 @@
 void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 {
 	char	*et,*ed;
-	struct SOAP_ENV__Detail	*detail = soap_malloc(soap,sizeof *detail);
+	struct SOAP_ENV__Detail	*detail;
 #if GSOAP_VERSION >= 20709
 	struct lbt__genericFault *f = soap_malloc(soap,sizeof *f);
 	struct lbt__genericFault *item = f;
@@ -39,6 +39,7 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 		free(ed);
 	}
 
+	detail = soap_faultdetail(soap);
 	detail->__type = GFNUM;
 #if GSOAP_VERSION >= 20700
 	detail->fault = f;
@@ -66,7 +67,7 @@ void edg_wll_FaultToErr(const struct soap *soap,edg_wll_Context ctx)
 	detail = soap->version == 2 ? soap->fault->SOAP_ENV__Detail : soap->fault->detail;
 	if (detail->__type == GFNUM) {
 #if GSOAP_VERSION >= 20709
-		f = detail->lbe__genericFault;
+		f = (struct lbt__genericFault *)detail->fault;
 #elif GSOAP_VERSION >= 20700
 		f = ((struct _genericFault *) detail->fault)
 			->lbe__genericFault;
@@ -74,12 +75,14 @@ void edg_wll_FaultToErr(const struct soap *soap,edg_wll_Context ctx)
 		f = ((struct _genericFault *) detail->value)
 			->lbe__genericFault;
 #endif
-		edg_wll_SetError(ctx,f->code,f->description);
+		if (f) edg_wll_SetError(ctx,f->code,f->description);
+		else edg_wll_SetError(ctx, EIO, "no or not parsable error from SOAP");
 	}
 	else {
 		char	*s;
 
-		asprintf(&s,"SOAP: %s", soap->version == 2 ?
+		if (detail->__any) asprintf(&s, "SOAP: %s", detail->__any);
+		else asprintf(&s,"SOAP: %s", soap->version == 2 ?
 			GLITE_SECURITY_GSOAP_REASON(soap) : soap->fault->faultstring);
 		edg_wll_SetError(ctx,EINVAL,s);
 		free(s);

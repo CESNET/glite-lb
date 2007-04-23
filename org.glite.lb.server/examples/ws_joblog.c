@@ -112,9 +112,14 @@ int main(int argc,char** argv)
 	memset(&in, 0, sizeof in);
 	memset(&out, 0, sizeof out);
 
+	soap_begin(mydlo);
 	if (edg_wll_QueryCondsExtToSoap(mydlo, (const edg_wll_QueryRec **)jconds,
 			&in.__sizejobConditions, &in.jobConditions) != SOAP_OK) {
 		printf("Error converting QueryConds to Soap!\n");
+		soap_end(mydlo);
+		soap_done(mydlo);
+		glite_gsplugin_free_context(gsplugin_ctx);
+		edg_wll_FreeContext(ctx);
 		return(1);
 	}
 
@@ -162,7 +167,10 @@ int main(int argc,char** argv)
 		edg_wll_FaultToErr(mydlo,ctx);
 		edg_wll_Error(ctx,&et,&ed);
 		fprintf(stderr,"%s: %s (%s)\n",argv[0],et,ed);
-		soap_done(mydlo);
+		soap_end(mydlo);
+		soap_done(mydlo); free(mydlo);
+		glite_gsplugin_free_context(gsplugin_ctx);
+		edg_wll_FreeContext(ctx);
 		exit(1);
 		}
 	default:
