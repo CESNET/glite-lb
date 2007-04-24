@@ -641,6 +641,7 @@ int edg_wll_SetLoggingJob(
 	}
 
 	/* add user credentials to context */
+#if 0
 	{
 		char	*my_subject_name = NULL;
 		edg_wll_GssStatus	gss_stat;
@@ -663,6 +664,7 @@ int edg_wll_SetLoggingJob(
 			gss_release_cred(&min_stat, &cred);
 		if (my_subject_name) free(my_subject_name);
 	}
+#endif
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
