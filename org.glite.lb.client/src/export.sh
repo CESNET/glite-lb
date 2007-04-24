@@ -43,6 +43,8 @@ GLITE_LB_EXPORT_PURGE_ARGS=${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 
 # Book Keeping Server
 GLITE_LB_SERVER_PORT=${GLITE_LB_SERVER_PORT:-9000}
 GLITE_LB_EXPORT_BKSERVER=${GLITE_LB_EXPORT_BKSERVER:-localhost:$GLITE_LB_SERVER_PORT}
+GLITE_LB_PURGE_ENABLED=${GLITE_LB_PURGE_ENABLED:true}
+GLITE_LB_EXPORT_ENABLED=$GLITE_LB_EXPORT_ENABLED:true}
 
 [ -d $GLITE_LB_EXPORT_JPDUMP_MAILDIR ] || mkdir -p $GLITE_LB_EXPORT_JPDUMP_MAILDIR
 [ -d $GLITE_LB_EXPORT_DUMPDIR ] || mkdir -p $GLITE_LB_EXPORT_DUMPDIR
@@ -51,24 +53,27 @@ GLITE_LB_EXPORT_BKSERVER=${GLITE_LB_EXPORT_BKSERVER:-localhost:$GLITE_LB_SERVER_
 [ -d $GLITE_LB_EXPORT_PURGEDIR_KEEP ] || mkdir -p $GLITE_LB_EXPORT_PURGEDIR_KEEP
 [ -d $GLITE_LB_EXPORT_JOBSDIR ] || mkdir -p $GLITE_LB_EXPORT_JOBSDIR
 
-X509_USER_CERT="$X509_USER_CERT" X509_USER_KEY="$X509_USER_KEY" $PREFIX/sbin/glite-lb-purge $GLITE_LB_EXPORT_PURGE_ARGS -l -m $GLITE_LB_EXPORT_BKSERVER -s
+if [ x"$GLITE_LB_PURGE_ENABLED" = x"true" ]; then
+	X509_USER_CERT="$X509_USER_CERT" X509_USER_KEY="$X509_USER_KEY" $PREFIX/sbin/glite-lb-purge $GLITE_LB_EXPORT_PURGE_ARGS -l -m $GLITE_LB_EXPORT_BKSERVER -s
+fi
 
-for file in $GLITE_LB_EXPORT_PURGEDIR/*; do
-  if [ -s $file ]; then
-    $PREFIX/sbin/glite-lb-lb_dump_exporter -d $file -s $GLITE_LB_EXPORT_JOBSDIR -m $GLITE_LB_EXPORT_JPDUMP_MAILDIR
-    if [ -n "$GLITE_LB_EXPORT_PURGEDIR_KEEP" ]; then
-      mv $file $GLITE_LB_EXPORT_PURGEDIR_KEEP
+if [ x"$GLITE_LB_EXPORT_ENABLED" = x"true" ]; then
+  for file in $GLITE_LB_EXPORT_PURGEDIR/*; do
+    if [ -s $file ]; then
+      $PREFIX/sbin/glite-lb-lb_dump_exporter -d $file -s $GLITE_LB_EXPORT_JOBSDIR -m $GLITE_LB_EXPORT_JPDUMP_MAILDIR
+      if [ -n "$GLITE_LB_EXPORT_PURGEDIR_KEEP" ]; then
+        mv $file $GLITE_LB_EXPORT_PURGEDIR_KEEP
+      else
+        rm $file
+      fi
     else
       rm $file
     fi
+  done
+
+  if [ -n "$GLITE_LB_EXPORT_DUMPDIR_KEEP" ]; then
+    ls $GLITE_LB_EXPORT_DUMPDIR | xargs  -i'{}' cp $GLITE_LB_EXPORT_DUMPDIR/'{}' $GLITE_LB_EXPORT_DUMPDIR_KEEP;
   else
-    rm $file
+    ls $GLITE_LB_EXPORT_DUMPDIR | xargs -i'{}' rm -f $GLITE_LB_EXPORT_DUMPDIR/'{}'
   fi
-done
-
-if [ -n "$GLITE_LB_EXPORT_DUMPDIR_KEEP" ]; then
-  ls $GLITE_LB_EXPORT_DUMPDIR | xargs  -i'{}' cp $GLITE_LB_EXPORT_DUMPDIR/'{}' $GLITE_LB_EXPORT_DUMPDIR_KEEP;
-else
-  ls $GLITE_LB_EXPORT_DUMPDIR | xargs -i'{}' rm -f $GLITE_LB_EXPORT_DUMPDIR/'{}'
 fi
-
