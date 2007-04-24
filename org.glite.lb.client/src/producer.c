@@ -756,11 +756,11 @@ static int edg_wll_RegisterJobMaster(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	char	*seq,*type_s,*intseed,*parent_s;
+	char	*seq,*type_s,*parent_s;
 	int	err = 0;
 	struct timeval sync_to;
 
-	seq = type_s = intseed = parent_s = NULL;
+	seq = type_s = parent_s = NULL;
 
 	edg_wll_ResetError(ctx);
 	memcpy(&sync_to, &ctx->p_sync_timeout, sizeof sync_to);
@@ -774,8 +774,8 @@ static int edg_wll_RegisterJobMaster(
 	     type == EDG_WLL_REGJOB_PARTITIONED ||
 	     type == EDG_WLL_REGJOB_COLLECTION)
 		&& num_subjobs > 0) {
+		err = edg_wll_GenerateSubjobIds(ctx,job,num_subjobs,seed,subjobs);
 		edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
-		err = edg_wll_GenerateSubjobIds(ctx,job,num_subjobs,intseed,subjobs);
 		/* increase log timeout on client (the same as on BK server) */
 		ctx->p_sync_timeout.tv_sec += num_subjobs;
 		if (ctx->p_sync_timeout.tv_sec > 86400) ctx->p_sync_timeout.tv_sec = 86400;
@@ -789,11 +789,9 @@ static int edg_wll_RegisterJobMaster(
 	if (flags & LOGFLAG_DIRECT) {
 		/* SetLoggingJob and log directly the message */
 		if (edg_wll_SetLoggingJob(ctx,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
-			intseed = seed ? strdup(seed) : 
-				str2md5base64(seq = edg_wll_GetSequenceCode(ctx));
 			edg_wll_LogEventMaster(ctx,LOGFLAG_DIRECT | LOGFLAG_SYNC,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
-				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
+				(char *)jdl,ns,parent_s,type_s,num_subjobs,seed);
 		}
 	} else if (flags & LOGFLAG_PROXY) {
 		/* SetLoggingJobProxy and and log to proxy */
@@ -801,20 +799,16 @@ static int edg_wll_RegisterJobMaster(
 		if (seq) free(seq);
 		seq = edg_wll_GetSequenceCode(ctx);
 		if (edg_wll_SetLoggingJobProxy(ctx,job,seq,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
-			intseed = seed ? strdup(seed) : 
-				str2md5base64(seq = edg_wll_GetSequenceCode(ctx));
 			edg_wll_LogEventMaster(ctx,LOGFLAG_PROXY | LOGFLAG_SYNC,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
-				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
+				(char *)jdl,ns,parent_s,type_s,num_subjobs,seed);
 		}
 	} else if (flags & LOGFLAG_NORMAL) {
 		/* SetLoggingJob and log normally the message through the local-logger */
 		if (edg_wll_SetLoggingJob(ctx,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
-			intseed = seed ? strdup(seed) : 
-				str2md5base64(seq = edg_wll_GetSequenceCode(ctx));
 			edg_wll_LogEventMaster(ctx, LOGFLAG_NORMAL,
 				EDG_WLL_EVENT_REGJOB,EDG_WLL_FORMAT_REGJOB,
-				(char *)jdl,ns,parent_s,type_s,num_subjobs,intseed);
+				(char *)jdl,ns,parent_s,type_s,num_subjobs,seed);
 		}
 	} else {
 		edg_wll_SetError(ctx,EINVAL,"edg_wll_RegisterJobMaster(): wrong flag specified");
@@ -824,7 +818,6 @@ edg_wll_registerjobmaster_end:
 	memcpy(&ctx->p_sync_timeout, &sync_to, sizeof sync_to);
 	if (seq) free(seq);
 	if (type_s) free(type_s); 
-	if (intseed) free(intseed); 
 	if (parent_s) free(parent_s);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -886,7 +879,6 @@ int edg_wll_RegisterJobProxy(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-#define	MY_SEED	"edg_wll_RegisterJobProxy()"
 	char	*seq,*type_s;
 	edg_wll_LogLine	logline = NULL;
 	int	ret = 0,n,count,fd;
@@ -914,7 +906,7 @@ int edg_wll_RegisterJobProxy(
 	     type == EDG_WLL_REGJOB_COLLECTION)
 		&& num_subjobs > 0) {
 		edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
-		ret = edg_wll_GenerateSubjobIds(ctx,job,num_subjobs,seed ? seed : MY_SEED,subjobs);
+		ret = edg_wll_GenerateSubjobIds(ctx,job,num_subjobs,seed,subjobs);
 		/* increase log timeout on client (the same as on BK server) */
 		ctx->p_sync_timeout.tv_sec += num_subjobs;
 		if (ctx->p_sync_timeout.tv_sec > 86400) ctx->p_sync_timeout.tv_sec = 86400;
@@ -935,7 +927,7 @@ int edg_wll_RegisterJobProxy(
 	/* format the RegJob event message */
 	if (edg_wll_FormatLogLine(ctx,LOGFLAG_SYNC | LOGFLAG_PROXY | LOGFLAG_PROXY,
 		EDG_WLL_EVENT_REGJOB,&logline,
-		EDG_WLL_FORMAT_REGJOB,(char *)jdl,ns,"",type_s,num_subjobs,seed ? seed : MY_SEED) != 0 ) {
+		EDG_WLL_FORMAT_REGJOB,(char *)jdl,ns,"",type_s,num_subjobs,seed) != 0 ) {
 		edg_wll_UpdateError(ctx,EINVAL,"edg_wll_RegisterJobProxy(): edg_wll_FormatLogLine() error");
 		goto edg_wll_registerjobproxy_end; 
 	}       
@@ -1029,7 +1021,6 @@ edg_wll_registerjobproxy_end:
 	if (logline) free(logline);
 
 	return edg_wll_Error(ctx,NULL,NULL);
-#undef MY_SEED
 }
 
 /**
@@ -1049,16 +1040,14 @@ int edg_wll_RegisterJobProxyOld(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-#define	MY_SEED	"edg_wll_RegisterJobProxyOld()"
 	/* first register with bkserver */
-	int ret = edg_wll_RegisterJobMaster(ctx,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
+	int ret = edg_wll_RegisterJobMaster(ctx,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 	if (ret) {
 		edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobProxyOld(): unable to register with bkserver");
 		return edg_wll_Error(ctx,NULL,NULL);
 	}
 	/* and then with L&B Proxy */
-	return edg_wll_RegisterJobMaster(ctx,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
-#undef MY_SEED
+	return edg_wll_RegisterJobMaster(ctx,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 #else /* LB_SERIAL_REG */
@@ -1080,16 +1069,14 @@ int edg_wll_RegisterJobProxy(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-#define	MY_SEED	"edg_wll_RegisterJobProxy()"
 	/* first register with bkserver */
-	int ret = edg_wll_RegisterJobMaster(ctx,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
+	int ret = edg_wll_RegisterJobMaster(ctx,LOGFLAG_DIRECT,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 	if (ret) {
 		edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobProxy(): unable to register with bkserver");
 		return edg_wll_Error(ctx,NULL,NULL);
 	}
 	/* and then with L&B Proxy */
-	return edg_wll_RegisterJobMaster(ctx,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
-#undef MY_SEED
+	return edg_wll_RegisterJobMaster(ctx,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 #endif /* LB_SERIAL_REG */
@@ -1114,9 +1101,7 @@ int edg_wll_RegisterJobProxyOnly(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-#define	MY_SEED	"edg_wll_RegisterJobProxyOnly()"
-	return edg_wll_RegisterJobMaster(ctx,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed ? seed : MY_SEED,subjobs);
-#undef	MY_SEED
+	return edg_wll_RegisterJobMaster(ctx,LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
 }
 
 #endif /* LB_SERIAL_REG */

@@ -449,10 +449,6 @@ int edg_wll_GenerateSubjobIds(
 	if (num_subjobs < 1)
 		return edg_wll_SetError(ctx, EINVAL,
 				"edg_wll_GenerateSubjobIds(): num_subjobs < 1");
-	if (seed == NULL)
-		intseed = edg_wll_GetSequenceCode(ctx);
-	else
-		intseed = strdup(seed);
 
 	p_unique = edg_wlc_JobIdGetUnique(parent);
 	edg_wlc_JobIdGetServerParts(parent, &p_bkserver, &p_port);
@@ -460,10 +456,15 @@ int edg_wll_GenerateSubjobIds(
 	retjobs = calloc(num_subjobs+1, sizeof(edg_wlc_JobId));
 
 	if (p_unique == NULL ||
-		intseed == NULL ||
 		p_bkserver == NULL ||
 		retjobs == NULL)
 		return edg_wll_SetError(ctx, ENOMEM, NULL);
+
+	if ( !seed || !strcmp(seed, "(nil)") ) {
+		intseed = strdup("edg_wll_GenerateSubjobIds()");
+	}
+	else
+		intseed = seed;
 
 	for (subjob = 0; subjob < num_subjobs; subjob++) {
 
