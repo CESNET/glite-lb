@@ -85,6 +85,7 @@ int edg_wll_JobStatus(
 #if DAG_ENABLE	
 	char		*stmt = NULL;
 #endif
+	char		*errdesc = NULL;
 	//The following declarations have originally been positioned in the funcion's code
 	//That was rather messy and lead to redeclaratios :-(
 	char *stat_str, *s_out;
@@ -139,6 +140,7 @@ int edg_wll_JobStatus(
 	} else {
 		lockErr = edg_wll_LockJob(ctx,job);
 		intErr = edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store && !lockErr);
+		if (intErr) edg_wll_Error(ctx, NULL, &errdesc);
 		if (!lockErr) {
 			edg_wll_UnlockJob(ctx,job);
 		}
@@ -152,7 +154,9 @@ int edg_wll_JobStatus(
 		free(string_jobid);
 		free(md5_jobid);
 		if (acl) edg_wll_FreeAcl(acl);
-		return edg_wll_Error(ctx, NULL, NULL);
+		edg_wll_SetError(ctx, intErr, errdesc);
+		free(errdesc);
+		return edg_wll_UpdateError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, "Could not compute job status from events");
 	}
 
 	if (acl) {
