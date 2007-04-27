@@ -1383,9 +1383,8 @@ static int read_roots(const char *file)
 		return 0;
 	}
 
-	while (!feof(roots)) {
+	while (fgets(buf,sizeof buf,roots) != NULL) {
 		char	*nl;
-		fgets(buf,sizeof buf,roots);
 		nl = strchr(buf,'\n');
 		if (nl) *nl = 0;
 
