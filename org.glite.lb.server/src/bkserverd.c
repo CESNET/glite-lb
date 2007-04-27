@@ -271,6 +271,7 @@ struct clnt_data_t {
 int main(int argc, char *argv[])
 {
 	int					fd, i;
+	int			dtablesize;
 	struct sockaddr_in	a;
 	char			   *mysubj = NULL;
 	int					opt;
@@ -288,6 +289,9 @@ int main(int argc, char *argv[])
 	struct timeval		to;
 
 
+	/* keep this at start of main() ! */
+	dtablesize = getdtablesize();
+	for (fd=3; fd < dtablesize ; fd++) close(fd);
 
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
@@ -404,8 +408,6 @@ int main(int argc, char *argv[])
 	fclose(fpid);
 
 	semkey = ftok(pidfile,0);
-
-	if (!debug) for (fd=3; fd<OPEN_MAX; fd++) close(fd);
 
 	if (check_mkdir(dumpStorage)) exit(1);
 	if (check_mkdir(purgeStorage)) exit(1);
