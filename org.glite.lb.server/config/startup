@@ -34,7 +34,9 @@ start()
 		fi
 	fi
 
-	super="--super-users-file $GLITE_LOCATION/etc/LB-super-users"
+	if test -r "$GLITE_LOCATION/etc/LB-super-users"; then
+		super="--super-users-file $GLITE_LOCATION/etc/LB-super-users"
+	fi
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
