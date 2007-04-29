@@ -130,6 +130,62 @@ badattr:
 	return -1; /* gcc, shut up! */
 }
 
+float Event::getValFloat(Attr attr)	const
+{
+	edg_wll_Event const	*cev = (edg_wll_Event *) flesh->ptr;
+
+@@@{
+	$indent = "\t";
+	typeswitch '_common_',undef,'float';
+@@@}
+
+	switch (cev->type) {
+@@@{
+	$indent = "\t\t";
+	for my $t (getTypes $event) {
+		gen "\t\tcase ".uc($t).":\n";
+		typeswitch $t,'goto badattr;','float';
+	}
+@@@}
+		default:
+		  STACK_ADD;
+		  throw(Exception(EXCEPTION_MANDATORY, EINVAL,
+				  "attribute is not of float type"));
+        }
+badattr:
+        STACK_ADD;
+        throw(Exception(EXCEPTION_MANDATORY, ENOENT, "invalid attribute"));
+	return -1; /* gcc, shut up! */
+}
+
+double Event::getValDouble(Attr attr)	const
+{
+	edg_wll_Event const	*cev = (edg_wll_Event *) flesh->ptr;
+
+@@@{
+	$indent = "\t";
+	typeswitch '_common_',undef,'double';
+@@@}
+
+	switch (cev->type) {
+@@@{
+	$indent = "\t\t";
+	for my $t (getTypes $event) {
+		gen "\t\tcase ".uc($t).":\n";
+		typeswitch $t,'goto badattr;','double';
+	}
+@@@}
+		default:
+		  STACK_ADD;
+		  throw(Exception(EXCEPTION_MANDATORY, EINVAL,
+				  "attribute is not of double type"));
+        }
+badattr:
+        STACK_ADD;
+        throw(Exception(EXCEPTION_MANDATORY, ENOENT, "invalid attribute"));
+	return -1; /* gcc, shut up! */
+}
+
 static char const *get_string_val(const edg_wll_Event *cev, Event::Attr attr)
 {
 @@@{

@@ -86,15 +86,37 @@ static int read_bool(const edg_wll_Args* o, char* arg, char* par)
     return rs;
 }
 
+static void read_float(const edg_wll_Args* o, char* arg, char* par)
+{
+    float d;
+    if (!par)
+    {
+	printf("Option: %s  - missing float value\n", arg);
+	exit(1);
+    }
+    d = strtof(par,NULL);
+    if (o->min != o->max)
+    {
+	if (d < o->min && d > o->max)
+	{
+	    printf("Option: %s  - value: %f  out of range <%d, %d>",
+		   arg, d, o->min, o->max);
+	    exit(1);
+	}
+    }
+    if (o->value)
+	*(float*)o->value = d;
+}
+
 static void read_double(const edg_wll_Args* o, char* arg, char* par)
 {
     double d;
     if (!par)
     {
-	printf("Option: %s  - missing double/float value\n", arg);
+	printf("Option: %s  - missing double value\n", arg);
 	exit(1);
     }
-    d = atof(par);
+    d = strtod(par,NULL);
     if (o->min != o->max)
     {
 	if (d < o->min && d > o->max)
@@ -365,6 +387,9 @@ static void parse_suboptions(const Option* o, const char* oname, char* pars, con
 		case Args::Option::BOOL:
 		    read_bool(&o[j], arr[i], par, r);
 		    break;
+		case Args::Option::FLOAT:
+		    read_float(&o[j], arr[i], par, r);
+		    break;
 		case Args::Option::DOUBLE:
 		    read_double(&o[j], arr[i], par, r);
 		    break;
@@ -445,6 +470,9 @@ static int findOpt(opt_ctx_t* ctx, int olong)
     case EDG_WLL_ARGS_BOOL:
 	if (!read_bool(o, arg, par))
 	    ctx->idx--; // no argument given
+	break;
+    case EDG_WLL_ARGS_FLOAT:
+	read_float(o, arg, par);
 	break;
     case EDG_WLL_ARGS_DOUBLE:
 	read_double(o, arg, par);

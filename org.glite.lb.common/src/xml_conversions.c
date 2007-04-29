@@ -162,6 +162,17 @@ void edg_wll_add_float_to_XMLBody(char **body, const float toAdd, const char *ta
 	}
 }
 
+void edg_wll_add_double_to_XMLBody(char **body, const double toAdd, const char *tag, const double null)
+{
+	if (toAdd != null) {
+                char *newBody;
+
+                trio_asprintf(&newBody,"%s\t\t\t<%s>%|Xf</%s>\r\n", *body, tag, toAdd, tag);
+
+                free(*body);
+                *body = newBody;
+	}
+}
 
 
 /* edg_wll_add_timeval_to_XMLBody(&body, eventsOut[i].any.tv, "timestamp", -1) */
@@ -613,6 +624,20 @@ float edg_wll_from_string_to_float(edg_wll_XML_ctx *XMLCtx)
         return(out);
 }
 
+double edg_wll_from_string_to_double(edg_wll_XML_ctx *XMLCtx)
+{
+        double out = -1;
+	char *s;
+
+	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	if (s) {
+	   out = strtod(s, (char **) NULL);
+	   free(s);
+	}
+        edg_wll_freeBuf(XMLCtx);
+
+        return(out);
+}
 
 
 long edg_wll_from_string_to_long(edg_wll_XML_ctx *XMLCtx)

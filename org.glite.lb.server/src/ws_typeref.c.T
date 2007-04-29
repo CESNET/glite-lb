@@ -58,8 +58,7 @@ sub eventFieldAssign {
 		} else {
 			gen $indent."$dest = $source;\n";
 		}
-	}
-	elsif ($tn eq 'port' || $tn eq 'bool') {
+	} elsif ($tn eq 'port' || $tn eq 'bool' || $tn eq 'float' || $tn eq 'double') {
 		if ($f->{optional}) {
 			gen $indent."$dest = soap_malloc(soap, sizeof(*$dest));\n";
 			gen $indent."*$dest = $source;\n";
@@ -105,7 +104,7 @@ sub eventFieldFree {
 	};
 	$dest = "VALUEEV_GET($dst, $soap_en)->$soap_fn";
 
-	if ($tn eq 'int' || $tn eq 'port' || $tn eq 'bool' || $tn eq 'logsrc') {
+	if ($tn eq 'int' || $tn eq 'port' || $tn eq 'bool' || $tn eq 'float' || $tn eq 'double' || $tn eq 'logsrc') {
 		if ($f->{optional}) {
 			gen $indent."if ($dest) soap_dealloc(soap, $dest);\n";
 		}
@@ -1082,15 +1081,18 @@ static int edg_wll_SoapToEvent(
 					}
 					elsif ($f->{optional}) {
 						gen "\t\t\tout->$act.$fn = *$src;\n";
-					}
-					else {
+					} else {
 						gen "\t\t\tout->$act.$fn = $src;\n";
 					}
-				}
-				elsif ($ft eq 'logsrc') {
+				} elsif ($tn eq 'port' || $tn eq 'bool' || $tn eq 'float' || $ft eq 'double') {
+					if ($f->{optional}) {
+						gen "\t\t\tout->$act.$fn = *$src;\n";
+					} else {
+						gen "\t\t\tout->$act.$fn = $src;\n";
+					}
+				} elsif ($ft eq 'logsrc') {
 					gen "\t\t\tedg_wll_SoapToSource($src, &(out->$act.$fn));\n";
-				}
-				else {
+				} else {
 					gen "\t\t\tout->$act.$fn = $src;\n";
 				}
 			}	

@@ -188,7 +188,7 @@
 
 @type ResourceUsage	Resource (CPU, memory etc.) consumption.
 	string	resource	Resource's name.
-	int	quantity	Resources's quantity (how much).
+	double	quantity	Resources's quantity (how much).
 	string	unit		Units (sec, kB, etc.).
 
 @type ReallyRunning	User payload started.
@@ -245,24 +245,24 @@
 	_code_	REQUESTED	Requested value
 	_code_	USED		Consumed quantity
 	string	name		Name of resource
-	int	quantity	The quantity
+	double	quantity	The quantity
 	_optional_		Bypass need of 'null value'
 	string	unit		Units (sec, kB, etc.)
 
 @type PBSError		Any error occured
 	string	error_desc	Error reason
 
-@type CondorSubmit		Job SUBMITed to Condor
-	string	universe	Condor Universe
-	string	submit_host	Submitting machine
-	string	condor_id	Condor ID
-
-@type CondorMatch		Job MATCHed
-	string	condor_id	Condor ID
+@type CondorMatch	Job MATCHed
 	string	owner		Owner
 	string	matched_host	Matched host
 	string	preempting	Preempting
 	_optional_
+
+@type CondorReject	Job REJECTed
+	string	owner		Owner
+	int	status_code	Reason code for the rejection of the job
+	_code_	NOMATCH		No match found
+	_code_	OTHER		Other reason
 
 @type CondorRun		Condor EXECUTEed
 	string  condor_id       Condor ID
