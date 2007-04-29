@@ -21,7 +21,7 @@ static const char *me;
 
 static void usage()
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-x] [-n jobs] [-f file_name]\n", me);
+	fprintf(stderr,"usage: %s -m bkserver [-x] [-N numjobs] [-n subjobs (each)] -f file_name \n", me);
 }
 
 int main(int argc, char *argv[])
@@ -35,18 +35,17 @@ int main(int argc, char *argv[])
 	FILE	*f;
 
 	edg_wll_InitContext(&ctx);
+
 	opterr = 0;
 
 	me = strdup(argv[0]);
 
 	do {
-		switch (getopt(argc,argv,"m:xn:f:")) {
+		switch (getopt(argc,argv,"m:xN:n:f:")) {
 			case 'm': server = strdup(optarg); break;
 			case 'x': lbproxy = 1; break;
-			case 'n': 
-				njobs = atoi(optarg); 
-				fprintf(stderr,"WARNING: -n option not implemented yet\n");
-				break;
+			case 'N': njobs = atoi(optarg); break;
+			case 'n': num_subjobs = atoi(optarg); break;
 			case 'f': filename = (char *) strdup(optarg); break;
 			case '?': usage(); exit(EINVAL);
 			case -1: done = 1; break;
@@ -59,7 +58,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if (njobs <= 0) {
+	if ((njobs <= 0) || (num_subjobs)) {
 		fprintf(stderr,"%s: wrong number of jobs\n",me);
 		usage();
 		exit(1);
@@ -76,13 +75,15 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	
+/* MAIN LOOP */
+for (i = 1; i<njobs; i++) {
 	/* create jobid */
 	if (!job) {
 		char *p = strchr(server,':');
 		if (p) *p=0;
 		edg_wlc_JobIdCreate(server,p?atoi(p+1):0,&jobid);
 		job = edg_wlc_JobIdUnparse(jobid);
-		// fprintf(stdout,"new jobid: %s\n",job);
+		fprintf(stdout,"new jobid: %s\n",job);
 	}
 	else if ((errno = edg_wlc_JobIdParse(job,&jobid))) {
 		perror(job);
@@ -92,9 +93,10 @@ int main(int argc, char *argv[])
 	/* register */
 	edg_wll_SetParam(ctx,EDG_WLL_PARAM_SOURCE,EDG_WLL_SOURCE_USER_INTERFACE);
 	// edg_wll_SetParam(ctx,EDG_WLL_PARAM_SOURCE,edg_wll_StringToSource(src));
+
 	if (lbproxy) {
 		if (edg_wll_RegisterJobProxy(ctx,jobid,
-			num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
+			num_subjobs?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_SIMPLE,
 			"JDL: blabla", "NNNSSSS",
 			num_subjobs,NULL,&subjobs))
 		{
@@ -105,7 +107,7 @@ int main(int argc, char *argv[])
 		}
 	} else {
 		if (edg_wll_RegisterJobSync(ctx,jobid,
-			num_subjobs?EDG_WLL_REGJOB_DAG:EDG_WLL_REGJOB_SIMPLE,
+			num_subjobs?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_SIMPLE,
 			"JDL: blabla", "NNNSSSS",
 			num_subjobs,NULL,&subjobs))
 		{
@@ -117,7 +119,6 @@ int main(int argc, char *argv[])
 	}
 
 	/* log events */
-	i = 1;
 	while (!feof(f)) {
 		edg_wll_LogLine logline;
 
@@ -142,16 +143,15 @@ int main(int argc, char *argv[])
 			}
 			if (logline) free(logline);
 		}
-		i++;
 	}
-	fclose(f);
+	rewind(f);
+	if (job) free(job); job = NULL;
 
 	/* seq. code */
 	seq = edg_wll_GetSequenceCode(ctx);
-	fprintf(stdout,"\n%s=\"%s\"\n",num_subjobs?"EDG_WL_DAG_JOBID":"EDG_JOBID",job);
+	fprintf(stdout,"\n%s=\"%s\"\n",num_subjobs?"EDG_WL_COLLECTION_JOBID":"EDG_JOBID",job);
 	fprintf(stdout,"EDG_WL_SEQUENCE=\"%s\"\n",seq);
 	free(seq);
-	free(job);
 
 	if (num_subjobs) for (i=0; subjobs[i]; i++) {
 		char	*job_s = edg_wlc_JobIdUnparse(subjobs[i]);
@@ -159,6 +159,9 @@ int main(int argc, char *argv[])
 		free(job_s);
 	}
 
+} /* MAIN LOOP */
+
+	fclose(f);
 	edg_wll_FreeContext(ctx);
 
 	return 0;
