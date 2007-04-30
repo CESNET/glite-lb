@@ -465,7 +465,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 		strncpy(outfilename+count_total,".",1); count_total+=1; count=strlen(jobId);
 		strncpy(outfilename+count_total,jobId,count); count_total+=count;
 		outfilename[count_total]='\0';
-		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+//		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 
 		/* fopen and properly handle the filelock */
 #ifdef LOGD_NOFILE
