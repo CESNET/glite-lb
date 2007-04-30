@@ -61,7 +61,12 @@ out:
 	if ( event_file ) free(event_file);
 
 	if ( !err ) return 0;
-	edg_wll_UpdateError(ctx, 0, "edg_wll_EventSendProxy()");
-	if ( err < 0 ) return 0;
-	return edg_wll_Error(ctx, NULL, NULL);
+	if ( err < 0 ) {
+		/* do not propagate IL errors */
+		edg_wll_ResetError(ctx);
+		return 0;
+	} else {
+		edg_wll_UpdateError(ctx, 0, "edg_wll_EventSendProxy()");
+		return edg_wll_Error(ctx, NULL, NULL);
+	}
 }
