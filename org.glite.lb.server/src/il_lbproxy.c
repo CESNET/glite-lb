@@ -52,7 +52,7 @@ edg_wll_EventSendProxy(
 
 	if ( edg_wll_log_event_send(ctx, lbproxy_ilog_socket_path, filepos,
 						event, strlen(event), 1, &ctx->p_tmp_timeout) ) {
-		edg_wll_UpdateError(ctx, 0, "edg_wll_log_event_send()");
+		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_event_send()");
 		_err(-1);
 	}
 
@@ -61,12 +61,7 @@ out:
 	if ( event_file ) free(event_file);
 
 	if ( !err ) return 0;
-	if ( err < 0 ) {
-		/* do not propagate IL errors */
-		edg_wll_ResetError(ctx);
-		return 0;
-	} else {
-		edg_wll_UpdateError(ctx, 0, "edg_wll_EventSendProxy()");
-		return edg_wll_Error(ctx, NULL, NULL);
-	}
+	edg_wll_UpdateError(ctx, 0, "edg_wll_EventSendProxy()");
+	if ( err < 0 ) return 0;
+	return edg_wll_Error(ctx, NULL, NULL);
 }
