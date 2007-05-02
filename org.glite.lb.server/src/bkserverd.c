@@ -574,6 +574,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 	if (!dbstring) dbstring = getenv("LBDB");
+	if (!dbstring) dbstring = strdup(DEFAULTCS);
 
 	/* Just check the database and let it be. The slaves do the job. */
 	edg_wll_InitContext(&ctx);

@@ -17,8 +17,6 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
 
-#define DEFAULTCS	"lbserver/@localhost:lbserver20"
-
 #define my_err() edg_wll_SetError(ctx,EDG_WLL_ERROR_DB_CALL,mysql_error((MYSQL *) ctx->mysql))
 
 struct _edg_wll_Stmt {
