@@ -80,14 +80,7 @@ create_reply(const edg_wll_Context ctx, char **buf)
     break;
 
   case EDG_WLL_IL_PROTO:
-    if ( ctx->isProxy ) {
-        /* Do not propagate IL errors */
-        err_code = LB_OK;
-	if (err_msg) free(err_msg);
-	err_msg = NULL;
-    } else {
-        err_code = LB_PROTO;
-    }
+    err_code = LB_PROTO;
     break;
     
   default:

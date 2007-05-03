@@ -1,5 +1,6 @@
 #ident "$Header$"
 
+#include <syslog.h>
 #include "glite/lb/context-int.h"
 #include "glite/lb/log_proto.h"
 
@@ -52,7 +53,13 @@ edg_wll_EventSendProxy(
 
 	if ( edg_wll_log_event_send(ctx, lbproxy_ilog_socket_path, filepos,
 						event, strlen(event), 1, &ctx->p_tmp_timeout) ) {
+		char *errt, *errd;
+		errt = errd = NULL;
+	
 		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_event_send()");
+		edg_wll_Error(ctx, &errt, &errd);
+		syslog(LOG_ERR,"%s (%s)", errt, errd);
+		free(errt); free(errd);
 		_err(-1);
 	}
 
@@ -61,7 +68,12 @@ out:
 	if ( event_file ) free(event_file);
 
 	if ( !err ) return 0;
-	edg_wll_UpdateError(ctx, 0, "edg_wll_EventSendProxy()");
-	if ( err < 0 ) return 0;
-	return edg_wll_Error(ctx, NULL, NULL);
+	if ( err < 0 ) {
+		/* do not propagate IL errors */
+		edg_wll_ResetError(ctx);
+		return 0;
+	} else {
+		edg_wll_UpdateError(ctx, 0, "edg_wll_EventSendProxy()");
+		return edg_wll_Error(ctx, NULL, NULL);
+	}
 }
