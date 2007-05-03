@@ -140,7 +140,7 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 	edg_wll_InitContext(&context);
 
 	/* parse the notification event */
-	if((ret=edg_wll_ParseNotifEvent(context, event, &notif_event))) {
+	if((ret=edg_wll_ParseNotifEvent(context, event->data, &notif_event))) {
 		set_error(IL_LBAPI, ret, "server_msg_init: error parsing notification event");
 		return(-1);
 	}
