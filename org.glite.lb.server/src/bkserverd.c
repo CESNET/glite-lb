@@ -1087,7 +1087,7 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 			/*
 			 *	unknown error - do rather return (<0) (slave will be killed)
 			 */
-			return -1;
+			return -EIO;
 		} 
 		free(errt); free(errd);
 	}
@@ -1154,7 +1154,7 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 			/*
 			 *	unknown error - do rather return (<0) (slave will be killed)
 			 */
-			return -1;
+			return -EIO;
 		} 
 		free(errt); free(errd);
 	}
