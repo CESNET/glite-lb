@@ -14,7 +14,7 @@ extern int opterr,optind;
 
 static void usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-x] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-l jdl_file] [-e seed]\n", me);
+	fprintf(stderr,"usage: %s [-m bkserver] [-x] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-P] [-l jdl_file] [-e seed]\n", me);
 }
 
 int main(int argc, char *argv[])
