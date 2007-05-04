@@ -467,7 +467,7 @@ int edg_wll_GenerateSubjobIds(
 		intseed = strdup("edg_wll_GenerateSubjobIds()");
 	}
 	else
-		intseed = seed;
+		intseed = strdup(seed);
 
 	for (subjob = 0; subjob < num_subjobs; subjob++) {
 
