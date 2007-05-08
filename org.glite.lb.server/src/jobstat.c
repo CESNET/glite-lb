@@ -10,6 +10,12 @@
 #include <regex.h>
 #include <syslog.h>
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <search.h>
+
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
@@ -93,6 +99,7 @@ int edg_wll_JobStatus(
 	edg_wll_Stmt sh;
 	int num_sub, num_f, i, ii;
 
+
 	edg_wll_ResetError(ctx);
 
 	string_jobid = edg_wlc_JobIdUnparse(job);
@@ -113,21 +120,34 @@ int edg_wll_JobStatus(
 		return edg_wll_Error(ctx,NULL,NULL);
 	}
 
+
+
 	/* authorization check */
 	if ( !(ctx->noAuth) &&
-	    (!(ctx->peerName) ||  strcmp(ctx->peerName, jobstat.pub.owner))) {
-	      	intErr = (acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
-	      if (intErr) {
-		 free(string_jobid);
-		 free(md5_jobid);
-		 free(jobstat.pub.owner); jobstat.pub.owner = NULL;
-	 	 if (acl) {
-			edg_wll_FreeAcl(acl);
-		 	return edg_wll_Error(ctx, NULL, NULL);
-		 } else {
-			return edg_wll_SetError(ctx,EPERM, "not owner, no ACL is set");
-		 }
-	      }
+	    (!(ctx->peerName) ||  strcmp(ctx->peerName, jobstat.pub.owner) )
+	) {
+		ENTRY	gmap_search, *gmap_return;
+
+		gmap_search.key = ctx->peerName;
+		gmap_search.data = NULL;
+
+		if (!ctx->gridmap || 
+			!hsearch_r(gmap_search,FIND,&gmap_return,ctx->gridmap) ||
+			strcmp(jobstat.pub.owner,(const char *) gmap_return->data)
+		) {
+	      		intErr = (acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
+			if (intErr) {
+				free(string_jobid);
+				free(md5_jobid);
+				free(jobstat.pub.owner); jobstat.pub.owner = NULL;
+				if (acl) {
+					edg_wll_FreeAcl(acl);
+		 			return edg_wll_Error(ctx, NULL, NULL);
+				} else {
+					return edg_wll_SetError(ctx,EPERM, "not owner, no ACL is set");
+				}
+			}
+		}
 	}
 
 	intErr = edg_wll_LoadIntState(ctx, job, -1 /*all events*/, &ijsp);

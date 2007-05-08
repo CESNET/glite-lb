@@ -146,6 +146,7 @@ char				   *cadir = NULL,
 					   *server_key = NULL,
 					   *server_cert = NULL;
 
+static void *gridmap;
 
 static struct option opts[] = {
 	{"cert",	1, NULL,	'c'},
@@ -184,10 +185,11 @@ static struct option opts[] = {
 #endif
 	{"transactions",	1,	NULL,	'b'},
 	{"greyjobs",	0,	NULL,	'g'},
+	{"grid-mapfile",	1, NULL,	'G'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jzb:g"
+static const char *get_opt_string = "a:c:k:C:V:p:drm:ns:l:L:N:i:S:D:X:Y:T:t:J:jzb:gG:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -237,7 +239,7 @@ static void usage(char *me)
 		"\t--perf-sink\t where to sink events\n"
 #endif
 		"\t-g,--greyjobs\t allow delayed registration (grey jobs), implies --strict-locking\n"
-
+		"\t-G,--grid-mapfile\t grid-mapfile to map X509 identities to unix users\n"
 	,me);
 }
 
@@ -248,6 +250,7 @@ static int asyn_gethostbyaddr(char **, const char *, int, int, struct timeval *)
 static int amIroot(const char *);
 static int parse_limits(char *, int *, int *, int *);
 static int check_mkdir(const char *);
+static void read_gridmap(const char *);
 
 
 /*
@@ -404,6 +407,8 @@ int main(int argc, char *argv[])
 			  break;
 #endif
 		case 'g': greyjobs = strict_locking = 1;
+			  break;
+		case 'G': read_gridmap(optarg);
 			  break;
 		case '?': usage(name); return 1;
 	}
@@ -1531,3 +1536,6 @@ static int decrement_timeout(struct timeval *timeout, struct timeval before, str
         else return(0);
 }
 
+static void read_gridmap(const char *fname)
+{
+}
