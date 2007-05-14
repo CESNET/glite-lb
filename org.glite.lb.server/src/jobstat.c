@@ -714,10 +714,10 @@ static char* hist_to_string(int * hist)
 
 
 	assert(hist[0] == EDG_WLL_NUMBER_OF_STATCODES);
-	asprintf(&s, "%s=%d", edg_wll_StatToString(1), hist[1]);
+	asprintf(&s, "%s=%d", edg_wll_StatToString(1), hist[2]);
 
-	for (i=1; i<hist[0] ; i++) {
-		asprintf(&s1, "%s, %s=%d", s, edg_wll_StatToString(i), hist[i]);
+	for (i=2; i<hist[0] ; i++) {
+		asprintf(&s1, "%s, %s=%d", s, edg_wll_StatToString(i), hist[i+1]);
 		free(s); s=s1; s1=NULL;
 	}
 
