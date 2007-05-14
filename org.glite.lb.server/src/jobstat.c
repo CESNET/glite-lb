@@ -710,10 +710,10 @@ static char* hist_to_string(int * hist)
 
 
 	assert(hist[0] == EDG_WLL_NUMBER_OF_STATCODES);
-	asprintf(&s, "%s=%d", edg_wll_StatToString(1), hist[1]);
+	asprintf(&s, "%s=%d", edg_wll_StatToString(1), hist[2]);
 
-	for (i=1; i<hist[0] ; i++) {
-		asprintf(&s1, "%s, %s=%d", s, edg_wll_StatToString(i), hist[i]);
+	for (i=2; i<hist[0] ; i++) {
+		asprintf(&s1, "%s, %s=%d", s, edg_wll_StatToString(i), hist[i+1]);
 		free(s); s=s1; s1=NULL;
 	}
 
@@ -819,64 +819,6 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 	// XXX: if load_parent_intJobStat occure (and survives in future) in each subcase
 	//	load parent status at the beginning of this function
 
-	/* Increment histogram for interesting states and 
-	 * cook artificial events to enable parent job state shift 
-	 */
-	switch (cis->pub.state) {
-		case EDG_WLL_JOB_RUNNING:
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[cis->pub.state+1]++;
-
-			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
-				/* not RUNNING yet? */
-				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
-					if (log_collectionState_event(ctx, cis->pub.state, 0, cis, pis, ce))
-						goto err;
-				}
-			}
-			update_hist = 1;
-			break;
-		case EDG_WLL_JOB_DONE:
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[cis->pub.state+1]++;
-			pis->children_done_hist[cis->pub.done_code]++;
-
-			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
-				if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
-					/* not DONE yet? */
-					if (pis->pub.state < EDG_WLL_JOB_DONE) {
-						if (log_collectionState_event(ctx, cis->pub.state, 
-								cis->pub.done_code, cis, pis, ce))
-							goto err;
-					}
-				}
-			}
-			update_hist = 1;
-			break;
-		case EDG_WLL_JOB_CLEARED: 
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[cis->pub.state+1]++;
-
-			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
-				if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
-					/* not CLEARED yet? */
-					if (pis->pub.state < EDG_WLL_JOB_CLEARED) {
-						if (log_collectionState_event(ctx, cis->pub.state, 
-								cis->pub.done_code, cis, pis, ce))
-							goto err;
-					}
-				}
-			}
-			update_hist = 1;
-			break;
-		default:
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[EDG_WLL_JOB_UNKNOWN+1]++;
-			// update_hist = 1; - triggered by the next case or not needed
-			break;
-	}
-	
-
 	/* Decrement histogram for interesting states
 	 */
 	switch (old_state) {
@@ -903,6 +845,76 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 			break;
 	}
 
+	/* Increment histogram for interesting states and 
+	 * cook artificial events to enable parent job state shift 
+	 */
+	switch (cis->pub.state) {
+		case EDG_WLL_JOB_RUNNING:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[cis->pub.state+1]++;
+
+			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
+				/* not RUNNING yet? */
+				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
+					if (log_collectionState_event(ctx, cis->pub.state, 0, cis, pis, ce))
+						goto err;
+				}
+			}
+			update_hist = 1;
+			break;
+		case EDG_WLL_JOB_DONE:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[cis->pub.state+1]++;
+			pis->children_done_hist[cis->pub.done_code]++;
+
+			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
+				if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
+					/* not DONE yet? */
+					if (pis->pub.state < EDG_WLL_JOB_DONE) {
+						if (pis->children_done_hist[EDG_WLL_STAT_FAILED]) {
+							if (log_collectionState_event(ctx, cis->pub.state, 
+									EDG_WLL_STAT_FAILED, cis, pis, ce))
+								goto err;
+						}
+						/* XXX: is this meaningful semantics?
+						else if (pis->children_done_hist[EDG_WLL_STAT_CANCELLED]) {
+							if (log_collectionState_event(ctx, cis->pub.state, 
+									EDG_WLL_STAT_CANCELLED, cis, pis, ce))
+								goto err;
+						}
+						*/
+						else 
+							if (log_collectionState_event(ctx, cis->pub.state, 
+									EDG_WLL_STAT_OK, cis, pis, ce))
+								goto err;
+					}
+				}
+			}
+			update_hist = 1;
+			break;
+		case EDG_WLL_JOB_CLEARED: 
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[cis->pub.state+1]++;
+
+			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
+				if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
+					/* not CLEARED yet? */
+					if (pis->pub.state < EDG_WLL_JOB_CLEARED) {
+						if (log_collectionState_event(ctx, cis->pub.state, 
+								0, cis, pis, ce))
+							goto err;
+					}
+				}
+			}
+			update_hist = 1;
+			break;
+		default:
+			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+			pis->pub.children_hist[EDG_WLL_JOB_UNKNOWN+1]++;
+			// update_hist = 1; - triggered by the next case or not needed
+			break;
+	}
+	
 	if (update_hist) 
 		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
 
