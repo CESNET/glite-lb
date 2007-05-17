@@ -334,6 +334,9 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 		case EDG_WLL_SEQ_PBS:
 			ret = strdup(ctx->p_seqcode.pbs);
 			break;
+		case EDG_WLL_SEQ_CONDOR:
+			ret = strdup(ctx->p_seqcode.condor);
+			break;
 		default:
 			edg_wll_SetError(ctx,EINVAL,"edg_wll_GetSequenceCode(): sequence code type");
 			return NULL;
@@ -394,6 +397,12 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 				memset(&ctx->p_seqcode.pbs, 0, sizeof ctx->p_seqcode.pbs);
 			else
 				strncpy(ctx->p_seqcode.pbs, seqcode_str, sizeof(ctx->p_seqcode.pbs));
+			break;
+		case EDG_WLL_SEQ_CONDOR:
+			if (!seqcode_str) 
+				memset(&ctx->p_seqcode.condor, 0, sizeof ctx->p_seqcode.condor);
+			else
+				strncpy(ctx->p_seqcode.condor, seqcode_str, sizeof(ctx->p_seqcode.condor));
 			break;
 		default:
 			return edg_wll_SetError(ctx, EINVAL,

@@ -254,7 +254,7 @@
 
 @type CondorMatch	Job MATCHed
 	string	owner		Owner
-	string	matched_host	Matched host
+	string	dest_host	Matched host
 	string	preempting	Preempting
 	_optional_
 
@@ -264,64 +264,42 @@
 	_code_	NOMATCH		No match found
 	_code_	OTHER		Other reason
 
-@type CondorRun		Condor EXECUTEed
-	string  condor_id       Condor ID
-	string  universe        Condor Universe
-	string	scheduler	Scheduler ID
-	_optional_
-	string	dest_host	Where to run the job
-	_optional_
-	int	pid		Actual process ID
+@type CondorShadowStarted	Condor Shadow Started
+	string	shadow_host	Shadow host
+	port	shadow_port	Shadow port
+	int	shadow_pid	PID of shadow process
+	string	shadow_status	Shadow status
 	_optional_
 
-@type CondorChkpt
-	string	info		Some useful info
+@type CondorShadowExited	Condor Shadow Exited
+	int	shadow_pid	PID of shadow process
+	int	shadow_exit_status	Exit status of shadow process
 
-@type CondorEvict
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
+@type CondorStarterStarted	Condor Starter Started
+	int	starter_pid	PID of starter process
+	_optional_
+	string	universe	Condor Universe
+	_optional_
 
-@type CondorTerminate
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
+@type CondorStarterExited	Condor Starter Exited
+	int	starter_pid	PID of starter process
+	_optional_
+	int	starter_exit_status	Exit status of starter process
+	_optional_
+	int	job_pid		PID of running job
+	_optional_
+	int	job_exit_status	Job exit status
+	_optional_
 
-@type CondorAbort
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
+@type CondorResourceUsage       Resources requested/consumed
+	int	usage		Type of record
+	_code_	REQUESTED	Requested value
+	_code_	USED		Consumed quantity
+	string	name		Name of resource
+	double	quantity	The quantity
+	_optional_		Bypass need of 'null value'
+	string	unit		Units (sec, kB, etc.)
 
-@type CondorSuspend
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
+@type CondorError		Any Error occured
+	string	error_desc	Error reason
 
-@type CondorUnsuspend
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
-
-@type CondorHold
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
-
-@type CondorRelease
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
-
-@type CondorNodeExecute
-	string	info		Some useful info
-
-@type CondorNodeTerminate
-	string	info		Some useful info
-
-@type CondorPostSctiptTerminate
-	string	info		Some useful info
-
-@type CondorGlobusSubmit
-	int	status_code
-	_code_  OK              The job was submitted successfully
-	_code_  FAIL            Job submission failed
-	string	info		Some useful info
-
-@type CondorGlobusResource
-	int	status_code	Status code
-	_code_	UP		Resource UP
-	_code_	DOWN		Resource DOWM
-	string	info		Some useful info

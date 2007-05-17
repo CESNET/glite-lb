@@ -892,6 +892,21 @@ edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num) {
 	}
 }
 
+edg_wll_CondorEventSource get_condor_event_source(const char *condor_seq_num) {
+	switch (condor_seq_num[EDG_WLL_SEQ_CONDOR_SIZE-1]) {
+		case 'L': return(EDG_WLL_CONDOR_EVENT_SOURCE_COLLECTOR);
+		case 'M': return(EDG_WLL_CONDOR_EVENT_SOURCE_MASTER);
+		case 'm': return(EDG_WLL_CONDOR_EVENT_SOURCE_MATCH);
+		case 'N': return(EDG_WLL_CONDOR_EVENT_SOURCE_NEGOTIATOR);
+		case 'C': return(EDG_WLL_CONDOR_EVENT_SOURCE_SCHED);
+		case 'H': return(EDG_WLL_CONDOR_EVENT_SOURCE_SHADOW);
+		case 's': return(EDG_WLL_CONDOR_EVENT_SOURCE_STARTER);
+		case 'S': return(EDG_WLL_CONDOR_EVENT_SOURCE_START);
+		case 'j': return(EDG_WLL_CONDOR_EVENT_SOURCE_JOBQUEUE);
+		default: return(EDG_WLL_CONDOR_EVENT_SOURCE_UNDEF);
+	}
+}
+
 int edg_wll_compare_seq(const char *a, const char *b)
 {
 	unsigned int    c[EDG_WLL_SOURCE__LAST];

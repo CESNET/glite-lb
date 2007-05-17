@@ -395,6 +395,7 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
 		my $uctype = uc $type;
 		my $flctype = lcfirst $type;
 		if ($flctype =~ m/^pBS/) { $flctype = ucfirst $flctype; }
+		if ($flctype =~ m/^condor/) { $flctype = ucfirst $flctype; }
 		gen qq{
 !		case EDG_WLL_EVENT_$uctype:
 };
