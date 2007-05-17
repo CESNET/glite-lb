@@ -601,7 +601,7 @@ for (i=0; i<table->num; i++) {
 	edg_wll_ULMDateToTimeval(value,&this->any.arrived);
       break;
    case ULM_HOST :
-	if (!(((this->any.host) == NULL && (NULL) == NULL) || ((this->any.host)&&(NULL)&& !strcmp(this->any.host,NULL)))) DUPLICITY 
+	if (!(((this->any.host) == NULL) || ((this->any.host)&& !strcmp(this->any.host,"")))) DUPLICITY
 	this->any.host = strdup(value);
       break;
    case ULM_LVL :
@@ -613,7 +613,7 @@ for (i=0; i<table->num; i++) {
 	this->any.source = edg_wll_StringToSource(value);
       break;
    case EDG_WLL_COMMON_SRC_INSTANCE :
-	if (!(((this->any.src_instance) == NULL && (NULL) == NULL) || ((this->any.src_instance)&&(NULL)&& !strcmp(this->any.src_instance,NULL)))) DUPLICITY 
+	if (!(((this->any.src_instance) == NULL) || ((this->any.src_instance)&& !strcmp(this->any.src_instance,"")))) DUPLICITY
 	this->any.src_instance = strdup(value);
       break;
 @@@{
