@@ -182,8 +182,7 @@ mkreports:
 check.parse: test_parse
 	./test_parse ${REPORTS}/parse.xml
 
-test_parse: parse.cpp
-	${CXX} -c ${CFLAGS} ${TEST_INC} $<
+test_parse: parse.o
 	${LINKXX} -o test_parse parse.o ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
 
 check.il: il_test
@@ -243,7 +242,7 @@ clean:
 %.o: %.c
 	${COMPILE} ${GLOBUSINC} ${CFLAGS} -c $<
 
-il_int_test.o il_string_test.o il_test.o il_msg_test.o: %.o: %.cpp
+il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 
 %.thr.o: %.c
