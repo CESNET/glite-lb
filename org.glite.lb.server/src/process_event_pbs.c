@@ -102,7 +102,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 						rep(js->pub.pbs_state, "R");
 						break;
 					default:
-						assert(0); // running event from strande source
+						assert(0); // running event from strange source
 						break;
 				}
 			}
@@ -165,7 +165,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			if (USABLE_DATA(res)) {
 				char *new_resource_usage;
 	
-				asprintf(&new_resource_usage,"%s%s\t%s = %d [%s]",
+				asprintf(&new_resource_usage,"%s%s\t%s = %f [%s]",
 					(js->pub.pbs_resource_usage) ? js->pub.pbs_resource_usage : "",
 					(js->pub.pbs_resource_usage) ? "\n": "",
 					e->PBSResourceUsage.name,
