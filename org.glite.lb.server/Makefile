@@ -240,10 +240,10 @@ LIB_OBJS_BK:= \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o
 
-glite_lb_bkserverd: ${NSMAP} ${BKSERVER_OBJS}
+glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
-glite_lb_bkindex: ${INDEX_OBJS}
+glite-lb-bkindex: ${INDEX_OBJS}
 	${LINKXX} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}
 
 glite_lb_plugin.la: ${PLUGIN_LOBJS}
@@ -261,7 +261,7 @@ else
 endif
 endif
 
-compile: glite_lb_bkserverd glite_lb_bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c jp_job_attrs.h
+compile: glite-lb-bkserverd glite-lb-bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c jp_job_attrs.h
 
 
 check: compile test.xml test.query
@@ -364,7 +364,7 @@ install:
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	for p in bkserverd bkindex; do \
-		${INSTALL} -m 755 "glite_lb_$$p" "${PREFIX}/bin/glite-lb-$$p"; \
+		${INSTALL} -m 755 "glite-lb-$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 
 	for f in dbsetup.sql dbsetup-migrate2transactions.sql index.conf.template; do \
@@ -390,6 +390,7 @@ install:
 	fi
 
 clean:
+	rm -rf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test*
 
 %.c: %.c.T
 	rm -f $@

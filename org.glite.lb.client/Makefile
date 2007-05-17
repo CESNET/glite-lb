@@ -312,7 +312,7 @@ endif
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 clean:
-	rm -rf *.o *.lo .libs *.c *.cpp producer_test
+	rm -rf *.o *.lo .libs lib* *.c *.cpp producer_test
 	rm -rf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ}
 	rm -rf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 
