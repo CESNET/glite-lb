@@ -30,8 +30,10 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 		if(notifid_map_set_dest(msg->job_id_s, eq) < 0) 
 			return(-1);
 		/* move all events with this notif_id from eq_known to eq */
-		if(eq_known != NULL) 
+		if(eq_known != NULL) {
 			event_queue_move_events(eq_known, eq, msg->job_id_s);
+			/* XXX - we should kill the old queue too */
+		}
 	}
 #endif
 

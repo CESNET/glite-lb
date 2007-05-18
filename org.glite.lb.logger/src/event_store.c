@@ -347,7 +347,7 @@ event_store_quarantine(struct event_store *es)
 int
 event_store_recover(struct event_store *es)
 {
-  struct event_queue *eq_l = NULL, *eq_b, *eq_b_new;
+  struct event_queue *eq_l = NULL, *eq_b;
   struct server_msg *msg;
   char *event_s;
   int fd, ret;
@@ -360,7 +360,7 @@ event_store_recover(struct event_store *es)
   assert(es != NULL);
   
 #if defined(IL_NOTIFICATIONS)
-  eq_b = queue_list_get(es->dest);
+  /* destination queue has to be found for each message separately */
 #else
   /* find bookkepping server queue */
   eq_b = queue_list_get(es->job_id_s);
@@ -532,12 +532,7 @@ event_store_recover(struct event_store *es)
       }
 
 #ifdef IL_NOTIFICATIONS
-    eq_b_new = queue_list_get(msg->dest);
-    if (eq_b_new != eq_b) {
-	    free(es->dest);
-	    es->dest = strdup(msg->dest);
-	    eq_b = eq_b_new;
-    }
+    eq_b = queue_list_get(msg->dest);
 #endif
 
     /* now enqueue to the BS, if neccessary */
@@ -961,10 +956,6 @@ event_store_from_file(char *filename)
 		ret = -1;
 		goto out;
 	}
-
-#if defined(IL_NOTIFICATIONS)
-	es->dest = dest_name;
-#endif
 
 	if((es->last_committed_ls == 0) &&
 	   (es->last_committed_bs == 0) &&
