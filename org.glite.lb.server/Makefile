@@ -375,19 +375,15 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
 
-	if [ x${DOSTAGE} != xyes ]; then \
-		${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; \
+	${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin
+	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
+	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix})
+	install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib
+	if [ x${LB_STANDALONE} = x -a x${PLUGIN_LIB} != x ]; then \
+		${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
+		${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 	fi
-	if [ x${DOSTAGE} = xyes ]; then \
-		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
-		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
-		install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib; \
-		if [ x${LB_STANDALONE} = x -a x${PLUGIN_LIB} != x ]; then \
-			${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
-			${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
-		fi; \
-		${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}; \
-	fi
+	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}
 
 clean:
 	rm -rf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test*
