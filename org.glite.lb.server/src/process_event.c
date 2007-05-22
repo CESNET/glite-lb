@@ -481,7 +481,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 						e->enQueued.host,
 						e->enQueued.src_instance);
 					if (e->enQueued.source == EDG_WLL_SOURCE_LOG_MONITOR)
-						js->pub.resubmitted += 1;
+						js->pub.resubmitted = 1;
 				} else {
 					js->pub.location = location_string(
 						edg_wll_SourceToString(e->enQueued.source),
