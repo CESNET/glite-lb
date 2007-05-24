@@ -15,6 +15,14 @@
 #include "lbs_db.h"
 #include "jobstat.h"
 
+#ifdef LB_PERF
+#include "glite/lb/lb_perftest.h"
+#include "glite/lb/srv_perf.h"
+
+enum lb_srv_perf_sink sink_mode;
+#endif
+
+
 static struct option opts[] = {
 	{ "mysql",1,NULL,'m' },
 	{ "remove",0,NULL,'R' },

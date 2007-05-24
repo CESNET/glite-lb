@@ -303,6 +303,7 @@ struct clnt_data_t {
 int main(int argc, char *argv[])
 {
 	int					fd, i;
+	int			dtablesize;
 	struct sockaddr_in	a;
 	char			   *mysubj = NULL;
 	int					opt;
@@ -322,6 +323,9 @@ int main(int argc, char *argv[])
 	int			silent = 0;
 
 
+	/* keep this at start of main() ! */
+	dtablesize = getdtablesize();
+	for (fd=3; fd < dtablesize ; fd++) close(fd);
 
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
@@ -436,8 +440,6 @@ int main(int argc, char *argv[])
 	if (fclose(fpid) != 0) { perror(pidfile); return 1; }
 
 	semkey = ftok(pidfile,0);
-
-	if (!debug) for (fd=3; fd<OPEN_MAX; fd++) close(fd);
 
 	if (check_mkdir(dumpStorage)) exit(1);
 	if (check_mkdir(purgeStorage)) exit(1);
@@ -1086,7 +1088,7 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 			/*
 			 *	unknown error - do rather return (<0) (slave will be killed)
 			 */
-			return -1;
+			return -EIO;
 		} 
 		free(errt); free(errd);
 	}
@@ -1153,7 +1155,7 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 			/*
 			 *	unknown error - do rather return (<0) (slave will be killed)
 			 */
-			return -1;
+			return -EIO;
 		} 
 		free(errt); free(errd);
 	}
@@ -1445,9 +1447,8 @@ static int read_roots(const char *file)
 		return 0;
 	}
 
-	while (!feof(roots)) {
+	while (fgets(buf,sizeof buf,roots) != NULL) {
 		char	*nl;
-		fgets(buf,sizeof buf,roots);
 		nl = strchr(buf,'\n');
 		if (nl) *nl = 0;
 

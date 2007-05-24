@@ -40,6 +40,7 @@ sub typeswitch {
 		if($ctype{$f->{type}}) {
   		  my $cstr = $ftype eq '_common_' ? 'any' : lcfirst $ftype;
 		  if ($cstr =~ m/^pBS/) { $cstr = ucfirst $cstr; }
+		  if ($cstr =~ m/^condor/) { $cstr = ucfirst $cstr; }
 		  my $cname = getName $f 'C';
 		  gen "$indent\tcase Event::".uc($f->{name}).": return(cev->$cstr.$cname);\n";
 		} elsif (($f->{type} eq "int") && 
@@ -48,6 +49,7 @@ sub typeswitch {
 		  # conversion from int to string (well, enum to string)
   		  my $cstr = $ftype eq '_common_' ? 'any' : lcfirst $ftype;
 		  if ($cstr =~ m/^pBS/) { $cstr = ucfirst $cstr; }
+		  if ($cstr =~ m/^condor/) { $cstr = ucfirst $cstr; }
 		  my $cname = getName $f 'C';
 		  my $fn = $ftype eq '_common_' ? "" : ucfirst $ftype;
 		  my $c =  $fn . ucfirst $f->{name}; 
@@ -123,6 +125,62 @@ int Event::getValInt(Attr attr)	const
 		  STACK_ADD;
 		  throw(Exception(EXCEPTION_MANDATORY, EINVAL,
 				  "attribute is not of int type"));
+        }
+badattr:
+        STACK_ADD;
+        throw(Exception(EXCEPTION_MANDATORY, ENOENT, "invalid attribute"));
+	return -1; /* gcc, shut up! */
+}
+
+float Event::getValFloat(Attr attr)	const
+{
+	edg_wll_Event const	*cev = (edg_wll_Event *) flesh->ptr;
+
+@@@{
+	$indent = "\t";
+	typeswitch '_common_',undef,'float';
+@@@}
+
+	switch (cev->type) {
+@@@{
+	$indent = "\t\t";
+	for my $t (getTypes $event) {
+		gen "\t\tcase ".uc($t).":\n";
+		typeswitch $t,'goto badattr;','float';
+	}
+@@@}
+		default:
+		  STACK_ADD;
+		  throw(Exception(EXCEPTION_MANDATORY, EINVAL,
+				  "attribute is not of float type"));
+        }
+badattr:
+        STACK_ADD;
+        throw(Exception(EXCEPTION_MANDATORY, ENOENT, "invalid attribute"));
+	return -1; /* gcc, shut up! */
+}
+
+double Event::getValDouble(Attr attr)	const
+{
+	edg_wll_Event const	*cev = (edg_wll_Event *) flesh->ptr;
+
+@@@{
+	$indent = "\t";
+	typeswitch '_common_',undef,'double';
+@@@}
+
+	switch (cev->type) {
+@@@{
+	$indent = "\t\t";
+	for my $t (getTypes $event) {
+		gen "\t\tcase ".uc($t).":\n";
+		typeswitch $t,'goto badattr;','double';
+	}
+@@@}
+		default:
+		  STACK_ADD;
+		  throw(Exception(EXCEPTION_MANDATORY, EINVAL,
+				  "attribute is not of double type"));
         }
 badattr:
         STACK_ADD;
@@ -269,9 +327,8 @@ std::string const attr_names[Event::ATTR_MAX] = {
 @@@}
 };
 
-
 const std::string & 
-Event::getAttrName(Attr attr) const
+Event::getAttrName(Attr attr)
 {
   if (attr<0 || attr>=ATTR_MAX) {
     STACK_ADD;
@@ -326,6 +383,17 @@ std::vector<std::pair<Event::Attr,Event::AttrType> > const & Event::getAttrs(voi
   }
   
   return attrs[type];
+}
+
+
+const std::string Event::getEventName(Type type)
+{
+	if(type < 0 || type >= TYPE_MAX) {
+		STACK_ADD;
+		throw(Exception(EXCEPTION_MANDATORY, EINVAL, "invalid event type"));
+	}
+
+	return std::string(edg_wll_EventToString(edg_wll_EventCode(type)));
 }
 
 

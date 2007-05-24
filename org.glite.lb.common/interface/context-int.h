@@ -15,8 +15,10 @@ extern "C" {
 	
 #define EDG_WLL_SEQ_NULL "UI=000000:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000"
 #define EDG_WLL_SEQ_PBS_NULL "TIMESTAMP=00000000000000:POS=0000000000:EV.CODE=000:SRC=?" 
+#define EDG_WLL_SEQ_CONDOR_NULL EDG_WLL_SEQ_PBS_NULL
 #define EDG_WLL_SEQ_SIZE        103	/* strlen(EDG_WLL_SEQ_NULL)+1 */
 #define EDG_WLL_SEQ_PBS_SIZE	57	/* strlen(EDG_WLL_SEQ_PBS_NULL)+1 */
+#define EDG_WLL_SEQ_CONDOR_SIZE EDG_WLL_SEQ_PBS_SIZE
 
 typedef struct _edg_wll_SeqCode {
 	unsigned int	type;				/* seq code type    */
@@ -26,7 +28,7 @@ typedef struct _edg_wll_SeqCode {
 				/* 25-39 POS=%010u: */
 				/* 40-51 EV.CODE=%03d: */
 				/* 53-56 SRC=%c */
-				
+	char		condor[EDG_WLL_SEQ_CONDOR_SIZE];			
 } edg_wll_SeqCode;
 
 /* non-gsi one-element analogy of connPool for L&B Proxy server */

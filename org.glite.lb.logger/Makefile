@@ -220,3 +220,6 @@ ll_test.o: %.o: %.cpp
 
 il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest.o event_storeTest.o: %.o: %.cpp
 	${CXX} ${CFLAGS} ${GLOBUSTHRINC} ${TEST_INC} -c $< -o $@
+
+clean:
+	rm -rf .libs/ *.o *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} 

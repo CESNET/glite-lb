@@ -134,8 +134,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=dump load purge lb_dump_exporter ${LB_PERF_TOOLS}
-EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog
-EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog lbmon flood_proxy dagids stress_context
+EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog flood_proxy dagids stress_context parse_eventsfile
 
 EXAMPLES_CL=user_jobs job_status 
 EXAMPLES_CL_THR=user_jobs_threaded
@@ -151,6 +150,8 @@ offset=0
 
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
+
+default: all
 
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib \
@@ -311,6 +312,10 @@ endif
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 clean:
+	rm -rf *.o *.lo .libs lib* *.c *.cpp producer_test
+	rm -rf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ}
+	rm -rf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
+
 
 check_version:
 	${CHECK_VERSION} ${stagedir}/include/glite/lb/interface_version.h

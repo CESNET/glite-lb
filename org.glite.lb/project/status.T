@@ -91,11 +91,15 @@ string	pbs_error_desc	Glued error descriptions from error events
 string	condor_status	Condor job status 
 string	condor_universe	Condor job Universe (in job ClassAds)
 string	condor_owner	Job owner
-string	condor_pid	PID of running job
-int	condor_notification	Condor notification 
-int	condor_job_exit_status	Job exit status
-int	condor_starter_exit_status	Condor starter exit status
+int	condor_shadow_pid	PID of Shadow
 int	condor_shadow_exit_status	Condor shadow exit status (see h/exit.h)
+int	condor_starter_pid	PID of Starter
+int	condor_starter_exit_status	Condor starter exit status
+int	condor_job_pid	PID of running job
+int	condor_job_exit_status	Job exit status
+string	condor_dest_host Hostname of node where job is running
+string	condor_reason	Glued reasons/errors leading to pending events
+string	condor_error_desc	Glued error descriptions from error events
 
 
 @type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.

@@ -139,7 +139,7 @@ int edg_wll_DoLogEventProxy(
 	memset(&conn,0,sizeof(conn));
 
 	/* connect to lbproxy */
-	if ((ret = edg_wll_log_proxy_connect(ctx,&conn)) < 0) {
+	if ((ret = edg_wll_log_proxy_connect(ctx,&conn))) {
 		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEventProxy(): edg_wll_log_proxy_write error");
 		goto edg_wll_DoLogEventProxy_end;
 	}
@@ -183,7 +183,7 @@ int edg_wll_DoLogEventDirect(
 	memset(&conn,0,sizeof(conn));
 
 	/* connect to bkserver */
-	if ((ret = edg_wll_log_direct_connect(ctx,&conn)) < 0) {
+	if ((ret = edg_wll_log_direct_connect(ctx,&conn))) {
 		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEventDirect(): edg_wll_log_direct_connect error");
 		goto edg_wll_DoLogEventDirect_end;
 	}
@@ -942,12 +942,12 @@ int edg_wll_RegisterJobProxy(
 		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
 #endif
 	/* connect to bkserver */
-	if ((ret = edg_wll_log_direct_connect(ctx,&con_bkserver)) < 0) {
+	if ((ret = edg_wll_log_direct_connect(ctx,&con_bkserver))) {
 		edg_wll_UpdateError(ctx,EAGAIN,"edg_wll_RegisterJobProxy(): edg_wll_log_direct_connect error");
 		goto edg_wll_registerjobproxy_end; 
 	}
 	/* connect to lbproxy */
-	if ((ret = edg_wll_log_proxy_connect(ctx,&con_lbproxy)) < 0) {
+	if ((ret = edg_wll_log_proxy_connect(ctx,&con_lbproxy))) {
 		edg_wll_UpdateError(ctx,EAGAIN,"edg_wll_RegisterJobProxy(): edg_wll_log_proxy_connect error");
 		goto edg_wll_registerjobproxy_end; 
 	}

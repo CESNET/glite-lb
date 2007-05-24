@@ -40,6 +40,9 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			case EDG_WLL_REGJOB_PBS:
 				js->pub.jobtype = EDG_WLL_STAT_PBS;
 				break;
+			case EDG_WLL_REGJOB_CONDOR:
+				js->pub.jobtype = EDG_WLL_STAT_CONDOR;
+				break;
 			default:
 				asprintf(errstring,"unknown job type %d in registration",e->regJob.jobtype);
 				return RET_FAIL;
@@ -52,6 +55,8 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			return processEvent_glite(js,e,ev_seq,strict,errstring);
 		case EDG_WLL_STAT_PBS: 
 			return processEvent_PBS(js,e,ev_seq,strict,errstring);
+		case EDG_WLL_STAT_CONDOR: 
+			return processEvent_Condor(js,e,ev_seq,strict,errstring);
 		case -1: return RET_UNREG;
 		default: 
 			asprintf(errstring,"undefined job type %d",js->pub.jobtype);
@@ -476,7 +481,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 						e->enQueued.host,
 						e->enQueued.src_instance);
 					if (e->enQueued.source == EDG_WLL_SOURCE_LOG_MONITOR)
-						js->pub.resubmitted += 1;
+						js->pub.resubmitted = 1;
 				} else {
 					js->pub.location = location_string(
 						edg_wll_SourceToString(e->enQueued.source),

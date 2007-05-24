@@ -188,7 +188,7 @@
 
 @type ResourceUsage	Resource (CPU, memory etc.) consumption.
 	string	resource	Resource's name.
-	int	quantity	Resources's quantity (how much).
+	double	quantity	Resources's quantity (how much).
 	string	unit		Units (sec, kB, etc.).
 
 @type ReallyRunning	User payload started.
@@ -245,83 +245,61 @@
 	_code_	REQUESTED	Requested value
 	_code_	USED		Consumed quantity
 	string	name		Name of resource
-	int	quantity	The quantity
+	double	quantity	The quantity
 	_optional_		Bypass need of 'null value'
 	string	unit		Units (sec, kB, etc.)
 
 @type PBSError		Any error occured
 	string	error_desc	Error reason
 
-@type CondorSubmit		Job SUBMITed to Condor
-	string	universe	Condor Universe
-	string	submit_host	Submitting machine
-	string	condor_id	Condor ID
-
-@type CondorMatch		Job MATCHed
-	string	condor_id	Condor ID
+@type CondorMatch	Job MATCHed
 	string	owner		Owner
-	string	matched_host	Matched host
+	string	dest_host	Matched host
 	string	preempting	Preempting
 	_optional_
 
-@type CondorRun		Condor EXECUTEed
-	string  condor_id       Condor ID
-	string  universe        Condor Universe
-	string	scheduler	Scheduler ID
+@type CondorReject	Job REJECTed
+	string	owner		Owner
+	int	status_code	Reason code for the rejection of the job
+	_code_	NOMATCH		No match found
+	_code_	OTHER		Other reason
+
+@type CondorShadowStarted	Condor Shadow Started
+	string	shadow_host	Shadow host
+	port	shadow_port	Shadow port
+	int	shadow_pid	PID of shadow process
+	string	shadow_status	Shadow status
 	_optional_
-	string	dest_host	Where to run the job
+
+@type CondorShadowExited	Condor Shadow Exited
+	int	shadow_pid	PID of shadow process
+	int	shadow_exit_status	Exit status of shadow process
+
+@type CondorStarterStarted	Condor Starter Started
+	int	starter_pid	PID of starter process
 	_optional_
-	int	pid		Actual process ID
+	string	universe	Condor Universe
 	_optional_
 
-@type CondorChkpt
-	string	info		Some useful info
+@type CondorStarterExited	Condor Starter Exited
+	int	starter_pid	PID of starter process
+	_optional_
+	int	starter_exit_status	Exit status of starter process
+	_optional_
+	int	job_pid		PID of running job
+	_optional_
+	int	job_exit_status	Job exit status
+	_optional_
 
-@type CondorEvict
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
+@type CondorResourceUsage       Resources requested/consumed
+	int	usage		Type of record
+	_code_	REQUESTED	Requested value
+	_code_	USED		Consumed quantity
+	string	name		Name of resource
+	double	quantity	The quantity
+	_optional_		Bypass need of 'null value'
+	string	unit		Units (sec, kB, etc.)
 
-@type CondorTerminate
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
+@type CondorError		Any Error occured
+	string	error_desc	Error reason
 
-@type CondorAbort
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
-
-@type CondorSuspend
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
-
-@type CondorUnsuspend
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
-
-@type CondorHold
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
-
-@type CondorRelease
-	int	shadow_exit_status	Condor shadow exit status
-	string	reason		reason
-
-@type CondorNodeExecute
-	string	info		Some useful info
-
-@type CondorNodeTerminate
-	string	info		Some useful info
-
-@type CondorPostSctiptTerminate
-	string	info		Some useful info
-
-@type CondorGlobusSubmit
-	int	status_code
-	_code_  OK              The job was submitted successfully
-	_code_  FAIL            Job submission failed
-	string	info		Some useful info
-
-@type CondorGlobusResource
-	int	status_code	Status code
-	_code_	UP		Resource UP
-	_code_	DOWN		Resource DOWM
-	string	info		Some useful info

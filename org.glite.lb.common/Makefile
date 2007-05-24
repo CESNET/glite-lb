@@ -120,7 +120,7 @@ REPORTS:=${top_srcdir}/reports
 ifdef LB_PERF
 STAGE_PERFTEST=mkdir -p ${PREFIX}/examples/perftest; \
 		install -m 644 ${top_srcdir}/examples/*.log ${PREFIX}/examples/perftest; \
-		install -m 755 ${top_srcdir}/src/perftest_common.sh ${PREFIX}/sbin
+		mkdir -p ${PREFIX}/sbin; install -m 755 ${top_srcdir}/src/perftest_common.sh ${PREFIX}/sbin
 else
 STAGE_PERFTEST=true
 endif
@@ -236,7 +236,7 @@ install:
 	fi
 
 clean:
-	rm -rf *.o *.lo .libs lib*
+	rm -rf *.o *.lo .libs lib* *.c test_parse il_test
 
 
 %.o: %.c

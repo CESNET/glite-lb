@@ -34,6 +34,9 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	/* XXX */
 	for (i=0; i<EDG_WLL_PARAM__LAST; i++) edg_wll_SetParam(out,i,NULL);
 
+	out->p_tmp_timeout.tv_sec = out->p_log_timeout.tv_sec;
+	out->p_tmp_timeout.tv_usec = out->p_log_timeout.tv_usec;
+
         out->connections = edg_wll_initConnections();
 //	out->connections->connPool = (edg_wll_ConnPool *) calloc(out->connections->poolSize, sizeof(edg_wll_ConnPool));
 	out->connPoolNotif = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
@@ -331,9 +334,12 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 		case EDG_WLL_SEQ_PBS:
 			ret = strdup(ctx->p_seqcode.pbs);
 			break;
-		default:
-			assert(0);	/* seq. number type  was not correctly set */
+		case EDG_WLL_SEQ_CONDOR:
+			ret = strdup(ctx->p_seqcode.condor);
 			break;
+		default:
+			edg_wll_SetError(ctx,EINVAL,"edg_wll_GetSequenceCode(): sequence code type");
+			return NULL;
 	}
 	
 	return ret;
@@ -391,6 +397,12 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 				memset(&ctx->p_seqcode.pbs, 0, sizeof ctx->p_seqcode.pbs);
 			else
 				strncpy(ctx->p_seqcode.pbs, seqcode_str, sizeof(ctx->p_seqcode.pbs));
+			break;
+		case EDG_WLL_SEQ_CONDOR:
+			if (!seqcode_str) 
+				memset(&ctx->p_seqcode.condor, 0, sizeof ctx->p_seqcode.condor);
+			else
+				strncpy(ctx->p_seqcode.condor, seqcode_str, sizeof(ctx->p_seqcode.condor));
 			break;
 		default:
 			return edg_wll_SetError(ctx, EINVAL,

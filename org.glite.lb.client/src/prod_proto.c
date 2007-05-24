@@ -234,6 +234,7 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 			ctx->connections->connPool[index].peerPort,index);
 #endif  
 
+#if 0
 	/* acquire gss credentials */
 	ret = edg_wll_gss_acquire_cred_gsi(
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
@@ -251,6 +252,7 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 		fprintf(stderr,"edg_wll_log_connect: going on anonymously!\n");
 	}
 #endif
+#endif
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"edg_wll_log_connect: opening connection to local-logger %s:%d\n",
 			ctx->connections->connPool[index].peerName,
@@ -259,6 +261,23 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	/* gss_connect */
 	if (ctx->connections->connPool[index].gss.context == GSS_C_NO_CONTEXT) {
 
+	/* acquire gss credentials */
+	ret = edg_wll_gss_acquire_cred_gsi(
+	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
+	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+	      &ctx->connections->connPool[index].gsiCred, &my_subject_name, &gss_stat);
+	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
+	if (ret && ctx->p_proxy_filename) {
+		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
+		goto edg_wll_log_connect_err;
+	}
+#ifdef EDG_WLL_LOG_STUB
+	if (my_subject_name != NULL) {
+		fprintf(stderr,"edg_wll_log_connect: using certificate: %s\n",my_subject_name);
+	} else {
+		fprintf(stderr,"edg_wll_log_connect: going on anonymously!\n");
+	}
+#endif
 		if ((answer = edg_wll_gss_connect(
 				ctx->connections->connPool[index].gsiCred,
 				ctx->connections->connPool[index].peerName,
@@ -283,8 +302,13 @@ edg_wll_log_connect_end:
 	edg_wll_poolUnlock();
 
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"edg_wll_log_connect: done (remaining timeout %d.%06d sec)\n",
+	if (answer) {
+		fprintf(stderr,"edg_wll_log_connect: error (remaining timeout %d.%06d sec)\n",
 		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+	} else {
+		fprintf(stderr,"edg_wll_log_connect: done o.k. (remaining timeout %d.%06d sec)\n",
+		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
+	}
 #endif
 	*conn = index;
 	return answer;

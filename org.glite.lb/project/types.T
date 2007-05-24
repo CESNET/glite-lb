@@ -12,7 +12,9 @@
 		logsrc=>'"edg_wll_Source"',
 		port=>'"uint16_t"',
 #		level=>'"enum edg_wll_Level"',
-		int=>'"int"'
+		int=>'"int"',
+		float=>'"float"',
+		double=>'"double"',
 	},
 	'C++'=>{
 		string=>'"std::string"',
@@ -25,7 +27,9 @@
 	        stslist=>'"std::vector<JobStatus>"',
 	        logsrc=>'"int"',
 	        port=>'"int"',
-	        int=>'"int"'
+	        int=>'"int"',
+		float=>'"float"',
+		double=>'"double"',
 	},
 	'wsdl'=>{
 		bool=>'"xsd:boolean"',
@@ -38,11 +42,15 @@
 		logsrc=>'"eventSource"',
 		notifid=>'"xsd:string"',
 		port=>'"xsd:int"',
+		float=>'"xsd:float"',
+		double=>'"xsd:double"',
 	}
 );
 
 %baseTypes = (
 	intlist=>'int',
+	floatlist=>'float',
+	doublelist=>'double',
 	strlist=>'string',
 	stslist=>'jobstat',
 	taglist=>'usertag'
@@ -51,6 +59,8 @@
 %toString = (
 	C=>{
 		int=>'qq{asprintf(&$dst,"%d",$src);}',
+		float=>'qq{asprintf(&$dst,"%f",$src);}',
+		double=>'qq{asprintf(&$dst,"%f",$src);}',
 		port=>'qq{asprintf(&$dst,"%d",(int) $src);}',
 		bool=>'qq{asprintf(&$dst,"%d",$src);}',
 		string=>'qq{$dst = $src?strdup($src):NULL;}',
@@ -70,6 +80,8 @@
 %fromString = (
 	C=>{
 		int=>'qq{$dst = atoi($src);}',
+		float=>'qq{$dst = strtof($src,NULL);}',
+		double=>'qq{$dst = strtod($src,NULL);}',
 		port=>'qq{$dst = (uint16_t) atoi($src);}',
 		bool=>'qq{$dst = atoi($src);}',
 		string=>'qq{$dst = strdup($src);}',
@@ -84,6 +96,8 @@
 
 %DefaultNullValue = (
 	int=>0,
+	float=>0.0,
+	double=>0.0,
 	port=>0,
 #	level=>'EDG_WLL_LEVEL_UNDEFINED',
 	bool=>0,
@@ -101,11 +115,17 @@
 %compare = (
 	C=>{
 		int=>'"($a == $b)"',
+		float=>'"($a == $b)"',
+		double=>'"($a == $b)"',
 		port=>'"($a == $b)"',
 #		level=>'"($a == $b)"',
 		bool=>'"(($a || !$b) && ($b || !$a))"',
-		string=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp($a,$b))"',
-		jobid=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wlc_JobIdUnparse($a),edg_wlc_JobIdUnparse($b)))"',
+#		string=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp($a,$b))"',
+		string=>'if ($b =~ m/^NULL/) { qq{(($a) == NULL) || (($a)&& !strcmp($a,""))}; } 
+			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp($a,$b))}; } ',
+#		jobid=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wlc_JobIdUnparse($a),edg_wlc_JobIdUnparse($b)))"',
+		jobid=>'if ($b =~ m/^NULL/) { qq{(($a) == NULL) || (($a)&& !strcmp(edg_wlc_JobIdUnparse($a),""))}; }
+			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wlc_JobIdUnparse($a),edg_wlc_JobIdUnparse($b)))}; }',
 		notifid=>'"($a) == ($b)"',
 		logsrc=>'"($a) == ($b)"',
 		timeval=>'"($a).tv_sec == ($b).tv_sec && ($a).tv_usec == ($b).tv_usec"',
@@ -115,6 +135,8 @@
 %toFormatString = (
 	C=>{
 		int=>'"%d"',
+		float=>'"%f"',
+		double=>'"%f"',
 		port=>'"%d"',
 		bool=>'"%d"',
 #		level=>'"%s"',

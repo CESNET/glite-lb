@@ -132,6 +132,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	my $tu = uc $t;
 	my $tl = lcfirst $t;
 	if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
+	if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 	my $misuse = "if (eventcode != EDG_WLL_EVENT_$tu ) MISUSE";
 	selectType $event $t;
 	for ($event->getFieldsOrdered) {
@@ -259,6 +260,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	my $tu = uc $t;
 	my $tl = lcfirst $t;
 	if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
+	if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 	my $free = "";
 	gen $indent."case EDG_WLL_EVENT_$tu :\n";
 	gen "\t\{";
@@ -392,6 +394,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	my $tu = uc $t;
 	my $tl = lcfirst $t;
 	if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
+	if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 	gen $indent."case EDG_WLL_EVENT_$tu :\n";
 	selectType $event $t;
 	for ($event->getFieldsOrdered) {
@@ -452,6 +455,7 @@ edg_wll_ErrorCode edg_wll_CompareEvents(
 		my $tu = uc $t;
 		my $tl = lcfirst $t;
 		if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
+		if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 
 		selectType $event $t;
 		gen "\t\tcase EDG_WLL_EVENT\_$tu :\n";
@@ -601,7 +605,7 @@ for (i=0; i<table->num; i++) {
 	edg_wll_ULMDateToTimeval(value,&this->any.arrived);
       break;
    case ULM_HOST :
-	if (!(((this->any.host) == NULL && (NULL) == NULL) || ((this->any.host)&&(NULL)&& !strcmp(this->any.host,NULL)))) DUPLICITY 
+	if (!(((this->any.host) == NULL) || ((this->any.host)&& !strcmp(this->any.host,"")))) DUPLICITY
 	this->any.host = strdup(value);
       break;
    case ULM_LVL :
@@ -613,7 +617,7 @@ for (i=0; i<table->num; i++) {
 	this->any.source = edg_wll_StringToSource(value);
       break;
    case EDG_WLL_COMMON_SRC_INSTANCE :
-	if (!(((this->any.src_instance) == NULL && (NULL) == NULL) || ((this->any.src_instance)&&(NULL)&& !strcmp(this->any.src_instance,NULL)))) DUPLICITY 
+	if (!(((this->any.src_instance) == NULL) || ((this->any.src_instance)&& !strcmp(this->any.src_instance,"")))) DUPLICITY
 	this->any.src_instance = strdup(value);
       break;
 @@@{
@@ -622,6 +626,7 @@ for (i=0; i<table->num; i++) {
 	my $tu = uc $t;
 	my $tl = lcfirst $t;
 	if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
+	if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 	my $misuse = "if (eventcode != EDG_WLL_EVENT_$tu ) MISUSE";
 	selectType $event $t;
 	for ($event->getFieldsOrdered) {
@@ -721,6 +726,7 @@ $indent = "   ";
 	my $tu = uc $t;
 	my $tl = lcfirst $t;
 	if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
+	if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 	my $free = "";
 ##	gen $indent."case EDG_WLL_EVENT_$tu :\n";
 	gen "\t\{";

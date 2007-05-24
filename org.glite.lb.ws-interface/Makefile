@@ -65,7 +65,7 @@ install:
 #	fi
 
 clean:
-	rm -f *.h
+	rm -f *.h *.html *.xml *.wsdl
 	
 
 %.xml: %.xml.T
