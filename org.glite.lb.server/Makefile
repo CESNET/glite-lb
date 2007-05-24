@@ -26,7 +26,7 @@ version=${module.version}
 default all: compile
 
 # disable lb plugin in order to build also with 3.1 JP
-#BUILD_PLUGIN=yes
+BUILD_PLUGIN=yes
 
 GLITE_LB_SERVER_WITH_WS=yes
 
