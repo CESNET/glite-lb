@@ -7,12 +7,15 @@
 #include <time.h>
 #include <assert.h>
 
+#include <expat.h>
+
 #include "glite/wmsutils/jobid/strmd5.h"
 
 #include "glite/lb/consumer.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
+#include "glite/lb/xml_conversions.h"
 
 
 #include "get_events.h"
@@ -24,6 +27,7 @@
 #define FL_SEL_STATUS		1
 #define FL_SEL_TAGS			(1<<1)
 #define FL_SEL_JOB			(1<<2)
+#define FL_FILTER			(1<<3)	// DB query result needs further filtering
 
 
 static int check_event_query_index(edg_wll_Context,const edg_wll_QueryRec **,const edg_wll_QueryRec **);
@@ -58,7 +62,8 @@ int edg_wll_QueryEventsServer(
 					ret = 0,
 					offset = 0, limit = 0,
 					limit_loop = 1,
-					eperm = 0;
+					eperm = 0,
+					where_flags = 0;
 
 
 	edg_wll_ResetError(ctx);
@@ -80,11 +85,11 @@ int edg_wll_QueryEventsServer(
 	if (event_conditions && *event_conditions && (*event_conditions)->attr &&
 		!(event_where = ec_to_head_where(ctx,event_conditions)) &&
 		edg_wll_Error(ctx,NULL,NULL) != 0)
-		goto cleanup;
+		if (!ctx->noIndex) goto cleanup;
 
 	if ( job_conditions && *job_conditions && (*job_conditions)->attr &&
-		!(job_where = jc_to_head_where(ctx, job_conditions, &i)) )
-		goto cleanup;
+		!(job_where = jc_to_head_where(ctx, job_conditions, &where_flags)) )
+		if (!ctx->noIndex) goto cleanup;
 
 /* XXX: similar query in srv_purge.c ! They has to match due to common
  * convert_event_head() called on the result
@@ -94,13 +99,13 @@ int edg_wll_QueryEventsServer(
 		"FROM events e,users u,jobs j%s "
 		"WHERE %se.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
 		"%s %s %s %s",
-		i & FL_SEL_STATUS			? ",states s"				: "",
-		i & FL_SEL_STATUS			? "s.jobid=j.jobid AND "	: "",
+		where_flags & FL_SEL_STATUS ? ",states s"	: "",
+		where_flags & FL_SEL_STATUS ? "s.jobid=j.jobid AND " : "",
 		EDG_WLL_EVENT_UNDEF,
-		job_where					? "AND"						: "",
-		job_where					? job_where					: "",
-		event_where					? "AND"						: "",
-		event_where					? event_where				: "");
+		job_where ? "AND" : "",
+		job_where ? job_where : "",
+		event_where ? "AND" : "",
+		event_where ? event_where : "");
 
 	if ( ctx->softLimit )
 	{
@@ -146,6 +151,7 @@ int edg_wll_QueryEventsServer(
 			int	n = atoi(res[0]);
 			free(res[0]);
 
+			/* Check non-indexed event conditions */
 			if ( convert_event_head(ctx, res+2, out+i) || edg_wll_get_event_flesh(ctx, n, out+i) )
 			{
 				free(res[1]);
@@ -160,6 +166,29 @@ int edg_wll_QueryEventsServer(
 				edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
 				goto fetch_cycle_cleanup;
 			}
+
+			/* Check non-indexed job conditions */
+			if (where_flags & FL_FILTER) {
+				edg_wll_JobStat state_out;
+
+				if ( edg_wll_JobStatus(ctx, out[i].any.jobId, 0, &state_out) )
+				{
+					edg_wll_FreeEvent(out+i);
+					if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
+					goto fetch_cycle_cleanup;
+				}
+
+				if ( !match_status(ctx, (&state_out), job_conditions) )
+				{
+					edg_wll_FreeEvent(out+i);
+					edg_wll_FreeStatus(&state_out);
+					edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
+					goto fetch_cycle_cleanup;
+				}
+
+				edg_wll_FreeStatus(&state_out);
+			}
+
 
 			if ( !noAuth )
 			{
@@ -256,7 +285,9 @@ int edg_wll_QueryJobsServer(
 						ret = 0,
 						eperm = 0,
 						limit = 0, offset = 0,
-						limit_loop = 1;
+						limit_loop = 1,
+						where_flags = 0;
+						
 
 
 	memset(res,0,sizeof res);
@@ -280,15 +311,19 @@ int edg_wll_QueryJobsServer(
 	if ( (!ctx->noIndex && check_job_query_index(ctx, conditions)) || check_strict_jobid_cond(ctx,conditions))
 		goto cleanup;
 
-	if ( !(job_where = jc_to_head_where(ctx, conditions, &i)) )
-		goto cleanup;
+	if ( !(job_where = jc_to_head_where(ctx, conditions, &where_flags)) )
+		if (!ctx->noIndex) goto cleanup;
 
-	if ( (i & FL_SEL_STATUS) )
+	if ( (where_flags & FL_SEL_STATUS) )
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j, states s WHERE j.jobid=s.jobid AND %s", job_where);
+						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s", 
+						(job_where) ? "AND" : "",
+						(job_where) ? job_where : "");
 	else
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j WHERE %s", job_where);
+						 "FROM jobs j %s %s", 
+						(job_where) ? "WHERE" : "",
+						(job_where) ? job_where : "");
 
 	if ( ctx->softLimit )
 	{
@@ -347,20 +382,25 @@ int edg_wll_QueryJobsServer(
 				edg_wlc_JobIdFree(jobs_out[i]);
 				goto fetch_cycle_cleanup;
 			}
+			
+			// if some condition hits unindexed column or states of matching jobs wanted
+			if ((where_flags & FL_FILTER) || !(flags & EDG_WLL_STAT_NO_STATES)) {
+				if ( edg_wll_JobStatus(ctx, jobs_out[i], flags, &states_out[i]) )
+				{
+					edg_wlc_JobIdFree(jobs_out[i]);
+					if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
+					goto fetch_cycle_cleanup;
+				}
 
-			if ( edg_wll_JobStatus(ctx, jobs_out[i], flags, &states_out[i]) )
-			{
-				edg_wlc_JobIdFree(jobs_out[i]);
-				if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
-				goto fetch_cycle_cleanup;
 			}
-
-			if ( !match_status(ctx, states_out+i, conditions) )
-			{
-				edg_wlc_JobIdFree(jobs_out[i]);
-				edg_wll_FreeStatus(states_out+i);
-				edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
-				goto fetch_cycle_cleanup;
+			if (where_flags & FL_FILTER) {
+				if ( !match_status(ctx, states_out+i, conditions) )
+				{
+					edg_wlc_JobIdFree(jobs_out[i]);
+					edg_wll_FreeStatus(states_out+i);
+					edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
+					goto fetch_cycle_cleanup;
+				}
 			}
 
 #if 0
@@ -729,6 +769,7 @@ static int is_indexed(const edg_wll_QueryRec *cond, const edg_wll_Context ctx)
 {
 	int		i, j;
 
+
 	if ( !(ctx->job_index) )
 		return 0;
 
@@ -868,7 +909,10 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_TIME:
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
+			{
+				*where_flags |= FL_FILTER;
 				break;
+			}
 
 			*where_flags |= FL_SEL_STATUS;
 
@@ -917,7 +961,10 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_PARENT:
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
+			{
+				*where_flags |= FL_FILTER;
 				break;
+			}
 
 			*where_flags |= FL_SEL_STATUS;
 			aux = edg_wlc_JobIdGetUnique(jc[m][n].value.j);
@@ -934,7 +981,10 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_OWNER:
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
+			{
+				*where_flags |= FL_FILTER;
 				break;
+			}
 
 			if ( !jc[m][n].value.c && !ctx->peerName ) 
 			{ 
@@ -966,7 +1016,10 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_STATUS:
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
+			{
+				*where_flags |= FL_FILTER;
 				break;
+			}
 
 			*where_flags |= FL_SEL_STATUS;
 			if ( conds )
@@ -992,7 +1045,10 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_USERTAG:
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
+			{
+				*where_flags |= FL_FILTER;
 				break;
+			}
 
 			*where_flags |= FL_SEL_STATUS;
 			if ( conds )
@@ -1008,6 +1064,7 @@ static char *jc_to_head_where(
 
 		default:
 			/* this may never occure, but keep compiler happy */
+			*where_flags |= FL_FILTER;	// just to be sure
 			break;
 		}
 
