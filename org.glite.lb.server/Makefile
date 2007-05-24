@@ -375,7 +375,7 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
 
-	${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin
+	if [ ${stagedir} != ${PREFIX} ]; then ${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; fi
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix})
 	install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib
