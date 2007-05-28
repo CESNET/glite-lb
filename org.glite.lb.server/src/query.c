@@ -180,7 +180,7 @@ int edg_wll_QueryEventsServer(
 					// => count jobStatus for this jobId
 					
 					if (j_old) edg_wll_FreeStatus(&state_out);
-printf("jobStatus\n");
+
 					if ( edg_wll_JobStatus(ctx, out[i].any.jobId, 0, &state_out) )
 					{
 						edg_wll_FreeEvent(out+i);
