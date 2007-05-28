@@ -108,7 +108,11 @@ continue_fetch_index:
 	edg_wll_FreeStmt(&stmt);
 	free(cols);
 	free(col_names);
-	if (keys_out) *keys_out = keys; else free(keys);
+	if (keys_out) *keys_out = keys;
+	else { 
+		for (i=0; i<nkeys; i++) free(keys[i]); 
+		free(keys);
+	}
 	*index_out = idx;
 
 	return edg_wll_ResetError(ctx);
