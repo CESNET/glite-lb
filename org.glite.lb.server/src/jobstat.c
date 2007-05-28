@@ -134,6 +134,7 @@ int edg_wll_JobStatus(
 	intErr = edg_wll_LoadIntState(ctx, job, -1 /*all events*/, &ijsp);
 	if (!intErr) {
 		*stat = ijsp->pub;
+		free(jobstat.pub.owner); jobstat.pub.owner = NULL;
 		destroy_intJobStat_extension(ijsp);
 		free(ijsp);
 
