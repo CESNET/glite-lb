@@ -171,6 +171,8 @@ int edg_wll_QueryEventsServer(
 			if (where_flags & FL_FILTER) {
 				edg_wll_JobStat state_out;
 
+				// XXX: possible optimalization: do not count JobStatus for all events
+				//	but only for different jobIds
 				if ( edg_wll_JobStatus(ctx, out[i].any.jobId, 0, &state_out) )
 				{
 					edg_wll_FreeEvent(out+i);
@@ -189,8 +191,8 @@ int edg_wll_QueryEventsServer(
 				edg_wll_FreeStatus(&state_out);
 			}
 
-
-			if ( !noAuth )
+			// Auth checked in edg_wll_JobStatus above
+			if ( !(where_flags & FL_FILTER) && !noAuth )
 			{
 				if (!ctx->peerName || strcmp(res[1],strmd5(ctx->peerName,NULL))) {
 					edg_wll_Acl	acl = NULL;
