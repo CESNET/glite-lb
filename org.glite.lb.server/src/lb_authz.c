@@ -870,6 +870,7 @@ int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl)
 
 	if (acl_id == NULL || *acl_id == '\0') {
 		free(acl_id);
+		free(jobstr);
 		*acl = NULL;
 		return 0;
 	}
