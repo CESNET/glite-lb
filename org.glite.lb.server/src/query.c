@@ -64,9 +64,13 @@ int edg_wll_QueryEventsServer(
 					limit_loop = 1,
 					eperm = 0,
 					where_flags = 0;
+	char		*j_old = NULL;
+	int		match_status_old = 0;
+	edg_wll_JobStat	state_out;
 
 
 	edg_wll_ResetError(ctx);
+	memset(&state_out, 0, sizeof(edg_wll_JobStat));
 
 	if ( (ctx->p_query_results == EDG_WLL_QUERYRES_ALL) &&
 			(!job_conditions || !job_conditions[0] || job_conditions[1] ||
@@ -98,14 +102,15 @@ int edg_wll_QueryEventsServer(
 		"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived "
 		"FROM events e,users u,jobs j%s "
 		"WHERE %se.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
-		"%s %s %s %s",
+		"%s %s %s %s %s",
 		where_flags & FL_SEL_STATUS ? ",states s"	: "",
 		where_flags & FL_SEL_STATUS ? "s.jobid=j.jobid AND " : "",
 		EDG_WLL_EVENT_UNDEF,
 		job_where ? "AND" : "",
 		job_where ? job_where : "",
 		event_where ? "AND" : "",
-		event_where ? event_where : "");
+		event_where ? event_where : "",
+		(where_flags & FL_FILTER) ? "order by j.dg_jobid" : "");
 
 	if ( ctx->softLimit )
 	{
@@ -155,6 +160,7 @@ int edg_wll_QueryEventsServer(
 			if ( convert_event_head(ctx, res+2, out+i) || edg_wll_get_event_flesh(ctx, n, out+i) )
 			{
 				free(res[1]);
+				free(res[2]);
 				memset(out+i, 0, sizeof(*out));
 				edg_wll_FreeStmt(&sh);
 				goto cleanup;
@@ -169,26 +175,35 @@ int edg_wll_QueryEventsServer(
 
 			/* Check non-indexed job conditions */
 			if (where_flags & FL_FILTER) {
-				edg_wll_JobStat state_out;
-
-				// XXX: possible optimalization: do not count JobStatus for all events
-				//	but only for different jobIds
-				if ( edg_wll_JobStatus(ctx, out[i].any.jobId, 0, &state_out) )
-				{
-					edg_wll_FreeEvent(out+i);
-					if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
-					goto fetch_cycle_cleanup;
+				if (!j_old || strcmp(res[2], j_old)) { 
+					// event of different jobId than last time? 
+					// => count jobStatus for this jobId
+					
+					if (j_old) edg_wll_FreeStatus(&state_out);
+printf("jobStatus\n");
+					if ( edg_wll_JobStatus(ctx, out[i].any.jobId, 0, &state_out) )
+					{
+						edg_wll_FreeEvent(out+i);
+						if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
+						goto fetch_cycle_cleanup;
+					}
+				
+					if ( !(match_status_old = match_status(ctx, (&state_out), job_conditions)) )
+					{
+						edg_wll_FreeEvent(out+i);
+						edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
+						goto fetch_cycle_cleanup;
+					}
 				}
-
-				if ( !match_status(ctx, (&state_out), job_conditions) )
-				{
-					edg_wll_FreeEvent(out+i);
-					edg_wll_FreeStatus(&state_out);
-					edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
-					goto fetch_cycle_cleanup;
+				else
+				// the same jobId => the same jobStatus
+				// => the same result of match_status()
+				 
+				if (!match_status_old) {
+						edg_wll_FreeEvent(out+i);
+						edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
+						goto fetch_cycle_cleanup;
 				}
-
-				edg_wll_FreeStatus(&state_out);
 			}
 
 			// Auth checked in edg_wll_JobStatus above
@@ -237,6 +252,8 @@ int edg_wll_QueryEventsServer(
 fetch_cycle_cleanup:
 			memset(out+i, 0, sizeof(*out));
 			free(res[1]);
+			free(j_old);
+			j_old=res[2];
 		}
 limit_cycle_cleanup:
 		edg_wll_FreeStmt(&sh);
@@ -263,6 +280,8 @@ cleanup:
 	free(qbase);
 	free(job_where);
 	free(event_where);
+	free(j_old);
+	if (state_out.jobId) edg_wll_FreeStatus(&state_out);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
