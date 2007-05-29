@@ -7,9 +7,9 @@
 #include <time.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <errno.h>
+#include <string.h>
 
-
-#include "context-int.h"
 #include "lb_maildir.h"
 
 #define DEFAULT_ROOT	"/tmp/lb_maildir"
