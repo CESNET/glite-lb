@@ -164,7 +164,7 @@ VOMS_LIBS:=-L${voms_prefix}/lib -lvomsc${vomsflavour}
 #	${GLOBUS_LIBS}
 
 ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/lib -lclassad
+	classadslib := -L${classads_prefix}/${archlib} -lclassad
 endif
 
 EXT_LIBS:=  \
