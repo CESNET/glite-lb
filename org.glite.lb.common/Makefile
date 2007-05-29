@@ -71,7 +71,13 @@ ifneq (${expat_prefix},/usr)
 endif
 EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 
-LDFLAGS:=-L${stagedir}/lib \
+archlib:=lib
+host_cpu:=${shell uname -m}
+ifeq (${host_cpu},x86_64)
+    archlib:=lib64
+endif
+
+LDFLAGS:=-L${stagedir}/${archlib} -L${stagedir}/lib \
 	${COVERAGE_FLAGS}
 
 EXT_LIBS:= ${EXPAT_LIBS} ${GLOBUS_LIBS} ${JOBID_LIB}
