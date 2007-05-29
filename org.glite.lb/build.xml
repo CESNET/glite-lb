@@ -20,6 +20,9 @@
 
 	Revision history:
 	$Log$
+	Revision 1.43.2.1  2007/03/29 20:05:00  akrenek
+	disable utils temporarily
+
 	Revision 1.43  2007/03/21 13:10:38  akrenek
 	utils -> jp.primary (sync with 3.1)
 
@@ -578,7 +581,6 @@
  	</target>
 
 	<!-- Main proxy -->
-<!--XXX: until JP from head is included					     utils, -->
 	<target name="buildmodules" depends="envset,
 					     client-interface,
 					     ws-interface,
@@ -587,7 +589,8 @@
 					     common,
 					     server,
 					     proxy,
-					     logger">
+					     logger,
+							 utils">
 		<echo append="true" file="${global.project.dir}/cruisecontrol-stub.xml">
 	&lt;project name="${subsystem.name}" type="post-subsystem" packageName="${global.prefix}-${subsystem.prefix}"/&gt;
 		</echo>
