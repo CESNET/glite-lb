@@ -24,7 +24,7 @@ PREFIX?=${glite_location}
 version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
-AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
+AT3=${stagedir}/sbin/glite-lb-at3
 GENSAM=${top_srcdir}/examples/gen_sample_job
 CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=0 perl ${top_srcdir}/project/check_version.pl
 
