@@ -1,7 +1,11 @@
 #include <stdsoap2.h>
+#include <expat.h>
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/consumer.h"
+#include "glite/lb/xml_parse.h"
+#include "glite/lb/xml_conversions.h"
+
 
 #include "soap_version.h"
 #include "glite/security/glite_gsplugin.h"
@@ -36,7 +40,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__GetVersion(
 	struct _lbe__GetVersion *in,
 	struct _lbe__GetVersionResponse *out)
 {
-	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
+	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
 
 	out->version = soap_strdup(soap, VERSION);
 
@@ -55,7 +59,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	int	flags;
 
 
-	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
+	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
 
 	if ( edg_wlc_JobIdParse(in->jobid, &j) )
 	{
@@ -65,6 +69,16 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	}
 
 	edg_wll_SoapToJobStatFlags(in->flags, &flags);
+	
+	if (debug) {
+		char *cjobid = NULL, *cflags = NULL;
+
+		cjobid = edg_wlc_JobIdUnparse((const edg_wlc_JobId) j);
+		cflags = edg_wll_stat_flags_to_string(flags);
+		dprintf(("[%d] \n\t<flags>%s</flags>\n\t<jobId>%s</jobId>\n\n",getpid(),cflags,cjobid));
+		free(cjobid);
+		free(cflags);
+	}
 
 	if ( edg_wll_JobStatus(ctx, j, flags, &s) )
 	{
@@ -92,7 +106,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	int                ret;
 
 
-	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
+	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
 
 	out->states = soap_malloc(soap, sizeof(*out->states));
 	out->jobs = soap_malloc(soap, sizeof(*out->jobs));
@@ -109,6 +123,20 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 		goto cleanup;
 	}
 	edg_wll_SoapToJobStatFlags(in->flags, &flags);
+
+	if (debug) {
+		char *message = NULL;
+
+		if (edg_wll_QueryJobsRequestToXML(ctx, 
+				(const edg_wll_QueryRec **) conditions, 
+				flags, &message)) {
+			dprintf(("[%d] %s\n",getpid(),"edg_wll_QueryJobsRequestToXML() returned error"));
+		}
+		else {
+			dprintf(("[%d] \n%s\n\n",getpid(),message));
+		}
+		free(message);
+	}
 
 	if (edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, &jobs, &states) != 0) goto cleanup;
 
@@ -136,7 +164,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__UserJobs(
 	edg_wll_JobStat	*states;
 
 
-	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
+	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
 
 	ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	memset(out, 0, sizeof *out);
@@ -169,7 +197,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 	int			ret = SOAP_OK;
 
 
-	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
+	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
 
 	edg_wll_ResetError(ctx);
 	if ( edg_wll_SoapToQueryCondsExt(in->jobConditions, in->__sizejobConditions, 
@@ -188,6 +216,21 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 		edg_wll_ErrToFault(ctx, soap);
 		ret = SOAP_FAULT;
 		goto cleanup;
+	}
+
+	if (debug) {
+		char *message = NULL;
+
+		if (edg_wll_QueryEventsRequestToXML(ctx, 
+				(const edg_wll_QueryRec **) job_conditions, 
+				(const edg_wll_QueryRec **) event_conditions,
+				&message)) {
+			dprintf(("[%d] %s\n",getpid(),"edg_wll_QueryEventsRequestToXML() returned error"));
+		}
+		else {
+			dprintf(("[%d] \n%s\n\n",getpid(),message));
+		}
+		free(message);
 	}
 
 	if (edg_wll_QueryEventsServer(ctx, ctx->noAuth, 
