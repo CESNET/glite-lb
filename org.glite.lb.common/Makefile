@@ -21,7 +21,7 @@ jobiddir=${top_srcdir}/../org.glite.wms-utils.jobid
 version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test::${top_srcdir}/doc
-AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
+AT3=${stagedir}/sbin/glite-lb-at3
 
 SUFFIXES = .T
 
