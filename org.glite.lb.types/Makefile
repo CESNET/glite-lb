@@ -1,10 +1,10 @@
-PREFIX?=/opt/glite
+stagedir=../stage
 
 -include Makefile.inc
 
-PM_DEST=${PREFIX}/share/perl/gLite/LB
-T_DEST=${PREFIX}/share/lb/at3
-SBIN=${PREFIX}/sbin
+PM_DEST=${stagedir}/share/perl/gLite/LB
+T_DEST=${stagedir}/share/lb/at3
+SBIN=${stagedir}/sbin
 
 PM=StructField.pm MultiStruct.pm
 T=events.T  status.T  types.T
@@ -14,7 +14,7 @@ default: compile
 compile: at3
 
 at3: at3.in
-	sed "s?%PREFIX%?${PREFIX}?" at3.in >$@
+	sed "s?%PREFIX%?${stagedir}?" at3.in >$@
 
 install: compile
 	mkdir -p ${PM_DEST} ${T_DEST} ${SBIN}
