@@ -18,7 +18,7 @@ version=${module.version}
 SUFFIXES = .T
 
 VPATH=${top_srcdir}/src
-AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
+AT3=${stagedir}/sbin/glite-lb-at3
 XSLTPROC:=xsltproc --nonet
 XMLLINT:=xmllint --nonet
 TIDY=tidy -i -q --show-warnings no --tidy-mark no --wrap 0
