@@ -22,6 +22,8 @@
 #define __lb__QueryEvents __ns1__QueryEvents
 #endif
 
+extern int debug;
+#define dprintf(x) if (debug) printf x
 
 static void freeQueryRecsExt(edg_wll_QueryRec **qr);
 static void freeJobIds(edg_wlc_JobId *jobs);
@@ -34,6 +36,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__GetVersion(
 	struct _lbe__GetVersion *in,
 	struct _lbe__GetVersionResponse *out)
 {
+	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
+
 	out->version = soap_strdup(soap, VERSION);
 
 	return out->version ? SOAP_OK : SOAP_FAULT;
@@ -50,6 +54,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	edg_wll_JobStat		s;
 	int	flags;
 
+
+	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
 
 	if ( edg_wlc_JobIdParse(in->jobid, &j) )
 	{
@@ -84,6 +90,9 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	edg_wlc_JobId	  *jobs;
 	edg_wll_JobStat	  *states;
 	int                ret;
+
+
+	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
 
 	out->states = soap_malloc(soap, sizeof(*out->states));
 	out->jobs = soap_malloc(soap, sizeof(*out->jobs));
@@ -126,6 +135,9 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__UserJobs(
 	edg_wlc_JobId	*jobs;
 	edg_wll_JobStat	*states;
 
+
+	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
+
 	ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	memset(out, 0, sizeof *out);
 	if (edg_wll_UserJobs(ctx, &jobs, &states) != 0) goto fault;
@@ -157,6 +169,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 	int			ret = SOAP_OK;
 
 
+	dprintf(("[%d] %s\n",getpid(),__FUNCTION__));
+
 	edg_wll_ResetError(ctx);
 	if ( edg_wll_SoapToQueryCondsExt(in->jobConditions, in->__sizejobConditions, 
 		&job_conditions) )
@@ -175,7 +189,6 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 		ret = SOAP_FAULT;
 		goto cleanup;
 	}
-
 
 	if (edg_wll_QueryEventsServer(ctx, ctx->noAuth, 
         	(const edg_wll_QueryRec **)job_conditions,
