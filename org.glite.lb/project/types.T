@@ -121,10 +121,10 @@
 #		level=>'"($a == $b)"',
 		bool=>'"(($a || !$b) && ($b || !$a))"',
 #		string=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp($a,$b))"',
-		string=>'if ($b =~ m/^NULL/) { qq{(($a) == NULL) || (($a)&& !strcmp($a,""))}; } 
+		string=>'if ($b eq \'NULL\') { qq{(($a) == NULL)}; } 
 			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp($a,$b))}; } ',
 #		jobid=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wlc_JobIdUnparse($a),edg_wlc_JobIdUnparse($b)))"',
-		jobid=>'if ($b =~ m/^NULL/) { qq{(($a) == NULL) || (($a)&& !strcmp(edg_wlc_JobIdUnparse($a),""))}; }
+		jobid=>'if ($b eq \'NULL\') { qq{(($a) == NULL) }; }
 			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wlc_JobIdUnparse($a),edg_wlc_JobIdUnparse($b)))}; }',
 		notifid=>'"($a) == ($b)"',
 		logsrc=>'"($a) == ($b)"',
