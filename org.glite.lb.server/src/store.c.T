@@ -61,6 +61,9 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	int 	err = 0;
 	struct glite_lb_StoreAux	aux;
 
+/* XXX */
+	if (!ctx->use_transactions) return edg_wll_SetError(ctx,EIO,"edg_wll_StoreEvent(): DB transactions required by this implementation");
+
 	edg_wll_ResetError(ctx);
 	memset(&aux,0,sizeof aux);
 
@@ -82,7 +85,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	}
 
 	if ((err = store_event(ctx,e,&aux)) ||
-		(err = glite_lb_AfterRegistration(ctx,e,&aux))
+		(err = glite_lb_AfterStore(ctx,e,&aux))
 	) goto clean;
 
 	*seq = aux.seq;
@@ -126,6 +129,7 @@ static int store_event(edg_wll_Context ctx,edg_wll_Event *e,struct glite_lb_Stor
 	 * 1) when using transactions:
 	 *   Store the whole event right now.
 	 *
+	 * XXX: N/A now
 	 * 2) when not using transaction:
 	 *   Store an UNDEF event first in order to prevent race condition
 	 *   with readers and update event code later.
@@ -153,7 +157,14 @@ static int store_event(edg_wll_Context ctx,edg_wll_Event *e,struct glite_lb_Stor
 	free(stmt); stmt = NULL;
 
 	if ((err = store_seq(ctx,e,next)) ||
-		(err = store_flesh(ctx,e,aux->jobid,next))) {
+		(err = store_flesh(ctx,e,aux->jobid,next)))
+	{
+		goto clean;
+	}
+
+/* XXX: transactions are assumed instead */
+#if 0 
+	{
 	/* attempt to cleanup, ignore new errors */
 		char		*desc;
 		edg_wll_ErrorCode	oerr = edg_wll_Error(ctx,NULL,&desc);
@@ -161,8 +172,9 @@ static int store_event(edg_wll_Context ctx,edg_wll_Event *e,struct glite_lb_Stor
 		edg_wll_delete_event(ctx,aux->jobid,next);
 		edg_wll_SetError(ctx,oerr,desc);
 		free(desc);
-	} else
-	if (!ctx->use_transactions) {
+	}
+
+	else if (!ctx->use_transactions) {
 	/* emulate commit, i.e. swith to a real event type to make
 	 * the record valid */
 		trio_asprintf(&stmt,
@@ -207,6 +219,7 @@ static int store_event(edg_wll_Context ctx,edg_wll_Event *e,struct glite_lb_Stor
 				break;
 		}
 	} /* if !ctx->use_transactions */
+#endif
 
 	aux->seq = next;
 
@@ -428,35 +441,49 @@ static int store_user(edg_wll_Context ctx,const char *userid,const char *subj)
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *userid)
+static int store_job(edg_wll_Context ctx,const edg_wll_Event *e,struct glite_lb_StoreAux *aux);
 {
-	char *jobstr = edg_wlc_JobIdUnparse(job);
-	char *jobid = edg_wlc_JobIdGetUnique(job);
-	char *stmt;
+	char	*jobstr = edg_wlc_JobIdUnparse(e->any.jobId);
+	char	*stmt = NULL,*user = NULL,*userid = NULL;
+	int	err;
 
 /* debug Duplicate key on index: Duplicate entry '(nil)' for key 1
  */
-	if (jobid == NULL || jobstr == NULL) 
-		return edg_wll_SetError(ctx,EINVAL,"store_job()");
 
 	edg_wll_ResetError(ctx);
+
+	if (!ctx->peerName) {
+		edg_wll_SetError(ctx,EPERM,"can't register jobs anonymously");
+		goto clean;
+	}
+
+	if (aux->jobid == NULL || jobstr == NULL) 
+		return edg_wll_SetError(ctx,EINVAL,"store_job()");
+
+	if (glite_lb_RegOwner(ctx,e,&user) ||
+		store_user(ctx,userid = str2md5(user),user)) goto clean;
+
 	trio_asprintf(&stmt,"insert into jobs(jobid,dg_jobid,userid) "
-		"values ('%|Ss','%|Ss','%|Ss')",jobid,jobstr,userid);
+		"values ('%|Ss','%|Ss','%|Ss')",aux->jobid,jobstr,userid);
 
 	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
 		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST) 
 			edg_wll_ResetError(ctx);
 	}
-	free(stmt);
+	free(stmt); stmt = NULL;
 
 	if (ctx->greyjobs) {
-		trio_asprintf(&stmt,"delete from grey_jobs where jobid = '%|Ss'",jobid);
+		trio_asprintf(&stmt,"delete from grey_jobs where jobid = '%|Ss'",aux->jobid);
 		edg_wll_ExecStmt(ctx,stmt,NULL); /* XXX: error propagates */
 		free(stmt);
 	}
 
+clean:
+	free(stmt);
 	free(jobstr);
-	free(jobid);
+	free(user);
+	free(userid);
+
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
