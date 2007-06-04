@@ -20,7 +20,7 @@ jobiddir=${top_srcdir}/../org.glite.wms-utils.jobid
 
 version=${module.version}
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test::${top_srcdir}/doc
+VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc
 AT3=${stagedir}/sbin/glite-lb-at3
 
 SUFFIXES = .T
@@ -38,8 +38,9 @@ else
 	JOBID_LIB:=-lglite_wmsutils_cjobid
 endif
 
-PERF_HDRS:=lb_perftest.h
-PERF_OBJS:=lb_perftest.o
+# FIXME:
+# PERF_HDRS:=lb_perftest.h
+# PERF_OBJS:=lb_perftest.o
 
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
@@ -106,9 +107,11 @@ MAILDIR_LIB:=libglite_lb_maildir.la
 THROBJS:=${OBJS:.o=.thr.o}
 THRLOBJS:=${OBJS:.o=.thr.lo}
 
-HDRS:=context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
+HDRS:=context.h context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h il_msg.h \
-	escape.h ulm_parse.h trio.h lb_maildir.h connpool.h ${PERF_HDRS}
+	escape.h ulm_parse.h trio.h lb_maildir.h connpool.h notifid.h \
+	query_rec.h LoggingExceptions.h CountRef.h ${PERF_HDRS} 
+GEN_HDRS:=Event.h events.h jobstat.h
 
 STATICLIB:=libglite_lb_common_${nothrflavour}.a
 THRSTATICLIB:=libglite_lb_common_${thrflavour}.a
@@ -119,15 +122,17 @@ REPORTS:=${top_srcdir}/reports
 
 ifdef LB_PERF
 STAGE_PERFTEST=mkdir -p ${PREFIX}/examples/perftest; \
-		install -m 644 ${top_srcdir}/examples/*.log ${PREFIX}/examples/perftest; \
-		mkdir -p ${PREFIX}/sbin; install -m 755 ${top_srcdir}/src/perftest_common.sh ${PREFIX}/sbin
+		${INSTALL} -m 644 ${top_srcdir}/examples/*.log ${PREFIX}/examples/perftest; \
+		mkdir -p ${PREFIX}/sbin; ${INSTALL} -m 755 ${top_srcdir}/src/perftest_common.sh ${PREFIX}/sbin
 else
 STAGE_PERFTEST=true
 endif
 
 default: all
 
-all compile: check_version ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
+generate: ${GEN_HDRS}
+
+all compile: generate ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
 
 # In order to use libtool versioning correcty, we must have:
 #
@@ -226,18 +231,19 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	if [ x${DOSTAGE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
-		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
-		install -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${PREFIX}/lib; \
+		(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
+		${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
+		${INSTALL} -m 644 ${STATICLIB} ${THRSTATICLIB} ${TRIO_LIB} ${PREFIX}/lib; \
 		if [ x${LB_STANDALONE} = xyes ]; then \
 			mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
-			install -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
+			${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
 		fi ; \
 		${STAGE_PERFTEST} ; \
 	fi
 
 clean:
-	rm -rf *.o *.lo .libs lib* *.c test_parse il_test
-
+	rm -rvf *.o *.lo .libs lib* *.c *.h test_parse il_test parse.cpp events.tex status.tex
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o: %.c
 	${COMPILE} ${GLOBUSINC} ${CFLAGS} -c $<

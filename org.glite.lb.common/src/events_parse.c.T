@@ -9,8 +9,7 @@
 #include <time.h>
 #include <errno.h>
 
-#include "glite/lb/events.h"
-#include "glite/lb/producer.h"
+#include "events.h"
 #include "events_parse.h"
 #include "ulm_parse.h"
 #include "context-int.h"

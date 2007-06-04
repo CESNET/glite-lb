@@ -10,7 +10,7 @@
 #include "globus_config.h"
 
 #include "trio.h"
-#include "glite/lb/producer.h"
+// #include "glite/lb/producer.h"
 #include "glite/wmsutils/jobid/cjobid.h"
 
 #include "escape.h"
@@ -481,6 +481,8 @@ static void startStsList(void *data, const char *el, const char **attr)
 
 
 
+/* FIXME */
+#if 0
 static void startPurgeResult(void *data, const char *el, const char **attr)
 {
 	edg_wll_XML_ctx *XMLCtx = data;
@@ -577,6 +579,7 @@ static void startLoadResult(void *data, const char *el, const char **attr)
         }       
         XMLCtx->level++;
 }
+#endif
 
 
 
@@ -1145,6 +1148,8 @@ static void endStsList(void *data, const char *el)
 
 
 
+/* FIXME: */
+#if 0
 static void endPurgeResult(void *data, const char *el UNUSED_VAR)
 {
         edg_wll_XML_ctx *XMLCtx = data;
@@ -1225,6 +1230,7 @@ static void endLoadResult(void *data, const char *el UNUSED_VAR)
         XMLCtx->char_buf_len = 0;
 	XMLCtx->level--;
 }
+#endif
 
 
 
@@ -1964,6 +1970,8 @@ edg_wll_ErrorCode edg_wll_ParseStsList(edg_wll_Context ctx, char *messageBody, l
 }
 
 
+/* FIXME */
+#if 0
 
 /* parse purge result from client */
 edg_wll_ErrorCode edg_wll_ParsePurgeResult(edg_wll_Context ctx, char *messageBody, edg_wll_PurgeResult *result)
@@ -2153,7 +2161,7 @@ edg_wll_ErrorCode edg_wll_ParseLoadResult(edg_wll_Context ctx, char *messageBody
 	edg_wll_freeXMLCtx(&XMLCtx);	
 	return errorCode;
 }
-
+#endif
 
 
 edg_wll_ErrorCode edg_wll_ParseIndexedAttrs(edg_wll_Context ctx, char *messageBody, edg_wll_QueryRec ***attrs)
@@ -2717,6 +2725,8 @@ int edg_wll_QueryJobsRequestToXML(
 }
 
 
+/* FIXME */
+#if 0
 /* construct Message-Body of Request-Line for edg_wll_Purge */
 int edg_wll_PurgeRequestToXML(
                 edg_wll_Context ctx,
@@ -2812,6 +2822,7 @@ int edg_wll_LoadRequestToXML(
 
         return 0;
 }
+#endif 
 
 
 
@@ -2832,6 +2843,8 @@ int edg_wll_IndexedAttrsRequestToXML(
 }
 
 
+/* FIXME */
+#if 0
 /* construct Message-Body of Request-Line for edg_wll_Notif* functions */
 int edg_wll_NotifRequestToXML(
                 edg_wll_Context ctx, 
@@ -2867,6 +2880,7 @@ int edg_wll_NotifRequestToXML(
 
         return 0;
 }
+#endif
 
 
 /* construct Message-Body of Request-Line for edg_wll_QuerySequeceCode function */

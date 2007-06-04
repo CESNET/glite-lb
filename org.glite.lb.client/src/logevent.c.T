@@ -18,9 +18,9 @@
 #include "glite/security/glite_gss.h"
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
-#include "glite/lb/producer.h"
 #include "glite/lb/events.h"
 
+#include "producer.h"
 #include "args.h"
 
     //"    %s -p -l 100000 -j https://localhost/First_JobIV?localhost:7771 -s UserInterface -e jobAbort DG.JOB.ABORT.REASON=\"oops\"\n\n",

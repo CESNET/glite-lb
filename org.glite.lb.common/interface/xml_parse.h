@@ -3,11 +3,17 @@
 
 #ident "$Header$"
 
+#include "glite/wmsutils/jobid/cjobid.h"
+#include "events.h"
+#include "context.h"
+#include "query_rec.h"
+#include "notifid.h"
+/* FIXME
 #include "glite/lb/purge.h"
 #include "glite/lb/dump.h"
 #include "glite/lb/load.h"
-#include "glite/lb/producer.h"
 #include "glite/lb/notification.h"
+*/
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,11 +38,13 @@ extern edg_wll_ErrorCode edg_wll_ParseTagList(edg_wll_Context ctx, char *message
 
 extern edg_wll_ErrorCode edg_wll_ParseStsList(edg_wll_Context ctx, char *messageBody, long len, char *tag, char *tag2,  edg_wll_JobStat **stsListOut);
 
+/* FIXME
 extern edg_wll_ErrorCode edg_wll_ParsePurgeResult(edg_wll_Context ctx, char *messageBody, edg_wll_PurgeResult *result);
 
 extern edg_wll_ErrorCode edg_wll_ParseDumpResult(edg_wll_Context ctx, char *messageBody, edg_wll_DumpResult *result);
 
 extern edg_wll_ErrorCode edg_wll_ParseLoadResult(edg_wll_Context ctx, char *messageBody, edg_wll_LoadResult *result);
+*/
 
 extern edg_wll_ErrorCode edg_wll_ParseIndexedAttrs(edg_wll_Context ctx, char *messageBody, edg_wll_QueryRec ***attrs);
 
@@ -50,15 +58,19 @@ extern int edg_wll_JobQueryRecToXML(edg_wll_Context ctx, edg_wll_QueryRec const 
 
 extern int edg_wll_QueryJobsRequestToXML(edg_wll_Context ctx, const edg_wll_QueryRec **conditions, int flags, char **send_mess);
 
+/* FIXME
 extern int edg_wll_PurgeRequestToXML(edg_wll_Context ctx, const edg_wll_PurgeRequest *request, char **message);
 
 extern int edg_wll_DumpRequestToXML(edg_wll_Context ctx, const edg_wll_DumpRequest *request, char **message);
 
 extern int edg_wll_LoadRequestToXML(edg_wll_Context ctx, const edg_wll_LoadRequest *request, char **message);
+*/
 
 extern int edg_wll_IndexedAttrsRequestToXML(edg_wll_Context ctx, char **message);
 
+/* FIXME:
 extern int edg_wll_NotifRequestToXML( edg_wll_Context ctx, const char *function, const edg_wll_NotifId notifId, const char *address, edg_wll_NotifChangeOp op, edg_wll_QueryRec const * const *conditions, char **message);
+*/
 
 extern int edg_wll_QuerySequenceCodeToXML(edg_wll_Context ctx, edg_wlc_JobId jobId, char **message);
 	

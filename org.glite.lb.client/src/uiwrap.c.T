@@ -5,7 +5,7 @@
 @@@LANG: C
 
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "glite/lb/producer.h"
+#include "producer.h"
 
 @@@{
 for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }

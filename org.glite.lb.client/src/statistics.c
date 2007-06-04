@@ -6,12 +6,12 @@
 #include <time.h>
 #include <errno.h>
 
-#include "glite/lb/statistics.h"
 #include "glite/lb/context.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/mini_http.h"
 
+#include "statistics.h"
 #include "connection.h"
 
 

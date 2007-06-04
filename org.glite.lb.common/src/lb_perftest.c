@@ -12,7 +12,7 @@
 #include <ctype.h>
 
 #include "lb_perftest.h"
-#include "glite/lb/producer.h"
+// #include "glite/lb/producer.h"
 #include "trio.h"
 #include "il_msg.h"
 

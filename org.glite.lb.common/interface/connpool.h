@@ -1,5 +1,5 @@
 #include "glite/security/glite_gss.h"
-#include "glite/lb/consumer.h"
+#include "context.h"
 #include "lb_plain_io.h"
 #include "authz.h"
 #ifdef GLITE_LB_THREADED

@@ -13,11 +13,11 @@
 
 #include "glite/lb/Event.h"
 #include "glite/wmsutils/jobid/JobIdExceptions.h"
-#include "glite/lb/LoggingExceptions.h"
-
-#include "glite/lb/consumer.h"
 #include "glite/lb/events.h"
 #include "glite/lb/notifid.h"
+#include "glite/lb/LoggingExceptions.h"
+
+#include "consumer.h"
 
 EWL_BEGIN_NAMESPACE;
 

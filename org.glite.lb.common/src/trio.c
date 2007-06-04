@@ -52,9 +52,8 @@ static const char rcsid[] = "@(#)$Id$";
 #include "strio.h"
 
 #ifdef DATAGRID_EXTENSION
-#include "glite/lb/events.h"
+#include "events.h"
 #include "escape.h"
-//#include "edg/workload/thirdparty/trio/events.h"
 #endif
 
 /*

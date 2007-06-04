@@ -23,7 +23,7 @@ PREFIX?=${glite_location}
 
 version=${module.version}
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
+VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
 AT3=${stagedir}/sbin/glite-lb-at3
 GENSAM=${top_srcdir}/examples/gen_sample_job
 CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=0 perl ${top_srcdir}/project/check_version.pl
@@ -82,6 +82,7 @@ COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
 
 CFLAGS:=${DEBUG} \
+	-I. \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	-I${glite_location}/include \
@@ -110,8 +111,11 @@ LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 FAKELIBOBJS:=consumer_fake.o producer_fake.o
 
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
-PUB_HDRS:=CountRef.h Event.h JobJobStatus.h Notification.h ServerConnection.h \
-	LoggingExceptions.h
+
+HDRS:=consumer.h dump.h Job.h load.h notification.h \
+	Notification.h purge.h ServerConnection.h statistics.h
+FAKE_HDRS:=consumer_fake.h producer_fake.h
+GEN_HDRS:=JobStatus.h producer.h interface_version.h
 
 LIBTHROBJS:=${LIBOBJS:.o=.thr.o}
 LIBLOBJS:=${LIBOBJS:.o=.lo}
@@ -133,7 +137,9 @@ FAKETHRLIB:=libglite_lb_client_fake_${thrflavour}.la
 PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
-TOOLS:=dump load purge lb_dump_exporter ${LB_PERF_TOOLS}
+# FIXME:
+#TOOLS:=dump load purge lb_dump_exporter ${LB_PERF_TOOLS}
+TOOLS:=${LB_PERF_TOOLS}
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog flood_proxy dagids stress_context parse_eventsfile
 
 EXAMPLES_CL=user_jobs job_status 
@@ -151,7 +157,16 @@ offset=0
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
-default: all
+ifdef LB_STANDALONE
+compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
+else
+compile all: generate ${LIB} ${THRLIB} ${TOOLS} examples ${MAN_GZ}
+endif
+
+generate: ${GEN_HDRS}
+
+interface_version.h: ${top_srcdir}/project/version.properties
+	echo "#define GLITE_LB_CLIENT_INTERFACE \"${version}\"" >$@ 
 
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib \
@@ -226,6 +241,11 @@ perftest_logjobs.o: perftest_logjobs.c
 %.o: %.c 
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
 
+%.h: %.h.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
+
 %.c: %.c.T
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
@@ -240,15 +260,6 @@ perftest_logjobs.o: perftest_logjobs.c
 	rm -f $@
 	$(GENSAM) $< >$@ || rm -f $@
 	chmod -w,+x $@ > /dev/null
-
-default: all
-
-
-ifdef LB_STANDALONE
-compile all: ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
-else
-compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
-endif
 
 examples: ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 
@@ -285,11 +296,19 @@ distbin:
 	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
 
+doc: generate
+	cp ${top_srcdir}/doc/*.dox .
+	echo "PROJECT_NUMBER = ${version}" >> C.dox
+	echo "PROJECT_NUMBER = ${version}" >> CPP.dox
+	doxygen C.dox
+	doxygen CPP.dox
+
 install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/sbin
+	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	mkdir -p ${PREFIX}/lib
-	mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	mkdir -p ${PREFIX}/share/doc/${package}-${version}/api
 	mkdir -p ${PREFIX}/share/man/man1
 ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
@@ -298,6 +317,12 @@ else
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
+	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) 
+	${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} 
+ifndef LB_STANDALONE
+	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
+#       cp -r ${top_srcdir}/doc/api/{Makefile,api.tex,fig} ${PREFIX}/share/doc/${package}-${version}/api
+endif
 	mkdir -p ${PREFIX}/examples
 	for p in logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
@@ -312,10 +337,10 @@ endif
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 
 clean:
-	rm -rf *.o *.lo .libs lib* *.c *.cpp producer_test
-	rm -rf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ}
-	rm -rf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
-
+	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test C/ CPP/
+	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ}
+	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 check_version:
 	${CHECK_VERSION} ${stagedir}/include/glite/lb/interface_version.h

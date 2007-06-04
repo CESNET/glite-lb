@@ -8,6 +8,7 @@
 
 #include "xml_conversions.h"
 #include "escape.h"
+#include "jobstat.h"
 
 
 
@@ -49,16 +50,20 @@ void edg_wll_initXMLCtx(edg_wll_XML_ctx *c) {
 	c->tagToIndex	 = NULL;
 	c->tagListGlobal = NULL;
 	c->stsListGlobal = NULL;
+/* FIXME:
 	memset(&(c->purgeRequestGlobal),0,sizeof(c->purgeRequestGlobal));
 	memset(&(c->purgeResultGlobal),0,sizeof(c->purgeResultGlobal));
 	memset(&(c->dumpRequestGlobal),0,sizeof(c->dumpRequestGlobal));
 	memset(&(c->dumpResultGlobal),0,sizeof(c->dumpResultGlobal));
 	memset(&(c->loadRequestGlobal),0,sizeof(c->loadRequestGlobal));
 	memset(&(c->loadResultGlobal),0,sizeof(c->loadResultGlobal));
+*/
 	c->notifFunction = NULL;
 	c->notifClientAddress = NULL;
 	c->notifId = NULL;
+/* FIXME:
 	c->notifChangeOp = EDG_WLL_NOTIF_NOOP;
+*/
 	c->notifValidity = -1;
 	c->jobId = NULL;
 	c->source = NULL;
@@ -792,6 +797,8 @@ int edg_wll_string_to_stat_flags(char *cflags)
 }
 
 
+#if 0
+/* FIXME */
 char *edg_wll_purge_flags_to_string(int flags)
 {
         char *cflags = NULL, *temp_cflags = NULL;
@@ -847,6 +854,7 @@ int edg_wll_string_to_purge_flags(char *cflags)
 
 	return(flags);
 }
+#endif
 
 
 /* Functions for conversion of DUMP constants */
@@ -954,6 +962,7 @@ static const char * const notifChangeOpConsts[] = {
 
 
 
+/* FIXME
 edg_wll_NotifChangeOp edg_wll_StringToNotifChangeOp(const char *name)
 {
         int     i;
@@ -970,4 +979,5 @@ char *edg_wll_NotifChangeOpToString(edg_wll_NotifChangeOp notifChangeOpConst)
         if (notifChangeOpConst < 0 || (notifChangeOpConst) > sizeof(notifChangeOpConsts)/sizeof(notifChangeOpConsts[0])) return (char *) NULL;
         return strdup(notifChangeOpConsts[(int) notifChangeOpConst]);
 }
+*/
 

@@ -13,10 +13,11 @@
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/ulm_parse.h"
 #include "glite/lb/trio.h"
+#include "glite/lb/context-int.h" 
 
-#include "glite/lb/producer.h"
-
+#include "producer.h"
 #include "prod_proto.h"
+#include "consumer.h" // for QuerySequenceCode
 
 /* XXX: paralel registration is disabled until the race condition (via proxy first)
  * job owner assignment is solved */

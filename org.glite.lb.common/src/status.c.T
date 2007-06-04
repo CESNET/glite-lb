@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "glite/lb/consumer.h"
+#include "jobstat.h"
 
 static const struct timeval null_timeval = {0,0};
 

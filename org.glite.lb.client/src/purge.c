@@ -12,12 +12,12 @@
 
 #define CLIENT_SBIN_PROG
 
-#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/purge.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/mini_http.h"
 
+#include "purge.h"
+#include "consumer.h"
 
 #define dprintf(x) { if (debug) printf x; }
 

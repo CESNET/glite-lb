@@ -3,12 +3,16 @@
 
 #ident "$Header$"
 
-#include "glite/lb/events.h"
-#include "glite/lb/consumer.h"
+#include "glite/wmsutils/jobid/cjobid.h"
+#include "events.h"
+#include "query_rec.h"
+#include "notifid.h"
+/* FIXME
 #include "glite/lb/purge.h"
 #include "glite/lb/dump.h"
 #include "glite/lb/load.h"
 #include "glite/lb/notification.h"
+*/
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,17 +59,21 @@ typedef struct _edg_wll_XML_ctx {
 	char			*(*indexToTag)();
 	edg_wll_TagValue	*tagListGlobal;
 	edg_wll_JobStat		*stsListGlobal;
+/* FIXME: 
 	edg_wll_PurgeRequest	purgeRequestGlobal;
 	edg_wll_PurgeResult	purgeResultGlobal;
 	edg_wll_DumpRequest	dumpRequestGlobal;
 	edg_wll_DumpResult	dumpResultGlobal;
 	edg_wll_LoadRequest	loadRequestGlobal;
 	edg_wll_LoadResult	loadResultGlobal;
+*/
 	edg_wll_QueryRec	**attrsGlobal;
 	char			*notifFunction;
 	char			*notifClientAddress;
 	edg_wll_NotifId		notifId;
+/* FIXME
 	edg_wll_NotifChangeOp	notifChangeOp;
+*/
 	time_t			notifValidity;
 	char                    *statsFunction;
 	edg_wll_QueryRec        **statsConditions;
@@ -137,8 +145,10 @@ int edg_wll_StringTodone_code(const char *name);
 char *edg_wll_done_codeToString(int done_codeConst);
 edg_wll_QueryAttr edg_wll_StringToquery_attr(const char *name);
 char *edg_wll_query_attrToString(edg_wll_QueryAttr query_attrConst);
+/* FIXME:
 edg_wll_NotifChangeOp edg_wll_StringToNotifChangeOp(const char *name);
 char *edg_wll_NotifChangeOpToString(edg_wll_NotifChangeOp notifChangeOpConst);
+*/
 
 #ifdef __cplusplus
 } // extern "C"

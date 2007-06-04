@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 
-#include "glite/lb/context.h"
+#include "context.h"
 
 /**
  * default (noauth) user name
@@ -46,15 +46,6 @@ extern "C" {
 #define EDG_WLL_LOG_HOST_DEFAULT		"localhost"
 /** port */
 #define EDG_WLL_LOG_PORT_DEFAULT		9002
-
-
-/**
- * default and maximal logging timeout (in seconds)
- */
-#define EDG_WLL_LOG_TIMEOUT_DEFAULT		120
-#define EDG_WLL_LOG_TIMEOUT_MAX			300
-#define EDG_WLL_LOG_SYNC_TIMEOUT_DEFAULT	120
-#define EDG_WLL_LOG_SYNC_TIMEOUT_MAX		600
 
 
 /**

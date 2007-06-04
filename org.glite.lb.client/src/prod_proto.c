@@ -8,13 +8,13 @@
 #include <netinet/in.h>
 #include <string.h>
 
-#include "glite/lb/producer.h"
 #include "glite/lb/lb_plain_io.h"
 #include "glite/lb/il_msg.h"
 #include "glite/lb/il_string.h"
 #include "glite/lb/connpool.h"
 
 #include "prod_proto.h"
+#include "producer.h"
 #include "connection.h"
 
 static const char* socket_path="/tmp/lb_proxy_store.sock";

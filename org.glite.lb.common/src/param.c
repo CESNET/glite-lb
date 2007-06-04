@@ -7,11 +7,10 @@
 #include <globus_common.h>
 
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "glite/lb/producer.h"
-#include "glite/lb/notification.h"
 #include "context-int.h"
-#include "log_proto.h"
-
+// XXX:
+#include "log_proto.h" // for default log host and port
+#include "timeouts.h" // for timeouts
 
 /* XXX: must match edg_wll_ContextParam */
 static const char *myenv[] = {
@@ -276,21 +275,25 @@ int edg_wll_SetParamTime(edg_wll_Context ctx,edg_wll_ContextParam param,const st
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 /* XXX: check also if val is not grater than EDG_WLL_LOG_TIMEOUT_MAX */
 			if (val) memcpy(&ctx->p_log_timeout,val,sizeof *val);
+/* FIXME - default timeouts - now in timeouts.h: */
 			else extract_time(param,EDG_WLL_LOG_TIMEOUT_DEFAULT,&ctx->p_log_timeout);
 			break;
 		case EDG_WLL_PARAM_LOG_SYNC_TIMEOUT: 
 /* XXX: check also if val is not grater than EDG_WLL_LOG_SYNC_TIMEOUT_MAX */
 			if (val) memcpy(&ctx->p_sync_timeout,val,sizeof *val);
+/* FIXME - default timeouts - now in timeouts.h: */
 			else extract_time(param,EDG_WLL_LOG_SYNC_TIMEOUT_DEFAULT,&ctx->p_sync_timeout);
 			break;
 		case EDG_WLL_PARAM_QUERY_TIMEOUT:    
 /* XXX: check also if val is not grater than EDG_WLL_QUERY_TIMEOUT_MAX */
 			if (val) memcpy(&ctx->p_query_timeout,val,sizeof *val);
+/* FIXME - default timeouts - now in timeouts.h: */
 			else extract_time(param,EDG_WLL_QUERY_TIMEOUT_DEFAULT,&ctx->p_query_timeout);
 			break;
 		case EDG_WLL_PARAM_NOTIF_TIMEOUT:    
 /* XXX: check also if val is not grater than EDG_WLL_NOTIF_TIMEOUT_MAX */
 			if (val) memcpy(&ctx->p_notif_timeout,val,sizeof *val);
+/* FIXME - default timeouts - now in timeouts.h: */
 			else extract_time(param,EDG_WLL_NOTIF_TIMEOUT_DEFAULT,&ctx->p_notif_timeout);
 			break;
 		default:

@@ -4,7 +4,8 @@
 #ident "$Header$"
 
 #include "glite/security/glite_gss.h"
-#include "glite/lb/consumer.h"
+#include "jobstat.h"
+#include "query_rec.h"
 #include "lb_plain_io.h"
 #include "authz.h"
 #include "connpool.h"

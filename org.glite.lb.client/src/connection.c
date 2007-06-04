@@ -13,11 +13,11 @@
 #include <assert.h>
 
 #include "glite/security/glite_gss.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/connpool.h"
 
+#include "consumer.h"
 #include "connection.h"
 
 

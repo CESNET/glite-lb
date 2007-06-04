@@ -3,7 +3,8 @@
 
 #ident "$Header$"
 
-#include "glite/lb/consumer.h"
+// #include "glite/lb/consumer.h"
+#include "context.h"
 #include "connpool.h"
 
 /* XXX: not a good place for the folowing #def's but we ain't got better currently */

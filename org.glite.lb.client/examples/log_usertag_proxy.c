@@ -9,9 +9,9 @@
 
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
-#include "glite/lb/producer.h"
 #include "glite/lb/events.h"
 
+#include "producer.h"
 
 static struct option opts[] = {
 	{"help",		0,	NULL,	'h'},

@@ -10,7 +10,7 @@
 #include <errno.h>
 
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "glite/lb/producer.h"
+#include "events.h"
 #include "ulm_parse.h"
 
 static const struct timeval null_timeval = {0,0};
