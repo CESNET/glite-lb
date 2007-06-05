@@ -1,3 +1,5 @@
+#ident "$Header$"
+
 #include <stdio.h>
 #include <errno.h>
 #include <sys/time.h>
@@ -12,11 +14,8 @@
 #include <ctype.h>
 
 #include "lb_perftest.h"
-// #include "glite/lb/producer.h"
 #include "trio.h"
 #include "il_msg.h"
-
-#ident "$Header$"
 
 static pthread_mutex_t perftest_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct timeval endtime;

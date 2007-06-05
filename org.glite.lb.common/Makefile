@@ -38,9 +38,8 @@ else
 	JOBID_LIB:=-lglite_wmsutils_cjobid
 endif
 
-# FIXME:
-# PERF_HDRS:=lb_perftest.h
-# PERF_OBJS:=lb_perftest.o
+PERF_HDRS:=lb_perftest.h
+PERF_OBJS:=lb_perftest.o
 
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
