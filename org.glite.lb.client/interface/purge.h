@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_PURGE_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_PURGE_H__
+#ifndef __GLITE_LB_PURGE_H__
+#define __GLITE_LB_PURGE_H__
 
 #ident "$Header$"
 
@@ -56,4 +56,4 @@ int edg_wll_Purge(
 	edg_wll_PurgeResult	*result
 );
 
-#endif
+#endif /* __GLITE_LB_PURGE_H__ */

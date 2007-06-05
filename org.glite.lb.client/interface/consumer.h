@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_CONSUMER_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_CONSUMER_H__
+#ifndef __GLITE_LB_CONSUMER_H__
+#define __GLITE_LB_CONSUMER_H__
 
 /*!
  * \file consumer.h
@@ -16,6 +16,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "glite/lb/query_rec.h"
 
 /**
  * \defgroup Functions for Server querying
@@ -332,4 +334,4 @@ extern int set_server_name_and_port(
 }
 #endif
 
-#endif /* __EDG_WORKLOAD_LOGGING_CLIENT_CONSUMER_H__ */
+#endif /* __GLITE_LB_CONSUMER_H__ */

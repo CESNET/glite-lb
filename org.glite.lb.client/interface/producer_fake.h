@@ -1,9 +1,9 @@
+#ifndef __GLITE_LB_PRODUCER_FAKE_H__
+#define __GLITE_LB_PRODUCER_FAKE_H
+
 /* 
  * fake implementation of the producer API
  */
-
-#ifndef WORKLOAD_LOGGING_CLIENT_PRODUCER_FAKE_H
-#define WORKLOAD_LOGGING_CLIENT_PRODUCER_FAKE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,4 +22,4 @@ void edg_wll_UnregisterTestLoggingProxy();
 }
 #endif
 
-#endif /* WORKLOAD_LOGGING_CLIENT_PRODUCER_FAKE_H */
+#endif /* __GLITE_LB_PRODUCER_FAKE_H__ */

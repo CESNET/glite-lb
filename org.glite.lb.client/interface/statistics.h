@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_STATISTICS_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_STATISTICS_H__
+#ifndef __GLITE_LB_STATISTICS_H__
+#define __GLITE_LB_STATISTICS_H__
 
 #include "consumer.h"
 
@@ -53,5 +53,4 @@ int edg_wll_StateDuration(
 }
 #endif
 
-#endif /* __EDG_WORKLOAD_LOGGING_CLIENT_CONSUMER_H__ */
-
+#endif /* __GLITE_LB_CONSUMER_H__ */

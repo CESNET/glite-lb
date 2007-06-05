@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_LOAD_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_LOAD_H__
+#ifndef __GLITE_LB_LOAD_H__
+#define __GLITE_LB_LOAD_H__
 
 #ident "$Header$"
 
@@ -23,5 +23,4 @@ int edg_wll_LoadEvents(
 	edg_wll_LoadResult *
 );
 
-#endif
-
+#endif /* __GLITE_LB_LOAD_H__ */

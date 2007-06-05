@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_JOB_HPP__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_JOB_HPP__
+#ifndef __GLITE_LB_JOB_HPP__
+#define __GLITE_LB_JOB_HPP__
 
 #ident "$Header$"
 
@@ -189,4 +189,4 @@ private:
 
 EWL_END_NAMESPACE
 
-#endif
+#endif /* __GLITE_LB_JOB_HPP__ */

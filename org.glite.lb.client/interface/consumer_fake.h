@@ -1,9 +1,9 @@
+#ifndef __GLITE_LB_CONSUMER_FAKE_H__
+#define __GLITE_LB_CONSUMER_FAKE_H__
+
 /* 
  * fake implementation of the consumer API 
  */
-
-#ifndef WORKLOAD_LOGGING_CLIENT_CONSUMER_FAKE_H
-#define WORKLOAD_LOGGING_CLIENT_CONSUMER_FAKE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,4 +23,4 @@ void edg_wll_UnregisterTestQueryListener();
 }
 #endif
 
-#endif /* WORKLOAD_LOGGING_CLIENT_CONSUMER_FAKE_H */
+#endif /* __GLITE_LB_CONSUMER_FAKE_H__ */

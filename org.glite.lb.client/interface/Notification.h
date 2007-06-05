@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_NOTIFICATION_HPP__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_NOTIFICATION_HPP__
+#ifndef __GLITE_LB_NOTIFICATION_HPP__
+#define __GLITE_LB_NOTIFICATION_HPP__
 
 
 #include "glite/wmsutils/jobid/JobId.h"
@@ -93,4 +93,4 @@ private:
 
 EWL_END_NAMESPACE
 
-#endif
+#endif /* __GLITE_LB_NOTIFICATION_HPP__ */

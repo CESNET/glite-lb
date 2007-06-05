@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_NOTIFICATION_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_NOTIFICATION_H__
+#ifndef __GLITE_LB_NOTIFICATION_H__
+#define __GLITE_LB_NOTIFICATION_H__
 
 #ident "$Header$"
 
@@ -177,4 +177,4 @@ int edg_wll_NotifCloseFd(
 }
 #endif
 
-#endif
+#endif /* __GLITE_LB_NOTIFICATION_H__ */

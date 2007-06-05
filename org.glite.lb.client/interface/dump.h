@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_DUMP_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_DUMP_H__
+#ifndef __GLITE_LB_DUMP_H__
+#define __GLITE_LB_DUMP_H__
 
 #ident "$Header$"
 
@@ -26,6 +26,4 @@ int edg_wll_DumpEvents(
 	edg_wll_DumpResult *
 );
 
-
-#endif
-
+#endif /* __GLITE_LB_DUMP_H__ */
