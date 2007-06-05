@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_COMMON_ESCAPE_H__
-#define __EDG_WORKLOAD_LOGGING_COMMON_ESCAPE_H__
+#ifndef __GLITE_LB_ESCAPE_H__
+#define __GLITE_LB_ESCAPE_H__
 /*!
  * \file Client/escape.h
  * \brief Prototypes for Client/escape.c
@@ -57,4 +57,4 @@ char *edg_wll_UnescapeXML(const char *);
 
 char *edg_wll_EscapeSQL(const char *);
 
-#endif /* __EDG_WORKLOAD_LOGGING_COMMON_ESCAPE_H__ */
+#endif /* __GLITE_LB_ESCAPE_H__ */

@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_COMMON_ULM_PARSE_H__
-#define __EDG_WORKLOAD_LOGGING_COMMON_ULM_PARSE_H__
+#ifndef __GLITE_LB_ULM_PARSE_H__
+#define __GLITE_LB_ULM_PARSE_H__
 
 #ident "$Header$"
 
@@ -44,4 +44,4 @@ extern double 	edg_wll_ULMDateToDouble( const char *s );
 void 		edg_wll_ULMDateToTimeval( const char *s, struct timeval *tv );
 extern int 	edg_wll_ULMTimevalToDate( long sec, long usec, char *dstr );
 
-#endif /* __EDG_WORKLOAD_LOGGING_COMMON_ULM_PARSE_H__ */
+#endif /* __GLITE_LB_ULM_PARSE_H__ */

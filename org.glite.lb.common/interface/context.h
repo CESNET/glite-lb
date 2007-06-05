@@ -1,5 +1,5 @@
-#ifndef _EDG_WORKLOAD_LOGGING_CLIENT_CONTEXT_H
-#define _EDG_WORKLOAD_LOGGING_CLIENT_CONTEXT_H
+#ifndef __GLITE_LB_CONTEXT_H__
+#define __GLITE_LB_CONTEXT_H__
 
 /**
  * \file context.h
@@ -275,4 +275,4 @@ int edg_wll_GetLoggingJob(
 }
 #endif
 
-#endif 
+#endif /* __GLITE_LB_CONTEXT_H__ */

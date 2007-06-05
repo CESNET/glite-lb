@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_COUNTREF_HPP__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_COUNTREF_HPP__
+#ifndef __GLITE_LB_COUNT_REF_HPP__
+#define __GLITE_LB_COUNT_REF_HPP__
 
 /**
  * Switching into glite.lb namespace (couple with EWL_END_NAMESPACE).
@@ -77,4 +77,4 @@ void CountRef<T>::use(void)
 
 EWL_END_NAMESPACE
 
-#endif
+#endif /* __GLITE_LB_COUNT_REF_HPP__ */

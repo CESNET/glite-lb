@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_COMMON_EVENTS_PARSE_H__
-#define __EDG_WORKLOAD_LOGGING_COMMON_EVENTS_PARSE_H__
+#ifndef __GLITE_LB_EVENTS_PARSE_H__
+#define __GLITE_LB_EVENTS_PARSE_H__
 
 #ident "$Header$"
 
@@ -94,4 +94,4 @@ extern edg_wll_LogLine edg_wll_UnparseNotifEvent(
 #endif
 
 
-#endif /* __EDG_WORKLOAD_LOGGING_COMMON_EVENTS_PARSE_H__ */
+#endif /* __GLITE_LB_EVENTS_PARSE_H__ */

@@ -1,3 +1,6 @@
+#ifndef __GLITE_LB_TIMEOUTS_H__
+#define __GLITE_LB_TIMEOUTS_H__
+
 /** 
  * default and maximal notif timeout (in seconds)
  */
@@ -18,3 +21,4 @@
 #define EDG_WLL_LOG_SYNC_TIMEOUT_DEFAULT	120
 #define EDG_WLL_LOG_SYNC_TIMEOUT_MAX		600
 
+#endif /* __GLITE_LB_TIMEOUTS_H__ */

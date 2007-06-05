@@ -1,3 +1,6 @@
+#ifndef __GLITE_LB_CONNPOOL_H__
+#define __GLITE_LB_CONNPOOL_H__
+
 #include "glite/security/glite_gss.h"
 #include "context.h"
 #include "lb_plain_io.h"
@@ -95,3 +98,4 @@ edg_wll_Connections* edg_wll_initConnections();
 }
 #endif
 
+#endif /* __GLITE_LB_CONNPOOL_H__ */

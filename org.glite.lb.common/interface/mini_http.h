@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_COMMON_MINI_HTTP_H__
-#define __EDG_WORKLOAD_LOGGING_COMMON_MINI_HTTP_H__
+#ifndef __GLITE_LB_MINI_HTTP_H__
+#define __GLITE_LB_MINI_HTTP_H__
 
 #ident "$Header$"
 
@@ -60,4 +60,4 @@ extern edg_wll_ErrorCode edg_wll_http_send_proxy(
 	const char *		/* IN: message body */
 );
 
-#endif /* __EDG_WORKLOAD_LOGGING_COMMON_MINI_HTTP_H__ */
+#endif /* __GLITE_LB_MINI_HTTP_H__ */

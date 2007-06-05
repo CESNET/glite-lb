@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_JOBSTAT_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_JOBSTAT_H__
+#ifndef __GLITE_LB_JOBSTAT_H__
+#define __GLITE_LB_JOBSTAT_H__
 
 /*!
  * \file jobstat.h  
@@ -166,4 +166,4 @@ extern char *edg_wll_StatToString(edg_wll_JobStatCode);
 }
 #endif
 
-#endif /* __EDG_WORKLOAD_LOGGING_CLIENT_JOBSTAT_H__ */
+#endif /* __GLITE_LB_JOBSTAT_H__ */

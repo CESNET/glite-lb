@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_COMMON_LB_PLAIN_IO_H__
-#define __EDG_WORKLOAD_LOGGING_COMMON_LB_PLAIN_IO_H__
+#ifndef __GLITE_LB_PLAIN_IO_H__
+#define __GLITE_LB_PLAIN_IO_H__
 
 
 #ifdef __cplusplus
@@ -43,4 +43,4 @@ int edg_wll_plain_write_full(
 } 
 #endif
 	
-#endif /* __EDG_WORKLOAD_LOGGING_COMMON_LB_PLAIN_IO_H__ */
+#endif /* __GLITE_LB_PLAIN_IO_H__ */

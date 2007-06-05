@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_COMMON_XML_PARSE_H__
-#define __EDG_WORKLOAD_LOGGING_COMMON_XML_PARSE_H__
+#ifndef __GLITE_LB_XML_PARSE_H__
+#define __GLITE_LB_XML_PARSE_H__
 
 #ident "$Header$"
 
@@ -79,4 +79,4 @@ extern int edg_wll_QuerySequenceCodeToXML(edg_wll_Context ctx, edg_wlc_JobId job
 }
 #endif
 
-#endif /* __EDG_WORKLOAD_LOGGING_COMMON_XML_PARSE_H__ */
+#endif /* __GLITE_LB_XML_PARSE_H__ */

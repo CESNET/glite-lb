@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_EVENT_HPP__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_EVENT_HPP__
+#ifndef __GLITE_LB_EVENT_HPP__
+#define __GLITE_LB_EVENT_HPP__
 
 
 #ident "$Header$"
@@ -274,4 +274,4 @@ private:
 
 EWL_END_NAMESPACE
 
-#endif
+#endif /* __GLITE_LB_EVENT_HPP__ */

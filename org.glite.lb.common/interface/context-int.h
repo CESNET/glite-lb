@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_COMMON_CONTEXT_H__
-#define __EDG_WORKLOAD_LOGGING_COMMON_CONTEXT_H__
+#ifndef __GLITE_LB_CONTEXT_INT_H__
+#define __GLITE_LB_CONTEXT_INT_H__
 
 #ident "$Header$"
 
@@ -176,4 +176,5 @@ extern void edg_wll_FreeParams(edg_wll_Context context);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __EDG_WORKLOAD_LOGGING_COMMON_CONTEXT_H__ */
+
+#endif /* __GLITE_LB_CONTEXT_INT_H__ */

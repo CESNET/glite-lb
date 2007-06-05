@@ -1,5 +1,5 @@
-#ifndef LB_PERFTEST_H
-#define LB_PERFTEST_H
+#ifndef __GLITE_LB_PERFTEST_H__
+#define __GLITE_LB_PERFTEST_H__ 
 
 #ident "$Header$"
 
@@ -40,4 +40,4 @@ glite_wll_perftest_createJobId(const char *bkserver,
 			       int job_num,
 			       edg_wlc_JobId *jobid);
 
-#endif
+#endif /* __GLITE_LB_PERFTEST_H__ */

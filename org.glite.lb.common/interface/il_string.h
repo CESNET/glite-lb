@@ -1,5 +1,5 @@
-#ifndef NET_STRING_H
-#define NET_STRING_H
+#ifndef __GLITE_LB_NET_STRING_H__
+#define __GLITE_LB_NET_STRING_H__
 
 #ident "$Header$"
 
@@ -19,4 +19,4 @@ char *get_string(char *p, il_octet_string_t *s);
 int len_string(il_octet_string_t *s);
 int len_int(int d);
 
-#endif
+#endif /* __GLITE_LB_NET_STRING_H__ */

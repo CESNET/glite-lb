@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_EVENTS_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_EVENTS_H__
+#ifndef __GLITE_LB_EVENTS_H__
+#define __GLITE_LB_EVENTS_H__
 
 /**
  * \file events.h
@@ -393,4 +393,4 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 }
 #endif
 
-#endif /* __EDG_WORKLOAD_LOGGING_CLIENT_EVENTS_H__ */
+#endif /* __GLITE_LB_EVENTS_H__ */
