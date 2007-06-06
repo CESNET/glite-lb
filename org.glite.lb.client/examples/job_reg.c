@@ -144,14 +144,14 @@ int main(int argc, char *argv[])
 		}
 
 		if (lbproxy) {
-			if (edg_wll_RegisterSubjobsProxy(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
+			if (edg_wll_RegisterSubjobsProxy(ctx, jobid, (const char **) jdls, "NNNSSSS", subjobs)) {
 				char 	*et,*ed;
 				edg_wll_Error(ctx,&et,&ed);
 				fprintf(stderr,"edg_wll_RegisterSubjobsProxy: %s (%s)\n", et, ed);
 				exit(1);
 			}
 		} else {
-			if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
+			if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, "NNNSSSS", subjobs)) {
 				char 	*et,*ed;
 				edg_wll_Error(ctx,&et,&ed);
 				fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);
