@@ -5,9 +5,9 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "glite/lb/consumer.h"
+#include "consumer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/consumer_fake.h"
+#include "consumer_fake.h"
 
 
 #define NUM_EVENTS 3

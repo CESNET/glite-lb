@@ -2,9 +2,9 @@
  * fake implementation of the producer API
  */
 
-#include "glite/lb/producer.h"
+#include "producer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/producer_fake.h"
+#include "producer_fake.h"
 
 #define FAKE_VERSION 1
 

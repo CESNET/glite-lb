@@ -8,7 +8,7 @@
 #include <globus_common.h>
 
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "glite/lb/consumer.h"
+#include "consumer.h"
 
 
 static struct option opts[] = {

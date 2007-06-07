@@ -2,7 +2,7 @@
 #include <time.h>
 #include <string.h>
 
-#include "glite/lb/statistics.h"
+#include "statistics.h"
 
 
 int main(int argc,char **argv)

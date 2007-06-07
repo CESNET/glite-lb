@@ -10,7 +10,7 @@
 #include <errno.h>
 
 #include "glite/lb/events_parse.h"
-#include "glite/lb/consumer.h"
+#include "consumer.h"
 #include "glite/wmsutils/jobid/cjobid.h"
 
 static void free_events(edg_wll_Event *);
