@@ -5,6 +5,7 @@
 
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
+#include "glite/lb/notif_rec.h"
 #include "glite/lb/context.h"
 
 #include "consumer.h"
@@ -68,18 +69,6 @@ int edg_wll_NotifBind(
 	time_t			*valid
 );
 
-typedef enum _edg_wll_NotifChangeOp {
-	/** No operation, equal to not defined */
-	EDG_WLL_NOTIF_NOOP = 0,
-	/** Replace notification registration with new one */
-	EDG_WLL_NOTIF_REPLACE,
-	/** Add new condition when to be notifed */
-	EDG_WLL_NOTIF_ADD,
-	/** Remove condition on notification */
-	EDG_WLL_NOTIF_REMOVE
-/*      if adding new attribute, add conversion string to common/xml_conversions.c too !! */
-} edg_wll_NotifChangeOp;
-
 /** Modify the query conditions for this notification.
  *
  * If op is either EDG_WLL_NOTIF_ADD or EDG_WLL_NOTIF_REMOVE, for the sake
@@ -90,7 +79,7 @@ typedef enum _edg_wll_NotifChangeOp {
  * \param[in] id		notification ID you are working with
  * \param[in] conditions	same as for \ref edg_wll_NotifNew
  * \param[in] op 		action to be taken on existing conditions,
- * 	\ref edg_wll_NotifChangeOp
+ * 	\ref edg_wll_NotifChangeOp (defined in common notif_rec.h)
  */
 int edg_wll_NotifChange(
 	edg_wll_Context		context,

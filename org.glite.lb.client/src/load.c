@@ -17,7 +17,7 @@
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/mini_http.h"
 
-#include "load.h"
+#include "query.h"
 #include "consumer.h"
 
 #define dprintf(x) { if (debug) printf x; }
