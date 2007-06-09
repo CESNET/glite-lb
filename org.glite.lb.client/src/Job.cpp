@@ -14,9 +14,9 @@
 
 #include "glite/wmsutils/jobid/JobIdExceptions.h"
 
-#include "glite/lb/Job.h"
+#include "Job.h"
+#include "consumer.h"
 #include "glite/lb/LoggingExceptions.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 
 EWL_BEGIN_NAMESPACE;
