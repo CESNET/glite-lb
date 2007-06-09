@@ -79,7 +79,7 @@ int edg_wll_NotifBind(
  * \param[in] id		notification ID you are working with
  * \param[in] conditions	same as for \ref edg_wll_NotifNew
  * \param[in] op 		action to be taken on existing conditions,
- * 	\ref edg_wll_NotifChangeOp (defined in common notif_rec.h)
+ * \see edg_wll_NotifChangeOp (defined in common notif_rec.h)
  */
 int edg_wll_NotifChange(
 	edg_wll_Context		context,
