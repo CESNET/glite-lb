@@ -181,7 +181,7 @@ stage: compile
 check: compile mkreports check.parse check.il
 
 mkreports:
-	-mkdir ${REPORTS}
+	-mkdir -p ${REPORTS}
 
 check.parse: test_parse
 	./test_parse ${REPORTS}/parse.xml
