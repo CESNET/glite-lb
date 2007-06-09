@@ -1,0 +1,15 @@
+PROJECT_NAME          = "Glite LB Client: C - Interface"
+OUTPUT_DIRECTORY      = C
+OPTIMIZE_OUTPUT_FOR_C = YES
+INPUT                 = ./producer.h \
+                        ../interface/notification.h \
+                        ../interface/consumer.h 
+SHOW_DIRECTORIES      = NO
+FULL_PATH_NAMES       = NO
+EXTRACT_ALL           = YES
+PDF_HYPERLINKS        = YES
+USE_PDFLATEX          = YES
+MACRO_EXPANSION       = YES
+EXPAND_ONLY_PREDEF    = YES
+PREDEFINED            = _EDG_WLL_EVENT_COMMON 
+HAVE_DOT              = NO

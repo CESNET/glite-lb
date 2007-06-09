@@ -7,19 +7,15 @@ lbprefix=lb
 package=glite-lb-client
 version=0.0.0
 
-glite_location=/opt/glite
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
-
 
 CC:=gcc
 CXX:=g++
 
 -include Makefile.inc
 -include ../project/version.properties
-
-PREFIX?=${glite_location}
 
 version=${module.version}
 
@@ -85,7 +81,6 @@ CFLAGS:=${DEBUG} \
 	-I. \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
-	-I${glite_location}/include \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS}
 
@@ -137,8 +132,6 @@ FAKETHRLIB:=libglite_lb_client_fake_${thrflavour}.la
 PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
-# FIXME:
-#TOOLS:=dump load purge lb_dump_exporter ${LB_PERF_TOOLS}
 TOOLS:=${LB_PERF_TOOLS}
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog flood_proxy dagids stress_context parse_eventsfile
 
@@ -160,7 +153,9 @@ version_info:=-version-info ${shell \
 ifdef LB_STANDALONE
 compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
 else
-compile all: generate ${LIB} ${THRLIB} ${TOOLS} examples ${MAN_GZ}
+# FIXME:
+#compile all: generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent examples ${MAN_GZ}
+compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
 endif
 
 generate: ${GEN_HDRS}
@@ -303,7 +298,7 @@ doc: generate
 	doxygen C.dox
 	doxygen CPP.dox
 
-install:
+install: doc
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/sbin
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
@@ -313,7 +308,9 @@ install:
 ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 else
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
+# FIXME:
+#	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
