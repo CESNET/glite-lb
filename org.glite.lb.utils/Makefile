@@ -8,7 +8,6 @@ package=glite-lb-utils
 version=0.0.0
 PREFIX=/opt/glite
 
-glite_location=/opt/glite
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
@@ -66,7 +65,7 @@ CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
 BKSERVER_LIB:=-lglite_lb_bkserver 
 JP_LIBS:=-lglite_jp_common_${nothrflavour} -lglite_jp_trio
 
-UTILS:=statistics mon 
+UTILS:=mon purge dump load dump_exporter
 
 MAN_GZ:=glite-lb-mon.1.gz
 MAN = $(MAN_GZ:.gz=)
@@ -74,13 +73,13 @@ MAN = $(MAN_GZ:.gz=)
 
 default: all
 
-compile all: ${UTILS} ${MAN_GZ}
+compile all: ${UTILS} ${MAN_GZ} statistics
 
 %.o: %.c 
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
 
-mon: mon.o
-	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} 
+${UTILS}: %: %.o
+	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${BKSERVER_LIB} ${EXT_LIBS}
 
 statistics: statistics.o
 	${LINK} -rdynamic -o $@ $< ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 

@@ -15,9 +15,9 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/mini_http.h"
-
-#include "query.h"
-#include "consumer.h"
+#include "glite/lb/query_rec.h"
+#include "glite/lb/consumer.h"
+#include "glite/lb/query.h" /* from server */
 
 #define dprintf(x) { if (debug) printf x; }
 
@@ -35,6 +35,10 @@ static const char rcsid[] = "@(#)$Id$";
 static int debug=0;
 static char *file;
 
+static int edg_wll_Purge(
+                edg_wll_Context ctx,
+                edg_wll_PurgeRequest *request,
+                edg_wll_PurgeResult *result);
 static int read_jobIds(const char *file, char ***jobs_out);
 static int get_timeout(const char *arg, int *timeout);
 static void printerr(edg_wll_Context ctx);
@@ -347,7 +351,11 @@ static const char* const request_headers[] = {
 	NULL
 };
 
-int edg_wll_Purge(
+/** Client side purge
+ * \retval EAGAIN only partial result returned, call repeatedly to get all
+ *      output data
+ */
+static int edg_wll_Purge(
 		edg_wll_Context ctx,
 		edg_wll_PurgeRequest *request,
 		edg_wll_PurgeResult *result)

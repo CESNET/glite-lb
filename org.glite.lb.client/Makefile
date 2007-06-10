@@ -107,7 +107,7 @@ FAKELIBOBJS:=consumer_fake.o producer_fake.o
 
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
 
-HDRS:=consumer.h notification.h query.h statistics.h \
+HDRS:=consumer.h notification.h statistics.h \
 	Job.h Notification.h ServerConnection.h 
 FAKE_HDRS:=consumer_fake.h producer_fake.h
 GEN_HDRS:=JobStatus.h producer.h interface_version.h

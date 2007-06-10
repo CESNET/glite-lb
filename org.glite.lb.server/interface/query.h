@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_SERVER_QUERY_H__
-#define __GLITE_LB_SERVER_QUERY_H__
+#ifndef __GLITE_LB_QUERY_H__
+#define __GLITE_LB_QUERY_H__
 
 #ident "$Header$"
 
@@ -14,4 +14,4 @@ int match_status(edg_wll_Context, const edg_wll_JobStat *stat,const edg_wll_Quer
 
 #define NOTIF_ALL_JOBS	"all_jobs"
 
-#endif /* __GLITE_LB_SERVER_QUERY_H__ */
+#endif /* __GLITE_LB_QUERY_H__ */

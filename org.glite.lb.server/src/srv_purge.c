@@ -287,7 +287,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 				}
 
 				memset(&stat,0,sizeof stat);
-				if (edg_wll_JobStatus(ctx,job,0,&stat)) goto abort; /* XXX: memory leak */
+				if (edg_wll_JobStatus(ctx,job,0,&stat)) goto abort; /* FIXME: replace by intJobStatus + fix memory leak */
 
 				switch (stat.state) {
 					case EDG_WLL_JOB_CLEARED:

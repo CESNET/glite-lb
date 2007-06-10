@@ -16,9 +16,8 @@
 #include "glite/lb/ulm_parse.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/mini_http.h"
-
-#include "query.h"
-#include "consumer.h"
+#include "glite/lb/consumer.h"
+#include "glite/lb/query.h" /* from server */
 
 #define dprintf(x) { if (debug) printf x; }
 
@@ -26,6 +25,10 @@ static const char rcsid[] = "@(#)$Id$";
 
 static int debug=0;
 
+static int edg_wll_DumpEvents(
+                edg_wll_Context ctx,
+                const edg_wll_DumpRequest *request,
+                edg_wll_DumpResult *result);
 static void printerr(edg_wll_Context ctx);
 
 static struct option opts[] = {
@@ -193,7 +196,10 @@ static const char* const request_headers[] = {
 	NULL
 };
 
-int edg_wll_DumpEvents(
+/** Dump events in a given time interval
+ */
+
+static int edg_wll_DumpEvents(
 		edg_wll_Context ctx,
 		const edg_wll_DumpRequest *request,
 		edg_wll_DumpResult *result)
