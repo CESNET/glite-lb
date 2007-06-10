@@ -11,8 +11,9 @@
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/lbs_db.h"
 #include "glite/lb/jobstat.h"
+
+#include "lbs_db.h"
 
 static struct option opts[] = {
 	{ "mysql",1,NULL,'m' },
