@@ -16,9 +16,12 @@
 
 static struct option opts[] = {
 	{ "mysql",1,NULL,'m' },
+	{ "debug",0,NULL,'d' },
 	{ "verbose",0,NULL,'v' },
 	{ NULL, 0, NULL, 0 }
 };
+
+int debug  = 0;
 
 static void usage();
 static void do_exit(edg_wll_Context,int);
@@ -37,8 +40,9 @@ int main(int argc,char **argv)
 
 	me = strdup(argv[0]);
 
-	while ((opt = getopt_long(argc,argv,"m:v",opts,NULL)) != EOF) switch (opt) {
+	while ((opt = getopt_long(argc,argv,"m:dv",opts,NULL)) != EOF) switch (opt) {
 		case 'm': dbstring = optarg; break;
+		case 'd': debug++; verbose++; break;
 		case 'v': verbose++; break;
 		case '?': usage(); exit(EX_USAGE);
 	}
@@ -90,6 +94,7 @@ static void usage()
 {
 	fprintf(stderr,"usage: %s <options>\n"
 			"	-m,--mysql <dbstring>	use non-default database connection\n"
+			"	-d,--debug		print debug info (if any)\n",
 			"	-v,--verbose		be verbose\n",
 			me);
 }

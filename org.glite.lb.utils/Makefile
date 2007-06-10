@@ -66,9 +66,9 @@ CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
 BKSERVER_LIB:=-lglite_lb_bkserver 
 JP_LIBS:=-lglite_jp_common_${nothrflavour} -lglite_jp_trio
 
-UTILS:=statistics mon mon-db
+UTILS:=statistics mon 
 
-MAN_GZ:=glite-lb-mon.1.gz glite-lb-mon-db.1.gz
+MAN_GZ:=glite-lb-mon.1.gz
 MAN = $(MAN_GZ:.gz=)
 
 
@@ -81,9 +81,6 @@ compile all: ${UTILS} ${MAN_GZ}
 
 mon: mon.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} 
-
-mon-db: mon-db.o
-	${LINK} -o $@ $< ${COMMON_LIB} ${BKSERVER_LIB} ${EXT_LIBS} 
 
 statistics: statistics.o
 	${LINK} -rdynamic -o $@ $< ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
@@ -130,7 +127,8 @@ install:
 	fi
 
 clean:
-	rm -fv ${UTILS} ${MAN_GZ} *.{lo,o}
+	rm -rfv ${UTILS} ${MAN_GZ} *.{lo,o}
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o: %.c
 	${COMPILE} -c $<

@@ -8,7 +8,6 @@ package=glite-lb-server
 version=0.2.0
 PREFIX=/opt/glite
 
-glite_location=/opt/glite
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
@@ -62,9 +61,9 @@ YACC=bison -y
 CC=gcc
 
 ifeq ($(gsoap_version),2.7.0)
-	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project:${gsoap_prefix}
+	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples:${top_srcdir}/project:${gsoap_prefix}
 else
-	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project
+	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples:${top_srcdir}/project
 endif
 AT3=${stagedir}/sbin/glite-lb-at3
 
@@ -100,6 +99,7 @@ ifdef LB_PROF
 else
 	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
 	LB_COMMON_LIB:=-lglite_lb_common_${nothrflavour}
+	LDFLAGS:= -L${stagedir}/lib
 endif
 
 ifdef LBS_DB_PROFILE
@@ -112,7 +112,7 @@ TEST_INC:=-I${cppunit_prefix}/include
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS} 
 SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
-LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
+# XXX: not used? LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
@@ -232,13 +232,19 @@ WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
 
 HDRS=index.h lb_authz.h lbs_db.h store.h
 
+MAN_GZ:=glite-lb-mon-db.1.gz
+MAN = $(MAN_GZ:.gz=)
+
 LIB_OBJS_BK:= \
 	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o process_event_pbs.o process_event_condor.o \
 	seqcode.o lbs_db.o lbs_db_supp.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o stats.o
+	notification.o il_notification.o notif_match.o stats.o write2rgma.o
+
+MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
+MONDB_LIBS:=${COMMON_LIBS} ${EXT_LIBS} 
 
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
@@ -249,7 +255,8 @@ glite-lb-bkindex: ${INDEX_OBJS}
 glite_lb_plugin.la: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
 
-default all: compile
+glite-lb-mon-db: ${MONDB_OBJS}
+	${LINKXX} -o $@ ${MONDB_OBJS} ${MONDB_LIBS}
 
 ifdef LB_STANDALONE
     PLUGIN_LIB=
@@ -261,8 +268,9 @@ else
 endif
 endif
 
-compile: glite-lb-bkserverd glite-lb-bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c jp_job_attrs.h
+compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${PLUGIN_LIB} ${MAN_GZ}
 
+generate: store.c index.c jp_job_attrs.h
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -331,7 +339,6 @@ ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
 ws_joblog: ws_joblog.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ ws_joblog.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
-
 ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 	ar crv $@ ${LIB_OBJS_BK}
 	ranlib $@
@@ -339,7 +346,11 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 jp_job_attrs.h: job-attrs.xsd jp_job_attrs.xsl 
 	${XSLTPROC} ../src/jp_job_attrs.xsl $< >$@
 
-doc:
+doc: ${MAN_GZ}
+
+${MAN_GZ}: ${MAN}
+	cp $? .
+	gzip -f $(notdir $?)
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
@@ -360,10 +371,12 @@ distbin:
 install:
 	-mkdir -p ${PREFIX}/bin ${PREFIX}/etc ${PREFIX}/etc/init.d ${PREFIX}/interface
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/share/man/man1
 	-mkdir -p ${PREFIX}/lib
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	for p in bkserverd bkindex; do \
+	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
+	for p in bkserverd bkindex mon-db; do \
 		${INSTALL} -m 755 "glite-lb-$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 

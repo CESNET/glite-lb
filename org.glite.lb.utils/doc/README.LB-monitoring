@@ -32,34 +32,3 @@ FILES
             [ type = "time"; name = "aborted" ],
             [ type = "time"; name = "cancelled" ],
 
-
-GLITE-LB-MON-DB
----------------
-NAME
-       glite-lb-mon-db - program for monitoring the number of jobs in the LB system
-
-SYNOPSIS
-       glite-lb-mon-db [-m dbstring]
-
-DESCRIPTION
-       glite-lb-mon-db  is a low-level program for monitoring the the number of jobs in the LB system.  Using the LB internals,
-       it connects directly to the underlying MySQL database and reads the number of jobs in each state.
-
-OPTIONS
-       -m dbstring, --mysql=dbstring
-              use non-default database connection string
-
-EXAMPLES
-       glite-lb-mon-db
-              this is the default usage
-
-       glite-lb-mon-db -m lbserver/@localhost:lbproxy
-              use this dbstring to query the LB Proxy database. WARNING: the data in the LB Proxy may be incomplete!
-
-ENVIRONMENT
-       MYSQL_UNIX_PORT
-              set this environment variable to specify the path to the non-default MySQL socket path
-
-       LBDB   you can set this environment variable as an alternative to specify the non-default database connection string
-
-
