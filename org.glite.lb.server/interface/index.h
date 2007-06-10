@@ -1,3 +1,9 @@
+#ifndef __GLITE_LB_INDEX_H__
+#define __GLITE_LB_INDEX_H__
+
+#ident "$Header$"
+
+#include "glite/lb/query_rec.h"
 
 int edg_wll_QueryJobIndices(edg_wll_Context,edg_wll_QueryRec ***,char ***);
 int edg_wll_ColumnToQueryRec(const char *,edg_wll_QueryRec *);
@@ -25,3 +31,5 @@ extern int	lex_line;
 #define STD_PREFIX	"STD_"
 #define USR_PREFIX	"USR_"
 #define TIME_PREFIX	"TIME_"
+
+#endif /* __GLITE_LB_INDEX_H__ */

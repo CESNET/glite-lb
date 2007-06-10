@@ -1,5 +1,5 @@
-#ifndef _LBS_DB_H
-#define _LBS_DB_H
+#ifndef __GLITE_LB_LBS_DB_H__
+#define __GLITE_LB_LBS_DB_H__
 
 #ident "$Header$"
 
@@ -132,4 +132,4 @@ edg_wll_ErrorCode edg_wll_bufferedInsertClose(edg_wll_bufInsert *bi);
 }
 #endif
 
-#endif
+#endif /* __GLITE_LB_LBS_DB_H__ */

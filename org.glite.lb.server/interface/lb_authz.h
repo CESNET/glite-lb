@@ -1,5 +1,7 @@
-#ifndef LB_AUTHZ_H
-#define LB_AUTHZ_H
+#ifndef __GLITE_LB_LB_AUTHZ_H__
+#define __GLITE_LB_LB_AUTHZ_H__
+
+#ident "$Header$"
 
 #ifndef NO_GACL
 #include <gridsite.h>
@@ -15,7 +17,7 @@ typedef struct _edg_wll_Acl {
 } _edg_wll_Acl;
 typedef struct _edg_wll_Acl *edg_wll_Acl;
 
-# ifndef NO_GACL
+#ifndef NO_GACL
 
 extern int
 edg_wll_DecodeACL(char *, GRSTgaclAcl **);
@@ -56,4 +58,4 @@ edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *, 
 extern void
 edg_wll_FreeVomsGroups(edg_wll_VomsGroups *);
 
-#endif
+#endif /* __GLITE_LB_LB_AUTHZ_H__ */

@@ -1,3 +1,8 @@
+#ifndef __GLITE_LB_SRV_PERF_H__
+#define __GLITE_LB_SRV_PERF_H__
+
+#ident "$Header$"
+
 enum lb_srv_perf_sink {
 	GLITE_LB_SINK_NONE = 0,	// standard behaviour, no sinking
 
@@ -21,3 +26,5 @@ enum lb_srv_perf_sink {
 
 
 extern enum lb_srv_perf_sink sink_mode;
+
+#endif /* __GLITE_LB_SRV_PERF_H__ */
