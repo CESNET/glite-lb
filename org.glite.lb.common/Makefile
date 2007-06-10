@@ -109,7 +109,7 @@ THRLOBJS:=${OBJS:.o=.thr.lo}
 HDRS:=context.h context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h il_msg.h \
 	escape.h ulm_parse.h trio.h lb_maildir.h connpool.h notifid.h notif_rec.h \
-	query_rec.h LoggingExceptions.h CountRef.h ${PERF_HDRS} 
+	query_rec.h timeouts.h LoggingExceptions.h CountRef.h ${PERF_HDRS} 
 GEN_HDRS:=Event.h events.h jobstat.h
 
 STATICLIB:=libglite_lb_common_${nothrflavour}.a
