@@ -65,8 +65,8 @@ install:
 #	fi
 
 clean:
-	rm -f *.h *.html *.xml *.wsdl
-	
+	rm -rvf *.h *.html *.xml *.wsdl
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.xml: %.xml.T
 	rm -f $@
