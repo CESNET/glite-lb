@@ -4,7 +4,8 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "glite/lb/consumer.h"
+#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb/context.h"
 
 #include "interlogd.h"
 

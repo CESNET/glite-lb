@@ -13,7 +13,6 @@
 #endif
 #include <fcntl.h>
 
-#include "glite/lb/consumer.h"
 #include "glite/lb/events_parse.h"
 
 #include "interlogd.h"

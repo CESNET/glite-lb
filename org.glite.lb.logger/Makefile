@@ -222,4 +222,5 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 	${CXX} ${CFLAGS} ${GLOBUSTHRINC} ${TEST_INC} -c $< -o $@
 
 clean:
-	rm -rf .libs/ *.o *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} 
+	rm -rvf .libs/ *.o *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} 
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/

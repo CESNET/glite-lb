@@ -12,7 +12,6 @@
 #include <globus_common.h>
 
 #include "interlogd.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/log_proto.h"
 #include "glite/security/glite_gss.h"
 #ifdef LB_PERF

@@ -7,7 +7,6 @@
 #include "interlogd.h"
 #include "glite/lb/il_msg.h" 
 #include "glite/lb/events_parse.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/context.h"
 
 static

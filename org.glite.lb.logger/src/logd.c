@@ -15,8 +15,8 @@
 #include <globus_common.h>
 
 #include "glite/lb/context-int.h"
+#include "glite/lb/timeouts.h"
 #include "logd_proto.h"
-#include "glite/lb/consumer.h"
 #include "glite/security/glite_gss.h"
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
