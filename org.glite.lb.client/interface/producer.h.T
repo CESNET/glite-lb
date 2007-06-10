@@ -480,27 +480,6 @@ extern int edg_wll_GenerateSubjobIds(
 );
 
 
-enum edg_wll_Permission {
-	EDG_WLL_PERM_READ  = 1,
-	EDG_WLL_PERM_WRITE = 4,
-	EDG_WLL_PERM_ADMIN = 8,
-};
-
-enum edg_wll_PermissionType {
-	EDG_WLL_PERM_ALLOW,
-	EDG_WLL_PERM_DENY,
-};
-
-enum edg_wll_ACLOperation {
-	EDG_WLL_ACL_ADD,
-	EDG_WLL_ACL_REMOVE,
-};
-
-enum edg_wll_UserIdType {
-	EDG_WLL_USER_SUBJECT,		/* X.509 subject name */
-	EDG_WLL_USER_VOMS_GROUP,	/* VOMS group membership */
-};
-
 /**
  * Change ACL for given job.
  * \param[in,out] context 	context to work with

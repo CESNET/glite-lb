@@ -385,6 +385,29 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 #define EDG_WLL_FORMAT_SYSCMPSTAT	"DG.SCHED.STATUS=\"%|Us\" "
 #define EDG_WLL_FORMAT_SYSCLSTAT	"DG.SCHED.NODE=\"%|Us\" DG.SCHED.STATUS=\"%|Us\" "
 
+/* enums for the ChangeACL event */
+
+enum edg_wll_Permission {
+	EDG_WLL_PERM_READ  = 1,
+	EDG_WLL_PERM_WRITE = 4,
+	EDG_WLL_PERM_ADMIN = 8,
+};
+
+enum edg_wll_PermissionType {
+	EDG_WLL_PERM_ALLOW,
+	EDG_WLL_PERM_DENY,
+};
+
+enum edg_wll_ACLOperation {
+	EDG_WLL_ACL_ADD,
+	EDG_WLL_ACL_REMOVE,
+};
+
+enum edg_wll_UserIdType {
+	EDG_WLL_USER_SUBJECT,           /* X.509 subject name */
+	EDG_WLL_USER_VOMS_GROUP,        /* VOMS group membership */
+};
+
 /*
  *@} end of group
  */
