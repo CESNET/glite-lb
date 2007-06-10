@@ -6,7 +6,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "glite/lb/consumer.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"
 

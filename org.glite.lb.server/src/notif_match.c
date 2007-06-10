@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <syslog.h>
 
-#include "glite/lb/producer.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
 

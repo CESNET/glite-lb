@@ -1,5 +1,11 @@
-#ifndef __EDG_WORKLOAD_LOGGING_LBSERVER_WS_TYPEREF_H__
-#define __EDG_WORKLOAD_LOGGING_LBSERVER_WS_TYPEREF_H__
+#ifndef __GLITE_LB_WS_TYPEREF_H__
+#define __GLITE_LB_WS_TYPEREF_H__
+
+#ident "$Header"
+
+#include "glite/lb/jobstat.h"
+#include "glite/lb/query_rec.h"
+#include "glite/lb/events.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,4 +91,4 @@ extern void edg_wll_FreeSoapEvent(struct soap *, struct lbt__event *);
 }
 #endif
 
-#endif /* __EDG_WORKLOAD_LOGGING_LBSERVER_WS_TYPEREF_H__ */
+#endif /* __GLITE_LB_WS_TYPEREF_H__ */

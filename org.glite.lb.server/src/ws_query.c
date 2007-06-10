@@ -2,7 +2,6 @@
 #include <expat.h>
 
 #include "glite/lb/context-int.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/xml_conversions.h"
 

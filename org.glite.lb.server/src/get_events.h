@@ -1,4 +1,10 @@
+#ifndef __GLITE_LB_GET_EVENTS_H__
+#define __GLITE_LB_GET_EVENTS_H__
 #ident "$Header$"
+
+#include "glite/lb/context.h"
+#include "glite/lb/events.h"
+#include "glite/lb/query_rec.h"
 
 /* Internal functions for getting event sets from the LB database */
 #include "lbs_db.h"
@@ -32,3 +38,4 @@ void edg_wll_SortPEvents(edg_wll_Event **);
 }
 #endif
 
+#endif /* __GLITE_LB_GET_EVENTS_H__ */

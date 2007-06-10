@@ -25,9 +25,6 @@
 #include "lbs_db.h"
 #include "query.h"
 #include "get_events.h"
-#include "glite/lb/purge.h"
-#include "glite/lb/load.h"
-#include "glite/lb/dump.h"
 #include "purge.h"
 #include "lb_xml_parse.h"
 

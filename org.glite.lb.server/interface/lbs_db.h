@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#include "glite/lb/consumer.h"
+#include "glite/lb/context.h"
 
 #ifdef __cplusplus
 extern "C" {

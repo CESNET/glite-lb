@@ -5,7 +5,7 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-#include <glite/lb/consumer.h>
+#include <glite/lb/query_rec.h>
 #include <glite/lb/context-int.h>
 
 #include "lbs_db.h"

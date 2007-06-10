@@ -1,5 +1,12 @@
-#ifndef __EDG_WORKLOAD_LOGGING_LBSERVER_STATS_H__
-#define __EDG_WORKLOAD_LOGGING_LBSERVER_STATS_H__
+#ifndef __GLITE_LB_STATS_H__
+#define __GLITE_LB_STATS_H__
+
+#ident "$Header$"
+
+#include "glite/lb/context.h"
+#include "glite/lb/events.h"
+#include "glite/lb/jobstat.h"
+#include "glite/lb/query_rec.h"
 
 int edg_wll_InitStatistics(edg_wll_Context);
 
@@ -67,4 +74,4 @@ int edg_wll_StateDurationServer(
 	int	*res_to
 );
 
-#endif
+#endif /* __GLITE_LB_STATS_H__ */

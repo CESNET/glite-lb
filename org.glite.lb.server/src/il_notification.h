@@ -1,8 +1,11 @@
-#ifndef IL_NOTIFICATION_H
-#define IL_NOTIFICATION_H
+#ifndef __GLITE_LB_IL_NOTIFICATION_H__
+#define __GLITE_LB_IL_NOTIFICATION_H__
+
+#ident "$Header$"
 
 /* needed for the edg_wll_NotifId */
-#include "glite/lb/notification.h"
+#include "glite/lb/notifid.h"
+
 /* import the edg_wll_JobStat structure */
 #include "glite/lb/jobstat.h"
 
@@ -93,4 +96,4 @@ edg_wll_NotifCancelRegId(edg_wll_Context context,
 }
 #endif
 
-#endif
+#endif /* __GLITE_LB_IL_NOTIFICATION_H__ */

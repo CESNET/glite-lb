@@ -1,8 +1,5 @@
 #ident "$Header$"
 
-#include <stdlib.h>
-
-#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 
 #include "lbs_db.h"

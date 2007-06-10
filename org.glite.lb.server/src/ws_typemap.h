@@ -1,3 +1,8 @@
+#ifndef __GLITE_LB_WS_TYPEMAP_H__
+#define __GLITE_LB_WS_TYPEMAP_H__
+
+#ident "$Header"
+
 #if GSOAP_VERSION >= 20700
 
 #define JOBID		lbt__queryAttr__JOBID
@@ -60,3 +65,5 @@
 #define LBServer	lbt__eventSource__LBServer
 
 #endif
+
+#endif /* __GLITE_LB_WS_TYPEMAP_H__ */

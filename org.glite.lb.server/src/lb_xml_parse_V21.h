@@ -1,9 +1,11 @@
-#ifndef _LB_XML_PARSE_H_V21
-#define _LB_XML_PARSE_H_V21
+#ifndef __GLITE_LB_LB_XML_PARSE_V21_H__
+#define __GLITE_LB_LB_XML_PARSE_V21_H__
 
 #ident "$Header$"
 
-#include "glite/lb/consumer.h"
+#include "glite/lb/context.h"
+#include "glite/lb/jobstat.h"
+#include "glite/lb/query_rec.h"
 
 /* function for parsing/unparsing XML requests from client */
 
@@ -18,4 +20,4 @@ int edg_wll_UserJobsToXMLV21(edg_wll_Context, edg_wlc_JobId *, char **);
 int edg_wll_PurgeResultToXMLV21(edg_wll_Context ctx, edg_wll_PurgeResult *result, char **message);
 int edg_wll_DumpResultToXMLV21(edg_wll_Context ctx, edg_wll_DumpResult *result, char **message);
 
-#endif
+#endif /* __GLITE_LB_LB_XML_PARSE_V21_H__ */

@@ -8,13 +8,9 @@
 
 #include <expat.h>
 
-#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/xml_conversions.h"
-#include "glite/lb/dump.h"
-#include "glite/lb/load.h"
-#include "glite/lb/purge.h"
 
 #include "lb_proto.h"
 #include "lb_html.h"

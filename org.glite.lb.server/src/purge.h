@@ -1,5 +1,9 @@
-#ifndef __EDG_WORKLOAD_LOGGING_COMMON_PURGE_H__
-#define __EDG_WORKLOAD_LOGGING_COMMON_PURGE_H__
+#ifndef __GLITE_LB_PURGE_H__
+#define __GLITE_LB_PURGE_H__
+
+#ident "$Header"
+
+#include "glite/lb/context.h"
 
 /** Server side implementation
  *  besides output to the SSL stream (in the context) it may produce
@@ -54,4 +58,4 @@ extern int edg_wll_CreateFileStorage(
 #define edg_wll_CreateDumpFile(ctx, f)		edg_wll_CreateFileStorage(ctx,FILE_TYPE_DUMP,NULL,f)
 #define edg_wll_CreatePurgeFile(ctx, f)		edg_wll_CreateFileStorage(ctx,FILE_TYPE_PURGE,NULL,f)
 
-#endif
+#endif /* __GLITE_LB_PURGE_H__ */

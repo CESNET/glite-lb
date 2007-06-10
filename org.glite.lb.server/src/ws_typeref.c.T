@@ -7,7 +7,8 @@
 #include "bk_ws_H.h"
 #include "ws_typemap.h"
 
-#include "glite/lb/consumer.h"
+#include "glite/lb/events.h"
+#include "glite/lb/query_rec.h"
 /* XXX: references only, src and dest share pointers */
 
 #include "glite/security/glite_gscompat.h"

@@ -6,7 +6,6 @@
 #include <cppunit/ui/text/TestRunner.h>
 
 
-#include <glite/lb/producer.h>
 #include "lb_xml_parse.h"
 #include <glite/lb/xml_parse.h>
 

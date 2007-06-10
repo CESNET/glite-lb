@@ -1,13 +1,12 @@
-#ifndef _LB_XML_PARSE_H
-#define _LB_XML_PARSE_H
+#ifndef __GLITE_LB_LB_XML_PARSE_H__
+#define __GLITE_LB_LB_XML_PARSE_H__
 
 #ident "$Header$"
 
-#include "glite/lb/consumer.h"
-#include "glite/lb/notification.h"
-#include "glite/lb/purge.h"
-#include "glite/lb/dump.h"
-#include "glite/lb/load.h"
+#include "glite/lb/context.h"
+#include "glite/lb/jobstat.h"
+#include "glite/lb/notif_rec.h"
+#include "glite/lb/query_rec.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,4 +42,4 @@ int parseStatsRequest(edg_wll_Context,char *,char **,edg_wll_QueryRec ***,edg_wl
 }
 #endif
 	
-#endif
+#endif /* __GLITE_LB_LB_XML_PARSE_H__ */

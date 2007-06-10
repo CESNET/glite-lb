@@ -9,7 +9,7 @@
 #include "glite/lb/trio.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"
-#include "glite/lb/notification.h"
+
 #include "il_notification.h"
 #include "lbs_db.h"
 #include "query.h"

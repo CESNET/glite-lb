@@ -7,7 +7,6 @@
 #include <assert.h>
 #include <syslog.h>
 
-#include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 
 #include "jobstat.h"

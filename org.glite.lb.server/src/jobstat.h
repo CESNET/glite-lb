@@ -1,9 +1,9 @@
-/* $Header$ */
+#ifndef __GLITE_LB_LBS_JOBSTAT_H__
+#define __GLITE_LB_LBS_JOBSTAT_H__
 
-#ifndef _LBS_JOBSTAT_H
-#define _LBS_JOBSTAT_H
+#ident "$Header$"
 
-
+#include "glite/lb/jobstat.h"
 #include "lbs_db.h"
 
 /*
@@ -123,4 +123,4 @@ void init_intJobStat(intJobStat *p);
 edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context, edg_wlc_JobId parent_jobid, int *hist);
 edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context, edg_wlc_JobId parent_jobid, intJobStat *ijs);
 
-#endif
+#endif /* __GLITE_LB_LBS_JOBSTAT_H__*/

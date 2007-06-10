@@ -1,9 +1,8 @@
-#ifndef _LBS_STORE_H
-#define _LBS_STORE_H
+#ifndef __GLITE_LB_STORE_H__
+#define __GLITE_LB_STORE_H__
 
 #ident "$Header$"
 
-#include "glite/lb/consumer.h"
 #include "jobstat.h"
 #include "lb_authz.h"
 
@@ -57,4 +56,4 @@ int edg_wll_delete_event(edg_wll_Context,const char *, int);
 }
 #endif
 
-#endif
+#endif /* __GLITE_LB_STORE_H__ */

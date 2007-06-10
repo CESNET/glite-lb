@@ -37,8 +37,6 @@
 
 #include "glite/security/glite_gss.h"
 #include "glite/lb/srvbones.h"
-#include "glite/lb/consumer.h"
-#include "glite/lb/purge.h"
 #include "glite/lb/context.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"

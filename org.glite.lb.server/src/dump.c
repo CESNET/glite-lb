@@ -13,9 +13,6 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/ulm_parse.h"
-#include "glite/lb/purge.h"
-#include "glite/lb/purge.h"
-#include "glite/lb/dump.h"
 
 #include "lbs_db.h"
 #include "query.h"

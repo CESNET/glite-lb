@@ -5,11 +5,9 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/lb_maildir.h"
-#include "glite/lb/purge.h"
 #include "purge.h"
 #include "store.h"
 #include "lbs_db.h"

@@ -3,7 +3,6 @@
 #include "lb_html.h"
 #include "lb_proto.h"
 
-#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 
 #include <string.h>

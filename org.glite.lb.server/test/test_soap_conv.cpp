@@ -6,7 +6,7 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-#include <glite/lb/consumer.h>
+#include <glite/lb/query_rec.h>
 
 #include "bk_ws_H.h"
 #include "ws_typeref.h"

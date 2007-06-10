@@ -11,7 +11,6 @@
 #include <syslog.h>
 
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
 

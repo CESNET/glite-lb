@@ -1,9 +1,9 @@
-#ifndef _LB_PROTO_H
-#define _LB_PROTO_H
+#ifndef __GLITE_LB_PROTO_H__
+#define __GLITE_LB_PROTO_H__
 
 #ident "$Header$"
 
-#include "glite/lb/consumer.h"
+#include "glite/lb/context.h"
 
 extern const char* const response_headers[];
 
@@ -24,4 +24,4 @@ extern edg_wll_ErrorCode edg_wll_Proto(
 
 extern char *edg_wll_HTTPErrorMessage(int);
 
-#endif
+#endif /* __GLITE_LB_PROTO_H__ */

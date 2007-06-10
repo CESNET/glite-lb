@@ -8,14 +8,10 @@
 
 #include "glite/wmsutils/jobid/cjobid.h"
 
-#include "glite/lb/consumer.h"
 #include "glite/lb/escape.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
 #include "glite/lb/xml_conversions.h"
-
-#include "glite/lb/purge.h"
-#include "glite/lb/dump.h"
 
 #include "lb_xml_parse_V21.h"
 

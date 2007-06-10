@@ -16,7 +16,6 @@
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/trio.h"
-#include "glite/lb/producer.h"
 
 #include "jobstat.h"
 #include "get_events.h"
