@@ -8,7 +8,6 @@ package=glite-lb-client
 version=0.0.0
 PREFIX=/opt/glite
 
-glite_location=/opt/glite
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
