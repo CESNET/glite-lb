@@ -198,7 +198,7 @@ static void usage(char *me)
 {
 	fprintf(stderr,"usage: %s [option]\n"
 		"\t-a, --address\t use this server address (may be faked for debugging)\n"
-		"\t-b, --transactions\t transactions switch\n"
+		"\t-b, --transactions\t transactions switch (0, 1)\n"
 		"\t-k, --key\t private key file\n"
 		"\t-c, --cert\t certificate file\n"
 		"\t-C, --CAdir\t trusted certificates directory\n"
@@ -1017,8 +1017,8 @@ int bk_handle_ws_connection(int conn, struct timeval *timeout, void *data)
 		soap_done(soap);
 		goto err;
 	}
-	gsplugin_ctx->connection = &cdata->ctx->connections->serverConnection->gss;
-	gsplugin_ctx->cred = mycred;
+	glite_gsplugin_set_connection(gsplugin_ctx, &cdata->ctx->connections->serverConnection->gss);
+	glite_gsplugin_set_credential(gsplugin_ctx, mycred);
 	cdata->soap = soap;
 
 
@@ -1247,8 +1247,8 @@ int bk_ws_clnt_disconnect(int conn, struct timeval *timeout, void *cdata)
 
 
 	gsplugin_ctx = glite_gsplugin_get_context(soap);
-	gsplugin_ctx->cred = GSS_C_NO_CREDENTIAL;
-	gsplugin_ctx->connection = NULL;
+	glite_gsplugin_set_connection(gsplugin_ctx, NULL);
+	glite_gsplugin_set_credential(gsplugin_ctx, GSS_C_NO_CREDENTIAL);
 	if ( (rv = bk_clnt_disconnect(conn, timeout, cdata)) )
 		return rv;
 
