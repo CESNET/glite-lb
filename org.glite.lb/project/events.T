@@ -269,11 +269,13 @@
 	port	shadow_port	Shadow port
 	int	shadow_pid	PID of shadow process
 	string	shadow_status	Shadow status
+	_null_	-1
 	_optional_
 
 @type CondorShadowExited	Condor Shadow Exited
 	int	shadow_pid	PID of shadow process
 	int	shadow_exit_status	Exit status of shadow process
+	_null_	-1
 
 @type CondorStarterStarted	Condor Starter Started
 	int	starter_pid	PID of starter process
@@ -285,10 +287,12 @@
 	int	starter_pid	PID of starter process
 	_optional_
 	int	starter_exit_status	Exit status of starter process
+	_null_	-1
 	_optional_
 	int	job_pid		PID of running job
 	_optional_
 	int	job_exit_status	Job exit status
+	_null_	-1
 	_optional_
 
 @type CondorResourceUsage       Resources requested/consumed
