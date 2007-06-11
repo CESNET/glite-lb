@@ -378,7 +378,10 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 					&c[EDG_WLL_SOURCE_LB_SERVER]);
 
 			assert(EDG_WLL_SOURCE__LAST == 10);
-			if (res != EDG_WLL_SOURCE__LAST-1)
+			if (res == EDG_WLL_SOURCE_LB_SERVER-1) {
+				/* pre-collections compatibility */
+				c[EDG_WLL_SOURCE_LB_SERVER] = 0;
+			} else if (res != EDG_WLL_SOURCE__LAST-1)
 				return edg_wll_SetError(ctx, EINVAL,
 					"edg_wll_SetSequenceCode(): syntax error in sequence code");
 
