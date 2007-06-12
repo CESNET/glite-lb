@@ -17,7 +17,6 @@
 #include "glite/lb/mini_http.h"
 #include "glite/lb/query_rec.h"
 #include "glite/lb/consumer.h"
-#include "glite/lb/query.h" /* from server */
 
 #define dprintf(x) { if (debug) printf x; }
 

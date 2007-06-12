@@ -44,25 +44,15 @@ INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
-ifneq (${mysql_prefix},/usr)
-	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
-		mysqlib := -L${mysql_prefix}/lib/mysql
-	else
-		mysqlib := -L${mysql_prefix}/lib
-	endif
-endif
-
 ifneq (${expat_prefix},/usr)
 	expatlib := -L${expat_prefix}/lib
 endif
 
 EXT_LIBS:= \
-	${mysqlib} -lmysqlclient -lz\
 	${expatlib} -lexpat \
 	${GLOBUS_LIBS}
 COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
-BKSERVER_LIB:=-lglite_lb_bkserver 
 JP_LIBS:=-lglite_jp_common_${nothrflavour} -lglite_jp_trio
 
 UTILS:=mon purge dump load dump_exporter
@@ -79,7 +69,7 @@ compile all: ${UTILS} ${MAN_GZ} statistics
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
 
 ${UTILS}: %: %.o
-	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${BKSERVER_LIB} ${EXT_LIBS}
+	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS}
 
 statistics: statistics.o
 	${LINK} -rdynamic -o $@ $< ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
