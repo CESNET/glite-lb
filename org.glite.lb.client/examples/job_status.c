@@ -213,6 +213,9 @@ static void printstat(edg_wll_JobStat stat, int level)
 		case EDG_WLL_STAT_PBS:
 			printf("%sjobtype : PBS\n", ind);
                         break;
+		case EDG_WLL_STAT_CONDOR:
+			printf("%sjobtype : CONDOR\n", ind);
+                        break;
 		default:
 			break;
 	}
@@ -296,6 +299,20 @@ static void printstat(edg_wll_JobStat stat, int level)
 		printf("%spbs_exit_status : %d\n", ind, stat.pbs_exit_status);
 		printf("%spbs_error_desc : %s%s\n", ind, 
 			(stat.pbs_error_desc) ? "\n" : "", stat.pbs_error_desc);
+	}
+	/* CONDOR state section */
+	if (stat.jobtype == EDG_WLL_STAT_CONDOR) {
+		printf("%scondor_status : %s\n", ind, stat.condor_status);
+		printf("%scondor_universe : %s\n", ind, stat.condor_universe);
+		printf("%scondor_owner : %s\n", ind, stat.condor_owner);
+		printf("%scondor_shadow_pid : %d\n", ind, stat.condor_shadow_pid);
+		printf("%scondor_shadow_exit_status : %d\n", ind, stat.condor_shadow_exit_status);
+		printf("%scondor_starter_pid : %d\n", ind, stat.condor_starter_pid);
+		printf("%scondor_starter_exit_status : %d\n", ind, stat.condor_starter_exit_status);
+		printf("%scondor_job_pid : %d\n", ind, stat.condor_job_pid);
+		printf("%scondor_job_exit_status : %d\n", ind, stat.condor_job_exit_status);
+		printf("%scondor_reason : %s\n", ind, stat.condor_reason);
+		printf("%scondor_error_desc : %s\n", ind, stat.condor_error_desc);
 	}
 
 	printf("\n");	
