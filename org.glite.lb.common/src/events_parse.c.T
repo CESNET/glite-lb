@@ -148,7 +148,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 			my $c = "$t".ucfirst(${fn});
 			gen "\tthis->$tl.$fn = edg_wll_StringTo${c}(value);";
 		} else {
-			gen "\t";
+			gen "\tif(strlen(value) > 0) ";
 			gen $f->fromString('value',"this->$tl.$fn");
 		}
 		gen "\n".$indent.$indent."break;\n";
