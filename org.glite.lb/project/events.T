@@ -269,7 +269,6 @@
 	port	shadow_port	Shadow port
 	int	shadow_pid	PID of shadow process
 	string	shadow_status	Shadow status
-	_null_	-1
 	_optional_
 
 @type CondorShadowExited	Condor Shadow Exited
