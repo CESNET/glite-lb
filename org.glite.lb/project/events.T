@@ -133,6 +133,7 @@
 
 @type RegJob		New job registration.
 	string	jdl		Job description of the job being registered.
+	_optional_
 	string	ns		NetworkServer handling the newly registered job.
 	jobid	parent		Grid job id of the parent job registering this new one.
 	_optional_
