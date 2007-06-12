@@ -672,7 +672,7 @@ typedef struct _userdef_T {
  * Internal variables
  */
 
-static const char null[] = "";
+static const char null[] = "(nil)";
 
 #if defined(USE_LOCALE)
 static struct lconv *internalLocaleValues = NULL;

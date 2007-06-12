@@ -475,6 +475,7 @@ int edg_wll_GenerateSubjobIds(
 		retjobs == NULL)
 		return edg_wll_SetError(ctx, ENOMEM, NULL);
 
+	// XXX: nasty! add correct escaping of NULL
 	if ( !seed || !strcmp(seed, "(nil)") ) {
 		intseed = strdup("edg_wll_GenerateSubjobIds()");
 	}
