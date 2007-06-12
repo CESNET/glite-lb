@@ -667,7 +667,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			else {
 				int     fatal = 0;
 				
-				switch (edg_wll_DumpEvents(ctx,(const edg_wll_DumpRequest *) &request, &result)) {
+				switch (edg_wll_DumpEventsServer(ctx,(const edg_wll_DumpRequest *) &request, &result)) {
 					case 0: if (html) ret = HTTP_NOTIMPL;
 						else      ret = HTTP_OK; 
 						break;
@@ -699,7 +699,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			else {
 				int     fatal = 0;
 				
-				switch (edg_wll_LoadEvents(ctx,(const edg_wll_LoadRequest *) &request, &result)) {
+				switch (edg_wll_LoadEventsServer(ctx,(const edg_wll_LoadRequest *) &request, &result)) {
 					case 0: if (html) ret = HTTP_NOTIMPL;
 						else      ret = HTTP_OK; 
 						break;

@@ -25,7 +25,7 @@ static int handle_specials(edg_wll_Context,time_t *);
 
 #define sizofa(a) (sizeof(a)/sizeof((a)[0]))
 
-int edg_wll_DumpEvents(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wll_DumpResult *result)
+int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wll_DumpResult *result)
 {
 	char	*from_s, *to_s, *stmt, *time_s, *ptr;
 	char	*tmpfname;

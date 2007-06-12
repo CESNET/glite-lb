@@ -27,7 +27,7 @@
 
 static int read_line(char **buff, size_t *maxsize, int fd);
 
-int edg_wll_LoadEvents(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wll_LoadResult *result)
+int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wll_LoadResult *result)
 {
 	int					fd,
 						reject_fd = -1,

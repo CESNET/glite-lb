@@ -223,7 +223,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 		};
 		edg_wll_DumpResult	res;
 
-		if (edg_wll_DumpEvents(ctx,&req,&res)) 
+		if (edg_wll_DumpEventsServer(ctx,&req,&res)) 
 		{
 			if ( request->flags & EDG_WLL_PURGE_SERVER_DUMP )
 				unlink(tmpfname);
