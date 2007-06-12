@@ -230,7 +230,7 @@ WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
 #                 ${EXT_LIBS}
 # 
 
-HDRS=index.h lb_authz.h lbs_db.h store.h query.h
+HDRS=index.h lb_authz.h lbs_db.h store.h
 
 MAN_GZ:=glite-lb-mon-db.1.gz
 MAN = $(MAN_GZ:.gz=)
