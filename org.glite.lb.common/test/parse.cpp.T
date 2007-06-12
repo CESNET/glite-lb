@@ -52,7 +52,7 @@ void EventParseTest::regJob()
 	e1->regJob.jdl = strdup("very long job = \"blabla\" \\\\ \n hugh\t;");
 	e1->regJob.ns = strdup("ns address");
 	e1->regJob.jobtype = EDG_WLL_REGJOB_SIMPLE;
-	e1->regJob.seed = strdup("");
+	e1->regJob.seed = strdup("some seed");
 
 	gettimeofday(&e1->any.timestamp,NULL);
 	
