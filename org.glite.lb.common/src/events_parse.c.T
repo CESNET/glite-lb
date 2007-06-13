@@ -341,7 +341,7 @@ clean:
  */
 #define MISSING(m_key) { \
 	char *k =  edg_wll_KeyNameToString(m_key); \
-        sprintf(err_desc,"Message incomplete, missing key %s.", k); \
+        sprintf(err_desc,"Message incomplete, missing or empty field %s.", k); \
 	free(k); \
         ret=edg_wll_SetError(context,EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE,err_desc); \
         goto end; }
