@@ -81,6 +81,15 @@ typedef enum _edg_wll_CondorEventSource {
 	EDG_WLL_CONDOR_EVENT_SOURCE__LAST
 } edg_wll_CondorEventSource;
 
+typedef enum _subjobClassCodes {
+	SUBJOB_CLASS_UNDEF = 0,
+	SUBJOB_CLASS_RUNNING,
+	SUBJOB_CLASS_DONE,
+	SUBJOB_CLASS_ABORTED,
+	SUBJOB_CLASS_REST
+} subjobClassCodes;
+
+
 void destroy_intJobStat(intJobStat *);
 void destroy_intJobStat_extension(intJobStat *p);
 

@@ -272,7 +272,9 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				
 	int	lm_favour_lrms = 0;
 
-	if (old_state == EDG_WLL_JOB_ABORTED ||
+	// Aborted may not be terminal state for collection in some cases
+	// i.e. if some Done/failed subjob is resubmitted
+	if ( (old_state == EDG_WLL_JOB_ABORTED && e->any.type != EDG_WLL_EVENT_COLLECTIONSTATE) ||
 		old_state == EDG_WLL_JOB_CANCELLED ||
 		old_state == EDG_WLL_JOB_CLEARED) {
 		res = RET_LATE;
