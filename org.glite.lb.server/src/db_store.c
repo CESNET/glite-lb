@@ -73,8 +73,10 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 
   if(use_db) {
     if (ctx->strict_locking && edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
-    if(edg_wll_StoreEvent(ctx, ev,&seq))
-      goto err;
+    if(edg_wll_StoreEvent(ctx, ev,&seq)) {
+       edg_wll_UnlockJob(ctx,ev->any.jobId);
+       goto err;
+    }
   }
 
   if (!ctx->strict_locking && edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
