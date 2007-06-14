@@ -11,7 +11,7 @@
  * (includes edg_wll_JobStat API structure)
  */
 
-#define INTSTAT_VERSION "release-3.2.1_pbs"
+#define INTSTAT_VERSION "release-3.3.1_pbs_condor"
 
 
 // Internal error codes 
