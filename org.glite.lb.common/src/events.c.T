@@ -87,6 +87,7 @@ static const char *keyNames[] = {
 	"Undefined",
 	"DG.EVNT",
 @@@{
+my $keyno = 2;
 selectType $event '_common_';
 for ($event->getFieldsOrdered) {
 	my $f = selectField $event $_;
@@ -94,10 +95,11 @@ for ($event->getFieldsOrdered) {
 	my $fnu = uc $fn;
 	my $c = $f->{comment};
 	if (hasAlias $f 'ULM') {
-		gen "\t\"$fnu\",\n";
+		gen "\t\"$fnu\",  /* $keyno */\n";
 	} else {
-		gen "\t\"DG.$fnu\",\n";
+		gen "\t\"DG.$fnu\", /* $keyno */\n";
 	}
+	$keyno++;
 }
 for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		$event->getTypes) {
@@ -106,7 +108,8 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	for ($event->getFieldsOrdered) {
 		my $f = selectField $event $_;
 		my $fnu = uc $f->{name};
-		gen "\t\"DG.$tu.$fnu\",\n";
+		gen "\t\"DG.$tu.$fnu\", /* $keyno */\n";
+		$keyno++;
 	}
 }
 @@@}
