@@ -152,7 +152,6 @@ static const char* const errTexts[] = {
 	"Server response error",
 	"Bad JobId format",
 	"Database call failed",
-	"Bad URL format",
 	"MD5 key clash",
 	"GSSAPI Error",
 	"DNS resolver error",
@@ -162,7 +161,6 @@ static const char* const errTexts[] = {
 	"Interlogger internal error",
 	"Interlogger has events pending",
 	"Compared events differ",
-	"SQL parse error",
 };
 
 const char *edg_wll_GetErrorText(int code) {
