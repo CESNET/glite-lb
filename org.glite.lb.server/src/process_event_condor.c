@@ -66,6 +66,8 @@ int processEvent_Condor(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 			}
 			if (USABLE_DATA(res)) {
 				rep_cond(js->pub.condor_dest_host,e->CondorMatch.dest_host);
+				rep_cond(js->pub.condor_owner,e->CondorMatch.owner);
+				rep_cond(js->pub.condor_preempting,e->CondorMatch.preempting);
 			}
 			break;
 		case EDG_WLL_EVENT_CONDORREJECT:
@@ -107,6 +109,7 @@ int processEvent_Condor(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 			if (USABLE_DATA(res)) {
 				switch (get_condor_event_source(e->any.seqcode)) {
 					case EDG_WLL_CONDOR_EVENT_SOURCE_SHADOW:
+						js->pub.condor_shadow_pid = e->CondorShadowExited.shadow_pid;
 						js->pub.condor_shadow_exit_status = e->CondorShadowExited.shadow_exit_status;
 						break;
 					default:
