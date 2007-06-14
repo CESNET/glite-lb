@@ -508,6 +508,19 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_int(ret, stat->pbs_pid);
 	if (ret) ret = enc_int(ret, stat->pbs_exit_status);
 	if (ret) ret = enc_string(ret, stat->pbs_error_desc);
+	if (ret) ret = enc_string(ret, stat->condor_status);
+	if (ret) ret = enc_string(ret, stat->condor_universe);
+	if (ret) ret = enc_string(ret, stat->condor_owner);
+	if (ret) ret = enc_string(ret, stat->condor_preempting);
+	if (ret) ret = enc_int(ret, stat->condor_shadow_pid);
+	if (ret) ret = enc_int(ret, stat->condor_shadow_exit_status);
+	if (ret) ret = enc_int(ret, stat->condor_starter_pid);
+	if (ret) ret = enc_int(ret, stat->condor_starter_exit_status);
+	if (ret) ret = enc_int(ret, stat->condor_job_pid);
+	if (ret) ret = enc_int(ret, stat->condor_job_exit_status);
+	if (ret) ret = enc_string(ret, stat->condor_dest_host);
+	if (ret) ret = enc_string(ret, stat->condor_reason);
+	if (ret) ret = enc_string(ret, stat->condor_error_desc);
 
 	return ret;
 }
@@ -570,6 +583,19 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->pbs_pid = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_exit_status = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_error_desc = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->condor_status = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->condor_universe = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->condor_owner = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->condor_preempting = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_shadow_pid = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_shadow_exit_status = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_starter_pid = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_starter_exit_status = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_job_pid = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_job_exit_status = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_dest_host = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_reason = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_error_desc = dec_string(tmp_in, &tmp_in);
 
 	*rest = tmp_in;
 
@@ -828,11 +854,12 @@ int same_branch(const char *a, const char *b)
 
 int edg_wll_compare_pbs_seq(const char *a,const char *b)
 {
-	char	timestamp_a[14], pos_a[10], ev_code_a, src_a;
-	char	timestamp_b[14], pos_b[10], ev_code_b, src_b;
+	char	timestamp_a[14], pos_a[10], src_a;
+	char	timestamp_b[14], pos_b[10], src_b;
+	int	ev_code_a, ev_code_b;
 	int	res;
 
-	res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", &timestamp_a, &pos_a, &ev_code_a, &src_a);	
+	res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_a, pos_a, &ev_code_a, &src_a);	
 
 	if (res != 4) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
@@ -840,7 +867,7 @@ int edg_wll_compare_pbs_seq(const char *a,const char *b)
 		return -1;
 	}
 
-	res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", &timestamp_b, &pos_b, &ev_code_b, &src_b);	
+	res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_b, pos_b, &ev_code_b, &src_b);	
 
 	if (res != 4) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", b);
@@ -883,7 +910,7 @@ int edg_wll_compare_pbs_seq(const char *a,const char *b)
 }
 
 edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num) {
-	switch (pbs_seq_num[EDG_WLL_SEQ_PBS_SIZE-1]) {
+	switch (pbs_seq_num[EDG_WLL_SEQ_PBS_SIZE - 2]) {
 		case 'c': return(EDG_WLL_PBS_EVENT_SOURCE_SCHEDULER);
 		case 's': return(EDG_WLL_PBS_EVENT_SOURCE_SERVER);
 		case 'm': return(EDG_WLL_PBS_EVENT_SOURCE_MOM);
@@ -893,7 +920,7 @@ edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num) {
 }
 
 edg_wll_CondorEventSource get_condor_event_source(const char *condor_seq_num) {
-	switch (condor_seq_num[EDG_WLL_SEQ_CONDOR_SIZE-1]) {
+	switch (condor_seq_num[EDG_WLL_SEQ_CONDOR_SIZE - 2]) {
 		case 'L': return(EDG_WLL_CONDOR_EVENT_SOURCE_COLLECTOR);
 		case 'M': return(EDG_WLL_CONDOR_EVENT_SOURCE_MASTER);
 		case 'm': return(EDG_WLL_CONDOR_EVENT_SOURCE_MATCH);
