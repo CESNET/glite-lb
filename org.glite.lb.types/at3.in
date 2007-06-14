@@ -16,8 +16,8 @@ my $statusn = "$prefix/share/lb/at3/status.T";
 
 my $indent = '';
 
-my $event = new MultiStruct;
-my $status = new MultiStruct;
+$event = new MultiStruct;
+$status = new MultiStruct;
 
 sub gen {
 	local $_ = shift;
