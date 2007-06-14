@@ -21,9 +21,28 @@ static const struct timeval null_timeval = {0,0};
 static const char *eventNames[] = {
 	"Undefined",
 @@@{
+my $flesh = 'gLite';    #XXX
+my $fleshno = 0;
+my $eventno = $fleshno;
+
 for my $e (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		$event->getTypes) {
-	gen "\t\"$e\",\n";
+
+	if ($flesh ne $event->{flesh}->{$e}) {
+		$flesh = $event->{flesh}->{$e};
+		$fleshno += 100;
+
+		gen "\t";
+		while ($eventno < $fleshno) {
+			gen "NULL, "; 
+			$eventno++;
+			if (($eventno % 10) == 0) { gen "\n\t"; }
+		}
+		gen "\n";
+	}
+	
+	$eventno++;
+	gen "\t\"$e\", /* $eventno */\n";
 }
 @@@}
 	"SysCmpStat",

@@ -228,6 +228,7 @@ static void read_event(const edg_wll_Args* o, char* arg, char* par)
 	    // list type
 	    int i;
 	    printf("Available events:   extra options\n");
+/* XXX: holes in edg_wll_EventCode */
 	    for (i = EDG_WLL_EVENT_UNDEF + 1; i < EDG_WLL_EVENT__LAST; i++)
 	    {
 		char* e = edg_wll_EventToString(i);
