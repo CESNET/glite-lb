@@ -99,7 +99,6 @@ int edg_wll_DoLogEvent(
 		goto edg_wll_DoLogEvent_end;
 	}
 
-	/* why?  sleep(3); */
 	/* send message */
 	if ((ret = edg_wll_log_write(ctx,conn,logline)) == -1) {
 		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_write error");
@@ -114,7 +113,7 @@ int edg_wll_DoLogEvent(
 	}
 
 edg_wll_DoLogEvent_end:
-// XXX: no close if using connpool:	edg_wll_log_close(ctx,&conn);
+	if (ret) edg_wll_log_close(ctx,conn);
 
 	return handle_errors(ctx,answer,"edg_wll_DoLogEvent()");
 }
