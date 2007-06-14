@@ -13,6 +13,9 @@
 
 #include <pthread.h>
 
+// we need the namespace definition from there
+#include "glite/lb/CountRef.h"
+
 EWL_BEGIN_NAMESPACE
 
 /** Base class for all exceptions thrown by the L&B C++ classes.
