@@ -28,6 +28,8 @@
 	string	src_instance	Instance of source component (e.g. service communication endpoint).
 	_optional_
 
+@flesh gLite
+
 @type Transfer		Start, success, or failure of job transfer to another component.
 	logsrc	destination	Destination where the job is being transfered to.
 	string	dest_host	Hostname of server that takes over control of the job.
@@ -213,6 +215,7 @@
 	jobid   child		JobId of subjob, which triggered the state change.	
 	string	child_event	Event which triggered the state change.	
 
+@flesh PBS
 
 @type PBSQueued		Job enqued
 	string	queue		Queue name
@@ -252,6 +255,8 @@
 
 @type PBSError		Any error occured
 	string	error_desc	Error reason
+
+@flesh Condor
 
 @type CondorMatch	Job MATCHed
 	string	owner		Owner
