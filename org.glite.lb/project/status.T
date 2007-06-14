@@ -91,6 +91,7 @@ string	pbs_error_desc	Glued error descriptions from error events
 string	condor_status	Condor job status 
 string	condor_universe	Condor job Universe (in job ClassAds)
 string	condor_owner	Job owner
+string	condor_preempting	Job preempting
 int	condor_shadow_pid	PID of Shadow
 int	condor_shadow_exit_status	Condor shadow exit status (see h/exit.h)
 int	condor_starter_pid	PID of Starter
