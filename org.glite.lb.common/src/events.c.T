@@ -62,7 +62,7 @@ edg_wll_EventCode edg_wll_StringToEvent(const char *name)
 	unsigned int	i;
 
 	for (i=1; i<sizeof(eventNames)/sizeof(eventNames[0]); i++)
-		if (strcasecmp(eventNames[i],name) == 0) return (edg_wll_EventCode) i;
+		if ( (eventNames[i]) && (strcasecmp(eventNames[i],name) == 0)) return (edg_wll_EventCode) i;
 	return EDG_WLL_EVENT_UNDEF;
 }
 
