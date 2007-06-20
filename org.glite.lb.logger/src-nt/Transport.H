@@ -9,11 +9,13 @@ public:
 	class Factory {
 	public:
 		virtual Transport *newTransport(Connection *conn) const = 0;
+
+		virtual ~Factory() = 0;
 	};
 
 	Transport(Connection *a_conn) 
-		: conn(a_conn),
-		  ThreadPool::WorkDescription(a_conn ? a_conn->getFD() : -1)
+		: ThreadPool::WorkDescription(a_conn ? a_conn->getFD() : -1),
+		  conn(a_conn)
 		{}
 
 	virtual ~Transport() 
