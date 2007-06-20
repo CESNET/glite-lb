@@ -56,7 +56,7 @@ int processEvent_Condor(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict
 				rep(js->pub.condor_status, "Idle");
 			}
 			if (USABLE_DATA(res)) {
-				rep(js->pub.jdl, e->regJob.jdl);
+				rep_cond(js->pub.jdl, e->regJob.jdl);
 			}
 			break;
 		case EDG_WLL_EVENT_CONDORMATCH:

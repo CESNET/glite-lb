@@ -65,6 +65,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 }
 
 #define rep(a,b) { free(a); a = (b == NULL) ? NULL : strdup(b); }
+#define rep_cond(a,b) { if (b) { free(a); a = strdup(b); } }
 
 static void free_stringlist(char ***lptr)
 {
@@ -265,7 +266,6 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
 	edg_wll_JobStatCode	old_state = js->pub.state;
-	enum edg_wll_StatDone_code	old_done_code = js->pub.done_code;
 	edg_wll_JobStatCode	new_state = EDG_WLL_JOB_UNKNOWN;
 	int			res = RET_OK,
 				fine_res = RET_OK;
@@ -818,7 +818,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				js->pub.state = EDG_WLL_JOB_SUBMITTED;
 			}
 			if (USABLE_DATA(res, strict)) {
-				rep(js->pub.jdl, e->regJob.jdl);
+				rep_cond(js->pub.jdl, e->regJob.jdl);
 				edg_wlc_JobIdFree(js->pub.parent_job);
 				edg_wlc_JobIdDup(e->regJob.parent,
 							&js->pub.parent_job);
@@ -882,7 +882,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			rep(js->last_cancel_seqcode, e->any.seqcode);
 		} else {
 
-/* the first set of LM events (Accept, Transfer/* -> LRMS)
+/* the first set of LM events (Accept, Transfer/- -> LRMS)
    should not should shift the state (to Ready, Scheduled) but NOT to
    update js->last_seqcode completely, in order not to block following
    LRMS events which are likely to arrive later but should still affect
