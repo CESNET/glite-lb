@@ -15,6 +15,8 @@ public:
 		}
 
 		virtual Connection *accept(int fd) const;
+
+		virtual ~Factory() {}
 	};
 
 	static Factory theFactory;
