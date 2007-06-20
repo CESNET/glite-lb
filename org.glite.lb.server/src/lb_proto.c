@@ -392,28 +392,30 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		if ( strstr(headers[i], KEY_AGENT) ) break;
   
 	if (headers[i] == NULL) { ret = HTTP_BADREQ; goto err; } /* if not present */
-	switch (is_protocol_incompatible(headers[i])) { 
-		case 0  : /* protocols compatible */
-			  ctx->is_V21 = 0;
-			  break;
-		case -1 : /* malformed 'User Agent:' line */
-			  ret = HTTP_BADREQ;
-			  goto err;
-			  break;
-		case 1  : /* protocols incompatible */
-			  /* try old (V21) version compatibility */
-			  edg_wll_ProtoV21(ctx, request, headers, messageBody, 
-					  response, headersOut, bodyOut);
-					  
-			  /* and propagate errors or results */
-			  return edg_wll_Error(ctx,NULL,NULL);
-			  break;
-		case -2 : /* version of one protocol unknown */
-			  /* fallthrough */
-		default : ret = HTTP_UNSUPPORTED; 
-			  edg_wll_SetError(ctx,ENOTSUP,"Protocol versions are incompatible.");
-			  goto err; 
-			  break;
+	if (!html) {
+		switch (is_protocol_incompatible(headers[i])) { 
+			case 0  : /* protocols compatible */
+				  ctx->is_V21 = 0;
+				  break;
+			case -1 : /* malformed 'User Agent:' line */
+				  ret = HTTP_BADREQ;
+				  goto err;
+				  break;
+			case 1  : /* protocols incompatible */
+				  /* try old (V21) version compatibility */
+				  edg_wll_ProtoV21(ctx, request, headers, messageBody, 
+						  response, headersOut, bodyOut);
+						  
+				  /* and propagate errors or results */
+				  return edg_wll_Error(ctx,NULL,NULL);
+				  break;
+			case -2 : /* version of one protocol unknown */
+				  /* fallthrough */
+			default : ret = HTTP_UNSUPPORTED; 
+				  edg_wll_SetError(ctx,ENOTSUP,"Protocol versions are incompatible.");
+				  goto err; 
+				  break;
+		}
 	}
 
 
