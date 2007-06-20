@@ -173,12 +173,9 @@ HTTPTransport::parseHeader(const char *s, unsigned int len)
 {
 	char *p;
 
-	std::cout << "header: ";
-	std::cout.write(s, len);
-	std::cout << std::endl;
-	std::cout.flush();
+	p = (char*)memccpy((void*)s, (void*)s, ':', len);
+	
 	if(!strncasecmp(s, "Content-Length", 14)) {
-		p = (char*)memccpy((void*)s, (void*)s, ':', len);
 		content_length = p ? atoi(p) : 0 ;
 	}
 	return(0);
