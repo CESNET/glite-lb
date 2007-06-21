@@ -7,10 +7,10 @@
 #include <globus_common.h>
 
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "context-int.h"
+#include "glite/lb/context-int.h"
 // XXX:
-#include "log_proto.h" // for default log host and port
-#include "timeouts.h" // for timeouts
+#include "glite/lb/log_proto.h" // for default log host and port
+#include "glite/lb/timeouts.h" // for timeouts
 
 /* XXX: must match edg_wll_ContextParam */
 static const char *myenv[] = {

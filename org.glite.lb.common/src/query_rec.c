@@ -7,7 +7,7 @@
 #include <assert.h>
 
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "query_rec.h"
+#include "glite/lb/query_rec.h"
 
 /*
  * edg_wll_QueryRec manipulation routines

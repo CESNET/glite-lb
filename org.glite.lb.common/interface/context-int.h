@@ -4,11 +4,11 @@
 #ident "$Header$"
 
 #include "glite/security/glite_gss.h"
-#include "jobstat.h"
-#include "query_rec.h"
-#include "lb_plain_io.h"
-#include "authz.h"
-#include "connpool.h"
+#include "glite/lb/jobstat.h"
+#include "glite/lb/query_rec.h"
+#include "glite/lb/lb_plain_io.h"
+#include "glite/lb/authz.h"
+#include "glite/lb/connpool.h"
 
 #ifdef __cplusplus
 extern "C" {

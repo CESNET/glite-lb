@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "il_string.h"
+#include "glite/lb/il_string.h"
 
 char *
 _put_int(char *p, int d)

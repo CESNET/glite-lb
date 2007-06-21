@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 
-#include "context.h"
+#include "glite/lb/context.h"
 
 /**
  * default (noauth) user name

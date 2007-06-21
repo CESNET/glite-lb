@@ -4,10 +4,10 @@
 #ident "$Header$"
 
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "events.h"
-#include "query_rec.h"
-#include "notifid.h"
-#include "notif_rec.h"
+#include "glite/lb/events.h"
+#include "glite/lb/query_rec.h"
+#include "glite/lb/notifid.h"
+#include "glite/lb/notif_rec.h"
 
 #ifdef __cplusplus
 extern "C" {

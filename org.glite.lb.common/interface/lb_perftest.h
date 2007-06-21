@@ -5,7 +5,7 @@
 
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/wmsutils/jobid/strmd5.h"
-#include "events.h"
+#include "glite/lb/events.h"
 
 #define PERFTEST_END_TAG_NAME "lb_perftest"
 #define PERFTEST_END_TAG_VALUE "+++ konec testu +++"

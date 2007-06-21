@@ -2,9 +2,9 @@
 #define __GLITE_LB_CONNPOOL_H__
 
 #include "glite/security/glite_gss.h"
-#include "context.h"
-#include "lb_plain_io.h"
-#include "authz.h"
+#include "glite/lb/context.h"
+#include "glite/lb/lb_plain_io.h"
+#include "glite/lb/authz.h"
 #ifdef GLITE_LB_THREADED
   #include <pthread.h>
 #endif

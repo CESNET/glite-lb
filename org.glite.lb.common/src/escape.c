@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include "escape.h"
+#include "glite/lb/escape.h"
 
 #define ULM_QM  '"'
 #define ULM_BS  '\\'

@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "context-int.h"
+#include "glite/lb/context-int.h"
 
 #define tv_sub(a, b) {\
 	(a).tv_usec -= (b).tv_usec;\

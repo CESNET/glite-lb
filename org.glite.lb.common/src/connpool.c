@@ -1,4 +1,4 @@
-#include "connpool.h"
+#include "glite/lb/connpool.h"
 
 #ifdef GLITE_LB_THREADED
 edg_wll_Connections connectionsHandle = 

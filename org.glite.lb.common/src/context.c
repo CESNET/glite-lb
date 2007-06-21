@@ -10,7 +10,7 @@
 
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "context-int.h"
+#include "glite/lb/context-int.h"
 // #include "glite/lb/producer.h"
 
 static void free_voms_groups(edg_wll_VomsGroups *);

@@ -1,7 +1,7 @@
 #ifndef __GLITE_LB_IL_MSG_H__
 #define __GLITE_LB_IL_MSG_H__
 
-#include "il_string.h"
+#include "glite/lb/il_string.h"
 
 #ident "$Header$"
 

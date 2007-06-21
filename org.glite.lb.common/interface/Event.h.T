@@ -20,8 +20,8 @@
 #include "glite/wmsutils/jobid/JobId.h"
 #include "glite/lb/CountRef.h"
 
-#include "events.h"
-#include "notifid.h"
+#include "glite/lb/events.h"
+#include "glite/lb/notifid.h"
 
 EWL_BEGIN_NAMESPACE
 

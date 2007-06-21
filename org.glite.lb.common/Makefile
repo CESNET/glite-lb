@@ -130,6 +130,10 @@ endif
 default: all
 
 generate: ${GEN_HDRS}
+	rm -vf ${globalprefix} ${lbprefix} ${HDRS}
+	ln -vs . ${globalprefix}
+	ln -vs . ${lbprefix}
+	for i in ${HDRS}; do ln -vs ../interface/$$i $$i ; done
 
 all compile: generate ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
 
@@ -242,6 +246,7 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h test_parse il_test parse.cpp events.tex status.tex
+	rm -vf ${globalprefix} ${lbprefix}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o: %.c

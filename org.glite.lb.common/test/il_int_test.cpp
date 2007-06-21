@@ -2,7 +2,7 @@
 
 
 extern "C" {
-#include "il_string.h"
+#include "glite/lb/il_string.h"
 }
 
 class IlIntTest: public CppUnit::TestFixture

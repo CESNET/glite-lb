@@ -47,13 +47,13 @@ static const char rcsid[] = "@(#)$Id$";
 /*************************************************************************
  * Trio include files
  */
-#include "trio.h"
+#include "glite/lb/trio.h"
 #include "triop.h"
 #include "strio.h"
 
 #ifdef DATAGRID_EXTENSION
-#include "events.h"
-#include "escape.h"
+#include "glite/lb/events.h"
+#include "glite/lb/escape.h"
 #endif
 
 /*

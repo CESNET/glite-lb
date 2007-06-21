@@ -16,8 +16,8 @@
 #include <inttypes.h>
 
 #include "glite/wmsutils/jobid/cjobid.h"
-#include "context.h"
-#include "notifid.h"
+#include "glite/lb/context.h"
+#include "glite/lb/notifid.h"
 
 #ifdef __cplusplus
 extern "C" {

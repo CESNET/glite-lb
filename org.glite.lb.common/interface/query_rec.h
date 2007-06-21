@@ -8,10 +8,10 @@
 
 #ident "$Header$"
 
-#include <glite/wmsutils/jobid/cjobid.h>
-#include "context.h"
-#include "events.h"
-#include "jobstat.h"
+#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb/context.h"
+#include "glite/lb/events.h"
+#include "glite/lb/jobstat.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -9,14 +9,13 @@
 #include <time.h>
 #include <errno.h>
 
-#include "events.h"
-#include "events_parse.h"
-#include "ulm_parse.h"
-#include "context-int.h"
-#include "escape.h"
 #include "glite/wmsutils/jobid/cjobid.h"
-
-#include "trio.h"
+#include "glite/lb/events.h"
+#include "glite/lb/events_parse.h"
+#include "glite/lb/ulm_parse.h"
+#include "glite/lb/context-int.h"
+#include "glite/lb/escape.h"
+#include "glite/lb/trio.h"
 
 static const struct timeval null_timeval = {0,0};
 

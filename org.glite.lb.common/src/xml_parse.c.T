@@ -9,13 +9,13 @@
 
 #include "globus_config.h"
 
-#include "trio.h"
+#include "glite/lb/trio.h"
 #include "glite/wmsutils/jobid/cjobid.h"
 
-#include "escape.h"
-#include "context-int.h"
-#include "xml_parse.h"
-#include "xml_conversions.h"    
+#include "glite/lb/escape.h"
+#include "glite/lb/context-int.h"
+#include "glite/lb/xml_parse.h"
+#include "glite/lb/xml_conversions.h"    
 
 
 #ifdef __GNUC__ 

@@ -3,7 +3,7 @@
 
 #ident "$Header$"
 
-#include "events.h"
+#include "glite/lb/events.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include <expat.h>
 
-#include "trio.h"
+#include "glite/lb/trio.h"
 
-#include "xml_conversions.h"
-#include "escape.h"
-#include "jobstat.h"
+#include "glite/lb/xml_conversions.h"
+#include "glite/lb/escape.h"
+#include "glite/lb/jobstat.h"
 
 
 

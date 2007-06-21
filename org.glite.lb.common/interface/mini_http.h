@@ -4,8 +4,8 @@
 #ident "$Header$"
 
 // #include "glite/lb/consumer.h"
-#include "context.h"
-#include "connpool.h"
+#include "glite/lb/context.h"
+#include "glite/lb/connpool.h"
 
 /* XXX: not a good place for the folowing #def's but we ain't got better currently */
 /** protocol version */

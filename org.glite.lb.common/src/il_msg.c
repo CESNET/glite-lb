@@ -1,6 +1,6 @@
 #ident "$Header$"
 
-#include "il_string.h"
+#include "glite/lb/il_string.h"
 
 #include <stdlib.h>
 #include <stdio.h>

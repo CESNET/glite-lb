@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "lb_maildir.h"
+#include "glite/lb/lb_maildir.h"
 
 #define DEFAULT_ROOT	"/tmp/lb_maildir"
 
