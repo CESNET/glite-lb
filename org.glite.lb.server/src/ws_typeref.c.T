@@ -195,7 +195,7 @@ int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt
 !		h = js->${usuc};
 !		for (i=1; i<EDG_WLL_NUMBER_OF_STATCODES; i++) {
 !			edg_wll_JobStatCodeToSoap(i,&GLITE_SECURITY_GSOAP_LIST_GET(h, i-1)->state);
-!			GLITE_SECURITY_GSOAP_LIST_GET(h, i-1)->$fmap{$_} = src->$_\[i];
+!			GLITE_SECURITY_GSOAP_LIST_GET(h, i-1)->$fmap{$_} = src->$_\[i+1];
 !		}
 !	}
 !	else {
@@ -310,9 +310,9 @@ void edg_wll_SoapToJobStatFlags(const struct lbt__jobFlags *in, int *out)
 {
 	int		i;
 
-	assert(in); assert(out);
+	assert(out);
 	*out = 0;
-	for ( i = 0; i < in->__sizeflag; i++ ) switch ( in->flag[i] )
+	if (in) for ( i = 0; i < in->__sizeflag; i++ ) switch ( in->flag[i] )
 	{
 	case CLASSADS: *out |= EDG_WLL_STAT_CLASSADS; break;
 	case CHILDREN: *out |= EDG_WLL_STAT_CHILDREN; break;
