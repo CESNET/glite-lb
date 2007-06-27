@@ -809,13 +809,13 @@ static subjobClassCodes class(edg_wll_JobStat *stat)
 				return(SUBJOB_CLASS_DONE);
 			else
 				// failed & cancelled
-				return(SUBJOB_CLASS_ABORTED);
+				return(SUBJOB_CLASS_REST);
 			break;
 		case EDG_WLL_JOB_ABORTED:
 			return(SUBJOB_CLASS_ABORTED);
 			break;
-		case EDG_WLL_JOB_CANCELLED:
-			return(SUBJOB_CLASS_DONE);
+		case EDG_WLL_JOB_CLEARED:
+			return(SUBJOB_CLASS_CLEARED);
 			break;
 		default:
 			return(SUBJOB_CLASS_REST);
@@ -830,15 +830,39 @@ static edg_wll_JobStatCode class_to_statCode(subjobClassCodes code)
 		case SUBJOB_CLASS_RUNNING:	return(EDG_WLL_JOB_RUNNING); break;
 		case SUBJOB_CLASS_DONE:		return(EDG_WLL_JOB_DONE); break;
 		case SUBJOB_CLASS_ABORTED:	return(EDG_WLL_JOB_ABORTED); break;
+		case SUBJOB_CLASS_CLEARED:	return(EDG_WLL_JOB_CLEARED); break;
 		case SUBJOB_CLASS_REST:		return(EDG_WLL_JOB_UNKNOWN); break;
 		default:			assert(0); break;
 	}
+}
+
+/* count parent state from subjob histogram */
+static edg_wll_JobStatCode process_Histogram(intJobStat *pis)
+{
+	if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_RUNNING)+1] > 0) {
+		return EDG_WLL_JOB_RUNNING;
+	}
+	else if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] == pis->pub.children_num) {
+		return EDG_WLL_JOB_CLEARED;
+	}
+	else if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1] 
+			+ pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] == pis->pub.children_num) {
+		return EDG_WLL_JOB_DONE;
+	}
+	else if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_ABORTED)+1]
+			+ pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1]
+			+ pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] == pis->pub.children_num) {
+		return EDG_WLL_JOB_ABORTED;
+	}
+	else
+		return EDG_WLL_JOB_WAITING;
 }
 
 static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobStat *subjob_stat_old, intJobStat *cis, edg_wll_Event *ce)
 {
 	intJobStat		*pis = NULL;
 	subjobClassCodes	subjob_class, subjob_class_old;
+	edg_wll_JobStatCode	parent_new_state;
 
 
 	subjob_class = class(&cis->pub);
@@ -851,7 +875,7 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 		pis->pub.children_hist[class_to_statCode(subjob_class)+1]++;
 		pis->pub.children_hist[class_to_statCode(subjob_class_old)+1]--;
 
-		/* not needed if DONE_OK and DONE_FAILED mapped on diffrent field in histogram 
+		/* XXX: not needed if DONE_OK and DONE_FAILED mapped on different field in histogram 
 		 * if furure proves it, children_done_hist field of intStat may be removed
 		if (cis->pub.state == EDG_WLL_JOB_DONE)
 	                pis->children_done_hist[cis->pub.done_code]++;
@@ -863,58 +887,16 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 
 
 		if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
-			switch (subjob_class) {
-				case SUBJOB_CLASS_RUNNING: 
-					if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
-						// no subjob running yet, this is the very first
-						if (log_collectionState_event(ctx, EDG_WLL_JOB_RUNNING, 0, cis, pis, ce))
-							goto err;
-					}
-					else if ((pis->pub.state == EDG_WLL_JOB_CLEARED) || 
-							(pis->pub.state == EDG_WLL_JOB_ABORTED)) {
-						// done or aborted hist-field loosing one subjob
-						if (log_collectionState_event(ctx, EDG_WLL_JOB_RUNNING, 0, cis, pis, ce))
-							goto err;
-					}
-					break;
-				case SUBJOB_CLASS_DONE:
-					if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1] == pis->pub.children_num) {
-						if (log_collectionState_event(ctx, EDG_WLL_JOB_CLEARED, EDG_WLL_STAT_OK, cis, pis, ce))
-							goto err;
-					}
-					else
-					if (( pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1] +
-					      pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_ABORTED)+1])
-					      == pis->pub.children_num) {
-						if (log_collectionState_event(ctx, EDG_WLL_JOB_ABORTED, EDG_WLL_STAT_FAILED, cis, pis, ce))
-							goto err;
-					}
-					break;
-				case SUBJOB_CLASS_ABORTED:
-					// XXX: is it correct semantics?
-					// what about EDG_WLL_STAT_ code? is it meaningful here?
-					if (( pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_ABORTED)+1] + 
-					      pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1]) 
-					      == pis->pub.children_num) {
-						if (log_collectionState_event(ctx, EDG_WLL_JOB_ABORTED, 0, cis, pis, ce))
-							goto err;
-					}
-					break;
-				case SUBJOB_CLASS_REST:
-					// XXX: is it correct semantics?
-					if ((pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_RUNNING)+1] == 0) &&
-							(pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1] == 0) &&
-							(pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_ABORTED)+1] == 0) &&
-							(pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_REST)+1] == 0)) {
-						if (log_collectionState_event(ctx, EDG_WLL_JOB_SUBMITTED, 0, cis, pis, ce))
-							goto err;
-					}
-					return(EDG_WLL_JOB_SUBMITTED);
-					break;
-				default: 
-					assert(0); 
-					break;
-			}			
+			parent_new_state = process_Histogram(pis);
+			if (pis->pub.state != parent_new_state) {
+				// XXX: we do not need  EDG_WLL_STAT_code any more
+				//	doneFailed subjob is stored in REST class and
+				//	inducting collection Waiting state
+				//	-> in future may be removed from collectionState event
+				//	   supposing collection Done state to be always DoneOK
+				if (log_collectionState_event(ctx, parent_new_state, EDG_WLL_STAT_OK, cis, pis, ce))
+					goto err;
+			}
 		}
 	}
 
