@@ -11,7 +11,7 @@
  * (includes edg_wll_JobStat API structure)
  */
 
-#define INTSTAT_VERSION "release-3.3.1_pbs_condor"
+#define INTSTAT_VERSION "release-3.3.2_pbs_condor"
 
 
 // Internal error codes 
@@ -52,8 +52,6 @@ typedef struct _intJobStat {
 		char		*deep_resubmit_seqcode;
 		branch_state	*branch_states;		// branch zero terminated array
 
-/*		int		expect_mask; */
-		int 		children_done_hist[EDG_WLL_NUMBER_OF_DONE_CODES];
 		struct timeval	last_pbs_event_timestamp;
 		int		pbs_reruning;		// true if rerun event arrived
 	} intJobStat;

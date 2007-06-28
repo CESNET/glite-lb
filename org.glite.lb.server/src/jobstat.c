@@ -875,14 +875,6 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 		pis->pub.children_hist[class_to_statCode(subjob_class)+1]++;
 		pis->pub.children_hist[class_to_statCode(subjob_class_old)+1]--;
 
-		/* XXX: not needed if DONE_OK and DONE_FAILED mapped on different field in histogram 
-		 * if furure proves it, children_done_hist field of intStat may be removed
-		if (cis->pub.state == EDG_WLL_JOB_DONE)
-	                pis->children_done_hist[cis->pub.done_code]++;
-		if (coll_stat_old->state == EDG_WLL_JOB_DONE)
-	                pis->children_done_hist[coll_stat_old->done_code]--;
-		*/	
-
 		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
 
 
