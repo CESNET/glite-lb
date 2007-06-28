@@ -4,9 +4,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-PlainConnection::Factory PlainConnection::theFactory;
-
-
 PlainConnection::~PlainConnection()
 {
 }

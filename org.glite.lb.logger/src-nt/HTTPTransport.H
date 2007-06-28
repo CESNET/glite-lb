@@ -3,6 +3,7 @@
 
 #include "ThreadPool.H"
 #include "Transport.H"
+#include "Singleton.H"
 
 #include <string>
 
@@ -10,7 +11,8 @@ class HTTPTransport:
 	public Transport
 {
 public:
-	class Factory: public Transport::Factory {
+	class Factory: public Transport::Factory, 
+		       public Singleton<HTTPTransport::Factory>  {
 	public:
 		virtual Transport *newTransport(Connection *conn) const {
 			if(conn) 
@@ -19,8 +21,6 @@ public:
 				return NULL;
 		}
 	};
-
-	static Factory theFactory;
 
 	HTTPTransport(Connection *conn) 
 		: Transport(conn),

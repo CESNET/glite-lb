@@ -2,7 +2,7 @@
 #define _TRANSPORT_H
 
 #include "Connection.H"
-
+#include "ThreadPool.H"
 
 class Transport: public ThreadPool::WorkDescription {
 public:
@@ -10,7 +10,7 @@ public:
 	public:
 		virtual Transport *newTransport(Connection *conn) const = 0;
 
-		virtual ~Factory() = 0;
+		virtual ~Factory();
 	};
 
 	Transport(Connection *a_conn) 

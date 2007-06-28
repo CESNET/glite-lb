@@ -21,6 +21,8 @@ public:
 
 		virtual bool initialize() = 0;
 		virtual bool cleanup () = 0;
+
+		virtual ~Plugin();
 	};
 
 	// add plugin with given name to the list of registered plugins

@@ -16,8 +16,10 @@ int main(int argc, char *argv[])
 
 	// create unix socket with plain IO and HTTP transport
 	input = new SocketInput(sock_path, 
-				&PlainConnection::theFactory, 
-				&HTTPTransport::theFactory);
+				PlainConnection::Factory::instance(), 
+				HTTPTransport::Factory::instance());
+	// and add the socket to pool
+	ThreadPool::instance()->setWorkAccept(input);
 
 	// start worker threads
 	ThreadPool::instance()->startWorkers(num_threads);

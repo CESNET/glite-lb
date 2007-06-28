@@ -21,7 +21,7 @@ TEST_OBJS= \
 	test/SingletonTest.o \
 	test/test_main.o
 
-plain: SocketInput.o PlainConnection.o HTTPTransport.o ThreadPool.o main.o
+plain: PluginManager.cpp SocketInput.o Connection.o PlainConnection.o Transport.o HTTPTransport.o ThreadPool.o main.o
 	$(LINK) -o $@ $+ $(THREAD_LIB)
 
 utest: ThreadPool.o PluginManager.o EventManager.o $(TEST_OBJS)

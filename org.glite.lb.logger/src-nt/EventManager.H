@@ -3,68 +3,41 @@
 
 #include <list>
 
-#include "Singleton.H"
 
 // interface
-
-// type for return code of event handler
-typedef enum {
-	NOT_HANDLED,  // the event was not handled at all
-	HANDLED,      // the event was handled succesfully
-	HANDLED_FINAL // the event was handled, 
-	// no other handlers should be called
-} eventstatus_t;
-
 
 class Event {
 };
 
 
-template<class T>
+template <class THandler, class TEvent>
 class EventHandler {
 public:
-	virtual eventstatus_t handleEvent(T *&e);
-};
+	typedef int (THandler::*EventHandlerType)(TEvent* &);
 
-
-template <class T>
-class EventManagerForType: public Singleton< EventManagerForType<T> > {
-public:
-
-protected:
-	void registerHandler(EventHandler<T> *);
-	void registerHandlerFirst(EventHandler<T> *);
-
-private:
-
-};
-
-
-class EventManager: public Singleton<EventManager> {
-public:
-	eventstatus_t postEvent(Event *);
-
-	template<class T>
-	void registerHandler(EventHandler<T> *h) {
-		EventManagerForType<T>::instance()->registerHandler(h);
-	}
-
-	template<class T>
-	void registerHandlerFirst(EventHandler<T> *) {
-		EventManagerForType<T>::instance()->registerHandlerFirst(h);
-	}
-
-protected:
-	EventManager() 
-		{}
-
-	virtual ~EventManager()
-		{}
-
-private:
 	
+
+private:
+	std::list<EventHandlerType> m_handlers;
 };
 
+
+class EventManager {
+public:
+	// constants for event handler return codes
+	static const int NOT_HANDLED = 0;
+	static const int HANDLED = 1;
+	static const int HANDLED_FINAL = 2;
+	static const int HANDLED_NEW = 3;
+
+	int postEvent(Event* &event);
+	
+	template<class T>
+	registerHandler(, int priority);
+
+private:
+	std::list<
+};
 
 
 

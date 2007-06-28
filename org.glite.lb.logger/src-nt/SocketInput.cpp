@@ -34,7 +34,6 @@ SocketInput::SocketInput(const char *path,
 		throw new Exception;
 	if(listen(fd, SOCK_QUEUE_MAX) < 0)
 		throw new Exception;
-	ThreadPool::instance()->setWorkAccept(this);
 }
 
 

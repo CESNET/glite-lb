@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <iostream>
 
@@ -69,8 +70,12 @@ ThreadPool::WaitDesc::adjustTimeout(const struct timeval &delta)
 }
 
 
+ThreadPool::WorkDescription::~WorkDescription() {
+}
+
+
 ThreadPool::ThreadPool() 
-	: work_count(0), wait_count(0), ufds_size(0), ufds(NULL), f_exit(false)
+	: f_exit(false), work_count(0), wait_count(0), ufds_size(0), ufds(NULL) 
 {
 	pthread_mutex_init(&wait_queue_mutex, NULL);
 	pthread_mutex_init(&work_queue_mutex, NULL);

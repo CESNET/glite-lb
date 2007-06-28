@@ -1,11 +1,9 @@
 #include "HTTPTransport.H"
 #include "Exception.H"
+#include "EventManager.H"
 
 #include <iostream>
 #include <string.h>
-
-
-HTTPTransport::Factory HTTPTransport::theFactory;
 
 
 HTTPTransport::~HTTPTransport()
@@ -29,9 +27,11 @@ HTTPTransport::onReady()
 		len = conn->read(pos, sizeof(buffer) - (pos - buffer));
 		if(len < 0) {
 			// error during request
+			// XXX - handle this
 			state = NONE;
 		} else if(len == 0) {
 			// other side closed connection
+			// XXX - handle this
 			state = NONE;
 		} else {
 			char *cr = NULL, *p = buffer, *s = buffer;
@@ -114,6 +114,7 @@ HTTPTransport::onReady()
 					}
 				} else {
 					// report error
+					// XXX - this may happen, do not handle using exceptions
 					std::cout << "Wrong content length" << std::endl;
 					throw new Exception();
 				}
@@ -137,7 +138,7 @@ HTTPTransport::onReady()
 			state = NONE;
 		} else {
 			pos += len;
-			if(pos - body == content_length) {
+			if(pos == content_length + body) {
 				// finished reading
 				state = NONE;
 			}
@@ -148,9 +149,12 @@ HTTPTransport::onReady()
 	if(state != NONE) 
 		ThreadPool::instance()->queueWorkRead(this);
 	else {
+		// we have a new message
+		// XXX - or we have an error, must handle it
 		std::cout << request << std::endl << headers << std::endl;
 		std::cout.write(body, content_length);
 		std::cout.flush();
+		res = EventManager::instance()->postEvent(new NewMessageEvent(conn, headers, body));
 	}
 
 }
