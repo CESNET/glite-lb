@@ -330,7 +330,7 @@ static int get_timeout(const char *arg, int *timeout)
 				case 'h': t *= 3600; break; // 60*60
 				case 'm': t *= 60; break;
 				case 's': break;
-				default: fprintf(stderr,"Allowed time units are s,m,h,d\n");
+				default: fprintf(stderr,"Allowed time units are s,m,h,d,w\n");
 					return -1;
 			}
 		}
