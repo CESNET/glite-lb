@@ -325,6 +325,7 @@ static int get_timeout(const char *arg, int *timeout)
 	if (sscanf(arg,"%d%c",&t,&tunit) > 0) {
 		if (tunit) {
 			switch (tunit) {
+				case 'w': t *= 604800; break; // 24*60*60*7
 				case 'd': t *= 86400; break; // 24*60*60
 				case 'h': t *= 3600; break; // 60*60
 				case 'm': t *= 60; break;
