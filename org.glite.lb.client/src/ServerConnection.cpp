@@ -394,7 +394,7 @@ QueryRecord::operator edg_wll_QueryRec() const
 		break;
 
 	case JOBID:
-		out.value.j = jobid_value;
+		out.value.j = jobid_value.getId();
 		break;
 
 	case UNDEF:
