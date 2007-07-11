@@ -614,7 +614,6 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	if (ret) ret = enc_string(ret, stat->last_branch_seqcode);
 	if (ret) ret = enc_string(ret, stat->deep_resubmit_seqcode);
 	if (ret) ret = enc_branch_states(ret, stat->branch_states);
-	if (ret) ret = enc_int_array(ret, stat->children_done_hist, EDG_WLL_NUMBER_OF_DONE_CODES-1);
 	if (ret) ret = enc_timeval(ret, stat->last_pbs_event_timestamp);
 	if (ret) ret = enc_int(ret, stat->pbs_reruning);
 	return ret;
@@ -652,9 +651,6 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 		}
 		if (tmp_in != NULL) {
 			stat->branch_states = dec_branch_states(tmp_in, &tmp_in);
-		}
-		if (tmp_in != NULL) {
-			dec_int_array(tmp_in, &tmp_in, stat->children_done_hist);
 		}
 		if (tmp_in != NULL) {
 			stat->last_pbs_event_timestamp = dec_timeval(tmp_in, &tmp_in);
