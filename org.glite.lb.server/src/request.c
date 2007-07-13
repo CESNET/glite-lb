@@ -22,6 +22,7 @@ int
 trans_db_store(edg_wll_Context ctx, char *event_data, edg_wll_Event *e, intJobStat *is)
 {
   int ret;
+  char *errd = NULL;
 
   if ((ret = edg_wll_Transaction(ctx) != 0)) goto err;
 
@@ -31,7 +32,10 @@ trans_db_store(edg_wll_Context ctx, char *event_data, edg_wll_Event *e, intJobSt
   if (ret == 0) {
     if ((ret = edg_wll_Commit(ctx)) != 0) goto err;
   } else {
+    edg_wll_Error(ctx, NULL, &errd);
     edg_wll_Rollback(ctx);
+    edg_wll_SetError(ctx, ret, errd);
+    free(errd);
   }
 
 err:
