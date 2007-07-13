@@ -596,6 +596,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 		fprintf(stderr, "[%d]: transactions aren't supported!\n", getpid());
 	}
 	use_transactions = ctx->use_transactions;
+	if (use_transactions) strict_locking = 1;
 	edg_wll_Close(ctx);
 	edg_wll_FreeContext(ctx);
 
