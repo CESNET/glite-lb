@@ -581,6 +581,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 	edg_wll_InitContext(&ctx);
 	wait_for_open(ctx, dbstring);
 
+	ctx->use_transactions = transactions;
 	if (edg_wll_DBCheckVersion(ctx, dbstring))
 	{
 		char	*et,*ed;
@@ -593,10 +594,6 @@ a.sin_addr.s_addr = INADDR_ANY;
 	if (count_statistics) edg_wll_InitStatistics(ctx);
 	if (!ctx->use_transactions && transactions != 0) {
 		fprintf(stderr, "[%d]: transactions aren't supported!\n", getpid());
-	}
-	if (transactions >= 0) {
-		fprintf(stderr, "[%d]: transactions forced from %d to %d\n", getpid(), ctx->use_transactions, transactions);
-		ctx->use_transactions = transactions;
 	}
 	use_transactions = ctx->use_transactions;
 	edg_wll_Close(ctx);
