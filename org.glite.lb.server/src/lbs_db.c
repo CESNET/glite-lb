@@ -76,54 +76,30 @@ static void db_close(MYSQL *mysql) {
 }
 
 
-static int transaction_test(edg_wll_Context ctx, MYSQL *m2) {
-	MYSQL *m1;
-	char *desc, *cmd_create, *cmd_insert, *cmd_select, *cmd_drop;
+static int transaction_test(edg_wll_Context ctx) {
+	edg_wll_Stmt sh;
+	char* res[2] = { NULL, NULL };
 	int retval;
-	edg_wll_ErrorCode err;
-	pid_t pid;
 
-	ctx->use_transactions = 1;
-	pid = getpid();
+	ctx->use_transactions = 0;
 
-	asprintf(&cmd_create, "create table test%d (item int) engine='innodb'", pid);
-	asprintf(&cmd_insert, "insert into test%d (item) values (1)", pid);
-	asprintf(&cmd_select, "select item from test%d", pid);
-	asprintf(&cmd_drop, "drop table test%d", pid);
-
-	m1 = (MYSQL *)ctx->mysql;
-	edg_wll_ExecStmt(ctx, cmd_drop, NULL);
-	if (edg_wll_ExecStmt(ctx, cmd_create, NULL) != 0) {
-		edg_wll_ResetError(ctx);
-		goto err1;
+	if (edg_wll_ExecStmt(ctx, "show create table events", &sh) != 0 ||
+	    (retval = edg_wll_FetchRow(sh, res)) < 0 ) {
+		edg_wll_FreeStmt(&sh);
+		return edg_wll_Error(ctx, NULL, NULL);
 	}
-	if (edg_wll_Transaction(ctx) != 0) goto err2;
-	if (edg_wll_ExecStmt(ctx, cmd_insert, NULL) != 1) goto err2;
-
-	ctx->mysql = (void *)m2;
-	if ((retval = edg_wll_ExecStmt(ctx, cmd_select, NULL)) == -1) goto err2;
-	ctx->use_transactions = (retval == 0);
-
-	ctx->mysql = (void *)m1;
-	if (edg_wll_Commit(ctx) != 0) goto err2;
-	if (edg_wll_ExecStmt(ctx, cmd_drop, NULL) != 0) goto err1;
+	edg_wll_FreeStmt(&sh);
+	if (retval != 2 || strcmp(res[0], "events")) {
+		edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_CALL, "unexpected show create result");
+	} else if (strstr(res[1],"ENGINE=InnoDB")) {
+		ctx->use_transactions = 1;
+	} 
+	free(res[0]); free(res[1]);
 
 #ifdef LBS_DB_PROFILE
 	fprintf(stderr, "[%d] use_transactions = %d\n", getpid(), ctx->use_transactions);
 #endif
 
-	goto ok;
-err2:
-	err = edg_wll_Error(ctx, NULL, &desc);
-	edg_wll_ExecStmt(ctx, cmd_drop, NULL);
-	edg_wll_SetError(ctx, err, desc);
-err1:
-	ctx->use_transactions = 0;
-ok:
-	free(cmd_create);
-	free(cmd_insert);
-	free(cmd_select);
-	free(cmd_drop);
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -275,7 +251,6 @@ void edg_wll_FreeStmt(edg_wll_Stmt *stmt)
 int edg_wll_DBCheckVersion(edg_wll_Context ctx, const char *cs)
 {
 	MYSQL	*m = (MYSQL *) ctx->mysql;
-	MYSQL	*m2;
 	const   char *ver_s = mysql_get_server_info(m);
 	int	major,minor,sub,version;
 
@@ -293,10 +268,7 @@ int edg_wll_DBCheckVersion(edg_wll_Context ctx, const char *cs)
 
 	edg_wll_ResetError(ctx);
 
-	if (db_connect(ctx, cs, &m2) == 0) {
-		transaction_test(ctx, m2);
-		db_close(m2);
-	}
+	if (ctx->use_transactions != 0) transaction_test(ctx);
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
