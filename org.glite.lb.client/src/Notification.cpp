@@ -18,7 +18,7 @@
 #include "glite/lb/ServerConnection.h"
 
 #include "glite/lb/notifid.h"
-#include "notification.h"
+#include "glite/lb/notification.h"
 
 EWL_BEGIN_NAMESPACE;
 

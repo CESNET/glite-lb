@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_PROD_PROTO_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_PROD_PROTO_H__
+#ifndef __GLITE_LB_PROD_PROTO_H__
+#define __GLITE_LB_PROD_PROTO_H__
 
 #ident "$Header$"
 
@@ -118,4 +118,4 @@ int edg_wll_log_direct_read(edg_wll_Context ctx, edg_wll_GssConnection *conn);
 }
 #endif
 
-#endif /* __EDG_WORKLOAD_LOGGING_CLIENT_PROD_PROTO_H__ */
+#endif /* __GLITE_LB_PROD_PROTO_H__ */

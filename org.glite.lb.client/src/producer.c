@@ -15,9 +15,9 @@
 #include "glite/lb/trio.h"
 #include "glite/lb/context-int.h" 
 
-#include "producer.h"
-#include "prod_proto.h"
-#include "consumer.h" // for QuerySequenceCode
+#include "glite/lb/producer.h"
+#include "glite/lb/prod_proto.h"
+#include "glite/lb/consumer.h" // for QuerySequenceCode
 
 /* XXX: paralel registration is disabled until the race condition (via proxy first)
  * job owner assignment is solved */

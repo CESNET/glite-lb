@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_CLIENT_CONNECTION_H__
-#define __EDG_WORKLOAD_LOGGING_CLIENT_CONNECTION_H__
+#ifndef __GLITE_LB_CONNECTION_H__
+#define __GLITE_LB_CONNECTION_H__
 
 #ident "$Header$"
 
@@ -21,4 +21,4 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index);
 #define PROXY_CONNECT_RETRY 10 /* ms */
 
 
-#endif /* __EDG_WORKLOAD_LOGGING_CLIENT_CONNECTION_H__ */
+#endif /* __GLITE_LB_CONNECTION_H__ */

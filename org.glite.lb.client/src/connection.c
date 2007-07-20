@@ -17,8 +17,8 @@
 #include "glite/lb/mini_http.h"
 #include "glite/lb/connpool.h"
 
-#include "consumer.h"
-#include "connection.h"
+#include "glite/lb/consumer.h"
+#include "glite/lb/connection.h"
 
 
 int CloseConnection(edg_wll_Context ctx, int* conn_index)

@@ -16,8 +16,8 @@
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/xml_conversions.h"
 
-#include "consumer.h"
-#include "connection.h"
+#include "glite/lb/consumer.h"
+#include "glite/lb/connection.h"
 
 static const char* const request_headers[] = {
 	"Cache-Control: no-cache",

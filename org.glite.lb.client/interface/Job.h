@@ -7,8 +7,8 @@
 
 #include "glite/lb/Event.h"
 
-#include "JobStatus.h"
-#include "ServerConnection.h"
+#include "glite/lb/JobStatus.h"
+#include "glite/lb/ServerConnection.h"
 
 
 /**

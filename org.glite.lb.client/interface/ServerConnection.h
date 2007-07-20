@@ -14,8 +14,8 @@
 #include "glite/wmsutils/jobid/JobId.h"
 
 #include "glite/lb/Event.h"
-#include "JobStatus.h"
-#include "consumer.h"
+#include "glite/lb/JobStatus.h"
+#include "glite/lb/consumer.h"
 
 EWL_BEGIN_NAMESPACE
 

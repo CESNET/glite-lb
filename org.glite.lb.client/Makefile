@@ -107,7 +107,7 @@ FAKELIBOBJS:=consumer_fake.o producer_fake.o
 
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
 
-HDRS:=consumer.h notification.h statistics.h \
+HDRS:=consumer.h notification.h statistics.h prod_proto.h connection.h \
 	Job.h Notification.h ServerConnection.h 
 FAKE_HDRS:=consumer_fake.h producer_fake.h
 GEN_HDRS:=JobStatus.h producer.h interface_version.h
@@ -159,6 +159,10 @@ compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
 endif
 
 generate: ${GEN_HDRS}
+	rm -vf ${globalprefix} ${lbprefix} ${HDRS}
+	ln -vs . ${globalprefix}
+	ln -vs . ${lbprefix}
+	for i in ${HDRS}; do ln -vs ../interface/$$i $$i ; done
 
 interface_version.h: ${top_srcdir}/project/version.properties
 	echo "#define GLITE_LB_CLIENT_INTERFACE \"${version}\"" >$@ 
@@ -337,6 +341,7 @@ clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test C/ CPP/
 	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
+	rm -vf ${globalprefix} ${lbprefix}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 check_version:

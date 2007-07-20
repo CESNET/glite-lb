@@ -13,9 +13,9 @@
 #include "glite/lb/il_string.h"
 #include "glite/lb/connpool.h"
 
-#include "prod_proto.h"
-#include "producer.h"
-#include "connection.h"
+#include "glite/lb/prod_proto.h"
+#include "glite/lb/producer.h"
+#include "glite/lb/connection.h"
 
 static const char* socket_path="/tmp/lb_proxy_store.sock";
 

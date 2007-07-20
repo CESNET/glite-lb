@@ -20,8 +20,8 @@
 #include "glite/lb/il_msg.h"
 #include "glite/lb/escape.h"
 
-#include "notification.h"
-#include "connection.h"
+#include "glite/lb/notification.h"
+#include "glite/lb/connection.h"
 
 #define CON_QUEUE               10	/* listen() queue limit */
 

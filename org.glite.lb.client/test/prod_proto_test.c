@@ -1,7 +1,7 @@
 #define edg_wll_gss_read_full(a,b,c,d,e,f)  test_edg_wll_gss_read_full(a,b,c,d,e,f)
 #define edg_wll_gss_write_full(a,b,c,d,e,f) test_edg_wll_gss_write_full(a,b,c,d,e,f)
 
-#include "prod_proto.h"
+#include "glite/lb/prod_proto.h"
 #include "glite/lb/producer.h"
 
 /* virtual read will return all zeroes (answer from logger always without error) */
