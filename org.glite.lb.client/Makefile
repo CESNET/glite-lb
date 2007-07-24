@@ -90,6 +90,14 @@ CFLAGS:=${DEBUG} \
 
 CXXFLAGS:=${CFLAGS}
 
+archlib:=lib
+LDFLAGS:=-L${stagedir}/lib
+host_cpu:=${shell uname -m}
+ifeq (${host_cpu},x86_64)
+    archlib:=lib64
+    LDFLAGS:=-L${stagedir}/lib64 -L${stagedir}/lib ${COVERAGE_FLAGS}
+endif
+
 EXT_LIB:= 
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
@@ -144,14 +152,6 @@ EXAMPLES_PLUS= job_status_plus
 MAN_GZ:=glite-lb-logevent.1.gz
 MAN = $(MAN_GZ:.gz=)
 
-archlib:=lib
-LDFLAGS:=-L${stagedir}/lib
-host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64)
-    archlib:=lib64
-    LDFLAGS:=-L${stagedir}/lib ${COVERAGE_FLAGS}
-endif
-
 PLUS_EXTRA_LIB:=-lglite_wmsutils_jobid -lglite_wmsutils_exception
 
 
@@ -185,11 +185,11 @@ ${FAKETHRLIB}: ${FAKELIBTHROBJS}
 			${COMMON_LIB_THR} \
 			-lglite_security_gss_${thrflavour}
 
-${PLUSLIB}: ${PLUSOBJS}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB}
+${PLUSLIB}: ${PLUSOBJS} ${LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB} ${PLUS_EXTRA_LIB}
 
-${THRPLUSLIB}: ${PLUSTHROBJS}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/lib ${THRLIB}
+${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/lib ${THRLIB} ${PLUS_EXTRA_LIB}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
@@ -217,8 +217,11 @@ ${PLUSOBJS}: %.o: %.cpp
 ${PLUSTHROBJS}: %.thr.o: %.cpp
 	${CXXCOMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
-${EXAMPLES_PLUS}: %: %.o ${PLUSLIB}
-	${LINKXX} -o $@ $< ${PLUSLIB} ${PLUS_EXTRA_LIB}
+
+${EXAMPLES_PLUS}: ${PLUSLIB}
+
+${EXAMPLES_PLUS}: %: %.o
+	${LINKXX} -o $@ $< ${PLUSLIB}
 
 ${LIBOBJS} ${FAKELIBOBJS}: %.o: %.c
 	${COMPILE} ${GLOBUSINC} -c $<
