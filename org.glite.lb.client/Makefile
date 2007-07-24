@@ -98,7 +98,7 @@ ifeq (${host_cpu},x86_64)
     LDFLAGS:=-L${stagedir}/lib64 -L${stagedir}/lib ${COVERAGE_FLAGS}
 endif
 
-EXT_LIB:= 
+CJOBID_LIB:= -lglite_wmsutils_cjobid
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
@@ -168,11 +168,13 @@ default: all
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB} \
+			${CJOBID_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
 	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB_THR} \
+			${CJOBID_LIB} \
 			-lglite_security_gss_${thrflavour}
 
 ${FAKELIB}: ${FAKELIBOBJS}
