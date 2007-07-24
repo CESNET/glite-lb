@@ -96,9 +96,6 @@ TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
 
-LDFLAGS:=-L${stagedir}/lib \
-	${COVERAGE_FLAGS}
-
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
@@ -140,8 +137,23 @@ EXAMPLES_CL=user_jobs job_status
 EXAMPLES_CL_THR=user_jobs_threaded
 FAKE_EXAMPLES:=job_log_fake
 
+EXAMPLES_PLUS= job_status_plus
+# EXAMPLES_PLUS= indexed_attrs_plus.cpp  job_status_plus.cpp  query_events_plus.cpp listener.cpp         user_jobs_plus.cpp job_log_plus.cpp        notify_plus.cpp
+
+
 MAN_GZ:=glite-lb-logevent.1.gz
 MAN = $(MAN_GZ:.gz=)
+
+archlib:=lib
+LDFLAGS:=-L${stagedir}/lib
+host_cpu:=${shell uname -m}
+ifeq (${host_cpu},x86_64)
+    archlib:=lib64
+    LDFLAGS:=-L${stagedir}/lib ${COVERAGE_FLAGS}
+endif
+
+PLUS_EXTRA_LIB:=-lglite_wmsutils_jobid -lglite_wmsutils_exception
+
 
 # version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
@@ -174,10 +186,10 @@ ${FAKETHRLIB}: ${FAKELIBTHROBJS}
 			-lglite_security_gss_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS}
-	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS}
-	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/lib ${THRLIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/lib ${THRLIB}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
@@ -205,6 +217,9 @@ ${PLUSOBJS}: %.o: %.cpp
 ${PLUSTHROBJS}: %.thr.o: %.cpp
 	${CXXCOMPILE} ${GLOBUSTHRINC} -o $@ -c $<
 
+${EXAMPLES_PLUS}: %: %.o ${PLUSLIB}
+	${LINKXX} -o $@ $< ${PLUSLIB} ${PLUS_EXTRA_LIB}
+
 ${LIBOBJS} ${FAKELIBOBJS}: %.o: %.c
 	${COMPILE} ${GLOBUSINC} -c $<
 
@@ -225,6 +240,9 @@ perftest_logjobs.o: perftest_logjobs.c
 # catches $TOOLS and logevent compilation
 %.o: %.c 
 	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
+
+%.o: %.cpp
+	${CXX} ${CFLAGS} ${GLOBUSINC} -c $<
 
 %.c: %.c.T
 	rm -f $@
