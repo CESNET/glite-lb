@@ -385,6 +385,15 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 #define EDG_WLL_FORMAT_SYSCMPSTAT	"DG.SCHED.STATUS=\"%|Us\" "
 #define EDG_WLL_FORMAT_SYSCLSTAT	"DG.SCHED.NODE=\"%|Us\" DG.SCHED.STATUS=\"%|Us\" "
 
+
+/* Flags (priority bits) defining the type of logging */
+
+#define EDG_WLL_LOGFLAG_ASYNC   0 /**< asynchronous logging */
+#define EDG_WLL_LOGFLAG_SYNC    1 /**< synchronous logging */
+#define EDG_WLL_LOGFLAG_LOCAL   2 /**< logging to local logger */
+#define EDG_WLL_LOGFLAG_PROXY   4 /**< logging to L&B Proxy */
+#define EDG_WLL_LOGFLAG_DIRECT  8 /**< logging directly to bkserver */
+
 /* enums for the ChangeACL event */
 
 enum edg_wll_Permission {

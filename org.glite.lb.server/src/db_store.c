@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "glite/lb/context-int.h"
+#include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/lb_maildir.h"
 #include "purge.h"
@@ -190,9 +191,8 @@ static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, 
   if ( ctx->isProxy ) {
 	/*
 	 *	send event to the proper BK server
+	 *	event with priority flag EDG_WLL_LOGFLAG_DIRECT (typically RegJob) is not sent
 	 */
-	/* XXX: RegJob events, which were logged also directly, are duplicated at server,
-		but it should not harm */
 
 #ifdef LB_PERF
 	if( sink_mode == GLITE_LB_SINK_SEND ) {
@@ -200,8 +200,16 @@ static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, 
 	} else
 #endif
 
-	if (edg_wll_EventSendProxy(ctx, ev->any.jobId, event) )  {
-		return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_EventSendProxy() error.");
+	/* XXX: ending here may break the backward compatibility */
+	if (!(ev->any.priority & EDG_WLL_LOGFLAG_PROXY)) {
+		edg_wll_UpdateError(ctx, 0, "db_actual_store() WARNING: the event is not PROXY");
+		//return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "db_actual_store() ERROR: the event is not PROXY");
+	}
+
+	if (!(ev->any.priority & EDG_WLL_LOGFLAG_DIRECT)) {
+		if (edg_wll_EventSendProxy(ctx, ev->any.jobId, event) )  {
+			return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_EventSendProxy() error.");
+		}
 	}
 
 	/* LB proxy purge
