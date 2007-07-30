@@ -1,3 +1,7 @@
+#ifndef __GLITE_LB_CONTEXT_INT__
+#define __GLITE_LB_CONTEXT_INT__
+
+#include "glite/lb/padstruct.h"
 #include "glite/security/glite_gss.h"
 #include "glite/lb/consumer.h"
 #include "lb_plain_io.h"
@@ -15,8 +19,7 @@ extern "C" {
 
 #define	GLITE_LB_COMMON_CONNPOOL_SIZE	50
 
-
-typedef struct _edg_wll_ConnPool {
+glite_lb_padded_struct(_edg_wll_ConnPool,15,
 /* address and port where we are connected to */
         char            *peerName;
         unsigned int    peerPort;
@@ -25,11 +28,13 @@ typedef struct _edg_wll_ConnPool {
         gss_cred_id_t   gsiCred;
         edg_wll_GssConnection   gss;
         char            *buf;
-        int             bufUse,bufSize;
+        int             bufUse;
+	int		bufSize;
 
 /* timestamp of usage of this entry in ctx.connPool */
         struct timeval  lastUsed;
-} edg_wll_ConnPool;
+);
+typedef struct _edg_wll_ConnPool  edg_wll_ConnPool;
 #endif
 
 
@@ -95,3 +100,4 @@ edg_wll_Connections* edg_wll_initConnections();
 }
 #endif
 
+#endif

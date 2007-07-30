@@ -1,17 +1,19 @@
 #ifndef __EDG_WORKLOAD_LOGGING_COMMON_LB_PLAIN_IO_H__
 #define __EDG_WORKLOAD_LOGGING_COMMON_LB_PLAIN_IO_H__
 
+#include "glite/lb/padstruct.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _edg_wll_PlainConnection {
+glite_lb_padded_struct(_edg_wll_PlainConnection,6,
 	int sock;
 	char *buf;
 	size_t bufSize;
 	size_t bufUse;
-} edg_wll_PlainConnection;
+)
+typedef struct _edg_wll_PlainConnection edg_wll_PlainConnection;
 
 	
 int edg_wll_plain_accept(

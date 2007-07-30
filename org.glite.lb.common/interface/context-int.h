@@ -1,5 +1,5 @@
-#ifndef __EDG_WORKLOAD_LOGGING_COMMON_CONTEXT_H__
-#define __EDG_WORKLOAD_LOGGING_COMMON_CONTEXT_H__
+#ifndef __EDG_WORKLOAD_LOGGING_COMMON_CONTEXT_INT_H__
+#define __EDG_WORKLOAD_LOGGING_COMMON_CONTEXT_INT_H__
 
 #ident "$Header$"
 
@@ -32,16 +32,16 @@ typedef struct _edg_wll_SeqCode {
 } edg_wll_SeqCode;
 
 /* non-gsi one-element analogy of connPool for L&B Proxy server */
-typedef struct _edg_wll_ConnProxy {
+glite_lb_padded_struct(_edg_wll_ConnProxy,12,
 	edg_wll_PlainConnection	conn;
 	char   *buf;
 	size_t  bufSize;
 	size_t  bufUse;
-} edg_wll_ConnProxy;
+)
+typedef struct _edg_wll_ConnProxy  edg_wll_ConnProxy;
 
 
-
-struct _edg_wll_Context {
+glite_lb_padded_struct(_edg_wll_Context,120,
 /* Error handling */
 	int		errCode;	/* recent error code */
 	char 		*errDesc;	/* additional error description */
@@ -53,7 +53,8 @@ struct _edg_wll_Context {
 	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
 	edg_wll_ConnProxy	*connProxy;		/* holds one plain connection */
 
-	int		semaphores,semset;
+	int		semaphores;
+	int		semset;
 	edg_wll_QueryRec	**job_index;
 	void		*job_index_cols;
 	
@@ -108,7 +109,11 @@ struct _edg_wll_Context {
 	char		*p_lbproxy_store_sock;
 	char		*p_lbproxy_serve_sock;
 	char		*p_user_lbproxy;
-	struct timeval	p_log_timeout,p_sync_timeout,p_query_timeout, p_notif_timeout, p_tmp_timeout;
+	struct timeval	p_log_timeout;
+	struct timeval	p_sync_timeout;
+	struct timeval	p_query_timeout;
+	struct timeval	p_notif_timeout;
+	struct timeval	p_tmp_timeout;
 	char		*p_query_server;
 	int		p_query_server_port;
 	int		p_query_server_override;
@@ -130,7 +135,7 @@ struct _edg_wll_Context {
 	int use_transactions;
 
 	int		greyjobs;
-};
+)
 
 /* to be used internally: set, update and and clear the error information in 
  * context, the desc string (if provided) is strdup()-ed
