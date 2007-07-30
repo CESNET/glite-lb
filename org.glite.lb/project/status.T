@@ -78,6 +78,8 @@ strlist possible_ce_nodes	CE nodes matching to possible_destinations
 bool	suspended	Job is suspended
 string	suspend_reason	Reason for the suspend
 
+_pad_	55
+
 string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
 string  pbs_queue	Name of queue in which is job queued
 string  pbs_owner	Owner of job
@@ -89,6 +91,8 @@ int	pbs_pid		PID of running job
 string	pbs_resource_usage	Glued resource usage
 int	pbs_exit_status	Job exit status
 string	pbs_error_desc	Glued error descriptions from error events
+
+_pad_	20
 
 string	condor_status	Condor job status 
 string	condor_universe	Condor job Universe (in job ClassAds)
@@ -104,6 +108,7 @@ string	condor_dest_host Hostname of node where job is running
 string	condor_reason	Glued reasons/errors leading to pending events
 string	condor_error_desc	Glued error descriptions from error events
 
+_pad_	25
 
 @type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.
 @type Waiting		Accepted by WMS, waiting for resource allocation.
@@ -116,3 +121,4 @@ string	condor_error_desc	Glued error descriptions from error events
 @type Cancelled		Cancelled by user.
 @type Unknown		Status cannot be determined.
 @type Purged		Job has been purged from bookkeeping server (for LB->RGMA interface).
+

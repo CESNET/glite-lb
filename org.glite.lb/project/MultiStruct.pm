@@ -102,6 +102,10 @@ sub load {
 			my $f = $self->getField();
 			$f->{index} = 1;
 		}
+		elsif ($ftype eq '_pad_') {
+			my $f = $self->getField();
+			$f->{pad} = $fname;
+		}
 		else {
 			my $f = new StructField $fname,$ftype,$comment,$.;
 			$self->addField($f);
