@@ -7,6 +7,8 @@ int	jobtype		Type of job
 	_null_	-1
 	_code_ SIMPLE		simple job
 	_code_ DAG		composite job
+	_code_ _PARTITIONABLE_UNUSED	placholder for unused code
+	_code_ _PARTITIONED_UNUSED	placholder for unused code
 	_code_ COLLECTION	parent of collection of jobs
 	_code_ PBS		PBS job
 	_code_ CONDOR		Condor job
