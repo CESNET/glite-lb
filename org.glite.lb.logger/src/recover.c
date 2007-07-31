@@ -32,10 +32,10 @@ recover_thread(void *q)
 			il_log(LOG_ERR, "recover_thread: %s\n", error_get_msg());
 			exit(1);
 		}
-		il_log(LOG_INFO, "Checking for new certificate...\n");
+		il_log(LOG_INFO, "Reloading certificate...\n");
 		if(pthread_mutex_lock(&cred_handle_lock) < 0)
 			abort();
-		if (edg_wll_gss_watch_creds(cert_file, &cert_mtime) > 0) {
+		{
 			gss_cred_id_t new_cred_handle = GSS_C_NO_CREDENTIAL;
 			OM_uint32 min_stat;
 			int ret;
