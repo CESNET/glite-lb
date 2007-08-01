@@ -83,7 +83,7 @@ static int transaction_test(edg_wll_Context ctx) {
 
 	ctx->use_transactions = 0;
 
-	if (edg_wll_ExecStmt(ctx, "show create table events", &sh) != 0 ||
+	if (edg_wll_ExecStmt(ctx, "show create table events", &sh) <= 0 ||
 	    (retval = edg_wll_FetchRow(sh, res)) < 0 ) {
 		edg_wll_FreeStmt(&sh);
 		return edg_wll_Error(ctx, NULL, NULL);
