@@ -318,6 +318,7 @@ Event::name(void) const
 }
 
 
+/* FIXME: this will not work with the current frozen assignment of constants in Event.h */
 static 
 std::string const attr_names[Event::ATTR_MAX] = {
 @@@{
