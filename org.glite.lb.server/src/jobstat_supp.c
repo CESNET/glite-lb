@@ -90,7 +90,7 @@ static char *enc_int_array(char *old, int *item, int itemsNo)
 
 	strpom=(char*)calloc(strlen(old)+1,sizeof(char));
 
-	for (index=0; index <= itemsNo; index++) sprintf(strpom,"%s%d%s", strpom, item[index],index==itemsNo?"":";");
+	for (index=0; index <= itemsNo; index++) sprintf(strpom+strlen(strpom),"%d%s", item[index],index==itemsNo?" ":";");
 
         asprintf(&out,"%s%s ", old, strpom);
 	free(strpom);
