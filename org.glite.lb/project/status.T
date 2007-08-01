@@ -78,6 +78,8 @@ strlist possible_ce_nodes	CE nodes matching to possible_destinations
 bool	suspended	Job is suspended
 string	suspend_reason	Reason for the suspend
 
+string	failure_reasons Concatenated job failure reasons, possibly from deeper middleware layers
+
 _pad_	55
 
 string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
