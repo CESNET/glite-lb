@@ -25,7 +25,8 @@ int
 gss_reader(void *user_data, char *buffer, int max_len)
 {
   edg_wll_Context tmp_ctx = (edg_wll_Context)user_data;
-  int ret, len;
+  int ret; 
+  size_t len;
   edg_wll_GssStatus gss_code;
 
   ret = edg_wll_gss_read_full(&tmp_ctx->connections->serverConnection->gss,
@@ -56,7 +57,8 @@ gss_reader(void *user_data, char *buffer, int max_len)
 int edg_wll_StoreProto(edg_wll_Context ctx)
 {
 	char	*buf;
-	int	len,ret;
+	size_t	len;
+	int	ret;
 	size_t	total;
 	edg_wll_GssStatus	gss_code;
 
