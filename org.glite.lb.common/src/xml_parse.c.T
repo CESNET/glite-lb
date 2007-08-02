@@ -7,8 +7,6 @@
 
 #include <expat.h> 	// Expat header file
 
-#include "globus_config.h"
-
 #include "glite/lb/trio.h"
 #include "glite/wmsutils/jobid/cjobid.h"
 

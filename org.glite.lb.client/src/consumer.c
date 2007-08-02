@@ -9,8 +9,6 @@
 
 #include <expat.h>
 
-#include "globus_config.h"
-
 #include "glite/lb/context-int.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/xml_parse.h"

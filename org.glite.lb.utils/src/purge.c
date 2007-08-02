@@ -8,8 +8,6 @@
 #include <time.h>
 #include <errno.h>
 
-#include <globus_common.h>
-
 #define CLIENT_SBIN_PROG
 
 #include "glite/lb/context-int.h"
@@ -161,15 +159,6 @@ int main(int argc,char *argv[])
 		case 'h':
 		case '?': usage(me); return 1;
 		}
-	}
-
-	/* Initialize Globus common module */
-	dprintf(("Initializing Globus common module..."));
-	if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS) {
-		dprintf(("no.\n"));
-		fprintf(stderr,"Unable to initialize Globus common module\n");
-	} else {
-		dprintf(("yes.\n"));
 	}
 
 	/* initialize context */

@@ -12,8 +12,6 @@
 
 #include "glite/security/glite_gss.h"
 
-#include "globus_config.h"
-
 #include "glite/lb/mini_http.h"
 #include "glite/lb/lb_plain_io.h"
 #include "glite/lb/context-int.h"

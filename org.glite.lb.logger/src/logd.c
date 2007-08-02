@@ -12,8 +12,6 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <globus_common.h>
-
 #include "glite/lb/context-int.h"
 #include "glite/lb/timeouts.h"
 #include "logd_proto.h"
@@ -372,18 +370,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 
    if (CAcert_dir)
 	setenv("X509_CERT_DIR", CAcert_dir, 1);
-
-   /* initialize Globus common module */
-/* XXX: obsolete?
-   edg_wll_ll_log(LOG_INFO,"Initializing Globus common module...");
-   if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS) {
-	edg_wll_ll_log(LOG_NOTICE,"no.\n");
-	edg_wll_ll_log(LOG_CRIT, "Failed to initialize Globus common module. Exiting.\n");
-	exit(1);
-   } else {
-	edg_wll_ll_log(LOG_INFO,"yes.\n");
-   }
-*/
 
    /* initialize signal handling */
    if (mysignal(SIGUSR1, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }

@@ -27,8 +27,6 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-#include <globus_common.h>
-
 #ifdef GLITE_LB_SERVER_WITH_WS
 #include "soap_version.h"
 #include <stdsoap2.h>
@@ -479,13 +477,7 @@ int main(int argc, char *argv[])
 	{
 		char	buf[300];
 
-		if ( globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS )
-		{
-			dprintf(("[%d]: Unable to initialize Globus common module\n",getpid()));
-			if (!debug) syslog(LOG_CRIT,"Unable to initialize Globus common module\n");
-		}
-
-		globus_libc_gethostname(buf,sizeof buf);
+		edg_wll_gss_gethostname(buf,sizeof buf);
 		buf[sizeof buf - 1] = 0;
 		fake_host = strdup(buf);
 		fake_port = atoi(port); 

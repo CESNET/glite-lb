@@ -13,8 +13,6 @@
 #include <math.h> // log
 #include <ctype.h> // isspace
 
-#include <globus_common.h>
-
 #include "glite/security/glite_gss.h"
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/notifid.h"

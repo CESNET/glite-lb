@@ -17,8 +17,6 @@
 #include <errno.h>
 #include <syslog.h>
 
-#include <globus_config.h>
-
 #include "glite/wmsutils/jobid/strmd5.h"
 
 #include "glite/lb/events_parse.h"

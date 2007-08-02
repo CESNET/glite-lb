@@ -9,8 +9,6 @@
 #include <signal.h>
 #include <pthread.h>
 
-#include <globus_common.h>
-
 #include "interlogd.h"
 #include "glite/lb/log_proto.h"
 #include "glite/security/glite_gss.h"
@@ -338,11 +336,6 @@ main (int argc, char **argv)
      (daemon(0,0) < 0)) {
     perror("daemon");
     exit(EXIT_FAILURE);
-  }
-
-  if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS)	{
-  	il_log(LOG_CRIT, "Failed to initialize Globus common module\n");
-  	exit(EXIT_FAILURE);
   }
 
 #ifndef PERF_EMPTY

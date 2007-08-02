@@ -4,8 +4,6 @@
 #include <sys/time.h>
 #include <errno.h>
 
-#include <globus_common.h>
-
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/context-int.h"
 // XXX:
@@ -128,7 +126,7 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 
 	switch (param) {
 		case EDG_WLL_PARAM_HOST:             
-			globus_libc_gethostname(hn,sizeof hn);
+			edg_wll_gss_gethostname(hn,sizeof hn);
 			free(ctx->p_host);
 			ctx->p_host = val ? strdup(val) : extract_host(param,hn);
 			break;
