@@ -105,8 +105,15 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		   registered with LBserver */
 		char *username;
 
-		username = (ctx->isProxy) ? "lbproxy" : ctx->peerName;
-		userid = strdup(strmd5(username, NULL));
+		if (!ctx->isProxy && ctx->peerName != NULL) {
+			username = ctx->peerName;
+			userid = strdup(strmd5(username, NULL));
+
+			free(e->any.user);
+			e->any.user = strdup(username);
+		} 
+		else
+			username = e->any.user;
 		if ((err = store_user(ctx,userid, username))) goto clean;
 		if ((err = store_job(ctx,e->any.jobId,userid))) goto clean;
 	} else {
