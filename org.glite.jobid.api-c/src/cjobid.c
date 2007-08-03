@@ -62,6 +62,7 @@ int glite_jobid_recreate(const char* bkserver, int port, const char *unique, gli
 
     /* check if it begins with prefix */
     /* unsupported */
+    /* FIXME: fill in PROTO_PREFIX if missing */
     if (strncmp(bkserver, GLITE_JOBID_PROTO_PREFIX, sizeof(GLITE_JOBID_PROTO_PREFIX)-1) == 0)
         return EINVAL;
 
@@ -123,7 +124,7 @@ int glite_jobid_dup(glite_jobid_const_t in, glite_jobid_t *out)
 // XXX
 // use recreate
 // parse name, port, unique
-int glite_jobid_recreate(const char *idString, glite_jobid_t *jobId)
+int glite_jobid_parse(const char *idString, glite_jobid_t *jobId)
 {
     char *pom, *pom1, *pom2;
     glite_jobid_t out;
@@ -255,4 +256,19 @@ void glite_jobid_getServerParts(glite_jobid_const_t jobid, char **srvName, unsig
 char* glite_jobid_getUnique(glite_jobid_const_t jobid)
 {
     return jobid ? strdup(jobid->id) : NULL;
+}
+
+
+void glite_jobid_getServerParts_internal(glite_jobid_const_t jobid, char **srvName, unsigned int *srvPort)
+{
+    if (jobid) {
+	*srvName = jobid->BShost;
+	*srvPort = jobid->BSport ? jobid->BSport : GLITE_JOBID_DEFAULT_PORT;
+    }
+}
+
+
+char* glite_jobid_getUnique_internal(glite_jobid_const_t jobid)
+{
+    return jobid ? jobid->id : NULL;
 }

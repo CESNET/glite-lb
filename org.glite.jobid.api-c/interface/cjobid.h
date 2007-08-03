@@ -107,12 +107,28 @@ char* glite_jobid_getServer(glite_jobid_const_t jobid);
 void glite_jobid_getServerParts(glite_jobid_const_t jobid, char **srvName, unsigned int *srvPort);
 
 /**
+ * Extract bookkeeping server address and port
+ * \param jobid from which the bkserver address should be extracted
+ * \param srvName pointer where to return server name
+ * \param srvPort pointer where to return server port
+ *     */
+void glite_jobid_getServerParts_internal(glite_jobid_const_t jobid, char **srvName, unsigned int *srvPort);
+
+/**
  * Extract unique string 
  * \param jobid
  * \retval pointer to allocated unique string representing jobid
  * \retval NULL if jobid is 0 or memory allocation fails
  */
 char* glite_jobid_getUnique(glite_jobid_const_t jobid);
+
+/**
+ * Extract unique string 
+ * \param jobid
+ * \retval pointer to allocated unique string representing jobid
+ * \retval NULL if jobid is 0 or memory allocation fails
+ */
+char* glite_jobid_getUnique_internal(glite_jobid_const_t jobid);
 
 #ifdef __cplusplus
 }
