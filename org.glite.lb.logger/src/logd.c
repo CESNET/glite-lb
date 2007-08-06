@@ -184,13 +184,13 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
         free(gss_err);
     }
 
-    if (ret || client->flags | EDG_WLL_GSS_FLAG_ANON) {
+    if (ret || client->flags & EDG_WLL_GSS_FLAG_ANON) {
 	edg_wll_ll_log(LOG_INFO,"  User not authenticated, setting as \"%s\". \n",EDG_WLL_LOG_USER_DEFAULT);
 	subject=strdup(EDG_WLL_LOG_USER_DEFAULT);
     } else {
 	edg_wll_ll_log(LOG_INFO,"  User successfully authenticated as:\n");
 	edg_wll_ll_log(LOG_INFO, "   %s\n", client->name);
-	subject=client->name;
+	subject=strdup(client->name);
     }
     if (client)
 	edg_wll_gss_free_princ(client);
