@@ -8,7 +8,6 @@ package=glite-lb-common
 version=0.0.0
 PREFIX=/opt/glite
 
-globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
 expat_prefix=/opt/expat
@@ -28,8 +27,6 @@ SUFFIXES = .T
 CC=gcc
 
 DEBUG:=-g -O0 -Wall
-GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
-GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
 ifdef LB_STANDALONE
 	JOBID_OBJS:=cjobid.o strmd5.o
@@ -58,14 +55,6 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 VERSION_AHEAD=3
 CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${top_srcdir}/project/check_version.pl
 
-GLOBUS_LIBS:=-L${globus_prefix}/lib \
-        -lglobus_common_${nothrflavour} \
-        -lglobus_gssapi_gsi_${nothrflavour} \
-
-GLOBUS_THRLIBS:=-L${globus_prefix}/lib \
-        -lglobus_common_${thrflavour} \
-        -lglobus_gssapi_gsi_${thrflavour} \
-
 ifneq (${expat_prefix},/usr)
 	EXPAT_LIBS:=-L${expat_prefix}/lib
 endif
@@ -74,8 +63,8 @@ EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 LDFLAGS:=-L${stagedir}/lib \
 	${COVERAGE_FLAGS}
 
-EXT_LIBS:= ${EXPAT_LIBS} ${GLOBUS_LIBS} ${JOBID_LIB}
-EXT_THRLIBS:= ${EXPAT_LIBS} ${GLOBUS_THRLIBS} ${JOBID_LIB}
+EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB}
+EXT_THRLIBS:= ${EXPAT_LIBS} ${JOBID_LIB}
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
@@ -250,13 +239,13 @@ clean:
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o: %.c
-	${COMPILE} ${GLOBUSINC} ${CFLAGS} -c $<
+	${COMPILE} ${CFLAGS} -c $<
 
 il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 
 %.thr.o: %.c
-	${COMPILE} ${GLOBUSTHRINC} ${CFLAGS} -D_REENTRANT -DGLITE_LB_THREADED -o $@ -c $<
+	${COMPILE} ${CFLAGS} -D_REENTRANT -DGLITE_LB_THREADED -o $@ -c $<
 
 %.h: %.h.T
 	rm -f $@

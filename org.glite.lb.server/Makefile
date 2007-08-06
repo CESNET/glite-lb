@@ -8,6 +8,7 @@ package=glite-lb-server
 version=0.2.0
 PREFIX=/opt/glite
 
+# gridsite requires openssl libraries, we want to include the ones from globus
 globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
@@ -86,10 +87,10 @@ CFLAGS:= \
 	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
-	-I${globus_prefix}/include/${nothrflavour} \
 	$(GRIDSITE_CFLAGS) \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} ${LB_DAG_FLAGS} \
-	${LB_BUF_FLAGS}
+	${LB_BUF_FLAGS} \
+	-I${globus_prefix}/include/${nothrflavour} #gridsite needs this
 
 ifdef LB_PROF
 	SRVBONES_LIB:= ${stagedir}/lib/libglite_lb_server_bones.la
@@ -116,10 +117,6 @@ SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
-
-GLOBUS_LIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour} \
 
 #ifeq ($(shell ls ${gsoap_prefix}/bin/soapcpp2),${gsoap_prefix}/bin/soapcpp2)
 #	gsoap_bin_prefix := ${gsoap_prefix}/bin
@@ -161,7 +158,6 @@ VOMS_LIBS:=-L${voms_prefix}/lib -lvomsc${vomsflavour}
 #	${expatlib} -lexpat \
 #	${GRIDSITE_LIBS} \
 #	-lvomsc${vomsflavour} \
-#	${GLOBUS_LIBS}
 
 ifneq (${classads_prefix},/usr)
 	classadslib := -L${classads_prefix}/lib -lclassad
@@ -423,7 +419,7 @@ clean:
 	${COMPILE} -c $<
 
 test_query_events.o: %.o: %.cpp
-	${CXX} -c ${CFLAGS} ${GLOBUSINC} ${TEST_INC} $<
+	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 
 
 %.lo: %.c

@@ -8,7 +8,6 @@ package=glite-lb-utils
 version=0.0.0
 PREFIX=/opt/glite
 
-globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
 expat_prefix=/opt/expat
@@ -32,7 +31,6 @@ CFLAGS:= \
 	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	${COVERAGE_FLAGS} \
 	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
-	-I${globus_prefix}/include/${nothrflavour} \
 	-D_GNU_SOURCE
 LDFLAGS:=-L${stagedir}/lib
 
@@ -49,8 +47,7 @@ ifneq (${expat_prefix},/usr)
 endif
 
 EXT_LIBS:= \
-	${expatlib} -lexpat \
-	${GLOBUS_LIBS}
+	${expatlib} -lexpat
 COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
 JP_LIBS:=-lglite_jp_common_${nothrflavour} -lglite_jp_trio
@@ -66,7 +63,7 @@ default: all
 compile all: ${UTILS} ${MAN_GZ} statistics
 
 %.o: %.c 
-	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
+	${CC} ${CFLAGS} -c $<
 
 ${UTILS}: %: %.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS}

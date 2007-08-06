@@ -7,7 +7,6 @@ lbprefix=lb
 package=glite-lb-client
 version=0.0.0
 
-globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
 
@@ -56,9 +55,6 @@ l_SRC = \
 
 
 sh_PROGS = $(l_SRC:.l=.sh)
-
-GLOBUSINC:= -I${globus_prefix}/include/${nothrflavour}
-GLOBUSTHRINC:= -I${globus_prefix}/include/${thrflavour}
 
 ifdef DEBUG
 	DEBUG:=-g -O0 -Wall -DEDG_WLL_LOG_STUB
@@ -211,22 +207,22 @@ ${FAKE_EXAMPLES}: %: %.o ${FAKELIB}
 ${TOOLS}: ${LIB}
 
 ${FAKE_EXAMPLES:=.o}: %.o: %.cpp
-	${COMPILE} ${GLOBUSINC} ${TEST_INC} -c $< -o $@
+	${COMPILE} ${TEST_INC} -c $< -o $@
 
 ${PLUSOBJS}: %.o: %.cpp
-	${CXXCOMPILE} ${GLOBUSINC} -c $<
+	${CXXCOMPILE} -c $<
 
 ${PLUSTHROBJS}: %.thr.o: %.cpp
-	${CXXCOMPILE} ${GLOBUSTHRINC} -o $@ -c $<
+	${CXXCOMPILE} -o $@ -c $<
 
 ${LIBOBJS} ${FAKELIBOBJS}: %.o: %.c
-	${COMPILE} ${GLOBUSINC} -c $<
+	${COMPILE} -c $<
 
 ${LIBTHROBJS} ${FAKELIBTHROBJS}: %.thr.o: %.c
-	${COMPILE} ${GLOBUSTHRINC} -o $@ -c $<
+	${COMPILE} -o $@ -c $<
 
 logevent_fake.o: logevent.c
-	${COMPILE} ${GLOBUSINC} -c $< -o $@
+	${COMPILE} -c $< -o $@
 
 ${MAN_GZ}: ${MAN}
 	cp $? .
@@ -234,11 +230,11 @@ ${MAN_GZ}: ${MAN}
 
 
 perftest_logjobs.o: perftest_logjobs.c
-	${CC} ${CFLAGS} -DLB_PERF_DROP ${GLOBUSINC} -c $<
+	${CC} ${CFLAGS} -DLB_PERF_DROP -c $<
 
 # catches $TOOLS and logevent compilation
 %.o: %.c 
-	${CC} ${CFLAGS} ${GLOBUSINC} -c $<
+	${CC} ${CFLAGS} -c $<
 
 %.h: %.h.T
 	rm -f $@
@@ -274,7 +270,7 @@ producer_test: producer_test.o prod_proto_test.o
 	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+ ${EXT_LIB}
 
 producer_test.o: %.o: %.cpp
-	${CXX} -c ${CXXFLAGS} ${TEST_INC} ${GLOBUSINC} $<
+	${CXX} -c ${CXXFLAGS} ${TEST_INC} $<
 
 man: ${MAN_GZ}
 

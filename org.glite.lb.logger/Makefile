@@ -8,7 +8,6 @@ package=glite-lb-client
 version=0.0.0
 PREFIX=/opt/glite
 
-globus_prefix=/opt/globus
 nothrflavour=gcc32
 thrflavour=gcc32pthr
 
@@ -24,10 +23,6 @@ VPATH:=${top_srcdir}/src:${top_srcdir}/test
 VERSION=-DVERSION=\"GLite-${version}\"
 
 SUFFIXES=.no
-
-GLOBUSINC=-I${globus_prefix}/include/${nothrflavour}
-
-GLOBUSTHRINC=-I${globus_prefix}/include/${thrflavour}
 
 ifdef LB_STANDALONE
 	LB_STANDALONE_FLAGS:=-DLB_STANDALONE
@@ -58,14 +53,6 @@ LDFLAGS:=-L${stagedir}/lib \
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
-
-GLOBUS_LIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour}
-
-GLOBUS_THRLIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${thrflavour} \
-	-lglobus_gssapi_gsi_${thrflavour}
 
 #ifneq (${expat_prefix},/usr)
 #	EXPAT_LIBS:=-L${expat_prefix}/lib
@@ -152,7 +139,7 @@ check:
 # check.ll check.il
 
 #check.ll: logd_proto_test.o ll_test.o
-#	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${GLOBUS_LIBS} ${TEST_LIBS} $+
+#	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${TEST_LIBS} $+
 #	./check.ll
 
 check.ll:
@@ -191,34 +178,34 @@ endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 
 ${INTERLOG_NOBJS}: %.no: %.c
-	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DIL_NOTIFICATIONS -c $< -o $@
+	${CC} ${CFLAGS} -DIL_NOTIFICATIONS -c $< -o $@
 
 ${INTERLOG_OBJS}: %.o: %.c
-	${CC} ${CFLAGS} ${GLOBUSTHRINC} -c $< -o $@
+	${CC} ${CFLAGS} -c $< -o $@
 
 ${INTERLOG_EMPTY_OBJS}: %.empty.o: %.c
-	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DPERF_EMPTY -c $< -o $@
+	${CC} ${CFLAGS} -DPERF_EMPTY -c $< -o $@
 
 ${INTERLOG_PERF_OBJS}: %.perf.o: %.c
-	${CC} ${CFLAGS} ${GLOBUSTHRINC} -c $< -o $@
+	${CC} ${CFLAGS} -c $< -o $@
 
 #${INTERLOG_INLINE_EMPTY_OBJS}: %.io: %.c
-#	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DLB_PERF -DPERF_EMPTY -DPERF_EVENTS_INLINE -c $< -o $@
+#	${CC} ${CFLAGS} -DLB_PERF -DPERF_EMPTY -DPERF_EVENTS_INLINE -c $< -o $@
 
 ${LOGD_NOBJS}: %.no: %.c
-	${CC} ${CFLAGS} ${GLOBUSINC} -DLOGD_NOFILE -c $< -o $@
+	${CC} ${CFLAGS} -DLOGD_NOFILE -c $< -o $@
 
 ${LOGD_OBJS}: %.o: %.c
-	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
+	${CC} ${CFLAGS} -c $< -o $@
 
 logd_proto_test.o: %.o: %.c
-	${CC} ${CFLAGS} ${GLOBUSINC} -c $< -o $@
+	${CC} ${CFLAGS} -c $< -o $@
 
 ll_test.o: %.o: %.cpp
 	${CXX} ${CFLAGS} ${TEST_INC} -c $< -o $@
 
 il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest.o event_storeTest.o: %.o: %.cpp
-	${CXX} ${CFLAGS} ${GLOBUSTHRINC} ${TEST_INC} -c $< -o $@
+	${CXX} ${CFLAGS} ${TEST_INC} -c $< -o $@
 
 clean:
 	rm -rvf .libs/ *.o *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} 
