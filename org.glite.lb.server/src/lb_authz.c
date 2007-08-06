@@ -10,7 +10,6 @@
 
 #ifndef NO_VOMS
 
-#include <openssl/ssl.h>
 #include <libxml/parser.h> 
 #undef WITHOUT_TRIO
 
@@ -74,124 +73,9 @@ get_groups(edg_wll_Context ctx, struct vomsdata *voms_info,
    return 0;
 }
 
-static int
-get_peer_cred(edg_wll_GssConnection *gss, char *server_cert, char *server_key, STACK_OF(X509) **chain, X509 **cert)
-{
-   OM_uint32 maj_stat, min_stat;
-   gss_buffer_desc buffer = GSS_C_EMPTY_BUFFER;
-   BIO *bio = NULL;
-   SSL_SESSION *session = NULL;
-   unsigned char int_buffer[4];
-   long length;
-   int ret, index;
-   STACK_OF(X509) *cert_chain = NULL;
-   X509 *peer_cert = NULL;
-   X509 *p_cert;
-
-   maj_stat = gss_export_sec_context(&min_stat, &gss->context, &buffer);
-   if (GSS_ERROR(maj_stat))
-      return -1; /* XXX */
-
-   {
-      /* The GSSAPI specs requires gss_export_sec_context() to destroy the
-       * context after exporting. So we have to resurrect the context here by
-       * importing from just generated buffer. gss_import_sec_context() must be
-       * able to read valid credential before it loads the exported context
-       * so we set the environment temporarily to point to the ones used by
-       * the server.
-       *
-       * I'm eagerly waiting for adaptations in the VOMS API to avoid these
-       * hacks */
-
-      char *orig_cert = NULL, *orig_key = NULL;
-
-      orig_cert = getenv("X509_USER_CERT");
-      orig_key = getenv("X509_USER_KEY");
-
-      if (server_cert)
-	 setenv("X509_USER_CERT", server_cert, 1);
-      if (server_key)
-	 setenv("X509_USER_KEY", server_key, 1);
-   
-      maj_stat = gss_import_sec_context(&min_stat, &buffer, &gss->context);
-
-      if (orig_cert)
-	 setenv("X509_USER_CERT", orig_cert, 1);
-      else
-	 unsetenv("X509_USER_CERT");
-
-      if (orig_key) 
-	 setenv("X509_USER_KEY", orig_key, 1);
-      else 
-	 unsetenv("X509_USER_KEY");
-
-      if (GSS_ERROR(maj_stat)) {
-	  ret = -1;
-	  goto end;
-      }
-   }
-
-   bio = BIO_new(BIO_s_mem());
-   if (bio == NULL) {
-      ret = -1;
-      goto end;
-   }
-   
-   /* Store exported context to memory, skipping the version number and and cred_usage fields */
-   BIO_write(bio, buffer.value + 8 , buffer.length - 8);
-
-   /* decode the session data in order to skip at the start of the cert chain */
-   session = d2i_SSL_SESSION_bio(bio, NULL);
-   if (session == NULL) {
-      ret = -1; /* XXX */
-      goto end;
-   }
-   if (session->peer)
-      peer_cert = X509_dup(session->peer);
-
-   SSL_SESSION_free(session);
-
-   BIO_read(bio, (char *) int_buffer, 4);
-   length  = (((size_t) int_buffer[0]) << 24) & 0xffff;
-   length |= (((size_t) int_buffer[1]) << 16) & 0xffff;
-   length |= (((size_t) int_buffer[2]) <<  8) & 0xffff;
-   length |= (((size_t) int_buffer[3])      ) & 0xffff;
-
-   if (length == 0) {
-      ret = 0;
-      goto end;
-   }
-
-   cert_chain = sk_X509_new_null();
-   for(index = 0; index < length; index++) {
-      p_cert = d2i_X509_bio(bio, NULL);
-      if (p_cert == NULL) {
-	 ret = -1; /* XXX */
-	 sk_X509_pop_free(cert_chain, X509_free);
-	 goto end;
-      }
-
-      sk_X509_push(cert_chain, p_cert);
-   }
-
-   *chain = cert_chain;
-   *cert = peer_cert;
-   peer_cert = NULL;
-   ret = 0;
-
-end:
-   if (peer_cert)
-      X509_free(peer_cert);
-   gss_release_buffer(&min_stat, &buffer);
-
-   return ret;
-}
-
 int
 edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *server_cert, char *server_key, char *voms_dir, char *ca_dir)
 {
-   STACK_OF(X509) *p_chain = NULL;
-   X509 *cert = NULL;
    int ret;
    int err = 0;
    struct vomsdata *voms_info = NULL;
@@ -200,21 +84,6 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
    memset (&ctx->vomsGroups, 0, sizeof(ctx->vomsGroups));
    edg_wll_ResetError(ctx);
 
-   ret = get_peer_cred(gss, server_cert, server_key, &p_chain, &cert);
-   if (ret) {
-//      ret = 0;
-//	XXX (MM): I do not know whether this error may be triggered by other
-//		bugs too... The error message may be incomplete.
-      edg_wll_SetError(ctx, errno, "cert/key file not owned by process owner?");
-      goto end;
-   }
-
-   /* exit if peer's credentials are not available */
-   if (p_chain == NULL || cert == NULL) {
-      ret = 0;
-      goto end;
-   }
-      
    /* uses X509_CERT_DIR and X509_VOMS_DIR vars */
    voms_info = VOMS_Init(voms_dir, ca_dir);
    if (voms_info == NULL) {
@@ -223,7 +92,7 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
       goto end;
    }
 
-   ret = VOMS_Retrieve(cert, p_chain, RECURSE_CHAIN, voms_info, &err);
+   ret = VOMS_RetrieveFromCtx(gss->context, RECURSE_CHAIN, voms_info, &err);
    if (ret == 0) {
       if (err == VERR_NOEXT)
 	 /* XXX DK:
@@ -242,8 +111,6 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
 end:
    if (voms_info)
       VOMS_Destroy(voms_info);
-   if (cert)
-      X509_free(cert);
 
    return ret;
 }
