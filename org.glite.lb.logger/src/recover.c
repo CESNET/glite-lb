@@ -36,14 +36,13 @@ recover_thread(void *q)
 		if(pthread_mutex_lock(&cred_handle_lock) < 0)
 			abort();
 		if (edg_wll_gss_watch_creds(cert_file, &cert_mtime) > 0) {
-			gss_cred_id_t new_cred_handle = GSS_C_NO_CREDENTIAL;
-			OM_uint32 min_stat;
+			edg_wll_GssCred new_cred_handle = NULL;
 			int ret;
 
 			ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file, 
 				&new_cred_handle, NULL, NULL);
-			if (new_cred_handle != GSS_C_NO_CREDENTIAL) {
-				gss_release_cred(&min_stat, &cred_handle);
+			if (new_cred_handle != NULL) {
+				edg_wll_gss_release_cred(&cred_handle, NULL);
 				cred_handle = new_cred_handle;
 				il_log(LOG_INFO, "New certificate found and deployed.\n");
 			}

@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 #include <expat.h> 	// Expat header file
 

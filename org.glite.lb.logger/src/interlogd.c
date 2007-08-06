@@ -4,10 +4,12 @@
    interlogger - collect events from local-logger and send them to logging and bookkeeping servers
 
 */
+#include <stdio.h>
 #include <getopt.h>
 #include <string.h>
 #include <signal.h>
 #include <pthread.h>
+#include <errno.h>
 
 #include "interlogd.h"
 #include "glite/lb/log_proto.h"
@@ -32,7 +34,7 @@ int killflg = 0;
 
 int TIMEOUT = DEFAULT_TIMEOUT;
 
-gss_cred_id_t cred_handle = GSS_C_NO_CREDENTIAL;
+edg_wll_GssCred cred_handle = NULL;
 pthread_mutex_t cred_handle_lock = PTHREAD_MUTEX_INITIALIZER;
 
 time_t key_mtime = 0, cert_mtime = 0;

@@ -33,7 +33,7 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 }
 	edg_wll_ResetError(ctx);
 
-	if (connPTR->gss.context != GSS_C_NO_CONTEXT)
+	if (connPTR->gss.context != NULL)
    		sock = connPTR->gss.sock;
 	else {
 		edg_wll_SetError(ctx,ENOTCONN,NULL);
@@ -302,7 +302,7 @@ edg_wll_ErrorCode edg_wll_http_send(edg_wll_Context ctx,const char *first,const 
 
 	edg_wll_ResetError(ctx);
 
-	if (connPTR->gss.context == GSS_C_NO_CONTEXT)
+	if (connPTR->gss.context == NULL)
 	   return edg_wll_SetError(ctx,ENOTCONN,NULL);
 
 	if (real_write(ctx,&connPTR->gss,first,strlen(first)) < 0 ||

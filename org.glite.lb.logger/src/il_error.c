@@ -13,9 +13,6 @@
 extern void _start (void), etext (void);
 #endif
 
-/* XXX DK: */
-#include <err.h> // SSL header file 
-
 #include "glite/security/glite_gss.h"
 
 #include "il_error.h"

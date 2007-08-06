@@ -1,5 +1,6 @@
 #ident "$Header$"
 
+#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -25,7 +26,6 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index)
 // XXX: should change the parameter conn_index to int (parameter is IN only)
 {
 	/* close connection and free its structures */
-	OM_uint32 min_stat;
 	int cIndex,ret = 0;
 
         cIndex = *conn_index;
@@ -34,8 +34,8 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index)
 
 	if (ctx->connections->connPool[cIndex].gss.sock)
 		ret = edg_wll_gss_close(&ctx->connections->connPool[cIndex].gss, &ctx->p_tmp_timeout);
-	if (ctx->connections->connPool[cIndex].gsiCred != GSS_C_NO_CREDENTIAL) 
-		gss_release_cred(&min_stat, &ctx->connections->connPool[cIndex].gsiCred);
+	if (ctx->connections->connPool[cIndex].gsiCred != NULL) 
+		edg_wll_gss_release_cred(&ctx->connections->connPool[cIndex].gsiCred, NULL);
 	free(ctx->connections->connPool[cIndex].peerName);
 	free(ctx->connections->connPool[cIndex].buf);
 	
@@ -104,7 +104,7 @@ int AddConnection(edg_wll_Context ctx, char *name, int port)
 	free(ctx->connections->connPool[index].peerName);	// should be empty; just to be sure
 	ctx->connections->connPool[index].peerName = strdup(name);
 	ctx->connections->connPool[index].peerPort = port;
-	ctx->connections->connPool[index].gsiCred = GSS_C_NO_CREDENTIAL; // initial value
+	ctx->connections->connPool[index].gsiCred = NULL; // initial value
 	ctx->connections->connOpened++;
 
 	return index;
@@ -221,7 +221,7 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 	    goto err;
 	}
 
-	if (ctx->connections->connPool[index].gss.context == GSS_C_NO_CONTEXT) {	
+	if (ctx->connections->connPool[index].gss.context == NULL) {	
 		switch (edg_wll_gss_connect(ctx->connections->connPool[index].gsiCred,
 				ctx->connections->connPool[index].peerName, ctx->connections->connPool[index].peerPort,
 				&ctx->p_tmp_timeout,&ctx->connections->connPool[index].gss,

@@ -5,8 +5,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include <globus_common.h>
-
 #include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/events.h"
@@ -64,11 +62,6 @@ int main(int argc, char *argv[])
 	if ( !value ) { fprintf(stderr, "Tag value not given\n"); return 1; }
 
 	if ( (errno = edg_wlc_JobIdParse(jobid_s, &jobid)) ) { perror(jobid_s); return 1; }
-
-	if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS) {
-		fprintf(stderr, "Cannot initialize Globus common module\n");
-		exit(1);
-	}
 
 	edg_wll_InitContext(&ctx);
 

@@ -1,5 +1,6 @@
 #ident "$Header$"
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -9,6 +10,8 @@
 #include <string.h>
 #include <syslog.h>
 #include <fcntl.h>
+#include <stdarg.h>
+#include <errno.h>
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/escape.h"

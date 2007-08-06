@@ -12,6 +12,7 @@
 #include <unistd.h>
 #endif
 #include <fcntl.h>
+#include <sys/param.h>
 
 #include "glite/lb/events_parse.h"
 

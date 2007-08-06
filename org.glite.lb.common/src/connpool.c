@@ -201,8 +201,6 @@ int RetVal;
 void edg_wll_poolFree() {
 	int i;
         struct timeval close_timeout = {0, 50000};	/* Declarations taken over from edg_wll_FreeContext() */
-        OM_uint32 min_stat;				/* Does not seem to have any use whatsoever - neither
-							   here nor in edg_wll_FreeContext() */
 
         #ifdef EDG_WLL_CONNPOOL_DEBUG
             #ifdef GLITE_LB_THREADED
@@ -216,7 +214,7 @@ void edg_wll_poolFree() {
 		if (connectionsHandle.connPool[i].peerName) free(connectionsHandle.connPool[i].peerName);
                 edg_wll_gss_close(&connectionsHandle.connPool[i].gss,&close_timeout);
                 if (connectionsHandle.connPool[i].gsiCred)
-                	gss_release_cred(&min_stat, &connectionsHandle.connPool[i].gsiCred);
+                	edg_wll_gss_release_cred(&connectionsHandle.connPool[i].gsiCred, NULL);
                 if (connectionsHandle.connPool[i].buf) free(connectionsHandle.connPool[i].buf);
         }
 

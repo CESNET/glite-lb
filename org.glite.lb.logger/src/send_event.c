@@ -172,7 +172,7 @@ event_queue_connect(struct event_queue *eq)
   if(!nosend) {
 #endif
 
-  if(eq->gss.context == GSS_C_NO_CONTEXT) {
+  if(eq->gss.context == NULL) {
 
     tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;
@@ -190,7 +190,7 @@ event_queue_connect(struct event_queue *eq)
       set_error(IL_DGGSS, ret,
 	        (ret == EDG_WLL_GSS_ERROR_GSS) ? gss_err : "event_queue_connect: edg_wll_gss_connect");
       if (gss_err) free(gss_err);
-      eq->gss.context = GSS_C_NO_CONTEXT;
+      eq->gss.context = NULL;
       eq->timeout = TIMEOUT;
       return(0);
     }
@@ -213,9 +213,9 @@ event_queue_close(struct event_queue *eq)
   if(!nosend) {
 #endif
 
-  if(eq->gss.context != GSS_C_NO_CONTEXT) {
+  if(eq->gss.context != NULL) {
     edg_wll_gss_close(&eq->gss, NULL);
-    eq->gss.context = GSS_C_NO_CONTEXT;
+    eq->gss.context = NULL;
   }
 #ifdef LB_PERF
   }
@@ -237,7 +237,7 @@ event_queue_send(struct event_queue *eq)
 #ifdef LB_PERF
   if(!nosend) {
 #endif
-  if(eq->gss.context == GSS_C_NO_CONTEXT)
+  if(eq->gss.context == NULL)
     return(0);
 #ifdef LB_PERF
   }

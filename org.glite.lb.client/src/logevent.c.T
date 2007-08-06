@@ -163,12 +163,11 @@ int main(int argc, char *argv[])
 
 	if ( use_lbproxy ) {
 		if ( !lbproxy_user ) {
-			gss_cred_id_t		gss_cred = GSS_C_NO_CREDENTIAL;
+			edg_wll_GssCred		gss_cred = NULL;
 			edg_wll_GssStatus   gss_stat;
-			OM_uint32			min_stat;
 			if ( edg_wll_gss_acquire_cred_gsi(NULL, NULL, &gss_cred, &lbproxy_user, &gss_stat) )
 				lbproxy_user = "anonymous";
-			if ( gss_cred != GSS_C_NO_CREDENTIAL ) gss_release_cred(&min_stat, &gss_cred);
+			if ( gss_cred != NULL ) edg_wll_gss_release_cred(&gss_cred, NULL);
 		}
 		if ( lbproxy_store_sock )
 			edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, lbproxy_store_sock);

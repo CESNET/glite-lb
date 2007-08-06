@@ -634,8 +634,7 @@ int edg_wll_SetLoggingJob(
 	{
 		char	*my_subject_name = NULL;
 		edg_wll_GssStatus	gss_stat;
-		gss_cred_id_t	cred = GSS_C_NO_CREDENTIAL;
-		OM_uint32	min_stat;
+		edg_wll_GssCred	cred = NULL;
 
 		/* acquire gss credentials */
 		err = edg_wll_gss_acquire_cred_gsi(
@@ -649,8 +648,8 @@ int edg_wll_SetLoggingJob(
 		} else {
 			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, my_subject_name);
 		}
-		if (cred != GSS_C_NO_CREDENTIAL)
-			gss_release_cred(&min_stat, &cred);
+		if (cred != NULL)
+			edg_wll_gss_release_cred(&cred, NULL);
 		if (my_subject_name) free(my_subject_name);
 	}
 
@@ -689,8 +688,7 @@ int edg_wll_SetLoggingJobProxy(
 	} else {
 		char	*my_subject_name = NULL;
 		edg_wll_GssStatus	gss_stat;
-		gss_cred_id_t	cred = GSS_C_NO_CREDENTIAL;
-		OM_uint32	min_stat;
+		edg_wll_GssCred	cred = NULL;
 
 		/* acquire gss credentials */
 		err = edg_wll_gss_acquire_cred_gsi(
@@ -705,8 +703,8 @@ int edg_wll_SetLoggingJobProxy(
 			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, my_subject_name);
 		}
 
-		if (cred != GSS_C_NO_CREDENTIAL)
-			gss_release_cred(&min_stat, &cred);
+		if (cred != NULL)
+			edg_wll_gss_release_cred(&cred, NULL);
 		if (my_subject_name) free(my_subject_name);
 	}
 

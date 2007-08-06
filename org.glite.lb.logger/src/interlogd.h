@@ -63,7 +63,7 @@ extern int TIMEOUT;
 #define INPUT_TIMEOUT (60)
 
 
-extern gss_cred_id_t cred_handle;
+extern edg_wll_GssCred cred_handle;
 extern pthread_mutex_t cred_handle_lock;
 extern char *cert_file;
 extern char *key_file;

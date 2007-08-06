@@ -25,7 +25,7 @@ typedef struct _edg_wll_ConnPool {
         unsigned int    peerPort;
 
 /* http(s) stream */
-        gss_cred_id_t   gsiCred;
+        edg_wll_GssCred   gsiCred;
         edg_wll_GssConnection   gss;
         char            *buf;
         int             bufUse,bufSize;

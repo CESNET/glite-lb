@@ -259,7 +259,7 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 			ctx->connections->connPool[index].peerPort);
 #endif
 	/* gss_connect */
-	if (ctx->connections->connPool[index].gss.context == GSS_C_NO_CONTEXT) {
+	if (ctx->connections->connPool[index].gss.context == NULL) {
 
 	/* acquire gss credentials */
 	ret = edg_wll_gss_acquire_cred_gsi(
@@ -636,8 +636,7 @@ int edg_wll_log_direct_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn)
 	int	ret,answer;
 	char	*my_subject_name = NULL;
 	edg_wll_GssStatus	gss_stat;
-	gss_cred_id_t	cred = GSS_C_NO_CREDENTIAL;
-	OM_uint32	min_stat;
+	edg_wll_GssCred	cred = NULL;
 	char	*host;
 	int	port;
 
@@ -683,8 +682,8 @@ edg_wll_log_direct_connect_end:
 	fprintf(stderr,"edg_wll_log_direct_connect: done (remaining timeout %d.%06d sec)\n",
 		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
 #endif
-	if (cred != GSS_C_NO_CREDENTIAL)
-		gss_release_cred(&min_stat, &cred);
+	if (cred != NULL)
+		edg_wll_gss_release_cred(&cred, NULL);
 	if (my_subject_name) free(my_subject_name);
 	if (host) free(host);
 

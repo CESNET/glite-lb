@@ -748,7 +748,7 @@ select:
 	/*	 notif_send() & notif_receive() should then migrate to		*/
 	/*	 client/connection.c and use connPool management f-cions	*/
 	
-	if (ctx->connPoolNotif[0].gss.context == GSS_C_NO_CONTEXT) 
+	if (ctx->connPoolNotif[0].gss.context == NULL) 
 	{	
 		int 	ret;
 		switch(poll(pollfds, 1, tv.tv_sec*1000+tv.tv_usec/1000)) {
@@ -903,7 +903,7 @@ int edg_wll_NotifCloseFd(
 	int err;
 	
 	if (ctx->notifSock >= 0) {
-		if (ctx->connPoolNotif[0].gss.context != GSS_C_NO_CONTEXT) {
+		if (ctx->connPoolNotif[0].gss.context != NULL) {
 			edg_wll_gss_close(&ctx->connPoolNotif[0].gss, NULL);
 		}
 		err = close(ctx->notifSock);

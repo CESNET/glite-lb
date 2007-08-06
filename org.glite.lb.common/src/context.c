@@ -61,7 +61,6 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 void edg_wll_FreeContext(edg_wll_Context ctx)
 {
 	struct timeval close_timeout = {0, 50000};
-	OM_uint32 min_stat;
 
 	if (!ctx) return;
 #ifdef CTXTRACE
@@ -108,7 +107,7 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 			if (ctx->connections->connPool[i].peerName) free(ctx->connections->connPool[i].peerName);
 			edg_wll_gss_close(&ctx->connections->connPool[i].gss,&close_timeout);
 			if (ctx->connections->connPool[i].gsiCred)
-				gss_release_cred(&min_stat, &ctx->connections->connPool[i].gsiCred);
+				edg_wll_gss_release_cred(&ctx->connections->connPool[i].gsiCred, NULL);
 			if (ctx->connections->connPool[i].buf) free(ctx->connections->connPool[i].buf);
 		}	
 		free(ctx->connections->connPool);*/
@@ -117,7 +116,7 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
  		if (ctx->connPoolNotif[0].peerName) free(ctx->connPoolNotif[0].peerName);
  		edg_wll_gss_close(&ctx->connPoolNotif[0].gss,&close_timeout);
  		if (ctx->connPoolNotif[0].gsiCred)
- 			gss_release_cred(&min_stat, &ctx->connPoolNotif[0].gsiCred);
+ 			edg_wll_gss_release_cred(&ctx->connPoolNotif[0].gsiCred, NULL);
  		if (ctx->connPoolNotif[0].buf) free(ctx->connPoolNotif[0].buf);
  		free(ctx->connPoolNotif);
  	}
