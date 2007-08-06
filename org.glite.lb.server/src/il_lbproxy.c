@@ -1,6 +1,7 @@
 #ident "$Header$"
 
 #include <syslog.h>
+#include <errno.h>
 #include "glite/lb/context-int.h"
 #include "glite/lb/log_proto.h"
 

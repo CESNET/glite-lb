@@ -26,6 +26,7 @@
 #include <ares.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <errno.h>
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 #include "soap_version.h"
@@ -135,7 +136,7 @@ static char				*server_subject = NULL;
 static time_t			purge_timeout[EDG_WLL_NUMBER_OF_STATCODES];
 static time_t			notif_duration = 60*60*24*7;
 
-static gss_cred_id_t	mycred = GSS_C_NO_CREDENTIAL;
+static edg_wll_GssCred	mycred = NULL;
 time_t					cert_mtime = 0;
 char				   *cadir = NULL,
 					   *vomsdir = NULL,
@@ -312,7 +313,6 @@ int main(int argc, char *argv[])
 	FILE			   *fpid;
 	key_t				semkey;
 	edg_wll_Context		ctx;
-	OM_uint32			min_stat;
 	edg_wll_GssStatus	gss_code;
 	struct timeval		to;
 	int 			request_timeout = REQUEST_TIMEOUT;
@@ -631,7 +631,7 @@ a.sin_addr.s_addr = INADDR_ANY;
 	semctl(semset, 0, IPC_RMID, 0);
 	unlink(pidfile);
 	free(port);
-	gss_release_cred(&min_stat, &mycred);
+	edg_wll_gss_release_cred(&mycred, NULL);
 
 
 	return 0;
@@ -730,12 +730,9 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 {
 	struct clnt_data_t *cdata = (struct clnt_data_t *)data;
 	edg_wll_Context		ctx;
-	gss_name_t			client_name = GSS_C_NO_NAME;
-	gss_buffer_desc		token = GSS_C_EMPTY_BUFFER;
-	gss_cred_id_t		newcred = GSS_C_NO_CREDENTIAL;
+	edg_wll_GssPrincipal	client = NULL;
+	edg_wll_GssCred		newcred = NULL;
 	edg_wll_GssStatus	gss_code;
-	OM_uint32			min_stat,
-						maj_stat;
 	struct timeval		dns_to = {DNS_TIMEOUT, 0},
 						conn_start, now;
 	struct sockaddr_in	a;
@@ -753,7 +750,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 */
 		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, NULL, &gss_code) ) {
 			dprintf(("[%d] reloading credentials\n", getpid()));
-			gss_release_cred(&min_stat, &mycred);
+			edg_wll_gss_release_cred(&mycred, NULL);
 			mycred = newcred;
 		} else { dprintf(("[%d] reloading credentials failed, using old ones\n", getpid())); }
 /* 
@@ -913,32 +910,16 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		return 1;
 	} 
 
-	maj_stat = gss_inquire_context(&min_stat, ctx->connections->serverConnection->gss.context,
-							&client_name, NULL, NULL, NULL, NULL, NULL, NULL);
-	if ( !GSS_ERROR(maj_stat) )
-		maj_stat = gss_display_name(&min_stat, client_name, &token, NULL);
-
-	if ( !GSS_ERROR(maj_stat) )
-	{
+	ret = edg_wll_gss_get_client_conn(&ctx->connections->serverConnection->gss, &client, NULL);
+	if (ret || client->flags & EDG_WLL_GSS_FLAG_ANON) {
+		dprintf(("[%d] annonymous client\n",getpid()));
+	} else {
 		if (ctx->peerName) free(ctx->peerName);
-		ctx->peerName = (char *)token.value;
-		memset(&token, 0, sizeof(token));
-		/* XXX DK: pujde pouzit lifetime z inquire_context()?
-		 *
-		ctx->peerProxyValidity = ASN1_UTCTIME_mktime(X509_get_notAfter(peer));
-		 */
-  
+		ctx->peerName = strdup(client->name);
+		edg_wll_gss_free_princ(client);
+
 		dprintf(("[%d] client DN: %s\n",getpid(),ctx->peerName));
 	}
-	else
-		/* XXX DK: Check if the ANONYMOUS flag is set ?
-		 */
-		dprintf(("[%d] annonymous client\n",getpid()));
-		  
-	if ( client_name != GSS_C_NO_NAME )
-		gss_release_name(&min_stat, &client_name);
-	if ( token.value )
-		gss_release_buffer(&min_stat, &token);
 
 	if ( edg_wll_SetVomsGroups(ctx, &ctx->connections->serverConnection->gss, server_cert, server_key, vomsdir, cadir) )
 	{
@@ -1222,7 +1203,7 @@ int bk_clnt_disconnect(int conn, struct timeval *timeout, void *cdata)
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
 
 
-	if ( ctx->connections->serverConnection->gss.context != GSS_C_NO_CONTEXT)
+	if ( ctx->connections->serverConnection->gss.context != NULL)
 		edg_wll_gss_close(&ctx->connections->serverConnection->gss, timeout);
 	edg_wll_FreeContext(ctx);
 	ctx = NULL;
@@ -1240,7 +1221,7 @@ int bk_ws_clnt_disconnect(int conn, struct timeval *timeout, void *cdata)
 
 	gsplugin_ctx = glite_gsplugin_get_context(soap);
 	glite_gsplugin_set_connection(gsplugin_ctx, NULL);
-	glite_gsplugin_set_credential(gsplugin_ctx, GSS_C_NO_CREDENTIAL);
+	glite_gsplugin_set_credential(gsplugin_ctx, NULL);
 	if ( (rv = bk_clnt_disconnect(conn, timeout, cdata)) )
 		return rv;
 

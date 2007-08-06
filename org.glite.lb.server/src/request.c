@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "glite/lb/il_string.h"
 #include "glite/lb/il_msg.h"

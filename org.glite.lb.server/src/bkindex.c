@@ -7,6 +7,7 @@
 #include <getopt.h>
 #include <sysexits.h>
 #include <assert.h>
+#include <errno.h>
 
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/context-int.h"

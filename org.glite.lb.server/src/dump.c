@@ -6,6 +6,7 @@
 #include <syslog.h>
 #include <assert.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "glite/lb/trio.h"
 #include "glite/wmsutils/jobid/cjobid.h"

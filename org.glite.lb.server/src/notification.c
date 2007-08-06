@@ -4,6 +4,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/trio.h"

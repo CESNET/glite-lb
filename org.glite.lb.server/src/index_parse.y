@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include "glite/lb/context-int.h"
 

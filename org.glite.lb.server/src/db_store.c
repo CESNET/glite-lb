@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/events.h"
