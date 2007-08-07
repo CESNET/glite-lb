@@ -63,6 +63,7 @@ start()
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
 		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
+		-b 0 $GLITE_LB_BKSERVERD_ADDOPTS \
 		$super $creds -i $pidfile $port $wport $dumpdir $purgedir $maildir" \
 	&& echo " done" || echo " FAILED"
 
