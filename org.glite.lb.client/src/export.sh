@@ -39,7 +39,7 @@ GLITE_LB_EXPORT_JPDUMP_MAILDIR=${GLITE_LB_EXPORT_JPDUMP_MAILDIR:-/tmp/jpdump}
 # directory with exported data (file per job)
 GLITE_LB_EXPORT_JOBSDIR=${GLITE_LB_EXPORT_JOBSDIR:-/tmp/lbexport}
 # purge args (timeouts)
-GLITE_LB_EXPORT_PURGE_ARGS=${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 2w --cancelled 2w --other 2m}
+GLITE_LB_EXPORT_PURGE_ARGS=${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 2w --cancelled 2w --other 60d}
 # Book Keeping Server
 GLITE_LB_SERVER_PORT=${GLITE_LB_SERVER_PORT:-9000}
 GLITE_LB_EXPORT_BKSERVER=${GLITE_LB_EXPORT_BKSERVER:-localhost:$GLITE_LB_SERVER_PORT}
