@@ -14,7 +14,7 @@ extern int opterr,optind;
 
 static void usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-x] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-P] [-l jdl_file] [-e seed]\n", me);
+	fprintf(stderr,"usage: %s [-m bkserver] [-x] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-l jdl_file] [-e seed]\n", me);
 }
 
 int main(int argc, char *argv[])
@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
 			case 'j': job = (char *) strdup(optarg); break;
 			case 'm': server = strdup(optarg); break;
 			case 'n': num_subjobs = atoi(optarg); break;
-			case 'S': reg_subjobs = 1; break;
-			case 'C': collection = 1; break;
+			case 'S': if (num_subjobs>0) { reg_subjobs = 1; break; }
+			case 'C': if (num_subjobs>0) { collection = 1; break; }
 			case 'P': pbs = 1; break;
 			case 'l': jdl = (char *) strdup(optarg); break;
 			case 'e': seed = strdup(optarg); break;
@@ -45,11 +45,6 @@ int main(int argc, char *argv[])
 			case -1: done = 1; break;
 		}
 	} while (!done);
-
-	if ((num_subjobs <= 0) && (reg_subjobs || collection) ) {
-		usage(argv[0]);
-		exit(EINVAL);
-	}	
 
 	if (!job && !server) {
 		fprintf(stderr,"%s: either -m server or -j jobid has to be specified\n",argv[0]);
@@ -144,14 +139,14 @@ int main(int argc, char *argv[])
 		}
 
 		if (lbproxy) {
-			if (edg_wll_RegisterSubjobsProxy(ctx, jobid, (const char **) jdls, "NNNSSSS", subjobs)) {
+			if (edg_wll_RegisterSubjobsProxy(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
 				char 	*et,*ed;
 				edg_wll_Error(ctx,&et,&ed);
 				fprintf(stderr,"edg_wll_RegisterSubjobsProxy: %s (%s)\n", et, ed);
 				exit(1);
 			}
 		} else {
-			if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, "NNNSSSS", subjobs)) {
+			if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
 				char 	*et,*ed;
 				edg_wll_Error(ctx,&et,&ed);
 				fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);
