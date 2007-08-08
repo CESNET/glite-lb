@@ -81,11 +81,14 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 
   if (!ctx->strict_locking && edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
 
-  if ( ev->any.type == EDG_WLL_EVENT_CHANGEACL )
+  if ( ev->any.type == EDG_WLL_EVENT_CHANGEACL ) {
     err = edg_wll_UpdateACL(ctx, ev->any.jobId,
 			ev->changeACL.user_id, ev->changeACL.user_id_type,
 			ev->changeACL.permission, ev->changeACL.permission_type,
 			ev->changeACL.operation);
+
+    edg_wll_UnlockJob(ctx,ev->any.jobId);
+  }
   else {
 #ifdef LB_PERF
     if(sink_mode == GLITE_LB_SINK_STATE) {
