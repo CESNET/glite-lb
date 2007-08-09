@@ -47,14 +47,6 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-D_GNU_SOURCE \
 	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS}
 
-# We must follow major version changes of org.glite.lb.client-interface due to
-# binary compatibility. However, we may live a life of our own, changing our
-# major version more frequently. This variable specifies how many steps ahead
-# we are.
-
-VERSION_AHEAD=3
-CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${top_srcdir}/project/check_version.pl
-
 ifneq (${expat_prefix},/usr)
 	EXPAT_LIBS:=-L${expat_prefix}/lib
 endif
@@ -99,7 +91,7 @@ HDRS:=context.h context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h il_msg.h \
 	escape.h ulm_parse.h trio.h lb_maildir.h connpool.h notifid.h notif_rec.h \
 	query_rec.h timeouts.h LoggingExceptions.h CountRef.h ${PERF_HDRS} 
-GEN_HDRS:=Event.h events.h jobstat.h
+GEN_HDRS:=Event.h events.h jobstat.h common_version.h
 
 STATICLIB:=libglite_lb_common_${nothrflavour}.a
 THRSTATICLIB:=libglite_lb_common_${thrflavour}.a
@@ -123,6 +115,9 @@ generate: ${GEN_HDRS}
 	ln -vs . ${globalprefix}
 	ln -vs . ${lbprefix}
 	for i in ${HDRS}; do ln -vs ../interface/$$i $$i ; done
+
+common_version.h: ${top_srcdir}/project/version.properties
+	echo "#define GLITE_LB_COMMON_VERSION \"${version}\"" >$@
 
 all compile: generate ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${TRIO_LIB} ${MAILDIR_LIB}
 
@@ -266,6 +261,3 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
-
-check_version:
-	${CHECK_VERSION} ${stagedir}/include/glite/lb/interface_version.h

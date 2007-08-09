@@ -18,10 +18,17 @@ CXX:=g++
 
 version=${module.version}
 
+# We must follow major version changes of org.glite.lb.common due to
+# binary compatibility. However, we may live a life of our own, changing our
+# major version more frequently. This variable specifies how many steps ahead
+# we are (the number can be even negative).
+
+VERSION_AHEAD=-3
+
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
 AT3=${stagedir}/sbin/glite-lb-at3
 GENSAM=${top_srcdir}/examples/gen_sample_job
-CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=0 perl ${top_srcdir}/project/check_version.pl
+CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${stagedir}/sbin/glite-lb-check_version.pl
 
 SUFFIXES = .T .l
 
@@ -106,7 +113,7 @@ PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
 HDRS:=consumer.h notification.h statistics.h prod_proto.h connection.h \
 	Job.h Notification.h ServerConnection.h 
 FAKE_HDRS:=consumer_fake.h producer_fake.h
-GEN_HDRS:=JobStatus.h producer.h interface_version.h
+GEN_HDRS:=JobStatus.h producer.h
 
 LIBTHROBJS:=${LIBOBJS:.o=.thr.o}
 LIBLOBJS:=${LIBOBJS:.o=.lo}
@@ -149,9 +156,7 @@ version_info:=-version-info ${shell \
 ifdef LB_STANDALONE
 compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
 else
-# FIXME:
-#compile all: generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent examples ${MAN_GZ}
-compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
+compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent examples ${MAN_GZ}
 endif
 
 generate: ${GEN_HDRS}
@@ -159,9 +164,6 @@ generate: ${GEN_HDRS}
 	ln -vs . ${globalprefix}
 	ln -vs . ${lbprefix}
 	for i in ${HDRS}; do ln -vs ../interface/$$i $$i ; done
-
-interface_version.h: ${top_srcdir}/project/version.properties
-	echo "#define GLITE_LB_CLIENT_INTERFACE \"${version}\"" >$@ 
 
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib \
@@ -341,6 +343,6 @@ clean:
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 check_version:
-	${CHECK_VERSION} ${stagedir}/include/glite/lb/interface_version.h
+	${CHECK_VERSION} ${stagedir}/include/glite/lb/common_version.h
 
 .PHONY: default all compile examples fake check stage dist distsrc distbin install clean check_version
