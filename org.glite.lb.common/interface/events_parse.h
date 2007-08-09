@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_EVENTS_PARSE_H__
-#define __GLITE_LB_EVENTS_PARSE_H__
+#ifndef GLITE_LB_EVENTS_PARSE_H
+#define GLITE_LB_EVENTS_PARSE_H
 
 #ident "$Header$"
 
@@ -94,4 +94,4 @@ extern edg_wll_LogLine edg_wll_UnparseNotifEvent(
 #endif
 
 
-#endif /* __GLITE_LB_EVENTS_PARSE_H__ */
+#endif /* GLITE_LB_EVENTS_PARSE_H */

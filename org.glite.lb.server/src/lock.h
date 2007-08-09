@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_LOCK_H__
-#define __GLITE_LB_LOCK_H__
+#ifndef GLITE_LB_LOCK_H
+#define GLITE_LB_LOCK_H
 
 #ident "$Header$"
 
@@ -11,4 +11,4 @@
 int edg_wll_LockUnlockJob(const edg_wll_Context,const edg_wlc_JobId,int);
 int edg_wll_JobSemaphore(const edg_wll_Context ctx, const edg_wlc_JobId job);
 
-#endif /* __GLITE_LB_LOCK_H__ */
+#endif /* GLITE_LB_LOCK_H */

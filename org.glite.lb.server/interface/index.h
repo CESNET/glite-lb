@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_INDEX_H__
-#define __GLITE_LB_INDEX_H__
+#ifndef GLITE_LB_INDEX_H
+#define GLITE_LB_INDEX_H
 
 #ident "$Header$"
 
@@ -32,4 +32,4 @@ extern int	lex_line;
 #define USR_PREFIX	"USR_"
 #define TIME_PREFIX	"TIME_"
 
-#endif /* __GLITE_LB_INDEX_H__ */
+#endif /* GLITE_LB_INDEX_H */

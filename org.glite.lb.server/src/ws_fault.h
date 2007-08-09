@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_WS_FAULT_H__
-#define __GLITE_LB_WS_FAULT_H__
+#ifndef GLITE_LB_WS_FAULT_H
+#define GLITE_LB_WS_FAULT_H
 
 #ident "$Header$"
 
@@ -8,4 +8,4 @@
 extern void edg_wll_ErrToFault(const edg_wll_Context, struct soap *);
 extern void edg_wll_FaultToErr(const struct soap *, edg_wll_Context);
 
-#endif /* __GLITE_LB_WS_FAULT_H__ */
+#endif /* GLITE_LB_WS_FAULT_H */

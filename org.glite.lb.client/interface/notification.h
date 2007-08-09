@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_NOTIFICATION_H__
-#define __GLITE_LB_NOTIFICATION_H__
+#ifndef GLITE_LB_NOTIFICATION_H
+#define GLITE_LB_NOTIFICATION_H
 
 #ident "$Header$"
 
@@ -166,4 +166,4 @@ int edg_wll_NotifCloseFd(
 }
 #endif
 
-#endif /* __GLITE_LB_NOTIFICATION_H__ */
+#endif /* GLITE_LB_NOTIFICATION_H */

@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_NOTIFID_H__
-#define __GLITE_LB_NOTIFID_H__
+#ifndef GLITE_LB_NOTIFID_H
+#define GLITE_LB_NOTIFID_H
 
 #ident "$Header$"
 
@@ -93,4 +93,4 @@ edg_wll_NotifId *edg_wll_NotifIdDup(const edg_wll_NotifId src);
 }
 #endif
 
-#endif /* __GLITE_LB_NOTIFID_H__ */
+#endif /* GLITE_LB_NOTIFID_H */

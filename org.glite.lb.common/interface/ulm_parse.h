@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_ULM_PARSE_H__
-#define __GLITE_LB_ULM_PARSE_H__
+#ifndef GLITE_LB_ULM_PARSE_H
+#define GLITE_LB_ULM_PARSE_H
 
 #ident "$Header$"
 
@@ -44,4 +44,4 @@ extern double 	edg_wll_ULMDateToDouble( const char *s );
 void 		edg_wll_ULMDateToTimeval( const char *s, struct timeval *tv );
 extern int 	edg_wll_ULMTimevalToDate( long sec, long usec, char *dstr );
 
-#endif /* __GLITE_LB_ULM_PARSE_H__ */
+#endif /* GLITE_LB_ULM_PARSE_H */

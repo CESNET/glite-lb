@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_LB_XML_PARSE_H__
-#define __GLITE_LB_LB_XML_PARSE_H__
+#ifndef GLITE_LB_LB_XML_PARSE_H
+#define GLITE_LB_LB_XML_PARSE_H
 
 #ident "$Header$"
 
@@ -42,4 +42,4 @@ int parseStatsRequest(edg_wll_Context,char *,char **,edg_wll_QueryRec ***,edg_wl
 }
 #endif
 	
-#endif /* __GLITE_LB_LB_XML_PARSE_H__ */
+#endif /* GLITE_LB_LB_XML_PARSE_H */

@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_IL_NOTIFICATION_H__
-#define __GLITE_LB_IL_NOTIFICATION_H__
+#ifndef GLITE_LB_IL_NOTIFICATION_H
+#define GLITE_LB_IL_NOTIFICATION_H
 
 #ident "$Header$"
 
@@ -96,4 +96,4 @@ edg_wll_NotifCancelRegId(edg_wll_Context context,
 }
 #endif
 
-#endif /* __GLITE_LB_IL_NOTIFICATION_H__ */
+#endif /* GLITE_LB_IL_NOTIFICATION_H */

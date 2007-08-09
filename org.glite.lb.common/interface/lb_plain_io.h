@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_PLAIN_IO_H__
-#define __GLITE_LB_PLAIN_IO_H__
+#ifndef GLITE_LB_PLAIN_IO_H
+#define GLITE_LB_PLAIN_IO_H
 
 
 #ifdef __cplusplus
@@ -43,4 +43,4 @@ int edg_wll_plain_write_full(
 } 
 #endif
 	
-#endif /* __GLITE_LB_PLAIN_IO_H__ */
+#endif /* GLITE_LB_PLAIN_IO_H */

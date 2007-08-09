@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_XML_PARSE_H__
-#define __GLITE_LB_XML_PARSE_H__
+#ifndef GLITE_LB_XML_PARSE_H
+#define GLITE_LB_XML_PARSE_H
 
 #ident "$Header$"
 
@@ -68,4 +68,4 @@ extern int edg_wll_QuerySequenceCodeToXML(edg_wll_Context ctx, edg_wlc_JobId job
 }
 #endif
 
-#endif /* __GLITE_LB_XML_PARSE_H__ */
+#endif /* GLITE_LB_XML_PARSE_H */

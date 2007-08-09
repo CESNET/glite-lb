@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_IL_MSG_H__
-#define __GLITE_LB_IL_MSG_H__
+#ifndef GLITE_LB_IL_MSG_H
+#define GLITE_LB_IL_MSG_H
 
 #include "glite/lb/il_string.h"
 
@@ -50,4 +50,4 @@ enum {
   LB_TIME  = 900
 };
 
-#endif /* __GLITE_LB_IL_MSG_H__ */
+#endif /* GLITE_LB_IL_MSG_H */

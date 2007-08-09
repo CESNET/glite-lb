@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_JOBSTAT_H__
-#define __GLITE_LB_JOBSTAT_H__
+#ifndef GLITE_LB_JOBSTAT_H
+#define GLITE_LB_JOBSTAT_H
 
 /*!
  * \file jobstat.h  
@@ -168,4 +168,4 @@ extern char *edg_wll_StatToString(edg_wll_JobStatCode);
 }
 #endif
 
-#endif /* __GLITE_LB_JOBSTAT_H__ */
+#endif /* GLITE_LB_JOBSTAT_H */

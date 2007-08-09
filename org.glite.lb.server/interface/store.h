@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_STORE_H__
-#define __GLITE_LB_STORE_H__
+#ifndef GLITE_LB_STORE_H
+#define GLITE_LB_STORE_H
 
 #ident "$Header$"
 
@@ -56,4 +56,4 @@ int edg_wll_delete_event(edg_wll_Context,const char *, int);
 }
 #endif
 
-#endif /* __GLITE_LB_STORE_H__ */
+#endif /* GLITE_LB_STORE_H */

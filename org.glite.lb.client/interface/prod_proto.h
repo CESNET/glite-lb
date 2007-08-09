@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_PROD_PROTO_H__
-#define __GLITE_LB_PROD_PROTO_H__
+#ifndef GLITE_LB_PROD_PROTO_H
+#define GLITE_LB_PROD_PROTO_H
 
 #ident "$Header$"
 
@@ -118,4 +118,4 @@ int edg_wll_log_direct_read(edg_wll_Context ctx, edg_wll_GssConnection *conn);
 }
 #endif
 
-#endif /* __GLITE_LB_PROD_PROTO_H__ */
+#endif /* GLITE_LB_PROD_PROTO_H */

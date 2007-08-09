@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_CONSUMER_FAKE_H__
-#define __GLITE_LB_CONSUMER_FAKE_H__
+#ifndef GLITE_LB_CONSUMER_FAKE_H
+#define GLITE_LB_CONSUMER_FAKE_H
 
 /* 
  * fake implementation of the consumer API 
@@ -23,4 +23,4 @@ void edg_wll_UnregisterTestQueryListener();
 }
 #endif
 
-#endif /* __GLITE_LB_CONSUMER_FAKE_H__ */
+#endif /* GLITE_LB_CONSUMER_FAKE_H */

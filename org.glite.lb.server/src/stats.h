@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_STATS_H__
-#define __GLITE_LB_STATS_H__
+#ifndef GLITE_LB_STATS_H
+#define GLITE_LB_STATS_H
 
 #ident "$Header$"
 
@@ -74,4 +74,4 @@ int edg_wll_StateDurationServer(
 	int	*res_to
 );
 
-#endif /* __GLITE_LB_STATS_H__ */
+#endif /* GLITE_LB_STATS_H */

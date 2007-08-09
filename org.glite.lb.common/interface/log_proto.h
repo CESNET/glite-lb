@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_LOG_PROTO_H__
-#define __GLITE_LB_LOG_PROTO_H__
+#ifndef GLITE_LB_LOG_PROTO_H
+#define GLITE_LB_LOG_PROTO_H
 
 #ident "$Header$"
 
@@ -90,4 +90,4 @@ edg_wll_log_event_send(
 	struct timeval     *timeout);
 
 
-#endif /* __GLITE_LB_LOG_PROTO_H__ */
+#endif /* GLITE_LB_LOG_PROTO_H */

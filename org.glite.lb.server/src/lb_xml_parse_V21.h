@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_LB_XML_PARSE_V21_H__
-#define __GLITE_LB_LB_XML_PARSE_V21_H__
+#ifndef GLITE_LB_LB_XML_PARSE_V21_H
+#define GLITE_LB_LB_XML_PARSE_V21_H
 
 #ident "$Header$"
 
@@ -20,4 +20,4 @@ int edg_wll_UserJobsToXMLV21(edg_wll_Context, edg_wlc_JobId *, char **);
 int edg_wll_PurgeResultToXMLV21(edg_wll_Context ctx, edg_wll_PurgeResult *result, char **message);
 int edg_wll_DumpResultToXMLV21(edg_wll_Context ctx, edg_wll_DumpResult *result, char **message);
 
-#endif /* __GLITE_LB_LB_XML_PARSE_V21_H__ */
+#endif /* GLITE_LB_LB_XML_PARSE_V21_H */

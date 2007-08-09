@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_CONSUMER_H__
-#define __GLITE_LB_CONSUMER_H__
+#ifndef GLITE_LB_CONSUMER_H
+#define GLITE_LB_CONSUMER_H
 
 /*!
  * \file consumer.h
@@ -334,4 +334,4 @@ extern int set_server_name_and_port(
 }
 #endif
 
-#endif /* __GLITE_LB_CONSUMER_H__ */
+#endif /* GLITE_LB_CONSUMER_H */

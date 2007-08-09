@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_ESCAPE_H__
-#define __GLITE_LB_ESCAPE_H__
+#ifndef GLITE_LB_ESCAPE_H
+#define GLITE_LB_ESCAPE_H
 /*!
  * \file Client/escape.h
  * \brief Prototypes for Client/escape.c
@@ -57,4 +57,4 @@ char *edg_wll_UnescapeXML(const char *);
 
 char *edg_wll_EscapeSQL(const char *);
 
-#endif /* __GLITE_LB_ESCAPE_H__ */
+#endif /* GLITE_LB_ESCAPE_H */

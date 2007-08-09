@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_PRODUCER_H__
-#define __GLITE_LB_PRODUCER_H__
+#ifndef GLITE_LB_PRODUCER_H
+#define GLITE_LB_PRODUCER_H
 
 /**
  * \file producer.h
@@ -358,4 +358,4 @@ extern int edg_wll_ChangeACL(
 }
 #endif
 
-#endif /* __GLITE_LB_PRODUCER_H__ */
+#endif /* GLITE_LB_PRODUCER_H */

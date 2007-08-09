@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_PROTO_H__
-#define __GLITE_LB_PROTO_H__
+#ifndef GLITE_LB_PROTO_H
+#define GLITE_LB_PROTO_H
 
 #ident "$Header$"
 
@@ -24,4 +24,4 @@ extern edg_wll_ErrorCode edg_wll_Proto(
 
 extern char *edg_wll_HTTPErrorMessage(int);
 
-#endif /* __GLITE_LB_PROTO_H__ */
+#endif /* GLITE_LB_PROTO_H */

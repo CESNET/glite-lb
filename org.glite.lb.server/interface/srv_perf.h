@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_SRV_PERF_H__
-#define __GLITE_LB_SRV_PERF_H__
+#ifndef GLITE_LB_SRV_PERF_H
+#define GLITE_LB_SRV_PERF_H
 
 #ident "$Header$"
 
@@ -27,4 +27,4 @@ enum lb_srv_perf_sink {
 
 extern enum lb_srv_perf_sink sink_mode;
 
-#endif /* __GLITE_LB_SRV_PERF_H__ */
+#endif /* GLITE_LB_SRV_PERF_H */

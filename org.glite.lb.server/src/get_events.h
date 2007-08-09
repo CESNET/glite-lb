@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_GET_EVENTS_H__
-#define __GLITE_LB_GET_EVENTS_H__
+#ifndef GLITE_LB_GET_EVENTS_H
+#define GLITE_LB_GET_EVENTS_H
 #ident "$Header$"
 
 #include "glite/lb/context.h"
@@ -38,4 +38,4 @@ void edg_wll_SortPEvents(edg_wll_Event **);
 }
 #endif
 
-#endif /* __GLITE_LB_GET_EVENTS_H__ */
+#endif /* GLITE_LB_GET_EVENTS_H */

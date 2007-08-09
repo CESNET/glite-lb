@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_SERVER_STATE_H__
-#define __GLITE_LB_SERVER_STATE_H__
+#ifndef GLITE_LB_SERVER_STATE_H
+#define GLITE_LB_SERVER_STATE_H
 
 #ident "$Header$"
 
@@ -9,4 +9,4 @@
 int edg_wll_GetServerState(edg_wll_Context,const char *,char **);
 int edg_wll_SetServerState(edg_wll_Context,const char *,const char *);
 
-#endif /* __GLITE_LB_SERVER_STATE_H__ */
+#endif /* GLITE_LB_SERVER_STATE_H */

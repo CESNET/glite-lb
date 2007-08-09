@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_JOB_HPP__
-#define __GLITE_LB_JOB_HPP__
+#ifndef GLITE_LB_JOB_HPP
+#define GLITE_LB_JOB_HPP
 
 #ident "$Header$"
 
@@ -189,4 +189,4 @@ private:
 
 EWL_END_NAMESPACE
 
-#endif /* __GLITE_LB_JOB_HPP__ */
+#endif /* GLITE_LB_JOB_HPP */

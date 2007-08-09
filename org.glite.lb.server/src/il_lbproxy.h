@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_IL_LBPROXY_H__
-#define __GLITE_LB_IL_LBPROXY_H__
+#ifndef GLITE_LB_IL_LBPROXY_H
+#define GLITE_LB_IL_LBPROXY_H
 
 #include "glite/lb/context.h"
 
@@ -16,4 +16,4 @@ int edg_wll_EventSendProxy(edg_wll_Context ctx, const edg_wlc_JobId jobid, const
 }
 #endif
 
-#endif /* __GLITE_LB_IL_LBPROXY_H__ */
+#endif /* GLITE_LB_IL_LBPROXY_H */

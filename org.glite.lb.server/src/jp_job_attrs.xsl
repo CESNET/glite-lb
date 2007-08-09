@@ -8,8 +8,8 @@
 <xsl:output method="text"/>
 
 <xsl:template match="xs:schema">
-#ifndef __GLITE_LB_JP_JOB_ATTR_H
-#define __GLITE_LB_JP_JOB_ATTR_H
+#ifndef GLITE_LB_JP_JOB_ATTR_H
+#define GLITE_LB_JP_JOB_ATTR_H
 #define GLITE_JP_LB_NS "http://egee.cesnet.cz/en/Schema/LB/Attributes"
 #define GLITE_JP_LB_JDL_NS "http://egee.cesnet.cz/en/Schema/LB/Attributes:JDL"
 	<xsl:apply-templates select="xs:element"/>

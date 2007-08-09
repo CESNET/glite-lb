@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_XML_CONVERSIONS_H__
-#define __GLITE_LB_XML_CONVERSIONS_H__
+#ifndef GLITE_LB_XML_CONVERSIONS_H
+#define GLITE_LB_XML_CONVERSIONS_H
 
 #ident "$Header$"
 
@@ -143,4 +143,4 @@ char *edg_wll_NotifChangeOpToString(edg_wll_NotifChangeOp notifChangeOpConst);
 } // extern "C"
 #endif
 
-#endif /* __GLITE_LB_XML_CONVERSIONS_H__ */
+#endif /* GLITE_LB_XML_CONVERSIONS_H */

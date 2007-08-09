@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_EVENT_HPP__
-#define __GLITE_LB_EVENT_HPP__
+#ifndef GLITE_LB_EVENT_HPP
+#define GLITE_LB_EVENT_HPP
 
 
 #ident "$Header$"
@@ -274,4 +274,4 @@ private:
 
 EWL_END_NAMESPACE
 
-#endif /* __GLITE_LB_EVENT_HPP__ */
+#endif /* GLITE_LB_EVENT_HPP */

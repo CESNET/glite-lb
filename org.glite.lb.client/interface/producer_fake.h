@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_PRODUCER_FAKE_H__
-#define __GLITE_LB_PRODUCER_FAKE_H
+#ifndef GLITE_LB_PRODUCER_FAKE_H
+#define GLITE_LB_PRODUCER_FAKE_H
 
 /* 
  * fake implementation of the producer API
@@ -22,4 +22,4 @@ void edg_wll_UnregisterTestLoggingProxy();
 }
 #endif
 
-#endif /* __GLITE_LB_PRODUCER_FAKE_H__ */
+#endif /* GLITE_LB_PRODUCER_FAKE_H */

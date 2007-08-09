@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_QUERY_REC_H__
-#define __GLITE_LB_QUERY_REC_H__
+#ifndef GLITE_LB_QUERY_REC_H
+#define GLITE_LB_QUERY_REC_H
 
 /*!
  * \file consumer.h
@@ -187,4 +187,4 @@ typedef struct {
 }
 #endif
 
-#endif /* __GLITE_LB_QUERY_REC_H__ */
+#endif /* GLITE_LB_QUERY_REC_H */

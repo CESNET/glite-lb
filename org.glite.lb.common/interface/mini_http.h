@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_MINI_HTTP_H__
-#define __GLITE_LB_MINI_HTTP_H__
+#ifndef GLITE_LB_MINI_HTTP_H
+#define GLITE_LB_MINI_HTTP_H
 
 #ident "$Header$"
 
@@ -60,4 +60,4 @@ extern edg_wll_ErrorCode edg_wll_http_send_proxy(
 	const char *		/* IN: message body */
 );
 
-#endif /* __GLITE_LB_MINI_HTTP_H__ */
+#endif /* GLITE_LB_MINI_HTTP_H */

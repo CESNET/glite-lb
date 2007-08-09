@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_NOTIFICATION_HPP__
-#define __GLITE_LB_NOTIFICATION_HPP__
+#ifndef GLITE_LB_NOTIFICATION_HPP
+#define GLITE_LB_NOTIFICATION_HPP
 
 
 #include "glite/wmsutils/jobid/JobId.h"
@@ -93,4 +93,4 @@ private:
 
 EWL_END_NAMESPACE
 
-#endif /* __GLITE_LB_NOTIFICATION_HPP__ */
+#endif /* GLITE_LB_NOTIFICATION_HPP */

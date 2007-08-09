@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_LB_AUTHZ_H__
-#define __GLITE_LB_LB_AUTHZ_H__
+#ifndef GLITE_LB_LB_AUTHZ_H
+#define GLITE_LB_LB_AUTHZ_H
 
 #ident "$Header$"
 
@@ -58,4 +58,4 @@ edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *, 
 extern void
 edg_wll_FreeVomsGroups(edg_wll_VomsGroups *);
 
-#endif /* __GLITE_LB_LB_AUTHZ_H__ */
+#endif /* GLITE_LB_LB_AUTHZ_H */

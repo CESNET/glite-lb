@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_STATISTICS_H__
-#define __GLITE_LB_STATISTICS_H__
+#ifndef GLITE_LB_STATISTICS_H
+#define GLITE_LB_STATISTICS_H
 
 #include "glite/lb/consumer.h"
 
@@ -53,4 +53,4 @@ int edg_wll_StateDuration(
 }
 #endif
 
-#endif /* __GLITE_LB_CONSUMER_H__ */
+#endif /* GLITE_LB_CONSUMER_H */

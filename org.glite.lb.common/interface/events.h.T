@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_EVENTS_H__
-#define __GLITE_LB_EVENTS_H__
+#ifndef GLITE_LB_EVENTS_H
+#define GLITE_LB_EVENTS_H
 
 /**
  * \file events.h
@@ -425,4 +425,4 @@ enum edg_wll_UserIdType {
 }
 #endif
 
-#endif /* __GLITE_LB_EVENTS_H__ */
+#endif /* GLITE_LB_EVENTS_H */

@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_WS_TYPEREF_H__
-#define __GLITE_LB_WS_TYPEREF_H__
+#ifndef GLITE_LB_WS_TYPEREF_H
+#define GLITE_LB_WS_TYPEREF_H
 
 #ident "$Header"
 
@@ -91,4 +91,4 @@ extern void edg_wll_FreeSoapEvent(struct soap *, struct lbt__event *);
 }
 #endif
 
-#endif /* __GLITE_LB_WS_TYPEREF_H__ */
+#endif /* GLITE_LB_WS_TYPEREF_H */

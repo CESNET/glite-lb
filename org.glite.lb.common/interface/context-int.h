@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_CONTEXT_INT_H__
-#define __GLITE_LB_CONTEXT_INT_H__
+#ifndef GLITE_LB_CONTEXT_INT_H
+#define GLITE_LB_CONTEXT_INT_H
 
 #ident "$Header$"
 
@@ -177,4 +177,4 @@ extern void edg_wll_FreeParams(edg_wll_Context context);
 }
 #endif
 
-#endif /* __GLITE_LB_CONTEXT_INT_H__ */
+#endif /* GLITE_LB_CONTEXT_INT_H */

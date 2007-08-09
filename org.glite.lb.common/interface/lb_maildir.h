@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_MAILDIR_H__
-#define __GLITE_LB_MAILDIR_H__
+#ifndef GLITE_LB_MAILDIR_H
+#define GLITE_LB_MAILDIR_H
 
 /*
  * Functions for reading and writing messages via
@@ -21,4 +21,4 @@ extern int edg_wll_MaildirRetryTransStart(const char *, time_t, time_t, char **,
 extern int edg_wll_MaildirTransStart(const char *, char **, char **);
 extern int edg_wll_MaildirTransEnd(const char *, char *, int);
 
-#endif /* __GLITE_LB_MAILDIR_H__ */
+#endif /* GLITE_LB_MAILDIR_H */

@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_NOTIF_REC_H__
-#define __GLITE_LB_NOTIF_REC_H__
+#ifndef GLITE_LB_NOTIF_REC_H
+#define GLITE_LB_NOTIF_REC_H
 
 #ident "$Header$"
 
@@ -24,4 +24,4 @@ typedef enum _edg_wll_NotifChangeOp {
 }
 #endif
 
-#endif /* __GLITE_LB_NOTIF_REC_H__ */
+#endif /* GLITE_LB_NOTIF_REC_H */

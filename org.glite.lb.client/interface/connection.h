@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_CONNECTION_H__
-#define __GLITE_LB_CONNECTION_H__
+#ifndef GLITE_LB_CONNECTION_H
+#define GLITE_LB_CONNECTION_H
 
 #ident "$Header$"
 
@@ -21,4 +21,4 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index);
 #define PROXY_CONNECT_RETRY 10 /* ms */
 
 
-#endif /* __GLITE_LB_CONNECTION_H__ */
+#endif /* GLITE_LB_CONNECTION_H */

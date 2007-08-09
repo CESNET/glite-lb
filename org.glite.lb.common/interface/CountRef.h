@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_COUNT_REF_HPP__
-#define __GLITE_LB_COUNT_REF_HPP__
+#ifndef GLITE_LB_COUNT_REF_HPP
+#define GLITE_LB_COUNT_REF_HPP
 
 /**
  * Switching into glite.lb namespace (couple with EWL_END_NAMESPACE).
@@ -77,4 +77,4 @@ void CountRef<T>::use(void)
 
 EWL_END_NAMESPACE
 
-#endif /* __GLITE_LB_COUNT_REF_HPP__ */
+#endif /* GLITE_LB_COUNT_REF_HPP */

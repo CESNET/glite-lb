@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_AUTHZ_H__
-#define __GLITE_LB_AUTHZ_H__
+#ifndef GLITE_LB_AUTHZ_H
+#define GLITE_LB_AUTHZ_H
 
 #ident "$Header$"
 
@@ -21,4 +21,4 @@ typedef struct _edg_wll_VomsGroups {
 }
 #endif
 
-#endif /* __GLITE_LB_AUTHZ_H__ */
+#endif /* GLITE_LB_AUTHZ_H */

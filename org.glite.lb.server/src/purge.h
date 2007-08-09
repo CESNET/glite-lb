@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_PURGE_H__
-#define __GLITE_LB_PURGE_H__
+#ifndef GLITE_LB_PURGE_H
+#define GLITE_LB_PURGE_H
 
 #ident "$Header"
 
@@ -58,4 +58,4 @@ extern int edg_wll_CreateFileStorage(
 #define edg_wll_CreateDumpFile(ctx, f)		edg_wll_CreateFileStorage(ctx,FILE_TYPE_DUMP,NULL,f)
 #define edg_wll_CreatePurgeFile(ctx, f)		edg_wll_CreateFileStorage(ctx,FILE_TYPE_PURGE,NULL,f)
 
-#endif /* __GLITE_LB_PURGE_H__ */
+#endif /* GLITE_LB_PURGE_H */

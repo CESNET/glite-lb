@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_CONTEXT_H__
-#define __GLITE_LB_CONTEXT_H__
+#ifndef GLITE_LB_CONTEXT_H
+#define GLITE_LB_CONTEXT_H
 
 /**
  * \file context.h
@@ -275,4 +275,4 @@ int edg_wll_GetLoggingJob(
 }
 #endif
 
-#endif /* __GLITE_LB_CONTEXT_H__ */
+#endif /* GLITE_LB_CONTEXT_H */

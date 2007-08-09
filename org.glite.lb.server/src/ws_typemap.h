@@ -1,5 +1,5 @@
-#ifndef __GLITE_LB_WS_TYPEMAP_H__
-#define __GLITE_LB_WS_TYPEMAP_H__
+#ifndef GLITE_LB_WS_TYPEMAP_H
+#define GLITE_LB_WS_TYPEMAP_H
 
 #ident "$Header"
 
@@ -66,4 +66,4 @@
 
 #endif
 
-#endif /* __GLITE_LB_WS_TYPEMAP_H__ */
+#endif /* GLITE_LB_WS_TYPEMAP_H */
