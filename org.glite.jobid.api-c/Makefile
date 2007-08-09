@@ -53,7 +53,7 @@ install: ${LIB}
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/include/${globalprefix}/${jobidprefix}
 	${INSTALL} -m 644 ${LIB} ${PREFIX}/lib
-	${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${jobidprefix}
+	(cd ${top_srcdir}/interface; ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${jobidprefix})
 
 
 %.o: %.c
