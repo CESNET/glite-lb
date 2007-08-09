@@ -5,12 +5,12 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-
+#include <ctype.h>
 #include <netdb.h>
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "glite/jobid/cjobid.h"
+#include "cjobid.h"
 #include "strmd5.h"
 
 struct _edg_wlc_JobId {

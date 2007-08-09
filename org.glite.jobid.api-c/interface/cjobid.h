@@ -88,7 +88,7 @@ int glite_jobid_parse(const char* jobidstr, glite_jobid_t * jobid);
  * \param jobid to be converted to string
  * \return allocated string which represents jobid
  */
-char* glite_jobid_unparse(const glite_jobid_t jobid);
+char* glite_jobid_unparse(glite_jobid_const_t jobid);
 
 /**
  * Extract bookkeeping server address (address:port)

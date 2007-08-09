@@ -19,7 +19,7 @@ VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test
 DEBUG:=-g -O0 -Wall
 
 CFLAGS:=${DEBUG} \
-	-I${top_srcdir}/interface \
+	-I${top_srcdir}/interface -I${top_srcdir}/src \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
 
@@ -29,7 +29,7 @@ LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
-LIBOBJS:=cjobid.o
+LIBOBJS:=cjobid.o strmd5.o
 HDRS:=cjobid.h
 
 LIBLOBJS:=${LIBOBJS:.o=.lo}
