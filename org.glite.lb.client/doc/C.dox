@@ -13,3 +13,5 @@ MACRO_EXPANSION       = YES
 EXPAND_ONLY_PREDEF    = YES
 PREDEFINED            = _EDG_WLL_EVENT_COMMON 
 HAVE_DOT              = NO
+GENERATE_MAN          = YES
+MAN_LINKS             = NO

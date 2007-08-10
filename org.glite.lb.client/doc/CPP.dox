@@ -11,3 +11,5 @@ PDF_HYPERLINKS         = YES
 USE_PDFLATEX           = YES
 #HAVE_DOT               = YES
 #CALL_GRAPH             = YES
+GENERATE_MAN           = YES
+MAN_LINKS              = NO
