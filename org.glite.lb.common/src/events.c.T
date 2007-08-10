@@ -9,7 +9,7 @@
 #include <time.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/events.h"
 #include "glite/lb/ulm_parse.h"
 

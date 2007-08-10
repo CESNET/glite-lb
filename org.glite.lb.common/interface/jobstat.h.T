@@ -14,7 +14,7 @@
 
 #include <sys/time.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 
 #ifdef __cplusplus
 extern "C" {
