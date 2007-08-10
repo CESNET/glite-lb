@@ -11,7 +11,7 @@
 
 #include "glite/lb/events_parse.h"
 #include "consumer.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #ifdef USE_CALLBACKS
   #include "glite/lb/consumer_fake.h"
 #endif

@@ -11,7 +11,7 @@
 #include <string.h>
 #include <list>
 
-#include "glite/wmsutils/jobid/JobId.h"
+#include "glite/jobid/JobId.h"
 
 #include "glite/lb/Event.h"
 #include "glite/lb/JobStatus.h"
@@ -138,7 +138,7 @@ public:
 	 * \param[in] value 		Actual value.
 	 * \throw Exception Invalid value type for given attribute.
 	 */
-	QueryRecord(const Attr name, const Op op, const glite::wmsutils::jobid::JobId &value);
+	QueryRecord(const Attr name, const Op op, const glite::jobid::JobId &value);
 
 	/* this one is for attr==TIME and particular state */
 	/** Constructor for condition on timeval typed value.
@@ -251,7 +251,7 @@ private:
 	std::string tag_name;
 	int state;
 	std::string string_value;
-	glite::wmsutils::jobid::JobId jobid_value;
+	glite::jobid::JobId jobid_value;
         int     int_value;
         struct timeval timeval_value;
 	std::string string_value2;
@@ -558,14 +558,14 @@ public:
 	 * \throws LoggingException Query failed.
 	 */
 	void queryJobs(const std::vector<QueryRecord>& query,
-		       std::vector<glite::wmsutils::jobid::JobId>& jobList) const;
+		       std::vector<glite::jobid::JobId>& jobList) const;
 
         /** Convenience form of queryJobs.
 	 *
 	 * The same as above, but job id's are passed as a return
 	 * value.
 	 */
-	const std::vector<glite::wmsutils::jobid::JobId>
+	const std::vector<glite::jobid::JobId>
 	queryJobs(const std::vector<QueryRecord>& query) const;
   
 	
@@ -578,13 +578,13 @@ public:
 	 * \throws LoggingException Query failed.
 	 */
 	void queryJobs(const std::vector<std::vector<QueryRecord> >& query,
-		       std::vector<glite::wmsutils::jobid::JobId>& jobList) const;
+		       std::vector<glite::jobid::JobId>& jobList) const;
   
         /** Convenience form of queryJobs.
 	 *
 	 * Same as above, but result is passed as a retutrn value.
 	 */
-	const std::vector<glite::wmsutils::jobid::JobId>
+	const std::vector<glite::jobid::JobId>
 	queryJobs(const std::vector<std::vector<QueryRecord> >& query) const;
 
 	/** Retrieve status of jobs satisfying the given simple query.
@@ -657,13 +657,13 @@ public:
 	 * \param[out] jobs Id's of jobs owned by this user.
 	 * \throws LoggingException Query failed.
 	 */
-	void userJobs(std::vector<glite::wmsutils::jobid::JobId> &jobs) const;
+	void userJobs(std::vector<glite::jobid::JobId> &jobs) const;
 
 	/** Convenience form of userJobs.
 	 *
 	 * Same as above, but results are passed as a return value.
 	 */
-	const std::vector<glite::wmsutils::jobid::JobId> userJobs() const;
+	const std::vector<glite::jobid::JobId> userJobs() const;
 
 	/** Set communication parameters of integer type.
 	 *

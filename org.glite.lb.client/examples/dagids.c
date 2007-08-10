@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "producer.h"
 #include "glite/lb/events.h"
 

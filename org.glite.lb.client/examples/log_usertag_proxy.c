@@ -5,7 +5,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/events.h"
 

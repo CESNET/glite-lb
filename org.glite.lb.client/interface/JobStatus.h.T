@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "glite/wmsutils/jobid/JobId.h"
+#include "glite/jobid/JobId.h"
 
 #include "glite/lb/jobstat.h"
 #include "glite/lb/CountRef.h"
@@ -156,7 +156,7 @@ public:
 	 * \returns Value of attribute.
 	 * \throws LoggingException Invalid attribute name.
 	 */
-	const glite::wmsutils::jobid::JobId  getValJobId(Attr name) const;
+	const glite::jobid::JobId  getValJobId(Attr name) const;
 
 	/** Access method for attribute values.
 	 *

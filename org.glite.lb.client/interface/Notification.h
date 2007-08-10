@@ -2,7 +2,7 @@
 #define GLITE_LB_NOTIFICATION_HPP
 
 
-#include "glite/wmsutils/jobid/JobId.h"
+#include "glite/jobid/JobId.h"
 
 #include "glite/lb/consumer.h"
 #include "glite/lb/notification.h"
@@ -47,12 +47,12 @@ public:
 	 * to propagate changes to server 
 	 * \param[in] jobId		JobId
 	 */
-	void addJob(const glite::wmsutils::jobid::JobId &jobId); 
+	void addJob(const glite::jobid::JobId &jobId); 
 
 	/** Remove job from the list, local op again. 
 	 * \param[in] jobId		JobId
 	 */
-	void removeJob(const glite::wmsutils::jobid::JobId &jobId);
+	void removeJob(const glite::jobid::JobId &jobId);
 
 	/** Get jobs on the list */
 	std::string getJobs();
@@ -82,7 +82,7 @@ public:
 	int receive(glite::lb::JobStatus &,timeval &);
 
 private:
-	std::vector<glite::wmsutils::jobid::JobId>	jobs;
+	std::vector<glite::jobid::JobId>	jobs;
 	std::vector<glite::lb::JobStatus::Code>	states;
 
 	edg_wll_Context	ctx;

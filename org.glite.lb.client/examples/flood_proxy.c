@@ -8,7 +8,7 @@
 #include <sys/wait.h>
 
 #include "producer.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 
 static void slave();
 

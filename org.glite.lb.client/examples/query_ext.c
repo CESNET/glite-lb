@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <time.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "consumer.h"
 
 #define BUFF_LEN		1024

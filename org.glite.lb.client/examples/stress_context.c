@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <limits.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "producer.h"
 #include "glite/lb/events.h"
 

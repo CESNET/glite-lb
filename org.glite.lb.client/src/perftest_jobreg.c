@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/producer.h"
 #include "glite/lb/events.h"
 

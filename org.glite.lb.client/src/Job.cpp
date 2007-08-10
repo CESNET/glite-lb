@@ -12,8 +12,6 @@
 
 #include <string>
 
-#include "glite/wmsutils/jobid/JobIdExceptions.h"
-
 #include "glite/lb/Job.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/LoggingExceptions.h"
@@ -27,19 +25,15 @@ const int Job::STAT_CLASSADS = EDG_WLL_STAT_CLASSADS;
 const int Job::STAT_CHILDREN = EDG_WLL_STAT_CHILDREN;
 const int Job::STAT_CHILDSTAT = EDG_WLL_STAT_CHILDSTAT;
 
-Job::Job(void) 
+Job::Job(void)
+  : jobId() 
 {
 }
 
 
-Job::Job(const glite::wmsutils::jobid::JobId &in) 
+Job::Job(const glite::jobid::JobId &in) 
+  : jobId(in)
 {
-  try {
-    jobId = in;
-  } catch (Exception &e) {
-    STACK_ADD;
-    throw;
-  }
 }
 
 
@@ -48,7 +42,7 @@ Job::~Job(void)
 }
 
 
-Job & Job::operator= (const glite::wmsutils::jobid::JobId &in) 
+Job & Job::operator= (const glite::jobid::JobId &in) 
 {
   try {
     jobId = in;
@@ -68,7 +62,7 @@ Job::status(int flags) const
   try {
     edg_wll_JobStat	*cstat = jobStatus.c_ptr();
     int ret = edg_wll_JobStatus(server.getContext(),
-				jobId, // automagically converted by member operator
+				const_cast<glite_jobid_t>(jobId.c_jobid()), 
 				flags,
 				cstat);
     check_result(ret,
@@ -97,7 +91,7 @@ Job::log(std::vector<Event> &eventList) const
 
   try {
     context = server.getContext();
-    result = edg_wll_JobLog(context, jobId, &events);
+    result = edg_wll_JobLog(context, const_cast<glite_jobid_t>(jobId.c_jobid()), &events);
     if (result == E2BIG) {
 	    edg_wll_Error(context, NULL, &errstr);
 	    check_result(edg_wll_GetParam(context,
@@ -153,10 +147,10 @@ Job::queryListener(std::string const & name) const
 
   try {
     int ret = edg_wll_QueryListener(server.getContext(),
-				       jobId,
-				       name.c_str(),
-				       &c_host,
-				       &port);
+				    const_cast<glite_jobid_t>(jobId.c_jobid()),
+				    name.c_str(),
+				    &c_host,
+				    &port);
     check_result(ret,
 		 server.getContext(),
 		 "edg_wll_QueryListener");

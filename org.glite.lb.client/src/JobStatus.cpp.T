@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "glite/wmsutils/jobid/JobId.h"
+#include "glite/jobid/JobId.h"
 #include "glite/lb/LoggingExceptions.h"
 
 #include "glite/lb/consumer.h"
@@ -231,14 +231,14 @@ get_val_jobid(edg_wll_JobStat const *cstat, JobStatus::Attr attr)
 
 
 const 
-glite::wmsutils::jobid::JobId  
+glite::jobid::JobId  
 JobStatus::getValJobId(Attr attr) const
 {
   edg_wll_JobStat const *cstat = (edg_wll_JobStat *) flesh->ptr;
 
   try {
 	  edg_wlc_JobId job_id = get_val_jobid(cstat, attr);
-	  return(glite::wmsutils::jobid::JobId(job_id));
+	  return(glite::jobid::JobId(job_id));
   }
   catch(Exception &e) {
 	  STACK_ADD;

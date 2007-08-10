@@ -3,7 +3,7 @@
 
 #ident "$Header$"
 
-#include "glite/wmsutils/jobid/JobId.h"
+#include "glite/jobid/JobId.h"
 
 #include "glite/lb/Event.h"
 
@@ -46,7 +46,7 @@ public:
 	 * represent.
 	 * \throws Exception Could not copy the job id.
 	 */
-	Job(const glite::wmsutils::jobid::JobId &jobid);
+	Job(const glite::jobid::JobId &jobid);
 
 
 	/** Destructor.
@@ -64,7 +64,7 @@ public:
 	 * \returns Reference to this object.
 	 * \throws Exception Could not copy the job id.
 	 */
-	Job & operator= (const glite::wmsutils::jobid::JobId &jobid);
+	Job & operator= (const glite::jobid::JobId &jobid);
 
 	/*
 	 * Status retrieval bitmasks. Used ORed as Job::status() argument,
@@ -184,7 +184,7 @@ public:
   
 private:
   ServerConnection	server;
-  glite::wmsutils::jobid::JobId			jobId;
+  glite::jobid::JobId			jobId;
 };
 
 EWL_END_NAMESPACE

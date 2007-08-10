@@ -14,7 +14,7 @@
 #include <ctype.h> // isspace
 
 #include "glite/security/glite_gss.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/events.h"
 
