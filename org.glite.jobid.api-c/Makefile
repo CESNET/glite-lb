@@ -12,9 +12,8 @@ CXX:=g++
 
 -include Makefile.inc
 
-version=${module.version}
-
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test
+CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=0 perl ${top_srcdir}/project/check_version.pl
 
 DEBUG:=-g -O0 -Wall
 
@@ -30,7 +29,7 @@ LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 LIBOBJS:=cjobid.o strmd5.o
-HDRS:=cjobid.h
+HDRS:=cjobid.h strmd5.h
 
 LIBLOBJS:=${LIBOBJS:.o=.lo}
 
@@ -38,9 +37,12 @@ LIB:=libglite_jobid.la
 
 compile all: ${LIB}
 
-${LIB}: ${LIBOBJS}
-	${LINK} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib 
+offset=0
+version_info:=-version-info ${shell \
+	perl -e '$$,=":"; @F=split /\./,"${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
+${LIB}: ${LIBOBJS}
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib 
 
 check: compile
 #
