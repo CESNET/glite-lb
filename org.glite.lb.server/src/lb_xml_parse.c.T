@@ -793,7 +793,7 @@ static void endDumpRequest(void *data, const char *el UNUSED_VAR)
 				XMLCtx->dumpRequestGlobal.from = edg_wll_StringToDumpConst(s);
 		}
 		else if (!strcmp(XMLCtx->element,"to")) {
-			if (isdigit(s))
+			if (isdigit(s[0]))
                         XMLCtx->dumpRequestGlobal.to = edg_wll_from_string_to_time_t(XMLCtx);
 			else
 				XMLCtx->dumpRequestGlobal.to = edg_wll_StringToDumpConst(s);
