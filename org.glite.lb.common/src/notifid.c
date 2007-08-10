@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
 
 int edg_wll_NotifIdParse(const char *s,edg_wll_NotifId *n)

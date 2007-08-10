@@ -3,8 +3,8 @@
 
 #ident "$Header$"
 
-#include "glite/wmsutils/jobid/cjobid.h"
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/jobid/cjobid.h"
+#include "glite/jobid/strmd5.h"
 #include "glite/lb/events.h"
 
 #define PERFTEST_END_TAG_NAME "lb_perftest"

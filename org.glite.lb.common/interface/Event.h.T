@@ -17,7 +17,7 @@
 #include <vector>
 #include <string>
 
-#include "glite/wmsutils/jobid/JobId.h"
+#include "glite/jobid/JobId.h"
 #include "glite/lb/CountRef.h"
 
 #include "glite/lb/events.h"
@@ -237,7 +237,7 @@ public:
 	 * \throw Exception Invalid event type or attribute not
 	 * defined for this event.
 	 */
-        const glite::wmsutils::jobid::JobId getValJobId(Attr name) const;
+        const glite::jobid::JobId getValJobId(Attr name) const;
 
 	/** Attribute name.
 	 *

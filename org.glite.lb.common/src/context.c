@@ -6,8 +6,8 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/strmd5.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/context-int.h"
 // #include "glite/lb/producer.h"
 

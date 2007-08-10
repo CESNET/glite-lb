@@ -15,7 +15,7 @@ expat_prefix=/opt/expat
 -include Makefile.inc
 -include ../project/version.properties
 
-jobiddir=${top_srcdir}/../org.glite.wms-utils.jobid
+jobiddir=${top_srcdir}/../org.glite.jobid.api-c
 
 version=${module.version}
 
@@ -32,7 +32,7 @@ ifdef LB_STANDALONE
 	JOBID_OBJS:=cjobid.o strmd5.o
 	LB_STANDALONE_FLAGS:=-DLB_STANDALONE
 else
-	JOBID_LIB:=-lglite_wmsutils_cjobid
+	JOBID_LIB:=-lglite_jobid
 endif
 
 PERF_HDRS:=lb_perftest.h
@@ -203,10 +203,10 @@ distbin:
 
 cjobid.c strmd5.c:
 	if [ ! -d ${jobiddir} ]; then echo "Directory ${jobiddir} not found"; exit 1; fi
-	mkdir -p glite/wmsutils/jobid
+	mkdir -p glite/jobid
 	rm -f jobid && ln -fs . jobid
-	cp -rv ${jobiddir}/interface/glite/wmsutils/jobid/cjobid.h glite/wmsutils/jobid/
-	cp -rv ${jobiddir}/src/jobid/*.h glite/wmsutils/jobid/
+	cp -rv ${jobiddir}/interface/cjobid.h glite/jobid/
+	cp -rv ${jobiddir}/src/jobid/*.h glite/jobid/
 	cp -rv ${jobiddir}/src/jobid/*.[ch] .
 
 doc: events.tex status.tex

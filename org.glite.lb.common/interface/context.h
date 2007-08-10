@@ -9,7 +9,7 @@
 #ifndef LB_STANDALONE
 #include "glite/wmsutils/exception/exception_codes.h"
 #endif
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 
 #ident "$Header$"
 

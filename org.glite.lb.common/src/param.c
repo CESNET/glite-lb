@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/context-int.h"
 // XXX:
 #include "glite/lb/log_proto.h" // for default log host and port
@@ -202,7 +202,7 @@ int edg_wll_SetParamInt(edg_wll_Context ctx,edg_wll_ContextParam param,int val)
 			break;
 		case EDG_WLL_PARAM_QUERY_SERVER_PORT:
 			ctx->p_query_server_port = val ? val :
-				extract_port(param,GLITE_WMSC_JOBID_DEFAULT_PORT);;
+				extract_port(param,GLITE_JOBID_DEFAULT_PORT);;
 			break;
 		case EDG_WLL_PARAM_NOTIF_SERVER_PORT:
 			ctx->p_notif_server_port = val ? val :
