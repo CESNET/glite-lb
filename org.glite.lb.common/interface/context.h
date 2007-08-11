@@ -5,10 +5,12 @@
  * \file context.h
  * \brief L&B API common context (publicly visible) and related definitions
  */
-
+ 
+/* XXX: remove during cleanup, this was used for GLITE_WMS_LOGGING_ERROR_BASE only
 #ifndef LB_STANDALONE
 #include "glite/wmsutils/exception/exception_codes.h"
 #endif
+*/
 #include "glite/jobid/cjobid.h"
 
 #ident "$Header$"
