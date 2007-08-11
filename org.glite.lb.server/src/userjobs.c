@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/jobid/cjobid.h"
+#include "glite/jobid/strmd5.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/trio.h"
 

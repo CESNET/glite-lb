@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 
 #include "interlogd.h"
 

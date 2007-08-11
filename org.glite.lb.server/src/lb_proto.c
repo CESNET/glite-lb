@@ -466,7 +466,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			for (pom1=pomCopy; *pom1 && !isspace(*pom1); pom1++);
 			*pom1 = 0;
 
-			asprintf(&fullid,GLITE_WMSC_JOBID_PROTO_PREFIX"%s:%u/%s",ctx->srvName,ctx->srvPort,pomCopy);
+			asprintf(&fullid,GLITE_JOBID_PROTO_PREFIX"%s:%u/%s",ctx->srvName,ctx->srvPort,pomCopy);
 			free(pomCopy);	
 
 			if (edg_wlc_JobIdParse(fullid, &jobId)) {

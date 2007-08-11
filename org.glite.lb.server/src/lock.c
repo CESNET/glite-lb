@@ -6,7 +6,7 @@
 #include <sys/sem.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/context-int.h"
 #include "lock.h"
 

@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <expat.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 
 #include "glite/lb/escape.h"
 #include "glite/lb/context-int.h"

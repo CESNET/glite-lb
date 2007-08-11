@@ -3,6 +3,7 @@
 
 #ident "$Header$"
 
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/context.h"
 #include "glite/lb/events.h"
 #include "glite/lb/jobstat.h"

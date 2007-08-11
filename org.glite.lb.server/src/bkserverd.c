@@ -34,6 +34,7 @@
 #include "glite/security/glite_gsplugin.h"
 #endif /* GLITE_LB_SERVER_WITH_WS */
 
+#include "glite/jobid/cjobid.h"
 #include "glite/security/glite_gss.h"
 #include "glite/lb/srvbones.h"
 #include "glite/lb/context.h"
@@ -326,9 +327,9 @@ int main(int argc, char *argv[])
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
 
-	asprintf(&port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT);
+	asprintf(&port, "%d", GLITE_JOBID_DEFAULT_PORT);
 #ifdef GLITE_LB_SERVER_WITH_WS
-	asprintf(&ws_port, "%d", GLITE_WMSC_JOBID_DEFAULT_PORT+3);
+	asprintf(&ws_port, "%d", GLITE_JOBID_DEFAULT_PORT+3);
 #endif 	/* GLITE_LB_SERVER_WITH_WS */
 	server_cert = server_key = cadir = vomsdir = NULL;
 

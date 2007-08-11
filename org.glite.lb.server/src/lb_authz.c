@@ -14,8 +14,8 @@
 #undef WITHOUT_TRIO
 
 #include "glite/security/voms/voms_apic.h"
-#include "glite/wmsutils/jobid/strmd5.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/strmd5.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/trio.h"
 #include "lbs_db.h"
 

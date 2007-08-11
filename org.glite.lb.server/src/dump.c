@@ -9,7 +9,7 @@
 #include <errno.h>
 
 #include "glite/lb/trio.h"
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
