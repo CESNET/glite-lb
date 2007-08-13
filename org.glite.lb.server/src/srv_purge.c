@@ -220,6 +220,11 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 		 ((dumpfile = edg_wll_CreateTmpPurgeFile(ctx, &tmpfname)) == -1 ) )
 		return edg_wll_Error(ctx, NULL, NULL);
 
+	/* 
+	should be changed so that only purged events are sent to whole-server dumps
+	(with this commented out, severely delayed events (>purge interval) can miss
+	whole-server dumps, but it is more acceptable than invoking whole-server dump
+	on each purge request (whole-server dumps are used rarely if at all)
 	if (request->flags&EDG_WLL_PURGE_REALLY_PURGE) {
 		edg_wll_DumpRequest	req = {
 			EDG_WLL_DUMP_LAST_END, EDG_WLL_DUMP_NOW
@@ -233,6 +238,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 			return edg_wll_Error(ctx, NULL, NULL);
 		}
 	}
+	*/
 
 	if (request->jobs) for (i=0; request->jobs[i]; i++) {
 		if (edg_wlc_JobIdParse(request->jobs[i],&job)) {
