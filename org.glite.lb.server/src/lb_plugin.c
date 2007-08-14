@@ -377,6 +377,12 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
+	} else if (strcmp(attr, GLITE_JP_LB_LBserver) == 0) {
+		av = calloc(2, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
+		av[0].value = edg_wlc_JobIdGetServer(h->status.jobId);
+		av[0].size = -1;
+		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_parent) == 0) {
 		if (h->status.parent_job) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
