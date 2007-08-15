@@ -157,6 +157,7 @@ putc(10,stderr);
 					edg_wll_SetError(ctx,EEXIST,mysql_error((MYSQL *) ctx->mysql));
 					return -1;
 					break;
+				case CR_SERVER_GONE_ERROR:
 				case CR_SERVER_LOST:
 					if (retry_nr <= 0) 
 						do_reconnect = 1;
