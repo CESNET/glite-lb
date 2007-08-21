@@ -205,8 +205,8 @@
 	string	unit		Units (sec, kB, etc.).
 
 @type ReallyRunning	User payload started.
-	_optional_
 	string	wn_seq		Sequence code on the worker node.
+	_optional_
 
 @type Suspend		Job execution (queuing) was suspended.
 	string	reason		Reason for the suspend.
