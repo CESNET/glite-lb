@@ -832,6 +832,7 @@ static int lb_status(void *handle) {
         int		maxnstates, nstates, i, be_strict = 0, retval;
 	char		*errstring;
 	edg_wll_JobStatCode old_state = EDG_WLL_JOB_UNDEF;
+	int 		lastStatusHistoryIndex = -1;
         
         js = calloc(1, sizeof(intJobStat));
 	init_intJobStat(js);
@@ -850,6 +851,8 @@ static int lb_status(void *handle) {
 		if (nstates >= maxnstates) {
 			maxnstates <<= 1;
 			h->fullStatusHistory = realloc(h->fullStatusHistory, maxnstates * sizeof(lb_historyStatus *));
+			if (lastStatusHistoryIndex > -1)
+				h->lastStatusHistory = &(h->fullStatusHistory[lastStatusHistoryIndex]);
 		}
 
 		/* job owner and jobId not filled from events normally */
@@ -874,6 +877,7 @@ static int lb_status(void *handle) {
 			/* lastStatusHistory starts from the last WAITING state */
 			if (js->pub.state == EDG_WLL_JOB_WAITING) {
 				h->lastStatusHistory = &(h->fullStatusHistory[nstates]);
+				lastStatusHistoryIndex = nstates;
 			}
 			/* finalStatus is the one preceeding the CLEARED state */
 			if ( (js->pub.state == EDG_WLL_JOB_CLEARED) && (nstates > 0) ) {
