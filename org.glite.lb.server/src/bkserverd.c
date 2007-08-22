@@ -323,10 +323,6 @@ int main(int argc, char *argv[])
 	int			silent = 0;
 
 
-	/* keep this at start of main() ! */
-	dtablesize = getdtablesize();
-	for (fd=3; fd < dtablesize ; fd++) close(fd);
-
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
 
