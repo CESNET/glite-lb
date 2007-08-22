@@ -755,7 +755,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	case 1:
 */
 		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, NULL, &gss_code) ) {
-			dprintf(("[%d] reloading credentials\n", getpid()));
+			dprintf(("[%d] reloading credentials successful\n", getpid()));
 			gss_release_cred(&min_stat, &mycred);
 			mycred = newcred;
 		} else { dprintf(("[%d] reloading credentials failed, using old ones\n", getpid())); }
