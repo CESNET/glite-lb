@@ -1046,6 +1046,7 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 		case EDG_WLL_ERROR_GSS:
 		case EPIPE:
 		case EIO:
+		case EDG_WLL_IL_PROTO:
 			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
 			if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
 			/*	fallthrough
@@ -1059,11 +1060,21 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 			break;
 
 		case ENOENT:
-		case EINVAL:
 		case EPERM:
 		case EEXIST:
 		case EDG_WLL_ERROR_NOINDEX:
 		case E2BIG:
+			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
+			break;
+		case EINVAL:
+		case EDG_WLL_ERROR_PARSE_BROKEN_ULM:
+		case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
+		case EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE:
+		case EDG_WLL_ERROR_PARSE_KEY_DUPLICITY:
+		case EDG_WLL_ERROR_PARSE_KEY_MISUSE:
+		case EDG_WLL_ERROR_PARSE_OK_WITH_EXTRA_FIELDS:
+		case EDG_WLL_ERROR_JOBID_FORMAT:
+		case EDG_WLL_ERROR_MD5_CLASH:
 			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
 			if ( !debug ) syslog(LOG_ERR,"%s (%s)", errt, errd);
 			/*
@@ -1071,6 +1082,8 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 			 */
 			break;
 			
+		case EDG_WLL_ERROR_DB_CALL:
+		case EDG_WLL_ERROR_SERVER_RESPONSE:
 		default:
 			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
 			if (!debug) syslog(LOG_CRIT,"%s (%s)",errt,errd);
