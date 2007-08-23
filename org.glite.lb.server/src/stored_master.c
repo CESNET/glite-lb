@@ -36,18 +36,27 @@ gss_reader(void *user_data, char *buffer, int max_len)
   if(ret < 0) {
 	  switch(ret) {
 
+	  case EDG_WLL_GSS_ERROR_GSS:
+		  edg_wll_SetErrorGss(tmp_ctx,"gss_reader",&gss_code);
+		  break;
+
 	  case EDG_WLL_GSS_ERROR_TIMEOUT: 
-		  edg_wll_SetError(tmp_ctx, ETIMEDOUT, "read message");
+		  edg_wll_SetError(tmp_ctx, ETIMEDOUT, "gss_reader");
 		  break;
 		  
 	  case EDG_WLL_GSS_ERROR_EOF:
 		  edg_wll_SetError(tmp_ctx, ENOTCONN, NULL);
 		  break;
 
+	  case EDG_WLL_GSS_ERROR_ERRNO:
+		  edg_wll_SetError(tmp_ctx, errno, "gss_reader");
+		  break;
+
 	  default:
-		  edg_wll_SetError(tmp_ctx, EDG_WLL_ERROR_GSS, "read message");
+		  edg_wll_SetError(tmp_ctx, EDG_WLL_ERROR_GSS, "gss_reader");
 		  break;
 	  }
+  ret = -2; /* -1 is used by read_il_data internals */
   }
 
   return(ret);
@@ -64,10 +73,10 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 
 	edg_wll_ResetError(ctx);
 	ret = read_il_data(ctx, &buf, gss_reader);
-	if (ret == EDG_WLL_GSS_ERROR_EOF) 
-	  return edg_wll_SetError(ctx,ENOTCONN,"client side");
-	if(ret < 0) 
-	  return edg_wll_SetError(ctx,EIO,"interlogger protocol");
+	if (ret == -1) 
+	  return edg_wll_SetError(ctx,EIO,"interlogger protocol error");
+	if (ret < 0)
+	  return edg_wll_Error(ctx,NULL,NULL);
 #ifdef LB_PERF
 	if (sink_mode == GLITE_LB_SINK_PARSE) glite_wll_perftest_consumeEventIlMsg(buf);
 	else
@@ -99,8 +108,10 @@ gss_plain_reader(void *user_data, char *buffer, int max_len)
 
   ret = edg_wll_plain_read_full(&tmp_ctx->connProxy->conn, buffer, max_len,
 				&tmp_ctx->p_tmp_timeout);
-  if(ret < 0)
-	  edg_wll_SetError(tmp_ctx, errno, "StoreProtoProxy() - reading data");
+  if(ret < 0) {
+	edg_wll_SetError(tmp_ctx, errno, "gss_plain_reader");
+	return -2;
+  }
 
   return(ret);
 }
@@ -116,7 +127,10 @@ int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
 
 	edg_wll_ResetError(ctx);
 	ret = read_il_data(ctx, &buf, gss_plain_reader);
-	if ( ret < 0 ) return(ret);
+	if (ret == -1) 
+	  return edg_wll_SetError(ctx,EIO,"interlogger protocol error");
+	if (ret < 0)
+	  return edg_wll_Error(ctx,NULL,NULL);
 #ifdef LB_PERF
 	if (sink_mode == GLITE_LB_SINK_PARSE) glite_wll_perftest_consumeEventIlMsg(buf);
 	else
