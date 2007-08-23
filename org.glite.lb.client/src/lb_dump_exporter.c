@@ -69,10 +69,11 @@ static void dump_storage_free(dump_storage_t *);
 
 int main(int argc, char **argv)
 {
-	edg_wll_Context		ctx;
-	edg_wll_Event	   *ev = NULL;
-	dump_storage_t	   *dstorage = NULL,
-					   *st;
+	edg_wll_Context	ctx;
+	edg_wll_Event	*ev = NULL;
+	dump_storage_t	*dstorage = NULL,
+			*last_st = NULL,
+			*st;
 	buffer_t			buf;
 	char			   *store_pref = DUMP_FILE_STORE_PREFIX,
 					   *lb_maildir = LB_MAILDIR_PATH,
@@ -171,14 +172,34 @@ int main(int argc, char **argv)
 				}
 				break;
 			}
+			if (last_st) { 
+				close(last_st->fhnd);
+				last_st->fhnd = 0;
+			}
 
 			if ( !(st = dump_storage_add(&dstorage, jobid, fname, fd)) ) {
 				perror("Can't record dump informations");
 				cleanup(1);
 			}
 		}
+		else {
+			if (strcmp(last_st->fname,st->fname)) {
+				/* new jobid data */
+				// this is only fallback code, because data in lb dump 
+				// are clustered by jobids, hence files are created by
+				// open() above
+				close(last_st->fhnd);
+				last_st->fhnd = 0;
+
+				if ( (st->fhnd = open(st->fname, O_APPEND|O_RDWR)) < 0 ) {
+					perror(st->fname);
+					cleanup(1);
+				}
+			}
+		}
 		free(jobid);
 		free(unique);
+		last_st = st;
 
 		lnsz = strlen(ln);
 		ln[lnsz++] = '\n';
