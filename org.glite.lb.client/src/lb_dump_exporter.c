@@ -38,6 +38,9 @@ typedef struct _dump_storage_t {
 	int		fhnd;
 } dump_storage_t;
 
+/* hold actual number of records in dump_storage_t structure st (defined below) */
+int 	number_of_st = 0;
+
 static const char *optstr = "d:s:j:m:h";
 
 static struct option opts[] = {
@@ -264,19 +267,18 @@ static dump_storage_t *dump_storage_find(dump_storage_t *st, char *job)
 static dump_storage_t *dump_storage_add(dump_storage_t **st, char *job, char *fname, int fhnd)
 {
 	dump_storage_t *tmp;
-	int				ct;
 
-	for ( ct = 0, tmp = *st; tmp && tmp->job; ct++, tmp++ ) ;
-	if ( ct ) tmp = realloc(*st, (ct+2)*sizeof(*tmp));
+	if ( number_of_st ) tmp = realloc(*st, (number_of_st+2)*sizeof(*tmp));
 	else tmp = calloc(2, sizeof(*tmp));
 	if ( !tmp ) return NULL;
 
 	*st = tmp;
-	while ( tmp && tmp->job ) tmp++;
-	
+	tmp = *st + number_of_st;	
+
 	if ( !(tmp->job = strdup(job)) ) return NULL;
-	if ( !(tmp->fname = strdup(fname)) ) { free(tmp->job); return NULL; }
+	if ( !(tmp->fname = strdup(fname)) ) { free(tmp->job); (tmp)->job = NULL; return NULL; }
 	tmp->fhnd = fhnd;
+	number_of_st++;
 	(tmp+1)->job = NULL;
 
 	return tmp;
