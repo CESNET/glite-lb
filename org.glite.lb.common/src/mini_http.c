@@ -52,7 +52,7 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 			case EDG_WLL_GSS_OK:
 				break;
 			case EDG_WLL_GSS_ERROR_GSS:
-				edg_wll_SetErrorGss(ctx, "receving HTTP request", &gss_code);
+				edg_wll_SetErrorGss(ctx, "receving HTTP request/response", &gss_code);
 				goto error;
 			case EDG_WLL_GSS_ERROR_ERRNO:
 	      			if (errno == ECONNRESET) errno = ENOTCONN;
