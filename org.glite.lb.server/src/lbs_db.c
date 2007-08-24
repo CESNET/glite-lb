@@ -32,6 +32,7 @@ static edg_wll_ErrorCode db_connect(edg_wll_Context ctx, const char *cs, MYSQL *
 	char	*buf = NULL;
 	char	*host,*user,*pw,*db; 
 	char	*slash,*at,*colon;
+	my_bool	reconnect = 1;
 
 	if (!cs) cs = DEFAULTCS;
 
@@ -39,6 +40,9 @@ static edg_wll_ErrorCode db_connect(edg_wll_Context ctx, const char *cs, MYSQL *
 		return edg_wll_SetError(ctx,ENOMEM,NULL);
 
 	mysql_options(*mysql, MYSQL_READ_DEFAULT_FILE, "my");
+
+/* XXX: may result in weird behaviour in the middle of transaction */
+	mysql_options(*mysql, MYSQL_OPT_RECONNECT, &reconnect);
 
 	host = user = pw = db = NULL;
 
