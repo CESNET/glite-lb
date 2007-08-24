@@ -154,7 +154,7 @@ HTTPTransport::onReady()
 		std::cout << request << std::endl << headers << std::endl;
 		std::cout.write(body, content_length);
 		std::cout.flush();
-		res = EventManager::instance()->postEvent(new NewMessageEvent(conn, headers, body));
+		// res = EventManager::instance()->postEvent(new NewMessageEvent(conn, headers, body));
 	}
 
 }

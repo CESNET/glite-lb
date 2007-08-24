@@ -26,7 +26,7 @@ public:
     static const int HANDLED_FINAL = 2;
     static const int HANDLED_NEW = 3;
 
-    virtual int handleEvent(Event* &e) {}
+    virtual int handleEvent(Event* &e) { return NOT_HANDLED; }
     virtual ~EventHandler() {}
 };
 
@@ -40,12 +40,12 @@ class TypedEventHandler: public EventHandler {
 public:
     typedef int (T::*handlerType)(E* &);
     
-    TypedEventHandler(T handler, handlerType method) 
+    TypedEventHandler(T *handler, handlerType method) 
 	: m_handler(handler), m_handleEvent(method) {
     }
 
     virtual int handleEvent(Event* &e) {
-	E *ne = dynamic_cast<E*>e;
+	E *ne = dynamic_cast<E*>(e);
 	int result = EventHandler::NOT_HANDLED;
 	if(ne) {
 	    result = (m_handler->*m_handleEvent)(ne);
@@ -59,8 +59,8 @@ public:
     }
     
 private:
-    handlerType m_handleEvent;
     T *m_handler;
+    handlerType m_handleEvent;
 };
 
 
@@ -71,7 +71,7 @@ public:
     
     template<class T, class E>
     EventHandler& registerHandler(T *handler, int (T::*method)(E* &)) {
-	EventHandler *h = new TypedEventHandler<T,E>(handler, method)
+	EventHandler *h = new TypedEventHandler<T,E>(handler, method);
 	addHandler(h);
 	return *h;
     }
@@ -88,7 +88,5 @@ private:
     void removeHandler(EventHandler *);
 };
 
-
-// implementation
 
 #endif
