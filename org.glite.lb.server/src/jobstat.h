@@ -11,7 +11,7 @@
  * (includes edg_wll_JobStat API structure)
  */
 
-#define INTSTAT_VERSION "release-3.3.3"
+#define INTSTAT_VERSION "release-3.3.4"
 
 
 // Internal error codes 

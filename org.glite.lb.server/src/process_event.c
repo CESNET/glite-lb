@@ -651,6 +651,22 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			}
 #endif
 			break;
+		case EDG_WLL_EVENT_SUSPEND:
+			if (USABLE(res, strict)) {
+				if (js->pub.state == EDG_WLL_JOB_RUNNING) {
+					js->pub.suspended = 1;
+					rep(js->pub.suspend_reason, e->suspend.reason);
+				}
+			}
+			break;
+		case EDG_WLL_EVENT_RESUME:
+			if (USABLE(res, strict)) {
+				if (js->pub.state == EDG_WLL_JOB_RUNNING) {
+					js->pub.suspended = 0;
+					rep(js->pub.suspend_reason, e->resume.reason);
+				}
+			}
+			break;
 		case EDG_WLL_EVENT_RESUBMISSION:
 			if (USABLE(res, strict)) {
 				if (e->resubmission.result == EDG_WLL_RESUBMISSION_WONTRESUB) {
@@ -895,6 +911,11 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				js->last_seqcode = set_component_seqcode(e->any.seqcode,EDG_WLL_SOURCE_LOG_MONITOR,0);
 			}
 			else rep(js->last_seqcode, e->any.seqcode);
+		}
+
+		if (js->pub.state != EDG_WLL_JOB_RUNNING) {
+			js->pub.suspended = 0;
+			rep(js->pub.suspend_reason, NULL);
 		}
 
 		if (fine_res == RET_GOODBRANCH) {
