@@ -6,39 +6,87 @@
 
 // interface
 
+/**
+ * Base class of event hierarchy.
+ */
 class Event {
+public:
+    virtual ~Event() {}
 };
 
 
-template <class THandler, class TEvent>
+/**
+ * Base class for event handler address.
+ */
 class EventHandler {
 public:
-	typedef int (THandler::*EventHandlerType)(TEvent* &);
+    // constants for event handler return codes
+    static const int NOT_HANDLED = 0;
+    static const int HANDLED = 1;
+    static const int HANDLED_FINAL = 2;
+    static const int HANDLED_NEW = 3;
 
-	
+    virtual int handleEvent(Event* &e) {}
+    virtual ~EventHandler() {}
+};
 
+
+/**
+ * Holds addres of event handler, ie. pointer to member function of T 
+ * that takes E* & as an argument.
+ */
+template<class T, class E>
+class TypedEventHandler: public EventHandler {
+public:
+    typedef int (T::*handlerType)(E* &);
+    
+    TypedEventHandler(T handler, handlerType method) 
+	: m_handler(handler), m_handleEvent(method) {
+    }
+
+    virtual int handleEvent(Event* &e) {
+	E *ne = dynamic_cast<E*>e;
+	int result = EventHandler::NOT_HANDLED;
+	if(ne) {
+	    result = (m_handler->*m_handleEvent)(ne);
+	    if((result == EventHandler::HANDLED_NEW) && 
+	       !(ne == e)) {
+		delete e;
+		e = ne;
+	    }
+	}
+	return result;
+    }
+    
 private:
-	std::list<EventHandlerType> m_handlers;
+    handlerType m_handleEvent;
+    T *m_handler;
 };
 
 
 class EventManager {
 public:
-	// constants for event handler return codes
-	static const int NOT_HANDLED = 0;
-	static const int HANDLED = 1;
-	static const int HANDLED_FINAL = 2;
-	static const int HANDLED_NEW = 3;
-
-	int postEvent(Event* &event);
-	
-	template<class T>
-	registerHandler(, int priority);
+    
+    int postEvent(Event* &event);
+    
+    template<class T, class E>
+    EventHandler& registerHandler(T *handler, int (T::*method)(E* &)) {
+	EventHandler *h = new TypedEventHandler<T,E>(handler, method)
+	addHandler(h);
+	return *h;
+    }
+    
+    template<class T>
+    EventHandler& registerHandler(T *handler) {
+	return registerHandler(handler, &T::handleEvent);
+    }
 
 private:
-	std::list<
-};
+    std::list<EventHandler*> handlers;
 
+    void addHandler(EventHandler*);
+    void removeHandler(EventHandler *);
+};
 
 
 // implementation
