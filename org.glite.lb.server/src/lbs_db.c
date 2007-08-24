@@ -42,7 +42,9 @@ static edg_wll_ErrorCode db_connect(edg_wll_Context ctx, const char *cs, MYSQL *
 	mysql_options(*mysql, MYSQL_READ_DEFAULT_FILE, "my");
 
 /* XXX: may result in weird behaviour in the middle of transaction */
+#ifdef MYSQL_OPT_RECONNECT
 	mysql_options(*mysql, MYSQL_OPT_RECONNECT, &reconnect);
+#endif
 
 	host = user = pw = db = NULL;
 
@@ -326,6 +328,7 @@ edg_wll_ErrorCode edg_wll_bufferedInsertInit(edg_wll_Context ctx, edg_wll_bufIns
 
 
 
+#if 0
 static int string_add(char *what, long *used_size, long *alloc_size, char **where)
 {
 	long	what_len = strlen(what);
@@ -346,6 +349,7 @@ static int string_add(char *what, long *used_size, long *alloc_size, char **wher
 
 	return 0;
 }
+#endif
 
 
 static int flush_bufferd_insert(edg_wll_bufInsert *bi)
