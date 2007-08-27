@@ -47,7 +47,7 @@ static int check_auth(edg_wll_Context,edg_wll_Event *e);
 #ifndef LB_DAG_EMBRIONIC
 static int register_subjobs(edg_wll_Context,const edg_wll_RegJobEvent *);
 #endif
-static int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *);
+static int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *, const char *);
 
 void edg_wll_StoreAnonymous(edg_wll_Context ctx,int anon) {
 	ctx->allowAnonymous = anon;
@@ -57,6 +57,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 {
 	edg_wll_ErrorCode	err = 0;
 	char		*userid = NULL,*jobid,*stmt;
+	char		*userid_job = NULL;
 	char		*select_max,*ssrc;
 	edg_wll_Stmt	sh = NULL;
 	int		next = 0xDEAD;
@@ -107,18 +108,18 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 		if (!ctx->isProxy && ctx->peerName != NULL) {
 			username = ctx->peerName;
-			userid = strdup(strmd5(username, NULL));
-
-			free(e->any.user);
-			e->any.user = strdup(username);
-		} 
-		else
+			userid_job = strdup(strmd5(username, NULL));
+			if (strcmp(username,e->any.user)) {
+				if ((err = store_user(ctx,userid_job, username))) goto clean;
+			}
+		} else {
 			username = e->any.user;
-		if ((err = store_user(ctx,userid, username))) goto clean;
-		if ((err = store_job(ctx,e->any.jobId,userid))) goto clean;
+			userid_job = strdup(userid);
+		}
+		if ((err = store_user(ctx,userid,e->any.user))) goto clean;
+		if ((err = store_job(ctx,e->any.jobId,userid_job))) goto clean;
 	} else {
 		/* for other events just make sure user record is there */
-		userid = strdup(strmd5(e->any.user,NULL));
 		if ((err = store_user(ctx,userid,e->any.user))) goto clean;
 	}
 
@@ -133,7 +134,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 /* try to insert (someone else may be doing the same) */
 	while (1) {
-		char	*max;
+		char	*max = NULL;
 
 		if (edg_wll_ExecStmt(ctx,select_max,&sh) < 0 ||
 		    edg_wll_FetchRow(sh,&max) < 0)
@@ -169,6 +170,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 	/* we were late -- try once again */
 		free(stmt);
+		free(max);
 	}
 
 	free(stmt); stmt = NULL;
@@ -236,7 +238,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		e->regJob.nsubjobs > 0)  
 
 #ifdef LB_DAG_EMBRIONIC
-			err = register_subjobs_embryonic(ctx,&e->regJob);
+			err = register_subjobs_embryonic(ctx,&e->regJob,userid_job);
 #else
 			err = register_subjobs(ctx,&e->regJob);
 #endif
@@ -245,6 +247,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 clean:
 	free(now_s);
 	free(userid);
+	free(userid_job);
 	free(jobid);
 	free(stmt);
 	free(ssrc);
@@ -713,12 +716,11 @@ err:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
+static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e, const char *userid)
 {
 	int			i, err = 0;
 	edg_wlc_JobId		*subjobs;
 	struct timeval		now;
-	char			*userid = strdup(strmd5(e->user,NULL));
 	char			*jobid_md5, *jobid_md5_old;
 	size_t			jobid_len;
 #ifdef LB_BUF
