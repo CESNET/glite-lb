@@ -920,19 +920,25 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	if ( !GSS_ERROR(maj_stat) )
 	{
 		if (ctx->peerName) free(ctx->peerName);
-		ctx->peerName = (char *)token.value;
-		memset(&token, 0, sizeof(token));
+		if (strcmp((char *)token.value, "<anonymous>")) {
+			ctx->peerName = (char *)token.value;
+			memset(&token, 0, sizeof(token));
+			dprintf(("[%d] client DN: %s\n",getpid(),ctx->peerName));
+		} else {
+			ctx->peerName = NULL;
+			dprintf(("[%d] anonymous client\n",getpid()));
+		}
+
 		/* XXX DK: pujde pouzit lifetime z inquire_context()?
 		 *
 		ctx->peerProxyValidity = ASN1_UTCTIME_mktime(X509_get_notAfter(peer));
 		 */
   
-		dprintf(("[%d] client DN: %s\n",getpid(),ctx->peerName));
 	}
 	else
 		/* XXX DK: Check if the ANONYMOUS flag is set ?
 		 */
-		dprintf(("[%d] annonymous client\n",getpid()));
+		dprintf(("[%d] anonymous client\n",getpid()));
 		  
 	if ( client_name != GSS_C_NO_NAME )
 		gss_release_name(&min_stat, &client_name);
