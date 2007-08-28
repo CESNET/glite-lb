@@ -2,6 +2,8 @@
 
 #include <syslog.h>
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
 #include "glite/lb/context-int.h"
 #include "glite/lb/log_proto.h"
 

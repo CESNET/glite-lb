@@ -81,6 +81,8 @@ typedef enum _edg_wll_CondorEventSource {
 	EDG_WLL_CONDOR_EVENT_SOURCE__LAST
 } edg_wll_CondorEventSource;
 
+int edg_wll_JobStatus(edg_wll_Context, const edg_wlc_JobId, int, edg_wll_JobStat *);
+
 void destroy_intJobStat(intJobStat *);
 void destroy_intJobStat_extension(intJobStat *p);
 
