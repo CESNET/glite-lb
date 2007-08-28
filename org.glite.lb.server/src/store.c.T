@@ -535,7 +535,8 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 	edg_wll_ResetError(ctx);
 
 	if (e->type == EDG_WLL_EVENT_REGJOB) 
-		return strcmp(e->any.user,EDG_WLL_LOG_USER_DEFAULT) ?
+		return ((ctx->isProxy || ctx->peerName) &&
+				strcmp(e->any.user,EDG_WLL_LOG_USER_DEFAULT)) ?
 			0 : edg_wll_SetError(ctx,EPERM,"can't register jobs anonymously");
 
 	trio_asprintf(&q,"select userid from jobs where jobid='%|Ss'",jobid);
