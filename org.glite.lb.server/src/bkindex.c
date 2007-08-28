@@ -280,7 +280,8 @@ static char *db_col_type(const edg_wll_QueryRec *r)
 		case EDG_WLL_QUERY_ATTR_USERTAG:
 		case EDG_WLL_QUERY_ATTR_HOST:
 		case EDG_WLL_QUERY_ATTR_CHKPT_TAG:
-			return "char(250) binary null";
+			/* XXX: 255 may not be enough for location or destination */
+			return "varchar(255) binary null"; 
 
 		case EDG_WLL_QUERY_ATTR_TIME:
 			return "datetime null";
