@@ -736,6 +736,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	gss_name_t			client_name = GSS_C_NO_NAME;
 	gss_buffer_desc		token = GSS_C_EMPTY_BUFFER;
 	gss_cred_id_t		newcred = GSS_C_NO_CREDENTIAL;
+	gss_OID			name_type = GSS_C_NO_OID;
 	edg_wll_GssStatus	gss_code;
 	OM_uint32			min_stat,
 						maj_stat;
@@ -915,12 +916,12 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	maj_stat = gss_inquire_context(&min_stat, ctx->connections->serverConnection->gss.context,
 							&client_name, NULL, NULL, NULL, NULL, NULL, NULL);
 	if ( !GSS_ERROR(maj_stat) )
-		maj_stat = gss_display_name(&min_stat, client_name, &token, NULL);
+		maj_stat = gss_display_name(&min_stat, client_name, &token, &name_type);
 
 	if ( !GSS_ERROR(maj_stat) )
 	{
 		if (ctx->peerName) free(ctx->peerName);
-		if (strcmp((char *)token.value, "<anonymous>")) {
+		if (edg_wll_gss_oid_equal(name_type, GSS_C_NT_ANONYMOUS)) {
 			ctx->peerName = (char *)token.value;
 			memset(&token, 0, sizeof(token));
 			dprintf(("[%d] client DN: %s\n",getpid(),ctx->peerName));
