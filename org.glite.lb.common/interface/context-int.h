@@ -172,6 +172,7 @@ extern int edg_wll_IncSequenceCode(edg_wll_Context ctx);
 
 extern void edg_wll_FreeParams(edg_wll_Context context);
 
+extern int edg_wll_GenerateSubjobIds(edg_wll_Context, const edg_wlc_JobId, int, const char *, edg_wlc_JobId **);
 
 #ifdef __cplusplus
 }
