@@ -8,7 +8,7 @@
 #include <sysexits.h>
 #include <assert.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/jobid/strmd5.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/jobstat.h"
@@ -95,7 +95,7 @@ static void usage()
 {
 	fprintf(stderr,"usage: %s <options>\n"
 			"	-m,--mysql <dbstring>	use non-default database connection\n"
-			"	-d,--debug		print debug info (if any)\n",
+			"	-d,--debug		print debug info (if any)\n"
 			"	-v,--verbose		be verbose\n",
 			me);
 }

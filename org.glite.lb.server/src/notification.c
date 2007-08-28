@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/jobid/strmd5.h"
 #include "glite/lb/trio.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"

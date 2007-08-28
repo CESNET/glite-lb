@@ -9,7 +9,7 @@
 #include <assert.h>
 #include <errno.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/jobid/strmd5.h"
 #include "glite/lb/context-int.h"
 #include "index.h"
 #include "lbs_db.h"

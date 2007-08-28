@@ -12,7 +12,7 @@
 #include "glite/lb/jobstat.h"
 #include "glite/lb/context-int.h"
 
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/jobid/strmd5.h"
 
 #include "stats.h"
 static int stats_inc_counter(edg_wll_Context,const edg_wll_JobStat *,edg_wll_Stats *);

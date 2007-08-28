@@ -17,7 +17,7 @@
 #include <errno.h>
 #include <syslog.h>
 
-#include "glite/wmsutils/jobid/strmd5.h"
+#include "glite/jobid/strmd5.h"
 
 #include "glite/lb/events_parse.h"
 #include "glite/lb/context-int.h"
