@@ -17,14 +17,19 @@ int edg_wll_UserJobs(
 	edg_wlc_JobId	**jobs,
 	edg_wll_JobStat	**states)
 {
-	char	*userid = strmd5(ctx->peerName,NULL),*stmt = NULL,
+	char	*userid, *stmt = NULL,
 		*res = NULL;
+	char	*can_peername;
 	int	njobs = 0,ret,i;
 	edg_wlc_JobId	*out = NULL;
 	edg_wll_Stmt	sth = NULL;
 	edg_wll_ErrorCode	err = 0;
 
 	edg_wll_ResetError(ctx);
+	
+	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
+	userid = strmd5(can_peername,NULL);
+	free(can_peername);
 
 	trio_asprintf(&stmt,"select cert_subj from users where userid = '%|Ss'",userid);
 

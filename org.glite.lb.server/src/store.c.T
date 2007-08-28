@@ -107,14 +107,13 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		char *username;
 
 		if (!ctx->isProxy && ctx->peerName != NULL) {
-			username = ctx->peerName;
-			userid_job = strdup(strmd5(username, NULL));
-			if (strcmp(username,e->any.user)) {
-				if ((err = store_user(ctx,userid_job, username))) goto clean;
-			}
+			username = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 		} else {
-			username = e->any.user;
-			userid_job = strdup(userid);
+			username = edg_wll_gss_normalize_subj(e->any.user, 0);
+		}
+		userid_job = strdup(strmd5(username, NULL));
+		if (strcmp(username,e->any.user)) {
+			if ((err = store_user(ctx,userid_job, username))) goto clean;
 		}
 		if ((err = store_user(ctx,userid,e->any.user))) goto clean;
 		if ((err = store_job(ctx,e->any.jobId,userid_job))) goto clean;
@@ -530,16 +529,18 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
 	char	*q = NULL,*owner = NULL;
 	edg_wll_Stmt	stmt = NULL;
-	char	*user;
 
 	edg_wll_ResetError(ctx);
 
+	if (!ctx->isProxy && !ctx->peerName) 
+		return edg_wll_SetError(ctx,EPERM,"can't store using unauthenticated connection");
+
 	if (e->type == EDG_WLL_EVENT_REGJOB) 
-		return ((ctx->isProxy || ctx->peerName) &&
-				strcmp(e->any.user,EDG_WLL_LOG_USER_DEFAULT)) ?
+		return strcmp(e->any.user,EDG_WLL_LOG_USER_DEFAULT) ?
 			0 : edg_wll_SetError(ctx,EPERM,"can't register jobs anonymously");
 
-	trio_asprintf(&q,"select userid from jobs where jobid='%|Ss'",jobid);
+	trio_asprintf(&q,"select u.cert_subj from jobs j, users u "
+				"where j.jobid='%|Ss' and u.userid=j.userid",jobid);
 
 	if (edg_wll_ExecStmt(ctx,q,&stmt) < 0
 		|| edg_wll_FetchRow(stmt,&owner) < 0
@@ -561,8 +562,8 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 		case EDG_WLL_SOURCE_USER_INTERFACE:
 		case EDG_WLL_SOURCE_LRMS:
 		case EDG_WLL_SOURCE_APPLICATION:
-			user = strmd5(e->any.user,NULL);
-			if (strcmp(owner,user)) edg_wll_SetError(ctx,EPERM,"check_auth()");
+			if (!edg_wll_gss_equal_subj(owner,e->any.user)) 
+				edg_wll_SetError(ctx,EPERM,"check_auth()");
 			break;
 		default:
 			/* XXX: just don't allow anonymous */

@@ -391,14 +391,15 @@ static char *get_user(edg_wll_Context ctx, int create)
 	char		   *userid	= NULL,
 				   *q		= NULL;
 	int				ret;
-
+	char	*can_peername = NULL;
 
 	if ( !ctx->peerName )
 	{
 		edg_wll_SetError(ctx, EPERM, "Annonymous access not allowed");
 		goto cleanup;
 	}
-	trio_asprintf(&q, "select userid from users where cert_subj='%|Ss'", ctx->peerName);
+	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
+	trio_asprintf(&q, "select userid from users where cert_subj='%|Ss'", can_peername);
 	if ( edg_wll_ExecStmt(ctx, q, &stmt) < 0 )
 		goto cleanup;
 
@@ -417,7 +418,7 @@ static char *get_user(edg_wll_Context ctx, int create)
 	}
 	free(q);
 	trio_asprintf(&q, "insert into users(userid,cert_subj) values ('%|Ss','%|Ss')",
-			userid, ctx->peerName);
+			userid, can_peername);
 	if ( edg_wll_ExecStmt(ctx, q, NULL) < 0 )
 	{
 		if ( edg_wll_Error(ctx,NULL,NULL) != EEXIST )
@@ -432,6 +433,7 @@ static char *get_user(edg_wll_Context ctx, int create)
 cleanup:
 	if ( q ) free(q);
 	if ( stmt ) edg_wll_FreeStmt(&stmt);
+	free(can_peername);
 
 	return userid;
 }
@@ -447,6 +449,7 @@ static int check_notif_request(
 	int			ret;
 
 
+	/* XXX: rewrite select below in order to handle cert_subj format changes */
 	if ( !(user = get_user(ctx, 0)) )
 	{
 		if ( !edg_wll_Error(ctx, NULL, NULL) )

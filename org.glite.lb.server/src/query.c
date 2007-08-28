@@ -59,7 +59,8 @@ int edg_wll_QueryEventsServer(
 					offset = 0, limit = 0,
 					limit_loop = 1,
 					eperm = 0;
-
+	char *peerid = NULL;
+	char *can_peername = NULL, *can_peerid = NULL;
 
 	edg_wll_ResetError(ctx);
 
@@ -85,6 +86,10 @@ int edg_wll_QueryEventsServer(
 	if ( job_conditions && *job_conditions && (*job_conditions)->attr &&
 		!(job_where = jc_to_head_where(ctx, job_conditions, &i)) )
 		goto cleanup;
+
+	peerid = strdup(strmd5(ctx->peerName,NULL));
+	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
+	can_peerid = strdup(strmd5(can_peername,NULL));
 
 /* XXX: similar query in srv_purge.c ! They has to match due to common
  * convert_event_head() called on the result
@@ -163,7 +168,7 @@ int edg_wll_QueryEventsServer(
 
 			if ( !noAuth )
 			{
-				if (!ctx->peerName || strcmp(res[1],strmd5(ctx->peerName,NULL))) {
+				if (!ctx->peerName || (strcmp(res[1],peerid) && strcmp(res[1], can_peerid))) {
 					edg_wll_Acl	acl = NULL;
 					char		*jobid = NULL;
 
@@ -232,6 +237,8 @@ cleanup:
 	free(qbase);
 	free(job_where);
 	free(event_where);
+	free(peerid);
+	free(can_peername); free(can_peerid);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -750,11 +757,12 @@ static char *jc_to_head_where(
 	int		ct, n, m;
 	char   *aux,
 		   *tmps,
+		   *tmps2,
 		   *dbt,
 		   *cname = NULL,
 			msg[100];
 	char   *conds, *retconds;
-
+	char 	*can_peername = NULL;
 
 	retconds = conds = NULL;
 
@@ -943,22 +951,28 @@ static char *jc_to_head_where(
 				return NULL;
 			}	
 
+			tmps2 = edg_wll_gss_normalize_subj(jc[m][n].value.c);
+			if (!jc[m][n].value.c && !can_peername) {
+				can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
+			}
+
 			*where_flags |= FL_SEL_STATUS;
 			if ( conds )
 			{
 				if ( jc[m][n].value.c ) 
-					trio_asprintf(&tmps, "%s OR s.%s%s'%|Ss'", conds, cname, opToString(jc[m][n].op), jc[m][n].value.c);
+					trio_asprintf(&tmps, "%s OR s.%s%s'%|Ss'", conds, cname, opToString(jc[m][n].op), tmps2);
 				else
-					trio_asprintf(&tmps, "%s OR s.%s%s'%|Ss'", conds, cname, opToString(jc[m][n].op), ctx->peerName);
+					trio_asprintf(&tmps, "%s OR s.%s%s'%|Ss'", conds, cname, opToString(jc[m][n].op), can_peername);
 				free(conds); conds = tmps;
 			}
 			else
 			{
 				if ( jc[m][n].value.c ) 
-					trio_asprintf(&conds, "s.%s%s'%|Ss'", cname, opToString(jc[m][n].op), jc[m][n].value.c);
+					trio_asprintf(&conds, "s.%s%s'%|Ss'", cname, opToString(jc[m][n].op), tmps2);
 				else
-					trio_asprintf(&conds, "s.%s%s'%|Ss'", cname, opToString(jc[m][n].op), ctx->peerName);
+					trio_asprintf(&conds, "s.%s%s'%|Ss'", cname, opToString(jc[m][n].op), can_peername);
 			}
+			free(tmps2);
 			break;
 
 		case EDG_WLL_QUERY_ATTR_DONECODE:
@@ -1026,6 +1040,7 @@ static char *jc_to_head_where(
 		}
 	}
 
+	free(can_peername);
 	return retconds;
 }
 
@@ -1256,11 +1271,11 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *stat, const edg_wll
 			case EDG_WLL_QUERY_ATTR_OWNER:
 				if (stat->owner) {
 					if (conds[i][j].value.c) {
-						if (!strcmp(conds[i][j].value.c, stat->owner) ) {
+						if (edg_wll_gss_equal_subj(conds[i][j].value.c, stat->owner) ) {
 							if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
 						} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 					} else if (ctx->peerName) {
-						if (!strcmp(ctx->peerName, stat->owner) ) {
+						if (edg_wll_gss_equal_subj(ctx->peerName, stat->owner) ) {
 							if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
 						} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 					}

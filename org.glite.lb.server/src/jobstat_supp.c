@@ -686,6 +686,7 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 	char *names, *values;
 	char *data;
 	char *tmp;
+	char *tmpval;
 	edg_wll_IColumnRec *job_index_cols = (edg_wll_IColumnRec *)job_index_cols_v;
 
 	edg_wll_ResetError(ctx);
@@ -698,9 +699,11 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 		data = NULL;
 		switch (job_index_cols[i].qrec.attr) {
 			case EDG_WLL_QUERY_ATTR_OWNER:
-				if (stat->pub.owner)
-					trio_asprintf(&data, "'%|Ss'", stat->pub.owner);
-				else data = strdup("''");
+				if (stat->pub.owner) {
+					tmpval = edg_wll_gss_normalize_subj(stat->pub.owner, 0);
+					trio_asprintf(&data, "'%|Ss'", tmpval);
+					free(tmpval);
+				} else data = strdup("''");
 				break;
 			case EDG_WLL_QUERY_ATTR_LOCATION:
 				if (stat->pub.location)

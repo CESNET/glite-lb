@@ -116,7 +116,7 @@ int edg_wll_JobStatus(
 
 	/* authorization check */
 	if ( !(ctx->noAuth) &&
-	    (!(ctx->peerName) ||  strcmp(ctx->peerName, jobstat.pub.owner))) {
+	    (!(ctx->peerName) ||  !edg_wll_gss_equal_subj(ctx->peerName, jobstat.pub.owner))) {
 	      	intErr = (acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
 	      if (intErr) {
 		 free(string_jobid);
