@@ -3,6 +3,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <new>
 
 #include "glite/jobid/cjobid.h"
 
@@ -36,10 +37,7 @@ private:
 	 * \param[in] exception 	Error message describing the exception.
 	 */
 	std::string formatMessage(std::string const& exception) {
-		std::ostringstream o;
-		
-		o << "JobId: bad argument ( " << exception << ")";
-		return o.str();
+	  return std::string("JobId: bad argument ( ") +  exception + ")";
 	}
 };
 
@@ -53,13 +51,6 @@ class JobId
 public:
 	//@name Constructors/Destructor
 	//@{
-
-	/** 
-	 * Default constructor; creates a jobid of the form
-	 *     https://localhost:<port>/<unique>
-	 * useful for internal processing. 
-	 */
-	JobId();
 
 	/**
 	 * Constructor from string format.
@@ -167,9 +158,10 @@ JobId::JobId(std::string const& job_id_string)
 		throw JobIdError(job_id_string);
 
 	case ENOMEM:
-		throw std::bad_alloc;
+	        throw std::bad_alloc();
 
 	default:
+	    break;
 	}
 }
 
@@ -181,17 +173,18 @@ JobId::JobId(std::string const& host, int port, std::string const& unique)
 		throw JobIdError("negative port");
 	}
 
-	int ret = glite_jobid_create(host.c_str(), port, 
-				     unique.empty() ? NULL : unique.c_str(),
-				     &m_jobid);
+	int ret = glite_jobid_recreate(host.c_str(), port, 
+				       unique.empty() ? NULL : unique.c_str(),
+				       &m_jobid);
 	switch(ret) {
 	case EINVAL:
-		throw JobIdError(host);
-		
+	    throw JobIdError(host);
+	  
 	case ENOMEM:
-		throw std::bad_alloc;
+	    throw std::bad_alloc();
 
 	default:
+	    break;
 	}
 }
 
@@ -208,7 +201,7 @@ JobId::JobId(JobId const& src)
 	int ret = glite_jobid_dup(src.m_jobid, 
 				  &m_jobid);
 	if(ret) {
-		throw std::bad_alloc;
+	    throw std::bad_alloc();
 	}
 }
 
@@ -223,7 +216,7 @@ JobId::JobId(glite_jobid_const_t src)
 	int ret = glite_jobid_dup(src,
 				  &m_jobid);
 	if(ret) {
-		throw std::bad_alloc;
+	    throw std::bad_alloc();
 	}
 }
 
@@ -240,7 +233,7 @@ JobId::operator=(JobId const& src)
 	int ret = glite_jobid_dup(src.m_jobid, 
 				  &m_jobid);
 	if(ret) {
-		throw std::bad_alloc;
+	    throw std::bad_alloc();
 	}
 	return *this;
 }
@@ -298,7 +291,7 @@ JobId::port() const
 	char *name;
 	unsigned int port;
 
-	glite_jobid_getServerParts_internal(m_jobid.
+	glite_jobid_getServerParts_internal(m_jobid,
 					    &name, &port);
 	return port;
 }
@@ -311,7 +304,6 @@ JobId::unique() const
 	char *unique = glite_jobid_getUnique_internal(m_jobid);
 	std::string res(unique);
 	
-	free(unique);
 	return res;
 }
 
