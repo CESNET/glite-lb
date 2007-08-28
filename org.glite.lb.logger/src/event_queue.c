@@ -47,7 +47,7 @@ event_queue_create(char *server_name)
 #if defined(IL_NOTIFICATIONS)
   eq->dest_port = atoi(p);
 #else
-  eq->dest_port = p ? atoi(p)+1 : GLITE_WMSC_JOBID_DEFAULT_PORT+1;
+  eq->dest_port = p ? atoi(p)+1 : GLITE_JOBID_DEFAULT_PORT+1;
 #endif
   /* create all necessary locks */
   if(pthread_rwlock_init(&eq->update_lock, NULL)) {
