@@ -951,7 +951,7 @@ static char *jc_to_head_where(
 				return NULL;
 			}	
 
-			tmps2 = edg_wll_gss_normalize_subj(jc[m][n].value.c);
+			tmps2 = edg_wll_gss_normalize_subj(jc[m][n].value.c, 0);
 			if (!jc[m][n].value.c && !can_peername) {
 				can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 			}
