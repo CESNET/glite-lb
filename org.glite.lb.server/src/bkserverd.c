@@ -921,7 +921,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	if ( !GSS_ERROR(maj_stat) )
 	{
 		if (ctx->peerName) free(ctx->peerName);
-		if (edg_wll_gss_oid_equal(name_type, GSS_C_NT_ANONYMOUS)) {
+		if (!edg_wll_gss_oid_equal(name_type, GSS_C_NT_ANONYMOUS)) {
 			ctx->peerName = (char *)token.value;
 			memset(&token, 0, sizeof(token));
 			dprintf(("[%d] client DN: %s\n",getpid(),ctx->peerName));
