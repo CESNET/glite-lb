@@ -76,7 +76,7 @@ edg_wll_EventCode edg_wll_StringToEvent(const char *name)
 char *edg_wll_EventToString(edg_wll_EventCode event)
 {
 	if ((int)event < 0 || event >= sizeof(eventNames)/sizeof(eventNames[0])) return NULL;
-	return strdup(eventNames[event]);
+	return eventNames[event] ? strdup(eventNames[event]) : NULL;
 }
 
 

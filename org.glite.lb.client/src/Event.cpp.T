@@ -389,12 +389,21 @@ std::vector<std::pair<Event::Attr,Event::AttrType> > const & Event::getAttrs(voi
 
 const std::string Event::getEventName(Type type)
 {
+	char *s;
+
 	if(type < 0 || type >= TYPE_MAX) {
 		STACK_ADD;
 		throw(Exception(EXCEPTION_MANDATORY, EINVAL, "invalid event type"));
 	}
 
-	return std::string(edg_wll_EventToString(edg_wll_EventCode(type)));
+	s = edg_wll_EventToString(edg_wll_EventCode(type));
+	if (!s) {
+		STACK_ADD;
+		throw(Exception(EXCEPTION_MANDATORY, EINVAL, "invalid event type"));
+	}
+	std::string ret(s);
+	free(s);
+	return ret;
 }
 
 
