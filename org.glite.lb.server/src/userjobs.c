@@ -27,6 +27,9 @@ int edg_wll_UserJobs(
 
 	edg_wll_ResetError(ctx);
 	
+	if (!ctx->peerName) {
+		return edg_wll_SetError(ctx,EPERM, "user not authenticated (edg_wll_UserJobs)");
+	}
 	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 	userid = strmd5(can_peername,NULL);
 	free(can_peername);

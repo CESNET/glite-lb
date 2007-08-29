@@ -87,9 +87,9 @@ int edg_wll_QueryEventsServer(
 		!(job_where = jc_to_head_where(ctx, job_conditions, &i)) )
 		goto cleanup;
 
-	peerid = strdup(strmd5(ctx->peerName,NULL));
+	if (ctx->peerName) peerid = strdup(strmd5(ctx->peerName,NULL));
 	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
-	can_peerid = strdup(strmd5(can_peername,NULL));
+	if (can_peername) can_peerid = strdup(strmd5(can_peername,NULL));
 
 /* XXX: similar query in srv_purge.c ! They has to match due to common
  * convert_event_head() called on the result
