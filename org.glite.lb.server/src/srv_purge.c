@@ -38,8 +38,7 @@
 
 static const char* const resp_headers[] = {
 	"Cache-Control: no-cache",
-	"Accept: application/x-dglb",
-	"User-Agent: edg_wll_Server/" PROTO_VERSION "/" COMP_PROTO,
+	"Server: edg_wll_Server/" PROTO_VERSION "/" COMP_PROTO,
 	"Content-Type: application/x-dglb",
 	NULL
 };

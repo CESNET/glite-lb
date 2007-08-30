@@ -5,8 +5,6 @@
 
 #include "glite/lb/consumer.h"
 
-extern const char* const response_headers[];
-
 /* Handle a single request of the LB server protocol 
  * returns a complete response string (may contain a formatted error
  * message)
