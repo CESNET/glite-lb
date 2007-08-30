@@ -41,7 +41,7 @@ int edg_wll_UserJobs(
 		case -1: goto err;
 		default:
 			if (edg_wll_FetchRow(sth,&res) < 0) goto err;
-			if (strcmp(ctx->peerName,res)) {
+			if (!edg_wll_gss_equal_subj(ctx->peerName,res)) {
 				edg_wll_SetError(ctx,EDG_WLL_ERROR_MD5_CLASH,ctx->peerName);
 				goto err;
 			}
