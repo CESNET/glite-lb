@@ -850,9 +850,10 @@ static void endQueryEvents(void *data, const char *el UNUSED_VAR)
 	    break;
 	  case 2: 
 		  /* skip events of unknown type */
-		  if (XMLCtx->eventCode == EDG_WLL_EVENT_UNDEF)
+		  if (XMLCtx->eventCode == EDG_WLL_EVENT_UNDEF) {
 			edg_wll_FreeEvent(&(XMLCtx->eventsOutGlobal)[XMLCtx->position]);
-		  XMLCtx->position--;
+		  	XMLCtx->position--;
+		  }
 		/* fallthough */
 	  default:
 	    if (XMLCtx->char_buf) {
