@@ -265,6 +265,9 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 	char *jobstr = edg_wlc_JobIdUnparse(job);
 	char *jobid = edg_wlc_JobIdGetUnique(job);
 	char *stmt;
+	char *srvName;
+	unsigned int	srvPort;
+	int proxy=0, server=0;
 
 /* debug Duplicate key on index: Duplicate entry '(nil)' for key 1
  */
@@ -272,8 +275,25 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 		return edg_wll_SetError(ctx,EINVAL,"store_job()");
 
 	edg_wll_ResetError(ctx);
-	trio_asprintf(&stmt,"insert into jobs(jobid,dg_jobid,userid) "
-		"values ('%|Ss','%|Ss','%|Ss')",jobid,jobstr,userid);
+
+	if (ctx->isProxy) {
+		proxy = 1;
+
+		/* If host&port in jobId match bkserver hostname and port and bkserver
+		 * runs server service, mark the proxy job to belong to bkserver too	
+		 */
+		edg_wlc_JobIdGetServerParts(job, &srvName, &srvPort);
+		if ( (ctx->serverRunning) && (ctx->srvPort == srvPort) && 
+				!strcmp(ctx->srvName, srvName)) {
+			server=1;
+		}
+	}
+	else {
+		server = 1;
+	}
+	
+	trio_asprintf(&stmt,"insert into jobs(jobid,dg_jobid,userid,proxy,bkserver) "
+		"values ('%|Ss','%|Ss','%|Ss', '%|Sd', '%|Sd')",jobid,jobstr,userid,proxy,server);
 
 	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
 		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST) 

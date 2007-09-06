@@ -53,7 +53,17 @@ gss_reader(void *user_data, char *buffer, int max_len)
 }
 
 
-int edg_wll_StoreProto(edg_wll_Context ctx)
+// XXX: for easier merge with RC31_3
+//	after merge, it would be possible to glue
+//	edg_wll_StoreProtoProxy and edg_wll_StoreProtoServer together
+int edg_wll_StoreProto(edg_wll_Context ctx) 
+{
+	if (ctx->isProxy) return(edg_wll_StoreProtoProxy(ctx));
+	else return(edg_wll_StoreProtoServer(ctx));
+}
+
+
+int edg_wll_StoreProtoServer(edg_wll_Context ctx)
 {
 	char	*buf;
 	int	len,ret;

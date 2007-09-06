@@ -1,0 +1,15 @@
+# This script is intendent to be used to extend bkserver database to 
+# to be able to hold both bkserver and lbproxy jobs.
+# The operation should be non-destructive, i.e. all data should persist
+# and continue to be fully usable.
+
+#!/bin/bash
+
+
+# add columns for job membership (proxy/server) flags
+mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD proxy bool not null"
+mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD server bool not null"
+
+# flag all jobs as server jobs
+mysql -u lbserver lbserver20 -e "update jobs set proxy='0'"
+mysql -u lbserver lbserver20 -e "update jobs set server='1'"

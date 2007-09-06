@@ -3,6 +3,9 @@ create table jobs (
 	dg_jobid	varchar(255)	binary not null,
 	userid		char(32)	binary not null,
 	aclid		char(32)	binary null,
+	proxy		bool		not null,
+	server		bool		not null,
+	
 
 	primary key (jobid),
 	unique (dg_jobid),
