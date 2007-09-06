@@ -71,6 +71,8 @@ struct _edg_wll_Context {
 
 	int             is_V21;         /* true if old (V21) request arrived */
 	int		isProxy;	/* LBProxy */
+	int		serverRunning;	/* bkserver runs server service */
+	int		proxyRunning;	/* bkserver runs proxy service */
 
 /* server limits */
 	int		softLimit;
