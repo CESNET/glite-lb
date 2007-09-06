@@ -8,7 +8,11 @@
 #include <glite/lb/consumer.h>
 #include <glite/lb/context-int.h>
 
+
 #include "lbs_db.h"
+
+#define NO_GACL
+#include "lb_authz.h"
 #include "get_events.h"
 
 using namespace std;
@@ -140,7 +144,21 @@ int edg_wll_Commit(edg_wll_Context ctx) { return 0; }
 int edg_wll_Rollback(edg_wll_Context ctx) { return 0; }
 
 edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, char *row)  { return (edg_wll_ErrorCode) 0; };
-	
+
+
+int edg_wll_JobStatus(
+	edg_wll_Context	ctx,
+	const edg_wlc_JobId		job,
+	int		flags,
+	edg_wll_JobStat	*stat)
+{
+	return 0;
+}
+
+int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl) { return 0; }
+int edg_wll_CheckACL(edg_wll_Context ctx, edg_wll_Acl acl, int requested_perm) { return 0; }
+void edg_wll_FreeAcl(edg_wll_Acl acl) { return; }
+
 }
 
 CPPUNIT_TEST_SUITE_REGISTRATION(QueryEventsTest);

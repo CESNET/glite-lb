@@ -99,7 +99,7 @@ ifdef LB_PROF
 	LDFLAGS:=${LDFLAGS} -pg
 else
 	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
-	LB_COMMON_LIB:=-lglite_lb_common_${nothrflavour}
+	LB_COMMON_LIB:=-L${stagedir}/lib -lglite_lb_common_${nothrflavour}
 endif
 
 ifdef LBS_DB_PROFILE
@@ -294,21 +294,24 @@ LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 	rm -f LBTypes.wsdl
 
 test.xml: test_xml
-#	./test_xml
+	./test_xml
 
 test_xml: test_xml.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIBS} ${TEST_LIBS} ${EXT_LIBS}
+	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${LB_COMMON_LIB} ${TEST_LIBS}
 
 test.query: test_query_events
 	./test_query_events
 
 #query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
-query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;'`
+#query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/lb_authz\.o//'`
 
-test_query_events: test_query_events.o
-	${LINKXX} -o $@ test_query_events.o ${query_events_objs} \
-	${TEST_LIBS} ${COMMON_LIBS} ${EXT_LIBS}
+query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o index.o
+
+test_query_events: ${query_events_objs}
+	${LINKXX} -o $@ ${query_events_objs} \
+	${TEST_LIBS} ${LB_COMMON_LIB}
+#	${TEST_LIBS} ${COMMON_LIBS} ${EXT_LIBS}
 
 test.soapconv: test_soap_conv
 	./test_soap_conv
