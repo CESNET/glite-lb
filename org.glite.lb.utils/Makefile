@@ -131,10 +131,6 @@ install:
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 
-	-if [ x${DOSTAGE} != xyes ]; then \
-		${INSTALL} -m 755 ${stagedir}/lib/glite_lb_plugin.so ${PREFIX}/lib; \
-	fi
-
 clean:
 	rm -fv ${UTILS} ${MAN_GZ} *.{lo,o}
 
