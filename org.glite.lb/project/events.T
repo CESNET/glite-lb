@@ -65,6 +65,7 @@
 @type EnQueued		The job has been enqueued in an inter-component queue.
 	string	queue		Queue into which the job has been stored for retrieval by another component.
 	string	job		Job description in the receiver's language.
+	_optional_
 	int     result          Result code of the attempt to put job into the queue (START, OK, REFUSED or FAIL).
 	_code_  START           The sending component has started or is about to start enqueuing the job.
 	_code_  OK              The job was enqueued successfully.
