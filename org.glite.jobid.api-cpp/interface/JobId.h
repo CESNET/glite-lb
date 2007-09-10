@@ -24,21 +24,12 @@ public:
 	 * \param[in] exception 	Error message describing the exception.
 	 */
 	JobIdError(std::string const& exception)
-		: std::runtime_error(formatMessage(exception))
+	    : std::runtime_error(std::string("JobId: bad argument (") + exception + ")")
 	{}
 		
 	virtual ~JobIdError() throw() 
 	{}
 
-private:
-	/** Format message for this particular exception.
-	 *
-	 * Returns formatted string describing exception.
-	 * \param[in] exception 	Error message describing the exception.
-	 */
-	std::string formatMessage(std::string const& exception) {
-	  return std::string("JobId: bad argument ( ") +  exception + ")";
-	}
 };
 
 
@@ -201,6 +192,8 @@ JobId::JobId(JobId const& src)
 	int ret = glite_jobid_dup(src.m_jobid, 
 				  &m_jobid);
 	if(ret) {
+	    // we rely on dup returning only ENOMEM on error
+	    assert(ret == ENOMEM);
 	    throw std::bad_alloc();
 	}
 }
