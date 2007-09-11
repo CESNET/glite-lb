@@ -56,6 +56,21 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   }
 #endif
 
+  /* events logged to proxy and server (DIRECT flag) may be ignored on proxy
+   * if jobid prefix hostname matches server hostname -> they will
+   * sooner or later arrive to server too and are stored in common DB 
+   */
+  if (ctx->isProxy && ctx->serverRunning && (ev->any.priority & EDG_WLL_LOGFLAG_DIRECT) ) {
+	char 		*srvName;
+	unsigned int    srvPort;
+
+	
+	edg_wlc_JobIdGetServerParts(ev->any.jobId, &srvName, &srvPort);
+	if (!strcmp(ctx->srvName, srvName)) {
+		return 0;
+	}
+
+  }
 
   /* XXX: if event type is user tag, convert the tag name to lowercase!
    * 	  (not sure whether to convert a value too is reasonable

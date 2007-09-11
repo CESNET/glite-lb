@@ -292,7 +292,7 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 		server = 1;
 	}
 	
-	trio_asprintf(&stmt,"insert into jobs(jobid,dg_jobid,userid,proxy,bkserver) "
+	trio_asprintf(&stmt,"insert into jobs(jobid,dg_jobid,userid,proxy,server) "
 		"values ('%|Ss','%|Ss','%|Ss', '%|Sd', '%|Sd')",jobid,jobstr,userid,proxy,server);
 
 	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {

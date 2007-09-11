@@ -390,6 +390,10 @@ int main(int argc, char *argv[])
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
 
+	memset(host, 0, sizeof host);
+	edg_wll_gss_gethostname(host,sizeof host);
+	host[sizeof host - 1] = 0;
+
 	asprintf(&port, "%d", GLITE_JOBID_DEFAULT_PORT);
 #ifdef GLITE_LB_SERVER_WITH_WS
 	asprintf(&ws_port, "%d", GLITE_JOBID_DEFAULT_PORT+3);
@@ -553,13 +557,8 @@ int main(int argc, char *argv[])
 			}
 			else fake_port = atoi(port);
 		}
-		else
-		{
-			char	buf[300];
-
-			edg_wll_gss_gethostname(buf,sizeof buf);
-			buf[sizeof buf - 1] = 0;
-			fake_host = strdup(buf);
+		else {
+			fake_host = strdup(host);
 			fake_port = atoi(port); 
 		}
 
@@ -1201,8 +1200,15 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 	ctx->semset = semset;
 	ctx->semaphores = semaphores;
 
-	ctx->srvName = strdup(host);
-	ctx->srvPort = atoi(port);
+	if (fake_host)
+	{
+		ctx->srvName = strdup(fake_host);
+		ctx->srvPort = fake_port;
+	}
+	else {
+		ctx->srvName = strdup(host);
+		ctx->srvPort = atoi(port);
+	}
 	
 	ctx->connProxy = (edg_wll_ConnProxy *) calloc(1, sizeof(edg_wll_ConnProxy));
 	if ( !ctx->connProxy ) {
