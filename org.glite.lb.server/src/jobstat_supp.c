@@ -740,7 +740,6 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 				break;
 			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 				data = strdup(edg_wll_TimeToDB(stat->pub.lastUpdateTime.tv_sec));
-				printf("lastupdatedb: %s\n", data);
 				break;
 
 				/* XXX add more attributes when defined */
