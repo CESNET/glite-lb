@@ -12,8 +12,11 @@ HTTPTransport::~HTTPTransport()
 }
 
 
-void
-HTTPTransport::onReady()
+// read what is available and parse what can be parsed
+// returns the result of read operation of the underlying connection,
+// ie. the number of bytes read or error code
+int
+HTTPTransport::receive(Connection *conn, Message* &msg)
 {
 	int len;
 
@@ -27,12 +30,12 @@ HTTPTransport::onReady()
 		len = conn->read(pos, sizeof(buffer) - (pos - buffer));
 		if(len < 0) {
 			// error during request
-			// XXX - handle this
-			state = NONE;
+			// state = NONE;
+			return len;
 		} else if(len == 0) {
 			// other side closed connection
-			// XXX - handle this
-			state = NONE;
+			// state = NONE;
+			return len;
 		} else {
 			char *cr = NULL, *p = buffer, *s = buffer;
 			bool crlf_seen = false;
@@ -132,10 +135,12 @@ HTTPTransport::onReady()
 		len = conn->read(pos, content_length - (pos - body));
 		if(len < 0) {
 			// error reading
-			state = NONE;
+			// state = NONE;
+			return len;
 		} else if(len == 0) {
 			// no more data
-			state = NONE;
+			// state = NONE;
+			return len;
 		} else {
 			pos += len;
 			if(pos == content_length + body) {
@@ -147,28 +152,15 @@ HTTPTransport::onReady()
 	}
 
 	if(state != NONE) 
-		ThreadPool::instance()->queueWorkRead(this);
+		msg = NULL;
 	else {
 		// we have a new message
 		// XXX - or we have an error, must handle it
 		std::cout << request << std::endl << headers << std::endl;
 		std::cout.write(body, content_length);
 		std::cout.flush();
-		// res = EventManager::instance()->postEvent(new NewMessageEvent(conn, headers, body));
 	}
-
-}
-
-
-void 
-HTTPTransport::onTimeout()
-{
-}
-
-
-void 
-HTTPTransport::onError()
-{
+	return len;
 }
 
 
@@ -183,4 +175,82 @@ HTTPTransport::parseHeader(const char *s, unsigned int len)
 		content_length = p ? atoi(p) : 0 ;
 	}
 	return(0);
+}
+
+
+int
+HTTPTransport::send(Connection *conn, Message* msg)
+{
+	int len;
+	switch(state) {
+	case NONE:
+		state = IN_REQUEST;
+		request = "POST " + msg->path() + "HTTP/1.1\r\n";
+		pos = request.c_str();
+		content_length = msg->getContent(body);
+
+	case IN_REQUEST:
+		len = conn->send(pos, request.length() - pos + request.c_str());
+		if(len < 0) {
+			return len;
+		}
+		pos += len;
+		if(request.c_str() + request.length() == pos) {
+			state = IN_HEADERS;
+			prepareHeaders(msg);
+			pos = headers.c_str();
+		} else {
+			break;
+		}
+
+	case IN_HEADERS:
+		len = conn->send(pos, headers.length() - pos + headers.c_str());
+		if(len < 0) {
+			return len;
+		}
+		pos += len;
+		if(headers.c_str() + headers.length() == pos) {
+			state = IN_BODY;
+			pos = body;
+		} else {
+			break;
+		}
+
+	case IN_BODY:
+		len = conn->send(pos, body, content_length - pos + body);
+		if(len < 0) {
+			return len;
+		}
+		pos += len;
+		if(body + content_length == pos) {
+			state = NONE;
+			return 0;
+		}
+		break;
+		
+	default:
+	}
+	return len;
+}
+
+
+void 
+HTTPTransport::reset()
+{
+	state = NONE;
+	request.clear();
+	headers.clear();
+	if(body) {
+		free(body);
+		body = NULL;
+	}
+	content_length = 0;
+	pos = buffer;
+}
+	
+
+void
+HTTPTransport::serializeHeaders(Message *msg);
+{
+	for(Properties::iterator i = msg->
 }

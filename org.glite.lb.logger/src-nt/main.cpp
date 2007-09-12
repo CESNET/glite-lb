@@ -3,9 +3,12 @@
 #include "SocketInput.H"
 #include "PlainConnection.H"
 #include "HTTPTransport.H"
+#include "EventManager.H"
 
 const int num_threads = 2;
 const char *sock_path = "/tmp/il_sock";
+
+EventManager theEventManager();
 
 int main(int argc, char *argv[])
 {

@@ -29,7 +29,8 @@ OBJS = \
 	Transport.o \
 	HTTPTransport.o \
 	ThreadPool.o \
-	EventManager.o
+	EventManager.o \
+	InputChannel.cpp 
 
 plain: main.o $(OBJS)
 	$(LINK) -o $@ $+ $(THREAD_LIB)

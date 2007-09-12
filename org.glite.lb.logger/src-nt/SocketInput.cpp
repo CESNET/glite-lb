@@ -6,6 +6,7 @@
 
 #include "ThreadPool.H"
 #include "SocketInput.H"
+#include "InputChannel.H"
 #include "Exception.H"
 
 
@@ -50,8 +51,9 @@ void
 SocketInput::onReady()
 {
 	Connection *conn = cFactory->accept(fd);
-	Transport  *trans = tFactory->newTransport(conn);
-	ThreadPool::instance()->queueWorkRead(trans);
+	Transport  *trans = tFactory->newTransport();
+	InputChannel *channel = new InputChannel(conn, trans);
+	channel->start();
 }
 
 
