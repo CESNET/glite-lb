@@ -738,6 +738,9 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 			case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 				asprintf(&data, "%d", stat->pub.resubmitted);
 				break;
+			case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+				data = strdup(edg_wll_TimeToDB(stat->pub.stateEnterTime.tv_sec));
+				break;
 			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 				data = strdup(edg_wll_TimeToDB(stat->pub.lastUpdateTime.tv_sec));
 				break;

@@ -284,6 +284,7 @@ static char *db_col_type(const edg_wll_QueryRec *r)
 			return "varchar(255) binary null"; 
 
 		case EDG_WLL_QUERY_ATTR_TIME:
+		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 			return "datetime null";
 		default:
