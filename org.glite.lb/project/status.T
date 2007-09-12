@@ -60,6 +60,7 @@ taglist	user_tags	List of pairs (user_tag, user_value)
 	_special_	XMLstructured
 
 timeval	stateEnterTime	When entered this status
+_index_
 timeval	lastUpdateTime	Last known event of the job
 _index_
 
