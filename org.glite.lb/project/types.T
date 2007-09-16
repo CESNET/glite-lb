@@ -120,13 +120,12 @@
 		port=>'"($a == $b)"',
 #		level=>'"($a == $b)"',
 		bool=>'"(($a || !$b) && ($b || !$a))"',
-#		string=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp($a,$b))"',
 		string=>'if ($b eq \'NULL\') { qq{(($a) == NULL)}; } 
 			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp($a,$b))}; } ',
-#		jobid=>'"(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wlc_JobIdUnparse($a),edg_wlc_JobIdUnparse($b)))"',
 		jobid=>'if ($b eq \'NULL\') { qq{(($a) == NULL) }; }
 			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wlc_JobIdUnparse($a),edg_wlc_JobIdUnparse($b)))}; }',
-		notifid=>'"($a) == ($b)"',
+		notifid=>'if ($b eq \'NULL\') { qq{(($a) == NULL) }; }
+			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wll_NotifIdUnparse($a),edg_wll_NotifIdUnparse($b)))}; }',
 		logsrc=>'"($a) == ($b)"',
 		timeval=>'"($a).tv_sec == ($b).tv_sec && ($a).tv_usec == ($b).tv_usec"',
 	}
