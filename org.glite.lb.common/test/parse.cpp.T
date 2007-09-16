@@ -93,7 +93,7 @@ void EventParseTest::$l()
 		}
 		gen '
 	line = edg_wll_UnparseEvent(ctx,e1);
-	std::cerr << line << std::endl;
+//	std::cerr << line << std::endl;
 	
 	if (!line) {
 		edg_wll_Error(ctx,&et,&ed);
