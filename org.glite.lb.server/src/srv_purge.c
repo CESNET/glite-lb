@@ -42,6 +42,13 @@ static const char* const resp_headers[] = {
 };
 
 static int purge_one(edg_wll_Context ctx,const edg_wlc_JobId,int,int);
+static int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job);
+
+/**
+ * return job membership in DB table jobs (proxy, server, both)
+ */
+static int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job);
+
 
 int edg_wll_CreateTmpFileStorage(edg_wll_Context ctx, char *prefix, char **fname)
 {
@@ -182,15 +189,29 @@ int edg_wll_CreateFileStorage(edg_wll_Context ctx, char *file_type, char *prefix
 
 int edg_wll_PurgeServerProxy(edg_wll_Context ctx, edg_wlc_JobId job)
 {
-	switch ( purge_one(ctx, job, -1, 1) ) {
-	case 0:
-	case ENOENT:
-		edg_wll_ResetError(ctx);
-		return 0;
+	switch (edg_wll_jobMembership(ctx, job)) {
+		case DB_PROXY_JOB:
+			switch ( purge_one(ctx, job, -1, 1) ) {
+				case 0:
+				case ENOENT:
+					edg_wll_ResetError(ctx);
+					return 0;
 
-	default:
-		return -1;
-	}
+				default:
+					return -1;
+			}
+			break;
+		case DB_SERVER_JOB:
+			// should not happen, however, no action needed
+			// proxy flag is unset already
+			break;
+		case DB_PROXY_JOB+DB_SERVER_JOB:
+			return(unset_proxy_flag(ctx, job));
+			break;
+		default:
+			return -1;
+			break;
+		}
 }
 
 int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
@@ -576,3 +597,63 @@ clean:
 	free(stmt);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
+
+
+int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job)
+{
+        char            *dbjob;
+        char            *stmt = NULL;
+        edg_wll_Stmt    q;
+        int             ret, result = -1;
+        char            *res[2] = { NULL, NULL};
+
+        edg_wll_ResetError(ctx);
+
+        dbjob = edg_wlc_JobIdGetUnique(job);
+
+        trio_asprintf(&stmt,"select proxy,server from jobs where jobid = '%|Ss'",dbjob);
+        ret = edg_wll_ExecStmt(ctx,stmt,&q);
+        if (ret <= 0) {
+                if (ret == 0) {
+                        fprintf(stderr,"%s: no such job\n",dbjob);
+                        edg_wll_SetError(ctx,ENOENT,dbjob);
+                }
+                goto clean;
+        }
+        free(stmt); stmt = NULL;
+
+        if ((ret = edg_wll_FetchRow(q,res)) > 0) {
+		result = 0;
+                if (strcmp(res[0],"0")) result += DB_PROXY_JOB;
+                if (strcmp(res[1],"0")) result += DB_SERVER_JOB;
+        }
+        else {
+                if (ret == 0) result = 0;
+                else {
+                        fprintf(stderr,"Error retrieving proxy&server fields of jobs table. Missing column?\n");
+                        edg_wll_SetError(ctx,ENOENT,dbjob);
+                }
+        }
+        edg_wll_FreeStmt(&q);
+
+clean:
+	free(res[0]); free(res[1]);
+        free(dbjob);
+        free(stmt);
+        return(result);
+}
+
+int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job)
+{
+	char	*stmt = NULL;
+	char            *dbjob;
+
+	edg_wll_ResetError(ctx);
+
+	dbjob = edg_wlc_JobIdGetUnique(job);
+
+	trio_asprintf(&stmt,"update jobs set proxy='0' where jobid='%|Ss'", dbjob);
+
+	return(edg_wll_ExecStmt(ctx,stmt,NULL));
+}
+

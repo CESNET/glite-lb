@@ -15,6 +15,10 @@ extern "C" {
 #define EDG_WLL_MYSQL_VERSION		40001
 #define BUF_INSERT_ROW_ALLOC_BLOCK	1000
 
+#define	DB_PROXY_JOB	1
+#define	DB_SERVER_JOB	2
+
+
 #define DEFAULTCS      "lbserver/@localhost:lbserver20"
 
 typedef struct _edg_wll_Stmt *edg_wll_Stmt;
@@ -125,7 +129,6 @@ edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, char *row);
  * flush buffered data and free bi structure
  */
 edg_wll_ErrorCode edg_wll_bufferedInsertClose(edg_wll_bufInsert *bi);
-
 
 
 #ifdef __cplusplus

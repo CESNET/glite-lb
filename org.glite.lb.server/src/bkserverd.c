@@ -118,8 +118,8 @@ extern void _start (void), etext (void);
 
 #define sizofa(a)		(sizeof(a)/sizeof((a)[0]))
 
-#define	SERVICE_PROXY		1
-#define SERVICE_SERVER	2
+#define	SERVICE_PROXY		DB_PROXY_JOB
+#define SERVICE_SERVER		DB_SERVER_JOB
 #define SERVICE_PROXY_SERVER	SERVICE_PROXY+SERVICE_SERVER
 
 
