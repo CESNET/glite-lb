@@ -148,7 +148,6 @@ queue_thread(void *q)
 		if(pthread_mutex_unlock(&flush_lock) < 0)
 			abort();
 #else
-		event_queue_cond_lock(eq);
 #endif
 
 		/* if there was some error with server, sleep for a while */
@@ -160,6 +159,11 @@ queue_thread(void *q)
 			il_log(LOG_WARNING, "    sleeping\n");
 			event_queue_sleep(eq);
 		}
+#endif
+
+#if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
+#else
+		event_queue_cond_lock(eq);
 #endif
 
 		if(exit) {
