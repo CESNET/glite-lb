@@ -154,7 +154,7 @@ endif
 ifeq (${nothrflavour},gcc32dbg)
 	vomsflavour :=
 endif
-VOMS_LIBS:=-L${voms_prefix}/lib -lvomsc${vomsflavour}
+VOMS_LIBS:=-L${voms_prefix}/lib -lvomsapi${vomsflavour}
 
 #EXT_LIBS:= \
 #	${mysqlib} -lmysqlclient -lz\
