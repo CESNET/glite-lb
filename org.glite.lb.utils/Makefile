@@ -29,7 +29,6 @@ CFLAGS:= \
 	-I${expat_prefix}/include \
 	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	${COVERAGE_FLAGS} \
-	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	-D_GNU_SOURCE
 LDFLAGS:=-L${stagedir}/lib
 
