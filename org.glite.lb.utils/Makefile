@@ -1,7 +1,6 @@
 # defaults
 top_srcdir=.
 stagedir=.
-distdir=.
 globalprefix=glite
 lbprefix=lb
 package=glite-lb-utils
@@ -82,19 +81,6 @@ ${MAN_GZ}: ${MAN}
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
-dist: distsrc distbin
-
-distsrc:
-	mkdir -p ${top_srcdir}/${package}-${version}
-	cd ${top_srcdir} && GLOBIGNORE="${package}-${version}" && cp -Rf * ${package}-${version}
-	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${version}
-	rm -rf ${top_srcdir}/${package}-${version}
-
-distbin:
-	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
-	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
-	rm -rf tmpbuilddir
-        
 install:
 	-mkdir -p ${PREFIX}/bin 
 	-mkdir -p ${PREFIX}/lib
@@ -113,7 +99,7 @@ install:
 	fi
 
 clean:
-	rm -rfv ${UTILS} ${MAN_GZ} *.{lo,o}
+	rm -rfv ${UTILS} ${MAN_GZ} *.{lo,o} .libs/
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o: %.c

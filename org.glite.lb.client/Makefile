@@ -1,7 +1,6 @@
 # Default values
 top_srcdir=.
 stagedir=.
-distdir=.
 globalprefix=glite
 lbprefix=lb
 package=glite-lb-client
@@ -280,19 +279,6 @@ stage:  compile ${FAKELIB} ${FAKETHRLIB}
 	$(MAKE) install PREFIX=${stagedir}
 	${INSTALL} -m 644 ${FAKELIB} ${FAKETHRLIB} ${stagedir}/lib
 
-dist: distsrc distbin
-
-distsrc:
-	mkdir -p ${top_srcdir}/${package}-${version}
-	cd ${top_srcdir} && GLOBIGNORE="${package}-${version}" && cp -Rf * ${package}-${version}
-	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${version}
-	rm -rf ${top_srcdir}/${package}-${version}
-
-distbin:
-	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
-	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
-	rm -rf tmpbuilddir
-
 doc: generate
 	cp ${top_srcdir}/doc/*.dox .
 	echo "PROJECT_NUMBER = ${version}" >> C.dox
@@ -345,4 +331,4 @@ clean:
 check_version:
 	${CHECK_VERSION} ${stagedir}/include/glite/lb/common_version.h
 
-.PHONY: default all compile examples fake check stage dist distsrc distbin install clean check_version
+.PHONY: default all compile examples fake check stage install clean check_version

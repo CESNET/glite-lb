@@ -1,7 +1,6 @@
 # Default values
 top_srcdir=.
 stagedir=.
-distdir=.
 globalprefix=glite
 jobidprefix=jobid
 package=glite-jobid-api-c
