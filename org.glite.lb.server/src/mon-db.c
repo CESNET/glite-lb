@@ -9,7 +9,6 @@
 #include <assert.h>
 
 #include "glite/jobid/strmd5.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/jobstat.h"
 
