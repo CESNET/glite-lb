@@ -135,6 +135,8 @@ glite_lb_padded_struct(_edg_wll_Context,120,
 	int use_transactions;
 
 	int		greyjobs;
+
+	char		**fqans; /* null-terminated list of peer's VOMS FQANs */
 )
 
 /* to be used internally: set, update and and clear the error information in 

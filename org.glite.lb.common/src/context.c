@@ -134,6 +134,13 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 	if (ctx->vomsGroups.len) free_voms_groups(&ctx->vomsGroups);
 	if (ctx->dumpStorage) free(ctx->dumpStorage);
 	if (ctx->purgeStorage) free(ctx->purgeStorage);
+	if (ctx->fqans) {
+		char **f;
+		for (f = ctx->fqans; f && *f; f++)
+			free(*f);
+		free(ctx->fqans);
+		ctx->fqans = NULL;
+	}
 
 	edg_wll_FreeParams(ctx);
 
