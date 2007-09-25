@@ -243,9 +243,10 @@ static void usage(char *me)
 
 static void wait_for_open(edg_wll_Context,const char *);
 static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
+static int add_root(char *);
 static int read_roots(const char *);
 static int asyn_gethostbyaddr(char **, const char *, int, int, struct timeval *);
-static int amIroot(const char *);
+static int amIroot(const char *, char **);
 static int parse_limits(char *, int *, int *, int *);
 static int check_mkdir(const char *);
 
@@ -374,21 +375,8 @@ int main(int argc, char *argv[])
 		case 'X': notif_ilog_socket_path = strdup(optarg); break;
 		case 'Y': notif_ilog_file_prefix = strdup(optarg); break;
 		case 'i': strcpy(pidfile,optarg); break;
-		case 'R': if (super_users) {
-				  fprintf(stderr,"%s: super-users already defined, second occurence ignored\n",
-						  argv[0]);
-				  break;
-			  }
-			  super_users = malloc(2 * sizeof super_users[0]);
-			  super_users[0] = optarg;
-			  super_users[1] = NULL;
-			  break;
-		case 'F': if (super_users) {
-				  fprintf(stderr,"%s: super-users already defined, second occurence ignored\n",
-						  argv[0]);
-				  break;
-			  }
-			  if (read_roots(optarg)) return 1;
+		case 'R': add_root(optarg); break;
+		case 'F': if (read_roots(optarg)) return 1;
 			  break;
 		case 'x': noIndex = atoi(optarg);
 			  if (noIndex < 0 || noIndex > 2) { usage(name); return 1; }
@@ -963,20 +951,27 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		for ( i = 0; i < ctx->vomsGroups.len; i++ )
 			dprintf(("\t%s:%s\n", ctx->vomsGroups.val[i].vo, ctx->vomsGroups.val[i].name));
 	}
+	if (debug && ctx->fqans && *(ctx->fqans))
+	{
+		char **f;
+
+		dprintf(("[%d] client's FQANs:\n",getpid()));
+		for (f = ctx->fqans; f && *f; f++)
+			dprintf(("\t%s\n", *f));
+	}
 	
 	/* used also to reset start_time after edg_wll_ssl_accept! */
 	/* gettimeofday(&start_time,0); */
 	
-	ctx->noAuth = noAuth || amIroot(ctx->peerName);
+	ctx->noAuth = noAuth || amIroot(ctx->peerName, ctx->fqans);
 	switch ( noIndex )
 	{
 	case 0: ctx->noIndex = 0; break;
-	case 1: ctx->noIndex = amIroot(ctx->peerName); break;
+	case 1: ctx->noIndex = amIroot(ctx->peerName, ctx->fqans); break;
 	case 2: ctx->noIndex = 1; break;
 	}
 	ctx->strict_locking = strict_locking;
 	ctx->greyjobs = greyjobs;
-
 
 	return 0;
 }
@@ -1444,11 +1439,38 @@ static int asyn_gethostbyaddr(char **name, const char *addr,int len, int type, s
 	return (ar.err);
 }
 
+static int add_root(char *root)
+{
+	char *null_suffix, **tmp;
+	int i, cnt;
+
+	for (cnt = 0; super_users && super_users[cnt]; cnt++)
+		;
+	/* try to be compliant with the new FQAN format that excludes
+	   the Capability and empty Role components */
+	null_suffix = strstr(root, "/Role=NULL/Capability=NULL");
+	if (null_suffix == NULL)
+		null_suffix = strstr(root, "/Capability=NULL");
+	i = (null_suffix == NULL) ? 0 : 1;
+
+	tmp = realloc(super_users, (cnt+2+i) * sizeof super_users[0]);
+	if (tmp == NULL)
+		return ENOMEM;
+	super_users = tmp;
+	super_users[cnt] = strdup(root);
+	if (null_suffix) {
+		*null_suffix = '\0'; /* changes the input, should be harmless */
+		super_users[++cnt] = strdup(root);
+	}
+	super_users[++cnt] = NULL;
+
+	return 0;
+}
+
 static int read_roots(const char *file)
 {
 	FILE	*roots = fopen(file,"r");
 	char	buf[BUFSIZ];
-	int	cnt = 0;
 
 	if (!roots) {
 		syslog(LOG_WARNING,"%s: %m, continuing without --super-users-file",file);
@@ -1460,10 +1482,7 @@ static int read_roots(const char *file)
 		char	*nl;
 		nl = strchr(buf,'\n');
 		if (nl) *nl = 0;
-
-		super_users = realloc(super_users, (cnt+2) * sizeof super_users[0]);
-		super_users[cnt] = strdup(buf);
-		super_users[++cnt] = NULL;
+		add_root(buf);
 	}
 
 	fclose(roots);
@@ -1471,13 +1490,18 @@ static int read_roots(const char *file)
 	return 0;
 }
 
-static int amIroot(const char *subj)
+static int amIroot(const char *subj, char **fqans)
 {
 	int	i;
+	char	**f;
 
-	if (!subj) return 0;
-	for (i=0; super_users && super_users[i]; i++) 
-		if (strcmp(subj,super_users[i]) == 0) return 1;
+	if (!subj && !fqans ) return 0;
+	for (i=0; super_users && super_users[i]; i++)
+		if (strncmp(super_users[i], "FQAN:", 5) == 0) {
+			for (f = fqans; f && *f; f++)
+				if (strcmp(*f, super_users[i]+5) == 0) return 1;
+		} else
+			if (strcmp(subj,super_users[i]) == 0) return 1;
 
 	return 0;
 }

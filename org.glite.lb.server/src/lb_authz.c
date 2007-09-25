@@ -24,6 +24,42 @@
 /* XXX should be defined in gridsite-gacl.h */
 GRSTgaclEntry *GACLparseEntry(xmlNodePtr cur);
 
+static int 
+get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
+      	  char ***fqans)
+{
+   struct voms **voms_cert = NULL;
+   char **f, **attrs, **tmp;
+   int ret, num;
+
+   attrs = NULL;
+   num = 0;
+
+   for (voms_cert = voms_info->data; voms_cert && *voms_cert; voms_cert++) {
+      for (f = (*voms_cert)->fqan; f && *f; f++) {
+         tmp = realloc(attrs, (num + 1) * sizeof(*attrs));
+         if (tmp == NULL) {
+            free(attrs);
+            return ENOMEM;
+         }
+         attrs = tmp;
+         attrs[num++] = strdup(*f);
+      }
+   }
+   if (attrs) {
+      tmp = realloc(attrs, (num + 1) * sizeof(*attrs));
+      if (tmp == NULL) {
+         free(attrs);
+         return ENOMEM;
+      }
+      attrs = tmp;
+      attrs[num++] = NULL;
+   }
+   
+   *fqans = attrs;
+   return 0;
+}
+
 static int
 add_groups(edg_wll_Context ctx, struct voms *voms_cert, char *vo_name,
       	   edg_wll_VomsGroups *groups)
@@ -201,6 +237,14 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
    memset (&ctx->vomsGroups, 0, sizeof(ctx->vomsGroups));
    edg_wll_ResetError(ctx);
 
+   if (ctx->fqans) {
+      char **f;
+      for (f = ctx->fqans; f && *f; f++)
+         free(*f);
+      free(ctx->fqans);
+      ctx->fqans = NULL;
+   }
+
    ret = get_peer_cred(gss, server_cert, server_key, &p_chain, &cert);
    if (ret) {
 //      ret = 0;
@@ -239,6 +283,10 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
    }
 
    ret = get_groups(ctx, voms_info, &ctx->vomsGroups);
+   if (ret)
+      goto end;
+
+   ret = get_fqans(ctx, voms_info, &ctx->fqans);
 
 end:
    if (voms_info)
