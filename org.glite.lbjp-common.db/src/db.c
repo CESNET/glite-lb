@@ -41,7 +41,6 @@
 struct glite_lbu_DBContext_s {
 	MYSQL *mysql;
 	const char *cs;
-	int have_caps;
 	int caps;
 	struct {
 		int code;
@@ -108,7 +107,7 @@ static int myerrstmt(glite_lbu_Statement stmt, const char *source, int line);
 static int myisokstmt(glite_lbu_Statement stmt, const char *source, int line, int *retry);
 static int db_connect(glite_lbu_DBContext ctx, const char *cs, MYSQL **mysql);
 static void db_close(MYSQL *mysql);
-static int transaction_test(glite_lbu_DBContext ctx, MYSQL *m2, int *have_transactions);
+static int transaction_test(glite_lbu_DBContext ctx);
 static int FetchRowSimple(glite_lbu_DBContext ctx, MYSQL_RES *result, unsigned long *lengths, char **results);
 static int FetchRowPrepared(glite_lbu_DBContext ctx, glite_lbu_Statement stmt, unsigned int n, unsigned long *lengths, char **results);
 void set_time(MYSQL_TIME *mtime, const time_t time);
@@ -158,12 +157,10 @@ void glite_lbu_DBClose(glite_lbu_DBContext ctx) {
 
 int glite_lbu_DBQueryCaps(glite_lbu_DBContext ctx) {
 	MYSQL	*m = ctx->mysql;
-	MYSQL	*m2;
-	int	major,minor,sub,version,caps,have_transactions=0;
+	int	major,minor,sub,version,caps,origcaps;
 	const char *ver_s;
 
-	if (ctx->have_caps) return ctx->caps;
-
+	origcaps = ctx->caps;
 	caps = 0;
 
 	ver_s = mysql_get_server_info(m);
@@ -175,17 +172,12 @@ int glite_lbu_DBQueryCaps(glite_lbu_DBContext ctx) {
 	if (version >= GLITE_LBU_MYSQL_PREPARED_VERSION) caps |= GLITE_LBU_DB_CAP_PREPARED;
 
 	CLR_ERR(ctx);
+	transaction_test(ctx);
+	if ((ctx->caps & GLITE_LBU_DB_CAP_TRANSACTIONS)) caps |= GLITE_LBU_DB_CAP_TRANSACTIONS;
 
-	if (db_connect(ctx, ctx->cs, &m2) == 0) {
-		transaction_test(ctx, m2, &have_transactions);
-		db_close(m2);
-	}
-	if (have_transactions) caps |= GLITE_LBU_DB_CAP_TRANSACTIONS;
-
-	if (STATUS(ctx) == 0) {
-		ctx->have_caps = 1;
-		return caps;
-	} else return -1;
+	ctx->caps = origcaps;
+	if (STATUS(ctx) == 0) return caps;
+	else return -1;
 }
 
 
@@ -264,7 +256,7 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 		return STATUS(ctx);
 
 	while ((ret = glite_lbu_FetchRow(stmt,sizeof(showcol)/sizeof(showcol[0]),NULL,showcol)) > 0) {
-		assert(ret <= sizeof showcol/sizeof showcol[0]);
+		assert(ret <= (int)(sizeof showcol/sizeof showcol[0]));
 
 		if (!col_names) {
 			col_names = malloc(ret * sizeof col_names[0]);
@@ -367,6 +359,7 @@ int glite_lbu_ExecSQL(glite_lbu_DBContext ctx, const char *cmd, glite_lbu_Statem
 					return -1;
 					break;
 				case CR_SERVER_LOST:
+				case CR_SERVER_GONE_ERROR:
 					if (retry_nr <= 0) 
 						do_reconnect = 1;
 					break;
@@ -485,7 +478,7 @@ failed:
 }
 
 
-int glite_lbu_ExecStmt(glite_lbu_Statement stmt, int n, ...) {
+int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...) {
 	int i;
 	va_list ap;
 	glite_lbu_DBType type;
@@ -597,7 +590,7 @@ failed:
 }
 
 
-int glite_lbu_bufferedInsertInit(glite_lbu_DBContext ctx, glite_lbu_bufInsert *bi, void *mysql, const char *table_name, long size_limit, long record_limit, const char *columns)
+int glite_lbu_bufferedInsertInit(glite_lbu_DBContext ctx, glite_lbu_bufInsert *bi, const char *table_name, long size_limit, long record_limit, const char *columns)
 {
 	*bi = calloc(1, sizeof(*bi));
 	(*bi)->ctx = ctx;
@@ -749,6 +742,7 @@ static int myisokstmt(glite_lbu_Statement stmt, const char *source, int line, in
 			return -1;
 			break;
 		case CR_SERVER_LOST:
+		case CR_SERVER_GONE_ERROR:
 			if (*retry > 0) {
 				(*retry)--;
 				return 0;
@@ -771,6 +765,9 @@ static int db_connect(glite_lbu_DBContext ctx, const char *cs, MYSQL **mysql) {
 	char	*host,*user,*pw,*db; 
 	char	*slash,*at,*colon;
 	int      ret;
+#ifdef MYSQL_OPT_RECONNECT
+	my_bool reconnect = 1;
+#endif
 
 	// needed for SQL result parameters
 	assert(sizeof(int) >= sizeof(my_bool));
@@ -780,6 +777,10 @@ static int db_connect(glite_lbu_DBContext ctx, const char *cs, MYSQL **mysql) {
 	if (!(*mysql = mysql_init(NULL))) return ERR(ctx, ENOMEM, NULL);
 
 	mysql_options(*mysql, MYSQL_READ_DEFAULT_FILE, "my");
+#ifdef MYSQL_OPT_RECONNECT
+	/* XXX: may result in weird behaviour in the middle of transaction */
+	mysql_options(*mysql, MYSQL_OPT_RECONNECT, &reconnect);
+#endif
 
 	host = user = pw = db = NULL;
 
@@ -827,60 +828,32 @@ static void db_close(MYSQL *mysql) {
 
 /*
  * test transactions capability:
- *
- * 1) with connection 1 create testing table test<pid>
- * 2) with connection 1 insert a value
- * 3) with connection 2 look for a value, transactions are for no error and
- *    no items found
- * 4) with connection 1 commit and drop  the table
  */
-static int transaction_test(glite_lbu_DBContext ctx, MYSQL *m2, int *have_transactions) {
-	MYSQL *m1;
-	char *desc, *cmd_create, *cmd_insert, *cmd_select, *cmd_drop;
+static int transaction_test(glite_lbu_DBContext ctx) {
+	glite_lbu_Statement stmt;
+	char *table[1] = { NULL }, *res[2] = { NULL, NULL }, *cmd = NULL;
 	int retval;
-	int err;
-	pid_t pid;
 
-	ctx->caps |= GLITE_LBU_DB_CAP_TRANSACTIONS;
-	pid = getpid();
-	*have_transactions = 0;
+	ctx->caps &= ~GLITE_LBU_DB_CAP_TRANSACTIONS;
 
-	asprintf(&cmd_create, "CREATE TABLE test%d (item INT) ENGINE='innodb'", pid);
-	asprintf(&cmd_insert, "INSERT INTO test%d (item) VALUES (1)", pid);
-	asprintf(&cmd_select, "SELECT item FROM test%d", pid);
-	asprintf(&cmd_drop, "DROP TABLE test%d", pid);
+	if ((retval = glite_lbu_ExecSQL(ctx, "SHOW TABLES", &stmt)) <= 0 || glite_lbu_FetchRow(stmt, 1, NULL, table) < 0) goto quit;
+	glite_lbu_FreeStmt(&stmt);
 
-	m1 = ctx->mysql;
-	//glite_lbu_ExecSQL(ctx, cmd_drop, NULL);
-	if (glite_lbu_ExecSQL(ctx, cmd_create, NULL) != 0) goto err1;
-	if (glite_lbu_Transaction(ctx) != 0) goto err2;
-	if (glite_lbu_ExecSQL(ctx, cmd_insert, NULL) != 1) goto err2;
-
-	ctx->mysql = m2;
-	if ((retval = glite_lbu_ExecSQL(ctx, cmd_select, NULL)) == -1) goto err2;
-
-	ctx->mysql = m1;
-	if (glite_lbu_Commit(ctx) != 0) goto err2;
-	if (glite_lbu_ExecSQL(ctx, cmd_drop, NULL) != 0) goto err1;
+	trio_asprintf(&cmd, "SHOW CREATE TABLE %|Ss", table[0]);
+	if (glite_lbu_ExecSQL(ctx, cmd, &stmt) <= 0 || (retval = glite_lbu_FetchRow(stmt, 2, NULL, res)) < 0 ) goto quit;
+	if (retval != 2 || strcmp(res[0], table[0])) ERR(ctx, EIO, "unexpected show create result");
+	else ctx->caps |= GLITE_LBU_DB_CAP_TRANSACTIONS;
 
 #ifdef LBS_DB_PROFILE
 	fprintf(stderr, "[%d] use_transactions = %d\n", getpid(), USE_TRANS(ctx));
 #endif
 
-	*have_transactions = retval == 0;
-	goto ok;
-err2:
-	err = ctx->err.code;
-	desc = ctx->err.desc;
-	glite_lbu_ExecSQL(ctx, cmd_drop, NULL);
-	ctx->err.code = err;
-	ctx->err.desc = desc;
-err1:
-ok:
-	free(cmd_create);
-	free(cmd_insert);
-	free(cmd_select);
-	free(cmd_drop);
+quit:
+	glite_lbu_FreeStmt(&stmt);
+	if (table[0]) free(table[0]);
+	if (res[0]) free(res[0]);
+	if (res[1]) free(res[1]);
+	if (cmd) free(cmd);
 	return STATUS(ctx);
 }
 
@@ -890,7 +863,7 @@ ok:
  */
 static int FetchRowSimple(glite_lbu_DBContext ctx, MYSQL_RES *result, unsigned long *lengths, char **results) {
 	MYSQL_ROW            row;
-	int                  nr, i;
+	unsigned int         nr, i;
 	unsigned long       *len;
 
 	CLR_ERR(ctx);
@@ -922,7 +895,8 @@ static int FetchRowSimple(glite_lbu_DBContext ctx, MYSQL_RES *result, unsigned l
  * prepared version of the fetch
  */
 static int FetchRowPrepared(glite_lbu_DBContext ctx, glite_lbu_Statement stmt, unsigned int n, unsigned long *lengths, char **results) {
-	int ret, retry, i;
+	int ret, retry;
+	unsigned int i;
 	MYSQL_BIND *binds = NULL;
 	unsigned long *lens = NULL;
 

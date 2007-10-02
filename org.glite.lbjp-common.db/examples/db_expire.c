@@ -24,7 +24,8 @@
 
 
 static void print_blob(unsigned long len, char *blob) {
-	int i;
+	unsigned int i;
+
 	for (i = 0; i < len; i++) printf("%02X ", blob[i]);
 	printf("(='");
 	for (i = 0; i < len; i++) printf("%c", blob[i]);
@@ -81,7 +82,7 @@ int main(int argn, char *argv[]) {
 	do {
 		user = "cicomexocitl.civ";
 		dprintf(("executing '%s'...\n", user));
-		if (glite_lbu_ExecStmt(stmt, 1, GLITE_LBU_DB_TYPE_VARCHAR, user) == -1) goto failstmt;
+		if (glite_lbu_ExecPreparedStmt(stmt, 1, GLITE_LBU_DB_TYPE_VARCHAR, user) == -1) goto failstmt;
 		dprintf(("fetching '%s'...\n", user));
 		while ((nr = glite_lbu_FetchRow(stmt, 3, lens, res)) > 0) {
 			dprintf(("Result: n=%d, res=%p\n", nr, res));

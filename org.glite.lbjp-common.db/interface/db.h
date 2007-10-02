@@ -24,7 +24,7 @@ extern "C" {
  * SQL commands as single string. All values are incorporated in the SQL command strings. Proper escaping is required.
  * - enhanced:
  *
- * Prepared SQL commands with separated parameters, functions PrepareStmt() and ExecStmt(). All values are delivered in separated buffers. Its faster for multiple using and more secure.
+ * Prepared SQL commands with separated parameters, functions PrepareStmt() and ExecPreparedStmt(). All values are delivered in separated buffers. Its faster for multiple using and more secure.
  * @{
  */
 
@@ -276,7 +276,7 @@ time_t glite_lbu_DBToTime(const char *str);
  * when insert string oversize size_limit or number of rows to be inserted
  * overcome record_limit, the real insert is triggered
  */
-int glite_lbu_bufferedInsertInit(glite_lbu_DBContext ctx, glite_lbu_bufInsert *bi, void *mysql, const char *table_name, long size_limit, long record_limit, const char * columns);
+int glite_lbu_bufferedInsertInit(glite_lbu_DBContext ctx, glite_lbu_bufInsert *bi, const char *table_name, long size_limit, long record_limit, const char * columns);
 
 
 /**
@@ -329,7 +329,7 @@ int glite_lbu_PrepareStmt(glite_lbu_DBContext ctx, const char *sql, glite_lbu_St
  *
  * \return              number of affected rows, -1 on error
  */
-int glite_lbu_ExecStmt(glite_lbu_Statement stmt, int n, ...);
+int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...);
 
 
 /**

@@ -4,7 +4,7 @@ builddir=build
 stagedir=.
 distdir=.
 globalprefix=glite
-lbutilsprefix=lb-utils
+lbutilsprefix=lbu
 package=glite-lb-utils-db
 version=0.2.0
 PREFIX=/opt/glite
@@ -20,13 +20,11 @@ nothrflavour=gcc32
 -include Makefile.inc
 -include ../project/version.properties
 
-version=${module.version}
-
 CC=gcc
 
 VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples
 
-DEBUG:=-g -O0 -Wall
+DEBUG:=-g -O0 -W -Wall
 
 CFLAGS:= \
 	${DEBUG} \
@@ -71,6 +69,8 @@ HDRS:=db.h
 LOBJS:=${OBJS:.o=.lo}
 LTESTOBJS:=${TESTOBJS:.o=.lo}
 
+default all: compile doc
+
 libglite_lbu_db.la: ${LOBJS}
 	${LINK} -o $@ $< ${EXT_LIBS}
 
@@ -86,8 +86,6 @@ db_test: db_test.lo libglite_lbu_dbtest.la
 db_expire: db_expire.lo libglite_lbu_dbtest.la
 	${LINK} -o $@ $+ ${EXT_LIBS}
 
-default all: compile
-
 compile: libglite_lbu_db.la
 
 check:
@@ -101,6 +99,8 @@ test_coverage:
 examples: db_test db_expire
 
 doc:
+	cp ${top_srcdir}/doc/*.dox .
+	echo "PROJECT_NUMBER = ${version}" >> C.dox
 	doxygen C.dox
 
 stage: compile
@@ -119,14 +119,18 @@ distbin:
 	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
         
-install:
+install: all
 	-mkdir -p ${PREFIX}/lib
+	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	cp -r C ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 755 "libglite_lbu_db.la" "${PREFIX}/lib/libglite_lbu_db.la"; \
 	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 
 clean:
+	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o %.lo: %.c
 	${COMPILE} -c $<

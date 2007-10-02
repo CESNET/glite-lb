@@ -13,8 +13,6 @@ lbuprefix=lbu
 -include Makefile.inc
 -include ../project/version.properties
 
-version=${module.version}
-
 VPATH=${top_srcdir}/src:${top_srcdir}/test::${top_srcdir}/doc
 
 CC=gcc
@@ -97,18 +95,18 @@ distbin:
 	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
 
-install:
-	mkdir -p ${PREFIX}/lib
-	mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${LTLIB} ${PREFIX}/lib
+install: all
+	-mkdir -p ${PREFIX}/lib
+	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
+	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbuprefix}
+	${INSTALL} -m 644 ${LTLIB} ${STATICLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	if [ x${DOSTAGE} = xyes ]; then \
-		mkdir -p ${PREFIX}/include/${globalprefix}/${lbuprefix} ; \
-		(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbuprefix}) ; \
-		install -m 644 ${STATICLIB} ${PREFIX}/lib; \
-	fi
+	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbuprefix})
 
 clean:
-
+	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

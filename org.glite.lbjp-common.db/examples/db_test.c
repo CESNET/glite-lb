@@ -33,7 +33,8 @@
 
 
 static void print_blob(unsigned long len, char *blob) {
-	int i;
+	unsigned int i;
+
 	for (i = 0; i < len; i++) printf("%02X ", blob[i]);
 	printf("(='");
 	for (i = 0; i < len; i++) printf("%c", blob[i]);
@@ -101,17 +102,17 @@ int main(int argn, char *argv[]) {
 	dprintf(("prepare-insert...\n"));
 	if (glite_lbu_PrepareStmt(ctx, INSERT_CMD, &stmt) != 0) goto failcon;
 	dprintf(("execute 1. insert...\n"));
-	if (glite_lbu_ExecStmt(stmt, 3,
+	if (glite_lbu_ExecPreparedStmt(stmt, 3,
 	                       GLITE_LBU_DB_TYPE_INT, 2,
 	                       GLITE_LBU_DB_TYPE_VARCHAR, "cicomexocitl.civ",
 	                       GLITE_LBU_DB_TYPE_BLOB, blob1, sizeof(blob1) - 1) != 1) goto failstmt;
 	dprintf(("execute 2. insert...\n"));
-	if (glite_lbu_ExecStmt(stmt, 3,
+	if (glite_lbu_ExecPreparedStmt(stmt, 3,
 	                       GLITE_LBU_DB_TYPE_INT, 3,
 	                       GLITE_LBU_DB_TYPE_VARCHAR, "tartarus",
 	                       GLITE_LBU_DB_TYPE_NULL) != 1) goto failstmt;
 	dprintf(("execute 3. insert...\n"));
-	if (glite_lbu_ExecStmt(stmt, 3,
+	if (glite_lbu_ExecPreparedStmt(stmt, 3,
 	                       GLITE_LBU_DB_TYPE_INT, 4,
 	                       GLITE_LBU_DB_TYPE_VARCHAR, "harpia",
 	                       GLITE_LBU_DB_TYPE_BLOB, blob2, sizeof(blob2)) != 1) goto failstmt;
@@ -162,7 +163,7 @@ int main(int argn, char *argv[]) {
 
 	user = "cicomexocitl.civ";
 	dprintf(("executing '%s'...\n", user));
-	if (glite_lbu_ExecStmt(stmt, 1, GLITE_LBU_DB_TYPE_VARCHAR, user) == -1) goto failstmt;
+	if (glite_lbu_ExecPreparedStmt(stmt, 1, GLITE_LBU_DB_TYPE_VARCHAR, user) == -1) goto failstmt;
 	dprintf(("fetching '%s'...\n", user));
 	while ((nr = glite_lbu_FetchRow(stmt, 3, lens, res)) > 0) {
 		dprintf(("Result: n=%d, res=%p\n", nr, res));
