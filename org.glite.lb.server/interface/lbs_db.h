@@ -15,9 +15,6 @@ extern "C" {
 #define EDG_WLL_MYSQL_VERSION		40001
 #define BUF_INSERT_ROW_ALLOC_BLOCK	1000
 
-#define	DB_PROXY_JOB	1
-#define	DB_SERVER_JOB	2
-
 
 #define DEFAULTCS      "lbserver/@localhost:lbserver20"
 

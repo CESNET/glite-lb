@@ -57,6 +57,7 @@ enum lb_srv_perf_sink sink_mode;
 #include "lb_authz.h"
 #include "il_notification.h"
 #include "stats.h"
+#include "db_calls.h"
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 #  if GSOAP_VERSION < 20700
@@ -490,8 +491,10 @@ int main(int argc, char *argv[])
 	setlinebuf(stdout);
 	setlinebuf(stderr);
 
-	if (mode & SERVICE_PROXY) dprintf(("\nStaring LB proxy service\n"));
-	if (mode & SERVICE_SERVER) dprintf(("\nStaring LB server service\n"));
+	dprintf(("\n"));
+	if (mode & SERVICE_PROXY) dprintf(("Staring LB proxy service\n"));
+	if (mode & SERVICE_SERVER) dprintf(("Staring LB server service\n"));
+	dprintf(("\n"));
 
 	if (geteuid()) snprintf(pidfile,sizeof pidfile, "%s/edg-bkserverd.pid", getenv("HOME"));
 

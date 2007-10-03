@@ -28,6 +28,7 @@
 
 extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *);
 
+
 static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat);
 
 
@@ -38,6 +39,9 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   int	seq;
   int   err;
   edg_wll_JobStat	newstat;
+  char 			*srvName;
+  unsigned int		srvPort;
+
 
   ev = NULL;
 
@@ -56,16 +60,22 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   }
 #endif
 
+  edg_wlc_JobIdGetServerParts(ev->any.jobId, &srvName, &srvPort);
+
+  if(use_db) {
+    if (edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
+    if(store_job_server_proxy(ctx, ev, srvName, srvPort))
+
+      goto err;
+  }
+  if (edg_wll_UnlockJob(ctx,ev->any.jobId)) goto err;
+
+
   /* events logged to proxy and server (DIRECT flag) may be ignored on proxy
    * if jobid prefix hostname matches server hostname -> they will
    * sooner or later arrive to server too and are stored in common DB 
    */
   if (ctx->isProxy && ctx->serverRunning && (ev->any.priority & EDG_WLL_LOGFLAG_DIRECT) ) {
-	char 		*srvName;
-	unsigned int    srvPort;
-
-	
-	edg_wlc_JobIdGetServerParts(ev->any.jobId, &srvName, &srvPort);
 	if (!strcmp(ctx->srvName, srvName)) {
 		return 0;
 	}

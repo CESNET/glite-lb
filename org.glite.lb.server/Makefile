@@ -180,7 +180,7 @@ BKSERVER_BASE_OBJS:= \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o stats.o 
+	notification.o il_notification.o notif_match.o stats.o db_calls.o
 
 dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
 GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}
@@ -209,7 +209,7 @@ endif
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o lbs_db_supp.o openserver.o \
 	jobstat.o process_event.o process_event_pbs.o process_event_condor.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o stats.o\
-	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o
+	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o db_calls.o
 
 INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} 
 
@@ -236,7 +236,8 @@ LIB_OBJS_BK:= \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o stats.o write2rgma.o
+	notification.o il_notification.o notif_match.o stats.o write2rgma.o \
+	db_calls.o
 
 MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
 MONDB_LIBS:=${COMMON_LIBS} ${EXT_LIBS} 
