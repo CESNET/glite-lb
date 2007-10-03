@@ -102,7 +102,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	int                flags;
 	edg_wlc_JobId	  *jobs;
 	edg_wll_JobStat	  *states;
-	int                ret;
+	int                ret = SOAP_FAULT;
 
 
 	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
@@ -114,12 +114,11 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	jobs = NULL;
 	states = NULL;
-	ret = SOAP_FAULT;
 
 	edg_wll_ResetError(ctx);
 	if ( edg_wll_SoapToQueryCondsExt(in->conditions, in->__sizeconditions, &conditions) ) {
 		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
-		goto cleanup;
+		goto err;
 	}
 	edg_wll_SoapToJobStatFlags(in->flags, &flags);
 
@@ -137,17 +136,17 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 		free(message);
 	}
 
-	if (edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, &jobs, &states) != 0) goto cleanup;
+	if (edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, &jobs, &states) != 0) goto err;
 
-	if (edg_wll_JobsQueryResToSoap(soap, jobs, states, out) != SOAP_OK) goto cleanup;
+	if (edg_wll_JobsQueryResToSoap(soap, jobs, states, out) != SOAP_OK) goto err;
 	ret = SOAP_OK;
 
+err:
+	if ( ret == SOAP_FAULT ) edg_wll_ErrToFault(ctx, soap);
 cleanup:
 	freeQueryRecsExt(conditions);
 	freeJobIds(jobs);
 	freeJobStats(states);
-
-	if ( ret == SOAP_FAULT ) edg_wll_ErrToFault(ctx, soap);
 
 	return ret;
 }

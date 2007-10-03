@@ -78,6 +78,7 @@ ifdef LB_PERF
 endif
 COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
+TRIO_LIB:=-lglite_lbu_trio
 
 CFLAGS:=${DEBUG} \
 	-I. \
@@ -88,7 +89,7 @@ CFLAGS:=${DEBUG} \
 
 CXXFLAGS:=${CFLAGS}
 
-EXT_LIB:= 
+EXT_LIB:=
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
@@ -166,12 +167,12 @@ generate: ${GEN_HDRS}
 
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib \
-			${COMMON_LIB} \
+			${COMMON_LIB} ${TRIO_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
 	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}/lib \
-			${COMMON_LIB_THR} \
+			${COMMON_LIB_THR} ${TRIO_LIB} \
 			-lglite_security_gss_${thrflavour}
 
 ${FAKELIB}: ${FAKELIBOBJS}

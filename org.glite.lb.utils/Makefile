@@ -48,7 +48,7 @@ EXT_LIBS:= \
 	${expatlib} -lexpat
 COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
-JP_LIBS:=-lglite_jp_common_${nothrflavour} -lglite_jp_trio
+JP_LIBS:=-lglite_jp_common_${nothrflavour}
 
 UTILS:=mon purge dump load dump_exporter
 

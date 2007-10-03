@@ -13,8 +13,8 @@
 #include <stdarg.h>
 #include <errno.h>
 
+#include "glite/lbu/escape.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/escape.h"
 #include "glite/lb/events_parse.h"
 
 #include "logd_proto.h"
@@ -379,7 +379,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	dglllid_size = strlen(dglllid);
 
 	/* format the DG.USER string */
-	name_esc = edg_wll_LogEscape(name);
+	name_esc = glite_lbu_EscapeULM(name);
 	if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
 		SYSTEM_ERROR("asprintf");
 		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): nomem for DG.USER\n");

@@ -264,7 +264,6 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
 	edg_wll_JobStatCode	old_state = js->pub.state;
-	enum edg_wll_StatDone_code	old_done_code = js->pub.done_code;
 	edg_wll_JobStatCode	new_state = EDG_WLL_JOB_UNKNOWN;
 	int			res = RET_OK,
 				fine_res = RET_OK;
@@ -879,7 +878,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			rep(js->last_cancel_seqcode, e->any.seqcode);
 		} else {
 
-/* the first set of LM events (Accept, Transfer/* -> LRMS)
+/* the first set of LM events (Accept, Transfer* -> LRMS)
    should not should shift the state (to Ready, Scheduled) but NOT to
    update js->last_seqcode completely, in order not to block following
    LRMS events which are likely to arrive later but should still affect

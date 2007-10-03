@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))

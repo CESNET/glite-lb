@@ -2,7 +2,7 @@
 
 #include <errno.h>
 
-#include "glite/lb/trio.h"
+#include "glite/lbu/trio.h"
 #include "glite/lb/context-int.h"
 
 #include "lbs_db.h"

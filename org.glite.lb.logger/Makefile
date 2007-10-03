@@ -62,6 +62,8 @@ INSTALL:=libtool --mode=install install
 
 COMMON_LIB:=-lglite_lb_common
 
+TRIO_LIB:=-lglite_lbu_trio
+
 GLITE_GSS_LIB:=-lglite_security_gss
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
@@ -103,10 +105,10 @@ default: all
 all compile: $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD)
 
 glite-lb-logd: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} 
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${TRIO_LIB}
 
 glite-lb-logd-perf: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} 
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${TRIO_LIB}
 
 glite-lb-logd-nofile: ${LOGD_NOBJS}
 	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} 

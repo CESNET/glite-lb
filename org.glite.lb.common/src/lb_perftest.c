@@ -14,7 +14,7 @@
 #include <ctype.h>
 
 #include "glite/lb/lb_perftest.h"
-#include "glite/lb/trio.h"
+#include "glite/lbu/trio.h"
 #include "glite/lb/il_msg.h"
 
 static pthread_mutex_t perftest_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -68,7 +68,7 @@ _strnstr(const char *big, const char *little, size_t max)
 
 static 
 int 
-read_line(int fd, char **buff, size_t *maxsize)
+read_line(int fd, char **buff, int *maxsize)
 {
         int             ct, i;
         void            *tmp;
@@ -135,7 +135,7 @@ int
 read_events(int fd, char ***evts /* *(*evts)[] */) 
 {
 	void *tmp;
-	size_t maxlinesize;
+	int maxlinesize;
 	char **e = NULL, *line = NULL;
 	size_t i = 0, max = EVENTS_BUFSIZ;
 
@@ -484,10 +484,11 @@ glite_wll_perftest_createJobId(const char *bkserver,
 			       edg_wlc_JobId *jobid)
 {
 	char unique[256];
+	int ret;
 
-	if(snprintf(unique, sizeof(unique), "%s_%s_%d", 
-		    test_user, test_name, job_num) >= sizeof(unique)) 
-		return(E2BIG);
+	ret = snprintf(unique, sizeof(unique), "%s_%s_%d",test_user, test_name, job_num);
+	if (ret < 0) return errno;
+	if ((unsigned int)ret >= sizeof(unique)) return(E2BIG);
 
 	return(edg_wlc_JobIdRecreate(bkserver, port, str2md5base64(unique), jobid));
 }

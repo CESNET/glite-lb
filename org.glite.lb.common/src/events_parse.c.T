@@ -14,8 +14,8 @@
 #include "glite/lb/events_parse.h"
 #include "glite/lb/ulm_parse.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/escape.h"
-#include "glite/lb/trio.h"
+#include "glite/lbu/escape.h"
+#include "glite/lbu/trio.h"
 
 static const struct timeval null_timeval = {0,0};
 
@@ -480,8 +480,8 @@ edg_wll_ErrorCode edg_wll_CompareEvents(
  * my_edg_wll_ULMGetValueAt - get value at index, but also
  *                - remove surrounding quotes if any
  *                - and unescape the string
- *                - the new string will be allocated (by edg_wll_LogUnescape)
- * Calls: edg_wll_ULMGetValueAt, edg_wll_LogUnescape, calloc and strncpy or strdup
+ *                - the new string will be allocated (by glite_lbu_UnescapeULM)
+ * Calls: edg_wll_ULMGetValueAt, glite_lbu_UnescapeULM, calloc and strncpy or strdup
  */
 char *my_edg_wll_ULMGetValueAt( p_edg_wll_ULMFields table, int index )
 {
@@ -507,7 +507,7 @@ if ((*first == ULM_QM) && (*last == ULM_QM)) {
 else tmp = strdup(str);
 
 if (len > 2) {
-	ret = edg_wll_LogUnescape(tmp);
+	ret = glite_lbu_UnescapeULM(tmp);
 	if (tmp) free(tmp);
 }
 else ret = tmp;

@@ -12,8 +12,8 @@
 
 #include "glite/jobid/cjobid.h"
 #include "glite/jobid/strmd5.h"
+#include "glite/lbu/trio.h"
 #include "glite/lb/ulm_parse.h"
-#include "glite/lb/trio.h"
 #include "glite/lb/context-int.h" 
 
 #include "glite/lb/producer.h"

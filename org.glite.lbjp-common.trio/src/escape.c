@@ -16,7 +16,7 @@
  * 
  * \fn char *glite_lbu_EscapeULM(const char *str)
  * \param str		a string to escape
- * \return 		new (allocated) escaped string
+ * \return 		new (allocated) escaped string (is is empty "" if str is NULL)
  * \brief in given string escape all ULM_QM, ULM_BS and ULM_LF by ULM_BS
  *
  * Calls: malloc, strlen
@@ -33,7 +33,7 @@ unsigned int i,j;
 size_t size;
 char *ret;
 
-if (str == NULL) return NULL;
+if (str == NULL) return strdup("");
 if ((size = strlen(str)) == 0) return strdup("");
 
 ret = (char*) malloc(1+2*size*sizeof(char));
@@ -66,7 +66,7 @@ return ret;
  * 
  * \fn char *glite_lbu_UnescapeULM(const char *str)
  * \param str		a string to unescape
- * \return		new (allocated) unescaped string
+ * \return		new (allocated) unescaped string or NULL (if str NULL or empty)
  * \brief in given string unescape all escaped ULM_QM, ULM_BS and ULM_LF
  *
  * Calls: malloc, strlen
@@ -86,6 +86,8 @@ char *ret;
 if (str == NULL) return NULL;
 
 size  = strlen(str);
+if (size == 0) return NULL;
+
 ret = (char*) malloc(1+size*sizeof(char));
 
 /*

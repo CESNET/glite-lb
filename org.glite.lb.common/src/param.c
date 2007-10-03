@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "glite/jobid/cjobid.h"
 #include "glite/lb/context-int.h"
@@ -100,7 +101,7 @@ static void extract_time(edg_wll_ContextParam param,double dflt,struct timeval *
 
 static char *my_strndup(const char *s,size_t len)
 {
-	int	l = strlen(s);
+	size_t	l = strlen(s);
 	char	*r = malloc(l < len ? l+1 : len+1);
 
 	strncpy(r,s,len);

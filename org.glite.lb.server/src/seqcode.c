@@ -2,8 +2,8 @@
 
 #include <errno.h>
 
+#include "glite/lbu/trio.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
 
 #include "get_events.h"
 #include "store.h"

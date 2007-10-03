@@ -11,11 +11,12 @@
 
 #include <cclassad.h>
 
+#include "glite/lbu/trio.h"
 #include "glite/lb/context.h"
+#include "glite/lb/context-int.h"
 #include "glite/lb/jobstat.h"
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
-#include "glite/lb/trio.h"
 
 #include "jobstat.h"
 #include "get_events.h"

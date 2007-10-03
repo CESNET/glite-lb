@@ -11,7 +11,9 @@
 
 #include "glite/lb/events_parse.h"
 #include "consumer.h"
+#include "producer.h"
 #include "glite/jobid/cjobid.h"
+#include "glite/lb/context-int.h"
 
 static void free_events(edg_wll_Event *);
 

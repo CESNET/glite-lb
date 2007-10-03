@@ -18,11 +18,11 @@
 #include <syslog.h>
 
 #include "glite/jobid/strmd5.h"
+#include "glite/lbu/trio.h"
 
 #include "glite/lb/events_parse.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/log_proto.h"	/* for EDG_WLL_LOG_USER_DEFAULT */
-#include "glite/lb/trio.h"
 
 #include "store.h"
 #include "get_events.h"

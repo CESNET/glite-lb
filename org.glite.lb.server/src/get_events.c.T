@@ -17,9 +17,9 @@
 #include <errno.h>
 #include <syslog.h>
 
+#include "glite/lbu/trio.h"
 #include "get_events.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
 #include "glite/lb/events_parse.h"
 
 static void edg_wll_set_event_field(edg_wll_Event *,char *,char *);

@@ -7,10 +7,10 @@
 #include <expat.h>
 
 #include "glite/jobid/cjobid.h"
+#include "glite/lbu/trio.h"
+#include "glite/lbu/escape.h"
 
-#include "glite/lb/escape.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
 #include "glite/lb/xml_conversions.h"
 
 #include "lb_xml_parse.h"
@@ -472,7 +472,7 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 				if ( (XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.j = 
 					edg_wll_from_string_to_jobid(XMLCtx)) == NULL )
 				{
-					s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+					s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 					if (XMLCtx->errtxt) {
 						asprintf(&e,"%s\n%s: invalid JobId at line %d",
 							XMLCtx->errtxt, s,
@@ -538,7 +538,7 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 			default: 
 				edg_wll_freeBuf(XMLCtx);
 				XMLCtx->level--;
-				s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+				s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 				if (XMLCtx->errtxt) {
 					asprintf(&e,"%s\n%s: invalid attribute type at line %d",
 						XMLCtx->errtxt, s,
@@ -566,7 +566,7 @@ static void endQueryJobsRequest(void *data, const char *el UNUSED_VAR)
 
 	if (XMLCtx->level == 2) {
 		if (!strcmp(XMLCtx->element,"flags") && XMLCtx->char_buf) {
-			s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+			s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 			// XXX: check if it works
 			XMLCtx->flags = edg_wll_string_to_stat_flags(s);
 			free(s);
@@ -615,7 +615,7 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 					if ( (XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.j = 
 						edg_wll_from_string_to_jobid(XMLCtx)) == NULL )
 					{
-						s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+						s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 						if (XMLCtx->errtxt) {
 							asprintf(&e,"%s\n%s: invalid JobId at line %d",
 								XMLCtx->errtxt, s,
@@ -662,7 +662,7 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 				default: 
 					edg_wll_freeBuf(XMLCtx);
 					XMLCtx->level--;
-					s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+					s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 					if (XMLCtx->errtxt) {
 						asprintf(&e,"%s\n%s: invalid attribute type at line %d",
 							XMLCtx->errtxt, s,
@@ -712,7 +712,7 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 				default: 
 					edg_wll_freeBuf(XMLCtx);
 					XMLCtx->level--;
-					s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+					s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 					if (XMLCtx->errtxt) {
 						asprintf(&e,"%s\n%s: invalid attribute type at line %d",
 							XMLCtx->errtxt, s,
@@ -741,7 +741,7 @@ static void endPurgeRequest(void *data, const char *el UNUSED_VAR)
 
         if (XMLCtx->level == 2) {
                 if (!strcmp(XMLCtx->element,"flags")) {
-			s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+			s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 			XMLCtx->purgeRequestGlobal.flags = edg_wll_string_to_purge_flags(s);
 			free(s);
 		}
@@ -780,7 +780,7 @@ static void endDumpRequest(void *data, const char *el UNUSED_VAR)
 	char *s;
 
         if (XMLCtx->level == 2) {
-		s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+		s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
                 if (!strcmp(XMLCtx->element,"from")) {
 			if (isdigit(s[0]))
 			XMLCtx->dumpRequestGlobal.from = edg_wll_from_string_to_time_t(XMLCtx);

@@ -261,7 +261,7 @@ edg_wll_Connections* edg_wll_initConnections() {
             connectionsHandle.connectionLock = (pthread_mutex_t *) calloc(connectionsHandle.poolSize, sizeof(pthread_mutex_t));
         #endif
 
-        connectionsHandle.locked_by = (edg_wll_Context) calloc(connectionsHandle.poolSize, sizeof(edg_wll_Context));
+        connectionsHandle.locked_by = (edg_wll_Context *) calloc(connectionsHandle.poolSize, sizeof(edg_wll_Context));
 
     }
     if(connectionsHandle.serverConnection == NULL) {

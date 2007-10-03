@@ -13,10 +13,10 @@
 #include <string.h>
 #include <errno.h>
 
+#include "glite/lbu/escape.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/events_parse.h"
-#include "glite/lb/escape.h"
 #include "glite/lb/log_proto.h"
 
 #include "il_notification.h"
@@ -154,8 +154,8 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 	if(edg_wll_JobStatusToXML(context, notif_job_stat, &xml_data)) 
 		goto out;
 	
-	if((xml_esc_data = edg_wll_EscapeXML(xml_data)) == NULL) {
-		edg_wll_SetError(context, ret=ENOMEM, "edg_wll_EscapeXML()");
+	if((xml_esc_data = glite_lbu_EscapeXML(xml_data)) == NULL) {
+		edg_wll_SetError(context, ret=ENOMEM, "glite_lbu_EscapeXML()");
 		goto out;
 	}
 

@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <assert.h>
+#include <time.h>
 
 #include "glite/security/glite_gss.h"
 #include "glite/lb/context-int.h"

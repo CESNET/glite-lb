@@ -5,6 +5,8 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <unistd.h>
+#include <time.h>
 
 #include "glite/jobid/strmd5.h"
 #include "glite/jobid/cjobid.h"
@@ -75,9 +77,9 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 #endif
 	if (ctx->errDesc) free(ctx->errDesc);
 	if (ctx->connections->connPool) {
+#ifdef GLITE_LB_THREADED
 		int i;
 
-#ifdef GLITE_LB_THREADED
                 /* Since the introduction of a shared connection pool, the pool
                    cannot be freed here. We only need to unlock connections that
                    may have been locked using this context. */

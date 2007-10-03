@@ -14,7 +14,7 @@
 
 #include <cclassad.h>
 
-#include "glite/lb/trio.h"
+#include "glite/lbu/trio.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/jobstat.h"
 

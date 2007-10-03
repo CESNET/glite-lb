@@ -9,13 +9,14 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <time.h>
 #include <assert.h>
 #include <stdarg.h>
 
+#include "glite/lbu/trio.h"
 #include "lbs_db.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
 
 #define my_err() edg_wll_SetError(ctx,EDG_WLL_ERROR_DB_CALL,mysql_error((MYSQL *) ctx->mysql))
 
@@ -346,7 +347,7 @@ edg_wll_ErrorCode edg_wll_bufferedInsertInit(edg_wll_Context ctx, edg_wll_bufIns
 }
 
 
-
+#if 0
 static int string_add(char *what, long *used_size, long *alloc_size, char **where)
 {
 	long	what_len = strlen(what);
@@ -367,6 +368,7 @@ static int string_add(char *what, long *used_size, long *alloc_size, char **wher
 
 	return 0;
 }
+#endif
 
 
 static int flush_bufferd_insert(edg_wll_bufInsert *bi)

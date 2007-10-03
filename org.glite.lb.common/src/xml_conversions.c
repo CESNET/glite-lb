@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <expat.h>
 
-#include "glite/lb/trio.h"
+#include "glite/lbu/trio.h"
+#include "glite/lbu/escape.h"
 
 #include "glite/lb/xml_conversions.h"
-#include "glite/lb/escape.h"
 #include "glite/lb/jobstat.h"
 
 
@@ -530,7 +530,7 @@ char *edg_wll_from_string_to_string(edg_wll_XML_ctx *XMLCtx)
 {
 	char *s;
 
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	edg_wll_freeBuf(XMLCtx);
 	return s;
 } 
@@ -542,7 +542,7 @@ edg_wlc_JobId edg_wll_from_string_to_jobid(edg_wll_XML_ctx *XMLCtx)
 	edg_wlc_JobId out = NULL;
 	char *s;
 
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	if (s) {
 	   edg_wlc_JobIdParse(s, &out);
 	   free(s);
@@ -559,7 +559,7 @@ edg_wll_NotifId edg_wll_from_string_to_notifid(edg_wll_XML_ctx *XMLCtx)
 	edg_wll_NotifId out = NULL;
 	char *s;
 
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	if (s) {
 	   edg_wll_NotifIdParse(s, &out);
 	   free(s);
@@ -576,7 +576,7 @@ edg_wll_JobStatCode edg_wll_from_string_to_edg_wll_JobStatCode(edg_wll_XML_ctx *
 	edg_wll_JobStatCode out = EDG_WLL_JOB_UNDEF;
 	char *s;
 	
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	if (s) {
 	   out = edg_wll_StringToStat(s);
 	   free(s);
@@ -596,7 +596,7 @@ int edg_wll_from_string_to_int(edg_wll_XML_ctx *XMLCtx)
         int out = -1;
 	char *s;
 
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	if (s) {
 	   out = atoi(s);
 	   free(s);
@@ -615,7 +615,7 @@ float edg_wll_from_string_to_float(edg_wll_XML_ctx *XMLCtx)
         float out = -1;
 	char *s;
 
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	if (s) {
 	   out = strtof(s, (char **) NULL);
 	   free(s);
@@ -630,7 +630,7 @@ double edg_wll_from_string_to_double(edg_wll_XML_ctx *XMLCtx)
         double out = -1;
 	char *s;
 
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	if (s) {
 	   out = strtod(s, (char **) NULL);
 	   free(s);
@@ -646,7 +646,7 @@ long edg_wll_from_string_to_long(edg_wll_XML_ctx *XMLCtx)
         long out = -1;
 	char *s;
 
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	if (s) {
 	   out = atol(s);
 	   free(s);
@@ -669,7 +669,7 @@ struct timeval edg_wll_from_string_to_timeval(edg_wll_XML_ctx *XMLCtx)
 	char *needle, *nil;
 	char *s;
 
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	if (s) {
 	   out.tv_sec  = strtol(s, &needle, 10);
    	   out.tv_usec = strtol(needle+1, &nil, 10);
@@ -692,7 +692,7 @@ edg_wll_Source edg_wll_from_string_to_logsrc(edg_wll_XML_ctx *XMLCtx)
 	edg_wll_Source	out = EDG_WLL_SOURCE_NONE;
 	char *s;
 
-	s = edg_wll_UnescapeXML((const char *) XMLCtx->char_buf);
+	s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 	if (s) {
 	   out = edg_wll_StringToSource(s);
 	   free(s);
@@ -861,7 +861,7 @@ static const char * const dumpConsts[] = {
 int edg_wll_StringToDumpConst(const char *name)
 
 {
-        int     i;
+        size_t     i;
 
         for (i=0; i<sizeof(dumpConsts)/sizeof(dumpConsts[0]); i++)
                 if (strcasecmp(dumpConsts[i],name) == 0) return -(i+1);
@@ -870,7 +870,7 @@ int edg_wll_StringToDumpConst(const char *name)
 
 char *edg_wll_DumpConstToString(int dumpConst)
 {
-        if (dumpConst >= 0 || -(dumpConst) > sizeof(dumpConsts)/sizeof(dumpConsts[0])) return (char *) NULL;
+        if (dumpConst >= 0 || (unsigned int)-(dumpConst) > sizeof(dumpConsts)/sizeof(dumpConsts[0])) return (char *) NULL;
         return strdup(dumpConsts[-(dumpConst+1)]);
 }
 
@@ -887,7 +887,7 @@ static const char * const done_codeConsts[] = {
 int edg_wll_StringTodone_code(const char *name)
 
 {
-        int     i;
+        size_t     i;
 
         for (i=0; i<sizeof(done_codeConsts)/sizeof(done_codeConsts[0]); i++)
                 if (strcasecmp(done_codeConsts[i],name) == 0) return i;
@@ -896,7 +896,7 @@ int edg_wll_StringTodone_code(const char *name)
 
 char *edg_wll_done_codeToString(int done_codeConst)
 {
-        if (done_codeConst < 0 || (done_codeConst) > sizeof(done_codeConsts)/sizeof(done_codeConsts[0])) return (char *) NULL;
+        if (done_codeConst < 0 || (unsigned int)(done_codeConst) > sizeof(done_codeConsts)/sizeof(done_codeConsts[0])) return (char *) NULL;
         return strdup(done_codeConsts[done_codeConst]);
 }
 
@@ -929,7 +929,7 @@ static const char * const query_attrConsts[] = {
 edg_wll_QueryAttr edg_wll_StringToquery_attr(const char *name)
 
 {
-        int     i;
+        size_t     i;
 
         for (i=0; i<sizeof(query_attrConsts)/sizeof(query_attrConsts[0]); i++)
                 if (strcasecmp(query_attrConsts[i],name) == 0) return (edg_wll_QueryAttr) i;
@@ -957,7 +957,7 @@ static const char * const notifChangeOpConsts[] = {
 
 edg_wll_NotifChangeOp edg_wll_StringToNotifChangeOp(const char *name)
 {
-        int     i;
+        size_t     i;
 
         for (i=0; i<sizeof(notifChangeOpConsts)/sizeof(notifChangeOpConsts[0]); i++)
                 if (strcasecmp(notifChangeOpConsts[i],name) == 0) return (edg_wll_NotifChangeOp) i;

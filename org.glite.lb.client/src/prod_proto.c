@@ -2,11 +2,14 @@
 
 #include <sys/types.h>
 #include <sys/un.h>
+#include <time.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <stdio.h>
+#include <netdb.h>
 
 #include "glite/lb/lb_plain_io.h"
 #include "glite/lb/il_msg.h"

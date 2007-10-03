@@ -8,10 +8,10 @@
 
 #include <expat.h> 	// Expat header file
 
-#include "glite/lb/trio.h"
+#include "glite/lbu/trio.h"
+#include "glite/lbu/escape.h"
 #include "glite/jobid/cjobid.h"
 
-#include "glite/lb/escape.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/xml_conversions.h"    

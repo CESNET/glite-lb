@@ -64,7 +64,7 @@ ${STATICLIB}: ${OBJS}
 	ranlib $@
 
 ${LTLIB}: ${OBJS}
-	${LINK} ${version_info} -o $@ ${LOBJS} 
+	${LINK} ${version_info} -o $@ ${LOBJS} -lm
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes

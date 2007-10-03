@@ -10,9 +10,9 @@
 #include <regex.h>
 #include <syslog.h>
 
+#include "glite/lbu/trio.h"
 #include "glite/lb/events.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/trio.h"
 
 #include "get_events.h"
 #include "store.h"
