@@ -347,7 +347,7 @@ event_store_quarantine(struct event_store *es)
 int
 event_store_recover(struct event_store *es)
 {
-  struct event_queue *eq_l = NULL, *eq_b;
+  struct event_queue *eq_l = NULL, *eq_b = NULL;
   struct server_msg *msg;
   char *event_s;
   int fd, ret;
@@ -364,9 +364,9 @@ event_store_recover(struct event_store *es)
 #else
   /* find bookkepping server queue */
   eq_b = queue_list_get(es->job_id_s);
-#endif
   if(eq_b == NULL) 
     return(-1);
+#endif
 
 #if !defined(IL_NOTIFICATIONS)
   /* get log server queue */

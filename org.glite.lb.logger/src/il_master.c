@@ -44,8 +44,11 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 #if defined(IL_NOTIFICATIONS)
 	/* if there are no data to send, do not send anything 
 	   (messsage was just to change the delivery address) */
-	if(msg->len == 0) 
+	/* CORRECTION - let the message pass through the output queue
+	   to commit it properly and keep event_store in sync */
+	/* if(msg->len == 0) 
 		return(0);
+	*/
 #endif
 	/* avoid losing signal to thread */
 	event_queue_cond_lock(eq);
