@@ -19,7 +19,7 @@ InputChannel::onReady()
 		// no new data read
 	} else if(msg) {
 		// we have a new message
-		//theEventManager.postEvent(new NewMessageEvent());
+		
 	} else {
 		// still need more data
 		ThreadPool::instance()->queueWorkRead(this);

@@ -2,7 +2,7 @@
 #define _TRANSPORT_H
 
 #include "Connection.H"
-#include "Properties.H"
+#include "Message.H"
 
 // Transport implements transport protocol 
 //  - reads/writes messages using Connection interface
@@ -17,23 +17,6 @@ public:
 
 		virtual ~Factory() 
 			{}
-	};
-
-
-	// 
-	class Message {
-	public:
-
-		Message();
-
-		int getContent(char* &data) const;
-		int getContentLength() const;
-		int getHeader(const char* name, char* &val) const;
-		Properties& getProperties();
-		char *path() const;
-
-	private:
-		
 	};
 
 	//
