@@ -491,6 +491,12 @@ int edg_wll_http_send_recv_proxy(
 			|| edg_wll_http_send_proxy(ctx,request,req_head,req_body)
 			|| edg_wll_http_recv_proxy(ctx,response,resp_head,resp_body));
 	}
+
+	/* XXX: workaround for bug #25153, don't keep proxy connection at all
+	 * May have slight performance impact, it would be nice to cover proxy
+	 * connections in the pool too.
+	 */
+	edg_wll_close_proxy(ctx);
 	
 	return edg_wll_Error(ctx,NULL,NULL);
 }
