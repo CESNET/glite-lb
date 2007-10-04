@@ -472,6 +472,9 @@ int edg_wll_http_send_recv_proxy(
 	char ***resp_head,
 	char **resp_body)
 {
+	int	err;
+	char	*et = NULL;
+
 	if (edg_wll_open_proxy(ctx)) return edg_wll_Error(ctx,NULL,NULL);
 	
 	switch (edg_wll_http_send_proxy(ctx,request,req_head,req_body)) {
@@ -496,7 +499,13 @@ int edg_wll_http_send_recv_proxy(
 	 * May have slight performance impact, it would be nice to cover proxy
 	 * connections in the pool too.
 	 */
+
+	err = edg_wll_Error(ctx,NULL,&et);
 	edg_wll_close_proxy(ctx);
+	if (err) {
+		edg_wll_SetError(ctx,err,et);
+		free(et);
+	}
 	
 	return edg_wll_Error(ctx,NULL,NULL);
 }
