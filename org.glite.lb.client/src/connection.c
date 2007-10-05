@@ -53,11 +53,23 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index)
 int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
 {
 	int i;
+	struct stat statinfo;
+	int using_certfile = 0;
+
+	if (ctx->p_proxy_filename || ctx->p_cert_filename) {
+		stat(ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename, &statinfo);
+		using_certfile = 1;
+	}
 
         for (i=0; i<ctx->connections->poolSize;i++) { 
-		if ((ctx->connections->connPool[i].peerName != NULL) &&
-                    !strcmp(name, ctx->connections->connPool[i].peerName) &&
-		   (port == ctx->connections->connPool[i].peerPort)) {
+//		printf("*** Testing connection %d: peerName = %s, peerPort = %d, file = %s\n", i, ctx->connections->connPool[i].peerName != NULL ? ctx->connections->connPool[i].peerName : "NULL", ctx->connections->connPool[i].peerPort, ctx->connections->connPool[i].file);
+		if ((ctx->connections->connPool[i].peerName != NULL) &&		// Conn Pool record must exist
+                    !strcmp(name, ctx->connections->connPool[i].peerName) &&	// Server names must be equal
+		   (port == ctx->connections->connPool[i].peerPort) && 		// Ports must be equal
+			(!using_certfile ||					// we are aither using the default cert file
+				((ctx->connections->connPool[i].file_ino == statinfo.st_ino) &&	 // or checking which file
+				 (ctx->connections->connPool[i].file_dev = statinfo.st_dev)))) { // this conn uses to auth.
+
 
 			/* TryLock (next line) is in fact used only 
 			   to check the mutex status */
@@ -180,11 +192,18 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 {
 	int index;
 	edg_wll_GssStatus gss_stat;
+	OM_uint32 lifetime = 0;
+	struct stat statinfo;
+	int acquire_cred = 0;
 	
 
 	edg_wll_ResetError(ctx);
 
         edg_wll_poolLock(); /* We are going to search the pool, it has better be locked */
+
+        /* July 12, 2007 - ZS - Searching the pool for srvName/srvPort is not enough.
+        we also need to check the user identity so that there may be several connections
+        open to the same server using different identities. */
 
 	if ( (index = ConnectionIndex(ctx, ctx->srvName, ctx->srvPort)) == -1 ) {
 		/* no such open connection in pool */
@@ -209,16 +228,51 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 
 	*connToUse = index;
 	
-	/* XXX support anonymous connections, perhaps add a flag to the connPool
+	/* Old Comment: support anonymous connections, perhaps add a flag to the connPool
 	 * struct specifying whether or not this connection shall be authenticated
 	 * to prevent from repeated calls to edg_wll_gss_acquire_cred_gsi() */
-	if (!ctx->connections->connPool[index].gsiCred && 
-	    edg_wll_gss_acquire_cred_gsi(
-	       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
-	       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-	       &ctx->connections->connPool[index].gsiCred, NULL, &gss_stat)) {
-	    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
-	    goto err;
+
+	// In case of using a specifically given cert file, stat it and check for the need to reauthenticate
+	if (ctx->p_proxy_filename || ctx->p_cert_filename) {
+		stat(ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename, &statinfo);
+		if (ctx->connections->connPool[index].file_mtime != statinfo.st_mtime)
+			acquire_cred = 1;	// File has been modified. Need to acquire new creds.
+	}
+		
+	// Check if credentials exist. If so, check validity
+	if (ctx->connections->connPool[index].gsiCred) {
+		gss_inquire_cred(ctx->connections->connPool[index].gsiCred, NULL, &lifetime, NULL, NULL, NULL);
+        	#ifdef EDG_WLL_CONNPOOL_DEBUG	
+			printf ("Credential exists, lifetime: %d\n", lifetime);
+		#endif
+		if (!lifetime) acquire_cred = 1;	// Credentials exist and lifetime is OK. No need to authenticate.
+	}
+	else {
+			acquire_cred = 1;	// No credentials exist so far, acquire. 
+	}
+
+
+	if (acquire_cred) {
+		if (edg_wll_gss_acquire_cred_gsi(
+	        	ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
+		       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+		       &ctx->connections->connPool[index].gsiCred, NULL, &gss_stat)) {
+		    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
+		    goto err;
+		}
+		else {
+			// Credentials Acquired successfully. Storing file identification.
+        		#ifdef EDG_WLL_CONNPOOL_DEBUG	
+				printf("Cert file: %s\n", ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename);
+			#endif
+			if (ctx->p_proxy_filename || ctx->p_cert_filename) {
+				stat(ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename, &statinfo);
+				ctx->connections->connPool[index].file_ino = statinfo.st_ino;
+				ctx->connections->connPool[index].file_dev = statinfo.st_dev;
+				ctx->connections->connPool[index].file_mtime = statinfo.st_mtime;
+
+			}
+		}
 	}
 
 	if (ctx->connections->connPool[index].gss.context == GSS_C_NO_CONTEXT) {	

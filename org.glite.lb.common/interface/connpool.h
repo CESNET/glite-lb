@@ -19,7 +19,7 @@ extern "C" {
 
 #define	GLITE_LB_COMMON_CONNPOOL_SIZE	50
 
-glite_lb_padded_struct(_edg_wll_ConnPool,15,
+glite_lb_padded_struct(_edg_wll_ConnPool,20,
 /* address and port where we are connected to */
         char            *peerName;
         unsigned int    peerPort;
@@ -33,6 +33,13 @@ glite_lb_padded_struct(_edg_wll_ConnPool,15,
 
 /* timestamp of usage of this entry in ctx.connPool */
         struct timeval  lastUsed;
+
+/* Proxy/Cert file identification */
+
+        ino_t           file_ino;
+        dev_t           file_dev;
+        time_t          file_mtime;
+
 );
 typedef struct _edg_wll_ConnPool  edg_wll_ConnPool;
 #endif
