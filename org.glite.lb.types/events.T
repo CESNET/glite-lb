@@ -218,10 +218,10 @@
 	string	owner		Job owner
 	string	name		Job name
 
-@type PBSMatch		Scheduler created exec_host
-	string	dest_host	Aka exec_host
+@type PBSMatch		Scheduler created exec host
+	string	dest_host	Aka exec host
 
-@type PBSPending	Scheduler is not able to find exec_host, or some error occured
+@type PBSPending	Scheduler is not able to find exec host, or some error occured
 	string	reason		Reasons of job pendation or errors
 
 @type PBSRun		Job attempted to be run by the logging component
