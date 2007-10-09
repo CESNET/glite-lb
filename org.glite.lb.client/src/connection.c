@@ -38,6 +38,7 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index)
 		gss_release_cred(&min_stat, &ctx->connections->connPool[cIndex].gsiCred);
 	free(ctx->connections->connPool[cIndex].peerName);
 	free(ctx->connections->connPool[cIndex].buf);
+	free(ctx->connections->connPool[cIndex].certfile);
 	
 	memset(ctx->connections->connPool + cIndex, 0, sizeof(edg_wll_ConnPool));
 	
@@ -66,9 +67,9 @@ int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
 		if ((ctx->connections->connPool[i].peerName != NULL) &&		// Conn Pool record must exist
                     !strcmp(name, ctx->connections->connPool[i].peerName) &&	// Server names must be equal
 		   (port == ctx->connections->connPool[i].peerPort) && 		// Ports must be equal
-			(!using_certfile ||					// we are aither using the default cert file
-				((ctx->connections->connPool[i].file_ino == statinfo.st_ino) &&	 // or checking which file
-				 (ctx->connections->connPool[i].file_dev = statinfo.st_dev)))) { // this conn uses to auth.
+			(!using_certfile ||					// we are either using the default cert file
+				((ctx->connections->connPool[i].certfile->st_ino == statinfo.st_ino) &&	 // or checking which file
+				 (ctx->connections->connPool[i].certfile->st_dev == statinfo.st_dev)))) { // this conn uses to auth.
 
 
 			/* TryLock (next line) is in fact used only 
@@ -117,6 +118,7 @@ int AddConnection(edg_wll_Context ctx, char *name, int port)
 	ctx->connections->connPool[index].peerName = strdup(name);
 	ctx->connections->connPool[index].peerPort = port;
 	ctx->connections->connPool[index].gsiCred = GSS_C_NO_CREDENTIAL; // initial value
+	ctx->connections->connPool[index].certfile = NULL;
 	ctx->connections->connOpened++;
 
 	return index;
@@ -234,9 +236,12 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 
 	// In case of using a specifically given cert file, stat it and check for the need to reauthenticate
 	if (ctx->p_proxy_filename || ctx->p_cert_filename) {
-		stat(ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename, &statinfo);
-		if (ctx->connections->connPool[index].file_mtime != statinfo.st_mtime)
-			acquire_cred = 1;	// File has been modified. Need to acquire new creds.
+		if (ctx->connections->connPool[index].certfile)	{	// Has the file been stated before?
+			stat(ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename, &statinfo);
+			if (ctx->connections->connPool[index].certfile->st_mtime != statinfo.st_mtime)
+				acquire_cred = 1;	// File has been modified. Need to acquire new creds.
+		}
+		else acquire_cred = 1; 
 	}
 		
 	// Check if credentials exist. If so, check validity
@@ -265,12 +270,12 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
         		#ifdef EDG_WLL_CONNPOOL_DEBUG	
 				printf("Cert file: %s\n", ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename);
 			#endif
-			if (ctx->p_proxy_filename || ctx->p_cert_filename) {
-				stat(ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename, &statinfo);
-				ctx->connections->connPool[index].file_ino = statinfo.st_ino;
-				ctx->connections->connPool[index].file_dev = statinfo.st_dev;
-				ctx->connections->connPool[index].file_mtime = statinfo.st_mtime;
 
+			if (ctx->p_proxy_filename || ctx->p_cert_filename) {
+				if (!ctx->connections->connPool[index].certfile) // Allocate space for certfile stats
+					ctx->connections->connPool[index].certfile = 
+						(struct stat*)calloc(1, sizeof(struct stat));
+				stat(ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename, ctx->connections->connPool[index].certfile);
 			}
 		}
 	}

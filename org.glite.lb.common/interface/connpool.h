@@ -19,7 +19,7 @@ extern "C" {
 
 #define	GLITE_LB_COMMON_CONNPOOL_SIZE	50
 
-glite_lb_padded_struct(_edg_wll_ConnPool,20,
+glite_lb_padded_struct(_edg_wll_ConnPool,15,
 /* address and port where we are connected to */
         char            *peerName;
         unsigned int    peerPort;
@@ -36,9 +36,7 @@ glite_lb_padded_struct(_edg_wll_ConnPool,20,
 
 /* Proxy/Cert file identification */
 
-        ino_t           file_ino;
-        dev_t           file_dev;
-        time_t          file_mtime;
+	struct stat	*certfile;	
 
 );
 typedef struct _edg_wll_ConnPool  edg_wll_ConnPool;
@@ -102,6 +100,7 @@ void edg_wll_poolFree();
 /** Allocate memory for the edg_wll_Connections structure and its properties and return a pointer.
     in case memory has been already allocated, just return a pointer */
 edg_wll_Connections* edg_wll_initConnections();
+
 
 #ifdef __cplusplus
 }
