@@ -85,7 +85,6 @@ CFLAGS:= \
 	-I${classads_prefix}/include \
 	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
-	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
 	$(GRIDSITE_CFLAGS) \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} ${LB_DAG_FLAGS} \
 	${LB_BUF_FLAGS} \
@@ -133,14 +132,6 @@ ifeq (${host_cpu},x86_64)
     archlib:=lib64
 endif
 
-ifneq (${mysql_prefix},/usr)
-	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
-		mysqlib := -L${mysql_prefix}/${archlib}/mysql
-	else
-		mysqlib := -L${mysql_prefix}/${archlib}
-	endif
-endif
-
 ifneq (${expat_prefix},/usr)
 	expatlib := -L${expat_prefix}/lib
 endif
@@ -155,7 +146,6 @@ endif
 VOMS_LIBS:=-L${voms_prefix}/lib -lvomsc${vomsflavour}
 
 #EXT_LIBS:= \
-#	${mysqlib} -lmysqlclient -lz\
 #	${expatlib} -lexpat \
 #	${GRIDSITE_LIBS} \
 #	-lvomsc${vomsflavour} \
@@ -165,7 +155,7 @@ ifneq (${classads_prefix},/usr)
 endif
 
 EXT_LIBS:=  \
-	${mysqlib} -lmysqlclient -lz -lcares\
+	-lz -lcares\
 	${GRIDSITE_LIBS} \
 	${classadslib} \
 	${VOMS_LIBS}
