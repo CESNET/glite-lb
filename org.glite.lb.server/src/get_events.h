@@ -6,9 +6,6 @@
 #include "glite/lb/events.h"
 #include "glite/lb/query_rec.h"
 
-/* Internal functions for getting event sets from the LB database */
-#include "lbs_db.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

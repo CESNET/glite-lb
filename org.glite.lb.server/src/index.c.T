@@ -4,8 +4,8 @@
 #include <assert.h>
 #include <errno.h>
 
+#include "glite/lbu/db.h"
 #include "glite/lb/context-int.h"
-#include "lbs_db.h"
 #include "index.h"
 
 extern int debug;
@@ -20,9 +20,6 @@ extern int debug;
 int edg_wll_QueryJobIndices(edg_wll_Context ctx,edg_wll_QueryRec *** index_out,char ***keys_out)
 {
 	edg_wll_QueryRec	**idx = NULL;
-	edg_wll_Stmt		stmt = NULL;
-
-	int	i,j,ret;
 
 	static const char *built_in_indices[] = {
 		"PRIMARY",
@@ -30,85 +27,60 @@ int edg_wll_QueryJobIndices(edg_wll_Context ctx,edg_wll_QueryRec *** index_out,c
 		NULL
 	};
 
-/* XXX: "show index from" columns. Matches at least MySQL 4.0.11 */
-
-	char	*showcol[12];
-	int	Key_name,Seq_in_index,Column_name,Sub_part;
-
 	char	**keys = NULL;
 	int	*cols = NULL;
-	char	**col_names = NULL;
+	char	***column_names = NULL;
 
+	int	i, j;
 	int	nkeys = 0;
 
-	Key_name = Seq_in_index = Column_name = Sub_part = -1;
 
-	if (edg_wll_ExecStmt(ctx,"show index from states",&stmt)<0) 
-		return edg_wll_Error(ctx,NULL,NULL);
-
-	while ((ret = edg_wll_FetchRow(stmt,showcol))) {
-		if (ret < 0) return edg_wll_Error(ctx,NULL,NULL);
-		assert(ret <= sizeof showcol/sizeof showcol[0]);
-
-		if (!col_names) {
-			col_names = malloc(ret * sizeof col_names[0]);
-			edg_wll_QueryColumns(stmt,col_names);
-			for (i=0; i<ret; i++) 
-				if (!strcasecmp(col_names[i],"Key_name")) Key_name = i;
-				else if (!strcasecmp(col_names[i],"Seq_in_index")) Seq_in_index = i;
-				else if (!strcasecmp(col_names[i],"Column_name")) Column_name = i;
-				else if (!strcasecmp(col_names[i],"Sub_part")) Sub_part = i;
-
-			assert(Key_name >= 0 && Seq_in_index >= 0 && 
-					Column_name >= 0 && Sub_part >= 0);
-
-		}
-
-
-		for (j=0; built_in_indices[j]; j++) {
-			if (strcasecmp(showcol[Key_name],built_in_indices[j]) == 0) {
-				for (i=0; i<ret; i++) free(showcol[i]);
-				goto continue_fetch_index;
-			}
-		}
-		
-		for (i=0; i<nkeys && strcasecmp(showcol[Key_name],keys[i]); i++);
-
-		if (i == nkeys) {
-			keys = realloc(keys,(i+2) * sizeof keys[0]);
-			keys[i] = showcol[Key_name];
-			keys[i+1] = NULL;
-			cols = realloc(cols,(i+1) * sizeof cols[0]); 
-			cols[i] = 0;
-			idx = realloc(idx,(i+2) * sizeof idx[0]);
-			idx[i] = idx[i+1] = NULL;
-			showcol[Key_name] = NULL;
-			nkeys++;
-		}
-
-		j = atoi(showcol[Seq_in_index])-1;
-		if (cols[i] <= j) {
-			cols[i] = j+1;
-			idx[i] = realloc(idx[i],(j+2)*sizeof idx[i][0]);
-			memset(&idx[i][j+1],0,sizeof idx[i][0]);
-		}
-
-		if (edg_wll_ColumnToQueryRec(showcol[Column_name],&idx[i][j])) {
-			char	ed[300];
-			sprintf(ed,"%s(%s): unsupported column",keys[i],showcol[Column_name]);
-			return edg_wll_SetError(ctx,EINVAL,ed);
-		}
-		else idx[i][j].value.i = atoi(showcol[Sub_part]);
-			
-		for (i=0; i<ret; i++) free(showcol[i]);
-continue_fetch_index:
-		// just for escaping from nested cycles		
-		;	/* prevent compiler to complain	*/
+	if (glite_lbu_QueryIndices(ctx->dbctx, "states", &keys, &column_names) != 0) {
+		edg_wll_SetErrorDB(ctx);
+		return -1;
 	}
 
-	edg_wll_FreeStmt(&stmt);
+	for (i = 0; keys[i]; i++) {
+		// skip builtin indices
+		for (j = 0; built_in_indices[j]; j++) {
+			if (strcasecmp(keys[i], built_in_indices[j]) == 0)
+				goto next_index;
+		}
+
+		cols = realloc(cols,(nkeys+1) * sizeof cols[0]); 
+		cols[nkeys] = 0;
+		idx = realloc(idx,(nkeys+2) * sizeof idx[0]);
+		idx[nkeys] = idx[nkeys+1] = NULL;
+
+		for (j = 0; column_names[i][j]; j++) {
+			if (cols[nkeys] <= j) {
+				cols[nkeys] = j+1;
+				idx[nkeys] = realloc(idx[nkeys],(j+2)*sizeof idx[nkeys][0]);
+				memset(&idx[nkeys][j+1],0,sizeof idx[nkeys][0]);
+			}
+		
+			if (edg_wll_ColumnToQueryRec(column_names[i][j],&idx[nkeys][j])) {
+				int   code;
+				char *ed;
+
+				asprintf(&ed, "%s(%s): unsupported column", keys[i], column_names[i][j]);
+				code = edg_wll_SetError(ctx, EINVAL, ed);
+				free(ed);
+				return code;
+			}
+#warning: TODO: needed Sub_part in value???
+//      	               else idx[nkeys][j].value.i = atoi(showcol[Sub_part]);
+		}
+		nkeys++;
+next_index:
+		for (j = 0; column_names[i][j]; j++) free(column_names[i][j]);
+		free(column_names[i]);
+		column_names[i] = NULL;
+		// just for escaping from nested cycles
+		;	/* prevent compiler to complain */
+	}
+
 	free(cols);
-	free(col_names);
 	if (keys_out) *keys_out = keys;
 	else { 
 		for (i=0; i<nkeys; i++) free(keys[i]); 

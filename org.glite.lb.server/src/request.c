@@ -10,7 +10,7 @@
 #include "glite/lb/context-int.h"
 
 #include "store.h"
-#include "lbs_db.h"
+#include "db_supp.h"
 
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))

@@ -17,7 +17,7 @@
 #include "glite/jobid/strmd5.h"
 #include "glite/jobid/cjobid.h"
 #include "glite/lbu/trio.h"
-#include "lbs_db.h"
+#include "db_supp.h"
 
 /* XXX should be defined in gridsite-gacl.h */
 GRSTgaclEntry *GACLparseEntry(xmlNodePtr cur);
@@ -565,7 +565,7 @@ edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
 
 		for ( ; ; )
 		{
-			if ( edg_wll_ExecStmt(ctx, q1, NULL) > 0 )
+			if ( edg_wll_ExecSQL(ctx, q1, NULL) > 0 )
 				goto end;
 
 			if ( edg_wll_Error(ctx,NULL,NULL) != EEXIST )
@@ -578,7 +578,7 @@ edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
 						"update acls set refcnt = refcnt+%d "
 						"where aclid = '%|Ss'",
 						incr, aclid);
-			if ( edg_wll_ExecStmt(ctx, q2, NULL) < 0 )
+			if ( edg_wll_ExecSQL(ctx, q2, NULL) < 0 )
 				continue;
 
 			goto end; 
@@ -591,13 +591,13 @@ edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
 				"where aclid='%|Ss' and refcnt>=%d",
 				-incr, aclid, -incr);
 
-		if ( edg_wll_ExecStmt(ctx, q1, NULL) > 0 )
+		if ( edg_wll_ExecSQL(ctx, q1, NULL) > 0 )
 		{
 			trio_asprintf(&q2,
 						"delete from acls "
 						"where aclid='%|Ss' and refcnt=0",
 						aclid);
-			edg_wll_ExecStmt(ctx, q2, NULL);
+			edg_wll_ExecSQL(ctx, q2, NULL);
 		}
 		else
 		{
@@ -683,7 +683,7 @@ edg_wll_UpdateACL(edg_wll_Context ctx, edg_wlc_JobId job,
 	 trio_asprintf(&stmt,
 	    "update jobs set aclid='%|Ss' where jobid='%|Ss' and ISNULL(aclid)",
 	    new_aclid, md5_jobid);
-      updated = edg_wll_ExecStmt(ctx, stmt, NULL);
+      updated = edg_wll_ExecSQL(ctx, stmt, NULL);
       free(stmt); stmt = NULL;
 
       if (updated > 0)
@@ -714,7 +714,7 @@ int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl)
 	char	*q = NULL;
 	char	*acl_id = NULL;
 	char	*acl_str = NULL;
-	edg_wll_Stmt    stmt = NULL;
+	glite_lbu_Statement    stmt = NULL;
 	int	ret;
 	GRSTgaclAcl	*gacl = NULL;
 	char	*jobstr = edg_wlc_JobIdGetUnique(jobid);
@@ -727,11 +727,11 @@ int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl)
 	trio_asprintf(&q,
 		"select aclid from jobs where jobid = '%|Ss'", jobstr);
 
-	if (edg_wll_ExecStmt(ctx, q, &stmt) < 0 ||
-		edg_wll_FetchRow(stmt, &acl_id) < 0) {
+	if (edg_wll_ExecSQL(ctx, q, &stmt) < 0 ||
+		edg_wll_FetchRow(ctx, stmt, 1, NULL, &acl_id) < 0) {
 		goto end;
 	}
-	edg_wll_FreeStmt(&stmt); stmt = NULL;
+	glite_lbu_FreeStmt(&stmt); stmt = NULL;
 	free(q); q = NULL;
 
 	if (acl_id == NULL || *acl_id == '\0') {
@@ -743,8 +743,8 @@ int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl)
 
 	trio_asprintf(&q,
 		"select value from acls where aclid = '%|Ss'", acl_id);
-	if (edg_wll_ExecStmt(ctx, q, &stmt) < 0 ||
-		edg_wll_FetchRow(stmt, &acl_str) < 0) {
+	if (edg_wll_ExecSQL(ctx, q, &stmt) < 0 ||
+		edg_wll_FetchRow(ctx, stmt, 1, NULL, &acl_str) < 0) {
 		goto end;
 	}
 
@@ -768,7 +768,7 @@ int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl)
 
 end:
 	if (q) free(q);
-	if (stmt) edg_wll_FreeStmt(&stmt);
+	if (stmt) glite_lbu_FreeStmt(&stmt);
 	if (acl_id) free(acl_id);
 	if (acl_str) free(acl_str);
 	/* XXX if (gacl) GRSTgaclAclFree(gacl); */

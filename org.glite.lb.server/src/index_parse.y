@@ -8,7 +8,6 @@
 
 #include "glite/lb/context-int.h"
 
-#include "lbs_db.h"
 #include "index.h"
 
 #define yyerror(x) {}

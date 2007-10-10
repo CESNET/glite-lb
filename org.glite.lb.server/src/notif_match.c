@@ -10,11 +10,11 @@
 #include "glite/lb/context-int.h"
 #include "glite/lbu/trio.h"
 
-#include "lbs_db.h"
 #include "lb_authz.h"
 #include "lb_xml_parse.h"
 #include "query.h"
 #include "il_notification.h"
+#include "db_supp.h"
 
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const char *);
 static int notif_check_acl(edg_wll_Context,const edg_wll_JobStat *,const char *);
@@ -25,7 +25,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 {
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[5];
-	edg_wll_Stmt	jobs = NULL;
+	glite_lbu_Statement	jobs = NULL;
 	int	ret,i;
 	time_t	now = time(NULL);
 
@@ -45,10 +45,10 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 
 	free(ju);
 
-	if (edg_wll_ExecStmt(ctx,jobq,&jobs) < 0) goto err;
+	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
 
-	while ((ret = edg_wll_FetchRow(jobs,jobc)) > 0) {
-		if (now > edg_wll_DBToTime(jobc[2]))
+	while ((ret = edg_wll_FetchRow(ctx,jobs,sizeof(jobc)/sizeof(jobc[0]),NULL,jobc)) > 0) {
+		if (now > glite_lbu_DBToTime(jobc[2]))
 			edg_wll_NotifExpired(ctx,jobc[0]);
 		else if (notif_match_conditions(ctx,stat,jobc[4]) &&
 				notif_check_acl(ctx,stat,jobc[3]))
@@ -96,7 +96,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 err:
 	if ( nid ) edg_wll_NotifIdFree(nid);
 	free(jobq);
-	edg_wll_FreeStmt(&jobs);
+	glite_lbu_FreeStmt(&jobs);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 

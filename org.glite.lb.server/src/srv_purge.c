@@ -22,12 +22,12 @@
 #include "lb_proto.h"
 #include "store.h"
 #include "lock.h"
-#include "lbs_db.h"
 #include "query.h"
 #include "get_events.h"
 #include "purge.h"
 #include "lb_xml_parse.h"
 #include "db_calls.h"
+#include "db_supp.h"
 
 
 #define DUMP_FILE_STORAGE					"/tmp/"
@@ -44,11 +44,6 @@ static const char* const resp_headers[] = {
 
 static int purge_one(edg_wll_Context ctx,const edg_wlc_JobId,int,int);
 static int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job);
-
-/**
- * return job membership in DB table jobs (proxy, server, both)
- */
-static int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job);
 
 
 int edg_wll_CreateTmpFileStorage(edg_wll_Context ctx, char *prefix, char **fname)
@@ -205,6 +200,8 @@ int edg_wll_PurgeServerProxy(edg_wll_Context ctx, edg_wlc_JobId job)
 		case DB_SERVER_JOB:
 			// should not happen, however, no action needed
 			// proxy flag is unset already
+			edg_wll_ResetError(ctx);
+			return 0;
 			break;
 		case DB_PROXY_JOB+DB_SERVER_JOB:
 			return(unset_proxy_flag(ctx, job));
@@ -283,7 +280,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 		}
 	}
 	else {
-		edg_wll_Stmt	s;
+		glite_lbu_Statement	s;
 		char		*job_s;
 		int		res;
 		time_t		timeout[EDG_WLL_NUMBER_OF_STATCODES],
@@ -292,8 +289,8 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 		for (i=0; i<EDG_WLL_NUMBER_OF_STATCODES; i++)
 			timeout[i] = request->timeout[i] < 0 ? ctx->purge_timeout[i] : request->timeout[i];
 
-		if (edg_wll_ExecStmt(ctx,"select dg_jobid from jobs",&s) < 0) goto abort;
-		while ((res = edg_wll_FetchRow(s,&job_s)) > 0) {
+		if (edg_wll_ExecSQL(ctx,"select dg_jobid from jobs",&s) < 0) goto abort;
+		while ((res = edg_wll_FetchRow(ctx,s,1,NULL,&job_s)) > 0) {
 			if (edg_wlc_JobIdParse(job_s,&job)) {
 				fprintf(stderr,"%s: parse error (internal inconsistency !)\n",job_s);
 				parse = 1;
@@ -341,7 +338,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 				free(job_s);
 			}
 		}
-		edg_wll_FreeStmt(&s);
+		glite_lbu_FreeStmt(&s);
 abort:
                 // just for escaping from nested cycles
 	        ;       /* prevent compiler to complain */
@@ -436,7 +433,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 {
 	char	*dbjob;
 	char	*stmt = NULL;
-	edg_wll_Stmt	q;
+	glite_lbu_Statement	q;
 	int		ret,dumped = 0;
 
 	edg_wll_ResetError(ctx);
@@ -448,7 +445,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 	if ( purge )
 	{
 		trio_asprintf(&stmt,"delete from jobs where jobid = '%|Ss'",dbjob);
-		ret = edg_wll_ExecStmt(ctx,stmt,NULL);
+		ret = edg_wll_ExecSQL(ctx,stmt,NULL);
 		if (ret <= 0) {
 			unlock_and_check(ctx,job);
 			if (ret == 0) {
@@ -460,7 +457,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 		free(stmt); stmt = NULL;
 
 		trio_asprintf(&stmt,"delete from states where jobid = '%|Ss'",dbjob);
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 			unlock_and_check(ctx,job);
 			goto clean;
 		}
@@ -468,7 +465,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 
 /* Why on earth ?
 		trio_asprintf(&stmt,"delete from states where jobid = '%|Ss'",dbjob);
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 			unlock_and_check(ctx,job);
 			goto clean;
 		}
@@ -482,7 +479,7 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 	if ( purge )
 	{
 		trio_asprintf(&stmt,"delete from status_tags where jobid = '%|Ss'",dbjob);
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto unlock;
+		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto unlock;
 		free(stmt); stmt = NULL;
 	}
 
@@ -499,11 +496,11 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 			"order by event", dbjob);
 
 /* check for events repeatedly -- new one may have arrived in the meantime */
-	while ((ret = edg_wll_ExecStmt(ctx,stmt,&q)) > 0) {
+	while ((ret = edg_wll_ExecSQL(ctx,stmt,&q)) > 0) {
 		char	*res[9];
 
 		dumped = 1;
-		while ((ret = edg_wll_FetchRow(q,res)) > 0) {
+		while ((ret = edg_wll_FetchRow(ctx,q,sizofa(res),NULL,res)) > 0) {
 			int	event;
 
 			event = atoi(res[0]);
@@ -584,11 +581,11 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 				}
 			}
 		}
-		edg_wll_FreeStmt(&q);
+		glite_lbu_FreeStmt(&q);
 		if (ret < 0 || !purge) break;
 	}
 
-	edg_wll_FreeStmt(&q);
+	glite_lbu_FreeStmt(&q);
 
 unlock:
 	if (ctx->strict_locking) unlock_and_check(ctx,job);
@@ -611,6 +608,6 @@ int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job)
 
 	trio_asprintf(&stmt,"update jobs set proxy='0' where jobid='%|Ss'", dbjob);
 
-	return(edg_wll_ExecStmt(ctx,stmt,NULL));
+	return(edg_wll_ExecSQL(ctx,stmt,NULL));
 }
 

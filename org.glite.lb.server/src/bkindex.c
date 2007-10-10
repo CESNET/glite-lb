@@ -10,10 +10,11 @@
 #include <errno.h>
 
 #include "glite/jobid/strmd5.h"
+#include "glite/lbu/trio.h"
 #include "glite/lb/context-int.h"
 #include "index.h"
-#include "lbs_db.h"
 #include "jobstat.h"
+#include "db_supp.h"
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -83,8 +84,14 @@ int main(int argc,char **argv)
 	}
 
 	edg_wll_InitContext(&ctx);
+	glite_lbu_InitDBContext(&ctx->dbctx);
+	if (!dbstring) dbstring = DEFAULTCS;
 	if (edg_wll_Open(ctx,dbstring)) do_exit(ctx,EX_UNAVAILABLE);
-	if (edg_wll_DBCheckVersion(ctx,dbstring)) do_exit(ctx,EX_SOFTWARE);
+	if ((ctx->dbcaps = glite_lbu_DBQueryCaps(ctx->dbctx)) == -1) do_exit(ctx, EX_SOFTWARE);
+	if (!(ctx->dbcaps & GLITE_LBU_DB_CAP_INDEX)) {
+		edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_CALL, "index capability not available");
+		do_exit(ctx, EX_SOFTWARE);
+	}
 	if (edg_wll_QueryJobIndices(ctx,&old_indices,&index_names)) do_exit(ctx,EX_SOFTWARE);
 
 	if (dump) {
@@ -97,7 +104,7 @@ int main(int argc,char **argv)
 		for (i=0; index_names && index_names[i]; i++) {
 			asprintf(&stmt,"alter table states drop index `%s`",index_names[i]);
 			if (verbose) putchar('.');
-			if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
 			free(stmt);
 		}
 		if (verbose) puts(" done");
@@ -106,7 +113,7 @@ int main(int argc,char **argv)
 			char *cname = edg_wll_QueryRecToColumn(old_indices[i]);
 			asprintf(&stmt,"alter table states drop column `%s`",cname);
 			if (verbose) putchar('.');
-			if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
 			free(stmt);
 			free(cname);
 		}
@@ -177,7 +184,7 @@ int main(int argc,char **argv)
 		}
 		if (really) {
 			asprintf(&stmt,"alter table states drop index `%s`",index_names[drop_indices[i]]);
-			if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
 			free(stmt);
 		}
 		if (verbose) puts(really ? "done" : "");
@@ -191,7 +198,7 @@ int main(int argc,char **argv)
 			if (verbose) printf("\t%s\n",cname); 
 			if (really) {
 				asprintf(&stmt,"alter table states drop column `%s`",cname);
-				if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+				if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
 				free(stmt);
 			}
 			free(cname);
@@ -209,7 +216,7 @@ int main(int argc,char **argv)
 			if (really) {
 				char	*ctype = db_col_type(new_columns[i]);
 				asprintf(&stmt,"alter table states add `%s` %s",cname,ctype);
-				if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+				if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
 				free(stmt);
 			}
 			memcpy(&added_icols[nadd_icols].qrec, new_columns[i], sizeof(edg_wll_QueryRec));
@@ -242,11 +249,13 @@ int main(int argc,char **argv)
 		if (really) {
 			asprintf(&stmt,"create index `%s` on states(%s)",n,l);
 			free(n); free(l);
-			if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
+			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
 			free(stmt);
 		}
 		if (verbose) puts(really ? "done" : "");
 	}
+
+	edg_wll_Close(ctx);
 
 	return 0;
 }
@@ -295,6 +304,8 @@ static void do_exit(edg_wll_Context ctx,int code)
 
 	edg_wll_Error(ctx,&et,&ed);
 	fprintf(stderr,"edg-bkindex: %s (%s)\n",et,ed);
+	edg_wll_Close(ctx);
+	edg_wll_FreeContext(ctx);
 	exit(code);
 }
 
@@ -318,7 +329,7 @@ static void usage(const char *me)
 
 edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_cols) {
 
-	edg_wll_Stmt sh, sh2;
+	glite_lbu_Statement sh;
 	int njobs, ret = -1;
 	intJobStat *stat;
 	edg_wlc_JobId jobid;
@@ -330,12 +341,12 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 	edg_wll_ResetError(ctx);
 	if (!job_index_cols) return 0;
 
-	if ((njobs = edg_wll_ExecStmt(ctx, "select s.jobid,s.int_status,s.seq,s.version,j.dg_jobid"
+	if ((njobs = edg_wll_ExecSQL(ctx, "select s.jobid,s.int_status,s.seq,s.version,j.dg_jobid"
 				       " from states s, jobs j where s.jobid=j.jobid",&sh)) < 0) {
-		edg_wll_FreeStmt(&sh);
+		glite_lbu_FreeStmt(&sh);
 		return edg_wll_Error(ctx, NULL, NULL);
 	}
-	while ((ret=edg_wll_FetchRow(sh,res)) >0) {
+	while ((ret=edg_wll_FetchRow(ctx,sh,sizeof(res)/sizeof(res[0]),NULL,res)) >0) {
 		if (strcmp(res[3], INTSTAT_VERSION)) {
 			stat = NULL;
 			if (!edg_wlc_JobIdParse(res[4], &jobid)) {
@@ -352,15 +363,14 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 			if (rest == NULL) stat = NULL;
 		}
 		if (stat == NULL) {
-			edg_wll_FreeStmt(&sh);
+			glite_lbu_FreeStmt(&sh);
 			return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE,
 				"cannot decode int_status from states DB table");
 		}
 
 		edg_wll_IColumnsSQLPart(ctx, job_index_cols, stat, 0, NULL, &icvalues);
 		trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
-		ret = edg_wll_ExecStmt(ctx, stmt, &sh2);
-		edg_wll_FreeStmt(&sh2);
+		ret = edg_wll_ExecSQL(ctx, stmt, NULL);
 
 		for (i = 0; i < 5; i++) free(res[i]);
 		destroy_intJobStat(stat); free(stat);
@@ -369,7 +379,7 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 		if (ret < 0) return edg_wll_Error(ctx, NULL, NULL);
 		
 	}
-	edg_wll_FreeStmt(&sh);
+	glite_lbu_FreeStmt(&sh);
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 

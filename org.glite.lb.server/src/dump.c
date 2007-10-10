@@ -15,11 +15,11 @@
 #include "glite/lb/events_parse.h"
 #include "glite/lb/ulm_parse.h"
 
-#include "lbs_db.h"
 #include "query.h"
 #include "get_events.h"
 #include "server_state.h"
 #include "purge.h"
+#include "db_supp.h"
 
 static char *time_to_string(time_t t, char **ptr);
 static int handle_specials(edg_wll_Context,time_t *);
@@ -31,7 +31,7 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 	char	*from_s, *to_s, *stmt, *time_s, *ptr;
 	char	*tmpfname;
 	time_t	start,end;
-	edg_wll_Stmt	q = NULL;
+	glite_lbu_Statement	q = NULL;
 	char		*res[10];
 	int	event;
 	edg_wll_Event	e;
@@ -54,8 +54,8 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 		return edg_wll_Error(ctx,NULL,NULL);
 	}
 
-	from_s = strdup(edg_wll_TimeToDB(from));
-	to_s = strdup(edg_wll_TimeToDB(to));
+	glite_lbu_TimeToDB(from, &from_s);
+	glite_lbu_TimeToDB(to, &to_s);
 
 	trio_asprintf(&stmt,
 			"select event,dg_jobid,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived "
@@ -68,9 +68,9 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 			ctx->srvName,ctx->srvPort,
 			from_s,to_s);
 
-	if (edg_wll_ExecStmt(ctx,stmt,&q) < 0) goto clean;
+	if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto clean;
 
-	while ((ret = edg_wll_FetchRow(q,res)) > 0) {
+	while ((ret = edg_wll_FetchRow(ctx,q,sizeof(res)/sizeof(res[0]),NULL,res)) > 0) {
 		assert(ret == sizofa(res));
 		event = atoi(res[0]); free(res[0]); res[0] = NULL;
 
@@ -145,7 +145,7 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 
 clean:
 	edg_wll_FreeEvent(&e);
-	edg_wll_FreeStmt(&q);
+	glite_lbu_FreeStmt(&q);
 
 	free(stmt);
 	free(from_s);
@@ -174,7 +174,7 @@ static int handle_specials(edg_wll_Context ctx,time_t *t)
 				case ENOENT: *t = 0; 
 					     edg_wll_ResetError(ctx);
 					     break;
-				case 0: *t = edg_wll_DBToTime(time_s); 
+				case 0: *t = glite_lbu_DBToTime(time_s); 
 					assert(*t >= 0);
 					break;
 				default: break;
@@ -189,7 +189,7 @@ static int handle_specials(edg_wll_Context ctx,time_t *t)
 static char *time_to_string(time_t t, char **ptr) {
 	char *s;
 
-	s = edg_wll_TimeToDB(t);
+	glite_lbu_TimeToDB(t, &s);
 	s[strlen(s) - 1] = '\0';
 	*ptr = s;
 

@@ -94,11 +94,13 @@ CFLAGS:= \
 ifdef LB_PROF
 	SRVBONES_LIB:= ${stagedir}/lib/libglite_lbu_server_bones.la
 	LB_COMMON_LIB:=${stagedir}/lib/libglite_lb_common_${nothrflavour}.la
+	LB_UTILS_DB_LIB:=${stagedir}/lib/libglite_lbu_db.la
 	CFLAGS:=${CFLAGS} -pg -g
 	LDFLAGS:=${LDFLAGS} -pg
 else
 	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lbu_server_bones
 	LB_COMMON_LIB:=-lglite_lb_common_${nothrflavour}
+	LB_UTILS_DB_LIB:=-lglite_lbu_db
 	LDFLAGS:= -L${stagedir}/lib
 endif
 
@@ -172,15 +174,15 @@ COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_secur
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_lbu_trio \
 	${classadslib} -lstdc++ ${expatlib} -lexpat\
 
-PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo lbs_db_supp.lo process_event_pbs.lo process_event_condor.lo
+PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo process_event_pbs.lo process_event_condor.lo
 
 BKSERVER_BASE_OBJS:= \
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o process_event_pbs.o process_event_condor.o \
-	seqcode.o write2rgma.o lbs_db.o lbs_db_supp.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	seqcode.o write2rgma.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o stats.o db_calls.o
+	notification.o il_notification.o notif_match.o stats.o db_calls.o db_supp.o
 
 dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
 GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}
@@ -194,6 +196,7 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
 		${LB_COMMON_LIB} \
+		${LB_UTILS_DB_LIB} \
 		${GSOAP_LIB} \
 		${EXT_LIBS}
 else
@@ -202,16 +205,17 @@ else
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
 		${LB_COMMON_LIB} \
+		${LB_UTILS_DB_LIB} \
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS}
 endif
 
-INDEX_OBJS:= index.o index_parse.o jobstat_supp.o lbs_db.o lbs_db_supp.o openserver.o \
+INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
 	jobstat.o process_event.o process_event_pbs.o process_event_condor.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o stats.o\
-	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o db_calls.o
+	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.lo
 
-INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} 
+INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
@@ -225,22 +229,22 @@ WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
 #                 ${EXT_LIBS}
 # 
 
-HDRS=index.h lb_authz.h lbs_db.h store.h
+HDRS=index.h lb_authz.h store.h
 
 MAN_GZ:=glite-lb-mon-db.1.gz
 MAN = $(MAN_GZ:.gz=)
 
 LIB_OBJS_BK:= \
 	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o process_event_pbs.o process_event_condor.o \
-	seqcode.o lbs_db.o lbs_db_supp.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	seqcode.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o write2rgma.o \
-	db_calls.o
+	db_calls.o db_supp.o
 
 MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
-MONDB_LIBS:=${COMMON_LIBS} ${EXT_LIBS} 
+MONDB_LIBS:=${COMMON_LIBS} ${LB_UTILS_DB_LIB} ${EXT_LIBS} 
 
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
@@ -308,7 +312,7 @@ test.query: test_query_events
 	./test_query_events
 
 #query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
-query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;'`
+query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/bkserverd\.o//;'`
 
 test_query_events: test_query_events.o
 	${LINKXX} -o $@ test_query_events.o ${query_events_objs} \

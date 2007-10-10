@@ -21,10 +21,10 @@
 
 #include "store.h"
 #include "purge.h"
-#include "lbs_db.h"
 #include "query.h"
 #include "get_events.h"
 #include "server_state.h"
+#include "db_supp.h"
 
 static int read_line(char **buff, size_t *maxsize, int fd);
 

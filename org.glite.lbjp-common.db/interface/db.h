@@ -333,6 +333,12 @@ int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...);
 
 
 /**
+ * Returns the last automatically generated id, if any.
+ */
+long int glite_lbu_Lastid(glite_lbu_Statement stmt);
+
+
+/**
  * @} database group
  */
 

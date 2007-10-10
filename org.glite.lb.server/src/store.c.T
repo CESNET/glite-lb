@@ -26,16 +26,16 @@
 
 #include "store.h"
 #include "get_events.h"
-#include "lbs_db.h"
 #include "lock.h"
 #include "lb_authz.h"
 #include "jobstat.h"
 #include "db_calls.h"
+#include "db_supp.h"
 
 static int store_user(edg_wll_Context,const char *,const char *); 
 static int store_job(edg_wll_Context,const edg_wlc_JobId,const char *, int, int);
 #ifdef LB_BUF
-static int store_job_block(edg_wll_Context, const edg_wlc_JobId, const char *, edg_wll_bufInsert *, int, int);
+static int store_job_block(edg_wll_Context, const edg_wlc_JobId, const char *, glite_lbu_bufInsert *, int, int);
 #endif
 static int store_job_grey(edg_wll_Context,const edg_wlc_JobId,time_t);
 static int store_flesh(edg_wll_Context,edg_wll_Event *,char *,int);
@@ -56,7 +56,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	edg_wll_ErrorCode	err = 0;
 	char		*userid = NULL,*jobid,*stmt;
 	char		*select_max,*ssrc;
-	edg_wll_Stmt	sh = NULL;
+	glite_lbu_Statement	sh = NULL;
 	int		next = 0xDEAD;
 	int		lbproxy_notreg = 0;
 	char		*now_s = NULL;
@@ -64,9 +64,9 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	ssrc = jobid = stmt = select_max = NULL;
 
 	if ( ctx->event_load )
-		now_s = strdup(edg_wll_TimeToDB(e->any.arrived.tv_sec));
+		glite_lbu_TimeToDB(e->any.arrived.tv_sec, &now_s);
 	else
-		now_s = strdup(edg_wll_TimeToDB(time(NULL)));
+		glite_lbu_TimeToDB(time(NULL), &now_s);
 
 	edg_wll_ResetError(ctx);
 	switch (err = check_auth(ctx,e)) {
@@ -99,8 +99,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 	trio_asprintf(&stmt,"select userid from jobs where jobid='%|Ss'", jobid);
 	
-	if (edg_wll_ExecStmt(ctx,stmt,&sh) < 0 || edg_wll_FetchRow(sh,&userid) < 0) goto clean;
-	if (sh) edg_wll_FreeStmt(&sh);
+	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 || edg_wll_FetchRow(ctx,sh,1,NULL,&userid) < 0) goto clean;
+	if (sh) glite_lbu_FreeStmt(&sh);
 
 
 /* obtain next event sequence number */
@@ -112,15 +112,15 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 /* try to insert (someone else may be doing the same) */
 	while (1) {
-		char	*max;
+		char	*max, *stamp;
 
-		if (edg_wll_ExecStmt(ctx,select_max,&sh) < 0 ||
-		    edg_wll_FetchRow(sh,&max) < 0)
+		if (edg_wll_ExecSQL(ctx,select_max,&sh) < 0 ||
+		    edg_wll_FetchRow(ctx,sh,1,NULL,&max) < 0)
 		{
 			err = edg_wll_Error(ctx,NULL,NULL);
 			goto clean;
 		}
-		edg_wll_FreeStmt(&sh); 
+		glite_lbu_FreeStmt(&sh); 
 		
 		next = max && *max ? atoi(max)+1 : 0;
 		
@@ -128,20 +128,21 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	 * 1) when using transactions:
 	 *   Store the whole event right now.
 	 *
-	 * 2) when not using transaction:
+	 * 2) when not using transactions:
 	 *   Store an UNDEF event first in order to prevent race condition
 	 *   with readers and update event code later.
 	 */
+		glite_lbu_TimeToDB(e->any.timestamp.tv_sec, &stamp);
 		trio_asprintf(&stmt,
 			"insert into events(jobid,event,code,prog,host,time_stamp,usec,arrived,level,userid) "
 			"values ('%|Ss',%d,%d,'%|Ss','%|Ss',%s,%d,%s,%d,'%|Ss')",
 			jobid,next,
-			ctx->use_transactions ? (int) e->any.type : EDG_WLL_EVENT_UNDEF,
+			ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS ? (int) e->any.type : EDG_WLL_EVENT_UNDEF,
 			ssrc,e->any.host,
-			edg_wll_TimeToDB(e->any.timestamp.tv_sec),e->any.timestamp.tv_usec,
+			stamp,e->any.timestamp.tv_usec,
 			now_s, e->any.level,userid);
 
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 			if ((err = edg_wll_Error(ctx,NULL,NULL)) != EEXIST)
 				goto clean;
 		} else break; /* successful insert */
@@ -161,14 +162,14 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		edg_wll_SetError(ctx,oerr,desc);
 		free(desc);
 	} else
-	if (!ctx->use_transactions) {
+	if (!(ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS)) {
 	/* emulate commit, i.e. swith to a real event type to make
 	 * the record valid */
 		trio_asprintf(&stmt,
 			"update events set code=%d "
 			"where jobid='%|Ss' and event=%d",
 			(int) e->any.type,jobid,next);
-		switch (edg_wll_ExecStmt(ctx,stmt,NULL)) {
+		switch (edg_wll_ExecSQL(ctx,stmt,NULL)) {
 			case 0: if (ctx->strict_locking)
 					err = edg_wll_SetError(ctx,ENOENT,"event disappeared on store while strict locking");
 			/* purge in progres: drop the garbage, ignore errors */
@@ -186,7 +187,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 					trio_asprintf(&stmt,
 						"select 'x' from jobs where jobid='%|Ss'",
 						jobid);
-					switch (edg_wll_ExecStmt(ctx,stmt,NULL)) {
+					switch (edg_wll_ExecSQL(ctx,stmt,NULL)) {
 						case 1: break;
 						case 0: /* purge in progres */
 							edg_wll_delete_event(ctx,jobid,next);
@@ -205,7 +206,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 				"more event records, what is that?");
 				break;
 		}
-	} /* if !ctx->use_transactions */
+	} /* if !transactions */
 
 	if (err == 0 && 
 		e->any.type == EDG_WLL_EVENT_REGJOB &&
@@ -228,7 +229,7 @@ clean:
 	free(stmt);
 	free(ssrc);
 	free(select_max);
-	if (sh) edg_wll_FreeStmt(&sh);
+	if (sh) glite_lbu_FreeStmt(&sh);
 	if (!err && seq) *seq = next;
 	return err;
 }
@@ -240,7 +241,7 @@ static int store_user(edg_wll_Context ctx,const char *userid,const char *subj)
 	trio_asprintf(&stmt,"insert into users(userid,cert_subj) "
 		"values ('%|Ss','%|Ss')",userid,subj);
 
-	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST)
 			edg_wll_ResetError(ctx);
 	}
@@ -283,7 +284,7 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 	trio_asprintf(&stmt,"insert into jobs(jobid,dg_jobid,userid,proxy,server) "
 		"values ('%|Ss','%|Ss','%|Ss', '%|Sd', '%|Sd')",jobid,jobstr,userid,proxy,server);
 
-	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST) 
 			edg_wll_ResetError(ctx);
 	}
@@ -291,7 +292,7 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 
 	if (ctx->greyjobs) {
 		trio_asprintf(&stmt,"delete from grey_jobs where jobid = '%|Ss'",jobid);
-		edg_wll_ExecStmt(ctx,stmt,NULL); /* XXX: error propagates */
+		edg_wll_ExecSQL(ctx,stmt,NULL); /* XXX: error propagates */
 		free(stmt);
 	}
 
@@ -301,7 +302,7 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 }
 
 #ifdef LB_BUF
-static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const char *userid, edg_wll_bufInsert *bi, int proxy, int server)
+static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const char *userid, glite_lbu_bufInsert *bi, int proxy, int server)
 {
 	char *jobstr = edg_wlc_JobIdUnparse(job);
 	char *jobid = edg_wlc_JobIdGetUnique(job);
@@ -330,17 +331,19 @@ static int store_job_grey(edg_wll_Context ctx,const edg_wlc_JobId job,time_t eti
 {
 	char *jobstr = edg_wlc_JobIdUnparse(job);
 	char *jobid = edg_wlc_JobIdGetUnique(job);
-	char *stmt;
+	char *stmt, *s_etime;
 
 	if (jobid == NULL || jobstr == NULL)
 		return edg_wll_SetError(ctx,EINVAL,"store_job_grey()");
 
 	edg_wll_ResetError(ctx);
+	glite_lbu_TimeToDB(etime, &s_etime);
 	trio_asprintf(&stmt,"insert into grey_jobs(jobid,dg_jobid,time_stamp) "
 			"values ('%|Ss','%|Ss',%s)",
-			jobid,jobstr,edg_wll_TimeToDB(etime));
+			jobid,jobstr,s_etime);
+	free(s_etime);
 
-	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST)
 			edg_wll_ResetError(ctx);
 	}
@@ -356,7 +359,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 {	
 	char 		*unique = edg_wlc_JobIdGetUnique(event->any.jobId);
 	char		*q = NULL, *owner = NULL, *userid = NULL;
-	edg_wll_Stmt    stmt = NULL;
+	glite_lbu_Statement    stmt = NULL;
 	int		nar;
 
 
@@ -372,7 +375,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 					trio_asprintf(&q,"update jobs set proxy=1 where jobid='%|Ss'",
 						unique);
 
-					nar = edg_wll_ExecStmt(ctx, q, NULL);
+					nar = edg_wll_ExecSQL(ctx, q, NULL);
 
 					if (nar == 0) {
 						/* job isn't registered yet */
@@ -410,7 +413,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 					trio_asprintf(&q,"update jobs set jobid='%|Ss' where jobid='%|Ss'",
 						unique, unique);
 					/* does the job exists ? */
-					if (edg_wll_ExecStmt(ctx,q,NULL) < 0) {
+					if (edg_wll_ExecSQL(ctx,q,NULL) < 0) {
 						edg_wll_SetError(ctx, ENOENT, "job not registered");
 						goto err;
 					}
@@ -433,7 +436,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 			trio_asprintf(&q,"update jobs set jobid='%|Ss' where jobid='%|Ss'",
                         	unique, unique);
 			/* does the job exists ? now we require registration on proxy too */
-			if (edg_wll_ExecStmt(ctx,q,NULL) < 0) {
+			if (edg_wll_ExecSQL(ctx,q,NULL) < 0) {
 				edg_wll_SetError(ctx, ENOENT, "job not registered");
 				 goto err;
 			}
@@ -444,7 +447,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 		if (event->any.type == EDG_WLL_EVENT_REGJOB) {
 			trio_asprintf(&q,"select cert_subj from jobs,users where jobs.jobid='%|Ss'"
 					" AND jobs.userid=users.userid",unique);
-			if ( (nar = edg_wll_ExecStmt(ctx,q,&stmt)) < 0 || edg_wll_FetchRow(stmt,&owner) < 0 ) 
+			if ( (nar = edg_wll_ExecSQL(ctx,q,&stmt)) < 0 || edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0 ) 
 				goto err;
 			
 			if (nar) {
@@ -457,7 +460,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 					trio_asprintf(&q,"update jobs set server=1, userid='%|Ss' where jobid='%|Ss'",
 						userid, unique);
 					
-					edg_wll_ExecStmt(ctx, q, NULL);
+					edg_wll_ExecSQL(ctx, q, NULL);
 				}
 				else { } /* re-registration, no action needed */
 			}
@@ -476,7 +479,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 	}
 	
 err:
-	if (stmt) edg_wll_FreeStmt(&stmt);
+	if (stmt) glite_lbu_FreeStmt(&stmt);
 	free(unique);
 	free(userid);
 	free(q);
@@ -503,7 +506,7 @@ static int store_seq(edg_wll_Context ctx,edg_wll_Event *e,int no)
 			"values ('%|Ss',%d,'SEQCODE','%|Ss')",
 			jobid,no,e->any.seqcode);
 
-	ret = edg_wll_ExecStmt(ctx,stmt,NULL);
+	ret = edg_wll_ExecSQL(ctx,stmt,NULL);
 	free(stmt);
 	free(jobid);
 
@@ -569,7 +572,7 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
 			strlen(f[i].val) <= SHORT_LEN ? "short_fields" : "long_fields",
 			jobid,no,f[i].key,f[i].val);
 
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
+		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
 		free(stmt);
 	}
 	for (i=0; i<sizeof(f)/sizeof(f[0]); i++) free(f[i].val);
@@ -579,7 +582,7 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
 		trio_asprintf(&stmt,"insert into short_fields(jobid,event,name,value) "
 			"values ('%|Ss',%d,'SRC_INSTANCE','%|Ss')",
 			jobid,no,e->any.src_instance);
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
+		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
 		free(stmt);
 	}
 
@@ -658,15 +661,15 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 {
 	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
 	char	*q = NULL,*owner = NULL;
-	edg_wll_Stmt	stmt = NULL;
+	glite_lbu_Statement	stmt = NULL;
 	char	*user;
 
 	edg_wll_ResetError(ctx);
 
 	trio_asprintf(&q,"select userid from jobs where jobid='%|Ss'",jobid);
 
-	if (edg_wll_ExecStmt(ctx,q,&stmt) < 0
-		|| edg_wll_FetchRow(stmt,&owner) < 0
+	if (edg_wll_ExecSQL(ctx,q,&stmt) < 0
+		|| edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0
 	) goto clean;
 
 	if (!owner) {
@@ -697,7 +700,7 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 
 
 clean:
-	if (stmt) edg_wll_FreeStmt(&stmt);
+	if (stmt) glite_lbu_FreeStmt(&stmt);
 	free(q);
 	free(owner);
 	return edg_wll_Error(ctx,NULL,NULL);
@@ -850,11 +853,11 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 	char			*jobid_md5, *jobid_md5_old;
 	size_t			jobid_len;
 #ifdef LB_BUF
-	edg_wll_bufInsert	bi_j;
-	edg_wll_bufInsert	*bi_jobs = &bi_j;
+	glite_lbu_bufInsert	bi_j;
+	glite_lbu_bufInsert	*bi_jobs = &bi_j;
        	char			*states_cols;
 #endif
-	edg_wll_bufInsert	bi_s, *bi_states = &bi_s;
+	glite_lbu_bufInsert	bi_s, *bi_states = &bi_s;
 	char			*icnames, *values;
 	int			server, proxy, membership = 0;
 
@@ -971,19 +974,19 @@ int edg_wll_delete_event(edg_wll_Context ctx,const char *jobid,int event)
 	trio_asprintf(&stmt,
 		"delete from short_fields where jobid='%|Ss' and event=%d",
 		jobid,event);
-	edg_wll_ExecStmt(ctx,stmt,NULL);
+	edg_wll_ExecSQL(ctx,stmt,NULL);
 	free(stmt);
 
 	trio_asprintf(&stmt,
 		"delete from long_fields where jobid='%|Ss' and event=%d",
 		jobid,event);
-	edg_wll_ExecStmt(ctx,stmt,NULL);
+	edg_wll_ExecSQL(ctx,stmt,NULL);
 	free(stmt);
 
 	trio_asprintf(&stmt,
 		"delete from events where jobid='%|Ss' and event=%d",
 		jobid,event);
-	edg_wll_ExecStmt(ctx,stmt,NULL);
+	edg_wll_ExecSQL(ctx,stmt,NULL);
 	free (stmt);
 
 	return edg_wll_Error(ctx,NULL,NULL);

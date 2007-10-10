@@ -18,10 +18,10 @@
 #include "store.h"
 #include "lock.h"
 #include "index.h"
-#include "lbs_db.h"
 #include "jobstat.h"
 #include "lb_authz.h"
 #include "stats.h"
+#include "db_supp.h"
 
 #define DAG_ENABLE	1
 
@@ -91,7 +91,7 @@ int edg_wll_JobStatus(
 	char *stat_str, *s_out;
 	intJobStat *js;
 	char *out[1];
-	edg_wll_Stmt sh;
+	glite_lbu_Statement sh;
 	int num_sub, num_f, i, ii;
 
 	edg_wll_ResetError(ctx);
@@ -195,15 +195,15 @@ int edg_wll_JobStatus(
 						" AND version='%|Ss'",
 					md5_jobid, INTSTAT_VERSION);
 			if (stmt != NULL) {
-				num_sub = edg_wll_ExecStmt(ctx, stmt, &sh);
+				num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
 				if (num_sub >=0 ) {
 					i = 0;
 					stat->children_states = calloc(num_sub+1, sizeof(edg_wll_JobStat));
 					if (stat->children_states == NULL) {
-						edg_wll_FreeStmt(&sh);
+						glite_lbu_FreeStmt(&sh);
 						goto dag_enomem;
 					}
-					while ((num_f = edg_wll_FetchRow(sh, &stat_str)) == 1
+					while ((num_f = edg_wll_FetchRow(ctx, sh, 1, NULL, &stat_str)) == 1
 						&& i < num_sub) {
 						js = dec_intJobStat(stat_str, &s_out);
 						if (s_out != NULL && js != NULL) {
@@ -214,7 +214,7 @@ int edg_wll_JobStatus(
 						}
 						free(stat_str);
 					}
-					edg_wll_FreeStmt(&sh);
+					glite_lbu_FreeStmt(&sh);
 				}
 				free(stmt);
 			} else goto dag_enomem;
@@ -246,15 +246,15 @@ int edg_wll_JobStatus(
 							md5_jobid, INTSTAT_VERSION);
 				out[1] = NULL;
 				if (stmt != NULL) {
-					num_sub = edg_wll_ExecStmt(ctx, stmt, &sh);
+					num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
 					if (num_sub >=0 ) {
-						while ((num_f = edg_wll_FetchRow(sh, out)) == 1 ) {
+						while ((num_f = edg_wll_FetchRow(ctx, sh, sizeof(out)/sizeof(out[0]), NULL, out)) == 1 ) {
 							num_f = atoi(out[0]);
 							if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
 								stat->children_hist[num_f+1]++;
 							free(out[0]); 
 						}
-						edg_wll_FreeStmt(&sh);
+						glite_lbu_FreeStmt(&sh);
 					}
 					free(stmt);
 				} else goto dag_enomem;
@@ -285,13 +285,13 @@ int edg_wll_JobStatus(
 					"WHERE s.parent_job='%|Ss' AND s.version='%|Ss' AND s.jobid=j.jobid",
 				md5_jobid, INTSTAT_VERSION);
 			if (stmt != NULL) {
-				num_sub = edg_wll_ExecStmt(ctx, stmt, &sh);
+				num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
 				if (num_sub >=0 ) {
-					while (edg_wll_FetchRow(sh, out) == 1 ) {
+					while (edg_wll_FetchRow(ctx, sh, sizeof(out)/sizeof(out[0]), NULL, out) == 1 ) {
 						add_stringlist(&stat->children, out[0]);
 						free(out[0]); 
 					}
-					edg_wll_FreeStmt(&sh);
+					glite_lbu_FreeStmt(&sh);
 				}
 				free(stmt);
 			} else goto dag_enomem;
@@ -442,7 +442,7 @@ static void warn(const char* format, ...)
 static char *job_owner(edg_wll_Context ctx,char *md5_jobid)
 {
 	char	*stmt = NULL,*out = NULL;
-	edg_wll_Stmt	sh;
+	glite_lbu_Statement	sh;
 	int	f = -1;
 	
 	edg_wll_ResetError(ctx);
@@ -454,15 +454,15 @@ static char *job_owner(edg_wll_Context ctx,char *md5_jobid)
 		edg_wll_SetError(ctx,ENOMEM, NULL);
 		return NULL;
 	}
-	if (edg_wll_ExecStmt(ctx,stmt,&sh) >= 0) {
-		f=edg_wll_FetchRow(sh,&out);
+	if (edg_wll_ExecSQL(ctx,stmt,&sh) >= 0) {
+		f=edg_wll_FetchRow(ctx,sh,1,NULL,&out);
 		if (f == 0) {
 			if (out) free(out);
 			out = NULL;
 			edg_wll_SetError(ctx,ENOENT,md5_jobid);
 		}
 	}
-	edg_wll_FreeStmt(&sh);
+	glite_lbu_FreeStmt(&sh);
 	free(stmt);
 
 	return out;
@@ -550,7 +550,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 					"(jobid,seq,name,value) values "
 					"('%|Ss',%d,'%|Ss','%|Ss')",
 					jobid_md5, seq, (*tagp).tag, (*tagp).value);
-			if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) {
+			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 				if (EEXIST == edg_wll_Error(ctx, NULL, NULL)) {
 				/* XXX: this should not happen */
 					edg_wll_ResetError(ctx);
@@ -580,7 +580,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 		jobid_md5);
 	free(icvalues);
 
-	if ((dbret = edg_wll_ExecStmt(ctx,stmt,NULL)) < 0) goto cleanup;
+	if ((dbret = edg_wll_ExecSQL(ctx,stmt,NULL)) < 0) goto cleanup;
 
 	if (dbret == 0) {
 		edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, stat, 1, &icnames, &icvalues);
@@ -594,19 +594,19 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 			INTSTAT_VERSION, parent_md5, icvalues);
 		free(icnames); free(icvalues);
 
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto cleanup;
+		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
 	}
 
 	if (update) {
 		trio_asprintf(&stmt, "delete from states "
 			"where jobid ='%|Ss' and ( seq<%d or version !='%|Ss')",
 			jobid_md5, seq, INTSTAT_VERSION);
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto cleanup;
+		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
 	}
 	if (update) {
 		trio_asprintf(&stmt, "delete from status_tags "
 			"where jobid ='%|Ss' and seq<%d", jobid_md5, seq);
-		if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto cleanup;
+		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
 	}
 
 cleanup:
@@ -621,7 +621,7 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
         edg_wlc_JobId jobid,
         char *icnames, 
 	char *values,
-	edg_wll_bufInsert *bi)
+	glite_lbu_bufInsert *bi)
 {
 	char *stmt = NULL;
 
@@ -642,7 +642,7 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 		"values (%s)",
 		icnames, values);
 
-	if (edg_wll_ExecStmt(ctx,stmt,NULL) < 0) goto cleanup;
+	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
 #endif
 
 cleanup:
@@ -663,7 +663,7 @@ edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
 {
 	char *jobid_md5;
 	char *stmt;
-	edg_wll_Stmt sh;
+	glite_lbu_Statement sh;
 	char *res, *res_rest;
 	int nstates;
 
@@ -687,12 +687,12 @@ edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
 		return edg_wll_SetError(ctx, ENOMEM, NULL);
 	}
 
-	if ((nstates = edg_wll_ExecStmt(ctx,stmt,&sh)) < 0) goto cleanup;
+	if ((nstates = edg_wll_ExecSQL(ctx,stmt,&sh)) < 0) goto cleanup;
 	if (nstates == 0) {
 		edg_wll_SetError(ctx,ENOENT,"no state in DB");
 		goto cleanup;
 	}
-	if (edg_wll_FetchRow(sh,&res) < 0) goto cleanup;
+	if (edg_wll_FetchRow(ctx,sh,1,NULL,&res) < 0) goto cleanup;
 
 	*stat = dec_intJobStat(res, &res_rest);
 	if (res_rest == NULL) {
@@ -703,7 +703,7 @@ edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
 	free(res);
 cleanup:
 	free(jobid_md5);
-	free(stmt); edg_wll_FreeStmt(&sh);
+	free(stmt); glite_lbu_FreeStmt(&sh);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
@@ -1069,7 +1069,7 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
 {
 
         char    *stmt = NULL,*out = NULL, *rest = NULL;
-        edg_wll_Stmt    sh;
+        glite_lbu_Statement    sh;
         int     f = -1, i;
 	char *jobid_md5;
 	intJobStat *ijs = NULL;
@@ -1085,8 +1085,8 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
                 return edg_wll_SetError(ctx,ENOMEM, NULL);
         }
 
-        if (edg_wll_ExecStmt(ctx,stmt,&sh) >= 0) {
-                f=edg_wll_FetchRow(sh,&out);
+        if (edg_wll_ExecSQL(ctx,stmt,&sh) >= 0) {
+                f=edg_wll_FetchRow(ctx,sh,1,NULL,&out);
                 if (f == 0) {
                         if (out) free(out);
                         out = NULL;
@@ -1099,7 +1099,7 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
 			for (i=0;i<=EDG_WLL_NUMBER_OF_STATCODES;i++) hist[i] = ijs->pub.children_hist[i];
 		}
         }
-        edg_wll_FreeStmt(&sh);
+        glite_lbu_FreeStmt(&sh);
         free(stmt);
 	if (rest==NULL) free(rest);
 	if (ijs==NULL) free(rest);
@@ -1136,7 +1136,7 @@ edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobI
 
 //printf ("\n\n\n Would like to run SQL statament: %s\n\n\n\n", stmt);
 
-        if ((dbret = edg_wll_ExecStmt(ctx,stmt,NULL)) < 0) goto cleanup;
+        if ((dbret = edg_wll_ExecSQL(ctx,stmt,NULL)) < 0) goto cleanup;
 
 	assert(dbret);	/* update should come through OK as the record exists */
 

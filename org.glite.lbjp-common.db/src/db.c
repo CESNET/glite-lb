@@ -110,8 +110,7 @@ static void db_close(MYSQL *mysql);
 static int transaction_test(glite_lbu_DBContext ctx);
 static int FetchRowSimple(glite_lbu_DBContext ctx, MYSQL_RES *result, unsigned long *lengths, char **results);
 static int FetchRowPrepared(glite_lbu_DBContext ctx, glite_lbu_Statement stmt, unsigned int n, unsigned long *lengths, char **results);
-void set_time(MYSQL_TIME *mtime, const time_t time);
-time_t get_time(const MYSQL_TIME *mtime);
+static void set_time(MYSQL_TIME *mtime, const time_t time);
 
 
 /* ---- common ---- */
@@ -152,6 +151,7 @@ int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char *cs) {
 void glite_lbu_DBClose(glite_lbu_DBContext ctx) {
 	db_close(ctx->mysql);
 	ctx->mysql = NULL;
+	CLR_ERR(ctx);
 }
 
 
@@ -187,6 +187,7 @@ void glite_lbu_DBSetCaps(glite_lbu_DBContext ctx, int caps) {
 
 
 int glite_lbu_Transaction(glite_lbu_DBContext ctx) {
+	CLR_ERR(ctx);
 	if (USE_TRANS(ctx)) {
 		if (glite_lbu_ExecSQL(ctx, "SET AUTOCOMMIT=0", NULL) < 0) goto err;
 		if (glite_lbu_ExecSQL(ctx, "BEGIN", NULL) < 0) goto err;
@@ -197,6 +198,7 @@ err:
 
 
 int glite_lbu_Commit(glite_lbu_DBContext ctx) {
+	CLR_ERR(ctx);
 	if (USE_TRANS(ctx)) {
 		if (glite_lbu_ExecSQL(ctx, "COMMIT", NULL) < 0) goto err;
 		if (glite_lbu_ExecSQL(ctx, "SET AUTOCOMMIT=1", NULL) < 0) goto err;
@@ -207,6 +209,7 @@ err:
 
 
 int glite_lbu_Rollback(glite_lbu_DBContext ctx) {
+	CLR_ERR(ctx);
 	if (USE_TRANS(ctx)) { 
 		if (glite_lbu_ExecSQL(ctx, "ROLLBACK", NULL) < 0) goto err;
 		if (glite_lbu_ExecSQL(ctx, "SET AUTOCOMMIT=1", NULL) < 0) goto err;
@@ -239,7 +242,7 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 	int	i,j,ret;
 
 /* XXX: "show index from" columns. Matches at least MySQL 4.0.11 */
-	char	*showcol[12];
+	char	*sql, *showcol[12];
 	int	Key_name,Seq_in_index,Column_name,Sub_part;
 
 	char	**keys = NULL;
@@ -252,8 +255,12 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 
 	Key_name = Seq_in_index = Column_name = Sub_part = -1;
 
-	if (glite_lbu_ExecSQL(ctx,"show index from states",&stmt)<0) 
+	asprintf(&sql, "show index from %s", table);
+	if (glite_lbu_ExecSQL(ctx,sql,&stmt)<0) {
+		free(sql);
 		return STATUS(ctx);
+	}
+	free(sql);
 
 	while ((ret = glite_lbu_FetchRow(stmt,sizeof(showcol)/sizeof(showcol[0]),NULL,showcol)) > 0) {
 		assert(ret <= (int)(sizeof showcol/sizeof showcol[0]));
@@ -413,6 +420,7 @@ int glite_lbu_QueryColumns(glite_lbu_Statement stmt, char **cols)
 	int	i = 0;
 	MYSQL_FIELD 	*f;
 
+	CLR_ERR(stmt->ctx);
 	if (!stmt->result) return ERR(stmt->ctx, EINVAL, "QueryColumns implemented only for simple API");
 	while ((f = mysql_fetch_field(stmt->result))) cols[i++] = f->name;
 	return i == 0;
@@ -681,6 +689,16 @@ int glite_lbu_bufferedInsertClose(glite_lbu_bufInsert bi)
 }
 
 
+long int glite_lbu_Lastid(glite_lbu_Statement stmt) {
+	my_ulonglong i;
+
+	CLR_ERR(stmt->ctx);
+	i = mysql_stmt_insert_id(stmt->stmt);
+	assert(i < ((unsigned long int)-1) >> 1);
+	return (long int)i;
+}
+
+
 /*
  * helping compatibility function: clear error from the context
  */
@@ -726,7 +744,7 @@ static int myerrstmt(glite_lbu_Statement stmt, const char *source, int line) {
 
 
 /*
- * Ehelping function: error handle
+ * helping function: error handle
  *
  * \return -1 failed
  * \return  0 retry
@@ -746,8 +764,10 @@ static int myisokstmt(glite_lbu_Statement stmt, const char *source, int line, in
 			if (*retry > 0) {
 				(*retry)--;
 				return 0;
-			} else
+			} else {
+				myerrstmt(stmt, source, line);
 				return -1;
+			}
 			break;
 		default:
 			myerrstmt(stmt, source, line);
@@ -814,7 +834,7 @@ static int db_connect(glite_lbu_DBContext ctx, const char *cs, MYSQL **mysql) {
 	free(buf);
 
 	ctx->cs = cs;
-	return 0;
+	return CLR_ERR(ctx);
 }
 
 
@@ -983,7 +1003,7 @@ quit:
 }
 
 
-void set_time(MYSQL_TIME *mtime, const time_t time) {
+static void set_time(MYSQL_TIME *mtime, const time_t time) {
 	struct tm tm;
 
 	gmtime_r(&time, &tm);
@@ -994,20 +1014,4 @@ void set_time(MYSQL_TIME *mtime, const time_t time) {
 	mtime->hour = tm.tm_hour;
 	mtime->minute = tm.tm_min;
 	mtime->second = tm.tm_sec;
-}
-
-
-time_t get_time(const MYSQL_TIME *mtime) {
-	struct tm tm;
-
-	memset(&tm, 0, sizeof(tm));
-	setenv("TZ","UTC",1); tzset();
-	tm.tm_year = mtime->year - 1900;
-	tm.tm_mon = mtime->month - 1;
-	tm.tm_mday = mtime->day;
-	tm.tm_hour = mtime->hour;
-	tm.tm_min = mtime->minute;
-	tm.tm_sec = mtime->second;
-
-	return mktime(&tm);
 }

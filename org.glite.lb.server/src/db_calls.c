@@ -8,8 +8,8 @@
 
 #include "glite/lb/context-int.h"
 
-#include "lbs_db.h"
 #include "db_calls.h"
+# include "db_supp.h"
 
 /** Returns bitmask of job membership in common server/proxy database 
  */
@@ -17,7 +17,7 @@ int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job)
 {
         char            *dbjob;
         char            *stmt = NULL;
-        edg_wll_Stmt    q;
+        glite_lbu_Statement q;
         int             ret, result = -1;
         char            *res[2] = { NULL, NULL};
 
@@ -26,7 +26,7 @@ int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job)
         dbjob = edg_wlc_JobIdGetUnique(job);
 
         trio_asprintf(&stmt,"select proxy,server from jobs where jobid = '%|Ss'",dbjob);
-        ret = edg_wll_ExecStmt(ctx,stmt,&q);
+        ret = edg_wll_ExecSQL(ctx,stmt,&q);
         if (ret <= 0) {
                 if (ret == 0) {
                         fprintf(stderr,"%s: no such job\n",dbjob);
@@ -36,7 +36,7 @@ int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job)
         }
         free(stmt); stmt = NULL;
 
-        if ((ret = edg_wll_FetchRow(q,res)) > 0) {
+        if ((ret = edg_wll_FetchRow(ctx,q,sizeof(res)/sizeof(res[0]),NULL,res)) > 0) {
 		result = 0;
                 if (strcmp(res[0],"0")) result += DB_PROXY_JOB;
                 if (strcmp(res[1],"0")) result += DB_SERVER_JOB;
@@ -48,7 +48,7 @@ int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job)
                         edg_wll_SetError(ctx,ENOENT,dbjob);
                 }
         }
-        edg_wll_FreeStmt(&q);
+        glite_lbu_FreeStmt(&q);
 
 clean:
 	free(res[0]); free(res[1]);

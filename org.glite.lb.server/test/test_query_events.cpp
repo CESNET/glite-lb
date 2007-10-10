@@ -5,10 +5,10 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
+#include <glite/lbu/db.h>
 #include <glite/lb/query_rec.h>
 #include <glite/lb/context-int.h>
 
-#include "lbs_db.h"
 #include "get_events.h"
 
 using namespace std;
@@ -30,13 +30,17 @@ private:
 
 public:
 	void oneJob();
-	int ExecStmt(const char *, edg_wll_Stmt *);
+	int ExecStmt(const char *, glite_lbu_Statement *);
 
 	void setUp() {
 		edg_wll_InitContext(&ctx);
-		ctx->mysql = (void *) this; /* XXX */
+		ctx->dbctx = (glite_lbu_DBContext) this; /* XXX */
+		ctx->dbcaps = 0;
 	}
 
+	void tearDown() {
+		edg_wll_FreeContext(ctx);
+	}
 };
 
 void QueryEventsTest::oneJob()
@@ -44,6 +48,7 @@ void QueryEventsTest::oneJob()
 	edg_wll_QueryRec	job[2];
 	const edg_wll_QueryRec	*jobs[2] = { job,NULL} ;
 	edg_wll_Event		*events;
+	int			i;
 
 	job[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
 	job[0].op = EDG_WLL_QUERY_OP_EQUAL ;
@@ -76,9 +81,12 @@ void QueryEventsTest::oneJob()
 	qry_file.close();
 
 	CPPUNIT_ASSERT(!edg_wll_QueryEventsServer(ctx,1,jobs,NULL,&events));
+	edg_wlc_JobIdFree(job[0].value.j);
+	for (i = 0; events[i].type; i++) edg_wll_FreeEvent(&events[i]);
+	free(events);
 }
 
-int QueryEventsTest::ExecStmt(const char *qry, edg_wll_Stmt *stmt_out)
+int QueryEventsTest::ExecStmt(const char *qry, glite_lbu_Statement *stmt_out)
 {
 	vector<pair<string,vector<string> > >::iterator	stmt = queries.begin();
 
@@ -95,21 +103,27 @@ int QueryEventsTest::ExecStmt(const char *qry, edg_wll_Stmt *stmt_out)
 	}
 	vector<string>::iterator	*rows = new vector<string>::iterator(stmt->second.begin());
 
-	*stmt_out = (edg_wll_Stmt) rows;
+	*stmt_out = (glite_lbu_Statement) rows;
+//cerr << (*rows)->c_str() << endl;
+//cerr << stmt->second.size()-1 << endl;
 	return stmt->second.size()-1;
 }
 
 extern "C" {
+int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) { return 0; }
+void glite_lbu_FreeDBContext(glite_lbu_DBContext ctx) { }
+int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char*str) { return 0; }
+void glite_lbu_DBClose(glite_lbu_DBContext ctx) { }
 
-int edg_wll_ExecStmt(edg_wll_Context ctx,char *qry,edg_wll_Stmt *stmt)
+int glite_lbu_ExecSQL(glite_lbu_DBContext ctx,const char *qry,glite_lbu_Statement *stmt)
 {
-	cout << "edg_wll_ExecStmt: " << qry << endl;
+	cout << "glite_lbu_ExecSQL: " << qry << endl;
 
-	class QueryEventsTest *tst = (class QueryEventsTest *)(ctx->mysql);
+	class QueryEventsTest *tst = (class QueryEventsTest *)ctx;
 	return tst->ExecStmt(qry, stmt);
 }
 
-int edg_wll_FetchRow(edg_wll_Stmt stmt, char **cols)
+int glite_lbu_FetchRow(glite_lbu_Statement stmt, unsigned int n, unsigned long int *lengths, char **cols)
 {
 	vector<string>::iterator	*rows = (vector<string>::iterator *) stmt;
 	char	*row,*p,i=0;
@@ -119,28 +133,28 @@ int edg_wll_FetchRow(edg_wll_Stmt stmt, char **cols)
 	(*rows)++;
 	for (p = strtok(row,"\t"); p; p = strtok(NULL,"\t"))
 		cols[i++] = strdup(p);
+	free(row);
 
 	return i;
 }
 
-void edg_wll_FreeStmt(edg_wll_Stmt *) {}
+void glite_lbu_FreeStmt(glite_lbu_Statement *) {}
 
 int debug;
 
-int edg_wll_QueryColumns(edg_wll_Stmt stmt, char**cols) { return 0; }
-char *edg_wll_TimeToDB(long t) { return NULL; }
+int glite_lbu_QueryColumns(glite_lbu_Statement stmt, char**cols) { return 0; }
+void glite_lbu_TimeToDB(long t, char **s) { *s = NULL; }
+time_t glite_lbu_DBToTime(const char *c) { return (time_t)-1; }
 
-time_t edg_wll_DBToTime(char *c) { return (time_t)-1; }
-edg_wll_ErrorCode edg_wll_DBConnect(edg_wll_Context ctx, const char*str) { 
-  return (edg_wll_ErrorCode)0;
-}
+int glite_lbu_Transaction(glite_lbu_DBContext ctx) { return 0; }
+int glite_lbu_Commit(glite_lbu_DBContext ctx) { return 0; }
+int glite_lbu_Rollback(glite_lbu_DBContext ctx) { return 0; }
 
-int edg_wll_Transaction(edg_wll_Context ctx) { return 0; }
-int edg_wll_Commit(edg_wll_Context ctx) { return 0; }
-int edg_wll_Rollback(edg_wll_Context ctx) { return 0; }
-
-edg_wll_ErrorCode edg_wll_bufferedInsert(edg_wll_bufInsert *bi, char *row)  { return (edg_wll_ErrorCode) 0; };
-	
+int glite_lbu_bufferedInsertInit(glite_lbu_DBContext ctx, glite_lbu_bufInsert *bi, const char *table_name, long size_limit, long record_limit, const char * columns) { return 0; }
+int glite_lbu_bufferedInsert(glite_lbu_bufInsert bi, const char *row)  { return 0; }
+int glite_lbu_bufferedInsertClose(glite_lbu_bufInsert bi) { return 0; }
+int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***key_names, char ****column_names) { return 0; }
+int glite_lbu_DBError(glite_lbu_DBContext ctx, char **s1, char **s2) { return 0; }
 }
 
 CPPUNIT_TEST_SUITE_REGISTRATION(QueryEventsTest);

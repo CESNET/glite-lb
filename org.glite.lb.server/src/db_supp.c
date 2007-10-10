@@ -1,0 +1,79 @@
+#include <stdlib.h>
+#include <errno.h>
+
+#include "glite/lbu/db.h"
+#include "glite/lb/context-int.h"
+
+int edg_wll_SetErrorDB(edg_wll_Context ctx) {
+	int code;
+	char *ed;
+
+	if (ctx->dbctx) {
+		code = glite_lbu_DBError(ctx->dbctx, NULL, &ed);
+		edg_wll_SetError(ctx, code, ed);
+		free(ed);
+	} else {
+		code = EINVAL;
+		edg_wll_SetError(ctx, EINVAL, "DB context isn't created");
+	}
+
+	return code;
+}
+
+
+int edg_wll_ExecSQL(edg_wll_Context ctx, const char *cmd, glite_lbu_Statement *stmt) {
+	int retval;
+
+	if ((retval = glite_lbu_ExecSQL(ctx->dbctx, cmd, stmt)) < 0) edg_wll_SetErrorDB(ctx);
+	return retval;
+}
+
+
+int edg_wll_FetchRow(edg_wll_Context ctx, glite_lbu_Statement stmt, unsigned int n, unsigned long *lengths, char **results) {
+	int retval;
+
+	if ((retval = glite_lbu_FetchRow(stmt, n, lengths, results)) < 0) edg_wll_SetErrorDB(ctx);
+	return retval;
+}
+
+int edg_wll_bufferedInsertInit(edg_wll_Context ctx, glite_lbu_bufInsert *bi, const char *table_name, long size_limit, long record_limit, const char *columns) {
+	int retval;
+
+	if ((retval = glite_lbu_bufferedInsertInit(ctx->dbctx, bi, table_name, size_limit, record_limit, columns)) != 0) edg_wll_SetErrorDB(ctx);
+	return retval;
+}
+
+int edg_wll_bufferedInsert(edg_wll_Context ctx, glite_lbu_bufInsert bi, const char *row) {
+	int retval;
+
+	if ((retval = glite_lbu_bufferedInsert(bi, row)) != 0) edg_wll_SetErrorDB(ctx);
+	return retval;
+}
+
+int edg_wll_bufferedInsertClose(edg_wll_Context ctx, glite_lbu_bufInsert bi) {
+	int retval;
+
+	if ((retval = glite_lbu_bufferedInsertClose(bi)) != 0) edg_wll_SetErrorDB(ctx);
+	return retval;
+}
+
+int edg_wll_Transaction(edg_wll_Context ctx) {
+	int retval;
+
+	if ((retval = glite_lbu_Transaction(ctx->dbctx)) != 0) edg_wll_SetErrorDB(ctx);
+	return retval;
+}
+
+int edg_wll_Commit(edg_wll_Context ctx) {
+	int retval;
+
+	if ((retval = glite_lbu_Commit(ctx->dbctx)) != 0) edg_wll_SetErrorDB(ctx);
+	return retval;
+}
+
+int edg_wll_Rollback(edg_wll_Context ctx) {
+	int retval;
+
+	if ((retval = glite_lbu_Rollback(ctx->dbctx)) != 0) edg_wll_SetErrorDB(ctx);
+	return retval;
+}
