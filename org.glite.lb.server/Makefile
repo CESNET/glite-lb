@@ -92,12 +92,12 @@ CFLAGS:= \
 	-I${globus_prefix}/include/${nothrflavour} #gridsite needs this
 
 ifdef LB_PROF
-	SRVBONES_LIB:= ${stagedir}/lib/libglite_lb_server_bones.la
+	SRVBONES_LIB:= ${stagedir}/lib/libglite_lbu_server_bones.la
 	LB_COMMON_LIB:=${stagedir}/lib/libglite_lb_common_${nothrflavour}.la
 	CFLAGS:=${CFLAGS} -pg -g
 	LDFLAGS:=${LDFLAGS} -pg
 else
-	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lb_server_bones
+	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lbu_server_bones
 	LB_COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 	LDFLAGS:= -L${stagedir}/lib
 endif

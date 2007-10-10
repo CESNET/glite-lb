@@ -37,7 +37,7 @@
 
 #include "glite/jobid/cjobid.h"
 #include "glite/security/glite_gss.h"
-#include "glite/lb/srvbones.h"
+#include "glite/lbu/srvbones.h"
 #include "glite/lb/context.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"

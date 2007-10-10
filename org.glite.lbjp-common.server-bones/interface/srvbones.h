@@ -85,6 +85,13 @@ extern int glite_srvbones_run(
 	size_t				table_sz,
 	int				dbg);
 
+/**
+ * helper common function to daemonize server
+ *
+ * \returns 1 OK, 0 error writtten to stderr
+ */
+int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile, const char *custom_logfile);
+
 #ifdef __cplusplus
 }
 #endif
