@@ -2,15 +2,32 @@
 #define _MESSAGE_H
 
 #include "Properties.H"
+#include "MessageStore.H"
 
 #include <string>
 
-class Message {
+class Message: public MessageStore::Storable {
 public:
-	class ID {
+	
+	/** class that holds message state
+	 *
+	 */
+	class State : public MessageStore::Storable {
 	public:
-	private:
+
+		/** Get size needed for storage (from Storable).
+		 */
+		virtual int getStorageSize() const;
+
+		/** Save State (from Storable)
+		 */
+		virtual int save(void* data, int len) const;
+
+		/** Load State (from Storable)
+		 */
+		virtual int load(void* data, int len);
 	};
+
 
 	Message();
 
@@ -28,15 +45,18 @@ public:
 
 	std::string getProperty(const std::string &name, std::string &val) const
 		{ return m_properties.getProperty(name); }
-
+	
 	void setProperty(const std::string &name, std::string &val) 
 		{ m_properties.setProperty(name, val); }
-
+	
 	Properties& getProperties() 
 		{ return m_properties; }
+	
+	void setProperties(Properties &)
+		{}
 
 private:
-	ID                      m_id;
+	MessageStore::ID        m_id;
 	unsigned int            m_length;
 	void *                  m_data;
 	Properties              m_properties;

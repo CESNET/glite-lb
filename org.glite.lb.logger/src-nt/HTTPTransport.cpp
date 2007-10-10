@@ -156,9 +156,8 @@ HTTPTransport::receive(Connection *conn, Message* &msg)
 	else {
 		// we have a new message
 		// XXX - or we have an error, must handle it
-		std::cout << request << std::endl << headers << std::endl;
-		std::cout.write(body, content_length);
-		std::cout.flush();
+		msg = new Message(body, content_length);
+		msg->setProperties(
 	}
 	return len;
 }
