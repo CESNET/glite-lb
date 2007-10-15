@@ -279,11 +279,12 @@ event_queue_send(struct event_queue *eq)
  	    
 	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
-		    il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
 		    if (events_sent>0) 
 			eq->timeout = 1;
-		    else
+		    else {
 			eq->timeout = TIMEOUT;
+		        il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
+                    }
 		    return(0);
 	    }
 #ifdef LB_PERF

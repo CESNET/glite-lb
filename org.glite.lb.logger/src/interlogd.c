@@ -281,7 +281,7 @@ main (int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  if (signal(SIGPIPE, handle_signal) == SIG_ERR
+  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR
       || signal(SIGABRT, handle_signal) == SIG_ERR
       || signal(SIGTERM, handle_signal) == SIG_ERR
       || signal(SIGINT, handle_signal) == SIG_ERR) {
