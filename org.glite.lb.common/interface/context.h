@@ -183,7 +183,6 @@ typedef enum _edg_wll_ErrorCode {
         EDG_WLL_ERROR_JOBID_FORMAT, /**< Malformed jobid */
 	EDG_WLL_ERROR_DB_CALL, /**< Failure of underlying database engine.
 		See errDesc returned by edg_wll_ErrorCode(). */
-	EDG_WLL_ERROR_URL_FORMAT, /**< Malformed URL */
 	EDG_WLL_ERROR_MD5_CLASH, /**< MD5 hash same for different strings. Very unlikely :-). */
 	EDG_WLL_ERROR_GSS, /**< Generic GSSAPI error. See errDesc returned by edg_wll_Error(). */
 	EDG_WLL_ERROR_DNS, /**< DNS resolver error. See errDesc returned by edg_wll_Error(). */
@@ -193,7 +192,6 @@ typedef enum _edg_wll_ErrorCode {
 	EDG_WLL_IL_SYS,         /**< Interlogger internal error. */
 	EDG_WLL_IL_EVENTS_WAITING, /**< Interlogger still has events pending delivery. */
 	EDG_WLL_ERROR_COMPARE_EVENTS, /**< Two compared events differ. */
-	EDG_WLL_ERROR_SQL_PARSE, /**< Error in SQL parsing. */
 } edg_wll_ErrorCode;
 
 /**

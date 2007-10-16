@@ -19,6 +19,8 @@
 #include "glite/lb/context.h"
 #include "glite/lb/notifid.h"
 
+#include "glite/lb/padstruct.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,11 +46,22 @@ typedef enum _edg_wll_EventCode {
 /** invalid code, e.g. uninitialized variable */
         EDG_WLL_EVENT_UNDEF = 0,
 @@@{
+my $flesh = 'gLite';	#XXX
+my $fleshno = 0;
+my $eventno = $fleshno;
 for my $e (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		$event->getTypes) {
 	my $u = uc $e;
 	my $c = getTypeComment $event $e;
-	gen "\tEDG_WLL_EVENT_$u,\t/**< $c */\n";
+
+	if ($flesh ne $event->{flesh}->{$e}) {
+		$flesh = $event->{flesh}->{$e};
+		gen "/* new flesh $flesh */\n";
+		$fleshno += 100;
+		$eventno = $fleshno;
+	}
+	$eventno++;
+	gen "\tEDG_WLL_EVENT_$u = $eventno,\t/**< $c */\n";
 }
 @@@}
         EDG_WLL_EVENT__LAST,	/**< last currently supported event code */
@@ -78,9 +91,10 @@ extern char *edg_wll_EventToString(edg_wll_EventCode event);
  * Predefined ULM key types
  */
 typedef enum _edg_wll_KeyNameCode {
-	UNDEFINED,		/**< undefined */
-	EDG_WLL_EVNT,		/**< event type */
+	UNDEFINED = 0,		/**< undefined */
+	EDG_WLL_EVNT = 1,		/**< event type */
 @@@{
+my $keyno = 2;
 selectType $event '_common_';
 for ($event->getFieldsOrdered) {
 	my $f = selectField $event $_;
@@ -88,10 +102,11 @@ for ($event->getFieldsOrdered) {
 	my $fnu = uc $fn;
 	my $c = $f->{comment};
 	if (hasAlias $f 'ULM') {
-		gen "\tULM\_$fnu,\t\t/**< $c */\n";
+		gen "\tULM\_$fnu = $keyno,\t\t/**< $c */\n";
 	} else {
-		gen "\tEDG_WLL\_COMMON\_$fnu,\t\t/**< $c */\n";
+		gen "\tEDG_WLL\_COMMON\_$fnu = $keyno,\t\t/**< $c */\n";
 	}
+	$keyno++;
 }
 for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		$event->getTypes) {
@@ -101,7 +116,8 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		my $f = selectField $event $_;
 		my $fnu = uc $f->{name};
 		my $c = $f->{comment};
-		gen "\tEDG_WLL\_$tu\_$fnu,\t/**< $c */\n";
+		gen "\tEDG_WLL\_$tu\_$fnu = $keyno,\t/**< $c */\n";
+		$keyno++;
 	}
 }
 @@@}
@@ -301,7 +317,7 @@ _EDG_WLL_EVENT_COMMON
  * \union edg_wll_Event
  * \brief All event types union
  */
-typedef union _edg_wll_Event {
+glite_lb_padded_union(_edg_wll_Event,30,
         edg_wll_EventCode           type; /* it is probably never used */
         edg_wll_AnyEvent            any;
 @@@{
@@ -314,7 +330,8 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	gen $indent."edg_wll_${t}Event\t${tl};\n";
 }
 @@@}
-} edg_wll_Event;
+)
+typedef union _edg_wll_Event edg_wll_Event;
 
 
 /**

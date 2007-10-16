@@ -92,9 +92,30 @@ typedef struct _edg_wll_TagValue {
  * Description of the job status.
  * Returned by the edg_wll_JobStatus() function
  */
+
+@@@{
+	my	$padno = 0;
+	my	$padstruct = 'edg_wll_JobStatCode state;';	# XXX
+
+	for my $n (getAllFieldsOrdered $status) {
+		selectField $status $n;
+		my $f = getField $status;
+		my $type = getType $f;
+		my $name = getName $f;
+
+		$padstruct .= "$type $name; ";
+		if ($f->{pad}) {
+			gen "struct _pad_JobStatus_${padno}_dont_use { $padstruct };\n";
+			$padno++;
+			$padstruct = '';
+		}
+	}
+@@@}
+
 typedef struct _edg_wll_JobStat {
 	edg_wll_JobStatCode	state;	        /**< status code */
 @@@{
+	$padno = 0;
 	for my $n (getAllFieldsOrdered $status) {
 		selectField $status $n;
 		my $f = getField $status;
@@ -106,6 +127,11 @@ typedef struct _edg_wll_JobStat {
 		gen qq{
 !	$type	$name;	/**< $comment */
 };
+		if ($f->{pad}) {
+			my $pad = $f->{pad};
+			gen "\n	char	_pad_${padno}[sizeof(void *) * $pad - sizeof(struct _pad_JobStatus_${padno}_dont_use)];\n\n";
+			$padno++;
+		}
 	}
 @@@}
 

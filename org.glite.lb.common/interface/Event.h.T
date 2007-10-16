@@ -48,10 +48,10 @@ public:
 	for my $e ($event->getTypesOrdered) {
 		my $u = uc $e;
 		my $c = getTypeComment $event $e;
-		gen "\t\t$u,\t/**< $c */\n";
+		gen "\t\t$u = EDG_WLL_EVENT_$u,\t/**< $c */\n";
 	}
 @@@}
-		TYPE_MAX /**< Limit for checking type validity. */
+		TYPE_MAX = EDG_WLL_EVENT__LAST /**< Limit for checking type validity. */
 	};
 
 	/** Event attribute symbolic identifier. 
@@ -62,6 +62,14 @@ public:
 	 */
 	enum Attr {
 @@@{
+
+	require "../src/EventAttrNames.pl";
+	my %EventAttrNums;
+	my $evno = 0;
+	for (@main::EventAttrNames) {
+		$EventAttrNums{$_} = $evno++;
+	}
+
 	for (sort {$a cmp $b} getAllFields $event) {
 		my $u = $_;
 # $u =~ s/([a-z])([A-Z])/$1_$2/g;
@@ -76,7 +84,9 @@ public:
 		}
 		$c .= "\t */\n";
 
-		gen "$c\t\t$u,\n";
+		gen defined($EventAttrNums{$u}) ?
+			"$c\t\t$u = $EventAttrNums{$u},\n" :
+			"#error \"$u not defined in EventAttrNames\"\n";
 	}
 @@@}
 		ATTR_MAX /**< Limit for checking attribute code
@@ -111,7 +121,7 @@ public:
 };
 				for (@{$ff->{codes}}) {
 					gen qq{
-!		$ut$_->{name},	/**< $_->{comment} */
+!		$ut$_->{name} = EDG_WLL_$ut$_->{name},	/**< $_->{comment} */
 };
 				}
 				gen qq{
@@ -268,6 +278,7 @@ public:
 	static const std::string getEventName(Type type);
 
 private:
+	std::string	my_name;
 	static void	destroyFlesh(void *);
 	CountRef<Event>	*flesh;
 };
