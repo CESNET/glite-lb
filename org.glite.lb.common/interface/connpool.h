@@ -1,6 +1,7 @@
 #ifndef GLITE_LB_CONNPOOL_H
 #define GLITE_LB_CONNPOOL_H
 
+#include "glite/lb/padstruct.h"
 #include "glite/security/glite_gss.h"
 #include "glite/lb/context.h"
 #include "glite/lb/lb_plain_io.h"
@@ -18,8 +19,7 @@ extern "C" {
 
 #define	GLITE_LB_COMMON_CONNPOOL_SIZE	50
 
-
-typedef struct _edg_wll_ConnPool {
+glite_lb_padded_struct(_edg_wll_ConnPool,15,
 /* address and port where we are connected to */
         char            *peerName;
         unsigned int    peerPort;
@@ -28,11 +28,18 @@ typedef struct _edg_wll_ConnPool {
         edg_wll_GssCred   gsiCred;
         edg_wll_GssConnection   gss;
         char            *buf;
-        int             bufUse,bufSize;
+        int             bufUse;
+	int		bufSize;
 
 /* timestamp of usage of this entry in ctx.connPool */
         struct timeval  lastUsed;
-} edg_wll_ConnPool;
+
+/* Proxy/Cert file identification */
+
+	struct stat	*certfile;	
+
+);
+typedef struct _edg_wll_ConnPool  edg_wll_ConnPool;
 #endif
 
 
@@ -93,6 +100,7 @@ void edg_wll_poolFree();
 /** Allocate memory for the edg_wll_Connections structure and its properties and return a pointer.
     in case memory has been already allocated, just return a pointer */
 edg_wll_Connections* edg_wll_initConnections();
+
 
 #ifdef __cplusplus
 }

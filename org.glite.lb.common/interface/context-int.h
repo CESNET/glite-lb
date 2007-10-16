@@ -14,13 +14,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	
+
+/* TODO: merge */
+<<<<<<< context-int.h
 #define EDG_WLL_SEQ_NULL "UI=000000:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000"
 #define EDG_WLL_SEQ_PBS_NULL "TIMESTAMP=00000000000000:POS=0000000000:EV.CODE=000:SRC=?" 
 #define EDG_WLL_SEQ_CONDOR_NULL EDG_WLL_SEQ_PBS_NULL
 #define EDG_WLL_SEQ_SIZE        103	/* strlen(EDG_WLL_SEQ_NULL)+1 */
 #define EDG_WLL_SEQ_PBS_SIZE	57	/* strlen(EDG_WLL_SEQ_PBS_NULL)+1 */
 #define EDG_WLL_SEQ_CONDOR_SIZE EDG_WLL_SEQ_PBS_SIZE
+=======
+#define EDG_WLL_SEQ_NULL 	"UI=000000:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000"
+#define EDG_WLL_SEQ_PBS_NULL 	"TIMESTAMP=00000000000000:POS=0000000000:EV.CODE=000:SRC=?" 
+#define EDG_WLL_SEQ_CONDOR_NULL EDG_WLL_SEQ_PBS_NULL
+#define EDG_WLL_SEQ_SIZE      	(sizeof(EDG_WLL_SEQ_NULL))
+#define EDG_WLL_SEQ_PBS_SIZE	(sizeof(EDG_WLL_SEQ_PBS_NULL))
+#define EDG_WLL_SEQ_CONDOR_SIZE EDG_WLL_SEQ_PBS_SIZE
+>>>>>>> 1.26.2.4
 
 typedef struct _edg_wll_SeqCode {
 	unsigned int	type;				/* seq code type    */
@@ -34,16 +44,16 @@ typedef struct _edg_wll_SeqCode {
 } edg_wll_SeqCode;
 
 /* non-gsi one-element analogy of connPool for L&B Proxy server */
-typedef struct _edg_wll_ConnProxy {
+glite_lb_padded_struct(_edg_wll_ConnProxy,12,
 	edg_wll_PlainConnection	conn;
 	char   *buf;
 	size_t  bufSize;
 	size_t  bufUse;
-} edg_wll_ConnProxy;
+)
+typedef struct _edg_wll_ConnProxy  edg_wll_ConnProxy;
 
 
-
-struct _edg_wll_Context {
+glite_lb_padded_struct(_edg_wll_Context,120,
 /* Error handling */
 	int		errCode;	/* recent error code */
 	char 		*errDesc;	/* additional error description */
@@ -56,7 +66,8 @@ struct _edg_wll_Context {
 	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
 	edg_wll_ConnProxy	*connProxy;		/* holds one plain connection */
 
-	int		semaphores,semset;
+	int		semaphores;
+	int		semset;
 	edg_wll_QueryRec	**job_index;
 	void		*job_index_cols;
 	
@@ -113,7 +124,11 @@ struct _edg_wll_Context {
 	char		*p_lbproxy_store_sock;
 	char		*p_lbproxy_serve_sock;
 	char		*p_user_lbproxy;
-	struct timeval	p_log_timeout,p_sync_timeout,p_query_timeout, p_notif_timeout, p_tmp_timeout;
+	struct timeval	p_log_timeout;
+	struct timeval	p_sync_timeout;
+	struct timeval	p_query_timeout;
+	struct timeval	p_notif_timeout;
+	struct timeval	p_tmp_timeout;
 	char		*p_query_server;
 	int		p_query_server_port;
 	int		p_query_server_override;
@@ -132,7 +147,9 @@ struct _edg_wll_Context {
 	int		count_statistics;
 
 	int		greyjobs;
-};
+
+	char		**fqans; /* null-terminated list of peer's VOMS FQANs */
+)
 
 /* to be used internally: set, update and and clear the error information in 
  * context, the desc string (if provided) is strdup()-ed

@@ -133,6 +133,13 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 	if (ctx->vomsGroups.len) free_voms_groups(&ctx->vomsGroups);
 	if (ctx->dumpStorage) free(ctx->dumpStorage);
 	if (ctx->purgeStorage) free(ctx->purgeStorage);
+	if (ctx->fqans) {
+		char **f;
+		for (f = ctx->fqans; f && *f; f++)
+			free(*f);
+		free(ctx->fqans);
+		ctx->fqans = NULL;
+	}
 
 	edg_wll_FreeParams(ctx);
 
@@ -151,7 +158,6 @@ static const char* const errTexts[] = {
 	"Server response error",
 	"Bad JobId format",
 	"Database call failed",
-	"Bad URL format",
 	"MD5 key clash",
 	"GSSAPI Error",
 	"DNS resolver error",
@@ -161,7 +167,6 @@ static const char* const errTexts[] = {
 	"Interlogger internal error",
 	"Interlogger has events pending",
 	"Compared events differ",
-	"SQL parse error",
 };
 
 const char *edg_wll_GetErrorText(int code) {
@@ -377,7 +382,10 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 					&c[EDG_WLL_SOURCE_LB_SERVER]);
 
 			assert(EDG_WLL_SOURCE__LAST == 10);
-			if (res != EDG_WLL_SOURCE__LAST-1)
+			if (res == EDG_WLL_SOURCE_LB_SERVER-1) {
+				/* pre-collections compatibility */
+				c[EDG_WLL_SOURCE_LB_SERVER] = 0;
+			} else if (res != EDG_WLL_SOURCE__LAST-1)
 				return edg_wll_SetError(ctx, EINVAL,
 					"edg_wll_SetSequenceCode(): syntax error in sequence code");
 
@@ -471,12 +479,22 @@ int edg_wll_GenerateSubjobIds(
 		retjobs == NULL)
 		return edg_wll_SetError(ctx, ENOMEM, NULL);
 
+/* TODO: merge */
+<<<<<<< context.c
 	if ( !seed || !strcmp(seed, "(nil)") ) {
 		intseed = strdup("edg_wll_GenerateSubjobIds()");
 	}
 	else
 		intseed = strdup(seed);
 
+=======
+	if ( !seed ) {
+		intseed = strdup("edg_wll_GenerateSubjobIds()");
+	}
+	else
+		intseed = strdup(seed);
+
+>>>>>>> 1.23.2.10
 	for (subjob = 0; subjob < num_subjobs; subjob++) {
 
 		asprintf(&unhashed, "%s,%s,%d", p_unique, intseed, subjob);

@@ -52,7 +52,13 @@ ifneq (${expat_prefix},/usr)
 endif
 EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 
-LDFLAGS:=-L${stagedir}/lib \
+archlib:=lib
+host_cpu:=${shell uname -m}
+ifeq (${host_cpu},x86_64)
+    archlib:=lib64
+endif
+
+LDFLAGS:=-L${stagedir}/${archlib} -L${stagedir}/lib \
 	${COVERAGE_FLAGS}
 
 EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB}
@@ -215,9 +221,14 @@ install: doc
 	fi
 
 clean:
+<<<<<<< Makefile
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
 	rm -vf ${globalprefix} ${lbprefix}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+=======
+	rm -rf *.o *.lo .libs lib* *.c test_parse il_test
+
+>>>>>>> 1.57.2.3
 
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

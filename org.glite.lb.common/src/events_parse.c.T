@@ -146,7 +146,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 			my $c = "$t".ucfirst(${fn});
 			gen "\tthis->$tl.$fn = edg_wll_StringTo${c}(value);";
 		} else {
-			gen "\t";
+			gen "\tif(strlen(value) > 0) ";
 			gen $f->fromString('value',"this->$tl.$fn");
 		}
 		gen "\n".$indent.$indent."break;\n";
@@ -339,7 +339,7 @@ clean:
  */
 #define MISSING(m_key) { \
 	char *k =  edg_wll_KeyNameToString(m_key); \
-        sprintf(err_desc,"Message incomplete, missing key %s.", k); \
+        sprintf(err_desc,"Message incomplete, missing or empty field %s.", k); \
 	free(k); \
         ret=edg_wll_SetError(context,EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE,err_desc); \
         goto end; }

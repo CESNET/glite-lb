@@ -21,9 +21,28 @@ static const struct timeval null_timeval = {0,0};
 static const char *eventNames[] = {
 	"Undefined",
 @@@{
+my $flesh = 'gLite';    #XXX
+my $fleshno = 0;
+my $eventno = $fleshno;
+
 for my $e (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		$event->getTypes) {
-	gen "\t\"$e\",\n";
+
+	if ($flesh ne $event->{flesh}->{$e}) {
+		$flesh = $event->{flesh}->{$e};
+		$fleshno += 100;
+
+		gen "\t";
+		while ($eventno < $fleshno) {
+			gen "NULL, "; 
+			$eventno++;
+			if (($eventno % 10) == 0) { gen "\n\t"; }
+		}
+		gen "\n";
+	}
+	
+	$eventno++;
+	gen "\t\"$e\", /* $eventno */\n";
 }
 @@@}
 	"SysCmpStat",
@@ -43,7 +62,7 @@ edg_wll_EventCode edg_wll_StringToEvent(const char *name)
 	unsigned int	i;
 
 	for (i=1; i<sizeof(eventNames)/sizeof(eventNames[0]); i++)
-		if (strcasecmp(eventNames[i],name) == 0) return (edg_wll_EventCode) i;
+		if ( (eventNames[i]) && (strcasecmp(eventNames[i],name) == 0)) return (edg_wll_EventCode) i;
 	return EDG_WLL_EVENT_UNDEF;
 }
 
@@ -57,7 +76,7 @@ edg_wll_EventCode edg_wll_StringToEvent(const char *name)
 char *edg_wll_EventToString(edg_wll_EventCode event)
 {
 	if ((int)event < 0 || event >= sizeof(eventNames)/sizeof(eventNames[0])) return NULL;
-	return strdup(eventNames[event]);
+	return eventNames[event] ? strdup(eventNames[event]) : NULL;
 }
 
 
@@ -68,6 +87,7 @@ static const char *keyNames[] = {
 	"Undefined",
 	"DG.EVNT",
 @@@{
+my $keyno = 2;
 selectType $event '_common_';
 for ($event->getFieldsOrdered) {
 	my $f = selectField $event $_;
@@ -75,10 +95,11 @@ for ($event->getFieldsOrdered) {
 	my $fnu = uc $fn;
 	my $c = $f->{comment};
 	if (hasAlias $f 'ULM') {
-		gen "\t\"$fnu\",\n";
+		gen "\t\"$fnu\",  /* $keyno */\n";
 	} else {
-		gen "\t\"DG.$fnu\",\n";
+		gen "\t\"DG.$fnu\", /* $keyno */\n";
 	}
+	$keyno++;
 }
 for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		$event->getTypes) {
@@ -87,7 +108,8 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	for ($event->getFieldsOrdered) {
 		my $f = selectField $event $_;
 		my $fnu = uc $f->{name};
-		gen "\t\"DG.$tu.$fnu\",\n";
+		gen "\t\"DG.$tu.$fnu\", /* $keyno */\n";
+		$keyno++;
 	}
 }
 @@@}

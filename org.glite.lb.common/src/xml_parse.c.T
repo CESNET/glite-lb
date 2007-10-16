@@ -218,7 +218,7 @@ static void startQueryEvents(void *data, const char *el, const char **attr)
 				if (!attr[0] || !attr[1]) { unexpError() break;}
 				if (strcmp(attr[0],"name")) { unexpError() break;}
                                 if ( (XMLCtx->eventCode = edg_wll_StringToEvent((char *) attr[1])) 
-					== EDG_WLL_EVENT_UNDEF ) { unexpError() break;}
+					== EDG_WLL_EVENT_UNDEF ) { unexpWarning() }
                                 XMLCtx->eventsOutGlobal = realloc(XMLCtx->eventsOutGlobal,
                                     			  (XMLCtx->position+1)*sizeof(*XMLCtx->eventsOutGlobal));
                                	if (!XMLCtx->eventsOutGlobal) { edg_wll_SetError(XMLCtx->ctx, ENOMEM, NULL); unexpError() return; }
@@ -845,6 +845,13 @@ static void endQueryEvents(void *data, const char *el UNUSED_VAR)
 		edg_wll_freeBuf(XMLCtx);
 	    }
 	    break;
+	  case 2: 
+		  /* skip events of unknown type */
+		  if (XMLCtx->eventCode == EDG_WLL_EVENT_UNDEF) {
+			edg_wll_FreeEvent(&(XMLCtx->eventsOutGlobal)[XMLCtx->position]);
+		  	XMLCtx->position--;
+		  }
+		/* fallthough */
 	  default:
 	    if (XMLCtx->char_buf) {
 		unexpWarning()

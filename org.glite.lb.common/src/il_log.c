@@ -24,7 +24,7 @@ il_log(int level, char *fmt, ...)
 	}
 
 	if(level <= LOG_ERR) {
-		openlog("edg-wl-interlogd", LOG_PID | LOG_CONS, LOG_DAEMON);
+		openlog(NULL, LOG_PID | LOG_CONS, LOG_DAEMON);
 		syslog(level, "%s", err_text);
 		closelog();
 	}
