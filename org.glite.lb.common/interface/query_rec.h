@@ -46,6 +46,9 @@ typedef enum _edg_wll_QueryAttr{
 	EDG_WLL_QUERY_ATTR_RESUBMITTED,	/**< Job was resubmitted */
 	EDG_WLL_QUERY_ATTR_PARENT,	/**< Job was resubmitted */
 	EDG_WLL_QUERY_ATTR_EXITCODE,	/**< Unix exit code */
+	EDG_WLL_QUERY_ATTR_JDL_ATTR,	/**< Arbitrary JDL attribute */
+	EDG_WLL_QUERY_ATTR_STATEENTERTIME,	/**< When entered current status */
+	EDG_WLL_QUERY_ATTR_LASTUPDATETIME,	/**< Time of the last known event of the job */
 	EDG_WLL_QUERY_ATTR__LAST
 /*	if adding new attribute, add conversion string to common/xml_conversions.c too !! */
 } edg_wll_QueryAttr;
@@ -76,7 +79,7 @@ typedef struct _edg_wll_QueryRec {
  * Specification of attribute to query
  */
 	union {
-		char *			tag;	/**< user tag name */
+		char *			tag;	/**< user tag name / JDL attribute "path"*/
 		edg_wll_JobStatCode	state;	/**< job status code */	
 	} attr_id;
 /**
