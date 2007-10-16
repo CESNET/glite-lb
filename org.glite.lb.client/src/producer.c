@@ -111,8 +111,6 @@ int edg_wll_DoLogEvent(
 	}
 
 edg_wll_DoLogEvent_end:
-// XXX: no close if using connpool:	edg_wll_log_close(ctx,&conn);
-
 	return handle_errors(ctx,answer,"edg_wll_DoLogEvent()");
 }
 
@@ -270,7 +268,8 @@ static int edg_wll_FormatLogLine(
 		edg_wll_SetError(ctx,ret = ENOMEM,"edg_wll_FormatLogLine(): trio_asprintf() error"); 
 		goto edg_wll_formatlogline_end; 
 	}
-	/* TODO: add always, probably new ctx->p_user */
+/* TODO: merge - add always, probably new ctx->p_user 
+	has this already been agreed? */
 	if ( ( (flags & EDG_WLL_LOGFLAG_PROXY) || (flags & EDG_WLL_LOGFLAG_DIRECT) ) && 
 	   (ctx->p_user_lbproxy) ) {
 		if (trio_asprintf(&dguser,EDG_WLL_FORMAT_USER,ctx->p_user_lbproxy) == -1) {
@@ -710,7 +709,7 @@ int edg_wll_SetLoggingJobProxy(
 	}
 
 	/* query LBProxyServer for sequence code if not user-suplied */
-/* XXX: don't know if working properly */
+/* TODO: merge - check if it is really working properly after the unification of proxy and server */
 	if (!code) {
 		if (edg_wll_QuerySequenceCodeProxy(ctx, job, &code_loc))
 			goto edg_wll_setloggingjobproxy_end;	
@@ -1123,12 +1122,11 @@ int edg_wll_RegisterSubjob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-/* XXX: what is that ? */
-#ifdef LB_PERF
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
-#else
+/* TODO: merge - do we want subjobs to be registered
+         directly to bkserver (LOGFLAG_DIRECT) 
+         or "just" through the locallogger (LOGFLAG_LOCAL) ? 
+*/
 	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_LOCAL,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
-#endif
 }
 
 /**

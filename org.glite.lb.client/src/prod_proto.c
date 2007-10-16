@@ -27,6 +27,9 @@ static const char* socket_path="/tmp/lb_proxy_store.sock";
  * Handle GSS failures on the client side
  *----------------------------------------------------------------------
  */
+/* TODO: restructuring - move handle_gss_failures to a separate file 
+	and use it both in producer (here) and consumer (connection.c)
+*/
 static
 int handle_gss_failures(edg_wll_Context ctx, int code, edg_wll_GssStatus *gss_code, const char *text)
 {
@@ -82,6 +85,9 @@ int handle_gss_failures(edg_wll_Context ctx, int code, edg_wll_GssStatus *gss_co
 	return ret;
 }
 
+/* TODO: restructuring - start using the following to provide better error handling when communicating with proxy
+	and use it also both in producer and consumer
+*/
 #if 0	/* unused */
 /**
  *----------------------------------------------------------------------
@@ -666,7 +672,9 @@ int edg_wll_log_direct_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn)
 	}
 #ifdef EDG_WLL_LOG_STUB
 	if (my_subject_name) {
-		// XXX: shouldn't be probably ctx->p_user_lbproxy but some new parameter, eg. ctx->p_user
+/* TODO: merge - shouldn't be probably ctx->p_user_lbproxy but some new parameter, eg. ctx->p_user
+	related to the change in producer.c
+*/
 		edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, my_subject_name);
 		fprintf(stderr,"edg_wll_log_direct_connect: using certificate: %s\n",my_subject_name);
 	} else {

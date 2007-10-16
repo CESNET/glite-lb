@@ -94,9 +94,16 @@ EXT_LIB:=
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
-
-LDFLAGS:=-L${stagedir}/lib \
-	${COVERAGE_FLAGS}
+# TODO: merge - check the 64bit stuff
+#             - and what about the new JOBID lib?
+archlib:=lib
+host_cpu:=${shell uname -m}
+ifeq (${host_cpu},x86_64)
+	archlib:=lib64
+	LDFLAGS:=-L${stagedir}/lib64 -L${stagedir}/lib ${COVERAGE_FLAGS}
+else
+	LDFLAGS:=-L${stagedir}/lib
+endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
@@ -106,6 +113,7 @@ INSTALL:=libtool --mode=install install
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 	producer.o uiwrap.o statistics.o
+# TODO: restructuring - do we really need FAKE versions? maybe remove all FAKEs here
 FAKELIBOBJS:=consumer_fake.o producer_fake.o
 
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
@@ -137,13 +145,17 @@ THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=${LB_PERF_TOOLS}
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog flood_proxy dagids stress_context parse_eventsfile
+EXAMPLES_PLUS:=indexed_attrs_plus job_status_plus query_events_plus listener user_jobs_plus job_log_plus notify_plus
 
-EXAMPLES_CL=user_jobs job_status 
-EXAMPLES_CL_THR=user_jobs_threaded
+EXAMPLES_CL:=user_jobs job_status 
+EXAMPLES_CL_THR:=user_jobs_threaded
 FAKE_EXAMPLES:=job_log_fake
 
 MAN_GZ:=glite-lb-logevent.1.gz
 MAN = $(MAN_GZ:.gz=)
+
+PLUS_EXTRA_LIB:=-lglite_wmsutils_jobid -lglite_wmsutils_exception
+
 
 # version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
@@ -165,6 +177,8 @@ generate: ${GEN_HDRS}
 	ln -vs . ${lbprefix}
 	for i in ${HDRS}; do ln -vs ../interface/$$i $$i ; done
 
+default: all
+
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib \
 			${COMMON_LIB} ${TRIO_LIB} \
@@ -185,11 +199,11 @@ ${FAKETHRLIB}: ${FAKELIBTHROBJS}
 			${COMMON_LIB_THR} \
 			-lglite_security_gss_${thrflavour}
 
-${PLUSLIB}: ${PLUSOBJS}
-	${LINK} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB}
+${PLUSLIB}: ${PLUSOBJS} ${LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB} ${PLUS_EXTRA_LIB}
 
-${THRPLUSLIB}: ${PLUSTHROBJS}
-	${LINK} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/lib ${THRLIB}
+${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/lib ${THRLIB} ${PLUS_EXTRA_LIB}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
@@ -217,6 +231,11 @@ ${PLUSOBJS}: %.o: %.cpp
 ${PLUSTHROBJS}: %.thr.o: %.cpp
 	${CXXCOMPILE} -o $@ -c $<
 
+${EXAMPLES_PLUS}: ${PLUSLIB}
+
+${EXAMPLES_PLUS}: %: %.o
+	${LINKXX} -o $@ $< ${PLUSLIB}
+
 ${LIBOBJS} ${FAKELIBOBJS}: %.o: %.c
 	${COMPILE} -c $<
 
@@ -243,6 +262,9 @@ perftest_logjobs.o: perftest_logjobs.c
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
+%.o: %.cpp
+	${CXX} ${CFLAGS} ${GLOBUSINC} -c $<
+
 %.c: %.c.T
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
@@ -258,7 +280,7 @@ perftest_logjobs.o: perftest_logjobs.c
 	$(GENSAM) $< >$@ || rm -f $@
 	chmod -w,+x $@ > /dev/null
 
-examples: ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
+examples: ${EXAMPLES} ${EXAMPLES_PLUS} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 
 fake: ${FAKE_EXAMPLES}
 
@@ -280,6 +302,7 @@ stage:  compile ${FAKELIB} ${FAKETHRLIB}
 	$(MAKE) install PREFIX=${stagedir}
 	${INSTALL} -m 644 ${FAKELIB} ${FAKETHRLIB} ${stagedir}/lib
 
+# TODO: restructuring - cleanup the documentation
 doc: generate
 	cp ${top_srcdir}/doc/*.dox .
 	echo "PROJECT_NUMBER = ${version}" >> C.dox
@@ -297,8 +320,7 @@ install: doc
 ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 else
-# FIXME:
-#	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
@@ -316,6 +338,7 @@ endif
 	for p in ${TOOLS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
 	done
+# TODO: restructuring - install also source code of examples together with some good Makefile
 	for p in ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
