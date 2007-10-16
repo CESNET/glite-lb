@@ -482,19 +482,14 @@ int edg_wll_GenerateSubjobIds(
 /* TODO: merge */
 <<<<<<< context.c
 	if ( !seed || !strcmp(seed, "(nil)") ) {
-		intseed = strdup("edg_wll_GenerateSubjobIds()");
-	}
-	else
-		intseed = strdup(seed);
-
 =======
 	if ( !seed ) {
+>>>>>>> 1.23.2.10
 		intseed = strdup("edg_wll_GenerateSubjobIds()");
 	}
 	else
 		intseed = strdup(seed);
 
->>>>>>> 1.23.2.10
 	for (subjob = 0; subjob < num_subjobs; subjob++) {
 
 		asprintf(&unhashed, "%s,%s,%d", p_unique, intseed, subjob);
