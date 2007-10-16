@@ -39,7 +39,7 @@ GLITE_LB_EXPORT_JPDUMP_MAILDIR=${GLITE_LB_EXPORT_JPDUMP_MAILDIR:-/tmp/jpdump}
 # directory with exported data (file per job)
 GLITE_LB_EXPORT_JOBSDIR=${GLITE_LB_EXPORT_JOBSDIR:-/tmp/lbexport}
 # purge args (timeouts)
-GLITE_LB_EXPORT_PURGE_ARGS=${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 2w --cancelled 2w --other 2m}
+GLITE_LB_EXPORT_PURGE_ARGS=${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 2w --cancelled 2w --other 60d}
 # Book Keeping Server
 GLITE_LB_SERVER_PORT=${GLITE_LB_SERVER_PORT:-9000}
 GLITE_LB_EXPORT_BKSERVER=${GLITE_LB_EXPORT_BKSERVER:-localhost:$GLITE_LB_SERVER_PORT}
@@ -53,10 +53,17 @@ GLITE_LB_EXPORT_ENABLED=${GLITE_LB_EXPORT_ENABLED:-true}
 [ -d $GLITE_LB_EXPORT_PURGEDIR_KEEP ] || mkdir -p $GLITE_LB_EXPORT_PURGEDIR_KEEP
 [ -d $GLITE_LB_EXPORT_JOBSDIR ] || mkdir -p $GLITE_LB_EXPORT_JOBSDIR
 
+<<<<<<< TODO: merge export.sh
 if [ x"$GLITE_LB_PURGE_ENABLED" = x"true" ]; then
 	X509_USER_CERT="$X509_USER_CERT" X509_USER_KEY="$X509_USER_KEY" $PREFIX/bin/glite-lb-purge $GLITE_LB_EXPORT_PURGE_ARGS -l -m $GLITE_LB_EXPORT_BKSERVER -s
 fi
+=======
+if [ x"$GLITE_LB_PURGE_ENABLED" = x"true" ]; then
+	X509_USER_CERT="$X509_USER_CERT" X509_USER_KEY="$X509_USER_KEY" $PREFIX/sbin/glite-lb-purge $GLITE_LB_EXPORT_PURGE_ARGS -l -m $GLITE_LB_EXPORT_BKSERVER -s
+fi
+>>>>>>> 1.2.4.2
 
+<<<<<<< TODO: merge export.sh
 if [ x"$GLITE_LB_EXPORT_ENABLED" = x"true" ]; then
   for file in $GLITE_LB_EXPORT_PURGEDIR/*; do
     if [ -s $file ]; then
@@ -66,6 +73,18 @@ if [ x"$GLITE_LB_EXPORT_ENABLED" = x"true" ]; then
       else
         rm $file
       fi
+=======
+if [ x"$GLITE_LB_EXPORT_ENABLED" = x"true" ]; then
+  list=`ls $GLITE_LB_EXPORT_PURGEDIR/* 2>/dev/null`
+  for file in $list; do
+    if [ -s $file ]; then
+      $PREFIX/sbin/glite-lb-lb_dump_exporter -d $file -s $GLITE_LB_EXPORT_JOBSDIR -m $GLITE_LB_EXPORT_JPDUMP_MAILDIR
+      if [ -n "$GLITE_LB_EXPORT_PURGEDIR_KEEP" ]; then
+        mv $file $GLITE_LB_EXPORT_PURGEDIR_KEEP
+      else
+        rm $file
+      fi
+>>>>>>> 1.2.4.2
     else
       rm $file
     fi
