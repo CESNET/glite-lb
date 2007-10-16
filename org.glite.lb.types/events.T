@@ -28,6 +28,8 @@
 	string	src_instance	Instance of source component (e.g. service communication endpoint).
 	_optional_
 
+@flesh gLite
+
 @type Transfer		Start, success, or failure of job transfer to another component.
 	logsrc	destination	Destination where the job is being transfered to.
 	string	dest_host	Hostname of server that takes over control of the job.
@@ -50,6 +52,7 @@
 	string	from_instance	Instance of the component the job was received from.
 	_optional_
 	string	local_jobid	New job id as assigned by the receiving component.
+	_optional_
 
 @type Refused		Refusing job (unsuccessful counterpart to Transfer).
 	logsrc	from		The software component that tried to send the job.
@@ -57,24 +60,29 @@
 	string	from_instance	Instance of the component that tried to send the job.
 	_optional_
 	string	reason		Description of the reason why the job was refused.
+	_optional_
 
 @type EnQueued		The job has been enqueued in an inter-component queue.
 	string	queue		Queue into which the job has been stored for retrieval by another component.
 	string	job		Job description in the receiver's language.
+	_optional_
 	int     result          Result code of the attempt to put job into the queue (START, OK, REFUSED or FAIL).
 	_code_  START           The sending component has started or is about to start enqueuing the job.
 	_code_  OK              The job was enqueued successfully.
 	_code_  REFUSED         The job was refused by the other component.
 	_code_  FAIL            The transfer failed for other reason than explicit refusal.
 	string	reason		Detailed description of the attempt to enqueue the job, especially the reason of failure.
+	_optional_
 
 @type DeQueued		The job has been dequeued from an inter-component queue.
 	string	queue		Name of the queue the job was obtained from.
 	string	local_jobid	New job id as assigned by the retreiving component.
+	_optional_
 
 @type HelperCall	Helper component is called.
 	string	helper_name	Name of the called helper component.
 	string	helper_params	Parameters of the call to the helper component.
+	_optional_
 	int	src_role	The role the event sender is playing in the helper call (CALLING or CALLEE).
 	_code_	CALLING		The logging component is caller.
 	_code_	CALLED		The logging component is callee.
@@ -82,6 +90,7 @@
 @type HelperReturn	Helper component is returning the control.
 	string	helper_name	Name of the called helper component.
 	string	retval		Data returned by the call to the helper component.
+	_optional_
 	int	src_role	The role the event sender is playing in the helper call (CALLING or CALLEE).
 	_code_	CALLING		The logging component is caller.
 	_code_	CALLED		The logging component is callee.
@@ -95,7 +104,9 @@
 	_code_	WONTRESUB	The job will not be resubmitted.
 	_code_	SHALLOW		Shallow resubmission (user payload has not started yet)
 	string	reason		Reason why the job will or will not be resubmitted.
+	_optional_
 	string	tag		Value of the attribute on which the decision to resubmit the job was based.
+	_optional_
 
 @type Done		Execution terminated (normally or abnormally).
 	int	status_code	Reason code for the termination of the job (OK, FAILED or CANCELLED).
@@ -103,6 +114,7 @@
 	_code_	FAILED		The job disappeared from LRMS.
 	_code_	CANCELLED	The job was cancelled by user request.
 	string	reason		Detailed description why the job was terminated.
+	_optional_
 	int	exit_code	Exit code of the job's process.
 	_null_	-1
 
@@ -113,6 +125,7 @@
 	_code_	DONE		The request was completed by whole WMS.
 	_code_	ABORT		The request was refused by whole WMS.
 	string	reason		Detailed description of the attempt to cancel the job, especially the reason of failure.
+	_optional_
 
 @type Abort		Job aborted by system.
 	string	reason		Reason why the job was aborted by the system.
@@ -133,6 +146,7 @@
 
 @type RegJob		New job registration.
 	string	jdl		Job description of the job being registered.
+	_optional_
 	string	ns		NetworkServer handling the newly registered job.
 	jobid	parent		Grid job id of the parent job registering this new one.
 	_optional_
@@ -192,26 +206,27 @@
 	string	unit		Units (sec, kB, etc.).
 
 @type ReallyRunning	User payload started.
-	_optional_
 	string	wn_seq		Sequence code on the worker node.
+	_optional_
 
 @type Suspend		Job execution (queuing) was suspended.
-	_optional_
 	string	reason		Reason for the suspend.
+	_optional_
 
 @type Resume		Job execution (queuing) was resumed.
-	_optional_
 	string	reason		Reason for the resume.
+	_optional_
 
 @type CollectionState	State of the collection.
 	string	state		New collection state.
-	_optional_
 	int	done_code	In case of (state == Done) contains done code 
+	_optional_
 	_null_	-1
 	string	histogram	User readable histogram; useful for debugging.
 	jobid   child		JobId of subjob, which triggered the state change.	
 	string	child_event	Event which triggered the state change.	
 
+@flesh PBS
 
 @type PBSQueued		Job enqued
 	string	queue		Queue name
@@ -252,6 +267,8 @@
 @type PBSError		Any error occured
 	string	error_desc	Error reason
 
+@flesh Condor
+
 @type CondorMatch	Job MATCHed
 	string	owner		Owner
 	string	dest_host	Matched host
@@ -274,6 +291,7 @@
 @type CondorShadowExited	Condor Shadow Exited
 	int	shadow_pid	PID of shadow process
 	int	shadow_exit_status	Exit status of shadow process
+	_null_	-1
 
 @type CondorStarterStarted	Condor Starter Started
 	int	starter_pid	PID of starter process
@@ -285,10 +303,12 @@
 	int	starter_pid	PID of starter process
 	_optional_
 	int	starter_exit_status	Exit status of starter process
+	_null_	-1
 	_optional_
 	int	job_pid		PID of running job
 	_optional_
 	int	job_exit_status	Job exit status
+	_null_	-1
 	_optional_
 
 @type CondorResourceUsage       Resources requested/consumed

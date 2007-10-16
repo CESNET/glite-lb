@@ -7,6 +7,8 @@ int	jobtype		Type of job
 	_null_	-1
 	_code_ SIMPLE		simple job
 	_code_ DAG		composite job
+	_code_ _PARTITIONABLE_UNUSED	placholder for unused code
+	_code_ _PARTITIONED_UNUSED	placholder for unused code
 	_code_ COLLECTION	parent of collection of jobs
 	_code_ PBS		PBS job
 	_code_ CONDOR		Condor job
@@ -58,7 +60,9 @@ taglist	user_tags	List of pairs (user_tag, user_value)
 	_special_	XMLstructured
 
 timeval	stateEnterTime	When entered this status
+_index_
 timeval	lastUpdateTime	Last known event of the job
+_index_
 
 intlist	stateEnterTimes	When all previous states were entered
 	_special_	XMLstructured
@@ -76,6 +80,10 @@ strlist possible_ce_nodes	CE nodes matching to possible_destinations
 bool	suspended	Job is suspended
 string	suspend_reason	Reason for the suspend
 
+string	failure_reasons Concatenated job failure reasons, possibly from deeper middleware layers
+
+_pad_	55
+
 string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
 string  pbs_queue	Name of queue in which is job queued
 string  pbs_owner	Owner of job
@@ -88,9 +96,12 @@ string	pbs_resource_usage	Glued resource usage
 int	pbs_exit_status	Job exit status
 string	pbs_error_desc	Glued error descriptions from error events
 
+_pad_	20
+
 string	condor_status	Condor job status 
 string	condor_universe	Condor job Universe (in job ClassAds)
 string	condor_owner	Job owner
+string	condor_preempting	Job preempting
 int	condor_shadow_pid	PID of Shadow
 int	condor_shadow_exit_status	Condor shadow exit status (see h/exit.h)
 int	condor_starter_pid	PID of Starter
@@ -101,6 +112,7 @@ string	condor_dest_host Hostname of node where job is running
 string	condor_reason	Glued reasons/errors leading to pending events
 string	condor_error_desc	Glued error descriptions from error events
 
+_pad_	25
 
 @type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.
 @type Waiting		Accepted by WMS, waiting for resource allocation.
@@ -113,3 +125,4 @@ string	condor_error_desc	Glued error descriptions from error events
 @type Cancelled		Cancelled by user.
 @type Unknown		Status cannot be determined.
 @type Purged		Job has been purged from bookkeeping server (for LB->RGMA interface).
+

@@ -8,6 +8,7 @@ sub new {
 	$self->{comments} = {}; # typ->comment
 	$self->{fields} = {};	# typ->{ name->StructField, ... }
 	$self->{order} = {};
+	$self->{flesh} = {};
 
 	bless $self;
 }
@@ -55,6 +56,7 @@ sub load {
 	my $self = shift;
 	my $fh = shift;
 	local $_;
+	my $flesh = 'common';
 
 	while ($_ = <$fh>) {
 
@@ -65,6 +67,12 @@ sub load {
 		if (/^\@type\s+(\S+)\s*(.*$)$/) {
 			$self->addType($1,$2);
 			$self->{order}->{$1} = $.;
+			$self->{flesh}->{$1} = $flesh;
+			next;
+		}
+
+		if (/^\@flesh\s+(\S+)\s*(.*$)$/) {
+			$flesh = $1;
 			next;
 		}
 
@@ -93,6 +101,10 @@ sub load {
 		elsif ($ftype eq '_index_') {
 			my $f = $self->getField();
 			$f->{index} = 1;
+		}
+		elsif ($ftype eq '_pad_') {
+			my $f = $self->getField();
+			$f->{pad} = $fname;
 		}
 		else {
 			my $f = new StructField $fname,$ftype,$comment,$.;
