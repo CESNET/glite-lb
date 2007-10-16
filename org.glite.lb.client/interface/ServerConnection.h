@@ -41,23 +41,24 @@ public:
 	 */
 	enum Attr {
 		UNDEF=0,	/**< Not-defined value, used to terminate lists etc. */
-		JOBID,	        /**< Job id. */
-		OWNER,	        /**< Job owner (certificate subject). */
-		STATUS,	        /**< Current job status code. */
-		LOCATION,	/**< Where is the job being processed. */
-		DESTINATION,	/**< Destination CE. */
-		DONECODE,	/**< Minor done status (OK,fail,cancel). */
-		USERTAG,	/**< User tag. */
-		TIME,	        /**< Timestamp of the event. */
-		LEVEL,	        /**< Logging level. */
-		HOST,	        /**< Hostname where the event was generated. */
-		SOURCE,	        /**< Source component that sent the event. */
-		INSTANCE,	/**< Instance of the source component. */
-		EVENT_TYPE,	/**< Event type. */
-		CHKPT_TAG,	/**< Checkpoint tag. */
-		RESUBMITTED,	/**< Job was resubmitted */
-		PARENT,	        /**< Id of the parent job. */
-		EXITCODE,	/**< Job system exit code. */
+		JOBID = EDG_WLL_QUERY_ATTR_JOBID,	        /**< Job id. */
+		OWNER = EDG_WLL_QUERY_ATTR_OWNER,	        /**< Job owner (certificate subject). */
+		STATUS = EDG_WLL_QUERY_ATTR_STATUS,	        /**< Current job status code. */
+		LOCATION = EDG_WLL_QUERY_ATTR_LOCATION,	/**< Where is the job being processed. */
+		DESTINATION = EDG_WLL_QUERY_ATTR_DESTINATION,	/**< Destination CE. */
+		DONECODE = EDG_WLL_QUERY_ATTR_DONECODE,	/**< Minor done status (OK,fail,cancel). */
+		USERTAG = EDG_WLL_QUERY_ATTR_USERTAG,	/**< User tag. */
+		TIME = EDG_WLL_QUERY_ATTR_TIME,	        /**< Timestamp of the event. */
+		LEVEL = EDG_WLL_QUERY_ATTR_LEVEL,	        /**< Logging level. */
+		HOST = EDG_WLL_QUERY_ATTR_HOST,	        /**< Hostname where the event was generated. */
+		SOURCE = EDG_WLL_QUERY_ATTR_SOURCE,	        /**< Source component that sent the event. */
+		INSTANCE = EDG_WLL_QUERY_ATTR_INSTANCE,	/**< Instance of the source component. */
+		EVENT_TYPE = EDG_WLL_QUERY_ATTR_EVENT_TYPE,	/**< Event type. */
+		CHKPT = EDG_WLL_QUERY_ATTR_CHKPT_TAG,	/**< Checkpoint tag. */
+		RESUBMITTED = EDG_WLL_QUERY_ATTR_RESUBMITTED,	/**< Job was resubmitted */
+		PARENT = EDG_WLL_QUERY_ATTR_PARENT,	        /**< Id of the parent job. */
+		EXITCODE = EDG_WLL_QUERY_ATTR_EXITCODE,	/**< Job system exit code. */
+		JDL_ATTR = EDG_WLL_QUERY_ATTR_JDL_ATTR, 		/**< Arbitrary JDL attribute */
 	};
 
 	/** Symbolic names of predicates.
