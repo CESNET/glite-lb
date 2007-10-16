@@ -443,7 +443,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 		if (ret) {
 			edg_wll_ll_log(LOG_WARNING,"Reloading credentials failed, continue with older\n");
 		} else {
-			edg_wll_ll_log(LOG_INFO,"Reloading credentials\n");
+			edg_wll_ll_log(LOG_DEBUG,"Reloading credentials succeeded\n");
 			edg_wll_gss_release_cred(&cred, NULL);
 			cred = newcred;
 		}

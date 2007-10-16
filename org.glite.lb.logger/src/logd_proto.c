@@ -652,7 +652,7 @@ void edg_wll_ll_log(int level, const char *fmt, ...) {
 	if(level <= edg_wll_ll_log_level) 
 		fprintf(stderr, "[%d] %s", (int) getpid(), err_text);
 	if(level <= LOG_ERR) {
-		openlog("edg-wl-logd", LOG_PID | LOG_CONS, LOG_DAEMON);
+		openlog(NULL, LOG_PID | LOG_CONS, LOG_DAEMON);
 		syslog(level, "%s", err_text);
 		closelog();
 	}
