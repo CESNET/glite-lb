@@ -93,6 +93,7 @@ install:
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 
+# TODO: merge - not sure if this is really the current solution for lbplugin
 	-if [ x${DOSTAGE} != xyes ]; then \
 		${INSTALL} -m 755 ${stagedir}/lib/glite_lb_plugin.so ${PREFIX}/lib; \
 	fi
