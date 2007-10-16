@@ -47,7 +47,7 @@ int edg_wll_UserJobsToHTML(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **m
 			"<h2><B>User jobs</B></h2>\r\n"
 			"User subject: %s<p>"
 			"<ul>%s</ul>"
-			"\t</body>\r\n</html>",ctx->peerName,pomB);
+			"\t</body>\r\n</html>",ctx->peerName?ctx->peerName: "&lt;anonymous&gt;",pomB);
         free(pomB);
 
         *message = pomA;

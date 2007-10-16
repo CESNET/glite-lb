@@ -41,11 +41,17 @@
 #define KEY_AGENT	"User-Agent"
 
 
-const char* const response_headers[] = {
+static const char* const response_headers_dglb[] = {
         "Cache-Control: no-cache",
-        "Accept: application/x-dglb",
-        "User-Agent: edg_wll_Server/" PROTO_VERSION "/" COMP_PROTO,
+        "Server: edg_wll_Server/" PROTO_VERSION "/" COMP_PROTO,
         "Content-Type: application/x-dglb",
+        NULL
+};
+
+static const char* const response_headers_html[] = {
+        "Cache-Control: no-cache",
+        "Server: edg_wll_Server/" PROTO_VERSION "/" COMP_PROTO,
+        "Content-Type: text/html",
         NULL
 };
 
@@ -362,7 +368,7 @@ edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
 	} else ret = HTTP_NOTALLOWED;
 
 errV21:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
-	*headersOut = (char **) response_headers;
+	*headersOut = (char **) (html? response_headers_html : response_headers_dglb);
 	if ((ret != HTTP_OK) && html)
 		*bodyOut = edg_wll_ErrorToHTML(ctx,ret);
 	else
@@ -388,28 +394,30 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		if ( strstr(headers[i], KEY_AGENT) ) break;
   
 	if (headers[i] == NULL) { ret = HTTP_BADREQ; goto err; } /* if not present */
-	switch (is_protocol_incompatible(headers[i])) { 
-		case 0  : /* protocols compatible */
-			  ctx->is_V21 = 0;
-			  break;
-		case -1 : /* malformed 'User Agent:' line */
-			  ret = HTTP_BADREQ;
-			  goto err;
-			  break;
-		case 1  : /* protocols incompatible */
-			  /* try old (V21) version compatibility */
-			  edg_wll_ProtoV21(ctx, request, headers, messageBody, 
-					  response, headersOut, bodyOut);
-					  
-			  /* and propagate errors or results */
-			  return edg_wll_Error(ctx,NULL,NULL);
-			  break;
-		case -2 : /* version of one protocol unknown */
-			  /* fallthrough */
-		default : ret = HTTP_UNSUPPORTED; 
-			  edg_wll_SetError(ctx,ENOTSUP,"Protocol versions are incompatible.");
-			  goto err; 
-			  break;
+	if (!html) {
+		switch (is_protocol_incompatible(headers[i])) { 
+			case 0  : /* protocols compatible */
+				  ctx->is_V21 = 0;
+				  break;
+			case -1 : /* malformed 'User Agent:' line */
+				  ret = HTTP_BADREQ;
+				  goto err;
+				  break;
+			case 1  : /* protocols incompatible */
+				  /* try old (V21) version compatibility */
+				  edg_wll_ProtoV21(ctx, request, headers, messageBody, 
+						  response, headersOut, bodyOut);
+						  
+				  /* and propagate errors or results */
+				  return edg_wll_Error(ctx,NULL,NULL);
+				  break;
+			case -2 : /* version of one protocol unknown */
+				  /* fallthrough */
+			default : ret = HTTP_UNSUPPORTED; 
+				  edg_wll_SetError(ctx,ENOTSUP,"Protocol versions are incompatible.");
+				  goto err; 
+				  break;
+		}
 	}
 
 
@@ -427,15 +435,13 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
 // FIXME: edg_wll_UserJobs should take flags as parameter
-	                if (!ctx->peerName) {
-				edg_wll_SetError(ctx,EPERM,"Operation not permitted.");
-				ret = HTTP_UNAUTH; 
-			}
 			switch (edg_wll_UserJobs(ctx,&jobsOut,NULL)) {
 				case 0: if (html) edg_wll_UserJobsToHTML(ctx, jobsOut, &message);
 					else ret = HTTP_OK;
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
+				case EPERM: ret = HTTP_UNAUTH; break;
+				case EDG_WLL_ERROR_NOINDEX: ret = HTTP_UNAVAIL; break;
 				default: ret = HTTP_INTERNAL; break;
 			}
 			if (!html && (ret != HTTP_INTERNAL)) 
@@ -590,8 +596,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				}
 				
 				switch ( retCode ) {
-					// case EPERM : ret = HTTP_UNAUTH;
-					//              /* soft-error fall through */
 					case 0: if (html) ret =  HTTP_NOTIMPL;
 						else ret = HTTP_OK;
 
@@ -885,7 +889,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	} else ret = HTTP_NOTALLOWED;
 
 err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
-	*headersOut = (char **) response_headers;
+	*headersOut = (char **) (html ? response_headers_html : response_headers_dglb);
 	if ((ret != HTTP_OK) && html)
 		*bodyOut = edg_wll_ErrorToHTML(ctx,ret);
 	else

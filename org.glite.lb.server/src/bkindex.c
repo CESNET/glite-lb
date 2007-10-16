@@ -24,6 +24,14 @@ enum lb_srv_perf_sink sink_mode;
 #endif
 
 
+#ifdef LB_PERF
+#include "glite/lb/lb_perftest.h"
+#include "glite/lb/srv_perf.h"
+
+enum lb_srv_perf_sink sink_mode;
+#endif
+
+
 static struct option opts[] = {
 	{ "mysql",1,NULL,'m' },
 	{ "remove",0,NULL,'R' },
@@ -289,9 +297,12 @@ static char *db_col_type(const edg_wll_QueryRec *r)
 		case EDG_WLL_QUERY_ATTR_USERTAG:
 		case EDG_WLL_QUERY_ATTR_HOST:
 		case EDG_WLL_QUERY_ATTR_CHKPT_TAG:
-			return "char(250) binary null";
+			/* XXX: 255 may not be enough for location or destination */
+			return "varchar(255) binary null"; 
 
 		case EDG_WLL_QUERY_ATTR_TIME:
+		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 			return "datetime null";
 		default:
 			return NULL;

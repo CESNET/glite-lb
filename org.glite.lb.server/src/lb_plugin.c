@@ -377,6 +377,12 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
+	} else if (strcmp(attr, GLITE_JP_LB_LBserver) == 0) {
+		av = calloc(2, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
+		av[0].value = edg_wlc_JobIdGetServer(h->status.jobId);
+		av[0].size = -1;
+		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 	} else if (strcmp(attr, GLITE_JP_LB_parent) == 0) {
 		if (h->status.parent_job) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
@@ -826,6 +832,7 @@ static int lb_status(void *handle) {
         int		maxnstates, nstates, i, be_strict = 0, retval;
 	char		*errstring;
 	edg_wll_JobStatCode old_state = EDG_WLL_JOB_UNDEF;
+	int 		lastStatusHistoryIndex = -1;
         
         js = calloc(1, sizeof(intJobStat));
 	init_intJobStat(js);
@@ -844,6 +851,8 @@ static int lb_status(void *handle) {
 		if (nstates >= maxnstates) {
 			maxnstates <<= 1;
 			h->fullStatusHistory = realloc(h->fullStatusHistory, maxnstates * sizeof(lb_historyStatus *));
+			if (lastStatusHistoryIndex > -1)
+				h->lastStatusHistory = &(h->fullStatusHistory[lastStatusHistoryIndex]);
 		}
 
 		/* job owner and jobId not filled from events normally */
@@ -868,6 +877,7 @@ static int lb_status(void *handle) {
 			/* lastStatusHistory starts from the last WAITING state */
 			if (js->pub.state == EDG_WLL_JOB_WAITING) {
 				h->lastStatusHistory = &(h->fullStatusHistory[nstates]);
+				lastStatusHistoryIndex = nstates;
 			}
 			/* finalStatus is the one preceeding the CLEARED state */
 			if ( (js->pub.state == EDG_WLL_JOB_CLEARED) && (nstates > 0) ) {

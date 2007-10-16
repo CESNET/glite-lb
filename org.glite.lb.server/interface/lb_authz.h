@@ -3,6 +3,10 @@
 
 #ident "$Header$"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NO_GACL
 #include <gridsite.h>
 #endif 
@@ -57,5 +61,9 @@ edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *, 
 
 extern void
 edg_wll_FreeVomsGroups(edg_wll_VomsGroups *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* GLITE_LB_LB_AUTHZ_H */

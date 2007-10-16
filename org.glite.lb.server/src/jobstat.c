@@ -116,7 +116,7 @@ int edg_wll_JobStatus(
 
 	/* authorization check */
 	if ( !(ctx->noAuth) &&
-	    (!(ctx->peerName) ||  strcmp(ctx->peerName, jobstat.pub.owner))) {
+	    (!(ctx->peerName) ||  !edg_wll_gss_equal_subj(ctx->peerName, jobstat.pub.owner))) {
 	      	intErr = (acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
 	      if (intErr) {
 		 free(string_jobid);
@@ -798,10 +798,11 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 }
 
 
-/* called only when childen state changed 
- */
-static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobStatCode old_state, enum edg_wll_StatDone_code old_done_code, intJobStat *cis, edg_wll_Event *ce)
+/* returns state class of subjob of job collection	*/
+static subjobClassCodes class(edg_wll_JobStat *stat)
 {
+/* TODO: merge */
+<<<<<<< jobstat.c
 	intJobStat	*pis = NULL;
 	int		update_hist = 0;
 
@@ -854,20 +855,15 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 	 * cook artificial events to enable parent job state shift 
 	 */
 	switch (cis->pub.state) {
+=======
+	switch (stat->state) {
+>>>>>>> 1.47.2.6
 		case EDG_WLL_JOB_RUNNING:
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[cis->pub.state+1]++;
-
-			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
-				/* not RUNNING yet? */
-				if (pis->pub.state < EDG_WLL_JOB_RUNNING) {
-					if (log_collectionState_event(ctx, cis->pub.state, 0, cis, pis, ce))
-						goto err;
-				}
-			}
-			update_hist = 1;
+			return(SUBJOB_CLASS_RUNNING);
 			break;
 		case EDG_WLL_JOB_DONE:
+/* TODO: merge */
+<<<<<<< jobstat.c
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[cis->pub.state+1]++;
 			pis->children_done_hist[cis->pub.done_code]++;
@@ -896,7 +892,19 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 				}
 			}
 			update_hist = 1;
+=======
+			if (stat->done_code == EDG_WLL_STAT_OK)
+				return(SUBJOB_CLASS_DONE);
+			else
+				// failed & cancelled
+				return(SUBJOB_CLASS_REST);
 			break;
+		case EDG_WLL_JOB_ABORTED:
+			return(SUBJOB_CLASS_ABORTED);
+>>>>>>> 1.47.2.6
+			break;
+/* TODO: merge */
+<<<<<<< jobstat.c
 		case EDG_WLL_JOB_CLEARED: 
 			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 			pis->pub.children_hist[cis->pub.state+1]++;
@@ -912,16 +920,91 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 				}
 			}
 			update_hist = 1;
+=======
+		case EDG_WLL_JOB_CLEARED:
+			return(SUBJOB_CLASS_CLEARED);
+>>>>>>> 1.47.2.6
 			break;
 		default:
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[EDG_WLL_JOB_UNKNOWN+1]++;
-			// update_hist = 1; - triggered by the next case or not needed
+			return(SUBJOB_CLASS_REST);
 			break;
 	}
+/* TODO: merge */
+<<<<<<< jobstat.c
 	
 	if (update_hist) 
+=======
+}
+
+/* Mapping of subjob class to some field in childen_hist */
+static edg_wll_JobStatCode class_to_statCode(subjobClassCodes code)
+{
+	switch (code) {
+		case SUBJOB_CLASS_RUNNING:	return(EDG_WLL_JOB_RUNNING); break;
+		case SUBJOB_CLASS_DONE:		return(EDG_WLL_JOB_DONE); break;
+		case SUBJOB_CLASS_ABORTED:	return(EDG_WLL_JOB_ABORTED); break;
+		case SUBJOB_CLASS_CLEARED:	return(EDG_WLL_JOB_CLEARED); break;
+		case SUBJOB_CLASS_REST:		return(EDG_WLL_JOB_UNKNOWN); break;
+		default:			assert(0); break;
+	}
+}
+
+/* count parent state from subjob histogram */
+static edg_wll_JobStatCode process_Histogram(intJobStat *pis)
+{
+	if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_RUNNING)+1] > 0) {
+		return EDG_WLL_JOB_RUNNING;
+	}
+	else if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] == pis->pub.children_num) {
+		return EDG_WLL_JOB_CLEARED;
+	}
+	else if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1] 
+			+ pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] == pis->pub.children_num) {
+		return EDG_WLL_JOB_DONE;
+	}
+	else if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_ABORTED)+1]
+			+ pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1]
+			+ pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] == pis->pub.children_num) {
+		return EDG_WLL_JOB_ABORTED;
+	}
+	else
+		return EDG_WLL_JOB_WAITING;
+}
+
+static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobStat *subjob_stat_old, intJobStat *cis, edg_wll_Event *ce)
+{
+	intJobStat		*pis = NULL;
+	subjobClassCodes	subjob_class, subjob_class_old;
+	edg_wll_JobStatCode	parent_new_state;
+
+
+	subjob_class = class(&cis->pub);
+	subjob_class_old = class(subjob_stat_old);
+
+
+	if (subjob_class_old != subjob_class) {
+		if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
+
+		pis->pub.children_hist[class_to_statCode(subjob_class)+1]++;
+		pis->pub.children_hist[class_to_statCode(subjob_class_old)+1]--;
+
+>>>>>>> 1.47.2.6
 		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
+
+
+		if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
+			parent_new_state = process_Histogram(pis);
+			if (pis->pub.state != parent_new_state) {
+				// XXX: we do not need  EDG_WLL_STAT_code any more
+				//	doneFailed subjob is stored in REST class and
+				//	inducting collection Waiting state
+				//	-> in future may be removed from collectionState event
+				//	   supposing collection Done state to be always DoneOK
+				if (log_collectionState_event(ctx, parent_new_state, EDG_WLL_STAT_OK, cis, pis, ce))
+					goto err;
+			}
+		}
+	}
 
 err:
 	edg_wll_UnlockJob(ctx,cis->pub.parent_job);
@@ -932,6 +1015,7 @@ err:
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
+
 
 
 /*
@@ -1024,7 +1108,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 
 		/* check whether subjob state change does not change parent state */
 		if ((ijsp->pub.parent_job) && (oldstat.state != ijsp->pub.state)) { 
-			if (update_parent_status(ctx, oldstat.state, oldstat.done_code, ijsp, e))
+			if (update_parent_status(ctx, &oldstat, ijsp, e))
 				return edg_wll_SetError(ctx, EINVAL, "update_parent_status()");
 		}
 

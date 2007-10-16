@@ -278,9 +278,10 @@ static void usage(char *me)
 
 static void wait_for_open(edg_wll_Context,const char *);
 static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
+static int add_root(char *);
 static int read_roots(const char *);
 static int asyn_gethostbyaddr(char **, const char *, int, int, struct timeval *);
-static int amIroot(const char *);
+static int amIroot(const char *, char **);
 static int parse_limits(char *, int *, int *, int *);
 static int check_mkdir(const char *);
 
@@ -385,10 +386,14 @@ int main(int argc, char *argv[])
 	char 			socket_path_prefix[PATH_MAX] = GLITE_LBPROXY_SOCK_PREFIX;
 
 
+/* TODO: merge */
+<<<<<<< bkserverd.c
 	/* keep this at start of main() ! */
 	dtablesize = getdtablesize();
 	for (fd=3; fd < dtablesize ; fd++) close(fd);
 
+=======
+>>>>>>> 1.52.2.12
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
 
@@ -441,21 +446,8 @@ int main(int argc, char *argv[])
 		case 'X': notif_ilog_socket_path = strdup(optarg); break;
 		case 'Y': notif_ilog_file_prefix = strdup(optarg); break;
 		case 'i': strcpy(pidfile,optarg); break;
-		case 'R': if (super_users) {
-				  fprintf(stderr,"%s: super-users already defined, second occurence ignored\n",
-						  argv[0]);
-				  break;
-			  }
-			  super_users = malloc(2 * sizeof super_users[0]);
-			  super_users[0] = optarg;
-			  super_users[1] = NULL;
-			  break;
-		case 'F': if (super_users) {
-				  fprintf(stderr,"%s: super-users already defined, second occurence ignored\n",
-						  argv[0]);
-				  break;
-			  }
-			  if (read_roots(optarg)) return 1;
+		case 'R': add_root(optarg); break;
+		case 'F': if (read_roots(optarg)) return 1;
 			  break;
 		case 'x': noIndex = atoi(optarg);
 			  if (noIndex < 0 || noIndex > 2) { usage(name); return 1; }
@@ -523,6 +515,8 @@ int main(int argc, char *argv[])
 
 	semkey = ftok(pidfile,0);
 
+/* TODO: merge */
+<<<<<<< bkserverd.c
 	if (mode & SERVICE_SERVER) {
 		if (check_mkdir(dumpStorage)) exit(1);
 		if (check_mkdir(purgeStorage)) exit(1);
@@ -532,6 +526,15 @@ int main(int argc, char *argv[])
 				if (!debug) syslog(LOG_CRIT, "edg_wll_MaildirInit failed: %s", lbm_errdesc);
 				exit(1);
 			}
+=======
+	if (check_mkdir(dumpStorage)) exit(1);
+	if (check_mkdir(purgeStorage)) exit(1);
+	if ( jpreg ) {
+		if ( edg_wll_MaildirInit(jpregDir) ) {
+			dprintf(("[%d] edg_wll_MaildirInit failed: %s\n", getpid(), lbm_errdesc));
+			if (!debug) syslog(LOG_CRIT, "edg_wll_MaildirInit failed: %s", lbm_errdesc);
+			exit(1);
+>>>>>>> 1.52.2.12
 		}
 	}
 
@@ -739,6 +742,7 @@ int main(int argc, char *argv[])
 	use_dbcaps = ctx->dbcaps;
 
 	if (count_statistics) edg_wll_InitStatistics(ctx);
+	if ((ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS)) strict_locking = 1;
 	edg_wll_FreeContext(ctx);
 
 	if ( !debug ) {
@@ -909,8 +913,16 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 {
 	struct clnt_data_t *cdata = (struct clnt_data_t *)data;
 	edg_wll_Context		ctx;
+/* TODO: merge */
+<<<<<<< bkserverd.c
 	edg_wll_GssPrincipal	client = NULL;
 	edg_wll_GssCred		newcred = NULL;
+=======
+	gss_name_t			client_name = GSS_C_NO_NAME;
+	gss_buffer_desc		token = GSS_C_EMPTY_BUFFER;
+	gss_cred_id_t		newcred = GSS_C_NO_CREDENTIAL;
+	gss_OID			name_type = GSS_C_NO_OID;
+>>>>>>> 1.52.2.12
 	edg_wll_GssStatus	gss_code;
 	struct timeval		dns_to = {DNS_TIMEOUT, 0},
 						conn_start, now;
@@ -922,21 +934,23 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 
 
-/* don't care :-( 
 	switch ( edg_wll_gss_watch_creds(server_cert, &cert_mtime) ) {
 	case 0: break;
 	case 1:
-*/
 		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, NULL, &gss_code) ) {
+/* TODO: merge */
+<<<<<<< bkserverd.c
 			dprintf(("[%d] reloading credentials\n", getpid()));
 			edg_wll_gss_release_cred(&mycred, NULL);
+=======
+			dprintf(("[%d] reloading credentials successful\n", getpid()));
+			gss_release_cred(&min_stat, &mycred);
+>>>>>>> 1.52.2.12
 			mycred = newcred;
 		} else { dprintf(("[%d] reloading credentials failed, using old ones\n", getpid())); }
-/* 
 		break;
 	case -1: dprintf(("[%d] edg_wll_gss_watch_creds failed\n", getpid())); break;
 	}
-*/
 
 	if ( edg_wll_InitContext(&ctx) )
 	{
@@ -1091,6 +1105,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		return 1;
 	} 
 
+/* TODO: merge */
+<<<<<<< bkserverd.c
 	ret = edg_wll_gss_get_client_conn(&ctx->connections->serverConnection->gss, &client, NULL);
 	if (ret || client->flags & EDG_WLL_GSS_FLAG_ANON) {
 		dprintf(("[%d] annonymous client\n",getpid()));
@@ -1098,9 +1114,49 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		if (ctx->peerName) free(ctx->peerName);
 		ctx->peerName = strdup(client->name);
 		edg_wll_gss_free_princ(client);
+=======
+	maj_stat = gss_inquire_context(&min_stat, ctx->connections->serverConnection->gss.context,
+							&client_name, NULL, NULL, NULL, NULL, NULL, NULL);
+	if ( !GSS_ERROR(maj_stat) )
+		maj_stat = gss_display_name(&min_stat, client_name, &token, &name_type);
+>>>>>>> 1.52.2.12
 
+/* TODO: merge */
+<<<<<<< bkserverd.c
 		dprintf(("[%d] client DN: %s\n",getpid(),ctx->peerName));
+=======
+	if ( !GSS_ERROR(maj_stat) )
+	{
+		if (ctx->peerName) free(ctx->peerName);
+		if (!edg_wll_gss_oid_equal(name_type, GSS_C_NT_ANONYMOUS)) {
+			ctx->peerName = (char *)token.value;
+			memset(&token, 0, sizeof(token));
+			dprintf(("[%d] client DN: %s\n",getpid(),ctx->peerName));
+		} else {
+			ctx->peerName = NULL;
+			dprintf(("[%d] anonymous client\n",getpid()));
+		}
+
+		/* XXX DK: pujde pouzit lifetime z inquire_context()?
+		 *
+		ctx->peerProxyValidity = ASN1_UTCTIME_mktime(X509_get_notAfter(peer));
+		 */
+  
+>>>>>>> 1.52.2.12
 	}
+/* TODO: merge */
+<<<<<<< bkserverd.c
+=======
+	else
+		/* XXX DK: Check if the ANONYMOUS flag is set ?
+		 */
+		dprintf(("[%d] anonymous client\n",getpid()));
+		  
+	if ( client_name != GSS_C_NO_NAME )
+		gss_release_name(&min_stat, &client_name);
+	if ( token.value )
+		gss_release_buffer(&min_stat, &token);
+>>>>>>> 1.52.2.12
 
 	if ( edg_wll_SetVomsGroups(ctx, &ctx->connections->serverConnection->gss, server_cert, server_key, vomsdir, cadir) )
 	{
@@ -1119,20 +1175,27 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		for ( i = 0; i < ctx->vomsGroups.len; i++ )
 			dprintf(("\t%s:%s\n", ctx->vomsGroups.val[i].vo, ctx->vomsGroups.val[i].name));
 	}
+	if (debug && ctx->fqans && *(ctx->fqans))
+	{
+		char **f;
+
+		dprintf(("[%d] client's FQANs:\n",getpid()));
+		for (f = ctx->fqans; f && *f; f++)
+			dprintf(("\t%s\n", *f));
+	}
 	
 	/* used also to reset start_time after edg_wll_ssl_accept! */
 	/* gettimeofday(&start_time,0); */
 	
-	ctx->noAuth = noAuth || amIroot(ctx->peerName);
+	ctx->noAuth = noAuth || amIroot(ctx->peerName, ctx->fqans);
 	switch ( noIndex )
 	{
 	case 0: ctx->noIndex = 0; break;
-	case 1: ctx->noIndex = amIroot(ctx->peerName); break;
+	case 1: ctx->noIndex = amIroot(ctx->peerName, ctx->fqans); break;
 	case 2: ctx->noIndex = 1; break;
 	}
 	ctx->strict_locking = strict_locking;
 	ctx->greyjobs = greyjobs;
-
 
 	return 0;
 }
@@ -1277,6 +1340,7 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 		case EDG_WLL_ERROR_GSS:
 		case EPIPE:
 		case EIO:
+		case EDG_WLL_IL_PROTO:
 			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
 			if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
 			/*	fallthrough
@@ -1290,11 +1354,21 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 			break;
 
 		case ENOENT:
-		case EINVAL:
 		case EPERM:
 		case EEXIST:
 		case EDG_WLL_ERROR_NOINDEX:
 		case E2BIG:
+			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
+			break;
+		case EINVAL:
+		case EDG_WLL_ERROR_PARSE_BROKEN_ULM:
+		case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
+		case EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE:
+		case EDG_WLL_ERROR_PARSE_KEY_DUPLICITY:
+		case EDG_WLL_ERROR_PARSE_KEY_MISUSE:
+		case EDG_WLL_ERROR_PARSE_OK_WITH_EXTRA_FIELDS:
+		case EDG_WLL_ERROR_JOBID_FORMAT:
+		case EDG_WLL_ERROR_MD5_CLASH:
 			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
 			if ( !debug ) syslog(LOG_ERR,"%s (%s)", errt, errd);
 			/*
@@ -1302,6 +1376,8 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 			 */
 			break;
 			
+		case EDG_WLL_ERROR_DB_CALL:
+		case EDG_WLL_ERROR_SERVER_RESPONSE:
 		default:
 			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
 			if (!debug) syslog(LOG_CRIT,"%s (%s)",errt,errd);
@@ -1675,11 +1751,38 @@ static int asyn_gethostbyaddr(char **name, const char *addr,int len, int type, s
 	return (ar.err);
 }
 
+static int add_root(char *root)
+{
+	char *null_suffix, **tmp;
+	int i, cnt;
+
+	for (cnt = 0; super_users && super_users[cnt]; cnt++)
+		;
+	/* try to be compliant with the new FQAN format that excludes
+	   the Capability and empty Role components */
+	null_suffix = strstr(root, "/Role=NULL/Capability=NULL");
+	if (null_suffix == NULL)
+		null_suffix = strstr(root, "/Capability=NULL");
+	i = (null_suffix == NULL) ? 0 : 1;
+
+	tmp = realloc(super_users, (cnt+2+i) * sizeof super_users[0]);
+	if (tmp == NULL)
+		return ENOMEM;
+	super_users = tmp;
+	super_users[cnt] = strdup(root);
+	if (null_suffix) {
+		*null_suffix = '\0'; /* changes the input, should be harmless */
+		super_users[++cnt] = strdup(root);
+	}
+	super_users[++cnt] = NULL;
+
+	return 0;
+}
+
 static int read_roots(const char *file)
 {
 	FILE	*roots = fopen(file,"r");
 	char	buf[BUFSIZ];
-	int	cnt = 0;
 
 	if (!roots) {
 		syslog(LOG_WARNING,"%s: %m, continuing without --super-users-file",file);
@@ -1691,10 +1794,7 @@ static int read_roots(const char *file)
 		char	*nl;
 		nl = strchr(buf,'\n');
 		if (nl) *nl = 0;
-
-		super_users = realloc(super_users, (cnt+2) * sizeof super_users[0]);
-		super_users[cnt] = strdup(buf);
-		super_users[++cnt] = NULL;
+		add_root(buf);
 	}
 
 	fclose(roots);
@@ -1702,13 +1802,18 @@ static int read_roots(const char *file)
 	return 0;
 }
 
-static int amIroot(const char *subj)
+static int amIroot(const char *subj, char **fqans)
 {
 	int	i;
+	char	**f;
 
-	if (!subj) return 0;
-	for (i=0; super_users && super_users[i]; i++) 
-		if (strcmp(subj,super_users[i]) == 0) return 1;
+	if (!subj && !fqans ) return 0;
+	for (i=0; super_users && super_users[i]; i++)
+		if (strncmp(super_users[i], "FQAN:", 5) == 0) {
+			for (f = fqans; f && *f; f++)
+				if (strcmp(*f, super_users[i]+5) == 0) return 1;
+		} else
+			if (strcmp(subj,super_users[i]) == 0) return 1;
 
 	return 0;
 }

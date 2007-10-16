@@ -89,7 +89,7 @@ static char *enc_int_array(char *old, int *item, int itemsNo)
 
 	strpom=(char*)calloc(strlen(old)+1,sizeof(char));
 
-	for (index=0; index <= itemsNo; index++) sprintf(strpom,"%s%d%s", strpom, item[index],index==itemsNo?"":";");
+	for (index=0; index <= itemsNo; index++) sprintf(strpom+strlen(strpom),"%d%s", item[index],index==itemsNo?"":";");
 
         asprintf(&out,"%s%s ", old, strpom);
 	free(strpom);
@@ -496,6 +496,8 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_int(ret, stat->payload_running);
 	if (ret) ret = enc_strlist(ret, stat->possible_destinations);
 	if (ret) ret = enc_strlist(ret, stat->possible_ce_nodes);
+	if (ret) ret = enc_int(ret, stat->suspended);
+	if (ret) ret = enc_string(ret, stat->suspend_reason);
 	if (ret) ret = enc_int_array(ret, stat->children_hist, EDG_WLL_NUMBER_OF_STATCODES);
 	if (ret) ret = enc_string(ret, stat->pbs_state);
 	if (ret) ret = enc_string(ret, stat->pbs_queue);
@@ -507,6 +509,19 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_int(ret, stat->pbs_pid);
 	if (ret) ret = enc_int(ret, stat->pbs_exit_status);
 	if (ret) ret = enc_string(ret, stat->pbs_error_desc);
+	if (ret) ret = enc_string(ret, stat->condor_status);
+	if (ret) ret = enc_string(ret, stat->condor_universe);
+	if (ret) ret = enc_string(ret, stat->condor_owner);
+	if (ret) ret = enc_string(ret, stat->condor_preempting);
+	if (ret) ret = enc_int(ret, stat->condor_shadow_pid);
+	if (ret) ret = enc_int(ret, stat->condor_shadow_exit_status);
+	if (ret) ret = enc_int(ret, stat->condor_starter_pid);
+	if (ret) ret = enc_int(ret, stat->condor_starter_exit_status);
+	if (ret) ret = enc_int(ret, stat->condor_job_pid);
+	if (ret) ret = enc_int(ret, stat->condor_job_exit_status);
+	if (ret) ret = enc_string(ret, stat->condor_dest_host);
+	if (ret) ret = enc_string(ret, stat->condor_reason);
+	if (ret) ret = enc_string(ret, stat->condor_error_desc);
 
 	return ret;
 }
@@ -555,6 +570,8 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->payload_running = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->possible_destinations = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->possible_ce_nodes = dec_strlist(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->suspended = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->suspend_reason = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) {
 			    stat->children_hist = (int*)calloc(EDG_WLL_NUMBER_OF_STATCODES+1, sizeof(int));
 			    dec_int_array(tmp_in, &tmp_in, stat->children_hist);
@@ -569,6 +586,19 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->pbs_pid = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_exit_status = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_error_desc = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->condor_status = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->condor_universe = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->condor_owner = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->condor_preempting = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_shadow_pid = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_shadow_exit_status = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_starter_pid = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_starter_exit_status = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_job_pid = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_job_exit_status = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_dest_host = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_reason = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->condor_error_desc = dec_string(tmp_in, &tmp_in);
 
 	*rest = tmp_in;
 
@@ -587,7 +617,6 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	if (ret) ret = enc_string(ret, stat->last_branch_seqcode);
 	if (ret) ret = enc_string(ret, stat->deep_resubmit_seqcode);
 	if (ret) ret = enc_branch_states(ret, stat->branch_states);
-	if (ret) ret = enc_int_array(ret, stat->children_done_hist, EDG_WLL_NUMBER_OF_DONE_CODES-1);
 	if (ret) ret = enc_timeval(ret, stat->last_pbs_event_timestamp);
 	if (ret) ret = enc_int(ret, stat->pbs_reruning);
 	return ret;
@@ -627,9 +656,6 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 			stat->branch_states = dec_branch_states(tmp_in, &tmp_in);
 		}
 		if (tmp_in != NULL) {
-			dec_int_array(tmp_in, &tmp_in, stat->children_done_hist);
-		}
-		if (tmp_in != NULL) {
 			stat->last_pbs_event_timestamp = dec_timeval(tmp_in, &tmp_in);
 		}
 		if (tmp_in != NULL) {
@@ -659,6 +685,7 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 	char *names, *values;
 	char *data;
 	char *tmp;
+	char *tmpval;
 	edg_wll_IColumnRec *job_index_cols = (edg_wll_IColumnRec *)job_index_cols_v;
 
 	edg_wll_ResetError(ctx);
@@ -671,9 +698,11 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 		data = NULL;
 		switch (job_index_cols[i].qrec.attr) {
 			case EDG_WLL_QUERY_ATTR_OWNER:
-				if (stat->pub.owner)
-					trio_asprintf(&data, "'%|Ss'", stat->pub.owner);
-				else data = strdup("''");
+				if (stat->pub.owner) {
+					tmpval = edg_wll_gss_normalize_subj(stat->pub.owner, 0);
+					trio_asprintf(&data, "'%|Ss'", tmpval);
+					free(tmpval);
+				} else data = strdup("''");
 				break;
 			case EDG_WLL_QUERY_ATTR_LOCATION:
 				if (stat->pub.location)
@@ -706,6 +735,12 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 				break;
 			case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 				asprintf(&data, "%d", stat->pub.resubmitted);
+				break;
+			case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+				data = strdup(edg_wll_TimeToDB(stat->pub.stateEnterTime.tv_sec));
+				break;
+			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
+				data = strdup(edg_wll_TimeToDB(stat->pub.lastUpdateTime.tv_sec));
 				break;
 
 				/* XXX add more attributes when defined */
@@ -826,11 +861,12 @@ int same_branch(const char *a, const char *b)
 
 int edg_wll_compare_pbs_seq(const char *a,const char *b)
 {
-	char	timestamp_a[14], pos_a[10], ev_code_a, src_a;
-	char	timestamp_b[14], pos_b[10], ev_code_b, src_b;
+	char	timestamp_a[14], pos_a[10], src_a;
+	char	timestamp_b[14], pos_b[10], src_b;
+	int	ev_code_a, ev_code_b;
 	int	res;
 
-	res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", &timestamp_a, &pos_a, &ev_code_a, &src_a);	
+	res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_a, pos_a, &ev_code_a, &src_a);	
 
 	if (res != 4) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", a);
@@ -838,7 +874,7 @@ int edg_wll_compare_pbs_seq(const char *a,const char *b)
 		return -1;
 	}
 
-	res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", &timestamp_b, &pos_b, &ev_code_b, &src_b);	
+	res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_b, pos_b, &ev_code_b, &src_b);	
 
 	if (res != 4) {
 		syslog(LOG_ERR, "unparsable sequence code %s\n", b);
@@ -881,7 +917,7 @@ int edg_wll_compare_pbs_seq(const char *a,const char *b)
 }
 
 edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num) {
-	switch (pbs_seq_num[EDG_WLL_SEQ_PBS_SIZE-1]) {
+	switch (pbs_seq_num[EDG_WLL_SEQ_PBS_SIZE - 2]) {
 		case 'c': return(EDG_WLL_PBS_EVENT_SOURCE_SCHEDULER);
 		case 's': return(EDG_WLL_PBS_EVENT_SOURCE_SERVER);
 		case 'm': return(EDG_WLL_PBS_EVENT_SOURCE_MOM);
@@ -890,6 +926,8 @@ edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num) {
 	}
 }
 
+/* TODO: merge */
+<<<<<<< jobstat_supp.c
 edg_wll_CondorEventSource get_condor_event_source(const char *condor_seq_num) {
 	switch (condor_seq_num[EDG_WLL_SEQ_CONDOR_SIZE-1]) {
 		case 'L': return(EDG_WLL_CONDOR_EVENT_SOURCE_COLLECTOR);
@@ -905,6 +943,23 @@ edg_wll_CondorEventSource get_condor_event_source(const char *condor_seq_num) {
 	}
 }
 
+=======
+edg_wll_CondorEventSource get_condor_event_source(const char *condor_seq_num) {
+	switch (condor_seq_num[EDG_WLL_SEQ_CONDOR_SIZE - 2]) {
+		case 'L': return(EDG_WLL_CONDOR_EVENT_SOURCE_COLLECTOR);
+		case 'M': return(EDG_WLL_CONDOR_EVENT_SOURCE_MASTER);
+		case 'm': return(EDG_WLL_CONDOR_EVENT_SOURCE_MATCH);
+		case 'N': return(EDG_WLL_CONDOR_EVENT_SOURCE_NEGOTIATOR);
+		case 'C': return(EDG_WLL_CONDOR_EVENT_SOURCE_SCHED);
+		case 'H': return(EDG_WLL_CONDOR_EVENT_SOURCE_SHADOW);
+		case 's': return(EDG_WLL_CONDOR_EVENT_SOURCE_STARTER);
+		case 'S': return(EDG_WLL_CONDOR_EVENT_SOURCE_START);
+		case 'j': return(EDG_WLL_CONDOR_EVENT_SOURCE_JOBQUEUE);
+		default: return(EDG_WLL_CONDOR_EVENT_SOURCE_UNDEF);
+	}
+}
+
+>>>>>>> 1.26.2.10
 int edg_wll_compare_seq(const char *a, const char *b)
 {
 	unsigned int    c[EDG_WLL_SOURCE__LAST];

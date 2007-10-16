@@ -10,7 +10,7 @@
  * (includes edg_wll_JobStat API structure)
  */
 
-#define INTSTAT_VERSION "release-3.2.1_pbs"
+#define INTSTAT_VERSION "release-3.3.4"
 
 
 // Internal error codes 
@@ -51,8 +51,6 @@ typedef struct _intJobStat {
 		char		*deep_resubmit_seqcode;
 		branch_state	*branch_states;		// branch zero terminated array
 
-/*		int		expect_mask; */
-		int 		children_done_hist[EDG_WLL_NUMBER_OF_DONE_CODES];
 		struct timeval	last_pbs_event_timestamp;
 		int		pbs_reruning;		// true if rerun event arrived
 	} intJobStat;
@@ -66,6 +64,8 @@ typedef enum _edg_wll_PBSEventSource {
 	EDG_WLL_PBS_EVENT_SOURCE__LAST
 } edg_wll_PBSEventSource;
 
+/* TODO: merge */
+<<<<<<< jobstat.h
 typedef enum _edg_wll_CondorEventSource {
 	EDG_WLL_CONDOR_EVENT_SOURCE_UNDEF = 0,
 	EDG_WLL_CONDOR_EVENT_SOURCE_COLLECTOR,
@@ -82,6 +82,32 @@ typedef enum _edg_wll_CondorEventSource {
 
 int edg_wll_JobStatus(edg_wll_Context, const edg_wlc_JobId, int, edg_wll_JobStat *);
 
+=======
+typedef enum _edg_wll_CondorEventSource {
+	EDG_WLL_CONDOR_EVENT_SOURCE_UNDEF = 0,
+	EDG_WLL_CONDOR_EVENT_SOURCE_COLLECTOR,
+	EDG_WLL_CONDOR_EVENT_SOURCE_MASTER,
+	EDG_WLL_CONDOR_EVENT_SOURCE_MATCH,
+	EDG_WLL_CONDOR_EVENT_SOURCE_NEGOTIATOR,
+	EDG_WLL_CONDOR_EVENT_SOURCE_SCHED,
+	EDG_WLL_CONDOR_EVENT_SOURCE_SHADOW,
+	EDG_WLL_CONDOR_EVENT_SOURCE_STARTER,
+	EDG_WLL_CONDOR_EVENT_SOURCE_START,
+	EDG_WLL_CONDOR_EVENT_SOURCE_JOBQUEUE,
+	EDG_WLL_CONDOR_EVENT_SOURCE__LAST
+} edg_wll_CondorEventSource;
+
+typedef enum _subjobClassCodes {
+	SUBJOB_CLASS_UNDEF = 0,
+	SUBJOB_CLASS_RUNNING,
+	SUBJOB_CLASS_DONE,
+	SUBJOB_CLASS_ABORTED,
+	SUBJOB_CLASS_CLEARED,
+	SUBJOB_CLASS_REST
+} subjobClassCodes;
+
+
+>>>>>>> 1.22.2.7
 void destroy_intJobStat(intJobStat *);
 void destroy_intJobStat_extension(intJobStat *p);
 

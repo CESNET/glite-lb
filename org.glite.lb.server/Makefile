@@ -98,8 +98,8 @@ ifdef LB_PROF
 	LDFLAGS:=${LDFLAGS} -pg
 else
 	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lbu_server_bones
-	LB_COMMON_LIB:=-lglite_lb_common_${nothrflavour}
-	LB_UTILS_DB_LIB:=-lglite_lbu_db
+	LB_COMMON_LIB:=-L${stagedir}/lib -lglite_lb_common_${nothrflavour}
+	LB_UTILS_DB_LIB:=-L${stagedir}/lib -lglite_lbu_db
 	LDFLAGS:= -L${stagedir}/lib
 endif
 
@@ -143,7 +143,7 @@ endif
 ifeq (${nothrflavour},gcc32dbg)
 	vomsflavour :=
 endif
-VOMS_LIBS:=-L${voms_prefix}/lib -lvomsc${vomsflavour}
+VOMS_LIBS:=-L${voms_prefix}/lib -lvomsapi${vomsflavour}
 
 #EXT_LIBS:= \
 #	${expatlib} -lexpat \
@@ -151,7 +151,7 @@ VOMS_LIBS:=-L${voms_prefix}/lib -lvomsc${vomsflavour}
 #	-lvomsc${vomsflavour} \
 
 ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/lib -lclassad
+	classadslib := -L${classads_prefix}/${archlib} -lclassad
 endif
 
 EXT_LIBS:=  \
@@ -258,7 +258,11 @@ else
 endif
 endif
 
+<<<<<<< Makefile
 compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${PLUGIN_LIB} ${MAN_GZ}
+=======
+compile: glite-lb-bkserverd glite-lb-bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c jp_job_attrs.h
+>>>>>>> 1.101.2.10
 
 generate: store.c index.c jp_job_attrs.h
 
@@ -292,21 +296,28 @@ LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 	rm -f LBTypes.wsdl
 
 test.xml: test_xml
-#	./test_xml
+	./test_xml
 
 test_xml: test_xml.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${COMMON_LIBS} ${TEST_LIBS} ${EXT_LIBS}
+	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${LB_COMMON_LIB} ${TEST_LIBS}
 
 test.query: test_query_events
 	./test_query_events
 
 #query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
+<<<<<<< Makefile
 query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/bkserverd\.o//;'`
+=======
+#query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/lb_authz\.o//'`
+>>>>>>> 1.101.2.10
 
-test_query_events: test_query_events.o
-	${LINKXX} -o $@ test_query_events.o ${query_events_objs} \
-	${TEST_LIBS} ${COMMON_LIBS} ${EXT_LIBS}
+query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o index.o
+
+test_query_events: ${query_events_objs}
+	${LINKXX} -o $@ ${query_events_objs} \
+	${TEST_LIBS} ${LB_COMMON_LIB}
+#	${TEST_LIBS} ${COMMON_LIBS} ${EXT_LIBS}
 
 test.soapconv: test_soap_conv
 	./test_soap_conv
@@ -365,6 +376,7 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
 
+<<<<<<< Makefile
 	if [ ${stagedir} != ${PREFIX} ]; then ${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; fi
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix})
@@ -372,12 +384,24 @@ install:
 	if [ x${LB_STANDALONE} = x -a x${PLUGIN_LIB} != x ]; then \
 		${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
 		${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
+=======
+	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
+	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix})
+	install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib
+	if [ x${LB_STANDALONE} = x -a x${PLUGIN_LIB} != x ]; then \
+		${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
+		${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
+>>>>>>> 1.101.2.10
 	fi
 	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}
 
 clean:
+<<<<<<< Makefile
 	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${PLUGIN_LIB} test*
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+=======
+	rm -rf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test*
+>>>>>>> 1.101.2.10
 
 %.c: %.c.T
 	rm -f $@

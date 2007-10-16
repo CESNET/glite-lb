@@ -18,14 +18,27 @@ int edg_wll_UserJobs(
 	edg_wlc_JobId	**jobs,
 	edg_wll_JobStat	**states)
 {
-	char	*userid = strmd5(ctx->peerName,NULL),*stmt = NULL,
+	char	*userid, *stmt = NULL,
 		*res = NULL;
+/* TODO: merge */
+<<<<<<< userjobs.c
 	int	njobs = 0,ret,i,j;
+=======
+	char	*can_peername;
+	int	njobs = 0,ret,i;
+>>>>>>> 1.2.30.3
 	edg_wlc_JobId	*out = NULL;
 	glite_lbu_Statement	sth = NULL;
 	edg_wll_ErrorCode	err = 0;
 
 	edg_wll_ResetError(ctx);
+	
+	if (!ctx->peerName) {
+		return edg_wll_SetError(ctx,EPERM, "user not authenticated (edg_wll_UserJobs)");
+	}
+	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
+	userid = strmd5(can_peername,NULL);
+	free(can_peername);
 
 	trio_asprintf(&stmt,"select cert_subj from users where userid = '%|Ss'",userid);
 
@@ -33,8 +46,14 @@ int edg_wll_UserJobs(
 		case 0: edg_wll_SetError(ctx,ENOENT,ctx->peerName);
 		case -1: goto err;
 		default:
+/* TODO: merge */
+<<<<<<< userjobs.c
 			if (edg_wll_FetchRow(ctx,sth,1,NULL,&res) < 0) goto err;
 			if (strcmp(ctx->peerName,res)) {
+=======
+			if (edg_wll_FetchRow(sth,&res) < 0) goto err;
+			if (!edg_wll_gss_equal_subj(ctx->peerName,res)) {
+>>>>>>> 1.2.30.3
 				edg_wll_SetError(ctx,EDG_WLL_ERROR_MD5_CLASH,ctx->peerName);
 				goto err;
 			}

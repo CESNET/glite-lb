@@ -27,8 +27,9 @@ int edg_wll_ServerHTTP(edg_wll_Context ctx)
 	if ( ctx->isProxy ) err = edg_wll_http_recv_proxy(ctx,&req,&hdr,&body);
 	else err = edg_wll_http_recv(ctx,&req,&hdr,&body,ctx->connections->serverConnection);
 
-	dprintf(("[%d] %s\n",getpid(),req));
-	if (body) dprintf(("\n%s\n\n",body));
+	if (req) dprintf(("[%d] request: %s\n",getpid(),req));
+		else dprintf(("no request\n"));
+	if (body) dprintf(("request body:\n%s\n\n",body));
 
 	if (!err) {
 		if ((err = edg_wll_Proto(ctx,req,hdr,body,&resp,&hdrOut,&bodyOut))) 

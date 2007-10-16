@@ -64,6 +64,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 }
 
 #define rep(a,b) { free(a); a = (b == NULL) ? NULL : strdup(b); }
+#define rep_cond(a,b) { if (b) { free(a); a = strdup(b); } }
 
 static void free_stringlist(char ***lptr)
 {
@@ -270,7 +271,9 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				
 	int	lm_favour_lrms = 0;
 
-	if (old_state == EDG_WLL_JOB_ABORTED ||
+	// Aborted may not be terminal state for collection in some cases
+	// i.e. if some Done/failed subjob is resubmitted
+	if ( (old_state == EDG_WLL_JOB_ABORTED && e->any.type != EDG_WLL_EVENT_COLLECTIONSTATE) ||
 		old_state == EDG_WLL_JOB_CANCELLED ||
 		old_state == EDG_WLL_JOB_CLEARED) {
 		res = RET_LATE;
@@ -647,6 +650,22 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			}
 #endif
 			break;
+		case EDG_WLL_EVENT_SUSPEND:
+			if (USABLE(res, strict)) {
+				if (js->pub.state == EDG_WLL_JOB_RUNNING) {
+					js->pub.suspended = 1;
+					rep(js->pub.suspend_reason, e->suspend.reason);
+				}
+			}
+			break;
+		case EDG_WLL_EVENT_RESUME:
+			if (USABLE(res, strict)) {
+				if (js->pub.state == EDG_WLL_JOB_RUNNING) {
+					js->pub.suspended = 0;
+					rep(js->pub.suspend_reason, e->resume.reason);
+				}
+			}
+			break;
 		case EDG_WLL_EVENT_RESUBMISSION:
 			if (USABLE(res, strict)) {
 				if (e->resubmission.result == EDG_WLL_RESUBMISSION_WONTRESUB) {
@@ -814,7 +833,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				js->pub.state = EDG_WLL_JOB_SUBMITTED;
 			}
 			if (USABLE_DATA(res, strict)) {
-				rep(js->pub.jdl, e->regJob.jdl);
+				rep_cond(js->pub.jdl, e->regJob.jdl);
 				edg_wlc_JobIdFree(js->pub.parent_job);
 				edg_wlc_JobIdDup(e->regJob.parent,
 							&js->pub.parent_job);
@@ -878,7 +897,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			rep(js->last_cancel_seqcode, e->any.seqcode);
 		} else {
 
-/* the first set of LM events (Accept, Transfer* -> LRMS)
+/* the first set of LM events (Accept, Transfer/- -> LRMS)
    should not should shift the state (to Ready, Scheduled) but NOT to
    update js->last_seqcode completely, in order not to block following
    LRMS events which are likely to arrive later but should still affect
@@ -891,6 +910,11 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				js->last_seqcode = set_component_seqcode(e->any.seqcode,EDG_WLL_SOURCE_LOG_MONITOR,0);
 			}
 			else rep(js->last_seqcode, e->any.seqcode);
+		}
+
+		if (js->pub.state != EDG_WLL_JOB_RUNNING) {
+			js->pub.suspended = 0;
+			rep(js->pub.suspend_reason, NULL);
 		}
 
 		if (fine_res == RET_GOODBRANCH) {

@@ -66,10 +66,14 @@ start()
 		$super $creds -i $pidfile $port $wport $dumpdir $purgedir $maildir" \
 	&& echo " done" || echo " FAILED"
 
-	echo -n Starting glite-lb-notif-interlogd ...
-	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
-		-f $GLITE_LB_NOTIF_FPREFIX -s $GLITE_LB_NOTIF_SOCK \
-		$creds" && echo " done" || echo " FAILED"
+	if test -x $GLITE_LOCATION/bin/glite-lb-notif-interlogd; then
+		echo -n Starting glite-lb-notif-interlogd ...
+		su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
+			-f $GLITE_LB_NOTIF_FPREFIX -s $GLITE_LB_NOTIF_SOCK \
+			$creds" && echo " done" || echo " FAILED"
+	else
+		echo Warning: glite-lb-notif-interlogd not installed, LB notifications will not work
+	fi
 }
 
 stop()
