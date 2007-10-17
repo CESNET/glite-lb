@@ -120,9 +120,6 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
    memset (&ctx->vomsGroups, 0, sizeof(ctx->vomsGroups));
    edg_wll_ResetError(ctx);
 
-/* TODO: merge */
-<<<<<<< lb_authz.c
-=======
    if (ctx->fqans) {
       char **f;
       for (f = ctx->fqans; f && *f; f++)
@@ -146,7 +143,6 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
       goto end;
    }
       
->>>>>>> 1.11.8.1
    /* uses X509_CERT_DIR and X509_VOMS_DIR vars */
    voms_info = VOMS_Init(voms_dir, ca_dir);
    if (voms_info == NULL) {
