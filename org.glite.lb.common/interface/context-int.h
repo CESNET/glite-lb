@@ -10,6 +10,7 @@
 #include "glite/lb/lb_plain_io.h"
 #include "glite/lb/authz.h"
 #include "glite/lb/connpool.h"
+#include "glite/lb/padstruct.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,7 +44,7 @@ glite_lb_padded_struct(_edg_wll_ConnProxy,12,
 typedef struct _edg_wll_ConnProxy  edg_wll_ConnProxy;
 
 
-glite_lb_padded_struct(_edg_wll_Context,120,
+glite_lb_padded_struct(_edg_wll_Context,150,
 /* Error handling */
 	int		errCode;	/* recent error code */
 	char 		*errDesc;	/* additional error description */
