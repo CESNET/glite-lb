@@ -258,11 +258,7 @@ else
 endif
 endif
 
-<<<<<<< Makefile
 compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${PLUGIN_LIB} ${MAN_GZ}
-=======
-compile: glite-lb-bkserverd glite-lb-bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c jp_job_attrs.h
->>>>>>> 1.101.2.10
 
 generate: store.c index.c jp_job_attrs.h
 
@@ -306,11 +302,7 @@ test.query: test_query_events
 	./test_query_events
 
 #query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
-<<<<<<< Makefile
 query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/bkserverd\.o//;'`
-=======
-#query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/lb_authz\.o//'`
->>>>>>> 1.101.2.10
 
 query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o index.o
 
@@ -376,7 +368,6 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
 
-<<<<<<< Makefile
 	if [ ${stagedir} != ${PREFIX} ]; then ${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; fi
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix})
@@ -384,24 +375,12 @@ install:
 	if [ x${LB_STANDALONE} = x -a x${PLUGIN_LIB} != x ]; then \
 		${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
 		${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
-=======
-	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
-	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix})
-	install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib
-	if [ x${LB_STANDALONE} = x -a x${PLUGIN_LIB} != x ]; then \
-		${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
-		${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
->>>>>>> 1.101.2.10
 	fi
 	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}
 
 clean:
-<<<<<<< Makefile
 	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${PLUGIN_LIB} test*
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
-=======
-	rm -rf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test*
->>>>>>> 1.101.2.10
 
 %.c: %.c.T
 	rm -f $@
