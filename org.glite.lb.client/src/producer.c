@@ -1122,10 +1122,6 @@ int edg_wll_RegisterSubjob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-/* TODO: merge - do we want subjobs to be registered
-         directly to bkserver (LOGFLAG_DIRECT) 
-         or "just" through the locallogger (LOGFLAG_LOCAL) ? 
-*/
 	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_LOCAL,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
 }
 
