@@ -479,16 +479,11 @@ int edg_wll_GenerateSubjobIds(
 		retjobs == NULL)
 		return edg_wll_SetError(ctx, ENOMEM, NULL);
 
-/* TODO: merge */
-<<<<<<< context.c
-	if ( !seed || !strcmp(seed, "(nil)") ) {
-=======
 	if ( !seed ) {
->>>>>>> 1.23.2.10
 		intseed = strdup("edg_wll_GenerateSubjobIds()");
-	}
-	else
+	} else {
 		intseed = strdup(seed);
+	}
 
 	for (subjob = 0; subjob < num_subjobs; subjob++) {
 
