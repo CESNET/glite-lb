@@ -63,36 +63,7 @@ void EventParseTest::$l()
 
 };
 
-/* TODO: merge */
-<<<<<<< parse.cpp.T
-	if ((edg_wll_CompareEvents(ctx,e1,e2))) {
-		edg_wll_Error(ctx,&et,&ed);
-		CPPUNIT_ASSERT_MESSAGE(std::string("edg_wll_CompareEvents():") + et + " " + ed, 0);
-	}
-}
-
-/*
-@@@{
-        for my $e ($event->getTypesOrdered) {
-                my $l = lcfirst $e;
-		if ($l =~ m/^pBS/) { $l = ucfirst $l; }
-		if ($l =~ m/^condor/) { $l = ucfirst $l; }
-                my $u = uc $e;
-                my $c = getTypeComment $event $e;
-                gen "
-void EventParseTest::$l(){
-	edg_wll_Context ctx;
-	edg_wll_Event   *e1,*e2;
-	char    *line,*et,*ed;
-
-	edg_wll_InitContext(&ctx);
-	e1 = edg_wll_InitEvent(EDG_WLL_EVENT_$u);
-";
-
-		selectType $event '_common_';
-=======
 		selectType $event "$e";
->>>>>>> 1.8.2.4
 		for ($event->getFieldsOrdered) {
 			my $f = selectField $event $_;
 			my $fn = getName $f;
