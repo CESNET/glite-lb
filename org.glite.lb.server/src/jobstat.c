@@ -801,98 +801,11 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 /* returns state class of subjob of job collection	*/
 static subjobClassCodes class(edg_wll_JobStat *stat)
 {
-/* TODO: merge */
-<<<<<<< jobstat.c
-	intJobStat	*pis = NULL;
-	int		update_hist = 0;
-
-
-	/* Easy version, where the whole histogram is evolving... 
-	 * not used because of performance reasons 
-	 *
-		if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-
-		pis->pub.children_hist[cis->pub.state+1]++;
-		if (cis->pub.state == EDG_WLL_JOB_DONE) 
-			pis->children_done_hist[cis->pub.done_code]++;
-		pis->pub.children_hist[old_state+1]--;
-		if (old_state == EDG_WLL_JOB_DONE)
-			pis->children_done_hist[old_done_code]--;
-		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
-	*/
-
-
-	// XXX: if load_parent_intJobStat occure (and survives in future) in each subcase
-	//	load parent status at the beginning of this function
-
-	/* Decrement histogram for interesting states
-	 */
-	switch (old_state) {
-		case EDG_WLL_JOB_RUNNING:
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[old_state+1]--;
-			update_hist = 1;
-			break;
-		case EDG_WLL_JOB_DONE:
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[old_state+1]--;
-			pis->children_done_hist[old_done_code]--;
-			update_hist = 1;
-			break;
-		case EDG_WLL_JOB_CLEARED:
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[old_state+1]--;
-			update_hist = 1;
-			break;
-		default:
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[EDG_WLL_JOB_UNKNOWN+1]--;
-			// update_hist = 1; - triggered by the previous case or not needed
-			break;
-	}
-
-	/* Increment histogram for interesting states and 
-	 * cook artificial events to enable parent job state shift 
-	 */
-	switch (cis->pub.state) {
-=======
 	switch (stat->state) {
->>>>>>> 1.47.2.6
 		case EDG_WLL_JOB_RUNNING:
 			return(SUBJOB_CLASS_RUNNING);
 			break;
 		case EDG_WLL_JOB_DONE:
-/* TODO: merge */
-<<<<<<< jobstat.c
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[cis->pub.state+1]++;
-			pis->children_done_hist[cis->pub.done_code]++;
-
-			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
-				if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
-					/* not DONE yet? */
-					if (pis->pub.state < EDG_WLL_JOB_DONE) {
-						if (pis->children_done_hist[EDG_WLL_STAT_FAILED]) {
-							if (log_collectionState_event(ctx, cis->pub.state, 
-									EDG_WLL_STAT_FAILED, cis, pis, ce))
-								goto err;
-						}
-						/* XXX: is this meaningful semantics?
-						else if (pis->children_done_hist[EDG_WLL_STAT_CANCELLED]) {
-							if (log_collectionState_event(ctx, cis->pub.state, 
-									EDG_WLL_STAT_CANCELLED, cis, pis, ce))
-								goto err;
-						}
-						*/
-						else 
-							if (log_collectionState_event(ctx, cis->pub.state, 
-									EDG_WLL_STAT_OK, cis, pis, ce))
-								goto err;
-					}
-				}
-			}
-			update_hist = 1;
-=======
 			if (stat->done_code == EDG_WLL_STAT_OK)
 				return(SUBJOB_CLASS_DONE);
 			else
@@ -901,39 +814,14 @@ static subjobClassCodes class(edg_wll_JobStat *stat)
 			break;
 		case EDG_WLL_JOB_ABORTED:
 			return(SUBJOB_CLASS_ABORTED);
->>>>>>> 1.47.2.6
 			break;
-/* TODO: merge */
-<<<<<<< jobstat.c
-		case EDG_WLL_JOB_CLEARED: 
-			if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
-			pis->pub.children_hist[cis->pub.state+1]++;
-
-			if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
-				if (pis->pub.children_hist[cis->pub.state+1] == pis->pub.children_num) {
-					/* not CLEARED yet? */
-					if (pis->pub.state < EDG_WLL_JOB_CLEARED) {
-						if (log_collectionState_event(ctx, cis->pub.state, 
-								0, cis, pis, ce))
-							goto err;
-					}
-				}
-			}
-			update_hist = 1;
-=======
 		case EDG_WLL_JOB_CLEARED:
 			return(SUBJOB_CLASS_CLEARED);
->>>>>>> 1.47.2.6
 			break;
 		default:
 			return(SUBJOB_CLASS_REST);
 			break;
 	}
-/* TODO: merge */
-<<<<<<< jobstat.c
-	
-	if (update_hist) 
-=======
 }
 
 /* Mapping of subjob class to some field in childen_hist */
@@ -988,7 +876,6 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 		pis->pub.children_hist[class_to_statCode(subjob_class)+1]++;
 		pis->pub.children_hist[class_to_statCode(subjob_class_old)+1]--;
 
->>>>>>> 1.47.2.6
 		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
 
 
