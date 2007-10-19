@@ -43,7 +43,7 @@ public:
 	int getContentLength() const 
 		{ return m_length; }
 
-	std::string getProperty(const std::string &name, std::string &val) const
+	std::string getProperty(const std::string &name, std::string &val)
 		{ return m_properties.getProperty(name); }
 	
 	void setProperty(const std::string &name, std::string &val) 

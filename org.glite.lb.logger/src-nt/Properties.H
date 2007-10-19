@@ -2,6 +2,7 @@
 #define _PROPERTIES_H_
 
 #include <map>
+#include <string>
 
 class Properties {
 public:
@@ -12,14 +13,14 @@ public:
 		{}
 
 	// accessors
-	string& getProperty(string &key) 
+	std::string& getProperty(const std::string &key) 
 		{ return properties[key]; }
 
-	void setProperty(string &key, string &val) 
+	void setProperty(const std::string &key, std::string &val) 
 		{ properties[key] = val; }
 
 	// iterators
-	typedef std::map<string,string>::iterator  iterator;
+	typedef std::map<std::string,std::string>::iterator  iterator;
 
 	iterator begin() 
 		{ return properties.begin(); }
@@ -29,7 +30,7 @@ public:
 
 	
 private:
-	std::map<string,string> properties;
+	std::map<std::string,std::string> properties;
 };
 
 #endif

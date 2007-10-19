@@ -1,6 +1,8 @@
 #ifndef _MESSAGE_STORE_H_
 #define _MESSAGE_STORE_H_
 
+#include <pthread.h>
+
 /** Permanent storage for messages and their states.
  */
 
@@ -43,7 +45,7 @@ public:
 
 		/** Destructor.
 		 */
-		~ID();
+		~ID() {};
 
 		/** Assignment operator.
 		 */
@@ -55,7 +57,7 @@ public:
 
 		/** Comparison operator
 		 */
-		int operator==();
+		int operator==(const ID& second);
 
 		/** Get size needed for storage (from Storable).
 		 */
@@ -63,13 +65,19 @@ public:
 
 		/** Save ID (from Storable)
 		 */
-		virtual int save(void* &data, int len) const;
+		virtual int save(void* data, int len) const;
 
 		/** Load ID (from Storable)
 		 */
 		virtual int load(void* data, int len);
 
+	protected:
+		unsigned long long getID() {return id;}
+
 	private:
+		static pthread_mutex_t counterLock;
+		static unsigned counter;
+		unsigned long long id;
 	};
 };
 
