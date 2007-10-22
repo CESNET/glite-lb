@@ -98,35 +98,10 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 	jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
 
-/* TODO: merge */
-<<<<<<< store.c.T
 	trio_asprintf(&stmt,"select userid from jobs where jobid='%|Ss'", jobid);
 	
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 || edg_wll_FetchRow(ctx,sh,1,NULL,&userid) < 0) goto clean;
 	if (sh) glite_lbu_FreeStmt(&sh);
-=======
-	if ((e->type == EDG_WLL_EVENT_REGJOB || lbproxy_notreg)) {
-		/* Register the job and owner. For LBproxy, contant "lbproxy"
-                   is used as the name - it's harmless as the job is already
-		   registered with LBserver */
-		char *username;
-
-		if (!ctx->isProxy && ctx->peerName != NULL) {
-			username = edg_wll_gss_normalize_subj(ctx->peerName, 0);
-		} else {
-			username = edg_wll_gss_normalize_subj(e->any.user, 0);
-		}
-		userid_job = strdup(strmd5(username, NULL));
-		if (strcmp(username,e->any.user)) {
-			if ((err = store_user(ctx,userid_job, username))) goto clean;
-		}
-		if ((err = store_user(ctx,userid,e->any.user))) goto clean;
-		if ((err = store_job(ctx,e->any.jobId,userid_job))) goto clean;
-	} else {
-		/* for other events just make sure user record is there */
-		if ((err = store_user(ctx,userid,e->any.user))) goto clean;
-	}
->>>>>>> 1.24.2.7
 
 
 /* obtain next event sequence number */
@@ -138,12 +113,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 /* try to insert (someone else may be doing the same) */
 	while (1) {
-/* TODO: merge */
-<<<<<<< store.c.T
-		char	*max, *stamp;
-=======
-		char	*max = NULL;
->>>>>>> 1.24.2.7
+		char	*max = NULL, *stamp;
 
 		if (edg_wll_ExecSQL(ctx,select_max,&sh) < 0 ||
 		    edg_wll_FetchRow(ctx,sh,1,NULL,&max) < 0)
@@ -394,9 +364,12 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 	char		*q = NULL, *owner = NULL, *userid = NULL;
 	glite_lbu_Statement    stmt = NULL;
 	int		nar;
+	char		*can_peername = NULL;
 
 
 	edg_wll_ResetError(ctx);
+	
+	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 
 	if (ctx->isProxy) {
 		/* event arrived on proxy socket */
@@ -487,8 +460,8 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 				/* job is already registered */
 				if (!strcmp(owner,"unknown_to_proxy")) {
 					/* proxy registration was already done */
-					userid = strdup(strmd5(ctx->peerName, NULL));
-					if (store_user(ctx,userid,ctx->peerName)) goto err;
+					userid = strdup(strmd5(can_peername, NULL));
+					if (store_user(ctx,userid,can_peername)) goto err;
 
 					trio_asprintf(&q,"update jobs set server=1, userid='%|Ss' where jobid='%|Ss'",
 						userid, unique);
@@ -498,8 +471,8 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 				else { } /* re-registration, no action needed */
 			}
 			else {
-				userid = strdup(strmd5(ctx->peerName, NULL));
-				if (store_user(ctx,userid,ctx->peerName)) goto err;
+				userid = strdup(strmd5(can_peername, NULL));
+				if (store_user(ctx,userid,can_peername)) goto err;
 
 				if (store_job(ctx,(const edg_wlc_JobId) event->any.jobId,
 						userid, 0, 1)) goto err;
@@ -694,30 +667,22 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 {
 	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
 	char	*q = NULL,*owner = NULL;
-/* TODO: merge */
-<<<<<<< store.c.T
 	glite_lbu_Statement	stmt = NULL;
 	char	*user;
-=======
-	edg_wll_Stmt	stmt = NULL;
-/* TODO: merge */
->>>>>>> 1.24.2.7
 
 	edg_wll_ResetError(ctx);
 
-<<<<<<< store.c.T
-	trio_asprintf(&q,"select userid from jobs where jobid='%|Ss'",jobid);
-=======
 	if (!ctx->isProxy && !ctx->peerName) 
 		return edg_wll_SetError(ctx,EPERM,"can't store using unauthenticated connection");
 
+#if 0
 	if (e->type == EDG_WLL_EVENT_REGJOB) 
 		return strcmp(e->any.user,EDG_WLL_LOG_USER_DEFAULT) ?
 			0 : edg_wll_SetError(ctx,EPERM,"can't register jobs anonymously");
+#endif
 
 	trio_asprintf(&q,"select u.cert_subj from jobs j, users u "
 				"where j.jobid='%|Ss' and u.userid=j.userid",jobid);
->>>>>>> 1.24.2.7
 
 	if (edg_wll_ExecSQL(ctx,q,&stmt) < 0
 		|| edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0

@@ -61,19 +61,13 @@ int edg_wll_QueryEventsServer(
 					ret = 0,
 					offset = 0, limit = 0,
 					limit_loop = 1,
-/* TODO: merge */
-<<<<<<< query.c
 					eperm = 0,
 					where_flags = 0;
+	char *peerid = NULL;
+	char *can_peername = NULL, *can_peerid = NULL;
 	char		*j_old = NULL;
 	int		match_status_old = 0;
 	edg_wll_JobStat	state_out;
-
-=======
-					eperm = 0;
-	char *peerid = NULL;
-	char *can_peername = NULL, *can_peerid = NULL;
->>>>>>> 1.10.2.3
 
 	edg_wll_ResetError(ctx);
 	memset(&state_out, 0, sizeof(edg_wll_JobStat));
@@ -290,14 +284,10 @@ cleanup:
 	free(qbase);
 	free(job_where);
 	free(event_where);
-/* TODO: merge */
-<<<<<<< query.c
 	free(j_old);
 	if (state_out.jobId) edg_wll_FreeStatus(&state_out);
-=======
 	free(peerid);
 	free(can_peername); free(can_peerid);
->>>>>>> 1.10.2.3
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
