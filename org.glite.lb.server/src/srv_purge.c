@@ -345,12 +345,9 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 			}
 		}
 		glite_lbu_FreeStmt(&s);
+	}
+
 abort:
-                // just for escaping from nested cycles
-                ;       /* prevent compiler to complain */
-        }
-
-
 	if (parse && !edg_wll_Error(ctx,NULL,NULL))
 	{
 		if ( naffected_jobs ) {
