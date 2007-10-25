@@ -28,6 +28,7 @@
 #include "lb_xml_parse.h"
 #include "db_calls.h"
 #include "db_supp.h"
+#include "jobstat.h"
 
 
 #define DUMP_FILE_STORAGE					"/tmp/"
@@ -344,8 +345,11 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 			}
 		}
 		glite_lbu_FreeStmt(&s);
-
 abort:
+                // just for escaping from nested cycles
+                ;       /* prevent compiler to complain */
+        }
+
 
 	if (parse && !edg_wll_Error(ctx,NULL,NULL))
 	{

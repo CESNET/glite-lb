@@ -21,7 +21,7 @@ int edg_wll_UserJobs(
 	char	*userid, *stmt = NULL,
 		*res = NULL;
 	char	*can_peername;
-	int	njobs = 0,ret,i;
+	int	njobs = 0,ret,i,j;
 	edg_wlc_JobId	*out = NULL;
 	glite_lbu_Statement	sth = NULL;
 	edg_wll_ErrorCode	err = 0;
