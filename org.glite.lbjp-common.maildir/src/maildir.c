@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "glite/lb/lb_maildir.h"
+#include "maildir.h"
 
 #define DEFAULT_ROOT	"/tmp/lb_maildir"
 
@@ -54,7 +54,7 @@ int glite_lbu_MaildirInit(
 {
 	const char *root = dir? : DEFAULT_ROOT;
 	char		dirname[PATH_MAX];
-	int			i;
+	size_t			i;
 
 	lbm_errdesc[0] = '\0';
 	if ( check_mkdir(root) ) {
