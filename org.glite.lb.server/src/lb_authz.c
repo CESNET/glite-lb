@@ -117,6 +117,9 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
    int ret;
    int err = 0;
    struct vomsdata *voms_info = NULL;
+   edg_wll_GssPrincipal principal;
+   edg_wll_GssStatus gss_code;
+
 
    /* XXX DK: correct cleanup ?? */
    memset (&ctx->vomsGroups, 0, sizeof(ctx->vomsGroups));
@@ -130,21 +133,15 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
       ctx->fqans = NULL;
    }
 
-   ret = get_peer_cred(gss, server_cert, server_key, &p_chain, &cert);
+   ret = edg_wll_gss_get_client_conn(gss, &principal, &gss_code);
    if (ret) {
-//      ret = 0;
-//	XXX (MM): I do not know whether this error may be triggered by other
-//		bugs too... The error message may be incomplete.
-      edg_wll_SetError(ctx, errno, "cert/key file not owned by process owner?");
-      goto end;
+	if (ret == EDG_WLL_GSS_ERROR_GSS) {
+		edg_wll_SetErrorGss(ctx,"edg_wll_SetVomsGroups()",&gss_code);
+	}
+	edg_wll_SetError(ctx, ret, "edg_wll_SetVomsGroups() - failed to get peer credentials");
+	goto end;	
    }
 
-   /* exit if peer's credentials are not available */
-   if (p_chain == NULL || cert == NULL) {
-      ret = 0;
-      goto end;
-   }
-      
    /* uses X509_CERT_DIR and X509_VOMS_DIR vars */
    voms_info = VOMS_Init(voms_dir, ca_dir);
    if (voms_info == NULL) {
@@ -174,6 +171,8 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
    ret = get_fqans(ctx, voms_info, &ctx->fqans);
 
 end:
+   edg_wll_gss_free_princ(principal);
+
    if (voms_info)
       VOMS_Destroy(voms_info);
 
