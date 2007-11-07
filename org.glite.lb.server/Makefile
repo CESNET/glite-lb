@@ -301,10 +301,9 @@ test_xml: test_xml.cpp
 test.query: test_query_events
 	./test_query_events
 
-#query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/lbs_db\.o//;s/lbs_db_supp\.o//;s/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
-query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/bkserverd\.o//;'`
+#query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
 
-query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o index.o
+query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o index.o db_supp.o
 
 test_query_events: ${query_events_objs}
 	${LINKXX} -o $@ ${query_events_objs} \
