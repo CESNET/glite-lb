@@ -369,7 +369,6 @@ int main(int argc, char *argv[])
 	int					fd, i;
 	int			dtablesize;
 	struct sockaddr_in	a;
-	char			   *mysubj = NULL;
 	int					opt;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *name;
@@ -610,15 +609,15 @@ int main(int argc, char *argv[])
 
 		if ( cadir ) setenv("X509_CERT_DIR", cadir, 1);
 		edg_wll_gss_watch_creds(server_cert, &cert_mtime);
-		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &mysubj, &gss_code) )
+		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &gss_code) )
 		{
 			int	i;
 
-			dprintf(("Server identity: %s\n",mysubj));
-			server_subject = strdup(mysubj);
+			dprintf(("Server identity: %s\n",mycred->name));
+			server_subject = strdup(mycred->name);
 			for ( i = 0; super_users && super_users[i]; i++ ) ;
 			super_users = realloc(super_users, (i+2)*sizeof(*super_users));
-			super_users[i] = mysubj;
+			super_users[i] = mycred->name;
 			super_users[i+1] = NULL;
 		}
 		else {
@@ -910,7 +909,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	switch ( edg_wll_gss_watch_creds(server_cert, &cert_mtime) ) {
 	case 0: break;
 	case 1:
-		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, NULL, &gss_code) ) {
+		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, &gss_code) ) {
 			dprintf(("[%d] reloading credentials successful\n", getpid()));
 			edg_wll_gss_release_cred(&mycred, NULL);
 			mycred = newcred;

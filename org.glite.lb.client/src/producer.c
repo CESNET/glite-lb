@@ -632,7 +632,6 @@ int edg_wll_SetLoggingJob(
 
 	/* add user credentials to context */
 	{
-		char	*my_subject_name = NULL;
 		edg_wll_GssStatus	gss_stat;
 		edg_wll_GssCred	cred = NULL;
 
@@ -640,17 +639,16 @@ int edg_wll_SetLoggingJob(
 		err = edg_wll_gss_acquire_cred_gsi(
 		      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 		      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-		      &cred, &my_subject_name, &gss_stat);
+		      &cred, &gss_stat);
 		/* give up if unable to acquire prescribed credentials */
 		if (err && ctx->p_proxy_filename) {
 			edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
 			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, EDG_WLL_LOG_USER_DEFAULT);
 		} else {
-			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, my_subject_name);
+			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, cred->name);
 		}
 		if (cred != NULL)
 			edg_wll_gss_release_cred(&cred, NULL);
-		if (my_subject_name) free(my_subject_name);
 	}
 
 	return edg_wll_Error(ctx,NULL,NULL);
@@ -686,7 +684,6 @@ int edg_wll_SetLoggingJobProxy(
 	if (user) {
 		edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, user);
 	} else {
-		char	*my_subject_name = NULL;
 		edg_wll_GssStatus	gss_stat;
 		edg_wll_GssCred	cred = NULL;
 
@@ -694,18 +691,17 @@ int edg_wll_SetLoggingJobProxy(
 		err = edg_wll_gss_acquire_cred_gsi(
 		      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 		      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-		      &cred, &my_subject_name, &gss_stat);
+		      &cred, &gss_stat);
 		/* give up if unable to acquire prescribed credentials */
 		if (err && ctx->p_proxy_filename) {
 			edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
 			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, EDG_WLL_LOG_USER_DEFAULT);
 		} else {
-			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, my_subject_name);
+			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, cred->name);
 		}
 
 		if (cred != NULL)
 			edg_wll_gss_release_cred(&cred, NULL);
-		if (my_subject_name) free(my_subject_name);
 	}
 
 	/* query LBProxyServer for sequence code if not user-suplied */

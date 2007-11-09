@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 		if ( edg_wll_gss_acquire_cred_gsi(
 				ctx->p_proxy_filename ? : ctx->p_cert_filename,
 				ctx->p_proxy_filename ? : ctx->p_key_filename,
-				NULL, &user_dn, &gss_stat) ) {
+				NULL, &gss_stat) ) {
 			fprintf(stderr, "failed to load GSI credentials\n");
 			retrun 1;
 		}

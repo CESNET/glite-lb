@@ -248,12 +248,14 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	ret = edg_wll_gss_acquire_cred_gsi(
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-	      &ctx->connections->connPool[index].gsiCred, &my_subject_name, &gss_stat);
+	      &ctx->connections->connPool[index].gsiCred, &gss_stat);
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {
 		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
 		goto edg_wll_log_connect_err;
 	}
+	my_subject_name = ctx->connections->connPool[index].gsiCred->name;
+        
 #ifdef EDG_WLL_LOG_STUB
 	if (my_subject_name != NULL) {
 		fprintf(stderr,"edg_wll_log_connect: using certificate: %s\n",my_subject_name);
@@ -274,12 +276,14 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	ret = edg_wll_gss_acquire_cred_gsi(
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-	      &ctx->connections->connPool[index].gsiCred, &my_subject_name, &gss_stat);
+	      &ctx->connections->connPool[index].gsiCred, &gss_stat);
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {
 		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
 		goto edg_wll_log_connect_err;
 	}
+	my_subject_name = ctx->connections->connPool[index].gsiCred->name;
+
 #ifdef EDG_WLL_LOG_STUB
 	if (my_subject_name != NULL) {
 		fprintf(stderr,"edg_wll_log_connect: using certificate: %s\n",my_subject_name);
@@ -306,7 +310,6 @@ edg_wll_log_connect_err:
 
 edg_wll_log_connect_end:
 	if (index >= 0) edg_wll_connectionTryLock(ctx, index);
-	if (my_subject_name) free(my_subject_name);
 
 	edg_wll_poolUnlock();
 
@@ -664,12 +667,13 @@ int edg_wll_log_direct_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn)
 	ret = edg_wll_gss_acquire_cred_gsi(
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-	      &cred, &my_subject_name, &gss_stat);
+	      &cred, &gss_stat);
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {
 		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
 		goto edg_wll_log_direct_connect_end;
 	}
+	my_subject_name = cred->name;
 #ifdef EDG_WLL_LOG_STUB
 	if (my_subject_name) {
 /* TODO: merge - shouldn't be probably ctx->p_user_lbproxy but some new parameter, eg. ctx->p_user
@@ -695,7 +699,6 @@ edg_wll_log_direct_connect_end:
 #endif
 	if (cred != NULL)
 		edg_wll_gss_release_cred(&cred, NULL);
-	if (my_subject_name) free(my_subject_name);
 	if (host) free(host);
 
 	return answer;

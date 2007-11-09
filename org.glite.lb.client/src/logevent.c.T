@@ -165,8 +165,10 @@ int main(int argc, char *argv[])
 		if ( !lbproxy_user ) {
 			edg_wll_GssCred		gss_cred = NULL;
 			edg_wll_GssStatus   gss_stat;
-			if ( edg_wll_gss_acquire_cred_gsi(NULL, NULL, &gss_cred, &lbproxy_user, &gss_stat) )
+			if ( edg_wll_gss_acquire_cred_gsi(NULL, NULL, &gss_cred, &gss_stat) )
 				lbproxy_user = "anonymous";
+                        else
+				lbproxy_user = strdup(gss_cred->name);
 			if ( gss_cred != NULL ) edg_wll_gss_release_cred(&gss_cred, NULL);
 		}
 		if ( lbproxy_store_sock )

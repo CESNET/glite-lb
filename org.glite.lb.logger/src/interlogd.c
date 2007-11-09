@@ -318,7 +318,7 @@ main (int argc, char **argv)
      setenv("X509_CERT_DIR", CAcert_dir, 1);
 
   edg_wll_gss_watch_creds(cert_file,&cert_mtime);
-  ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred_handle, NULL, &gss_stat);
+  ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred_handle, &gss_stat);
   if (ret) {
      char *gss_err = NULL;
      char *str;

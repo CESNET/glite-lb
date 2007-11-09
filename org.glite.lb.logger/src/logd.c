@@ -274,8 +274,6 @@ int main(int argc, char *argv[])
    struct sockaddr_in client_addr;
    int client_addr_len;
 
-   char *my_subject_name = NULL;
-
    time_t	cert_mtime = 0, key_mtime = 0;
    edg_wll_GssStatus	gss_stat;
    edg_wll_GssCred	cred = NULL;
@@ -371,25 +369,17 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
  
    edg_wll_gss_watch_creds(cert_file,&cert_mtime);
    /* XXX DK: support noAuth */
-   ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &my_subject_name, 
-		&gss_stat);
+   ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &gss_stat);
    if (ret) {
 	/* XXX DK: call edg_wll_gss_get_error() */
 	edg_wll_ll_log(LOG_CRIT,"Failed to get GSI credentials. Exiting.\n");
 	exit(1);
    }
 
-   if (my_subject_name!=NULL) {
-	edg_wll_ll_log(LOG_INFO,"Server running with certificate: %s\n",my_subject_name);
-	free(my_subject_name);
+   if (cred->name!=NULL) {
+	edg_wll_ll_log(LOG_INFO,"Server running with certificate: %s\n",cred->name);
    } else if (noAuth) {
 	edg_wll_ll_log(LOG_INFO,"Server running without certificate\n");
-#if 0
-   /* XXX DK: */    
-   } else {
-	edg_wll_ll_log(LOG_CRIT,"No server credential found. Exiting.\n");
-	exit(1);
-#endif
    }
 
    /* do listen */
@@ -439,7 +429,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	edg_wll_GssCred newcred;
 	case 0: break;
 	case 1:
-		ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,NULL,&gss_stat);
+		ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,&gss_stat);
 		if (ret) {
 			edg_wll_ll_log(LOG_WARNING,"Reloading credentials failed, continue with older\n");
 		} else {

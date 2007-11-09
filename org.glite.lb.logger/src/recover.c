@@ -40,7 +40,7 @@ recover_thread(void *q)
 			int ret;
 
 			ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file, 
-				&new_cred_handle, NULL, NULL);
+				&new_cred_handle, NULL);
 			if (new_cred_handle != NULL) {
 				edg_wll_gss_release_cred(&cred_handle, NULL);
 				cred_handle = new_cred_handle;

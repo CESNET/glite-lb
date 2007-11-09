@@ -118,7 +118,7 @@ int AddConnection(edg_wll_Context ctx, char *name, int port)
 	free(ctx->connections->connPool[index].peerName);	// should be empty; just to be sure
 	ctx->connections->connPool[index].peerName = strdup(name);
 	ctx->connections->connPool[index].peerPort = port;
-	ctx->connections->connPool[index].gsiCred = GSS_C_NO_CREDENTIAL; // initial value
+	ctx->connections->connPool[index].gsiCred = NULL; // initial value
 	ctx->connections->connPool[index].certfile = NULL;
 	ctx->connections->connOpened++;
 
@@ -195,7 +195,7 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 {
 	int index;
 	edg_wll_GssStatus gss_stat;
-	OM_uint32 lifetime = 0;
+	time_t lifetime = 0;
 	struct stat statinfo;
 	int acquire_cred = 0;
 	
@@ -247,7 +247,7 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 		
 	// Check if credentials exist. If so, check validity
 	if (ctx->connections->connPool[index].gsiCred) {
-		gss_inquire_cred(ctx->connections->connPool[index].gsiCred, NULL, &lifetime, NULL, NULL, NULL);
+		lifetime = ctx->connections->connPool[index].gsiCred->lifetime;
         	#ifdef EDG_WLL_CONNPOOL_DEBUG	
 			printf ("Credential exists, lifetime: %d\n", lifetime);
 		#endif
@@ -262,7 +262,7 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 		if (edg_wll_gss_acquire_cred_gsi(
 	        	ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 		       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-		       &ctx->connections->connPool[index].gsiCred, NULL, &gss_stat)) {
+		       &ctx->connections->connPool[index].gsiCred, &gss_stat)) {
 		    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
 		    goto err;
 		}
