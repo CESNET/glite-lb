@@ -76,8 +76,8 @@
 # endif
 #endif
 
-void md5_block_host_order (MD5_CTX *c, const void *p,size_t num);
-void md5_block_data_order (MD5_CTX *c, const void *p,size_t num);
+MD5_JOBID_PROTO void md5_block_host_order (MD5_CTX *c, const void *p,size_t num);
+MD5_JOBID_PROTO void md5_block_data_order (MD5_CTX *c, const void *p,size_t num);
 
 #if defined(__i386) || defined(__i386__) || defined(_M_IX86) || defined(__INTEL__) || defined(__x86_64) || defined(__x86_64__)
 # if !defined(B_ENDIAN)

@@ -1,11 +1,16 @@
 #ident "$Header$"
 
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MD5_JOBID_PROTO static
 #include "md5.h"
 #include "strmd5.h"
+
+#include "md5_dgst.c"
+
 
 #warning Thread unsafe!
 static char mbuf[33];

@@ -396,7 +396,7 @@
  * Time for some action:-)
  */
 
-int HASH_UPDATE (HASH_CTX *c, const void *data_, size_t len)
+MD5_JOBID_PROTO int HASH_UPDATE (HASH_CTX *c, const void *data_, size_t len)
 	{
 	const unsigned char *data=data_;
 	register HASH_LONG * p;
@@ -513,7 +513,7 @@ int HASH_UPDATE (HASH_CTX *c, const void *data_, size_t len)
 	}
 
 
-void HASH_TRANSFORM (HASH_CTX *c, const unsigned char *data)
+MD5_JOBID_PROTO void HASH_TRANSFORM (HASH_CTX *c, const unsigned char *data)
 	{
 #if defined(HASH_BLOCK_DATA_ORDER_ALIGNED)
 	if ((((size_t)data)%4) == 0)
@@ -522,7 +522,7 @@ void HASH_TRANSFORM (HASH_CTX *c, const unsigned char *data)
 	else
 #if !defined(HASH_BLOCK_DATA_ORDER)
 		{
-		memcpy (c->data,data,HASH_CBLOCK);
+		
 		HASH_BLOCK_DATA_ORDER_ALIGNED (c,c->data,1);
 		}
 #endif
@@ -533,7 +533,7 @@ void HASH_TRANSFORM (HASH_CTX *c, const unsigned char *data)
 	}
 
 
-int HASH_FINAL (unsigned char *md, HASH_CTX *c)
+MD5_JOBID_PROTO int HASH_FINAL (unsigned char *md, HASH_CTX *c)
 	{
 	register HASH_LONG *p;
 	register unsigned long l;
