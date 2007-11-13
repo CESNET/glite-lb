@@ -1,0 +1,31 @@
+% save previous definitions for use in new macros
+\let\dsection=\section
+\let\dsubsection=\subsection
+\let\dsubsubsection=\subsubsection
+
+% change the sections definition to reflect the actual hierarchy
+%  - section is just one in each included file
+\renewcommand{\section}[1]{\dsubsubsection{#1}}
+%  - subsections are for member section headings (constructors, data, ...)
+\renewcommand{\subsection}[2]{\ifx*#1
+\dsubsubsection*{#2}\def\zbytek{}
+\else
+\dsubsubsection*{#1}\def\zbytek{#2}\fi
+\zbytek}
+%  - subsubsections are for particular class members
+\def\eatbraces#1]{}
+\def\dosubsubsection#1{\par
+  \vskip 10pt\framebox{\begin{minipage}{\linewidth}{\hangindent=20pt\noindent\bf #1\par}\end{minipage}}\vskip-2pt}
+\renewcommand{\subsubsection}[2]{\ifx*#1
+  \dosubsubsection{#2}\def\zbytek{}
+\else\ifx[#1
+  \def\zbytek{\expandafter\dosubsubsection\eatbraces}
+\else
+  \dosubsubsection{#1}\def\zbytek{#2}
+\fi\fi
+\zbytek}
+
+%\let\ddescription=\description
+%\let\denddescription=\enddescription
+%\renewenvironment{description}{\list{}{\labelwidth 5cm\leftmargin 3cm}}{\endlist}
+
