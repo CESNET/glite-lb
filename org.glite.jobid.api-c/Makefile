@@ -27,7 +27,7 @@ LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
-LIBOBJS:=cjobid.o strmd5.o
+LIBOBJS:=cjobid.o strmd5.o md5_dgst.o
 HDRS:=cjobid.h strmd5.h
 
 LIBLOBJS:=${LIBOBJS:.o=.lo}

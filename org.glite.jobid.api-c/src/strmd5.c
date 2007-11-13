@@ -1,10 +1,10 @@
 #ident "$Header$"
 
-#include <openssl/md5.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "md5.h"
 #include "strmd5.h"
 
 #warning Thread unsafe!
