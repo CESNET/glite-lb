@@ -150,7 +150,9 @@ EXAMPLES_PLUS= job_status_plus
 
 
 MAN_GZ:=glite-lb-logevent.1.gz
+MAN8_GZ:=glite-lb-dump.8.gz glite-lb-load.8.gz glite-lb-purge.8.gz
 MAN = $(MAN_GZ:.gz=)
+MAN8 = $(MAN8_GZ:.gz=)
 
 PLUS_EXTRA_LIB:=-lglite_wmsutils_jobid -lglite_wmsutils_exception
 
@@ -238,6 +240,9 @@ ${MAN_GZ}: ${MAN}
 	cp $? .
 	gzip $(notdir $?)
 
+${MAN8_GZ}: ${MAN8}
+	cp $? .
+	gzip $(notdir $?)
 
 perftest_logjobs.o: perftest_logjobs.c
 	${CC} ${CFLAGS} -DLB_PERF_DROP ${GLOBUSINC} -c $<
@@ -268,9 +273,9 @@ default: all
 
 
 ifdef LB_STANDALONE
-compile all: ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
+compile all: ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ} ${MAN8_GZ}
 else
-compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ}
+compile all: check_version ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} examples ${MAN_GZ} ${MAN8_GZ}
 endif
 
 examples: ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
@@ -289,7 +294,7 @@ producer_test: producer_test.o prod_proto_test.o
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${TEST_INC} ${GLOBUSINC} $<
 
-man: ${MAN_GZ}
+man: ${MAN_GZ} ${MAN8_GZ}
 
 stage:  compile ${FAKELIB} ${FAKETHRLIB} 
 	$(MAKE) install PREFIX=${stagedir}
@@ -314,6 +319,7 @@ install:
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/share/man/man1
+	mkdir -p ${PREFIX}/share/man/man8
 ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 else
@@ -333,10 +339,11 @@ endif
 	done
 	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${PREFIX}/sbin/glite-lb-export.sh"
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
+	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
 
 clean:
 	rm -rf *.o *.lo .libs lib* *.c *.cpp producer_test
-	rm -rf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ}
+	rm -rf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 
 

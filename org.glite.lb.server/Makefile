@@ -62,9 +62,9 @@ YACC=bison -y
 CC=gcc
 
 ifeq ($(gsoap_version),2.7.0)
-	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project:${gsoap_prefix}
+	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project:${top_srcdir}/doc:${gsoap_prefix}
 else
-	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project
+	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project:${top_srcdir}/doc
 endif
 AT3=perl -I${top_srcdir}/project ${top_srcdir}/project/at3
 
@@ -240,6 +240,9 @@ LIB_OBJS_BK:= \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o
 
+MAN_GZ:= glite-lb-bkindex.8.gz glite-lb-bkserverd.8.gz
+MAN = $(MAN_GZ:.gz=)
+
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
@@ -261,7 +264,11 @@ else
 endif
 endif
 
-compile: glite-lb-bkserverd glite-lb-bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c jp_job_attrs.h
+${MAN_GZ}: ${MAN}
+	cp $? .
+	gzip $(notdir $?)
+
+compile: glite-lb-bkserverd glite-lb-bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c jp_job_attrs.h ${MAN_GZ}
 
 
 check: compile test.xml test.query
@@ -344,6 +351,8 @@ jp_job_attrs.h: job-attrs.xsd jp_job_attrs.xsl
 
 doc:
 
+man: ${MAN_GZ}
+
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
@@ -365,6 +374,7 @@ install:
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/lib
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
+	mkdir -p ${PREFIX}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	for p in bkserverd bkindex; do \
 		${INSTALL} -m 755 "glite-lb-$$p" "${PREFIX}/bin/glite-lb-$$p"; \
@@ -386,9 +396,9 @@ install:
 		${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 	fi
 	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}
-
+	 ${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
 clean:
-	rm -rf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test*
+	rm -rf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test* ${MAN_GZ}
 
 %.c: %.c.T
 	rm -f $@
