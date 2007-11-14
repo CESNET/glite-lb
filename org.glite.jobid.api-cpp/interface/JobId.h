@@ -1,6 +1,7 @@
 #ifndef GLITE_JOBID_JOBID_H
 #define GLITE_JOBID_JOBID_H
 
+#include <assert.h>
 #include <string>
 #include <stdexcept>
 #include <new>
