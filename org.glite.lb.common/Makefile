@@ -253,3 +253,5 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
+
+Event.h: EventAttrNames.pl
