@@ -32,4 +32,8 @@ PlainConnection::read(char *buf, unsigned int len)
 int 
 PlainConnection::write(char *buf, unsigned int len)
 {
+	int ret;
+
+	ret = ::write(fd, buf, len);
+	return ret;
 }
