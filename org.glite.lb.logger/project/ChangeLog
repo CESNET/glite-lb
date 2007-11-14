@@ -1,0 +1,4 @@
+1.4.6-1 (lb-1.7.0-1)
+- let empty notification message get through the output queue to keep
+  event_store commits in sync
+- don't keep event queue mutex while sleeping on error
