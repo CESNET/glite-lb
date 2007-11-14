@@ -56,8 +56,10 @@ l_SRC = \
 	failed_subjob.l \
 	aborted.l \
 	cancelled.l \
-	shallow_resub_complex.l shallow_resub_simple.l shallow_resub_simple2.l \
-	resubmission.l resubmitted.l
+
+# TODO: missing resubmission_deep
+#	shallow_resub_complex.l shallow_resub_simple.l shallow_resub_simple2.l \
+#	resubmission.l resubmitted.l
 
 
 sh_PROGS = $(l_SRC:.l=.sh)
@@ -145,7 +147,9 @@ THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=${LB_PERF_TOOLS}
 EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog flood_proxy dagids stress_context parse_eventsfile
-EXAMPLES_PLUS:=indexed_attrs_plus job_status_plus query_events_plus listener user_jobs_plus job_log_plus notify_plus
+
+# TODO: migrate them here from branch_RC31_3
+# EXAMPLES_PLUS:=indexed_attrs_plus job_status_plus query_events_plus listener user_jobs_plus job_log_plus notify_plus
 
 EXAMPLES_CL:=user_jobs job_status 
 EXAMPLES_CL_THR:=user_jobs_threaded
@@ -154,7 +158,7 @@ FAKE_EXAMPLES:=job_log_fake
 MAN_GZ:=glite-lb-logevent.1.gz
 MAN = $(MAN_GZ:.gz=)
 
-PLUS_EXTRA_LIB:=-lglite_wmsutils_jobid -lglite_wmsutils_exception
+PLUS_EXTRA_LIB:=-lglite_jobid
 
 
 # version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
