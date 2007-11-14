@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <syslog.h>
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/notifid.h"
@@ -28,6 +29,7 @@
 #define FCNTL_TIMEOUT		1
 #define FILE_PREFIX             "/tmp/notif_events"
 #define DEFAULT_SOCKET          "/tmp/notif_interlogger.sock"
+#define NOTIF_TIMEOUT		1
 
 char *notif_ilog_socket_path = DEFAULT_SOCKET;
 char *notif_ilog_file_prefix = FILE_PREFIX;
@@ -94,7 +96,7 @@ edg_wll_NotifSend(edg_wll_Context       context,
 		  const char           *owner,
                   const char           *notif_data)
 {
-	struct timeval	timeout;
+	struct timeval	timeout = {NOTIF_TIMEOUT, 0};
 	int				ret;
 	long			filepos;
 	char		   *ulm_data,
@@ -159,13 +161,22 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		goto out;
 	}
 
-	ret=edg_wll_NotifSend(context, reg_id, host, port, owner, xml_esc_data);
+	if (ret=edg_wll_NotifSend(context, reg_id, host, port, owner, xml_esc_data)) {
+		char *ed = NULL, *et = NULL;
+
+		if(ret) edg_wll_UpdateError(context, ret, "edg_wll_NotifJobStatus()");
+		edg_wll_Error(context,&et,&ed);
+		fprintf(stderr,"%s - %s\n", ed, et);
+		syslog(LOG_INFO,"%s - %s\n", ed, et);
+		edg_wll_ResetError(context);
+		free(et); 
+		free(ed);
+	}
 
 out:
 	if(xml_data) free(xml_data);
 	if(xml_esc_data) free(xml_esc_data);
-	if(ret) edg_wll_UpdateError(context, ret, "edg_wll_NotifJobStatus()");
-	return(ret);
+	return(edg_wll_Error(context,NULL,NULL));
 }
 
 
