@@ -355,4 +355,6 @@ clean:
 check_version:
 	${CHECK_VERSION} ${stagedir}/include/glite/lb/common_version.h
 
+JobStatus.h: StatusAttrNames.pl
+
 .PHONY: default all compile examples fake check stage install clean check_version
