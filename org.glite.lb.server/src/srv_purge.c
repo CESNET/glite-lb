@@ -295,7 +295,10 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 				}
 
 				memset(&stat,0,sizeof stat);
-				if (edg_wll_JobStatus(ctx,job,0,&stat)) goto abort; /* XXX: memory leak */
+				if (edg_wll_JobStatus(ctx,job,0,&stat)) {
+					edg_wll_FreeStatus(&stat);
+					goto abort; 
+				}
 
 				switch (stat.state) {
 					case EDG_WLL_JOB_CLEARED:
@@ -309,8 +312,10 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 
 				if (now-stat.lastUpdateTime.tv_sec > timeout[i] && !check_strict_jobid(ctx,job))
 				{
-					if (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE))
+					if (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE)) {
+						edg_wll_FreeStatus(&stat);
 						goto abort;
+					}
 
 				/* XXX: change with the streaming interface */
 					if (request->flags & EDG_WLL_PURGE_LIST_JOBS) {
@@ -396,6 +401,8 @@ abort:
 	asprintf(&response, "HTTP/1.1 %d %s", ret, edg_wll_HTTPErrorMessage(ret));
 
 	edg_wll_http_send(ctx, response, resp_headers, message,ctx->connections->serverConnection);
+	if (response) free(response);
+	if (message) free(message);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }

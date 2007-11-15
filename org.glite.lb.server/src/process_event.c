@@ -969,9 +969,13 @@ int add_stringlist(char ***lptr, const char *new_item)
 
 void destroy_intJobStat_extension(intJobStat *p)
 {
-	free(p->last_seqcode); p->last_seqcode = NULL;
-	free(p->last_cancel_seqcode); p->last_cancel_seqcode = NULL;
-			       p->resubmit_type = EDG_WLL_RESUBMISSION_UNDEFINED;
+	if (p->last_seqcode) free(p->last_seqcode);
+	if (p->last_cancel_seqcode) free(p->last_cancel_seqcode);
+	if (p->branch_tag_seqcode) free(p->branch_tag_seqcode);
+	if (p->last_branch_seqcode) free(p->last_branch_seqcode);
+	if (p->deep_resubmit_seqcode) free(p->deep_resubmit_seqcode);
+	free_branch_state(&p->branch_states);
+	memset(p,0,sizeof(*p));
 }
 
 void destroy_intJobStat(intJobStat *p)

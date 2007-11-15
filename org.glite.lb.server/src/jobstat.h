@@ -39,6 +39,7 @@ typedef struct _branch_state {
 	char	*destination;
 	char	*ce_node;
 	char	*jdl;
+	/*!! if adding new field, modify also free_branch_state() */
 } branch_state;
 
 
@@ -54,6 +55,8 @@ typedef struct _intJobStat {
 
 		struct timeval	last_pbs_event_timestamp;
 		int		pbs_reruning;		// true if rerun event arrived
+
+		/*!! if adding new field, modify also destroy_intJobStat_extension() */
 	} intJobStat;
 
 typedef enum _edg_wll_PBSEventSource {
