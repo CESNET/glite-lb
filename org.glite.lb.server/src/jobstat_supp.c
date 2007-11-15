@@ -219,15 +219,18 @@ static char **dec_strlist(char *in, char **rest)
 		return NULL;
 	}
 
+	/* count number of fields only */
 	len = 0;
 	tmp_in = in = strchr(in, ' ') + 1 ;
 	do {
 		tmp_ret = dec_string(tmp_in, &tmp_in);
+		free(tmp_ret); 
 		len++;
 	}  while (tmp_ret != NULL);
 
 	out = (char**) malloc(len*sizeof(char*));
 
+	/* get them */
 	if (out) {
 		len = 0;
 		tmp_in = in;
