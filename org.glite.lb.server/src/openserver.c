@@ -1,7 +1,8 @@
 #ident "$Header$"
 
-#include "glite/lbu/db.h"
 #include "glite/lb/context-int.h"
+#include "openserver.h"
+#include "db_supp.h"
 
 edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 {

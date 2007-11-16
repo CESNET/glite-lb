@@ -15,6 +15,7 @@
 #include "index.h"
 #include "jobstat.h"
 #include "db_supp.h"
+#include "openserver.h"
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"

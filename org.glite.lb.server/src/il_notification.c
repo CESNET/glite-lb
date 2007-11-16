@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "glite/lbu/escape.h"
 #include "glite/lb/context-int.h"

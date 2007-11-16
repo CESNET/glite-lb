@@ -4,8 +4,8 @@
 #include <assert.h>
 #include <errno.h>
 
-#include "glite/lbu/db.h"
 #include "glite/lb/context-int.h"
+#include "db_supp.h"
 #include "index.h"
 
 extern int debug;

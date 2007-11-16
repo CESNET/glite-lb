@@ -12,6 +12,7 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/jobstat.h"
 #include "db_supp.h"
+#include "openserver.h"
 
 static struct option opts[] = {
 	{ "mysql",1,NULL,'m' },
