@@ -298,6 +298,7 @@ static char *db_col_type(const edg_wll_QueryRec *r)
 		case EDG_WLL_QUERY_ATTR_USERTAG:
 		case EDG_WLL_QUERY_ATTR_HOST:
 		case EDG_WLL_QUERY_ATTR_CHKPT_TAG:
+		case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
 			/* XXX: 255 may not be enough for location or destination */
 			return "varchar(255) binary null"; 
 
@@ -315,7 +316,7 @@ static void do_exit(edg_wll_Context ctx,int code)
 	char	*et,*ed;
 
 	edg_wll_Error(ctx,&et,&ed);
-	fprintf(stderr,"edg-bkindex: %s (%s)\n",et,ed);
+	fprintf(stderr,"glite-lb-bkindex: %s (%s)\n",et,ed);
 	edg_wll_Close(ctx);
 	edg_wll_FreeContext(ctx);
 	exit(code);

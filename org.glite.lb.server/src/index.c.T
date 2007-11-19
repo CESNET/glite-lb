@@ -12,33 +12,52 @@ extern int debug;
 
 #define const_len(c)	(sizeof((c))-1)
 
-/* TODO: 
-   - better error recovery (skip unrecognised indices etc.)
-   - leaks memory on errors
-*/
+static int parse_indices(edg_wll_Context ctx,char **keys,char ***column_names,const char **built_in_indices,edg_wll_QueryRec *** index_out,char ***keys_out);
 
 int edg_wll_QueryJobIndices(edg_wll_Context ctx,edg_wll_QueryRec *** index_out,char ***keys_out)
 {
-	edg_wll_QueryRec	**idx = NULL;
-
 	static const char *built_in_indices[] = {
 		"PRIMARY",
 		"parent_job",
 		NULL
 	};
-
 	char	**keys = NULL;
-	int	*cols = NULL;
 	char	***column_names = NULL;
+
+	if (glite_lbu_QueryIndices(ctx->dbctx, "states", &keys, &column_names) != 0) {
+		edg_wll_SetErrorDB(ctx);
+		return EIO;
+	}
+
+	if (!keys) {
+		*index_out = NULL;
+		if (keys_out) *keys_out = NULL;
+		return edg_wll_ResetError(ctx);
+	}
+
+/* XXX: keys are passed up or freed, column_names are freed there */
+	if (parse_indices(ctx,keys,column_names,built_in_indices,index_out,keys_out)) 
+		return edg_wll_Error(ctx,NULL,NULL);
+	else return edg_wll_ResetError(ctx);
+
+}
+
+/* TODO: 
+   - better error recovery (skip unrecognised indices etc.)
+   - leaks memory on errors
+*/
+
+static int parse_indices(edg_wll_Context ctx,char **keys,char ***column_names,const char **built_in_indices,edg_wll_QueryRec *** index_out,char ***keys_out)
+{
+
+	edg_wll_QueryRec	**idx = NULL;
+
+	int	*cols = NULL;
 
 	int	i, j;
 	int	nkeys = 0;
 
 
-	if (glite_lbu_QueryIndices(ctx->dbctx, "states", &keys, &column_names) != 0) {
-		edg_wll_SetErrorDB(ctx);
-		return -1;
-	}
 
 	for (i = 0; keys[i]; i++) {
 		// skip builtin indices
