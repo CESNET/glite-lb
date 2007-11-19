@@ -44,6 +44,7 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 		if ((ret=edg_wll_ExecSQL(ctx,q,&sh)) < 0) goto cleanup;
 
 		while ((ret=edg_wll_FetchRow(ctx,sh,sizeof(nameval)/sizeof(nameval[0]),NULL,nameval)) > 0) {
+			assert(ret == 2);
 			edg_wll_set_event_field(e,nameval[0],nameval[1]);
 			free(nameval[0]);
 			/* XXX: nameval[1] freed in edg_wll_set_event_field
