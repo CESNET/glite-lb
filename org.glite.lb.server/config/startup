@@ -58,19 +58,27 @@ start()
 	[ -n "$GLITE_LB_SERVER_PORT" ] && port="-p $GLITE_LB_SERVER_PORT"
 	[ -n "$GLITE_LB_SERVER_WPORT" ] && wport="-w $GLITE_LB_SERVER_WPORT"
 	[ -z "$GLITE_LB_NOTIF_FPREFIX" ] && GLITE_LB_NOTIF_FPREFIX="/var/tmp/glite-lb-notif"
+	if [ -n "$GLITE_LB_SERVER_DEBUG" ] ; then
+		if which tscat >/dev/null; then
+			tscat="| tscat "
+		fi
+		GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -d -s 1 2>&1 $tscat>> $GLITE_LOCATION_VAR/lb.log &"
+		GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d 2>&1 $tscat>> $GLITE_LOCATION_VAR/notif-il.log &"
+	fi
 
 	echo -n Starting glite-lb-bkserver ...
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
 		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
-		$super $creds -i $pidfile $port $wport $dumpdir $purgedir $maildir" \
+		$super $creds -i $pidfile $port $wport $dumpdir $purgedir $maildir \
+		$GLITE_LB_SERVER_OTHER_OPTIONS" \
 	&& echo " done" || echo " FAILED"
 
 	if test -x $GLITE_LOCATION/bin/glite-lb-notif-interlogd; then
 		echo -n Starting glite-lb-notif-interlogd ...
 		su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
 			-f $GLITE_LB_NOTIF_FPREFIX -s $GLITE_LB_NOTIF_SOCK \
-			$creds" && echo " done" || echo " FAILED"
+			$creds $GLITE_LB_NOTIF_OTHER_OPTIONS" && echo " done" || echo " FAILED"
 	else
 		echo Warning: glite-lb-notif-interlogd not installed, LB notifications will not work
 	fi
