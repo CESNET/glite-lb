@@ -62,12 +62,19 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   edg_wlc_JobIdGetServerParts(ev->any.jobId, &srvName, &srvPort);
 
   if(use_db) {
-    if (edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
-    if(store_job_server_proxy(ctx, ev, srvName, srvPort))
+    char	*ed;
+    int		code;
 
-      goto err;
+    if (edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
+    store_job_server_proxy(ctx, ev, srvName, srvPort);
+    code = edg_wll_Error(ctx,NULL,&ed);
+    edg_wll_UnlockJob(ctx,ev->any.jobId);	/* XXX: ignore error */
+    if (code) {
+	    edg_wll_SetError(ctx,code,ed);
+	    free(ed);
+	    goto err;
+    }
   }
-  if (edg_wll_UnlockJob(ctx,ev->any.jobId)) goto err;
 
 
   /* events logged to proxy and server (DIRECT flag) may be ignored on proxy
