@@ -189,6 +189,13 @@ failcon:
 	dprintf(("closing...\n"));
 	glite_lbu_DBClose(ctx);
 failctx:
+	{
+		char *t, *d;
+
+		glite_lbu_DBError(ctx, &t, &d);
+		printf("Error %s: %s\n", t, d);
+		free(t); free(d);
+	}
 	glite_lbu_FreeDBContext(ctx);
 fail:
 	free(cmd);

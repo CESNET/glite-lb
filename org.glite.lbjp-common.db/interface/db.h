@@ -306,7 +306,8 @@ int glite_lbu_PrepareStmt(glite_lbu_DBContext ctx, const char *sql, glite_lbu_St
 
 
 /**
- * Execute prepared SQL statement.
+ * Bind input parameters and execute prepared SQL statement.
+ * Results can be fetched via glite_lbu_FetchRow.
  *
  * \param[in,out] stmt  SQL statement
  * \param[in]  n                     number of items

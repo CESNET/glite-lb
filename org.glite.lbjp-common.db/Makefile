@@ -26,13 +26,27 @@ VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples
 
 DEBUG:=-g -O0 -W -Wall
 
+archlib:=lib
+host_cpu:=${shell uname -m}
+ifeq (${host_cpu},x86_64) 
+	archlib:=lib64
+endif   
+ifeq ($(shell test -f ${mysql_prefix}/${archlib}/libmysqlclient.so && echo ok),ok)
+	MYSQL_LIBPATH := ${mysql_prefix}/${archlib}/libmysqlclient.so
+endif
+ifeq ($(shell test -f ${mysql_prefix}/${archlib}/mysql/libmysqlclient.so && echo ok),ok)
+	MYSQL_LIBPATH := ${mysql_prefix}/${archlib}/mysql/libmysqlclient.so
+endif
+MYSQL_CPPFLAGS:=-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql -DMYSQL_LIBPATH=\"${MYSQL_LIBPATH}\"
+MYSQL_LIBS=-lz
+
 CFLAGS:= \
 	${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
-	-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql \
+	${MYSQL_CPPFLAGS} \
 	-D_GNU_SOURCE
 
 ifdef LBS_DB_PROFILE
@@ -48,21 +62,7 @@ COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
-archlib:=lib
-host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64) 
-    archlib:=lib64
-endif
-
-ifneq (${mysql_prefix},/usr)
-	ifeq ($(shell echo ${mysql_version} | cut -d. -f1,2),4.1)
-		mysqlib := -L${mysql_prefix}/${archlib}/mysql
-	else
-		mysqlib := -L${mysql_prefix}/${archlib}
-	endif
-endif
-
-EXT_LIBS:=${mysqlib} -lmysqlclient -lz -lglite_lbu_trio
+EXT_LIBS:=${MYSQL_LIBS} -lglite_lbu_trio -lpthread -ldl
 OBJS:=db.o
 TESTOBJS:=dbtest.o
 HDRS:=db.h
@@ -72,6 +72,10 @@ LTESTOBJS:=${TESTOBJS:.o=.lo}
 default all: compile doc
 
 libglite_lbu_db.la: ${LOBJS}
+	if [ -z "${MYSQL_LIBPATH}" ]; then \
+		echo "MySQL shared library not found!"; \
+		exit 1; \
+	fi
 	${LINK} -o $@ $< ${EXT_LIBS}
 
 libglite_lbu_dbtest.la: ${LTESTOBJS}
