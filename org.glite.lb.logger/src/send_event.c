@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -102,7 +103,8 @@ static
 int
 gss_reader(void *user_data, char *buffer, int max_len)
 {
-  int ret, len;
+  int ret;
+  size_t len;
   struct reader_data *data = (struct reader_data *)user_data;
   edg_wll_GssStatus gss_stat;
 
@@ -262,6 +264,8 @@ event_queue_send(struct event_queue *eq)
 #ifdef LB_PERF
     if(!nosend) {
 #endif
+        /* XXX: ljocha -- does it make sense to send empty messages ? */
+	if (msg->len) {
 	    tv.tv_sec = TIMEOUT;
 	    tv.tv_usec = 0;
 	    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
@@ -287,6 +291,8 @@ event_queue_send(struct event_queue *eq)
                     }
 		    return(0);
 	    }
+	}
+	else { code = LB_OK; code_min = 0; rep = strdup("not sending emtpy message"); }
 #ifdef LB_PERF
     } else {
 	    glite_wll_perftest_consumeEventIlMsg(msg->msg+17);
