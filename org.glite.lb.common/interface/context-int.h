@@ -139,6 +139,8 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 
 	int		greyjobs;
 	char		**fqans; /* null-terminated list of peer's VOMS FQANs */
+	edg_wll_QueryRec	**notif_index;
+	void		*notif_index_cols;
 )
 
 /* to be used internally: set, update and and clear the error information in 

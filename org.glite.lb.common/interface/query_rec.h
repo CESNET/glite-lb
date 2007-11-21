@@ -49,6 +49,7 @@ typedef enum _edg_wll_QueryAttr{
 	EDG_WLL_QUERY_ATTR_JDL_ATTR,	/**< Arbitrary JDL attribute */
 	EDG_WLL_QUERY_ATTR_STATEENTERTIME,	/**< When entered current status */
 	EDG_WLL_QUERY_ATTR_LASTUPDATETIME,	/**< Time of the last known event of the job */
+	EDG_WLL_QUERY_ATTR_NETWORK_SERVER,	/**< Network server aka RB aka WMproxy endpoint */
 	EDG_WLL_QUERY_ATTR__LAST
 /*	if adding new attribute, add conversion string to common/xml_conversions.c too !! */
 } edg_wll_QueryAttr;
