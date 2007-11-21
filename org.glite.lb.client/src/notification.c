@@ -453,7 +453,8 @@ static int gss_reader(void *user_data, char *buffer, int max_len)
 {
   edg_wll_GssStatus gss_code;
   edg_wll_Context tmp_ctx = (edg_wll_Context)user_data;
-  int ret, len;
+  int ret;
+  size_t	len;
 
   ret = edg_wll_gss_read_full(&tmp_ctx->connPoolNotif[0].gss,
 			      buffer, max_len,
@@ -711,7 +712,8 @@ err:
 {
 	struct pollfd		pollfds[1];
 	struct sockaddr_in	a;
-	int 			recv_sock, alen;
+	int 			recv_sock;
+	size_t			alen;
 	edg_wll_Event 		*event = NULL;
 	struct timeval 		start_time,check_time,tv;
 	char 			*event_char = NULL, *jobstat_char = NULL;
@@ -748,6 +750,19 @@ select:
 	/*	 ctx->connPoolNotif[ctx->connPoolNotifToUse]			*/
 	/*	 notif_send() & notif_receive() should then migrate to		*/
 	/*	 client/connection.c and use connPool management f-cions	*/
+
+	/* XXX: long-lived contexts may have problems, TODO implement credential reload */
+
+	if (!ctx->connPoolNotif[0].gsiCred) {
+		if (edg_wll_gss_acquire_cred_gsi(
+			ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
+			ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+			&ctx->connPoolNotif[0].gsiCred,&gss_code))
+		{
+			edg_wll_SetErrorGss(ctx,"failed aquiring credentials",&gss_code);
+			goto err;
+		}
+	}
 	
 	if (ctx->connPoolNotif[0].gss.context == NULL) 
 	{	

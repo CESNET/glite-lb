@@ -41,8 +41,10 @@ static void usage(char *cmd)
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		printf("\n'new' command usage: %s new jobid\n"
-			"    jobid       job ID to connect notif. reg. with\n", me);
+		printf("\n'new' command usage: %s new [-j jobid] [-o owner]\n"
+			"    jobid      job ID to connect notif. reg. with\n"
+			"    owner	match this owner DN\n"
+			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
 		printf("\n'bind' command usage: %s bind notifid [fake_addr]\n"
 			"    notifid     Notification ID\n"
@@ -60,7 +62,7 @@ static void usage(char *cmd)
 			"    fake_addr   Fake the client address.\n"
 			"    timeout     Timeout to receive operation in seconds.\n", me);
 	if ( !cmd || !strcmp(cmd, "test") )
-		printf("\n'new' command usage: %s test jobid\n"
+		printf("\n'test' command usage: %s test jobid\n"
 			"    jobid       job ID to connect notif. reg. with\n", me);
 	if ( !cmd || !strcmp(cmd, "drop") )
 		printf("\n'drop' command usage: %s drop notifid\n"
@@ -152,10 +154,23 @@ err:
 	}
 	else if ( !strcmp(argv[1], "new") )
 	{
+		int	c;
 		edg_wlc_JobId		jid;
 		edg_wll_NotifId		id_out;
+		char	*job = NULL,*owner = NULL;
 
-		if ( (argc < 3) || edg_wlc_JobIdParse(argv[2], &jid) ) {
+		while ((c = getopt(argc-1,argv+1,"j:o:")) > 0) switch (c) {
+			case 'j': job = optarg; break;
+			case 'o': owner = optarg; break;
+			default: usage("new"); goto cleanup;
+		}
+
+		if ((!job && !owner) || (job && owner)) { 
+			usage("new");
+			goto cleanup;
+		}
+
+		if ( job && edg_wlc_JobIdParse(job, &jid) ) {
 			printf("Job ID parameter not set propperly!\n");
 			usage("new");
 			goto cleanup;
@@ -164,9 +179,10 @@ err:
 		conditions = (edg_wll_QueryRec **)calloc(2,sizeof(edg_wll_QueryRec *));
 		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 	
-		conditions[0][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
+		conditions[0][0].attr = job ? EDG_WLL_QUERY_ATTR_JOBID : EDG_WLL_QUERY_ATTR_OWNER;
 		conditions[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-		conditions[0][0].value.j = jid;
+		if (job) conditions[0][0].value.j = jid;
+		else conditions[0][0].value.c = owner;
 
 		if ( !edg_wll_NotifNew(ctx,
 					(edg_wll_QueryRec const* const*)conditions,
@@ -176,7 +192,7 @@ err:
 					TimeToStr(valid),
 					valid);
 		edg_wll_NotifIdFree(id_out);
-		edg_wlc_JobIdFree(jid);
+		if (job) edg_wlc_JobIdFree(jid);
 	}
 	else if ( !strcmp(argv[1], "bind") )
 	{
