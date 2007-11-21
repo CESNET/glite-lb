@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <syslog.h>
 #include <errno.h>
+#include <unistd.h>
+#include <assert.h>
 
 #include "glite/lb/context-int.h"
 #include "glite/lbu/trio.h"
@@ -15,6 +17,7 @@
 #include "query.h"
 #include "il_notification.h"
 #include "db_supp.h"
+#include "index.h"
 
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const char *);
 static int notif_check_acl(edg_wll_Context,const edg_wll_JobStat *,const char *);
@@ -28,20 +31,44 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	glite_lbu_Statement	jobs = NULL;
 	int	ret,i;
 	time_t	now = time(NULL);
+	
+	char *cond_where = NULL;
 
 	edg_wll_ResetError(ctx);
+
+	if (ctx->notif_index) {
+		cond_where = strdup("");
+		edg_wll_IColumnRec *notif_index_cols = ctx->notif_index_cols;
+
+		for (i=0; notif_index_cols[i].qrec.attr; i++) {
+			char	*val = NULL;
+
+			val = edg_wll_StatToSQL(stat,notif_index_cols[i].qrec.attr);
+			assert(val != (char *) -1);
+
+			if (val) {
+				char	*aux;
+				trio_asprintf(&aux, "%s or %s = %s",cond_where,
+						notif_index_cols[i].colname,val);
+				free(cond_where);
+				cond_where = aux;
+				free(val);
+			}
+		}
+	}
 
 	if ( (ret = edg_wll_NotifIdCreate(ctx->srvName, ctx->srvPort, &nid)) )
 	{
 		edg_wll_SetError(ctx, ret, "edg_wll_NotifMatch()");
 		goto err;
 	}
+
 	trio_asprintf(&jobq,
 		"select distinct n.notifid,n.destination,n.valid,u.cert_subj,n.conditions "
 		"from notif_jobs j,users u,notif_registrations n "
 		"where j.notifid=n.notifid and n.userid=u.userid "
-		"   and (j.jobid = '%|Ss' or j.jobid = '%|Ss')",
-		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS);
+		"   and (j.jobid = '%|Ss' or j.jobid = '%|Ss' %s)",
+		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS,cond_where ? cond_where : "");
 
 	free(ju);
 
@@ -94,6 +121,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	if (ret < 0) goto err;
 	
 err:
+	free(ctx->p_instance); ctx->p_instance = NULL;
 	if ( nid ) edg_wll_NotifIdFree(nid);
 	free(jobq);
 	glite_lbu_FreeStmt(&jobs);

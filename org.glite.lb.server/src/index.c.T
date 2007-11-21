@@ -5,6 +5,7 @@
 #include <errno.h>
 
 #include "glite/lb/context-int.h"
+#include "glite/lbu/trio.h"
 #include "db_supp.h"
 #include "index.h"
 
@@ -25,6 +26,33 @@ int edg_wll_QueryJobIndices(edg_wll_Context ctx,edg_wll_QueryRec *** index_out,c
 	char	***column_names = NULL;
 
 	if (glite_lbu_QueryIndices(ctx->dbctx, "states", &keys, &column_names) != 0) {
+		edg_wll_SetErrorDB(ctx);
+		return EIO;
+	}
+
+	if (!keys) {
+		*index_out = NULL;
+		if (keys_out) *keys_out = NULL;
+		return edg_wll_ResetError(ctx);
+	}
+
+/* XXX: keys are passed up or freed, column_names are freed there */
+	if (parse_indices(ctx,keys,column_names,built_in_indices,index_out,keys_out)) 
+		return edg_wll_Error(ctx,NULL,NULL);
+	else return edg_wll_ResetError(ctx);
+
+}
+
+int edg_wll_QueryNotifIndices(edg_wll_Context ctx,edg_wll_QueryRec *** index_out,char ***keys_out)
+{
+	static const char *built_in_indices[] = {
+		"PRIMARY",
+		NULL
+	};
+	char	**keys = NULL;
+	char	***column_names = NULL;
+
+	if (glite_lbu_QueryIndices(ctx->dbctx, "notif_registrations", &keys, &column_names) != 0) {
 		edg_wll_SetErrorDB(ctx);
 		return EIO;
 	}
@@ -123,21 +151,51 @@ int edg_wll_CmpColumn(const edg_wll_QueryRec *r1,const edg_wll_QueryRec *r2)
 	}
 }
 
+static char *to_sql_string(edg_wll_JobStat const *stat,int offset)
+{
+	char	*out = NULL,
+	    	*in = *((char **) (((char *) stat) + offset));
+
+       	if (in) trio_asprintf(&out,"'%|Ss'",in);
+	return out;
+}
+
+static char *to_sql_timeval(edg_wll_JobStat const *stat,int offset)
+{
+	char	*out;
+	glite_lbu_TimeToDB( ((struct timeval *) (((char *) stat) + offset))->tv_sec, &out );
+	return out;
+}
+
+static edg_wll_JobStat	fakestat;
+
 static struct {
 	const char	*name;
 	edg_wll_QueryAttr	attr;
+	int		offset;
+	char	* (*to_sql)(edg_wll_JobStat const *,int);
 } std_attrs[] =
 {
 @@@{
 	for my $n ($status->getAllFieldsOrdered) {
 		my $f = selectField $status $n;
 		next unless $f->{index};
-		my $u = uc getName $f;
-		gen "\t{ \"$n\", EDG_WLL_QUERY_ATTR_$u },\n";
+		my $u = uc $n;
+		gen "\t{ \"$n\", EDG_WLL_QUERY_ATTR_$u, ((char *) \&fakestat.$n) - ((char *) \&fakestat),\&to_sql_$f->{type} },\n";
 	}
 @@@}
 	{ NULL, },
 };
+
+/* TODO: use in queries */
+char *edg_wll_StatToSQL(edg_wll_JobStat const *stat,edg_wll_QueryAttr attr)
+{
+	int	i;
+
+	for (i=0; std_attrs[i].attr && std_attrs[i].attr != attr; i++);
+
+	return std_attrs[i].attr ? std_attrs[i].to_sql(stat,std_attrs[i].offset) : (char *) -1;
+}
 
 int edg_wll_ColumnToQueryRec(const char *col_name,edg_wll_QueryRec *rec)
 {

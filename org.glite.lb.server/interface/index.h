@@ -6,6 +6,7 @@
 #include "glite/lb/query_rec.h"
 
 int edg_wll_QueryJobIndices(edg_wll_Context,edg_wll_QueryRec ***,char ***);
+int edg_wll_QueryNotifIndices(edg_wll_Context,edg_wll_QueryRec ***,char ***);
 int edg_wll_ColumnToQueryRec(const char *,edg_wll_QueryRec *);
 char * edg_wll_QueryRecToColumn(const edg_wll_QueryRec *);
 char * edg_wll_QueryRecToColumnExt(const edg_wll_QueryRec *);
@@ -14,6 +15,9 @@ int edg_wll_ParseIndexConfig(edg_wll_Context,const char *,edg_wll_QueryRec ***);
 int edg_wll_DumpIndexConfig(edg_wll_Context,const char *,edg_wll_QueryRec * const *);
 
 int edg_wll_CmpColumn(const edg_wll_QueryRec *,const edg_wll_QueryRec *);
+
+char *edg_wll_StatToSQL(edg_wll_JobStat const *stat,edg_wll_QueryAttr attr);
+
 
 typedef struct _edg_wll_IColumnRec {
 	edg_wll_QueryRec	qrec;

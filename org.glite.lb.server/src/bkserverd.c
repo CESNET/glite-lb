@@ -357,8 +357,8 @@ struct clnt_data_t {
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 	glite_lbu_DBContext	dbctx;
 	int			dbcaps;
-	edg_wll_QueryRec	  **job_index;
-	edg_wll_IColumnRec	   *job_index_cols;
+	edg_wll_QueryRec	  **job_index,**notif_index;
+	edg_wll_IColumnRec	   *job_index_cols,*notif_index_cols;;
 	int			mode;
 };
 
@@ -366,8 +366,7 @@ struct clnt_data_t {
 
 int main(int argc, char *argv[])
 {
-	int					fd, i;
-	int			dtablesize;
+	int			i;
 	struct sockaddr_in	a;
 	int					opt;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
@@ -798,13 +797,49 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+static void list_index_cols(edg_wll_QueryRec **index,edg_wll_IColumnRec **index_cols_out)
+{
+	int i,j, k, maxncol, ncol;
+	edg_wll_IColumnRec	*index_cols;
+
+	ncol = maxncol = 0;
+	for ( i = 0; index[i]; i++ )
+		for ( j = 0; index[i][j].attr; j++ )
+			maxncol++;
+
+	index_cols = calloc(maxncol+1, sizeof(edg_wll_IColumnRec));
+	for ( i = 0; index[i]; i++ )
+	{
+		for ( j = 0; index[i][j].attr; j++)
+		{
+			for ( k = 0;
+				  k < ncol && edg_wll_CmpColumn(&index_cols[k].qrec, &index[i][j]);
+				  k++);
+
+			if ( k == ncol)
+			{
+				index_cols[ncol].qrec = index[i][j];
+				if ( index[i][j].attr == EDG_WLL_QUERY_ATTR_USERTAG )
+				{
+					index_cols[ncol].qrec.attr_id.tag =
+							strdup(index[i][j].attr_id.tag);
+				}
+				index_cols[ncol].colname =
+						edg_wll_QueryRecToColumn(&index_cols[ncol].qrec);
+				ncol++;
+			}
+		}
+	}
+	index_cols[ncol].qrec.attr = EDG_WLL_QUERY_ATTR_UNDEF;
+	index_cols[ncol].colname = NULL;
+	*index_cols_out = index_cols;
+}
 
 int bk_clnt_data_init(void **data)
 {
 	edg_wll_Context			ctx;
 	struct clnt_data_t	   *cdata;
-	edg_wll_QueryRec	  **job_index;
-	edg_wll_IColumnRec	   *job_index_cols;
+	edg_wll_QueryRec	  **job_index,**notif_index;
 
 
 	if ( !(cdata = calloc(1, sizeof(*cdata))) )
@@ -834,46 +869,21 @@ int bk_clnt_data_init(void **data)
 		free(et);
 		free(ed);
 	}
-	edg_wll_FreeContext(ctx);
 	cdata->job_index = job_index;
+	if ( job_index ) list_index_cols(job_index,&cdata->job_index_cols);
 
-	if ( job_index )
-	{
-		int i,j, k, maxncol, ncol;
+	if (edg_wll_QueryNotifIndices(ctx,&notif_index,NULL)) {
+		char	*et,*ed;
+		edg_wll_Error(ctx,&et,&ed);
 
-		ncol = maxncol = 0;
-		for ( i = 0; job_index[i]; i++ )
-			for ( j = 0; job_index[i][j].attr; j++ )
-				maxncol++;
-
-		job_index_cols = calloc(maxncol+1, sizeof(edg_wll_IColumnRec));
-		for ( i = 0; job_index[i]; i++ )
-		{
-			for ( j = 0; job_index[i][j].attr; j++)
-			{
-				for ( k = 0;
-					  k < ncol && edg_wll_CmpColumn(&job_index_cols[k].qrec, &job_index[i][j]);
-					  k++);
-
-				if ( k == ncol)
-				{
-					job_index_cols[ncol].qrec = job_index[i][j];
-					if ( job_index[i][j].attr == EDG_WLL_QUERY_ATTR_USERTAG )
-					{
-						job_index_cols[ncol].qrec.attr_id.tag =
-								strdup(job_index[i][j].attr_id.tag);
-					}
-					job_index_cols[ncol].colname =
-							edg_wll_QueryRecToColumn(&job_index_cols[ncol].qrec);
-					ncol++;
-				}
-			}
-		}
-		job_index_cols[ncol].qrec.attr = EDG_WLL_QUERY_ATTR_UNDEF;
-		job_index_cols[ncol].colname = NULL;
-		cdata->job_index_cols = job_index_cols;
+		dprintf(("[%d]: query notif indices: %s: %s\n",getpid(),et,ed));
+		free(et); free(ed);
 	}
+	cdata->notif_index = notif_index;
+	if (notif_index) list_index_cols(notif_index,&cdata->notif_index_cols);
 
+	edg_wll_FreeContext(ctx);
+		
 #ifdef LB_PERF
 	glite_wll_perftest_init(NULL, NULL, NULL, NULL, 0);
 #endif
@@ -933,6 +943,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->dbcaps = cdata->dbcaps;
 	ctx->job_index_cols = cdata->job_index_cols;
 	ctx->job_index = cdata->job_index; 
+	ctx->notif_index_cols = cdata->notif_index_cols;
+	ctx->notif_index = cdata->notif_index; 
 	
 	/*	set globals
 	 */

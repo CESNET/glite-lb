@@ -14,6 +14,7 @@
 #include "il_notification.h"
 #include "query.h"
 #include "db_supp.h"
+#include "index.h"
 
 
 static char *get_user(edg_wll_Context ctx, int create);
@@ -22,6 +23,8 @@ static int split_cond_list(edg_wll_Context, edg_wll_QueryRec const * const *,
 						edg_wll_QueryRec ***, char ***);
 static int update_notif(edg_wll_Context, const edg_wll_NotifId,
 						const char *, const char *, const char *);
+
+static int get_indexed_cols(edg_wll_Context,char const *,edg_wll_QueryRec **,char **);
 
 
 int edg_wll_NotifNewServer(
@@ -40,6 +43,7 @@ int edg_wll_NotifNewServer(
 					   *owner		= NULL,
 					  **jobs		= NULL;
 	edg_wll_QueryRec  **nconds		= NULL;
+	char		*add_index = NULL;
 
 
 	/*	Format notification ID
@@ -58,6 +62,7 @@ int edg_wll_NotifNewServer(
 	 */
 	if ( split_cond_list(ctx, conditions, &nconds, &jobs) )
 		goto cleanup;
+
 
 	/*
 	 *	encode new cond. list into a XML string
@@ -112,6 +117,11 @@ int edg_wll_NotifNewServer(
 	if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
 		goto cleanup;
 
+	if (get_indexed_cols(ctx,nid_s,nconds,&add_index) ||
+		edg_wll_ExecSQL(ctx,add_index,NULL) < 0
+	) goto cleanup;
+
+
 	if (jobs) for ( i = 0; jobs[i]; i++ )
 	{
 		free(q);
@@ -154,6 +164,7 @@ cleanup:
 		free(jobs);
 	}
 	if ( nconds ) free(nconds);
+	free(add_index);
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
@@ -661,4 +672,39 @@ cleanup:
 	if ( host ) free(host);
 
 	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+static int get_indexed_cols(edg_wll_Context ctx,char const *notif,edg_wll_QueryRec **conds,char **update_out)
+{
+	int	i,j;
+	edg_wll_IColumnRec	* notif_cols = ctx->notif_index_cols;
+	char	*cols = NULL,*aux;
+
+	for (i=0; conds[i]; i++) {
+		for (j=0; notif_cols[j].qrec.attr && notif_cols[j].qrec.attr != conds[i]->attr; j++);
+		if (notif_cols[j].qrec.attr) {
+			if (conds[i][1].attr && conds[i][0].op != EDG_WLL_QUERY_OP_EQUAL) {
+				char	buf[1000];
+				sprintf(buf,"%s: indexed, only one and only `equals' condition supported",
+						notif_cols[j].colname);
+
+				return edg_wll_SetError(ctx,EINVAL,buf);
+			}
+			trio_asprintf(&aux,"%s%c %s = '%|Ss'",
+					cols ? cols : "",
+					cols ? ',': ' ',
+					notif_cols[j].colname,conds[i]->value.c
+			);
+			free(cols);
+			cols = aux; 
+
+		}
+	}
+	if (cols) trio_asprintf(&aux,"update notif_registrations set %s where notifid = '%s'",
+					cols,notif);
+	else aux = NULL;
+
+	free(cols);
+	*update_out = aux;
+	return edg_wll_ResetError(ctx);
 }
