@@ -116,8 +116,8 @@ create table notif_registrations (
 	`STD_network_server`	varchar(200)	null,
 
 	primary key (notifid),
-	index (`STD_owner`);
-	index (`STD_network_server`);
+	index (`STD_owner`),
+	index (`STD_network_server`)
 ) engine=innodb;
 
 create table notif_jobs (
