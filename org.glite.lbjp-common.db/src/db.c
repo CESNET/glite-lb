@@ -938,10 +938,14 @@ static int db_connect(glite_lbu_DBContext ctx, const char *cs, MYSQL **mysql) {
 	 * working in update_notif(). 
 	 * Hope it does not break anything else */ 
 	if (!db_handle.mysql_real_connect(*mysql,host,user,pw,db,0,NULL,CLIENT_FOUND_ROWS)) {
+		char *desc;
 		free(buf);
 		ret = MY_ERR(ctx);
+ 		desc = ctx->err.desc;
+		ctx->err.desc = NULL;
 		glite_lbu_DBClose(ctx);
-		return ret;
+		ctx->err.desc = desc;
+		return ctx->err.code = ret;
 	}
 	free(buf);
 
