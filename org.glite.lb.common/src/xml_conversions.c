@@ -94,8 +94,10 @@ void edg_wll_freeXMLCtx(edg_wll_XML_ctx *c) {
 
 
 void edg_wll_freeBuf(edg_wll_XML_ctx *c) {
-        free(c->char_buf);
-        c->char_buf = NULL;
+        if (c->char_buf) {
+		free(c->char_buf);
+	        c->char_buf = NULL;
+	}
         c->char_buf_len = 0;
 }
 
