@@ -40,6 +40,7 @@ string	location	Where the job is being processed
 _index_
 string	ce_node		Worker node where the job is executed
 string	network_server	Network server handling the job
+_index_
 
 bool	subjob_failed	Subjob failed (the parent job will fail too)
 int	done_code		Return code
