@@ -234,10 +234,14 @@ static char* location_string(const char *source, const char *host, const char *i
 	return ret;
 }
 
+/* is seq. number of 'es' before WMS higher then 'js' */
 static int after_enter_wm(const char *es,const char *js)
 {
-	return component_seqcode(es,EDG_WLL_SOURCE_NETWORK_SERVER) >
-		component_seqcode(js,EDG_WLL_SOURCE_NETWORK_SERVER);
+	return ((component_seqcode(es,EDG_WLL_SOURCE_NETWORK_SERVER) >
+		component_seqcode(js,EDG_WLL_SOURCE_NETWORK_SERVER))
+		||
+		(component_seqcode(es,EDG_WLL_SOURCE_USER_INTERFACE) >
+		component_seqcode(js,EDG_WLL_SOURCE_USER_INTERFACE)));
 }
 
 
@@ -280,7 +284,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		res = RET_LATE;
 	}
 
-/* new event coming from NS => forget about any resubmission loops */
+/* new event coming from NS or UI => forget about any resubmission loops */
 	if (e->type != EDG_WLL_EVENT_CANCEL && 
 		js->last_seqcode &&
 		after_enter_wm(e->any.seqcode,js->last_seqcode))
