@@ -12,7 +12,7 @@
 
 static
 int 
-create_msg(il_octet_string_t *ev, char **buffer, long *receipt)
+create_msg(il_octet_string_t *ev, char **buffer, long *receipt, time_t *expires)
 {
   char *p;  int  len;
   char *event = ev->data;
@@ -57,6 +57,12 @@ create_msg(il_octet_string_t *ev, char **buffer, long *receipt)
   }
 #endif
 
+  if(p = strstr(event, "DG.EXPIRES")) {
+	  int n;
+
+	  p += 11;
+	  *expires = atoi(p);
+  }
   len = encode_il_msg(buffer, ev);
   if(len < 0) {
     set_error(IL_NOMEM, ENOMEM, "create_msg: out of memory allocating message");
@@ -117,6 +123,7 @@ server_msg_copy(struct server_msg *src)
   msg->dest_port = src->dest_port;
   msg->dest = strdup(src->dest);
 #endif
+  msg->expires = src->expires;
   return(msg);
 }
 
@@ -154,7 +161,7 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 	msg->job_id_s = edg_wll_NotifIdUnparse(notif_event->notification.notifId);
 	if(notif_event->notification.jobstat && 
 	   (strlen(notif_event->notification.jobstat) > 0)) {
-		msg->len = create_msg(event, &msg->msg, &msg->receipt_to);
+		msg->len = create_msg(event, &msg->msg, &msg->receipt_to, &msg->expires);
 	}
 	edg_wll_FreeEvent(notif_event);
 	free(notif_event);
@@ -162,7 +169,7 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 		return(-1);
 	}
 #else
-	msg->len = create_msg(event, &msg->msg, &msg->receipt_to);
+	msg->len = create_msg(event, &msg->msg, &msg->receipt_to, &msg->expires);
 	if(msg->len < 0) {
 		return(-1);
 	}

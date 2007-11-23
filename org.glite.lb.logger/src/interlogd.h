@@ -61,7 +61,7 @@
 // #define TIMEOUT      5
 extern int TIMEOUT;
 #define INPUT_TIMEOUT (60)
-
+#define EXIT_TIMEOUT (1*60)
 
 extern gss_cred_id_t cred_handle;
 extern pthread_mutex_t cred_handle_lock;
@@ -115,6 +115,7 @@ struct server_msg {
 	int                     dest_port;
 	char                   *dest;
 #endif
+	time_t                  expires;        /* time (in seconds from epoch) the message expires */
 };
 
 
@@ -165,6 +166,7 @@ int event_queue_remove(struct event_queue *);
 int event_queue_enqueue(struct event_queue *, char *);
 /* helper */
 int enqueue_msg(struct event_queue *, struct server_msg *);
+int event_queue_clean_expired(struct event_queue *eq);
 
 /* protocol event queue methods */
 int event_queue_connect(struct event_queue *);
