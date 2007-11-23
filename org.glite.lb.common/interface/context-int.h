@@ -41,6 +41,7 @@ glite_lb_padded_struct(_edg_wll_ConnProxy,12,
 typedef struct _edg_wll_ConnProxy  edg_wll_ConnProxy;
 
 
+/* !!! if adding something malloc-able, update edg_wll_FreeContext too !!! */
 glite_lb_padded_struct(_edg_wll_Context,120,
 /* Error handling */
 	int		errCode;	/* recent error code */
