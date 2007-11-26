@@ -4,3 +4,6 @@
 - support for FQAN-based super-user authorization in LB server
 - resurrected and extended some unit tests
 
+6.1.1-1 (lb-1.7.1-1)
+- fixed memleaks in LB query protocol 
+
