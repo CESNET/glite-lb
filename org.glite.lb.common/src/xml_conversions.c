@@ -370,16 +370,14 @@ void edg_wll_add_intlist_to_XMLBody(char **body, const int *toAdd, const char *t
         char **list = NULL;
         int i, len, tot_len = 0;
         int *len_list = NULL;
-	char *tag = NULL;
-
 	
 	i = from;
         while (i <= to) {
-		tag = indexToTag(i-1);
+		char *tag2 = indexToTag(i-1);
                 len = trio_asprintf(&pomA,"%s\t<%s>%|Xd</%s>\r\n",
-                        indent,tag,toAdd[i],tag);
+                        indent,tag2,toAdd[i],tag2);
 
-		if (tag) free(tag);
+		if (tag2) free(tag2);
 
 		i++;
                 tot_len += len;
@@ -477,16 +475,15 @@ void edg_wll_add_time_t_list_to_XMLBody(char **body, const time_t *toAdd, const 
         char **list = NULL;
         int i, len, tot_len = 0;
         int *len_list = NULL;
-	char *tag = NULL;
 
 	
 	i = from;
         while (i < to) {
-		tag = indexToTag(i);
+		char *tag2 = indexToTag(i);
                 len = trio_asprintf(&pomA,"%s\t<%s>%|Xld</%s>\r\n",
-                        indent,tag,toAdd[i],tag);
+                        indent,tag2,toAdd[i],tag2);
 
-		if (tag) free(tag);
+		if (tag2) free(tag2);
 
 		i++;
                 tot_len += len;
