@@ -456,7 +456,7 @@ int main(int argc, char *argv[])
 			  break;
 		case 'P': mode = SERVICE_PROXY;
 			  break;
-		case 'B': mode = SERVICE_PROXY_SERVER;;
+		case 'B': mode = SERVICE_PROXY_SERVER;
 			  break;
 		case 'o': strcpy(socket_path_prefix, optarg);
 			  break;
@@ -478,6 +478,14 @@ int main(int argc, char *argv[])
 	if (mode & SERVICE_PROXY) dprintf(("Staring LB proxy service\n"));
 	if (mode & SERVICE_SERVER) dprintf(("Staring LB server service\n"));
 	dprintf(("\n"));
+
+	// XXX: workaround for only preudoparallel job registration
+	//	we need at least 2 slaves to avoid locking misbehaviour
+	if ((mode == SERVICE_PROXY_SERVER) && (slaves == 1)) {
+		dprintf(("WARNING: Running both proxy and server services enforces at least 2 slaves\n"));
+		dprintf(("Starting 2 slaves\n"));
+		slaves = 2;
+	}
 
 	if (geteuid()) snprintf(pidfile,sizeof pidfile, "%s/edg-bkserverd.pid", getenv("HOME"));
 
