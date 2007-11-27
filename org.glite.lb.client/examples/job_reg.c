@@ -14,7 +14,7 @@ extern int opterr,optind;
 
 static void usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-x] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-P] [-l jdl_file] [-e seed]\n", me);
+	fprintf(stderr,"usage: %s [-m bkserver] [-x|-X non-default_sock_path] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-P] [-l jdl_file] [-e seed]\n", me);
 }
 
 int main(int argc, char *argv[])
@@ -30,8 +30,11 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xs:j:m:n:SCl:e:P")) {
+		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:P")) {
 			case 'x': lbproxy = 1; break;
+			case 'X': lbproxy = 1; 
+				  edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, optarg);
+				  break;
 			case 's': src = (char *) strdup(optarg); break;
 			case 'j': job = (char *) strdup(optarg); break;
 			case 'm': server = strdup(optarg); break;
