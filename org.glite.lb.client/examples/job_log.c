@@ -20,7 +20,7 @@ static void free_events(edg_wll_Event *);
 
 static void help(const char* n)
 {
-    fprintf(stderr,"usage: %s [-r repeat] [-d delay] [ -x ] <jobid>\n", n);
+    fprintf(stderr,"usage: %s [-r repeat] [-d delay] [ -x|-X non-default_sock_path ] <jobid>\n", n);
     exit(1);
 }
 
@@ -51,16 +51,20 @@ int main(int argc,char **argv)
 	if (argc < 2)
 	    help(argv[0]);
 
-	while ((opt=getopt(argc,argv,"r:d:x")) != -1)
+	edg_wll_InitContext(&ctx);
+
+	while ((opt=getopt(argc,argv,"r:d:xX:")) != -1)
 	    switch (opt) {
 	    case 'd': delay = atoi(optarg); break;
 	    case 'r': count = atoi(optarg); break;
 	    case 'x': proxy = 1; break;
+	    case 'X': proxy = 1; 
+		      edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, optarg);
+		      break;
 	    default:
                 help(argv[0]);
 	    }
 
-	edg_wll_InitContext(&ctx);
 	if (edg_wlc_JobIdParse(argv[optind],&job)) {
 		fprintf(stderr,"%s: can't parse job ID\n",argv[1]);
 		return 1;
