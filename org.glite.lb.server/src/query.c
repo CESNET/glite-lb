@@ -106,7 +106,7 @@ int edg_wll_QueryEventsServer(
 		"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived "
 		"FROM events e,users u,jobs j%s "
 		"WHERE %se.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
-		"%s %s %s %s %s",
+		"%s %s %s %s %s %s",
 		where_flags & FL_SEL_STATUS ? ",states s"	: "",
 		where_flags & FL_SEL_STATUS ? "s.jobid=j.jobid AND " : "",
 		EDG_WLL_EVENT_UNDEF,
@@ -114,6 +114,7 @@ int edg_wll_QueryEventsServer(
 		job_where ? job_where : "",
 		event_where ? "AND" : "",
 		event_where ? event_where : "",
+		(ctx->isProxy) ? "AND j.proxy='1'" : "AND j.server='1'",
 		(where_flags & FL_FILTER) ? "order by j.dg_jobid" : "");
 
 	if ( ctx->softLimit )
@@ -343,14 +344,16 @@ int edg_wll_QueryJobsServer(
 
 	if ( (where_flags & FL_SEL_STATUS) )
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s", 
+						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s AND %s", 
 						(job_where) ? "AND" : "",
-						(job_where) ? job_where : "");
+						(job_where) ? job_where : "",
+						(ctx->isProxy) ? "j.proxy='1'" : "j.server='1'");
 	else
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j %s %s", 
+						 "FROM jobs j %s %s AND %s", 
 						(job_where) ? "WHERE" : "",
-						(job_where) ? job_where : "");
+						(job_where) ? job_where : "",
+						(ctx->isProxy) ? "j.proxy='1'" : "j.server='1'");
 
 	if ( ctx->softLimit )
 	{
