@@ -55,7 +55,6 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 {
 	edg_wll_ErrorCode	err = 0;
 	char		*userid = NULL,*jobid,*stmt;
-	char		*userid_job = NULL;
 	char		*select_max,*ssrc;
 	glite_lbu_Statement	sh = NULL;
 	int		next = 0xDEAD;
@@ -218,7 +217,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		e->regJob.nsubjobs > 0)  
 
 #ifdef LB_DAG_EMBRIONIC
-			err = register_subjobs_embryonic(ctx,&e->regJob,userid_job);
+			err = register_subjobs_embryonic(ctx,&e->regJob,userid);
 #else
 			err = register_subjobs(ctx,&e->regJob);
 #endif
@@ -227,7 +226,6 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 clean:
 	free(now_s);
 	free(userid);
-	free(userid_job);
 	free(jobid);
 	free(stmt);
 	free(ssrc);
