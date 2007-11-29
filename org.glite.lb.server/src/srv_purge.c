@@ -43,7 +43,8 @@ static const char* const resp_headers[] = {
 };
 
 static int purge_one(edg_wll_Context ctx,const edg_wlc_JobId,int,int);
-static int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job);
+int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job);
+static int unset_server_flag(edg_wll_Context ctx, edg_wlc_JobId job);
 
 
 int edg_wll_CreateTmpFileStorage(edg_wll_Context ctx, char *prefix, char **fname)
@@ -185,31 +186,15 @@ int edg_wll_CreateFileStorage(edg_wll_Context ctx, char *file_type, char *prefix
 
 int edg_wll_PurgeServerProxy(edg_wll_Context ctx, edg_wlc_JobId job)
 {
-	switch (edg_wll_jobMembership(ctx, job)) {
-		case DB_PROXY_JOB:
-			switch ( purge_one(ctx, job, -1, 1) ) {
-				case 0:
-				case ENOENT:
-					edg_wll_ResetError(ctx);
-					return 0;
-
-				default:
-					return -1;
-			}
-			break;
-		case DB_SERVER_JOB:
-			// should not happen, however, no action needed
-			// proxy flag is unset already
+	switch ( purge_one(ctx, job, -1, 1) ) {
+		case 0:
+		case ENOENT:
 			edg_wll_ResetError(ctx);
 			return 0;
-			break;
-		case DB_PROXY_JOB+DB_SERVER_JOB:
-			return(unset_proxy_flag(ctx, job));
-			break;
+
 		default:
 			return -1;
-			break;
-		}
+	}
 }
 
 int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
@@ -295,7 +280,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 		for (i=0; i<EDG_WLL_NUMBER_OF_STATCODES; i++)
 			timeout[i] = request->timeout[i] < 0 ? ctx->purge_timeout[i] : request->timeout[i];
 
-		if (edg_wll_ExecSQL(ctx,"select dg_jobid from jobs",&s) < 0) goto abort;
+		if (edg_wll_ExecSQL(ctx,"select dg_jobid from jobs where server='1'",&s) < 0) goto abort;
 		while ((res = edg_wll_FetchRow(ctx,s,1,NULL,&job_s)) > 0) {
 			if (edg_wlc_JobIdParse(job_s,&job)) {
 				fprintf(stderr,"%s: parse error (internal inconsistency !)\n",job_s);
@@ -442,6 +427,44 @@ int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
 
 	edg_wll_ResetError(ctx);
 	if ( !purge && dump < 0 ) return 0;
+
+	switch (edg_wll_jobMembership(ctx, job)) {
+		case DB_PROXY_JOB:
+			if (!ctx->isProxy) {
+				/* should not happen */
+				return 0;
+			}
+			/* continue */
+			break;
+		case DB_SERVER_JOB:
+			if (ctx->isProxy) {
+				/* should not happen */
+				return 0;
+			}
+			/* continue */
+			break;
+		case DB_PROXY_JOB+DB_SERVER_JOB:
+			if (ctx->isProxy) {
+				purge = 0;
+				if (unset_proxy_flag(ctx, job) < 0) {
+					return(edg_wll_Error(ctx,NULL,NULL));
+				}
+			}
+			else {
+				purge = 0;
+				if (unset_server_flag(ctx, job) < 0) {
+					return(edg_wll_Error(ctx,NULL,NULL));
+				}
+			}
+			break;
+		case 0:
+			// Zombie job (server=0, proxy=0)? should not happen;
+			// clear it to keep DB healthy
+			break;
+		default:
+			return 0;
+			break;
+	}
 
 	dbjob = edg_wlc_JobIdGetUnique(job);	/* XXX: strict jobid already checked */
 	if (edg_wll_LockJob(ctx,job)) goto clean;
@@ -611,6 +634,21 @@ int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job)
 	dbjob = edg_wlc_JobIdGetUnique(job);
 
 	trio_asprintf(&stmt,"update jobs set proxy='0' where jobid='%|Ss'", dbjob);
+
+	return(edg_wll_ExecSQL(ctx,stmt,NULL));
+}
+
+
+int unset_server_flag(edg_wll_Context ctx, edg_wlc_JobId job)
+{
+	char	*stmt = NULL;
+	char            *dbjob;
+
+	edg_wll_ResetError(ctx);
+
+	dbjob = edg_wlc_JobIdGetUnique(job);
+
+	trio_asprintf(&stmt,"update jobs set server='0' where jobid='%|Ss'", dbjob);
 
 	return(edg_wll_ExecSQL(ctx,stmt,NULL));
 }

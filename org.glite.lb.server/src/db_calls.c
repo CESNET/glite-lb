@@ -42,11 +42,8 @@ int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job)
                 if (strcmp(res[1],"0")) result += DB_SERVER_JOB;
         }
         else {
-                if (ret == 0) result = 0;
-                else {
-                        fprintf(stderr,"Error retrieving proxy&server fields of jobs table. Missing column?\n");
-                        edg_wll_SetError(ctx,ENOENT,dbjob);
-                }
+		fprintf(stderr,"Error retrieving proxy&server fields of jobs table. Missing column?\n");
+                edg_wll_SetError(ctx,ENOENT,dbjob);
         }
         glite_lbu_FreeStmt(&q);
 

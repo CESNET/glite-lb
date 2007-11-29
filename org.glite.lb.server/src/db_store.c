@@ -25,6 +25,7 @@
 /* XXX */
 #define use_db	1
 
+extern int unset_proxy_flag(edg_wll_Context, edg_wlc_JobId);
 extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *);
 
 
@@ -271,6 +272,29 @@ static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, 
 	} else 
 #endif
   {
+	/* Purge proxy flag
+	 * XXX: Workaround - if these events arrive on server with shared DB
+	 * 	it reaches terminal state from proxy point of view and so
+	 *	proxy flag have to be removed (cannot call edg_wll_PurgeServerProxy)
+	 * - these triggers on events should be replaced by triggers on state change
+	 * (remove extern unset_proxy_flag, set it static in srv_purge.c)
+	 */
+	switch ( ev->any.type ) {
+	case EDG_WLL_EVENT_CLEAR:
+	case EDG_WLL_EVENT_ABORT:
+		if (unset_proxy_flag(ctx, ev->any.jobId) < 0) {
+                                        return(edg_wll_Error(ctx,NULL,NULL));
+		}
+		break;
+	case EDG_WLL_EVENT_CANCEL:
+		if (ev->cancel.status_code == EDG_WLL_CANCEL_DONE) 
+			if (unset_proxy_flag(ctx, ev->any.jobId) < 0) {
+                        	                return(edg_wll_Error(ctx,NULL,NULL));
+			}
+		break;
+	default: break;
+	}
+
 	if ( newstat->state ) {
 		edg_wll_NotifMatch(ctx, newstat);
 		edg_wll_FreeStatus(newstat);
