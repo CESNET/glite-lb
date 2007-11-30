@@ -166,7 +166,7 @@ int event_queue_remove(struct event_queue *);
 int event_queue_enqueue(struct event_queue *, char *);
 /* helper */
 int enqueue_msg(struct event_queue *, struct server_msg *);
-int event_queue_clean_expired(struct event_queue *eq);
+int event_queue_move_events(struct event_queue *, struct event_queue *, int (*)(struct server_msg *, void *), void *); 
 
 /* protocol event queue methods */
 int event_queue_connect(struct event_queue *);
@@ -201,7 +201,8 @@ int queue_list_is_log(struct event_queue *);
 #if defined(IL_NOTIFICATIONS)
 struct event_queue *notifid_map_get_dest(const char *);
 int notifid_map_set_dest(const char *, struct event_queue *);
-int event_queue_move_events(struct event_queue *, struct event_queue *, char *); 
+time_t notifid_map_get_expiration(const char *);
+int notifid_map_set_expiration(const char *, time_t);
 #endif
 
 /* event store functions */

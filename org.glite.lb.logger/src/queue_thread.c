@@ -27,6 +27,16 @@ queue_thread_cleanup(void *q)
 }
 
 
+static time_t now;
+
+static
+int
+cmp_expires(struct server_msg *msg, void *data)
+{
+  time_t *t = (time_t*)data;
+  return msg->expires < *t;
+}
+
 static
 void *
 queue_thread(void *q)
@@ -94,7 +104,8 @@ queue_thread(void *q)
 		
 		/* discard expired events */
 		il_log(LOG_DEBUG, "  discarding expired events\n");
-		event_queue_clean_expired(eq);
+		now = time(NULL);
+		event_queue_move_events(eq, NULL, cmp_expires, &now);
 		if(!event_queue_empty(eq)) {
 
 			/* deliver pending events */
@@ -409,3 +420,7 @@ int event_queue_cond_unlock(struct event_queue *eq)
 
 	return(0);
 }
+
+/* Local Variables:           */
+/* c-indentation-style: linux */
+/* End:                       */

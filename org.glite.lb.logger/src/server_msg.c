@@ -163,6 +163,7 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 	   (strlen(notif_event->notification.jobstat) > 0)) {
 		msg->len = create_msg(event, &msg->msg, &msg->receipt_to, &msg->expires);
 	}
+	msg->expires = notif_event->notification.expires;
 	edg_wll_FreeEvent(notif_event);
 	free(notif_event);
 	if(msg->len < 0) {
