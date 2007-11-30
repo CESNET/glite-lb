@@ -738,8 +738,25 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 				break;
 			case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 				glite_lbu_TimeToDB(stat->pub.stateEnterTime.tv_sec, &data);
+				break;
 			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 				glite_lbu_TimeToDB(stat->pub.lastUpdateTime.tv_sec, &data);
+				break;
+			case EDG_WLL_QUERY_ATTR_JDL_ATTR: // XXX: It's not clear how this is supposed to work
+				if (stat->pub.jdl)
+					trio_asprintf(&data, "'%|Ss'", stat->pub.destination);
+				else data = strdup("''");
+				break;
+/*			case EDG_WLL_QUERY_ATTR_STATEENTERTIME: /// XXX: Which way of handling this is correct?
+				if (stat->pub.stateEnterTime)
+					glite_lbu_TimeToDB(stat->pub.stateEnterTime, &data);
+				else data = strdup("0");
+				break;
+			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
+				if (stat->pub.lastUpdateTime)
+					glite_lbu_TimeToDB(stat->pub.lastUpdateTime, &data);
+				else data = strdup("0");
+				break;*/
 
 				/* XXX add more attributes when defined */
 			default:

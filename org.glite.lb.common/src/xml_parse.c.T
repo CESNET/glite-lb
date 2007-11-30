@@ -2506,6 +2506,26 @@ int edg_wll_JobQueryRecToXML(
 	                                case EDG_WLL_QUERY_ATTR_USERTAG:
 	                                        edg_wll_add_tagged_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "usertag", conditions[row][i].attr_id.tag, "name", NULL);
 	                                        break;
+	                                case EDG_WLL_QUERY_ATTR_JDL_ATTR:
+	                                        edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "jdl", NULL);
+	                                        break;
+					case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+						if (conditions[row][i].op == EDG_WLL_QUERY_OP_WITHIN) {
+							edg_wll_add_tagged_time_t_to_XMLBody(&pomValue, conditions[row][i].value.t.tv_sec, "stateentertime", edg_wll_StatToString(conditions[row][i].attr_id.state), "state", -1);
+							edg_wll_add_tagged_time_t_to_XMLBody(&pomValue, conditions[row][i].value2.t.tv_sec, "stateentertime", edg_wll_StatToString(conditions[row][i].attr_id.state), "state", -1);	
+						}
+						else 
+							edg_wll_add_tagged_time_t_to_XMLBody(&pomValue, conditions[row][i].value.t.tv_sec, "stateentertime", edg_wll_StatToString(conditions[row][i].attr_id.state), "state", -1);
+						break;
+					case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
+						if (conditions[row][i].op == EDG_WLL_QUERY_OP_WITHIN) {
+							edg_wll_add_time_t_to_XMLBody(&pomValue, conditions[row][i].value.t.tv_sec, "lastupdatetime", -1);
+							edg_wll_add_time_t_to_XMLBody(&pomValue, conditions[row][i].value2.t.tv_sec, "lastupdatetime", -1);	
+						}
+						else 
+							edg_wll_add_time_t_to_XMLBody(&pomValue, conditions[row][i].value.t.tv_sec, "lastupdatetime", -1);
+						break;
+
 	                        default:
 	                                free(pomValue);
 	                                return -1;

@@ -370,6 +370,9 @@ int edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 	case RESUBMITTED: *out = EDG_WLL_QUERY_ATTR_RESUBMITTED; break;
 	case PARENT: *out = EDG_WLL_QUERY_ATTR_PARENT; break;
 	case EXITCODE: *out = EDG_WLL_QUERY_ATTR_EXITCODE; break;
+	case JDLATTR: *out = EDG_WLL_QUERY_ATTR_JDL_ATTR; break;
+	case STATEENTERTIME: *out = EDG_WLL_QUERY_ATTR_STATEENTERTIME; break;
+	case LASTUPDATETIME: *out = EDG_WLL_QUERY_ATTR_LASTUPDATETIME; break;
 	default: return 0;
 	}
 
@@ -399,6 +402,9 @@ int edg_wll_AttrToSoap(const edg_wll_QueryAttr in, enum lbt__queryAttr *out)
 	case EDG_WLL_QUERY_ATTR_RESUBMITTED: *out = RESUBMITTED; break;
 	case EDG_WLL_QUERY_ATTR_PARENT: *out = PARENT; break;
 	case EDG_WLL_QUERY_ATTR_EXITCODE: *out = EXITCODE; break;
+	case EDG_WLL_QUERY_ATTR_JDL_ATTR: *out = JDLATTR; break;
+	case EDG_WLL_QUERY_ATTR_STATEENTERTIME: *out = STATEENTERTIME; break;
+	case EDG_WLL_QUERY_ATTR_LASTUPDATETIME: *out = LASTUPDATETIME; break;
 	default: return 0;
 	}
 
@@ -468,6 +474,7 @@ int edg_wll_QueryValToSoap(
 	case EDG_WLL_QUERY_ATTR_HOST:
 	case EDG_WLL_QUERY_ATTR_INSTANCE:
 	case EDG_WLL_QUERY_ATTR_CHKPT_TAG:
+	case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 		VALUEQR_SET(out, c, in->c ? soap_strdup(soap, in->c) : NULL);
 		if (in->c && !VALUEQR_GET(out, c) ) return SOAP_FAULT;
 		break;
@@ -480,6 +487,8 @@ int edg_wll_QueryValToSoap(
 		}
 		break;
 	case EDG_WLL_QUERY_ATTR_TIME:
+	case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+	case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 		VALUEQR_SET(out, t, soap_malloc(soap, sizeof(*(VALUEQR_GET(out, t)))));
 		if ( !VALUEQR_GET(out, t) ) return SOAP_FAULT;
 		VALUEQR_SETTYPE(out, t);

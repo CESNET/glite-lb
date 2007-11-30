@@ -268,6 +268,9 @@
 			<val name="INSTANCE">Instance of the source component.</val>
 			<val name="EVENTTYPE">Event type.</val>
 			<val name="CHKPTTAG">Checkpoint tag.</val>
+			<val name="JDLATTR">JDL Attribute.</val>
+			<val name="STATEENTERTIME">Staus enter time.</val>
+			<val name="LASTUPDATETIME">Last update time.</val>
 		</enum>
 
 		<struct name="queryRecord">

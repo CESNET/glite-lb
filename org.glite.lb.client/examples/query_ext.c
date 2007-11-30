@@ -393,6 +393,15 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 	else if ( !strcmp(tmps, "exit_code") ) cond->attr = EDG_WLL_QUERY_ATTR_EXITCODE;
 	else if ( !strcmp(tmps, "parent_job") ) cond->attr = EDG_WLL_QUERY_ATTR_PARENT;
 	else if ( !strcmp(tmps, "time") ) cond->attr = EDG_WLL_QUERY_ATTR_TIME;
+	else if ( !strcmp(tmps, "state_enter_time") ) cond->attr = EDG_WLL_QUERY_ATTR_STATEENTERTIME;
+	else if ( !strcmp(tmps, "last_update_time") ) cond->attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
+	else if ( !strcmp(tmps, "jdl_attr") ) cond->attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
+
+
+       /**< When entered current status */
+        /**< Time of the last known event of the job */
+         /**< Network server aka RB aka WMproxy endpoint */
+
 	else
 	{
 		cond->attr = EDG_WLL_QUERY_ATTR_USERTAG;
@@ -460,7 +469,8 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 			cond->value2.i = atoi(tmps);
 		}
 		break;
-
+	case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
+	case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 	case EDG_WLL_QUERY_ATTR_TIME:
 		cond->value.t.tv_sec = StrToTime(tmps);
 		if ( cond->op == EDG_WLL_QUERY_OP_WITHIN )
@@ -514,6 +524,9 @@ static char *get_event_condition(char *src, edg_wll_QueryRec *cond)
 	if ( tmps[0] == '\0' ) return NULL;
 
 	if ( !strcmp(tmps, "time") ) cond->attr = EDG_WLL_QUERY_ATTR_TIME;
+	else if ( !strcmp(tmps, "state_enter_time") ) cond->attr = EDG_WLL_QUERY_ATTR_STATEENTERTIME;
+	else if ( !strcmp(tmps, "last_update_time") ) cond->attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
+	else if ( !strcmp(tmps, "jdl_attr") ) cond->attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
 	else if ( !strcmp(tmps, "level") ) cond->attr = EDG_WLL_QUERY_ATTR_LEVEL;
 	else if ( !strcmp(tmps, "host") ) cond->attr = EDG_WLL_QUERY_ATTR_HOST;
 	else if ( !strcmp(tmps, "source") ) cond->attr = EDG_WLL_QUERY_ATTR_SOURCE;
@@ -722,6 +735,9 @@ static void printconds(edg_wll_QueryRec **cond)
 			case EDG_WLL_QUERY_ATTR_RESUBMITTED: printf("resubmitted"); break;
 			case EDG_WLL_QUERY_ATTR_USERTAG: printf("%s",cond[i][j].attr_id.tag); break;
 			case EDG_WLL_QUERY_ATTR_TIME: printf("time"); break;
+			case EDG_WLL_QUERY_ATTR_STATEENTERTIME: printf("state_enter_time"); break;
+			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME: printf("last_update_time"); break;
+			case EDG_WLL_QUERY_ATTR_JDL_ATTR: printf("jdl_attr"); break;
 			case EDG_WLL_QUERY_ATTR_LEVEL: printf("level"); break;
 			case EDG_WLL_QUERY_ATTR_HOST: printf("host"); break;
 			case EDG_WLL_QUERY_ATTR_SOURCE: printf("source"); break;

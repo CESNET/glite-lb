@@ -914,11 +914,21 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_DONECODE:
 		case EDG_WLL_QUERY_ATTR_EXITCODE:
 		case EDG_WLL_QUERY_ATTR_STATUS:
+		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 			ct++;
 			break;
 
 		case EDG_WLL_QUERY_ATTR_USERTAG:
 			ct++;
+			break;
+		case EDG_WLL_QUERY_ATTR_JDL_ATTR:
+			ct++;
+			if ( jc[m][n].op != EDG_WLL_QUERY_OP_EQUAL && jc[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
+			{
+				edg_wll_SetError(ctx, EINVAL, "only `=' and '!=' supported with JDL attributes");
+				return NULL;
+			}
 			break;
 
 		default:
@@ -942,6 +952,8 @@ static char *jc_to_head_where(
 		for ( n = 0; jc[m][n].attr; n++ ) switch (jc[m][n].attr)
 		{
 		case EDG_WLL_QUERY_ATTR_TIME:
+		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 			{
@@ -1088,6 +1100,7 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_LOCATION:
 		case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 		case EDG_WLL_QUERY_ATTR_USERTAG:
+		case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 			{
@@ -1456,6 +1469,58 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *stat, const edg_wll
 					break;
 				}
 				break;
+			case EDG_WLL_QUERY_ATTR_JDL_ATTR:
+				if ( stat->destination )
+				{
+					if ( !strcmp(conds[i][j].value.c, stat->jdl) ) { // XXX: actually interested in one attribute only.
+						if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
+					} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
+				}
+				break;
+			case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+				if ( !stat->stateEnterTime.tv_sec )
+					break;
+				switch ( conds[i][j].op )
+				{
+				case EDG_WLL_QUERY_OP_EQUAL:
+					if ( conds[i][j].value.t.tv_sec == stat->stateEnterTime.tv_sec ) goto or_satisfied;
+					break;
+				case EDG_WLL_QUERY_OP_UNEQUAL:
+					if ( conds[i][j].value.t.tv_sec != stat->stateEnterTime.tv_sec ) goto or_satisfied;
+					break;
+				case EDG_WLL_QUERY_OP_LESS:
+					if ( conds[i][j].value.t.tv_sec > stat->stateEnterTime.tv_sec ) goto or_satisfied;
+					break;
+				case EDG_WLL_QUERY_OP_GREATER:
+					if ( conds[i][j].value.t.tv_sec < stat->stateEnterTime.tv_sec ) goto or_satisfied;
+					break;
+				case EDG_WLL_QUERY_OP_WITHIN:
+					if (   conds[i][j].value.t.tv_sec <= stat->stateEnterTime.tv_sec
+						&& conds[i][j].value2.t.tv_sec >= stat->stateEnterTime.tv_sec ) goto or_satisfied;
+					break;
+				}
+			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
+				if ( !stat->lastUpdateTime.tv_sec )
+					break;
+				switch ( conds[i][j].op )
+				{
+				case EDG_WLL_QUERY_OP_EQUAL:
+					if ( conds[i][j].value.t.tv_sec == stat->lastUpdateTime.tv_sec ) goto or_satisfied;
+					break;
+				case EDG_WLL_QUERY_OP_UNEQUAL:
+					if ( conds[i][j].value.t.tv_sec != stat->lastUpdateTime.tv_sec ) goto or_satisfied;
+					break;
+				case EDG_WLL_QUERY_OP_LESS:
+					if ( conds[i][j].value.t.tv_sec > stat->lastUpdateTime.tv_sec ) goto or_satisfied;
+					break;
+				case EDG_WLL_QUERY_OP_GREATER:
+					if ( conds[i][j].value.t.tv_sec < stat->lastUpdateTime.tv_sec ) goto or_satisfied;
+					break;
+				case EDG_WLL_QUERY_OP_WITHIN:
+					if (   conds[i][j].value.t.tv_sec <= stat->lastUpdateTime.tv_sec
+						&& conds[i][j].value2.t.tv_sec >= stat->lastUpdateTime.tv_sec ) goto or_satisfied;
+					break;
+				}
 			default:
 				break;
 			}

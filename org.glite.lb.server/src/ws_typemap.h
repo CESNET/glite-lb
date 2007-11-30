@@ -22,6 +22,10 @@
 #define RESUBMITTED	lbt__queryAttr__RESUBMITTED
 #define PARENT		lbt__queryAttr__PARENT
 #define EXITCODE	lbt__queryAttr__EXITCODE
+#define JDLATTR		lbt__queryAttr__JDLATTR
+#define STATEENTERTIME	lbt__queryAttr__STATEENTERTIME
+#define LASTUPDATETIME	lbt__queryAttr__LASTUPDATETIME
+
 
 #define EQUAL		lbt__queryOp__EQUAL
 #define UNEQUAL		lbt__queryOp__UNEQUAL

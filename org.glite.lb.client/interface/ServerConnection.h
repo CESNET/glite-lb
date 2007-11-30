@@ -58,7 +58,7 @@ public:
 		RESUBMITTED = EDG_WLL_QUERY_ATTR_RESUBMITTED,	/**< Job was resubmitted */
 		PARENT = EDG_WLL_QUERY_ATTR_PARENT,	        /**< Id of the parent job. */
 		EXITCODE = EDG_WLL_QUERY_ATTR_EXITCODE,	/**< Job system exit code. */
-		JDL_ATTR = EDG_WLL_QUERY_ATTR_JDL_ATTR, 		/**< Arbitrary JDL attribute */
+		JDLATTR = EDG_WLL_QUERY_ATTR_JDL_ATTR, 		/**< Arbitrary JDL attribute */
 	};
 
 	/** Symbolic names of predicates.
