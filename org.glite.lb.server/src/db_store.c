@@ -28,8 +28,7 @@
 extern int unset_proxy_flag(edg_wll_Context, edg_wlc_JobId);
 extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *);
 
-
-static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat);
+static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat);
 
 
 int
@@ -89,7 +88,6 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 	}
 
   }
-  free(srvName);
 
   /* XXX: if event type is user tag, convert the tag name to lowercase!
    * 	  (not sure whether to convert a value too is reasonable
@@ -140,7 +138,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
    */
   if (err) goto err;
 
-  db_actual_store(ctx, event, ev, &newstat);
+  db_store_finalize(ctx, event, ev, &newstat);
 
 err:
 
@@ -148,6 +146,8 @@ err:
     edg_wll_FreeEvent(ev);
     free(ev);
   }
+
+  if (srvName) free(srvName);
 
   if ( newstat.state ) edg_wll_FreeStatus(&newstat);
 
@@ -220,7 +220,7 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
     assert(event);
   }
 
-  db_actual_store(ctx, event, ev, &newstat);
+  db_store_finalize(ctx, event, ev, &newstat);
 
 err:
 
@@ -230,7 +230,7 @@ err:
   return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat) {
+static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat) {
 
   if ( ctx->isProxy ) {
 	/*
@@ -256,10 +256,10 @@ static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, 
 		}
 	}
 
-	/* LB proxy purge
-	 */
-	if (newstat->remove_from_proxy) 
+	/* LB proxy purge */
+	if (newstat->remove_from_proxy) {
 			edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
+	}
   } else 
 #ifdef LB_PERF
 	if( sink_mode == GLITE_LB_SINK_SEND ) {
@@ -271,9 +271,7 @@ static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, 
 	unsigned int	jobIdPort;
 
 
-	/* Purge proxy flag
-	 * (remove extern unset_proxy_flag, set it static in srv_purge.c)
-	 */
+	/* Purge proxy flag */
 	edg_wlc_JobIdGetServerParts(ev->any.jobId, &jobIdHost, &jobIdPort);
 	if ( newstat->remove_from_proxy && (ctx->srvPort == jobIdPort) && 
 		!strcmp(jobIdHost,ctx->srvName) )
