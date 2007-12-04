@@ -1,10 +1,11 @@
 #ifndef GLITE_JOBID_JOBID_H
 #define GLITE_JOBID_JOBID_H
 
-#include <assert.h>
 #include <string>
 #include <stdexcept>
 #include <new>
+#include <cerrno>
+#include <cassert>
 
 #include "glite/jobid/cjobid.h"
 
@@ -41,6 +42,13 @@ public:
 class JobId 
 {
 public:
+	class Hostname {
+	public: 
+		std::string const& name;
+		Hostname(std::string const& n) : name(n) 
+		{}
+	};
+
 	//@name Constructors/Destructor
 	//@{
 
@@ -57,7 +65,7 @@ public:
 	 * \param port
 	 * \param unique
 	 */
-	explicit JobId(std::string const& host = std::string("localhost"), 
+	explicit JobId(Hostname const& host = Hostname("localhost"), 
 		       int port = GLITE_JOBID_DEFAULT_PORT, 
 		       std::string const& unique = std::string(""));
 
@@ -159,18 +167,18 @@ JobId::JobId(std::string const& job_id_string)
 
 
 inline
-JobId::JobId(std::string const& host, int port, std::string const& unique)
+JobId::JobId(JobId::Hostname const& host, int port, std::string const& unique)
 {
 	if(port < 0) {
 		throw JobIdError("negative port");
 	}
 
-	int ret = glite_jobid_recreate(host.c_str(), port, 
+	int ret = glite_jobid_recreate(host.name.c_str(), port, 
 				       unique.empty() ? NULL : unique.c_str(),
 				       &m_jobid);
 	switch(ret) {
 	case EINVAL:
-	    throw JobIdError(host);
+	    throw JobIdError(host.name);
 	  
 	case ENOMEM:
 	    throw std::bad_alloc();
