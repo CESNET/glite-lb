@@ -746,6 +746,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 						js->pub.cancelling = 1; break;
 					case EDG_WLL_CANCEL_DONE:
 						js->pub.state = EDG_WLL_JOB_CANCELLED;
+						js->pub.remove_from_proxy = 1;
 						rep(js->pub.reason, e->cancel.reason);
 						rep(js->last_seqcode, e->any.seqcode);
 						rep(js->pub.location, "none");
@@ -768,6 +769,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (e->any.source == EDG_WLL_SOURCE_WORKLOAD_MANAGER) res = RET_OK;
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_ABORTED;
+				js->pub.remove_from_proxy = 1;
 				rep(js->pub.reason, e->abort.reason);
 				rep(js->pub.location, "none");
 
@@ -778,6 +780,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		case EDG_WLL_EVENT_CLEAR:
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_CLEARED;
+				js->pub.remove_from_proxy = 1;
 				rep(js->pub.location, "none");
 				switch (e->clear.reason) {
 					case EDG_WLL_CLEAR_USER:

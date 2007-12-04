@@ -10,7 +10,11 @@
  * (includes edg_wll_JobStat API structure)
  */
 
-#define INTSTAT_VERSION "release-3.3.4"
+/* convention: revision X.XX - DESCRIPTION 			*/
+/* where X.XX is version from indent + 1 (version after commit) */
+/* and DESCRIPTION is short hit why version changed		*/
+
+#define INTSTAT_VERSION "revision 1.31 - proxy merge"
 
 
 // Internal error codes 

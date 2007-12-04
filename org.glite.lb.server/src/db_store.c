@@ -39,7 +39,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   int	seq;
   int   err;
   edg_wll_JobStat	newstat;
-  char 			*srvName;
+  char 			*srvName = NULL;
   unsigned int		srvPort;
 
 
@@ -84,10 +84,12 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
    */
   if (ctx->isProxy && ctx->serverRunning && (ev->any.priority & EDG_WLL_LOGFLAG_DIRECT) ) {
 	if (!strcmp(ctx->srvName, srvName)) {
+		free(srvName);
 		return 0;
 	}
 
   }
+  free(srvName);
 
   /* XXX: if event type is user tag, convert the tag name to lowercase!
    * 	  (not sure whether to convert a value too is reasonable
@@ -130,7 +132,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
     }
 #endif
 
-    err = edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, ctx->isProxy? NULL: &newstat);
+    err = edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, &newstat);
   }
 
   /* XXX: in edg_wll_StepIntState() 
@@ -146,7 +148,10 @@ err:
     edg_wll_FreeEvent(ev);
     free(ev);
   }
-  
+
+  if ( newstat.state ) edg_wll_FreeStatus(&newstat);
+
+
   return edg_wll_Error(ctx,NULL,NULL);
 }
 
@@ -220,6 +225,7 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
 err:
 
   free(event);
+  if ( newstat.state ) edg_wll_FreeStatus(&newstat);
   
   return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -251,20 +257,9 @@ static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, 
 	}
 
 	/* LB proxy purge
-	 * XXX: Set propper set of states!
-	 * TODO: Do the set of states configurable? 
 	 */
-	switch ( ev->any.type ) {
-	case EDG_WLL_EVENT_CLEAR:
-	case EDG_WLL_EVENT_ABORT:
-		edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
-		break;
-	case EDG_WLL_EVENT_CANCEL:
-		if (ev->cancel.status_code == EDG_WLL_CANCEL_DONE) 
+	if (newstat->remove_from_proxy) 
 			edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
-		break;
-	default: break;
-	}
   } else 
 #ifdef LB_PERF
 	if( sink_mode == GLITE_LB_SINK_SEND ) {
@@ -272,32 +267,26 @@ static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, 
 	} else 
 #endif
   {
+	char		*jobIdHost = NULL;
+	unsigned int	jobIdPort;
+
+
 	/* Purge proxy flag
-	 * XXX: Workaround - if these events arrive on server with shared DB
-	 * 	it reaches terminal state from proxy point of view and so
-	 *	proxy flag have to be removed (cannot call edg_wll_PurgeServerProxy)
-	 * - these triggers on events should be replaced by triggers on state change
 	 * (remove extern unset_proxy_flag, set it static in srv_purge.c)
 	 */
-	switch ( ev->any.type ) {
-	case EDG_WLL_EVENT_CLEAR:
-	case EDG_WLL_EVENT_ABORT:
-		if (unset_proxy_flag(ctx, ev->any.jobId) < 0) {
-                                        return(edg_wll_Error(ctx,NULL,NULL));
-		}
-		break;
-	case EDG_WLL_EVENT_CANCEL:
-		if (ev->cancel.status_code == EDG_WLL_CANCEL_DONE) 
+	edg_wlc_JobIdGetServerParts(ev->any.jobId, &jobIdHost, &jobIdPort);
+	if ( newstat->remove_from_proxy && (ctx->srvPort == jobIdPort) && 
+		!strcmp(jobIdHost,ctx->srvName) )
+	{
 			if (unset_proxy_flag(ctx, ev->any.jobId) < 0) {
+						free(jobIdHost);
                         	                return(edg_wll_Error(ctx,NULL,NULL));
 			}
-		break;
-	default: break;
 	}
+	free(jobIdHost);
 
 	if ( newstat->state ) {
 		edg_wll_NotifMatch(ctx, newstat);
-		edg_wll_FreeStatus(newstat);
 	}
 	if ( ctx->jpreg_dir && ev->any.type == EDG_WLL_EVENT_REGJOB ) {
 		char *jids, *msg;
