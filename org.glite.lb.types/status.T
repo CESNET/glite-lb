@@ -82,8 +82,9 @@ bool	suspended	Job is suspended
 string	suspend_reason	Reason for the suspend
 
 string	failure_reasons Concatenated job failure reasons, possibly from deeper middleware layers
+bool	remove_from_proxy	Job reached final status and may be removed from proxy
 
-_pad_	55
+_pad_	54
 
 string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
 string  pbs_queue	Name of queue in which is job queued

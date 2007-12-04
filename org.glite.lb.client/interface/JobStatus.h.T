@@ -77,8 +77,8 @@ public:
 			"\t/** $f->{comment} */\n\t\t$u = $StatusAttrNums{$u},\n" :
 			"#error \"$u not defined in StatusAttrNames\"\n";
 	}
+	gen "\tATTR_MAX = $stno /**< Limit for range checking. */ ";
 @@@}
-                ATTR_MAX /**< Limit for range checking. */
 	};
 
 @@@{

@@ -405,11 +405,12 @@ JobStatus::getValJobStatusList(Attr attr) const
 }
 
 
-/* FIXME: this will not work with the current frozen assignment of constants in JobStatus.h */
 static std::string const attr_names[JobStatus::ATTR_MAX] = {
 @@@{
-	for (sort {$a cmp $b} getAllFields $status) {
-		gen "\t\"$_\",\n";
+	require '../src/StatusAttrNames.pl';
+	for (@main::StatusAttrNames) {
+		my $fn = lc $_;
+		gen "\t\"$fn\",\n";
 	}
 @@@}
 };
