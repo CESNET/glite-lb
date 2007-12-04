@@ -181,6 +181,7 @@ typedef enum _edg_wll_ErrorCode {
         EDG_WLL_ERROR_XML_PARSE, /**< Error in parsing XML protocol. */
         EDG_WLL_ERROR_SERVER_RESPONSE, /**< Generic failure on server. See syslog on the server machine for details. */
         EDG_WLL_ERROR_JOBID_FORMAT, /**< Malformed jobid */
+	EDG_WLL_ERROR_DB_INIT, /**< Failed DB initialization (dynamic load, version mismatch, ...) */
 	EDG_WLL_ERROR_DB_CALL, /**< Failure of underlying database engine.
 		See errDesc returned by edg_wll_ErrorCode(). */
 	EDG_WLL_ERROR_MD5_CLASH, /**< MD5 hash same for different strings. Very unlikely :-). */

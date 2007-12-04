@@ -6,7 +6,14 @@
 
 edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 {
-	glite_lbu_InitDBContext(&ctx->dbctx);
+	if (glite_lbu_InitDBContext(&ctx->dbctx) != 0) {
+		char *ed;
+
+		glite_lbu_DBError(ctx->dbctx, NULL, &ed);
+		edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, ed);
+		free(ed);
+		return EDG_WLL_ERROR_DB_INIT;
+	}
 	return glite_lbu_DBConnect(ctx->dbctx,cs) ? edg_wll_SetErrorDB(ctx) : 0;
 }
 

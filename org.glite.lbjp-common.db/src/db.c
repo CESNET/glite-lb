@@ -14,6 +14,7 @@
 
 #include <mysql.h>
 #include <mysqld_error.h>
+#include <mysql_version.h>
 #include <errmsg.h>
 
 #include "glite/lbu/trio.h"
@@ -36,7 +37,7 @@
 
 #define USE_TRANS(CTX) ((CTX->caps & GLITE_LBU_DB_CAP_TRANSACTIONS) != 0)
 #define LOAD(SYM, SYM2) if ((*(void **)(&db_handle.SYM) = dlsym(db_handle.lib, SYM2)) == NULL) { \
-	err = ERR(ctx, ENOENT, "can't load symbol %s from mysql library (%s)", SYM2, dlerror()); \
+	err = ERR(*ctx, ENOENT, "can't load symbol %s from mysql library (%s)", SYM2, dlerror()); \
 	break; \
 }
 
@@ -109,6 +110,7 @@ typedef struct {
 	pthread_mutex_t lock;
 
 	void *(*mysql_init)(void *);
+	unsigned long (*mysql_get_client_version)(void);
 	int (*mysql_options)(MYSQL *mysql, enum mysql_option option, const char *arg);
 	unsigned int (*mysql_errno)(MYSQL *mysql);
 	const char *(*mysql_error)(MYSQL *mysql);
@@ -157,6 +159,7 @@ static int transaction_test(glite_lbu_DBContext ctx);
 static int FetchRowSimple(glite_lbu_DBContext ctx, MYSQL_RES *result, unsigned long *lengths, char **results);
 static int FetchRowPrepared(glite_lbu_DBContext ctx, glite_lbu_Statement stmt, unsigned int n, unsigned long *lengths, char **results);
 static void set_time(MYSQL_TIME *mtime, const time_t time);
+static void glite_lbu_DBCleanup(void);
 
 
 /* ---- common ---- */
@@ -174,41 +177,21 @@ int glite_lbu_DBError(glite_lbu_DBContext ctx, char **text, char **desc) {
 
 
 int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) {
-	*ctx = calloc(1, sizeof **ctx);
-	return *ctx == NULL ? ENOMEM : 0;
-}
-
-
-void glite_lbu_FreeDBContext(glite_lbu_DBContext ctx) {
-	if (ctx) {
-		assert(ctx->mysql == NULL);
-		free(ctx->err.desc);
-		free(ctx);
-	}
-}
-
-
-static void glite_lbu_DBCleanup(void) {
-	pthread_mutex_lock(&db_handle.lock);
-	if (db_handle.lib) {
-		dlclose(db_handle.lib);
-		db_handle.lib = NULL;
-	}
-	pthread_mutex_unlock(&db_handle.lock);
-}
-
-
-int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char *cs) {
 	int err = 0;
+	unsigned int ver_u;
+
+	*ctx = calloc(1, sizeof **ctx);
+	if (!*ctx) return ENOMEM;
 
 	/* dynamic load the mysql library */
 	pthread_mutex_lock(&db_handle.lock);
 	if (!db_handle.lib) {
 		if ((!MYSQL_LIBPATH[0] || (db_handle.lib = dlopen(MYSQL_LIBPATH, RTLD_LAZY | RTLD_LOCAL)) == NULL) &&
 		    (db_handle.lib = dlopen("libmysqlclient.so", RTLD_LAZY | RTLD_LOCAL)) == NULL)
-			return ERR(ctx, ENOENT, "can't load '%s' or 'libmysqlclient.so' (%s)", MYSQL_LIBPATH, dlerror());
+			return ERR(*ctx, ENOENT, "can't load '%s' or 'libmysqlclient.so' (%s)", MYSQL_LIBPATH, dlerror());
 		do {
 			LOAD(mysql_init, "mysql_init");
+			LOAD(mysql_get_client_version, "mysql_get_client_version");
 			LOAD(mysql_options, "mysql_options");
 			LOAD(mysql_errno, "mysql_errno");
 			LOAD(mysql_error, "mysql_error");
@@ -237,9 +220,18 @@ int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char *cs) {
 			LOAD(mysql_stmt_affected_rows, "mysql_stmt_affected_rows");
 			LOAD(mysql_stmt_result_metadata, "mysql_stmt_result_metadata");
 			LOAD(mysql_stmt_fetch_column, "mysql_stmt_fetch_column");
+
+			// check the runtime version
+			ver_u = db_handle.mysql_get_client_version();
+			if (ver_u != MYSQL_VERSION_ID) {
+				err = ERR(*ctx, EINVAL, "version mismatch (compiled '%lu', runtime '%lu')", MYSQL_VERSION_ID, ver_u);
+				break;
+			}
+
 			pthread_mutex_unlock(&db_handle.lock);
 			atexit(glite_lbu_DBCleanup);
 		} while(0);
+
 		if (err) {
 			dlclose(db_handle.lib);
 			db_handle.lib = NULL;
@@ -248,6 +240,20 @@ int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char *cs) {
 		}
 	} else pthread_mutex_unlock(&db_handle.lock);
 
+	return 0;
+}
+
+
+void glite_lbu_FreeDBContext(glite_lbu_DBContext ctx) {
+	if (ctx) {
+		assert(ctx->mysql == NULL);
+		free(ctx->err.desc);
+		free(ctx);
+	}
+}
+
+
+int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char *cs) {
 	if (db_connect(ctx, cs, &ctx->mysql) != 0) return STATUS(ctx);
 	return 0;
 }
@@ -1131,3 +1137,15 @@ static void set_time(MYSQL_TIME *mtime, const time_t time) {
 	mtime->minute = tm.tm_min;
 	mtime->second = tm.tm_sec;
 }
+
+
+static void glite_lbu_DBCleanup(void) {
+	pthread_mutex_lock(&db_handle.lock);
+	if (db_handle.lib) {
+		dlclose(db_handle.lib);
+		db_handle.lib = NULL;
+	}
+	pthread_mutex_unlock(&db_handle.lock);
+}
+
+

@@ -157,6 +157,7 @@ static const char* const errTexts[] = {
 	"XML Parse error",
 	"Server response error",
 	"Bad JobId format",
+	"Database initialization failed",
 	"Database call failed",
 	"MD5 key clash",
 	"GSSAPI Error",

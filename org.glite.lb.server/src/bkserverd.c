@@ -58,6 +58,7 @@ enum lb_srv_perf_sink sink_mode;
 #include "stats.h"
 #include "db_calls.h"
 #include "db_supp.h"
+#include "openserver.h"
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 #  if GSOAP_VERSION < 20700
@@ -71,8 +72,6 @@ enum lb_srv_perf_sink sink_mode;
 #endif /* GLITE_LB_SERVER_WITH_WS */
 
 extern int edg_wll_StoreProto(edg_wll_Context ctx);
-extern edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs);
-extern edg_wll_ErrorCode edg_wll_Close(edg_wll_Context);
 extern int edg_wll_StoreProtoProxy(edg_wll_Context ctx);
 
 extern char *lbproxy_ilog_socket_path;
@@ -276,7 +275,7 @@ static void usage(char *me)
 	,me);
 }
 
-static void wait_for_open(edg_wll_Context,const char *);
+static int wait_for_open(edg_wll_Context,const char *);
 static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
 static int add_root(char *);
 static int read_roots(const char *);
@@ -699,8 +698,7 @@ int main(int argc, char *argv[])
 
 	/* Just check the database and let it be. The slaves do the job. */
 	edg_wll_InitContext(&ctx);
-	glite_lbu_InitDBContext(&ctx->dbctx);
-	wait_for_open(ctx, dbstring);
+	if (wait_for_open(ctx, dbstring)) return 1;
 
 	if ((ctx->dbcaps = glite_lbu_DBQueryCaps(ctx->dbctx)) == -1)
 	{
@@ -1321,6 +1319,7 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 			 */
 			break;
 			
+		case EDG_WLL_ERROR_DB_INIT:
 		case EDG_WLL_ERROR_DB_CALL:
 		case EDG_WLL_ERROR_SERVER_RESPONSE:
 		default:
@@ -1544,17 +1543,17 @@ int bk_clnt_reject_proxy(int conn)
 }
 
 
-static void wait_for_open(edg_wll_Context ctx, const char *dbstring)
+static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 {
 	char	*dbfail_string1, *dbfail_string2;
+	char	*errt,*errd;
+	int err;
 
 	dbfail_string1 = dbfail_string2 = NULL;
 
-	while (edg_wll_Open(ctx, (char *) dbstring)) {
-		char	*errt,*errd;
-
+	while (((err = edg_wll_Open(ctx, (char *) dbstring)) != EDG_WLL_ERROR_DB_INIT) && err) {
 		if (dbfail_string1) free(dbfail_string1);
-		glite_lbu_DBError(ctx->dbctx,&errt,&errd);
+		edg_wll_Error(ctx,&errt,&errd);
 		asprintf(&dbfail_string1,"%s (%s)\n",errt,errd);
 		if (dbfail_string1 != NULL) {
 			if (dbfail_string2 == NULL || strcmp(dbfail_string1,dbfail_string2)) {
@@ -1574,6 +1573,16 @@ static void wait_for_open(edg_wll_Context ctx, const char *dbstring)
 		dprintf(("[%d]: DB connection established\n",getpid()));
 		if (!debug) syslog(LOG_INFO,"DB connection established\n");
 	}
+
+	if (err) {
+		edg_wll_Error(ctx,&errt,&errd);
+		asprintf(&dbfail_string1,"%s (%s)\n",errt,errd);
+		dprintf(("[%d]: %s\n", getpid(), dbfail_string1));
+		if (!debug) syslog(LOG_ERR,dbfail_string1);
+		free(dbfail_string1);
+	}
+
+	return err;
 }
 
 static void free_hostent(struct hostent *h){

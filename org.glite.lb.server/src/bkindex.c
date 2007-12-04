@@ -93,7 +93,6 @@ int main(int argc,char **argv)
 	}
 
 	edg_wll_InitContext(&ctx);
-	glite_lbu_InitDBContext(&ctx->dbctx);
 	if (!dbstring) dbstring = DEFAULTCS;
 	if (edg_wll_Open(ctx,dbstring)) do_exit(ctx,EX_UNAVAILABLE);
 	if ((ctx->dbcaps = glite_lbu_DBQueryCaps(ctx->dbctx)) == -1) do_exit(ctx, EX_SOFTWARE);

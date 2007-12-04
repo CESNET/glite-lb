@@ -73,7 +73,7 @@ default all: compile doc
 
 libglite_lbu_db.la: ${LOBJS}
 	if [ -z "${MYSQL_LIBPATH}" ]; then \
-		echo "MySQL shared library not found!"; \
+		echo "Warning: MySQL shared library not found!"; \
 		sleep 15; \
 	fi
 	${LINK} -o $@ $< ${EXT_LIBS}
