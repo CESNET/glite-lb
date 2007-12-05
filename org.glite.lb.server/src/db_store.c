@@ -156,6 +156,7 @@ err:
 }
 
 
+/* Called only when CollectionStateEvent generated */
 int
 db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
 {
@@ -168,6 +169,7 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
   edg_wll_ResetError(ctx);
   memset(&newstat,0,sizeof newstat);
 
+  /* Locked from load_parent_intJobStat() */
 
 #ifdef LB_PERF
   if (sink_mode == GLITE_LB_SINK_STORE) {
@@ -179,17 +181,6 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
 #endif
 
 
-  /* XXX: if event type is user tag, convert the tag name to lowercase!
-   * 	  (not sure whether to convert a value too is reasonable
-   * 	  or keep it 'case sensitive')
-   */
-  if ( ev->any.type == EDG_WLL_EVENT_USERTAG )
-  {
-	int i;
-	for ( i = 0; ev->userTag.name[i] != '\0'; i++ )
-	  ev->userTag.name[i] = tolower(ev->userTag.name[i]);
-  }
-  
   assert(ev->any.user);
 
   if(use_db) {
@@ -197,21 +188,14 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
       goto err;
   }
 
-  if ( ev->any.type == EDG_WLL_EVENT_CHANGEACL )
-    err = edg_wll_UpdateACL(ctx, ev->any.jobId,
-			ev->changeACL.user_id, ev->changeACL.user_id_type,
-			ev->changeACL.permission, ev->changeACL.permission_type,
-			ev->changeACL.operation);
-  else {
 #ifdef LB_PERF
-    if(sink_mode == GLITE_LB_SINK_STATE) {
+  if(sink_mode == GLITE_LB_SINK_STATE) {
 	     glite_wll_perftest_consumeEvent(ev);
 	     goto err;
-    }
+  }
 #endif
 
-    err = edg_wll_StepIntStateParent(ctx,ev->any.jobId, ev, seq, is, ctx->isProxy? NULL: &newstat);
-  }
+  err = edg_wll_StepIntStateParent(ctx,ev->any.jobId, ev, seq, is, ctx->isProxy? NULL: &newstat);
 
   if (err) goto err;
 
