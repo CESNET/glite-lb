@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 				(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG) 
 				:EDG_WLL_REGJOB_SIMPLE
 				),
-			jdl ? jdl : "blabla", "NNNSSSS",
+			jdl ? jdl : "blabla", "NS",
 			num_subjobs,seed,&subjobs))
 		{
 			char 	*et,*ed;
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 				(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG) 
 				:EDG_WLL_REGJOB_SIMPLE
 				),
-			jdl ? jdl : "blabla", "NNNSSSS",
+			jdl ? jdl : "blabla", "NS",
 			num_subjobs,seed,&subjobs))
 		{
 			char 	*et,*ed;
@@ -147,14 +147,14 @@ int main(int argc, char *argv[])
 		}
 
 		if (lbproxy) {
-			if (edg_wll_RegisterSubjobsProxy(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
+			if (edg_wll_RegisterSubjobsProxy(ctx, jobid, (const char **) jdls, "NS", subjobs)) {
 				char 	*et,*ed;
 				edg_wll_Error(ctx,&et,&ed);
 				fprintf(stderr,"edg_wll_RegisterSubjobsProxy: %s (%s)\n", et, ed);
 				exit(1);
 			}
 		} else {
-			if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, NULL, subjobs)) {
+			if (edg_wll_RegisterSubjobs(ctx, jobid, (const char **) jdls, "NS", subjobs)) {
 				char 	*et,*ed;
 				edg_wll_Error(ctx,&et,&ed);
 				fprintf(stderr,"edg_wll_RegisterSubjobs: %s (%s)\n", et, ed);
