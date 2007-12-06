@@ -1,0 +1,54 @@
+Besides the API's \LB\ offers its users a simple command-line interface for
+logging events. The command glite-lb-logevent is used for this purpose. However, it
+is intended for internal WMS debugging tests in the first place and should not
+be used for common event logging because of possibility of confusing \LB\
+server job state automaton.
+
+The only legal user usage is for logging \verb'UserTag' and \verb'ChangeACL' events. The following description is therefore concentrating only on options dealing with these two events.
+
+Command usage is:
+
+\begin{verbatim}
+    glite-lb-logevent [-h] [-p] [-c seq_code] \
+        -j <dg_jobid> -s Application -e <event_name> [key=value ...]
+\end{verbatim}
+
+where
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{  -h  -{}-help} &           this help message\\
+\texttt{  -p  -{}-priority} &       send a priority event\\
+\texttt{  -c  -{}-sequence} &       event sequence code\\
+\texttt{  -j  -{}-jobid} &          JobId\\
+\texttt{  -e  -{}-event} &           select event type (see -e help)\\
+\end{tabularx}
+
+\medskip
+
+Each event specified after \verb'-e' option has different sub-options enabling to set event specific values.
+
+Sub-options usable with \verb'UserTag' event are:
+
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{      -{}-name}  &          tag name\\
+\texttt{      -{}-value} &          tag value\\
+\end{tabularx}
+
+\medskip
+
+Sub-options usable with \verb'ChangeACL' event are:
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{      -{}-operation} &       operation requested to perform with ACL (add, remove)\\
+\texttt{      -{}-permission} &      ACL permission to change (currently only READ)\\
+\texttt{      -{}-permission\_type} & type of permission requested (0 = 'allow', 1 = 'deny')\\
+\texttt{      -{}-user\_id} &         DN or VOMS parameter (in format VO:group)\\
+\texttt{      -{}-user\_id\_type} &    type of information given in \verb'user_id' (DN or VOMS)\\
+\end{tabularx}
+
+\bigskip
+
+To be able to use this command several environmental variables must be set properly. User must specify where the event should be sent. This is address and port of glite-lb-logd daemon. It is done using environmental variable \verb'EDG_WL_LOG_DESTINATION' in a form \verb'address:port'.
+
+Because user is allowed to change ACL or add user tags only for her jobs, paths to valid X509 user credentials has to be set to authorise her. This is done using two environmental variables \verb'EDG_WL_X509_KEY' and \verb'EDG_WL_X509_CERT' in a form \verb'path_to_cred'.
