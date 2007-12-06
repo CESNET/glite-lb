@@ -54,14 +54,14 @@ GLITE_LB_EXPORT_ENABLED=${GLITE_LB_EXPORT_ENABLED:-true}
 [ -d $GLITE_LB_EXPORT_JOBSDIR ] || mkdir -p $GLITE_LB_EXPORT_JOBSDIR
 
 if [ x"$GLITE_LB_PURGE_ENABLED" = x"true" ]; then
-	X509_USER_CERT="$X509_USER_CERT" X509_USER_KEY="$X509_USER_KEY" $PREFIX/sbin/glite-lb-purge $GLITE_LB_EXPORT_PURGE_ARGS -l -m $GLITE_LB_EXPORT_BKSERVER -s
+	X509_USER_CERT="$X509_USER_CERT" X509_USER_KEY="$X509_USER_KEY" $PREFIX/sbin/glite-lb-purge $GLITE_LB_EXPORT_PURGE_ARGS -l -m $GLITE_LB_EXPORT_BKSERVER -s $GLITE_LB_PURGE_OTHER_OPTIONS
 fi
 
 if [ x"$GLITE_LB_EXPORT_ENABLED" = x"true" ]; then
   list=`ls $GLITE_LB_EXPORT_PURGEDIR/* 2>/dev/null`
   for file in $list; do
     if [ -s $file ]; then
-      $PREFIX/sbin/glite-lb-lb_dump_exporter -d $file -s $GLITE_LB_EXPORT_JOBSDIR -m $GLITE_LB_EXPORT_JPDUMP_MAILDIR
+      $PREFIX/sbin/glite-lb-lb_dump_exporter -d $file -s $GLITE_LB_EXPORT_JOBSDIR -m $GLITE_LB_EXPORT_JPDUMP_MAILDIR $GLITE_LB_DUMP_EXPORTER_OTHER_OPTIONS
       if [ -n "$GLITE_LB_EXPORT_PURGEDIR_KEEP" ]; then
         mv $file $GLITE_LB_EXPORT_PURGEDIR_KEEP
       else
