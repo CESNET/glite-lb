@@ -103,8 +103,24 @@ err:
 
 int edg_wll_NotifExpired(edg_wll_Context ctx,const char *notif)
 {
-	/* TODO */
-	return 0;
+	char	*dn = NULL,*dj = NULL;
+
+	trio_asprintf(&dn,"delete from notif_registrations where notifid='%|Ss'",notif);
+	trio_asprintf(&dj,"delete from notif_jobs where notifid='%|Ss'",notif);
+
+	if (edg_wll_ExecStmt(ctx,dn,NULL) < 0 ||
+		edg_wll_ExecStmt(ctx,dj,NULL) < 0)
+	{
+		char	*et,*ed;
+		edg_wll_Error(ctx,&et,&ed);
+
+		syslog(LOG_WARNING,"delete notification %s: %s (%d)",notif,et,ed);
+		free(et); free(ed);
+	}
+
+	free(dn);
+	free(dj);
+	return edg_wll_ResetError(ctx);
 }
 
 
