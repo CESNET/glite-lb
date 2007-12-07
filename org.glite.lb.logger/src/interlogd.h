@@ -62,9 +62,13 @@
 extern int TIMEOUT;
 #define INPUT_TIMEOUT (60)
 
-
-extern edg_wll_GssCred cred_handle;
+typedef struct cred_handle {
+	edg_wll_GssCred creds;
+	int counter;
+} cred_handle_t;
+extern cred_handle_t *cred_handle;
 extern pthread_mutex_t cred_handle_lock;
+extern pthread_key_t cred_handle_key;
 extern char *cert_file;
 extern char *key_file;
 extern char *CAcert_dir;
@@ -145,6 +149,9 @@ struct event_queue {
 	int                     cur_len;        /* current length */
 };
 
+
+/* credential destructor */
+void cred_handle_destroy(void *);
 
 /* server msg methods */
 struct server_msg *server_msg_create(il_octet_string_t *, long);

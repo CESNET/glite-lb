@@ -33,22 +33,27 @@ recover_thread(void *q)
 			exit(1);
 		}
 		il_log(LOG_INFO, "Reloading certificate...\n");
-		if(pthread_mutex_lock(&cred_handle_lock) < 0)
-			abort();
 		if (edg_wll_gss_watch_creds(cert_file, &cert_mtime) > 0) {
-			edg_wll_GssCred new_cred_handle = NULL;
+			edg_wll_GssCred new_creds = NULL;
 			int ret;
 
 			ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file, 
-				&new_cred_handle, NULL);
-			if (new_cred_handle != NULL) {
-				edg_wll_gss_release_cred(&cred_handle, NULL);
-				cred_handle = new_cred_handle;
+				&new_creds, NULL);
+			if (new_creds != NULL) {
+				if(pthread_mutex_lock(&cred_handle_lock) < 0)
+					abort();
+				cred_handle = malloc(sizeof(*cred_handle));
+				if(cred_handle == NULL) {
+					il_log(LOG_CRIT, "Failed to allocate structure for credentials.\n");
+					exit(EXIT_FAILURE);
+				}
+				cred_handle->creds = new_creds;
+				cred_handle->counter = 0;
+				if(pthread_mutex_unlock(&cred_handle_lock) < 0)
+					abort();
 				il_log(LOG_INFO, "New certificate found and deployed.\n");
 			}
 		}
-		if(pthread_mutex_unlock(&cred_handle_lock) < 0)
-			abort();
 		sleep(INPUT_TIMEOUT);
 	}
 }
