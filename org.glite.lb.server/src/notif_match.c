@@ -114,7 +114,7 @@ int edg_wll_NotifExpired(edg_wll_Context ctx,const char *notif)
 		char	*et,*ed;
 		edg_wll_Error(ctx,&et,&ed);
 
-		syslog(LOG_WARNING,"delete notification %s: %s (%d)",notif,et,ed);
+		syslog(LOG_WARNING,"delete notification %s: %s (%s)",notif,et,ed);
 		free(et); free(ed);
 	}
 
