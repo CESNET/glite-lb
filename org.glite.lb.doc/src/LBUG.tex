@@ -1,12 +1,7 @@
 \documentclass{egee}
-\usepackage{doxygen}
-\usepackage{tabularx}
+%\usepackage{doxygen}
 
-\def\LB{L\&B}
-\def\eg{e.\,g.}
-\def\ie{i.\,e.}
-\def\Dash{\,---\,\penalty-1000}
-\def\todo#1{\par\textbf{TODO:} #1\par}
+\input{definitions}
 
 \title{Logging and Bookkeeping}
 \Subtitle{User's Guide}
@@ -31,158 +26,23 @@ as well as \LB\ query and notification API use cases.
 \input{frontmatter}
 \newpage
 \tableofcontents
-\newpage
-
-\section{Introduction}
-%This Section should give a brief summary of what the service described
-%is supposed to achieve and how it fits into the overall
-%architecture. It should contain subsections on the service internal
-%architecture and its relations to other services. 
-
-The Logging and Bookkeeping (\LB) service tracks jobs managed by 
-the gLite WMS (workload management system).
-It gathers events from various WMS components in a~reliable way
-and processes them in order to give a~higher level view, the
-\emph{status of job}.
-
-Virtually all the important
-data are fed to \LB\ internally from various gLite middleware
-components, transparently from the user's point of view.
-On the contrary, \LB\ provides public interfaces for querying the job
-information synchronously as well as registering for asynchronous
-notifications.
-API's for this functionality are described in this document in detail.
-
-
-\subsection{Service Architecture}
-\input{arch}
-
-
-\subsection{Security and Access Control}
-\input{security}
-
-
-\subsection{Interactions with other Services}
-\input{interaction}
-
 
 \newpage
-\section{Quickstart Guide}
-% The quickstart guide should explain in simple terms and with examples
-% how a user is supposed to achieve the most common usecases. E.g. how
-% to submit and cancel a job, how to receive a job's output. How to
-% create a grid file, move it around, locate it, and delete it. How to
-% monitor the progress on an application etc. 
-
-\subsection{Command-Line Tools}
-This section describes usage of event-logging \LB\ command in the two
-cases which are ment for the end-user: adding a~user description (tag)
-to a~job, and changing a~job access control list.
-
-\subsubsection{Logging a UserTag event}
-\label{log_usertag}
-\input{log_usertag}
-
-\subsubsection{Changing Job Access Control List}
-\label{change_acl}
-\input{change_acl}
-
-
-%% \subsection{\LB Producer API}
-%% \todo{honik}
-%% This API is not public at the moment, it may change later.
-%% \input{producer_api}
-
-
-\subsection{\LB\ Querying API}
-%\todo{valtri}
-\input{consumer_api}
-
-
-\subsection{\LB\ Notification API}
-\input{notification_api}
-
+\input{LBUG-Introduction}
+\input{LBUG-Architecture}
+\input{LBUG-Security}
+\input{LBUG-Interaction}
 
 \newpage
-\section{Reference Guide}
-
-%The reference guide should contain detailed descriptions of all
-%provided CLIs and APIs. There should be two subsections for those. 
-
-\subsection{Command-Line Interfaces}
-\label{cmdln_interface} 
-\input{cmdln_interface}
-
+\input{LBUG-QuickStartGuide}
 
 \newpage
-
-\subsection{\LB\ Web Service Interface}
-
-The \LB\ web service interface currently reflects the functionality of legacy
-\LB\ query API (Sect.~\ref{query-C}). 
-
-The following sections describe the operations defined in the \LB\ WSDL
-file as well as its custom types.
-
-For the sake of readability this documentation does not follow the structure
-of WSDL strictly, avoiding to duplicate information which is already present
-here.
-Conseqently, the SOAP messages are not documented, for example, as they
-are derived from operation inputs and outputs mechanically.
-The same holds for types: \eg\ we do not document defined elements 
-which correspond 1:1 to types but are required due to the literal SOAP
-encoding.
-
-For exact definition of the operations and types see the WSDL file.
-
-
-{
-\def\chapter#1{}
-\def\section#1{\subsubsection{#1}}
-\def\subsection#1{\par\textbf{#1}\par}
-
-\let\odesc=\description
-\let\oedesc=\enddescription
-\renewenvironment{description}{\odesc\itemindent=1em
-\listparindent=2em
-}{\oedesc}
-%\renewenvironment{description}{\list{}{\labelwidth 5cm\leftmargin 5cm}}
-%{\endlist}
-
-\let\null=\relax
-%\input LB-ug
-}
-
+\input{LBUG-ReferenceGuide}
 
 \newpage
-\section{Known Problems and Caveats}
-\input{caveats}
+\input{LBUG-Caveats}
 
-
-\begin{thebibliography}1
-\bibitem[R1]{lbapi}\emph{\LB\ API Reference}, DataGrid-01-TED-0139.
-\bibitem[R2]{lbarch}\emph{\LB\ Architecture release 2}, DataGrid-01-TED-0141.
-\bibitem[R3]{WMS} G.Avellino at al., \emph{The DataGrid Workload Management System: Challenges and Results}, Journal of Grid Computing, ISSN: 1570-7873, 2005, accepted.
-\end{thebibliography}
-
-\clearpage
-
-\appendix
-
-\section{Component and Interaction Diagrams}
-% \todo{nekdy priste}
-% To help understanding the service a set of component and interaction
-% diagrams might help. This section is not mandatory. 
-
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=.8\hsize]{logging-arch-notif}
-\caption{Overview of the \LB\ architecture}
-\label{fig-arch}
-\end{figure}
-
-
-
+\bibliographystyle{unsrt}
+\bibliography{lbjp}
 
 \end{document}

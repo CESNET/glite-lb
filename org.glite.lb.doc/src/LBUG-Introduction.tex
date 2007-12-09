@@ -1,0 +1,21 @@
+\section{Introduction}
+%This Section should give a brief summary of what the service described
+%is supposed to achieve and how it fits into the overall
+%architecture. It should contain subsections on the service internal
+%architecture and its relations to other services. 
+
+The Logging and Bookkeeping (\LB) service tracks jobs managed by 
+the gLite WMS (workload management system).
+It gathers events from various WMS components in a~reliable way
+and processes them in order to give a~higher level view, the
+\emph{status of job}.
+
+Virtually all the important
+data are fed to \LB\ internally from various gLite middleware
+components, transparently from the user's point of view.
+On the contrary, \LB\ provides public interfaces for querying the job
+information synchronously as well as registering for asynchronous
+notifications.
+API's for this functionality are described in this document in detail.
+
+\endinput

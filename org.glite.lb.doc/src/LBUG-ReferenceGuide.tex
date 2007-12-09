@@ -1,0 +1,31 @@
+\section{Reference Guide}
+
+%The reference guide should contain detailed descriptions of all
+%provided CLIs and APIs. There should be two subsections for those.
+
+\subsection{Command-Line Interfaces}
+\label{cmdln_interface}
+\input{cmdln_interface}
+
+\newpage
+
+\subsection{\LB\ Web Service Interface}
+
+The \LB\ web service interface currently reflects the functionality of legacy
+\LB\ query API (Sect.~\ref{query-C}).
+
+The following sections describe the operations defined in the \LB\ WSDL
+file as well as its custom types.
+
+For the sake of readability this documentation does not follow the structure
+of WSDL strictly, avoiding to duplicate information which is already present
+here.
+Conseqently, the SOAP messages are not documented, for example, as they
+are derived from operation inputs and outputs mechanically.
+The same holds for types: \eg\ we do not document defined elements
+which correspond 1:1 to types but are required due to the literal SOAP
+encoding.
+
+For exact definition of the operations and types see the WSDL file.
+
+\endinput

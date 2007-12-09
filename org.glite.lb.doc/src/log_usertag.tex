@@ -31,7 +31,7 @@ where
 \verb'<tag_value>' & specifies the value of user tag\\
 \end{tabularx}
 
-The user application is always executed from within a JobWrapper script (part of Workload Management System \cite{WMS}). The wrapper  sets the  appropriate \verb'JobId' in the environment variable \verb'GLITE_WMS_JOBID'. The user should pass this value to the -j option of glite-lb-logevent.  Similarly, the wrapper sets an initial value of the event sequence code in the environment variable \verb'GLITE_WMS_SEQUENCE_CODE'.
+The user application is always executed from within a JobWrapper script (part of Workload Management System \cite{jgc}). The wrapper  sets the  appropriate \verb'JobId' in the environment variable \verb'GLITE_WMS_JOBID'. The user should pass this value to the -j option of glite-lb-logevent.  Similarly, the wrapper sets an initial value of the event sequence code in the environment variable \verb'GLITE_WMS_SEQUENCE_CODE'.
 
 If the user application calls glite-lb-logevent just once, it is sufficient to pass this value to the -c option.  However, if there are more  subsequent calls,  the  user is responsible for capturing an updated sequence code from the stdout of glite-lb-logevent and using it in subsequent calls.  The \LB\ design requires the sequence codes in  order  to  be able to sort events correctly while not relying on strictly synchronized clocks.  
 
