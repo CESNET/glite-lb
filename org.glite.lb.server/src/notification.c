@@ -637,17 +637,25 @@ static int update_notif(
 		 */
 	}
 
-	if ( host ) {
-		printf("edg_wll_NotifChangeDestination(ctx, %s, %s, %d)\n",
+	if ( host || valid) {
+		char	*v = strdup(valid),*v2 = strchr(v+1,'\'');
+		int	expires;
+		
+		*v2 = 0;
+		expires = edg_wll_DBToTime(v+1);
+/*
+ 		printf("edg_wll_NotifChangeIL(ctx, %s, %s, %d)\n",
 				nid_s? nid_s: "nid", host, port);
-		if ( edg_wll_NotifChangeDestination(ctx, nid, host, port) ) {
+*/
+		if ( edg_wll_NotifChangeIL(ctx, nid, host, port, expires) ) {
 			char *errt, *errd;
 
 			edg_wll_Error(ctx, &errt, &errd);
-			printf("edg_wll_NotifChangeDestination(): %s (%s)\n", errt, errd);
+			fprintf(stderr,"edg_wll_NotifChangeIL(): %s (%s)\n", errt, errd);
 			free(errt);
 			free(errd);
 		}
+		free(v);
 	}
 
 

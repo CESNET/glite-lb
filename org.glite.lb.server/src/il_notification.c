@@ -43,6 +43,7 @@ notif_create_ulm(
 	const char	*host,
 	const uint16_t	port,
 	const char	*owner,
+	int		expires,
 	const char	*notif_data,
 	char		**ulm_data,
 	char		**reg_id_s)
@@ -65,6 +66,8 @@ notif_create_ulm(
 	if (host) event->notification.dest_host = strdup(host);
 	event->notification.dest_port = port;
 	if (notif_data) event->notification.jobstat = strdup(notif_data);
+
+	event->notification.expires = expires;
 
 	if ((*ulm_data = edg_wll_UnparseNotifEvent(context,event)) == NULL) {
 		edg_wll_SetError(context, ret = ENOMEM, "edg_wll_UnparseNotifEvent()"); 
@@ -94,6 +97,7 @@ edg_wll_NotifSend(edg_wll_Context       context,
 		  const char           *host,
                   int                   port,
 		  const char           *owner,
+		  int			expires,
                   const char           *notif_data)
 {
 	struct timeval	timeout = {NOTIF_TIMEOUT, 0};
@@ -108,6 +112,7 @@ edg_wll_NotifSend(edg_wll_Context       context,
 				 host, 
 				 port, 
 				 owner, 
+				 expires,
 				 notif_data,
 				 &ulm_data,
 				 &reg_id_s))) {
@@ -148,6 +153,7 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		       const char      *host,
                        int              port,
 		       const char      *owner,
+		       int		expires,
 		       const edg_wll_JobStat notif_job_stat)
 {
 	int ret=0;
@@ -161,7 +167,7 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		goto out;
 	}
 
-	if (ret=edg_wll_NotifSend(context, reg_id, host, port, owner, xml_esc_data)) {
+	if ((ret=edg_wll_NotifSend(context, reg_id, host, port, owner, expires, xml_esc_data))) {
 		char *ed = NULL, *et = NULL;
 
 		if(ret) edg_wll_UpdateError(context, ret, "edg_wll_NotifJobStatus()");
@@ -181,12 +187,13 @@ out:
 
 
 int 
-edg_wll_NotifChangeDestination(edg_wll_Context context,
+edg_wll_NotifChangeIL(edg_wll_Context context,
                                edg_wll_NotifId reg_id,
                                const char      *host,
-                               int             port)
+                               int             port,
+			       int	       expires)
 {
-	return(edg_wll_NotifSend(context, reg_id, host, port, "", ""));
+	return(edg_wll_NotifSend(context, reg_id, host, port, "", expires, ""));
 }
 
 
@@ -194,6 +201,6 @@ int
 edg_wll_NotifCancelRegId(edg_wll_Context context,
 			 edg_wll_NotifId reg_id)
 {
-	return(edg_wll_NotifSend(context, reg_id, NULL, 0, "", ""));
+	return(edg_wll_NotifSend(context, reg_id, NULL, 0, "", 0, ""));
 }
 

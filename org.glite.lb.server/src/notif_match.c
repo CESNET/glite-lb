@@ -27,7 +27,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[5];
 	edg_wll_Stmt	jobs = NULL;
-	int	ret,i;
+	int	ret,i,expires;
 	time_t	now = time(NULL);
 
 	edg_wll_ResetError(ctx);
@@ -49,7 +49,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	if (edg_wll_ExecStmt(ctx,jobq,&jobs) < 0) goto err;
 
 	while ((ret = edg_wll_FetchRow(jobs,jobc)) > 0) {
-		if (now > edg_wll_DBToTime(jobc[2]))
+		if (now > (expires = edg_wll_DBToTime(jobc[2])))
 			edg_wll_NotifExpired(ctx,jobc[0]);
 		else if (notif_match_conditions(ctx,stat,jobc[4]) &&
 				notif_check_acl(ctx,stat,jobc[3]))
@@ -81,7 +81,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 			/* XXX: only temporary hack!!!
 			 */
 			ctx->p_instance = strdup("");
-			if ( edg_wll_NotifJobStatus(ctx, nid, dest, port, jobc[3], *stat) )
+			if ( edg_wll_NotifJobStatus(ctx, nid, dest, port, jobc[3], expires, *stat) )
 			{
 				free(dest);
 				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
