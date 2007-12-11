@@ -118,7 +118,7 @@ int edg_wll_NotifNewServer(
 		goto cleanup;
 
 	if (get_indexed_cols(ctx,nid_s,nconds,&add_index) ||
-		edg_wll_ExecSQL(ctx,add_index,NULL) < 0
+		(add_index && edg_wll_ExecSQL(ctx,add_index,NULL) < 0)
 	) goto cleanup;
 
 
@@ -680,7 +680,7 @@ static int get_indexed_cols(edg_wll_Context ctx,char const *notif,edg_wll_QueryR
 	edg_wll_IColumnRec	* notif_cols = ctx->notif_index_cols;
 	char	*cols = NULL,*aux;
 
-	for (i=0; conds[i]; i++) {
+	for (i=0; conds && conds[i]; i++) {
 		for (j=0; notif_cols[j].qrec.attr && notif_cols[j].qrec.attr != conds[i]->attr; j++);
 		if (notif_cols[j].qrec.attr) {
 			if (conds[i][1].attr && conds[i][0].op != EDG_WLL_QUERY_OP_EQUAL) {
