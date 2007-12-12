@@ -162,7 +162,7 @@ EXT_LIBS:=  \
 
 COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_lbu_trio \
-	${classadslib} -lstdc++ ${expatlib} -lexpat\
+	${classadslib} -lstdc++ ${expatlib} -lexpat -lglite_lbu_db\
 
 PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo process_event_pbs.lo process_event_condor.lo
 
