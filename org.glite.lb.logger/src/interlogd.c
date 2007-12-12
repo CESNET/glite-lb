@@ -337,7 +337,7 @@ main (int argc, char **argv)
   /* initialize credential key and get credentials */
   /* IMPORTANT: no other threads may run at the time, the key initialization 
      has to be done exactly once */
-  if(pthread_key_create(&cred_handle_key, cred_handle_destroy) < 0)
+  if(pthread_key_create(&cred_handle_key, cred_handle_destroy) != 0)
 	  abort();
   if (CAcert_dir)
      setenv("X509_CERT_DIR", CAcert_dir, 1);

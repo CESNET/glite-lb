@@ -181,13 +181,14 @@ event_queue_connect(struct event_queue *eq)
     tv.tv_usec = 0;
     /* get thread specific pointer to credentials */
     local_cred_handle = pthread_getspecific(cred_handle_key);
+
     /* check if there are new credentials */
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
 	    abort();
     if(local_cred_handle != cred_handle) {
 	    il_log(LOG_DEBUG, "    new credentials were found, discarding old\n");
 	    /* decrement counter in credentials, if it goes to zero, deallocate */
-	    if(--(local_cred_handle->counter) == 0) {
+	    if(local_cred_handle && --(local_cred_handle->counter) == 0) {
 		    edg_wll_gss_release_cred(&local_cred_handle->creds, &gss_stat);
 		    free(local_cred_handle);
 		    il_log(LOG_DEBUG, "   freed old credentials, not used anymore\n");
