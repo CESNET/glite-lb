@@ -334,6 +334,12 @@ int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...);
 
 
 /**
+ * "va_list version" of glite_lbu_ExecPreparedStmt().
+ */
+int glite_lbu_ExecPreparedStmt_v(glite_lbu_Statement stmt, int n, va_list ap);
+
+
+/**
  * Returns the last automatically generated id, if any.
  */
 long int glite_lbu_Lastid(glite_lbu_Statement stmt);

@@ -597,9 +597,8 @@ failed:
 }
 
 
-int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...) {
+int glite_lbu_ExecPreparedStmt_v(glite_lbu_Statement stmt, int n, va_list ap) {
 	int i;
-	va_list ap;
 	glite_lbu_DBType type;
 	char *pchar;
 	long int *plint;
@@ -616,7 +615,6 @@ int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...) {
 		data = calloc(n, sizeof(void *));
 		lens = calloc(n, sizeof(unsigned long *));
 	}
-	va_start(ap, n);
 	for (i = 0; i < n; i++) {
 		type = va_arg(ap, glite_lbu_DBType);
 		switch (type) {
@@ -667,13 +665,13 @@ int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...) {
 		}
 		binds[i].buffer_type = glite_type_to_mysql[type];
 	}
-	va_end(ap);
 
 	// bind parameters
-	if (db_handle.mysql_stmt_bind_param(stmt->stmt, binds) != 0) {
-		MY_ERRSTMT(stmt);
-		goto failed;
-	}
+	if (n)
+		if (db_handle.mysql_stmt_bind_param(stmt->stmt, binds) != 0) {
+			MY_ERRSTMT(stmt);
+			goto failed;
+		}
 
 	// run
 	ctx = stmt->ctx;
@@ -693,10 +691,12 @@ int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...) {
 	if (ret == -1) goto failed;
 
 	// free params
-	for (i = 0; i < n; i++) free(data[i]);
-	free(data);
-	free(binds);
-	free(lens);
+	if (n) {
+		for (i = 0; i < n; i++) free(data[i]);
+		free(data);
+		free(binds);
+		free(lens);
+	}
 	CLR_ERR(ctx);
 	return db_handle.mysql_stmt_affected_rows(stmt->stmt);
 
@@ -706,6 +706,18 @@ failed:
 	free(binds);
 	free(lens);
 	return -1;
+}
+
+
+int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...) {
+	va_list ap;
+	int retval;
+
+	va_start(ap, n);
+	retval = glite_lbu_ExecPreparedStmt_v(stmt, n, ap);
+	va_end(ap);
+
+	return retval;
 }
 
 
