@@ -277,9 +277,14 @@ err:
 			printf("\nnotification ID: %s\n", edg_wll_NotifIdUnparse(recv_nid));
 			
 			if (stat.state != EDG_WLL_JOB_UNDEF) {
-				printf("Job status is : %s\n", 
+				char	*jobid_s;
+
+				jobid_s = edg_wlc_JobIdUnparse(stat.jobId);
+				printf("Jobid:\t%s\nStatus:\t%s\n", 
+						jobid_s,
 						edg_wll_StatToString(stat.state));
 				edg_wll_FreeStatus(&stat);
+				free(jobid_s);
 				stat.state = EDG_WLL_JOB_UNDEF;
 			}
 			
