@@ -1,6 +1,9 @@
+\subsection{Changing Job Access Control List}
+\label{change_acl}
+
 In order to change ACL for a job a special event \verb+ChangeACL+ is used. This
 event can be logged by the job owner using the glite-lb-logevent command (see also
-Sect.~\ref{cmdln_interface}). General template for changing the ACL is as follows:
+Sect.~\ref{glite-lb-logevent}). General template for changing the ACL is as follows:
 \begin{verbatim}
 glite-lb-logevent -e ChangeACL -s UserInterface -p	--permission 1          \
         -j <job_id>                                                     \

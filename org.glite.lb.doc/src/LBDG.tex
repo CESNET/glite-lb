@@ -3,7 +3,7 @@
 \input{definitions}
 
 \title{Logging and Bookkeeping}
-\Subtitle{User's Guide}
+\Subtitle{Developer's Guide}
 \author{CESNET EGEE II JRA1 team}
 \DocIdentifier{EGEE-II....}
 \Date{\today}
@@ -12,11 +12,9 @@
 \Dissemination{PUBLIC}
 \DocumentLink{http://...}
 
-\Abstract{This user's guide explains how to use the Logging and Bookkeeping
-(\LB) service from the user's point of view. The service architecture is
-described thoroughly. Examples on using \LB\ event logging command to log
-a~user tag and change job ACL are given, as well as \LB\ query and notification
-use cases. }
+\Abstract{This developer's guide explains how to use the Logging and Bookkeeping
+(\LB) service API. Logging, querying and notification API as well as the Web Services 
+Interface is described in details together with programming examples. }
 
 \begin{document}
 
@@ -24,17 +22,19 @@ use cases. }
 \tableofcontents
 
 \newpage
-\input{LBUG-Introduction}
+\input{LBDG-Introduction}
 
 \newpage
-\input{LBUG-Tools}
+\input{producer_api}
 
 \newpage
-\input{LBUG-UseCases}
+\input{consumer_api}
 
-\appendix
 \newpage
-\input{LBUG-Appendix}
+\input{notification_api}
+
+\newpage
+\input{web_services}
 
 \newpage
 \bibliographystyle{unsrt}

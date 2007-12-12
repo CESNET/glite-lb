@@ -1,4 +1,5 @@
-
+\subsection{Logging a UserTag event}
+\label{log_usertag}
 
 User tag is an arbitrary ``name=value'' pair with which the user can 
 assign additional information to a job. Further on, LB can be queried
@@ -7,7 +8,7 @@ based also on values of user tags.
 
 In order to add user tag for a job a special event \verb+UserTag+ is used. This
 event can be logged by the job owner using the glite-lb-logevent command (see also
-sec.\ref{cmdln_interface}). Here we suppose the command is used from user's running
+sec.\ref{glite-lb-logevent}). Here we suppose the command is used from user's running
  application because a correct setting of environment variables needed by 
 the command is assured.
 

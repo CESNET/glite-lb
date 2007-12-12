@@ -12,12 +12,16 @@ PREFIX=/opt/glite
 VPATH = ${top_srcdir}/src
 KPATH = TEXINPUTS=".:$(VPATH)//:"
 KPATHBIB = BIBINPUTS=".:$(VPATH)//:"
+
 LATEX = $(KPATH) latex
 PDFLATEX = $(KPATH) pdflatex
 BIBTEX = $(KPATHBIB) bibtex
 DVIPS = $(KPATH) dvips
+AT3=${stagedir}/sbin/glite-lb-at3
 
-default: LBUG.pdf LBAG.pdf
+default all: generate LBUG.pdf LBAG.pdf LBDG.pdf
+
+generate: events.tex status.tex
 
 # %.dvi: %.tex
 # 	$(LATEX) $<
@@ -34,7 +38,12 @@ default: LBUG.pdf LBAG.pdf
 	$(PDFLATEX) $<
 	$(PDFLATEX) $<
 
+%.tex: %.tex.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
+
 clean:
-	rm -rvf LBUG* LBAG*
+	rm -rvf LBUG* LBAG* LBDG* events.tex status.tex
 
 .PHONY: all clean purge ps pdf

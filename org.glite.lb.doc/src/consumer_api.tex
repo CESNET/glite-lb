@@ -1,3 +1,5 @@
+\section{\LB\ Querying API}
+
 \def\partitle#1{\par{\textbf{#1}}\par}
 
 \label{ConsOview}
@@ -14,7 +16,7 @@ capabilities.
 In the presented examples only the C \LB\ API (Sect.~\ref{query-C}) is considered.
 The C++ API (Sect.~\ref{query-CPP})  covers the same functionality.
 
-\subsubsection{Returned results}
+\subsection{Returned results}
 
 \LB\ server returns errors which are classified as hard and soft errors.
 The main difference between these categories is that in the case of soft
@@ -59,7 +61,7 @@ It may take the following values:
 Default value is EDG\_WLL\_QUERYRES\_NONE.
 
 
-\subsubsection{Job queries}
+\subsection{Job queries}
 
 \partitle{Job status}
 \label{JS}
@@ -457,7 +459,7 @@ interval.
 \end{verbatim}
 
 
-\subsubsection{Event queries and application specific queries}
+\subsection{Event queries and application specific queries}
 \label{ASQ}
 Event queries and job queries are similar. 
 Obviously, the return type is different\Dash the \LB\ raw events.

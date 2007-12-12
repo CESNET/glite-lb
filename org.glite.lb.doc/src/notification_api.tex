@@ -1,7 +1,9 @@
+\section{\LB\ Notification API}
+
 The purpose of this section is demonstrating the usage of the \LB\ notification API. Two examples of basic API usage are given.
 
 
-\subsubsection{Registering and receiving notification}
+\subsection{Registering and receiving notification}
 
 The following example registers on \LB\ server to receive notifications triggered by events belonging to job with \verb'jobid' and waits for notification until \verb'timeout'. 
 The code assumes the user to prepare a~reasonable value in \verb'jobid'
@@ -81,7 +83,7 @@ error:
 
 \end{verbatim}
 
-First of all the context is initialised. During this procedure user's credentials are loaded (see \ref{cmdln_interface} for information on environmental variables pointing to user's X509 credentials). 
+First of all the context is initialised. During this procedure user's credentials are loaded. %(see \ref{cmdln_interface} for information on environmental variables pointing to user's X509 credentials). 
 
 Then conditions under which notifications are sent are set. In this example, user is notified every time when event with given jobId is logged to \LB\ server. For more complicated conditions, please, consider the conditions limitations mentioned in \ref{notification}.
 
@@ -94,7 +96,7 @@ delivery, the call waits until some notification arrival or timeout.
 If user does not want to receive notifications any more, \verb'edg_wll_NotifDrop' call removes the registration for notifications from \LB server.
 
 
-\subsubsection{Changing destination for notifications}
+\subsection{Changing destination for notifications}
 
 The second example illustrates how to receive notifications from different host or different application. 
 
