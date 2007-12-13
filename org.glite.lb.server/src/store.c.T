@@ -414,7 +414,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 				/* supplementary re-registration (JDL of subjob, etc.) */
 				if ((ctx->srvPort == jobIdPort) && !strcmp(jobIdHost,ctx->srvName)) {
 					/* previous registration via GSI required */
-					trio_asprintf(&q,"update jobs set jobid='%|Ss' where jobid='%|Ss'",
+					trio_asprintf(&q,"update jobs set jobid='%|Ss', proxy='1' where jobid='%|Ss'",
 						unique, unique);
 					/* does the job exists ? */
 					if (edg_wll_ExecSQL(ctx,q,NULL) < 0) {
@@ -437,7 +437,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 		}
 		else {
 			/* any other event than JobReg */
-			trio_asprintf(&q,"update jobs set jobid='%|Ss' where jobid='%|Ss'",
+			trio_asprintf(&q,"update jobs set jobid='%|Ss', proxy='1' where jobid='%|Ss'",
                         	unique, unique);
 			/* does the job exists ? now we require registration on proxy too */
 			if (edg_wll_ExecSQL(ctx,q,NULL) < 0) {
