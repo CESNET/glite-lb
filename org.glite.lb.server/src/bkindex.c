@@ -46,6 +46,7 @@ static void usage(const char *);
 static void do_exit(edg_wll_Context,int);
 static char *col_list(const edg_wll_QueryRec *);
 static char *db_col_type(const edg_wll_QueryRec *);
+static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context, void *);
 
 /* XXX: don't bother with malloc() of arrays that are tiny in real life */
 #define CI_MAX	200
@@ -339,7 +340,7 @@ static void usage(const char *me)
  * Set values of index columns in state table (after index reconfiguration)
  */
 
-edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_cols) {
+static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_cols) {
 
 	glite_lbu_Statement sh;
 	int njobs, ret = -1;
@@ -380,7 +381,7 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 				"cannot decode int_status from states DB table");
 		}
 
-		edg_wll_IColumnsSQLPart(ctx, job_index_cols, stat, 0, NULL, &icvalues);
+		edg_wll_IColumnsSQLPart(ctx, job_index_cols, &stat->pub, 0, NULL, &icvalues);
 		trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
 		ret = edg_wll_ExecSQL(ctx, stmt, NULL);
 

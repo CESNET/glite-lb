@@ -25,6 +25,7 @@ typedef struct _edg_wll_IColumnRec {
 } edg_wll_IColumnRec;
 
 void edg_wll_FreeIColumnRec(edg_wll_IColumnRec *);
+edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context, void *,  edg_wll_JobStat*, int , char **, char **);
 
 int yylex();
 

@@ -568,7 +568,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 	if (parent_md5 == NULL) parent_md5 = strdup("*no parent job*");
 
 
-	edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, stat, 0, NULL, &icvalues);
+	edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, &stat->pub, 0, NULL, &icvalues);
 
 	trio_asprintf(&stmt,
 		"update states set "
@@ -583,7 +583,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 	if ((dbret = edg_wll_ExecSQL(ctx,stmt,NULL)) < 0) goto cleanup;
 
 	if (dbret == 0) {
-		edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, stat, 1, &icnames, &icvalues);
+		edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, &stat->pub, 1, &icnames, &icvalues);
 		trio_asprintf(&stmt,
 			"insert into states"
 			"(jobid,status,seq,int_status,version"

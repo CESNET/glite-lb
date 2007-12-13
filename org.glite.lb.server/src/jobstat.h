@@ -97,8 +97,6 @@ void destroy_intJobStat(intJobStat *);
 void destroy_intJobStat_extension(intJobStat *p);
 
 
-edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context, void *, intJobStat *, int , char **, char **);
-edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context, void *);
 int edg_wll_intJobStatus( edg_wll_Context, const edg_wlc_JobId, int, intJobStat *, int);
 edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context, intJobStat *, int);
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context, edg_wlc_JobId, char *icnames, char *values, glite_lbu_bufInsert *bi);
