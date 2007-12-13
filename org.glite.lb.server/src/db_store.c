@@ -28,7 +28,7 @@
 extern int unset_proxy_flag(edg_wll_Context, edg_wlc_JobId);
 extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *);
 
-static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat);
+static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat, int seq);
 
 
 int
@@ -138,7 +138,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
    */
   if (err) goto err;
 
-  db_store_finalize(ctx, event, ev, &newstat);
+  db_store_finalize(ctx, event, ev, &newstat, seq);
 
 err:
 
@@ -204,7 +204,7 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
     assert(event);
   }
 
-  db_store_finalize(ctx, event, ev, &newstat);
+  db_store_finalize(ctx, event, ev, &newstat, seq);
 
 err:
 
@@ -214,8 +214,10 @@ err:
   return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat) {
 
+
+static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat, int seq) {
+printf("%d\n", seq);
   if ( ctx->isProxy ) {
 	/*
 	 *	send event to the proper BK server
@@ -270,7 +272,7 @@ static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev
 	if ( newstat->state ) {
 		edg_wll_NotifMatch(ctx, newstat);
 	}
-	if ( ctx->jpreg_dir && ev->any.type == EDG_WLL_EVENT_REGJOB ) {
+	if ( ctx->jpreg_dir && ev->any.type == EDG_WLL_EVENT_REGJOB && seq == 0) {
 		char *jids, *msg;
 		
 		if ( !(jids = edg_wlc_JobIdUnparse(ev->any.jobId)) ) {
