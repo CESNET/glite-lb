@@ -915,7 +915,7 @@ static int db_connect(glite_lbu_DBContext ctx, const char *cs, MYSQL **mysql) {
 	char	*host,*user,*pw,*db; 
 	char	*slash,*at,*colon;
 	int      ret;
-#ifdef MYSQL_OPT_RECONNECT
+#if MYSQL_VERSION_ID >= 50013
 	my_bool reconnect = 1;
 #endif
 
@@ -927,7 +927,7 @@ static int db_connect(glite_lbu_DBContext ctx, const char *cs, MYSQL **mysql) {
 	if (!(*mysql = db_handle.mysql_init(NULL))) return ERR(ctx, ENOMEM, NULL);
 
 	db_handle.mysql_options(*mysql, MYSQL_READ_DEFAULT_FILE, "my");
-#ifdef MYSQL_OPT_RECONNECT
+#if MYSQL_VERSION_ID >= 50013
 	/* XXX: may result in weird behaviour in the middle of transaction */
 	db_handle.mysql_options(*mysql, MYSQL_OPT_RECONNECT, &reconnect);
 #endif
