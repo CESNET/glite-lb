@@ -1,9 +1,12 @@
 \subsection{Changing Job Access Control List}
 \label{change_acl}
+\TODO{Review if it is still correct - Dan?}
 
-In order to change ACL for a job a special event \verb+ChangeACL+ is used. This
-event can be logged by the job owner using the glite-lb-logevent command (see also
-Sect.~\ref{glite-lb-logevent}). General template for changing the ACL is as follows:
+In order to change ACL for a job a special event \verb'ChangeACL' is used. This
+event can be logged by the job owner using the \verb'glite-lb-logevent' command
+(see also Sect.~\ref{glite-lb-logevent}). General template for changing the ACL
+is as follows:
+
 \begin{verbatim}
 glite-lb-logevent -e ChangeACL -s UserInterface -p	--permission 1          \
         -j <job_id>                                                     \
@@ -30,8 +33,9 @@ where
 Adding a user specified by her subject name to the ACL (\verb'user_id' =
 subject name, \verb'user_id_type' = 0, \verb'permission_type' = 0,
 \verb'operation' = 0):
+
 \begin{verbatim}
-glite-lb-logevent -e ChangeACL -s UserInterface -p --permission 1          \
+glite-lb-logevent -e ChangeACL -s UserInterface -p --permission 1       \
         -j https://scientific.civ.zcu.cz:9000/PC8Y6jBitHt_fKMTEKFnVw    \
         --user_id '/O=CESNET/O=Masaryk University/CN=Daniel Kouril'     \
         --user_id_type 0 --permission_type 0 --operation 0
@@ -42,7 +46,7 @@ subject name, \verb'user_id_type' = 0, \verb'permission_type' = 0,
 \verb'operation' = 1):
 
 \begin{verbatim}
-glite-lb-logevent -e ChangeACL -s UserInterface -p --permission 1          \
+glite-lb-logevent -e ChangeACL -s UserInterface -p --permission 1       \
         -j https://scientific.civ.zcu.cz:9000/PC8Y6jBitHt_fKMTEKFnVw    \
         --user_id '/O=CESNET/O=Masaryk University/CN=Daniel Kouril'     \
         --user_id_type 0 --permission_type 0 --operation 1
@@ -52,7 +56,7 @@ Adding a VOMS group to the ACL (\verb'user_id' = VOMS group,
 \verb'user_id_type' = 1,  \verb'permission_type' = 0, \verb'operation' = 0):
 
 \begin{verbatim}
-glite-lb-logevent -e ChangeACL -s UserInterface -p --permission 1          \
+glite-lb-logevent -e ChangeACL -s UserInterface -p --permission 1       \
         -j https://scientific.civ.zcu.cz:9000/PC8Y6jBitHt_fKMTEKFnVw    \
         --user_id 'VOCE:/VOCE'                                          \
         --user_id_type 1 --permission_type 0 --operation 0
@@ -63,7 +67,7 @@ combined e.g. with VOMS groups (\verb'user_id' = subject name,
 \verb'user_id_type' = 0, \verb'permission_type' = 1, \verb'operation' = 0):
 
 \begin{verbatim}
-glite-lb-logevent -e ChangeACL -s UserInterface -p --permission 1          \
+glite-lb-logevent -e ChangeACL -s UserInterface -p --permission 1       \
         -j https://scientific.civ.zcu.cz:9000/PC8Y6jBitHt_fKMTEKFnVw    \
         --user_id '/O=CESNET/O=Masaryk University/CN=Daniel Kouril'     \
         --user_id_type 0 --permission_type 1 --operation 0

@@ -2,12 +2,16 @@
 \label{glite-lb-logevent}
 
 Besides the API's \LB\ offers its users a simple command-line interface for
-logging events. The command glite-lb-logevent is used for this purpose. However, it
-is intended for internal WMS debugging tests in the first place and should not
-be used for common event logging because of possibility of confusing \LB\
-server job state automaton.
+logging events. The command \verb'glite-lb-logevent' is used for this purpose.
+However, it is intended for internal WMS debugging tests in the first place and
+should not be used for common event logging because of possibility of confusing
+\LB\ server job state automaton.
 
-The only legal user usage is for logging \verb'UserTag' and \verb'ChangeACL' events. The following description is therefore concentrating only on options dealing with these two events.
+The command \verb'glite-lb-logevent' is a complex logging tool and the complete
+list of parameters can be obtained using the \verb'-h' option. However,
+the only legal user usage is for logging \verb'UserTag' and \verb'ChangeACL'
+events. The following description is therefore concentrating only on options
+dealing with these two events.
 
 Command usage is:
 
@@ -28,7 +32,8 @@ where
 
 \medskip
 
-Each event specified after \verb'-e' option has different sub-options enabling to set event specific values.
+Each event specified after \verb'-e' option has different sub-options enabling
+to set event specific values.
 
 Sub-options usable with \verb'UserTag' event are:
 
@@ -52,6 +57,13 @@ Sub-options usable with \verb'ChangeACL' event are:
 
 \bigskip
 
-To be able to use this command several environmental variables must be set properly. User must specify where the event should be sent. This is address and port of glite-lb-logd daemon. It is done using environmental variable \verb'EDG_WL_LOG_DESTINATION' in a form \verb'address:port'.
+To be able to use this command several environmental variables must be set
+properly. User must specify where the event should be sent. This is address and
+port of glite-lb-logd daemon. It is done using environmental variable
+\verb'EDG_WL_LOG_DESTINATION' in a form \verb'address:port'.
 
-Because user is allowed to change ACL or add user tags only for her jobs, paths to valid X509 user credentials has to be set to authorise her. This is done using two environmental variables \verb'EDG_WL_X509_KEY' and \verb'EDG_WL_X509_CERT' in a form \verb'path_to_cred'.
+Because user is allowed to change ACL or add user tags only for her jobs, paths
+to valid X509 user credentials has to be set to authorise her. This is done
+using two environmental variables \verb'EDG_WL_X509_KEY' and
+\verb'EDG_WL_X509_CERT' in a form \verb'path_to_cred'.
+

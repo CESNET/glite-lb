@@ -1,4 +1,5 @@
-\section{\LB\ Querying API}
+\section{\LB\ Querying (Consumer) API}
+\TODO{Complete review; create really functional (buildable) examples and use verbatiminput of relevant part of the code; add list of header files, important functions and data types and their description, etc.}
 
 \def\partitle#1{\par{\textbf{#1}}\par}
 
@@ -66,6 +67,8 @@ Default value is EDG\_WLL\_QUERYRES\_NONE.
 \partitle{Job status}
 \label{JS}
 
+\TODO{Add edg\_wll\_JobStat description and error codes handling}
+
 The simplest case corresponds to the situation when an exact job ID
 is known and the only information requested is the job status. The job ID
 format is described in~\cite{djra1.4}.
@@ -130,6 +133,8 @@ in the rest of this document.}
 \partitle{All user's jobs}
 \label{JQ-auj}
 
+\TODO{Update the example so that it is really working}
+
 The simple query example is a request for all user's jobs. Another
 condition type, \\
 \texttt{EDG\_WLL\_QUERY\_ATTR\_OWNER}, is used in this case, with the 
@@ -162,6 +167,7 @@ The query may return either a~list of job ID's or a~list of job states or both,
 depending on the parameters \texttt{jobsOut} and \texttt{statesOut}.
 If either is NULL the corresponding list is not retrieved.
 
+Developers should keep in mind that the output of such a query could be really huge.
 \par
 
 The following examples demonstrates how \texttt{edg\_wll\_QueryJobs()} combines 
@@ -319,6 +325,7 @@ This query equals to the formula
 
 \partitle{User tags}
 \label{JQ_ut}
+\TODO{Is it really working?}
 User tags can be used for marking (labelling) jobs. A user tag is
 a pair of user defined \texttt{name} and \texttt{value}. 
 
