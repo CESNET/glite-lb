@@ -146,13 +146,19 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=${LB_PERF_TOOLS}
-EXAMPLES:=log_usertag_proxy job_log job_reg feed_shark notify query_ext query_seq_code stats abort_job change_acl stresslog flood_proxy dagids stress_context parse_eventsfile
+EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c notify.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c
+EXAMPLES:=${EXAMPLES_SRC:.c=}
 
 # TODO: migrate them here from branch_RC31_3
-# EXAMPLES_PLUS:=indexed_attrs_plus job_status_plus query_events_plus listener user_jobs_plus job_log_plus notify_plus
+# EXAMPLES_PLUS_SRC:=indexed_attrs_plus.cpp job_status_plus.cpp query_events_plus.cpp listener.cpp user_jobs_plus.cpp job_log_plus.cpp notify_plus.cpp
+# EXAMPLES_PLUS:=${EXAMPLES_PLUS_SRC:.cpp=}
 
-EXAMPLES_CL:=user_jobs job_status 
-EXAMPLES_CL_THR:=user_jobs_threaded
+EXAMPLES_CL_SRC:=user_jobs.c job_status.c 
+EXAMPLES_CL:=${EXAMPLES_CL_SRC:.c=}
+
+EXAMPLES_CL_THR_SRC:=user_jobs_threaded.c
+EXAMPLES_CL_THR:=${EXAMPLES_CL_THR_SRC:.c=}
+
 FAKE_EXAMPLES:=job_log_fake
 
 MAN_GZ:=glite-lb-logevent.1.gz
@@ -320,7 +326,9 @@ install: doc
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}/api
+	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
 	mkdir -p ${PREFIX}/share/man/man1
+	mkdir -p ${PREFIX}/examples
 ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 else
@@ -335,17 +343,21 @@ ifndef LB_STANDALONE
 	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
 #       cp -r ${top_srcdir}/doc/api/{Makefile,api.tex,fig} ${PREFIX}/share/doc/${package}-${version}/api
 endif
-	mkdir -p ${PREFIX}/examples
 	for p in logevent; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 	for p in ${TOOLS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
 	done
-# TODO: restructuring - install also source code of examples together with some good Makefile
-	for p in ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS} ; do \
+# TODO: restructuring - do we really need binaries of the examples to be installed?
+	for p in ${EXAMPLES} ${EXAMPLES_PLUS} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
 	done
+	for p in ${EXAMPLES_SRC} ${EXAMPLES_PLUS_SRC} ${EXAMPLES_CL_SRC} ${EXAMPLES_CL_THR_SRC} ; do \
+		${INSTALL} -m 644 "${top_srcdir}/examples/$$p" "${PREFIX}/share/doc/${package}-${version}/examples/"; \
+	done
+	${INSTALL} -m 644 ${top_srcdir}/examples/Makefile "${PREFIX}/share/doc/${package}-${version}/examples/"
+	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${PREFIX}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${PREFIX}/sbin/glite-lb-export.sh"
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 

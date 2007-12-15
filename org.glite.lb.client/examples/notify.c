@@ -6,7 +6,7 @@
 
 #include "glite/security/glite_gss.h"
 #include "glite/lb/context.h"
-#include "notification.h"
+#include "glite/lb/notification.h"
 
 
 static char *me;

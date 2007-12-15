@@ -6,7 +6,7 @@
 #include <errno.h>
 
 #include "glite/jobid/cjobid.h"
-#include "consumer.h"
+#include "glite/lb/consumer.h"
 
 
 static struct option opts[] = {

@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "consumer.h"
+#include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
 #include "consumer_fake.h"
 

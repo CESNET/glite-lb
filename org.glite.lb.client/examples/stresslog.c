@@ -6,7 +6,7 @@
 #include <fcntl.h>
 
 #include "glite/jobid/cjobid.h"
-#include "producer.h"
+#include "glite/lb/producer.h"
 #include "glite/lb/events.h"
 
 #define	MAXMSGSIZE	10240

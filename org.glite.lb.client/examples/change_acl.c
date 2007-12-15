@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include "glite/jobid/cjobid.h"
-#include "producer.h"
+#include "glite/lb/producer.h"
 #include "glite/lb/authz.h"
 
 void

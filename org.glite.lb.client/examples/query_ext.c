@@ -7,7 +7,7 @@
 #include <time.h>
 
 #include "glite/jobid/cjobid.h"
-#include "consumer.h"
+#include "glite/lb/consumer.h"
 
 #define BUFF_LEN		1024
 #define MAX_AND_CONDS	20

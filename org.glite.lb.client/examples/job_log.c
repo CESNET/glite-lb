@@ -10,7 +10,7 @@
 #include <errno.h>
 
 #include "glite/lb/events_parse.h"
-#include "consumer.h"
+#include "glite/lb/consumer.h"
 #include "glite/jobid/cjobid.h"
 #ifdef USE_CALLBACKS
   #include "glite/lb/consumer_fake.h"
