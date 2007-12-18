@@ -27,6 +27,7 @@ void edg_wll_QueryRecFree(edg_wll_QueryRec *prec)
 		case EDG_WLL_QUERY_ATTR_DESTINATION:
 		case EDG_WLL_QUERY_ATTR_HOST:
 		case EDG_WLL_QUERY_ATTR_INSTANCE:
+		case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 			if ( prec->value.c ) free(prec->value.c);
 			break;
 		case EDG_WLL_QUERY_ATTR_JOBID:
@@ -40,6 +41,8 @@ void edg_wll_QueryRecFree(edg_wll_QueryRec *prec)
 		case EDG_WLL_QUERY_ATTR_EVENT_TYPE:
 		case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 		case EDG_WLL_QUERY_ATTR_TIME:
+		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 			/* do nothing */
 			break;
 		default:

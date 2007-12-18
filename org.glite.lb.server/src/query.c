@@ -344,15 +344,16 @@ int edg_wll_QueryJobsServer(
 
 	if ( (where_flags & FL_SEL_STATUS) )
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s AND %s", 
+						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s %s %s", 
 						(job_where) ? "AND" : "",
 						(job_where) ? job_where : "",
+						(job_where) ? "AND" : "",
 						(ctx->isProxy) ? "j.proxy='1'" : "j.server='1'");
 	else
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j %s %s AND %s", 
-						(job_where) ? "WHERE" : "",
+						 "FROM jobs j WHERE %s %s %s", 
 						(job_where) ? job_where : "",
+						(job_where) ? "AND" : "",
 						(ctx->isProxy) ? "j.proxy='1'" : "j.server='1'");
 
 	if ( ctx->softLimit )
@@ -904,6 +905,7 @@ static char *jc_to_head_where(
 			break;
 
 		case EDG_WLL_QUERY_ATTR_TIME:
+		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 			if ( jc[m][n].attr_id.state == EDG_WLL_JOB_UNDEF )
 			{
 				edg_wll_SetError(ctx, EINVAL, "Time attribut have to be associated with status specification");
@@ -914,7 +916,6 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_DONECODE:
 		case EDG_WLL_QUERY_ATTR_EXITCODE:
 		case EDG_WLL_QUERY_ATTR_STATUS:
-		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 			ct++;
 			break;
