@@ -28,18 +28,17 @@
 extern int unset_proxy_flag(edg_wll_Context, edg_wlc_JobId);
 extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *);
 
-static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat, int seq);
+static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat, int seq, int reg_to_JP);
 
 
 int
 db_store(edg_wll_Context ctx,char *ucs, char *event)
 {
   edg_wll_Event *ev;
-  int	seq;
+  int	seq, reg_to_JP = 0;
   int   err;
+  int 	local_job;
   edg_wll_JobStat	newstat;
-  char 			*srvName = NULL;
-  unsigned int		srvPort;
 
 
   ev = NULL;
@@ -49,6 +48,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 
   if(edg_wll_ParseEvent(ctx, event, &ev))
     goto err;
+  local_job = is_job_local(ctx, ev->any.jobId);
 
 #ifdef LB_PERF
   if (sink_mode == GLITE_LB_SINK_STORE) {
@@ -59,14 +59,12 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   }
 #endif
 
-  edg_wlc_JobIdGetServerParts(ev->any.jobId, &srvName, &srvPort);
-
   if(use_db) {
     char	*ed;
     int		code;
 
     if (edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
-    store_job_server_proxy(ctx, ev, srvName, srvPort);
+    store_job_server_proxy(ctx, ev);
     code = edg_wll_Error(ctx,NULL,&ed);
     edg_wll_UnlockJob(ctx,ev->any.jobId);	/* XXX: ignore error */
     if (code) {
@@ -81,12 +79,15 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
    * if jobid prefix hostname matches server hostname -> they will
    * sooner or later arrive to server too and are stored in common DB 
    */
-  if (ctx->isProxy && ctx->serverRunning && (ev->any.priority & EDG_WLL_LOGFLAG_DIRECT) ) {
-	if (!strcmp(ctx->srvName, srvName)) {
-		free(srvName);
+  if (ctx->isProxy && local_job) {
+	if  (ev->any.priority & EDG_WLL_LOGFLAG_DIRECT) {
 		return 0;
 	}
-
+	else {
+		/* these are re-registrations of subjobs on proxy 		*/
+		/* embryonic registrations does not trigger registration in JP	*/
+		reg_to_JP = 1;
+	}
   }
 
   /* XXX: if event type is user tag, convert the tag name to lowercase!
@@ -138,7 +139,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
    */
   if (err) goto err;
 
-  db_store_finalize(ctx, event, ev, &newstat, seq);
+  db_store_finalize(ctx, event, ev, &newstat, seq, reg_to_JP);
 
 err:
 
@@ -146,8 +147,6 @@ err:
     edg_wll_FreeEvent(ev);
     free(ev);
   }
-
-  if (srvName) free(srvName);
 
   if ( newstat.state ) edg_wll_FreeStatus(&newstat);
 
@@ -204,7 +203,7 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
     assert(event);
   }
 
-  db_store_finalize(ctx, event, ev, &newstat, seq);
+  db_store_finalize(ctx, event, ev, &newstat, seq, 0);
 
 err:
 
@@ -216,63 +215,22 @@ err:
 
 
 
-static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat, int seq) {
-printf("%d\n", seq);
-  if ( ctx->isProxy ) {
-	/*
-	 *	send event to the proper BK server
-	 *	event with priority flag EDG_WLL_LOGFLAG_DIRECT (typically RegJob) is not sent
+static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat, int seq, int reg_to_JP) 
+{
+	int 	local_job = is_job_local(ctx, ev->any.jobId);
+
+
+#ifdef LB_PERF
+	if( sink_mode == GLITE_LB_SINK_SEND ) {
+		glite_wll_perftest_consumeEvent(ev);
+		return edg_wll_Error(ctx,NULL,NULL);
+	}
+#endif
+	
+	/* Send regitration to JP 
 	 */
-
-#ifdef LB_PERF
-	if( sink_mode == GLITE_LB_SINK_SEND ) {
-		glite_wll_perftest_consumeEvent(ev);
-	} else
-#endif
-
-	/* XXX: ending here may break the backward compatibility */
-	if (!(ev->any.priority & EDG_WLL_LOGFLAG_PROXY)) {
-		edg_wll_UpdateError(ctx, 0, "db_actual_store() WARNING: the event is not PROXY");
-		//return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "db_actual_store() ERROR: the event is not PROXY");
-	}
-
-	if (!(ev->any.priority & EDG_WLL_LOGFLAG_DIRECT)) {
-		if (edg_wll_EventSendProxy(ctx, ev->any.jobId, event) )  {
-			return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_EventSendProxy() error.");
-		}
-	}
-
-	/* LB proxy purge */
-	if (newstat->remove_from_proxy) {
-			edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
-	}
-  } else 
-#ifdef LB_PERF
-	if( sink_mode == GLITE_LB_SINK_SEND ) {
-		glite_wll_perftest_consumeEvent(ev);
-	} else 
-#endif
-  {
-	char		*jobIdHost = NULL;
-	unsigned int	jobIdPort;
-
-
-	/* Purge proxy flag */
-	edg_wlc_JobIdGetServerParts(ev->any.jobId, &jobIdHost, &jobIdPort);
-	if ( newstat->remove_from_proxy && (ctx->srvPort == jobIdPort) && 
-		!strcmp(jobIdHost,ctx->srvName) )
-	{
-			if (unset_proxy_flag(ctx, ev->any.jobId) < 0) {
-						free(jobIdHost);
-                        	                return(edg_wll_Error(ctx,NULL,NULL));
-			}
-	}
-	free(jobIdHost);
-
-	if ( newstat->state ) {
-		edg_wll_NotifMatch(ctx, newstat);
-	}
-	if ( ctx->jpreg_dir && ev->any.type == EDG_WLL_EVENT_REGJOB && seq == 0) {
+	if ( ctx->jpreg_dir && ev->any.type == EDG_WLL_EVENT_REGJOB && seq == 0 &&
+	     (!ctx->isProxy || reg_to_JP) ) {
 		char *jids, *msg;
 		
 		if ( !(jids = edg_wlc_JobIdUnparse(ev->any.jobId)) ) {
@@ -290,6 +248,51 @@ printf("%d\n", seq);
 		}
 		free(msg);
 	}
-  }
-  return edg_wll_Error(ctx,NULL,NULL);
+
+
+	if ( ctx->isProxy ) {
+		/*
+		 *	send event to the proper BK server
+		 *	event with priority flag EDG_WLL_LOGFLAG_DIRECT (typically RegJob) is not sent
+		 */
+
+		/* XXX: ending here may break the backward compatibility */
+		if (!(ev->any.priority & EDG_WLL_LOGFLAG_PROXY)) {
+			edg_wll_UpdateError(ctx, 0, "db_actual_store() WARNING: the event is not PROXY");
+			//return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "db_actual_store() ERROR: the event is not PROXY");
+		}
+
+		if (!(ev->any.priority & EDG_WLL_LOGFLAG_DIRECT) && !local_job) {
+			if (edg_wll_EventSendProxy(ctx, ev->any.jobId, event) )  {
+				return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_EventSendProxy() error.");
+			}
+		}
+		else {
+			/* event will not arrive to server, only flag was set		*/
+			/* check whether some pending notifications are not triggered	*/
+			if ( newstat->state ) {
+				edg_wll_NotifMatch(ctx, newstat);
+			}
+		}
+			
+		/* LB proxy purge */
+		if (newstat->remove_from_proxy) {
+				edg_wll_PurgeServerProxy(ctx, ev->any.jobId);
+		}
+ 	} else 
+ 	{
+		/* Purge proxy flag */
+		if ( newstat->remove_from_proxy && local_job ) {
+			if (unset_proxy_flag(ctx, ev->any.jobId) < 0) {
+				return(edg_wll_Error(ctx,NULL,NULL));
+			}
+		}
+
+		if ( newstat->state ) {
+			edg_wll_NotifMatch(ctx, newstat);
+		}
+	}
+	
+
+	return edg_wll_Error(ctx,NULL,NULL);
 }

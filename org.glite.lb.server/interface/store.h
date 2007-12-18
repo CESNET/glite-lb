@@ -45,7 +45,8 @@ int db_parent_store(edg_wll_Context, edg_wll_Event *, intJobStat *);
 int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
 int trans_db_store(edg_wll_Context,char *,edg_wll_Event *,intJobStat *);
-int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobIdHost, unsigned int jobIdPort);
+int is_job_local(edg_wll_Context, edg_wlc_JobId jobId);
+int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event);
 
 int edg_wll_delete_event(edg_wll_Context,const char *, int);
 

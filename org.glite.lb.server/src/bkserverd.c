@@ -1214,12 +1214,15 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 	
 	/*	set globals
 	 */
+	ctx->notifDuration = notif_duration;
+	if ( jpreg ) ctx->jpreg_dir = strdup(jpregDir); else ctx->jpreg_dir = NULL;
 	ctx->allowAnonymous = 1;
 	ctx->isProxy = 1;
 	ctx->noAuth = 1;
 	ctx->noIndex = 1;
 	ctx->semset = semset;
 	ctx->semaphores = semaphores;
+
 
 	if (fake_host)
 	{

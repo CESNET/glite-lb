@@ -355,14 +355,29 @@ static int store_job_grey(edg_wll_Context ctx,const edg_wlc_JobId job,time_t eti
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+/* test whether job shares LB proxy and server DB or not */
+int is_job_local(edg_wll_Context ctx, edg_wlc_JobId jobId) 
+{
+	char		*srvName = NULL;
+	unsigned int	srvPort; 
+	int		ret;	
 
-int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobIdHost, unsigned int jobIdPort)
+
+	edg_wlc_JobIdGetServerParts(jobId, &srvName, &srvPort);
+	ret = ((ctx->srvPort == srvPort) && !strcmp(srvName,ctx->srvName));
+	free(srvName);
+
+	return(ret);
+}
+
+int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event)
 {	
 	char 		*unique = edg_wlc_JobIdGetUnique(event->any.jobId);
 	char		*q = NULL, *owner = NULL, *userid = NULL;
 	glite_lbu_Statement    stmt = NULL;
 	int		nar;
 	char		*can_peername = NULL;
+	int		local_job = is_job_local(ctx, event->any.jobId);
 
 
 	edg_wll_ResetError(ctx);
@@ -374,7 +389,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 		if (event->any.type == EDG_WLL_EVENT_REGJOB) {
 			if (event->any.priority & EDG_WLL_LOGFLAG_DIRECT) {
                         /* first synchronous registration */
-				if ((ctx->srvPort == jobIdPort) && !strcmp(jobIdHost,ctx->srvName)) {
+				if (local_job) {
 					/* we are both server and proxy for this job */
 					trio_asprintf(&q,"update jobs set proxy=1 where jobid='%|Ss'",
 						unique);
@@ -412,7 +427,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, char *jobI
 			}
 			else {
 				/* supplementary re-registration (JDL of subjob, etc.) */
-				if ((ctx->srvPort == jobIdPort) && !strcmp(jobIdHost,ctx->srvName)) {
+				if (local_job) {
 					/* previous registration via GSI required */
 					trio_asprintf(&q,"update jobs set jobid='%|Ss', proxy='1' where jobid='%|Ss'",
 						unique, unique);
