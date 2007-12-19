@@ -132,7 +132,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	ssrc = edg_wll_SourceToString(e->any.source);
 
 /* try to insert (someone else may be doing the same) */
-	while (1) {
+	{
 		char	*max = NULL;
 
 		if (edg_wll_ExecStmt(ctx,select_max,&sh) < 0 ||
@@ -144,7 +144,10 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		edg_wll_FreeStmt(&sh); 
 		
 		next = max && *max ? atoi(max)+1 : 0;
+		free(max);
+	}
 		
+	while (1) {
 	/* 
 	 * 1) when using transactions:
 	 *   Store the whole event right now.
@@ -168,8 +171,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		} else break; /* successful insert */
 
 	/* we were late -- try once again */
+		next++;
 		free(stmt);
-		free(max);
 	}
 
 	free(stmt); stmt = NULL;
