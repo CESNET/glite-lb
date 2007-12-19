@@ -60,10 +60,12 @@ start()
 	[ -z "$GLITE_LB_NOTIF_FPREFIX" ] && GLITE_LB_NOTIF_FPREFIX="/var/tmp/glite-lb-notif"
 	if [ -n "$GLITE_LB_SERVER_DEBUG" ] ; then
 		if which tscat >/dev/null; then
-			tscat="| tscat "
+			GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -d -s 1 2>&1 | tscat >> $GLITE_LOCATION_VAR/lb.log &"
+			GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d 2>&1 | tscat >> $GLITE_LOCATION_VAR/notif-il.log &"
+		else
+			GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -d -s 1 >> $GLITE_LOCATION_VAR/lb.log 2>&1 &"
+			GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d >> $GLITE_LOCATION_VAR/notif-il.log 2>&1 &"
 		fi
-		GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -d -s 1 2>&1 $tscat>> $GLITE_LOCATION_VAR/lb.log &"
-		GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d 2>&1 $tscat>> $GLITE_LOCATION_VAR/notif-il.log &"
 	fi
 
 	echo -n Starting glite-lb-bkserver ...
