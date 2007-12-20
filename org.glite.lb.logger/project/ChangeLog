@@ -5,3 +5,6 @@
 
 1.4.7-1 (lb-1.7.1-1)
 - support for message expiration
+
+1.4.8-1 (lb-1.7.2-1)
+- support for notification expiration
