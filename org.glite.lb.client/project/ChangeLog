@@ -8,3 +8,8 @@
 - check for loaded credentials in connection pool management (avoid SEGV)
 - minor fixes to manpage
 
+3.1.2-1 (lb-1.7.2-1)
+- allow aditional options for purger (variables GLITE_LB_PURGE_OTHER_OPTIONS,
+  GLITE_LB_DUMP_EXPORTER_OTHER_OPTIONS
+- pass errors from credential loading to upper layers properly
+
