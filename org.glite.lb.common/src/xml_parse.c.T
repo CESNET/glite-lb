@@ -2511,11 +2511,11 @@ int edg_wll_JobQueryRecToXML(
 	                                        break;
 					case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 						if (conditions[row][i].op == EDG_WLL_QUERY_OP_WITHIN) {
-							edg_wll_add_tagged_time_t_to_XMLBody(&pomValue, conditions[row][i].value.t.tv_sec, "stateentertime", edg_wll_StatToString(conditions[row][i].attr_id.state), "state", -1);
-							edg_wll_add_tagged_time_t_to_XMLBody(&pomValue, conditions[row][i].value2.t.tv_sec, "stateentertime", edg_wll_StatToString(conditions[row][i].attr_id.state), "state", -1);	
+							edg_wll_add_time_t_to_XMLBody(&pomValue, conditions[row][i].value.t.tv_sec, "stateentertime", -1);
+							edg_wll_add_time_t_to_XMLBody(&pomValue, conditions[row][i].value2.t.tv_sec, "stateentertime", -1);	
 						}
 						else 
-							edg_wll_add_tagged_time_t_to_XMLBody(&pomValue, conditions[row][i].value.t.tv_sec, "stateentertime", edg_wll_StatToString(conditions[row][i].attr_id.state), "state", -1);
+							edg_wll_add_time_t_to_XMLBody(&pomValue, conditions[row][i].value.t.tv_sec, "stateentertime", -1);
 						break;
 					case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 						if (conditions[row][i].op == EDG_WLL_QUERY_OP_WITHIN) {
@@ -2629,6 +2629,14 @@ int edg_wll_QueryEventsRequestToXML(
 					}
 					else 
 						edg_wll_add_tagged_time_t_to_XMLBody(&pomValue, event_conditions[row][i].value.t.tv_sec, "time", edg_wll_StatToString(event_conditions[row][i].attr_id.state), "state", -1);
+					break;
+				case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+					if (event_conditions[row][i].op == EDG_WLL_QUERY_OP_WITHIN) {
+						edg_wll_add_time_t_to_XMLBody(&pomValue, event_conditions[row][i].value.t.tv_sec, "stateentertime", -1);
+						edg_wll_add_time_t_to_XMLBody(&pomValue, event_conditions[row][i].value2.t.tv_sec, "stateentertime", -1);	
+					}
+					else 
+						edg_wll_add_time_t_to_XMLBody(&pomValue, event_conditions[row][i].value.t.tv_sec, "stateentertime", -1);
 					break;
 				case EDG_WLL_QUERY_ATTR_LEVEL:
 					edg_wll_add_int_to_XMLBody(&pomValue, event_conditions[row][i].value.i, "level", -1);

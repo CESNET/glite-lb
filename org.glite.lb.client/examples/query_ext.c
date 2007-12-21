@@ -469,8 +469,6 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 			cond->value2.i = atoi(tmps);
 		}
 		break;
-	case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
-	case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 	case EDG_WLL_QUERY_ATTR_TIME:
 		cond->value.t.tv_sec = StrToTime(tmps);
 		if ( cond->op == EDG_WLL_QUERY_OP_WITHIN )
@@ -503,7 +501,22 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 			fprintf(stderr,"%s: invalid status value (%s)\n", myname, tmps);
 			return 0;
 		}
-        break;
+        	break;
+
+	case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
+	case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+		cond->value.t.tv_sec = StrToTime(tmps);
+		if ( cond->op == EDG_WLL_QUERY_OP_WITHIN )
+		{
+			if ( !(s = get_attr_value(s, tmps, 500)) ) return NULL;
+			if ( tmps[0] == '\0' )
+			{
+				fprintf(stderr,"%s: second interval boundary not set\n", myname);
+				return NULL;
+			}
+			cond->value2.t.tv_sec = StrToTime(tmps);
+		}
+		break;
 
 	default:
 		break;

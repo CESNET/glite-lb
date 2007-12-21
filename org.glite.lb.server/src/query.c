@@ -642,6 +642,8 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 			 *	Any op allowed - but be careful
 			 */
 		case EDG_WLL_QUERY_ATTR_TIME:
+		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 			/* any operator allowed */
 			ct++;
 			break;
@@ -676,6 +678,8 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 		for ( n = 0; ec[m][n].attr; n++ ) switch ( ec[m][n].attr )
 		{
 		case EDG_WLL_QUERY_ATTR_TIME:
+		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 			glite_lbu_TimeToDB(ec[m][n].value.t.tv_sec, &dbt);
 			if ( conds )
 			{
@@ -905,7 +909,6 @@ static char *jc_to_head_where(
 			break;
 
 		case EDG_WLL_QUERY_ATTR_TIME:
-		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 			if ( jc[m][n].attr_id.state == EDG_WLL_JOB_UNDEF )
 			{
 				edg_wll_SetError(ctx, EINVAL, "Time attribut have to be associated with status specification");
@@ -916,6 +919,7 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_DONECODE:
 		case EDG_WLL_QUERY_ATTR_EXITCODE:
 		case EDG_WLL_QUERY_ATTR_STATUS:
+		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 			ct++;
 			break;
@@ -1533,6 +1537,7 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *stat, const edg_wll
 		return 0;
 
 or_satisfied:
+
                 // just for escaping from nested cycles
 		;       /* prevent compiler to complain */
 	}

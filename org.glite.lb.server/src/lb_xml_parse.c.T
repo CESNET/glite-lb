@@ -116,8 +116,7 @@ static void startJobQueryRec(void *data, const char *el, const char **attr)
 	                                if (strcmp(attr[0],"name")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
 				} 
-				else if ( ((i+1) == EDG_WLL_QUERY_ATTR_TIME) ||
-						 ((i+1) == EDG_WLL_QUERY_ATTR_STATEENTERTIME)) {
+				else if ( (i+1) == EDG_WLL_QUERY_ATTR_TIME ) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
                                         if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
@@ -242,8 +241,7 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 	                                if (attr[0] && strcmp(attr[0],"name")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
 				} 
-				else if ( ((i+1) == EDG_WLL_QUERY_ATTR_TIME) ||
-						((i+1) == EDG_WLL_QUERY_ATTR_STATEENTERTIME)) {
+				else if ( (i+1) == EDG_WLL_QUERY_ATTR_TIME ) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
                                         if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
@@ -258,8 +256,7 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 	                                if (attr[0] && strcmp(attr[0],"name")) { unexp() break;}
 					XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position].attr_id.tag = strdup(attr[1]);
 				} 
-				else if ( ((i+1) == EDG_WLL_QUERY_ATTR_TIME) ||
-						((i+1) == EDG_WLL_QUERY_ATTR_STATEENTERTIME)) {
+				else if ( (i+1) == EDG_WLL_QUERY_ATTR_TIME ) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
                                         if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
 					XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
@@ -688,7 +685,6 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 			XMLCtx->event_conditions[XMLCtx->row2] != NULL) {
 			switch (XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position2].attr) {
 				case EDG_WLL_QUERY_ATTR_TIME:
-				case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 					if ( !XMLCtx->bound )
 					{
 						XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position2].value.t.tv_sec = 
@@ -1935,8 +1931,7 @@ int edg_wll_IndexedAttrsToXML(
 					edg_wll_query_attrToString(ctx->job_index[i][j].attr), 
 					"attribute", NULL);
 
-				if ((ctx->job_index[i][j].attr == EDG_WLL_QUERY_ATTR_TIME) ||
-						(ctx->job_index[i][j].attr == EDG_WLL_QUERY_ATTR_STATEENTERTIME))
+				if ( ctx->job_index[i][j].attr == EDG_WLL_QUERY_ATTR_TIME )
 					edg_wll_add_string_to_XMLBody(&pomA,
 						edg_wll_StatToString(ctx->job_index[i][j].attr_id.state),
 						"state", NULL);
