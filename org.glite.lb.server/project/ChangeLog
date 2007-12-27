@@ -10,3 +10,11 @@
 - fixed several memleaks
 - ignore shallow branch seqence code for events coming from UI and NS
   (fixes impossibility to clear jobs with ReallyRunning events)
+
+1.8.2-1 (lb-1.7.2-1)
+- fix debug output redirection without tscat in startup script
+- support notification expiration in interlogger
+- implement expired notification purging on server
+- rewrite internal event number increment code to avoid race & inifinit loop
+  with read-consistent transactional database (should fix bug #27555)
+- revert enforced "strict locking" with transcactions (not needed anymore)
