@@ -299,6 +299,7 @@ static char *db_col_type(const edg_wll_QueryRec *r)
 		case EDG_WLL_QUERY_ATTR_HOST:
 		case EDG_WLL_QUERY_ATTR_CHKPT_TAG:
 		case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
+		case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 			/* XXX: 255 may not be enough for location or destination */
 			return "varchar(255) binary null"; 
 

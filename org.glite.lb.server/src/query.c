@@ -627,6 +627,15 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 			ct++;
 			break;
 
+		case EDG_WLL_QUERY_ATTR_JDL_ATTR:
+			if ( ec[m][n].op != EDG_WLL_QUERY_OP_EQUAL && ec[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
+			{
+				edg_wll_SetError(ctx, EINVAL, "only `=' and '!=' supported with jdl_attr");
+				return NULL;
+			}
+			ct++;
+			break;
+
 		case EDG_WLL_QUERY_ATTR_INSTANCE:
 			if ( ec[m][n].op != EDG_WLL_QUERY_OP_EQUAL && ec[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
 			{

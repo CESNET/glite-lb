@@ -286,6 +286,7 @@ static void free_QueryRec(edg_wll_QueryRec *qr)
 	case EDG_WLL_QUERY_ATTR_OWNER:
 	case EDG_WLL_QUERY_ATTR_LOCATION: 
 	case EDG_WLL_QUERY_ATTR_DESTINATION:
+	case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 		free(qr->value.c);
 		break;
 
@@ -433,6 +434,7 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 	case EDG_WLL_QUERY_ATTR_LOCATION:
 	case EDG_WLL_QUERY_ATTR_DESTINATION:
 	case EDG_WLL_QUERY_ATTR_USERTAG:
+	case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 		if ( !(cond->value.c = strdup(tmps)) )
 			return 0;
 		break;
@@ -560,6 +562,7 @@ static char *get_event_condition(char *src, edg_wll_QueryRec *cond)
 	case EDG_WLL_QUERY_ATTR_USERTAG:
 	case EDG_WLL_QUERY_ATTR_HOST:
 	case EDG_WLL_QUERY_ATTR_INSTANCE:
+	case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 		if ( !(cond->value.c = strdup(tmps)) )
 			return 0;
 		break;
@@ -780,6 +783,7 @@ static void printconds(edg_wll_QueryRec **cond)
 			case EDG_WLL_QUERY_ATTR_HOST:
 			case EDG_WLL_QUERY_ATTR_INSTANCE:
 			case EDG_WLL_QUERY_ATTR_USERTAG:
+			case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 				printf("%s", cond[i][j].value.c);
 				break;
 			case EDG_WLL_QUERY_ATTR_STATUS:
