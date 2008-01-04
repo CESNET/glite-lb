@@ -613,7 +613,7 @@ edg_wll_logflushall_end:
  */
 int edg_wll_SetLoggingJob(
 	edg_wll_Context ctx,
-	const edg_wlc_JobId job,
+	glite_jobid_const_t job,
 	const char *code,
 	int flags)
 {
@@ -662,7 +662,7 @@ int edg_wll_SetLoggingJob(
  */
 int edg_wll_SetLoggingJobProxy(
         edg_wll_Context ctx,
-        const edg_wlc_JobId job,
+        glite_jobid_const_t job,
         const char *code,
 	const char *user,
         int flags)
@@ -731,7 +731,7 @@ edg_wll_setloggingjobproxy_end:
 static int edg_wll_RegisterJobMaster(
         edg_wll_Context         ctx,
 	int			flags,
-        const edg_wlc_JobId     job,
+        glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
@@ -841,7 +841,7 @@ edg_wll_registerjobmaster_end:
  */
 int edg_wll_RegisterJobSync(
         edg_wll_Context         ctx,
-        const edg_wlc_JobId     job,
+        glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
@@ -860,7 +860,7 @@ int edg_wll_RegisterJobSync(
  */
 int edg_wll_RegisterJob(
         edg_wll_Context         ctx,
-        const edg_wlc_JobId     job,
+        glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
@@ -882,7 +882,7 @@ int edg_wll_RegisterJob(
  */
 int edg_wll_RegisterJobProxy(
         edg_wll_Context         ctx,
-        const edg_wlc_JobId     job,
+        glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
@@ -1043,7 +1043,7 @@ edg_wll_registerjobproxy_end:
  */
 int edg_wll_RegisterJobProxyOld(
         edg_wll_Context         ctx,
-        const edg_wlc_JobId     job,
+        glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
@@ -1066,7 +1066,7 @@ int edg_wll_RegisterJobProxyOld(
  */
 int edg_wll_RegisterJobProxy(
         edg_wll_Context         ctx,
-        const edg_wlc_JobId     job,
+        glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
@@ -1089,7 +1089,7 @@ int edg_wll_RegisterJobProxy(
  */
 int edg_wll_RegisterJobProxyOnly(
         edg_wll_Context         ctx,
-        const edg_wlc_JobId     job,
+        glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
@@ -1109,7 +1109,7 @@ int edg_wll_RegisterJobProxyOnly(
 static
 int edg_wll_RegisterSubjob(
         edg_wll_Context         ctx,
-        const edg_wlc_JobId     job,
+        glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
@@ -1130,7 +1130,7 @@ int edg_wll_RegisterSubjob(
 static
 int edg_wll_RegisterSubjobProxy(
         edg_wll_Context         ctx,
-        const edg_wlc_JobId     job,
+        glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
@@ -1150,7 +1150,7 @@ int edg_wll_RegisterSubjobProxy(
  */
 int edg_wll_RegisterSubjobs(
 	edg_wll_Context 	ctx,
-	const edg_wlc_JobId 	parent,
+	glite_jobid_const_t 	parent,
 	char const * const * 	jdls, 
 	const char * 		ns, 
 	edg_wlc_JobId const * 	subjobs)
@@ -1195,7 +1195,7 @@ edg_wll_registersubjobs_end:
  */
 int edg_wll_RegisterSubjobsProxy(
 	edg_wll_Context 	ctx,
-	const edg_wlc_JobId 	parent,
+	glite_jobid_const_t 	parent,
 	char const * const * 	jdls, 
 	const char * 		ns, 
 	edg_wlc_JobId const * 	subjobs)
@@ -1239,7 +1239,7 @@ edg_wll_registersubjobsproxy_end:
  */
 int edg_wll_ChangeACL(
 		edg_wll_Context			ctx,
-		const edg_wlc_JobId		jobid,
+		glite_jobid_const_t		jobid,
 		const char			*user_id,
 		enum edg_wll_UserIdType		user_id_type,
 		enum edg_wll_Permission		permission,
