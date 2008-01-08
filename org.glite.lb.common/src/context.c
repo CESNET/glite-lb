@@ -454,7 +454,7 @@ int edg_wll_GetLoggingJob(const edg_wll_Context ctx,edg_wlc_JobId *out)
 
 int edg_wll_GenerateSubjobIds(
 	edg_wll_Context	ctx,
-	const edg_wlc_JobId	parent,
+	glite_jobid_const_t	parent,
 	int			num_subjobs,
 	const char *		seed,
 	edg_wlc_JobId **	subjobs)
