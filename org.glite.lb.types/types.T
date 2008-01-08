@@ -7,7 +7,7 @@
 		taglist=>'"edg_wll_TagValue *"',
 		stslist=>'"struct _edg_wll_JobStat *"',
 		timeval=>'"struct timeval"',
-		jobid=>'"edg_wlc_JobId"',
+		jobid=>'"glite_jobid_t"',
 		notifid=>'"edg_wll_NotifId"',
 		logsrc=>'"edg_wll_Source"',
 		port=>'"uint16_t"',
@@ -19,7 +19,7 @@
 	'C++'=>{
 		string=>'"std::string"',
 		timeval=>'"struct timeval"',
-		jobid=>'"edg::workload::common::jobid::JobId"',
+		jobid=>'"glite::jobid::JobId"',
 	        bool=>'"int"',
                 intlist=>'"std::vector<int>"',
                 strlist=>'"std::vector<std::string>"',

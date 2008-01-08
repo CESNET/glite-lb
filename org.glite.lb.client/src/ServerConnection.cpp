@@ -393,7 +393,7 @@ QueryRecord::operator edg_wll_QueryRec() const
 		break;
 
 	case JOBID:
-	    if(glite_jobid_dup(jobid_value.c_jobid(), &out.value.j)) {
+	    if(glite_jobid_dup(jobid_value.c_jobid(), (glite_jobid_t*)&out.value.j)) {
 		throw std::bad_alloc();
 	    }
 	    break;

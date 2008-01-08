@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 	"char *", "EDG_WLL_ARGS_STRING",
 	"int", "EDG_WLL_ARGS_INT",
 	"double", "EDG_WLL_ARGS_DOUBLE",
-	"edg_wlc_JobId", "EDG_WLL_ARGS_JOBID",
+	"glite_jobid_t", "EDG_WLL_ARGS_JOBID",
 	"edg_wll_NotifId", "EDG_WLL_ARGS_NOTIFID",
 	"edg_wll_Source", "EDG_WLL_ARGS_SOURCE",
 	"uint16_t", "EDG_WLL_ARGS_UINT16"

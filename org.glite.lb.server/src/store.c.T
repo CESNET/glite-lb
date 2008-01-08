@@ -33,11 +33,11 @@
 #include "db_supp.h"
 
 static int store_user(edg_wll_Context,const char *,const char *); 
-static int store_job(edg_wll_Context,const edg_wlc_JobId,const char *, int, int);
+static int store_job(edg_wll_Context,glite_jobid_const_t,const char *, int, int);
 #ifdef LB_BUF
-static int store_job_block(edg_wll_Context, const edg_wlc_JobId, const char *, glite_lbu_bufInsert *, int, int);
+static int store_job_block(edg_wll_Context, glite_jobid_const_t, const char *, glite_lbu_bufInsert *, int, int);
 #endif
-static int store_job_grey(edg_wll_Context,const edg_wlc_JobId,time_t);
+static int store_job_grey(edg_wll_Context,glite_jobid_const_t,time_t);
 static int store_flesh(edg_wll_Context,edg_wll_Event *,char *,int);
 static int store_seq(edg_wll_Context,edg_wll_Event *,int);
 static int check_dup(edg_wll_Context,edg_wll_Event *);
@@ -251,7 +251,7 @@ static int store_user(edg_wll_Context ctx,const char *userid,const char *subj)
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *userid, int proxy, int server)
+static int store_job(edg_wll_Context ctx,glite_jobid_const_t job,const char *userid, int proxy, int server)
 {
 	char *jobstr = edg_wlc_JobIdUnparse(job);
 	char *jobid = edg_wlc_JobIdGetUnique(job);
@@ -303,7 +303,7 @@ static int store_job(edg_wll_Context ctx,const edg_wlc_JobId job,const char *use
 }
 
 #ifdef LB_BUF
-static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const char *userid, glite_lbu_bufInsert *bi, int proxy, int server)
+static int store_job_block(edg_wll_Context ctx,glite_jobid_const_t job,const char *userid, glite_lbu_bufInsert *bi, int proxy, int server)
 {
 	char *jobstr = edg_wlc_JobIdUnparse(job);
 	char *jobid = edg_wlc_JobIdGetUnique(job);
@@ -328,7 +328,7 @@ static int store_job_block(edg_wll_Context ctx,const edg_wlc_JobId job,const cha
 }
 #endif
 
-static int store_job_grey(edg_wll_Context ctx,const edg_wlc_JobId job,time_t etime)
+static int store_job_grey(edg_wll_Context ctx,glite_jobid_const_t job,time_t etime)
 {
 	char *jobstr = edg_wlc_JobIdUnparse(job);
 	char *jobid = edg_wlc_JobIdGetUnique(job);
@@ -401,7 +401,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event)
 						userid = strdup(strmd5("unknown_to_proxy", NULL));
 						if (store_user(ctx,userid,"unknown_to_proxy")) goto err;
 
-						if (store_job(ctx,(const edg_wlc_JobId) event->any.jobId,
+						if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
 							userid, 1, ctx->serverRunning)) goto err;
 							
 					}
@@ -421,7 +421,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event)
 					userid = strdup(strmd5(event->any.user, NULL));
 					if (store_user(ctx,userid,event->any.user)) goto err;
 
-					if (store_job(ctx,(const edg_wlc_JobId) event->any.jobId,
+					if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
                                                         userid, 1, 0)) goto err;
 				}
 			}
@@ -443,7 +443,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event)
 					userid = strdup(strmd5(event->any.user, NULL));
 					if (store_user(ctx,userid,event->any.user)) goto err;
 
-					store_job(ctx,(const edg_wlc_JobId) event->any.jobId,
+					store_job(ctx,(glite_jobid_const_t) event->any.jobId,
                                                         userid, 1, 0);
 					edg_wll_ResetError(ctx);
 					
@@ -487,7 +487,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event)
 				userid = strdup(strmd5(can_peername, NULL));
 				if (store_user(ctx,userid,can_peername)) goto err;
 
-				if (store_job(ctx,(const edg_wlc_JobId) event->any.jobId,
+				if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
 						userid, 0, 1)) goto err;
 			}
 		}

@@ -101,7 +101,7 @@ void edg_wll_add_int_to_XMLBody(char **body, const int toAdd, const char *tag, c
 void edg_wll_add_float_to_XMLBody(char **body, const float toAdd, const char *tag, const float null);
 void edg_wll_add_double_to_XMLBody(char **body, const double toAdd, const char *tag, const double null);
 void edg_wll_add_timeval_to_XMLBody(char **body, struct timeval toAdd, const char *tag, const struct timeval null);
-void edg_wll_add_jobid_to_XMLBody(char **body, edg_wlc_JobId toAdd, const char *tag, const void *null);
+void edg_wll_add_jobid_to_XMLBody(char **body, glite_jobid_const_t toAdd, const char *tag, const void *null);
 void edg_wll_add_notifid_to_XMLBody(char **body, edg_wll_NotifId toAdd, const char *tag, const void *null);
 void edg_wll_add_edg_wll_JobStatCode_to_XMLBody(char **body, edg_wll_JobStatCode toAdd, const char *tag, const edg_wll_JobStatCode null);
 void edg_wll_add_edg_wll_EventCode_to_XMLBody(char **body, edg_wll_EventCode toAdd, const char *tag, const edg_wll_EventCode null);

@@ -21,7 +21,7 @@ char *lbproxy_ilog_file_prefix = FILE_PREFIX;
 int
 edg_wll_EventSendProxy(
 	edg_wll_Context			ctx,
-	const edg_wlc_JobId		jobid,
+	glite_jobid_const_t		jobid,
 	const char			   *event)
 {
 	long			filepos;

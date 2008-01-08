@@ -68,7 +68,7 @@ static char* matched_substr(char *in, regmatch_t match)
 
 int edg_wll_JobStatus(
 	edg_wll_Context	ctx,
-	const edg_wlc_JobId		job,
+	glite_jobid_const_t		job,
 	int		flags,
 	edg_wll_JobStat	*stat)
 {
@@ -316,7 +316,7 @@ dag_enomem:
 
 int edg_wll_intJobStatus(
 	edg_wll_Context	ctx,
-	const edg_wlc_JobId	job,
+	glite_jobid_const_t	job,
 	int			flags,
 	intJobStat	*intstat,
 	int		update_db)

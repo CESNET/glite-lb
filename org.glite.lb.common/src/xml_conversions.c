@@ -195,7 +195,7 @@ void edg_wll_add_timeval_to_XMLBody(char **body, struct timeval toAdd, const cha
 
 /* edg_wll_add_jobid_to_XMLBody(&body, eventsOut[i].any.jobId, "jobId", NULL) */
 
-void edg_wll_add_jobid_to_XMLBody(char **body, edg_wlc_JobId toAdd, const char *tag, const void *null)
+void edg_wll_add_jobid_to_XMLBody(char **body, glite_jobid_const_t toAdd, const char *tag, const void *null)
 {
 	if (toAdd != (edg_wlc_JobId) null) {
                 char *newBody, *pom;

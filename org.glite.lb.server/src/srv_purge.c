@@ -42,7 +42,7 @@ static const char* const resp_headers[] = {
 	NULL
 };
 
-static int purge_one(edg_wll_Context ctx,const edg_wlc_JobId,int,int);
+static int purge_one(edg_wll_Context ctx,glite_jobid_const_t,int,int);
 int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job);
 static int unset_server_flag(edg_wll_Context ctx, edg_wlc_JobId job);
 
@@ -418,7 +418,7 @@ static void unlock_and_check(edg_wll_Context ctx,edg_wlc_JobId job)
 }
 
 
-int purge_one(edg_wll_Context ctx,const edg_wlc_JobId job,int dump, int purge)
+int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge)
 {
 	char	*dbjob;
 	char	*stmt = NULL;

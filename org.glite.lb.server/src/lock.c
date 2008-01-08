@@ -12,7 +12,7 @@
 
 extern int debug;
 
-int edg_wll_JobSemaphore(const edg_wll_Context ctx, const edg_wlc_JobId job)
+int edg_wll_JobSemaphore(const edg_wll_Context ctx, glite_jobid_const_t job)
 {
 	char	*un = edg_wlc_JobIdGetUnique(job);
 	int	n,i;
@@ -32,7 +32,7 @@ int edg_wll_JobSemaphore(const edg_wll_Context ctx, const edg_wlc_JobId job)
 	return(n % ctx->semaphores);
 }
 
-int edg_wll_LockUnlockJob(const edg_wll_Context ctx,const edg_wlc_JobId job,int lock)
+int edg_wll_LockUnlockJob(const edg_wll_Context ctx,glite_jobid_const_t job,int lock)
 {
 	struct sembuf	s;
 	int 		n;

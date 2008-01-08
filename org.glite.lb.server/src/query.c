@@ -1566,7 +1566,7 @@ static int cmp_string(const char *s1,edg_wll_QueryOp op,const char *s2)
 }
 
 
-int check_strict_jobid(edg_wll_Context ctx, const edg_wlc_JobId job)
+int check_strict_jobid(edg_wll_Context ctx, glite_jobid_const_t job)
 {
 	char	*job_host;
 	unsigned int	job_port;

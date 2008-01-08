@@ -71,7 +71,7 @@ extern int edg_wll_JobsQueryResToSoap(struct soap *,
 
 extern int edg_wll_UserJobsResToSoap(
 	struct soap *,
-	const edg_wlc_JobId *,
+	glite_jobid_const_t *,
 	const edg_wll_JobStat *,
 	struct _lbe__UserJobsResponse *);
 

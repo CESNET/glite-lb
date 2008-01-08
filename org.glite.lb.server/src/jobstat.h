@@ -91,13 +91,13 @@ typedef enum _subjobClassCodes {
 	SUBJOB_CLASS_REST
 } subjobClassCodes;
 
-int edg_wll_JobStatus(edg_wll_Context, const edg_wlc_JobId, int, edg_wll_JobStat *);
+int edg_wll_JobStatus(edg_wll_Context, glite_jobid_const_t, int, edg_wll_JobStat *);
 
 void destroy_intJobStat(intJobStat *);
 void destroy_intJobStat_extension(intJobStat *p);
 
 
-int edg_wll_intJobStatus( edg_wll_Context, const edg_wlc_JobId, int, intJobStat *, int);
+int edg_wll_intJobStatus( edg_wll_Context, glite_jobid_const_t, int, intJobStat *, int);
 edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context, intJobStat *, int);
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context, edg_wlc_JobId, char *icnames, char *values, glite_lbu_bufInsert *bi);
 edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context , edg_wlc_JobId , int, intJobStat **);

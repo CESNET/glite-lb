@@ -72,7 +72,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	if (debug) {
 		char *cjobid = NULL, *cflags = NULL;
 
-		cjobid = edg_wlc_JobIdUnparse((const edg_wlc_JobId) j);
+		cjobid = edg_wlc_JobIdUnparse(j);
 		cflags = edg_wll_stat_flags_to_string(flags);
 		dprintf(("[%d] \n\t<flags>%s</flags>\n\t<jobId>%s</jobId>\n\n",getpid(),cflags,cjobid));
 		free(cjobid);

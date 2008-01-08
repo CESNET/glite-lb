@@ -167,7 +167,7 @@ int edg_wll_QueryJobsExtProxy(
 
 int edg_wll_JobStatus(
 	edg_wll_Context		context,
-	const edg_wlc_JobId		jobid,
+	glite_jobid_const_t		jobid,
 	int			flags,
 	edg_wll_JobStat		*status
 );
@@ -184,7 +184,7 @@ int edg_wll_JobStatus(
  */
 int edg_wll_JobStatusProxy(
 	edg_wll_Context		context,
-	const edg_wlc_JobId	jobid,
+	glite_jobid_const_t	jobid,
 	int			flags,
 	edg_wll_JobStat		*status
 );
@@ -199,7 +199,7 @@ int edg_wll_JobStatusProxy(
 
 int edg_wll_JobLog(
 	edg_wll_Context		context,
-	const edg_wlc_JobId	jobId,
+	glite_jobid_const_t	jobId,
 	edg_wll_Event **	events
 );
 
@@ -211,7 +211,7 @@ int edg_wll_JobLog(
  */
 int edg_wll_JobLogProxy(
 	edg_wll_Context		context,
-	const edg_wlc_JobId	jobId,
+	glite_jobid_const_t	jobId,
 	edg_wll_Event **	events
 );
 
@@ -302,7 +302,7 @@ int edg_wll_QueryListenerProxy(
 
 int edg_wll_QuerySequenceCodeProxy(
 	edg_wll_Context	context,
-	edg_wlc_JobId	jobId,
+	glite_jobid_const_t	jobId,
 	char **		code
 );
 		

@@ -61,7 +61,7 @@ extern int edg_wll_IndexedAttrsRequestToXML(edg_wll_Context ctx, char **message)
 
 extern int edg_wll_NotifRequestToXML( edg_wll_Context ctx, const char *function, const edg_wll_NotifId notifId, const char *address, edg_wll_NotifChangeOp op, edg_wll_QueryRec const * const *conditions, char **message);
 
-extern int edg_wll_QuerySequenceCodeToXML(edg_wll_Context ctx, edg_wlc_JobId jobId, char **message);
+extern int edg_wll_QuerySequenceCodeToXML(edg_wll_Context ctx, glite_jobid_const_t jobId, char **message);
 	
 
 #ifdef __cplusplus

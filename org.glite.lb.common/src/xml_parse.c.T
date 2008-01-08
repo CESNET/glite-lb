@@ -2904,7 +2904,7 @@ int edg_wll_NotifRequestToXML(
 /* construct Message-Body of Request-Line for edg_wll_QuerySequeceCode function */
 int edg_wll_QuerySequenceCodeToXML(
 		edg_wll_Context ctx,
-		edg_wlc_JobId jobId,
+		glite_jobid_const_t jobId,
                 char **message)
 {
 	char *pomA=NULL, *pomC=NULL;

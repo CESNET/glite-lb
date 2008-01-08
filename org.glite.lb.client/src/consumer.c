@@ -276,7 +276,7 @@ int edg_wll_UserJobs(
 
 int edg_wll_JobLog(
 	edg_wll_Context ctx,
-	edg_wlc_JobId	job,
+	glite_jobid_const_t	job,
 	edg_wll_Event **eventsOut)
 {
 	edg_wll_QueryRec	j[2], e[2];
@@ -297,7 +297,7 @@ int edg_wll_JobLog(
 
 int edg_wll_JobStatus(
                 edg_wll_Context ctx,
-                edg_wlc_JobId job,
+                glite_jobid_const_t job,
                 int flags,
                 edg_wll_JobStat *stat)
 {
@@ -440,7 +440,7 @@ int set_server_name_and_port(edg_wll_Context ctx, const edg_wll_QueryRec **job_c
 	return(error);
 }
 
-int edg_wll_QuerySequenceCodeProxy(edg_wll_Context ctx, edg_wlc_JobId jobId, char **code) 
+int edg_wll_QuerySequenceCodeProxy(edg_wll_Context ctx, glite_jobid_const_t jobId, char **code) 
 {
 	int		error = 0;
 	char   *response = NULL,
@@ -549,7 +549,7 @@ int edg_wll_UserJobsProxy(
 
 int edg_wll_JobLogProxy(
 	edg_wll_Context ctx,
-	edg_wlc_JobId	job,
+	glite_jobid_const_t	job,
 	edg_wll_Event **eventsOut)
 {
 	ctx->isProxy = 1;
@@ -559,7 +559,7 @@ int edg_wll_JobLogProxy(
 
 int edg_wll_JobStatusProxy(
                 edg_wll_Context ctx,
-                edg_wlc_JobId job,
+                glite_jobid_const_t job,
                 int flags,
                 edg_wll_JobStat *stat)
 {
