@@ -555,8 +555,7 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 				break;
 		}
 	}
-        XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
+	edg_wll_freeBuf(XMLCtx);
 	XMLCtx->level--;
 }
 
@@ -583,8 +582,7 @@ static void endQueryJobsRequest(void *data, const char *el UNUSED_VAR)
                         	&XMLCtx->job_conditions);
 		}
 	}
-        XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
+	edg_wll_freeBuf(XMLCtx);
 	XMLCtx->level--;
 }
 
@@ -731,8 +729,7 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 			}
 		} 
 	
-        	XMLCtx->char_buf = NULL;
-	        XMLCtx->char_buf_len = 0;
+		edg_wll_freeBuf(XMLCtx);
 	}
 	XMLCtx->level--;
 }
@@ -773,8 +770,7 @@ static void endPurgeRequest(void *data, const char *el UNUSED_VAR)
 		}
 	}
 
-	XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
+	edg_wll_freeBuf(XMLCtx);
 	XMLCtx->level--;
 }
 
@@ -801,8 +797,7 @@ static void endDumpRequest(void *data, const char *el UNUSED_VAR)
 		free(s);
 	}
 
-	XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
+	edg_wll_freeBuf(XMLCtx);
 	XMLCtx->level--;
 }
 
@@ -817,8 +812,7 @@ static void endLoadRequest(void *data, const char *el UNUSED_VAR)
 			XMLCtx->loadRequestGlobal.server_file = edg_wll_from_string_to_string(XMLCtx);
 	}
 
-	XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
+	edg_wll_freeBuf(XMLCtx);
 	XMLCtx->level--;
 }
 
@@ -852,8 +846,7 @@ static void endNotifRequest(void *data, const char *el UNUSED_VAR)
 		}
 	}
 
-	XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
+	edg_wll_freeBuf(XMLCtx);
 	XMLCtx->level--;
 }
 
@@ -872,8 +865,7 @@ static void endQuerySequenceCodeRequest(void *data, const char *el UNUSED_VAR)
 		}
 	}
 
-	XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
+	edg_wll_freeBuf(XMLCtx);
 	XMLCtx->level--;
 }
 
@@ -907,8 +899,7 @@ static void endStatsRequest(void *data, const char *el UNUSED_VAR)
 		}
 	}
 
-	XMLCtx->char_buf = NULL;
-        XMLCtx->char_buf_len = 0;
+	edg_wll_freeBuf(XMLCtx);
 	XMLCtx->level--;
 }
 

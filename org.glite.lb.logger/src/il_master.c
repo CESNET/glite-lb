@@ -15,6 +15,27 @@
 #include "glite/lb/lb_perftest.h"
 #endif
 
+static
+int
+cmp_jobid(struct server_msg *msg, void *data) 
+{
+	char *job_id_s = (char*)data;
+	return strcmp(msg->job_id_s, job_id_s) == 0;
+}
+
+static
+int
+cmp_jobid_set_exp(struct server_msg *msg, void *data)
+{
+	struct server_msg *m = (struct server_msg *)data;
+
+	if(strcmp(msg->job_id_s, m->job_id_s) == 0) {
+		msg->expires = m->expires;
+	}
+	return 0;
+}
+
+
 int 
 enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 {
@@ -31,9 +52,16 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 			return(-1);
 		/* move all events with this notif_id from eq_known to eq */
 		if(eq_known != NULL) {
-			event_queue_move_events(eq_known, eq, msg->job_id_s);
+			event_queue_move_events(eq_known, eq, cmp_jobid, msg->job_id_s);
 			/* XXX - we should kill the old queue too */
 		}
+	}
+
+	/* if the expiration changed, set new one */
+	if(msg->expires != notifid_map_get_expiration(msg->job_id_s)) {
+		notifid_map_set_expiration(msg->job_id_s, msg->expires);
+		/* set expiration for all events with this notif id */
+		event_queue_move_events(eq, NULL, cmp_jobid_set_exp, msg);
 	}
 #endif
 

@@ -1,0 +1,15 @@
+3.1.0-1 (lb-1.7.0-1)
+- key connections in the pool also with certificate; allows using LB client
+  while swithing among multiple identities safely
+- don't keep proxy connections at all (workaround bug #25153 with little
+  perfomance impact only)
+
+3.1.1-1 (lb-1.7.1-1)
+- check for loaded credentials in connection pool management (avoid SEGV)
+- minor fixes to manpage
+
+3.1.2-1 (lb-1.7.2-1)
+- allow aditional options for purger (variables GLITE_LB_PURGE_OTHER_OPTIONS,
+  GLITE_LB_DUMP_EXPORTER_OTHER_OPTIONS
+- pass errors from credential loading to upper layers properly
+

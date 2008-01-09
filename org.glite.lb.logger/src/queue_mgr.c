@@ -13,6 +13,9 @@ struct queue_list {
   struct event_queue *queue;
   char   *dest;
   struct queue_list *next;
+#if defined(IL_NOTIFICATIONS)
+  time_t expires;
+#endif
 };
 
 static struct event_queue *log_queue;
@@ -90,24 +93,6 @@ queue_list_add(struct queue_list **ql, const char *dest, struct event_queue *eq)
   *ql = el;
   return 0;
 }
-
-
-/*
-static
-int
-queue_list_remove(struct queue_list *el, struct queue_list *prev)
-{
-  assert(el != NULL);
-
-  if(prev) 
-    prev->next = el->next;
-  else
-    queues = el->next;
-
-  free(el);
-  return(1);
-}
-*/
 
 
 #if !defined(IL_NOTIFICATIONS)
@@ -214,6 +199,17 @@ queue_list_next()
   return(current ? current->queue : NULL);
 }
 
+
+int
+queue_list_remove_queue(struct event_queue *eq)
+{
+  assert(eq != NULL);
+
+  free(eq);
+  return(1);
+}
+
+
 #if defined(IL_NOTIFICATIONS)
 
 static struct queue_list  *notifid_map = NULL;
@@ -242,4 +238,32 @@ notifid_map_set_dest(const char *notif_id, struct event_queue *eq)
 	}
 }
 
+
+time_t
+notifid_map_get_expiration(const char * notif_id)
+{
+  struct queue_list *q;
+
+  queue_list_find(notifid_map, notif_id, &q, NULL);
+  return(q ? q->expires : 0);
+}
+
+
+int
+notifid_map_set_expiration(const char *notif_id, time_t exp)
+{
+  struct queue_list *q;
+
+  if(queue_list_find(notifid_map, notif_id, &q, NULL)) {
+    q->expires = exp;
+    return(1);
+  } else {
+    return(0);
+  }
+}
+
 #endif
+
+/* Local Variables:           */
+/* c-indentation-style: gnu   */
+/* End:                       */

@@ -111,8 +111,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	ssrc = edg_wll_SourceToString(e->any.source);
 
 /* try to insert (someone else may be doing the same) */
-	while (1) {
-		char	*max = NULL, *stamp;
+	{
+		char	*max = NULL;
 
 		if (edg_wll_ExecSQL(ctx,select_max,&sh) < 0 ||
 		    edg_wll_FetchRow(ctx,sh,1,NULL,&max) < 0)
@@ -123,7 +123,10 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		glite_lbu_FreeStmt(&sh); 
 		
 		next = max && *max ? atoi(max)+1 : 0;
+		free(max);
+	}
 		
+	while (1) {
 	/* 
 	 * 1) when using transactions:
 	 *   Store the whole event right now.
@@ -132,6 +135,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	 *   Store an UNDEF event first in order to prevent race condition
 	 *   with readers and update event code later.
 	 */
+		char	*stamp = NULL;
+
 		glite_lbu_TimeToDB(e->any.timestamp.tv_sec, &stamp);
 		trio_asprintf(&stmt,
 			"insert into events(jobid,event,code,prog,host,time_stamp,usec,arrived,level,userid) "
@@ -148,8 +153,8 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		} else break; /* successful insert */
 
 	/* we were late -- try once again */
+		next++;
 		free(stmt);
-		free(max);
 	}
 
 	free(stmt); stmt = NULL;

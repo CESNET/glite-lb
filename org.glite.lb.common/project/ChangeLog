@@ -1,0 +1,9 @@
+6.1.0-1 (lb-1.7.0-1)
+- key connections in the pool also with certificate; allows using LB client
+  while swithing among multiple identities safely
+- support for FQAN-based super-user authorization in LB server
+- resurrected and extended some unit tests
+
+6.1.1-1 (lb-1.7.1-1)
+- fixed memleaks in LB query protocol 
+

@@ -727,7 +727,6 @@ int main(int argc, char *argv[])
 	use_dbcaps = ctx->dbcaps;
 
 	if (count_statistics) edg_wll_InitStatistics(ctx);
-	if ((ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS)) strict_locking = 1;
 	edg_wll_FreeContext(ctx);
 
 	if ( !debug ) {

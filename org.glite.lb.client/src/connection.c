@@ -69,8 +69,9 @@ int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
                     !strcmp(name, ctx->connections->connPool[i].peerName) &&	// Server names must be equal
 		   (port == ctx->connections->connPool[i].peerPort) && 		// Ports must be equal
 			(!using_certfile ||					// we are either using the default cert file
-				((ctx->connections->connPool[i].certfile->st_ino == statinfo.st_ino) &&	 // or checking which file
-				 (ctx->connections->connPool[i].certfile->st_dev == statinfo.st_dev)))) { // this conn uses to auth.
+				((ctx->connections->connPool[i].certfile) &&	// or checking which file
+				 (ctx->connections->connPool[i].certfile->st_ino == statinfo.st_ino) &&	 // this conn
+				 (ctx->connections->connPool[i].certfile->st_dev == statinfo.st_dev)))) { // uses to auth.
 
 
 			/* TryLock (next line) is in fact used only 

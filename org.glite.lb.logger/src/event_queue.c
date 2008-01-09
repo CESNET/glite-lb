@@ -270,15 +270,15 @@ event_queue_remove(struct event_queue *eq)
   return(0);
 }
 
-#if defined(IL_NOTIFICATIONS)
-
 int
-event_queue_move_events(struct event_queue *eq_s, struct event_queue *eq_d, char *notif_id)
+event_queue_move_events(struct event_queue *eq_s, 
+			struct event_queue *eq_d, 
+			int (*cmp_func)(struct server_msg *, void *), 
+			void *data)
 {
 	struct event_queue_msg *p, **source_prev, **dest_tail;
 
 	assert(eq_s != NULL);
-	assert(notif_id != NULL);
 
 	event_queue_lock(eq_s);
 	if(eq_d) {
@@ -290,9 +290,10 @@ event_queue_move_events(struct event_queue *eq_s, struct event_queue *eq_d, char
 	p = *source_prev;
 	eq_s->tail = NULL;
 	while(p) {
-		if(strcmp(p->msg->job_id_s, notif_id) == 0) {
+	  if((*cmp_func)(p->msg, data)) {
 			il_log(LOG_DEBUG, "  moving event at offset %d from %s:%d to %s:%d\n",
-			       p->msg->offset, eq_s->dest_name,eq_s->dest_port, eq_d ? eq_d->dest_name : "trash",eq_d ? eq_d->dest_port : -1);
+			       p->msg->offset, eq_s->dest_name, eq_s->dest_port, 
+			       eq_d ? eq_d->dest_name : "trash", eq_d ? eq_d->dest_port : -1);
 			il_log(LOG_DEBUG, "  current: %x, next: %x\n", p, p->prev);
 			/* remove the message from the source list */
 			*source_prev = p->prev;
@@ -319,4 +320,3 @@ event_queue_move_events(struct event_queue *eq_s, struct event_queue *eq_d, char
 	return(0);
 }
 
-#endif

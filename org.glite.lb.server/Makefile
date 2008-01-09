@@ -236,6 +236,9 @@ LIB_OBJS_BK:= \
 MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
 MONDB_LIBS:=${COMMON_LIBS} ${LB_UTILS_DB_LIB} ${EXT_LIBS} 
 
+MAN_GZ:= glite-lb-bkindex.8.gz glite-lb-bkserverd.8.gz
+MAN = $(MAN_GZ:.gz=)
+
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
@@ -257,6 +260,10 @@ else
     PLUGIN_LIB=glite_lb_plugin.la
 endif
 endif
+
+${MAN_GZ}: ${MAN}
+	cp $? .
+	gzip $(notdir $?)
 
 compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${PLUGIN_LIB} ${MAN_GZ}
 
@@ -299,7 +306,7 @@ test_xml: test_xml.cpp
 	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${LB_COMMON_LIB} ${TEST_LIBS}
 
 test.query: test_query_events
-	./test_query_events
+	# XXX coredumps ./test_query_events
 
 #query_events_objs:=`echo ${BKSERVER_BASE_OBJS} |sed 's/bkserverd\.o//;s/db_store\.o//;s/stored_master\.o//;s/store\.o//;s/srv_purge\.o//;s/load\.o//;s/dump\.o//;s/lb_proto\.o//;s/lb_html\.o//;s/lb_http\.o//;'`
 
@@ -344,6 +351,8 @@ ${MAN_GZ}: ${MAN}
 	cp $? .
 	gzip -f $(notdir $?)
 
+man: ${MAN_GZ}
+
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
@@ -353,6 +362,7 @@ install:
 	-mkdir -p ${PREFIX}/share/man/man1
 	-mkdir -p ${PREFIX}/lib
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
+	mkdir -p ${PREFIX}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 	for p in bkserverd bkindex mon-db; do \
@@ -376,9 +386,9 @@ install:
 		${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 	fi
 	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}
-
+	 ${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
 clean:
-	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${PLUGIN_LIB} test*
+	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${PLUGIN_LIB} test* ${MAN_GZ}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.c: %.c.T

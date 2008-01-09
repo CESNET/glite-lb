@@ -70,6 +70,7 @@ public:
 		$EventAttrNums{$_} = $evno++;
 	}
 
+	my $max = 0;
 	for (sort {$a cmp $b} getAllFields $event) {
 		my $u = $_;
 # $u =~ s/([a-z])([A-Z])/$1_$2/g;
@@ -87,10 +88,12 @@ public:
 		gen defined($EventAttrNums{$u}) ?
 			"$c\t\t$u = $EventAttrNums{$u},\n" :
 			"#error \"$u not defined in EventAttrNames\"\n";
+
+		$max = $EventAttrNums{$u} if defined($EventAttrNums{$u}) && $EventAttrNums{$u} > $max;
 	}
+	$max++;
+	gen "\t\tATTR_MAX = $max	/**< Limit for checking attribute code validity. */\n";
 @@@}
-		ATTR_MAX /**< Limit for checking attribute code
-			    validity. */
 	};
 
 @@@{

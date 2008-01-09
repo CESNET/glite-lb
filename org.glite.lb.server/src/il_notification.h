@@ -46,6 +46,7 @@ edg_wll_NotifSend(edg_wll_Context       context,
 		  const char           *host,
                   int                   port,
 		  const char           *owner,
+		  int			expires,
                   const char           *notif_data);
 
 
@@ -66,6 +67,7 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		       const char      *host,
                        int              port,
 		       const char      *owner,
+		       int		expires,
 		       const edg_wll_JobStat notif_job_stat);
 
 
@@ -77,10 +79,11 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
  * \see edg_wll_NotifSend()
  */
 int 
-edg_wll_NotifChangeDestination(edg_wll_Context context,
+edg_wll_NotifChangeIL(edg_wll_Context context,
                                edg_wll_NotifId reg_id,
                                const char      *host,
-                               int             port);
+                               int             port,
+			       int		expires);
 
 /** Cancel registration.
  * Creates ULM string and uses edg_wll_NotifSend() to pass it to

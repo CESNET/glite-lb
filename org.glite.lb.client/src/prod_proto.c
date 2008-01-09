@@ -279,7 +279,7 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	      &ctx->connections->connPool[index].gsiCred, &gss_stat);
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {
-		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
+		answer = edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
 		goto edg_wll_log_connect_err;
 	}
 	my_subject_name = ctx->connections->connPool[index].gsiCred->name;
@@ -670,7 +670,7 @@ int edg_wll_log_direct_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn)
 	      &cred, &gss_stat);
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {
-		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
+		answer = edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
 		goto edg_wll_log_direct_connect_end;
 	}
 	my_subject_name = cred->name;

@@ -153,7 +153,7 @@ EXAMPLES:=${EXAMPLES_SRC:.c=}
 # EXAMPLES_PLUS_SRC:=indexed_attrs_plus.cpp job_status_plus.cpp query_events_plus.cpp listener.cpp user_jobs_plus.cpp job_log_plus.cpp notify_plus.cpp
 # EXAMPLES_PLUS:=${EXAMPLES_PLUS_SRC:.cpp=}
 
-EXAMPLES_CL_SRC:=user_jobs.c job_status.c 
+EXAMPLES_CL_SRC:=user_jobs.c job_status.c multiple_user_jobs.c
 EXAMPLES_CL:=${EXAMPLES_CL_SRC:.c=}
 
 EXAMPLES_CL_THR_SRC:=user_jobs_threaded.c
@@ -162,7 +162,9 @@ EXAMPLES_CL_THR:=${EXAMPLES_CL_THR_SRC:.c=}
 FAKE_EXAMPLES:=job_log_fake
 
 MAN_GZ:=glite-lb-logevent.1.gz
+MAN8_GZ:=glite-lb-dump.8.gz glite-lb-load.8.gz glite-lb-purge.8.gz
 MAN = $(MAN_GZ:.gz=)
+MAN8 = $(MAN8_GZ:.gz=)
 
 PLUS_EXTRA_LIB:=-lglite_jobid
 
@@ -176,9 +178,9 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ifdef LB_STANDALONE
-compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ}
+compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ} ${MAN8_GZ}
 else
-compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent examples ${MAN_GZ}
+compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent examples ${MAN_GZ} ${MAN8_GZ}
 endif
 
 generate: ${GEN_HDRS}
@@ -256,9 +258,13 @@ logevent_fake.o: logevent.c
 	${COMPILE} -c $< -o $@
 
 ${MAN_GZ}: ${MAN}
+	rm -f ${MAN_GZ} ${MAN}
+	cp $? .
+	gzip -f $(notdir $?)
+
+${MAN8_GZ}: ${MAN8}
 	cp $? .
 	gzip $(notdir $?)
-
 
 perftest_logjobs.o: perftest_logjobs.c
 	${CC} ${CFLAGS} -DLB_PERF_DROP -c $<
@@ -306,7 +312,7 @@ producer_test: producer_test.o prod_proto_test.o
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${TEST_INC} $<
 
-man: ${MAN_GZ}
+man: ${MAN_GZ} ${MAN8_GZ}
 
 stage:  compile ${FAKELIB} ${FAKETHRLIB} 
 	$(MAKE) install PREFIX=${stagedir}
@@ -329,6 +335,7 @@ install: doc
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
 	mkdir -p ${PREFIX}/share/man/man1
 	mkdir -p ${PREFIX}/examples
+	mkdir -p ${PREFIX}/share/man/man8
 ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 else
@@ -360,10 +367,11 @@ endif
 	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${PREFIX}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${PREFIX}/sbin/glite-lb-export.sh"
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
+	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test C/ CPP/
-	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ}
+	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -vf ${globalprefix} ${lbprefix}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/

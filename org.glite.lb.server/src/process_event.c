@@ -233,10 +233,14 @@ static char* location_string(const char *source, const char *host, const char *i
 	return ret;
 }
 
+/* is seq. number of 'es' before WMS higher then 'js' */
 static int after_enter_wm(const char *es,const char *js)
 {
-	return component_seqcode(es,EDG_WLL_SOURCE_NETWORK_SERVER) >
-		component_seqcode(js,EDG_WLL_SOURCE_NETWORK_SERVER);
+	return ((component_seqcode(es,EDG_WLL_SOURCE_NETWORK_SERVER) >
+		component_seqcode(js,EDG_WLL_SOURCE_NETWORK_SERVER))
+		||
+		(component_seqcode(es,EDG_WLL_SOURCE_USER_INTERFACE) >
+		component_seqcode(js,EDG_WLL_SOURCE_USER_INTERFACE)));
 }
 
 
@@ -279,7 +283,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		res = RET_LATE;
 	}
 
-/* new event coming from NS => forget about any resubmission loops */
+/* new event coming from NS or UI => forget about any resubmission loops */
 	if (e->type != EDG_WLL_EVENT_CANCEL && 
 		js->last_seqcode &&
 		after_enter_wm(e->any.seqcode,js->last_seqcode))
@@ -971,9 +975,13 @@ int add_stringlist(char ***lptr, const char *new_item)
 
 void destroy_intJobStat_extension(intJobStat *p)
 {
-	free(p->last_seqcode); p->last_seqcode = NULL;
-	free(p->last_cancel_seqcode); p->last_cancel_seqcode = NULL;
-			       p->resubmit_type = EDG_WLL_RESUBMISSION_UNDEFINED;
+	if (p->last_seqcode) free(p->last_seqcode);
+	if (p->last_cancel_seqcode) free(p->last_cancel_seqcode);
+	if (p->branch_tag_seqcode) free(p->branch_tag_seqcode);
+	if (p->last_branch_seqcode) free(p->last_branch_seqcode);
+	if (p->deep_resubmit_seqcode) free(p->deep_resubmit_seqcode);
+	free_branch_state(&p->branch_states);
+	memset(p,0,sizeof(*p));
 }
 
 void destroy_intJobStat(intJobStat *p)

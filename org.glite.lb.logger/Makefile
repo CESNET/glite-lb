@@ -17,7 +17,7 @@ version=${module.version}
 
 CC=gcc
 
-VPATH:=${top_srcdir}/src:${top_srcdir}/test
+VPATH:=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
@@ -100,9 +100,12 @@ INTERLOG_TEST_OBJS:= \
 	IlTestBase.o \
 	il_test.o 
 
+MAN_GZ:=glite-lb-interlogd.8.gz glite-lb-logd.8.gz
+MAN = $(MAN_GZ:.gz=)
+
 default: all 
 
-all compile: $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD)
+all compile: $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
 
 glite-lb-logd: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${TRIO_LIB}
@@ -132,6 +135,12 @@ glite-lb-interlogd-perf-empty: ${INTERLOG_EMPTY_OBJS}
 #	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
 #		${COMMON_LIB}_${thrflavour}
 
+${MAN_GZ}: ${MAN}
+	cp $? .
+	gzip $(notdir $?)
+
+man: ${MAN_GZ}
+
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
@@ -153,6 +162,7 @@ install:
 	-mkdir -p ${PREFIX}/bin
 	-mkdir -p ${PREFIX}/etc/init.d
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/share/man/man8
 	${INSTALL} -m 755 ${LOGD} ${PREFIX}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${PREFIX}/bin
 	if [ x${DOSTAGE} = xyes ]; then \
@@ -164,6 +174,7 @@ ifdef LB_PERF
 endif
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
 
 ${INTERLOG_NOBJS}: %.no: %.c
 	${CC} ${CFLAGS} -DIL_NOTIFICATIONS -c $< -o $@
@@ -196,5 +207,5 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 	${CXX} ${CFLAGS} ${TEST_INC} -c $< -o $@
 
 clean:
-	rm -rvf .libs/ *.o *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} 
+	rm -rvf .libs/ *.o *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} {MAN_GZ}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/

@@ -66,6 +66,7 @@ public:
 		$StatusAttrNums{$_} = $stno++;
 	}
 
+	my $max = 0;
 	selectType $status '_common_';
 	for my $u (sort {$a cmp $b} getAllFields $status) {
 		selectField $status $u;
@@ -76,8 +77,10 @@ public:
 		gen defined($StatusAttrNums{$u}) ? 
 			"\t/** $f->{comment} */\n\t\t$u = $StatusAttrNums{$u},\n" :
 			"#error \"$u not defined in StatusAttrNames\"\n";
+		$max = $StatusAttrNums{$u} if defined($StatusAttrNums{$u}) && $StatusAttrNums{$u} > $max;
 	}
-	gen "\tATTR_MAX = $stno /**< Limit for range checking. */ ";
+	$max++;
+	gen "\t\tATTR_MAX = $max /**< Limit for range checking. */\n";
 @@@}
 	};
 

@@ -29,7 +29,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[5];
 	glite_lbu_Statement	jobs = NULL;
-	int	ret,i;
+	int	ret,i,expires;
 	time_t	now = time(NULL);
 	
 	char *cond_where = NULL;
@@ -75,7 +75,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
 
 	while ((ret = edg_wll_FetchRow(ctx,jobs,sizeof(jobc)/sizeof(jobc[0]),NULL,jobc)) > 0) {
-		if (now > glite_lbu_DBToTime(jobc[2]))
+		if (now > (expires = glite_lbu_DBToTime(jobc[2])))
 			edg_wll_NotifExpired(ctx,jobc[0]);
 		else if (notif_match_conditions(ctx,stat,jobc[4]) &&
 				notif_check_acl(ctx,stat,jobc[3]))
@@ -107,7 +107,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 			/* XXX: only temporary hack!!!
 			 */
 			ctx->p_instance = strdup("");
-			if ( edg_wll_NotifJobStatus(ctx, nid, dest, port, jobc[3], *stat) )
+			if ( edg_wll_NotifJobStatus(ctx, nid, dest, port, jobc[3], expires, *stat) )
 			{
 				free(dest);
 				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
@@ -130,8 +130,24 @@ err:
 
 int edg_wll_NotifExpired(edg_wll_Context ctx,const char *notif)
 {
-	/* TODO */
-	return 0;
+	char	*dn = NULL,*dj = NULL;
+
+	trio_asprintf(&dn,"delete from notif_registrations where notifid='%|Ss'",notif);
+	trio_asprintf(&dj,"delete from notif_jobs where notifid='%|Ss'",notif);
+
+	if (edg_wll_ExecSQL(ctx,dn,NULL) < 0 ||
+		edg_wll_ExecSQL(ctx,dj,NULL) < 0)
+	{
+		char	*et,*ed;
+		edg_wll_Error(ctx,&et,&ed);
+
+		syslog(LOG_WARNING,"delete notification %s: %s (%s)",notif,et,ed);
+		free(et); free(ed);
+	}
+
+	free(dn);
+	free(dj);
+	return edg_wll_ResetError(ctx);
 }
 
 

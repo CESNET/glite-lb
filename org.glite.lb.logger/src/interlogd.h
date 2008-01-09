@@ -61,12 +61,14 @@
 // #define TIMEOUT      5
 extern int TIMEOUT;
 #define INPUT_TIMEOUT (60)
+#define EXIT_TIMEOUT (1*60)
 
 typedef struct cred_handle {
 	edg_wll_GssCred creds;
 	int counter;
 } cred_handle_t;
 extern cred_handle_t *cred_handle;
+
 extern pthread_mutex_t cred_handle_lock;
 extern pthread_key_t cred_handle_key;
 extern char *cert_file;
@@ -119,6 +121,7 @@ struct server_msg {
 	int                     dest_port;
 	char                   *dest;
 #endif
+	time_t                  expires;        /* time (in seconds from epoch) the message expires */
 };
 
 
@@ -172,6 +175,7 @@ int event_queue_remove(struct event_queue *);
 int event_queue_enqueue(struct event_queue *, char *);
 /* helper */
 int enqueue_msg(struct event_queue *, struct server_msg *);
+int event_queue_move_events(struct event_queue *, struct event_queue *, int (*)(struct server_msg *, void *), void *); 
 
 /* protocol event queue methods */
 int event_queue_connect(struct event_queue *);
@@ -206,7 +210,8 @@ int queue_list_is_log(struct event_queue *);
 #if defined(IL_NOTIFICATIONS)
 struct event_queue *notifid_map_get_dest(const char *);
 int notifid_map_set_dest(const char *, struct event_queue *);
-int event_queue_move_events(struct event_queue *, struct event_queue *, char *); 
+time_t notifid_map_get_expiration(const char *);
+int notifid_map_set_expiration(const char *, time_t);
 #endif
 
 /* event store functions */

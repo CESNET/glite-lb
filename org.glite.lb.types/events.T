@@ -197,6 +197,7 @@
 	string	owner		Identification of the job owner (certificate subject).
 	string	dest_host	Hostname the notification is sent to.
 	port	dest_port	Port number the notification is sent to.
+	int     expires         When the notification expires
 	string	jobstat		Status of the job (the notification content).
 
 

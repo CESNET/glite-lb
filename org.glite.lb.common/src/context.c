@@ -140,6 +140,9 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		free(ctx->fqans);
 		ctx->fqans = NULL;
 	}
+	
+	if (ctx->jpreg_dir) free(ctx->jpreg_dir);
+	if (ctx->serverIdentity) free(ctx->serverIdentity);
 
 	edg_wll_FreeParams(ctx);
 

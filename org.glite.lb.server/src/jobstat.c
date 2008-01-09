@@ -111,6 +111,7 @@ int edg_wll_JobStatus(
 	if (intErr) {
 		free(md5_jobid);
 		free(string_jobid);
+		free(jobstat.pub.owner);
 		return edg_wll_Error(ctx,NULL,NULL);
 	}
 
@@ -130,6 +131,7 @@ int edg_wll_JobStatus(
 		 }
 	      }
 	}
+	free(jobstat.pub.owner);
 
 	intErr = edg_wll_LoadIntState(ctx, job, -1 /*all events*/, &ijsp);
 	if (!intErr) {
@@ -368,6 +370,7 @@ int edg_wll_intJobStatus(
 	if (edg_wll_QueryEventsServer(ctx,1, (const edg_wll_QueryRec **)jqra, NULL, &events)) {
 		free(string_jobid);
 		free(jqra);
+		free(intstat->pub.owner);
                 return edg_wll_Error(ctx, NULL, NULL);
 	}
 	free(jqra);
@@ -377,6 +380,7 @@ int edg_wll_intJobStatus(
 
 	if (num_events == 0) {
 		free(string_jobid);
+		free(intstat->pub.owner);
 		return edg_wll_SetError(ctx,ENOENT,NULL);
 	}
 
