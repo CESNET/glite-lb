@@ -93,6 +93,117 @@ int glite_jp_clear_error(glite_jp_context_t ctx) {
 
 
 /*
+ * realloc the line to double size if needed
+ *
+ * \return 0 if failed, did nothing
+ * \return 1 if success
+ */
+int check_realloc_line(char **line, size_t *maxlen, size_t len) {
+        void *tmp;
+
+        if (len > *maxlen) {
+                *maxlen <<= 1;
+                tmp = realloc(*line, *maxlen);
+                if (!tmp) return 0;
+                *line = tmp;
+        }
+
+        return 1;
+}
+
+
+typedef struct _rl_buffer_t {
+        char                    *buf;
+        size_t                  pos, size;
+        off_t                   offset;
+} rl_buffer_t;
+
+
+/*
+ * read next line from stream
+ *
+ * \return error code
+ */
+int glite_jppsbe_readline(
+        glite_jp_context_t ctx,
+        void *handle,
+        rl_buffer_t *buffer,
+        char **line
+)
+{
+        size_t maxlen, len, i;
+        ssize_t nbytes;
+        int retval, z, end;
+
+        maxlen = BUFSIZ;
+        i = 0;
+        len = 0;
+        *line = malloc(maxlen);
+        end = 0;
+
+        do {
+                /* read next portion */
+                if (buffer->pos >= buffer->size) {
+                        buffer->pos = 0;
+                        buffer->size = 0;
+                        if ((retval = glite_jppsbe_pread(ctx, handle, buffer->buf, BUFSIZ, buffer->offset, &nbytes)) == 0) {
+                                if (nbytes < 0) {
+                                        retval = EINVAL;
+                                        goto fail;
+                                } else {
+                                        if (nbytes) {
+                                                buffer->size = (size_t)nbytes;
+                                                buffer->offset += nbytes;
+                                        } else end = 1;
+                                }
+                        } else goto fail;
+                }
+
+                /* we have buffer->size - buffer->pos bytes */
+                i = buffer->pos;
+                do {
+                        if (i >= buffer->size) z = '\0';
+                        else {
+                                z = buffer->buf[i];
+                                if (z == '\n') z = '\0';
+                        }
+                        len++;
+
+                        if (!check_realloc_line(line, &maxlen, len)) {
+                                retval = ENOMEM;
+                                goto fail;
+                        }
+                        (*line)[len - 1] = z;
+                        i++;
+                } while (z && i < buffer->size);
+                buffer->pos = i;
+        } while (len && (*line)[len - 1] != '\0');
+
+        if ((!len || !(*line)[0]) && end) {
+                free(*line);
+                *line = NULL;
+        }
+
+        return 0;
+
+fail:
+        free(*line);
+        *line = NULL;
+        return retval;
+}
+
+char* glite_jpps_get_namespace(const char* attr){
+        char* namespace = strdup(attr);
+        char* colon = strrchr(namespace, ':');
+        if (colon)
+                namespace[strrchr(namespace, ':') - namespace] = 0;
+        else
+                namespace[0] = 0;
+        return namespace;
+}
+
+
+/*
  * free the array of JP attr
  */
 static void free_attrs(glite_jp_attrval_t *av) {
@@ -174,8 +285,13 @@ int main(int argc, char *argv[])
 		outfile = stdout;
 	}
 
+	jpctx = calloc(1,sizeof *jpctx);
 	/* use the plugin */
 	plugin_init(jpctx, &plugin_data);
+
+	jpctx->plugins = calloc(2,sizeof(*jpctx->plugins));
+	jpctx->plugins[0] = &plugin_data;
+
 	plugin_data.ops.open(jpctx, infile, "uri://", &data_handle);
 
 	if (data_handle) {
@@ -282,6 +398,12 @@ int main(int argc, char *argv[])
 		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_finalStatus, &attrval);
 		if (attrval) {
 			fprintf(outfile,"\t<finalStatus>%s</finalStatus>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_finalDoneStatus, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<finalDoneStatus>%s</finalDoneStatus>\n", attrval->value);
 			free_attrs(attrval);
 		}
 
