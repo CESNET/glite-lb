@@ -294,7 +294,7 @@ static int lb_close(void *fpctx,void *handle) {
 }
 
 static int get_classad_attr(const char* attr, glite_jp_context_t ctx, lb_handle *h, glite_jp_attrval_t **av){
-	printf("attr = %s\n", attr);
+/*	printf("attr = %s\n", attr); */
 	glite_jp_error_t err;
 	glite_jp_clear_error(ctx);
         memset(&err,0,sizeof err);
@@ -496,6 +496,23 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
 		av[0].size = -1;
+	} else if (strcmp(attr, GLITE_JP_LB_finalDoneStatus) == 0) {
+
+	/* XXX: should be a string */
+		if (h->finalStatus && h->finalStatus->state == EDG_WLL_JOB_DONE) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+
+			asprintf(&av[0].value,"%d",h->status.done_code);
+			av[0].timestamp = h->finalStatus->timestamp.tv_sec;
+		}
+		else {
+			*attrval = NULL;
+                        err.code = EINVAL;
+                        err.desc = strdup("Final status is not Done");
+                        return glite_jp_stack_error(ctx,&err);
+		}
+
 	} else if (strcmp(attr, GLITE_JP_LB_finalStatusDate) == 0) {
                 struct tm *t = NULL;
                 if ( (h->finalStatus) &&
