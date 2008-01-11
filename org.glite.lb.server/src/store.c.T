@@ -863,7 +863,7 @@ static edg_wll_ErrorCode states_values_embryonic(
 	if (jobid_md5 == NULL || parent_md5 == NULL || stat_enc == NULL) goto err;
 
 
-	if (edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, stat->pub, 1, icnames, &icvalues)) goto err;
+	if (edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, &stat->pub, 1, icnames, &icvalues)) goto err;
 	trio_asprintf(&stmt,
 		"'%|Ss',%d,%d,'%|Ss','%|Ss','%|Ss'%s",
 		jobid_md5, stat->pub.state, 1, stat_enc,
