@@ -28,7 +28,7 @@ get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
 {
    struct voms **voms_cert = NULL;
    char **f, **attrs, **tmp;
-   int ret, num;
+   int num;
 
    attrs = NULL;
    num = 0;
@@ -112,8 +112,6 @@ get_groups(edg_wll_Context ctx, struct vomsdata *voms_info,
 int
 edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *server_cert, char *server_key, char *voms_dir, char *ca_dir)
 {
-   STACK_OF(X509) *p_chain = NULL;
-   X509 *cert = NULL;
    int ret;
    int err = 0;
    struct vomsdata *voms_info = NULL;
