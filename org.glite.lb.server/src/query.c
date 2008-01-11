@@ -1260,7 +1260,6 @@ int convert_event_head(edg_wll_Context ctx,char **f,edg_wll_Event *e)
 		edg_wll_SetError(ctx,-ret,"edg_wlc_JobIdParse()");
 		goto err;
 	}
-	free(f[0]);
 
 	e->type = atoi(f[1]);
 	free(f[1]); f[1] = NULL;
