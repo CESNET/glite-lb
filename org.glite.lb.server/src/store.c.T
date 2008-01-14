@@ -101,6 +101,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 || edg_wll_FetchRow(ctx,sh,1,NULL,&userid) < 0) goto clean;
 	if (sh) glite_lbu_FreeStmt(&sh);
+	free(stmt); stmt = NULL;
 
 
 /* obtain next event sequence number */
@@ -146,6 +147,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 			ssrc,e->any.host,
 			stamp,e->any.timestamp.tv_usec,
 			now_s, e->any.level,userid);
+		free(stamp);
 
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 			if ((err = edg_wll_Error(ctx,NULL,NULL)) != EEXIST)
@@ -471,8 +473,10 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event)
 		if (event->any.type == EDG_WLL_EVENT_REGJOB) {
 			trio_asprintf(&q,"select cert_subj from jobs,users where jobs.jobid='%|Ss'"
 					" AND jobs.userid=users.userid",unique);
-			if ( (nar = edg_wll_ExecSQL(ctx,q,&stmt)) < 0 || edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0 ) 
+			if ( (nar = edg_wll_ExecSQL(ctx,q,&stmt)) < 0 || edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0 ) { 
 				goto err;
+			}
+			free(q); q = NULL;
 			
 			if (nar) {
 				/* job is already registered */

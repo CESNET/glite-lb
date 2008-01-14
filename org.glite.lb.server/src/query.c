@@ -698,7 +698,6 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 					free(dbt);
 					glite_lbu_TimeToDB(ec[m][n].value2.t.tv_sec, &dbt);
 					trio_asprintf(&out, "%s OR (e.time_stamp >= %s AND e.time_stamp <= %s)", conds, aux, dbt);
-					free(dbt);
 					free(aux);
 				}
 				else if (ec[m][n].op == EDG_WLL_QUERY_OP_EQUAL) {
@@ -716,15 +715,16 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 				free(dbt);
 				glite_lbu_TimeToDB(ec[m][n].value2.t.tv_sec, &dbt);
 				trio_asprintf(&conds, "(e.time_stamp >= %s AND e.time_stamp <= %s)", aux, dbt);
-				free(dbt);
 				free(aux);
 			}
 			else if (ec[m][n].op == EDG_WLL_QUERY_OP_EQUAL) {
 				trio_asprintf(&conds, "(e.time_stamp = %s AND e.usec = %d)",
 						dbt, ec[m][n].value.t.tv_usec);
 			}
-			else
+			else {
 				trio_asprintf(&conds, "e.time_stamp %s %s", opToString(ec[m][n].op), dbt);
+			}
+			free(dbt);
 			break;
 
 		case EDG_WLL_QUERY_ATTR_LEVEL:

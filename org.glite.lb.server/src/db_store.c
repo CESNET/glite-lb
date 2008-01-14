@@ -81,6 +81,8 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
    */
   if (ctx->isProxy && local_job) {
 	if  (ev->any.priority & EDG_WLL_LOGFLAG_DIRECT) {
+	  	edg_wll_FreeEvent(ev);
+		free(ev);
 		return 0;
 	}
 	else {

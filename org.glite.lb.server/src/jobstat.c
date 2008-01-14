@@ -558,12 +558,14 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 				if (EEXIST == edg_wll_Error(ctx, NULL, NULL)) {
 				/* XXX: this should not happen */
 					edg_wll_ResetError(ctx);
+					free(stmt); stmt = NULL;
 					tagp++;
 					continue;
 				}
 				else
 					goto cleanup;
 			}
+			free(stmt); stmt = NULL;
 			tagp++;
 		}
 	}
@@ -585,6 +587,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 	free(icvalues);
 
 	if ((dbret = edg_wll_ExecSQL(ctx,stmt,NULL)) < 0) goto cleanup;
+	free(stmt); stmt = NULL;
 
 	if (dbret == 0) {
 		edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, &stat->pub, 1, &icnames, &icvalues);
@@ -599,6 +602,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 		free(icnames); free(icvalues);
 
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
+		free(stmt); stmt = NULL;
 	}
 
 	if (update) {
@@ -606,11 +610,13 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 			"where jobid ='%|Ss' and ( seq<%d or version !='%|Ss')",
 			jobid_md5, seq, INTSTAT_VERSION);
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
+		free(stmt); stmt = NULL;
 	}
 	if (update) {
 		trio_asprintf(&stmt, "delete from status_tags "
 			"where jobid ='%|Ss' and seq<%d", jobid_md5, seq);
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
+		free(stmt); stmt = NULL;
 	}
 
 cleanup:
