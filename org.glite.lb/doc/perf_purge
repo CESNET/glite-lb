@@ -1,1 +1,0 @@
-./stage/sbin/glite-lb-purge -j /tmp/perftest_1000.jobids  -m scientific.civ.zcu.cz:10000 -s
