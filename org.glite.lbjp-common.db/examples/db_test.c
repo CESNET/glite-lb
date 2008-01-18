@@ -79,7 +79,7 @@ int main(int argn, char *argv[]) {
 
 	// init
 	dprintf(("connecting to %s...\n", cs));
-	if (glite_lbu_InitDBContext(&ctx) != 0) goto fail;
+	if (glite_lbu_InitDBContext(&ctx) != 0) goto failctx;
 	if (glite_lbu_DBConnect(ctx, cs) != 0) goto failctx;
 	if ((caps = glite_lbu_DBQueryCaps(ctx)) == -1) goto failcon;
 	if ((caps & GLITE_LBU_DB_CAP_PREPARED) == 0) {
@@ -189,7 +189,7 @@ failcon:
 	dprintf(("closing...\n"));
 	glite_lbu_DBClose(ctx);
 failctx:
-	{
+	if (ctx) {
 		char *t, *d;
 
 		glite_lbu_DBError(ctx, &t, &d);
@@ -197,7 +197,6 @@ failctx:
 		free(t); free(d);
 	}
 	glite_lbu_FreeDBContext(ctx);
-fail:
 	free(cmd);
 	dprintf(("failed\n"));
 	return 1;

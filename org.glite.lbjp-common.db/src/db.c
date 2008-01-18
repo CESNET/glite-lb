@@ -64,6 +64,7 @@ struct glite_lbu_Statement_s {
 	/* for prepared commands */
 	MYSQL_STMT          *stmt;
 	unsigned long        nrfields;
+	char                *sql;
 };
 
 
@@ -160,6 +161,7 @@ static int FetchRowSimple(glite_lbu_DBContext ctx, MYSQL_RES *result, unsigned l
 static int FetchRowPrepared(glite_lbu_DBContext ctx, glite_lbu_Statement stmt, unsigned int n, unsigned long *lengths, char **results);
 static void set_time(MYSQL_TIME *mtime, const time_t time);
 static void glite_lbu_DBCleanup(void);
+static void glite_lbu_FreeStmt_int(glite_lbu_Statement stmt);
 
 
 /* ---- common ---- */
@@ -337,13 +339,19 @@ int glite_lbu_FetchRow(glite_lbu_Statement stmt, unsigned int n, unsigned long *
 }
 
 
-void glite_lbu_FreeStmt(glite_lbu_Statement *stmt) {
-	if (*stmt) {
-		if ((*stmt)->result) db_handle.mysql_free_result((*stmt)->result);
-		if ((*stmt)->stmt) db_handle.mysql_stmt_close((*stmt)->stmt);
-		free(*stmt);
-		*stmt = NULL;
+static void glite_lbu_FreeStmt_int(glite_lbu_Statement stmt) {
+	if (stmt) {
+		if (stmt->result) db_handle.mysql_free_result(stmt->result);
+		if (stmt->stmt) db_handle.mysql_stmt_close(stmt->stmt);
+		free(stmt->sql);
 	}
+}
+
+
+void glite_lbu_FreeStmt(glite_lbu_Statement *stmt) {
+	glite_lbu_FreeStmt_int(*stmt);
+	free(*stmt);
+	*stmt = NULL;
 }
 
 
@@ -589,6 +597,9 @@ int glite_lbu_PrepareStmt(glite_lbu_DBContext ctx, const char *sql, glite_lbu_St
 	} else
 		(*stmt)->nrfields = 0;
 
+	// remember the command
+	(*stmt)->sql = strdup(sql);
+
 	return CLR_ERR(ctx);
 
 failed:
@@ -598,7 +609,7 @@ failed:
 
 
 int glite_lbu_ExecPreparedStmt_v(glite_lbu_Statement stmt, int n, va_list ap) {
-	int i;
+	int i, prepare_retry;
 	glite_lbu_DBType type;
 	char *pchar;
 	long int *plint;
@@ -608,6 +619,7 @@ int glite_lbu_ExecPreparedStmt_v(glite_lbu_Statement stmt, int n, va_list ap) {
 	MYSQL_BIND *binds = NULL;
 	void **data = NULL;
 	unsigned long *lens;
+	glite_lbu_Statement newstmt;
 
 	// gather parameters
 	if (n) {
@@ -666,21 +678,36 @@ int glite_lbu_ExecPreparedStmt_v(glite_lbu_Statement stmt, int n, va_list ap) {
 		binds[i].buffer_type = glite_type_to_mysql[type];
 	}
 
-	// bind parameters
-	if (n)
-		if (db_handle.mysql_stmt_bind_param(stmt->stmt, binds) != 0) {
-			MY_ERRSTMT(stmt);
-			goto failed;
+	prepare_retry = 2;
+	do {
+		// bind parameters
+		if (n) {
+			if (db_handle.mysql_stmt_bind_param(stmt->stmt, binds) != 0) {
+				MY_ERRSTMT(stmt);
+				ret = -1;
+				goto statement_failed;
+			}
 		}
 
-	// run
-	ctx = stmt->ctx;
-	retry = 1;
-	do {
-		db_handle.mysql_stmt_execute(stmt->stmt);
-		ret = MY_ISOKSTMT(stmt, &retry);
-	} while (ret == 0);
-	if (ret == -1) goto failed;
+		// run
+		ctx = stmt->ctx;
+		retry = 1;
+		do {
+			db_handle.mysql_stmt_execute(stmt->stmt);
+			ret = MY_ISOKSTMT(stmt, &retry);
+		} while (ret == 0);
+	statement_failed:
+		if (ret == -1) {
+			if (db_handle.mysql_stmt_errno(stmt->stmt) == ER_UNKNOWN_STMT_HANDLER) {
+				// expired the prepared command ==> restore it
+				if (glite_lbu_PrepareStmt(stmt->ctx, stmt->sql, &newstmt) == -1) goto failed;
+				glite_lbu_FreeStmt_int(stmt);
+				memcpy(stmt, newstmt, sizeof(struct glite_lbu_Statement_s));
+				prepare_retry--;
+				ret = 0;
+			} else goto failed;
+		}
+	} while (ret == 0 && prepare_retry > 0);
 
 	// result
 	retry = 1;

@@ -8,7 +8,11 @@
  *   mysql -u root -p -e 'GRANT ALL on test.* to testuser@localhost'
  *   ./db_test
  *
- * Use CS environment variable when using different user/pwd@machine:dbname.
+ * Then you can launch:
+ *
+ *   ./db_expire
+ *
+ * Use CS environment variable for different user/pwd@machine:dbname.
  */
 
 #include <stdio.h>
@@ -49,12 +53,24 @@ static void print_free_result(const char *name, unsigned long *lens, char **res)
 }
 
 
+static void print_error(glite_lbu_DBContext ctx) {
+	if (ctx) {
+		char *t, *d;
+
+		if (glite_lbu_DBError(ctx, &t, &d)) {
+			printf("Error %s: %s\n", t, d);
+			free(t); free(d);
+		}
+	}
+}
+
+
 int main(int argn, char *argv[]) {
 	char *name, *user;
 	const char *cs;
 	glite_lbu_DBContext ctx;
 	glite_lbu_Statement stmt;
-	int caps, i, nr, c;
+	int caps, nr, c;
 	unsigned long lens[3];
 	char *res[3];
 
@@ -64,25 +80,41 @@ int main(int argn, char *argv[]) {
 
 	// init
 	dprintf(("connecting to %s...\n", cs));
-	if (glite_lbu_InitDBContext(&ctx) != 0) goto fail;
-	if (glite_lbu_DBConnect(ctx, cs) != 0) goto failctx;
-	if ((caps = glite_lbu_DBQueryCaps(ctx)) == -1) goto failcon;
+	if (glite_lbu_InitDBContext(&ctx) != 0) {
+		print_error(ctx);
+		goto failctx;
+	}
+	if (glite_lbu_DBConnect(ctx, cs) != 0) {
+		print_error(ctx);
+		goto failctx;
+	}
+	if ((caps = glite_lbu_DBQueryCaps(ctx)) == -1) {
+		print_error(ctx);
+		goto failcon;
+	}
 	if ((caps & GLITE_LBU_DB_CAP_PREPARED) == 0) {
+		print_error(ctx);
 		dprintf(("can't do prepared commands, exiting."));
 		goto failcon;
 	}
 	// caps
-	glite_lbu_DBSetCaps(ctx, caps);
+	glite_lbu_DBSetCaps(ctx, caps | GLITE_LBU_DB_CAP_ERRORS);
 	dprintf(("capabilities: %d\n", caps));
 
 	user = NULL;
 	dprintf(("preparing '%s'...\n", user));
-	if ((glite_lbu_PrepareStmt(ctx, SELECT_CMD, &stmt)) != 0) goto failcon;
+	if ((glite_lbu_PrepareStmt(ctx, SELECT_CMD, &stmt)) != 0) {
+		print_error(ctx);
+		goto failcon;
+	}
 
 	do {
 		user = "cicomexocitl.civ";
 		dprintf(("executing '%s'...\n", user));
-		if (glite_lbu_ExecPreparedStmt(stmt, 1, GLITE_LBU_DB_TYPE_VARCHAR, user) == -1) goto failstmt;
+		if (glite_lbu_ExecPreparedStmt(stmt, 1, GLITE_LBU_DB_TYPE_VARCHAR, user) == -1) {
+			print_error(ctx);
+			goto failstmt;
+		}
 		dprintf(("fetching '%s'...\n", user));
 		while ((nr = glite_lbu_FetchRow(stmt, 3, lens, res)) > 0) {
 			dprintf(("Result: n=%d, res=%p\n", nr, res));
@@ -110,7 +142,6 @@ failcon:
 	glite_lbu_DBClose(ctx);
 failctx:
 	glite_lbu_FreeDBContext(ctx);
-fail:
 	dprintf(("failed\n"));
 	return 1;
 }
