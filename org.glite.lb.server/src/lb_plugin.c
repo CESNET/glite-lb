@@ -45,6 +45,8 @@ typedef struct _lb_historyStatus {
 	edg_wll_JobStatCode 	state;
 	struct timeval 		timestamp;
 	char 			*reason;
+	char			*destination;
+	int			done_code;
 } lb_historyStatus;
 
 typedef struct _lb_handle {
@@ -276,7 +278,8 @@ static int lb_close(void *fpctx,void *handle) {
 	if (h->fullStatusHistory) {
 		i = 0;
 		while  (h->fullStatusHistory[i]) {
-			if (h->fullStatusHistory[i]->reason) free(h->fullStatusHistory[i]->reason);
+			free(h->fullStatusHistory[i]->reason);
+			free(h->fullStatusHistory[i]->destination);
 			free (h->fullStatusHistory[i]);
 			i++;
 		}
@@ -722,7 +725,9 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 		t = calloc(1, sizeof(*t));
 		i = 0;
 		while (h->fullStatusHistory[i]) {
-			s_str = edg_wll_StatToString(h->fullStatusHistory[i]->state);
+			int	state;
+			
+			s_str = edg_wll_StatToString(state = h->fullStatusHistory[i]->state);
 			for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
 			if (gmtime_r(&h->fullStatusHistory[i]->timestamp.tv_sec,t) != NULL) {
 				/* dateTime format: yyyy-mm-ddThh:mm:ss:uuuuuu */
@@ -732,8 +737,28 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 					h->fullStatusHistory[i]->timestamp.tv_usec);
 			} 
 			if (h->fullStatusHistory[i]->reason) {
-				trio_asprintf(&r_str,"reason=\"%s\" ",h->fullStatusHistory[i]->reason);
+				trio_asprintf(&r_str,"reason=\"%|Xs\" ",h->fullStatusHistory[i]->reason);
 			}
+
+			if (h->fullStatusHistory[i]->destination && 
+				state >= EDG_WLL_JOB_READY && 
+				state <= EDG_WLL_JOB_DONE
+			) {
+				char	*aux;
+				trio_asprintf(&aux,"%s destination=\"%|Xs\"",
+						r_str ? r_str : "",
+						h->fullStatusHistory[i]->destination);
+				r_str = aux;
+			}
+
+			if (state == EDG_WLL_JOB_DONE) {
+				char	*aux;
+				trio_asprintf(&aux,"%s doneCode=\"%d\"",
+						r_str ? r_str : "",
+						h->fullStatusHistory[i]->done_code);
+				r_str = aux;
+			}
+
 			trio_asprintf(&val,"%s\t\t<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
 				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 			if (s_str) free(s_str); s_str = NULL;
@@ -900,6 +925,10 @@ static int lb_status(void *handle) {
 			if ( (js->pub.state == EDG_WLL_JOB_CLEARED) && (nstates > 0) ) {
 				h->finalStatus = h->fullStatusHistory[nstates-1];
 			}
+
+			h->fullStatusHistory[nstates]->destination = check_strdup(js->pub.destination);
+			h->fullStatusHistory[nstates]->done_code = js->pub.done_code;
+
 			old_state = js->pub.state;
 			nstates++;
 		}
