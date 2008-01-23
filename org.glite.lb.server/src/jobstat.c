@@ -131,7 +131,6 @@ int edg_wll_JobStatus(
 		 }
 	      }
 	}
-	free(jobstat.pub.owner);
 
 	intErr = edg_wll_LoadIntState(ctx, job, -1 /*all events*/, &ijsp);
 	if (!intErr) {
