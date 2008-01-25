@@ -1,5 +1,37 @@
 \section{Introduction}
 \TODO{This document should contain:}
 
+\subsection{Service overview}
+
+A~fairly complete overview of the \LB service is given in \LB User's Guide~\cite{lbug}.
+This section is a~brief excerpt only, providing minimal information necessary for
+understanding the rest of this document.
+
+The task of \LB is gathering \emph{\LB events} from various grid middleware components,
+and delivering the events to \LB servers where users can query for them.
+Figure~\ref{f:gather} shows all principal components involved in the event gathering.
+
+\begin{figure}
+\centering
+\includegraphics[width=.67\hsize]{LB-components-gather}
+\caption{Components involved in gathering and transfering \LB events}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=.67\hsize]{LB-components-query}
+\caption{\LB queries and notifications}
+\end{figure}
+
+\TODO{revize vhodnosti textu wrt. include do AG i UG}
+\input components
+
+
 \subsection{Deployment scenarios}
 
+\subsubsection{Standalone \LB server}
+
+\subsubsection{Hybrid \LB server-proxy}
+
+\subsubsection{\LB server on WMS node}
+Highly obsolete and inefficient \dots
