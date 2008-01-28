@@ -34,7 +34,7 @@ int
 cmp_expires(struct server_msg *msg, void *data)
 {
   time_t *t = (time_t*)data;
-  return msg->expires < *t;
+  return (msg->expires > 0) && (msg->expires < *t);
 }
 
 static
