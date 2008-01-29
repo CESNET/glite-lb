@@ -76,7 +76,7 @@ public:
 
 	//@}
 
-	//@ Conversions, assignments
+	//@ Conversions, assignments, comparisons
 	//@{
 
 	/**
@@ -107,6 +107,12 @@ public:
 	 */
 	std::string toString() const;
 
+
+	/**
+	 * Comparison given by lexicographical ordering of string representations.
+	 * @return Result of comparison.
+	 */
+	int operator< (const JobId &j) const;
 	//@}
 
 
@@ -258,6 +264,17 @@ JobId::toString() const
 
 	free(out);
 	return res;
+}
+
+
+inline
+int
+JobId::operator< (const JobId &j) const
+{
+	std::string me(toString());
+	std::string js(j.toString());
+
+	return(me < js);
 }
 
 
