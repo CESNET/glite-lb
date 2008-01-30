@@ -798,7 +798,7 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 	edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
 	event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
 
-	ret = trans_db_store(ctx, NULL, event, pis);
+	ret = db_parent_store(ctx, event, pis);
 
 	edg_wll_FreeEvent(event);
 	free(event);
