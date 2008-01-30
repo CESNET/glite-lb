@@ -32,7 +32,7 @@ static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev
 
 
 int
-db_store(edg_wll_Context ctx,char *ucs, char *event)
+db_store(edg_wll_Context ctx, char *event)
 {
   edg_wll_Event *ev;
   int	seq, reg_to_JP = 0;
@@ -103,9 +103,6 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 	  ev->userTag.name[i] = tolower(ev->userTag.name[i]);
   }
   
-  if(ev->any.user == NULL)
-    ev->any.user = strdup(ucs);
-
   if(use_db) {
     if (ctx->strict_locking && edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
     if(edg_wll_StoreEvent(ctx, ev, event, &seq)) {

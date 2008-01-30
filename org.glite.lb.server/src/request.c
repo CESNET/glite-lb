@@ -33,7 +33,7 @@ handle_il_message(edg_wll_Context ctx,char *buf)
     return EDG_WLL_IL_PROTO;
   }
 
-  ret = db_store(ctx, "NOT USED", event.data);
+  ret = db_store(ctx, event.data);
 
   if(event.data)
     free(event.data);

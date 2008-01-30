@@ -41,11 +41,10 @@ edg_wll_ErrorCode edg_wll_StepIntStateEmbriotic(
         edg_wll_Event *e	/* IN */
 );
 
-int db_store(edg_wll_Context,char *, char *);
+int db_store(edg_wll_Context, char *);
 int db_parent_store(edg_wll_Context, edg_wll_Event *, intJobStat *);
 int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
-int trans_db_store(edg_wll_Context,char *,edg_wll_Event *,intJobStat *);
 int is_job_local(edg_wll_Context, edg_wlc_JobId jobId);
 int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event);
 
