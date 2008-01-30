@@ -108,7 +108,7 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 
   if(use_db) {
     if (ctx->strict_locking && edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
-    if(edg_wll_StoreEvent(ctx, ev,&seq)) {
+    if(edg_wll_StoreEvent(ctx, ev, event, &seq)) {
        edg_wll_UnlockJob(ctx,ev->any.jobId);
        goto err;
     }
@@ -185,7 +185,7 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
   assert(ev->any.user);
 
   if(use_db) {
-    if(edg_wll_StoreEvent(ctx, ev,&seq))
+    if(edg_wll_StoreEvent(ctx, ev, NULL, &seq))
       goto err;
   }
 

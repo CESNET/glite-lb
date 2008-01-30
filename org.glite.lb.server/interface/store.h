@@ -15,6 +15,7 @@ extern "C" {
 int edg_wll_StoreEvent(
 	edg_wll_Context,	/* INOUT */
 	edg_wll_Event *,	/* IN */
+	const char *,		/* IN */
 	int *
 );
 

@@ -84,7 +84,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 			result->to = event->any.arrived.tv_sec;
 		}
 		ctx->event_load = 1;
-		if ( edg_wll_StoreEvent(ctx, event, NULL) )
+		if ( edg_wll_StoreEvent(ctx, event, line, NULL) )
 		{
 			char		*errdesc;
 			int		len = strlen(line),

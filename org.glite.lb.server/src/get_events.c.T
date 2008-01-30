@@ -33,9 +33,24 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 	glite_lbu_Statement	sh;
 	int	ret,t;
 	const char	*tables[] = { "short_fields","long_fields" };
+	edg_wll_Event *f;
 
 	edg_wll_ResetError(ctx);
 
+	trio_asprintf(&q, "select ulm from events_flesh where jobid = '%|Ss' and event = %d", jobid, n);
+	if ((ret=edg_wll_ExecSQL(ctx,q,&sh)) < 0) goto cleanup;
+	if (edg_wll_FetchRow(ctx,sh,1,NULL,&nameval[0]) == 1) {
+		//fprintf(stderr, "got ulm: '%s'\n", nameval[0]);
+		// nasty ;-)
+		edg_wll_ParseEvent(ctx,nameval[0],&f);
+		memcpy(e, f, sizeof *e);
+		free(f);
+		ret=edg_wll_CheckEvent(ctx,e);
+	} else ret = ENOENT;
+	free(q); q = NULL;
+
+	// old way keeped for compatibility/slow migration
+	if (ret != 0) {
 	for (t=0; t<=1; t++) {
 		trio_asprintf(&q,"select name,value from %s "
 				"where jobid = '%|Ss' and event = %d ",
@@ -56,8 +71,8 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 		glite_lbu_FreeStmt(&sh);
 		free(q); q=NULL;
 	}
-
 	ret=edg_wll_CheckEvent(ctx,e);
+	}
 
 cleanup:
 	if (sh) glite_lbu_FreeStmt(&sh);

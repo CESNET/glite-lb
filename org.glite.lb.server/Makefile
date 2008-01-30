@@ -107,6 +107,10 @@ ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE
 endif
 
+ifdef LB_EVENTS_BLOB
+	CFLAGS:=${CFLAGS} -DLB_EVENTS_BLOB
+endif
+
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 

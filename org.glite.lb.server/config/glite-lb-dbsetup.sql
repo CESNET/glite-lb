@@ -41,7 +41,7 @@ create table events (
 	level		int		null,
 
 	arrived		datetime	not null,
-	
+	ulm		mediumblob	not null,   -- testing (1)
 
 	primary key (jobid,event),
 	index (time_stamp),
@@ -49,6 +49,16 @@ create table events (
 	index (arrived)
 ) engine=innodb;
 
+-- testing (2)
+create table events_flesh (
+	jobid		char(32)	binary not null,
+	event		int		not null,
+	ulm		mediumblob	binary not null;
+	
+	primary key (jobid,event),
+) engine=innodb;
+
+-- for compatibility
 create table short_fields (
 	jobid		char(32)	binary not null,
 	event		int		not null,
@@ -58,6 +68,7 @@ create table short_fields (
 	primary key (jobid,event,name)
 ) engine=innodb;
 
+-- for compatibility
 create table long_fields (
 	jobid		char(32)	binary not null,
 	event		int		not null,

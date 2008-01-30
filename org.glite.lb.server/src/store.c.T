@@ -38,7 +38,7 @@ static int store_job(edg_wll_Context,glite_jobid_const_t,const char *, int, int)
 static int store_job_block(edg_wll_Context, glite_jobid_const_t, const char *, glite_lbu_bufInsert *, int, int);
 #endif
 static int store_job_grey(edg_wll_Context,glite_jobid_const_t,time_t);
-static int store_flesh(edg_wll_Context,edg_wll_Event *,char *,int);
+static int store_flesh(edg_wll_Context,edg_wll_Event *,const char *ulm, char *,int);
 static int store_seq(edg_wll_Context,edg_wll_Event *,int);
 static int check_dup(edg_wll_Context,edg_wll_Event *);
 static int check_auth(edg_wll_Context,edg_wll_Event *e); 
@@ -51,7 +51,7 @@ void edg_wll_StoreAnonymous(edg_wll_Context ctx,int anon) {
 	ctx->allowAnonymous = anon;
 }
 
-int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
+int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int *seq)
 {
 	edg_wll_ErrorCode	err = 0;
 	char		*userid = NULL,*jobid,*stmt;
@@ -161,7 +161,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 
 	free(stmt); stmt = NULL;
 	if ((err = store_seq(ctx,e,next)) ||
-		(err = store_flesh(ctx,e,jobid,next))) {
+		(err = store_flesh(ctx,e,ulm,jobid,next))) {
 	/* attempt to cleanup, ignore new errors */
 		char		*desc;
 		edg_wll_ErrorCode	oerr = edg_wll_Error(ctx,NULL,&desc);
@@ -543,7 +543,7 @@ static int store_seq(edg_wll_Context ctx,edg_wll_Event *e,int no)
 
 #define SHORT_LEN	255	/* short_fiels.value db column lenght */
 
-static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
+static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,char *jobid,int no)
 {
 	struct {
 		char	*key;
@@ -554,7 +554,17 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
 	unsigned int	i;
 	int	err = 0;
 
+	assert(ulm || e);
 	edg_wll_ResetError(ctx);
+	if (!ulm) ulm = edg_wll_UnparseEvent(ctx, e);
+	if (!ulm) return edg_wll_Error(ctx, NULL, NULL);
+
+#ifndef LB_EVENTS_BLOB
+	// in both ways if some preparsed flesh fields in events too
+	if (!e) {
+		if (edg_wll_ParseEvent(ctx, (char *)ulm, &e) != 0) return edg_wll_Error(ctx, NULL, NULL);
+	}
+
 	memset(f,0,sizeof(f)); assert(f[0].key == NULL);
 
 	switch (e->type) {
@@ -613,6 +623,11 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
 		free(stmt);
 	}
+#else
+	if (!ulm) ulm = edg_wll_UnparseEvent(ctx, e);
+	trio_asprintf(&stmt, "insert into events_flesh (jobid, event, ulm) values ('%|Ss', %d, '%|Ss')", jobid, no, ulm);
+	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
+#endif
 
 	return err;
 }
@@ -786,7 +801,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 		e2.regJob.jobtype = EDG_WLL_REGJOB_SIMPLE;
 		e2.regJob.jdl = strdup("");
 
-		switch (edg_wll_StoreEvent(ctx,&e2,&seq)) {
+		switch (edg_wll_StoreEvent(ctx,&e2,NULL,&seq)) {
 
 			case 0: break;
 			/* maybe some non-ignorable errors should be handled here */
@@ -1017,6 +1032,12 @@ int edg_wll_delete_event(edg_wll_Context ctx,const char *jobid,int event)
 
 	trio_asprintf(&stmt,
 		"delete from long_fields where jobid='%|Ss' and event=%d",
+		jobid,event);
+	edg_wll_ExecSQL(ctx,stmt,NULL);
+	free(stmt);
+
+	trio_asprintf(&stmt,
+		"delete from events_flesh where jobid='%|Ss' and event=%d",
 		jobid,event);
 	edg_wll_ExecSQL(ctx,stmt,NULL);
 	free(stmt);
