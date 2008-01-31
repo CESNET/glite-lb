@@ -9,6 +9,8 @@
 
 #include <expat.h>
 
+#include <cclassad.h>
+
 #include "glite/jobid/strmd5.h"
 #include "glite/lbu/trio.h"
 
@@ -27,6 +29,7 @@
 #define FL_SEL_TAGS			(1<<1)
 #define FL_SEL_JOB			(1<<2)
 #define FL_FILTER			(1<<3)	// DB query result needs further filtering
+#define FL_SEL_JDL			(1<<4)  // Retrieve classads while filtering
 
 
 static int check_event_query_index(edg_wll_Context,const edg_wll_QueryRec **,const edg_wll_QueryRec **);
@@ -415,8 +418,9 @@ int edg_wll_QueryJobsServer(
 			}
 			
 			// if some condition hits unindexed column or states of matching jobs wanted
+
 			if ((where_flags & FL_FILTER) || !(flags & EDG_WLL_STAT_NO_STATES)) {
-				if ( edg_wll_JobStatus(ctx, jobs_out[i], flags, &states_out[i]) )
+				if ( edg_wll_JobStatus(ctx, jobs_out[i], (where_flags & FL_SEL_JDL)?(flags|EDG_WLL_STAT_CLASSADS):flags, &states_out[i]) )
 				{
 					edg_wlc_JobIdFree(jobs_out[i]);
 					if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
@@ -1118,7 +1122,7 @@ static char *jc_to_head_where(
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 			{
-				*where_flags |= FL_FILTER;
+				*where_flags |= FL_FILTER | FL_SEL_JDL;
 				break;
 			}
 
@@ -1484,11 +1488,27 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *stat, const edg_wll
 				}
 				break;
 			case EDG_WLL_QUERY_ATTR_JDL_ATTR:
-				if ( stat->destination )
-				{
-					if ( !strcmp(conds[i][j].value.c, stat->jdl) ) { // XXX: actually interested in one attribute only.
-						if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
-					} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
+
+			        if (stat->jdl != NULL) {
+			                struct cclassad *ad = NULL;
+					char *extr_val = NULL;
+
+					// Jobs that do not have a JDL come with blabla:
+					if (!strcmp(stat->jdl,"blabla")) break;
+
+				        ad = cclassad_create(stat->jdl);
+			                if (ad) {
+                        			if (!cclassad_evaluate_to_string(ad, conds[i][j].attr_id.tag, &extr_val)) // Extract attribute value
+			                                extr_val = NULL;
+                        			cclassad_delete(ad);
+					}
+					if (extr_val) {
+
+						if ( !strcmp(conds[i][j].value.c, extr_val) ) {
+							if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
+							else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
+						}
+					}
 				}
 				break;
 			case EDG_WLL_QUERY_ATTR_STATEENTERTIME:

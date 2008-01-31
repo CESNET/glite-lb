@@ -188,7 +188,8 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 		${LB_COMMON_LIB} \
 		${LB_UTILS_DB_LIB} \
 		${GSOAP_LIB} \
-		${EXT_LIBS}
+		${EXT_LIBS} \
+		${classadslib}
 else
 	BKSERVER_OBJS:= ${BKSERVER_BASE_OBJS}
 		
@@ -197,7 +198,8 @@ else
 		${LB_COMMON_LIB} \
 		${LB_UTILS_DB_LIB} \
 		-lglite_security_gss_${nothrflavour} \
-		${EXT_LIBS}
+		${EXT_LIBS} \
+		${classadslib}
 endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
@@ -314,7 +316,7 @@ query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o ind
 
 test_query_events: ${query_events_objs}
 	${LINKXX} -o $@ ${query_events_objs} \
-	${TEST_LIBS} ${LB_COMMON_LIB}
+	${TEST_LIBS} ${LB_COMMON_LIB} ${classadslib}
 #	${TEST_LIBS} ${COMMON_LIBS} ${EXT_LIBS}
 
 test.soapconv: test_soap_conv

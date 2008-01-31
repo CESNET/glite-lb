@@ -144,6 +144,8 @@ int edg_wll_CmpColumn(const edg_wll_QueryRec *r1,const edg_wll_QueryRec *r2)
 	switch (r1->attr) {
 		case EDG_WLL_QUERY_ATTR_USERTAG:
 			return strcasecmp(r1->attr_id.tag,r2->attr_id.tag);
+		case EDG_WLL_QUERY_ATTR_JDL_ATTR:
+			return strcasecmp(r1->attr_id.tag,r2->attr_id.tag);
 		case EDG_WLL_QUERY_ATTR_TIME:
 			return r1->attr_id.state != r2->attr_id.state;
 		default:
@@ -352,9 +354,10 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 				glite_lbu_TimeToDB(stat->lastUpdateTime.tv_sec, &data);
 				break;
-			case EDG_WLL_QUERY_ATTR_JDL_ATTR: // XXX: It's not clear how this is supposed to work
+			case EDG_WLL_QUERY_ATTR_JDL_ATTR: // This is not the correct way to handle jdl searches.
+                                /* There's no way to index individual JDL attributes */
 				if (stat->jdl)
-					trio_asprintf(&data, "'%|Ss'", stat->destination);
+					trio_asprintf(&data, "'%|Ss'", stat->jdl);
 				else data = strdup("''");
 				break;
 /*			case EDG_WLL_QUERY_ATTR_STATEENTERTIME: /// XXX: Which way of handling this is correct?

@@ -121,6 +121,11 @@ static void startJobQueryRec(void *data, const char *el, const char **attr)
                                         if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
 				}
+				if ( (i+1) == EDG_WLL_QUERY_ATTR_JDL_ATTR) {
+					if (!attr[0] || !attr[1]) { unexp() break;}
+	                                if (strcmp(attr[0],"name")) { unexp() break;}
+					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
+				} 
 				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr = i+1;
 			}		
 			break;
@@ -633,6 +638,7 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 				case EDG_WLL_QUERY_ATTR_LOCATION:
 				case EDG_WLL_QUERY_ATTR_DESTINATION:
 				case EDG_WLL_QUERY_ATTR_USERTAG:
+				case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.c = 
 						edg_wll_from_string_to_string(XMLCtx);
 					break;
@@ -709,6 +715,7 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 				case EDG_WLL_QUERY_ATTR_HOST:
 				case EDG_WLL_QUERY_ATTR_INSTANCE:
 				case EDG_WLL_QUERY_ATTR_USERTAG:
+				case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 					XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position2].value.c =
 						edg_wll_from_string_to_string(XMLCtx);
 					break;
@@ -1928,6 +1935,11 @@ int edg_wll_IndexedAttrsToXML(
 						"state", NULL);
 
 				if (ctx->job_index[i][j].attr == EDG_WLL_QUERY_ATTR_USERTAG)
+					 edg_wll_add_string_to_XMLBody(&pomA,
+						ctx->job_index[i][j].attr_id.tag,
+						"name", NULL);
+
+				if (ctx->job_index[i][j].attr == EDG_WLL_QUERY_ATTR_JDL_ATTR)
 					 edg_wll_add_string_to_XMLBody(&pomA,
 						ctx->job_index[i][j].attr_id.tag,
 						"name", NULL);

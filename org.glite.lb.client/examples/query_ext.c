@@ -434,8 +434,20 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 	case EDG_WLL_QUERY_ATTR_LOCATION:
 	case EDG_WLL_QUERY_ATTR_DESTINATION:
 	case EDG_WLL_QUERY_ATTR_USERTAG:
+		if ( !(cond->value.c = strdup(tmps)) )
+			return 0;
+		break;
+
 	case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 		if ( !(cond->value.c = strdup(tmps)) )
+			return 0;
+		if ( !(s = get_attr_value(s, tmps, 500)) ) return NULL;
+		if ( tmps[0] == '\0' )
+		{
+			fprintf(stderr,"%s: you need to specify attribute name\n", myname);
+			return NULL;
+		}
+		if ( !(cond->attr_id.tag = strdup(tmps)) )
 			return 0;
 		break;
 

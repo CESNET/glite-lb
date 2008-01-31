@@ -21,13 +21,13 @@ void edg_wll_QueryRecFree(edg_wll_QueryRec *prec)
 	}
 	switch (prec->attr) {
 		case EDG_WLL_QUERY_ATTR_USERTAG:
+		case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 			free(prec->attr_id.tag);
 		case EDG_WLL_QUERY_ATTR_OWNER: 
 		case EDG_WLL_QUERY_ATTR_LOCATION:
 		case EDG_WLL_QUERY_ATTR_DESTINATION:
 		case EDG_WLL_QUERY_ATTR_HOST:
 		case EDG_WLL_QUERY_ATTR_INSTANCE:
-		case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 			if ( prec->value.c ) free(prec->value.c);
 			break;
 		case EDG_WLL_QUERY_ATTR_JOBID:
