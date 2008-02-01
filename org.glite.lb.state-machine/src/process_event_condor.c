@@ -10,8 +10,8 @@
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 
-#include "jobstat.h"
-#include "lock.h"
+#include "intjobstat.h"
+#include "seqcode_aux.h"
 
 /* TBD: share in whole logging or workload */
 #ifdef __GNUC__

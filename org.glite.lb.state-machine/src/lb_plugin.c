@@ -11,15 +11,27 @@
 
 #include <cclassad.h>
 
+#include "glite/lbu/trio.h"
+
+#include "glite/lb/jobstat.h"
+#include "glite/lb/events.h"
+#include "glite/lb/producer.h"
+#include "glite/lb/events_parse.h"
+
+
+#include "intjobstat.h"
+#include "seqcode_aux.h"
+
+/*
 #include "glite/lb/context.h"
 #include "glite/lb/jobstat.h"
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
-#include "glite/lb/trio.h"
 #include "glite/lb/producer.h"
 
 #include "jobstat.h"
 #include "get_events.h"
+*/
 
 #include "glite/jp/types.h"
 #include "glite/jp/context.h"
@@ -29,11 +41,10 @@
 #include "glite/jp/attr.h"
 #include "glite/jp/utils.h"
 #include "glite/jp/known_attr.h"
-#include "jp_job_attrs.h"
+#include "job_attrs.h"
 
 #define INITIAL_NUMBER_EVENTS 100
 #define INITIAL_NUMBER_STATES EDG_WLL_NUMBER_OF_STATCODES
-#define LB_PLUGIN_NAMESPACE "urn:org.glite.lb"
 
 /*typedef struct _lb_buffer_t {
 	char 			*buf;
@@ -57,6 +68,7 @@ typedef struct _lb_handle {
 #define check_strdup(s) ((s) ? strdup(s) : NULL)
 
 extern int processEvent(intJobStat *, edg_wll_Event *, int, int, char **);
+static void edg_wll_SortPEvents(edg_wll_Event **);
 
 static int lb_query(void *fpctx, void *handle, const char *attr, glite_jp_attrval_t **attrval);
 static int lb_open(void *fpctx, void *bhandle, const char *uri, void **handle);
@@ -1008,3 +1020,26 @@ fail:
 	return retval;
 }
 */
+
+
+static int compare_pevents_by_seq(const void *a, const void *b)
+{
+        const edg_wll_Event **e = (const edg_wll_Event **) a;
+        const edg_wll_Event **f = (const edg_wll_Event **) b;
+	return compare_events_by_seq(*e,*f);
+}
+
+
+static void edg_wll_SortPEvents(edg_wll_Event **e)
+{
+	edg_wll_Event **p;
+	int	n;
+
+	if (!e) return;
+	p = e;
+	for (n=0; *p; n++) {
+		p++;
+	}
+	qsort(e,n,sizeof(*e),compare_pevents_by_seq);
+}
+

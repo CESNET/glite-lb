@@ -10,8 +10,10 @@
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 
-#include "jobstat.h"
-#include "lock.h"
+#include "glite/lbu/trio.h"
+
+#include "intjobstat.h"
+#include "seqcode_aux.h"
 
 /* TBD: share in whole logging or workload */
 #ifdef __GNUC__
@@ -21,6 +23,10 @@
 #endif
 
 static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
+int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
+int processEvent_Condor(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
+
+int add_stringlist(char ***lptr, const char *new_item);
 
 int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
@@ -44,7 +50,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 				js->pub.jobtype = EDG_WLL_STAT_CONDOR;
 				break;
 			default:
-				asprintf(errstring,"unknown job type %d in registration",e->regJob.jobtype);
+				trio_asprintf(errstring,"unknown job type %d in registration",e->regJob.jobtype);
 				return RET_FAIL;
 	}
 
@@ -59,7 +65,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			return processEvent_Condor(js,e,ev_seq,strict,errstring);
 		case -1: return RET_UNREG;
 		default: 
-			asprintf(errstring,"undefined job type %d",js->pub.jobtype);
+			trio_asprintf(errstring,"undefined job type %d",js->pub.jobtype);
 			return RET_FAIL;
 	}
 }
@@ -229,7 +235,7 @@ static void reset_branch(intJobStat *js, edg_wll_Event *e)
 static char* location_string(const char *source, const char *host, const char *instance)
 {
 	char *ret;
-	asprintf(&ret, "%s/%s/%s", source, host, instance);
+	trio_asprintf(&ret, "%s/%s/%s", source, host, instance);
 	return ret;
 }
 
@@ -265,7 +271,7 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
 	edg_wll_JobStatCode	old_state = js->pub.state;
-	enum edg_wll_StatDone_code	old_done_code = js->pub.done_code;
+/* unused	enum edg_wll_StatDone_code	old_done_code = js->pub.done_code; */
 	edg_wll_JobStatCode	new_state = EDG_WLL_JOB_UNKNOWN;
 	int			res = RET_OK,
 				fine_res = RET_OK;
@@ -880,7 +886,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			rep(js->last_cancel_seqcode, e->any.seqcode);
 		} else {
 
-/* the first set of LM events (Accept, Transfer/* -> LRMS)
+/* the first set of LM events (Accept, Transfer/XX -> LRMS)
    should not should shift the state (to Ready, Scheduled) but NOT to
    update js->last_seqcode completely, in order not to block following
    LRMS events which are likely to arrive later but should still affect
@@ -905,7 +911,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			js->pub.network_server == NULL) {
 			char *inst;
 			inst = e->any.src_instance;
-			asprintf(&js->pub.network_server, "%s%s%s",
+			trio_asprintf(&js->pub.network_server, "%s%s%s",
 				e->any.host,
 				inst != NULL ? ":" : " ",
 				inst != NULL ? inst : "");
@@ -957,3 +963,15 @@ void destroy_intJobStat(intJobStat *p)
 	destroy_intJobStat_extension(p);
 	memset(p, 0, sizeof(intJobStat));
 }
+
+void init_intJobStat(intJobStat *p)
+{
+	memset(p, 0, sizeof(intJobStat));
+	p->pub.jobtype = -1 /* why? EDG_WLL_STAT_SIMPLE */;
+	p->pub.children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
+	p->pub.children_hist[0] = EDG_WLL_NUMBER_OF_STATCODES;
+	p->pub.stateEnterTimes = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
+	p->pub.stateEnterTimes[0] = EDG_WLL_NUMBER_OF_STATCODES;
+	/* TBD: generate */
+}
+

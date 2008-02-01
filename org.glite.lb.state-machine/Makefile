@@ -10,6 +10,8 @@ PREFIX=/opt/glite
 
 -include Makefile.inc
 
+VPATH = ../src:../interface
+
 default all: compile
 
 CC=gcc
@@ -22,6 +24,7 @@ DEBUG:=-g -O0 -Wall
 
 CFLAGS:= \
 	${DEBUG} \
+	-I${classads_prefix}/include \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface 
 
@@ -38,21 +41,41 @@ COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_secur
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
 	${classadslib} -lstdc++ ${expatlib} -lexpat\
 
-PLUGIN_LOBJS:=
-MACHINE_BASE_OBJS:=
+PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo lb_plugin.lo
+MACHINE_OBJS:=seqcode_aux.o process_event.o process_event_pbs.o process_event_condor.o
+
+PLUGIN_LIB=glite_lb_plugin.la
+MACHINE_LIB=libglite_lb_statemachine.a
 
 default all: compile
 
-compile: 
+compile: ${PLUGIN_LIB} ${MACHINE_LIB}
+
+${PLUGIN_LIB}: ${PLUGIN_LOBJS}
+	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
+
+${MACHINE_LIB}:  ${MACHINE_OBJS}
+	ar crv $@ ${MACHINE_OBJS}
+	-ranlib $@
+
 
 doc:
 
 stage: compile
-	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
+	$(MAKE) install PREFIX=${stagedir}
 
 install:
+	-mkdir -p ${PREFIX}/lib ${PREFIX}/interface ${PREFIX}/include/glite/lb
+	install -m 644 ${MACHINE_LIB} ${PREFIX}/lib 
+	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib
+	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${PREFIX}/interface
+	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${PREFIX}/interface
+	install -m 644 ${top_srcdir}/interface/intjobstat.h ${PREFIX}/include/glite/lb
+
 
 clean:
+	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB}
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.c: %.c.T
 	rm -f $@
@@ -70,6 +93,9 @@ clean:
 %.lo: %.c
 	${COMPILE} -o $@ -c $<
 
-lb_plugin.lo: lb_plugin.c jp_job_attrs.h
+lb_plugin.lo: lb_plugin.c job_attrs.h
 	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<
+
+job_attrs.h: lb-job-attrs.xsd job_attrs.xsl
+	${XSLTPROC} ../src/job_attrs.xsl $< >$@
 

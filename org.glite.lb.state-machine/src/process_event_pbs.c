@@ -10,8 +10,10 @@
 #include "glite/lb/producer.h"
 #include "glite/lb/context-int.h"
 
-#include "jobstat.h"
-#include "lock.h"
+#include "glite/lbu/trio.h"
+
+#include "intjobstat.h"
+#include "seqcode_aux.h"
 
 /* TBD: share in whole logging or workload */
 #ifdef __GNUC__
@@ -165,7 +167,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			if (USABLE_DATA(res)) {
 				char *new_resource_usage;
 	
-				asprintf(&new_resource_usage,"%s%s\t%s = %f [%s]",
+				trio_asprintf(&new_resource_usage,"%s%s\t%s = %f [%s]",
 					(js->pub.pbs_resource_usage) ? js->pub.pbs_resource_usage : "",
 					(js->pub.pbs_resource_usage) ? "\n": "",
 					e->PBSResourceUsage.name,
@@ -185,7 +187,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			if (USABLE_DATA(res)) {
 				char *new_error_desc;
 
-				asprintf(&new_error_desc,"%s%s\t%s",
+				trio_asprintf(&new_error_desc,"%s%s\t%s",
 					(js->pub.pbs_error_desc) ? js->pub.pbs_error_desc : "",
 					(js->pub.pbs_error_desc) ? "\n" : "",
 					e->PBSError.error_desc);
