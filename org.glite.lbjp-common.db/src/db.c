@@ -493,6 +493,10 @@ int glite_lbu_ExecSQL(glite_lbu_DBContext ctx, const char *cmd, glite_lbu_Statem
 					if (retry_nr <= 0) 
 						do_reconnect = 1;
 					break;
+				case ER_LOCK_DEADLOCK:
+					ERR(ctx, EDEADLOCK, db_handle.mysql_error(ctx->mysql));
+					return -1;
+					break;	
 				default:
 					MY_ERR(ctx);
 					return -1;
