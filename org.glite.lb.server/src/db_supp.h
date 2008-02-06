@@ -22,5 +22,6 @@ int edg_wll_bufferedInsertClose(edg_wll_Context ctx, glite_lbu_bufInsert bi);
 int edg_wll_Transaction(edg_wll_Context ctx);
 int edg_wll_Commit(edg_wll_Context ctx);
 int edg_wll_Rollback(edg_wll_Context ctx);
+int edg_wll_TransNeedRetry(edg_wll_Context ctx);
 
 #endif

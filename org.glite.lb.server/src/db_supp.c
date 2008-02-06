@@ -78,3 +78,9 @@ int edg_wll_Rollback(edg_wll_Context ctx) {
 	if ((retval = glite_lbu_Rollback(ctx->dbctx)) != 0) edg_wll_SetErrorDB(ctx);
 	return retval;
 }
+
+int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
+	// XXX: needs flesh
+}
+
+
