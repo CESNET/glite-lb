@@ -435,7 +435,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
 // FIXME: edg_wll_UserJobs should take flags as parameter
-			switch (edg_wll_UserJobs(ctx,&jobsOut,NULL)) {
+			switch (edg_wll_UserJobsServer(ctx,&jobsOut,NULL)) {
 				case 0: if (html) edg_wll_UserJobsToHTML(ctx, jobsOut, &message);
 					else ret = HTTP_OK;
 					break;

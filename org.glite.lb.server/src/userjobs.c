@@ -13,7 +13,7 @@
 #include "jobstat.h"
 #include "db_supp.h"
 
-int edg_wll_UserJobs(
+int edg_wll_UserJobsServer(
 	edg_wll_Context ctx,
 	edg_wlc_JobId	**jobs,
 	edg_wll_JobStat	**states)
