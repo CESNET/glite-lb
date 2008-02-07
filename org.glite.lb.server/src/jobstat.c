@@ -66,7 +66,7 @@ static char* matched_substr(char *in, regmatch_t match)
 }
 
 
-int edg_wll_JobStatus(
+int edg_wll_JobStatusServer(
 	edg_wll_Context	ctx,
 	glite_jobid_const_t		job,
 	int		flags,

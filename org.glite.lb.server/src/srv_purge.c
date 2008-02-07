@@ -297,7 +297,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 				}
 
 				memset(&stat,0,sizeof stat);
-				if (edg_wll_JobStatus(ctx,job,0,&stat)) {  /* FIXME: replace by intJobStatus ?? */
+				if (edg_wll_JobStatusServer(ctx,job,0,&stat)) {  /* FIXME: replace by intJobStatus ?? */
 					edg_wll_FreeStatus(&stat);
 					goto abort; 
 				}

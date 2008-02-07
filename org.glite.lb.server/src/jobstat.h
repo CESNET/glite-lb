@@ -94,7 +94,7 @@ typedef enum _subjobClassCodes {
 	SUBJOB_CLASS_REST
 } subjobClassCodes;
 
-int edg_wll_JobStatus(edg_wll_Context, glite_jobid_const_t, int, edg_wll_JobStat *);
+int edg_wll_JobStatusServer(edg_wll_Context, glite_jobid_const_t, int, edg_wll_JobStat *);
 
 void destroy_intJobStat(intJobStat *);
 void destroy_intJobStat_extension(intJobStat *p);

@@ -186,7 +186,7 @@ int edg_wll_QueryEventsServer(
 					
 					if (j_old) edg_wll_FreeStatus(&state_out);
 
-					if ( edg_wll_JobStatus(ctx, out[i].any.jobId, 0, &state_out) )
+					if ( edg_wll_JobStatusServer(ctx, out[i].any.jobId, 0, &state_out) )
 					{
 						edg_wll_FreeEvent(out+i);
 						if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
@@ -416,7 +416,7 @@ int edg_wll_QueryJobsServer(
 			
 			// if some condition hits unindexed column or states of matching jobs wanted
 			if ((where_flags & FL_FILTER) || !(flags & EDG_WLL_STAT_NO_STATES)) {
-				if ( edg_wll_JobStatus(ctx, jobs_out[i], flags, &states_out[i]) )
+				if ( edg_wll_JobStatusServer(ctx, jobs_out[i], flags, &states_out[i]) )
 				{
 					edg_wlc_JobIdFree(jobs_out[i]);
 					if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;

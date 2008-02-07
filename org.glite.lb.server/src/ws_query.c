@@ -79,7 +79,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 		free(cflags);
 	}
 
-	if ( edg_wll_JobStatus(ctx, j, flags, &s) )
+	if ( edg_wll_JobStatusServer(ctx, j, flags, &s) )
 	{
 		edg_wll_ErrToFault(ctx, soap);
 		return SOAP_FAULT;

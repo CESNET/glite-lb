@@ -72,7 +72,7 @@ int edg_wll_UserJobsServer(
 
 	*states = calloc(njobs, sizeof(**states));
 	for (i = 0; i < njobs; i++) {
-		if (edg_wll_JobStatus(ctx, out[i], -1, &(*states)[i]) != 0) {
+		if (edg_wll_JobStatusServer(ctx, out[i], -1, &(*states)[i]) != 0) {
 			for (j = 0; j < i; j++) edg_wll_FreeStatus(&(*states)[j]);
 			*states = NULL;
 			break;

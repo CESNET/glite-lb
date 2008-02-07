@@ -138,7 +138,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 				{
 					edg_wll_JobStat st;
 
-					edg_wll_JobStatus(ctx, jobid, 0, &st);
+					edg_wll_JobStatusServer(ctx, jobid, 0, &st);
 					edg_wll_FreeStatus(&st);
 
 					edg_wlc_JobIdFree(jobid);
@@ -160,7 +160,7 @@ cycle_clean:
 	{
 		edg_wll_JobStat st;
 
-		edg_wll_JobStatus(ctx, jobid, 0, &st);
+		edg_wll_JobStatusServer(ctx, jobid, 0, &st);
 		edg_wll_FreeStatus(&st);
 		edg_wlc_JobIdFree(jobid);
 	}
