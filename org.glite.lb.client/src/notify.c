@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sysexits.h>
 
 #include "glite/security/glite_gss.h"
 #include "glite/lb/context.h"
@@ -28,45 +30,44 @@ static void usage(char *cmd)
 {
 	if ( !cmd )
 	{
-		printf("usage: %s command [options]\n"
+		fprintf(stderr,"usage: %s command [options]\n"
 			"  where commands are:\n"
 			"    new         Create new notification reg.\n"
 			"    bind        Binds an notification reg. to a client.\n"
-			"    change      Changes notification reg. params.\n"
+/* UNIMPL		"    change      Changes notification reg. params.\n"
+ */
 			"    refresh     Enlarge notification reg. validity.\n"
 			"    receive     Binds to an existing notif. registration and listen to server.\n"
-			"    test        Creates new notif., waits for events and drops notif. after timeout.\n"
 			"    drop        Drop the notification reg.\n"
 			"    help        Prints this message\n",
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		printf("\n'new' command usage: %s new {-j jobid | -o owner | -n network_server}\n"
+		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } ] {-j jobid | -o owner | -n network_server}\n"
 			"    jobid      job ID to connect notif. reg. with\n"
 			"    owner	match this owner DN\n"
-			"    network_server	match only this networ server (WMS entry point)\n"
+			"    network_server	match only this networ server (WMS entry point)\n\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
-		printf("\n'bind' command usage: %s bind notifid [fake_addr]\n"
+		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } ] notifid\n"
 			"    notifid     Notification ID\n"
 			"    fake_addr   Fake the client address\n", me);
+/* UNIMPL 
 	if ( !cmd || !strcmp(cmd, "change") )
-		printf("\n'change' command usage: %s change notifid jobid\n"
+		fprintf(stderr,"\n'change' command usage: %s change notifid jobid\n"
 			"    notifid     Notification ID.\n"
 			"    jobid       Job ID to connect notif. reg. with.\n", me);
+*/
 	if ( !cmd || !strcmp(cmd, "refresh") )
-		printf("\n'refresh' command usage: %s refresh notifid\n"
+		fprintf(stderr,"\n'refresh' command usage: %s refresh notifid\n"
 			"    notifid     Notification ID.\n", me);
 	if ( !cmd || !strcmp(cmd, "receive") )
-		printf("\n'receive' command usage: %s receive notifid [-a fake_addr] [-t timeout]\n"
-			"    notifid     Notification ID.\n"
+		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t timeout] [notifid]\n"
+			"    notifid     Notification ID (not used if -s specified).\n"
 			"    fake_addr   Fake the client address.\n"
 			"    timeout     Timeout to receive operation in seconds.\n", me);
-	if ( !cmd || !strcmp(cmd, "test") )
-		printf("\n'test' command usage: %s test jobid\n"
-			"    jobid       job ID to connect notif. reg. with\n", me);
 	if ( !cmd || !strcmp(cmd, "drop") )
-		printf("\n'drop' command usage: %s drop notifid\n"
+		fprintf(stderr,"\n'drop' command usage: %s drop notifid\n"
 			"    notifid     Notification to remove.\n", me);
 }
 
@@ -77,8 +78,11 @@ int main(int argc,char **argv)
 	time_t				valid;
 	char			   *errt, *errd;
 	struct timeval		tout = {220, 0};
-		
 
+	int	sock = -1;
+	char	*fake_addr = NULL;
+		
+//	sleep(20);
 
 	me = argv[0];
 	edg_wll_InitContext(&ctx);
@@ -92,67 +96,6 @@ int main(int argc,char **argv)
 	{
 		usage(NULL); goto cleanup;
 	}
-	else if ( !strcmp(argv[1], "test") ) {
-		edg_wll_NotifId		nid = NULL;
-		edg_wlc_JobId		jid = NULL;
-		edg_wll_JobStat		stat;
-
-		if ( (argc < 3) || edg_wlc_JobIdParse(argv[2], &jid) ) {
-			printf("Job ID parameter not set propperly!\n");
-			usage("new");
-			goto cleanup;
-		}
-
-		memset(&stat, 0, sizeof(stat));
-
-		conditions = (edg_wll_QueryRec **)calloc(2,sizeof(edg_wll_QueryRec *));
-		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
-	
-		conditions[0][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
-		conditions[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-		conditions[0][0].value.j = jid;
-
-		
-		if ( edg_wll_NotifNew(ctx,
-					(edg_wll_QueryRec const* const*)conditions,
-					-1, NULL,
-					&nid, &valid)) goto err;
-			
-		printf("notification ID: %s\nvalid: %s (%ld)\n",
-				edg_wll_NotifIdUnparse(nid),
-				TimeToStr(valid),
-				valid);
-
-		do {
-			edg_wll_NotifId		recv_nid = NULL;
-
-			printf("waiting...\n");
-			if ( edg_wll_NotifReceive(ctx, -1, &tout, &stat, &recv_nid) ) {
-				edg_wll_NotifIdFree(recv_nid);
-				printf("timeout\n");
-				break;
-			}
-			
-			printf("Notification received:\n");
-			printf("  - notification ID: %s\n", edg_wll_NotifIdUnparse(recv_nid));
-			printf("  - job ID: %s\n", edg_wlc_JobIdUnparse(stat.jobId));
-			
-			if (stat.state != EDG_WLL_JOB_UNDEF) {
-				printf("  - job status is: %s\n\n", edg_wll_StatToString(stat.state));
-				edg_wll_FreeStatus(&stat);
-				stat.state = EDG_WLL_JOB_UNDEF;
-			}
-			if (recv_nid) { edg_wll_NotifIdFree(recv_nid); recv_nid = NULL; }
-		} while (1); // till timeout....
-err:		
-		if (nid) {
-			edg_wll_NotifDrop(ctx, nid);
-			edg_wll_NotifIdFree(nid);
-			edg_wll_NotifCloseFd(ctx);
-		}
-		if (stat.state != EDG_WLL_JOB_UNDEF) edg_wll_FreeStatus(&stat);
-		if (jid) edg_wlc_JobIdFree(jid);
-	}
 	else if ( !strcmp(argv[1], "new") )
 	{
 		int	c;
@@ -161,24 +104,31 @@ err:
 		char	*arg = NULL;
 		int	attr = 0;
 
-		while ((c = getopt(argc-1,argv+1,"j:o:n:")) > 0) switch (c) {
+		while ((c = getopt(argc-1,argv+1,"j:o:n:s:a:")) > 0) switch (c) {
 			case 'j':
-				if (arg) { usage("new"); return 0; }
+				if (arg) { usage("new"); return EX_USAGE; }
 				attr = EDG_WLL_QUERY_ATTR_JOBID;
 				arg = optarg; break;
 			case 'o':
-				if (arg) { usage("new"); return 0; }
+				if (arg) { usage("new"); return EX_USAGE; }
 				attr = EDG_WLL_QUERY_ATTR_OWNER;
 				arg = optarg; break;
 			case 'n':
-				if (arg) { usage("new"); return 0; }
+				if (arg) { usage("new"); return EX_USAGE; }
 				attr= EDG_WLL_QUERY_ATTR_NETWORK_SERVER; 
 				arg = optarg; break;
-			default: usage("new"); goto cleanup;
+			case 's':
+				if (fake_addr) { usage("new"); return EX_USAGE; }
+				sock = atoi(optarg); break;
+			case 'a':
+				if (sock >= 0) { usage("new"); return EX_USAGE; }
+				fake_addr = optarg; break;
+			default:
+				usage("new"); return EX_USAGE;
 		}
 
 		if ( attr == EDG_WLL_QUERY_ATTR_JOBID && edg_wlc_JobIdParse(arg, &jid) ) {
-			printf("Job ID parameter not set propperly!\n");
+			fprintf(stderr,"Job ID parameter not set propperly!\n");
 			usage("new");
 			goto cleanup;
 		}
@@ -193,8 +143,8 @@ err:
 
 		if ( !edg_wll_NotifNew(ctx,
 					(edg_wll_QueryRec const* const*)conditions,
-					-1, NULL, &id_out, &valid))
-			printf("notification ID: %s\nvalid: %s (%ld)\n",
+					sock, fake_addr, &id_out, &valid))
+			fprintf(stderr,"notification ID: %s\nvalid: %s (%ld)\n",
 					edg_wll_NotifIdUnparse(id_out),
 					TimeToStr(valid),
 					valid);
@@ -204,14 +154,26 @@ err:
 	else if ( !strcmp(argv[1], "bind") )
 	{
 		edg_wll_NotifId		nid;
+		int			c;
 
-		if ( (argc < 3) || edg_wll_NotifIdParse(argv[2], &nid) )
-		{
-			printf("Notification ID parameter not set propperly!\n");
-			usage("bind");
-			return 1;
+		while ((c = getopt(argc-1,argv+1,"s:a:")) > 0) switch (c) {
+			case 's':
+				if (fake_addr) { usage("bind"); return EX_USAGE; }
+				sock = atoi(optarg); break;
+			case 'a':
+				if (sock >= 0) { usage("bind"); return EX_USAGE; }
+				fake_addr = optarg; break;
+			default:
+				usage("bind"); return EX_USAGE;
 		}
-		if ( !edg_wll_NotifBind(ctx, nid, -1, (argc<4)? NULL: argv[3], &valid) )
+
+		if ( (optind+1 == argc) || edg_wll_NotifIdParse(argv[optind+1], &nid) )
+		{
+			fprintf(stderr,"Notification ID parameter not set propperly!\n\n");
+			usage("bind");
+			return EX_USAGE;
+		}
+		if ( !edg_wll_NotifBind(ctx, nid, sock, (argc<4)? NULL: argv[3], &valid) )
 			printf("valid until: %s (%ld)\n", TimeToStr(valid), valid);
 		edg_wll_NotifIdFree(nid);
 	}
@@ -219,59 +181,46 @@ err:
 	{
 		edg_wll_JobStat		stat;
 		edg_wll_NotifId		nid = NULL;
-		char			   *addr = NULL;
-		int					i;
+		int			c;
 
-		if ( (argc < 3) || edg_wll_NotifIdParse(argv[2], &nid) )
-		{
-			printf("Notification ID parameter not set propperly!\n");
-			usage("receive");
-			return 1;
+		while ((c = getopt(argc-1,argv+1,"s:a:t:")) > 0) switch (c) {
+			case 's':
+				if (fake_addr) { usage("receive"); return EX_USAGE; }
+				sock = atoi(optarg); break;
+			case 'a':
+				if (sock >= 0) { usage("receive"); return EX_USAGE; }
+				fake_addr = optarg; break;
+			case 't':
+				tout.tv_sec = atoi(optarg); break;
+			default:
+				usage("receive"); return EX_USAGE;
 		}
 
-		for ( i = 3; i < argc; i++ )
-		{
-			if ( !strcmp(argv[i], "-t") )
-			{
-				if ( argc < i+1 )
-				{
-					printf("Timeout value not set\n");
-					usage("receive");
-					return 1;
-				}
-				tout.tv_sec = atoi(argv[++i]);
-			}
-			else if ( !strcmp(argv[i], "-a") )
-			{
-				if ( argc < i+1 )
-				{
-					printf("Address value not set\n");
-					usage("receive");
-					return 1;
-				}
-				addr = strdup(argv[++i]);
-			}
-			else
-			{
-				printf("unrecognized option: %s\n", argv[i]);
-				usage("receive");
-				return 1;
-			}
-		}
 
 		memset(&stat,0,sizeof stat);
 
-		if ( edg_wll_NotifBind(ctx, nid, -1, addr, &valid) )
-			goto receive_err;
+		if (sock == -1) {
+			if ( (optind+1 == argc) || edg_wll_NotifIdParse(argv[optind+1], &nid) )
+			{
+				fprintf(stderr, "Notification ID parameter not set propperly!\n\n");
+				usage("receive");
+				return EX_USAGE;
+			}
 
-		printf("notification is valid until: %s (%ld)\n", TimeToStr(valid), valid);
+			if (edg_wll_NotifBind(ctx, nid, -1, fake_addr, &valid) )
+				goto receive_err;
+			fprintf(stderr,"notification is valid until: %s (%ld)\n", TimeToStr(valid), valid);
+		}
 
 		do {
 			edg_wll_NotifId		recv_nid = NULL;
+			int	err;
 			
-			if ( edg_wll_NotifReceive(ctx, -1, &tout, &stat, &recv_nid) ) {
+			if ( (err = edg_wll_NotifReceive(ctx, sock, &tout, &stat, &recv_nid)) ) {
 				edg_wll_NotifIdFree(recv_nid);
-				break;
+
+				if (err == EAGAIN) return 0;
+				else goto receive_err;
 			}
 			
 			printf("\nnotification ID: %s\n", edg_wll_NotifIdUnparse(recv_nid));
@@ -293,13 +242,16 @@ err:
 				recv_nid = NULL;
 			}
 		} while (1); // till timeout....
+		return 0;
 
 receive_err:		
-		if (addr) free(addr);
+		if (fake_addr) free(fake_addr);
 		if (stat.state != EDG_WLL_JOB_UNDEF) edg_wll_FreeStatus(&stat);
 		if (nid) edg_wll_NotifIdFree(nid);
 		edg_wll_NotifCloseFd(ctx);
+		return EX_IOERR;
 	}
+/* UNIMPL
 	else if ( !strcmp(argv[1], "change") )
 	{
 		edg_wlc_JobId		jid;
@@ -340,15 +292,16 @@ receive_err:
 		edg_wlc_JobIdFree(jid);
 		edg_wll_NotifIdFree(nid);
 	}
+*/
 	else if ( !strcmp(argv[1], "refresh") )
 	{
 		edg_wll_NotifId		nid;
 
 		if ( (argc < 3) || edg_wll_NotifIdParse(argv[2], &nid) )
 		{
-			printf("Notification ID parameter not set propperly!\n");
-			usage("bind");
-			return 1;
+			fprintf(stderr,"Notification ID parameter not set propperly!\n");
+			usage("refresh");
+			return EX_USAGE;
 		}
 		if ( !edg_wll_NotifRefresh(ctx, nid, &valid) )
 			printf("valid until: %s (%ld)\n", TimeToStr(valid), valid);
@@ -360,16 +313,17 @@ receive_err:
 
 		if ( (argc < 3) || edg_wll_NotifIdParse(argv[2], &nid) )
 		{
-			printf("Notification ID parameter not set propperly!\n");
-			usage("bind");
-			return 1;
+			fprintf(stderr,"Notification ID parameter not set propperly!\n");
+			usage("drop");
+			return EX_USAGE;
 		}
 		edg_wll_NotifDrop(ctx, nid);
 		edg_wll_NotifIdFree(nid);
 	}
-	else
-		printf("bad acction\n");
-	
+	else {
+		usage(NULL);
+		return EX_USAGE;
+	}
 	
 cleanup:
 	

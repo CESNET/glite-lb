@@ -146,7 +146,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=${LB_PERF_TOOLS}
-EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c notify.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c
+EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c
 EXAMPLES:=${EXAMPLES_SRC:.c=}
 
 # TODO: migrate them here from branch_RC31_3
@@ -219,6 +219,9 @@ ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
+
+notify: notify.o
+	${LINK} -o $@ notify.o ${LIB} ${EXT_LIB} 
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
@@ -314,7 +317,9 @@ producer_test.o: %.o: %.cpp
 
 man: ${MAN_GZ} ${MAN8_GZ}
 
-stage:  compile ${FAKELIB} ${FAKETHRLIB} 
+# XXX is fake needed?
+# stage:  compile ${FAKELIB} ${FAKETHRLIB} 
+stage:  compile
 	$(MAKE) install PREFIX=${stagedir}
 	${INSTALL} -m 644 ${FAKELIB} ${FAKETHRLIB} ${stagedir}/lib
 
@@ -350,7 +355,7 @@ ifndef LB_STANDALONE
 	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
 #       cp -r ${top_srcdir}/doc/api/{Makefile,api.tex,fig} ${PREFIX}/share/doc/${package}-${version}/api
 endif
-	for p in logevent; do \
+	for p in logevent notify; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 	for p in ${TOOLS} ; do \
@@ -366,6 +371,7 @@ endif
 	${INSTALL} -m 644 ${top_srcdir}/examples/Makefile "${PREFIX}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${PREFIX}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${PREFIX}/sbin/glite-lb-export.sh"
+	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${PREFIX}/examples/glite-lb-notify.pl
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
 
