@@ -9,11 +9,11 @@
 #include "glite/lb/context-int.h"
 
 #include "db_calls.h"
-# include "db_supp.h"
+#include "db_supp.h"
 
 /** Returns bitmask of job membership in common server/proxy database 
  */
-int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job)
+int edg_wll_jobMembership(edg_wll_Context ctx, glite_jobid_const_t job)
 {
         char            *dbjob;
         char            *stmt = NULL;
@@ -25,7 +25,7 @@ int edg_wll_jobMembership(edg_wll_Context ctx, edg_wlc_JobId job)
 
         dbjob = edg_wlc_JobIdGetUnique(job);
 
-        trio_asprintf(&stmt,"select proxy,server from jobs where jobid = '%|Ss'",dbjob);
+        trio_asprintf(&stmt,"select proxy,server from jobs where jobid = '%|Ss' for update",dbjob);
         ret = edg_wll_ExecSQL(ctx,stmt,&q);
         if (ret <= 0) {
                 if (ret == 0) {
@@ -53,3 +53,38 @@ clean:
         free(stmt);
         return(result);
 }
+
+
+/* just lock one row corresponding to job in table jobs
+ * lock_mode: 0 = in share mode / 1 = for update
+ */
+int edg_wll_LockJobRow(edg_wll_Context ctx, glite_jobid_const_t job, int lock_mode) 
+{
+	char			*jobid_md5 = NULL;
+	char			*stmt = NULL;
+	glite_lbu_Statement 	sh;
+	int			nr;
+
+
+	edg_wll_ResetError(ctx);
+	jobid_md5 = edg_wlc_JobIdGetUnique(job);
+
+	if (lock_mode) 
+		trio_asprintf(&stmt, "select count(*) from jobs where jobid='%|Ss' for update", jobid_md5);
+	else
+		trio_asprintf(&stmt, "select count(*) from jobs where jobid='%|Ss' in share mode", jobid_md5);
+
+	if ((nr = edg_wll_ExecSQL(ctx,stmt,&sh)) < 0) goto cleanup;
+	if (nr == 0) {
+                edg_wll_SetError(ctx,ENOENT,"no state in DB");
+                goto cleanup;
+	}
+	
+cleanup:
+	if (sh) glite_lbu_FreeStmt(&sh);
+	free(stmt); stmt = NULL;
+	free(jobid_md5);
+
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+

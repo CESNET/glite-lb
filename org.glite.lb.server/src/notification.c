@@ -107,48 +107,45 @@ int edg_wll_NotifNewServer(
 			trio_asprintf(&addr_s, "%s:%s", ctx->connections->serverConnection->peerName, aux+1);
 	}
 
-	/*	Format DB insert statement
-	 */
-	trio_asprintf(&q,
-				"insert into notif_registrations(notifid,destination,valid,userid,conditions) "
-				"values ('%|Ss','%|Ss',%s,'%|Ss', '<and>%|Ss</and>')",
-				nid_s, addr_s? addr_s: address_override, time_s, owner, xml_conds);
+	do {
+		if (edg_wll_Transaction(ctx) != 0) goto cleanup;
 
-	if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
-		goto cleanup;
-
-	if (get_indexed_cols(ctx,nid_s,nconds,&add_index) ||
-		(add_index && edg_wll_ExecSQL(ctx,add_index,NULL) < 0)
-	) goto cleanup;
-
-
-	if (jobs) for ( i = 0; jobs[i]; i++ )
-	{
-		free(q);
+		/*	Format DB insert statement
+		 */
 		trio_asprintf(&q,
-				"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
-				nid_s, jobs[i]);
+					"insert into notif_registrations(notifid,destination,valid,userid,conditions) "
+					"values ('%|Ss','%|Ss',%s,'%|Ss', '<and>%|Ss</and>')",
+					nid_s, addr_s? addr_s: address_override, time_s, owner, xml_conds);
+
 		if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
+			goto rollback;
+
+		if (get_indexed_cols(ctx,nid_s,nconds,&add_index) ||
+			(add_index && edg_wll_ExecSQL(ctx,add_index,NULL) < 0)
+		) goto rollback;
+
+
+		if (jobs) for ( i = 0; jobs[i]; i++ )
 		{
-			/*	XXX: Remove uncoplete registration?
-			 *		 Which error has to be returned?
-			 */
 			free(q);
-			trio_asprintf(&q, "delete from notif_jobs where notifid='%|Ss'", nid_s);
-			edg_wll_ExecSQL(ctx, q, NULL);
-			free(q);
-			trio_asprintf(&q, "delete from notif_registrations where notifid='%|Ss'", nid_s);
-			edg_wll_ExecSQL(ctx, q, NULL);
-			goto cleanup;
+			trio_asprintf(&q,
+					"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
+					nid_s, jobs[i]);
+			if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
+				goto rollback;
 		}
-	}
-	else {
-		trio_asprintf(&q,"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
-				nid_s,NOTIF_ALL_JOBS);
-		if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 ) goto cleanup;
+		else {
+			trio_asprintf(&q,"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
+					nid_s,NOTIF_ALL_JOBS);
+			if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 ) goto rollback;
 
-	}
+		}
 
+rollback:
+		free(q); q= NULL;
+		free(add_index); add_index = NULL;
+
+	} while (edg_wll_TransNeedRetry(ctx));
 
 cleanup:
 	if ( q ) free(q);
@@ -176,57 +173,63 @@ int edg_wll_NotifBindServer(
 	const char					   *address_override,
 	time_t						   *valid)
 {
-	char	   *time_s = NULL,
-			   *addr_s = NULL;
+	char	*time_s = NULL,
+		*addr_s = NULL;
 
 
 	if ( !address_override )
 	{
 		edg_wll_SetError(ctx, EINVAL, "Address parameter not given");
-		goto cleanup;
+		goto err;
 	}
+	
+	do {
+		if (edg_wll_Transaction(ctx) != 0) goto err;
 
-	if ( check_notif_request(ctx, nid, NULL) )
-		goto cleanup;
+		if ( check_notif_request(ctx, nid, NULL) )
+			goto rollback;
 
-	/*	Format time of validity
-	 */
-	*valid = time(NULL);
-	if (   ctx->peerProxyValidity
-		&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
-		*valid = ctx->peerProxyValidity;
-	else
-		*valid += ctx->notifDuration;
+		/*	Format time of validity
+		 */
+		*valid = time(NULL);
+		if (   ctx->peerProxyValidity
+			&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
+			*valid = ctx->peerProxyValidity;
+		else
+			*valid += ctx->notifDuration;
 
-	glite_lbu_TimeToDB(*valid, &time_s);
-	if ( !time_s )
-	{
-		edg_wll_SetError(ctx, errno, "Formating validity time");
-		goto cleanup;
-	}
-
-	/*	Format the address
-	 */
-	if ( address_override )
-	{
-		char   *aux;
-
-		if ( !(aux = strchr(address_override, ':')) )
+		glite_lbu_TimeToDB(*valid, &time_s);
+		if ( !time_s )
 		{
-			edg_wll_SetError(ctx, EINVAL, "Addres overrirde not in format host:port");
-			goto cleanup;
+			edg_wll_SetError(ctx, errno, "Formating validity time");
+			goto rollback;
 		}
-		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) )
-			trio_asprintf(&addr_s, "%s:%s", ctx->connections->serverConnection->peerName, aux+1);
-	}
+
+		/*	Format the address
+		 */
+		if ( address_override )
+		{
+			char   *aux;
+
+			if ( !(aux = strchr(address_override, ':')) )
+			{
+				edg_wll_SetError(ctx, EINVAL, "Addres overrirde not in format host:port");
+				goto rollback;
+			}
+			if ( !strncmp(address_override, "0.0.0.0", aux-address_override) )
+				trio_asprintf(&addr_s, "%s:%s", ctx->connections->serverConnection->peerName, aux+1);
+		}
 
 
-	update_notif(ctx, nid, NULL, addr_s? addr_s: address_override, (const char *)(time_s));
+		update_notif(ctx, nid, NULL, addr_s? addr_s: address_override, (const char *)(time_s));
 
-cleanup:
-	if ( time_s ) free(time_s);
-	if ( addr_s ) free(addr_s);
+rollback:
+	free(time_s); time_s = NULL;
+	free(addr_s); addr_s = NULL;
 
+	} while (edg_wll_TransNeedRetry(ctx));
+
+err:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -248,89 +251,94 @@ int edg_wll_NotifChangeServer(
 	/*	Format notification ID
 	 */
 	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
-		goto cleanup;
+		goto err;
 
-	if ( check_notif_request(ctx, nid, NULL) )
-		goto cleanup;
+	do {
+		if (edg_wll_Transaction(ctx) != 0) goto err;
 
-	switch ( op )
-	{
-	case EDG_WLL_NOTIF_REPLACE:
-		/*	Format conditions
-		 *	- separate all jobids
-		 *	- format new condition list without jobids
-		 */
-		if ( split_cond_list(ctx, conditions, &nconds, &jobs) )
-			goto cleanup;
+		if ( check_notif_request(ctx, nid, NULL) )
+			goto rollback;
 
-		/*
-		 *	encode new cond. list into a XML string
-		 */
-		if ( edg_wll_JobQueryRecToXML(ctx, (edg_wll_QueryRec const * const *) nconds, &xml_conds) )
+		switch ( op )
 		{
-			/*	XXX: edg_wll_JobQueryRecToXML() do not set errors in context!
-			 *			can't get propper error number :(
+		case EDG_WLL_NOTIF_REPLACE:
+			/*	Format conditions
+			 *	- separate all jobids
+			 *	- format new condition list without jobids
 			 */
-			edg_wll_SetError(ctx, errno, "Can't encode data into xml");
-			goto cleanup;
-		}
+			if ( split_cond_list(ctx, conditions, &nconds, &jobs) )
+				goto rollback;
 
-		/*	Format DB insert statement
-		 */
-		if ( update_notif(ctx, nid, xml_conds, NULL, NULL) )
-			goto cleanup;
+			/*
+			 *	encode new cond. list into a XML string
+			 */
+			if ( edg_wll_JobQueryRecToXML(ctx, (edg_wll_QueryRec const * const *) nconds, &xml_conds) )
+			{
+				/*	XXX: edg_wll_JobQueryRecToXML() do not set errors in context!
+				 *			can't get propper error number :(
+				 */
+				edg_wll_SetError(ctx, errno, "Can't encode data into xml");
+				goto rollback;
+			}
 
-		if ( jobs )
-		{
 			/*	Format DB insert statement
 			 */
-			trio_asprintf(&q, "delete from  notif_jobs where notifid='%|Ss'", nid_s);
-			if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
-				goto cleanup;
+			if ( update_notif(ctx, nid, xml_conds, NULL, NULL) )
+				goto rollback;
 
-			for ( i = 0; jobs[i]; i++ )
+			if ( jobs )
 			{
-				free(q);
-				trio_asprintf(&q,
-						"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
-						nid_s, jobs[i]);
+				/*	Format DB insert statement
+				 */
+				trio_asprintf(&q, "delete from  notif_jobs where notifid='%|Ss'", nid_s);
 				if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
+					goto rollback;
+
+				for ( i = 0; jobs[i]; i++ )
 				{
-					/*	XXX: Remove uncoplete registration?
-					 *		 Which error has to be returned?
-					 */
 					free(q);
-					trio_asprintf(&q, "delete from notif_jobs where notifid='%|Ss'", nid_s);
-					edg_wll_ExecSQL(ctx, q, NULL);
-					free(q);
-					trio_asprintf(&q,"delete from notif_registrations where notifid='%|Ss'", nid_s);
-					edg_wll_ExecSQL(ctx, q, NULL);
-					goto cleanup;
+					trio_asprintf(&q,
+							"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
+							nid_s, jobs[i]);
+					if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
+					{
+						/*	XXX: Remove uncoplete registration?
+						 *		 Which error has to be returned?
+						 */
+						free(q);
+						trio_asprintf(&q, "delete from notif_jobs where notifid='%|Ss'", nid_s);
+						edg_wll_ExecSQL(ctx, q, NULL);
+						free(q);
+						trio_asprintf(&q,"delete from notif_registrations where notifid='%|Ss'", nid_s);
+						edg_wll_ExecSQL(ctx, q, NULL);
+						goto rollback;
+					}
 				}
 			}
+			break;
+
+		case EDG_WLL_NOTIF_ADD:
+			break;
+		case EDG_WLL_NOTIF_REMOVE:
+			break;
+		default:
+			break;
 		}
-		break;
 
-	case EDG_WLL_NOTIF_ADD:
-		break;
-	case EDG_WLL_NOTIF_REMOVE:
-		break;
-	default:
-		break;
-	}
+rollback:
+		free(q); q = NULL;
+		free(xml_conds); xml_conds = NULL;
+		free(nid_s); nid_s = NULL;
+		if ( jobs ) {
+			for ( i = 0; jobs[i]; i++ )
+				free(jobs[i]);
+			free(jobs); jobs = NULL;
+		}
+		free(nconds); nconds = NULL;
 
-cleanup:
-	if ( q ) free(q);
-	if ( xml_conds ) free(xml_conds);
-	if ( nid_s ) free(nid_s);
-	if ( jobs )
-	{
-		for ( i = 0; jobs[i]; i++ )
-			free(jobs[i]);
-		free(jobs);
-	}
-	if ( nconds ) free(nconds);
+	} while (edg_wll_TransNeedRetry(ctx));
 
+err:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -341,31 +349,36 @@ int edg_wll_NotifRefreshServer(
 {
 	char	   *time_s = NULL;
 
+	do {
+		if (edg_wll_Transaction(ctx) != 0) goto err;		
 
-	if ( check_notif_request(ctx, nid, NULL) )
-		goto cleanup;
+		if ( check_notif_request(ctx, nid, NULL) )
+			goto rollback;
 
-	/*	Format time of validity
-	 */
-	*valid = time(NULL);
-	if (   ctx->peerProxyValidity
-		&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
-		*valid = ctx->peerProxyValidity;
-	else
-		*valid += ctx->notifDuration;
+		/*	Format time of validity
+		 */
+		*valid = time(NULL);
+		if (   ctx->peerProxyValidity
+			&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
+			*valid = ctx->peerProxyValidity;
+		else
+			*valid += ctx->notifDuration;
 
-	glite_lbu_TimeToDB(*valid, &time_s);
-	if ( !time_s )
-	{
-		edg_wll_SetError(ctx, errno, "Formating validity time");
-		goto cleanup;
-	}
+		glite_lbu_TimeToDB(*valid, &time_s);
+		if ( !time_s )
+		{
+			edg_wll_SetError(ctx, errno, "Formating validity time");
+			goto rollback;
+		}
 
-	update_notif(ctx, nid, NULL, NULL, time_s);
+		update_notif(ctx, nid, NULL, NULL, time_s);
 
-cleanup:
-	if ( time_s ) free(time_s);
+rollback:
+		free(time_s); time_s = NULL;
 
+	} while (edg_wll_TransNeedRetry(ctx));
+
+err:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -375,27 +388,33 @@ int edg_wll_NotifDropServer(
 {
 	char	   *nid_s = NULL,
 			   *stmt = NULL;
-	int			ret;
 
+	
+	do {
+		if (edg_wll_Transaction(ctx) != 0) goto err;
 
-	if ( check_notif_request(ctx, nid, NULL) )
-		goto cleanup;
+		if ( check_notif_request(ctx, nid, NULL) )
+			goto rollback;
 
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
-		goto cleanup;
+		if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+			goto rollback;
 
-	trio_asprintf(&stmt, "delete from notif_registrations where notifid='%|Ss'", nid_s);
-	if ( (ret = edg_wll_ExecSQL(ctx, stmt, NULL)) < 0 )
-		goto cleanup;
-	free(stmt);
-	trio_asprintf(&stmt, "delete from notif_jobs where notifid='%|Ss'", nid_s);
-	edg_wll_ExecSQL(ctx, stmt, NULL);
-	edg_wll_NotifCancelRegId(ctx, nid);
+		trio_asprintf(&stmt, "delete from notif_registrations where notifid='%|Ss'", nid_s);
+		if ( edg_wll_ExecSQL(ctx, stmt, NULL) < 0 )
+			goto rollback;
+		free(stmt);
+		trio_asprintf(&stmt, "delete from notif_jobs where notifid='%|Ss'", nid_s);
+		if ( edg_wll_ExecSQL(ctx, stmt, NULL) < 0 ) 
+			goto rollback;
+		edg_wll_NotifCancelRegId(ctx, nid);
 
-cleanup:
-	if ( nid_s ) free(nid_s);
-	if ( stmt ) free(stmt);
+rollback:
+		free(nid_s); nid_s = NULL;
+		free(stmt); stmt = NULL;
 
+	} while (edg_wll_TransNeedRetry(ctx));
+
+err:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -478,7 +497,7 @@ static int check_notif_request(
 
 	trio_asprintf(&stmt,
 				"select notifid from notif_registrations "
-				"where notifid='%|Ss' and userid='%|Ss'",
+				"where notifid='%|Ss' and userid='%|Ss' FOR UPDATE",
 				nid_s, user);
 
 	if ( (ret = edg_wll_ExecSQL(ctx, stmt, NULL)) < 0 )

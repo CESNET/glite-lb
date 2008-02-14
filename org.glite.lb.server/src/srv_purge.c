@@ -42,9 +42,9 @@ static const char* const resp_headers[] = {
 	NULL
 };
 
-static int purge_one(edg_wll_Context ctx,glite_jobid_const_t,int,int);
-int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job);
-static int unset_server_flag(edg_wll_Context ctx, edg_wlc_JobId job);
+static int purge_one(edg_wll_Context ctx,glite_jobid_const_t,int,int,int);
+int unset_proxy_flag(edg_wll_Context ctx, glite_jobid_const_t job);
+static int unset_server_flag(edg_wll_Context ctx, glite_jobid_const_t job);
 
 
 int edg_wll_CreateTmpFileStorage(edg_wll_Context ctx, char *prefix, char **fname)
@@ -184,16 +184,16 @@ int edg_wll_CreateFileStorage(edg_wll_Context ctx, char *file_type, char *prefix
 	return retfd;
 }
 
-int edg_wll_PurgeServerProxy(edg_wll_Context ctx, edg_wlc_JobId job)
+int edg_wll_PurgeServerProxy(edg_wll_Context ctx, glite_jobid_const_t job)
 {
-	switch ( purge_one(ctx, job, -1, 1) ) {
+	switch ( purge_one(ctx, job, -1, 1, 1) ) {
 		case 0:
 		case ENOENT:
-			edg_wll_ResetError(ctx);
-			return 0;
-
+			return(edg_wll_ResetError(ctx));
+			break;
 		default:
-			return -1;
+			return(edg_wll_Error(ctx,NULL,NULL));
+			break;
 	}
 }
 
@@ -252,7 +252,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 				parse = 1;
 			}
 			else {
-				switch (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE)) {
+				switch (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,0)) {
 					case 0: if (request->flags & EDG_WLL_PURGE_LIST_JOBS) {
 							result.jobs = realloc(result.jobs,(naffected_jobs+2) * sizeof(*result.jobs));
 							result.jobs[naffected_jobs] = strdup(request->jobs[i]);
@@ -260,7 +260,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 						}
 						naffected_jobs++;
 						break;
-					case ENOENT: parse = 1;
+					case ENOENT: /* job does not exist, consider purged and ignore */
 						     edg_wll_ResetError(ctx);
 						     break;
 					default: goto abort;
@@ -298,6 +298,11 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 
 				memset(&stat,0,sizeof stat);
 				if (edg_wll_JobStatusServer(ctx,job,0,&stat)) {  /* FIXME: replace by intJobStatus ?? */
+					if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
+						/* job purged meanwhile, ignore */
+						edg_wll_ResetError(ctx);
+						continue;
+					}
 					edg_wll_FreeStatus(&stat);
 					goto abort; 
 				}
@@ -314,8 +319,13 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 
 				if (now-stat.lastUpdateTime.tv_sec > timeout[i] && !check_strict_jobid(ctx,job))
 				{
-					if (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE)) {
+					if (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,0)) {
 						edg_wll_FreeStatus(&stat);
+						if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
+							/* job purged meanwhile, ignore */
+							edg_wll_ResetError(ctx);
+							continue;
+						}
 						goto abort;
 					}
 
@@ -424,214 +434,204 @@ static void unlock_and_check(edg_wll_Context ctx,edg_wlc_JobId job)
 	}
 }
 
+static int dump_events(edg_wll_Context ctx, glite_jobid_const_t job, int dump, char **res)
+{
+	edg_wll_Event	e;
+	int		event;
 
-int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge)
+
+	event = atoi(res[0]);
+	free(res[0]); res[0] = NULL;
+
+	res[0] = edg_wlc_JobIdUnparse(job);
+	if (convert_event_head(ctx,res,&e) || edg_wll_get_event_flesh(ctx,event,&e))
+	{
+		char	*et,*ed, *dbjob;
+		int	i;
+
+
+	/* Most likely sort of internal inconsistency. 
+	 * Must not be fatal -- just complain
+	 */
+		edg_wll_Error(ctx,&et,&ed);
+		dbjob = edg_wlc_JobIdGetUnique(job);
+		fprintf(stderr,"%s event %d: %s (%s)\n",dbjob,event,et,ed);
+		syslog(LOG_WARNING,"%s event %d: %s (%s)",dbjob,event,et,ed);
+		free(et); free(ed); free(dbjob);
+		for (i=0; i<sizofa(res); i++) free(res[i]);
+		edg_wll_ResetError(ctx);
+	}
+	else {
+		char	*event_s = edg_wll_UnparseEvent(ctx,&e);
+		char    arr_s[100];
+		int     len, written, total;
+
+		strcpy(arr_s, "DG.ARRIVED=");
+		edg_wll_ULMTimevalToDate(e.any.arrived.tv_sec,
+						e.any.arrived.tv_usec,
+						arr_s+strlen("DG.ARRIVED="));
+
+		len = strlen(arr_s);
+		total = 0;
+		while (total != len) {
+			written = write(dump,arr_s+total,len-total);
+			if (written < 0 && errno != EAGAIN) {
+				edg_wll_SetError(ctx,errno,"writing dump file");
+				free(event_s);
+				return edg_wll_Error(ctx,NULL,NULL);
+			}
+			total += written;
+		}
+		write(dump, " ", 1);
+		
+		len = strlen(event_s);
+		total = 0;
+		while (total != len) {
+			written = write(dump,event_s+total,len-total);
+			if (written < 0 && errno != EAGAIN) {
+				perror("dump to file");
+				syslog(LOG_ERR,"dump to file: %m");
+				dump = -1; /* XXX: likely to be a permanent error
+					    * give up writing but do purge */
+				break;
+			}
+			total += written;
+		}
+		/* write(dump,"\n",1); edg_wll_UnparseEvent does so */
+		free(event_s);
+	}
+	edg_wll_FreeEvent(&e);
+
+
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, int purge_from_proxy_only)
 {
 	char	*dbjob;
 	char	*stmt = NULL;
 	glite_lbu_Statement	q;
 	int		ret,dumped = 0;
+	char	*res[9];
+
 
 	edg_wll_ResetError(ctx);
 	if ( !purge && dump < 0 ) return 0;
 
-	switch (edg_wll_jobMembership(ctx, job)) {
-		case DB_PROXY_JOB:
-			if (!ctx->isProxy) {
-				/* should not happen */
-				return 0;
-			}
-			/* continue */
-			break;
-		case DB_SERVER_JOB:
-			if (ctx->isProxy) {
-				/* should not happen */
-				return 0;
-			}
-			/* continue */
-			break;
-		case DB_PROXY_JOB+DB_SERVER_JOB:
-			if (ctx->isProxy) {
-				purge = 0;
-				if (unset_proxy_flag(ctx, job) < 0) {
-					return(edg_wll_Error(ctx,NULL,NULL));
+	do {
+        	if (edg_wll_Transaction(ctx)) goto err;
+
+		switch (edg_wll_jobMembership(ctx, job)) {
+			case DB_PROXY_JOB:
+				if (!ctx->isProxy) {
+					/* should not happen */
+					goto commit;
 				}
-			}
-			else {
-				purge = 0;
-				if (unset_server_flag(ctx, job) < 0) {
-					return(edg_wll_Error(ctx,NULL,NULL));
+				/* continue */
+				break;
+			case DB_SERVER_JOB:
+				if (ctx->isProxy) {
+					/* should not happen */
+					goto commit;
 				}
-			}
-			break;
-		case 0:
-			// Zombie job (server=0, proxy=0)? should not happen;
-			// clear it to keep DB healthy
-			break;
-		default:
-			return 0;
-			break;
-	}
-
-	dbjob = edg_wlc_JobIdGetUnique(job);	/* XXX: strict jobid already checked */
-	if (edg_wll_LockJob(ctx,job)) goto clean;
-
-	if ( purge )
-	{
-		trio_asprintf(&stmt,"delete from jobs where jobid = '%|Ss'",dbjob);
-		ret = edg_wll_ExecSQL(ctx,stmt,NULL);
-		if (ret <= 0) {
-			unlock_and_check(ctx,job);
-			if (ret == 0) {
-				fprintf(stderr,"%s: no such job\n",dbjob);
-				edg_wll_SetError(ctx,ENOENT,dbjob);
-			}
-			goto clean;
+				/* continue */
+				break;
+			case DB_PROXY_JOB+DB_SERVER_JOB:
+				if (ctx->isProxy) {
+					purge = 0;
+					if (unset_proxy_flag(ctx, job) < 0) {
+						goto rollback;
+					}
+				}
+				else {
+					purge = 0;
+					/* if server&proxy DB is shared ... */
+					if (is_job_local(ctx,job) && purge_from_proxy_only) {
+						if (unset_proxy_flag(ctx, job) < 0) {
+							goto rollback;
+						}
+					}
+					else {
+						if (unset_server_flag(ctx, job) < 0) {
+							goto rollback;
+						}
+					}
+				}
+				break;
+			case 0:
+				// Zombie job (server=0, proxy=0)? should not happen;
+				// clear it to keep DB healthy
+				break;
+			default:
+				goto rollback;
+				break;
 		}
-		free(stmt); stmt = NULL;
 
-		trio_asprintf(&stmt,"delete from states where jobid = '%|Ss'",dbjob);
-		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
-			unlock_and_check(ctx,job);
-			goto clean;
+		dbjob = edg_wlc_JobIdGetUnique(job);	/* XXX: strict jobid already checked */
+
+		if ( purge )
+		{
+			trio_asprintf(&stmt,"delete from jobs where jobid = '%|Ss'",dbjob);
+			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback;
+			free(stmt); stmt = NULL;
+
+			trio_asprintf(&stmt,"delete from states where jobid = '%|Ss'",dbjob);
+			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback; 
+			free(stmt); stmt = NULL;
 		}
-		free(stmt); stmt = NULL;
 
-/* Why on earth ?
-		trio_asprintf(&stmt,"delete from states where jobid = '%|Ss'",dbjob);
-		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
-			unlock_and_check(ctx,job);
-			goto clean;
+		if ( purge )
+		{
+			trio_asprintf(&stmt,"delete from status_tags where jobid = '%|Ss'",dbjob);
+			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback;
+			free(stmt); stmt = NULL;
 		}
+
+		if (dump >= 0) 
+			trio_asprintf(&stmt,
+				"select event,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived "
+				"from events e,users u "
+				"where e.jobid='%|Ss' "
+				"and u.userid=e.userid "
+				"order by event", dbjob);
+		else
+			trio_asprintf(&stmt,"select event from events "
+				"where jobid='%|Ss' "
+				"order by event", dbjob);
+
+		if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto rollback;
 		free(stmt); stmt = NULL;
-*/
-
-	}
-
-	if (!ctx->strict_locking) unlock_and_check(ctx,job);
-
-	if ( purge )
-	{
-		trio_asprintf(&stmt,"delete from status_tags where jobid = '%|Ss'",dbjob);
-		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto unlock;
-		free(stmt); stmt = NULL;
-	}
-
-	if (dump >= 0) 
-		trio_asprintf(&stmt,
-			"select event,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived "
-			"from events e,users u "
-			"where e.jobid='%|Ss' "
-			"and u.userid=e.userid "
-			"order by event", dbjob);
-	else
-		trio_asprintf(&stmt,"select event from events "
-			"where jobid='%|Ss' "
-			"order by event", dbjob);
-
-/* check for events repeatedly -- new one may have arrived in the meantime */
-	while ((ret = edg_wll_ExecSQL(ctx,stmt,&q)) > 0) {
-		char	*res[9];
 
 		dumped = 1;
 		while ((ret = edg_wll_FetchRow(ctx,q,sizofa(res),NULL,res)) > 0) {
 			int	event;
 
+			
+			assert(ret == 9);
 			event = atoi(res[0]);
-			free(res[0]); res[0] = NULL;
 
-			if (dump >= 0) {
-				edg_wll_Event	e;
+			if (dump >= 0) 
+				if (dump_events( ctx, job, dump, (char **) &res)) goto rollback;
 
-				assert(ret == 9);
-				res[0] = edg_wlc_JobIdUnparse(job);
-				if (convert_event_head(ctx,res,&e) || edg_wll_get_event_flesh(ctx,event,&e))
-				{
-					char	*et,*ed;
-					int	i;
-
-				/* Most likely sort of internal inconsistency. 
-				 * Must not be fatal -- just complain
-				 */
-					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"%s event %d: %s (%s)\n",dbjob,event,et,ed);
-					syslog(LOG_WARNING,"%s event %d: %s (%s)",dbjob,event,et,ed);
-					free(et); free(ed);
-					for (i=0; i<sizofa(res); i++) free(res[i]);
-					edg_wll_ResetError(ctx);
-				}
-				else {
-					char	*event_s = edg_wll_UnparseEvent(ctx,&e);
-					char    arr_s[100];
-					int     len, written, total;
-
-					strcpy(arr_s, "DG.ARRIVED=");
-					edg_wll_ULMTimevalToDate(e.any.arrived.tv_sec,
-									e.any.arrived.tv_usec,
-									arr_s+strlen("DG.ARRIVED="));
-
-					len = strlen(arr_s);
-					total = 0;
-					while (total != len) {
-						written = write(dump,arr_s+total,len-total);
-						if (written < 0 && errno != EAGAIN) {
-							edg_wll_SetError(ctx,errno,"writing dump file");
-							free(event_s);
-							goto clean;
-						}
-						total += written;
-					}
-					write(dump, " ", 1);
-					
-					len = strlen(event_s);
-					total = 0;
-					while (total != len) {
-						written = write(dump,event_s+total,len-total);
-						if (written < 0 && errno != EAGAIN) {
-							perror("dump to file");
-							syslog(LOG_ERR,"dump to file: %m");
-							dump = -1; /* XXX: likely to be a permanent error
-								    * give up writing but do purge */
-							break;
-						}
-						total += written;
-					}
-					/* write(dump,"\n",1); edg_wll_UnparseEvent does so */
-					free(event_s);
-				}
-				edg_wll_FreeEvent(&e);
-			}
-
-			if ( purge ) {
-				if (edg_wll_delete_event(ctx,dbjob,event)) {
-					char	*et,*ed;
-
-				/* XXX: just complain and carry on. Is it OK? */
-					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"%s event %d: %s (%s)\n",dbjob,event,et,ed);
-					syslog(LOG_WARNING,"%s event %d: %s (%s)",dbjob,event,et,ed);
-					free(et); free(ed);
-					edg_wll_ResetError(ctx);
-				}
-			}
+			if ( purge ) 
+				if (edg_wll_delete_event(ctx,dbjob,event)) goto rollback;
 		}
 		glite_lbu_FreeStmt(&q);
-		if (ret < 0 || !purge) break;
-	}
+		if (ret < 0) goto rollback;
 
-	glite_lbu_FreeStmt(&q);
+commit:
+rollback:;
+	} while (edg_wll_TransNeedRetry(ctx));
 
-unlock:
-	if (ctx->strict_locking) unlock_and_check(ctx,job);
 
-clean:
+err:
 	free(dbjob);
 	free(stmt);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
 
-int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job)
+int unset_proxy_flag(edg_wll_Context ctx, glite_jobid_const_t job)
 {
 	char	*stmt = NULL;
 	char            *dbjob;
@@ -646,7 +646,7 @@ int unset_proxy_flag(edg_wll_Context ctx, edg_wlc_JobId job)
 }
 
 
-int unset_server_flag(edg_wll_Context ctx, edg_wlc_JobId job)
+int unset_server_flag(edg_wll_Context ctx, glite_jobid_const_t job)
 {
 	char	*stmt = NULL;
 	char            *dbjob;

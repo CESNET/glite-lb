@@ -211,7 +211,7 @@ int edg_wll_QueryEventsServer(
 				}
 			}
 
-			// Auth checked in edg_wll_JobStatus above
+			// Auth checked in edg_wll_JobStatusServer above
 			if ( !(where_flags & FL_FILTER) && !noAuth )
 			{
 				if (!ctx->peerName || (strcmp(res[1],peerid) && strcmp(res[1], can_peerid))) {

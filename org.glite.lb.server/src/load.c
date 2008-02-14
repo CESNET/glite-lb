@@ -32,7 +32,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 {
 	int					fd,
 						reject_fd = -1,
-						readret, i;
+						readret, i, ret;
 	size_t					maxsize;
 	char			   *line = NULL,
 						buff[30];
@@ -48,9 +48,6 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 	if ( (fd = open(req->server_file, O_RDONLY)) == -1 )
 		return edg_wll_SetError(ctx, errno, "Server can not open the file");
 
-	if (edg_wll_Transaction(ctx) != 0) 
-		return edg_wll_Error(ctx, NULL, NULL);
-
 	memset(result,0,sizeof(*result));
 	i = 0;
 	while ( 1 )
@@ -58,7 +55,6 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 		/*	Read one line
 		 */
 		if ( (readret = read_line(&line, &maxsize, fd)) == -1 ) {
-			edg_wll_Rollback(ctx);
 			return edg_wll_SetError(ctx, errno, "reading dump file");
 		}
 
@@ -84,8 +80,15 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 			result->to = event->any.arrived.tv_sec;
 		}
 		ctx->event_load = 1;
-		if ( edg_wll_StoreEvent(ctx, event, line, NULL) )
-		{
+		
+		do {
+			if (edg_wll_Transaction(ctx)) goto err;
+
+			ret = edg_wll_StoreEvent(ctx, event, line, NULL); 
+
+		} while (edg_wll_TransNeedRetry(ctx));
+
+		if (ret) {
 			char		*errdesc;
 			int		len = strlen(line),
 					total = 0,
@@ -127,8 +130,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 			}
 			write(reject_fd,"\n",1);
 		}
-		else
-		{
+		else {
 			result->to = event->any.arrived.tv_sec;
 			if ( jobid )
 			{
@@ -156,6 +158,7 @@ cycle_clean:
 		edg_wll_FreeEvent(event);
 	}
 
+err:
 	if ( jobid )
 	{
 		edg_wll_JobStat st;
@@ -167,9 +170,6 @@ cycle_clean:
 
 	if ( reject_fd != -1 )
 		close(reject_fd);
-
-	if (edg_wll_Commit(ctx) != 0)
-		return edg_wll_Error(ctx, NULL, NULL);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }

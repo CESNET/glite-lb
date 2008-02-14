@@ -5,20 +5,12 @@ create table jobs (
 	aclid		char(32)	binary null,
 	proxy		bool		not null,
 	server		bool		not null,
-	
+	grey		bool		not null,
+	nevents		int		not null,
 
 	primary key (jobid),
 	unique (dg_jobid),
 	index (userid)
-) engine=innodb;
-
-create table grey_jobs (
-	jobid		char(32)	binary not null,
-	dg_jobid	varchar(255)	binary not null,
-	time_stamp	datetime	not null,
-
-	primary key (jobid),
-	unique (dg_jobid)
 ) engine=innodb;
 
 create table users (
@@ -42,6 +34,7 @@ create table events (
 
 	arrived		datetime	not null,
 	ulm		mediumblob	not null,   -- testing (1)
+	seqcode		varchar(255)	binary not null,
 
 	primary key (jobid,event),
 	index (time_stamp),
