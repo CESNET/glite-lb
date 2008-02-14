@@ -108,11 +108,7 @@ rollback:;
 		 ev->regJob.jobtype == EDG_WLL_REGJOB_COLLECTION) &&
 		ev->regJob.nsubjobs > 0)  
 
-#ifdef LB_DAG_EMBRIONIC
 			if (register_subjobs_embryonic(ctx,&ev->regJob)) goto rollback2;
-#else
-			if (register_subjobs(ctx,&ev->regJob)) goto rollback2;
-#endif
 
 rollback2:;
   } while (edg_wll_TransNeedRetry(ctx));

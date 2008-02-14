@@ -654,11 +654,6 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 		if (ctx->rgma_export) write2rgma_status(&jobstat.pub);
 */
 
-#ifdef LB_BUF
-	if (edg_wll_bufferedInsert(bi, values))
-		goto cleanup;
-#else
-
 	trio_asprintf(&stmt,
 		"insert into states"
 		"(jobid,status,seq,int_status,version"
@@ -667,7 +662,6 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 		icnames, values);
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
-#endif
 
 cleanup:
 	free(stmt); 

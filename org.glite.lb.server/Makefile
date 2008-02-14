@@ -41,13 +41,6 @@ else
 	STATIC_LIB_BK:=libglite_lb_bkserver.a
 endif
 
-# Use embrionic DAG registration implicitely
-LB_DAG_FLAGS:=-DLB_DAG_EMBRIONIC
-
-ifdef LB_BUF
-	LB_BUF_FLAGS:=-DLB_BUF
-endif
-
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	WS_CFLAGS=-DGLITE_LB_SERVER_WITH_WS 
 	NSMAP=LoggingAndBookkeeping.nsmap
@@ -86,8 +79,7 @@ CFLAGS:= \
 	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
 	$(GRIDSITE_CFLAGS) \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} ${LB_DAG_FLAGS} \
-	${LB_BUF_FLAGS} \
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} \
 	-I${globus_prefix}/include/${nothrflavour} #gridsite needs this
 
 ifdef LB_PROF

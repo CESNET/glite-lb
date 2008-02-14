@@ -47,9 +47,6 @@ int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
 int is_job_local(edg_wll_Context, glite_jobid_const_t jobId);
 int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *register_to_JP);
-#ifndef LB_DAG_EMBRIONIC
-int register_subjobs(edg_wll_Context,const edg_wll_RegJobEvent *);
-#endif
 int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *);
 
 
