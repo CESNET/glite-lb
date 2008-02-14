@@ -70,13 +70,15 @@ int edg_wll_UserJobs(
 		free(res); res = NULL;
 	}
 
-	*states = calloc(njobs, sizeof(**states));
+	if (states) *states = calloc(njobs, sizeof(**states));
 	for (i = 0; i < njobs; i++) {
-		if (edg_wll_JobStatus(ctx, out[i], -1, &(*states)[i]) != 0) {
+		edg_wll_JobStat	*stat = states ?  &(*states)[i] : NULL;
+
+		if (stat && edg_wll_JobStatus(ctx, out[i], -1, stat) != 0) {
 			for (j = 0; j < i; j++) edg_wll_FreeStatus(&(*states)[j]);
 			*states = NULL;
-			break;
 		}
+		break;
 	}
 err:
 	free(res);
