@@ -34,7 +34,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 						reject_fd = -1,
 						readret, i, ret;
 	size_t					maxsize;
-	char			   *line = NULL,
+	char			   *line = NULL, *errdesc,
 						buff[30];
 	edg_wll_Event	   *event;
 	edg_wlc_JobId		jobid = NULL;
@@ -84,17 +84,15 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 		do {
 			if (edg_wll_Transaction(ctx)) goto err;
 
-			ret = edg_wll_StoreEvent(ctx, event, line, NULL); 
+			edg_wll_StoreEvent(ctx, event, line, NULL); 
 
 		} while (edg_wll_TransNeedRetry(ctx));
 
-		if (ret) {
-			char		*errdesc;
+		if ((ret = edg_wll_Error(ctx, NULL, &errdesc)) != 0) {
 			int		len = strlen(line),
 					total = 0,
 					written;
 
-			edg_wll_Error(ctx, NULL, &errdesc);
 			fprintf(stderr, "Can't store event: %s\n", errdesc);
 			if ( reject_fd == -1 )
 			{
