@@ -256,9 +256,10 @@ int is_job_local(edg_wll_Context ctx, glite_jobid_const_t jobId)
 	unsigned int	srvPort; 
 	int		ret;	
 
+	if (!ctx->ServerRunning) return 0;	/* XXX */
 
 	edg_wlc_JobIdGetServerParts(jobId, &srvName, &srvPort);
-	ret = ((ctx->srvPort == srvPort) && !strcmp(srvName,ctx->srvName));
+	ret = ((ctx->srvPort == srvPort) && ctx->srvName && !strcmp(srvName,ctx->srvName));
 	free(srvName);
 
 	return(ret);
@@ -282,8 +283,6 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		return edg_wll_SetError(ctx,EPERM,"LB proxy can't store using unauthenticated connection");
 
 
-	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
-
 	trio_asprintf(&q,"select proxy,server,grey from jobs where jobid='%|Ss' for update", event->any.jobId);
 
 	if ( (nar = edg_wll_ExecSQL(ctx,q,&stmt)) < 0 ) {
@@ -299,24 +298,31 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 			}
 		}
 
-		subj = strdup( ctx->isProxy ? event->any.user : can_peername);
-		userid = strdup(strmd5(subj, NULL));
-		if (store_user(ctx,userid,subj)) goto err;
+		subj = strdup( ctx->isProxy ? event->any.user : ctx->peerName);
+		can_peername = edg_wll_gss_normalize_subj(subj, 0);
+		userid = strdup(strmd5(can_peername, NULL));
+		if (store_user(ctx,userid,can_peername)) goto err;
 		if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
-			userid, ctx->isProxy, local_job ? ctx->serverRunning : 0, grey, 0 )) goto err;
-		*register_to_JP = 1;
+			userid, ctx->isProxy, local_job, grey, 0 )) goto err;
+		*register_to_JP = local_job;
 	}
 	else {
 		/* Job already registered */
 
 		if (edg_wll_FetchRow(ctx,stmt,sizeof(res)/sizeof(res[0]),NULL,res) < 0) goto err;
+
+/* TODO: ljocha: only GSI should switch the job from grey, and specify owner
+ * add !ctx->isProxy to the conditions and make the rest simpler */
+
 		if (ctx->greyjobs && !strcmp(res[2],"1") && 
 			(event->any.type == EDG_WLL_EVENT_REGJOB) && 
 			(event->any.priority & EDG_WLL_LOGFLAG_DIRECT)) 
 		{
-			subj = strdup(ctx->isProxy ? event->any.user : can_peername);
-			userid = strdup(strmd5(subj, NULL));
-			if (store_user(ctx,userid,subj)) goto err;
+
+			subj = strdup(ctx->isProxy ? event->any.user : ctx->peerName);
+			can_peername = edg_wll_gss_normalize_subj(subj, 0);
+			userid = strdup(strmd5(can_peername, NULL));
+			if (store_user(ctx,userid,can_peername)) goto err;
 			if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
 				userid, (ctx->isProxy || !strcmp(res[0],"1")), 
 				!strcmp(res[1],"1") || (local_job ? ctx->serverRunning : 0), 0, 1)) goto err;
@@ -331,7 +337,9 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 			}
 		}
 
-		/* ??? test whether user from proxy is the same as user from server ??? */
+		/* ??? test whether user from proxy is the same as user from server ??? 
+		   be picky -- return error when not mathing?
+		*/
 	}
 
 err:
