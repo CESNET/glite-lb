@@ -46,9 +46,9 @@ create table events (
 create table events_flesh (
 	jobid		char(32)	binary not null,
 	event		int		not null,
-	ulm		mediumblob	binary not null;
+	ulm		mediumblob	binary not null,
 	
-	primary key (jobid,event),
+	primary key (jobid,event)
 ) engine=innodb;
 
 -- for compatibility
