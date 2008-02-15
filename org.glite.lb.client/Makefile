@@ -331,7 +331,7 @@ doc: generate
 	doxygen C.dox
 	doxygen CPP.dox
 
-install: doc
+install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/sbin
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
@@ -352,7 +352,7 @@ endif
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) 
 	${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} 
 ifndef LB_STANDALONE
-	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
+#	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
 #       cp -r ${top_srcdir}/doc/api/{Makefile,api.tex,fig} ${PREFIX}/share/doc/${package}-${version}/api
 endif
 	for p in logevent notify; do \

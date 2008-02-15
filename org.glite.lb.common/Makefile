@@ -202,12 +202,12 @@ doc: generate events.tex status.tex
 	doxygen C.dox
 	doxygen CPP.dox
 
-install: doc
+install: 
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${MAILDIR_LIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
+#	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
 	if [ x${DOSTAGE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
 		(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
