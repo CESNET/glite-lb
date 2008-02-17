@@ -178,7 +178,7 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ifdef LB_STANDALONE
-compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent examples ${MAN_GZ} ${MAN8_GZ}
+compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent notify examples ${MAN_GZ} ${MAN8_GZ}
 else
 compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent examples ${MAN_GZ} ${MAN8_GZ}
 endif
