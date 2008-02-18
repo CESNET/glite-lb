@@ -93,14 +93,14 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 /* check duplicity */
 	trio_asprintf(&stmt,
 		"select arrived from events where jobid='%|Ss' and code='%d'"
-		" and prog='%|Ss' and host='%|Ss' and time_stamp='%s' and usec='%d'"
-		" and level='%d' and userid='%|Ss' and seqcode='%|Ss') ",
+		" and prog='%|Ss' and host='%|Ss' and time_stamp=%s and usec='%d'"
+		" and level='%d' and userid='%|Ss' and seqcode='%|Ss'",
 		jobid, (int) e->any.type,
 		ssrc,e->any.host,
 		stamp,e->any.timestamp.tv_usec,
 		e->any.level,userid, e->any.seqcode);
 
-	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto clean;
+	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0) goto clean;
 	nr = edg_wll_FetchRow(ctx,sh,1,NULL,&dummy);
 	if (sh) glite_lbu_FreeStmt(&sh);
 	free(stmt); stmt = NULL;
@@ -285,7 +285,10 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 
 	trio_asprintf(&q,"select proxy,server,grey from jobs where jobid='%|Ss' for update", event->any.jobId);
 
-	if ( (nar = edg_wll_ExecSQL(ctx,q,&stmt)) < 0 ) {
+	nar = edg_wll_ExecSQL(ctx,q,&stmt);
+
+	if (nar < 0) goto err;
+	else if (nar == 0) {
 		/* Job not registered yet */
 
 		if (!( (event->any.type == EDG_WLL_EVENT_REGJOB) && 
@@ -343,7 +346,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 	}
 
 err:
-	free(res[0]); free(res[1]); free(res[3]);
+	free(res[0]); free(res[1]); free(res[2]);
 	if (stmt) glite_lbu_FreeStmt(&stmt);
 	free(subj);
 	free(userid);

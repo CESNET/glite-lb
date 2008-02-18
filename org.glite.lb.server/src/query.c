@@ -54,7 +54,7 @@ int edg_wll_QueryEventsServer(
 				   *event_where = NULL,
 				   *qbase = NULL,
 				   *q = NULL,
-				   *res[11];
+				   *res[12];
 	edg_wll_Event  *out = NULL;
 	glite_lbu_Statement	sh = NULL;
 	int				i = 0,
@@ -103,7 +103,7 @@ int edg_wll_QueryEventsServer(
  * convert_event_head() called on the result
  */
 	trio_asprintf(&qbase,"SELECT e.event,j.userid,j.dg_jobid,e.code,"
-		"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived "
+		"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived,e.seqcode "
 		"FROM events e,users u,jobs j%s "
 		"WHERE %se.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
 		"%s %s %s %s %s %s",
@@ -1285,6 +1285,9 @@ int convert_event_head(edg_wll_Context ctx,char **f,edg_wll_Event *e)
 	e->any.arrived.tv_sec = glite_lbu_DBToTime(f[8]); 
 	e->any.arrived.tv_usec = 0;
 	free(f[8]); f[8] = NULL;
+
+	e->any.seqcode = f[9];
+	f[9] = NULL;
 
 	return 0;
 
