@@ -256,7 +256,7 @@ int is_job_local(edg_wll_Context ctx, glite_jobid_const_t jobId)
 	unsigned int	srvPort; 
 	int		ret;	
 
-	if (!ctx->ServerRunning) return 0;	/* XXX */
+	if (!ctx->serverRunning) return 0;	/* XXX */
 
 	edg_wlc_JobIdGetServerParts(jobId, &srvName, &srvPort);
 	ret = ((ctx->srvPort == srvPort) && ctx->srvName && !strcmp(srvName,ctx->srvName));
