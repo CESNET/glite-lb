@@ -7,3 +7,5 @@
 6.1.1-1 (lb-1.7.1-1)
 - fixed memleaks in LB query protocol 
 
+6.1.1-2 (lb-1.7.4-1)
+- rebuild wrt. downgraded security 3.1.57-1

@@ -19,6 +19,6 @@
   with read-consistent transactional database (should fix bug #27555)
 - revert enforced "strict locking" with transcactions (not needed anymore)
 
-1.8.3-1 (lb-1.7.3-1)
+1.8.3-1 (lb-1.7.4-1)
 - JP plugin: implementation of finalDoneStatus and history status attributes
 - fix double-free in state machine
