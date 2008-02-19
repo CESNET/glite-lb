@@ -47,6 +47,7 @@ int handle_errors(edg_wll_Context ctx, int code, const char *text)
 		case ECONNREFUSED:
 		case ETIMEDOUT:
 		case EAGAIN:
+		case EPERM:
 			break;
 		case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
 		case EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE:
