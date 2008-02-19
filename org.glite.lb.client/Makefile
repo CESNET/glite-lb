@@ -180,7 +180,7 @@ version_info:=-version-info ${shell \
 ifdef LB_STANDALONE
 compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent notify examples ${MAN_GZ} ${MAN8_GZ}
 else
-compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent examples ${MAN_GZ} ${MAN8_GZ}
+compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent notify examples ${MAN_GZ} ${MAN8_GZ}
 endif
 
 generate: ${GEN_HDRS}
