@@ -97,7 +97,7 @@ int edg_wll_JobStatusServer(
 
 	edg_wll_ResetError(ctx);
 
-	jobstat.pub.owner = NULL;	
+	memset(&jobstat, 0, sizeof(jobstat));
 	string_jobid = edg_wlc_JobIdUnparse(job);
 	if (string_jobid == NULL || stat == NULL)
 		return edg_wll_SetError(ctx,EINVAL, NULL);
