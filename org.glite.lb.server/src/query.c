@@ -22,6 +22,7 @@
 #include "store.h"
 #include "lb_authz.h"
 #include "db_supp.h"
+#include "jobstat.h"
 
 #define FL_SEL_STATUS		1
 #define FL_SEL_TAGS			(1<<1)

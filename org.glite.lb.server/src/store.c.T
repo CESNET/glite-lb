@@ -268,7 +268,7 @@ int is_job_local(edg_wll_Context ctx, glite_jobid_const_t jobId)
 int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *register_to_JP)
 {
 	char 		*unique = edg_wlc_JobIdGetUnique(event->any.jobId);
-	char            *q = NULL, *userid = NULL, *subj;
+	char            *q = NULL, *userid = NULL, *subj = NULL;
 	glite_lbu_Statement    stmt = NULL;
 	int             nar, grey = 0;
 	char		*can_peername = NULL;
@@ -283,7 +283,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		return edg_wll_SetError(ctx,EPERM,"LB proxy can't store using unauthenticated connection");
 
 
-	trio_asprintf(&q,"select proxy,server,grey from jobs where jobid='%|Ss' for update", event->any.jobId);
+	trio_asprintf(&q,"select proxy,server,grey from jobs where jobid='%|Ss' for update", unique);
 
 	nar = edg_wll_ExecSQL(ctx,q,&stmt);
 
