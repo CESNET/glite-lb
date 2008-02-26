@@ -119,7 +119,7 @@ create table notif_registrations (
 	primary key (notifid),
 	index (`STD_owner`),
 	index (`STD_network_server`),
-	index (`JDL_VirtualOrganization`)
+	index (`JDL_VirtualOrganisation`)
 ) engine=innodb;
 
 create table notif_jobs (
