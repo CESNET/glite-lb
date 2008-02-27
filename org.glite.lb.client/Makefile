@@ -220,8 +220,8 @@ ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
 
-notify: notify.o
-	${LINK} -o $@ notify.o ${LIB} ${EXT_LIB} 
+notify: notify.o notify_supp.o
+	${LINKXX} -o $@ notify.o notify_supp.o ${PLUSLIB} ${EXT_LIB} 
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
@@ -240,7 +240,7 @@ ${TOOLS}: ${LIB}
 ${FAKE_EXAMPLES:=.o}: %.o: %.cpp
 	${COMPILE} ${TEST_INC} -c $< -o $@
 
-${PLUSOBJS}: %.o: %.cpp
+notify_supp.o ${PLUSOBJS}: %.o: %.cpp
 	${CXXCOMPILE} -c $<
 
 ${PLUSTHROBJS}: %.thr.o: %.cpp

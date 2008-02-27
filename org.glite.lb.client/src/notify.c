@@ -10,6 +10,8 @@
 #include "glite/lb/context.h"
 #include "glite/lb/notification.h"
 
+#include "notify_supp.h"
+
 
 static char *me;
 
@@ -62,9 +64,10 @@ static void usage(char *cmd)
 		fprintf(stderr,"\n'refresh' command usage: %s refresh notifid\n"
 			"    notifid     Notification ID.\n", me);
 	if ( !cmd || !strcmp(cmd, "receive") )
-		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t timeout] [notifid]\n"
+		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t timeout] [-f field1,field2,...] [notifid]\n"
 			"    notifid     Notification ID (not used if -s specified).\n"
 			"    fake_addr   Fake the client address.\n"
+			"    field1,field2,...	list of status fields to print (only owner by default)\n"
 			"    timeout     Timeout to receive operation in seconds.\n", me);
 	if ( !cmd || !strcmp(cmd, "drop") )
 		fprintf(stderr,"\n'drop' command usage: %s drop notifid\n"
@@ -78,6 +81,7 @@ int main(int argc,char **argv)
 	time_t				valid;
 	char			   *errt, *errd;
 	struct timeval		tout = {220, 0};
+	void		*fields = NULL;
 
 	int	sock = -1;
 	char	*fake_addr = NULL;
@@ -182,8 +186,9 @@ int main(int argc,char **argv)
 		edg_wll_JobStat		stat;
 		edg_wll_NotifId		nid = NULL;
 		int			c;
+		char	*field_arg = "owner",*err;
 
-		while ((c = getopt(argc-1,argv+1,"s:a:t:")) > 0) switch (c) {
+		while ((c = getopt(argc-1,argv+1,"s:a:t:f:")) > 0) switch (c) {
 			case 's':
 				if (fake_addr) { usage("receive"); return EX_USAGE; }
 				sock = atoi(optarg); break;
@@ -192,10 +197,16 @@ int main(int argc,char **argv)
 				fake_addr = optarg; break;
 			case 't':
 				tout.tv_sec = atoi(optarg); break;
+			case 'f':
+				field_arg = optarg; break;
 			default:
 				usage("receive"); return EX_USAGE;
 		}
 
+		if ((err = parse_fields(field_arg,&fields))) {
+			fprintf(stderr,"%s: invalid argument\n",err);
+			return EX_USAGE;
+		}
 
 		memset(&stat,0,sizeof stat);
 
@@ -223,7 +234,11 @@ int main(int argc,char **argv)
 				else goto receive_err;
 			}
 			
-			printf("\nnotification ID: %s\n", edg_wll_NotifIdUnparse(recv_nid));
+			print_fields(fields,recv_nid,&stat);
+
+/* original example */
+#if 0
+			printf("\nnotification ID: %s\n", edg_wll_NotifIdUnparse(recv_nid)); 
 			
 			if (stat.state != EDG_WLL_JOB_UNDEF) {
 				char	*jobid_s;
@@ -236,6 +251,7 @@ int main(int argc,char **argv)
 				free(jobid_s);
 				stat.state = EDG_WLL_JOB_UNDEF;
 			}
+#endif
 			
 			if (recv_nid) {
 				edg_wll_NotifIdFree(recv_nid);
