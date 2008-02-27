@@ -535,7 +535,7 @@ int glite_lbu_ExecSQL(glite_lbu_DBContext ctx, const char *cmd, glite_lbu_Statem
 	sum.tv_usec += end.tv_usec;
 	sum.tv_sec += end.tv_sec + sum.tv_usec / 1000000;
 	sum.tv_usec -= 1000000 * (sum.tv_usec / 1000000);
-	fprintf(stderr,"[%d] %s\n[%d] %3ld.%06ld (sum: %3ld.%06ld)\n",pid,txt,pid,end.tv_sec,end.tv_usec,sum.tv_sec,sum.tv_usec);
+	fprintf(stderr,"[%d] %s\n[%d] %3ld.%06ld (sum: %3ld.%06ld)\n",pid,cmd,pid,end.tv_sec,end.tv_usec,sum.tv_sec,sum.tv_usec);
 #endif
 
 	return db_handle.mysql_affected_rows(ctx->mysql);
@@ -1034,8 +1034,6 @@ static int transaction_test(glite_lbu_DBContext ctx) {
 		ERR(ctx, EIO, "unexpected show create result");
 		goto quit;
 	}
-
-	if (glite_lbu_ExecSQL(ctx, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ", NULL) <= 0) goto quit;
 
 	if (strstr(res[1],"ENGINE=InnoDB"))
 		ctx->caps |= GLITE_LBU_DB_CAP_TRANSACTIONS;
