@@ -1372,6 +1372,7 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 			/*	fallthrough
 			 */
 		case ENOTCONN:
+		case ECONNREFUSED:
 			free(errt); free(errd);
 			/*
 			 *	"recoverable" error - return (>0)

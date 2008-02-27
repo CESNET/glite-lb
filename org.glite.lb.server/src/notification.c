@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <syslog.h>
+#include <unistd.h>
 
 #include "glite/jobid/strmd5.h"
 #include "glite/lbu/trio.h"
@@ -407,6 +409,17 @@ int edg_wll_NotifDropServer(
 		if ( edg_wll_ExecSQL(ctx, stmt, NULL) < 0 ) 
 			goto rollback;
 		edg_wll_NotifCancelRegId(ctx, nid);
+		if (edg_wll_Error(ctx, NULL, NULL) == ECONNREFUSED) {
+			/* Let notification erase from DB, 
+			 * on notif-IL side it will be autopurged later anyway */
+
+			fprintf(stderr,"[%d] edg_wll_NotifDropServer() - NotifID found and dropped,"\
+				" however, connection to notif-IL was refused (notif-IL not running?)\n", getpid());
+			syslog(LOG_INFO,"edg_wll_NotifDropServer() - NotifID found and dropped,"\
+				" however, connection to notif-IL was refused (notif-IL not running?)");
+
+			edg_wll_ResetError(ctx);
+		}
 
 rollback:
 		free(nid_s); nid_s = NULL;
