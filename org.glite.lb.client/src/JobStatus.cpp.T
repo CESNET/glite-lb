@@ -74,10 +74,11 @@ JobStatus::operator=(const JobStatus & in)
   return *this;
 }
 
-JobStatus::JobStatus(const edg_wll_JobStat & in)
+JobStatus::JobStatus(const edg_wll_JobStat & in,int destroy)
 {
   status = (Code)in.state;
   flesh = new CountRef<JobStatus>((void*)&in);
+  if (!destroy) flesh->use();
 }
  
 JobStatus & 
@@ -426,6 +427,16 @@ JobStatus::getAttrName(JobStatus::Attr attr)
   }
 
   return attr_names[attr];
+}
+
+JobStatus::Attr JobStatus::attrByName(std::string const & name)
+{
+	int	a;
+	for (a=0; a<ATTR_MAX; a++) {
+		if (strcasecmp(attr_names[a].c_str(),name.c_str()) == 0) return (JobStatus::Attr) a;
+	}
+	STACK_ADD;
+	throw(Exception(EXCEPTION_MANDATORY,EINVAL,"no such attribute"));
 }
 
 

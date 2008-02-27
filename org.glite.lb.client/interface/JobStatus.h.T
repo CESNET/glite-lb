@@ -223,6 +223,13 @@ public:
 	 * \throws LoggingException Invalid attribute name.
 	 */
 	static const std::string& getAttrName(Attr name);
+
+	/** Find attribute by name (case insensitive)
+	 * \param[in] name String name.
+	 * \returns enum attr value.
+	 * \throws LoggingException Invalid attribute name.
+	 */
+	static Attr attrByName(std::string const &);
   
 	/** List of attributes and their types valid for this
 	 * instance.
@@ -271,8 +278,9 @@ public:
 	 *
 	 * Encapsulates the given struct.
 	 * \param[in] src C struct that holds the status.
+	 * \param[in] destroy destroy src after use.
 	 */
-	JobStatus(const edg_wll_JobStat &src);
+	JobStatus(const edg_wll_JobStat &src,int destroy = 1);
 
         /** Assignment from the C type.
 	 *
