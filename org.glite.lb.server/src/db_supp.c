@@ -86,6 +86,7 @@ int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
 	ret = edg_wll_Error(ctx,NULL,NULL);
 	if (ret == EDG_WLL_ERROR_DB_TRANS_DEADLOCK) {
 		edg_wll_Rollback(ctx);
+		edg_wll_ResetError(ctx);
 		return 1;
 	} else if (ret==0) {
 		edg_wll_Commit(ctx); /* errors propagated further */
