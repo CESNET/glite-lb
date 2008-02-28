@@ -49,7 +49,7 @@ MACHINE_LIB=libglite_lb_statemachine.a
 
 default all: compile
 
-compile: ${PLUGIN_LIB} ${MACHINE_LIB}
+compile: ${MACHINE_LIB}
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
@@ -67,14 +67,14 @@ stage: compile
 install:
 	-mkdir -p ${PREFIX}/lib ${PREFIX}/interface ${PREFIX}/include/glite/lb
 	install -m 644 ${MACHINE_LIB} ${PREFIX}/lib 
-	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib
+#	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib
 	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/intjobstat.h ${PREFIX}/include/glite/lb
 
 
 clean:
-	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB}
+	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB} job_attrs.h
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.c: %.c.T
