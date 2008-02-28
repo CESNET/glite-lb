@@ -426,7 +426,7 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 		idx[i][j] = strdup(showcol[Column_name]);
 //printf("****** [%d, %d] %s\n", i, j, idx[i][j]);
 //FIXME: needed?idx[i][j].value.i = atoi(showcol[Sub_part]);
-		for (i = 0; showcol[i]; i++) free(showcol[i]);
+		for (i = 0; i<(sizeof(showcol)/sizeof(showcol[0])); i++) free(showcol[i]);
 	}
 
 	glite_lbu_FreeStmt(&stmt);
