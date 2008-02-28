@@ -110,7 +110,7 @@ endif
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
@@ -289,7 +289,9 @@ stage:  compile
 	$(MAKE) install PREFIX=${stagedir}
 
 # TODO: restructuring - cleanup the documentation
-doc: generate
+doc:
+
+olddoc: generate
 	cp ${top_srcdir}/doc/*.dox .
 	echo "PROJECT_NUMBER = ${version}" >> C.dox
 	echo "PROJECT_NUMBER = ${version}" >> CPP.dox
