@@ -325,10 +325,17 @@ static int dispatchit(int sock_slave, int sock, int sidx)
 
 	getpeername(conn, (struct sockaddr *)&a, &alen);
 	pom = (char *) &a.sin_addr.s_addr;
-	dprintf(("[master] %s connection from %d.%d.%d.%d:%d\n",
-				services[sidx].id? services[sidx].id: "",
-				(int)pom[0], (int)pom[1], (int)pom[2], (int)pom[3],
-				ntohs(a.sin_port)));
+	if (a.sin_family  == PF_LOCAL) {
+		dprintf(("[master] %s connection from local socket\n",
+					services[sidx].id? services[sidx].id: ""));
+	}
+	else {
+		dprintf(("[master] %s connection from %d.%d.%d.%d:%d\n",
+					services[sidx].id? services[sidx].id: "",
+					(int)pom[0], (int)pom[1], (int)pom[2], (int)pom[3],
+					ntohs(a.sin_port)));
+	}
+
 
 	ret = 0;
 	if (    (   clnt_dispatched < clnt_accepted	/* wraparound */
