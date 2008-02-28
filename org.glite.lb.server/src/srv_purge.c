@@ -508,7 +508,7 @@ static int dump_events(edg_wll_Context ctx, glite_jobid_const_t job, int dump, c
 
 int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, int purge_from_proxy_only)
 {
-	char	*dbjob;
+	char	*dbjob = NULL;
 	char	*stmt = NULL;
 	glite_lbu_Statement	q;
 	int		ret,dumped = 0;
@@ -530,6 +530,10 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 				/* continue */
 				break;
 			case DB_SERVER_JOB:
+				if (purge_from_proxy_only) {
+					/* no action needed */
+					goto commit;
+				}
 				if (ctx->isProxy) {
 					/* should not happen */
 					goto commit;
@@ -607,11 +611,12 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 			int	event;
 
 			
-			assert(ret == 9);
 			event = atoi(res[0]);
 
-			if (dump >= 0) 
+			if (dump >= 0) {
+				assert(ret == 9);
 				if (dump_events( ctx, job, dump, (char **) &res)) goto rollback;
+			}
 
 			if ( purge ) 
 				if (edg_wll_delete_event(ctx,dbjob,event)) goto rollback;
