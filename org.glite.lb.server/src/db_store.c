@@ -92,15 +92,6 @@ db_store(edg_wll_Context ctx, char *event)
 			if (edg_wll_PurgeServerProxy(ctx, ev->any.jobId)) goto rollback;
 	}
 
-commit:
-rollback:;
-  } while (edg_wll_TransNeedRetry(ctx));
-	
-  if (edg_wll_Error(ctx, NULL, NULL)) goto err;
-
-
-  do {
-	if (edg_wll_Transaction(ctx)) goto err;
 
 	if (ev->any.type == EDG_WLL_EVENT_REGJOB &&
 		(ev->regJob.jobtype == EDG_WLL_REGJOB_DAG ||
@@ -108,9 +99,10 @@ rollback:;
 		 ev->regJob.jobtype == EDG_WLL_REGJOB_COLLECTION) &&
 		ev->regJob.nsubjobs > 0)  
 
-			if (register_subjobs_embryonic(ctx,&ev->regJob)) goto rollback2;
+			if (register_subjobs_embryonic(ctx,&ev->regJob)) goto rollback;
 
-rollback2:;
+commit:
+rollback:;
   } while (edg_wll_TransNeedRetry(ctx));
 
   if (edg_wll_Error(ctx, NULL, NULL)) goto err;
