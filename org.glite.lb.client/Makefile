@@ -110,19 +110,16 @@ endif
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
-LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 	producer.o uiwrap.o statistics.o
-# TODO: restructuring - do we really need FAKE versions? maybe remove all FAKEs here
-FAKELIBOBJS:=consumer_fake.o producer_fake.o
 
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
 
 HDRS:=consumer.h notification.h statistics.h prod_proto.h connection.h \
 	Job.h Notification.h ServerConnection.h 
-FAKE_HDRS:=consumer_fake.h producer_fake.h
 GEN_HDRS:=JobStatus.h producer.h
 
 LIBTHROBJS:=${LIBOBJS:.o=.thr.o}
@@ -133,14 +130,8 @@ PLUSTHROBJS:=${PLUSOBJS:.o=.thr.o}
 PLUSLOBJS:=${PLUSOBJS:.o=.lo}
 PLUSTHRLOBJS:=${PLUSOBJS:.o=.thr.lo}
 
-FAKELIBTHROBJS:=${FAKELIBOBJS:.o=.thr.o}
-FAKELIBLOBJS:=${FAKELIBOBJS:.o=.lo}
-FAKELIBTHRLOBJS:=${FAKELIBOBJS:.o=.thr.lo}
-
 LIB:=libglite_lb_client_${nothrflavour}.la
 THRLIB:=libglite_lb_client_${thrflavour}.la
-FAKELIB:=libglite_lb_client_fake_${nothrflavour}.la
-FAKETHRLIB:=libglite_lb_client_fake_${thrflavour}.la
 
 PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
@@ -158,8 +149,6 @@ EXAMPLES_CL:=${EXAMPLES_CL_SRC:.c=}
 
 EXAMPLES_CL_THR_SRC:=user_jobs_threaded.c
 EXAMPLES_CL_THR:=${EXAMPLES_CL_THR_SRC:.c=}
-
-FAKE_EXAMPLES:=job_log_fake
 
 MAN_GZ:=glite-lb-logevent.1.gz
 MAN8_GZ:=glite-lb-dump.8.gz glite-lb-load.8.gz glite-lb-purge.8.gz
@@ -201,16 +190,6 @@ ${THRLIB}: ${LIBTHROBJS}
 			${COMMON_LIB_THR} ${TRIO_LIB} \
 			-lglite_security_gss_${thrflavour}
 
-${FAKELIB}: ${FAKELIBOBJS}
-	${LINK} ${version_info} -o $@ ${FAKELIBLOBJS} -rpath ${PREFIX}/lib \
-			${COMMON_LIB} \
-			-lglite_security_gss_${nothrflavour}
-
-${FAKETHRLIB}: ${FAKELIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${FAKELIBTHRLOBJS} -rpath ${PREFIX}/lib \
-			${COMMON_LIB_THR} \
-			-lglite_security_gss_${thrflavour}
-
 ${PLUSLIB}: ${PLUSOBJS} ${LIB}
 	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB} ${PLUS_EXTRA_LIB}
 
@@ -232,13 +211,7 @@ ${EXAMPLES_CL}: %: %.o
 ${EXAMPLES_CL_THR}: %: %.o
 	${LINK} -o $@ $< ${THRLIB} ${COMMON_LIB_THR} ${EXT_LIB} 
 
-${FAKE_EXAMPLES}: %: %.o ${FAKELIB}
-	${LINK} -o $@ $< ${FAKELIB} ${TEST_LIBS} ${EXT_LIB} 
-
 ${TOOLS}: ${LIB}
-
-${FAKE_EXAMPLES:=.o}: %.o: %.cpp
-	${COMPILE} ${TEST_INC} -c $< -o $@
 
 notify_supp.o ${PLUSOBJS}: %.o: %.cpp
 	${CXXCOMPILE} -c $<
@@ -251,14 +224,11 @@ ${EXAMPLES_PLUS}: ${PLUSLIB}
 ${EXAMPLES_PLUS}: %: %.o
 	${LINKXX} -o $@ $< ${PLUSLIB}
 
-${LIBOBJS} ${FAKELIBOBJS}: %.o: %.c
+${LIBOBJS}: %.o: %.c
 	${COMPILE} -c $<
 
-${LIBTHROBJS} ${FAKELIBTHROBJS}: %.thr.o: %.c
+${LIBTHROBJS}: %.thr.o: %.c
 	${COMPILE} -o $@ -c $<
-
-logevent_fake.o: logevent.c
-	${COMPILE} -c $< -o $@
 
 ${MAN_GZ}: ${MAN}
 	rm -f ${MAN_GZ} ${MAN}
@@ -301,8 +271,6 @@ perftest_logjobs.o: perftest_logjobs.c
 
 examples: ${EXAMPLES} ${EXAMPLES_PLUS} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 
-fake: ${FAKE_EXAMPLES}
-
 check: compile 
 # shut up check.producer
 
@@ -317,11 +285,8 @@ producer_test.o: %.o: %.cpp
 
 man: ${MAN_GZ} ${MAN8_GZ}
 
-# XXX is fake needed?
-# stage:  compile ${FAKELIB} ${FAKETHRLIB} 
 stage:  compile
 	$(MAKE) install PREFIX=${stagedir}
-	${INSTALL} -m 644 ${FAKELIB} ${FAKETHRLIB} ${stagedir}/lib
 
 # TODO: restructuring - cleanup the documentation
 doc: generate
@@ -348,7 +313,7 @@ else
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${top_srcdir}/doc/README-fake ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) 
 	${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} 
 ifndef LB_STANDALONE
@@ -376,7 +341,7 @@ endif
 	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
 
 clean:
-	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test C/ CPP/
+	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
 	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -vf ${globalprefix} ${lbprefix}
@@ -387,4 +352,4 @@ check_version:
 
 JobStatus.h: StatusAttrNames.pl
 
-.PHONY: default all compile examples fake check stage install clean check_version
+.PHONY: default all compile examples check stage install clean check_version
