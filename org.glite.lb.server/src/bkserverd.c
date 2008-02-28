@@ -151,7 +151,8 @@ static char				*server_subject = NULL;
 
 
 static time_t			purge_timeout[EDG_WLL_NUMBER_OF_STATCODES];
-static time_t			notif_duration = 60*60*24*7;
+static time_t			notif_duration_max = 60*60*24,
+				notif_duration = 60*60*2;
 
 static edg_wll_GssCred	mycred = NULL;
 time_t					cert_mtime = 0;
@@ -245,7 +246,7 @@ static void usage(char *me)
 		"\t-l, --semaphores number of semaphores (job locks) to use\n"
 		"\t-i, --pidfile\t file to store master pid\n"
 		"\t-L, --limits\t query limits numbers in format \"events_limit:jobs_limit:size_limit\"\n"
-		"\t-N, --notif-dur\t Maximal duration of notification registrations in hours\n"
+		"\t-N, --notif-dur default[:max]\t Duration of notification registrations in seconds (default and maximal)\n"
 		"\t-S, --purge-prefix\t purge files full-path prefix\n"
 		"\t-D, --dump-prefix\t dump files full-path prefix\n"
 		"\t-J, --jpreg-dir\t JP registration temporary files prefix (implies '-j')\n"
@@ -431,7 +432,18 @@ int main(int argc, char *argv[])
 				return 1;
 			}
 			break;
-		case 'N': notif_duration = atoi(optarg) * (60*60); break;
+		case 'N': {
+				int	std,max;
+				switch (sscanf(optarg,"%d:%d",&std,&max)) {
+					case 2: notif_duration_max = max;
+						/* fallthrough */
+					case 1: notif_duration = std;
+						break;
+					default: 
+						usage(name);
+						return 1;
+				}
+			}  break;
 		case 'X': notif_ilog_socket_path = strdup(optarg); break;
 		case 'Y': notif_ilog_file_prefix = strdup(optarg); break;
 		case 'i': strcpy(pidfile,optarg); break;
@@ -954,6 +966,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	/*	set globals
 	 */
 	ctx->notifDuration = notif_duration;
+	ctx->notifDurationMax = notif_duration_max;
 	ctx->purgeStorage = strdup(purgeStorage);
 	ctx->dumpStorage = strdup(dumpStorage);
 	if ( jpreg ) ctx->jpreg_dir = strdup(jpregDir); else ctx->jpreg_dir = NULL;
@@ -1214,6 +1227,7 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 	/*	set globals
 	 */
 	ctx->notifDuration = notif_duration;
+	ctx->notifDurationMax = notif_duration_max;
 	if ( jpreg ) ctx->jpreg_dir = strdup(jpregDir); else ctx->jpreg_dir = NULL;
 	ctx->allowAnonymous = 1;
 	ctx->isProxy = 1;

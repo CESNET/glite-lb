@@ -25,6 +25,7 @@ static int update_notif(edg_wll_Context, const edg_wll_NotifId,
 						const char *, const char *, const char *);
 
 static int get_indexed_cols(edg_wll_Context,char const *,edg_wll_QueryRec **,char **);
+static void adjust_validity(edg_wll_Context,time_t *);
 
 
 int edg_wll_NotifNewServer(
@@ -78,12 +79,10 @@ int edg_wll_NotifNewServer(
 
 	/*	Format time of validity
 	 */
-	*valid = time(NULL);
-	if (   ctx->peerProxyValidity
-		&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
-		*valid = ctx->peerProxyValidity;
-	else
-		*valid += ctx->notifDuration;
+
+/* XXX: until valid works [inout] */
+	*valid = time(NULL) + ctx->notifDuration;	
+	adjust_validity(ctx,valid);
 
 	glite_lbu_TimeToDB(*valid, &time_s);
 	if ( !time_s )
@@ -191,12 +190,10 @@ int edg_wll_NotifBindServer(
 
 	/*	Format time of validity
 	 */
-	*valid = time(NULL);
-	if (   ctx->peerProxyValidity
-		&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
-		*valid = ctx->peerProxyValidity;
-	else
-		*valid += ctx->notifDuration;
+
+/* XXX: until valid works [inout] */
+	*valid = time(NULL) + ctx->notifDuration;	
+	adjust_validity(ctx,valid);
 
 	glite_lbu_TimeToDB(*valid, &time_s);
 	if ( !time_s )
@@ -347,12 +344,10 @@ int edg_wll_NotifRefreshServer(
 
 	/*	Format time of validity
 	 */
-	*valid = time(NULL);
-	if (   ctx->peerProxyValidity
-		&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
-		*valid = ctx->peerProxyValidity;
-	else
-		*valid += ctx->notifDuration;
+
+/* XXX: until valid works [inout] */
+	*valid = time(NULL) + ctx->notifDuration;	
+	adjust_validity(ctx,valid);
 
 	glite_lbu_TimeToDB(*valid, &time_s);
 	if ( !time_s )
@@ -716,3 +711,20 @@ static int get_indexed_cols(edg_wll_Context ctx,char const *notif,edg_wll_QueryR
 	*update_out = aux;
 	return edg_wll_ResetError(ctx);
 }
+
+static void adjust_validity(edg_wll_Context ctx,time_t *valid)
+{
+	time_t	now;
+
+	if (*valid <= 0) {
+		time(&now); 
+		*valid = now + ctx->notifDuration;
+	}
+
+	if (ctx->peerProxyValidity && ctx->peerProxyValidity < *valid)
+		*valid = ctx->peerProxyValidity;
+
+	if (*valid - now > ctx->notifDurationMax) 
+		*valid = now + ctx->notifDurationMax;
+}
+
