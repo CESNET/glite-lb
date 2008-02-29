@@ -67,11 +67,12 @@ stage: compile
 install:
 	-mkdir -p ${PREFIX}/lib ${PREFIX}/interface ${PREFIX}/include/glite/lb
 	install -m 644 ${MACHINE_LIB} ${PREFIX}/lib 
-#	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib
+	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib
 	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/intjobstat.h ${PREFIX}/include/glite/lb
 	install -m 644 ${top_srcdir}/interface/seqcode_aux.h ${PREFIX}/include/glite/lb
+	install -m 644 job_attrs.h ${PREFIX}/include/glite/lb
 
 clean:
 	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB} job_attrs.h

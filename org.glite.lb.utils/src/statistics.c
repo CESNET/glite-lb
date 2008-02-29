@@ -23,7 +23,7 @@
 #include "glite/jp/file_plugin.h"
 #include "glite/jp/known_attr.h"
 #include "glite/jp/attr.h"
-#include "glite/lb/jp_job_attrs.h"
+#include "glite/lb/job_attrs.h"
 
 
 typedef int init_f(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data);
