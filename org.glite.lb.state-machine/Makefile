@@ -49,7 +49,7 @@ MACHINE_LIB=libglite_lb_statemachine.a
 
 default all: compile
 
-compile: ${MACHINE_LIB}
+compile: ${MACHINE_LIB} ${PLUGIN_LIB}
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
