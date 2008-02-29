@@ -221,7 +221,7 @@ WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
 
 HDRS=index.h lb_authz.h store.h
 
-MAN_GZ:=glite-lb-mon-db.1.gz
+MAN_GZ:=glite-lb-bkindex.8.gz glite-lb-bkserverd.8.gz glite-lb-mon-db.1.gz
 MAN = $(MAN_GZ:.gz=)
 
 LIB_OBJS_BK:= \
@@ -236,9 +236,6 @@ LIB_OBJS_BK:= \
 MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
 MONDB_LIBS:=${COMMON_LIBS} ${LB_MACHINE_LIB} ${LB_UTILS_DB_LIB} ${EXT_LIBS} 
 
-MAN_GZ:= glite-lb-bkindex.8.gz glite-lb-bkserverd.8.gz
-MAN = $(MAN_GZ:.gz=)
-
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
@@ -247,10 +244,6 @@ glite-lb-bkindex: ${INDEX_OBJS}
 
 glite-lb-mon-db: ${MONDB_OBJS}
 	${LINKXX} -o $@ ${MONDB_OBJS} ${MONDB_LIBS}
-
-${MAN_GZ}: ${MAN}
-	cp $? .
-	gzip $(notdir $?)
 
 compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${MAN_GZ}
 
@@ -301,8 +294,7 @@ query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o ind
 
 test_query_events: ${query_events_objs}
 	${LINKXX} -o $@ ${query_events_objs} \
-	${TEST_LIBS} ${LB_COMMON_LIB} ${classadslib}
-#	${TEST_LIBS} ${COMMON_LIBS} ${EXT_LIBS}
+	${TEST_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib}
 
 test.soapconv: test_soap_conv
 	./test_soap_conv
@@ -331,11 +323,11 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 
 doc: ${MAN_GZ}
 
+man: ${MAN_GZ}
+
 ${MAN_GZ}: ${MAN}
 	cp $? .
 	gzip -f $(notdir $?)
-
-man: ${MAN_GZ}
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
@@ -404,3 +396,4 @@ soap_version.h:
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 bkserverd.o ws_fault.o: soap_version.h
 endif
+
