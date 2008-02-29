@@ -24,9 +24,6 @@ version=${module.version}
 
 default all: compile
 
-# disable lb plugin in order to build also with 3.1 JP
-BUILD_PLUGIN=yes
-
 GLITE_LB_SERVER_WITH_WS=yes
 
 ifdef LB_STANDALONE
@@ -103,6 +100,9 @@ else
 	LDFLAGS:= -L${stagedir}/lib
 endif
 
+# LB_MACHINE_LIB:=${stagedir}/lib/libglite_lb_statemachine.a
+LB_MACHINE_LIB:=-L${stagedir}/lib -lglite_lb_statemachine
+
 ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE
 endif
@@ -161,13 +161,9 @@ EXT_LIBS:=  \
 	${VOMS_LIBS}
 
 COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio
-PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour} -lglite_lbu_trio \
-	${classadslib} -lstdc++ ${expatlib} -lexpat
-
-PLUGIN_LOBJS:= lb_plugin.lo jobstat_supp.lo process_event.lo process_event_pbs.lo process_event_condor.lo
 
 BKSERVER_BASE_OBJS:= \
-	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o process_event_pbs.o process_event_condor.o \
+	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
 	seqcode.o write2rgma.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
@@ -186,6 +182,7 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
 		${LB_COMMON_LIB} \
+		${LB_MACHINE_LIB} \
 		${LB_UTILS_DB_LIB} \
 		${GSOAP_LIB} \
 		${EXT_LIBS} \
@@ -196,6 +193,7 @@ else
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
 		${LB_COMMON_LIB} \
+		${LB_MACHINE_LIB} \
 		${LB_UTILS_DB_LIB} \
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS} \
@@ -203,11 +201,11 @@ else
 endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
-	jobstat.o process_event.o process_event_pbs.o process_event_condor.o query.o lock.o get_events.o write2rgma.o index_lex.o \
+	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o stats.o\
 	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.lo
 
-INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
+INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${LB_MACHINE_LIB} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
@@ -227,7 +225,7 @@ MAN_GZ:=glite-lb-mon-db.1.gz
 MAN = $(MAN_GZ:.gz=)
 
 LIB_OBJS_BK:= \
-	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o process_event.o process_event_pbs.o process_event_condor.o \
+	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
 	seqcode.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o \
 	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
@@ -236,7 +234,7 @@ LIB_OBJS_BK:= \
 	db_calls.o db_supp.o
 
 MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
-MONDB_LIBS:=${COMMON_LIBS} ${LB_UTILS_DB_LIB} ${EXT_LIBS} 
+MONDB_LIBS:=${COMMON_LIBS} ${LB_MACHINE_LIB} ${LB_UTILS_DB_LIB} ${EXT_LIBS} 
 
 MAN_GZ:= glite-lb-bkindex.8.gz glite-lb-bkserverd.8.gz
 MAN = $(MAN_GZ:.gz=)
@@ -247,29 +245,16 @@ glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 glite-lb-bkindex: ${INDEX_OBJS}
 	${LINKXX} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}
 
-glite_lb_plugin.la: ${PLUGIN_LOBJS}
-	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
-
 glite-lb-mon-db: ${MONDB_OBJS}
 	${LINKXX} -o $@ ${MONDB_OBJS} ${MONDB_LIBS}
-
-ifdef LB_STANDALONE
-    PLUGIN_LIB=
-else
-ifndef BUILD_PLUGIN
-    PLUGIN_LIB=
-else
-    PLUGIN_LIB=glite_lb_plugin.la
-endif
-endif
 
 ${MAN_GZ}: ${MAN}
 	cp $? .
 	gzip $(notdir $?)
 
-compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${PLUGIN_LIB} ${MAN_GZ}
+compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${MAN_GZ}
 
-generate: store.c index.c jp_job_attrs.h
+generate: store.c index.c 
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -344,9 +329,6 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 	ar crv $@ ${LIB_OBJS_BK}
 	ranlib $@
 
-jp_job_attrs.h: job-attrs.xsd jp_job_attrs.xsl 
-	${XSLTPROC} ../src/jp_job_attrs.xsl $< >$@
-
 doc: ${MAN_GZ}
 
 ${MAN_GZ}: ${MAN}
@@ -376,21 +358,15 @@ install:
 	done
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
-	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
-	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
 
 	if [ ${stagedir} != ${PREFIX} ]; then ${INSTALL} -m 755 ${stagedir}/bin/glite-lb-notif-interlogd ${PREFIX}/bin; fi
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix})
 	install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib
-	if [ x${LB_STANDALONE} = x -a x${PLUGIN_LIB} != x ]; then \
-		${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib; \
-		${INSTALL} -m 644 jp_job_attrs.h ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
-	fi
 	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}
-	 ${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
+	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
 clean:
-	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${PLUGIN_LIB} test* ${MAN_GZ}
+	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test* ${MAN_GZ}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.c: %.c.T
@@ -419,9 +395,6 @@ test_query_events.o: %.o: %.cpp
 
 %.lo: %.c
 	${COMPILE} -o $@ -c $<
-
-lb_plugin.lo: lb_plugin.c jp_job_attrs.h
-	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<
 
 soap_version.h:
 	${gsoap_bin_prefix}/soapcpp2 /dev/null

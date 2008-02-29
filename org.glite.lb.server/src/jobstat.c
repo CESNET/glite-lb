@@ -13,6 +13,7 @@
 #include "glite/lbu/trio.h"
 #include "glite/lb/events.h"
 #include "glite/lb/context-int.h"
+#include "glite/lb/intjobstat.h"
 
 #include "get_events.h"
 #include "store.h"
