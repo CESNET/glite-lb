@@ -14,6 +14,7 @@
 #include "intjobstat.h"
 #include "seqcode_aux.h"
 
+
 /* TBD: share in whole logging or workload */
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))
@@ -70,6 +71,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 }
 
 #define rep(a,b) { free(a); a = (b == NULL) ? NULL : strdup(b); }
+#define rep_cond(a,b) { if (b) { free(a); a = strdup(b); } }
 
 static void free_stringlist(char ***lptr)
 {
@@ -238,10 +240,14 @@ static char* location_string(const char *source, const char *host, const char *i
 	return ret;
 }
 
+/* is seq. number of 'es' before WMS higher then 'js' */
 static int after_enter_wm(const char *es,const char *js)
 {
-	return component_seqcode(es,EDG_WLL_SOURCE_NETWORK_SERVER) >
-		component_seqcode(js,EDG_WLL_SOURCE_NETWORK_SERVER);
+	return ((component_seqcode(es,EDG_WLL_SOURCE_NETWORK_SERVER) >
+		component_seqcode(js,EDG_WLL_SOURCE_NETWORK_SERVER))
+		||
+		(component_seqcode(es,EDG_WLL_SOURCE_USER_INTERFACE) >
+		component_seqcode(js,EDG_WLL_SOURCE_USER_INTERFACE)));
 }
 
 
@@ -270,20 +276,21 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
 	edg_wll_JobStatCode	old_state = js->pub.state;
-/* unused	enum edg_wll_StatDone_code	old_done_code = js->pub.done_code; */
 	edg_wll_JobStatCode	new_state = EDG_WLL_JOB_UNKNOWN;
 	int			res = RET_OK,
 				fine_res = RET_OK;
 				
 	int	lm_favour_lrms = 0;
 
-	if (old_state == EDG_WLL_JOB_ABORTED ||
+	// Aborted may not be terminal state for collection in some cases
+	// i.e. if some Done/failed subjob is resubmitted
+	if ( (old_state == EDG_WLL_JOB_ABORTED && e->any.type != EDG_WLL_EVENT_COLLECTIONSTATE) ||
 		old_state == EDG_WLL_JOB_CANCELLED ||
 		old_state == EDG_WLL_JOB_CLEARED) {
 		res = RET_LATE;
 	}
 
-/* new event coming from NS => forget about any resubmission loops */
+/* new event coming from NS or UI => forget about any resubmission loops */
 	if (e->type != EDG_WLL_EVENT_CANCEL && 
 		js->last_seqcode &&
 		after_enter_wm(e->any.seqcode,js->last_seqcode))
@@ -654,6 +661,22 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			}
 #endif
 			break;
+		case EDG_WLL_EVENT_SUSPEND:
+			if (USABLE(res, strict)) {
+				if (js->pub.state == EDG_WLL_JOB_RUNNING) {
+					js->pub.suspended = 1;
+					rep(js->pub.suspend_reason, e->suspend.reason);
+				}
+			}
+			break;
+		case EDG_WLL_EVENT_RESUME:
+			if (USABLE(res, strict)) {
+				if (js->pub.state == EDG_WLL_JOB_RUNNING) {
+					js->pub.suspended = 0;
+					rep(js->pub.suspend_reason, e->resume.reason);
+				}
+			}
+			break;
 		case EDG_WLL_EVENT_RESUBMISSION:
 			if (USABLE(res, strict)) {
 				if (e->resubmission.result == EDG_WLL_RESUBMISSION_WONTRESUB) {
@@ -734,6 +757,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 						js->pub.cancelling = 1; break;
 					case EDG_WLL_CANCEL_DONE:
 						js->pub.state = EDG_WLL_JOB_CANCELLED;
+						js->pub.remove_from_proxy = 1;
 						rep(js->pub.reason, e->cancel.reason);
 						rep(js->last_seqcode, e->any.seqcode);
 						rep(js->pub.location, "none");
@@ -756,6 +780,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (e->any.source == EDG_WLL_SOURCE_WORKLOAD_MANAGER) res = RET_OK;
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_ABORTED;
+				js->pub.remove_from_proxy = 1;
 				rep(js->pub.reason, e->abort.reason);
 				rep(js->pub.location, "none");
 
@@ -766,6 +791,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		case EDG_WLL_EVENT_CLEAR:
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_CLEARED;
+				js->pub.remove_from_proxy = 1;
 				rep(js->pub.location, "none");
 				switch (e->clear.reason) {
 					case EDG_WLL_CLEAR_USER:
@@ -821,7 +847,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				js->pub.state = EDG_WLL_JOB_SUBMITTED;
 			}
 			if (USABLE_DATA(res, strict)) {
-				rep(js->pub.jdl, e->regJob.jdl);
+				rep_cond(js->pub.jdl, e->regJob.jdl);
 				edg_wlc_JobIdFree(js->pub.parent_job);
 				edg_wlc_JobIdDup(e->regJob.parent,
 							&js->pub.parent_job);
@@ -900,6 +926,11 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			else rep(js->last_seqcode, e->any.seqcode);
 		}
 
+		if (js->pub.state != EDG_WLL_JOB_RUNNING) {
+			js->pub.suspended = 0;
+			rep(js->pub.suspend_reason, NULL);
+		}
+
 		if (fine_res == RET_GOODBRANCH) {
 			rep(js->last_branch_seqcode, e->any.seqcode);
 		}
@@ -951,9 +982,13 @@ int add_stringlist(char ***lptr, const char *new_item)
 
 void destroy_intJobStat_extension(intJobStat *p)
 {
-	free(p->last_seqcode); p->last_seqcode = NULL;
-	free(p->last_cancel_seqcode); p->last_cancel_seqcode = NULL;
-			       p->resubmit_type = EDG_WLL_RESUBMISSION_UNDEFINED;
+	if (p->last_seqcode) free(p->last_seqcode);
+	if (p->last_cancel_seqcode) free(p->last_cancel_seqcode);
+	if (p->branch_tag_seqcode) free(p->branch_tag_seqcode);
+	if (p->last_branch_seqcode) free(p->last_branch_seqcode);
+	if (p->deep_resubmit_seqcode) free(p->deep_resubmit_seqcode);
+	free_branch_state(&p->branch_states);
+	memset(p,0,sizeof(*p));
 }
 
 void destroy_intJobStat(intJobStat *p)
