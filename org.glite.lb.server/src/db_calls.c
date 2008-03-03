@@ -58,21 +58,19 @@ clean:
 /* just lock one row corresponding to job in table jobs
  * lock_mode: 0 = lock in share mode / 1 = for update
  */
-int edg_wll_LockJobRow(edg_wll_Context ctx, glite_jobid_const_t job, int lock_mode) 
+int edg_wll_LockJobRow(edg_wll_Context ctx, const char *job, int lock_mode) 
 {
-	char			*jobid_md5 = NULL;
 	char			*stmt = NULL;
 	glite_lbu_Statement 	sh;
 	int			nr;
 
 
 	edg_wll_ResetError(ctx);
-	jobid_md5 = edg_wlc_JobIdGetUnique(job);
 
 	if (lock_mode) 
-		trio_asprintf(&stmt, "select count(*) from jobs where jobid='%|Ss' for update", jobid_md5);
+		trio_asprintf(&stmt, "select count(*) from jobs where jobid='%|Ss' for update", job);
 	else
-		trio_asprintf(&stmt, "select count(*) from jobs where jobid='%|Ss' lock in share mode", jobid_md5);
+		trio_asprintf(&stmt, "select count(*) from jobs where jobid='%|Ss' lock in share mode", job);
 
 	if ((nr = edg_wll_ExecSQL(ctx,stmt,&sh)) < 0) goto cleanup;
 	if (nr == 0) {
@@ -83,7 +81,6 @@ int edg_wll_LockJobRow(edg_wll_Context ctx, glite_jobid_const_t job, int lock_mo
 cleanup:
 	if (sh) glite_lbu_FreeStmt(&sh);
 	free(stmt); stmt = NULL;
-	free(jobid_md5);
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }

@@ -107,7 +107,7 @@ int edg_wll_JobStatusServer(
 		whole_cycle = 0;
 
 		if (edg_wll_Transaction(ctx)) goto rollback;
-		if (edg_wll_LockJobRowInShareMode(ctx, job)) goto rollback;;
+		if (edg_wll_LockJobRowInShareMode(ctx, md5_jobid)) goto rollback;;
 
 
 		if (edg_wll_GetACL(ctx, job, &acl)) goto rollback;
@@ -384,7 +384,7 @@ int edg_wll_intJobStatus(
 	if (edg_wll_QueryEventsServer(ctx,1, (const edg_wll_QueryRec **)jqra, NULL, &events)) {
 		free(string_jobid);
 		free(jqra);
-		free(intstat->pub.owner);
+		free(intstat->pub.owner); intstat->pub.owner = NULL;
                 return edg_wll_Error(ctx, NULL, NULL);
 	}
 	free(jqra);
@@ -394,7 +394,7 @@ int edg_wll_intJobStatus(
 
 	if (num_events == 0) {
 		free(string_jobid);
-		free(intstat->pub.owner);
+		free(intstat->pub.owner); intstat->pub.owner = NULL;
 		return edg_wll_SetError(ctx,ENOENT,NULL);
 	}
 
@@ -690,7 +690,7 @@ edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
 	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
 
 	if (lock) {
-		edg_wll_LockJobRowForUpdate(ctx,jobid);
+		edg_wll_LockJobRowForUpdate(ctx,jobid_md5);
 	}
 
 	if (seq == -1) {
