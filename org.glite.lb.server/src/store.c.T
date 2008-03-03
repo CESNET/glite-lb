@@ -286,6 +286,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 	trio_asprintf(&q,"select proxy,server,grey from jobs where jobid='%|Ss' for update", unique);
 
 	nar = edg_wll_ExecSQL(ctx,q,&stmt);
+	free(q); q = NULL;
 
 	if (nar < 0) goto err;
 	else if (nar == 0) {
@@ -337,6 +338,8 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 			if ( (!strcmp(res[0],"0") && ctx->isProxy) || (!strcmp(res[1],"0") && !ctx->isProxy) ) {
 				trio_asprintf(&q,"update jobs set server='1', proxy='1' where jobid='%|Ss'",
 					unique);
+				if (edg_wll_ExecSQL(ctx,q,NULL) < 0) goto err;
+				free(q); q = NULL;
 			}
 		}
 
