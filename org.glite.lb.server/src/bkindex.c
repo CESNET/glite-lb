@@ -370,9 +370,15 @@ static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_
 				stat = NULL;
 				if (!edg_wlc_JobIdParse(res[4], &jobid)) {
 					if ((stat = malloc(sizeof(intJobStat))) != NULL) {
-						if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1)) {
+						if (!edg_wll_LoadIntState(ctx, jobid, 0 /* DONT_LOCK */, -1 /*all events*/, &stat)) {
+							destroy_intJobStat_extension(stat);
 							free(stat);
 							stat = NULL;
+						} else {
+							if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1)) {
+								free(stat);
+								stat = NULL;
+							}
 						}
 					}
 					edg_wlc_JobIdFree(jobid);
