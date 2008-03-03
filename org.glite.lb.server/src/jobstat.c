@@ -133,6 +133,9 @@ int edg_wll_JobStatusServer(
 		} else {
 			if (edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store)) {
 				edg_wll_UpdateError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, "Could not compute job status from events");
+				syslog(LOG_ERR, "Could not compute status of job %s events (corrupted DB?)\n",string_jobid);
+				fprintf(stderr, "[%d] Could not compute status of job %s events (corrupted DB?)\n", getpid(), string_jobid);
+
 				goto rollback;
 			}
 			*stat = jobstat.pub;
