@@ -16,6 +16,7 @@
 #include "jobstat.h"
 #include "db_supp.h"
 #include "openserver.h"
+#include "db_calls.h"
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -361,38 +362,46 @@ static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_
 		return edg_wll_Error(ctx, NULL, NULL);
 	}
 	while ((ret=edg_wll_FetchRow(ctx,sh,sizeof(res)/sizeof(res[0]),NULL,res)) >0) {
-		if (strcmp(res[3], INTSTAT_VERSION)) {
-			stat = NULL;
-			if (!edg_wlc_JobIdParse(res[4], &jobid)) {
-				if ((stat = malloc(sizeof(intJobStat))) != NULL) {
-					if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1)) {
-						free(stat);
-						stat = NULL;
+		do {
+	                if (edg_wll_Transaction(ctx)) goto rollback;
+        	        if (edg_wll_LockJobRowInShareMode(ctx, res[4])) goto rollback;;
+
+			if (strcmp(res[3], INTSTAT_VERSION)) {
+				stat = NULL;
+				if (!edg_wlc_JobIdParse(res[4], &jobid)) {
+					if ((stat = malloc(sizeof(intJobStat))) != NULL) {
+						if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1)) {
+							free(stat);
+							stat = NULL;
+						}
 					}
+					edg_wlc_JobIdFree(jobid);
 				}
-				edg_wlc_JobIdFree(jobid);
+			} else {
+				stat = dec_intJobStat(res[1], &rest);
+				if (rest == NULL) stat = NULL;
 			}
-		} else {
-			stat = dec_intJobStat(res[1], &rest);
-			if (rest == NULL) stat = NULL;
-		}
-		if (stat == NULL) {
-			glite_lbu_FreeStmt(&sh);
-			return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE,
-				"cannot decode int_status from states DB table");
-		}
+			if (stat == NULL) {
+				glite_lbu_FreeStmt(&sh);
+				edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE,
+					"cannot decode int_status from states DB table");
+				goto rollback;
+			}
 
-		edg_wll_IColumnsSQLPart(ctx, job_index_cols, &stat->pub, 0, NULL, &icvalues);
-		trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
-		ret = edg_wll_ExecSQL(ctx, stmt, NULL);
+			edg_wll_IColumnsSQLPart(ctx, job_index_cols, &stat->pub, 0, NULL, &icvalues);
+			trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
+			ret = edg_wll_ExecSQL(ctx, stmt, NULL);
 
-		for (i = 0; i < 5; i++) free(res[i]);
-		destroy_intJobStat(stat); free(stat);
-		free(stmt); free(icvalues);
+			for (i = 0; i < 5; i++) free(res[i]);
+			destroy_intJobStat(stat); free(stat);
+			free(stmt); free(icvalues);
 
-		if (ret < 0) return edg_wll_Error(ctx, NULL, NULL);
-		
+			if (ret < 0) goto rollback;
+rollback:;
+		}  while (edg_wll_TransNeedRetry(ctx));
+		if (edg_wll_Error(ctx, NULL, NULL))  goto err;
 	}
+err:
 	glite_lbu_FreeStmt(&sh);
 	return edg_wll_Error(ctx, NULL, NULL);
 }
