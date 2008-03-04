@@ -193,7 +193,7 @@ event_queue_connect(struct event_queue *eq)
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
 	    abort();
     /* check if we need to release the credentials */
-    --local_cred_handle->coounter;
+    --local_cred->handle->counter;
     if(local_cred_handle != cred_handle && local_cred_handle->counter == 0) {
 	    edg_wll_gss_release_cred(&local_cred_handle->creds, NULL);
 	    free(local_cred_handle);
