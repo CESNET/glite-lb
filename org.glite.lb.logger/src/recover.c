@@ -42,6 +42,12 @@ recover_thread(void *q)
 			if (new_creds != NULL) {
 				if(pthread_mutex_lock(&cred_handle_lock) < 0)
 					abort();
+				/* if no one is using the old credentials, release them */
+				if(cred_handle && cred_handle->counter == 0) {
+					edg_wll_gss_release_cred(&cred_handle->creds, NULL);
+					free(cred_handle);
+					il_log(LOG_DEBUG, "  freed old credentials\n");
+				}
 				cred_handle = malloc(sizeof(*cred_handle));
 				if(cred_handle == NULL) {
 					il_log(LOG_CRIT, "Failed to allocate structure for credentials.\n");

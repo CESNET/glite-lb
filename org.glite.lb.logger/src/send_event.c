@@ -179,29 +179,28 @@ event_queue_connect(struct event_queue *eq)
 
     tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;
-    /* get thread specific pointer to credentials */
-    local_cred_handle = pthread_getspecific(cred_handle_key);
 
-    /* check if there are new credentials */
+    /* get pointer to the credentials */
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
 	    abort();
-    if(local_cred_handle != cred_handle) {
-	    il_log(LOG_DEBUG, "    new credentials were found, discarding old\n");
-	    /* decrement counter in credentials, if it goes to zero, deallocate */
-	    if(local_cred_handle && --(local_cred_handle->counter) == 0) {
-		    edg_wll_gss_release_cred(&local_cred_handle->creds, &gss_stat);
-		    free(local_cred_handle);
-		    il_log(LOG_DEBUG, "   freed old credentials, not used anymore\n");
-	    }
-	    /* use the new credentials, increment usage count */
-	    local_cred_handle = cred_handle;
-	    local_cred_handle->counter++;
-	    pthread_setspecific(cred_handle_key, local_cred_handle);
+    local_cred_handle = cred_handle;
+    local_cred_handle->counter++;
+    if(pthread_mutex_unlock(&cred_handle_lock) < 0)
+	    abort();
+    
+    il_log(LOG_DEBUG, "    trying to connect to %s:%d\n", eq->dest_name, eq->dest_port);
+    ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
+    if(pthread_mutex_lock(&cred_handle_lock) < 0)
+	    abort();
+    /* check if we need to release the credentials */
+    if(local_cred_handle != cred_handle && --(local_cred_handle->counter) == 0) {
+	    edg_wll_gss_release_cred(&local_cred_handle->creds, NULL);
+	    free(local_cred_handle);
+	    il_log(LOG_DEBUG, "   freed credentials, not used anymore\n");
     }
     if(pthread_mutex_unlock(&cred_handle_lock) < 0) 
 	    abort();
-    il_log(LOG_DEBUG, "    trying to connect to %s:%d\n", eq->dest_name, eq->dest_port);
-    ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
+
     if(ret < 0) {
       char *gss_err = NULL;
 

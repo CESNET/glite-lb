@@ -36,7 +36,6 @@ int TIMEOUT = DEFAULT_TIMEOUT;
 
 cred_handle_t *cred_handle = NULL;
 pthread_mutex_t cred_handle_lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_key_t cred_handle_key;
 
 time_t key_mtime = 0, cert_mtime = 0;
 
@@ -255,24 +254,6 @@ void handle_signal(int num) {
 }
 
 
-/* this is called when thread exists */
-void cred_handle_destroy(void *handle) {
-	cred_handle_t *h = (cred_handle_t*)handle;
-	if(!h)
-		return;
-	il_log(LOG_DEBUG, "Thread exiting, releasing credentials.\n");
-	if(pthread_mutex_lock(&cred_handle_lock) < 0)
-		abort();
-	if(--(h->counter) == 0) {
-		edg_wll_gss_release_cred(&h->creds, NULL);
-		free(h);
-		il_log(LOG_DEBUG, "Freed credentials, not used anymore.\n");
-	}
-	if(pthread_mutex_unlock(&cred_handle_lock) < 0) 
-		abort();
-}
-
-
 int
 main (int argc, char **argv)
 {
@@ -334,11 +315,7 @@ main (int argc, char **argv)
 	  il_log(LOG_DEBUG, "  using lazy mode when closing connections, timeout %d\n",
 		 default_close_timeout);
 
-  /* initialize credential key and get credentials */
-  /* IMPORTANT: no other threads may run at the time, the key initialization 
-     has to be done exactly once */
-  if(pthread_key_create(&cred_handle_key, cred_handle_destroy) != 0)
-	  abort();
+  /* get credentials */
   if (CAcert_dir)
      setenv("X509_CERT_DIR", CAcert_dir, 1);
   edg_wll_gss_watch_creds(cert_file,&cert_mtime);
