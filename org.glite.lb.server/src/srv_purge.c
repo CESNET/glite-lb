@@ -197,15 +197,12 @@ int edg_wll_PurgeServerProxy(edg_wll_Context ctx, glite_jobid_const_t job)
 	}
 }
 
-int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
+int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request, edg_wll_PurgeResult *result)
 {
 	int	i,parse = 0,dumpfile = -1;
 	edg_wlc_JobId	job;
-	char	*message = NULL, *response = NULL;
 	char	*tmpfname = NULL;
-	int	naffected_jobs = 0;
-	edg_wll_PurgeResult result;
-	int		ret = HTTP_OK;
+	int	naffected_jobs = 0, ret;
 
 
 	if (!ctx->noAuth) {
@@ -214,7 +211,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 	}
 
 	edg_wll_ResetError(ctx);
-	memset(&result, 0, sizeof(edg_wll_PurgeResult));
+	memset(result, 0, sizeof(*result));
 
 
 	if ( (request->flags & EDG_WLL_PURGE_SERVER_DUMP) && 
@@ -254,9 +251,9 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 			else {
 				switch (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,0)) {
 					case 0: if (request->flags & EDG_WLL_PURGE_LIST_JOBS) {
-							result.jobs = realloc(result.jobs,(naffected_jobs+2) * sizeof(*result.jobs));
-							result.jobs[naffected_jobs] = strdup(request->jobs[i]);
-							result.jobs[naffected_jobs+1] = NULL;
+							result->jobs = realloc(result->jobs,(naffected_jobs+2) * sizeof(*(result->jobs)));
+							result->jobs[naffected_jobs] = strdup(request->jobs[i]);
+							result->jobs[naffected_jobs+1] = NULL;
 						}
 						naffected_jobs++;
 						break;
@@ -331,9 +328,9 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request)
 
 				/* XXX: change with the streaming interface */
 					if (request->flags & EDG_WLL_PURGE_LIST_JOBS) {
-						result.jobs = realloc(result.jobs,(naffected_jobs+2) * sizeof(*result.jobs));
-						result.jobs[naffected_jobs] = job_s;
-						result.jobs[naffected_jobs+1] = NULL;
+						result->jobs = realloc(result->jobs,(naffected_jobs+2) * sizeof(*(result->jobs)));
+						result->jobs[naffected_jobs] = job_s;
+						result->jobs[naffected_jobs+1] = NULL;
 						job_s = NULL;
 					}
 					naffected_jobs++;
@@ -364,57 +361,15 @@ abort:
 		}
 	}
 
-	switch ( edg_wll_Error(ctx,NULL,NULL) )
-	{
-		case 0:
-			ret = HTTP_OK;
-			break;
-		case EINVAL:
-			ret = HTTP_INVALID;
-			break;
-		case EPERM:
-			ret = HTTP_UNAUTH;
-			break;
-		case ENOENT:
-			ret = HTTP_NOTFOUND;
-			break;
-		
-		/* fatal errors */
-		case ENOMEM:
-			/* fall through */
-		default:
-			ret = HTTP_INTERNAL;
-			break;
-	}
-	
-	if (ret != HTTP_INTERNAL) {
+	ret = edg_wll_Error(ctx,NULL,NULL);
+	if (ret == 0 || ret == ENOENT || ret == EPERM || ret == EINVAL) {
 		if ( request->flags & EDG_WLL_PURGE_SERVER_DUMP && tmpfname )
 		{
-			edg_wll_CreatePurgeFileFromTmp(ctx, tmpfname, &(result.server_file));
+			edg_wll_CreatePurgeFileFromTmp(ctx, tmpfname, &(result->server_file));
 			unlink(tmpfname);
 		}
-
-		if ( edg_wll_PurgeResultToXML(ctx, &result, &message) )
-			ret = HTTP_INTERNAL;
-		else 
-			printf("%s", message);
 	}
 	
-	if ( result.server_file )
-		free(result.server_file);
-	if ( result.jobs )
-	{
-		for ( i = 0; result.jobs[i]; i++ )
-			free(result.jobs[i]);
-		free(result.jobs);
-	}
-
-	asprintf(&response, "HTTP/1.1 %d %s", ret, edg_wll_HTTPErrorMessage(ret));
-
-	edg_wll_http_send(ctx, response, resp_headers, message,ctx->connections->serverConnection);
-	if (response) free(response);
-	if (message) free(message);
-
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 

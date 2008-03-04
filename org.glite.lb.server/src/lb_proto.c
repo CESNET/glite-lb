@@ -635,11 +635,41 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
         	}
 		else if (!strncmp(requestPTR,KEY_PURGE_REQUEST,sizeof(KEY_PURGE_REQUEST)-1)) {
 			edg_wll_PurgeRequest    request;
+			edg_wll_PurgeResult	result;
+			int			fatal = 0;
 
 			ctx->p_tmp_timeout.tv_sec = 86400;  
 
-			if ( !parsePurgeRequest(ctx,messageBody,(int (*)()) edg_wll_StringToStat,&request) )
-				edg_wll_PurgeServer(ctx, (const edg_wll_PurgeRequest *)&request);
+			if ( !parsePurgeRequest(ctx,messageBody,(int (*)()) edg_wll_StringToStat,&request) ) {
+				switch ( edg_wll_PurgeServer(ctx, (const edg_wll_PurgeRequest *)&request, &result)) {
+					case 0: if (html) ret =  HTTP_NOTIMPL;
+						else ret = HTTP_OK;
+
+						break;
+					case ENOENT: ret = HTTP_NOTFOUND; break;
+					case EPERM: ret = HTTP_UNAUTH; break;
+					case EINVAL: ret = HTTP_INVALID; break;
+					case ENOMEM: fatal = 1; ret = HTTP_INTERNAL; break;
+					default: ret = HTTP_INTERNAL; break;
+				}
+				if (!html && !fatal) {
+					if (edg_wll_PurgeResultToXML(ctx, &result, &message))
+						ret = HTTP_INTERNAL;
+					else
+						printf("%s", message);
+				}				
+
+				/* result is now packed in message, free it */	
+				if ( result.server_file )
+					free(result.server_file);
+				if ( result.jobs )
+				{
+					for ( i = 0; result.jobs[i]; i++ )
+						free(result.jobs[i]);
+					free(result.jobs);
+				}
+
+			}
 
 			if ( request.jobs )
 			{
@@ -649,13 +679,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				free(request.jobs);
 			}
 
-			/*
-			 * response allready sent from edg_wll_PurgeServer() - return NULL results
-			 */
-			*response = NULL;
-			*headersOut = NULL;
-			*bodyOut = NULL;
-			return edg_wll_Error(ctx,NULL,NULL);
 		}
 		else if (!strncmp(requestPTR,KEY_DUMP_REQUEST,sizeof(KEY_DUMP_REQUEST)-1)) {
 			edg_wll_DumpRequest	request;

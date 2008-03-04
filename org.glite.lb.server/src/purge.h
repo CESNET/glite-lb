@@ -11,7 +11,8 @@
  */
 int edg_wll_PurgeServer(
 	edg_wll_Context ctx,
-	const edg_wll_PurgeRequest *request
+	const edg_wll_PurgeRequest *request,
+	edg_wll_PurgeResult *result
 );
 
 /** LB Proxy purge implementation
