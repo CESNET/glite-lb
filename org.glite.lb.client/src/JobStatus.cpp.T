@@ -16,6 +16,9 @@ EWL_BEGIN_NAMESPACE;
 #define CLASS_PREFIX "glite::lb::JobStatus::"
 
 @@@{
+
+require 'StatusAttrNames.pl';
+
 sub typeswitch {
         my ($ftype,$ctype,$resc) = @_;
         local $_;
@@ -405,10 +408,11 @@ JobStatus::getValJobStatusList(Attr attr) const
 }
 
 
-/* FIXME: this will not work with the current frozen assignment of constants in JobStatus.h */
 static std::string const attr_names[JobStatus::ATTR_MAX] = {
 @@@{
-	for (sort {$a cmp $b} getAllFields $status) {
+#	for (sort {$a cmp $b} getAllFields $status) {
+	for (@main::StatusAttrNames) {
+		$_ = lc $_;
 		gen "\t\"$_\",\n";
 	}
 @@@}

@@ -300,6 +300,13 @@ stage:  compile ${FAKELIB} ${FAKETHRLIB}
 	$(MAKE) install PREFIX=${stagedir}
 	${INSTALL} -m 644 ${FAKELIB} ${FAKETHRLIB} ${stagedir}/lib
 
+Event.cpp: EventAttrNames.pl
+
+JobStatus.cpp: StatusAttrNames.pl
+
+EventAttrNames.pl StatusAttrNames.pl:
+	ln -s ${stagedir}/share/${lbprefix}/at3/$@ $@
+
 dist: distsrc distbin
 
 distsrc:
@@ -345,6 +352,7 @@ clean:
 	rm -rf *.o *.lo .libs lib* *.c *.cpp producer_test
 	rm -rf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
+	rm -f EventAttrNames.pl StatusAttrNames.pl
 
 
 check_version:
