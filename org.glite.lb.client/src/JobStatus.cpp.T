@@ -410,10 +410,15 @@ JobStatus::getValJobStatusList(Attr attr) const
 
 static std::string const attr_names[JobStatus::ATTR_MAX] = {
 @@@{
-#	for (sort {$a cmp $b} getAllFields $status) {
+	my %s;
+
+	for (getAllFields $status) {
+		my $id = $_;
+		$id =~ s/([a-z])([A-Z])/$1_$2/g;
+		$s{uc($id)} = $_;
+	}
 	for (@main::StatusAttrNames) {
-		$_ = lc $_;
-		gen "\t\"$_\",\n";
+		gen "\t\"$s{$_}\",\n";
 	}
 @@@}
 };

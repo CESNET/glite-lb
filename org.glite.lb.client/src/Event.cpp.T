@@ -324,12 +324,15 @@ Event::name(void) const
 static 
 std::string const attr_names[Event::ATTR_MAX] = {
 @@@{
-#	for (sort {$a cmp $b} getAllFields $event) {
-#		gen "\t\"$_\",\n";
-#	}
+	my %s;
+
+	for (getAllFields $event) {
+		my $id = $_;
+		$id =~ s/([a-z])([A-Z])/$1_$2/g;
+		$s{uc($id)} = $_;
+	}
 	for (@main::EventAttrNames) {
-		$_ = lc $_;
-		gen "\t\"$_\",\n";
+		gen "\t\"$s{$_}\",\n";
 	}
 @@@}
 };

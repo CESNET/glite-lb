@@ -19,3 +19,7 @@
 3.1.3-1 (lb-1.7.5-1)
 - align attr_names[] (used in getAttrName methods) in Event and JobStatus
   to definitions in *.h from lb.client-interface 
+
+3.1.4-1
+- do the previous quick fix thoroughly -- don't smash name_with_underscores
+  and nameWithUppercaseLetters
