@@ -102,6 +102,12 @@ int main(int argc,char **argv)
 		edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_CALL, "index capability not available");
 		do_exit(ctx, EX_SOFTWARE);
 	}
+	if (!(ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS)) {
+		edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_CALL, "transactions capability not available");
+		do_exit(ctx, EX_SOFTWARE);
+	}
+	glite_lbu_DBSetCaps(ctx->dbctx, ctx->dbcaps);
+
 	if (edg_wll_QueryJobIndices(ctx,&old_indices,&index_names)) do_exit(ctx,EX_SOFTWARE);
 
 	if (dump) {
