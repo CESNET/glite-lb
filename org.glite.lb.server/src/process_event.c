@@ -376,7 +376,10 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE_DATA(res, strict)) {
 				switch (e->transfer.source) {
 					case EDG_WLL_SOURCE_USER_INTERFACE:
-						rep(js->pub.jdl, e->transfer.job); break;
+						if (!js->pub.jdl) {
+							rep(js->pub.jdl, e->transfer.job);
+						}
+						break;
 					case EDG_WLL_SOURCE_JOB_SUBMISSION:
 						rep(js->pub.condor_jdl, e->transfer.job); break;
 					case EDG_WLL_SOURCE_LOG_MONITOR:
@@ -497,7 +500,10 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE_DATA(res, strict)) {
 				switch (e->enQueued.source) {
 					case EDG_WLL_SOURCE_NETWORK_SERVER:
-						rep(js->pub.jdl, e->enQueued.job); break;
+						if (!js->pub.jdl) {
+							rep(js->pub.jdl, e->enQueued.job);
+						}
+						break;
 					case EDG_WLL_SOURCE_WORKLOAD_MANAGER:
 						if (USABLE_BRANCH(res)) {
 							rep(js->pub.matched_jdl, e->enQueued.job);
