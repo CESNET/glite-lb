@@ -35,6 +35,7 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 		for (i = 0; i < ret; i++) free(cols[i]);
 	}
 	if (ret < 0) goto err;
+	glite_lbu_FreeStmt(&stmt);
 	if (hit != 2) {
 		ret = edg_wll_SetError(ctx, EINVAL, "old DB schema found, migration to new schema needed");
 		goto close_db;
@@ -48,6 +49,7 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 		free(table[0]);
 	}
 	if (ret < 0) goto err;
+	glite_lbu_FreeStmt(&stmt);
 	if (hit != 1) {
 		ret = edg_wll_SetError(ctx, EINVAL, "events_flesh table not found, migration to new schema needed");
 		goto close_db;
@@ -57,6 +59,7 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 
 err:
 	edg_wll_SetErrorDB(ctx);
+	glite_lbu_FreeStmt(&stmt);
 close_db:
 	glite_lbu_DBClose(ctx->dbctx);
 	return ret;
