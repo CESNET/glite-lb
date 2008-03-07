@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	char 	*job = NULL,*server = NULL,*seq = NULL,*filename = NULL;
 	char 	buf[MAXMSGSIZE];
 	int 	lbproxy = 0, num_subjobs = 0;
-	int 	done = 0, njobs = 1,i;
+	int 	done = 0, njobs = 1,i,j;
 	edg_wll_Context	ctx;
 	edg_wlc_JobId	jobid,*subjobs;
 	FILE	*f;
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if ((njobs <= 0) || (num_subjobs)) {
+	if ((njobs <= 0) || (num_subjobs <= 0)) {
 		fprintf(stderr,"%s: wrong number of jobs\n",me);
 		usage();
 		exit(1);
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	}
 	
 /* MAIN LOOP */
-for (i = 1; i<njobs; i++) {
+for (i = 0; i<njobs; i++) {
 	/* create jobid */
 	if (!job) {
 		char *p = strchr(server,':');
@@ -154,9 +154,9 @@ for (i = 1; i<njobs; i++) {
 	fprintf(stdout,"EDG_WL_SEQUENCE=\"%s\"\n",seq);
 	free(seq);
 
-	if (num_subjobs) for (i=0; subjobs[i]; i++) {
-		char	*job_s = edg_wlc_JobIdUnparse(subjobs[i]);
-		fprintf(stdout,"EDG_WL_SUB_JOBID[%d]=\"%s\"\n",i,job_s);
+	if (num_subjobs) for (j=0; subjobs[j]; j++) {
+		char	*job_s = edg_wlc_JobIdUnparse(subjobs[j]);
+		fprintf(stdout,"EDG_WL_SUB_JOBID[%d]=\"%s\"\n",j,job_s);
 		free(job_s);
 	}
 
