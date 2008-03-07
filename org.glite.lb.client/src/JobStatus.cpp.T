@@ -416,6 +416,7 @@ static std::string const attr_names[JobStatus::ATTR_MAX] = {
 		my $id = $_;
 		$id =~ s/([a-z])([A-Z])/$1_$2/g;
 		$s{uc($id)} = $_;
+		$s{uc($_)} = $_;
 	}
 	for (@main::StatusAttrNames) {
 		gen "\t\"$s{$_}\",\n";

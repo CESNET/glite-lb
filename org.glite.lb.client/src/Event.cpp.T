@@ -324,12 +324,13 @@ Event::name(void) const
 static 
 std::string const attr_names[Event::ATTR_MAX] = {
 @@@{
-	my %s = (JOBID=>'jobId', NOTIFID=>'notifId');	# XXX
+	my %s;
 
 	for (getAllFields $event) {
 		my $id = $_;
 		$id =~ s/([a-z])([A-Z])/$1_$2/g;
 		$s{uc($id)} = $_;
+		$s{uc($_)} = $_;
 	}
 	for (@main::EventAttrNames) {
 		gen "\t\"$s{$_}\",\n";
