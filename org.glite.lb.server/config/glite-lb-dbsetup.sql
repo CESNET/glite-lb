@@ -6,6 +6,7 @@ create table jobs (
 	proxy		bool		not null,
 	server		bool		not null,
 	grey		bool		not null,
+	zombie		bool		not null,
 	nevents		int		not null,
 
 	primary key (jobid),
