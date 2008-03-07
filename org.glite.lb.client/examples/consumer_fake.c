@@ -138,11 +138,10 @@ int edg_wll_QueryListener(
   }
 }
 
-
 /* cut'nd pasted from consumer.c */
 int edg_wll_JobLog(
 	edg_wll_Context ctx,
-	edg_wlc_JobId	job,
+	glite_jobid_const_t	job,
 	edg_wll_Event **eventsOut)
 {
 	edg_wll_QueryRec	j[2], e[2];
