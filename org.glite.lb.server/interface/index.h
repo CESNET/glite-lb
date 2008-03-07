@@ -17,6 +17,7 @@ int edg_wll_DumpIndexConfig(edg_wll_Context,const char *,edg_wll_QueryRec * cons
 int edg_wll_CmpColumn(const edg_wll_QueryRec *,const edg_wll_QueryRec *);
 
 char *edg_wll_StatToSQL(edg_wll_JobStat const *stat,edg_wll_QueryAttr attr);
+char *edg_wll_JDLStatToSQL(edg_wll_JobStat const *stat, edg_wll_QueryRec col_rec);
 
 
 typedef struct _edg_wll_IColumnRec {
@@ -36,5 +37,6 @@ extern int	lex_line;
 #define STD_PREFIX	"STD_"
 #define USR_PREFIX	"USR_"
 #define TIME_PREFIX	"TIME_"
+#define JDL_PREFIX	"JDL_"
 
 #endif /* GLITE_LB_INDEX_H */

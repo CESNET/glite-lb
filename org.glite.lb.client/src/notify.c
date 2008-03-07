@@ -45,7 +45,7 @@ static void usage(char *cmd)
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } ] {-j jobid | -o owner | -n network_server}\n"
+		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } ] {-j jobid | -o owner | -n network_server | -v virtual_organization}\n"
 			"    jobid      job ID to connect notif. reg. with\n"
 			"    owner	match this owner DN\n"
 			"    network_server	match only this networ server (WMS entry point)\n\n"
@@ -108,7 +108,7 @@ int main(int argc,char **argv)
 		char	*arg = NULL;
 		int	attr = 0;
 
-		while ((c = getopt(argc-1,argv+1,"j:o:n:s:a:")) > 0) switch (c) {
+		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:")) > 0) switch (c) {
 			case 'j':
 				if (arg) { usage("new"); return EX_USAGE; }
 				attr = EDG_WLL_QUERY_ATTR_JOBID;
@@ -116,6 +116,10 @@ int main(int argc,char **argv)
 			case 'o':
 				if (arg) { usage("new"); return EX_USAGE; }
 				attr = EDG_WLL_QUERY_ATTR_OWNER;
+				arg = optarg; break;
+			case 'v':
+				if (arg) { usage("new"); return EX_USAGE; }
+				attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
 				arg = optarg; break;
 			case 'n':
 				if (arg) { usage("new"); return EX_USAGE; }
@@ -143,7 +147,10 @@ int main(int argc,char **argv)
 		conditions[0][0].attr = attr;
 		conditions[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
 		if (attr == EDG_WLL_QUERY_ATTR_JOBID) conditions[0][0].value.j = jid;
-		else conditions[0][0].value.c = arg;
+		else {
+			conditions[0][0].value.c = arg;
+			if (attr == EDG_WLL_QUERY_ATTR_JDL_ATTR) asprintf(&(conditions[0][0].attr_id.tag), "VirtualOrganisation");
+		}
 
 		if ( !edg_wll_NotifNew(ctx,
 					(edg_wll_QueryRec const* const*)conditions,

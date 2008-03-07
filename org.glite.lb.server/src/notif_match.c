@@ -33,25 +33,40 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	time_t	now = time(NULL);
 	
 	char *cond_where = NULL;
+	char *cond_and_where = NULL;
 
 	edg_wll_ResetError(ctx);
 
 	if (ctx->notif_index) {
-		cond_where = strdup("");
 		edg_wll_IColumnRec *notif_index_cols = ctx->notif_index_cols;
 
 		for (i=0; notif_index_cols[i].qrec.attr; i++) {
 			char	*val = NULL;
 
-			val = edg_wll_StatToSQL(stat,notif_index_cols[i].qrec.attr);
-			assert(val != (char *) -1);
+			if (notif_index_cols[i].qrec.attr != EDG_WLL_QUERY_ATTR_JDL_ATTR) {
+				val = edg_wll_StatToSQL(stat,notif_index_cols[i].qrec.attr);
+				assert(val != (char *) -1);
+			}
+			else { // Special Treatment for JDL attributes
+				val = edg_wll_JDLStatToSQL(stat,notif_index_cols[i].qrec);
+			} 
 
 			if (val) {
 				char	*aux;
-				trio_asprintf(&aux, "%s or %s = %s",cond_where,
+				if (!cond_where) cond_where = strdup("");
+				trio_asprintf(&aux, "%s or %s = '%s'",cond_where,
 						notif_index_cols[i].colname,val);
 				free(cond_where);
 				cond_where = aux;
+				free(val);
+			}
+			else if (notif_index_cols[i].qrec.attr == EDG_WLL_QUERY_ATTR_JDL_ATTR) {
+				char	*aux;
+				if (!cond_and_where) cond_and_where = strdup("");
+				trio_asprintf(&aux, "%s AND %s = NULL",cond_and_where,
+						notif_index_cols[i].colname);
+				free(cond_and_where);
+				cond_and_where = aux;
 				free(val);
 			}
 		}
@@ -67,8 +82,8 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 		"select distinct n.notifid,n.destination,n.valid,u.cert_subj,n.conditions "
 		"from notif_jobs j,users u,notif_registrations n "
 		"where j.notifid=n.notifid and n.userid=u.userid "
-		"   and (j.jobid = '%|Ss' or j.jobid = '%|Ss' %s)",
-		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS,cond_where ? cond_where : "");
+		"   and (j.jobid = '%|Ss' or j.jobid = '%|Ss' %s) %s",
+		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS,cond_where ? cond_where : "",cond_and_where ? cond_and_where : "");
 
 	free(ju);
 

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
+#include <cclassad.h>
 
 #include "glite/lb/context-int.h"
 #include "glite/lbu/trio.h"
@@ -105,7 +106,7 @@ static int parse_indices(edg_wll_Context ctx,char **keys,char ***column_names,co
 				idx[nkeys] = realloc(idx[nkeys],(j+2)*sizeof idx[nkeys][0]);
 				memset(&idx[nkeys][j+1],0,sizeof idx[nkeys][0]);
 			}
-		
+
 			if (edg_wll_ColumnToQueryRec(column_names[i][j],&idx[nkeys][j])) {
 				int   code;
 				char *ed;
@@ -199,6 +200,23 @@ char *edg_wll_StatToSQL(edg_wll_JobStat const *stat,edg_wll_QueryAttr attr)
 	return std_attrs[i].attr ? std_attrs[i].to_sql(stat,std_attrs[i].offset) : (char *) -1;
 }
 
+char *edg_wll_JDLStatToSQL(edg_wll_JobStat const *stat,edg_wll_QueryRec col_rec)
+{
+        struct cclassad *ad = NULL;
+        char *extr_val = NULL;
+
+        ad = cclassad_create(stat->jdl);
+        if (ad) {
+                if (!cclassad_evaluate_to_string(ad, col_rec.attr_id.tag, &extr_val)) { // Extract attribute value
+                        extr_val = NULL;
+                        cclassad_delete(ad);
+                }
+        }
+
+        //return extr_val ? extr_val : (char *) -1;
+        return extr_val;
+}
+
 int edg_wll_ColumnToQueryRec(const char *col_name,edg_wll_QueryRec *rec)
 {
 	int	i;
@@ -217,6 +235,11 @@ int edg_wll_ColumnToQueryRec(const char *col_name,edg_wll_QueryRec *rec)
 	else if (strncasecmp(col_name,USR_PREFIX,const_len(USR_PREFIX)) == 0) {
 		rec->attr = EDG_WLL_QUERY_ATTR_USERTAG;
 		rec->attr_id.tag = strdup(col_name+const_len(USR_PREFIX));
+		rec->value.c = NULL;
+	}
+	else if (strncasecmp(col_name,JDL_PREFIX,const_len(JDL_PREFIX)) == 0) {
+		rec->attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
+		rec->attr_id.tag = strdup(col_name+const_len(JDL_PREFIX));
 		rec->value.c = NULL;
 	}
 
@@ -239,6 +262,10 @@ char * edg_wll_QueryRecToColumn(const edg_wll_QueryRec *rec)
 			strcat(col,s);
 			free(s);
 		}
+	}
+	else if (rec->attr == EDG_WLL_QUERY_ATTR_JDL_ATTR) {
+		strcpy(col,JDL_PREFIX);
+		strcat(col,rec->attr_id.tag);
 	}
 	else {
 		int	i;
