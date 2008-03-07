@@ -82,6 +82,7 @@ for (i = 1; i<njobs; i++) {
 		char *p = strchr(server,':');
 		if (p) *p=0;
 		edg_wlc_JobIdCreate(server,p?atoi(p+1):0,&jobid);
+		*p=':';
 		job = edg_wlc_JobIdUnparse(jobid);
 		fprintf(stdout,"new jobid: %s\n",job);
 	}
