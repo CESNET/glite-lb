@@ -324,7 +324,7 @@ Event::name(void) const
 static 
 std::string const attr_names[Event::ATTR_MAX] = {
 @@@{
-	my %s;
+	my %s = (JOBID=>'jobId', NOTIFID=>'notifId');	# XXX
 
 	for (getAllFields $event) {
 		my $id = $_;
