@@ -716,8 +716,9 @@ static void adjust_validity(edg_wll_Context ctx,time_t *valid)
 {
 	time_t	now;
 
+	time(&now);
+
 	if (*valid <= 0) {
-		time(&now); 
 		*valid = now + ctx->notifDuration;
 	}
 
