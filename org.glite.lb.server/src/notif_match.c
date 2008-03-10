@@ -63,7 +63,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 			else if (notif_index_cols[i].qrec.attr == EDG_WLL_QUERY_ATTR_JDL_ATTR) {
 				char	*aux;
 				if (!cond_and_where) cond_and_where = strdup("");
-				trio_asprintf(&aux, "%s AND %s = NULL",cond_and_where,
+				trio_asprintf(&aux, "%s AND %s is NULL",cond_and_where,
 						notif_index_cols[i].colname);
 				free(cond_and_where);
 				cond_and_where = aux;
