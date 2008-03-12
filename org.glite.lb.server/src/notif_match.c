@@ -54,7 +54,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 			if (val) {
 				char	*aux;
 				if (!cond_where) cond_where = strdup("");
-				trio_asprintf(&aux, "%s or %s = '%s'",cond_where,
+				trio_asprintf(&aux, "%s or %s = %s",cond_where,
 						notif_index_cols[i].colname,val);
 				free(cond_where);
 				cond_where = aux;

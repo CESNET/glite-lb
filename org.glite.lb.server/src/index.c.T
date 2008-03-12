@@ -204,6 +204,7 @@ char *edg_wll_JDLStatToSQL(edg_wll_JobStat const *stat,edg_wll_QueryRec col_rec)
 {
         struct cclassad *ad = NULL;
         char *extr_val = NULL;
+	char *extr_val_apostrophed = NULL;
 
         ad = cclassad_create(stat->jdl);
         if (ad) {
@@ -213,8 +214,13 @@ char *edg_wll_JDLStatToSQL(edg_wll_JobStat const *stat,edg_wll_QueryRec col_rec)
                 }
         }
 
-        //return extr_val ? extr_val : (char *) -1;
-        return extr_val;
+	if (extr_val) {
+		//XXX: To do this properly, it mayrequire some escaping
+		asprintf(&extr_val_apostrophed,"'%s'", extr_val);
+		free(extr_val);
+	}
+
+        return extr_val_apostrophed;
 }
 
 int edg_wll_ColumnToQueryRec(const char *col_name,edg_wll_QueryRec *rec)
