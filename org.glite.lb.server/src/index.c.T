@@ -215,8 +215,7 @@ char *edg_wll_JDLStatToSQL(edg_wll_JobStat const *stat,edg_wll_QueryRec col_rec)
         }
 
 	if (extr_val) {
-		//XXX: To do this properly, it mayrequire some escaping
-		asprintf(&extr_val_apostrophed,"'%s'", extr_val);
+		trio_asprintf(&extr_val_apostrophed,"'%|Ss'", extr_val);
 		free(extr_val);
 	}
 
