@@ -24,6 +24,7 @@
 #include "store.h"
 #include "lb_authz.h"
 #include "db_supp.h"
+#include "jobstat.h"
 
 #define FL_SEL_STATUS		1
 #define FL_SEL_TAGS			(1<<1)
@@ -57,7 +58,7 @@ int edg_wll_QueryEventsServer(
 				   *event_where = NULL,
 				   *qbase = NULL,
 				   *q = NULL,
-				   *res[11];
+				   *res[12];
 	edg_wll_Event  *out = NULL;
 	glite_lbu_Statement	sh = NULL;
 	int				i = 0,
@@ -106,7 +107,7 @@ int edg_wll_QueryEventsServer(
  * convert_event_head() called on the result
  */
 	trio_asprintf(&qbase,"SELECT e.event,j.userid,j.dg_jobid,e.code,"
-		"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived "
+		"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived,e.seqcode "
 		"FROM events e,users u,jobs j%s "
 		"WHERE %se.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
 		"%s %s %s %s %s %s",
@@ -189,7 +190,7 @@ int edg_wll_QueryEventsServer(
 					
 					if (j_old) edg_wll_FreeStatus(&state_out);
 
-					if ( edg_wll_JobStatus(ctx, out[i].any.jobId, 0, &state_out) )
+					if ( edg_wll_JobStatusServer(ctx, out[i].any.jobId, 0, &state_out) )
 					{
 						edg_wll_FreeEvent(out+i);
 						if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
@@ -214,7 +215,7 @@ int edg_wll_QueryEventsServer(
 				}
 			}
 
-			// Auth checked in edg_wll_JobStatus above
+			// Auth checked in edg_wll_JobStatusServer above
 			if ( !(where_flags & FL_FILTER) && !noAuth )
 			{
 				if (!ctx->peerName || (strcmp(res[1],peerid) && strcmp(res[1], can_peerid))) {
@@ -420,7 +421,7 @@ int edg_wll_QueryJobsServer(
 			// if some condition hits unindexed column or states of matching jobs wanted
 
 			if ((where_flags & FL_FILTER) || !(flags & EDG_WLL_STAT_NO_STATES)) {
-				if ( edg_wll_JobStatus(ctx, jobs_out[i], (where_flags & FL_SEL_JDL)?(flags|EDG_WLL_STAT_CLASSADS):flags, &states_out[i]) )
+				if ( edg_wll_JobStatusServer(ctx, jobs_out[i], (where_flags & FL_SEL_JDL)?(flags|EDG_WLL_STAT_CLASSADS):flags, &states_out[i]) )
 				{
 					edg_wlc_JobIdFree(jobs_out[i]);
 					if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
@@ -1289,6 +1290,9 @@ int convert_event_head(edg_wll_Context ctx,char **f,edg_wll_Event *e)
 	e->any.arrived.tv_sec = glite_lbu_DBToTime(f[8]); 
 	e->any.arrived.tv_usec = 0;
 	free(f[8]); f[8] = NULL;
+
+	e->any.seqcode = f[9];
+	f[9] = NULL;
 
 	return 0;
 

@@ -158,7 +158,7 @@ int glite_lbu_bufferedInsertClose(glite_lbu_bufInsert bi) { return 0; }
 int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***key_names, char ****column_names) { return 0; }
 int glite_lbu_DBError(glite_lbu_DBContext ctx, char **s1, char **s2) { return 0; }
 
-int edg_wll_JobStatus(
+int edg_wll_JobStatusServer(
 	edg_wll_Context	ctx,
 	const edg_wlc_JobId		job,
 	int		flags,

@@ -642,8 +642,13 @@ int edg_wll_SetLoggingJob(
 		      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
 		      &cred, &gss_stat);
 		/* give up if unable to acquire prescribed credentials */
-		if (err && ctx->p_proxy_filename) {
+		if (err) {
 			edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
+
+			// XXX: stop here - further changes need to be done in 
+			//	edg_wll_gss_connect() to support annonymous connetion
+			return edg_wll_Error(ctx,NULL,NULL);
+
 			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, EDG_WLL_LOG_USER_DEFAULT);
 		} else {
 			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, cred->name);
@@ -694,8 +699,13 @@ int edg_wll_SetLoggingJobProxy(
 		      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
 		      &cred, &gss_stat);
 		/* give up if unable to acquire prescribed credentials */
-		if (err && ctx->p_proxy_filename) {
+		if (err) {
 			edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
+
+			// XXX: stop here - further changes need to be done in 
+			//	edg_wll_gss_connect() to support annonymous connetion
+			return edg_wll_SetError(ctx, ENOENT, "No credentials found.");
+
 			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, EDG_WLL_LOG_USER_DEFAULT);
 		} else {
 			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, cred->name);

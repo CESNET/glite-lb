@@ -92,7 +92,7 @@ int edg_wll_StoreProtoServer(edg_wll_Context ctx)
 	else
 #endif
 
-	handle_request(ctx,buf);
+	handle_il_message(ctx,buf);
 	free(buf);
 
 	if ((len = create_reply(ctx,&buf)) > 0) {
@@ -145,7 +145,7 @@ int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
 	if (sink_mode == GLITE_LB_SINK_PARSE) glite_wll_perftest_consumeEventIlMsg(buf);
 	else
 #endif
-	if ( !(ret = handle_request(ctx, buf)) ) {
+	if ( !(ret = handle_il_message(ctx, buf)) ) {
 		if ( (err = edg_wll_Error(ctx, NULL, &errd)) ) edg_wll_ResetError(ctx);
 	}
 	free(buf);

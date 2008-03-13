@@ -11,7 +11,8 @@
  */
 int edg_wll_PurgeServer(
 	edg_wll_Context ctx,
-	const edg_wll_PurgeRequest *request
+	const edg_wll_PurgeRequest *request,
+	edg_wll_PurgeResult *result
 );
 
 /** LB Proxy purge implementation
@@ -19,7 +20,7 @@ int edg_wll_PurgeServer(
  */
 int edg_wll_PurgeServerProxy(
 	edg_wll_Context ctx,
-	edg_wlc_JobId job
+	glite_jobid_const_t job
 );
 
 #define		FILE_TYPE_ANY		""

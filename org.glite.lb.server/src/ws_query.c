@@ -79,7 +79,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 		free(cflags);
 	}
 
-	if ( edg_wll_JobStatus(ctx, j, flags, &s) )
+	if ( edg_wll_JobStatusServer(ctx, j, flags, &s) )
 	{
 		edg_wll_ErrToFault(ctx, soap);
 		return SOAP_FAULT;
@@ -166,7 +166,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__UserJobs(
 
 	ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	memset(out, 0, sizeof *out);
-	if (edg_wll_UserJobs(ctx, &jobs, &states) != 0) goto fault;
+	if (edg_wll_UserJobsServer(ctx, &jobs, &states) != 0) goto fault;
 	if (edg_wll_UserJobsResToSoap(soap, jobs, states, out) != SOAP_OK) {
 		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
 		goto freefault;

@@ -15,6 +15,7 @@ extern "C" {
 int edg_wll_StoreEvent(
 	edg_wll_Context,	/* INOUT */
 	edg_wll_Event *,	/* IN */
+	const char *,		/* IN */
 	int *
 );
 
@@ -40,13 +41,14 @@ edg_wll_ErrorCode edg_wll_StepIntStateEmbriotic(
         edg_wll_Event *e	/* IN */
 );
 
-int db_store(edg_wll_Context,char *, char *);
+int db_store(edg_wll_Context, char *);
 int db_parent_store(edg_wll_Context, edg_wll_Event *, intJobStat *);
 int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
-int trans_db_store(edg_wll_Context,char *,edg_wll_Event *,intJobStat *);
-int is_job_local(edg_wll_Context, edg_wlc_JobId jobId);
-int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event);
+int is_job_local(edg_wll_Context, glite_jobid_const_t jobId);
+int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *register_to_JP);
+int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *);
+
 
 int edg_wll_delete_event(edg_wll_Context,const char *, int);
 

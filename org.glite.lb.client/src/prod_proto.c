@@ -646,7 +646,6 @@ int edg_wll_log_proxy_read(edg_wll_Context ctx, edg_wll_PlainConnection *conn)
 int edg_wll_log_direct_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn) 
 {
 	int	ret,answer;
-	char	*my_subject_name = NULL;
 	edg_wll_GssStatus	gss_stat;
 	edg_wll_GssCred	cred = NULL;
 	char	*host;
@@ -673,14 +672,13 @@ int edg_wll_log_direct_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn)
 		answer = edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
 		goto edg_wll_log_direct_connect_end;
 	}
-	my_subject_name = cred->name;
 #ifdef EDG_WLL_LOG_STUB
-	if (my_subject_name) {
+	if (cred && cred->name) {
 /* TODO: merge - shouldn't be probably ctx->p_user_lbproxy but some new parameter, eg. ctx->p_user
 	related to the change in producer.c
 */
-		edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, my_subject_name);
-		fprintf(stderr,"edg_wll_log_direct_connect: using certificate: %s\n",my_subject_name);
+		edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, cred->name);
+		fprintf(stderr,"edg_wll_log_direct_connect: using certificate: %s\n", cred->name);
 	} else {
 		fprintf(stderr,"edg_wll_log_direct_connect: going on anonymously\n");
 	}

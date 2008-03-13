@@ -10,6 +10,7 @@ int edg_wll_SetErrorDB(edg_wll_Context ctx) {
 
 	if (ctx->dbctx) {
 		code = glite_lbu_DBError(ctx->dbctx, NULL, &ed);
+		if (code == EDEADLOCK) code = EDG_WLL_ERROR_DB_TRANS_DEADLOCK;
 		edg_wll_SetError(ctx, code, ed);
 		free(ed);
 	} else {
@@ -77,3 +78,26 @@ int edg_wll_Rollback(edg_wll_Context ctx) {
 	if ((retval = glite_lbu_Rollback(ctx->dbctx)) != 0) edg_wll_SetErrorDB(ctx);
 	return retval;
 }
+
+int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
+	int ret;
+	char *errd;
+
+	ret = edg_wll_Error(ctx,NULL,NULL);
+	if (ret == EDG_WLL_ERROR_DB_TRANS_DEADLOCK) {
+		edg_wll_Rollback(ctx);
+		edg_wll_ResetError(ctx);
+		return 1;
+	} else if (ret==0) {
+		edg_wll_Commit(ctx); /* errors propagated further */
+		return 0;
+	} else {
+		edg_wll_Error(ctx, NULL, &errd);
+		edg_wll_Rollback(ctx);
+		edg_wll_SetError(ctx, ret, errd);
+		free(errd);
+		return 0;
+	}
+}
+
+

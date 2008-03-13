@@ -325,10 +325,17 @@ static int dispatchit(int sock_slave, int sock, int sidx)
 
 	getpeername(conn, (struct sockaddr *)&a, &alen);
 	pom = (char *) &a.sin_addr.s_addr;
-	dprintf(("[master] %s connection from %d.%d.%d.%d:%d\n",
-				services[sidx].id? services[sidx].id: "",
-				(int)pom[0], (int)pom[1], (int)pom[2], (int)pom[3],
-				ntohs(a.sin_port)));
+	if (a.sin_family  == PF_LOCAL) {
+		dprintf(("[master] %s connection from local socket\n",
+					services[sidx].id? services[sidx].id: ""));
+	}
+	else {
+		dprintf(("[master] %s connection from %d.%d.%d.%d:%d\n",
+					services[sidx].id? services[sidx].id: "",
+					(int)pom[0], (int)pom[1], (int)pom[2], (int)pom[3],
+					ntohs(a.sin_port)));
+	}
+
 
 	ret = 0;
 	if (    (   clnt_dispatched < clnt_accepted	/* wraparound */
@@ -481,7 +488,8 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 				req_cnt++;
 				first_request = 0;
 				to = set_request_to;
-				if ((rv = services[srv].on_request_hnd(conn,to.tv_sec>=0 ? &to : NULL,clnt_data)) == ENOTCONN) {
+				rv = services[srv].on_request_hnd(conn,to.tv_sec>=0 ? &to : NULL,clnt_data);
+				if ( (rv == ENOTCONN) || (rv == ECONNREFUSED) ) {
 					if (services[srv].on_disconnect_hnd
 							&& (rv = services[srv].on_disconnect_hnd(conn,NULL,clnt_data)))
 					{

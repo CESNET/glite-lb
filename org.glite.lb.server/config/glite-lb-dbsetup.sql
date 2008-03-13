@@ -5,20 +5,13 @@ create table jobs (
 	aclid		char(32)	binary null,
 	proxy		bool		not null,
 	server		bool		not null,
-	
+	grey		bool		not null,
+	zombie		bool		not null,
+	nevents		int		not null,
 
 	primary key (jobid),
 	unique (dg_jobid),
 	index (userid)
-) engine=innodb;
-
-create table grey_jobs (
-	jobid		char(32)	binary not null,
-	dg_jobid	varchar(255)	binary not null,
-	time_stamp	datetime	not null,
-
-	primary key (jobid),
-	unique (dg_jobid)
 ) engine=innodb;
 
 create table users (
@@ -41,7 +34,8 @@ create table events (
 	level		int		null,
 
 	arrived		datetime	not null,
-	
+	ulm		mediumblob	not null,   -- testing (1)
+	seqcode		varchar(255)	binary not null,
 
 	primary key (jobid,event),
 	index (time_stamp),
@@ -49,6 +43,16 @@ create table events (
 	index (arrived)
 ) engine=innodb;
 
+-- testing (2)
+create table events_flesh (
+	jobid		char(32)	binary not null,
+	event		int		not null,
+	ulm		mediumblob	binary not null,
+	
+	primary key (jobid,event)
+) engine=innodb;
+
+-- for compatibility
 create table short_fields (
 	jobid		char(32)	binary not null,
 	event		int		not null,
@@ -58,6 +62,7 @@ create table short_fields (
 	primary key (jobid,event,name)
 ) engine=innodb;
 
+-- for compatibility
 create table long_fields (
 	jobid		char(32)	binary not null,
 	event		int		not null,
@@ -114,7 +119,7 @@ create table notif_registrations (
 
 	`STD_owner`	varchar(200)	null,
 	`STD_network_server`	varchar(200)	null,
-	`JDL_VirtualOrganization`	varchar(200)	null,
+	`JDL_VirtualOrganisation`	varchar(200)	null,
 
 	primary key (notifid),
 	index (`STD_owner`),

@@ -19,32 +19,8 @@
 #endif
 
 
-int
-trans_db_store(edg_wll_Context ctx, char *event_data, edg_wll_Event *e, intJobStat *is)
-{
-  int ret;
-  char *errd = NULL;
-
-  if ((ret = edg_wll_Transaction(ctx) != 0)) goto err;
-
-  if (e) ret = db_parent_store(ctx, e, is);
-  else ret = db_store(ctx, "NOT USED", event_data);
-
-  if (ret == 0) {
-    if ((ret = edg_wll_Commit(ctx)) != 0) goto err;
-  } else {
-    edg_wll_Error(ctx, NULL, &errd);
-    edg_wll_Rollback(ctx);
-    edg_wll_SetError(ctx, ret, errd);
-    free(errd);
-  }
-
-err:
-  return(ret);
-}
-    
 int 
-handle_request(edg_wll_Context ctx,char *buf)
+handle_il_message(edg_wll_Context ctx,char *buf)
 {
 	il_octet_string_t event;
   int ret;
@@ -57,7 +33,7 @@ handle_request(edg_wll_Context ctx,char *buf)
     return EDG_WLL_IL_PROTO;
   }
 
-  ret = trans_db_store(ctx, event.data, NULL, NULL);
+  ret = db_store(ctx, event.data);
 
   if(event.data)
     free(event.data);

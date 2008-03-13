@@ -23,8 +23,12 @@
 #include "lb_authz.h"
 #include "stats.h"
 #include "db_supp.h"
+#include "db_calls.h"
 
 #define DAG_ENABLE	1
+
+#define	DONT_LOCK	0
+#define	LOCK		1
 
 /* TBD: share in whole logging or workload */
 #ifdef __GNUC__
@@ -67,7 +71,7 @@ static char* matched_substr(char *in, regmatch_t match)
 }
 
 
-int edg_wll_JobStatus(
+int edg_wll_JobStatusServer(
 	edg_wll_Context	ctx,
 	glite_jobid_const_t		job,
 	int		flags,
@@ -75,245 +79,262 @@ int edg_wll_JobStatus(
 {
 
 /* Local variables */
-	char		*string_jobid;
-	char		*md5_jobid;
+	char		*string_jobid = NULL;
+	char		*md5_jobid = NULL;
 
 	intJobStat	jobstat;
 	intJobStat	*ijsp;
-	int		intErr = 0;
-	int		lockErr;
+	int		whole_cycle;
 	edg_wll_Acl	acl = NULL;
 #if DAG_ENABLE	
 	char		*stmt = NULL;
 #endif
-	char		*errdesc = NULL;
-	//The following declarations have originally been positioned in the funcion's code
-	//That was rather messy and lead to redeclaratios :-(
 	char *stat_str, *s_out;
 	intJobStat *js;
 	char *out[1];
-	glite_lbu_Statement sh;
+	glite_lbu_Statement sh = NULL;
 	int num_sub, num_f, i, ii;
+
 
 	edg_wll_ResetError(ctx);
 
+	memset(&jobstat, 0, sizeof(jobstat));
 	string_jobid = edg_wlc_JobIdUnparse(job);
 	if (string_jobid == NULL || stat == NULL)
 		return edg_wll_SetError(ctx,EINVAL, NULL);
 	md5_jobid = edg_wlc_JobIdGetUnique(job);
 
-	if ( !(jobstat.pub.owner = job_owner(ctx,md5_jobid)) ) {
-		free(md5_jobid);
-		free(string_jobid);
-		return edg_wll_Error(ctx,NULL,NULL);
-	}
+	do {
+		whole_cycle = 0;
 
-	intErr = edg_wll_GetACL(ctx, job, &acl);
-	if (intErr) {
-		free(md5_jobid);
-		free(string_jobid);
-		free(jobstat.pub.owner);
-		return edg_wll_Error(ctx,NULL,NULL);
-	}
+		if (edg_wll_Transaction(ctx)) goto rollback;
+		if (edg_wll_LockJobRowInShareMode(ctx, md5_jobid)) goto rollback;;
 
-	/* authorization check */
-	if ( !(ctx->noAuth) &&
-	    (!(ctx->peerName) ||  !edg_wll_gss_equal_subj(ctx->peerName, jobstat.pub.owner))) {
-	      	intErr = (acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
-	      if (intErr) {
-		 free(string_jobid);
-		 free(md5_jobid);
-		 free(jobstat.pub.owner); jobstat.pub.owner = NULL;
-	 	 if (acl) {
+
+		if (edg_wll_GetACL(ctx, job, &acl)) goto rollback;
+
+		/* authorization check */
+		if ( !(ctx->noAuth) &&
+		    (!(ctx->peerName) ||  !edg_wll_gss_equal_subj(ctx->peerName, jobstat.pub.owner))) {
+		      if ((acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ)) {
+			 if (acl) {
+				goto rollback;
+			 } else {
+				edg_wll_SetError(ctx,EPERM, "not owner, no ACL is set");
+				goto rollback;
+			 }
+		      }
+		}
+
+		if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, -1 /*all events*/, &ijsp)) {
+			*stat = ijsp->pub;
+			free(jobstat.pub.owner); jobstat.pub.owner = NULL;
+			destroy_intJobStat_extension(ijsp);
+			free(ijsp);
+		} else {
+			if (edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store)) {
+				char *err;
+
+				/* job has no record in states table ?? */
+				asprintf(&err, "Could not compute status of job %s (corrupted DB?)\n",string_jobid);
+				edg_wll_UpdateError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, err);
+				free(err);
+
+				goto rollback;
+			}
+			*stat = jobstat.pub;
+		}
+		
+		if (acl) {
+			stat->acl = strdup(acl->string);
 			edg_wll_FreeAcl(acl);
-		 	return edg_wll_Error(ctx, NULL, NULL);
-		 } else {
-			return edg_wll_SetError(ctx,EPERM, "not owner, no ACL is set");
-		 }
-	      }
-	}
-
-	intErr = edg_wll_LoadIntState(ctx, job, -1 /*all events*/, &ijsp);
-	if (!intErr) {
-		*stat = ijsp->pub;
-		free(jobstat.pub.owner); jobstat.pub.owner = NULL;
-		destroy_intJobStat_extension(ijsp);
-		free(ijsp);
-
-	} else {
-		lockErr = edg_wll_LockJob(ctx,job);
-		intErr = edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store && !lockErr);
-		if (intErr) edg_wll_Error(ctx, NULL, &errdesc);
-		if (!lockErr) {
-			edg_wll_UnlockJob(ctx,job);
 		}
-	
-		*stat = jobstat.pub;
-		if (intErr) edg_wll_FreeStatus(&jobstat.pub);
-		destroy_intJobStat_extension(&jobstat);
-	}
-	
-	if (intErr) {
-		free(string_jobid);
-		free(md5_jobid);
-		if (acl) edg_wll_FreeAcl(acl);
-		edg_wll_SetError(ctx, intErr, errdesc);
-		free(errdesc);
-		return edg_wll_UpdateError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, "Could not compute job status from events");
-	}
 
-	if (acl) {
-		stat->acl = strdup(acl->string);
-		edg_wll_FreeAcl(acl);
-	}
+		if ((flags & EDG_WLL_STAT_CLASSADS) == 0) {
+			char *null = NULL;
 
-	if ((flags & EDG_WLL_STAT_CLASSADS) == 0) {
-		char *null = NULL;
+			mov(stat->jdl, null);
+			mov(stat->matched_jdl, null);
+			mov(stat->condor_jdl, null);
+			mov(stat->rsl, null);
+		}
 
-		mov(stat->jdl, null);
-		mov(stat->matched_jdl, null);
-		mov(stat->condor_jdl, null);
-		mov(stat->rsl, null);
-	}
+	#if DAG_ENABLE
+		if (stat->jobtype == EDG_WLL_STAT_DAG || stat->jobtype == EDG_WLL_STAT_COLLECTION) {
 
-#if DAG_ENABLE
-	if (stat->jobtype == EDG_WLL_STAT_DAG || stat->jobtype == EDG_WLL_STAT_COLLECTION) {
-
-//	XXX: The users does not want any histogram. What do we do about it? 
-//		if ((!(flags & EDG_WLL_STAT_CHILDHIST_FAST))&&(!(flags & EDG_WLL_STAT_CHILDHIST_THOROUGH))) { /* No Histogram */
-//                        if (stat->children_hist != NULL) {	/* No histogram will be sent even if there was one */
-//
-//				printf("\nNo Histogram required\n\n");
-//
-//                              free(stat->children_hist);
-//			}
-//			
-//		}
+	//	XXX: The users does not want any histogram. What do we do about it? 
+	//		if ((!(flags & EDG_WLL_STAT_CHILDHIST_FAST))&&(!(flags & EDG_WLL_STAT_CHILDHIST_THOROUGH))) { /* No Histogram */
+	//                        if (stat->children_hist != NULL) {	/* No histogram will be sent even if there was one */
+	//
+	//				printf("\nNo Histogram required\n\n");
+	//
+	//                              free(stat->children_hist);
+	//			}
+	//			
+	//		}
 
 
-		if (flags & EDG_WLL_STAT_CHILDSTAT) {
+			if (flags & EDG_WLL_STAT_CHILDSTAT) {
 
-			trio_asprintf(&stmt, "SELECT int_status FROM states WHERE parent_job='%|Ss'"
-						" AND version='%|Ss'",
-					md5_jobid, INTSTAT_VERSION);
-			if (stmt != NULL) {
-				num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
-				if (num_sub >=0 ) {
-					i = 0;
-					stat->children_states = calloc(num_sub+1, sizeof(edg_wll_JobStat));
-					if (stat->children_states == NULL) {
-						glite_lbu_FreeStmt(&sh);
-						goto dag_enomem;
-					}
-					while ((num_f = edg_wll_FetchRow(ctx, sh, 1, NULL, &stat_str)) == 1
-						&& i < num_sub) {
-						js = dec_intJobStat(stat_str, &s_out);
-						if (s_out != NULL && js != NULL) {
-							stat->children_states[i] = js->pub;
-							destroy_intJobStat_extension(js);
-							free(js);
-							i++; // Careful, this value will also be used further
+				trio_asprintf(&stmt, "SELECT int_status FROM states WHERE parent_job='%|Ss'"
+							" AND version='%|Ss'",
+						md5_jobid, INTSTAT_VERSION);
+				if (stmt != NULL) {
+					num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
+					if (num_sub >=0 ) {
+						i = 0;
+						stat->children_states = calloc(num_sub+1, sizeof(edg_wll_JobStat));
+						if (stat->children_states == NULL) {
+							edg_wll_SetError(ctx, ENOMEM, "edg_wll_JobStatusServer() calloc children_states failed!");
+							goto rollback;
 						}
-						free(stat_str);
+						while ((num_f = edg_wll_FetchRow(ctx, sh, 1, NULL, &stat_str)) == 1
+							&& i < num_sub) {
+							js = dec_intJobStat(stat_str, &s_out);
+							if (s_out != NULL && js != NULL) {
+								stat->children_states[i] = js->pub;
+								destroy_intJobStat_extension(js);
+								free(js);
+								i++; // Careful, this value will also be used further
+							}
+							free(stat_str);
+						}
+						if (num_f < 0) goto rollback;
+
+						glite_lbu_FreeStmt(&sh); sh = NULL;
 					}
-					glite_lbu_FreeStmt(&sh);
-				}
-				free(stmt);
-			} else goto dag_enomem;
-		}
+					else goto rollback;
 
-
-		if (flags & EDG_WLL_STAT_CHILDHIST_THOROUGH) { /* Full (thorough) Histogram */
-
-
-			if (stat->children_hist == NULL) {
-				stat->children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
-				stat->children_hist[0] = EDG_WLL_NUMBER_OF_STATCODES;
-			}
-			else {
-				/* If hist is loaded, it probably contain only incomplete histogram
-				 * built in update_parent_status. Count it from scratch...*/
-				for (ii=1; ii<=EDG_WLL_NUMBER_OF_STATCODES; ii++)
-					stat->children_hist[ii] = 0;
-			}
-
-			if (flags & EDG_WLL_STAT_CHILDSTAT) { // Job states have already been loaded
-				for ( ii = 0 ; ii < i ; ii++ ) {
-					stat->children_hist[(stat->children_states[ii].state)+1]++;
+					free(stmt); stmt = NULL;
+				} else {
+					edg_wll_SetError(ctx, ENOMEM, "edg_wll_JobStatusServer() trio_asprintf failed!");
+					goto rollback;
 				}
 			}
+
+
+			if (flags & EDG_WLL_STAT_CHILDHIST_THOROUGH) { /* Full (thorough) Histogram */
+
+
+				if (stat->children_hist == NULL) {
+					stat->children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
+					if (stat->children_hist == NULL) {
+						edg_wll_SetError(ctx, ENOMEM, "edg_wll_JobStatusServer() calloc children_hist failed!");
+						goto rollback;
+					}
+
+					stat->children_hist[0] = EDG_WLL_NUMBER_OF_STATCODES;
+				}
+				else {
+					/* If hist is loaded, it probably contain only incomplete histogram
+					 * built in update_parent_status. Count it from scratch...*/
+					for (ii=1; ii<=EDG_WLL_NUMBER_OF_STATCODES; ii++)
+						stat->children_hist[ii] = 0;
+				}
+
+				if (flags & EDG_WLL_STAT_CHILDSTAT) { // Job states have already been loaded
+					for ( ii = 0 ; ii < i ; ii++ ) {
+						stat->children_hist[(stat->children_states[ii].state)+1]++;
+					}
+				}
+				else {
+					// Get child states from the database
+					trio_asprintf(&stmt, "SELECT status FROM states WHERE parent_job='%|Ss' AND version='%|Ss'",
+								md5_jobid, INTSTAT_VERSION);
+					out[1] = NULL;
+					if (stmt != NULL) {
+						num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
+						if (num_sub >=0 ) {
+							while ((num_f = edg_wll_FetchRow(ctx, sh, sizeof(out)/sizeof(out[0]), NULL, out)) == 1 ) {
+								num_f = atoi(out[0]);
+								if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
+									stat->children_hist[num_f+1]++;
+								free(out[0]); 
+							}
+							if (num_f < 0) goto rollback;
+
+							glite_lbu_FreeStmt(&sh); sh = NULL;
+						}
+						else goto rollback;
+
+						free(stmt); stmt = NULL;
+					} else {
+						edg_wll_SetError(ctx, ENOMEM, "edg_wll_JobStatusServer() trio_asprintf failed!");
+						goto rollback;
+					}
+				}
+			}
 			else {
-				// Get child states from the database
-				trio_asprintf(&stmt, "SELECT status FROM states WHERE parent_job='%|Ss' AND version='%|Ss'",
-							md5_jobid, INTSTAT_VERSION);
-				out[1] = NULL;
+				if (flags & EDG_WLL_STAT_CHILDHIST_FAST) { /* Fast Histogram */
+					
+					if (stat->children_hist == NULL) {
+						// If the histogram exists, assume that it was already filled during job state retrieval
+						stat->children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
+						if (stat->children_hist == NULL) {
+							edg_wll_SetError(ctx, ENOMEM, "edg_wll_JobStatusServer() calloc children_hist failed!");
+							goto rollback;
+						}
+
+						if (edg_wll_GetSubjobHistogram(ctx, job, stat->children_hist))
+							goto rollback;
+					}
+				}
+				else {
+					if (stat->children_hist) {
+						free (stat->children_hist);
+						stat->children_hist = NULL;
+					}
+				}
+
+			}
+
+
+			if (flags & EDG_WLL_STAT_CHILDREN) {
+
+				trio_asprintf(&stmt, "SELECT j.dg_jobid FROM states s,jobs j "
+						"WHERE s.parent_job='%|Ss' AND s.version='%|Ss' AND s.jobid=j.jobid",
+					md5_jobid, INTSTAT_VERSION);
 				if (stmt != NULL) {
 					num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
 					if (num_sub >=0 ) {
 						while ((num_f = edg_wll_FetchRow(ctx, sh, sizeof(out)/sizeof(out[0]), NULL, out)) == 1 ) {
-							num_f = atoi(out[0]);
-							if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
-								stat->children_hist[num_f+1]++;
+							add_stringlist(&stat->children, out[0]);
 							free(out[0]); 
 						}
-						glite_lbu_FreeStmt(&sh);
+						if (num_f < 0) goto rollback;
+
+						glite_lbu_FreeStmt(&sh); sh = NULL;
 					}
-					free(stmt);
-				} else goto dag_enomem;
-			}
-		}
-		else {
-	                if (flags & EDG_WLL_STAT_CHILDHIST_FAST) { /* Fast Histogram */
-				
-                        	if (stat->children_hist == NULL) {
-					// If the histogram exists, assume that it was already filled during job state retrieval
-                                	stat->children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
-					edg_wll_GetSubjobHistogram(ctx, job, stat->children_hist);
+					else goto rollback;
+
+					free(stmt); stmt = NULL;
+				} else {
+					edg_wll_SetError(ctx, ENOMEM, "edg_wll_JobStatusServer() trio_asprintf failed!");
+					goto rollback;
 				}
 			}
-			else {
-				if (stat->children_hist) {
-					free (stat->children_hist);
-					stat->children_hist = NULL;
-				}
-			}
-
 		}
-
-
-		if (flags & EDG_WLL_STAT_CHILDREN) {
-
-			trio_asprintf(&stmt, "SELECT j.dg_jobid FROM states s,jobs j "
-					"WHERE s.parent_job='%|Ss' AND s.version='%|Ss' AND s.jobid=j.jobid",
-				md5_jobid, INTSTAT_VERSION);
-			if (stmt != NULL) {
-				num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
-				if (num_sub >=0 ) {
-					while (edg_wll_FetchRow(ctx, sh, sizeof(out)/sizeof(out[0]), NULL, out) == 1 ) {
-						add_stringlist(&stat->children, out[0]);
-						free(out[0]); 
-					}
-					glite_lbu_FreeStmt(&sh);
-				}
-				free(stmt);
-			} else goto dag_enomem;
-
-		}
-
-	}
 #endif
+
+		whole_cycle = 1;
+commit:
+rollback:
+		if (!whole_cycle) {
+				edg_wll_FreeStatus(&jobstat.pub);
+				jobstat.pub.owner = NULL;
+				destroy_intJobStat_extension(&jobstat);
+		}
+		if (jobstat.pub.owner) { free(jobstat.pub.owner); jobstat.pub.owner = NULL; }
+		if (acl) { edg_wll_FreeAcl(acl); acl = NULL; }
+		if (stmt) { free(stmt); stmt = NULL; }
+		if (sh) { glite_lbu_FreeStmt(&sh); sh = NULL; }
+
+        } while (edg_wll_TransNeedRetry(ctx));
+
 	free(string_jobid);
 	free(md5_jobid);
+
 	return edg_wll_Error(ctx, NULL, NULL);
-
-#if DAG_ENABLE
-dag_enomem:
-	free(string_jobid);
-	free(md5_jobid);
-	edg_wll_FreeStatus(stat);
-	free(stmt);
-	return edg_wll_SetError(ctx, ENOMEM, NULL);
-#endif
 }
 
 int edg_wll_intJobStatus(
@@ -370,7 +391,7 @@ int edg_wll_intJobStatus(
 	if (edg_wll_QueryEventsServer(ctx,1, (const edg_wll_QueryRec **)jqra, NULL, &events)) {
 		free(string_jobid);
 		free(jqra);
-		free(intstat->pub.owner);
+		free(intstat->pub.owner); intstat->pub.owner = NULL;
                 return edg_wll_Error(ctx, NULL, NULL);
 	}
 	free(jqra);
@@ -380,7 +401,7 @@ int edg_wll_intJobStatus(
 
 	if (num_events == 0) {
 		free(string_jobid);
-		free(intstat->pub.owner);
+		free(intstat->pub.owner); intstat->pub.owner = NULL;
 		return edg_wll_SetError(ctx,ENOENT,NULL);
 	}
 
@@ -640,11 +661,6 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 		if (ctx->rgma_export) write2rgma_status(&jobstat.pub);
 */
 
-#ifdef LB_BUF
-	if (edg_wll_bufferedInsert(bi, values))
-		goto cleanup;
-#else
-
 	trio_asprintf(&stmt,
 		"insert into states"
 		"(jobid,status,seq,int_status,version"
@@ -653,7 +669,6 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 		icnames, values);
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
-#endif
 
 cleanup:
 	free(stmt); 
@@ -668,6 +683,7 @@ cleanup:
 
 edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
 				    edg_wlc_JobId jobid,
+				    int lock,
 				    int seq,
 				    intJobStat **stat)
 {
@@ -679,6 +695,10 @@ edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
 
 	edg_wll_ResetError(ctx);
 	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
+
+	if (lock) {
+		edg_wll_LockJobRowForUpdate(ctx,jobid_md5);
+	}
 
 	if (seq == -1) {
 		/* any sequence number */
@@ -713,7 +733,8 @@ edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
 	free(res);
 cleanup:
 	free(jobid_md5);
-	free(stmt); glite_lbu_FreeStmt(&sh);
+	free(stmt); 
+	if (sh) glite_lbu_FreeStmt(&sh);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
@@ -756,9 +777,7 @@ static edg_wll_ErrorCode load_parent_intJobStat(edg_wll_Context ctx, intJobStat 
 {
 	if (*pis) return edg_wll_Error(ctx, NULL, NULL); // already loaded and locked
 
-	if (edg_wll_LockJob(ctx,cis->pub.parent_job)) goto err;
-	
-	if (edg_wll_LoadIntState(ctx, cis->pub.parent_job, - 1, pis))
+	if (edg_wll_LoadIntState(ctx, cis->pub.parent_job, LOCK, - 1, pis))
 		goto err;
 
 	assert(*pis);	// deadlock would happen with next call of this function
@@ -799,7 +818,7 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 	edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
 	event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
 
-	ret = trans_db_store(ctx, NULL, event, pis);
+	ret = db_parent_store(ctx, event, pis);
 
 	edg_wll_FreeEvent(event);
 	free(event);
@@ -904,8 +923,6 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 	}
 
 err:
-	edg_wll_UnlockJob(ctx,cis->pub.parent_job);
-
 	if (pis)
 		destroy_intJobStat(pis);
 
@@ -987,7 +1004,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 
 	memset(&oldstat,0,sizeof oldstat);
 
-	if (!edg_wll_LoadIntState(ctx, job, seq - 1, &ijsp)) {
+	if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, seq - 1, &ijsp)) {
 		edg_wll_CpyStatus(&ijsp->pub,&oldstat);
 
 		if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(&ijsp->pub);
@@ -995,11 +1012,9 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		res = processEvent(ijsp, e, seq, be_strict, &errstring);
 		if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
 			edg_wll_FreeStatus(&oldstat);
-			edg_wll_UnlockJob(ctx,job); /* XXX: error lost */
 			return edg_wll_SetError(ctx, EINVAL, errstring);
 		}
 		edg_wll_StoreIntState(ctx, ijsp, seq);
-		if (edg_wll_UnlockJob(ctx,job)) goto err;
 
 		edg_wll_UpdateStatistics(ctx,&oldstat,e,&ijsp->pub);
 
@@ -1029,7 +1044,6 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		   Right approach is computing parent status from scratch.
 		*/
 
-		if (edg_wll_UnlockJob(ctx,job)) goto err;
 		edg_wll_UpdateStatistics(ctx,NULL,e,&jobstat.pub);
 
 		if (ctx->rgma_export) write2rgma_status(&jobstat.pub);
@@ -1040,7 +1054,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		}
 		else destroy_intJobStat(&jobstat);
 	}
-	else edg_wll_UnlockJob(ctx,job);
+
 err:
 	return edg_wll_Error(ctx, NULL, NULL);
 }

@@ -13,7 +13,7 @@
 #include "jobstat.h"
 #include "db_supp.h"
 
-int edg_wll_UserJobs(
+int edg_wll_UserJobsServer(
 	edg_wll_Context ctx,
 	edg_wlc_JobId	**jobs,
 	edg_wll_JobStat	**states)
@@ -21,7 +21,7 @@ int edg_wll_UserJobs(
 	char	*userid, *stmt = NULL,
 		*res = NULL;
 	char	*can_peername;
-	int	njobs = 0,ret,i,j;
+	int	njobs = 0,ret,i,j,idx;
 	edg_wlc_JobId	*out = NULL;
 	glite_lbu_Statement	sth = NULL;
 	edg_wll_ErrorCode	err = 0;
@@ -52,7 +52,7 @@ int edg_wll_UserJobs(
 	free(stmt); stmt = NULL;
 	free(res); res = NULL;
 
-	trio_asprintf(&stmt,"select dg_jobid from jobs where userid = '%|Ss'",userid);
+	trio_asprintf(&stmt,"select dg_jobid from jobs where userid = '%|Ss' and grey='0'",userid);
 	switch (njobs = edg_wll_ExecSQL(ctx,stmt,&sth)) {
 		case 0: edg_wll_SetError(ctx,ENOENT,ctx->peerName);
 		case -1: goto err;
@@ -71,14 +71,16 @@ int edg_wll_UserJobs(
 	}
 
 	if (states) *states = calloc(njobs, sizeof(**states));
+	idx = 0;
 	for (i = 0; i < njobs; i++) {
-		edg_wll_JobStat	*stat = states ?  &(*states)[i] : NULL;
-
-		if (stat && edg_wll_JobStatus(ctx, out[i], -1, stat) != 0) {
-			for (j = 0; j < i; j++) edg_wll_FreeStatus(&(*states)[j]);
-			*states = NULL;
+		if (edg_wll_JobStatusServer(ctx, out[idx], -1, &(*states)[idx]) != 0) {
+			if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
+				/* some jobs may be purged meanwhile, ignore */
+				continue;
+			}
+			else break;
 		}
-		break;
+		idx++;
 	}
 err:
 	free(res);

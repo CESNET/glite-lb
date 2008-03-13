@@ -16,20 +16,22 @@ extern int opterr,optind;
 
 extern int edg_wll_DoLogEvent(edg_wll_Context context, edg_wll_LogLine logline);
 extern int edg_wll_DoLogEventProxy(edg_wll_Context context, edg_wll_LogLine logline);
+extern int edg_wll_DoLogEventDirect(edg_wll_Context context, edg_wll_LogLine logline);
 
 static const char *me;
 
 static void usage()
 {
-	fprintf(stderr,"usage: %s -m bkserver [-x] [-N numjobs] [-n subjobs (each)] -f file_name \n", me);
+	fprintf(stderr,"usage: %s -m bkserver [-x|-y] [-N numjobs] [-n subjobs (each)] -f file_name \n", me);
+	fprintf(stderr,"	- event file not containing DG.JOBID and without -x or -z not containing DG.USER\n");
 }
 
 int main(int argc, char *argv[])
 {
 	char 	*job = NULL,*server = NULL,*seq = NULL,*filename = NULL;
 	char 	buf[MAXMSGSIZE];
-	int 	lbproxy = 0, num_subjobs = 0;
-	int 	done = 0, njobs = 1,i;
+	int 	lbproxy = 0, num_subjobs = 0, lbdirect = 0;
+	int 	done = 0, njobs = 1,i,j;
 	edg_wll_Context	ctx;
 	edg_wlc_JobId	jobid,*subjobs;
 	FILE	*f;
@@ -41,9 +43,10 @@ int main(int argc, char *argv[])
 	me = strdup(argv[0]);
 
 	do {
-		switch (getopt(argc,argv,"m:xN:n:f:")) {
+		switch (getopt(argc,argv,"m:xyN:n:f:")) {
 			case 'm': server = strdup(optarg); break;
 			case 'x': lbproxy = 1; break;
+			case 'y': lbdirect = 1; break;
 			case 'N': njobs = atoi(optarg); break;
 			case 'n': num_subjobs = atoi(optarg); break;
 			case 'f': filename = (char *) strdup(optarg); break;
@@ -51,6 +54,12 @@ int main(int argc, char *argv[])
 			case -1: done = 1; break;
 		}
 	} while (!done);
+	
+	if (lbproxy && lbdirect) {
+		fprintf(stderr,"%s: only one of -x or -y options may be specified \n",me);
+		usage();
+		exit(1);
+        }
 
 	if (!server) {
 		fprintf(stderr,"%s: -m required\n",me);
@@ -58,7 +67,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if ((njobs <= 0) || (num_subjobs)) {
+	if ((njobs <= 0) || (num_subjobs <= 0)) {
 		fprintf(stderr,"%s: wrong number of jobs\n",me);
 		usage();
 		exit(1);
@@ -76,12 +85,13 @@ int main(int argc, char *argv[])
 	}
 	
 /* MAIN LOOP */
-for (i = 1; i<njobs; i++) {
+for (i = 0; i<njobs; i++) {
 	/* create jobid */
 	if (!job) {
 		char *p = strchr(server,':');
 		if (p) *p=0;
 		edg_wlc_JobIdCreate(server,p?atoi(p+1):0,&jobid);
+		*p=':';
 		job = edg_wlc_JobIdUnparse(jobid);
 		fprintf(stdout,"new jobid: %s\n",job);
 	}
@@ -133,6 +143,13 @@ for (i = 1; i<njobs; i++) {
 					fprintf(stderr,"edg_wll_DoLogEventProxy(): %s (%s)\n",et,ed);
 					exit(1);
 				}
+			} else if (lbdirect) {
+				if (edg_wll_DoLogEventDirect(ctx,logline)) {
+					char    *et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					fprintf(stderr,"edg_wll_DoLogEvent(): %s (%s)\n",et,ed);
+					exit(1);
+				}
 			} else {
 				if (edg_wll_DoLogEvent(ctx,logline)) {
 					char    *et,*ed;
@@ -141,6 +158,7 @@ for (i = 1; i<njobs; i++) {
 					exit(1);
 				}
 			}
+
 			if (logline) free(logline);
 		}
 	}
@@ -153,9 +171,9 @@ for (i = 1; i<njobs; i++) {
 	fprintf(stdout,"EDG_WL_SEQUENCE=\"%s\"\n",seq);
 	free(seq);
 
-	if (num_subjobs) for (i=0; subjobs[i]; i++) {
-		char	*job_s = edg_wlc_JobIdUnparse(subjobs[i]);
-		fprintf(stdout,"EDG_WL_SUB_JOBID[%d]=\"%s\"\n",i,job_s);
+	if (num_subjobs) for (j=0; subjobs[j]; j++) {
+		char	*job_s = edg_wlc_JobIdUnparse(subjobs[j]);
+		fprintf(stdout,"EDG_WL_SUB_JOBID[%d]=\"%s\"\n",j,job_s);
 		free(job_s);
 	}
 

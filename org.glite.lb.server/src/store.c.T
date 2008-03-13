@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <syslog.h>
+#include <ctype.h>
 
 #include "glite/jobid/strmd5.h"
 #include "glite/lbu/trio.h"
@@ -31,37 +32,36 @@
 #include "jobstat.h"
 #include "db_calls.h"
 #include "db_supp.h"
+#include "index.h"
 
 static int store_user(edg_wll_Context,const char *,const char *); 
-static int store_job(edg_wll_Context,glite_jobid_const_t,const char *, int, int);
-#ifdef LB_BUF
-static int store_job_block(edg_wll_Context, glite_jobid_const_t, const char *, glite_lbu_bufInsert *, int, int);
-#endif
-static int store_job_grey(edg_wll_Context,glite_jobid_const_t,time_t);
-static int store_flesh(edg_wll_Context,edg_wll_Event *,char *,int);
-static int store_seq(edg_wll_Context,edg_wll_Event *,int);
+static int store_job(edg_wll_Context,glite_jobid_const_t,const char *, int, int, int, int);
+static int set_job_grey(edg_wll_Context ctx, char *jobid);
+static int store_flesh(edg_wll_Context,edg_wll_Event *,const char *ulm, char *,int);
 static int check_dup(edg_wll_Context,edg_wll_Event *);
 static int check_auth(edg_wll_Context,edg_wll_Event *e); 
-#ifndef LB_DAG_EMBRIONIC
-static int register_subjobs(edg_wll_Context,const edg_wll_RegJobEvent *);
-#endif
-static int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *, const char *);
+static void lowercase_usertag(edg_wll_Event *ev);
 
 void edg_wll_StoreAnonymous(edg_wll_Context ctx,int anon) {
 	ctx->allowAnonymous = anon;
 }
 
-int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
-{
-	edg_wll_ErrorCode	err = 0;
-	char		*userid = NULL,*jobid,*stmt;
-	char		*select_max,*ssrc;
-	glite_lbu_Statement	sh = NULL;
-	int		next = 0xDEAD;
-	int		lbproxy_notreg = 0;
-	char		*now_s = NULL;
 
-	ssrc = jobid = stmt = select_max = NULL;
+/* !!! to be called from OPEN TRANSACTION only !!! 
+ */
+int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int *seq)
+{
+	char			*userid, *jobid, *stmt, *ssrc, *now_s, *stamp, *dummy, *max;
+	glite_lbu_Statement	sh = NULL;
+	int			next = 0xDEAD, nr;
+
+
+	userid = ssrc = jobid = stmt = now_s = stamp = dummy = max = NULL;
+
+	lowercase_usertag(e);
+	jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
+	glite_lbu_TimeToDB(e->any.timestamp.tv_sec, &stamp);
+	ssrc = edg_wll_SourceToString(e->any.source);
 
 	if ( ctx->event_load )
 		glite_lbu_TimeToDB(e->any.arrived.tv_sec, &now_s);
@@ -69,21 +69,12 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		glite_lbu_TimeToDB(time(NULL), &now_s);
 
 	edg_wll_ResetError(ctx);
-	switch (err = check_auth(ctx,e)) {
+	switch (check_auth(ctx,e)) {
 		case 0: break;
 		case ENOENT: 
-			if ( !ctx->isProxy ) {
-				if (ctx->greyjobs) {
-					edg_wll_ResetError(ctx);
-					if (store_job_grey(ctx,e->any.jobId,e->any.timestamp.tv_sec))
-						goto clean;
-					break;
-				} 
-		       		else goto clean;
-			}
-
-			edg_wll_ResetError(ctx);
-			lbproxy_notreg = 1;
+			/* job not registered */
+			// should not happen, store_job_server_proxy() miscoded or going thu load?
+			goto clean;
 			break;
 		case EPERM:
 			if (!ctx->noAuth) goto clean;
@@ -92,11 +83,6 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 		default: goto clean;
 	}
 
-/* FIXME: does not work for grey jobs due to "select from jobs" -- I don't care for the time being */
-	if ((err = check_dup(ctx,e))) goto clean;
-
-	jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
-
 	trio_asprintf(&stmt,"select userid from jobs where jobid='%|Ss'", jobid);
 	
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 || edg_wll_FetchRow(ctx,sh,1,NULL,&userid) < 0) goto clean;
@@ -104,131 +90,69 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,int *seq)
 	free(stmt); stmt = NULL;
 
 
-/* obtain next event sequence number */
-	trio_asprintf(&select_max,
-		"select max(event) from events "
+/* check duplicity */
+	trio_asprintf(&stmt,
+		"select arrived from events where jobid='%|Ss' and code='%d'"
+		" and prog='%|Ss' and host='%|Ss' and time_stamp=%s and usec='%d'"
+		" and level='%d' and userid='%|Ss' and seqcode='%|Ss'",
+		jobid, (int) e->any.type,
+		ssrc,e->any.host,
+		stamp,e->any.timestamp.tv_usec,
+		e->any.level,userid, e->any.seqcode);
+
+	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0) goto clean;
+	nr = edg_wll_FetchRow(ctx,sh,1,NULL,&dummy);
+	if (sh) glite_lbu_FreeStmt(&sh);
+	free(stmt); stmt = NULL;
+	free(dummy);
+
+	if (nr < 0) goto clean;
+	if (nr > 0) {
+		/* possible duplicity (99%) */
+		// XXX: check event flesh to be 100% sure
+		edg_wll_SetError(ctx,EEXIST,"duplicate event");
+		goto clean;
+	}
+	/* else (nr == 0) -> unique event, continue */
+	
+
+/* obtain number of stored events */
+	trio_asprintf(&stmt,
+		"select nevents from jobs "
 		"where jobid = '%|Ss'",jobid);
 
-	ssrc = edg_wll_SourceToString(e->any.source);
+	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 ||
+	    edg_wll_FetchRow(ctx,sh,1,NULL,&max) < 0) goto clean;
+	glite_lbu_FreeStmt(&sh); 
+	
+	next = (max && *max) ? atoi(max)+1 : 0;
+	free(max);
 
-/* try to insert (someone else may be doing the same) */
-	{
-		char	*max = NULL;
 
-		if (edg_wll_ExecSQL(ctx,select_max,&sh) < 0 ||
-		    edg_wll_FetchRow(ctx,sh,1,NULL,&max) < 0)
-		{
-			err = edg_wll_Error(ctx,NULL,NULL);
-			goto clean;
-		}
-		glite_lbu_FreeStmt(&sh); 
-		
-		next = max && *max ? atoi(max)+1 : 0;
-		free(max);
-	}
-		
-	while (1) {
-	/* 
-	 * 1) when using transactions:
-	 *   Store the whole event right now.
-	 *
-	 * 2) when not using transactions:
-	 *   Store an UNDEF event first in order to prevent race condition
-	 *   with readers and update event code later.
-	 */
-		char	*stamp = NULL;
+/* store event */		
+	trio_asprintf(&stmt,
+		"insert into events(jobid,event,code,prog,host,time_stamp,usec,arrived,level,userid,seqcode) "
+		"values ('%|Ss',%d,%d,'%|Ss','%|Ss',%s,%d,%s,%d,'%|Ss','%|Ss')",
+		jobid,next,
+		(int) e->any.type,
+		ssrc,e->any.host,
+		stamp,e->any.timestamp.tv_usec,
+		now_s, e->any.level,userid, e->any.seqcode);
 
-		glite_lbu_TimeToDB(e->any.timestamp.tv_sec, &stamp);
-		trio_asprintf(&stmt,
-			"insert into events(jobid,event,code,prog,host,time_stamp,usec,arrived,level,userid) "
-			"values ('%|Ss',%d,%d,'%|Ss','%|Ss',%s,%d,%s,%d,'%|Ss')",
-			jobid,next,
-			ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS ? (int) e->any.type : EDG_WLL_EVENT_UNDEF,
-			ssrc,e->any.host,
-			stamp,e->any.timestamp.tv_usec,
-			now_s, e->any.level,userid);
-		free(stamp);
-
-		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
-			if ((err = edg_wll_Error(ctx,NULL,NULL)) != EEXIST)
-				goto clean;
-		} else break; /* successful insert */
-
-	/* we were late -- try once again */
-		next++;
-		free(stmt);
-	}
-
+	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto clean;
 	free(stmt); stmt = NULL;
-	if ((err = store_seq(ctx,e,next)) ||
-		(err = store_flesh(ctx,e,jobid,next))) {
-	/* attempt to cleanup, ignore new errors */
-		char		*desc;
-		edg_wll_ErrorCode	oerr = edg_wll_Error(ctx,NULL,&desc);
 
-		edg_wll_delete_event(ctx,jobid,next);
-		edg_wll_SetError(ctx,oerr,desc);
-		free(desc);
-	} else
-	if (!(ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS)) {
-	/* emulate commit, i.e. swith to a real event type to make
-	 * the record valid */
-		trio_asprintf(&stmt,
-			"update events set code=%d "
-			"where jobid='%|Ss' and event=%d",
-			(int) e->any.type,jobid,next);
-		switch (edg_wll_ExecSQL(ctx,stmt,NULL)) {
-			case 0: if (ctx->strict_locking)
-					err = edg_wll_SetError(ctx,ENOENT,"event disappeared on store while strict locking");
-			/* purge in progres: drop the garbage, ignore errors */
-				else {
-					edg_wll_delete_event(ctx,jobid,next);
-					err = edg_wll_SetError(ctx,ENOENT,"job being purged");
-				}
-				break;
-			case 1: if (ctx->strict_locking) err = 0;
-				else {
-			/* check whether the job is still there to prevent garbage
-			 * left while there is a concurrent purge 
-			 */
-					free(stmt);
-					trio_asprintf(&stmt,
-						"select 'x' from jobs where jobid='%|Ss'",
-						jobid);
-					switch (edg_wll_ExecSQL(ctx,stmt,NULL)) {
-						case 1: break;
-						case 0: /* purge in progres */
-							edg_wll_delete_event(ctx,jobid,next);
-							err = edg_wll_SetError(ctx,ENOENT,"job being purged");
-							break;
-						default: err = edg_wll_SetError(ctx,EDG_WLL_ERROR_DB_CALL,
-								"more job records, what is that?");
-							break;
-					}
-				}
-				break;
-			case -1: err = edg_wll_Error(ctx,NULL,NULL);
-				break;
+/* increase number of stored events */
+	trio_asprintf(&stmt,
+		"update jobs set nevents='%d'"
+		"where jobid = '%|Ss'", next, jobid);
 
-			default: err = edg_wll_SetError(ctx,EDG_WLL_ERROR_DB_CALL,
-				"more event records, what is that?");
-				break;
-		}
-	} /* if !transactions */
+	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto clean;
+	free(stmt); stmt = NULL;
+	
 
-	if (err == 0 && 
-		e->any.type == EDG_WLL_EVENT_REGJOB &&
-		(e->regJob.jobtype == EDG_WLL_REGJOB_DAG ||
-		 e->regJob.jobtype == EDG_WLL_REGJOB_PARTITIONED ||
-		 e->regJob.jobtype == EDG_WLL_REGJOB_COLLECTION) &&
-		e->regJob.nsubjobs > 0)  
-
-#ifdef LB_DAG_EMBRIONIC
-			err = register_subjobs_embryonic(ctx,&e->regJob,userid);
-#else
-			err = register_subjobs(ctx,&e->regJob);
-#endif
-
+/* store event record */
+	if (store_flesh(ctx,e,ulm,jobid,next)) goto clean;
 
 clean:
 	free(now_s);
@@ -236,10 +160,10 @@ clean:
 	free(jobid);
 	free(stmt);
 	free(ssrc);
-	free(select_max);
 	if (sh) glite_lbu_FreeStmt(&sh);
-	if (!err && seq) *seq = next;
-	return err;
+	if (!edg_wll_Error(ctx,NULL,NULL) && seq) *seq = next;
+	free(stamp);
+	return edg_wll_Error(ctx,NULL,NULL);
 }
 
 static int store_user(edg_wll_Context ctx,const char *userid,const char *subj)
@@ -258,7 +182,7 @@ static int store_user(edg_wll_Context ctx,const char *userid,const char *subj)
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int store_job(edg_wll_Context ctx,glite_jobid_const_t job,const char *userid, int proxy, int server)
+static int store_job(edg_wll_Context ctx,glite_jobid_const_t job,const char *userid, int proxy, int server,int grey, int update)
 {
 	char *jobstr = edg_wlc_JobIdUnparse(job);
 	char *jobid = edg_wlc_JobIdGetUnique(job);
@@ -288,262 +212,158 @@ static int store_job(edg_wll_Context ctx,glite_jobid_const_t job,const char *use
 	else {
 		server = 1;
 	}
-	
-	trio_asprintf(&stmt,"insert into jobs(jobid,dg_jobid,userid,proxy,server) "
-		"values ('%|Ss','%|Ss','%|Ss', '%|Sd', '%|Sd')",jobid,jobstr,userid,proxy,server);
+
+	if (update) {
+		trio_asprintf(&stmt,"update jobs set userid='%|Ss', proxy='%|Sd', server='%|Sd', grey='%|Sd' where jobid='%|Ss'", 
+			userid,proxy,server,grey,jobid);
+	}
+	else {
+		trio_asprintf(&stmt,"insert into jobs(jobid,dg_jobid,userid,proxy,server,grey) "
+			"values ('%|Ss','%|Ss','%|Ss', '%|Sd', '%|Sd', '%|Sd')",jobid,jobstr,userid,proxy,server,grey);
+	}
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
-		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST) 
+		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST && !update) 
 			edg_wll_ResetError(ctx);
+		else
+			goto err;
 	}
+	free(stmt); stmt = NULL;
+
+err:
 	free(stmt);
-
-	if (ctx->greyjobs) {
-		trio_asprintf(&stmt,"delete from grey_jobs where jobid = '%|Ss'",jobid);
-		edg_wll_ExecSQL(ctx,stmt,NULL); /* XXX: error propagates */
-		free(stmt);
-	}
-
 	free(jobstr);
 	free(jobid);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-#ifdef LB_BUF
-static int store_job_block(edg_wll_Context ctx,glite_jobid_const_t job,const char *userid, glite_lbu_bufInsert *bi, int proxy, int server)
+
+static int set_job_grey(edg_wll_Context ctx, char *jobid)
 {
-	char *jobstr = edg_wlc_JobIdUnparse(job);
-	char *jobid = edg_wlc_JobIdGetUnique(job);
-	char *row;
+	char *stmt;
 
-/* debug Duplicate key on index: Duplicate entry '(nil)' for key 1
- */
-
-	assert(!ctx->greyjobs);	/* XXX: should not happen */
-
-	if (jobid == NULL || jobstr == NULL) 
-		return edg_wll_SetError(ctx,EINVAL,"store_jobi_block()");
-
-	edg_wll_ResetError(ctx);
-
-	trio_asprintf(&row, "'%|Ss','%|Ss','%|Ss','%|Ss','%|Ss'", jobid,jobstr,userid,proxy,server);
-	edg_wll_bufferedInsert(bi, row); // no need to free row
-
-	free(jobstr);
-	free(jobid);
-	return edg_wll_Error(ctx,NULL,NULL);
-}
-#endif
-
-static int store_job_grey(edg_wll_Context ctx,glite_jobid_const_t job,time_t etime)
-{
-	char *jobstr = edg_wlc_JobIdUnparse(job);
-	char *jobid = edg_wlc_JobIdGetUnique(job);
-	char *stmt, *s_etime;
-
-	if (jobid == NULL || jobstr == NULL)
-		return edg_wll_SetError(ctx,EINVAL,"store_job_grey()");
-
-	edg_wll_ResetError(ctx);
-	glite_lbu_TimeToDB(etime, &s_etime);
-	trio_asprintf(&stmt,"insert into grey_jobs(jobid,dg_jobid,time_stamp) "
-			"values ('%|Ss','%|Ss',%s)",
-			jobid,jobstr,s_etime);
-	free(s_etime);
-
-	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
-		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST)
-			edg_wll_ResetError(ctx);
-	}
+	trio_asprintf(&stmt,"update jobs set grey='1' where jobid='%|Ss'", jobid);
+	edg_wll_ExecSQL(ctx,stmt,NULL); 
 
 	free(stmt);
-	free(jobstr);
-	free(jobid);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
 /* test whether job shares LB proxy and server DB or not */
-int is_job_local(edg_wll_Context ctx, edg_wlc_JobId jobId) 
+int is_job_local(edg_wll_Context ctx, glite_jobid_const_t jobId) 
 {
 	char		*srvName = NULL;
 	unsigned int	srvPort; 
 	int		ret;	
 
+	if (!ctx->serverRunning) return 0;	/* XXX */
 
 	edg_wlc_JobIdGetServerParts(jobId, &srvName, &srvPort);
-	ret = ((ctx->srvPort == srvPort) && !strcmp(srvName,ctx->srvName));
+	ret = ((ctx->srvPort == srvPort) && ctx->srvName && !strcmp(srvName,ctx->srvName));
 	free(srvName);
 
 	return(ret);
 }
 
-int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event)
-{	
+int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *register_to_JP)
+{
 	char 		*unique = edg_wlc_JobIdGetUnique(event->any.jobId);
-	char		*q = NULL, *owner = NULL, *userid = NULL;
+	char            *q = NULL, *userid = NULL, *subj = NULL;
 	glite_lbu_Statement    stmt = NULL;
-	int		nar;
+	int             nar, grey = 0;
 	char		*can_peername = NULL;
-	int		local_job = is_job_local(ctx, event->any.jobId);
-
-
-	edg_wll_ResetError(ctx);
+	int             local_job = is_job_local(ctx, event->any.jobId);
+	char 		*res[3] = {NULL, NULL, NULL};
 	
-	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 
-	if (ctx->isProxy) {
-		/* event arrived on proxy socket */
-		if (event->any.type == EDG_WLL_EVENT_REGJOB) {
-			if (event->any.priority & EDG_WLL_LOGFLAG_DIRECT) {
-                        /* first synchronous registration */
-				if (local_job) {
-					/* we are both server and proxy for this job */
-					trio_asprintf(&q,"update jobs set proxy=1 where jobid='%|Ss'",
-						unique);
+	/* check auth */
+	if (!ctx->isProxy && !ctx->peerName)
+		return edg_wll_SetError(ctx,EPERM,"LB server can't store using unauthenticated connection");
+	if (ctx->isProxy && (!event->any.user || !strcmp(event->any.user,EDG_WLL_LOG_USER_DEFAULT)) )
+		return edg_wll_SetError(ctx,EPERM,"LB proxy can't store using unauthenticated connection");
 
-					nar = edg_wll_ExecSQL(ctx, q, NULL);
 
-					if (nar == 0) {
-						/* job isn't registered yet */
-						userid = strdup(strmd5("unknown_to_proxy", NULL));
-						if (store_user(ctx,userid,"unknown_to_proxy")) goto err;
+	trio_asprintf(&q,"select proxy,server,grey from jobs where jobid='%|Ss' for update", unique);
 
-						if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
-							userid, 1, ctx->serverRunning)) goto err;
-							
-					}
-					else {} /* job was registered thru GSI, no further action needed */
-						/* or error occured - and will go out via return() */
-				}
-				else {
-					/* we are only proxy for this job, forward it to server */
+	nar = edg_wll_ExecSQL(ctx,q,&stmt);
+	free(q); q = NULL;
 
-					/* XXX - does it have any sence ??
-	                		if (!strcmp(e->any.user,EDG_WLL_LOG_USER_DEFAULT)) {
-			                        edg_wll_SetError(ctx,EPERM,"can't register jobs anonymously");
-						goto err;
-					}
-					*/
+	if (nar < 0) goto err;
+	else if (nar == 0) {
+		/* Job not registered yet */
 
-					userid = strdup(strmd5(event->any.user, NULL));
-					if (store_user(ctx,userid,event->any.user)) goto err;
-
-					if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
-                                                        userid, 1, 0)) goto err;
-				}
-			}
+		if (!( (event->any.type == EDG_WLL_EVENT_REGJOB) && 
+			(event->any.priority & EDG_WLL_LOGFLAG_DIRECT) )) 
+		{
+			if (ctx->greyjobs) grey = 1;
 			else {
-				/* supplementary re-registration (JDL of subjob, etc.) */
-				if (local_job) {
-					/* previous registration via GSI required */
-					trio_asprintf(&q,"update jobs set jobid='%|Ss', proxy='1' where jobid='%|Ss'",
-						unique, unique);
-					/* does the job exists ? */
-					if (edg_wll_ExecSQL(ctx,q,NULL) < 0) {
-						edg_wll_SetError(ctx, ENOENT, "job not registered");
-						goto err;
-					}
-				}
-				else {
-					/* try to register job in case that first reistration 	*/
-					/* was sent to server only; ignore errors (EEXIST)	*/
-					userid = strdup(strmd5(event->any.user, NULL));
-					if (store_user(ctx,userid,event->any.user)) goto err;
-
-					store_job(ctx,(glite_jobid_const_t) event->any.jobId,
-                                                        userid, 1, 0);
-					edg_wll_ResetError(ctx);
-					
-				}
-			}
-		}
-		else {
-			/* any other event than JobReg */
-			trio_asprintf(&q,"update jobs set jobid='%|Ss', proxy='1' where jobid='%|Ss'",
-                        	unique, unique);
-			/* does the job exists ? now we require registration on proxy too */
-			if (edg_wll_ExecSQL(ctx,q,NULL) < 0) {
 				edg_wll_SetError(ctx, ENOENT, "job not registered");
-				 goto err;
-			}
-		}
-	}
-	else {
-		/* event arrived on LB port */
-		if (event->any.type == EDG_WLL_EVENT_REGJOB) {
-			trio_asprintf(&q,"select cert_subj from jobs,users where jobs.jobid='%|Ss'"
-					" AND jobs.userid=users.userid",unique);
-			if ( (nar = edg_wll_ExecSQL(ctx,q,&stmt)) < 0 || edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0 ) { 
 				goto err;
 			}
-			free(q); q = NULL;
-			
-			if (nar) {
-				/* job is already registered */
-				if (!strcmp(owner,"unknown_to_proxy")) {
-					/* proxy registration was already done */
-					userid = strdup(strmd5(can_peername, NULL));
-					if (store_user(ctx,userid,can_peername)) goto err;
+		}
 
-					trio_asprintf(&q,"update jobs set server=1, userid='%|Ss' where jobid='%|Ss'",
-						userid, unique);
-					
-					edg_wll_ExecSQL(ctx, q, NULL);
-				}
-				else { } /* re-registration, no action needed */
-			}
-			else {
-				userid = strdup(strmd5(can_peername, NULL));
-				if (store_user(ctx,userid,can_peername)) goto err;
+		subj = strdup( ctx->isProxy ? event->any.user : ctx->peerName);
+		can_peername = edg_wll_gss_normalize_subj(subj, 0);
+		userid = strdup(strmd5(can_peername, NULL));
+		if (store_user(ctx,userid,can_peername)) goto err;
+		if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
+			userid, ctx->isProxy, local_job, grey, 0 )) goto err;
+		*register_to_JP = local_job;
+	}
+	else {
+		/* Job already registered */
 
-				if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
-						userid, 0, 1)) goto err;
-			}
+		if (edg_wll_FetchRow(ctx,stmt,sizeof(res)/sizeof(res[0]),NULL,res) < 0) goto err;
+
+/* TODO: ljocha: only GSI should switch the job from grey, and specify owner
+ * add !ctx->isProxy to the conditions and make the rest simpler */
+
+		if (ctx->greyjobs && !strcmp(res[2],"1") && 
+			(event->any.type == EDG_WLL_EVENT_REGJOB) && 
+			(event->any.priority & EDG_WLL_LOGFLAG_DIRECT)) 
+		{
+
+			subj = strdup(ctx->isProxy ? event->any.user : ctx->peerName);
+			can_peername = edg_wll_gss_normalize_subj(subj, 0);
+			userid = strdup(strmd5(can_peername, NULL));
+			if (store_user(ctx,userid,can_peername)) goto err;
+			if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
+				userid, (ctx->isProxy || !strcmp(res[0],"1")), 
+				!strcmp(res[1],"1") || (local_job ? ctx->serverRunning : 0), 0, 1)) goto err;
+			*register_to_JP = 1;
+				
 		}
 		else {
-			/* any other event than JobReg 	*/
-			/* no action needed 		*/
+			// if (!strcmp(res[0],"1") && !strcmp(res[1],"1") ) /*nothing to do */;
+			if ( (!strcmp(res[0],"0") && ctx->isProxy) || (!strcmp(res[1],"0") && !ctx->isProxy) ) {
+				trio_asprintf(&q,"update jobs set server='1', proxy='1' where jobid='%|Ss'",
+					unique);
+				if (edg_wll_ExecSQL(ctx,q,NULL) < 0) goto err;
+				free(q); q = NULL;
+			}
 		}
+
+		/* ??? test whether user from proxy is the same as user from server ??? 
+		   be picky -- return error when not mathing?
+		*/
 	}
-	
+
 err:
+	free(res[0]); free(res[1]); free(res[2]);
 	if (stmt) glite_lbu_FreeStmt(&stmt);
-	free(unique);
+	free(subj);
 	free(userid);
 	free(q);
 
 	return edg_wll_Error(ctx,NULL,NULL);
+
 }
 
 
-/*
- * XXX: store it in SHORT_FIELDS for now despite it should go to dedicated
- * 	column in EVENTS.
- *
- * 	don't want to change the database structure now, will be done anyway
- * 	soon
- */
-static int store_seq(edg_wll_Context ctx,edg_wll_Event *e,int no)
-{
-	int	ret;
-	char	*stmt;
-	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
-
-	edg_wll_ResetError(ctx);
-	trio_asprintf(&stmt,"insert into short_fields(jobid,event,name,value) "
-			"values ('%|Ss',%d,'SEQCODE','%|Ss')",
-			jobid,no,e->any.seqcode);
-
-	ret = edg_wll_ExecSQL(ctx,stmt,NULL);
-	free(stmt);
-	free(jobid);
-
-	return ret>=0 ? 0 : edg_wll_Error(ctx,NULL,NULL);
-}
 
 #define SHORT_LEN	255	/* short_fiels.value db column lenght */
 
-static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
+static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,char *jobid,int no)
 {
 	struct {
 		char	*key;
@@ -554,7 +374,17 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
 	unsigned int	i;
 	int	err = 0;
 
+	assert(ulm || e);
 	edg_wll_ResetError(ctx);
+	if (!ulm) ulm = edg_wll_UnparseEvent(ctx, e);
+	if (!ulm) return edg_wll_Error(ctx, NULL, NULL);
+
+#ifndef LB_EVENTS_BLOB
+	// in both ways if some preparsed flesh fields in events too
+	if (!e) {
+		if (edg_wll_ParseEvent(ctx, (char *)ulm, &e) != 0) return edg_wll_Error(ctx, NULL, NULL);
+	}
+
 	memset(f,0,sizeof(f)); assert(f[0].key == NULL);
 
 	switch (e->type) {
@@ -613,6 +443,11 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,char *jobid,int no)
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
 		free(stmt);
 	}
+#else
+	if (!ulm) ulm = edg_wll_UnparseEvent(ctx, e);
+	trio_asprintf(&stmt, "insert into events_flesh (jobid, event, ulm) values ('%|Ss', %d, '%|Ss')", jobid, no, ulm);
+	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
+#endif
 
 	return err;
 }
@@ -690,18 +525,11 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
 	char	*q = NULL,*owner = NULL;
 	glite_lbu_Statement	stmt = NULL;
-	char	*user;
 
 	edg_wll_ResetError(ctx);
 
 	if (!ctx->isProxy && !ctx->peerName) 
 		return edg_wll_SetError(ctx,EPERM,"can't store using unauthenticated connection");
-
-#if 0
-	if (e->type == EDG_WLL_EVENT_REGJOB) 
-		return strcmp(e->any.user,EDG_WLL_LOG_USER_DEFAULT) ?
-			0 : edg_wll_SetError(ctx,EPERM,"can't register jobs anonymously");
-#endif
 
 	trio_asprintf(&q,"select u.cert_subj from jobs j, users u "
 				"where j.jobid='%|Ss' and u.userid=j.userid",jobid);
@@ -711,14 +539,7 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 	) goto clean;
 
 	if (!owner) {
-		if ( ctx->isProxy )
-			edg_wll_SetError(ctx, EINVAL, "Job not registered");
-		else
-			/* We have to let the calling function know what happened here
-			 * even if it hapens inside the LB Proxy which shouldn't consider
-			 * this as an error
-			 */
-			edg_wll_SetError(ctx, ENOENT, "job not registered");
+		edg_wll_SetError(ctx, ENOENT, "job not registered");
 		goto clean;
 	}
 
@@ -744,95 +565,6 @@ clean:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-#ifndef LB_DAG_EMBRIONIC
-static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
-{
-	int	i,err;
-	edg_wlc_JobId	*subjobs;
-	struct timeval	now;
-
-	edg_wll_ResetError(ctx);
-	if (e->nsubjobs == 0) return 0;
-	if (e->nsubjobs < 0) return edg_wll_SetError(ctx,EINVAL,"negative number of subjobs");
-
-	if ((err = edg_wll_GenerateSubjobIds(ctx,e->jobId,e->nsubjobs,e->seed,&subjobs)))
-		return err;
-
-	gettimeofday(&now,NULL);
-
-/* XXX: increase the overall request timeout. */
-	ctx->p_tmp_timeout.tv_sec += e->nsubjobs;
-	if (ctx->p_tmp_timeout.tv_sec > 86400) ctx->p_tmp_timeout.tv_sec = 86400;
-
-	for (i=0; i<e->nsubjobs; i++) {
-		edg_wll_Event	e2;
-		int		seq;
-		char		*et,*ed,*job_s;
-
-		memset(&e2,0,sizeof e2);
-		e2.type = EDG_WLL_EVENT_REGJOB;
-		e2.any.jobId = subjobs[i]; subjobs[i] = NULL;
-		memcpy(&e2.regJob.timestamp,&now,sizeof now);
-		e2.any.host = strdup(ctx->srvName);
-		e2.any.level = e->level;
-		e2.any.priority = e->priority;
-		e2.any.seqcode = strdup(EDG_WLL_SEQ_NULL);
-		e2.any.user = strdup(e->user);
-		e2.any.source = e->source;
-		e2.any.src_instance = strdup(ctx->isProxy ? 
-			"L&B proxy" : "L&B server");
-		e2.regJob.ns = strdup(e->ns);
-		edg_wlc_JobIdDup(e->jobId,&e2.regJob.parent);
-		e2.regJob.jobtype = EDG_WLL_REGJOB_SIMPLE;
-		e2.regJob.jdl = strdup("");
-
-		switch (edg_wll_StoreEvent(ctx,&e2,&seq)) {
-
-			case 0: break;
-			/* maybe some non-ignorable errors should be handled here */
-
-			default: 
-				edg_wll_Error(ctx,&et,&ed);
-				job_s = edg_wlc_JobIdUnparse(e2.any.jobId);
-				fprintf(stderr,"register subjob %s: %s (%s)\n",job_s,et,ed);
-				syslog(LOG_ERR,"register subjob %s: %s (%s)",job_s,et,ed);
-				free(job_s); free(et); free(ed);
-				edg_wll_FreeEvent(&e2);
-				edg_wll_ResetError(ctx);
-				continue;
-		}
-
-		if (edg_wll_LockJob(ctx,e2.any.jobId)) {
-			job_s = edg_wlc_JobIdUnparse(e2.any.jobId);
-			fprintf(stderr,"lock job %s: %s (%s)\n",job_s,et,ed);
-			syslog(LOG_ERR,"lock job %s: %s (%s)",job_s,et,ed);
-			free(job_s); free(et); free(ed);
-			edg_wll_FreeEvent(&e2);
-			edg_wll_ResetError(ctx);
-			continue;
-		}
-
-		if ((err = edg_wll_StepIntState(ctx,e2.any.jobId,&e2,seq,NULL)))
-			edg_wll_Error(ctx,&et,&ed);
-
-		edg_wll_UnlockJob(ctx,e2.any.jobId);
-		edg_wll_ResetError(ctx);
-
-		if (err) {
-			job_s = edg_wlc_JobIdUnparse(e2.any.jobId);
-			fprintf(stderr,"%s: %s (%s)\n",job_s,et,ed);
-			syslog(LOG_ERR,"%s: %s (%s)",job_s,et,ed);
-			free(job_s); free(et); free(ed);
-			edg_wll_ResetError(ctx);
-		}
-
-		edg_wll_FreeEvent(&e2);
-	}
-
-	free(subjobs);
-	return edg_wll_Error(ctx,NULL,NULL);
-}
-#endif
 
 
 /*
@@ -841,7 +573,7 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 
 static edg_wll_ErrorCode states_values_embryonic(
 	edg_wll_Context ctx,
-	edg_wlc_JobId jobid,
+	glite_jobid_const_t jobid,
 	const edg_wll_RegJobEvent *e,
 	char **icnames,
 	char **values)
@@ -883,21 +615,17 @@ err:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e, const char *userid)
+int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 {
-	int			i, err = 0;
-	edg_wlc_JobId		*subjobs;
+	int			i, j,  err = 0;
+	edg_wlc_JobId		*subjobs = NULL;
 	struct timeval		now;
-	char			*jobid_md5, *jobid_md5_old;
+	char			*jobid = NULL, *jobid_md5 = NULL, *jobid_md5_old = NULL;
 	size_t			jobid_len;
-#ifdef LB_BUF
-	glite_lbu_bufInsert	bi_j;
-	glite_lbu_bufInsert	*bi_jobs = &bi_j;
-       	char			*states_cols;
-#endif
 	glite_lbu_bufInsert	bi_s, *bi_states = &bi_s;
-	char			*icnames, *values;
+	char			*icnames = NULL, *values = NULL, *userid = NULL, *stmt = NULL;
 	int			server, proxy, membership = 0;
+	glite_lbu_Statement     sh = NULL;
 
 
 	edg_wll_ResetError(ctx);
@@ -914,43 +642,28 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 	jobid_len = strlen(jobid_md5_old);
 		
 
-#ifdef LB_BUF
-	/* init multirows insert mechanism for tables used here */
-	if (edg_wll_bufferedInsertInit(ctx, bi_jobs, NULL, "jobs", 4000, 1000,
-		"jobid, dg_jobid, userid, proxy, server"))
-	{
-		return edg_wll_SetError(ctx, EINVAL, "edg_wll_bufferedInsertInit()");
-	}
-
-	asprintf(&states_cols,"jobid, status, seq,int_status, version, parent_job%s", icnames);
-	if (edg_wll_bufferedInsertInit(ctx, bi_states, NULL, "states", 4000, 1000, states_cols))
-	{
-                return edg_wll_SetError(ctx, EINVAL, "edg_wll_bufferedInsertInit()");
-	}
-	free(states_cols);
-#endif		
-
-
 	gettimeofday(&now,NULL);
 
 	/* increase the overall request timeout. */
 	ctx->p_tmp_timeout.tv_sec += e->nsubjobs/10;
 	if (ctx->p_tmp_timeout.tv_sec > 86400) ctx->p_tmp_timeout.tv_sec = 86400;
 
-	membership = edg_wll_jobMembership(ctx, e->jobId);
+	if ((membership = edg_wll_jobMembership(ctx, e->jobId)) < 0) goto err;
+
 	proxy = membership & DB_PROXY_JOB;
 	server = membership & DB_SERVER_JOB;
+
+	/* get userid of parent job */
+	jobid = edg_wlc_JobIdGetUnique(e->jobId);
+	trio_asprintf(&stmt,"select userid from jobs where jobid='%|Ss'", jobid);
+	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 || edg_wll_FetchRow(ctx,sh,1,NULL,&userid) < 0) goto err;
 
 	for (i=0; i<e->nsubjobs; i++) {
 		char		*et,*ed,*job_s,*p,*p1;
 
 		/* save jobid-userid relation into jobs table */
-#ifdef LB_BUF
-	        if ((err = store_job_block(ctx, subjobs[i], userid, bi_jobs, proxy, server)))
-#else
-	        if ((err = store_job(ctx, subjobs[i], userid, proxy, server)))
-#endif
-			edg_wll_Error(ctx,&et,&ed);
+	        if ((err = store_job(ctx, subjobs[i], userid, proxy, server, 0, 0)))
+			if (edg_wll_Error(ctx,&et,&ed) == EDEADLOCK) goto err;
 
 		/* interchange variable parts (jobids) in values */
 		/* there are only two occurences of subjob jobid */
@@ -970,10 +683,6 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, subjobs[i], icnames, values, bi_states)))
 			edg_wll_Error(ctx,&et,&ed);
 
-//job_s = edg_wlc_JobIdUnparse(subjobs[i]);
-//printf("%s\n", job_s);
-//free(job_s);
-
 		if (err) {
 			job_s = edg_wlc_JobIdUnparse(subjobs[i]);
 			fprintf(stderr,"%s: %s (%s)\n",job_s,et,ed);
@@ -984,16 +693,15 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 		edg_wlc_JobIdFree(subjobs[i]);
 	}
 
+err:
 	free(jobid_md5_old);	//free the last one
 	free(icnames);
 	free(values);
+	/* free the rest of subjobs if DEADLOCK occurs */
+	for (j=i; j<e->nsubjobs; j++) edg_wlc_JobIdFree(subjobs[i]);
 	free(subjobs);
-
-#ifdef LB_BUF
-	/* commit the rest of multirows insert and clean structures */
-	edg_wll_bufferedInsertClose(bi_jobs);
-	edg_wll_bufferedInsertClose(bi_states);
-#endif
+	if (sh) glite_lbu_FreeStmt(&sh);
+	free(stmt);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -1022,10 +730,32 @@ int edg_wll_delete_event(edg_wll_Context ctx,const char *jobid,int event)
 	free(stmt);
 
 	trio_asprintf(&stmt,
+		"delete from events_flesh where jobid='%|Ss' and event=%d",
+		jobid,event);
+	edg_wll_ExecSQL(ctx,stmt,NULL);
+	free(stmt);
+
+	trio_asprintf(&stmt,
 		"delete from events where jobid='%|Ss' and event=%d",
 		jobid,event);
 	edg_wll_ExecSQL(ctx,stmt,NULL);
 	free (stmt);
 
 	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+/* XXX: if event type is user tag, convert the tag name to lowercase!
+ * 	  (not sure whether to convert a value too is reasonable
+ * 	  or keep it 'case sensitive')
+ */
+static void lowercase_usertag(edg_wll_Event *ev)
+{
+	int i;
+
+	if ( ev->any.type == EDG_WLL_EVENT_USERTAG ) {
+
+		for ( i = 0; ev->userTag.name[i] != '\0'; i++ )
+		ev->userTag.name[i] = tolower(ev->userTag.name[i]);
+	}
 }

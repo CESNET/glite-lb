@@ -256,8 +256,12 @@ void glite_lbu_FreeDBContext(glite_lbu_DBContext ctx) {
 
 
 int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char *cs) {
-	if (db_connect(ctx, cs, &ctx->mysql) != 0) return STATUS(ctx);
-	return 0;
+	if (db_connect(ctx, cs, &ctx->mysql) != 0 ||
+	    glite_lbu_ExecSQL(ctx, "SET AUTOCOMMIT=1", NULL) < 0 ||
+	    glite_lbu_ExecSQL(ctx, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ", NULL) < 0)
+		return STATUS(ctx);
+	else
+		return 0;
 }
 
 
@@ -422,7 +426,7 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 		idx[i][j] = strdup(showcol[Column_name]);
 //printf("****** [%d, %d] %s\n", i, j, idx[i][j]);
 //FIXME: needed?idx[i][j].value.i = atoi(showcol[Sub_part]);
-		for (i = 0; showcol[i]; i++) free(showcol[i]);
+		for (i = 0; i<(sizeof(showcol)/sizeof(showcol[0])); i++) free(showcol[i]);
 	}
 
 	glite_lbu_FreeStmt(&stmt);
@@ -489,6 +493,10 @@ int glite_lbu_ExecSQL(glite_lbu_DBContext ctx, const char *cmd, glite_lbu_Statem
 					if (retry_nr <= 0) 
 						do_reconnect = 1;
 					break;
+				case ER_LOCK_DEADLOCK:
+					ERR(ctx, EDEADLOCK, db_handle.mysql_error(ctx->mysql));
+					return -1;
+					break;	
 				default:
 					MY_ERR(ctx);
 					return -1;
@@ -527,7 +535,7 @@ int glite_lbu_ExecSQL(glite_lbu_DBContext ctx, const char *cmd, glite_lbu_Statem
 	sum.tv_usec += end.tv_usec;
 	sum.tv_sec += end.tv_sec + sum.tv_usec / 1000000;
 	sum.tv_usec -= 1000000 * (sum.tv_usec / 1000000);
-	fprintf(stderr,"[%d] %s\n[%d] %3ld.%06ld (sum: %3ld.%06ld)\n",pid,txt,pid,end.tv_sec,end.tv_usec,sum.tv_sec,sum.tv_usec);
+	fprintf(stderr,"[%d] %s\n[%d] %3ld.%06ld (sum: %3ld.%06ld)\n",pid,cmd,pid,end.tv_sec,end.tv_usec,sum.tv_sec,sum.tv_usec);
 #endif
 
 	return db_handle.mysql_affected_rows(ctx->mysql);
@@ -1022,8 +1030,13 @@ static int transaction_test(glite_lbu_DBContext ctx) {
 
 	trio_asprintf(&cmd, "SHOW CREATE TABLE %|Ss", table[0]);
 	if (glite_lbu_ExecSQL(ctx, cmd, &stmt) <= 0 || (retval = glite_lbu_FetchRow(stmt, 2, NULL, res)) < 0 ) goto quit;
-	if (retval != 2 || strcmp(res[0], table[0])) ERR(ctx, EIO, "unexpected show create result");
-	else ctx->caps |= GLITE_LBU_DB_CAP_TRANSACTIONS;
+	if (retval != 2 || strcmp(res[0], table[0])) {
+		ERR(ctx, EIO, "unexpected show create result");
+		goto quit;
+	}
+
+	if (strstr(res[1],"ENGINE=InnoDB"))
+		ctx->caps |= GLITE_LBU_DB_CAP_TRANSACTIONS;
 
 #ifdef LBS_DB_PROFILE
 	fprintf(stderr, "[%d] use_transactions = %d\n", getpid(), USE_TRANS(ctx));
@@ -1031,10 +1044,10 @@ static int transaction_test(glite_lbu_DBContext ctx) {
 
 quit:
 	glite_lbu_FreeStmt(&stmt);
-	if (table[0]) free(table[0]);
-	if (res[0]) free(res[0]);
-	if (res[1]) free(res[1]);
-	if (cmd) free(cmd);
+	free(table[0]);
+	free(res[0]);
+	free(res[1]);
+	free(cmd);
 	return STATUS(ctx);
 }
 

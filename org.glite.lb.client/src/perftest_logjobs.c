@@ -4,6 +4,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <time.h>
+#include <errno.h>
 #include "glite/lb/context-int.h"
 #include "glite/lb/lb_perftest.h"
 #include "glite/lb/log_proto.h"

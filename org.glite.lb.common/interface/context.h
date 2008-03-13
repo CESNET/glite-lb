@@ -193,6 +193,7 @@ typedef enum _edg_wll_ErrorCode {
 	EDG_WLL_IL_SYS,         /**< Interlogger internal error. */
 	EDG_WLL_IL_EVENTS_WAITING, /**< Interlogger still has events pending delivery. */
 	EDG_WLL_ERROR_COMPARE_EVENTS, /**< Two compared events differ. */
+	EDG_WLL_ERROR_DB_TRANS_DEADLOCK,	/**< Deadlock detected during DB operation. */
 } edg_wll_ErrorCode;
 
 /**
