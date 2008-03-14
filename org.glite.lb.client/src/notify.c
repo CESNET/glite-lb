@@ -272,6 +272,10 @@ receive_err:
 		if (stat.state != EDG_WLL_JOB_UNDEF) edg_wll_FreeStatus(&stat);
 		if (nid) edg_wll_NotifIdFree(nid);
 		edg_wll_NotifCloseFd(ctx);
+
+		if (edg_wll_Error(ctx,&errt,&errd))
+			fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
+
 		return EX_IOERR;
 	}
 /* UNIMPL
