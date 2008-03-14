@@ -18,6 +18,37 @@ Interface is described in details together with programing examples. }
 
 \begin{document}
 
+
+% ----- BEGIN COPY -----
+% copied from org.glite.lb.client/doc/api/api.tex in hope it could be useful
+
+%\parindent=0pt
+%\parskip=\smallskipamount
+
+\makeatletter
+\def\jobid{\textit{JobId}\xspace}
+\def\@tti[#1]{\item[{\normalfont\texttt{#1}}]\catcode`\_=8}
+\def\tti{\catcode`\_=11\noexpand\@tti}
+\newlength{\tw}
+
+\def\synopsis{\catcode`\_=11\noexpand\@synopsis}
+\def\@synopsis#1#2{
+\tw=\linewidth
+\advance\tw-2em
+\texttt{#1(}\\
+\strut\hskip2em\begin{tabularx}\tw{>{\begingroup\tt}l<{\endgroup}lX}
+#2
+\end{tabularx}\\
+\texttt)
+\catcode`\_=8
+}
+
+\def\Synopsis{\subsubsection*{Synopsis}}
+\def\Description{\subsubsection*{Description}}
+\def\Return{\subsubsection*{Return values}}
+
+% ----- END COPY -----
+
 \input{frontmatter}
 \tableofcontents
 
