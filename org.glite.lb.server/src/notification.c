@@ -614,14 +614,16 @@ static int update_notif(
 	const char					   *dest,
 	const char					   *valid)
 {
-	char	   *nid_s = NULL,
-			   *host = NULL,
-			   *stmt, *aux;
-	int			ret, port;
+	char	*nid_s = NULL, *host = NULL,
+		*stmt = NULL, *aux = NULL;
+	int	ret, port;
 
 
 	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+	{
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID.");
 		goto cleanup;
+	}
 
 	/*	Format SQL update string
 	 *	(Only the owner could update the notification registration)
