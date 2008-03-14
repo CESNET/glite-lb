@@ -110,7 +110,7 @@ int edg_wll_NotifRefresh(
 
 int edg_wll_NotifDrop(
 	edg_wll_Context		context,
-	edg_wll_NotifId		*id
+	edg_wll_NotifId		id
 );
 
 /** Receive notification.
