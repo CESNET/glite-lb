@@ -51,8 +51,16 @@ install:
 	$(INSTALL) -m 644 LBUG.pdf ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBAG.pdf ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBDG.pdf ${PREFIX}/share/doc/${package}-${version}
-	
+
 clean:
 	rm -rvf LBUG* LBAG* LBDG* events.tex status.tex
 
 .PHONY: all clean purge ps pdf
+
+LBDG.pdf: 	LBDG.tex \
+	 	LBDG-Common.tex \
+		LBDG-Introduction.tex \
+		producer_api.tex \
+		consumer_api.tex \
+		notification_api.tex \
+		web_services.tex
