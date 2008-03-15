@@ -37,7 +37,7 @@ stage: compile
 
 install:
 	-mkdir -p ${PREFIX}/${STAGETO}
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
 	install -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	install -m 644 LB.html ${PREFIX}/share/doc/${package}-${version}
 # install the generated stuff instead
