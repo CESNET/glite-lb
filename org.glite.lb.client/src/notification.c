@@ -242,7 +242,7 @@ int edg_wll_NotifNew(
 		goto err;
 	
 	if ( (ret = edg_wll_NotifRequestToXML(ctx, "New", notifId, address, 
-			EDG_WLL_NOTIF_NOOP, conditions, &send_mess)) )
+			EDG_WLL_NOTIF_NOOP, *valid, conditions, &send_mess)) )
 		goto err;
 
 	ctx->p_tmp_timeout = ctx->p_notif_timeout;
@@ -305,7 +305,7 @@ int edg_wll_NotifBind(
 		goto err;
 
 	if (edg_wll_NotifRequestToXML(ctx, "Bind", id, address, 
-			EDG_WLL_NOTIF_NOOP, NULL, &send_mess)) 
+			EDG_WLL_NOTIF_NOOP, *valid, NULL, &send_mess)) 
 		goto err;
 
 	ctx->p_tmp_timeout = ctx->p_notif_timeout;
@@ -347,7 +347,7 @@ int edg_wll_NotifChange(
 		goto err;
 		
 	if (edg_wll_NotifRequestToXML(ctx, "Change", id, NULL, 
-			op, conditions, &send_mess)) 
+			op, -1, conditions, &send_mess)) 
 		goto err;
 
 	ctx->p_tmp_timeout = ctx->p_notif_timeout;
@@ -386,7 +386,7 @@ int edg_wll_NotifRefresh(
 		goto err;
 		
 	if (edg_wll_NotifRequestToXML(ctx, "Refresh", id, NULL, 
-			EDG_WLL_NOTIF_NOOP, NULL, &send_mess)) 
+			EDG_WLL_NOTIF_NOOP, *valid, NULL, &send_mess)) 
 		goto err;
 
 	ctx->p_tmp_timeout = ctx->p_notif_timeout;
@@ -425,7 +425,7 @@ int edg_wll_NotifDrop(
 		goto err;
 		
 	if (edg_wll_NotifRequestToXML(ctx, "Drop", id, NULL, 
-			EDG_WLL_NOTIF_NOOP, NULL, &send_mess)) 
+			EDG_WLL_NOTIF_NOOP, -1, NULL, &send_mess)) 
 		goto err;
 
 	ctx->p_tmp_timeout = ctx->p_notif_timeout;

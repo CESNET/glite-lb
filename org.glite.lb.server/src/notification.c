@@ -82,8 +82,8 @@ int edg_wll_NotifNewServer(
 	/*	Format time of validity
 	 */
 
-/* XXX: until valid works [inout] */
-	*valid = time(NULL) + ctx->notifDuration;	
+	if (*valid == 0) 
+		*valid = time(NULL) + ctx->notifDuration;	
 	adjust_validity(ctx,valid);
 
 	glite_lbu_TimeToDB(*valid, &time_s);
@@ -193,8 +193,8 @@ int edg_wll_NotifBindServer(
 		/*	Format time of validity
 		 */
 
-/* XXX: until valid works [inout] */
-		*valid = time(NULL) + ctx->notifDuration;
+		if (*valid == 0) 
+			*valid = time(NULL) + ctx->notifDuration;	
 		adjust_validity(ctx,valid);
 
 		glite_lbu_TimeToDB(*valid, &time_s);
@@ -357,8 +357,8 @@ int edg_wll_NotifRefreshServer(
 		/*	Format time of validity
 		 */
 
-/* XXX: until valid works [inout] */
-		*valid = time(NULL) + ctx->notifDuration;
+		if (*valid == 0) 
+			*valid = time(NULL) + ctx->notifDuration;	
 		adjust_validity(ctx,valid);
 
 		glite_lbu_TimeToDB(*valid, &time_s);

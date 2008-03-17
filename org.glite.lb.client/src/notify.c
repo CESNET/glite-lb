@@ -45,13 +45,13 @@ static void usage(char *cmd)
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } ] {-j jobid | -o owner | -n network_server | -v virtual_organization}\n"
+		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity ] {-j jobid | -o owner | -n network_server | -v virtual_organization }\n"
 			"    jobid      job ID to connect notif. reg. with\n"
 			"    owner	match this owner DN\n"
 			"    network_server	match only this networ server (WMS entry point)\n\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
-		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } ] notifid\n"
+		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } -t requested_validity ] notifid\n"
 			"    notifid     Notification ID\n"
 			"    fake_addr   Fake the client address\n", me);
 /* UNIMPL 
@@ -61,7 +61,7 @@ static void usage(char *cmd)
 			"    jobid       Job ID to connect notif. reg. with.\n", me);
 */
 	if ( !cmd || !strcmp(cmd, "refresh") )
-		fprintf(stderr,"\n'refresh' command usage: %s refresh notifid\n"
+		fprintf(stderr,"\n'refresh' command usage: %s refresh [-t requested_validity ] notifid\n"
 			"    notifid     Notification ID.\n", me);
 	if ( !cmd || !strcmp(cmd, "receive") )
 		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t timeout] [-f field1,field2,...] [notifid]\n"
@@ -78,7 +78,7 @@ int main(int argc,char **argv)
 {
 	edg_wll_Context		ctx;
 	edg_wll_QueryRec  **conditions = NULL;
-	time_t				valid;
+	time_t				valid = 0;
 	char			   *errt, *errd;
 	struct timeval		tout = {220, 0};
 	void		*fields = NULL;
@@ -108,7 +108,7 @@ int main(int argc,char **argv)
 		char	*arg = NULL;
 		int	attr = 0;
 
-		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:")) > 0) switch (c) {
+		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:t:")) > 0) switch (c) {
 			case 'j':
 				if (arg) { usage("new"); return EX_USAGE; }
 				attr = EDG_WLL_QUERY_ATTR_JOBID;
@@ -131,6 +131,8 @@ int main(int argc,char **argv)
 			case 'a':
 				if (sock >= 0) { usage("new"); return EX_USAGE; }
 				fake_addr = optarg; break;
+			case 't':
+				valid = atol(optarg); break;
 			default:
 				usage("new"); return EX_USAGE;
 		}
@@ -167,13 +169,15 @@ int main(int argc,char **argv)
 		edg_wll_NotifId		nid;
 		int			c;
 
-		while ((c = getopt(argc-1,argv+1,"s:a:")) > 0) switch (c) {
+		while ((c = getopt(argc-1,argv+1,"s:a:t:")) > 0) switch (c) {
 			case 's':
 				if (fake_addr) { usage("bind"); return EX_USAGE; }
 				sock = atoi(optarg); break;
 			case 'a':
 				if (sock >= 0) { usage("bind"); return EX_USAGE; }
 				fake_addr = optarg; break;
+			case 't':
+				valid = atol(optarg); break;
 			default:
 				usage("bind"); return EX_USAGE;
 		}
@@ -323,13 +327,22 @@ receive_err:
 	else if ( !strcmp(argv[1], "refresh") )
 	{
 		edg_wll_NotifId		nid;
+		int			c;
 
-		if ( (argc < 3) || edg_wll_NotifIdParse(argv[2], &nid) )
+		while ((c = getopt(argc-1,argv+1,"t:")) > 0) switch (c) {
+			case 't':
+				valid = atol(optarg); break;
+			default:
+				usage("refresh"); return EX_USAGE;
+		}
+
+		if ( (optind+1 == argc) || edg_wll_NotifIdParse(argv[optind+1], &nid) )
 		{
-			fprintf(stderr,"Notification ID parameter not set propperly!\n");
+			fprintf(stderr,"Notification ID parameter not set propperly!\n\n");
 			usage("refresh");
 			return EX_USAGE;
 		}
+
 		if ( !edg_wll_NotifRefresh(ctx, nid, &valid) )
 			printf("valid until: %s (%ld)\n", TimeToStr(valid), valid);
 		edg_wll_NotifIdFree(nid);

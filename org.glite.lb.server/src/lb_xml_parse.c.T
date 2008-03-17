@@ -372,7 +372,7 @@ static void startNotifRequest(void *data, const char *el, const char **attr)
 				XMLCtx->jobQueryRec_begin = XML_GetCurrentByteIndex(XMLCtx->p);
 			}
 			else if ( (strcasecmp(el,"notifId")) && (strcasecmp(el,"clientAddress")) && 
-				(strcasecmp(el,"notifChangeOp")) ) unexp()
+				(strcasecmp(el,"notifChangeOp")) && (strcasecmp(el,"requestedValidity")) ) unexp()
 			break;
 		case 2: /* fall through */
 		case 3: /* do not check xml tags, processed in startJobQueryRec */
@@ -843,6 +843,9 @@ static void endNotifRequest(void *data, const char *el UNUSED_VAR)
 			pom = edg_wll_from_string_to_string(XMLCtx);
 			XMLCtx->notifChangeOp = edg_wll_StringToNotifChangeOp(pom);
 			free(pom);
+		}
+		else if (!strcmp(XMLCtx->element,"requestedValidity")) {
+			XMLCtx->notifValidity = edg_wll_from_string_to_time_t(XMLCtx);
 		}
 		else if (!strcmp(el,"and")) {
 			long len = (XML_GetCurrentByteIndex(XMLCtx->p) + XML_GetCurrentByteCount(XMLCtx->p))
@@ -1325,7 +1328,7 @@ int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 	return ret;
 }
 /* parse Notif request from client */
-int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, edg_wll_QueryRec ***conditions) 
+int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, time_t *validity, edg_wll_QueryRec ***conditions) 
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -1385,12 +1388,14 @@ int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 		*notifId = NULL;
 		*address = NULL;
 		*op = EDG_WLL_NOTIF_NOOP;
+		*validity = 0;
 		*conditions = NULL;
 	} else {
 		*function = XMLCtx.notifFunction;
 		*notifId = XMLCtx.notifId;
 		*address = XMLCtx.notifClientAddress;
 		*op = XMLCtx.notifChangeOp;
+		*validity = XMLCtx.notifValidity;
 		*conditions = XMLCtx.job_conditions;
 	}
 

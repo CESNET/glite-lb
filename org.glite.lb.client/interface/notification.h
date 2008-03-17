@@ -34,7 +34,9 @@ extern "C" {
  * \param[in] address_override 	if not NULL, use this address instead of extracting it
  * 		from the connection (useful when multiple interfaces are present,
  * 		circumventing NAT problems etc.)
- * \param[in] valid 		until when the registration is valid (NULL means no interest in
+ * \param[in,out] valid 	until when the registration is valid
+				in: 	requested validity (NULL means 'give me server defaults')
+				out:	value really set on the server
  * \param[out] id_out		returened NotifId
  * 		the value
  * \retval 0 OK
@@ -58,7 +60,7 @@ int edg_wll_NotifNew(
  * \param[in] id		notification ID you are binding to
  * \param[in] fd		same as for \ref edg_wll_NotifNew 
  * \param[in] address_override 	same as for \ref edg_wll_NotifNew
- * \param[in] valid 		same as for \ref edg_wll_NotifNew
+ * \param[in,out] valid 	same as for \ref edg_wll_NotifNew
  */
 
 int edg_wll_NotifBind(
@@ -91,8 +93,7 @@ int edg_wll_NotifChange(
 /** Refresh the registration, i.e. extend its validity period.
  * \param[in,out] context	context to work with
  * \param[in] id		notification ID you are working with
- * \param[in] valid 		until when the registration is valid (NULL means no interest in
- * 		the value
+ * \param[in,out] valid 	same as for \ref edg_wll_NotifNew
  */
 
 int edg_wll_NotifRefresh(

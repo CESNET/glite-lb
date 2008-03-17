@@ -761,7 +761,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			
 			
         	        if (parseNotifRequest(ctx, messageBody, &function, &notifId, 
-						&address, &op, &conditions))
+						&address, &op, &validity, &conditions))
 				ret = HTTP_BADREQ;
 			else {
 				int     fatal = 0, err = 0;
