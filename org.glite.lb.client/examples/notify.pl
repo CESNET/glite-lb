@@ -27,7 +27,7 @@ while (1) {
 	select($fdin,undef,undef,undef);
 	print "got connection\n";
 
-	system "$notif receive -s $fd -t 3";
+	system "$notif receive -s $fd -i 3";
 }
 
 

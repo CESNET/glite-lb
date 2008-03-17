@@ -64,7 +64,7 @@ static void usage(char *cmd)
 		fprintf(stderr,"\n'refresh' command usage: %s refresh [-t requested_validity ] notifid\n"
 			"    notifid     Notification ID.\n", me);
 	if ( !cmd || !strcmp(cmd, "receive") )
-		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t timeout] [-f field1,field2,...] [notifid]\n"
+		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t requested_validity ] [-i timeout] [-f field1,field2,...] [notifid]\n"
 			"    notifid     Notification ID (not used if -s specified).\n"
 			"    fake_addr   Fake the client address.\n"
 			"    field1,field2,...	list of status fields to print (only owner by default)\n"
@@ -199,17 +199,19 @@ int main(int argc,char **argv)
 		int			c;
 		char	*field_arg = "owner",*err;
 
-		while ((c = getopt(argc-1,argv+1,"s:a:t:f:")) > 0) switch (c) {
+		while ((c = getopt(argc-1,argv+1,"s:a:i:f:t:")) > 0) switch (c) {
 			case 's':
 				if (fake_addr) { usage("receive"); return EX_USAGE; }
 				sock = atoi(optarg); break;
 			case 'a':
 				if (sock >= 0) { usage("receive"); return EX_USAGE; }
 				fake_addr = optarg; break;
-			case 't':
+			case 'i':
 				tout.tv_sec = atoi(optarg); break;
 			case 'f':
 				field_arg = optarg; break;
+			case 't':
+				valid = atol(optarg); break;
 			default:
 				usage("receive"); return EX_USAGE;
 		}
