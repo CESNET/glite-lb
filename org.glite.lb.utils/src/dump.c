@@ -211,7 +211,7 @@ static int edg_wll_DumpEvents(
 	if ( error != 0 )
 		goto edg_wll_dumpevents_end;
 
-	if (http_check_status(ctx, response, &recv_mess))
+	if (http_check_status(ctx, response))
 		goto edg_wll_dumpevents_end;
 
 	edg_wll_ParseDumpResult(ctx, recv_mess, result);

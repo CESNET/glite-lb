@@ -319,8 +319,7 @@ extern int edg_wll_http_send_recv(
 
 extern int http_check_status(
 	edg_wll_Context,
-	char *,
-	char **
+	char *
 );
 
 extern int set_server_name_and_port(

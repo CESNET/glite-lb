@@ -249,7 +249,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 				parse = 1;
 			}
 			else {
-				switch (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,0)) {
+				switch (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,ctx->isProxy)) {
 					case 0: if (request->flags & EDG_WLL_PURGE_LIST_JOBS) {
 							result->jobs = realloc(result->jobs,(naffected_jobs+2) * sizeof(*(result->jobs)));
 							result->jobs[naffected_jobs] = strdup(request->jobs[i]);
@@ -277,7 +277,9 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 		for (i=0; i<EDG_WLL_NUMBER_OF_STATCODES; i++)
 			timeout[i] = request->timeout[i] < 0 ? ctx->purge_timeout[i] : request->timeout[i];
 
-		if (edg_wll_ExecSQL(ctx,"select dg_jobid from jobs where server='1'",&s) < 0) goto abort;
+		if (edg_wll_ExecSQL(ctx, (ctx->isProxy) ? "select dg_jobid from jobs where proxy='1'" :
+			"select dg_jobid from jobs where server='1'", &s) < 0) goto abort;
+
 		while ((res = edg_wll_FetchRow(ctx,s,1,NULL,&job_s)) > 0) {
 			if (edg_wlc_JobIdParse(job_s,&job)) {
 				fprintf(stderr,"%s: parse error (internal inconsistency !)\n",job_s);
@@ -316,7 +318,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 
 				if (now-stat.lastUpdateTime.tv_sec > timeout[i] && !check_strict_jobid(ctx,job))
 				{
-					if (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,0)) {
+					if (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,ctx->isProxy)) {
 						edg_wll_FreeStatus(&stat);
 						if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
 							/* job purged meanwhile, ignore */

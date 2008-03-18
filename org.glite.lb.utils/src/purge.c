@@ -15,6 +15,7 @@
 #include "glite/lb/mini_http.h"
 #include "glite/lb/query_rec.h"
 #include "glite/lb/consumer.h"
+#include "glite/lb/connection.h"
 
 #define dprintf(x) { if (debug) printf x; }
 
@@ -54,6 +55,8 @@ static struct option opts[] = {
 	{ "version", 		no_argument, NULL, 'v' },
 	{ "debug", 		no_argument, NULL, 'd' },
 	{ "server",	 	required_argument, NULL, 'm' },
+	{ "proxy",	 	no_argument, NULL, 'x' },
+	{ "sock",	 	required_argument, NULL, 'X' },
 	{ NULL,			no_argument, NULL,  0 }
 };
 
@@ -72,7 +75,9 @@ static void usage(char *me)
 		"	-h, --help                  display this help\n"
 		"	-v, --version               display version\n"
 		"	-d, --debug                 diagnostic output\n"
-		"	-m, --server                L&B server machine name\n",
+		"	-m, --server                L&B server machine name\n"
+		"	-x, --proxy		    purge L&B proxy\n"
+		"	-X, --sock <path>	    purge L&B proxy using default socket path\n",
 		me);
 }
 
@@ -101,8 +106,11 @@ int main(int argc,char *argv[])
 	me = strrchr(argv[0],'/');
 	if (me) me++; else me=argv[0];
 
+	/* initialize context */
+	edg_wll_InitContext(&ctx);
+
 	/* get arguments */
-	while ((opt = getopt_long(argc,argv,"a:c:n:o:j:m:rlsidhv",opts,NULL)) != EOF) {
+	while ((opt = getopt_long(argc,argv,"a:c:n:o:j:m:rlsidhvxX:",opts,NULL)) != EOF) {
 		timeout=-1;
 
 		switch (opt) {
@@ -156,13 +164,15 @@ int main(int argc,char *argv[])
 		case 'i': request->flags |= EDG_WLL_PURGE_CLIENT_DUMP; break;
 		case 'd': debug = 1; break;
 		case 'v': fprintf(stdout,"%s:\t%s\n",me,rcsid); exit(0);
+		case 'x': ctx->isProxy = 1; break;
+		case 'X': 
+			ctx->isProxy = 1; 
+			edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, optarg); 
+			break;
 		case 'h':
 		case '?': usage(me); return 1;
 		}
 	}
-
-	/* initialize context */
-	edg_wll_InitContext(&ctx);
 
 	/* read the jobIds from file, if wanted */
 	if (file) {
@@ -363,15 +373,24 @@ static int edg_wll_Purge(
 	ctx->p_tmp_timeout = ctx->p_query_timeout;
 	if (ctx->p_tmp_timeout.tv_sec < 600) ctx->p_tmp_timeout.tv_sec = 600;
 
-	if (set_server_name_and_port(ctx, NULL)) 
-		goto edg_wll_purge_end;
+	
+	if (ctx->isProxy){
+		ctx->isProxy = 0;
+		if (edg_wll_http_send_recv_proxy(ctx, "POST /purgeRequest HTTP/1.1",
+				request_headers,send_mess,&response,NULL,&recv_mess))
+			goto edg_wll_purge_end;
+	}
+	else {
+		if (set_server_name_and_port(ctx, NULL)) 
+			goto edg_wll_purge_end;
 
-	if (edg_wll_http_send_recv(ctx,
-		"POST /purgeRequest HTTP/1.1", request_headers, send_mess,
-		&response, NULL, &recv_mess)) 
-		goto edg_wll_purge_end;
+		if (edg_wll_http_send_recv(ctx,
+			"POST /purgeRequest HTTP/1.1", request_headers, send_mess,
+			&response, NULL, &recv_mess)) 
+			goto edg_wll_purge_end;
+	}
 
-	if (http_check_status(ctx, response, &recv_mess))
+	if (http_check_status(ctx, response))
 		goto edg_wll_purge_end;
 
 	if (edg_wll_ParsePurgeResult(ctx, recv_mess, result))

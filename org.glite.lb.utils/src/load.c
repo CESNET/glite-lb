@@ -191,7 +191,7 @@ static int edg_wll_LoadEvents(
 	if ( error != 0 )
 		goto edg_wll_loadevents_end;
 
-	if (http_check_status(ctx, response, &recv_mess))
+	if (http_check_status(ctx, response))
 		goto edg_wll_loadevents_end;
 
 	edg_wll_ParseLoadResult(ctx, recv_mess, result);
