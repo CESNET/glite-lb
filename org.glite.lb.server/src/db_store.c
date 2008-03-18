@@ -239,7 +239,7 @@ static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev
 	}
 #endif
 	
-	if (reg_to_JP) 
+	if (reg_to_JP && ctx->jpreg_dir) 
 		if (register_to_JP(ctx,ev)) goto err;
 
 	if (forward_event_to_server(ctx, event, ev, local_job)) goto err;
