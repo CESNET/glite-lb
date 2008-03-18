@@ -111,21 +111,6 @@ int edg_wll_JobStatusServer(
 		if (edg_wll_LockJobRowInShareMode(ctx, md5_jobid)) goto rollback;;
 
 
-		if (edg_wll_GetACL(ctx, job, &acl)) goto rollback;
-
-		/* authorization check */
-		if ( !(ctx->noAuth) &&
-		    (!(ctx->peerName) ||  !edg_wll_gss_equal_subj(ctx->peerName, jobstat.pub.owner))) {
-		      if ((acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ)) {
-			 if (acl) {
-				goto rollback;
-			 } else {
-				edg_wll_SetError(ctx,EPERM, "not owner, no ACL is set");
-				goto rollback;
-			 }
-		      }
-		}
-
 		if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, -1 /*all events*/, &ijsp)) {
 			*stat = ijsp->pub;
 			free(jobstat.pub.owner); jobstat.pub.owner = NULL;
@@ -145,6 +130,21 @@ int edg_wll_JobStatusServer(
 			*stat = jobstat.pub;
 		}
 		
+		if (edg_wll_GetACL(ctx, job, &acl)) goto rollback;
+
+		/* authorization check */
+		if ( !(ctx->noAuth) &&
+		    (!(ctx->peerName) ||  !edg_wll_gss_equal_subj(ctx->peerName, stat->owner))) {
+		      if ((acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ)) {
+			 if (acl) {
+				goto rollback;
+			 } else {
+				edg_wll_SetError(ctx,EPERM, "not owner, no ACL is set");
+				goto rollback;
+			 }
+		      }
+		}
+
 		if (acl) {
 			stat->acl = strdup(acl->string);
 			edg_wll_FreeAcl(acl);
