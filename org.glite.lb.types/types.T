@@ -44,6 +44,10 @@
 		port=>'"xsd:int"',
 		float=>'"xsd:float"',
 		double=>'"xsd:double"',
+		strlist=>'"stringSequenceType"',
+		intlist=>'"intSequenceType"',
+		stslist=>'"statusSequenceType"',
+		taglist=>'"tagSequenceType"',
 	}
 );
 
