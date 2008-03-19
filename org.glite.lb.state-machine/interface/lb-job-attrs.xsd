@@ -3,6 +3,12 @@
 
 <!-- $Header$ -->
 
+<!-- 
+
+  ** This schema definition is deprecated, use version 2.0 in lb-job-attrs2.xsd at the same location **
+
+-->
+
 <xs:schema 
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	xmlns:a="http://egee.cesnet.cz/en/Schema/LB/Attributes"

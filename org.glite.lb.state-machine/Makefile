@@ -47,9 +47,11 @@ MACHINE_OBJS:=seqcode_aux.o process_event.o process_event_pbs.o process_event_co
 PLUGIN_LIB=glite_lb_plugin.la
 MACHINE_LIB=libglite_lb_statemachine.a
 
+XSD=lb-job-attrs2.xsd
+
 default all: compile
 
-compile: ${MACHINE_LIB} ${PLUGIN_LIB}
+compile: ${MACHINE_LIB} ${PLUGIN_LIB} ${XSD}
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
@@ -69,6 +71,7 @@ install:
 	install -m 644 ${MACHINE_LIB} ${PREFIX}/lib 
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib
 	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${PREFIX}/interface
+	install -m 644 lb-job-attrs2.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/intjobstat.h ${PREFIX}/include/glite/lb
 	install -m 644 ${top_srcdir}/interface/seqcode_aux.h ${PREFIX}/include/glite/lb
@@ -88,6 +91,11 @@ clean:
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
+%.xsd: %.xsd.T
+	rm -f $@
+	${AT3} $< >$@ || rm -f $@
+	chmod -w $@ >/dev/null
+
 %.o %.lo: %.c
 	${COMPILE} -c $<
 
@@ -98,5 +106,8 @@ lb_plugin.lo: lb_plugin.c job_attrs.h
 	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<
 
 job_attrs.h: lb-job-attrs.xsd job_attrs.xsl
+	${XSLTPROC} ../src/job_attrs.xsl $< >$@
+
+job_attrs2.h: lb-job-attrs2.xsd job_attrs.xsl
 	${XSLTPROC} ../src/job_attrs.xsl $< >$@
 

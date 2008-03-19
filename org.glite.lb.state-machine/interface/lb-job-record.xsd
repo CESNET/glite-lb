@@ -3,6 +3,11 @@
 
 <!-- $Header$ -->
 
+<!--
+	This schema reflects JRA2 statistics record which seems not to be used anynmore.
+	It is supported on the best effort basis only.
+-->
+
 <xs:schema 
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	xmlns:jr="http://egee.cesnet.cz/en/Schema/LB/JobRecord"
