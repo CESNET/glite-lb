@@ -76,9 +76,10 @@ install:
 	install -m 644 ${top_srcdir}/interface/intjobstat.h ${PREFIX}/include/glite/lb
 	install -m 644 ${top_srcdir}/interface/seqcode_aux.h ${PREFIX}/include/glite/lb
 	install -m 644 job_attrs.h ${PREFIX}/include/glite/lb
+	install -m 644 job_attrs2.h ${PREFIX}/include/glite/lb
 
 clean:
-	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB} job_attrs.h
+	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB} job_attrs.h job_attrs2.h
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.c: %.c.T
@@ -102,7 +103,7 @@ clean:
 %.lo: %.c
 	${COMPILE} -o $@ -c $<
 
-lb_plugin.lo: lb_plugin.c job_attrs.h
+lb_plugin.lo: lb_plugin.c job_attrs.h job_attrs2.h
 	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<
 
 job_attrs.h: lb-job-attrs.xsd job_attrs.xsl
