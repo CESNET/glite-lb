@@ -110,5 +110,5 @@ job_attrs.h: lb-job-attrs.xsd job_attrs.xsl
 	${XSLTPROC} ../src/job_attrs.xsl $< >$@
 
 job_attrs2.h: lb-job-attrs2.xsd job_attrs.xsl
-	${XSLTPROC} ../src/job_attrs.xsl $< >$@
+	${XSLTPROC} ../src/job_attrs.xsl $< | sed 's/GLITE_LB_JP_JOB_ATTR_H/GLITE_LB_JP_JOB_ATTR2_H/' >$@
 

@@ -42,6 +42,7 @@
 #include "glite/jp/utils.h"
 #include "glite/jp/known_attr.h"
 #include "job_attrs.h"
+#include "job_attrs2.h"
 
 #define INITIAL_NUMBER_EVENTS 100
 #define INITIAL_NUMBER_STATES EDG_WLL_NUMBER_OF_STATCODES
