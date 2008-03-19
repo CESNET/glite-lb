@@ -111,6 +111,7 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
+  <xsd:element name="status" type="statusType"/>
 
 @@@{
 # elems
