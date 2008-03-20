@@ -25,19 +25,31 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 	}
 	if (glite_lbu_DBConnect(ctx->dbctx,cs) != 0) return edg_wll_SetErrorDB(ctx);
 
-	// proxy and server columns added
-	if (glite_lbu_ExecSQL(ctx->dbctx, "DESC jobs", &stmt) <= 0) goto err;
 	hit = 0;
-	while (hit < 2 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, cols)) > 0) {
+	// new columns added to jobs
+	if (glite_lbu_ExecSQL(ctx->dbctx, "DESC jobs", &stmt) <= 0) goto err;
+	while (hit < 5 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, cols)) > 0) {
 		assert(ret <= (int)(sizeof cols/sizeof cols[0]));
-		if (strcasecmp(cols[0], "proxy") == 0 || 
-		    strcasecmp(cols[0], "server") == 0) hit++;
+		if (strcasecmp(cols[0], "proxy") == 0 ||
+		    strcasecmp(cols[0], "server") == 0 ||
+		    strcasecmp(cols[0], "grey") == 0 ||
+		    strcasecmp(cols[0], "zombie") == 0 ||
+		    strcasecmp(cols[0], "nevents") == 0) hit++;
 		for (i = 0; i < ret; i++) free(cols[i]);
 	}
 	if (ret < 0) goto err;
 	glite_lbu_FreeStmt(&stmt);
-	if (hit != 2) {
-		ret = edg_wll_SetError(ctx, EINVAL, "old DB schema found, migration to new schema needed");
+	// new columns added to events
+	if (glite_lbu_ExecSQL(ctx->dbctx, "DESC events", &stmt) <= 0) goto err;
+	while (hit < 6 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, cols)) > 0) {
+		assert(ret <= (int)(sizeof cols/sizeof cols[0]));
+		if (strcasecmp(cols[0], "seqcode") == 0) hit++;
+		for (i = 0; i < ret; i++) free(cols[i]);
+	}
+	if (ret < 0) goto err;
+	glite_lbu_FreeStmt(&stmt);
+	if (hit != 6) {
+		ret = edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, "old DB schema found, migration to new schema needed");
 		goto close_db;
 	}
 
@@ -51,7 +63,7 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 	if (ret < 0) goto err;
 	glite_lbu_FreeStmt(&stmt);
 	if (hit != 1) {
-		ret = edg_wll_SetError(ctx, EINVAL, "events_flesh table not found, migration to new schema needed");
+		ret = edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, "events_flesh table not found, migration to new schema needed");
 		goto close_db;
 	}
 

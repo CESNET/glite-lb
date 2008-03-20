@@ -707,10 +707,12 @@ int main(int argc, char *argv[])
 	if (!dbstring) dbstring = getenv("LBDB");
 	if (!dbstring) dbstring = strdup(DEFAULTCS);
 		
-
 	/* Just check the database and let it be. The slaves do the job. */
 	edg_wll_InitContext(&ctx);
-	if (wait_for_open(ctx, dbstring)) return 1;
+	if (wait_for_open(ctx, dbstring)) {
+		edg_wll_FreeContext(ctx);
+		return 1;
+	}
 
 	if ((ctx->dbcaps = glite_lbu_DBQueryCaps(ctx->dbctx)) == -1)
 	{
