@@ -34,7 +34,6 @@ create table events (
 	level		int		null,
 
 	arrived		datetime	not null,
-	ulm		mediumblob	not null,   -- testing (1)
 	seqcode		varchar(255)	binary not null,
 
 	primary key (jobid,event),
@@ -43,7 +42,6 @@ create table events (
 	index (arrived)
 ) engine=innodb;
 
--- testing (2)
 create table events_flesh (
 	jobid		char(32)	binary not null,
 	event		int		not null,
