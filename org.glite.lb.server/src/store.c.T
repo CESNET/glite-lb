@@ -125,7 +125,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 	    edg_wll_FetchRow(ctx,sh,1,NULL,&max) < 0) goto clean;
 	glite_lbu_FreeStmt(&sh); 
 	
-	next = (max && *max) ? atoi(max)+1 : 0;
+	next = (max && *max) ? atoi(max) : 0;
 	free(max);
 
 
@@ -145,7 +145,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 /* increase number of stored events */
 	trio_asprintf(&stmt,
 		"update jobs set nevents='%d'"
-		"where jobid = '%|Ss'", next, jobid);
+		"where jobid = '%|Ss'", next+1, jobid);
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto clean;
 	free(stmt); stmt = NULL;
