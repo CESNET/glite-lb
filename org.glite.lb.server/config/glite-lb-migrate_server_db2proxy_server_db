@@ -6,10 +6,49 @@
 #!/bin/bash
 
 
-# add columns for job membership (proxy/server) flags
+# add new columns
 mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD proxy bool not null"
 mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD server bool not null"
+mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD grey bool not null"
+mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD zombie bool not null"
+mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD nevents bool not null"
+
 
 # flag all jobs as server jobs
-mysql -u lbserver lbserver20 -e "update jobs set proxy='0'"
-mysql -u lbserver lbserver20 -e "update jobs set server='1'"
+mysql -u lbserver lbserver20 -e "UPDATE jobs SET proxy='0'"
+mysql -u lbserver lbserver20 -e "UPDATE jobs SET server='1'"
+
+
+# for all greyjobs set a flag
+mysql -u lbserver lbserver20 -e "UPDATE jobs,grey_jobs SET jobs.grey='1' WHERE jobs.jobid=grey_jobs.jobid"
+
+
+# erase grey_jobs table
+mysql -u lbserver lbserver20 -e "DROP TABLE grey_jobs"
+
+
+# seqcode
+mysql -u lbserver lbserver20 -e "ALTER TABLE events ADD seqcode varchar(255) binary not null"
+mysql -u lbserver lbserver20 -e "UPDATE events,short_fields SET events.seqcode=short_fields.value WHERE events.event=short_fields.event AND events.jobid=short_fields.jobid AND short_fields.name='SEQCODE'"
+mysql -u lbserver lbserver20 -e "DELETE FROM short_fields where name='SEQCODE'"
+
+
+# create events_flesh table
+mysql -u lbserver lbserver20 -e "\
+\
+create table events_flesh (\
+        jobid           char(32)        binary not null,\
+        event           int             not null,\
+        ulm             mediumblob      binary not null,\
+\
+        primary key (jobid,event)\
+) engine=innodb"
+
+
+# notif_registrations UPDATE
+mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD STD_owner varchar(200) null"
+mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD STD_network_server varchar(200) null"
+mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD JDL_VirtualOrganisation varchar(200) null"
+mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD index(STD_owner)"
+mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD index(STD_network_server)"
+mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD index(JDL_VirtualOrganisation)"
