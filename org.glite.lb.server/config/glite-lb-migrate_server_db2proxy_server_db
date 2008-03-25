@@ -36,7 +36,9 @@ do
     "d") DB_NAME=$OPTARG
     ;;
 
-    "h") usage;
+    "h") 
+	usage;
+	exit;
     ;;
 
     esac
@@ -44,49 +46,53 @@ done
 
 if [ -z "$SERVER" -a -z "$PROXY" ]; then
 	usage;
+	exit;
 fi
 
 if [ "$SERVER" -a "$PROXY" ]; then
 	usage;
+	exit;
 fi
-
-exit 1;
 
 
 # add new columns
-mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD proxy bool not null"
-mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD server bool not null"
-mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD grey bool not null"
-mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD zombie bool not null"
-mysql -u lbserver lbserver20 -e "ALTER TABLE jobs ADD nevents bool not null"
+mysql -u lbserver $DB_NAME -e "ALTER TABLE jobs ADD proxy bool not null"
+mysql -u lbserver $DB_NAME -e "ALTER TABLE jobs ADD server bool not null"
+mysql -u lbserver $DB_NAME -e "ALTER TABLE jobs ADD grey bool not null"
+mysql -u lbserver $DB_NAME -e "ALTER TABLE jobs ADD zombie bool not null"
+mysql -u lbserver $DB_NAME -e "ALTER TABLE jobs ADD nevents int not null"
 
 
 # flag all jobs as server jobs
 if [ "$SERVER" ]; then
-	mysql -u lbserver lbserver20 -e "UPDATE jobs SET proxy='0'"
-	mysql -u lbserver lbserver20 -e "UPDATE jobs SET server='1'"
+	mysql -u lbserver $DB_NAME -e "UPDATE jobs SET proxy='0'"
+	mysql -u lbserver $DB_NAME -e "UPDATE jobs SET server='1'"
 else
-	mysql -u lbserver lbserver20 -e "UPDATE jobs SET proxy='1'"
-	mysql -u lbserver lbserver20 -e "UPDATE jobs SET server='0'"
+	mysql -u lbserver $DB_NAME -e "UPDATE jobs SET proxy='1'"
+	mysql -u lbserver $DB_NAME -e "UPDATE jobs SET server='0'"
 fi
 
 
 # for all greyjobs set a flag
-mysql -u lbserver lbserver20 -e "UPDATE jobs,grey_jobs SET jobs.grey='1' WHERE jobs.jobid=grey_jobs.jobid"
+mysql -u lbserver $DB_NAME -e "UPDATE jobs,grey_jobs SET jobs.grey='1' WHERE jobs.jobid=grey_jobs.jobid"
 
 
 # erase grey_jobs table
-mysql -u lbserver lbserver20 -e "DROP TABLE grey_jobs"
+mysql -u lbserver $DB_NAME -e "DROP TABLE grey_jobs"
+
+
+# set nevents field
+mysql -u lbserver $DB_NAME -e "UPDATE jobs SET nevents=(SELECT max(event) FROM events where events.jobid=jobs.jobid)+1"
 
 
 # seqcode
-mysql -u lbserver lbserver20 -e "ALTER TABLE events ADD seqcode varchar(255) binary not null"
-mysql -u lbserver lbserver20 -e "UPDATE events,short_fields SET events.seqcode=short_fields.value WHERE events.event=short_fields.event AND events.jobid=short_fields.jobid AND short_fields.name='SEQCODE'"
-mysql -u lbserver lbserver20 -e "DELETE FROM short_fields where name='SEQCODE'"
+mysql -u lbserver $DB_NAME -e "ALTER TABLE events ADD seqcode varchar(255) binary not null"
+mysql -u lbserver $DB_NAME -e "UPDATE events,short_fields SET events.seqcode=short_fields.value WHERE events.event=short_fields.event AND events.jobid=short_fields.jobid AND short_fields.name='SEQCODE'"
+mysql -u lbserver $DB_NAME -e "DELETE FROM short_fields where name='SEQCODE'"
 
 
 # create events_flesh table
-mysql -u lbserver lbserver20 -e "\
+mysql -u lbserver $DB_NAME -e "\
 \
 create table events_flesh (\
         jobid           char(32)        binary not null,\
@@ -98,9 +104,11 @@ create table events_flesh (\
 
 
 # notif_registrations UPDATE
-mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD STD_owner varchar(200) null"
-mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD STD_network_server varchar(200) null"
-mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD JDL_VirtualOrganisation varchar(200) null"
-mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD index(STD_owner)"
-mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD index(STD_network_server)"
-mysql -u lbserver lbserver20 -e "ALTER TABLE notif_registrations ADD index(JDL_VirtualOrganisation)"
+mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD STD_owner varchar(200) null" && \
+mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD index(STD_owner)"
+
+mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD STD_network_server varchar(200) null" && \
+mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD index(STD_network_server)"
+
+mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD JDL_VirtualOrganisation varchar(200) null" && \
+mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD index(JDL_VirtualOrganisation)"
