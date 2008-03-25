@@ -17,6 +17,21 @@ capabilities.
 In the presented examples only the C \LB\ API (Sect.~\ref{query-C}) is considered.
 The C++ API (Sect.~\ref{query-CPP})  covers the same functionality.
 
+\subsection{Header files}
+
+Job.h
+JobStatus.h.T
+Notification.h
+ServerConnection.h
+connection.h
+consumer.h
+notification.h
+prod\_proto.h
+producer.h.T
+statistics.h
+
+\verbatiminput{client_headers.h}
+
 \subsection{Returned results}
 
 \LB\ server returns errors which are classified as hard and soft errors.
@@ -77,41 +92,43 @@ all the relevant structures and API calls to retrieve status information
 about a job with the ID\\
 \texttt{https://lhun.ics.muni.cz:9000/OirOgeWh\_F9sfMZjnIPYhQ}.
 
-\begin{verbatim}
-  #include <glite/lb/consumer.h>
-  ...
-  edg_wll_Context     ctx;    
-  edg_wll_JobStat    *statesOut = NULL;
-  edg_wll_QueryRec    jc[2];
-  ...
-  edg_wll_InitContext(&ctx);
-  ...
-  jc[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
-  jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
-  if ( edg_wlc_JobIdParse(
-    "https://lhun.ics.muni.cz:9000/OirOgeWh_F9sfMZjnIPYhQ",
-     &jc[0].value.j) )
-  {
-     edg_wll_FreeContext(ctx);
-     exit(1);
-  }
-  jc[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-  if (edg_wll_QueryJobs(ctx, jc, 0, NULL, &statesOut)) {
-    char    *err_text,*err_desc;
+\verbatiminput{example1_code.c}
 
-    edg_wll_Error(ctx,&err_text,&err_desc);
-    fprintf(stderr,"QueryJobs: %s (%s)\n",err_text,err_desc);
-    free(err_text);
-    free(err_desc);
-  }
-  else {
-    ...	/* process the returned data */
-    edg_wll_FreeStatus(statesOut);
-    free(statesOut);
-  }
-  edg_wlc_JobIdFree(jc[0].value.j);
-  edg_wll_FreeContext(ctx);
-\end{verbatim}
+%\begin{verbatim}
+%  #include <glite/lb/consumer.h>
+%  ...
+%  edg_wll_Context     ctx;    
+%  edg_wll_JobStat    *statesOut = NULL;
+%  edg_wll_QueryRec    jc[2];
+%  ...
+%  edg_wll_InitContext(&ctx);
+%  ...
+%  jc[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
+%  jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
+%  if ( edg_wlc_JobIdParse(
+%    "https://lhun.ics.muni.cz:9000/OirOgeWh_F9sfMZjnIPYhQ",
+%     &jc[0].value.j) )
+%  {
+%     edg_wll_FreeContext(ctx);
+%     exit(1);
+%  }
+%  jc[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+%  if (edg_wll_QueryJobs(ctx, jc, 0, NULL, &statesOut)) {
+%    char    *err_text,*err_desc;
+%
+%    edg_wll_Error(ctx,&err_text,&err_desc);
+%    fprintf(stderr,"QueryJobs: %s (%s)\n",err_text,err_desc);
+%    free(err_text);
+%    free(err_desc);
+%  }
+%  else {
+%    ...	/* process the returned data */
+%    edg_wll_FreeStatus(statesOut);
+%    free(statesOut);
+%  }
+%  edg_wlc_JobIdFree(jc[0].value.j);
+%  edg_wll_FreeContext(ctx);
+%\end{verbatim}
 
 The first function call in this example initializes the \LB\ context\,---\,variable
 \texttt{ctx}\,---\,which is necessary for later use. The most important part

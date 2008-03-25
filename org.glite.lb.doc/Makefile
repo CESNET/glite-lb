@@ -10,7 +10,9 @@ PREFIX=/opt/glite
 -include Makefile.inc
 
 VPATH = ${top_srcdir}/src
-KPATH = TEXINPUTS=".:$(VPATH)//:"
+# example source code is part of the org.glite.lb.client
+EXAMPLE_SOURCE_DIR=${stagedir}/share/doc/glite-lb-client-3.1.2/examples
+KPATH = TEXINPUTS=".:$(EXAMPLE_SOURCE_DIR):$(VPATH)//:"
 KPATHBIB = BIBINPUTS=".:$(VPATH)//:"
 
 LATEX = $(KPATH) latex
