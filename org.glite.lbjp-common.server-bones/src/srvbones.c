@@ -530,7 +530,7 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 				kick_client = KICK_IDLE;
 		}
 
-		if ( (conn < 0 || !first_request) && FD_ISSET(sock, &fds) && req_cnt < set_slave_reqs_max )
+		if ( !die && (conn < 0 || !first_request) && FD_ISSET(sock, &fds) && req_cnt < set_slave_reqs_max )
 		{
 			/* Prefer slaves with no connection, then kick idle clients,
 			 * active ones last. Wait less if we have serviced a request in the meantime.
