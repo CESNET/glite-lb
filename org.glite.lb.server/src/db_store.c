@@ -97,9 +97,11 @@ db_store(edg_wll_Context ctx, char *event)
 		(ev->regJob.jobtype == EDG_WLL_REGJOB_DAG ||
 		 ev->regJob.jobtype == EDG_WLL_REGJOB_PARTITIONED ||
 		 ev->regJob.jobtype == EDG_WLL_REGJOB_COLLECTION) &&
-		ev->regJob.nsubjobs > 0)  
+		ev->regJob.nsubjobs > 0) { 
 
 			if (register_subjobs_embryonic(ctx,&ev->regJob)) goto rollback;
+			reg_to_JP |= REG_SUBJOBS_TO_JP;
+	}
 
 commit:
 rollback:;
@@ -179,24 +181,50 @@ err:
 
 /* Send regitration to JP 
  */
-static int register_to_JP(edg_wll_Context ctx, edg_wll_Event *ev)
+static int register_to_JP(edg_wll_Context ctx, edg_wlc_JobId jobid, char *user)
 {
 	char *jids, *msg;
 	
-	if ( !(jids = edg_wlc_JobIdUnparse(ev->any.jobId)) ) {
+	
+	if ( !(jids = edg_wlc_JobIdUnparse(jobid)) ) {
 		return edg_wll_SetError(ctx, errno, "Can't unparse jobid when registering to JP");
 	}
-	if ( !(msg = realloc(jids, strlen(jids)+strlen(ev->any.user)+2)) ) {
+	if ( !(msg = calloc(strlen(jids)+strlen(user)+2, sizeof(char) )) ) {
 		free(jids);
 		return edg_wll_SetError(ctx, errno, "Can't allocate buffer when registering to JP");
 	}
+	strcat(msg, jids);
+	free(jids);
 	strcat(msg, "\n");
-	strcat(msg, ev->any.user);
+	strcat(msg, user);
 	if ( edg_wll_MaildirStoreMsg(ctx->jpreg_dir, ctx->srvName, msg) ) {
 		free(msg);
 		return edg_wll_SetError(ctx, errno, lbm_errdesc);
 	}
 	free(msg);
+
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+static int register_subjobs_to_JP(edg_wll_Context ctx, edg_wll_Event *ev)
+{
+	edg_wlc_JobId	*subjobs = NULL;
+	int		i = 0, j;
+
+
+	if (edg_wll_GenerateSubjobIds(ctx, ev->regJob.jobId, 
+			ev->regJob.nsubjobs, ev->regJob.seed, &subjobs)) 
+		goto err;
+
+	for (i=0; i<ev->regJob.nsubjobs; i++) {
+		if (register_to_JP(ctx, subjobs[i], ev->any.user))
+			goto err;
+	}
+
+err:
+	for (j=i; j<ev->regJob.nsubjobs; j++) edg_wlc_JobIdFree(subjobs[j]);
+	free(subjobs);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -239,8 +267,12 @@ static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev
 	}
 #endif
 	
-	if (reg_to_JP && ctx->jpreg_dir) 
-		if (register_to_JP(ctx,ev)) goto err;
+	if (ctx->jpreg_dir) {
+		if (reg_to_JP & REG_JOB_TO_JP) 
+			if (register_to_JP(ctx,ev->any.jobId,ev->any.user)) goto err;
+		if (reg_to_JP & REG_SUBJOBS_TO_JP)
+			if (register_subjobs_to_JP(ctx,ev)) goto err;
+	}
 
 	if (forward_event_to_server(ctx, event, ev, local_job)) goto err;
 	

@@ -308,7 +308,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		if (store_user(ctx,userid,can_peername)) goto err;
 		if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
 			userid, ctx->isProxy, local_job, grey, 0 )) goto err;
-		*register_to_JP = local_job;
+		*register_to_JP = (local_job) ? REG_JOB_TO_JP : 0;
 	}
 	else {
 		/* Job already registered */
@@ -330,7 +330,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 			if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
 				userid, (ctx->isProxy || !strcmp(res[0],"1")), 
 				!strcmp(res[1],"1") || (local_job ? ctx->serverRunning : 0), 0, 1)) goto err;
-			*register_to_JP = 1;
+			*register_to_JP = REG_JOB_TO_JP;
 				
 		}
 		else {
@@ -698,7 +698,7 @@ err:
 	free(icnames);
 	free(values);
 	/* free the rest of subjobs if DEADLOCK occurs */
-	for (j=i; j<e->nsubjobs; j++) edg_wlc_JobIdFree(subjobs[i]);
+	for (j=i; j<e->nsubjobs; j++) edg_wlc_JobIdFree(subjobs[j]);
 	free(subjobs);
 	if (sh) glite_lbu_FreeStmt(&sh);
 	free(stmt);

@@ -62,6 +62,8 @@ int edg_wll_Transaction(edg_wll_Context ctx) {
 	int retval;
 
 	if ((retval = glite_lbu_Transaction(ctx->dbctx)) != 0) edg_wll_SetErrorDB(ctx);
+
+printf("edg_wll_Transaction(%d)\n", retval);
 	return retval;
 }
 
@@ -69,6 +71,7 @@ int edg_wll_Commit(edg_wll_Context ctx) {
 	int retval;
 
 	if ((retval = glite_lbu_Commit(ctx->dbctx)) != 0) edg_wll_SetErrorDB(ctx);
+printf("edg_wll_Commit(%d)\n", retval);
 	return retval;
 }
 
@@ -76,6 +79,7 @@ int edg_wll_Rollback(edg_wll_Context ctx) {
 	int retval;
 
 	if ((retval = glite_lbu_Rollback(ctx->dbctx)) != 0) edg_wll_SetErrorDB(ctx);
+printf("edg_wll_Rollback(%d)\n", retval);
 	return retval;
 }
 

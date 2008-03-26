@@ -55,6 +55,11 @@ int edg_wll_delete_event(edg_wll_Context,const char *, int);
 
 #define USER_UNKNOWN	"unknown"
 
+/* flags for JP registrations */
+#define REG_JOB_TO_JP		1
+#define REG_SUBJOBS_TO_JP	2
+
+
 #ifdef __cplusplus
 }
 #endif
