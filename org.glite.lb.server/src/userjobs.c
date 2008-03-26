@@ -12,6 +12,7 @@
 
 #include "jobstat.h"
 #include "db_supp.h"
+#include "query.h"
 
 int edg_wll_UserJobsServer(
 	edg_wll_Context ctx,
@@ -70,17 +71,30 @@ int edg_wll_UserJobsServer(
 		free(res); res = NULL;
 	}
 
-	if (states) *states = calloc(njobs+1, sizeof(**states));
-	idx = 0;
-	for (i = 0; i < njobs; i++) {
-		if (edg_wll_JobStatusServer(ctx, out[idx], -1, &(*states)[idx]) != 0) {
-			if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
-				/* some jobs may be purged meanwhile, ignore */
-				continue;
-			}
-			else break;
+	if (states) {
+		edg_wll_QueryRec	oc[2],*ocp[2] = { oc, NULL };
+
+		oc[0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+		oc[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+
+		if (check_job_query_index(ctx,ocp)) {
+			edg_wll_ResetError(ctx);
+			*states = NULL;
+			goto err;
 		}
-		idx++;
+
+		*states = calloc(njobs+1, sizeof(**states));
+		idx = 0;
+		for (i = 0; i < njobs; i++) {
+			if (edg_wll_JobStatusServer(ctx, out[idx], -1, &(*states)[idx]) != 0) {
+				if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
+					/* some jobs may be purged meanwhile, ignore */
+					continue;
+				}
+				else break;
+			}
+			idx++;
+		}
 	}
 err:
 	free(res);

@@ -34,7 +34,6 @@
 
 
 static int check_event_query_index(edg_wll_Context,const edg_wll_QueryRec **,const edg_wll_QueryRec **);
-static int check_job_query_index(edg_wll_Context, const edg_wll_QueryRec **);
 static char *jc_to_head_where(edg_wll_Context, const edg_wll_QueryRec **, int *);
 static char *ec_to_head_where(edg_wll_Context, const edg_wll_QueryRec **);
 static int match_flesh_conditions(const edg_wll_Event *,const edg_wll_QueryRec **);
@@ -535,7 +534,7 @@ static int check_event_query_index(edg_wll_Context ctx,const edg_wll_QueryRec **
 			is_all_query(jc) ? "\"-all\" queries denied by server configuration" : NULL);
 }
 
-static int check_job_query_index(edg_wll_Context ctx, const edg_wll_QueryRec **jc)
+int check_job_query_index(edg_wll_Context ctx, const edg_wll_QueryRec **jc)
 {
 	int		i, j, jj;
 
