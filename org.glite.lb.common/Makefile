@@ -195,7 +195,9 @@ cjobid.c strmd5.c:
 	cp -rv ${jobiddir}/src/jobid/*.h glite/jobid/
 	cp -rv ${jobiddir}/src/jobid/*.[ch] .
 
-doc: generate events.tex status.tex
+doc:
+
+olddoc: generate events.tex status.tex
 	cp ${top_srcdir}/doc/*.dox .
 	echo "PROJECT_NUMBER = ${version}" >> C.dox
 	echo "PROJECT_NUMBER = ${version}" >> CPP.dox

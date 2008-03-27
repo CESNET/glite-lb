@@ -103,6 +103,8 @@ test_coverage:
 examples: db_test db_expire
 
 doc:
+
+olddoc:
 	cp ${top_srcdir}/doc/*.dox .
 	echo "PROJECT_NUMBER = ${version}" >> C.dox
 	doxygen C.dox
@@ -128,7 +130,7 @@ install: all
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	cp -r C ${PREFIX}/share/doc/${package}-${version}
+	-cp -r C ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 755 "libglite_lbu_db.la" "${PREFIX}/lib/libglite_lbu_db.la"; \
 	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 
