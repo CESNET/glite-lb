@@ -56,13 +56,29 @@ install:
 
 clean:
 	rm -rvf LBUG* LBAG* LBDG* events.tex status.tex
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
-.PHONY: all clean purge ps pdf
 
-LBDG.pdf: 	LBDG.tex \
-	 	LBDG-Common.tex \
-		LBDG-Introduction.tex \
-		producer_api.tex \
-		consumer_api.tex \
-		notification_api.tex \
-		web_services.tex
+# dependencies:
+
+LBUG.pdf: LBUG.tex \
+	LBUG-Introduction.tex components.tex \
+	LBUG-Tools.tex logevent.tex notify.tex \
+	LBUG-UseCases.tex log_usertag.tex change_acl.tex \
+	LBUG-Appendix.tex events.tex status.tex 
+
+LBAG.pdf: LBAG.tex \
+	LBAG-Introduction.tex components.tex \
+	LBAG-Installation.tex \
+	LBAG-Running.tex
+
+LBDG.pdf: LBDG.tex \
+	LBDG-Common.tex \
+	LBDG-Introduction.tex \
+	producer_api.tex \
+	consumer_api.tex \
+	notification_api.tex \
+	web_services.tex
+
+.PHONY: all clean
+
