@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "glite/lbu/maildir.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
-#include "glite/lb/lb_maildir.h"
 #include "purge.h"
 #include "store.h"
 #include "il_lbproxy.h"
@@ -197,7 +197,7 @@ static int register_to_JP(edg_wll_Context ctx, edg_wlc_JobId jobid, char *user)
 	free(jids);
 	strcat(msg, "\n");
 	strcat(msg, user);
-	if ( edg_wll_MaildirStoreMsg(ctx->jpreg_dir, ctx->srvName, msg) ) {
+	if ( glite_lbu_MaildirStoreMsg(ctx->jpreg_dir, ctx->srvName, msg) ) {
 		free(msg);
 		return edg_wll_SetError(ctx, errno, lbm_errdesc);
 	}

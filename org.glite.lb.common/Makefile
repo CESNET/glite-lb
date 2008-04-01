@@ -80,19 +80,16 @@ INSTALL:=libtool --mode=install install
 OBJS:=${JOBID_OBJS} ${PERF_OBJS} lb_plain_io.o events.o mini_http.o query_rec.o \
 	status.o xml_conversions.o xml_parse.o ulm_parse.o param.o \
 	events_parse.o il_string.o il_int.o notifid.o \
-	il_log.o il_msg.o log_msg.o context.o lb_maildir.o \
+	il_log.o il_msg.o log_msg.o context.o \
 	connpool.o 
 LOBJS:=${OBJS:.o=.lo}
-
-MAILDIR_OBJS:=lb_maildir.lo
-MAILDIR_LIB:=libglite_lb_maildir.la
 
 THROBJS:=${OBJS:.o=.thr.o}
 THRLOBJS:=${OBJS:.o=.thr.lo}
 
 HDRS:=context.h context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h il_msg.h \
-	ulm_parse.h lb_maildir.h connpool.h notifid.h notif_rec.h padstruct.h \
+	ulm_parse.h connpool.h notifid.h notif_rec.h padstruct.h \
 	query_rec.h timeouts.h LoggingExceptions.h CountRef.h ${PERF_HDRS} 
 GEN_HDRS:=Event.h events.h jobstat.h common_version.h
 
@@ -122,7 +119,7 @@ generate: ${GEN_HDRS}
 common_version.h: ${top_srcdir}/project/version.properties
 	echo "#define GLITE_LB_COMMON_VERSION \"${version}\"" >$@
 
-all compile: generate ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB} ${MAILDIR_LIB}
+all compile: generate ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
 
 # In order to use libtool versioning correcty, we must have:
 #
@@ -142,9 +139,6 @@ version_info:=-version-info ${shell \
 ${STATICLIB}: ${OBJS}
 	ar crv $@ ${OBJS}
 	ranlib $@
-
-${MAILDIR_LIB}: ${MAILDIR_OBJS}
-	${LINK} ${version_info} -o $@ ${MAILDIR_OBJS}
 
 ${THRSTATICLIB}: ${THROBJS}
 	ar crv $@ ${THROBJS}
@@ -207,7 +201,7 @@ olddoc: generate events.tex status.tex
 install: 
 	mkdir -p ${PREFIX}/lib
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${MAILDIR_LIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 #	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
 	if [ x${DOSTAGE} = xyes ]; then \

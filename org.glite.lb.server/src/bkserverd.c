@@ -38,10 +38,10 @@
 #include "glite/jobid/cjobid.h"
 #include "glite/security/glite_gss.h"
 #include "glite/lbu/srvbones.h"
+#include "glite/lbu/maildir.h"
 #include "glite/lb/context.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/lb_maildir.h"
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -528,9 +528,9 @@ int main(int argc, char *argv[])
 		if (check_mkdir(dumpStorage)) exit(1);
 		if (check_mkdir(purgeStorage)) exit(1);
 		if ( jpreg ) {
-			if ( edg_wll_MaildirInit(jpregDir) ) {
-				dprintf(("[%d] edg_wll_MaildirInit failed: %s\n", getpid(), lbm_errdesc));
-				if (!debug) syslog(LOG_CRIT, "edg_wll_MaildirInit failed: %s", lbm_errdesc);
+			if ( glite_lbu_MaildirInit(jpregDir) ) {
+				dprintf(("[%d] glite_lbu_MaildirInit failed: %s\n", getpid(), lbm_errdesc));
+				if (!debug) syslog(LOG_CRIT, "glite_lbu_MaildirInit failed: %s", lbm_errdesc);
 				exit(1);
 			}
 		}

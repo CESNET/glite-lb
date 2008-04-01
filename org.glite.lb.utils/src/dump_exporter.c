@@ -12,10 +12,10 @@
 #include <sys/time.h>
 
 
+#include "glite/lbu/maildir.h"
 #include "glite/lb/context.h"
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
-#include "glite/lb/lb_maildir.h"
 
 
 #define DUMP_FILE_STORE_PREFIX	"/tmp"
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 		}
 	} else fhnd = 0;
 
-	if ( edg_wll_MaildirInit(lb_maildir) ) {
+	if ( glite_lbu_MaildirInit(lb_maildir) ) {
 		perror(lbm_errdesc);
 		exit(1);
 	}
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
 		else 
 			sprintf(msg, "%s%s\n%s%s",
 					KEYNAME_JOBID, st->job, KEYNAME_FILE, st->fname);
-		if ( edg_wll_MaildirStoreMsg(lb_maildir, "localhost", msg) < 0 ) {
+		if ( glite_lbu_MaildirStoreMsg(lb_maildir, "localhost", msg) < 0 ) {
 			perror(lbm_errdesc);
 			exit(1);
 		}

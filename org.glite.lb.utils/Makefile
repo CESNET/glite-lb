@@ -64,7 +64,7 @@ compile all: ${UTILS} ${MAN_GZ} statistics
 	${CC} ${CFLAGS} -c $<
 
 ${UTILS}: %: %.o
-	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS}
+	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} -lglite_lbu_maildir
 
 statistics: statistics.o
 	${LINK} -rdynamic -o $@ $< ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 

@@ -156,7 +156,7 @@ EXT_LIBS:=  \
 	${classadslib} \
 	${VOMS_LIBS}
 
-COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio
+COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio -lglite_lbu_maildir
 
 BKSERVER_BASE_OBJS:= \
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
@@ -182,7 +182,8 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 		${LB_UTILS_DB_LIB} \
 		${GSOAP_LIB} \
 		${EXT_LIBS} \
-		${classadslib}
+		${classadslib} \
+		-lglite_lbu_maildir
 else
 	BKSERVER_OBJS:= ${BKSERVER_BASE_OBJS}
 		
@@ -193,7 +194,8 @@ else
 		${LB_UTILS_DB_LIB} \
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS} \
-		${classadslib}
+		${classadslib} \
+		-lglite_lbu_maildir
 endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
