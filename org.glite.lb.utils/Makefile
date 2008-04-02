@@ -92,14 +92,10 @@ install:
 	for p in ${UTILS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
-
-# TODO: merge - not sure if this is really the current solution for lbplugin
-	-if [ x${DOSTAGE} != xyes ]; then \
-		${INSTALL} -m 755 ${stagedir}/lib/glite_lb_plugin.so ${PREFIX}/lib; \
-	fi
+	${INSTALL} -m 755 statistics ${PREFIX}/bin/glite-lb-statistics
 
 clean:
-	rm -rfv ${UTILS} ${MAN_GZ} *.{lo,o} .libs/
+	rm -rfv ${UTILS} statistics ${MAN_GZ} *.{lo,o} .libs/
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o: %.c
