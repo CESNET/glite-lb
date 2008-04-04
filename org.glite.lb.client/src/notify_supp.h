@@ -4,6 +4,8 @@ extern "C" {
 
 char * parse_fields(const char *,void **);
 void print_fields(void **,const edg_wll_NotifId,edg_wll_JobStat const *);
+void dump_fields(void);
+
 
 #ifdef __cplusplus
 }

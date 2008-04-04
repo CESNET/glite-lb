@@ -25,6 +25,7 @@ char * parse_fields(const char *arg,void **out)
 	return NULL;
 }
 
+
 std::string & escape(std::string &s)
 {
 	for (std::string::iterator p = s.begin(); p < s.end(); p++) switch (*p) {
@@ -38,6 +39,20 @@ std::string & escape(std::string &s)
 }
 
 typedef std::vector<std::pair<JobStatus::Attr,JobStatus::AttrType> > attrs_t;
+
+void dump_fields(void)
+{
+	JobStatus	s;
+	attrs_t 	a = s.getAttrs(); 
+	for (attrs_t::iterator i=a.begin(); i != a.end(); i++) {
+		switch (i->second) {
+			case JobStatus::INT_T:
+			case JobStatus::STRING_T:
+				std::cerr << JobStatus::getAttrName(i->first) << ", ";
+			default: break;
+		}
+	}
+}
 
 void print_fields(void **ff,const edg_wll_NotifId n,edg_wll_JobStat const *s)
 {

@@ -63,12 +63,16 @@ static void usage(char *cmd)
 	if ( !cmd || !strcmp(cmd, "refresh") )
 		fprintf(stderr,"\n'refresh' command usage: %s refresh [-t requested_validity ] notifid\n"
 			"    notifid     Notification ID.\n", me);
-	if ( !cmd || !strcmp(cmd, "receive") )
+	if ( !cmd || !strcmp(cmd, "receive") ) {
 		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t requested_validity ] [-i timeout] [-f field1,field2,...] [notifid]\n"
 			"    notifid     Notification ID (not used if -s specified).\n"
 			"    fake_addr   Fake the client address.\n"
 			"    field1,field2,...	list of status fields to print (only owner by default)\n"
 			"    timeout     Timeout to receive operation in seconds.\n", me);
+		fprintf(stderr,"\navailable fields:\n\t");
+		dump_fields();
+		putc(10,stderr);
+	}
 	if ( !cmd || !strcmp(cmd, "drop") )
 		fprintf(stderr,"\n'drop' command usage: %s drop notifid\n"
 			"    notifid     Notification to remove.\n", me);
