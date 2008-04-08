@@ -13,6 +13,7 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <sys/stat.h>
 
 #include "glite/lb/context.h"
 #include "glite/lb/jobstat.h"
@@ -79,129 +80,6 @@ int glite_jppsbe_pread(glite_jp_context_t ctx, void *handle, void *buf, size_t n
 
 	return ferror(f) ? 1 : 0;
 }
-
-
-int glite_jp_stack_error(glite_jp_context_t ctx, const glite_jp_error_t *jperror) {
-	if (verbose) fprintf(stderr,"lb_statistics: JP backend error %d: %s\n", jperror->code, jperror->desc);
-	return 0;
-}
-
-
-int glite_jp_clear_error(glite_jp_context_t ctx) {
-	return 0;
-}
-
-
-/*
- * realloc the line to double size if needed
- *
- * \return 0 if failed, did nothing
- * \return 1 if success
- */
-int check_realloc_line(char **line, size_t *maxlen, size_t len) {
-        void *tmp;
-
-        if (len > *maxlen) {
-                *maxlen <<= 1;
-                tmp = realloc(*line, *maxlen);
-                if (!tmp) return 0;
-                *line = tmp;
-        }
-
-        return 1;
-}
-
-
-typedef struct _rl_buffer_t {
-        char                    *buf;
-        size_t                  pos, size;
-        off_t                   offset;
-} rl_buffer_t;
-
-
-/*
- * read next line from stream
- *
- * \return error code
- */
-int glite_jppsbe_readline(
-        glite_jp_context_t ctx,
-        void *handle,
-        rl_buffer_t *buffer,
-        char **line
-)
-{
-        size_t maxlen, len, i;
-        ssize_t nbytes;
-        int retval, z, end;
-
-        maxlen = BUFSIZ;
-        i = 0;
-        len = 0;
-        *line = malloc(maxlen);
-        end = 0;
-
-        do {
-                /* read next portion */
-                if (buffer->pos >= buffer->size) {
-                        buffer->pos = 0;
-                        buffer->size = 0;
-                        if ((retval = glite_jppsbe_pread(ctx, handle, buffer->buf, BUFSIZ, buffer->offset, &nbytes)) == 0) {
-                                if (nbytes < 0) {
-                                        retval = EINVAL;
-                                        goto fail;
-                                } else {
-                                        if (nbytes) {
-                                                buffer->size = (size_t)nbytes;
-                                                buffer->offset += nbytes;
-                                        } else end = 1;
-                                }
-                        } else goto fail;
-                }
-
-                /* we have buffer->size - buffer->pos bytes */
-                i = buffer->pos;
-                do {
-                        if (i >= buffer->size) z = '\0';
-                        else {
-                                z = buffer->buf[i];
-                                if (z == '\n') z = '\0';
-                        }
-                        len++;
-
-                        if (!check_realloc_line(line, &maxlen, len)) {
-                                retval = ENOMEM;
-                                goto fail;
-                        }
-                        (*line)[len - 1] = z;
-                        i++;
-                } while (z && i < buffer->size);
-                buffer->pos = i;
-        } while (len && (*line)[len - 1] != '\0');
-
-        if ((!len || !(*line)[0]) && end) {
-                free(*line);
-                *line = NULL;
-        }
-
-        return 0;
-
-fail:
-        free(*line);
-        *line = NULL;
-        return retval;
-}
-
-char* glite_jpps_get_namespace(const char* attr){
-        char* namespace = strdup(attr);
-        char* colon = strrchr(namespace, ':');
-        if (colon)
-                namespace[strrchr(namespace, ':') - namespace] = 0;
-        else
-                namespace[0] = 0;
-        return namespace;
-}
-
 
 /*
  * free the array of JP attr
