@@ -5,6 +5,7 @@
 
 #include "glite/lb/jobstat.h"
 #include "glite/lb/intjobstat.h"
+#include "glite/lbu/db.h"
 
 int edg_wll_JobStatusServer(edg_wll_Context, glite_jobid_const_t, int, edg_wll_JobStat *);
 
