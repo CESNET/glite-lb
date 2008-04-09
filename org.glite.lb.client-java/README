@@ -1,0 +1,19 @@
+How to compile the source code.
+
+Run the script "compile.sh" with arguments:
+All options are required except PATH_TO_JAVA, PREFIX and install or remove.
+
+-Dbuild.classes.dir="path to directory where .class files will be saved" \
+-Ddist.dir="path to directory where .jar file will be saved" \
+-Ddist.javadoc.dir="path to directory where documentation will be saved" \
+-Dproject.jobid-api-java="path to directory jobid-api-java" \
+-Dreference.jobid-api-java.jar="path to directory where jobid-api-java.jar is" \
+choose one of these: install or compile \
+PREFIX="path to directory where .so file will be saved" \
+PATH_TO_JAVA="path to directory where java is installed" \
+
+How to run locallogger:
+java -Djava.library.path=/path/to/shared/library -cp "/path/to/jobid-api-java.jar:/path/to/lb-client-java.jar" org.glite.test.Test
+
+If you don't set -Djava.library.path messages will not be send via unix socket but only written to specified file.
+
