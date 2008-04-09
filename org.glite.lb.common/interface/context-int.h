@@ -4,7 +4,6 @@
 #ident "$Header$"
 
 #include "glite/security/glite_gss.h"
-#include "glite/lbu/db.h"
 #include "glite/lb/jobstat.h"
 #include "glite/lb/query_rec.h"
 #include "glite/lb/lb_plain_io.h"
@@ -53,7 +52,7 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 
 /* server part */
 
-	glite_lbu_DBContext	dbctx;
+	void		*dbctx;
 	int		dbcaps;
 	edg_wll_Connections	*connections;
 	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
