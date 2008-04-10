@@ -1,6 +1,5 @@
 package org.glite.jobid.api_java;
 
-import java.math.BigInteger;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -29,7 +28,8 @@ public class Jobid {
 
     /**
      * Creates new instace of JobId with BK server address and port number, unique part 
-     * is generated
+     * is generated. If some exception is catched during generating the unique part, then
+     * System.exit(-1); is called.
      * 
      * @param bkserver BK server address
      * @param port BK server port
@@ -69,41 +69,14 @@ public class Jobid {
                      new Random().nextInt(999999);
             
             digest.update(unique.getBytes(),0,unique.length());
-            unique = new BigInteger(1,digest.digest()).toString(16);
+            Base64 base64 = new Base64();
+            byte[] tmp = base64.encode(digest.digest());
+            unique = new CheckedString(new String(tmp, 0, tmp.length-2)).toString();
             
         } catch (NoSuchAlgorithmException ex) {
             System.err.println(ex);
+            System.exit(-1);
         }
-        
-        Base64 base64 = new Base64();
-        byte[] tmp = base64.decode(unique.getBytes());
-        boolean test = false;
-        while(!test) {
-            test = true;
-            for (int i = 0; i < tmp.length; i++) {
-                if (tmp[i] < 0) {
-                    tmp[i] = (byte)(-1*tmp[i]);
-                    test = false;
-                }
-                if (tmp[i] <= 47) {
-                    tmp[i] = (byte)(10+tmp[i]);
-                    test = false;
-                }
-                if (tmp[i] <= 64 && tmp[i] >= 58) {
-                    tmp[i] = (byte)(7+tmp[i]);
-                    test = false;
-                }
-                if (tmp[i] <= 96 && tmp[i] >= 91) {
-                    tmp[i] = (byte)(6+tmp[i]);
-                    test = false;
-                }
-                if (tmp[i] >= 123) {
-                    tmp[i] = (byte)(5-tmp[i]);
-                    test = false;
-                }
-            }
-        }
-        unique = new String(tmp);
     }
     
     /**

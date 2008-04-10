@@ -22,9 +22,7 @@ public class CheckedString {
             throw new IllegalArgumentException("checkedString is null");
         }
         
-        checkedString = checkedString.replaceAll("[\\\"]", "\\\\\"");
-        checkedString = checkedString.replaceAll("[\n]", "\\\\\\\\n");
-        this.checkedString = checkedString;
+        setCheckedString(checkedString);
     }
 
     /**
@@ -44,6 +42,8 @@ public class CheckedString {
     public void setCheckedString(String checkedString) {
         checkedString = checkedString.replaceAll("[\\\"]", "\\\\\"");
         checkedString = checkedString.replaceAll("[\n]", "\\\\\\\\n");
+        checkedString = checkedString.replaceAll("[/]", "_");
+        checkedString = checkedString.replaceAll("[\\+]", "-");
         this.checkedString = checkedString;
     }
     
@@ -52,6 +52,7 @@ public class CheckedString {
      * 
      * @return converted string
      */
+    @Override
     public String toString() {
         return checkedString;
     }
