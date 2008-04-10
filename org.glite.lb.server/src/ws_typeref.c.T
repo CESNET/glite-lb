@@ -711,7 +711,7 @@ ret:
 
 
 #define edg_wll_CommonJobsResponseToSoap do { \
-	int	i; \
+	int	count, i; \
 \
 	assert(out); \
 	out->__sizejobs = 0; \
@@ -719,11 +719,13 @@ ret:
 	out->__sizestates = 0; \
 	out->states = NULL; \
 \
+	count = 0; \
 	if ( jobs ) { \
 		for ( i = 0; jobs[i]; i++ ) ; \
-		out->jobs = soap_malloc(soap, sizeof(*(out->jobs))*i); \
+		count = i; \
+		out->jobs = soap_malloc(soap, sizeof(*(out->jobs))*count); \
 		if ( !out->jobs ) return SOAP_FAULT; \
-		out->__sizejobs = i; \
+		out->__sizejobs = count; \
 		for ( i = 0; jobs[i]; i++ ) { \
 			char	   *s; \
 			if ( !(s = edg_wlc_JobIdUnparse(jobs[i])) ) return SOAP_FAULT; \
@@ -732,11 +734,10 @@ ret:
 		} \
 	} \
 	if ( states ) { \
-		for ( i = 0; states[i].state; i++ ) ; \
-		GLITE_SECURITY_GSOAP_LIST_CREATE(soap, out, states, struct lbt__jobStatus, i); \
+		GLITE_SECURITY_GSOAP_LIST_CREATE(soap, out, states, struct lbt__jobStatus, count); \
 		if ( !out->states ) return SOAP_FAULT; \
 \
-		for ( i = 0; states[i].state; i++ ) \
+		for ( i = 0; i < count; i++ ) \
 			if ( edg_wll_StatusToSoap(soap, states+i, GLITE_SECURITY_GSOAP_LIST_GET(out->states, i)) ) \
 				return SOAP_FAULT; \
 	} \

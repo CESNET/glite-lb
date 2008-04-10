@@ -22,7 +22,7 @@ int edg_wll_UserJobsServer(
 	char	*userid, *stmt = NULL,
 		*res = NULL;
 	char	*can_peername;
-	int	njobs = 0,ret,i,j,idx;
+	int	njobs = 0,ret,i,idx;
 	edg_wlc_JobId	*out = NULL;
 	glite_lbu_Statement	sth = NULL;
 	edg_wll_ErrorCode	err = 0;
@@ -86,13 +86,8 @@ int edg_wll_UserJobsServer(
 		*states = calloc(njobs+1, sizeof(**states));
 		idx = 0;
 		for (i = 0; i < njobs; i++) {
-			if (edg_wll_JobStatusServer(ctx, out[idx], -1, &(*states)[idx]) != 0) {
-				if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
-					/* some jobs may be purged meanwhile, ignore */
-					continue;
-				}
-				else break;
-			}
+			if (edg_wll_JobStatusServer(ctx, out[idx], -1, &(*states)[idx]) != 0)
+				edg_wll_ResetError(ctx);
 			idx++;
 		}
 	}
