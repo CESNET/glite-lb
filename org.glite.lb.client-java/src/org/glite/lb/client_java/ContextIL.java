@@ -9,6 +9,7 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import org.glite.jobid.api_java.Jobid;
+import org.glite.jobid.api_java.CheckedString;
 
 /**
  * Class which is used to send messages to inter-logger using unix socket.
@@ -25,7 +26,7 @@ public class ContextIL extends Context {
     private int timeout = 3;
     private Boolean useUnixSocket = true;
 
-    //navod http://java.sun.com/developer/onlineTraining/Programming/JDCBook/jni.html
+    //tutorial http://java.sun.com/developer/onlineTraining/Programming/JDCBook/jni.html
     //native method which is written in C and imported to Java
     native int sendToSocket(String socket_path,
     long filepos,

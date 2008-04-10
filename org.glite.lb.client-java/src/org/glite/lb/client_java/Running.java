@@ -1,5 +1,7 @@
 package org.glite.lb.client_java;
 
+import org.glite.jobid.api_java.CheckedString;
+
 /**
  * Class which represents event "running".
  * 

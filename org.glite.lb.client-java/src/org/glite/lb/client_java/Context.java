@@ -4,6 +4,7 @@ import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Random;
 import org.glite.jobid.api_java.Jobid;
+import org.glite.jobid.api_java.CheckedString;
 
 /**
  * Class representing a context for some job
@@ -12,7 +13,7 @@ import org.glite.jobid.api_java.Jobid;
  * @version 15. 3. 2008
  */
 public class Context {
-    
+
     private int id;
     private Sources source;
     private int flag;
@@ -23,13 +24,13 @@ public class Context {
     private Jobid jobid;
     private SeqCode seqCode;
     private String message;
-    
+
     /**
      * Creates new instance of Context class.
      */
     public Context() {
     }
-    
+
     /**
      * Creates new instance of Context class.
      * 
@@ -41,60 +42,54 @@ public class Context {
      * @param prog if null then is used "egd-wms"
      * @param srcInstance if null then it is set as ""
      * @param jobid
-     * @throws java.lang.IllegalArgumentException if source, user or jobid is null 
-     *  or flag < 0 
+     * @throws java.lang.IllegalArgumentException if user or jobid is null 
+     *  or flag < 0 or source <=0 || >= 9 
      * 
      */
     public Context(int id,
-                   Sources source,
-                   int flag,
-                   String host,
-                   String user,
-                   String prog,
-                   String srcInstance,
-                   Jobid jobid) {
+            Sources source,
+            int flag,
+            String host,
+            String user,
+            String prog,
+            String srcInstance,
+            Jobid jobid) {
         if (id < 0) {
             id = new Random().nextInt();
         }
-        
-        if (source == null)
-        {
+
+        if (source == null) {
             throw new IllegalArgumentException("Context source");
         }
-        
-        if (flag < 0 || flag > 8)
-        {
+
+        if (flag < 0) {
             throw new IllegalArgumentException("Context flag");
         }
-        
-        if (host == null || host.equals(""))
-        {
+
+        if (host == null || host.equals("")) {
             try {
                 host = java.net.InetAddress.getLocalHost().getHostName();
             } catch (UnknownHostException ex) {
-               System.err.println(ex);
+                System.err.println(ex);
             }
         }
-        
-        if (user == null)
-        {
+
+        if (user == null) {
             throw new IllegalArgumentException("Context user");
         }
-        
+
         if (prog == null) {
             prog = new String("edg-wms");
         }
-        
-        if (srcInstance == null)
-        {
+
+        if (srcInstance == null) {
             srcInstance = new String("");
         }
-        
-        if (jobid == null)
-        {
+
+        if (jobid == null) {
             throw new IllegalArgumentException("Context jobid");
         }
-        
+
         this.id = id;
         this.source = source;
         this.flag = flag;
@@ -104,7 +99,7 @@ public class Context {
         this.srcInstance = new CheckedString(srcInstance).toString();
         this.jobid = jobid;
     }
-    
+
     /**
      * Converts Sources enum constants to defined string
      * @param sourceEnum Sources enum constant
@@ -126,106 +121,85 @@ public class Context {
             default: throw new IllegalArgumentException("wrong source type");
         }
     }
-    
-    public Sources stringToSources(String source) {
-        if (source.equals("EDG_WLL_SOURCE_NONE")) return Sources.EDG_WLL_SOURCE_NONE;
-        if (source.equals("EDG_WLL_SOURCE_USER_INTERFACE")) return Sources.EDG_WLL_SOURCE_USER_INTERFACE;
-        if (source.equals( "EDG_WLL_SOURCE_NETWORK_SERVER")) return Sources.EDG_WLL_SOURCE_NETWORK_SERVER;
-        if (source.equals("EDG_WLL_SOURCE_WORKLOAD_MANAGER")) return Sources.EDG_WLL_SOURCE_WORKLOAD_MANAGER;
-        if (source.equals("EDG_WLL_SOURCE_BIG_HELPER")) return Sources.EDG_WLL_SOURCE_BIG_HELPER;
-        if (source.equals("EDG_WLL_SOURCE_JOB_SUBMISSION")) return Sources.EDG_WLL_SOURCE_JOB_SUBMISSION;
-        if (source.equals("EDG_WLL_SOURCE_LOG_MONITOR")) return Sources.EDG_WLL_SOURCE_LOG_MONITOR;
-        if (source.equals("EDG_WLL_SOURCE_LRMS")) return Sources.EDG_WLL_SOURCE_LRMS;
-        if (source.equals("EDG_WLL_SOURCE_APPLICATION")) return Sources.EDG_WLL_SOURCE_APPLICATION;
-        if (source.equals("EDG_WLL_SOURCE_LB_SERVER")) return Sources.EDG_WLL_SOURCE_LB_SERVER;
-        throw new IllegalArgumentException("wrong source type");
-        
-    }
-    
+
     /**
      * Creates message prepared to send
      * @param event event for which is message generated
      * @throws IllegalArgumentException if event, source, user or job is null
      * or flag < 0
      */
-    public void log(Event event) { 
+    public void log(Event event) {
         if (event == null) {
             throw new IllegalArgumentException("Context event");
         }
-        
-        if (source == null)
-        {
+
+        if (source == null) {
             throw new IllegalArgumentException("Context source");
         }
-        
-        if (flag < 0 || flag > 8)
-        {
+
+        if (flag < 0) {
             throw new IllegalArgumentException("Context flag");
         }
-        
-        if (host == null || host.equals(""))
-        {
+
+        if (host == null || host.equals("")) {
             try {
                 host = java.net.InetAddress.getLocalHost().getHostName();
             } catch (UnknownHostException ex) {
-               System.err.println(ex);
+                System.err.println(ex);
             }
         }
-        
+
         if (prog == null) {
             prog = new String("edg-wms");
         }
-        
-        if (user == null)
-        {
+
+        if (user == null) {
             throw new IllegalArgumentException("Context user");
         }
-        
-        if (srcInstance == null)
-        {
+
+        if (srcInstance == null) {
             srcInstance = new String("");
         }
-        
-        if (jobid == null)
-        {
+
+        if (jobid == null) {
             throw new IllegalArgumentException("Context jobid");
         }
-        
+
         String output;
         String date = "";
         String tmp;
         date = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
         tmp = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
-        date += "00".substring(0, 2 - tmp.length ()) + tmp;
+        date += "00".substring(0, 2 - tmp.length()) + tmp;
         tmp = String.valueOf(Calendar.getInstance().get(Calendar.DATE));
-        date += "00".substring(0, 2 - tmp.length ()) + tmp;
+        date += "00".substring(0, 2 - tmp.length()) + tmp;
         tmp = String.valueOf(Calendar.getInstance().get(Calendar.HOUR));
-        date += "00".substring(0, 2 - tmp.length ()) + tmp;
+        date += "00".substring(0, 2 - tmp.length()) + tmp;
         tmp = String.valueOf(Calendar.getInstance().get(Calendar.MINUTE));
-        date += "00".substring(0, 2 - tmp.length ()) + tmp;
+        date += "00".substring(0, 2 - tmp.length()) + tmp;
         tmp = String.valueOf(Calendar.getInstance().get(Calendar.SECOND));
-        date += "00".substring(0, 2 - tmp.length ()) + tmp;
-	date += ".";
+        date += "00".substring(0, 2 - tmp.length()) + tmp;
+        date += ".";
         tmp = String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND));
-        String tmp2 = "000".substring(0, 3 - tmp.length ()) + tmp;
-        date += tmp2 + "000000".substring(tmp.length (), 6);
-        
-        seqCode.setPardOfSeqCode(flag, seqCode.getPardOfSeqCode(flag)+1);
-        
-        output = ("DG.LLLID=" + id + 
-               " DG.USER=\"" + user + "\"" + 
-               " DATE=" + date +
-               " HOST=\"" + host + "\"" + 
-               " PROG=" + prog +
-               " LVL=SYSTEM" +
-               " DG.PRIORITY=0" +
-               " DG.SOURCE=\"" + recognizeSource(source) + "\"" + 
-               " DG.SRC_INSTANCE=\"" + srcInstance + "\"" + 
-               " DG.EVNT=\"" + event.getEventType() + "\"" +
-               " DG.JOBID=\"" + jobid + "\"" +
-               " DG.SEQCODE=\"" + seqCode + "\"" +
-               event.ulm());
-        
+        String tmp2 = "000".substring(0, 3 - tmp.length()) + tmp;
+        date += tmp2 + "000000".substring(tmp.length(), 6);
+
+        seqCode.incrementSeqCode(source);
+
+        output = ("DG.LLLID=" + id +
+                " DG.USER=\"" + user + "\"" +
+                " DATE=" + date +
+                " HOST=\"" + host + "\"" +
+                " PROG=" + prog +
+                " LVL=SYSTEM" +
+                " DG.PRIORITY=0" +
+                " DG.SOURCE=\"" + recognizeSource(source) + "\"" +
+                " DG.SRC_INSTANCE=\"" + srcInstance + "\"" +
+                " DG.EVNT=\"" + event.getEventType() + "\"" +
+                " DG.JOBID=\"" + jobid + "\"" +
+                " DG.SEQCODE=\"" + seqCode + "\"" +
+                event.ulm());
+
         this.message = output;
     }
 
@@ -245,11 +219,10 @@ public class Context {
      * @throws java.lang.IllegalArgumentException if flag is lower than 0
      */
     public void setFlag(int flag) {
-        if (flag < 0 || flag > 8)
-        {
+        if (flag < 0) {
             throw new IllegalArgumentException("Context flag");
         }
-        
+
         this.flag = flag;
     }
 
@@ -268,11 +241,10 @@ public class Context {
      * @throws java.lang.IllegalArgumentException if host is null
      */
     public void setHost(String host) {
-        if (host == null)
-        {
+        if (host == null) {
             throw new IllegalArgumentException("Context host");
         }
-        
+
         this.host = host;
     }
 
@@ -284,7 +256,7 @@ public class Context {
     public int getId() {
         return id;
     }
-    
+
     /**
      * Sets message id.
      * 
@@ -292,8 +264,7 @@ public class Context {
      * @throws java.lang.IllegalArgumentException if id is lower than 0
      */
     public void setId(int id) {
-        if (id < 0)
-        {
+        if (id < 0) {
             throw new IllegalArgumentException("Context id");
         }
         this.id = id;
@@ -315,11 +286,10 @@ public class Context {
      * @throws java.lang.IllegalArgumentException if jobid is null
      */
     public void setJobid(Jobid jobid) {
-        if (jobid == null)
-        {
+        if (jobid == null) {
             throw new IllegalArgumentException("Context jobid");
         }
-        
+
         this.jobid = jobid;
     }
 
@@ -347,7 +317,7 @@ public class Context {
         if (prog == null) {
             prog = new String("edg-wms");
         }
-        
+
         this.prog = (new CheckedString(prog)).toString();
     }
 
@@ -369,7 +339,7 @@ public class Context {
         if (seqCode == null) {
             throw new IllegalArgumentException("Context seqCode");
         }
-        
+
         this.seqCode = seqCode;
     }
 
@@ -387,11 +357,10 @@ public class Context {
      * @throws java.lang.IllegalArgumentException if source is null
      */
     public void setSource(Sources source) {
-        if (source == null)
-        {
+        if (source == null) {
             throw new IllegalArgumentException("Context source");
         }
-        
+
         this.source = source;
     }
 
@@ -408,11 +377,10 @@ public class Context {
      * @param srcInstance srcInstance
      */
     public void setSrcInstance(String srcInstance) {
-        if (srcInstance == null)
-        {
+        if (srcInstance == null) {
             srcInstance = new String("");
         }
-        
+
         this.srcInstance = new CheckedString(srcInstance).toString();
     }
 
@@ -430,11 +398,10 @@ public class Context {
      * @throws java.lang.IllegalArgumentException if user is null
      */
     public void setUser(String user) {
-        if (user == null)
-        {
+        if (user == null) {
             throw new IllegalArgumentException("Context user");
         }
-        
+
         this.user = (new CheckedString(user)).toString();
     }
 }

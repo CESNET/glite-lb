@@ -15,8 +15,9 @@ import java.util.ArrayList;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import org.glite.jobid.api_java.Jobid;
+import org.glite.jobid.api_java.CheckedString;
 
-/**
+/** NOT IMPLEMENTED YET! THIS IS ONLY SKELETON
  *
  * @author xpiskac
  */

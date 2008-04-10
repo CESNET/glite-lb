@@ -9,6 +9,7 @@ import org.glite.jobid.api_java.Jobid;
 import org.glite.lb.client_java.ContextIL;
 import org.glite.lb.client_java.Running;
 import org.glite.lb.client_java.SeqCode;
+import org.glite.lb.client_java.Sources;
 
 /**
  *
@@ -19,11 +20,11 @@ public class Test {
     public static void main(String[] args) {
         
         //how Jobid class works
-        /* //unique part is automatically generated
-        Jobid jobid = new Jobid("https://somewhere.cz", 5000);
-        System.out.println("bkserver "+ jobid.getBkserver());
-        System.out.println("port "+ jobid.getPort());
-        System.out.println("unique "+ jobid.getUnique());
+        //unique part is automatically generated
+        Jobid jobid1 = new Jobid("https://somewhere.cz", 5000);
+        System.out.println("bkserver "+ jobid1.getBkserver());
+        System.out.println("port "+ jobid1.getPort());
+        System.out.println("unique "+ jobid1.getUnique());
         System.out.println("-------------------");
         
         //unique part is set by user
@@ -50,7 +51,6 @@ public class Test {
         System.out.println("unique "+ jobid4.getUnique());
         System.out.println("-------------------");
         
-         */ 
         if (args.length == 0) {
             System.out.println("How to use test class:\n" +
                     "you have to set 10 arguments in this order, if the choice is optional \"\" or text has to be set:\n" +
@@ -80,16 +80,19 @@ public class Test {
             /* Create sequence code
              * Example:
              * SeqCode seqCode = new SeqCode();
-             * Then you can set some parts
+             * Insert sequence number in format 
+             * UI=XXXXXX:NS=XXXXXXXXXX:WM=XXXXXX:BH=XXXXXXXXXX:JSS=XXXXXX:LM=XXXXXX:LRMS=XXXXXX:APP=XXXXXX:LBS=XXXXXX
+             * where X is 0-9, or you can just create new instance of SeqCode where all parts are set to 0
              * Example:
-             * seqCode.setPardOfSeqCode(0, 95);
-             * or whole sequence number
-             * Example:
-             * int[] seqCodeArray = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-             * seqCode.setSeqCode(seqCodeArray);
+             * SeqCode seqCode = new SeqCode();
+             * seqCode.getSeqCodeFromString("UI=000001:NS=0000000002:WM=000003:BH=0000000004:" + 
+             * "JSS=000005:LM=000006:LRMS=000007:APP=000008:LBS=000009"); 
+             * seqCode.incrementSeqCode(Sources.EDG_WLL_SOURCE_USER_INTERFACE); 
+             * resulting sequence code will be 
+             * UI=000002:NS=0000000002:WM=000003:BH=0000000004:JSS=000005:LM=000006:LRMS=000007:APP=000008:LBS=000009
              */
             SeqCode seqCode = new SeqCode();
-
+            
             /* Choose type of sending a log messages (at this time is implemented only ContextIL class)
              * You can choose from some constructors (see org.glite.lb.client_java.ContextIL class)
              */
@@ -106,9 +109,11 @@ public class Test {
             ctx.setId(new Random().nextInt(99999999));
 
             /* Source indicates source of the message, it is constant from org.glite.lb.client_java.Sources class
-             * Example: ctx.setSource(ctx.stringToSources("EDG_WLL_SOURCE_LRMS"));
+             * Example: ctx.setSource(Sources.EDG_WLL_SOURCE_LRMS);
+             * In this case we have to use method which converts args[2] to Sources. In real environment it will
+             * not be used.
              */
-            ctx.setSource(ctx.stringToSources(args[2]));
+            ctx.setSource(stringToSources(args[2]));
 
             /* Flag tells which part of the sequence number will be increased. It is a number in range from 0 to 8
              * Example: ctx.setFlag(0);
@@ -174,5 +179,24 @@ public class Test {
              */
             ctx.log(running);
         }
+    }
+    
+    /*
+     * This method helps with converting String from input to convert to Source.
+     * In real environment it will not be used.
+     */
+    private static Sources stringToSources(String source) {         
+        if (source.equals("Sources.EDG_WLL_SOURCE_NONE")) return Sources.EDG_WLL_SOURCE_NONE;
+        if (source.equals("Sources.EDG_WLL_SOURCE_USER_INTERFACE")) return Sources.EDG_WLL_SOURCE_USER_INTERFACE;
+        if (source.equals("Sources.EDG_WLL_SOURCE_NETWORK_SERVER")) return Sources.EDG_WLL_SOURCE_NETWORK_SERVER;
+        if (source.equals("Sources.EDG_WLL_SOURCE_WORKLOAD_MANAGER")) return Sources.EDG_WLL_SOURCE_WORKLOAD_MANAGER;
+        if (source.equals("Sources.EDG_WLL_SOURCE_BIG_HELPER")) return Sources.EDG_WLL_SOURCE_BIG_HELPER;
+        if (source.equals("Sources.EDG_WLL_SOURCE_JOB_SUBMISSION")) return Sources.EDG_WLL_SOURCE_JOB_SUBMISSION;
+        if (source.equals("Sources.EDG_WLL_SOURCE_LOG_MONITOR")) return Sources.EDG_WLL_SOURCE_LOG_MONITOR;
+        if (source.equals("Sources.EDG_WLL_SOURCE_LRMS")) return Sources.EDG_WLL_SOURCE_LRMS;
+        if (source.equals("Sources.EDG_WLL_SOURCE_APPLICATION")) return Sources.EDG_WLL_SOURCE_APPLICATION;
+        if (source.equals("Sources.EDG_WLL_SOURCE_LB_SERVER")) return Sources.EDG_WLL_SOURCE_LB_SERVER;
+        throw new IllegalArgumentException("wrong source type");
+
     }
 }
