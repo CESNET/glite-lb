@@ -136,15 +136,14 @@ create table zombie_jobs (
 	binary_jobid	binary(16)	not null,
 	prefix_id	binary(1)	not null,
 
-	primary key (binary_jobid),
-	index (binary_jobid)
+	primary key (binary_jobid)
 ) engine=innodb;
 
 create table zombie_prefixes (
 	prefix_id	binary(1)	not null,
 	prefix		varchar(255)	binary not null,
 
-	primary key (prefix_id),
+	primary key (prefix_id)
 ) engine=innodb;
 
 
