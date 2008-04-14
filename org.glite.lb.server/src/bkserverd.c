@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
 {
 	int			i;
 	struct sockaddr_in	a;
-	int					opt;
+	int					opt, pidfile_forced = 0;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *name;
 #ifdef GLITE_LB_SERVER_WITH_WS
@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
 			}  break;
 		case 'X': notif_ilog_socket_path = strdup(optarg); break;
 		case 'Y': notif_ilog_file_prefix = strdup(optarg); break;
-		case 'i': strcpy(pidfile,optarg); break;
+		case 'i': strcpy(pidfile,optarg); pidfile_forced = 1; break;
 		case 'R': add_root(optarg); break;
 		case 'F': if (read_roots(optarg)) return 1;
 			  break;
@@ -498,7 +498,8 @@ int main(int argc, char *argv[])
 		slaves = 2;
 	}
 
-	if (geteuid()) snprintf(pidfile,sizeof pidfile, "%s/edg-bkserverd.pid", getenv("HOME"));
+	if (!pidfile_forced && geteuid())
+		snprintf(pidfile,sizeof pidfile, "%s/edg-bkserverd.pid", getenv("HOME"));
 
 	fpid = fopen(pidfile,"r");
 	if ( fpid )
