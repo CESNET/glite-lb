@@ -52,7 +52,6 @@ public class CheckedString {
      * 
      * @return converted string
      */
-    @Override
     public String toString() {
         return checkedString;
     }
