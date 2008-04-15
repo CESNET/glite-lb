@@ -1,6 +1,9 @@
 #ident "$Header$"
 
 #include <sys/types.h>
+#ifdef LBS_DB_PROFILE
+#include <sys/time.h>
+#endif
 #include <unistd.h>
 #include <time.h>
 #include <assert.h>
