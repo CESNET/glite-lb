@@ -82,6 +82,8 @@ string	suspend_reason	Reason for the suspend
 
 string	failure_reasons Concatenated job failure reasons, possibly from deeper middleware layers
 
+string ui_host		Hostname or address of UI used to submit the job
+
 _pad_	55
 
 string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
