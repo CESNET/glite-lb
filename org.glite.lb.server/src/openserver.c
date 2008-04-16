@@ -28,12 +28,11 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 	hit = 0;
 	// new columns added to jobs
 	if (glite_lbu_ExecSQL(ctx->dbctx, "DESC jobs", &stmt) <= 0) goto err;
-	while (hit < 5 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, cols)) > 0) {
+	while (hit < 4 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, cols)) > 0) {
 		assert(ret <= (int)(sizeof cols/sizeof cols[0]));
 		if (strcasecmp(cols[0], "proxy") == 0 ||
 		    strcasecmp(cols[0], "server") == 0 ||
 		    strcasecmp(cols[0], "grey") == 0 ||
-		    strcasecmp(cols[0], "zombie") == 0 ||
 		    strcasecmp(cols[0], "nevents") == 0) hit++;
 		for (i = 0; i < ret; i++) free(cols[i]);
 	}
@@ -41,14 +40,14 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 	glite_lbu_FreeStmt(&stmt);
 	// new columns added to events
 	if (glite_lbu_ExecSQL(ctx->dbctx, "DESC events", &stmt) <= 0) goto err;
-	while (hit < 6 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, cols)) > 0) {
+	while (hit < 5 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, cols)) > 0) {
 		assert(ret <= (int)(sizeof cols/sizeof cols[0]));
 		if (strcasecmp(cols[0], "seqcode") == 0) hit++;
 		for (i = 0; i < ret; i++) free(cols[i]);
 	}
 	if (ret < 0) goto err;
 	glite_lbu_FreeStmt(&stmt);
-	if (hit != 6) {
+	if (hit != 5) {
 		ret = edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, "old DB schema found, migration to new schema needed");
 		goto close_db;
 	}
@@ -56,14 +55,16 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 	// events_flesh table added
 	if (glite_lbu_ExecSQL(ctx->dbctx, "SHOW TABLES", &stmt) <= 0) goto err;
 	hit = 0;
-	while (hit < 1 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, table)) > 0) {
-		if (strcasecmp(table[0], "events_flesh") == 0) hit++;
+	while (hit < 3 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, table)) > 0) {
+		if (strcasecmp(table[0], "events_flesh") == 0 ||
+		strcasecmp(table[0], "zombie_jobs") == 0 ||
+		strcasecmp(table[0], "zombie_prefixes") == 0) hit++;
 		free(table[0]);
 	}
 	if (ret < 0) goto err;
 	glite_lbu_FreeStmt(&stmt);
-	if (hit != 1) {
-		ret = edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, "events_flesh table not found, migration to new schema needed");
+	if (hit != 3) {
+		ret = edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, "events_flesh or zombie_jobs or zombie_prefixes table not found, migration to new schema needed");
 		goto close_db;
 	}
 
