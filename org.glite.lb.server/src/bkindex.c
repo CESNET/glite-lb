@@ -11,6 +11,7 @@
 #include "glite/wmsutils/jobid/strmd5.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/context-int.h"
+#include "glite/lb/trio.h"
 #include "index.h"
 #include "lbs_db.h"
 #include "jobstat.h"
@@ -322,10 +323,12 @@ static void usage(const char *me)
 edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_cols) {
 
 	edg_wll_Stmt sh, sh2;
+	edg_wll_Stmt sh0;
 	int njobs, ret = -1;
 	intJobStat *stat;
 	edg_wlc_JobId jobid;
 	char *res[5];
+	char *res0[1];
 	char *rest;
 	char *icvalues, *stmt;
 	int i;
@@ -333,12 +336,23 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 	edg_wll_ResetError(ctx);
 	if (!job_index_cols) return 0;
 
-	if ((njobs = edg_wll_ExecStmt(ctx, "select s.jobid,s.int_status,s.seq,s.version,j.dg_jobid"
-				       " from states s, jobs j where s.jobid=j.jobid",&sh)) < 0) {
-		edg_wll_FreeStmt(&sh);
+	if ((njobs = edg_wll_ExecStmt(ctx, "select jobid from states",&sh0)) < 0) {
+		edg_wll_FreeStmt(&sh0);
 		return edg_wll_Error(ctx, NULL, NULL);
 	}
-	while ((ret=edg_wll_FetchRow(sh,res)) >0) {
+	while ((ret=edg_wll_FetchRow(sh0,res0)) >0) {
+		trio_asprintf(&stmt, "select s.jobid,s.int_status,s.seq,s.version,j.dg_jobid"
+					" from states s, jobs j where s.jobid='%|Ss' and s.jobid=j.jobid",
+					res0[0]);
+		if ((edg_wll_ExecStmt(ctx, stmt ,&sh)) < 1) {
+			edg_wll_FreeStmt(&sh);
+			return edg_wll_Error(ctx, NULL, NULL);
+		}
+		free(stmt); stmt = NULL;
+		if ((ret=edg_wll_FetchRow(sh,res)) <= 0) {
+			edg_wll_FreeStmt(&sh);
+			return edg_wll_Error(ctx, NULL, NULL);
+		}
 		if (strcmp(res[3], INTSTAT_VERSION)) {
 			stat = NULL;
 			if (!edg_wlc_JobIdParse(res[4], &jobid)) {
@@ -346,6 +360,7 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 					if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1, 0)) {
 						free(stat);
 						stat = NULL;
+						if (edg_wll_Error(ctx,NULL,NULL) != ENOENT) do_exit(ctx, EX_SOFTWARE);
 					}
 				}
 				edg_wlc_JobIdFree(jobid);
@@ -353,26 +368,27 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 		} else {
 			stat = dec_intJobStat(res[1], &rest);
 			if (rest == NULL) stat = NULL;
+			if (stat == NULL) fprintf(stderr,"edg-bkindex: warning: "
+							"cannot decode int_status for %s\n",res[4]);
 		}
-		if (stat == NULL) {
-			edg_wll_FreeStmt(&sh);
-			return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE,
-				"cannot decode int_status from states DB table");
+		if (stat != NULL) {
+			edg_wll_IColumnsSQLPart(ctx, job_index_cols, stat, 0, NULL, &icvalues);
+			trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
+			ret = edg_wll_ExecStmt(ctx, stmt, &sh2);
+			edg_wll_FreeStmt(&sh2);
+			free(icvalues);
+			free(stmt); 
+			destroy_intJobStat(stat); free(stat);
 		}
-
-		edg_wll_IColumnsSQLPart(ctx, job_index_cols, stat, 0, NULL, &icvalues);
-		trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
-		ret = edg_wll_ExecStmt(ctx, stmt, &sh2);
-		edg_wll_FreeStmt(&sh2);
 
 		for (i = 0; i < 5; i++) free(res[i]);
-		destroy_intJobStat(stat); free(stat);
-		free(stmt); free(icvalues);
+		free(res0[0]);
+		edg_wll_FreeStmt(&sh);
 
 		if (ret < 0) return edg_wll_Error(ctx, NULL, NULL);
 		
 	}
-	edg_wll_FreeStmt(&sh);
+	edg_wll_FreeStmt(&sh0);
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
