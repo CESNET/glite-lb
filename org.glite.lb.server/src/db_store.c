@@ -38,6 +38,8 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   int	seq;
   int   err;
   edg_wll_JobStat	newstat;
+  char * err_desc = NULL;
+  edg_wll_ErrorCode oerr;
 
   ev = NULL;
 
@@ -74,7 +76,11 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
   if(use_db) {
     if (ctx->strict_locking && edg_wll_LockJob(ctx,ev->any.jobId)) goto err;
     if(edg_wll_StoreEvent(ctx, ev,&seq)) {
+       oerr = edg_wll_Error(ctx,NULL,&err_desc);
+
        edg_wll_UnlockJob(ctx,ev->any.jobId);
+
+       edg_wll_SetError(ctx,oerr,err_desc); free(err_desc);
        goto err;
     }
   }
@@ -87,7 +93,9 @@ db_store(edg_wll_Context ctx,char *ucs, char *event)
 			ev->changeACL.permission, ev->changeACL.permission_type,
 			ev->changeACL.operation);
 
+    if (err) edg_wll_Error(ctx,NULL,&err_desc);
     edg_wll_UnlockJob(ctx,ev->any.jobId);
+    if (err) edg_wll_SetError(ctx,err,err_desc); free(err_desc);
   }
   else {
 #ifdef LB_PERF
