@@ -141,7 +141,7 @@ int edg_wll_JobStatus(
 
 	} else {
 		lockErr = edg_wll_LockJob(ctx,job);
-		intErr = edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store && !lockErr);
+		intErr = edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store && !lockErr, 0);
 		if (intErr) edg_wll_Error(ctx, NULL, &errdesc);
 		if (!lockErr) {
 			edg_wll_UnlockJob(ctx,job);
@@ -320,7 +320,8 @@ int edg_wll_intJobStatus(
 	const edg_wlc_JobId	job,
 	int			flags,
 	intJobStat	*intstat,
-	int		update_db)
+	int		update_db,
+	int		add_fqans)
 {
 
 /* Local variables */
@@ -410,6 +411,14 @@ int edg_wll_intJobStatus(
 		if (!intErr) {
 			if (update_db) {
 				int tsq = num_events - 1;
+			        if (add_fqans && tsq == 0 && ctx->fqans != NULL) {
+			                for (i=0; ctx->fqans[i]; i++);
+			                intstat->user_fqans = malloc(sizeof(*ctx->fqans)*(i+1));
+			                for (i=0; ctx->fqans[i]; i++) {
+			                        intstat->user_fqans[i] = strdup(ctx->fqans[i]);
+			                }
+			                intstat->user_fqans[i] = NULL;
+			        }
 				edg_wll_StoreIntState(ctx, intstat, tsq);
 				/* recheck
 				 * intJobStat *reread;
@@ -630,7 +639,7 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 
 /* TODO
 		edg_wll_UpdateStatistics(ctx, NULL, e, &jobstat.pub);
-		if (ctx->rgma_export) write2rgma_status(&jobstat.pub);
+		if (ctx->rgma_export) write2rgma_status(&jobstat);
 */
 
 #ifdef LB_BUF
@@ -931,7 +940,7 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
 
 	edg_wll_CpyStatus(&ijsp->pub,&oldstat);
 
-	if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(&ijsp->pub);
+	if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(ijsp);
 
 	res = processEvent(ijsp, e, seq, be_strict, &errstring);
 	if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
@@ -943,7 +952,7 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
 
 	edg_wll_UpdateStatistics(ctx,&oldstat,e,&ijsp->pub);
 
-	if (ctx->rgma_export) write2rgma_chgstatus(&ijsp->pub, oldstat_rgmaline);
+	if (ctx->rgma_export) write2rgma_chgstatus(ijsp, oldstat_rgmaline);
 
 	if (stat_out) {
 		edg_wll_CpyStatus(&ijsp->pub, stat_out);
@@ -983,7 +992,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 	if (!edg_wll_LoadIntState(ctx, job, seq - 1, &ijsp)) {
 		edg_wll_CpyStatus(&ijsp->pub,&oldstat);
 
-		if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(&ijsp->pub);
+		if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(ijsp);
 
 		res = processEvent(ijsp, e, seq, be_strict, &errstring);
 		if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
@@ -1002,7 +1011,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 				return edg_wll_SetError(ctx, EINVAL, "update_parent_status()");
 		}
 
-		if (ctx->rgma_export) write2rgma_chgstatus(&ijsp->pub, oldstat_rgmaline);
+		if (ctx->rgma_export) write2rgma_chgstatus(ijsp, oldstat_rgmaline);
 
 		if (stat_out) {
 			memcpy(stat_out,&ijsp->pub,sizeof *stat_out);
@@ -1012,7 +1021,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		free(ijsp);
 		edg_wll_FreeStatus(&oldstat);
 	}
-	else if (!edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store)) 
+	else if (!edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store, 1)) 
 	{
 		/* FIXME: we miss state change in the case of seq != 0 
 		 * Does anybody care? */
@@ -1025,7 +1034,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		if (edg_wll_UnlockJob(ctx,job)) goto err;
 		edg_wll_UpdateStatistics(ctx,NULL,e,&jobstat.pub);
 
-		if (ctx->rgma_export) write2rgma_status(&jobstat.pub);
+		if (ctx->rgma_export) write2rgma_status(&jobstat);
 
 		if (stat_out) {
 			memcpy(stat_out,&jobstat.pub,sizeof *stat_out);

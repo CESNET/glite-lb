@@ -502,6 +502,8 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_strlist(ret, stat->possible_ce_nodes);
 	if (ret) ret = enc_int(ret, stat->suspended);
 	if (ret) ret = enc_string(ret, stat->suspend_reason);
+	if (ret) ret = enc_string(ret, stat->failure_reasons);
+	if (ret) ret = enc_string(ret, stat->ui_host);
 	if (ret) ret = enc_int_array(ret, stat->children_hist, EDG_WLL_NUMBER_OF_STATCODES);
 	if (ret) ret = enc_string(ret, stat->pbs_state);
 	if (ret) ret = enc_string(ret, stat->pbs_queue);
@@ -576,6 +578,8 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->possible_ce_nodes = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->suspended = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->suspend_reason = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->failure_reasons = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->ui_host = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) {
 			    stat->children_hist = (int*)calloc(EDG_WLL_NUMBER_OF_STATCODES+1, sizeof(int));
 			    dec_int_array(tmp_in, &tmp_in, stat->children_hist);
@@ -623,6 +627,7 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	if (ret) ret = enc_branch_states(ret, stat->branch_states);
 	if (ret) ret = enc_timeval(ret, stat->last_pbs_event_timestamp);
 	if (ret) ret = enc_int(ret, stat->pbs_reruning);
+	if (ret) ret = enc_strlist(ret, stat->user_fqans);
 	return ret;
 }
 
@@ -664,6 +669,9 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 		}
 		if (tmp_in != NULL) {
 			stat->pbs_reruning = dec_int(tmp_in, &tmp_in);
+		}
+        	if (tmp_in != NULL) {
+			stat->user_fqans = dec_strlist(tmp_in, &tmp_in);
 		}
 	} else if (tmp_in != NULL) {
 		edg_wll_FreeStatus(pubstat);

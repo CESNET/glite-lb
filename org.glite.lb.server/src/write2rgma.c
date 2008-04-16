@@ -149,16 +149,38 @@ static void write2rgma_line(char *line, int old_style)
 	return;
 }
 
-
-char* write2rgma_statline(edg_wll_JobStat *stat)
+static char* format_strlist(char **list, char sep)
 {
+	char *a, *b;
+	int i;
+	
+	if (list && list[0]) {
+		a = strdup(list[0]);
+		for (i = 1; list[i]; i++) {
+			b = NULL;
+			trio_asprintf(&b,"%s%c%s",a,sep,list[i]);
+			free(a);
+			if (!b) { return strdup(""); }
+			a = b;
+		}
+		return a;
+	} else {
+		return strdup("");
+	}
+}
+
+char* write2rgma_statline(intJobStat *intstat)
+{
+	edg_wll_JobStat *stat = &intstat->pub;
 	char *stmt = NULL;
 	char *string_jobid, *string_stat, *string_server;
 	char *string_vo = NULL;
+	char *string_fqans = NULL;
 
 	string_jobid = edg_wlc_JobIdUnparse(stat->jobId);
 	string_stat = edg_wll_StatToString(stat->state);
 	string_server = edg_wlc_JobIdGetServer(stat->jobId);
+	string_fqans = format_strlist(intstat->user_fqans, '|');
 
 	if (stat->jdl != NULL) {
 		struct cclassad *ad;
@@ -184,6 +206,8 @@ char* write2rgma_statline(edg_wll_JobStat *stat)
 		"DESTINATION=%|Ss "
 		"EXITCODE=%d "
 		"DONECODE=%d "
+		"UIHOST=%s "
+		"VOMS=%s "
 		"STATUSREASON=%|Ss"
 		"\n",
 		string_jobid,
@@ -198,6 +222,8 @@ char* write2rgma_statline(edg_wll_JobStat *stat)
 		(stat->destination) ? (stat->destination) : "",
 		stat->exit_code,
 		stat->done_code,
+		(stat->ui_host) ? (stat->ui_host) : "",
+		string_fqans ? string_fqans : "",
 		(stat->reason) ? (stat->reason) : ""
 	);
 				
@@ -205,18 +231,19 @@ char* write2rgma_statline(edg_wll_JobStat *stat)
 	free(string_jobid);
 	free(string_stat);
 	free(string_server);
+	free(string_fqans);
 	
 	return stmt;
 }
 
-void write2rgma_status(edg_wll_JobStat *stat)
+void write2rgma_status(intJobStat *intstat)
 {
 	char *line;
 	int lcgmon = 0;
 	
 	if (rgma_fd < -1) return;
 
-	line = write2rgma_statline(stat);
+	line = write2rgma_statline(intstat);
 	if (line) {
 		if (getenv("GLITE_WMS_LCGMON_FILE")) lcgmon = 1;
 		write2rgma_line(line, !lcgmon);
@@ -227,14 +254,14 @@ void write2rgma_status(edg_wll_JobStat *stat)
 /* Export status record only if new status line is different from
    previous one. free() prev_statline parameter. */
 
-void write2rgma_chgstatus(edg_wll_JobStat *stat, char *prev_statline)
+void write2rgma_chgstatus(intJobStat *intstat, char *prev_statline)
 {
 	char *line;
 	int lcgmon = 0;
 	
 	if (rgma_fd < -1) return;
 
-	line = write2rgma_statline(stat);
+	line = write2rgma_statline(intstat);
 	if (line && (!prev_statline || strcmp(line, prev_statline))) {
 		if (getenv("GLITE_WMS_LCGMON_FILE")) lcgmon = 1;
 		write2rgma_line(line, !lcgmon);

@@ -413,6 +413,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE_DATA(res, strict)) {
 				switch (e->accepted.source) {
 					case EDG_WLL_SOURCE_NETWORK_SERVER:
+						rep(js->pub.ui_host, e->accepted.from_host);
 						break; /* no WM id */
 					case EDG_WLL_SOURCE_LOG_MONITOR:
 						rep(js->pub.condorId, e->accepted.local_jobid); break;
@@ -973,12 +974,20 @@ int add_stringlist(char ***lptr, const char *new_item)
 
 void destroy_intJobStat_extension(intJobStat *p)
 {
+	int i;
+
 	if (p->last_seqcode) free(p->last_seqcode);
 	if (p->last_cancel_seqcode) free(p->last_cancel_seqcode);
 	if (p->branch_tag_seqcode) free(p->branch_tag_seqcode);
 	if (p->last_branch_seqcode) free(p->last_branch_seqcode);
 	if (p->deep_resubmit_seqcode) free(p->deep_resubmit_seqcode);
 	free_branch_state(&p->branch_states);
+	if (p->user_fqans != NULL ) {
+                for (i=0; p->user_fqans[i]; i++)
+                        free(p->user_fqans[i]);
+                free(p->user_fqans);
+        }
+
 	memset(p,0,sizeof(*p));
 }
 

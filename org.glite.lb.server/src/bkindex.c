@@ -343,7 +343,7 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 			stat = NULL;
 			if (!edg_wlc_JobIdParse(res[4], &jobid)) {
 				if ((stat = malloc(sizeof(intJobStat))) != NULL) {
-					if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1)) {
+					if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1, 0)) {
 						free(stat);
 						stat = NULL;
 					}

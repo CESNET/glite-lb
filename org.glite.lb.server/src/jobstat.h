@@ -11,7 +11,7 @@
  * (includes edg_wll_JobStat API structure)
  */
 
-#define INTSTAT_VERSION "release-3.3.4"
+#define INTSTAT_VERSION "release-3.3.4+rgma_ui"
 
 
 // Internal error codes 
@@ -55,6 +55,7 @@ typedef struct _intJobStat {
 
 		struct timeval	last_pbs_event_timestamp;
 		int		pbs_reruning;		// true if rerun event arrived
+		char*		*user_fqans;
 
 		/*!! if adding new field, modify also destroy_intJobStat_extension() */
 	} intJobStat;
@@ -98,7 +99,7 @@ void destroy_intJobStat_extension(intJobStat *p);
 
 edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context, void *, intJobStat *, int , char **, char **);
 edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context, void *);
-int edg_wll_intJobStatus( edg_wll_Context, const edg_wlc_JobId, int, intJobStat *, int);
+int edg_wll_intJobStatus( edg_wll_Context, const edg_wlc_JobId, int, intJobStat *, int, int);
 edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context, intJobStat *, int);
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context, edg_wlc_JobId, char *icnames, char *values, edg_wll_bufInsert *bi);
 edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context , edg_wlc_JobId , int, intJobStat **);
@@ -110,9 +111,9 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context,edg_wlc_JobId,edg_w
 intJobStat* dec_intJobStat(char *, char **);
 char *enc_intJobStat(char *, intJobStat* );
 
-void write2rgma_status(edg_wll_JobStat *);
-void write2rgma_chgstatus(edg_wll_JobStat *, char *);
-char* write2rgma_statline(edg_wll_JobStat *);
+void write2rgma_status(intJobStat *);
+void write2rgma_chgstatus(intJobStat *, char *);
+char* write2rgma_statline(intJobStat *);
 
 int before_deep_resubmission(const char *, const char *);
 int same_branch(const char *, const char *);
