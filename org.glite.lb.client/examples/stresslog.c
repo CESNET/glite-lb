@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if ((njobs <= 0) || (num_subjobs <= 0)) {
+	if ((njobs <= 0) || (num_subjobs < 0)) {
 		fprintf(stderr,"%s: wrong number of jobs\n",me);
 		usage();
 		exit(1);
