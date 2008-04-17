@@ -113,12 +113,12 @@ public class Test {
              * In this case we have to use method which converts args[2] to Sources. In real environment it will
              * not be used.
              */
-            ctx.setSource(stringToSources(args[2]));
+            ctx.setSource(new Sources(stringToSources(args[2])));
 
             /* Flag tells which part of the sequence number will be increased. It is a number in range from 0 to 8
              * Example: ctx.setFlag(0);
              */
-            ctx.setFlag(new Integer(args[3]));
+            ctx.setFlag((new Integer(args[3])).intValue());
 
             /* Name of the computer where is locallogger running
              * Example: ctx.setHost("pelargir.ics.muni.cz");
@@ -185,7 +185,7 @@ public class Test {
      * This method helps with converting String from input to convert to Source.
      * In real environment it will not be used.
      */
-    private static Sources stringToSources(String source) {         
+    private static int stringToSources(String source) {
         if (source.equals("Sources.EDG_WLL_SOURCE_NONE")) return Sources.EDG_WLL_SOURCE_NONE;
         if (source.equals("Sources.EDG_WLL_SOURCE_USER_INTERFACE")) return Sources.EDG_WLL_SOURCE_USER_INTERFACE;
         if (source.equals("Sources.EDG_WLL_SOURCE_NETWORK_SERVER")) return Sources.EDG_WLL_SOURCE_NETWORK_SERVER;
@@ -197,6 +197,5 @@ public class Test {
         if (source.equals("Sources.EDG_WLL_SOURCE_APPLICATION")) return Sources.EDG_WLL_SOURCE_APPLICATION;
         if (source.equals("Sources.EDG_WLL_SOURCE_LB_SERVER")) return Sources.EDG_WLL_SOURCE_LB_SERVER;
         throw new IllegalArgumentException("wrong source type");
-
     }
 }

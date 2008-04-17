@@ -107,17 +107,17 @@ public class Context {
      * @throws IllegalArgumentException if wrong source type is set
      */
     private String recognizeSource(Sources sourceEnum) {
-        switch (sourceEnum) {
-            case EDG_WLL_SOURCE_NONE: return "Undefined";
-            case EDG_WLL_SOURCE_USER_INTERFACE: return "UserInterface";
-            case EDG_WLL_SOURCE_NETWORK_SERVER: return "NetworkServer";
-            case EDG_WLL_SOURCE_WORKLOAD_MANAGER: return "WorkloadManager";
-            case EDG_WLL_SOURCE_BIG_HELPER: return "BigHelper";
-            case EDG_WLL_SOURCE_JOB_SUBMISSION: return "JobController";
-            case EDG_WLL_SOURCE_LOG_MONITOR: return "LogMonitor";
-            case EDG_WLL_SOURCE_LRMS: return "LRMS";
-            case EDG_WLL_SOURCE_APPLICATION: return "Application";
-            case EDG_WLL_SOURCE_LB_SERVER: return "LBServer";
+        switch (sourceEnum.source) {
+            case Sources.EDG_WLL_SOURCE_NONE: return "Undefined";
+            case Sources.EDG_WLL_SOURCE_USER_INTERFACE: return "UserInterface";
+            case Sources.EDG_WLL_SOURCE_NETWORK_SERVER: return "NetworkServer";
+            case Sources.EDG_WLL_SOURCE_WORKLOAD_MANAGER: return "WorkloadManager";
+            case Sources.EDG_WLL_SOURCE_BIG_HELPER: return "BigHelper";
+            case Sources.EDG_WLL_SOURCE_JOB_SUBMISSION: return "JobController";
+            case Sources.EDG_WLL_SOURCE_LOG_MONITOR: return "LogMonitor";
+            case Sources.EDG_WLL_SOURCE_LRMS: return "LRMS";
+            case Sources.EDG_WLL_SOURCE_APPLICATION: return "Application";
+            case Sources.EDG_WLL_SOURCE_LB_SERVER: return "LBServer";
             default: throw new IllegalArgumentException("wrong source type");
         }
     }

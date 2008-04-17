@@ -93,7 +93,7 @@ public class ContextProxy extends Context {
                     if (!file.exists()) {
                         continue;
                     }
-                    fileLength = raf.length();
+                    fileLength = new Long(raf.length());
                     fileWriter = new FileWriter(file, true);
                     //true means append data to the end of file
                     
@@ -141,7 +141,8 @@ public class ContextProxy extends Context {
             socket.setEnabledProtocols(new String[]{"SSLv3"});   //  SSLv2Hello, SSLv3,TLSv1
             //enable only ciphers without RC4 (some bug in JSSE?)
             String[] ciphers = socket.getEnabledCipherSuites();
-            ArrayList<String> al = new ArrayList<String>(ciphers.length);
+//            ArrayList<String> al = new ArrayList<String>(ciphers.length);
+            ArrayList al = new ArrayList(ciphers.length);
             for (int i = 0; i < ciphers.length; i++) {
                 if (ciphers[i].indexOf("RC4") == -1) al.add(ciphers[i]);
             }
@@ -163,7 +164,6 @@ public class ContextProxy extends Context {
         }
     }
 
-    @Override
     public void log(Event event) {
         if (event == null) {
             throw new IllegalArgumentException("ContextProxy event");

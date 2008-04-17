@@ -24,7 +24,7 @@ public class ContextIL extends Context {
     private int repeatWriteToFile = 5;
     private int connAttempts = 3;
     private int timeout = 3;
-    private Boolean useUnixSocket = true;
+    private Boolean useUnixSocket = Boolean.TRUE;
 
     //tutorial http://java.sun.com/developer/onlineTraining/Programming/JDCBook/jni.html
     //native method which is written in C and imported to Java
@@ -118,7 +118,7 @@ public class ContextIL extends Context {
                     if (!file.exists()) {
                         continue;
                     }
-                    fileLength = raf.length();
+                    fileLength = new Long(raf.length());
                     fileWriter = new FileWriter(file, true);
                     //true means append data at the end of file
 
@@ -172,7 +172,7 @@ public class ContextIL extends Context {
             long fileSize,
             String message) {
 
-        if (useUnixSocket) {
+        if (useUnixSocket.booleanValue()) {
             try {
                 System.loadLibrary("sendviasocket");
             	message += '\n';
@@ -184,7 +184,7 @@ public class ContextIL extends Context {
                         timeout);
                 
             } catch (UnsatisfiedLinkError ex) {
-                useUnixSocket = false;
+                useUnixSocket = Boolean.FALSE;
                 System.err.println(ex);
             }
         }
@@ -196,7 +196,6 @@ public class ContextIL extends Context {
      * @param event event
      * @throws java.lang.IllegalArgumentException if event, prefix or path
      */
-    @Override
     public void log(Event event) {
         if (event == null) {
             throw new IllegalArgumentException("ContextIL event");
@@ -208,12 +207,12 @@ public class ContextIL extends Context {
 
         if (pathToSocket == null || pathToSocket.equals("")) { 
             pathToSocket = new String("");
-            useUnixSocket = false;
+            useUnixSocket = Boolean.FALSE;
         }
 
         if (pathToNativeLib == null || pathToNativeLib.equals("")) { 
             pathToNativeLib = new String("");
-            useUnixSocket = false;
+            useUnixSocket = Boolean.FALSE;
         }
         
         super.log(event);
@@ -221,7 +220,7 @@ public class ContextIL extends Context {
 
         Long fileLength = writeToFile(prefix, message);
 
-        writeToSocket(pathToSocket, fileLength, message);
+        writeToSocket(pathToSocket, fileLength.longValue(), message);
     }
 
     /**

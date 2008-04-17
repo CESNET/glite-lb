@@ -33,7 +33,7 @@ public class SeqCode {
      * @param part part of sequence number which will be increased
      */
     public void incrementSeqCode(Sources part) {
-        seqCode[part.ordinal()-1]++;
+        seqCode[part.source-1]++;
     }
     
     /**
@@ -60,13 +60,12 @@ public class SeqCode {
             } else {
                 colonPosition = seqCodeString.indexOf(':', currentPosition);
             }
-            seqCode[i] = new Integer(seqCodeString.substring(equalsPosition+1, colonPosition));
+            seqCode[i] = (new Integer(seqCodeString.substring(equalsPosition+1, colonPosition))).intValue();
             currentPosition = colonPosition + 1;
         }
         
     }
     
-    @Override
     public String toString() {        
         String tmp = Integer.toString(seqCode[0]);    
         String output = "UI=";
