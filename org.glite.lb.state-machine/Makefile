@@ -79,7 +79,7 @@ install:
 	install -m 644 job_attrs2.h ${PREFIX}/include/glite/lb
 
 clean:
-	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB} job_attrs.h job_attrs2.h
+	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB} job_attrs.h job_attrs2.h lb-job-attrs2.xsd
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.c: %.c.T
@@ -109,6 +109,6 @@ lb_plugin.lo: lb_plugin.c job_attrs.h job_attrs2.h
 job_attrs.h: lb-job-attrs.xsd job_attrs.xsl
 	${XSLTPROC} ../src/job_attrs.xsl $< >$@
 
-job_attrs2.h: lb-job-attrs2.xsd job_attrs.xsl
-	${XSLTPROC} ../src/job_attrs.xsl $< | sed 's/GLITE_LB_JP_JOB_ATTR_H/GLITE_LB_JP_JOB_ATTR2_H/' >$@
+job_attrs2.h: lb-job-attrs2.xsd job_attrs2.xsl
+	${XSLTPROC} ../src/job_attrs2.xsl $< >$@
 

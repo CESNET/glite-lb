@@ -111,7 +111,9 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-  <xsd:element name="status" type="statusType"/>
+	<xsd:element name="status" type="statusType">
+		<xsd:documentation>Job status</xsd:documentation>
+	</xsd:element>
 
 @@@{
 # elems
@@ -124,8 +126,13 @@
 
 		@ln = split /_/,$name;
 		my $un = shift @ln; $un .= ucfirst shift @ln while (@ln);
+		my $c = getComment $f;
 
-		gen qq{	<xsd:element name="$un" type="$type"/>\n};
+		gen qq{	<xsd:element name="$un" type="$type">
+		<xsd:documentation>$c</xsd:documentation>
+	</xsd:element>
+
+};
 
 	}
 @@@}
