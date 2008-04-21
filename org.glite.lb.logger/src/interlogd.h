@@ -91,6 +91,29 @@ extern pthread_mutex_t flush_lock;
 extern pthread_cond_t flush_cond;
 #endif
   
+typedef struct {
+	/* il_octet_string_t */
+	int       len;
+	char     *data;
+	/* http message specific */
+	enum { IL_HTTP_OTHER,
+	       IL_HTTP_GET,
+	       IL_HTTP_POST,
+	       IL_HTTP_REPLY 
+	} msg_type;
+	int       reply_code;
+	char      *reply_string;
+	size_t    content_length;
+	char     *host;
+} il_http_message_t;
+
+/* this struct can be passed instead of il_octet_string as parameter */
+typedef union {
+	il_octet_string_t bin_msg;
+	il_http_message_t http_msg;
+} il_message_t;
+
+  
 struct event_store {
 	char     *event_file_name;         /* file with events from local logger */
 	char     *control_file_name;       /* file with control information */
@@ -198,7 +221,7 @@ int event_queue_cond_unlock(struct event_queue *);
 /* input queue */
 int input_queue_attach();
 void input_queue_detach();
-int input_queue_get(il_octet_string_t *, long *, int);
+int input_queue_get(il_octet_string_t **, long *, int);
 
 /* queue management functions */
 int queue_list_init(char *);
@@ -225,6 +248,12 @@ int event_store_commit(struct event_store *, int, int);
 int event_store_recover(struct event_store *);
 int event_store_release(struct event_store *);
 /* int event_store_remove(struct event_store *); */
+
+#if defined(IL_WS)
+/* http functions */
+int parse_header(const char *, il_http_message_t *);
+int receive_http(void *, int (*)(void *, char *, const int), il_http_message_t *);
+#endif
 
 /* master main loop */
 int loop();
