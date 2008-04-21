@@ -431,7 +431,7 @@ loop()
 {
 	/* receive events */
 	while(1) {
-		il_octet_string_t msg;
+		il_octet_string_t *msg;
 		long offset;
 		int ret;
     
@@ -456,17 +456,17 @@ loop()
 		}
 
 #ifdef PERF_EMPTY
-		glite_wll_perftest_consumeEventString(msg.data);
-		free(msg.data);
+		glite_wll_perftest_consumeEventString(msg->data);
+		free(msg->data);
 		continue;
 #endif
 
 #ifdef INTERLOGD_HANDLE_CMD		
-		ret = handle_cmd(&msg, offset);
+		ret = handle_cmd(msg, offset);
 		if(ret == 0)
 #endif
-			ret = handle_msg(&msg, offset);
-		free(msg.data);
+			ret = handle_msg(msg, offset);
+		if(msg->data) free(msg->data);
 		if(ret < 0)
 			switch (error_get_maj()) {
 				case IL_SYS:
