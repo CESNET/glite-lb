@@ -640,6 +640,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 			ctx->p_tmp_timeout.tv_sec = 86400;  
 
+			memset(&request,0,sizeof(request));
+			memset(&result,0,sizeof(result));
+
 			if ( !parsePurgeRequest(ctx,messageBody,(int (*)()) edg_wll_StringToStat,&request) ) {
 				switch ( edg_wll_PurgeServer(ctx, (const edg_wll_PurgeRequest *)&request, &result)) {
 					case 0: if (html) ret =  HTTP_NOTIMPL;
