@@ -38,6 +38,7 @@ else
 	LOGD:=glite-lb-logd
 	INTERLOGD:=glite-lb-interlogd
 	NOTIF_INTERLOGD:=glite-lb-notif-interlogd
+	WS_INTERLOGD:=glite-lb-ws-interlogd
 endif
 
 DEBUG:=-g -O0
@@ -78,7 +79,13 @@ INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 	event_queue.o event_store.o il_master.o interlogd.o \
 	queue_mgr.o server_msg.o queue_thread.o
 
+WS_INTERLOG_OBJS:=il_error.o input_queue_socket_http.o \
+	recover.o http.o send_event_http.o \
+	event_queue.o event_store_http.o il_master.o interlogd.o \
+	queue_mgr_http.o server_msg_http.o queue_thread.o
+
 INTERLOG_NOBJS:=${INTERLOG_OBJS:.o=.no}
+INTERLOG_WOBJS:=${WS_INTERLOG_OBJS:.o=.wo}
 INTERLOG_PERF_OBJS:=${INTERLOG_OBJS:.o=.perf.o}
 INTERLOG_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.empty.o}
 #INTERLOG_INLINE_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.io}
@@ -131,6 +138,9 @@ glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
 glite-lb-interlogd-perf-empty: ${INTERLOG_EMPTY_OBJS}
 	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}_${thrflavour}
 
+glite-lb-ws-interlogd: ${INTERLOG_WOBJS}
+	${LINK} -o $@ ${INTERLOG_WOBJS} ${COMMON_LIB}_${thrflavour}
+
 #glite-lb-interlogd-perf-inline-empty: ${INTERLOG_INLINE_EMPTY_OBJS}
 #	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
 #		${COMMON_LIB}_${thrflavour}
@@ -181,6 +191,9 @@ ${INTERLOG_NOBJS}: %.no: %.c
 
 ${INTERLOG_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} -c $< -o $@
+
+${INTERLOG_WOBJS}: %.wo: %.c
+	${CC} ${CFLAGS} -DIL_WS -c $< -o $@
 
 ${INTERLOG_EMPTY_OBJS}: %.empty.o: %.c
 	${CC} ${CFLAGS} -DPERF_EMPTY -c $< -o $@
