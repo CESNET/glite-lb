@@ -44,7 +44,7 @@ event_queue_create(char *server_name)
   if(p)
     *(p-1) = ':';
   
-#if defined(IL_NOTIFICATIONS)
+#if defined(IL_NOTIFICATIONS) || defined(IL_WS)
   eq->dest_port = atoi(p);
 #else
   eq->dest_port = p ? atoi(p)+1 : GLITE_JOBID_DEFAULT_PORT+1;
@@ -304,6 +304,8 @@ event_queue_move_events(struct event_queue *eq_s,
 				dest_tail = &(p->prev);
 				eq_d->tail = p;
 			} else {
+				/* signal that the message was 'delivered' */
+				event_store_commit(p->msg->es, p->msg->ev_len, queue_list_is_log(eq_s));
 				/* free the message */
 				server_msg_free(p->msg);
 				free(p);
