@@ -278,7 +278,6 @@ int main(int argc,char **argv)
 		return 0;
 
 receive_err:		
-		if (fake_addr) free(fake_addr);
 		if (stat.state != EDG_WLL_JOB_UNDEF) edg_wll_FreeStatus(&stat);
 		if (nid) edg_wll_NotifIdFree(nid);
 		edg_wll_NotifCloseFd(ctx);
