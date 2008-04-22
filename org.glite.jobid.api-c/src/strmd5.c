@@ -12,12 +12,12 @@
 #include "md5_dgst.c"
 
 
-#warning Thread unsafe!
 static char mbuf[33];
+static const char* b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+static char *b64r;
 
-static int base64_encode(const void *enc, int enc_size, char *out, int out_max_size)
+int base64_encode(const void *enc, int enc_size, char *out, int out_max_size)
 {
-    static const char* b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
     unsigned char* enc_buf = (unsigned char*)enc;
     int		  out_size = 0;
@@ -56,6 +56,35 @@ static int base64_encode(const void *enc, int enc_size, char *out, int out_max_s
 
     // Output overflow
     return -1;
+}
+
+int base64_decode(const char *enc,char *out,int max_out_size)
+{
+	unsigned int	bits = 0;
+	int	shift = 0;
+	int	out_size = 0;
+
+	if (!b64r) {
+		int	i;
+		b64r = calloc(128,1);
+
+		for (i=0; b64[i]; i++) b64r[(int)b64[i]] = i;
+	}
+
+	while (*enc && *enc != '=') {
+		bits <<= 6;
+		bits |= b64r[(int)*enc++];
+		shift += 6;
+
+		while (shift >= 8) {
+			if (out_size >= max_out_size) return -1;
+			shift -= 8;
+			*out++ = (bits >> shift) & 0xff;
+			out_size++;
+		}
+	}
+
+	return out_size;
 }
 
 char *strmd5(const char *s, unsigned char *digest)

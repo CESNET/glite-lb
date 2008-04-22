@@ -34,6 +34,9 @@ LIBLOBJS:=${LIBOBJS:.o=.lo}
 
 LIB:=libglite_jobid.la
 
+TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit -ldl
+TEST_INC:=-I${cppunit_prefix}/include
+
 compile all: ${LIB}
 
 offset=0
@@ -43,8 +46,12 @@ version_info:=-version-info ${shell \
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib 
 
-check: compile
-#
+check: compile base64_test
+	./base64_test base64_test.xml
+
+base64_test: %: %.cpp compile
+	${CXX} -c ${CFLAGS} ${TEST_INC} $<
+	${LINKXX} -o $@ $@.o ${LIB} ${TEST_LIBS}
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h
