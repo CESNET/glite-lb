@@ -268,7 +268,7 @@ int is_job_local(edg_wll_Context ctx, glite_jobid_const_t jobId)
 int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *register_to_JP)
 {
 	char 		*unique = edg_wlc_JobIdGetUnique(event->any.jobId);
-	char            *q = NULL, *userid = NULL, *subj = NULL;
+	char            *q = NULL, *userid = NULL, *subj = NULL, *owner = NULL;
 	glite_lbu_Statement    stmt = NULL;
 	int             nar, grey = 0;
 	char		*can_peername = NULL;
@@ -314,6 +314,8 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		/* Job already registered */
 
 		if (edg_wll_FetchRow(ctx,stmt,sizeof(res)/sizeof(res[0]),NULL,res) < 0) goto err;
+		if (stmt) { glite_lbu_FreeStmt(&stmt); stmt = NULL; }
+
 
 /* TODO: ljocha: only GSI should switch the job from grey, and specify owner
  * add !ctx->isProxy to the conditions and make the rest simpler */
@@ -334,6 +336,31 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 				
 		}
 		else {
+			/* check possible server vs. proxy registration ownership clash */
+			if (( (event->any.type == EDG_WLL_EVENT_REGJOB) && 
+				(event->any.priority & EDG_WLL_LOGFLAG_DIRECT) )) 
+			{
+				trio_asprintf(&q,"select u.cert_subj from jobs j, users u "
+							"where j.jobid='%|Ss' and u.userid=j.userid",unique);
+
+				if (edg_wll_ExecSQL(ctx,q,&stmt) < 0
+					|| edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0
+				) goto err;
+
+				if (ctx->isProxy) {
+					if (!edg_wll_gss_equal_subj(event->any.user, owner)) {
+						edg_wll_SetError(ctx,EPERM,"Job already registered to LB server with different owner then set in this registration event. Rejecting event.");
+					}
+				}
+				else {
+					if (!edg_wll_gss_equal_subj(ctx->peerName, owner)) {
+						edg_wll_SetError(ctx,EPERM,"Job already registered to LB proxy with different owner then owner of certificate (DN) used for sending this registration event. Rejecting event.");
+						goto err;
+					}
+				}
+			}
+
+			/* update job membership if needed */
 			// if (!strcmp(res[0],"1") && !strcmp(res[1],"1") ) /*nothing to do */;
 			if ( (!strcmp(res[0],"0") && ctx->isProxy) || (!strcmp(res[1],"0") && !ctx->isProxy) ) {
 				trio_asprintf(&q,"update jobs set server='1', proxy='1' where jobid='%|Ss'",
@@ -342,10 +369,6 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 				free(q); q = NULL;
 			}
 		}
-
-		/* ??? test whether user from proxy is the same as user from server ??? 
-		   be picky -- return error when not mathing?
-		*/
 	}
 
 err:
@@ -353,7 +376,8 @@ err:
 	if (stmt) glite_lbu_FreeStmt(&stmt);
 	free(subj);
 	free(userid);
-	free(q);
+	if (q) free(q);
+	if (owner) free(owner);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 
