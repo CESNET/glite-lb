@@ -83,11 +83,14 @@ qq{	public String ulm() \{
 		for ($event->getFieldsOrdered) {
 			my $f = selectField $event $_;
 			my $fn = $f->{name};
+			my $t = getType $f;
 			my $fnu = ucfirst $fn;
 			my $fnuu = uc $fn;
+			my $val = $t eq 'String' ? 
+		 		"new CheckedString($fn).toString()" : $fn;
 
 			print E
-qq{		"DG.$uuc.$fnuu=\\"" + $fn + "\\"" +
+qq{		"DG.$uuc.$fnuu=\\"" + $val + "\\"" +
 };
 		}
 
