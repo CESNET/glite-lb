@@ -303,8 +303,7 @@ struct clnt_data_t {
 
 int main(int argc, char *argv[])
 {
-	int					fd, i;
-	int			dtablesize;
+	int			i;
 	struct sockaddr_in	a;
 	char			   *mysubj = NULL;
 	int					opt;
@@ -730,7 +729,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	struct timeval		dns_to = {DNS_TIMEOUT, 0},
 						conn_start, now;
 	struct sockaddr_in	a;
-	int					alen;
+	socklen_t					alen;
 	char			   *server_name = NULL,
 					   *name = NULL;
 	int					h_errno, ret;
@@ -1024,77 +1023,82 @@ err:
 }
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
+static int handle_server_error(edg_wll_Context ctx)
+{ 
+	char    *errt = NULL, *errd = NULL;
+	int		err,ret = 0;
+
+	
+	errt = errd = NULL;
+	switch ( (err = edg_wll_Error(ctx, &errt, &errd)) )
+	{
+	case ETIMEDOUT:
+	case EDG_WLL_ERROR_GSS:
+	case EPIPE:
+	case EIO:
+	case EDG_WLL_IL_PROTO:
+		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
+		if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
+		/*	fallthrough
+		 */
+	case ENOTCONN:
+		free(errt); free(errd);
+		/*
+		 *	"recoverable" error - return (>0)
+		 */
+		ret = err;
+		break;
+
+	case ENOENT:
+	case EPERM:
+	case EEXIST:
+	case EDG_WLL_ERROR_NOINDEX:
+	case E2BIG:
+		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
+		break;
+	case EINVAL:
+	case EDG_WLL_ERROR_PARSE_BROKEN_ULM:
+	case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
+	case EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE:
+	case EDG_WLL_ERROR_PARSE_KEY_DUPLICITY:
+	case EDG_WLL_ERROR_PARSE_KEY_MISUSE:
+	case EDG_WLL_ERROR_PARSE_OK_WITH_EXTRA_FIELDS:
+	case EDG_WLL_ERROR_JOBID_FORMAT:
+	case EDG_WLL_ERROR_MD5_CLASH:
+		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
+		if ( !debug ) syslog(LOG_ERR,"%s (%s)", errt, errd);
+		/*
+		 *	no action for non-fatal errors
+		 */
+		break;
+		
+	case EDG_WLL_ERROR_DB_CALL:
+	case EDG_WLL_ERROR_SERVER_RESPONSE:
+	default:
+		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
+		if (!debug) syslog(LOG_CRIT,"%s (%s)",errt,errd);
+		/*
+		 *	unknown error - do rather return (<0) (slave will be killed)
+		 */
+		ret = -EIO; 
+	} 
+	free(errt); free(errd);
+	return ret;
+}
+
 int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 {
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
 	struct timeval		before, after;
+	int	err;
 
 	/*
 	 *	serve the request
 	 */
 	memcpy(&ctx->p_tmp_timeout, timeout, sizeof(ctx->p_tmp_timeout));
 	gettimeofday(&before, NULL);
-	if ( edg_wll_StoreProto(ctx) )
-	{ 
-		char    *errt, *errd;
-		int		err;
+	if ( edg_wll_StoreProto(ctx) && (err = handle_server_error(ctx))) return err;
 
-		
-		errt = errd = NULL;
-		switch ( (err = edg_wll_Error(ctx, &errt, &errd)) )
-		{
-		case ETIMEDOUT:
-		case EDG_WLL_ERROR_GSS:
-		case EPIPE:
-		case EIO:
-		case EDG_WLL_IL_PROTO:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
-			/*	fallthrough
-			 */
-		case ENOTCONN:
-			free(errt); free(errd);
-			/*
-			 *	"recoverable" error - return (>0)
-			 */
-			return err;
-			break;
-
-		case ENOENT:
-		case EPERM:
-		case EEXIST:
-		case EDG_WLL_ERROR_NOINDEX:
-		case E2BIG:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			break;
-		case EINVAL:
-		case EDG_WLL_ERROR_PARSE_BROKEN_ULM:
-		case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
-		case EDG_WLL_ERROR_PARSE_MSG_INCOMPLETE:
-		case EDG_WLL_ERROR_PARSE_KEY_DUPLICITY:
-		case EDG_WLL_ERROR_PARSE_KEY_MISUSE:
-		case EDG_WLL_ERROR_PARSE_OK_WITH_EXTRA_FIELDS:
-		case EDG_WLL_ERROR_JOBID_FORMAT:
-		case EDG_WLL_ERROR_MD5_CLASH:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if ( !debug ) syslog(LOG_ERR,"%s (%s)", errt, errd);
-			/*
-			 *	no action for non-fatal errors
-			 */
-			break;
-			
-		case EDG_WLL_ERROR_DB_CALL:
-		case EDG_WLL_ERROR_SERVER_RESPONSE:
-		default:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if (!debug) syslog(LOG_CRIT,"%s (%s)",errt,errd);
-			/*
-			 *	unknown error - do rather return (<0) (slave will be killed)
-			 */
-			return -EIO;
-		} 
-		free(errt); free(errd);
-	}
 	gettimeofday(&after, NULL);
 	if ( decrement_timeout(timeout, before, after) ) {
 		if (debug) fprintf(stderr, "Serving store connection timed out");
@@ -1109,59 +1113,15 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 {
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
 	struct timeval		before, after;
+	int	err;
 
 	/*
 	 *	serve the request
 	 */
 	memcpy(&ctx->p_tmp_timeout, timeout, sizeof(ctx->p_tmp_timeout));
 	gettimeofday(&before, NULL);
-	if ( edg_wll_ServerHTTP(ctx) )
-	{ 
-		char    *errt, *errd;
-		int		err;
+	if ( edg_wll_ServerHTTP(ctx) && (err = handle_server_error(ctx))) return err;
 
-		
-		errt = errd = NULL;
-		switch ( (err = edg_wll_Error(ctx, &errt, &errd)) )
-		{
-		case ETIMEDOUT:
-		case EDG_WLL_ERROR_GSS:
-		case EPIPE:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
-			/*	fallthrough
-			 */
-		case ENOTCONN:
-			free(errt); free(errd);
-			/*
-			 *	"recoverable" error - return (>0)
-			 */
-			return err;
-			break;
-
-		case ENOENT:
-		case EINVAL:
-		case EPERM:
-		case EEXIST:
-		case EDG_WLL_ERROR_NOINDEX:
-		case E2BIG:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if ( !debug ) syslog(LOG_ERR,"%s (%s)", errt, errd);
-			/*
-			 *	no action for non-fatal errors
-			 */
-			break;
-			
-		default:
-			dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-			if (!debug) syslog(LOG_CRIT,"%s (%s)",errt,errd);
-			/*
-			 *	unknown error - do rather return (<0) (slave will be killed)
-			 */
-			return -EIO;
-		} 
-		free(errt); free(errd);
-	}
 	gettimeofday(&after, NULL);
 	if ( decrement_timeout(timeout, before, after) ) {
 		if (debug) fprintf(stderr, "Serving store connection timed out");
