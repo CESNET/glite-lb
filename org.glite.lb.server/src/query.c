@@ -84,7 +84,8 @@ int edg_wll_QueryEventsServer(
 		goto cleanup;
 
 	if ( job_conditions && *job_conditions && (*job_conditions)->attr &&
-		!(job_where = jc_to_head_where(ctx, job_conditions, &i)) )
+		!(job_where = jc_to_head_where(ctx, job_conditions, &i)) &&
+		edg_wll_Error(ctx,NULL,NULL) != 0 )
 		goto cleanup;
 
 	if (ctx->peerName) peerid = strdup(strmd5(ctx->peerName,NULL));
@@ -287,7 +288,7 @@ int edg_wll_QueryJobsServer(
 	if ( (!ctx->noIndex && check_job_query_index(ctx, conditions)) || check_strict_jobid_cond(ctx,conditions))
 		goto cleanup;
 
-	if ( !(job_where = jc_to_head_where(ctx, conditions, &i)) )
+	if ( !(job_where = jc_to_head_where(ctx, conditions, &i)) && edg_wll_Error(ctx,NULL,NULL) != 0)
 		goto cleanup;
 
 	if ( (i & FL_SEL_STATUS) )
@@ -295,7 +296,7 @@ int edg_wll_QueryJobsServer(
 						 "FROM jobs j, states s WHERE j.jobid=s.jobid AND %s", job_where);
 	else
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j WHERE %s", job_where);
+						 "FROM jobs j WHERE %s", job_where ? job_where : "true");
 
 	if ( ctx->softLimit )
 	{
