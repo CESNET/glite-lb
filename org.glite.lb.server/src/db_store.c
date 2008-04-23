@@ -215,7 +215,8 @@ static int db_actual_store(edg_wll_Context ctx, char *event, edg_wll_Event *ev, 
 	} else
 #endif
 
-	if (edg_wll_EventSendProxy(ctx, ev->any.jobId, event) )  {
+	if (ev->type != EDG_WLL_EVENT_COLLECTIONSTATE && 
+			edg_wll_EventSendProxy(ctx, ev->any.jobId, event) )  {
 		return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_EventSendProxy() error.");
 	}
 
