@@ -469,7 +469,7 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 	char	*stmt = NULL;
 	glite_lbu_Statement	q;
 	int		ret,dumped = 0;
-	char	*res[9];
+	char	*res[10];
 
 
 	edg_wll_ResetError(ctx);
@@ -550,7 +550,7 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 
 		if (dump >= 0) 
 			trio_asprintf(&stmt,
-				"select event,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived "
+				"select event,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived,seqcode "
 				"from events e,users u "
 				"where e.jobid='%|Ss' "
 				"and u.userid=e.userid "
@@ -571,7 +571,7 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 			event = atoi(res[0]);
 
 			if (dump >= 0) {
-				assert(ret == 9);
+				assert(ret == 10);
 				if (dump_events( ctx, job, dump, (char **) &res)) goto rollback;
 			}
 
