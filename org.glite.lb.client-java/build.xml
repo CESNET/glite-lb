@@ -5,6 +5,12 @@
 <project name="lb-client-java" default="default" basedir=".">
     <description>Builds, tests, and runs the project lb-client-java.</description>
     <import file="nbproject/build-impl.xml"/>
+
+		<target name="-pre-compile">
+			<exec executable="${stageDir}/sbin/glite-lb-at3">
+				<arg line="project/genEventTypes.pl src/org/glite/lb/client_java"/>
+			</exec>
+		</target>
     <!--
 
     There exist several targets which are by default empty and which can be 
