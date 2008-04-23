@@ -48,6 +48,17 @@
 		intlist=>'"intSequenceType"',
 		stslist=>'"statusSequenceType"',
 		taglist=>'"tagSequenceType"',
+	},
+	'java'=>{
+		bool=>'"bool"',
+		string=>'"String"',
+		int=>'"int"',
+		jobid=>'"Jobid"',
+		notifid=>'"Jobid"',
+		port=>'"int"',
+		float=>'"float"',
+		double=>'"double"',
+		logsrc=>'"Sources"',
 	}
 );
 
