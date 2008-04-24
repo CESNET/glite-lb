@@ -23,3 +23,7 @@
 3.1.4-1
 - do the previous quick fix thoroughly -- don't smash name_with_underscores
   and nameWithUppercaseLetters
+
+3.2.0-1 (lb-1.8.0-1)
+- added ui_host to jobstat
+- store purge files (to be uploaded to JP) in GLITE_LOCATION_VAR rahter then GLITE_TMP 
