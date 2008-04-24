@@ -84,7 +84,7 @@ string	failure_reasons Concatenated job failure reasons, possibly from deeper mi
 
 string ui_host		Hostname or address of UI used to submit the job
 
-_pad_	55
+_pad_	54
 
 string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
 string  pbs_queue	Name of queue in which is job queued
