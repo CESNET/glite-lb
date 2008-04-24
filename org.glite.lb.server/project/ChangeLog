@@ -22,3 +22,15 @@
 1.8.3-1 (lb-1.7.4-1)
 - JP plugin: implementation of finalDoneStatus and history status attributes
 - fix double-free in state machine
+
+1.9.0-1 (lb-1.8.0-1)
+- store dumps in GLITE_LOCATION_VAR rather than /tmp
+- don't waste memory while reindexing
+- handle subjob embryos in reindexing
+- unify error handling for store and query
+- don't clobber store errors with job unlocking
+- don't send CollectionState from lb proxy to server
+- export UI host and VOMS FQAN to RGMA
+- don't coredump on requesting notifications that are denied
+- don't return empty results for some non-indexed queries
+
