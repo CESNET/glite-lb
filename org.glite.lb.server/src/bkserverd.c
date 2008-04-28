@@ -1042,7 +1042,6 @@ static int handle_server_error(edg_wll_Context ctx)
 		/*	fallthrough
 		 */
 	case ENOTCONN:
-		free(errt); free(errd);
 		/*
 		 *	"recoverable" error - return (>0)
 		 */
