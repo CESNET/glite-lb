@@ -117,16 +117,16 @@ mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD index(JDL_Vir
 mysql -u lbserver $DB_NAME -e "\
 \
 create table zombie_jobs (\
-        binary_jobid    binary(16)      not null,\
-        prefix_id       binary(1)       not null,\
+        jobid		varchar(22)	not null,\
+        prefix_id	tinyint		unsigned not null,\
 \
-        primary key (binary_jobid)\
+        primary key (jobid)\
 ) engine=innodb"
 
 mysql -u lbserver $DB_NAME -e "\
 \
 create table zombie_prefixes (\
-        prefix_id       binary(1)       not null,\
+        prefix_id	tinyint		unsigned not null auto_increment,\
         prefix          varchar(255)    binary not null,\
 \
         primary key (prefix_id)\
