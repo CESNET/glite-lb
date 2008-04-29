@@ -237,7 +237,7 @@ ${MAN_GZ}: ${MAN}
 
 ${MAN8_GZ}: ${MAN8}
 	cp $? .
-	gzip $(notdir $?)
+	gzip -f $(notdir $?)
 
 perftest_logjobs.o: perftest_logjobs.c
 	${CC} ${CFLAGS} -DLB_PERF_DROP -c $<
