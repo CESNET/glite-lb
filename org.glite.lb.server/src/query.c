@@ -296,6 +296,25 @@ cleanup:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+int jobid_only_query(const edg_wll_QueryRec **conditions) {
+	int i = 0, j;
+	int jobid_in_this_or;
+	int not_jobid_only = 0;
+
+	while(conditions[i]) {
+		jobid_in_this_or = 0;
+		j = 0;
+		while(conditions[i][j].attr) {
+			if(conditions[i][j].attr == EDG_WLL_QUERY_ATTR_JOBID) jobid_in_this_or++;
+			j++;
+		}
+		if (!jobid_in_this_or) not_jobid_only++;
+		i++;
+	}
+
+	return not_jobid_only;
+}
+
 int edg_wll_QueryJobsServer(
 		edg_wll_Context ctx,
 		const edg_wll_QueryRec **conditions,
@@ -308,18 +327,24 @@ int edg_wll_QueryJobsServer(
 					   *tags_where = NULL,
 					   *q = NULL,
 					   *qbase = NULL,
-					   *res[3];
+					   *zquery = NULL,
+					   *res[3],
+					   *prefix,
+					   *dbjob,
+					   *zomb_where = NULL,
+					   *zomb_where_temp = NULL,
+					   *full_jobid = NULL;
 	edg_wlc_JobId	   *jobs_out = NULL;
 	edg_wll_JobStat	   *states_out = NULL;
 	glite_lbu_Statement		sh;
 	int					i = 0,
+						j = 0,
 						ret = 0,
 						eperm = 0,
 						limit = 0, offset = 0,
 						limit_loop = 1,
-						where_flags = 0;
-						
-
+						where_flags = 0,
+						first_or;
 
 	memset(res,0,sizeof res);
 	edg_wll_ResetError(ctx);
@@ -329,6 +354,8 @@ int edg_wll_QueryJobsServer(
 		edg_wll_SetError(ctx, EINVAL, "empty condition list");
 		goto cleanup;
 	}
+
+
 
 	if ( (ctx->p_query_results == EDG_WLL_QUERYRES_ALL) &&
 			(!conditions[0] || conditions[1] ||
@@ -476,8 +503,65 @@ limit_cycle_cleanup:
 	} while ( limit_loop );
 
 	if ( !*jobs_out ) {
+		if(!jobid_only_query(conditions)) {
+			i = 0;
+			while(conditions[i]) {
+				asprintf(&zomb_where_temp,"%s AND (", zomb_where ? zomb_where : "");
+				free(zomb_where); 
+				zomb_where = zomb_where_temp; zomb_where_temp = NULL;
+
+				first_or = 0;
+				j = 0;
+				while(conditions[i][j].attr) {
+				
+					if(conditions[i][j].attr == EDG_WLL_QUERY_ATTR_JOBID) {
+						dbjob = edg_wlc_JobIdGetUnique(conditions[i][j].value.j);
+						prefix = glite_jobid_getServer(conditions[i][j].value.c);
+						trio_asprintf(&zomb_where_temp,"%s%s((p.prefix = '%|Ss') AND (j.jobid = '%|Ss'))",
+							zomb_where,
+							first_or ? " OR " : "", 
+							prefix,
+							dbjob);
+						free(dbjob); 
+						free(zquery);
+						free(zomb_where);
+						zomb_where = zomb_where_temp; zomb_where_temp = NULL;
+						first_or++;
+					}
+					j++;
+				}
+				asprintf(&zomb_where_temp,"%s)", zomb_where ? zomb_where : "");
+				free(zomb_where); 
+				zomb_where = zomb_where_temp; zomb_where_temp = NULL;
+				i++;
+			}
+
+			trio_asprintf(&zquery,"SELECT p.prefix,j.jobid FROM zombie_prefixes as p, zombie_jobs as j "
+					     "WHERE (p.prefix_id = j.prefix_id) %s", zomb_where);
+
+			j = edg_wll_ExecSQL(ctx,zquery,&sh);
+
+			if (j > 0) {
+				jobs_out	= (edg_wlc_JobId *) calloc(j+1, sizeof(*jobs_out));
+				states_out	= (edg_wll_JobStat *) calloc(j+1, sizeof(*states_out));
+
+				i = 0; 
+				while ( (ret=edg_wll_FetchRow(ctx,sh,2,NULL,res)) > 0 ) {
+					asprintf(&full_jobid,"https://%s/%s",res[0],res[1]);
+					edg_wlc_JobIdParse(full_jobid, jobs_out+i);
+					edg_wlc_JobIdParse(full_jobid, &(states_out[i].jobId));
+					states_out[i].state = EDG_WLL_JOB_PURGED;
+
+					i++;
+				}
+			}
+			glite_lbu_FreeStmt(&sh);
+		}
+	}
+
+	if ( !*jobs_out ) {
 		if (eperm) edg_wll_SetError(ctx, EPERM, "matching jobs found but authorization failed");
-		  else     edg_wll_SetError(ctx, ENOENT, "no matching jobs found");
+		else edg_wll_SetError(ctx, ENOENT, "no matching jobs found");
 	}
 
 	if ( i && (ret == 0) )

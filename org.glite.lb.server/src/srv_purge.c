@@ -470,7 +470,9 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 	glite_lbu_Statement	q;
 	int		ret,dumped = 0;
 	char	*res[10];
-
+	char	*prefix = NULL;
+	char	*prefix_id;
+	int	sql_retval;
 
 	edg_wll_ResetError(ctx);
 	if ( !purge && dump < 0 ) return 0;
@@ -546,6 +548,47 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 			trio_asprintf(&stmt,"delete from status_tags where jobid = '%|Ss'",dbjob);
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback;
 			free(stmt); stmt = NULL;
+		}
+
+		if ( purge )
+		{
+			prefix = glite_jobid_getServer(job);
+		
+			// See if that prefix is already stored in the database	
+			trio_asprintf(&stmt,"select prefix_id from zombie_prefixes where prefix = '%|Ss'", prefix);
+
+			sql_retval = edg_wll_ExecSQL(ctx,stmt,&q);
+			free(stmt); stmt = NULL;
+
+			if (sql_retval < 0) goto rollback;
+
+			if (sql_retval == 0) { //prefix does not exist yet
+				glite_lbu_FreeStmt(&q);
+
+				trio_asprintf(&stmt,"insert into zombie_prefixes (prefix) VALUES ('%|Ss')", prefix);
+
+				if (edg_wll_ExecSQL(ctx,stmt,&q) <= 0) goto rollback;
+
+				free(stmt); stmt = NULL;
+				glite_lbu_FreeStmt(&q);
+
+				// The record should exist now, however we need to look up the prefix_id 
+				trio_asprintf(&stmt,"select prefix_id from zombie_prefixes where prefix = '%|Ss'", prefix);
+
+				if (edg_wll_ExecSQL(ctx,stmt,&q) <= 0) goto rollback;
+				free(stmt); stmt = NULL;
+			}
+			ret = edg_wll_FetchRow(ctx,q, 1, NULL, &prefix_id);
+			glite_lbu_FreeStmt(&q);
+
+			trio_asprintf(&stmt,"insert into zombie_jobs (jobid, prefix_id) VALUES ('%|Ss', %|Ss)", dbjob, prefix_id);
+
+			if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto rollback;
+			glite_lbu_FreeStmt(&q);
+			free(stmt); stmt = NULL;
+			free(prefix_id); prefix_id = NULL;
+
+			free(prefix);
 		}
 
 		if (dump >= 0) 
