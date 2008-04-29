@@ -146,8 +146,9 @@ glite-lb-ws-interlogd: ${INTERLOG_WOBJS}
 #		${COMMON_LIB}_${thrflavour}
 
 ${MAN_GZ}: ${MAN}
+	rm -f ${MAN_GZ} ${MAN}
 	cp $? .
-	gzip $(notdir $?)
+	gzip -f $(notdir $?)
 
 man: ${MAN_GZ}
 
