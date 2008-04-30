@@ -1,4 +1,4 @@
-package org.glite.jobid.api_java;
+package org.glite.jobid;
 
 /**
  * Class which escapes \ and new line signs in string which is set as parameter
@@ -52,6 +52,7 @@ public class CheckedString {
      * 
      * @return converted string
      */
+    @Override
     public String toString() {
         return checkedString;
     }

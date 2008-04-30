@@ -1,4 +1,4 @@
-package org.glite.jobid.api_java;
+package org.glite.jobid;
 
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
@@ -137,7 +137,7 @@ public class Jobid {
         String uniqueS = jobidString.substring(dashAfterPort+1, jobidString.length());
         
         this.bkserver = bkserverS;
-        this.port = portS.intValue();
+        this.port = portS;
         this.unique = (new CheckedString(uniqueS)).toString();
     }
 
@@ -219,6 +219,7 @@ public class Jobid {
      * 
      * @return Jobid string representation in format bkserver:port/unique
      */
+    @Override
     public String toString() {
         return bkserver + ":" + port + "/" + unique;
     }
