@@ -11,9 +11,9 @@
 
 		print E
 qq{
-package org.glite.lb.client_java;
-import org.glite.jobid.api_java.CheckedString;
-import org.glite.jobid.api_java.Jobid;
+package org.glite.lb;
+import org.glite.jobid.CheckedString;
+import org.glite.jobid.Jobid;
 
 public class Event$uc extends Event \{
 	public Event$uc() \{

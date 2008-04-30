@@ -1,10 +1,10 @@
-package org.glite.lb.client_java;
+package org.glite.lb;
 
 import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Random;
-import org.glite.jobid.api_java.Jobid;
-import org.glite.jobid.api_java.CheckedString;
+import org.glite.jobid.Jobid;
+import org.glite.jobid.CheckedString;
 
 /**
  * Class representing a context for some job
@@ -12,10 +12,10 @@ import org.glite.jobid.api_java.CheckedString;
  * @author Pavel Piskac (173297@mail.muni.cz)
  * @version 15. 3. 2008
  */
-public class Context {
+public abstract class Context {
 
     private int id;
-    private Sources source;
+    private int source;
     private int flag;
     private String host;
     private String user;
@@ -23,8 +23,7 @@ public class Context {
     private String srcInstance;
     private Jobid jobid;
     private SeqCode seqCode;
-    private String message;
-
+    
     /**
      * Creates new instance of Context class.
      */
@@ -47,7 +46,7 @@ public class Context {
      * 
      */
     public Context(int id,
-            Sources source,
+            int source,
             int flag,
             String host,
             String user,
@@ -58,7 +57,7 @@ public class Context {
             id = new Random().nextInt();
         }
 
-        if (source == null) {
+        if (source <= -1 || source > Sources.EDG_WLL_SOURCE_LB_SERVER) {
             throw new IllegalArgumentException("Context source");
         }
 
@@ -106,8 +105,8 @@ public class Context {
      * @return String representation of Sources enum constants
      * @throws IllegalArgumentException if wrong source type is set
      */
-    private String recognizeSource(Sources sourceEnum) {
-        switch (sourceEnum.source) {
+    private String recognizeSource(int sourceEnum) {
+        switch (sourceEnum) {
             case Sources.EDG_WLL_SOURCE_NONE: return "Undefined";
             case Sources.EDG_WLL_SOURCE_USER_INTERFACE: return "UserInterface";
             case Sources.EDG_WLL_SOURCE_NETWORK_SERVER: return "NetworkServer";
@@ -123,17 +122,44 @@ public class Context {
     }
 
     /**
+     * Abstract method which will serve as method for sending messages with events.
+     * @param event event for which will be created and send message
+     */
+    public abstract void log(Event event);
+    
+    /**
      * Creates message prepared to send
      * @param event event for which is message generated
      * @throws IllegalArgumentException if event, source, user or job is null
      * or flag < 0
+     * @return output String with message
      */
-    public void log(Event event) {
+    protected String createMessage(Event event) {
+        if (event == null) {
+            throw new IllegalArgumentException("Context event");
+        }
+        
+        if (jobid == null) {
+            throw new IllegalArgumentException("Context jobid");
+        }
+
+        if (jobid.getBkserver() == null) {
+            throw new IllegalArgumentException("Context Jobid bkserver");
+        }
+
+        if (jobid.getPort() <= 0 || jobid.getPort() >= 65536) {
+            throw new IllegalArgumentException("Context Jobid port");
+        }
+        
+        if (jobid.getUnique() == null) {
+            throw new IllegalArgumentException("Context Jobid unique");
+        }
+        
         if (event == null) {
             throw new IllegalArgumentException("Context event");
         }
 
-        if (source == null) {
+        if (source <= -1 || source > Sources.EDG_WLL_SOURCE_LB_SERVER) {
             throw new IllegalArgumentException("Context source");
         }
 
@@ -159,10 +185,6 @@ public class Context {
 
         if (srcInstance == null) {
             srcInstance = new String("");
-        }
-
-        if (jobid == null) {
-            throw new IllegalArgumentException("Context jobid");
         }
 
         String output;
@@ -200,11 +222,11 @@ public class Context {
                 " DG.SEQCODE=\"" + seqCode + "\"" +
                 event.ulm());
 
-        this.message = output;
+        return output;
     }
 
     /**
-     * Return flag which represents which part of sequence code will be changes
+     * Return flag 
      * 
      * @return flag
      */
@@ -213,7 +235,7 @@ public class Context {
     }
 
     /**
-     * Set flag which represents which part of sequence code will be changes
+     * Set flag
      * 
      * @param flag
      * @throws java.lang.IllegalArgumentException if flag is lower than 0
@@ -294,14 +316,6 @@ public class Context {
     }
 
     /**
-     * Gets message which is prepared to send.
-     * @return message
-     */
-    public String getMessage() {
-        return message;
-    }
-
-    /**
      * Gets prog.
      * @return prog
      */
@@ -344,20 +358,20 @@ public class Context {
     }
 
     /**
-     * Gets source.
+     * Gets source which represents which part of sequence code will be changed
      * @return source
      */
-    public Sources getSource() {
+    public int getSource() {
         return source;
     }
 
     /**
-     * Sets source
+     * Sets source which represents which part of sequence code will be changed
      * @param source source
      * @throws java.lang.IllegalArgumentException if source is null
      */
-    public void setSource(Sources source) {
-        if (source == null) {
+    public void setSource(int source) {
+        if (source <= -1 || source > Sources.EDG_WLL_SOURCE_LB_SERVER) {
             throw new IllegalArgumentException("Context source");
         }
 

@@ -8,7 +8,7 @@
 
 		<target name="-pre-compile">
 			<exec executable="${stageDir}/sbin/glite-lb-at3">
-				<arg line="project/genEventTypes.pl src/org/glite/lb/client_java"/>
+				<arg line="project/genEventTypes.pl src/org/glite/lb"/>
 			</exec>
 		</target>
     <!--

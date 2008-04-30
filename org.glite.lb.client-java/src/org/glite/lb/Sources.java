@@ -1,4 +1,4 @@
-package org.glite.lb.client_java;
+package org.glite.lb;
 
 /**
  * Enum which represents type if sources.

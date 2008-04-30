@@ -1,15 +1,6 @@
-package org.glite.lb.client_java;
+package org.glite.lb;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import org.glite.jobid.api_java.Jobid;
-import org.glite.jobid.api_java.CheckedString;
+import org.glite.jobid.Jobid;
 
 /**
  * Class which is used to send messages to inter-logger using unix socket.
@@ -48,8 +39,8 @@ public class ContextIL extends Context {
      * @param prefix path where are stored messages
      */
     public ContextIL(String pathToSocket, String prefix) {
-        this.prefix = new CheckedString(prefix).toString();
-        this.pathToSocket = new CheckedString(pathToSocket).toString();
+        this.prefix = prefix;
+        this.pathToSocket = pathToSocket;
     }
 
     /**
@@ -69,14 +60,14 @@ public class ContextIL extends Context {
      * or path is null or flag < 0
      */
     public ContextIL(int id,
-            Sources source,
+            int source,
             int flag,
             String host,
             String user,
             String prog,
             String srcInstance,
             Jobid jobid,
-            String path,
+            String pathToSocket,
             String prefix) {
 
         super(id, source, flag, host, user, prog, srcInstance, jobid);
@@ -85,78 +76,12 @@ public class ContextIL extends Context {
             throw new IllegalArgumentException("ContextIL prefix");
         }
 
-        if (path == null) {
+        if (pathToSocket == null) {
             throw new IllegalArgumentException("ContextIL path");
         }
 
-        this.prefix = new CheckedString(prefix).toString();
-        this.pathToSocket = new CheckedString(pathToSocket).toString();
-    }
-
-    /**
-     * Writes message to a file and returns original size of this file
-     * 
-     * @param prefix file path
-     * @param message message which will be written
-     * @return size of the file before writing the data
-     */
-    private Long writeToFile(String prefix, String message) {
-        FileWriter fileWriter = null;
-        Long fileLength = null;
-        RandomAccessFile raf = null;
-        FileLock fileLock = null;
-        File file;
-
-        for (int i = 0; i < repeatWriteToFile; i++) {
-            try {
-                file = new File(prefix);
-                raf = new RandomAccessFile(file, "rw");
-                FileChannel fileChannel = raf.getChannel();
-
-                fileLock = fileChannel.tryLock();
-                if (fileLock != null) {
-                    if (!file.exists()) {
-                        continue;
-                    }
-                    fileLength = new Long(raf.length());
-                    fileWriter = new FileWriter(file, true);
-                    //true means append data at the end of file
-
-                    BufferedWriter bufferedFileWriter = new BufferedWriter(fileWriter);
-
-                    bufferedFileWriter.write(message + '\n');
-                    bufferedFileWriter.flush();
-
-                    if (file.exists()) {
-                        break;
-                    }
-                }
-            } catch (FileNotFoundException ex) {
-                System.err.println(ex);
-            } catch (IOException ex) {
-                System.err.println(ex);
-            } catch (Exception ex) {
-                System.err.println(ex);
-            } finally {
-                if (fileLock != null) {
-                    try {
-                        fileLock.release();
-                    } catch (IOException ex) {
-                        System.err.println(ex);
-                    }
-                }
-
-                try {
-                    raf.close();
-                } catch (IOException ex) {
-                    System.err.println(ex);
-                } catch (NullPointerException ex) {
-                    System.err.println(ex);
-                }
-            }
-        }
-
-        return fileLength;
+        this.prefix = prefix;
+        this.pathToSocket = pathToSocket;
     }
 
     /**
@@ -174,7 +99,7 @@ public class ContextIL extends Context {
 
         if (useUnixSocket.booleanValue()) {
             try {
-                System.loadLibrary("sendviasocket");
+                System.loadLibrary("glite_lb_sendviasocket");
             	message += '\n';
 		    sendToSocket(pathToSocket,
                         fileSize,
@@ -215,10 +140,9 @@ public class ContextIL extends Context {
             useUnixSocket = Boolean.FALSE;
         }
         
-        super.log(event);
-        String message = super.getMessage();
+        String message = super.createMessage(event);
 
-        Long fileLength = writeToFile(prefix, message);
+        Long fileLength = ILFileWriter.write(prefix, message, repeatWriteToFile);
 
         writeToSocket(pathToSocket, fileLength.longValue(), message);
     }
@@ -243,7 +167,7 @@ public class ContextIL extends Context {
             throw new IllegalArgumentException("ContextIL pathToSocket");
         }
 
-        this.pathToSocket = new CheckedString(pathToSocket).toString();
+        this.pathToSocket = pathToSocket;
     }
 
     /**
@@ -286,7 +210,7 @@ public class ContextIL extends Context {
             throw new IllegalArgumentException("ContextIL prefix");
         }
 
-        this.prefix = new CheckedString(prefix).toString();
+        this.prefix = prefix;
     }
 
     /**

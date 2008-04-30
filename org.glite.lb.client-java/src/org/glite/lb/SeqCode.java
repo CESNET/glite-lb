@@ -1,4 +1,4 @@
-package org.glite.lb.client_java;
+package org.glite.lb;
 
 /**
  * This class represents sequence code.
@@ -32,8 +32,12 @@ public class SeqCode {
      * 
      * @param part part of sequence number which will be increased
      */
-    public void incrementSeqCode(Sources part) {
-        seqCode[part.source-1]++;
+    public void incrementSeqCode(int part) {
+        if (part <= -1 || part >= Sources.EDG_WLL_SOURCE_LB_SERVER) {
+            throw new IllegalArgumentException("SeqCode part");
+        }
+        
+        seqCode[part-1]++;
     }
     
     /**

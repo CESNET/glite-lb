@@ -1,4 +1,4 @@
-package org.glite.lb.client_java;
+package org.glite.lb;
 
 /**
  * Abstract class which serves as base for all events.
