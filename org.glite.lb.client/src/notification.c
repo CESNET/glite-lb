@@ -783,11 +783,27 @@ select:
 
 		ret = edg_wll_gss_accept(ctx->connPoolNotif[0].gsiCred, recv_sock,
 				&tv, &ctx->connPoolNotif[0].gss,&gss_code);
-		if (ret) {
-			edg_wll_SetError(ctx, errno, "GSS authentication failed.");
-			goto err;	
+
+		switch (ret) {
+			case EDG_WLL_GSS_OK:
+				break;
+			case EDG_WLL_GSS_ERROR_ERRNO:
+				edg_wll_SetError(ctx,errno,"failed to receive notification");
+				goto err;
+			case EDG_WLL_GSS_ERROR_GSS:
+				edg_wll_SetErrorGss(ctx, "failed to authenticate sender", &gss_code);
+				goto err;
+			case EDG_WLL_GSS_ERROR_EOF:
+				edg_wll_SetError(ctx,ECONNREFUSED,"sender closed the connection");
+				goto err;
+			case EDG_WLL_GSS_ERROR_TIMEOUT:
+				edg_wll_SetError(ctx,ETIMEDOUT,"accepting notification");
+				goto err;
+			default:
+				edg_wll_SetError(ctx, ENOTCONN, "failed to accept notification");
+				goto err;
 		}
-		
+
 		/* check time */
 		gettimeofday(&check_time,0);
 		if (decrement_timeout(&tv, start_time, check_time)) {
