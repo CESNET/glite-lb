@@ -48,7 +48,7 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 #endif
 	detail->__any = NULL;
 
-	soap_receiver_fault(soap,"shit",NULL);
+	soap_receiver_fault(soap,"An error occurred, see detail",NULL);
 	if (soap->version == 2) soap->fault->SOAP_ENV__Detail = detail;
 	else soap->fault->detail = detail;
 }
