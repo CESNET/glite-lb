@@ -280,6 +280,8 @@ event_queue_send(struct event_queue *eq)
 	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
 		    if (events_sent>0) 
+			/* could be expected server connection preemption */
+			clear_error();
 			eq->timeout = 1;
 		    else {
 			eq->timeout = TIMEOUT;
