@@ -219,6 +219,15 @@ int main(int argc, char **argv)
 	}
 
 cleanup_lbl:
+	if (ret) {
+		char	*et, *ed;
+                
+		if (edg_wll_Error(ctx,&et,&ed)) {
+	                fprintf(stderr,"\nError during dump processing! Terminating.\n%s: %s\n",et,ed);           
+        	        free(et);
+                	free(ed);
+		}
+	}
 	edg_wll_FreeContext(ctx);
 	if ( ev ) edg_wll_FreeEvent(ev);
 	for ( st = dstorage; st && st->job; st++ ) if ( st->fhnd > 0 ) close(st->fhnd);
