@@ -133,7 +133,7 @@ create table notif_jobs (
 ) engine=innodb;
 
 create table zombie_jobs (
-	jobid	varchar(22)	not null,
+	jobid	varchar(32)	not null,
 	prefix_id       tinyint unsigned not null,
 
 	primary key (jobid)

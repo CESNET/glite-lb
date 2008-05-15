@@ -117,7 +117,7 @@ mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD index(JDL_Vir
 mysql -u lbserver $DB_NAME -e "\
 \
 create table zombie_jobs (\
-        jobid		varchar(22)	not null,\
+        jobid		varchar(32)	not null,\
         prefix_id	tinyint		unsigned not null,\
 \
         primary key (jobid)\
