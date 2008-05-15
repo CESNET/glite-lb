@@ -260,6 +260,21 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 					case ENOENT: /* job does not exist, consider purged and ignore */
 						     edg_wll_ResetError(ctx);
 						     break;
+					case EEXIST: 
+						/* job already among zombies */
+						/* do not delete it, print error but */
+						/* continue erasing other jobs */
+						{
+							char *et, *ed, *msg;
+							edg_wll_Error(ctx, &et, &ed);
+							
+							asprintf(&msg,"Error during erasing job %s (%s: %s) skippig this job, but continue erasing rest of the jobs.",request->jobs[i],et,ed), 
+							fprintf(stderr,"[%d] %s\n", getpid(), msg);
+							syslog(LOG_INFO,msg);
+							free(et); free(ed); free(msg);
+							edg_wll_ResetError(ctx);
+						}
+						break;
 					default: goto abort;
 				}
 
@@ -322,6 +337,20 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 						edg_wll_FreeStatus(&stat);
 						if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
 							/* job purged meanwhile, ignore */
+							edg_wll_ResetError(ctx);
+							continue;
+						}
+						if (edg_wll_Error(ctx, NULL, NULL) == EEXIST) {
+							/* job already among zombies */
+							/* do not delete it, print error but */
+							/* continue erasing other jobs */
+							char *et, *ed, *msg;
+							edg_wll_Error(ctx, &et, &ed);
+							
+							asprintf(&msg,"Error during erasing job %s (%s: %s) skippig this job, but continue erasing rest of the jobs.",job_s,et,ed), 
+							fprintf(stderr,"[%d] %s\n", getpid(), msg);
+							syslog(LOG_INFO,msg);
+							free(et); free(ed); free(msg);
 							edg_wll_ResetError(ctx);
 							continue;
 						}
