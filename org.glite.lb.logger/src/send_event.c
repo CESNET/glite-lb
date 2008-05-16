@@ -262,13 +262,16 @@ event_queue_send(struct event_queue *eq)
 #ifdef LB_PERF
     if(!nosend) {
 #endif
+      if(msg->len) {
 	    tv.tv_sec = TIMEOUT;
 	    tv.tv_usec = 0;
 	    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
+	    /* commented out due to the conflict with following ljocha's code
 	    if(ret < 0) {
 		    eq->timeout = TIMEOUT;
 		    return(0);
 	    }
+	    */
 	    if(ret < 0) {
 	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && events_sent > 0)
 	        eq->timeout = 0;
@@ -289,6 +292,8 @@ event_queue_send(struct event_queue *eq)
                     }
 		    return(0);
 	    }
+      } 
+      else { code = LB_OK; code_min = 0; rep = strdup("not sending empty message"); }
 #ifdef LB_PERF
     } else {
 	    glite_wll_perftest_consumeEventIlMsg(msg->msg+17);
