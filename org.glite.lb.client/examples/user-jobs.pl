@@ -36,7 +36,7 @@ $body = $resp->body();
 # follow the response structure and pick just jobids and states to print
 unless ($fault) {
 	$njobs = $#{$body->{UserJobsResponse}->{jobs}};
-	for ($i = 0; $i < $njobs; $i++) {
+	for ($i = 0; $i <= $njobs; $i++) {
 		print "$body->{UserJobsResponse}->{jobs}->[$i]\t",
 		      $body->{UserJobsResponse}->{states} ? $body->{UserJobsResponse}->{states}->[$i]->{state} : '',
 		      "\n";
