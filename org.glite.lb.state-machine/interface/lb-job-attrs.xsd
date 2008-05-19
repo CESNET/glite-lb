@@ -105,7 +105,6 @@
 	<xs:element name="finalStatus" type="a:statusType" />
 	<xs:element name="finalStatusDate" type="xs:dateTime" />
 	<xs:element name="finalStatusReason" type="xs:string" />
-	<xs:element name="finalDoneStatus" type="a:doneType" />
 	<xs:element name="LRMSDoneStatus" type="a:doneType" />
 	<xs:element name="LRMSStatusReason" type="xs:string" />
 
