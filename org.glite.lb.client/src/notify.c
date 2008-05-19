@@ -21,7 +21,7 @@ char *TimeToStr(time_t t)
 {
 	struct tm   *tm = gmtime(&t);
 
-	sprintf(tbuf,"'%4d-%02d-%02d %02d:%02d:%02d'",
+	sprintf(tbuf,"'%4d-%02d-%02d %02d:%02d:%02d UTC'",
 			tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday,
 			tm->tm_hour,tm->tm_min,tm->tm_sec);
 

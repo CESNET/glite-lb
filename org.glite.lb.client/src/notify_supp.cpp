@@ -48,11 +48,14 @@ void dump_fields(void)
 		switch (i->second) {
 			case JobStatus::INT_T:
 			case JobStatus::STRING_T:
+			case JobStatus::TIMEVAL_T:
 				std::cerr << JobStatus::getAttrName(i->first) << ", ";
 			default: break;
 		}
 	}
 }
+
+extern "C" { char * TimeToStr(time_t); }
 
 void print_fields(void **ff,const edg_wll_NotifId n,edg_wll_JobStat const *s)
 {
@@ -72,6 +75,10 @@ void print_fields(void **ff,const edg_wll_NotifId n,edg_wll_JobStat const *s)
 			case JobStatus::STRING_T: {
 				std::string val = stat.getValString(a->first);
 				std::cout << (val.empty() ? "(null)" : escape(val)) << '\t';
+				} break;
+			case JobStatus::TIMEVAL_T: {
+				struct timeval t = stat.getValTime(a->first);
+				std::cout << TimeToStr(t.tv_sec) << '\t';
 				} break;
 			default:
 				std::cout << "(unsupported)";
