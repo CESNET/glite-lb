@@ -298,6 +298,16 @@ olddoc: generate
 	doxygen C.dox
 	doxygen CPP.dox
 
+Event.cpp: EventAttrNames.pl
+
+JobStatus.cpp: StatusAttrNames.pl
+
+EventAttrNames.pl StatusAttrNames.pl:
+	rm -f $@
+	ln -s ${stagedir}/share/${lbprefix}/at3/$@ $@
+
+dist: distsrc distbin
+
 install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/sbin
@@ -346,6 +356,7 @@ clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
 	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
+	rm -f EventAttrNames.pl StatusAttrNames.pl
 	rm -vf ${globalprefix} ${lbprefix}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 

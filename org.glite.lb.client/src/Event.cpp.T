@@ -23,6 +23,9 @@ EWL_BEGIN_NAMESPACE;
 #define CLASS_PREFIX "glite::lb::Event::"
 
 @@@{
+
+require 'EventAttrNames.pl';
+
 sub typeswitch {
 	my $ftype = shift;
 	my $resc = shift;
@@ -296,7 +299,7 @@ Event::getValJobId(Attr attr) const
 
 
 static std::string const names[Event::TYPE_MAX] = {
-  "undefined",
+	"undefined",
 @@@{
   for (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	 $event->getTypes)
@@ -317,12 +320,19 @@ Event::name(void) const
 }
 
 
-/* FIXME: this will not work with the current frozen assignment of constants in Event.h */
 static 
 std::string const attr_names[Event::ATTR_MAX] = {
 @@@{
-	for (sort {$a cmp $b} getAllFields $event) {
-		gen "\t\"$_\",\n";
+	my %s;
+
+	for (getAllFields $event) {
+		my $id = $_;
+		$id =~ s/([a-z])([A-Z])/$1_$2/g;
+		$s{uc($id)} = $_;
+		$s{uc($_)} = $_;
+	}
+	for (@main::EventAttrNames) {
+		gen "\t\"$s{$_}\",\n";
 	}
 @@@}
 };

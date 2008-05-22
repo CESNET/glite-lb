@@ -16,6 +16,9 @@ EWL_BEGIN_NAMESPACE;
 #define CLASS_PREFIX "glite::lb::JobStatus::"
 
 @@@{
+
+require 'StatusAttrNames.pl';
+
 sub typeswitch {
         my ($ftype,$ctype,$resc) = @_;
         local $_;
@@ -408,10 +411,16 @@ JobStatus::getValJobStatusList(Attr attr) const
 
 static std::string const attr_names[JobStatus::ATTR_MAX] = {
 @@@{
-	require '../src/StatusAttrNames.pl';
+	my %s;
+
+	for (getAllFields $status) {
+		my $id = $_;
+		$id =~ s/([a-z])([A-Z])/$1_$2/g;
+		$s{uc($id)} = $_;
+		$s{uc($_)} = $_;
+	}
 	for (@main::StatusAttrNames) {
-		my $fn = lc $_;
-		gen "\t\"$fn\",\n";
+		gen "\t\"$s{$_}\",\n";
 	}
 @@@}
 };

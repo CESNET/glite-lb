@@ -8,7 +8,7 @@ $inst = "/opt/glite" unless $inst;
 $sbin = "$inst/sbin";
 $bin = "$inst/bin";
 $test = "$inst/examples";
-$purge = "$sbin/glite-lb-purge";
+$purge = "$bin/glite-lb-purge";
 $status = "$test/glite-lb-job_status";
 $log = "$test/glite-lb-job_log";
 $prefix = "/tmp/purge_test_$$";
@@ -147,6 +147,7 @@ $dump = <DUMP>; chomp $dump; $dump =~ s/Server dump: //;
 close DUMP;
 
 die "!! no dump file reported\n" unless $dump;
+#print "DEBUG: dump file: '$dump'\n";
 @list = glob "${prefix}_old*";
 system "cat @list | sort >${prefix}_old_all";
 system "cat $dump | sed -e s/^.*DATE/DATE/ | sort >${prefix}_old_dump";
@@ -165,6 +166,7 @@ $dump = <DUMP>; chomp $dump; $dump =~ s/Server dump: //;
 close DUMP;
 
 die "!! no dump file reported\n" unless $dump;
+#print "DEBUG: dump file: '$dump'\n";
 @list = glob "${prefix}_new*";
 system "cat @list | sort >${prefix}_new_all";
 system "cat $dump | sed -e s/^.*DATE/DATE/ | sort >${prefix}_new_dump";
