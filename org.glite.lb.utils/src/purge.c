@@ -45,6 +45,7 @@ static struct option opts[] = {
 	{ "aborted",		required_argument, NULL, 'a'},
 	{ "cleared",		required_argument, NULL, 'c'},
 	{ "cancelled",		required_argument, NULL, 'n'},
+	{ "done",		required_argument, NULL, 'e'},
 	{ "other",		required_argument, NULL, 'o'},
 	{ "dry-run",		no_argument, NULL, 'r'},
 	{ "jobs",		required_argument, NULL, 'j'},
@@ -66,6 +67,7 @@ static void usage(char *me)
 		"	-a, --aborted NNN[smhd]     purge ABORTED jobs older than NNN secs/mins/hours/days\n"
 		"	-c, --cleared NNN[smhd]     purge CLEARED jobs older than given time\n"
 		"	-n, --cancelled NNN[smhd]   purge CANCELLED jobs older than given time\n"
+		"	-e, --done NNN[smhd]	    purge DONE jobs older than given time\n"
 		"	-o, --other NNN[smhd]       purge OTHER jobs older than given time\n"
 		"	-r, --dry-run               do not really purge\n"
 		"	-j, --jobs <filename>       input file with jobIds of jobs to purge\n"
@@ -110,7 +112,7 @@ int main(int argc,char *argv[])
 	edg_wll_InitContext(&ctx);
 
 	/* get arguments */
-	while ((opt = getopt_long(argc,argv,"a:c:n:o:j:m:rlsidhvxX:",opts,NULL)) != EOF) {
+	while ((opt = getopt_long(argc,argv,"a:c:n:e:o:j:m:rlsidhvxX:",opts,NULL)) != EOF) {
 		timeout=-1;
 
 		switch (opt) {
@@ -147,6 +149,17 @@ int main(int argc,char *argv[])
 				request->timeout[EDG_WLL_JOB_CANCELLED]=timeout; 
 			}
 			break;
+		case 'e': 
+			if (get_timeout(optarg,&timeout) != 0 ) {
+				printf("Wrong usage of timeout argument.\n");
+				usage(me);
+				return 1;
+			}
+			if (timeout >= 0) {
+				request->timeout[EDG_WLL_JOB_DONE]=timeout; 
+			}
+			break;
+
 		case 'o': 
 			if (get_timeout(optarg,&timeout) != 0 ) {
 				printf("Wrong usage of timeout argument.\n");
