@@ -279,3 +279,38 @@ int compare_events_by_seq(const void *a, const void *b)
 	return 0;
 }
 
+
+
+int add_taglist(edg_wll_TagValue **lptr, const char *new_item, const char *new_item2)
+{
+	edg_wll_TagValue 	*itptr;
+	int			i;
+
+	if (*lptr == NULL) {
+		itptr = (edg_wll_TagValue *) calloc(2,sizeof(edg_wll_TagValue));
+		itptr[0].tag = strdup(new_item);
+		itptr[0].value = strdup(new_item2);
+		*lptr = itptr;
+		return 1;
+	} else {
+		for (i = 0, itptr = *lptr; itptr[i].tag != NULL; i++)
+			if ( !strcasecmp(itptr[i].tag, new_item) )
+			{
+				free(itptr[i].value);
+				itptr[i].value = strdup(new_item2);
+				return 1;
+			}
+		itptr = (edg_wll_TagValue *) realloc(*lptr, (i+2)*sizeof(edg_wll_TagValue));
+		if (itptr != NULL) {
+			itptr[i].tag = strdup(new_item);
+			itptr[i].value = strdup(new_item2);
+			itptr[i+1].tag = NULL;
+			itptr[i+1].value = NULL;
+			*lptr = itptr;
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+}
+

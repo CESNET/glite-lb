@@ -195,6 +195,14 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				js->pub.pbs_error_desc = new_error_desc;	
 			}
 			break;
+		case EDG_WLL_EVENT_USERTAG:
+			if (USABLE_DATA(res)) {
+				if (e->userTag.name != NULL && e->userTag.value != NULL) {
+					add_taglist(&js->pub.user_tags, 
+						    e->userTag.name, e->userTag.value);
+				}
+			}
+			break;
 
 		default:
 			break;
