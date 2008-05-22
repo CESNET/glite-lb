@@ -13,7 +13,6 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <sys/stat.h>
 
 #include "glite/lb/context.h"
 #include "glite/lb/jobstat.h"
@@ -30,19 +29,16 @@
 typedef int init_f(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data);
 typedef void done_f(glite_jp_context_t ctx, glite_jpps_fplug_data_t *data);
 
-void process_attrs(glite_jp_context_t jpctx, glite_jpps_fplug_data_t plugin_data, void *data_handle, FILE *outfile);
-void process_attrs2(glite_jp_context_t jpctx, glite_jpps_fplug_data_t plugin_data, void *data_handle, FILE *outfile);
-
 static const char rcsid[] = "@(#)$Id$";
 static int verbose = 0;
 static char *infilename = NULL;
 static char *outfilename = NULL;
-static int versionone = 0;
+static int jdl = 0;
 
 static struct option const long_options[] = {
 	{ "file", required_argument, 0, 'f' },
 	{ "outfile", required_argument, 0, 'o' },
-	{ "versionone", no_argument, 0, '1' },
+	{ "jdl", no_argument, 0, 'j' },
         { "help", no_argument, 0, 'h' },
         { "verbose", no_argument, 0, 'v' },
         { "version", no_argument, 0, 'V' },
@@ -63,7 +59,7 @@ usage(char *program_name) {
 		"-v, --verbose              print extensive debug output to stderr\n"
 		"-f, --file <file>          dump file to process\n"
 		"-o, --outfile <file>       output filename\n"	
-		"-1, --versionone           use version 1 of the attributes (obsolete now)\n\n",
+		"-j, --jdl                  prit also JDL in the XML\n\n",
 		program_name);
 }
 
@@ -84,6 +80,142 @@ int glite_jppsbe_pread(glite_jp_context_t ctx, void *handle, void *buf, size_t n
 	return ferror(f) ? 1 : 0;
 }
 
+
+int glite_jp_stack_error(glite_jp_context_t ctx, const glite_jp_error_t *jperror) {
+	if (verbose) fprintf(stderr,"lb_statistics: JP backend error %d: %s\n", jperror->code, jperror->desc);
+	return 0;
+}
+
+
+int glite_jp_clear_error(glite_jp_context_t ctx) {
+	return 0;
+}
+
+
+/*
+ * realloc the line to double size if needed
+ *
+ * \return 0 if failed, did nothing
+ * \return 1 if success
+ */
+int check_realloc_line(char **line, size_t *maxlen, size_t len) {
+        void *tmp;
+
+        if (len > *maxlen) {
+                *maxlen <<= 1;
+                tmp = realloc(*line, *maxlen);
+                if (!tmp) return 0;
+                *line = tmp;
+        }
+
+        return 1;
+}
+
+
+typedef struct _rl_buffer_t {
+        char                    *buf;
+        size_t                  pos, size;
+        off_t                   offset;
+} rl_buffer_t;
+
+
+/*
+ * read next line from stream
+ *
+ * \return error code
+ */
+int glite_jppsbe_readline(
+        glite_jp_context_t ctx,
+        void *handle,
+        rl_buffer_t *buffer,
+        char **line
+)
+{
+        size_t maxlen, len, i;
+        ssize_t nbytes;
+        int retval, z, end;
+
+        maxlen = BUFSIZ;
+        i = 0;
+        len = 0;
+        *line = malloc(maxlen);
+        end = 0;
+
+        do {
+                /* read next portion */
+                if (buffer->pos >= buffer->size) {
+                        buffer->pos = 0;
+                        buffer->size = 0;
+                        if ((retval = glite_jppsbe_pread(ctx, handle, buffer->buf, BUFSIZ, buffer->offset, &nbytes)) == 0) {
+                                if (nbytes < 0) {
+                                        retval = EINVAL;
+                                        goto fail;
+                                } else {
+                                        if (nbytes) {
+                                                buffer->size = (size_t)nbytes;
+                                                buffer->offset += nbytes;
+                                        } else end = 1;
+                                }
+                        } else goto fail;
+                }
+
+                /* we have buffer->size - buffer->pos bytes */
+                i = buffer->pos;
+                do {
+                        if (i >= buffer->size) z = '\0';
+                        else {
+                                z = buffer->buf[i];
+                                if (z == '\n') z = '\0';
+                        }
+                        len++;
+
+                        if (!check_realloc_line(line, &maxlen, len)) {
+                                retval = ENOMEM;
+                                goto fail;
+                        }
+                        (*line)[len - 1] = z;
+                        i++;
+                } while (z && i < buffer->size);
+                buffer->pos = i;
+        } while (len && (*line)[len - 1] != '\0');
+
+        if ((!len || !(*line)[0]) && end) {
+                free(*line);
+                *line = NULL;
+        }
+
+        return 0;
+
+fail:
+        free(*line);
+        *line = NULL;
+        return retval;
+}
+
+char* glite_jpps_get_namespace(const char* attr){
+        char* namespace = strdup(attr);
+        char* colon = strrchr(namespace, ':');
+        if (colon)
+                namespace[strrchr(namespace, ':') - namespace] = 0;
+        else
+                namespace[0] = 0;
+        return namespace;
+}
+
+
+/*
+ * free the array of JP attr
+ */
+static void free_attrs(glite_jp_attrval_t *av) {
+	glite_jp_attrval_t *item;
+
+	item = av;
+	while (item->name) {
+		glite_jp_attrval_free(item++, 0);
+	}
+	free(av);
+}
+
 /*
  * main
  */
@@ -93,6 +225,7 @@ int main(int argc, char *argv[])
 	glite_jpps_fplug_data_t plugin_data;
 	void *data_handle, *lib_handle;
 	FILE *infile,*outfile = NULL;
+	glite_jp_attrval_t *attrval;
 	char *err;
 	init_f *plugin_init;
 	done_f *plugin_done;
@@ -102,7 +235,7 @@ int main(int argc, char *argv[])
 	while ((opt = getopt_long(argc,argv,
 		"f:" /* input file */
 		"o:" /* output file */
-		"1"  /* version one of the attributes */
+		"j"  /* jdl */
 		"h"  /* help */
 		"v"  /* verbose */
 		"V",  /* version */
@@ -113,7 +246,7 @@ int main(int argc, char *argv[])
 			case 'v': verbose = 1; break;
 			case 'f': infilename = optarg; break;
 			case 'o': outfilename = optarg; break;
-			case '1': versionone = 1; break;
+			case 'j': jdl = 1; break;
 			case 'h':
 			default:
 				usage(argv[0]); return(0);
@@ -125,22 +258,21 @@ int main(int argc, char *argv[])
 		err = dlerror() ? :"unknown error";
 		fprintf(stderr,"lb_statistics: can't load L&B plugin (%s)\n", err);
 		return 1;
-	} else if (verbose) fprintf(stdout,"lb_statistics: loaded L&B plugin\n");
-
+	}
 	if ((plugin_init = dlsym(lib_handle, "init")) == NULL ||
 	    (plugin_done = dlsym(lib_handle, "done")) == NULL) {
 		err = dlerror() ? : "unknown error";
 		fprintf(stderr,"lb_statistics: can't find symbol 'init' or 'done' (%s)\n", err);
 		dlclose(lib_handle);
 		return 1;
-	} else if (verbose) fprintf(stdout,"lb_statistics: L&B plugin check o.k.\n");
+	}
 
 	/* dump file with events */
 	if ((infile = fopen(infilename, "rt")) == NULL) {
 		fprintf(stderr,"lb_statistics: Error opening file %s: %s\n", infilename, strerror(errno));
 		dlclose(lib_handle);
 		return 1;
-	} else if (verbose) fprintf(stdout,"lb_statistics: opened input file %s\n", infilename);
+	}
 
 	/* output filename */
 	if (outfilename) {
@@ -148,14 +280,13 @@ int main(int argc, char *argv[])
 			fprintf(stderr,"lb_statistics: Error opening file %s: %s\n", outfilename, strerror(errno));
 			dlclose(lib_handle);
 			fclose(infile);
-		} else if (verbose) fprintf(stdout,"lb_statistics: opened output file %s\n", outfilename);
+		}
 	} else {
 		outfile = stdout;
-		if (verbose) fprintf(stdout,"lb_statistics: output will go to stdout\n");
 	}
 
-	/* use the plugin */
 	jpctx = calloc(1,sizeof *jpctx);
+	/* use the plugin */
 	plugin_init(jpctx, &plugin_data);
 
 	jpctx->plugins = calloc(2,sizeof(*jpctx->plugins));
@@ -164,28 +295,201 @@ int main(int argc, char *argv[])
 	plugin_data.ops.open(jpctx, infile, "uri://", &data_handle);
 
 	if (data_handle) {
-
-		if (versionone) {
-			process_attrs(jpctx, plugin_data, data_handle, outfile);
+		/* <header> */
+		fprintf(outfile,"<?xml version=\"1.0\"?>\n\n");
+		fprintf(outfile,"<lbd:jobRecord\n");
+		fprintf(outfile,"\txmlns:lbd=\"http://glite.org/wsdl/types/lbdump\"\n");
+		
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_jobId, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\tjobid=\"%s\"\n", attrval->value);
+			free_attrs(attrval);
 		} else {
-			process_attrs2(jpctx, plugin_data, data_handle, outfile);
+			fprintf(outfile,"\tjobid=\"default\"\n");
+		}
+		fprintf(outfile,">\n");
+		/* </header> */
+		
+		/* <body> */
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_user, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<user>%s</user>\n", attrval->value);
+			free_attrs(attrval);
 		}
 
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_parent, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<parent>%s</parent>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_VO, &attrval);
+		if (attrval) {
+			fprintf(stdout,"\t<VO>%s</VO>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_aTag, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<aTag>%s</aTag>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_rQType, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<rQType>%s</rQType>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_eDuration, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<eDuration>%s</eDuration>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_eNodes, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<eNodes>%s</eNodes>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_eProc, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<eProc>%s</eProc>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_RB, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<RB>%s</RB>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_CE, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<CE>%s</CE>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_host, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<host>%s</host>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_UIHost, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<UIHost>%s</UIHost>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_CPUTime, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<CPUTime>%s</CPUTime>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_NProc, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<NProc>%s</NProc>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_finalStatus, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<finalStatus>%s</finalStatus>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_finalDoneStatus, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<finalDoneStatus>%s</finalDoneStatus>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_finalStatusDate, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<finalStatusDate>%s</finalStatusDate>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_finalStatusReason, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<finalStatusReason>%s</finalStatusReason>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_LRMSDoneStatus, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<LRMSDoneStatus>%s</LRMSDoneStatus>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_LRMSStatusReason, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<LRMSStatusReason>%s</LRMSStatusReason>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_retryCount, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<retryCount>%s</retryCount>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_additionalReason, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<additionalReason>%s</additionalReason>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_jobType, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<jobType>%s</jobType>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_nsubjobs, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<nsubjobs>%s</nsubjobs>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_subjobs, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<subjobs>\n%s\t</subjobs>\n", attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_lastStatusHistory, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<lastStatusHistory>\n%s\t</lastStatusHistory>\n",attrval->value);
+			free_attrs(attrval);
+		}
+
+		plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_fullStatusHistory, &attrval);
+		if (attrval) {
+			fprintf(outfile,"\t<fullStatusHistory>\n%s\t</fullStatusHistory>\n",attrval->value);
+			free_attrs(attrval);
+		}
+
+		if (jdl) {
+			plugin_data.ops.attr(jpctx, data_handle, GLITE_JP_LB_JDL, &attrval);
+			if (attrval) {
+				fprintf(outfile,"\t<JDL>%s</JDL>\n", attrval->value);
+				free_attrs(attrval);
+			}
+		}
+
+		fprintf(outfile,"</lbd:jobRecord>\n");
+
+		/* </body> */
 		plugin_data.ops.close(jpctx, data_handle);
 	}
 	plugin_done(jpctx, &plugin_data);
 
 	fclose(infile);
-	if (verbose) fprintf(stdout,"lb_statistics: closed input file %s\n", infilename);
-
-	if (outfile) {
-		fclose(outfile);
-		if (verbose) fprintf(stdout,"lb_statistics: closed output file %s\n", outfilename);
-	}
-
+	if (outfile) fclose(outfile);
 	dlclose(lib_handle);
-	if (verbose) fprintf(stdout,"lb_statistics: L&B plugin closed\n");
-
 	return 0;
 }
-

@@ -8,7 +8,6 @@
 #include <errno.h>
 #include <time.h>
 #include <ctype.h>
-#include <sys/stat.h>
 
 #include <cclassad.h>
 
@@ -16,11 +15,23 @@
 
 #include "glite/lb/jobstat.h"
 #include "glite/lb/events.h"
+#include "glite/lb/producer.h"
 #include "glite/lb/events_parse.h"
-#include "glite/lb/context-int.h"
+
 
 #include "intjobstat.h"
 #include "seqcode_aux.h"
+
+/*
+#include "glite/lb/context.h"
+#include "glite/lb/jobstat.h"
+#include "glite/lb/events.h"
+#include "glite/lb/events_parse.h"
+#include "glite/lb/producer.h"
+
+#include "jobstat.h"
+#include "get_events.h"
+*/
 
 #include "glite/jp/types.h"
 #include "glite/jp/context.h"
@@ -28,12 +39,19 @@
 #include "glite/jp/builtin_plugins.h"
 #include "glite/jp/backend.h"
 #include "glite/jp/attr.h"
+//#include "glite/jp/utils.h"
 #include "glite/jp/known_attr.h"
 #include "job_attrs.h"
 #include "job_attrs2.h"
 
 #define INITIAL_NUMBER_EVENTS 100
 #define INITIAL_NUMBER_STATES EDG_WLL_NUMBER_OF_STATCODES
+
+/*typedef struct _lb_buffer_t {
+	char 			*buf;
+	size_t 			pos, size;
+	off_t 			offset;
+} lb_buffer_t;*/
 
 typedef struct _lb_historyStatus {
 	edg_wll_JobStatCode 	state;
@@ -74,23 +92,6 @@ static int readline(
 );
 char* get_namespace(const char* attr);
 
-static int lb_StringToAttr(const char *name) {
-        unsigned int    i;
-
-        for (i=1; i<sizeof(lb_attrNames)/sizeof(lb_attrNames[0]); i++)
-                if ( (lb_attrNames[i]) && (strcasecmp(lb_attrNames[i],name) == 0)) return i;
-        for (i=1; i<sizeof(lb_attrNames2)/sizeof(lb_attrNames2[0]); i++)
-                if ( (lb_attrNames2[i]) && (strcasecmp(lb_attrNames2[i],name) == 0)) return i+ATTRS2_OFFSET;
-        return attr_UNDEF;
-}
-
-/* XXX: probably not needed 
-static char *lb_AttrToString(int attr) {
-        if (attr >= 0 && attr < sizeof(lb_attrNames)/sizeof(lb_attrNames[0])) return strdup(lb_attrNames[attr]);
-        if (attr >= ATTRS2_OFFSET && attr < ATTRS2_OFFSET + sizeof(lb_attrNames2)/sizeof(lb_attrNames2[0])) return strdup(lb_attrNames2[attr]);
-        return NULL;
-}
-*/
 
 static int lb_dummy(void *fpctx, void *handle, int oper, ...) {
 	puts("lb_dummy() - generic call not used; for testing purposes only...");
@@ -364,9 +365,8 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 	glite_jp_error_t 	err; 
 	glite_jp_attrval_t	*av = NULL;
 	int			i, j, n_tags;
-	char 			*ns = get_namespace(attr); 
+	char 			*ns = get_namespace(attr);
 	char			*tag;
-	int			aa = lb_StringToAttr(attr);
 
         glite_jp_clear_error(ctx); 
         memset(&err,0,sizeof err);
@@ -378,12 +378,10 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
                 *attrval = NULL;
                 err.code = ENOENT;
 		err.desc = strdup("There is no job information to query.");
-		free(ns);
                 return glite_jp_stack_error(ctx,&err);
 	}
 
-
-        if (strcmp(ns, GLITE_JP_LB_JDL_NS) == 0) {
+        if (strcmp(ns, GLITE_JP_LB_JDL_NS) == 0){
 		if (get_classad_attr(attr, ctx, h, &av)){
 			*attrval = NULL;
                         err.code = ENOENT;
@@ -391,57 +389,8 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			free(ns);
                         return glite_jp_stack_error(ctx,&err);
 		}
-	} else if (strcmp(ns, GLITE_JP_LBTAG_NS) == 0) {
-/* XXX: probably obsoleted by GLITE_JP_LB_userTags below */
-		tag = strrchr(attr, ':');
-                if (h->events && tag) {
-                	tag++;
-			i = 0;
-			n_tags = 0;
-
-			while (h->events[i]) {
-				if ((h->events[i]->type == EDG_WLL_EVENT_USERTAG) &&
-				(strcasecmp(h->events[i]->userTag.name, tag) == 0) ) {
-/* XXX: LB tag names are case-insensitive */
-					av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
-					memset(&av[n_tags], 0, 2 * sizeof(glite_jp_attrval_t));
-
-					av[n_tags].name = strdup(attr);
-					av[n_tags].value = check_strdup(h->events[i]->userTag.value);
-					av[n_tags].timestamp = 
-						h->events[i]->any.timestamp.tv_sec;
-					av[n_tags].size = -1;
-
-					n_tags++;
-				}
-				i++;
-			}
-		}
-	} else if (strcmp(ns, GLITE_JP_LB_NS) == 0) {
-
-	switch (aa) {
-
-	case attr2_status :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		av[0].value = edg_wll_StatToString(h->status.state);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
-
-	case attr2_jobId :
-	case attr_jobId :
-		if (h->status.jobId) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = edg_wlc_JobIdUnparse(h->status.jobId);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_owner :
-	case attr_user :
+	}	
+	else if (strcmp(attr, GLITE_JP_LB_user) == 0) {
 		if (h->status.owner) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
 			av[0].name = strdup(attr);
@@ -449,32 +398,15 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
-	   break;
-
-	case attr2_jobtype :
-	case attr_jobType :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		switch (h->status.jobtype) {
-			case EDG_WLL_STAT_SIMPLE:
-				av[0].value = strdup("SIMPLE"); break;
-			case EDG_WLL_STAT_DAG:
-				av[0].value = strdup("DAG"); break;
-			case EDG_WLL_STAT_COLLECTION:
-				av[0].value = strdup("COLLECTION"); break;
-			case EDG_WLL_STAT_PBS:
-				av[0].value = strdup("PBS"); break;
-			case EDG_WLL_STAT_CONDOR:
-				av[0].value = strdup("CONDOR"); break;
-			default:
-				av[0].value = strdup("UNKNOWN"); break;
+	} else if (strcmp(attr, GLITE_JP_LB_jobId) == 0) {
+		if (h->status.jobId) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = edg_wlc_JobIdUnparse(h->status.jobId);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
-
-	case attr2_parentJob :
-	case attr_parent :
+	} else if (strcmp(attr, GLITE_JP_LB_parent) == 0) {
 		if (h->status.parent_job) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
 			av[0].name = strdup(attr);
@@ -482,231 +414,45 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
-	   break;
-
-	case attr2_seed :
-		if (h->status.seed) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.seed);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_childrenNum :
-	case attr_nsubjobs :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d", h->status.children_num);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
-
-	case attr2_children :
-	case attr_subjobs :
-		if ((h->status.children_num > 0) && (h->status.children)) {
-			char *val = NULL, *old_val;
-
-			old_val = strdup ("\n");			
-			for (i=0; h->status.children[i]; i++) {
-				trio_asprintf(&val,"%s<jobId>%|Xs</jobId>\n",
-					old_val, h->status.children[i]);
-				if (old_val) free(old_val);
-				old_val = val; val = NULL; 
-			}
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = check_strdup(old_val);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		} 
-	   break;
-
-	case attr2_childrenHist :
-		if ((h->status.children_num > 0) && (h->status.children_hist)) {
-			char *val = NULL, *old_val;
-
-			old_val = strdup ("\n");
-			for (i=1; i<=h->status.children_hist[0]; i++) {
-				trio_asprintf(&val,"%s<item name=\"%s\">%d</item>\n",
-					old_val, edg_wll_StatToString(i-1), h->status.children_hist[i]);
-				if (old_val) free(old_val);
-				old_val = val; val = NULL;
-			}
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = check_strdup(old_val);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_childrenStates : 
-	   {
-		int i,j;
-		char *val, *old_val, *s_str, *t_str, *r_str;
-                struct tm *t;
-
-		val = s_str = t_str = r_str = NULL;
-		old_val = strdup("\n");
-		t = calloc(1, sizeof(*t));
-
-		if (h->status.children_states) {
-			for (i=0; h->status.children_states[i].state; i++) {
-
-				s_str = edg_wll_StatToString(h->status.children_states[i].state);
-				for (j = 0; s_str[j]; j++) s_str[j] = toupper(s_str[j]);
-				if (gmtime_r(&h->status.children_states[i].stateEnterTime.tv_sec,t) != NULL) {
-					/* dateTime format: yyyy-mm-ddThh:mm:ss.uuuuuu */
-					trio_asprintf(&t_str,"timestamp=\"%04d-%02d-%02dT%02d:%02d:%02d.%06d\" ",
-						1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
-						t->tm_hour, t->tm_min, t->tm_sec,
-						h->status.children_states[i].stateEnterTime.tv_usec);
-				} 
-				if (h->status.children_states[i].reason) {
-					trio_asprintf(&r_str,"reason=\"%|Xs\" ",h->status.children_states[i].reason);
-				}
-				trio_asprintf(&val,"%s<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
-					old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
-				if (s_str) free(s_str); s_str = NULL;
-				if (t_str) free(t_str); t_str = NULL;
-				if (r_str) free(r_str); r_str = NULL;
-				if (old_val) free(old_val);
-				old_val = val; val = NULL;
-				i++;
-			}
-			val = old_val; old_val = NULL;
-		}
-		if (val) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(val);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-			free(val);
-		}
-		free(t);
-	   }
-	   break;
-
-	case attr2_condorId :
-		if (h->status.condorId) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.condorId);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_globusId :
-		if (h->status.globusId) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.globusId);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_localId :
-		if (h->status.localId) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.localId);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-
-	case attr2_jdl :
-	case attr_JDL :
-		if (h->status.jdl) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.jdl);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-
-	case attr2_matchedJdl :
-		if (h->status.matched_jdl) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.matched_jdl);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_destination :
-	case attr_CE :
-		if (h->status.destination) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.destination);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_condorJdl :
-		if (h->status.condor_jdl) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.condor_jdl);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_rsl :
-		if (h->status.rsl) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.rsl);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_reason :
-		if (h->status.reason) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.reason);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_location :
-		if (h->status.location) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.location);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_ceNode :
-	case attr_host :
-		if (h->status.ce_node) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.ce_node);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_networkServer :
-	case attr_RB :
+	} else if (strcmp(attr, GLITE_JP_LB_VO) == 0) {
+		if (get_classad_attr(":VirtualOrganisation", ctx, h, &av)){
+			printf("error");
+                        *attrval = NULL;
+                        err.code = ENOENT;
+                        err.desc = strdup("Cannot get attribute from classad.");
+			free(ns);
+                        return glite_jp_stack_error(ctx,&err);
+                }
+        } else if (strcmp(attr, GLITE_JP_LB_eNodes) == 0) {
+		if (get_classad_attr(":max_nodes_running", ctx, h, &av)){
+                        printf("error");
+                        *attrval = NULL;
+                        err.code = ENOENT;
+                        err.desc = strdup("Cannot get attribute from classad.");
+			free(ns);
+                        return glite_jp_stack_error(ctx,&err);
+                }
+        } else if (strcmp(attr, GLITE_JP_LB_eProc) == 0) {
+		if (get_classad_attr(":NodeNumber", ctx, h, &av)){
+                        printf("error");
+                        *attrval = NULL;
+                        err.code = ENOENT;
+                        err.desc = strdup("Cannot get attribute from classad.");
+			free(ns);
+                        return glite_jp_stack_error(ctx,&err);
+                }
+	} else if (strcmp(attr, GLITE_JP_LB_aTag) == 0 ||
+                   strcmp(attr, GLITE_JP_LB_rQType) == 0 ||
+                   strcmp(attr, GLITE_JP_LB_eDuration) == 0) {
+		/* have to be retrieved from JDL, but probably obsolete and not needed at all */
+		char et[BUFSIZ];
+		*attrval = NULL;
+		err.code = ENOSYS;
+		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
+		et[BUFSIZ-1] = 0;
+		err.desc = et;
+		return glite_jp_stack_error(ctx,&err);
+	} else if (strcmp(attr, GLITE_JP_LB_RB) == 0) {
 		if (h->status.network_server) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
 			av[0].name = strdup(attr);
@@ -714,111 +460,83 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
-	   break;
-
-	case attr2_subjobFailed :
+	} else if (strcmp(attr, GLITE_JP_LB_CE) == 0) {
+		if (h->status.destination) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(h->status.destination);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
+	} else if (strcmp(attr, GLITE_JP_LB_host) == 0) {
+		if (h->status.ce_node) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(h->status.ce_node);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
+	} else if (strcmp(attr, GLITE_JP_LB_UIHost) == 0) {
+                i = 0;
+                while (h->events[i]) {
+                        if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
+                                if (h->events[i]->any.host) {
+                                        av = calloc(2, sizeof(glite_jp_attrval_t));
+                                        av[0].name = strdup(attr);
+                                        av[0].value = strdup(h->events[i]->any.host);
+                                        av[0].size = -1;
+                                        av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
+                                }       
+                                break;
+                        }       
+                        i++;    
+                }       
+	} else if (strcmp(attr, GLITE_JP_LB_CPUTime) == 0) {
+		if (h->status.cpuTime) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			trio_asprintf(&av[0].value,"%d", h->status.cpuTime);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
+	} else if (strcmp(attr, GLITE_JP_LB_NProc) == 0) {
+		/* currently LB hasn't got the info */
+		char et[BUFSIZ];
+		*attrval = NULL;
+		err.code = ENOSYS;
+		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
+		et[BUFSIZ-1] = 0;
+		err.desc = et;
+		return glite_jp_stack_error(ctx,&err);
+	} else if (strcmp(attr, GLITE_JP_LB_finalStatus) == 0) {
 		av = calloc(2, sizeof(glite_jp_attrval_t));
 		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d", h->status.subjob_failed);
+		if (h->finalStatus) {
+			av[0].value = edg_wll_StatToString(h->finalStatus->state);
+			av[0].timestamp = h->finalStatus->timestamp.tv_sec;
+		} else {
+			av[0].value = edg_wll_StatToString(h->status.state);
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
+	} else if (strcmp(attr, GLITE_JP_LB_finalDoneStatus) == 0) {
 
-	case attr2_doneCode :
-	case attr_finalDoneStatus :
+	/* XXX: should be a string */
 		if (h->finalStatus && h->finalStatus->state == EDG_WLL_JOB_DONE) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
 			av[0].name = strdup(attr);
-			// trio_asprintf(&av[0].value,"%d",h->status.done_code);
-			switch (h->status.done_code) {
-				case EDG_WLL_STAT_OK : 
-					av[0].value = strdup("OK"); break;
-				case EDG_WLL_STAT_FAILED : 
-					av[0].value = strdup("FAILED"); break;
-				case EDG_WLL_STAT_CANCELLED : 
-					av[0].value = strdup("CANCELLED"); break;
-				default : 
-					break;
-			}
+
+			trio_asprintf(&av[0].value,"%d",h->status.done_code);
 			av[0].timestamp = h->finalStatus->timestamp.tv_sec;
 		}
 		else {
 			*attrval = NULL;
                         err.code = EINVAL;
                         err.desc = strdup("Final status is not Done");
-			free(ns);
                         return glite_jp_stack_error(ctx,&err);
 		}
-	   break;
 
-	case attr2_exitCode :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d", h->status.exit_code);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
-
-	case attr2_resubmitted :
-	case attr_retryCount :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d", h->status.resubmitted);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
-
-	case attr2_cancelling :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d", h->status.cancelling);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
-
-	case attr2_cancelReason :
-		if (h->status.cancelReason) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.cancelReason);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_cpuTime :
-	case attr_CPUTime :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d", h->status.cpuTime);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
-
-	case attr2_userTags : 
-		if (h->status.user_tags) {
-			char *val = NULL, *old_val;
-
-			old_val = strdup ("\n");
-			i = 0;
-			while (h->status.user_tags[i].tag) {
-				trio_asprintf(&val,"%s<tag>\n<name>%|Xs</name>\n<value>%|Xs</value>\n</tag>\n",
-					old_val, h->status.user_tags[i].tag, h->status.user_tags[i].value);
-				if (old_val) free(old_val);
-				old_val = val; val = NULL;
-				i++;
-			}
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = check_strdup(old_val);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_stateEnterTime :
-	case attr_finalStatusDate : 
-	   {
+	} else if (strcmp(attr, GLITE_JP_LB_finalStatusDate) == 0) {
                 struct tm *t = NULL;
                 if ( (h->finalStatus) &&
 		     ((t = gmtime(&h->finalStatus->timestamp.tv_sec)) != NULL) ) {
@@ -842,414 +560,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
                 }
-	   }
-	   break;
-
-	case attr2_lastUpdateTime :
-	   {
-                struct tm *t = NULL;
-                if ((t = gmtime(&h->status.lastUpdateTime.tv_sec)) != NULL) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        /* dateTime format: yyyy-mm-ddThh:mm:ss.uuuuuu */
-                        trio_asprintf(&av[0].value,"%04d-%02d-%02dT%02d:%02d:%02d.%06d",
-                                1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
-                                t->tm_hour, t->tm_min, t->tm_sec,
-                                h->status.lastUpdateTime.tv_usec);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           }
-           break;
-
-
-	case attr2_stateEnterTimes : 
-		if (h->status.stateEnterTimes) {
-			char *val = NULL, *old_val;
-			struct tm *t = NULL;
-			t = calloc(1, sizeof(*t));
-
-			old_val = strdup ("\n");
-			for (i=1; i<=h->status.stateEnterTimes[0]; i++) {
-			   time_t  st = h->status.stateEnterTimes[i];
-
-			   if ((st != 0) && (t = gmtime_r(&st,t)) != NULL) {
-				/* dateTime format: yyyy-mm-ddThh:mm:ss */
-				trio_asprintf(&val,"%s<item name=\"%s\">%04d-%02d-%02dT%02d:%02d:%02d</item>\n",
-					old_val, edg_wll_StatToString(i-1), 
-					1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
-					t->tm_hour, t->tm_min, t->tm_sec);
-				if (old_val) free(old_val);
-				old_val = val; val = NULL;
-			   }
-			}
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = check_strdup(old_val);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-			free(t);
-		}
-	   break;
-	
-	case attr2_expectUpdate :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d", h->status.expectUpdate);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
-
-	case attr2_expectFrom :
-		if (h->status.expectFrom) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.expectFrom);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_acl :
-		if (h->status.acl) {
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = strdup(h->status.acl);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_payloadRunning :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		trio_asprintf(&av[0].value,"%d", h->status.payload_running);
-		av[0].size = -1;
-		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-	   break;
-
-	case attr2_possibleDestinations :
-		if (h->status.possible_destinations) {
-			char *val = NULL, *old_val;
-
-			old_val = strdup ("");
-			i = 0;
-			while (h->status.possible_destinations[i]) {
-				trio_asprintf(&val,"%s<item>%|Xs</item>\n",
-					old_val, h->status.possible_destinations[i]);
-				if (old_val) free(old_val);
-				old_val = val; val = NULL;
-				i++;
-			}
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = check_strdup(old_val);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_possibleCeNodes :
-		if (h->status.possible_ce_nodes) {
-			char *val = NULL, *old_val;
-
-			old_val = strdup ("");
-			i = 0;
-			while (h->status.possible_ce_nodes[i]) {
-				trio_asprintf(&val,"%s<item>%|Xs</item>\n",
-					old_val, h->status.possible_ce_nodes[i]);
-				if (old_val) free(old_val);
-				old_val = val; val = NULL;
-				i++;
-			}
-			av = calloc(2, sizeof(glite_jp_attrval_t));
-			av[0].name = strdup(attr);
-			av[0].value = check_strdup(old_val);
-			av[0].size = -1;
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-	   break;
-
-	case attr2_suspended :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.suspended);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-	case attr2_suspendReason :
-                if (h->status.suspend_reason) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.suspend_reason);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_failureReasons :
-                if (h->status.failure_reasons) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.failure_reasons);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_removeFromProxy :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.remove_from_proxy);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-	/* PBS: */
-
-	case attr2_pbsState :
-                if (h->status.pbs_state) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_state);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_pbsQueue :
-                if (h->status.pbs_queue) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_queue);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_pbsOwner :
-                if (h->status.pbs_owner) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_owner);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_pbsName :
-                if (h->status.pbs_name) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_name);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_pbsReason :
-                if (h->status.pbs_reason) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_reason);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_pbsScheduler :
-                if (h->status.pbs_scheduler) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_scheduler);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_pbsDestHost :
-                if (h->status.pbs_dest_host) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_dest_host);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-        case attr2_pbsPid :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.pbs_pid);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-	case attr2_pbsResourceUsage :
-                if (h->status.pbs_resource_usage) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_resource_usage);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-        case attr2_pbsExitStatus :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.pbs_exit_status);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-	case attr2_pbsErrorDesc :
-                if (h->status.pbs_error_desc) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_error_desc);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	/* Condor: */
-        case attr2_condorStatus :
-                if (h->status.condor_status) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.condor_status);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-        case attr2_condorUniverse :
-                if (h->status.condor_universe) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.condor_universe);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-        case attr2_condorOwner :
-                if (h->status.condor_owner) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.condor_owner);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-        case attr2_condorPreempting :
-                if (h->status.condor_preempting) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.condor_preempting);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-        case attr2_condorShadowPid :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.condor_shadow_pid);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-        case attr2_condorShadowExitStatus :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.condor_shadow_exit_status);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-        case attr2_condorStarterPid :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.condor_starter_pid);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-        case attr2_condorStarterExitStatus :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.condor_starter_exit_status);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-        case attr2_condorJobPid :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.condor_job_pid);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-        case attr2_condorJobExitStatus :
-                av = calloc(2, sizeof(glite_jp_attrval_t));
-                av[0].name = strdup(attr);
-                trio_asprintf(&av[0].value,"%d", h->status.condor_job_exit_status);
-                av[0].size = -1;
-                av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-           break;
-
-
-	case attr2_condorDestHost :
-                if (h->status.condor_dest_host) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.condor_dest_host);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_condorReason :
-                if (h->status.condor_reason) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.condor_reason);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	case attr2_condorErrorDesc :
-                if (h->status.condor_error_desc) {
-                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                        av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.condor_error_desc);
-                        av[0].size = -1;
-                        av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-                }
-           break;
-
-	/* Others : */
-
-	case attr_finalStatus :
-		av = calloc(2, sizeof(glite_jp_attrval_t));
-		av[0].name = strdup(attr);
-		if (h->finalStatus) {
-			av[0].value = edg_wll_StatToString(h->finalStatus->state);
-			av[0].timestamp = h->finalStatus->timestamp.tv_sec;
-		} else {
-			av[0].value = edg_wll_StatToString(h->status.state);
-			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
-		}
-		av[0].size = -1;
-	   break;
-
-	case attr_finalStatusReason :
+	} else if (strcmp(attr, GLITE_JP_LB_finalStatusReason) == 0) {
 		if (h->finalStatus && h->finalStatus->reason) {
 			av = calloc(2, sizeof(glite_jp_attrval_t));
 			av[0].name = strdup(attr);
@@ -1263,9 +574,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].size = -1;
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
-	   break;
-
-	case attr_LRMSDoneStatus :
+	} else if (strcmp(attr, GLITE_JP_LB_LRMSDoneStatus) == 0) {
 		i = 0;
 		j = -1;
 		while (h->events[i]) {
@@ -1284,9 +593,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].value = edg_wll_DoneStatus_codeToString(h->status.done_code);
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 		}
-	   break;
-
-	case attr_LRMSStatusReason :
+	} else if (strcmp(attr, GLITE_JP_LB_LRMSStatusReason) == 0) {
 		i = 0;
 		j = -1;
 		while (h->events[i]) {
@@ -1302,16 +609,72 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].size = -1;
 			av[0].timestamp = h->events[j]->any.timestamp.tv_sec;
 		}
-	   break;
+	} else if (strcmp(attr, GLITE_JP_LB_retryCount) == 0) {
+		av = calloc(2, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
+		trio_asprintf(&av[0].value,"%d", h->status.resubmitted);
+		av[0].size = -1;
+		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+	} else if (strcmp(attr, GLITE_JP_LB_additionalReason) == 0) {
+		/* what is it? */
+		char et[BUFSIZ];
+		*attrval = NULL;
+		err.code = ENOSYS;
+		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
+		et[BUFSIZ-1] = 0;
+		err.desc = et;
+		return glite_jp_stack_error(ctx,&err);
+	} else if (strcmp(attr, GLITE_JP_LB_jobType) == 0) {
+		av = calloc(2, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
+		switch (h->status.jobtype) {
+			case EDG_WLL_STAT_SIMPLE:
+				av[0].value = strdup("SIMPLE"); break;
+			case EDG_WLL_STAT_DAG:
+				av[0].value = strdup("DAG"); break;
+			default:
+				av[0].value = strdup("UNKNOWN"); break;
+		}
+		av[0].size = -1;
+		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+	} else if (strcmp(attr, GLITE_JP_LB_nsubjobs) == 0) {
+		av = calloc(2, sizeof(glite_jp_attrval_t));
+		av[0].name = strdup(attr);
+		trio_asprintf(&av[0].value,"%d", h->status.children_num);
+		av[0].size = -1;
+		av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+	} else if (strcmp(attr, GLITE_JP_LB_subjobs) == 0) {
+		if (h->status.children_num > 0) {
+			char *val = NULL, *old_val;
 
-	case attr_lastStatusHistory :
-	   {
+			old_val = strdup ("");			
+			for (i=0; i<h->status.children_num; i++) {
+				trio_asprintf(&val,"%s\t\t<jobId>%s</jobId>\n",
+					old_val, h->status.children[i] ? h->status.children[i] : "");
+				if (old_val) free(old_val);
+				old_val = val; val = NULL; 
+			}
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = check_strdup(old_val);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		} else {
+			char et[BUFSIZ];
+			*attrval = NULL;
+			err.code = ENOENT;
+			snprintf(et,sizeof et,"Value unknown for attribute '%s', there are no subjobs.",attr);
+			et[BUFSIZ-1] = 0;
+			err.desc = et;
+			return glite_jp_stack_error(ctx,&err);
+		}
+	} else if (strcmp(attr, GLITE_JP_LB_lastStatusHistory) == 0) {
 		int i,j;
 		char *val, *old_val, *s_str, *t_str, *r_str;
                 struct tm *t;
 
 		val = s_str = t_str = r_str = NULL;
-		old_val = strdup("\n");
+		old_val = strdup("");
 		t = calloc(1, sizeof(*t));
 		/* first record is Submitted - hopefully in fullStatusHistory[0] */
 		if ((h->fullStatusHistory[0] && 
@@ -1327,9 +690,9 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 					h->fullStatusHistory[0]->timestamp.tv_usec);
 			} 
 			if (h->fullStatusHistory[0]->reason) {
-				trio_asprintf(&r_str,"reason=\"%|Xs\" ",h->fullStatusHistory[0]->reason);
+				trio_asprintf(&r_str,"reason=\"%s\" ",h->fullStatusHistory[0]->reason);
 			}
-			trio_asprintf(&val,"%s<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
+			trio_asprintf(&val,"%s\t\t<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
 				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 			if (s_str) free(s_str);
 			if (t_str) free(t_str);
@@ -1351,9 +714,9 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 						h->lastStatusHistory[i]->timestamp.tv_usec);
 				} 
 				if (h->lastStatusHistory[i]->reason) {
-					trio_asprintf(&r_str,"reason=\"%|Xs\" ",h->lastStatusHistory[i]->reason);
+					trio_asprintf(&r_str,"reason=\"%s\" ",h->lastStatusHistory[i]->reason);
 				}
-				trio_asprintf(&val,"%s<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
+				trio_asprintf(&val,"%s\t\t<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
 					old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 				if (s_str) free(s_str); s_str = NULL;
 				if (t_str) free(t_str); t_str = NULL;
@@ -1372,17 +735,13 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 			free(val);
 		}
-	   }
-	   break;
-
-	case attr_fullStatusHistory :
-	   {
+	} else if (strcmp(attr, GLITE_JP_LB_fullStatusHistory) == 0) {
 		int i,j;
 		char *val, *old_val, *s_str, *t_str, *r_str;
                 struct tm *t;
 
 		val = s_str = t_str = r_str = NULL;
-		old_val = strdup("\n");
+		old_val = strdup("");
 		t = calloc(1, sizeof(*t));
 		i = 0;
 		while (h->fullStatusHistory[i]) {
@@ -1420,7 +779,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 				r_str = aux;
 			}
 
-			trio_asprintf(&val,"%s<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
+			trio_asprintf(&val,"%s\t\t<status xmlns=\"" GLITE_JP_LB_NS "\" name=\"%s\" %s%s/>\n", 
 				old_val, s_str ? s_str : "", t_str ? t_str : "", r_str ? r_str : "");
 			if (s_str) free(s_str); s_str = NULL;
 			if (t_str) free(t_str); t_str = NULL;
@@ -1438,99 +797,46 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
 			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
 			free(val);
 		}
-	   }
-	   break;
+	} else if (strcmp(ns, GLITE_JP_LBTAG_NS) == 0) {
+		tag = strrchr(attr, ':');
+                if (h->events && tag) {
+                	tag++;
+			i = 0;
+			n_tags = 0;
 
+			while (h->events[i]) {
+				if ((h->events[i]->type == EDG_WLL_EVENT_USERTAG) &&
+				(strcasecmp(h->events[i]->userTag.name, tag) == 0) ) {
+/* XXX: LB tag names are case-insensitive */
+					av = realloc(av, (n_tags+2) * sizeof(glite_jp_attrval_t));
+					memset(&av[n_tags], 0, 2 * sizeof(glite_jp_attrval_t));
 
-	case attr_VO :
-		if (get_classad_attr(":VirtualOrganisation", ctx, h, &av)){
-                        *attrval = NULL;
-                        err.code = ENOENT;
-                        err.desc = strdup("Cannot get attribute from classad.");
-			free(ns);
-                        return glite_jp_stack_error(ctx,&err);
-                }
-	   break;
+					av[n_tags].name = strdup(attr);
+					av[n_tags].value = check_strdup(h->events[i]->userTag.value);
+					av[n_tags].timestamp = 
+						h->events[i]->any.timestamp.tv_sec;
+					av[n_tags].size = -1;
 
-        case attr_eNodes :
-		if (get_classad_attr(":max_nodes_running", ctx, h, &av)){
-                        *attrval = NULL;
-                        err.code = ENOENT;
-                        err.desc = strdup("Cannot get attribute from classad.");
-			free(ns);
-                        return glite_jp_stack_error(ctx,&err);
-                }
-	   break;
-
-        case attr_eProc :
-		if (get_classad_attr(":NodeNumber", ctx, h, &av)){
-                        *attrval = NULL;
-                        err.code = ENOENT;
-                        err.desc = strdup("Cannot get attribute from classad.");
-			free(ns);
-                        return glite_jp_stack_error(ctx,&err);
-                }
-	   break;
-
-	case attr_UIHost :
-                i = 0;
-                while (h->events[i]) {
-                        if (h->events[i]->type == EDG_WLL_EVENT_REGJOB) {
-                                if (h->events[i]->any.host) {
-                                        av = calloc(2, sizeof(glite_jp_attrval_t));
-                                        av[0].name = strdup(attr);
-                                        av[0].value = strdup(h->events[i]->any.host);
-                                        av[0].size = -1;
-                                        av[0].timestamp = h->events[i]->any.timestamp.tv_sec;
-                                }       
-                                break;
-                        }       
-                        i++;    
-                }       
-	   break;
-
-	case attr_aTag : /* have to be retrieved from JDL, but probably obsolete and not needed at all */
-	case attr_rQType : /* have to be retrieved from JDL, but probably obsolete and not needed at all */
-	case attr_eDuration : /* have to be retrieved from JDL, but probably obsolete and not needed at all */
-	case attr_NProc : /* currently LB hasn't got the info */
-	case attr_additionalReason : /* what is it? */
-	   {
-		char et[BUFSIZ];
-		*attrval = NULL;
-		err.code = ENOSYS;
-		snprintf(et,sizeof et,"Attribute '%s' not implemented yet.",attr);
-		et[BUFSIZ-1] = 0;
-		err.desc = et;
-		free(ns);
-		return glite_jp_stack_error(ctx,&err);
-	   }
-	   break;
-
-	case attr_UNDEF :
-	case attr2_UNDEF :
-	default:
-	   {
-		char et[BUFSIZ];
-		*attrval = NULL;
-		err.code = ENOSYS;
-		snprintf(et,sizeof et,"Unknown attribute '%s' (in the '%s' namespace).",attr,ns);
-		et[BUFSIZ-1] = 0;
-		err.desc = et;
-		free(ns);
-		return glite_jp_stack_error(ctx,&err);
-	   }
-
-	   break;
-	} /* switch */
-
+					n_tags++;
+				}
+				i++;
+			}
+		}
+	} else if (strcmp(attr, GLITE_JP_LB_JDL) == 0) {
+		if (h->status.jdl) {
+			av = calloc(2, sizeof(glite_jp_attrval_t));
+			av[0].name = strdup(attr);
+			av[0].value = strdup(h->status.jdl);
+			av[0].size = -1;
+			av[0].timestamp = h->status.lastUpdateTime.tv_sec;
+		}
 	} else {
 		char et[BUFSIZ];
 		*attrval = NULL;
         	err.code = EINVAL;
-		snprintf(et,sizeof et,"No such attribute '%s' or namespace '%s'.",attr,ns);
+		snprintf(et,sizeof et,"No such attribute '%s'.",attr);
 		et[BUFSIZ-1] = 0;
 		err.desc = et;
-		free(ns);
 	        return glite_jp_stack_error(ctx,&err);
 	}
 

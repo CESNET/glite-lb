@@ -20,12 +20,7 @@ version=${module.version}
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
 CC=gcc
-AT3=${stagedir}/sbin/glite-lb-at3
-
-SUFFIXES = .T
-
 DEBUG:=-g -O0 -Wall
-
 CFLAGS:= \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
@@ -56,7 +51,6 @@ CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
 JP_LIBS:=-lglite_jp_common_${nothrflavour}
 
 UTILS:=mon purge dump load dump_exporter
-STATISTICS_OBJS:=statistics.o process_attrs.o process_attrs2.o
 
 MAN_GZ:=glite-lb-mon.1.gz
 MAN = $(MAN_GZ:.gz=)
@@ -66,11 +60,14 @@ default: all
 
 compile all: ${UTILS} ${MAN_GZ} statistics
 
+%.o: %.c 
+	${CC} ${CFLAGS} -c $<
+
 ${UTILS}: %: %.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} -lglite_lbu_maildir
 
-statistics: ${STATISTICS_OBJS}
-	${LINK} -rdynamic -o $@ ${STATISTICS_OBJS} ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
+statistics: statistics.o
+	${LINK} -rdynamic -o $@ $< ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
 
 check: compile 
 
@@ -103,9 +100,4 @@ clean:
 
 %.o: %.c
 	${COMPILE} -c $<
-
-%.c: %.c.T
-	rm -f $@
-	${AT3} $< >$@ || rm -f $@
-	chmod -w $@ >/dev/null
 
