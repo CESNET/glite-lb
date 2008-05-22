@@ -785,7 +785,8 @@ static void endQueryJobs(void *data, const char *el)
 			break;
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+        XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
 	memset(&(XMLCtx->element), 0, sizeof(XMLCtx->element));
         XMLCtx->level--;
 }
@@ -862,7 +863,8 @@ static void endQueryEvents(void *data, const char *el UNUSED_VAR)
 	    break; 
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+        XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
 	memset(&(XMLCtx->element), 0, sizeof(XMLCtx->element));
         XMLCtx->level--;
 
@@ -1003,7 +1005,8 @@ static void endJobStat(void *data, const char *el)
 	    break;
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+	XMLCtx->char_buf_len = 0;
 	memset(&(XMLCtx->element), 0, sizeof(XMLCtx->element));
 	XMLCtx->level--;
 }
@@ -1036,7 +1039,8 @@ static void endStrList(void *data, const char *el UNUSED_VAR)
 	    break;
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+	XMLCtx->char_buf_len = 0;
 	memset(&(XMLCtx->element), 0, sizeof(XMLCtx->element));
 	XMLCtx->level--;
 }
@@ -1069,7 +1073,8 @@ static void endIntList(void *data, const char *el UNUSED_VAR)
 	    break;
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+	XMLCtx->char_buf_len = 0;
 	memset(&(XMLCtx->element), 0, sizeof(XMLCtx->element));
 	XMLCtx->level--;
 }
@@ -1101,7 +1106,8 @@ static void endTagList(void *data, const char *el UNUSED_VAR)
 	    break;
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+	XMLCtx->char_buf_len = 0;
 	memset(&(XMLCtx->element), 0, sizeof(XMLCtx->element));
 	XMLCtx->level--;
 }
@@ -1137,7 +1143,8 @@ static void endStsList(void *data, const char *el)
 	    break;
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+	XMLCtx->char_buf_len = 0;
 	memset(&(XMLCtx->element), 0, sizeof(XMLCtx->element));
 	XMLCtx->level--;
 }
@@ -1172,7 +1179,8 @@ static void endPurgeResult(void *data, const char *el UNUSED_VAR)
 		}
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
 	XMLCtx->level--;
 }
 
@@ -1199,7 +1207,8 @@ static void endDumpResult(void *data, const char *el UNUSED_VAR)
 		}
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
 	XMLCtx->level--;
 }
 
@@ -1219,7 +1228,8 @@ static void endLoadResult(void *data, const char *el UNUSED_VAR)
 		
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
 	XMLCtx->level--;
 }
 
@@ -1253,7 +1263,8 @@ static void endIndexedAttrs(void *data, const char *el)
 		}	
         }
 
-	edg_wll_freeBuf(XMLCtx);
+        XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
         XMLCtx->level--;
 }
 
@@ -1268,7 +1279,8 @@ static void endNotifResult(void *data, const char *el UNUSED_VAR)
                         XMLCtx->notifValidity = edg_wll_from_string_to_time_t(XMLCtx);
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
 	XMLCtx->level--;
 }
 
@@ -1283,7 +1295,8 @@ static void endQuerySequenceCodeResult(void *data, const char *el UNUSED_VAR)
                         XMLCtx->seqCode = edg_wll_from_string_to_string(XMLCtx);
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
 	XMLCtx->level--;
 }
 
@@ -1312,7 +1325,8 @@ static void endStatsResult(void *data, const char *el UNUSED_VAR)
                         XMLCtx->statsResTo = edg_wll_from_string_to_int(XMLCtx);
 	}
 
-	edg_wll_freeBuf(XMLCtx);
+	XMLCtx->char_buf = NULL;
+        XMLCtx->char_buf_len = 0;
 	XMLCtx->level--;
 }
 

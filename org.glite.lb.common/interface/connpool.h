@@ -33,11 +33,6 @@ glite_lb_padded_struct(_edg_wll_ConnPool,15,
 
 /* timestamp of usage of this entry in ctx.connPool */
         struct timeval  lastUsed;
-
-/* Proxy/Cert file identification */
-
-	struct stat	*certfile;	
-
 );
 typedef struct _edg_wll_ConnPool  edg_wll_ConnPool;
 #endif
@@ -100,7 +95,6 @@ void edg_wll_poolFree();
 /** Allocate memory for the edg_wll_Connections structure and its properties and return a pointer.
     in case memory has been already allocated, just return a pointer */
 edg_wll_Connections* edg_wll_initConnections();
-
 
 #ifdef __cplusplus
 }
