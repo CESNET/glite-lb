@@ -196,6 +196,7 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 	int index;
 	edg_wll_GssStatus gss_stat;
 	OM_uint32 lifetime = 0;
+	OM_uint32 maj_stat, min_stat = 0;
 	struct stat statinfo;
 	int acquire_cred = 0;
 	
@@ -247,11 +248,11 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 		
 	// Check if credentials exist. If so, check validity
 	if (ctx->connections->connPool[index].gsiCred) {
-		gss_inquire_cred(ctx->connections->connPool[index].gsiCred, NULL, &lifetime, NULL, NULL, NULL);
+		maj_stat = gss_inquire_cred(&min_stat, ctx->connections->connPool[index].gsiCred, NULL, &lifetime, NULL, NULL);
         	#ifdef EDG_WLL_CONNPOOL_DEBUG	
 			printf ("Credential exists, lifetime: %d\n", lifetime);
 		#endif
-		if (!lifetime) acquire_cred = 1;	// Credentials exist and lifetime is OK. No need to authenticate.
+		if (GSS_ERROR(maj_stat) || !lifetime) acquire_cred = 1;	// Credentials exist and lifetime is OK. No need to authenticate.
 	}
 	else {
 			acquire_cred = 1;	// No credentials exist so far, acquire. 
