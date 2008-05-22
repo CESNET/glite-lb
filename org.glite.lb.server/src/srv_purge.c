@@ -290,7 +290,11 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 				now = time(NULL);
 
 		for (i=0; i<EDG_WLL_NUMBER_OF_STATCODES; i++)
-			timeout[i] = request->timeout[i] < 0 ? ctx->purge_timeout[i] : request->timeout[i];
+			timeout[i] = request->timeout[i] < 0 ? 
+				( request->timeout[EDG_WLL_PURGE_JOBSTAT_OTHER] < 0 ?
+					ctx->purge_timeout[i] : 
+				  	request->timeout[EDG_WLL_PURGE_JOBSTAT_OTHER] ) :
+				request->timeout[i];
 
 		if (edg_wll_ExecSQL(ctx, (ctx->isProxy) ? "select dg_jobid from jobs where proxy='1'" :
 			"select dg_jobid from jobs where server='1'", &s) < 0) goto abort;
@@ -321,17 +325,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 					goto abort; 
 				}
 
-				switch (stat.state) {
-					case EDG_WLL_JOB_CLEARED:
-					case EDG_WLL_JOB_ABORTED:
-					case EDG_WLL_JOB_CANCELLED:
-						i = stat.state;
-						break;
-					default:
-						i = EDG_WLL_PURGE_JOBSTAT_OTHER;
-				}
-
-				if (now-stat.lastUpdateTime.tv_sec > timeout[i] && !check_strict_jobid(ctx,job))
+				if (now-stat.lastUpdateTime.tv_sec > timeout[stat.state] && !check_strict_jobid(ctx,job))
 				{
 					if (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,ctx->isProxy)) {
 						edg_wll_FreeStatus(&stat);

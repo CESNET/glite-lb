@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
 	server_cert = server_key = cadir = vomsdir = NULL;
 
 /* no magic here: 1 month, 3 and 7 days */
-	purge_timeout[EDG_WLL_PURGE_JOBSTAT_OTHER] = 60*60*24*31;	
+	for (i=0; i < EDG_WLL_NUMBER_OF_STATCODES; i++) purge_timeout[i] = 60*60*24*31;	
 	purge_timeout[EDG_WLL_JOB_CLEARED] = 60*60*24*3;
 	purge_timeout[EDG_WLL_JOB_ABORTED] = 60*60*24*7;
 	purge_timeout[EDG_WLL_JOB_CANCELLED] = 60*60*24*7;
