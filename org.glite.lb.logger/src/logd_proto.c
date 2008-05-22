@@ -496,7 +496,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 #endif
 
 	/* if not priority send now the answer back to client */
-	if (!event->any.priority) {
+	if (!(event->any.priority & EDG_WLL_LOGFLAG_SYNC)) {
 		if (!send_answer_back(con,answer,timeout)) { 
 			answer_sent = 1;
 		}
@@ -504,7 +504,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 
 	/* send message via IPC (UNIX socket) */
 	if (!noipc) {
-		if (event->any.priority) {
+		if (event->any.priority & EDG_WLL_LOGFLAG_SYNC) {
 			edg_wll_ll_log(LOG_DEBUG,"Initializing 2nd UNIX socket (%s) for priority messages confirmation...",confirm_sock_name);
 			if(init_confirmation() < 0) { 
 				edg_wll_ll_log(LOG_DEBUG,"error.\n");
@@ -528,7 +528,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 			goto edg_wll_log_proto_server_end_1;
 		} else edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 
-		if (event->any.priority) {
+		if (event->any.priority & EDG_WLL_LOGFLAG_SYNC) {
 			edg_wll_ll_log(LOG_INFO,"Waiting for confirmation...");
 			if ((count = wait_for_confirmation(timeout, &answer)) < 0) {
 				edg_wll_ll_log(LOG_INFO,"error.\n");
