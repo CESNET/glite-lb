@@ -332,8 +332,6 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 			if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
 				userid, (ctx->isProxy || !strcmp(res[0],"1")), 
 				!strcmp(res[1],"1") || (local_job ? ctx->serverRunning : 0), 0, 1)) goto err;
-			*register_to_JP = REG_JOB_TO_JP;
-				
 		}
 		else {
 			/* check possible server vs. proxy registration ownership clash */
