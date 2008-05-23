@@ -38,6 +38,9 @@ typedef struct _dump_storage_t {
 	int		fhnd;
 } dump_storage_t;
 
+/* hold actual number of records in dump_storage_t structure st (defined below) */
+int 	number_of_st = 0;
+
 static const char *optstr = "d:s:j:m:h";
 
 static struct option opts[] = {
@@ -69,10 +72,11 @@ static void dump_storage_free(dump_storage_t *);
 
 int main(int argc, char **argv)
 {
-	edg_wll_Context		ctx;
-	edg_wll_Event	   *ev = NULL;
-	dump_storage_t	   *dstorage = NULL,
-					   *st;
+	edg_wll_Context	ctx;
+	edg_wll_Event	*ev = NULL;
+	dump_storage_t	*dstorage = NULL,
+			*last_st = NULL,
+			*st;
 	buffer_t			buf;
 	char			   *store_pref = DUMP_FILE_STORE_PREFIX,
 					   *lb_maildir = LB_MAILDIR_PATH,
@@ -171,14 +175,34 @@ int main(int argc, char **argv)
 				}
 				break;
 			}
+			if (last_st) { 
+				close(last_st->fhnd);
+				last_st->fhnd = 0;
+			}
 
 			if ( !(st = dump_storage_add(&dstorage, jobid, fname, fd)) ) {
 				perror("Can't record dump informations");
 				cleanup(1);
 			}
 		}
+		else {
+			if (strcmp(last_st->fname,st->fname)) {
+				/* new jobid data */
+				// this is only fallback code, because data in lb dump 
+				// are clustered by jobids, hence files are created by
+				// open() above
+				close(last_st->fhnd);
+				last_st->fhnd = 0;
+
+				if ( (st->fhnd = open(st->fname, O_APPEND|O_RDWR)) < 0 ) {
+					perror(st->fname);
+					cleanup(1);
+				}
+			}
+		}
 		free(jobid);
 		free(unique);
+		last_st = st;
 
 		lnsz = strlen(ln);
 		ln[lnsz++] = '\n';
@@ -252,19 +276,18 @@ static dump_storage_t *dump_storage_find(dump_storage_t *st, char *job)
 static dump_storage_t *dump_storage_add(dump_storage_t **st, char *job, char *fname, int fhnd)
 {
 	dump_storage_t *tmp;
-	int				ct;
 
-	for ( ct = 0, tmp = *st; tmp && tmp->job; ct++, tmp++ ) ;
-	if ( ct ) tmp = realloc(*st, (ct+2)*sizeof(*tmp));
+	if ( number_of_st ) tmp = realloc(*st, (number_of_st+2)*sizeof(*tmp));
 	else tmp = calloc(2, sizeof(*tmp));
 	if ( !tmp ) return NULL;
 
 	*st = tmp;
-	while ( tmp && tmp->job ) tmp++;
-	
+	tmp = *st + number_of_st;	
+
 	if ( !(tmp->job = strdup(job)) ) return NULL;
-	if ( !(tmp->fname = strdup(fname)) ) { free(tmp->job); return NULL; }
+	if ( !(tmp->fname = strdup(fname)) ) { free(tmp->job); (tmp)->job = NULL; return NULL; }
 	tmp->fhnd = fhnd;
+	number_of_st++;
 	(tmp+1)->job = NULL;
 
 	return tmp;
