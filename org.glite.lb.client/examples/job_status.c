@@ -213,6 +213,9 @@ static void printstat(edg_wll_JobStat stat, int level)
 		case EDG_WLL_STAT_PBS:
 			printf("%sjobtype : PBS\n", ind);
                         break;
+		case EDG_WLL_STAT_CONDOR:
+			printf("%sjobtype : CONDOR\n", ind);
+                        break;
 		default:
 			break;
 	}
