@@ -28,6 +28,8 @@ static
 void
 error_key_delete(void *err)
 {
+  if(((struct error_inf*)err)->msg)
+    free(((struct error_inf*)err)->msg);
   free(err);
 }
 
