@@ -88,32 +88,36 @@ int edg_wll_DoLogEvent(
 	edg_wll_LogLine logline)
 {
 	int	ret = 0, answer = EAGAIN;
-        int	conn;
+        int	conn = -1;
+	int	attempt = 1;
 
         edg_wll_ResetError(ctx);
         memset(&conn,0,sizeof(conn));
 
-	/* connect to local-logger */
-	if ((ret = edg_wll_log_connect(ctx,&conn))) {
-		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_connect error");
-		goto edg_wll_DoLogEvent_end;
-	}
-
-	/* send message */
-	if ((ret = edg_wll_log_write(ctx,conn,logline)) == -1) {
-		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_write error");
-		goto edg_wll_DoLogEvent_end;
-	}
-
-	/* get answer */
-	if ((ret = edg_wll_log_read(ctx,conn)) == -1) {
-		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_read error");
-	} else {
+	do {
+		/* connect to local-logger */
+		if ((ret = edg_wll_log_connect(ctx,&conn))) {
+			edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_connect error");
+			goto edg_wll_DoLogEvent_end;
+		}
+	
+		/* send message */
+		if ((ret = edg_wll_log_write(ctx,conn,logline)) == -1) {
+			answer = edg_wll_Error(ctx, NULL, NULL);
+			edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_write error");
+			goto edg_wll_DoLogEvent_end;
+		}
+	
+		/* get answer */
+		ret = edg_wll_log_read(ctx,conn);
 		answer = edg_wll_Error(ctx, NULL, NULL);
-	}
+		if (ret == -1) 
+			edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_read error");
+	
+	edg_wll_DoLogEvent_end:
+		if (ret == -1 && conn >= 0) edg_wll_log_close(ctx,conn);
 
-edg_wll_DoLogEvent_end:
-	if (ret) edg_wll_log_close(ctx,conn);
+	} while (++attempt <= 2 && (answer == ENOTCONN || answer == EPIPE));
 
 	return handle_errors(ctx,answer,"edg_wll_DoLogEvent()");
 }
