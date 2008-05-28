@@ -54,6 +54,7 @@ int main(int argc,char** argv)
     edg_wll_InitContext(&ctx);
     glite_gsplugin_init_context(&gsplugin_ctx);
 
+	memset(&soap, 0, sizeof soap);
 	soap_init(&soap);
 	soap_set_namespaces(&soap, namespaces);
 

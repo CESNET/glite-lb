@@ -13,6 +13,8 @@
 #define soap_call___lb__UserJobs soap_call___ns1__UserJobs
 #endif
 
+#include "glite/security/glite_gscompat.h"
+
 #include "LoggingAndBookkeeping.nsmap"
 
 static struct option opts[] = {
@@ -73,7 +75,7 @@ int main(int argc,char** argv)
 		printf("Server version: %p\n", &out);
 		assert(out.__sizejobs == out.__sizestates);
 		for (i = 0; i < out.__sizejobs; i++) {
-			st = edg_wll_StatToString(out.states[i]->state);
+			st = edg_wll_StatToString(GLITE_SECURITY_GSOAP_LIST_GET(out.states, i)->state);
 			printf("\t%s\t%s\n", out.jobs[i], st);
 			free(st);
 		}

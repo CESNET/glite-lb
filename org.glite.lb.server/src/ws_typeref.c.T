@@ -444,7 +444,7 @@ int edg_wll_SoapToQueryVal(
 	assert(in); assert(out);
 	if ( VALUEQR_ISTYPE(in, c) ) {
 		if ( attr == EDG_WLL_QUERY_ATTR_JOBID || attr == EDG_WLL_QUERY_ATTR_PARENT ) {
-			if ( edg_wlc_JobIdParse(VALUEQR_GET(in, c), &(out->j)) ) return -1;
+			if ( glite_jobid_parse(VALUEQR_GET(in, c), (glite_jobid_t *)&(out->j)) ) return -1;
 		} else {
 			if ( !(out->c = strdup(VALUEQR_GET(in, c))) ) return -1;
 		}
@@ -558,9 +558,15 @@ int edg_wll_QueryRecToSoap(
 	if ( !in ) goto ret;
 	edg_wll_QueryOpToSoap(in->op, &(qr->op));
 
+#ifdef GLITE_SECURITY_GSOAP_CHOICE_SETNULL
+	if ((qr->value2 = soap_malloc(soap, sizeof(*(qr->value2)))) == NULL) return SOAP_FAULT;
+	GLITE_SECURITY_GSOAP_CHOICE_SETNULL(qr->value2,  queryRecValue);
+#endif
 	switch ( in->op ) {
 	case EDG_WLL_QUERY_OP_WITHIN:
+#ifndef GLITE_SECURITY_GSOAP_CHOICE_SETNULL
 		if ( !(qr->value2 = soap_malloc(soap, sizeof(*(qr->value2)))) ) return SOAP_FAULT;
+#endif
 		if ( edg_wll_QueryValToSoap(soap, in->attr, &(in->value2), qr->value2) ) return SOAP_FAULT;
 	default:
 		if ( !(qr->value1 = soap_malloc(soap, sizeof(*(qr->value1)))) ) return SOAP_FAULT;
