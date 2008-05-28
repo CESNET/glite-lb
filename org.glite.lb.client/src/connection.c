@@ -32,7 +32,7 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index)
 
 	assert(ctx->connections->connOpened);
 
-	if (ctx->connections->connPool[cIndex].gss.sock)
+	if (ctx->connections->connPool[cIndex].gss.sock >= 0)
 		ret = edg_wll_gss_close(&ctx->connections->connPool[cIndex].gss, &ctx->p_tmp_timeout);
 	if (ctx->connections->connPool[cIndex].gsiCred != GSS_C_NO_CREDENTIAL) 
 		gss_release_cred(&min_stat, &ctx->connections->connPool[cIndex].gsiCred);
@@ -41,6 +41,7 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index)
 	free(ctx->connections->connPool[cIndex].certfile);
 	
 	memset(ctx->connections->connPool + cIndex, 0, sizeof(edg_wll_ConnPool));
+	ctx->connections->connPool[cIndex].gss.sock = -1;
 	
 	ctx->connections->connOpened--;
 
