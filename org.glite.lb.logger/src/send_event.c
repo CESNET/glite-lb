@@ -282,11 +282,11 @@ event_queue_send(struct event_queue *eq)
  	    
 	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
-		    if (events_sent>0) 
+		    if (events_sent>0) {
 			/* could be expected server connection preemption */
 			clear_error();
 			eq->timeout = 1;
-		    else {
+		    } else {
 			eq->timeout = TIMEOUT;
 		        il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
                     }
