@@ -73,7 +73,7 @@ void *thread_code(thread_code_args *arguments) {
 
 
 	sl = (unsigned long) ((double) random()/ RAND_MAX * arguments->rand_start * 1000000);
-	printf("Thread [%d] - sleeping for %ld us\n",pthread_self(),sl);
+	printf("Thread [%lu] - sleeping for %ld us\n",(unsigned long)pthread_self(),sl);
 	usleep( sl );
 
 	user_jobs = edg_wll_UserJobs;
@@ -221,5 +221,6 @@ int main(int argc,char **argv)
 
 //        exit(0);
 //        pthread_exit(NULL);
+	return 0;
 }
 
