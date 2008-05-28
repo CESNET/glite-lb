@@ -360,21 +360,9 @@ int edg_wll_log_write(edg_wll_Context ctx, int conn, edg_wll_LogLine logline)
 	sprintf(header,"%s",EDG_WLL_LOG_SOCKET_HEADER);
 	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH]='\0';
 	if ((err = edg_wll_gss_write_full(&ctx->connections->connPool[conn].gss, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
-		switch (answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()")) {
-		case ENOTCONN:
-			edg_wll_log_close(ctx,conn);
-			if (edg_wll_log_connect(ctx,&conn) || 
-			    edg_wll_gss_write_full(&ctx->connections->connPool[conn].gss, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, &ctx->p_tmp_timeout, &count, &gss_code) < 0) {
-				edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending header");
-				return -1;
-			}
-			break;
-		case 0:
-			break;
-		default:
-			edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending header");
-			return -1;
-		}
+		answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
+		edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending header");
+		return -1;
 	}
 	sent += count;
 
@@ -383,22 +371,9 @@ int edg_wll_log_write(edg_wll_Context ctx, int conn, edg_wll_LogLine logline)
 #endif
 	count = 0;
 	if ((err = edg_wll_gss_write_full(&ctx->connections->connPool[conn].gss, size_end, 4, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
-                switch (answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()")) {
-		case ENOTCONN:
-			edg_wll_log_close(ctx,conn);
-			if (edg_wll_log_connect(ctx,&conn) ||
-			    edg_wll_gss_write_full(&ctx->connections->connPool[conn].gss, size_end, 4, &ctx->p_tmp_timeout, &count, &gss_code) < 0) {
-				edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message size");
-		                return -1;
-			}
-			break;
-		case 0:
-			break;
-		default:
-			edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message size");
-			return -1;
-		
-		}
+                answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
+                edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message size");
+                return -1;
         }
 	sent += count;
 
@@ -407,21 +382,9 @@ int edg_wll_log_write(edg_wll_Context ctx, int conn, edg_wll_LogLine logline)
 #endif
 	count = 0;
 	if (( err = edg_wll_gss_write_full(&ctx->connections->connPool[conn].gss, logline, size, &ctx->p_tmp_timeout, &count, &gss_code)) < 0) {
-		switch (answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()")) {
-		case ENOTCONN:
-			edg_wll_log_close(ctx,conn);
-			if (edg_wll_log_connect(ctx,&conn) ||
-			    edg_wll_gss_write_full(&ctx->connections->connPool[conn].gss, logline, size, &ctx->p_tmp_timeout, &count, &gss_code) < 0) {
-				edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message");
-				return -1;
-			}
-                        break;
-                case 0:
-                        break;
-                default:
-			edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message");
-			return -1;
-		}
+		answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_write_full()");
+		edg_wll_UpdateError(ctx,answer,"edg_wll_log_write(): error sending message");
+		return -1;
 	}
 	sent += count;
 
@@ -454,30 +417,19 @@ int edg_wll_log_read(edg_wll_Context ctx, int conn)
 #endif
 	count = 0;
 	if ((err = edg_wll_gss_read_full(&ctx->connections->connPool[conn].gss, answer_end, 4, &ctx->p_tmp_timeout, &count, &gss_code)) < 0 ) {
-		switch (answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_read_full()")) {
-		case ENOTCONN:
-                        edg_wll_log_close(ctx,conn);
-                        if (edg_wll_log_connect(ctx,&conn) ||
-			    edg_wll_gss_read_full(&ctx->connections->connPool[conn].gss, answer_end, 4, &ctx->p_tmp_timeout, &count, &gss_code) < 0 ) {
-				edg_wll_UpdateError(ctx,answer,"edg_wll_log_read(): error reading answer from local-logger");
-				return -1;
-			}
-			break;
-		case 0:
-			break;
-		default:
-			edg_wll_UpdateError(ctx,answer,"edg_wll_log_read(): error reading answer from local-logger");
-			return -1;
-		}
-	} 
-	answer = answer_end[3]; answer <<=8;
-	answer |= answer_end[2]; answer <<=8;
-	answer |= answer_end[1]; answer <<=8;
-	answer |= answer_end[0];
+		answer = handle_gss_failures(ctx,err,&gss_code,"edg_wll_gss_read_full()");
+		edg_wll_UpdateError(ctx,answer,"edg_wll_log_read(): error reading answer from local-logger");
+		return -1;
+	} else {
+		answer = answer_end[3]; answer <<=8;
+		answer |= answer_end[2]; answer <<=8;
+		answer |= answer_end[1]; answer <<=8;
+		answer |= answer_end[0];
 #ifdef EDG_WLL_LOG_STUB
-	fprintf(stderr,"edg_wll_log_read: read answer \"%d\"\n",answer);
+		fprintf(stderr,"edg_wll_log_read: read answer \"%d\"\n",answer);
 #endif
-	edg_wll_SetError(ctx,answer,"edg_wll_log_read(): answer read from locallogger");
+		edg_wll_SetError(ctx,answer,"edg_wll_log_read(): answer read from locallogger");
+	}
 
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"edg_wll_log_read: done (remaining timeout %d.%06d sec)\n",
