@@ -215,11 +215,13 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	/* check if connection already in pool */
 	if ( (index = ConnectionIndex(ctx, ctx->p_destination, ctx->p_dest_port)) == -1 ) {
 		if (ctx->connections->connOpened == ctx->connections->poolSize)
-			if (ReleaseConnection(ctx, NULL, 0)) 
+			if (ReleaseConnection(ctx, NULL, 0)) {
+                    		answer = edg_wll_SetError(ctx,EAGAIN,"cannot release connection (pool size exceeded)");
 				goto edg_wll_log_connect_end;
+			}
 		index = AddConnection(ctx, ctx->p_destination, ctx->p_dest_port);
 		if (index < 0) {
-                    edg_wll_SetError(ctx,EAGAIN,"connection pool size exceeded");
+                    answer = edg_wll_SetError(ctx,EAGAIN,"cannot add connection to pool");
 		    goto edg_wll_log_connect_end;
 		}
 #ifdef EDG_WLL_LOG_STUB	
@@ -242,7 +244,7 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	      &ctx->connections->connPool[index].gsiCred, &my_subject_name, &gss_stat);
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {
-		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
+		answer = edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
 		goto edg_wll_log_connect_err;
 	}
 #ifdef EDG_WLL_LOG_STUB
