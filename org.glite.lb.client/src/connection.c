@@ -261,14 +261,19 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 
 
 	if (acquire_cred) {
+		gss_cred_id_t newcred = GSS_C_NO_CREDENTIAL;
 		if (edg_wll_gss_acquire_cred_gsi(
 	        	ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 		       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-		       &ctx->connections->connPool[index].gsiCred, NULL, &gss_stat)) {
+		       &newcred, NULL, &gss_stat)) {
 		    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
 		    goto err;
-		}
-		else {
+		} else {
+			if (ctx->connections->connPool[index].gsiCred != GSS_C_NO_CREDENTIAL)
+      				gss_release_cred(&min_stat, &ctx->connections->connPool[index].gsiCred);
+		       	ctx->connections->connPool[index].gsiCred = newcred;
+			newcred = GSS_C_NO_CREDENTIAL;
+
 			// Credentials Acquired successfully. Storing file identification.
         		#ifdef EDG_WLL_CONNPOOL_DEBUG	
 				printf("Cert file: %s\n", ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename);
@@ -283,6 +288,9 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 		}
 	}
 
+	if (acquire_cred && ctx->connections->connPool[index].gss.context != GSS_C_NO_CONTEXT) {
+		edg_wll_gss_close(&ctx->connections->connPool[index].gss, &ctx->p_tmp_timeout);
+	}
 	if (ctx->connections->connPool[index].gss.context == GSS_C_NO_CONTEXT) {	
 		switch (edg_wll_gss_connect(ctx->connections->connPool[index].gsiCred,
 				ctx->connections->connPool[index].peerName, ctx->connections->connPool[index].peerPort,
