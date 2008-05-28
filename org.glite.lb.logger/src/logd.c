@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <signal.h>
 #include <unistd.h> 
@@ -412,6 +413,8 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
     * Main loop
     */
    while (1) {
+        int opt;
+
 	edg_wll_ll_log(LOG_INFO,"Accepting incomming connections...\n");
 	client_fd = accept(listener_fd, (struct sockaddr *) &client_addr,
 			&client_addr_len);
@@ -423,6 +426,15 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 		exit(-1);
 	} else {
 		edg_wll_ll_log(LOG_DEBUG,"Incomming connection on socket '%d'\n",client_fd);
+	}
+
+	opt = 0;
+	if (setsockopt(client_fd,IPPROTO_TCP,TCP_CORK,(const void *) &opt,sizeof opt)) {
+		edg_wll_ll_log(LOG_WARNING,"Can't reset TCP_CORK\n");
+	}
+	opt = 1;
+	if (setsockopt(client_fd,IPPROTO_TCP,TCP_NODELAY,(const void *) &opt,sizeof opt)) {
+		edg_wll_ll_log(LOG_WARNING,"Can't set TCP_NODELAY\n");
 	}
 
 	switch (edg_wll_gss_watch_creds(cert_file,&cert_mtime)) {
