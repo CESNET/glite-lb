@@ -157,8 +157,6 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *sta
 static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip)
 {
 	edg_wll_Acl	acl = calloc(1,sizeof *acl);
-/* XXX: NO_GACL	GACLacl		*gacl; */
-	void		*gacl;
 	int		ret;
 
 	edg_wll_ResetError(ctx);
@@ -166,14 +164,14 @@ static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const
 
 	if (stat->acl == NULL) return 0;
 
-	ret = edg_wll_DecodeACL(stat->acl,&gacl);
+	ret = edg_wll_DecodeACL(stat->acl,&acl->value);
 	if (ret) {
+		edg_wll_FreeAcl(acl);
 		edg_wll_SetError(ctx,EINVAL,"decoding ACL");
 		return 0;
 	}
 
 	acl->string = stat->acl; 
-	acl->value = gacl;
 
 	ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
 
