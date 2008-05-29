@@ -385,6 +385,7 @@ install:
 	done
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
+	${INSTALL} -m 755 ${top_srcdir}/src/glite-lb-bkpurge-offline.sh ${PREFIX}/bin/glite-lb-bkpurge-offline
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-attrs.xsd ${PREFIX}/interface
 	${INSTALL} -m 644 ${top_srcdir}/interface/job-record.xsd ${PREFIX}/interface
 
