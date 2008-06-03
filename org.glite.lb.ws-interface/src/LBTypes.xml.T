@@ -260,6 +260,7 @@
 			<val name="DONECODE">How the job terminated (see doneCode type)</val>
 			<val name="USERTAG">Value of particular user tag. The tag name has to be specified in queryConditions.tagName.</val>
 			<val name="TIME">When the job entered a particular state. The state has to be specified in queryCondition.statName.</val>
+			<val name="LEVEL">Logging level (see "dglog.h"), see _edg_wll_QueryRec</val>
 			<val name="RESUBMITTED">The job was resubmitted.</val>
 			<val name="PARENT">JobId of the job parend (DAG).</val>
 			<val name="EXITCODE">UNIX exit code of the job.</val>
@@ -271,6 +272,7 @@
 			<val name="JDLATTR">JDL Attribute.</val>
 			<val name="STATEENTERTIME">Staus enter time.</val>
 			<val name="LASTUPDATETIME">Last update time.</val>
+			<val name="NETWORKSERVER">Network server aka RB aka WMproxy endpoint</val>
 		</enum>
 
 		<struct name="queryRecord">

@@ -349,7 +349,7 @@ int edg_wll_JobStatFlagsToSoap(struct soap *soap, const int in, struct lbt__jobF
 
 int edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 {
-	assert(EDG_WLL_QUERY_ATTR_EXITCODE + 1 == EDG_WLL_QUERY_ATTR__LAST);
+	assert(EDG_WLL_QUERY_ATTR_NETWORK_SERVER + 1 == EDG_WLL_QUERY_ATTR__LAST);
 
 	switch ( in )
 	{
@@ -361,7 +361,7 @@ int edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 	case DONECODE: *out = EDG_WLL_QUERY_ATTR_DONECODE; break;
 	case USERTAG: *out = EDG_WLL_QUERY_ATTR_USERTAG; break;
 	case TIME: *out = EDG_WLL_QUERY_ATTR_TIME; break;
-//	case LEVEL: *out = EDG_WLL_QUERY_ATTR_LEVEL; break;
+	case LEVEL: *out = EDG_WLL_QUERY_ATTR_LEVEL; break;
 	case HOST: *out = EDG_WLL_QUERY_ATTR_HOST; break;
 	case SOURCE: *out = EDG_WLL_QUERY_ATTR_SOURCE; break;
 	case INSTANCE: *out = EDG_WLL_QUERY_ATTR_INSTANCE; break;
@@ -373,6 +373,7 @@ int edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 	case JDLATTR: *out = EDG_WLL_QUERY_ATTR_JDL_ATTR; break;
 	case STATEENTERTIME: *out = EDG_WLL_QUERY_ATTR_STATEENTERTIME; break;
 	case LASTUPDATETIME: *out = EDG_WLL_QUERY_ATTR_LASTUPDATETIME; break;
+	case NETWORKSERVER: *out = EDG_WLL_QUERY_ATTR_NETWORK_SERVER; break;
 	default: return 0;
 	}
 
@@ -381,7 +382,7 @@ int edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 
 int edg_wll_AttrToSoap(const edg_wll_QueryAttr in, enum lbt__queryAttr *out)
 {
-	assert(EDG_WLL_QUERY_ATTR_EXITCODE + 1 == EDG_WLL_QUERY_ATTR__LAST);
+	assert(EDG_WLL_QUERY_ATTR_NETWORK_SERVER + 1 == EDG_WLL_QUERY_ATTR__LAST);
 
 	switch ( in )
 	{
@@ -393,7 +394,7 @@ int edg_wll_AttrToSoap(const edg_wll_QueryAttr in, enum lbt__queryAttr *out)
 	case EDG_WLL_QUERY_ATTR_DONECODE: *out = DONECODE; break;
 	case EDG_WLL_QUERY_ATTR_USERTAG: *out = USERTAG; break;
 	case EDG_WLL_QUERY_ATTR_TIME: *out = TIME; break;
-//	case EDG_WLL_QUERY_ATTR_LEVEL: *out = LEVEL; break;
+	case EDG_WLL_QUERY_ATTR_LEVEL: *out = LEVEL; break;
 	case EDG_WLL_QUERY_ATTR_HOST: *out = HOST; break;
 	case EDG_WLL_QUERY_ATTR_SOURCE: *out = SOURCE; break;
 	case EDG_WLL_QUERY_ATTR_INSTANCE: *out = INSTANCE; break;
@@ -405,6 +406,7 @@ int edg_wll_AttrToSoap(const edg_wll_QueryAttr in, enum lbt__queryAttr *out)
 	case EDG_WLL_QUERY_ATTR_JDL_ATTR: *out = JDLATTR; break;
 	case EDG_WLL_QUERY_ATTR_STATEENTERTIME: *out = STATEENTERTIME; break;
 	case EDG_WLL_QUERY_ATTR_LASTUPDATETIME: *out = LASTUPDATETIME; break;
+	case EDG_WLL_QUERY_ATTR_NETWORK_SERVER: *out = NETWORKSERVER; break;
 	default: return 0;
 	}
 
