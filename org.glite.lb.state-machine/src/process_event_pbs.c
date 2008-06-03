@@ -210,13 +210,13 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 
 /* XXX : just debug output - remove */
 
-	printf("processEvent_PBS(): %s (%s), state: %s --> %s\n ", 
+	/*printf("processEvent_PBS(): %s (%s), state: %s --> %s\n ", 
 		edg_wll_EventToString(e->any.type), 
 		(res == RET_LATE) ? "RET_LATE" : "RET_OK", 
 		edg_wll_StatToString(old_state), 
 		edg_wll_StatToString(js->pub.state) );
 	printf("\t%s\n",e->any.seqcode);
-	printf("\t(last=%s)\n",js->last_seqcode);
+	printf("\t(last=%s)\n",js->last_seqcode);*/
 
 /*----------------------------------*/
 

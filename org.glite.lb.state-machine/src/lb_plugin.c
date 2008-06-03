@@ -308,6 +308,7 @@ static int lb_close(void *fpctx,void *handle) {
 			free (h->fullStatusHistory[i]);
 			i++;
 		}
+		free(h->fullStatusHistory);
 		h->fullStatusHistory = NULL;
 		h->lastStatusHistory = NULL;
 		h->finalStatus = NULL;
@@ -1677,11 +1678,13 @@ static int lb_status(void *handle) {
 	// not very clean, but working
 	memset(&js->pub, 0, sizeof(edg_wll_JobStat));
 	destroy_intJobStat(js);
+	free(js);
 
 	return 0;
 
 err:
 	destroy_intJobStat(js);
+	free(js);
 	return -1;
 }
 
