@@ -255,6 +255,9 @@ cont:
 
 	*handle = (void *)h;
 
+	if (id0) free(id0);
+        if (id) free(id);
+
 	return 0;
 
 fail:
