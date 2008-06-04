@@ -43,11 +43,13 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 		//fprintf(stderr, "got ulm: '%s'\n", nameval[0]);
 		// nasty ;-)
 		edg_wll_ParseEvent(ctx,nameval[0],&f);
+		free(nameval[0]);
 		memcpy(e, f, sizeof *e);
 		free(f);
 		ret=edg_wll_CheckEvent(ctx,e);
 	} else ret = ENOENT;
 	free(q); q = NULL;
+	glite_lbu_FreeStmt(&sh);
 
 	// old way keeped for compatibility/slow migration
 	if (ret != 0) {

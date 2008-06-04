@@ -427,7 +427,6 @@ static int dump_events(edg_wll_Context ctx, glite_jobid_const_t job, int dump, c
 	if (convert_event_head(ctx,res,&e) || edg_wll_get_event_flesh(ctx,event,&e))
 	{
 		char	*et,*ed, *dbjob;
-		int	i;
 
 
 	/* Most likely sort of internal inconsistency. 
@@ -438,7 +437,6 @@ static int dump_events(edg_wll_Context ctx, glite_jobid_const_t job, int dump, c
 		fprintf(stderr,"%s event %d: %s (%s)\n",dbjob,event,et,ed);
 		syslog(LOG_WARNING,"%s event %d: %s (%s)",dbjob,event,et,ed);
 		free(et); free(ed); free(dbjob);
-		for (i=0; i<sizofa(res); i++) free(res[i]);
 		edg_wll_ResetError(ctx);
 	}
 	else {
@@ -637,8 +635,12 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 			event = atoi(res[0]);
 
 			if (dump >= 0) {
+				int ret_dump, i;
+
 				assert(ret == 10);
-				if (dump_events( ctx, job, dump, (char **) &res)) goto rollback;
+				ret_dump = dump_events( ctx, job, dump, (char **) &res);
+				for (i=0; i<sizofa(res); i++) free(res[i]);
+				if (ret_dump) goto rollback;
 			}
 
 			if ( purge ) 
