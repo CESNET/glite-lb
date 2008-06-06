@@ -58,7 +58,7 @@ static void print_free_result(const char *name, unsigned long *lens, char **res)
 }
 
 
-int main(int argn, char *argv[]) {
+int main(int argn __attribute((unused)), char *argv[]) {
 	char *name, *cmd;
 	const char *cs;
 	glite_lbu_DBContext ctx;

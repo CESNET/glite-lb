@@ -65,7 +65,7 @@ static void print_error(glite_lbu_DBContext ctx) {
 }
 
 
-int main(int argn, char *argv[]) {
+int main(int argn __attribute((unused)), char *argv[]) {
 	char *name, *user;
 	const char *cs;
 	glite_lbu_DBContext ctx;

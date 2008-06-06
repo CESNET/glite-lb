@@ -192,8 +192,11 @@ int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) {
 	pthread_mutex_lock(&db_handle.lock);
 	if (!db_handle.lib) {
 		if ((!MYSQL_LIBPATH[0] || (db_handle.lib = dlopen(MYSQL_LIBPATH, RTLD_LAZY | RTLD_LOCAL)) == NULL) &&
-		    (db_handle.lib = dlopen("libmysqlclient.so", RTLD_LAZY | RTLD_LOCAL)) == NULL)
+		    (db_handle.lib = dlopen("libmysqlclient.so", RTLD_LAZY | RTLD_LOCAL)) == NULL) {
+			free(*ctx);
+			*ctx = NULL;
 			return ERR(*ctx, ENOENT, "can't load '%s' or 'libmysqlclient.so' (%s)", MYSQL_LIBPATH, dlerror());
+		}
 		do {
 			LOAD(mysql_init, "mysql_init");
 			LOAD(mysql_get_client_version, "mysql_get_client_version");
@@ -241,6 +244,8 @@ int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) {
 			dlclose(db_handle.lib);
 			db_handle.lib = NULL;
 			pthread_mutex_unlock(&db_handle.lock);
+			free(*ctx);
+			*ctx = NULL;
 			return err;
 		}
 	} else pthread_mutex_unlock(&db_handle.lock);
@@ -365,17 +370,17 @@ void glite_lbu_FreeStmt(glite_lbu_Statement *stmt) {
 int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***key_names, char ****column_names) {
 	glite_lbu_Statement       stmt = NULL;
 
-	int	i,j,ret;
+	size_t	i,j,ret;
 
 /* XXX: "show index from" columns. Matches at least MySQL 4.0.11 */
 	char	*sql, *showcol[12];
 	int	Key_name,Seq_in_index,Column_name,Sub_part;
 
 	char	**keys = NULL;
-	int	*cols = NULL;
+	size_t	*cols = NULL;
 	char	**col_names = NULL;
 
-	int	nkeys = 0;
+	size_t	nkeys = 0;
 
 	char	***idx = NULL;
 
