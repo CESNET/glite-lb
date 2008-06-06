@@ -42,14 +42,15 @@ typedef struct _dump_storage_t {
 /* hold actual number of records in dump_storage_t structure st (defined below) */
 int 	number_of_st = 0;
 
-static const char *optstr = "d:s:j:m:h";
+static const char *optstr = "d:s:j:m:hx";
 
 static struct option opts[] = {
 	{ "help",		0,	NULL,	'h'},
 	{ "dump",		0,	NULL,	'd'},
 	{ "store",		0,	NULL,	's'},
 	{ "jpps",		0,	NULL,	'j'},
-	{ "lbmaildir",	0,	NULL,	'm'},
+	{ "lbmaildir",		0,	NULL,	'm'},
+	{ "mixed",		0,	NULL,	'x'},
 	{ NULL,			0,	NULL,	0}
 };
 
@@ -61,20 +62,24 @@ void usage(char *me)
 			"\t-s, --store <prefix>    New dump files storage.\n"
 			"\t-j, --jpps <host:port>  Target JPPS.\n"
 			"\t-m, --lbmaildir <path>  LB maildir path.\n"
+			"\t-x, --mixed		   Suppose events in dump file unsorted by jobid (slower).\n"
 			, me);
 }
 
 
 static int read_line(int, buffer_t *, char **);
-static dump_storage_t *dump_storage_find(dump_storage_t *, char *);
+static dump_storage_t *dump_storage_find_sorted(dump_storage_t *, char *);
+static dump_storage_t *dump_storage_find_unsorted(dump_storage_t *, char *);
 static dump_storage_t *dump_storage_add(dump_storage_t **, char *, char *, int);
 static void dump_storage_free(dump_storage_t *);
 
+typedef dump_storage_t *(*find_function)();
 
 int main(int argc, char **argv)
 {
 	edg_wll_Context	ctx;
 	edg_wll_Event	*ev = NULL;
+	find_function	dump_storage_find = dump_storage_find_sorted;
 	dump_storage_t	*dstorage = NULL,
 			*last_st = NULL,
 			*st;
@@ -100,6 +105,7 @@ int main(int argc, char **argv)
 		case 's': store_pref = optarg; break;
 		case 'j': jpps = optarg; break;
 		case 'm': lb_maildir = optarg; break;
+		case 'x': dump_storage_find = dump_storage_find_unsorted; break;
 		case 'h': usage(name); return 0;
 		case '?': usage(name); return 1;
 		}
@@ -263,10 +269,24 @@ cleanup_lbl:
 	return (ret);
 }
 
-/* look thru list from the last element to the first 
+
+/* Suppose that dumps in purged dump file are sorted by jobid */
+static dump_storage_t *dump_storage_find_sorted(dump_storage_t *st, char *job)
+{
+	if (st && (st+number_of_st-1)->job) {
+		if ( !strcmp(job, (st+number_of_st-1)->job) ) return (st+number_of_st-1);
+	}
+
+	return NULL;
+}
+
+
+/* Suppose that dumps in purged dump file are NOT sorted by jobid 
+ *
+ * look thru list from the last element to the first 
  * last element is most likely corresponding to the job we are looking for
  */
-static dump_storage_t *dump_storage_find(dump_storage_t *st, char *job)
+static dump_storage_t *dump_storage_find_unsorted(dump_storage_t *st, char *job)
 {
 	int i;
 
@@ -286,7 +306,6 @@ static dump_storage_t *dump_storage_add(dump_storage_t **st, char *job, char *fn
 
 	if ( !(number_of_st % REALLOC_CHUNK) )  { 
 		*st = realloc(*st, (REALLOC_CHUNK + number_of_st+2)*sizeof(*tmp));
-		printf("reallocing\n");
 	}
 	if ( !(*st) ) return NULL;
 
