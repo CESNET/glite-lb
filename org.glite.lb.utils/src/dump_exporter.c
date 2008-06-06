@@ -24,6 +24,7 @@
 #define KEYNAME_JOBID			"jobid  "
 #define KEYNAME_FILE			"file   "
 #define KEYNAME_JPPS			"jpps   "
+#define REALLOC_CHUNK			10000
 
 typedef struct _buffer_t {
 	char   *str;
@@ -262,14 +263,20 @@ cleanup_lbl:
 	return (ret);
 }
 
-
+/* look thru list from the last element to the first 
+ * last element is most likely corresponding to the job we are looking for
+ */
 static dump_storage_t *dump_storage_find(dump_storage_t *st, char *job)
 {
-	while ( st && st->job ) {
-		if ( !strcmp(job, st->job) ) break;
-		st++;
+	int i;
+
+	st = st + (number_of_st -1); 		// point to the last element
+
+	for (i=number_of_st; i > 0; i--)  {
+		if (!st || !st->job) return NULL;
+		if ( !strcmp(job, st->job) ) return st;
+		st--;
 	}
-	if ( st && st->job ) return st;
 	return NULL;
 }
 
@@ -277,11 +284,12 @@ static dump_storage_t *dump_storage_add(dump_storage_t **st, char *job, char *fn
 {
 	dump_storage_t *tmp;
 
-	if ( number_of_st ) tmp = realloc(*st, (number_of_st+2)*sizeof(*tmp));
-	else tmp = calloc(2, sizeof(*tmp));
-	if ( !tmp ) return NULL;
+	if ( !(number_of_st % REALLOC_CHUNK) )  { 
+		*st = realloc(*st, (REALLOC_CHUNK + number_of_st+2)*sizeof(*tmp));
+		printf("reallocing\n");
+	}
+	if ( !(*st) ) return NULL;
 
-	*st = tmp;
 	tmp = *st + number_of_st;	
 
 	if ( !(tmp->job = strdup(job)) ) return NULL;
