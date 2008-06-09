@@ -1576,7 +1576,7 @@ static int lb_filecom(void *fpctx, void *handle){
         			attr[0].timestamp = time(NULL);
         			attr[0].origin_detail = NULL;   /* XXX */
         			attr[1].name = NULL;
-				glite_jppsbe_append_tag(ctx, edg_wlc_JobIdUnparse(h->status.jobId), attr);
+				glite_jppsbe_append_tags(ctx, edg_wlc_JobIdUnparse(h->status.jobId), attr);
                         }
                         i++;
                 }
