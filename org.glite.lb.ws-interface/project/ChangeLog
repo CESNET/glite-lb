@@ -3,3 +3,6 @@
 
 2.5.0-1 (lb-1.8.0-1)
 - added ui_host (via lb.build)
+
+2.5.1-1
+- source element of genericFault is now optional
