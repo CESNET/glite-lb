@@ -34,7 +34,6 @@
 - don't coredump on requesting notifications that are denied
 - don't return empty results for some non-indexed queries
 
-1.10.0-1
-- added an offline purge script
+1.9.1-1
 - clarified soap error messages
 
