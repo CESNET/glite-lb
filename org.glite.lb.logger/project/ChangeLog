@@ -17,3 +17,8 @@
 
 3.1.9-3 (lb-1.8.0-1)
 - startup script: use grep with ^ rather than fgrep
+
+3.1.10-1
+- fixed sending empty events
+- do not syslog "error reading server reply" unnecessarily
+
