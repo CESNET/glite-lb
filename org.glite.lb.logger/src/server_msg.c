@@ -16,7 +16,7 @@ create_msg(il_octet_string_t *ev, char **buffer, long *receipt, time_t *expires)
   char *p;  int  len;
   char *event = ev->data;
 
-  *receipt = 0;
+  *receipt = 0L;
 
 #if defined(INTERLOGD_EMS)
   /* find DG.LLLID */
@@ -41,18 +41,19 @@ create_msg(il_octet_string_t *ev, char **buffer, long *receipt, time_t *expires)
       int n;
       
       p += 12; /* skip the key and = */
-      if((n = atoi(p)) == 0) {
+      n = atoi(p);
+      if((n & EDG_WLL_LOGFLAG_SYNC) == 0) {
 	/* normal asynchronous message */
-	*receipt = 0;
+	      *receipt = 0L;
       }
     } else {
       /* could not find priority key */
-      *receipt = 0;
+      *receipt = 0L;
     }
     
   } else {
     /* could not find local logger PID, confirmation can not be sent */
-    *receipt = 0;
+    *receipt = 0L;
   }
 #endif
 
