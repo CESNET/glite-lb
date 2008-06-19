@@ -76,7 +76,7 @@ CFLAGS:= \
 	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
 	$(GRIDSITE_CFLAGS) \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} \
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB \
 	-I${globus_prefix}/include/${nothrflavour} #gridsite needs this
 
 ifdef LB_PROF
@@ -97,10 +97,6 @@ LB_MACHINE_LIB:=-L${stagedir}/lib -lglite_lb_statemachine
 
 ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE
-endif
-
-ifdef LB_EVENTS_BLOB
-	CFLAGS:=${CFLAGS} -DLB_EVENTS_BLOB
 endif
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
