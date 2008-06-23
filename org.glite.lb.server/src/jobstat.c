@@ -370,7 +370,7 @@ int edg_wll_intJobStatus(
 	if (edg_wll_QueryEventsServer(ctx,1, (const edg_wll_QueryRec **)jqra, NULL, &events)) {
 		free(string_jobid);
 		free(jqra);
-		free(intstat->pub.owner);
+		free(intstat->pub.owner); intstat->pub.owner = NULL;
                 return edg_wll_Error(ctx, NULL, NULL);
 	}
 	free(jqra);
@@ -380,7 +380,7 @@ int edg_wll_intJobStatus(
 
 	if (num_events == 0) {
 		free(string_jobid);
-		free(intstat->pub.owner);
+		free(intstat->pub.owner); intstat->pub.owner = NULL;
 		return edg_wll_SetError(ctx,ENOENT,NULL);
 	}
 
