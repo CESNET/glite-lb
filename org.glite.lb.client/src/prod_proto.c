@@ -254,7 +254,8 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 		edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
 		goto edg_wll_log_connect_err;
 	}
-	my_subject_name = ctx->connections->connPool[index].gsiCred->name;
+	if (ctx->connections->connPool[index].gsiCred)
+		my_subject_name = ctx->connections->connPool[index].gsiCred->name;
         
 #ifdef EDG_WLL_LOG_STUB
 	if (my_subject_name != NULL) {
@@ -282,7 +283,8 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 		answer = edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);
 		goto edg_wll_log_connect_err;
 	}
-	my_subject_name = ctx->connections->connPool[index].gsiCred->name;
+	if (ctx->connections->connPool[index].gsiCred)
+		my_subject_name = ctx->connections->connPool[index].gsiCred->name;
 
 #ifdef EDG_WLL_LOG_STUB
 	if (my_subject_name != NULL) {
