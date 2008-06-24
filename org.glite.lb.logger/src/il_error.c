@@ -109,11 +109,6 @@ set_error(int code, long minor, char *msg)
     snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, hstrerror(err->code_min));
     break;
 
-  /* XXX DK: je tahle hodnota k necemu potreba? */
-  case IL_AUTH:
-    snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, ERR_error_string(err->code_min, NULL));
-    break;
-
   case IL_DGGSS:
     switch(err->code_min) {
 
