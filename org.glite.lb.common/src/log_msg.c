@@ -224,7 +224,8 @@ int edg_wll_log_event_send(
 	int					msg_sock,
 						flags,
 						conn_timeout,
-						i, count = 0;
+						i;
+        ssize_t	count = 0;
 
 
 	if ( (msg_sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0 ) {

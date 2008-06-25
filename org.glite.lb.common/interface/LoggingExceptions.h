@@ -45,8 +45,8 @@ public:
 		  const std::string& method,
 		  int   code,
 		  const std::string& exception)
-		: source_file(source), line(line_number), error_code(code),
-		std::runtime_error(formatMessage(exception, method, source, line_number))
+		: std::runtime_error(formatMessage(exception, method, source, line_number)),
+		source_file(source), line(line_number), error_code(code)
 		{}
 		
 		
@@ -68,9 +68,9 @@ public:
 		   int   code,
 		   const std::string& exception,
 		   const Exception &exc)
-		 : source_file(source), line(line_number), error_code(code),
-		 std::runtime_error(formatMessage(exception, method, source, line_number) +
-				    exc.what())
+		 : std::runtime_error(formatMessage(exception, method, source, line_number) +
+				    exc.what()),
+		 source_file(source), line(line_number), error_code(code)
 		 { }
 		
 	 virtual ~Exception() throw() 

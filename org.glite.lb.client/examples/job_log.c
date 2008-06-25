@@ -112,7 +112,6 @@ int main(int argc,char **argv)
 	
 	return 0;
 
-err:
 #ifdef USE_CALLBACKS
 	edg_wll_UnregisterTestQueryEvents();
 #endif

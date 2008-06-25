@@ -62,7 +62,10 @@ extern int edg_wll_IndexedAttrsRequestToXML(edg_wll_Context ctx, char **message)
 extern int edg_wll_NotifRequestToXML( edg_wll_Context ctx, const char *function, const edg_wll_NotifId notifId, const char *address, edg_wll_NotifChangeOp op, time_t validity, edg_wll_QueryRec const * const *conditions, char **message);
 
 extern int edg_wll_QuerySequenceCodeToXML(edg_wll_Context ctx, glite_jobid_const_t jobId, char **message);
+
+extern int edg_wll_StatsRequestToXML(edg_wll_Context,const char *,const edg_wll_QueryRec *,edg_wll_JobStatCode,int,time_t *,time_t *,char **); 
 	
+extern edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float *rate, float *duration, int *res_from, int *res_to);
 
 #ifdef __cplusplus
 }

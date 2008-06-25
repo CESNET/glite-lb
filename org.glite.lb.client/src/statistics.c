@@ -126,7 +126,7 @@ static int set_server_name_and_port(edg_wll_Context ctx, const edg_wll_QueryRec 
 	int				i = 0, j,
 					found = 0,
 					error = 0;
-	int				srvPort = 0,
+	unsigned int			srvPort = 0,
 					srvPortTmp;
 	char		   *srvName = NULL,
 				   *srvNameTmp;

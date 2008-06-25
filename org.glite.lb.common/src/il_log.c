@@ -19,7 +19,7 @@ il_log(int level, char *fmt, ...)
 	va_end(fmt_args);
 	
 	if(level <= log_level) {
-		fprintf(stderr, "[%6d] ", pthread_self());
+		fprintf(stderr, "[%6ld] ", (long) pthread_self());
 		fprintf(stderr, err_text);
 	}
 

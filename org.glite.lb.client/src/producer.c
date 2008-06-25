@@ -86,32 +86,37 @@ int edg_wll_DoLogEvent(
 	edg_wll_LogLine logline)
 {
 	int	ret = 0, answer = EAGAIN;
-        int	conn;
+        int	conn = -1;
+	int	attempt = 1;
 
         edg_wll_ResetError(ctx);
         memset(&conn,0,sizeof(conn));
 
-	/* connect to local-logger */
-	if ((ret = edg_wll_log_connect(ctx,&conn))) {
-		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_connect error");
-		goto edg_wll_DoLogEvent_end;
-	}
-
-	/* why?  sleep(3); */
-	/* send message */
-	if ((ret = edg_wll_log_write(ctx,conn,logline)) == -1) {
-		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_write error");
-		goto edg_wll_DoLogEvent_end;
-	}
-
-	/* get answer */
-	if ((ret = edg_wll_log_read(ctx,conn)) == -1) {
-		edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_read error");
-	} else {
+	do {
+		/* connect to local-logger */
+		if ((ret = edg_wll_log_connect(ctx,&conn))) {
+			edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_connect error");
+			goto edg_wll_DoLogEvent_end;
+		}
+	
+		/* send message */
+		if ((ret = edg_wll_log_write(ctx,conn,logline)) == -1) {
+			answer = edg_wll_Error(ctx, NULL, NULL);
+			edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_write error");
+			goto edg_wll_DoLogEvent_end;
+		}
+	
+		/* get answer */
+		ret = edg_wll_log_read(ctx,conn);
 		answer = edg_wll_Error(ctx, NULL, NULL);
-	}
+		if (ret == -1) 
+			edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_read error");
+	
+	edg_wll_DoLogEvent_end:
+		if (ret == -1 && conn >= 0) edg_wll_log_close(ctx,conn);
 
-edg_wll_DoLogEvent_end:
+	} while (++attempt <= 2 && (answer == ENOTCONN || answer == EPIPE));
+
 	return handle_errors(ctx,answer,"edg_wll_DoLogEvent()");
 }
 
@@ -746,7 +751,7 @@ static int edg_wll_RegisterJobMaster(
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
-	edg_wlc_JobId		parent,
+	glite_jobid_const_t	parent,
         int                     num_subjobs,
         const char *            seed,
         edg_wlc_JobId **        subjobs)
@@ -1124,7 +1129,7 @@ int edg_wll_RegisterSubjob(
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
-	edg_wlc_JobId		parent,
+	glite_jobid_const_t	parent,
         int                     num_subjobs,
         const char *            seed,
         edg_wlc_JobId **        subjobs)
@@ -1145,7 +1150,7 @@ int edg_wll_RegisterSubjobProxy(
         enum edg_wll_RegJobJobtype	type,
         const char *            jdl,
         const char *            ns,
-	edg_wlc_JobId		parent,
+	glite_jobid_const_t	parent,
         int                     num_subjobs,
         const char *            seed,
         edg_wlc_JobId **        subjobs)

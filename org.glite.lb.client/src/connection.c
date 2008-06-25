@@ -33,7 +33,7 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index)
 
 	assert(ctx->connections->connOpened);
 
-	if (ctx->connections->connPool[cIndex].gss.sock)
+	if (ctx->connections->connPool[cIndex].gss.sock >= 0)
 		ret = edg_wll_gss_close(&ctx->connections->connPool[cIndex].gss, &ctx->p_tmp_timeout);
 	if (ctx->connections->connPool[cIndex].gsiCred != NULL) 
 		edg_wll_gss_release_cred(&ctx->connections->connPool[cIndex].gsiCred, NULL);
@@ -42,6 +42,7 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index)
 	free(ctx->connections->connPool[cIndex].certfile);
 	
 	memset(ctx->connections->connPool + cIndex, 0, sizeof(edg_wll_ConnPool));
+	ctx->connections->connPool[cIndex].gss.sock = -1;
 	
 	ctx->connections->connOpened--;
 
@@ -260,14 +261,19 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 
 
 	if (acquire_cred) {
+		edg_wll_GssCred newcred = NULL;
 		if (edg_wll_gss_acquire_cred_gsi(
 	        	ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 		       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-		       &ctx->connections->connPool[index].gsiCred, &gss_stat)) {
+		       &newcred, &gss_stat)) {
 		    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
 		    goto err;
-		}
-		else {
+		} else {
+			if (ctx->connections->connPool[index].gsiCred != NULL)
+      				edg_wll_gss_release_cred(&ctx->connections->connPool[index].gsiCred,&gss_stat);
+		       	ctx->connections->connPool[index].gsiCred = newcred;
+			newcred = NULL;
+
 			// Credentials Acquired successfully. Storing file identification.
         		#ifdef EDG_WLL_CONNPOOL_DEBUG	
 				printf("Cert file: %s\n", ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename);
@@ -282,6 +288,9 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 		}
 	}
 
+	if (acquire_cred && ctx->connections->connPool[index].gss.context != NULL) {
+		edg_wll_gss_close(&ctx->connections->connPool[index].gss, &ctx->p_tmp_timeout);
+	}
 	if (ctx->connections->connPool[index].gss.context == NULL) {	
 		switch (edg_wll_gss_connect(ctx->connections->connPool[index].gsiCred,
 				ctx->connections->connPool[index].peerName, ctx->connections->connPool[index].peerPort,

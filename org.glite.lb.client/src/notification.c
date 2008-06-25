@@ -713,7 +713,7 @@ err:
 	struct pollfd		pollfds[1];
 	struct sockaddr_in	a;
 	int 			recv_sock;
-	size_t			alen;
+	socklen_t			alen;
 	edg_wll_Event 		*event = NULL;
 	struct timeval 		start_time,check_time,tv;
 	char 			*event_char = NULL, *jobstat_char = NULL;

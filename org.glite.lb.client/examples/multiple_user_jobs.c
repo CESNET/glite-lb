@@ -31,10 +31,9 @@ int main(int argc,char **argv)
 {
 	edg_wll_Context	*p_ctx;
 	char		*errt,*errd;
-	edg_wlc_JobId		**jobs = NULL;
+	glite_jobid_t		**jobs = NULL;
 	edg_wll_JobStat		**states = NULL;
 	int		i,j,k;
-	int		proxy_file_no = 0;
 	int		no_of_runs;
 
 	if ((argc<2) || !strcmp(argv[1], "-h")) {usage(argv[0]); exit(0);}
@@ -106,7 +105,7 @@ err:
 	if  (states) {
 		for (k=0; k < no_of_runs; k++) {
 			if (states[k])
-				for (i=0; states[k][i].state; i++)  edg_wll_FreeStatus(&states[i]);	
+				for (i=0; states[k][i].state; i++)  edg_wll_FreeStatus(states[i]);	
 		}
 		free(states);
 	}

@@ -236,6 +236,7 @@ void edg_wll_poolFree() {
 /** Allocate memory for arrays within the edg_wll_Connections structure */
 edg_wll_Connections* edg_wll_initConnections() {
 
+	int i;
 
     #ifdef EDG_WLL_CONNPOOL_DEBUG
         #ifdef GLITE_LB_THREADED
@@ -256,6 +257,9 @@ edg_wll_Connections* edg_wll_initConnections() {
 
 
         connectionsHandle.connPool = (edg_wll_ConnPool *) calloc(connectionsHandle.poolSize, sizeof(edg_wll_ConnPool));
+        for (i=0; i<connectionsHandle.poolSize; i++) {
+                connectionsHandle.connPool[i].gss.sock = -1;
+        }
 
         #ifdef GLITE_LB_THREADED
             connectionsHandle.connectionLock = (pthread_mutex_t *) calloc(connectionsHandle.poolSize, sizeof(pthread_mutex_t));

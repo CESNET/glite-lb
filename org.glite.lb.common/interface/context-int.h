@@ -142,7 +142,6 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	char		**fqans; /* null-terminated list of peer's VOMS FQANs */
 	edg_wll_QueryRec	**notif_index;
 	void		*notif_index_cols;
-
 	time_t		notifDurationMax;
 )
 
