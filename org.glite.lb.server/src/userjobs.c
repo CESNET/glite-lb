@@ -13,6 +13,7 @@
 #include "jobstat.h"
 #include "db_supp.h"
 #include "query.h"
+#include "lb_proto.h"
 
 int edg_wll_UserJobsServer(
 	edg_wll_Context ctx,

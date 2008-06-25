@@ -48,13 +48,13 @@ extern void
 edg_wll_FreeAcl(edg_wll_Acl);
 
 extern int
-edg_wll_UpdateACL(edg_wll_Context, edg_wlc_JobId, char *, int, int, int, int);
+edg_wll_UpdateACL(edg_wll_Context, glite_jobid_const_t, char *, int, int, int, int);
 
 extern int
 edg_wll_CheckACL(edg_wll_Context, edg_wll_Acl, int);
 
 extern int
-edg_wll_GetACL(edg_wll_Context, edg_wlc_JobId, edg_wll_Acl *);
+edg_wll_GetACL(edg_wll_Context, glite_jobid_const_t, edg_wll_Acl *);
 
 extern int
 edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *, char *, char *);

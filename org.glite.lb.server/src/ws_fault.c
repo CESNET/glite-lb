@@ -39,6 +39,7 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 		free(ed);
 	}
 
+/* FIXME: assignment from incompatible pointer type */
 	detail = soap_faultdetail(soap);
 	detail->__type = GFNUM;
 #if GSOAP_VERSION >= 20700

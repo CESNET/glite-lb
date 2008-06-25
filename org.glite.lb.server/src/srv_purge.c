@@ -398,6 +398,8 @@ abort:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+/* FIXME: defined but not used */
+#if 0
 static void unlock_and_check(edg_wll_Context ctx,edg_wlc_JobId job)
 {
 	char	*job_s,*et,*ed;
@@ -413,6 +415,7 @@ static void unlock_and_check(edg_wll_Context ctx,edg_wlc_JobId job)
 		free(et); free(ed); free(job_s);
 	}
 }
+#endif
 
 static int dump_events(edg_wll_Context ctx, glite_jobid_const_t job, int dump, char **res)
 {

@@ -15,6 +15,7 @@
 #include "lb_proto.h"
 #include "lb_html.h"
 #include "stats.h"
+#include "jobstat.h"
 #include "get_events.h"
 #include "purge.h"
 #include "lb_xml_parse.h"

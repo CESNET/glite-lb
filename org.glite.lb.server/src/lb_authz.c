@@ -677,7 +677,7 @@ end:
 }
 
 int
-edg_wll_UpdateACL(edg_wll_Context ctx, edg_wlc_JobId job, 
+edg_wll_UpdateACL(edg_wll_Context ctx, glite_jobid_const_t job, 
       		  char *user_id, int user_id_type,
 		  int permission, int perm_type, int operation)
 {
@@ -771,7 +771,7 @@ end:
    return ret;
 }
 
-int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl)
+int edg_wll_GetACL(edg_wll_Context ctx, glite_jobid_const_t jobid, edg_wll_Acl *acl)
 {
 	char	*q = NULL;
 	char	*acl_id = NULL;
@@ -856,10 +856,10 @@ int edg_wll_InitAcl(edg_wll_Acl *acl) { return 0; }
 void edg_wll_FreeAcl(edg_wll_Acl acl) { }
 int edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
                          char *aclid, int incr) { return 0; }
-int edg_wll_UpdateACL(edg_wll_Context ctx, edg_wlc_JobId job,
+int edg_wll_UpdateACL(edg_wll_Context ctx, glite_jobid_const_t job,
                   char *user_id, int user_id_type,
                   int permission, int perm_type, int operation) { return 0; }
-int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl) { return 0; }
+int edg_wll_GetACL(edg_wll_Context ctx, glite_jobid_const_t jobid, edg_wll_Acl *acl) { return 0; }
 
 
 #endif

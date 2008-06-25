@@ -13,7 +13,7 @@
 #include "lb_authz.h"
 */
 #include "db_supp.h"
-
+#include "lb_proto.h"
 
 
 int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, const char *source, char **seqcode)

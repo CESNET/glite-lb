@@ -518,8 +518,8 @@ limit_cycle_cleanup:
 				while(conditions[i][j].attr) {
 				
 					if(conditions[i][j].attr == EDG_WLL_QUERY_ATTR_JOBID) {
-						dbjob = edg_wlc_JobIdGetUnique(conditions[i][j].value.j);
-						prefix = glite_jobid_getServer(conditions[i][j].value.c);
+						dbjob = glite_jobid_getUnique(conditions[i][j].value.j);
+						prefix = glite_jobid_getServer(conditions[i][j].value.j);
 						trio_asprintf(&zomb_where_temp,"%s%s((p.prefix = '%|Ss') AND (j.jobid = '%|Ss'))",
 							zomb_where,
 							first_or ? " OR " : "", 

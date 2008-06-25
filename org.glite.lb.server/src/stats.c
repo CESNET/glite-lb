@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <errno.h>
+#include <time.h>
 
 #include "glite/lb/events.h"
 #include "glite/lb/jobstat.h"

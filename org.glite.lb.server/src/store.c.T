@@ -36,8 +36,10 @@
 
 static int store_user(edg_wll_Context,const char *,const char *); 
 static int store_job(edg_wll_Context,glite_jobid_const_t,const char *, int, int, int, int);
+/* FIXME: 'set_job_grey' defined but not used */
 static int set_job_grey(edg_wll_Context ctx, char *jobid);
 static int store_flesh(edg_wll_Context,edg_wll_Event *,const char *ulm, char *,int);
+/* FIXME: 'check_dup' defined but not used */
 static int check_dup(edg_wll_Context,edg_wll_Event *);
 static int check_auth(edg_wll_Context,edg_wll_Event *e); 
 static void lowercase_usertag(edg_wll_Event *ev);
@@ -387,13 +389,15 @@ err:
 
 static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,char *jobid,int no)
 {
+#ifndef LB_EVENTS_BLOB
 	struct {
 		char	*key;
 		char	*val;
 	} f[20];
+	unsigned int	i;
+#endif
 
 	char	*stmt;
-	unsigned int	i;
 	int	err = 0;
 
 	assert(ulm || e);

@@ -22,4 +22,8 @@ extern edg_wll_ErrorCode edg_wll_Proto(
 
 extern char *edg_wll_HTTPErrorMessage(int);
 
+extern int edg_wll_UserJobsServer(edg_wll_Context ctx, edg_wlc_JobId  **jobs, edg_wll_JobStat **states);
+
+extern int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, const char *source, char **seqcode);
+
 #endif /* GLITE_LB_PROTO_H */

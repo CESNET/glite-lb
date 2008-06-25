@@ -16,6 +16,7 @@
 #include "get_events.h"
 #include "ws_fault.h"
 #include "ws_typeref.h"
+#include "lb_proto.h"
 
 #if GSOAP_VERSION <= 20602
 #define __lb__GetVersion __ns1__GetVersion

@@ -48,6 +48,10 @@ extern int edg_wll_CreateFileStorage(
 	char **fname
 );
 
+extern int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,edg_wll_DumpResult *result);
+
+extern int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,edg_wll_LoadResult *result);
+
 #define edg_wll_CreateTmpDumpFile(ctx, f)	edg_wll_CreateTmpFileStorage(ctx,ctx->dumpStorage,f)
 #define edg_wll_CreateTmpPurgeFile(ctx, f)	edg_wll_CreateTmpFileStorage(ctx,ctx->purgeStorage,f)
 

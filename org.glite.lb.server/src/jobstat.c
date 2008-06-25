@@ -14,6 +14,7 @@
 #include "glite/lb/events.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/intjobstat.h"
+#include "glite/lb/process_event.h"
 
 #include "get_events.h"
 #include "store.h"
@@ -317,7 +318,6 @@ int edg_wll_JobStatusServer(
 #endif
 
 		whole_cycle = 1;
-commit:
 rollback:
 		if (!whole_cycle) {
 				edg_wll_FreeStatus(&jobstat.pub);
@@ -382,7 +382,7 @@ int edg_wll_intJobStatus(
 	
         jqr[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
         jqr[0].op = EDG_WLL_QUERY_OP_EQUAL;
-        jqr[0].value.j = job;
+        jqr[0].value.j = (glite_jobid_t)job;
         jqr[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 
 	jqra = (edg_wll_QueryRec **) malloc (2 * sizeof(edg_wll_QueryRec **));
@@ -658,7 +658,7 @@ cleanup:
 
 
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
-        edg_wlc_JobId jobid,
+        glite_jobid_const_t jobid,
         char *icnames, 
 	char *values,
 	glite_lbu_bufInsert *bi)
@@ -691,7 +691,7 @@ cleanup:
  */
 
 edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
-				    edg_wlc_JobId jobid,
+				    glite_jobid_const_t jobid,
 				    int lock,
 				    int seq,
 				    intJobStat **stat)
@@ -769,7 +769,7 @@ static char* hist_to_string(int * hist)
 
 /* checks whether parent jobid would generate the same sem.num. */
 /* as children jobid 						*/
-static int dependent_parent_lock(edg_wll_Context ctx, edg_wlc_JobId p,edg_wlc_JobId c)
+static int dependent_parent_lock(edg_wll_Context ctx, glite_jobid_const_t p,glite_jobid_const_t c)
 {
 	int     p_id, c_id;
 
@@ -949,7 +949,7 @@ err:
  */
 
 edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
-					edg_wlc_JobId job,
+					glite_jobid_const_t job,
 					edg_wll_Event *e,
 					int seq,
 					intJobStat *ijsp,
@@ -998,7 +998,7 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
  */
 
 edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
-					edg_wlc_JobId job,
+					glite_jobid_const_t job,
 					edg_wll_Event *e,
 					int seq,
 					edg_wll_JobStat	*stat_out)
@@ -1066,12 +1066,11 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		else destroy_intJobStat(&jobstat);
 	}
 
-err:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 
-edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, int *hist)
+edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, glite_jobid_const_t parent_jobid, int *hist)
 {
 
         char    *stmt = NULL,*out = NULL, *rest = NULL;
@@ -1117,7 +1116,7 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId 
 
 /* Make a histogram of all subjobs belonging to the parent job */
 
-edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context ctx, edg_wlc_JobId parent_jobid, intJobStat *ijs)
+edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context ctx, glite_jobid_const_t parent_jobid, intJobStat *ijs)
 {
         char *stat_enc = NULL;
         char *stmt;

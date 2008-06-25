@@ -74,6 +74,7 @@ install:
 	install -m 644 lb-job-attrs2.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/intjobstat.h ${PREFIX}/include/glite/lb
+	install -m 644 ${top_srcdir}/interface/process_event.h ${PREFIX}/include/glite/lb
 	install -m 644 ${top_srcdir}/interface/seqcode_aux.h ${PREFIX}/include/glite/lb
 	install -m 644 job_attrs.h ${PREFIX}/include/glite/lb
 	install -m 644 job_attrs2.h ${PREFIX}/include/glite/lb

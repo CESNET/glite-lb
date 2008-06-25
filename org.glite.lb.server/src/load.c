@@ -25,6 +25,7 @@
 #include "get_events.h"
 #include "server_state.h"
 #include "db_supp.h"
+#include "lb_proto.h"
 
 static int read_line(char **buff, size_t *maxsize, int fd);
 

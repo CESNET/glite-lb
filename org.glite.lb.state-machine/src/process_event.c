@@ -13,6 +13,7 @@
 
 #include "intjobstat.h"
 #include "seqcode_aux.h"
+#include "process_event.h"
 
 
 /* TBD: share in whole logging or workload */
@@ -71,6 +72,7 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 }
 
 #define rep(a,b) { free(a); a = (b == NULL) ? NULL : strdup(b); }
+#define rep_null(a) { free(a); a = NULL; }
 #define rep_cond(a,b) { if (b) { free(a); a = strdup(b); } }
 
 static void free_stringlist(char ***lptr)
@@ -197,7 +199,7 @@ static void reset_branch(intJobStat *js, edg_wll_Event *e)
 	free_stringlist(&js->pub.possible_ce_nodes);
 	free_branch_state(&js->branch_states);
 	js->pub.payload_running = 0;
-	rep(js->branch_tag_seqcode, NULL);
+	rep_null(js->branch_tag_seqcode);
 	rep(js->deep_resubmit_seqcode, e->any.seqcode);
 }
 
@@ -263,9 +265,9 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		js->last_seqcode &&
 		after_enter_wm(e->any.seqcode,js->last_seqcode))
 	{
-		rep(js->branch_tag_seqcode,NULL); 
-		rep(js->deep_resubmit_seqcode,NULL); 
-		rep(js->last_branch_seqcode,NULL); 
+		rep_null(js->branch_tag_seqcode); 
+		rep_null(js->deep_resubmit_seqcode); 
+		rep_null(js->last_branch_seqcode); 
 	}
 
 	if (js->deep_resubmit_seqcode && 
@@ -902,7 +904,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 
 		if (js->pub.state != EDG_WLL_JOB_RUNNING) {
 			js->pub.suspended = 0;
-			rep(js->pub.suspend_reason, NULL);
+			rep_null(js->pub.suspend_reason);
 		}
 
 		if (fine_res == RET_GOODBRANCH) {

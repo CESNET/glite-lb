@@ -20,6 +20,7 @@
 #include "server_state.h"
 #include "purge.h"
 #include "db_supp.h"
+#include "lb_proto.h"
 
 static char *time_to_string(time_t t, char **ptr);
 static int handle_specials(edg_wll_Context,time_t *);
