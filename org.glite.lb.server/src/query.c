@@ -95,8 +95,10 @@ int edg_wll_QueryEventsServer(
 		if (!ctx->noIndex) goto cleanup;
 
 	if ( job_conditions && *job_conditions && (*job_conditions)->attr &&
-		!(job_where = jc_to_head_where(ctx, job_conditions, &where_flags)) )
-		if (!ctx->noIndex) goto cleanup;
+		!(job_where = jc_to_head_where(ctx, job_conditions, &where_flags)) && 
+		edg_wll_Error(ctx,NULL,NULL) != 0 )
+	/* XXX: covered with error check above:  if (!ctx->noIndex) */
+		 goto cleanup;
 
 	if (ctx->peerName) peerid = strdup(strmd5(ctx->peerName,NULL));
 	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
@@ -369,8 +371,9 @@ int edg_wll_QueryJobsServer(
 	if ( (!ctx->noIndex && check_job_query_index(ctx, conditions)) || check_strict_jobid_cond(ctx,conditions))
 		goto cleanup;
 
-	if ( !(job_where = jc_to_head_where(ctx, conditions, &where_flags)) )
-		if (!ctx->noIndex) goto cleanup;
+	if ( !(job_where = jc_to_head_where(ctx, conditions, &where_flags)) && edg_wll_Error(ctx,NULL,NULL) != 0)
+		/* XXX: covered with error check above:  if (!ctx->noIndex) */
+		goto cleanup;
 
 	if ( (where_flags & FL_SEL_STATUS) )
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "

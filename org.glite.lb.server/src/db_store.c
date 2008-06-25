@@ -244,7 +244,7 @@ static int forward_event_to_server(edg_wll_Context ctx, char *event, edg_wll_Eve
 			//return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "db_actual_store() ERROR: the event is not PROXY");
 		}
 
-		if (!(ev->any.priority & EDG_WLL_LOGFLAG_DIRECT) && !local_job) {
+		if (!(ev->any.priority & (EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_INTERNAL)) && !local_job) {
 			if (edg_wll_EventSendProxy(ctx, ev->any.jobId, event) )  {
 				return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_EventSendProxy() error.");
 			}

@@ -10,7 +10,7 @@
 int edg_wll_JobStatusServer(edg_wll_Context, glite_jobid_const_t, int, edg_wll_JobStat *);
 
 
-int edg_wll_intJobStatus( edg_wll_Context, glite_jobid_const_t, int, intJobStat *, int);
+int edg_wll_intJobStatus( edg_wll_Context, glite_jobid_const_t, int, intJobStat *, int, int);
 edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context, intJobStat *, int);
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context, edg_wlc_JobId, char *icnames, char *values, glite_lbu_bufInsert *bi);
 edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context , edg_wlc_JobId , int, int, intJobStat **);
@@ -23,9 +23,9 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context,edg_wlc_JobId,edg_w
 intJobStat* dec_intJobStat(char *, char **);
 char *enc_intJobStat(char *, intJobStat* );
 
-void write2rgma_status(edg_wll_JobStat *);
-void write2rgma_chgstatus(edg_wll_JobStat *, char *);
-char* write2rgma_statline(edg_wll_JobStat *);
+void write2rgma_status(intJobStat *);
+void write2rgma_chgstatus(intJobStat *, char *);
+char* write2rgma_statline(intJobStat *);
 
 int add_stringlist(char ***, const char *);
 

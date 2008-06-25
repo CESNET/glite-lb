@@ -88,7 +88,7 @@ start()
 
 stop()
 {
-	echo -n Stopping glite-lb-interlogd ...
+	echo -n Stopping glite-lb-notif-interlogd ...
 	killall glite-lb-notif-interlogd
 	echo done
 	if [ -f $pidfile ]; then

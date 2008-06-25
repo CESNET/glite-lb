@@ -351,10 +351,12 @@ static void usage(const char *me)
 static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_cols) {
 
 	glite_lbu_Statement sh;
+	glite_lbu_Statement sh0;
 	int njobs, ret = -1;
 	intJobStat *stat;
 	edg_wlc_JobId jobid;
 	char *res[5];
+	char *res0[1];
 	char *rest;
 	char *icvalues, *stmt;
 	int i;
@@ -362,15 +364,27 @@ static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_
 	edg_wll_ResetError(ctx);
 	if (!job_index_cols) return 0;
 
-	if ((njobs = edg_wll_ExecSQL(ctx, "select s.jobid,s.int_status,s.seq,s.version,j.dg_jobid"
-				       " from states s, jobs j where s.jobid=j.jobid",&sh)) < 0) {
-		glite_lbu_FreeStmt(&sh);
+	if ((njobs = edg_wll_ExecSQL(ctx, "select jobid from states", &sh0)) < 0) {
+		glite_lbu_FreeStmt(&sh0);
 		return edg_wll_Error(ctx, NULL, NULL);
 	}
-	while ((ret=edg_wll_FetchRow(ctx,sh,sizeof(res)/sizeof(res[0]),NULL,res)) >0) {
+	while ((ret=edg_wll_FetchRow(ctx,sh0,sizeof(res0)/sizeof(res0[0]),NULL,res0)) >0) {
 		do {
 	                if (edg_wll_Transaction(ctx)) goto rollback;
-        	        if (edg_wll_LockJobRowInShareMode(ctx, res[4])) goto rollback;;
+			trio_asprintf(&stmt, "select s.jobid,s.int_status,s.seq,s.version,j.dg_jobid"
+					" from states s, jobs j where s.jobid='%|Ss' and s.jobid=j.jobid"
+					" for update",
+					res0[0]);
+			if ((edg_wll_ExecSQL(ctx, stmt ,&sh)) < 1) {
+				glite_lbu_FreeStmt(&sh);
+				free(stmt); stmt = NULL;
+				goto rollback;
+			}
+			free(stmt); stmt = NULL;
+			if ((ret=edg_wll_FetchRow(ctx,sh,sizeof(res)/sizeof(res[0]),NULL,res)) <= 0) {
+				glite_lbu_FreeStmt(&sh);
+				goto rollback;
+			}
 
 			if (strcmp(res[3], INTSTAT_VERSION)) {
 				stat = NULL;
@@ -381,9 +395,10 @@ static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_
 							free(stat);
 							stat = NULL;
 						} else {
-							if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1)) {
+							if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1, 0)) {
 								free(stat);
 								stat = NULL;
+								if (edg_wll_Error(ctx,NULL,NULL) != ENOENT) do_exit(ctx, EX_SOFTWARE);
 							}
 						}
 					}
@@ -392,21 +407,21 @@ static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_
 			} else {
 				stat = dec_intJobStat(res[1], &rest);
 				if (rest == NULL) stat = NULL;
+				if (stat == NULL) fprintf(stderr,"glite-lb-bkindex: warning: "
+							"cannot decode int_status for %s\n",res[4]);
 			}
-			if (stat == NULL) {
-				glite_lbu_FreeStmt(&sh);
-				edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE,
-					"cannot decode int_status from states DB table");
-				goto rollback;
+			if (stat != NULL) {
+				edg_wll_IColumnsSQLPart(ctx, job_index_cols, &stat->pub, 0, NULL, &icvalues);
+				trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
+				ret = edg_wll_ExecSQL(ctx, stmt, NULL);
+				free(icvalues);
+				free(stmt);
+				destroy_intJobStat(stat); free(stat);
 			}
-
-			edg_wll_IColumnsSQLPart(ctx, job_index_cols, &stat->pub, 0, NULL, &icvalues);
-			trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
-			ret = edg_wll_ExecSQL(ctx, stmt, NULL);
 
 			for (i = 0; i < 5; i++) free(res[i]);
-			destroy_intJobStat(stat); free(stat);
-			free(stmt); free(icvalues);
+			free(res0[0]);
+			glite_lbu_FreeStmt(&sh);
 
 			if (ret < 0) goto rollback;
 rollback:;
@@ -414,7 +429,7 @@ rollback:;
 		if (edg_wll_Error(ctx, NULL, NULL))  goto err;
 	}
 err:
-	glite_lbu_FreeStmt(&sh);
+	glite_lbu_FreeStmt(&sh0);
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
