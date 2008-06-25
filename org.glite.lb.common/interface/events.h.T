@@ -410,6 +410,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 #define EDG_WLL_LOGFLAG_LOCAL   2 /**< logging to local logger */
 #define EDG_WLL_LOGFLAG_PROXY   4 /**< logging to L&B Proxy */
 #define EDG_WLL_LOGFLAG_DIRECT  8 /**< logging directly to bkserver */
+#define EDG_WLL_LOGFLAG_INTERNAL  16 /**< internally generated event, don't forward */
 
 /* enums for the ChangeACL event */
 
