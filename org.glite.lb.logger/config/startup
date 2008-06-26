@@ -40,7 +40,7 @@ start()
 	mkdir -p /var/glite/log 
 	chown $GLITE_USER /var/glite/log
 	echo -n Starting glite-lb-logd ...
-        (cd /tmp && ls -f /tmp |fgrep ^dglogd_sock_ |xargs rm -f)
+        (cd /tmp && ls -f /tmp |grep ^dglogd_sock_ |xargs rm -f)
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-logd \
 		$creds $port $sock $fprefix" && echo " done" || echo " FAILED"
 

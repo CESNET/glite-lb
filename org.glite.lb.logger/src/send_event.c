@@ -282,17 +282,10 @@ event_queue_send(struct event_queue *eq)
 #ifdef LB_PERF
     if(!nosend) {
 #endif
-        /* XXX: ljocha -- does it make sense to send empty messages ? */
 	if (msg->len) {
 	    tv.tv_sec = TIMEOUT;
 	    tv.tv_usec = 0;
 	    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
-	    /* commented out due to the conflict with following ljocha's code
-	      if(ret < 0) {
-		    eq->timeout = TIMEOUT;
-		    return(0);
-	    }
-	    */
 	    if(ret < 0) {
 	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && events_sent > 0)
 	        eq->timeout = 0;
@@ -303,9 +296,11 @@ event_queue_send(struct event_queue *eq)
  	    
 	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
-		    if (events_sent>0) 
+		    if (events_sent>0) {
+			/* could be expected server connection preemption */
+			clear_error();
 			eq->timeout = 1;
-		    else {
+		    } else {
 			eq->timeout = TIMEOUT;
 		        il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
                     }
