@@ -135,6 +135,7 @@ int glite_srvbones_run(
 
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGUSR1, &sa, NULL);
+	sigaction(SIGXFSZ, &sa, NULL);
 
 	sigemptyset(&sset);
 	sigaddset(&sset, SIGCHLD);
