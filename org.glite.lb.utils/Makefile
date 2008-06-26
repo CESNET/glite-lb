@@ -91,6 +91,7 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README* ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
+	${INSTALL} -m 755 ${top_srcdir}/src/glite-lb-bkpurge-offline.sh ${PREFIX}/bin/glite-lb-bkpurge-offline
 
 	for p in ${UTILS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \

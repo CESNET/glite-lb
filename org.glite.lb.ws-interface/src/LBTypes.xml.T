@@ -233,7 +233,7 @@
 
 		<struct name="genericFault" fault="yes">
 			Generic SOAP fault, used to deliver any LB errors.
-			<elem name="source" type="xsd:string">Source component (module) of the error.</elem>
+			<elem name="source" type="xsd:string" optional="yes">Source component (module) of the error.</elem>
 			<elem name="code" type="xsd:int">Numeric error code.</elem>
 			<elem name="text" type="xsd:string">Error text corresponding to the code.</elem>
 			<elem name="description" type="xsd:string" optional="yes">Additional description of the error (e.g. filename)</elem>
