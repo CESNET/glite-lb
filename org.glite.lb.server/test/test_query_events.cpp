@@ -54,7 +54,7 @@ void QueryEventsTest::oneJob()
 
 	job[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
 	job[0].op = EDG_WLL_QUERY_OP_EQUAL ;
-	edg_wlc_JobIdParse("https://lhun.ics.muni.cz:4850/WrCEKje9QTXFiSOZuPMLtw",
+	glite_jobid_parse("https://lhun.ics.muni.cz:4850/WrCEKje9QTXFiSOZuPMLtw",
 		(glite_jobid_t *) &job[0].value.j);
 	job[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 	
@@ -83,7 +83,7 @@ void QueryEventsTest::oneJob()
 	qry_file.close();
 
 	CPPUNIT_ASSERT(!edg_wll_QueryEventsServer(ctx,1,jobs,NULL,&events));
-	edg_wlc_JobIdFree((glite_jobid_t) job[0].value.j);
+	glite_jobid_free((glite_jobid_t) job[0].value.j);
 	for (i = 0; events[i].type; i++) edg_wll_FreeEvent(&events[i]);
 	free(events);
 }
@@ -160,14 +160,14 @@ int glite_lbu_DBError(glite_lbu_DBContext ctx, char **s1, char **s2) { return 0;
 
 int edg_wll_JobStatusServer(
 	edg_wll_Context	ctx,
-	const edg_wlc_JobId		job,
+	glite_jobid_const_t		job,
 	int		flags,
 	edg_wll_JobStat	*stat)
 {
 	return 0;
 }
 
-int edg_wll_GetACL(edg_wll_Context ctx, edg_wlc_JobId jobid, edg_wll_Acl *acl) { return 0; }
+int edg_wll_GetACL(edg_wll_Context ctx, glite_jobid_const_t jobid, edg_wll_Acl *acl) { return 0; }
 int edg_wll_CheckACL(edg_wll_Context ctx, edg_wll_Acl acl, int requested_perm) { return 0; }
 void edg_wll_FreeAcl(edg_wll_Acl acl) { return; }
 }
