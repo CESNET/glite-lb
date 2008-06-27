@@ -22,3 +22,7 @@ SEQCODE	UI=000002:NS=0000000001:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRM
 SRC_INSTANCE	
 
 select name,value from long_fields where jobid = 'WrCEKje9QTXFiSOZuPMLtw' and event = 1
+
+SELECT DISTINCT j.dg_jobid,j.userid FROM jobs j WHERE (j.jobid='WrCEKje9QTXFiSOZuPMLtw')
+https://lhun.ics.muni.cz:4850/WrCEKje9QTXFiSOZuPMLtw	294de3557d9d00b3d2d8a1e6aab028cf
+

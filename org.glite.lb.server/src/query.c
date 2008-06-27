@@ -61,6 +61,10 @@ int edg_wll_QueryEventsServer(
 					eperm = 0;
 	char *peerid = NULL;
 	char *can_peername = NULL, *can_peerid = NULL;
+	edg_wlc_JobId *jobsfound;
+	edg_wll_JobStat *statesfound;
+        char *jobstr;
+	int ii;
 
 	edg_wll_ResetError(ctx);
 
@@ -92,130 +96,142 @@ int edg_wll_QueryEventsServer(
 	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 	if (can_peername) can_peerid = strdup(strmd5(can_peername,NULL));
 
-/* XXX: similar query in srv_purge.c ! They has to match due to common
- * convert_event_head() called on the result
- */
-	trio_asprintf(&qbase,"SELECT e.event,j.userid,j.dg_jobid,e.code,"
-		"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived "
-		"FROM events e,users u,jobs j%s "
-		"WHERE %se.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
-		"%s %s %s %s",
-		i & FL_SEL_STATUS			? ",states s"				: "",
-		i & FL_SEL_STATUS			? "s.jobid=j.jobid AND "	: "",
-		EDG_WLL_EVENT_UNDEF,
-		job_where					? "AND"						: "",
-		job_where					? job_where					: "",
-		event_where					? "AND"						: "",
-		event_where					? event_where				: "");
-
-	if ( ctx->softLimit )
-	{
-		if ( ctx->hardEventsLimit )
-			limit = ctx->softLimit < ctx->hardEventsLimit? ctx->softLimit: ctx->hardEventsLimit;
-		else
-			limit = ctx->softLimit;
-	}
-	else if ( ctx->hardEventsLimit )
-		limit = ctx->hardEventsLimit;
-	else
-		limit = 0;
 
 	i = 0;
 	out = calloc(1, sizeof(*out));
-	do
-	{
-		if ( limit )
-			trio_asprintf(&q, "%s LIMIT %d, %d", qbase, offset, limit);
-		else if ( !q )
-			q = qbase;
 
-//		printf("\nquery: %s\n\n", q);
-		ret = edg_wll_ExecStmt(ctx, q, &sh);
-		if ( limit )
-			free(q);
-		if ( ret < 0 )
+	edg_wll_QueryJobsServer(ctx, job_conditions, 0, &jobsfound, &statesfound);
+
+	for ( ii = 0; (jobsfound) && (jobsfound[ii]); ii++ ) {
+		jobstr = edg_wlc_JobIdUnparse(jobsfound[ii]);
+
+/* XXX: similar query in srv_purge.c ! They have to match due to common
+ * convert_event_head() called on the result
+ */
+		trio_asprintf(&qbase,"SELECT e.event,j.userid,j.dg_jobid,e.code,"
+			"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived "
+			"FROM events e,users u,jobs j "
+			"WHERE j.dg_jobid = '%s' AND e.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
+			"%s %s %s %s",
+			jobstr,
+			EDG_WLL_EVENT_UNDEF,
+			job_where					? "AND"						: "",
+			job_where					? job_where					: "",
+			event_where					? "AND"						: "",
+			event_where					? event_where				: "");
+
+		if ( ctx->softLimit )
 		{
-			edg_wll_FreeStmt(&sh);
-			goto cleanup;
+			if ( ctx->hardEventsLimit )
+				limit = ctx->softLimit < ctx->hardEventsLimit? ctx->softLimit: ctx->hardEventsLimit;
+			else
+				limit = ctx->softLimit;
 		}
-		if ( ret == 0 )
-		{
-			limit_loop = 0;
-			goto limit_cycle_cleanup;
-		}
-		if ( !limit || (ret < limit) )
-			limit_loop = 0;
+		else if ( ctx->hardEventsLimit )
+			limit = ctx->hardEventsLimit;
+		else
+			limit = 0;
 
-		offset += ret;
-		while ( (ret = edg_wll_FetchRow(sh, res)) == sizofa(res) )
+		do
 		{
-			int	n = atoi(res[0]);
-			free(res[0]);
+			if ( limit )
+				trio_asprintf(&q, "%s LIMIT %d, %d", qbase, offset, limit);
+			else if ( !q )
+				q = qbase;
 
-			if ( convert_event_head(ctx, res+2, out+i) || edg_wll_get_event_flesh(ctx, n, out+i) )
+			ret = edg_wll_ExecStmt(ctx, q, &sh);
+
+			free (qbase); qbase = NULL;
+
+			if ( limit )
+				free(q);
+			q = NULL;
+
+			if ( ret < 0 )
 			{
-				free(res[1]);
-				memset(out+i, 0, sizeof(*out));
 				edg_wll_FreeStmt(&sh);
 				goto cleanup;
 			}
-
-			if ( !match_flesh_conditions(out+i,event_conditions) || check_strict_jobid(ctx,out[i].any.jobId) )
+			if ( ret == 0 )
 			{
-				edg_wll_FreeEvent(out+i);
-				edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
-				goto fetch_cycle_cleanup;
+				limit_loop = 0;
+				goto limit_cycle_cleanup;
 			}
+			if ( !limit || (ret < limit) )
+				limit_loop = 0;
 
-			if ( !noAuth )
+			offset += ret;
+			while ( (ret = edg_wll_FetchRow(sh, res)) == sizofa(res) )
 			{
-				if (!ctx->peerName || (strcmp(res[1],peerid) && strcmp(res[1], can_peerid))) {
-					edg_wll_Acl	acl = NULL;
-					char		*jobid = NULL;
+				int	n = atoi(res[0]);
+				free(res[0]);
 
-					ret = edg_wll_GetACL(ctx, out[i].any.jobId, &acl);
-					free(jobid);
-					if (ret || acl == NULL) {
-						eperm = 1;
-						edg_wll_FreeEvent(out+i);
-						edg_wll_ResetError(ctx); /* XXX: should be reported somewhere at least in debug mode */
-						goto fetch_cycle_cleanup;
-					}
-
-					ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
-					edg_wll_FreeAcl(acl);
-					if (ret) {
-						eperm = 1;
-						edg_wll_FreeEvent(out+i);
-						edg_wll_ResetError(ctx); /* XXX: should be reported somewhere at least in debug mode */
-						goto fetch_cycle_cleanup;
-					}
-				}
-			}
-			
-			if ( (ctx->p_query_results != EDG_WLL_QUERYRES_ALL) && limit && (i+1 > limit) )
-			{
-				free(res[1]);
-				memset(out+i, 0, sizeof(*out));
-				edg_wll_SetError(ctx, E2BIG, "Query result size limit exceeded");
-				if ( ctx->p_query_results == EDG_WLL_QUERYRES_LIMITED )
+				if ( convert_event_head(ctx, res+2, out+i) || edg_wll_get_event_flesh(ctx, n, out+i) )
 				{
-					limit_loop = 0;
-					goto limit_cycle_cleanup;
+					free(res[1]);
+					memset(out+i, 0, sizeof(*out));
+					edg_wll_FreeStmt(&sh);
+					goto cleanup;
 				}
-				goto cleanup;
-			}
 
-			i++;
-			out = (edg_wll_Event *) realloc(out, (i+1) * sizeof(*out));
+				if ( !match_flesh_conditions(out+i,event_conditions) || check_strict_jobid(ctx,out[i].any.jobId) )
+				{
+					edg_wll_FreeEvent(out+i);
+					edg_wll_ResetError(ctx);	/* check_strict_jobid() sets it */
+					goto fetch_cycle_cleanup;
+				}
+
+				if ( !noAuth )
+				{
+					if (!ctx->peerName || (strcmp(res[1],peerid) && strcmp(res[1], can_peerid))) {
+						edg_wll_Acl	acl = NULL;
+						char		*jobid = NULL;
+
+						ret = edg_wll_GetACL(ctx, out[i].any.jobId, &acl);
+						free(jobid);
+						if (ret || acl == NULL) {
+							eperm = 1;
+							edg_wll_FreeEvent(out+i);
+							edg_wll_ResetError(ctx); /* XXX: should be reported somewhere at least in debug mode */
+							goto fetch_cycle_cleanup;
+						}
+
+						ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
+						edg_wll_FreeAcl(acl);
+						if (ret) {
+							eperm = 1;
+							edg_wll_FreeEvent(out+i);
+							edg_wll_ResetError(ctx); /* XXX: should be reported somewhere at least in debug mode */
+							goto fetch_cycle_cleanup;
+						}
+					}
+				}
+				
+				if ( (ctx->p_query_results != EDG_WLL_QUERYRES_ALL) && limit && (i+1 > limit) )
+				{
+					free(res[1]);
+					memset(out+i, 0, sizeof(*out));
+					edg_wll_SetError(ctx, E2BIG, "Query result size limit exceeded");
+					if ( ctx->p_query_results == EDG_WLL_QUERYRES_LIMITED )
+					{
+						limit_loop = 0;
+						goto limit_cycle_cleanup;
+					}
+					goto cleanup;
+				}
+
+				i++;
+				out = (edg_wll_Event *) realloc(out, (i+1) * sizeof(*out));
 
 fetch_cycle_cleanup:
-			memset(out+i, 0, sizeof(*out));
-			free(res[1]);
-		}
+				memset(out+i, 0, sizeof(*out));
+				free(res[1]);
+			}
 limit_cycle_cleanup:
-		edg_wll_FreeStmt(&sh);
-	} while ( limit_loop );
+			edg_wll_FreeStmt(&sh);
+		} while ( limit_loop );
+		free(jobstr); jobstr = NULL;
+	}
 
 	if ( i == 0 && eperm )
 		edg_wll_SetError(ctx, EPERM, "matching events found but authorization failed");
@@ -235,7 +251,6 @@ cleanup:
 			edg_wll_FreeEvent(out+i);
 		free(out);
 	}
-	free(qbase);
 	free(job_where);
 	free(event_where);
 	free(peerid);
@@ -320,7 +335,6 @@ int edg_wll_QueryJobsServer(
 		else if ( !q )
 			q = qbase;
 
-//		printf("\nquery: %s\n\n", q);
 		ret = edg_wll_ExecStmt(ctx, q, &sh);
 		if ( limit )
 			free(q);

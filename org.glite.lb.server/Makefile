@@ -271,7 +271,8 @@ ${MAN_GZ}: ${MAN}
 compile: glite-lb-bkserverd glite-lb-bkindex ${STATIC_LIB_BK} ${PLUGIN_LIB} store.c index.c jp_job_attrs.h ${MAN_GZ}
 
 
-check: compile test.xml test.query
+#check: compile test.xml test.query
+check: compile test.xml 
 	-echo check.query not complete yet
 
 test_coverage:
