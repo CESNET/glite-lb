@@ -152,6 +152,7 @@ int edg_wll_JobStatus(
 	int		flags,
 	edg_wll_JobStat	*stat)
 {
+	edg_wlc_JobIdDup(job,&stat->jobId);
 	return 0;
 }
 

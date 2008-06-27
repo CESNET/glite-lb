@@ -100,7 +100,7 @@ int edg_wll_QueryEventsServer(
 	i = 0;
 	out = calloc(1, sizeof(*out));
 
-	edg_wll_QueryJobsServer(ctx, job_conditions, 0, &jobsfound, &statesfound);
+	if (edg_wll_QueryJobsServer(ctx, job_conditions, 0, &jobsfound, &statesfound)) goto cleanup;
 
 	for ( ii = 0; (jobsfound) && (jobsfound[ii]); ii++ ) {
 		jobstr = edg_wlc_JobIdUnparse(jobsfound[ii]);
