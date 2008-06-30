@@ -137,7 +137,7 @@ public class Jobid {
         String uniqueS = jobidString.substring(dashAfterPort+1, jobidString.length());
         
         this.bkserver = bkserverS;
-        this.port = portS;
+        this.port = portS.intValue();
         this.unique = (new CheckedString(uniqueS)).toString();
     }
 
@@ -219,7 +219,6 @@ public class Jobid {
      * 
      * @return Jobid string representation in format bkserver:port/unique
      */
-    @Override
     public String toString() {
         return bkserver + ":" + port + "/" + unique;
     }
