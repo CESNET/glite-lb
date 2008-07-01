@@ -47,8 +47,7 @@ int edg_wll_QueryEventsServer(
         const edg_wll_QueryRec **event_conditions,
         edg_wll_Event **events)
 {
-	char		   *job_where = NULL,
-				   *event_where = NULL,
+	char			   *event_where = NULL,
 				   *qbase = NULL,
 				   *q = NULL,
 				   *res[11];
@@ -87,11 +86,6 @@ int edg_wll_QueryEventsServer(
 		edg_wll_Error(ctx,NULL,NULL) != 0)
 		goto cleanup;
 
-	if ( job_conditions && *job_conditions && (*job_conditions)->attr &&
-		!(job_where = jc_to_head_where(ctx, job_conditions, &i)) &&
-		edg_wll_Error(ctx,NULL,NULL) != 0 )
-		goto cleanup;
-
 	if (ctx->peerName) peerid = strdup(strmd5(ctx->peerName,NULL));
 	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 	if (can_peername) can_peerid = strdup(strmd5(can_peername,NULL));
@@ -112,11 +106,9 @@ int edg_wll_QueryEventsServer(
 			"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived "
 			"FROM events e,users u,jobs j "
 			"WHERE j.dg_jobid = '%s' AND e.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
-			"%s %s %s %s",
+			"%s %s",
 			jobstr,
 			EDG_WLL_EVENT_UNDEF,
-			job_where					? "AND"						: "",
-			job_where					? job_where					: "",
 			event_where					? "AND"						: "",
 			event_where					? event_where				: "");
 
@@ -251,7 +243,6 @@ cleanup:
 			edg_wll_FreeEvent(out+i);
 		free(out);
 	}
-	free(job_where);
 	free(event_where);
 	free(peerid);
 	free(can_peername); free(can_peerid);
