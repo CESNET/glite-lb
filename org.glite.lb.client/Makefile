@@ -248,7 +248,7 @@ perftest_logjobs.o: perftest_logjobs.c
 
 %.h: %.h.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 %.o: %.cpp
@@ -256,12 +256,12 @@ perftest_logjobs.o: perftest_logjobs.c
 
 %.c: %.c.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 %.cpp: %.cpp.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 %.sh: %.l gen_begin gen_sample_job
@@ -302,9 +302,9 @@ Event.cpp: EventAttrNames.pl
 
 JobStatus.cpp: StatusAttrNames.pl
 
-EventAttrNames.pl StatusAttrNames.pl:
+EventAttrNames.pl:
 	rm -f $@
-	ln -s ${stagedir}/share/${lbprefix}/at3/$@ $@
+	ln -s ${stagedir}/share/perl/gLite/LB/$@ $@
 
 dist: distsrc distbin
 
@@ -356,7 +356,7 @@ clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
 	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
-	rm -f EventAttrNames.pl StatusAttrNames.pl
+	rm -f EventAttrNames.pl
 	rm -vf ${globalprefix} ${lbprefix}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 

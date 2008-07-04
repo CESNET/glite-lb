@@ -215,6 +215,7 @@ install:
 		fi ; \
 		${STAGE_PERFTEST} ; \
 	fi
+	${INSTALL} -m 644 ${top_srcdir}/src/EventAttrNames.pl ${PREFIX}/share/perl/gLite/LB
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex

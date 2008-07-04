@@ -49,7 +49,7 @@ while (<>) {
 		if (/^\@\@\@}$/) {
 			$code .= "1;\n";
 			print "#line $startcode \"$ARGV\"\n/* begin */\n" if $lines;
-			eval $code or warn "eval: $@ at $ARGV:$.\n";
+			eval $code or die "eval: $@ at $ARGV:$.\n";
 			my $nxtline = $.+1;
 			print "/* end */\n#line $nxtline \"$ARGV\"\n" if $lines;
 			undef $code;
