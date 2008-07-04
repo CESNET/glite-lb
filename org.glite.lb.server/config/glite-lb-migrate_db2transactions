@@ -24,6 +24,9 @@ EOF
 SERVER=""
 PROXY=""
 
+#default DB name (may be overriden by -d option)
+DB_NAME="lbserver20"
+
 while getopts "spd:h" OPTION 
 do
     case "$OPTION" in 
