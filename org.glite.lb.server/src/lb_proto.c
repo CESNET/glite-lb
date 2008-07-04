@@ -190,6 +190,21 @@ static int outputHTML(char **headers)
 }
 
 
+static int drain_text_request(char *request){
+	int i = 0;
+	while (!isspace(request[i])) i++;
+	if (i < 5) 
+		return 0;
+	if (! strncmp(request+i-5, "/text", 5)){
+		if (i == 5)
+			strcpy(request+i-4, request+i); // keep '/'
+		else
+			strcpy(request+i-5, request+i);
+		return 1;
+	}
+	else
+		return 0;
+}
 
 
 edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
@@ -384,9 +399,10 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	char *request,char **headers,char *messageBody,
 	char **response,char ***headersOut,char **bodyOut)
 {
-	char *requestPTR, *message = NULL;
+	char *requestPTR = NULL, *message = NULL;
 	int	ret = HTTP_OK;
 	int 	html = outputHTML(headers);
+	int 	text = 0; //XXX: Plain text communication is special case of html here, hence when text=1, html=1 too
 	int	i;
 
 	edg_wll_ResetError(ctx);
@@ -425,7 +441,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 /* GET */
 	if (!strncmp(request, METHOD_GET, sizeof(METHOD_GET)-1)) {
 		
-		requestPTR = request + sizeof(METHOD_GET)-1;
+		requestPTR = strdup(request + sizeof(METHOD_GET)-1);
+		if (html) text = drain_text_request(requestPTR);
 
 
 	/* GET /: Current User Jobs */
@@ -437,7 +454,10 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 // FIXME: edg_wll_UserJobs should take flags as parameter
 			switch (edg_wll_UserJobsServer(ctx,&jobsOut,NULL)) {
-				case 0: if (html) edg_wll_UserJobsToHTML(ctx, jobsOut, &message);
+				case 0: if (text)
+						edg_wll_UserJobsToText(ctx, jobsOut, &message);
+					else if (html)
+						edg_wll_UserJobsToHTML(ctx, jobsOut, &message);
 					else ret = HTTP_OK;
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
@@ -481,7 +501,10 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				ret = HTTP_BADREQ;
 			}
 			else switch (edg_wll_JobStatusServer(ctx,jobId,0,&stat)) {
-				case 0: if (html) edg_wll_JobStatusToHTML(ctx,stat,&message); 
+				case 0: if (text) 
+						edg_wll_JobStatusToText(ctx,stat,&message); 
+					else if (html)
+						edg_wll_JobStatusToHTML(ctx,stat,&message);
 					else ret = HTTP_OK;
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
@@ -499,11 +522,13 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
+		free(requestPTR); requestPTR = NULL;
 
 /* POST */
 	} else if (!strncmp(request,METHOD_POST,sizeof(METHOD_POST)-1)) {
 
-		requestPTR = request + sizeof(METHOD_POST)-1;
+		requestPTR = strdup(request + sizeof(METHOD_POST)-1);
+		if (html) text = drain_text_request(requestPTR);
 	
 		if (!strncmp(requestPTR,KEY_QUERY_EVENTS,sizeof(KEY_QUERY_EVENTS)-1)) { 
         	        edg_wll_Event *eventsOut = NULL;
@@ -912,15 +937,21 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
         /* POST [something else]: not understood */
 		else ret = HTTP_BADREQ;
 
+		free(requestPTR); requestPTR = NULL;
+
 /* other HTTP methods */
 	} else ret = HTTP_NOTALLOWED;
 
 err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
 	*headersOut = (char **) (html ? response_headers_html : response_headers_dglb);
-	if ((ret != HTTP_OK) && html)
+	if ((ret != HTTP_OK) && text)
+                *bodyOut = edg_wll_ErrorToText(ctx,ret);
+	else if ((ret != HTTP_OK) && html)
 		*bodyOut = edg_wll_ErrorToHTML(ctx,ret);
 	else
 		*bodyOut = message;
+
+	if (requestPTR) free(requestPTR);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
