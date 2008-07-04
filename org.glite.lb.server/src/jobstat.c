@@ -113,7 +113,7 @@ int edg_wll_JobStatusServer(
 
 
 		if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, -1 /*all events*/, &ijsp)) {
-			*stat = ijsp->pub;
+			memcpy(stat, &(ijsp->pub), sizeof(ijsp->pub));
 			free(jobstat.pub.owner); jobstat.pub.owner = NULL;
 			destroy_intJobStat_extension(ijsp);
 			free(ijsp);
@@ -128,7 +128,7 @@ int edg_wll_JobStatusServer(
 
 				goto rollback;
 			}
-			*stat = jobstat.pub;
+			memcpy(stat, &(ijsp->pub), sizeof(ijsp->pub));
 		}
 		
 		if (edg_wll_GetACL(ctx, job, &acl)) goto rollback;
