@@ -8,7 +8,7 @@ should not be used for common event logging because of possibility of confusing
 \LB\ server job state automaton.
 
 The command \verb'glite-lb-logevent' is a complex logging tool and the complete
-list of parameters can be obtained using the \verb'-h' option. However,
+list of parameters can be obtained using the \verb'-h' option.  However,
 the only legal user usage is for logging \verb'UserTag' and \verb'ChangeACL'
 events. The following description is therefore concentrating only on options
 dealing with these two events.
@@ -30,40 +30,21 @@ where
 \texttt{  -e  -{}-event} &           select event type (see -e help)\\
 \end{tabularx}
 
-\medskip
+%\medskip
 
 Each event specified after \verb'-e' option has different sub-options enabling
 to set event specific values.
 
-Sub-options usable with \verb'UserTag' event are:
-
-
-\begin{tabularx}{\textwidth}{lX}
-\texttt{      -{}-name}  &          tag name\\
-\texttt{      -{}-value} &          tag value\\
-\end{tabularx}
-
-\medskip
-
-Sub-options usable with \verb'ChangeACL' event are:
-
-\begin{tabularx}{\textwidth}{lX}
-\texttt{      -{}-operation} &       operation requested to perform with ACL (add, remove)\\
-\texttt{      -{}-permission} &      ACL permission to change (currently only READ)\\
-\texttt{      -{}-permission\_type} & type of permission requested (0 = 'allow', 1 = 'deny')\\
-\texttt{      -{}-user\_id} &         DN or VOMS parameter (in format VO:group)\\
-\texttt{      -{}-user\_id\_type} &    type of information given in \verb'user_id' (DN or VOMS)\\
-\end{tabularx}
-
-\bigskip
-
-To be able to use this command several environmental variables must be set
-properly. User must specify where the event should be sent. This is address and
-port of glite-lb-logd daemon. It is done using environmental variable
-\verb'EDG_WL_LOG_DESTINATION' in a form \verb'address:port'.
+Address of local logger, where event is sent, must be specified by environment
+variable \verb'GLITE_WMS_LOG_DESTINATION' in a form \verb'address:port'.
 
 Because user is allowed to change ACL or add user tags only for her jobs, paths
 to valid X509 user credentials has to be set to authorise her. This is done
-using two environmental variables \verb'EDG_WL_X509_KEY' and
-\verb'EDG_WL_X509_CERT' in a form \verb'path_to_cred'.
+using standard X509 environment variables \verb'X509_USER_KEY' and
+\verb'X509_USER_CERT'.
 
+For additional information see also manual page GLITE-LB-LOGEVENT(1).
+
+\input log_usertag.tex
+
+\input change_acl.tex

@@ -1,15 +1,30 @@
 \section{Tools description}
-
-\TODO{glite-wms-*}
-
-\TODO{RPM, environment}
+\label{s:lb-tools}
 
 In this section we give a description of the tools that are installed
-together with the \verb'glite-lb-client'. These are the only \LB\ tools that a
-regular grid user may need to use.
+together with the \verb'glite-lb-client' RPM. These tools are \LB-specific.
+Besides these tools, \verb'glite-wms-job-status' and \verb'glite-wms-job-logging-info' available 
+in \verb'glite-wms-ui-cli-python' RPM, provide more information about user jobs and corresponding events.
+
+Behaviour of \verb'glite-lb-*' commands can be changed by setting the following enviroment variables:
+\begin{tabularx}{\textwidth}{lX}
+GLITE\_WMS\_LOG\_DESTINATION & address of \verb'glite-lb-logd' daemon, in form \verb'hostname:port'\\
+GLITE\_WMS\_LOG\_TIMEOUT & timeout (in seconds) for asynchronous logging\\
+GLITE\_WMS\_LOG\_SYNC\_TIMEOUT & timeout (in seconds) for synchronous logging\\
+GLITE\_WMS\_NOTIF\_SERVER& address of \verb'glite-lb-bkserver' daemon, in form \verb'hostname:port'\\
+GLITE\_WMS\_NOTIF\_TIMEOUT& timeout (in seconds) for notification registration\\
+X509\_USER\_CERT and X509\_USER\_KEY & location of user credentials\\
+\end{tabularx}
+For backward compatibility, all \verb'GLITE\_WMS\_*' variables can be prefixed by \verb'EDG\_WL\_' instead.
 
 \input{logevent}
 
 \input{notify}
 
-\TODO{Maybe add other tools: lite-lb-job-log, glite-lb-job-status, ...? Zlehka.}
+\subsection{Other useful tools}
+\label{glite-lb-other}
+
+For debugging purposes, low-level commands for getting \LB job status and job related events are provided in 
+\verb'examples' directory (\verb'glite-lb-job-status' and \verb'glite-lb-job-log'). The same directory
+contains also debugging commands for getting of all user jobs (\verb'glite-lb-user\_jobs') and
+CE-reputability rank (see Section \ref{s:ce-rank}, \verb'glite-lb-stats').

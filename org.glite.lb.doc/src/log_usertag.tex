@@ -1,9 +1,12 @@
-\subsection{Logging a UserTag event}
-\label{log_usertag}
+\subsubsection{Example: Logging a UserTag event}
+\label{e:usertag}
 
 User tag is an arbitrary ``name=value'' pair with which the user can assign
 additional information to a job. Further on, LB can be queried based also on
-values of user tags.  % (see Sect.~\ref{tag-query}).
+values of user tags. \LB treats all values as strings only, semantic meaning
+is left to user application. For internal reasons, all tag names are stored 
+in lower-case format. Support for case-sensitivenes is planned in future 
+versions of \LB.
 
 In order to add user tag for a job a special event \verb'UserTag' is used. This
 event can be logged by the job owner using the glite-lb-logevent command (see
@@ -24,11 +27,8 @@ glite-lb-logevent -s Application -e UserTag    \
 where
 
 \begin{tabularx}{\textwidth}{lX}
-\verb'<job_id>'    & specifies the job to change \\
-\verb'<seq_code>'  & specifies the sequence code returned by previous call
-			of verb 'glite-lb-logevent' \\
-\verb'<tag_name>'  & specifies the name of user tag \\
-\verb'<tag_value>' & specifies the value of user tag \\
+\texttt{<tag\_name>}  & specifies the name of user tag \\
+\texttt{<tag\_value>} & specifies the value of user tag \\
 \end{tabularx}
 
 The user application is always executed from within a JobWrapper script (part
@@ -44,9 +44,7 @@ more  subsequent calls,  the  user is responsible for capturing an updated
 sequence code from the stdout of \verb'glite-lb-logevent' and using it in
 subsequent calls. The \LB\ design requires the sequence codes in  order  to be
 able to sort events correctly while not relying on strictly synchronized
-clocks.  
-
-\TODO{What are the possible values/types of the tag? String/Integer/Float/Double?}
+clocks.
 
 The example bellow is a job consisting of 100 phases. A user tag phase is used
 to log the phase currently being executed. Subsequently, the user may monitor
@@ -66,6 +64,3 @@ execution of the job phases as a part of the job status returned by \LB.
   # do the actual computation here
   done
 \end{verbatim}
-
-\TODO{Add more examples.}
-

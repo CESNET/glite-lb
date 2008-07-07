@@ -1,3 +1,97 @@
 \subsection{glite-lb-notify}
+\label{s:lb-notify}
+
+\verb'glite-lb-notify' is a fairly simple wrapper on the \LB notification API
+(see also \cite{lbdg}).
+It allows to create a notification (with a restricted richness of specifying 
+conditions), bind to it for receiving notifications, and drop it finally.
+
+\LB notification is a user-initiated trigger at the server.
+Whenever a job enters a state matching conditions specified with the notification,
+the current state of the job is sent to the notification client.
+On the other hand, the notification client is a network listener
+which receives server-initiated connections to get the notifications.
+Unless \verb'-s' is specified, the notification library creates the listener
+socket.
+
+Within the notification validity, clients can disappear and even migrate.
+However, only a single active client for a notification is allowed.
+
+\LB server and port to contact is specified with GLITE\_WMS\_NOTIF\_SERVER 
+environment variable.
+
+\verb'glite-lb-notify' support these actions:
+\begin{description}
+\item[new] Create new notification registration
+\item[bind]  Binds an notification registration to a client.
+\item[refresh]  Enlarge notification registration validity.
+\item[receive]  Binds to an existing notification registration and listen to server.
+\item[drop]     Drop the notification registration.
+\end{description}
+
+For action \verb'new', command usage is:
+
+\begin{verbatim}
+  glite-lb-notify new [ { -s socket_fd | -a fake_addr } -t requested_validity ] {-j jobid | -o owner | -n network_server | -v virtual_organization }
+\end{verbatim}
+
+For action \verb'bind', command usage is:
+\begin{verbatim}
+glite-lb-notify bind [ { -s socket_fd | -a fake_addr } -t requested_validity ] notifid
+\end{verbatim}
+
+For action \verb'refresh', command usage is:
+\begin{verbatim}
+glite-lb-notify refresh [-t requested_validity ] notifid
+\end{verbatim}
+
+For action \verb'receive', command usage is:
+\begin{verbatim}
+glite-lb-notify receive [ { -s socket_fd | -a fake_addr } ] [-t requested_validity ] [-i timeout] [-f field1,field2,...] [notifid]
+\end{verbatim}
+
+For action \verb'drop', command usage is:
+\begin{verbatim}
+glite-lb-notify drop notifid
+\end{verbatim}
+
+where
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{  notifid} & Notification ID \\
+\texttt{  -s socket\_fd} &  allows  to  pass  a opened listening socket  \\
+\texttt{  -a fake\_addr} &  fake the client address \\
+\texttt{  -t requested\_validity} & requested validity of the notification (in seconds)   \\
+\texttt{  -j jobid} & job ID to connect notification registration with   \\
+\texttt{  -o owner} & match this owner DN   \\
+\texttt{  -n network\_server} &  match only this network server (WMS entry point)  \\
+\texttt{  -v virtual\_organization} & match only jobs of this Virtual Organization  \\
+\texttt{  -i timeout} & timeout to receive operation in seconds   \\
+\texttt{  -f field1,field2,...} & list of status fields to print (only owner by default)   \\
+\end{tabularx}
+
+For additional information see also manual page GLITE-LB-NOTIFY(1).
+
+\subsubsection{Example: Registration and waiting for simple notification}
+\label{e:notify}
+
+The two steps bellow describe basic testing procedure of the notification
+system by registering a notification on any state change of this job
+and waiting for notification.
+
+Register notification:
+\begin{verbatim}
+  export EDG_WL_NOTIF_SERVER=HOSTNAME:9000
+  ./glite-lb-notify new JOBID
+\end{verbatim}
+
+Wait for notification:
+\begin{verbatim}
+ TODO
+\end{verbatim}
+
+When you let notification client running several minutes without any incomming notification, it will finish and remove your registration from the server automatically.
+
+\subsubsection{Example: Waiting for more notifications on one socket}
 
 \TODO{ljocha}
