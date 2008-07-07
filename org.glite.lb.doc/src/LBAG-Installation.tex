@@ -9,7 +9,40 @@
 
 \subsubsection{Hardware requirements}
 
-Dimenzovano na normalni EGEE instalaci
+Hardware requirements depend on performance and storage time requirements.
+Disk space used by LB server consists of database space and working space 
+for backup dumps and temporary files used by exports to Job Provenance and
+R-GMA tables. Necessary database space can be calculated by multiplying 
+job retention length (job purge timeout), job submission rate, and  
+per-job space requirements (120\,KB per job is recommended for current common 
+EGEE usage pattern; jobs can consume more than that with use of very long
+JDL descriptions, user tags, or very high number of resubmissions).
+For temporary files, approximately 10\,GB is sufficient for LB server setups
+working normally, more can be needed when backlog forms in data export
+to any external service. For example, typical setup processing 40\,000 jobs per 
+day where all jobs are purged after 10 days needs about 58
+($0.000000120\cdot 40000\cdot 10 + 10$) gigabytes (not accounting for operating 
+system and system logs).
+
+For smooth handling of 40\,000 jobs/day, this or better machine configuration 
+is necessary:
+\begin{itemize}
+\item 1GB RAM
+\item CPU equivalent of single Xeon/Opteron 1.5GHz
+\item single 7200 rpm SATA disk.
+\end{itemize}
+In order to achieve higher performace, following changes are recommended:
+\begin{itemize}
+\item Faster disks. Disk access speed is crucial for LB server, couple of 15k rpm
+SCSI or SAS disks (one for MySQL database data file, the second for DB logs, LB server's
+working directories, and operating system files) or RAID with battery backed 
+write-back cache is preferable.
+\item More memory. Large RAM improves performance through memory caching,
+relative speed gain is likely to be rougly proportional to memory/database size ratio.
+To use 3\,GB or more efficiently, 64bit OS and MySQL server versions are recommended.
+\item Faster or more processors. CPU requirements scale approximately linearly with
+offered load.
+\end{itemize}
 
 \subsubsection{Standard installation}
 
