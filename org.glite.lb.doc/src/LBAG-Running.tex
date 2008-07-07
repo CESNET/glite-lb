@@ -7,6 +7,20 @@ that need more verbose description.
 It is complemented with the full commands reference that is provided
 as standard manual pages installed with the \LB packages.
 
+\subsubsection{Server superusers}
+
+Certain administrative operations (identified bellow when appropriate)
+on \LB server are privileged.
+When they are invoked remotely, a~special authorization is required.
+By default, the server identity (X509 certificate subject) is considered
+privileged.
+Additional subjects can be specified in \emph{superusers file},
+specified by \verb'--super-users-file' server option
+(one subject per line).
+
+The default startup script checks for existence of 
+/opt/glite/etc/LB-super-users and uses it eventually.
+
 \subsubsection{Changing index configuration}
 
 % full-scan skodi, LB se tomu brani
@@ -162,9 +176,61 @@ and it is not fatal in general (data were purged on purpose either).
 \subsubsection{Purging and processing old data}
 \label{run:purge}
 
-\TODO{salvet}
+Primary purpose of the LB purge operation  is removal of aged data from LB database. This is necessary in
+production in order to prevent ever-increasing database and sustain reasonable
+performance of the server. Therefore the purge should be invoked periodically.
+
+The purge operation has additional important ``side effect'' -- dumping the
+purged data into a plain text file. These dumps can be archived ``as is'' or
+uploaded to Job Provenance. 
+
+\paragraph{Purge setup}
+
+The purge operation itself is performed by a~running \LB server
+(there is no need to shut it down, then).
+However, it is triggered with \verb'glite-lb-purge' client command
+(complete usage reference is given in its man page).
+A~typical invocation specifies \LB server to purge (\verb'-m' option),
+and purge timeouts (grace periods) for several job states -- options
+\verb'-a' (aborted), \verb'-n' (canceled), \verb'-c' (cleared), and
+\verb'-o' (other).
+A~job falling in one of the four categories is purged when it has not been
+touched (\ie an event arrived) for time longer than the specified category
+timeout.
+Suggested values are several days for aborted and canceled jobs,
+and one day for cleared jobs, however, the values may strongly vary
+with \LB server policy.
+
+Optionally, \verb'-s' purge command option instructs the server to
+dump the purged data into a~file at the server side.
+It's location (prefix) is given by \verb'-S' server option,
+the purge command reports a~specific file name on its output.
+
+It is recommended (and the default YAIM setup does so) to run the purge
+command periodically from cron.
+
+Server superuser privileges (X509 credentials) are required to run \verb'glite-lb-purge'.
+
+If the server database has already grown huge, the purge operation can take
+rather long and hit the \LB server operation timeout. At client side, \ie the
+glite-lb-purge command, it can be increased by setting GLITE\_WMS\_QUERY\_TIMEOUT
+environment variable.
+
+Sometimes hardcoded server-side timeout can be still reached; in this case the
+server fails to return a correct response but the purge is done anyway. 
+
+\paragraph{Emergency purge}
+
+When regular purge was not invoked for some time, it may happen that 
+the database grows huge and the regular (on-line) purge fails.
+In order to work around such situation we provide an off-line emergency
+purge script \verb'glite-lb-bkpurge-offline.sh'
+
+\TODO{salvet}  
 
 \paragraph{Post-mortem statistics}
+
+\TODO{honik}
 
 \paragraph{Export to Job Provenance}
 
