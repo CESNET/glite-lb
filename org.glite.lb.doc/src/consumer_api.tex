@@ -39,7 +39,7 @@ statistics.h
 \LB\ server returns errors which are classified as hard and soft errors.
 The main difference between these categories is that in the case of soft
 errors results may still be returned.
-The authentication errors belong to
+The authorization errors belong to
 ``soft error'' sort. Hard errors are typically all unrecoverable errors like ENOMEM.
 
 When the item count returned by \LB\ server exceeds the defined limits, the E2BIG error occur.
@@ -78,6 +78,7 @@ It may take the following values:
 \end{itemize}
 Default value is EDG\_WLL\_QUERYRES\_NONE.
 
+\TODO{zkratit, doplnit zpracovani struktury (print jobs)}
 
 \subsection{Job queries}
 
