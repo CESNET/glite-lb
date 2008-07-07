@@ -206,7 +206,8 @@ dump the purged data into a~file at the server side.
 It's location (prefix) is given by \verb'-S' server option,
 the purge command reports a~specific file name on its output.
 
-It is recommended (and the default YAIM setup does so) to run the purge
+It is recommended (and the default YAIM setup does so, via
+the \verb'glite-lb-export.sh' wrapper) to run the purge
 command periodically from cron.
 
 Server superuser privileges (X509 credentials) are required to run \verb'glite-lb-purge'.
@@ -233,6 +234,24 @@ purge script \verb'glite-lb-bkpurge-offline.sh'
 \TODO{honik}
 
 \paragraph{Export to Job Provenance}
+
+An important, though currently optional, processing of \LB dumps
+is their upload to the Job Provenance service for permanent preservation
+of the data.
+
+
+When enabled (via configuration environment variables, see bellow), 
+the export is done in two steps:
+\begin{itemize}
+\item \verb'glite-lb-export.sh' wrapper script, after calling \verb'glite-lb-purge', breaks up the resulting dump file on a~per-job basis.
+The individual job dump files are stored in a~dedicated spool directory.
+\item \verb'glite-jp-importer' daemon (installed optionally in glite-jp-client.rpm) checks the spool directory periodically,
+and tries to upload the files into JP.
+\end{itemize}
+
+Details, including the configuration variables, are covered at the following
+wiki page:
+\url{http://egee.cesnet.cz/mediawiki/index.php/LB_purge_and_export_to_JP}.
 
 \subsubsection{On-line monitoring and statistics}
 
