@@ -10,6 +10,87 @@ as standard manual pages installed with the \LB packages.
 \subsubsection{Changing index configuration}
 
 \TODO{ljocha}
+% full-scan skodi, LB se tomu brani
+Inefficient queries, yielding full scan of \LB database tables (up to millions of tuples) would degrade server performance.
+Therefore \LB does not allow arbitrary queries in general.
+On the contrary, a~query has to hit a~\emph{job index}, build on one or
+more job attributes.
+It is left up to the specific \LB server administrator to decide
+which job attributes are selective enough to be indexed and allow queries
+(\eg for many-users communities job owner can be a~sufficient criterion;
+for others, where only a~few users submit thousands of jobs, it is not).
+
+% indexy  -- implementace jako extra sloupce => zmeny offline, konfigurace
+% olizovana z DB
+Technically, job indices are implemented via dedicated columns
+in a~database table.
+These columns and their indices are scanned by the \LB server on startup,
+therefore there is no specific configuration file.
+Changing the index configuration is rather heavyweight operation
+(depending on the number of jobs in the database), it performs
+updates of all tuples in general, and it should be done when the server is not
+running.
+
+% utilitka bkindex -- pouziti
+Indices are manipulated with a~standalone utility \verb'glite-lb-bkindex'
+(see its man page for complete usage reference).
+A~general sequence of changing the indices is:
+\begin{enumerate}
+\item stop the running server
+\item retrieve current index configuration
+\begin{quote}
+\verb'glite-lb-bkindex -d >index_file'
+\end{quote}
+\item edit \verb'index_file' appropriately
+\item re-index the database (it may take long time)
+\begin{quote}
+\verb'glite-lb-bkindex -r -v index_file'
+\end{quote}
+\verb'-r' stands for ``really do it'', \verb'-v' is ``be verbose''
+\item start the server again
+\end{enumerate}
+
+% format vstupniho souboru
+The index description file follows the classad format, having the following grammar:
+\begin{quote}
+\emph{IndexFile} ::= [ JobIndices = \{ \emph{IndexList} \} ] \\
+\emph{IndexList} ::= \emph{IndexDef} $|$ \emph{IndexDef}, \emph{IndexList} \\
+\emph{IndexDef} ::= \emph{IndexColumn} $|$ \emph{ComplexIndex} \\
+\emph{IndexColumn} ::= [ type = "\emph{IndexType}"; name = "\emph{IndexName}" ]\\
+\emph{ComplexIndex} ::= \{ \emph{ColumnList} \} \\
+\emph{ColumnList} ::= \emph{IndexColumn} $|$ \emph{IndexColumn}, \emph{ColumnList}
+\end{quote}
+
+where eligible \emph{IndexType}, \emph{IndexName} combinations are given
+in Tab.~\ref{t:indexcols}.
+A~template index configuration, containing indices on the most frequently
+used attributes, can be found in /opt/glite/etc/glite-lb-index.conf.template.
+
+
+\begin{table}
+\begin{center}
+\begin{tabularx}{.9\hsize}{|l|l|X|}
+\hline
+\emph{IndexType} & \emph{IndexName} & description \\
+\hline
+system & owner & job owner \\
+ & destination & where the job is heading to (computing element name) \\
+ & location & where is the job being processed \\
+ & network\_server & endpoint of WMS \\
+ & stateEnterTime & time when current status was entered \\
+ & lastUpdateTime & last time when the job status was updated \\
+\hline
+time & \emph{state name} & when the job entered given state (Waiting, Ready, \dots) \\
+\hline
+user & \emph{arbitrary} & arbitrary user tag \\
+\hline
+\end{tabularx}
+\end{center}
+\caption{Available index column types and names}
+\label{t:indexcols}
+\end{table}
+
+% super user muze vsechno
 
 \subsubsection{Multiple server instances}
 
