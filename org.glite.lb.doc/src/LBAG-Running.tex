@@ -127,20 +127,29 @@ a~more complex and more fragile setup.
 
 Using an external utility \verb'glite-lb-dump' (typical invocation is with
 a~single option \verb'-m' \emph{my.server.name:port}, see man page for
-details) the server is instructed to dump events, which arrived in
-a~specified time interval, into a~text file.  Default interval is from last
-dump till the current time.  The events are stored in a~uniquely named text
-file prefixed with the value of \verb'-D' server option.  This kind of dump
+details) the server is triggered to dump events, which arrived in
+a~specified time interval, into a~text file. (Default interval is from last
+dump till the current time.)
+
+\verb'glite-lb-dump' is a~standalone client program, however, 
+the events are stored at server side (\ie not transferred to the client,
+due to performance reasons),
+in a~uniquely named text
+file prefixed with the value of \verb'-D' server option. This kind of dump
 contains events according to their arrival time, regardless of jobs they belong
 to.
 
-It is sufficient to run the dump regularly, with a~frequency matching
-an acceptable risk of loosing data (several hours typically), and back up the
-resulting dump files.  In the event of server crash, the files can be loaded
-back into a~restored empty server with complementary \verb'glite-lb-load'
-utility.
+It is sufficient to run the dump regularly (from a~cron job), with a~frequency
+matching an acceptable risk of loosing data (several hours typically), and back
+up the resulting dump files. 
+
+In the event of server crash, its database should be recreated empty,
+and the server started up.
+Then the dump files can be loaded back with complementary
+\verb'glite-lb-load' utility.
 
 Server superuser privileges (X509 credentials) are required to run \verb'glite-lb-dump' and \verb'glite-lb-load'.
+Dumping the events does not interfere with normal server operation.
 
 This backup strategy can interfere with too aggressive setting of old
 data purging (Sect.~\ref{run:purge}), 
