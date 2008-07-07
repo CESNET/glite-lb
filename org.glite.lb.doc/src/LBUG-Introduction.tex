@@ -1,5 +1,6 @@
 \section{Introduction}
 
+\input versions
 %historie: vyrobeno pro WMS v EDG, 1. a 2. verze (seq. èísla,
 %cache a dotazy na stavy), v EGEE gLite---ustabilnìní, proxy
 
@@ -115,7 +116,7 @@ The \LB events themselves are structured into \emph{attribute}~=
 event \emph{type} (or scheme). For the purpose of tracking job status on
 the Grid and with the knowledge of WMS Grid middleware structure we
 defined an \LB schema with specific \LB event
-types\footnote{\url{https://edms.cern.ch/document/571273/}}.
+types (see Appendix\ref{a:events}).
 The schema contains a common base, the attributes that must be assigned
 to every single event. The primary key is the jobid, which is also one of
 the required attributes. The other common attributes are currently the
@@ -595,8 +596,8 @@ and the user annotations. Rather complex query semantics can be
 supported, \eg 
 \emph{Which of my jobs annotated as ``apple'' or ``pear'' are already
 scheduled for execution and are heading to the ``garden'' computing element?}
-The \LB User's
-Guide\footnote{\url{https://edms.cern.ch/file/571273/1/LB-guide.pdf}} provides a~series of similar examples of
+The \LB Developer's
+Guide\cite{lbdg} provides a~series of similar examples of
 complex queries.
 
 %dotazy na události
@@ -888,4 +889,3 @@ CE's should be penalized or completely avoided
 when RB decides where jobs get submitted.
 
 
-\TODO{prehled verzi}

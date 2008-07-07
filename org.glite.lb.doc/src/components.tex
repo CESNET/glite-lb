@@ -7,8 +7,8 @@ These APIs are provided as sets of C/C++ header files and shared libraries.
 The library implements communication protocol with other \LB components
 (logger and server), including encryption, authentication etc.
 
-We do not describe the API here in detail; it is documented in~\LB User's
-Guide\footnote{\url{https://edms.cern.ch/file/571273/1/LB-guide.pdf}},
+We do not describe the API here in detail; it is documented in~\LB Developer's
+Guide\cite{lbdg},
 including complete reference and both simple and complex usage examples.
 
 Events can be also logged with a~standalone program (using the C~API in turn),
@@ -98,10 +98,12 @@ pending events belonging to this handle accordingly.
 % asi nepotrebujeme \subsubsection{Clients}
 
 \subsubsection{Proxy}
-\TODO{Proxy is now "integrated" into the server executable, update the text:}
+
 \emph{\LB proxy} is the implementation of the local view concept
-(Sect.~\ref{local}).
-When deployed (on the Resource Broker node in the current gLite middleware) 
+\ifx\insideUG\undefined{(see \cite{lbug}).}\else{Sect.~\ref{local}}.\fi
+Since \LBnew, \LB proxy is intergrated into \LB server 
+executable.
+When deployed (on the WMS node in the current gLite middleware) 
 it takes over the role of the local-logger daemon---it accepts the incoming
 events, stores them in files, and forwards them to the inter-logger.
 
