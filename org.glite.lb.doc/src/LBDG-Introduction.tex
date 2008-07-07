@@ -1,24 +1,16 @@
 % -*- mode: latex -*-
 
-\section{Introduction}
+\section{Common concepts and practices}
 \TODO{Add the information from the "Best practices" workshop, i.e. information how the whole LB is coded, why C, what were the general techniques - context, connection pool, .T templates description, etc.}
 
-\subsection{Return values}
-The return type of most of the API functions is return \verb'int'.
-Unless specified otherwise the returned values are as follows:
-\begin{description}
-\item[0] success
-\item[errno] an error occured, the nature of the error
-matches meaning of one of standard \verb'<errno.h>' error codes.
-\item[\LB specific] a~few errors can't be intuitively mapped to
-\verb'<errno.h>', therefore the are specific \LB error codes, starting from \verb'EDG_WLL_ERROR_BASE'.
-\end{description}
-See Sect.~\ref{s:error} for details on error handling.
+The whole \LB service shares a number of common concepts and
+principles used to design, develop and use the services. Most of
+common data types and functions is separated in its own SW module called
+\LB common.
 
-Few API function return \verb'char *'. In such a~case \verb'NULL' indicates
-an error, non-null value means success.
+\subsection{General introduction}
 
-\subsection{Function arguments}
+\subsubsection{Function arguments}
 In the following description the function arguments are classified as follows:
 \begin{description}
 \item[IN] pure input argument, not modified by the function.
@@ -50,11 +42,29 @@ user. The structure is documented and no incompatible changes will be done
 without notice.
 \end{description}
 
-\subsection{Context and Parameter Settings}
+\subsubsection{Return values}
+The return type of most of the API functions is return \verb'int'.
+Unless specified otherwise the returned values are as follows:
+\begin{description}
+\item[0] success
+\item[errno] an error occured, the nature of the error
+matches meaning of one of standard \verb'<errno.h>' error codes.
+\item[\LB specific] a~few errors can't be intuitively mapped to
+\verb'<errno.h>', therefore the are specific \LB error codes, starting from \verb'EDG_WLL_ERROR_BASE'.
+\end{description}
+See Sect.~\ref{s:error} for details on error handling.
+
+Few API function return \verb'char *'. In such a~case \verb'NULL' indicates
+an error, non-null value means success.
+
+\subsection{\LB design principles}
+
+\subsubsection{Context and Parameter Settings}
 \label{s:context}
 
-All the API functions refer to a~\emph{context} argument.
-The context type \verb'edg_wll_Context' is opaque.
+All the API functions refer to a~\emph{context} argument. See next
+session for futher description of context type \verb'edg_wll_Context'.
+
 Context objects preserve various status information
 (\eg\ connection to server) among the API calls.
 The API caller can create many context objects, those are guaranteed
@@ -79,3 +89,106 @@ the context has to be assigned a~single \jobid
 (with the \verb'edg_wll_SetLoggingJob' call, see Sect.~\ref{s:sequence}),
 and keeps track of an event \emph{sequence code} for the job 
 (detailed description in~\cite{lbarch}).
+
+\subsubsection{Asynchronnous calls}
+\LB library calls are typically asynchronnous. The typical call --
+loging a event -- is returned immediatelly and the success of the call
+means that the first \LB infrastructure component takes over the event
+for delivery. The event itself is queued for delivery to the \LB
+server, so there is no guarantee that subsequent query will see the
+event. This is not true for new job registration. It is the operation done
+synchronously.
+
+The \LB proxy provides a \emph{local view} semantics. The \LB proxy
+query semantics is synchronnous (there is a guarantee that a query
+next to the event logging call will see the event) but only for events
+logged through the particular \LB proxy instance.
+
+\subsubsection{Connection pool}
+For better performance the \LB client library have a feature called
+connection pool -- a client--server connection is transparently reused
+by different threads/context to eliminate the overhead of secure
+channel establishment.
+
+\subsection{\LB common overview}
+
+\subsubsection{edg\_wll\_Event}
+\begin{description}
+ \item[Description:] Data structure representing a \LB event
+   (set of key--value pairs with predefined structure -- allowed event
+   types and names of attributes).
+ \item[Components:]  The data structure have a common part and a event
+   type specific part. Most important common event attributes:
+   \begin{itemize}
+    \item \texttt{jobId} Grid job id of the job the event belongs to.
+    \item \texttt{user} Identity (certificate subject) of the event sender.
+    \item \texttt{timestamp} Time when the event was generated.
+    \item \texttt{seqcode} Sequence code assigned to the event.
+    \item \texttt{type} Event type.
+   \end{itemize}
+ \item[Header file:] \texttt{glite/lb/events.h}
+ \item[Operations:] The event type is transparent. The only important
+   operation defined is \texttt{edg\_wll\_FreeEvent(edg\_wll\_Event
+     *event)} to free event structure.
+ \item[More information:] see file \texttt{org.glite.lb.types/types.T} 
+\end{description}
+
+\subsubsection{edg\_wll\_Context} 
+vytváøení, ru¹ení, nastavování paramentrù
+\begin{description}
+ \item[Description:] Data structure representing \LB API context (see
+   section~\ref{s:context}).
+ \item[Components:] There are parameters described in consumer
+   and producer API chapters which are stored in context and
+   accessed by funcions described below (\texttt{edg\_wll\_SetParam})
+   using appropriate constants. Examples of common context parameters:
+   \begin{itemize}
+    \item \texttt{EDG\_WLL\_PARAM\_X509\_KEY} key file to use for authentication.
+    \item \texttt{EDG\_WLL\_PARAM\_X509\_CERT} certificate file to use for
+      authentication
+   \end{itemize}
+ \item[Header file:] \texttt{glite/lb/context.h}
+ \item[Operations:] The context type is opaque. Operations with the
+   instance:
+   \begin{itemize}
+    \item \texttt{edg\_wll\_InitContext(edg\_wll\_Context *context)}
+      Allocate and initialize a new context object.
+    \item \texttt{edg\_wll\_FreeContext(edg\_wll\_Context context)}
+      Destroy and free context object.
+    \item \texttt{edg\_wll\_SetParam(edg\_wll\_Context context, 
+      edg\_wll\_ContextParam param, val)} Set a context parameter.
+    \item \texttt{edg\_wll\_GetParam(edg\_wll\_Context context, 
+      edg\_wll\_ContextParam param, val)} Get current parameter value.
+   \end{itemize}
+ \item[More information:] see file \texttt{context.h} 
+\end{itemize}
+
+\subsubsection{JobStat}
+
+
+\subsubsection{\LB common header files overview}
+CountRef.h
+Event.h.T
+LoggingExceptions.h
+authz.h
+connpool.h
+context-int.h
+context.h
+events.h.T
+events\_parse.h
+il\_msg.h
+il\_string.h
+jobstat.h.T
+lb\_maildir.h
+lb\_perftest.h
+lb\_plain\_io.h
+log\_proto.h
+mini\_http.h
+notif\_rec.h
+notifid.h
+padstruct.h
+query\_rec.h
+timeouts.h
+ulm\_parse.h
+xml\_conversions.h
+xml\_parse.h
