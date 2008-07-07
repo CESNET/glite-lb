@@ -9,10 +9,10 @@ as standard manual pages installed with the \LB packages.
 
 \subsubsection{Changing index configuration}
 
-\TODO{ljocha}
 % full-scan skodi, LB se tomu brani
 Inefficient queries, yielding full scan of \LB database tables (up to millions of tuples) would degrade server performance.
-Therefore \LB does not allow arbitrary queries in general.
+Therefore \LB does not allow arbitrary queries in general
+(server option \verb'--no-index' can change this behaviour).
 On the contrary, a~query has to hit a~\emph{job index}, build on one or
 more job attributes.
 It is left up to the specific \LB server administrator to decide
@@ -94,7 +94,7 @@ user & \emph{arbitrary} & arbitrary user tag \\
 
 \subsubsection{Multiple server instances}
 
-lze to, i nad jednou databazi, zadna automaticka podpora
+% lze to, i nad jednou databazi, zadna automaticka podpora
 
 \subsubsection{Backup dumps}
 
