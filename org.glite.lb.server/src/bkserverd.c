@@ -263,7 +263,7 @@ static void usage(char *me)
 		"\t-t, --request-timeout\t request timeout for one client\n"
 		"\t--silent\t don't print diagnostic, even if -d is on\n"
 #ifdef LB_PERF
-		"\t--perf-sink\t where to sink events\n"
+		"\t-K, --perf-sink\t where to sink events\n"
 #endif
 		"\t-g,--greyjobs\t allow delayed registration (grey jobs), implies --strict-locking\n"
 		"\t-P,--proxyonly\t	run only proxy service\n"
