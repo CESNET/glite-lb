@@ -220,6 +220,8 @@ environment variable.
 Sometimes hardcoded server-side timeout can be still reached; in this case the
 server fails to return a correct response but the purge is done anyway. 
 
+\textbf{\LBnew only}: option \verb'-x' allows purging \LB proxy database too.
+
 \paragraph{Emergency purge}
 
 When regular purge was not invoked for some time, it may happen that 
@@ -227,7 +229,13 @@ the database grows huge and the regular (on-line) purge fails.
 In order to work around such situation we provide an off-line emergency
 purge script \verb'glite-lb-bkpurge-offline.sh'
 
-\TODO{salvet}  
+The script accepts the same \verb'-acno' options, and adds \verb'-d' for ``done'' jobs. 
+Via \verb'-p' also \LB proxy database can be purged (all \LB versions).
+
+On startup, a~warning message is printed and interactive confirmation
+requested.
+Re-check that \LB server (proxy) is not running, and carry on only when you
+know what you are doing.
 
 \paragraph{Post-mortem statistics}
 
@@ -263,7 +271,8 @@ histogramy :-)
 
 \subsection{\LB proxy}
 
-Purge zamrzlych jobu (overit v kodu, na ktere verzi to mame)
+Purge zamrzlych jobu (overit v kodu, na ktere verzi to mame(installed optionally in glite-jp-client.rpm) )
+
 
 \subsection{\LB logger}
 
