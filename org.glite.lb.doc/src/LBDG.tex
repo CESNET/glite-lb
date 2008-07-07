@@ -1,3 +1,4 @@
+% -*- mode: latex -*-
 \documentclass{egee}
 
 \input{definitions}
@@ -16,8 +17,10 @@
 (\LB) service API. Logging (producer), querying (consumer) and notification API as well as the Web Services 
 Interface is described in details together with programing examples. }
 
-\begin{document}
+\usepackage{listings}
 
+\begin{document}
+\lstset{language=C,basicstyle=\footnotesize,numbers=left,breaklines=true}
 
 % ----- BEGIN COPY -----
 % copied from org.glite.lb.client/doc/api/api.tex in hope it could be useful

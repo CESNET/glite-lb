@@ -11,7 +11,7 @@ PREFIX=/opt/glite
 
 VPATH = ${top_srcdir}/src
 # example source code is part of the org.glite.lb.client
-EXAMPLE_SOURCE_DIR=${stagedir}/share/doc/glite-lb-client-3.1.2/examples
+EXAMPLE_SOURCE_DIR=${top_srcdir}/examples
 KPATH = TEXINPUTS=".:$(EXAMPLE_SOURCE_DIR):$(VPATH)//:"
 KPATHBIB = BIBINPUTS=".:$(VPATH)//:"
 
@@ -53,6 +53,11 @@ install:
 	$(INSTALL) -m 644 LBUG.pdf ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBAG.pdf ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBDG.pdf ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/share/examples/dg
+# michal: install DG example sources
+	for p in ${top_srcdir}/examples/*; do \
+		${INSTALL} -m 644 "$$p" "${PREFIX}/share/examples/dg"; \
+	done
 
 clean:
 	rm -rvf LBUG* LBAG* LBDG* events.tex status.tex
