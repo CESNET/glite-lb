@@ -96,11 +96,62 @@ user & \emph{arbitrary} & arbitrary user tag \\
 
 % lze to, i nad jednou databazi, zadna automaticka podpora
 
+Specific conditions (\eg debugging, different authorization setup, \dots)
+may require running multiple \LB server instances
+on the same machine.
+Such setup is available, however, there is no specific support in automated
+configuration, the additional non-default server instances must be run manually.
+
+The other server instance must use different ports (changed with \verb'-p'
+and \verb'-w' options), as well as use different pid file (\verb'-i' option).
+
+The servers may or may not share the database (non-default is specified
+with  \verb'-m')%
+\footnote{Even when sharing the database, the servers are still 
+partially isolated from
+one another, \eg a~job \url{https://my.machine:9000/xyz} cannot be queried 
+as \url{https://my.machine:8000/xyz}.
+However, due to implementation internals, the second job cannot be registered.}.
+
 \subsubsection{Backup dumps}
 
-Denni dumpy (ne purge)
+(This functionality should not be confused with per-job dumps, Sect.~\ref{inst:purge} and \ref{run:purge}.)
+
+Besides setting up \LB server database on a~reliable storage or
+backing it up directly (Sect.~\ref{inst:backup})
+\LB server supports backing up only incremental changes in the data.
+Advantages of this approach are lower volume of data to be backed up,
+and possibility to load them to another instance (\eg for heavyweight
+queries which should not disturb normal operation), disadvantage is
+a~more complex and more fragile setup. 
+
+Using an external utility \verb'glite-lb-dump' (typical invocation is with
+a~single option \verb'-m' \emph{my.server.name:port}, see man page for
+details) the server is instructed to dump events, which arrived in
+a~specified time interval, into a~text file.  Default interval is from last
+dump till the current time.  The events are stored in a~uniquely named text
+file prefixed with the value of \verb'-D' server option.  This kind of dump
+contains events according to their arrival time, regardless of jobs they belong
+to.
+
+It is sufficient to run the dump regularly, with a~frequency matching
+an acceptable risk of loosing data (several hours typically), and back up the
+resulting dump files.  In the event of server crash, the files can be loaded
+back into a~restored empty server with complementary \verb'glite-lb-load'
+utility.
+
+Server superuser privileges (X509 credentials) are required to run \verb'glite-lb-dump' and \verb'glite-lb-load'.
+
+This backup strategy can interfere with too aggressive setting of old
+data purging (Sect.~\ref{run:purge}), 
+If the purging grace period is shorter than the dump interval,
+events may get purged before they are captured by the backup dump.
+However, this interference is unlikely (reasonable purge grace period
+is several times longer than dump period),
+and it is not fatal in general (data were purged on purpose either).
 
 \subsubsection{Purging and processing old data}
+\label{run:purge}
 
 \TODO{salvet}
 
