@@ -1,13 +1,94 @@
 % -*- mode: latex -*-
 
 \section{\LB\ Logging (Producer) API}
-\TODO{Add the list of header files, important functions and data types and their description; add fully working (buildable) programing examples and use verbatiminput to include the important parts of the code.}
+\TODO{Add the list of header files, important functions and data types
+and their description; add fully working (buildable) programing
+examples and use verbatiminput to include the important parts of the
+code.}
 
+\label{ProdOverview}
+The \LB\ logging API (or producer API) is used to create and deliver
+events to the \LB\ server and/or proxy, depending on the function
+used:
 
-jenom UserTag
+\begin{table}[h]
+\begin{tabularx}{\textwidth}{lX}
+\bf Function & \bf Delivered to \\
+\hline
+\small\verb'edg_wll_Register*(...)' & directly to both \LB\ server and proxy \\
+\small\verb'edg_wll_ChangeACL(...)' & directly to the \LB\ server \\
+\small\verb'edg_wll_LogEventSync(...)' & synchronously through
+locallogger/interlogger to the \LB\ server \\
+\small\verb'edg_wll_LogEvent(...)' & asynchronously through
+locallogger/interlogger to the \LB\ server \\
+\small\verb'edg_wll_LogEventProxy(...)' & through \LB\ proxy to the \LB\ server \\
+\end{tabularx}
+\end{table}
 
+These general functions take as an argument event format (which
+defines the ULM used) and variable number of arguments corresponding
+to the given format. For each defined event there is predefined format
+string in the form \verb'EDG_WLL_FORMAT_'\textit{EventType}, \eg\
+\verb'EDG_WLL_FORMAT_UserTag', as well as three convenience functions
+\verb'edg_wll_LogUserTag(...)', \verb'edg_wll_LogUserTagSync(...)',
+\verb'edg_wll_LogUserTagProxy(...)'. 
 
-doporucene reakce na chyby (podle WMS)
+For most developers (\ie\ those not developing the WMS itself) the
+\verb'edg_wll_LogUserTag*(...)' and \verb'edg_wll_ChangeACL(...)' are
+the only functions of interest.
+
+\subsection{Header files}
+
+\begin{table}[h]
+\begin{tabularx}{\textwidth}{>{\tt}lX}
+glite/lb/context.h & Definition of context structure and parameters. \\
+{\bf glite/lb/producer.h} & Prototypes for all event logging functions. \\
+\end{tabularx}
+\end{table}
+
+\subsection{Context parameters}
+The following table summarizes context parameters relevant to the
+event logging. If  parameter is not set in the context explicitly, the
+\LB\ library will search for value of corresponding environment
+variable. The symbolic C names should be prepended with
+\verb'EDG_WLL_PARAM_' prefix, \ie\ \verb'EDG_WLL_PARAM_HOST'.
+
+\begin{table}[h]
+\begin{tabularx}{\textwidth}{llX}
+{\bf C name} & {\bf Env. variable} & {\bf Description} \\
+\hline
+\small\verb'HOST' & & Hostname that appears as event origin. \\
+\small\verb'SOURCE' & & Event source component. \\
+\small\verb'DESTINATION' & \small\verb'GLITE_WMS_LOG_DESTINATION' & Hostname of machine running
+locallogger/interlogger. \\
+\small\verb'DESTINATION_PORT' & \small\verb'GLITE_WMS_LOG_DESTINATION' & Port the locallogger is listening
+on. \\
+\small\verb'LOG_TIMEOUT' & \small\verb'GLITE_WMS_LOG_TIMEOUT' & Logging timeout for asynchronous
+logging. \\
+\small\verb'LOG_SYNC_TIMEOUT' & \small\verb'GLITE_WMS_LOG_SYNC_TIMEOUT' & Logging timeout for synchronous
+logging. \\
+\small\verb'LBPROXY_STORE_SOCK' & \small\verb'GLITE_WMS_LBPROXY_STORE_SOCK' & \LB\ Proxy store socket path (if
+logging through \LB\ Proxy) \\
+\small\verb'LBPROXY_USER' & \small\verb'GLITE_WMS_LBPROXY_USER' & Certificate subject of the user (if
+logging through \LB\ proxy).
+\end{tabularx}
+\end{table}
+The \verb'GLITE_WMS_LOG_DESTINATION' environment variable contains
+both locallogger host and port separated by colon (\ie\ ``host:port'').
+
+\subsection{Return values}
+The logging functions return 0 on success and one of {\texttt EINVAL,
+ENOSPC, ENOMEM, ECONNREFUSED, EAGAIN} on error. If {\texttt EAGAIN} is
+returned, the function should be called again to retry the delivery;
+it is not guaranteed, however, that the event was not delivered by the
+first call. Possibly duplicated events are discarded by the \LB\
+server or proxy.
+
+The synchronous variants of logging functions can in addition return
+\verb'EDG_WLL_ERROR_NOJOBID' or \verb'EDG_WLL_ERROR_DB_DUP_KEY'.
+
+\subsection{Logging events}
+
 
 
 
