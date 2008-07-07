@@ -78,7 +78,6 @@ LBAG.pdf: LBAG.tex \
 	LBAG-Running.tex
 
 LBDG.pdf: LBDG.tex \
-	LBDG-Common.tex \
 	LBDG-Introduction.tex \
 	producer_api.tex \
 	consumer_api.tex \
