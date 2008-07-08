@@ -46,29 +46,33 @@ static void usage(char *cmd)
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
 		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity ] {-j jobid | -o owner | -n network_server | -v virtual_organization }\n"
-			"    jobid      job ID to connect notif. reg. with\n"
-			"    owner	match this owner DN\n"
-			"    network_server	match only this networ server (WMS entry point)\n\n"
+			"    jobid		Job ID to connect notif. reg. with\n"
+			"    owner		Match this owner DN\n"
+			"    requested_validity	Validity of notification req. in seconds\n"
+			"    network_server	Match only this networ server (WMS entry point)\n\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
 		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } -t requested_validity ] notifid\n"
-			"    notifid     Notification ID\n"
-			"    fake_addr   Fake the client address\n", me);
+			"    requested_validity	Validity of notification req. in seconds\n"
+			"    notifid     	Notification ID\n"
+			"    fake_addr   	Fake the client address\n", me);
 /* UNIMPL 
 	if ( !cmd || !strcmp(cmd, "change") )
 		fprintf(stderr,"\n'change' command usage: %s change notifid jobid\n"
-			"    notifid     Notification ID.\n"
-			"    jobid       Job ID to connect notif. reg. with.\n", me);
+			"    notifid   	Notification ID.\n"
+			"    jobid      Job ID to connect notif. reg. with.\n", me);
 */
 	if ( !cmd || !strcmp(cmd, "refresh") )
 		fprintf(stderr,"\n'refresh' command usage: %s refresh [-t requested_validity ] notifid\n"
-			"    notifid     Notification ID.\n", me);
+			"    requested_validity	Validity of notification req. in seconds\n"
+			"    notifid     	Notification ID.\n", me);
 	if ( !cmd || !strcmp(cmd, "receive") ) {
 		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t requested_validity ] [-i timeout] [-f field1,field2,...] [notifid]\n"
-			"    notifid     Notification ID (not used if -s specified).\n"
-			"    fake_addr   Fake the client address.\n"
-			"    field1,field2,...	list of status fields to print (only owner by default)\n"
-			"    timeout     Timeout to receive operation in seconds.\n", me);
+			"    requested_validity	Validity of notification req. in seconds\n"
+			"    notifid     	Notification ID (not used if -s specified).\n"
+			"    fake_addr   	Fake the client address.\n"
+			"    field1,field2,...	List of status fields to print (only owner by default)\n"
+			"    timeout     	Timeout to receive operation in seconds.\n", me);
 		fprintf(stderr,"\navailable fields:\n\t");
 		dump_fields();
 		putc(10,stderr);
@@ -136,7 +140,7 @@ int main(int argc,char **argv)
 				if (sock >= 0) { usage("new"); return EX_USAGE; }
 				fake_addr = optarg; break;
 			case 't':
-				valid = atol(optarg); break;
+				valid = time(NULL) + atol(optarg); break;
 			default:
 				usage("new"); return EX_USAGE;
 		}
