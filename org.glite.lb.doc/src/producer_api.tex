@@ -1,11 +1,6 @@
 % -*- mode: latex -*-
 
 \section{\LB\ Logging (Producer) API}
-\TODO{Add the list of header files, important functions and data types
-and their description; add fully working (buildable) programing
-examples and use verbatiminput to include the important parts of the
-code.}
-
 \label{ProdOverview}
 The \LB\ logging API (or producer API) is used to create and deliver
 events to the \LB\ server and/or proxy, depending on the function
@@ -15,18 +10,18 @@ used:
 \begin{tabularx}{\textwidth}{lX}
 \bf Function & \bf Delivered to \\
 \hline
-\small\verb'edg_wll_Register*(...)' & directly to both \LB\ server and proxy \\
-\small\verb'edg_wll_ChangeACL(...)' & directly to the \LB\ server \\
-\small\verb'edg_wll_LogEventSync(...)' & synchronously through
-locallogger/interlogger to the \LB\ server \\
 \small\verb'edg_wll_LogEvent(...)' & asynchronously through
 locallogger/interlogger to the \LB\ server \\
+\small\verb'edg_wll_LogEventSync(...)' & synchronously through
+locallogger/interlogger to the \LB\ server \\
 \small\verb'edg_wll_LogEventProxy(...)' & through \LB\ proxy to the \LB\ server \\
+\small\verb'edg_wll_Register*(...)' & directly to both \LB\ server and proxy \\
+\small\verb'edg_wll_ChangeACL(...)' & directly to the \LB\ server \\
 \end{tabularx}
 \end{table}
 
 These general functions take as an argument event format (which
-defines the ULM used) and variable number of arguments corresponding
+defines the ULM string used) and variable number of arguments corresponding
 to the given format. For each defined event there is predefined format
 string in the form \verb'EDG_WLL_FORMAT_'\textit{EventType}, \eg\
 \verb'EDG_WLL_FORMAT_UserTag', as well as three convenience functions
@@ -88,8 +83,37 @@ The synchronous variants of logging functions can in addition return
 \verb'EDG_WLL_ERROR_NOJOBID' or \verb'EDG_WLL_ERROR_DB_DUP_KEY'.
 
 \subsection{Logging events}
+In this section we will give an example how to log an UserTag event to
+the \LB.
 
+First we have to include neccessary headers:
+\lstinputlisting[firstline=8,lastline=10]{prod_example1.c}
 
+Initialize context and set parameters:
+\lstinputlisting[firstline=61,lastline=84]{prod_example1.c}
 
+\TODO{proper setting of sequence codes}
+\lstinputlisting[firstline=86,lastline=91]{prod_example1.c}
 
-Java binding
+Log the event:
+\lstinputlisting[firstline=93,lastline=107]{prod_example1.c}
+
+The \verb'edg_wll_LogEvent()' function is defined as follows:
+\begin{lstlisting}[numbers=none]
+extern int edg_wll_LogEvent(
+        edg_wll_Context context,
+        edg_wll_EventCode event,
+        char *fmt, ...);
+\end{lstlisting}
+If you use this function, you have to provide event code, format
+string and corresponding arguments yourself. The UserTag event has
+only two arguments, tag name and value, but other events require more
+arguments. 
+
+Instead of using the generic \verb'edg_wll_LogEvent()', we could also
+write:
+\begin{lstlisting}[firstnumber=92]
+err = edg_wll_LogUserTag(ctx, name, value);
+\end{lstlisting}
+
+\subsection{Java binding}
