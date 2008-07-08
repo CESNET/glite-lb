@@ -7,20 +7,6 @@ that need more verbose description.
 It is complemented with the full commands reference that is provided
 as standard manual pages installed with the \LB packages.
 
-\subsubsection{Server superusers}
-
-Certain administrative operations (identified bellow when appropriate)
-on \LB server are privileged.
-When they are invoked remotely, a~special authorization is required.
-By default, the server identity (X509 certificate subject) is considered
-privileged.
-Additional subjects can be specified in \emph{superusers file},
-specified by \verb'--super-users-file' server option
-(one subject per line).
-
-The default startup script checks for existence of 
-/opt/glite/etc/LB-super-users and uses it eventually.
-
 \subsubsection{Changing index configuration}
 
 % full-scan skodi, LB se tomu brani
@@ -263,23 +249,33 @@ wiki page:
 
 \subsubsection{On-line monitoring and statistics}
 
-CE Rank
+\TODO{ljocha: CE Rank}
 
-DB mon (a mon)
+\TODO{honik: DB mon (a mon)}
 
-histogramy :-)
+% histogramy :-)
 
 \subsection{\LB proxy}
 
-Purge zamrzlych jobu (overit v kodu, na ktere verzi to mame(installed optionally in glite-jp-client.rpm) )
+\TODO{ljocha}
+Purge zamrzlych jobu (overit v kodu, na ktere verzi to mame )
 
 
 \subsection{\LB logger}
 
+\TODO{ljocha}
+
 Karantena (od ktere verze to mame?)
+- kdyz se nepodari rozparsovat soubor
+- client/examples -- parse-logevent-file??, lze pouzit
 
 Cistky pri zaseknuti, nesmyslna jobid apod.
 
+Debugovaci rezim
+
+Notifikacni IL
+
 \subsection{Used resources}
 
-Adresare, porty, ...
+\TODO{ljocha}
+Demoni, Adresare, porty, ...

@@ -1,9 +1,14 @@
 \section{Installation and Configuration}
-\TODO{}
 
 \subsection{Complete RPMs description}
 %\subsection{Daemons description}
 %\subsection{CLI tools description: purge/dump/load}
+
+\TODO{honik}
+
+seznam RPM pro obe verze
+
+popisky rovnou doplnit do RPM
 
 \subsection{\LB server}
 
@@ -78,9 +83,23 @@ transakce
 
 \TODO{Initial YAIM way only, rest in Sect.~\ref{maintain:index}}
 
-\subsubsection{Notification delivery}
+\subsubsection{Server superusers}
 
-\subsubsection{Multiple server instances}
+Certain administrative operations (identified bellow when appropriate)
+on \LB server are privileged.
+When they are invoked remotely, a~special authorization is required.
+By default, the server identity (X509 certificate subject) is considered
+privileged.
+Additional subjects can be specified in \emph{superusers file},
+specified by \verb'--super-users-file' server option
+(one subject per line).
+After changing the file, the server has to be restarted.
+
+The default startup script checks for existence of 
+/opt/glite/etc/LB-super-users and uses it eventually.
+
+
+\subsubsection{Notification delivery}
 
 \subsubsection{Export to R-GMA}
 
@@ -210,4 +229,4 @@ Send events via \LB proxy. Checks the proxy functionality.
 Register for receiving notifications, and log events which trigger
 the notification delivery. Checks the whole notification mechanism.
 
-\TODO{}
+\TODO{mozna jen odkaz do User Guide}

@@ -21,6 +21,7 @@ However, only a single active client for a notification is allowed.
 environment variable.
 
 \verb'glite-lb-notify' support these actions:
+
 \begin{tabularx}{\textwidth}{lX}
 \texttt{new} & Create new notification registration.\\
 \texttt{bind} &  Binds an notification registration to a client.\\
@@ -74,7 +75,7 @@ where
 \texttt{  -f field1,field2,...} & list of status fields to print (only owner by default)   \\
 \end{tabularx}
 
-For additional information see also manual page GLITE-LB-NOTIFY(1).
+For additional information see also manual page glite-lb-notify(1).
 
 \subsubsection{Example: Registration and waiting for simple notification}
 \label{e:notify}
@@ -96,6 +97,10 @@ Wait for notification:
 
 When you let notification client running several minutes without any incomming notification, it will finish and remove your registration from the server automatically.
 
+\subsubsection{Example: Waiting for notifications on all user's jobs}
+
+\TODO{}
+
 \subsubsection{Example: Waiting for more notifications on one socket}
 
-\TODO{ljocha}
+\TODO{ruda}
