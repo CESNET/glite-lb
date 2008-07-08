@@ -46,9 +46,24 @@ offered load.
 
 \subsubsection{Standard installation}
 
-\TODO{salvet}
+After installation and configuration of OS and basic services
+(certificates, CAs, time synchronization), glite-LB metapackage 
+from appropriate gLite sotware repository should be installed.
+YAIM configuration for \emph{glite-LB} node type 
+(\texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}) 
+can done then. Available parameters specific to LB server are:
 
-Tabluka YAIMovych parametru, odkazy do nasledujiciho textu
+%variable&meaning&default value &further details\\
+\begin{itemize}
+\item \texttt{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory)
+\item \texttt{GLITE\_WMS\_LCGMON\_FILE} -- pathname of file where job state
+export data are written for use by lgcmon/R-GMA 
+(default: \texttt{/var/glite/logging/status.log}
+\end{itemize}
+\TODO{add more parameters to YAIM module}
+
+In addition to those, YAIM LB module uses following parameters:
+\texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{GLITE\_USER\_HOME},\texttt{SITE\_EMAIL}.
 
 \subsubsection{Migration from previous versions}
 
@@ -84,12 +99,37 @@ transakce
 
 \subsubsection{Tuning database engine}
 
-\TODO{Salvet}
+In order to achieve high performance with LB server underlaying MySQL 
+database server has to be configured reasonably well too. 
+Default values of some MySQL settings are likely to be suboptimal
+and need tuning, especially for larger machines.
+These are MySQL configuration variables (to be configured in \texttt{[mysqld]} 
+section of \texttt{/etc/my.cnf}) that need tuning most often:
+\begin{itemize}
+\item \texttt{innodb\_buffer\_pool\_size} -- size of database memory pool/cache. 
+It is generally recommended to set it to aroung 75\% of RAM size
+(32bit OS/MySQL versions limit this to approx. 2GB due to address space 
+constraints).
 
-velikosti bufferu
+\item \texttt{innodb\_flush\_logs\_at\_trx\_commit} -- frequency of flushing to disk.
+Recommended values include:
+\begin{itemize}
+\item 1 (default) -- flush at each write transaction commit; relatively
+slow without battery-backed disk cache but offers highest level of data safety
+\item 0 -- flush once per second; fast, use if loss of latest updates on MySQL
+or OS crash (e.g. unhandled power outage) is acceptable (database remains consistent)
+\end{itemize}
 
-syncovani transakci
+\item \texttt{innodb\_log\_file\_size} -- size of database log file. Larger values
+save some I/O activity, but also make database shutdown and crash recovery slower.
+Recommended value: 50MB. Clean mysqld shutdown and deletion of log files 
+(\texttt{/var/lib/mysql/ib\_logfile*} by default) is necessary before change.
 
+\item \texttt{innodb\_data\_file\_path} -- path to main database file. File on
+disk separate from OS and MySQL log files (\texttt{innodb\_log\_group\_home\_dir} variable,
+\texttt{/var/lib/mysql/} by default) is recommended.
+
+\end{itemize}
 
 \subsection{\LB proxy}
 
