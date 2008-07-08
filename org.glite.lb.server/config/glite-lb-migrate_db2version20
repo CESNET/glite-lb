@@ -8,11 +8,12 @@
 usage() {
 cat <<EOF
 NAME:
-	migrate - script for migrating older LB server or proxy databases
+	glite-lb-migrate_db2version20
+		script for migrating older LB server or proxy databases
 		to new schema required for transaction locking and USP 
 		(United Server and Proxy)
 USAGE:
-	migrate -s|-p [-d db_name]
+	glite-lb-migrate_db2version20 -s|-p [-d db_name]
 
 		-s		migrate old server DB to new version
 		-p		migrate old proxy DB to new version
