@@ -20,6 +20,8 @@ However, only a single active client for a notification is allowed.
 \LB server and port to contact is specified with GLITE\_WMS\_NOTIF\_SERVER 
 environment variable.
 
+\TODO{ruda, what's supported in \LBold, what in \LBnew}
+
 \verb'glite-lb-notify' support these actions:
 
 \begin{tabularx}{\textwidth}{lX}
@@ -80,20 +82,32 @@ For additional information see also manual page glite-lb-notify(1).
 \subsubsection{Example: Registration and waiting for simple notification}
 \label{e:notify}
 
-The two steps bellow describe basic testing procedure of the notification
+Following steps describe basic testing procedure of the notification
 system by registering a notification on any state change of this job
 and waiting for notification.
 
-Register notification:
+Register notification for given jobid:
 \begin{verbatim}
-  export EDG_WL_NOTIF_SERVER=HOSTNAME:9000
-  ./glite-lb-notify new JOBID
+   GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 bin/glite-lb-notify new \
+    -j https://skurut68-2.cesnet.cz:9100/D1qbFGwvXLnd927JOcja1Q
+
+   returns:
+   notification ID: https://skurut68-2.cesnet.cz:9100/NOTIF:tOsgB19Wz-M884anZufyUw 
 \end{verbatim}
 
-Wait for notification:
+
+Wait for notification (with timeout 120 seconds):
 \begin{verbatim}
- TODO
+   GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 bin/glite-lb-notify receive \
+    -i 120 https://skurut68-2.cesnet.cz:9100/NOTIF:tOsgB19Wz-M884anZufyUw 
 \end{verbatim}
+
+Destroy notification:
+\begin{verbatim}
+   GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 bin/glite-lb-notify destroy \
+\end{verbatim}
+
+\TODO{ruda, end of notification, set validity for two hours}
 
 When you let notification client running several minutes without any incomming notification, it will finish and remove your registration from the server automatically.
 
