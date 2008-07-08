@@ -8,10 +8,10 @@ event can be logged by the job owner using the \verb'glite-lb-logevent' command
 is as follows:
 
 \begin{verbatim}
-glite-lb-logevent -e ChangeACL -s UserInterface -p	--permission 1          \
-        -j <job_id>                                                     \
-        --user_id <user_id>                                             \
-        --user_id_type <user_id_type>                                   \
+glite-lb-logevent -e ChangeACL -s UserInterface -p	--permission 1          
+        -j <job_id>                                                     
+        --user_id <user_id>                                             
+        --user_id_type <user_id_type>                                   
         --permission_type <permission_type> --operation <operation>
 \end{verbatim}
 
@@ -20,7 +20,8 @@ where
 \begin{tabularx}{\textwidth}{lX}
 \verb'<job_id>'    & specifies the job to change \\
 \verb'<user_id>'   & specifies the user to use, can be either an X.500 name
-                     (subject name) or a VOMS group (of the form <VO>:<Group>)\\
+                     (subject name) or a VOMS group (of the form 
+                      VO:Group)\\
 \verb'<user_id_type>'    & \verb'0' or \verb'1', indicating \verb'user_id'
                      specifies X.500 name or VOMS group, respectively \\
 \verb'<permission_type>' & \verb'0' or \verb'1', indicating the user is 

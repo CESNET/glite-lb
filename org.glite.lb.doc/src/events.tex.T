@@ -5,6 +5,8 @@ gen qq{
 };
 @@@}
 
+Events for gLite world:
+
 \begin{tabularx}{\textwidth}{l>{\bfseries}lX}
 @@@{
 my $flesh = 'gLite';    #XXX
@@ -17,7 +19,9 @@ for my $e (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 
         if ($flesh ne $event->{flesh}->{$e}) {
                 $flesh = $event->{flesh}->{$e};
-                gen "% new flesh $flesh \n";
+                gen "\\end{tabularx}\n";
+                gen " Events for $flesh world:\n\n";
+                gen "\\begin{tabularx}{\\textwidth}{l>{\\bfseries}lX}\n";
                 $fleshno += 100;
                 $eventno = $fleshno;
         }

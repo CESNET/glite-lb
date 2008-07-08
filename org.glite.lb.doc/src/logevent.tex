@@ -16,14 +16,13 @@ dealing with these two events.
 Command usage is:
 
 \begin{verbatim}
-    glite-lb-logevent [-h] [-p] [-c seq_code] \
+    glite-lb-logevent [-h] [-p] [-c seq_code] 
         -j <dg_jobid> -s Application -e <event_name> [key=value ...]
 \end{verbatim}
 
 where
 
 \begin{tabularx}{\textwidth}{lX}
-\texttt{  -h  -{}-help} &           this help message\\
 \texttt{  -p  -{}-priority} &       send a priority event\\
 \texttt{  -c  -{}-sequence} &       event sequence code\\
 \texttt{  -j  -{}-jobid} &          JobId\\
@@ -35,7 +34,8 @@ where
 Each event specified after \verb'-e' option has different sub-options enabling
 to set event specific values.
 
-Address of local logger, where event is sent, must be specified by environment
+Address of local-logger, daemon responsible for further message delivery, must 
+be specified by environment
 variable \verb'GLITE_WMS_LOG_DESTINATION' in a form \verb'address:port'.
 
 Because user is allowed to change ACL or add user tags only for her jobs, paths
