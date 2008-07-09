@@ -215,6 +215,7 @@ install:
 		fi ; \
 		${STAGE_PERFTEST} ; \
 	fi
+	mkdir -p ${PREFIX}/share/perl/gLite/LB
 	${INSTALL} -m 644 ${top_srcdir}/src/EventAttrNames.pl ${PREFIX}/share/perl/gLite/LB
 
 clean:
