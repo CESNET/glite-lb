@@ -60,8 +60,6 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 	char    *chid,*chstat;
         char    *jdl,*rsl;
 
-	*chid = edg_wlc_JobIdUnparse(stat.jobId);
-
 	#define TR(name,type,field) \
         if (field) { \
                 asprintf(&a,"%s%s=" type "\n", \

@@ -13,6 +13,7 @@
 #include "glite/lb/xml_conversions.h"
 
 #include "lb_proto.h"
+#include "lb_text.h"
 #include "lb_html.h"
 #include "stats.h"
 #include "jobstat.h"

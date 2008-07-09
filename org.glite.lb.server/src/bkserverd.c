@@ -45,7 +45,7 @@
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
-#include "glite/lb/srv_perf.h"
+#include "srv_perf.h"
 
 enum lb_srv_perf_sink sink_mode;
 #endif
