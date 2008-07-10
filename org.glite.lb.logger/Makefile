@@ -180,6 +180,7 @@ install:
 		${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin; \
 	fi
 ifdef LB_PERF
+	-mkdir -p ${PREFIX}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${PREFIX}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${PREFIX}/sbin
 endif
