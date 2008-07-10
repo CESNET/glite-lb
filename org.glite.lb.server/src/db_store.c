@@ -149,6 +149,9 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
 
   assert(ev->any.user);
 
+    // locked from edg_wll_LoadIntState() <- load_parent_intJobStat() <- update_parent_status()
+    // XXX: maybe it can be locked InShareMode there and re-locked ForUpdate here?
+
     if(edg_wll_StoreEvent(ctx, ev, NULL, &seq))
       goto err;
 
