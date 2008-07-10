@@ -109,7 +109,7 @@ int edg_wll_JobStatusServer(
 		whole_cycle = 0;
 
 		if (edg_wll_Transaction(ctx)) goto rollback;
-		if (edg_wll_LockJobRowInShareMode(ctx, md5_jobid)) goto rollback;;
+		if (edg_wll_LockJobRowInShareMode(ctx, md5_jobid)) goto rollback;
 
 
 		if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, -1 /*all events*/, &ijsp)) {
@@ -119,13 +119,6 @@ int edg_wll_JobStatusServer(
 			free(ijsp);
 		} else {
 			if (edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store, 0)) {
-				char *err;
-
-				/* job has no record in states table ?? */
-				asprintf(&err, "Could not compute status of job %s (corrupted DB?)\n",string_jobid);
-				edg_wll_UpdateError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, err);
-				free(err);
-
 				goto rollback;
 			}
 			memcpy(stat, &(ijsp->pub), sizeof(ijsp->pub));
@@ -430,28 +423,35 @@ int edg_wll_intJobStatus(
 	} else {
 		/* XXX intstat->pub.expectUpdate = eval_expect_update(intstat, &intstat->pub.expectFrom); */
 		intErr = edg_wlc_JobIdDup(job, &intstat->pub.jobId);
-		if (!intErr) {
-			if (update_db) {
-				int tsq = num_events - 1;
-			        if (add_fqans && tsq == 0 && ctx->fqans != NULL) {
-			                for (i=0; ctx->fqans[i]; i++);
-			                intstat->user_fqans = malloc(sizeof(*ctx->fqans)*(i+1));
-			                for (i=0; ctx->fqans[i]; i++) {
-			                        intstat->user_fqans[i] = strdup(ctx->fqans[i]);
-			                }
-			                intstat->user_fqans[i] = NULL;
-			        }
-				edg_wll_StoreIntState(ctx, intstat, tsq);
-				/* recheck
-				 * intJobStat *reread;
-				 * edg_wll_LoadIntState(ctx, job, tsq, &reread);
-				 * destroy_intJobStat(reread);
-				*/
+		if (intErr) return edg_wll_SetError(ctx, intErr, NULL);
+
+		if (update_db) {
+			int tsq = num_events - 1;
+			if (add_fqans && tsq == 0 && ctx->fqans != NULL) {
+				for (i=0; ctx->fqans[i]; i++);
+				intstat->user_fqans = malloc(sizeof(*ctx->fqans)*(i+1));
+				for (i=0; ctx->fqans[i]; i++) {
+					intstat->user_fqans[i] = strdup(ctx->fqans[i]);
+				}
+				intstat->user_fqans[i] = NULL;
 			}
+
+			// re-lock job from InShareMode to ForUpdate
+			md5_jobid = edg_wlc_JobIdGetUnique(job);
+			res = edg_wll_LockJobRowForUpdate(ctx, md5_jobid);
+			free(md5_jobid);
+			if (res) return edg_wll_Error(ctx, NULL, NULL);
+
+			edg_wll_StoreIntState(ctx, intstat, tsq);
+			/* recheck
+			 * intJobStat *reread;
+			 * edg_wll_LoadIntState(ctx, job, tsq, &reread);
+			 * destroy_intJobStat(reread);
+			*/
 		}
-		return edg_wll_SetError(ctx, intErr, NULL);
 	}
 
+	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 
