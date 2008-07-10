@@ -1,8 +1,15 @@
 #include <stdlib.h>
 #include <errno.h>
+#include <syslog.h>
+#include <unistd.h>
+#include <stdio.h>
+
 
 #include "glite/lbu/db.h"
 #include "glite/lb/context-int.h"
+
+extern int 	debug;	// declared and set in bkserver.c
+
 
 int edg_wll_SetErrorDB(edg_wll_Context ctx) {
 	int code;
@@ -89,6 +96,11 @@ int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
 
 	ret = edg_wll_Error(ctx,NULL,NULL);
 	if (ret == EDG_WLL_ERROR_DB_TRANS_DEADLOCK) {
+		if (debug)
+			printf("[%d]: DB deadlock detected. Rolling back transaction and retrying... \n",getpid());
+		else 
+			syslog(LOG_INFO,"[%d]: DB deadlock detected. Rolling back transaction and retrying... \n",getpid());
+
 		edg_wll_Rollback(ctx);
 		edg_wll_ResetError(ctx);
 		return 1;
