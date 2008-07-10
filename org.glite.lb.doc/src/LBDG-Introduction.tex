@@ -1,63 +1,16 @@
 % -*- mode: latex -*-
 
-\section{Common concepts and practices}
-\TODO{Add the information from the "Best practices" workshop, i.e. information how the whole LB is coded, why C, what were the general techniques - context, connection pool, .T templates description, etc.}
+\section{\LB API introduction}
+\input versions
+
+\TODO{Udelat nejaky odkaz na UG - LB introduction and architecture}
 
 The whole \LB service shares a number of common concepts and
 principles used to design, develop and use the services. Most of
 common data types and functions is separated in its own SW module called
 \LB common.
 
-\subsection{General introduction}
-
-\subsubsection{Function arguments}
-In the following description the function arguments are classified as follows:
-\begin{description}
-\item[IN] pure input argument, not modified by the function.
-If it is a~pointer, the C prototype includes \verb'const' (which is omitted in
-this document for the sake of readability).
-\item[OUT] pure output argument. The function expects a~pointer and fills in
-the pointed object.
-
-If the argument is \verb'**', or a~structure containing pointers,
-the returned objects are \emph{always} dynamically allocated,
-and has to be freed when not used anymore.
-The same holds for directly returned pointers.
-
-\item[INOUT] an argument taken as an input and modified by the function.
-Typically it is the \LB context.
-
-\end{description}
-
-\subsubsection{Datatypes}
-The API uses two classes of custom datatypes:
-\begin{description}
-\item[opaque types] (\eg context, jobid) do not expose their structure
-to the user.
-The only way to access them is via the API functions.
-The internal structure of those may be subject to change.
-
-\item[transparent types] (\eg event, status) expose the structure to the
-user. The structure is documented and no incompatible changes will be done
-without notice.
-\end{description}
-
-\subsubsection{Return values}
-The return type of most of the API functions is return \verb'int'.
-Unless specified otherwise the returned values are as follows:
-\begin{description}
-\item[0] success
-\item[errno] an error occured, the nature of the error
-matches meaning of one of standard \verb'<errno.h>' error codes.
-\item[\LB specific] a~few errors can't be intuitively mapped to
-\verb'<errno.h>', therefore the are specific \LB error codes, starting from \verb'EDG_WLL_ERROR_BASE'.
-\end{description}
-See Sect.~\ref{s:error} for details on error handling.
-
-Few API function return \verb'char *'. In such a~case \verb'NULL' indicates
-an error, non-null value means success.
-
-\subsection{\LB design principles}
+\subsection{\LB API design notes}
 
 \subsubsection{Context and Parameter Settings}
 \label{s:context}
@@ -110,12 +63,79 @@ connection pool -- a client--server connection is transparently reused
 by different threads/context to eliminate the overhead of secure
 channel establishment.
 
-\subsection{\LB common overview}
+\subsubsection{Function arguments}
+In the following description the function arguments are classified as follows:
+\begin{description}
+\item[IN] pure input argument, not modified by the function.
+If it is a~pointer, the C prototype includes \verb'const' (which is omitted in
+this document for the sake of readability).
+\item[OUT] pure output argument. The function expects a~pointer and fills in
+the pointed object.
+
+If the argument is \verb'**', or a~structure containing pointers,
+the returned objects are \emph{always} dynamically allocated,
+and has to be freed when not used anymore.
+The same holds for directly returned pointers.
+
+\item[INOUT] an argument taken as an input and modified by the function.
+Typically it is the \LB context.
+
+\end{description}
+
+\subsubsection{Datatypes}
+The API uses two classes of custom datatypes:
+\begin{description}
+\item[opaque types] (\eg context, jobid) do not expose their structure
+to the user.
+The only way to access them is via the API functions.
+The internal structure of those may be subject to change.
+
+\item[transparent types] (\eg event, status) expose the structure to the
+user. The structure is documented and no incompatible changes will be done
+without notice.
+\end{description}
+
+\subsubsection{Return values}
+The return type of most of the API functions is return \verb'int'.
+Unless specified otherwise the returned values are as follows:
+\begin{description}
+\item[0] success
+\item[errno] an error occured, the nature of the error
+matches meaning of one of standard \verb'<errno.h>' error codes.
+\item[\LB specific] a~few errors can't be intuitively mapped to
+\verb'<errno.h>', therefore the are specific \LB error codes, starting from \verb'EDG_WLL_ERROR_BASE'.
+\end{description}
+See Sect.~\ref{s:error} for details on error handling.
+
+Few API function return \verb'char *'. In such a~case \verb'NULL' indicates
+an error, non-null value means success.
+
+\subsection{\LB common general components}
+
+\subsubsection{JobId} 
+\TODO{JobId kratce vetveno na 3.1 a 2.0 (jmeno a umisteni / samostatny
+  modul) Odkazy na zacatek user's guide pro vysvetleni architektury.}
+The primary entity of \LB is a job, identified by JobId -- a unique
+identifier of the job. The type representing the JobId is opaque, it's
+contents is hidden to the API users and should be manipulated with the
+access methods only. 
+
+The JobId representing data structure name and location
+changed between \LB versions:
+
+\begin{itemize}
+ \item \texttt{edg\_wlc\_JobId} -- old data structure used in WMS 3.1
+  edg\_wlc\_JobIdParse, edg\_wlc\_JobIdFree
+  glite/lb/jobid.h 
+ \item \texttt{glite\_jobid\_t} -- new data structure for \LB 2.0 
+  glite/jobid/cjobid.h
+\end{itemize}
 
 \subsubsection{edg\_wll\_Event}
-Data structure \texttt{edg\_wll\_Event} represents a \LB event (set of
+Data structure \texttt{edg\_wll\_Event} represents a \LB event, atomic
+data unit received and processed by \LB. It is a set of
 key--value pairs with predefined structure -- allowed event types and
-names of attributes). It is returned by customer LB API job event
+names of attributes. It is returned by customer LB API job event
 related calls. The data structure have a common part and a event
 type specific part. Most important common event attributes:
 \begin{itemize}
@@ -130,7 +150,21 @@ The event type is transparent. The only important operation defined is
 \texttt{edg\_wll\_FreeEvent(edg\_wll\_Event *event)} to free event
 structure. For more information see file \texttt{org.glite.lb.types/types.T} 
 
-\TODO{examples}
+\TODO{example - Michal?}
+
+\subsubsection{edg\_wll\_JobStat}
+Data type \texttt{edg\_wll\_JobStat} represents status of a job as
+computed by \LB from received events. The data structure have a common
+part and a job state specific part. Most important common
+attributes:
+\begin{itemize}
+  \item \texttt{state} numeric code of the status
+    (EDG\_WLL\_JOB\_SUBMITTED, EDG\_WLL\_JOB\_WAITING, \dots)
+  \item \texttt{type} type of the job (EDG\_WLL\_JOB\_SIMPLE,
+    EDG\_WLL\_JOB\_DAG, EDG\_WLL\_JOB\_COLLECTION) 
+  \item \texttt{children} list of subjob \jobid's
+\end{itemize}
+
 
 \subsubsection{edg\_wll\_Context} 
 Data structure representing \LB API context (see
@@ -157,25 +191,9 @@ The context type is opaque. Operations with the type instance:
 \end{itemize}
 For more information see file \texttt{context.h} 
 
-\TODO{examples}
+\TODO{Referenced or inline example?}
 
-\subsubsection{edg\_wll\_JobStat}
-Data type \texttt{edg\_wll\_JobStat} represents status of a job as
-computed by \LB from received events. The data structure have a common
-part and a job state specific part. Most important common
-attributes:
-\begin{itemize}
-  \item \texttt{state} numeric code of the status
-    (EDG\_WLL\_JOB\_SUBMITTED, EDG\_WLL\_JOB\_WAITING, \dots)
-  \item \texttt{type} type of the job (EDG\_WLL\_JOB\_SIMPLE or
-    EDG\_WLL\_JOB\_DAG) 
-  \item \texttt{children} list of subjob \jobid's
-\end{itemize}
-
-
-\TODO{JobId? Odkazy na zacatek user's guide pro vysvetleni architektury.}
-
-\subsubsection{\LB common header files overview}
+\subsubsection{\LB common header files}
 
 Header files for mentioned common structures are summarized in the
 following table, other important header files are described in the
@@ -185,7 +203,7 @@ next chapters (producer and consumer API).
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite/lb/context.h & Definition of context structure and parameters. \\
 glite/lb/events.h & \LB event data structure.\\
-glite/lb.jobstat.h & Job status structure returned by consumer API.\\
+glite/lb/jobstat.h & Job status structure returned by consumer API.\\
 \end{tabularx}
 \end{table}
 
