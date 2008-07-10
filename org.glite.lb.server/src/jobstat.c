@@ -399,8 +399,6 @@ int edg_wll_intJobStatus(
 		return edg_wll_SetError(ctx,ENOENT,NULL);
 	}
 
-	edg_wll_SortEvents(events);
-
 	for (i = 0; i < num_events; i++) {
 		res = processEvent(intstat, &events[i], i, be_strict, &errstring);
 		if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
