@@ -768,8 +768,7 @@ cleanup:
 
 edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
         char *icnames, 
-	char *values,
-	glite_lbu_bufInsert *bi)
+	char *values)
 {
 	char *stmt = NULL;
 

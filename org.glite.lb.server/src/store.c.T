@@ -660,7 +660,6 @@ int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 	edg_wlc_JobId		*subjobs = NULL;
 	char			*jobid = NULL, *jobid_md5 = NULL, *jobid_md5_old = NULL;
 	size_t			jobid_len;
-	glite_lbu_bufInsert	bi_s, *bi_states = &bi_s;
 	char			*icnames = NULL, *values = NULL, *userid = NULL, *stmt = NULL;
 	int			server, proxy, membership = 0;
 	glite_lbu_Statement     sh = NULL;
@@ -716,7 +715,7 @@ int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 		free(jobid_md5_old);
 		jobid_md5_old = jobid_md5;
 
-		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, icnames, values, bi_states)))
+		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, icnames, values)))
 			edg_wll_Error(ctx,&et,&ed);
 
 		if (err) {
