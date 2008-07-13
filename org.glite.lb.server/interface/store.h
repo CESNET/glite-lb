@@ -32,6 +32,8 @@ int create_reply(const edg_wll_Context,char **);
 int is_job_local(edg_wll_Context, glite_jobid_const_t jobId);
 int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *register_to_JP);
 int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *);
+edg_wll_ErrorCode intJobStat_embryonic(edg_wll_Context ctx, glite_jobid_const_t jobid, const edg_wll_RegJobEvent *e, intJobStat *stat);
+
 
 
 int edg_wll_delete_event(edg_wll_Context,const char *, int);

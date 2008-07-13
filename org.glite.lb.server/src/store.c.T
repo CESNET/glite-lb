@@ -592,6 +592,23 @@ clean:
 }
 
 
+edg_wll_ErrorCode intJobStat_embryonic(
+	edg_wll_Context ctx,
+	glite_jobid_const_t jobid,
+	const edg_wll_RegJobEvent *e,
+	intJobStat *stat)
+{
+	if (edg_wlc_JobIdDup(jobid, &stat->pub.jobId) ||
+		edg_wlc_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
+	stat->pub.state = EDG_WLL_JOB_SUBMITTED;
+	stat->pub.owner = strdup(e->user);
+	stat->pub.jobtype = EDG_WLL_STAT_SIMPLE;
+	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
+	stat->pub.lastUpdateTime = e->timestamp;
+
+err:
+	return edg_wll_Error(ctx,NULL,NULL);
+}
 
 /*
  * Returns encoded SQL table states record for embryonic DAG subjob
@@ -611,14 +628,9 @@ static edg_wll_ErrorCode states_values_embryonic(
 	intJobStat *stat = &stat_rec;
 
 	init_intJobStat(stat);
-	if (edg_wlc_JobIdDup(jobid, &stat->pub.jobId) ||
-		edg_wlc_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
-	stat->pub.state = EDG_WLL_JOB_SUBMITTED;
-	stat->pub.owner = strdup(e->user);
-	stat->pub.jobtype = EDG_WLL_STAT_SIMPLE;
-	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
-	stat->pub.lastUpdateTime = e->timestamp;
 
+	if (intJobStat_embryonic(ctx, jobid, e, stat)) goto err;
+	
 	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
 	parent_md5 = edg_wlc_JobIdGetUnique(e->jobId);
 	stat_enc = enc_intJobStat(strdup(""), stat);
@@ -641,11 +653,11 @@ err:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+
 int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 {
 	int			i, j,  err = 0;
 	edg_wlc_JobId		*subjobs = NULL;
-	struct timeval		now;
 	char			*jobid = NULL, *jobid_md5 = NULL, *jobid_md5_old = NULL;
 	size_t			jobid_len;
 	glite_lbu_bufInsert	bi_s, *bi_states = &bi_s;
@@ -667,8 +679,6 @@ int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 	jobid_md5_old = edg_wlc_JobIdGetUnique(subjobs[0]);
 	jobid_len = strlen(jobid_md5_old);
 		
-
-	gettimeofday(&now,NULL);
 
 	/* increase the overall request timeout. */
 	ctx->p_tmp_timeout.tv_sec += e->nsubjobs/10;
@@ -706,7 +716,7 @@ int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 		free(jobid_md5_old);
 		jobid_md5_old = jobid_md5;
 
-		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, subjobs[i], icnames, values, bi_states)))
+		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, icnames, values, bi_states)))
 			edg_wll_Error(ctx,&et,&ed);
 
 		if (err) {
@@ -731,6 +741,7 @@ err:
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
+
 
 int edg_wll_delete_event(edg_wll_Context ctx,const char *jobid,int event)
 {
