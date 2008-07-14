@@ -7,6 +7,19 @@ that need more verbose description.
 It is complemented with the full commands reference that is provided
 as standard manual pages installed with the \LB packages.
 
+\subsubsection{Standard and debug logs}
+
+In normal operation \LB server sends error messages to syslog.
+Informational messages are generally avoided in order to prevent syslog congestion.
+
+\begin{sloppypar}
+When tracing problems, GLITE\_LB\_SERVER\_DEBUG environment variable can be set to
+non-empty value when starting the service.
+Then verbose log \$GLITE\_LOCATION\_VAR/lb.log 
+(as well as \$GLITE\_LOCATION\_VAR/notif-il.log eventually when notifications are enabled).
+Beware that these can grow huge easily.
+\end{sloppypar}
+
 \subsubsection{Changing index configuration}
 
 % full-scan skodi, LB se tomu brani
@@ -263,6 +276,7 @@ Purge zamrzlych jobu (overit v kodu, na ktere verzi to mame )
 
 \subsection{\LB logger}
 
+\iffalse
 \TODO{ljocha}
 
 Karantena (od ktere verze to mame?)
@@ -274,8 +288,99 @@ Cistky pri zaseknuti, nesmyslna jobid apod.
 Debugovaci rezim
 
 Notifikacni IL
+\fi
+
+The logger component (implemented by \verb'glite-lb-interlogd' daemon fed by
+either \verb'glite-lb-logd' or \LB proxy)
+is responsible for the store-and-forward event delivery in \LB
+(Sect~\ref{comp:logger}).
+Therefore eventual operational problems are related mostly to 
+cumulating undelivered events.
+
+\subsubsection{Event files}
+
+\LB logger stores events in one file per job, named
+\verb'$GLITE_LOCATION_VAR/log/dglogd.log.JOBID' by default
+(JOBID is only the part after the \LB server address prefix).
+The format is text (ULM~\cite{ulm}), one event per line.
+In addition, control information on delivery status is stored in additional
+file with \verb'.ctl' suffix.
+
+\begin{sloppypar}
+In case of emergency (\eg corrupted file) the files can be examined
+with \verb'glite-lb-parse_eventsfile'%
+\footnote{Not fully supported tool, installed by glite-lb-client RPM among examples.}.
+It is possible to hand-edit the event files in emergency (remove corrupted lines).
+However, glite-lb-interlogd must not be running, and the corresponding .ctl file
+must be removed.
+\end{sloppypar}
+
+\subsubsection{Backlog reasons}
+
+\paragraph{Undeliverable jobid.}
+In normal gLite job processing, jobids are verified on job submission
+(via synchronous job registration, see~\cite{lbug}), hence occurrence of
+undeliverable jobid (\ie its prefix does not point to
+a~working \LB server) is unlikely.
+On the other hand, if it happens,
+and an event with such a~jobid is logged,
+\eg due to a~third-party job processing software bug,
+glite-lb-interlogd keeps trying to deliver it indefinitely%
+\footnote{Unless event expiration is set, though it is not done for normal events.}.
+The unsuccessful attempts are reported via syslog.
+The only solution is manual
+removal of the corresponding files
+and restart of the service.
+
+\paragraph{Corrupted event file.} 
+For various reasons the files may get corrupted.
+In general, corrupted file is detected by glite-lb-interlogd, and it is moved
+to \emph{quarantine} (by renaming the file to contain ``quarantine'' in its name).
+The action is reported in syslog.
+The renamed files can be removed or repaired by hand and renamed back
+for glite-lb-interlogd to pick them up again
+(in this case, the service needn't be stopped).
+
+\paragraph{Slow delivery.}
+Either glite-lb-interlogd or the target \LB server(s) may not keep pace 
+with the incoming stream of events.
+Unless the situation is permanent, no specific action is required---the 
+event backlog decreases once the source is drained.
+Otherwise hardware bottlenecks (CPU, disk, network) have to be identified
+(with standard OS monitoring) and removed.
+
+\TODO{salvet -- nemame jeste nejake rychle tipy?}
+
+
+\subsubsection{Notification delivery}
+\begin{sloppypar}
+When glite-lb-logger RPM is optionally installed with \LB server, 
+a~modified \verb'glite-lb-notif-interlogd' is run by the server startup
+script.
+This version of the daemon is specialized for \LB notifications delivery;
+it uses the same mechanism, however, the events (notifications) are routed
+by \emph{notification id} rather than jobid, and targeted to user's listeners,
+not \LB servers.
+See~\cite{lbug, lbdg} for details.
+\end{sloppypar}
+
+On the contrary to normal events, it is more likely that the event destination
+disappears permanently.
+Therefore the notification events have their expiration time set,
+and glite-lb-interlogd purges expired undelivered notifications by default.
+Therefore the need for manual purge is even less likely.
+
+The event files have different prefix (\verb'/var/tmp/glite-lb-notif' by default).
+
+\subsubsection{Debug mode}
+
+All the logger daemons, \ie glite-lb-logd, glite-lb-interlogd, and
+glite-lb-notif-interlogd, can be started with \verb'-d' 
+to avoid detaching control terminal, and \verb'-v' to increase 
+debug message verbosity.
+See manual pages for details.
 
 \subsection{Used resources}
 
 \TODO{ljocha}
-Demoni, Adresare, porty, ...
+Demoni, procesy a thready, Adresare, porty, ...
