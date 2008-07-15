@@ -343,14 +343,18 @@ for glite-lb-interlogd to pick them up again
 
 \paragraph{Slow delivery.}
 Either glite-lb-interlogd or the target \LB server(s) may not keep pace 
-with the incoming stream of events.
-Unless the situation is permanent, no specific action is required---the 
+with the incoming stream of events. 
+Amount of such backlog can be quickly assessed by looking at timestamps of the oldest
+event files (with \verb'ls -lt $GLITE_LOCATION_VAR/log/', for example). 
+Fully processed event files are deleted in approx. one minute intervals, 
+so files last modified one minute ago or newer do not constitute backlog at all.
+Unless the backlog situation is permanent, no specific action is required---the 
 event backlog decreases once the source is drained.
 Otherwise hardware bottlenecks (CPU, disk, network) have to be identified
-(with standard OS monitoring) and removed.
-
-\TODO{salvet -- nemame jeste nejake rychle tipy?}
-
+(with standard OS monitoring) and removed, see sections~\ref{inst:hw_req} and
+\ref{inst:db_tuning} for \LB server tuning tips. In order to maximize 
+performance of \verb'glite-lb-interlogd', it is recommended to distribute
+jobs to multiple \LB servers that can be shared by multiple WMS setups in turn.
 
 \subsubsection{Notification delivery}
 \begin{sloppypar}
