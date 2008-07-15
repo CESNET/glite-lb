@@ -349,9 +349,6 @@ static int edg_wll_LogEventMaster(
 
 	edg_wll_ResetError(ctx);
 
-   /* default return value is "Try Again" */
-	ret = EAGAIN; 
-
    /* format the message: */
 	va_start(fmt_args,fmt);
 
@@ -369,28 +366,29 @@ static int edg_wll_LogEventMaster(
 //	fprintf(stderr,"edg_wll_LogEventMaster (%d chars): %s",strlen(out),out);
 #endif
 	
-	ctx->p_tmp_timeout.tv_sec = 0;
-	ctx->p_tmp_timeout.tv_usec = 0;
-	if (priority) {
-		ctx->p_tmp_timeout = ctx->p_sync_timeout;
-	}
-	else {
-		ctx->p_tmp_timeout = ctx->p_log_timeout;
-	}
-
    /* and send the message */ 
 #ifndef LB_PERF_DROP
 	if (flags & EDG_WLL_LOGFLAG_LOCAL) {
 		/* to the local-logger: */
+		ctx->p_tmp_timeout = priority ? ctx->p_sync_timeout : ctx->p_log_timeout;
 		ret = edg_wll_DoLogEvent(ctx, out);
-	} else if (flags & EDG_WLL_LOGFLAG_PROXY) {
+		if (ret) goto edg_wll_logeventmaster_end;
+	}
+	if (flags & EDG_WLL_LOGFLAG_PROXY) {
 		/* to the L&B Proxy: */
+		ctx->p_tmp_timeout = priority ? ctx->p_sync_timeout : ctx->p_log_timeout;
 		ret = edg_wll_DoLogEventProxy(ctx, out);
-	} else if (flags & EDG_WLL_LOGFLAG_DIRECT) {
+		if (ret) goto edg_wll_logeventmaster_end;
+	}
+	if (flags & EDG_WLL_LOGFLAG_DIRECT) {
 		/* directly to the bkserver: */
+		ctx->p_tmp_timeout = priority ? ctx->p_sync_timeout : ctx->p_log_timeout;
 		ret = edg_wll_DoLogEventDirect(ctx, out);
-	} else {
-		edg_wll_SetError(ctx,ret = EINVAL,"edg_wll_LogEventMaster(): wrong flag specified");
+		if (ret) goto edg_wll_logeventmaster_end;
+	}
+
+	if (flags & (EDG_WLL_LOGFLAG_LOCAL|EDG_WLL_LOGFLAG_PROXY|EDG_WLL_LOGFLAG_DIRECT) == 0) {
+		edg_wll_SetError(ctx,ret = EINVAL,"edg_wll_LogEventMaster(): no known flag specified");
 	}
 #endif
 
@@ -786,59 +784,26 @@ static int edg_wll_RegisterJobMaster(
 	}
 	parent_s = parent ? edg_wlc_JobIdUnparse(parent) : strdup("");
 
-	if ( (flags & EDG_WLL_LOGFLAG_DIRECT & EDG_WLL_LOGFLAG_LOCAL) ||
-	     (flags & EDG_WLL_LOGFLAG_PROXY & EDG_WLL_LOGFLAG_LOCAL) ||
-	     !(flags | EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_PROXY | EDG_WLL_LOGFLAG_LOCAL) ) {
+	if ( ((flags & (EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_LOCAL)) == 
+				(EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_LOCAL)) ||
+	     ((flags & (EDG_WLL_LOGFLAG_PROXY | EDG_WLL_LOGFLAG_LOCAL)) == 
+	      			(EDG_WLL_LOGFLAG_PROXY | EDG_WLL_LOGFLAG_LOCAL))
+	) {
 		edg_wll_SetError(ctx,EINVAL,"edg_wll_RegisterJobMaster(): wrong flag specified");
 		goto edg_wll_registerjobmaster_end;
 	}
-	if (flags & EDG_WLL_LOGFLAG_DIRECT) {
-		/* SetLoggingJob and log the message directly to bkserver */
-		if (edg_wll_SetLoggingJob(ctx,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
-			err = edg_wll_LogEventMaster(ctx, flags,
-				EDG_WLL_EVENT_REGJOB, EDG_WLL_FORMAT_REGJOB,
-				(char *)jdl, ns, parent_s, type_s, num_subjobs, seed);
-			if (err) {
-				edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobMaster(): unable to register with bkserver");
-				goto edg_wll_registerjobmaster_end;
-			}
-		} else {
-			edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobMaster(): unable to set logging job (direct)");
+
+	if (edg_wll_SetLoggingJob(ctx,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
+		err = edg_wll_LogEventMaster(ctx, flags,
+			EDG_WLL_EVENT_REGJOB, EDG_WLL_FORMAT_REGJOB,
+			(char *)jdl, ns, parent_s, type_s, num_subjobs, seed);
+		if (err) {
+			edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobMaster(): unable to register with bkserver");
 			goto edg_wll_registerjobmaster_end;
 		}
-	} 
-	if (flags & EDG_WLL_LOGFLAG_PROXY) {
-		/* SetLoggingJobProxy and log the message to lbproxy */
-		edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
-		if (seq) free(seq);
-		seq = edg_wll_GetSequenceCode(ctx);
-		if (edg_wll_SetLoggingJobProxy(ctx,job,seq,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
-			err = edg_wll_LogEventMaster(ctx, flags,
-				EDG_WLL_EVENT_REGJOB, EDG_WLL_FORMAT_REGJOB,
-				(char *)jdl, ns, parent_s, type_s, num_subjobs, seed);
-			if (err) {
-				edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobMaster(): unable to register with lbproxy");
-				goto edg_wll_registerjobmaster_end;
-			}
-		} else {
-			edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobMaster(): unable to set logging job (proxy)");
-			goto edg_wll_registerjobmaster_end;
-		}
-	} 
-	if (flags & EDG_WLL_LOGFLAG_LOCAL) {
-		/* SetLoggingJob and log the message through the local-logger */
-		if (edg_wll_SetLoggingJob(ctx,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
-			err = edg_wll_LogEventMaster(ctx, flags,
-				EDG_WLL_EVENT_REGJOB, EDG_WLL_FORMAT_REGJOB,
-				(char *)jdl, ns, parent_s, type_s, num_subjobs, seed);
-			if (err) {
-				edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobMaster(): unable to register through local-logger");
-				goto edg_wll_registerjobmaster_end;
-			}
-		} else {
-			edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobMaster(): unable to set logging job (local)");
-			goto edg_wll_registerjobmaster_end;
-		}
+	} else {
+		edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobMaster(): unable to set logging job (direct)");
+		goto edg_wll_registerjobmaster_end;
 	}
 
 edg_wll_registerjobmaster_end:
@@ -923,6 +888,7 @@ int edg_wll_RegisterJobProxy(
 
 	FD_ZERO(&fdset);
 
+
 	type_s = edg_wll_RegJobJobtypeToString(type);
 	if (!type_s) {
 		edg_wll_SetError(ctx,EINVAL,"edg_wll_RegisterJobProxy(): no jobtype specified");
@@ -932,7 +898,6 @@ int edg_wll_RegisterJobProxy(
 	     type == EDG_WLL_REGJOB_PARTITIONED ||
 	     type == EDG_WLL_REGJOB_COLLECTION)
 		&& num_subjobs > 0) {
-		edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
 		ret = edg_wll_GenerateSubjobIds(ctx,job,num_subjobs,seed,subjobs);
 		/* increase log timeout on client (the same as on BK server) */
 		ctx->p_sync_timeout.tv_sec += num_subjobs;
@@ -943,7 +908,6 @@ int edg_wll_RegisterJobProxy(
 		goto edg_wll_registerjobproxy_end;
 	}
 
-	/* SetLoggingJobProxy */
 	edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
 	seq = edg_wll_GetSequenceCode(ctx);
 	if (edg_wll_SetLoggingJobProxy(ctx,job,seq,NULL,EDG_WLL_SEQ_NORMAL) != 0) {
@@ -952,7 +916,7 @@ int edg_wll_RegisterJobProxy(
 	}
 
 	/* format the RegJob event message */
-	if (edg_wll_FormatLogLine(ctx,EDG_WLL_LOGFLAG_SYNC | EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_PROXY,
+	if (edg_wll_FormatLogLine(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_PROXY,
 		EDG_WLL_EVENT_REGJOB,&logline,
 		EDG_WLL_FORMAT_REGJOB,(char *)jdl,ns,"",type_s,num_subjobs,seed) != 0 ) {
 		edg_wll_UpdateError(ctx,EINVAL,"edg_wll_RegisterJobProxy(): edg_wll_FormatLogLine() error");
@@ -1020,7 +984,7 @@ int edg_wll_RegisterJobProxy(
 			/* read answer from bkserver */
 			if ((ret = edg_wll_log_direct_read(ctx,&con_bkserver)) == -1) {
 				edg_wll_UpdateError(ctx,EAGAIN,"edg_wll_RegisterJobProxy(): edg_wll_log_direct_read error");
-				goto edg_wll_registerjobproxy_end; 
+				goto inc_seq_code; 
 			}
 			count -= 1;
 		}	
@@ -1028,13 +992,18 @@ int edg_wll_RegisterJobProxy(
 			/* read answer from lbproxy */
 			if ((ret = edg_wll_log_proxy_read(ctx,&con_lbproxy)) == -1) {
 				edg_wll_UpdateError(ctx,EAGAIN,"edg_wll_RegisterJobProxy(): edg_wll_log_proxy_read error");
-				goto edg_wll_registerjobproxy_end; 
+				goto inc_seq_code; 
 			}
 			count -= 1;
 		}	
 	}
 
+
+inc_seq_code:
+	edg_wll_IncSequenceCode(ctx);	/* XXX: should not fail, called second time */
+
 edg_wll_registerjobproxy_end:
+
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"edg_wll_RegisterJobProxy: done (remaining timeout %d.%06d sec)\n",
 		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
