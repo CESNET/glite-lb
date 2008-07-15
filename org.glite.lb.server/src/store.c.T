@@ -290,13 +290,27 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 	nar = edg_wll_ExecSQL(ctx,q,&stmt);
 	free(q); q = NULL;
 
+/* XXX: greyjobs semantics is overloaded here:
+ * we trust the registration event content to specify job owner unconditionally.
+ * It's fine for the time being but should be solved with new authz.
+ * */
+
 	if (nar < 0) goto err;
 	else if (nar == 0) {
-		/* Job not registered yet */
+		/* Job not stored yet */
 
-		if (!( (event->any.type == EDG_WLL_EVENT_REGJOB) && 
-			(event->any.priority & EDG_WLL_LOGFLAG_DIRECT) )) 
-		{
+		if (event->any.type == EDG_WLL_EVENT_REGJOB) {
+
+		/* XXX: directness is checked by any.user == peerName. Not perfect but better than event flags. */
+
+			if (!ctx->isProxy && !edg_wll_gss_equal_subj(event->any.user, ctx->peerName) && !ctx->greyjobs) {
+				edg_wll_SetError(ctx,EPERM,"job registration must go directly");
+				goto err;
+
+			}
+			/* else OK */
+		}
+		else {
 			if (ctx->greyjobs) grey = 1;
 			else {
 				edg_wll_SetError(ctx, ENOENT, "job not registered");
@@ -304,8 +318,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 			}
 		}
 
-		subj = strdup( ctx->isProxy ? event->any.user : ctx->peerName);
-		can_peername = edg_wll_gss_normalize_subj(subj, 0);
+		can_peername = grey ?  strdup("GREY JOB") : edg_wll_gss_normalize_subj(event->any.user, 0);
 		userid = strdup(strmd5(can_peername, NULL));
 		if (store_user(ctx,userid,can_peername)) goto err;
 		if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
@@ -313,22 +326,16 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		*register_to_JP = (local_job) ? REG_JOB_TO_JP : 0;
 	}
 	else {
-		/* Job already registered */
+		/* Job already stored */
 
 		if (edg_wll_FetchRow(ctx,stmt,sizeof(res)/sizeof(res[0]),NULL,res) < 0) goto err;
 		if (stmt) { glite_lbu_FreeStmt(&stmt); stmt = NULL; }
 
 
-/* TODO: ljocha: only GSI should switch the job from grey, and specify owner
- * add !ctx->isProxy to the conditions and make the rest simpler */
-
 		if (ctx->greyjobs && !strcmp(res[2],"1") && 
-			(event->any.type == EDG_WLL_EVENT_REGJOB) && 
-			(event->any.priority & EDG_WLL_LOGFLAG_DIRECT)) 
+			(event->any.type == EDG_WLL_EVENT_REGJOB)) 
 		{
-
-			subj = strdup(ctx->isProxy ? event->any.user : ctx->peerName);
-			can_peername = edg_wll_gss_normalize_subj(subj, 0);
+			can_peername = edg_wll_gss_normalize_subj(event->any.user, 0);
 			userid = strdup(strmd5(can_peername, NULL));
 			if (store_user(ctx,userid,can_peername)) goto err;
 			if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
@@ -337,8 +344,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		}
 		else {
 			/* check possible server vs. proxy registration ownership clash */
-			if (( (event->any.type == EDG_WLL_EVENT_REGJOB) && 
-				(event->any.priority & EDG_WLL_LOGFLAG_DIRECT) )) 
+			if (event->any.type == EDG_WLL_EVENT_REGJOB) 
 			{
 				trio_asprintf(&q,"select u.cert_subj from jobs j, users u "
 							"where j.jobid='%|Ss' and u.userid=j.userid",unique);
@@ -347,16 +353,9 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 					|| edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0
 				) goto err;
 
-				if (ctx->isProxy) {
-					if (!edg_wll_gss_equal_subj(event->any.user, owner)) {
-						edg_wll_SetError(ctx,EPERM,"Job already registered to LB server with different owner then set in this registration event. Rejecting event.");
-					}
-				}
-				else {
-					if (!edg_wll_gss_equal_subj(ctx->peerName, owner)) {
-						edg_wll_SetError(ctx,EPERM,"Job already registered to LB proxy with different owner then owner of certificate (DN) used for sending this registration event. Rejecting event.");
-						goto err;
-					}
+				if (!edg_wll_gss_equal_subj(event->any.user, owner)) {
+					edg_wll_SetError(ctx,EPERM,"Job already registered with different owner. Rejecting event.");
+					goto err;
 				}
 			}
 
