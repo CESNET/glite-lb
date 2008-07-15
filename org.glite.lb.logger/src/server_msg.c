@@ -42,7 +42,7 @@ create_msg(il_octet_string_t *ev, char **buffer, long *receipt, time_t *expires)
       
       p += 12; /* skip the key and = */
       n = atoi(p);
-      if((n & EDG_WLL_LOGFLAG_SYNC) == 0) {
+      if((n & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) == 0) {
 	/* normal asynchronous message */
 	      *receipt = 0L;
       }
