@@ -354,6 +354,10 @@ install:
 	install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
+ifdef LB_PERF
+	-mkdir -p ${PREFIX}/sbin
+	${INSTALL} -m 755 ${top_srcdir}/src/perftest_proxy.sh ${PREFIX}/sbin
+
 clean:
 	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test* ${MAN_GZ}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
