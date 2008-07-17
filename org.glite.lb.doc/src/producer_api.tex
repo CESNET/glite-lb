@@ -32,12 +32,27 @@ For most developers (\ie\ those not developing the WMS itself) the
 \verb'edg_wll_LogUserTag*(...)' and \verb'edg_wll_ChangeACL(...)' are
 the only functions of interest.
 
+\subsection{Call semantics}
+\LB producer calls generally do not have transaction semantics, the
+query following succesful logging call is not guaranteed to see
+updated \LB server state. The typical call -- loging an event -- is
+returned immediatelly and the success of the call means that the first
+\LB infrastructure component takes over the event and queues it for
+delivery. If you require transaction semantics, you have to use
+synchronous \verb'edg_wll_LogEventSync(...)' call. 
+
+The \LB proxy on the other hand provides a \emph{local view}
+semantics, events logged into proxy using
+\verb'edg_wll_LogEventProxy(...)' are guaranteed to by accessible by
+subsequent queries \emph{on that proxy}.
+
+Job registrations are all synchronous.
+
 \subsection{Header files}
 
 \begin{table}[h]
 \begin{tabularx}{\textwidth}{>{\tt}lX}
-glite/lb/context.h & Definition of context structure and parameters. \\
-{\bf glite/lb/producer.h} & Prototypes for all event logging functions. \\
+glite/lb/producer.h & Prototypes for all event logging functions. \\
 \end{tabularx}
 \end{table}
 
