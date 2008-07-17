@@ -357,6 +357,7 @@ install:
 ifdef LB_PERF
 	-mkdir -p ${PREFIX}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_proxy.sh ${PREFIX}/sbin
+endif
 
 clean:
 	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test* ${MAN_GZ}
