@@ -1,155 +1,212 @@
 % -*- mode: latex -*-
 
-\section{\LB API design notes}
+\section{Introduction}
 
-\input versions
-
-A recomended prerequisity for reader of this developer's guide is the
-\LB architecture description located in the first part of
-the \LB user's guide (\cite{LBUG}).
+This document is intented to guide the reader through basic steps
+of writing, compiling and running programs communicating with the \LB
+service using the \LB library. It is not intended as a complete API
+reference; for this, the reader is referred to the C or C++ header
+files, which are thoroughly documented using the doxygen--style
+comments. 
 
 The \LB API can be divided by functionality into two independent
 parts:
 \begin{itemize}
-\item \textit{\LB Producer API} is used to create and send events to the \LB
-server (proxy),
-\item \textit{\LB Consumer API} and \textit{\LB
-Notification API} are used to obtain information from the  \LB server (proxy).
+\item \textit{\LB Producer API} (section \ref{s:ProdOverview}) is used
+to create and send events to the \LB server (proxy),
+\item \textit{\LB Consumer API} (section \ref{s:ConsOverview}) and \textit{\LB
+Notification API} (section \ref{s:NotifOverview}) are used to obtain
+information from the  \LB server (proxy).
 \end{itemize}
 These two parts (and in fact the whole \LB service implementation)
 share a number of common concepts, design principles, data types and
 functions which we will describe first. Most of common data types and
 functions are separated in its own SW module called
-\texttt{org.glite.lb.common} described in section~\ref{s:common}.
+\texttt{org.glite.lb.common} and are described in section~\ref{s:common}
 
+\marginpar{Recommended reading}
+Before you start reading this guide, it is recommended to accomodate
+yourself with the \LB architecture described in the first part of the
+\LB user's guide (\cite{LBUG}).
+
+\input versions
+
+\subsection{General Guidelines}
+
+\marginpar{Naming conventions}
+All names exported by the \LB library (function names, symbolic
+constants) are prefixed to avoid name clashes. The prefix is
+\lstinline'edg_wll_' for function names and \lstinline'EDG_WLL_' for
+symbolic constants.
+
+\marginpar{Input and output arguments}
+All input arguments in \LB API are designated \lstinline'const' (for simple
+types) or have \texttt{const} in type name (for structures).
+
+If pointers are passed in output of function call (either as a return
+value, output argument or part of structure), the corresponding
+objects are \emph{always} allocated dynamically and have to be freed
+when not used anymore. 
+
+\marginpar{Opaque and transparent types}
+Types used in \LB API are either opaque or transparent. \textit{Opaque
+types} are considered internal to the library, their structure is not
+exposed to users and is subject to change without notice. The only way
+to modify opaque objects is to use API calls. Example of opaque type
+is \lstinline'edg_wll_Context'.
+
+Structure of \textit{transparent types} is completely visible to
+user, is well documented and no incompatible changes will be done
+without notice. Example of transparent type is
+\lstinline'edg_wll_Event'.
+
+\marginpar{Return values}
+The return type of most of the API functions is \lstinline'int'.
+Unless specified otherwise, zero return value means success, non-zero
+failure. Standard error codes from \lstinline'<errno.h>' are used as
+much as possible. In a few cases the error can not be intuitively
+mapped and \LB specific error value greater than
+\lstinline'EDG_WLL_ERROR_BASE' is returned.
+
+Few API function return \lstinline'char *'. In such a~case
+\lstinline'NULL' indicates an error, non-null value means success.
 
 \subsection{Context and Parameter Settings}
 \label{s:context}
 
-All the API functions refer to a~\emph{context} argument, which is
-described more thoroughly in section~\ref{s:edg_wll_context}.
-Context objects preserve various status information
-(\eg\ connection to server) among the API calls.
-The API caller can create many context objects, those are guaranteed
-to be independent on one another. In this way thread-safety of the
-library is achieved -- one context object has to be used by only one
-thread at time. 
+The \LB library does not maintain internal state, all the API
+functions refer to a~\emph{context} argument instead.
+Context object preserves state information among the various API
+calls, the state including \LB library parameters (\eg security
+context, server addresses, timeouts), reference to open connections
+(connection pool), error state etc.
 
-Context is used to set and keep various parameters of the library
-(\eg\ default server addresses, timeouts, \dots).
-Upon initialization, all the parameters are assigned default values.
-However, many of the parameters take their default value from environment
-variables. If the corresponding environment variable is set,
-the parameter is initialized to its value instead of the default.
-Note that a~few parameters cannot be assigned default value; consequently
-setting them either in environment or with an explicit API call
-is mandatory before using the appropriate part of the API.
+The API caller can create many context objects which are guaranteed
+to be independent on one another. In this way thread--safety of the
+library is achieved as long as the context is not used by more threads
+at the same time. One thread may use more than one context, though.
+
+Upon context initialization, all the parameters are assigned default
+values. If not set explicitely, many of the parameters take their
+value from environment variables. If the corresponding environment
+variable is set, the parameter is initialized to its value instead of
+the default. Note that a~few parameters cannot be assigned default
+value; consequently setting them either in environment or with an
+explicit API call is mandatory before using the appropriate part of
+the API.
 
 The context also stores details on errors of the recent API call.
 
-For use with the \emph{producer} calls (see Sect.~\ref{s:producer})
-the context has to be assigned a~single \jobid
-(with the \verb'edg_wll_SetLoggingJob' call),
-and keeps track of an event \emph{sequence code} for the job 
-(see~\cite{LBUG}, detailed description in~\cite{lbarch}).
+For use with the \emph{producer} calls (see section~\ref{s:producer})
+the context has to be assigned a~single \jobid (with the
+\lstinline'edg_wll_SetLoggingJob' call), and keeps track of an event
+\emph{sequence code} for the job (see~\cite{LBUG}, detailed
+description in~\cite{lbarch}).
 
+The context object and its API functions are described more thoroughly
+in section~\ref{s:edg_wll_context}.
 
 \subsection{Connection pool}
-For better performance the \LB client library have a feature called
-connection pool -- a client--server connection is transparently reused
-by different threads/context to eliminate the overhead of secure
-channel establishment.
+The \LB library maintains pool of client--server connections to
+improve performance (creating SSL connection is heavy--weight
+operation). The connections are transparently shared and reused by all
+contexts/threads to eliminate the overhead of secure channel
+establishment. This behaviour is completely hidden by the library.
 
-\subsection{Function arguments}
-In the following description the function arguments are classified as follows:
-\begin{description}
-\item[IN] pure input argument, not modified by the function.
-If it is a~pointer, the C prototype includes \verb'const' (which is omitted in
-this document for the sake of readability).
-\item[OUT] pure output argument. The function expects a~pointer and fills in
-the pointed object.
-
-If the argument is \verb'**', or a~structure containing pointers,
-the returned objects are \emph{always} dynamically allocated,
-and has to be freed when not used anymore.
-The same holds for directly returned pointers.
-
-\item[INOUT] an argument taken as an input and modified by the function.
-Typically it is the \LB context.
-
-\end{description}
-
-\subsection{Datatypes}
-The API uses two classes of custom datatypes:
-\begin{description}
-\item[opaque types] (\eg context, jobid) do not expose their structure
-to the user.
-The only way to access them is via the API functions.
-The internal structure of those may be subject to change.
-
-\item[transparent types] (\eg event, status) expose the structure to the
-user. The structure is documented and no incompatible changes will be done
-without notice.
-\end{description}
-
-\subsection{Return values}
-The return type of most of the API functions is return \verb'int'.
-Unless specified otherwise the returned values are as follows:
-\begin{description}
-\item[0] success
-\item[errno] an error occured, the nature of the error
-matches meaning of one of standard \verb'<errno.h>' error codes.
-\item[\LB specific] a~few errors can't be intuitively mapped to
-\verb'<errno.h>', therefore the are specific \LB error codes, starting from \verb'EDG_WLL_ERROR_BASE'.
-\end{description}
-See Sect.~\ref{s:error} for details on error handling.
-
-Few API function return \verb'char *'. In such a~case \verb'NULL' indicates
-an error, non-null value means success.
-
-\section{\LB common general components}
+\section{\LB Common Components}
 \label{s:common}
 
-\subsection{edg\_wll\_Context} 
+\subsection{Header Files}
+
+Header files for the structures and functions are summarized in the
+table~\ref{t:cheaders} If you use the producer and/or consumer API
+described further in this document, you do not have to include them
+explicitly.
+
+\begin{table}[h]
+\label{t:cheaders}
+\begin{tabularx}{\textwidth}{>{\tt}lX}
+glite/jobid/cjobid.h & Definition of job identifier. \\
+glite/lb/context.h & Definition of context structure and parameters. \\
+glite/lb/events.h & \LB event data structure.\\
+glite/lb/jobstat.h & Job status structure returned by consumer API.\\
+\end{tabularx}
+\caption{Header files for common structures}
+\end{table}
+
+\subsection{Context} 
 \label{s:edg_wll_context}
-Data structure representing \LB API context (see
-section~\ref{s:context}).  There are parameters described in consumer
-and producer API chapters which are stored in context and accessed by
-funcions described below (\texttt{edg\_wll\_SetParam}) using
-appropriate constants. Examples of common context parameters:
-\begin{itemize}
-  \item \texttt{EDG\_WLL\_PARAM\_X509\_KEY} key file to use for authentication.
-  \item \texttt{EDG\_WLL\_PARAM\_X509\_CERT} certificate file to use for
-      authentication
-\end{itemize}
+\marginpar{Context initialization}
+Opaque data structure representing \LB API context (see
+section~\ref{s:context}) is named \lstinline'edg_wll_Context'.
+The context must be initialized before the first \LB API call:
+\begin{lstlisting}
+#include <glite/lb/context.h>
+
+edg_wll_Context ctx;
+edg_wll_InitContext(&ctx);
+\end{lstlisting}
+
+\marginpar{Parameter setting}
+The context parameters can be set explicitly by calling
+\lstinline'edg_wll_SetParam(edg_wll_Context *, edg_wll_ContextParam, ...)' 
+function. The second argument is symbolic name of the context
+parameter; parameters specific for producer and consumer API are
+described in respective API sections, the common parameters are:
+
+\begin{table}[h]
+\begin{tabularx}{\textwidth}{llX}
+{\bf C name} & {\bf Env. variable} & {\bf Description} \\
+\hline
+\lstinline'EDG_WLL_PARAM_X509_KEY' & \lstinline'X509_USER_KEY' & Key file to use for
+authentication. \\
+\lstinline'EDG_WLL_PARAM_X509_CERT' & \lstinline'X509_USER_CERT' & Certificate file to use
+for authentication. \\
+\lstinline'EDG_WLL_PARAM_CONNPOOL_SIZE' & & Maximum number
+of open connections maintained by the library. \\
+\end{tabularx}
+\end{table}
+
+The third argument is parameter value, which can be of type
+\lstinline'int', \lstinline'char *' or \lstinline'struct timeval *'. 
+If the parameter value is set to \lstinline'NULL' (or 0), the 
+parameter is reset to the default value.
+
+If you want to obtain current value of some context parameter, call
+\lstinline'edg_wll_GetParam(edg_wll_Context, edg_wll_ContextParam, ...)' function:
+\begin{lstlisting}
+char *cert_file;
+
+edg_wll_GetParam(ctx, EDG_WLL_PARAM_X509_CERT, &cert_file);
+printf("Certificate used: %s\n", cert_file);
+free(cert_file);
+\end{lstlisting}
+The third argument points at variable with type corresponding to the
+requested parameter. Do not forget to free the result.
 
 \TODO{Máme odkaz kde jsou popsany defaulty a vazby na promenne environmentu?}
 
-The context type is opaque. Operations with the type instance:
-\begin{itemize}
-  \item \texttt{edg\_wll\_InitContext(OUT edg\_wll\_Context *context)}
-    Allocate and initialize a new context object.
-  \item \texttt{edg\_wll\_FreeContext(IN edg\_wll\_Context context)}
-    Destroy and free context object, performs the necessary cleanup
-    (closing pending connections etc.).
-  \item \texttt{edg\_wll\_SetParam(INOUT edg\_wll\_Context context, IN
-    edg\_wll\_ContextParam param, IN val)} Sets a context parameter to
-    a given value (supports different types of \texttt{val}). If the
-    value is NULL (pointer type) or 0 (int), the parameter is reset to
-    its default value (or the value given by environment variable), in
-    exactly the same way as on context initialization.
-  \item \texttt{edg\_wll\_GetParam(INOUT edg\_wll\_Context context, IN
-    edg\_wll\_ContextParam param, OUT val)} Gets current parameter
-    value. Different types of \texttt{val} supported. Please note that
-    if the value of parameter is a~default, an actual value is always
-    returned, not NULL or 0.
-  \item edg\_wll\_Error 
-\end{itemize}
-For more information see file \texttt{context.h} 
+\marginpar{Obtaining error details}
+When \LB API call returns error, additional details can be obtained
+from the context:
+\begin{lstlisting}
+char    *err_text,*err_desc;
+        
+edg_wll_Error(ctx, &err_text, &err_desc);
+fprintf(stderr, "LB library error: %s (%s)\n", err_text, err_desc);
+free(err_text);
+free(err_desc);
+\end{lstlisting}
 
-\TODO{Referenced or inline example?}
+\marginpar{Context deallocation}
+If the context is needed no more, deallocate it:
+\begin{lstlisting}
+edg_wll_FreeContext(ctx);
+\end{lstlisting}
 
-\subsection{JobId} 
+For more information see file \texttt{glite/lb/context.h}
+
+\subsection{Job Identification} 
 The primary entity of \LB is a job, identified by JobId -- a unique
 identifier of the job (see also \cite{LBUG}). The type representing
 the JobId is opaque, it's contents is hidden to the API users and
@@ -184,7 +241,7 @@ changed between \LB versions:
   \end{itemize}
 \end{description}
 
-\subsection{edg\_wll\_Event}
+\subsection{Event}
 Data structure \texttt{edg\_wll\_Event} represents a \LB event, atomic
 data unit received and processed by \LB. It is a set of key--value
 pairs with predefined structure -- allowed event types and names of
@@ -206,7 +263,7 @@ structure. For more information see file \texttt{org.glite.lb.types/types.T}
 
 \TODO{example - Michal?}
 
-\subsection{edg\_wll\_JobStat}
+\subsection{Job Status}
 Data type \texttt{edg\_wll\_JobStat} represents status of a job as
 computed by \LB from received events. The data structure have a common
 part and a job state specific part. Most important common
@@ -219,22 +276,5 @@ attributes:
   \item \texttt{children} -- list of subjob \jobid's
 \end{itemize}
 
-
-
-\subsection{\LB common header files}
-
-Header files for the above mentioned common structures are summarized in the
-table~\ref{t:cheaders}. If you use the producer and/or consumer API
-described further in this document, you do not have to include them explicitly.
-
-\begin{table}[h]
-\label{t:cheaders}
-\caption{Header files for common structures}
-\begin{tabularx}{\textwidth}{>{\tt}lX}
-glite/lb/context.h & Definition of context structure and parameters. \\
-glite/lb/events.h & \LB event data structure.\\
-glite/lb/jobstat.h & Job status structure returned by consumer API.\\
-\end{tabularx}
-\end{table}
 
 

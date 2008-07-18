@@ -2,6 +2,7 @@
 \documentclass{egee}
 
 \input{definitions}
+\def\LB{LB\xspace}
 
 \title{Logging and Bookkeeping}
 \Subtitle{Developer's Guide}
@@ -19,7 +20,13 @@ Interface is described in details together with programing examples. }
 
 \usepackage{listings}
 
+%\setlength{\marginparwidth}{1.2in}
+\let\oldmarginpar\marginpar
+\renewcommand\marginpar[1]{\-\oldmarginpar[\raggedleft\footnotesize #1]%
+{\raggedright\footnotesize #1}}
+
 \begin{document}
+\reversemarginpar
 \lstset{language=C,basicstyle=\footnotesize,numbers=left,breaklines=true}
 
 % ----- BEGIN COPY -----
