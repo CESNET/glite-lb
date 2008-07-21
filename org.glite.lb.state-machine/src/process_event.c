@@ -251,6 +251,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				fine_res = RET_OK;
 				
 	int	lm_favour_lrms = 0;
+	int	ignore_seq_code = 0;
 
 	// Aborted may not be terminal state for collection in some cases
 	// i.e. if some Done/failed subjob is resubmitted
@@ -858,11 +859,14 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			break;
 		case EDG_WLL_EVENT_LISTENER:
 			/* ignore, listener port is not part of job status */
-			break;
 		case EDG_WLL_EVENT_CURDESCR:
 		case EDG_WLL_EVENT_CHKPT:
+			/* these three event are probably dead relics */
+			break;
 		case EDG_WLL_EVENT_CHANGEACL:
 			/* ignore, only for event log */
+			/* seq. code of this event should not influence future state computeation */
+			ignore_seq_code = 1;
 			break;
 		case EDG_WLL_EVENT_COLLECTIONSTATE:
 			new_state = edg_wll_StringToStat(e->collectionState.state);
@@ -900,7 +904,9 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				free(js->last_seqcode);
 				js->last_seqcode = set_component_seqcode(e->any.seqcode,EDG_WLL_SOURCE_LOG_MONITOR,0);
 			}
-			else rep(js->last_seqcode, e->any.seqcode);
+			else if (!ignore_seq_code) { 
+				rep(js->last_seqcode, e->any.seqcode); 
+			}
 		}
 
 		if (js->pub.state != EDG_WLL_JOB_RUNNING) {
