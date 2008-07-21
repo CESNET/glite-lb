@@ -27,7 +27,7 @@ For temporary files, approximately 10\,GB is sufficient for LB server setups
 working normally, more can be needed when backlog forms in data export
 to any external service. For example, typical setup processing 40\,000 jobs per 
 day where all jobs are purged after 10 days needs about 58
-($0.000000120\cdot 40000\cdot 10 + 10$) gigabytes (not accounting for operating 
+($10 \cdot 40000 \cdot 0.000000120 + 10$) gigabytes (not accounting for operating 
 system and system logs).
 
 For smooth handling of 40\,000 jobs/day, this or better machine configuration 
@@ -180,7 +180,8 @@ and started as described above.
 Register a~new job with the \LB server and check that its status is
 reported correctly.
 
-\req Installed glite-lb-client package, valid user's X509 credentials.
+\req Installed glite-lb-client package, valid user's X509 credentials,
+known destination (address:port) of running \LB server.
 Can be invoked from any machine.
 
 \how 
@@ -200,7 +201,8 @@ The command should report ``Submitted'' job status.
 Send several \LB events, simulating normal job life cycle.
 Checks delivery of the events via \LB logger.
 
-\req Installed glite-lb-client package, valid user's X509 credentials.
+\req Installed glite-lb-client package, valid user's X509 credentials,
+known destination (address:port) of running \LB server.
 Must be run on a~machine where glite-lb-logger package is set up and running.
 
 \how

@@ -192,7 +192,7 @@ However, it is triggered with \verb'glite-lb-purge' client command
 A~typical invocation specifies \LB server to purge (\verb'-m' option),
 and purge timeouts (grace periods) for several job states -- options
 \verb'-a' (aborted), \verb'-n' (canceled), \verb'-c' (cleared), and
-\verb'-o' (other).
+\verb'-o' (other). \LB versions 2.0 supports also \verb'-e' (done) option.
 A~job falling in one of the four categories is purged when it has not been
 touched (\ie an event arrived) for time longer than the specified category
 timeout.
@@ -214,7 +214,7 @@ Server superuser privileges (X509 credentials) are required to run \verb'glite-l
 If the server database has already grown huge, the purge operation can take
 rather long and hit the \LB server operation timeout. At client side, \ie the
 glite-lb-purge command, it can be increased by setting GLITE\_WMS\_QUERY\_TIMEOUT
-environment variable.
+environment variable. \TODO{mozna zminit, ze i po tom timeoutu bezi purge dal?}
 
 Sometimes hardcoded server-side timeout can be still reached; in this case the
 server fails to return a correct response but the purge is done anyway. 
