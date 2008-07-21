@@ -22,7 +22,7 @@ DVIPS = $(KPATH) dvips
 AT3=${stagedir}/sbin/glite-lb-at3
 INSTALL=install
 
-default all: generate LBUG.pdf LBAG.pdf LBDG.pdf
+default all: generate LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf
 
 generate: events.tex status.tex
 
@@ -47,42 +47,58 @@ generate: events.tex status.tex
 	chmod -w $@ >/dev/null
 
 install:
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
 	$(INSTALL) -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 ${top_srcdir}/src/README ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBUG.pdf ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBAG.pdf ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBDG.pdf ${PREFIX}/share/doc/${package}-${version}
-	-mkdir -p ${PREFIX}/share/examples/dg
-# michal: install DG example sources
+# install DG example sources
 	for p in ${top_srcdir}/examples/*; do \
-		${INSTALL} -m 644 "$$p" "${PREFIX}/share/examples/dg"; \
+#		${INSTALL} -m 644 "$$p" "${PREFIX}/share/examples/dg"; \
+		${INSTALL} -m 644 "$$p" "${PREFIX}/share/doc/${package}-${version}/examples"; \
 	done
 
 clean:
-	rm -rvf LBUG* LBAG* LBDG* events.tex status.tex
+	rm -rvf LBUG* LBAG* LBDG* LBTP* events.tex status.tex comment*
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 
 # dependencies:
 
-LBUG.pdf: LBUG.tex \
+common: copyright.tex \
+	definitions.tex \
+	egee.cls \
+	frontmatter.tex \
+	lbjp.bib \
+	versions.tex
+
+LBUG.pdf: common \
+	LBUG.tex \
 	LBUG-Introduction.tex components.tex \
 	LBUG-Tools.tex logevent.tex notify.tex \
 	LBUG-UseCases.tex log_usertag.tex change_acl.tex \
 	LBUG-Appendix.tex events.tex status.tex 
 
-LBAG.pdf: LBAG.tex \
+LBAG.pdf: common \
+	LBAG.tex \
 	LBAG-Introduction.tex components.tex \
 	LBAG-Installation.tex \
 	LBAG-Running.tex
 
-LBDG.pdf: LBDG.tex \
+LBDG.pdf: common \
+	LBDG.tex \
 	LBDG-Introduction.tex \
 	producer_api.tex \
 	consumer_api.tex \
 	notification_api.tex \
 	web_services.tex
 
-.PHONY: all clean
+LBTP.pdf: common \
+	LBTP.tex \
+	LBTP-Introduction.tex \
+	LBTP-Tests.tex \
+	LBTP-PerfTests.tex
+
+.PHONY: all clean common
 

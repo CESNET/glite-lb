@@ -3,6 +3,9 @@
 % $Id$
 %
 % $Log$
+% Revision 1.1.1.1  2007/11/13 17:42:10  jpospi
+% initial import
+%
 % Revision 1.13  2004/08/31 19:24:27  szamsu
 % Fixing overfull problem in page headers. Saving the logo and reusing it later, instead of loading in again.
 %
@@ -356,7 +359,7 @@
 %
 % common constants
 %
-\def\ISTNumber{INFSO-RI-508833}
+\def\ISTNumber{INFSO-RI-222667}
 \newsavebox{\@EGEELogo}
 \savebox{\@EGEELogo}{\includegraphics[height=0.75\headheight]{egee}}
 \def\EGEELogo{\usebox{\@EGEELogo}}

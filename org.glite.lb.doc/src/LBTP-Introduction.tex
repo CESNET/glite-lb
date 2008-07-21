@@ -1,0 +1,34 @@
+\section{Introduction}
+
+\input{versions}
+
+This document explains how to test the \LB service. Tests are described at six different layers, from elementary tests
+if the service is up and running, through tests of the fully supported functionality,
+performance and stress tests to interoperability tests.
+
+\TODO{add some more introduction}
+
+
+\subsection{Test Categories}
+Several layers of tests are considered:
+
+\begin{description}
+\item[Layer 1 - service ping tests:] Basic test if a service is up and running.
+\item[Layer 2 - service functionality tests:] Test the fully supported functionality of a service. This includes also service interface tests.
+\item[Layer 3 - system tests:] Test a complete system that traverses multiple services.
+\item[Layer 4 - stress tests:] Stress test services and systems (including long running jobs to check for resource leaks).
+\item[Layer 5 - performance tests:] Test performance of the service (including the MegaJob results).
+\item[Layer 6 - interoperability tests:] Test for interoperability with other grids (might be interactive).
+\end{description}
+
+
+\subsection{Test Coverage}
+\TODO{unit tests?}
+
+
+\subsection{Tests in \texttt{org.glite.testsuites.ctb/LB}}
+\TODO{implementation}
+
+
+\subsection{Integration into other frameworks}
+\TODO{SAM, Nagios, ETICS, ...}

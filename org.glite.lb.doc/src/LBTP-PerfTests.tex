@@ -1,40 +1,9 @@
-\documentclass{egee}
-\usepackage{comment}
+\section{Performance and Stress Tests}
 
-\def\LB{L\&B}
-
-\title{\LB\ Performance Test Plan}
-\author{CESNET EGEE JRA1 team}
-\DocIdentifier{EGEE-JRA1-??}
-\Date{\today}
-\Activity{JRA1: Middleware Engineering and Integration}
-\DocStatus{DRAFT}
-\Dissemination{PUBLIC}
-\DocumentLink{}
-
-%\def\req{\noindent\textbf{Prerequisities:}}
-%\def\how{\noindent\textbf{How to run:}}
-%\def\result{\noindent\textbf{Expected result:}}
-
-\def\path#1{{\normalfont\textsf{#1}}}
-\def\code#1{\texttt{#1}}
-\def\todo#1{\textbf{TODO:} #1}
-
-\begin{document}
-
-\input{frontmatter}
-\newpage
-\tableofcontents
-\newpage
-
-\section{Rationale}
-\todo{}
+In this section we describe tests from layers 4 (stress tests) and 5 (performance tests). 
+\TODO{review, reformat plus add megaJob results} 
 
 \begin{verbatim}
-
-L&B Performance Testing
-=======================
-
 - all source modifications for tests are in CVS, conditionaly compiled
   only with appropriate symbol
 
@@ -89,16 +58,20 @@ L&B Performance Testing
 job throughput from throughput of selected types of events?
 
 
+
 I) Component tests 
    ***************
 
 - tests of the isolated components on one node
 - may require binaries from other components to produce/consume events
 
---------------------
-Logging library test
---------------------
+\end{verbatim}
 
+%--------------------
+\subsection{Logging library test}
+%--------------------
+
+\begin{verbatim}
 * component:  
      org.glite.lb.client
 
@@ -132,12 +105,14 @@ Logging library test
    small DAG
    big DAG
 
+\end{verbatim}
 
 
-----------------
-Locallogger test
-----------------
+% ----------------
+\subsection{Locallogger test}
+% ----------------
 
+\begin{verbatim}
 * component:
      org.glite.lb.logger
 
@@ -207,11 +182,13 @@ ii) events sent to IL
    d)
 
 
+\end{verbatim}
 
-----------------
-Interlogger test
-----------------
+% ----------------
+\subsection{Interlogger test}
+% ----------------
 
+\begin{verbatim}
 * component:
      org.glite.lb.logger
 
@@ -313,11 +290,13 @@ ii) events sent to empty bkserver
    d)
    e)
 
+\end{verbatim}
 
-------------
-LBProxy test
-------------
+% ------------
+\subsection{LBProxy test}
+% ------------
 
+\begin{verbatim}
 * component:
      org.glite.lb.proxy
 
@@ -383,12 +362,14 @@ b) without duplicity check:
    iii)
     iv)
      v)
+\end{verbatim}
+
+%--------------
+\subsection{LB server test}
+% --------------
 
 
---------------
-LB server test
---------------
-
+\begin{verbatim}
 * component:
      org.glite.lb.server
 
@@ -445,12 +426,13 @@ b) without duplicity check:
    iii)
     iv)
 
+\end{verbatim}
 
+% ---------------------
+\subsection{Job registration test}
+% ---------------------
 
----------------------
-Job registration test
----------------------
-
+\begin{verbatim}
 * component:
      org.glite.lb.server
      org.glite.lb.proxy
@@ -518,7 +500,5 @@ c) parallel communication
      i)
 
 
-
 \end{verbatim}
 
-\end{document}

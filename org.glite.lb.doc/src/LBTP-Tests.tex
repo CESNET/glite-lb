@@ -1,44 +1,10 @@
-\documentclass{egee}
-\usepackage{comment}
-
-\def\LB{L\&B}
-
-\title{\LB\ Test Plan}
-\author{CESNET EGEE JRA1 team}
-\DocIdentifier{EGEE-JRA1-??}
-\Date{\today}
-\Activity{JRA1: Middleware Engineering and Integration}
-\DocStatus{DRAFT}
-\Dissemination{PUBLIC}
-\DocumentLink{}
-
-\def\req{\noindent\textbf{Prerequisities:}}
-\def\how{\noindent\textbf{How to run:}}
-\def\result{\noindent\textbf{Expected result:}}
-
-\def\path#1{{\normalfont\textsf{#1}}}
-\def\code#1{\texttt{#1}}
-
-\def\todo#1{\textbf{TODO:} #1}
-
-
-\specialcomment{hints}{\par\noindent\textbf{Hints: }\begingroup\slshape}{\endgroup}
-%\includecomment{hints}
-
-\begin{document}
-
-\input{frontmatter}
-\newpage
-\tableofcontents
-\newpage
-
-\section{Rationale}
-\todo{}
-
-\section{Test Coverage}
-\todo{}
-
 \section{Test Cases}
+
+In this section we describe tests from layers 2 (service functionality tests)
+and 3 (system tests). 
+
+\TODO{completely review}
+
 
 \subsection{Event delivery}
 
@@ -147,7 +113,7 @@ in the job state same as the `*' part of the script name.
 \end{hints}
 
 \subsubsection{DAG job states}
-\todo{}
+\TODO{}
 % specialni stav DAGu, histogram potomku
 
 \subsection{LB proxy}
@@ -295,6 +261,3 @@ do nothing (i.e. nothing was left in the database).
 The example \path{glite-lb-test\_purge} does exactly this sequence of steps,
 including the checks.
 \end{hints}
-
-
-\end{document}

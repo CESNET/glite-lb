@@ -1,10 +1,12 @@
+% external packages
 \usepackage{xspace}
 \usepackage{ifthen}
-%\usepackage{doxygen}
+\usepackage{comment}
 
+% useful definitions
 \def\LB{L\&B\xspace}
-\def\LBnew{LB version 2.0\xspace}
-\def\LBold{LB version 1.x\xspace}
+\def\LBnew{\LB version 2.0\xspace}
+\def\LBold{\LB version 1.x\xspace}
 \def\JP{JP\xspace}
 %\def\eg{e.\,g.}
 \def\eg{for example\xspace}
@@ -13,6 +15,15 @@
 \def\ie{that is\xspace}
 \def\wrt{with respect to\xspace}
 \def\Dash{---\penalty-1000}
+
+\def\req{\noindent\textbf{Prerequisities:}}
+\def\how{\noindent\textbf{How to run:}}
+\def\result{\noindent\textbf{Expected result:}}
+\def\path#1{{\normalfont\textsf{#1}}}
+\def\code#1{\texttt{#1}}
+
+\specialcomment{hints}{\par\noindent\textbf{Hints: }\begingroup\slshape}{\endgroup}
+%\includecomment{hints}
 
 \long\def\TODO#1{\par\noindent\textbf{TODO:} {\sl#1}\par}
 \long\def\ludek#1{}

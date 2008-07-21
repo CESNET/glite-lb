@@ -1,0 +1,44 @@
+\documentclass{egee}
+\def\insideTP{}
+
+\input{definitions}
+
+\title{Logging and Bookkeeping}
+\Subtitle{Test Plan}
+\author{CESNET EGEE III JRA1 and SA3 team}
+\DocIdentifier{EGEE-III....}
+\Date{\today}
+\Activity{SA3: Integration, Testing and Certification}
+\DocStatus{DRAFT}
+\Dissemination{PUBLIC}
+\DocumentLink{http://...}
+
+\Abstract{This document explains how to test the Logging and Bookkeeping
+(\LB) service. Tests are described at six different layers, from elementary tests
+if the service is up and running, through tests of the fully supported functionality, 
+performance and stress tests to interoperability tests.}
+
+\begin{document}
+
+\input{frontmatter}
+\tableofcontents
+
+\newpage
+\input{LBTP-Introduction}
+
+\newpage
+\input{LBTP-Tests}
+
+\newpage
+\input{LBTP-PerfTests}
+
+%\appendix
+%\newpage
+%\input{LBTP-Appendix}
+
+\newpage
+\bibliographystyle{unsrt}
+\bibliography{lbjp}
+
+\end{document}
+

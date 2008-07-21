@@ -2,6 +2,8 @@
 
 \section{Introduction}
 
+\input{versions}
+
 This document is intented to guide the reader through basic steps
 of writing, compiling and running programs communicating with the \LB
 service using the \LB library. It is not intended as a complete API
@@ -27,9 +29,8 @@ functions are separated in its own SW module called
 \marginpar{Recommended reading}
 Before you start reading this guide, it is recommended to accomodate
 yourself with the \LB architecture described in the first part of the
-\LB user's guide (\cite{LBUG}).
+\LB user's guide (\cite{lbug}).
 
-\input versions
 
 \subsection{General Guidelines}
 
@@ -102,7 +103,7 @@ The context also stores details on errors of the recent API call.
 For use with the \emph{producer} calls (see section~\ref{s:producer})
 the context has to be assigned a~single \jobid (with the
 \lstinline'edg_wll_SetLoggingJob' call), and keeps track of an event
-\emph{sequence code} for the job (see~\cite{LBUG}, detailed
+\emph{sequence code} for the job (see~\cite{lbug}, detailed
 description in~\cite{lbarch}).
 
 The context object and its API functions are described more thoroughly
@@ -210,7 +211,7 @@ For more information see file \texttt{glite/lb/context.h}
 
 \subsection{Job Identification} 
 The primary entity of \LB is a job, identified by JobId -- a unique
-identifier of the job (see also \cite{LBUG}). The type representing
+identifier of the job (see also \cite{lbug}). The type representing
 the JobId is opaque, it's contents is hidden to the API users and
 should be manipulated with the access methods only.
 
