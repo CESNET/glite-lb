@@ -409,14 +409,13 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 
 		if (i == nkeys) {
 			keys = realloc(keys,(i+2) * sizeof keys[0]);
-			keys[i] = showcol[Key_name];
+			keys[i] = strdup(showcol[Key_name]);
 //printf("** KEY [%d] %s\n", i, keys[i]);
 			keys[i+1] = NULL;
 			cols = realloc(cols,(i+1) * sizeof cols[0]); 
 			cols[i] = 0;
 			idx = realloc(idx,(i+2) * sizeof idx[0]);
 			idx[i] = idx[i+1] = NULL;
-			showcol[Key_name] = NULL;
 			nkeys++;
 		}
 
@@ -429,7 +428,7 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 		idx[i][j] = strdup(showcol[Column_name]);
 //printf("****** [%d, %d] %s\n", i, j, idx[i][j]);
 //FIXME: needed?idx[i][j].value.i = atoi(showcol[Sub_part]);
-		for (i = 0; i<(sizeof(showcol)/sizeof(showcol[0])); i++) free(showcol[i]);
+		for (i = 0; i<ret; i++) free(showcol[i]);
 	}
 
 	glite_lbu_FreeStmt(&stmt);
@@ -449,7 +448,10 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 	}
 
 	if (key_names) *key_names = keys;
-	else free(keys);
+	else {
+		for (i = 0; keys[i]; i++) free(keys[i]);
+		free(keys);
+	}
 	*column_names = idx;
 
 	return STATUS(ctx);

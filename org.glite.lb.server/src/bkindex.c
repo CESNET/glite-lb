@@ -53,13 +53,13 @@ int main(int argc,char **argv)
 	char	*fname = "-";
 	int	dump = 0, really = 0, verbose = 0, remove_all = 0;
 	edg_wll_Context	ctx;
-	edg_wll_QueryRec	**old_indices,**new_indices;
+	edg_wll_QueryRec	**old_indices = NULL,**new_indices;
 	edg_wll_QueryRec	*new_columns[CI_MAX],*old_columns[CI_MAX];
 	int	add_columns[CI_MAX],drop_columns[CI_MAX];
 	int	add_indices[CI_MAX],drop_indices[CI_MAX];
 	edg_wll_IColumnRec *added_icols;
 	int	nadd_icols;
-	char	**index_names;
+	char	**index_names = NULL;
 	int	i,j,k;
 	int	nnew,nold,nadd,ndrop;
 	char	*stmt;
@@ -104,7 +104,7 @@ int main(int argc,char **argv)
 
 	if (dump) {
 		if (edg_wll_DumpIndexConfig(ctx,fname,old_indices)) do_exit(ctx,EX_SOFTWARE);
-		else if ( !remove_all ) return 0;
+		else if ( !remove_all ) goto quit;
 	}
 
 	if (remove_all) {
@@ -126,7 +126,7 @@ int main(int argc,char **argv)
 			free(cname);
 		}
 		if (verbose) puts(" done");
-		return 0;
+		goto quit;
 	}
 
 	if (edg_wll_ParseIndexConfig(ctx,fname,&new_indices))
@@ -256,14 +256,27 @@ int main(int argc,char **argv)
 		if (verbose) { printf("\t%s(%s) ... ",n,l); fflush(stdout); }
 		if (really) {
 			asprintf(&stmt,"create index `%s` on states(%s)",n,l);
-			free(n); free(l);
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) do_exit(ctx,EX_SOFTWARE);
 			free(stmt);
 		}
+		free(n); free(l);
 		if (verbose) puts(really ? "done" : "");
 	}
 
+quit:
+	if (index_names) {
+		for (i = 0; index_names[i]; i++) free(index_names[i]);
+		free(index_names);
+	}
+	if (old_indices) {
+		for (i = 0; old_indices[i]; i++) {
+			for (j = 0; old_indices[i][j].attr; j++) edg_wll_QueryRecFree(&old_indices[i][j]);
+			free(old_indices[i]);
+		}
+		free(old_indices);
+	}
 	edg_wll_Close(ctx);
+	edg_wll_FreeContext(ctx);
 
 	return 0;
 }

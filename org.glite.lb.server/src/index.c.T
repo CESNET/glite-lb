@@ -99,6 +99,11 @@ static int parse_indices(edg_wll_Context ctx,char **keys,char ***column_names,co
 		cols[nkeys] = 0;
 		idx = realloc(idx,(nkeys+2) * sizeof idx[0]);
 		idx[nkeys] = idx[nkeys+1] = NULL;
+		if (keys_out) {
+			*keys_out = realloc(*keys_out, (nkeys + 2) * sizeof(char *));
+			(*keys_out)[nkeys] = strdup(keys[i]);
+			(*keys_out)[nkeys + 1] = NULL;
+		}
 
 		for (j = 0; column_names[i][j]; j++) {
 			if (cols[nkeys] <= j) {
@@ -124,16 +129,15 @@ next_index:
 		for (j = 0; column_names[i][j]; j++) free(column_names[i][j]);
 		free(column_names[i]);
 		column_names[i] = NULL;
+		free(keys[i]);
+		keys[i] = NULL;
+
 		// just for escaping from nested cycles
 		;	/* prevent compiler to complain */
 	}
-
+	free(column_names);
+	free(keys);
 	free(cols);
-	if (keys_out) *keys_out = keys;
-	else { 
-		for (i=0; i<nkeys; i++) free(keys[i]); 
-		free(keys);
-	}
 	*index_out = idx;
 
 	return edg_wll_ResetError(ctx);
