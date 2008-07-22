@@ -65,22 +65,9 @@ int main(int argc, char *argv[])
 
 	edg_wll_InitContext(&ctx);
 
-	if ( !user ) {
-		/*
-		edg_wll_GssStatus	gss_stat;
-
-		if ( edg_wll_gss_acquire_cred_gsi(
-				ctx->p_proxy_filename ? : ctx->p_cert_filename,
-				ctx->p_proxy_filename ? : ctx->p_key_filename,
-				NULL, &gss_stat) ) {
-			fprintf(stderr, "failed to load GSI credentials\n");
-			retrun 1;
-		}
-		*/
-	}
-
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_SOURCE, EDG_WLL_SOURCE_USER_INTERFACE);
-	edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, server);
+	edg_wll_SetParam(ctx, EDG_WLL_PARAM_HOST, server);
+	edg_wll_SetParam(ctx, EDG_WLL_PARAM_PORT, port);
 
 	if (edg_wll_SetLoggingJob(ctx, jobid, seq_code, EDG_WLL_SEQ_NORMAL)) {
 		char 	*et,*ed;

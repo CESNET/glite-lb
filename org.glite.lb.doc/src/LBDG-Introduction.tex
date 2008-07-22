@@ -24,32 +24,43 @@ These two parts (and in fact the whole \LB service implementation)
 share a number of common concepts, design principles, data types and
 functions which we will describe first. Most of common data types and
 functions are separated in its own SW module called
-\texttt{org.glite.lb.common} and are described in section~\ref{s:common}
+\verb'org.glite.lb.common' and are described in section~\ref{s:common}
 
-\marginpar{Recommended reading}
+\marginpar{Recommended reading}%
 Before you start reading this guide, it is recommended to accomodate
 yourself with the \LB architecture described in the first part of the
 \LB user's guide (\cite{lbug}).
 
 
+\subsection{Language Bindings}
+The \LB library itself is developed in C language, the C API covers
+all the \LB services. There are bindings for other languages (C++,
+Java) as well as web--service based interface, but these cover only
+subsets of \LB functionality and internally they use the C API
+themselves (in the C++ case the C API also exported).
+
+We describe the C API first and then the differences between C and the
+other languages, as the C constructs often reflect directly.
+
 \subsection{General Guidelines}
 
-\marginpar{Naming conventions}
+\marginpar{Naming conventions}%
 All names exported by the \LB library (function names, symbolic
 constants) are prefixed to avoid name clashes. The prefix is
 \lstinline'edg_wll_' for function names and \lstinline'EDG_WLL_' for
-symbolic constants.
+symbolic constants. In C++ the namespace \lstinline'glite::lb' is used
+instead.
 
-\marginpar{Input and output arguments}
-All input arguments in \LB API are designated \lstinline'const' (for simple
-types) or have \texttt{const} in type name (for structures).
+\marginpar{Input and output arguments}%
+All input arguments in \LB API are designated \verb'const' (for simple
+types) or have \verb'const' in type name (for structures).
 
 If pointers are passed in output of function call (either as a return
 value, output argument or part of structure), the corresponding
 objects are \emph{always} allocated dynamically and have to be freed
 when not used anymore. 
 
-\marginpar{Opaque and transparent types}
+\marginpar{Opaque and transparent types}%
 Types used in \LB API are either opaque or transparent. \textit{Opaque
 types} are considered internal to the library, their structure is not
 exposed to users and is subject to change without notice. The only way
@@ -61,7 +72,7 @@ user, is well documented and no incompatible changes will be done
 without notice. Example of transparent type is
 \lstinline'edg_wll_Event'.
 
-\marginpar{Return values}
+\marginpar{Return values}%
 The return type of most of the API functions is \lstinline'int'.
 Unless specified otherwise, zero return value means success, non-zero
 failure. Standard error codes from \lstinline'<errno.h>' are used as
@@ -109,7 +120,7 @@ description in~\cite{lbarch}).
 The context object and its API functions are described more thoroughly
 in section~\ref{s:edg_wll_context}.
 
-\subsection{Connection pool}
+\subsection{Connection Pool}
 The \LB library maintains pool of client--server connections to
 improve performance (creating SSL connection is heavy--weight
 operation). The connections are transparently shared and reused by all
@@ -119,15 +130,16 @@ establishment. This behaviour is completely hidden by the library.
 \section{\LB Common Components}
 \label{s:common}
 
-\subsection{Header Files}
+\subsection{C Language Binding}
 
-Header files for the structures and functions are summarized in the
-table~\ref{t:cheaders} If you use the producer and/or consumer API
+\subsubsection{Header Files}
+
+Header files for the common structures and functions are summarized in
+the table~\ref{t:cheaders} If you use the producer and/or consumer API
 described further in this document, you do not have to include them
 explicitly.
 
 \begin{table}[h]
-\label{t:cheaders}
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite/jobid/cjobid.h & Definition of job identifier. \\
 glite/lb/context.h & Definition of context structure and parameters. \\
@@ -135,9 +147,10 @@ glite/lb/events.h & \LB event data structure.\\
 glite/lb/jobstat.h & Job status structure returned by consumer API.\\
 \end{tabularx}
 \caption{Header files for common structures}
+\label{t:cheaders}
 \end{table}
 
-\subsection{Context} 
+\subsubsection{Context} 
 \label{s:edg_wll_context}
 \marginpar{Context initialization}
 Opaque data structure representing \LB API context (see
@@ -150,7 +163,7 @@ edg_wll_Context ctx;
 edg_wll_InitContext(&ctx);
 \end{lstlisting}
 
-\marginpar{Parameter setting}
+\marginpar{Parameter setting}%
 The context parameters can be set explicitly by calling
 \lstinline'edg_wll_SetParam(edg_wll_Context *, edg_wll_ContextParam, ...)' 
 function. The second argument is symbolic name of the context
@@ -189,7 +202,7 @@ requested parameter. Do not forget to free the result.
 
 \TODO{Máme odkaz kde jsou popsany defaulty a vazby na promenne environmentu?}
 
-\marginpar{Obtaining error details}
+\marginpar{Obtaining error details}%
 When \LB API call returns error, additional details can be obtained
 from the context:
 \begin{lstlisting}
@@ -201,57 +214,59 @@ free(err_text);
 free(err_desc);
 \end{lstlisting}
 
-\marginpar{Context deallocation}
+\marginpar{Context deallocation}%
 If the context is needed no more, deallocate it:
 \begin{lstlisting}
 edg_wll_FreeContext(ctx);
 \end{lstlisting}
 
-For more information see file \texttt{glite/lb/context.h}
+For more information see file \verb'glite/lb/context.h'
 
-\subsection{Job Identification} 
+\subsubsection{JobId} 
 The primary entity of \LB is a job, identified by JobId -- a unique
-identifier of the job (see also \cite{lbug}). The type representing
-the JobId is opaque, it's contents is hidden to the API users and
-should be manipulated with the access methods only.
+identifier of the job (see also \cite{LBUG}). The type representing
+the JobId is opaque \verb'glite_jobid_t'. The JobId is in fact
+just URL with \verb'https' protocol, path component being unique string
+with no further structure and host and port designating the \LB server
+holding the job information. The JobId can be
+\begin{itemize}
+\item created new for given \LB server (the unique part will be
+generated by the \LB library):
+\begin{lstlisting}
+glite_jobid_t jobid;
+int ret; 
+if(ret = glite_jobid_create("some.host", 0, &jobid)) {
+	fprintf(stderr, "error creating jobid: %s\n", strerror(ret));
+}
+\end{lstlisting}
+\item parsed from string (\eg when given as an program argument or
+read from file):
+\begin{lstlisting}[firstnumber=3]
+if(ret = glite_jobid_parse("https://some.host:9000/OirOgeWh_F9sfMZjnIPYhQ", &jobid)) {
+\end{lstlisting}
+\item or obtained as part of \LB server query result.
+\end{itemize}
+In either case the jobid must be freed when no longer in use:
+\begin{lstlisting}
+glite_jobid_free(jobid);
+\end{lstlisting}
 
-The JobId representing data structure name and location
-changed between \LB versions:
+For more information see file \verb'glite/jobid/cjobid.h'
 
-\begin{description}
- \item [\texttt{edg\_wlc\_JobId}] -- data structure used in WMS 3.1 and earlier
-  \begin{itemize}
-   \item header file -- \texttt{glite/lb/jobid.h}
-   \item important funcions:
-    \begin{itemize}
-     \item \texttt{edg\_wlc\_JobIdParse} -- convert JobId in a form of
-      string into \texttt{edg\_wlc\_JobId} structure; returns 0 for
-      success and EINVAL if the input string can't be parsed into a valid JobId
-     \item \texttt{edg\_wlc\_JobIdUnParse} -- produce the string
-      representation of JobId structure
-     \item \texttt{edg\_wlc\_JobIdFree} -- dealocation of the structure
-    \end{itemize}
-  \end{itemize} 
- \item [\texttt{glite\_jobid\_t}] -- new data structure for \LB 2.0 
-  \begin{itemize}
-   \item different header file -- \texttt{glite/jobid/cjobid.h}
-   \item new names of important funcions described above:
-    \begin{itemize}
-     \item \texttt{glite\_jobid\_parse}
-     \item \texttt{glite\_jobid\_unparse}
-     \item \texttt{glite\_jobid\_free}
-    \end{itemize}
-  \end{itemize}
-\end{description}
+\marginpar{\textbf{\LB 1.x}}%
+{\it In the older \LB versions (1.x) the
+structure was named \verb'edg_wlc_JobId' and the functions had prefix
+\verb'edg_wlc_JobId'. Exact description can be found in the
+header file \verb'glite/wmsutils/cjobid.h'}
 
-\subsection{Event}
-Data structure \texttt{edg\_wll\_Event} represents a \LB event, atomic
+
+\subsubsection{Event}
+Data structure \verb'edg_wll_Event' represents \LB event, atomic
 data unit received and processed by \LB. It is a set of key--value
-pairs with predefined structure -- allowed event types and names of
-attributes. In \LB each event must be associated with a particular
-job. The \texttt{edg\_wll\_Event} is returned by customer LB API job
-event related calls. The data structure have a common part and a event
-type specific part. Most important common event attributes:
+pairs with predefined structure -- allowed event types and
+attributes. In \LB each event must be associated with a~particular
+job. The data structure has common part and event type specific
+part. Most important common event attributes:
 \begin{itemize}
   \item \texttt{jobId} -- identificaion of the job the event belongs to.
   \item \texttt{user} -- identity (certificate subject) of the event sender.
@@ -259,14 +274,18 @@ type specific part. Most important common event attributes:
   \item \texttt{seqcode} -- sequence code assigned to the event.
   \item \texttt{type} -- event type.
 \end{itemize}
+The \verb'edg_wll_Event' is returned by consumer \LB API job
+event related calls.
 
 The event type is transparent. The only important operation defined is
 \texttt{edg\_wll\_FreeEvent(edg\_wll\_Event *event)} to free event
-structure. For more information see file \texttt{org.glite.lb.types/types.T} 
+structure. 
+
+For more information see file \verb'org.glite.lb.types/types.T' 
 
 \TODO{example - Michal?}
 
-\subsection{Job Status}
+\subsubsection{JobStatus}
 Data type \texttt{edg\_wll\_JobStat} represents status of a job as
 computed by \LB from received events. The data structure have a common
 part and a job state specific part. Most important common
@@ -279,5 +298,13 @@ attributes:
   \item \texttt{children} -- list of subjob \jobid's
 \end{itemize}
 
+\subsubsection{Building Programs}
 
+\subsection{C++ Language Binding}
+\marginpar{Exceptions}%
 
+\marginpar{Reference counting}%
+
+\subsubsection{Header Files}
+\subsubsection{Event}
+\subsubsection{Building Programs}
