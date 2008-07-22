@@ -1,37 +1,70 @@
 \section{User tools}
 \label{s:lb-tools}
 
-\TODO{honik: vytahnout WMS-UI do zvlastni kapitolky}
+In this section we give a description of the CLI tools that a regular grid user
+might want to use. If not stated otherwise, the tools are distributed in the
+\verb'glite-lb-client' RPM. Behaviour of the commands can be often changed by
+setting some of the following enviroment variables:
 
-In this section we give a description of the tools that are installed
-together with the \verb'glite-lb-client' RPM. These tools are \LB-specific.
-Besides these tools, more general WMS commands \verb'glite-wms-job-status' 
-and \verb'glite-wms-job-logging-info' available 
-in \verb'glite-wms-ui-cli-python' RPM, provide also information about user jobs 
-and corresponding events.
-
-Behaviour of \verb'glite-lb-*' commands can be changed by setting the following enviroment variables:
 \begin{tabularx}{\textwidth}{lX}
-GLITE\_WMS\_LOG\_DESTINATION & address of \verb'glite-lb-logd' daemon, in form \verb'hostname:port'\\
+GLITE\_WMS\_LOG\_DESTINATION & address of \verb'glite-lb-logd' daemon, in form \verb'hostname:port', for logging events\\
 GLITE\_WMS\_LOG\_TIMEOUT & timeout (in seconds) for asynchronous logging\\
 GLITE\_WMS\_LOG\_SYNC\_TIMEOUT & timeout (in seconds) for synchronous logging\\
 GLITE\_WMS\_NOTIF\_SERVER& address of \verb'glite-lb-bkserver' daemon, in form \verb'hostname:port', for receiving notifications\\
 GLITE\_WMS\_NOTIF\_TIMEOUT& timeout (in seconds) for notification registration\\
+GLITE\_WMS\_QUERY\_SERVER& address of \verb'glite-lb-bkserver' daemon, in form \verb'hostname:port', for queries\\
 X509\_USER\_CERT and X509\_USER\_KEY & location of user credentials\\
 \end{tabularx}
-\TODO{zminil bych i EDG\_WL\_QUERY\_SERVER}
 For backward compatibility, all \verb'GLITE_WMS_*' variables can be prefixed by 
-\verb'EDG_WL_' instead.
+\verb'EDG_WL_' instead. Setting the environment variable is for some commands mandatory,
+so reading the documentaion below and appropriate manpages is highly recommended.
+
+
+\subsection{glite-wms-job-status and glite-wms-job-logging-info}
+
+We start with tools that are distributed in \verb'glite-wms-ui-cli-python' RPM
+and that can be found probably on all UI machines. Description of all user
+commands that are used during the job submission process (generating proxy,
+creating a JDL describing the job, submitting a job, retrieving output,
+cancelling a job, etc.) is beoynd this document and it can be found for example
+in \cite{wmsug}. We mention here only the commands that are related to
+job monitoring.
+
+Once job has been submitted to WMS (by \verb'glite-wms-job-submit'), 
+a user can retrieve the job status by
+\begin{verbatim}
+    glite-wms-job-status <jobId>
+\end{verbatim}
+or if job ID is saved in the file
+\begin{verbatim}
+    glite-wms-job-status -i <job_id_file>
+\end{verbatim}
+or if user wants to see status of all his/her jobs
+\begin{verbatim}
+    glite-wms-job-status --all
+\end{verbatim}
+List of all possible job states is summarised in Appendix \ref{a:jobstat}.
+
+Logging details on submitted job can be accessed via
+\begin{verbatim}
+    glite-wms-job-logging-info -v <verbosity_level> <job_ID>
+\end{verbatim}
+or if job ID is saved in the file
+\begin{verbatim}
+   glite-wms-job-logging-info -v <verbosity_level> -i <job_id_file>
+\end{verbatim}
+where verbosity level can be from 0 to 3. 
+
 
 \input{logevent}
 
 \input{notify}
 
+
 \subsection{Other useful tools}
-\label{glite-lb-other}
 
 For debugging purposes, low-level commands for getting \LB job status and job related events are provided in 
-\verb'examples' directory (\verb'glite-lb-job-status' and \verb'glite-lb-job-log'). The same directory
+\verb'examples' directory (\verb'glite-lb-job_status' and \verb'glite-lb-job_log'). The same directory
 contains also debugging commands for getting of all user jobs (\verb'glite-lb-user_jobs') and
 CE-reputability rank (see Section \ref{s:ce-rank}, \verb'glite-lb-stats').
-\TODO{job-log vs. job\_log - ujednotit}
+

@@ -114,11 +114,11 @@ defined an \LB schema with specific \LB event
 types (see Appendix\ref{a:events}).
 The schema contains a common base, the attributes that must be assigned
 to every single event. The primary key is the jobid, which is also one of
-the required attributes. The other common attributes are currently the
-timestamp of the event origin, generating component name and the event
-sequence code (see Sect.~\ref{evprocess}).
-\TODO{je jich mnohem vic (type, arrived, priority, ....) cili bud bych
-je vyjmenoval vsechny, nebo napsal neco jako 'priklady nekterych dalsich jsou...'}
+the required attributes. Among other common attributes belong currently the
+timestamps of the event origin and of the event arrival to LB, 
+generating component name, the event type, its priority and sequence code 
+(see Sect.~\ref{evprocess}) and so on. For a complete list of attributes
+see \cite{lbdg}.
 
 While the necessary and sufficient condition for a global jobid is
 to be Grid-wide unique, additional desired property relates to the
@@ -911,5 +911,20 @@ functions, allowing the user to specify that similarly misbehaving
 CE's should be penalized or completely avoided
 when RB decides where jobs get submitted.
 
-\TODO{zminit, ze umime zpracovavat condorove a PBS joby; jsou i v appendixu v seznamu eventu, tak by se asi nekde zminit mely}
-% \subsubsection{Non-glite event sources}
+
+\subsubsection{Non-gLite event sources}
+\TODO{ruda: zminit, ze umime zpracovavat condorove a PBS joby; jsou i v appendixu v
+seznamu eventu, tak by se asi nekde zminit mely}
+
+\LB has been enhanced to support also non-gLite events, namely events from PBS
+or Condor batch systems \cite{hpdc07}. These events are handeled differently from gLite events,
+for a complete list of the PBS and Condor events see Appendix \ref{a:events}. 
+Since job states in the batch system slightly differ from the states of a job
+defined in \LB (see also Appendix \ref{a:jobstat}), events are processed separately
+from gLite events. Both PBS and Condor events has its own state machine that processes the
+events and determines the now state of the job.
+
+Recently, there were also attempts to use \LB system to track syslog messages. 
+For a detailed description see \cite{TODO:LB4syslog}.
+
+
