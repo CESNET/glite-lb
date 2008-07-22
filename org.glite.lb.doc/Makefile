@@ -55,7 +55,7 @@ install:
 	$(INSTALL) -m 644 LBDG.pdf ${PREFIX}/share/doc/${package}-${version}
 # install DG example sources
 	for p in ${top_srcdir}/examples/*; do \
-#		${INSTALL} -m 644 "$$p" "${PREFIX}/share/examples/dg"; \
+		if [ "$$p" == "../examples/CVS" ]; then continue; fi; \
 		${INSTALL} -m 644 "$$p" "${PREFIX}/share/doc/${package}-${version}/examples"; \
 	done
 
