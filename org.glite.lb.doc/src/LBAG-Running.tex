@@ -238,7 +238,41 @@ know what you are doing.
 
 \paragraph{Post-mortem statistics}
 
-\TODO{honik}
+Once a job is purged from the database, all important data about the job can be
+processed offline from the corresponding dump file. The idea of post-mortem
+statistics is the following:
+
+\begin{itemize}
+\item LB server produces dump files (during each purge on regular basis),
+see LB server startup script; option \verb'-D / --dump-prefix' of \verb'glite-lb-bkserverd',
+\item these dumps are exported for the purposes of JP also on regular basis,
+see LB/JP deplyment module; option \verb'-s/ --store' of \verb'glite-lb-lb_dump_exporter',
+\item it depends on the LB server policy if dumps in this directory are used for
+the statistics purposes or all files are hardlinked for example to a different
+directory
+\item general idea is such that data are available for statistics server that downloads
+and removes dumps after download! Dump files are then processed on the statistics
+server.
+\end{itemize}
+
+What needs to be done on the LB server:
+\begin{itemize}
+\item \verb'glite-lb-bkserverd' and \verb'glite-lb-lb_dump_exporter' running
+\item \verb'gridftp' running (allowing statistics server to download and remove files from 
+a given directory
+\end{itemize}
+
+
+What needs to be done on the statistics server:
+\begin{itemize}
+\item \verb'glite-lb-utils' RPM installed
+\item download and remove files from the LB server
+see \verb'glite-lb-statistics-gsi.sh' (shell script in the examples directory)
+\item process dump files using the \verb'glite-lb-statistics' tool
+see \verb'glite-lb-statistics.sh' (shell script in the examples directory)
+\end{itemize}
+all scripts are supposed to be run from a crontab.
+
 
 \paragraph{Export to Job Provenance}
 
@@ -262,11 +296,55 @@ wiki page:
 
 \subsubsection{On-line monitoring and statistics}
 
-\TODO{ljocha: CE Rank}
+\paragraph{CE reputability rank}
+\TODO{ljocha}
 
-\TODO{honik: DB mon (a mon)}
 
-% histogramy :-)
+\paragraph{glite-lb-mon} is a program for monitoring the number of jobs on the
+LB server and their several statistics. It is part of the
+\verb'glite-lb-utils' RPM, so the monitoring can be done from remote machine
+where this RPM is installed and the enironment variable
+\verb'GLITE_WMS_QUERY_SERVER' properly set. Values like minimum, average and
+maximum time spent in the system are calulated for jobs that entered  the
+final  state (Aborted,  Cleared,  Cancelled) in specific time (default last
+hour). Also number of jobs that entered the system during this time is
+calculated.
+
+A special bkindex configuration is needed. 
+The following time indices must be defined:
+\begin{verbatim}
+            [ type = "time"; name = "submitted" ],
+            [ type = "time"; name = "cleared" ],
+            [ type = "time"; name = "aborted" ],
+            [ type = "time"; name = "cancelled" ],
+\end{verbatim}
+For more details se man page glite-lb-mon(1).
+
+
+\paragraph{glite-lb-mon-db} is a low-level program for monitoring the the
+number of jobs in the LB system. Using the LB internals, it connects directly
+to the underlying MySQL database and reads the number of jobs in each state.
+The tool is distributed itogether with the server in the \verb'glite-lb-server' RPM.
+It can be used to read data also from the database of LB Proxy.
+For more details se man page glite-lb-mon-db(1).
+
+
+\paragraph{Subjob states in a collection} can be calculated on demand on the server and
+returned as a histogram using standard job status query. There are two ways how to obtain the 
+histogram:
+\begin{itemize}
+\item fast histograms, the last known states are returned, see e.g.
+\begin{verbatim}
+   glite-lb-job_status -fasthist <collectionJobId>
+\end{verbatim}
+\item full histograms. the states of all collection subjobs are recalculated, see o.g.
+\begin{verbatim}
+   glite-lb-job_status -fullhist <collectionJobId>
+\end{verbatim}
+\end{itemize}
+The command \verb'glite-lb-job_status' is a low level query program that can be
+found in the \verb'glite-lb-client' RPM among examples.
+
 
 \subsection{\LB proxy}
 
