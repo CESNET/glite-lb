@@ -284,6 +284,18 @@ static void printstat(edg_wll_JobStat stat, int level)
 		for (i=0; stat.possible_ce_nodes[i]; i++) 
 			printf("%s\t%s \n", ind, stat.possible_ce_nodes[i]);
 	}
+	printf("%ssuspended : %d\n", ind, stat.suspended);
+	printf("%ssuspend_reason : %s\n", ind, stat.suspend_reason);
+	printf("%sfailure_reasons : %s\n", ind, stat.failure_reasons);
+	printf("%sremove_from_proxy : %d\n", ind, stat.remove_from_proxy);
+	printf("%sui_host : %s\n", ind, stat.ui_host);
+	if (stat.user_fqans) {
+                printf("%suser_fqans : \n", ind);
+                for (i=0; stat.user_fqans[i]; i++) 
+                        printf("%s\t%s \n", ind, stat.user_fqans[i]);
+        }
+	printf("%ssandbox_retrieved : %d\n", ind, stat.sandbox_retrieved);
+
 	/* PBS state section */
 	if (stat.jobtype == EDG_WLL_STAT_PBS) {
 		printf("%spbs_state : %s\n", ind, stat.pbs_state);
