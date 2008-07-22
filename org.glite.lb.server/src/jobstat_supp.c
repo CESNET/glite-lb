@@ -508,6 +508,7 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_int_array(ret, stat->children_hist, EDG_WLL_NUMBER_OF_STATCODES);
 	if (ret) ret = enc_string(ret, stat->failure_reasons);
 	if (ret) ret = enc_int(ret, stat->remove_from_proxy);
+	if (ret) ret = enc_int(ret, stat->sandbox_retrieved);
 	if (ret) ret = enc_string(ret, stat->pbs_state);
 	if (ret) ret = enc_string(ret, stat->pbs_queue);
 	if (ret) ret = enc_string(ret, stat->pbs_owner);
@@ -589,6 +590,7 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
 	}
         if (tmp_in != NULL) stat->failure_reasons = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->remove_from_proxy = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->sandbox_retrieved = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_state = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_queue = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_owner = dec_string(tmp_in, &tmp_in);

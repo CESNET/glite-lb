@@ -786,6 +786,23 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 
 				}
 			}
+			if (USABLE_DATA(res, strict)) {
+				switch (e->clear.reason) {
+					case EDG_WLL_CLEAR_USER:
+						js->pub.sandbox_retrieved = EDG_WLL_STAT_USER;
+						break;
+					case EDG_WLL_CLEAR_TIMEOUT:
+						js->pub.sandbox_retrieved = EDG_WLL_STAT_TIMEOUT;
+						break;
+					case EDG_WLL_CLEAR_NOOUTPUT:
+						js->pub.sandbox_retrieved = EDG_WLL_STAT_NOOUTPUT;
+						break;
+					default:
+						goto bad_event; break;
+
+				}
+
+			}
 			break;
 		case EDG_WLL_EVENT_PURGE:
 			/* ignore, meta-information only */

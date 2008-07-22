@@ -86,6 +86,11 @@ bool	remove_from_proxy	Job reached final status and may be removed from proxy
 string	ui_host		Hostname or address of UI used to submit the job
 strlist	user_fqans	FQAN used to register the job
 	_special_	XMLstructured
+int	sandbox_retrieved	Flag is set on incomming Clear event
+	_code_	NOTYET		Sandbox was not retrieved yet.
+	_code_	USER		User retrieved output sandbox.
+	_code_	TIMEOUT		Timed out, resource forced purge of the sandbox.
+	_code_	NOOUTPUT	No output was generated.
 
 _pad_	55
 
