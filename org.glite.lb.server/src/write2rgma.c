@@ -180,7 +180,7 @@ char* write2rgma_statline(intJobStat *intstat)
 	string_jobid = edg_wlc_JobIdUnparse(stat->jobId);
 	string_stat = edg_wll_StatToString(stat->state);
 	string_server = edg_wlc_JobIdGetServer(stat->jobId);
-	string_fqans = format_strlist(intstat->user_fqans, '|');
+	string_fqans = format_strlist(intstat->pub.user_fqans, '|');
 
 	if (stat->jdl != NULL) {
 		struct cclassad *ad;

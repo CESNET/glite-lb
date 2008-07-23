@@ -442,11 +442,11 @@ int edg_wll_intJobStatus(
 			int tsq = num_events - 1;
 			if (add_fqans && tsq == 0 && ctx->fqans != NULL) {
 				for (i=0; ctx->fqans[i]; i++);
-				intstat->user_fqans = malloc(sizeof(*ctx->fqans)*(i+1));
+				intstat->pub.user_fqans = malloc(sizeof(*ctx->fqans)*(i+1));
 				for (i=0; ctx->fqans[i]; i++) {
-					intstat->user_fqans[i] = strdup(ctx->fqans[i]);
+					intstat->pub.user_fqans[i] = strdup(ctx->fqans[i]);
 				}
-				intstat->user_fqans[i] = NULL;
+				intstat->pub.user_fqans[i] = NULL;
 			}
 
 			edg_wll_StoreIntState(ctx, intstat, tsq);

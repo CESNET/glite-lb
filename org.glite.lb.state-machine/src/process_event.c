@@ -990,11 +990,6 @@ void destroy_intJobStat_extension(intJobStat *p)
 	if (p->last_branch_seqcode) free(p->last_branch_seqcode);
 	if (p->deep_resubmit_seqcode) free(p->deep_resubmit_seqcode);
 	free_branch_state(&p->branch_states);
-	if (p->user_fqans != NULL ) {
-                for (i=0; p->user_fqans[i]; i++)
-                        free(p->user_fqans[i]);
-                free(p->user_fqans);
-        }
 
 	memset(p,0,sizeof(*p));
 }
