@@ -1,0 +1,1 @@
+glite-lb-logger is the LB local-logger and inter-logger. This package contains the local-logger (glite-lb-logd), inter-logger (glite-lb-interlogd) and notification inter-logger (glite-lb-notif-interlogd) damons.

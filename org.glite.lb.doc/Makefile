@@ -22,9 +22,11 @@ DVIPS = $(KPATH) dvips
 AT3=${stagedir}/sbin/glite-lb-at3
 INSTALL=install
 
-default all: generate LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf
+default all: generate doc
 
 generate: events.tex status.tex
+
+doc: LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf
 
 # %.dvi: %.tex
 # 	$(LATEX) $<
@@ -46,16 +48,20 @@ generate: events.tex status.tex
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
+stage: doc
+	$(MAKE) install PREFIX=${stagedir}
+
 install:
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
 	$(INSTALL) -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 	$(INSTALL) -m 644 ${top_srcdir}/src/README ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBUG.pdf ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBAG.pdf ${PREFIX}/share/doc/${package}-${version}
 	$(INSTALL) -m 644 LBDG.pdf ${PREFIX}/share/doc/${package}-${version}
 # install DG example sources
 	for p in ${top_srcdir}/examples/*; do \
-		if [ "$$p" == "../examples/CVS" ]; then continue; fi; \
+		if [ "$$p" == "${top_srcdir}/examples/CVS" ]; then continue; fi; \
 		${INSTALL} -m 644 "$$p" "${PREFIX}/share/doc/${package}-${version}/examples"; \
 	done
 
@@ -66,27 +72,27 @@ clean:
 
 # dependencies:
 
-common: copyright.tex \
+COMMON:= copyright.tex \
 	definitions.tex \
 	egee.cls \
 	frontmatter.tex \
 	lbjp.bib \
 	versions.tex
 
-LBUG.pdf: common \
+LBUG.pdf: ${COMMON} \
 	LBUG.tex \
 	LBUG-Introduction.tex components.tex \
 	LBUG-Tools.tex logevent.tex notify.tex \
 	LBUG-UseCases.tex log_usertag.tex change_acl.tex \
 	LBUG-Appendix.tex events.tex status.tex 
 
-LBAG.pdf: common \
+LBAG.pdf: ${COMMON} \
 	LBAG.tex \
 	LBAG-Introduction.tex components.tex \
 	LBAG-Installation.tex \
 	LBAG-Running.tex
 
-LBDG.pdf: common \
+LBDG.pdf: ${COMMON} \
 	LBDG.tex \
 	LBDG-Introduction.tex \
 	producer_api.tex \
@@ -94,11 +100,10 @@ LBDG.pdf: common \
 	notification_api.tex \
 	web_services.tex
 
-LBTP.pdf: common \
+LBTP.pdf: ${COMMON} \
 	LBTP.tex \
 	LBTP-Introduction.tex \
 	LBTP-Tests.tex \
 	LBTP-PerfTests.tex
 
-.PHONY: all clean common
-
+.PHONY: all clean doc

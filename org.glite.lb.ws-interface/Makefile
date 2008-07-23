@@ -39,6 +39,7 @@ install:
 	-mkdir -p ${PREFIX}/${STAGETO}
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
 	install -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	( cd ${top_srcdir}/project && install -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 	install -m 644 LB.html ${PREFIX}/share/doc/${package}-${version}
 # install the generated stuff instead
 #	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
@@ -71,3 +72,4 @@ LB.html: doc.xml LBTypes.xml LB.xml puke-ug.xsl
 	${XMLLINT} --valid --noout doc-html.xml
 	${XSLTPROC} --stringparam  chapter.autolabel 0 ${docbookxls} doc-html.xml >$@
 	-${TIDY} -asxhtml -m $@
+

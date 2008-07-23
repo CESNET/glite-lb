@@ -1,0 +1,1 @@
+glite-lb-client is the library implementing client side of LB API. This package contains the library, client tools (glite-lb-logevent) and many examples.

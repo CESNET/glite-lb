@@ -1,0 +1,1 @@
+glite-lb-server is the LB server. This package contains the LB server daemon (glite-lb-bkserverd) and a tool for rebuilding server indeces (glite-lb-bkindex).
