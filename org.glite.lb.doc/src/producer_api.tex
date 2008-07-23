@@ -67,22 +67,27 @@ variable. The symbolic C names should be prepended with
 
 \begin{table}[h]
 \begin{tabularx}{\textwidth}{llX}
-{\bf C name} & {\bf Env. variable} & {\bf Description} \\
+{\bf Name: Type}  & {\bf Env. variable} & {\bf Description} \\
 \hline
-\small\verb'HOST' & & Hostname that appears as event origin. \\
-\small\verb'SOURCE' & & Event source component. \\
-\small\verb'DESTINATION' & \small\verb'GLITE_WMS_LOG_DESTINATION' & Hostname of machine running
+\lstinline'HOST': \lstinline'char*' & & Hostname that appears as event origin. \\
+\lstinline'SOURCE': \lstinline'edg_wll_Source' & & Event source component. \\
+\lstinline'DESTINATION': \lstinline'char*' & \lstinline'GLITE_WMS_LOG_DESTINATION' & Hostname of machine running
 locallogger/interlogger. \\
-\small\verb'DESTINATION_PORT' & \small\verb'GLITE_WMS_LOG_DESTINATION' & Port the locallogger is listening
-on. \\
-\small\verb'LOG_TIMEOUT' & \small\verb'GLITE_WMS_LOG_TIMEOUT' & Logging timeout for asynchronous
+\lstinline'DESTINATION_PORT': \lstinline'int' &
+\lstinline'GLITE_WMS_LOG_DESTINATION' Port the locallogger is
+listening on. \\
+\lstinline'LOG_TIMEOUT': \lstinline'struct timeval' &
+\lstinline'GLITE_WMS_LOG_TIMEOUT' & Logging timeout for asynchronous
 logging. \\
-\small\verb'LOG_SYNC_TIMEOUT' & \small\verb'GLITE_WMS_LOG_SYNC_TIMEOUT' & Logging timeout for synchronous
-logging. \\
-\small\verb'LBPROXY_STORE_SOCK' & \small\verb'GLITE_WMS_LBPROXY_STORE_SOCK' & \LB\ Proxy store socket path (if
-logging through \LB\ Proxy) \\
-\small\verb'LBPROXY_USER' & \small\verb'GLITE_WMS_LBPROXY_USER' & Certificate subject of the user (if
-logging through \LB\ proxy).
+\lstinline'LOG_SYNC_TIMEOUT': \lstinline'struct timeval' &
+\lstinline'GLITE_WMS_LOG_SYNC_TIMEOUT' & Logging timeout for
+synchronous logging. \\
+\lstinline'LBPROXY_STORE_SOCK': \lstinline'char*' &
+\lstinline'GLITE_WMS_LBPROXY_STORE_SOCK' & \LB\ Proxy store socket
+path (if logging through \LB\ Proxy) \\
+\lstinline'LBPROXY_USER': \lstinline'char*' &
+\lstinline'GLITE_WMS_LBPROXY_USER' & Certificate subject of the user
+(if logging through \LB\ proxy). \\
 \end{tabularx}
 \end{table}
 The \verb'GLITE_WMS_LOG_DESTINATION' environment variable contains

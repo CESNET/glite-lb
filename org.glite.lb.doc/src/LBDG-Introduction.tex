@@ -51,6 +51,13 @@ constants) are prefixed to avoid name clashes. The prefix is
 symbolic constants. In C++ the namespace \lstinline'glite::lb' is used
 instead.
 
+\marginpar{Symbolic constants}%
+Symbolic constants (\ie enumerated types) are used at various places in the \LB
+API. There is a user--friendly string representation of each
+constant and for each enumerated type there are two functions that
+convert strings to enum values and vice versa. Example is given in
+section~\ref{s:edg_wll_Event}
+
 \marginpar{Input and output arguments}%
 All input arguments in \LB API are designated \verb'const' (for simple
 types) or have \verb'const' in type name (for structures).
@@ -135,7 +142,7 @@ establishment. This behaviour is completely hidden by the library.
 \subsubsection{Header Files}
 
 Header files for the common structures and functions are summarized in
-the table~\ref{t:cheaders} If you use the producer and/or consumer API
+table~\ref{t:cheaders}. If you use the producer and/or consumer API
 described further in this document, you do not have to include them
 explicitly.
 
@@ -224,7 +231,7 @@ For more information see file \verb'glite/lb/context.h'
 
 \subsubsection{JobId} 
 The primary entity of \LB is a job, identified by JobId -- a unique
-identifier of the job (see also \cite{LBUG}). The type representing
+identifier of the job (see also \cite{lbug}). The type representing
 the JobId is opaque \verb'glite_jobid_t'. The JobId is in fact
 just URL with \verb'https' protocol, path component being unique string
 with no further structure and host and port designating the \LB server
@@ -261,29 +268,65 @@ header file \verb'glite/wmsutils/cjobid.h'}
 
 
 \subsubsection{Event}
-Data structure \verb'edg_wll_Event' represents \LB event, atomic
-data unit received and processed by \LB. It is a set of key--value
-pairs with predefined structure -- allowed event types and
-attributes. In \LB each event must be associated with a~particular
-job. The data structure has common part and event type specific
-part. Most important common event attributes:
-\begin{itemize}
-  \item \texttt{jobId} -- identificaion of the job the event belongs to.
-  \item \texttt{user} -- identity (certificate subject) of the event sender.
-  \item \texttt{timestamp} -- time when the event was generated.
-  \item \texttt{seqcode} -- sequence code assigned to the event.
-  \item \texttt{type} -- event type.
-\end{itemize}
-The \verb'edg_wll_Event' is returned by consumer \LB API job
-event related calls.
+\label{s:edg_wll_Event}
+The transparent data structure \verb'edg_wll_Event' represents \LB
+event, atomic data unit received and processed by \LB. It is a set of
+key--value pairs with predefined structure -- allowed event types and
+attributes. The only important operation defined on
+\verb'edg_wll_Event' itself is
+\lstinline{edg\_wll\_FreeEvent(edg\_wll\_Event *event)} to free the
+event structure. 
 
-The event type is transparent. The only important operation defined is
-\texttt{edg\_wll\_FreeEvent(edg\_wll\_Event *event)} to free event
-structure. 
 
-For more information see file \verb'org.glite.lb.types/types.T' 
+\begin{table}[h]
+\begin{tabularx}{\textwidth}{llX}
+\bf Attribute name & \bf Attribute type & \bf Description \\
+\hline
+\verb'type' & \verb'edg_wll_EventCode' & Event type. Values are
+symbolic constants \eg \verb'EDG_WLL_EVENT_DONE' \\ 
+\verb'jobId' & \verb'glite_jobid_t' & Jobid of the job the event
+belongs to. \\
+\verb'user' & \verb'char*' & Identity (certificate subject) of the
+event sender. \\
+\verb'host' & \verb'char*' & Hostname of the machine the event was
+sent from. \\
+\verb'source' & \verb'edg_wll_Source' & Designation of the WMS component
+the event was sent from, \eg \verb'EDG_WLL_SOURCE_USER_INTERFACE' \\
+\verb'timestamp' & \verb'struct timeval' & Time when the event was
+generated. \\
+\verb'seqcode' & \verb'char*' & Sequence code assigned to the event. \\
+\end{tabularx}
+\caption{Common event attributes}
+\label{t:cevent}
+\end{table}
 
-\TODO{example - Michal?}
+
+
+The \verb'edg_wll_Event' is returned by consumer \LB
+API job event related calls. The data structure has common part and
+event type specific part. Most important common event attributes are
+listed in table~\ref{t:cevent}, for more information see file
+\verb'org.glite.lb.types/types.T'
+
+\marginpar{List of event types}%
+The event structure makes use of enumerated types extensively,
+starting with the \verb'type' atribute. The following example
+demonstrates how to convert enumerated values into more
+user--friendly strings; it will print out the event names known to the
+\LB library:
+\begin{lstlisting}
+edg_wll_EventCode ev_type;
+
+for(ev_type = 1; ev_type < EDG_WLL_EVENT__LAST; ev_type++) {
+	char *ev_string = edg_wll_EventToString(ev_type);
+	if(ev_string) {
+	   /* there may be holes */
+           printf("%s\n", ev_string);
+	   free(ev_string);
+        }
+}
+\end{lstlisting}
+
 
 \subsubsection{JobStatus}
 Data type \texttt{edg\_wll\_JobStat} represents status of a job as
