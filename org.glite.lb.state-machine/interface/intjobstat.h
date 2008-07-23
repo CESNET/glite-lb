@@ -14,7 +14,7 @@
 /* where Z.XX is version from indent + 1 (version after commit), Y = Z+1 */
 /* and DESCRIPTION is short hit why version changed		*/
 
-#define INTSTAT_VERSION "revision 2.3 - sandbox_retrieved"
+#define INTSTAT_VERSION "revision 2.4 - proxy merge"
 
 
 // Internal error codes 
@@ -58,7 +58,6 @@ typedef struct _intJobStat {
 
 		struct timeval	last_pbs_event_timestamp;
 		int		pbs_reruning;		// true if rerun event arrived
-		char*		*user_fqans;
 
 		/*!! if adding new field, modify also destroy_intJobStat_extension() */
 	} intJobStat;

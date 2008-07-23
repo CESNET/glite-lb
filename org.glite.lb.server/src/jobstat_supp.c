@@ -472,7 +472,8 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_jobid(ret, stat->parent_job);
 	if (ret) ret = enc_string(ret, stat->seed);
 	if (ret) ret = enc_int(ret, stat->children_num);
-		/* children histogram also stored in the DB, see bellow. Other children data not stored. */
+	if (ret) ret = enc_int_array(ret, stat->children_hist, EDG_WLL_NUMBER_OF_STATCODES);
+		/* children histogram stored in the DB, other children data not stored. */
 	if (ret) ret = enc_string(ret, stat->condorId);
 	if (ret) ret = enc_string(ret, stat->globusId);
 	if (ret) ret = enc_string(ret, stat->localId);
@@ -494,20 +495,20 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_int(ret, stat->cpuTime);
 	if (ret) ret = enc_taglist(ret, stat->user_tags);
 	if (ret) ret = enc_timeval(ret, stat->stateEnterTime);
-	if (ret) ret = enc_intlist(ret, stat->stateEnterTimes);
 	if (ret) ret = enc_timeval(ret, stat->lastUpdateTime);
+	if (ret) ret = enc_intlist(ret, stat->stateEnterTimes);
 	if (ret) ret = enc_int(ret, stat->expectUpdate);
 	if (ret) ret = enc_string(ret, stat->expectFrom);
+	if (ret) ret = enc_string(ret, stat->acl);
 	if (ret) ret = enc_int(ret, stat->payload_running);
 	if (ret) ret = enc_strlist(ret, stat->possible_destinations);
 	if (ret) ret = enc_strlist(ret, stat->possible_ce_nodes);
 	if (ret) ret = enc_int(ret, stat->suspended);
 	if (ret) ret = enc_string(ret, stat->suspend_reason);
 	if (ret) ret = enc_string(ret, stat->failure_reasons);
-	if (ret) ret = enc_string(ret, stat->ui_host);
-	if (ret) ret = enc_int_array(ret, stat->children_hist, EDG_WLL_NUMBER_OF_STATCODES);
-	if (ret) ret = enc_string(ret, stat->failure_reasons);
 	if (ret) ret = enc_int(ret, stat->remove_from_proxy);
+	if (ret) ret = enc_string(ret, stat->ui_host);
+	if (ret) ret = enc_strlist(ret, stat->user_fqans);
 	if (ret) ret = enc_int(ret, stat->sandbox_retrieved);
 	if (ret) ret = enc_string(ret, stat->pbs_state);
 	if (ret) ret = enc_string(ret, stat->pbs_queue);
@@ -517,6 +518,7 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_string(ret, stat->pbs_scheduler);
 	if (ret) ret = enc_string(ret, stat->pbs_dest_host);
 	if (ret) ret = enc_int(ret, stat->pbs_pid);
+	if (ret) ret = enc_string(ret, stat->pbs_resource_usage);
 	if (ret) ret = enc_int(ret, stat->pbs_exit_status);
 	if (ret) ret = enc_string(ret, stat->pbs_error_desc);
 	if (ret) ret = enc_string(ret, stat->condor_status);
@@ -551,7 +553,11 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->parent_job = dec_jobid(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->seed = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->children_num = dec_int(tmp_in, &tmp_in);
-                /* children histogram also stored in the DB, see bellow. Other children data not stored. */
+        if (tmp_in != NULL) {
+			    stat->children_hist = (int*)calloc(EDG_WLL_NUMBER_OF_STATCODES+1, sizeof(int));
+			    dec_int_array(tmp_in, &tmp_in, stat->children_hist);
+	}
+                /* children histogram stored in the DB, other children data not stored. */
         if (tmp_in != NULL) stat->condorId = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->globusId = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->localId = dec_string(tmp_in, &tmp_in);
@@ -573,23 +579,20 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->cpuTime = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->user_tags = dec_taglist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->stateEnterTime = dec_timeval(tmp_in, &tmp_in);
-        if (tmp_in != NULL) stat->stateEnterTimes = dec_intlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->lastUpdateTime = dec_timeval(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->stateEnterTimes = dec_intlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->expectUpdate = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->expectFrom = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->acl = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->payload_running = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->possible_destinations = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->possible_ce_nodes = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->suspended = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->suspend_reason = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->failure_reasons = dec_string(tmp_in, &tmp_in);
-        if (tmp_in != NULL) stat->ui_host = dec_string(tmp_in, &tmp_in);
-        if (tmp_in != NULL) {
-			    stat->children_hist = (int*)calloc(EDG_WLL_NUMBER_OF_STATCODES+1, sizeof(int));
-			    dec_int_array(tmp_in, &tmp_in, stat->children_hist);
-	}
-        if (tmp_in != NULL) stat->failure_reasons = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->remove_from_proxy = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->ui_host = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->user_fqans = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->sandbox_retrieved = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_state = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_queue = dec_string(tmp_in, &tmp_in);
@@ -599,6 +602,7 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->pbs_scheduler = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_dest_host = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_pid = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_resource_usage = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_exit_status = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_error_desc = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->condor_status = dec_string(tmp_in, &tmp_in);
@@ -634,7 +638,6 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	if (ret) ret = enc_branch_states(ret, stat->branch_states);
 	if (ret) ret = enc_timeval(ret, stat->last_pbs_event_timestamp);
 	if (ret) ret = enc_int(ret, stat->pbs_reruning);
-	if (ret) ret = enc_strlist(ret, stat->user_fqans);
 	return ret;
 }
 
@@ -676,9 +679,6 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 		}
 		if (tmp_in != NULL) {
 			stat->pbs_reruning = dec_int(tmp_in, &tmp_in);
-		}
-        	if (tmp_in != NULL) {
-			stat->user_fqans = dec_strlist(tmp_in, &tmp_in);
 		}
 	} else if (tmp_in != NULL) {
 		edg_wll_FreeStatus(pubstat);
