@@ -104,6 +104,7 @@ LBTP.pdf: ${COMMON} \
 	LBTP.tex \
 	LBTP-Introduction.tex \
 	LBTP-Tests.tex \
-	LBTP-PerfTests.tex
+	LBTP-PerfTests.tex \
+	LBTP-InterTests.tex
 
 .PHONY: all clean doc
