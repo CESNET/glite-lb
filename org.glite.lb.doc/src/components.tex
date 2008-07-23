@@ -100,13 +100,12 @@ pending events belonging to this handle accordingly.
 
 \subsubsection{Proxy}
 
-\emph{\LB proxy} is the implementation of the local view concept
-\ifx\insideUG\undefined{(see \cite{lbug}).}\else{Sect.~\ref{local}}.\fi
-Since \LBnew, \LB proxy is intergrated into \LB server 
-executable.
-When deployed (on the WMS node in the current gLite middleware) 
-it takes over the role of the local-logger daemon---it accepts the incoming
-events, stores them in files, and forwards them to the inter-logger.
+\emph{\LB proxy} is the implementation of the local view concept (see
+\ifx\insideUG\undefined{\cite{lbug}}\else{Sect.~\ref{local}}\fi). Since
+\LBnew, \LB proxy is intergrated into \LB server executable.  When deployed (on
+the WMS node in the current gLite middleware) it takes over the role of the
+local-logger daemon---it accepts the incoming events, stores them in files, and
+forwards them to the inter-logger.
 
 In addition, the proxy provides the basic principal functionality of \LB server,
 \ie processing events into job state and providing a~query interface,
