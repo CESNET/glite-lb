@@ -113,3 +113,5 @@ job_attrs.h: lb-job-attrs.xsd job_attrs.xsl
 job_attrs2.h: lb-job-attrs2.xsd job_attrs2.xsl
 	${XSLTPROC} ../src/job_attrs2.xsl $< >$@
 
+jpis_config.xml: lb-job-attrs2.xsd jpis_config.xsl
+	${XSLTPROC} ../src/jpis_config.xsl lb-job-attrs2.xsd >$@
