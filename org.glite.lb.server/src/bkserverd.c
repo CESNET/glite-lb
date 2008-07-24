@@ -636,7 +636,7 @@ int main(int argc, char *argv[])
 			server_subject = strdup(mycred->name);
 			for ( i = 0; super_users && super_users[i]; i++ ) ;
 			super_users = realloc(super_users, (i+2)*sizeof(*super_users));
-			super_users[i] = mycred->name;
+			super_users[i] = strdup(mycred->name);
 			super_users[i+1] = NULL;
 		}
 		else {
