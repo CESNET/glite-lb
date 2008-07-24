@@ -136,16 +136,18 @@ transakce
 \TODO{Initial YAIM way only, rest in Sect.~\ref{maintain:index}}
 
 \subsubsection{Server superusers}
+\label{inst:superusers}
 
-Certain administrative operations (identified bellow when appropriate)
-on \LB server are privileged.
-When they are invoked remotely, a~special authorization is required.
-By default, the server identity (X509 certificate subject) is considered
-privileged.
-Additional subjects can be specified in \emph{superusers file},
-specified by \verb'--super-users-file' server option
-(one subject per line).
-After changing the file, the server has to be restarted.
+Certain administrative operations (identified below when appropriate) on \LB
+server are privileged and special authorization is required to invoke them.  By
+default, the \LB server identity (X509 certificate subject name) is considered
+privileged.  Additional administrator identitites can be specified in a
+\emph{superusers file}, specified by the \verb'--super-users-file' server
+option.  A client is granted superuser privileges if they present credentials
+matching the superusers specifications in the file.  The file consists of one
+or more lines, each one containing either a subject name or VOMS attribute(s)
+in the FQAN format (in the latter case the line must start with \verb'FQAN:').
+After changing the file, the server has to be restarted. 
 
 The default startup script checks for existence of 
 /opt/glite/etc/LB-super-users and uses it eventually.
