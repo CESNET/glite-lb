@@ -263,8 +263,8 @@ void edg_wll_SoapToStatus(struct soap *soap,struct lbt__jobStatus const *src,edg
 			my %fmap = ( children_hist=>'count', stateEnterTimes=>'time');
 			gen qq {
 !	if (src->__size$usuc) {
-!		dest->$_ = calloc(EDG_WLL_NUMBER_OF_STATCODES+1, sizeof *dest->$_);
-!		dest->$_\[0] = src->__size$usuc;
+!		dest->$_ = calloc(src->__size$usuc + 1, sizeof *dest->$_);
+!		dest->$_\[0] = src->__size$usuc + 2;
 !		for (i=0; i<src->__size$usuc; i++) {
 !			edg_wll_JobStatCode	s;
 !			edg_wll_SoapToJobStatCode(GLITE_SECURITY_GSOAP_LIST_GET(src->$usuc, i)->state,&s);
