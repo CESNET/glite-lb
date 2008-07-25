@@ -301,6 +301,26 @@ Table~\ref{t:cefail} shows a~simplified example of the problem caused by delayed
 clocks. 
 \fi
 %
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{rlrl}
+1.&WM: Accept&
+6.&WM: Accept\\
+2.&WM: Match $A$&
+7.&WM: Match $B$\\
+3.&WM: Transfer to $A$&
+8.&WM: Transfer to $B$\\
+4.&CE~$A$: Accept &
+9.&CE~$B$: Accept \\
+5.&CE~$A$: Run &
+10.&CE~$B$: Run \\
+\dots & $A$ dies\\
+\end{tabular}
+\end{center}
+\caption{Simplified \LB events in the CE failure scenario}
+\label{t:cefail}
+\end{table}
+%
 We assume that the workload manager (WM) sends the job to a~computing element
 (CE)~A, where it starts running but the job dies in the middle.
 The failure is detected and the job is resubmitted back to the WM which sends it to CE~B then.
@@ -315,27 +335,6 @@ Even the \emph{Done} event can be sent by B with a timestamp that says
 this happened before the job has been submitted to A and the job state
 will end with a discrepancy---it has been reported to finish on B while
 still reported to run on A.
-
-\begin{table}[hb]
-\begin{tabular}{rlrl}
-1.&WM: Accept&
-6.&WM: Accept\\
-2.&WM: Match $A$&
-7.&WM: Match $B$\\
-3.&WM: Transfer to $A$&
-8.&WM: Transfer to $B$\\
-4.&CE~$A$: Accept &
-9.&CE~$B$: Accept \\
-5.&CE~$A$: Run &
-10.&CE~$B$: Run \\
-\dots & $A$ dies\\
-\end{tabular}
-
-\TODO{tahle tabulka je taky v 1.3, navic ve footnote}
-
-\caption{Simplified \LB events in the CE failure scenario}
-\label{t:cefail}
-\end{table}
 
 Therefore we are looking for a~more robust and general solution. We can
 discover severe clock bias if the timestamp on an event is in a future
@@ -485,17 +484,28 @@ are shown in Figures~\ref{f:comp-gather} (gathering and transferring
 \label{seqcode}
 
 As discussed in Sect.~\ref{evorder}, sequence codes are used as logical
-timestamps to ensure proper event ordering on the \LB server. The
-sequence code counter is incremented whenever an event is logged and the
-sequence code must be passed between individual Grid components together
-with the job control.
+timestamps to ensure proper event ordering on the \LB server. The sequence code
+counter is incremented whenever an event is logged and the sequence code must
+be passed between individual Grid components together with the job control.
 However, a single valued counter is not sufficient to support detection of
-branch forks within the execution tree.
-When considering again the Computing Element failure scenario described
-in Sect.~\ref{evorder}, there is no way to know that the counter value of
-the last event logged by the failed CE A is 5 (Tab.~\ref{t:cefail}). 
+branch forks within the execution tree. When considering again the Computing
+Element failure scenario described in Sect.~\ref{evorder}, there is no way to
+know that the counter value of the last event logged by the failed CE A is 5
+(see Table~\ref{t:cefail} on page~\pageref{t:cefail}). 
 
-\begin{table}[b]
+Therefore we define a~hierarchical \emph{sequence code}---an array of
+counters, each corresponding to a~single Grid component class handling the job%
+\footnote{Currently the following gLite components: Network Server, Workload
+Manager, Job Controller, Log Monitor, Job Wrapper, and the application itself.}.
+Table~\ref{t:cefail2} below shows the same scenario with a~simplified two-counter
+sequence code. The counters correspond to the WM and CE component classes
+and they are incremented when each of the components logs an event.
+When WM receives the job back for resubmission, 
+the CE counter becomes irrelevant (as the job control is on WM now),
+and the WM counter is incremented again.
+
+\begin{table}[h]
+\begin{center}
 \begin{tabular}{rlrl}
 1:x&WM: Accept&
 4:x&WM: Accept\\
@@ -509,22 +519,11 @@ the last event logged by the failed CE A is 5 (Tab.~\ref{t:cefail}).
 6:2&CE~$B$: Run \\
 \dots & $A$ dies\\
 \end{tabular}
+\end{center}
 \caption{The same CE failure scenario: hierarchical sequence codes.
 ``x'' denotes an undefined and unused value.}
 \label{t:cefail2}
 \end{table}
-
-
-Therefore we define a~hierarchical \emph{sequence code}---an array of
-counters, each corresponding to a~single Grid component class handling the job%
-\footnote{Currently the following gLite components: Network Server, Workload
-Manager, Job Controller, Log Monitor, Job Wrapper, and the application itself.}.
-Table~\ref{t:cefail2} shows the same scenario with a~simplified two-counter
-sequence code. The counters correspond to the WM and CE component classes
-and they are incremented when each of the components logs an event.
-When WM receives the job back for resubmission, 
-the CE counter becomes irrelevant (as the job control is on WM now),
-and the WM counter is incremented again.
 
 %Events on a~branch are ordered following the lexicographical order
 %of the sequence codes.
@@ -808,7 +807,7 @@ to our goal to handle one million of jobs per day.  The first line
 indicates how fast we are able to ``generate'' events in the feeding
 program. 
 
-\begin{table}[hbt]
+\begin{table}[h]
 \begin{tabular}{l|r}
 {\bf Component} & {\bf Job throughput (jobs/day)} \\
 \hline
