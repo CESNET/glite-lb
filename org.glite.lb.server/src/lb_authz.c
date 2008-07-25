@@ -18,9 +18,13 @@
 #include "glite/jobid/cjobid.h"
 #include "glite/lbu/trio.h"
 #include "db_supp.h"
+#include <glite/security/lcas/lcas_pem.h>
 
 /* XXX should be defined in gridsite-gacl.h */
 GRSTgaclEntry *GACLparseEntry(xmlNodePtr cur);
+
+extern char *server_key;
+extern char *server_cert;
 
 static int 
 get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
@@ -837,6 +841,33 @@ end:
 	if (jobstr) free(jobstr);
 
 	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int
+check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
+{
+   char *pem_string = NULL;
+   char *request = NULL;
+   int ret;
+
+   /* XXX make a real RSL ? */
+   request = edg_wll_EventToString(ev->any.type);
+   if (request == NULL)
+      return edg_wll_SetError(ctx, EINVAL, "Unknown event type");
+
+   ret = edg_wll_gss_get_client_pem(&ctx->connections->serverConnection->gss,
+				    server_cert, server_key,
+                                    &pem_string);
+   if (ret)
+      return edg_wll_SetError(ctx, ret, "Failed to extract client's PEM string");
+
+   ret = lcas_pem(pem_string, request);
+   if (ret)
+      ret = edg_wll_SetError(ctx, EPERM, "Not allowed to log events here");
+
+   free(pem_string);
+
+   return ret;
 }
 
 #else /* VOMS & GACL */

@@ -124,6 +124,7 @@ extern void _start (void), etext (void);
 
 
 
+int					enable_lcas = 0;
 int						debug  = 0;
 int						rgma_export = 0;
 static const int		one = 1;
@@ -171,6 +172,7 @@ static char *           port;
 
 
 static struct option opts[] = {
+        {"enable-lcas", 0, NULL,	'A'},
 	{"cert",	1, NULL,	'c'},
 	{"key",		1, NULL,	'k'},
 	{"CAdir",	1, NULL,	'C'},
@@ -216,7 +218,7 @@ static struct option opts[] = {
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "c:k:C:V:p:a:drm:ns:l:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:l:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -228,6 +230,7 @@ static const char *get_opt_string = "c:k:C:V:p:a:drm:ns:l:i:S:D:J:jR:F:xOL:N:X:Y
 static void usage(char *me) 
 {
 	fprintf(stderr,"usage: %s [option]\n"
+		"\t-A, --enable-lcas\t activate LCAS-based authorization\n"
 		"\t-a, --address\t use this server address (may be faked for debugging)\n"
 		"\t-b, --transactions\t transactions switch (0, 1)\n"
 		"\t-k, --key\t private key file\n"
@@ -404,6 +407,7 @@ int main(int argc, char *argv[])
 	purge_timeout[EDG_WLL_JOB_CANCELLED] = 60*60*24*7;
 
 	while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
+		case 'A': enable_lcas = 1; break;
 		case 'a': fake_host = strdup(optarg); break;
 		case 'b': transactions = atoi(optarg); break;
 		case 'c': server_cert = optarg; break;

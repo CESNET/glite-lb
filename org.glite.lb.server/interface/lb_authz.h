@@ -62,6 +62,9 @@ edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *, 
 extern void
 edg_wll_FreeVomsGroups(edg_wll_VomsGroups *);
 
+extern int
+check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev);
+
 #ifdef __cplusplus
 }
 #endif

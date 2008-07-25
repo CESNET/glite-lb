@@ -24,6 +24,8 @@
 
 extern int unset_proxy_flag(edg_wll_Context, edg_wlc_JobId);
 extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *);
+extern int enable_lcas;
+
 
 static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat, int reg_to_JP);
 
@@ -42,6 +44,9 @@ db_store(edg_wll_Context ctx, char *event)
   if(edg_wll_ParseEvent(ctx, event, &ev)) goto err;
 
   local_job = is_job_local(ctx, ev->any.jobId);
+
+  if (enable_lcas && check_store_authz(ctx, ev) != 0)
+    goto err;
 
 #ifdef LB_PERF
   if (sink_mode == GLITE_LB_SINK_STORE) {

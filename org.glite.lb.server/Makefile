@@ -177,6 +177,7 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 		${LB_MACHINE_LIB} \
 		${LB_UTILS_DB_LIB} \
 		${GSOAP_LIB} \
+		-llcas \
 		${EXT_LIBS} \
 		${classadslib} \
 		-lglite_lbu_maildir
@@ -189,6 +190,7 @@ else
 		${LB_MACHINE_LIB} \
 		${LB_UTILS_DB_LIB} \
 		-lglite_security_gss_${nothrflavour} \
+		-llcas \
 		${EXT_LIBS} \
 		${classadslib} \
 		-lglite_lbu_maildir
@@ -199,7 +201,7 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
 	lb_authz.o store.o bkindex.o stats.o\
 	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o lb_text.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.lo
 
-INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${LB_MACHINE_LIB} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
+INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${LB_MACHINE_LIB} ${EXT_LIBS} ${LB_UTILS_DB_LIB} -lcas
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
@@ -230,6 +232,10 @@ LIB_OBJS_BK:= \
 MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
 MONDB_LIBS:=${COMMON_LIBS} ${LB_MACHINE_LIB} ${LB_UTILS_DB_LIB} ${EXT_LIBS} 
 
+LCAS_PLUGIN_OBJS:=lcas_lb.o
+LCAS_PLUGIN_LOBJS:=${LCAS_PLUGIN_OBJS:.o=.lo}
+LCAS_PLUGIN_LIB:=liblcas_lb.la
+
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
@@ -239,7 +245,7 @@ glite-lb-bkindex: ${INDEX_OBJS}
 glite-lb-mon-db: ${MONDB_OBJS}
 	${LINKXX} -o $@ ${MONDB_OBJS} ${MONDB_LIBS}
 
-compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${MAN_GZ}
+compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${MAN_GZ}
 
 generate: store.c index.c 
 
@@ -318,6 +324,9 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 	ar crv $@ ${LIB_OBJS_BK}
 	ranlib $@
 
+${LCAS_PLUGIN_LIB}: ${LCAS_PLUGIN_LOBJS}
+	${LINK} -o $@ $<
+
 doc: ${MAN_GZ}
 
 man: ${MAN_GZ}
@@ -342,6 +351,9 @@ install:
 	for p in bkserverd bkindex mon-db; do \
 		${INSTALL} -m 755 "glite-lb-$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
+	-mkdir -p ${PREFIX}/lib/modules
+	${INSTALL} -m 755 ${LCAS_PLUGIN_LOBJS} ${PREFIX}/lib/modules
+	ln -sf liblcas_lb.so ${PREFIX}/lib/modules/lcas_lb.mod
 
 	for f in dbsetup.sql dbsetup-migrate2transactions.sql index.conf.template; do \
 		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${PREFIX}/etc; \
