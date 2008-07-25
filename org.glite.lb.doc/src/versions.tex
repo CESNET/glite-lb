@@ -1,4 +1,5 @@
-%\subsection{Versions overview}
+\section*{\LB Documentation and versions overview}
+\addcontentsline{toc}{section}{\uppercase{\LB Documentation and versions overview}}
 
 The Logging and Bookkeeping service (\LB\ for short) was initially developed in
 the EU DataGrid
@@ -14,9 +15,17 @@ that appeared in gLite 3.0 become obsolete and is not maintained anymore.}
 
 The complete \LB Documentation consists of the following parts:
 \begin{itemize}
-\item \LB User's Guide \ifx\insideUG\undefined{\cite{lbug}}\else{- this document}\fi,
-\item \LB Administrator's Guide \ifx\insideAG\undefined{\cite{lbag}}\else{- this document}\fi,
-\item \LB Developer's Guide \ifx\insideDG\undefined{\cite{lbdg}}\else{- this document}\fi,
-\item \LB Test Plan \ifx\insideTP\undefined{\cite{lbtp}}\else{- this document}\fi.
+\item \textbf{\LB User's Guide} 
+   \ifx\insideUG\undefined{\cite{lbug}}\else{- this document}\fi. 
+   \input{LBUG-Abstract}
+\item \textbf{\LB Administrator's Guide} 
+   \ifx\insideAG\undefined{\cite{lbag}}\else{- this document}\fi. 
+   \input{LBAG-Abstract}
+\item \textbf{\LB Developer's Guide} 
+   \ifx\insideDG\undefined{\cite{lbdg}}\else{- this document}\fi. 
+   \input{LBDG-Abstract}
+\item \textbf{\LB Test Plan} 
+   \ifx\insideTP\undefined{\cite{lbtp}}\else{- this document}\fi. 
+   \input{LBTP-Abstract}
 \end{itemize}
 

@@ -81,6 +81,7 @@ COMMON:= copyright.tex \
 
 LBUG.pdf: ${COMMON} \
 	LBUG.tex \
+	LBUG-Abstract.tex \
 	LBUG-Introduction.tex components.tex \
 	LBUG-Tools.tex logevent.tex notify.tex \
 	LBUG-UseCases.tex log_usertag.tex change_acl.tex \
@@ -88,12 +89,14 @@ LBUG.pdf: ${COMMON} \
 
 LBAG.pdf: ${COMMON} \
 	LBAG.tex \
+	LBAG-Abstract.tex \
 	LBAG-Introduction.tex components.tex \
 	LBAG-Installation.tex \
 	LBAG-Running.tex
 
 LBDG.pdf: ${COMMON} \
 	LBDG.tex \
+	LBDG-Abstract.tex \
 	LBDG-Introduction.tex \
 	producer_api.tex \
 	consumer_api.tex \
@@ -102,6 +105,7 @@ LBDG.pdf: ${COMMON} \
 
 LBTP.pdf: ${COMMON} \
 	LBTP.tex \
+	LBTP-Abstract.tex \
 	LBTP-Introduction.tex \
 	LBTP-Tests.tex \
 	LBTP-PerfTests.tex \
