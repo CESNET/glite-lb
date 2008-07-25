@@ -3,28 +3,33 @@
 
 In this section we give a description of the CLI tools that a regular grid user
 might want to use. If not stated otherwise, the tools are distributed in the
-\verb'glite-lb-client' RPM. Behaviour of the commands can be changed by
-setting some of the following enviroment variables:
+\verb'glite-lb-client' package.
 
+\subsection{Environment variables}
 \TODO{ruda: tady kapitolku, ze prostredi je dulezite, odkaz na appendix, kde bude vsechno. common/src/param.c}
 
+Behaviour of the commands can be changed by setting some of the following
+enviroment variables:
+
 \begin{tabularx}{\textwidth}{lX}
-GLITE\_WMS\_LOG\_DESTINATION & address of \verb'glite-lb-logd' daemon, in form \verb'hostname:port', for logging events\\
+GLITE\_WMS\_LOG\_DESTINATION & address of \verb'glite-lb-logd' daemon (for logging events)\\
 GLITE\_WMS\_LOG\_TIMEOUT & timeout (in seconds) for asynchronous logging\\
 GLITE\_WMS\_LOG\_SYNC\_TIMEOUT & timeout (in seconds) for synchronous logging\\
-GLITE\_WMS\_NOTIF\_SERVER& address of \verb'glite-lb-bkserver' daemon, in form \verb'hostname:port', for receiving notifications\\
+GLITE\_WMS\_NOTIF\_SERVER& address of \verb'glite-lb-bkserver' daemon (for receiving notifications)\\
 GLITE\_WMS\_NOTIF\_TIMEOUT& timeout (in seconds) for notification registration\\
-GLITE\_WMS\_QUERY\_SERVER& address of \verb'glite-lb-bkserver' daemon, in form \verb'hostname:port', for queries\\
+GLITE\_WMS\_QUERY\_SERVER& address of \verb'glite-lb-bkserver' daemon (for queries)\\
 X509\_USER\_CERT and X509\_USER\_KEY & location of user credentials\\
 \end{tabularx}
-For backward compatibility, all \verb'GLITE_WMS_*' variables can be prefixed by 
-\verb'EDG_WL_' instead. Setting the environment variable is for some commands mandatory,
-so reading the documentaion below and appropriate manpages is highly recommended.
+
+For a complete list of environment variables, their form and default value
+description, see Appendix~\ref{a:environment}. Setting the environment variable
+is for some commands mandatory, so reading the documentaion below and
+appropriate manpages is highly recommended.
 
 
 \subsection{glite-wms-job-status and glite-wms-job-logging-info}
 
-We start with tools that are distributed in \verb'glite-wms-ui-cli-python' RPM
+We start with tools that are distributed in \verb'glite-wms-ui-cli-python' package
 and that can be found probably on all UI machines. Description of all user
 commands that are used during the job submission process (generating proxy,
 creating a JDL describing the job, submitting a job, retrieving output,
