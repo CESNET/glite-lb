@@ -85,6 +85,7 @@ LBUG.pdf: ${COMMON} \
 	LBUG-Introduction.tex components.tex \
 	LBUG-Tools.tex logevent.tex notify.tex \
 	LBUG-UseCases.tex log_usertag.tex change_acl.tex \
+	LBUG-Troubleshooting.tex \
 	LBUG-Appendix.tex events.tex status.tex 
 
 LBAG.pdf: ${COMMON} \
@@ -92,7 +93,8 @@ LBAG.pdf: ${COMMON} \
 	LBAG-Abstract.tex \
 	LBAG-Introduction.tex components.tex \
 	LBAG-Installation.tex \
-	LBAG-Running.tex
+	LBAG-Running.tex \
+	LBAG-Troubleshooting.tex
 
 LBDG.pdf: ${COMMON} \
 	LBDG.tex \
