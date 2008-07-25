@@ -265,7 +265,7 @@ a given directory
 
 What needs to be done on the statistics server:
 \begin{itemize}
-\item \verb'glite-lb-utils' RPM installed
+\item \verb'glite-lb-utils' package installed
 \item download and remove files from the LB server
 see \verb'glite-lb-statistics-gsi.sh' (shell script in the examples directory)
 \item process dump files using the \verb'glite-lb-statistics' tool
@@ -302,8 +302,8 @@ wiki page:
 
 \paragraph{glite-lb-mon} is a program for monitoring the number of jobs on the
 LB server and their several statistics. It is part of the
-\verb'glite-lb-utils' RPM, so the monitoring can be done from remote machine
-where this RPM is installed and the enironment variable
+\verb'glite-lb-utils' package, so the monitoring can be done from remote machine
+where this package is installed and the enironment variable
 \verb'GLITE_WMS_QUERY_SERVER' properly set. Values like minimum, average and
 maximum time spent in the system are calulated for jobs that entered  the
 final  state (Aborted,  Cleared,  Cancelled) in specific time (default last
@@ -324,7 +324,7 @@ For more details se man page glite-lb-mon(1).
 \paragraph{glite-lb-mon-db} is a low-level program for monitoring the the
 number of jobs in the LB system. Using the LB internals, it connects directly
 to the underlying MySQL database and reads the number of jobs in each state.
-The tool is distributed itogether with the server in the \verb'glite-lb-server' RPM.
+The tool is distributed itogether with the server in the \verb'glite-lb-server' package.
 It can be used to read data also from the database of LB Proxy.
 For more details se man page glite-lb-mon-db(1).
 
@@ -343,7 +343,7 @@ histogram:
 \end{verbatim}
 \end{itemize}
 The command \verb'glite-lb-job_status' is a low level query program that can be
-found in the \verb'glite-lb-client' RPM among examples.
+found in the \verb'glite-lb-client' package among examples.
 
 
 \subsection{\LB proxy}
@@ -386,8 +386,8 @@ file with \verb'.ctl' suffix.
 
 \begin{sloppypar}
 In case of emergency (\eg corrupted file) the files can be examined
-with \verb'glite-lb-parse_eventsfile'%
-\footnote{Not fully supported tool, installed by glite-lb-client RPM among examples.}.
+with \verb'glite-lb-parse_eventsfile' %
+\footnote{Not fully supported tool, installed by \texttt{glite-lb-client} package among examples.}.
 It is possible to hand-edit the event files in emergency (remove corrupted lines).
 However, glite-lb-interlogd must not be running, and the corresponding .ctl file
 must be removed.
@@ -436,7 +436,7 @@ jobs to multiple \LB servers that can be shared by multiple WMS setups in turn.
 
 \subsubsection{Notification delivery}
 \begin{sloppypar}
-When glite-lb-logger RPM is optionally installed with \LB server, 
+When \verb'glite-lb-logger' package is optionally installed with \LB server, 
 a~modified \verb'glite-lb-notif-interlogd' is run by the server startup
 script.
 This version of the daemon is specialized for \LB notifications delivery;
