@@ -42,6 +42,8 @@ other languages, as the C constructs often reflect directly.
 
 \subsection{General Guidelines}
 
+\TODO{kde se vzalo edg}
+
 \marginpar{Naming conventions}%
 All names exported by the \LB library (function names, symbolic
 constants) are prefixed to avoid name clashes. The prefix is
@@ -89,15 +91,13 @@ much as possible. In a few cases the error can not be intuitively
 mapped and \LB specific error value greater than
 \verb'EDG_WLL_ERROR_BASE' is returned.
 
-\TODO{mozna by stalo za to zminit f-ce edg\_wll\_*Error*}
-
 Few API function return \verb'char *'. In such a~case
 \verb'NULL' indicates an error, non-null value means success.
 
 \subsection{Context and Parameter Settings}
 \label{s:context}
 
-The \LB library does not maintain internal state, all the API
+The \LB library does not maintain internal state (apart of network connections, see \ref{s:pool}), all the API
 functions refer to a~\emph{context} argument instead.
 Context object preserves state information among the various API
 calls, the state including \LB library parameters (\eg security
@@ -130,6 +130,7 @@ The context object and its API functions are described more thoroughly
 in section~\ref{s:edg_wll_context}
 
 \subsection{Connection Pool}
+\label{s:pool}
 The \LB library maintains pool of client--server connections to
 improve performance (creating SSL connection is heavy--weight
 operation). The connections are transparently shared and reused by all

@@ -20,7 +20,7 @@ However, only a single active client for a notification is allowed.
 \LB server and port to contact is specified with GLITE\_WMS\_NOTIF\_SERVER 
 environment variable.
 
-\TODO{ruda, what's supported in \LBold, what in \LBnew}
+\TODO{ruda, what's supported in \LBold (jen example), what in \LBnew}
 
 \verb'glite-lb-notify' support these actions:
 
@@ -90,8 +90,11 @@ Register notification for given jobid:
 \begin{verbatim}
    GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 bin/glite-lb-notify new \
     -j https://skurut68-2.cesnet.cz:9100/D1qbFGwvXLnd927JOcja1Q
+\end{verbatim}
 
    returns:
+
+\begin{verbatim}
    notification ID: https://skurut68-2.cesnet.cz:9100/NOTIF:tOsgB19Wz-M884anZufyUw 
 \end{verbatim}
 
