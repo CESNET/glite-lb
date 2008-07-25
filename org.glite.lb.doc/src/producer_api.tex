@@ -1,7 +1,9 @@
 % -*- mode: latex -*-
 
 \section{\LB\ Logging (Producer) API}
-\label{ProdOverview}
+\label{s:ProdOverview}
+
+\subsection{C Language Binding}
 The \LB\ logging API (or producer API) is used to create and deliver
 events to the \LB\ server and/or proxy, depending on the function
 used:
@@ -33,7 +35,7 @@ For most developers (\ie\ those not developing the WMS itself) the
 \verb'edg_wll_LogUserTag*(...)' and \verb'edg_wll_ChangeACL(...)' are
 the only functions of interest.
 
-\subsection{Call semantics}
+\subsubsection{Call semantics}
 \LB producer calls generally do not have transaction semantics, the
 query following succesful logging call is not guaranteed to see
 updated \LB server state. The typical call -- loging an event -- is
@@ -49,7 +51,7 @@ subsequent queries \emph{on that proxy}.
 
 Job registrations are all synchronous.
 
-\subsection{Header files}
+\subsubsection{Header files}
 
 \begin{table}[h]
 \begin{tabularx}{\textwidth}{>{\tt}lX}
@@ -58,8 +60,8 @@ glite/lb/producer.h & Prototypes for all event logging functions. \\
 \end{tabularx}
 \end{table}
 
-\subsection{Context parameters}
-The table\ref{} summarizes context parameters relevant to the
+\subsubsection{Context parameters}
+The table\ref{t:pcontext} summarizes context parameters relevant to the
 event logging. If  parameter is not set in the context explicitly, the
 \LB\ library will search for value of corresponding environment
 variable. The symbolic C names should be prepended with
@@ -89,11 +91,13 @@ path (if logging through \LB\ Proxy) \\
 \lstinline'GLITE_WMS_LBPROXY_USER' & Certificate subject of the user
 (if logging through \LB\ proxy). \\
 \end{tabularx}
+\caption{Producer specific context parameters}
+\label{t:pcontext}
 \end{table}
 The \verb'GLITE_WMS_LOG_DESTINATION' environment variable contains
 both locallogger host and port separated by colon (\ie\ ``host:port'').
 
-\subsection{Return values}
+\subsubsection{Return values}
 The logging functions return 0 on success and one of \texttt{EINVAL,
 ENOSPC, ENOMEM, ECONNREFUSED, EAGAIN} on error. If \texttt{EAGAIN} is
 returned, the function should be called again to retry the delivery;
@@ -105,7 +109,7 @@ server or proxy.
 The synchronous variants of logging functions can in addition return
 \verb'EDG_WLL_ERROR_NOJOBID' or \verb'EDG_WLL_ERROR_DB_DUP_KEY'.
 
-\subsection{Logging events}
+\subsubsection{Logging events}
 \TODO{odkaz na soubor}
 In this section we will give an example how to log an UserTag event to
 the \LB.
@@ -143,4 +147,3 @@ err = edg_wll_LogUserTag(ctx, name, value);
 \subsection{Java binding}
 \TODO{mirek}
 
-\TODO{C, C++, WS doplnit jako subsekce}
