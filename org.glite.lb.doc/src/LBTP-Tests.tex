@@ -1,4 +1,5 @@
 \section{Test Cases}
+\label{s:tests}
 
 In this section we describe tests from layers 1 (service ping tests), 
 2 (service functionality tests) and 3 (system tests). 
@@ -9,13 +10,53 @@ In this section we describe tests from layers 1 (service ping tests),
 \subsection{Tests if services are up and running}
 \TODO{how?}
 
+\begin{verbatim}
+org.glite.testsuites.ctb/LB/lb-l1.sh now does the following:
+- ping_host
+- check_binaries
+- check_service: runs testSocket (non GSI) on default ports for LL, IL and server
+
+What needs to be done:
+- how test scripts should be told to test such a service on such a (nondefualt) port?
+- test GSI credentials
+- do a GSI testSocket? hand-shake? 
+- maybe call a logevent with INTERNAL msg type?
+- move all common parts to functions.sh and write individual test scripts for each daemon:
+\end{verbatim}
+
 \subsubsection{Local-logger}
+\TODO{ping, check binaries, check if enough disk capacity is free for dglog* files, 
+check GSI credentials, gsi-connect?, log an internal msg?, ...} 
+
 \subsubsection{Inter-logger}
+\TODO{ping, check binaries, check if enough disk capacity is free for dglog* files, socket-connect?,
+check GSI credentials, fake an internal msg to the dglog* direcotry?, ...} 
+
 \subsubsection{Server}
+\TODO{ping, check binaries, check MySQL (running, accessible, enough disk capacity, ...), 
+check GSI credentials, gsi-connect?, socket-connect?, log an internal msg?,
+WS getVersion?, HTTP-connect?, check if enough disk capacity is free for dumps?, ...}
+
 \subsubsection{Notification inter-logger}
+\TODO{ping, check binaries, check GSI credentials, gsi-connect?, send some fake notification?, ...}
 
 
 \subsection{Event delivery}
+
+\begin{verbatim}
+org.glite.testsuites.ctb/LB/lb-l2.sh now does the following:
+- array_job_reg: registeres $JOBS_ARRAY_SIZE jobs
+- logEvents: logs events by glite-lb-$state.sh example scripts
+- logTags: logs user tags
+- testLB: calls glite-lb-job_log for all jobs
+- testLB2: calls glite-lb-job_status for all jobs
+
+What needs to be done:
+- tidy
+- create some meaningful sequence of events for logEvents
+\end{verbatim}
+
+
 
 % locallogger
 % bez dalsich demonu, registrovat job, vrati EAGAIN, objevi se fajly
@@ -56,6 +97,7 @@ of events.
 
 \subsubsection{Interlogger recovery}
 \label{recover}
+\TODO{See also org.glite.testsuites.ctb/LB/lb-l2ILR.sh.}
 % recover interloggeru
 % il & server (remote)
 % spustit, protlaci soubory na server, soubory zmizi, lze se dotazat na stav
@@ -102,7 +144,10 @@ They can be grabbed and used for comparing the events as in~\ref{recover}.
 
 \end{hints}
 
+
+
 \subsection{Job state computation}
+\TODO{See also org.glite.testsuites.ctb/LB/lb-l2.sh above.}
 
 % normal event delivery & job state machine
 % .sh, dotaz na stav
@@ -125,6 +170,8 @@ in the job state same as the `*' part of the script name.
 \TODO{}
 % specialni stav DAGu, histogram potomku
 
+
+
 \subsection{LB proxy}
 \req\ running \path{glite-lb-proxy}, \path{glite-lb-interlogd} and
 \path{glite-lb-bkserverd}
@@ -144,6 +191,8 @@ above mentioned scripts \path{glite-lb-*.sh} (they are called from
 \path{test.sh}) to test all this.
 \end{hints}
 
+
+
 \subsection{WS interface}
 \req\ \path{glite-lb-bkserverd} running, events from \ref{normal} logged
 
@@ -158,6 +207,8 @@ Examples \path{org.glite.lb.server/examples/ws\_*.c} convert the WS
 responses back to the legacy \LB\ data structures and print them in
 the same form as e.g. \path{glite-lb-jobstat}.
 \end{hints}
+
+
 
 \subsection{Notifications}
 
@@ -236,6 +287,8 @@ immediately.
 
 \result\ Delayed notifications should be received by the client almost
 immediately.
+
+
 
 \subsection{Server purge}
 

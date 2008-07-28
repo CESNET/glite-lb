@@ -1,9 +1,6 @@
 \section{Introduction}
 
-This document explains how to test the \LB service. Tests are described at six
-different layers, from elementary tests if the service is up and running,
-through tests of the fully supported functionality, performance and stress
-tests to interoperability tests.
+This document explains how to test the Logging and Bookkeeping (\LB) service. 
 
 \TODO{add some more introduction}
 
@@ -26,8 +23,72 @@ Several layers of tests are considered:
 
 
 \subsection{Tests in \texttt{org.glite.testsuites.ctb/LB}}
-\TODO{implementation}
+\TODO{implementation} 
+
+EGEE Certification team collects tests for \LB in a gLite module
+\verb'org.glite.testsuites.ctb' in the \verb'LB' directory. All \LB tests are
+described at
+\url{https://twiki.cern.ch/twiki/bin/view/LCG/SAMTests#Logging_and_Bookkeeping_LB}
+as well as next to each test case in Sections \ref{s:tests} and \ref{s:perftests}.
+
+The tests can be used as sensors in different monitoring frameworks 
+(see also below).
+
+
 
 
 \subsection{Integration into other frameworks}
-\TODO{SAM, Nagios, ETICS, ...}
+
+\subsubsection{Service Availability Monitoring}
+
+Service Availability Monitoring
+(SAM)\footnote{\url{http://sam-docs.web.cern.ch/sam-docs}} is a framework for
+the monitoring of production and pre-production grid sites. It provides a set
+of probes which are submitted at regular intervals, and a database that stores
+test results. In effect, SAM provides monitoring of grid services from a user
+perspective. 
+
+\TODO{More about SAM. How LB is integrated - LB sensors for SAM}
+
+
+\subsubsection{Nagios} 
+
+Nagios\footnote{\url{http://www.nagios.org}} is a host and service monitor
+designed to inform you of network problems before your clients, end-users or
+managers do.
+
+\TODO{More about Nagios. How LB is integrated - LB sensors for Nagios?}
+
+
+\subsubsection{ETICS}
+
+ETICS\footnote{\url{http://etics.web.cern.ch/etics/}} stands for
+"eInfrastructure for Testing, Integration and Configuration of Software". It
+provides a service to help software developers, managers and users to better
+manage complexity and improve the quality of their software. Using cutting
+edge Grid software and best practices, ETICS allows to fully automate
+the way your software is built and tested.
+
+Please see the ETICS User Manual \cite{etics_manual} for the description
+of the ETICS service and basic ETICS commands. The command to be issued to 
+test the whole \LB subsystem is:
+
+\begin{verbatim}
+   etics-test org.glite.lb
+\end{verbatim}
+
+It can be issued locally or using the remote build and test system.
+\TODO{More about ETICS testing}
+
+General ideas of \LB tests using ETICS are the following
+
+\begin{itemize}
+\item tests are in CVS together with the code
+
+\item tests run the service themselves on some nondefault ports and perform a set of 
+elementary actions similar to those from org.glite.testsuites.ctb/LB
+to test the basic functionality of the service which is stopped again at the 
+end of the test
+
+\end{itemize} 
+\TODO{More about LB tests for individual modules?}
