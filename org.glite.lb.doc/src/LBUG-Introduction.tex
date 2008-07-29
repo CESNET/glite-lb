@@ -75,7 +75,6 @@ see Sect.~\ref{local}.
 
 \subsection{Concepts}
 
-\TODO{ruda: typy jobu -- simple, dag, collection}
 
 \subsubsection{Jobs and events}
 To keep track of user jobs on the Grid, we first need some reliable
@@ -266,6 +265,20 @@ employing the above mentioned fault tolerance---despite a~delayed event
 cannot switch
 the major job state back
 it still may carry valuable information to update the job state attributes.
+
+% typy jobu
+Jobs monitored by \LB service may have different type. For gLite jobs, \LB supports
+simple jobs and jobs representing \emph{set of jobs} -- \emph{DAGs} (with dependencies between 
+subjobs described by direct acyclic graph) and \emph{collections} (without dependencies 
+between subjobs). 
+In these cases, subjobs are monitored in standard way, with one extensions - when job
+status is changed, information is propagated also to the job representing corresponding 
+collection or DAG.
+Job representing collection or DAG can be used to monitor status of the set, including
+information like how many subjobs is already finished etc.
+Support for non-gLite jobs, namely for PBS or Condor systems, is described in section
+\ref{sec:nonglite}.
+
 
 \subsubsection{Event ordering}%
 \label{evorder}
@@ -916,8 +929,7 @@ when RB decides where jobs get submitted.
 
 
 \subsubsection{Non-gLite event sources}
-\TODO{ruda: zminit, ze umime zpracovavat condorove a PBS joby; jsou i v appendixu v
-seznamu eventu, tak by se asi nekde zminit mely}
+\label{sec:nonglite}
 
 \LB has been enhanced to support also non-gLite events, namely events from PBS
 or Condor batch systems \cite{hpdc07}. These events are handeled differently from gLite events,
@@ -927,7 +939,8 @@ defined in \LB (see also Appendix \ref{a:jobstat}), events are processed separat
 from gLite events. Both PBS and Condor events has its own state machine that processes the
 events and determines the now state of the job.
 
-Recently, there were also attempts to use \LB system to track syslog messages. 
-For a detailed description see \cite{TODO:LB4syslog}.
+Recently, there were also attempts to use \LB system to transport different types of events: 
+Certificate Revocation Lists or syslog messages. For a detailed description see 
+\cite{LB4CRL}.
 
 
