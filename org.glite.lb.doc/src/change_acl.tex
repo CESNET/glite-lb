@@ -1,8 +1,7 @@
 \subsubsection{Example: Changing Job Access Control List}
 \label{e:change-acl}
-\TODO{Review if it is still correct - Dan?}
 
-In order to change ACL for a job a special event \verb'ChangeACL' is used. This
+In order to change an ACL for a job a special event \verb'ChangeACL' is used. This
 event can be logged by the job owner using the \verb'glite-lb-logevent' command
 (see also Sect.~\ref{glite-lb-logevent}). General template for changing the ACL
 is as follows:
@@ -31,7 +30,7 @@ where
 		     the ACL \\
 \end{tabularx}
 
-Adding a user specified by her subject name to the ACL (\verb'user_id' =
+Adding a user specified by his or her subject name to the ACL (\verb'user_id' =
 subject name, \verb'user_id_type' = 0, \verb'permission_type' = 0,
 \verb'operation' = 0):
 
@@ -42,7 +41,7 @@ glite-lb-logevent -e ChangeACL -s UserInterface -p --permission 1       \
         --user_id_type 0 --permission_type 0 --operation 0
 \end{verbatim}
 
-Removing a user specified by her subject name from the ACL (\verb'user_id' =
+Removing a user specified by his or her subject name from the ACL (\verb'user_id' =
 subject name, \verb'user_id_type' = 0, \verb'permission_type' = 0,
 \verb'operation' = 1):
 
