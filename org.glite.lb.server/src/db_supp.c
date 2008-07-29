@@ -103,9 +103,8 @@ int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
 		else 
 			syslog(LOG_INFO,"[%d]: DB deadlock detected. Rolling back transaction and retrying... \n",getpid());
 
-		edg_wll_Rollback(ctx);
 		edg_wll_ResetError(ctx);
-		return 1;
+		return !edg_wll_Rollback(ctx);
 	}
 	if (ret == EDG_WLL_ERROR_DB_LOST_CONNECTION) {
 		if (debug)
@@ -115,9 +114,8 @@ int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
 			syslog(LOG_INFO,"[%d]: Lost connection to DB. "
 				"Rolling back transaction and retrying... \n",getpid());
 
-		edg_wll_Rollback(ctx);
 		edg_wll_ResetError(ctx);
-		return 1;
+		return !edg_wll_Rollback(ctx);
 	} else if (ret==0) {
 		edg_wll_Commit(ctx); /* errors propagated further */
 		return 0;
