@@ -99,3 +99,8 @@ https://skurut68-2.cesnet.cz:9100/D1qbFGwvXLnd927JOcja1Q        Done /DC=cz/DC=c
 
 
 When you let notification client running several minutes without any incomming notification, it will finish and remove your registration from the server automatically. 
+
+6) Destroy notification
+  
+    GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 bin/glite-lb-notify \
+       drop https://skurut68-2.cesnet.cz:9100/D1qbFGwvXLnd927JOcja1Q
