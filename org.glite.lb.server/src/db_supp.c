@@ -18,6 +18,7 @@ int edg_wll_SetErrorDB(edg_wll_Context ctx) {
 	if (ctx->dbctx) {
 		code = glite_lbu_DBError(ctx->dbctx, NULL, &ed);
 		if (code == EDEADLOCK) code = EDG_WLL_ERROR_DB_TRANS_DEADLOCK;
+		if (code == ERESTART) code = EDG_WLL_ERROR_DB_LOST_CONNECTION;
 		edg_wll_SetError(ctx, code, ed);
 		free(ed);
 	} else {
@@ -95,11 +96,24 @@ int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
 	char *errd;
 
 	ret = edg_wll_Error(ctx,NULL,NULL);
+
 	if (ret == EDG_WLL_ERROR_DB_TRANS_DEADLOCK) {
 		if (debug)
 			printf("[%d]: DB deadlock detected. Rolling back transaction and retrying... \n",getpid());
 		else 
 			syslog(LOG_INFO,"[%d]: DB deadlock detected. Rolling back transaction and retrying... \n",getpid());
+
+		edg_wll_Rollback(ctx);
+		edg_wll_ResetError(ctx);
+		return 1;
+	}
+	if (ret == EDG_WLL_ERROR_DB_LOST_CONNECTION) {
+		if (debug)
+			printf("[%d]: Lost connection to DB. "
+				"Rolling back transaction and retrying... \n",getpid());
+		else 
+			syslog(LOG_INFO,"[%d]: Lost connection to DB. "
+				"Rolling back transaction and retrying... \n",getpid());
 
 		edg_wll_Rollback(ctx);
 		edg_wll_ResetError(ctx);

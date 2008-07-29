@@ -55,6 +55,7 @@ struct glite_lbu_DBContext_s {
 		int code;
 		char *desc;
 	} err;
+	int in_transaction;	/* this flag is set whenever we are in DB transaction */
 };
 
 
@@ -311,6 +312,7 @@ int glite_lbu_Transaction(glite_lbu_DBContext ctx) {
 	if (USE_TRANS(ctx)) {
 		if (glite_lbu_ExecSQL(ctx, "SET AUTOCOMMIT=0", NULL) < 0) goto err;
 		if (glite_lbu_ExecSQL(ctx, "BEGIN", NULL) < 0) goto err;
+		ctx->in_transaction = 1;
 	}
 err:
 	return STATUS(ctx);
@@ -322,6 +324,7 @@ int glite_lbu_Commit(glite_lbu_DBContext ctx) {
 	if (USE_TRANS(ctx)) {
 		if (glite_lbu_ExecSQL(ctx, "COMMIT", NULL) < 0) goto err;
 		if (glite_lbu_ExecSQL(ctx, "SET AUTOCOMMIT=1", NULL) < 0) goto err;
+		ctx->in_transaction = 0;
 	}
 err:
 	return STATUS(ctx);
@@ -333,6 +336,7 @@ int glite_lbu_Rollback(glite_lbu_DBContext ctx) {
 	if (USE_TRANS(ctx)) { 
 		if (glite_lbu_ExecSQL(ctx, "ROLLBACK", NULL) < 0) goto err;
 		if (glite_lbu_ExecSQL(ctx, "SET AUTOCOMMIT=1", NULL) < 0) goto err;
+		ctx->in_transaction = 0;
 	}
 err:
 	return STATUS(ctx);
@@ -495,7 +499,11 @@ int glite_lbu_ExecSQL(glite_lbu_DBContext ctx, const char *cmd, glite_lbu_Statem
 					break;
 				case CR_SERVER_LOST:
 				case CR_SERVER_GONE_ERROR:
-					if (retry_nr <= 0) 
+					if (ctx->in_transaction) {
+						ERR(ctx, ERESTART, db_handle.mysql_error(ctx->mysql));
+						return -1;
+					}
+					else if (retry_nr <= 0) 
 						do_reconnect = 1;
 					break;
 				case ER_LOCK_DEADLOCK:
