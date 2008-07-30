@@ -479,7 +479,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE_DATA(res, strict)) {
 				switch (e->enQueued.source) {
 					case EDG_WLL_SOURCE_NETWORK_SERVER:
-						if (!js->pub.jdl) {
+						if (!js->pub.jdl || e->enQueued.result == EDG_WLL_ENQUEUED_OK) {
 							rep(js->pub.jdl, e->enQueued.job);
 						}
 						break;
