@@ -134,5 +134,5 @@ _pad_	25
 @type Aborted		Aborted by system (at any stage).
 @type Cancelled		Cancelled by user.
 @type Unknown		Status cannot be determined.
-@type Purged		Job has been purged from bookkeeping server (for LB->RGMA interface).
+@type Purged		Job has been purged from bookkeeping server (for LB-RGMA interface).
 
