@@ -1,13 +1,34 @@
 \section{Troubleshooting}
 
-\TODO{ljocha}
+Please, report all bugs to EU EGEE Bug Tracking System located at
+\begin{center}
+\url{https://savannah.cern.ch/bugs/?func=additem&group=jra1mdw}
+\end{center}
 
+When submitting a \LB spcecific bug, the following information might be useful:
+\begin{itemize}
+\item description of the problem, the \verb'jobId', addresses of all relevant
+ machines (LB server, ...), environment variables set, etc.
+\item output from the following commands:
 \begin{verbatim}
-- is it documented how a user should submit a ticket/bug, e.g. what
-  information is useful to debug the problem?
-
-- co muze uzivatel udelat sam (vystup z jakych prikazu), 
-  co s pomoci administratora (odkaz do LBAG), apod.
-
-- kam poslat email, kde submitnout bug a pod.
+   glite-wms-job-status <jobId>
+   glite-wms-job-logging-info -v 3 <jobID>
 \end{verbatim}
+\item sometimes it can be useful also output from the commands
+\begin{verbatim}
+   glite-lb-job_status <jobId>
+   glite-lb-job_log <jobId>
+\end{verbatim}
+that should be available in the \verb'$GLITE_LOCATION/examples' directory,
+or command
+\begin{verbatim}
+   grid-proxy-info -debug
+\end{verbatim}
+\item appropriate excerpts from the logs on the server side are also highly appreciated, 
+please tell your administrator to look at the Troubleshooting section in LB Administrator's 
+Guide \cite{lbag} to follow the steps there and provide you the necessary information.
+\end{itemize}
+
+Users are encouradged to send developers all non-bugs comments and questions to email
+\email{egee-jra1@lindir.ics.muni.cz}.
+
