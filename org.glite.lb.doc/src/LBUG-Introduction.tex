@@ -221,7 +221,7 @@ See Appendix~\ref{a:jobstat} for a list of the individual states.
 % stavovy automat
 % obrazek: stavovy diagram
 
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[width=.6\hsize]{images/wms2-jobstat}
 \caption{\LB\ job state diagram}
@@ -314,7 +314,7 @@ Table~\ref{t:cefail} shows a~simplified example of the problem caused by delayed
 clocks. 
 \fi
 %
-\begin{table}[h]
+\begin{table}[ht]
 \begin{center}
 \begin{tabular}{rlrl}
 1.&WM: Accept&
@@ -366,7 +366,7 @@ Fig.~\ref{f:seqtree}.
 The approach is quite general---any finite pass through any state
 diagram (finite directed graph) can be encoded in this way.
 
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[scale=.833]{images/seqtree}
 \caption{Job state sequence in the CE failure scenario, arranged into a~tree.
@@ -484,7 +484,7 @@ The principal components of the \LB service and their interactions
 are shown in Figures~\ref{f:comp-gather} (gathering and transferring
 \LB events) and~\ref{f:comp-query} (\LB query and notification services).
 
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[scale=.5]{images/LB-components-gather}
 \caption{\LB components involved in gathering and transferring the events}
@@ -517,7 +517,7 @@ When WM receives the job back for resubmission,
 the CE counter becomes irrelevant (as the job control is on WM now),
 and the WM counter is incremented again.
 
-\begin{table}[h]
+\begin{table}[ht]
 \begin{center}
 \begin{tabular}{rlrl}
 1:x&WM: Accept&
@@ -600,7 +600,7 @@ usage and produce monitoring data based on the \LB information.
 
 
 \subsection{User interaction}
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[scale=.5]{images/LB-components-query}
 \caption{\LB queries and notifications}
@@ -637,12 +637,11 @@ Description of tools for event submission and ACL manipulation
 can be found in Section \ref{s:lb-tools}.
 
 
-\subsubsection{Retrieving information}
+\subsubsection{Querying information}
+%\TODO{prejmenovat, aby v nazvy byly Queries}
 
-\TODO{prejmenovat, aby v nazvy byly Queries}
-
-From the user point of view, the information retrieval is the most
-important interaction with the \LB service.
+From the user point of view, the information retrieval (\emph{query}) is the
+most important interaction with the \LB service.
 
 %dotazy na stav
 The typical \LB usage are queries on the high-level job state information.
@@ -774,7 +773,7 @@ to our goal to handle one million of jobs per day.  The first line
 indicates how fast we are able to ``generate'' events in the feeding
 program. 
 
-\begin{table}[h]
+\begin{table}[ht]
 \begin{tabular}{l|r}
 {\bf Component} & {\bf Job throughput (jobs/day)} \\
 \hline

@@ -14,4 +14,6 @@ for my $stat ($status->getTypesOrdered) {
         }
 @@@}
 \end{tabularx}
+
 \endinput
+
