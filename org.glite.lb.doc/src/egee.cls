@@ -2,64 +2,6 @@
 %
 % $Id$
 %
-% $Log$
-% Revision 1.1.1.1  2007/11/13 17:42:10  jpospi
-% initial import
-%
-% Revision 1.13  2004/08/31 19:24:27  szamsu
-% Fixing overfull problem in page headers. Saving the logo and reusing it later, instead of loading in again.
-%
-% Revision 1.12  2004/08/09 14:03:54  szamsu
-% proper IST number
-%
-% Revision 1.11  2004/08/03 17:02:21  szamsu
-% Information Society Infrastrcutures logo replacing the old IST logo
-%
-% Revision 1.10  2004/08/03 13:34:37  szamsu
-% Removed 'compat2' option on geometry, because it has also specified
-% 'scale{0.8,0.9}' for page size, which we define otherwise. Added the
-% 'centering' and 'includeheadfoot' options, which were defined in
-% 'compat2'.
-%
-% Revision 1.9  2004/07/09 16:06:52  leanne
-% Removed the Lead partner which is not used in egee
-%
-% Revision 1.8  2004/06/03 09:56:11  leanne
-% removed lead partner
-
-% Revision 1.8  2004/06/03 09:56:11  diana
-% updated the front page
-%
-% Revision 1.7  2004/05/26 09:38:55  leanne
-% Removed DocumentLink in pdfinfo - it was causing errors
-%
-% Revision 1.6  2004/05/26 08:36:58  leanne
-% Updated IST number in template
-%
-% Revision 1.5  2004/05/24 13:25:04  diana
-% added template for egee latex documents
-%
-% Revision 1.4  2004/05/17 10:56:51  diana
-% added compat2 option to geometry and hypertex option to hyperref to get logo and links back on the page
-%
-% Revision 1.3  2004/02/18 18:08:48  leanne
-% Modified Document identifiers to mauch the EGEE Word templates
-%
-% Revision 1.2  2004/02/18 17:23:21  leanne
-% Changed Work Package to Activity. Included definition of Document Link.
-%
-% Revision 1.1.1.1  2004/02/18 11:17:44  leanne
-% Initial version of EGGE LaTeX Style files based on the EDG LaTeX Style
-%
-%
-% Revision 1.0 2004/02/17 leanne
-% Took the datagrid.cls file and modified it for the EGEE project
-% Original Authors:
-%  Frohner Akos <Akos.Frohner@cern.ch>
-%  Diana Bosio <diana.bosio@cern.ch>
-%  Paul Millar <paulm@physics.gla.ac.uk>
-%  Thanks are due to Norman Gray
-%
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{egee}[2002/06/20 EGEE LaTeX Class]
 \typeout{EGEE LaTeX class -- 2002/06/13  Rock Lobster!}
@@ -121,7 +63,7 @@
 \ifpdf
         \usepackage[pdftex,
                 pdfpagemode={UseOutlines},bookmarks=true,bookmarksopen=true,
-                bookmarksopenlevel=0,bookmarksnumbered=true,
+                bookmarksopenlevel=2,bookmarksnumbered=true,
                 hypertexnames=false,colorlinks,linkcolor={blue},
                 citecolor={blue},urlcolor={red},
                 pdfstartview={FitV}]{hyperref}
@@ -183,7 +125,7 @@
 
 \def\ps@title{%
   \@defaultfooter
-  \def\@oddhead{\hbox to \textwidth{\LargeEGEELogo\hfil\ISTLogo}}
+  \def\@oddhead{\hbox to \textwidth{\LargeEGEELogo\hfil\CESNETLogo\hfil\ISTLogo}}
 }
 
 \def\ps@headings{%
@@ -280,7 +222,8 @@
 \hbox{}% Force top of page
 \vfill
 {\centering
-        \Huge\bf\textsf{\textcolor{blue}{EGEE}}\\[20mm]%
+%        \Huge\bf\textsf{\textcolor{blue}{EGEE}}\\[20mm]%
+	\gLiteLogo\\[20mm]%
         \LARGE\sc\textsf{\bf \@title}\\[5mm]%
         \ifx\@Subtitle\@empty\else
             \normalsize\textsf{\@Subtitle}\\[10mm]%
@@ -365,6 +308,8 @@
 \def\EGEELogo{\usebox{\@EGEELogo}}
 \def\LargeEGEELogo{\includegraphics[height=\headheight]{egee}}
 \def\ISTLogo{\includegraphics[height=\headheight]{isi}}
+\def\gLiteLogo{\includegraphics[width=0.6\textwidth]{glite}}
+\def\CESNETLogo{\includegraphics[height=\headheight]{cesnet}}
 
 %
 % parameters to be supplied by the author
