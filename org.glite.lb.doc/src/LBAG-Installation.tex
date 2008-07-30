@@ -142,19 +142,39 @@ transakce
 \label{inst:superusers}
 
 Certain administrative operations (identified below when appropriate) on \LB
-server are privileged and special authorization is required to invoke them.  By
-default, the \LB server identity (X509 certificate subject name) is considered
-privileged.  Additional administrator identitites can be specified in a
-\emph{superusers file}, specified by the \verb'--super-users-file' server
-option.  A client is granted superuser privileges if they present credentials
-matching the superusers specifications in the file.  The file consists of one
-or more lines, each one containing either a subject name or VOMS attribute(s)
-in the FQAN format (in the latter case the line must start with \verb'FQAN:').
-After changing the file, the server has to be restarted. 
+server are privileged and special authorization is required to invoke them.
+Privileged user can also access job data owned by other users, bypassing the
+standard \LB access control mechanisms.  By default, the \LB server identity
+(X509 certificate subject name) is considered privileged.  Additional
+administrator identitites can be specified in a \emph{superusers file},
+specified by the \verb'--super-users-file' server option.  A client is granted
+superuser privileges if they present credentials matching the superusers
+specifications in the file.  The file consists of one or more lines, each one
+containing either a subject name or VOMS attribute(s) in the FQAN format (in
+the latter case the line must start with \verb'FQAN:').  Note that VOMS anchors
+must be configured properly on the \LB machine when FQANs are used.  After
+changing the file, the server has to be restarted. 
 
 The default startup script checks for existence of 
 /opt/glite/etc/LB-super-users and uses it eventually.
 
+\subsubsection{Authorization of event originators}
+\LBold allowed anyone possessing a trusted digital certificate to send an
+arbitrary event to the \LB server. While enabling an easy setup, such an
+arrangement does not comply with some contemporary requirements, \eg job
+traceability, since the data could be distorted by a malicious user.  In order
+to strengthen trustworthiness of data provided, the \LBnew server has
+introduced an authorization mechanism to control the originators of events.
+The authorization model presumes a set of trusted components that are only
+allowed to send some types of events, while other types can be logged by any
+user. Being based on the LCAS schema~\cite{lcas}, the authorization mechanism
+allows to make use standard LCAS plugins, \eg to ban particular users or limit
+the service to a specific virtual organization. The \LB server is shipped with
+an LCAS plugin providing more fine-grained access control based on event types.
+
+The LCAS-based authorization must be enabled in the \LB configuration.
+
+\TODO{policy format}
 
 \subsubsection{Notification delivery}
 
