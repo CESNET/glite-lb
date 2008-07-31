@@ -1,6 +1,13 @@
 \section{Maintenance}
 
-\subsection{\LB server}
+\subsection{Changing default settings}
+All configurable settings of the \LB daemons (network and local sockets, 
+file paths, modified behaviour etc.) can be set with specific command line
+options.
+In the following only relevant options are discussed whenever appropriate.
+See specific manual pages for complete reference.
+
+\subsection{\LB server and proxy}
 
 This section deals with several typical but more peculiar tasks
 that need more verbose description.
@@ -20,7 +27,12 @@ Then verbose log \$GLITE\_LOCATION\_VAR/lb.log
 Beware that these can grow huge easily.
 \end{sloppypar}
 
+\textbf{\LBold only:} not available for \LB proxy, \verb'-d' and output redirection
+have to be added manually if necessary.
+
 \subsubsection{Changing index configuration}
+
+\LB server only (\LB proxy database is neither so huge nor accessed directly by users).
 
 % full-scan skodi, LB se tomu brani
 Inefficient queries, yielding full scan of \LB database tables (up to millions of tuples) would degrade server performance.
@@ -105,7 +117,7 @@ user & \emph{arbitrary} & arbitrary user tag \\
 
 % super user muze vsechno
 
-\subsubsection{Multiple server instances}
+\subsubsection{Multiple instances}
 
 % lze to, i nad jednou databazi, zadna automaticka podpora
 
@@ -126,7 +138,14 @@ one another, \eg a~job \url{https://my.machine:9000/xyz} cannot be queried
 as \url{https://my.machine:8000/xyz}.
 However, due to implementation internals, the second job cannot be registered.}.
 
+Though it may have little sense to run multiple \LB proxy instances, it is possible too.
+Non-default listening socket have to be specified via \verb'-p' option then.
+
+
+
 \subsubsection{Backup dumps}
+
+\LB server only, not supported by proxy.
 
 (This functionality should not be confused with per-job dumps, Sect.~\ref{inst:purge} and \ref{run:purge}.)
 
@@ -218,7 +237,15 @@ environment variable.
 Sometimes hardcoded server-side timeout can be still reached. In either case the
 server fails to return a correct response to the client but the purge is done anyway. 
 
-\textbf{\LBnew only}: option \verb'-x' allows purging \LB proxy database too.
+\LB proxy purges jobs automatically when they reach a~state ensuring that WMS will
+neither query nor log events to them anymore.
+Therefore routine purging is not required theoretically.
+However, frozen jobs which never reach such a~state may occur in an unstable environment,
+and they may cumulate in \LB proxy database for ever.
+Therefore occasional purging is recommended too.
+\LBnew supports \verb'-x' option of \verb'glite-lb-purge', allowing
+to purge \LB proxy database too.
+With \LBold the emergency purge procedure described bellow is the only option.
 
 \paragraph{Emergency purge}
 
@@ -402,10 +429,10 @@ The command \verb'glite-lb-job_status' is a low level query program that can be
 found in the \verb'glite-lb-client' package among examples.
 
 
-\subsection{\LB proxy}
+%\subsection{\LB proxy}
 
-\TODO{ljocha}
-Purge zamrzlych jobu (overit v kodu, na ktere verzi to mame )
+%\TODO{ljocha}
+%Purge zamrzlych jobu (overit v kodu, na ktere verzi to mame )
 
 
 \subsection{\LB logger}
