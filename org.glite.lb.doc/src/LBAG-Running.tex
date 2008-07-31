@@ -214,10 +214,9 @@ Server superuser privileges (see section~\ref{inst:superusers}) are required to 
 If the server database has already grown huge, the purge operation can take
 rather long and hit the \LB server operation timeout. At client side, \ie the
 glite-lb-purge command, it can be increased by setting GLITE\_WMS\_QUERY\_TIMEOUT
-environment variable. \TODO{mozna zminit, ze i po tom timeoutu bezi purge dal?}
-
-Sometimes hardcoded server-side timeout can be still reached; in this case the
-server fails to return a correct response but the purge is done anyway. 
+environment variable.
+Sometimes hardcoded server-side timeout can be still reached. In either case the
+server fails to return a correct response to the client but the purge is done anyway. 
 
 \textbf{\LBnew only}: option \verb'-x' allows purging \LB proxy database too.
 
@@ -297,7 +296,64 @@ wiki page:
 \subsubsection{On-line monitoring and statistics}
 
 \paragraph{CE reputability rank}
-\TODO{ljocha}
+
+Rather frequent problem in the grid production are ``black hole'' sites (Computing Elements).
+Such a~site declares itself to have an empty queue, therefore schedulers usually prefer sending
+jobs there. The site accepts the job but it fails there immediately.
+In this way large number of jobs can be swallowed, affecting the overall success rate
+(namely for non-resubmittable jobs).
+
+\LB data as a~whole contain enough information to detect such sites.
+However, due to the primary per-job structure certain reorganization is required.
+
+A~job is always assigned to a~\emph{group} according to
+the CE where it is executed (cf.\ ``destination'' job state attribute).
+Similarly to RRDtool\footnote{\url{http://oss.oetiker.ch/rrdtool/}}
+for each recently active group (CE),
+and for each job state (Ready, Scheduled, Running, Done/OK, Done/Failed),
+a~fixed sized series of counters is maintained.
+At time $t$, the counters cover intervals $[t-T,t]$, $[t-2T,t-T]$, \dots
+where $T$ a~fixed interval size.
+Whenever a~job state changes, the series matching the group and new state
+is shifted eventually (dropping its expired tail), and the current counter
+is incremented.
+In addition, multiple series for different $T$ values (\ie covering different
+total times) are available. 
+
+% API
+The data are available via statistics calls of the client API,
+see \verb'statistics.h' for details (coming with glite-lb-client in \LBnew,
+glite-lb-client-interface in \LBold).
+The call specifies the group and job state of interest, as well as queried
+time interval.
+The interval is fitted to the running counter series as accurately as possible,
+and the average number of jobs per second which entered the specific state for
+the given group is computed.  The resolution ($T$) of the used counters is also
+returned.
+
+\begin{sloppypar}
+% successFraction(CEId) classad gLite 3.1 WMS, nedokumentovana, netestovana
+In gLite 3.1 WMS the calls can be accessed from inside of the matchmaking process
+via \verb'successFraction(CEId)'
+JDL function.
+The function computes the ratio of successful vs.\ all jobs for a~given CE,
+and it can be directly used to penalize detected black hole CEs in the ranking
+JDL expression.
+\end{sloppypar}
+
+
+% zapnuti na serveru, volatilita, privilegia
+The functionality is enabled with \verb'--count-statistics' \LB server option
+(disabled by default).
+
+The gathered information is currently not persistent, it is lost when the server is stopped.
+Despite the statistics call API is defined in a~general way, the implementation is
+restricted to a~hardcoded configuration of a~single grouping criterion (the destination),
+and a~fixed set of counter series (60 counters of $T=10s$, 30 of 1 minute, and 12 of 15 minutes).
+The functionality has not been very thoroughly tested yet.
+
+% omezeni implementace: hardcoded konfigurace, jen Rate, neprilis dukladne testovane
+
 
 
 \paragraph{glite-lb-mon} is a program for monitoring the number of jobs on the
