@@ -14,7 +14,7 @@
 /* where Z.XX is version from indent + 1 (version after commit), Y = Z+1 */
 /* and DESCRIPTION is short hit why version changed		*/
 
-#define INTSTAT_VERSION "revision 2.4 - proxy merge"
+#define INTSTAT_VERSION "revision 2.5 - proxy merge"
 
 
 // Internal error codes 

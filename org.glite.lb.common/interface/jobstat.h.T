@@ -184,6 +184,16 @@ extern edg_wll_JobStatCode edg_wll_StringToStat(const char *);
  */
 extern char *edg_wll_StatToString(edg_wll_JobStatCode);
 
+/**
+ * Convert string Job Wrapper status to numeric code.
+ */
+extern enum edg_wll_StatJw_status edg_wll_StringToJWStat(const char *);
+
+/** 
+ * Convert numeric Job Wrapper status code to string representation
+ */
+extern char *edg_wll_JWStatToString(enum edg_wll_StatJw_status);
+
 /*@}*/
 
 /*

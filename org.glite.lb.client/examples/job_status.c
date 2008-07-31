@@ -11,6 +11,7 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/consumer.h"
 #include "glite/lb/xml_conversions.h"
+#include "glite/lb/jobstat.h"
 
 static void dgerr(edg_wll_Context,char *);
 static void printstat(edg_wll_JobStat,int);
@@ -295,6 +296,7 @@ static void printstat(edg_wll_JobStat stat, int level)
                         printf("%s\t%s \n", ind, stat.user_fqans[i]);
         }
 	printf("%ssandbox_retrieved : %d\n", ind, stat.sandbox_retrieved);
+	printf("%sjw_status : %s\n", ind, edg_wll_JWStatToString(stat.jw_status));
 
 	/* PBS state section */
 	if (stat.jobtype == EDG_WLL_STAT_PBS) {

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "glite/lb/jobstat.h"
+#include "jobstat.h"
 
 static const struct timeval null_timeval = {0,0};
 
@@ -170,3 +170,35 @@ char *edg_wll_StatToString(edg_wll_JobStatCode statCode)
         if ((int)statCode < 0 || statCode >= sizeof(statNames)/sizeof(statNames[0])) return (char *) NULL; 
         return strdup(statNames[statCode]);
 }
+
+static const char * const jw_statNames[] = {
+@@@{
+                my $f = selectField $status jw_status;
+                if ($f->{codes}) {
+                        for (@{$f->{codes}}) {
+                                my $lc = lc $_->{name};
+				my $uc = ucfirst $lc;
+                                gen qq{
+!       "$uc",
+}; 
+                        } 
+                }
+@@@}
+};
+
+enum edg_wll_StatJw_status edg_wll_StringToJWStat(const char *name)
+{
+        unsigned int     i;
+
+        for (i=0; i<sizeof(jw_statNames)/sizeof(jw_statNames[0]); i++)
+                if (strcasecmp(jw_statNames[i],name) == 0) return (enum edg_wll_StatJw_status) i;
+        return (enum edg_wll_StatJw_status) -1; 
+}
+
+char *edg_wll_JWStatToString(enum edg_wll_StatJw_status statCode)
+{
+        if ((int)statCode < 0 || statCode >= sizeof(jw_statNames)/sizeof(jw_statNames[0])) return (char *) NULL; 
+        return strdup(jw_statNames[statCode]);
+}
+
+

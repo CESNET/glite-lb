@@ -91,6 +91,11 @@ int	sandbox_retrieved	Flag is set on incomming Clear event
 	_code_	USER		User retrieved output sandbox.
 	_code_	TIMEOUT		Timed out, resource forced purge of the sandbox.
 	_code_	NOOUTPUT	No output was generated.
+int	jw_status		Status of Job wrapper
+	_code_	UNKNOWN		Status of JW unknown
+	_code_	WRAPPER_RUNNING Wrapper started
+	_code_	PAYLOAD_RUNNING Payload running
+	_code_	DONE		JW finished
 
 _pad_	55
 

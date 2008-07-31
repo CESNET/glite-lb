@@ -510,6 +510,7 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_string(ret, stat->ui_host);
 	if (ret) ret = enc_strlist(ret, stat->user_fqans);
 	if (ret) ret = enc_int(ret, stat->sandbox_retrieved);
+	if (ret) ret = enc_int(ret, stat->jw_status);
 	if (ret) ret = enc_string(ret, stat->pbs_state);
 	if (ret) ret = enc_string(ret, stat->pbs_queue);
 	if (ret) ret = enc_string(ret, stat->pbs_owner);
@@ -594,6 +595,7 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->ui_host = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->user_fqans = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->sandbox_retrieved = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->jw_status = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_state = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_queue = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_owner = dec_string(tmp_in, &tmp_in);
