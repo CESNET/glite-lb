@@ -8,7 +8,7 @@ In this section we describe tests from layers 1 (service ping tests),
 
 
 \subsection{Tests if services are up and running}
-\TODO{how?}
+\TODO{how? remote vs. local tests}
 
 \begin{verbatim}
 org.glite.testsuites.ctb/LB/lb-l1.sh now does the following:
@@ -20,25 +20,22 @@ What needs to be done:
 - how test scripts should be told to test such a service on such a (nondefualt) port?
 - test GSI credentials
 - do a GSI testSocket? hand-shake? 
-- maybe call a logevent with INTERNAL msg type?
+- maybe call a logevent with INTERNAL msg type? -> belongs to level 2
 - move all common parts to functions.sh and write individual test scripts for each daemon:
 \end{verbatim}
 
-\subsubsection{Local-logger}
-\TODO{ping, check binaries, check if enough disk capacity is free for dglog* files, 
-check GSI credentials, gsi-connect?, log an internal msg?, ...} 
-
-\subsubsection{Inter-logger}
-\TODO{ping, check binaries, check if enough disk capacity is free for dglog* files, socket-connect?,
-check GSI credentials, fake an internal msg to the dglog* direcotry?, ...} 
+\subsubsection{logger (local \& inter)}
+\TODO{
+remote: ping, check binaries on monitoring machine, check GSI credentials, gsi-connect?;
+local: check if enough disk capacity is free for dglog* files 
+il: check binaries, check if enough disk capacity is free for dglog* files, socket-connect? }
 
 \subsubsection{Server}
-\TODO{ping, check binaries, check MySQL (running, accessible, enough disk capacity, ...), 
-check GSI credentials, gsi-connect?, socket-connect?, log an internal msg?,
-WS getVersion?, HTTP-connect?, check if enough disk capacity is free for dumps?, ...}
-
-\subsubsection{Notification inter-logger}
-\TODO{ping, check binaries, check GSI credentials, gsi-connect?, send some fake notification?, ...}
+\TODO{
+monitoring machine prerequisities: check binaries, check GSI credentials,
+remote: ping, tcp-connect, ssl-connect, WS getVersion, 
+local: check MySQL (running, accessible, enough disk capacity, ...), socket-connect?, check if enough disk capacity is free for dumps?, ...
++Notification inter-logger: jako u il}
 
 
 \subsection{Event delivery}
@@ -61,6 +58,7 @@ What needs to be done:
 % locallogger
 % bez dalsich demonu, registrovat job, vrati EAGAIN, objevi se fajly
 \subsubsection{Standalone locallogger -- job registration}
+\TODO{registrace uz nejde pres LL}
 \label{reg}
 \req\ running \path{glite-lb-logd} on the test node, don't start either
 \path{glite-lb-interlogd} or \path{glite-lb-bkserverd}
@@ -120,6 +118,7 @@ format as the locallogger files.
 % event delivery
 % poslat .sh, job log vrati to, co bylo ve fajlech
 \subsubsection{Normal event delivery}
+\TODO{na zacatek sekce}
 \label{normal}
 \req\ all \LB\ daemons running (\path{glite-lb-logd}, \path{glite-lb-interlogd},
 \path{glite-lb-bkserverd}
@@ -152,6 +151,7 @@ They can be grabbed and used for comparing the events as in~\ref{recover}.
 % normal event delivery & job state machine
 % .sh, dotaz na stav
 \subsubsection{Normal job states}
+\TODO{projit vsechny stavy}
 \label{state}
 \req\ \path{glite-lb-bkserverd} running, events from \ref{normal} logged.
 
@@ -166,13 +166,15 @@ events (e.g. destination computing element) wrt. the values reported in the job 
 in the job state same as the `*' part of the script name.
 \end{hints}
 
-\subsubsection{DAG job states}
-\TODO{}
+\subsubsection{Non-simple job states}
+\TODO{dagy, kolekce, ...}
 % specialni stav DAGu, histogram potomku
 
 
 
 \subsection{LB proxy}
+\TODO{logovani pridat do Event delivery, ptani se na stavy pridat do Normal job states,
+zde resit mizeni jobu z proxy, Milos: kombinovany test na server-proxy}
 \req\ running \path{glite-lb-proxy}, \path{glite-lb-interlogd} and
 \path{glite-lb-bkserverd}
 
@@ -194,6 +196,7 @@ above mentioned scripts \path{glite-lb-*.sh} (they are called from
 
 
 \subsection{WS interface}
+\TODO{fila: ws example + html example}
 \req\ \path{glite-lb-bkserverd} running, events from \ref{normal} logged
 
 \how\ retrieve both events and job states with the \LB\ WS interface
@@ -209,8 +212,11 @@ the same form as e.g. \path{glite-lb-jobstat}.
 \end{hints}
 
 
+\subsection{Change ACL}
+\TODO{dan: pozdeji - s novym auth. schematem. dopsat TODO jak}
 
 \subsection{Notifications}
+\TODO{doplnit nove optiony}
 
 % notifikace 
 % regjob, reg notifikace na vsechno, poslat udalosti, hlidat notif
@@ -291,6 +297,7 @@ immediately.
 
 
 \subsection{Server purge}
+\TODO{ljocha, valtri: ozivit skript i text}
 
 \textbf{WARNING: This test is destructive, it destroys ALL data in an
 existing \LB\ database.} 
