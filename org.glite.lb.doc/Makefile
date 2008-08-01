@@ -90,8 +90,7 @@ LBUG.pdf: ${COMMON} \
 	LBUG.tex \
 	LBUG-Abstract.tex \
 	LBUG-Introduction.tex components.tex \
-	LBUG-Tools.tex logevent.tex notify.tex \
-	LBUG-UseCases.tex log_usertag.tex change_acl.tex \
+	LBUG-Tools.tex logevent.tex notify.tex log_usertag.tex change_acl.tex \
 	LBUG-Troubleshooting.tex \
 	LBUG-Appendix.tex events.tex status.tex 
 
