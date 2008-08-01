@@ -8,6 +8,9 @@ version=0.0.0
 PREFIX=/opt/glite
 
 -include Makefile.inc
+-include ../project/version.properties
+
+version=${module.version}
 
 VPATH = ${top_srcdir}/src
 # example source code is part of the org.glite.lb.client
@@ -24,7 +27,7 @@ INSTALL=install
 
 default all: generate doc
 
-generate: events.tex status.tex
+generate: events.tex status.tex ver.tex
 
 doc: LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf
 
@@ -48,6 +51,9 @@ doc: LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
 
+ver.tex:
+	@echo "\def\version{${version}}" > ver.tex
+
 stage: doc
 	$(MAKE) install PREFIX=${stagedir}
 
@@ -66,18 +72,19 @@ install:
 	done
 
 clean:
-	rm -rvf LBUG* LBAG* LBDG* LBTP* events.tex status.tex comment*
+	rm -rvf LBUG* LBAG* LBDG* LBTP* events.tex status.tex ver.tex comment*
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 
 # dependencies:
 
-COMMON:= copyright.tex \
+COMMON:=copyright.tex \
 	definitions.tex \
 	egee.cls \
 	frontmatter.tex \
 	lbjp.bib \
-	versions.tex
+	versions.tex \
+	ver.tex
 
 LBUG.pdf: ${COMMON} \
 	LBUG.tex \
