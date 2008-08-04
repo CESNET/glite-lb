@@ -543,6 +543,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		case EDG_WLL_EVENT_RUNNING:
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_RUNNING;
+				js->pub.jw_status = EDG_WLL_STAT_WRAPPER_RUNNING;
 				free(js->pub.location);
 				js->pub.location = location_string(
 						edg_wll_SourceToString(EDG_WLL_SOURCE_LRMS),
@@ -605,6 +606,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 						rep(js->last_branch_seqcode,js->last_seqcode);
 				}
 
+				js->pub.jw_status = EDG_WLL_STAT_PAYLOAD_RUNNING;
 				js->pub.payload_running = 1;
 				load_branch_state(js);
 			}
@@ -682,10 +684,14 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (e->any.source == EDG_WLL_SOURCE_LRMS) {
 				/* Done from JobWrapper is not sufficient for transition
 				 * to DONE state according its current definition */
+				if (USABLE(res, strict)) {
+					js->pub.jw_status = EDG_WLL_STAT_DONE;
+				}
 				break;
 			}
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_DONE;
+				js->pub.jw_status = EDG_WLL_STAT_DONE;
 				rep(js->pub.reason, e->done.reason);
 				if (fine_res == RET_GOODBRANCH) {
 					js->pub.payload_running = 0;
@@ -904,6 +910,13 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			js->pub.stateEnterTime = js->pub.lastUpdateTime;
 			js->pub.stateEnterTimes[1 + js->pub.state]
 				= (int)js->pub.lastUpdateTime.tv_sec;
+
+			/* in case of resubmit switch JW status back to unknown */
+			if (js->pub.state  == EDG_WLL_JOB_WAITING || 
+			    js->pub.state == EDG_WLL_JOB_READY ||
+			    js->pub.state ==  EDG_WLL_JOB_SCHEDULED) {
+				js->pub.jw_status = EDG_WLL_STAT_UNKNOWN;
+			}
 		}
 		if (e->any.type == EDG_WLL_EVENT_CANCEL) {
 			rep(js->last_cancel_seqcode, e->any.seqcode);
