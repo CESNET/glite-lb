@@ -185,7 +185,7 @@ int main(int argc,char **argv)
 				if (sock >= 0) { usage("bind"); return EX_USAGE; }
 				fake_addr = optarg; break;
 			case 't':
-				valid = atol(optarg); break;
+				valid = time(NULL) + atol(optarg); break;
 			default:
 				usage("bind"); return EX_USAGE;
 		}
@@ -219,7 +219,7 @@ int main(int argc,char **argv)
 			case 'f':
 				field_arg = optarg; break;
 			case 't':
-				valid = atol(optarg); break;
+				valid = time(NULL) + atol(optarg); break;
 			default:
 				usage("receive"); return EX_USAGE;
 		}
@@ -340,7 +340,7 @@ receive_err:
 
 		while ((c = getopt(argc-1,argv+1,"t:")) > 0) switch (c) {
 			case 't':
-				valid = atol(optarg); break;
+				valid = time(NULL) + atol(optarg); break;
 			default:
 				usage("refresh"); return EX_USAGE;
 		}
