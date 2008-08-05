@@ -686,6 +686,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				 * to DONE state according its current definition */
 				if (USABLE(res, strict)) {
 					js->pub.jw_status = EDG_WLL_STAT_DONE;
+					js->pub.payload_running = 0;
 				}
 				break;
 			}
