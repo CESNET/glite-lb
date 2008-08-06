@@ -61,35 +61,38 @@ glite/lb/producer.h & Prototypes for all event logging functions. \\
 \end{table}
 
 \subsubsection{Context parameters}
-The table\ref{t:pcontext} summarizes context parameters relevant to the
+The table~\ref{t:pcontext} summarizes context parameters relevant to the
 event logging. If  parameter is not set in the context explicitly, the
 \LB\ library will search for value of corresponding environment
 variable. The symbolic C names should be prepended with
 \verb'EDG_WLL_PARAM_' prefix, \ie\ \verb'EDG_WLL_PARAM_HOST'.
 
 \begin{table}[h]
-\begin{tabularx}{\textwidth}{llX}
-{\bf Name: Type}  & {\bf Env. variable} & {\bf Description} \\
+\begin{tabularx}{\textwidth}{lX}
+{\bf Name} & {\bf Description} \\
 \hline
-\lstinline'HOST': \lstinline'char*' & & Hostname that appears as event origin. \\
-\lstinline'SOURCE': \lstinline'edg_wll_Source' & & Event source component. \\
-\lstinline'DESTINATION': \lstinline'char*' & \lstinline'GLITE_WMS_LOG_DESTINATION' & Hostname of machine running
-locallogger/interlogger. \\
-\lstinline'DESTINATION_PORT': \lstinline'int' &
-\lstinline'GLITE_WMS_LOG_DESTINATION' Port the locallogger is
-listening on. \\
-\lstinline'LOG_TIMEOUT': \lstinline'struct timeval' &
-\lstinline'GLITE_WMS_LOG_TIMEOUT' & Logging timeout for asynchronous
-logging. \\
-\lstinline'LOG_SYNC_TIMEOUT': \lstinline'struct timeval' &
-\lstinline'GLITE_WMS_LOG_SYNC_TIMEOUT' & Logging timeout for
-synchronous logging. \\
-\lstinline'LBPROXY_STORE_SOCK': \lstinline'char*' &
-\lstinline'GLITE_WMS_LBPROXY_STORE_SOCK' & \LB\ Proxy store socket
-path (if logging through \LB\ Proxy) \\
-\lstinline'LBPROXY_USER': \lstinline'char*' &
-\lstinline'GLITE_WMS_LBPROXY_USER' & Certificate subject of the user
-(if logging through \LB\ proxy). \\
+\lstinline'HOST' & Hostname that appears as event origin. \par {\it
+Type: \lstinline'char*'} \par {\it Environment: } \\
+\lstinline'SOURCE'  & Event source component. \par {\it Type:
+\lstinline'edg_wll_Source'} \par {\it Environment: } \\
+\lstinline'DESTINATION'  &  Hostname of machine running
+locallogger/interlogger. \par {\it Type: \lstinline'char*'} \par {\it
+Environment: \lstinline'GLITE_WMS_LOG_DESTINATION'} \\ 
+\lstinline'DESTINATION_PORT' & Port the locallogger is listening
+on. \par {\it Type: \lstinline'int'} \par {\it Environment:
+\lstinline'GLITE_WMS_LOG_DESTINATION'} \\ 
+\lstinline'LOG_TIMEOUT'  & Logging timeout for asynchronous
+logging. \par {\it Type: \lstinline'struct timeval'} \par {\it
+Environment: \lstinline'GLITE_WMS_LOG_TIMEOUT'} \\ 
+\lstinline'LOG_SYNC_TIMEOUT'  & Logging timeout for synchronous
+logging. \par {\it Type: \lstinline'struct timeval'} \par {\it
+Environment: \lstinline'GLITE_WMS_LOG_SYNC_TIMEOUT'} \\
+\lstinline'LBPROXY_STORE_SOCK'  & \LB\ Proxy store socket
+path (if logging through \LB\ Proxy) \par {\it Type:
+\lstinline'char*'} \par {\it Environment: \lstinline'GLITE_WMS_LBPROXY_STORE_SOCK'} \\ 
+\lstinline'LBPROXY_USER' & Certificate subject of the user (if logging
+through \LB\ proxy). \par {\it Type: \lstinline'char*'} \par {\it
+Environment: \lstinline'GLITE_WMS_LBPROXY_USER'} \\
 \end{tabularx}
 \caption{Producer specific context parameters}
 \label{t:pcontext}
