@@ -5,9 +5,12 @@
 #include <string.h>
 #include <errno.h>
 
-#include "glite/jobid/cjobid.h"
+/*headers*/
+#include "glite/jobid/cjobid.h" 
 #include "glite/lb/events.h"
-#include "glite/lb/producer.h"
+#include "glite/lb/producer.h" 
+/*end headers*/
+
 
 static struct option opts[] = {
 	{"help",		0,	NULL,	'h'},
@@ -63,24 +66,28 @@ int main(int argc, char *argv[])
 
 	if ( (errno = edg_wlc_JobIdParse(jobid_s, &jobid)) ) { perror(jobid_s); return 1; }
 
+	/*context*/
 	edg_wll_InitContext(&ctx);
-
+	
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_SOURCE, EDG_WLL_SOURCE_USER_INTERFACE);
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_HOST, server);
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_PORT, port);
+	/*end context*/
 
+	/*sequence*/
 	if (edg_wll_SetLoggingJob(ctx, jobid, seq_code, EDG_WLL_SEQ_NORMAL)) {
 		char 	*et,*ed;
 		edg_wll_Error(ctx,&et,&ed);
 		fprintf(stderr,"SetLoggingJob(%s,%s): %s (%s)\n",jobid_s,seq_code,et,ed);
 		exit(1);
 	}
+	/*end sequence*/
 
-	err = edg_wll_LogEvent(ctx,
+	/*log*/
+	err = edg_wll_LogEvent(ctx, //* \label{l:logevent}
 			       EDG_WLL_EVENT_USERTAG, 
 			       EDG_WLL_FORMAT_USERTAG,
 			       name, value);
-
 	if (err) {
 	    char	*et,*ed;
 
@@ -89,6 +96,7 @@ int main(int argc, char *argv[])
 		    argv[0],et,ed);
 	    free(et); free(ed);
 	}
+	/*end log*/
 
 	seq_code = edg_wll_GetSequenceCode(ctx);
 	puts(seq_code);

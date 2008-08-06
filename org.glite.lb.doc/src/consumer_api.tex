@@ -1,72 +1,27 @@
 % -*- mode: latex -*-
 
 \section{\LB\ Querying (Consumer) API}
-\TODO{Complete review; create really functional (buildable) examples and use verbatiminput of relevant part of the code; add list of header files, important functions and data types and their description, etc.}
-
-\def\partitle#1{\par{\textbf{#1}}\par}
 
 \label{ConsOview}
-This section describes the aspects of principal use of the \LB\ consumer API.
-It begins with the simplest examples how to query the bookkeeping
-service, continues with various selection criteria and their combinations, and
-through queries on user tags and timestamps it concludes with the discussion of
-application specific queries.
 
-The document is intended for users interested in the \LB\
-consumer API or those interested in better understanding of the \LB\ service 
-capabilities.
+\subsection{Query Language}
 
-In the presented examples only the C \LB\ API (Sect.~\ref{query-C}) is considered.
-The C++ API (Sect.~\ref{query-CPP})  covers the same functionality.
+\subsection{C Language Binding}
 
-\subsection{Header files}
-
-Job.h
-JobStatus.h.T
-Notification.h
-ServerConnection.h
-connection.h
-consumer.h
-notification.h
-prod\_proto.h
-producer.h.T
-statistics.h
-
-\verbatiminput{client_headers.h}
-
-\subsection{Returned results}
-
-\LB\ server returns errors which are classified as hard and soft errors.
-The main difference between these categories is that in the case of soft
-errors results may still be returned.
-The authorization errors belong to
-``soft error'' sort. Hard errors are typically all unrecoverable errors like ENOMEM.
+\subsubsection{Call Semantics}
 
 When the item count returned by \LB\ server exceeds the defined limits, the E2BIG error occur.
 There are two limits\,---\,the server and the user limit. The user defined limit may be set in
 the context at the client side in the following way:
-\begin{verbatim}
-  #include <glite/lb/context.h>
-  ...
-  edg_wll_Context     ctx;    
 
-  edg_wll_InitContext(&ctx);
-  edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_JOBS_LIMIT, 10);
-  edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_EVENTS_LIMIT, 20);
-  edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_RESULTS, 30);
-  ...
-  edg_wll_FreeContext(ctx);
-\end{verbatim}
-This code sets the user query limits to the given maximal count of items.
+\subsubsection{Header Files}
+\begin{table}[h]
+\begin{tabularx}{\textwidth}{>{\tt}lX}
+glite/lb/consumer.h & Prototypes for all query functions. \\
+\end{tabularx}
+\end{table}
 
-The E2BIG error may fall into both categories depending on the setting of
-another context parameter, EDG\_WLL\_PARAM\_QUERY\_RESULTS.
-It may take the following values:
-
-%The E2BIG error can be classified as hard or soft error too because this error can be affected
-%by one more parameter which can make this error hard or soft. This parameter can be set like this:\\
-%\texttt{edg\_wll\_SetParam(ctx, EDG\_WLL\_PARAM\_QUERY\_RESULTS, EDG\_WLL\_QUERYRES\_ALL);}
-%and possible values follows:
+\subsubsection{Context Parameters}
 \begin{itemize}
 	\item{EDG\_WLL\_QUERYRES\_NONE}\,---\,No results are returned.
 	In this case an E2BIG error acts like a hard error.
@@ -78,14 +33,19 @@ It may take the following values:
 \end{itemize}
 Default value is EDG\_WLL\_QUERYRES\_NONE.
 
-\TODO{zkratit, doplnit zpracovani struktury (print jobs)}
+\subsubsection{Return Values}
+\LB\ server returns errors which are classified as hard and soft errors.
+The main difference between these categories is that in the case of soft
+errors results may still be returned.
+The authorization errors belong to
+``soft error'' sort. Hard errors are typically all unrecoverable errors like ENOMEM.
 
-\subsection{Job queries}
+The E2BIG error may fall into both categories depending on the setting of
+another context parameter, EDG\_WLL\_PARAM\_QUERY\_RESULTS.
+It may take the following values:
 
-\partitle{Job status}
-\label{JS}
 
-\TODO{Add edg\_wll\_JobStat description and error codes handling}
+\subsubsection{Job Queries}
 
 The simplest case corresponds to the situation when an exact job ID
 is known and the only information requested is the job status. The job ID
@@ -94,46 +54,6 @@ The following example shows
 all the relevant structures and API calls to retrieve status information
 about a job with the ID\\
 \texttt{https://lhun.ics.muni.cz:9000/OirOgeWh\_F9sfMZjnIPYhQ}.
-
-\lstinputlisting{example1_code.c}
-
-%\verbatiminput{example1_code.c}
-
-%\begin{verbatim}
-%  #include <glite/lb/consumer.h>
-%  ...
-%  edg_wll_Context     ctx;    
-%  edg_wll_JobStat    *statesOut = NULL;
-%  edg_wll_QueryRec    jc[2];
-%  ...
-%  edg_wll_InitContext(&ctx);
-%  ...
-%  jc[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
-%  jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
-%  if ( edg_wlc_JobIdParse(
-%    "https://lhun.ics.muni.cz:9000/OirOgeWh_F9sfMZjnIPYhQ",
-%     &jc[0].value.j) )
-%  {
-%     edg_wll_FreeContext(ctx);
-%     exit(1);
-%  }
-%  jc[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-%  if (edg_wll_QueryJobs(ctx, jc, 0, NULL, &statesOut)) {
-%    char    *err_text,*err_desc;
-%
-%    edg_wll_Error(ctx,&err_text,&err_desc);
-%    fprintf(stderr,"QueryJobs: %s (%s)\n",err_text,err_desc);
-%    free(err_text);
-%    free(err_desc);
-%  }
-%  else {
-%    ...	/* process the returned data */
-%    edg_wll_FreeStatus(statesOut);
-%    free(statesOut);
-%  }
-%  edg_wlc_JobIdFree(jc[0].value.j);
-%  edg_wll_FreeContext(ctx);
-%\end{verbatim}
 
 The first function call in this example initializes the \LB\ context\,---\,variable
 \texttt{ctx}\,---\,which is necessary for later use. The most important part
@@ -152,7 +72,7 @@ management\,---\,deallocation of data that are not needed anymore.
 \emph{For the sake of simplicity such code is not included in the examples
 in the rest of this document.}
 
-\partitle{All user's jobs}
+%\partitle{All user's jobs}
 \label{JQ-auj}
 
 \TODO{Update the example so that it is really working}
@@ -195,7 +115,7 @@ Developers should keep in mind that the output of such a query could be really h
 The following examples demonstrates how \texttt{edg\_wll\_QueryJobs()} combines 
 the given conditions in a logical conjugation.
 
-\partitle{Running jobs}
+%\partitle{Running jobs}
 \label{JQ-rj}
 
 If all (user's) running jobs are to be retrieved the following code can
@@ -224,7 +144,7 @@ This example combines previous example with a new criteria. There are used two d
 \texttt{edg\_wll\_QueryJobs()} connects them in the logical conjunction.
 Examples using logical conjunction and logical disjunction are shown in the Sect.~\ref{JQ-AO}.
 
-\partitle{Jobs running at a given CE}
+%\partitle{Jobs running at a given CE}
 The following example gives description of all (user's) jobs running at CE XYZ.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
@@ -252,7 +172,7 @@ In a case the job is not running the destination (attribute \texttt{EDG\_WLL\_QU
 saves a CE name the job will be routed to. If location is needed use the \texttt{EDG\_WLL\_QUERY\_ATTR\_LOCATION} attribute.
 
 
-\partitle{The WITHIN operator}
+%\partitle{The WITHIN operator}
 The \texttt{EDG\_WLL\_QUERY\_OP\_WITHIN} operator can be used in any condition with numeric values.
 The following example shows a query on all user's jobs that have returned 
 an exit code from 2 to 7.
@@ -285,7 +205,7 @@ The last attribute (``exit code'') uses the WITHIN operator. The WITHIN operator
 interval\,---\,the lower bound of the interval is stored in the \texttt{value} union and the
 upper bound is stored in the \texttt{value2} union.
 
-\partitle{Using AND, OR in query clauses}
+%\partitle{Using AND, OR in query clauses}
 \label{JQ-AO}
 In many cases the basic logic using only conjunctions is not sufficient.
 For example, if you need all your jobs running at the destination XXX or at
@@ -345,7 +265,7 @@ This query equals to the formula
 \texttt{(user=NULL) and (state=Running) and (dest='XXX' or dest='YYY')}.
 \end{quote}
 
-\partitle{User tags}
+%\partitle{User tags}
 \label{JQ_ut}
 \TODO{Is it really working?}
 User tags can be used for marking (labelling) jobs. A user tag is
@@ -427,7 +347,7 @@ or-clause.
 %That means that user tags are composed of two variable components
 %and user tag indices depend on tag names.
 
-\partitle{Time attributes}
+%\partitle{Time attributes}
 
 %A time interval in which a particular state appears is attached to every job
 %state.
@@ -490,7 +410,7 @@ interval.
 \TODO{pro prehlednost bych mozna pridal seznam vsech atributu
 na ktere se lze ptat}
 
-\subsection{Event queries and application specific queries}
+\subsubsection{Event queries and application specific queries}
 \label{ASQ}
 Event queries and job queries are similar. 
 Obviously, the return type is different\Dash the \LB\ raw events.
@@ -501,7 +421,7 @@ Some examples showing event queries
 are considered in the following paragraph.
 
 
-\partitle{All jobs marked as red}
+%\partitle{All jobs marked as red}
 \label{ASQ_allred}
 This example shows how to select all user's jobs which were (at some time)
 marked with the value red of user tag color.
@@ -545,7 +465,7 @@ changed afterwards or not (unlike straightforward \texttt{edg\_wll\_QueryJobs()}
 which considers the ``current color'' only). The same applies on all
 subsequent examples using the user's marking.
 
-\partitle{All red jobs at some time marked as green}
+%\partitle{All red jobs at some time marked as green}
 The next example shows how to select all jobs which are just now marked with
 user tag color red, but at some time in the past they were marked as green.
 \begin{verbatim}
@@ -574,7 +494,7 @@ Jobs conditions selects all jobs with tag ``color = red'' (See example in paragr
 \ref{JQ_RedJobs}). Event conditions selects all jobs which were sometimes marked
 as green\,---\,this is described in previous example \ref{ASQ_allred}.
 
-\partitle{All resubmitted jobs}
+%\partitle{All resubmitted jobs}
 The next example shows how to get all (your) resubmitted jobs.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
@@ -596,7 +516,7 @@ The next example shows how to get all (your) resubmitted jobs.
   ...
 \end{verbatim}
 
-\partitle{Jobs resubmitted in the last two hours}
+%\partitle{Jobs resubmitted in the last two hours}
 The next example shows how to get all user's jobs which were resubmitted in the last
 2 hours.
 \begin{verbatim}
@@ -623,7 +543,7 @@ The next example shows how to get all user's jobs which were resubmitted in the 
 \end{verbatim}
 
 
-\partitle{Complex query}
+%\partitle{Complex query}
 The last example illustrates the API usage on
  a~meaningful but rather complex query ``which of my red jobs are heading  
 to a~destination that already encountered problems executing red jobs''.
