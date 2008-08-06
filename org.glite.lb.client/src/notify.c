@@ -67,12 +67,15 @@ static void usage(char *cmd)
 			"    requested_validity	Validity of notification req. in seconds\n"
 			"    notifid     	Notification ID.\n", me);
 	if ( !cmd || !strcmp(cmd, "receive") ) {
-		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t requested_validity ] [-i timeout] [-f field1,field2,...] [notifid]\n"
-			"    requested_validity	Validity of notification req. in seconds\n"
+		fprintf(stderr,"\n'receive' command usage: %s receive [ { -s socket_fd | -a fake_addr } ] [-t requested_validity ] [-i timeout] [-r ] [-f field1,field2,...] [notifid]\n"
+			"    requested_validity	Validity of notification req. in seconds (default 3600)\n"
 			"    notifid     	Notification ID (not used if -s specified).\n"
 			"    fake_addr   	Fake the client address.\n"
 			"    field1,field2,...	List of status fields to print (only owner by default)\n"
-			"    timeout     	Timeout to receive operation in seconds.\n", me);
+			"    timeout     	Timeout to receive operation in seconds.\n"
+			"    -r 	    	Attempt to refresh the notification handle in 1/2 of current validity.\n"
+			"\n    -a, -t, and -r are unusable with -s\n"
+			, me);
 		fprintf(stderr,"\navailable fields:\n\t");
 		dump_fields();
 		putc(10,stderr);
@@ -86,9 +89,8 @@ int main(int argc,char **argv)
 {
 	edg_wll_Context		ctx;
 	edg_wll_QueryRec  **conditions = NULL;
-	time_t				valid = 0;
+	time_t				valid = time(NULL) + 999999999;
 	char			   *errt, *errd;
-	struct timeval		tout = {220, 0};
 	void		*fields = NULL;
 
 	int	sock = -1;
@@ -206,23 +208,33 @@ int main(int argc,char **argv)
 		edg_wll_NotifId		nid = NULL;
 		int			c;
 		char	*field_arg = "owner",*err;
+		time_t	client_tout = time(NULL) + 60;
+	        int	refresh = 0;
+		struct timeval		tout;
+		time_t	opt_valid = 0,do_refresh = client_tout + 999999999,now;
 
-		while ((c = getopt(argc-1,argv+1,"s:a:i:f:t:")) > 0) switch (c) {
+		while ((c = getopt(argc-1,argv+1,"s:a:i:f:t:r")) > 0) switch (c) {
 			case 's':
-				if (fake_addr) { usage("receive"); return EX_USAGE; }
+				if (fake_addr || refresh || opt_valid) { usage("receive"); return EX_USAGE; }
 				sock = atoi(optarg); break;
 			case 'a':
 				if (sock >= 0) { usage("receive"); return EX_USAGE; }
 				fake_addr = optarg; break;
 			case 'i':
-				tout.tv_sec = atoi(optarg); break;
+				client_tout = time(NULL) + atoi(optarg); break;
 			case 'f':
 				field_arg = optarg; break;
 			case 't':
-				valid = time(NULL) + atol(optarg); break;
+				if (sock >= 0) { usage("receive"); return EX_USAGE; }
+				opt_valid = atol(optarg); break;
+			case 'r':
+				if (sock >= 0) { usage("receive"); return EX_USAGE; }
+				refresh = 1; break;
 			default:
 				usage("receive"); return EX_USAGE;
 		}
+
+		if (opt_valid == 0) opt_valid = 3600;
 
 		if ((err = parse_fields(field_arg,&fields))) {
 			fprintf(stderr,"%s: invalid argument\n",err);
@@ -239,24 +251,54 @@ int main(int argc,char **argv)
 				return EX_USAGE;
 			}
 
+			valid = time(NULL) + opt_valid;
+
 			if (edg_wll_NotifBind(ctx, nid, -1, fake_addr, &valid) )
 				goto receive_err;
 			fprintf(stderr,"notification is valid until: %s (%ld)\n", TimeToStr(valid), valid);
+
+			now = time(NULL);
+			do_refresh = now + (refresh ? (valid - now)/2 : 999999999);
+			if (refresh) fprintf(stderr,"next refresh %s (%ld)\n",
+					TimeToStr(do_refresh),do_refresh);
 		}
 
 		do {
 			edg_wll_NotifId		recv_nid = NULL;
 			int	err;
+
+			tout.tv_sec = (client_tout < do_refresh ? 
+					client_tout : do_refresh)
+					- time(NULL);
+			if (tout.tv_sec < 0) tout.tv_sec = 0;
+			tout.tv_usec = 0;
 			
 			if ( (err = edg_wll_NotifReceive(ctx, sock, &tout, &stat, &recv_nid)) ) {
 				edg_wll_NotifIdFree(recv_nid);
+				recv_nid = NULL; 
 
-				if (err == EAGAIN) return 0;
-				else goto receive_err;
+				if (err != ETIMEDOUT) goto receive_err;
 			}
+			else print_fields(fields,recv_nid,&stat);
 			
-			print_fields(fields,recv_nid,&stat);
+			if ((now = time(NULL)) >= client_tout) return 0;
 
+			if (refresh && now >= do_refresh) {
+				valid = now + opt_valid;
+				if (!edg_wll_NotifRefresh(ctx,nid,&valid)) {
+					do_refresh = now + (valid - now)/2;
+					fprintf(stderr,"notification is valid until: %s (%ld)\n",TimeToStr(valid), valid);
+					fprintf(stderr,"next refresh %s (%ld)\n", TimeToStr(do_refresh),do_refresh);
+				}
+				else {
+					char	*et,*ed;
+					edg_wll_Error(ctx,&et,&ed);
+					do_refresh = now + (valid - now)/2;
+					fprintf(stderr,"warning: edg_wll_NotifRefresh failed (%s, %s)\n"
+							"next refresh %s (%ld)\n",
+							et,ed,TimeToStr(do_refresh),do_refresh);
+				}
+			}
 /* original example */
 #if 0
 			printf("\nnotification ID: %s\n", edg_wll_NotifIdUnparse(recv_nid)); 
