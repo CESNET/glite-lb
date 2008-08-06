@@ -22,6 +22,8 @@
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const char *);
 static int notif_check_acl(edg_wll_Context,const edg_wll_JobStat *,const char *);
 
+extern int debug;
+
 int edg_wll_NotifExpired(edg_wll_Context,const char *);
 
 int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
@@ -29,8 +31,8 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[5];
 	glite_lbu_Statement	jobs = NULL;
-	int	ret,i,expires;
-	time_t	now = time(NULL);
+	int	ret,i;
+	time_t	expires,now = time(NULL);
 	
 	char *cond_where = NULL;
 	char *cond_and_where = NULL;
@@ -90,15 +92,18 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
 
 	while ((ret = edg_wll_FetchRow(ctx,jobs,sizeof(jobc)/sizeof(jobc[0]),NULL,jobc)) > 0) {
-		if (now > (expires = glite_lbu_DBToTime(jobc[2])))
+		if (now > (expires = glite_lbu_DBToTime(jobc[2]))) {
 			edg_wll_NotifExpired(ctx,jobc[0]);
+			if (debug) fprintf(stderr,"[%d] NOTIFY:%s expired at %s UTC\n",
+					getpid(),jobc[0],asctime(gmtime(&expires)));
+		}
 		else if (notif_match_conditions(ctx,stat,jobc[4]) &&
 				notif_check_acl(ctx,stat,jobc[3]))
 		{
 			char			   *dest, *aux;
 			int					port;
 
-			fprintf(stderr,"NOTIFY: %s, job %s\n",jobc[0],
+			if (debug) fprintf(stderr,"NOTIFY: %s, job %s\n",jobc[0],
 					ju = edg_wlc_JobIdGetUnique(stat->jobId));
 			free(ju);
 
