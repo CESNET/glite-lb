@@ -32,10 +32,10 @@ ifeq (${host_cpu},x86_64)
 	archlib:=lib64
 endif   
 ifeq ($(shell test -f ${mysql_prefix}/${archlib}/libmysqlclient.so && echo ok),ok)
-	MYSQL_LIBPATH := ${mysql_prefix}/${archlib}/libmysqlclient.so
+	MYSQL_LIBPATH := "$(wildcard ${mysql_prefix}/${archlib}/libmysqlclient.so*) $(notdir $(wildcard ${mysql_prefix}/${archlib}/libmysqlclient.so*))"
 endif
 ifeq ($(shell test -f ${mysql_prefix}/${archlib}/mysql/libmysqlclient.so && echo ok),ok)
-	MYSQL_LIBPATH := ${mysql_prefix}/${archlib}/mysql/libmysqlclient.so
+	MYSQL_LIBPATH := "$(wildcard ${mysql_prefix}/${archlib}/mysql/libmysqlclient.so*) $(notdir $(wildcard ${mysql_prefix}/${archlib}/mysql/libmysqlclient.so*))"
 endif
 MYSQL_CPPFLAGS:=-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql -DMYSQL_LIBPATH=\"${MYSQL_LIBPATH}\"
 MYSQL_LIBS=-lz

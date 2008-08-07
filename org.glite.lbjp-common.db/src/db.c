@@ -185,6 +185,7 @@ int glite_lbu_DBError(glite_lbu_DBContext ctx, char **text, char **desc) {
 int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) {
 	int err = 0;
 	unsigned int ver_u;
+	char *p, *libnames, *libname;
 
 	*ctx = calloc(1, sizeof **ctx);
 	if (!*ctx) return ENOMEM;
@@ -192,9 +193,14 @@ int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) {
 	/* dynamic load the mysql library */
 	pthread_mutex_lock(&db_handle.lock);
 	if (!db_handle.lib) {
-		if ((!MYSQL_LIBPATH[0] || (db_handle.lib = dlopen(MYSQL_LIBPATH, RTLD_LAZY | RTLD_LOCAL)) == NULL) &&
-		    (db_handle.lib = dlopen("libmysqlclient.so", RTLD_LAZY | RTLD_LOCAL)) == NULL)
-			return ERR(*ctx, ENOENT, "can't load '%s' or 'libmysqlclient.so' (%s)", MYSQL_LIBPATH, dlerror());
+		libnames = strdup(MYSQL_LIBPATH " libmysqlclient.so");
+		libname = strtok_r(libnames, " ", &p);
+		while (libname) {
+			libname = strtok_r(NULL, " ", &p);
+			if ((db_handle.lib = dlopen(libname, RTLD_LAZY | RTLD_LOCAL)) != NULL) break;
+		}
+		free(libnames);
+		if (!db_handle.lib) return ERR(*ctx, ENOENT, "can't load libmysqlclient library (%s), tried: ", dlerror(), MYSQL_LIBPATH " libmysqlclient.so");
 		do {
 			LOAD(mysql_init, "mysql_init");
 			LOAD(mysql_get_client_version, "mysql_get_client_version");
