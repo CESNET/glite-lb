@@ -64,35 +64,44 @@ glite/lb/producer.h & Prototypes for all event logging functions. \\
 The table~\ref{t:pcontext} summarizes context parameters relevant to the
 event logging. If  parameter is not set in the context explicitly, the
 \LB\ library will search for value of corresponding environment
-variable. The symbolic C names should be prepended with
-\verb'EDG_WLL_PARAM_' prefix, \ie\ \verb'EDG_WLL_PARAM_HOST'.
+variable. 
 
 \begin{table}[h]
 \begin{tabularx}{\textwidth}{lX}
 {\bf Name} & {\bf Description} \\
 \hline
-\lstinline'HOST' & Hostname that appears as event origin. \par {\it
-Type: \lstinline'char*'} \par {\it Environment: } \\
-\lstinline'SOURCE'  & Event source component. \par {\it Type:
-\lstinline'edg_wll_Source'} \par {\it Environment: } \\
-\lstinline'DESTINATION'  &  Hostname of machine running
-locallogger/interlogger. \par {\it Type: \lstinline'char*'} \par {\it
-Environment: \lstinline'GLITE_WMS_LOG_DESTINATION'} \\ 
-\lstinline'DESTINATION_PORT' & Port the locallogger is listening
-on. \par {\it Type: \lstinline'int'} \par {\it Environment:
-\lstinline'GLITE_WMS_LOG_DESTINATION'} \\ 
-\lstinline'LOG_TIMEOUT'  & Logging timeout for asynchronous
-logging. \par {\it Type: \lstinline'struct timeval'} \par {\it
-Environment: \lstinline'GLITE_WMS_LOG_TIMEOUT'} \\ 
-\lstinline'LOG_SYNC_TIMEOUT'  & Logging timeout for synchronous
-logging. \par {\it Type: \lstinline'struct timeval'} \par {\it
-Environment: \lstinline'GLITE_WMS_LOG_SYNC_TIMEOUT'} \\
-\lstinline'LBPROXY_STORE_SOCK'  & \LB\ Proxy store socket
-path (if logging through \LB\ Proxy) \par {\it Type:
-\lstinline'char*'} \par {\it Environment: \lstinline'GLITE_WMS_LBPROXY_STORE_SOCK'} \\ 
-\lstinline'LBPROXY_USER' & Certificate subject of the user (if logging
-through \LB\ proxy). \par {\it Type: \lstinline'char*'} \par {\it
-Environment: \lstinline'GLITE_WMS_LBPROXY_USER'} \\
+\lstinline'EDG_WLL_PARAM_HOST' & 
+Hostname that appears as event origin. 
+\par {\it Type: } \lstinline'char*' 
+\par {\it Environment: } \\
+\lstinline'EDG_WLL_PARAM_SOURCE'  & 
+Event source component. 
+\par {\it Type: }\lstinline'edg_wll_Source'
+\par {\it Environment: } \\
+\lstinline'EDG_WLL_PARAM_DESTINATION'  &  
+Hostname of machine running locallogger/interlogger. 
+\par {\it Type: }\lstinline'char*' 
+\par {\it Environment: }\lstinline'GLITE_WMS_LOG_DESTINATION' \\ 
+\lstinline'EDG_WLL_PARAM_DESTINATION_PORT' & 
+Port the locallogger is listening on. 
+\par {\it Type: } \lstinline'int' 
+\par {\it Environment: }\lstinline'GLITE_WMS_LOG_DESTINATION' \\ 
+\lstinline'EDG_WLL_LOG_TIMEOUT'  & 
+Logging timeout for asynchronous logging. 
+\par {\it Type: }\lstinline'struct timeval' 
+\par {\it Environment: }\lstinline'GLITE_WMS_LOG_TIMEOUT' \\ 
+\lstinline'EDG_WLL_LOG_SYNC_TIMEOUT'  & 
+Logging timeout for synchronous logging. 
+\par {\it Type: }\lstinline'struct timeval' 
+\par {\it Environment: }\lstinline'GLITE_WMS_LOG_SYNC_TIMEOUT' \\
+\lstinline'EDG_WLL_LBPROXY_STORE_SOCK'  & 
+\LB\ Proxy store socket path (if logging through \LB\ Proxy) 
+\par {\it Type: }\lstinline'char*' 
+\par {\it Environment: }\lstinline'GLITE_WMS_LBPROXY_STORE_SOCK' \\ 
+\lstinline'EDG_WLL_LBPROXY_USER' & 
+Certificate subject of the user (if logging through \LB\ proxy). 
+\par {\it Type: }\lstinline'char*' 
+\par {\it Environment: }\lstinline'GLITE_WMS_LBPROXY_USER' \\
 \end{tabularx}
 \caption{Producer specific context parameters}
 \label{t:pcontext}
@@ -117,16 +126,16 @@ In this section we will give commented example how to log an UserTag event to
 the \LB.
 
 First we have to include neccessary headers:
-\lstinputlisting[numbers=left,linerange=headers-end\ headers]{prod_example1.c}
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=headers-end\ headers]{prod_example1.c}
 
 Initialize context and set parameters:
-\lstinputlisting[numbers=left,linerange=context-end\ context]{prod_example1.c}
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=context-end\ context]{prod_example1.c}
 
 \TODO{proper setting of sequence codes}
-\lstinputlisting[numbers=left,linerange=sequence-end\ sequence]{prod_example1.c}
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=sequence-end\ sequence]{prod_example1.c}
 
 Log the event:
-\lstinputlisting[numbers=left,linerange=log-end\ log]{prod_example1.c}
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=log-end\ log]{prod_example1.c}
 
 The \verb'edg_wll_LogEvent()' function is defined as follows:
 \begin{lstlisting}[numbers=none]

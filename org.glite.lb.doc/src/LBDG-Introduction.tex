@@ -196,17 +196,17 @@ described in respective API sections, the common parameters are:
 \lstinline'EDG_WLL_PARAM_X509_KEY' & 
 Key file to use for authentication. 
 \par {\it Type: } \lstinline'char *'
-\par {\it Env. variable: } \lstinline'X509_USER_KEY'  
+\par {\it Environment: } \lstinline'X509_USER_KEY'  
 \\
 \lstinline'EDG_WLL_PARAM_X509_CERT' &   
 Certificate file to use for authentication. 
 \par {\it Type: } \lstinline'char *'
-\par {\it Env. variable: } \lstinline'X509_USER_CERT'
+\par {\it Environment: } \lstinline'X509_USER_CERT'
 \\
 \lstinline'EDG_WLL_PARAM_CONNPOOL_SIZE' & 
 Maximum number of open connections maintained by the library. 
 \par {\it Type: } \lstinline'int'
-\\
+\par {\it Environment: } \\
 \end{tabularx}
 \caption{Common context parameters}
 \label{t:cparam}
@@ -297,11 +297,27 @@ can be found in the header file \verb'glite/wmsutils/cjobid.h'}
 \subsubsection{Event}
 \label{s:edg_wll_Event}
 The transparent data structure \verb'edg_wll_Event' represents \LB
-event, atomic data unit received and processed by \LB. It is a set of
-attributes (\ie key--value pairs) with predefined structure -- there
-are common attributes and each defined event type allows for specific
-set of additional attributes.  The most important common event
-attributes are listed in table~\ref{t:cevent}, 
+event, atomic data unit received and processed by \LB. It is a union of
+common structure and structures for all event types:
+\begin{lstlisting}
+union _edg_wll_Event {
+	edg_wll_EventCode	type;
+	edg_wll_AnyEvent	any;
+	edg_wll_TransferEvent	transfer;
+	edg_wll_AcceptedEvent	accepted;
+	//* \dots {\it more follows} \dots
+}
+typedef union _edg_wll_Event edg_wll_Event;
+\end{lstlisting}
+
+The most important common event attributes are listed in
+table~\ref{t:cevent}, the following example shows access:
+\begin{lstlisting}
+edg_wll_Event event;
+
+event.type = 0;
+event.any.user = "me";
+\end{lstlisting}
 
 \begin{table}[h]
 \begin{tabularx}{\textwidth}{llX}
@@ -360,11 +376,12 @@ a job as computed by the \LB from received events.  Much like the
 \verb'edg_wll_Event' structure it can be viewed as a set of
 attributes, where some attributes are common and some specific
 for a given job state (but unlike the \verb'edg_wll_Event' it is not
-implemented as union of structs but rather as one big struct). Most
-important common attributes are summarized in table~\ref{t:cstatus}.
+implemented as union of structs but rather as one big struct). 
+Generally speaking, when the attribute value is set, it is a valid
+part of job state description. Most important common attributes are
+summarized in table~\ref{t:cstatus}.
 
-\TODO{Is somewhere documented what attributes are filled in for given
-job type and status?}
+
 
 \begin{table}[h]
 \begin{tabularx}{\linewidth}{llX}
@@ -391,7 +408,7 @@ void edg_wll_FreeStatus(edg_wll_JobStat *);
 The following example prints out the states of jobs given in the input
 list; the job states are printed together with their subjobs on the
 same input list:
-\lstinputlisting[firstline=12,numbers=left]{util.c}
+\lstinputlisting[title={\bf File: }\lstname,firstline=12,numbers=left]{util.c}
 
 For more information see file \verb'include/glite/lb/jobstat.h'
 

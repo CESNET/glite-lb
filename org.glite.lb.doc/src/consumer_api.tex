@@ -1,10 +1,26 @@
 % -*- mode: latex -*-
 
 \section{\LB\ Querying (Consumer) API}
+\label{s:ConsOview}
+The \LB Consumer API is used to obtain information from \LB server
+or Proxy using simple query language (see
+Sect.~\ref{s:querylang}). There are two general types of queries based
+on the results returned:
+\begin{itemize}
+\item query for events -- the result contains events satisfying given
+criteria,
+\item query for jobs -- the result contains JobId's and job states of jobs
+satisfying given criteria.
+\end{itemize}
 
-\label{ConsOview}
 
 \subsection{Query Language}
+\label{s:querylang}
+The \LB query language is based on simple value assertions on job and
+event attributes, which can be described using the following formula:
+$$
+E=mc^2
+$$
 
 \subsection{C Language Binding}
 
