@@ -4,7 +4,7 @@
 \label{s:ConsOview}
 The \LB Consumer API is used to obtain information from \LB server
 or Proxy using simple query language (see
-Sect.~\ref{s:querylang}). There are two general types of queries based
+Sect.~\ref{s:querylang}). There are two types of queries based
 on the results returned:
 \begin{itemize}
 \item query for events -- the result contains events satisfying given
@@ -12,23 +12,79 @@ criteria,
 \item query for jobs -- the result contains JobId's and job states of jobs
 satisfying given criteria.
 \end{itemize}
+The potential result sets can be very large; the \LB server imposes
+limits on the result set size, which can be further restricted by the
+client. 
 
 
 \subsection{Query Language}
 \label{s:querylang}
 The \LB query language is based on simple value assertions on job and
-event attributes, which can be described using the following formula:
-$$
-E=mc^2
-$$
+event attributes. There are two types of queries based on the
+complexity of selection criteria, \textit{simple} and
+\textit{complex}.
+Simple queries are can be described by the following formula:
+\begin{displaymath}
+\textit{attr}_1 \mathop{\textrm{ OP }} \textit{value}_1 \wedge \dots \wedge
+\textit{attr}_n \mathop{\textrm{ OP }} \textit{value}_n 
+\end{displaymath}
+where $\textit{attr}_i$ is attribute name, $\mathop{\textrm{ OP }}$ is
+one of the $=$, $<$, $>$, $\neq$ and $\in$ relational operators and
+$\textit{value}$ is single value (or, in the case of $\in$ operator,
+interval) from attribute type. 
+
+Complex queries can be described using the following formula:
+\begin{multline*}
+(\textit{attr}_1 \mathop{\textrm{ OP }} \textit{value}_{1,1} \vee \dots \vee
+\textit{attr}_1 \mathop{\textrm{ OP }} \textit{value}_{1,i_1}) \wedge \\
+(\textit{attr}_2 \mathop{\textrm{ OP }} \textit{value}_{2,1} \vee \dots \vee
+\textit{attr}_2 \mathop{\textrm{ OP }} \textit{value}_{2,i_2}) \wedge \\
+\vdots \\
+\wedge (\textit{attr}_n \mathop{\textrm{ OP }} \textit{value}_{n,1} \vee \dots \vee 
+\textit{attr}_n \mathop{\textrm{ OP }} \textit{value}_{n,i_n}) 
+\end{multline*}
+The complex query can, in contrast to simple query, contain more
+assertions on value of single attribute, which are ORed together.
+
+\marginpar{Indexed attributes}%
+The query must always contain at least one attribute indexed
+on the \LB server; this restriction is necessary to avoid matching the
+selection criteria against all jobs in the \LB database. The list of
+indexed attributes for given \LB server can be obtained by \LB API
+call.
 
 \subsection{C Language Binding}
 
 \subsubsection{Call Semantics}
+The \LB server queries are, in contrast to logging event calls,
+synchronous (for asynchronous variant see Sect.~\ref{s:NotifOverview},
+notifications). The server response contains \jobid's, job states
+and/or events known to the server at the moment of processing the
+query. Due to the asynchronous nature of event delivery it may not
+contain all data that was actually sent; the job state computation is
+designed to be resilient to event loss to some extent.
 
-When the item count returned by \LB\ server exceeds the defined limits, the E2BIG error occur.
-There are two limits\,---\,the server and the user limit. The user defined limit may be set in
-the context at the client side in the following way:
+\marginpar{Result size limits}%
+When the item count returned by \LB\ server exceeds the defined
+limits, the \verb'E2BIG' error occur. There are two limits\,---\,the server
+and the user limit. The user defined limit may be set in the context
+at the client side, while the server imposed limit is configured at
+the server and can be only queried by the client. The way the \LB
+library and server handles the over--limit result size can be
+specified by setting context parameter
+\verb'EDG_WLL_PARAM_QUERY_RESULTS' to one of the following values:
+\begin{itemize}
+\item \verb'EDG_WLL_QUERYRES_NONE'\,---\,In case the limit is reached,
+no results are returned at all.
+\item \verb'EDG_WLL_QUERYRES_LIMITED'\,---\,A result contains at most
+``limit'' item count. 
+\item \verb'EDG_WLL_QUERYRES_ALL'\,---\,All results are returned and
+limits have no effect. This option is available only in special cases
+such as ``user jobs query'' and  the ``job status query''. Otherwise
+the EINVAL error is returned. 
+\end{itemize}
+Default value is \verb'EDG_WLL_QUERYRES_NONE'.
+
 
 \subsubsection{Header Files}
 \begin{table}[h]
@@ -38,28 +94,72 @@ glite/lb/consumer.h & Prototypes for all query functions. \\
 \end{table}
 
 \subsubsection{Context Parameters}
-\begin{itemize}
-	\item{EDG\_WLL\_QUERYRES\_NONE}\,---\,No results are returned.
-	In this case an E2BIG error acts like a hard error.
-	\item{EDG\_WLL\_QUERYRES\_LIMITED}\,---\,A result contains at most ``limit'' item count.
-	In this case an E2BIG error acts like a soft error.
-	\item{EDG\_WLL\_QUERYRES\_ALL}\,---\,All results are returned and limits has no effect.
-	This option is available only in special cases such as ``user jobs query'' and 
-	the ``job status query''. Otherwise the EINVAL error is returned.
-\end{itemize}
-Default value is EDG\_WLL\_QUERYRES\_NONE.
+The table~\ref{t:ccontext} shows parameters relevant to the query API.
+
+\begin{table}[h]
+\begin{tabularx}{\textwidth}{lX}
+{\bf Name} & {\bf Description} \\
+\hline
+\lstinline'EDG_WLL_PARAM_QUERY_SERVER' &  
+Default server name to query. 
+\\
+\lstinline'EDG_WLL_PARAM_QUERY_SERVER_PORT' &
+Default server port to query. 
+\\
+\lstinline'EDG_WLL_PARAM_QUERY_SERVER_OVERRIDE' &
+host:port parameter setting override even values in \jobid (useful for
+debugging \& hacking only) 
+\\
+\lstinline'EDG_WLL_PARAM_QUERY_TIMEOUT' &
+Query timeout. 
+\\
+\lstinline'EDG_WLL_PARAM_QUERY_JOBS_LIMIT' & 
+Maximal query jobs result size.
+\\
+\lstinline'EDG_WLL_PARAM_QUERY_EVENTS_LIMIT' & 
+Maximal query events result size.
+\\
+\lstinline'EDG_WLL_PARAM_QUERY_RESULTS' &
+Flag to indicate handling of too large results.
+\\
+\end{tabularx}
+\caption{Consumer specific context parameters}
+\label{t:ccontext}
+\end{table}
+
 
 \subsubsection{Return Values}
 \LB\ server returns errors which are classified as hard and soft errors.
 The main difference between these categories is that in the case of soft
-errors results may still be returned.
-The authorization errors belong to
-``soft error'' sort. Hard errors are typically all unrecoverable errors like ENOMEM.
+errors results may still be returned. The authorization errors belong to
+``soft error'' sort. Hard errors like \verb'ENOMEM' are typically all
+unrecoverable, to obtain results the query must be repeated, possibly
+after correcting the failure condition the error indicated.
 
-The E2BIG error may fall into both categories depending on the setting of
-another context parameter, EDG\_WLL\_PARAM\_QUERY\_RESULTS.
-It may take the following values:
+The \verb'E2BIG' error may fall into both categories depending on the
+setting of context parameter \verb'EDG_WLL_PARAM_QUERY_RESULTS'.
 
+
+\subsubsection{Query condition encoding}
+The \LB query language is mapped into (one- or two-dimensional) array
+of attribute value assertions represented by
+\verb'edg_wll_QueryRec' structure:
+\begin{lstlisting}
+typedef struct _edg_wll_QueryRec {
+        edg_wll_QueryAttr       attr;   //* \textit{attribute to query}
+        edg_wll_QueryOp         op;     //* \textit{query operation}
+        union {
+                char *                  tag;    //* \textit{user tag name / JDL attribute "path"}
+                edg_wll_JobStatCode     state;  //* \textit{job status code}
+        } attr_id;
+        union edg_wll_QueryVal {
+                int     i;      	//* \textit{integer query attribute value}
+                char    *c;     	//* \textit{character query attribute value}
+                struct timeval  t;      //* \textit{time query attribute value}
+                glite_jobid_t   j;      //* \textit{JobId query attribute value}
+        } value, value2;
+} edg_wll_QueryRec;
+\end{lstlisting}
 
 \subsubsection{Job Queries}
 
@@ -85,8 +185,8 @@ in this example state of a given job.
 
 The code also shows a~complete handling of returned errors as well as memory
 management\,---\,deallocation of data that are not needed anymore.
-\emph{For the sake of simplicity such code is not included in the examples
-in the rest of this document.}
+\emph{For the sake of simplicity such code is not included in the
+examples in the rest of this document.}
 
 %\partitle{All user's jobs}
 \label{JQ-auj}

@@ -109,6 +109,23 @@ Certificate subject of the user (if logging through \LB\ proxy).
 The \verb'GLITE_WMS_LOG_DESTINATION' environment variable contains
 both locallogger host and port separated by colon (\ie\ ``host:port'').
 
+\marginpar{Logging job and sequence numbers}%
+In addition to the above list, there are two more parameters that must
+be set before logging call is made: \jobid of the logging job and
+\emph{sequence number}. There is a special call for this task:
+\begin{lstlisting}
+extern int edg_wll_SetLoggingJob(
+        edg_wll_Context context,	//* \emph{context to work with}
+        glite_jobid_const_t     job,	//* \emph{jobid of the job}
+        const char *            code,	//* \emph{sequence code}
+        int                     flags	//* \emph{flags on code handling}
+);
+\end{lstlisting}
+After setting the logging job identity, all the following logging
+calls refer to this \jobid and the sequence code is incremented
+according to the source component. 
+\TODO{how is the sequence code updated?}
+
 \subsubsection{Return values}
 The logging functions return 0 on success and one of \texttt{EINVAL,
 ENOSPC, ENOMEM, ECONNREFUSED, EAGAIN} on error. If \texttt{EAGAIN} is
