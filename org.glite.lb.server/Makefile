@@ -166,7 +166,10 @@ BKSERVER_BASE_OBJS:= \
 	notification.o il_notification.o notif_match.o stats.o db_calls.o db_supp.o
 
 dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
-GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}
+ifeq ($(shell test -f ${stagedir}/lib/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
+	langflavour:=_c
+endif
+GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_OBJS:= \
@@ -374,7 +377,7 @@ ifdef LB_PERF
 endif
 
 clean:
-	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} test* ${MAN_GZ}
+	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} test* ${MAN_GZ}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.c: %.c.T
