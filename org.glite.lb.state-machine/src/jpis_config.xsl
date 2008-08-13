@@ -25,6 +25,7 @@
 	&lt;!--
 	&lt;attrs&gt;&lt;name&gt;http://egee.cesnet.cz/en/Schema/JP/System:jobId&lt;/name&gt;&lt;/attrs&gt;
 	&lt;attrs&gt;&lt;name&gt;http://egee.cesnet.cz/en/Schema/JP/System:owner&lt;/name&gt;&lt;/attrs&gt;
+	&lt;attrs&gt;&lt;name&gt;http://egee.cesnet.cz/en/Schema/JP/System:regtime&lt;/name&gt;&lt;/attrs&gt;
 	--&gt;
 <xsl:apply-templates select="xs:element" mode="define"/>
 
@@ -33,10 +34,9 @@
 	&lt;!--&lt;indexedAttrs&gt;http://egee.cesnet.cz/en/Schema/JP/System:owner&lt;/indexedAttrs&gt;--&gt;
 	&lt;!-- internal attribute (index replacement) --&gt;
 	&lt;!--&lt;indexedAttrs&gt;http://egee.cesnet.cz/en/Schema/JP/System:jobId&lt;/indexedAttrs&gt;--&gt;
-	&lt;indexedAttrs&gt;http://egee.cesnet.cz/en/Schema/LB/Attributes:user&lt;/indexedAttrs&gt;
-	&lt;indexedAttrs&gt;http://egee.cesnet.cz/en/Schema/LB/Attributes:CE&lt;/indexedAttrs&gt;
-	&lt;indexedAttrs&gt;http://egee.cesnet.cz/en/Schema/LB/Attributes:VO&lt;/indexedAttrs&gt;
-	&lt;indexedAttrs&gt;http://egee.cesnet.cz/en/Schema/LB/Attributes:finalStatus&lt;/indexedAttrs&gt;
+	&lt;indexedAttrs&gt;http://egee.cesnet.cz/en/Schema/LB/Attributes:owner&lt;/indexedAttrs&gt;
+	&lt;indexedAttrs&gt;http://egee.cesnet.cz/en/Schema/LB/Attributes:ceNode&lt;/indexedAttrs&gt;
+	&lt;indexedAttrs&gt;http://egee.cesnet.cz/en/Schema/LB/Attributes:status&lt;/indexedAttrs&gt;
 
 &lt;!-- List of type plugins --&gt;
 	&lt;plugins&gt;&lt;/plugins&gt;
@@ -61,7 +61,12 @@
 </xsl:template>
 
 <xsl:template match="xs:element" mode="define">	&lt;!-- <xsl:value-of select="xs:documentation/text()"/> --&gt;
-	&lt;attrs&gt;&lt;name&gt;http://egee.cesnet.cz/en/Schema/LB/Attributes:<xsl:value-of select="@name"/>&lt;/name&gt;&lt;/attrs&gt;
+	&lt;attrs&gt;
+		&lt;name&gt;http://egee.cesnet.cz/en/Schema/LB/Attributes:<xsl:value-of select="@name"/>&lt;/name&gt;
+		&lt;multival&gt;YES&lt;/multival&gt;
+		&lt;queryable&gt;YES&lt;/queryable&gt;
+	&lt;/attrs&gt;
+
 </xsl:template>
 
 </xsl:stylesheet>
