@@ -1,9 +1,15 @@
-\section{Performance and Stress Tests}
+\section{Performance and stress tests}
 \label{s:perftests}
-\TODO{review, reformat, update also \url{https://meta.cesnet.cz/mediawiki/index.php/LB_and_JP_Performance_Testing}, ...}
 
-In this section we describe tests from layers 4 (stress tests) and 5 (performance tests). 
-General idea of performance and stress tests of LB components is the following:
+\TODO{michal: nejak sesynchronizovat s webem}
+In this section we describe only the general idea of performance and stress tests of \LB components.
+This work is in progress and all necessary information is updated at the wiki page:
+
+\begin{center}
+\url{http://egee.cesnet.cz/mediawiki/index.php/LB_and_JP_Performance_Testing}
+\end{center}
+
+The general idea is thus the following:
 
 \begin{itemize}
 
@@ -55,19 +61,26 @@ queries, for example).
     \item After completion test scripts print the table described for the
       respective tests filled in with measured values (ie. the table
       is not filled in manually by human tester).
- 
-    \item Measure event throughput bu
+
+    \item Measure event throughput by
     \[ \mbox{event\_throughput} = \frac{1}{\mbox{time\_delivered} - \mbox{time\_arrived}} \]
 \TODO{measure job throughput for event patterns of typical jobs or deduce
 job throughput from throughput of selected types of events?}
 
     \item Publish the results on the web.
-\TODO{ETICS test? \url{https://meta.cesnet.cz/mediawiki/index.php/LB_and_JP_Performance_Testing}? etc.}
+    
+    \item \TODO{ETICS test framework is used to run performance and stress tests automatically.}
     \end{itemize}
+
 % vztahuje se k cemu?
 % * only if next event is sent after previous was delivered
 %
 \end{itemize}
+
+
+
+\endinput
+
 
 In the following subsections we describe performance and stress tests for
 individual LB compoments.  They include both tests of the isolated components
@@ -80,10 +93,10 @@ events) as well as tests of LB components among more nodes.
 %--------------------
 
 \begin{verbatim}
-* component:  
+* component:
      org.glite.lb.client
 
-* binaries required: 
+* binaries required:
      logevent_libtest
 
 * test shell script:
@@ -95,7 +108,7 @@ events) as well as tests of LB components among more nodes.
 * test description:
      - measures time required to format given events into ULM. Events
        are read from file, parsed into components, timestamped and
-       produced. 
+       produced.
 
      - events produced:
          - by calling logging function edg_wll_LogEvent*()
@@ -153,7 +166,7 @@ events) as well as tests of LB components among more nodes.
 	      d) normal operation
 		    glite_lb_logd_perf
 
-         no parse - LL does not parse events 
+         no parse - LL does not parse events
          no file  - LL does not store events into files
          no ipc   - LL does not send events through socket to IL
 
@@ -164,15 +177,15 @@ events) as well as tests of LB components among more nodes.
       - events consumed:
            i) after storing into files
           ii) by "empty" IL
-        
+
 * results:
 
 
 
 i) events stored in files
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
    a)
    b)
@@ -181,8 +194,8 @@ i) events stored in files
 
 ii) events sent to IL
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
    a)
    b)
@@ -227,7 +240,7 @@ ii) events sent to IL
      - measures time the event travels through interlogger.
        Interlogger is instrumented to skip some parts of eventh
        processing for particular test, specifically tests include
-       these variants: 
+       these variants:
 	      a) disabled event parsing. The server address
                  (eg. jobid) is hardcoded.
 	      b) disabled event synchronization from files
@@ -256,8 +269,8 @@ i) events discarded
 1) events received on socket
 (options 2 and 3 are not tested)
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
    a)
    b)
@@ -265,11 +278,11 @@ i) events discarded
    e)
 
 
-ii) events sent to empty bkserver 
+ii) events sent to empty bkserver
 1) events received on socket
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
    a)
    b)
@@ -280,8 +293,8 @@ ii) events sent to empty bkserver
 
 2) events recovered from files
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
    d)
    e)
@@ -289,8 +302,8 @@ ii) events sent to empty bkserver
 
 3) events synced from files, every 10th event sent on socket
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
    a)
    b)
@@ -330,7 +343,7 @@ ii) events sent to empty bkserver
 * test description:
      - measures time required for processing event by LB proxy. Test
        is performed with (a)) and without (b)) checking for duplicit
-       events. 
+       events.
 
      - events produced:
 	   - stresslog sends events using the IL protokol on local
@@ -343,15 +356,15 @@ ii) events sent to empty bkserver
 	   iv) after job status computation
 	    v) normal operation
 
- 
+
 
 
 * results:
 
 a) with duplicity check:
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
      i)
     ii)
@@ -362,8 +375,8 @@ a) with duplicity check:
 
 b) without duplicity check:
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
      i)
     ii)
@@ -400,7 +413,7 @@ b) without duplicity check:
 * test description:
      - measures time required for processing event by LB server. Test
        is performed with (a)) and without (b)) checking for duplicit
-       events. 
+       events.
 
      - events produced:
 	   - stresslog sends events using the IL protokol (using DoLogEventDirect())
@@ -415,8 +428,8 @@ b) without duplicity check:
 
 a) with duplicity check:
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
      i)
     ii)
@@ -426,8 +439,8 @@ a) with duplicity check:
 
 b) without duplicity check:
 
-   throughput:     small    big    small    big 
-                   job      job    DAG      DAG 
+   throughput:     small    big    small    big
+                   job      job    DAG      DAG
    -------------------------------------------------
      i)
     ii)
@@ -452,7 +465,7 @@ b) without duplicity check:
      glite_lb_proxy
      glite_lb_bkserverd_perf_empty
      glite_lb_proxy_perf_empty
-     
+
 * test shell script:
      perftest_jobreg
 
@@ -467,8 +480,8 @@ b) without duplicity check:
 	    a) current implementation
 	    b) implementation of connection pool at the client
 	    c) parallel communication with server and proxy
-       
-       
+
+
      - events produced:
            - stressreg sends registration events by calling
 	     edg_wll_RegisterJob*()

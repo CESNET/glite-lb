@@ -1,118 +1,111 @@
-% - local (meant to be run on the install node) LB server ping test                
-% - remote (meant to be run via another node) LB server ping test  
-% - local LB logger ping test                                            
-% - remote LB logger ping test
+% System tests
 
-\section{Test Cases}
-\label{s:tests}
-
-In this section we describe tests from layers 1 (service ping tests), 
-2 (service functionality tests) and 3 (system tests). 
-
-\TODO{completely review}
-
-
-\subsection{Tests if services are up and running}
-\TODO{how? remote vs. local tests}
-
-\begin{verbatim}
-org.glite.testsuites.ctb/LB/lb-l1.sh now does the following:
-- ping_host
-- check_binaries
-- check_service: runs testSocket (non GSI) on default ports for LL, IL and server
-
-What needs to be done:
-- how test scripts should be told to test such a service on such a (nondefualt) port?
-- test GSI credentials
-- do a GSI testSocket? hand-shake? 
-- maybe call a logevent with INTERNAL msg type? -> belongs to level 2
-- move all common parts to functions.sh and write individual test scripts for each daemon:
-\end{verbatim}
-
-\subsubsection{logger (local \& inter)}
-\TODO{
-remote: ping, check binaries on monitoring machine, check GSI credentials, gsi-connect?;
-local: check if enough disk capacity is free for dglog* files 
-il: check binaries, check if enough disk capacity is free for dglog* files, socket-connect? }
-
-\subsubsection{Server}
-\TODO{
-monitoring machine prerequisities: check binaries, check GSI credentials,
-remote: ping, tcp-connect, ssl-connect, WS getVersion, 
-local: check MySQL (running, accessible, enough disk capacity, ...), socket-connect?, check if enough disk capacity is free for dumps?, ...
-+Notification inter-logger: jako u il}
-
+\section{System functionality tests}
+\label{s:functionality}
+\TODO{vsichni: znovu cele projit}
 
 \subsection{Event delivery}
 
-\begin{verbatim}
-org.glite.testsuites.ctb/LB/lb-l2.sh now does the following:
-- array_job_reg: registeres $JOBS_ARRAY_SIZE jobs
-- logEvents: logs events by glite-lb-$state.sh example scripts
-- logTags: logs user tags
-- testLB: calls glite-lb-job_log for all jobs
-- testLB2: calls glite-lb-job_status for all jobs
-
-What needs to be done:
-- tidy
-- create some meaningful sequence of events for logEvents
-\end{verbatim}
 
 
+\subsubsection{Normal event delivery}
+\label{normal}
+% event delivery
+% poslat .sh, job log vrati to, co bylo ve fajlech
 
-% locallogger
-% bez dalsich demonu, registrovat job, vrati EAGAIN, objevi se fajly
-\subsubsection{Standalone locallogger -- job registration}
-\TODO{registrace uz nejde pres LL}
+\req\ all \LB\ daemons running (\path{glite-lb-logd}, \path{glite-lb-interlogd},
+\path{glite-lb-bkserverd})
+
+\what\ 
+\begin{enumerate}
+\item Register jobs with \code{edg\_wll\_RegsterJob} 
+\item Log reasonable sequences of events with \code{edg\_wll\_Log*}, both through logger and/or proxy
+\item Check with \code{edg\_wll\_JobLog} that the events got delivered afterwards (approx. 10s).
+\end{enumerate}
+
+\how\ \ctblb{lb-test-normal-event-delivery.sh}
+% org.glite.testsuites.ctb/LB/lb-l2.sh now does the following:
+% - array_job_reg: registeres $JOBS_ARRAY_SIZE jobs
+% - logEvents: logs events by glite-lb-$state.sh example scripts
+% - logTags: logs user tags
+% - testLB: calls glite-lb-job_log for all jobs
+% - testLB2: calls glite-lb-job_status for all jobs
+%
+% What needs to be done:
+% - rename the script, tidy it
+% - create some meaningful sequence of events for logEvents
+
+\result\ All sub tests (API calls) should return 0. The same events that were logged must be returned.
+
+\begin{hints}
+\path{glite-lb-*.sh} scripts produce reasonable seqences of events, including
+the job initial registration.
+
+There is approx. 1 min time window in which the locallogger files exist.
+They can be grabbed and used for comparing the events later in~\ref{recover}.
+\end{hints}
+
+
+
+\subsubsection{Job registration only}
 \label{reg}
-\req\ running \path{glite-lb-logd} on the test node, don't start either
-\path{glite-lb-interlogd} or \path{glite-lb-bkserverd}
+\req\ running \path{glite-lb-bkserverd}
 
-\how\ call \code{edg\_wll\_RegisterJob}. Jobid's should preferably point
+\what\ call \code{edg\_wll\_RegisterJob}. Jobid's should preferably point
 to a~remote \LB\ server.
 
-\result\ The API call returns EAGAIN, but locallogger creates an event file
-in its storage.
-The file should contain single line RegJob event.
+\how\ \ctblb{lb-test-job-registration.sh}
+
+\result\ All sub tests (API calls) return 0.
 
 \begin{hints}
 \path{glite-lb-regjob} example can be used. It generates a~unique jobid,
 prints it and calls \LB\ API appropriately.
 \end{hints}
 
-% async -- prida do fajlu, OK
-% logevent
+
+
 \subsubsection{Standalone locallogger -- log event}
 \label{log}
-\req\ running \path{glite-lb-logd} only, files generated in test~\ref{reg}.
+% async -- prida do fajlu, OK
+% logevent
 
-\how\ call \code{edg\_wll\_Log*} for various event types in a~sequence
+\req\ running \path{glite-lb-logd} only, jobs registered in test~\ref{reg}.
+
+\what\ call \code{edg\_wll\_Log*} for various event types in a~sequence
 resebmling real \LB\ usage, using the same jobid's as in test~\ref{reg}
 
-\result\ API calls return 0, events are added one per line to the locallogger files
+\how\ \ctblb{lb-test-logevent.sh}
+
+\result\ All sub tests (API calls) return 0, events are added one per line to the locallogger files.
 
 \begin{hints}
-\path{glite-lb-logev} client program can be used.
+\path{glite-lb-logevent} client program can be used.
 
-\path{glite-lb-*.sh} examples may be adapted to produce reasonable seqences
-of events.
+\TODO{\path{glite-lb-*.sh} examples may be adapted to produce reasonable seqences
+of events.}
 \end{hints}
+
+
 
 \subsubsection{Interlogger recovery}
 \label{recover}
-\TODO{See also org.glite.testsuites.ctb/LB/lb-l2ILR.sh.}
 % recover interloggeru
 % il & server (remote)
 % spustit, protlaci soubory na server, soubory zmizi, lze se dotazat na stav
-\req\ running \path{glite-lb-bkserverd} on the machine and port where 
-jobid's from \ref{reg} point to; files generated in~\ref{log}.
 
-\how\ Make a~copy of the files created in~\ref{log}, then start
+\req\ running \path{glite-lb-bkserverd} on the machine and port where
+jobid's from \ref{reg} point to; files generated in~\ref{log};
+\path{glite-lb-interlogd} is stopped.
+
+\what\ Make a~copy of the files created in~\ref{log}, then start
 \path{glite-lb-interlogd}. After approx. 10s check the jobs
-with \code{edg\_wll\_JobLog} call. 
+with \code{edg\_wll\_JobLog} call.
+
+\how\ \ctblb{lb-l2ILR.sh}
 
 \result \code{edg\_wll\_JobLog} should return the same events that were
-contained in the locallogger files. The files should be removed by 
+contained in the locallogger files. The files should be removed by
 interlogger after approx. 1 min.
 
 \begin{hints}
@@ -120,47 +113,20 @@ interlogger after approx. 1 min.
 format as the locallogger files.
 \end{hints}
 
-% event delivery
-% poslat .sh, job log vrati to, co bylo ve fajlech
-\subsubsection{Normal event delivery}
-\TODO{na zacatek sekce}
-\label{normal}
-\req\ all \LB\ daemons running (\path{glite-lb-logd}, \path{glite-lb-interlogd},
-\path{glite-lb-bkserverd}
-
-\how\
-\begin{enumerate}
-
-\item Register jobs with \code{edg\_wll\_RegsterJob} 
-\item Log reasonable sequences of events with \code{edg\_wll\_Log*}.
-\item Check with \code{edg\_wll\_JobLog}
-that the events got delivered afterwards (approx. 10s).
-\end{enumerate}
-
-\result\ API calls should return 0. The same events that were logged must be returned.
-
-\begin{hints}
-\path{glite-lb-*.sh} scripts produce reasonable seqences of events, including
-the job initial registration.
-
-There is approx. 1min time window in which the locallogger files exist.
-They can be grabbed and used for comparing the events as in~\ref{recover}.
-
-\end{hints}
 
 
 
 \subsection{Job state computation}
-\TODO{See also org.glite.testsuites.ctb/LB/lb-l2.sh above.}
 
+\subsubsection{Normal job states}
+\label{state}
 % normal event delivery & job state machine
 % .sh, dotaz na stav
-\subsubsection{Normal job states}
-\TODO{projit vsechny stavy}
-\label{state}
+
 \req\ \path{glite-lb-bkserverd} running, events from \ref{normal} logged.
 
-\how\ Check state of the jobs with \code{edg\_wll\_JobStatus}.
+\what\ Check state of the jobs with \code{edg\_wll\_JobStatus}. Check all possible job states 
+(if necessary, log relevant events). Query both server and/or proxy.
 
 \result\ The API call should return 0, the jobs should be in the expected
 states. Thorough tests may also cross check the values supplied in the
@@ -171,25 +137,28 @@ events (e.g. destination computing element) wrt. the values reported in the job 
 in the job state same as the `*' part of the script name.
 \end{hints}
 
+
+
 \subsubsection{Non-simple job states}
-\TODO{dagy, kolekce, ...}
-% specialni stav DAGu, histogram potomku
+\TODO{dags, collections, their states and states (and histogram) of their children/subjobs, ...}
 
 
 
-\subsection{LB proxy}
-\TODO{logovani pridat do Event delivery, ptani se na stavy pridat do Normal job states,
-zde resit mizeni jobu z proxy, Milos: kombinovany test na server-proxy}
+\subsection{LB server and proxy combined test}
+\TODO{mulac: mizeni jobu z proxy, alias kombinovany test na server-proxy}
+
 \req\ running \path{glite-lb-proxy}, \path{glite-lb-interlogd} and
 \path{glite-lb-bkserverd}
 
-\how\ Register jobs with \code{edg\_wll\_RegisterJobProxy}, log events
+\what\ Register jobs with \code{edg\_wll\_RegisterJobProxy}, log events
 using \code{edg\_wll\_LogEventProxy} and check the job states against
 both lbproxy (using \code{edg\_wll\_JobStatusProxy}) and bkserver
-(using \code{edg\_wll\_JobStatus}).
+(using \code{edg\_wll\_JobStatus}). Pay special attention to job reaching final 
+job status and to the automatic purge from proxy - check the timeouts.
 
 \result\ A new job state should be available immediately at the
-lbproxy and probably with a small delay also at the bkserver.
+lbproxy and probably with a small delay also at the bkserver. Jobs that reach the final job state
+are really purged from the proxy in given timeout.
 
 \begin{hints}
 There is already a script \path{test.sh} in
@@ -217,25 +186,31 @@ the same form as e.g. \path{glite-lb-jobstat}.
 \end{hints}
 
 
+
 \subsection{Change ACL}
-\TODO{dan: pozdeji - s novym auth. schematem. dopsat TODO jak}
+\TODO{kouril: pozdeji - s novym auth. schematem. dopsat TODO jak}
+
+
+
 
 \subsection{Notifications}
-\TODO{doplnit nove optiony}
-
-% notifikace 
+\TODO{ruda: revize, doplnit nove optiony}
+% notifikace
 % regjob, reg notifikace na vsechno, poslat udalosti, hlidat notif
+
+
+
 \subsubsection{Single job, any state change}
 \label{notif1}
 \req\ All \LB\ services running
 
-\how
+\what
 \begin{enumerate}
-\item Register a job. 
+\item Register a job.
 \item Start a~notification client (preferably on another machine),
-register with \code{edg\_wll\_NotifNew} for any state changes of the job, 
+register with \code{edg\_wll\_NotifNew} for any state changes of the job,
 and repeatedly invoke \code{edg\_wll\_NotifReceive}.
-\item One by one send events triggering job state change. 
+\item One by one send events triggering job state change.
 \end{enumerate}
 
 \result\ All the events should trigger notification reported by the running
@@ -244,6 +219,8 @@ notification client.
 \begin{hints}
 \path{glite-lb-notify} example can be used with its \path{test} command.
 \end{hints}
+
+
 
 \subsubsection{Additional notification criteria}
 \label{notif-complex}
@@ -255,11 +232,14 @@ e.g. job is scheduled for a~specific destination.
 \result\ Only notifications matching the criteria should be delivered.
 
 % rozsireni dotazu o dalsi job
+
+
+
 \subsubsection{Include another job}
 \label{notif2}
 \req\ All \LB\ services running, notification from \ref{notif1} still active
 
-\how\ 
+\how\
 \begin{enumerate}
 \item Register another job.
 \item Augment the notification registration with the new jobid using
@@ -280,13 +260,15 @@ can be used.
 % pak poslat udalost, musi dojit
 % uz je v predchozim implicitne
 
+
+
 \subsubsection{Delayed delivery}
 % notifikace -- zpozdene doruceni
 % registrovat, odpojit, poslat udalosti, pripojit se
 
 \req\ All \LB\ services running
 
-\how\ 
+\how\
 \begin{enumerate}
 \item Register another job.
 \item Register a~notification as in~\ref{notif1} but terminate the client
@@ -301,11 +283,12 @@ immediately.
 
 
 
+
 \subsection{Server purge}
 \TODO{ljocha, valtri: ozivit skript i text}
 
 \textbf{WARNING: This test is destructive, it destroys ALL data in an
-existing \LB\ database.} 
+existing \LB\ database.}
 
 The test is fairly complex but it does not make too much sense to split it
 artificially.

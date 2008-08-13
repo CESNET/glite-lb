@@ -36,7 +36,7 @@ doc: LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf
 # 	$(BIBTEX) `basename $< .tex`
 # 	$(LATEX) $<
 # 	$(LATEX) $<
-# 
+#
 # %.ps: %.dvi
 # 	$(DVIPS) -ta4 -o $@ $<
 
@@ -92,7 +92,7 @@ LBUG.pdf: ${COMMON} \
 	LBUG-Introduction.tex components.tex \
 	LBUG-Tools.tex logevent.tex notify.tex log_usertag.tex change_acl.tex \
 	LBUG-Troubleshooting.tex \
-	LBUG-Appendix.tex events.tex status.tex 
+	LBUG-Appendix.tex events.tex status.tex
 
 LBAG.pdf: ${COMMON} \
 	LBAG.tex \
@@ -115,6 +115,7 @@ LBTP.pdf: ${COMMON} \
 	LBTP.tex \
 	LBTP-Abstract.tex \
 	LBTP-Introduction.tex \
+    LBTP-IntegrationTests.tex \
 	LBTP-Tests.tex \
 	LBTP-PerfTests.tex \
 	LBTP-InterTests.tex

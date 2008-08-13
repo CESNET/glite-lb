@@ -1,0 +1,73 @@
+% Integration tests
+
+\section{Installation tests}
+\label{s:installation}
+\TODO{salvet: list installed packages, check all dependencies, ...}
+
+
+\newpage
+\section{Configuration tests}
+\label{s:configuration}
+\TODO{salvet: check all config files, ...}
+
+
+\newpage
+\section{Service ping tests}
+\label{s:ping}
+
+In this section we describe basic tests of \LB if the services are up and running.
+% Local tests are meant to be run on the install node (where the appropriate daemon is running)
+% whereas remote tests are meant to be run via another node.
+
+\subsection{Logger (local \& inter)}
+
+\subsubsection{Local tests}
+\what\ check if both \texttt{glite-lb-logd} and \texttt{glite-lb-interlogd} are running,
+check if \texttt{glite-lb-logd} is listnening on which port (9002 by default),
+socket-connect to \texttt{glite-lb-logd},
+check if enough disk capacity is free for \code{dglog*} files,
+socket-connect to \texttt{glite-lb-interlogd}.
+
+\how\ \ctblb{lb-test-logger-local.sh}
+
+
+\subsubsection{Remote tests}
+\req\ environment variable \texttt{GLITE\_WMS\_LOG\_DESTINATION} set, GSI credentials set
+
+\what\ network ping,
+check GSI credentials,
+socket-connect,
+gsi-connect
+
+\how\ \ctblb{lb-test-logger-remote.sh}
+
+
+\subsection{Server}
+
+\subsubsection{Local tests}
+\req\ environment variables \texttt{GLITE\_WMS\_LBPROXY\_STORE\_SOCK},
+and \texttt{GLITE\_WMS\_LBPROXY\_SERVE\_SOCK} set
+
+\what\ check MySQL (running, accessible, enough disk capacity, ...),
+check if both daemons \texttt{glite-lb-bkserverd} and \texttt{glite-lb-notif-interlogd} are running,
+check if \texttt{glite-lb-bkserverd} is listnening on which ports (9000, 9001 and 9003 by default),
+socket-connect to all \texttt{glite-lb-bkserverd} ports and sockets,
+check if enough disk capacity is free for dumps,
+socket-connect to \texttt{glite-lb-notif-interlogd}.
+
+\how\ \ctblb{lb-test-server-local.sh}
+
+
+\subsubsection{Remote tests}
+\req\ environment variable \texttt{GLITE\_WMS\_QUERY\_SERVER} set, GSI credentials set
+
+\what\ network ping,
+check GSI credentials,
+socket-connect to all server ports,
+gsi-connect to all server ports,
+WS getVersion.
+
+\how\ \ctblb{lb-test-server-remote.sh}
+
+
+

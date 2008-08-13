@@ -1,10 +1,10 @@
 \section{Introduction}
 
-This document explains how to test the Logging and Bookkeeping (\LB) service. 
+This document explains how to test the Logging and Bookkeeping (\LB) service.
 
 As part of the EGEE-III project, Specific Service Activity SA3: Integration,
-testing and certification\footnote{\url{https://twiki.cern.ch/twiki/bin/view/EGEE/SA3}}, 
-testing is an essential activity and all important information about gLite software 
+testing and certification\footnote{\url{https://twiki.cern.ch/twiki/bin/view/EGEE/SA3}},
+testing is an essential activity and all important information about gLite software
 testing should be available from the webpage
 
 \begin{center}
@@ -14,7 +14,7 @@ testing should be available from the webpage
 This document describes test plan for the \LB service.
 
 
-\subsection{Test Categories}
+\subsection{Test categories}
 
 % Obsolete, not used anymore:
 %
@@ -32,24 +32,24 @@ According to the gLite Test Writnig Guidelines
 \footnote{\url{https://twiki.cern.ch/twiki/bin/view/LCG/LCGgliteTestWritingGuidelines}},
 we consider two test categories with the following test types:
 
-\begin{description} 
-\item[Integration tests] verify if the software is installable and configurable
+\begin{description}
+\item[Integration tests] verify if the software is installable and configurable.
 They also check for basic, not depending on other grid services, functionality
 of the component (e.g. daemon is up and running).
-\begin{enumerate}
-\item installation tests,
-\item configuration tests,
-\item service ping tests: basic tests if service is up and running.
-\end{enumerate}
+\begin{itemize}
+\item Installation tests, see Section~\ref{s:installation}
+\item Configuration tests, see Section~\ref{s:configuration}
+\item Service ping tests: basic tests if service is up and running, see Section~\ref{s:ping}
+\end{itemize}
 %
 \item[System tests] verify if the component works within the grid in
 interaction with other grid services.
-\begin{enumerate}
-\item functionality tests of fully supported functionality (including APIs and CLI), 	
-\item stress tests and performance tests,
-\item interoperability tests,
-\item security tests.
-\end{enumerate}
+\begin{itemize}
+\item Functionality tests of fully supported functionality (including APIs and CLI), see Section~\ref{s:functionality}
+\item Performance and stress tests, see Section~\ref{s:perftests}
+\item Interoperability tests, see Section~\ref{s:interoperability}
+\item Security tests, see Section~\ref{s:security}
+\end{itemize}
 \end{description}
 
 The tests could be run either locally (on the install node = where the service
@@ -61,16 +61,15 @@ for example during the build process (especially unit tests). They are not
 described in this document.
 
 
-\subsection{Tests in \texttt{org.glite.testsuites.ctb/LB}}
-\TODO{implementation} 
+\subsection{Certification tests}
 
 EGEE Certification team collects tests for \LB in a gLite module
 \verb'org.glite.testsuites.ctb' in the \verb'LB' directory. All \LB tests are
 described at
 \url{https://twiki.cern.ch/twiki/bin/view/LCG/SAMTests#Logging_and_Bookkeeping_LB}
-as well as next to each test case in Sections \ref{s:tests} and \ref{s:perftests}.
+as well as next to each test case in the following sections.
 
-The tests can be used as sensors in different monitoring frameworks 
+The tests can be used as sensors in different monitoring frameworks
 (see also below).
 
 
@@ -85,18 +84,18 @@ Service Availability Monitoring
 the monitoring of production and pre-production grid sites. It provides a set
 of probes which are submitted at regular intervals, and a database that stores
 test results. In effect, SAM provides monitoring of grid services from a user
-perspective. 
+perspective.
 
-\TODO{More about SAM. How LB is integrated - LB sensors for SAM}
+\TODO{ljocha: More about SAM. How LB is integrated - LB sensors for SAM}
 
 
-\subsubsection{Nagios} 
+\subsubsection{Nagios}
 
 Nagios\footnote{\url{http://www.nagios.org}} is a host and service monitor
 designed to inform you of network problems before your clients, end-users or
 managers do.
 
-\TODO{More about Nagios. How LB is integrated - LB sensors for Nagios?}
+\TODO{ruda: More about Nagios. How LB is integrated - LB sensors for Nagios}
 
 
 \subsubsection{ETICS}
@@ -109,7 +108,7 @@ edge Grid software and best practices, ETICS allows to fully automate
 the way your software is built and tested.
 
 Please see the ETICS User Manual \cite{etics_manual} for the description
-of the ETICS service and basic ETICS commands. The command to be issued to 
+of the ETICS service and basic ETICS commands. The command to be issued to
 test the whole \LB subsystem is:
 
 \begin{verbatim}
@@ -117,17 +116,17 @@ test the whole \LB subsystem is:
 \end{verbatim}
 
 It can be issued locally or using the remote build and test system.
-\TODO{More about ETICS testing}
+%\TODO{More about ETICS testing?}
 
 General ideas of \LB tests using ETICS are the following
 
 \begin{itemize}
 \item tests are in CVS together with the code
 
-\item tests run the service themselves on some nondefault ports and perform a set of 
-elementary actions similar to those from org.glite.testsuites.ctb/LB
-to test the basic functionality of the service which is stopped again at the 
+\item tests run the service themselves on some nondefault ports and perform a set of
+elementary actions similar to those from \ctblb{}\ 
+to test the basic functionality of the service which is stopped again at the
 end of the test
 
-\end{itemize} 
-\TODO{More about LB tests for individual modules?}
+\end{itemize}
+\TODO{More about LB tests for individual modules}
