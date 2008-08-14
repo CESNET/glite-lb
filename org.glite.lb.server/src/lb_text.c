@@ -16,6 +16,36 @@
 #define UNUSED_VAR
 #endif
 
+static char *escape_text(char *text){
+	int len = strlen(text);
+	char *ret = malloc((len+1)*sizeof(char));
+	int reti = 0;
+	int retlen = len;
+	int i;
+	for (i = 0; i < len; i++){
+		// escape '\'
+		if (text[i] == '\\'){
+			ret[reti] = '\\';
+			reti++;
+			retlen++;
+			ret = realloc(ret, (retlen+1)*sizeof(char));
+		}
+		// replace newline by '\\n'
+		if (text[i] == '\n'){
+			ret[reti] = '\\';
+			reti++;
+			ret[reti] = 'n';
+			retlen++;
+                        ret = realloc(ret, (retlen+1)*sizeof(char));
+		}
+		else
+			ret[reti] = text[i];
+		reti++;
+	}
+	ret[reti] = 0;
+	return ret;
+}
+
 int edg_wll_QueryToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut UNUSED_VAR, char **message UNUSED_VAR)
 {
 /* not implemented yet */
@@ -108,11 +138,15 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 	TR("Done_code","%d",stat.done_code);
 	TR("Exit_code","%d",stat.exit_code);
 
-        if (stat.jdl) asprintf(&jdl,">Job_description = %s\n", stat.jdl);
+        if (stat.jdl){
+		char* my_jdl = escape_text(stat.jdl);
+		asprintf(&jdl,"Job_description=%s\n", my_jdl);
+		free(my_jdl);
+	}
 
-	if (stat.rsl) asprintf(&rsl,"RSL = %s\n", stat.rsl);
+	if (stat.rsl) asprintf(&rsl,"RSL=%s\n", stat.rsl);
 
-        asprintf(&a, "Job = %s\n"
+        asprintf(&a, "Job=%s\n"
 			"%s"
 			"%s"
 			"%s",

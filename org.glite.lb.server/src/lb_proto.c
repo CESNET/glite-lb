@@ -501,7 +501,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				edg_wll_SetError(ctx,EDG_WLL_ERROR_JOBID_FORMAT,fullid);
 				ret = HTTP_BADREQ;
 			}
-			else switch (edg_wll_JobStatusServer(ctx,jobId,0,&stat)) {
+			else switch (edg_wll_JobStatusServer(ctx,jobId,EDG_WLL_STAT_CLASSADS,&stat)) {
 				case 0: if (text) 
 						edg_wll_JobStatusToText(ctx,stat,&message); 
 					else if (html)
