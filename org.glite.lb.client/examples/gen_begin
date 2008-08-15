@@ -32,7 +32,7 @@ do
 	case "$1" in 
 	"-m") shift; BKSERVER_HOST="$1" ;;
 	"-x") LBPROXY="-x" ;;
-	"-X") shift; LBPROXY="-x"; LBPROXY_STORE_SOCK="-S $1" ;;
+	"-X") shift; LBPROXY="-x"; LBPROXY_STORE_SOCK="-S $1"; LBPROXY_REG="-X $1" ;;
 	"-j") shift; EDG_JOBID="$1" ;;
 	"-l") shift; LARGE_STRESS="-l $1" ;;
 	"*") usage ;;
@@ -46,7 +46,7 @@ if [ -z "$EDG_JOBID" ]
 then
 	# initial sequence code & jobid (normaly returned by job_reg)
 	EDG_JOBID=
-	SCRIPT=`$JOB_REG $LBPROXY -m $BKSERVER_HOST -s UserInterface | tail -n 2`
+	SCRIPT=`$JOB_REG $LBPROXY_REG -m $BKSERVER_HOST -s UserInterface | tail -n 2`
 	eval $SCRIPT
 	test -z "$EDG_JOBID" && exit 4
 	echo EDG_JOBID=$EDG_JOBID
