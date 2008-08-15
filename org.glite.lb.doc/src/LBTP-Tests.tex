@@ -145,7 +145,6 @@ in the job state same as the `*' part of the script name.
 
 
 \subsection{LB server and proxy combined test}
-\TODO{mulac: mizeni jobu z proxy, alias kombinovany test na server-proxy}
 
 \req\ running \path{glite-lb-proxy}, \path{glite-lb-interlogd} and
 \path{glite-lb-bkserverd}
@@ -154,18 +153,29 @@ in the job state same as the `*' part of the script name.
 using \code{edg\_wll\_LogEventProxy} and check the job states against
 both lbproxy (using \code{edg\_wll\_JobStatusProxy}) and bkserver
 (using \code{edg\_wll\_JobStatus}). Pay special attention to job reaching final 
-job status and to the automatic purge from proxy - check the timeouts.
+job status and to the automatic purge from proxy.
+
+%  - check the timeouts. - ??tam byly nejaky timeouty???
+
+\how \\
+\TODO{mozna to ma prijit do nejakeho testsuitu, netusim} 
+{\tt glite-lb-running.sh -x -m LB\_HOST:PORT} \\
+- logs sequence of events and returns JOBID \\
+
+{\tt Q1: glite-lb-job\_status -x JOBID } \\
+{\tt Q2: glite-lb-job\_status JOBID } \\
+- Q1 queries LB proxy, Q2 queries LB server - both should return status of the job \\
+
+{\tt glite-lb-cleared.sh -x -m JOBID} \\
+- logs sequence of events to JOBID pushing it to terminal state \\
+
+{\tt Q1: glite-lb-job\_status -x JOBID } \\
+{\tt Q2: glite-lb-job\_status JOBID } \\
+- Q1 returns {\em error: edg\_wll\_JobStatusProxy: No such file or directory (no matching jobs found)} while Q2 returns state of the job until it is purged \\
 
 \result\ A new job state should be available immediately at the
 lbproxy and probably with a small delay also at the bkserver. Jobs that reach the final job state
-are really purged from the proxy in given timeout.
-
-\begin{hints}
-There is already a script \path{test.sh} in
-\path{org.glite.lb.proxy/examples} that can be used together with
-above mentioned scripts \path{glite-lb-*.sh} (they are called from
-\path{test.sh}) to test all this.
-\end{hints}
+are really purged from the proxy.
 
 
 
