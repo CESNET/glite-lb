@@ -119,8 +119,10 @@ can done then. Available parameters specific to LB server are:
 \item \texttt{GLITE\_WMS\_LCGMON\_FILE} -- pathname of file where job state
 export data are written for use by lgcmon/R-GMA 
 (default: \texttt{/var/glite/logging/status.log}
+\item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --other 60d})
+\item \texttt{GLITE\_LB\_EXPORT\_ENABLED} -- set to \texttt{true} for export to JP, installed glite-lb-client and glite-jp-client are needed (default: \texttt{false})
+\item \texttt{GLITE\_LB\_EXPORT\_JPPS} -- Job Provenance Primary Storage where to export purged jobs, required if export to JP is enabled
 \end{itemize}
-\TODO{add more parameters to YAIM module}
 
 In addition to those, YAIM LB module uses following parameters:
 \texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{GLITE\_USER\_HOME},\texttt{SITE\_EMAIL}.
