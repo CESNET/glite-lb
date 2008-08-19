@@ -7,12 +7,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <stdio.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <errno.h>
 
 #include "interlogd.h"
 
@@ -81,121 +76,6 @@ void input_queue_detach()
   unlink(socket_path);
 }
 
-
-int
-store_to_file(il_http_message_t *msg, long *offset) {
-	char s_len[20];
-	char filename[PATH_MAX];
-	FILE *outfile;
-	int i, filedesc;
-	int ret = -1;
-
-	if(msg->host == NULL) {
-		set_error(IL_PROTO, EINVAL, "store_to_file: no message destination specified");
-	}
-
-	snprintf(filename, sizeof(filename), "%s.%s", file_prefix, msg->host);
-	filename[sizeof(filename) - 1] = 0;
-	snprintf(s_len+1, sizeof(s_len)-1, "%18d\n", msg->len);
-	s_len[sizeof(s_len) - 1] = 0;
-	s_len[0] = 0;
-
-try_again:
-	if((outfile = fopen(filename, "a")) == NULL) {
-		set_error(IL_SYS, errno, "store_to_file: error opening file");
-		goto cleanup;
-	}
-	if((filedesc = fileno(outfile)) < 0) {
-		set_error(IL_SYS, errno, "store_to_file: error getting file descriptor");
-		goto cleanup;
-	}
-
-	for(i = 0; i < 5; i++) {
-		struct flock filelock;
-		int filelock_status;
-		struct stat statbuf;
-
-		filelock.l_type = F_WRLCK;
-		filelock.l_whence = SEEK_SET;
-		filelock.l_start = 0;
-		filelock.l_len = 0;
-
-		if((filelock_status=fcntl(filedesc, F_SETLK, &filelock)) < 0) {
-			switch(errno) {
-			case EAGAIN:
-			case EACCES:
-			case EINTR:
-				if((i+1) < 5) sleep(1);
-				break;
-			default:
-				set_error(IL_SYS, errno, "store_to_file: error locking file");
-				goto cleanup;
-			}
-		} else {
-			if(stat(filename, &statbuf)) {
-				if(errno == ENOENT) {
-					fclose(outfile);
-					goto try_again;
-				} else {
-					set_error(IL_SYS, errno, "store_file: could not stat file");
-					goto cleanup;
-				}
-			} else {
-				/* success */
-				break;
-			}
-		}
-	}
-
-	if(i == 5) {
-		set_error(IL_SYS, ETIMEDOUT, "store_to_file: timed out trying to lock file");
-		goto cleanup;
-	}
-	if(fseek(outfile, 0, SEEK_END) < 0) {
-		set_error(IL_SYS, errno, "store_to_file: error seeking at end of file");
-		goto cleanup;
-	}
-	if((*offset=ftell(outfile)) < 0) {
-		set_error(IL_SYS, errno, "store_to_file: error getting current position");
-		goto cleanup;
-	}
-	if(fwrite(s_len, sizeof(s_len), 1, outfile) != 1) {
-		set_error(IL_SYS, errno, "store_to_file: error writing data header to file");
-		goto cleanup;
-	}
-	if(fwrite(msg->data, msg->len, 1, outfile) != 1) {
-		set_error(IL_SYS, errno, "store_to_file: error writing data to file");
-		goto cleanup;
-	}
-	ret = 0;
-	fflush(outfile);
-
-cleanup:
-	if(outfile) fclose(outfile);
-	return ret;
-}
-
-
-int 
-send_reply(int sd)
-{
-	const char reply[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-		"<SOAP-ENV:Envelope"
-		" xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\""
-		" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\""
-		" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-		" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\""
-		" xmlns:ns3=\"http://glite.org/wsdl/types/jp\""
-		" xmlns:ns1=\"http://glite.org/wsdl/services/jp\""
-		" xmlns:ns2=\"http://glite.org/wsdl/elements/jp\">"
-		" <SOAP-ENV:Body>"
-		"  <ns2:UpdateJobsResponse>"
-		"  </ns2:UpdateJobsResponse>"
-		" </SOAP-ENV:Body>"
-		"</SOAP-ENV:Envelope>";
-	
-	return(write(sd, reply, sizeof(reply)));
-}
 
 
 /*
@@ -279,13 +159,8 @@ input_queue_get(il_octet_string_t **buffer, long *offset, int timeout)
 		  return 0;
   }
 
-  if(store_to_file(&msg, offset) < 0) {
-	  close(accepted);
-	  return -1;
-  }
-
-  send_reply(accepted);
   close(accepted);
+  *offset = -1;
   return(msg.len);
 }
 #endif

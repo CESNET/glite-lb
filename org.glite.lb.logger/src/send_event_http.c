@@ -252,7 +252,7 @@ event_queue_send(struct event_queue *eq)
        4xx - client error (eq. 400 Bad Request)
        5xx - server error (eq. 500 Internal Server Error)
     */
-    if(code >= 500 && code < 600) {
+    if(code >= 100 && code < 200) {
 
 	    /* non fatal errors (for us), try to deliver later */
 	    eq->timeout = TIMEOUT;

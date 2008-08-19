@@ -71,27 +71,18 @@ jobid2controlfile(char *job_id_s)
   return(buffer);
 }
 
-struct file_reader_data {
-	int fd;
-	size_t max_len;
-	size_t pos;
-};
-
-#define IL_RD_VALUE(a,b) ((struct file_reader_data*)(a))->b
-
 static
 int
 file_reader(void *user_data, char *buffer, const int len)
 {
-	int l, m, ret;
+	size_t ret = 0;
 	
-	m = IL_RD_VALUE(user_data, max_len) - IL_RD_VALUE(user_data, pos);
-	l = (len > m) ? m : len;
-	if(l > 0) 
-		ret = read(IL_RD_VALUE(user_data, fd), buffer, l);
-	else 
-		ret = 0;
-	IL_RD_VALUE(user_data, pos) += ret;
+	if(len > 0) {
+		ret = fread(buffer, 1, len, (FILE*)user_data);
+		if(ret == 0 && ferror((FILE*)user_data)) {
+			return -1;
+		} 
+	}
 	return ret;
 }
 
@@ -100,32 +91,24 @@ static
 int
 read_event_string(FILE *file, il_http_message_t *msg)
 {
-	struct file_reader_data rd;
-	char s_len[20];
 	int  len, ret;
 	int fd = fileno(file);
+	long start;
 
-	len = read(fd, s_len, sizeof(s_len));
-	if(len != sizeof(s_len)) {
-		if(len < 0) 
-			set_error(IL_SYS, errno, "read_event_string: error reading record header");
-		else 
-			set_error(IL_SYS, EIO, "read_event_string: record header too short");
-		return -1;
+	/* remember the start position */
+	start = ftell(file);
+	ret = receive_http(file, file_reader, msg);
+	if(ret < 0) return ret;
+	/* seek at the end of message in case the reader read ahead */
+	len = fseek(file, start + msg->len, SEEK_SET);
+	len = fgetc(file);
+	if(len != '\n') {
+		il_log(LOG_ERR, "error reading event from file, missing terminator character at %d, found %c(%d))\n", 
+		       start+msg->len, len, len);
+		if(msg->data) { free(msg->data); msg->data = NULL; }
+		if(msg->host) { free(msg->host); msg->host = NULL; }
+		return EINVAL;
 	}
-	if(s_len[0] != 0 || s_len[sizeof(s_len) - 1] != 0) {
-		set_error(IL_SYS, EINVAL, "read_event_string: invalid record header");
-		return -1;
-	}
-	len = atoi(s_len + 1);
-	if(len < 0) {
-		set_error(IL_SYS, EINVAL, "read_event_string: invalid record length in header");
-		return -1;
-	}
-	rd.fd = fd;
-	rd.max_len = len;
-	rd.pos = 0;
-	ret = receive_http(&rd, file_reader, msg);
 	return ret;
 }
 
@@ -436,14 +419,14 @@ event_store_recover(struct event_store *es)
 		  /* skip all committed or already enqueued events */
 		  /* be careful - check, if the offset really points to the
 		     beginning of event string */
-		  if(fseek(ef, last, SEEK_SET) < 0) {
+		  if(fseek(ef, last - 1, SEEK_SET) < 0) {
 			  set_error(IL_SYS, errno, "event_store_recover: error setting position for read");
 			  event_store_unlock(es);
 			  fclose(ef);
 			  return(-1);
 		  }
-		  /* the new event MUST start with 0 */
-		  if((c=fgetc(ef)) != 0) {
+		  /* the last enqueued event MUST end with \n */
+		  if((c=fgetc(ef)) != '\n') {
 			  /* Houston, we have got a problem */
 			  il_log(LOG_WARNING, 
 				 "    file position %ld does not point at the beginning of event string, backing off!\n",
@@ -459,7 +442,6 @@ event_store_recover(struct event_store *es)
 			  }
 		  } else {
 			  /* OK, break out of the loop */
-			  fseek(ef, -1, SEEK_CUR); /* should ungetc, but we are reading with read... */
 			  break;
 		  }
 	  } else {
@@ -488,7 +470,7 @@ event_store_recover(struct event_store *es)
     ret = -1;
 
     /* create message for server */
-    msg = server_msg_create(&hmsg, last);
+    msg = server_msg_create((il_octet_string_t*)&hmsg, last);
     if(msg == NULL) {
 	    il_log(LOG_ALERT, "    event file corrupted! I will try to move it to quarantine (ie. rename it).\n");
 	    /* actually do not bother if quarantine succeeded or not - we could not do more */
@@ -502,7 +484,7 @@ event_store_recover(struct event_store *es)
     /* first enqueue to the LS */
     if(!bs_only && (last >= es->last_committed_ls)) {
       
-      il_log(LOG_DEBUG, "      queueing event at %ld to logging server\n", last);
+	    il_log(LOG_DEBUG, "      queueing event at %ld to server %s\n", last, eq_l->dest_name);
 
 #if !defined(IL_NOTIFICATIONS)
       if(enqueue_msg(eq_l, msg) < 0)
@@ -518,7 +500,7 @@ event_store_recover(struct event_store *es)
     if((eq_b != eq_l) && 
        (last >= es->last_committed_bs)) {
       
-      il_log(LOG_DEBUG, "      queueing event at %ld to bookkeeping server\n", last);
+	    il_log(LOG_DEBUG, "      queueing event at %ld to server %s\n", last, eq_b->dest_name);
       
       if(enqueue_msg(eq_b, msg) < 0)
 	break;
@@ -560,11 +542,16 @@ event_store_recover(struct event_store *es)
 int
 event_store_sync(struct event_store *es, long offset)
 {
+	int ret;
+
 	assert(es != NULL);
 
-	/* all events actually come through socket before going to file,
-	   so nothing can be found in file that was not seen here */
-	return 1;
+	/* all events are actually read from file, the event on socket
+	 * is ignored and serves just to notify us about file change
+	 */
+	ret = event_store_recover(es);
+	ret = (ret < 0) ? ret : 0;
+	return(ret);
 }
 
 

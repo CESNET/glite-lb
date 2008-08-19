@@ -100,7 +100,8 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 		return -1;
 	/* set this to indicate new data owner */
 	hmsg->data = NULL;
-	msg->ev_len = hmsg->len; /* XXX: add lentgh size too */
+	hmsg->host = NULL;
+	msg->ev_len = hmsg->len + 1; /* must add separator size too */
 	return 0;
 
 }

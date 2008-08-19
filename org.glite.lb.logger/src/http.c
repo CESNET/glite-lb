@@ -61,8 +61,9 @@ receive_http(void *user_data, int (*reader)(void *, char *, const int), il_http_
 	int  len, alen, clen, i, buffer_free, min_buffer_free = DEFAULT_CHUNK_SIZE;
 	char *buffer, *p, *s, *cr;
 	
-	msg->data = NULL;
-	msg->len = 0;
+	memset(msg, 0, sizeof(*msg));
+	// msg->data = NULL;
+	// msg->len = 0;
 	state = IN_REQUEST;
 	alen = 0;
 	buffer = NULL;
