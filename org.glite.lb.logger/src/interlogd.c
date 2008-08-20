@@ -290,6 +290,12 @@ main (int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
+  if(!debug &&
+     (daemon(0,0) < 0)) {
+    perror("daemon");
+    exit(EXIT_FAILURE);
+  }
+
 #ifdef LB_PERF
   /* this must be called after installing signal handlers */
   glite_wll_perftest_init(NULL, /* host */
@@ -335,12 +341,6 @@ main (int argc, char **argv)
      exit(EXIT_FAILURE);
   }
   
-  if(!debug &&
-     (daemon(0,0) < 0)) {
-    perror("daemon");
-    exit(EXIT_FAILURE);
-  }
-
   if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS)	{
   	il_log(LOG_CRIT, "Failed to initialize Globus common module\n");
   	exit(EXIT_FAILURE);
