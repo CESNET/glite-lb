@@ -78,7 +78,7 @@ add_groups(edg_wll_Context ctx, struct voms *voms_cert, char *vo_name,
       if ((*voms_data)->group && *(*voms_data)->group) {
 	 tmp = realloc(groups->val, (groups->len + 1) * sizeof(*groups->val));
 	 if (tmp == NULL)
-	    return ENOMEM;
+	    return edg_wll_SetError(ctx, ENOMEM, "not enough memory");
 	 groups->val = tmp;
 	 groups->val[groups->len].vo = strdup(vo_name);
 	 groups->val[groups->len].name = strdup((*voms_data)->group);
@@ -214,27 +214,30 @@ void edg_wll_FreeVomsGroups(edg_wll_VomsGroups *groups) {}
 #if !defined(NO_VOMS) && !defined(NO_GACL)
 
 static int
-parse_creds(edg_wll_VomsGroups *groups, char *subject, GRSTgaclUser **gacl_user)
+parse_creds(edg_wll_Context ctx, edg_wll_VomsGroups *groups, char **fqans,
+            char *subject, GRSTgaclUser **gacl_user)
 {
    GRSTgaclCred *cred = NULL;
    GRSTgaclUser *user = NULL;
-   int ret;
    int i;
+   char **f;
+
+   edg_wll_ResetError(ctx);
 
    GRSTgaclInit();
 
    cred = GRSTgaclCredNew("person");
    if (cred == NULL)
-      return ENOMEM;
+      return edg_wll_SetError(ctx, ENOMEM, "Failed to create GACL person");
    
    if (!GRSTgaclCredAddValue(cred, "dn", subject)) {
-      ret = EINVAL; /* GACL_ERR */
+      edg_wll_SetError(ctx, EINVAL, "Failed to create GACL DN credential");
       goto fail;
    }
 
    user = GRSTgaclUserNew(cred);
    if (user == NULL) {
-      ret = ENOMEM;
+      edg_wll_SetError(ctx, ENOMEM, "Failed to create GACL user");
       goto fail;
    }
    cred = NULL; /* GACLnewUser() doesn't copy content, just store the pointer */
@@ -242,21 +245,38 @@ parse_creds(edg_wll_VomsGroups *groups, char *subject, GRSTgaclUser **gacl_user)
    for (i = 0; i < groups->len; i++) {
       cred = GRSTgaclCredNew("voms-cred");
       if (cred == NULL) {
-	 ret = ENOMEM;
+	 edg_wll_SetError(ctx, ENOMEM, "Failed to create GACL voms-cred credential");
 	 goto fail;
       }
       if (!GRSTgaclCredAddValue(cred, "vo", groups->val[i].vo) ||
 	  !GRSTgaclCredAddValue(cred, "group", groups->val[i].name)) {
-	 ret = EINVAL; /* GACL_ERR */
+         edg_wll_SetError(ctx, EINVAL, "Failed to populate GACL voms-cred credential");
 	 goto fail;
       }
       if (!GRSTgaclUserAddCred(user, cred)) {
-	 ret = EINVAL; /* GACL_ERR */
+         edg_wll_SetError(ctx, EINVAL, "Failed to add GACL voms-cred credential");
 	 goto fail;
       }
       cred = NULL;
       /* GACLuserAddCred() doesn't copy content, just store the pointer. Cred
        * mustn't be free()ed */
+   }
+
+   for (f = fqans; f && *f; f++) {
+      cred = GRSTgaclCredNew("voms");
+      if (cred == NULL) {
+         edg_wll_SetError(ctx, ENOMEM, "Failed to create GACL voms credential");
+         goto fail;
+      }
+      if (!GRSTgaclCredAddValue(cred, "fqan", *f)) {
+         edg_wll_SetError(ctx, EINVAL, "Failed to populate GACL voms credential");
+         goto fail;
+      }
+      if (!GRSTgaclUserAddCred(user, cred)) {
+         edg_wll_SetError(ctx, EINVAL, "Failed to add GACL voms credential");
+         goto fail;
+      }
+      cred = NULL;
    }
 
    *gacl_user = user;
@@ -265,13 +285,11 @@ parse_creds(edg_wll_VomsGroups *groups, char *subject, GRSTgaclUser **gacl_user)
 
 fail:
    if (cred)
-      /* XXX GRSTgaclCredFree(cred); */
-      ;
+      GRSTgaclCredFree(cred);
    if (user)
-      /* XXX GRSTgaclUserFree(user); */
-      ;
+      GRSTgaclUserFree(user);
 
-   return ret;
+   return edg_wll_Error(ctx,NULL,NULL);
 }
 
 static int
@@ -363,7 +381,7 @@ create_cred(char *userid, int user_type, GRSTgaclCred **cred)
       if (c == NULL)
 	 return ENOMEM;
       if (!GRSTgaclCredAddValue(c, "dn", userid)) {
-	 /* XXX GRSTgaclCredFree(c); */
+	 GRSTgaclCredFree(c);
 	 return -1; /* GACL_ERR */
       }
    } else if(user_type == EDG_WLL_USER_VOMS_GROUP) {
@@ -376,8 +394,16 @@ create_cred(char *userid, int user_type, GRSTgaclCred **cred)
       *group++ = '\0';
       if (!GRSTgaclCredAddValue(c, "vo", userid) ||
 	  !GRSTgaclCredAddValue(c, "group", group)) {
-	 /* XXX GRSTgaclCredFree(c); */
+	  GRSTgaclCredFree(c);
 	 return -1; /* GACL_ERR */
+      }
+   } else if (user_type == EDG_WLL_USER_FQAN) {
+      c = GRSTgaclCredNew("voms");
+      if (c == NULL)
+         return ENOMEM;
+      if (!GRSTgaclCredAddValue(c, "fqan", userid)) {
+         GRSTgaclCredFree(c);
+         return -1; /* GACL_ERR */
       }
    } else
       return EINVAL;
@@ -466,14 +492,13 @@ edg_wll_CheckACL(edg_wll_Context ctx, edg_wll_Acl acl, int requested_perm)
 
    if (!ctx->peerName) return edg_wll_SetError(ctx,EPERM,"CheckACL");
 
-   ret = parse_creds(&ctx->vomsGroups, ctx->peerName, &user);
-   if (ret) {
-      return edg_wll_SetError(ctx,ret,"parse_creds()");
-   }
+   ret = parse_creds(ctx, &ctx->vomsGroups, ctx->fqans, ctx->peerName, &user);
+   if (ret)
+      return edg_wll_Error(ctx,NULL,NULL);
 
    perm = GRSTgaclAclTestUser(acl->value, user);
 
-   /* XXX GRSTgaclUserFree(user); */
+   GRSTgaclUserFree(user);
    
    if (perm & requested_perm) return edg_wll_ResetError(ctx);
    else return edg_wll_SetError(ctx,EPERM,"CheckACL");
@@ -608,7 +633,7 @@ edg_wll_InitAcl(edg_wll_Acl *acl)
 void
 edg_wll_FreeAcl(edg_wll_Acl acl)
 {
-   /* XXX if ( acl->value ) GRSTgaclAclFree(acl->value); */
+   if ( acl->value ) GRSTgaclAclFree(acl->value);
    if ( acl->string ) free(acl->string);
    free(acl);
 }
@@ -837,7 +862,7 @@ end:
 	if (stmt) glite_lbu_FreeStmt(&stmt);
 	if (acl_id) free(acl_id);
 	if (acl_str) free(acl_str);
-	/* XXX if (gacl) GRSTgaclAclFree(gacl); */
+	if (gacl) GRSTgaclAclFree(gacl);
 	if (jobstr) free(jobstr);
 
 	return edg_wll_Error(ctx, NULL, NULL);

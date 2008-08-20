@@ -142,6 +142,7 @@ int edg_wll_JobStatusServer(
 		if (acl) {
 			stat->acl = strdup(acl->string);
 			edg_wll_FreeAcl(acl);
+			acl = NULL;
 		}
 
 		if ((flags & EDG_WLL_STAT_CLASSADS) == 0) {

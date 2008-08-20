@@ -434,6 +434,7 @@ enum edg_wll_ACLOperation {
 enum edg_wll_UserIdType {
 	EDG_WLL_USER_SUBJECT,           /* X.509 subject name */
 	EDG_WLL_USER_VOMS_GROUP,        /* VOMS group membership */
+	EDG_WLL_USER_FQAN,		/* Full qualified attribute name */
 };
 
 /*
