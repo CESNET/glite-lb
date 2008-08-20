@@ -582,13 +582,16 @@ proxy certificates.
 By default, access to information about a job is only allowed to the user
 who submitted the job (\ie the job owner). The job owner can also assign an
 access control list to his or job in the \LB specifying other users who are
-allowed to read the data from \LB. The ACLs are internally represented in
-the GridSite GACL format~\cite{gacl2} and are stored in the \LB
-database along with the job information. The stored ACL are checked on each
-query requesting the data. The ACLs are under control of the job owner, who
-can add and remove entries in the ACL arbitrarily using the \LB API or
-command-line tools. Each entry of an ACL can specify either a user subject
-name or a name of a VOMS group.
+allowed to read the data from \LB. The ACLs are represented in
+the GridSite GACL format~\cite{gacl2} and are stored in the \LB database
+along with the job information. The stored ACL are checked on each query
+requesting the data. The ACLs are under control of the job owner, who can
+add and remove entries in the ACL arbitrarily using the \LB API or
+command-line tools (see~\ref{e:change-acl}). Each entry of an ACL can
+specify either a user subject name, a name of a VOMS group, or an attribute
+specified in the Full qualified attribute name format (the FQAN support is
+only available in \LBnew). An ACL assigned to a job is returned as part of 
+job status information.
 
 Besides of using the ACLs, the \LB administrator can also specify a~set of
 privileged users with access to all job records on a particular \LB server

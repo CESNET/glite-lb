@@ -19,10 +19,11 @@ where
 \begin{tabularx}{\textwidth}{>{\texttt}lX}
 <job\_id>    & specifies the job to change \\
 <user\_id>   & specifies the user to use, can be either an X.500 name
-               (subject name) or a VOMS group (of the form VO:Group)\\
-<user\_id\_type>   & \texttt{0} or \texttt{1}, indicating \texttt{user\_id}
-                     specifies X.500 name or VOMS group, respectively \\
-<permission\_type> & \texttt{0} or \texttt{1}, indicating the user is 
+               (subject name), a VOMS group (of the form VO:Group), or a Full
+               qualified attribute name (FQAN). FQANs are only supported in \LBnew. \\
+<user\_id\_type>   & \texttt{0}, \texttt{1}, or \texttt{2} indicating \texttt{user\_id}
+                     specifies X.500 name, VOMS group, or FQAN, respectively \\
+<permission\_type> & \texttt{0} or \texttt{1} indicating the user is 
                      \textit{allowed} or \textit{denied}, respectively \\
 <operation>  & \texttt{0} or \texttt{1} indicating the record carried in
                the event shall be added or removed, respectively from
