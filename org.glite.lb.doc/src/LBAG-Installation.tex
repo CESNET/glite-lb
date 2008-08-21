@@ -11,32 +11,31 @@ distribute the software in other distribution formats, e.g. DEB packages.
 
 In \LBold, the list of all LB packages was the following:
 
-\TODO{ljocha: vylepsit popisky, taky do zdrojaku}
-
 \begin{tabularx}{\textwidth}{>{\tt}lX}
-glite-lb-common & LB common files \\ 
-glite-lb-client & LB client library \\ 
-glite-lb-client-interface & LB client library interface (header files) \\ 
-glite-lb-logger & LB local-logger end inter-logger \\ 
-glite-lb-proxy & LB proxy \\ 
-glite-lb-server & LB server \\ 
-glite-lb-server-bones & LB server bones (common to proxy and server) \\ 
-glite-lb-utils & LB utilities \\ 
-glite-lb-ws-interface & LB Web Services Interface 
+glite-lb-common & common files \\ 
+glite-lb-client & client library and CLI tools\\ 
+glite-lb-client-interface & client library interface (header files) \\ 
+glite-lb-logger & local-logger and inter-logger \\ 
+glite-lb-proxy & proxy (restricted server used by WMS)\\ 
+glite-lb-server & server \\ 
+glite-lb-server-bones & multi-process server building library \\ 
+glite-lb-utils & auxiliary utilities \\ 
+glite-lb-ws-interface & web service interface  \\
+glite-security-gsoap-plugin & GSS wrapper and GSS plugin for gSoap
 \end{tabularx}
 
 In \LBnew, the code has been restructured quite a lot, especially the dependencies were lightened,
 and the new list of packages is now the following:
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
-glite-lb-doc & LB documentation \\ 
-glite-lb-common & LB common files \\ 
-glite-lb-client & LB client library \\ 
-glite-lb-logger & LB local-logger end inter-logger \\
-glite-lb-server & LB server \\
-glite-lb-state-machine & LB state machine (LB plugin) \\ 
-glite-lb-utils & LB utilities \\
-glite-lb-ws-interface & LB Web Services Interface      
+glite-lb-doc & documentation \\ 
+glite-lb-common & common files \\ 
+glite-lb-client & client library and CLI tools\\ 
+glite-lb-logger & local-logger and inter-logger \\
+glite-lb-server & server, including merged proxy functionality \\
+glite-lb-state-machine & state machine and LB plugin for Job Provenance \\ 
+glite-lb-utils & auxiliary utilities \\
+glite-lb-ws-interface & web service interface \\
 \end{tabularx}
 
 More detailed description together with the dependencies can be read directly from each package,
@@ -50,13 +49,14 @@ that are worth to mention in this documentation:
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-jobid-api-c & gLite jobId C API library \\ 
-glite-jp-common & JP common files \\ 
-glite-lbjp-common-db & database (MySQL) backend \\
-glite-lbjp-common-maildir & maildir backend common files \\
-glite-lbjp-common-server-bones & server bones (common files) \\
-glite-lbjp-common-trio & trio printf modification \\
-glite-security-gsoap-plugin & gSOAP plugin \\ 
-glite-security-gss & GSS client/server C API library \\
+% pro beh LB neni triba
+% glite-jp-common & JP common files \\ 
+glite-lbjp-common-db & database access layer \\
+glite-lbjp-common-maildir & persistent request spool management \\
+glite-lbjp-common-server-bones & multi-process server building library \\
+glite-lbjp-common-trio & extended printf implementation \\
+glite-security-gss & GSS wrapper \\
+glite-security-gsoap-plugin & GSS plugin for gSoap \\
 \end{tabularx}
 
 where all \verb'glite-lbjp-common-*' packages are common both to \LB and 
