@@ -31,13 +31,10 @@ host_cpu:=${shell uname -m}
 ifeq (${host_cpu},x86_64) 
 	archlib:=lib64
 endif   
-ifeq ($(shell test -f ${mysql_prefix}/${archlib}/libmysqlclient.so && echo ok),ok)
-	MYSQL_LIBPATH := "$(wildcard ${mysql_prefix}/${archlib}/libmysqlclient.so*) $(notdir $(wildcard ${mysql_prefix}/${archlib}/libmysqlclient.so*))"
-endif
-ifeq ($(shell test -f ${mysql_prefix}/${archlib}/mysql/libmysqlclient.so && echo ok),ok)
-	MYSQL_LIBPATH := "$(wildcard ${mysql_prefix}/${archlib}/mysql/libmysqlclient.so*) $(notdir $(wildcard ${mysql_prefix}/${archlib}/mysql/libmysqlclient.so*))"
-endif
-MYSQL_CPPFLAGS:=-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql -DMYSQL_LIBPATH=\"${MYSQL_LIBPATH}\"
+
+MYSQL_SONAME:=$(shell lib=/dev/null; for dir in '' mysql; do lib=${mysql_prefix}/${archlib}/$$dir/libmysqlclient.so; [ -f $$lib ] && break; done; readelf -d $$lib | grep SONAME | sed 's/.*\(libmysqlclient.so.[0-9]\{1,\}\).*/\1/' || echo notfound )
+
+MYSQL_CPPFLAGS:=-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql -DMYSQL_SONAME=\"${MYSQL_SONAME}\"
 MYSQL_LIBS=-lz
 
 CFLAGS:= \
@@ -71,11 +68,15 @@ LTESTOBJS:=${TESTOBJS:.o=.lo}
 
 default all: compile doc
 
-libglite_lbu_db.la: ${LOBJS}
-	if [ -z "${MYSQL_LIBPATH}" ]; then \
-		echo "Warning: MySQL shared library not found!"; \
-		sleep 15; \
+check_soname:
+	if [ "${MYSQL_SONAME}" = notfound ]; then \
+		echo "MySQL shared library not found!"; \
+		false; \
 	fi
+
+db.lo: check_soname
+
+libglite_lbu_db.la: ${LOBJS}
 	${LINK} -o $@ $< ${EXT_LIBS}
 
 libglite_lbu_dbtest.la: ${LTESTOBJS}

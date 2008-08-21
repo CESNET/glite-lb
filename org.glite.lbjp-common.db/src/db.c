@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <dlfcn.h>
 #include <pthread.h>
+#include <syslog.h>
 
 #include <mysql.h>
 #include <mysqld_error.h>
@@ -185,7 +186,6 @@ int glite_lbu_DBError(glite_lbu_DBContext ctx, char **text, char **desc) {
 int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) {
 	int err = 0;
 	unsigned int ver_u;
-	char *p, *libnames, *libname;
 
 	*ctx = calloc(1, sizeof **ctx);
 	if (!*ctx) return ENOMEM;
@@ -193,14 +193,8 @@ int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) {
 	/* dynamic load the mysql library */
 	pthread_mutex_lock(&db_handle.lock);
 	if (!db_handle.lib) {
-		libnames = strdup(MYSQL_LIBPATH " libmysqlclient.so");
-		libname = strtok_r(libnames, " ", &p);
-		while (libname) {
-			libname = strtok_r(NULL, " ", &p);
-			if ((db_handle.lib = dlopen(libname, RTLD_LAZY | RTLD_LOCAL)) != NULL) break;
-		}
-		free(libnames);
-		if (!db_handle.lib) return ERR(*ctx, ENOENT, "can't load libmysqlclient library (%s), tried: ", dlerror(), MYSQL_LIBPATH " libmysqlclient.so");
+		db_handle.lib = dlopen(MYSQL_SONAME, RTLD_LAZY | RTLD_LOCAL);
+		if (!db_handle.lib) return ERR(*ctx, ENOENT, "dlopen(): " MYSQL_SONAME ": %s", dlerror());
 		do {
 			LOAD(mysql_init, "mysql_init");
 			LOAD(mysql_get_client_version, "mysql_get_client_version");
@@ -236,8 +230,8 @@ int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) {
 			// check the runtime version
 			ver_u = db_handle.mysql_get_client_version();
 			if (ver_u != MYSQL_VERSION_ID) {
-				err = ERR(*ctx, EINVAL, "version mismatch (compiled '%lu', runtime '%lu')", MYSQL_VERSION_ID, ver_u);
-				break;
+				fprintf(stderr,"Warning: MySQL library version mismatch (compiled '%lu', runtime '%lu')", MYSQL_VERSION_ID, ver_u);
+				syslog(LOG_WARNING,"MySQL library version mismatch (compiled '%lu', runtime '%lu')", MYSQL_VERSION_ID, ver_u);
 			}
 
 			pthread_mutex_unlock(&db_handle.lock);
@@ -904,7 +898,7 @@ static int lbu_err(glite_lbu_DBContext ctx, int code, const char *func, int line
 			va_end(ap);
 		} else
 			ctx->err.desc = NULL;
-		dprintf(ctx, "[db %d] %s:%d %s\n", getpid(), func, line, desc);
+		dprintf(ctx, "[db %d] %s:%d %s\n", getpid(), func, line, desc ? ctx->err.desc : "");
 		return code;
 	} else
 		return ctx->err.code;
