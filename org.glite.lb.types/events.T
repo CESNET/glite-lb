@@ -182,15 +182,24 @@
 	string	value	Arbitrary user tag value.
 
 @type ChangeACL		Management of ACL stored on bookkepping server.
-	string	user_id		DN or VOMS parameter (in format VO:group).
-	int	user_id_type	Type of information given in user_id (DN or VOMS).
+	string	user_id		Certificate or VOMS parameter.
+	int	user_id_type	Type of information given in user_id.
 	_null_	-1
-	int	permission	ACL permission to change (currently only READ).
+	_code_	DN		Certificate subject name
+	_code_	GROUP		VO group (must be specified as "vo":"group")
+	_code_	FQAN		Standard Full Qualified Attribute Name (FQAN)
+	int	permission	ACL permission to change.
 	_null_	-1
-	int	permission_type	Type of permission requested ('allow', 'deny').
+	_code_	READ		Get job information
+	int	permission_type	Type of permission requested.
 	_null_	-1
-	int	operation	Operation requested to perform with ACL (add, remove).
+	_code_	ALLOW		Grant the permission specified
+	_code_	DENY		Deny the permission specified
+	int	operation	Operation requested to perform with ACL.
 	_null_	-1
+	_code_	ADD		Add the record to the ACL
+	_code_	REMOVE		Remove the record from the ACL
+
 
 @type Notification	Management of notification service.
 	notifid	notifId		Notification id.
