@@ -214,7 +214,8 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
  */
 $enum \{
 };
-			gen $indent."EDG_WLL_${tu}UNDEFINED,\t/**< undefined code */ \n";
+			my $null = $f->{null} ? $f->{null} : 0;
+			gen $indent."EDG_WLL_${tu}UNDEFINED = $null,\t/**< undefined code */ \n";
 			for (@{$f->{codes}}) {
 				gen $indent."EDG_WLL_$tu$_->{name},\t/**< $_->{comment} */ \n";
 			}
