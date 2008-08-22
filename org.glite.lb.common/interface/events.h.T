@@ -203,6 +203,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		my $f = selectField $event $_;
 		if ($f->{codes}) {
 			my $fn = ucfirst($f->{name});
+			my $fu = uc $fn;
 			my $c = "$t${fn}"; # new code
 			my $enum = "enum edg_wll\_$c"; # new enum name
 
@@ -215,7 +216,14 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 $enum \{
 };
 			my $null = $f->{null} ? $f->{null} : 0;
-			gen $indent."EDG_WLL_${tu}UNDEFINED = $null,\t/**< undefined code */ \n";
+			gen $indent."EDG_WLL_${tu}${fu}_UNDEFINED = $null,\t/**< undefined code */ \n";
+			unless ($main::defined_undefs{$tu}) {
+				gen qq{/* backward compatibility */
+!\#define EDG_WLL_${tu}UNDEFINED EDG_WLL_${tu}${fu}_UNDEFINED
+!
+};
+				$main::defined_undefs{$tu} = 1;
+			}
 			for (@{$f->{codes}}) {
 				gen $indent."EDG_WLL_$tu$_->{name},\t/**< $_->{comment} */ \n";
 			}
