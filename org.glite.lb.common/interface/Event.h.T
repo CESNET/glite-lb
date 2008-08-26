@@ -134,6 +134,13 @@ public:
 				gen qq{
 !	\};
 };
+				unless ($main::defined_enums{$utf}) {
+					gen qq{/* backward compatibility */
+!\#define ${utf}Code ${utf}${fn}Code
+!
+};
+					$main::defined_enums{$utf} = 1;
+				}
 			}
 		}
 	}
