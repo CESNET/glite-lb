@@ -67,9 +67,15 @@ void EventParseTest::$l()
 		for ($event->getFieldsOrdered) {
 			my $f = selectField $event $_;
 			my $fn = getName $f;
+			my $value = '';
 
-			if (!$f->{codes}) {
-				my $value = '';
+			if ($f->{codes}) {
+				my $fnu = uc $fn;
+				
+				my $v = "EDG_WLL_${u}_$f->{codes}->[0]->{name}";
+				$value = "e1->$l.$fn = $v;";
+			}
+			else {
 #				$value = "e1->$l.$fn = value;";
 #				$value = $f->fromString('value',"e1->$l.$fn");
 				if (($f->{type} eq "int") || ($f->{type} eq "port")) { 
@@ -87,8 +93,8 @@ void EventParseTest::$l()
 				} else { 
 					gen "% FIXME: unknown type $f->{type} for $fn \n"; 
 				}
-				gen "\t$value\n";
 			}
+			gen "\t$value\n";
 		}
 		gen '
 	line = edg_wll_UnparseEvent(ctx,e1);
