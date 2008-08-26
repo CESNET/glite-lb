@@ -103,6 +103,7 @@ public:
 			my $ut;
 			my $utf;
 			my $fc;
+			my $fn;
 			if ($t eq '_common_') {
 				$ff = $f;
 				$ut = '';
@@ -117,10 +118,13 @@ public:
 				$utf = ucfirst $t;
 				$fc = $event->getFieldComment($f);
 			}
+			$fn = ucfirst $ff->{name};
+			my @a = ($fn =~ /_(.)/g);
+			while (@a) { my $c = uc shift @a; $fn =~ s/_(.)/$c/; }
 			if ($ff->{codes}) {
 				gen qq{
 !       /** $fc */
-!	enum ${utf}Code \{
+!	enum ${utf}${fn}Code \{
 };
 				for (@{$ff->{codes}}) {
 					gen qq{

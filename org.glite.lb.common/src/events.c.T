@@ -162,6 +162,7 @@ for ($event->getFieldsOrdered) {
 		my $c = "${fn}"; 		# code
 		my $enum = "enum edg_wll\_$c"; 	# enum name
 		my $char = "edg_wll\_${fn}Names"; # char name
+		my $null = $f->{null} ? $f->{null} : 0;
 # static const char:
 		gen qq{
 /**
@@ -218,6 +219,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 			my $c = "$t${fn}"; 		# code
 			my $enum = "enum edg_wll\_$c"; 	# enum name
 			my $char = "edg_wll\_$t${fn}Names"; # char name
+			my $null = $f->{null} ? $f->{null} : 0;
 # static const char:
 			gen qq{
 /**
@@ -243,7 +245,7 @@ $enum edg_wll_StringTo${c}(const char *name)
 	unsigned int	i;
 
 	for (i=1; i<sizeof($char)/sizeof(${char}\[0\]); i++) 
-		if (strcasecmp(${char}\[i\],name) == 0) return ($enum) i;
+		if (strcasecmp(${char}\[i\],name) == 0) return ($enum) i + ($null);
 	return ($enum) EDG_WLL_${tu}UNDEFINED;
 \}
 \n};
@@ -256,8 +258,8 @@ $enum edg_wll_StringTo${c}(const char *name)
  */
 char *edg_wll\_${c}ToString($enum code) 
 \{
-	if ((int)code < 0 || code >= sizeof($char)/sizeof(${char}\[0\])) return NULL;
-	return strdup(${char}\[code\]);
+	if ((int)code - ($null) < 0 || code - ($null) >= sizeof($char)/sizeof(${char}\[0\])) return NULL;
+	return strdup(${char}\[code - ($null)\]);
 
 \}
 \n\n};
