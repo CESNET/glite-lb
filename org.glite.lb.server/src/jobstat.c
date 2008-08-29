@@ -501,7 +501,7 @@ edg_wll_ErrorCode edg_wll_RestoreSubjobState(
 	ec[1] = NULL;
 
 	if (edg_wll_QueryEventsServer(ctx,1, (const edg_wll_QueryRec **)jc, 
-				(const edg_wll_QueryRec **)jc, &events_p)) {
+				(const edg_wll_QueryRec **)ec, &events_p)) {
 		free(jc);
 		free(ec);
 		return edg_wll_Error(ctx, NULL, NULL);
