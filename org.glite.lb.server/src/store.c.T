@@ -674,6 +674,25 @@ static int register_subjobs(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 #endif
 
 
+edg_wll_ErrorCode intJobStat_embryonic(
+	edg_wll_Context ctx,
+	edg_wlc_JobId jobid,
+	const edg_wll_RegJobEvent *e,
+	intJobStat *stat)
+{
+	if (edg_wlc_JobIdDup(jobid, &stat->pub.jobId) ||
+		edg_wlc_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
+	stat->pub.state = EDG_WLL_JOB_SUBMITTED;
+	stat->pub.owner = strdup(e->user);
+	stat->pub.jobtype = EDG_WLL_STAT_SIMPLE;
+	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
+	stat->pub.lastUpdateTime = e->timestamp;
+
+err:
+	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
 /*
  * Returns encoded SQL table states record for embryonic DAG subjob
  */
@@ -692,13 +711,8 @@ static edg_wll_ErrorCode states_values_embryonic(
 	intJobStat *stat = &stat_rec;
 
 	init_intJobStat(stat);
-	if (edg_wlc_JobIdDup(jobid, &stat->pub.jobId) ||
-		edg_wlc_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
-	stat->pub.state = EDG_WLL_JOB_SUBMITTED;
-	stat->pub.owner = strdup(e->user);
-	stat->pub.jobtype = EDG_WLL_STAT_SIMPLE;
-	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
-	stat->pub.lastUpdateTime = e->timestamp;
+
+	if (intJobStat_embryonic(ctx, jobid, e, stat)) goto err;
 
 	jobid_md5 = edg_wlc_JobIdGetUnique(jobid);
 	parent_md5 = edg_wlc_JobIdGetUnique(e->jobId);
@@ -726,7 +740,6 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 {
 	int			i, err = 0;
 	edg_wlc_JobId		*subjobs;
-	struct timeval		now;
 	char			*jobid_md5, *jobid_md5_old;
 	size_t			jobid_len;
 #ifdef LB_BUF
@@ -769,8 +782,6 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 #endif		
 
 
-	gettimeofday(&now,NULL);
-
 	/* increase the overall request timeout. */
 	ctx->p_tmp_timeout.tv_sec += e->nsubjobs/10;
 	if (ctx->p_tmp_timeout.tv_sec > 86400) ctx->p_tmp_timeout.tv_sec = 86400;
@@ -801,7 +812,7 @@ static int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEv
 		free(jobid_md5_old);
 		jobid_md5_old = jobid_md5;
 
-		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, subjobs[i], icnames, values, bi_states)))
+		if (!err && (err = edg_wll_StoreIntStateEmbryonic(ctx, icnames, values, bi_states)))
 			edg_wll_Error(ctx,&et,&ed);
 
 //job_s = edg_wlc_JobIdUnparse(subjobs[i]);

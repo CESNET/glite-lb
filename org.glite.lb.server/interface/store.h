@@ -46,6 +46,7 @@ int db_parent_store(edg_wll_Context, edg_wll_Event *, intJobStat *);
 int handle_request(edg_wll_Context,char *);
 int create_reply(const edg_wll_Context,char **);
 int trans_db_store(edg_wll_Context,char *,edg_wll_Event *,intJobStat *);
+edg_wll_ErrorCode intJobStat_embryonic(edg_wll_Context ctx, edg_wlc_JobId jobid, const edg_wll_RegJobEvent *e, intJobStat *stat);
 
 
 int edg_wll_delete_event(edg_wll_Context,const char *, int);
