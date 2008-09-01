@@ -57,7 +57,31 @@ where verbosity level can be from 0 to 3.
 
 
 \subsection{HTML and plain text interface}
-\TODO{fila neco je jenom in \LBnew only}
+Since the gLite jobId has the form of a unique URL, it is possible to cut and paste it directly
+to the web browser to view the information about the job (esp. its status), e.g.
+\begin{verbatim}
+  firefox https://pelargir.ics.muni.cz:9000/1234567890
+\end{verbatim}
+To list all user's jobs, it is possible to query only the \LB server address, e.g.
+\begin{verbatim}
+  firefox https://pelargir.ics.muni.cz:9000
+\end{verbatim}
+In all cases it is necessary to have the user certificate installed in the browser.
+
+
+Since \LBnew, it is also possible to obtain the above results in a machine readable 
+\verb'key=value' form by adding a suffix \verb'text' to the above URLs. For example
+\begin{verbatim}
+  curl -3 --key $X509_USER_KEY --cert $X509_USER_CERT \
+    --capath /etc/grid-security/certificates \ 
+    https://pelargir.ics.muni.cz:9000/text
+\end{verbatim}
+or
+\begin{verbatim}
+  curl -3 --key $X509_USER_KEY --cert $X509_USER_CERT \
+    --capath /etc/grid-security/certificates \ 
+    https://pelargir.ics.muni.cz:9000/1234567890/text
+\end{verbatim}
 
 
 \subsection{Other useful tools}
