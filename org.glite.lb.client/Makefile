@@ -173,10 +173,6 @@ compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${
 endif
 
 generate: ${GEN_HDRS}
-	rm -vf ${globalprefix} ${lbprefix} ${HDRS}
-	ln -vs . ${globalprefix}
-	ln -vs . ${lbprefix}
-	for i in ${HDRS}; do ln -vs ../interface/$$i $$i ; done
 
 default: all
 
@@ -358,7 +354,6 @@ clean:
 	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl
-	rm -vf ${globalprefix} ${lbprefix}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 check_version:

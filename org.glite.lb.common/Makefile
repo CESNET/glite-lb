@@ -111,10 +111,6 @@ endif
 default: all
 
 generate: ${GEN_HDRS}
-	rm -vf ${globalprefix} ${lbprefix} ${HDRS}
-	ln -vs . ${globalprefix}
-	ln -vs . ${lbprefix}
-	for i in ${HDRS}; do ln -vs ../interface/$$i $$i ; done
 
 common_version.h: ${top_srcdir}/project/version.properties
 	echo "#define GLITE_LB_COMMON_VERSION \"${version}\"" >$@
@@ -221,7 +217,6 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
-	rm -vf ${globalprefix} ${lbprefix}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o: %.c
