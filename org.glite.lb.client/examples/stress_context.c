@@ -5,7 +5,7 @@
 #include <limits.h>
 
 #include "glite/jobid/cjobid.h"
-#include "glite/lb/producer.h"
+#include "producer.h"
 #include "glite/lb/events.h"
 
 char	*outfile = "context_errors";

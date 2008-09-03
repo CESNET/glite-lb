@@ -9,7 +9,11 @@
 #include "glite/lb/notifid.h"
 #include "glite/lb/events.h"
 
-#include "glite/lb/producer.h"
+#ifdef BUILDING_LB_CLIENT
+#include "producer.h"
+#else
+#include "producer.h"
+#endif
 
 static struct option opts[] = {
 	{"help",		0,	NULL,	'h'},

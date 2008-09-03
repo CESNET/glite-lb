@@ -12,13 +12,13 @@
 #include <string>
 #include <vector>
 
-#include "glite/lb/Notification.h"
-#include "glite/lb/JobStatus.h"
+#include "Notification.h"
+#include "JobStatus.h"
 #include "glite/lb/LoggingExceptions.h"
-#include "glite/lb/ServerConnection.h"
+#include "ServerConnection.h"
 
 #include "glite/lb/notifid.h"
-#include "glite/lb/notification.h"
+#include "notification.h"
 
 EWL_BEGIN_NAMESPACE;
 

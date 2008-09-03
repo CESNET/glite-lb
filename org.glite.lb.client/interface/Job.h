@@ -7,8 +7,13 @@
 
 #include "glite/lb/Event.h"
 
+#ifdef BUILDING_LB_CLIENT
+#include "JobStatus.h"
+#include "ServerConnection.h"
+#else
 #include "glite/lb/JobStatus.h"
 #include "glite/lb/ServerConnection.h"
+#endif
 
 
 /**

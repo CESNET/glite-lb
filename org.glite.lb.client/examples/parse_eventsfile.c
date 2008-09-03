@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "glite/lb/producer.h"
+#include "producer.h"
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
 

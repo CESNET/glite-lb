@@ -6,7 +6,7 @@
 #include <fcntl.h>
 
 #include "glite/jobid/cjobid.h"
-#include "glite/lb/producer.h"
+#include "producer.h"
 #include "glite/lb/events.h"
 
 extern char *optarg;

@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "glite/lb/producer.h"
+#include "producer.h"
 #include "glite/jobid/cjobid.h"
 
 static void slave();

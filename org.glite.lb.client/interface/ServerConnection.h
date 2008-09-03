@@ -14,8 +14,14 @@
 #include "glite/jobid/JobId.h"
 
 #include "glite/lb/Event.h"
+
+#ifdef BUILDING_LB_CLIENT
+#include "JobStatus.h"
+#include "consumer.h"
+#else
 #include "glite/lb/JobStatus.h"
 #include "glite/lb/consumer.h"
+#endif
 
 EWL_BEGIN_NAMESPACE
 

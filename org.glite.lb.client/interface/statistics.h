@@ -1,7 +1,11 @@
 #ifndef GLITE_LB_STATISTICS_H
 #define GLITE_LB_STATISTICS_H
 
+#ifdef BUILDING_LB_CLIENT
+#include "consumer.h"
+#else
 #include "glite/lb/consumer.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

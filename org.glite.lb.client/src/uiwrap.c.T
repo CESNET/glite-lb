@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 #include "glite/jobid/cjobid.h"
-#include "glite/lb/producer.h"
+#include "producer.h"
 
 @@@{
 $PRINTPROTOTYPESONLY = 0;

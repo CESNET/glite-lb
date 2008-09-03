@@ -7,8 +7,8 @@
 #include "glite/jobid/JobId.h"
 #include "glite/lb/LoggingExceptions.h"
 
-#include "glite/lb/consumer.h"
-#include "glite/lb/JobStatus.h"
+#include "consumer.h"
+#include "JobStatus.h"
 
 
 EWL_BEGIN_NAMESPACE;

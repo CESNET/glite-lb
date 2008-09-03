@@ -87,6 +87,7 @@ CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	${COVERAGE_FLAGS} \
+	-DBUILDING_LB_CLIENT \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS}
 
 CXXFLAGS:=${CFLAGS}
@@ -262,6 +263,7 @@ perftest_logjobs.o: perftest_logjobs.c
 
 %.sh: %.l gen_begin gen_sample_job
 	rm -f $@
+	-chmod +x ${GENSAM}
 	$(GENSAM) $< >$@ || rm -f $@
 	chmod -w,+x $@ > /dev/null
 

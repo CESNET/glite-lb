@@ -10,10 +10,10 @@
 #include <errno.h>
 
 #include "glite/lb/events_parse.h"
-#include "glite/lb/consumer.h"
+#include "consumer.h"
 #include "glite/jobid/cjobid.h"
 #ifdef USE_CALLBACKS
-  #include "glite/lb/consumer_fake.h"
+  #include "consumer_fake.h"
 #endif
 
 static void free_events(edg_wll_Event *);

@@ -10,8 +10,8 @@
 #include <errno.h>
 
 #include "glite/lb/events_parse.h"
-#include "glite/lb/consumer.h"
-#include "glite/lb/producer.h"
+#include "consumer.h"
+#include "producer.h"
 #include "glite/jobid/cjobid.h"
 #include "glite/lb/context-int.h"
 

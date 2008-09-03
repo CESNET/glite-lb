@@ -11,8 +11,8 @@
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/mini_http.h"
 
-#include "glite/lb/statistics.h"
-#include "glite/lb/connection.h"
+#include "statistics.h"
+#include "connection.h"
 
 
 

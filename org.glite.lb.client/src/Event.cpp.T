@@ -16,7 +16,7 @@
 #include "glite/lb/notifid.h"
 #include "glite/lb/LoggingExceptions.h"
 
-#include "glite/lb/consumer.h"
+#include "consumer.h"
 
 EWL_BEGIN_NAMESPACE;
 

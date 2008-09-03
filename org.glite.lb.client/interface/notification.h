@@ -8,7 +8,11 @@
 #include "glite/lb/notif_rec.h"
 #include "glite/lb/context.h"
 
+#ifdef BUILDING_LB_CLIENT
+#include "consumer.h"
+#else
 #include "glite/lb/consumer.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

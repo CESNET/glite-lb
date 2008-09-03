@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "glite/lb/LoggingExceptions.h"
-#include "glite/lb/JobStatus.h"
-#include "glite/lb/notification.h"
+#include "JobStatus.h"
+#include "notification.h"
 
 #include "notify_supp.h"
 

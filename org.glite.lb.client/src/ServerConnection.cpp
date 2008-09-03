@@ -18,7 +18,7 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
 
-#include "glite/lb/ServerConnection.h"
+#include "ServerConnection.h"
 #include "glite/lb/LoggingExceptions.h"
 
 EWL_BEGIN_NAMESPACE;

@@ -7,7 +7,7 @@
 #include <sys/time.h>
 
 #include "glite/jobid/cjobid.h"
-#include "glite/lb/producer.h"
+#include "producer.h"
 #include "glite/lb/events.h"
 
 #define PROXY_SERVER "localhost:9000"

@@ -16,9 +16,9 @@
 #include "glite/lb/ulm_parse.h"
 #include "glite/lb/context-int.h" 
 
-#include "glite/lb/producer.h"
-#include "glite/lb/prod_proto.h"
-#include "glite/lb/consumer.h" // for QuerySequenceCode
+#include "producer.h"
+#include "prod_proto.h"
+#include "consumer.h" // for QuerySequenceCode
 
 #ifdef FAKE_VERSION
 int edg_wll_DoLogEvent(edg_wll_Context ctx, edg_wll_LogLine logline);

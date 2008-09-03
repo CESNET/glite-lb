@@ -12,8 +12,8 @@
 
 #include <string>
 
-#include "glite/lb/Job.h"
-#include "glite/lb/consumer.h"
+#include "Job.h"
+#include "consumer.h"
 #include "glite/lb/LoggingExceptions.h"
 #include "glite/lb/context-int.h"
 

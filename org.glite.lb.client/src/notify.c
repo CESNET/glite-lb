@@ -8,7 +8,7 @@
 
 #include "glite/security/glite_gss.h"
 #include "glite/lb/context.h"
-#include "glite/lb/notification.h"
+#include "notification.h"
 
 #include "notify_supp.h"
 
