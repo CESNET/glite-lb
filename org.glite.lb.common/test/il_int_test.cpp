@@ -2,7 +2,11 @@
 
 
 extern "C" {
+#ifdef BUILDING_LB_COMMON
+#include "il_string.h"
+#else
 #include "glite/lb/il_string.h"
+#endif
 }
 
 class IlIntTest: public CppUnit::TestFixture

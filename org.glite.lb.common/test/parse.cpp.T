@@ -3,8 +3,11 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TestFixture.h>
 
-
+#ifdef BUILDING_LB_COMMON
+#include "events_parse.h"
+#else
 #include "glite/lb/events_parse.h"
+#endif
 
 class EventParseTest: public  CppUnit::TestFixture
 {

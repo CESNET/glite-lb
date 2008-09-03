@@ -3,8 +3,13 @@
 
 extern "C" {
 #include <string.h>
+#ifdef BUILDING_LB_COMMON
+#include "il_string.h"
+#include "il_msg.h"
+#else
 #include "glite/lb/il_string.h"
 #include "glite/lb/il_msg.h"
+#endif
 }
 
 class IlMsgTest : public CppUnit::TestFixture 
