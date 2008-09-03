@@ -3,7 +3,11 @@
 
 #ident "$Header$"
 
+#ifdef BUILDING_LB_COMMON
+#include "events.h"
+#else
 #include "glite/lb/events.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

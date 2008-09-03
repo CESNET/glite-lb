@@ -12,9 +12,9 @@
 #include "glite/lbu/escape.h"
 #include "glite/jobid/cjobid.h"
 
-#include "glite/lb/context-int.h"
-#include "glite/lb/xml_parse.h"
-#include "glite/lb/xml_conversions.h"    
+#include "context-int.h"
+#include "xml_parse.h"
+#include "xml_conversions.h"    
 
 
 #ifdef __GNUC__ 

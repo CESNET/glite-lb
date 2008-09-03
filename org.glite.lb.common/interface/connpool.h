@@ -1,11 +1,20 @@
 #ifndef GLITE_LB_CONNPOOL_H
 #define GLITE_LB_CONNPOOL_H
 
-#include "glite/lb/padstruct.h"
 #include "glite/security/glite_gss.h"
+
+#ifdef BUILDING_LB_COMMON
+#include "padstruct.h"
+#include "context.h"
+#include "lb_plain_io.h"
+#include "authz.h"
+#else
+#include "glite/lb/padstruct.h"
 #include "glite/lb/context.h"
 #include "glite/lb/lb_plain_io.h"
 #include "glite/lb/authz.h"
+#endif
+
 #ifdef GLITE_LB_THREADED
   #include <pthread.h>
 #endif

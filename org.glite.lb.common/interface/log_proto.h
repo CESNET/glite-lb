@@ -13,8 +13,11 @@
 extern "C" {
 #endif
 
-
+#ifdef BUILDING_LB_COMMON
+#include "context.h"
+#else
 #include "glite/lb/context.h"
+#endif
 
 /**
  * default (noauth) user name

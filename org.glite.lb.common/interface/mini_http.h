@@ -4,8 +4,13 @@
 #ident "$Header$"
 
 // #include "glite/lb/consumer.h"
+#ifdef BUILDING_LB_COMMON
+#include "context.h"
+#include "connpool.h"
+#else
 #include "glite/lb/context.h"
 #include "glite/lb/connpool.h"
+#endif
 
 /* XXX: not a good place for the folowing #def's but we ain't got better currently */
 /** protocol version */

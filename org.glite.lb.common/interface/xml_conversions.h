@@ -4,10 +4,18 @@
 #ident "$Header$"
 
 #include "glite/jobid/cjobid.h"
+
+#ifdef BUILDING_LB_COMMON
+#include "events.h"
+#include "query_rec.h"
+#include "notifid.h"
+#include "notif_rec.h"
+#else
 #include "glite/lb/events.h"
 #include "glite/lb/query_rec.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/notif_rec.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

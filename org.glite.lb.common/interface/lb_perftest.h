@@ -5,7 +5,12 @@
 
 #include "glite/jobid/cjobid.h"
 #include "glite/jobid/strmd5.h"
+
+#ifdef BUILDING_LB_COMMON
+#include "events.h"
+#else
 #include "glite/lb/events.h"
+#endif
 
 #define PERFTEST_END_TAG_NAME "lb_perftest"
 #define PERFTEST_END_TAG_VALUE "+++ konec testu +++"

@@ -9,9 +9,16 @@
 #ident "$Header$"
 
 #include <glite/jobid/cjobid.h>
+
+#ifdef BUILDING_LB_COMMON
+#include "context.h"
+#include "events.h"
+#include "jobstat.h"
+#else
 #include "glite/lb/context.h"
 #include "glite/lb/events.h"
 #include "glite/lb/jobstat.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

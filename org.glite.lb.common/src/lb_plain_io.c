@@ -18,7 +18,7 @@
 #define INFTIM (-1)
 #endif
 
-#include "glite/lb/lb_plain_io.h"
+#include "lb_plain_io.h"
 
 #define tv_sub(a,b) {\
 	(a).tv_usec -= (b).tv_usec;\

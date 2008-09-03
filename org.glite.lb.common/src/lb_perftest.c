@@ -13,9 +13,10 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#include "glite/lb/lb_perftest.h"
 #include "glite/lbu/trio.h"
-#include "glite/lb/il_msg.h"
+
+#include "lb_perftest.h"
+#include "il_msg.h"
 
 static pthread_mutex_t perftest_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct timeval endtime;

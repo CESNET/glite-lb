@@ -1,7 +1,11 @@
 #ifndef GLITE_LB_PLAIN_IO_H
 #define GLITE_LB_PLAIN_IO_H
 
+#ifdef BUILDING_LB_COMMON
+#include "padstruct.h"
+#else
 #include "glite/lb/padstruct.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

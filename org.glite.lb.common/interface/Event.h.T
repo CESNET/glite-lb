@@ -18,10 +18,16 @@
 #include <string>
 
 #include "glite/jobid/JobId.h"
-#include "glite/lb/CountRef.h"
 
+#ifdef BUILDING_LB_COMMON
+#include "CountRef.h"
+#include "events.h"
+#include "notifid.h"
+#else
+#include "glite/lb/CountRef.h"
 #include "glite/lb/events.h"
 #include "glite/lb/notifid.h"
+#endif
 
 EWL_BEGIN_NAMESPACE
 

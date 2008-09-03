@@ -16,10 +16,16 @@
 #include <inttypes.h>
 
 #include "glite/jobid/cjobid.h"
+
+#ifdef BUILDING_LB_COMMON
+#include "context.h"
+#include "notifid.h"
+#include "padstruct.h"
+#else
 #include "glite/lb/context.h"
 #include "glite/lb/notifid.h"
-
 #include "glite/lb/padstruct.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,7 +1,11 @@
 #ifndef GLITE_LB_IL_MSG_H
 #define GLITE_LB_IL_MSG_H
 
+#ifdef BUILDING_LB_COMMON
+#include "il_string.h"
+#else
 #include "glite/lb/il_string.h"
+#endif
 
 #ident "$Header$"
 

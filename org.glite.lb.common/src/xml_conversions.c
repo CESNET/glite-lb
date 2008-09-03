@@ -7,8 +7,8 @@
 #include "glite/lbu/trio.h"
 #include "glite/lbu/escape.h"
 
-#include "glite/lb/xml_conversions.h"
-#include "glite/lb/jobstat.h"
+#include "xml_conversions.h"
+#include "jobstat.h"
 
 
 

@@ -45,7 +45,8 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${expat_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
-	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS}
+	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS} \
+	-DBUILDING_LB_COMMON
 
 ifneq (${expat_prefix},/usr)
 	EXPAT_LIBS:=-L${expat_prefix}/lib

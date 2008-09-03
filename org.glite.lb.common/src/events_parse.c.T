@@ -10,10 +10,10 @@
 #include <errno.h>
 
 #include "glite/jobid/cjobid.h"
-#include "glite/lb/events.h"
-#include "glite/lb/events_parse.h"
-#include "glite/lb/ulm_parse.h"
-#include "glite/lb/context-int.h"
+#include "events.h"
+#include "events_parse.h"
+#include "ulm_parse.h"
+#include "context-int.h"
 #include "glite/lbu/escape.h"
 #include "glite/lbu/trio.h"
 

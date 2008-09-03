@@ -10,8 +10,8 @@
 
 #include "glite/jobid/strmd5.h"
 #include "glite/jobid/cjobid.h"
-#include "glite/lb/context-int.h"
-// #include "glite/lb/producer.h"
+#include "context-int.h"
+// #include "producer.h"
 
 static void free_voms_groups(edg_wll_VomsGroups *);
 

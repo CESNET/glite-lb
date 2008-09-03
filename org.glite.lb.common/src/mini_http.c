@@ -12,9 +12,9 @@
 
 #include "glite/security/glite_gss.h"
 
-#include "glite/lb/mini_http.h"
-#include "glite/lb/lb_plain_io.h"
-#include "glite/lb/context-int.h"
+#include "mini_http.h"
+#include "lb_plain_io.h"
+#include "context-int.h"
 
 #define min(x,y)	((x) < (y) ? (x) : (y))
 #define CONTENT_LENGTH	"Content-Length:"

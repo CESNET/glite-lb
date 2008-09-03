@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "glite/lb/il_string.h"
+#include "il_string.h"
 
 char *
 put_string(char *p, il_octet_string_t *s)
