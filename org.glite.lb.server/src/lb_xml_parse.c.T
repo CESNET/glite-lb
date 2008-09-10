@@ -51,7 +51,8 @@ static char	*ops[] = { "equal","less","greater","within","unequal" },
 		*attrs[] = {	"jobid","owner","status","location","destination",
 				"donecode","usertag","time","level","host","source",
 				"instance","type","chkpt_tag", "resubmitted", "parent_job",
-				"exitcode", "jdl", "stateentertime", "lastupdatetime" };
+				"exitcode", "jdl", "stateentertime", "lastupdatetime", 
+				"networkserver"  };
 
 static const struct timeval null_timeval = {0,0};
 
