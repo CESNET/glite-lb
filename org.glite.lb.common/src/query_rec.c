@@ -28,6 +28,7 @@ void edg_wll_QueryRecFree(edg_wll_QueryRec *prec)
 		case EDG_WLL_QUERY_ATTR_DESTINATION:
 		case EDG_WLL_QUERY_ATTR_HOST:
 		case EDG_WLL_QUERY_ATTR_INSTANCE:
+		case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
 			if ( prec->value.c ) free(prec->value.c);
 			break;
 		case EDG_WLL_QUERY_ATTR_JOBID:
