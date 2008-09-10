@@ -2421,7 +2421,6 @@ int edg_wll_JobQueryRecToXML(
         int *len_list;
         char **list;
 
-	
 	pomC = strdup("");
 
 	while (conditions && conditions[row]) {
@@ -2472,6 +2471,9 @@ int edg_wll_JobQueryRecToXML(
 	                                        break;
 	                                case EDG_WLL_QUERY_ATTR_DESTINATION:
 	                                        edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "destination", NULL);
+	                                        break;
+	                                case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
+	                                        edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "networkserver", NULL);
 	                                        break;
 	                                case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 	                                        edg_wll_add_int_to_XMLBody(&pomValue, conditions[row][i].value.i, "resubmitted", -1);
