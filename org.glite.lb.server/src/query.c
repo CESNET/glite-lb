@@ -1505,6 +1505,13 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *stat, const edg_wll
 						if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
 					} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 				}
+			case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
+				if ( stat->network_server )
+				{
+					if ( !strcmp(conds[i][j].value.c, stat->network_server) ) {
+						if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
+					} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
+				}
 				break;
 			case EDG_WLL_QUERY_ATTR_JOBID:
 				if ( !stat->jobId )
