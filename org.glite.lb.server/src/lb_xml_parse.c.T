@@ -500,6 +500,7 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 				else /* fall through */
 			case EDG_WLL_QUERY_ATTR_LOCATION:
 			case EDG_WLL_QUERY_ATTR_DESTINATION:
+			case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
 			case EDG_WLL_QUERY_ATTR_USERTAG:
 			case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.c = 
