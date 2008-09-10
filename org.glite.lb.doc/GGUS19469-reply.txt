@@ -23,16 +23,22 @@ org.glite.lb.doc module and it contains three major documents:
 - LB User's Guide (LBUG)
 - LB Adminstrator's Guide (LBAG)
 - LB Developer's Guide (LBDG)
+- LB Test Plan (LBTP)
 
-TODO: the official web location for these documents is now... and links 
-to these documents were updated on all the following webs: 
-http://egee.cesnet.cz/en/JRA1 
+The official web location for these documents is now
+http://egee.cesnet.cz/en/JRA1/LB
+and links to these documents were updated on all the following webs: 
+TODO honik, ljocha:
 http://glite.web.cern.ch/glite/documentation/default.asp 
-https://edms.cern.ch/document/571273/2 
 http://egee-jra1-wm.mi.infn.it/egee-jra1-wm
 
-TODO: The same holds also for the JP documentation that is now part of 
-the org.glite.jp.doc module.
+TODO honik, ljocha:
+The old LB User's Guide was removed from
+https://edms.cern.ch/document/571273/2 
+
+The JP documentation is going to have a similar structure, it is now kept 
+in the org.glite.jp.doc module and it will be published soon.
+
 
 > At last, the guide mentions example code (quote from p. 14 : "You can 
 > found this example in client module, file job_status.c."). I found an 
@@ -51,16 +57,17 @@ can make the examples on their machines.
 > to a user tag: only a string or is an integer value possible? This has 
 > it's importance in the following.
 
-TODO: log_usertag.tex
+LB keeps user tags only as strings, it is left on the application level to 
+give the values some semantics. It is mentioned in LBUG Section 2.3.1.
 
 > I think the documentation misses a description of the equivalent API. 
 > At least some part of the code of the CLI interface should be 
 > available, as in a job this duty is probably better done by the code 
 > itself than by some external command.
 
-TODO: glite-lb-logevent is now in details described in LBUG, section 
-2.1, and the use-case of using this tool to log the user-tag is 
-described in the LBUG 3.1. The logging API is in details described in 
+glite-lb-logevent is now in details described in LBUG, Section 
+2.3, and the use-case of using this tool to log the user-tag is 
+described in the LBUG 2.3.1. The logging API is in details described in 
 LBDG together with the programming examples.
 
 
@@ -74,7 +81,7 @@ LBDG together with the programming examples.
 > supported (Protocol versions incompatible)'. I'm glad to know now but 
 > I would have preferred reading it in the docs.
 
-TODO: consumer_api.tex
+TODO michal, sitera: All this is now mentioned in LBDG Section 4.
 
 > Section 2.2.2,
 > example 1 ("Job status", p. 13)
@@ -87,7 +94,7 @@ TODO: consumer_api.tex
 > to interpret these return codes, can't some details be given in the 
 > docs ?
 
-TODO: consumer_api.tex, see \label{JS}
+TODO michal, sitera: consumer_api.tex, see \label{JS}
 
 > example 2 ("All user's jobs" p. 14) does not work: it misses the 
 > calling of
@@ -98,12 +105,12 @@ TODO: consumer_api.tex, see \label{JS}
 > general/convenient way to set it through config files or environment 
 > vars, it is not mentioned.
 
-TODO: consumer_api.c, see \label{JQ-auj}
+TODO michal, sitera: consumer_api.c, see \label{JQ-auj}
 
 > One more thing about this example : output can be HUGE! Better mention 
 > it...
 
-Mentioned :).
+TODO michal, sitera: Mentioned :).
 
 > example "querying user tags", p. 17
 > I haven't managed to get it working and after quite a few tries I'm 
@@ -115,13 +122,13 @@ Mentioned :).
 > Is this code really working ? Could it be a problem linked with the LB 
 > or VO I'm using (I tried under 'esr' and 'dteam' VOs)?
 
-TODO: consumer_api.c, see \label{JQ_ut}
+TODO michal, sitera: consumer_api.c, see \label{JQ_ut}
 
 > I had no more chance with example "All jobs marked as red" p. 19 and 
 > the event query. Is there some available code somewhere that does 
 > successfully query some user tag?
 
-TODO: consumer_api.c, see \label{ASQ_allred}
+TODO michal, sitera: consumer_api.c, see \label{ASQ_allred}
 
 
 > 3/ The reference
@@ -131,15 +138,14 @@ TODO: consumer_api.c, see \label{ASQ_allred}
 > p. 97) disappeared from the library? No libglite_lb_whatever seems to 
 > contain it.
 
-The automatically generated documentation was really unreadeble, so we 
-removed it almost completely from the LBDG. 
-
-TODO: Only a list of header files and important API functions can be 
-found there.
+The automatically generated documentation was really unreadeble, so we removed
+it almost completely from the LBDG. Only a list of header files and important
+API functions can be found there.
 
 > I can provide the full source code I used if requested.
 
 We would really appreciate if you could look at the documentation now 
 and tell us if you find it suitable and if all examples are working for 
 you without problems.
+
 
