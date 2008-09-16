@@ -30,7 +30,10 @@ http://egee.cesnet.cz/en/JRA1/LB
 and links to these documents were updated on all the following webs: 
 TODO honik, ljocha:
 http://glite.web.cern.ch/glite/documentation/default.asp 
+http://glite.web.cern.ch/glite/packages/R3.1/deployment/glite-LB/glite-LB.asp
 http://egee-jra1-wm.mi.infn.it/egee-jra1-wm
+https://twiki.cern.ch/twiki/bin/view/EGEE/Glite-LB
+https://twiki.cern.ch/twiki/bin/view/EGEE/Egee3Jra1
 
 TODO honik, ljocha:
 The old LB User's Guide was removed from
