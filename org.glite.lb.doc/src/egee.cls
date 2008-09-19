@@ -210,7 +210,7 @@
         \DeclareGraphicsExtensions{.eps}
 \fi
 
-\def\frontboxwidth{10.6cm}%
+\def\frontboxwidth{12.6cm}%
 
 
 
