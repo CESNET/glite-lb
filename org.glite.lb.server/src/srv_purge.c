@@ -285,9 +285,11 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 	else {
 		glite_lbu_Statement	s;
 		char		*job_s;
-		int		res;
+		int		jobs_to_exa;
 		time_t		timeout[EDG_WLL_NUMBER_OF_STATCODES],
-				now = time(NULL);
+				start = time(NULL);
+		double		now, time_per_job, target_this, purge_end;
+		struct timeval	tp;
 
 		for (i=0; i<EDG_WLL_NUMBER_OF_STATCODES; i++)
 			timeout[i] = request->timeout[i] < 0 ? 
@@ -296,10 +298,17 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 				  	request->timeout[EDG_WLL_PURGE_JOBSTAT_OTHER] ) :
 				request->timeout[i];
 
-		if (edg_wll_ExecSQL(ctx, (ctx->isProxy) ? "select dg_jobid from jobs where proxy='1'" :
-			"select dg_jobid from jobs where server='1'", &s) < 0) goto abort;
+		if ((jobs_to_exa = edg_wll_ExecSQL(ctx, (ctx->isProxy) ? "select dg_jobid from jobs where proxy='1'" :
+			"select dg_jobid from jobs where server='1'", &s)) < 0) goto abort;
+		
+		gettimeofday(&tp, NULL);
+		now = tp.tv_sec + (double)tp.tv_usec / 1000000.0;
+		purge_end = now + request->target_runtime;
+		time_per_job = jobs_to_exa ? (double)request->target_runtime / jobs_to_exa : 0.0;
+		//fprintf(stderr, "[%d] target runtime: %ld, end: %lf, jobs: %d, tpj: %lf\n",
+		//    getpid(), request->target_runtime, purge_end, jobs_to_exa, time_per_job);
 
-		while ((res = edg_wll_FetchRow(ctx,s,1,NULL,&job_s)) > 0) {
+		while (edg_wll_FetchRow(ctx,s,1,NULL,&job_s) > 0) {
 			if (edg_wlc_JobIdParse(job_s,&job)) {
 				fprintf(stderr,"%s: parse error (internal inconsistency !)\n",job_s);
 				parse = 1;
@@ -314,6 +323,21 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 					continue;
 				}
 
+				/* throttle purging according to the required target_runtime */
+				if (request->target_runtime) {
+					target_this = purge_end - time_per_job * jobs_to_exa;
+					gettimeofday(&tp, NULL);
+					now = tp.tv_sec + (double)tp.tv_usec / 1000000.0;
+					if (target_this > now) {  /* enough time */
+						//fprintf(stderr, "[%d] sleeping for %lf second...\n", getpid(), target_this - now);
+						usleep(1e6*(target_this - now));
+					}
+					if (target_this < now) {   /* speed up */
+						time_per_job = (purge_end-now)/jobs_to_exa;
+					}
+					//fprintf(stderr, "[%d] tpj: %lf\n", getpid(), time_per_job);
+				}
+
 				memset(&stat,0,sizeof stat);
 				if (edg_wll_JobStatusServer(ctx,job,0,&stat)) {  /* FIXME: replace by intJobStatus ?? */
 					if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
@@ -325,7 +349,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 					goto abort; 
 				}
 
-				if (stat.lastUpdateTime.tv_sec && now-stat.lastUpdateTime.tv_sec > timeout[stat.state] && !check_strict_jobid(ctx,job))
+				if (stat.lastUpdateTime.tv_sec && start-stat.lastUpdateTime.tv_sec > timeout[stat.state] && !check_strict_jobid(ctx,job))
 				{
 					if (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,ctx->isProxy)) {
 						edg_wll_FreeStatus(&stat);
@@ -365,6 +389,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 				edg_wll_FreeStatus(&stat);
 				free(job_s);
 			}
+			jobs_to_exa--;
 		}
 		glite_lbu_FreeStmt(&s);
 	}

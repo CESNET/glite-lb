@@ -58,6 +58,7 @@ static struct option opts[] = {
 	{ "server",	 	required_argument, NULL, 'm' },
 	{ "proxy",	 	no_argument, NULL, 'x' },
 	{ "sock",	 	required_argument, NULL, 'X' },
+	{"target-runtime",	required_argument, NULL, 't'},
 	{ NULL,			no_argument, NULL,  0 }
 };
 
@@ -79,7 +80,8 @@ static void usage(char *me)
 		"	-d, --debug                 diagnostic output\n"
 		"	-m, --server                L&B server machine name\n"
 		"	-x, --proxy		    purge L&B proxy\n"
-		"	-X, --sock <path>	    purge L&B proxy using default socket path\n",
+		"	-X, --sock <path>	    purge L&B proxy using default socket path\n"
+		"	-t, --target-runtime NNN[smhd]	throttle purge to the estimated target runtime\n",
 		me);
 }
 
@@ -112,7 +114,7 @@ int main(int argc,char *argv[])
 	edg_wll_InitContext(&ctx);
 
 	/* get arguments */
-	while ((opt = getopt_long(argc,argv,"a:c:n:e:o:j:m:rlsidhvxX:",opts,NULL)) != EOF) {
+	while ((opt = getopt_long(argc,argv,"a:c:n:e:o:j:m:rlsidhvxX:t:",opts,NULL)) != EOF) {
 		timeout=-1;
 
 		switch (opt) {
@@ -182,6 +184,16 @@ int main(int argc,char *argv[])
 			ctx->isProxy = 1; 
 			edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, optarg); 
 			break;
+		case 't':
+			if ((get_timeout(optarg,&timeout) != 0 )) {
+				printf("Wrong usage of timeout argument.\n");
+				usage(me);
+				return 1;
+			}
+			if (timeout >= 0) {
+				request->target_runtime=timeout; 
+			}
+			break;
 		case 'h':
 		case '?': usage(me); return 1;
 		}
@@ -218,6 +230,7 @@ int main(int argc,char *argv[])
 			for ( i = 0; request->jobs[i]; i++ )
 				printf("%s\n", request->jobs[i]);
 		}
+		printf("- target runtime: %ld\n", request->target_runtime);
 	}
 
 	if ( server )

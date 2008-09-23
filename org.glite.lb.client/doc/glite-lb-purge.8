@@ -32,6 +32,9 @@ Purge CLEARED jobs older than given time.
 .IP "-n, --cancelled \fiNNN[smhd]\fR"
 Purge CANCELLED jobs older than given time.
 
+.IP "-e, --done \fiNNN[smhd]\fR"
+Purge DONE jobs older than given time.
+
 .IP "-o, --other \fiNNN[smhd]\fR"
 Purge OTHER (i.e. job in other state than ABORTED, CLEARED or CANCELLED) jobs older than given time.
 
@@ -50,9 +53,6 @@ Dump jobs at the server into a file (see bkserverd).
 .IP "-i, --client-dump"
 Receive stream of dumped jobs (NOT implemented yet!).
 
-.IP "-f, --dump-full"
-Dump full database records of purged jobs.
-
 .IP "-h, --help"
 Display help.
 
@@ -61,6 +61,15 @@ Display version.
 
 .IP "-d, --debug"
 Print diagnostics on the \fIstderr\fR.
+
+.IP "-x, --proxy"
+Purge L&B proxy.
+
+.IP "-X, --sock \fIpath\fR"
+Purge L&B proxy using given socket path.
+
+.IP "-t, --target-runtime \fiNNN[smhd]\fR"
+Throttle purge to the estimated target runtime.
 
 
 .\".SH EXAMPLES

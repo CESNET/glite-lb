@@ -148,6 +148,9 @@ typedef struct _edg_wll_PurgeRequest {
 #define EDG_WLL_PURGE_CLIENT_DUMP	8
 /* ! when addning new constant, add it also to common/xml_conversions.c ! */
 
+/** Desired purge estimated time.
+ */
+	time_t target_runtime;
 	
 /** private request processing data (for the reentrant functions) */
 /* TODO */

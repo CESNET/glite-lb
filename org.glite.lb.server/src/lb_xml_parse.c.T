@@ -288,7 +288,7 @@ static void startPurgeRequest(void *data, const char *el, const char **attr)
 		case 0:	if (strcasecmp(el,"edg_wll_PurgeRequest")) unexp()
 			break;
 		case 1: if (strcasecmp(el,"jobs") && strcasecmp(el,"timeout")
-				&& strcasecmp(el,"flags")) unexp()
+				&& strcasecmp(el,"flags") && strcasecmp(el,"target_runtime")) unexp()
 			else 
 				XMLCtx->position = 0;
 			break;
@@ -755,6 +755,8 @@ static void endPurgeRequest(void *data, const char *el UNUSED_VAR)
 			s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
 			XMLCtx->purgeRequestGlobal.flags = edg_wll_string_to_purge_flags(s);
 			free(s);
+		} else if (!strcmp(XMLCtx->element,"target_runtime")) {
+			XMLCtx->purgeRequestGlobal.target_runtime = edg_wll_from_string_to_time_t(XMLCtx);
 		}
 	}
 	else if (XMLCtx->level == 3) {

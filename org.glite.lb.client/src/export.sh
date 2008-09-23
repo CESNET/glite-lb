@@ -62,7 +62,7 @@ if [ x"$GLITE_LB_PURGE_ENABLED" = x"true" ]; then
 	X509_USER_CERT="$X509_USER_CERT" X509_USER_KEY="$X509_USER_KEY" $PREFIX/bin/glite-lb-purge $GLITE_LB_EXPORT_PURGE_ARGS -l -m $GLITE_LB_EXPORT_BKSERVER $GLITE_LB_PURGE_OTHER_OPTIONS
 fi
 
-  find  $GLITE_LB_EXPORT_PURGEDIR/ -type f 2>/dev/null | \
+  find  $GLITE_LB_EXPORT_PURGEDIR/ -type f -name purge_\* 2>/dev/null | \
   while read file; do
     if [ -s $file ]; then
 	if [ x"$GLITE_LB_EXPORT_ENABLED" = x"true" ]; then

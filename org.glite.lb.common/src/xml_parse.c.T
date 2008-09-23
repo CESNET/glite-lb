@@ -2745,7 +2745,7 @@ int edg_wll_PurgeRequestToXML(
 		const edg_wll_PurgeRequest *request,
                 char **message)
 {
-        char *pomA, *pomB, *pomC;
+        char *pomA, *pomB, *pomC, *pomMSG;
 
 
 	if (!request) { *message = NULL; return(-1); }
@@ -2759,15 +2759,18 @@ int edg_wll_PurgeRequestToXML(
 	edg_wll_add_time_t_list_to_XMLBody(&pomB, request->timeout, "timeout", edg_wll_StatToString, "\t",
 						0, EDG_WLL_NUMBER_OF_STATCODES);
 
-	trio_asprintf(&pomC,"%s%s%s\t<flags>%|Xs</flags>\r\n%s",
-			PURGE_REQUEST_BEGIN,pomA,pomB,edg_wll_purge_flags_to_string(request->flags),
+	pomC = strdup("");
+	edg_wll_add_time_t_to_XMLBody(&pomC, request->target_runtime, "target_runtime", 0);
+
+	trio_asprintf(&pomMSG,"%s%s%s%s\t<flags>%|Xs</flags>\r\n%s",
+			PURGE_REQUEST_BEGIN,pomA,pomB,pomC,edg_wll_purge_flags_to_string(request->flags),
 			PURGE_REQUEST_END);
 
 	free(pomA);
 	free(pomB);
+	free(pomC);
 
-
-        *message = pomC;
+        *message = pomMSG;
 
         return 0;
 }
