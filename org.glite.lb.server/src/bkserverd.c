@@ -284,7 +284,6 @@ static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
 static int add_root(char *);
 static int read_roots(const char *);
 static int asyn_gethostbyaddr(char **, const char *, int, int, struct timeval *);
-static int amIroot(const char *, char **);
 static int parse_limits(char *, int *, int *, int *);
 static int check_mkdir(const char *);
 
@@ -1149,15 +1148,17 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	/* used also to reset start_time after edg_wll_ssl_accept! */
 	/* gettimeofday(&start_time,0); */
 	
-	ctx->noAuth = noAuth || amIroot(ctx->peerName, ctx->fqans);
+	ctx->noAuth = noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,super_users);
 	switch ( noIndex )
 	{
 	case 0: ctx->noIndex = 0; break;
-	case 1: ctx->noIndex = amIroot(ctx->peerName, ctx->fqans); break;
+	case 1: ctx->noIndex = edg_wll_amIroot(ctx->peerName, ctx->fqans,super_users); break;
 	case 2: ctx->noIndex = 1; break;
 	}
 	ctx->strict_locking = strict_locking;
 	ctx->greyjobs = greyjobs;
+
+	ctx->super_users = super_users;
 
 	return 0;
 }
@@ -1735,22 +1736,6 @@ static int read_roots(const char *file)
 	}
 
 	fclose(roots);
-
-	return 0;
-}
-
-static int amIroot(const char *subj, char **fqans)
-{
-	int	i;
-	char	**f;
-
-	if (!subj && !fqans ) return 0;
-	for (i=0; super_users && super_users[i]; i++)
-		if (strncmp(super_users[i], "FQAN:", 5) == 0) {
-			for (f = fqans; f && *f; f++)
-				if (strcmp(*f, super_users[i]+5) == 0) return 1;
-		} else
-			if (strcmp(subj,super_users[i]) == 0) return 1;
 
 	return 0;
 }

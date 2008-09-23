@@ -920,3 +920,20 @@ int edg_wll_GetACL(edg_wll_Context ctx, glite_jobid_const_t jobid, edg_wll_Acl *
 
 #endif
 
+
+int edg_wll_amIroot(const char *subj, char **fqans,char **super_users)
+{
+	int	i;
+	char	**f;
+
+	if (!subj && !fqans ) return 0;
+	for (i=0; super_users && super_users[i]; i++)
+		if (strncmp(super_users[i], "FQAN:", 5) == 0) {
+			for (f = fqans; f && *f; f++)
+				if (strcmp(*f, super_users[i]+5) == 0) return 1;
+		} else
+			if (strcmp(subj,super_users[i]) == 0) return 1;
+
+	return 0;
+}
+

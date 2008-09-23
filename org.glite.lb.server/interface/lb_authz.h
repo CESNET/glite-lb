@@ -65,6 +65,9 @@ edg_wll_FreeVomsGroups(edg_wll_VomsGroups *);
 extern int
 check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev);
 
+int edg_wll_amIroot(const char *subj, char **fqans,char **super_users);
+
+
 #ifdef __cplusplus
 }
 #endif

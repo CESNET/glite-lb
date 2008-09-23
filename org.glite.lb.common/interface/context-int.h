@@ -153,6 +153,8 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	edg_wll_QueryRec	**notif_index;
 	void		*notif_index_cols;
 	time_t		notifDurationMax;
+
+	char		**super_users;
 )
 
 /* to be used internally: set, update and and clear the error information in 
