@@ -144,6 +144,7 @@ Non-default listening socket have to be specified via \verb'-p' option then.
 
 
 \subsubsection{Backup dumps}
+\label{run:dump}
 
 \LB server only, not supported by proxy.
 
@@ -546,6 +547,105 @@ debug message verbosity.
 See manual pages for details.
 
 \subsection{Used resources}
+\label{run:resources}
 
-\TODO{ljocha}
-Demoni, procesy a thready, Adresare, porty, ...
+\subsubsection{Server and proxy}
+
+\begin{description}
+\item[Processes and threads.]
+By default \LB server runs as one master process,
+and 10 slave processes.
+Threads are not used.
+
+Master pid is stored in \verb'$HOME/edg-bkserverd.pid' (\LBold),
+\verb'$HOME/glite-lb-bkserverd.pid' (\LBnew).
+Number of slaves can be set with \verb'-s, --slaves' option,
+pid file location with~\verb'-i, --pidfile'.
+
+Slave server processes are restarted regularly in order to prevent
+memory leakage.
+
+\item[Network and UNIX ports.]
+\LB server listens on port 9000 for incoming queries,
+9001 for incoming events, and 9003 for WS interface queries.
+The former two can be changed with \verb'-p, --port' option
+(incoming events are always one port higher than queries), 
+the latter with~\verb'-w, --wsport'.
+
+When \LB notifications are enabled (automatically in server startup script when 
+glite-lb-logger is also installed with the server), 
+\verb'/tmp/glite-lb-notif.sock' is used for communication with notification interlogger.
+It can be changed with \verb'--notif-il-sock'.
+
+\LB proxy communicates on two UNIX sockets:
+\verb'/tmp/lb_proxy_server.sock' (queries) and 
+\verb'/tmp/lb_proxy_store.sock' (incoming events).
+
+\LBnew: as proxy and server are merged, the mode of operation determines
+the actual server ports (network or UNIX).
+Notifications are not delivered from proxy-only mode.
+
+\item[IPC.] \LBold only: mutual exclusion of server slaves is done
+via SYSV semaphores. The semset key is obtained by calling ftok(3) on 
+the pid file.
+
+\LBnew does not use semaphores anymore.
+
+\item[Database.]
+Server data are stored in MySQL database. Normal setup assumes ``server scenario'', 
+\ie the database IS NOT protected with password and it is not accessible over network.
+Option \verb'-m user/password@machine:database' can be used to change
+the default \verb'lbserver/@localhost:lbserver20'.
+
+\item[Dump files.]
+Backup dump (Sect.~\ref{run:dump}) files are stored in
+\verb'/tmp/dump' by default, however, gLite startup script uses
+\verb'--dump-prefix' option to relocate them into \verb'$GLITE_LOCATION_VAR/dump'.
+Similarly dumps resulting from purge operation (Sect.~\ref{run:purge})
+go to \verb'/tmp/purge' by default, and startup script uses \verb'--purge-prefix'
+to set \verb'$GLITE_LOCATION_VAR/purge'.
+
+When export to Job Provenance is enabled (Sect.~\ref{run:purge})
+job registrations are exported to \verb'/tmp/jpreg_'
+overridden in startup script with \verb'--jpreg-dir' to \verb'$GLITE_LOCATION_VAR/jpreg'.
+In addition, dump files are further processed in \verb'GLITE_LOCATION_VAR/jpdump'.
+
+Normal operation of JP export should not leave any files behind,
+however, abnormal situations (JP unavailable for longer time etc.)
+may start filling the disk space. Therefore periodic checks are
+recommended.
+
+Also when purge and dump operations are invoked resulting files are left in their
+directories and it is the responsibility of the operation caller to clean them up.
+
+\item[Notifications]
+(see above with Network ports) are stored in files with \verb'/var/tmp/glite-lb-notif'
+prefix. It can be changed with \verb'--notif-il-fprefix'.
+
+Normal operation of notification interlogger purges these files when
+they are either delivered or expire.
+
+\end{description}
+
+\subsubsection{Logger}
+
+\begin{description}
+\item[Processes and threads.]
+glite-lb-logd uses one permanent process and forks a~child to serve
+each incoming connection.
+
+glite-lb-interlogd (and derived glite-lb-notif-interlogd) is multithreaded:
+one thread for handling input, another for recovery, and a~dynamic pool of others
+to deliver events to their destinations.
+
+\item[Network and UNIX ports.]
+glite-lb-logd listens on 9002 (can be changed with \verb'-p' option).
+The daemons communicate over UNIX socket \verb'/tmp/interlogger.sock',
+can be changed with \verb'-s' (for both daemons simultaneously).
+
+\item[Event files] are stored
+with prefix \verb'/var/glite/log/dglogd.log' (changed with \verb'-f').
+
+
+\end{description}
+
