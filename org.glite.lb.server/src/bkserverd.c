@@ -105,7 +105,7 @@ extern void _start (void), etext (void);
 
 /* file to store pid and generate semaphores key */
 #ifndef EDG_BKSERVERD_PIDFILE
-#define EDG_BKSERVERD_PIDFILE	"/var/run/edg-bkserverd.pid"
+#define EDG_BKSERVERD_PIDFILE	"/var/run/glite-lb-bkserverd.pid"
 #endif
 
 #ifndef GLITE_LBPROXY_SOCK_PREFIX
@@ -502,7 +502,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (!pidfile_forced && geteuid())
-		snprintf(pidfile,sizeof pidfile, "%s/edg-bkserverd.pid", getenv("HOME"));
+		snprintf(pidfile,sizeof pidfile, "%s/glite-lb-bkserverd.pid", getenv("HOME"));
 
 	fpid = fopen(pidfile,"r");
 	if ( fpid )
