@@ -89,9 +89,9 @@ int edg_wll_JobStatus(
 	char		*errdesc = NULL;
 	//The following declarations have originally been positioned in the funcion's code
 	//That was rather messy and lead to redeclaratios :-(
-	char *stat_str, *s_out;
+	char *s_out;
 	intJobStat *js;
-	char *out[1];
+	char *out[1], *out_stat[3] = {0,0,0};
 	edg_wll_Stmt sh;
 	int num_sub, num_f, i, ii;
 
@@ -193,9 +193,7 @@ int edg_wll_JobStatus(
 
 		if (flags & EDG_WLL_STAT_CHILDSTAT) {
 
-			trio_asprintf(&stmt, "SELECT int_status FROM states WHERE parent_job='%|Ss'"
-						" AND version='%|Ss'",
-					md5_jobid, INTSTAT_VERSION);
+			trio_asprintf(&stmt, "SELECT version,int_status,jobid FROM states WHERE parent_job='%|Ss'", md5_jobid);
 			if (stmt != NULL) {
 				num_sub = edg_wll_ExecStmt(ctx, stmt, &sh);
 				if (num_sub >=0 ) {
@@ -205,16 +203,44 @@ int edg_wll_JobStatus(
 						edg_wll_FreeStmt(&sh);
 						goto dag_enomem;
 					}
-					while ((num_f = edg_wll_FetchRow(sh, &stat_str)) == 1
+					while ((num_f = edg_wll_FetchRow(sh, out_stat)) == 3
 						&& i < num_sub) {
-						js = dec_intJobStat(stat_str, &s_out);
-						if (s_out != NULL && js != NULL) {
+						if (!strcmp(INTSTAT_VERSION,out_stat[0])) {
+							js = dec_intJobStat(out_stat[1], &s_out);
+							if (s_out != NULL && js != NULL) {
+								stat->children_states[i] = js->pub;
+								destroy_intJobStat_extension(js);
+								free(js);
+								i++; // Careful, this value will also be used further
+							}
+						}
+						else { // recount state
+							edg_wlc_JobId	subjob;
+							intJobStat	js_real;
+							char		*name;
+							int		port;
+
+
+							js = &js_real;
+							edg_wlc_JobIdGetServerParts(job, &name, &port);
+							if (edg_wlc_JobIdRecreate(name, port, out_stat[2], &subjob)) {
+								free(name);
+								edg_wll_SetError(ctx, EINVAL, "edg_wlc_JobIdRecreate()");
+								goto error;
+							}
+							free(name);
+
+							if (edg_wll_intJobStatus(ctx, subjob, flags, js, js_enable_store, 0)) {
+								goto error;
+							}
+							edg_wlc_JobIdFree(subjob);
 							stat->children_states[i] = js->pub;
 							destroy_intJobStat_extension(js);
-							free(js);
 							i++; // Careful, this value will also be used further
 						}
-						free(stat_str);
+						free(out_stat[0]); out_stat[0] = NULL;
+						free(out_stat[1]); out_stat[1] = NULL;  
+						free(out_stat[2]); out_stat[2] = NULL;
 					}
 					edg_wll_FreeStmt(&sh);
 				}
@@ -244,17 +270,46 @@ int edg_wll_JobStatus(
 			}
 			else {
 				// Get child states from the database
-				trio_asprintf(&stmt, "SELECT status FROM states WHERE parent_job='%|Ss' AND version='%|Ss'",
-							md5_jobid, INTSTAT_VERSION);
-				out[1] = NULL;
+				trio_asprintf(&stmt, "SELECT version,status,jobid FROM states WHERE parent_job='%|Ss'", md5_jobid);
 				if (stmt != NULL) {
 					num_sub = edg_wll_ExecStmt(ctx, stmt, &sh);
 					if (num_sub >=0 ) {
-						while ((num_f = edg_wll_FetchRow(sh, out)) == 1 ) {
-							num_f = atoi(out[0]);
-							if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
-								stat->children_hist[num_f+1]++;
-							free(out[0]); 
+
+						while ((num_f = edg_wll_FetchRow(sh, out_stat)) == 3 ) {
+							if (!strcmp(INTSTAT_VERSION,out_stat[0])) {
+								num_f = atoi(out_stat[1]);
+								if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
+									stat->children_hist[num_f+1]++;
+							}
+							else { // recount state
+								edg_wlc_JobId	subjob;
+								intJobStat	js_real;
+								char		*name;
+								int		port;
+
+
+								js = &js_real;
+								edg_wlc_JobIdGetServerParts(job, &name, &port);
+								if (edg_wlc_JobIdRecreate(name, port, out_stat[2], &subjob)) {
+									free(name);
+									edg_wll_SetError(ctx, EINVAL, "edg_wlc_JobIdRecreate()");
+									goto error;
+								}
+								free(name);
+
+								if (edg_wll_intJobStatus(ctx, subjob, flags, js, js_enable_store, 0)) {
+									goto error;
+								}
+								edg_wlc_JobIdFree(subjob);
+								num_f = js->pub.state;
+								if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
+									stat->children_hist[num_f+1]++;
+
+								destroy_intJobStat(js);
+							}
+							free(out_stat[0]); out_stat[0] = NULL;
+							free(out_stat[1]); out_stat[1] = NULL;  
+							free(out_stat[2]); out_stat[2] = NULL;
 						}
 						edg_wll_FreeStmt(&sh);
 					}
@@ -284,8 +339,8 @@ int edg_wll_JobStatus(
 		if (flags & EDG_WLL_STAT_CHILDREN) {
 
 			trio_asprintf(&stmt, "SELECT j.dg_jobid FROM states s,jobs j "
-					"WHERE s.parent_job='%|Ss' AND s.version='%|Ss' AND s.jobid=j.jobid",
-				md5_jobid, INTSTAT_VERSION);
+					"WHERE s.parent_job='%|Ss' AND s.jobid=j.jobid",
+				md5_jobid);
 			if (stmt != NULL) {
 				num_sub = edg_wll_ExecStmt(ctx, stmt, &sh);
 				if (num_sub >=0 ) {
@@ -308,11 +363,16 @@ int edg_wll_JobStatus(
 
 #if DAG_ENABLE
 dag_enomem:
+	edg_wll_SetError(ctx, ENOMEM, NULL);
+error:
+	free(out_stat[0]); out_stat[0] = NULL;
+        free(out_stat[1]); out_stat[1] = NULL;
+        free(out_stat[2]); out_stat[2] = NULL;
 	free(string_jobid);
 	free(md5_jobid);
 	edg_wll_FreeStatus(stat);
 	free(stmt);
-	return edg_wll_SetError(ctx, ENOMEM, NULL);
+	return edg_wll_Error(ctx, NULL, NULL);
 #endif
 }
 
