@@ -27,7 +27,6 @@
 
 #include "store.h"
 #include "get_events.h"
-#include "lock.h"
 #include "lb_authz.h"
 #include "jobstat.h"
 #include "db_calls.h"

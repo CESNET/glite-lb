@@ -21,7 +21,6 @@
 #include "lb_html.h"
 #include "lb_proto.h"
 #include "store.h"
-#include "lock.h"
 #include "query.h"
 #include "get_events.h"
 #include "purge.h"

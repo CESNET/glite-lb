@@ -25,8 +25,6 @@
 #include <arpa/nameser.h>
 #include <resolv.h>
 #include <ares.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
 #include <errno.h>
 
 #ifdef GLITE_LB_SERVER_WITH_WS
@@ -141,9 +139,7 @@ int        				transactions = -1;
 int					use_dbcaps = 0;
 static int				fake_port = 0;
 static char			  **super_users = NULL;
-static int				slaves = 10,
-						semaphores = -1,
-						semset;
+static int				slaves = 10;
 static char			   *purgeStorage = EDG_PURGE_STORAGE;
 static char			   *dumpStorage = EDG_DUMP_STORAGE;
 static char			   *jpregDir = JPREG_DEF_DIR;
@@ -187,7 +183,6 @@ static struct option opts[] = {
 	{"mysql",	1, NULL,	'm'},
 	{"noauth",	0, NULL,	'n'},
 	{"slaves",	1, NULL,	's'},
-	{"semaphores",	1, NULL,	'l'},
 	{"pidfile",	1, NULL,	'i'},
 	{"purge-prefix",	1, NULL,	'S'},
 	{"dump-prefix",	1, NULL,	'D'},
@@ -218,7 +213,7 @@ static struct option opts[] = {
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:l:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -246,7 +241,6 @@ static void usage(char *me)
 		"\t-r, --rgmaexport write state info to RGMA interface\n"
 		"\t-n, --noauth\t don't check user identity with result owner\n"
 		"\t-s, --slaves\t number of slave servers to fork\n"
-		"\t-l, --semaphores number of semaphores (job locks) to use\n"
 		"\t-i, --pidfile\t file to store master pid\n"
 		"\t-L, --limits\t query limits numbers in format \"events_limit:jobs_limit:size_limit\"\n"
 		"\t-N, --notif-dur default[:max]\t Duration of notification registrations in seconds (default and maximal)\n"
@@ -377,7 +371,6 @@ int main(int argc, char *argv[])
 	char			   *ws_port;
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 	FILE			   *fpid;
-	key_t				semkey;
 	edg_wll_Context		ctx;
 	edg_wll_GssStatus	gss_code;
 	struct timeval		to;
@@ -423,7 +416,6 @@ int main(int argc, char *argv[])
 		case 'm': dbstring = optarg; break;
 		case 'n': noAuth = 1; break;
 		case 's': slaves = atoi(optarg); break;
-		case 'l': semaphores = atoi(optarg); break;
 		case 'S': purgeStorage = optarg; break;
 		case 'D': dumpStorage = optarg; break;
 		case 'J': jpregDir = optarg; jpreg = 1; break;
@@ -526,8 +518,6 @@ int main(int argc, char *argv[])
 	if (fprintf(fpid, "%d", getpid()) <= 0) { perror(pidfile); return 1; }
 	if (fclose(fpid) != 0) { perror(pidfile); return 1; }
 
-	semkey = ftok(pidfile,0);
-
 	if (mode & SERVICE_SERVER) {
 		if (check_mkdir(dumpStorage)) exit(1);
 		if (check_mkdir(purgeStorage)) exit(1);
@@ -540,20 +530,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (semaphores == -1) semaphores = slaves;
-	semset = semget(semkey, 0, 0);
-	if (semset >= 0) semctl(semset, 0, IPC_RMID);
-	semset = semget(semkey, semaphores, IPC_CREAT | 0600);
-	if (semset < 0) { perror("semget()"); return 1; }
-	dprintf(("Using %d semaphores, set id %d\n",semaphores,semset));
-	for (i=0; i<semaphores; i++)
-	{
-		struct sembuf	s;
-
-		s.sem_num = i; s.sem_op = 1; s.sem_flg = 0;
-		if (semop(semset,&s,1) == -1) { perror("semop()"); return 1; }
-	}
-	
 	if (mode & SERVICE_SERVER) {
 		if ( fake_host )
 		{
@@ -802,7 +778,6 @@ int main(int argc, char *argv[])
 	}
 
 
-	semctl(semset, 0, IPC_RMID, 0);
 	unlink(pidfile);
 
 	for ( i = 0; i < sizofa(service_table); i++ )
@@ -978,8 +953,6 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	if ( jpreg ) ctx->jpreg_dir = strdup(jpregDir); else ctx->jpreg_dir = NULL;
 	ctx->hardJobsLimit = hardJobsLimit;
 	ctx->hardEventsLimit = hardEventsLimit;
-	ctx->semset = semset;
-	ctx->semaphores = semaphores;
 	if ( noAuth ) ctx->noAuth = 1;
 	ctx->rgma_export = rgma_export;
 	memcpy(ctx->purge_timeout, purge_timeout, sizeof(ctx->purge_timeout));
@@ -1240,8 +1213,6 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 	ctx->isProxy = 1;
 	ctx->noAuth = 1;
 	ctx->noIndex = 1;
-	ctx->semset = semset;
-	ctx->semaphores = semaphores;
 
 
 	if (fake_host)

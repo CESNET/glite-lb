@@ -20,7 +20,6 @@
 
 #include "get_events.h"
 #include "store.h"
-#include "lock.h"
 #include "index.h"
 #include "jobstat.h"
 

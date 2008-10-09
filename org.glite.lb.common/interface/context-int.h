@@ -68,8 +68,6 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
 	edg_wll_ConnProxy	*connProxy;		/* holds one plain connection */
 
-	int		semaphores;
-	int		semset;
 	edg_wll_QueryRec	**job_index;
 	void		*job_index_cols;
 	

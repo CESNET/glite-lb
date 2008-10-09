@@ -161,7 +161,7 @@ BKSERVER_BASE_OBJS:= \
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
 	seqcode.o write2rgma.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o lb_text.o \
-	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
+	openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o db_calls.o db_supp.o
 
@@ -201,7 +201,7 @@ else
 endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
-	jobstat.o query.o lock.o get_events.o write2rgma.o index_lex.o \
+	jobstat.o query.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o stats.o\
 	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o lb_text.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.lo
 
@@ -228,7 +228,7 @@ LIB_OBJS_BK:= \
 	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
 	seqcode.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
 	lb_xml_parse_V21.o lb_text.o \
-	lock.o openserver.o query.o userjobs.o db_store.o request.o store.o \
+	openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o write2rgma.o \
 	db_calls.o db_supp.o
