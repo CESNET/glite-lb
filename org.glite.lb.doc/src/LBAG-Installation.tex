@@ -134,14 +134,14 @@ space.
 
 There were two such notable upgrades:
 \begin{itemize}
-\item Version 1.4.3 of \textt{glite-lb-server} package. This \LB server version introduced optional use of database transactions for \LB database updates in order to improve their performace. This feature is switched on by default when underlaying MySQL database uses transactional InnoDB tables. For new installations, YAIM configuration process will create transactional database automatically. Existing databases can be converted using provided SQL command script:
+\item Version 1.4.3 of \texttt{glite-lb-server} package. This \LB server version introduced optional use of database transactions for \LB database updates in order to improve their performace. This feature is switched on by default when underlaying MySQL database uses transactional InnoDB tables. For new installations, YAIM configuration process will create transactional database automatically. Existing databases can be converted using provided SQL command script:
 \begin{quote}
 \verb'mysql -u lbserver lbserver20 </opt/glite/etc/glite-lb-dbsetup-migrate2transactions.sql'
 \end{quote}
 
 \item \LB version 2.0.  This version features merged \LB server and  proxy services using single database, pointers to purged jobs (``zombies'') and other improvements requiring database schema changes. Existing databases must be converted using provided shell script \verb'/opt/glite/etc/glite-lb-migrate_db2version20'. Use \verb'-s' parameter to convert database used by \LB server previously and \verb'-p' to convert database used by \LB proxy before. Optionally, unnecesary index can be dropped (this operation is likely to take a lot of time when applied to large database):
 \begin{quote}
-\verb'mysql -u lbserver lbserver20 -e "alter table events drop index host"
+\verb'mysql -u lbserver lbserver20 -e "alter table events drop index host"'
 \end{quote}
 \end{itemize}
 
@@ -149,7 +149,7 @@ There were two such notable upgrades:
 
 \subsubsection{Index configuration}
 
-Initial YAIM configuration does not create any \LB indexes, see Section~\ref{maintain:index}} for instructions
+Initial YAIM configuration does not create any \LB indexes, see Section~\ref{maintain:index} for instructions
 on changing \LB server index configuration.
 
 
