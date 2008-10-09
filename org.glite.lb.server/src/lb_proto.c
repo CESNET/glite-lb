@@ -11,6 +11,8 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/xml_conversions.h"
+#include "glite/jobid/strmd5.h"
+#include "glite/lbu/trio.h"
 
 #include "lb_proto.h"
 #include "lb_text.h"
@@ -21,6 +23,7 @@
 #include "purge.h"
 #include "lb_xml_parse.h"
 #include "lb_xml_parse_V21.h"
+#include "db_supp.h"
 
 
 #define METHOD_GET      "GET "
@@ -207,6 +210,78 @@ static int drain_text_request(char *request){
 		return 0;
 }
 
+static int getUserNotifications(edg_wll_Context ctx, char *user, char ***notifids){
+        char *q = NULL;
+        glite_lbu_Statement notifs = NULL;
+        char *notifc[1] = {NULL};
+
+        trio_asprintf(&q, "select notifid "
+                "from notif_registrations "
+                "where userid='%s'",
+                user);
+        if (edg_wll_ExecSQL(ctx, q, &notifs) < 0) goto err;
+        free(q); q = NULL;
+
+        int n = 0;
+        *notifids = NULL;
+        while(edg_wll_FetchRow(ctx, notifs, sizeof(notifc)/sizeof(notifc[0]), NULL, notifc)){
+                n++;
+                *notifids = realloc(*notifids, n*sizeof(**notifids));
+                (*notifids)[n-1] = strdup(notifc[n-1]);
+                printf("Notif %s found\n", notifc[n-1]);
+        }
+	if (n){
+		*notifids = realloc(*notifids, (n+1)*sizeof(**notifids));
+		(*notifids)[n] = NULL;
+	}
+        return n;
+
+err:
+        return 0;
+}
+
+static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
+	char *q = NULL;
+        glite_lbu_Statement notif = NULL;
+	char *notifc[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+
+	trio_asprintf(&q, "select destination, valid, conditions, "
+		"JDL_VirtualOrganisation, STD_owner, STD_network_server "
+                "from notif_registrations "
+                "where notifid='%s'",
+                notifId);
+	if (edg_wll_ExecSQL(ctx, q, &notif) < 0) goto err;
+        free(q); q = NULL;
+
+	ni->notifid = strdup(notifId);
+	if (edg_wll_FetchRow(ctx, notif, sizeof(notifc)/sizeof(notifc[0]), NULL, notifc)){
+		ni->destination = notifc[0];
+		ni->valid = notifc[1];
+		ni->conditions = notifc[2];
+		ni->JDL_VirtualOrganisation = notifc[3];
+		ni->STD_owner = notifc[4];
+		ni->STD_network_server = notifc[5];
+	}
+	else 
+		goto err;
+
+	printf("%s\n%s\n", ni->destination, ni->valid);
+
+	return 0;
+
+err:
+	return  edg_wll_Error(ctx, NULL, NULL);
+}
+
+static void freeNotifInfo(notifInfo *ni){
+	if (ni->notifid) free(ni->notifid);
+	if (ni->destination) free(ni->destination);
+	if (ni->valid) free(ni->valid);
+	if (ni->conditions) free(ni->conditions);
+	if (ni->JDL_VirtualOrganisation) free(ni->JDL_VirtualOrganisation);
+	if (ni->STD_owner) free(ni->STD_owner);
+	if (ni->STD_network_server) free(ni->STD_network_server);
+}
 
 edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
 	char *request,char **headers,char *messageBody,
@@ -453,12 +528,18 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
+			char **notifids = NULL;
+			char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
+		        char *userid = strmd5(can_peername, NULL);
+			free(can_peername);
+			getUserNotifications(ctx, userid, &notifids);
+
 // FIXME: edg_wll_UserJobs should take flags as parameter
 			switch (edg_wll_UserJobsServer(ctx,&jobsOut,NULL)) {
 				case 0: if (text)
-						edg_wll_UserJobsToText(ctx, jobsOut, &message);
+						edg_wll_UserInfoToText(ctx, jobsOut, notifids, &message);
 					else if (html)
-						edg_wll_UserJobsToHTML(ctx, jobsOut, &message);
+						edg_wll_UserInfoToHTML(ctx, jobsOut, notifids, &message);
 					else ret = HTTP_OK;
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
@@ -474,10 +555,16 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
 				free(jobsOut);
 			}
+			if (notifids){
+				for (i = 0; notifids[i]; i++) 
+					free(notifids[i]);
+				free(notifids);
+			}
 	        } 
 
 	/* GET /[jobId]: Job Status */
-		else if (*requestPTR=='/') {
+		else if (*requestPTR=='/' 
+			&& strncmp(requestPTR, "/notif/", strlen("/notif/"))) {
 			edg_wlc_JobId jobId = NULL;
 			char *pom1,*fullid = NULL;
 			edg_wll_JobStat stat;
@@ -520,6 +607,22 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			free(fullid);
 			edg_wlc_JobIdFree(jobId);
 			edg_wll_FreeStatus(&stat);
+	/*GET /notif/[notifId]: Norification info*/
+		} else if (strncmp(requestPTR, "/notif/", strlen("/notif/")) == 0){
+			notifInfo ni;
+			char *pomCopy, *pom;
+			pomCopy = strdup(requestPTR + 1);
+                        for (pom=pomCopy; *pom && !isspace(*pom); pom++);
+                        *pom = 0;
+			getNotifInfo(ctx, strrchr(pomCopy, '/')+1, &ni);
+			free(pomCopy);
+
+			if (text)
+				edg_wll_NotificationToText(ctx, &ni, &message);
+			else
+				edg_wll_NotificationToHTML(ctx, &ni, &message);
+
+			freeNotifInfo(&ni);
 
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;

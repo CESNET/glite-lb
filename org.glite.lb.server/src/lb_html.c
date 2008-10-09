@@ -16,6 +16,33 @@
 #define UNUSED_VAR
 #endif
 
+static char *xmlToHTML(char *xml) {
+	char *html = strdup("");
+	int i = 0;
+	int j = 0;
+	while (xml[i]){
+		if (xml[i] == '<'){
+			html = realloc(html, (j+strlen("&lt;")+1)*sizeof(*html) );
+			strcpy(html+j, "&lt;");
+			j += strlen("&lt;");
+		}
+		else if (xml[i] == '>'){
+			html = realloc(html, (j+strlen("&gt;")+1)*sizeof(*html) );
+			strcpy(html+j, "&gt;");
+			j += strlen("&gt;");
+		}
+		else{
+			html = realloc(html, (j+2)*sizeof(*html));
+			html[j] = xml[i];
+			j++;
+		}
+		i++;
+	}
+	html[j] = 0;
+
+	return html;
+}
+
 int edg_wll_QueryToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut UNUSED_VAR, char **message UNUSED_VAR)
 {
 /* not implemented yet */
@@ -23,38 +50,110 @@ int edg_wll_QueryToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 }
 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserJobsToHTML(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
+int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, char **notifids, char **message)
 {
-        char *pomA, *pomB;
+        char *pomA = NULL, *pomB;
         int i = 0;
 
-	/* head */
-	pomB = strdup("");	
+        /* head */
+        pomB = strdup("");
 
         while (jobsOut[i]) {
-		char	*chid = edg_wlc_JobIdUnparse(jobsOut[i]);
+                char    *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
 
                 asprintf(&pomA,"%s\t\t <li> <a href=\"%s\">%s</a>\r\n",
                         pomB, chid,chid);
 
-		free(chid);
+                free(chid);
                 free(pomB);
                 pomB = pomA;
                 i++;
         }
 
-        asprintf(&pomA, "<html>\r\n\t<body>\r\n"
-			"<h2><B>User jobs</B></h2>\r\n"
-			"User subject: %s<p>"
-			"<ul>%s</ul>"
-			"\t</body>\r\n</html>",ctx->peerName?ctx->peerName: "&lt;anonymous&gt;",pomB);
-        free(pomB);
+	char *pomC = NULL, *pomD;
+	pomD = strdup("");
+	i = 0;
 
-        *message = pomA;
+	while(notifids[i]){
+		asprintf(&pomC, "%s\t\t <li> <a href=\"/notif/%s\">%s</a>\r\n",
+				pomD,
+				notifids[i],
+				notifids[i]
+			);
+		free(pomD);
+		pomD = pomC;
+		i++;
+	}
+
+	char *ret;
+	asprintf(&ret, "<html>\r\n\t<body>\r\n");
+	pomA = ret;
+	if (pomB[0]){
+		asprintf(&ret, "%s<h2><B>User jobs</B></h2>\r\n"
+			"<ul>%s</ul>",
+			pomA, pomB
+		);
+		free(pomA);
+		free(pomB);
+	}
+	pomA = ret;
+	if (pomC){
+		asprintf(&ret, "%s<h2><B>User notifications</B></h2>\r\n"
+                        "<ul>%s</ul>",
+                        pomA, pomD
+                );
+		free(pomA);
+		free(pomD);
+	}
+	pomA = ret;
+	asprintf(&ret, "%sUser subject: %s<p>"
+		"\t</body>\r\n</html>",
+		pomA, ctx->peerName?ctx->peerName: "&lt;anonymous&gt;"
+	);
+	free(pomA);
+
+        *message = ret;
 
         return 0;
 }
 
+#define TR(name,type,field)             \
+        if (field) {            \
+                asprintf(&pomA,"%s<tr><th align=\"left\">" name ":</th>"        \
+                        "<td>" type "</td></tr>",pomB,(field)); \
+                free(pomB);                                     \
+                pomB = pomA;                                    \
+        }
+
+int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
+	char *pomA, *pomB;
+	pomB = strdup("");
+
+	TR("Destination", "%s", ni->destination);
+	TR("Valid until", "%s", ni->valid);
+	char *cond = xmlToHTML(ni->conditions);
+	asprintf(&pomA, "%s<h3>Conditions</h3>\r\n<pre>%s</pre>\r\n",
+		pomB, cond);
+	free(cond);
+	free(pomB);
+	pomB = pomA;
+	if (ni->JDL_VirtualOrganisation && ni->JDL_VirtualOrganisation[0])
+		TR("JDL VirtualOrganisation", "%s", ni->JDL_VirtualOrganisation);
+	if (ni->STD_owner && ni->STD_owner[0])
+		TR("STD owner", "%s", ni->STD_owner);
+	if (ni->STD_network_server && ni->STD_network_server[0])
+		TR("STD network server", "%s", ni->STD_network_server);
+
+	asprintf(&pomA, "<html>\r\n\t<body>\r\n"
+		"<h2>Norification %s</h2>\r\n"
+		"<table halign=\"left\">%s</table>"
+		"\t</body>\r\n</html>",
+		ni->notifid, pomB);
+	
+	*message = pomA;
+
+	return 0;
+}
 
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
 int edg_wll_JobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
@@ -69,14 +168,6 @@ int edg_wll_JobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 	pomB = strdup("");
 
         chid = edg_wlc_JobIdUnparse(stat.jobId);
-
-#define TR(name,type,field) 		\
-	if (field) {		\
-		asprintf(&pomA,"%s<tr><th align=\"left\">" name ":</th>"	\
-			"<td>" type "</td></tr>",pomB,(field));	\
-		free(pomB);					\
-		pomB = pomA;					\
-	}
 
 	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)));
 	free(chstat);

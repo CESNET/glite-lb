@@ -7,7 +7,7 @@
 
 int edg_wll_QueryToText(edg_wll_Context,edg_wll_Event *,char **);
 int edg_wll_JobStatusToText(edg_wll_Context, edg_wll_JobStat, char **);
-int edg_wll_UserJobsToText(edg_wll_Context, edg_wlc_JobId *, char **);
+int edg_wll_UserInfoToText(edg_wll_Context, edg_wlc_JobId *, char **, char **);
 char *edg_wll_ErrorToText(edg_wll_Context,int);
 
 #endif /* GLITE_LB_TEXT */

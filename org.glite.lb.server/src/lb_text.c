@@ -4,6 +4,8 @@
 #include "lb_proto.h"
 
 #include "glite/lb/context-int.h"
+#include "glite/lbu/trio.h"
+#include "glite/lbu/db.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -53,7 +55,7 @@ int edg_wll_QueryToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 }
 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserJobsToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
+/*int edg_wll_UserJobsToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
 {
 	char *a, *b;
 	int i = 0;
@@ -80,8 +82,83 @@ int edg_wll_UserJobsToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **m
         *message = a;
 
         return 0;
+}*/
+
+int edg_wll_UserInfoToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **notifids, char **message)
+{
+        char *a = NULL, *b;
+        int i = 0;
+        b = strdup("");
+
+        while (jobsOut[i]){
+                char *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
+
+                if (i == 0)
+                        asprintf(&a, "%s%s", b, chid);
+                else
+                        asprintf(&a, "%s,%s", b, chid);
+
+                free(chid);
+                free(b);
+                b = a;
+                i++;
+        }
+
+	char *c = NULL, *d;
+	i = 0;
+	d = strdup("");
+	while(notifids[i]){
+		if (i == 0)
+			asprintf(&c, "%s", notifids[i]);
+		else
+			asprintf(&c, "%s,%s", d, notifids[i]);
+		free(d);
+		d = c;
+		i++;
+	}
+
+	if (a){
+		asprintf(&a, "User_jobs=%s\n", b);
+		b = a;
+		if (c)
+			asprintf(&a, "%sUser_notifications=%s\n", b, d);
+	}
+	else if (c)
+		asprintf(&a, "User_notifications=%s\n", d);
+	b = a;
+
+        if (a)
+		asprintf(&a, "%sUser_subject=%s\n", b, ctx->peerName ? ctx->peerName: "<anonymous>");
+	else
+		asprintf(&a, "User_subject=%s\n", ctx->peerName ? ctx->peerName: "<anonymous>");
+
+        *message = a;
+
+        return 0;
 }
 
+
+int edg_wll_NotificationToText(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
+	char *a = NULL, *b = NULL;
+	asprintf(&a, "Notif_id=%s\n", ni->notifid);
+	asprintf(&b, "%sDestination=%s\n", a, ni->destination);
+	asprintf(&a, "%sValid_until=%s\n", b, ni->valid);
+	char *cond = escape_text(ni->conditions);
+	asprintf(&b, "%sConditions=%s\n", a, cond);
+	free(cond);
+	a = b;
+	if (ni->JDL_VirtualOrganisation && ni->JDL_VirtualOrganisation[0])
+		asprintf(&a, "%sJDL_VirtualOrganisation=%s\n", b, ni->JDL_VirtualOrganisation);
+	b = a;
+	if (ni->STD_owner && ni->STD_owner[0])
+		asprintf(&a, "%sSTD_owner=%s\n", b, ni->STD_owner);
+	b = a;
+	if (ni->STD_network_server && ni->STD_network_server[0])
+		asprintf(&a, "%sSTD_network_server=%s\n", b, ni->STD_network_server);
+	*message = a;
+
+	return 0;
+}
 
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
 int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
@@ -143,7 +220,6 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 		asprintf(&jdl,"Job_description=%s\n", my_jdl);
 		free(my_jdl);
 	}
-
 	if (stat.rsl) asprintf(&rsl,"RSL=%s\n", stat.rsl);
 
         asprintf(&a, "Job=%s\n"

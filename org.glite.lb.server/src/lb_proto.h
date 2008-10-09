@@ -20,6 +20,16 @@ extern edg_wll_ErrorCode edg_wll_Proto(
 	char **		/* OUT: HTTP response body */
 );
 
+typedef struct _notifInfo{
+        char *notifid;
+        char *destination;
+        char *valid;
+        char *conditions;
+        char *JDL_VirtualOrganisation;
+        char *STD_owner;
+        char *STD_network_server;
+} notifInfo;
+
 extern char *edg_wll_HTTPErrorMessage(int);
 
 extern int edg_wll_UserJobsServer(edg_wll_Context ctx, edg_wlc_JobId  **jobs, edg_wll_JobStat **states);
