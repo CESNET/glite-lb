@@ -58,13 +58,14 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 	while (hit < 3 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, table)) > 0) {
 		if (strcasecmp(table[0], "events_flesh") == 0 ||
 		strcasecmp(table[0], "zombie_jobs") == 0 ||
+		strcasecmp(table[0], "zombie_suffixes") == 0 ||
 		strcasecmp(table[0], "zombie_prefixes") == 0) hit++;
 		free(table[0]);
 	}
 	if (ret < 0) goto err;
 	glite_lbu_FreeStmt(&stmt);
 	if (hit != 3) {
-		ret = edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, "events_flesh or zombie_jobs or zombie_prefixes table not found, migration to new schema needed");
+		ret = edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, "events_flesh or zombie_jobs or zombie_prefixes or zombie_suffixes table not found, migration to new schema needed");
 		goto close_db;
 	}
 

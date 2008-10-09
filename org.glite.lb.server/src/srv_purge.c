@@ -512,6 +512,64 @@ static int dump_events(edg_wll_Context ctx, glite_jobid_const_t job, int dump, c
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+
+static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, char **unique, char **suffix)
+{
+	char 		*ptr = NULL, *dbjob = NULL;
+	edg_wll_JobStat	stat;
+
+	
+	memset(&stat, 0, sizeof(stat));
+	if (edg_wll_JobStatusServer(ctx, job, 0 /*no flags*/, &stat)) {
+		goto err;
+	}
+	
+	dbjob = glite_jobid_getUnique(job);
+
+	switch (stat.jobtype) {
+	        case EDG_WLL_STAT_SIMPLE:
+	        case EDG_WLL_STAT_DAG:
+        	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
+	        case EDG_WLL_STAT__PARTITIONED_UNUSED:
+        	case EDG_WLL_STAT_COLLECTION:
+			// glite jobs, no suffix
+			*suffix = strdup("");
+			*unique = strdup(dbjob);
+			break;
+
+	        case EDG_WLL_STAT_PBS:
+			// PBS jobs; suffix is everything starting from first '.'
+			ptr = strchr(dbjob,'.');
+			if (ptr) {
+				*suffix = strdup(ptr);
+				ptr[0] = '\0';
+				*unique = strdup(dbjob);
+				ptr[0] = '.';
+			}
+			else {
+				edg_wll_SetError(ctx,EINVAL,"Uknown PBS job format");
+				goto err;
+			}
+			break;
+
+        	case EDG_WLL_STAT_CONDOR:
+			// condor jobs
+			assert(0); // XXX: todo
+			break;
+	        default:
+			edg_wll_SetError(ctx,EINVAL,"Uknown job type");
+			goto err;
+			break;
+	}
+
+err:	
+	edg_wll_FreeStatus(&stat);
+	free(dbjob);
+
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+
 int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, int purge_from_proxy_only)
 {
 	char	*dbjob = NULL;
@@ -519,8 +577,8 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 	glite_lbu_Statement	q;
 	int		ret,dumped = 0;
 	char	*res[10];
-	char	*prefix = NULL;
-	char	*prefix_id;
+	char	*prefix = NULL, *suffix = NULL, *root = NULL;
+	char	*prefix_id, *suffix_id;
 	int	sql_retval;
 
 	edg_wll_ResetError(ctx);
@@ -583,6 +641,13 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 
 		if ( purge )
 		{
+			// get job suffix before its state is deleted
+			if ( get_jobid_suffix(ctx, job, &root, &suffix) ) goto rollback;
+		
+		}
+
+		if ( purge )
+		{
 			trio_asprintf(&stmt,"delete from jobs where jobid = '%|Ss'",dbjob);
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback;
 			free(stmt); stmt = NULL;
@@ -601,6 +666,7 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 
 		if ( purge )
 		{
+			/* Store zombie prefix */
 			prefix = glite_jobid_getServer(job);
 		
 			// See if that prefix is already stored in the database	
@@ -630,14 +696,42 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 			ret = edg_wll_FetchRow(ctx,q, 1, NULL, &prefix_id);
 			glite_lbu_FreeStmt(&q);
 
-			trio_asprintf(&stmt,"insert into zombie_jobs (jobid, prefix_id) VALUES ('%|Ss', %|Ss)", dbjob, prefix_id);
+			/* Store zombie suffix */
+
+			// See if that suffix is already stored in the database	
+			trio_asprintf(&stmt,"select suffix_id from zombie_suffixes where suffix = '%|Ss'", suffix);
+
+			sql_retval = edg_wll_ExecSQL(ctx,stmt,&q);
+			free(stmt); stmt = NULL;
+
+			if (sql_retval < 0) goto rollback;
+
+			if (sql_retval == 0) { //suffix does not exist yet
+				glite_lbu_FreeStmt(&q);
+
+				trio_asprintf(&stmt,"insert into zombie_suffixes (suffix) VALUES ('%|Ss')", suffix);
+
+				if (edg_wll_ExecSQL(ctx,stmt,&q) <= 0) goto rollback;
+
+				free(stmt); stmt = NULL;
+				glite_lbu_FreeStmt(&q);
+
+				// The record should exist now, however we need to look up the suffix_id 
+				trio_asprintf(&stmt,"select suffix_id from zombie_suffixes where suffix = '%|Ss'", suffix);
+
+				if (edg_wll_ExecSQL(ctx,stmt,&q) <= 0) goto rollback;
+				free(stmt); stmt = NULL;
+			}
+			ret = edg_wll_FetchRow(ctx,q, 1, NULL, &suffix_id);
+			glite_lbu_FreeStmt(&q);
+
+			/* Store zombie job */
+			trio_asprintf(&stmt,"insert into zombie_jobs (jobid, prefix_id, suffix_id)"
+					" VALUES ('%|Ss', '%|Ss', '%|Ss')", root, prefix_id, suffix_id);
 
 			if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto rollback;
 			glite_lbu_FreeStmt(&q);
 			free(stmt); stmt = NULL;
-			free(prefix_id); prefix_id = NULL;
-
-			free(prefix);
 		}
 
 		if (dump >= 0) 
@@ -683,8 +777,15 @@ rollback:;
 
 
 err:
+	free(root);
+	free(suffix);
+	free(prefix);
+	free(prefix_id);
+	free(suffix_id);
 	free(dbjob);
 	free(stmt);
+	glite_lbu_FreeStmt(&q);
+
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 

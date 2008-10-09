@@ -331,7 +331,6 @@ int edg_wll_QueryJobsServer(
 					   *qbase = NULL,
 					   *zquery = NULL,
 					   *res[3],
-					   *prefix,
 					   *dbjob,
 					   *zomb_where = NULL,
 					   *zomb_where_temp = NULL,
@@ -509,7 +508,7 @@ limit_cycle_cleanup:
 		if(!jobid_only_query(conditions)) {
 			i = 0;
 			while(conditions[i]) {
-				asprintf(&zomb_where_temp,"%s AND (", zomb_where ? zomb_where : "");
+				asprintf(&zomb_where_temp,"%s%s", zomb_where ? zomb_where : "(", zomb_where ? " AND (" : "");
 				free(zomb_where); 
 				zomb_where = zomb_where_temp; zomb_where_temp = NULL;
 
@@ -518,12 +517,10 @@ limit_cycle_cleanup:
 				while(conditions[i][j].attr) {
 				
 					if(conditions[i][j].attr == EDG_WLL_QUERY_ATTR_JOBID) {
-						dbjob = glite_jobid_getUnique(conditions[i][j].value.j);
-						prefix = glite_jobid_getServer(conditions[i][j].value.j);
-						trio_asprintf(&zomb_where_temp,"%s%s((p.prefix = '%|Ss') AND (j.jobid = '%|Ss'))",
+						dbjob = glite_jobid_unparse(conditions[i][j].value.j);
+						trio_asprintf(&zomb_where_temp,"%s%s(result.dg_jobid='%|Ss')",
 							zomb_where,
 							first_or ? " OR " : "", 
-							prefix,
 							dbjob);
 						free(dbjob); 
 						free(zquery);
@@ -539,8 +536,12 @@ limit_cycle_cleanup:
 				i++;
 			}
 
-			trio_asprintf(&zquery,"SELECT p.prefix,j.jobid FROM zombie_prefixes as p, zombie_jobs as j "
-					     "WHERE (p.prefix_id = j.prefix_id) %s", zomb_where);
+			trio_asprintf(&zquery,"SELECT * FROM "
+						"(SELECT  concat('https://',p.prefix,'/',j.jobid,s.suffix) AS dg_jobid FROM "
+						"zombie_suffixes AS s, zombie_jobs AS j, zombie_prefixes AS p WHERE "
+						"(s.suffix_id = j.suffix_id) AND (p.prefix_id = j.prefix_id)) AS result "
+						"WHERE %s", zomb_where);	
+
 
 			j = edg_wll_ExecSQL(ctx,zquery,&sh);
 
@@ -549,11 +550,12 @@ limit_cycle_cleanup:
 				states_out	= (edg_wll_JobStat *) calloc(j+1, sizeof(*states_out));
 
 				i = 0; 
-				while ( (ret=edg_wll_FetchRow(ctx,sh,2,NULL,res)) > 0 ) {
-					asprintf(&full_jobid,"https://%s/%s",res[0],res[1]);
+				while ( (ret=edg_wll_FetchRow(ctx,sh,sizeof(res),NULL,res)) > 0 ) {
+					asprintf(&full_jobid,"https://%s/%s%s",res[0],res[1],res[2]);
 					edg_wlc_JobIdParse(full_jobid, jobs_out+i);
 					edg_wlc_JobIdParse(full_jobid, &(states_out[i].jobId));
 					states_out[i].state = EDG_WLL_JOB_PURGED;
+					free(res[0]); free(res[1]); free(res[2]);
 
 					i++;
 				}

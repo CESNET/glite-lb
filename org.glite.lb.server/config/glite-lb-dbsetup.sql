@@ -135,6 +135,7 @@ create table notif_jobs (
 create table zombie_jobs (
 	jobid	varchar(32)	not null,
 	prefix_id       tinyint unsigned not null,
+	suffix_id       tinyint unsigned not null,
 
 	primary key (jobid)
 ) engine=innodb;
@@ -144,6 +145,13 @@ create table zombie_prefixes (
 	prefix		varchar(255)	binary not null,
 
 	primary key (prefix_id)
+) engine=innodb;
+
+create table zombie_suffixes (
+	suffix_id       tinyint unsigned not null auto_increment,
+	suffix		varchar(255)	binary not null,
+
+	primary key (suffix_id)
 ) engine=innodb;
 
 
