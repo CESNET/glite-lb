@@ -528,14 +528,14 @@ static enum edg_wll_StatJobtype get_job_type(edg_wll_Context ctx, glite_jobid_co
 	return(type);	
 }
 
-static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, char **unique, char **suffix)
+static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, enum edg_wll_StatJobtype jobtype, char **unique, char **suffix)
 {
 	char 		*ptr = NULL, *dbjob = NULL;
 	
 
 	dbjob = glite_jobid_getUnique(job);
 
-	switch (get_job_type(ctx, job)) {
+	switch (jobtype) {
 	        case EDG_WLL_STAT_SIMPLE:
 	        case EDG_WLL_STAT_DAG:
         	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
@@ -565,10 +565,6 @@ static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, char *
 			// condor jobs
 			assert(0); // XXX: todo
 			break;
-		case EDG_WLL_NUMBER_OF_JOBTYPES:
-			// error getting job type, description in context
-			goto err;
-			break;
 	        default:
 			edg_wll_SetError(ctx,EINVAL,"Uknown job type");
 			goto err;
@@ -581,12 +577,12 @@ err:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
-static int get_jobid_prefix(edg_wll_Context ctx, glite_jobid_const_t job, char **prefix)
+static int get_jobid_prefix(edg_wll_Context ctx, glite_jobid_const_t job, enum edg_wll_StatJobtype jobtype, char **prefix)
 {
 	char	*ser = NULL;
 	
 
-	switch (get_job_type(ctx, job)) {
+	switch (jobtype) {
 	        case EDG_WLL_STAT_SIMPLE:
 	        case EDG_WLL_STAT_DAG:
         	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
@@ -608,10 +604,6 @@ static int get_jobid_prefix(edg_wll_Context ctx, glite_jobid_const_t job, char *
         	case EDG_WLL_STAT_CONDOR:
 			// condor jobs
 			assert(0); // XXX: todo
-			break;
-		case EDG_WLL_NUMBER_OF_JOBTYPES:
-			// error getting job type, description in context
-			goto err;
 			break;
 	        default:
 			edg_wll_SetError(ctx,EINVAL,"Uknown job type");
@@ -695,9 +687,12 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 
 		if ( purge )
 		{
+			enum edg_wll_StatJobtype jobtype = get_job_type(ctx, job);
+
 			// get job prefix/suffix before its state is deleted
-			if ( get_jobid_suffix(ctx, job, &root, &suffix) ) goto rollback;
-			if ( get_jobid_prefix(ctx, job, &prefix) ) goto rollback;
+			if ( jobtype == EDG_WLL_NUMBER_OF_JOBTYPES) goto rollback;
+			if ( get_jobid_suffix(ctx, job, jobtype, &root, &suffix) ) goto rollback;
+			if ( get_jobid_prefix(ctx, job, jobtype, &prefix) ) goto rollback;
 			
 		
 		}
