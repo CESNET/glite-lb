@@ -537,7 +537,7 @@ limit_cycle_cleanup:
 			}
 
 			trio_asprintf(&zquery,"SELECT * FROM "
-						"(SELECT  concat('https://',p.prefix,'/',j.jobid,s.suffix) AS dg_jobid FROM "
+						"(SELECT  concat('https://',p.prefix,j.jobid,s.suffix) AS dg_jobid FROM "
 						"zombie_suffixes AS s, zombie_jobs AS j, zombie_prefixes AS p WHERE "
 						"(s.suffix_id = j.suffix_id) AND (p.prefix_id = j.prefix_id)) AS result "
 						"WHERE %s", zomb_where);	

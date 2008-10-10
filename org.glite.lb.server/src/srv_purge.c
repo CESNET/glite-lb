@@ -511,21 +511,31 @@ static int dump_events(edg_wll_Context ctx, glite_jobid_const_t job, int dump, c
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+static enum edg_wll_StatJobtype get_job_type(edg_wll_Context ctx, glite_jobid_const_t job)
+{
+	edg_wll_JobStat			stat;
+	enum edg_wll_StatJobtype	type;
+
+	memset(&stat, 0, sizeof(stat));
+	if (edg_wll_JobStatusServer(ctx, job, 0 /*no flags*/, &stat)) {
+		edg_wll_FreeStatus(&stat);
+                return(EDG_WLL_NUMBER_OF_JOBTYPES);
+        }
+
+	type = stat.jobtype;
+	edg_wll_FreeStatus(&stat);
+
+	return(type);	
+}
 
 static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, char **unique, char **suffix)
 {
 	char 		*ptr = NULL, *dbjob = NULL;
-	edg_wll_JobStat	stat;
+	
 
-	
-	memset(&stat, 0, sizeof(stat));
-	if (edg_wll_JobStatusServer(ctx, job, 0 /*no flags*/, &stat)) {
-		goto err;
-	}
-	
 	dbjob = glite_jobid_getUnique(job);
 
-	switch (stat.jobtype) {
+	switch (get_job_type(ctx, job)) {
 	        case EDG_WLL_STAT_SIMPLE:
 	        case EDG_WLL_STAT_DAG:
         	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
@@ -555,6 +565,10 @@ static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, char *
 			// condor jobs
 			assert(0); // XXX: todo
 			break;
+		case EDG_WLL_NUMBER_OF_JOBTYPES:
+			// error getting job type, description in context
+			goto err;
+			break;
 	        default:
 			edg_wll_SetError(ctx,EINVAL,"Uknown job type");
 			goto err;
@@ -562,9 +576,50 @@ static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, char *
 	}
 
 err:	
-	edg_wll_FreeStatus(&stat);
 	free(dbjob);
 
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+static int get_jobid_prefix(edg_wll_Context ctx, glite_jobid_const_t job, char **prefix)
+{
+	char	*ser = NULL;
+	
+
+	switch (get_job_type(ctx, job)) {
+	        case EDG_WLL_STAT_SIMPLE:
+	        case EDG_WLL_STAT_DAG:
+        	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
+	        case EDG_WLL_STAT__PARTITIONED_UNUSED:
+        	case EDG_WLL_STAT_COLLECTION:
+			// glite job prefix
+			ser = glite_jobid_getServer(job);
+			asprintf(prefix,"%s/",ser);
+			free(ser);
+			break;
+
+	        case EDG_WLL_STAT_PBS:
+			// PBS jobs; prefix same as glite job prefix
+			ser = glite_jobid_getServer(job);
+			asprintf(prefix,"%s/",ser);
+			free(ser);
+			break;
+
+        	case EDG_WLL_STAT_CONDOR:
+			// condor jobs
+			assert(0); // XXX: todo
+			break;
+		case EDG_WLL_NUMBER_OF_JOBTYPES:
+			// error getting job type, description in context
+			goto err;
+			break;
+	        default:
+			edg_wll_SetError(ctx,EINVAL,"Uknown job type");
+			goto err;
+			break;
+	}
+
+err:	
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
@@ -640,8 +695,10 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 
 		if ( purge )
 		{
-			// get job suffix before its state is deleted
+			// get job prefix/suffix before its state is deleted
 			if ( get_jobid_suffix(ctx, job, &root, &suffix) ) goto rollback;
+			if ( get_jobid_prefix(ctx, job, &prefix) ) goto rollback;
+			
 		
 		}
 
@@ -666,7 +723,6 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 		if ( purge )
 		{
 			/* Store zombie prefix */
-			prefix = glite_jobid_getServer(job);
 		
 			// See if that prefix is already stored in the database	
 			trio_asprintf(&stmt,"select prefix_id from zombie_prefixes where prefix = '%|Ss'", prefix);
@@ -694,6 +750,7 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 			}
 			ret = edg_wll_FetchRow(ctx,q, 1, NULL, &prefix_id);
 			glite_lbu_FreeStmt(&q);
+
 
 			/* Store zombie suffix */
 
