@@ -1,5 +1,6 @@
 #ident "$Header$"
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -701,7 +702,21 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 					case EDG_WLL_DONE_CANCELLED:
 						js->pub.state = EDG_WLL_JOB_CANCELLED;
 					case EDG_WLL_DONE_OK:
-						rep(js->pub.location, "none"); break;
+						rep(js->pub.location, "none");
+						break;
+					case EDG_WLL_DONE_FAILED:
+						if (js->pub.failure_reasons) {
+							char *glued_reasons;
+
+							asprintf(&glued_reasons,"%s\n%s [%s]", 
+								js->pub.failure_reasons, e->done.reason, js->pub.destination);
+							rep(js->pub.failure_reasons, glued_reasons)
+						}
+						else {
+							asprintf(&(js->pub.failure_reasons),"%s [%s]",
+								e->done.reason, js->pub.destination);
+						}
+						// fall through
 					default:
 						free(js->pub.location);
 						js->pub.location = location_string(
@@ -719,6 +734,20 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 						js->pub.exit_code = 0;
 						js->pub.done_code = EDG_WLL_STAT_CANCELLED; break;
 					case EDG_WLL_DONE_FAILED:
+						if (!USABLE(res, strict)) {
+							// record reason, destination could have changed already
+							if (js->pub.failure_reasons) {
+								char *glued_reasons;
+	
+								asprintf(&glued_reasons,"%s\n%s [delayed event, destination unreliable]", 
+									js->pub.failure_reasons, e->done.reason);
+								rep(js->pub.failure_reasons, glued_reasons)
+							}
+							else {
+								asprintf(&(js->pub.failure_reasons),"%s [delayed event, destination unreliable]",
+									e->done.reason);
+							}
+						}
 						js->pub.exit_code = 0;
 						js->pub.done_code = EDG_WLL_STAT_FAILED; break;
 					default:
@@ -998,8 +1027,6 @@ int add_stringlist(char ***lptr, const char *new_item)
 
 void destroy_intJobStat_extension(intJobStat *p)
 {
-	int i;
-
 	if (p->last_seqcode) free(p->last_seqcode);
 	if (p->last_cancel_seqcode) free(p->last_cancel_seqcode);
 	if (p->branch_tag_seqcode) free(p->branch_tag_seqcode);
