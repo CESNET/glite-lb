@@ -356,7 +356,7 @@ install:
 		${INSTALL} -m 755 "glite-lb-$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 	-mkdir -p ${PREFIX}/lib/modules
-	${INSTALL} -m 755 ${LCAS_PLUGIN_LOBJS} ${PREFIX}/lib/modules
+	${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${PREFIX}/lib/modules
 	ln -sf liblcas_lb.so ${PREFIX}/lib/modules/lcas_lb.mod
 
 	for f in dbsetup.sql dbsetup-migrate2transactions.sql index.conf.template; do \
