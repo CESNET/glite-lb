@@ -58,7 +58,7 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
         /* head */
         pomB = strdup("");
 
-        while (jobsOut[i]) {
+        while (jobsOut && jobsOut[i]) {
                 char    *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
 
                 asprintf(&pomA,"%s\t\t <li> <a href=\"%s\">%s</a>\r\n",
@@ -74,7 +74,7 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 	pomD = strdup("");
 	i = 0;
 
-	while(notifids[i]){
+	while(notifids && notifids[i]){
 		asprintf(&pomC, "%s\t\t <li> <a href=\"/notif/%s\">%s</a>\r\n",
 				pomD,
 				notifids[i],
