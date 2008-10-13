@@ -1,10 +1,12 @@
 #include <getopt.h>
 #include <stdsoap2.h>
+#include <expat.h>
 
 #include "soap_version.h"
 #include "glite/security/glite_gsplugin.h"
 #include "glite/security/glite_gscompat.h"
 #include "glite/lb/consumer.h"
+#include "glite/lb/xml_conversions.h"
 
 #include "bk_ws_H.h"
 #include "ws_typeref.h"

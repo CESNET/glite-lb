@@ -240,6 +240,8 @@ LCAS_PLUGIN_OBJS:=lcas_lb.o
 LCAS_PLUGIN_LOBJS:=${LCAS_PLUGIN_OBJS:.o=.lo}
 LCAS_PLUGIN_LIB:=liblcas_lb.la
 
+EXAMPLES=ws_getversion ws_jobstat ws_query_ex ws_joblog ws_userjobs
+
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
 
@@ -307,7 +309,7 @@ test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 	${LINKXX} -o $@ test_soap_conv.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${TEST_LIBS}
 
-examples: ws_getversion ws_jobstat ws_query_ex ws_joblog ws_userjobs
+examples: ${EXAMPLES}
 
 ws_getversion: ws_getversion.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ $< ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
@@ -377,7 +379,7 @@ ifdef LB_PERF
 endif
 
 clean:
-	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} test* ${MAN_GZ}
+	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} test* ${MAN_GZ} ${EXAMPLES}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.c: %.c.T
