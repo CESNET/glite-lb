@@ -2,6 +2,7 @@
 #include <string.h>
 #include <iostream>
 #include <vector>
+//#include <classad.h>
 
 #include "glite/lb/LoggingExceptions.h"
 #include "JobStatus.h"
@@ -11,14 +12,23 @@
 
 using namespace glite::lb;
 
+typedef std::pair<JobStatus::Attr,std::string> FieldPair;
+
 char * parse_fields(const char *arg,void **out)
 {
 	char	*aux = strdup(arg),*p;
-	std::vector<JobStatus::Attr>	*fields = new std::vector<JobStatus::Attr>;
+	std::vector<FieldPair>	*fields = new std::vector<FieldPair>;
 
 	for (p = strtok(aux,","); p; p = strtok(NULL,",")) {
-		try { fields->push_back(JobStatus::attrByName(p)); }
-		catch (std::runtime_error &e) { delete fields; return p; };
+		/*special treatment for JDL (and possibly other) two-valued fields with ':' used as a separator  */
+		if (strncasecmp("jdl:", p, 4)) {
+			try { fields->push_back(std::make_pair(JobStatus::attrByName(p), "")); }
+			catch (std::runtime_error &e) { delete fields; return p; };
+		}
+		else {
+			try { fields->push_back(std::make_pair(JobStatus::attrByName("jdl"), p + 4)); }
+			catch (std::runtime_error &e) { delete fields; return p; };
+		}
 	}
 	
 	*out = (void *) fields;
@@ -57,32 +67,46 @@ void dump_fields(void)
 
 extern "C" { char * TimeToStr(time_t); }
 
-void print_fields(void **ff,const edg_wll_NotifId n,edg_wll_JobStat const *s)
+void print_fields(void **ff,const edg_wll_NotifId n,edg_wll_JobStat *s)
 {
-	std::vector<JobStatus::Attr>	*fields = (std::vector<JobStatus::Attr> *) ff;
+	std::vector<FieldPair>	*fields = (std::vector<FieldPair> *) ff;
 	JobStatus	stat(*s,0);
 	attrs_t 	attrs = stat.getAttrs();
 	attrs_t::iterator a;
+	std::vector<FieldPair>::iterator f;
+	std::string val;
+	struct timeval t;
+	JobStatus::Attr attr;
 
 	std::cout << glite_jobid_unparse(s->jobId) << '\t' << stat.name() << '\t';
 
-	for (std::vector<JobStatus::Attr>::iterator f = fields->begin(); f != fields->end(); f++) {
-		for (a = attrs.begin(); a != attrs.end() && a->first != *f; a++);
-		if (a != attrs.end() ) switch (a->second) {
-			case JobStatus::INT_T:
-				std::cout << stat.getValInt(a->first) << '\t';
-				break;
-			case JobStatus::STRING_T: {
-				std::string val = stat.getValString(a->first);
-				std::cout << (val.empty() ? "(null)" : escape(val)) << '\t';
-				} break;
-			case JobStatus::TIMEVAL_T: {
-				struct timeval t = stat.getValTime(a->first);
-				std::cout << TimeToStr(t.tv_sec) << '\t';
-				} break;
-			default:
-				std::cout << "(unsupported)";
-				break;
+	for (f = fields->begin(); f != fields->end(); f++) {
+		for (a = attrs.begin(); a != attrs.end() && a->first != f->first; a++);
+		if (a != attrs.end() ) {
+			attr = (a->first);
+			switch (a->second) {
+				case (JobStatus::INT_T):
+					std::cout << stat.getValInt(attr) << '\t';
+					break;
+				case (JobStatus::STRING_T):
+					val = stat.getValString(attr);
+					if (attr != JobStatus::JDL) {
+						std::cout << (val.empty() ? "(null)" : escape(val)) << '\t'; 
+					}
+					else {
+//						printf("\n1: %d\n2: %d\n", f->first, f->second); 
+						//XXX: Treat JDL
+					//	printf("\n\nJDL: %s\n\n", (*f).second);
+					}
+					break;
+				case (JobStatus::TIMEVAL_T): 
+					t = stat.getValTime(attr);
+					std::cout << TimeToStr(t.tv_sec) << '\t'; 
+					break;
+				default:
+					std::cout << "(unsupported)";
+					break;
+			}
 		}
 	}
 	std::cout << std::endl;

@@ -15,6 +15,7 @@
 		int=>'"int"',
 		float=>'"float"',
 		double=>'"double"',
+		cclassad=>'"void *"',
 	},
 	'C++'=>{
 		string=>'"std::string"',
@@ -30,6 +31,7 @@
 	        int=>'"int"',
 		float=>'"float"',
 		double=>'"double"',
+		cclassad=>'"void *"',
 	},
 	'wsdl'=>{
 		bool=>'"xsd:boolean"',
@@ -48,6 +50,7 @@
 		intlist=>'"intSequenceType"',
 		stslist=>'"statusSequenceType"',
 		taglist=>'"tagSequenceType"',
+		cclassad=>'"xsd:string"',
 	},
 	'java'=>{
 		bool=>'"bool"',
@@ -84,6 +87,8 @@
 		notifid=>'qq{$dst = edg_wll_NotifIdUnparse($src);}',
 #		level=>'qq{$dst = edg_wll_LevelToString($src);}',
 		logsrc=>'qq{$dst = edg_wll_SourceToString($src);}',
+		logsrc=>'qq{$dst = edg_wll_StringToSource($src);}',
+		cclassad=>'qq{$dst = NULL;}',
 #	strlist, intlist, stslist are used only in consumer API, they don't need toString method
 	}
 );
@@ -125,6 +130,7 @@
 	intlist=>'NULL',
 	taglist=>'NULL',
 	stslist=>'NULL',
+	cclassad=>'NULL',
 );
 
 %compare = (
@@ -143,6 +149,7 @@
 			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wll_NotifIdUnparse($a),edg_wll_NotifIdUnparse($b)))}; }',
 		logsrc=>'"($a) == ($b)"',
 		timeval=>'"($a).tv_sec == ($b).tv_sec && ($a).tv_usec == ($b).tv_usec"',
+		cclassad=>'"($a == $b)"',
 	}
 );
 

@@ -118,7 +118,8 @@ public:
 			INTLIST_T, /**< List of integer values. */
 			STRLIST_T, /**< List of string values. */
 			TAGLIST_T, /**< List of user tags. */
-			STSLIST_T  /**< List of states. */
+			STSLIST_T,  /**< List of states. */
+			CCLASSAD_T /**< Unparsed classad */
 	};
   
 	/** Numeric status code. 

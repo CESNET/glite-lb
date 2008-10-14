@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <syslog.h>
+#include <cclassad.h> 
 
 #include "glite/lb/context-int.h"
 

@@ -2,6 +2,7 @@
 top_srcdir=.
 stagedir=.
 globalprefix=glite
+classads_prefix=/opt/classads
 lbprefix=lb
 package=glite-lb-common
 version=0.0.0
@@ -43,10 +44,11 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${top_srcdir}/test \
 	-I${stagedir}/include \
 	-I${expat_prefix}/include \
+	-I${classads_prefix}/include \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
 	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS} \
-	-DBUILDING_LB_COMMON
+	-DBUILDING_LB_COMMON 
 
 ifneq (${expat_prefix},/usr)
 	EXPAT_LIBS:=-L${expat_prefix}/lib
@@ -59,11 +61,16 @@ ifeq (${host_cpu},x86_64)
     archlib:=lib64
 endif
 
+ifneq (${classads_prefix},/usr)
+        classadslib := -L${classads_prefix}/${archlib} -lclassad
+endif
+
+
 LDFLAGS:=-L${stagedir}/${archlib} -L${stagedir}/lib \
 	${COVERAGE_FLAGS}
 
-EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB}
-EXT_THRLIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB}
+EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${classadslib}
+EXT_THRLIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${classadslib}
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
@@ -142,13 +149,13 @@ ${THRSTATICLIB}: ${THROBJS}
 	ranlib $@
 
 ${LTLIB}: ${OBJS}
-	${LINK} ${version_info} -o $@ ${LOBJS} \
+	${LINKXX} ${version_info} -o $@ ${LOBJS} \
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS} \
 		-lm
 
 ${THRLTLIB}: ${THROBJS}
-	${LINK} ${version_info} -o $@ ${THRLOBJS} \
+	${LINKXX} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss_${thrflavour} \
 		${EXT_THRLIBS} \
 		-lm

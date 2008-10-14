@@ -194,6 +194,11 @@ extern enum edg_wll_StatJw_status edg_wll_StringToJWStat(const char *);
  */
 extern char *edg_wll_JWStatToString(enum edg_wll_StatJw_status);
 
+/** 
+ * Extract a variable from the JDL attribute 
+ */
+extern char *edg_wll_JDLField(edg_wll_JobStat *stat, const char *field_name);
+
 /*@}*/
 
 /*

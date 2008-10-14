@@ -524,6 +524,9 @@ void edg_wll_add_time_t_list_to_XMLBody(char **body, const time_t *toAdd, const 
         *body = newBody;
 }
 
+void edg_wll_add_cclassad_to_XMLBody(char **body, void *toAdd, const char *tag, const char *null) {
+	//dummy function. This conversion will never be done.
+}
 
 // void edg_wll_add_stslist_to_XMLBody(char **body, const edg_wll_JobStat *toAdd, const char *tag, const char *UNUSED_subTag, const int null)
 // in lbserver/lb_xml_parse.c.T
@@ -708,6 +711,11 @@ edg_wll_Source edg_wll_from_string_to_logsrc(edg_wll_XML_ctx *XMLCtx)
 	return(out);
 }
 
+void *edg_wll_from_string_to_cclassad(edg_wll_XML_ctx *XMLCtx)
+{
+	//This conversion will never be done
+	return (NULL);
+}
 
 
 /************************************************************************/

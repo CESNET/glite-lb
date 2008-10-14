@@ -884,7 +884,7 @@ select:
 		edg_wll_SetError(ctx, EINVAL, "glite_lbu_UnescapeXML()");
 		goto err;
 	}
-		
+	
 	/* fill in return values
 	 */
 	if ( edg_wll_ParseJobStat(ctx, jobstat_char, 

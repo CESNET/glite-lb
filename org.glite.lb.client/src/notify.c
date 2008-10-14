@@ -272,7 +272,9 @@ int main(int argc,char **argv)
 					- time(NULL);
 			if (tout.tv_sec < 0) tout.tv_sec = 0;
 			tout.tv_usec = 0;
-			
+
+			edg_wll_FreeStatus(&stat);
+		
 			if ( (err = edg_wll_NotifReceive(ctx, sock, &tout, &stat, &recv_nid)) ) {
 				edg_wll_NotifIdFree(recv_nid);
 				recv_nid = NULL; 
@@ -280,7 +282,7 @@ int main(int argc,char **argv)
 				if (err != ETIMEDOUT) goto receive_err;
 			}
 			else print_fields(fields,recv_nid,&stat);
-			
+
 			if ((now = time(NULL)) >= client_tout) return 0;
 
 			if (refresh && now >= do_refresh) {

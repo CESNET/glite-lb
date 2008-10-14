@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <cclassad.h>
+
 #include "jobstat.h"
 
 static const struct timeval null_timeval = {0,0};
@@ -50,10 +52,11 @@ void edg_wll_FreeStatus(edg_wll_JobStat *stat)
 			gen "\t\tfree(stat->$_);\n";
 			gen "\t}\n";
                 }
-
+                if ($ft eq 'cclassad') {
+                        gen "\tif (stat->$_ != NULL )   { \tcclassad_delete(stat->$_); stat->$_=NULL; }\n";
+                }
         }
 @@@}
-    
   }
 }
 
@@ -199,6 +202,22 @@ char *edg_wll_JWStatToString(enum edg_wll_StatJw_status statCode)
 {
         if ((int)statCode < 0 || statCode >= sizeof(jw_statNames)/sizeof(jw_statNames[0])) return (char *) NULL; 
         return strdup(jw_statNames[statCode]);
+}
+
+char *edg_wll_JDLField(edg_wll_JobStat *stat, const char *field_name)
+{
+	char *extr_val;
+
+	if (stat->jdl_classad == NULL) { //classad had not been unparsed yet
+
+		stat->jdl_classad = (struct classad*)cclassad_create(stat->jdl);
+	}
+
+	if (cclassad_evaluate_to_string(stat->jdl_classad, field_name, &extr_val)) {
+		return extr_val;
+	}
+	else 
+		return NULL;
 }
 
 

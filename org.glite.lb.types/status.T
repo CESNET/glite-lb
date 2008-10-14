@@ -96,6 +96,7 @@ int	jw_status		Status of Job wrapper
 	_code_	WRAPPER_RUNNING Wrapper started
 	_code_	PAYLOAD_RUNNING Payload running
 	_code_	DONE		JW finished
+cclassad	jdl_classad	Unparsed JDL classad
 
 _pad_	55
 

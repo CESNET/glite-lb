@@ -1702,7 +1702,7 @@ int check_strict_jobid(edg_wll_Context ctx, glite_jobid_const_t job)
 		char	*jobid,msg[300];
 
 		jobid = edg_wlc_JobIdUnparse(job);
-		snprintf(msg,sizeof msg,"%s: does not match server address",jobid);
+		snprintf(msg,sizeof msg,"%s: does not match server address (%s:%d)",jobid,ctx->srvName,ctx->srvPort);
 		msg[sizeof msg - 1] = 0;
 		edg_wll_SetError(ctx,EINVAL,msg);
 		free(jobid);
