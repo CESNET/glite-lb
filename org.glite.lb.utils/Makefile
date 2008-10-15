@@ -55,7 +55,7 @@ COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
 JP_LIBS:=-lglite_jp_common_${nothrflavour}
 
-UTILS:=mon purge dump load dump_exporter
+UTILS:=mon purge dump load dump_exporter state_history
 STATISTICS_OBJS:=statistics.o process_attrs.o process_attrs2.o
 
 MAN_GZ:=glite-lb-mon.1.gz
@@ -71,6 +71,9 @@ ${UTILS}: %: %.o
 
 statistics: ${STATISTICS_OBJS}
 	${LINK} -rdynamic -o $@ ${STATISTICS_OBJS} ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
+
+state_history: state_history.o
+	${LINK} -o $@ state_history.o -L${stagedir}/lib -lglite_lb_statemachine ${CLIENT_LIB} ${COMMON_LIB}
 
 check: compile 
 
