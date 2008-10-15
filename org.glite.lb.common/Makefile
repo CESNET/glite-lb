@@ -45,6 +45,7 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	-I${expat_prefix}/include \
 	-I${classads_prefix}/include \
+	-I${classads_prefix}/include/classad \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
 	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS} \
@@ -62,7 +63,7 @@ ifeq (${host_cpu},x86_64)
 endif
 
 ifneq (${classads_prefix},/usr)
-        classadslib := -L${classads_prefix}/${archlib} -lclassad
+        classadslib := -L${classads_prefix}/${archlib} -L${classads_prefix}/lib -lclassad
 endif
 
 
