@@ -117,7 +117,7 @@ INSTALL:=libtool --mode=install install
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 	producer.o uiwrap.o statistics.o
 
-PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o
+PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o stat_fields.o
 
 HDRS:=consumer.h notification.h statistics.h prod_proto.h connection.h \
 	Job.h Notification.h ServerConnection.h 
@@ -196,8 +196,8 @@ ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
 
-notify: notify.o notify_supp.o
-	${LINKXX} -o $@ notify.o notify_supp.o ${PLUSLIB} ${EXT_LIB} 
+notify: notify.o
+	${LINKXX} -o $@ notify.o ${PLUSLIB} ${EXT_LIB} 
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
@@ -210,7 +210,7 @@ ${EXAMPLES_CL_THR}: %: %.o
 
 ${TOOLS}: ${LIB}
 
-notify_supp.o ${PLUSOBJS}: %.o: %.cpp
+${PLUSOBJS}: %.o: %.cpp
 	${CXXCOMPILE} -c $<
 
 ${PLUSTHROBJS}: %.thr.o: %.cpp

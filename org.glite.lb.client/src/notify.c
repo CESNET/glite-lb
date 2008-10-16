@@ -10,7 +10,7 @@
 #include "glite/lb/context.h"
 #include "notification.h"
 
-#include "notify_supp.h"
+#include "stat_fields.h"
 
 
 static char *me;
@@ -77,7 +77,7 @@ static void usage(char *cmd)
 			"\n    -a, -t, and -r are unusable with -s\n"
 			, me);
 		fprintf(stderr,"\navailable fields:\n\t");
-		dump_fields();
+		glite_lb_dump_stat_fields();
 		putc(10,stderr);
 	}
 	if ( !cmd || !strcmp(cmd, "drop") )
@@ -236,7 +236,7 @@ int main(int argc,char **argv)
 
 		if (opt_valid == 0) opt_valid = 3600;
 
-		if ((err = parse_fields(field_arg,&fields))) {
+		if ((err = glite_lb_parse_stat_fields(field_arg,&fields))) {
 			fprintf(stderr,"%s: invalid argument\n",err);
 			return EX_USAGE;
 		}
@@ -281,7 +281,7 @@ int main(int argc,char **argv)
 
 				if (err != ETIMEDOUT) goto receive_err;
 			}
-			else print_fields(fields,recv_nid,&stat);
+			else glite_lb_print_stat_fields(fields,&stat);
 
 			if ((now = time(NULL)) >= client_tout) return 0;
 

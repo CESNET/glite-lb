@@ -8,13 +8,13 @@
 #include "JobStatus.h"
 #include "notification.h"
 
-#include "notify_supp.h"
+#include "stat_fields.h"
 
 using namespace glite::lb;
 
 typedef std::pair<JobStatus::Attr,std::string> FieldPair;
 
-char * parse_fields(const char *arg,void **out)
+char * glite_lb_parse_stat_fields(const char *arg,void **out)
 {
 	char	*aux = strdup(arg),*p;
 	std::vector<FieldPair>	*fields = new std::vector<FieldPair>;
@@ -36,7 +36,7 @@ char * parse_fields(const char *arg,void **out)
 }
 
 
-std::string & escape(std::string &s)
+static std::string & escape(std::string &s)
 {
 	for (std::string::iterator p = s.begin(); p < s.end(); p++) switch (*p) {
 		case '\n':
@@ -50,7 +50,7 @@ std::string & escape(std::string &s)
 
 typedef std::vector<std::pair<JobStatus::Attr,JobStatus::AttrType> > attrs_t;
 
-void dump_fields(void)
+void glite_lb_dump_stat_fields(void)
 {
 	JobStatus	s;
 	attrs_t 	a = s.getAttrs(); 
@@ -67,7 +67,7 @@ void dump_fields(void)
 
 extern "C" { char * TimeToStr(time_t); }
 
-void print_fields(void **ff,const edg_wll_NotifId n,edg_wll_JobStat *s)
+void glite_lb_print_stat_fields(void **ff,edg_wll_JobStat *s)
 {
 	std::vector<FieldPair>	*fields = (std::vector<FieldPair> *) ff;
 	JobStatus	stat(*s,0);
