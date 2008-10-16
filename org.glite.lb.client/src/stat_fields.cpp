@@ -77,9 +77,10 @@ void glite_lb_print_stat_fields(void **ff,edg_wll_JobStat *s)
 	std::string val;
 	struct timeval t;
 	JobStatus::Attr attr;
-	char *jdl_param = NULL;
+	char *jdl_param = NULL,*jobid_s = NULL;
 
-	std::cout << glite_jobid_unparse(s->jobId) << '\t' << stat.name() << '\t';
+	std::cout << (jobid_s = glite_jobid_unparse(s->jobId)) << '\t' << stat.name() << '\t';
+	free(jobid_s);
 
 	for (f = fields->begin(); f != fields->end(); f++) {
 		for (a = attrs.begin(); a != attrs.end() && a->first != f->first; a++);
