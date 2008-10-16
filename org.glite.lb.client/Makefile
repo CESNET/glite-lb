@@ -120,7 +120,7 @@ LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o stat_fields.o
 
 HDRS:=consumer.h notification.h statistics.h prod_proto.h connection.h \
-	Job.h Notification.h ServerConnection.h 
+	Job.h Notification.h ServerConnection.h stat_fields.h
 GEN_HDRS:=JobStatus.h producer.h
 
 LIBTHROBJS:=${LIBOBJS:.o=.thr.o}
