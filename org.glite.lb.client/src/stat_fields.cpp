@@ -77,6 +77,7 @@ void glite_lb_print_stat_fields(void **ff,edg_wll_JobStat *s)
 	std::string val;
 	struct timeval t;
 	JobStatus::Attr attr;
+	char *jdl_param = NULL;
 
 	std::cout << glite_jobid_unparse(s->jobId) << '\t' << stat.name() << '\t';
 
@@ -89,14 +90,15 @@ void glite_lb_print_stat_fields(void **ff,edg_wll_JobStat *s)
 					std::cout << stat.getValInt(attr) << '\t';
 					break;
 				case (JobStatus::STRING_T):
-					val = stat.getValString(attr);
 					if (attr != JobStatus::JDL) {
+						val = stat.getValString(attr);
 						std::cout << (val.empty() ? "(null)" : escape(val)) << '\t'; 
 					}
 					else {
-//						printf("\n1: %d\n2: %d\n", f->first, f->second); 
-						//XXX: Treat JDL
-					//	printf("\n\nJDL: %s\n\n", (*f).second);
+                                                val = f->second;
+                                                jdl_param = edg_wll_JDLField(s, val.c_str());
+                                                std::cout << (jdl_param ? jdl_param : "(null)") << '\t'; 
+                                                free(jdl_param); jdl_param = NULL;
 					}
 					break;
 				case (JobStatus::TIMEVAL_T): 
