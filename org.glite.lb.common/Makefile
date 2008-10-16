@@ -63,8 +63,10 @@ ifeq (${host_cpu},x86_64)
 endif
 
 ifneq (${classads_prefix},/usr)
-        classadslib := -L${classads_prefix}/${archlib} -L${classads_prefix}/lib -lclassad
+        classadslib := -L${classads_prefix}/${archlib} -L${classads_prefix}/lib 
 endif
+
+classadslib := ${classadslib} -lclassad
 
 
 LDFLAGS:=-L${stagedir}/${archlib} -L${stagedir}/lib \
