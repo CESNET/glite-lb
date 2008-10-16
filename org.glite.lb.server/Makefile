@@ -73,7 +73,7 @@ CFLAGS:= \
 	-I${top_srcdir}/interface \
 	-I${expat_prefix}/include \
 	-I${cares_prefix}/include \
-	-I${classads_prefix}/include \
+	-I${classads_prefix}/include -I${classads_prefix}/include/classad \
 	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
 	$(GRIDSITE_CFLAGS) \
@@ -145,8 +145,10 @@ LCAS_LIBS:=-L${lcas_prefix}/lib -llcas
 #	-lvomsc${vomsflavour} \
 
 ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/${archlib} -lclassad
+	classadslib := -L${classads_prefix}/${archlib} -L${classads_prefix}/lib
 endif
+
+classadslib := ${classadslib} -lclassad
 
 EXT_LIBS:=  \
 	-lz -lcares\
