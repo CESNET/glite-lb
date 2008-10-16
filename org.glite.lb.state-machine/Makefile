@@ -8,6 +8,12 @@ package=glite-lb-state-machine
 version=0.2.0
 PREFIX=/opt/glite
 
+archlib:=lib
+host_cpu:=${shell uname -m}
+ifeq (${host_cpu},x86_64)
+    archlib:=lib64
+endif
+
 -include Makefile.inc
 
 VPATH = ../src:../interface
@@ -24,7 +30,7 @@ DEBUG:=-g -O0 -Wall
 
 CFLAGS:= \
 	${DEBUG} \
-	-I${classads_prefix}/include \
+	-I${classads_prefix}/include -I${classads_prefix}/include/classad \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface 
 
@@ -35,6 +41,12 @@ LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
+
+ifneq (${classads_prefix},/usr)
+	classadslib := -L${classads_prefix}/${archlib} -L${classads_prefix}/lib 
+endif
+
+classadslib := ${classadslib} -lclassad
 
 EXT_LIBS:=
 COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
