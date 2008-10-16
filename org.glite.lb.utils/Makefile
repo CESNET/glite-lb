@@ -53,9 +53,11 @@ EXT_LIBS:= \
 	${expatlib} -lexpat
 COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
+PLUS_LIB:=-lglite_lb_clientpp_${nothrflavour}
 JP_LIBS:=-lglite_jp_common_${nothrflavour}
 
-UTILS:=mon purge dump load dump_exporter state_history
+UTILS:=mon purge dump load dump_exporter
+ALLUTILS:=${UTILS} state_history statistics
 STATISTICS_OBJS:=statistics.o process_attrs.o process_attrs2.o
 
 MAN_GZ:=glite-lb-mon.1.gz
@@ -64,7 +66,7 @@ MAN = $(MAN_GZ:.gz=)
 
 default: all
 
-compile all: ${UTILS} ${MAN_GZ} statistics
+compile all: ${ALLUTILS} ${MAN_GZ}
 
 ${UTILS}: %: %.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} -lglite_lbu_maildir
@@ -73,7 +75,7 @@ statistics: ${STATISTICS_OBJS}
 	${LINK} -rdynamic -o $@ ${STATISTICS_OBJS} ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
 
 state_history: state_history.o
-	${LINK} -o $@ state_history.o -L${stagedir}/lib -lglite_lb_statemachine ${CLIENT_LIB} ${COMMON_LIB}
+	${LINK} -o $@ state_history.o -L${stagedir}/lib -lglite_lb_statemachine ${PLUS_LIB}
 
 check: compile 
 
@@ -97,10 +99,9 @@ install:
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 	${INSTALL} -m 755 ${top_srcdir}/src/glite-lb-bkpurge-offline.sh ${PREFIX}/bin/glite-lb-bkpurge-offline
 
-	for p in ${UTILS} ; do \
+	for p in ${ALLUTILS} ; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
-	${INSTALL} -m 755 statistics ${PREFIX}/bin/glite-lb-statistics
 
 clean:
 	rm -rfv ${UTILS} statistics ${MAN_GZ} *.{lo,o} .libs/

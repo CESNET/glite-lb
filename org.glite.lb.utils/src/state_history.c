@@ -1,26 +1,45 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "glite/lb/context.h"
 #include "glite/lb/consumer.h"
 
 #include "glite/lb/intjobstat.h"
 #include "glite/lb/seqcode_aux.h"
+#include "glite/lb/stat_fields.h"
+#include "glite/lb/process_event.h"
 
-/*comment */
+#define usage() { \
+	fprintf(stderr,"usage: %s [-f fields] <jobid>\n",argv[0]); \
+	fprintf(stderr,"\navailable fields:\n\t"); \
+	glite_lb_dump_stat_fields(); \
+	putc(10,stderr); \
+}
 
 int main (int argc, char ** argv)
 {
 	edg_wll_Context	ctx;
 	edg_wll_QueryRec	jc[2];
 	edg_wll_Event	*events;
-	int	i,n;
+	int	i,n,opt;
 	intJobStat	is;
+	char	*farg = "network_server,jdl:VirtualOrganisation,destination,done_code,reason";
+	void	*fields;
+
+	while ((opt = getopt(argc,argv,"f:")) != -1) switch (opt) {
+		case 'f': farg = optarg; break;
+		default: usage(); return 1;
+	}
+
 
 	memset(&jc,0,sizeof jc);
-	if (argc != 2 || glite_jobid_parse(argv[1],&jc[0].value.j)) {
-		fprintf(stderr,"usage: %s <jobid>\n",argv[0]);
+	if (optind+1 != argc
+			|| glite_jobid_parse(argv[optind],&jc[0].value.j)
+			|| glite_lb_parse_stat_fields(farg,&fields))
+	{
+		usage();
 		return 1;
 	}
 
@@ -39,18 +58,20 @@ int main (int argc, char ** argv)
 	for (n=0; events[n].type; n++);
 
 	init_intJobStat(&is);
+	glite_jobid_dup(jc[0].value.j,&is.pub.jobId);
 
 	qsort(events,n,sizeof *events,compare_events_by_seq);
 
 	for (i=0; i<n; i++) {
-		char	*err;
+		char	*err,*evnt = NULL;
 		if (processEvent(&is,events+i,0,0,&err) == RET_FATAL) {
 			fprintf(stderr,"event %d: %s\n",i,err);
 			return 1;
 		}
 
-		printf ("%s %s\n",edg_wll_EventToString(events[i].type),
-				edg_wll_StatToString(is.pub.state));
+		printf("%s\t",evnt = edg_wll_EventToString(events[i].type));
+		free(evnt); evnt = NULL;
+		glite_lb_print_stat_fields(fields,&is.pub);   
 	}
 
 	return 0;
