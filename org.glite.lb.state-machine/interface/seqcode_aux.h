@@ -19,4 +19,4 @@ int edg_wll_compare_seq(const char *a, const char *b);
 
 int compare_events_by_seq(const void *a, const void *b);
 
-int add_taglist(edg_wll_TagValue **lptr, const char *new_item, const char *new_item2);
+int add_taglist(const char *new_item, const char *new_item2, const char *seq_code, intJobStat *js);

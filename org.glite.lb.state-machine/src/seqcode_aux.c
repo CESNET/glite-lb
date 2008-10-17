@@ -281,32 +281,50 @@ int compare_events_by_seq(const void *a, const void *b)
 
 
 
-int add_taglist(edg_wll_TagValue **lptr, const char *new_item, const char *new_item2)
+int add_taglist(const char *new_item, const char *new_item2, const char *seq_code, intJobStat *js)
 {
 	edg_wll_TagValue 	*itptr;
 	int			i;
 
-	if (*lptr == NULL) {
+	if (js->pub.user_tags == NULL) {
 		itptr = (edg_wll_TagValue *) calloc(2,sizeof(edg_wll_TagValue));
 		itptr[0].tag = strdup(new_item);
 		itptr[0].value = strdup(new_item2);
-		*lptr = itptr;
+		js->pub.user_tags = itptr;
+	
+		js->tag_seq_codes = (char **) calloc(2,sizeof(char *));
+		js->tag_seq_codes[0] = strdup(seq_code);
+
 		return 1;
 	} else {
-		for (i = 0, itptr = *lptr; itptr[i].tag != NULL; i++)
-			if ( !strcasecmp(itptr[i].tag, new_item) )
-			{
-				free(itptr[i].value);
-				itptr[i].value = strdup(new_item2);
-				return 1;
+		for (i = 0, itptr = js->pub.user_tags; itptr[i].tag != NULL; i++) {
+			if ( !strcasecmp(itptr[i].tag, new_item)) {
+				if (edg_wll_compare_seq(seq_code,js->tag_seq_codes[i]) == 1) {
+					free(itptr[i].value);
+					itptr[i].value = strdup(new_item2);
+
+					free(js->tag_seq_codes[i]);
+					js->tag_seq_codes[i] = strdup(seq_code);
+
+					return 1;
+				}
+				else return 1;
 			}
-		itptr = (edg_wll_TagValue *) realloc(*lptr, (i+2)*sizeof(edg_wll_TagValue));
-		if (itptr != NULL) {
+		}
+
+		itptr = (edg_wll_TagValue *) realloc(js->pub.user_tags, (i+2)*sizeof(edg_wll_TagValue));
+		js->tag_seq_codes = (char **) realloc(js->tag_seq_codes, (i+2) * sizeof(char *));
+
+		if (itptr != NULL && js->tag_seq_codes != NULL) {
 			itptr[i].tag = strdup(new_item);
 			itptr[i].value = strdup(new_item2);
 			itptr[i+1].tag = NULL;
 			itptr[i+1].value = NULL;
-			*lptr = itptr;
+			js->pub.user_tags = itptr;
+			
+			js->tag_seq_codes[i] = strdup(seq_code);
+			js->tag_seq_codes[i+1] = NULL;
+
 			return 1;
 		} else {
 			return 0;

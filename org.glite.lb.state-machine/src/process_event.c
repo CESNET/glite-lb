@@ -904,8 +904,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		case EDG_WLL_EVENT_USERTAG:
 			if (USABLE_DATA(res, strict)) {
 				if (e->userTag.name != NULL && e->userTag.value != NULL) {
-					add_taglist(&js->pub.user_tags, 
-						    e->userTag.name, e->userTag.value);
+					add_taglist(e->userTag.name, e->userTag.value, e->any.seqcode, js);
 				} else {
 					goto bad_event;
 				}
@@ -1034,6 +1033,12 @@ void destroy_intJobStat_extension(intJobStat *p)
 	if (p->last_branch_seqcode) free(p->last_branch_seqcode);
 	if (p->deep_resubmit_seqcode) free(p->deep_resubmit_seqcode);
 	free_branch_state(&p->branch_states);
+	if (p->tag_seq_codes) {
+		int	i;
+		
+		for (i=0; p->tag_seq_codes[i]; i++) free(p->tag_seq_codes[i]);
+		free(p->tag_seq_codes);
+	}
 
 	memset(p,0,sizeof(*p));
 }

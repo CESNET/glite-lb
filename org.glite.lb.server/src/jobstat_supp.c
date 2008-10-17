@@ -640,6 +640,7 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	if (ret) ret = enc_branch_states(ret, stat->branch_states);
 	if (ret) ret = enc_timeval(ret, stat->last_pbs_event_timestamp);
 	if (ret) ret = enc_int(ret, stat->pbs_reruning);
+	if (ret) ret = enc_strlist(ret, stat->tag_seq_codes);
 	return ret;
 }
 
@@ -681,6 +682,9 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 		}
 		if (tmp_in != NULL) {
 			stat->pbs_reruning = dec_int(tmp_in, &tmp_in);
+		}
+		if (tmp_in != NULL) {
+			stat->tag_seq_codes = dec_strlist(tmp_in, &tmp_in);
 		}
 	} else if (tmp_in != NULL) {
 		edg_wll_FreeStatus(pubstat);

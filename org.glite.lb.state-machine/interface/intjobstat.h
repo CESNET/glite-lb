@@ -14,7 +14,7 @@
 /* where Z.XX is version from indent + 1 (version after commit), Y = Z+1 */
 /* and DESCRIPTION is short hit why version changed		*/
 
-#define INTSTAT_VERSION "revision 2.5 - proxy merge"
+#define INTSTAT_VERSION "revision 2.6 - user tag sequences"
 
 
 // Internal error codes 
@@ -58,8 +58,10 @@ typedef struct _intJobStat {
 
 		struct timeval	last_pbs_event_timestamp;
 		int		pbs_reruning;		// true if rerun event arrived
+		char		**tag_seq_codes;
 
-		/*!! if adding new field, modify also destroy_intJobStat_extension() */
+		/*!! if adding new field, modify also destroy_intJobStat_extension() 	*
+		 *!! update dec/enc_intJobStat and increase INTSTAT_VERSION		*/
 	} intJobStat;
 
 typedef enum _edg_wll_PBSEventSource {
