@@ -198,8 +198,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 		case EDG_WLL_EVENT_USERTAG:
 			if (USABLE_DATA(res)) {
 				if (e->userTag.name != NULL && e->userTag.value != NULL) {
-					add_taglist(&js->pub.user_tags, 
-						    e->userTag.name, e->userTag.value);
+					add_taglist(e->userTag.name, e->userTag.value, e->any.seqcode, js);
 				}
 			}
 			break;
