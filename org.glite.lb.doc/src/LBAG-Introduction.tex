@@ -39,9 +39,43 @@ and delivering the events to \LB servers where users can query for them
 
 \subsubsection{Standalone \LB server}
 
+This is the recommended standard production deployment.
+
+\LB server is installed on a~dedicated machine,
+where no other grid services (gLite WMS in particular) run.
+Hence user queries and notification processing are offloaded 
+from the WMS, not affecting its performance directly.
+
+In this setup the full reported performance is achieved,
+currently up to several hundreds thousands jobs per day, with the goal
+of one million, see~\cite{lbtp}).
+
+Further performance can be gained with clustering $M$ WMS's and $N$ \LB's
+while configuring all WMS's to distribute jobs to the \LB's uniformly.
+In this setup bottlenecks emerging from \LB proxy to \LB server serialized
+communication are likely to be eliminated.
+The optimal $M:N$ ratio strongly depends on the rate of user queries
+and number of evaluated notifications,
+and it must be determined empirically for each specific installation.
+
 \subsubsection{Hybrid \LB server-proxy}
 
-Jen 2.0
+\LB server runs on the WMS node, in combined server-proxy mode,
+serving both user queries and supporting WMS.
+Total processing requirements for a~single jobs are lower
+(unlike with separated proxy and server, job state is computed and stored only once).
+
+On the other hand, processing user queries is done on the WMS node,
+limiting its performance then.
+This setup is suitable for smaller installations with a~single (unclustered)
+WMS, expected load of upto 30--50 kjobs/day, and not very heavy user-generated
+load.
+
+The functionality is available for \LBnew only.
+
 
 \subsubsection{\LB server on WMS node}
-Highly obsolete and inefficient \dots
+
+% dedictvi pre-proxy , chybny deployment
+
+% Highly obsolete and inefficient \dots

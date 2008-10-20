@@ -6,6 +6,7 @@ is available in ANSI~C binding, most of the querying capabilities also in C++.
 These APIs are provided as sets of C/C++ header files and shared libraries.
 The library implements communication protocol with other \LB components
 (logger and server), including encryption, authentication etc.
+\LBnew provides an experimental Java binding of the logging API.
 
 We do not describe the API here in detail; it is documented in~\LB Developer's
 Guide\cite{lbdg},
@@ -16,6 +17,17 @@ intended for usage in scripts.
 
 The query interface is also available as a~web-service provided by the
 \LB server (Sect.~\ref{server}).
+
+Finally, certain frequent queries (all user's jobs, single job status, \dots)
+are available as HTML pages (by pointing ordinary web browser to the \LB server
+endpoint), or as simple text queries (\LBnew only) intended for scripts.
+See~%
+\ifx\insideUG\undefined
+\cite{lbug}
+\else
+\ref{simple}
+\fi
+for details.
 
 \subsubsection{Logger}
 \label{comp:logger}
@@ -57,10 +69,18 @@ owner can store events belonging to a~particular job), and stored into the
 database.
 In addition, the current state of the job is retrieved from the database,
 the event is fed
-into the state machine (Sect.~\ref{evprocess}), and the job state updated
+into the state machine 
+\ifx\insideUG\undefined\relax\else
+(Sect.~\ref{evprocess}),
+\fi
+and the job state updated
 accordingly.
 
-On the other hand, the server exposes querying interface (Fig.~\ref{f:comp-query}, Sect.~\ref{retrieve}).
+On the other hand, the server exposes querying interface (Fig.~\ref{f:comp-query}%
+\ifx\insideUG\undefined\relax\else
+, Sect.~\ref{retrieve}
+\fi
+).
 The incoming user queries are transformed into SQL queries on the underlying
 database engine.
 The query result is filtered, authorization rules applied, and the result
@@ -77,8 +97,11 @@ The set of indices is configurable, and it may involve both \LB system
 attributes (\eg job owner, computing element,
 timestamps of entering particular state,~\dots) and user defined ones.
 
-The server also maintains the active notification handles
-(Sect.~\ref{retrieve}), providing the subscription interface to the user.
+The server also maintains the active notification handles%
+\ifx\insideUG\undefined\relax\else
+(Sect.~\ref{retrieve})
+\fi
+, providing the subscription interface to the user.
 Whenever an event arrives and the updated job state is computed,
 it is matched against the active handles%
 \footnote{The current implementation enforces specifying an~actual jobid
@@ -100,7 +123,7 @@ pending events belonging to this handle accordingly.
 
 \subsubsection{Proxy}
 
-\emph{\LB proxy} is the implementation of the local view concept (see
+\emph{\LB proxy} is the implementation of the concept of local view on job state (see
 \ifx\insideUG\undefined{\cite{lbug}}\else{Sect.~\ref{local}}\fi). Since
 \LBnew, \LB proxy is intergrated into \LB server executable.  When deployed (on
 the WMS node in the current gLite middleware) it takes over the role of the
