@@ -42,8 +42,18 @@ for example by issuing the command
    rpm -qiR <package_name>
 \end{verbatim}
 
-Some of the LB packages may depend among others also on the following packages
-that are worth to mention in this documentation:
+Some of the LB packages depend also on other gLite packages, different 
+due to the restructuring of \LBnew.
+For \LBold they are:
+
+
+\begin{tabularx}{\textwidth}{>{\tt}lX}
+glite-wms-utils-jobid & gLite jobId management library \\
+glite-jp-common & Job Provenance auxiliary library \\ 
+\end{tabularx}
+
+\noindent
+And for \LBnew:
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-jobid-api-c & gLite jobId C API library \\ 
@@ -103,11 +113,11 @@ offered load.
 
 \subsubsection{Standard installation}
 
-Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories) according to the \htmladdnormallink{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide310}{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide310}. Then should be installed glite-LB metapackage from appropriate gLite software repository.
+Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories) according to the \htmladdnormallink{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide310}{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide310}. Then glite-LB metapackage from appropriate gLite software repository should be installed.
 
 YAIM configuration for \emph{glite-LB} node type 
 (\texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}) 
-can done then. Available parameters specific to LB server are:
+can be done then. Available parameters specific to LB server are:
 
 %variable&meaning&default value &further details\\
 \begin{itemize}
@@ -136,13 +146,17 @@ There were two such notable upgrades:
 \begin{itemize}
 \item Version 1.4.3 of \texttt{glite-lb-server} package. This \LB server version introduced optional use of database transactions for \LB database updates in order to improve their performace. This feature is switched on by default when underlaying MySQL database uses transactional InnoDB tables. For new installations, YAIM configuration process will create transactional database automatically. Existing databases can be converted using provided SQL command script:
 \begin{quote}
-\verb'mysql -u lbserver lbserver20 </opt/glite/etc/glite-lb-dbsetup-migrate2transactions.sql'
+\begin{verbatim}
+mysql -u lbserver lbserver20 \
+        </opt/glite/etc/glite-lb-dbsetup-migrate2transactions.sql
+\end{verbatim}
 \end{quote}
 
-\item \LB version 2.0.  This version features merged \LB server and  proxy services using single database, pointers to purged jobs (``zombies'') and other improvements requiring database schema changes. Existing databases must be converted using provided shell script \verb'/opt/glite/etc/glite-lb-migrate_db2version20'. Use \verb'-s' parameter to convert database used by \LB server previously and \verb'-p' to convert database used by \LB proxy before. Optionally, unnecesary index can be dropped (this operation is likely to take a lot of time when applied to large database):
+\item {\sloppy \LB version 2.0.  This version features merged \LB server and  proxy services using single database, pointers to purged jobs (``zombies'') and other improvements requiring database schema changes. Existing databases must be converted using provided shell script \verb'/opt/glite/etc/glite-lb-migrate_db2version20'. Use \verb'-s' parameter to convert database used by \LB server previously and \verb'-p' to convert database used by \LB proxy before. Optionally, unnecesary index can be dropped (this operation is likely to take a lot of time when applied to large database):
 \begin{quote}
 \verb'mysql -u lbserver lbserver20 -e "alter table events drop index host"'
 \end{quote}
+}
 \end{itemize}
 
 %\TODO{automated conversion through YAIM ?}
@@ -195,10 +209,13 @@ The LCAS-based authorization must be enabled in the \LB configuration.
 
 \subsubsection{Export to R-GMA}
 
+{\sloppy
 \LB server can export information on job state changes to R-GMA infrastructure through \verb'lcgmon' 
 in real time. This export is enabled by YAIM by default and uses \verb'GLITE_WMS_LCGMON_FILE' 
 environmental variable to retrieve name of log file which is to be consumed by \verb'lcgmon' (usually
 \verb'/var/glite/logging/status.log'). The log file has to be rotated regularly.
+
+}
 
 \subsubsection{Data backup}
 \label{inst:backup}
@@ -269,8 +286,6 @@ All necessary configuration of normal \LB logger is done by YAIM.
 
 \subsection{Smoke tests}
 
-\TODO{ljocha: get something from the old testing docs}
-
 Thorough tests of \LB, including performance measurement, are
 covered in the \LB Test Plan document \cite{lbtp}.
 This section describes only elementary tests that verify basic
@@ -306,6 +321,8 @@ The command should report ``Submitted'' job status.
 
 \subsubsection{Logging events via lb-logger}
 
+\label{smoke-log}
+
 Send several \LB events, simulating normal job life cycle.
 Checks delivery of the events via \LB logger.
 
@@ -334,11 +351,23 @@ Finally the
 
 Send events via \LB proxy. Checks the proxy functionality.
 
-\TODO{}
+\req Running \LB proxy, in standalone package for \LBold, or
+\LB server running with \verb'-P' (proxy only) or \verb'-B' (both server and proxy)
+options.
+
+\how Similar to Sect.~\ref{smoke-log}:
+\begin{quote}
+\verb'/opt/glite/examples/glite-lb-running.sh -x -m ' \emph{my.server.name:port}
+\end{quote}
+
+And check with:
+\begin{quote}
+\verb'/opt/glite/examples/glite-lb-job_status -x /tmp/lb_proxy_server.sock' \emph{the\_\/new\_\/jobid}
+\end{quote}
+
 
 \subsubsection{Notification delivery}
 
 Register for receiving notifications, and log events which trigger
 the notification delivery. Checks the whole notification mechanism.
-
-\TODO{mozna jen odkaz do User Guide}
+The test is quite complex, though, see notification sections in~\cite{lbug,lbtp}.
