@@ -33,11 +33,12 @@ and delivering the events to \LB servers where users can query for them
 
 \subsection{Deployment scenarios}
 
-\TODO{salvet}
+%\TODO{salvet}
 
-\TODO{jakou zatez ktery snese}
+%\TODO{jakou zatez ktery snese}
 
 \subsubsection{Standalone \LB server}
+\label{deploy-stand}
 
 This is the recommended standard production deployment.
 
@@ -48,7 +49,7 @@ from the WMS, not affecting its performance directly.
 
 In this setup the full reported performance is achieved,
 currently up to several hundreds thousands jobs per day, with the goal
-of one million, see~\cite{lbtp}).
+of one million, see~\cite{lbtp}.
 
 Further performance can be gained with clustering $M$ WMS's and $N$ \LB's
 while configuring all WMS's to distribute jobs to the \LB's uniformly.
@@ -59,6 +60,7 @@ and number of evaluated notifications,
 and it must be determined empirically for each specific installation.
 
 \subsubsection{Hybrid \LB server-proxy}
+\label{deploy-hybrid}
 
 \LB server runs on the WMS node, in combined server-proxy mode,
 serving both user queries and supporting WMS.
@@ -76,6 +78,15 @@ The functionality is available for \LBnew only.
 
 \subsubsection{\LB server on WMS node}
 
-% dedictvi pre-proxy , chybny deployment
+\textbf{This setup is obsolete and very inefficient, hence discouraged.}
 
-% Highly obsolete and inefficient \dots
+Ancient \LB versions, where \LB proxy was not available yet,
+used to be frequently installed with \LB server on the WMS machine.
+With the introduction of \LB proxy it makes little sense anymore
+but, unfortunately, this setup still persists at some sites.
+It's consequence is doubling both CPU and disk load, yielding observable
+performance degradation.
+
+Large production sites should consider standalone \LB server (Sect.~\ref{deploy-stand})
+instead, while for smaller sites new hybrid setup (Sect.~\ref{deploy-hybrid}) may
+be more appropriate.
