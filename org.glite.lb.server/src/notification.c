@@ -33,6 +33,7 @@ static void adjust_validity(edg_wll_Context,time_t *);
 int edg_wll_NotifNewServer(
 	edg_wll_Context					ctx,
 	edg_wll_QueryRec const * const *conditions,
+	int	flags,
 	char const					   *address_override,
 	const edg_wll_NotifId 			nid,
 	time_t						   *valid)

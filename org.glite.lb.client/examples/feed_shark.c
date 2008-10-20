@@ -48,7 +48,7 @@ int main(int argc,char *argv[])
 		edg_wll_QueryRec	const *empty[] = { NULL };
 		char	*notif_s;
 
-		if (edg_wll_NotifNew(ctx,empty,-1,NULL,&notif,&valid)) {
+		if (edg_wll_NotifNew(ctx,empty,0,-1,NULL,&notif,&valid)) {
 			char	*et,*ed;
 
 			edg_wll_Error(ctx,&et,&ed);

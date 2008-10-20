@@ -2867,9 +2867,10 @@ int edg_wll_NotifRequestToXML(
 		edg_wll_NotifChangeOp op,
 		time_t validity,
 		edg_wll_QueryRec const * const *conditions,
+		int flags,
                 char **message)
 {
-	char *pomA=NULL, *pomB=NULL, *pomC=NULL;
+	char *pomA=NULL, *pomB=NULL, *pomC=NULL, *cflags=NULL;
 
 
 	pomA = strdup("");
@@ -2879,16 +2880,17 @@ int edg_wll_NotifRequestToXML(
 	edg_wll_add_time_t_to_XMLBody(&pomA, validity, "requestedValidity", -1);
 	if (conditions && conditions[0] && conditions[0][0].attr != EDG_WLL_QUERY_ATTR_UNDEF)
 		edg_wll_JobQueryRecToXML(ctx, conditions, &pomB);
-		
+	cflags = edg_wll_stat_flags_to_string(flags);
 
 	if (pomB)
-		trio_asprintf(&pomC,"%s function=\"%s\">\r\n%s\t<and>\r\n%s\t</and>\r\n%s",
-			NOTIF_REQUEST_BEGIN,function,pomA,pomB,NOTIF_REQUEST_END);
+		trio_asprintf(&pomC,"%s function=\"%s\">\r\n\t<flags>%s</flags>\r\n%s\t<and>\r\n%s\t</and>\r\n%s",
+			NOTIF_REQUEST_BEGIN,function,cflags,pomA,pomB,NOTIF_REQUEST_END);
 	else
-		trio_asprintf(&pomC,"%s function=\"%s\">\r\n%s%s",
-			NOTIF_REQUEST_BEGIN,function,pomA,NOTIF_REQUEST_END);
+		trio_asprintf(&pomC,"%s function=\"%s\">\r\n\t<flags>%s</flags>\r\n%s%s",
+			NOTIF_REQUEST_BEGIN,function,cflags,pomA,NOTIF_REQUEST_END);
 
 
+	free(cflags);
 	free(pomA);
 	free(pomB);
         *message = pomC;

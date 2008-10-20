@@ -33,6 +33,9 @@ extern "C" {
  * 		Only a single occurence of a specific attribute is allowed
  * 		among ANDed conditions (due to the ability to modify them
  * 		further).
+ * \param[in] flags		verbosity of notifications
+		0			- send basic job status info
+		EDG_WLL_STAT_CLASSADS 	- send also JDL in job status
  * \param[in] fd		= -1 create or reuse the default listening socket (one per context)
  * 	     >= 0 non-default listening socket 
  * \param[in] address_override 	if not NULL, use this address instead of extracting it
@@ -50,6 +53,7 @@ extern "C" {
 int edg_wll_NotifNew(
 	edg_wll_Context		context,
 	edg_wll_QueryRec	const * const *conditions,
+	int			flags,
 	int			fd,
 	const char		*address_override,
 	edg_wll_NotifId		*id_out,

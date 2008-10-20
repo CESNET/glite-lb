@@ -269,7 +269,7 @@ Notification::Register(void)
 	/* convert query to conditions */
 	conditions = convertQueryVectorExt(queryExt);
 	/* register */
-	ret = edg_wll_NotifNew(ctx,conditions,-1,NULL,&notifId,&valid);
+	ret = edg_wll_NotifNew(ctx,conditions,0,-1,NULL,&notifId,&valid);
 	check_result(ret,ctx,"edg_wll_NotifNew");
 	/* clean */
 	if (conditions) {

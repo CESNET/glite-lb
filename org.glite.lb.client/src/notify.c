@@ -32,10 +32,11 @@ static void usage(char *cmd)
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity ] {-j jobid | -o owner | -n network_server | -v virtual_organization }\n"
+		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity ] {-j jobid | -o owner | -n network_server | -v virtual_organization } [-f flags]\n"
 			"    jobid		Job ID to connect notif. reg. with\n"
 			"    owner		Match this owner DN\n"
 			"    requested_validity	Validity of notification req. in seconds\n"
+			"    flags		0 - return basic status, 1 - return also JDL in status\n"
 			"    network_server	Match only this networ server (WMS entry point)\n\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
@@ -80,7 +81,7 @@ int main(int argc,char **argv)
 	char			   *errt, *errd;
 	void		*fields = NULL;
 
-	int	sock = -1;
+	int	sock = -1, flags = 0;
 	char	*fake_addr = NULL;
 		
 //	sleep(20);
@@ -105,7 +106,7 @@ int main(int argc,char **argv)
 		char	*arg = NULL;
 		int	attr = 0;
 
-		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:t:")) > 0) switch (c) {
+		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:t:f:")) > 0) switch (c) {
 			case 'j':
 				if (arg) { usage("new"); return EX_USAGE; }
 				attr = EDG_WLL_QUERY_ATTR_JOBID;
@@ -130,6 +131,8 @@ int main(int argc,char **argv)
 				fake_addr = optarg; break;
 			case 't':
 				valid = time(NULL) + atol(optarg); break;
+			case 'f':
+				flags = atoi(optarg); break;
 			default:
 				usage("new"); return EX_USAGE;
 		}
@@ -153,7 +156,7 @@ int main(int argc,char **argv)
 
 		if ( !edg_wll_NotifNew(ctx,
 					(edg_wll_QueryRec const* const*)conditions,
-					sock, fake_addr, &id_out, &valid))
+					flags, sock, fake_addr, &id_out, &valid))
 			fprintf(stderr,"notification ID: %s\nvalid: %s (%ld)\n",
 					edg_wll_NotifIdUnparse(id_out),
 					TimeToStr(valid),

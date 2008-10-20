@@ -61,7 +61,7 @@ static const char* const response_headers_html[] = {
 };
 
 extern int edg_wll_NotifNewServer(edg_wll_Context,
-				edg_wll_QueryRec const * const *, char const *,
+				edg_wll_QueryRec const * const *, int flags, char const *,
 				const edg_wll_NotifId, time_t *);
 extern int edg_wll_NotifBindServer(edg_wll_Context,
 				const edg_wll_NotifId, const char *, time_t *);
@@ -889,12 +889,13 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			edg_wll_NotifId	notifId;
 			edg_wll_NotifChangeOp op;
 			edg_wll_QueryRec **conditions;
+			int flags;
 			time_t validity = -1;
 			int i,j;
 			
 			
         	        if (parseNotifRequest(ctx, messageBody, &function, &notifId, 
-						&address, &op, &validity, &conditions))
+						&address, &op, &validity, &conditions, &flags))
 				ret = HTTP_BADREQ;
 			else {
 				int     fatal = 0, err = 0;
@@ -903,7 +904,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				// navratove chyby nejsou zname, nutno predelat dle aktualni situace
 				if (!strcmp(function,"New")) 
 					err = edg_wll_NotifNewServer(ctx,
-								(edg_wll_QueryRec const * const *)conditions,
+								(edg_wll_QueryRec const * const *)conditions, flags,
 								address, notifId, &validity);
 				else if (!strcmp(function,"Bind"))
 					err = edg_wll_NotifBindServer(ctx, notifId, address, &validity);

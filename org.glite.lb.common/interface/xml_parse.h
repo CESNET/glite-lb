@@ -68,7 +68,7 @@ extern int edg_wll_LoadRequestToXML(edg_wll_Context ctx, const edg_wll_LoadReque
 
 extern int edg_wll_IndexedAttrsRequestToXML(edg_wll_Context ctx, char **message);
 
-extern int edg_wll_NotifRequestToXML( edg_wll_Context ctx, const char *function, const edg_wll_NotifId notifId, const char *address, edg_wll_NotifChangeOp op, time_t validity, edg_wll_QueryRec const * const *conditions, char **message);
+extern int edg_wll_NotifRequestToXML( edg_wll_Context ctx, const char *function, const edg_wll_NotifId notifId, const char *address, edg_wll_NotifChangeOp op, time_t validity, edg_wll_QueryRec const * const *conditions, int flags, char **message);
 
 extern int edg_wll_QuerySequenceCodeToXML(edg_wll_Context ctx, glite_jobid_const_t jobId, char **message);
 

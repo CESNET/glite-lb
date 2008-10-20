@@ -373,7 +373,8 @@ static void startNotifRequest(void *data, const char *el, const char **attr)
 				XMLCtx->jobQueryRec_begin = XML_GetCurrentByteIndex(XMLCtx->p);
 			}
 			else if ( (strcasecmp(el,"notifId")) && (strcasecmp(el,"clientAddress")) && 
-				(strcasecmp(el,"notifChangeOp")) && (strcasecmp(el,"requestedValidity")) ) unexp()
+				(strcasecmp(el,"notifChangeOp")) && (strcasecmp(el,"requestedValidity")) &&
+				(strcasecmp(el,"flags")) ) unexp()
 			break;
 		case 2: /* fall through */
 		case 3: /* do not check xml tags, processed in startJobQueryRec */
@@ -858,6 +859,15 @@ static void endNotifRequest(void *data, const char *el UNUSED_VAR)
 			parseJobQueryRec(XMLCtx->ctx, XMLCtx->message_body + XMLCtx->jobQueryRec_begin, len,
 				&XMLCtx->job_conditions);
 		}
+		else if (!strcmp(XMLCtx->element,"flags") && XMLCtx->char_buf) {
+			char	*s;
+
+			s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
+			// XXX: check if it works
+			XMLCtx->flags = edg_wll_string_to_stat_flags(s);
+			free(s);
+		}
+
 	}
 
 	edg_wll_freeBuf(XMLCtx);
@@ -1332,7 +1342,7 @@ int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 	return ret;
 }
 /* parse Notif request from client */
-int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, time_t *validity, edg_wll_QueryRec ***conditions) 
+int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, time_t *validity, edg_wll_QueryRec ***conditions, int *flags) 
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -1394,6 +1404,7 @@ int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 		*op = EDG_WLL_NOTIF_NOOP;
 		*validity = 0;
 		*conditions = NULL;
+		*flags = 0;
 	} else {
 		*function = XMLCtx.notifFunction;
 		*notifId = XMLCtx.notifId;
@@ -1401,6 +1412,7 @@ int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 		*op = XMLCtx.notifChangeOp;
 		*validity = XMLCtx.notifValidity;
 		*conditions = XMLCtx.job_conditions;
+		*flags = XMLCtx.flags;
 	}
 
 	
