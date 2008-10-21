@@ -13,7 +13,7 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-job-registration.sh} & Implemented & Tries to register a job and checks if the registration worked. \\
 \hline
-{\tt lb-test-normal-event-delivery-remote.sh} & Implemented & Tries to register a job and log events. Checks if the registration worked and events resulted in state change accordingly. \\
+{\tt lb-test-event-delivery.sh} & Implemented & Tries to register a job and log events. Checks if the registration worked and events resulted in state change accordingly. \\
 \hline
 {\tt lb-test-logevent.sh} & Proposed & Test if local logger accepts events correctly (i.e. returns 0). \\
 \hline
@@ -178,6 +178,10 @@ in the job state same as the `*' part of the script name.
 
 
 
+\subsection{Query tests}
+\TODO{query all my jobs, query one job, query with some structured conditions, some other queries that caused problems in the past, ...}
+
+
 \subsection{LB server and proxy combined test}
 
 \req\ running \path{glite-lb-proxy}, \path{glite-lb-interlogd} and
@@ -193,7 +197,7 @@ job status and to the automatic purge from proxy.
 
 \how\ \ctblb{lb-test-proxy-delivery.sh}
 
-\TODO{mozna to ma prijit do nejakeho testsuitu, netusim} 
+%\TODO{mozna to ma prijit do nejakeho testsuitu, netusim} 
 {\tt glite-lb-running.sh -x -m LB\_HOST:PORT} \\
 - logs sequence of events and returns JOBID \\
 
@@ -215,7 +219,7 @@ are really purged from the proxy.
 
 
 \subsection{WS interface}
-\TODO{fila: ws example + html example}
+\TODO{fila, valtri: tests using java example}
 \req\ \path{glite-lb-bkserverd} running, events from \ref{normal} logged
 
 \what\ retrieve both events and job states with the \LB\ WS interface
@@ -234,17 +238,27 @@ the same form as e.g. \path{glite-lb-jobstat}.
 
 
 
+\subsection{HTML interface}
+\TODO{fila: query tests using wget/curl}
+
+
+
 \subsection{Change ACL}
-\TODO{kouril: pozdeji - s novym auth. schematem. dopsat TODO jak}
+\TODO{kouril: to be added later with new authz schema}
 
 
 
 
 \subsection{Notifications}
-\TODO{ruda: revize, doplnit nove optiony}
 % notifikace
 % regjob, reg notifikace na vsechno, poslat udalosti, hlidat notif
 
+All notification tests require the \LB server to be run with notifications enambled,
+i.e. to be run for example with options 
+\texttt{--notif-il-sock /tmp/sock.test\_notif --notif-il-fprefix /tmp/test\_notif}, 
+where \texttt{/tmp/sock.test\_notif} is a socket of notification interlogger.
+
+Plese see also \cite{lbug}, Section 2.4, for other possible scenarios how to test the notification delivery.
 
 
 \subsubsection{Single job, any state change}
@@ -266,7 +280,7 @@ and repeatedly invoke \code{edg\_wll\_NotifReceive}.
 notification client.
 
 \begin{hints}
-\path{glite-lb-notify} example can be used with its \path{test} command.
+\path{glite-lb-notify} example can be used with its commands \path{new} and \path{receive}.
 \end{hints}
 
 
