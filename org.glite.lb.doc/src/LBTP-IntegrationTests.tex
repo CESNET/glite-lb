@@ -28,6 +28,24 @@ In this section we describe basic tests of \LB if the services are up and runnin
 % Local tests are meant to be run on the install node (where the appropriate daemon is running)
 % whereas remote tests are meant to be run via another node.
 
+\subsection{Test Suite Overview}
+
+This subsection gives a comprehensive overview of all system functionality tests.
+
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+     {\bf Executable} & {\bf Status} & {\bf Use} \\
+\hline
+{\tt lb-test-logger-local.sh} & Implemented & Test job logging facilities on a local machine (processes running, ports listening, etc.). \\
+\hline
+{\tt lb-test-logger-remote.sh} & Implemented & Test the local logger availability remotely (open ports). \\
+\hline
+{\tt lb-test-server-local.sh} & Implemented & Test for LB server running on a local machine (processes running, ports listening, etc.). \\
+\hline
+{\tt lb-test-server-remote.sh} & Implemented & Test the LB server availability remotely (open ports). \\
+\hline
+\end{tabularx}
+
 \subsection{Logger (local \& inter)}
 
 \subsubsection{Local tests}
