@@ -160,7 +160,7 @@ queries which should not disturb normal operation), disadvantage is
 a~more complex and more fragile setup. 
 
 Using an external utility \verb'glite-lb-dump' (typical invocation is with
-a~single option \verb'-m' \emph{my.server.name:port}, see man page for
+a~single option \verb'-m' \emph{server\_name:port}, see man page for
 details) the server is triggered to dump events, which arrived in
 a~specified time interval, into a~text file. (Default interval is from last
 dump till the current time.)
@@ -428,7 +428,7 @@ histogram:
 \end{verbatim}
 \end{itemize}
 The command \verb'glite-lb-job_status' is a low level query program that can be
-found in the \verb'glite-lb-client' package among examples.
+found in the package \verb'glite-lb-client' among examples.
 
 
 %\subsection{\LB proxy}
@@ -558,8 +558,8 @@ By default \LB server runs as one master process,
 and 10 slave processes.
 Threads are not used.
 
-Master pid is stored in \verb'$HOME/edg-bkserverd.pid' (\LBold),
-\verb'$HOME/glite-lb-bkserverd.pid' (\LBnew).
+Master pid is stored in the file \verb'$HOME/edg-bkserverd.pid' (\LBold)
+or in the file \verb'$HOME/glite-lb-bkserverd.pid' (\LBnew) respectively.
 Number of slaves can be set with \verb'-s, --slaves' option,
 pid file location with~\verb'-i, --pidfile'.
 
@@ -596,7 +596,7 @@ the pid file.
 Server data are stored in MySQL database. Normal setup assumes ``server scenario'', 
 \ie the database IS NOT protected with password and it is not accessible over network.
 Option \verb'-m user/password@machine:database' can be used to change
-the default \verb'lbserver/@localhost:lbserver20'.
+the default connect string \verb'lbserver/@localhost:lbserver20'.
 
 \item[Dump files.]
 Backup dump (Sect.~\ref{run:dump}) files are stored in
@@ -607,7 +607,7 @@ go to \verb'/tmp/purge' by default, and startup script uses \verb'--purge-prefix
 to set \verb'$GLITE_LOCATION_VAR/purge'.
 
 When export to Job Provenance is enabled (Sect.~\ref{run:purge})
-job registrations are exported to \verb'/tmp/jpreg_'
+job registrations are exported to directory \verb'/tmp/jpreg'
 overridden in startup script with \verb'--jpreg-dir' to \verb'$GLITE_LOCATION_VAR/jpreg'.
 In addition, dump files are further processed in \verb'GLITE_LOCATION_VAR/jpdump'.
 

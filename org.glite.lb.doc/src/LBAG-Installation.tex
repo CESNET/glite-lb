@@ -309,11 +309,11 @@ Can be invoked from any machine.
 
 \how 
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-job_reg -m' \emph{my.server.name:port}
+\verb'/opt/glite/examples/glite-lb-job_reg -m' \emph{server\_name:port}
 \end{quote}
 A~new jobid is generated and printed.  Run 
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-job_status' \emph{the\_\/new\_\/jobid}
+\verb'/opt/glite/examples/glite-lb-job_status' \emph{jobid}
 \end{quote}
 
 \result
@@ -332,13 +332,13 @@ Must be run on a~machine where glite-lb-logger package is set up and running.
 
 \how
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-running.sh -m ' \emph{my.server.name:port}
+\verb'/opt/glite/examples/glite-lb-running.sh -m ' \emph{server\_name:port}
 \end{quote}
 
 The command prints a~new jobid, followed by diagnostic messages as the events are logged. 
 Check the status of the new job with
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-job_status' \emph{the\_\/new\_\/jobid}
+\verb'/opt/glite/examples/glite-lb-job_status' \emph{jobid}
 \end{quote}
 
 \result
@@ -357,12 +357,12 @@ options.
 
 \how Similar to Sect.~\ref{smoke-log}:
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-running.sh -x -m ' \emph{my.server.name:port}
+\verb'/opt/glite/examples/glite-lb-running.sh -x -m ' \emph{server\_name:port}
 \end{quote}
 
 And check with:
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-job_status -x /tmp/lb_proxy_server.sock' \emph{the\_\/new\_\/jobid}
+\verb'/opt/glite/examples/glite-lb-job_status -x /tmp/lb_proxy_server.sock' \emph{jobid}
 \end{quote}
 
 
