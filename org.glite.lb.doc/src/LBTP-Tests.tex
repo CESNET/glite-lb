@@ -2,11 +2,31 @@
 
 \section{System functionality tests}
 \label{s:functionality}
-\TODO{ruda: znovu cele projit}
+
+\subsection{Test Suite Overview}
+
+This subsection gives a comprehensive overview of all tests.
+
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+     {\bf Executable} & {\bf Status} & {\bf Use} \\
+\hline
+{\tt lb-test-logger-local.sh} & Implemented & Test job logging facilities on a local machine (processes running, ports listening, etc.). \\
+\hline
+{\tt lb-test-logger-remote.sh} & Implemented & Test the local logger remotely (open ports). \\
+\hline
+{\tt lb-test-server-local.sh} & Implemented & Test for LB server running on a local machine (processes running, ports listening, etc.). \\
+\hline
+{\tt lb-test-server-remote.sh} & Implemented & Test the LB server remotely (open ports). \\
+\hline
+{\tt lb-test-job-registration.sh} & Implemented & Tries to register a job and checks if the registration worked. \\
+\hline
+{\tt lb-test-normal-event-delivery-remote.sh} & Implemented & Tries to register a job and log events. Checks if the registration worked and events resulted in state change accordingly. \\
+\hline
+\end{tabularx}
+
 
 \subsection{Event delivery}
-
-
 
 \subsubsection{Normal event delivery}
 \label{normal}
@@ -51,7 +71,7 @@ They can be grabbed and used for comparing the events later in~\ref{recover}.
 \label{reg}
 \req\ running \path{glite-lb-bkserverd}
 
-\what\ call \code{edg\_wll\_RegisterJob}. Jobid's should preferably point
+\what\ call \code{edg\_wll\_RegisterJob}. Jobids should preferably point
 to a~remote \LB\ server.
 
 \how\ \ctblb{lb-test-job-registration.sh}
@@ -73,7 +93,7 @@ prints it and calls \LB\ API appropriately.
 \req\ running \path{glite-lb-logd} only, jobs registered in test~\ref{reg}.
 
 \what\ call \code{edg\_wll\_Log*} for various event types in a~sequence
-resebmling real \LB\ usage, using the same jobid's as in test~\ref{reg}
+resebmling real \LB\ usage, using the same jobids as in test~\ref{reg}
 
 \how\ \ctblb{lb-test-logevent.sh}
 
@@ -95,7 +115,7 @@ of events.}
 % spustit, protlaci soubory na server, soubory zmizi, lze se dotazat na stav
 
 \req\ running \path{glite-lb-bkserverd} on the machine and port where
-jobid's from \ref{reg} point to; files generated in~\ref{log};
+jobids from \ref{reg} point to; files generated in~\ref{log};
 \path{glite-lb-interlogd} is stopped.
 
 \what\ Make a~copy of the files created in~\ref{log}, then start
