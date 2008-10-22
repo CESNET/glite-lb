@@ -107,6 +107,8 @@ create table events_flesh (\
 
 
 # notif_registrations UPDATE
+mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD flags int not null"
+
 mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD STD_owner varchar(200) null" && \
 mysql -u lbserver $DB_NAME -e "ALTER TABLE notif_registrations ADD index(STD_owner)"
 

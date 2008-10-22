@@ -126,8 +126,12 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
         }
 
 int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
-	char *pomA, *pomB;
+	char *pomA, *pomB, *flags;
+
+
 	pomB = strdup("");
+	flags = edg_wll_stat_flags_to_string(ni->flags);
+printf("flags %d - %s", ni->flags, flags);
 
 	TR("Destination", "%s", ni->destination);
 	TR("Valid until", "%s", ni->valid);
@@ -137,6 +141,8 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 	free(cond);
 	free(pomB);
 	pomB = pomA;
+	TR("Flags", "%s", flags);
+	free(flags);
 	if (ni->JDL_VirtualOrganisation && ni->JDL_VirtualOrganisation[0])
 		TR("JDL VirtualOrganisation", "%s", ni->JDL_VirtualOrganisation);
 	if (ni->STD_owner && ni->STD_owner[0])
@@ -145,7 +151,7 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 		TR("STD network server", "%s", ni->STD_network_server);
 
 	asprintf(&pomA, "<html>\r\n\t<body>\r\n"
-		"<h2>Norification %s</h2>\r\n"
+		"<h2>Notification %s</h2>\r\n"
 		"<table halign=\"left\">%s</table>"
 		"\t</body>\r\n</html>",
 		ni->notifid, pomB);

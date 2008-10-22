@@ -115,9 +115,9 @@ int edg_wll_NotifNewServer(
 		/*	Format DB insert statement
 		 */
 		trio_asprintf(&q,
-					"insert into notif_registrations(notifid,destination,valid,userid,conditions) "
-					"values ('%|Ss','%|Ss',%s,'%|Ss', '<and>%|Ss</and>')",
-					nid_s, addr_s? addr_s: address_override, time_s, owner, xml_conds);
+					"insert into notif_registrations(notifid,destination,valid,userid,conditions,flags) "
+					"values ('%|Ss','%|Ss',%s,'%|Ss', '<and>%|Ss</and>', '%d')",
+					nid_s, addr_s? addr_s: address_override, time_s, owner, xml_conds, flags);
 
 		if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
 			goto rollback;

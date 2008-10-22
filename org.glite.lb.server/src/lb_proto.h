@@ -25,6 +25,7 @@ typedef struct _notifInfo{
         char *destination;
         char *valid;
         char *conditions;
+	int  flags;
         char *JDL_VirtualOrganisation;
         char *STD_owner;
         char *STD_network_server;

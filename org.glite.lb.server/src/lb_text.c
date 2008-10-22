@@ -4,6 +4,7 @@
 #include "lb_proto.h"
 
 #include "glite/lb/context-int.h"
+#include "glite/lb/xml_conversions.h"
 #include "glite/lbu/trio.h"
 #include "glite/lbu/db.h"
 
@@ -141,20 +142,29 @@ int edg_wll_UserInfoToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **n
 int edg_wll_NotificationToText(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
 	char *a = NULL, *b = NULL;
 	asprintf(&a, "Notif_id=%s\n", ni->notifid);
-	asprintf(&b, "%sDestination=%s\n", a, ni->destination);
-	asprintf(&a, "%sValid_until=%s\n", b, ni->valid);
+	asprintf(&b, "%sDestination=%s\n", a, ni->destination); free(a);
+	asprintf(&a, "%sValid_until=%s\n", b, ni->valid); free(b);
 	char *cond = escape_text(ni->conditions);
-	asprintf(&b, "%sConditions=%s\n", a, cond);
+	asprintf(&b, "%sConditions=%s\n", a, cond); free(a);
 	free(cond);
-	a = b;
-	if (ni->JDL_VirtualOrganisation && ni->JDL_VirtualOrganisation[0])
-		asprintf(&a, "%sJDL_VirtualOrganisation=%s\n", b, ni->JDL_VirtualOrganisation);
+	char *flags = edg_wll_stat_flags_to_string(ni->flags);
+	asprintf(&a, "%sFlags=%s\n", b, flags); free(b);
+	free(flags);
 	b = a;
-	if (ni->STD_owner && ni->STD_owner[0])
+	if (ni->JDL_VirtualOrganisation && ni->JDL_VirtualOrganisation[0]) {
+		asprintf(&a, "%sJDL_VirtualOrganisation=%s\n", b, ni->JDL_VirtualOrganisation); 
+		free(b);
+	}
+	b = a;
+	if (ni->STD_owner && ni->STD_owner[0]) {
 		asprintf(&a, "%sSTD_owner=%s\n", b, ni->STD_owner);
+		free(b);
+	}
 	b = a;
-	if (ni->STD_network_server && ni->STD_network_server[0])
-		asprintf(&a, "%sSTD_network_server=%s\n", b, ni->STD_network_server);
+	if (ni->STD_network_server && ni->STD_network_server[0]) {
+		asprintf(&a, "%sSTD_network_server=%s\n", b, ni->STD_network_server); 
+		free(b);
+	}
 	*message = a;
 
 	return 0;

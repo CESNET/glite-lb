@@ -243,9 +243,9 @@ err:
 static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
 	char *q = NULL;
         glite_lbu_Statement notif = NULL;
-	char *notifc[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+	char *notifc[7] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
-	trio_asprintf(&q, "select destination, valid, conditions, "
+	trio_asprintf(&q, "select destination, valid, conditions, flags, "
 		"JDL_VirtualOrganisation, STD_owner, STD_network_server "
                 "from notif_registrations "
                 "where notifid='%s'",
@@ -258,14 +258,13 @@ static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
 		ni->destination = notifc[0];
 		ni->valid = notifc[1];
 		ni->conditions = notifc[2];
-		ni->JDL_VirtualOrganisation = notifc[3];
-		ni->STD_owner = notifc[4];
-		ni->STD_network_server = notifc[5];
+		ni->flags = atoi(notifc[3]);
+		ni->JDL_VirtualOrganisation = notifc[4];
+		ni->STD_owner = notifc[5];
+		ni->STD_network_server = notifc[6];
 	}
 	else 
 		goto err;
-
-	printf("%s\n%s\n", ni->destination, ni->valid);
 
 	return 0;
 
@@ -607,7 +606,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			free(fullid);
 			edg_wlc_JobIdFree(jobId);
 			edg_wll_FreeStatus(&stat);
-	/*GET /notif/[notifId]: Norification info*/
+	/*GET /notif/[notifId]: Notification info*/
 		} else if (strncmp(requestPTR, "/notif/", strlen("/notif/")) == 0){
 			notifInfo ni;
 			char *pomCopy, *pom;

@@ -113,6 +113,7 @@ create table notif_registrations (
 	valid		datetime	not null,
 	userid		char(32)	binary not null,
 	conditions	mediumblob	not null,
+	flags		int		not null,
 
 	`STD_owner`	varchar(200)	null,
 	`STD_network_server`	varchar(200)	null,

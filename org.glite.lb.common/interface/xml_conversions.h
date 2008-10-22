@@ -3,6 +3,8 @@
 
 #ident "$Header$"
 
+#include <expat.h>
+
 #include "glite/jobid/cjobid.h"
 
 #ifdef BUILDING_LB_COMMON
