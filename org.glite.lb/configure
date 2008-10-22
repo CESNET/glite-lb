@@ -1,0 +1,292 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+
+my $prefix = '/opt/glite';
+my $pwd = `pwd`; chomp $pwd;
+my $stage = $pwd.'/stage';
+my $instage;
+my $module;
+my $thrflavour = 'gcc64dbgpthr';
+my $notrhrflavour = 'gcc64dbg';
+
+my @nodes = qw/client server logger utils java doc/;
+my %enable_nodes;
+my %disable_nodes;
+
+my %extern_prefix = (
+	cares => '/opt/c-ares',
+	classads => '/opt/classads',
+	cppunit => '/usr',
+	expat => '/usr',
+	globus => '/opt/globus',
+	gsoap => '/usr',
+	mysql => '/usr'
+);
+
+
+my %glite_prefix;
+my %need_externs;
+my %extrafull;
+my %extranodmod;
+my %deps;
+my %topbuild;
+
+my @lbmodules = qw/client client-java common doc logger server state-machine types utils ws-interface/;
+
+
+my @opts = (
+	'prefix=s' => \$prefix,
+	'stage=s' => \$stage,
+	'in-stage=s' => \$instage,
+	'module=s' => \$module,
+	'thrflavour=s' => \$thrflavour,
+	'nothrflavour=s' => \$nothrflavour,
+);
+
+for (@nodes) {
+	$enable_nodes{$_} = 0;
+	$disable_nodes{$_} = 0;
+	
+	push @opts,"disable-$_",\$disable_nodes{$_};
+	push @opts,"enable-$_",\$enable_nodes{$_};
+}
+
+push @opts,"with-$_=s",\$extern_prefix{$_} for keys %extern_prefix;
+
+GetOptions @opts or die "Errors parsing command line\n";
+
+my $en;
+for (keys %enable_nodes) { $en = 1 if $enable_nodes{$_}; }
+
+my $dis;
+for (keys %disable_nodes) { $dis = 1 if $disable_nodes{$_}; }
+
+die "--enable-* and --disable-* are mutually exclusive\n"
+	if $en && $dis;
+
+die "--module cannot be used with --enable-* or --disable-*\n"
+	if $module && ($en || $dis);
+
+die "$module: unknown module\n" if $module && ! grep $module,@lbmodules;
+
+if ($dis) {
+	for (@nodes) {
+		$enable_nodes{$_} = 1 unless $disable_nodes{$_};
+	}
+}
+
+if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
+
+for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
+
+
+
+
+my @modules;
+my %aux;
+
+if ($module) {
+	push @modules,$module;
+}
+else {
+	@modules = map 'lb.'.($extranodmod{$_} ? $extranodmod{$_} : $_),keys %enable_nodes;
+	
+	my $n;
+
+	do {
+		local $"="\n";
+ 		$n = $#modules;
+		push @modules,(map @{$deps{$_}},@modules);
+
+		undef %aux; @aux{@modules} = 1;
+		@modules = keys %aux;
+	} while ($#modules > $n);
+}
+
+@aux{@modules} = 1;
+delete $aux{$_} for (split /,/,$instage);
+@modules = keys %aux;
+
+print "\nBuilding modules: @modules\n";
+
+my @ext = map @{$need_externs{$_}},@modules;
+undef %aux; @aux{@ext} = 1;
+@ext = keys %aux;
+
+print "\nRequired externals:\n";
+print "\t$_: $extern_prefix{$_}\n" for @ext;
+print "\nThis is a poor-man configure, it's up to you to have sources and externals there\n\n";
+
+mkinc($_) for @modules;
+
+print "Creating Makefile\n";
+
+open MAK,">Makefile" or die "Makefile: $!\n";
+
+print MAK "all: @modules\n\nclean:\n";
+
+for (@modules) {
+	my $full = full($_);
+	my $build = $topbuild{$_} ? '': '/build';
+	print MAK "\tcd $full$build && \${MAKE} clean\n"
+}
+
+print MAK "\ndistclean:\n";
+
+for (@modules) {
+	my $full = full($_);
+	print MAK $topbuild{$_} ?
+		"\tcd $full$build && \${MAKE} distclean\n" :
+		"\trm -rf $full$build\n"
+}
+
+print MAK "\n";
+
+for (@modules) {
+	my %ldeps; undef %ldeps;  
+	@ldeps{@{$deps{$_}}} = 1;
+	for my $x (split /,/,$instage) { delete $ldeps{$x}; }
+	my @dnames = keys %ldeps;
+
+	my $full = full($_);
+	my $build = $topbuild{$_} ? '': '/build';
+
+	print MAK "$_: @dnames\n\tcd $full$build && \${MAKE} stage\n\n";
+}
+
+close MAK;
+
+
+BEGIN{
+%need_externs = (
+	'lb.client' => [ qw/cppunit classads/ ],
+	'lb.common' => [ qw/expat cppunit classads/ ],
+	'lb.doc' => [],
+	'lb.logger' => [ qw/cppunit/ ],
+	'lb.server' => [ qw/globus expat cares mysql cppunit gsoap/ ],
+	'lb.state-machine' => [ qw/classads/ ],
+	'lb.utils' => [ qw/cppunit/ ],
+	'lb.ws-interface' => [],
+	'lb.types' => [ qw// ],
+	'lbjp-common.db' => [ qw/mysql/ ],
+	'lbjp-common.maildir' => [ qw// ],
+	'lbjp-common.server-bones' => [ qw// ],
+	'lbjp-common.trio' => [ qw// ],
+	'security.gss' =>  [ qw/globus cares cppunit/ ],
+	'security.gsoap-plugin' =>  [ qw/cppunit globus cares/ ],
+	'jobid.api-c' =>  [ qw/cppunit/ ],
+	'jobid.api-cpp' =>  [ qw/cppunit/ ],
+	'jobid.api-java' =>  [ qw// ],
+);
+
+%deps = (
+	'lb.client' => [ qw/
+		lb.types lb.common
+		lbjp-common.trio
+		jobid.api-cpp jobid.api-c
+		security.gss
+	/ ],
+	'lb.client-java' => [ qw/
+		lb.types
+		jobid.api-java
+	/ ],
+	'lb.common' => [ qw/
+		jobid.api-cpp jobid.api-c
+		lb.types lbjp-common.trio security.gss
+	/ ],
+	'lb.doc' => [ qw/lb.types/ ],
+	'lb.logger' => [ qw/
+		lbjp-common.trio
+		jobid.api-c
+		lb.common
+		security.gss
+	/ ],
+	'lb.server' => [ qw/
+		lb.ws-interface lb.logger lb.types lb.common lb.state-machine
+		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir
+		jobid.api-c
+		security.gsoap-plugin security.lcas security.voms
+		gridsite
+	/ ],
+	'lb.state-machine' => [ qw/lb.common jp.common security.gss/ ],
+	'lb.utils' => [ qw/
+		jp.common
+		jobid.api-c
+		lbjp-common.trio lbjp-common.maildir
+		lb.client lb.state-machine
+	/ ],
+	'lb.ws-interface' => [ qw/lb.types/ ],
+	'lb.types' => [ qw// ],
+	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
+	'lbjp-common.maildir' => [ qw// ],
+	'lbjp-common.server-bones' => [ qw// ],
+	'lbjp-common.trio' => [ qw// ],
+	'security.gss' =>  [ qw// ],
+	'security.gsoap-plugin' =>  [ qw/security.gss/ ],
+	'jobid.api-c' =>  [ qw// ],
+	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
+	'jobid.api-java' =>  [ qw// ],
+);
+
+%extrafull = ( gridsite=>'org.gridsite.core');
+
+%extranodmod = ( java => 'client-java' );
+
+my @t = qw/lb.client-java jobid.api-java lb.types/;
+@topbuild{@t} = (1) x ($#t+1);
+}
+
+sub full
+{
+	my $short = shift;
+	return $extrafull{$short} ? $extrafull{$short} : 'org.glite.'.$short;
+}
+
+sub mkinc
+{
+	my %aux;
+	undef %aux;
+	my @m=qw/
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils 
+security.gss security.gsoap-plugin
+jobid.api-c jobid-api-cpp
+lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio
+jp.common/;
+	@aux{@m} = (1) x ($#m+1);
+
+	my $short = shift;
+	my $full = full $short;
+
+	unless ($aux{$short}) {
+		print "Makefile.inc not needed in $full\n";
+		return;
+	}
+
+	my $build = '';
+	
+	unless ($topbuild{$_}) {
+		$build = '/build';
+		unless (-d "$full/build") {
+			mkdir "$full/build" or die "mkdir $full/build: $!\n";
+		}
+	}
+
+	open MKINC,">$full$build/Makefile.inc"
+		or die "$full$build/Makefile.inc: $!\n";
+
+	print "Creating $full$build/Makefile.inc\n";
+
+	print MKINC qq{
+PREFIX = $prefix
+stagedir = $stage
+thrflavour = $thrflavour
+nothrflavour = $nothrflavour
+};
+
+	for (@{$need_externs{$short}}) {
+		print MKINC "${_}_prefix = $extern_prefix{$_}\n"
+	}
+
+	close MKINC;
+}
