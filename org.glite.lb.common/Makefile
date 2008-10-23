@@ -233,7 +233,7 @@ clean:
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<
 
-il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp
+il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp test_main.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 
 %.thr.o: %.c

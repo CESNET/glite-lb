@@ -12,6 +12,8 @@
 
 int main (int argc,const char *argv[])
 {
+	edg_wll_initConnections();
+
 	CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 
 	assert(argc == 2);
@@ -30,6 +32,7 @@ int main (int argc,const char *argv[])
 	xout.write();
 	tout.write();
 
+	// for leak hunting
 	edg_wll_poolFree();
 
 	return result.wasSuccessful() ? 0 : 1 ;
