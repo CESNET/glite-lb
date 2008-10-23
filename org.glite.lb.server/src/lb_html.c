@@ -50,7 +50,7 @@ int edg_wll_QueryToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 }
 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, char **notifids, char **message)
+int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, char **message)
 {
         char *pomA = NULL, *pomB;
         int i = 0;
@@ -70,21 +70,6 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
                 i++;
         }
 
-	char *pomC = NULL, *pomD;
-	pomD = strdup("");
-	i = 0;
-
-	while(notifids && notifids[i]){
-		asprintf(&pomC, "%s\t\t <li> <a href=\"/notif/%s\">%s</a>\r\n",
-				pomD,
-				notifids[i],
-				notifids[i]
-			);
-		free(pomD);
-		pomD = pomC;
-		i++;
-	}
-
 	char *ret;
 	asprintf(&ret, "<html>\r\n\t<body>\r\n");
 	pomA = ret;
@@ -95,15 +80,6 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 		);
 		free(pomA);
 		free(pomB);
-	}
-	pomA = ret;
-	if (pomC){
-		asprintf(&ret, "%s<h2><B>User notifications</B></h2>\r\n"
-                        "<ul>%s</ul>",
-                        pomA, pomD
-                );
-		free(pomA);
-		free(pomD);
 	}
 	pomA = ret;
 	asprintf(&ret, "%sUser subject: %s<p>"
@@ -117,6 +93,37 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
         return 0;
 }
 
+int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, char **message){
+	char *pomA = NULL, *pomB;
+        pomB = strdup("");
+
+	int i = 0;
+        while(notifids && notifids[i]){
+                asprintf(&pomA, "%s\t\t <li> <a href=\"/notif/%s\">%s</a>\r\n",
+                                pomB,
+                                notifids[i],
+                                notifids[i]
+                        );
+                free(pomB);
+                pomB = pomA;
+                i++;
+        }
+
+	char *ret;
+        asprintf(&ret, "<html>\r\n\t<body>\r\n");
+	asprintf(&ret, "<html>\r\n\t<body>\r\n"
+			"<h2><B>User notifications</B></h2>\r\n"
+                        "<ul>%s</ul>"
+			"\t</body>\r\n</html>",
+                        pomA
+        );
+        free(pomA);
+
+	*message = ret;
+
+	return 0;
+}
+
 #define TR(name,type,field)             \
         if (field) {            \
                 asprintf(&pomA,"%s<tr><th align=\"left\">" name ":</th>"        \
@@ -125,8 +132,14 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
                 pomB = pomA;                                    \
         }
 
+#define GS(string){	\
+	asprintf(&pomA, "%s %s", pomB, (string)); \
+	free(pomB); \
+	pomB = pomA; \
+}
+
 int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
-	char *pomA, *pomB, *flags;
+	char *pomA = NULL, *pomB, *flags;
 
 
 	pomB = strdup("");
@@ -135,7 +148,155 @@ printf("flags %d - %s", ni->flags, flags);
 
 	TR("Destination", "%s", ni->destination);
 	TR("Valid until", "%s", ni->valid);
-	char *cond = xmlToHTML(ni->conditions);
+
+/*	// Fake the ni->conditions content
+	ni->conditions = malloc(3*sizeof(*(ni->conditions)));
+	ni->conditions[0] = malloc(2*sizeof(*(ni->conditions[0])));
+	ni->conditions[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+	ni->conditions[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+	ni->conditions[0][0].value.c = strdup("fila");
+	ni->conditions[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+	ni->conditions[1] = malloc(3*sizeof(*(ni->conditions[1])));
+	ni->conditions[1][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+        ni->conditions[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
+        ni->conditions[1][0].value.c = strdup("fila");
+	ni->conditions[1][1].attr = EDG_WLL_QUERY_ATTR_OWNER;
+        ni->conditions[1][1].op = EDG_WLL_QUERY_OP_EQUAL;
+        ni->conditions[1][1].value.c = strdup("sauron");
+        ni->conditions[1][2].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+	ni->conditions[2] = NULL;*/
+
+/*	edg_wll_QueryRec **l1;
+	edg_wll_QueryRec *l2;
+	for (l1 = ni->conditions; *l1; l1++){
+		if (l1 != ni->conditions)
+			GS ("and");
+		l2 = *l1;
+		switch (l2->attr){
+			case EDG_WLL_QUERY_ATTR_JOBID: GS("jobId");
+				break;
+			case EDG_WLL_QUERY_ATTR_OWNER: GS("owner");
+				break;
+			case EDG_WLL_QUERY_ATTR_STATUS: GS("status");
+				break;
+			case EDG_WLL_QUERY_ATTR_LOCATION: GS("location");
+				break;
+                        case EDG_WLL_QUERY_ATTR_DESTINATION: GS("destination");
+				break;
+			case EDG_WLL_QUERY_ATTR_DONECODE: GS("donecode");
+				break;
+			case EDG_WLL_QUERY_ATTR_USERTAG: GS("usertag");
+				break;
+			case EDG_WLL_QUERY_ATTR_TIME: GS("time");
+				break;
+			case EDG_WLL_QUERY_ATTR_LEVEL: GS("level");
+				break;
+			case EDG_WLL_QUERY_ATTR_HOST: GS("host");
+				break;
+                        case EDG_WLL_QUERY_ATTR_SOURCE: GS("source");
+				break;
+                        case EDG_WLL_QUERY_ATTR_INSTANCE: GS("instance");
+				break;
+                        case EDG_WLL_QUERY_ATTR_EVENT_TYPE: GS("eventtype");
+				break;
+			case EDG_WLL_QUERY_ATTR_CHKPT_TAG: GS("chkpttag");
+				break;
+			case EDG_WLL_QUERY_ATTR_RESUBMITTED: GS("resubmitted");
+				break;
+			case EDG_WLL_QUERY_ATTR_PARENT: GS("parent_job");
+				break;
+			case EDG_WLL_QUERY_ATTR_EXITCODE: GS("exitcode");
+				break;
+			case EDG_WLL_QUERY_ATTR_JDL_ATTR: GS("jdl");
+				break;
+			case EDG_WLL_QUERY_ATTR_STATEENTERTIME: GS("stateentertime");
+				break;
+			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME: GS("lastupdatetime");
+				break;
+			case EDG_WLL_QUERY_ATTR_NETWORK_SERVER: GS("networkserver");
+				break;
+		}
+		for (l2 = *l1; l2->attr; l2++){
+			if (l2 != *l1) GS ("or");
+			switch(l2->op){
+				case EDG_WLL_QUERY_OP_EQUAL: GS("=");
+					break;
+				case EDG_WLL_QUERY_OP_LESS: GS ("<");
+					break;
+				case EDG_WLL_QUERY_OP_GREATER: GS ("<");
+					break;
+				case EDG_WLL_QUERY_OP_WITHIN: GS ("within");
+					break;
+				case EDG_WLL_QUERY_OP_UNEQUAL: GS ("!=");
+			}
+			char *buf;
+			switch (l2->attr){
+		                case EDG_WLL_QUERY_ATTR_JOBID:
+					GS(edg_wlc_JobIdUnparse(l2->value.j));
+        	                        break;
+				case EDG_WLL_QUERY_ATTR_DESTINATION:
+				case EDG_WLL_QUERY_ATTR_LOCATION:
+                	        case EDG_WLL_QUERY_ATTR_OWNER:
+					GS(l2->value.c);
+                        	        break;
+	                        case EDG_WLL_QUERY_ATTR_STATUS:
+					//XXX: need interpretation!
+					asprintf(&buf, "%i", l2->value.i);
+					GS(buf);
+					free(buf);
+        	                        break;
+                	        case EDG_WLL_QUERY_ATTR_DONECODE:
+					//XXX: need interpretation!
+                                        asprintf(&buf, "%i", l2->value.i);
+                                        GS(buf);
+                                        free(buf);
+                        	        break;
+	                        case EDG_WLL_QUERY_ATTR_USERTAG:
+					GS(l2->attr_id.tag);
+        	                        break;
+                	        case EDG_WLL_QUERY_ATTR_TIME:
+					buf = ctime(&(l2->value.t.tv_sec));
+					if (l2->op == EDG_WLL_QUERY_OP_WITHIN){
+						buf[strlen(buf)-1] = 0; // cut out '\n'
+						asprintf(&buf, " and %s", ctime(&(l2->value2.t.tv_sec)));
+						GS(buf);
+					}
+					else
+						GS(buf);
+					free(buf);
+                        	        break;
+	                        case EDG_WLL_QUERY_ATTR_LEVEL:
+        	                        break;
+                	        case EDG_WLL_QUERY_ATTR_HOST:
+                        	        break;
+	                        case EDG_WLL_QUERY_ATTR_SOURCE:
+        	                        break;
+                	        case EDG_WLL_QUERY_ATTR_INSTANCE:
+                        	        break;
+	                        case EDG_WLL_QUERY_ATTR_EVENT_TYPE:
+        	                        break;
+                	        case EDG_WLL_QUERY_ATTR_CHKPT_TAG:
+                        	        break;
+	                        case EDG_WLL_QUERY_ATTR_RESUBMITTED:
+        	                        break;
+                	        case EDG_WLL_QUERY_ATTR_PARENT:
+                        	        break;
+	                        case EDG_WLL_QUERY_ATTR_EXITCODE:
+        	                        break;
+                	        case EDG_WLL_QUERY_ATTR_JDL_ATTR:
+                        	        break;
+	                        case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+        	                        break;
+                	        case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
+                        	        break;
+		                case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
+                	                break;
+	                }
+			GS("\n");
+		}
+	}*/
+
+	char *cond = xmlToHTML(ni->conditions_text);
 	asprintf(&pomA, "%s<h3>Conditions</h3>\r\n<pre>%s</pre>\r\n",
 		pomB, cond);
 	free(cond);
@@ -143,12 +304,6 @@ printf("flags %d - %s", ni->flags, flags);
 	pomB = pomA;
 	TR("Flags", "%s", flags);
 	free(flags);
-	if (ni->JDL_VirtualOrganisation && ni->JDL_VirtualOrganisation[0])
-		TR("JDL VirtualOrganisation", "%s", ni->JDL_VirtualOrganisation);
-	if (ni->STD_owner && ni->STD_owner[0])
-		TR("STD owner", "%s", ni->STD_owner);
-	if (ni->STD_network_server && ni->STD_network_server[0])
-		TR("STD network server", "%s", ni->STD_network_server);
 
 	asprintf(&pomA, "<html>\r\n\t<body>\r\n"
 		"<h2>Notification %s</h2>\r\n"

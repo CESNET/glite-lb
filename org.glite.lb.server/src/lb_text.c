@@ -85,7 +85,16 @@ int edg_wll_QueryToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
         return 0;
 }*/
 
-int edg_wll_UserInfoToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **notifids, char **message)
+#define TR(name,type,field) \
+        if (field) { \
+                asprintf(&a,"%s%s=" type "\n", \
+                        b, name, field); \
+                free(b); \
+                b = a; \
+        }
+
+
+int edg_wll_UserInfoToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
 {
         char *a = NULL, *b;
         int i = 0;
@@ -105,66 +114,54 @@ int edg_wll_UserInfoToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **n
                 i++;
         }
 
-	char *c = NULL, *d;
-	i = 0;
-	d = strdup("");
-	while(notifids[i]){
-		if (i == 0)
-			asprintf(&c, "%s", notifids[i]);
-		else
-			asprintf(&c, "%s,%s", d, notifids[i]);
-		free(d);
-		d = c;
-		i++;
-	}
-
 	if (a){
 		asprintf(&a, "User_jobs=%s\n", b);
+		free(b);
 		b = a;
-		if (c)
-			asprintf(&a, "%sUser_notifications=%s\n", b, d);
 	}
-	else if (c)
-		asprintf(&a, "User_notifications=%s\n", d);
 	b = a;
 
-        if (a)
-		asprintf(&a, "%sUser_subject=%s\n", b, ctx->peerName ? ctx->peerName: "<anonymous>");
-	else
-		asprintf(&a, "User_subject=%s\n", ctx->peerName ? ctx->peerName: "<anonymous>");
+	asprintf(&a, "%sUser_subject=%s\n", b, ctx->peerName ? ctx->peerName: "<anonymous>");
 
         *message = a;
 
         return 0;
 }
 
+int edg_wll_UserNotifsToText(edg_wll_Context ctx, char **notifids, char **message){
+	char *a = NULL, *b;
+        int i = 0;
+        b = strdup("");
+
+        while(notifids[i]){
+                if (i == 0)
+                        asprintf(&a, "%s", notifids[i]);
+                else
+                        asprintf(&a, "%s,%s", b, notifids[i]);
+                free(b);
+                b = a;
+                i++;
+        }
+	if (b)
+		asprintf(&a, "User_notifications=%s\n", b);
+
+	*message = a;
+}
 
 int edg_wll_NotificationToText(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
-	char *a = NULL, *b = NULL;
-	asprintf(&a, "Notif_id=%s\n", ni->notifid);
-	asprintf(&b, "%sDestination=%s\n", a, ni->destination); free(a);
-	asprintf(&a, "%sValid_until=%s\n", b, ni->valid); free(b);
-	char *cond = escape_text(ni->conditions);
-	asprintf(&b, "%sConditions=%s\n", a, cond); free(a);
+	char *a = NULL, *b;
+	b = strdup("");
+
+	TR("Notif_id", "%s", ni->notifid);
+	TR("Destination", "%s", ni->destination);
+	TR("Valid_until", "%s", ni->valid);
+	char *cond = escape_text(ni->conditions_text);
+	TR("Conditions", "%s", cond);
 	free(cond);
 	char *flags = edg_wll_stat_flags_to_string(ni->flags);
-	asprintf(&a, "%sFlags=%s\n", b, flags); free(b);
+	TR("Flags", "%s", flags);
 	free(flags);
-	b = a;
-	if (ni->JDL_VirtualOrganisation && ni->JDL_VirtualOrganisation[0]) {
-		asprintf(&a, "%sJDL_VirtualOrganisation=%s\n", b, ni->JDL_VirtualOrganisation); 
-		free(b);
-	}
-	b = a;
-	if (ni->STD_owner && ni->STD_owner[0]) {
-		asprintf(&a, "%sSTD_owner=%s\n", b, ni->STD_owner);
-		free(b);
-	}
-	b = a;
-	if (ni->STD_network_server && ni->STD_network_server[0]) {
-		asprintf(&a, "%sSTD_network_server=%s\n", b, ni->STD_network_server); 
-		free(b);
-	}
+
 	*message = a;
 
 	return 0;
@@ -176,14 +173,6 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 	char *a, *b;
 	char    *chid,*chstat;
         char    *jdl,*rsl;
-
-	#define TR(name,type,field) \
-        if (field) { \
-                asprintf(&a,"%s%s=" type "\n", \
-                        b, name, field); \
-                free(b); \
-                b = a; \
-        }
 
 	jdl = strdup("");
 	rsl = strdup("");

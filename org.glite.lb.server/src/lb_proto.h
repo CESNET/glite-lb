@@ -4,6 +4,7 @@
 #ident "$Header$"
 
 #include "glite/lb/context.h"
+#include "glite/lb/query_rec.h"
 
 /* Handle a single request of the LB server protocol 
  * returns a complete response string (may contain a formatted error
@@ -24,11 +25,9 @@ typedef struct _notifInfo{
         char *notifid;
         char *destination;
         char *valid;
-        char *conditions;
+	edg_wll_QueryRec **conditions;
+	char *conditions_text;
 	int  flags;
-        char *JDL_VirtualOrganisation;
-        char *STD_owner;
-        char *STD_network_server;
 } notifInfo;
 
 extern char *edg_wll_HTTPErrorMessage(int);
