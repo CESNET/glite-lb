@@ -7,6 +7,8 @@
 
 This subsection gives a comprehensive overview of all system functionality tests.
 
+\subsubsection{Test Scripts}
+
 \begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
      {\bf Executable} & {\bf Status} & {\bf Use} \\
@@ -37,6 +39,9 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 \end{tabularx}
 
+\subsubsection{Event logging examples}
+
+There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds various example files---both binaries and scripts. There is---among others---a suite of scripts aimed at testing event delivery and the proper operation of the LB state machine. Scripts named {\tt glite-lb-<state>.sh}---where {\tt <state>} corresponds with a job state---can be used to generate sequences of events that will always get an existing job into that state. (For example the {\tt glite-lb-running.sh} script logs a series of 12 events resulting in the job state turning to running.) Some of these scripts are used by system functionality tests detailed bellow but all of them can also be used for manual testing.
 
 \subsection{Event delivery}
 
@@ -50,7 +55,7 @@ This subsection gives a comprehensive overview of all system functionality tests
 
 \what\ 
 \begin{enumerate}
-\item Register jobs with \code{edg\_wll\_RegsterJob} 
+\item Register jobs with \code{edg\_wll\_RegisterJob} 
 \item Log reasonable sequences of events with \code{edg\_wll\_Log*}, both through logger and/or proxy
 \item Check with \code{edg\_wll\_JobLog} that the events got delivered afterwards (approx. 10s).
 \end{enumerate}
@@ -70,9 +75,6 @@ This subsection gives a comprehensive overview of all system functionality tests
 \result\ All sub tests (API calls) should return 0. The same events that were logged must be returned.
 
 \begin{hints}
-\path{glite-lb-*.sh} scripts produce reasonable seqences of events, including
-the job initial registration.
-
 There is approx. 1 min time window in which the locallogger files exist.
 They can be grabbed and used for comparing the events later in~\ref{recover}.
 \end{hints}
@@ -110,13 +112,6 @@ resebmling real \LB\ usage, using the same jobids as in test~\ref{reg}
 \how\ \ctblb{lb-test-logevent.sh}
 
 \result\ All sub tests (API calls) return 0, events are added one per line to the locallogger files.
-
-\begin{hints}
-\path{glite-lb-logevent} client program can be used.
-
-\TODO{\path{glite-lb-*.sh} examples may be adapted to produce reasonable seqences
-of events.}
-\end{hints}
 
 
 
@@ -166,10 +161,6 @@ format as the locallogger files.
 states. Thorough tests may also cross check the values supplied in the
 events (e.g. destination computing element) wrt. the values reported in the job states.
 
-\begin{hints}
-\path{glite-lb-*.sh} scripts produce sequences of events resultning
-in the job state same as the `*' part of the script name.
-\end{hints}
 
 
 
