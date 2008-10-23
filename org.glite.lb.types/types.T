@@ -144,9 +144,9 @@
 		string=>'if ($b eq \'NULL\') { qq{(($a) == NULL)}; } 
 			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp($a,$b))}; } ',
 		jobid=>'if ($b eq \'NULL\') { qq{(($a) == NULL) }; }
-			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wlc_JobIdUnparse($a),edg_wlc_JobIdUnparse($b)))}; }',
+			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !(tmp1=glite_jobid_unparse($a),tmp2=glite_jobid_unparse($b),tmp3=strcmp(tmp1,tmp2),free(tmp1),free(tmp2),tmp3))}; }',
 		notifid=>'if ($b eq \'NULL\') { qq{(($a) == NULL) }; }
-			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !strcmp(edg_wll_NotifIdUnparse($a),edg_wll_NotifIdUnparse($b)))}; }',
+			else { qq{(($a) == NULL && ($b) == NULL) || (($a)&&($b)&& !(tmp1=edg_wll_NotifIdUnparse($a),tmp2=edg_wll_NotifIdUnparse($b),tmp3=strcmp(tmp1,tmp2),free(tmp1),free(tmp2),tmp3))}; }',
 		logsrc=>'"($a) == ($b)"',
 		timeval=>'"($a).tv_sec == ($b).tv_sec && ($a).tv_usec == ($b).tv_usec"',
 		cclassad=>'"($a == $b)"',

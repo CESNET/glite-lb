@@ -2870,13 +2870,15 @@ int edg_wll_NotifRequestToXML(
 		int flags,
                 char **message)
 {
-	char *pomA=NULL, *pomB=NULL, *pomC=NULL, *cflags=NULL;
+	char *pomA=NULL, *pomB=NULL, *pomC=NULL, *cflags=NULL, *nid=NULL, *nop=NULL;
 
 
 	pomA = strdup("");
-	edg_wll_add_string_to_XMLBody(&pomA, edg_wll_NotifIdUnparse(notifId), "notifId", NULL);
+	nid = edg_wll_NotifIdUnparse(notifId);
+	nop = edg_wll_NotifChangeOpToString(op);
+	edg_wll_add_string_to_XMLBody(&pomA, nid, "notifId", NULL);
 	edg_wll_add_string_to_XMLBody(&pomA, address, "clientAddress", NULL);
-	edg_wll_add_string_to_XMLBody(&pomA, edg_wll_NotifChangeOpToString(op), "notifChangeOp", NULL);
+	edg_wll_add_string_to_XMLBody(&pomA, nop, "notifChangeOp", NULL);
 	edg_wll_add_time_t_to_XMLBody(&pomA, validity, "requestedValidity", -1);
 	if (conditions && conditions[0] && conditions[0][0].attr != EDG_WLL_QUERY_ATTR_UNDEF)
 		edg_wll_JobQueryRecToXML(ctx, conditions, &pomB);
@@ -2891,6 +2893,8 @@ int edg_wll_NotifRequestToXML(
 
 
 	free(cflags);
+	free(nid);
+	free(nop);
 	free(pomA);
 	free(pomB);
         *message = pomC;

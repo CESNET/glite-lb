@@ -174,7 +174,7 @@ mkreports:
 check.parse: test_parse
 	./test_parse ${REPORTS}/parse.xml
 
-test_parse: parse.o
+test_parse: parse.o test_main.cpp
 	${LINKXX} -o test_parse parse.o ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
 
 check.il: il_test

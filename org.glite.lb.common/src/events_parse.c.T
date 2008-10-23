@@ -432,6 +432,8 @@ edg_wll_ErrorCode edg_wll_CompareEvents(
 	const edg_wll_Event *e2		/* event 2 IN */
 )
 {
+	char *tmp1, *tmp2;
+	int tmp3;
 	if (e1->any.type != e2->any.type) return edg_wll_SetError(context,EDG_WLL_ERROR_COMPARE_EVENTS,"Different event types");
 @@@{
 	selectType $event '_common_';

@@ -59,7 +59,7 @@ void EventParseTest::$l()
 	e1->any.level = 7;
 	e1->any.priority = 0;
 	edg_wlc_JobIdParse("https://some.host:1234/x67qr549qc",&e1->any.jobId);
-	e1->any.seqcode = EDG_WLL_SEQ_BIGHELPER_INITIAL;
+	e1->any.seqcode = strdup(EDG_WLL_SEQ_BIGHELPER_INITIAL);
 	e1->any.user = strdup("/O=Grid/CN=This User");
 	e1->any.source = EDG_WLL_SOURCE_USER_INTERFACE;
 	e1->any.src_instance = strdup("");
@@ -117,6 +117,11 @@ void EventParseTest::$l()
 		edg_wll_Error(ctx,&et,&ed);
 		CPPUNIT_ASSERT_MESSAGE(std::string("edg_wll_CompareEvents():") + et + " " + ed, 0);
 	}
+
+	edg_wll_FreeEvent(e1); free(e1);
+	edg_wll_FreeEvent(e2); free(e2);
+	edg_wll_FreeContext(ctx);
+	free(line);
 }
 ';
 

@@ -8,6 +8,8 @@
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
 
+#include <glite/lb/connpool.h>
+
 int main (int argc,const char *argv[])
 {
 	CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
@@ -27,6 +29,8 @@ int main (int argc,const char *argv[])
 	CppUnit::CompilerOutputter tout( &result, std::cout);
 	xout.write();
 	tout.write();
+
+	edg_wll_poolFree();
 
 	return result.wasSuccessful() ? 0 : 1 ;
 }

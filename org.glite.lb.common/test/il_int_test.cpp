@@ -26,7 +26,7 @@ public:
 
 	void testPutInt() {
 		put_int(buffer, 17);
-		CPPUNIT_ASSERT(!strcmp(buffer, "17\n"));
+		CPPUNIT_ASSERT(!strncmp(buffer, "17\n", 3));
 	}
 
 	void testGetInt() {
