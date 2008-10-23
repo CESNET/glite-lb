@@ -165,6 +165,9 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 	
 	if (flags == 0) {
 		stat.jdl = NULL;
+		stat.matched_jdl = NULL;
+		stat.condor_jdl = NULL;
+		stat.rsl = NULL;
 	}
 
 	if(edg_wll_JobStatusToXML(context, stat, &xml_data)) 

@@ -151,6 +151,7 @@ int edg_wll_JobStatusServer(
 			mov(stat->matched_jdl, null);
 			mov(stat->condor_jdl, null);
 			mov(stat->rsl, null);
+			// !! if adding something here, add it also to edg_wll_NotifJobStatus() !!
 		}
 
 	#if DAG_ENABLE
