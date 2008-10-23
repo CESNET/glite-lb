@@ -58,6 +58,7 @@ edg_wll_NotifSend(edg_wll_Context       context,
  * \param host,port address to deliver the notification to.
  * \param owner DN of the registration owner, this will be verified
  *              against client's certificate
+ * \param flags verbosity of returned status 
  * \param notif_job_stat structure describing job status
  * \see edg_wll_NotifSend()
  */
@@ -67,6 +68,7 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		       const char      *host,
                        int              port,
 		       const char      *owner,
+                       int              flags,
 		       int		expires,
 		       const edg_wll_JobStat notif_job_stat);
 

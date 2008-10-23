@@ -154,13 +154,20 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		       const char      *host,
                        int              port,
 		       const char      *owner,
+                       int		flags,
 		       int		expires,
 		       const edg_wll_JobStat notif_job_stat)
 {
-	int ret=0;
-	char   *xml_data, *xml_esc_data=NULL;
+	int 		ret=0;
+	char   		*xml_data, *xml_esc_data=NULL;
+	edg_wll_JobStat	stat = notif_job_stat;
 
-	if(edg_wll_JobStatusToXML(context, notif_job_stat, &xml_data)) 
+	
+	if (flags == 0) {
+		stat.jdl = NULL;
+	}
+
+	if(edg_wll_JobStatusToXML(context, stat, &xml_data)) 
 		goto out;
 	
 	if((xml_esc_data = glite_lbu_EscapeXML(xml_data)) == NULL) {

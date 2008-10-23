@@ -29,7 +29,7 @@ int edg_wll_NotifExpired(edg_wll_Context,const char *);
 int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 {
 	edg_wll_NotifId		nid = NULL;
-	char	*jobq,*ju = NULL,*jobc[5];
+	char	*jobq,*ju = NULL,*jobc[6];
 	glite_lbu_Statement	jobs = NULL;
 	int	ret,i;
 	time_t	expires,now = time(NULL);
@@ -81,7 +81,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 	}
 
 	trio_asprintf(&jobq,
-		"select distinct n.notifid,n.destination,n.valid,u.cert_subj,n.conditions "
+		"select distinct n.notifid,n.destination,n.valid,u.cert_subj,n.conditions,n.flags "
 		"from notif_jobs j,users u,notif_registrations n "
 		"where j.notifid=n.notifid and n.userid=u.userid "
 		"   and (j.jobid = '%|Ss' or j.jobid = '%|Ss' %s) %s",
@@ -127,7 +127,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 			/* XXX: only temporary hack!!!
 			 */
 			ctx->p_instance = strdup("");
-			if ( edg_wll_NotifJobStatus(ctx, nid, dest, port, jobc[3], expires, *stat) )
+			if ( edg_wll_NotifJobStatus(ctx, nid, dest, port, jobc[3], atoi(jobc[5]), expires, *stat) )
 			{
 				free(dest);
 				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
