@@ -6,8 +6,6 @@
 #include <errno.h>
 #include <time.h>
 
-#include <expat.h>
-
 #include "glite/lb/context-int.h"
 #include "consumer.h"
 #include "glite/lb/xml_conversions.h"

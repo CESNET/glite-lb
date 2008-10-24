@@ -3,8 +3,6 @@
 
 #ident "$Header$"
 
-#include <expat.h>
-
 #include "glite/jobid/cjobid.h"
 
 #ifdef BUILDING_LB_COMMON
@@ -34,7 +32,7 @@ enum edg_wll_QueryType {
 
 typedef struct _edg_wll_XML_ctx {
 	edg_wll_Context ctx;			
-        XML_Parser      p;
+        void		*p;
 	char		*message_body;		/* copy of pointer to data to be parsed */		
         edg_wll_EventCode   eventCode;          /* code of processed event */
         int             position;               /* row index in the result list */

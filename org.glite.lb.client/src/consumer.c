@@ -7,8 +7,6 @@
 #include <unistd.h>
 #include <assert.h>
 
-#include <expat.h>
-
 #include "glite/jobid/cjobid.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/mini_http.h"

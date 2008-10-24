@@ -12,8 +12,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include <expat.h>
-
 #include "glite/jobid/JobId.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"

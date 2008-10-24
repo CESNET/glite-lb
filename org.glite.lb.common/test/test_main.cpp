@@ -8,7 +8,11 @@
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
 
-#include <glite/lb/connpool.h>
+#ifdef BUILDING_LB_COMMON
+#include "connpool.h"
+#else
+#include "glite/lb/connpool.h"
+#endif
 
 int main (int argc,const char *argv[])
 {

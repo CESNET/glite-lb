@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <expat.h>
-
 #include "glite/lb/context.h"
 #include "glite/lb/xml_conversions.h"
 #include "consumer.h"

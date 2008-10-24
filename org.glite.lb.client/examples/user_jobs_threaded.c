@@ -6,8 +6,6 @@
 #include <unistd.h>
 #include <getopt.h>
 
-#include <expat.h>
-
 #include <pthread.h>
 
 #include "glite/lb/context.h"
