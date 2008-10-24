@@ -57,6 +57,7 @@ static void usage (int status)
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
 	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers (default, timeout==0 means turn lazy off)\n"
+	       "  -p, --parallel [<num>]     use <num> parallel streams to the same server\n"
 #ifdef LB_PERF
 	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
 	       "  -S, --nosync               PERFTEST: do not check logd files for lost events\n"
@@ -79,6 +80,7 @@ char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
 int lazy_close = 1;
 int default_close_timeout;
+int parallel = 0;
 #ifdef LB_PERF
 int nosend = 0, norecover=0, nosync=0, noparse=0;
 char *event_source = NULL;
@@ -105,6 +107,7 @@ static struct option const long_options[] =
   {"log-server", required_argument, 0, 'l'},
   {"socket", required_argument, 0, 's'},
   {"lazy", optional_argument, 0, 'L'},
+  {"parallel", optional_argument, 0, 'p'},
 #ifdef LB_PERF
   {"nosend", no_argument, 0, 'n'},
   {"nosync", no_argument, 0, 'S'},
@@ -140,6 +143,7 @@ decode_switches (int argc, char **argv)
 			   "b"  /* only bookeeping */
                            "l:" /* log server */
 			   "d" /* debug */
+			   "p" /* parallel */
 #ifdef LB_PERF
 			   "n" /* nosend */
 			   "S" /* nosync */
@@ -209,6 +213,13 @@ decode_switches (int argc, char **argv)
 			}
 		else
 			default_close_timeout = TIMEOUT;
+		break;
+
+	case 'p':
+		if(optarg) 
+			parallel = atoi(optarg);
+		else 
+			parallel = 4;
 		break;
 
 #ifdef LB_PERF

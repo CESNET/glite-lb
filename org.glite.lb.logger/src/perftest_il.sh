@@ -15,7 +15,7 @@ DEBUG=${DEBUG:-0}
 # CONSUMER_ARGS=
 # PERFTEST_COMPONENT=
 # COMPONENT_ARGS=
-#LOGJOBS_ARGS="" 
+LOGJOBS_ARGS="-s /tmp/interlogger.perftest" 
 
 check_test_files || exit 1
 

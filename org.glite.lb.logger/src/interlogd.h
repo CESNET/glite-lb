@@ -78,6 +78,7 @@ extern int bs_only;
 extern int killflg;
 extern int lazy_close;
 extern int default_close_timeout;
+extern int parallel;
 #ifdef LB_PERF
 extern int nosend, nosync, norecover, noparse;
 #ifdef PERF_EVENTS_INLINE
@@ -122,8 +123,9 @@ struct event_store {
 	long      last_committed_ls;       /*  -"-                                           LS */
 	long      offset;                  /* expected file position of next event */
 	time_t    last_modified;           /* time of the last file modification */
-	int       recovering;              /* flag for recovery mode */
-	pthread_rwlock_t update_lock;      /* lock to prevent simultaneous updates */
+	int       generation;              /* cleanup counter, scopes the offset */
+	pthread_rwlock_t commit_lock;      /* lock to prevent simultaneous updates to last_committed_* */
+	pthread_rwlock_t offset_lock;      /* lock to prevent simultaneous updates offset */
 	pthread_rwlock_t use_lock;         /* lock to prevent struct deallocation */
 #if defined(IL_NOTIFICATIONS)
 	char     *dest;                    /* host:port destination */
@@ -138,6 +140,7 @@ struct server_msg {
 	int                     len;
 	int                     ev_len;
 	struct event_store     *es;             /* cache for corresponding event store */
+	int                     generation;     /* event store genereation */
 	long                    receipt_to;     /* receiver (long local-logger id - LLLID) of delivery confirmation (for priority messages) */
 #if defined(IL_NOTIFICATIONS)
 	char                   *dest_name;
@@ -244,7 +247,7 @@ int event_store_recover_all(void);
 struct event_store *event_store_find(char *);
 int event_store_sync(struct event_store *, long);
 int event_store_next(struct event_store *, long, int);
-int event_store_commit(struct event_store *, int, int);
+int event_store_commit(struct event_store *, int, int, int);
 int event_store_recover(struct event_store *);
 int event_store_release(struct event_store *);
 /* int event_store_remove(struct event_store *); */

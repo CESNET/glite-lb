@@ -336,7 +336,7 @@ event_queue_send(struct event_queue *eq)
     default: /* LB_DBERR, LB_PROTO */
       /* the event was not accepted by the server */
       /* update the event pointer */
-      if(event_store_commit(msg->es, msg->ev_len, queue_list_is_log(eq)) < 0) 
+        if(event_store_commit(msg->es, msg->ev_len, queue_list_is_log(eq), msg->generation) < 0)
 	/* failure committing message, this is bad */
 	return(-1);
       /* if we have just delivered priority message from the queue, send confirmation */

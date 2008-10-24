@@ -291,8 +291,8 @@ event_queue_move_events(struct event_queue *eq_s,
 	eq_s->tail = NULL;
 	while(p) {
 	  if((*cmp_func)(p->msg, data)) {
-			il_log(LOG_DEBUG, "  moving event at offset %d from %s:%d to %s:%d\n",
-			       p->msg->offset, eq_s->dest_name, eq_s->dest_port, 
+			il_log(LOG_DEBUG, "  moving event at offset %d(%d) from %s:%d to %s:%d\n",
+			       p->msg->offset, p->msg->generation, eq_s->dest_name, eq_s->dest_port, 
 			       eq_d ? eq_d->dest_name : "trash", eq_d ? eq_d->dest_port : -1);
 			il_log(LOG_DEBUG, "  current: %x, next: %x\n", p, p->prev);
 			/* remove the message from the source list */
@@ -305,7 +305,8 @@ event_queue_move_events(struct event_queue *eq_s,
 				eq_d->tail = p;
 			} else {
 				/* signal that the message was 'delivered' */
-				event_store_commit(p->msg->es, p->msg->ev_len, queue_list_is_log(eq_s));
+				event_store_commit(p->msg->es, p->msg->ev_len, queue_list_is_log(eq_s),
+						   p->msg->generation);
 				/* free the message */
 				server_msg_free(p->msg);
 				free(p);

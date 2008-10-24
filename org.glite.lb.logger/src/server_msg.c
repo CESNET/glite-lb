@@ -144,13 +144,16 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 
 
 #if defined(IL_NOTIFICATIONS)
-	edg_wll_InitContext(&context);
 
 	/* parse the notification event */
-	if((ret=edg_wll_ParseNotifEvent(context, event->data, &notif_event))) {
+	edg_wll_InitContext(&context);
+	ret=edg_wll_ParseNotifEvent(context, event->data, &notif_event);
+	edg_wll_FreeContext(context);
+	if(ret) {
 		set_error(IL_LBAPI, ret, "server_msg_init: error parsing notification event");
 		return(-1);
 	}
+
 	/* FIXME: check for allocation error */
 	if(notif_event->notification.dest_host && 
 	   (strlen(notif_event->notification.dest_host) > 0)) {

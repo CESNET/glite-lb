@@ -139,7 +139,8 @@ event_store_free(struct event_store *es)
   if(es->event_file_name) free(es->event_file_name);
   if(es->control_file_name) free(es->control_file_name);
   pthread_rwlock_destroy(&es->use_lock);
-  pthread_rwlock_destroy(&es->update_lock);
+  pthread_rwlock_destroy(&es->commit_lock);
+  pthread_rwlock_destroy(&es->offset_lock);
   free(es);
 
   return(0);
@@ -175,7 +176,9 @@ event_store_create(char *job_id_s)
   es->control_file_name = jobid2controlfile(job_id);
   IL_EVENT_ID_FREE(job_id);
 
-  if(pthread_rwlock_init(&es->update_lock, NULL)) 
+  if(pthread_rwlock_init(&es->commit_lock, NULL)) 
+          abort();
+  if(pthread_rwlock_init(&es->offset_lock, NULL)) 
           abort();
   if(pthread_rwlock_init(&es->use_lock, NULL)) 
 	  abort();
@@ -190,7 +193,7 @@ event_store_lock_ro(struct event_store *es)
 {
   assert(es != NULL);
 
-  if(pthread_rwlock_rdlock(&es->update_lock)) 
+  if(pthread_rwlock_rdlock(&es->commit_lock)) 
     abort();
 
   return(0);
@@ -203,7 +206,7 @@ event_store_lock(struct event_store *es)
 {
   assert(es != NULL);
 
-  if(pthread_rwlock_wrlock(&es->update_lock)) 
+  if(pthread_rwlock_wrlock(&es->commit_lock)) 
     abort();
 
   return(0);
@@ -216,7 +219,7 @@ event_store_unlock(struct event_store *es)
 {
   assert(es != NULL);
 
-  if(pthread_rwlock_unlock(&es->update_lock)) 
+  if(pthread_rwlock_unlock(&es->commit_lock))
     abort();
   return(0);
 }
@@ -334,6 +337,9 @@ event_store_quarantine(struct event_store *es)
 	es->last_committed_bs = 0;
 	es->offset = 0;
 
+	/* increase cleanup count, this will invalidate all commits from previous generation */
+	es->generation++;
+
 	return(0);
 }
 
@@ -373,7 +379,10 @@ event_store_recover(struct event_store *es)
   eq_l = queue_list_get(NULL);
 #endif
 
+  /* lock the event_store and offset locks */
   event_store_lock(es);
+  if(pthread_rwlock_wrlock(&es->offset_lock))
+	  abort();
 
   il_log(LOG_DEBUG, "  reading events from %s\n", es->event_file_name);
 
@@ -385,6 +394,8 @@ event_store_recover(struct event_store *es)
 		   es->event_file_name);
 	  set_error(IL_SYS, errno, err_msg);
 	  event_store_unlock(es);
+	  if(pthread_rwlock_unlock(&es->offset_lock)) 
+		  abort();
 	  return(-1);
   }
 
@@ -400,6 +411,8 @@ event_store_recover(struct event_store *es)
 		   es->event_file_name);
 	  set_error(IL_SYS, errno, err_msg);
 	  event_store_unlock(es);
+	  if(pthread_rwlock_unlock(&es->offset_lock)) 
+		  abort();
 	  fclose(ef);
 	  return(-1);
   }
@@ -410,12 +423,16 @@ event_store_recover(struct event_store *es)
 	  il_log(LOG_ERR, "    could not stat event file %s: %s\n", es->event_file_name, strerror(errno));
 	  fclose(ef);
 	  event_store_unlock(es);
+	  if(pthread_rwlock_unlock(&es->offset_lock)) 
+		  abort();
 	  return -1;
   } else {
 	  if((es->offset == stbuf.st_size) && (es->last_modified == stbuf.st_mtime)) {
 		  il_log(LOG_DEBUG, "  event file not modified since last visit, skipping\n");
 		  fclose(ef);
 		  event_store_unlock(es);
+		  if(pthread_rwlock_unlock(&es->offset_lock)) 
+			  abort();
 		  return(0);
 	  }
   }
@@ -454,6 +471,8 @@ event_store_recover(struct event_store *es)
 			  set_error(IL_SYS, errno, "event_store_recover: error setting position for read");
 			  event_store_unlock(es);
 			  fclose(ef);
+			  if(pthread_rwlock_unlock(&es->offset_lock)) 
+				  abort();
 			  return(-1);
 		  }
 		  /* the last enqueued event MUST end with EVENT_SEPARATOR,
@@ -484,19 +503,37 @@ event_store_recover(struct event_store *es)
 			  set_error(IL_SYS, errno, "event_store_recover: error setting position for read");
 			  event_store_unlock(es);
 			  fclose(ef);
+			  if(pthread_rwlock_unlock(&es->offset_lock)) 
+				  abort();
 			  return(-1);
 		  }
 		  break;
 	  }
   }
 
+  /* now we have: 
+   *   - event file opened at position 'last'
+   *   - offset and last_committed_* potentially reset to zero
+   */
+
+  /* release lock on commits, offset remains locked;
+   * other threads are allowed to send/remove events, but not insert
+   */
+  event_store_unlock(es);
+
   /* enqueue all remaining events */
   ret = 1;
   msg = NULL;
   while((event_s=read_event_string(ef)) != NULL) {
-	
+    long last_ls, last_bs;
+
     /* last holds the starting position of event_s in file */
     il_log(LOG_DEBUG, "    reading event at %ld\n", last);
+
+    event_store_lock_ro(es);
+    last_ls = es->last_committed_ls;
+    last_bs = es->last_committed_bs;
+    event_store_unlock(es);
 
     /* break from now on means there was some error */
     ret = -1;
@@ -515,13 +552,15 @@ event_store_recover(struct event_store *es)
 	    /* actually do not bother if quarantine succeeded or not - we could not do more */
 	    event_store_quarantine(es);
 	    fclose(ef);
-	    event_store_unlock(es);
+	    if(pthread_rwlock_unlock(&es->offset_lock)) 
+		    abort();
 	    return(-1);
     }
     msg->es = es;
+    msg->generation = es->generation;
 
     /* first enqueue to the LS */
-    if(!bs_only && (last >= es->last_committed_ls)) {
+    if(!bs_only && (last >= last_ls)) {
       
       il_log(LOG_DEBUG, "      queueing event at %ld to logging server\n", last);
 
@@ -537,7 +576,7 @@ event_store_recover(struct event_store *es)
 
     /* now enqueue to the BS, if neccessary */
     if((eq_b != eq_l) && 
-       (last >= es->last_committed_bs)) {
+       (last >= last_bs)) {
       
       il_log(LOG_DEBUG, "      queueing event at %ld to bookkeeping server\n", last);
       
@@ -555,7 +594,6 @@ event_store_recover(struct event_store *es)
 
   } /* while */
 
-  /* due to this little assignment we had to lock the event_store for writing */
   es->offset = last;
   es->last_modified = stbuf.st_mtime;
   il_log(LOG_DEBUG, "  event store offset set to %ld\n", last);
@@ -566,7 +604,9 @@ event_store_recover(struct event_store *es)
   fclose(ef);
   il_log(LOG_DEBUG, "  finished reading events with %d\n", ret);
 
-  event_store_unlock(es);
+  if(pthread_rwlock_unlock(&es->offset_lock)) 
+	  abort();
+
   return(ret);
 }
 
@@ -671,9 +711,16 @@ event_store_next(struct event_store *es, long offset, int len)
  *
  */
 int
-event_store_commit(struct event_store *es, int len, int ls)
+event_store_commit(struct event_store *es, int len, int ls, int generation)
 {
   assert(es != NULL);
+
+  /* do not move counters if event store with this message was cleaned up 
+   * (this can happen only when moving to quarantine)
+   */
+  /* XXX - assume int access is atomic */
+  if(generation != es->generation) 
+	  return 0;
 
   event_store_lock(es);
 
@@ -717,7 +764,7 @@ event_store_clean(struct event_store *es)
 
   /* prevent sender threads from updating */
   event_store_lock(es);
-  
+
   il_log(LOG_DEBUG, "  trying to cleanup event store %s\n", es->job_id_s);
   il_log(LOG_DEBUG, "    bytes sent to logging server: %d\n", es->last_committed_ls);
   il_log(LOG_DEBUG, "    bytes sent to bookkeeping server: %d\n", es->last_committed_bs);
@@ -730,6 +777,11 @@ event_store_clean(struct event_store *es)
     return(0);
   }
 
+  if(fd = pthread_rwlock_wrlock(&es->offset_lock)) {
+	  fprintf(stderr, "Fatal locking error: %s\n", strerror(fd));
+	  abort();
+  }
+
   /* the file can only be removed when all the events were succesfully sent 
      (ie. committed both by LS and BS */
   /* That also implies that the event queues are 'empty' at the moment. */
@@ -738,6 +790,8 @@ event_store_clean(struct event_store *es)
     /* if we can not open the event store, it is an error and the struct should be removed */
     /* XXX - is it true? */
     event_store_unlock(es);
+    if(pthread_rwlock_unlock(&es->offset_lock)) 
+	    abort();
     il_log(LOG_ERR,  "  event_store_clean: error opening event file: %s\n", strerror(errno));
     return(1);
   }
@@ -753,6 +807,8 @@ event_store_clean(struct event_store *es)
     il_log(LOG_DEBUG, "    could not lock event file, cleanup aborted\n");
     fclose(ef);
     event_store_unlock(es);
+    if(pthread_rwlock_unlock(&es->offset_lock)) 
+	    abort();
     if(errno != EACCES &&
        errno != EAGAIN) {
       set_error(IL_SYS, errno, "event_store_clean: error locking event file");
@@ -766,6 +822,8 @@ event_store_clean(struct event_store *es)
   if(fseek(ef, 0, SEEK_END) < 0) {
     set_error(IL_SYS, errno, "event_store_clean: error seeking the end of file");
     event_store_unlock(es);
+    if(pthread_rwlock_unlock(&es->offset_lock)) 
+	    abort();
     fclose(ef);
     return(-1);
   }
@@ -776,6 +834,8 @@ event_store_clean(struct event_store *es)
   if(es->last_committed_ls < last) {
     fclose(ef);
     event_store_unlock(es);
+    if(pthread_rwlock_unlock(&es->offset_lock)) 
+	    abort();
     il_log(LOG_DEBUG, "    events still waiting in queue, cleanup aborted\n");
     return(0);
   } else if( es->last_committed_ls > last) {
@@ -784,6 +844,8 @@ event_store_clean(struct event_store *es)
 	     some undelivered events referring to that event store */
 	  fclose(ef);
 	  event_store_unlock(es);
+	  if(pthread_rwlock_unlock(&es->offset_lock)) 
+		  abort();
 	  return(0);
   }
   
@@ -799,8 +861,14 @@ event_store_clean(struct event_store *es)
   es->last_committed_bs = 0;
   es->offset = 0;
 
+  /* increasing the generation count is rather pointless here, because there
+     are no messages waiting in the queue that would be invalidated */
+  /* es->generation++ */
+
   /* unlock the event_store even if it is going to be removed */
   event_store_unlock(es);
+  if(pthread_rwlock_unlock(&es->offset_lock)) 
+	  abort();
 
   /* close the event file (that unlocks it as well) */
   fclose(ef);
@@ -898,7 +966,6 @@ event_store_from_file(char *filename)
 	edg_wll_Context context;
 	char *dest_name = NULL;
 
-	edg_wll_InitContext(&context);
 #endif
 	
 	il_log(LOG_INFO, "  attaching to event file: %s\n", filename);
@@ -919,7 +986,10 @@ event_store_from_file(char *filename)
 		return(0);
 	
 #if defined(IL_NOTIFICATIONS)
-	if((ret=edg_wll_ParseNotifEvent(context, event_s, &notif_event))) {
+	edg_wll_InitContext(&context);
+	ret=edg_wll_ParseNotifEvent(context, event_s, &notif_event);
+	edg_wll_FreeContext(context);
+	if(ret) {
 		set_error(IL_LBAPI, ret, "event_store_from_file: could not parse event");
 		ret = -1;
 		goto out;
@@ -935,10 +1005,12 @@ event_store_from_file(char *filename)
 		ret = -1;
 		goto out;
 	}
+	/*  XXX: what was that good for?
 	if(notif_event->notification.dest_host && 
 	   (strlen(notif_event->notification.dest_host) > 0)) {
 		asprintf(&dest_name, "%s:%d", notif_event->notification.dest_host, notif_event->notification.dest_port);
 	}
+	*/
 	
 #else
 	job_id_s = edg_wll_GetJobId(event_s);

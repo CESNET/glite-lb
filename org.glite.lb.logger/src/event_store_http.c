@@ -128,7 +128,7 @@ event_store_free(struct event_store *es)
   if(es->event_file_name) free(es->event_file_name);
   if(es->control_file_name) free(es->control_file_name);
   pthread_rwlock_destroy(&es->use_lock);
-  pthread_rwlock_destroy(&es->update_lock);
+  pthread_rwlock_destroy(&es->commit_lock);
   free(es);
 
   return(0);
@@ -155,7 +155,7 @@ event_store_create(char *job_id_s)
   es->event_file_name = jobid2eventfile(job_id_s);
   es->control_file_name = jobid2controlfile(job_id_s);
 
-  if(pthread_rwlock_init(&es->update_lock, NULL)) 
+  if(pthread_rwlock_init(&es->commit_lock, NULL)) 
           abort();
   if(pthread_rwlock_init(&es->use_lock, NULL)) 
 	  abort();
@@ -170,7 +170,7 @@ event_store_lock_ro(struct event_store *es)
 {
   assert(es != NULL);
 
-  if(pthread_rwlock_rdlock(&es->update_lock)) 
+  if(pthread_rwlock_rdlock(&es->commit_lock)) 
     abort();
 
   return(0);
@@ -183,7 +183,7 @@ event_store_lock(struct event_store *es)
 {
   assert(es != NULL);
 
-  if(pthread_rwlock_wrlock(&es->update_lock)) 
+  if(pthread_rwlock_wrlock(&es->commit_lock)) 
     abort();
 
   return(0);
@@ -196,7 +196,7 @@ event_store_unlock(struct event_store *es)
 {
   assert(es != NULL);
 
-  if(pthread_rwlock_unlock(&es->update_lock)) 
+  if(pthread_rwlock_unlock(&es->commit_lock)) 
     abort();
   return(0);
 }

@@ -359,7 +359,7 @@ handle_msg(il_octet_string_t *event, long offset)
 	if((es = event_store_find(msg->job_id_s)) == NULL) 
 		return(-1);
 	msg->es = es;
-
+	
 #ifdef LB_PERF
 	if(nosync) 
 		ret = 1;
