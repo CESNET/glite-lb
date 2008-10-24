@@ -25,6 +25,9 @@ public:
 
 static char * compare_events(const edg_wll_Event *e1, const edg_wll_Event *e2)
 {
+	char *tmp1, *tmp2;
+	int tmp3;
+
 	if (e1->any.type != e2->any.type) return "type";
 @@@{
 	selectType $event '_common_';
@@ -70,6 +73,8 @@ static char * compare_events(const edg_wll_Event *e1, const edg_wll_Event *e2)
 
 static char * compare_states(const edg_wll_JobStat s1, const edg_wll_JobStat s2)
 {
+	char *tmp1, *tmp2;
+	int tmp3;
 @@@{
 	selectType $status '_common_';
         for (getFieldsOrdered $status) {
