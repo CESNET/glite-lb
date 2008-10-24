@@ -87,7 +87,7 @@ queue_list_add(struct queue_list **ql, const char *dest, struct event_queue *eq)
     return(-1);
   }
   el->queue = eq;
-  el->next = queues;
+  el->next = *ql;
   *ql = el;
   return 0;
 }
