@@ -530,10 +530,8 @@ event_store_recover(struct event_store *es)
     /* last holds the starting position of event_s in file */
     il_log(LOG_DEBUG, "    reading event at %ld\n", last);
 
-    event_store_lock_ro(es);
     last_ls = es->last_committed_ls;
     last_bs = es->last_committed_bs;
-    event_store_unlock(es);
 
     /* break from now on means there was some error */
     ret = -1;
