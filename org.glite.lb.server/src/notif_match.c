@@ -26,7 +26,7 @@ extern int debug;
 
 int edg_wll_NotifExpired(edg_wll_Context,const char *);
 
-int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
+int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_wll_JobStat *stat)
 {
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[6];

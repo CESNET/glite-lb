@@ -228,6 +228,9 @@ printf("flags %d - %s", ni->flags, flags);
 				case EDG_WLL_QUERY_OP_WITHIN: GS ("within");
 					break;
 				case EDG_WLL_QUERY_OP_UNEQUAL: GS ("!=");
+					break;
+				case EDG_WLL_QUERY_OP_CHANGED: GS ("changed");
+					break;
 			}
 			char *buf;
 			switch (l2->attr){

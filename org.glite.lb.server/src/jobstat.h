@@ -18,9 +18,9 @@ edg_wll_ErrorCode edg_wll_RestoreSubjobState(edg_wll_Context , glite_jobid_const
 
 
 /* update stored job state according to new event */
-edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx, glite_jobid_const_t job, edg_wll_Event *e, int seq, edg_wll_JobStat *stat_out);
+edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx, glite_jobid_const_t job, edg_wll_Event *e, int seq, edg_wll_JobStat *old_stat, edg_wll_JobStat *stat_out);
 
-edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context,glite_jobid_const_t,edg_wll_Event *,int,intJobStat *,edg_wll_JobStat *);
+edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context,glite_jobid_const_t,edg_wll_Event *,int,intJobStat *, edg_wll_JobStat *old_stat, edg_wll_JobStat *);
 
 /* create embriotic job state for DAGs' subjob */
 

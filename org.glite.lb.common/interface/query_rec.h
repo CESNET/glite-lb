@@ -71,6 +71,8 @@ typedef enum _edg_wll_QueryOp{
 	EDG_WLL_QUERY_OP_GREATER,	/**< attribute is less than the operand value \see _edg_wll_QueryRec */
 	EDG_WLL_QUERY_OP_WITHIN,	/**< attribute is in given interval \see _edg_wll_QueryRec */
 	EDG_WLL_QUERY_OP_UNEQUAL,	/**< attribute is not equal to the operand value \see _edg_wll_QueryRec */
+	EDG_WLL_QUERY_OP_CHANGED,	/**< attribute has changed from last check; supported only in notification matching 
+						\see _edg_wll_QueryRec */
 } edg_wll_QueryOp;
 
 

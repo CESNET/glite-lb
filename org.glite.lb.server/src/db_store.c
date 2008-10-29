@@ -23,11 +23,11 @@
 
 
 extern int unset_proxy_flag(edg_wll_Context, edg_wlc_JobId);
-extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *);
+extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *, const edg_wll_JobStat *);
 extern int enable_lcas;
 
 
-static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat, int reg_to_JP);
+static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *oldstat, edg_wll_JobStat *newstat, int reg_to_JP);
 
 
 int
@@ -36,10 +36,12 @@ db_store(edg_wll_Context ctx, char *event)
   edg_wll_Event 	*ev = NULL;
   int			seq, reg_to_JP = 0, local_job;
   edg_wll_JobStat	newstat;
+  edg_wll_JobStat	oldstat;
 
 
   edg_wll_ResetError(ctx);
   memset(&newstat,0,sizeof newstat);
+  memset(&oldstat,0,sizeof oldstat);
 
   if(edg_wll_ParseEvent(ctx, event, &ev)) goto err;
 
@@ -91,7 +93,7 @@ db_store(edg_wll_Context ctx, char *event)
 			edg_wll_FreeStatus(&newstat);
 			newstat.state = EDG_WLL_JOB_UNDEF;
 		}
-		if (edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, &newstat)) goto rollback;
+		if (edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, &oldstat, &newstat)) goto rollback;
 		
 		if (newstat.remove_from_proxy) 
 			if (edg_wll_PurgeServerProxy(ctx, ev->any.jobId)) goto rollback;
@@ -115,12 +117,13 @@ rollback:;
   if (edg_wll_Error(ctx, NULL, NULL)) goto err;
 
 
-  db_store_finalize(ctx, event, ev, &newstat, reg_to_JP);
+  db_store_finalize(ctx, event, ev, &oldstat, &newstat, reg_to_JP);
 
 
 err:
   if(ev) { edg_wll_FreeEvent(ev); free(ev); }
   if ( newstat.state ) edg_wll_FreeStatus(&newstat);
+  if ( oldstat.state ) edg_wll_FreeStatus(&oldstat);
 
   return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -135,10 +138,12 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
   int	seq;
   int   err;
   edg_wll_JobStat	newstat;
+  edg_wll_JobStat	oldstat;
 
 
   edg_wll_ResetError(ctx);
   memset(&newstat,0,sizeof newstat);
+  memset(&oldstat,0,sizeof oldstat);
 
   /* Transaction opened from db_store */
 
@@ -167,7 +172,7 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
   }
 #endif
 
-  err = edg_wll_StepIntStateParent(ctx,ev->any.jobId, ev, seq, is, ctx->isProxy? NULL: &newstat);
+  err = edg_wll_StepIntStateParent(ctx,ev->any.jobId, ev, seq, is, &oldstat, ctx->isProxy? NULL: &newstat);
 
   if (err) goto err;
 
@@ -176,12 +181,13 @@ db_parent_store(edg_wll_Context ctx, edg_wll_Event *ev, intJobStat *is)
     assert(event);
   }
 
-  db_store_finalize(ctx, event, ev, &newstat, 0);
+  db_store_finalize(ctx, event, ev, &oldstat, &newstat, 0);
 
 err:
 
   free(event);
   if ( newstat.state ) edg_wll_FreeStatus(&newstat);
+  if ( oldstat.state ) edg_wll_FreeStatus(&oldstat);
   
   return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -263,7 +269,7 @@ static int forward_event_to_server(edg_wll_Context ctx, char *event, edg_wll_Eve
 }
 
 
-static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *newstat, int reg_to_JP) 
+static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *oldstat, edg_wll_JobStat *newstat, int reg_to_JP) 
 {
 	int 	local_job = is_job_local(ctx, ev->any.jobId);
 
@@ -289,10 +295,10 @@ static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev
 			if ((ev->any.priority & EDG_WLL_LOGFLAG_DIRECT) || local_job) 
 				/* event will not arrive to server, only flag was set		*/
 				/* check whether some pending notifications are not triggered	*/
-				edg_wll_NotifMatch(ctx, newstat);
+				edg_wll_NotifMatch(ctx, oldstat, newstat);
 			}
 		else {
-				edg_wll_NotifMatch(ctx, newstat);
+				edg_wll_NotifMatch(ctx, oldstat, newstat);
 		}
 	}
 

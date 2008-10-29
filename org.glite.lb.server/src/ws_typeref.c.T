@@ -422,6 +422,7 @@ void edg_wll_SoapToQueryOp(const enum lbt__queryOp in, edg_wll_QueryOp *out)
 	case LESS: *out = EDG_WLL_QUERY_OP_LESS; break;
 	case GREATER: *out = EDG_WLL_QUERY_OP_GREATER; break;
 	case WITHIN: *out = EDG_WLL_QUERY_OP_WITHIN; break;
+	case CHANGED: *out = EDG_WLL_QUERY_OP_CHANGED; break;
 	}
 }
 
@@ -434,6 +435,7 @@ void edg_wll_QueryOpToSoap(const edg_wll_QueryOp in, enum lbt__queryOp *out)
 	case EDG_WLL_QUERY_OP_LESS: *out = LESS; break;
 	case EDG_WLL_QUERY_OP_GREATER: *out = GREATER; break;
 	case EDG_WLL_QUERY_OP_WITHIN: *out = WITHIN; break;
+	case EDG_WLL_QUERY_OP_CHANGED: *out = CHANGED; break;
 	default: assert(0);
 	}
 }

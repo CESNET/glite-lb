@@ -1111,37 +1111,35 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
 					edg_wll_Event *e,
 					int seq,
 					intJobStat *ijsp,
+					edg_wll_JobStat *oldstat,
 					edg_wll_JobStat	*stat_out)
 {
 	int		res;
 	int		be_strict = 0;
 	char		*errstring = NULL;
-	edg_wll_JobStat	oldstat;
 	char 		*oldstat_rgmaline = NULL;
 
 
-	memset(&oldstat,0,sizeof oldstat);
-
-	edg_wll_CpyStatus(&ijsp->pub,&oldstat);
+	edg_wll_CpyStatus(&ijsp->pub,oldstat);
 
 	if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(ijsp);
 
 	res = processEvent(ijsp, e, seq, be_strict, &errstring);
 	if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
-		edg_wll_FreeStatus(&oldstat);
+		edg_wll_FreeStatus(oldstat);
+		memset(oldstat,0,sizeof *oldstat);
 		return edg_wll_SetError(ctx, EINVAL, errstring);
 	}
 	// XXX: store it in update_parent status ?? 
 	edg_wll_StoreIntState(ctx, ijsp, seq);
 
-	edg_wll_UpdateStatistics(ctx,&oldstat,e,&ijsp->pub);
+	edg_wll_UpdateStatistics(ctx,oldstat,e,&ijsp->pub);
 
 	if (ctx->rgma_export) write2rgma_chgstatus(ijsp, oldstat_rgmaline);
 
 	if (stat_out) {
 		edg_wll_CpyStatus(&ijsp->pub, stat_out);
 	}
-	edg_wll_FreeStatus(&oldstat);
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
@@ -1159,6 +1157,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 					glite_jobid_const_t job,
 					edg_wll_Event *e,
 					int seq,
+					edg_wll_JobStat	*oldstat,
 					edg_wll_JobStat	*stat_out)
 {
 	intJobStat 	*ijsp;
@@ -1167,30 +1166,31 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 	int		be_strict = 0;
 	char		*errstring = NULL;
 	intJobStat	jobstat;
-	edg_wll_JobStat	oldstat;
 	char 		*oldstat_rgmaline = NULL;
 
 
-	memset(&oldstat,0,sizeof oldstat);
-
 	if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, seq - 1, &ijsp)) {
-		edg_wll_CpyStatus(&ijsp->pub,&oldstat);
+		edg_wll_CpyStatus(&ijsp->pub,oldstat);
 
 		if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(ijsp);
 
 		res = processEvent(ijsp, e, seq, be_strict, &errstring);
 		if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
-			edg_wll_FreeStatus(&oldstat);
+			edg_wll_FreeStatus(oldstat);
+			memset(oldstat,0,sizeof *oldstat);
 			return edg_wll_SetError(ctx, EINVAL, errstring);
 		}
 		edg_wll_StoreIntState(ctx, ijsp, seq);
 
-		edg_wll_UpdateStatistics(ctx,&oldstat,e,&ijsp->pub);
+		edg_wll_UpdateStatistics(ctx,oldstat,e,&ijsp->pub);
 
 		/* check whether subjob state change does not change parent state */
-		if ((ijsp->pub.parent_job) && (oldstat.state != ijsp->pub.state)) { 
-			if (update_parent_status(ctx, &oldstat, ijsp, e))
+		if ((ijsp->pub.parent_job) && (oldstat->state != ijsp->pub.state)) { 
+			if (update_parent_status(ctx, oldstat, ijsp, e)) {
+				edg_wll_FreeStatus(oldstat);
+				memset(oldstat,0,sizeof *oldstat);
 				return edg_wll_SetError(ctx, EINVAL, "update_parent_status()");
+			}
 		}
 
 		if (ctx->rgma_export) write2rgma_chgstatus(ijsp, oldstat_rgmaline);
@@ -1201,7 +1201,6 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		}
 		else destroy_intJobStat(ijsp);
 		free(ijsp);
-		edg_wll_FreeStatus(&oldstat);
 	}
 	else if (!edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store, 1)) 
 	{

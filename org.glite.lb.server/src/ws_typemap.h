@@ -32,6 +32,7 @@
 #define LESS		lbt__queryOp__LESS
 #define GREATER		lbt__queryOp__GREATER
 #define WITHIN		lbt__queryOp__WITHIN
+#define CHANGED		lbt__queryOp__CHANGED
 
 #define SUBMITTED	lbt__statName__SUBMITTED
 #define WAITING		lbt__statName__WAITING

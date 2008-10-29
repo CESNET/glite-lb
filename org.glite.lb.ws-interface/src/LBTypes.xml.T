@@ -289,6 +289,7 @@
 			<val name="GREATER"> Attribute is greater than the specified value or equal </val>
 			<val name="WITHIN"> Attribute is withing a range (queryRecord.value2 must be specified) </val>
 			<val name="UNEQUAL"> Attribute is not equal to the specified value.</val>
+			<val name="CHANGED"> Attribute has changed its value from last check (notification conditions only).</val>
 		</enum>
 		
 		<choice name="queryRecValue"> 
