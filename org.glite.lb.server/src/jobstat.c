@@ -733,6 +733,10 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 	int dbret;
 	char *icnames, *icvalues;
 
+
+	/* check size of intstat version, its only varchar(32) */
+	assert(strlen(INTSTAT_VERSION) <= 32);
+	
 	update = (seq > 0);
 	jobid_md5 = edg_wlc_JobIdGetUnique(stat->pub.jobId);
 	stat_enc = enc_intJobStat(strdup(""), stat);
