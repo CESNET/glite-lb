@@ -195,11 +195,8 @@ static int get_client_address(
 						goto err;
 			// else: resue socket
 		}
-		else	
-			// used supplied socket
-			ctx->notifSock = fd;
 	
-		if (getsockname(ctx->notifSock,(struct sockaddr *)  &a, &alen)) 
+		if (getsockname(fd == -1 ? ctx->notifSock : fd,(struct sockaddr *)  &a, &alen)) 
 			return edg_wll_SetError(ctx, errno, "getsockname() failed");
 
 		if (a.sin_addr.s_addr == INADDR_ANY)
