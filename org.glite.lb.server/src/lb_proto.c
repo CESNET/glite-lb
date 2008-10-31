@@ -266,7 +266,7 @@ static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
 	return 0;
 
 err:
-	return  edg_wll_Error(ctx, NULL, NULL);
+	return  -1;
 }
 
 static void freeNotifInfo(notifInfo *ni){
@@ -531,12 +531,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
-			//char **notifids = NULL;
-			char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
-		        /*char *userid = strmd5(can_peername, NULL);
-			free(can_peername);
-			getUserNotifications(ctx, userid, &notifids);*/
-
 // FIXME: edg_wll_UserJobs should take flags as parameter
 			switch (edg_wll_UserJobsServer(ctx,&jobsOut,NULL)) {
 				case 0: if (text)
@@ -562,9 +556,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 	/* GET /[jobId]: Job Status */
 		else if (*requestPTR=='/' 
-			&& strncmp(requestPTR, "/notif", strlen("/notif"))
-			&& *(requestPTR+strlen("/notif")-1) != '/'
-			&& !isspace(*(requestPTR+strlen("/notif")-1))) {
+			&& strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
+			&& *(requestPTR+strlen("/NOTIF")-1) != ':'
+			&& !isspace(*(requestPTR+strlen("/NOTIF")-1))) {
 			edg_wlc_JobId jobId = NULL;
 			char *pom1,*fullid = NULL;
 			edg_wll_JobStat stat;
@@ -607,10 +601,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			free(fullid);
 			edg_wlc_JobIdFree(jobId);
 			edg_wll_FreeStatus(&stat);
-	/*GET /notif[/]: All user's notifications*/
-		} else if (strncmp(requestPTR, "/notif", strlen("/notif")) == 0 
-			&& (*(requestPTR+strlen("/notif/")-1) == '/' && isspace(*(requestPTR+strlen("/notif/"))))
-			|| isspace(*(requestPTR+strlen("/notif/")-1))){
+	/*GET /NOTIF: All user's notifications*/
+		} else if (strncmp(requestPTR, "/NOTIF", strlen("/NOTIF")) == 0 			&& (isspace(*(requestPTR+strlen("/NOTIF")))
+			|| isspace(*(requestPTR+strlen("/NOTIF:"))))){
 			char **notifids = NULL;
 			char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
                         char *userid = strmd5(can_peername, NULL);
@@ -622,15 +615,17 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	                        edg_wll_UserNotifsToHTML(ctx, notifids, &message);
                         else ret = HTTP_OK;
 
-	/*GET /notif/[notifId]: Notification info*/
-		} else if (strncmp(requestPTR, "/notif/", strlen("/notif/")) == 0){
+	/*GET /NOTIF:[notifId]: Notification info*/
+		} else if (strncmp(requestPTR, "/NOTIF:", strlen("/NOTIF:")) == 0){
 			notifInfo ni;
 			char *pomCopy, *pom;
 			pomCopy = strdup(requestPTR + 1);
                         for (pom=pomCopy; *pom && !isspace(*pom); pom++);
                         *pom = 0;
-			getNotifInfo(ctx, strrchr(pomCopy, '/')+1, &ni);
-			//TODO handle error
+			if (getNotifInfo(ctx, strrchr(pomCopy, ':')+1, &ni)){
+				ret = HTTP_NOTFOUND;
+				goto err;
+			}
 			free(pomCopy);
 
 			if (text)

@@ -2,6 +2,7 @@
 
 #include "lb_text.h"
 #include "lb_proto.h"
+#include "cond_dump.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
@@ -54,36 +55,6 @@ int edg_wll_QueryToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 /* not implemented yet */
 	return -1;
 }
-
-/* construct Message-Body of Response-Line for edg_wll_UserJobs */
-/*int edg_wll_UserJobsToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
-{
-	char *a, *b;
-	int i = 0;
-	b = strdup("");
-
-	while (jobsOut[i]){
-		char *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
-
-		if (i == 0)
-			asprintf(&a, "%s%s", b, chid);
-		else
-			asprintf(&a, "%s,%s", b, chid);
-
-		free(chid);
-		free(b);
-		b = a;
-		i++;
-	}
-
-	asprintf(&a, "User_jobs=%s\n"
-		     "User_subject=%s\n",
-		b, ctx->peerName ? ctx->peerName: "<anonymous>");
-
-        *message = a;
-
-        return 0;
-}*/
 
 #define TR(name,type,field) \
         if (field) { \
@@ -146,19 +117,21 @@ int edg_wll_UserNotifsToText(edg_wll_Context ctx, char **notifids, char **messag
 		asprintf(&a, "User_notifications=%s\n", b);
 
 	*message = a;
+
+	return 0;
 }
 
 int edg_wll_NotificationToText(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
-	char *a = NULL, *b;
+	char *a = NULL, *b, *cond, *flags;
 	b = strdup("");
 
 	TR("Notif_id", "%s", ni->notifid);
 	TR("Destination", "%s", ni->destination);
 	TR("Valid_until", "%s", ni->valid);
-	char *cond = escape_text(ni->conditions_text);
-	TR("Conditions", "%s", cond);
+	if (! edg_wll_Condition_Dump(ni, &cond, 1))
+		TR("Conditions", "%s", cond);
 	free(cond);
-	char *flags = edg_wll_stat_flags_to_string(ni->flags);
+	flags = edg_wll_stat_flags_to_string(ni->flags);
 	TR("Flags", "%s", flags);
 	free(flags);
 
@@ -184,42 +157,42 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)));
 	free(chstat);
 	TR("owner","%s",stat.owner);
-	TR("Condor_Id","%s",stat.condorId);
-	TR("Globus_Id","%s",stat.globusId);
-	TR("Local_Id","%s",stat.localId);
-	TR("Reason","%s",stat.reason);
+	TR("condorId","%s",stat.condorId);
+	TR("globusId","%s",stat.globusId);
+	TR("localId","%s",stat.localId);
+	TR("reason","%s",stat.reason);
 	if ( (stat.stateEnterTime.tv_sec) || (stat.stateEnterTime.tv_usec) ) {
 		time_t  time = stat.stateEnterTime.tv_sec;
 		//TR("State_entered","%s",ctime(&time));
-		asprintf(&a, "%sState_entered=%s", b, ctime(&time));
+		asprintf(&a, "%sstateEnterTime=%s", b, ctime(&time));
 		free(b); b = a;
 	}
         if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
 		time_t  time = stat.lastUpdateTime.tv_sec;
 		//TR("Last_update","%s",ctime(&time));
-		asprintf(&a, "%sLast_update=%s", b, ctime(&time));
+		asprintf(&a, "%slastUpdateTime=%s", b, ctime(&time));
                 free(b); b = a;
 	}
-	TR("Expect_update","%s",stat.expectUpdate ? "YES" : "NO");
-	TR("Expect_update_from","%s",stat.expectFrom);
-	TR("Location","%s",stat.location);
-	TR("Destination","%s",stat.destination);
-	TR("Cancelling","%s",stat.cancelling>0 ? "YES" : "NO");
+	TR("expectUpdate","%s",stat.expectUpdate ? "YES" : "NO");
+	TR("expectFrom","%s",stat.expectFrom);
+	TR("location","%s",stat.location);
+	TR("destination","%s",stat.destination);
+	TR("cancelling","%s",stat.cancelling>0 ? "YES" : "NO");
 	if (stat.cancelReason != NULL) {
-		TR("Cancel_reason","%s",stat.cancelReason);
+		TR("cancelReason","%s",stat.cancelReason);
 	}
-	TR("CPU_time","%d",stat.cpuTime);
+	TR("cpuTime","%d",stat.cpuTime);
 
 	
-	TR("Done_code","%d",stat.done_code);
-	TR("Exit_code","%d",stat.exit_code);
+	TR("done_code","%d",stat.done_code);
+	TR("exit_code","%d",stat.exit_code);
 
         if (stat.jdl){
 		char* my_jdl = escape_text(stat.jdl);
-		asprintf(&jdl,"Job_description=%s\n", my_jdl);
+		asprintf(&jdl,"jdl=%s\n", my_jdl);
 		free(my_jdl);
 	}
-	if (stat.rsl) asprintf(&rsl,"RSL=%s\n", stat.rsl);
+	if (stat.rsl) asprintf(&rsl,"rsl=%s\n", stat.rsl);
 
         asprintf(&a, "Job=%s\n"
 			"%s"
