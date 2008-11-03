@@ -161,7 +161,7 @@ COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_secur
 
 BKSERVER_BASE_OBJS:= \
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
-	seqcode.o write2rgma.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	seqcode.o write2rgma.o lb_html.o lb_http.o lb_proto.o cond_dump.o lb_xml_parse.o \
 	lb_xml_parse_V21.o lb_text.o \
 	openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
@@ -205,7 +205,7 @@ endif
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
 	jobstat.o query.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o stats.o\
-	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o lb_text.o server_state.o lb_xml_parse_V21.o lb_html.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.lo
+	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o lb_text.o server_state.o lb_xml_parse_V21.o lb_html.o cond_dump.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.lo
 
 INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${LB_MACHINE_LIB} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
 
@@ -228,7 +228,7 @@ MAN = $(MAN_GZ:.gz=)
 
 LIB_OBJS_BK:= \
 	il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
-	seqcode.o lb_html.o lb_http.o lb_proto.o lb_xml_parse.o \
+	seqcode.o lb_html.o lb_http.o lb_proto.o cond_dump.o lb_xml_parse.o \
 	lb_xml_parse_V21.o lb_text.o \
 	openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
