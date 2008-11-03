@@ -2462,7 +2462,15 @@ int edg_wll_JobQueryRecToXML(
 														"NULL", "owner", NULL);
 	                                        break;
 	                                case EDG_WLL_QUERY_ATTR_STATUS:
-						edg_wll_add_edg_wll_JobStatCode_to_XMLBody(&pomValue, conditions[row][i].value.i, "status", EDG_WLL_JOB_UNDEF);
+						if (conditions[row][i].op != EDG_WLL_QUERY_OP_CHANGED)
+							edg_wll_add_edg_wll_JobStatCode_to_XMLBody(&pomValue, conditions[row][i].value.i, "status", EDG_WLL_JOB_UNDEF);
+						else {
+							char *newBody;
+	
+							asprintf(&newBody,"%s\t\t\t<status/>\r\n", pomValue);
+							free(pomValue);
+							pomValue = newBody;
+						}
 						if (conditions[row][i].op == EDG_WLL_QUERY_OP_WITHIN)
 							edg_wll_add_edg_wll_JobStatCode_to_XMLBody(&pomValue, conditions[row][i].value2.i, "status", EDG_WLL_JOB_UNDEF);
 	                                        break;
@@ -2524,6 +2532,7 @@ int edg_wll_JobQueryRecToXML(
 	                        case EDG_WLL_QUERY_OP_GREATER: pomOp = "greater"; break;
 				case EDG_WLL_QUERY_OP_WITHIN: pomOp = "within"; break;
 				case EDG_WLL_QUERY_OP_UNEQUAL: pomOp = "unequal"; break;
+				case EDG_WLL_QUERY_OP_CHANGED: pomOp = "changed"; break;
 	                        default:
 	                                return -1;
 	                }

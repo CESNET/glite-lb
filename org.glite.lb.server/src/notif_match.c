@@ -19,7 +19,7 @@
 #include "db_supp.h"
 #include "index.h"
 
-static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const char *);
+static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *);
 static int notif_check_acl(edg_wll_Context,const edg_wll_JobStat *,const char *);
 
 extern int debug;
@@ -97,7 +97,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			if (debug) fprintf(stderr,"[%d] NOTIFY:%s expired at %s UTC\n",
 					getpid(),jobc[0],asctime(gmtime(&expires)));
 		}
-		else if (notif_match_conditions(ctx,stat,jobc[4]) &&
+		else if (notif_match_conditions(ctx,oldstat,stat,jobc[4]) &&
 				notif_check_acl(ctx,stat,jobc[3]))
 		{
 			char			   *dest, *aux;
@@ -171,7 +171,7 @@ int edg_wll_NotifExpired(edg_wll_Context ctx,const char *notif)
 }
 
 
-static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *cond)
+static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *oldstat, const edg_wll_JobStat *stat,const char *cond)
 {
 	edg_wll_QueryRec	**c,**p;
 	int			match,i;
@@ -184,7 +184,7 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *sta
 		return 1;
 	}
 
-	match = match_status(ctx,stat,(const edg_wll_QueryRec **) c);
+	match = match_status(ctx,oldstat,stat,(const edg_wll_QueryRec **) c);
 	if ( c )
 	{
 		for (p = c; *p; p++) {

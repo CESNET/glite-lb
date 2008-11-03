@@ -1440,8 +1440,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					if ( conds[i][j].value.i == stat->resubmitted ) goto or_satisfied;
 				} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) {
 					if ( conds[i][j].value.i != stat->resubmitted ) goto or_satisfied;
-				} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_CHANGED ) {
-                                        if ( oldstat->resubmitted != stat->resubmitted ) goto or_satisfied;
 				}
 				break;
 			case EDG_WLL_QUERY_ATTR_DONECODE:
@@ -1462,9 +1460,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 				case EDG_WLL_QUERY_OP_WITHIN:
 					if (   conds[i][j].value.i <= stat->done_code
 						&& conds[i][j].value2.i >= stat->done_code ) goto or_satisfied;
-					break;
-				case EDG_WLL_QUERY_OP_CHANGED:
-					if ( oldstat->done_code != stat->done_code ) goto or_satisfied;
 					break;
 				}
 				break;
@@ -1487,9 +1482,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					if (   conds[i][j].value.i <= stat->exit_code
 						&& conds[i][j].value2.i >= stat->exit_code ) goto or_satisfied;
 					break;
-				case EDG_WLL_QUERY_OP_CHANGED:
-					if ( oldstat->exit_code != stat->exit_code ) goto or_satisfied;
-					break;
 				}
 				break;
 			case EDG_WLL_QUERY_ATTR_OWNER:
@@ -1502,8 +1494,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 						if (edg_wll_gss_equal_subj(ctx->peerName, stat->owner) ) {
 							if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
 						} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
-					} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_CHANGED ) {
-						if (!edg_wll_gss_equal_subj(oldstat->owner, stat->owner) ) goto or_satisfied;
 					}
 				}
 				break;
@@ -1514,12 +1504,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 						if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
 					} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 				}
-				if ( conds[i][j].op == EDG_WLL_QUERY_OP_CHANGED ) {
-						if ( (oldstat->location && !stat->location) || 
-							(!oldstat->location && stat->location) ) goto or_satisfied;
-						if ( oldstat->location && stat->location && 
-							strcmp(oldstat->location,stat->location) ) goto or_satisfied;
-				}
 				break;
 			case EDG_WLL_QUERY_ATTR_DESTINATION:
 				if ( stat->destination )
@@ -1527,12 +1511,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					if ( !strcmp(conds[i][j].value.c, stat->destination) ) {
 						if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
 					} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
-				}
-				if ( conds[i][j].op == EDG_WLL_QUERY_OP_CHANGED ) {
-						if ( (oldstat->destination && !stat->destination) || 
-							(!oldstat->destination && stat->destination) ) goto or_satisfied;
-						if ( oldstat->destination && stat->destination && 
-							strcmp(oldstat->destination,stat->destination) ) goto or_satisfied;
 				}
 			case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
 				if ( stat->network_server )
@@ -1542,12 +1520,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 				}
 				break;
-				if ( conds[i][j].op == EDG_WLL_QUERY_OP_CHANGED ) {
-						if ( (oldstat->network_server && !stat->network_server) || 
-							(!oldstat->network_server && stat->network_server) ) goto or_satisfied;
-						if ( oldstat->network_server && stat->network_server && 
-							strcmp(oldstat->network_server,stat->network_server) ) goto or_satisfied;
-				}
 			case EDG_WLL_QUERY_ATTR_JOBID:
 				if ( !stat->jobId )
 					break;
@@ -1595,19 +1567,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					}
 				if ( !stat->user_tags[n].tag && conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL )
 					goto or_satisfied;
-				if ( conds[i][j].op == EDG_WLL_QUERY_OP_CHANGED ) {
-						if ( (oldstat->user_tags && !stat->user_tags) || 
-							(!oldstat->user_tags && stat->user_tags) ) goto or_satisfied;
-						if ( oldstat->user_tags && stat->user_tags ) { 
-							for ( n = 0; stat->user_tags[n].tag; n++ )
-								if ( !oldstat->user_tags[n].tag ) goto or_satisfied;
-								if ( strcmp(oldstat->user_tags[n].tag,stat->user_tags[n].tag) ) goto or_satisfied;
-								else {
-									if ( strcmp(oldstat->user_tags[n].value, stat->user_tags[n].value) ) goto or_satisfied;
-								}
-						}
-				}
-
 				break;
 			case EDG_WLL_QUERY_ATTR_TIME:
 				if ( !stat->stateEnterTimes || !stat->stateEnterTimes[1+conds[i][j].attr_id.state] )
@@ -1630,23 +1589,16 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					if (   conds[i][j].value.t.tv_sec <= stat->stateEnterTimes[1+conds[i][j].attr_id.state]
 						&& conds[i][j].value2.t.tv_sec >= stat->stateEnterTimes[1+conds[i][j].attr_id.state] ) goto or_satisfied;
 					break;
-				case EDG_WLL_QUERY_OP_CHANGED:
-					if ( oldstat->stateEnterTimes[1+conds[i][j].attr_id.state] != stat->stateEnterTimes[1+conds[i][j].attr_id.state] ) goto or_satisfied;
-					break;
 				}
 				break;
 			case EDG_WLL_QUERY_ATTR_JDL_ATTR:
-				if ( conds[i][j].op == EDG_WLL_QUERY_OP_CHANGED ) {
-						if ( (oldstat->jdl && !stat->jdl) || 
-							(!oldstat->jdl && stat->jdl) ) goto or_satisfied;
-				}
 
 			        if (stat->jdl != NULL) {
 			                struct cclassad *ad = NULL;
 					char *extr_val = NULL;
 
 					// Jobs that do not have a JDL come with blabla:
-					if (!strcmp(stat->jdl,"blabla") && conds[i][j].op != EDG_WLL_QUERY_OP_CHANGED) break;
+					if (!strcmp(stat->jdl,"blabla")) break;
 
 				        ad = cclassad_create(stat->jdl);
 			                if (ad) {
@@ -1659,24 +1611,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 						if ( !strcmp(conds[i][j].value.c, extr_val) ) {
 							if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
 							else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
-						}
-					}
-					if ( conds[i][j].op == EDG_WLL_QUERY_OP_CHANGED ) {
-						struct cclassad *ad2 = NULL;
-						char *extr_val2 = NULL;
-
-						// Jobs that do not have a JDL come with blabla:
-						if ( (!strcmp(stat->jdl,"blabla") && strcmp(oldstat->jdl,"blabla")) ||
-							(strcmp(stat->jdl,"blabla") && !strcmp(oldstat->jdl,"blabla")) ) goto or_satisfied;
-
-						ad2 = cclassad_create(oldstat->jdl);
-						if (ad2) {
-							if (!cclassad_evaluate_to_string(ad2, conds[i][j].attr_id.tag, &extr_val2)) // Extract attribute value
-								extr_val2 = NULL;
-							cclassad_delete(ad2);
-						}
-						if (extr_val2) {
-							if ( strcmp(extr_val, extr_val2) ) goto or_satisfied;
 						}
 					}
 				}
@@ -1702,9 +1636,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					if (   conds[i][j].value.t.tv_sec <= stat->stateEnterTime.tv_sec
 						&& conds[i][j].value2.t.tv_sec >= stat->stateEnterTime.tv_sec ) goto or_satisfied;
 					break;
-				case EDG_WLL_QUERY_OP_CHANGED:
-					if ( oldstat->stateEnterTime.tv_sec != stat->stateEnterTime.tv_sec ) goto or_satisfied;
-					break;
 				}
 			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 				if ( !stat->lastUpdateTime.tv_sec )
@@ -1726,9 +1657,6 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 				case EDG_WLL_QUERY_OP_WITHIN:
 					if (   conds[i][j].value.t.tv_sec <= stat->lastUpdateTime.tv_sec
 						&& conds[i][j].value2.t.tv_sec >= stat->lastUpdateTime.tv_sec ) goto or_satisfied;
-					break;
-				case EDG_WLL_QUERY_OP_CHANGED:
-					if ( oldstat->lastUpdateTime.tv_sec != stat->lastUpdateTime.tv_sec ) goto or_satisfied;
 					break;
 				}
 			default:

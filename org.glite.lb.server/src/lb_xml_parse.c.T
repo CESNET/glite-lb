@@ -47,7 +47,7 @@
 #define USERJOBS_END		"</edg_wll_UserJobs>\r\n"
 
 
-static char	*ops[] = { "equal","less","greater","within","unequal" },
+static char	*ops[] = { "equal","less","greater","within","unequal","changed" },
 		*attrs[] = {	"jobid","owner","status","location","destination",
 				"donecode","usertag","time","level","host","source",
 				"instance","type","chkpt_tag", "resubmitted", "parent_job",
