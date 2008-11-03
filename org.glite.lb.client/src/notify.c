@@ -32,12 +32,13 @@ static void usage(char *cmd)
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity ] {-j jobid | -o owner | -n network_server | -v virtual_organization } [-f flags]\n"
+		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity ] {-j jobid | -o owner | -n network_server | -v virtual_organization | -c } [-f flags]\n"
 			"    jobid		Job ID to connect notif. reg. with\n"
 			"    owner		Match this owner DN\n"
 			"    requested_validity	Validity of notification req. in seconds\n"
 			"    flags		0 - return basic status, 1 - return also JDL in status\n"
-			"    network_server	Match only this networ server (WMS entry point)\n\n"
+			"    network_server	Match only this networ server (WMS entry point)\n"
+			"    -c			Match only on state change\n\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
 		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } -t requested_validity ] notifid\n"
@@ -104,9 +105,9 @@ int main(int argc,char **argv)
 		edg_wlc_JobId		jid;
 		edg_wll_NotifId		id_out;
 		char	*arg = NULL;
-		int	attr = 0;
+		int	attr = 0, op = EDG_WLL_QUERY_OP_EQUAL;
 
-		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:t:f:")) > 0) switch (c) {
+		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:t:f:c")) > 0) switch (c) {
 			case 'j':
 				if (arg) { usage("new"); return EX_USAGE; }
 				attr = EDG_WLL_QUERY_ATTR_JOBID;
@@ -133,6 +134,10 @@ int main(int argc,char **argv)
 				valid = time(NULL) + atol(optarg); break;
 			case 'f':
 				flags = atoi(optarg); break;
+			case 'c':
+				attr = EDG_WLL_QUERY_ATTR_STATUS;
+				op = EDG_WLL_QUERY_OP_CHANGED;
+				break;
 			default:
 				usage("new"); return EX_USAGE;
 		}
@@ -147,7 +152,7 @@ int main(int argc,char **argv)
 		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 	
 		conditions[0][0].attr = attr;
-		conditions[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+		conditions[0][0].op = op;
 		if (attr == EDG_WLL_QUERY_ATTR_JOBID) conditions[0][0].value.j = jid;
 		else {
 			conditions[0][0].value.c = arg;
