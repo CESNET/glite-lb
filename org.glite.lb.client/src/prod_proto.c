@@ -315,7 +315,10 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	} else goto edg_wll_log_connect_end;
 
 edg_wll_log_connect_err:
-	if (index >= 0) CloseConnection(ctx, &index);
+	if (index >= 0) {
+		CloseConnection(ctx, index);
+		edg_wll_connectionUnlock(ctx, index);
+	}
 	index = -1;
 
 edg_wll_log_connect_end:
@@ -346,7 +349,7 @@ int edg_wll_log_close(edg_wll_Context ctx, int conn)
 	int ret = 0;
 
 	if (conn == -1) return 0;
-	ret = CloseConnection(ctx,&conn);
+	ret = CloseConnection(ctx,conn);
 	edg_wll_connectionUnlock(ctx,conn);
 	return ret;
 }

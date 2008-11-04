@@ -16,7 +16,7 @@ int http_check_status(edg_wll_Context, char *);
 int ConnectionIndex(edg_wll_Context ctx, const char *name, int port);
 int AddConnection(edg_wll_Context ctx, char *name, int port);
 int ReleaseConnection(edg_wll_Context ctx, char *name, int port);
-int CloseConnection(edg_wll_Context ctx, int* conn_index);
+int CloseConnection(edg_wll_Context ctx, int conn_index);
 
 #define PROXY_CONNECT_RETRY 10 /* ms */
 

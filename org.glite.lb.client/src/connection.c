@@ -23,13 +23,12 @@
 #include "connection.h"
 
 
-int CloseConnection(edg_wll_Context ctx, int* conn_index)
-// XXX: should change the parameter conn_index to int (parameter is IN only)
+int CloseConnection(edg_wll_Context ctx, int conn_index)
 {
 	/* close connection and free its structures */
 	int cIndex,ret = 0;
 
-        cIndex = *conn_index;
+        cIndex = conn_index;
 
 	assert(ctx->connections->connOpened);
 
@@ -45,8 +44,6 @@ int CloseConnection(edg_wll_Context ctx, int* conn_index)
 	ctx->connections->connPool[cIndex].gss.sock = -1;
 	
 	ctx->connections->connOpened--;
-
-// XXX: not needed        *conn_index = cIndex;
 
 	return ret;
 }
@@ -140,7 +137,7 @@ int ReleaseConnection(edg_wll_Context ctx, char *name, int port)
 	
 	if (name) {
 		if ((index = ConnectionIndex(ctx, name, port)) >= 0)
-			CloseConnection(ctx, &index);
+			CloseConnection(ctx, index);
 	}
 	else {					/* free the oldest (unlocked) connection */
 		for (i=0; i<ctx->connections->poolSize; i++) {
@@ -162,7 +159,7 @@ int ReleaseConnection(edg_wll_Context ctx, char *name, int port)
 			}
 		}
 		if (!foundConnToDrop) return edg_wll_SetError(ctx,EAGAIN,"all connections in the connection pool are locked");
-		CloseConnection(ctx, &index);
+		CloseConnection(ctx, index);
 	}
 	return edg_wll_Error(ctx,NULL,NULL);
 }
@@ -174,7 +171,7 @@ int edg_wll_close(edg_wll_Context ctx, int* connToUse)
 	edg_wll_ResetError(ctx);
 	if (*connToUse == -1) return 0;
 
-	CloseConnection(ctx, connToUse);
+	CloseConnection(ctx, *connToUse);
 
         edg_wll_connectionUnlock(ctx, *connToUse); /* Forgetting the conn. Unlocking is safe. */
 		
@@ -328,7 +325,10 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 err:
 	/* some error occured; close created connection
 	 * and free all fields in connPool[index] */
-	if (index >= 0) CloseConnection(ctx, &index);
+	if (index >= 0) {
+		CloseConnection(ctx, index);
+		edg_wll_connectionUnlock(ctx, index);
+	}
 	*connToUse = -1;
 ok:	
 

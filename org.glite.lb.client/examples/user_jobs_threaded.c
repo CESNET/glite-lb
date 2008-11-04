@@ -10,6 +10,7 @@
 
 #include "glite/lb/context.h"
 #include "glite/lb/xml_conversions.h"
+#include "glite/security/glite_gss.h"
 #include "consumer.h"
 
 int use_proxy = 0;
@@ -174,6 +175,12 @@ int main(int argc,char **argv)
         }
 
         arguments.argv_0 = argv[0];
+
+	/* threads && Globus */
+	if (edg_wll_gss_initialize()) {
+		printf("can't initialize GSS\n");
+		return 1;
+	}
 
 	/* Do a thready work */
 	{
