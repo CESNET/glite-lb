@@ -47,7 +47,17 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 	}
 	if (ret < 0) goto err;
 	glite_lbu_FreeStmt(&stmt);
-	if (hit != 5) {
+	// new columns added to notif_registrations
+	if (glite_lbu_ExecSQL(ctx->dbctx, "DESC notif_registrations", &stmt) <= 0) goto err;
+	while (hit < 6 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, cols)) > 0) {
+		assert(ret <= (int)(sizeof cols/sizeof cols[0]));
+		if (strcasecmp(cols[0], "flags") == 0) hit++;
+		for (i = 0; i < ret; i++) free(cols[i]);
+	}
+	if (ret < 0) goto err;
+	glite_lbu_FreeStmt(&stmt);
+
+	if (hit != 6) {
 		ret = edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, "old DB schema found, migration to new schema needed");
 		goto close_db;
 	}
