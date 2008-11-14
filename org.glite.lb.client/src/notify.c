@@ -162,7 +162,7 @@ int main(int argc,char **argv)
 		if ( !edg_wll_NotifNew(ctx,
 					(edg_wll_QueryRec const* const*)conditions,
 					flags, sock, fake_addr, &id_out, &valid))
-			fprintf(stderr,"notification ID: %s\nvalid: %s (%ld)\n",
+			fprintf(stdout,"notification ID: %s\nvalid: %s (%ld)\n",
 					edg_wll_NotifIdUnparse(id_out),
 					TimeToStr(valid),
 					valid);
