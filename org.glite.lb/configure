@@ -2,13 +2,14 @@
 
 use Getopt::Long;
 
-my $prefix = '/opt/glite';
 my $pwd = `pwd`; chomp $pwd;
-my $stage = $pwd.'/stage';
-my $instage;
+my $prefix = $pwd.'/stage';
+my $staged;
 my $module;
 my $thrflavour = 'gcc64dbgpthr';
-my $notrhrflavour = 'gcc64dbg';
+my $nothrflavour = 'gcc64dbg';
+my $mode = 'build';
+my $help = 0;
 
 my @nodes = qw/client server logger utils java doc/;
 my %enable_nodes;
@@ -37,11 +38,12 @@ my @lbmodules = qw/client client-java common doc logger server state-machine typ
 
 my @opts = (
 	'prefix=s' => \$prefix,
-	'stage=s' => \$stage,
-	'in-stage=s' => \$instage,
+	'staged=s' => \$staged,
 	'module=s' => \$module,
 	'thrflavour=s' => \$thrflavour,
 	'nothrflavour=s' => \$nothrflavour,
+	'mode=s' => \$mode,
+	'help' => \$help,
 );
 
 for (@nodes) {
@@ -54,7 +56,12 @@ for (@nodes) {
 
 push @opts,"with-$_=s",\$extern_prefix{$_} for keys %extern_prefix;
 
+my @keeparg = @ARGV;
+
 GetOptions @opts or die "Errors parsing command line\n";
+
+if ($help) { usage(); exit 0; }
+
 
 my $en;
 for (keys %enable_nodes) { $en = 1 if $enable_nodes{$_}; }
@@ -80,7 +87,10 @@ if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
 
-
+print "Writing config.status\n";
+open CONF,">config.status" or die "config.status: $!\n";
+print CONF "$0 @keeparg\n";
+close CONF;
 
 
 my @modules;
@@ -105,58 +115,70 @@ else {
 }
 
 @aux{@modules} = 1;
-delete $aux{$_} for (split /,/,$instage);
+delete $aux{$_} for (split /,/,$staged);
 @modules = keys %aux;
 
-print "\nBuilding modules: @modules\n";
+mode_build() if $mode eq 'build';
+mode_checkout() if $mode eq 'checkout';
 
-my @ext = map @{$need_externs{$_}},@modules;
-undef %aux; @aux{@ext} = 1;
-@ext = keys %aux;
-
-print "\nRequired externals:\n";
-print "\t$_: $extern_prefix{$_}\n" for @ext;
-print "\nThis is a poor-man configure, it's up to you to have sources and externals there\n\n";
-
-mkinc($_) for @modules;
-
-print "Creating Makefile\n";
-
-open MAK,">Makefile" or die "Makefile: $!\n";
-
-print MAK "all: @modules\n\nclean:\n";
-
-for (@modules) {
-	my $full = full($_);
-	my $build = $topbuild{$_} ? '': '/build';
-	print MAK "\tcd $full$build && \${MAKE} clean\n"
+sub mode_build {
+	print "\nBuilding modules: @modules\n";
+	
+	my @ext = map @{$need_externs{$_}},@modules;
+	undef %aux; @aux{@ext} = 1;
+	@ext = keys %aux;
+	
+	print "\nRequired externals:\n";
+	print "\t$_: $extern_prefix{$_}\n" for @ext;
+	print "\nThis is a poor-man configure, it's up to you to have sources and externals there\n\n";
+	
+	mkinc($_) for @modules;
+	
+	print "Creating Makefile\n";
+	
+	open MAK,">Makefile" or die "Makefile: $!\n";
+	
+	print MAK "all: @modules\n\nclean:\n";
+	
+	for (@modules) {
+		my $full = full($_);
+		my $build = $topbuild{$_} ? '': '/build';
+		print MAK "\tcd $full$build && \${MAKE} clean\n"
+	}
+	
+	print MAK "\ndistclean:\n";
+	
+	for (@modules) {
+		my $full = full($_);
+		print MAK $topbuild{$_} ?
+			"\tcd $full$build && \${MAKE} distclean\n" :
+			"\trm -rf $full$build\n"
+	}
+	
+	print MAK "\n";
+	
+	for (@modules) {
+		my %ldeps; undef %ldeps;  
+		@ldeps{@{$deps{$_}}} = 1;
+		for my $x (split /,/,$staged) { delete $ldeps{$x}; }
+		my @dnames = keys %ldeps;
+	
+		my $full = full($_);
+		my $build = $topbuild{$_} ? '': '/build';
+	
+		print MAK "$_: @dnames\n\tcd $full$build && \${MAKE} && \${MAKE} install\n\n";
+	}
+	
+	close MAK;
 }
-
-print MAK "\ndistclean:\n";
-
-for (@modules) {
-	my $full = full($_);
-	print MAK $topbuild{$_} ?
-		"\tcd $full$build && \${MAKE} distclean\n" :
-		"\trm -rf $full$build\n"
+	
+sub mode_checkout() {
+	for (@modules) {
+		$_ = full($_);
+		print "\n*** Checking out $_\n";
+		system("cvs checkout $_") == 0 or die "cvs checkout $_: $?\n";
+	}
 }
-
-print MAK "\n";
-
-for (@modules) {
-	my %ldeps; undef %ldeps;  
-	@ldeps{@{$deps{$_}}} = 1;
-	for my $x (split /,/,$instage) { delete $ldeps{$x}; }
-	my @dnames = keys %ldeps;
-
-	my $full = full($_);
-	my $build = $topbuild{$_} ? '': '/build';
-
-	print MAK "$_: @dnames\n\tcd $full$build && \${MAKE} stage\n\n";
-}
-
-close MAK;
-
 
 BEGIN{
 %need_externs = (
@@ -250,7 +272,7 @@ sub mkinc
 	my @m=qw/
 lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils 
 security.gss security.gsoap-plugin
-jobid.api-c jobid-api-cpp
+jobid.api-c jobid.api-cpp
 lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio
 jp.common/;
 	@aux{@m} = (1) x ($#m+1);
@@ -270,6 +292,8 @@ jp.common/;
 		unless (-d "$full/build") {
 			mkdir "$full/build" or die "mkdir $full/build: $!\n";
 		}
+		unlink "$full/build/Makefile";
+		symlink "../Makefile","$full/build/Makefile" or die "symlink ../Makefile $full/build/Makefile: $!\n";
 	}
 
 	open MKINC,">$full$build/Makefile.inc"
@@ -279,7 +303,7 @@ jp.common/;
 
 	print MKINC qq{
 PREFIX = $prefix
-stagedir = $stage
+stagedir = $prefix
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 };
@@ -289,4 +313,36 @@ nothrflavour = $nothrflavour
 	}
 
 	close MKINC;
+}
+
+
+sub usage {
+	my @ext = keys %extern_prefix;
+
+	print STDERR qq{
+usage: $0 options
+
+General options (defaults in []):
+  --prefix=PREFIX		destination directory [./stage]
+  --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
+  --thrflavour=flavour
+  --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
+  
+Mode of operation:
+  --mode={checkout|build}	what to do [build]
+  
+What to build:
+  --module=module		build this module only (mostly in-Etics operation)
+  --enable-NODE			build this "node" (set of modules) only. Available nodes are
+					@lbmodules
+  --disable-NODE		don't build this node
+
+Dependencies:
+  --with-EXTERNAL=PATH		where to look for an external. Required externals
+ 				(not all for all modules) are:
+					@ext
+				Summary of what will be used is always printed
+
+};
+
 }

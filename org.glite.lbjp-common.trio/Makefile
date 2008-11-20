@@ -1,5 +1,5 @@
 # Default values
-top_srcdir=.
+top_srcdir=..
 builddir=build
 top_builddir=${top_srcdir}/${builddir}
 stagedir=.

@@ -1,5 +1,5 @@
 # Default values
-top_srcdir=.
+top_srcdir=..
 stagedir=.
 globalprefix=glite
 classads_prefix=/opt/classads
