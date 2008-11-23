@@ -1,7 +1,7 @@
 % -*- mode: latex -*-
 
 \section{\LB\ Querying (Consumer) API}
-\label{s:ConsOview}
+\label{s:Consumer-API}
 The \LB Consumer API is used to obtain information from \LB server
 or Proxy using simple query language (see
 Sect.~\ref{s:querylang}). There are two types of queries based
@@ -14,7 +14,7 @@ satisfying given criteria.
 \end{itemize}
 The potential result sets can be very large; the \LB server imposes
 limits on the result set size, which can be further restricted by the
-client. 
+client.
 
 
 \subsection{Query Language}
@@ -26,12 +26,12 @@ complexity of selection criteria, \textit{simple} and
 Simple queries are can be described by the following formula:
 \begin{displaymath}
 \textit{attr}_1 \mathop{\textrm{ OP }} \textit{value}_1 \wedge \dots \wedge
-\textit{attr}_n \mathop{\textrm{ OP }} \textit{value}_n 
+\textit{attr}_n \mathop{\textrm{ OP }} \textit{value}_n
 \end{displaymath}
 where $\textit{attr}_i$ is attribute name, $\mathop{\textrm{ OP }}$ is
 one of the $=$, $<$, $>$, $\neq$ and $\in$ relational operators and
 $\textit{value}$ is single value (or, in the case of $\in$ operator,
-interval) from attribute type. 
+interval) from attribute type.
 
 Complex queries can be described using the following formula:
 \begin{multline*}
@@ -40,8 +40,8 @@ Complex queries can be described using the following formula:
 (\textit{attr}_2 \mathop{\textrm{ OP }} \textit{value}_{2,1} \vee \dots \vee
 \textit{attr}_2 \mathop{\textrm{ OP }} \textit{value}_{2,i_2}) \wedge \\
 \vdots \\
-\wedge (\textit{attr}_n \mathop{\textrm{ OP }} \textit{value}_{n,1} \vee \dots \vee 
-\textit{attr}_n \mathop{\textrm{ OP }} \textit{value}_{n,i_n}) 
+\wedge (\textit{attr}_n \mathop{\textrm{ OP }} \textit{value}_{n,1} \vee \dots \vee
+\textit{attr}_n \mathop{\textrm{ OP }} \textit{value}_{n,i_n})
 \end{multline*}
 The complex query can, in contrast to simple query, contain more
 assertions on value of single attribute, which are ORed together.
@@ -57,7 +57,7 @@ call.
 
 \subsubsection{Call Semantics}
 The \LB server queries are, in contrast to logging event calls,
-synchronous (for asynchronous variant see Sect.~\ref{s:NotifOverview},
+synchronous (for asynchronous variant see Sect.~\ref{s:Notification-API},
 notifications). The server response contains \jobid's, job states
 and/or events known to the server at the moment of processing the
 query. Due to the asynchronous nature of event delivery it may not
@@ -77,11 +77,11 @@ specified by setting context parameter
 \item \verb'EDG_WLL_QUERYRES_NONE'\,---\,In case the limit is reached,
 no results are returned at all.
 \item \verb'EDG_WLL_QUERYRES_LIMITED'\,---\,A result contains at most
-``limit'' item count. 
+``limit'' item count.
 \item \verb'EDG_WLL_QUERYRES_ALL'\,---\,All results are returned and
 limits have no effect. This option is available only in special cases
 such as ``user jobs query'' and  the ``job status query''. Otherwise
-the EINVAL error is returned. 
+the EINVAL error is returned.
 \end{itemize}
 Default value is \verb'EDG_WLL_QUERYRES_NONE'.
 
@@ -100,23 +100,23 @@ The table~\ref{t:ccontext} shows parameters relevant to the query API.
 \begin{tabularx}{\textwidth}{lX}
 {\bf Name} & {\bf Description} \\
 \hline
-\lstinline'EDG_WLL_PARAM_QUERY_SERVER' &  
-Default server name to query. 
+\lstinline'EDG_WLL_PARAM_QUERY_SERVER' &
+Default server name to query.
 \\
 \lstinline'EDG_WLL_PARAM_QUERY_SERVER_PORT' &
-Default server port to query. 
+Default server port to query.
 \\
 \lstinline'EDG_WLL_PARAM_QUERY_SERVER_OVERRIDE' &
 host:port parameter setting override even values in \jobid (useful for
-debugging \& hacking only) 
+debugging \& hacking only)
 \\
 \lstinline'EDG_WLL_PARAM_QUERY_TIMEOUT' &
-Query timeout. 
+Query timeout.
 \\
-\lstinline'EDG_WLL_PARAM_QUERY_JOBS_LIMIT' & 
+\lstinline'EDG_WLL_PARAM_QUERY_JOBS_LIMIT' &
 Maximal query jobs result size.
 \\
-\lstinline'EDG_WLL_PARAM_QUERY_EVENTS_LIMIT' & 
+\lstinline'EDG_WLL_PARAM_QUERY_EVENTS_LIMIT' &
 Maximal query events result size.
 \\
 \lstinline'EDG_WLL_PARAM_QUERY_RESULTS' &
@@ -166,7 +166,7 @@ typedef struct _edg_wll_QueryRec {
 The simplest case corresponds to the situation when an exact job ID
 is known and the only information requested is the job status. The job ID
 format is described in~\cite{djra1.4}.
-The following example shows 
+The following example shows
 all the relevant structures and API calls to retrieve status information
 about a job with the ID\\
 \texttt{https://lhun.ics.muni.cz:9000/OirOgeWh\_F9sfMZjnIPYhQ}.
@@ -174,12 +174,12 @@ about a job with the ID\\
 The first function call in this example initializes the \LB\ context\,---\,variable
 \texttt{ctx}\,---\,which is necessary for later use. The most important part
 of this code fragment is the \texttt{jc} variable setting.
-Variable \texttt{jc} is a list of conditions terminated with the 
+Variable \texttt{jc} is a list of conditions terminated with the
 \texttt{EDG\_WLL\_QUERY\_ATTR\_UNDEF} item.
 In this example it contains the only data item\,---\,the job ID
 (in its parsed form).
 
-If \texttt{edg\_wll\_QueryJobs()} is successful, returned results are available 
+If \texttt{edg\_wll\_QueryJobs()} is successful, returned results are available
 in the \texttt{statesOut} variable. This variable contains an array of job states\,---\,
 in this example state of a given job.
 
@@ -195,13 +195,13 @@ examples in the rest of this document.}
 
 The simple query example is a request for all user's jobs. Another
 condition type, \\
-\texttt{EDG\_WLL\_QUERY\_ATTR\_OWNER}, is used in this case, with the 
+\texttt{EDG\_WLL\_QUERY\_ATTR\_OWNER}, is used in this case, with the
 value field filled with a user name. You can found this example in client module, file \texttt{job\_status.c}.
 
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    jc[2];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -228,7 +228,7 @@ If either is NULL the corresponding list is not retrieved.
 Developers should keep in mind that the output of such a query could be really huge.
 \par
 
-The following examples demonstrates how \texttt{edg\_wll\_QueryJobs()} combines 
+The following examples demonstrates how \texttt{edg\_wll\_QueryJobs()} combines
 the given conditions in a logical conjugation.
 
 %\partitle{Running jobs}
@@ -239,7 +239,7 @@ be used.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    jc[3];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -265,7 +265,7 @@ The following example gives description of all (user's) jobs running at CE XYZ.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    jc[4];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -290,12 +290,12 @@ saves a CE name the job will be routed to. If location is needed use the \texttt
 
 %\partitle{The WITHIN operator}
 The \texttt{EDG\_WLL\_QUERY\_OP\_WITHIN} operator can be used in any condition with numeric values.
-The following example shows a query on all user's jobs that have returned 
+The following example shows a query on all user's jobs that have returned
 an exit code from 2 to 7.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    jc[4];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -329,7 +329,7 @@ the destination YYY, the only way to do this with the \texttt{edg\_wll\_QueryJob
 call is to call it twice. The \texttt{edg\_wll\_QueryJobsExt()} call allows to make
 such a~query in a single step.
 The function accepts an array of condition lists. Conditions within a~single list are
-OR-ed and the lists themselves are AND-ed. 
+OR-ed and the lists themselves are AND-ed.
 %It is allowed to use only identical attributes in every standalone condition list.
 %This is forced by an ``indexing'' definition, look at Sect.~\ref{ConsIndx}
 %for further details.
@@ -339,7 +339,7 @@ CE XXX or YYY.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    *jc[4];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -374,9 +374,9 @@ CE XXX or YYY.
 As clearly seen, there are three lists supplied to
 \texttt{edg\_wll\_QueryJobsExt()}. The first list specifies the owner of the
 job, the second list provides the required status (\texttt{Running}) and
-the last list specifies the two destinations. 
+the last list specifies the two destinations.
 The list of lists is terminated with \texttt{NULL}.
-This query equals to the formula 
+This query equals to the formula
 \begin{quote}
 \texttt{(user=NULL) and (state=Running) and (dest='XXX' or dest='YYY')}.
 \end{quote}
@@ -385,7 +385,7 @@ This query equals to the formula
 \label{JQ_ut}
 \TODO{Is it really working?}
 User tags can be used for marking (labelling) jobs. A user tag is
-a pair of user defined \texttt{name} and \texttt{value}. 
+a pair of user defined \texttt{name} and \texttt{value}.
 
 \label{JQ_RedJobs}
 For example, if all jobs marked with the user tag \texttt{color} and with its
@@ -393,7 +393,7 @@ value \texttt{red} should be retrieved, the following code can  be used:
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    jc[2];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -416,7 +416,7 @@ Another example\,---\,jobs marked with red or green color:
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    jc[1][3];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -438,7 +438,7 @@ And the last one (with two user tags)\,---\,jobs marked with red color and using
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    jc[2];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -456,9 +456,9 @@ And the last one (with two user tags)\,---\,jobs marked with red color and using
   ...
 \end{verbatim}
 
-Due to performance reasons 
+Due to performance reasons
 it is not possible to make query with two tags of different type in one
-or-clause. 
+or-clause.
 % fakt nevim, co tahle veta znamena. ljocha
 %That means that user tags are composed of two variable components
 %and user tag indices depend on tag names.
@@ -478,7 +478,7 @@ the last 24 hours.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    jc[2];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -495,17 +495,17 @@ the last 24 hours.
 In this case, a record representing the necessary condition is quite
 different. The \LB\ API allows to ask for jobs with a particular status at a
 given time. When \LB\ server gets \texttt{EDG\_WLL\_QUERY\_ATTR\_TIME}
-as a job condition, it checks \texttt{jc[0].attr\_id.state} for job state. 
+as a job condition, it checks \texttt{jc[0].attr\_id.state} for job state.
 Note that \texttt{timenow} is a variable which contains current time in
 seconds.
 
-It is easy to modify previous example and add another time boundary. It is then 
+It is easy to modify previous example and add another time boundary. It is then
 possible to ask for all jobs with a specified state within a particular time
 interval.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_QueryRec    jc[3];
   edg_wll_JobStat    *statesOut = NULL;
   edg_wlc_JobId      *jobsOut = NULL;
@@ -528,12 +528,12 @@ na ktere se lze ptat}
 
 \subsubsection{Event queries and application specific queries}
 \label{ASQ}
-Event queries and job queries are similar. 
+Event queries and job queries are similar.
 Obviously, the return type is different\Dash the \LB\ raw events.
 There is one more input parameter
 representing specific conditions on events (possibly empty)
 in addition to conditions on jobs.
-Some examples showing event queries 
+Some examples showing event queries
 are considered in the following paragraph.
 
 
@@ -544,7 +544,7 @@ marked with the value red of user tag color.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_Event      *eventsOut;
   edg_wll_QueryRec    jc[2];
   edg_wll_QueryRec    ec[2];
@@ -570,7 +570,7 @@ events represent a state of a job in a particular moment and this changes in tim
 
 The \texttt{edg\_wll\_QueryEvents()} returns matched events and save them in the
 \texttt{eventsOut} variable. Required job IDs are stored in the edg\_wll\_Event
-structure. 
+structure.
 
 Due to the need of ``historic'' information it's impossible to address
 this type of query with calling the function \texttt{edg\_wll\_QueryJobs()}, raw events has to
@@ -587,7 +587,7 @@ user tag color red, but at some time in the past they were marked as green.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_Event      *eventsOut;
   edg_wll_QueryRec    jc[2];
   edg_wll_QueryRec    ec[2];
@@ -615,7 +615,7 @@ The next example shows how to get all (your) resubmitted jobs.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_Event      *eventsOut;
   edg_wll_QueryRec    jc[2];
   edg_wll_QueryRec    ec[2];
@@ -638,7 +638,7 @@ The next example shows how to get all user's jobs which were resubmitted in the 
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_Event      *eventsOut;
   edg_wll_QueryRec    jc[2];
   edg_wll_QueryRec    ec[3];
@@ -661,12 +661,12 @@ The next example shows how to get all user's jobs which were resubmitted in the 
 
 %\partitle{Complex query}
 The last example illustrates the API usage on
- a~meaningful but rather complex query ``which of my red jobs are heading  
+ a~meaningful but rather complex query ``which of my red jobs are heading
 to a~destination that already encountered problems executing red jobs''.
 
 First we retrieve the information of red jobs failures.
 This cannot be accomplished with a~job query because the job may
-get resubmitted automatically to another computing element and terminate 
+get resubmitted automatically to another computing element and terminate
 successfully. Therefore we need to search for the ``historic''
 information\,---\,`Done' events with their minor status
 equal to `Failed'.
@@ -674,7 +674,7 @@ equal to `Failed'.
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context    ctx;    
+  edg_wll_Context    ctx;
   edg_wll_QueryRec   jc1[3],ec1[3];
   edg_wll_Event     *failures;
 
@@ -715,7 +715,7 @@ However, this falls beyond the scope of this document.}.
 
 Due to job resubmissions again
 a~job may be represented several times in \verb'failures'.
-Because of obvious performance reasons 
+Because of obvious performance reasons
 it is desirable to avoid repeated queries on the same job.
 On the other hand, we may rely on \LB\ queries returning data grouped
 according to jobs. Therefore checking duplicities is easy.
@@ -740,7 +740,7 @@ according to jobs. Therefore checking duplicities is easy.
   ec2[0][1].value.i = EDG_WLL_EVENT_DONE;
   ec2[0][2].attr = EDG_WLL_QUERY_ATTR_UNDEF;
   ec2[1] = NULL;
-  
+
   n = 0;
   for (i=0; failures[i].type; i++) {
     this_job = edg_wlc_JobIdUnparse(failures[i].any.jobId);
@@ -780,7 +780,7 @@ Finally we can query the server for the jobs heading to one of the failing
 sites.
 A~job's destination is known starting from the `Ready' state,
 and the query makes sense also in the `Scheduled' state (\ie\ the job reached
-the LRMS queue but has not been started yet). 
+the LRMS queue but has not been started yet).
 
 \begin{verbatim}
   ...
@@ -815,13 +815,13 @@ The last example deals with a more complex situation where too complex actual
 query must be
 split into two simpler queries and user must perform an intersection
 on the obtained results.
-We need to get all red jobs routed to destination X on which were already some 
-red jobs, but they have failed. 
+We need to get all red jobs routed to destination X on which were already some
+red jobs, but they have failed.
 
 \begin{verbatim}
   #include <glite/lb/consumer.h>
   ...
-  edg_wll_Context     ctx;    
+  edg_wll_Context     ctx;
   edg_wll_Event      *eventsOut;
   edg_wll_JobStat    *statesOut;
   edg_wlc_JobId      *jobsOut;
@@ -871,3 +871,27 @@ red jobs, but they have failed.
 
 \TODO{pro prehlednost bych mozna pridal seznam vsech atributu
 na ktere se lze ptat}
+
+
+\subsection{C++ Language Binding}
+\TODO{michal}
+
+
+\subsection{Web-Services Binding}\label{s:Consumer-API-WS}
+
+\TODO{ljocha: Complete review, list of all relevant (WSDL) files, their location, etc.}
+
+In this section we describe the operations defined in the \LB\ WSDL
+file (\texttt{LB.wsdl}) as well as its custom types (\texttt{LBTypes.wsdl}).
+
+For the sake of readability this documentation does not follow the structure
+of WSDL strictly, avoiding to duplicate information which is already present
+here. Consequently, the SOAP messages are not documented, for example, as they
+are derived from operation inputs and outputs mechanically.
+The same holds for types: \eg\ we do not document defined elements
+which correspond 1:1 to types but are required due to the literal SOAP
+encoding.
+
+For exact definition of the operations and types see the WSDL file.
+
+\TODO{ljocha: Add fully functional WS examples - in Java, Python, C?}

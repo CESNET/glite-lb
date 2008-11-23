@@ -7,15 +7,15 @@ of writing, compiling and running programs communicating with the \LB
 service using the \LB library. It is not intended as a complete API
 reference; for this, the reader is referred to the C or C++ header
 files, which are thoroughly documented using the doxygen--style
-comments. 
+comments.
 
 The \LB API can be divided by functionality into two independent
 parts:
 \begin{itemize}
-\item \textit{\LB Producer API} (section \ref{s:ProdOverview}) is used
+\item \textit{\LB Producer API} (section \ref{s:Producer-API}) is used
 to create and send events to the \LB server (proxy),
-\item \textit{\LB Consumer API} (section \ref{s:ConsOverview}) and \textit{\LB
-Notification API} (section \ref{s:NotifOverview}) are used to obtain
+\item \textit{\LB Consumer API} (section \ref{s:Consumer-API}) and \textit{\LB
+Notification API} (section \ref{s:Notification-API}) are used to obtain
 information from the  \LB server (proxy).
 \end{itemize}
 These two parts (and in fact the whole \LB service implementation)
@@ -39,12 +39,20 @@ yourself with the \LB architecture described in the first part of the
 \subsection{Language Bindings}
 The \LB library itself is developed in C language, the C API covers
 all the \LB services. There are bindings for other languages (C++,
-Java) as well as web--service based interface, but these cover only
+Java) as well as web-service (WS) based interface, but these cover only
 subsets of \LB functionality and internally they use the C API
 themselves (in the C++ case the C API also exported).
 
 We describe the C API first and then the differences between C and the
 other languages, as the C constructs often reflect directly.
+
+As for the \LB\ WS interface, it reflects only the functionality of legacy
+\LB\ Querying API (see Sect.~\ref{s:Consumer-API-WS}). 
+
+There exist also HTML and plain text interfaces to \LB. We do not expect anybody using them 
+in a programming language (though it is possible), they might be useful rather in
+scripts. Their usage is rather straightforward as it is described in the User's Guide \cite{lbug}.
+
 
 \subsection{General Guidelines}
 
@@ -104,7 +112,7 @@ Few API function return \verb'char *'. In such a~case
 \label{s:context}
 
 The \LB library does not maintain internal state (apart of network
-connections, see \ref{s:pool}), all the API 
+connections, see \ref{s:pool}), all the API
 functions refer to a~\emph{context} argument instead.
 Context object preserves state information among the various API
 calls, the state including \LB library parameters (\eg security
@@ -127,11 +135,10 @@ the API.
 
 The context also stores details on errors of the recent API call.
 
-For use with the \emph{producer} calls (see section~\ref{s:producer})
+For use with the \emph{producer} calls (see section~\ref{s:Producer-API})
 the context has to be assigned a~single \jobid (with the
 \verb'edg_wll_SetLoggingJob()' call), and keeps track of an event
-\emph{sequence code} for the job (see~\cite{lbug}, detailed
-description in~\cite{lbarch}).
+\emph{sequence code} for the job (see also \LB Architecture described in \cite{lbug}).
 
 The context object and its API functions are described more thoroughly
 in section~\ref{s:edg_wll_context}
@@ -167,7 +174,7 @@ glite/lb/jobstat.h & Job status structure returned by consumer API.\\
 \label{t:cheaders}
 \end{table}
 
-\subsubsection{Context} 
+\subsubsection{Context}
 \label{s:edg_wll_context}
 \marginpar{Context initialization}%
 Opaque data structure representing \LB API context (see
@@ -193,18 +200,18 @@ described in respective API sections, the common parameters are:
 \begin{tabularx}{\textwidth}{lX}
 {\bf C name} & {\bf Description} \\
 \hline
-\lstinline'EDG_WLL_PARAM_X509_KEY' & 
-Key file to use for authentication. 
+\lstinline'EDG_WLL_PARAM_X509_KEY' &
+Key file to use for authentication.
 \par {\it Type: } \lstinline'char *'
-\par {\it Environment: } \lstinline'X509_USER_KEY'  
+\par {\it Environment: } \lstinline'X509_USER_KEY'
 \\
-\lstinline'EDG_WLL_PARAM_X509_CERT' &   
-Certificate file to use for authentication. 
+\lstinline'EDG_WLL_PARAM_X509_CERT' &
+Certificate file to use for authentication.
 \par {\it Type: } \lstinline'char *'
 \par {\it Environment: } \lstinline'X509_USER_CERT'
 \\
-\lstinline'EDG_WLL_PARAM_CONNPOOL_SIZE' & 
-Maximum number of open connections maintained by the library. 
+\lstinline'EDG_WLL_PARAM_CONNPOOL_SIZE' &
+Maximum number of open connections maintained by the library.
 \par {\it Type: } \lstinline'int'
 \par {\it Environment: } \\
 \end{tabularx}
@@ -213,8 +220,8 @@ Maximum number of open connections maintained by the library.
 \end{table}
 
 The third argument is parameter value, which can be of type
-\verb'int', \verb'char *' or \verb'struct timeval *'. 
-If the parameter value is set to \verb'NULL' (or 0), the 
+\verb'int', \verb'char *' or \verb'struct timeval *'.
+If the parameter value is set to \verb'NULL' (or 0), the
 parameter is reset to the default value.
 
 If you want to obtain current value of some context parameter, call
@@ -239,7 +246,7 @@ When \LB API call returns error, additional details can be obtained
 from the context:
 \begin{lstlisting}
 char    *err_text,*err_desc;
-        
+
 edg_wll_Error(ctx, &err_text, &err_desc);
 fprintf(stderr, "LB library error: %s (%s)\n", err_text, err_desc);
 free(err_text);
@@ -254,7 +261,7 @@ edg_wll_FreeContext(ctx);
 
 For more information see file \verb'glite/lb/context.h'
 
-\subsubsection{JobId} 
+\subsubsection{JobId}
 The primary entity of \LB is a job, identified by JobId -- a unique
 identifier of the job (see also \cite{lbug}). The type representing
 the JobId is opaque \verb'glite_jobid_t'. The JobId is in fact
@@ -266,7 +273,7 @@ holding the job information. The JobId can be:
 generated by the \LB library):
 \begin{lstlisting}
 glite_jobid_t jobid;
-int ret; 
+int ret;
 if(ret = glite_jobid_create("some.host", 0, &jobid)) {
 	fprintf(stderr, "error creating jobid: %s\n", strerror(ret));
 }
@@ -324,7 +331,7 @@ event.any.user = "me";
 \bf Attribute name & \bf Attribute type & \bf Description \\
 \hline
 \verb'type' & \verb'edg_wll_EventCode' & Event type. Values are
-symbolic constants \eg \verb'EDG_WLL_EVENT_DONE' \\ 
+symbolic constants \eg \verb'EDG_WLL_EVENT_DONE' \\
 \verb'jobId' & \verb'glite_jobid_t' & Jobid of the job the event
 belongs to. \\
 \verb'user' & \verb'char*' & Identity (certificate subject) of the
@@ -342,12 +349,12 @@ generated. \\
 \end{table}
 
 The \verb'edg_wll_Event' is returned by consumer \LB
-API job event related calls. The only important operation defined on 
+API job event related calls. The only important operation defined on
 \verb'edg_wll_Event' itself is
 \begin{lstlisting}
-edg_wll_FreeEvent(edg_wll_Event *event) 
+edg_wll_FreeEvent(edg_wll_Event *event)
 \end{lstlisting}
-to free the event structure.  
+to free the event structure.
 
 \marginpar{List of event types}%
 The event structure makes use of enumerated types extensively,
@@ -376,7 +383,7 @@ a job as computed by the \LB from received events.  Much like the
 \verb'edg_wll_Event' structure it can be viewed as a set of
 attributes, where some attributes are common and some specific
 for a given job state (but unlike the \verb'edg_wll_Event' it is not
-implemented as union of structs but rather as one big struct). 
+implemented as union of structs but rather as one big struct).
 Generally speaking, when the attribute value is set, it is a valid
 part of job state description. Most important common attributes are
 summarized in table~\ref{t:cstatus}.
@@ -396,7 +403,7 @@ summarized in table~\ref{t:cstatus}.
 \verb'owner' & \verb'char*' & Owner (certificate subject) of the
 job. \\
 \end{tabularx}
-\caption{Common job status attributes}
+\caption{Common job status attributes}\label{t:cstatus}
 \end{table}
 
 Job status structure is returned by the \LB consumer API job status

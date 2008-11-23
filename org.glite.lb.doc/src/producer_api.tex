@@ -1,7 +1,7 @@
 % -*- mode: latex -*-
 
 \section{\LB\ Logging (Producer) API}
-\label{s:ProdOverview}
+\label{s:Producer-API}
 
 \subsection{C Language Binding}
 The \LB\ logging API (or producer API) is used to create and deliver
@@ -29,7 +29,7 @@ to the given format. For each defined event there is predefined format
 string in the form \verb'EDG_WLL_FORMAT_'\textit{EventType}, \eg\
 \verb'EDG_WLL_FORMAT_UserTag', as well as three convenience functions
 \verb'edg_wll_LogUserTag(...)', \verb'edg_wll_LogUserTagSync(...)',
-\verb'edg_wll_LogUserTagProxy(...)'. 
+\verb'edg_wll_LogUserTagProxy(...)'.
 
 For most developers (\ie\ those not developing the WMS itself) the
 \verb'edg_wll_LogUserTag*(...)' and \verb'edg_wll_ChangeACL(...)' are
@@ -42,7 +42,7 @@ updated \LB server state. The typical call -- loging an event -- is
 returned immediatelly and the success of the call means that the first
 \LB infrastructure component takes over the event and queues it for
 delivery. If you require transaction semantics, you have to use
-synchronous \verb'edg_wll_LogEventSync(...)' call. 
+synchronous \verb'edg_wll_LogEventSync(...)' call.
 
 The \LB proxy on the other hand provides a \emph{local view}
 semantics, events logged into proxy using
@@ -64,43 +64,43 @@ glite/lb/producer.h & Prototypes for all event logging functions. \\
 The table~\ref{t:pcontext} summarizes context parameters relevant to the
 event logging. If  parameter is not set in the context explicitly, the
 \LB\ library will search for value of corresponding environment
-variable. 
+variable.
 
 \begin{table}[h]
 \begin{tabularx}{\textwidth}{lX}
 {\bf Name} & {\bf Description} \\
 \hline
-\lstinline'EDG_WLL_PARAM_HOST' & 
-Hostname that appears as event origin. 
-\par {\it Type: } \lstinline'char*' 
+\lstinline'EDG_WLL_PARAM_HOST' &
+Hostname that appears as event origin.
+\par {\it Type: } \lstinline'char*'
 \par {\it Environment: } \\
-\lstinline'EDG_WLL_PARAM_SOURCE'  & 
-Event source component. 
+\lstinline'EDG_WLL_PARAM_SOURCE'  &
+Event source component.
 \par {\it Type: }\lstinline'edg_wll_Source'
 \par {\it Environment: } \\
-\lstinline'EDG_WLL_PARAM_DESTINATION'  &  
-Hostname of machine running locallogger/interlogger. 
-\par {\it Type: }\lstinline'char*' 
-\par {\it Environment: }\lstinline'GLITE_WMS_LOG_DESTINATION' \\ 
-\lstinline'EDG_WLL_PARAM_DESTINATION_PORT' & 
-Port the locallogger is listening on. 
-\par {\it Type: } \lstinline'int' 
-\par {\it Environment: }\lstinline'GLITE_WMS_LOG_DESTINATION' \\ 
-\lstinline'EDG_WLL_LOG_TIMEOUT'  & 
-Logging timeout for asynchronous logging. 
-\par {\it Type: }\lstinline'struct timeval' 
-\par {\it Environment: }\lstinline'GLITE_WMS_LOG_TIMEOUT' \\ 
-\lstinline'EDG_WLL_LOG_SYNC_TIMEOUT'  & 
-Logging timeout for synchronous logging. 
-\par {\it Type: }\lstinline'struct timeval' 
+\lstinline'EDG_WLL_PARAM_DESTINATION'  &
+Hostname of machine running locallogger/interlogger.
+\par {\it Type: }\lstinline'char*'
+\par {\it Environment: }\lstinline'GLITE_WMS_LOG_DESTINATION' \\
+\lstinline'EDG_WLL_PARAM_DESTINATION_PORT' &
+Port the locallogger is listening on.
+\par {\it Type: } \lstinline'int'
+\par {\it Environment: }\lstinline'GLITE_WMS_LOG_DESTINATION' \\
+\lstinline'EDG_WLL_LOG_TIMEOUT'  &
+Logging timeout for asynchronous logging.
+\par {\it Type: }\lstinline'struct timeval'
+\par {\it Environment: }\lstinline'GLITE_WMS_LOG_TIMEOUT' \\
+\lstinline'EDG_WLL_LOG_SYNC_TIMEOUT'  &
+Logging timeout for synchronous logging.
+\par {\it Type: }\lstinline'struct timeval'
 \par {\it Environment: }\lstinline'GLITE_WMS_LOG_SYNC_TIMEOUT' \\
-\lstinline'EDG_WLL_LBPROXY_STORE_SOCK'  & 
-\LB\ Proxy store socket path (if logging through \LB\ Proxy) 
-\par {\it Type: }\lstinline'char*' 
-\par {\it Environment: }\lstinline'GLITE_WMS_LBPROXY_STORE_SOCK' \\ 
-\lstinline'EDG_WLL_LBPROXY_USER' & 
-Certificate subject of the user (if logging through \LB\ proxy). 
-\par {\it Type: }\lstinline'char*' 
+\lstinline'EDG_WLL_LBPROXY_STORE_SOCK'  &
+\LB\ Proxy store socket path (if logging through \LB\ Proxy)
+\par {\it Type: }\lstinline'char*'
+\par {\it Environment: }\lstinline'GLITE_WMS_LBPROXY_STORE_SOCK' \\
+\lstinline'EDG_WLL_LBPROXY_USER' &
+Certificate subject of the user (if logging through \LB\ proxy).
+\par {\it Type: }\lstinline'char*'
 \par {\it Environment: }\lstinline'GLITE_WMS_LBPROXY_USER' \\
 \end{tabularx}
 \caption{Producer specific context parameters}
@@ -123,7 +123,7 @@ extern int edg_wll_SetLoggingJob(
 \end{lstlisting}
 After setting the logging job identity, all the following logging
 calls refer to this \jobid and the sequence code is incremented
-according to the source component. 
+according to the source component.
 \TODO{how is the sequence code updated?}
 
 \subsubsection{Return values}
@@ -164,7 +164,7 @@ extern int edg_wll_LogEvent(
 If you use this function, you have to provide event code, format
 string and corresponding arguments yourself. The UserTag event has
 only two arguments, tag name and value, but other events require more
-arguments. 
+arguments.
 
 Instead of using the generic \verb'edg_wll_LogEvent()' at line~\ref{l:logevent}, we could also
 write:

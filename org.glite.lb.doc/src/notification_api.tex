@@ -1,14 +1,14 @@
 % -*- mode: latex -*-
 
 \section{\LB\ Notification API}
-\label{s:NotifOverview}
+\label{s:Notification-API}
 
 The purpose of this section is demonstrating the usage of the \LB\ notification API. Two examples of basic API usage are given.
 
 
 \subsection{Registering and receiving notification}
 
-The following example registers on \LB\ server to receive notifications triggered by events belonging to job with \verb'jobid' and waits for notification until \verb'timeout'. 
+The following example registers on \LB\ server to receive notifications triggered by events belonging to job with \verb'jobid' and waits for notification until \verb'timeout'.
 The code assumes the user to prepare a~reasonable value in \verb'jobid'
 (\ie\ identifying an existing job).
 
@@ -71,7 +71,7 @@ The code assumes the user to prepare a~reasonable value in \verb'jobid'
     edg_wll_FreeStatus(&stat);
     edg_wll_NotifIdFree(recv_notif_id);
   }
- 
+
   /* Release registration on BK server. Don't do this if notif_id is reused. */
   edg_wll_NotifDrop(ctx, notif_id);
 
@@ -86,9 +86,9 @@ error:
 
 \end{verbatim}
 
-First of all the context is initialised. During this procedure user's credentials are loaded. %(see \ref{cmdln_interface} for information on environmental variables pointing to user's X509 credentials). 
+First of all the context is initialised. During this procedure user's credentials are loaded. %(see \ref{cmdln_interface} for information on environmental variables pointing to user's X509 credentials).
 
-Then conditions under which notifications are sent are set. In this example, user is notified every time when event with given jobId is logged to \LB\ server. For more complicated conditions, please, consider the conditions limitations mentioned in \ref{notification}.
+Then conditions under which notifications are sent are set. In this example, user is notified every time when event with given jobId is logged to \LB\ server. For more complicated conditions, please, consider the conditions limitations mentioned in \cite{lbug}.
 
 Afterwards, a new registration is created and a unique notification ID is
 returned.
@@ -101,7 +101,7 @@ If user does not want to receive notifications any more, \verb'edg_wll_NotifDrop
 
 \subsection{Changing destination for notifications}
 
-The second example illustrates how to receive notifications from different host or different application. 
+The second example illustrates how to receive notifications from different host or different application.
 
 Let us suppose that user is registered for receiving notifications on \LB\ server. She obtained a notification ID and information how long this registration will be valid as described in the previous example but she did not delete registration with \verb'edg_wll_NotifDrop'.
 
@@ -111,7 +111,7 @@ The sequence of function calls (without catching errors) would be as follows:
 
 \begin{verbatim}
   edg_wll_NotifId         nid;
-  char                    *ns;  // notification ID string returned 
+  char                    *ns;  // notification ID string returned
                                 // in previous example
   ...
   edg_wll_NotifIdParse(ns, &nid);
@@ -119,7 +119,7 @@ The sequence of function calls (without catching errors) would be as follows:
 
   /* prolong the registration validity if necessary */
   if (...validity close to expire...)
-    edg_wll_NotifRefresh(ctx, nid, &valid);  
+    edg_wll_NotifRefresh(ctx, nid, &valid);
 
   edg_wll_NotifReceive(ctx, -1, &timeout, &status, &recv_notif_id);
   ...
