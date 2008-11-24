@@ -19,13 +19,13 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-logevent.sh} & Proposed & Test if local logger accepts events correctly (i.e. returns 0). \\
 \hline
-{\tt lb-l2ILR.sh} & Proposed & Tests if iterlogger recovers correctly and processes events logged inbetween when restarted. \\
+{\tt lb-l2ILR.sh} & Proposed & Tests if iterlogger recovers correctly and processes events logged in between when restarted. \\
 \hline
 {\tt lb-test-job-states.sh} & Proposed & Test that job state queries return correctly and that testing jobs are in expected states. \\
 \hline
 {\tt lb-test-proxy-delivery.sh} & Proposed & Test correct event delivery through LB proxy. \\
 \hline
-{\tt lb-test-ws.sh} & Proposed & Query events and job states throught the WebService interface. \\
+{\tt lb-test-ws.sh} & Proposed & Query events and job states through the Web-Service interface. \\
 \hline
 {\tt lb-test-notif.sh} & Implemented & Test if notifications are delivered correctly for testing jobs. \\
 \hline
@@ -60,7 +60,7 @@ There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds vario
 \item Check with \code{edg\_wll\_JobLog} that the events got delivered afterwards (approx. 10s).
 \end{enumerate}
 
-\how\ \ctblb{lb-test-normal-event-delivery.sh}
+\how\ \ctblb{lb-test-event-delivery.sh}
 % org.glite.testsuites.ctb/LB/lb-l2.sh now does the following:
 % - array_job_reg: registeres $JOBS_ARRAY_SIZE jobs
 % - logEvents: logs events by glite-lb-$state.sh example scripts
@@ -72,10 +72,12 @@ There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds vario
 % - rename the script, tidy it
 % - create some meaningful sequence of events for logEvents
 
+\note\ The test includes artificial delays. Takes time to finish.
+
 \result\ All sub tests (API calls) should return 0. The same events that were logged must be returned.
 
 \begin{hints}
-There is approx. 1 min time window in which the locallogger files exist.
+There is approx. 1 min time window in which the local logger files exist.
 They can be grabbed and used for comparing the events later in~\ref{recover}.
 \end{hints}
 
@@ -99,7 +101,7 @@ prints it and calls \LB\ API appropriately.
 
 
 
-\subsubsection{Standalone locallogger -- log event}
+\subsubsection{Standalone local logger -- log event}
 \label{log}
 % async -- prida do fajlu, OK
 % logevent
@@ -107,11 +109,11 @@ prints it and calls \LB\ API appropriately.
 \req\ running \path{glite-lb-logd} only, jobs registered in test~\ref{reg}.
 
 \what\ call \code{edg\_wll\_Log*} for various event types in a~sequence
-resebmling real \LB\ usage, using the same jobids as in test~\ref{reg}
+resembling real \LB\ usage, using the same jobids as in test~\ref{reg}
 
 \how\ \ctblb{lb-test-logevent.sh}
 
-\result\ All sub tests (API calls) return 0, events are added one per line to the locallogger files.
+\result\ All sub tests (API calls) return 0, events are added one per line to the local logger files.
 
 
 
@@ -132,12 +134,12 @@ with \code{edg\_wll\_JobLog} call.
 \how\ \ctblb{lb-l2ILR.sh}
 
 \result \code{edg\_wll\_JobLog} should return the same events that were
-contained in the locallogger files. The files should be removed by
+contained in the local logger files. The files should be removed by
 interlogger after approx. 1 min.
 
 \begin{hints}
 \path{glite-lb-joblog} example outputs the events in (almost) the same
-format as the locallogger files.
+format as the local logger files.
 \end{hints}
 
 
@@ -210,7 +212,7 @@ are really purged from the proxy.
 
 
 \subsection{WS interface}
-\TODO{fila, valtri: tests using java example}
+\TODO{fila, valtri: tests using Java example}
 \req\ \path{glite-lb-bkserverd} running, events from \ref{normal} logged
 
 \what\ retrieve both events and job states with the \LB\ WS interface
@@ -218,7 +220,7 @@ are really purged from the proxy.
 
 \how\ \ctblb{lb-test-ws.sh}
 
-\result\ the returened data should match those returned by the legacy
+\result\ the returned data should match those returned by the legacy
 API calls.
 
 \begin{hints}
@@ -249,7 +251,7 @@ i.e. to be run for example with options
 \texttt{--notif-il-sock /tmp/sock.test\_notif --notif-il-fprefix /tmp/test\_notif}, 
 where \texttt{/tmp/sock.test\_notif} is a socket of notification interlogger.
 
-Plese see also \cite{lbug}, Section 2.4, for other possible scenarios how to test the notification delivery.
+Please see also \cite{lbug}, Section 2.4, for other possible scenarios how to test the notification delivery.
 
 
 \subsubsection{Single job, any state change}
@@ -266,6 +268,8 @@ and repeatedly invoke \code{edg\_wll\_NotifReceive}.
 \end{enumerate}
 
 \how\ \ctblb{lb-test-notif.sh}
+
+\note\ The test includes artificial delays. Takes time to finish.
 
 \result\ All the events should trigger notification reported by the running
 notification client.
