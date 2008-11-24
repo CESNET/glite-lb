@@ -1,7 +1,7 @@
 \section{Performance and stress tests}
 \label{s:perftests}
 
-\TODO{michal: nejak sesynchronizovat s webem}
+\TODO{Michal: nejak sesynchronizovat s webem}
 In this section we describe only the general idea of performance and stress tests of \LB components.
 This work is in progress and all necessary information is updated at the wiki page:
 
@@ -13,7 +13,7 @@ The general idea is thus the following:
 
 \begin{itemize}
 
-\item All source modifications for tests are in CVS, conditionaly compiled only
+\item All source modifications for tests are in CVS, conditionally compiled only
 with appropriate symbol.
 
 \item To compile LB with performance testing enabled, set environment variable
@@ -41,7 +41,7 @@ generated and sent.
 component being tested or the next component in chain, that is instrumented to
 read and discard events immediately. The consumption itself is done by calling
 special function which takes current time, extracts timestamp from event and
-prints the difference (ie. the event processing time)\footnote{the only
+prints the difference (ie.. the event processing time)\footnote{the only
 exception is test of the logging library itself}. These "break points" are
 chosen to measure throughput of the various component parts and to identify
 possible bottlenecks within the components.
@@ -59,7 +59,7 @@ queries, for example).
       result at the end of testing.
 
     \item After completion test scripts print the table described for the
-      respective tests filled in with measured values (ie. the table
+      respective tests filled in with measured values (ie.. the table
       is not filled in manually by human tester).
 
     \item Measure event throughput by
@@ -83,7 +83,7 @@ job throughput from throughput of selected types of events?}
 
 
 In the following subsections we describe performance and stress tests for
-individual LB compoments.  They include both tests of the isolated components
+individual LB components.  They include both tests of the isolated components
 on one node (may require binaries from other components to produce/consume
 events) as well as tests of LB components among more nodes.
 
@@ -130,7 +130,7 @@ events) as well as tests of LB components among more nodes.
 
 
 % ----------------
-\subsection{Locallogger test}
+\subsection{Local logger test}
 % ----------------
 
 \begin{verbatim}
@@ -154,7 +154,7 @@ events) as well as tests of LB components among more nodes.
 
 * test description:
       - measures time required for event to be sent from client to
-        local logger and processed by locallogger. Localloger is
+        local logger and processed by local logger. Localizer is
         either instructed (by option) or instrumented to skip some
         parts of event processing:
 	      a) no parse, no file, no ipc
@@ -217,7 +217,7 @@ ii) events sent to IL
      stresslog
      glite_lb_interlogd_perf
      glite_lb_interlogd_perf_noparse
-        - does not parse events, server address is hardcoded
+        - does not parse events, server address is hard-coded
      glite_lb_interlogd_perf_nosync
 	- does not call event_store_sync()
      glite_lb_interlogd_perf_norecover
@@ -238,25 +238,25 @@ ii) events sent to IL
 
 * test description:
      - measures time the event travels through interlogger.
-       Interlogger is instrumented to skip some parts of eventh
+       Interlogger is instrumented to skip some parts of event
        processing for particular test, specifically tests include
        these variants:
 	      a) disabled event parsing. The server address
-                 (eg. jobid) is hardcoded.
+                 (eg. jobid) is hard-coded.
 	      b) disabled event synchronization from files
 	      c) disabled recovery thread
 	      d) lazy bkserver connection close
 	      e) normal operation
 
      - events produced:
-           1) stresslog sends events to interlogger using the unix
+           1) stresslog sends events to interlogger using the UNIX
               domain socket and logd->interlogger protocol, events are
               stored in files (stresslog behaves like logd)
  TODO: pro toto neni funkce v producerske knihovne
            2) interlogger reads events from event files created by
               stresslog (by recovery thread)
            3) stresslog stores events to files and every n-th
-              (optional argument) is sent also through the unix socket
+              (optional argument) is sent also through the UNIX socket
 
      - events consumed:
            i) discarded instead of being sent
@@ -342,11 +342,11 @@ ii) events sent to empty bkserver
 
 * test description:
      - measures time required for processing event by LB proxy. Test
-       is performed with (a)) and without (b)) checking for duplicit
+       is performed with (a)) and without (b)) checking for duplicate
        events.
 
      - events produced:
-	   - stresslog sends events using the IL protokol on local
+	   - stresslog sends events using the IL protocol on local
 	     socket (using DoLogEventProxy())
 
      - events consumed:
@@ -412,11 +412,11 @@ b) without duplicity check:
 
 * test description:
      - measures time required for processing event by LB server. Test
-       is performed with (a)) and without (b)) checking for duplicit
+       is performed with (a)) and without (b)) checking for duplicate
        events.
 
      - events produced:
-	   - stresslog sends events using the IL protokol (using DoLogEventDirect())
+	   - stresslog sends events using the IL protocol (using DoLogEventDirect())
 
      - events consumed:
 	    i) before parsing
