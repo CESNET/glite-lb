@@ -312,12 +312,8 @@ cmp_gacl_names(GRSTgaclNamevalue *n1, GRSTgaclNamevalue *n2)
 static int
 cmp_gacl_creds(GRSTgaclCred *c1, GRSTgaclCred *c2)
 {
-   if (strcmp(c1->type, c2->type) != 0)
-      return 0;
-
-   return cmp_gacl_names(c1->firstname, c2->firstname);
-   /* we support only "simple" entries containing only one credential (DN or 
-    * VOMS group */
+   /* XXX the GRSTgaclCred contains a bit more information to handle */
+   return (strcmp(c1->auri, c2->auri) != 0);
 }
 
 static int
