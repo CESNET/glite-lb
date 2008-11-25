@@ -167,6 +167,8 @@ BKSERVER_BASE_OBJS:= \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o db_calls.o db_supp.o
 
+gsoap_version ?= ${gsoap_default_version}
+
 dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
 ifeq ($(shell test -f ${stagedir}/lib/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
 	langflavour:=_c
@@ -413,7 +415,7 @@ test_query_events.o: %.o: %.cpp
 
 soap_version.h:
 	${gsoap_bin_prefix}/soapcpp2 /dev/null
-	perl -ne '$$. == 2 && /.*([0-9]+)\.([0-9]+)\.([0-9]+).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n",$$1,$$2,$$3' soapH.h >$@
+	perl -ne '$$. == 2 && /.*([0-9]+)\.([0-9]+)\.([0-9]+)([a-z]).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n#define GSOAP_VERSION_LETTER '\''$$4'\''\n",$$1,$$2,$$3' soapH.h >$@
 	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
