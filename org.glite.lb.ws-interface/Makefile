@@ -1,5 +1,5 @@
 # Default values
-top_srcdir=.
+top_srcdir=..
 builddir=build
 top_builddir=${top_srcdir}/${builddir}
 stagedir=.
@@ -27,7 +27,7 @@ STAGETO=interface
 
 WSDL=LB.wsdl LBTypes.wsdl
 
-all compile: ${WSDL} LB.html
+all compile: ${WSDL} ${doc}
 
 check: 
 	@echo No unit test required for interface-only module.
@@ -40,7 +40,7 @@ install:
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
 	install -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && install -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-	install -m 644 LB.html ${PREFIX}/share/doc/${package}-${version}
+	-test -f LB.html && install -m 644 LB.html ${PREFIX}/share/doc/${package}-${version}
 # install the generated stuff instead
 #	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
 	install -m 644 ${WSDL} ${PREFIX}/${STAGETO}

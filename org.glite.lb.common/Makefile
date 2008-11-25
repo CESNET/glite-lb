@@ -213,17 +213,15 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 #	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
-	if [ x${DOSTAGE} = xyes ]; then \
-		mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
-		(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ; \
-		${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} ; \
-		${INSTALL} -m 644 ${STATICLIB} ${THRSTATICLIB} ${PREFIX}/lib; \
-		if [ x${LB_STANDALONE} = xyes ]; then \
-			mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
-			${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
-		fi ; \
-		${STAGE_PERFTEST} ; \
-	fi
+	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ;
+	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ;
+	${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} ;
+	${INSTALL} -m 644 ${STATICLIB} ${THRSTATICLIB} ${PREFIX}/lib;
+	if [ x${LB_STANDALONE} = xyes ]; then \
+		mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
+		${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
+	fi ;
+#???		${STAGE_PERFTEST} ;
 	mkdir -p ${PREFIX}/share/perl/gLite/LB
 	${INSTALL} -m 644 ${top_srcdir}/src/EventAttrNames.pl ${PREFIX}/share/perl/gLite/LB
 

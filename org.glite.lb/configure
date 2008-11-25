@@ -109,12 +109,12 @@ else {
  		$n = $#modules;
 		push @modules,(map @{$deps{$_}},@modules);
 
-		undef %aux; @aux{@modules} = 1;
+		undef %aux; @aux{@modules} = (1) x $#modules;
 		@modules = keys %aux;
 	} while ($#modules > $n);
 }
 
-@aux{@modules} = 1;
+@aux{@modules} = (1) x $#modules;
 delete $aux{$_} for (split /,/,$staged);
 @modules = keys %aux;
 
@@ -186,7 +186,7 @@ BEGIN{
 	'lb.common' => [ qw/expat cppunit classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit/ ],
-	'lb.server' => [ qw/globus expat cares mysql cppunit gsoap/ ],
+	'lb.server' => [ qw/globus expat cares mysql cppunit gsoap classads/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit/ ],
 	'lb.ws-interface' => [],
@@ -196,10 +196,14 @@ BEGIN{
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw// ],
 	'security.gss' =>  [ qw/globus cares cppunit/ ],
-	'security.gsoap-plugin' =>  [ qw/cppunit globus cares/ ],
+	'security.gsoap-plugin' =>  [ qw/cppunit globus cares gsoap/ ],
 	'jobid.api-c' =>  [ qw/cppunit/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit/ ],
 	'jobid.api-java' =>  [ qw// ],
+);
+
+%build_only = (
+	'security.gsoap-plugin' => [ qw/gsoap/ ],
 );
 
 %deps = (
@@ -249,6 +253,8 @@ BEGIN{
 	'jobid.api-c' =>  [ qw// ],
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
+
+	'jp.common' => [ qw/lbjp-common.db/ ],
 );
 
 %extrafull = ( gridsite=>'org.gridsite.core');
@@ -312,7 +318,26 @@ nothrflavour = $nothrflavour
 		print MKINC "${_}_prefix = $extern_prefix{$_}\n"
 	}
 
+	my $need_gsoap = 0;
+	for (@{$need_externs{$short}})  { $need_gsoap = 1 if $_ eq 'gsoap'; }
+
+	print MKINC "gsoap_default_version=".gsoap_version()."\n"  if $need_gsoap;
+
 	close MKINC;
+}
+
+sub gsoap_version {
+	local $_;
+	my $gsoap_version;
+	open S,"$extern_prefix{gsoap}/bin/soapcpp2 -v 2>&1 |" or die "$extern_prefix{gsoap}/bin/soapcpp2: $!\n";
+
+	while ($_ = <S>) {
+		chomp;
+
+		$gsoap_version = $1 if /The gSOAP Stub and Skeleton Compiler for C and C\+\+ ([.[:digit:][:alpha:]]+)$/;
+	}
+	close S;
+	return $gsoap_version;
 }
 
 

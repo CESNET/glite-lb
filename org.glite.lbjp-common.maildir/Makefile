@@ -1,5 +1,5 @@
 # defaults
-top_srcdir=.
+top_srcdir=..
 builddir=build
 stagedir=.
 distdir=.
