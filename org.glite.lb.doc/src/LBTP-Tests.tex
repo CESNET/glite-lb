@@ -17,7 +17,7 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-event-delivery.sh} & Implemented & Tries to register a job and log events. Checks if the registration worked and events resulted in state change accordingly. \\
 \hline
-{\tt lb-test-logevent.sh} & Proposed & Test if local logger accepts events correctly (i.e. returns 0). \\
+{\tt lb-test-logevent.sh} & Implemented & Test if local logger accepts events correctly (i.e. returns 0). \\
 \hline
 {\tt lb-l2ILR.sh} & Proposed & Tests if iterlogger recovers correctly and processes events logged in between when restarted. \\
 \hline
@@ -111,7 +111,7 @@ prints it and calls \LB\ API appropriately.
 \what\ call \code{edg\_wll\_Log*} for various event types in a~sequence
 resembling real \LB\ usage, using the same jobids as in test~\ref{reg}
 
-\how\ \ctblb{lb-test-logevent.sh}
+\how\ \ctblb{lb-test-logevent.sh [event-file-prefix]}
 
 \result\ All sub tests (API calls) return 0, events are added one per line to the local logger files.
 
