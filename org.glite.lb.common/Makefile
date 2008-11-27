@@ -208,8 +208,8 @@ olddoc: generate events.tex status.tex
 
 install: 
 	mkdir -p ${PREFIX}/lib
-	mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${PREFIX}/lib
+	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
+	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${MAILDIR_LIB} ${PREFIX}/lib
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 #	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
@@ -224,6 +224,7 @@ install:
 #???		${STAGE_PERFTEST} ;
 	mkdir -p ${PREFIX}/share/perl/gLite/LB
 	${INSTALL} -m 644 ${top_srcdir}/src/EventAttrNames.pl ${PREFIX}/share/perl/gLite/LB
+	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
