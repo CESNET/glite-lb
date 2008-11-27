@@ -316,6 +316,7 @@ install:
 	mkdir -p ${PREFIX}/share/man/man1
 	mkdir -p ${PREFIX}/examples
 	mkdir -p ${PREFIX}/share/man/man8
+	mkdir -p ${PREFIX}/share/build/m4
 ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
 else
@@ -350,6 +351,7 @@ endif
 	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${PREFIX}/examples/glite-lb-notify.pl
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
+	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4/
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
