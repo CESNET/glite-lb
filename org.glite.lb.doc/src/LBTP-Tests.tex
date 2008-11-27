@@ -19,7 +19,7 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-logevent.sh} & Implemented & Test if local logger accepts events correctly (i.e. returns 0). \\
 \hline
-{\tt lb-l2ILR.sh} & Proposed & Tests if iterlogger recovers correctly and processes events logged in between when restarted. \\
+{\tt lb-test-il-recovery.sh} & Implemented & Tests if iterlogger recovers correctly and processes events logged in between when restarted. \\
 \hline
 {\tt lb-test-job-states.sh} & Proposed & Test that job state queries return correctly and that testing jobs are in expected states. \\
 \hline
@@ -131,7 +131,9 @@ jobids from \ref{reg} point to; files generated in~\ref{log};
 \path{glite-lb-interlogd}. After approx. 10s check the jobs
 with \code{edg\_wll\_JobLog} call.
 
-\how\ \ctblb{lb-l2ILR.sh}
+\how\ \ctblb{lb-test-il-recovery.sh}
+
+\note\ The test includes artificial delays. Takes time to finish.
 
 \result \code{edg\_wll\_JobLog} should return the same events that were
 contained in the local logger files. The files should be removed by
