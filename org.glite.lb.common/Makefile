@@ -224,6 +224,7 @@ install:
 #???		${STAGE_PERFTEST} ;
 	mkdir -p ${PREFIX}/share/perl/gLite/LB
 	${INSTALL} -m 644 ${top_srcdir}/src/EventAttrNames.pl ${PREFIX}/share/perl/gLite/LB
+	mkdir -p ${PREFIX}/share/build/m4
 	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4
 
 clean:
