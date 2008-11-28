@@ -13,21 +13,32 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "db.h"
+#include "glite/lbu/db.h"
 
 #define CS "testuser/@localhost:test"
+#if defined(DB_BACKEND) && DB_BACKEND == postgresql
+#define CREATE_CMD "CREATE TABLE \"data\" (\n\
+    \"id\"    INTEGER NOT NULL,\n\
+    \"user\"  VARCHAR(32) NOT NULL,\n\
+    \"info\"  BYTEA,\n\
+    PRIMARY KEY (\"id\")\n\
+)"
+#define AMP "\""
+#else
 #define CREATE_CMD "CREATE TABLE data (\n\
-    id    INT NOT NULL,\n\
-    user  VARCHAR(32) NOT NULL,\n\
-    info  BLOB,\n\
+    `id`    INT NOT NULL,\n\
+    `user`  VARCHAR(32) NOT NULL,\n\
+    `info`  BLOB,\n\
     PRIMARY KEY (id),\n\
-    INDEX(user)\n\
+    INDEX(`user`)\n\
 ) engine=innodb"
-#define DROP_CMD "DROP TABLE data"
-#define INSERT_TRIO_CMD "INSERT INTO data (id, user, info) VALUES (%d, %s, %s)"
-#define SELECT_TRIO_CMD "SELECT id, user, info FROM data WHERE user = '%s'"
-#define INSERT_CMD "INSERT INTO data (id, user, info) VALUES (?, ?, ?)"
-#define SELECT_CMD "SELECT id, user, info FROM data WHERE user = ?"
+#define AMP "`"
+#endif
+#define DROP_CMD "DROP TABLE " AMP "data" AMP
+#define INSERT_TRIO_CMD "INSERT INTO " AMP "data" AMP " (" AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP ") VALUES (%d, %s, %s)"
+#define SELECT_TRIO_CMD "SELECT " AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP " FROM " AMP "data" AMP " WHERE " AMP "user" AMP " = '%s'"
+#define INSERT_CMD "INSERT INTO " AMP "data" AMP " (" AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP ") VALUES (?, ?, ?)"
+#define SELECT_CMD "SELECT " AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP " FROM " AMP "data" AMP " WHERE " AMP "user" AMP " = ?"
 
 #define dprintf(ARGS) { printf("%s: ", name); printf ARGS; }
 
@@ -65,8 +76,10 @@ int main(int argn __attribute((unused)), char *argv[]) {
 	glite_lbu_Statement stmt;
 	int caps;
 
+#ifndef NO_PREPARED
 	char blob1[] = "Guess: blob or \000string?";
 	char blob2[] = {0, 1, 2, 3, 4, 5};
+#endif
 
 	int nr;	
 	char *res[3];
@@ -82,12 +95,14 @@ int main(int argn __attribute((unused)), char *argv[]) {
 	if (glite_lbu_InitDBContext(&ctx) != 0) goto failctx;
 	if (glite_lbu_DBConnect(ctx, cs) != 0) goto failctx;
 	if ((caps = glite_lbu_DBQueryCaps(ctx)) == -1) goto failcon;
+#ifndef NO_PREPARED
 	if ((caps & GLITE_LBU_DB_CAP_PREPARED) == 0) {
 		dprintf(("can't do prepared commands, exiting."));
 		goto failcon;
 	}
+#endif
 	// caps
-	glite_lbu_DBSetCaps(ctx, caps || GLITE_LBU_DB_CAP_ERRORS);
+	glite_lbu_DBSetCaps(ctx, caps | GLITE_LBU_DB_CAP_ERRORS);
 	dprintf(("capabilities: %d\n", caps));
 	// create all needed tables and data
 	dprintf(("creating tables...\n"));
@@ -98,6 +113,7 @@ int main(int argn __attribute((unused)), char *argv[]) {
 	asprintf(&cmd, INSERT_TRIO_CMD, 1, "'hyperochus'", "NULL");
 	if (glite_lbu_ExecSQL(ctx, cmd, NULL) != 1) goto failcon;
 	free(cmd); cmd = NULL;
+#ifndef NO_PREPARED
 	// prepared-insert
 	dprintf(("prepare-insert...\n"));
 	if (glite_lbu_PrepareStmt(ctx, INSERT_CMD, &stmt) != 0) goto failcon;
@@ -118,12 +134,28 @@ int main(int argn __attribute((unused)), char *argv[]) {
 	                       GLITE_LBU_DB_TYPE_BLOB, blob2, sizeof(blob2)) != 1) goto failstmt;
 	glite_lbu_FreeStmt(&stmt);
 	dprintf(("\n"));
+#endif
 
 	// trio-query
 {
 	const char *user;
 
 	user = "harpia";
+	dprintf(("selecting '%s'...\n", user));
+	asprintf(&cmd, SELECT_TRIO_CMD, user);
+	if (glite_lbu_ExecSQL(ctx, cmd, &stmt) == -1) goto failcon;
+	free(cmd); cmd = NULL;
+	dprintf(("fetching '%s'...\n", user));
+	while ((nr = glite_lbu_FetchRow(stmt, 3, lens, res)) > 0) {
+		dprintf(("Result: n=%d, res=%p\n", nr, res));
+		print_free_result(name, lens, res);
+	}
+	if (nr < 0) dprintf(("fetch '%s' failed\n", user));
+	dprintf(("closing stmt...\n"));
+	glite_lbu_FreeStmt(&stmt);
+	dprintf(("\n"));
+
+	user = "hyperochus";
 	dprintf(("selecting '%s'...\n", user));
 	asprintf(&cmd, SELECT_TRIO_CMD, user);
 	if (glite_lbu_ExecSQL(ctx, cmd, &stmt) == -1) goto failcon;
@@ -152,8 +184,17 @@ int main(int argn __attribute((unused)), char *argv[]) {
 	dprintf(("closing stmt...\n"));
 	glite_lbu_FreeStmt(&stmt);
 	dprintf(("\n"));
+
+	dprintf(("nonsese...\n"));
+	if (glite_lbu_ExecSQL(ctx, "nonsense", NULL) == -1) {
+		dprintf(("was error, OK\n"));
+	} else {
+		dprintf(("this should file\n"));
+		goto failcon;
+	}
 }
 
+#ifndef NO_PREPARED
 	// "param" queries
 {
 	const char *user = NULL;
@@ -176,15 +217,18 @@ int main(int argn __attribute((unused)), char *argv[]) {
 	glite_lbu_FreeStmt(&stmt);
 	dprintf(("\n"));
 }
+#endif
 
 	dprintf(("closing...\n"));
 	glite_lbu_DBClose(ctx);
 	glite_lbu_FreeDBContext(ctx);
 	return 0;
 
+#ifndef NO_PREPARED
 failstmt:
-	printf("closing stmt...\n");
+	dprintf(("closing stmt...\n"));
 	glite_lbu_FreeStmt(&stmt);
+#endif
 failcon:
 	dprintf(("closing...\n"));
 	glite_lbu_DBClose(ctx);
