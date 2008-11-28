@@ -123,7 +123,7 @@ The API caller can create many context objects which are guaranteed
 to be independent on one another. In this way thread--safety of the
 library is achieved as long as the context is not used by more threads
 at the same time. One thread may use more than one context, though.
-
+w 
 Upon context initialization, all the parameters are assigned default
 values. If not set explicitly, many of the parameters take their
 value from environment variables. If the corresponding environment
@@ -425,7 +425,7 @@ GNU's libtool to take care of all the dependencies:
 \begin{verbatim}
 flavour=gcc32dbg
 libtool --mode=compile gcc -c example1.c util.c \
-        -I$GLITE_LOCATION/include -D_GNU_SOURCE
+        -I\$GLITE_LOCATION/include -D_GNU_SOURCE
 libtool --mode=link gcc -o example1 example1.o util.o \
         -L$GLITE_LOCATION/lib -lglite_lb_client_$flavour
 \end{verbatim}
@@ -436,10 +436,49 @@ correct Globus library flavours.
 \TODO{Library dependencies - which rpms are needed?}
 
 \subsection{C++ Language Binding}
+C++ language binding for the \LB library is not the (re)implementation
+of the library in C++; instead it is just a thin adaptation layer on top of the C
+API, \ie all the structures and functions of the C API can be used in
+C++. The C++ classes wrap up the concepts and structures of C API and
+provide convenient access to the functionality. The namespace used for
+\LB C++ API is \verb'glite::lb'.
+
 \marginpar{Exceptions}%
+While the C++ API closely follows the C API functionality, there are
+also two important differences: error handling and memory management.
+
+When the \LB method call fails, the exception of class 
+\verb'glite::lb::Exception' (derived from \verb'std::runtime_error')
+is raised that holds the error description and information about the
+source file, line and method the exception was thrown from (possibly
+accumulating information from other exception). 
 
 \marginpar{Reference counting}%
+When the C++ \LB library calls return allocated structures, they are
+encapsulated within C++ accessor objects. Copying the C++ object does
+not copy the underlying structure, it increases the reference count
+instead, making use of the same allocated data. The reference count is
+decremented with destruction of the wrapper object, when it drops to
+zero, the allocated memory is freed. 
+
+Using this scheme all the data allocated by the \LB library are held
+in memory only once.
 
 \subsubsection{Header Files}
+Header files for the C++ version of common definitions are suummarized
+in table~\ref{t:cppheaders}
+
+\begin{table}[h]
+\begin{tabularx}{\textwidth}{>{\tt}lX}
+glite/jobid/JobId.h & Definition of job identifier. \\
+glite/lb/CountRef.h & Reference counting class for encapsulated C structures.\\
+glite/lb/LoggingExceptions.h & Exception class for \LB--specific errors.\\
+\end{tabularx}
+\caption{Header file for common C++ classes}
+\label{t:cppheaders}
+
+\end{table}
+
 \subsubsection{Event}
+
 \subsubsection{Building Programs}
