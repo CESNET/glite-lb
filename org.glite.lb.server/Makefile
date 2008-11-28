@@ -15,8 +15,9 @@ expat_prefix=/opt/expat
 cares_prefix=/opt/c-ares
 gsoap_prefix=/opt/gsoap
 classads_prefix=/opt/classads
-voms_prefix=/opt/voms
-lcas_prefix=/opt/lcas
+voms_prefix=/opt/glite
+lcas_prefix=/opt/glite
+gridsite_prefix=/opt/glite
 
 -include Makefile.inc
 -include ../project/version.properties
@@ -62,8 +63,10 @@ SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
 
-GRIDSITE_CFLAGS = `xml2-config --cflags`
-GRIDSITE_LIBS = -lgridsite_globus `xml2-config --libs`
+GRIDSITE_CFLAGS = -I${gridsite_prefix}/include `xml2-config --cflags`
+GRIDSITE_LIBS = -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
+
+LCAS_CFLAGS=-I${lcas_prefix}/include
 
 CFLAGS:= \
 	${WS_CFLAGS} ${DEBUG} \
@@ -76,7 +79,7 @@ CFLAGS:= \
 	-I${classads_prefix}/include -I${classads_prefix}/include/classad \
 	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
-	$(GRIDSITE_CFLAGS) \
+	$(GRIDSITE_CFLAGS) ${LCAS_CFLAGS}\
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB \
 	-I${globus_prefix}/include/${nothrflavour} #gridsite needs this
 
@@ -136,8 +139,8 @@ endif
 ifeq (${nothrflavour},gcc32dbg)
 	vomsflavour :=
 endif
-VOMS_LIBS:=-L${voms_prefix}/lib -lvomsapi${vomsflavour}
-LCAS_LIBS:=-L${lcas_prefix}/lib -llcas
+VOMS_LIBS:=-L${voms_prefix}/${archlib} -lvomsapi${vomsflavour}
+LCAS_LIBS:=-L${lcas_prefix}/${archlib} -llcas
 
 #EXT_LIBS:= \
 #	${expatlib} -lexpat \

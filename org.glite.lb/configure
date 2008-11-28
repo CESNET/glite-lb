@@ -22,7 +22,10 @@ my %extern_prefix = (
 	expat => '/usr',
 	globus => '/opt/globus',
 	gsoap => '/usr',
-	mysql => '/usr'
+	mysql => '/usr',
+	voms => '/opt/glite',
+	gridsite => '/opt/glite',
+	lcas => '/opt/glite',
 );
 
 
@@ -186,7 +189,7 @@ BEGIN{
 	'lb.common' => [ qw/expat cppunit classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit/ ],
-	'lb.server' => [ qw/globus expat cares mysql cppunit gsoap classads/ ],
+	'lb.server' => [ qw/globus expat cares mysql cppunit gsoap classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit/ ],
 	'lb.ws-interface' => [],
@@ -232,8 +235,7 @@ BEGIN{
 		lb.ws-interface lb.logger lb.types lb.common lb.state-machine
 		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir
 		jobid.api-c
-		security.gsoap-plugin security.lcas security.voms
-		gridsite
+		security.gsoap-plugin
 	/ ],
 	'lb.state-machine' => [ qw/lb.common jp.common security.gss/ ],
 	'lb.utils' => [ qw/
@@ -257,6 +259,7 @@ BEGIN{
 	'jp.common' => [ qw/lbjp-common.db/ ],
 );
 
+#unused
 %extrafull = ( gridsite=>'org.gridsite.core');
 
 %extranodmod = ( java => 'client-java' );
