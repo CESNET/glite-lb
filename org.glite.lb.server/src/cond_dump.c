@@ -53,7 +53,8 @@ int edg_wll_Condition_Dump(notifInfo *ni, char **output, int oneline){
 				break;
 			case EDG_WLL_QUERY_ATTR_DONECODE: GS("donecode");
 				break;
-			case EDG_WLL_QUERY_ATTR_USERTAG: GS("usertag");
+			case EDG_WLL_QUERY_ATTR_USERTAG:
+				GS(l2->attr_id.tag);
 				break;
 			case EDG_WLL_QUERY_ATTR_TIME: GS("time");
 				break;
@@ -143,7 +144,7 @@ int edg_wll_Condition_Dump(notifInfo *ni, char **output, int oneline){
 							edg_wll_EventToString((edg_wll_EventCode)l2->value.i),
 							edg_wll_EventToString((edg_wll_EventCode)l2->value2.i));
 					else
-						asprintf(&buf, "%i", 
+						asprintf(&buf, "%s", 
 							edg_wll_EventToString((edg_wll_EventCode)l2->value.i));
 					GS(buf);
 					free(buf);
@@ -154,10 +155,13 @@ int edg_wll_Condition_Dump(notifInfo *ni, char **output, int oneline){
                 	        case EDG_WLL_QUERY_ATTR_TIME:
 				case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
                                 case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
-					buf = ctime(&(l2->value.t.tv_sec));
+					buf = strdup(ctime(&(l2->value.t.tv_sec)));
+					buf[strlen(buf)-1] = 0; // cut out '\n'
 					if (l2->op == EDG_WLL_QUERY_OP_WITHIN){
-						buf[strlen(buf)-1] = 0; // cut out '\n'
-						asprintf(&buf, " and %s", ctime(&(l2->value2.t.tv_sec)));
+						char *buf_ptr = buf;
+						asprintf(&buf, "%s and %s", buf_ptr, ctime(&(l2->value2.t.tv_sec)));
+						free(buf_ptr);
+						buf[strlen(buf)-1] = 0;
 						GS(buf);
 					}
 					else
