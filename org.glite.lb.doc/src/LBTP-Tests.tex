@@ -21,7 +21,7 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-il-recovery.sh} & Implemented & Tests if iterlogger recovers correctly and processes events logged in between when restarted. \\
 \hline
-{\tt lb-test-job-states.sh} & Proposed & Test that job state queries return correctly and that testing jobs are in expected states. \\
+{\tt lb-test-job-states.sh} & Implemented & Test that job state queries return correctly and that testing jobs are in expected states. \\
 \hline
 {\tt lb-test-proxy-delivery.sh} & Proposed & Test correct event delivery through LB proxy. \\
 \hline
@@ -72,7 +72,7 @@ There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds vario
 % - rename the script, tidy it
 % - create some meaningful sequence of events for logEvents
 
-\note\ The test includes artificial delays. Takes time to finish.
+\note\ The test includes artificial delays. Takes approx. 25\,s to finish.
 
 \result\ All sub tests (API calls) should return 0. The same events that were logged must be returned.
 
@@ -128,12 +128,12 @@ jobids from \ref{reg} point to; files generated in~\ref{log};
 \path{glite-lb-interlogd} is stopped.
 
 \what\ Make a~copy of the files created in~\ref{log}, then start
-\path{glite-lb-interlogd}. After approx. 10s check the jobs
+\path{glite-lb-interlogd}. After approx. 10\,s check the jobs
 with \code{edg\_wll\_JobLog} call.
 
 \how\ \ctblb{lb-test-il-recovery.sh}
 
-\note\ The test includes artificial delays. Takes time to finish.
+\note\ The test includes artificial delays. Takes approx. 15 to 75\,s to finish.
 
 \result \code{edg\_wll\_JobLog} should return the same events that were
 contained in the local logger files. The files should be removed by
@@ -160,6 +160,8 @@ format as the local logger files.
 (if necessary, log relevant events). Query both server and/or proxy.
 
 \how\ \ctblb{lb-test-job-states.sh}
+
+\note\ The test includes artificial delays. Takes approx. 150\,s to finish.
 
 \result\ The API call should return 0, the jobs should be in the expected
 states. Thorough tests may also cross check the values supplied in the
@@ -271,7 +273,7 @@ and repeatedly invoke \code{edg\_wll\_NotifReceive}.
 
 \how\ \ctblb{lb-test-notif.sh}
 
-\note\ The test includes artificial delays. Takes time to finish.
+\note\ The test includes artificial delays. Takes approx. 12\,s to finish.
 
 \result\ All the events should trigger notification reported by the running
 notification client.
