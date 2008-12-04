@@ -96,7 +96,7 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 }
 
 int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, char **message){
-	char *pomA = NULL, *pomB;
+	char *pomA = NULL, *pomB = NULL;
         pomB = strdup("");
 
 	int i = 0;
@@ -126,27 +126,22 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 	return 0;
 }
 
-#define TR(name,type,field)             \
-        if (field) {            \
-                asprintf(&pomA,"%s<tr><th align=\"left\">" name ":</th>"        \
-                        "<td>" type "</td></tr>",pomB,(field)); \
-                free(pomB);                                     \
-                pomB = pomA;                                    \
-        }
-
-#define GS(string){	\
-	asprintf(&pomA, "%s %s", pomB, (string)); \
-	free(pomB); \
-	pomB = pomA; \
-}
+#define TR(name,type,field) \
+	if (field){ \
+		int l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
+		"<td>" type "</td></tr>", (field)); \
+		pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
+		strcpy(pomB+pomL, pomA); \
+		pomL += l; \
+		free(pomA); pomA=NULL; \
+	}
 
 int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
-	char *pomA = NULL, *pomB, *flags, *cond;
+	char *pomA = NULL, *pomB = NULL, *flags, *cond;
+	int pomL = 0;
 
-
-	pomB = strdup("");
 	flags = edg_wll_stat_flags_to_string(ni->flags);
-printf("flags %d - %s", ni->flags, flags);
+	printf("flags %d - %s", ni->flags, flags);
 
 	TR("Destination", "%s", ni->destination);
 	TR("Valid until", "%s", ni->valid);
@@ -176,15 +171,14 @@ printf("flags %d - %s", ni->flags, flags);
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
 int edg_wll_JobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
 {
-        char *pomA, *pomB;
+        char *pomA = NULL, *pomB = NULL;
+	int pomL = 0;
 	char	*chid,*chstat;
 	char	*jdl,*rsl;
 
 	jdl = strdup("");
 	rsl = strdup("");
 	
-	pomB = strdup("");
-
         chid = edg_wlc_JobIdUnparse(stat.jobId);
 
 	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)));

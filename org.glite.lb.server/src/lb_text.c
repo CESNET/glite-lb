@@ -56,14 +56,23 @@ int edg_wll_QueryToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 	return -1;
 }
 
-#define TR(name,type,field) \
+/*#define TR(name,type,field) \
         if (field) { \
                 asprintf(&a,"%s%s=" type "\n", \
                         b, name, field); \
                 free(b); \
                 b = a; \
-        }
-
+        }*/
+#define TR(name,type,field) \
+        if (field){ \
+		int l = asprintf(&a,"%s=" type "\n", \
+			name, field); \
+		printf("a = %s l = %i\n", a, l); \
+		b = realloc(b, sizeof(*b)*(pomL+l+1)); \
+		strcpy(b+pomL, a); \
+		pomL += l; \
+		free(a); a=NULL; \
+	}
 
 int edg_wll_UserInfoToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
 {
@@ -122,20 +131,22 @@ int edg_wll_UserNotifsToText(edg_wll_Context ctx, char **notifids, char **messag
 }
 
 int edg_wll_NotificationToText(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
-	char *a = NULL, *b, *cond, *flags;
-	b = strdup("");
+	char *a = NULL, *b = NULL, *cond, *flags;
+	int pomL = 0;
 
 	TR("Notif_id", "%s", ni->notifid);
 	TR("Destination", "%s", ni->destination);
 	TR("Valid_until", "%s", ni->valid);
-	if (! edg_wll_Condition_Dump(ni, &cond, 1))
+	if (! edg_wll_Condition_Dump(ni, &cond, 1)){
 		TR("Conditions", "%s", cond);
+	}
 	free(cond);
 	flags = edg_wll_stat_flags_to_string(ni->flags);
 	TR("Flags", "%s", flags);
 	free(flags);
 
-	*message = a;
+	*message = b;
+	printf("Returning message: %s\n", a);
 
 	return 0;
 }
@@ -143,14 +154,14 @@ int edg_wll_NotificationToText(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
 int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
 {
-	char *a, *b;
+	char *a = NULL, *b = NULL;
 	char    *chid,*chstat;
         char    *jdl,*rsl;
 
 	jdl = strdup("");
 	rsl = strdup("");
 	
-	b = strdup("");
+	int pomL = 0;
 
         chid = edg_wlc_JobIdUnparse(stat.jobId);
 
@@ -224,3 +235,4 @@ char *edg_wll_ErrorToText(edg_wll_Context ctx,int code)
 	free(et); free(ed);
 	return out;
 }
+
