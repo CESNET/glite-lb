@@ -276,21 +276,6 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 					case ENOENT: /* job does not exist, consider purged and ignore */
 						     edg_wll_ResetError(ctx);
 						     break;
-					case EEXIST: 
-						/* job already among zombies */
-						/* do not delete it, print error but */
-						/* continue erasing other jobs */
-						{
-							char *et, *ed, *msg;
-							edg_wll_Error(ctx, &et, &ed);
-							
-							asprintf(&msg,"Error during erasing job %s (%s: %s) skippig this job, but continue erasing rest of the jobs.",request->jobs[i],et,ed), 
-							fprintf(stderr,"[%d] %s\n", getpid(), msg);
-							syslog(LOG_INFO,msg);
-							free(et); free(ed); free(msg);
-							edg_wll_ResetError(ctx);
-						}
-						break;
 					default: goto abort;
 				}
 
@@ -350,20 +335,6 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 						edg_wll_FreeStatus(&stat);
 						if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
 							/* job purged meanwhile, ignore */
-							edg_wll_ResetError(ctx);
-							continue;
-						}
-						if (edg_wll_Error(ctx, NULL, NULL) == EEXIST) {
-							/* job already among zombies */
-							/* do not delete it, print error but */
-							/* continue erasing other jobs */
-							char *et, *ed, *msg;
-							edg_wll_Error(ctx, &et, &ed);
-							
-							asprintf(&msg,"Error during erasing job %s (%s: %s) skippig this job, but continue erasing rest of the jobs.",job_s,et,ed), 
-							fprintf(stderr,"[%d] %s\n", getpid(), msg);
-							syslog(LOG_INFO,msg);
-							free(et); free(ed); free(msg);
 							edg_wll_ResetError(ctx);
 							continue;
 						}
@@ -772,11 +743,31 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 			ret = edg_wll_FetchRow(ctx,q, 1, NULL, &suffix_id);
 			glite_lbu_FreeStmt(&q);
 
+
 			/* Store zombie job */
+
 			trio_asprintf(&stmt,"insert into zombie_jobs (jobid, prefix_id, suffix_id)"
 					" VALUES ('%|Ss', '%|Ss', '%|Ss')", root, prefix_id, suffix_id);
 
-			if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto rollback;
+			if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) {
+				if (edg_wll_Error(ctx, NULL, NULL) == EEXIST) {
+					/* job already among zombies */
+					/* print warning but continue */
+					/* erasing other jobs */
+					char *et, *ed, *msg, *job_s;
+
+					edg_wll_Error(ctx, &et, &ed);
+					job_s = glite_jobid_unparse(job);
+					
+					asprintf(&msg,"Warning: erasing job %s that already existed in this LB "
+						"(reused jobid or corruped DB) (%s: %s)",job_s,et,ed);
+					fprintf(stderr,"[%d] %s\n", getpid(), msg);
+					syslog(LOG_INFO,msg);
+					free(et); free(ed); free(msg); free(job_s);
+					edg_wll_ResetError(ctx);
+				}
+				else goto rollback;
+			}
 			glite_lbu_FreeStmt(&q);
 			free(stmt); stmt = NULL;
 		}
