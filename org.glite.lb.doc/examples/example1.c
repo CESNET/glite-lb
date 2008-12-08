@@ -23,7 +23,7 @@ int main(int argc,char **argv)
 	jc[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
 	jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
 	if ( edg_wlc_JobIdParse(
-		     "https://lhun.ics.muni.cz:9000/OirOgeWh_F9sfMZjnIPYhQ",
+		     argv[1],
 		     &jc[0].value.j) )
 	{
 		edg_wll_FreeContext(ctx);
