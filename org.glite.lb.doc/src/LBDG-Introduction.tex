@@ -435,14 +435,15 @@ The library comes in different flavours (with/without debugging
 symbols, with/withou thread support) which in turn depend on the
 correct Globus library flavours.
 
-The package needed is \texttt{glite-lb-client} and its dependencies which contain all necessary libraries.
+The package needed is \texttt{glite-lb-client} and its dependencies
+which contain all necessary libraries. 
 
 \subsection{C++ Language Binding}
 The C++ languague binding now only supports the consumer (querying)
 API. It is not the (re)implementation of the library in C++; instead
-it is just a thin adaptation layer on top of the C API, \ie all the
-structures and functions of the C API can be used in C++. The C++
-classes wrap up the concepts and structures of C API and provide
+it is just a thin adaptation layer on top of the C API, which means
+all the structures and functions of the C API can be used in C++. The
+C++ classes wrap up the concepts and structures of C API and provide
 convenient access to the functionality. The namespace used for 
 \LB C++ API is \verb'glite::lb'.
 
@@ -488,6 +489,88 @@ glite/lb/LoggingExceptions.h & Exception class for \LB--specific errors.\\
 
 \end{table}
 
+\subsubsection{JobId}
+The \verb'glite::jobid::JobId' class represents job identification and
+provides convenient methods for manipulating the data. The
+\verb'JobId' object can be created:
+\begin{itemize}
+\item from the C structure (this is used mainly internally within the
+library):
+\begin{lstlisting}
+using namespace glite::jobid;
+glite_jobid_t cjobid;
+
+JobId *jobid = new JobId(cjobid);
+\end{lstlisting}
+\emph{Note:} This creates copy of the structure, the original structure has to be
+deallocated as usual.
+\item parsed from the string:
+\begin{lstlisting}
+JobId jobid(std::string("https://some.host:9000/OirOgeWh_F9sfMZjnIPYhQ"));
+\end{lstlisting}
+\item from the components:
+\begin{lstlisting}
+JobId jobid(Hostname("some.host"), 9000, "OirOgeWh_F9sfMZjnIPYhQ");
+\end{lstlisting}
+The last two arguments are optional, so you have to specify only
+name of the \LB server machine (the \verb'Hostname' class is used to
+disambiguate the constructors):
+\begin{lstlisting}
+JobId jobid(Hostname("some.host"));
+\end{lstlisting}
+In that case new unique part is generated automatically.
+\end{itemize}
+Apart from that there are the usual copy constructor and assignment
+operator that do the deep copy, and the destructor that deallocates
+the memory.
+
+\marginpar{Data access}%
+The \verb'JobId' class provides methods for obtaining the host, port
+and unique part of the \jobid\ as well as conversion into C
+\verb'glite_jobid_t' type and into string representation. There is
+also a defined ordering (\verb'operator<') on the \jobid's, which is just the
+lexicographical ordering of corresponding string
+representations. The following example illustrates these features:
+
+\begin{lstlisting}
+JobId a(Hostname("me"));
+JobId b(Hostname("me"));
+
+cout << (a < b) ? a.unique() : b.unique() << " comes first" << endl;
+cout << "Complete jobid: " << a.toString() << endl;
+\end{lstlisting}
+
 \subsubsection{Event}
+The objects of class \verb'glite::lb::Event' are returned by the \LB event
+queries. The \verb'Event' class introduces symbolic names for event attributes
+and their types, feature not available through the C API, as well as
+(read only) access to the attribute values.  Using these methods you can 
+\begin{itemize}
+\item get the event type (both symbolic and string),
+\begin{lstlisting}
+	const std::string & name(void) const;
+	static const std::string getEventName(Type type);
+\end{lstlisting}
+\item get the list of attribute types and values,
+\begin{lstlisting}
+	const std::vector<std::pair<Attr,AttrType> >  &	getAttrs(void) const;
+\end{lstlisting}
+\item get string representation of attribute names,
+\begin{lstlisting}
+	static const std::string & getAttrName(Attr name);
+\end{lstlisting}
+\item get value of given attribute.
+\begin{lstlisting}
+	int	getValInt(Attr name) const;
+	float	getValFloat(Attr name) const;
+	double	getValDouble(Attr name) const;
+	std::string getValString(Attr name) const;
+        struct timeval	getValTime(Attr name) const;
+        const glite::jobid::JobId getValJobId(Attr name) const;
+\end{lstlisting}
+\end{itemize}
+
+Following example demonstrates this by printing the event attributes:
+\lstinputlisting[title={\bf File: }\lstname,firstline=8,numbers=left]{util.C}
 
 \subsubsection{Building Programs}
