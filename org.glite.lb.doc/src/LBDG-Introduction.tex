@@ -46,7 +46,7 @@ themselves (in the C++ case the C API is also exported).
 We describe the C API first and then the differences between C and the
 other languages, as the C constructs often reflect directly.
 
-As for the \LB\ WS interface, it reflects only the functionality of legacy
+As for the \LB\ WS interface, it reflects only the functionality of 
 \LB\ Querying API (see Sect.~\ref{s:Consumer-API-WS}). 
 
 There exist also HTML and plain text interfaces to \LB. We do not expect anybody using them 
@@ -302,6 +302,7 @@ can be found in the header file \verb'glite/wmsutils/cjobid.h'}
 
 
 \subsubsection{Event}
+
 \label{s:edg_wll_Event}
 The transparent data structure \verb'edg_wll_Event' represents \LB
 event, atomic data unit received and processed by \LB. It is a union of
@@ -420,8 +421,8 @@ same input list:
 
 For more information see file \verb'include/glite/lb/jobstat.h'
 
-\subsubsection{Building Programs}
-The easiest way to build programs using the \LB library is to use
+\subsubsection{Building Client Programs}
+The easiest way to build programs using the \LB library in C is to use
 GNU's libtool to take care of all the dependencies:
 \begin{verbatim}
 flavour=gcc32dbg
@@ -434,7 +435,7 @@ The library comes in different flavours (with/without debugging
 symbols, with/withou thread support) which in turn depend on the
 correct Globus library flavours.
 
-\TODO{Library dependencies - which rpms are needed?}
+The package needed is \texttt{glite-lb-client} and its dependencies which contain all necessary libraries.
 
 \subsection{C++ Language Binding}
 The C++ languague binding now only supports the consumer (querying)
