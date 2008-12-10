@@ -103,7 +103,7 @@ HDRS:=context.h context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h il_msg.h \
 	ulm_parse.h connpool.h notifid.h notif_rec.h padstruct.h \
 	query_rec.h timeouts.h LoggingExceptions.h CountRef.h ${PERF_HDRS} 
-GEN_HDRS:=Event.h events.h jobstat.h common_version.h
+GEN_HDRS:=events.h jobstat.h common_version.h
 
 STATICLIB:=libglite_lb_common_${nothrflavour}.a
 THRSTATICLIB:=libglite_lb_common_${thrflavour}.a
@@ -223,9 +223,12 @@ install:
 	fi ;
 #???		${STAGE_PERFTEST} ;
 	mkdir -p ${PREFIX}/share/perl/gLite/LB
+<<<<<<< Makefile
+=======
 	${INSTALL} -m 644 ${top_srcdir}/src/EventAttrNames.pl ${PREFIX}/share/perl/gLite/LB
 	mkdir -p ${PREFIX}/share/build/m4
 	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4
+>>>>>>> 1.94
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
@@ -259,5 +262,3 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp test_
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
 	chmod -w $@ >/dev/null
-
-Event.h: EventAttrNames.pl

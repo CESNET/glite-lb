@@ -5,12 +5,13 @@
 
 #include "glite/jobid/JobId.h"
 
-#include "glite/lb/Event.h"
 
 #ifdef BUILDING_LB_CLIENT
+#include "Event.h"
 #include "JobStatus.h"
 #include "ServerConnection.h"
 #else
+#include "glite/lb/Event.h"
 #include "glite/lb/JobStatus.h"
 #include "glite/lb/ServerConnection.h"
 #endif

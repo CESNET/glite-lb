@@ -11,7 +11,7 @@
 
 #include "glite/jobid/cjobid.h"
 
-#include "glite/lb/Event.h"
+#include "Event.h"
 #include "glite/lb/events.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/LoggingExceptions.h"
@@ -24,7 +24,7 @@ EWL_BEGIN_NAMESPACE;
 
 @@@{
 
-require 'EventAttrNames.pl';
+require '../src/EventAttrNames.pl';
 
 sub typeswitch {
 	my $ftype = shift;

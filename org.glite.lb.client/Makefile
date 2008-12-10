@@ -112,7 +112,7 @@ COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
-INSTALL:=libtool --mode=install install
+INSTALL?=libtool --mode=install install
 
 LIBOBJS:=connection.o consumer.o notification.o prod_proto.o \
 	producer.o uiwrap.o statistics.o
@@ -121,7 +121,7 @@ PLUSOBJS:=Event.o Job.o JobStatus.o Notification.o ServerConnection.o stat_field
 
 HDRS:=consumer.h notification.h statistics.h prod_proto.h connection.h \
 	Job.h Notification.h ServerConnection.h stat_fields.h
-GEN_HDRS:=JobStatus.h producer.h
+GEN_HDRS:=Event.h JobStatus.h producer.h
 
 LIBTHROBJS:=${LIBOBJS:.o=.thr.o}
 LIBLOBJS:=${LIBOBJS:.o=.lo}
@@ -296,13 +296,13 @@ olddoc: generate
 	doxygen C.dox
 	doxygen CPP.dox
 
-Event.cpp: EventAttrNames.pl
+Event.h Event.cpp: EventAttrNames.pl
 
-JobStatus.cpp: StatusAttrNames.pl
+JobStatus.h JobStatus.cpp: StatusAttrNames.pl
 
-EventAttrNames.pl:
-	rm -f $@
-	ln -s ${stagedir}/share/perl/gLite/LB/$@ $@
+#EventAttrNames.pl:
+#	rm -f $@
+#	ln -s ${stagedir}/share/perl/gLite/LB/$@ $@
 
 dist: distsrc distbin
 
@@ -363,6 +363,5 @@ clean:
 check_version:
 	${CHECK_VERSION} ${stagedir}/include/glite/lb/common_version.h
 
-JobStatus.h: StatusAttrNames.pl
 
 .PHONY: default all compile examples check stage install clean check_version

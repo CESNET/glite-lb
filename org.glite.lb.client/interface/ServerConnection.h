@@ -13,12 +13,13 @@
 
 #include "glite/jobid/JobId.h"
 
-#include "glite/lb/Event.h"
 
 #ifdef BUILDING_LB_CLIENT
+#include "Event.h"
 #include "JobStatus.h"
 #include "consumer.h"
 #else
+#include "glite/lb/Event.h"
 #include "glite/lb/JobStatus.h"
 #include "glite/lb/consumer.h"
 #endif
