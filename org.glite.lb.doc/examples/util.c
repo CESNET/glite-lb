@@ -4,8 +4,8 @@
 #include <string.h>
 #include <expat.h>
 
-#include "client_headers.h"
-
+#include <glite/jobid/cjobid.h>
+#include <glite/lb/jobstat.h>
 
 int use_proxy = 0;
 
