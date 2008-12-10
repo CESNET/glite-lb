@@ -1,0 +1,3 @@
+lb = http://glite.org/wsdl/services/lb
+lbt = http://glite.org/wsdl/types/lb
+lbe = http://glite.org/wsdl/elements/lb
