@@ -8,7 +8,8 @@ The \LB\ logging API (or producer API) is used to create and deliver
 events to the \LB\ server and/or proxy, depending on the function
 used:
 
-\TODO{verify ChangeACL}
+\TODO{kouril: verify ChangeACL}
+
 \begin{table}[h]
 \begin{tabularx}{\textwidth}{lX}
 \bf Function & \bf Delivers to \\
@@ -124,7 +125,7 @@ extern int edg_wll_SetLoggingJob(
 After setting the logging job identity, all the following logging
 calls refer to this \jobid and the sequence code is incremented
 according to the source component.
-\TODO{how is the sequence code updated?}
+\TODO{honik: how is the sequence code updated?}
 
 \subsubsection{Return values}
 The logging functions return 0 on success and one of \texttt{EINVAL,
@@ -134,7 +135,7 @@ it is not guaranteed, however, that the event was not delivered by the
 first call. Possibly duplicated events are discarded by the \LB\
 server or proxy.
 
-\TODO{check these}
+\TODO{ljocha: check these}
 The synchronous variants of logging functions can in addition return
 \verb'EDG_WLL_ERROR_NOJOBID' or \verb'EDG_WLL_ERROR_DB_DUP_KEY'.
 
@@ -148,7 +149,7 @@ First we have to include neccessary headers:
 Initialize context and set parameters:
 \lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=context-end\ context]{prod_example1.c}
 
-\TODO{proper setting of sequence codes}
+\TODO{honik: proper setting of sequence codes}
 \lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=sequence-end\ sequence]{prod_example1.c}
 
 Log the event:
@@ -171,6 +172,12 @@ write:
 \begin{lstlisting}
 err = edg_wll_LogUserTag(ctx, name, value);
 \end{lstlisting}
+
+
+\subsubsection{Change ACL example}
+\TODO{kouril}
+
+
 
 \subsection{Java binding}
 \TODO{mirek}

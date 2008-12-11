@@ -54,6 +54,11 @@ in a programming language (though it is possible), they might be useful rather i
 scripts. Their usage is rather straightforward as it is described in the User's Guide \cite{lbug}.
 
 
+\subsection{Building Client Libraries}
+\TODO{ljocha}
+
+
+
 \subsection{General Guidelines}
 
 \marginpar{Naming conventions}%
@@ -151,6 +156,8 @@ operation). The connections are transparently shared and reused by all
 contexts/threads to eliminate the overhead of secure channel
 establishment. This behaviour is completely hidden by the library.
 
+
+
 \section{\LB Common Components}
 \label{s:common}
 
@@ -239,7 +246,7 @@ free(cert_file);
 The third argument points at variable with type corresponding to the
 requested parameter. Do not forget to free the result.
 
-\TODO{Máme odkaz kde jsou popsany defaulty a vazby na promenne environmentu?}
+\TODO{sitera: Mame odkaz kde jsou popsany defaulty a vazby na promenne environmentu (ty jsou v LBUG Appendix C)}
 
 \marginpar{Obtaining error details}%
 When \LB API call returns error, additional details can be obtained
@@ -471,7 +478,7 @@ in memory only once.
 \marginpar{Context}%
 The context in C API is part of common components, the C++ API on the
 other hand differentiates between query context
-(see~\ref{ServerConnection}) and logging context; the description is
+(see Section~\ref{s:ServerConnection}) and logging context; the description is
 therefore part of the respective chapters.
 
 \subsubsection{Header Files}
