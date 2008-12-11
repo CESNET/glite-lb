@@ -1,1 +1,2 @@
 This directory contains source code of examples from LB Developer's Guide
+To build these examples, set the GLITE_LOCATION variable and run make.

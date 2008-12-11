@@ -37,7 +37,7 @@ LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
-EXAMPLES_SRC:=example1.c
+EXAMPLES_SRC:=example1.c prod_example1.c cons_example1.c cons_example2.c cons_example3.c
 EXAMPLES:=${EXAMPLES_SRC:.c=}
 
 EXTRA_SRC:=util.c

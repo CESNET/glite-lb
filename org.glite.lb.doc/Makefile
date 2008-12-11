@@ -115,7 +115,7 @@ LBTP.pdf: ${COMMON} \
 	LBTP.tex \
 	LBTP-Abstract.tex \
 	LBTP-Introduction.tex \
-    LBTP-IntegrationTests.tex \
+	LBTP-IntegrationTests.tex \
 	LBTP-Tests.tex \
 	LBTP-PerfTests.tex \
 	LBTP-InterTests.tex
