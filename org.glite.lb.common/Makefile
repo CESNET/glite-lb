@@ -223,12 +223,9 @@ install:
 	fi ;
 #???		${STAGE_PERFTEST} ;
 	mkdir -p ${PREFIX}/share/perl/gLite/LB
-<<<<<<< Makefile
-=======
 	${INSTALL} -m 644 ${top_srcdir}/src/EventAttrNames.pl ${PREFIX}/share/perl/gLite/LB
 	mkdir -p ${PREFIX}/share/build/m4
 	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4
->>>>>>> 1.94
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
