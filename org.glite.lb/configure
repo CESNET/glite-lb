@@ -11,7 +11,7 @@ my $nothrflavour = 'gcc64dbg';
 my $mode = 'build';
 my $help = 0;
 
-my @nodes = qw/client server logger utils java doc/;
+my @nodes = qw/client server logger utils client-java doc ws-test/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -36,7 +36,7 @@ my %extranodmod;
 my %deps;
 my %topbuild;
 
-my @lbmodules = qw/client client-java common doc logger server state-machine types utils ws-interface/;
+my @lbmodules = qw/client client-java common doc logger server state-machine types utils ws-interface ws-test/;
 
 
 my @opts = (
@@ -193,6 +193,7 @@ BEGIN{
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit/ ],
 	'lb.ws-interface' => [],
+	'lb.ws-test' => [ qw/gsoap/ ],
 	'lb.types' => [ qw// ],
 	'lbjp-common.db' => [ qw/mysql/ ],
 	'lbjp-common.maildir' => [ qw// ],
@@ -244,6 +245,7 @@ BEGIN{
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine
 	/ ],
+	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types/ ],
 	'lb.types' => [ qw// ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
@@ -262,7 +264,7 @@ BEGIN{
 #unused
 %extrafull = ( gridsite=>'org.gridsite.core');
 
-%extranodmod = ( java => 'client-java' );
+# %extranodmod = ( java => 'client-java' );
 
 my @t = qw/lb.client-java jobid.api-java lb.types/;
 @topbuild{@t} = (1) x ($#t+1);
