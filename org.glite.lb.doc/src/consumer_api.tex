@@ -310,8 +310,16 @@ demonstrated in the client example \texttt{job\_log.c} (in the client module).
 \TODO{michal}
 The querying C++ \LB API is modelled after the C \LB API using these basic principles:
 \begin{itemize}
-\item 
+\item queries are expressed as vectors of
+\verb'glite::lb::QueryRecord' instances,
+\item \LB context and query methods are represented by class
+\verb'glite::lb::ServerConnection',
+\item \LB job specific queries are encapsulated within class
+\verb'glite::lb::Job',
+\item query results are returned as (vector or list of)
+\verb'glite::lb::Event' or \verb'glite::lb::JobStatus' read-only instances.
 \end{itemize}
+
 
 \subsubsection{Header Files}
 Header files for the \LB consumer API are summarized in table~\ref{t:ccppheaders}.
