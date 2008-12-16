@@ -14,7 +14,8 @@
 
 static struct option opts[] = {
 	{"help",		0,	NULL,	'h'},
-	{"sock",		1,	NULL,	's'},
+	{"server",		1,	NULL,	's'},
+	{"port",		1,	NULL,	'p'},
 	{"jobid",		1,	NULL,	'j'},
 	{"user",		1,	NULL,	'u'},
 };
@@ -23,7 +24,8 @@ static void usage(char *me)
 {
 	fprintf(stderr, "usage: %s [option]\n"
 			"\t-h, --help      Shows this screen.\n"
-			"\t-s, --server    LB Proxy socket.\n"
+			"\t-s, --server    LB server.\n"
+			"\t-p, --port      LB server port.\n"
 			"\t-j, --jobid     ID of requested job.\n"
 			"\t-u, --user      User DN.\n"
 			, me);
@@ -33,20 +35,23 @@ static void usage(char *me)
 int main(int argc, char *argv[])
 {
 	char			   *server, *jobid_s, *user;
+	edg_wlc_JobId                   jobid = NULL;
 	int					opt, err = 0;
+	long 				i;
+	int port = 0; 
 
-	server = code = jobid_s = name = value = NULL;
-	while ( (opt = getopt_long(argc, argv, "hs:j:u:c:n:v:", opts, NULL)) != EOF)
+	server = jobid_s = user = NULL;
+	while ( (opt = getopt_long(argc, argv, "hs:p:j:u:c:n:v:", opts, NULL)) != EOF)
 		switch (opt) {
-		case 'h': usage(name); return 0;
+		case 'h': usage(argv[0]); return 0;
 		case 's': server = strdup(optarg); break;
+		case 'p': port = atoi(optarg); break;
 		case 'j': jobid_s = strdup(optarg); break;
 		case 'u': user = strdup(optarg); break;
-		case '?': usage(name); return 1;
+		case '?': usage(argv[0]); return 1;
 		}
 
 	if ( !jobid_s ) { fprintf(stderr, "JobId not given\n"); return 1; }
-	if ( !server ) { fprintf(stderr, "LB proxy socket not given\n"); return 1; }
 
 	/*variables*/
 	edg_wll_Context		ctx;
@@ -61,7 +66,7 @@ int main(int argc, char *argv[])
 	edg_wll_InitContext(&ctx);
 	
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER, server);
-	edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER_PORT, port);
+	if (port) edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER_PORT, port);
 	/*end context*/
 
 	/*queryrec*/
@@ -97,7 +102,7 @@ int main(int argc, char *argv[])
 	if ( err == E2BIG ) {
 		fprintf(stderr,"Warning: only limited result returned!\n");
 		return 0;
-	} elseif (err) {
+	} else if (err) {
 		char	*et,*ed;
 		
 		edg_wll_Error(ctx,&et,&ed);

@@ -42,17 +42,17 @@ int main(int argc, char *argv[])
 	int					opt, err = 0;
 
 
-	server = code = jobid_s = name = value = NULL;
+	server = seq_code = jobid_s = name = value = NULL;
 	while ( (opt = getopt_long(argc, argv, "hs:j:u:c:n:v:", opts, NULL)) != EOF)
 		switch (opt) {
-		case 'h': usage(name); return 0;
+		case 'h': usage(argv[0]); return 0;
 		case 's': server = strdup(optarg); break;
 		case 'j': jobid_s = strdup(optarg); break;
 		case 'u': user = strdup(optarg); break;
 		case 'c': seq_code = strdup(optarg); break;
 		case 'n': name = strdup(optarg); break;
 		case 'v': value = strdup(optarg); break;
-		case '?': usage(name); return 1;
+		case '?': usage(argv[0]); return 1;
 		}
 
 	if ( !jobid_s ) { fprintf(stderr, "JobId not given\n"); return 1; }
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 	
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_SOURCE, EDG_WLL_SOURCE_USER_INTERFACE);
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_HOST, server);
-	edg_wll_SetParam(ctx, EDG_WLL_PARAM_PORT, port);
+	//edg_wll_SetParam(ctx, EDG_WLL_PARAM_PORT, port);
 	/*end context*/
 
 	/*sequence*/
