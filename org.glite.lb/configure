@@ -259,7 +259,7 @@ BEGIN{
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine
 	/ ],
-	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface lb.client/ ],
+	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types/ ],
 	'lb.types' => [ qw// ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],

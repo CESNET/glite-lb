@@ -1,15 +1,11 @@
 #include <getopt.h>
 #include <stdsoap2.h>
 
-#include "glite/lb/consumer.h"
-#include "glite/lb/events_parse.h"
-
 #include "soap_version.h"
 #include "glite/security/glite_gsplugin.h"
 #include "glite/security/glite_gscompat.h"
 
 #include "bk_ws_H.h"
-#include "ws_typeref.h"
 #include "ws_fault.h"
 
 #if GSOAP_VERSION <= 20602
@@ -33,23 +29,21 @@ static void usage(char *me)
 		, me);
 }
 
-static void free_events(edg_wll_Event *events);
-
 int main(int argc,char** argv)
 {
-	edg_wll_Context				ctx;
 	glite_gsplugin_Context			gsplugin_ctx;
 	struct soap				*mydlo = soap_new();
-	struct _lbe__QueryEventsResponse	out;
+	struct _lbe__QueryEventsResponse	out,*outp = &out;
 	struct _lbe__QueryEvents		in;	
-	edg_wll_QueryRec			**jconds = NULL;
-	edg_wll_QueryRec			j[2], e[1];
 	int					opt, err, i;
-	edg_wlc_JobId				job;
 	char					*server = "http://localhost:9003/",
 						*jobid = NULL,
 						*name = NULL;
 
+
+	struct lbt__queryConditions	qc,*qcp;	
+	struct lbt__queryRecord		qr,*qrp;
+	struct lbt__queryRecValue	qv;
 
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
@@ -68,13 +62,7 @@ int main(int argc,char** argv)
 		usage(name);
 		return 1;
 	}
-	else if (edg_wlc_JobIdParse(jobid,&job)) {
-                fprintf(stderr,"%s: can't parse job ID\n",argv[1]);
-                return 1;
-        }
-
 		
-	edg_wll_InitContext(&ctx);
     	glite_gsplugin_init_context(&gsplugin_ctx);
 
 	soap_set_namespaces(mydlo, namespaces);
@@ -84,84 +72,45 @@ int main(int argc,char** argv)
 		return 1;
 	}
 
-	glite_gsplugin_set_udata(mydlo, ctx);
-
-	/* prepare job log query */
-	memset(j,0,sizeof j);
-	memset(e,0,sizeof e);
-
-	j[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
-	j[0].op = EDG_WLL_QUERY_OP_EQUAL;
-	j[0].value.j = job;
-
-	
-	jconds = (edg_wll_QueryRec **) calloc(2, sizeof(edg_wll_QueryRec *));
-	for ( i = 0; i < 1; i++ )
-	{
-		jconds[i] = (edg_wll_QueryRec *) calloc(2, sizeof(edg_wll_QueryRec));
-		jconds[i][0] = j[i];
-	}
-
-/*	econds = (edg_wll_QueryRec **) calloc(1, sizeof(edg_wll_QueryRec *));
-	for ( i = 0; i < 1; i++ )
-	{
-		econds[i] = (edg_wll_QueryRec *) calloc(1, sizeof(edg_wll_QueryRec));
-		econds[i][0] = e[i];
-	}*/
-
-	memset(&in, 0, sizeof in);
-	memset(&out, 0, sizeof out);
-
-	if (edg_wll_QueryCondsExtToSoap(mydlo, (const edg_wll_QueryRec **)jconds,
-			&in.__sizejobConditions, &in.jobConditions) != SOAP_OK) {
-		printf("Error converting QueryConds to Soap!\n");
-		return(1);
-	}
-
-	for (i = 0; jconds[i]; i++) {
-		if (jconds[i]) edg_wlc_JobIdFree(jconds[i][0].value.j);
-		free(jconds[i]);
-	}
-	free(jconds);
-
-	//edg_wll_QueryCondsExtToSoap(mydlo, (const edg_wll_QueryRec **)econds,
-	//	&in.__sizeeventConditions, &in.eventConditions);
-
-	//in.jobConditions = NULL;
-	//in.__sizejobConditions = 0;
+	qcp = &qc;
+	in.jobConditions = &qcp;
+	in.__sizejobConditions = 1;
 	in.eventConditions = NULL;
 	in.__sizeeventConditions = 0;
+
+	memset(&qc,0,sizeof qc);
+	qc.attr = lbt__queryAttr__JOBID;
+	qc.__sizerecord = 1;
+	qc.record = &qrp;
+	qrp = &qr;
+
+	memset(&qr,0,sizeof qr);
+	qr.op = lbt__queryOp__EQUAL;
+	qr.value1 = &qv;
+	qv.__union_2 = SOAP_UNION_lbt__union_2_c;
+	qv.union_2.c = jobid;
 
 	switch (err = soap_call___lb__QueryEvents(mydlo, server, "",&in,&out))
 	{
 	case SOAP_OK:
-		{
-		edg_wll_Event 	*events = NULL;
-		int		i;
+	{
+		struct soap	*outsoap = soap_new();
+		outsoap->sendfd = 1;
 
+		soap_serialize_PointerTo_lbe__QueryEventsResponse(outsoap,&outp);
+		soap_begin_send(outsoap);
+		soap_put_PointerTo_lbe__QueryEventsResponse(outsoap,&outp,"joblog","http://glite.org/wsdl/elements/lb:QueryJobsResponse");
 
-		edg_wll_SoapToEventsQueryRes(mydlo,out,&events);
-
-		for ( i = 0; events && events[i].type != EDG_WLL_EVENT_UNDEF; i++ )
-		{
-			char	*e = edg_wll_UnparseEvent(ctx,events+i);
-			fputs(e,stdout);
-			fputs("\n",stdout);
-			free(e);
-		}
-
-		free_events(events);
-		printf("\nFound %d events\n",i);
-		}
 		break;
+	}
 	case SOAP_FAULT: 
 	case SOAP_SVR_FAULT:
 		{
-		char	*et,*ed;
+		char	*et;
+		int	err;
 
-		edg_wll_FaultToErr(mydlo,ctx);
-		edg_wll_Error(ctx,&et,&ed);
-		fprintf(stderr,"%s: %s (%s)\n",argv[0],et,ed);
+		err = glite_lb_FaultToErr(mydlo,&et);
+		fprintf(stderr,"%s: %s (%s)\n",argv[0],strerror(err),et);
 		soap_done(mydlo);
 		exit(1);
 		}
@@ -174,20 +123,5 @@ int main(int argc,char** argv)
 	soap_done(mydlo);
 	free(mydlo);
 	glite_gsplugin_free_context(gsplugin_ctx);
-	edg_wll_FreeContext(ctx);
 	return 0;
-}
-
-
-static void free_events(edg_wll_Event *events)
-{
-	int	i;
-
-	if (events) {
-		for (i=0; events[i].type != EDG_WLL_EVENT_UNDEF; i++) 
-			edg_wll_FreeEvent(&(events[i]));
-		edg_wll_FreeEvent(&(events[i])); /* free last line */
-		free(events);	
-		events = NULL;
-	}
 }

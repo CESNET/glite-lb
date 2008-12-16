@@ -18,7 +18,8 @@ voms_prefix=/opt/voms
 
 version=${module.version}
 
-CEXAMPLES:=ws_getversion ws_jobstat ws_query_ex ws_joblog
+CEXAMPLES:=ws_getversion ws_jobstat ws_joblog
+#TODO ws_query_ex 
 
 default all: ${CEXAMPLES}
 
@@ -31,6 +32,7 @@ CFLAGS=-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS}
+INSTALL:=libtool --mode=install install
 
 GSOAP_FILES_PREFIX:= bk_ws_
 dotless_gsoap_ver:=${shell echo ${gsoap_default_version} | tr -d . }
@@ -52,6 +54,13 @@ ${CEXAMPLES}: %: %.o ${WS_CLIENT_OBJS}
 
 %.o %.lo: %.c soap_version.h ${SOAP_FILES}
 	${COMPILE} -c $<
+
+install:
+	mkdir -p ${PREFIX}/examples/
+	for f in ${CEXAMPLES}; do \
+		${INSTALL} -m 755 $$f ${PREFIX}/examples/glite-lb-$$f; \
+	done
+
 
 LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 	cp ${stagedir}/interface/LBTypes.wsdl .
