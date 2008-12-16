@@ -1,10 +1,6 @@
-top_srcdir=.
+top_srcdir=..
 stagedir=.
-distdir=.
-globalprefix=glite
-lbprefix=lb
-package=glite-lb-server
-version=0.2.0
+version=0.0.0
 PREFIX=/opt/glite
 
 glite_location=/opt/glite
@@ -36,7 +32,7 @@ COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS}
 
 GSOAP_FILES_PREFIX:= bk_ws_
-dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
+dotless_gsoap_ver:=${shell echo ${gsoap_default_version} | tr -d . }
 GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o

@@ -7,7 +7,7 @@
 #include "glite/lb/consumer.h"
 
 #include "bk_ws_H.h"
-#include "ws_typeref.h"
+// #include "ws_typeref.h"
 #include "ws_fault.h"
 
 #if GSOAP_VERSION <= 20602

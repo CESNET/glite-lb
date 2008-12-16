@@ -2,7 +2,7 @@
 #include <stdsoap2.h>
 
 #include "glite/security/glite_gsplugin.h"
-#include "glite/lb/consumer.h"
+#include "glite/lb/context.h"
 
 #include "bk_ws_H.h"
 #include "ws_fault.h"

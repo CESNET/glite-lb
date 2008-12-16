@@ -28,9 +28,14 @@ my %extern_prefix = (
 	lcas => '/opt/glite',
 );
 
+my %jar = (
+	'commons-codec' => '/usr/share/java/commons-codec-1.3.jar',
+);
+
 
 my %glite_prefix;
 my %need_externs;
+my %need_jars;
 my %extrafull;
 my %extranodmod;
 my %deps;
@@ -58,6 +63,7 @@ for (@nodes) {
 }
 
 push @opts,"with-$_=s",\$extern_prefix{$_} for keys %extern_prefix;
+push @opts,"with-$_=s",\$jar{$_} for keys %jar;
 
 my @keeparg = @ARGV;
 
@@ -128,11 +134,15 @@ sub mode_build {
 	print "\nBuilding modules: @modules\n";
 	
 	my @ext = map @{$need_externs{$_}},@modules;
+	my @myjars = map @{$need_jars{$_}},@modules;
 	undef %aux; @aux{@ext} = 1;
 	@ext = keys %aux;
+	undef %aux; @aux{@myjars} = (1) x $#myjars;
+	@myjars = keys %aux;
 	
 	print "\nRequired externals:\n";
 	print "\t$_: $extern_prefix{$_}\n" for @ext;
+	print "\t$_: $jar{$_}\n" for @myjars;
 	print "\nThis is a poor-man configure, it's up to you to have sources and externals there\n\n";
 	
 	mkinc($_) for @modules;
@@ -206,6 +216,10 @@ BEGIN{
 	'jobid.api-java' =>  [ qw// ],
 );
 
+%need_jars = (
+	'jobid.api-java' => [ qw/commons-codec/ ],
+);
+
 %build_only = (
 	'security.gsoap-plugin' => [ qw/gsoap/ ],
 );
@@ -245,7 +259,7 @@ BEGIN{
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine
 	/ ],
-	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
+	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface lb.client/ ],
 	'lb.ws-interface' => [ qw/lb.types/ ],
 	'lb.types' => [ qw// ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
@@ -281,9 +295,9 @@ sub mkinc
 	my %aux;
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils 
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java
 security.gss security.gsoap-plugin
-jobid.api-c jobid.api-cpp
+jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio
 jp.common/;
 	@aux{@m} = (1) x ($#m+1);
@@ -323,6 +337,10 @@ nothrflavour = $nothrflavour
 		print MKINC "${_}_prefix = $extern_prefix{$_}\n"
 	}
 
+	for (@{$need_jars{$short}}) {
+		print MKINC "${_}_jar = $jar{$_}\n"
+	}
+
 	my $need_gsoap = 0;
 	for (@{$need_externs{$short}})  { $need_gsoap = 1 if $_ eq 'gsoap'; }
 
@@ -348,6 +366,7 @@ sub gsoap_version {
 
 sub usage {
 	my @ext = keys %extern_prefix;
+	my @myjars, keys %jar;
 
 	print STDERR qq{
 usage: $0 options
@@ -371,6 +390,8 @@ Dependencies:
   --with-EXTERNAL=PATH		where to look for an external. Required externals
  				(not all for all modules) are:
 					@ext
+  --with-JAR=JAR		where to look for jars. Required jars are:
+					@myjars
 				Summary of what will be used is always printed
 
 };
