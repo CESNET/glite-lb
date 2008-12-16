@@ -308,11 +308,60 @@ demonstrated in the client example \texttt{job\_log.c} (in the client module).
 
 \subsection{C++ Language Binding}
 \TODO{michal}
+The querying C++ \LB API is modelled after the C \LB API using these basic principles:
+\begin{itemize}
+\item 
+\end{itemize}
 
 \subsubsection{Header Files}
+Header files for the \LB consumer API are summarized in table~\ref{t:ccppheaders}.
+\begin{table}[h]
+\begin{tabularx}{\textwidth}{>{\tt}lX}
+glite/lb/Event.h & \\
+glite/lb/ServerConnection.h & \\
+glite/lb/Job.h & \\
+glite/lb/JobStatus.h & \\
+
+\end{tabularx}
+\end{table}
+
+\subsubsection{QueryRecord}
+\subsubsection{Event}
+The objects of class \verb'glite::lb::Event' are returned by the \LB event
+queries. The \verb'Event' class introduces symbolic names for event attributes
+and their types, feature not available through the C API, as well as
+(read only) access to the attribute values.  Using these methods you can 
+\begin{itemize}
+\item get the event type (both symbolic and string),
+\begin{lstlisting}
+	const std::string & name(void) const;
+	static const std::string getEventName(Type type);
+\end{lstlisting}
+\item get the list of attribute types and values,
+\begin{lstlisting}
+	const std::vector<std::pair<Attr,AttrType> >  &	getAttrs(void) const;
+\end{lstlisting}
+\item get string representation of attribute names,
+\begin{lstlisting}
+	static const std::string & getAttrName(Attr name);
+\end{lstlisting}
+\item get value of given attribute.
+\begin{lstlisting}
+	int	getValInt(Attr name) const;
+	float	getValFloat(Attr name) const;
+	double	getValDouble(Attr name) const;
+	std::string getValString(Attr name) const;
+        struct timeval	getValTime(Attr name) const;
+        const glite::jobid::JobId getValJobId(Attr name) const;
+\end{lstlisting}
+\end{itemize}
+
+Following example demonstrates this by printing the event attributes:
+\lstinputlisting[title={\bf File: }\lstname,firstline=8,numbers=left]{util.C}
+
+\subsubsection{JobStatus}
 \subsubsection{ServerConnection}\label{s:ServerConnection}
 \subsubsection{Job}
-\subsubsection{JobStatus}
 
 
 \subsection{Web-Services Binding}\label{s:Consumer-API-WS}
