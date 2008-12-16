@@ -2,7 +2,6 @@
 #include <stdsoap2.h>
 
 #include "glite/security/glite_gsplugin.h"
-#include "glite/lb/context.h"
 
 #include "bk_ws_H.h"
 #include "ws_fault.h"
@@ -27,11 +26,8 @@ static void usage(char *me)
 		, me);
 }
 
-//static void printstat(edg_wll_JobStat stat, int level);
-
 int main(int argc,char** argv)
 {
-	edg_wll_Context			ctx;
 	glite_gsplugin_Context		gsplugin_ctx;
 	struct soap			soap;
 	struct _lbe__GetVersion		in;
@@ -51,7 +47,6 @@ int main(int argc,char** argv)
 	case '?': usage(name); return 1;
 	}
 
-    edg_wll_InitContext(&ctx);
     glite_gsplugin_init_context(&gsplugin_ctx);
 
 	soap_init(&soap);
@@ -71,11 +66,11 @@ int main(int argc,char** argv)
 	case SOAP_FAULT: 
 	case SOAP_SVR_FAULT:
 		{
-		char	*et,*ed;
+		char	*et;
+		int	err;
 
-		edg_wll_FaultToErr(&soap,ctx);
-		edg_wll_Error(ctx,&et,&ed);
-		fprintf(stderr,"%s: %s (%s)\n",argv[0],et,ed);
+		err = glite_lb_FaultToErr(&soap,&et);
+		fprintf(stderr,"%s: %s (%s)\n",argv[0],strerror(err),et);
 		exit(1);
 		}
 	default: 
@@ -86,7 +81,6 @@ int main(int argc,char** argv)
     soap_end(&soap);
     soap_done(&soap);
     glite_gsplugin_free_context(gsplugin_ctx);
-    edg_wll_FreeContext(ctx);
 
     return 0;
 }

@@ -26,7 +26,8 @@ VPATH=${top_srcdir}/examples
 CC=gcc
 CFLAGS=-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
-	-I${globus_prefix}/include/${nothrflavour}
+	-I${globus_prefix}/include/${nothrflavour} \
+	${DEBUG}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS}
@@ -37,8 +38,7 @@ GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o
 # ws_typeref.o
-WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
-        -lglite_lb_common_${nothrflavour}
+WS_CLIENT_LIBS:= ${GSOAP_LIB} 
 
 SOAP_FILES:=${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c ${GSOAP_FILES_PREFIX}ServerLib.c ${GSOAP_FILES_PREFIX}ClientLib.c LoggingAndBookkeeping.nsmap
 
