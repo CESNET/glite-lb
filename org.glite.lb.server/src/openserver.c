@@ -27,7 +27,7 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 
 	hit = 0;
 	// new columns added to jobs
-	if (glite_lbu_ExecSQL(ctx->dbctx, "DESC jobs", &stmt) <= 0) goto err;
+	if ((ret = glite_lbu_ExecSQL(ctx->dbctx, "DESC jobs", &stmt)) <= 0) goto err;
 	while (hit < 4 && (ret = glite_lbu_FetchRow(stmt, 1, NULL, cols)) > 0) {
 		assert(ret <= (int)(sizeof cols/sizeof cols[0]));
 		if (strcasecmp(cols[0], "proxy") == 0 ||
