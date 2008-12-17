@@ -1,10 +1,12 @@
 #include "glite/lb/Event.h"
+#include "glite/lb/JobStatus.h"
 
 #include <iostream>
 
 using namespace glite::lb;
 using namespace std;
 
+/*event*/
 void
 dumpEvent(Event *event)
 {
@@ -52,3 +54,12 @@ dumpEvent(Event *event)
 		}
 	}
 }
+/*end event*/
+
+
+/*status*/
+void dumpState(JobStatus *status) 
+{
+	
+}
+/*end status*/

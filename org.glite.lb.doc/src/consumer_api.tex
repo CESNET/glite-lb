@@ -326,10 +326,13 @@ The querying C++ \LB API is modelled after the C \LB API using these basic princ
 Header files for the \LB consumer API are summarized in table~\ref{t:ccppheaders}.
 \begin{table}[h]
 \begin{tabularx}{\textwidth}{>{\tt}lX}
-glite/lb/Event.h & \\
-glite/lb/ServerConnection.h & \\
-glite/lb/Job.h & \\
-glite/lb/JobStatus.h & \\
+glite/lb/Event.h & Event class for event query results. \\
+glite/lb/JobStatus.h & JobStatus class for job query results. \\
+glite/lb/ServerConnection.h & Core of the C++ \LB API, defines
+\verb'QueryRecord' class for specifying queries and
+\verb'ServerConnection' class for performing the queries. \\
+glite/lb/Job.h & Defines \verb'Job' class with methods for job
+specific queries. \\
 
 \end{tabularx}
 \end{table}
@@ -337,24 +340,30 @@ glite/lb/JobStatus.h & \\
 \subsubsection{QueryRecord}
 \subsubsection{Event}
 The objects of class \verb'glite::lb::Event' are returned by the \LB event
-queries. The \verb'Event' class introduces symbolic names for event attributes
-and their types, feature not available through the C API, as well as
-(read only) access to the attribute values.  Using these methods you can 
+queries. The \verb'Event' class introduces symbolic names for event
+type (enumeration \verb'Event::Type'), event attributes (enumeration
+\verb'Event::Attr') and their types (enumeration
+\verb'Event::AttrType'), feature not available through the C API, as
+well as (read only) access to the attribute values.  Using 
+these methods you can:
 \begin{itemize}
-\item get the event type (both symbolic and string),
+\item get the string name for the symbolic event type:
 \begin{lstlisting}
-	const std::string & name(void) const;
 	static const std::string getEventName(Type type);
 \end{lstlisting}
-\item get the list of attribute types and values,
+\item get the event type (both symbolic and string):
+\begin{lstlisting}
+	const std::string & name(void) const;
+\end{lstlisting}
+\item get the list of attribute types and values:
 \begin{lstlisting}
 	const std::vector<std::pair<Attr,AttrType> >  &	getAttrs(void) const;
 \end{lstlisting}
-\item get string representation of attribute names,
+\item get string representation of attribute names:
 \begin{lstlisting}
 	static const std::string & getAttrName(Attr name);
 \end{lstlisting}
-\item get value of given attribute.
+\item get value of given attribute:
 \begin{lstlisting}
 	int	getValInt(Attr name) const;
 	float	getValFloat(Attr name) const;
@@ -366,9 +375,42 @@ and their types, feature not available through the C API, as well as
 \end{itemize}
 
 Following example demonstrates this by printing the event attributes:
-\lstinputlisting[title={\bf File: }\lstname,firstline=8,numbers=left]{util.C}
+\lstinputlisting[title={\bf File:}\lstname,numbers=left,linerange=event-end\ event]{util.C}
 
 \subsubsection{JobStatus}
+The \verb'glite::lb::JobStatus' serves as a result type of job status
+queries in the same way the \verb'glite::lb::Event' serves in event
+queries. The \verb'JobStatus' class provides symbolic names for job
+states (enumeration \verb'JobStatus::Code'), state attributes
+(enumeration \verb'JobStatus::Attr') and their types (enumeration
+\verb'JobStatus::AttrType'), and read only access to the
+attribute values. Using the \verb'JobStatus' interface you can:
+\begin{itemize}
+\item get the string name for the symbolic job state:
+\begin{lstlisting}
+	static const std::string &getStateName(Code state);
+\end{lstlisting}
+\item get the job state name (both symbolic and string):
+\begin{lstlisting}
+	const std::string & name(void) const;
+\end{lstlisting}
+\item get the list of job state attributes and types:
+\begin{lstlisting}
+	const std::vector<std::pair<Attr,AttrType> >& getAttrs(void) const;
+\end{lstlisting}
+\item convert the attribute names from symbolic to string form and
+vice versa:
+\begin{lstlisting}
+	static const std::string& getAttrName(Attr name);
+	static Attr attrByName(std::string const &);
+\end{lstlisting}
+\item get value of given attribute:
+\begin{lstlisting}
+\end{lstlisting}
+\end{itemize}
+
+\lstinputlisting[title={\bf File:}\lstname,numbers=left,linerange=status-end\ status]{util.C}
+
 \subsubsection{ServerConnection}\label{s:ServerConnection}
 \subsubsection{Job}
 
