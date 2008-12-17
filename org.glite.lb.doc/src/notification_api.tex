@@ -5,16 +5,17 @@
 
 \TODO{sitera: prepsat ve stejnem duchu jako predchozi kapitoly, zminit novinky v \LBnew}
 
-The \LB\ notification API is another kind of \LB\ consumer API and
+The \LB\ notification API is another kind of \LB\ consumer API which
 provides streaming publish/subscribe model instead of query/response
 model. It is designed to provide the same information and use the same
-query conditions encoding as the consumer API described in sec.~\ref{s:Consumer-API}.
+query conditions encoding as the consumer API described in
+sec.~\ref{s:Consumer-API}
 
 Basic usage of the \LB\ notification API is described in the \LB
 user's guide (\cite{lbug}) in section ``Tools'' as there is described
-a tool called \verb'glite-lb-notify' which is a thin wrapper around
-the \LB\ notification API. Its source code can also serve as a
-complete exaple of the \LB\ notification API usage.
+a tool called \verb'glite-lb-notify' which is a command line interface
+wrapper around the \LB\ notification API. Its source code can also
+serve as a complete exaple of the \LB\ notification API usage.
 
 The \LB\ notification API have currently only C language binding.
 
@@ -59,22 +60,22 @@ least one particular JobId must be defined. In \LB 2.0 you cat make a
 registration based on other attributes without referencing a
 particular JobId (you can select owner, VO, network server).
 
-A new notification is created using \lstinline'edg_wll_NotifNew' call. The
+A new notification is created using \verb'edg_wll_NotifNew' call. The
 notification validity parameter is intended to set the refresh period,
 not the lifetime of the notification itself. The owner of notification
-must periodically call \lstinline'edg_wll_NotifRefresh' to ensure validity
+must periodically call \verb'edg_wll_NotifRefresh' to ensure validity
 of the notification.
 
 If user does not want to receive notifications any more,
-\lstinline'edg_wll_NotifDrop' call removes the registration for
+\verb'edg_wll_NotifDrop' call removes the registration for
 notifications from \LB server.
 
-It is possible to change existing notification (conditions) by
-\lstinline'edg_wll_NotifChange' call.
+It is possible to change existing notification (its conditions) by
+\verb'edg_wll_NotifChange' call.
 
 \subsection{Receive data}
 To receive data from a notificaton the API provides
-\lstinline'edg_wll_NotifReceive' call. It returns first incoming
+\verb'edg_wll_NotifReceive' call. It returns first incoming
 notification if at least one is available or waits a specified timeout. You can
 also set the timeout to zero if you want to poll.
 
@@ -84,7 +85,7 @@ than where the registration was done, it is possible but the
 
 \TODO{Reusing of socket}
 
-\TODO{Normal usage of \lstinline'edg_wll_NotifCloseFd'? Shoul be used?}
+\TODO{Normal usage of edg\_wll\_NotifCloseFd? Shoul be used?}
 
 \subsection{Registering and receiving notification example}
 
