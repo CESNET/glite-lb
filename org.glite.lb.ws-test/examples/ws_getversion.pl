@@ -13,16 +13,18 @@ $ENV{HTTPS_CA_FILE}= $ENV{HTTPS_CERT_FILE} = $ENV{HTTPS_KEY_FILE} =
 $srv = shift;
 
 $c = SOAP::Lite
-	-> proxy("$srv/lb")
-	-> uri('http://glite.org/wsdl/services/lb');
+	-> uri('http://glite.org/wsdl/services/lb')
+	-> proxy("$srv/lb") ;
+
 
 # TODO: replace with $srv/lb/?wsdl once it works
 service $c 'http://egee.cesnet.cz/en/WSDL/HEAD/LB.wsdl';
+
 ns $c 'http://glite.org/wsdl/elements/lb';
 
 on_fault $c sub { print Dumper($_[1]->fault); $fault = 1; };
 
-$resp = uuGetVersion $c;
+$resp = GetVersion $c;
 
-print Dumper($resp);
+print $resp->result,"\n";
 
