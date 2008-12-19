@@ -333,85 +333,75 @@ glite/lb/ServerConnection.h & Core of the C++ \LB API, defines
 \verb'ServerConnection' class for performing the queries. \\
 glite/lb/Job.h & Defines \verb'Job' class with methods for job
 specific queries. \\
-
 \end{tabularx}
+\caption{Consumer C++ API header files}
+\label{t:ccppheaders}
 \end{table}
 
 \subsubsection{QueryRecord}
+
 \subsubsection{Event}
 The objects of class \verb'glite::lb::Event' are returned by the \LB event
 queries. The \verb'Event' class introduces symbolic names for event
-type (enumeration \verb'Event::Type'), event attributes (enumeration
-\verb'Event::Attr') and their types (enumeration
+type (enum \verb'Event::Type'), event attributes (enum
+\verb'Event::Attr') and their types (enum
 \verb'Event::AttrType'), feature not available through the C API, as
 well as (read only) access to the attribute values.  Using 
 these methods you can:
 \begin{itemize}
-\item get the string name for the symbolic event type:
-\begin{lstlisting}
-	static const std::string getEventName(Type type);
-\end{lstlisting}
 \item get the event type (both symbolic and string):
 \begin{lstlisting}
-	const std::string & name(void) const;
-\end{lstlisting}
-\item get the list of attribute types and values:
-\begin{lstlisting}
-	const std::vector<std::pair<Attr,AttrType> >  &	getAttrs(void) const;
-\end{lstlisting}
-\item get string representation of attribute names:
-\begin{lstlisting}
-	static const std::string & getAttrName(Attr name);
-\end{lstlisting}
-\item get value of given attribute:
-\begin{lstlisting}
-	int	getValInt(Attr name) const;
-	float	getValFloat(Attr name) const;
-	double	getValDouble(Attr name) const;
-	std::string getValString(Attr name) const;
-        struct timeval	getValTime(Attr name) const;
-        const glite::jobid::JobId getValJobId(Attr name) const;
-\end{lstlisting}
-\end{itemize}
+      Event event;
 
-Following example demonstrates this by printing the event attributes:
+      // we suppose event gets somehow filled in
+      cout << "Event type: " << event.type << endl;
+   
+      cout << "Event name:" << endl;
+      // these two lines should print the same string
+      cout << Event::getEventName(event.type) << endl;
+      cout << event.name() << endl;
+\end{lstlisting}
+\item get the list of attribute types and values (see
+line~\ref{l:getattrs} of the example),
+\item get string representation of attribute names,
+\item get value of given attribute.
+\end{itemize}
+The following example demonstrates this by printing event name and attributes:
 \lstinputlisting[title={\bf File:}\lstname,numbers=left,linerange=event-end\ event]{util.C}
 
 \subsubsection{JobStatus}
 The \verb'glite::lb::JobStatus' serves as a result type of job status
 queries in the same way the \verb'glite::lb::Event' serves in event
 queries. The \verb'JobStatus' class provides symbolic names for job
-states (enumeration \verb'JobStatus::Code'), state attributes
-(enumeration \verb'JobStatus::Attr') and their types (enumeration
+states (enum \verb'JobStatus::Code'), state attributes
+(enum \verb'JobStatus::Attr') and their types (enum
 \verb'JobStatus::AttrType'), and read only access to the
 attribute values. Using the \verb'JobStatus' interface you can:
 \begin{itemize}
 \item get the string name for the symbolic job state:
 \begin{lstlisting}
-	static const std::string &getStateName(Code state);
-\end{lstlisting}
-\item get the job state name (both symbolic and string):
-\begin{lstlisting}
-	const std::string & name(void) const;
-\end{lstlisting}
-\item get the list of job state attributes and types:
-\begin{lstlisting}
-	const std::vector<std::pair<Attr,AttrType> >& getAttrs(void) const;
-\end{lstlisting}
-\item convert the attribute names from symbolic to string form and
-vice versa:
-\begin{lstlisting}
-	static const std::string& getAttrName(Attr name);
-	static Attr attrByName(std::string const &);
-\end{lstlisting}
-\item get value of given attribute:
-\begin{lstlisting}
-\end{lstlisting}
-\end{itemize}
+	JobStatus status;
 
+	// we suppose status gets somehow filled in
+        cout << "Job state: " << status.type << endl;
+
+        cout << "State name: " << endl;
+        // these two lines should print the same string
+        cout << JobStatus::getStateName(status.type) << endl;
+        cout << status.name() << endl;
+\end{lstlisting}
+\item get the job state name (both symbolic and string),
+\item get the list of job state attributes and types,	
+\item convert the attribute names from symbolic to string form and
+vice versa,
+\item get value of given attribute.
+\end{itemize}
+The following example demostrates this by printing job status (name
+and attributes):
 \lstinputlisting[title={\bf File:}\lstname,numbers=left,linerange=status-end\ status]{util.C}
 
 \subsubsection{ServerConnection}\label{s:ServerConnection}
+
 \subsubsection{Job}
 
 
