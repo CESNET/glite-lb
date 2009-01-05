@@ -54,9 +54,39 @@ in a programming language (though it is possible), they might be useful rather i
 scripts. Their usage is rather straightforward as it is described in the User's Guide \cite{lbug}.
 
 
-\subsection{Building Client Libraries}
-\TODO{ljocha}
+\subsection{Getting and Building Client Libraries}
 
+All C and C++ \LB\ API's  are implemented in \LB\ client library
+(\verb'glite-lb-client' package of standard gLite distribution),
+and \LB common library (\verb'glite-lb-common'). 
+These bring in other gLite dependencies:
+\begin{itemize}
+\item \verb'glite-lb-client-interface' (\LBold only)
+\item \verb'glite-security-gsoap-plugin' (\LBold only)
+\item \verb'glite-security-gss' (\LBnew only)
+\end{itemize}
+and external dependencies:
+\begin{itemize}
+\item globus -- only GSS library is needed, we use 
+\verb'vdt_globus_essentials' package from VDT if available.
+\item expat -- XML parser, available in most operating systems
+\item c-ares -- asynchronous resolver library
+\item cppunit -- unit tests library, required for build only
+\item classads -- ClassAd parser and matchmaking library from Condor
+\end{itemize}
+
+For platforms supported by gLite officially all the required packages
+can be downloaded from \url{http://www.glite.org}.
+However, \LB\ is fairly portable and it can be build on other
+platforms fairly smoothly.
+
+Detailed instructions on getting the sources, including the required
+dependencies, are available at
+\url{https://erebor.ics.muni.cz/wiki/lb_build.html}
+\footnote{The location may change
+but we will keep it linked from 
+official \LB\ pages
+\url{http://egee.cesnet.cz/en/JRA1/LB/}.}.
 
 
 \subsection{General Guidelines}
