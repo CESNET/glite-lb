@@ -87,8 +87,11 @@ int main(int argc,char** argv)
 	memset(&qr,0,sizeof qr);
 	qr.op = lbt__queryOp__EQUAL;
 	qr.value1 = &qv;
-	qv.__union_2 = SOAP_UNION_lbt__union_2_c;
-	qv.union_2.c = jobid;
+
+	GLITE_SECURITY_GSOAP_CHOICE_SET(&qv,c,lbt,queryRecValue,2,jobid);
+
+//	qv.__union_2 = SOAP_UNION_lbt__union_2_c;
+//	qv.union_2.c = jobid;
 
 	switch (err = soap_call___lb__QueryEvents(mydlo, server, "",&in,&out))
 	{
