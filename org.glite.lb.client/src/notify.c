@@ -37,7 +37,7 @@ static void usage(char *cmd)
 			"    owner		Match this owner DN\n"
 			"    requested_validity	Validity of notification req. in seconds\n"
 			"    flags		0 - return basic status, 1 - return also JDL in status\n"
-			"    network_server	Match only this networ server (WMS entry point)\n"
+			"    network_server	Match only this network server (WMS entry point)\n"
 			"    -c			Match only on state change\n\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
