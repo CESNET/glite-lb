@@ -10,6 +10,7 @@ my $thrflavour = 'gcc64dbgpthr';
 my $nothrflavour = 'gcc64dbg';
 my $mode = 'build';
 my $help = 0;
+my $listmodules;
 
 my @nodes = qw/client server logger utils client-java doc ws-test/;
 my %enable_nodes;
@@ -41,7 +42,10 @@ my %extranodmod;
 my %deps;
 my %topbuild;
 
-my @lbmodules = qw/client client-java common doc logger server state-machine types utils ws-interface ws-test/;
+my %lbmodules = (
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test/], 
+	'security' => [qw/gss gsoap-plugin/],
+	);
 
 
 my @opts = (
@@ -51,6 +55,7 @@ my @opts = (
 	'thrflavour=s' => \$thrflavour,
 	'nothrflavour=s' => \$nothrflavour,
 	'mode=s' => \$mode,
+	'listmodules=s' => \$listmodules,
 	'help' => \$help,
 );
 
@@ -71,6 +76,11 @@ GetOptions @opts or die "Errors parsing command line\n";
 
 if ($help) { usage(); exit 0; }
 
+if ($listmodules) {
+	my @m = map "org.glite.$listmodules.$_",@{$lbmodules{$listmodules}};
+	print "@m\n";
+	exit 0;
+}
 
 my $en;
 for (keys %enable_nodes) { $en = 1 if $enable_nodes{$_}; }
@@ -84,7 +94,7 @@ die "--enable-* and --disable-* are mutually exclusive\n"
 die "--module cannot be used with --enable-* or --disable-*\n"
 	if $module && ($en || $dis);
 
-die "$module: unknown module\n" if $module && ! grep $module,@lbmodules;
+die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},@{$lbmodules{security}};
 
 if ($dis) {
 	for (@nodes) {
@@ -96,10 +106,12 @@ if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
 
-print "Writing config.status\n";
-open CONF,">config.status" or die "config.status: $!\n";
-print CONF "$0 @keeparg\n";
-close CONF;
+if ($mode eq 'build') {
+	print "Writing config.status\n";
+	open CONF,">config.status" or die "config.status: $!\n";
+	print CONF "$0 @keeparg\n";
+	close CONF;
+}
 
 
 my @modules;
@@ -129,6 +141,7 @@ delete $aux{$_} for (split /,/,$staged);
 
 mode_build() if $mode eq 'build';
 mode_checkout() if $mode eq 'checkout';
+mode_etics() if $mode eq 'etics';
 
 sub mode_build {
 	print "\nBuilding modules: @modules\n";
@@ -349,6 +362,98 @@ nothrflavour = $nothrflavour
 	close MKINC;
 }
 
+my %etics_externs;
+BEGIN{
+	%etics_externs = (
+		globus=>'vdt_globus_essentials',
+	);
+};
+
+sub mode_etics {
+	die "$0: --module required with --etics\n" unless $module;
+
+	my $subsys;
+	my ($major,$minor,$rev,$age);
+
+	for my $s (keys %lbmodules) {
+		for (@{$lbmodules{$s}}) {
+			$subsys = $s if $_ eq $module;
+		}
+	}
+
+	open V,"org.glite.$subsys.$module/project/version.properties"
+		or die "org.glite.$subsys.$module/project/version.properties: $!\n";
+
+	while ($_ = <V>) {
+		chomp;
+		($major,$minor,$rev) = ($1,$2,$3) if /module\.version\s*=\s*([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)/;
+		$age = $1 if /module\.age\s*=\s*([[:digit:]]+)/;
+	}
+	close V;
+
+	my @copts = ();
+
+	for (@{$need_externs{"$subsys.$module"}}) {
+		$eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
+		push @copts,"--with-$_=\${$eext.location}";
+	}
+
+
+	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
+	open C,">$conf.ini" or die "$conf.ini: $!\n";
+
+	my $buildroot = $topbuild{$subsys.$module} ? '' : "build.root = build\n";
+
+	print STDERR "Writing $conf.ini\n";
+	print C qq{
+[Configuration-$conf]
+profile = None
+moduleName = org.glite.$subsys.$module
+displayName = $conf
+description = org.glite.$subsys.$module
+projectName = org.glite
+age = $age
+deploymentType = None
+tag = $conf
+version = $major.$minor.$rev
+path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz
+
+[Platform-default:VcsCommand]
+displayName = None
+description = None
+tag = cvs -d \${vcsroot} tag -R \${tag} \${moduleName}
+branch = None
+commit = None
+checkout = cvs -d \${vcsroot} co -r \${tag} \${moduleName}
+
+[Platform-default:BuildCommand]
+postpublish = None
+packaging = None
+displayName = None
+description = None
+doc = None
+prepublish = None
+publish = None
+compile = make
+init = None
+install = make install
+clean = make clean
+test = make check
+configure = org.glite.lb/configure --module $module @copts
+checkstyle = None
+
+[Platform-default:Property]
+$buildroot
+
+[Platform-default:DynamicDependency]
+
+};
+
+# TODO dependencies
+
+	close C;
+}
+
 sub gsoap_version {
 	local $_;
 	my $gsoap_version;
@@ -376,14 +481,15 @@ General options (defaults in []):
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
   --thrflavour=flavour
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
+  --listmodules=subsys		list modules of a subsystem
   
 Mode of operation:
-  --mode={checkout|build}	what to do [build]
+  --mode={checkout|build|etics}	what to do [build]
   
 What to build:
   --module=module		build this module only (mostly in-Etics operation)
   --enable-NODE			build this "node" (set of modules) only. Available nodes are
-					@lbmodules
+					@{$lbmodules{lb}},@{$lbmodules{security}}
   --disable-NODE		don't build this node
 
 Dependencies:
