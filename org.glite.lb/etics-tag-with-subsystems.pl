@@ -72,7 +72,7 @@ usage: $0 module.name
 		$old_major=-1; $old_minor=-1; $old_revision=-1; $old_age=-1;
 		$new_major=-1; $new_minor=-1; $new_revision=-1; $new_age=-1;
 
-		foreach $l (`cvs diff -r GLITE_RELEASE_3_0_0 $m/project/version.properties | grep -E "module\.age|module\.version"`) {
+		foreach $l (`cvs diff -r glite-lb_R_$current_major\_$current_minor\_$current_revision\_$current_age $m/project/version.properties | grep -E "module\.age|module\.version"`) {
 			chomp($l);
 			#printf("$l\n");
 
