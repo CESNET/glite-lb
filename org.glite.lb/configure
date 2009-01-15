@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# $Header$
+
 use Getopt::Long;
 
 my $pwd = `pwd`; chomp $pwd;
@@ -11,6 +13,8 @@ my $nothrflavour = 'gcc64dbg';
 my $mode = 'build';
 my $help = 0;
 my $listmodules;
+my $version;
+my $output;
 
 my @nodes = qw/client server logger utils client-java doc ws-test/;
 my %enable_nodes;
@@ -56,6 +60,8 @@ my @opts = (
 	'nothrflavour=s' => \$nothrflavour,
 	'mode=s' => \$mode,
 	'listmodules=s' => \$listmodules,
+	'version=s' => \$version,
+	'output=s' => \$output,
 	'help' => \$help,
 );
 
@@ -81,6 +87,9 @@ if ($listmodules) {
 	print "@m\n";
 	exit 0;
 }
+
+warn "$0: --version and --output make sense only in --mode=etics\n"
+	if ($version || $output) && $mode ne 'etics';
 
 my $en;
 for (keys %enable_nodes) { $en = 1 if $enable_nodes{$_}; }
@@ -390,15 +399,21 @@ sub mode_etics {
 		}
 	}
 
-	open V,"org.glite.$subsys.$module/project/version.properties"
-		or die "org.glite.$subsys.$module/project/version.properties: $!\n";
-
-	while ($_ = <V>) {
-		chomp;
-		($major,$minor,$rev) = ($1,$2,$3) if /module\.version\s*=\s*([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)/;
-		$age = $1 if /module\.age\s*=\s*([[:digit:]]+)/;
+	if ($version) {
+		$version =~ /([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)-(.+)/;
+		($major,$minor,$rev,$age) = ($1,$2,$3,$4);
 	}
-	close V;
+	else { 
+		open V,"org.glite.$subsys.$module/project/version.properties"
+			or die "org.glite.$subsys.$module/project/version.properties: $!\n";
+	
+		while ($_ = <V>) {
+			chomp;
+			($major,$minor,$rev) = ($1,$2,$3) if /module\.version\s*=\s*([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)/;
+			$age = $1 if /module\.age\s*=\s*([[:digit:]]+)/;
+		}
+		close V;
+	}
 
 	my @copts = ();
 	my %ge;
@@ -411,13 +426,14 @@ sub mode_etics {
 
 
 	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
-	open C,">$conf.ini" or die "$conf.ini: $!\n";
+	my $file = $output ? $output : "$conf.ini";
+	open C,">$output" or die "$output: $!\n";
 
 	my $buildroot = $topbuild{$subsys.$module} ? '' : "build.root = build\n";
 
 	my $confdir = $topbuild{$subsys.$module} ? '../org.glite.lb' : '../../org.glite.lb';
 
-	print STDERR "Writing $conf.ini\n";
+	print STDERR "Writing $output\n";
 	print C qq{
 [Configuration-$conf]
 profile = None
