@@ -130,12 +130,12 @@ else {
  		$n = $#modules;
 		push @modules,(map @{$deps{$_}},@modules);
 
-		undef %aux; @aux{@modules} = (1) x $#modules;
+		undef %aux; @aux{@modules} = (1) x ($#modules+1);
 		@modules = keys %aux;
 	} while ($#modules > $n);
 }
 
-@aux{@modules} = (1) x $#modules;
+@aux{@modules} = (1) x ($#modules+1);
 delete $aux{$_} for (split /,/,$staged);
 @modules = keys %aux;
 
@@ -150,7 +150,7 @@ sub mode_build {
 	my @myjars = map @{$need_jars{$_}},@modules;
 	undef %aux; @aux{@ext} = 1;
 	@ext = keys %aux;
-	undef %aux; @aux{@myjars} = (1) x $#myjars;
+	undef %aux; @aux{@myjars} = (1) x ($#myjars+1);
 	@myjars = keys %aux;
 	
 	print "\nRequired externals:\n";
@@ -363,9 +363,18 @@ nothrflavour = $nothrflavour
 }
 
 my %etics_externs;
+my %etics_projects;
 BEGIN{
 	%etics_externs = (
 		globus=>'vdt_globus_essentials',
+		cares=>'c-ares',
+		voms=>'org.glite.security.voms-api',
+		gridsite=>'org.gridsite.core',
+		lcas=>'org.glite.security.lcas',
+	);
+	%etics_projects = (
+		vdt=>[qw/globus/],
+		'org.glite'=>[qw/voms gridsite lcas/],
 	);
 };
 
@@ -392,10 +401,12 @@ sub mode_etics {
 	close V;
 
 	my @copts = ();
+	my %ge;
+	@ge{@{$etics_projects{'org.glite'}}} = (1) x ($#{$etics_projects{'org.glite'}}+1);
 
 	for (@{$need_externs{"$subsys.$module"}}) {
-		$eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
-		push @copts,"--with-$_=\${$eext.location}";
+		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
+		push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
 	}
 
 
@@ -403,6 +414,8 @@ sub mode_etics {
 	open C,">$conf.ini" or die "$conf.ini: $!\n";
 
 	my $buildroot = $topbuild{$subsys.$module} ? '' : "build.root = build\n";
+
+	my $confdir = $topbuild{$subsys.$module} ? '../org.glite.lb' : '../../org.glite.lb';
 
 	print STDERR "Writing $conf.ini\n";
 	print C qq{
@@ -439,7 +452,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = org.glite.lb/configure --module $module @copts
+configure = $confdir/configure --module $module @copts
 checkstyle = None
 
 [Platform-default:Property]
@@ -448,8 +461,23 @@ $buildroot
 [Platform-default:DynamicDependency]
 
 };
+	for (@{$need_externs{"$subsys.$module"}}) {
+		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-# TODO dependencies
+		my $proj = 'externals';
+		for my $p (keys %etics_projects) {
+			for $m (@{$etics_projects{$p}}) {
+				$proj = $p if $m eq $_;
+			}
+		}
+
+# TODO build-only
+		print C "$proj|$eext = BR\n";
+	}
+
+	for (@{$deps{"$subsys.$module"}}) {
+		print C "org.glite|org.glite.$_ = BR\n";
+	}
 
 	close C;
 }
