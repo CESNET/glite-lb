@@ -109,6 +109,7 @@ start()
 	fi
 
 	if test x"$GLITE_LB_EXPORT_ENABLED" = x"true" ; then
+		echo -n Starting glite-jp-importer ...
 		su - $GLITE_USER -c "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GLITE_JP_LOCATION/lib $GLITE_JP_LOCATION/bin/glite-jp-importer \
 			-i $jp_importer_pidfile $jpreg_maildir $jpdump_maildir $sandbox_maildir \
 			$jpps $creds $GLITE_JP_IMPORTER_ARGS" \
