@@ -40,10 +40,12 @@ my %jar = (
 
 my %glite_prefix;
 my %need_externs;
+my %need_externs_type;
 my %need_jars;
 my %extrafull;
 my %extranodmod;
 my %deps;
+my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
@@ -216,12 +218,12 @@ sub mode_checkout() {
 }
 
 BEGIN{
-%need_externs = (
+%need_externs_aux = (
 	'lb.client' => [ qw/cppunit classads/ ],
 	'lb.common' => [ qw/expat cppunit classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit/ ],
-	'lb.server' => [ qw/globus expat cares mysql cppunit gsoap classads voms lcas gridsite/ ],
+	'lb.server' => [ qw/globus expat cares mysql cppunit:B gsoap classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit/ ],
 	'lb.ws-interface' => [],
@@ -238,6 +240,15 @@ BEGIN{
 	'jobid.api-java' =>  [ qw// ],
 );
 
+for my $ext (keys %need_externs_aux) {
+	for (@{$need_externs_aux{$ext}}) {
+		/([^:]*)(?::(.*))?/;
+		push @{$need_externs{$ext}},$1;
+		my $type = $2 ? $2 : 'BR';
+		$need_externs_type{$ext}->{$1} = $type;
+	}
+}
+
 %need_jars = (
 	'jobid.api-java' => [ qw/commons-codec/ ],
 );
@@ -246,7 +257,7 @@ BEGIN{
 	'security.gsoap-plugin' => [ qw/gsoap/ ],
 );
 
-%deps = (
+%deps_aux = (
 	'lb.client' => [ qw/
 		lb.types lb.common
 		lbjp-common.trio
@@ -269,7 +280,7 @@ BEGIN{
 		security.gss
 	/ ],
 	'lb.server' => [ qw/
-		lb.ws-interface lb.logger lb.types lb.common lb.state-machine
+		lb.ws-interface lb.logger lb.types:B lb.common lb.state-machine
 		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir
 		jobid.api-c
 		security.gsoap-plugin
@@ -296,6 +307,16 @@ BEGIN{
 
 	'jp.common' => [ qw/lbjp-common.db/ ],
 );
+
+for my $ext (keys %deps_aux) {
+	for (@{$deps_aux{$ext}}) {
+		/([^:]*)(?::(.*))?/;
+		push @{$deps{$ext}},$1;
+		my $type = $2 ? $2 : 'BR';
+		$deps_type{$ext}->{$1} = $type;
+	}
+}
+
 
 #unused
 %extrafull = ( gridsite=>'org.gridsite.core');
@@ -488,11 +509,13 @@ $buildroot
 		}
 
 # TODO build-only
-		print C "$proj|$eext = BR\n";
+		my $type = $need_externs_type{"$subsys.$module"}->{$_};
+		print C "$proj|$eext = $type\n";
 	}
 
 	for (@{$deps{"$subsys.$module"}}) {
-		print C "org.glite|org.glite.$_ = BR\n";
+		my $type = $deps_type{"$subsys.$module"}->{$_};
+		print C "org.glite|org.glite.$_ = $type\n";
 	}
 
 	close C;
