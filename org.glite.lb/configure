@@ -154,7 +154,7 @@ delete $aux{$_} for (split /,/,$staged);
 
 mode_build() if $mode eq 'build';
 mode_checkout() if $mode eq 'checkout';
-mode_etics() if $mode eq 'etics';
+mode_etics($module) if $mode eq 'etics';
 
 sub mode_build {
 	print "\nBuilding modules: @modules\n";
@@ -412,16 +412,13 @@ BEGIN{
 };
 
 sub mode_etics {
-	die "$0: --module required with --etics\n" unless $module;
+	$fmod = shift;
 
-	my $subsys;
+	die "$0: --module required with --etics\n" unless $fmod;
+	
+	my ($subsys,$module) = split /\./,$fmod;
+
 	my ($major,$minor,$rev,$age);
-
-	for my $s (keys %lbmodules) {
-		for (@{$lbmodules{$s}}) {
-			$subsys = $s if $_ eq $module;
-		}
-	}
 
 	if ($version) {
 		$version =~ /([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)-(.+)/;
@@ -492,7 +489,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = $confdir/configure --module $module @copts
+configure = $confdir/configure --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
