@@ -3,43 +3,64 @@
 use Getopt::Std;
 use Switch;
 
-#getopts('i:');
-
 $TMPDIR=$ENV{'TMPDIR'};
+
+getopts('c:h');
 
 $module = shift;
 
 $usage = qq{
-usage: $0 module.name
+usage: $0 [-c <current configuration>] module.name
+
+        -c      Use this configuration (\d+\.\d+\.\d+-\S+) rather than parsing version.properties
+        -h      Display this help
+
 };
-
+        if (defined $opt_h) {die $usage};
 	die $usage unless $module;
+ 
+        if (defined $opt_c) {
 
-	# **********************************
-	# Determine the most recent tag and its components
-	# **********************************
+                # **********************************
+                # Parse the tag supplied by the user 
+                # **********************************
 
-        open VP, "$module/project/version.properties" or die "$module/project/version.properties: $?\n";
+                if ($opt_c=~/(\d+)\.(\d+)\.(\d+)-(\S+?)/) {
+                                $current_major=$1;
+                                $current_minor=$2;
+                                $current_revision=$3;
+                                $current_age=$4;
+                }
+                else {die ("tag not specified properly")};
 
-        while ($_ = <VP>) {
-                chomp;
-
-		if(/module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
-			$current_major=$1;
-			$current_minor=$2;
-			$current_revision=$3;
-		}
-                if(/module\.age\s*=\s*(\S+)/) {
-			$current_age=$1;
-		}
         }
-	close (VP);
+	else {
+		# **********************************
+		# Determine the most recent tag and its components
+		# **********************************
 
-	$current_prefix=$module;
-	$current_prefix=~s/^org\.//;
-	$current_prefix=~s/\./-/g;
-	$current_prefix="$current_prefix" . "_R_";
-	$current_tag="$current_prefix" . "$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
+		open VP, "$module/project/version.properties" or die "$module/project/version.properties: $?\n";
+
+		while ($_ = <VP>) {
+			chomp;
+
+			if(/module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
+				$current_major=$1;
+				$current_minor=$2;
+				$current_revision=$3;
+			}
+			if(/module\.age\s*=\s*(\S+)/) {
+				$current_age=$1;
+			}
+		}
+		close (VP);
+
+		$current_prefix=$module;
+		$current_prefix=~s/^org\.//;
+		$current_prefix=~s/\./-/g;
+		$current_prefix="$current_prefix" . "_R_";
+		$current_tag="$current_prefix" . "$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
+	}
 
 	# According to the documentation, symbolic names in the 'cvs log' output are sorted by age so this should be OK
 	#$current_tag=`cvs log -h $module/Makefile | grep \"_R_\" | head -n 1`;
