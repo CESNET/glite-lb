@@ -5,7 +5,7 @@ use Switch;
 
 $TMPDIR=$ENV{'TMPDIR'};
 
-getopts('i:c:gh');
+getopts('i:c:m:gh');
 
 $module = shift;
 
@@ -17,6 +17,7 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 		output and ask you to specify what to increment interactively.
 	-g	Generate old configuration for comparison
 	-c	Use this configuration (\d+\.\d+\.\d+-\S+) rather than parsing version.properties
+	-m	Use this as a CVS commit message instead of the script's default.
 	-h	Display this help
 
 };
@@ -176,7 +177,10 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 
 		printf("Modified ChangeLog ready, ret code: $ChangeLogRet\n");
 
-		printf(EXEC "#Update and commit the ChangeLog\ncp $tmpChangeLog $module/project/ChangeLog\ncvs commit -m \"Appended the description of changes regarding version $major.$minor.$revision-$age\" $module/project/ChangeLog\n\n");
+		if (defined $opt_m) {$commit_message=$opt_m;}
+		else {$commit_message="Appended the description of changes regarding version $major.$minor.$revision-$age";}
+
+		printf(EXEC "#Update and commit the ChangeLog\ncp $tmpChangeLog $module/project/ChangeLog\ncvs commit -m \"$commit_message\" $module/project/ChangeLog\n\n");
 
 	}	
 
@@ -196,7 +200,13 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
         }
         close V;
 	printf(EXEC "EOF\n\n");
-	printf(EXEC "cvs commit -m \"Modified to reflect version $major.$minor.$revision-$age\" $module/project/version.properties\n\n");
+
+
+	if (defined $opt_m) {$commit_message=$opt_m;}
+	else {$commit_message="Modified to reflect version $major.$minor.$revision-$age";}
+
+
+	printf(EXEC "cvs commit -m \"$commit_message\" $module/project/version.properties\n\n");
 
 
 	$cwd=`pwd`;
@@ -221,8 +231,8 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 	$modulename=$2;
 
 	printf("Module=$module\nname=$modulename\nsubsys=$subsysname\n");
-	printf("PATH=\$PATH:./org.glite.lb:./ configure --mode=etics --module $modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age\n");
-	system("PATH=\$PATH:./org.glite.lb:./ configure --mode=etics --module $modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age");
+	printf("PATH=\$PATH:./org.glite.lb:./ configure --mode=etics --module $subsysname.$modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age\n");
+	system("PATH=\$PATH:./org.glite.lb:./ configure --mode=etics --module $subsysname.$modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age");
 
 #	printf("\nCurrent configuration:\t$currentconfig\nNew configuration:\t$newconfig\n\nPreparing...\n");
 #
