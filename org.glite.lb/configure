@@ -221,13 +221,13 @@ sub mode_checkout() {
 
 BEGIN{
 %need_externs_aux = (
-	'lb.client' => [ qw/cppunit classads/ ],
-	'lb.common' => [ qw/expat cppunit classads/ ],
+	'lb.client' => [ qw/cppunit:B classads/ ],
+	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
-	'lb.logger' => [ qw/cppunit/ ],
-	'lb.server' => [ qw/globus expat cares mysql cppunit:B gsoap classads voms lcas gridsite/ ],
+	'lb.logger' => [ qw/cppunit:B/ ],
+	'lb.server' => [ qw/globus expat cares mysql cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
-	'lb.utils' => [ qw/cppunit/ ],
+	'lb.utils' => [ qw/cppunit:B/ ],
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap/ ],
 	'lb.types' => [ qw// ],
@@ -235,10 +235,10 @@ BEGIN{
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw// ],
-	'security.gss' =>  [ qw/globus cares cppunit/ ],
-	'security.gsoap-plugin' =>  [ qw/cppunit globus cares gsoap/ ],
-	'jobid.api-c' =>  [ qw/cppunit/ ],
-	'jobid.api-cpp' =>  [ qw/cppunit/ ],
+	'security.gss' =>  [ qw/globus cares cppunit:B/ ],
+	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap/ ],
+	'jobid.api-c' =>  [ qw/cppunit:B/ ],
+	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw// ],
 );
 
@@ -255,26 +255,28 @@ for my $ext (keys %need_externs_aux) {
 	'jobid.api-java' => [ qw/commons-codec/ ],
 );
 
-%build_only = (
-	'security.gsoap-plugin' => [ qw/gsoap/ ],
-);
+for my $jar (keys %need_jars) {
+	for (@{$need_jars{$jar}}) {
+		$need_externs_type{$jar}->{$_} = 'BR'; 	# XXX
+	}
+}
 
 %deps_aux = (
 	'lb.client' => [ qw/
-		lb.types lb.common
+		lb.types:B lb.common
 		lbjp-common.trio
 		jobid.api-cpp jobid.api-c
 		security.gss
 	/ ],
 	'lb.client-java' => [ qw/
-		lb.types
+		lb.types:B
 		jobid.api-java
 	/ ],
 	'lb.common' => [ qw/
 		jobid.api-cpp jobid.api-c
-		lb.types lbjp-common.trio security.gss
+		lb.types:B lbjp-common.trio security.gss
 	/ ],
-	'lb.doc' => [ qw/lb.types/ ],
+	'lb.doc' => [ qw/lb.types:B/ ],
 	'lb.logger' => [ qw/
 		lbjp-common.trio
 		jobid.api-c
@@ -282,10 +284,10 @@ for my $ext (keys %need_externs_aux) {
 		security.gss
 	/ ],
 	'lb.server' => [ qw/
-		lb.ws-interface lb.logger lb.types:B lb.common lb.state-machine
+		lb.ws-interface lb.types:B lb.common lb.state-machine
 		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir
 		jobid.api-c
-		security.gsoap-plugin
+		security.gsoap-plugin security.gss
 	/ ],
 	'lb.state-machine' => [ qw/lb.common jp.common security.gss/ ],
 	'lb.utils' => [ qw/
@@ -295,7 +297,7 @@ for my $ext (keys %need_externs_aux) {
 		lb.client lb.state-machine
 	/ ],
 	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
-	'lb.ws-interface' => [ qw/lb.types/ ],
+	'lb.ws-interface' => [ qw/lb.types:B/ ],
 	'lb.types' => [ qw// ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
 	'lbjp-common.maildir' => [ qw// ],
@@ -320,7 +322,6 @@ for my $ext (keys %deps_aux) {
 }
 
 
-#unused
 %extrafull = ( gridsite=>'org.gridsite.core');
 
 # %extranodmod = ( java => 'client-java' );
@@ -400,8 +401,8 @@ BEGIN{
 	%etics_externs = (
 		globus=>'vdt_globus_essentials',
 		cares=>'c-ares',
-		voms=>'org.glite.security.voms-api',
-		gridsite=>'org.gridsite.core',
+		voms=>'org.glite.security.voms-api-c',
+		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
 	);
 	%etics_projects = (
@@ -450,13 +451,13 @@ sub mode_etics {
 
 	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 	my $file = $output ? $output : "$conf.ini";
-	open C,">$output" or die "$output: $!\n";
+	open C,">$file" or die "$file: $!\n";
 
 	my $buildroot = $topbuild{$subsys.$module} ? '' : "build.root = build\n";
 
 	my $confdir = $topbuild{$subsys.$module} ? '../org.glite.lb' : '../../org.glite.lb';
 
-	print STDERR "Writing $output\n";
+	print STDERR "Writing $file\n";
 	print C qq{
 [Configuration-$conf]
 profile = None
@@ -500,7 +501,7 @@ $buildroot
 [Platform-default:DynamicDependency]
 
 };
-	for (@{$need_externs{"$subsys.$module"}}) {
+	for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
 		my $proj = 'externals';
@@ -510,7 +511,6 @@ $buildroot
 			}
 		}
 
-# TODO build-only
 		my $type = $need_externs_type{"$subsys.$module"}->{$_};
 		print C "$proj|$eext = $type\n";
 	}
