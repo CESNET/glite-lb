@@ -16,3 +16,6 @@
 6.1.2-1
 - changed unused socket number from 0 to -1
 
+7.0.0-1
+- LB 2.0 release
+
