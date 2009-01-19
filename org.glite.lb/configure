@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+# WARNING: Don't edit this file unless it is the master copy in org.glite.lb
+#
+# For the purpose of standalone builds of lb/jobid/lbjp-common components
+# it is copied on tagging 
+
 # $Header$
 
 use Getopt::Long;
@@ -489,7 +494,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && org.glite.lb/configure --module $subsys.$module @copts
+configure = cd $confdir && org.glite.$subsys.$module/configure --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
