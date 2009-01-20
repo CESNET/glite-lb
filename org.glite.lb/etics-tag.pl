@@ -4,17 +4,19 @@ use Getopt::Std;
 use Switch;
 
 $TMPDIR=$ENV{'TMPDIR'};
+$GLITE_LB_LOCATION="./org.glite.lb";
 
 getopts('i:c:m:gh');
 
 $module = shift;
 
 $usage = qq{
-usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration> ] module.name
+usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configuration> ] module.name
 
 	-i	What to increment ('maj'or version, 'min'or version, 'rev'ision, 'age')
 		Should you fail to specify the -i option the script will open up a cvs diff
 		output and ask you to specify what to increment interactively.
+		'none' means no change -- this basically just generates a configuration.
 	-g	Generate old configuration for comparison
 	-c	Use this configuration (\d+\.\d+\.\d+-\S+) rather than parsing version.properties
 	-m	Use this as a CVS commit message instead of the script's default.
@@ -34,6 +36,7 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 		case "min" {$increment="i"}
 		case "rev" {$increment="r"}
 		case "age" {$increment="a"}
+		case "none" {$increment="n"}
 		else {$increment=$opt_i};
 	}
 	
@@ -111,7 +114,7 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 	# Generate the new tag name
 	# **********************************
 
-	printf("\nWhich component do you wish to increment?\n\n\t'j'\tmaJor\n\t'i'\tmInor\n\t'r'\tRevision\n\t'a'\tAge\n\tfree type\tUse what I have typed (single word) as a new age name (original: $current_age)\n\nType in your choice: ");
+	printf("\nWhich component do you wish to increment?\n\n\t'j'\tmaJor\n\t'i'\tmInor\n\t'r'\tRevision\n\t'a'\tAge\n\t\'n'\tNo change\n\tfree type\tUse what I have typed (single word) as a new age name (original: $current_age)\n\nType in your choice: ");
 
 	unless (defined $increment) {
 		$increment=<STDIN>;
@@ -140,6 +143,11 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 			$minor=$current_minor;
 			$revision=$current_revision;
 			$age=$current_age+1;} 
+		case "n" {
+			$major=$current_major;
+			$minor=$current_minor;
+			$revision=$current_revision;
+			$age=$current_age;} 
 		else {
 			$major=$current_major;
 			$minor=$current_minor;
@@ -150,7 +158,7 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 
 	printf("\nNew tag: $tag\n\n");
 
-	die "This tag already exists; reported by assertion" unless system("cvs log -h $module/Makefile | grep \"$tag\"");
+	die "This tag already exists; reported by assertion" unless (($increment eq 'n') || system("cvs log -h $module/Makefile | grep \"$tag\""));
 
 	# **********************************
 	# Create the execution script
@@ -171,7 +179,7 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 
 		system("cp $module/project/ChangeLog $tmpChangeLog");
 
-		system("echo $major.$minor.$revision-$age >> $tmpChangeLog");
+		unless ($increment eq "n") {system("echo $major.$minor.$revision-$age >> $tmpChangeLog");}
 
 		$ChangeLogRet=system("vim $tmpChangeLog");
 
@@ -184,36 +192,49 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 
 	}	
 
+	unless ($increment eq "n") {
+		# **********************************
+		# Update version.properties
+		# **********************************
+		open V, "$module/project/version.properties" or die "$module/project/version.properties: $?\n";
+
+		printf(EXEC "#Generate new version.properties\ncat >$module/project/version.properties <<EOF\n");
+		while ($_ = <V>) {
+			chomp;
+
+			$_=~s/module\.version\s*=\s*[.0-9]+/module\.version=$major.$minor.$revision/;
+			$_=~s/module\.age\s*=\s*(\S+)/module\.age=$age/;
+
+			printf(EXEC "$_\n");
+		}
+		close V;
+		printf(EXEC "EOF\n\n");
+
+
+		if (defined $opt_m) {$commit_message=$opt_m;}
+		else {$commit_message="Modified to reflect version $major.$minor.$revision-$age";}
+
+
+		printf(EXEC "cvs commit -m \"$commit_message\" $module/project/version.properties\n\n");
+	}
+
+
 	# **********************************
-	# Update version.properties
+	# Update configure
 	# **********************************
-        open V, "$module/project/version.properties" or die "$module/project/version.properties: $?\n";
+	
+	printf(EXEC "#Update and commit the \"configure\" script\ncp $GLITE_LB_LOCATION/configure $module/\ncvs commit -m \"The most recent version copied. Do not modify this instance (RW in $GLITE_LB_LOCATION).\" $module/configure\n\n");
 
-	printf(EXEC "#Generate new version.properties\ncat >$module/project/version.properties <<EOF\n");
-        while ($_ = <V>) {
-                chomp;
+	unless ($increment eq "n") {
+		# **********************************
+		# Run CVS Tag
+		# **********************************
 
-		$_=~s/module\.version\s*=\s*[.0-9]+/module\.version=$major.$minor.$revision/;
-                $_=~s/module\.age\s*=\s*(\S+)/module\.age=$age/;
+		$cwd=`pwd`;
+		chomp($cwd);
 
-		printf(EXEC "$_\n");
-        }
-        close V;
-	printf(EXEC "EOF\n\n");
-
-
-	if (defined $opt_m) {$commit_message=$opt_m;}
-	else {$commit_message="Modified to reflect version $major.$minor.$revision-$age";}
-
-
-	printf(EXEC "cvs commit -m \"$commit_message\" $module/project/version.properties\n\n");
-
-
-	$cwd=`pwd`;
-	chomp($cwd);
-
-	printf(EXEC "#Register the new tag\ncd $module\ncvs tag \"$tag\"\ncd \"$cwd\"\n");
-
+		printf(EXEC "#Register the new tag\ncd $module\ncvs tag \"$tag\"\ncd \"$cwd\"\n");
+	}
 
 	# **********************************
 	# Etics configuration prepare / modify / upload
@@ -231,8 +252,7 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 	$modulename=$2;
 
 	printf("Module=$module\nname=$modulename\nsubsys=$subsysname\n");
-	printf("PATH=\$PATH:./org.glite.lb:./ configure --mode=etics --module $subsysname.$modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age\n");
-	system("PATH=\$PATH:./org.glite.lb:./ configure --mode=etics --module $subsysname.$modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age");
+	system("$GLITE_LB_LOCATION/configure --mode=etics --module $subsysname.$modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age");
 
 #	printf("\nCurrent configuration:\t$currentconfig\nNew configuration:\t$newconfig\n\nPreparing...\n");
 #
@@ -257,7 +277,10 @@ usage: $0 [-i maj|min|rev|age|<sigle_word_age>] [-g] [-c <current configuration>
 #	close(OLDCONF);
 #	close(NEWCONF);
 
-	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n");
+	if ($increment eq "n") { # There was no version change and the configuration should already exist
+		printf(EXEC "\n#Add new configuration\netics-configuration modify -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n"); }
+	else { # New configuration needs to be created
+	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n"); }
 
 
 	# **********************************
