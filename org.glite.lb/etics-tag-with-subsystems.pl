@@ -5,6 +5,8 @@ use Switch;
 
 $TMPDIR=$ENV{'TMPDIR'};
 
+if ($TMPDIR eq "") {$TMPDIR="/tmp";}
+
 getopts('c:h');
 
 $module = shift;
@@ -186,7 +188,7 @@ usage: $0 [-c <current configuration>] module.name
 	# Create the execution script
 	# **********************************
 
-	open EXEC, ">", "./tag-with-subsystems-$module.$major.$minor.$revision-$age.sh" or die $!;
+	open EXEC, ">", "$TMPDIR/tag-with-subsystems-$module.$major.$minor.$revision-$age.sh" or die $!;
 
 	printf (EXEC "#This script registers tags for the $module module, version $major.$minor.$revision-$age\n#Generated automatically by $0\n\n"); 
 
@@ -282,7 +284,7 @@ usage: $0 [-c <current configuration>] module.name
 
 	close(EXEC);
 
-	system("chmod +x \"./tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\"");
+	system("chmod +x \"$TMPDIR/tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\"");
 
-	printf("\n\n---------\nFinished!\n\nExecution script written in:\t./tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\nNew configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
+	printf("\n\n---------\nFinished!\n\nExecution script written in:\t$TMPDIR/tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\nNew configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
 

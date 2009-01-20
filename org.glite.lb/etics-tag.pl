@@ -6,6 +6,8 @@ use Switch;
 $TMPDIR=$ENV{'TMPDIR'};
 $GLITE_LB_LOCATION="./org.glite.lb";
 
+if ($TMPDIR eq "") {$TMPDIR="/tmp";}
+
 getopts('i:c:m:gh');
 
 $module = shift;
@@ -164,7 +166,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	# Create the execution script
 	# **********************************
 
-	open EXEC, ">", "./etics-tag-$module.$major.$minor.$revision-$age.sh" or die $!;
+	open EXEC, ">", "$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh" or die $!;
 
 	printf (EXEC "#This script registers tags for the $module module, version $major.$minor.$revision-$age\n#Generated automatically by $0\n\n"); 
 
@@ -289,9 +291,9 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 
 	close(EXEC);
 
-	system("chmod +x \"./etics-tag-$module.$major.$minor.$revision-$age.sh\"");
+	system("chmod +x \"$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh\"");
 
-	printf("\n\n---------\nFinished!\n\nExecution script written in:\t./etics-tag-$module.$major.$minor.$revision-$age.sh\nChangeLog candidate written in:\t$tmpChangeLog\n");
+	printf("\n\n---------\nFinished!\n\nExecution script written in:\t$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh\nChangeLog candidate written in:\t$tmpChangeLog\n");
 	printf("Old configuration stored in:\t$TMPDIR/$currentconfig.ini.$$\n") if (defined $opt_g);
 	printf("New configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
 
