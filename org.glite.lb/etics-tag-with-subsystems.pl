@@ -9,6 +9,8 @@ getopts('c:h');
 
 $module = shift;
 
+chomp($module);
+
 $usage = qq{
 usage: $0 [-c <current configuration>] module.name
 
@@ -75,7 +77,9 @@ usage: $0 [-c <current configuration>] module.name
 	#$current_revision=$4;
 	#$current_age=$5;
 
-	@modules=split(/\s+/, `PATH=\$PATH:./:./org.glite.lb configure --listmodules lb`);
+	$module=~/\.([^\.]+?)$/;	
+
+	@modules=split(/\s+/, `PATH=\$PATH:./:./org.glite.lb configure --listmodules $1`);
 
 	my $incmajor=0;
 	my $incminor=0;
@@ -170,6 +174,8 @@ usage: $0 [-c <current configuration>] module.name
 		$revision=$current_revision;
 		$age=<STDIN>;}
 
+	chomp($age);
+
 	$tag="$current_prefix" . "$major" . "_$minor" . "_$revision" . "_$age";
 
 	printf("\nNew tag: $tag\n\n");
@@ -237,8 +243,6 @@ usage: $0 [-c <current configuration>] module.name
 
 	printf (NEWCONF "[Platform-default:Environment]\nHOME = \${workspaceDir}\n\n[Hierarchy]\n");
 
-	close(NEWCONF);
-
 	foreach $m (@modules) {
 	        open MOD, "$m/project/version.properties" or die "$m/project/version.properties: $?\n";
 
@@ -261,10 +265,13 @@ usage: $0 [-c <current configuration>] module.name
 		$modconfig=~s/^org.//;
 		$modconfig=~s/\./-/g;
 
-		system("echo $m = $modconfig >> $TMPDIR/$newconfig.ini.$$");
+#		system("echo $m = $modconfig >> $TMPDIR/$newconfig.ini.$$");
+		printf(NEWCONF "$m = $modconfig\n");
 
 		close (MOD);
         }
+
+	close(NEWCONF);
 
 	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n");
 
