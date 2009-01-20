@@ -99,9 +99,9 @@ usage: $0 [-c <current configuration>] module.name
 		$old_major=-1; $old_minor=-1; $old_revision=-1; $old_age=-1;
 		$new_major=-1; $new_minor=-1; $new_revision=-1; $new_age=-1;
 
-		foreach $l (`cvs diff -r glite-lb_R_$current_major\_$current_minor\_$current_revision\_$current_age $m/project/version.properties | grep -E "module\.age|module\.version"`) {
+		foreach $l (`cvs diff -r $current_prefix$current_major\_$current_minor\_$current_revision\_$current_age $m/project/version.properties | grep -E "module\.age|module\.version"`) {
 			chomp($l);
-			#printf("$l\n");
+			printf("$l\n");
 
 			if($l=~/<\s*module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
 				$old_major=$1;
@@ -135,8 +135,8 @@ usage: $0 [-c <current configuration>] module.name
 			$increvision++;
 			printf("Revision change ($old_revision -> $new_revision)");
 		}
-		elsif ($old_minor != $new_minor) {
-			$incminor++;
+		elsif ($old_age != $new_age) {
+			$incage++;
 			printf("Age change ($old_age -> $new_age)");
 		}
 		printf("\n");
@@ -168,7 +168,7 @@ usage: $0 [-c <current configuration>] module.name
 		$major=$current_major;
 		$minor=$current_minor;
 		$revision=$current_revision;
-		$age=1+1;} 
+		$age=$current_age+1;} 
 	else {
 		printf("No change in either version component.\nAbort by pressing Ctrl+C or enter new age manually.\nUse a number or a word: ");
 		$major=$current_major;
