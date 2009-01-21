@@ -239,7 +239,7 @@ BEGIN{
 	'lbjp-common.db' => [ qw/mysql/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
-	'lbjp-common.trio' => [ qw// ],
+	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus cares cppunit:B/ ],
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
