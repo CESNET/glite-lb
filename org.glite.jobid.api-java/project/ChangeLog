@@ -6,3 +6,6 @@
 
 1.0.0-3
 - another configuration fix
+
+1.0.0-4
+- access .jar's via wildcard in etics config
