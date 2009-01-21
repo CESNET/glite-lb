@@ -3,3 +3,6 @@
 
 1.0.0-2
 - added required dependence on jobid.api-c
+
+1.0.0-3
+- fixed reference to cppunit
