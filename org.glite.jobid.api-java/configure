@@ -453,7 +453,7 @@ sub mode_etics {
 	for (@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		push @copts,"--with-$_=\${$_.location}/$_-`echo \${$_.version} | sed 's/\\([0-9]*\\.[0-9]*\\)\\.[0-9]*/\\1/'`.jar";
+		push @copts,"--with-$_=\${$_.location}/$_*.jar";
 	}
 
 
