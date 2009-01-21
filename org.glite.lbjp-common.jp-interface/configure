@@ -57,7 +57,7 @@ my %topbuild;
 my %lbmodules = (
 	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
-	'lbjp-common' => [qw/db maildir server-bones trio/],
+	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	);
 
@@ -244,6 +244,7 @@ BEGIN{
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
+	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus cares cppunit:B/ ],
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
@@ -298,9 +299,9 @@ for my $jar (keys %need_jars) {
 		jobid.api-c
 		security.gsoap-plugin security.gss
 	/ ],
-	'lb.state-machine' => [ qw/lb.common jp.common security.gss/ ],
+	'lb.state-machine' => [ qw/lb.common lbjp-common.jp-interface security.gss/ ],
 	'lb.utils' => [ qw/
-		jp.common
+		lbjp-common.jp-interface
 		jobid.api-c
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine
@@ -318,7 +319,7 @@ for my $jar (keys %need_jars) {
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
 
-	'jp.common' => [ qw/lbjp-common.db/ ],
+	'lbjp-common.jp-interface' => [ qw/lbjp-common.db/ ],
 );
 
 for my $ext (keys %deps_aux) {
@@ -353,8 +354,8 @@ sub mkinc
 lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
-lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio
-jp.common/;
+lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
+/;
 	@aux{@m} = (1) x ($#m+1);
 
 	my $short = shift;
