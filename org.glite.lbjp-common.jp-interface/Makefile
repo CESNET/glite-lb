@@ -46,8 +46,8 @@ THRLIBS:=${LIBS}
 commonlib:= libglite_jp_common_${nothrflavour}.la
 commonlib_thr:= libglite_jp_common_${thrflavour}.la
 
-TEST_LIBS:=-L${cppunit}/lib -lcppunit -ldl
-TEST_INC:=-I${cppunit}/include
+TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit -ldl
+TEST_INC:=-I${cppunit_prefix}/include
 
 
 default all: compile
