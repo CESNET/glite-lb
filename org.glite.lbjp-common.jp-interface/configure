@@ -319,7 +319,7 @@ for my $jar (keys %need_jars) {
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
 
-	'lbjp-common.jp-interface' => [ qw/lbjp-common.db/ ],
+	'lbjp-common.jp-interface' => [ qw/lbjp-common.db jobid.api-c/ ],
 );
 
 for my $ext (keys %deps_aux) {
