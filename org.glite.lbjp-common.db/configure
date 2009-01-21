@@ -11,6 +11,7 @@ use Getopt::Long;
 
 my $pwd = `pwd`; chomp $pwd;
 my $prefix = $pwd.'/stage';
+my $stagedir;
 my $staged;
 my $module;
 my $thrflavour = 'gcc64dbgpthr';
@@ -71,6 +72,7 @@ my @opts = (
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
 	'output=s' => \$output,
+	'stage=s' => \$stagedir,
 	'help' => \$help,
 );
 
@@ -123,6 +125,8 @@ if ($dis) {
 if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
+
+$stagedir = $prefix unless $stagedir;
 
 if ($mode eq 'build') {
 	print "Writing config.status\n";
@@ -239,7 +243,7 @@ BEGIN{
 	'lbjp-common.db' => [ qw/mysql/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
-	'lbjp-common.trio' => [ qw// ],
+	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus cares cppunit:B/ ],
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
@@ -379,7 +383,7 @@ jp.common/;
 
 	print MKINC qq{
 PREFIX = $prefix
-stagedir = $prefix
+stagedir = $stagedir
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 };
@@ -500,7 +504,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && \${moduleName}/configure --prefix=\${prefix} --module $subsys.$module @copts
+configure = cd $confdir && \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
