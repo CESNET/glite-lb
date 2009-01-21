@@ -153,7 +153,7 @@ ${MAN_GZ}: ${MAN}
 man: ${MAN_GZ}
 
 stage: compile
-	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
+	$(MAKE) install PREFIX=${stagedir} 
 
 check: 
 # do nothing until test/ is really added to CVS
@@ -176,9 +176,7 @@ install:
 	-mkdir -p ${PREFIX}/share/man/man8
 	${INSTALL} -m 755 ${LOGD} ${PREFIX}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${PREFIX}/bin
-	if [ x${DOSTAGE} = xyes ]; then \
-		${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin; \
-	fi
+	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin; \
 ifdef LB_PERF
 	-mkdir -p ${PREFIX}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${PREFIX}/sbin
