@@ -1,2 +1,6 @@
 2.0.0-1
 - LB 2.0 release
+
+2.0.0-2
+- fixed configure to work in etics
+
