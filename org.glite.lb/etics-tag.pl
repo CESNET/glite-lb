@@ -207,6 +207,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 			$_=~s/module\.version\s*=\s*[.0-9]+/module\.version=$major.$minor.$revision/;
 			$_=~s/module\.age\s*=\s*(\S+)/module\.age=$age/;
 
+			$_=~s/\$/\\\$/g;
 			printf(EXEC "$_\n");
 		}
 		close V;
