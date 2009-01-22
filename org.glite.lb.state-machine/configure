@@ -11,6 +11,7 @@ use Getopt::Long;
 
 my $pwd = `pwd`; chomp $pwd;
 my $prefix = $pwd.'/stage';
+my $stagedir;
 my $staged;
 my $module;
 my $thrflavour = 'gcc64dbgpthr';
@@ -56,7 +57,7 @@ my %topbuild;
 my %lbmodules = (
 	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
-	'lbjp-common' => [qw/db maildir server-bones trio/],
+	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	);
 
@@ -71,6 +72,7 @@ my @opts = (
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
 	'output=s' => \$output,
+	'stage=s' => \$stagedir,
 	'help' => \$help,
 );
 
@@ -123,6 +125,8 @@ if ($dis) {
 if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
+
+$stagedir = $prefix unless $stagedir;
 
 if ($mode eq 'build') {
 	print "Writing config.status\n";
@@ -239,7 +243,8 @@ BEGIN{
 	'lbjp-common.db' => [ qw/mysql/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
-	'lbjp-common.trio' => [ qw// ],
+	'lbjp-common.trio' => [ qw/cppunit:B/ ],
+	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus cares cppunit:B/ ],
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
@@ -294,9 +299,9 @@ for my $jar (keys %need_jars) {
 		jobid.api-c
 		security.gsoap-plugin security.gss
 	/ ],
-	'lb.state-machine' => [ qw/lb.common jp.common security.gss/ ],
+	'lb.state-machine' => [ qw/lb.common lbjp-common.jp-interface security.gss/ ],
 	'lb.utils' => [ qw/
-		jp.common
+		lbjp-common.jp-interface
 		jobid.api-c
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine
@@ -314,7 +319,7 @@ for my $jar (keys %need_jars) {
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
 
-	'jp.common' => [ qw/lbjp-common.db/ ],
+	'lbjp-common.jp-interface' => [ qw/lbjp-common.db jobid.api-c/ ],
 );
 
 for my $ext (keys %deps_aux) {
@@ -349,8 +354,8 @@ sub mkinc
 lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
-lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio
-jp.common/;
+lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
+/;
 	@aux{@m} = (1) x ($#m+1);
 
 	my $short = shift;
@@ -379,7 +384,7 @@ jp.common/;
 
 	print MKINC qq{
 PREFIX = $prefix
-stagedir = $prefix
+stagedir = $stagedir
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 };
@@ -450,6 +455,12 @@ sub mode_etics {
 		push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
 	}
 
+	for (@{$need_jars{"$subsys.$module"}}) {
+		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
+
+		push @copts,"--with-$_ \${$eext.location}/$_*.jar";
+	}
+
 
 	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 	my $file = $output ? $output : "$conf.ini";
@@ -494,7 +505,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && org.glite.$subsys.$module/configure --module $subsys.$module @copts
+configure = cd $confdir && \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
