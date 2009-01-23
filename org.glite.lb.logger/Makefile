@@ -176,11 +176,10 @@ install:
 	-mkdir -p ${PREFIX}/share/man/man8
 	${INSTALL} -m 755 ${LOGD} ${PREFIX}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${PREFIX}/bin
-	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin; \
+	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin
 ifdef LB_PERF
 	-mkdir -p ${PREFIX}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${PREFIX}/sbin
-	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${PREFIX}/sbin
 endif
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
