@@ -57,6 +57,9 @@ ver.tex:
 stage: doc
 	$(MAKE) install PREFIX=${stagedir}
 
+check:
+	@echo "No test"
+
 install:
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
 	$(INSTALL) -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}

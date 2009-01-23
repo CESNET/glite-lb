@@ -55,6 +55,9 @@ ${CEXAMPLES}: %: %.o ${WS_CLIENT_OBJS}
 %.o %.lo: %.c soap_version.h ${SOAP_FILES}
 	${COMPILE} -c $<
 
+check:
+	@echo "No test"
+
 install:
 	mkdir -p ${PREFIX}/examples/
 	for f in ${CEXAMPLES}; do \

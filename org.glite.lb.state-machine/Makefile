@@ -96,6 +96,9 @@ clean:
 	rm -rfv job_attrs.h job_attrs2.h lb-job-attrs2.xsd glite-jpis-config.xml
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
+check:
+	@echo No tests yet
+
 %.c: %.c.T
 	rm -f $@
 	${AT3} $< >$@ || rm -f $@
