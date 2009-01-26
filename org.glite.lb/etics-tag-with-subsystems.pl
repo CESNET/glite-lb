@@ -22,6 +22,9 @@ usage: $0 [-c <current configuration>] module.name
 };
         if (defined $opt_h) {die $usage};
 	die $usage unless $module;
+
+        #Clean possible trailing '/' (even multiple occurrences :-) from module name
+        $module=~s/\/+$//;
  
         if (defined $opt_c) {
 

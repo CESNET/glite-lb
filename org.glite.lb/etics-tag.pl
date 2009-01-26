@@ -33,6 +33,9 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	if (defined $opt_h) {die $usage};
 	die $usage unless $module;
 
+	#Clean possible trailing '/' (even multiple occurrences :-) from module name
+	$module=~s/\/+$//;
+
 	switch ($opt_i) {
 		case "maj" {$increment="j"}
 		case "min" {$increment="i"}
