@@ -1418,7 +1418,8 @@ edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context ctx, char *messageBody,
 	
 	if (XMLCtx.errDesc || XMLCtx.errCode) {
 		ctx->errDesc = XMLCtx.errDesc;
-                ctx->errCode = XMLCtx.errCode;
+		ctx->errCode = XMLCtx.errCode;
+		errorCode = XMLCtx.errCode;
 	}
 
 
@@ -1504,7 +1505,8 @@ edg_wll_ErrorCode edg_wll_ParseQueryEvents(edg_wll_Context ctx, char *messageBod
 	
 	if (XMLCtx.errDesc || XMLCtx.errCode) {
                 ctx->errDesc = XMLCtx.errDesc;
-                ctx->errCode = XMLCtx.errCode;
+		ctx->errCode = XMLCtx.errCode;
+		errorCode =  XMLCtx.errCode;
         }
 
 	/* print all warning if corresponding env variable is set	*/
@@ -2003,7 +2005,8 @@ edg_wll_ErrorCode edg_wll_ParsePurgeResult(edg_wll_Context ctx, char *messageBod
 
 	if (XMLCtx.errDesc || XMLCtx.errCode) {
 		ctx->errDesc = XMLCtx.errDesc;
-                ctx->errCode = XMLCtx.errCode;
+		ctx->errCode = XMLCtx.errCode;
+		errorCode =  XMLCtx.errCode;
 	}
 	
 	/* print all warning if corresponding env variable is set	*/
@@ -2064,7 +2067,8 @@ edg_wll_ErrorCode edg_wll_ParseDumpResult(edg_wll_Context ctx, char *messageBody
 
 	if (XMLCtx.errDesc || XMLCtx.errCode) {
 		ctx->errDesc = XMLCtx.errDesc;
-                ctx->errCode = XMLCtx.errCode;
+		ctx->errCode = XMLCtx.errCode;
+		errorCode =  XMLCtx.errCode;
 	}
 	
 	/* print all warning if corresponding env variable is set	*/
@@ -2125,7 +2129,8 @@ edg_wll_ErrorCode edg_wll_ParseLoadResult(edg_wll_Context ctx, char *messageBody
 
 	if (XMLCtx.errDesc || XMLCtx.errCode) {
 		ctx->errDesc = XMLCtx.errDesc;
-                ctx->errCode = XMLCtx.errCode;
+		ctx->errCode = XMLCtx.errCode;
+		errorCode =  XMLCtx.errCode;
 	}
 	
 	/* print all warning if corresponding env variable is set	*/
@@ -2198,7 +2203,8 @@ edg_wll_ErrorCode edg_wll_ParseIndexedAttrs(edg_wll_Context ctx, char *messageBo
 
 	if (XMLCtx.errDesc || XMLCtx.errCode) {
 		ctx->errDesc = XMLCtx.errDesc;
-                ctx->errCode = XMLCtx.errCode;
+		ctx->errCode = XMLCtx.errCode;
+		errorCode =  XMLCtx.errCode;
 	}
 
 	/* print all warning if corresponding env variable is set	*/
@@ -2258,7 +2264,8 @@ edg_wll_ErrorCode edg_wll_ParseNotifResult(edg_wll_Context ctx, char *messageBod
 
 	if (XMLCtx.errDesc || XMLCtx.errCode) {
 		ctx->errDesc = XMLCtx.errDesc;
-                ctx->errCode = XMLCtx.errCode;
+		ctx->errCode = XMLCtx.errCode;
+		errorCode =  XMLCtx.errCode;
 	}
 	
 	/* print all warning if corresponding env variable is set	*/
@@ -2319,7 +2326,8 @@ edg_wll_ErrorCode edg_wll_ParseQuerySequenceCodeResult(edg_wll_Context ctx, char
 
 	if (XMLCtx.errDesc || XMLCtx.errCode) {
 		ctx->errDesc = XMLCtx.errDesc;
-                ctx->errCode = XMLCtx.errCode;
+		ctx->errCode = XMLCtx.errCode;
+		errorCode =  XMLCtx.errCode;
 	}
 	
 	/* print all warning if corresponding env variable is set	*/
@@ -2389,7 +2397,8 @@ edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBod
 
 	if (XMLCtx.errDesc || XMLCtx.errCode) {
 		ctx->errDesc = XMLCtx.errDesc;
-                ctx->errCode = XMLCtx.errCode;
+		ctx->errCode = XMLCtx.errCode;
+		errorCode =  XMLCtx.errCode;
 	}
 	
 	/* print all warning if corresponding env variable is set	*/
