@@ -1,9 +1,0 @@
-1.0.0-1
-- LB 2.0 release
-
-1.0.0-2
-- fixed configure to work in etics
-
-1.0.0-3
-- Added the dummy 'check' rule to the Makefile
-
