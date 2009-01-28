@@ -3,8 +3,6 @@
 \section{\LB\ Notification API}
 \label{s:Notification-API}
 
-\TODO{sitera: prepsat ve stejnem duchu jako predchozi kapitoly, zminit novinky v \LBnew}
-
 The \LB\ notification API is another kind of \LB\ consumer API which
 provides streaming publish/subscribe model instead of query/response
 model. It is designed to provide the same information and use the same
@@ -17,7 +15,8 @@ a tool called \verb'glite-lb-notify' which is a command line interface
 wrapper around the \LB\ notification API. Its source code can also
 serve as a complete exaple of the \LB\ notification API usage.
 
-The \LB\ notification API have currently only C language binding.
+The \LB\ notification API have currently fully implemented C language
+binding and partially implemented C++ binding.
 
 \subsection{Header files}
 \begin{table}[h]
@@ -53,25 +52,34 @@ file. The next sessions briefly describe main facts about API
 funcions.
 
 \subsection{Notification subscription and management}
-To create a new notification registration the same encoding of
-conditions as for the \LB query/response API is used
-(sec.~\ref{s:queryrec}). In version 1.x there is a restriction that at
-least one particular JobId must be defined. In \LB 2.0 you cat make a
-registration based on other attributes without referencing a
-particular JobId (you can select owner, VO, network server).
+\begin{itemize}
+ \item \emph{New notification} is created using
+  \verb'edg_wll_NotifNew' call. The call needs properly initialized
+  context and returns a unique notification ID. To create a new
+  notification the same encoding of conditions as for the \LB
+  query/response API is used (sec.~\ref{s:queryrec}). 
 
-A new notification is created using \verb'edg_wll_NotifNew' call. The
-notification validity parameter is intended to set the refresh period,
-not the lifetime of the notification itself. The owner of notification
-must periodically call \verb'edg_wll_NotifRefresh' to ensure validity
-of the notification.
+  In version 1.x
+  there is a restriction that at least one particular JobId must be
+  defined. In \LB 2.0 you cat make a registration based on other
+  attributes without referencing a particular JobId (you can select
+  owner, VO, network server).
+  \TODO{Operator CHANGED, JDL flags} 
 
-If user does not want to receive notifications any more,
-\verb'edg_wll_NotifDrop' call removes the registration for
-notifications from \LB server.
+ \item \emph {Refresh of a notification} When a new notification is
+  created using \verb'edg_wll_NotifNew' call, the notification
+  validity parameter is intended to set the refresh period, not the
+  lifetime of the notification itself. The owner of notification must
+  periodically call \verb'edg_wll_NotifRefresh' to ensure validity of
+  the notification.
 
-It is possible to change existing notification (its conditions) by
-\verb'edg_wll_NotifChange' call.
+ \item It is possible to \emph{change existing notification} (its conditions) by
+  \verb'edg_wll_NotifChange' call.
+
+ \item If user does not want to receive notifications any more,
+  \verb'edg_wll_NotifDrop' call \emph{removes the registration} for
+  notifications from \LB server.
+\end{itemize}
 
 \subsection{Receive data}
 To receive data from a notificaton the API provides
@@ -79,102 +87,45 @@ To receive data from a notificaton the API provides
 notification if at least one is available or waits a specified timeout. You can
 also set the timeout to zero if you want to poll.
 
-If the user wants to start receiving the notifications from different machine
-than where the registration was done, it is possible but the
-\verb'edg_wll_NotifBind' call must be used. 
+If the user wants to start receiving the notifications from different
+machine than where the registration was done, it is possible. The
+client must use the \verb'edg_wll_NotifBind' call to inform the
+notification infrastructure (interlogger) about its location change.
 
-\TODO{Reusing of socket}
+There is a possibility to reuse existing socket for multiple notifications (calls of 
+\verb'edg_wll_NotifReceive'. \TODO{Reusing of socket reasons/recomendations}
 
 \TODO{Normal usage of edg\_wll\_NotifCloseFd? Shoul be used?}
 
+\TODO{Receiving notification from more sources on one socket.}
+
 \subsection{Registering and receiving notification example}
 
-The following example registers on \LB\ server to receive notifications triggered by events belonging to job with \verb'jobid' and waits for notification until \verb'timeout'.
-The code assumes the user to prepare a~reasonable value in \verb'jobid'
-(\ie\ identifying an existing job).
+The following example registers on \LB\ server to receive
+notifications triggered by any event belonging to a
+given user and waits for notification (until \verb'timeout').
 
 %The glite-lb-bkserverd and glite-lb-notif-interlogd daemons have to be running. The first one user registers to, the second one delivers notifications to the example program (as described in \ref{notification}).
 
-\begin{verbatim}
-  #include <time.h>
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <string.h>
-  #include <unistd.h>
+First we have to include neccessary headers:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=headers-end\ headers]{notif_example.c}
 
-  #include "glite/lb/context.h"
-  #include "glite/lb/lb_gss.h"
-  #include "glite/lb/notification.h"
+Define and initialize variables and context. During context
+initialization user's credentials are loaded and environment variable
+\verb'GLITE_WMS_NOTIF_SERVER' is used as a LB notification server:
+\lstinputlisting[title={\bf File:}\lstname,numbers=left,linerange=variables-end\ variables]{notif_example.c} 
 
-  /* jobid magically appears here */
-  char                    *jobid;
 
-  edg_wll_Context         ctx;
-  edg_wll_QueryRec        **conditions;
-  edg_wll_NotifId         notif_id = NULL, recv_notif_id = NULL;
-  edg_wlc_JobId           my_jobId = NULL;
-  edg_wll_JobStat         stat;
-  time_t                  valid;
-  struct timeval          timeout = {220, 0};
-  ...
+Set the query record to \emph{all user's jobs}:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=queryrec-end\ queryrec]{notif_example.c}
 
-  edg_wll_InitContext(&ctx);
+New registration based on prepared query record is created and a
+unique notification ID is returned: 
+\lstinputlisting[title={\bf File:}\lstname,numbers=left,linerange=register-end\ register]{notif_example.c}
 
-  memset(&stat, 0, sizeof(stat));
+The \verb'edg_wll_NotifReceive' call returns one notification. If no notification is 
+ready for delivery, the call waits until some notification arrival or timeout:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=receive-end\ receive]{notif_example.c}
 
-  conditions = (edg_wll_QueryRec **)calloc(2,sizeof(edg_wll_QueryRec *));
-  conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
-
-  edg_wlc_JobIdParse(jobid, &my_jobId);
-
-  conditions[0][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
-  conditions[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-  conditions[0][0].value.j = my_jobId;
-
-  /* register notification on BK server */
-  if (edg_wll_NotifNew(ctx, conditions, -1, NULL, &notif_id, &validity))
-    goto error;
-
-  /* the ID string my be used to receive notifications */
-  /* from another computer later on                    */
-  printf("notification ID: %s\n", edg_wll_NotifIdUnparse(notif_id));
-
-  if (edg_wll_NotifReceive(ctx, -1, &timeout, &status, &recv_notif_id))
-    /* timeout or error */
-    goto error;
-  else {
-    /* notification arrived */
-    /* check recv_notif_id if you have registered more notifications */
-    /* to know which one you received. If you have just this one     */
-    /* do not bother.                                                */
-
-    printf("Status of my job is: %s\n", edg_wll_StatToString(stat.state));
-    edg_wll_FreeStatus(&stat);
-    edg_wll_NotifIdFree(recv_notif_id);
-  }
-
-  /* Release registration on BK server. Don't do this if notif_id is reused. */
-  edg_wll_NotifDrop(ctx, notif_id);
-
-  edg_wll_NotifIdFree(notif_id);
-  edg_wll_NotifCloseFd(ctx);
-	
-  ...
-
-error:
-	/* clean-up */
-  ...
-
-\end{verbatim}
-
-First of all the context is initialised. During this procedure user's credentials are loaded. %(see \ref{cmdln_interface} for information on environmental variables pointing to user's X509 credentials).
-
-Then conditions under which notifications are sent are set. In this example, user is notified every time when event with given jobId is logged to \LB\ server. For more complicated conditions, please, consider the conditions limitations mentioned in \cite{lbug}.
-
-Afterwards, a new registration is created and a unique notification ID is
-returned.
-Notifications are recieved with the \verb'edg_wll_NotifReceive' call.
-If no notification is ready for
-delivery, the call waits until some notification arrival or timeout.
 
 
