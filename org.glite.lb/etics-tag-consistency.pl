@@ -28,7 +28,7 @@ usage: $0 [-h] subsystem.name [subsystem.name] [...]
 	die $usage unless @ARGV[0];
 
 	if (defined $opt_c) {
-		printf ("\n\nYou have selected the -c option. Note that etics may require authetication.\n If you cannot see any progress in the script, it is probably waiting for your password. ;-)\n\n");   
+		printf ("\n\nYou have selected the -c option. Note that etics may require authetication.\n If you cannot see any progress in the script, it is probably waiting for your password. ;-)\n\n"); 
 	}
 
 	# **********************************
@@ -40,7 +40,7 @@ usage: $0 [-h] subsystem.name [subsystem.name] [...]
 		#Clean possible trailing '/' (even multiple occurrences :-) from subsystem name
 		$subsystem=~s/\/+$//;
 
-		printf("  $subsystem\n");
+		printf("$subsystem\n");
 
 		$subsystem=~/\.([^\.]+?)$/;
 
@@ -50,7 +50,7 @@ usage: $0 [-h] subsystem.name [subsystem.name] [...]
 
 		foreach $module (@modules) {
 
-			printf("     %-30s", $module);
+			printf("  %-30s", $module);
 
 
 			if (open VP, "$module/project/version.properties") {
@@ -75,19 +75,19 @@ usage: $0 [-h] subsystem.name [subsystem.name] [...]
 				$current_prefix="$current_prefix" . "_R_";
 				$current_tag="$current_prefix" . "$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
 
-				if ($module eq $subsystem) { $subsystem_tag = $current_tag; }  
+				if ($module eq $subsystem) { $subsystem_tag = $current_tag; }
 
 				printf("\t $current_major.$current_minor.$current_revision-$current_age");
 
 				unless (system("cvs log -h $module/project/version.properties | grep -E \"\\W$current_tag\\W\" > /dev/null"))
-					{ printf ("\t module tag OK"); }
+					{ printf ("\t mod. OK"); }
 				else {
 					printf(STDERR "\nERROR: Tag $current_tag does not exist in module $module!\n"); 
 				}
  
 				if ($module ne $subsystem ) {
 					unless (system("cvs log -h $module/project/version.properties | grep -E \"\\W$subsystem_tag\\W\" > /dev/null"))
-						{ printf ("\t subsystem tag OK"); }
+						{ printf ("\t subsys. OK"); }
 					else {
 						printf(STDERR "\nERROR: Tag $subsystem_tag does not exist in module $module!\n"); 
 					}
@@ -103,7 +103,7 @@ usage: $0 [-h] subsystem.name [subsystem.name] [...]
 
 				if (defined $opt_c) {
 					unless (system("etics-list-configuration $module | grep \"$current_tag\" &> /dev/null"))
-                                                { printf ("\t etics configuration OK"); }
+						{ printf ("\t etics OK"); }
 					else {
 						printf(STDERR "\nERROR: Configuration $current_tag for module $module does not exist!\n"); 
 					}
