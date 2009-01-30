@@ -6,3 +6,7 @@
 
 1.0.0-3
 - fixed reference to cppunit
+
+1.0.0-4
+- configure script update (globus flavors added to configure call)
+
