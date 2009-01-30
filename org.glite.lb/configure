@@ -546,7 +546,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --module $subsys.$module @copts
+configure = cd $confdir && \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
