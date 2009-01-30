@@ -31,3 +31,6 @@
 2.0.0-3
 - Fixed typos in the Makefile
 
+2.0.0-4
+- configure script update (globus flavors added to configure call)
+
