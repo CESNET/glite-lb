@@ -112,7 +112,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	unless (defined $increment) {
 		printf("Diffing...\n");
 
-		system("cvs diff -u -kk -r $current_tag $module | less");
+		system("cvs diff -r $current_tag $module | less");
 	}
 
 	# **********************************
