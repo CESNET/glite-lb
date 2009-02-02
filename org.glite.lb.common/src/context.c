@@ -38,8 +38,8 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	out->p_tmp_timeout.tv_usec = out->p_log_timeout.tv_usec;
 
         out->connections = edg_wll_initConnections();
-//	out->connections->connPool = (edg_wll_ConnPool *) calloc(out->connections->poolSize, sizeof(edg_wll_ConnPool));
-	out->connPoolNotif = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
+	out->connNotif = (edg_wll_Connections *) calloc(1, sizeof(edg_wll_Connections));
+	edg_wll_initConnNotif(out->connNotif);
 	out->connProxy = (edg_wll_ConnProxy *) calloc(1, sizeof(edg_wll_ConnProxy));
 	out->connProxy->conn.sock = -1;
 //	out->connToUse = -1;
@@ -63,6 +63,7 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 void edg_wll_FreeContext(edg_wll_Context ctx)
 {
 	struct timeval close_timeout = {0, 50000};
+	int	i;
 
 	if (!ctx) return;
 #ifdef CTXTRACE
@@ -114,13 +115,17 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		}	
 		free(ctx->connections->connPool);*/
 	}
- 	if (ctx->connPoolNotif) {
- 		if (ctx->connPoolNotif[0].peerName) free(ctx->connPoolNotif[0].peerName);
- 		edg_wll_gss_close(&ctx->connPoolNotif[0].gss,&close_timeout);
- 		if (ctx->connPoolNotif[0].gsiCred)
- 			edg_wll_gss_release_cred(&ctx->connPoolNotif[0].gsiCred, NULL);
- 		if (ctx->connPoolNotif[0].buf) free(ctx->connPoolNotif[0].buf);
- 		free(ctx->connPoolNotif);
+ 	if (ctx->connNotif) {
+		for (i=0; i<ctx->connNotif->poolSize; i++) {
+	 		if (ctx->connNotif->connPool[i].peerName) free(ctx->connNotif->connPool[i].peerName);
+ 			edg_wll_gss_close(&ctx->connNotif->connPool[i].gss,&close_timeout);
+ 			if (ctx->connNotif->connPool[i].gsiCred)
+ 				edg_wll_gss_release_cred(&ctx->connNotif->connPool[i].gsiCred, NULL);
+	 		if (ctx->connNotif->connPool[i].buf) free(ctx->connNotif->connPool[i].buf);
+	 		if (ctx->connNotif->connPool[i].bufOut) free(ctx->connNotif->connPool[i].bufOut);
+		}
+ 		free(ctx->connNotif->connPool);
+		free(ctx->connNotif);
  	}
 	if ( ctx->connProxy ) {
 		if ( ctx->connProxy->buf ) free(ctx->connProxy->buf);

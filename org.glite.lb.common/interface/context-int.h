@@ -65,7 +65,7 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	void		*dbctx;
 	int		dbcaps;
 	edg_wll_Connections	*connections;
-	edg_wll_ConnPool	*connPoolNotif;		/* hold _one_ connection from notif-interlogger */
+	edg_wll_Connections	*connNotif;		/* holds connections from notif-interlogger */
 	edg_wll_ConnProxy	*connProxy;		/* holds one plain connection */
 
 	edg_wll_QueryRec	**job_index;

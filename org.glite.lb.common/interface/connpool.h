@@ -26,9 +26,10 @@ extern "C" {
 #ifndef EDG_WLL_CONNPOOL_DECLARED
 #define EDG_WLL_CONNPOOL_DECLARED 1
 
-#define	GLITE_LB_COMMON_CONNPOOL_SIZE	50
+#define	GLITE_LB_COMMON_CONNPOOL_SIZE		50
+#define	GLITE_LB_COMMON_CONNPOOL_NOTIF_SIZE	50
 
-glite_lb_padded_struct(_edg_wll_ConnPool,15,
+glite_lb_padded_struct(_edg_wll_ConnPool,25,
 /* address and port where we are connected to */
         char            *peerName;
         unsigned int    peerPort;
@@ -37,6 +38,7 @@ glite_lb_padded_struct(_edg_wll_ConnPool,15,
         edg_wll_GssCred   gsiCred;
         edg_wll_GssConnection   gss;
         char            *buf;
+	int		bufPtr;
         int             bufUse;
 	int		bufSize;
 
@@ -47,6 +49,11 @@ glite_lb_padded_struct(_edg_wll_ConnPool,15,
 
 	struct stat	*certfile;	
 
+/* output buffer */
+	char	*bufOut;
+	int	bufPtrOut;
+	int	bufUseOut;	
+	int	bufSizeOut;
 );
 typedef struct _edg_wll_ConnPool  edg_wll_ConnPool;
 #endif
@@ -64,6 +71,7 @@ typedef struct _edg_wll_Connections {
 /* pool of connections from client */
         int             poolSize;       /* number of connections in the pool */
         int             connOpened;     /* number of opened connections  */
+	int		connToUse;	/* active connection we are working with */
 
 /* Connection pool locks & accessories.*/
 #ifdef GLITE_LB_THREADED
@@ -109,6 +117,9 @@ void edg_wll_poolFree();
 /** Allocate memory for the edg_wll_Connections structure and its properties and return a pointer.
     in case memory has been already allocated, just return a pointer */
 edg_wll_Connections* edg_wll_initConnections();
+
+/** Initializes connNotif structure */
+void edg_wll_initConnNotif(edg_wll_Connections *);
 
 
 #ifdef __cplusplus

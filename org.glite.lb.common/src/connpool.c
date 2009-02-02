@@ -2,13 +2,18 @@
 
 #ifdef GLITE_LB_THREADED
 edg_wll_Connections connectionsHandle = 
-  { NULL , NULL , GLITE_LB_COMMON_CONNPOOL_SIZE , 0 , PTHREAD_MUTEX_INITIALIZER , NULL , NULL};
+  { NULL , NULL , GLITE_LB_COMMON_CONNPOOL_SIZE , 0 , 0,  PTHREAD_MUTEX_INITIALIZER , NULL , NULL};
+edg_wll_Connections connNotifInitializer = 
+  { NULL , NULL , GLITE_LB_COMMON_CONNPOOL_NOTIF_SIZE , 0 , 0 , PTHREAD_MUTEX_INITIALIZER , NULL, NULL};
 #endif
 
 #ifndef GLITE_LB_THREADED
 edg_wll_Connections connectionsHandle =
-  { NULL , NULL , GLITE_LB_COMMON_CONNPOOL_SIZE , 0 , NULL};
+  { NULL , NULL , GLITE_LB_COMMON_CONNPOOL_SIZE , 0 , 0, NULL};
+edg_wll_Connections connNotifInitializer = 
+  { NULL , NULL , GLITE_LB_COMMON_CONNPOOL_NOTIF_SIZE , 0 , 0 , NULL};
 #endif
+
 
 /** Lock (try) the pool */
 int edg_wll_poolTryLock() {
@@ -277,3 +282,13 @@ edg_wll_Connections* edg_wll_initConnections() {
 }
 
 
+void edg_wll_initConnNotif(edg_wll_Connections *conn) 
+{
+	int	i;
+
+	*conn = connNotifInitializer;
+        conn->connPool = (edg_wll_ConnPool *) calloc(conn->poolSize, sizeof(edg_wll_ConnPool));
+        for (i=0; i<conn->poolSize; i++) {
+        	conn->connPool[i].gss.sock = -1;
+        }
+}

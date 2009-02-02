@@ -203,7 +203,7 @@ int main(int argc,char **argv)
 		edg_wll_NotifId		nid = NULL;
 		int			c;
 		char	*field_arg = "owner",*err;
-		time_t	client_tout = time(NULL) + 60;
+		time_t	client_tout = time(NULL) + 600;
 	        int	refresh = 0;
 		struct timeval		tout;
 		time_t	opt_valid = 0,do_refresh = client_tout + 999999999,now;
@@ -269,6 +269,7 @@ int main(int argc,char **argv)
 			tout.tv_usec = 0;
 
 			edg_wll_FreeStatus(&stat);
+			stat.state = EDG_WLL_JOB_UNDEF;
 		
 			if ( (err = edg_wll_NotifReceive(ctx, sock, &tout, &stat, &recv_nid)) ) {
 				edg_wll_NotifIdFree(recv_nid);
@@ -324,6 +325,7 @@ receive_err:
 		if (stat.state != EDG_WLL_JOB_UNDEF) edg_wll_FreeStatus(&stat);
 		if (nid) edg_wll_NotifIdFree(nid);
 		edg_wll_NotifCloseFd(ctx);
+		edg_wll_NotifClosePool(ctx);
 
 		if (edg_wll_Error(ctx,&errt,&errd))
 			fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);

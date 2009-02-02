@@ -18,6 +18,10 @@
 extern "C" {
 #endif
 
+/** allocate memory for notification buffer using block of size XY
+*/
+#define NOTIF_POOL_BUFFER_BLOCK_SIZE	16384
+
 /**
  * \defgroup notifications Notifications handling
  * \brief Notifications handling.
@@ -166,6 +170,15 @@ int edg_wll_NotifGetFd(
 int edg_wll_NotifCloseFd(
 	edg_wll_Context		context
 );
+
+/** Close all connections in notifPool and free it.
+ * \param[in,out] context	context to work with
+ */
+
+int edg_wll_NotifClosePool(
+	edg_wll_Context		context
+);
+
 
 /*
  *@} end of group

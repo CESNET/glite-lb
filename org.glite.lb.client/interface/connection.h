@@ -5,6 +5,7 @@
 
 int edg_wll_close(edg_wll_Context ctx,int *);
 int edg_wll_open(edg_wll_Context ctx,int *);
+int edg_wll_accept(edg_wll_Context ctx, int fd);
 int edg_wll_http_send_recv(edg_wll_Context, char *, const char * const *, char *, char **, char ***, char **);
 
 int edg_wll_close_proxy(edg_wll_Context ctx);
@@ -17,6 +18,7 @@ int ConnectionIndex(edg_wll_Context ctx, const char *name, int port);
 int AddConnection(edg_wll_Context ctx, char *name, int port);
 int ReleaseConnection(edg_wll_Context ctx, char *name, int port);
 int CloseConnection(edg_wll_Context ctx, int conn_index);
+int CloseConnectionNotif(edg_wll_Context ctx);
 
 #define PROXY_CONNECT_RETRY 10 /* ms */
 
