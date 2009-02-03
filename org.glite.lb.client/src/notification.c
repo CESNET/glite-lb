@@ -758,7 +758,6 @@ int edg_wll_NotifReceive(
 	}
 	start_time = check_time;
 		
-	event = edg_wll_InitEvent(EDG_WLL_EVENT_NOTIFICATION);
 	if (edg_wll_ParseNotifEvent(ctx, event_char, &event)) {
 		goto err;
 	}
@@ -786,7 +785,7 @@ err:
 		edg_wll_FreeEvent(event);
 		// XXX - konzultovat s honikem; podle meho by to free 
 		// mel delat uz edg_wll_FreeEvent
-		//free(event);
+		free(event);
 	}
 
 	free(event_char);
