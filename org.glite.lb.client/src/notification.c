@@ -741,7 +741,8 @@ int edg_wll_NotifReceive(
 
                 if ( decode_il_msg(&ev, message) < 0 ) {
 			CloseConnectionNotif(ctx);
-			return edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "decoding event string");
+			edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "decoding event string");
+			goto err;
 		}
 		event_char = ev.data;
 	}
@@ -790,6 +791,7 @@ err:
 
 	free(event_char);
 	free(jobstat_char);
+	free(message);
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
