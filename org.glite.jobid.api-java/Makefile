@@ -1,7 +1,7 @@
 -include Makefile.inc
 
 all compile:
-	ant -Dfile.reference.commons-codec.jar=${commons-codec_jar}
+	${ant_prefix}/bin/ant -Dfile.reference.commons-codec.jar=${commons-codec_jar}
 
 install:
 	mkdir -p ${PREFIX}/share/java
