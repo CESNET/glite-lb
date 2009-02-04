@@ -46,3 +46,6 @@
 2.0.0-3
 - configure script update (globus flavors added to configure call)
 
+2.0.0-4
+- fixed server dependency on voms-api-cpp instead of voms-api-c in configure
+
