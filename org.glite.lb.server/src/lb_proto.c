@@ -70,7 +70,7 @@ extern int edg_wll_NotifChangeServer(edg_wll_Context,
 				edg_wll_NotifChangeOp);
 extern int edg_wll_NotifRefreshServer(edg_wll_Context,
 				const edg_wll_NotifId, time_t *);
-extern int edg_wll_NotifDropServer(edg_wll_Context, edg_wll_NotifId);
+extern int edg_wll_NotifDropServer(edg_wll_Context, edg_wll_NotifId *);
 
 
 

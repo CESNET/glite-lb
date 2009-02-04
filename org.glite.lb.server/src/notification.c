@@ -28,8 +28,6 @@ static int update_notif(edg_wll_Context, const edg_wll_NotifId,
 
 static int get_indexed_cols(edg_wll_Context,char const *,edg_wll_QueryRec **,char **);
 static void adjust_validity(edg_wll_Context,time_t *);
-static int drop_notif_request(edg_wll_Context, const edg_wll_NotifId);
-static int check_notif_age(edg_wll_Context, const edg_wll_NotifId);
 
 
 int edg_wll_NotifNewServer(
@@ -193,11 +191,6 @@ int edg_wll_NotifBindServer(
 		if ( check_notif_request(ctx, nid, NULL) )
 			goto rollback;
 
-		if ( check_notif_age(ctx, nid) ) {
-			drop_notif_request(ctx, nid);
-			goto rollback;
-		}
-
 		/*	Format time of validity
 		 */
 
@@ -265,11 +258,6 @@ int edg_wll_NotifChangeServer(
 
 		if ( check_notif_request(ctx, nid, NULL) )
 			goto rollback;
-
-		if ( check_notif_age(ctx, nid) ) {
-			drop_notif_request(ctx, nid);
-			goto rollback;
-		}
 
 		switch ( op )
 		{
@@ -367,11 +355,6 @@ int edg_wll_NotifRefreshServer(
 		if ( check_notif_request(ctx, nid, NULL) )
 			goto rollback;
 
-		if ( check_notif_age(ctx, nid) ) {
-			drop_notif_request(ctx, nid);
-			goto rollback;
-		}
-
 		/*	Format time of validity
 		 */
 
@@ -399,19 +382,45 @@ err:
 
 int edg_wll_NotifDropServer(
 	edg_wll_Context					ctx,
-	edg_wll_NotifId				   nid)
+	edg_wll_NotifId				   *nid)
 {
+	char	   *nid_s = NULL,
+			   *stmt = NULL;
+
+	
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;
 
 		if ( check_notif_request(ctx, nid, NULL) )
 			goto rollback;
 
-		if ( drop_notif_request(ctx, nid) )
+		if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
 			goto rollback;
 
+		trio_asprintf(&stmt, "delete from notif_registrations where notifid='%|Ss'", nid_s);
+		if ( edg_wll_ExecSQL(ctx, stmt, NULL) < 0 )
+			goto rollback;
+		free(stmt);
+		trio_asprintf(&stmt, "delete from notif_jobs where notifid='%|Ss'", nid_s);
+		if ( edg_wll_ExecSQL(ctx, stmt, NULL) < 0 ) 
+			goto rollback;
+		edg_wll_NotifCancelRegId(ctx, nid);
+		if (edg_wll_Error(ctx, NULL, NULL) == ECONNREFUSED) {
+			/* Let notification erase from DB, 
+			 * on notif-IL side it will be autopurged later anyway */
+
+			fprintf(stderr,"[%d] edg_wll_NotifDropServer() - NotifID found and dropped,"\
+				" however, connection to notif-IL was refused (notif-IL not running?)\n", getpid());
+			syslog(LOG_INFO,"edg_wll_NotifDropServer() - NotifID found and dropped,"\
+				" however, connection to notif-IL was refused (notif-IL not running?)");
+
+			edg_wll_ResetError(ctx);
+		}
+
 rollback:
-		;
+		free(nid_s); nid_s = NULL;
+		free(stmt); stmt = NULL;
+
 	} while (edg_wll_TransNeedRetry(ctx));
 
 err:
@@ -512,7 +521,6 @@ static int check_notif_request(
 			edg_wll_SetError(ctx, ENOENT, "Unknown notification ID");
 		else if ( ret > 0 )
 			edg_wll_SetError(ctx, EPERM, "Only owner could access the notification");
-		goto cleanup;
 	}
 
 cleanup:
@@ -756,76 +764,3 @@ static void adjust_validity(edg_wll_Context ctx,time_t *valid)
 		*valid = now + ctx->notifDurationMax;
 }
 
-static int drop_notif_request(edg_wll_Context ctx, const edg_wll_NotifId nid) {
-	char	   *nid_s = NULL,
-		   *stmt = NULL,
-		   *errDesc;
-	int	    errCode;
-
-	errCode = edg_wll_Error(ctx, NULL, &errDesc);	
-
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
-		goto rollback;
-
-	trio_asprintf(&stmt, "delete from notif_registrations where notifid='%|Ss'", nid_s);
-	if ( edg_wll_ExecSQL(ctx, stmt, NULL) < 0 )
-		goto rollback;
-	free(stmt);
-	trio_asprintf(&stmt, "delete from notif_jobs where notifid='%|Ss'", nid_s);
-	if ( edg_wll_ExecSQL(ctx, stmt, NULL) < 0 ) 
-		goto rollback;
-	edg_wll_NotifCancelRegId(ctx, nid);
-	if (edg_wll_Error(ctx, NULL, NULL) == ECONNREFUSED) {
-		/* Let notification erase from DB, 
-		 * on notif-IL side it will be autopurged later anyway */
-
-		fprintf(stderr,"[%d] edg_wll_NotifDropServer() - NotifID found and dropped,"\
-			" however, connection to notif-IL was refused (notif-IL not running?)\n", getpid());
-		syslog(LOG_INFO,"edg_wll_NotifDropServer() - NotifID found and dropped,"\
-			" however, connection to notif-IL was refused (notif-IL not running?)");
-
-		edg_wll_ResetError(ctx);
-	}
-
-rollback:
-	free(nid_s); nid_s = NULL;
-	free(stmt); stmt = NULL;
-	/* take precedence to previous error */
-	if (errCode || errDesc) {
-		edg_wll_SetError(ctx, errCode, errDesc);
-		free(errDesc);
-	}
-
-	return edg_wll_Error(ctx, NULL, NULL);
-}
-
-static int check_notif_age(edg_wll_Context ctx, const edg_wll_NotifId nid) {
-	time_t now = time(NULL);
-	char *time_s = NULL,
-	     *nid_s = NULL,
-	     *q = NULL;
-	int ret;
-
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
-		goto cleanup;
-
-	glite_lbu_TimeToDB(now, &time_s);
-	if ( !time_s )
-	{
-		edg_wll_SetError(ctx, errno, NULL);
-		goto cleanup;
-	}
-
-	trio_asprintf(&q, "select notifid from notif_registrations WHERE notifid='%|Ss' AND valid < %s", nid_s, time_s);
-	if ( (ret = edg_wll_ExecSQL(ctx, q, NULL)) < 0 )
-		goto cleanup;
-
-	if (ret > 0)
-		edg_wll_SetError(ctx, EINVAL, "Notification expired.");
-
-cleanup:
-	free(q);
-	free(nid_s);
-	free(time_s);
-	return edg_wll_Error(ctx, NULL, NULL);
-}
