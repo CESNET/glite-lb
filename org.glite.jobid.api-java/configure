@@ -11,6 +11,7 @@ use Getopt::Long;
 
 my $pwd = `pwd`; chomp $pwd;
 my $prefix = $pwd.'/stage';
+my $stagedir;
 my $staged;
 my $module;
 my $thrflavour = 'gcc64dbgpthr';
@@ -20,6 +21,10 @@ my $help = 0;
 my $listmodules;
 my $version;
 my $output;
+my $lb_tag = '';
+my $lbjp_tag = '';
+my $sec_tag = '';
+my $jobid_tag = '';
 
 my @nodes = qw/client server logger utils client-java doc ws-test/;
 my %enable_nodes;
@@ -36,6 +41,7 @@ my %extern_prefix = (
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
+	ant => '/usr',
 );
 
 my %jar = (
@@ -56,7 +62,7 @@ my %topbuild;
 my %lbmodules = (
 	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
-	'lbjp-common' => [qw/db maildir server-bones trio/],
+	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	);
 
@@ -71,6 +77,11 @@ my @opts = (
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
 	'output=s' => \$output,
+	'stage=s' => \$stagedir,
+	'lb-tag=s' => \$lb_tag,
+	'lbjp-common-tag=s' => \$lbjp_tag,
+	'security-tag=s' => \$sec_tag,
+	'jobid-tag=s' => \$jobid_tag,
 	'help' => \$help,
 );
 
@@ -123,6 +134,8 @@ if ($dis) {
 if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
+
+$stagedir = $prefix unless $stagedir;
 
 if ($mode eq 'build') {
 	print "Writing config.status\n";
@@ -218,15 +231,49 @@ sub mode_build {
 	
 sub mode_checkout() {
 	for (@modules) {
+		my $module = $_;
+		my $tag = "";
+		if ($lb_tag){
+			for (@{$lbmodules{lb}}){
+				if ("lb.".$_ eq $module){
+					$tag = '-r '.$lb_tag;
+				}
+			}	
+		}
+		if ($lbjp_tag){
+			for (@{$lbmodules{'lbjp-common'}}){
+				if ("lbjp-common.".$_ eq $module){
+                                        $tag = '-r '.$lbjp_tag;
+                                }
+			}
+		}
+		if ($sec_tag){
+			for (@{$lbmodules{security}}){
+				if ("security.".$_ eq $module){
+                                        $tag = '-r '.$sec_tag;
+                                }
+			}
+		}
+		if ($jobid_tag){
+			for (@{$lbmodules{jobid}}){
+				if ("jobid.".$_ eq $module){
+                                        $tag = '-r '.$jobid_tag;
+                                }
+			}
+		}
+		#if (grep {"lb.".$_ eq $module} @{$lbmodules{lb}}){
+		#	print "found";
+		#}
 		$_ = full($_);
 		print "\n*** Checking out $_\n";
-		system("cvs checkout $_") == 0 or die "cvs checkout $_: $?\n";
+		system("cvs checkout  $tag $_") == 0 or die "cvs checkout $tag $_: $?\n";
 	}
 }
 
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
+	'lb.client-java' => [ qw/ant:B/ ],
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
@@ -239,12 +286,13 @@ BEGIN{
 	'lbjp-common.db' => [ qw/mysql/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
-	'lbjp-common.trio' => [ qw// ],
+	'lbjp-common.trio' => [ qw/cppunit:B/ ],
+	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus cares cppunit:B/ ],
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
-	'jobid.api-java' =>  [ qw// ],
+	'jobid.api-java' =>  [ qw/ant:B/ ],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -294,9 +342,9 @@ for my $jar (keys %need_jars) {
 		jobid.api-c
 		security.gsoap-plugin security.gss
 	/ ],
-	'lb.state-machine' => [ qw/lb.common jp.common security.gss/ ],
+	'lb.state-machine' => [ qw/lb.common lbjp-common.jp-interface security.gss/ ],
 	'lb.utils' => [ qw/
-		jp.common
+		lbjp-common.jp-interface
 		jobid.api-c
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine
@@ -314,7 +362,7 @@ for my $jar (keys %need_jars) {
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
 
-	'jp.common' => [ qw/lbjp-common.db/ ],
+	'lbjp-common.jp-interface' => [ qw/lbjp-common.db jobid.api-c/ ],
 );
 
 for my $ext (keys %deps_aux) {
@@ -349,8 +397,8 @@ sub mkinc
 lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
-lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio
-jp.common/;
+lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
+/;
 	@aux{@m} = (1) x ($#m+1);
 
 	my $short = shift;
@@ -379,7 +427,7 @@ jp.common/;
 
 	print MKINC qq{
 PREFIX = $prefix
-stagedir = $prefix
+stagedir = $stagedir
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 };
@@ -406,7 +454,7 @@ BEGIN{
 	%etics_externs = (
 		globus=>'vdt_globus_essentials',
 		cares=>'c-ares',
-		voms=>'org.glite.security.voms-api-c',
+		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
 	);
@@ -453,7 +501,7 @@ sub mode_etics {
 	for (@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		push @copts,"--with-$_=\${$_.location}/$_*.jar";
+		push @copts,"--with-$_ \${$eext.location}/$_*.jar";
 	}
 
 
@@ -500,7 +548,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && \${moduleName}/configure --prefix=\${prefix} --module $subsys.$module @copts
+configure = cd $confdir && \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
@@ -568,6 +616,10 @@ What to build:
   --enable-NODE			build this "node" (set of modules) only. Available nodes are
 					@{$lbmodules{lb}},@{$lbmodules{security}}
   --disable-NODE		don't build this node
+  --lb-tag=tag			checkout LB modules with specific tag
+  --lbjp-common-tag=tag         checkout lbjp-common modules with specific tag
+  --security-tag=tag		checkout security modules with specific tag
+  --jobid-tag=tag		checkout jobid modules with specific tag
 
 Dependencies:
   --with-EXTERNAL=PATH		where to look for an external. Required externals
