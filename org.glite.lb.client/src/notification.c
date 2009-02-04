@@ -289,6 +289,7 @@ int edg_wll_NotifBind(
 	edg_wll_ResetError(ctx);
 
 	
+/* XXX - ??? this should not be there - if fd = -1 then semantic is 'create new socket or _reuse_ old'
 	// if a local listening socket active, close it
 	if (ctx->notifSock >= 0) {
 		if (close(ctx->notifSock)) 
@@ -296,6 +297,7 @@ int edg_wll_NotifBind(
 		else
 			ctx->notifSock = -1;
 	}
+*/
 
 	if (set_server_name_and_port(ctx)) 
 		goto err;
@@ -662,7 +664,7 @@ int edg_wll_NotifReceive(
 		start_time = check_time;
 		
 		if (edg_wll_accept(ctx,fd)) goto err;
-		
+	
 		/* check time */
 		gettimeofday(&check_time,0);
 		if (decrement_timeout(&ctx->p_tmp_timeout, start_time, check_time)) {
