@@ -41,9 +41,9 @@ static void usage(char *cmd)
 			"    -c			Match only on state change\n\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
-		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } -t requested_validity ] notifid\n"
+		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } -t requested_validity ] notifids \n"
 			"    requested_validity	Validity of notification req. in seconds\n"
-			"    notifid     	Notification ID\n"
+			"    notifids     	One or more notification ID's\n"
 			"    fake_addr   	Fake the client address\n", me);
 /* UNIMPL 
 	if ( !cmd || !strcmp(cmd, "change") )
@@ -239,7 +239,9 @@ int main(int argc,char **argv)
 		memset(&stat,0,sizeof stat);
 
 		if (sock == -1) {
-			if ( (optind+1 == argc) || edg_wll_NotifIdParse(argv[optind+1], &nid) )
+			int	param = optind+1;
+
+			if (param == argc)
 			{
 				fprintf(stderr, "Notification ID parameter not set propperly!\n\n");
 				usage("receive");
@@ -248,10 +250,20 @@ int main(int argc,char **argv)
 
 			valid = time(NULL) + opt_valid;
 
-			if (edg_wll_NotifBind(ctx, nid, -1, fake_addr, &valid) )
-				goto receive_err;
-			fprintf(stderr,"notification is valid until: %s (%ld)\n", TimeToStr(valid), valid);
+			while (param < argc) {
+				if (edg_wll_NotifIdParse(argv[param], &nid)) {
+					fprintf(stderr, "Notification ID parameter not set propperly!\n\n");
+					usage("receive");
+					return EX_USAGE;
+				}
 
+				if (edg_wll_NotifBind(ctx, nid, -1, fake_addr, &valid) )
+					goto receive_err;
+				fprintf(stderr,"notification is valid until: %s (%ld)\n", TimeToStr(valid), valid);
+				
+				if (nid) edg_wll_NotifIdFree(nid); nid = NULL;
+				param++;
+			}
 			now = time(NULL);
 			do_refresh = now + (refresh ? (valid - now)/2 : 999999999);
 			if (refresh) fprintf(stderr,"next refresh %s (%ld)\n",
