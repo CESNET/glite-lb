@@ -116,7 +116,8 @@ receive_err:
 	/* Drop registration if not used anymore edg_wll_NotifDrop() */
 
 	edg_wll_NotifIdFree(recv_notif_id);
-
+        edg_wll_NotifCloseFd(ctx);
+        /* edg_wll_NotifClosePool(ctx); */
 
 register_err:
 	

@@ -43,9 +43,13 @@ The typical notification workflow consist of 3 tasks:
   soft-state registration and must be regullarly refreshed by the
   owner.
  \item Receiving the data from notification. The \LB infrastructure
-  provides data queuing and garantied delivery (while the registration
-  is valid).
+  provides data queuing and garanteed delivery (while the registration
+  is valid). 
 \end{itemize}
+
+The client notification library contains a code providing a pool of
+receiving sockets/connections to optimize a parallel receiving of
+notifications.
 
 For complete reference of all API funcions please see the header
 file. The next sessions briefly describe main facts about API
@@ -92,12 +96,22 @@ machine than where the registration was done, it is possible. The
 client must use the \verb'edg_wll_NotifBind' call to inform the
 notification infrastructure (interlogger) about its location change.
 
-There is a possibility to reuse existing socket for multiple notifications (calls of 
-\verb'edg_wll_NotifReceive'. \TODO{Reusing of socket reasons/recomendations}
+The notification API cleanup procedure should be called when
+finalizing the client (\verb'edg_wll_NotifClosePool' and 
+\verb'edg_wll_NotifCloseFd' calls -- where the later is optional 
+-- see the next section).
 
-\TODO{Normal usage of edg\_wll\_NotifCloseFd? Shoul be used?}
+\subsubsection{External versus internal management of notification socket}
+A notification socket used by \verb'edg_wll_NotifReceive' call to
+receive the notifications is automatically created during the
+\verb'edg_wll_NotifNew' or \verb'edg_wll_NotifBind' calls.
 
-\TODO{Receiving notification from more sources on one socket.}
+It the user wants to use its own socket (for example to be used in
+main select() call) it can be created and closed by the user and set
+as a parameter (fd) to all calls mentioned above.
+
+When using automatically created socket it must be closed explicitly
+by calling \verb'edg_wll_CloseFd'.
 
 \subsection{Registering and receiving notification example}
 
@@ -127,5 +141,5 @@ The \verb'edg_wll_NotifReceive' call returns one notification. If no notificatio
 ready for delivery, the call waits until some notification arrival or timeout:
 \lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=receive-end\ receive]{notif_example.c}
 
-
+# Finalizing the client
 
