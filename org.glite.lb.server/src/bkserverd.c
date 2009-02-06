@@ -481,8 +481,8 @@ int main(int argc, char *argv[])
 	setlinebuf(stderr);
 
 	dprintf(("\n"));
-	if (mode & SERVICE_PROXY) dprintf(("Staring LB proxy service\n"));
-	if (mode & SERVICE_SERVER) dprintf(("Staring LB server service\n"));
+	if (mode & SERVICE_PROXY) dprintf(("Starting LB proxy service\n"));
+	if (mode & SERVICE_SERVER) dprintf(("Starting LB server service\n"));
 	dprintf(("\n"));
 
 	// XXX: workaround for only preudoparallel job registration

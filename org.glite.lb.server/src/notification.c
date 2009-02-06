@@ -609,7 +609,7 @@ static int update_notif(
 {
 	char	*nid_s = NULL, *host = NULL,
 		*stmt = NULL, *aux = NULL;
-	int	ret, port;
+	int	ret, port = 0;
 
 
 	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
