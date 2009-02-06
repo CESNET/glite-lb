@@ -585,7 +585,7 @@ int edg_wll_NotifReceive(
 
 /* NotifReceive */
 {
-	int 			i, j, fd_num = ctx->connNotif->connOpened + 1;
+	int 			i, j, ret, fd_num = ctx->connNotif->connOpened + 1;
 	struct _fd_map {
 		struct pollfd	pollfds[fd_num];
 		int		index[fd_num];
@@ -593,11 +593,11 @@ int edg_wll_NotifReceive(
 	edg_wll_Event 		*event = NULL;
 	struct timeval 		start_time,check_time;
 	char 			*event_char = NULL, *jobstat_char = NULL, *message = NULL;
+	struct timeval		tv = *timeout;
 	
-	
+
 	edg_wll_ResetError(ctx);
 
-	ctx->p_tmp_timeout = *timeout;
 	/* start timer */
 	gettimeofday(&start_time,0);
 
@@ -610,6 +610,7 @@ int edg_wll_NotifReceive(
 		}
 	}
 
+start:
 	fd_map.pollfds[0].fd = fd;
 	fd_map.pollfds[0].events = POLLIN;
 	fd_map.index[0] = -1;
@@ -623,13 +624,14 @@ int edg_wll_NotifReceive(
 			j++;
 		}
 	}
+	assert(j == fd_num);
 	
 	/* XXX	 notif_send() & notif_receive() should then migrate to		*/
 	/*	 client/connection.c and use connPool management f-cions	*/
 
 	/* XXX: long-lived contexts may have problems, TODO implement credential reload */
 
-	switch(poll(fd_map.pollfds, fd_num, ctx->p_tmp_timeout.tv_sec*1000+ctx->p_tmp_timeout.tv_usec/1000)) {
+	switch(poll(fd_map.pollfds, fd_num, tv.tv_sec*1000+tv.tv_usec/1000)) {
 		case -1:
 			edg_wll_SetError(ctx, errno, "edg_wll_NotifReceive: poll() failed");
 			goto err;
@@ -652,10 +654,11 @@ int edg_wll_NotifReceive(
 
 	/* check time */
 	gettimeofday(&check_time,0);
-	if (decrement_timeout(&ctx->p_tmp_timeout, start_time, check_time)) {
+	if (decrement_timeout(&tv, start_time, check_time)) {
 		edg_wll_SetError(ctx, ETIMEDOUT, "edg_wll_NotifReceive()");
 		goto err;
 	}
+	ctx->p_tmp_timeout = tv;
 
 	// there is some incomming connection(s)
 	// XXX: what has higher priority? new connection, or data on active connection ?
@@ -667,10 +670,11 @@ int edg_wll_NotifReceive(
 	
 		/* check time */
 		gettimeofday(&check_time,0);
-		if (decrement_timeout(&ctx->p_tmp_timeout, start_time, check_time)) {
+		if (decrement_timeout(&tv, start_time, check_time)) {
 			edg_wll_SetError(ctx, ETIMEDOUT, "edg_wll_NotifReceive()");
 			goto err;
 		}
+		ctx->p_tmp_timeout = tv;
 	}
 	else {	/* data on some of active (NotifPool) connections */
 		// XXX: if data arrives for more connections, which one serve first?
@@ -690,17 +694,39 @@ int edg_wll_NotifReceive(
 	
 	start_time = check_time;
 
-	if (read_data(ctx)) {
+	if ( (ret = read_data(ctx)) ) {
 		ctx->connNotif->connPool[ctx->connNotif->connToUse].bufPtr = 0;
+
+		if ( (ret == ENOTCONN) && (ctx->connNotif->connPool[ctx->connNotif->connToUse].bufUse == 0) ) {
+			/* IL closed connection; remove this connection from pool and go to poll if timeout > 0 */
+
+			CloseConnectionNotif(ctx);
+
+			/* check time */
+			gettimeofday(&check_time,0);
+			if (decrement_timeout(&tv, start_time, check_time)) {
+				edg_wll_SetError(ctx, ETIMEDOUT, "edg_wll_NotifReceive()");
+				goto err;
+			}
+			ctx->p_tmp_timeout = tv;
+			start_time = check_time;
+
+			fd_num--;
+			edg_wll_ResetError(ctx);
+
+			goto start;
+		}
+
 		goto err;
 	}
 
 	/* check time */
 	gettimeofday(&check_time,0);
-	if (decrement_timeout(&ctx->p_tmp_timeout, start_time, check_time)) {
+	if (decrement_timeout(&tv, start_time, check_time)) {
 		edg_wll_SetError(ctx, ETIMEDOUT, "edg_wll_NotifReceive()");
 		goto err;
 	}
+	ctx->p_tmp_timeout = tv;
 	start_time = check_time;
 
 	if (recv_notif(ctx, &message) < 0) {
@@ -725,10 +751,11 @@ int edg_wll_NotifReceive(
 
 	/* check time */
 	gettimeofday(&check_time,0);
-	if (decrement_timeout(&ctx->p_tmp_timeout, start_time, check_time)) {
+	if (decrement_timeout(&tv, start_time, check_time)) {
 		edg_wll_SetError(ctx, ETIMEDOUT, "edg_wll_NotifReceive()");
 		goto err;
 	}
+	ctx->p_tmp_timeout = tv;
 	start_time = check_time;
 
 	/* response sent, free output buffer */
@@ -754,10 +781,11 @@ int edg_wll_NotifReceive(
 	
 	/* check time */
 	gettimeofday(&check_time,0);
-	if (decrement_timeout(&ctx->p_tmp_timeout, start_time, check_time)) {
+	if (decrement_timeout(&tv, start_time, check_time)) {
 		edg_wll_SetError(ctx, ETIMEDOUT, "edg_wll_NotifReceive()");
 		goto err;
 	}
+	ctx->p_tmp_timeout = tv;
 	start_time = check_time;
 		
 	if (edg_wll_ParseNotifEvent(ctx, event_char, &event)) {
@@ -793,6 +821,9 @@ err:
 	free(event_char);
 	free(jobstat_char);
 	free(message);
+	
+	// XXX: decrement or not to decrement :)
+	//*timeout = tv;
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
