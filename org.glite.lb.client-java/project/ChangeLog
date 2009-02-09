@@ -10,3 +10,6 @@
 1.0.0-4
 - configure script update (globus flavors added to configure call)
 
+1.0.0-5
+- Added ant_prefix handling to Makefile and configure
+

@@ -41,6 +41,7 @@ my %extern_prefix = (
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
+	ant => '/usr',
 );
 
 my %jar = (
@@ -272,6 +273,7 @@ sub mode_checkout() {
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
+	'lb.client-java' => [ qw/ant:B/ ],
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
@@ -290,7 +292,7 @@ BEGIN{
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
-	'jobid.api-java' =>  [ qw// ],
+	'jobid.api-java' =>  [ qw/ant:B/ ],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -452,7 +454,7 @@ BEGIN{
 	%etics_externs = (
 		globus=>'vdt_globus_essentials',
 		cares=>'c-ares',
-		voms=>'org.glite.security.voms-api-c',
+		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
 	);
