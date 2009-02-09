@@ -42,6 +42,7 @@ my %extern_prefix = (
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
 	ant => '/usr',
+	jdk => '/usr',
 );
 
 my %jar = (
@@ -292,7 +293,7 @@ BEGIN{
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
-	'jobid.api-java' =>  [ qw/ant:B/ ],
+	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
 );
 
 for my $ext (keys %need_externs_aux) {
