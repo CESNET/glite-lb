@@ -68,7 +68,7 @@ funcions.
   defined. In \LB 2.0 you cat make a registration based on other
   attributes without referencing a particular JobId (you can select
   owner, VO, network server).
-  \TODO{Operator CHANGED, JDL flags} 
+  \TODO{JDL flags?} 
 
  \item \emph {Refresh of a notification} When a new notification is
   created using \verb'edg_wll_NotifNew' call, the notification
@@ -101,6 +101,8 @@ finalizing the client (\verb'edg_wll_NotifClosePool' and
 \verb'edg_wll_NotifCloseFd' calls -- where the later is optional 
 -- see the next section).
 
+\subsection{Advanced aspects}
+
 \subsubsection{External versus internal management of notification socket}
 A notification socket used by \verb'edg_wll_NotifReceive' call to
 receive the notifications is automatically created during the
@@ -112,6 +114,25 @@ as a parameter (fd) to all calls mentioned above.
 
 When using automatically created socket it must be closed explicitly
 by calling \verb'edg_wll_CloseFd'.
+
+\subsubsection{Multiple registrations}
+Each user can register for multiple notifications (call
+\verb'edg_wll_NotifNew' function more than once). Every registration
+gets its own notification ID and must be managed separately (refresh,
+change, drop). But the \verb'edg_wll_NotifReceive' call is common for
+all the registrations created in the same context (all previous
+\verb'edg_wll_NotifNew' calls). 
+
+If the user wants to distinguish between multiple registrations it is
+needed to inspect a notification ID value of each received notification.
+
+A \verb'edg_wll_NotifBind' works in similar way like
+\verb'edg_wll_NotifNew'. For each notification ID it must be called
+once and subsequent \verb'edg_wll_NotifReceive' call will work with
+the whole set of registrations. Will receive a first notification from
+any of registations.
+
+\subsubsection{Operator CHANGED}
 
 \subsection{Registering and receiving notification example}
 
@@ -141,5 +162,5 @@ The \verb'edg_wll_NotifReceive' call returns one notification. If no notificatio
 ready for delivery, the call waits until some notification arrival or timeout:
 \lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=receive-end\ receive]{notif_example.c}
 
-# Finalizing the client
+% Finalizing the client
 
