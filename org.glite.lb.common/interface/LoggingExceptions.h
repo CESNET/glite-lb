@@ -7,6 +7,8 @@
  *  @version $Revision$
  */
 
+#include <cstdlib>
+#include <cstring>
 #include <stdexcept>
 #include <sstream>
 #include <string>
