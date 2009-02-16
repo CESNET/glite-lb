@@ -49,3 +49,8 @@
 2.0.0-4
 - fixed server dependency on voms-api-cpp instead of voms-api-c in configure
 
+2.0.0-5
+- fixed credential setting via gsoap-plugin (switching to a newly introduced API call)
+- minor initialization/freeing fixes
+- printout typo fix
+ 
