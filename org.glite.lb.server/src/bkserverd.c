@@ -481,8 +481,8 @@ int main(int argc, char *argv[])
 	setlinebuf(stderr);
 
 	dprintf(("\n"));
-	if (mode & SERVICE_PROXY) dprintf(("Staring LB proxy service\n"));
-	if (mode & SERVICE_SERVER) dprintf(("Staring LB server service\n"));
+	if (mode & SERVICE_PROXY) dprintf(("Starting LB proxy service\n"));
+	if (mode & SERVICE_SERVER) dprintf(("Starting LB server service\n"));
 	dprintf(("\n"));
 
 	// XXX: workaround for only preudoparallel job registration
@@ -1171,7 +1171,7 @@ int bk_handle_ws_connection(int conn, struct timeval *timeout, void *data)
 		goto err;
 	}
 	glite_gsplugin_set_connection(gsplugin_ctx, &cdata->ctx->connections->serverConnection->gss);
-	glite_gsplugin_set_credential(gsplugin_ctx, mycred);
+	glite_gsplugin_use_credential(gsplugin_ctx, mycred);
 	cdata->soap = soap;
 
 
@@ -1446,7 +1446,7 @@ int bk_ws_clnt_disconnect(int conn, struct timeval *timeout, void *cdata)
 
 	gsplugin_ctx = glite_gsplugin_get_context(soap);
 	glite_gsplugin_set_connection(gsplugin_ctx, NULL);
-	glite_gsplugin_set_credential(gsplugin_ctx, NULL);
+	glite_gsplugin_use_credential(gsplugin_ctx, NULL);
 	if ( (rv = bk_clnt_disconnect(conn, timeout, cdata)) )
 		return rv;
 

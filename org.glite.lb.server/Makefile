@@ -418,7 +418,7 @@ test_query_events.o: %.o: %.cpp
 
 soap_version.h:
 	${gsoap_bin_prefix}/soapcpp2 /dev/null
-	perl -ne '$$. == 2 && /.*([0-9]+)\.([0-9]+)\.([0-9]+)([a-z]).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n#define GSOAP_VERSION_LETTER '\''$$4'\''\n",$$1,$$2,$$3' soapH.h >$@
+	perl -ne '$$. == 2 && /.*([0-9]+)\.([0-9]+)\.([0-9]+)([a-z]?).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n#define GSOAP_VERSION_LETTER '\''".($$4?$$4:"\\0")."'\''\n",$$1,$$2,$$3' soapH.h >$@
 	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)

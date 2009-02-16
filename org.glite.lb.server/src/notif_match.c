@@ -87,7 +87,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 		"   and (j.jobid = '%|Ss' or j.jobid = '%|Ss' %s) %s",
 		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS,cond_where ? cond_where : "",cond_and_where ? cond_and_where : "");
 
-	free(ju);
+	free(ju); ju = NULL;
 
 	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
 
@@ -103,9 +103,11 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			char			   *dest, *aux;
 			int					port;
 
-			if (debug) fprintf(stderr,"NOTIFY: %s, job %s\n",jobc[0],
+			if (debug) {
+				fprintf(stderr,"NOTIFY: %s, job %s\n",jobc[0],
 					ju = edg_wlc_JobIdGetUnique(stat->jobId));
-			free(ju);
+				free(ju); ju = NULL;
+			}
 
 			dest = strdup(jobc[1]);
 			if ( !(aux = strchr(dest, ':')) )

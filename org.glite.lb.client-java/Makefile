@@ -1,7 +1,7 @@
 -include Makefile.inc
 
 all compile:
-	ant -Dno.deps=yes -Dreference.jobid-api-java.jar=${stagedir}/share/java/jobid-api-java.jar -DstageDir=${stagedir} 
+	${ant_prefix}/bin/ant -Dno.deps=yes -Dreference.jobid-api-java.jar=${stagedir}/share/java/jobid-api-java.jar -DstageDir=${stagedir} 
 	cd src_c && make PREFIX=${PREFIX}
 
 check:
