@@ -211,6 +211,10 @@ char *edg_wll_JDLField(edg_wll_JobStat *stat, const char *field_name)
 	if (stat->jdl_classad == NULL) { //classad had not been unparsed yet
 
 		stat->jdl_classad = (struct classad*)cclassad_create(stat->jdl);
+
+		/* XXX: Can't parse, likely due to filename 
+		        which is logged first, than replaced by content */
+		if (!stat->jdl_classad) return NULL;
 	}
 
 	if (cclassad_evaluate_to_string(stat->jdl_classad, field_name, &extr_val)) {
