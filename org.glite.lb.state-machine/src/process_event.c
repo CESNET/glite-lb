@@ -396,6 +396,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				switch (e->accepted.source) {
 					case EDG_WLL_SOURCE_NETWORK_SERVER:
 						rep(js->pub.ui_host, e->accepted.from_host);
+						rep(js->pub.network_server,e->any.host);
 						break; /* no WM id */
 					case EDG_WLL_SOURCE_LOG_MONITOR:
 						rep(js->pub.condorId, e->accepted.local_jobid); break;
