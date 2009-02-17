@@ -26,7 +26,7 @@ my $lbjp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
 
-my @nodes = qw/client server logger utils client-java doc ws-test/;
+my @nodes = qw/client server logger utils client-java doc ws-test db/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -150,10 +150,11 @@ my @modules;
 my %aux;
 
 if ($module) {
+#	push @modules,split(/[,.]+/,$module);
 	push @modules,$module;
 }
 else {
-	@modules = map 'lb.'.($extranodmod{$_} ? $extranodmod{$_} : $_),keys %enable_nodes;
+	@modules = map(($extranodmod{$_} ? $extranodmod{$_} : 'lb.'.$_),(keys %enable_nodes));
 	
 	my $n;
 
@@ -219,7 +220,7 @@ sub mode_build {
 		my %ldeps; undef %ldeps;  
 		@ldeps{@{$deps{$_}}} = 1;
 		for my $x (split /,/,$staged) { delete $ldeps{$x}; }
-		my @dnames = keys %ldeps;
+		my @dnames = $module ? () : keys %ldeps;
 	
 		my $full = full($_);
 		my $build = $topbuild{$_} ? '': '/build';
@@ -378,7 +379,10 @@ for my $ext (keys %deps_aux) {
 
 %extrafull = ( gridsite=>'org.gridsite.core');
 
-# %extranodmod = ( java => 'client-java' );
+#( java => 'client-java' );
+%extranodmod = (
+	db => 'lbjp-common.db',
+);
 
 my @t = qw/lb.client-java jobid.api-java lb.types/;
 @topbuild{@t} = (1) x ($#t+1);
