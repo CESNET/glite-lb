@@ -1214,6 +1214,8 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 	ctx->noAuth = 1;
 	ctx->noIndex = 1;
 
+	/* required to match superuser-authorized notifications */
+	ctx->super_users = super_users;
 
 	if (fake_host)
 	{
