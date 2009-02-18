@@ -697,7 +697,8 @@ start:
 	if ( (ret = read_data(ctx)) ) {
 		ctx->connNotif->connPool[ctx->connNotif->connToUse].bufPtr = 0;
 
-		if ( (ret == ENOTCONN) && (ctx->connNotif->connPool[ctx->connNotif->connToUse].bufUse == 0) ) {
+		if ( ret == ENOTCONN ) {
+			int	broken = (ctx->connNotif->connPool[ctx->connNotif->connToUse].bufUse != 0);
 			/* IL closed connection; remove this connection from pool and go to poll if timeout > 0 */
 
 			CloseConnectionNotif(ctx);
@@ -712,8 +713,12 @@ start:
 			start_time = check_time;
 
 			fd_num--;
-			edg_wll_ResetError(ctx);
+			if (broken) { 
+				edg_wll_SetError(ctx,ENOTCONN,"IL connection broken in middle of message");
+				goto err;
+			}
 
+			edg_wll_ResetError(ctx);
 			goto start;
 		}
 
