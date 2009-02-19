@@ -376,14 +376,15 @@ int edg_wll_QueryJobsServer(
 
 	if ( (where_flags & FL_SEL_STATUS) )
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s %s %s", 
+						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s %s %s ORDER BY j.jobid", 
 						(job_where) ? "AND" : "",
 						(job_where) ? job_where : "",
-						(job_where) ? "AND" : "",
+						(ctx->isProxy) ? "AND" : "",
 						(ctx->isProxy) ? "j.proxy='1'" : "j.server='1'");
 	else
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j WHERE %s %s %s", 
+						 "FROM jobs j WHERE %s %s %s "
+						 "ORDER BY j.jobid", 
 						(job_where) ? job_where : "",
 						(job_where) ? "AND" : "",
 						(ctx->isProxy) ? "j.proxy='1'" : "j.server='1'");
@@ -958,9 +959,9 @@ static char *jc_to_head_where(
 		{
 		case EDG_WLL_QUERY_ATTR_JOBID:
 			ct++;
-			if ( jc[m][n].op != EDG_WLL_QUERY_OP_EQUAL && jc[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
+			if ( jc[m][n].op != EDG_WLL_QUERY_OP_EQUAL && jc[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL && jc[m][n].op != EDG_WLL_QUERY_OP_GREATER)
 			{
-				edg_wll_SetError(ctx, EINVAL, "only `=' and '!=' supported with jobid");
+				edg_wll_SetError(ctx, EINVAL, "only `=', '>' and '!=' supported with jobid");
 				return NULL;
 			}
 			break;
