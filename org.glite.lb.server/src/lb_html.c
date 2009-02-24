@@ -151,6 +151,8 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
         	        pomB, cond);
 	        free(pomB);
         	pomB = pomA;
+		pomL = strlen(pomB);
+
 	}
 	free(cond);
 
