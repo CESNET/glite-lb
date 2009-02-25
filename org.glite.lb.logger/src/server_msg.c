@@ -124,6 +124,7 @@ server_msg_copy(struct server_msg *src)
   msg->dest = strdup(src->dest);
 #endif
   msg->expires = src->expires;
+  msg->generation = src->generation;
   return(msg);
 }
 
