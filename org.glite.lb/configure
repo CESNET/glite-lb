@@ -26,7 +26,7 @@ my $lbjp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
 
-my @nodes = qw/client server logger utils client-java doc ws-test db/;
+my @nodes = qw/client server logger utils client-java doc ws-test db primary index client/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -43,6 +43,7 @@ my %extern_prefix = (
 	lcas => '/opt/glite',
 	ant => '/usr',
 	jdk => '/usr',
+	libtar => '/usr',
 );
 
 my %jar = (
@@ -65,6 +66,7 @@ my %lbmodules = (
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp api-java/],
+	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	);
 
 
@@ -124,7 +126,7 @@ die "--enable-* and --disable-* are mutually exclusive\n"
 die "--module cannot be used with --enable-* or --disable-*\n"
 	if $module && ($en || $dis);
 
-die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},@{$lbmodules{security}};
+die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},@{$lbmodules{security}},{$lbmodules{jp}};
 
 if ($dis) {
 	for (@nodes) {
@@ -295,6 +297,12 @@ BEGIN{
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
+	'jp.client' => [ qw/gsoap libtar globus/ ],
+        'jp.doc' => [],
+        'jp.index' => [ qw/gsoap globus/ ],
+        'jp.primary' => [ qw/classads gsoap libtar globus/ ],
+        'jp.server-common' => [],
+        'jp.ws-interface' => [],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -365,6 +373,30 @@ for my $jar (keys %need_jars) {
 	'jobid.api-java' =>  [ qw// ],
 
 	'lbjp-common.jp-interface' => [ qw/lbjp-common.db jobid.api-c/ ],
+
+	'jp.client' => [ qw/
+                jp.ws-interface
+                lbjp-common.jp-interface lbjp-common.maildir
+                jobid.api-c
+                security.gsoap-plugin
+        / ],
+	'jp.doc' => [ qw// ],
+	'jp.index' => [ qw/
+                jp.server-common jp.ws-interface
+                lbjp-common.jp-interface lbjp-common.trio lbjp-common.db lbjp-common.server-bones
+                security.gsoap-plugin
+        / ],
+	'jp.primary' => [ qw/
+                jobid.api-c
+                jp.server-common jp.ws-interface
+                lb.state-machine
+                lbjp-common.jp-interface lbjp-common.trio lbjp-common.db lbjp-common.server-bones
+                security.gsoap-plugin
+        / ],
+	'jp.server-common' => [ qw/ 
+                lbjp-common.jp-interface lbjp-common.db
+        / ],
+	'jp.ws-interface' => [ qw// ],
 );
 
 for my $ext (keys %deps_aux) {
@@ -382,6 +414,9 @@ for my $ext (keys %deps_aux) {
 #( java => 'client-java' );
 %extranodmod = (
 	db => 'lbjp-common.db',
+	primary => 'jp.primary',
+	index => 'jp.index',
+	client => 'jp.client',
 );
 
 my @t = qw/lb.client-java jobid.api-java lb.types/;
@@ -403,6 +438,7 @@ lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common l
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
+jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
 /;
 	@aux{@m} = (1) x ($#m+1);
 
@@ -611,7 +647,7 @@ General options (defaults in []):
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
   --thrflavour=flavour
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
-  --listmodules=subsys		list modules of a subsystem
+  --listmodules=subsys          list modules of a subsystem
   
 Mode of operation:
   --mode={checkout|build|etics}	what to do [build]
