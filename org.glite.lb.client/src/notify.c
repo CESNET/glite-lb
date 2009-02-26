@@ -32,12 +32,13 @@ static void usage(char *cmd)
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity ] {-j jobid | -o owner | -n network_server | -v virtual_organization | -c } [-f flags]\n"
+		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity -j jobid  { -o owner | -O }  -n network_server -v virtual_organization  -c -f flags]\n"
 			"    jobid		Job ID to connect notif. reg. with\n"
 			"    owner		Match this owner DN\n"
 			"    requested_validity	Validity of notification req. in seconds\n"
 			"    flags		0 - return basic status, 1 - return also JDL in status\n"
 			"    network_server	Match only this network server (WMS entry point)\n"
+			"    -O			Match owner - credentials are retrieved from environment\n"
 			"    -c			Match only on state change\n\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
@@ -104,26 +105,50 @@ int main(int argc,char **argv)
 		int	c;
 		edg_wlc_JobId		jid;
 		edg_wll_NotifId		id_out;
-		char	*arg = NULL;
-		int	attr = 0, op = EDG_WLL_QUERY_OP_EQUAL;
+		int			attr = 0, i = 0, excl = 0;
+		edg_wll_GssCred 	mycred;
+                edg_wll_GssStatus	gss_code;
+		
 
-		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:t:f:c")) > 0) switch (c) {
+		conditions = (edg_wll_QueryRec **)calloc(7,sizeof(edg_wll_QueryRec *));
+		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
+
+		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:t:f:cO")) > 0) switch (c) {
 			case 'j':
-				if (arg) { usage("new"); return EX_USAGE; }
-				attr = EDG_WLL_QUERY_ATTR_JOBID;
-				arg = optarg; break;
+				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
+				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
+				conditions[i][0].op = EDG_WLL_QUERY_OP_EQUAL;
+				if (edg_wlc_JobIdParse(optarg, &jid) ) {
+					fprintf(stderr,"Job ID parameter not set propperly!\n");
+					usage("new");
+					goto cleanup;
+				}
+				conditions[i][0].value.j = jid;
+				i++;
+				break;
 			case 'o':
-				if (arg) { usage("new"); return EX_USAGE; }
-				attr = EDG_WLL_QUERY_ATTR_OWNER;
-				arg = optarg; break;
+				if (excl) { usage("new"); return EX_USAGE; } else excl = 1;
+				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
+				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+				conditions[i][0].op = EDG_WLL_QUERY_OP_EQUAL;
+				conditions[i][0].value.c = optarg;
+				i++;
+				break;
 			case 'v':
-				if (arg) { usage("new"); return EX_USAGE; }
-				attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
-				arg = optarg; break;
+				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
+				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
+				conditions[i][0].op = EDG_WLL_QUERY_OP_EQUAL;
+				conditions[i][0].value.c = optarg;
+				asprintf(&(conditions[i][0].attr_id.tag), "VirtualOrganisation");
+				i++;
+				break;
 			case 'n':
-				if (arg) { usage("new"); return EX_USAGE; }
-				attr= EDG_WLL_QUERY_ATTR_NETWORK_SERVER; 
-				arg = optarg; break;
+				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
+				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_NETWORK_SERVER;
+				conditions[i][0].op = EDG_WLL_QUERY_OP_EQUAL;
+				conditions[i][0].value.c = optarg;
+				i++;
+				break;
 			case 's':
 				if (fake_addr) { usage("new"); return EX_USAGE; }
 				sock = atoi(optarg); break;
@@ -135,28 +160,29 @@ int main(int argc,char **argv)
 			case 'f':
 				flags = atoi(optarg); break;
 			case 'c':
-				attr = EDG_WLL_QUERY_ATTR_STATUS;
-				op = EDG_WLL_QUERY_OP_CHANGED;
+				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
+				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+				conditions[i][0].op = EDG_WLL_QUERY_OP_CHANGED;
+				i++;
+				break;
+			case 'O':
+				if (excl) { usage("new"); return EX_USAGE; } else excl = 1;
+				if ( !edg_wll_gss_acquire_cred_gsi(NULL, NULL, &mycred, &gss_code) )
+				{
+					conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
+					conditions[i][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+					conditions[i][0].op = EDG_WLL_QUERY_OP_EQUAL;
+					conditions[i][0].value.c = strdup(mycred->name);
+					edg_wll_gss_release_cred(&mycred, NULL);
+					i++;
+				}
+				else {
+					printf("No credentials found! Exiting. \n");	
+					goto cleanup;
+				}
 				break;
 			default:
 				usage("new"); return EX_USAGE;
-		}
-
-		if ( attr == EDG_WLL_QUERY_ATTR_JOBID && edg_wlc_JobIdParse(arg, &jid) ) {
-			fprintf(stderr,"Job ID parameter not set propperly!\n");
-			usage("new");
-			goto cleanup;
-		}
-
-		conditions = (edg_wll_QueryRec **)calloc(2,sizeof(edg_wll_QueryRec *));
-		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
-	
-		conditions[0][0].attr = attr;
-		conditions[0][0].op = op;
-		if (attr == EDG_WLL_QUERY_ATTR_JOBID) conditions[0][0].value.j = jid;
-		else {
-			conditions[0][0].value.c = arg;
-			if (attr == EDG_WLL_QUERY_ATTR_JDL_ATTR) asprintf(&(conditions[0][0].attr_id.tag), "VirtualOrganisation");
 		}
 
 		if ( !edg_wll_NotifNew(ctx,
