@@ -585,7 +585,7 @@ int edg_wll_NotifReceive(
 
 /* NotifReceive */
 {
-	int 			i, j, ret, fd_num = ctx->connNotif->connOpened + 1;
+	int 			i, j, ret, fd_num;
 	struct _fd_map {
 		struct pollfd	pollfds[fd_num];
 		int		index[fd_num];
@@ -611,6 +611,7 @@ int edg_wll_NotifReceive(
 	}
 
 start:
+	fd_num = ctx->connNotif->connOpened + 1;
 	fd_map.pollfds[0].fd = fd;
 	fd_map.pollfds[0].events = POLLIN;
 	fd_map.index[0] = -1;
@@ -712,7 +713,6 @@ start:
 			ctx->p_tmp_timeout = tv;
 			start_time = check_time;
 
-			fd_num--;
 			if (broken) { 
 				edg_wll_SetError(ctx,ENOTCONN,"IL connection broken in middle of message");
 				goto err;
