@@ -585,7 +585,7 @@ int edg_wll_NotifReceive(
 
 /* NotifReceive */
 {
-	int 			i, j, ret, fd_num;
+	int 			i, j, ret, fd_num = ctx->connNotif->connOpened + 1;
 	struct _fd_map {
 		struct pollfd	pollfds[fd_num];
 		int		index[fd_num];
