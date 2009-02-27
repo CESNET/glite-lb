@@ -411,7 +411,7 @@ err:
 
 int edg_wll_NotifDrop(
         edg_wll_Context         ctx,
-        edg_wll_NotifId         *id)
+        edg_wll_NotifId         id)
 {
 	char	*send_mess = NULL, *recv_mess = NULL, *response = NULL;
 	time_t 	not_used;
