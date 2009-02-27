@@ -35,11 +35,6 @@
 - handle gss errors whene receiving notifications (#35118)
 - fix producer connection management (re-establishing connections) (#37074)
 
-w
-p
-w
-s
-- (# 
-
-
+3.2.2-1
+- Fix edg_wll_NotifDrop prototype (#34649).
 
