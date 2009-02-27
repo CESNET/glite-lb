@@ -26,7 +26,7 @@ my $lbjp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
 
-my @nodes = qw/client server logger utils client-java doc ws-test db primary index client/;
+my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -414,9 +414,9 @@ for my $ext (keys %deps_aux) {
 #( java => 'client-java' );
 %extranodmod = (
 	db => 'lbjp-common.db',
-	primary => 'jp.primary',
-	index => 'jp.index',
-	client => 'jp.client',
+	jpprimary => 'jp.primary',
+	jpindex => 'jp.index',
+	jpclient => 'jp.client',
 );
 
 my @t = qw/lb.client-java jobid.api-java lb.types/;
