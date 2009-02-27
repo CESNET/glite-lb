@@ -874,6 +874,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			break;
 		case EDG_WLL_EVENT_LISTENER:
 			/* ignore, listener port is not part of job status */
+		case EDG_WLL_EVENT_RESOURCEUSAGE:
+			/* ignore, not reflected in job status */
 		case EDG_WLL_EVENT_CURDESCR:
 		case EDG_WLL_EVENT_CHKPT:
 			/* these three event are probably dead relics */
