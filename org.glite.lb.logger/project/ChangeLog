@@ -22,3 +22,7 @@
 - fixed sending empty events
 - do not syslog "error reading server reply" unnecessarily
 
+3.1.11-1
+- Support chconfig in startup scripts (#27055)
+- Proper kill signal handling (#36470)
+
