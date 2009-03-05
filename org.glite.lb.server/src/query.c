@@ -35,6 +35,7 @@ static int check_strict_jobid_cond(edg_wll_Context, const edg_wll_QueryRec **);
 
 static int cmp_string(const char *,edg_wll_QueryOp,const char *);
 static int is_all_query(const edg_wll_QueryRec **);
+static int is_singlejob_query(const edg_wll_QueryRec **);
 
 
 
@@ -61,7 +62,6 @@ int edg_wll_QueryEventsServer(
 	char *peerid = NULL;
 	char *can_peername = NULL, *can_peerid = NULL;
 	edg_wlc_JobId *jobsfound;
-	edg_wll_JobStat *statesfound;
         char *jobstr;
 	int ii;
 
@@ -94,7 +94,15 @@ int edg_wll_QueryEventsServer(
 	i = 0;
 	out = calloc(1, sizeof(*out));
 
-	if (edg_wll_QueryJobsServer(ctx, job_conditions, 0, &jobsfound, &statesfound)) goto cleanup;
+	if (noAuth && is_singlejob_query(job_conditions)) {
+		jobsfound = calloc(1, sizeof(*jobsfound));
+		if (!jobsfound || edg_wlc_JobIdDup(job_conditions[0][0].value.j,&jobsfound[0])) {
+                	edg_wll_SetError(ctx,ENOMEM,"edg_wll_QueryEventsServer(): error copying jobid");
+			goto cleanup;
+		}
+	} else {
+		if (edg_wll_QueryJobsServer(ctx, job_conditions, 0, &jobsfound, NULL)) goto cleanup;
+	}
 
 	for ( ii = 0; (jobsfound) && (jobsfound[ii]); ii++ ) {
 		jobstr = edg_wlc_JobIdUnparse(jobsfound[ii]);
@@ -1450,6 +1458,17 @@ static int is_all_query(const edg_wll_QueryRec **jc)
 	if (!jc || !*jc) return 1;
 
 	if (jc[0][0].attr == EDG_WLL_QUERY_ATTR_OWNER && 
+	    jc[0][0].op == EDG_WLL_QUERY_OP_EQUAL &&
+	    !jc[0][1].attr && !jc[1]) return 1;
+
+	return 0;
+}
+
+static int is_singlejob_query(const edg_wll_QueryRec **jc)
+{
+	if (!jc || !*jc) return 0;
+
+	if (jc[0][0].attr == EDG_WLL_QUERY_ATTR_JOBID && 
 	    jc[0][0].op == EDG_WLL_QUERY_OP_EQUAL &&
 	    !jc[0][1].attr && !jc[1]) return 1;
 
