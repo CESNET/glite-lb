@@ -40,8 +40,9 @@ static std::string & escape(std::string &s)
 {
 	for (std::string::iterator p = s.begin(); p < s.end(); p++) switch (*p) {
 		case '\n':
+			s.insert(p-s.begin(),"\\"); *(++p) = 'n';
 		case '\t':
-			s.insert(p-s.begin(),"\\"); p++;
+			s.insert(p-s.begin(),"\\"); *(++p) = 't';
 			break;
 		default: break;
 	}
@@ -98,7 +99,9 @@ void glite_lb_print_stat_fields(void **ff,edg_wll_JobStat *s)
 					else {
                                                 val = f->second;
                                                 jdl_param = edg_wll_JDLField(s, val.c_str());
-                                                std::cout << (jdl_param ? jdl_param : "(null)") << '\t'; 
+						std::string	s_param(jdl_param);
+						
+                                                std::cout << (jdl_param ? escape(s_param) : "(null)") << '\t'; 
                                                 free(jdl_param); jdl_param = NULL;
 					}
 					break;
