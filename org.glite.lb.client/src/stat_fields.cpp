@@ -41,6 +41,7 @@ static std::string & escape(std::string &s)
 	for (std::string::iterator p = s.begin(); p < s.end(); p++) switch (*p) {
 		case '\n':
 			s.insert(p-s.begin(),"\\"); *(++p) = 'n';
+			break;
 		case '\t':
 			s.insert(p-s.begin(),"\\"); *(++p) = 't';
 			break;
