@@ -370,8 +370,6 @@ static void startNotifRequest(void *data, const char *el, const char **attr)
 		case 1: if (!strcasecmp(el,"and")) {
 				XMLCtx->jobQueryRec_begin = XML_GetCurrentByteIndex(XMLCtx->p);
 			}
-			else if ( (strcasecmp(el,"notifId")) && (strcasecmp(el,"clientAddress")) && 
-				(strcasecmp(el,"notifChangeOp")) ) unexp()
 			break;
 		case 2: /* fall through */
 		case 3: /* do not check xml tags, processed in startJobQueryRec */
