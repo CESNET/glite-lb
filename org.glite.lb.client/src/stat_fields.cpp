@@ -99,11 +99,14 @@ void glite_lb_print_stat_fields(void **ff,edg_wll_JobStat *s)
 					}
 					else {
                                                 val = f->second;
-                                                jdl_param = edg_wll_JDLField(s, val.c_str());
-						std::string	s_param(jdl_param);
-						
-                                                std::cout << (jdl_param ? escape(s_param) : "(null)") << '\t'; 
-                                                free(jdl_param); jdl_param = NULL;
+						if ((jdl_param = edg_wll_JDLField(s, val.c_str()))) {
+							std::string	s_param(jdl_param);
+
+        	                                       	std::cout << escape(s_param); 
+	                                                free(jdl_param); jdl_param = NULL;
+						} else
+        	                                       	std::cout << "(null)"; 
+						std::cout << '\t';
 					}
 					break;
 				case (JobStatus::TIMEVAL_T): 
