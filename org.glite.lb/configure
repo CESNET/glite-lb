@@ -23,6 +23,7 @@ my $version;
 my $output;
 my $lb_tag = '';
 my $lbjp_tag = '';
+my $jp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
 
@@ -83,6 +84,7 @@ my @opts = (
 	'stage=s' => \$stagedir,
 	'lb-tag=s' => \$lb_tag,
 	'lbjp-common-tag=s' => \$lbjp_tag,
+	'jp-tag=s' => \$jp_tag,
 	'security-tag=s' => \$sec_tag,
 	'jobid-tag=s' => \$jobid_tag,
 	'help' => \$help,
@@ -250,6 +252,13 @@ sub mode_checkout() {
                                         $tag = '-r '.$lbjp_tag;
                                 }
 			}
+		}
+		if ($jp_tag){
+			for (@{$lbmodules{'jp'}}){
+	                        if ("jp.".$_ eq $module){
+                                        $tag = '-r '.$jp_tag;
+	                        }
+                        }
 		}
 		if ($sec_tag){
 			for (@{$lbmodules{security}}){
@@ -658,6 +667,7 @@ What to build:
 					@{$lbmodules{lb}},@{$lbmodules{security}}
   --disable-NODE		don't build this node
   --lb-tag=tag			checkout LB modules with specific tag
+  --jp-tag=tag			checkout JP modules with specific tag
   --lbjp-common-tag=tag         checkout lbjp-common modules with specific tag
   --security-tag=tag		checkout security modules with specific tag
   --jobid-tag=tag		checkout jobid modules with specific tag
