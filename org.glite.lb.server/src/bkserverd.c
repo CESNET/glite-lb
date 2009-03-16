@@ -206,7 +206,7 @@ static struct option opts[] = {
 	{"greyjobs",	0,	NULL,	'g'},
 	{"withproxy",	0,	NULL,	'B'},
 	{"proxyonly",	0,	NULL,	'P'},
-	{"sock",	0,	NULL,	'o'},
+	{"sock",	1,	NULL,	'o'},
 	{"con-queue",	1,	NULL,	'q'},
 	{"proxy-il-sock",	1,	NULL,	'W'},
 	{"proxy-il-fprefix",	1,	NULL,	'Z'},
