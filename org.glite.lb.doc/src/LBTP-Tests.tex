@@ -25,7 +25,7 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-proxy-delivery.sh} & Proposed & Test correct event delivery through LB proxy. \\
 \hline
-{\tt lb-test-ws.sh} & Proposed & Query events and job states through the Web-Service interface. \\
+{\tt lb-test-ws.sh} & Implemented & Query events and job states through the Web-Service interface. \\
 \hline
 {\tt lb-test-notif.sh} & Implemented & Test if notifications are delivered correctly for testing jobs. \\
 \hline
@@ -224,14 +224,8 @@ are really purged from the proxy.
 
 \how\ \ctblb{lb-test-ws.sh}
 
-\result\ the returned data should match those returned by the legacy
-API calls.
+\result\ the returned data should match those returned by the legacy API calls.
 
-\begin{hints}
-Examples \path{org.glite.lb.server/examples/ws\_*.c} convert the WS
-responses back to the legacy \LB\ data structures and print them in
-the same form as e.g. \path{glite-lb-jobstat}.
-\end{hints}
 
 
 
