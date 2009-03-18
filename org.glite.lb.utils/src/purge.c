@@ -168,7 +168,15 @@ int main(int argc,char *argv[])
 				usage(me);
 				return 1;
 			}
-			if (timeout >= 0) request->timeout[EDG_WLL_PURGE_JOBSTAT_OTHER]= timeout;
+			if (timeout >= 0) 
+				for (i = 0 ; i<EDG_WLL_NUMBER_OF_STATCODES ; i++) {
+					if ((i == EDG_WLL_JOB_ABORTED) ||
+						(i == EDG_WLL_JOB_CLEARED) ||
+						(i == EDG_WLL_JOB_CANCELLED) ||
+						(i == EDG_WLL_JOB_DONE)) continue;
+
+					request->timeout[i]= timeout;
+				}
 			break;
 
 		case 'm': server = optarg; break;
