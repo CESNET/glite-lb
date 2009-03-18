@@ -129,10 +129,14 @@ export data are written for use by lgcmon/R-GMA
 \item \texttt{GLITE\_LB\_EXPORT\_ENABLED} -- set to \texttt{true} for export to JP, installed glite-lb-client and glite-jp-client are needed (default: \texttt{false})
 \item \texttt{GLITE\_LB\_EXPORT\_JPPS} -- Job Provenance Primary Storage where to export purged jobs, required if export to JP is enabled
 \item \texttt{GLITE\_JP\_LOCATION} -- optional parameter for combining LB and JP subsystems on the different locations
+\item \texttt{GLITE\_LB\_RTM\_ENABLED} -- enable settings for Real Time Monitor - indexes and additional access (default: false)
+\item \texttt{GLITE\_LB\_RTM\_DN} -- DN using to get notifications from \LB server\\
+(default: \texttt{heppc24.hep.ph.ic.ac.uk} machine certificate)
+\item \texttt{GLITE\_LB\_SUPER\_USERS} -- additional super-users (default: empty)
 \end{itemize}
 
 In addition to those, YAIM LB module uses following parameters:
-\texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{GLITE\_USER\_HOME},\texttt{SITE\_EMAIL}.
+\texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{GLITE\_HOME\_DIR},\texttt{SITE\_EMAIL}.
 
 \subsubsection{Migration from previous versions}
 
