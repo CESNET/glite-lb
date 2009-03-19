@@ -164,7 +164,7 @@ static void db_close(MYSQL *mysql);
 static int transaction_test(glite_lbu_DBContext ctx);
 static int FetchRowSimple(glite_lbu_DBContext ctx, MYSQL_RES *result, unsigned long *lengths, char **results);
 static int FetchRowPrepared(glite_lbu_DBContext ctx, glite_lbu_Statement stmt, unsigned int n, unsigned long *lengths, char **results);
-static void set_time(MYSQL_TIME *mtime, const time_t time);
+static void set_time(MYSQL_TIME *mtime, const double time);
 static void glite_lbu_DBCleanup(void);
 static void glite_lbu_FreeStmt_int(glite_lbu_Statement stmt);
 
@@ -575,6 +575,16 @@ void glite_lbu_TimeToDB(time_t t, char **str) {
 }
 
 
+void glite_lbu_TimestampToDB(double t, char **str) {
+	time_t tsec = t;
+	struct tm *tm = gmtime(&tsec);
+
+	t = t - tsec + tm->tm_sec;
+	asprintf(str,"'%4d-%02d-%02d %02d:%02d:%02.09f'",tm->tm_year+1900,tm->tm_mon+1,
+	         tm->tm_mday,tm->tm_hour,tm->tm_min,t);
+}
+
+
 time_t glite_lbu_DBToTime(const char *str) {
 	struct tm	tm;
 
@@ -633,6 +643,7 @@ int glite_lbu_ExecPreparedStmt_v(glite_lbu_Statement stmt, int n, va_list ap) {
 	int i, prepare_retry;
 	glite_lbu_DBType type;
 	char *pchar;
+	int *pint;
 	long int *plint;
 	MYSQL_TIME *ptime;
 	glite_lbu_DBContext ctx;
@@ -661,6 +672,11 @@ int glite_lbu_ExecPreparedStmt_v(glite_lbu_Statement stmt, int n, va_list ap) {
 			*plint = va_arg(ap, long int);
 			break;
 
+		case GLITE_LBU_DB_TYPE_BOOLEAN:
+			pint = binds[i].buffer = data[i] = malloc(sizeof(int));
+			*pint = va_arg(ap, int) ? 1 : 0;
+			break;
+
 		case GLITE_LBU_DB_TYPE_TINYBLOB:
 		case GLITE_LBU_DB_TYPE_TINYTEXT:
 		case GLITE_LBU_DB_TYPE_BLOB:
@@ -684,9 +700,13 @@ int glite_lbu_ExecPreparedStmt_v(glite_lbu_Statement stmt, int n, va_list ap) {
 		case GLITE_LBU_DB_TYPE_DATE:
 		case GLITE_LBU_DB_TYPE_TIME:
 		case GLITE_LBU_DB_TYPE_DATETIME:
-		case GLITE_LBU_DB_TYPE_TIMESTAMP:
 			ptime = binds[i].buffer = data[i] = malloc(sizeof(MYSQL_TIME));
 			set_time(ptime, va_arg(ap, time_t));
+			break;
+
+		case GLITE_LBU_DB_TYPE_TIMESTAMP:
+			ptime = binds[i].buffer = data[i] = malloc(sizeof(MYSQL_TIME));
+			set_time(ptime, va_arg(ap, double));
 			break;
 
 		case GLITE_LBU_DB_TYPE_NULL:
@@ -1190,10 +1210,12 @@ quit:
 }
 
 
-static void set_time(MYSQL_TIME *mtime, const time_t time) {
+static void set_time(MYSQL_TIME *mtime, const double time) {
 	struct tm tm;
+	time_t itime;
 
-	gmtime_r(&time, &tm);
+	itime = time;
+	gmtime_r(&itime, &tm);
 	memset(mtime, 0, sizeof *mtime);
 	mtime->year = tm.tm_year + 1900;
 	mtime->month = tm.tm_mon + 1;
@@ -1201,6 +1223,7 @@ static void set_time(MYSQL_TIME *mtime, const time_t time) {
 	mtime->hour = tm.tm_hour;
 	mtime->minute = tm.tm_min;
 	mtime->second = tm.tm_sec;
+	mtime->second_part = (time - itime) * 1000;
 }
 
 

@@ -260,6 +260,17 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 void glite_lbu_TimeToDB(time_t t, char **str);
 
 
+/** 
+ * Convert double into database-specific time string.
+ *
+ * The result string can be used directly in SQL commands.
+ *
+ * \param[in]   t    the converted time
+ * \param[out]  str  result allocated string
+ */
+void glite_lbu_TimestampToDB(double t, char **str);
+
+
 /**
  * Convert database-specific time string to time_t.
  *
@@ -327,7 +338,8 @@ int glite_lbu_PrepareStmt(glite_lbu_DBContext ctx, const char *sql, glite_lbu_St
  *   \param GLITE_LBU_DB_TYPE_...BLOB/TEXT        void *b, unsigned long len
  *   \param GLITE_LBU_DB_TYPE_[VAR]CHAR           char *str
  *   \param GLITE_LBU_DB_TYPE_DATE/TIME/DATETIME  time_t t
- *   \param GLITE_LBU_DB_TYPE_TIMESTAMP           time_t t
+ *   \param GLITE_LBU_DB_TYPE_TIMESTAMP           double t
+ *   \param GLITE_LBU_DB_TYPE_BOOLEAN             int b
  *   \param GLITE_LBU_DB_TYPE_NULL       -
  *
  * \return              number of affected rows, -1 on error
