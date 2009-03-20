@@ -35,7 +35,7 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-notif-recovery.sh} & Implemented & Test if notification client receives notifications correctly upon restart.  \\
 \hline
-{\tt lb-test-purge.sh} & Proposed & Test that LB server purge works correctly. \\
+{\tt lb-test-purge.pl} & Implemented & Test that LB server purge works correctly. \\
 \hline
 \end{tabularx}
 
@@ -375,7 +375,11 @@ letting the server dump the purged events.
 \item \label{purge3} Run purge once more.
 \end{enumerate}
 
-\how\ \ctblb{lb-test-purge.sh}
+\how\ \ctblb{lb-test-purge.pl}
+
+\note\ The test includes artificial delays. Takes approx. 2\,minutes to finish.
+
+\note\ This test is destructive to your data. You need to run it with the \texttt{--i-want-to-purge} option to confirm your intention. Also, you need to provide the \LB server \texttt{address:port} explicitly as an argument to rule out any confusion. 
 
 \result\ The data dumped in steps \ref{purge1}, \ref{purge2} should be the
 same as retrieved in~\ref{purgel}. The final purge invocation should
@@ -383,6 +387,6 @@ do nothing (i.e. nothing was left in the database).
 
 % test_purge
 \begin{hints}
-The example \path{glite-lb-test\_purge} does exactly this sequence of steps,
+The example \path{org.glite.lb.client/examples/purge\_test} does exactly this sequence of steps,
 including the checks.
 \end{hints}
