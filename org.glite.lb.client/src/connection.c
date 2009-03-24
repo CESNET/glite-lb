@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <time.h>
 
+#include "glite/jobid/cjobid.h"
 #include "glite/security/glite_gss.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/mini_http.h"
@@ -46,35 +47,6 @@ int CloseConnection(edg_wll_Context ctx, int conn_index)
 	ctx->connections->connOpened--;
 
 	return ret;
-}
-
-
-int CloseConnectionNotif(edg_wll_Context ctx)
-{
-	/* close connection and free its structures */
-	int cIndex,ret = 0;
-
-
-        cIndex = ctx->connNotif->connToUse;
-
-	assert(ctx->connNotif->connOpened);
-
-	if (ctx->connNotif->connPool[cIndex].gss.sock >= 0)
-		edg_wll_gss_close(&ctx->connNotif->connPool[cIndex].gss, &ctx->p_tmp_timeout); // always returns 0
-	if (ctx->connNotif->connPool[cIndex].gsiCred != NULL) 
-		if ( (ret = edg_wll_gss_release_cred(&ctx->connNotif->connPool[cIndex].gsiCred, NULL)) )
-			edg_wll_SetError(ctx,ret,"error in edg_wll_gss_release_cred()");	
-	free(ctx->connNotif->connPool[cIndex].peerName);
-	free(ctx->connNotif->connPool[cIndex].buf);
-	free(ctx->connNotif->connPool[cIndex].bufOut);
-	free(ctx->connNotif->connPool[cIndex].certfile);
-	
-	memset(ctx->connNotif->connPool + cIndex, 0, sizeof(edg_wll_ConnPool));
-	ctx->connNotif->connPool[cIndex].gss.sock = -1;
-	
-	ctx->connNotif->connOpened--;
-
-	return edg_wll_Error(ctx,NULL,NULL);
 }
 
 
@@ -127,6 +99,7 @@ int ConnectionIndex(edg_wll_Context ctx, const char *name, int port)
 }
 
 
+
 int AddConnection(edg_wll_Context ctx, char *name, int port)
 {
 	int i,index = -1;
@@ -150,25 +123,6 @@ int AddConnection(edg_wll_Context ctx, char *name, int port)
 	ctx->connections->connOpened++;
 
 	return index;
-}
-
-
-int SetFreeConnectionIndexNotif(edg_wll_Context ctx)
-{
-	int i;
-
-
-	ctx->connNotif->connToUse = -1;
-
-        for (i = 0; i < ctx->connNotif->poolSize; i++) 
-        	if (ctx->connNotif->connPool[i].gss.sock == -1) {
-			ctx->connNotif->connToUse = i;
-			ctx->connNotif->connOpened++;
-			assert(!ctx->connNotif->connPool[i].buf);
-			break;
-		}
-
-	return ctx->connNotif->connToUse;
 }
 
 
@@ -208,34 +162,6 @@ int ReleaseConnection(edg_wll_Context ctx, char *name, int port)
 		if (!foundConnToDrop) return edg_wll_SetError(ctx,EAGAIN,"all connections in the connection pool are locked");
 		CloseConnection(ctx, index);
 	}
-	return edg_wll_Error(ctx,NULL,NULL);
-}
-			
-
-int ReleaseConnectionNotif(edg_wll_Context ctx)
-{
-	int i, index = 0;
-	long min;
-
-
-	edg_wll_ResetError(ctx);
-	if (ctx->connNotif->connOpened == 0) return 0;	/* nothing to release */
-	
-	min = ctx->connNotif->connPool[0].lastUsed.tv_sec;
-
-	/* free the oldest (unlocked) connection */
-	for (i=0; i<ctx->connNotif->poolSize; i++) {
-		assert(ctx->connNotif->connPool[i].gss.sock > -1); // Full pool expected - accept non-NULL values only
-
-		if (ctx->connections->connPool[i].lastUsed.tv_sec < min) {
-			min = ctx->connections->connPool[i].lastUsed.tv_sec;
-			index = i;
-		}
-	}	
-
-	ctx->connNotif->connToUse = index;
-	CloseConnectionNotif(ctx);
-
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 			
@@ -654,138 +580,3 @@ int edg_wll_http_send_recv_proxy(
 	
 	return edg_wll_Error(ctx,NULL,NULL);
 }
-
-
-int edg_wll_accept(edg_wll_Context ctx, int fd)
-{
-	int recv_sock;
-	edg_wll_GssStatus gss_stat;
-	time_t lifetime = 0;
-	struct stat statinfo;
-	int acquire_cred = 0;
-        struct sockaddr_in	a;
-        socklen_t		alen;
-	edg_wll_GssStatus	gss_code;
-
-	
-	edg_wll_ResetError(ctx);
-	assert(fd > 0);
-
-	alen=sizeof(a);
-	recv_sock = accept(fd,(struct sockaddr *)&a,&alen);
-	if (recv_sock <0) {
-		edg_wll_SetError(ctx, errno, "accept() failed");
-		goto err;
-	}
-
-	if (ctx->connNotif->connOpened == ctx->connNotif->poolSize)	
-		if (ReleaseConnectionNotif(ctx)) goto err;
-	
-	if (SetFreeConnectionIndexNotif(ctx) < 0) {
-		edg_wll_SetError(ctx,EAGAIN,"connection pool size exceeded");
-		goto err; 
-	}
-
-        #ifdef EDG_WLL_CONNPOOL_DEBUG	
-        	printf("Connection with fd %d accepted. %d in the pool\n",>srvName,ctx->srvPort,ctx->connNotif->connToUse);
-        #endif
-		
-
-	// In case of using a specifically given cert file, stat it and check for the need to reauthenticate
-	if (ctx->p_proxy_filename || ctx->p_cert_filename) {
-		if (ctx->connNotif->connPool[ctx->connNotif->connToUse].certfile)	{	// Has the file been stated before?
-			stat(ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename, &statinfo);
-			if (ctx->connNotif->connPool[ctx->connNotif->connToUse].certfile->st_mtime != statinfo.st_mtime)
-				acquire_cred = 1;	// File has been modified. Need to acquire new creds.
-		}
-		else acquire_cred = 1; 
-	}
-		
-	// Check if credentials exist. If so, check validity
-	if (ctx->connNotif->connPool[ctx->connNotif->connToUse].gsiCred) {
-		lifetime = ctx->connNotif->connPool[ctx->connNotif->connToUse].gsiCred->lifetime;
-        	#ifdef EDG_WLL_CONNPOOL_DEBUG	
-			printf ("Credential exists, lifetime: %d\n", lifetime);
-		#endif
-		if (!lifetime) acquire_cred = 1;	// Credentials exist and lifetime is OK. No need to authenticate.
-	}
-	else {
-			acquire_cred = 1;	// No credentials exist so far, acquire. 
-	}
-
-
-	if (acquire_cred) {
-		edg_wll_GssCred newcred = NULL;
-		if (edg_wll_gss_acquire_cred_gsi(
-	        	ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
-		       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-		       &newcred, &gss_stat)) {
-		    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
-		    goto err;
-		} else {
-			if (ctx->connNotif->connPool[ctx->connNotif->connToUse].gsiCred != NULL)
-      				edg_wll_gss_release_cred(&ctx->connNotif->connPool[ctx->connNotif->connToUse].gsiCred,&gss_stat);
-		       	ctx->connNotif->connPool[ctx->connNotif->connToUse].gsiCred = newcred;
-			newcred = NULL;
-
-			// Credentials Acquired successfully. Storing file identification.
-        		#ifdef EDG_WLL_CONNPOOL_DEBUG	
-				printf("Cert file: %s\n", ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename);
-			#endif
-
-			if (ctx->p_proxy_filename || ctx->p_cert_filename) {
-				if (!ctx->connNotif->connPool[ctx->connNotif->connToUse].certfile) // Allocate space for certfile stats
-					ctx->connNotif->connPool[ctx->connNotif->connToUse].certfile = 
-						(struct stat*)calloc(1, sizeof(struct stat));
-				stat(ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename, ctx->connNotif->connPool[ctx->connNotif->connToUse].certfile);
-			}
-		}
-	}
-
-	assert(ctx->connNotif->connPool[ctx->connNotif->connToUse].gss.context == NULL);
-
-	switch ( edg_wll_gss_accept(ctx->connNotif->connPool[ctx->connNotif->connToUse].gsiCred, recv_sock,
-			&ctx->p_tmp_timeout, &ctx->connNotif->connPool[ctx->connNotif->connToUse].gss,&gss_code)) {
-
-		case EDG_WLL_GSS_OK:
-			break;
-		case EDG_WLL_GSS_ERROR_ERRNO:
-			edg_wll_SetError(ctx,errno,"failed to receive notification");
-			goto err;
-		case EDG_WLL_GSS_ERROR_GSS:
-			edg_wll_SetErrorGss(ctx, "failed to authenticate sender", &gss_code);
-			goto err;
-		case EDG_WLL_GSS_ERROR_HERRNO:
-			{ const char *msg1;
-			  char *msg2;
-			  msg1 = hstrerror(errno);
-			  asprintf(&msg2, "edg_wll_gss_connect(): %s", msg1);
-			  edg_wll_SetError(ctx,EDG_WLL_ERROR_DNS, msg2);
-			  free(msg2);
-			}
-			break;
-		case EDG_WLL_GSS_ERROR_EOF:
-			edg_wll_SetError(ctx,ECONNREFUSED,"sender closed the connection");
-			goto err;
-		case EDG_WLL_GSS_ERROR_TIMEOUT:
-			edg_wll_SetError(ctx,ETIMEDOUT,"accepting notification");
-			goto err;
-		default:
-			edg_wll_SetError(ctx, ENOTCONN, "failed to accept notification");
-			goto err;
-	}
-
-	return edg_wll_Error(ctx,NULL,NULL);
-
-
-err:
-	/* some error occured; close created connection
-	 * and free all fields in connPool[ctx->connNotif->connToUse] */
-	if (ctx->connNotif->connToUse >= 0) {
-		CloseConnectionNotif(ctx);
-	}
-
-
-	return edg_wll_Error(ctx,NULL,NULL);
-}
-
