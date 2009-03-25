@@ -254,9 +254,9 @@ echo ""
 fi
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
-CONSUMER_ARGS="-d --perf-sink=1"
+CONSUMER_ARGS="-d --perf-sink=1 -p 10500 -w 10503"
 PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-interlogd-perf
-LOGJOBS_ARGS=" $COMM_ARGS"
+LOGJOBS_ARGS=" -m localhost:10500 $COMM_ARGS"
 }
 
 group_c_test_a ()
