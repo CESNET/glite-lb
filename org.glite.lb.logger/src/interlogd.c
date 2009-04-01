@@ -80,6 +80,7 @@ char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
 int lazy_close = 1;
 int default_close_timeout;
+size_t max_store_size;
 int parallel = 0;
 #ifdef LB_PERF
 int nosend = 0, norecover=0, nosync=0, noparse=0;
@@ -107,6 +108,7 @@ static struct option const long_options[] =
   {"log-server", required_argument, 0, 'l'},
   {"socket", required_argument, 0, 's'},
   {"lazy", optional_argument, 0, 'L'},
+  {"max-store", required_argument, 0, 'M'},
   {"parallel", optional_argument, 0, 'p'},
 #ifdef LB_PERF
   {"nosend", no_argument, 0, 'n'},
@@ -141,7 +143,7 @@ decode_switches (int argc, char **argv)
 			   "k:"          /* key */
 			   "C:"          /* CA dir */
 			   "b"  /* only bookeeping */
-                           "l:" /* log server */
+               "l:" /* log server */
 			   "d" /* debug */
 			   "p" /* parallel */
 #ifdef LB_PERF
@@ -153,9 +155,10 @@ decode_switches (int argc, char **argv)
 			   "e:" /* event file */
 			   "j:" /* num jobs */
 #endif
-#endif			   
+#endif
 			   "L::" /* lazy */
-			   "s:", /* socket */
+			   "s:" /* socket */
+			   "M:" /* max-store */,
 			   long_options, (int *) 0)) != EOF)
     {
       switch (c)
@@ -205,7 +208,7 @@ decode_switches (int argc, char **argv)
 
 	case 'L':
 		lazy_close = 1;
-		if(optarg) 
+		if(optarg)
 		        default_close_timeout = atoi(optarg);
 			if(default_close_timeout == 0) {
 				default_close_timeout = TIMEOUT;
@@ -215,10 +218,14 @@ decode_switches (int argc, char **argv)
 			default_close_timeout = TIMEOUT;
 		break;
 
+	case 'M':
+		max_store_size = atoi(optarg);
+		break;
+
 	case 'p':
-		if(optarg) 
+		if(optarg)
 			parallel = atoi(optarg);
-		else 
+		else
 			parallel = 4;
 		break;
 
@@ -351,14 +358,14 @@ main (int argc, char **argv)
      if (ret == EDG_WLL_GSS_ERROR_GSS)
 	edg_wll_gss_get_error(&gss_stat, "edg_wll_gss_acquire_cred_gsi()", &gss_err);
      asprintf(&str, "Failed to load GSI credential: %s\n",
-	      (gss_err) ? gss_err : "edg_wll_gss_acquire_cred_gsi() failed"); 
+	      (gss_err) ? gss_err : "edg_wll_gss_acquire_cred_gsi() failed");
      il_log(LOG_CRIT, str);
      free(str);
      if (gss_err)
 	free(gss_err);
      exit(EXIT_FAILURE);
   }
-  
+
 #ifndef PERF_EMPTY
   /* find all unsent events waiting in files */
 #ifdef LB_PERF
@@ -369,7 +376,7 @@ main (int argc, char **argv)
 	  }
   } else
 #endif
-  { 
+  {
 	  pthread_t rid;
 
 	  il_log(LOG_INFO, "Starting recovery thread...\n");
