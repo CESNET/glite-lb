@@ -1,7 +1,7 @@
+#ident "$Header$"
+
 #ifndef GLITE_LB_LBS_JOBSTAT_H
 #define GLITE_LB_LBS_JOBSTAT_H
-
-#ident "$Header$"
 
 #include "glite/lb/jobstat.h"
 #include "glite/lb/intjobstat.h"

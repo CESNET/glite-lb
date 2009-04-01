@@ -917,7 +917,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		case EDG_WLL_EVENT_CHKPT:
 			/* these three event are probably dead relics */
 		case EDG_WLL_EVENT_RESOURCEUSAGE:
-			/* ignore too - not used? */
+			/* ignore, not reflected in job status */
 			break;
 		case EDG_WLL_EVENT_CHANGEACL:
 			/* ignore, only for event log */

@@ -103,7 +103,7 @@ int edg_wll_ULMProcessParseTable(p_edg_wll_ULMFields this)
   char *func = "edg_wll_ULMProcessParseTable";
   char *eq;
   int  i,j;
-  int  eqCnt,qmCnt,spCnt;
+  int  eqCnt,qmCnt,spCnt,bsCnt;
   int  iArrayEQ[ULM_FIELDS_MAX];
   int  iArraySP[ULM_FIELDS_MAX];
   size_t size;
@@ -122,7 +122,7 @@ int edg_wll_ULMProcessParseTable(p_edg_wll_ULMFields this)
   }
 
   i = j = 0;
-  qmCnt = eqCnt = spCnt = 0;
+  qmCnt = eqCnt = spCnt = bsCnt = 0;
 
   size = strlen(this->raw);
 
@@ -132,45 +132,68 @@ int edg_wll_ULMProcessParseTable(p_edg_wll_ULMFields this)
     switch (this->raw[i]) {
       case ULM_SP :
       case ULM_TB :
-         if (qmCnt == 0) { iArraySP[spCnt] = i; spCnt++; }
+         if (qmCnt == 0) { 
+            iArraySP[spCnt] = i; spCnt++; 
+         } else { 
+            if (this->raw[i-1] == ULM_BS) bsCnt = 0; // escaped ULM_SP or ULM_TB inside value
+         }
          break;
       case ULM_EQ :
 	 if (i==0) {
-		fprintf(stderr,"%s: PARSE ERROR: '%c' at the beginning of log line.\n", func, ULM_EQ);
-		return ULM_PARSE_ERROR;
+            fprintf(stderr,"%s: PARSE ERROR: '%c' at the beginning of log line.\n", func, ULM_EQ);
+            return ULM_PARSE_ERROR;
 	 }
          if (qmCnt == 0) { 
-           if (isblank(this->raw[i-1]) || (!edg_wll_ULMisalphaext(this->raw[i-1]))) {
-             fprintf(stderr,"%s: PARSE ERROR: Disallowed character ('%c') or space before delimiter '%c'.\n",
-                     func,this->raw[i-1],ULM_EQ);
-             return ULM_PARSE_ERROR;
+            if (isblank(this->raw[i-1]) || (!edg_wll_ULMisalphaext(this->raw[i-1]))) {
+              fprintf(stderr,"%s: PARSE ERROR: Disallowed character ('%c') or space before delimiter '%c'.\n",
+                      func,this->raw[i-1],ULM_EQ);
+              return ULM_PARSE_ERROR;
            }
            if (isblank(this->raw[i+1]) || ((!edg_wll_ULMisalphaext(this->raw[i-1])) && (this->raw[i+1] != ULM_QM ))) {
-             fprintf(stderr,"%s: PARSE ERROR: Disallowed character ('%c') or space after delimiter '%c'.\n",
-                     func,this->raw[i+1],ULM_EQ);
-             return ULM_PARSE_ERROR;
+              fprintf(stderr,"%s: PARSE ERROR: Disallowed character ('%c') or space after delimiter '%c'.\n",
+                      func,this->raw[i+1],ULM_EQ);
+              return ULM_PARSE_ERROR;
            }
            iArrayEQ[eqCnt] = i; 
            eqCnt++; 
-         }
+         } else if (this->raw[i-1] == ULM_BS) bsCnt = 0; // escaped ULM_EQ inside value
          break;
       case ULM_LF :
-         if (qmCnt == 0) { this->raw[i] = '\0'; }
+         if (qmCnt == 0) { 
+            this->raw[i] = '\0'; 
+         } else if (this->raw[i-1] == ULM_BS) bsCnt = 0; // escaped ULM_LF inside value
 	 break;
+      case ULM_BS :
+         if (qmCnt != 0) { 
+            if (this->raw[i-1] == ULM_BS) {
+               if (bsCnt == 1) bsCnt = 0; // escaped ULM_BS inside value
+               else bsCnt = 1;
+            } else bsCnt = 1;
+         } else {
+            fprintf(stderr,"%s: PARSE ERROR: Disallowed character ('%c') at i=%d size=%lu char=%d bsCnt=%d qmCnt=%d.\n",
+                     func,this->raw[i],i+1,(unsigned long)size,this->raw[i],bsCnt,qmCnt);
+            for (j=0; j<=i; j++) fputc(this->raw[j],stderr);
+            fputc(ULM_LF,stderr);
+            return ULM_PARSE_ERROR;
+         }
+         break;
       case ULM_QM :
-         if (this->raw[i-1] != ULM_BS) {
-           if (qmCnt == 0) qmCnt++;
-           else qmCnt--;
-         }              
+         if (qmCnt == 0) {
+            qmCnt++;
+         } else {
+            if (bsCnt == 0) qmCnt--;
+            if (this->raw[i-1] == ULM_BS) bsCnt = 0; // escaped ULM_QM inside value
+         }
          if ((qmCnt == 0) && (!isspace(this->raw[i+1]) && (this->raw[i+1] != '\0'))) {
-             fprintf(stderr,"%s: PARSE ERROR: Disallowed character ('%c') after ending '%c'at i=%d size=%lu char=%d.\n",
-                     func,this->raw[i+1],ULM_QM,i,(unsigned long)size,this->raw[i+1]);
+             fprintf(stderr,"%s: PARSE ERROR: Disallowed character ('%c') after ending '%c' at i=%d size=%lu char=%d bsCnt=%d qmCnt=%d.\n",
+                     func,this->raw[i+1],ULM_QM,i+1,(unsigned long)size,this->raw[i+1],bsCnt,qmCnt);
              for (j=0; j<=i; j++) fputc(this->raw[j],stderr);
              fputc(ULM_LF,stderr);
              return ULM_PARSE_ERROR;
          }
          break;
       default :
+         if (this->raw[i-1] == ULM_BS) bsCnt = 0; // escaped character inside value
          break;
     } /* switch */
   } /* for */
@@ -186,7 +209,14 @@ int edg_wll_ULMProcessParseTable(p_edg_wll_ULMFields this)
   }
 
   if (qmCnt != 0) {
-    fprintf(stderr,"%s: PARSE ERROR: Last quoted value did not finish.\n",func);
+    fprintf(stderr,"%s: PARSE ERROR: Last quoted value did not finish (i=%d size=%lu char=%d bsCnt=%d qmCnt=%d).\n",
+                     func,i+1,(unsigned long)size,this->raw[i+1],bsCnt,qmCnt);
+    return ULM_PARSE_ERROR;                    
+  }
+
+  if (bsCnt != 0) {
+    fprintf(stderr,"%s: PARSE ERROR: Probably an unescaped '%c' occured (i=%d size=%lu char=%d bsCnt=%d qmCnt=%d).\n",
+                     func,ULM_BS,i+1,(unsigned long)size,this->raw[i+1],bsCnt,qmCnt);
     return ULM_PARSE_ERROR;                    
   }
 

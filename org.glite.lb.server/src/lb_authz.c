@@ -928,7 +928,7 @@ int edg_wll_amIroot(const char *subj, char **fqans,char **super_users)
 			for (f = fqans; f && *f; f++)
 				if (strcmp(*f, super_users[i]+5) == 0) return 1;
 		} else
-			if (strcmp(subj,super_users[i]) == 0) return 1;
+			if (edg_wll_gss_equal_subj(subj,super_users[i])) return 1;
 
 	return 0;
 }

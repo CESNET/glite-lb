@@ -1395,7 +1395,7 @@ int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 			free(XMLCtx.job_conditions);
 		}
 		free(XMLCtx.notifFunction);
-		edg_wll_NotifIdFree(&XMLCtx.notifId);
+		edg_wll_NotifIdFree(XMLCtx.notifId);
 		free(XMLCtx.notifClientAddress);
 
 		*function = NULL;

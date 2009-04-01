@@ -64,7 +64,7 @@ SUFFIXES = .T
 DEBUG:=-g -O0 -Wall
 
 GRIDSITE_CFLAGS = -I${gridsite_prefix}/include `xml2-config --cflags`
-GRIDSITE_LIBS = -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
+GRIDSITE_LIBS = -L${gridsite_prefix}/${archlib} -lgridsite_globus `xml2-config --libs`
 
 LCAS_CFLAGS=-I${lcas_prefix}/include
 
