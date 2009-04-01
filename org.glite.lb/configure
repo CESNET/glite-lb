@@ -290,7 +290,7 @@ BEGIN{
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
-	'lb.server' => [ qw/globus expat cares mysql cppunit:B gsoap:B classads voms lcas gridsite/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
 	'lb.ws-interface' => [],
@@ -301,15 +301,15 @@ BEGIN{
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
-	'security.gss' =>  [ qw/globus cares cppunit:B/ ],
-	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap:B/ ],
+	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
+	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
-	'jp.client' => [ qw/gsoap libtar globus/ ],
+	'jp.client' => [ qw/gsoap libtar globus_essentials:R globus:B/ ],
         'jp.doc' => [],
-        'jp.index' => [ qw/gsoap globus/ ],
-        'jp.primary' => [ qw/classads gsoap libtar globus/ ],
+        'jp.index' => [ qw/gsoap globus_essentials:R globus:B/ ],
+        'jp.primary' => [ qw/classads gsoap libtar globus_essentials:R globus:B/ ],
         'jp.server-common' => [],
         'jp.ws-interface' => [],
 );
@@ -502,14 +502,15 @@ my %etics_externs;
 my %etics_projects;
 BEGIN{
 	%etics_externs = (
-		globus=>'vdt_globus_essentials',
+		globus_essentials=>'vdt_globus_essentials',
+		globus=>'globus',
 		cares=>'c-ares',
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
 	);
 	%etics_projects = (
-		vdt=>[qw/globus/],
+		vdt=>[qw/globus globus_essentials/],
 		'org.glite'=>[qw/voms gridsite lcas/],
 	);
 };
