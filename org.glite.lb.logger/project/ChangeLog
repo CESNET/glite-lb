@@ -34,6 +34,7 @@
 2.0.0-4
 - configure script update (globus flavors added to configure call)
 
-from 1.4.11-1
-- Support chconfig in startup scripts (#27055)
-- Proper kill signal handling (#36470)
+2.0.1-1
+- (from 1.4.11-1) Support chconfig in startup scripts (#27055)
+- (from 1.4.11-1) Proper kill signal handling (#36470)
+
