@@ -54,13 +54,15 @@
 - minor initialization/freeing fixes
 - printout typo fix
 
-from 1.9.2-1
-- Support for chconfig in startup scripts (#27055)
-- Support for JP importer in startup scripts
-- Support for variant DN certificates (workaround for #41820)
-- Recalculate subjob states after DB version upgrade (#25871)
-- Ignore reseource_usage events when computing job states (#43767)
-- Fix sequence code processing for Change ACL events
+2.0.1-1
+- (from 1.9.2-1) Support for chconfig in startup scripts (#27055)
+- (from 1.9.2-1) Support for JP importer in startup scripts
+- (from 1.9.2-1) Support for variant DN certificates (workaround for #41820)
+- (from 1.9.2-1) Recalculate subjob states after DB version upgrade (#25871)
+- (from 1.9.2-1) Ignore reseource_usage events when computing job states (#43767)
+- (from 1.9.2-1) Fix sequence code processing for Change ACL events
+- (from 1.9.2-1) WS example fix
 - Reflect job conditions while processing queries for events (#32390)
-- WS example fix
+- Support for 'greater' and 'smalleer' comparisons in jobids 
+- Modified handling of state-dependent timeouts.
 
