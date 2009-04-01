@@ -2,9 +2,6 @@ stagedir=../stage
 
 -include Makefile.inc
 
-PM_DEST=${stagedir}/share/perl/gLite/LB
-T_DEST=${stagedir}/share/lb/at3
-SBIN=${stagedir}/sbin
 
 PM=StructField.pm MultiStruct.pm
 T=events.T status.T types.T
@@ -17,14 +14,15 @@ compile: at3
 at3: at3.in
 	sed "s?%PREFIX%?${stagedir}?" at3.in >$@
 
-stage: install
+stage: compile
+	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	mkdir -p ${PM_DEST} ${T_DEST} ${SBIN}
-	install -m 644 ${PM} ${PM_DEST}
-	install -m 644 ${T} ${T_DEST}
+	mkdir -p ${PREFIX}/share/perl/gLite/LB ${PREFIX}/share/lb/at3 ${PREFIX}/sbin
+	install -m 644 ${PM} ${PREFIX}/share/perl/gLite/LB
+	install -m 644 ${T} ${PREFIX}/share/lb/at3
 	for p in ${SCRIPTS} ; do \
-		install -m 755 "$$p" "${SBIN}/glite-lb-$$p"; \
+		install -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
 	done
 	
 clean:
