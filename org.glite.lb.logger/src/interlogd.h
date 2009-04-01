@@ -246,7 +246,7 @@ int notifid_map_set_expiration(const char *, time_t);
 int event_store_init(char *);
 int event_store_cleanup();
 int event_store_recover_all(void);
-struct event_store *event_store_find(char *, const char * = NULL);
+struct event_store *event_store_find(char *, const char *);
 int event_store_sync(struct event_store *, long);
 int event_store_next(struct event_store *, long, int);
 int event_store_commit(struct event_store *, int, int, int);

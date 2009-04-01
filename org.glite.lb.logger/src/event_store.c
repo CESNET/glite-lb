@@ -102,7 +102,7 @@ fname2index(const char *filename)
 	if(p == NULL)
 		return 0;
 
-	for(s = p+1; *s != NULL; s++) {
+	for(s = p+1; *s != 0; s++) {
 		if(*s < '0' || *s > '9') {
 			return 0;
 		}
@@ -996,7 +996,7 @@ event_store_clean(struct event_store *es)
  * --------------------------------
  */
 struct event_store *
-event_store_find(char *job_id_s, const char *filename = NULL)
+event_store_find(char *job_id_s, const char *filename)
 {
   struct event_store_list *q, *p, *d;
   struct event_store *es;

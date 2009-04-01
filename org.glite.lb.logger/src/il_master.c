@@ -180,7 +180,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 
 	/* catchup with all neccessary event files */
 	if(job_id_s) {
-		struct event_store *es = event_store_find(job_id_s);
+		struct event_store *es = event_store_find(job_id_s, NULL);
 
 		if(es == NULL) {
 			goto cmd_error;
@@ -356,7 +356,7 @@ handle_msg(il_octet_string_t *event, long offset)
   
 	/* sync event store with IPC (if neccessary)
 	 * This MUST be called before inserting event into output queue! */
-	if((es = event_store_find(msg->job_id_s)) == NULL) 
+	if((es = event_store_find(msg->job_id_s, NULL)) == NULL) 
 		return(-1);
 	msg->es = es;
 	
