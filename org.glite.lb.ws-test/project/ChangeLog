@@ -10,3 +10,7 @@
 1.0.0-4
 - configure script update (globus flavors added to configure call)
 
+1.0.1-1
+- configure script update
+- new example script
+
