@@ -10,3 +10,6 @@
 1.0.0-4
 - configure script update (globus flavors added to configure call)
 
+1.0.0-5
+- Installation rules improved - treat stage as prefix.
+
