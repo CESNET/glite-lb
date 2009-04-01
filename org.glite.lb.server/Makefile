@@ -247,7 +247,7 @@ LCAS_PLUGIN_OBJS:=lcas_lb.o
 LCAS_PLUGIN_LOBJS:=${LCAS_PLUGIN_OBJS:.o=.lo}
 LCAS_PLUGIN_LIB:=liblcas_lb.la
 
-EXAMPLES=ws_getversion ws_jobstat ws_query_ex ws_joblog ws_userjobs
+EXAMPLES=
 
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
@@ -317,21 +317,6 @@ test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
 	${LINKXX} -o $@ test_soap_conv.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${TEST_LIBS}
 
 examples: ${EXAMPLES}
-
-ws_getversion: ws_getversion.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ $< ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
-
-ws_jobstat: ws_jobstat.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ $< ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
-
-ws_query_ex: ws_query_ex.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ $< ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
-
-ws_joblog: ws_joblog.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ $< ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
-
-ws_userjobs: ws_userjobs.o ${WS_CLIENT_OBJS}
-	${LINK} -o $@ $< ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
 ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 	ar crv $@ ${LIB_OBJS_BK}
