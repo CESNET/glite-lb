@@ -44,6 +44,7 @@
 4.0.0-3
 - configure script update (globus flavors added to configure call)
 
-from 3.2.2-1
-- Fix edg_wll_NotifDrop prototype (#34649).
+4.0.1-1
+- (from 3.2.2-1) Fix edg_wll_NotifDrop prototype (#34649).
+- Notification pool implementation
 
