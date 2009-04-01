@@ -7,3 +7,6 @@
 2.0.0-3
 - configure script update (globus flavors added to configure call)
 
+2.0.1-1
+- purging client - 'other' jobs selection updated.
+
