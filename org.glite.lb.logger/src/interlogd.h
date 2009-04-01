@@ -125,6 +125,7 @@ struct event_store {
 	long      offset;                  /* expected file position of next event */
 	time_t    last_modified;           /* time of the last file modification */
 	int       generation;              /* cleanup counter, scopes the offset */
+	int		  rotate_index;			   /* rotation counter */
 	pthread_rwlock_t commit_lock;      /* lock to prevent simultaneous updates to last_committed_* */
 	pthread_rwlock_t offset_lock;      /* lock to prevent simultaneous updates offset */
 	pthread_rwlock_t use_lock;         /* lock to prevent struct deallocation */
