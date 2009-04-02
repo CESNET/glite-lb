@@ -1064,6 +1064,8 @@ event_store_find(char *job_id_s, const char *filename)
     return(NULL);
   }
   p->es = es;
+  p->jobid_next = p;
+  p->jobid_prev = p;
   es->le = p;
 
   if(filename != NULL && d != NULL) {
