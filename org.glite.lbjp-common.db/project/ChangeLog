@@ -10,3 +10,6 @@
 1.0.0-5
 - configure script and Makefile update (splitting mysql dependency into separate run-time and build-time deps)
 
+1.0.0-6
+- configure script update (fixed 'mysql-devel' handling)
+
