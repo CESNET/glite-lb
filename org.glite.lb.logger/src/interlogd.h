@@ -78,7 +78,6 @@ extern int bs_only;
 extern int killflg;
 extern int lazy_close;
 extern int default_close_timeout;
-extern size_t max_store_size;
 extern int parallel;
 #ifdef LB_PERF
 extern int nosend, nosync, norecover, noparse;
@@ -92,7 +91,7 @@ extern char *event_source;
 extern pthread_mutex_t flush_lock;
 extern pthread_cond_t flush_cond;
 #endif
-
+  
 typedef struct {
 	/* il_octet_string_t */
 	int       len;
@@ -101,7 +100,7 @@ typedef struct {
 	enum { IL_HTTP_OTHER,
 	       IL_HTTP_GET,
 	       IL_HTTP_POST,
-	       IL_HTTP_REPLY
+	       IL_HTTP_REPLY 
 	} msg_type;
 	int       reply_code;
 	char      *reply_string;
@@ -115,7 +114,7 @@ typedef union {
 	il_http_message_t http_msg;
 } il_message_t;
 
-
+  
 struct event_store {
 	char     *event_file_name;         /* file with events from local logger */
 	char     *control_file_name;       /* file with control information */
@@ -125,8 +124,6 @@ struct event_store {
 	long      offset;                  /* expected file position of next event */
 	time_t    last_modified;           /* time of the last file modification */
 	int       generation;              /* cleanup counter, scopes the offset */
-	int		  rotate_index;			   /* rotation counter */
-	struct 	event_store_list *le;	   /* points back to the list */
 	pthread_rwlock_t commit_lock;      /* lock to prevent simultaneous updates to last_committed_* */
 	pthread_rwlock_t offset_lock;      /* lock to prevent simultaneous updates offset */
 	pthread_rwlock_t use_lock;         /* lock to prevent struct deallocation */
@@ -204,7 +201,7 @@ int event_queue_remove(struct event_queue *);
 int event_queue_enqueue(struct event_queue *, char *);
 /* helper */
 int enqueue_msg(struct event_queue *, struct server_msg *);
-int event_queue_move_events(struct event_queue *, struct event_queue *, int (*)(struct server_msg *, void *), void *);
+int event_queue_move_events(struct event_queue *, struct event_queue *, int (*)(struct server_msg *, void *), void *); 
 
 /* protocol event queue methods */
 int event_queue_connect(struct event_queue *);
@@ -247,7 +244,7 @@ int notifid_map_set_expiration(const char *, time_t);
 int event_store_init(char *);
 int event_store_cleanup();
 int event_store_recover_all(void);
-struct event_store *event_store_find(char *, const char *);
+struct event_store *event_store_find(char *);
 int event_store_sync(struct event_store *, long);
 int event_store_next(struct event_store *, long, int);
 int event_store_commit(struct event_store *, int, int, int);
