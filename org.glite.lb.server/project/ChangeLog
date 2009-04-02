@@ -66,3 +66,7 @@
 - Support for 'greater' and 'smalleer' comparisons in jobids 
 - Modified handling of state-dependent timeouts.
 
+2.0.1-2
+- Notif IL installation removed from makefile
+- configure script updated
+
