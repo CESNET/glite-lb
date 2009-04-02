@@ -11,7 +11,7 @@ PREFIX=/opt/glite
 flavour=gcc32thr
 
 glite_location=/opt/glite
-mysql_prefix=/opt/mysql
+mysql-devel_prefix=/opt/mysql
 mysql_version=4.1.11
 cppunit_prefix=/opt/cppunit
 thrflavour=gcc32pthr
@@ -32,9 +32,9 @@ ifeq (${host_cpu},x86_64)
 	archlib:=lib64
 endif   
 
-MYSQL_SONAME:=$(shell lib=""; for dir in ${archlib} ${archlib}/mysql lib lib/mysql; do l=$(shell find ${mysql_prefix}/$$dir -name libmysqlclient.so* | head -n 1); [ -f $$l ] && { lib=$$l; break;} ; done; if [ x != x$$lib ]; then readelf -d $$lib | grep SONAME | sed 's/.*\(libmysqlclient.so.[0-9]\{1,\}\).*/\1/'; else echo notfound; fi )
+MYSQL_SONAME:=$(shell lib=""; for dir in ${archlib} ${archlib}/mysql lib lib/mysql; do l=$(shell find ${mysql-devel_prefix}/$$dir -name libmysqlclient.so* | head -n 1); [ -f $$l ] && { lib=$$l; break;} ; done; if [ x != x$$lib ]; then readelf -d $$lib | grep SONAME | sed 's/.*\(libmysqlclient.so.[0-9]\{1,\}\).*/\1/'; else echo notfound; fi )
 
-MYSQL_CPPFLAGS:=-I${mysql_prefix}/include -I${mysql_prefix}/include/mysql -DMYSQL_SONAME=\"${MYSQL_SONAME}\"
+MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/mysql -DMYSQL_SONAME=\"${MYSQL_SONAME}\"
 MYSQL_LIBS=-lz
 
 CFLAGS:= \
