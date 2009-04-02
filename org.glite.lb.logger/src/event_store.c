@@ -208,8 +208,6 @@ event_store_create(char *job_id_s, const char *filename)
   es->event_file_name = filename ? strdup(filename) : jobid2eventfile(job_id);
   es->control_file_name = filename ? astrcat(filename, ".ctl") : jobid2controlfile(job_id);
   es->rotate_index = filename ? fname2index(filename) : 0;
-  es->jobid_next = es;
-  es->jobid_prev = es;
   IL_EVENT_ID_FREE(job_id);
 
   il_log(LOG_DEBUG, "  creating event store for id %s, filename %s\n", job_id_s, es->event_file_name);
@@ -456,16 +454,16 @@ event_store_recover_jobid(struct event_store *es)
 	struct event_store_list *p = es->le;
 
 	do {
-		event_store_recover(p);
+		event_store_recover(p->es);
 		if(p != es->le ) {
-			event_store_release(p);
+			event_store_release(p->es);
 		}
 
 		if(pthread_rwlock_rdlock(&store_list_lock))
 			abort();
 		p = p->jobid_next;
 		if(p != es->le) {
-			if(pthread_rwlock_rdlock(&p->use_lock))
+			if(pthread_rwlock_rdlock(&p->es->use_lock))
 				abort();
 		}
 		if(pthread_rwlock_unlock(&store_list_lock))
