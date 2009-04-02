@@ -568,7 +568,7 @@ event_store_recover(struct event_store *es)
   }
 
   /* check the file size, rename it if it is bigger than max_store_size */
-  if(stbuf.st_size > max_store_size) {
+  if(max_store_size > 0 && stbuf.st_size > max_store_size) {
 	  event_store_rotate_file(es);
   }
 
