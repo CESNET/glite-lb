@@ -545,8 +545,10 @@ sub mode_etics {
 	@ge{@{$etics_projects{'org.glite'}}} = (1) x ($#{$etics_projects{'org.glite'}}+1);
 
 	for (@{$need_externs{"$subsys.$module"}}) {
+	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 		push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
+	    }
 	}
 
 	for (@{$need_jars{"$subsys.$module"}}) {
