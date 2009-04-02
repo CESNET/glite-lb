@@ -30,6 +30,8 @@ static char *file_prefix = NULL;
 struct event_store_list {
 	struct event_store *es;
 	struct event_store_list *next;			// LL of event_store's
+	struct event_store_list *jobid_next;	   /* double LL of rotated stores - forward */
+	struct event_store_list *jobid_prev;	   /* double LL of rotated stores - backward */
 };
 
 
@@ -451,18 +453,18 @@ int
 event_store_recover_jobid(struct event_store *es)
 {
 	// es is locked for use already
-	struct event_store *p = es;
+	struct event_store_list *p = es->le;
 
 	do {
 		event_store_recover(p);
-		if(p != es ) {
+		if(p != es->le ) {
 			event_store_release(p);
 		}
 
 		if(pthread_rwlock_rdlock(&store_list_lock))
 			abort();
 		p = p->jobid_next;
-		if(p != es) {
+		if(p != es->le) {
 			if(pthread_rwlock_rdlock(&p->use_lock))
 				abort();
 		}
@@ -470,7 +472,9 @@ event_store_recover_jobid(struct event_store *es)
 			abort();
 
 
-	} while(p != es);
+	} while(p != es->le);
+
+	return 0;
 }
 
 
@@ -1018,8 +1022,8 @@ event_store_clean(struct event_store *es)
 struct event_store *
 event_store_find(char *job_id_s, const char *filename)
 {
-  struct event_store_list *p, *d;
-  struct event_store *es, *q;
+  struct event_store_list *q, *p, *d;
+  struct event_store *es;
 
   if(pthread_rwlock_wrlock(&store_list_lock)) {
 	  abort();
@@ -1062,6 +1066,7 @@ event_store_find(char *job_id_s, const char *filename)
     return(NULL);
   }
   p->es = es;
+  es->le = p;
 
   if(filename != NULL && d != NULL) {
 	  // there is another event store for this jobid;
@@ -1072,17 +1077,17 @@ event_store_find(char *job_id_s, const char *filename)
 		  p->next = d->next;
 		  d->next = p;
 		  // insert behind d in jobid LL
-		  p->es->jobid_next = d->es->jobid_next;
-		  p->es->jobid_prev = d->es;
-		  d->es->jobid_next->jobid_prev = p->es;
-		  d->es->jobid_next = p->es;
+		  p->jobid_next = d->jobid_next;
+		  p->jobid_prev = d;
+		  d->jobid_next->jobid_prev = p;
+		  d->jobid_next = p;
 	  } else {
-		  struct event_store *r;
+		  struct event_store_list *r;
 		  q = NULL;
-		  for(r = d->es->jobid_next; r != d->es->jobid_next; r = r->jobid_next) {
-			  if(p->es->rotate_index < r->rotate_index)
+		  for(r = d->jobid_next; r != d->jobid_next; r = r->jobid_next) {
+			  if(p->es->rotate_index < r->es->rotate_index)
 				  break;
-			  if(r->rotate_index > 0)
+			  if(r->es->rotate_index > 0)
 				  q = r;
 		  }
 		  // q has the last lesser non-zero index than p
@@ -1090,18 +1095,18 @@ event_store_find(char *job_id_s, const char *filename)
 			  p->next = store_list;
 			  store_list = p;
 			  // insert behind d
-			  p->es->jobid_next = d->es->jobid_next;
-			  p->es->jobid_prev = d->es;
-			  d->es->jobid_next->jobid_prev = p->es;
-			  d->es->jobid_next = p->es;
+			  p->jobid_next = d->jobid_next;
+			  p->jobid_prev = d;
+			  d->jobid_next->jobid_prev = p;
+			  d->jobid_next = p;
 		  } else {
 			  p->next = q->next;
 			  q->next = p;
 			  // insert behind q
-			  p->es->jobid_next = q->jobid_next;
-			  p->es->jobid_prev = q;
-			  q->jobid_next->jobid_prev = p->es;
-			  q->jobid_next = p->es;
+			  p->jobid_next = q->jobid_next;
+			  p->jobid_prev = q;
+			  q->jobid_next->jobid_prev = p;
+			  q->jobid_next = p;
 		  }
 	  }
   } else {
@@ -1473,9 +1478,9 @@ event_store_cleanup()
 		  /* remove this event store from LL */
 		  (*prev) = slnext;
 		  /* remove this event store from jobid's LL */
-		  if(sl->es->jobid_next != sl->es) {
-			  sl->es->jobid_prev->jobid_next = sl->es->jobid_next;
-			  sl->es->jobid_next->jobid_prev = sl->es->jobid_prev;
+		  if(sl->jobid_next != sl) {
+			  sl->jobid_prev->jobid_next = sl->jobid_next;
+			  sl->jobid_next->jobid_prev = sl->jobid_prev;
 		  }
 		  event_store_free(sl->es);
 		  free(sl);
