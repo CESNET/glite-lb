@@ -366,7 +366,9 @@ handle_msg(il_octet_string_t *event, long offset)
 	else 
 #endif
 		ret = event_store_sync(es, offset);
+	/* no longer informative:
 	il_log(LOG_DEBUG, "  syncing event store at %d with event at %d, result %d\n", es->offset, offset, ret);
+	*/
 	if(ret < 0) {
 		il_log(LOG_ERR, "    handle_msg: error syncing event store:\n      %s\n", error_get_msg());
 		/* XXX should error during event store recovery cause us to drop the message? */

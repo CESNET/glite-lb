@@ -108,7 +108,7 @@ fname2index(const char *filename)
 		}
 	}
 
-	return atoi(p+1);
+	return atoi(p+1)+1;
 }
 
 
@@ -210,7 +210,8 @@ event_store_create(char *job_id_s, const char *filename)
   es->rotate_index = filename ? fname2index(filename) : 0;
   IL_EVENT_ID_FREE(job_id);
 
-  il_log(LOG_DEBUG, "  creating event store for id %s, filename %s\n", job_id_s, es->event_file_name);
+  il_log(LOG_DEBUG, "  creating event store for id %s, filename %s, rotate index %d\n", 
+	 job_id_s, es->event_file_name, es->rotate_index);
 
   if(pthread_rwlock_init(&es->commit_lock, NULL))
           abort();
@@ -437,6 +438,7 @@ event_store_rotate_file(struct event_store *es)
 	/* change names in event_store */
 	es->event_file_name = strdup(newname);
 	es->control_file_name = astrcat(newname, ".ctl");
+	es->rotate_index = num + 1;
 
 	return(0);
 }
@@ -1034,17 +1036,18 @@ event_store_find(char *job_id_s, const char *filename)
 
   while(p) {
     if(strcmp(p->es->job_id_s, job_id_s) == 0) {
-		es = p->es;
+	    es = p->es;
 	    d = p;
     	// if filename was given, compare it as well
-    	if(filename == NULL || strcmp(p->es->event_file_name, filename) != 0) {
+	    if((filename == NULL && p->es->rotate_index == 0) || 
+	       (filename != NULL && strcmp(p->es->event_file_name, filename) == 0)) {
     		if(pthread_rwlock_rdlock(&es->use_lock))
     			abort();
     		if(pthread_rwlock_unlock(&store_list_lock))
     			abort();
     		return(es);
     	}
-	}
+    }
     p = p->next;
   }
 
