@@ -39,7 +39,7 @@ my %extern_prefix = (
 	globus => '/opt/globus',
 	gsoap => '/usr',
 	mysql => '/usr',
-	'mysql-devel' => '/usr',
+	'mysql-devel' => '',
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
@@ -105,6 +105,8 @@ push @opts,"with-$_=s",\$jar{$_} for keys %jar;
 my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
+
+$extern_prefix{'mysql-devel'}=$extern_prefix{mysql} if $extern_prefix{'mysql-devel'} eq '';
 
 if ($help) { usage(); exit 0; }
 
