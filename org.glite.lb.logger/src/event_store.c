@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -393,7 +394,7 @@ int
 event_store_rotate_file(struct event_store *es)
 {
 	int num;
-	time_t timestamp = time();
+	time_t timestamp = time(NULL);
 	char newname[MAXPATHLEN+1];
 
 	/* do not rotate already rotated files */
