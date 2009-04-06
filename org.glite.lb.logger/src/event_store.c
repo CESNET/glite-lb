@@ -210,7 +210,7 @@ event_store_create(char *job_id_s, const char *filename)
   es->rotate_index = filename ? fname2index(filename) : 0;
   IL_EVENT_ID_FREE(job_id);
 
-  il_log(LOG_DEBUG, "  creating event store for id %s, filename %s, rotate index %d\n", 
+  il_log(LOG_DEBUG, "  creating event store for id %s, filename %s, rotate index %d\n",
 	 job_id_s, es->event_file_name, es->rotate_index);
 
   if(pthread_rwlock_init(&es->commit_lock, NULL))
@@ -393,6 +393,7 @@ int
 event_store_rotate_file(struct event_store *es)
 {
 	int num;
+	time_t timestamp = time();
 	char newname[MAXPATHLEN+1];
 
 	/* do not rotate already rotated files */
@@ -400,11 +401,11 @@ event_store_rotate_file(struct event_store *es)
 		return 0;
 
 	/* find available name */
-	/* we give it at most 1024 tries */
-	for(num = 0; num < 1024; num++) {
+	/* we give it at most 256 tries */
+	for(num = 0; num < 256; num++) {
 		struct stat st;
 
-		snprintf(newname, MAXPATHLEN, "%s.%d", es->event_file_name, num);
+		snprintf(newname, MAXPATHLEN, "%s.%d%3d", es->event_file_name, timestamp, num);
 		newname[MAXPATHLEN] = 0;
 		if(stat(newname, &st) < 0) {
 			if(errno == ENOENT) {
@@ -1039,7 +1040,7 @@ event_store_find(char *job_id_s, const char *filename)
 	    es = p->es;
 	    d = p;
     	// if filename was given, compare it as well
-	    if((filename == NULL && p->es->rotate_index == 0) || 
+	    if((filename == NULL && p->es->rotate_index == 0) ||
 	       (filename != NULL && strcmp(p->es->event_file_name, filename) == 0)) {
     		if(pthread_rwlock_rdlock(&es->use_lock))
     			abort();
