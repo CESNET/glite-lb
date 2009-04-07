@@ -219,7 +219,7 @@ int main(int argc,char **argv)
 			usage("bind");
 			return EX_USAGE;
 		}
-		if ( !edg_wll_NotifBind(ctx, nid, sock, (argc<4)? NULL: argv[3], &valid) )
+		if ( !edg_wll_NotifBind(ctx, nid, sock, fake_addr, &valid) )
 			printf("valid until: %s (%ld)\n", TimeToStr(valid), valid);
 		edg_wll_NotifIdFree(nid);
 	}
