@@ -406,7 +406,7 @@ event_store_rotate_file(struct event_store *es)
 	for(num = 0; num < 256; num++) {
 		struct stat st;
 
-		snprintf(newname, MAXPATHLEN, "%s.%d%3d", es->event_file_name, timestamp, num);
+		snprintf(newname, MAXPATHLEN, "%s.%d%03d", es->event_file_name, timestamp, num);
 		newname[MAXPATHLEN] = 0;
 		if(stat(newname, &st) < 0) {
 			if(errno == ENOENT) {
