@@ -39,6 +39,7 @@ my %extern_prefix = (
 	globus => '/opt/globus',
 	gsoap => '/usr',
 	mysql => '/usr',
+	'mysql-devel' => '',
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
@@ -104,6 +105,8 @@ push @opts,"with-$_=s",\$jar{$_} for keys %jar;
 my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
+
+$extern_prefix{'mysql-devel'}=$extern_prefix{mysql} if $extern_prefix{'mysql-devel'} eq '';
 
 if ($help) { usage(); exit 0; }
 
@@ -296,7 +299,7 @@ BEGIN{
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
-	'lbjp-common.db' => [ qw/mysql/ ],
+	'lbjp-common.db' => [ qw/mysql:R mysql-devel:B/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
@@ -545,8 +548,10 @@ sub mode_etics {
 	@ge{@{$etics_projects{'org.glite'}}} = (1) x ($#{$etics_projects{'org.glite'}}+1);
 
 	for (@{$need_externs{"$subsys.$module"}}) {
+	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 		push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
+	    }
 	}
 
 	for (@{$need_jars{"$subsys.$module"}}) {
