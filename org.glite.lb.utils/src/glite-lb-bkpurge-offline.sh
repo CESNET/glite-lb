@@ -114,6 +114,7 @@ ds="$ds LEFT JOIN events AS e ON (e.jobid = states.jobid)"
 ds="$ds LEFT JOIN jobs ON (jobs.jobid = states.jobid)"
 ds="$ds LEFT JOIN short_fields ON (short_fields.jobid = e.jobid AND short_fields.event=e.event)"
 ds="$ds LEFT JOIN long_fields ON (long_fields.jobid = e.jobid AND long_fields.event=e.event)"
+ds="$ds LEFT JOIN events_flesh ON (events_flesh.jobid = e.jobid AND events_flesh.event=e.event)"
 ds="$ds LEFT JOIN status_tags ON (status_tags.jobid = states.jobid)"
 ds="$ds WHERE ($tclause)"
 
@@ -133,6 +134,7 @@ ds="$ds LEFT JOIN events AS e ON (e.jobid = states.jobid)"
 ds="$ds LEFT JOIN jobs ON (jobs.jobid = states.jobid)"
 ds="$ds LEFT JOIN short_fields ON (short_fields.jobid = e.jobid AND short_fields.event=e.event)"
 ds="$ds LEFT JOIN long_fields ON (long_fields.jobid = e.jobid AND long_fields.event=e.event)"
+ds="$ds LEFT JOIN events_flesh ON (events_flesh.jobid = e.jobid AND events_flesh.event=e.event)"
 ds="$ds LEFT JOIN status_tags ON (status_tags.jobid = states.jobid)"
 
 #wc -l $tempfile1 /dev/null;echo -n "???";read n
@@ -162,7 +164,7 @@ if [ "$thorough" = 1 ]
 then
 	(
 	for table in acls jobs status_tags events \
-		short_fields states long_fields
+		short_fields states long_fields events_flesh
 	do
 		echo "OPTIMIZE TABLE $table;"
 	done 
