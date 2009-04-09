@@ -64,7 +64,7 @@ extern int TIMEOUT;
 #define EXIT_TIMEOUT (1*60)
 
 typedef struct cred_handle {
-	edg_wll_GssCred creds;
+	gss_cred_id_t creds;
 	int counter;
 } cred_handle_t;
 extern cred_handle_t *cred_handle;

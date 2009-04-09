@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "glite/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/context.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/il_string.h"

@@ -41,6 +41,8 @@ else
 	WS_INTERLOGD:=glite-lb-ws-interlogd
 endif
 
+GLOBUSTHRINC=-I${globus_prefix}/include/${thrflavour}
+
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src \
@@ -112,7 +114,7 @@ MAN = $(MAN_GZ:.gz=)
 
 default: all 
 
-all compile: $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
+all compile: $(NOTIF_INTERLOGD)
 
 glite-lb-logd: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${TRIO_LIB}
@@ -174,20 +176,12 @@ install:
 	-mkdir -p ${PREFIX}/etc/init.d
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/share/man/man8
-	${INSTALL} -m 755 ${LOGD} ${PREFIX}/bin
-	${INSTALL} -m 755 ${INTERLOGD} ${PREFIX}/bin
+#	${INSTALL} -m 755 ${LOGD} ${PREFIX}/bin
+#	${INSTALL} -m 755 ${INTERLOGD} ${PREFIX}/bin
 	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin
-ifdef LB_PERF
-	-mkdir -p ${PREFIX}/sbin
-	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${PREFIX}/sbin
-endif
-	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
 
 ${INTERLOG_NOBJS}: %.no: %.c
-	${CC} ${CFLAGS} -DIL_NOTIFICATIONS -c $< -o $@
+	${CC} ${CFLAGS} ${GLOBUSTHRINC} -DIL_NOTIFICATIONS -c $< -o $@
 
 ${INTERLOG_OBJS}: %.o: %.c
 	${CC} ${CFLAGS} -c $< -o $@

@@ -16,7 +16,7 @@
  *   - L/B server protocol handling routines 
  */
 
-#include "glite/jobid/cjobid.h"
+#include "glite/wmsutils/jobid/cjobid.h"
 #include "glite/lb/il_string.h"
 #include "glite/lb/context.h"
 
@@ -195,7 +195,8 @@ event_queue_connect(struct event_queue *eq)
     /* check if we need to release the credentials */
     --local_cred_handle->counter;
     if(local_cred_handle != cred_handle && local_cred_handle->counter == 0) {
-	    edg_wll_gss_release_cred(&local_cred_handle->creds, NULL);
+	    OM_uint32	min_stat;
+	    gss_release_cred(&min_stat,&local_cred_handle->creds);
 	    free(local_cred_handle);
 	    il_log(LOG_DEBUG, "   freed credentials, not used anymore\n");
     }

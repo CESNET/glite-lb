@@ -34,17 +34,18 @@ recover_thread(void *q)
 		}
 		il_log(LOG_INFO, "Reloading certificate...\n");
 		if (edg_wll_gss_watch_creds(cert_file, &cert_mtime) > 0) {
-			edg_wll_GssCred new_creds = NULL;
+			gss_cred_id_t new_creds = GSS_C_NO_CREDENTIAL;
 			int ret;
 
 			ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file, 
-				&new_creds, NULL);
-			if (new_creds != NULL) {
+				&new_creds, NULL, NULL);
+			if (new_creds != GSS_C_NO_CREDENTIAL) {
 				if(pthread_mutex_lock(&cred_handle_lock) < 0)
 					abort();
 				/* if no one is using the old credentials, release them */
 				if(cred_handle && cred_handle->counter == 0) {
-					edg_wll_gss_release_cred(&cred_handle->creds, NULL);
+					OM_uint32	min_stat;
+					gss_release_cred(&min_stat,&cred_handle->creds);
 					free(cred_handle);
 					il_log(LOG_DEBUG, "  freed old credentials\n");
 				}
