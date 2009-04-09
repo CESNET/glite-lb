@@ -246,7 +246,7 @@ static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
 static int add_root(char *);
 static int read_roots(const char *);
 static int asyn_gethostbyaddr(char **, const char *, int, int, struct timeval *);
-static int amIroot(const char *, char **);
+int amIroot(const char *, char **);
 static int parse_limits(char *, int *, int *, int *);
 static int check_mkdir(const char *);
 
@@ -1448,7 +1448,7 @@ static int read_roots(const char *file)
 	return 0;
 }
 
-static int amIroot(const char *subj, char **fqans)
+int amIroot(const char *subj, char **fqans)
 {
 	int	i;
 	char	**f;

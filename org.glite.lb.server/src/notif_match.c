@@ -160,7 +160,7 @@ static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const
 	int		ret;
 
 	edg_wll_ResetError(ctx);
-	if (ctx->noAuth || strcmp(stat->owner,recip) == 0) return 1;
+	if (strcmp(stat->owner,recip) == 0 || amIroot(recip,NULL)) return 1;
 
 	if (stat->acl == NULL) return 0;
 

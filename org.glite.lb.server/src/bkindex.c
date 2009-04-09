@@ -392,3 +392,8 @@ edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_index_c
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
+int amIroot(const char *subj, char **fqans)
+{
+	/* XXX: fake implementation, should not be called from bkindex at all */
+	abort();
+}
