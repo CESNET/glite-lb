@@ -94,11 +94,12 @@ jobid2controlfile(IL_EVENT_ID_T job_id)
 }
 
 static
-int
+long long
 fname2index(const char *filename)
 {
 	char *p = rindex(filename, '.');
 	char *s;
+	long long	ret;
 
 	if(p == NULL)
 		return 0;
@@ -109,7 +110,8 @@ fname2index(const char *filename)
 		}
 	}
 
-	return atoi(p+1)+1;
+	sscanf(p+1,"%lld",&ret);
+	return ret+1;
 }
 
 
@@ -211,7 +213,7 @@ event_store_create(char *job_id_s, const char *filename)
   es->rotate_index = filename ? fname2index(filename) : 0;
   IL_EVENT_ID_FREE(job_id);
 
-  il_log(LOG_DEBUG, "  creating event store for id %s, filename %s, rotate index %d\n",
+  il_log(LOG_DEBUG, "  creating event store for id %s, filename %s, rotate index %lld\n",
 	 job_id_s, es->event_file_name, es->rotate_index);
 
   if(pthread_rwlock_init(&es->commit_lock, NULL))
