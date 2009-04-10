@@ -20,7 +20,7 @@
 
 
 static char *get_user(edg_wll_Context ctx, int create);
-static int check_notif_request(edg_wll_Context, const edg_wll_NotifId, char **);
+static int check_notif_request(edg_wll_Context, const edg_wll_NotifId, char **, char **);
 static int split_cond_list(edg_wll_Context, edg_wll_QueryRec const * const *,
 						edg_wll_QueryRec ***, char ***);
 static int update_notif(edg_wll_Context, const edg_wll_NotifId,
@@ -190,7 +190,7 @@ int edg_wll_NotifBindServer(
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;
 
-		if ( check_notif_request(ctx, nid, NULL) )
+		if ( check_notif_request(ctx, nid, NULL, NULL) )
 			goto rollback;
 
 		if ( check_notif_age(ctx, nid) ) {
@@ -263,7 +263,7 @@ int edg_wll_NotifChangeServer(
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;
 
-		if ( check_notif_request(ctx, nid, NULL) )
+		if ( check_notif_request(ctx, nid, NULL, NULL) )
 			goto rollback;
 
 		if ( check_notif_age(ctx, nid) ) {
@@ -359,12 +359,12 @@ int edg_wll_NotifRefreshServer(
 	const edg_wll_NotifId			nid,
 	time_t						   *valid)
 {
-	char	   *time_s = NULL;
+	char	   *time_s = NULL, *dest = NULL;
 
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;		
 
-		if ( check_notif_request(ctx, nid, NULL) )
+		if ( check_notif_request(ctx, nid, NULL, &dest) )
 			goto rollback;
 
 		if ( check_notif_age(ctx, nid) ) {
@@ -386,10 +386,11 @@ int edg_wll_NotifRefreshServer(
 			goto rollback;
 		}
 
-		update_notif(ctx, nid, NULL, NULL, time_s);
+		update_notif(ctx, nid, NULL, dest, time_s);
 
 rollback:
 		free(time_s); time_s = NULL;
+		free(dest); dest = NULL;
 
 	} while (edg_wll_TransNeedRetry(ctx));
 
@@ -404,7 +405,7 @@ int edg_wll_NotifDropServer(
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;
 
-		if ( check_notif_request(ctx, nid, NULL) )
+		if ( check_notif_request(ctx, nid, NULL, NULL) )
 			goto rollback;
 
 		if ( drop_notif_request(ctx, nid) )
@@ -434,8 +435,8 @@ static char *get_user(edg_wll_Context ctx, int create)
 	}
 	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 	trio_asprintf(&q, "select userid from users where cert_subj='%|Ss'", can_peername);
-	if ( edg_wll_ExecSQL(ctx, q, &stmt) < 0 )
-		goto cleanup;
+		if ( edg_wll_ExecSQL(ctx, q, &stmt) < 0 )
+			goto cleanup;
 
 	/*	returned value:
 	 *	0		no user find - continue only when 'create' parameter is set
@@ -476,11 +477,13 @@ cleanup:
 static int check_notif_request(
 	edg_wll_Context				ctx,
 	const edg_wll_NotifId		nid,
-	char					  **owner)
+	char					  **owner,
+	char	**destination)
 {
 	char	   *nid_s = NULL,
-			   *stmt, *user;
+			   *stmt, *user, *dest = NULL;
 	int			ret;
+	glite_lbu_Statement	s = NULL;
 
 
 	/* XXX: rewrite select below in order to handle cert_subj format changes */
@@ -496,11 +499,11 @@ static int check_notif_request(
 		goto cleanup;
 
 	trio_asprintf(&stmt,
-				"select notifid from notif_registrations "
+				"select destination from notif_registrations "
 				"where notifid='%|Ss' and userid='%|Ss' FOR UPDATE",
 				nid_s, user);
 
-	if ( (ret = edg_wll_ExecSQL(ctx, stmt, NULL)) < 0 )
+	if ( (ret = edg_wll_ExecSQL(ctx, stmt, &s)) < 0 )
 		goto cleanup;
 	if ( ret == 0 )
 	{
@@ -514,14 +517,17 @@ static int check_notif_request(
 			edg_wll_SetError(ctx, EPERM, "Only owner could access the notification");
 		goto cleanup;
 	}
+	else edg_wll_FetchRow(ctx,s,1,NULL,&dest);
 
 cleanup:
-	if ( !edg_wll_Error(ctx, NULL, NULL) && owner )
-		*owner = user;
-	else
-		free(user);
+	if ( !edg_wll_Error(ctx, NULL, NULL)) {
+		if (owner) *owner = user; else free(user);
+		if (destination) *destination = dest; else free(dest);
+	}
+
 	if ( nid_s ) free(nid_s);
 	if ( stmt ) free(stmt);
+ 	glite_lbu_FreeStmt(&s);
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }

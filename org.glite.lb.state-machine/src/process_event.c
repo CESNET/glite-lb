@@ -243,7 +243,7 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 
 #define USABLE_BRANCH(fine_res) ((fine_res) != RET_TOOOLD && (fine_res) != RET_BADBRANCH)
 #define LRMS_STATE(state) ((state) == EDG_WLL_JOB_RUNNING || (state) == EDG_WLL_JOB_DONE)
-#define PARSABLE_SEQCODE(code) ((code) && component_seqcode((code),0) >= 0)
+#define PARSABLE_SEQCODE(code) (component_seqcode((code),0) >= 0)
 
 static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
@@ -396,7 +396,6 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				switch (e->accepted.source) {
 					case EDG_WLL_SOURCE_NETWORK_SERVER:
 						rep(js->pub.ui_host, e->accepted.from_host);
-						rep(js->pub.network_server,e->any.host);
 						break; /* no WM id */
 					case EDG_WLL_SOURCE_LOG_MONITOR:
 						rep(js->pub.condorId, e->accepted.local_jobid); break;
@@ -917,7 +916,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		case EDG_WLL_EVENT_CHKPT:
 			/* these three event are probably dead relics */
 		case EDG_WLL_EVENT_RESOURCEUSAGE:
-			/* ignore, not reflected in job status */
+			/* ignore too - not used? */
 			break;
 		case EDG_WLL_EVENT_CHANGEACL:
 			/* ignore, only for event log */
