@@ -193,7 +193,7 @@ int edg_wll_ULMProcessParseTable(p_edg_wll_ULMFields this)
          }
          break;
       default :
-         if (this->raw[i-1] == ULM_BS) bsCnt = 0; // escaped character inside value
+         if (i && this->raw[i-1] == ULM_BS) bsCnt = 0; // escaped character inside value
          break;
     } /* switch */
   } /* for */
