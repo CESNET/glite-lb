@@ -720,6 +720,7 @@ event_store_recover(struct event_store *es)
         	/* message has no destination and no destination is known for notification id,
         	 * commit it immediately
         	 */
+    		il_log(LOG_DEBUG, "    message has no known destination, will not be sent\n");
 			event_store_commit(es, msg->ev_len, 0, msg->generation);
     		/* if the expiration changed, set new one now, message will be discarded soon */
     		if(msg->expires != notifid_map_get_expiration(msg->job_id_s)) {
