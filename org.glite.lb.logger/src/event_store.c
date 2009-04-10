@@ -709,10 +709,24 @@ event_store_recover(struct event_store *es)
       if(enqueue_msg(eq_l, msg) < 0)
 	break;
 #endif
-      }
+    }
 
 #ifdef IL_NOTIFICATIONS
     eq_b = queue_list_get(msg->dest);
+    /* if the message does not have destination itself, use destination cached for notification id */
+    if(eq_b == NULL) {
+    	eq_b = notifid_map_get_dest(msg->job_id_s);
+    	if(eq_b == NULL) {
+        	/* message has no destination and no destination is known for notification id,
+        	 * commit it immediately
+        	 */
+			event_store_commit(es, msg->ev_len, 0, msg->generation);
+    		/* if the expiration changed, set new one now, message will be discarded soon */
+    		if(msg->expires != notifid_map_get_expiration(msg->job_id_s)) {
+    			notifid_map_set_expiration(msg->job_id_s, msg->expires);
+    		}
+    	}
+    }
 #endif
 
     /* now enqueue to the BS, if neccessary */
@@ -722,7 +736,7 @@ event_store_recover(struct event_store *es)
       il_log(LOG_DEBUG, "      queueing event at %ld to bookkeeping server\n", last);
 
       if(enqueue_msg(eq_b, msg) < 0)
-	break;
+    	  break;
     }
     server_msg_free(msg);
     msg = NULL;
