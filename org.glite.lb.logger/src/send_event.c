@@ -13,7 +13,7 @@
 
 
 /*
- *   - L/B server protocol handling routines 
+ *   - L/B server protocol handling routines
  */
 
 #include "glite/jobid/cjobid.h"
@@ -23,7 +23,7 @@
 #include "interlogd.h"
 
 #if defined(INTERLOGD_EMS) || (defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH))
-/* 
+/*
  * Send confirmation to client.
  *
  */
@@ -68,7 +68,7 @@ send_confirmation(long lllid, int code)
 }
 
 
-static 
+static
 int
 confirm_msg(struct server_msg *msg, int code, int code_min)
 {
@@ -86,7 +86,7 @@ confirm_msg(struct server_msg *msg, int code, int code_min)
 		code_min = EDG_WLL_IL_SYS;
 		break;
 	}
-  
+
 	return(send_confirmation(msg->receipt_to, code_min));
 }
 #endif
@@ -116,7 +116,7 @@ gss_reader(void *user_data, char *buffer, int max_len)
       edg_wll_gss_get_error(&gss_stat, "get_reply", &gss_err);
       set_error(IL_DGGSS, ret, gss_err);
       free(gss_err);
-    } else 
+    } else
       set_error(IL_DGGSS, ret, "get_reply");
   }
   return(ret);
@@ -125,11 +125,11 @@ gss_reader(void *user_data, char *buffer, int max_len)
 
 /*
  * Read reply from server.
- *  Returns: -1 - error reading message, 
+ *  Returns: -1 - error reading message,
  *         code > 0 - error code from server
  */
 static
-int 
+int
 get_reply(struct event_queue *eq, char **buf, int *code_min)
 {
   char *msg=NULL;
@@ -161,7 +161,7 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
 /*
  *  Returns: 0 - not connected, timeout set, 1 - OK
  */
-int 
+int
 event_queue_connect(struct event_queue *eq)
 {
   int ret;
@@ -187,7 +187,7 @@ event_queue_connect(struct event_queue *eq)
     local_cred_handle->counter++;
     if(pthread_mutex_unlock(&cred_handle_lock) < 0)
 	    abort();
-    
+
     il_log(LOG_DEBUG, "    trying to connect to %s:%d\n", eq->dest_name, eq->dest_port);
     ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
@@ -199,7 +199,7 @@ event_queue_connect(struct event_queue *eq)
 	    free(local_cred_handle);
 	    il_log(LOG_DEBUG, "   freed credentials, not used anymore\n");
     }
-    if(pthread_mutex_unlock(&cred_handle_lock) < 0) 
+    if(pthread_mutex_unlock(&cred_handle_lock) < 0)
 	    abort();
 
     if(ret < 0) {
@@ -244,11 +244,11 @@ event_queue_close(struct event_queue *eq)
 }
 
 
-/* 
+/*
  * Send all events from the queue.
  *   Returns: -1 - system error, 0 - not send, 1 - queue empty
  */
-int 
+int
 event_queue_send(struct event_queue *eq)
 {
   int events_sent = 0;
@@ -274,7 +274,7 @@ event_queue_send(struct event_queue *eq)
 
     clear_error();
 
-    if(event_queue_get(eq, &msg) < 0) 
+    if(event_queue_get(eq, &msg) < 0)
       return(-1);
 
     il_log(LOG_DEBUG, "    trying to deliver event at offset %d for job %s\n", msg->offset, msg->job_id_s);
@@ -293,7 +293,7 @@ event_queue_send(struct event_queue *eq)
 	        eq->timeout = TIMEOUT;
 	      return(0);
 	    }
- 	    
+
 	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
 		    if (events_sent>0) {
@@ -307,7 +307,7 @@ event_queue_send(struct event_queue *eq)
 		    return(0);
 	    }
 	}
-	else { code = LB_OK; code_min = 0; rep = strdup("not sending emtpy message"); }
+	else { code = LB_OK; code_min = 0; rep = strdup("not sending empty message"); }
 #ifdef LB_PERF
     } else {
 	    glite_wll_perftest_consumeEventIlMsg(msg->msg+17);
@@ -315,13 +315,13 @@ event_queue_send(struct event_queue *eq)
 	    rep = strdup("OK");
     }
 #endif
-    
+
     il_log(LOG_DEBUG, "    event sent, server %s replied with %d, %s\n", eq->dest_name, code, rep);
     free(rep);
 
     /* the reply is back here */
     switch(code) {
-      
+
 	    /* NOT USED: case LB_TIME: */
     case LB_NOMEM:
 	    /* NOT USED: case LB_SYS:  */
@@ -329,10 +329,10 @@ event_queue_send(struct event_queue *eq)
       /* non fatal errors (for us) */
       eq->timeout = TIMEOUT;
       return(0);
-	
+
     case LB_OK:
       /* event succesfully delivered */
-      
+
     default: /* LB_DBERR, LB_PROTO */
       /* the event was not accepted by the server */
       /* update the event pointer */
@@ -350,11 +350,11 @@ event_queue_send(struct event_queue *eq)
       if((ret == 0) &&
 	 (error_get_maj() != IL_OK))
 	  il_log(LOG_ERR, "send_event: %s\n", error_get_msg());
-	
+
       event_queue_remove(eq);
       events_sent++;
       break;
-      
+
     } /* switch */
   } /* while */
 
