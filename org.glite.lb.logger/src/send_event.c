@@ -308,7 +308,7 @@ event_queue_send(struct event_queue *eq)
 		    return(0);
 	    }
 	}
-	else { code = LB_OK; code_min = 0; rep = strdup("not sending emtpy message"); }
+	else { code = LB_OK; code_min = 0; rep = strdup("not sending empty message"); }
 #ifdef LB_PERF
     } else {
 	    glite_wll_perftest_consumeEventIlMsg(msg->msg+17);

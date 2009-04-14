@@ -294,7 +294,7 @@ event_queue_move_events(struct event_queue *eq_s,
 			il_log(LOG_DEBUG, "  moving event at offset %d(%d) from %s:%d to %s:%d\n",
 			       p->msg->offset, p->msg->generation, eq_s->dest_name, eq_s->dest_port, 
 			       eq_d ? eq_d->dest_name : "trash", eq_d ? eq_d->dest_port : -1);
-			il_log(LOG_DEBUG, "  current: %x, next: %x\n", p, p->prev);
+			/* il_log(LOG_DEBUG, "  current: %x, next: %x\n", p, p->prev); */
 			/* remove the message from the source list */
 			*source_prev = p->prev;
 			if(eq_d) {
