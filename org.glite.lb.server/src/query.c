@@ -376,10 +376,9 @@ int edg_wll_QueryJobsServer(
 
 	if ( (where_flags & FL_SEL_STATUS) )
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s %s %s ORDER BY j.jobid", 
+						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s AND %s ORDER BY j.jobid", 
 						(job_where) ? "AND" : "",
 						(job_where) ? job_where : "",
-						(ctx->isProxy) ? "AND" : "",
 						(ctx->isProxy) ? "j.proxy='1'" : "j.server='1'");
 	else
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
