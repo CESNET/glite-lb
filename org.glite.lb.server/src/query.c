@@ -333,8 +333,7 @@ int edg_wll_QueryJobsServer(
 					   *res[3],
 					   *dbjob,
 					   *zomb_where = NULL,
-					   *zomb_where_temp = NULL,
-					   *full_jobid = NULL;
+					   *zomb_where_temp = NULL;
 	edg_wlc_JobId	   *jobs_out = NULL;
 	edg_wll_JobStat	   *states_out = NULL;
 	glite_lbu_Statement		sh;
@@ -550,10 +549,9 @@ limit_cycle_cleanup:
 				states_out	= (edg_wll_JobStat *) calloc(j+1, sizeof(*states_out));
 
 				i = 0; 
-				while ( (ret=edg_wll_FetchRow(ctx,sh,sizeof(res),NULL,res)) > 0 ) {
-					asprintf(&full_jobid,"https://%s/%s%s",res[0],res[1],res[2]);
-					edg_wlc_JobIdParse(full_jobid, jobs_out+i);
-					edg_wlc_JobIdParse(full_jobid, &(states_out[i].jobId));
+				while ( (ret=edg_wll_FetchRow(ctx,sh,sizofa(res),NULL,res)) > 0 ) {
+					edg_wlc_JobIdParse(res[0], jobs_out+i);
+					edg_wlc_JobIdParse(res[0], &(states_out[i].jobId));
 					states_out[i].state = EDG_WLL_JOB_PURGED;
 					free(res[0]); free(res[1]); free(res[2]);
 
