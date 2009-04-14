@@ -201,6 +201,7 @@ int
 edg_wll_NotifCancelRegId(edg_wll_Context context,
 			 edg_wll_NotifId reg_id)
 {
-	return(edg_wll_NotifSend(context, reg_id, NULL, 0, "", 0, ""));
+/* XXX: Jan 1 1970 00:00:01 -- quite sure to make it expire immediately */
+	return(edg_wll_NotifSend(context, reg_id, NULL, 0, "", 1, ""));
 }
 
