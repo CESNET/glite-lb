@@ -119,9 +119,9 @@ server_msg_copy(struct server_msg *src)
   msg->receipt_to = src->receipt_to;
   msg->offset = src->offset;
 #if defined(IL_NOTIFICATIONS)
-  msg->dest_name = strdup(src->dest_name);
+  msg->dest_name = src->dest_name ? strdup(src->dest_name) : NULL;
   msg->dest_port = src->dest_port;
-  msg->dest = strdup(src->dest);
+  msg->dest = src->dest ? strdup(src->dest) : NULL;
 #endif
   msg->expires = src->expires;
   msg->generation = src->generation;
