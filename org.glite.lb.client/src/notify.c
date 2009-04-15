@@ -23,8 +23,7 @@ static void usage(char *cmd)
 			"  where commands are:\n"
 			"    new         Create new notification reg.\n"
 			"    bind        Binds an notification reg. to a client.\n"
-/* UNIMPL		"    change      Changes notification reg. params.\n"
- */
+			"    change      Changes notification reg. params.\n"
 			"    refresh     Enlarge notification reg. validity.\n"
 			"    receive     Binds to an existing notif. registration and listen to server.\n"
 			"    drop        Drop the notification reg.\n"
@@ -46,12 +45,12 @@ static void usage(char *cmd)
 			"    requested_validity	Validity of notification req. in seconds\n"
 			"    notifids     	One or more notification ID's\n"
 			"    fake_addr   	Fake the client address\n", me);
-/* UNIMPL 
+
 	if ( !cmd || !strcmp(cmd, "change") )
 		fprintf(stderr,"\n'change' command usage: %s change notifid jobid\n"
 			"    notifid   	Notification ID.\n"
 			"    jobid      Job ID to connect notif. reg. with.\n", me);
-*/
+
 	if ( !cmd || !strcmp(cmd, "refresh") )
 		fprintf(stderr,"\n'refresh' command usage: %s refresh [-t requested_validity ] notifid\n"
 			"    requested_validity	Validity of notification req. in seconds\n"
@@ -370,7 +369,6 @@ receive_err:
 
 		return EX_IOERR;
 	}
-/* UNIMPL
 	else if ( !strcmp(argv[1], "change") )
 	{
 		edg_wlc_JobId		jid;
@@ -389,7 +387,7 @@ receive_err:
 			goto cleanup;
 		}
 
-		conditions = (edg_wll_QueryRec **)calloc(3,sizeof(edg_wll_QueryRec *));
+		conditions = (edg_wll_QueryRec **)calloc(2,sizeof(edg_wll_QueryRec *));
 		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 		conditions[1] = (edg_wll_QueryRec *)calloc(3, sizeof(edg_wll_QueryRec));
 	
@@ -397,13 +395,13 @@ receive_err:
 		conditions[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
 		conditions[0][0].value.j = jid;
 
-		conditions[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+		/*conditions[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
 		conditions[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
 		conditions[1][0].value.i = EDG_WLL_JOB_DONE;
 
 		conditions[1][1].attr = EDG_WLL_QUERY_ATTR_STATUS;
 		conditions[1][1].op = EDG_WLL_QUERY_OP_EQUAL;
-		conditions[1][1].value.i = EDG_WLL_JOB_RUNNING;
+		conditions[1][1].value.i = EDG_WLL_JOB_RUNNING;*/
 
 		edg_wll_NotifChange(ctx, nid,
 						(edg_wll_QueryRec const * const *) conditions,
@@ -411,7 +409,6 @@ receive_err:
 		edg_wlc_JobIdFree(jid);
 		edg_wll_NotifIdFree(nid);
 	}
-*/
 	else if ( !strcmp(argv[1], "refresh") )
 	{
 		edg_wll_NotifId		nid;
