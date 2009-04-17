@@ -158,6 +158,7 @@ struct event_queue {
 	edg_wll_GssConnection   gss;            /* GSS connection */
 	char                   *dest_name;
 	int                     dest_port;
+	char				   *dest;
 	int                     timeout;        /* queue timeout */
 	struct event_queue_msg *tail;           /* last message in the queue */
 	struct event_queue_msg *head;           /* first message in the queue */

@@ -15,66 +15,19 @@
 #include "glite/lb/lb_perftest.h"
 #endif
 
-static
 int
-cmp_jobid(struct server_msg *msg, void *data) 
-{
-	char *job_id_s = (char*)data;
-	return strcmp(msg->job_id_s, job_id_s) == 0;
-}
-
-static
-int
-cmp_jobid_set_exp(struct server_msg *msg, void *data)
-{
-	struct server_msg *m = (struct server_msg *)data;
-
-	if(strcmp(msg->job_id_s, m->job_id_s) == 0) {
-		msg->expires = m->expires;
-	}
-	return 0;
-}
-
-
-int 
 enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 {
-#if defined(IL_NOTIFICATIONS)
-	struct event_queue *eq_known;
-
-	/* now we have a new event with possibly changed destination,
-	   so check for the already known destination and possibly move 
-	   events from the original output queue to a new one */
-	eq_known = notifid_map_get_dest(msg->job_id_s);
-	if(eq != eq_known) {
-		/* client has changed delivery address for this notification */
-		if(notifid_map_set_dest(msg->job_id_s, eq) < 0) 
-			return(-1);
-		/* move all events with this notif_id from eq_known to eq */
-		if(eq_known != NULL) {
-			event_queue_move_events(eq_known, eq, cmp_jobid, msg->job_id_s);
-			/* XXX - we should kill the old queue too */
-		}
-	}
-
-	/* if the expiration changed, set new one */
-	if(msg->expires != notifid_map_get_expiration(msg->job_id_s)) {
-		notifid_map_set_expiration(msg->job_id_s, msg->expires);
-		/* set expiration for all events with this notif id */
-		event_queue_move_events(eq, NULL, cmp_jobid_set_exp, msg);
-	}
-#endif
-
 	/* fire thread to take care of this queue */
-	if(event_queue_create_thread(eq) < 0) 
+	if(event_queue_create_thread(eq) < 0)
 		return(-1);
-	
+
 #if defined(IL_NOTIFICATIONS)
-	/* if there are no data to send, do not send anything 
+	/* if there are no data to send, do not send anything
 	   (messsage was just to change the delivery address) */
 	/* CORRECTION - let the message pass through the output queue
 	   to commit it properly and keep event_store in sync */
-	/* if(msg->len == 0) 
+	/* if(msg->len == 0)
 		return(0);
 	*/
 #endif
@@ -86,7 +39,7 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 		event_queue_cond_unlock(eq);
 		return(-1);
 	}
-      
+
 	/* signal thread that we have a new message */
 	event_queue_signal(eq);
 
@@ -103,7 +56,7 @@ pthread_cond_t flush_cond = PTHREAD_COND_INITIALIZER;
 #endif /* INTERLOGD_FLUSH */
 
 #ifdef INTERLOGD_HANDLE_CMD
-static 
+static
 int
 parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 {
@@ -125,7 +78,7 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 			continue;
 		}
 		if(strncmp(token, "DG.COMMAND", r - token) == 0) {
-#if defined(INTERLOGD_FLUSH)			
+#if defined(INTERLOGD_FLUSH)
 			if(strcmp(++r, "\"flush\"")) {
 #endif
 				il_log(LOG_WARNING, "  command %s not implemented\n", r);
@@ -136,7 +89,7 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 #endif
 		} else if(strncmp(token, "DG.JOBID", r - token) == 0) {
 			char  *p;
-      
+
 			r += 2; /* skip =" */
 			p = index(r, '"');
 			if(p == NULL) { ret = -1; continue; }
@@ -147,7 +100,7 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 		} else if(strncmp(token, "DG.LLLID", r - token) == 0) {
 			sscanf(++r, "%ld", receipt);
 		}
-    
+
 	}
 	return(0);
 }
@@ -159,8 +112,8 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
  *  -1 - failure
  */
 
-static 
-int 
+static
+int
 handle_cmd(il_octet_string_t *event, long offset)
 {
 	char *job_id_s;
@@ -172,7 +125,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 	struct timeval  tv;
 
 	/* parse command */
-	if(parse_cmd(event->data, &job_id_s, &receipt, &timeout) < 0) 
+	if(parse_cmd(event->data, &job_id_s, &receipt, &timeout) < 0)
 		return(0);
 
 #if defined(INTERLOGD_FLUSH)
@@ -194,7 +147,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 			       error_get_msg());
 			clear_error();
 		}
-	} else 
+	} else
 	  /* this call does not fail :-) */
 	  event_store_recover_all();
 
@@ -258,7 +211,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 			result = (ret == ETIMEDOUT) ? 0 : -1;
 			break;
 		}
-		
+
 		/* collect results from reporting threads */
 		if(job_id_s) {
 			/* find appropriate queue */
@@ -269,7 +222,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 				if(eq->flushing == 2) {
 					eq->flushing = 0;
 					num_replies++;
-					result = ((result == 1) || (eq->flush_result < 0))  ? 
+					result = ((result == 1) || (eq->flush_result < 0))  ?
 						eq->flush_result : result;
 				}
 				event_queue_cond_unlock(eq);
@@ -283,7 +236,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 						eq->flushing = 0;
 						num_replies++;
 						il_log(LOG_DEBUG, "    thread reply: %d\n", eq->flush_result);
-						result = ((result == 1) || (eq->flush_result < 0))  ? 
+						result = ((result == 1) || (eq->flush_result < 0))  ?
 							eq->flush_result : result;
 					}
 					event_queue_cond_unlock(eq);
@@ -297,7 +250,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 			if(eq->flushing == 2) {
 				eq->flushing = 0;
 				num_replies++;
-				result = ((result == 1) || (eq->flush_result < 0))  ? 
+				result = ((result == 1) || (eq->flush_result < 0))  ?
 					eq->flush_result : result;
 			}
 			event_queue_cond_unlock(eq);
@@ -305,7 +258,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 	}
 
 	/* prevent deadlock in next flush */
-	if(pthread_mutex_unlock(&flush_lock) < 0) 
+	if(pthread_mutex_unlock(&flush_lock) < 0)
 		abort();
 
 
@@ -320,7 +273,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 	}
 	if(job_id_s) free(job_id_s);
 	result = send_confirmation(receipt, result);
-	if(result <= 0) 
+	if(result <= 0)
 		il_log(LOG_ERR, "handle_cmd: error sending status: %s\n", error_get_msg());
 	return(1);
 
@@ -335,10 +288,10 @@ cmd_error:
 #endif /* INTERLOGD_HANDLE_CMD */
 
 
-static 
+static
 int
 handle_msg(il_octet_string_t *event, long offset)
-{ 
+{
 	struct server_msg *msg = NULL;
 #if !defined(IL_NOTIFICATIONS)
 	struct event_queue *eq_l;
@@ -353,17 +306,17 @@ handle_msg(il_octet_string_t *event, long offset)
 		il_log(LOG_ERR, "    handle_msg: error parsing event '%s':\n      %s\n", event, error_get_msg());
 		return(0);
 	}
-  
+
 	/* sync event store with IPC (if neccessary)
 	 * This MUST be called before inserting event into output queue! */
-	if((es = event_store_find(msg->job_id_s, NULL)) == NULL) 
+	if((es = event_store_find(msg->job_id_s, NULL)) == NULL)
 		return(-1);
 	msg->es = es;
-	
+
 #ifdef LB_PERF
-	if(nosync) 
+	if(nosync)
 		ret = 1;
-	else 
+	else
 #endif
 		ret = event_store_sync(es, offset);
 	/* no longer informative:
@@ -393,7 +346,7 @@ handle_msg(il_octet_string_t *event, long offset)
 #else
 	eq_s = queue_list_get(msg->job_id_s);
 #endif
-	if(eq_s == NULL) { 
+	if(eq_s == NULL) {
 		il_log(LOG_ERR, "    handle_msg: apropriate queue not found: %s\n", error_get_msg());
 		clear_error();
 	} else {
@@ -428,7 +381,7 @@ err:
 
 
 
-int 
+int
 loop()
 {
 	/* receive events */
@@ -436,12 +389,12 @@ loop()
 		il_octet_string_t *msg;
 		long offset;
 		int ret;
-    
+
 		if(killflg)
 			exit(0);
 
 		clear_error();
-		if((ret = input_queue_get(&msg, &offset, INPUT_TIMEOUT)) < 0) 
+		if((ret = input_queue_get(&msg, &offset, INPUT_TIMEOUT)) < 0)
 		{
 			if(error_get_maj() == IL_PROTO) {
 				il_log(LOG_DEBUG, "  premature EOF while receiving event\n");
@@ -450,7 +403,7 @@ loop()
 				event_store_recover_all();
 #endif
 				continue;
-			} else 
+			} else
 				return(-1);
 		}
 		else if(ret == 0) {
@@ -463,7 +416,7 @@ loop()
 		continue;
 #endif
 
-#ifdef INTERLOGD_HANDLE_CMD		
+#ifdef INTERLOGD_HANDLE_CMD
 		ret = handle_cmd(msg, offset);
 		if(ret == 0)
 #endif
@@ -475,7 +428,7 @@ loop()
 				case IL_NOMEM:
 					return (ret);
 					break;
-				default: 
+				default:
     					il_log(LOG_ERR, "Error: %s\n", error_get_msg());
 					break;
 			}

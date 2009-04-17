@@ -1,6 +1,6 @@
 #ident "$Header$"
 
-/* 
+/*
  *   - general queue handling routines (insert, get)
  */
 
@@ -27,11 +27,6 @@ event_queue_create(char *server_name)
   struct event_queue *eq;
   char *p;
 
-  p = strchr(server_name, ':');
-  
-  if(p) 
-    *p++ = 0;
-
   if((eq = malloc(sizeof(*eq))) == NULL) {
     set_error(IL_NOMEM, ENOMEM, "event_queue_create: error allocating event queue");
     return(NULL);
@@ -39,11 +34,15 @@ event_queue_create(char *server_name)
 
   memset(eq, 0, sizeof(*eq));
 
-  eq->dest_name = strdup(server_name);
+  eq->dest = strdup(server_name);
 
+  p = strchr(server_name, ':');
+  if(p)
+    *p++ = 0;
+  eq->dest_name = strdup(server_name);
   if(p)
     *(p-1) = ':';
-  
+
 #if defined(IL_NOTIFICATIONS) || defined(IL_WS)
   eq->dest_port = atoi(p);
 #else
@@ -96,6 +95,11 @@ event_queue_free(struct event_queue *eq)
 #if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
   pthread_cond_destroy(&eq->flush_cond);
 #endif
+
+  if(eq->dest_name)
+	  free(eq->dest_name);
+  if(eq->dest)
+	  free(eq->dest);
   free(eq);
 
   return(0);
@@ -124,10 +128,10 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
 #if defined(INTERLOGD_EMS)
   struct event_queue_msg *tail;
 #endif
-  
+
   assert(eq != NULL);
 
-  if((el = malloc(sizeof(*el))) == NULL) 
+  if((el = malloc(sizeof(*el))) == NULL)
     return(set_error(IL_NOMEM, ENOMEM, "event_queue_insert: not enough room for queue element"));
 
   el->msg = server_msg_copy(msg);
@@ -154,9 +158,9 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
 	eq->tail = el;
     }
     eq->tail_ems = el;
-  } else 
+  } else
 #endif
-  { 
+  {
     /* normal messages */
     if(eq->tail)
       eq->tail->prev = el;
@@ -168,7 +172,7 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
 #if defined(INTERLOGD_EMS)
   /* if we are inserting message between mark_prev and mark_this,
      we have to adjust mark_prev accordingly */
-  if(eq->mark_this && (el->prev == eq->mark_this)) 
+  if(eq->mark_this && (el->prev == eq->mark_this))
     eq->mark_prev = el;
 #endif
 
@@ -189,7 +193,7 @@ event_queue_get(struct event_queue *eq, struct server_msg **msg)
 
   assert(eq != NULL);
   assert(msg != NULL);
-  
+
   event_queue_lock(eq);
   el = eq->head;
 #if defined(INTERLOGD_EMS)
@@ -208,7 +212,7 @@ event_queue_get(struct event_queue *eq, struct server_msg **msg)
 }
 
 
-int 
+int
 event_queue_remove(struct event_queue *eq)
 {
   struct event_queue_msg *el;
@@ -258,12 +262,12 @@ event_queue_remove(struct event_queue *eq)
 	  eq->tail = NULL;
   }
 #endif
-  if(--eq->cur_len == 0) 
+  if(--eq->cur_len == 0)
 	  eq->times_empty++;
 
   event_queue_unlock(eq);
   /* end of critical section */
-    
+
   server_msg_free(el->msg);
   free(el);
 
@@ -271,9 +275,9 @@ event_queue_remove(struct event_queue *eq)
 }
 
 int
-event_queue_move_events(struct event_queue *eq_s, 
-			struct event_queue *eq_d, 
-			int (*cmp_func)(struct server_msg *, void *), 
+event_queue_move_events(struct event_queue *eq_s,
+			struct event_queue *eq_d,
+			int (*cmp_func)(struct server_msg *, void *),
 			void *data)
 {
 	struct event_queue_msg *p, **source_prev, **dest_tail;
@@ -292,7 +296,7 @@ event_queue_move_events(struct event_queue *eq_s,
 	while(p) {
 	  if((*cmp_func)(p->msg, data)) {
 			il_log(LOG_DEBUG, "  moving event at offset %d(%d) from %s:%d to %s:%d\n",
-			       p->msg->offset, p->msg->generation, eq_s->dest_name, eq_s->dest_port, 
+			       p->msg->offset, p->msg->generation, eq_s->dest_name, eq_s->dest_port,
 			       eq_d ? eq_d->dest_name : "trash", eq_d ? eq_d->dest_port : -1);
 			/* il_log(LOG_DEBUG, "  current: %x, next: %x\n", p, p->prev); */
 			/* remove the message from the source list */
