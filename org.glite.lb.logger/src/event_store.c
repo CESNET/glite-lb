@@ -786,8 +786,8 @@ event_store_recover(struct event_store *es)
 	  struct event_queue *eq_dest = queue_list_get(last_dest);
 
 	  /* set new destination */
-	  if(notifid_map_set_dest(es->job_id_s, eq) < 0) {
-		  ret = -1; break;
+	  if(notifid_map_set_dest(es->job_id_s, eq_dest) < 0) {
+		  ret = -1; 
 	  }
 
 	  /* move all events with this notif_id from eq_b to eq_dest */
