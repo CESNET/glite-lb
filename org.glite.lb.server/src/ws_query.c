@@ -256,6 +256,49 @@ cleanup:
 	return ret;
 }
 
+SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifNew(
+	struct soap *soap,
+	struct _lbe__NotifNew *in,
+	struct _lbe__NotifNewResponse *out
+) {
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
+	edg_wll_QueryRec 	**conditions = NULL;
+	int			flags;
+	edg_wll_NotifId		nid = NULL;
+	int			ret = SOAP_OK;
+
+	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
+
+	edg_wll_ResetError(ctx);
+	if ( edg_wll_SoapToQueryCondsExt(in->conditions, in->__sizeconditions, &conditions) )
+	{
+		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
+		edg_wll_ErrToFault(ctx, soap);
+		ret = SOAP_FAULT;
+		goto cleanup;
+	}
+	edg_wll_SoapToJobStatFlags(in->flags, &flags);
+
+	if (edg_wll_NotifIdParse(in->notifId,&nid)) {
+		edg_wll_SetError(ctx,EINVAL,"Parse notifid");
+		edg_wll_ErrToFault(ctx, soap);
+		ret = SOAP_FAULT;
+		goto cleanup;
+	}
+
+	if (edg_wll_NotifNewServer(ctx,conditions,flags,in->addressOverride,nid,&out->valid)) {
+		edg_wll_ErrToFault(ctx, soap);
+		ret = SOAP_FAULT;
+		goto cleanup;
+	}
+
+
+cleanup:
+	edg_wll_NotifIdFree(nid);
+	freeQueryRecsExt(conditions);
+	return ret;
+}
+
 
 static void freeQueryRecsExt(edg_wll_QueryRec **qr) {
 	int i, j;
