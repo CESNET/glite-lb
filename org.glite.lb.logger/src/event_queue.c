@@ -283,6 +283,7 @@ event_queue_move_events(struct event_queue *eq_s,
 	struct event_queue_msg *p, **source_prev, **dest_tail;
 
 	assert(eq_s != NULL);
+	assert(data != NULL);
 
 	event_queue_lock(eq_s);
 	if(eq_d) {
@@ -294,10 +295,10 @@ event_queue_move_events(struct event_queue *eq_s,
 	p = *source_prev;
 	eq_s->tail = NULL;
 	while(p) {
-	  if((*cmp_func)(p->msg, data)) {
-			il_log(LOG_DEBUG, "  moving event at offset %d(%d) from %s:%d to %s:%d\n",
-			       p->msg->offset, p->msg->generation, eq_s->dest_name, eq_s->dest_port,
-			       eq_d ? eq_d->dest_name : "trash", eq_d ? eq_d->dest_port : -1);
+		if((*cmp_func)(p->msg, data)) {
+			il_log(LOG_DEBUG, "      moving event at offset %d(%d) from %s:%d to %s:%d\n",
+			   p->msg->offset, p->msg->generation, eq_s->dest_name, eq_s->dest_port, 
+			   eq_d ? eq_d->dest_name : "trash", eq_d ? eq_d->dest_port : -1);
 			/* il_log(LOG_DEBUG, "  current: %x, next: %x\n", p, p->prev); */
 			/* remove the message from the source list */
 			*source_prev = p->prev;
