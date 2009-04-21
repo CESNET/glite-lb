@@ -717,7 +717,12 @@ static int get_indexed_cols(edg_wll_Context ctx,char const *notif,edg_wll_QueryR
 	char	*cols = NULL,*aux;
 
 	for (i=0; conds && conds[i]; i++) {
-		for (j=0; notif_cols[j].qrec.attr && notif_cols[j].qrec.attr != conds[i]->attr; j++);
+		for (j=0; notif_cols[j].qrec.attr &&
+			(notif_cols[j].qrec.attr != conds[i]->attr || 
+				(notif_cols[j].qrec.attr == EDG_WLL_QUERY_ATTR_JDL_ATTR && 
+					(!conds[i]->attr_id.tag || strcmp(notif_cols[j].qrec.attr_id.tag,conds[i]->attr_id.tag))
+				)
+			); j++);
 		if (notif_cols[j].qrec.attr) {
 			if (conds[i][1].attr && conds[i][0].op != EDG_WLL_QUERY_OP_EQUAL) {
 				char	buf[1000];

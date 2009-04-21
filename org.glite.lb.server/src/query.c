@@ -1590,8 +1590,15 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 				}
 				break;
 			case EDG_WLL_QUERY_ATTR_JDL_ATTR:
+				if (conds[i][j].op == EDG_WLL_QUERY_OP_CHANGED && 
+					conds[i][j].attr_id.tag == NULL &&
+					oldstat && 
+					(oldstat->jdl == NULL || 
+					 	(stat->jdl && strcmp(oldstat->jdl,stat->jdl))
+					)
+				) goto or_satisfied;
 
-			        if (stat->jdl != NULL) {
+			        if (stat->jdl != NULL && conds[i][j].attr_id.tag) {
 			                struct cclassad *ad = NULL;
 					char *extr_val = NULL;
 

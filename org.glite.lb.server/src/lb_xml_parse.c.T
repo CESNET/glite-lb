@@ -123,9 +123,10 @@ static void startJobQueryRec(void *data, const char *el, const char **attr)
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
 				}
 				if ( (i+1) == EDG_WLL_QUERY_ATTR_JDL_ATTR) {
-					if (!attr[0] || !attr[1]) { unexp() break;}
-	                                if (strcmp(attr[0],"name")) { unexp() break;}
-					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
+					if (!attr[0] || !attr[1]) 
+						XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = NULL;
+					else if (strcmp(attr[0],"name")) { unexp() break;}
+					else XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
 				} 
 				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr = i+1;
 			}		
