@@ -81,6 +81,17 @@
 			<fault name="genericFault" type="genericFault"> Any error. </fault>
 		</op>
 
+		<op name="NotifNew">
+			<input name="notifId" type="xsd:string"/>
+			<input name="conditions" type="queryConditions" list="yes"/>
+			<input name="flags" type="jobFlags" optional="yes"/>
+			<input name="addressOverride" type="xsd:string" optional="yes"/>
+			<input name="valid" type="xsd:dateTime" optional="yes"/>
+			<output name="valid" type="xsd:dateTime"/>
+			<fault name="genericFault" type="genericFault"/>
+		</op>
+
+
 		<!-- TODO: event queries -->
 
 	</operations>

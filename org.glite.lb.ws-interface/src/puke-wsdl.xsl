@@ -179,7 +179,13 @@
 							<xsl:otherwise>1</xsl:otherwise>
 						</xsl:choose>
 					</xsl:variable>
-					<xsd:element name="{@name}" type="{$prefix}{@type}" minOccurs="1" maxOccurs="{$max}"/>
+					<xsl:variable name="min">
+						<xsl:choose>
+							<xsl:when test="@optional='yes'">0</xsl:when>
+							<xsl:otherwise>1</xsl:otherwise>
+						</xsl:choose>
+					</xsl:variable>
+					<xsd:element name="{@name}" type="{$prefix}{@type}" minOccurs="{$min}" maxOccurs="{$max}"/>
 				</xsl:for-each>
 			</xsd:sequence>
 		</xsd:complexType>
