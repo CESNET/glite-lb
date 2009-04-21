@@ -2512,7 +2512,16 @@ int edg_wll_JobQueryRecToXML(
 	                                        edg_wll_add_tagged_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "usertag", conditions[row][i].attr_id.tag, "name", NULL);
 	                                        break;
 	                                case EDG_WLL_QUERY_ATTR_JDL_ATTR:
-	                                        edg_wll_add_tagged_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "jdl", conditions[row][i].attr_id.tag, "name", NULL);
+						if (conditions[row][i].op != EDG_WLL_QUERY_OP_CHANGED)
+	                                        	edg_wll_add_tagged_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "jdl", conditions[row][i].attr_id.tag, "name", NULL);
+						else {
+							char	*newBody, *tag = conditions[row][i].attr_id.tag;
+							if (tag) asprintf(&newBody,"%s\t\t\t<jdl name=\"%s\"/>\r\n",pomValue,tag);
+							else asprintf(&newBody,"%s\t\t\t<jdl/>\r\n",pomValue);
+
+							free(pomValue);
+							pomValue = newBody;
+						}
 	                                        break;
 					case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 						if (conditions[row][i].op == EDG_WLL_QUERY_OP_WITHIN) {
