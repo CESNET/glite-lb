@@ -86,7 +86,6 @@
 			<input name="destination" type="xsd:string"/>
 			<input name="conditions" type="queryConditions" list="yes"/>
 			<input name="flags" type="jobFlags"/>
-			<input name="addressOverride" type="xsd:string" optional="yes"/>
 			<input name="valid" type="xsd:dateTime" optional="yes"/>
 			<output name="valid" type="xsd:dateTime"/>
 			<fault name="genericFault" type="genericFault"/>
