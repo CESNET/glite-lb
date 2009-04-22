@@ -83,6 +83,7 @@
 
 		<op name="NotifNew">
 			<input name="notifId" type="xsd:string"/>
+			<input name="destination" type="xsd:string"/>
 			<input name="conditions" type="queryConditions" list="yes"/>
 			<input name="flags" type="jobFlags"/>
 			<input name="addressOverride" type="xsd:string" optional="yes"/>
