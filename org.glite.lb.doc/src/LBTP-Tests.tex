@@ -29,9 +29,9 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-notif.sh} & Implemented & Test if notifications are delivered correctly for testing jobs. \\
 \hline
-{\tt lb-test-notif-additional.sh} & Proposed & Test notification delivery with additional options. \\
-\hline
-{\tt lb-test-notif-switch.sh} & Proposed & Test the correct behavior of a notification once its target jobid changes.  \\
+%{\tt lb-test-notif-additional.sh} & Proposed & Test notification delivery with additional options. \\
+%\hline
+{\tt lb-test-notif-switch.sh} & Implemented & Test the correct behavior of a notification once its target jobid changes.  \\
 \hline
 {\tt lb-test-notif-recovery.sh} & Implemented & Test if notification client receives notifications correctly upon restart.  \\
 \hline
@@ -280,17 +280,17 @@ notification client.
 
 
 
-\subsubsection{Additional notification criteria}
-\label{notif-complex}
-\req\ All \LB\ services running
-
-\what\ Like~\ref{notif1} but include additional criteria,
-e.g. job is scheduled for a~specific destination.
-
-\how\ \ctblb{lb-test-notif-additional.sh}
-
-\result\ Only notifications matching the criteria should be delivered.
-
+%\subsubsection{Additional notification criteria}
+%\label{notif-complex}
+%\req\ All \LB\ services running
+%
+%\what\ Like~\ref{notif1} but include additional criteria,
+%e.g. job is scheduled for a~specific destination.
+%
+%\how\ \ctblb{lb-test-notif-additional.sh}
+%
+%\result\ Only notifications matching the criteria should be delivered.
+%
 % rozsireni dotazu o dalsi job
 
 
@@ -310,6 +310,8 @@ e.g. job is scheduled for a~specific destination.
 \end{enumerate}
 
 \how\ \ctblb{lb-test-notif-switch.sh}
+
+\note\ The test includes artificial delays. Takes approx. 25\,s to finish. Also note that this test will not work with \LB versions older than 2.0.
 
 \result\ Notifications should be received by the client.
 
