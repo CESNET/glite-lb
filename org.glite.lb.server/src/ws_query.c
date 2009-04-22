@@ -286,7 +286,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifNew(
 		goto cleanup;
 	}
 
-	if (edg_wll_NotifNewServer(ctx,conditions,flags,in->addressOverride,nid,&out->valid)) {
+	out->valid = in->valid ? *in->valid : 0;
+	if (edg_wll_NotifNewServer(ctx,conditions,flags,in->destination,nid,&out->valid)) {
 		edg_wll_ErrToFault(ctx, soap);
 		ret = SOAP_FAULT;
 		goto cleanup;

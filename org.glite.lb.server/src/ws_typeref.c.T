@@ -664,7 +664,7 @@ int edg_wll_SoapToQueryCondsExt(GLITE_SECURITY_GSOAP_LIST_TYPE(lbt, queryConditi
 
 	assert(out);
 	if ( !(qr = calloc(__sizecondition + 1, sizeof(*qr))) ) return -1;
-	for ( i = 0; i < __sizecondition; i++ )
+	for ( i = 0; i < __sizecondition && GLITE_SECURITY_GSOAP_LIST_GET(in, i); i++ )
 		if ( edg_wll_SoapToQueryConds(GLITE_SECURITY_GSOAP_LIST_GET(in, i), qr+i) ) goto err;
 
 	*out = qr;
