@@ -286,6 +286,49 @@ static void freeNotifInfo(notifInfo *ni){
 	if (ni->conditions_text) free(ni->conditions_text);
 }
 
+static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **statesOut){
+	edg_wlc_JobId *jobsOut;
+        //edg_wll_JobStat *statesOut;
+        edg_wll_QueryRec **conds;
+	int i;
+
+	char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
+
+	if (strncmp(feedType, "finished", strlen("finished")) == 0){
+		conds = malloc(3*sizeof(*conds));
+		conds[0] = malloc(2*sizeof(**conds));
+		conds[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+		conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+		conds[0][0].value.c = can_peername;
+		conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+		conds[1] = malloc(4*sizeof(**conds));
+		conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+		conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
+		conds[1][0].value.i = EDG_WLL_JOB_DONE;
+		conds[1][1].attr = EDG_WLL_QUERY_ATTR_STATUS;
+                conds[1][1].op = EDG_WLL_QUERY_OP_EQUAL;
+                conds[1][1].value.i = EDG_WLL_JOB_ABORTED;
+		conds[1][2].attr = EDG_WLL_QUERY_ATTR_STATUS;
+                conds[1][2].op = EDG_WLL_QUERY_OP_EQUAL;
+                conds[1][2].value.i = EDG_WLL_JOB_CANCELLED;
+		conds[1][3].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+		conds[2] = NULL;
+	}
+	else{
+		*statesOut = NULL;
+		return -1;
+	}
+
+	edg_wll_QueryJobsServer(ctx, conds, 0, &jobsOut, statesOut);
+
+	for (i = 0; conds[i]; i++)
+		free(conds[i]);
+	free(conds);
+	free(can_peername);
+
+	return 0;
+}
+
 edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
 	char *request,char **headers,char *messageBody,
 	char **response,char ***headersOut,char **bodyOut)
@@ -555,7 +598,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	        } 
 
 	/* GET /[jobId]: Job Status */
-		else if (*requestPTR=='/' 
+		else if (*requestPTR=='/'
+			&& strncmp(requestPTR, "/RSS", strlen("/RSS")) 
 			&& strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
 			&& *(requestPTR+strlen("/NOTIF")-1) != ':'
 			&& !isspace(*(requestPTR+strlen("/NOTIF")-1))) {
@@ -634,6 +678,17 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				edg_wll_NotificationToHTML(ctx, &ni, &message);
 
 			freeNotifInfo(&ni);
+
+	/*GET /RSS:[feed type] RSS feed */
+		} else if (strncmp(requestPTR, "/RSS:", strlen("/RSS:")) == 0){
+			edg_wll_JobStat *states;
+			char *feedType = requestPTR + strlen("/RSS:");
+			if (getJobsRSS(ctx, feedType, &states) < 0){
+				ret = HTTP_INTERNAL;
+                                goto err;
+			}
+			edg_wll_RSSFeed(ctx, states, requestPTR, &message);
+			// freeJobStates
 
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
