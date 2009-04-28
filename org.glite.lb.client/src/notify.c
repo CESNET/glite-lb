@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sysexits.h>
+#include <getopt.h>
 
 #include "glite/security/glite_gss.h"
 #include "glite/lb/context.h"
@@ -31,14 +32,15 @@ static void usage(char *cmd)
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity -j jobid  { -o owner | -O }  -n network_server -v virtual_organization  -c -f flags]\n"
+		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity -j jobid  { -o owner | -O }  -n network_server -v virtual_organization --states state1,state2,... -c -f flags]\n"
 			"    jobid		Job ID to connect notif. reg. with\n"
 			"    owner		Match this owner DN\n"
 			"    requested_validity	Validity of notification req. in seconds\n"
 			"    flags		0 - return basic status, 1 - return also JDL in status\n"
 			"    network_server	Match only this network server (WMS entry point)\n"
 			"    -O			Match owner - credentials are retrieved from environment\n"
-			"    -c			Match only on state change\n\n"
+			"    -c			Match only on state change\n"
+			"    -S | --state	Match on events resulting in listed (coma-delimited) states\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
 		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } -t requested_validity ] notifids \n"
@@ -107,12 +109,20 @@ int main(int argc,char **argv)
 		int			attr = 0, i = 0, excl = 0;
 		edg_wll_GssCred 	mycred;
                 edg_wll_GssStatus	gss_code;
+		static struct option long_options[] = {
+			{"state", required_argument, 0, 'S'},
+			{0, 0, 0, 0}};
+           	int option_index = 0;
+		char *single, *statelist;
+		edg_wll_JobStatCode single_code;
+		int statno, stdelims, sti;
+
 		
 
 		conditions = (edg_wll_QueryRec **)calloc(7,sizeof(edg_wll_QueryRec *));
 		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 
-		while ((c = getopt(argc-1,argv+1,"j:o:v:n:s:a:t:f:cO")) > 0) switch (c) {
+		while ((c = getopt_long(argc-1,argv+1,"j:o:v:n:s:a:t:f:cOS:",long_options,&option_index)) > 0) switch (c) {
 			case 'j':
 				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
@@ -176,10 +186,34 @@ int main(int argc,char **argv)
 					i++;
 				}
 				else {
-					printf("No credentials found! Exiting. \n");	
+					fprintf(stderr,"No credentials found! Exiting. \n");	
 					goto cleanup;
 				}
 				break;
+			case 'S':
+				statelist = optarg;
+
+				statno = 0;
+				stdelims = 0;
+				for (sti = 0; sti < strlen(statelist); sti++) 
+					if (statelist[sti] == ',') stdelims++;
+				conditions[i] = (edg_wll_QueryRec *)calloc(stdelims+2,sizeof(edg_wll_QueryRec));
+				while(single = strtok(statelist, ",")) {
+					single_code = edg_wll_StringToStat(single);
+					if (single_code != -1) {
+						conditions[i][statno].attr = EDG_WLL_QUERY_ATTR_STATUS;
+						conditions[i][statno].op = EDG_WLL_QUERY_OP_EQUAL;
+						conditions[i][statno].value.i = single_code;
+						statelist = NULL;
+						statno++;
+					}
+					else {
+						fprintf(stderr,"'%s' is not a valid state name! Exitting.\n", single);	
+						goto cleanup;
+					}
+				}
+				i++;
+				break; 
 			default:
 				usage("new"); return EX_USAGE;
 		}
@@ -382,7 +416,7 @@ receive_err:
 		}
 		if ( (argc < 4) || edg_wlc_JobIdParse(argv[3], &jid) )
 		{
-			printf("Job ID parameter not set propperly!\n");
+			fprintf(stderr,"Job ID parameter not set propperly!\n");
 			usage("change");
 			goto cleanup;
 		}
