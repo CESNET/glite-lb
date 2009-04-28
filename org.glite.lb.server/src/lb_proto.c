@@ -295,7 +295,7 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 	char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 
 	if (strncmp(feedType, "finished", strlen("finished")) == 0){
-		conds = malloc(3*sizeof(*conds));
+		conds = malloc(4*sizeof(*conds));
 		conds[0] = malloc(2*sizeof(**conds));
 		conds[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
 		conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
@@ -312,7 +312,13 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
                 conds[1][2].op = EDG_WLL_QUERY_OP_EQUAL;
                 conds[1][2].value.i = EDG_WLL_JOB_CANCELLED;
 		conds[1][3].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-		conds[2] = NULL;
+		conds[2] = malloc(2*sizeof(**conds));
+		conds[2][0].attr = EDG_WLL_QUERY_ATTR_STATEENTERTIME;
+		conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
+		conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
+		conds[2][0].value.t.tv_usec = 0;
+		conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+		conds[3] = NULL;
 	}
 	else{
 		*statesOut = NULL;

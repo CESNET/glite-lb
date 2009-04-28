@@ -163,6 +163,7 @@ static char             sock_store[PATH_MAX],
 static int		con_queue = CON_QUEUE;
 static char             host[300];
 static char *           port;
+static time_t		rss_time = 60*60;
 
 
 
@@ -210,10 +211,11 @@ static struct option opts[] = {
 	{"con-queue",	1,	NULL,	'q'},
 	{"proxy-il-sock",	1,	NULL,	'W'},
 	{"proxy-il-fprefix",	1,	NULL,	'Z'},
+	{"rss-time", 	1,	NULL,	'I'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:I:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -269,6 +271,7 @@ static void usage(char *me)
 		"\t-q,--con-queue\t size of the connection queue (accept)\n"
 		"\t-W,--proxy-il-sock\t socket to send events to\n"
 		"\t-Z,--proxy-il-fprefix\t file prefix for events\n"
+		"\t-I,--rss-time age\t (in seconds) of job states published via RSS\n"
 
 	,me);
 }
@@ -471,6 +474,8 @@ int main(int argc, char *argv[])
 		case 'W': lbproxy_ilog_socket_path = strdup(optarg); 
 			  break;
 		case 'Z': lbproxy_ilog_file_prefix = strdup(optarg);
+			  break;
+		case 'I': sscanf(optarg, "%d", &rss_time);
 			  break;
 		case '?': usage(name); return 1;
 	}
@@ -970,6 +975,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 	ctx->serverIdentity = strdup(server_subject);
 
+	ctx->rssTime = rss_time;
+
 	gettimeofday(&conn_start, 0);
 
 	h_errno = asyn_gethostbyaddr(&name, (char *)&a.sin_addr.s_addr,sizeof(a.sin_addr.s_addr), AF_INET, &dns_to);
@@ -1251,6 +1258,7 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 		return -1;
 	}
 
+	ctx->rssTime = rss_time;
 
 	return 0;
 }
