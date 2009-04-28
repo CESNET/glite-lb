@@ -93,6 +93,8 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	int		hardEventsLimit;
 
 	time_t		notifDuration;
+	
+	time_t		rssTime;
 
 /* purge and dump files storage */
 	char		*dumpStorage;
