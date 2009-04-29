@@ -16,3 +16,6 @@
 1.0.0-7
 - Makefile fixes - streamlining the 'clean' target, fixing MySQL library detection
  
+1.0.0-8
+- Soname detection logic moved from the Makefille to a shell-out script
+
