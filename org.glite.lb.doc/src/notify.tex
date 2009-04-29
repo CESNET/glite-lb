@@ -37,8 +37,9 @@ server.\\
 For action \verb'new', command usage is:
 
 \begin{verbatim}
-  glite-lb-notify new [ { -s socket_fd | -a fake_addr } -t requested_validity ] 
-           {-j jobid | -o owner | -n network_server | -v virtual_organization }
+  glite-lb-notify new [ { -s socket_fd | -a fake_addr } -t requested_validity
+           -j jobid  { -o owner | -O }  -n network_server 
+           -v virtual_organization --states state1,state2,... -c -f flags]
 \end{verbatim}
 
 For action \verb'bind', command usage is:
@@ -72,10 +73,13 @@ where
 \texttt{  -t requested\_validity} & requested validity of the notification (in seconds)   \\
 \texttt{  -j jobid} & job ID to connect notification registration with   \\
 \texttt{  -o owner} & match this owner DN   \\
+\texttt{  -O} & match owner on current user's DN \\
 \texttt{  -n network\_server} &  match only this network server (WMS entry point)  \\
 \texttt{  -v virtual\_organization} & match only jobs of this Virtual Organization  \\
 \texttt{  -i timeout} & timeout to receive operation in seconds   \\
 \texttt{  -f field1,field2,...} & list of status fields to print (only owner by default)   \\
+\texttt{  -c} & notify only on job state change \\
+\texttt{  -S, --state state1,state2,...} & match on events resulting in listed states   \\
 \end{tabularx}
 
 For additional information see also manual page glite-lb-notify(1).
@@ -130,7 +134,7 @@ Destroy notification:
 
 \subsubsection{Example: Waiting for notifications on all user's jobs}
 
-Instead of waiting for one job, user may want accept notification about 
+Instead of waiting for one job, user may want to accept notification about 
 state changes of all his jobs.
 
 Register notification for user (DN obtained by \verb'grid-proxy-info -subject'):
@@ -218,3 +222,40 @@ got connection
 https://skurut68-2.cesnet.cz:9100/p2jBsy5WkFItY284lW2o8A        Waiting
 /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
 \end{verbatim}
+
+
+\subsubsection{Example: Waiting for notifications on jobs reaching terminal states}
+
+This example shows how to set up notifications for jobs reaching state \emph{done} or \emph {aborted}. Since we prefer to receive just one notification per job, we will also use the \texttt{-c} option, which makes sure that notifications will be generated only on actual job state change.
+
+
+\begin{verbatim}
+  GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 glite-lb-notify new \
+   --state done,aborted -c
+\end{verbatim}
+
+returns:
+
+\begin{verbatim}
+  notification ID: https://skurut68-2.cesnet.cz:9100/NOTIF:6krjMRshTouH2n7D9t-xdg 
+  valid: '2009-04-30 06:59:18 UTC' (1241074758)	
+\end{verbatim}
+
+Wait for notification (with timeout 120 seconds):
+\begin{verbatim}
+  GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 glite-lb-notify receive \
+   -i 120 https://skurut68-2.cesnet.cz:9100/NOTIF:6krjMRshTouH2n7D9t-xdg 
+\end{verbatim}
+
+returns:
+\begin{verbatim}
+https://skurut68-2.cesnet.cz:9100/eIbQNz3oHpv-OkYVu-cXNg	Done
+    /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
+https://skurut68-2.cesnet.cz:9100/GpBy2gfIZOAXR2hKOAYGgg	Aborted
+    /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
+https://skurut68-2.cesnet.cz:9100/KWXmsqvsTQKizQ4OMiXItA	Done
+    /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
+https://skurut68-2.cesnet.cz:9100/O1zs50Nm1r03vx2GLyaxQw	Done
+    /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
+\end{verbatim}
+
