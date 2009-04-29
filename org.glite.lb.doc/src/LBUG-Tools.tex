@@ -83,17 +83,29 @@ Since \LBnew, it is also possible to obtain the above results in a machine reada
 \begin{verbatim}
   curl -3 --key $X509_USER_KEY --cert $X509_USER_CERT \
     --capath /etc/grid-security/certificates \ 
-    https://pelargir.ics.muni.cz:9000/?text
+    https://pelargir.ics.muni.cz:9000?text
 \end{verbatim}
 or
 \begin{verbatim}
   curl -3 --key $X509_USER_KEY --cert $X509_USER_CERT \
     --capath /etc/grid-security/certificates \ 
-    https://pelargir.ics.muni.cz:9000/1234567890/?text
+    https://pelargir.ics.muni.cz:9000/1234567890?text
 \end{verbatim}
 
 \subsection{Job state changes as a RSS feed}
-\TODO{Fila}
+The LB includes RSS interface allowing users to keep trace of their jobs in very simple way using RSS reader. The parameters of RSS feeds are predefined, so no configuration is required.
+
+The address of feed is given by the URL of LB server and \textit{/RSS:rss\_feed\_name}, e.g.
+\begin{verbatim}
+   https://pelargir.ics.muni.cz:9000/RSS:finished
+\end{verbatim}  
+
+There are currently 3 feeds implemented in LB:
+\begin{itemize}
+ \item \textit{finished} for jobs in terminate state (Done/OK, Aborted and Canceled)
+ \item \textit{running} for running jobs
+ \item \textit{aborted} for aborted jobs
+\end{itemize}
 
 \subsection{Other useful tools}
 
