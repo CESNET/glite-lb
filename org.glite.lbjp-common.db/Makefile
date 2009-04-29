@@ -32,7 +32,7 @@ ifeq (${host_cpu},x86_64)
 	archlib:=lib64
 endif   
 
-MYSQL_SONAME:=$(shell lib=""; for dir in ${archlib} ${archlib}/mysql lib lib/mysql; do l=`find ${mysql-devel_prefix}/$$dir -maxdepth 1 -name libmysqlclient.so* | head -n 1`; if [ -f "$$l" ]; then lib=$$l; break; fi ; done; if [ x != x$$lib ]; then readelf -d $$lib | grep SONAME | sed 's/.*\(libmysqlclient.so.[0-9]\{1,\}\).*/\1/'; else echo notfound; fi )
+MYSQL_SONAME:=$(shell ../project/get_soname.sh ${mysql-devel_prefix}/${archlib} ${mysql_prefix}/${archlib} ${mysql-devel_prefix}/lib ${mysql_prefix}/lib)
 
 MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/mysql -DMYSQL_SONAME=\"${MYSQL_SONAME}\"
 MYSQL_LIBS=-lz
