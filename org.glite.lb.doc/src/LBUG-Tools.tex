@@ -67,6 +67,14 @@ To list all user's jobs, it is possible to query only the \LB server address, e.
 \begin{verbatim}
   firefox https://pelargir.ics.muni.cz:9000
 \end{verbatim}
+To list all user's notification registration curently valid on a given \LB server, use a URL constructed as in folowing example:
+\begin{verbatim}
+  firefox https://pelargir.ics.muni.cz:9000/NOTIF
+\end{verbatim}
+A notification ID also have a form of URL. If you direct your browser to a particular notification ID, the \LB server will provide the notification details for it.
+\begin{verbatim}
+  firefox https://pelargir.ics.muni.cz:9000/NOTIF:1234567890
+\end{verbatim}
 In all cases it is necessary to have the user certificate installed in the browser.
 
 
@@ -84,6 +92,8 @@ or
     https://pelargir.ics.muni.cz:9000/1234567890/?text
 \end{verbatim}
 
+\subsection{Job state changes as a RSS feed}
+\TODO{Fila}
 
 \subsection{Other useful tools}
 

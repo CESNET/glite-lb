@@ -55,8 +55,7 @@ For action \verb'refresh', command usage is:
 
 For action \verb'receive', command usage is:
 \begin{verbatim}
-  glite-lb-notify receive [ { -s socket_fd | -a fake_addr } ] [-i timeout]
-            [-t requested_validity ] [-f field1,field2,...] [notifid]
+  glite-lb-notify receive  [ { -s socket_fd | -a fake_addr } ] [-t requested_validity ] [-i timeout] [-r ] [-f field1,field2,...] [notifid]
 \end{verbatim}
 
 For action \verb'drop', command usage is:
@@ -80,6 +79,7 @@ where
 \texttt{  -f field1,field2,...} & list of status fields to print (only owner by default)   \\
 \texttt{  -c} & notify only on job state change \\
 \texttt{  -S, --state state1,state2,...} & match on events resulting in listed states   \\
+\texttt{  -r} & refresh automatically the notification registration while receiving data\\
 \end{tabularx}
 
 For additional information see also manual page glite-lb-notify(1).
@@ -137,10 +137,9 @@ Destroy notification:
 Instead of waiting for one job, user may want to accept notification about 
 state changes of all his jobs.
 
-Register notification for user (DN obtained by \verb'grid-proxy-info -subject'):
+Register notification for actual user:
 \begin{verbatim}
-  GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 glite-lb-notify new \
-   -o "/DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda"
+  GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 glite-lb-notify new -O
 \end{verbatim}
 
 returns:
@@ -202,7 +201,7 @@ examples directory) creates socket, which is then reused for all
 
 \begin{verbatim}
 GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 NOTIFY_CMD=glite-lb-notify \
- ./notify.pl -o "/DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda"
+ ./notify.pl -O
 \end{verbatim}
 
 returns:
