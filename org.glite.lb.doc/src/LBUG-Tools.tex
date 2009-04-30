@@ -92,17 +92,17 @@ or
     https://pelargir.ics.muni.cz:9000/1234567890?text
 \end{verbatim}
 
-\subsection{Job state changes as a RSS feed}
-The LB includes RSS interface allowing users to keep trace of their jobs in very simple way using RSS reader. The parameters of RSS feeds are predefined, so no configuration is required.
+\subsection{Job state changes as an RSS feed}
+The \LB includes an RSS interface allowing users to keep trace of their jobs in a very simple way using an RSS reader. The parameters of the RSS feeds are predefined, so no configuration is required.
 
-The address of feed is given by the URL of LB server and \textit{/RSS:rss\_feed\_name}, e.g.
+The address of a feed is given by the URL of the \LB server and a \textit{/RSS:rss\_feed\_name} postfix, e.g.
 \begin{verbatim}
    https://pelargir.ics.muni.cz:9000/RSS:finished
 \end{verbatim}  
 
 There are currently 3 feeds implemented in LB:
 \begin{itemize}
- \item \textit{finished} for jobs in terminate state (Done/OK, Aborted and Canceled)
+ \item \textit{finished} for jobs in terminal states (Done/OK, Aborted and Canceled)
  \item \textit{running} for running jobs
  \item \textit{aborted} for aborted jobs
 \end{itemize}
