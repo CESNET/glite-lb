@@ -6,7 +6,7 @@
 \LB's primary purpose is tracking WMS jobs as they are processed by
 individual Grid components, not counting on the WMS to provide this data.
 The information gathered from individual sources is collected, stored in
-a database and made available at a single contact point. The user get a
+a database and made available at a single contact point. The user gets a
 complete view on her job without the need to inspect several service logs
 (which she may not be authorized to see in the entirety or she may not be
 even aware of their existence).
@@ -15,11 +15,11 @@ While \LB keeps track of submitted and running jobs, the information is
 kept by the \LB service also after the job has been finished (successfully
 completed its execution, failed, or has been canceled for any reason). The 
 information is usually available several days after the last event
-related to the job arrived, to give user an opportunity to check the job
+related to the job arrived, to give user an opportunity to check the job's
 final state and eventually evaluate failure reasons.
 
 As \LB collects also information provided by the WMS, the WMS services are
-no longer required to provide job-state querying interface.  Most of the
+no longer required to provide a job-state querying interface.  Most of the
 WMS services can be even designed as stateless---they process a~job and
 pass it over to another service, not keeping state information about the job
 anymore.  During development and deployment of the first WMS version this
@@ -28,7 +28,7 @@ required extent~\cite{jgc}.
 
 \LB must collect information about all important events in the Grid job
 life. These include transitions between components or services, results
-of matching and brokerage, waiting in a queue systems or start and end of
+of matching and brokerage, waiting in queue systems or start and end of
 actual execution.
 We decided to achieve this
 goal through provision of an API (and the associated library) and
@@ -42,12 +42,12 @@ must not prevent (nor block) the instrumented service to perform as usual.
 An asynchronous model with a clear \emph{asynchronous delivery
 semantics}, see Sect.~\ref{gathering}, is used to address this issue.
 
-As individual Grid components has only local and transient view about a
+As individual Grid components have only local and transient view of a
 job, they are able to send only information about individual events. This
 raw, fairly complex information is not 
 a~suitable form to be presented to the user for frequent queries. It must
-be processed at the central service and users are presented primarily this
-processed form. This form derives its form from the \emph{job state} and its
+be processed at the central service and users must be presented primarily with this
+processed form. This form is derived from the \emph{job state} and its
 transition, not from the job events themselves. The raw information is
 still available, in case more detailed insight is necessary.
 
@@ -63,7 +63,7 @@ for the state information. However, this requirement contains two
 contradictions: (i)~due to the asynchronous event delivery model, the \LB
 information may not be up to date and remote queries may lead to unexpected
 results
-(or even inconsistent one---some older information may not be available for 
+(or even inconsistent ones---some older information may not be available for 
 one query but may arrive before a subsequent query is issued),
 and (ii)~the dependence on a~remote service to provide vital state information
 may block the local service if the remote one is not responding.
