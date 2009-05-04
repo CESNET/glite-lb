@@ -801,7 +801,7 @@ event_store_recover(struct event_store *es)
 
 #if defined(IL_NOTIFICATIONS)
   /* check if we have to move events to new destination */
-  il_log(LOG_DEBUG, "    last destination %s, last known destination %s\n", last_dest, eq_b->dest);
+  il_log(LOG_DEBUG, "    last destination %s, last known destination %s\n", last_dest, eq_b ? eq_b->dest : "none");
   if(last_dest && strcmp(last_dest, eq_b->dest)) {
 	  struct event_queue *eq_dest = queue_list_get(last_dest);
 
