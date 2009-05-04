@@ -320,6 +320,46 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 		conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 		conds[3] = NULL;
 	}
+	else if (strncmp(feedType, "running", strlen("running")) == 0){
+                conds = malloc(4*sizeof(*conds));
+                conds[0] = malloc(2*sizeof(**conds));
+                conds[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+                conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+                conds[0][0].value.c = can_peername;
+                conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+                conds[1] = malloc(2*sizeof(**conds));
+                conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+                conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
+                conds[1][0].value.i = EDG_WLL_JOB_RUNNING;
+                conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+                conds[2] = malloc(2*sizeof(**conds));
+                conds[2][0].attr = EDG_WLL_QUERY_ATTR_STATEENTERTIME;
+                conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
+                conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
+                conds[2][0].value.t.tv_usec = 0;
+                conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+                conds[3] = NULL;
+        }
+	else if (strncmp(feedType, "aborted", strlen("aborted")) == 0){
+                conds = malloc(4*sizeof(*conds));
+                conds[0] = malloc(2*sizeof(**conds));
+                conds[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+                conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+                conds[0][0].value.c = can_peername;
+                conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+                conds[1] = malloc(2*sizeof(**conds));
+                conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+                conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
+                conds[1][0].value.i = EDG_WLL_JOB_ABORTED;
+                conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+                conds[2] = malloc(2*sizeof(**conds));
+                conds[2][0].attr = EDG_WLL_QUERY_ATTR_STATEENTERTIME;
+                conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
+                conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
+                conds[2][0].value.t.tv_usec = 0;
+                conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+                conds[3] = NULL;
+        }
 	else{
 		*statesOut = NULL;
 		return -1;
