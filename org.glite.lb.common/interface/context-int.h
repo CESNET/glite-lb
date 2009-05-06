@@ -94,8 +94,6 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 
 	time_t		notifDuration;
 	
-	time_t		rssTime;
-
 /* purge and dump files storage */
 	char		*dumpStorage;
 	char		*purgeStorage;
@@ -155,6 +153,8 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	time_t		notifDurationMax;
 
 	char		**super_users;
+
+	time_t          rssTime;
 )
 
 /* to be used internally: set, update and and clear the error information in 
