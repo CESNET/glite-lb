@@ -56,22 +56,15 @@ int edg_wll_RSSFeed(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat *states, cha
 		TR("<link>%s</link>\n", chid);
 		TR("<guid>%s</guid>\n", chid);
 		// strip description to allow new lines
-		TR("<description>Status: %s</description>\n", (chstat = edg_wll_StatToString(states[i].state)));
-		TRC("</item>\n<item>\n");
+		TR("<description>Status: %s\n", (chstat = edg_wll_StatToString(states[i].state)));
+		TRC("<![CDATA[<br/>]]>\n");
 		time = states[i].stateEnterTime.tv_sec;
-		TR("<description>State entered: %s</description>\n", ctime(&time));
-		TRC("</item>\n<item>\n");
-		TR("<description>Destination: %s</description>\n", states[i].destination);
+		TR("State entered: %s\n", ctime(&time));
+		TRC("<![CDATA[<br/>]]>\n");
+		TR("Destination: %s</description>\n", states[i].destination);
 		TRC("</item>\n");
 		
 		
-		/*TRC("<description>");
-		TR("Status: %s\n", (chstat = edg_wll_StatToString(states[i].state)));
-		time = states[i].stateEnterTime.tv_sec;
-		TR("State entered %s\n", ctime(&time));
-		TRC("</description>\n");
-		TR("<guid>%s</guid>\n", chid);
-		TRC("</item>\n");*/
 		free(chid);
 		free(chstat);
 	}
