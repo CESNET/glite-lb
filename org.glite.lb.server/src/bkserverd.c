@@ -475,7 +475,7 @@ int main(int argc, char *argv[])
 			  break;
 		case 'Z': lbproxy_ilog_file_prefix = strdup(optarg);
 			  break;
-		case 'I': sscanf(optarg, "%d", &rss_time);
+		case 'I': rss_time = atol(optarg);
 			  break;
 		case '?': usage(name); return 1;
 	}
