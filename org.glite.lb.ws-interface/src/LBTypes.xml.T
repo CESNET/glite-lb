@@ -278,7 +278,7 @@
 		<struct name="queryRecord">
 			A single query condition.
 			<elem name="op" type="queryOp"> Relational operator of the condition.</elem>
-			<elem name="value1" type="queryRecValue"> Value to compare the attribute with.</elem>
+			<elem name="value1" type="queryRecValue" optional="yes"> Value to compare the attribute with.</elem>
 			<elem name="value2" type="queryRecValue" optional="yes"> Another value to compare the attribute with (op = WITHIN only).</elem>
 		</struct>
 
