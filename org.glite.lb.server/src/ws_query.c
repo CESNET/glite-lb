@@ -372,6 +372,28 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifRefresh(
 	return SOAP_OK;
 }
 
+SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifDrop(
+	struct soap *soap,
+	struct _lbe__NotifDrop *in,
+	struct _lbe__NotifDropResponse *out
+) {
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
+	edg_wll_NotifId		nid = NULL;
+
+	if (edg_wll_NotifIdParse(in->notifId,&nid)) {
+		edg_wll_SetError(ctx,EINVAL,"Parse notifid");
+		edg_wll_ErrToFault(ctx, soap);
+		return SOAP_FAULT;
+	}
+
+	if (edg_wll_NotifDropServer(ctx,nid)) {
+		edg_wll_ErrToFault(ctx, soap);
+		edg_wll_NotifIdFree(nid);
+		return SOAP_FAULT;
+	}
+	return SOAP_OK;
+}
+
 static void freeQueryRecsExt(edg_wll_QueryRec **qr) {
 	int i, j;
 

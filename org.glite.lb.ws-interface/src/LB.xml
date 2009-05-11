@@ -124,6 +124,11 @@
 			<fault name="genericFault" type="genericFault"/>
 		</op>
 
+		<op name="NotifDrop">
+			<input name="notifId" type="xsd:string"/>
+			<fault name="genericFault" type="genericFault"/>
+		</op>
+
 		<!-- TODO: event queries -->
 
 	</operations>
