@@ -256,6 +256,32 @@ cleanup:
 	return ret;
 }
 
+SOAP_FMAC5 int SOAP_FMAC6 __lb__GetServerLimit(
+	struct soap *soap,
+	struct _lbe__GetServerLimit	*in,
+	struct _lbe__GetServerLimitResponse	*out
+)
+{
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
+
+	edg_wll_SetError(ctx,ENOSYS,"not implemented yet");
+	edg_wll_ErrToFault(ctx, soap);
+	return SOAP_FAULT;
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __lb__GetIndexedAttrs(
+	struct soap *soap,
+	struct _lbe__GetIndexedAttrs	*in,
+	struct _lbe__GetIndexedAttrsResponse	*out
+)
+{
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
+
+	edg_wll_SetError(ctx,ENOSYS,"not implemented yet");
+	edg_wll_ErrToFault(ctx, soap);
+	return SOAP_FAULT;
+}
+
 SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifNew(
 	struct soap *soap,
 	struct _lbe__NotifNew *in,
@@ -300,6 +326,51 @@ cleanup:
 	return ret;
 }
 
+SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifBind(
+	struct soap *soap,
+	struct _lbe__NotifBind *in,
+	struct _lbe__NotifBindResponse *out
+) {
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
+	edg_wll_NotifId		nid = NULL;
+
+	if (edg_wll_NotifIdParse(in->notifId,&nid)) {
+		edg_wll_SetError(ctx,EINVAL,"Parse notifid");
+		edg_wll_ErrToFault(ctx, soap);
+		return SOAP_FAULT;
+	}
+	out->valid = in->valid ? *in->valid : 0;
+
+	if (edg_wll_NotifBindServer(ctx,nid,in->destination,&out->valid)) {
+		edg_wll_ErrToFault(ctx, soap);
+		edg_wll_NotifIdFree(nid);
+		return SOAP_FAULT;
+	}
+	return SOAP_OK;
+}
+
+SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifRefresh(
+	struct soap *soap,
+	struct _lbe__NotifRefresh *in,
+	struct _lbe__NotifRefreshResponse *out
+) {
+	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
+	edg_wll_NotifId		nid = NULL;
+
+	if (edg_wll_NotifIdParse(in->notifId,&nid)) {
+		edg_wll_SetError(ctx,EINVAL,"Parse notifid");
+		edg_wll_ErrToFault(ctx, soap);
+		return SOAP_FAULT;
+	}
+	out->valid = in->valid ? *in->valid : 0;
+
+	if (edg_wll_NotifRefreshServer(ctx,nid,&out->valid)) {
+		edg_wll_ErrToFault(ctx, soap);
+		edg_wll_NotifIdFree(nid);
+		return SOAP_FAULT;
+	}
+	return SOAP_OK;
+}
 
 static void freeQueryRecsExt(edg_wll_QueryRec **qr) {
 	int i, j;
