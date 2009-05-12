@@ -37,7 +37,7 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 	event_queue_cond_lock(eq);
 
 	/* insert new event */
-	if(ret = event_queue_insert(eq, msg) < 0) {
+	if((ret = event_queue_insert(eq, msg)) < 0) {
 		event_queue_cond_unlock(eq);
 		return ret;
 	}

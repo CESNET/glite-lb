@@ -787,7 +787,7 @@ event_store_recover(struct event_store *es)
 
       il_log(LOG_DEBUG, "      queuing event at %ld to bookkeeping server\n", last);
 
-      if(r=enqueue_msg(eq_b, msg) < 0) {
+      if((r=enqueue_msg(eq_b, msg)) < 0) {
     	  break;
       } else if(r > 0) {
 	      throttle = 1;

@@ -312,7 +312,7 @@ event_queue_move_events(struct event_queue *eq_s,
 			/* remove the message from the source list */
 			*source_prev = p->prev;
 			assert(eq_s->cur_len > 0);
-			es_s->cur_len--;
+			eq_s->cur_len--;
 			if(eq_d) {
 				/* append the message at the end of destination list */
 				p->prev = NULL;
