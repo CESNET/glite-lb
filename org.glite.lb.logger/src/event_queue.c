@@ -131,6 +131,11 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
 
   assert(eq != NULL);
 
+  if(queue_size_high > 0 && (eq->cur_len >= queue_size_high || eq->throttling)) {
+	  eq->throttling = 1;
+	  return 1;
+  }
+
   if((el = malloc(sizeof(*el))) == NULL)
     return(set_error(IL_NOMEM, ENOMEM, "event_queue_insert: not enough room for queue element"));
 
@@ -265,6 +270,10 @@ event_queue_remove(struct event_queue *eq)
   if(--eq->cur_len == 0)
 	  eq->times_empty++;
 
+  if(eq->cur_len <= queue_size_low) {
+	  eq->throttling = 0;
+  }
+
   event_queue_unlock(eq);
   /* end of critical section */
 
@@ -297,17 +306,22 @@ event_queue_move_events(struct event_queue *eq_s,
 	while(p) {
 		if((*cmp_func)(p->msg, data)) {
 			il_log(LOG_DEBUG, "      moving event at offset %d(%d) from %s:%d to %s:%d\n",
-			   p->msg->offset, p->msg->generation, eq_s->dest_name, eq_s->dest_port, 
+			   p->msg->offset, p->msg->generation, eq_s->dest_name, eq_s->dest_port,
 			   eq_d ? eq_d->dest_name : "trash", eq_d ? eq_d->dest_port : -1);
 			/* il_log(LOG_DEBUG, "  current: %x, next: %x\n", p, p->prev); */
 			/* remove the message from the source list */
 			*source_prev = p->prev;
+			assert(eq_s->cur_len > 0);
+			es_s->cur_len--;
 			if(eq_d) {
 				/* append the message at the end of destination list */
 				p->prev = NULL;
 				*dest_tail = p;
 				dest_tail = &(p->prev);
 				eq_d->tail = p;
+				if(++eq_d->cur_len > eq_d->max_len) {
+					eq_d->max_len = eq_d->cur_len;
+				}
 			} else {
 				/* signal that the message was 'delivered' */
 				event_store_commit(p->msg->es, p->msg->ev_len, queue_list_is_log(eq_s),
@@ -322,6 +336,9 @@ event_queue_move_events(struct event_queue *eq_s,
 			eq_s->tail = p;
 		}
 		p = *source_prev;
+	}
+	if(eq_s->cur_len <= queue_size_low) {
+		eq_s->throttling = 0;
 	}
 	if(eq_d) event_queue_unlock(eq_d);
 	event_queue_unlock(eq_s);

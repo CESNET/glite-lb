@@ -58,6 +58,8 @@ static void usage (int status)
 	       "  -s, --socket <path>        non-default path of local socket\n"
 	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers (default, timeout==0 means turn lazy off)\n"
 	       "  -p, --parallel [<num>]     use <num> parallel streams to the same server\n"
+	       "  -q, --queue-low <num>      queue length that enables another insertions\n"
+	       "  -Q, --queue-high <num>     max queue length\n"
 #ifdef LB_PERF
 	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
 	       "  -S, --nosync               PERFTEST: do not check logd files for lost events\n"
@@ -81,6 +83,8 @@ int bs_only = 0;
 int lazy_close = 1;
 int default_close_timeout;
 size_t max_store_size;
+size_t queue_size_low = 0;
+size_t queue_size_high = 0;
 int parallel = 0;
 #ifdef LB_PERF
 int nosend = 0, norecover=0, nosync=0, noparse=0;
@@ -110,6 +114,8 @@ static struct option const long_options[] =
   {"lazy", optional_argument, 0, 'L'},
   {"max-store", required_argument, 0, 'M'},
   {"parallel", optional_argument, 0, 'p'},
+  {"queue_size_low", required_argument, 0, 'q'},
+  {"queue_size_high", required_argument, 0, 'Q'},
 #ifdef LB_PERF
   {"nosend", no_argument, 0, 'n'},
   {"nosync", no_argument, 0, 'S'},
@@ -146,6 +152,8 @@ decode_switches (int argc, char **argv)
                "l:" /* log server */
 			   "d" /* debug */
 			   "p" /* parallel */
+			   "q:"
+			   "Q:"
 #ifdef LB_PERF
 			   "n" /* nosend */
 			   "S" /* nosync */
@@ -229,6 +237,14 @@ decode_switches (int argc, char **argv)
 			parallel = 4;
 		break;
 
+	case 'q':
+		queue_size_low = atoi(optarg);
+		break;
+
+	case 'Q':
+		queue_size_high = atoi(optarg);
+		break;
+
 #ifdef LB_PERF
 	case 'n':
 		nosend = 1;
@@ -289,6 +305,13 @@ main (int argc, char **argv)
 
   i = decode_switches (argc, argv);
 
+  /* check for reasonable queue lengths */
+  if(queue_size_low == 0 && queue_size_high > 0 ||
+     queue_size_low > queue_size_high) {
+	  fprintf(stderr, "max queue length -Q must be greater than low queue length -q, both or none must be specified!\n");
+	  exit(EXIT_FAILURE);
+  }
+
   /* force -b if we do not have log server */
   if(log_server == NULL) {
     log_server = strdup(DEFAULT_LOG_SERVER);
@@ -296,7 +319,7 @@ main (int argc, char **argv)
   }
 
   if(init_errors(verbose ? LOG_DEBUG : LOG_WARNING)) {
-    fprintf(stderr, "Failed to initialize error message subsys. Exiting.\n");
+    fprintf(stderr, "Failed to initialize error message subsystem. Exiting.\n");
     exit(EXIT_FAILURE);
   }
 

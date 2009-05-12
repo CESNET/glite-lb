@@ -525,6 +525,7 @@ event_store_recover(struct event_store *es)
   struct server_msg *msg;
   char *event_s;
   int fd, ret;
+  int throttle;
   long last;
   FILE *ef;
   struct flock efl;
@@ -700,8 +701,10 @@ event_store_recover(struct event_store *es)
   /* enqueue all remaining events */
   ret = 1;
   msg = NULL;
+  throttle = 0;
   while((event_s=read_event_string(ef)) != NULL) {
     long last_ls, last_bs;
+    int r;
 
     /* last holds the starting position of event_s in file */
     il_log(LOG_DEBUG, "    reading event at %ld\n", last);
@@ -735,7 +738,7 @@ event_store_recover(struct event_store *es)
 
 #ifdef IL_NOTIFICATIONS
     il_log(LOG_DEBUG, "DEBUG: message dest %s, last dest %s, known dest %s\n",
-	   msg->dest, last_dest, eq_b ? eq_b->dest : "none"); 
+	   msg->dest, last_dest, eq_b ? eq_b->dest : "none");
     /* check message destination */
     if(msg->dest == NULL) {
             /* the message does not have destination itself, use destination cached for notification id */
@@ -772,6 +775,7 @@ event_store_recover(struct event_store *es)
 
       il_log(LOG_DEBUG, "      queuing event at %ld to logging server\n", last);
 
+      /* TODO: throttling for the log server queue? */
       if(enqueue_msg(eq_l, msg) < 0) {
     	  break;
       }
@@ -779,20 +783,25 @@ event_store_recover(struct event_store *es)
 #endif
 
     /* now enqueue to the BS, if necessary */
-    if((eq_b != eq_l) &&
-       (last >= last_bs)) {
+    if(!throttle && (eq_b != eq_l) && (last >= last_bs)) {
 
       il_log(LOG_DEBUG, "      queuing event at %ld to bookkeeping server\n", last);
 
-      if(enqueue_msg(eq_b, msg) < 0) {
+      if(r=enqueue_msg(eq_b, msg) < 0) {
     	  break;
+      } else if(r > 0) {
+	      throttle = 1;
       }
     }
     server_msg_free(msg);
     msg = NULL;
 
     /* now last is also the offset behind the last successfully queued event */
-    last = ftell(ef);
+    if(!throttle) {
+	    last = ftell(ef);
+    } else {
+	    il_log(LOG_DEBUG, "      queue max length limit reached, event at %ld throttled\n", ftell(ef));
+    }
 
     /* ret == 0 means EOF or incomplete event found */
     ret = 0;
@@ -807,7 +816,7 @@ event_store_recover(struct event_store *es)
 
 	  /* set new destination */
 	  if(notifid_map_set_dest(es->job_id_s, eq_dest) < 0) {
-		  ret = -1; 
+		  ret = -1;
 	  } else {
 
 		  /* move all events with this notif_id from eq_b to eq_dest */
@@ -816,7 +825,7 @@ event_store_recover(struct event_store *es)
 		  il_log(LOG_DEBUG, "    all messages for notif id %s are now destined to %s\n",
 			 es->job_id_s, eq_b->dest);
 		  if(event_queue_create_thread(eq_b) < 0) {
-			  ret = -1; 
+			  ret = -1;
 		  } else {
 			  event_queue_cond_lock(eq_b);
 			  event_queue_signal(eq_b);

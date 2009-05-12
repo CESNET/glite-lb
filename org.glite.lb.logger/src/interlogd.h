@@ -79,6 +79,8 @@ extern int killflg;
 extern int lazy_close;
 extern int default_close_timeout;
 extern size_t max_store_size;
+extern size_t queue_size_high;
+extern size_t queue_size_low;
 extern int parallel;
 #ifdef LB_PERF
 extern int nosend, nosync, norecover, noparse;
@@ -180,6 +182,7 @@ struct event_queue {
 	int                     times_empty;    /* number of times the queue was emptied */
 	int                     max_len;        /* max queue length */
 	int                     cur_len;        /* current length */
+	int			throttling;	/* event insertion suspend flag */
 };
 
 

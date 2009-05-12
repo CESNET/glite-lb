@@ -18,6 +18,8 @@
 int
 enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 {
+	int ret;
+
 	/* fire thread to take care of this queue */
 	if(event_queue_create_thread(eq) < 0)
 		return(-1);
@@ -35,9 +37,9 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 	event_queue_cond_lock(eq);
 
 	/* insert new event */
-	if(event_queue_insert(eq, msg) < 0) {
+	if(ret = event_queue_insert(eq, msg) < 0) {
 		event_queue_cond_unlock(eq);
-		return(-1);
+		return ret;
 	}
 
 	/* signal thread that we have a new message */
@@ -46,7 +48,7 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 	/* allow thread to continue */
 	event_queue_cond_unlock(eq);
 
-	return(0);
+	return ret;
 }
 
 
