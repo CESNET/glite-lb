@@ -3,6 +3,7 @@ package org.glite.lb;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.security.*;
+import java.net.Socket;
 
 /**
  * This class opens secure connection using SSLv3 and then sends message to set
@@ -31,7 +32,8 @@ public class SSLSend {
 	SSL lbsock = new SSL();
 
 	lbsock.setProxy(keyStoreSender);
-	PrintStream s = lbsock.connect(host,port,timeout);
+	Socket sock = lbsock.connect(host,port,timeout);
+	PrintStream s = new PrintStream(sock.getOutputStream(),false);
 
         s.print(EDG_WLL_LOG_SOCKET_HEADER);
 

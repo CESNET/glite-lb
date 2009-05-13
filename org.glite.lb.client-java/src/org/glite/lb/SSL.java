@@ -41,8 +41,8 @@ public class SSL {
 
         public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket
 socket) {
-            System.out.println("MyX509KeyManager.chooseClientAlias()");
 /*
+            System.out.println("MyX509KeyManager.chooseClientAlias()");
             for (int i = 0; i < keyType.length; i++) {
                 System.out.println("MyX509KeyManager.chooseClientAlias() keyType[" + i +
 "]=" + keyType[i]);
@@ -140,7 +140,7 @@ socket) {
 	    proxy = p;
     }
 
-    public PrintStream connect(String host,int port,int timeout) throws KeyStoreException,NoSuchAlgorithmException,KeyManagementException,SocketException,IOException {
+    public Socket connect(String host,int port,int timeout) throws KeyStoreException,NoSuchAlgorithmException,KeyManagementException,SocketException,IOException {
 
 	    init_ctx();
 	    
@@ -158,10 +158,11 @@ socket) {
                 throw new NullPointerException("null session");
             }
 
-	    return new PrintStream(client.getOutputStream(),false);
+	    return client;
+	    //return new PrintStream(client.getOutputStream(),false);
     }
 
-    public InputStream accept(int port,int timeout) 
+    public Socket accept(int port,int timeout) 
 	    throws KeyStoreException,IOException,SocketException,NoSuchAlgorithmException,KeyManagementException
     {
 
@@ -176,7 +177,7 @@ socket) {
 
 	SSLSocket conn = (SSLSocket) server.accept();
 
-	return conn.getInputStream();
+	return conn;
     }
 
     public void close() throws IOException,SocketException {
