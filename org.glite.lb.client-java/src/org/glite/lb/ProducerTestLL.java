@@ -4,7 +4,7 @@ import java.util.Random;
 import org.glite.jobid.Jobid;
 
 /**
- * This class shows how to work with ContextLL.
+ * This class shows how to work with ContextIL.
  * 
  * @author Pavel Piskac
  */
@@ -12,7 +12,7 @@ public class ProducerTestLL {
 
     public static void main(String[] args) {
 
-        if (args.length != 13) {
+        if (args.length != 12) {
             System.out.println("How to use test class:\n" +
                     "you have to set 13 arguments in this order, if the choice is optional \"\" or text has to be set:\n" +
                     "1. jobid in format \"https://somewhere:port/unique_part\" (required)\n" +
@@ -25,8 +25,7 @@ public class ProducerTestLL {
                     "8. proxy server address (required)\n" +
                     "9. proxy server port, default value is 9002 (optional)\n" +
                     "10. path to user's certificate (required)\n" + 
-                    "11. password to certificate (required)\n" +
-                    "12. path to directory where will be saved files with logs until inter-logger sends the content.");
+                    "11. path to directory where will be saved files with logs until inter-logger sends the content.");
         } else {
             /* Create new instance of jobid, you can use other constructors too (see org.glite.jobid.api_java.Jobid.java) 
              * Examples:
@@ -51,7 +50,7 @@ public class ProducerTestLL {
              * SeqCode seqCode = new SeqCode();
              * seqCode.getSeqCodeFromString("UI=000001:NS=0000000002:WM=000003:BH=0000000004:" + 
              * "JSS=000005:LM=000006:LRMS=000007:APP=000008:LBS=000009"); 
-             * seqCode.incrementSeqCode(Sources.EDG_WLL_SOURCE_USER_INTERFACE); 
+             * seqCode.incrementSeqCode(Sources.USER_INTERFACE); 
              * resulting sequence code will be 
              * UI=000002:NS=0000000002:WM=000003:BH=0000000004:JSS=000005:LM=000006:LRMS=000007:APP=000008:LBS=000009
              */
@@ -137,19 +136,12 @@ public class ProducerTestLL {
             ctx.setPathToCertificate(args[9]);
             System.out.println("pathToCertificate: " + args[9]);
 
-            /* Password to certificate.
-             * Example: 
-             * ctx.setPassword("MySecretPassword");
-             */
-            ctx.setPassword(args[10]);
-            System.out.println("password: " + args[10]);
-
             /* Path to directory where will be saved files with logs until inter-logger sends 
              * the content.
              * Example: ctx.setPrefix("/home/paja6/tmp/dglog." + jobid.getUnique());
              */
-            ctx.setPrefix(args[11]);
-            System.out.println("prefix: " + args[11]);
+            ctx.setPrefix(args[10]);
+            System.out.println("prefix: " + args[10]);
 
             /* Create new instance of the event which will be logged.
              */
@@ -158,8 +150,8 @@ public class ProducerTestLL {
             /* Set some description for the event.
              * Example: running.setNode("worker node");
              */
-            running.setNode(args[12]);
-            System.out.println("node: " + args[12]);
+            running.setNode(args[11]);
+            System.out.println("node: " + args[11]);
 
             /* And now is the context and event prepared to work.
              * 

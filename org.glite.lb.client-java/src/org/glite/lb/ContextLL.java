@@ -1,7 +1,6 @@
 package org.glite.lb;
 
 import org.glite.jobid.Jobid;
-import org.glite.jobid.CheckedString;
 
 /** 
  * This class provides sending messages using network sockets.
@@ -16,7 +15,6 @@ public class ContextLL extends Context {
     private int repeatWriteToFile = 5;
     private int timeout = 30000; //in milliseconds
     private String pathToCertificate;
-    private String password;
     private SSLSend sslSend = null;
 
     public ContextLL() {
@@ -43,35 +41,35 @@ public class ContextLL extends Context {
         super(id, source, flag, host, user, prog, srcInstance, jobid);
 
         if (prefix == null) {
-            throw new IllegalArgumentException("ContextProxy prefix");
+            throw new IllegalArgumentException("ContextLL prefix");
         }
         if (address == null) {
-            throw new IllegalArgumentException("ContextProxy socket");
+            throw new IllegalArgumentException("ContextLL socket");
         }
         if (port < 0) {
-            throw new IllegalArgumentException("ContextProxy port");
+            throw new IllegalArgumentException("ContextLL port");
         }
 
-        this.prefix = new CheckedString(prefix).toString();
-        this.address = new CheckedString(address).toString();
+        this.prefix = prefix;
+        this.address = address;
     }
 
     @Override
     public void log(Event event) {
         if (event == null) {
-            throw new IllegalArgumentException("ContextProxy event");
+            throw new IllegalArgumentException("ContextLL event");
         }
 
         if (prefix == null) {
-            throw new IllegalArgumentException("ContextProxy prefix");
+            throw new IllegalArgumentException("ContextLL prefix");
         }
 
         if (address == null) {
-            throw new IllegalArgumentException("ContextProxy socket");
+            throw new IllegalArgumentException("ContextLL socket");
         }
 
         if (port < 0) {
-            throw new IllegalArgumentException("ContextProxy port");
+            throw new IllegalArgumentException("ContextLL port");
         }
 
         if (sslSend == null) {
@@ -83,7 +81,7 @@ public class ContextLL extends Context {
         ILFileWriter.write(prefix, message, repeatWriteToFile);
         
         
-        sslSend.send(pathToCertificate, password, address, port, timeout, message);
+        sslSend.send(pathToCertificate, address, port, timeout, message);
     }
 
     public String getAddress() {
@@ -92,7 +90,7 @@ public class ContextLL extends Context {
 
     public void setAddress(String address) {
         if (address == null) {
-            throw new IllegalArgumentException("ContextProxy address");
+            throw new IllegalArgumentException("ContextLL address");
         }
         
         this.address = address;
@@ -104,7 +102,7 @@ public class ContextLL extends Context {
 
     public void setPort(int port) {
         if (port < 0) {
-            throw new IllegalArgumentException("ContextProxy port");
+            throw new IllegalArgumentException("ContextLL port");
         }
         this.port = port;
     }
@@ -116,7 +114,7 @@ public class ContextLL extends Context {
 
     public void setPrefix(String prefix) {
         if (prefix == null) {
-            throw new IllegalArgumentException("ContextProxy prefix");
+            throw new IllegalArgumentException("ContextLL prefix");
         }
         
         this.prefix = prefix;
@@ -128,7 +126,7 @@ public class ContextLL extends Context {
 
     public void setRepeatWriteToFile(int repeatWriteToFile) {
         if (repeatWriteToFile < 1) {
-            throw new IllegalArgumentException("ContextProxy repeatWriteToFile");
+            throw new IllegalArgumentException("ContextLL repeatWriteToFile");
         }
         
         this.repeatWriteToFile = repeatWriteToFile;
@@ -140,21 +138,9 @@ public class ContextLL extends Context {
 
     public void setTimeout(int timeout) {
         if (timeout < 0) {
-            throw new IllegalArgumentException("ContextProxy timout");
+            throw new IllegalArgumentException("ContextLL timout");
         }
         this.timeout = timeout;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        if (password == null) {
-            throw new IllegalArgumentException("ContextProxy password");
-        }
-        
-        this.password = password;
     }
 
     public String getPathToCertificate() {
@@ -163,7 +149,7 @@ public class ContextLL extends Context {
 
     public void setPathToCertificate(String pathToCertificate) {
         if (pathToCertificate == null) {
-            throw new IllegalArgumentException("ContextProxy pathToCertificate");
+            throw new IllegalArgumentException("ContextLL pathToCertificate");
         }
         
         this.pathToCertificate = pathToCertificate;
