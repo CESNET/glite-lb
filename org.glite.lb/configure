@@ -37,6 +37,7 @@ my %extern_prefix = (
 	cppunit => '/usr',
 	expat => '/usr',
 	globus => '/opt/globus',
+	jglobus => '/opt/globus',
 	gsoap => '/usr',
 	mysql => '/usr',
 	'mysql-devel' => '',
@@ -289,7 +290,7 @@ sub mode_checkout() {
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
-	'lb.client-java' => [ qw/ant:B/ ],
+	'lb.client-java' => [ qw/ant:B jglobus jdk:B/ ],
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
