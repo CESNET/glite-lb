@@ -1,6 +1,6 @@
 -include Makefile.inc
 
-EXAMPLES := SimpleLLTest.class SSLClient.class
+EXAMPLES := SimpleLLTest.class SSLClient.class SSLServer.class
 # broken: ProducerTestIL.class ProducerTestLL.class
 
 VPATH := examples

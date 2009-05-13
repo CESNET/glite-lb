@@ -1,6 +1,7 @@
 package org.glite.lb;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.security.*;
 
 /**
@@ -30,9 +31,9 @@ public class SSLSend {
 	SSL lbsock = new SSL();
 
 	lbsock.setProxy(keyStoreSender);
-	lbsock.connect(host,port,timeout);
+	PrintStream s = lbsock.connect(host,port,timeout);
 
-        lbsock.sendString(EDG_WLL_LOG_SOCKET_HEADER,timeout);
+        s.print(EDG_WLL_LOG_SOCKET_HEADER);
 
         message = message.replaceFirst("DG.LLLID=[0-9]* ", "");
         message = message.replaceFirst("DG.USER=\\x22[a-zA-Z ]*\\x22 ", "");
@@ -47,10 +48,10 @@ public class SSLSend {
         messageSize >>= 8;
         revertedInt[3] = (byte) (messageSize);
 
-        lbsock.sendBytes(revertedInt,4,timeout);
-	lbsock.sendString(message + '\n' + '\0',timeout);
-	lbsock.close();
-
+        s.write(revertedInt,0,4);
+	s.print(message + '\n' + '\0');
+	s.flush();
+	s.close();
     }
 
 }

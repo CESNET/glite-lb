@@ -41,41 +41,49 @@ public class SSL {
 
         public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket
 socket) {
-            //System.out.println("MyX509KeyManager.chooseClientAlias()");
-            //for (int i = 0; i < keyType.length; i++) {
-                //System.out.println("MyX509KeyManager.chooseClientAlias() keyType[" + i +
-//"]=" + keyType[i]);
-            //}
-            //for (int i = 0; i < issuers.length; i++) {
-                //System.out.println("MyX509KeyManager.chooseClientAlias() issuers[" + i +
-//"]=" + issuers[i]);
-            //}
+            System.out.println("MyX509KeyManager.chooseClientAlias()");
+/*
+            for (int i = 0; i < keyType.length; i++) {
+                System.out.println("MyX509KeyManager.chooseClientAlias() keyType[" + i +
+"]=" + keyType[i]);
+            }
+            for (int i = 0; i < issuers.length; i++) {
+                System.out.println("MyX509KeyManager.chooseClientAlias() issuers[" + i +
+"]=" + issuers[i]);
+            }
+*/
             return "";
         }
 
         public String chooseServerAlias(String keyType, Principal[] issuers, Socket
 socket) {
-            //System.out.println("MyX509KeyManager.chooseServerAlias(" + keyType + ")");
-            return null;
+/*
+            System.out.println("MyX509KeyManager.chooseServerAlias(" + keyType + ")");
+
+		if (issuers != null) for (int i=0; i<issuers.length; i++) 
+			System.out.println("	" + issuers[i]);
+*/
+	
+		return "";
         }
 
         public X509Certificate[] getCertificateChain(String alias) {
-            //System.out.println("MyX509KeyManager.getCertificateChain(" + alias + ")");
+//            System.out.println("MyX509KeyManager.getCertificateChain(" + alias + ")");
             return certchain;
         }
 
         public String[] getClientAliases(String keyType, Principal[] issuers) {
-            //System.out.println("MyX509KeyManager.getClientAliases(" + keyType + ")");
+//            System.out.println("MyX509KeyManager.getClientAliases(" + keyType + ")");
             return null;
         }
 
         public PrivateKey getPrivateKey(String alias) {
-            //System.out.println("MyX509KeyManager.getPrivateKey(" + alias + ")");
+//            System.out.println("MyX509KeyManager.getPrivateKey(" + alias + ")");
             return key;
         }
 
         public String[] getServerAliases(String keyType, Principal[] issuers) {
-            //System.out.println("MyX509KeyManager.getServerAliases(" + keyType + ")");
+//            System.out.println("MyX509KeyManager.getServerAliases(" + keyType + ")");
             return null;
         }
     }
@@ -106,10 +114,10 @@ socket) {
     }
 
     SSLContext sctx;
-    SSLSocket socket;
+    SSLSocket client;
+    SSLServerSocket server;
     SSLSession sess;
     String proxy;
-    PrintStream osw = null;
 
     void init_ctx() throws KeyStoreException,NoSuchAlgorithmException,KeyManagementException {
 	    if (sctx == null) {
@@ -132,43 +140,47 @@ socket) {
 	    proxy = p;
     }
 
-    public void connect(String host,int port,int timeout) throws KeyStoreException,NoSuchAlgorithmException,KeyManagementException,SocketException,IOException {
+    public PrintStream connect(String host,int port,int timeout) throws KeyStoreException,NoSuchAlgorithmException,KeyManagementException,SocketException,IOException {
 
 	    init_ctx();
 	    
-	    osw = null;
-	    socket = (SSLSocket) sctx.getSocketFactory().createSocket();
+	    client = (SSLSocket) sctx.getSocketFactory().createSocket();
 
-            socket.setEnabledProtocols(new String[]{"SSLv3"});
-            socket.setUseClientMode(true);
-            socket.setSoTimeout(timeout * 10); //read timeout
+            client.setEnabledProtocols(new String[]{"SSLv3"});
+            client.setUseClientMode(true);
+            client.setSoTimeout(timeout); //read timeout
 
-            socket.connect(new InetSocketAddress(host, port), timeout); //connect timeout
-            socket.startHandshake();
+            client.connect(new InetSocketAddress(host, port), timeout); //connect timeout
+            client.startHandshake();
 
-            sess = socket.getSession();
+            sess = client.getSession();
             if (sess == null) {
                 throw new NullPointerException("null session");
             }
 
-	    osw = new PrintStream(socket.getOutputStream(), false);
+	    return new PrintStream(client.getOutputStream(),false);
+    }
+
+    public InputStream accept(int port,int timeout) 
+	    throws KeyStoreException,IOException,SocketException,NoSuchAlgorithmException,KeyManagementException
+    {
+
+	init_ctx();
+
+	server = (SSLServerSocket) sctx.getServerSocketFactory().createServerSocket();
+
+	server.setEnabledProtocols(new String[]{"SSLv3"});
+	server.setSoTimeout(timeout); 
+
+	server.bind(new InetSocketAddress(port));
+
+	SSLSocket conn = (SSLSocket) server.accept();
+
+	return conn.getInputStream();
     }
 
     public void close() throws IOException,SocketException {
-	    osw.close();
-	    socket.close();
-    }
-
-    public void sendString(String message,int timeout) throws IOException,SocketException {
-	    socket.setSoTimeout(timeout * 10);
-	    osw.print(message);
-	    osw.flush();
-    }
-
-    public void sendBytes(byte[] message,int len,int timeout) throws IOException,SocketException {
-	    socket.setSoTimeout(timeout * 10);
-	    osw.write(message,0,len);
-	    osw.flush();
+	    client.close();
     }
 
     /**
