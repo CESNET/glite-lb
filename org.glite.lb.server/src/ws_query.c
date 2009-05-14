@@ -264,9 +264,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__GetServerLimit(
 {
 	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 
-	edg_wll_SetError(ctx,ENOSYS,"not implemented yet");
-	edg_wll_ErrToFault(ctx, soap);
-	return SOAP_FAULT;
+	out->limit = ctx->hardJobsLimit;
+	return SOAP_OK;
 }
 
 SOAP_FMAC5 int SOAP_FMAC6 __lb__GetIndexedAttrs(
@@ -277,9 +276,15 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__GetIndexedAttrs(
 {
 	edg_wll_Context		ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 
-	edg_wll_SetError(ctx,ENOSYS,"not implemented yet");
-	edg_wll_ErrToFault(ctx, soap);
-	return SOAP_FAULT;
+	if (ctx->job_index)
+		return edg_wll_QueryCondsExtToSoap(soap,
+			(const edg_wll_QueryRec **) ctx->job_index,
+			&out->__sizeattrs,&out->attrs);
+	else {
+		edg_wll_SetError(ctx,ENOENT,"no indexed attributes");
+		edg_wll_ErrToFault(ctx, soap);
+		return SOAP_FAULT;
+	}
 }
 
 SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifNew(
