@@ -613,8 +613,14 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		if (html) text = drain_text_request(requestPTR);
 
 
+	/* Is user authorised? */
+		if (!ctx->peerName){
+			ret = HTTP_UNAUTH;
+			edg_wll_SetError(ctx, EPERM, "user not authenticated");
+		}
+
 	/* GET /: Current User Jobs */
-		if (requestPTR[0]=='/' && (requestPTR[1]==' ' || requestPTR[1]=='?')) {
+		else if (requestPTR[0]=='/' && (requestPTR[1]==' ' || requestPTR[1]=='?')) {
                 	edg_wlc_JobId *jobsOut = NULL;
 			int	i, flags;
 			
