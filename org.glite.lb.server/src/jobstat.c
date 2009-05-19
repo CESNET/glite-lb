@@ -128,7 +128,7 @@ int edg_wll_JobStatusServer(
 		/* authorization check */
 		if ( !(ctx->noAuth) &&
 		    (!(ctx->peerName) ||  !edg_wll_gss_equal_subj(ctx->peerName, stat->owner))) {
-		      if ((acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ)) {
+		      if ((acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ)) {
 			 if (acl) {
 				goto rollback;
 			 } else {

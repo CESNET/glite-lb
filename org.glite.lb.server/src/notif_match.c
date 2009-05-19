@@ -223,7 +223,7 @@ static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const
 
 	acl->string = stat->acl; 
 
-	ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
+	ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ);
 
 	acl->string = NULL;
 	edg_wll_FreeAcl(acl);

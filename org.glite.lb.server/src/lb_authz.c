@@ -313,11 +313,11 @@ static int
 cmp_gacl_creds(GRSTgaclCred *c1, GRSTgaclCred *c2)
 {
    /* XXX the GRSTgaclCred contains a bit more information to handle */
-   return (strcmp(c1->auri, c2->auri) != 0);
+   return (strcmp(c1->auri, c2->auri) == 0);
 }
 
 static int
-addEntry(GRSTgaclAcl *acl, GRSTgaclEntry *entry)
+addEntry(edg_wll_Context ctx, GRSTgaclAcl *acl, GRSTgaclEntry *entry)
 {
 	GRSTgaclEntry   *cur = NULL;
    
@@ -332,13 +332,13 @@ addEntry(GRSTgaclAcl *acl, GRSTgaclEntry *entry)
 		if (   cmp_gacl_creds(cur->firstcred, entry->firstcred)
 			&& cur->allowed == entry->allowed
 			&& cur->denied == entry->denied ) 
-	 		return EEXIST;
+	 		return edg_wll_SetError(ctx,EEXIST,"ACL entry already exists");;
 
 	return (GRSTgaclAclAddEntry(acl, entry) == 0) ? -1 /* GACL_ERR */ : 0;
 }
 
 static int
-delEntry(GRSTgaclAcl *acl, GRSTgaclEntry *entry)
+delEntry(edg_wll_Context ctx, GRSTgaclAcl *acl, GRSTgaclEntry *entry)
 {
    GRSTgaclEntry *cur = NULL, *prev = NULL;
    int found = 0;
@@ -363,16 +363,16 @@ delEntry(GRSTgaclAcl *acl, GRSTgaclEntry *entry)
       cur = cur->next; 
    }
 
-   return (found) ? 0 : -1 /* NOT_FOUND */;
+   return (found) ? 0 : edg_wll_SetError(ctx,EINVAL,"ACL entry doesn't exist");
 }
 
 static int
-create_cred(char *userid, int user_type, GRSTgaclCred **cred)
+create_cred(edg_wll_Context ctx, char *userid, int user_type, GRSTgaclCred **cred)
 {
    GRSTgaclCred *c = NULL;
    char *group = NULL;
 
-   if (user_type == EDG_WLL_USER_SUBJECT) {
+   if (user_type == EDG_WLL_CHANGEACL_DN) {
       c = GRSTgaclCredNew("person");
       if (c == NULL)
 	 return ENOMEM;
@@ -380,7 +380,7 @@ create_cred(char *userid, int user_type, GRSTgaclCred **cred)
 	 GRSTgaclCredFree(c);
 	 return -1; /* GACL_ERR */
       }
-   } else if(user_type == EDG_WLL_USER_VOMS_GROUP) {
+   } else if(user_type == EDG_WLL_CHANGEACL_GROUP) {
       c = GRSTgaclCredNew("voms-cred");
       if (c == NULL)
 	 return ENOMEM;
@@ -393,7 +393,7 @@ create_cred(char *userid, int user_type, GRSTgaclCred **cred)
 	  GRSTgaclCredFree(c);
 	 return -1; /* GACL_ERR */
       }
-   } else if (user_type == EDG_WLL_USER_FQAN) {
+   } else if (user_type == EDG_WLL_CHANGEACL_FQAN) {
       c = GRSTgaclCredNew("voms");
       if (c == NULL)
          return ENOMEM;
@@ -402,7 +402,7 @@ create_cred(char *userid, int user_type, GRSTgaclCred **cred)
          return -1; /* GACL_ERR */
       }
    } else
-      return EINVAL;
+      return edg_wll_SetError(ctx,EINVAL,"Unknown user type for ACL");
 
    *cred = c;
 
@@ -410,56 +410,66 @@ create_cred(char *userid, int user_type, GRSTgaclCred **cred)
 }
 
 static int
-change_acl(GRSTgaclAcl *acl, GRSTgaclEntry *entry, int operation)
+change_acl(edg_wll_Context ctx, GRSTgaclAcl *acl, GRSTgaclEntry *entry, int operation)
       /* creds, permission, permission_type */
 {
-   if (operation == EDG_WLL_ACL_ADD)
-      return addEntry(acl, entry);
+   if (operation == EDG_WLL_CHANGEACL_ADD)
+      return addEntry(ctx, acl, entry);
    
-   if (operation == EDG_WLL_ACL_REMOVE)
-      return delEntry(acl, entry);
+   if (operation == EDG_WLL_CHANGEACL_REMOVE)
+      return delEntry(ctx, acl, entry);
 
-   return -1;
+   return edg_wll_SetError(ctx,EINVAL,"Unknown ACL operation requested");
 }
 
 static int
-edg_wll_change_acl(edg_wll_Acl acl, char *user_id, int user_id_type, 
-      		   int permission, int perm_type, int operation)
+edg_wll_change_acl(edg_wll_Context ctx, edg_wll_Acl acl, char *user_id,
+		   int user_id_type, int permission, int perm_type,
+		   int operation)
 {
    GRSTgaclCred *cred = NULL;
    GRSTgaclEntry *entry = NULL;
-   int ret;
+   int ret,p;
 
    GRSTgaclInit();
 
    if (acl == NULL || acl->value == NULL)
-      return EINVAL;
+      return edg_wll_SetError(ctx,EINVAL,"Change ACL");
 
-   ret = create_cred(user_id, user_id_type, &cred);
+   ret = create_cred(ctx, user_id, user_id_type, &cred);
    if (ret)
       return ret;
 
    entry = GRSTgaclEntryNew();
    if (entry == NULL) {
-      ret = ENOMEM;
+      ret = edg_wll_SetError(ctx,ENOMEM,"Change ACL");
       goto end;
    }
 
    if (!GRSTgaclEntryAddCred(entry, cred)) {
-      ret = -1; /* GACLErr */
+      ret = edg_wll_SetError(ctx,EINVAL,"Can't create ACL");
       goto end;
    }
 
-   if (perm_type == EDG_WLL_PERM_ALLOW)
-      GRSTgaclEntryAllowPerm(entry, permission);
-   else if (perm_type == EDG_WLL_PERM_DENY)
-      GRSTgaclEntryDenyPerm(entry, permission);
+   switch (permission) {
+      case EDG_WLL_CHANGEACL_READ:
+          p = EDG_WLL_CHANGEACL_READ;
+	  break;
+      default:
+          ret = edg_wll_SetError(ctx,EINVAL,"Unknown permission for ACL");
+	  goto end;
+   }
+
+   if (perm_type == EDG_WLL_CHANGEACL_ALLOW)
+      GRSTgaclEntryAllowPerm(entry, p);
+   else if (perm_type == EDG_WLL_CHANGEACL_DENY)
+      GRSTgaclEntryDenyPerm(entry, p);
    else {
-      ret = EINVAL;
+      ret = edg_wll_SetError(ctx,EINVAL,"Unknown permission type");
       goto end;
    }
 
-   ret = change_acl(acl->value, entry, operation);
+   ret = change_acl(ctx, acl->value, entry, operation);
    if (ret)
    {
 /*    XXX: mem leak?
@@ -741,17 +751,12 @@ edg_wll_UpdateACL(edg_wll_Context ctx, glite_jobid_const_t job,
 	 
       old_aclid = acl->string? strdup(strmd5(acl->string, NULL)): NULL;
 
-      ret = edg_wll_change_acl(acl, user_id, user_id_type, 
+      ret = edg_wll_change_acl(ctx, acl, user_id, user_id_type, 
 	    		       permission, perm_type, operation);
       if (ret)
       {
 	 if ( ret == EEXIST )
-	    /*
-	     *	adding allready set entry
-	     *	only upgrade the counter
-	     */
-      	    ret = edg_wll_HandleCounterACL(ctx, acl, new_aclid, 1);
-
+            ret = edg_wll_ResetError(ctx);
 	 goto end;
       }
 

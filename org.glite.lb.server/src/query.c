@@ -232,7 +232,7 @@ int edg_wll_QueryEventsServer(
 						goto fetch_cycle_cleanup;
 					}
 
-					ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_PERM_READ);
+					ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ);
 					edg_wll_FreeAcl(acl);
 					if (ret) {
 						eperm = 1;
