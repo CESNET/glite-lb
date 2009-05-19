@@ -481,36 +481,6 @@ event_store_recover_jobid(struct event_store *es)
 	return 0;
 }
 
-static
-int
-cmp_jobid(struct server_msg *msg, void *data)
-{
-	assert(msg != NULL);
-	assert(data != NULL);
-
-	char *job_id_s = (char*)data;
-	return strcmp(msg->job_id_s, job_id_s) == 0;
-}
-
-struct cmp_exp_data {
-	char *job_id_s;
-	time_t expires;
-};
-
-static
-int
-cmp_jobid_set_exp(struct server_msg *msg, void *data)
-{
-	struct cmp_exp_data *m = (struct cmp_exp_data *)data;
-
-	assert(msg != NULL);
-	assert(data != NULL);
-
-	if(strcmp(msg->job_id_s, m->job_id_s) == 0) {
-		msg->expires = m->expires;
-	}
-	return 0;
-}
 
 /*
  * event_store_recover()
@@ -525,30 +495,26 @@ event_store_recover(struct event_store *es)
   struct server_msg *msg;
   char *event_s;
   int fd, ret;
-  int throttle;
-  long fpos, last;
+  long last;
   FILE *ef;
   struct flock efl;
   char err_msg[128];
   struct stat stbuf;
-#if defined(IL_NOTIFICATIONS)
-  char *last_dest = NULL;
-  time_t last_exp = 0;
-#endif
 
   assert(es != NULL);
 
 #if defined(IL_NOTIFICATIONS)
-  /* destination queue has to be found for each message separately, */
-  /* this is current known destination for our notification id (may be NULL!) */
-  eq_b = notifid_map_get_dest(es->job_id_s);
+  /* destination queue has to be found for each message separately */
 #else
-  /* get log server queue */
-  eq_l = queue_list_get(NULL);
   /* find bookkeeping server queue */
   eq_b = queue_list_get(es->job_id_s);
   if(eq_b == NULL)
     return(-1);
+#endif
+
+#if !defined(IL_NOTIFICATIONS)
+  /* get log server queue */
+  eq_l = queue_list_get(NULL);
 #endif
 
   /* lock the event_store and offset locks */
@@ -701,14 +667,11 @@ event_store_recover(struct event_store *es)
   /* enqueue all remaining events */
   ret = 1;
   msg = NULL;
-  throttle = 0;
-  fpos = last;
   while((event_s=read_event_string(ef)) != NULL) {
     long last_ls, last_bs;
-    int r;
 
-    /* fpos holds the starting position of event_s in file */
-    il_log(LOG_DEBUG, "    reading event at %ld\n", fpos);
+    /* last holds the starting position of event_s in file */
+    il_log(LOG_DEBUG, "    reading event at %ld\n", last);
 
     last_ls = es->last_committed_ls;
     last_bs = es->last_committed_bs;
@@ -737,119 +700,55 @@ event_store_recover(struct event_store *es)
     msg->es = es;
     msg->generation = es->generation;
 
-#ifdef IL_NOTIFICATIONS
-    il_log(LOG_DEBUG, "DEBUG: message dest %s, last dest %s, known dest %s\n",
-	   msg->dest, last_dest, eq_b ? eq_b->dest : "none");
-    /* check message destination */
-    if(msg->dest == NULL) {
-            /* the message does not have destination itself, use destination cached for notification id */
-	    if(eq_b == NULL) {
-		    /* no destination is known for notification id, commit it immediately */
-		    il_log(LOG_DEBUG, "    message has no known destination, will not be sent\n");
-		    event_store_commit(es, msg->ev_len, 0, msg->generation);
-	    }
-    } else {
-        /* check if we know destination for notification id */
-        if(eq_b == NULL) {
-        	eq_b = queue_list_get(msg->dest);
-		if(notifid_map_set_dest(es->job_id_s, eq_b) < 0) {
-			break;
-		}
-        }
-	/* remember last message destination */
-	if(last_dest == NULL || strcmp(msg->dest, last_dest) != 0) {
-		/* destination changed */
-		if(last_dest) {
-			free(last_dest);
-		}
-		last_dest = strdup(msg->dest);
-	}
-    }
-
-    /* check message expiration */
-    if(last_exp == 0 || last_exp != msg->expires) {
-    	last_exp = msg->expires;
-    }
-#else
     /* first enqueue to the LS */
     if(!bs_only && (last >= last_ls)) {
 
       il_log(LOG_DEBUG, "      queuing event at %ld to logging server\n", last);
 
-      /* TODO: throttling for the log server queue? */
-      if(enqueue_msg(eq_l, msg) < 0) {
-    	  break;
-      }
+#if !defined(IL_NOTIFICATIONS)
+      if(enqueue_msg(eq_l, msg) < 0)
+	break;
+#endif
+    }
+
+#ifdef IL_NOTIFICATIONS
+    eq_b = queue_list_get(msg->dest);
+    /* if the message does not have destination itself, use destination cached for notification id */
+    if(eq_b == NULL) {
+    	eq_b = notifid_map_get_dest(msg->job_id_s);
+    	if(eq_b == NULL) {
+        	/* message has no destination and no destination is known for notification id,
+        	 * commit it immediately
+        	 */
+    		il_log(LOG_DEBUG, "    message has no known destination, will not be sent\n");
+			event_store_commit(es, msg->ev_len, 0, msg->generation);
+    		/* if the expiration changed, set new one now, message will be discarded soon */
+    		if(msg->expires != notifid_map_get_expiration(msg->job_id_s)) {
+    			notifid_map_set_expiration(msg->job_id_s, msg->expires);
+    		}
+    	}
     }
 #endif
 
-    /* now enqueue to the BS, if necessary */
-    if(!throttle && (eq_b != eq_l) && (last >= last_bs)) {
+    /* now enqueue to the BS, if neccessary */
+    if((eq_b != eq_l) &&
+       (last >= last_bs)) {
 
-      if((r=enqueue_msg(eq_b, msg)) < 0) {
+      il_log(LOG_DEBUG, "      queueing event at %ld to bookkeeping server\n", last);
+
+      if(enqueue_msg(eq_b, msg) < 0)
     	  break;
-      } else if(r > 0) {
-	      throttle = 1;
-	      il_log(LOG_DEBUG, "      queue max length limit reached, event at %ld throttled\n", fpos);
-      } else {
-	      il_log(LOG_DEBUG, "      queuing event at %ld to bookkeeping server\n", last);
-      }
     }
     server_msg_free(msg);
     msg = NULL;
 
-    fpos = ftell(ef);
     /* now last is also the offset behind the last successfully queued event */
-    if(!throttle) {
-	    last = fpos;
-    }
+    last = ftell(ef);
 
     /* ret == 0 means EOF or incomplete event found */
     ret = 0;
 
   } /* while */
-
-#if defined(IL_NOTIFICATIONS)
-  /* check if we have to move events to new destination */
-  il_log(LOG_DEBUG, "    last destination %s, last known destination %s\n", last_dest, eq_b ? eq_b->dest : "none");
-  if(last_dest && strcmp(last_dest, eq_b->dest)) {
-	  struct event_queue *eq_dest = queue_list_get(last_dest);
-
-	  /* set new destination */
-	  if(notifid_map_set_dest(es->job_id_s, eq_dest) < 0) {
-		  ret = -1;
-	  } else {
-
-		  /* move all events with this notif_id from eq_b to eq_dest */
-		  event_queue_move_events(eq_b, eq_dest, cmp_jobid, es->job_id_s);
-		  eq_b = eq_dest;
-		  il_log(LOG_DEBUG, "    all messages for notif id %s are now destined to %s\n",
-			 es->job_id_s, eq_b->dest);
-		  if(event_queue_create_thread(eq_b) < 0) {
-			  ret = -1;
-		  } else {
-			  event_queue_cond_lock(eq_b);
-			  event_queue_signal(eq_b);
-			  event_queue_cond_unlock(eq_b);
-		  }
-	  }
-  }
-  if(last_dest) {
-	  free(last_dest);
-	  last_dest = NULL;
-  }
-
-  /* if the expiration changed, set new one */
-  if(last_exp != notifid_map_get_expiration(es->job_id_s)) {
-	  struct cmp_exp_data data;
-
-	  notifid_map_set_expiration(es->job_id_s, last_exp);
-	  /* set expiration for all events with this notif id */
-	  data.job_id_s = es->job_id_s;
-	  data.expires = last_exp;
-	  event_queue_move_events(eq_b, NULL, cmp_jobid_set_exp, &data);
-  }
-#endif
 
   es->offset = last;
   es->last_modified = stbuf.st_mtime;

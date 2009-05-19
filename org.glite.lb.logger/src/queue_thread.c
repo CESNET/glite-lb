@@ -213,7 +213,7 @@ event_queue_create_thread(struct event_queue *eq)
 	event_queue_lock(eq);
 
 	/* if there is a thread already, just return */
-	if(eq->thread_id != 0) {
+	if(eq->thread_id > 0) {
 		event_queue_unlock(eq);
 		return(0);
 	}
