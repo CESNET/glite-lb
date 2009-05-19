@@ -22,10 +22,10 @@ int
 main(int argc, char *argv[])
 {
    edg_wll_Context ctx;
-   int operation = EDG_WLL_ACL_ADD;
-   int permission = EDG_WLL_PERM_READ;
-   int permission_type = EDG_WLL_PERM_ALLOW;
-   int user_id_type = EDG_WLL_USER_SUBJECT;
+   int operation = EDG_WLL_CHANGEACL_ADD;
+   int permission = EDG_WLL_CHANGEACL_READ;
+   int permission_type = EDG_WLL_CHANGEACL_ALLOW;
+   int user_id_type = EDG_WLL_CHANGEACL_DN;
    edg_wlc_JobId jobid;
    int opt;
    int ret;
@@ -37,9 +37,9 @@ main(int argc, char *argv[])
 
    while ((opt=getopt(argc, argv, "rdg")) != -1)
       switch(opt) {
-	 case 'r': operation = EDG_WLL_ACL_REMOVE; break;
-	 case 'd': permission_type = EDG_WLL_PERM_DENY; break;
-	 case 'g': user_id_type = EDG_WLL_USER_VOMS_GROUP; break;
+	 case 'r': operation = EDG_WLL_CHANGEACL_REMOVE; break;
+	 case 'd': permission_type = EDG_WLL_CHANGEACL_DENY; break;
+	 case 'g': user_id_type = EDG_WLL_CHANGEACL_GROUP; break;
 	 default:
 		   usage(argv[0]);
 		   return 1;
