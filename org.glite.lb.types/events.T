@@ -189,7 +189,7 @@
 	_code_	GROUP		VO group (must be specified as "vo":"group")
 	_code_	FQAN		Standard Full Qualified Attribute Name (FQAN)
 	int	permission	ACL permission to change.
-	_null_	-1
+	_null_	0
 	_code_	READ		Get job information
 	int	permission_type	Type of permission requested.
 	_null_	-1
