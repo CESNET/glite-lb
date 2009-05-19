@@ -313,7 +313,7 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
                 conds[1][2].value.i = EDG_WLL_JOB_CANCELLED;
 		conds[1][3].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 		conds[2] = malloc(2*sizeof(**conds));
-		conds[2][0].attr = EDG_WLL_QUERY_ATTR_STATEENTERTIME;
+		conds[2][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
 		conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
 		conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
 		conds[2][0].value.t.tv_usec = 0;
@@ -333,7 +333,7 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
                 conds[1][0].value.i = EDG_WLL_JOB_RUNNING;
                 conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
                 conds[2] = malloc(2*sizeof(**conds));
-                conds[2][0].attr = EDG_WLL_QUERY_ATTR_STATEENTERTIME;
+                conds[2][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
                 conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
                 conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
                 conds[2][0].value.t.tv_usec = 0;
@@ -353,7 +353,7 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
                 conds[1][0].value.i = EDG_WLL_JOB_ABORTED;
                 conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
                 conds[2] = malloc(2*sizeof(**conds));
-                conds[2][0].attr = EDG_WLL_QUERY_ATTR_STATEENTERTIME;
+                conds[2][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
                 conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
                 conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
                 conds[2][0].value.t.tv_usec = 0;
@@ -734,13 +734,28 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	/*GET /RSS:[feed type] RSS feed */
 		} else if (strncmp(requestPTR, "/RSS:", strlen("/RSS:")) == 0){
 			edg_wll_JobStat *states;
-			char *feedType = requestPTR + strlen("/RSS:");
+			char *feedType;
+			int i;
+			int idx;
+
+			feedType = requestPTR + strlen("/RSS:");
 			if (getJobsRSS(ctx, feedType, &states) < 0){
 				ret = HTTP_INTERNAL;
                                 goto err;
 			}
+
+			// check if owner and lastupdatetime is indexed
+			idx = 0;
+			for (i = 0; ctx->job_index[i]; i++)
+				if (ctx->job_index[i]->attr == EDG_WLL_QUERY_ATTR_OWNER)
+					idx++;
+				else if (ctx->job_index[i]->attr == EDG_WLL_QUERY_ATTR_LASTUPDATETIME)
+					idx++;
+			if (idx < 2){
+				ret = HTTP_NOTFOUND;
+	                        edg_wll_SetError(ctx, ENOENT, "current index configuration does not support RSS feeds");
+			}
 			edg_wll_RSSFeed(ctx, states, requestPTR, &message);
-			// freeJobStates
 
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
