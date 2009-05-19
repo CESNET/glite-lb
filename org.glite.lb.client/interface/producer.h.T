@@ -347,10 +347,10 @@ extern int edg_wll_ChangeACL(
 	edg_wll_Context		context,
 	glite_jobid_const_t	job,
 	const char *		user_id,
-	enum edg_wll_UserIdType	user_id_type,
-	enum edg_wll_Permission		permission,
-	enum edg_wll_PermissionType	permission_type,
-	enum edg_wll_ACLOperation	operation
+	enum edg_wll_ChangeACLUser_id_type	user_id_type,
+	enum edg_wll_ChangeACLPermission	permission,
+	enum edg_wll_ChangeACLPermission_type	permission_type,
+	enum edg_wll_ChangeACLOperation		operation
 );
 
 

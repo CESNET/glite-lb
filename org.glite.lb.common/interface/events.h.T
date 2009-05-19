@@ -428,30 +428,6 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 #define EDG_WLL_LOGFLAG_DIRECT  16 /**< logging directly to bkserver */
 #define EDG_WLL_LOGFLAG_INTERNAL  32 /**< internally generated event, don't forward */
 
-/* enums for the ChangeACL event */
-
-enum edg_wll_Permission {
-	EDG_WLL_PERM_READ  = 1,
-	EDG_WLL_PERM_WRITE = 4,
-	EDG_WLL_PERM_ADMIN = 8,
-};
-
-enum edg_wll_PermissionType {
-	EDG_WLL_PERM_ALLOW,
-	EDG_WLL_PERM_DENY,
-};
-
-enum edg_wll_ACLOperation {
-	EDG_WLL_ACL_ADD,
-	EDG_WLL_ACL_REMOVE,
-};
-
-enum edg_wll_UserIdType {
-	EDG_WLL_USER_SUBJECT,           /* X.509 subject name */
-	EDG_WLL_USER_VOMS_GROUP,        /* VOMS group membership */
-	EDG_WLL_USER_FQAN,		/* Full qualified attribute name */
-};
-
 /*
  *@} end of group
  */

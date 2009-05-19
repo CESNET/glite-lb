@@ -1226,10 +1226,10 @@ int edg_wll_ChangeACL(
 		edg_wll_Context			ctx,
 		glite_jobid_const_t		jobid,
 		const char			*user_id,
-		enum edg_wll_UserIdType		user_id_type,
-		enum edg_wll_Permission		permission,
-		enum edg_wll_PermissionType	permission_type,
-		enum edg_wll_ACLOperation	operation)
+        	enum edg_wll_ChangeACLUser_id_type      user_id_type,
+        	enum edg_wll_ChangeACLPermission        permission,
+        	enum edg_wll_ChangeACLPermission_type   permission_type,
+        	enum edg_wll_ChangeACLOperation         operation)
 {
 	if ( edg_wll_SetLoggingJob(ctx, jobid, NULL, EDG_WLL_SEQ_NORMAL) == 0 ) {
 		edg_wll_LogEventMaster(ctx, EDG_WLL_LOGFLAG_LOCAL | EDG_WLL_LOGFLAG_SYNC, 
