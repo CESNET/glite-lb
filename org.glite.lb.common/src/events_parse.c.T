@@ -398,12 +398,10 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	for ($event->getFieldsOrdered) {
 		my $f = selectField $event $_;
 		next if $f->{optional};
-		if (!$f->{codes}) {
-			my $fn = $f->{name};
-			my $fu = uc $fn;
-			my $ft = $f->{type};
-			gen "\tif (". $f->isNULL("event->$tl.$fn") .") MISSING(EDG_WLL\_$tu\_$fu)\n";
-		}
+		my $fn = $f->{name};
+		my $fu = uc $fn;
+		my $ft = $f->{type};
+		gen "\tif (". $f->isNULL("event->$tl.$fn") .") MISSING(EDG_WLL\_$tu\_$fu)\n";
 	}
 	gen $indent.$indent."break;\n";
 }
