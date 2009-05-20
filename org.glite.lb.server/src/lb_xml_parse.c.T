@@ -835,6 +835,9 @@ static void endNotifRequest(void *data, const char *el UNUSED_VAR)
 			XMLCtx->notifChangeOp = edg_wll_StringToNotifChangeOp(pom);
 			free(pom);
 		}
+		else if (!strcmp(XMLCtx->element,"requestedValidity")) {
+			XMLCtx->notifValidity = edg_wll_from_string_to_time_t(XMLCtx);
+		}
 		else if (!strcmp(el,"and")) {
 			long len = (XML_GetCurrentByteIndex(XMLCtx->p) + XML_GetCurrentByteCount(XMLCtx->p))
 					-  XMLCtx->jobQueryRec_begin;
@@ -1316,7 +1319,7 @@ int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 	return ret;
 }
 /* parse Notif request from client */
-int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, edg_wll_QueryRec ***conditions) 
+int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, time_t *validity,edg_wll_QueryRec ***conditions) 
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -1382,6 +1385,7 @@ int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 		*notifId = XMLCtx.notifId;
 		*address = XMLCtx.notifClientAddress;
 		*op = XMLCtx.notifChangeOp;
+		*validity = XMLCtx.notifValidity;
 		*conditions = XMLCtx.job_conditions;
 	}
 

@@ -21,7 +21,7 @@ int parseQueryEventsRequest(edg_wll_Context ctx, char *messageBody, edg_wll_Quer
 int parsePurgeRequest(edg_wll_Context ctx, char *messageBody, int (*tagToIndex)(), edg_wll_PurgeRequest *request);
 int parseDumpRequest(edg_wll_Context ctx, char *messageBody, edg_wll_DumpRequest *request);
 int parseLoadRequest(edg_wll_Context ctx, char *messageBody, edg_wll_LoadRequest *request);
-int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, edg_wll_QueryRec ***conditions);
+int parseNotifRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_NotifId *notifId, char **address, edg_wll_NotifChangeOp *op, time_t *validity,edg_wll_QueryRec ***conditions);
 int parseQuerySequenceCodeRequest(edg_wll_Context ctx, char *messageBody, edg_wlc_JobId *jobId, char **source);
 int edg_wll_QueryEventsToXML(edg_wll_Context, edg_wll_Event *, char **);
 int edg_wll_QueryJobsToXML(edg_wll_Context, edg_wlc_JobId *, edg_wll_JobStat *, char **);

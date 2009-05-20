@@ -23,6 +23,24 @@ static int update_notif(edg_wll_Context, const edg_wll_NotifId,
 						const char *, const char *, const char *);
 
 
+static void adjust_validity(edg_wll_Context ctx,time_t *valid)
+{
+	time_t	now;
+
+	time(&now);
+
+	if (*valid <= 0) {
+		*valid = now + ctx->notifDuration;
+	}
+
+	if (ctx->peerProxyValidity && ctx->peerProxyValidity < *valid)
+		*valid = ctx->peerProxyValidity;
+
+	if (*valid - now > ctx->notifDuration) 
+		*valid = now + ctx->notifDuration;
+}
+
+
 int edg_wll_NotifNewServer(
 	edg_wll_Context					ctx,
 	edg_wll_QueryRec const * const *conditions,
@@ -72,12 +90,11 @@ int edg_wll_NotifNewServer(
 
 	/*	Format time of validity
 	 */
-	*valid = time(NULL);
-	if (   ctx->peerProxyValidity
-		&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
-		*valid = ctx->peerProxyValidity;
-	else
-		*valid += ctx->notifDuration;
+
+	if (*valid <= 0)
+		*valid = time(NULL) + ctx->notifDuration;
+	adjust_validity(ctx,valid);
+
 	
 	if ( !(time_s = strdup(edg_wll_TimeToDB(*valid))) )
 	{
@@ -178,12 +195,9 @@ int edg_wll_NotifBindServer(
 
 	/*	Format time of validity
 	 */
-	*valid = time(NULL);
-	if (   ctx->peerProxyValidity
-		&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
-		*valid = ctx->peerProxyValidity;
-	else
-		*valid += ctx->notifDuration;
+	if (*valid <= 0)
+		*valid = time(NULL) + ctx->notifDuration;
+	adjust_validity(ctx,valid);
 
 	if ( !(time_s = strdup(edg_wll_TimeToDB(*valid))) )
 	{
@@ -333,12 +347,10 @@ int edg_wll_NotifRefreshServer(
 
 	/*	Format time of validity
 	 */
-	*valid = time(NULL);
-	if (   ctx->peerProxyValidity
-		&& (ctx->peerProxyValidity - *valid) < ctx->notifDuration )
-		*valid = ctx->peerProxyValidity;
-	else
-		*valid += ctx->notifDuration;
+	if (*valid <= 0)
+		*valid = time(NULL) + ctx->notifDuration;
+	adjust_validity(ctx,valid);
+
 
 	if ( !(time_s = strdup(edg_wll_TimeToDB(*valid))) )
 	{
