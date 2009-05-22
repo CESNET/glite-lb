@@ -27,7 +27,7 @@ my $jp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
 
-my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient/;
+my @nodes = qw/client server logger utils doc ws-test db jpprimary jpindex jpclient/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -65,10 +65,10 @@ my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test/], 
+	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
-	'jobid' => [qw/api-c api-cpp api-java/],
+	'jobid' => [qw/api-c api-cpp/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	);
 
@@ -365,7 +365,7 @@ for my $jar (keys %need_jars) {
 		jobid.api-c
 		security.gsoap-plugin security.gss
 	/ ],
-	'lb.state-machine' => [ qw/lb.common lbjp-common.jp-interface security.gss/ ],
+	'lb.state-machine' => [ qw/lb.types:B lb.common lbjp-common.jp-interface security.gss/ ],
 	'lb.utils' => [ qw/
 		lbjp-common.jp-interface
 		jobid.api-c
