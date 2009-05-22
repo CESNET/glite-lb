@@ -41,3 +41,8 @@
 2.0.2-1
 - implemented multi-file event store, avoiding ever-growing files
   in the case of heavy traffic notifications
+
+2.0.3-1
+- Fixed handling messages with destination not set
+- Additional logging output
+
