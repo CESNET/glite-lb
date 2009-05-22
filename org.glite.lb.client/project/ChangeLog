@@ -48,3 +48,8 @@
 - (from 3.2.2-1) Fix edg_wll_NotifDrop prototype (#34649).
 - Notification pool implementation
 
+4.0.2-1
+- don't use hard-wired types for ACLs events but the ones generated automatically
+- change_acl code adapted to the new API using generated types
+- new options to the glite-lb-notify command
+
