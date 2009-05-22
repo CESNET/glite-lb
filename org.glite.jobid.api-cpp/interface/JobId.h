@@ -6,7 +6,6 @@
 #include <new>
 #include <cerrno>
 #include <cassert>
-#include <cstdlib>
 
 #include "glite/jobid/cjobid.h"
 
