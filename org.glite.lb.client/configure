@@ -27,7 +27,7 @@ my $jp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
 
-my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient/;
+my @nodes = qw/client server logger utils doc ws-test db jpprimary jpindex jpclient/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -37,8 +37,10 @@ my %extern_prefix = (
 	cppunit => '/usr',
 	expat => '/usr',
 	globus => '/opt/globus',
+	jglobus => '/opt/globus',
 	gsoap => '/usr',
 	mysql => '/usr',
+	'mysql-devel' => '',
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
@@ -63,10 +65,10 @@ my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test/], 
+	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
-	'jobid' => [qw/api-c api-cpp api-java/],
+	'jobid' => [qw/api-c api-cpp/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	);
 
@@ -104,6 +106,8 @@ push @opts,"with-$_=s",\$jar{$_} for keys %jar;
 my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
+
+$extern_prefix{'mysql-devel'}=$extern_prefix{mysql} if $extern_prefix{'mysql-devel'} eq '';
 
 if ($help) { usage(); exit 0; }
 
@@ -286,7 +290,7 @@ sub mode_checkout() {
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
-	'lb.client-java' => [ qw/ant:B/ ],
+	'lb.client-java' => [ qw/ant:B jglobus jdk:B/ ],
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
@@ -296,7 +300,7 @@ BEGIN{
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
-	'lbjp-common.db' => [ qw/mysql/ ],
+	'lbjp-common.db' => [ qw/mysql:R mysql-devel:B/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
@@ -361,7 +365,7 @@ for my $jar (keys %need_jars) {
 		jobid.api-c
 		security.gsoap-plugin security.gss
 	/ ],
-	'lb.state-machine' => [ qw/lb.common lbjp-common.jp-interface security.gss/ ],
+	'lb.state-machine' => [ qw/lb.types:B lb.common lbjp-common.jp-interface security.gss/ ],
 	'lb.utils' => [ qw/
 		lbjp-common.jp-interface
 		jobid.api-c
@@ -545,8 +549,10 @@ sub mode_etics {
 	@ge{@{$etics_projects{'org.glite'}}} = (1) x ($#{$etics_projects{'org.glite'}}+1);
 
 	for (@{$need_externs{"$subsys.$module"}}) {
+	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 		push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
+	    }
 	}
 
 	for (@{$need_jars{"$subsys.$module"}}) {
