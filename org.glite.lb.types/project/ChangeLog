@@ -13,3 +13,6 @@
 1.0.0-5
 - Installation rules improved - treat stage as prefix.
 
+1.0.1-1
+- make the READ permission be compatible with the value used previously
+
