@@ -70,3 +70,11 @@
 - Notif IL installation removed from makefile
 - configure script updated
 
+2.0.2-1
+- RSS feed implementation
+- Fixed notification expiry
+- Fixes to ACL handling
+- Fixed authorization in simple interface
+- Support for JDL changes in JDL-based notifications
+- Initial implementation of WS notifications
+
