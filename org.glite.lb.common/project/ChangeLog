@@ -33,3 +33,8 @@
 - Connection pool for notifications.
 - Enable reading collection events in performance tests
 
+7.0.2-1
+- don't use hard-wired types for ACLs events but the ones generated automatically
+- check mandatory events fields even if they contain enum types
+- RSS time in context
+
