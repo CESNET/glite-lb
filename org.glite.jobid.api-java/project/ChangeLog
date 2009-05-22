@@ -13,3 +13,6 @@
 1.0.0-6
 - Added ant_prefix handling to Makefile and configure
 
+1.0.0-7
+- configure script update
+
