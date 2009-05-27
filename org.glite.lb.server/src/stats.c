@@ -46,6 +46,8 @@ static edg_wll_Stats default_stats[] = {
 	
 };
 
+extern int debug;
+
 int edg_wll_InitStatistics(edg_wll_Context ctx)
 {
 	edg_wll_Stats *stats = default_stats; 	/* XXX: hardcoded */
@@ -68,7 +70,7 @@ int edg_wll_InitStatistics(edg_wll_Context ctx)
 		}
 		zero = calloc(1,stats[i].grpsize);
 		write(stats[i].fd,zero,stats[i].grpsize);
-		stats[i].map = mmap(NULL,sizeof zero,PROT_READ|PROT_WRITE,MAP_SHARED,stats[i].fd,0);
+		stats[i].map = mmap(NULL,stats[i].grpsize,PROT_READ|PROT_WRITE,MAP_SHARED,stats[i].fd,0);
 		if (stats[i].map == MAP_FAILED) return edg_wll_SetError(ctx,errno,"mmap()");
 
 		dprintf(("stats: using %s\n",fname));
@@ -123,10 +125,27 @@ static struct edg_wll_stats_archive *archive_skip(
 			);
 }
 
+static int stats_remap(edg_wll_Stats *stats)
+{
+	int newgrpno = stats->map->grpno;
+	dprintf(("stats_remap: size changed (%d != %d), remap",stats->grpno,newgrpno));
+	munmap(stats->map,(stats->grpno ? stats->grpno : 1) * stats->grpsize);
+	stats->map = mmap(NULL,newgrpno * stats->grpsize,
+			PROT_READ|PROT_WRITE,MAP_SHARED,stats->fd,0);
+	if (stats->map == MAP_FAILED) {
+		if (debug) abort();
+		return -1;
+	}
+	assert(stats->map->grpno == newgrpno);
+	stats->grpno = newgrpno;
+	return 0;
+}
+
+
 static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,edg_wll_Stats *stats)
 {
 	int	i,j;
-	char	*sig;
+	char	*sig = NULL;
 	struct edg_wll_stats_group	*g;
 	struct edg_wll_stats_archive	*a;
 	time_t	now = jobstat->stateEnterTime.tv_sec;
@@ -141,17 +160,9 @@ static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,
 	if (flock(stats->fd,LOCK_EX)) return edg_wll_SetError(ctx,errno,"flock()");
 
 	/* remap the file if someone changed its size */
-	if (stats->map->grpno != stats->grpno) {
-		int newgrpno = stats->map->grpno;
-		munmap(stats->map,(stats->grpno ? stats->grpno : 1) * stats->grpsize);
-		stats->map = mmap(NULL,newgrpno * stats->grpsize,
-				PROT_READ|PROT_WRITE,MAP_SHARED,stats->fd,0);
-		if (stats->map == MAP_FAILED) {
-			edg_wll_SetError(ctx,errno,"mmap()");
-			goto cleanup;
-		}
-		assert(stats->map->grpno == newgrpno);
-		stats->grpno = newgrpno;
+	if (stats->map->grpno != stats->grpno && stats_remap(stats)) {
+		edg_wll_SetError(ctx,errno,"shmem remap failed");
+		goto cleanup;
 	}
 
 	sig = str2md5base64(jobstat->destination);
@@ -172,7 +183,7 @@ static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,
 			lseek(stats->fd,0,SEEK_END);
 			write(stats->fd,zero,stats->grpsize);
 			free(zero);
-			stats->map = mmap(NULL,stats->grpno * stats->grpsize,
+			stats->map = mmap(NULL,(stats->grpno+1) * stats->grpsize,
 					PROT_READ|PROT_WRITE,MAP_SHARED,stats->fd,0);
 
 			if (stats->map == MAP_FAILED) {
@@ -297,6 +308,16 @@ int edg_wll_StateRateServer(
 
 	if (!stats->type) return edg_wll_SetError(ctx,ENOENT,"no matching state counter");
 
+	/* remap the file if someone changed its size */
+	if (stats->map->grpno != stats->grpno)
+	{	
+		if (flock(stats->fd,LOCK_EX)) return edg_wll_SetError(ctx,errno,"flock()");
+		if (stats_remap(stats)) {
+			edg_wll_SetError(ctx,errno,"shmem remap failed");
+			goto cleanup;
+		}
+	}
+
 	if (flock(stats->fd,LOCK_SH)) return edg_wll_SetError(ctx,errno,"flock()");
 
 	/* XXX */
@@ -309,6 +330,7 @@ int edg_wll_StateRateServer(
 	}
 
 	if (i == stats->grpno) {
+		dprintf(("no match: %s\n",sig));
 		edg_wll_SetError(ctx,ENOENT,"no matching group");
 		goto cleanup;
 	}
