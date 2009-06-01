@@ -6,15 +6,19 @@ glite-lb-notify - Register and receive notification from L&B
 .SH SYNOPSIS
 .B glite-lb-notify 
 .br
-	\fBnew\fR [ { \fB-s\fI socket_fd\fR | \fB-a \fIfake_addr\fR } \fB-t \fIrequested_validity\fR ] { \fB-j \fIjobid \fR| \fB-o \fIowner \fR| \fB-n \fInetwork_server \fR| \fB-v\fI virtual_organization\fR }
+	\fBnew\fR [ { \fB-s\fI socket_fd\fR | \fB-a \fIfake_addr\fR } \fB-t \fIrequested_validity\fR \fB-j \fIjobid \fR| { \fB-o \fIowner \fR | \fB -O \fR } \fB-n \fInetwork_server \fR \fB-v\fI virtual_organization\fR \fB-c \fR \fB-f\fI flags\fR ] 
 .br
 	\fBbind \fR [ { \fB-s\fI socket_fd\fR | \fB-a \fIfake_addr\fR } \fB-t \fIrequested_validity\fR ] \fInotifid\fR
+.br	
+	\fBchange \fR \fInotifid\fR \fIjobid\fR
 .br
 	\fBrefresh\fR [ \fB-t \fIrequested_validity \fR ] notifid
 .br
-	\fBreceive\fR [ { \fB-s\fI socket_fd\fR | \fB-a \fIfake_addr\fR } \fB-t \fIrequested_validity\fR ] [ \fB -i \fItimeout \fR] [ \fB-f\fI field1,field2\fR,... \fInotifid\fR
+	\fBreceive\fR [ { \fB-s\fI socket_fd\fR | \fB-a \fIfake_addr\fR } \fB-t \fIrequested_validity\fR ] [ \fB -i \fItimeout \fR] [ \fB-r\fR] [ \fB-f\fI field1,field2\fR,... \fInotifid\fR
 .br
 	\fBdrop\fR \fInotifid\fR
+.br	
+	\fBhelp\fR
 
 
 .SH DESCRIPTION
@@ -79,7 +83,11 @@ with exacltly one of
 .B -o\fR,
 .B -n,\fR
 .B -v
-options. 
+options. If the option 
+.B -O\fR 
+is used, credentials are retrieved from environment. The
+.B -c\fR
+set matching only on state change.
 Prints ID of the created notification.
 
 .TP
@@ -87,6 +95,11 @@ Prints ID of the created notification.
 
 Binds to an existing notification, changing its listener eventually.
 Useful for debugging purposes mostly. 
+
+.TP
+.B change
+
+Connect notification with another job.
 
 .TP
 .B refresh
@@ -100,6 +113,8 @@ Bind to an existing notification, and start waiting for an incoming
 event, at most the time specified with
 .B -i
 (seconds).
+.B -r
+attempts to refresh the notification handle in 1/2 of current validity.
 .B -f
 allows to specify a custom list of fields of the job status
 to display. Run 

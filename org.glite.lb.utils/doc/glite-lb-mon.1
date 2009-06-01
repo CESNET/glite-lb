@@ -5,7 +5,7 @@ glite-lb-mon - program for monitoring the number of jobs on the LB server and th
 
 .SH SYNOPSIS
 .B glite-lb-mon
-.B [-t time]
+.B [-t time -h]
 .br
 
 .SH DESCRIPTION
@@ -18,7 +18,11 @@ that entered the system during this time is calculated.
 .SH OPTIONS
 .TP
 .B \-t time, \-\-time=time
-querying time in seconds from now to the past [deault 3600]
+Querying time in seconds from now to the past [deault 3600].
+
+.TP
+.B \-h, \-\-help
+Display help and exit.
 
 .SH ENVIRONMENT
 .TP
