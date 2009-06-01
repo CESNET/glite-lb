@@ -118,7 +118,7 @@ MAN = $(MAN_GZ:.gz=)
 
 default: all 
 
-all compile: $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
+all compile: $(LOGD) $(INTERLOGD) ${MAN_GZ}
 
 glite-lb-logd: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} 
@@ -191,9 +191,9 @@ install:
 	-mkdir -p ${PREFIX}/share/man/man8
 	${INSTALL} -m 755 ${LOGD} ${PREFIX}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${PREFIX}/bin
-	if [ x${DOSTAGE} = xyes ]; then \
-		${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin; \
-	fi
+#	if [ x${DOSTAGE} = xyes ]; then \
+#		${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin; \
+#	fi
 ifdef LB_PERF
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${PREFIX}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${PREFIX}/sbin
