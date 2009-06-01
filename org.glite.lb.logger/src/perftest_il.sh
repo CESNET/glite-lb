@@ -344,7 +344,7 @@ do
 	    echo -n "Your choice: "
 	    read -e TEST_VARIANT
 	done
-	echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
+	print_result_header
     fi
 
     if [[ "x$TEST_VARIANT" = "x*" ]]

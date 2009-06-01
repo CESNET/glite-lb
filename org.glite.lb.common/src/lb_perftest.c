@@ -218,6 +218,7 @@ read_events(int fd)
 					nsubjobs = val;
 					subjobids = realloc(subjobids, (nsubjobs+1)*sizeof(*subjobids));
 					if(subjobids == NULL) goto nomem;
+					memset(subjobids, 0, (nsubjobs+1)*sizeof(*subjobids));
 				}
 			} else {
 				/* some other key */
@@ -310,7 +311,8 @@ glite_wll_perftest_init(const char *host,
 		close(fd);
 
 		fprintf(stderr, "PERFTEST_JOB_SIZE=%d\n", nevents);
-		fprintf(stderr, "PERFTEST_NUM_JOBS=%d\n", njobs * (nsubjobs + 1));
+		fprintf(stderr, "PERFTEST_NUM_JOBS=%d\n", njobs);
+		fprintf(stderr, "PERFTEST_NUM_SUBJOBS=%d\n", nsubjobs);
 	}
 
 	/* we suppose nsubjobs was filled in by read_events() */
@@ -340,7 +342,6 @@ glite_wll_perftest_init(const char *host,
 			fprintf(stderr, "produceJobId: error unparsing jobid\n");
 			return(-1);
 		}
-		glite_jobid_free(jobid);
 
 		/* generate subjob ids */
 		if(nsubjobs > 0) {
@@ -351,12 +352,13 @@ glite_wll_perftest_init(const char *host,
 			}
 		}
 		for(i = 1; i <= nsubjobs; i++) {
-			if((jobids[n*(nsubjobs+1) + i] = edg_wlc_JobIdUnparse(subjobid[i])) == NULL) {
+			if((jobids[n*(nsubjobs+1) + i] = edg_wlc_JobIdUnparse(subjobid[i-1])) == NULL) {
 				fprintf(stderr, "produceJobId: error unparsing jobid\n");
 				return(-1);
 			}
 			glite_jobid_free(subjobid[i]);
 		}
+		glite_jobid_free(jobid);
 	}
 
 			
@@ -406,7 +408,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 {
 	static int first = 1;
 	char *e;
-	int len, cur_subjob;
+	int len, cur_subjob, jobi;
 
 	assert(event != NULL);
 
@@ -423,8 +425,11 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 	/* use index to get current subjob */
 	cur_subjob = events[cur_event].job_index;
 
+	/* current job index */
+	jobi = cur_group*group_size + cur_job;
+
 	/* did we send all events? */
-	if(cur_group*group_size + cur_job > njobs) {
+	if(jobi > njobs) {
 		
 		/* construct termination event */
 		if((len=trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USERTAG "\n",
@@ -435,7 +440,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 				      "UserInterface", /* source */
 				      "me again", /* source instance */
 				      "UserTag", /* event */
-				      jobids[cur_job], /* jobid */
+				      jobids[jobi], /* jobid */
 				      "UI=999980:NS=9999999980:WM=999980:BH=9999999980:JSS=999980:LM=999980:LRMS=999980:APP=999980", /* sequence */
 				      PERFTEST_END_TAG_NAME,
 				      PERFTEST_END_TAG_VALUE)) < 0) {
@@ -467,8 +472,8 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 		
 		/* return current event with jobid filled in */
 		if((len=trio_asprintf(&e, "DG.JOBID=\"%s\" DG.REGJOB.PARENT=\"%s\" DG.REGJOB.SEED=\"%s\" DG.REGJOB.NSUBJOBS=\"%d\" %s", 
-				      jobids[cur_job*(nsubjobs+1) + cur_subjob], 
-				      (nsubjobs > 0) ? jobids[cur_job*(nsubjobs+1)] : "",
+				      jobids[jobi*(nsubjobs+1) + cur_subjob], 
+				      (nsubjobs > 0) ? jobids[jobi*(nsubjobs+1)] : "",
 				      test_name,
 				      nsubjobs,
 				      events[cur_event].event)) < 0) {
@@ -477,7 +482,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 				abort();
 			return(-1);
 		}
-		*jobid = jobids[cur_job*(nsubjobs+1) + cur_subjob];
+		*jobid = jobids[jobi*(nsubjobs+1) + cur_subjob];
 
 		/* advance to the next job and/or event */
 		if(++cur_job % group_size == 0) {
