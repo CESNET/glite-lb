@@ -156,7 +156,11 @@ public class ProducerTestLL {
             /* And now is the context and event prepared to work.
              * 
              */
-            ctx.log(running);
+	    try { 
+            	ctx.log(running);
+	    } catch (LBException e) {
+		e.printStackTrace();
+	    }
         }
     }
 }

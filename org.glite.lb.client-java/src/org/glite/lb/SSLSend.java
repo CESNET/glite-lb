@@ -26,9 +26,11 @@ public class SSLSend {
      */
     public void send(String keyStoreSender, String host,
             int port, int timeout, String message) 
-    throws KeyStoreException,IOException,NoSuchAlgorithmException,KeyManagementException
+	throws LBException
+//    throws KeyStoreException,IOException,NoSuchAlgorithmException,KeyManagementException
     {
 
+      try {
 	SSL lbsock = new SSL();
 
 	lbsock.setProxy(keyStoreSender);
@@ -54,6 +56,18 @@ public class SSLSend {
 	s.print(message + '\n' + '\0');
 	s.flush();
 	s.close();
+      } 
+      catch (KeyStoreException e) {
+	throw new LBException(e);
+      }
+      catch (IOException e) {
+	throw new LBException(e);
+      }
+      catch (NoSuchAlgorithmException e) {
+	throw new LBException(e);
+      }
+      catch (KeyManagementException e) {
+	throw new LBException(e);
+      }
     }
-
 }

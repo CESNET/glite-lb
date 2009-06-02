@@ -125,7 +125,7 @@ public abstract class Context {
      * Abstract method which will serve as method for sending messages with events.
      * @param event event for which will be created and send message
      */
-    public abstract void log(Event event);
+    public abstract void log(Event event) throws LBException;
     
     /**
      * Creates message prepared to send

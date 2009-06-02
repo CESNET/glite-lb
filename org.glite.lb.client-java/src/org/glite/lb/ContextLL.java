@@ -55,7 +55,7 @@ public class ContextLL extends Context {
     }
 
     @Override
-    public void log(Event event) {
+    public void log(Event event) throws LBException {
         if (event == null) {
             throw new IllegalArgumentException("ContextLL event");
         }
