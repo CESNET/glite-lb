@@ -37,16 +37,17 @@ my %extern_prefix = (
 	cppunit => '/usr',
 	expat => '/usr',
 	globus => '/opt/globus',
-	jglobus => '/opt/globus',
 	gsoap => '/usr',
 	mysql => '/usr',
 	'mysql-devel' => '',
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
+	trustmanager => '/opt/glite',
 	ant => '/usr',
 	jdk => '/usr',
 	libtar => '/usr',
+	axis => '/usr',
 );
 
 my %jar = (
@@ -290,7 +291,7 @@ sub mode_checkout() {
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
-	'lb.client-java' => [ qw/ant:B jglobus jdk:B/ ],
+	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager/ ],
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
@@ -346,6 +347,7 @@ for my $jar (keys %need_jars) {
 	/ ],
 	'lb.client-java' => [ qw/
 		lb.types:B
+		lb.ws-interface:B
 		jobid.api-java
 	/ ],
 	'lb.common' => [ qw/
@@ -512,6 +514,7 @@ BEGIN{
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
+		trustmanager=>'org.glite.security.trustmanager',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials/],
