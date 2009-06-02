@@ -12,8 +12,8 @@ all compile:
 	JAVA_HOME=${jdk_prefix} \
 	${ant_prefix}/bin/ant -Dno.deps=yes -DstageDir=${stagedir} \
 		-Dreference.jobid-api-java.jar=${stagedir}/share/java/jobid-api-java.jar \
-		-Dfile.reference.cog-certmanagement.jar=${certmanagement_jar} \
-		-Dfile.reference.cog-jglobus.jar=${jglobus_jar}
+		-Dreference.trustmanager.jar=${trustmanager_prefix}/share/java/glite-security-trustmanager.jar \
+		-Daxis.classpath=`ls ${axis_prefix}/lib/*.jar | tr '\012' :` 
 	cd src_c && make PREFIX=${PREFIX}
 
 examples: ${EXAMPLES}

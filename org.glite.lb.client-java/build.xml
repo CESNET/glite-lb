@@ -6,11 +6,16 @@
     <description>Builds, tests, and runs the project lb-client-java.</description>
     <import file="nbproject/build-impl.xml"/>
 
-		<target name="-pre-compile">
-			<exec executable="${stageDir}/sbin/glite-lb-at3">
-				<arg line="project/genEventTypes.pl src/org/glite/lb"/>
-			</exec>
-		</target>
+
+	<target name="-pre-compile">
+		<exec executable="${stageDir}/sbin/glite-lb-at3">
+			<arg line="project/genEventTypes.pl src/org/glite/lb"/>
+		</exec>
+		<java fork="true" dir="." classname="org.apache.axis.wsdl.WSDL2Java">
+			<arg value="${stageDir}/interface/LB.wsdl"/>
+			<classpath path="${axis.classpath}"/>
+		</java>
+	</target>
     <!--
 
     There exist several targets which are by default empty and which can be 
