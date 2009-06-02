@@ -19,7 +19,7 @@ public class CheckedString {
      */
     public CheckedString(String checkedString) {
         if (checkedString == null) {
-            throw new IllegalArgumentException("checkedString is null");
+	    this.checkedString = "";
         }
         
         setCheckedString(checkedString);
