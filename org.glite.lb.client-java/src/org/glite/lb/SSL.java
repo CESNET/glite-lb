@@ -5,18 +5,9 @@ import java.net.SocketException;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.security.*;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.Enumeration;
-import org.glite.security.trustmanager.CRLFileTrustManager;
-import org.glite.security.trustmanager.UpdatingKeyManager;
 
 public class SSL {
 
-    static final String proxyProp = "X509UserProxy";
 
 
     SSLContext sctx;
