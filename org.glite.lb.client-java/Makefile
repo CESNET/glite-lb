@@ -11,6 +11,7 @@ jglobus_jar := $(shell ls ${jglobus_prefix}/lib/cog-jglobus-*.jar | sort | tail 
 all compile:
 	JAVA_HOME=${jdk_prefix} \
 	${ant_prefix}/bin/ant -Dno.deps=yes -DstageDir=${stagedir} \
+		-Dfile.reference.commons-lang.jar=${commons-lang_jar} \
 		-Dreference.jobid-api-java.jar=${stagedir}/share/java/jobid-api-java.jar \
 		-Dreference.trustmanager.jar=${trustmanager_prefix}/share/java/glite-security-trustmanager.jar \
 		-Daxis.classpath=`ls ${axis_prefix}/lib/*.jar | tr '\012' :` 
