@@ -1,4 +1,5 @@
 import org.glite.lb.SSL;
+import org.glite.lb.LBCredentials;
 import java.io.*;
 import java.net.Socket;
 
@@ -8,7 +9,7 @@ public class SSLServer {
 		SSL ssl = new SSL();
 
 		try {
-			ssl.setProxy(args[0]);
+			ssl.setCredentials(new LBCredentials(args[0],null));
 			Socket sock = ssl.accept(Integer.parseInt(args[1]),100000);
 			System.out.println("accept ok");
 			InputStream in = sock.getInputStream();

@@ -1,12 +1,9 @@
 -include Makefile.inc
 
-EXAMPLES := SimpleLLTest.class SSLClient.class SSLServer.class
+EXAMPLES := SimpleLLTest.class SSLClient.class SSLServer.class QueryDemo.class
 # broken: ProducerTestIL.class ProducerTestLL.class
 
 VPATH := examples
-
-certmanagement_jar := $(shell ls ${jglobus_prefix}/lib/cog-certmanagement-*.jar | sort | tail -1)
-jglobus_jar := $(shell ls ${jglobus_prefix}/lib/cog-jglobus-*.jar | sort | tail -1)
 
 all compile:
 	JAVA_HOME=${jdk_prefix} \
@@ -21,7 +18,7 @@ examples: ${EXAMPLES}
 
 
 ${EXAMPLES}: %.class: %.java
-	javac -cp build/classes/:${stagedir}/share/java/jobid-api-java.jar $<
+	${jdk_prefix}/bin/javac -cp build/classes/:${stagedir}/share/java/jobid-api-java.jar $<
 
 
 check:

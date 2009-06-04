@@ -11,6 +11,7 @@ public class SimpleLLTest {
 
     public static void main(String[] args) {
 
+     try {
         Jobid jobid = new Jobid("https://skurut68-2.cesnet.cz:9000/paja6_test2");
         SeqCode seqCode = new SeqCode();
         ContextLL ctx = new ContextLL();
@@ -30,5 +31,7 @@ public class SimpleLLTest {
         EventRunning running = new EventRunning();
         running.setNode("node");
         ctx.log(running);
+      }
+      catch (Exception e) { e.printStackTrace(); }
     }
 }

@@ -11,7 +11,7 @@
 		<exec executable="${stageDir}/sbin/glite-lb-at3">
 			<arg line="project/genEventTypes.pl src/org/glite/lb"/>
 		</exec>
-		<java fork="true" dir="." classname="org.apache.axis.wsdl.WSDL2Java">
+		<java fork="true" dir="src" classname="org.apache.axis.wsdl.WSDL2Java">
 			<arg value="${stageDir}/interface/LB.wsdl"/>
 			<classpath path="${axis.classpath}"/>
 		</java>

@@ -6,7 +6,6 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.axis.client.Stub;
-import org.apache.log4j.PropertyConfigurator;
 import org.glite.jobid.Jobid;
 import org.glite.lb.Event;
 import org.glite.lb.Level;
@@ -78,7 +77,6 @@ public class ServerConnection {
         if (server == null) throw new IllegalArgumentException("Server cannot be null");
         if (lbCredent == null) throw new IllegalArgumentException("Credentials cannot be null");
 
-        PropertyConfigurator.configure("log4j.properties");
         this.lbCredent = lbCredent;
         setQueryServerAddress(server);
         setQueryTimeout(120);
