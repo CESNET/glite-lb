@@ -214,6 +214,7 @@ event_queue_connect(struct event_queue *eq)
       eq->timeout = TIMEOUT;
       return(0);
     }
+    eq->first_event_sent = 0;
   }
 
 #ifdef LB_PERF
@@ -237,6 +238,7 @@ event_queue_close(struct event_queue *eq)
     edg_wll_gss_close(&eq->gss, NULL);
     eq->gss.context = NULL;
   }
+  eq->first_event_sent = 0;
 #ifdef LB_PERF
   }
 #endif
@@ -251,7 +253,6 @@ event_queue_close(struct event_queue *eq)
 int 
 event_queue_send(struct event_queue *eq)
 {
-  int events_sent = 0;
   assert(eq != NULL);
 
 #ifdef LB_PERF
@@ -287,7 +288,7 @@ event_queue_send(struct event_queue *eq)
 	    tv.tv_usec = 0;
 	    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
 	    if(ret < 0) {
-	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && events_sent > 0)
+	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && eq->first_event_sent )
 	        eq->timeout = 0;
 	      else
 	        eq->timeout = TIMEOUT;
@@ -296,7 +297,7 @@ event_queue_send(struct event_queue *eq)
  	    
 	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
-		    if (events_sent>0) {
+		    if (eq->first_event_sent) {
 			/* could be expected server connection preemption */
 			clear_error();
 			eq->timeout = 1;
@@ -352,7 +353,7 @@ event_queue_send(struct event_queue *eq)
 	  il_log(LOG_ERR, "send_event: %s\n", error_get_msg());
 	
       event_queue_remove(eq);
-      events_sent++;
+      eq->first_event_sent = 1;
       break;
       
     } /* switch */

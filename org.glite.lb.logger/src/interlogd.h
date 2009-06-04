@@ -183,6 +183,7 @@ struct event_queue {
 	int                     max_len;        /* max queue length */
 	int                     cur_len;        /* current length */
 	int			throttling;	/* event insertion suspend flag */
+	int			first_event_sent; /* connection can be preempted by server */
 };
 
 
