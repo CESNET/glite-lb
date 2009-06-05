@@ -88,6 +88,7 @@ usage(char *program_name)
 #define FCNTL_ATTEMPTS          5
 #define FCNTL_TIMEOUT           1
 
+
 int edg_wll_DoLogEventIl(
 	edg_wll_Context context,
 	edg_wll_LogLine logline,
@@ -116,8 +117,10 @@ int edg_wll_DoLogEventIl(
 
 	if(!nofile) {
 		ret = edg_wlc_JobIdParse(jobid, &jid);
-		if(ret != 0) 
+		if(ret != 0) {
+			fprintf(stderr, "error parsing jobid %s\n", jobid);
 			return(edg_wll_SetError(context, ret, "edg_wlc_JobIdParse()"));
+		}
 		unique = edg_wlc_JobIdGetUnique(jid);
 		if(unique == NULL) {
 			edg_wlc_JobIdFree(jid);
@@ -172,7 +175,8 @@ main(int argc, char *argv[])
 		DEST_LL,
 		DEST_IL,
 		DEST_PROXY,
-		DEST_BKSERVER
+		DEST_BKSERVER,
+		DEST_DUMP,
 	} dest = 0;
 
 
@@ -208,6 +212,8 @@ main(int argc, char *argv[])
 			dest=DEST_IL;
 		else if(!strncasecmp(destname, "bk", 2) || !strncasecmp(destname, "se", 2))
 			dest=DEST_BKSERVER;
+		else if(!strncasecmp(destname, "du", 2)) 
+			dest=DEST_DUMP;
 		else {
 			fprintf(stderr,"%s: wrong destination\n",argv[0]);
 			usage(argv[0]);
@@ -286,6 +292,10 @@ main(int argc, char *argv[])
 					fprintf(stderr,"edg_wll_DoLogEventIl(): %s (%s)\n",et,ed);
 					exit(1);
 				}
+				break;
+
+			case DEST_DUMP:
+				printf("%s\n", event);
 				break;
 
 			default:
