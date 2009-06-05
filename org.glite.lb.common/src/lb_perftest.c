@@ -356,7 +356,7 @@ glite_wll_perftest_init(const char *host,
 				fprintf(stderr, "produceJobId: error unparsing jobid\n");
 				return(-1);
 			}
-			glite_jobid_free(subjobid[i]);
+			glite_jobid_free(subjobid[i-1]);
 		}
 		glite_jobid_free(jobid);
 	}
@@ -429,7 +429,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 	jobi = cur_group*group_size + cur_job;
 
 	/* did we send all events? */
-	if(jobi > njobs) {
+	if(jobi >= njobs) {
 		
 		/* construct termination event */
 		if((len=trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USERTAG "\n",
@@ -440,7 +440,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 				      "UserInterface", /* source */
 				      "me again", /* source instance */
 				      "UserTag", /* event */
-				      jobids[jobi], /* jobid */
+				      jobids[0], /* jobid */
 				      "UI=999980:NS=9999999980:WM=999980:BH=9999999980:JSS=999980:LM=999980:LRMS=999980:APP=999980", /* sequence */
 				      PERFTEST_END_TAG_NAME,
 				      PERFTEST_END_TAG_VALUE)) < 0) {
@@ -449,7 +449,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 				abort();
 			return(-1);
 		}
-		*jobid = jobids[cur_job*(nsubjobs+1)];
+		*jobid = jobids[0];
 
 		/* and refuse to produce more */
 		cur_job = -1;
