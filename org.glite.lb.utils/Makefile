@@ -61,12 +61,13 @@ ALLUTILS:=${UTILS} state_history statistics
 STATISTICS_OBJS:=statistics.o process_attrs.o process_attrs2.o
 
 MAN_GZ:=glite-lb-mon.1.gz
+MAN8_GZ:=glite-lb-purge.8.gz
 MAN = $(MAN_GZ:.gz=)
-
+MAN8 = $(MAN8_GZ:.gz=)
 
 default: all
 
-compile all: ${ALLUTILS} ${MAN_GZ}
+compile all: ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ}
 
 ${UTILS}: %: %.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} -lglite_lbu_maildir
@@ -79,9 +80,12 @@ state_history: state_history.o
 
 check: compile 
 
-doc: ${MAN_GZ}
+doc: ${MAN_GZ} ${MAN8_GZ}
 
 ${MAN_GZ}: ${MAN}
+	cp $? .
+	gzip -f $(notdir $?)
+${MAN8_GZ}: ${MAN8}
 	cp $? .
 	gzip -f $(notdir $?)
 
@@ -93,10 +97,12 @@ install:
 	-mkdir -p ${PREFIX}/lib
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/share/man/man1
+	-mkdir -p ${PREFIX}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${top_srcdir}/doc/README* ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
+	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
 	${INSTALL} -m 755 ${top_srcdir}/src/glite-lb-bkpurge-offline.sh ${PREFIX}/bin/glite-lb-bkpurge-offline
 
 	for p in ${ALLUTILS} ; do \
@@ -104,7 +110,7 @@ install:
 	done
 
 clean:
-	rm -rfv ${UTILS} statistics ${MAN_GZ} *.{lo,o} .libs/
+	rm -rfv ${UTILS} statistics ${MAN_GZ} ${MAN8_GZ} *.{lo,o} .libs/
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o: %.c
