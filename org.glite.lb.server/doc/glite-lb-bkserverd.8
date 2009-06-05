@@ -228,7 +228,37 @@ Do not print diagnostic, even if -d is on.
 .BI -g \fP --greyjobs
 Allow delayed registration (grey jobs), implies --strict-locking.
 
+.TP
+.BI -A\fR,\fP --enable-lcas
+Activate LCAS-based authorization.
 
+.TP
+.BI -I\fR,\fP --rss-time " NUM"
+Set the maximal age (in seconds) of states published via RSS.
+
+.TP
+.BI -P\fR,\fP --proxyonly          
+Run only proxy service.
+
+.TP
+.BI -B\fR,\fP --withproxy
+Run both server and proxy service.
+
+.TP
+.BI -o\fR,\fP --sock
+Path-name to the local socket for communication with LB proxy.
+
+.TP
+.BI -q\fR,\fP --con-queue
+Size of the connection queue (accept).
+
+.TP
+.BI -W\fR,\fP --proxy-il-sock
+Socket to send events to.
+
+.TP
+.BI -Z\fR,\fP --proxy-il-fprefix
+File prefix for events.
 
 .\".SH USAGE
 .\" Add any additional description here
