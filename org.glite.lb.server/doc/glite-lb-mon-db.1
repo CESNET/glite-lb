@@ -5,7 +5,7 @@ glite-lb-mon-db - program for monitoring the number of jobs in the LB system
 
 .SH SYNOPSIS
 .B glite-lb-mon-db
-.B [-m dbstring]
+.B [-m dbstring -d -v -h]
 .br
 
 .SH DESCRIPTION
@@ -17,7 +17,19 @@ the number of jobs in each state.
 .SH OPTIONS
 .TP
 .B \-m dbstring, \-\-mysql=dbstring
-use non-default database connection string
+Use non-default database connection string.
+
+.TP
+.B \-d, \-\-debug
+Print debug info (if any).
+
+.TP
+.B \-v, \-\-verbose
+Be verbose.
+
+.TP
+.B \-h, \-\-help
+Display help and exit.
 
 .SH EXAMPLES
 .TP 
