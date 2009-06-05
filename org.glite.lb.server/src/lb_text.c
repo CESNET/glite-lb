@@ -56,23 +56,19 @@ int edg_wll_QueryToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 	return -1;
 }
 
-/*#define TR(name,type,field) \
-        if (field) { \
-                asprintf(&a,"%s%s=" type "\n", \
-                        b, name, field); \
-                free(b); \
-                b = a; \
-        }*/
 #define TR(name,type,field) \
-        if (field){ \
-		int l = asprintf(&a,"%s=" type "\n", \
+{ \
+	int l; \
+        if (field) \
+		l = asprintf(&a,"%s=" type "\n", \
 			name, field); \
-		printf("a = %s l = %i\n", a, l); \
-		b = realloc(b, sizeof(*b)*(pomL+l+1)); \
-		strcpy(b+pomL, a); \
-		pomL += l; \
-		free(a); a=NULL; \
-	}
+	else \
+		l = asprintf(&a,"%s=\n", name); \
+	b = realloc(b, sizeof(*b)*(pomL+l+1)); \
+	strcpy(b+pomL, a); \
+	pomL += l; \
+	free(a); a=NULL; \
+}
 
 int edg_wll_UserInfoToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
 {
@@ -137,16 +133,15 @@ int edg_wll_NotificationToText(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 	TR("Notif_id", "%s", ni->notifid);
 	TR("Destination", "%s", ni->destination);
 	TR("Valid_until", "%s", ni->valid);
+	flags = edg_wll_stat_flags_to_string(ni->flags);
+	TR("Flags", "%s", flags);
+        free(flags);
 	if (! edg_wll_Condition_Dump(ni, &cond, 1)){
 		TR("Conditions", "%s", cond);
 	}
 	free(cond);
-	flags = edg_wll_stat_flags_to_string(ni->flags);
-	TR("Flags", "%s", flags);
-	free(flags);
 
 	*message = b;
-	printf("Returning message: %s\n", a);
 
 	return 0;
 }
@@ -178,10 +173,18 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 		asprintf(&a, "%sstateEnterTime=%s", b, ctime(&time));
 		free(b); b = a;
 	}
+	else{
+		asprintf(&a, "%sstateEnterTime=", b);
+                free(b); b = a;
+	}	
         if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
 		time_t  time = stat.lastUpdateTime.tv_sec;
 		//TR("Last_update","%s",ctime(&time));
 		asprintf(&a, "%slastUpdateTime=%s", b, ctime(&time));
+                free(b); b = a;
+	}
+	else{
+		asprintf(&a, "%slastUpdateTime=", b);
                 free(b); b = a;
 	}
 	TR("expectUpdate","%s",stat.expectUpdate ? "YES" : "NO");
@@ -189,11 +192,8 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 	TR("location","%s",stat.location);
 	TR("destination","%s",stat.destination);
 	TR("cancelling","%s",stat.cancelling>0 ? "YES" : "NO");
-	if (stat.cancelReason != NULL) {
-		TR("cancelReason","%s",stat.cancelReason);
-	}
+	TR("cancelReason","%s",stat.cancelReason);
 	TR("cpuTime","%d",stat.cpuTime);
-
 	
 	TR("done_code","%d",stat.done_code);
 	TR("exit_code","%d",stat.exit_code);
@@ -203,7 +203,12 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 		asprintf(&jdl,"jdl=%s\n", my_jdl);
 		free(my_jdl);
 	}
-	if (stat.rsl) asprintf(&rsl,"rsl=%s\n", stat.rsl);
+	else
+		asprintf(&jdl,"jdl=\n");
+	if (stat.rsl) 
+		asprintf(&rsl,"rsl=%s\n", stat.rsl);
+	else
+		asprintf(&rsl,"rsl=\n");
 
         asprintf(&a, "Job=%s\n"
 			"%s"

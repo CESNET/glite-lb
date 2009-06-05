@@ -3,6 +3,7 @@
 #include "lb_html.h"
 #include "lb_proto.h"
 #include "cond_dump.h"
+#include "pretty_print_wrapper.h"
 
 #include "glite/lb/context-int.h"
 
@@ -127,14 +128,21 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 }
 
 #define TR(name,type,field) \
+{ \
+	int l; \
 	if (field){ \
-		int l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
-		"<td>" type "</td></tr>", (field)); \
-		pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
-		strcpy(pomB+pomL, pomA); \
-		pomL += l; \
-		free(pomA); pomA=NULL; \
-	}
+		l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
+			"<td>" type "</td></tr>", (field)); \
+	} \
+	else{ \
+		l = asprintf(&pomA,"<tr><th align=\"left\"><span style=\"color:grey\">" name \
+			"</span></th></tr>"); \
+	} \
+	pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
+	strcpy(pomB+pomL, pomA); \
+	pomL += l; \
+	free(pomA); pomA=NULL; \ 
+}
 
 int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
 	char *pomA = NULL, *pomB = NULL, *flags, *cond;
@@ -145,6 +153,8 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 
 	TR("Destination", "%s", ni->destination);
 	TR("Valid until", "%s", ni->valid);
+	TR("Flags", "%s", flags);
+        free(flags);
 
 	if (! edg_wll_Condition_Dump(ni, &cond, 0)){
 		asprintf(&pomA, "%s<h3>Conditions</h3>\r\n<pre>%s</pre>\r\n",
@@ -155,9 +165,6 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 
 	}
 	free(cond);
-
-	TR("Flags", "%s", flags);
-	free(flags);
 
 	asprintf(&pomA, "<html>\r\n\t<body>\r\n"
 		"<h2>Notification %s</h2>\r\n"
@@ -194,26 +201,35 @@ int edg_wll_JobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 		time_t  time = stat.stateEnterTime.tv_sec;
 		TR("State entered","%s",ctime(&time));
 	}
+	else
+		TR("State entered", "%s", NULL);
         if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
 		time_t  time = stat.lastUpdateTime.tv_sec;
 		TR("Last update","%s",ctime(&time));
 	}
+	else
+		TR("Last update", "%s", NULL);
 	TR("Expect update","%s",stat.expectUpdate ? "YES" : "NO");
 	TR("Expect update from","%s",stat.expectFrom);
 	TR("Location","%s",stat.location);
 	TR("Destination","%s",stat.destination);
 	TR("Cancelling","%s",stat.cancelling>0 ? "YES" : "NO");
-	if (stat.cancelReason != NULL) {
-		TR("Cancel reason","%s",stat.cancelReason);
-	}
+	TR("Cancel reason","%s",stat.cancelReason);
 	TR("CPU time","%d",stat.cpuTime);
 
 	
 	TR("Done code","%d",stat.done_code);
 	TR("Exit code","%d",stat.exit_code);
 
-        if (stat.jdl) asprintf(&jdl,"<h3>Job description</h3>\r\n"
-		"<pre>%s</pre>\r\n",stat.jdl);
+	if (stat.jdl){
+		char *jdl_unp;
+		if (pretty_print(stat.jdl, &jdl_unp) == 0)
+			asprintf(&jdl,"<h3>Job description</h3>\r\n"
+                                "<pre>%s</pre>\r\n",jdl_unp);
+		else
+			asprintf(&jdl,"<h3>Job description (not a ClassAd)"
+				"</h3>\r\n<pre>%s</pre>\r\n",stat.jdl);
+	}
 
 	if (stat.rsl) asprintf(&rsl,"<h3>RSL</h3>\r\n"
 		"<pre>%s</pre>\r\n",stat.rsl);
