@@ -51,6 +51,7 @@ GSOAP_FILES_PREFIX:= bk_ws_
 
 YACC=bison -y
 CC=gcc
+CXX=g++
 
 ifeq ($(gsoap_version),2.7.0)
 	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples:${top_srcdir}/project:${gsoap_prefix}
@@ -83,6 +84,8 @@ CFLAGS:= \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB \
 	-I${globus_prefix}/include/${nothrflavour} #gridsite needs this
 
+CXXFLAGS:=${CFLAGS}
+
 ifdef LB_PROF
 	SRVBONES_LIB:= ${stagedir}/lib/libglite_lbu_server_bones.la
 	LB_COMMON_LIB:=${stagedir}/lib/libglite_lb_common_${nothrflavour}.la
@@ -107,6 +110,7 @@ TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
+CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS} 
 SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
 # XXX: not used? LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
@@ -168,7 +172,7 @@ BKSERVER_BASE_OBJS:= \
 	lb_xml_parse_V21.o lb_text.o \
 	openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o stats.o db_calls.o db_supp.o lb_rss.o
+	notification.o il_notification.o notif_match.o stats.o db_calls.o db_supp.o lb_rss.o pretty_print_wrapper.o 
 
 gsoap_version ?= ${gsoap_default_version}
 
@@ -210,7 +214,7 @@ endif
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
 	jobstat.o query.o get_events.o write2rgma.o index_lex.o \
 	lb_authz.o store.o bkindex.o stats.o\
-	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o lb_text.o server_state.o lb_xml_parse_V21.o lb_html.o cond_dump.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.o lb_rss.o
+	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o lb_text.o server_state.o lb_xml_parse_V21.o lb_html.o cond_dump.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.o lb_rss.o pretty_print_wrapper.o
 
 INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${LB_MACHINE_LIB} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
 
@@ -238,7 +242,7 @@ LIB_OBJS_BK:= \
 	openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
 	notification.o il_notification.o notif_match.o stats.o write2rgma.o \
-	db_calls.o db_supp.o lb_rss.o
+	db_calls.o db_supp.o lb_rss.o pretty_print_wrapper.o
 
 MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
 MONDB_LIBS:=${COMMON_LIBS} ${LB_MACHINE_LIB} ${LB_UTILS_DB_LIB} ${EXT_LIBS}
@@ -392,6 +396,9 @@ clean:
 
 %.o %.lo: %.c
 	${COMPILE} -c $<
+
+%.o %.lo: %.cpp
+	${CXXCOMPILE} -c $<
 
 test_query_events.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
