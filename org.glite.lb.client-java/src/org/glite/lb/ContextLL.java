@@ -14,7 +14,7 @@ public class ContextLL extends Context {
     private String prefix;
     private int repeatWriteToFile = 5;
     private int timeout = 30000; //in milliseconds
-    private String pathToCertificate;
+    private LBCredentials cred;
     private SSLSend sslSend = null;
 
     public ContextLL() {
@@ -81,7 +81,7 @@ public class ContextLL extends Context {
         ILFileWriter.write(prefix, message, repeatWriteToFile);
         
         
-        sslSend.send(pathToCertificate, address, port, timeout, message);
+        sslSend.send(cred, address, port, timeout, message);
     }
 
     public String getAddress() {
@@ -143,16 +143,16 @@ public class ContextLL extends Context {
         this.timeout = timeout;
     }
 
-    public String getPathToCertificate() {
-        return pathToCertificate;
+    public LBCredentials getCredentials() {
+        return cred;
     }
 
-    public void setPathToCertificate(String pathToCertificate) {
-        if (pathToCertificate == null) {
-            throw new IllegalArgumentException("ContextLL pathToCertificate");
+    public void setCredentials(LBCredentials cred) {
+        if (cred == null) {
+            throw new IllegalArgumentException("ContextLL credentials");
         }
         
-        this.pathToCertificate = pathToCertificate;
+        this.cred = cred;
     }
 
     

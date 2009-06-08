@@ -1,7 +1,6 @@
 -include Makefile.inc
 
-EXAMPLES := SimpleLLTest.class SSLClient.class SSLServer.class QueryDemo.class
-# broken: ProducerTestIL.class ProducerTestLL.class
+EXAMPLES := SimpleLLTest.class SSLClient.class SSLServer.class QueryDemo.class ProducerTestIL.class ProducerTestLL.class
 
 VPATH := examples
 
@@ -30,6 +29,8 @@ install:
 	cd src_c && make install PREFIX=${PREFIX}
 
 clean:
-	echo TODO
+	rm -rf dist
+	find . -name \*.class -exec rm {} \;
+	cd src_c && make clean
 
 

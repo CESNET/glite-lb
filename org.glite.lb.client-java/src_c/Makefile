@@ -16,3 +16,6 @@ ${LIB}: ${OBJ}
 install: compile
 	-mkdir -p ${PREFIX}/lib
 	libtool --mode=install install -m 755 ${LIB} ${PREFIX}/lib
+
+clean:
+	rm -rf ${OBJ} .libs ${LIB}

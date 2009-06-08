@@ -24,16 +24,15 @@ public class SSLSend {
      * @param timeout connection timeout
      * @param message message which will be send
      */
-    public void send(String keyStoreSender, String host,
+    public void send(LBCredentials cred, String host,
             int port, int timeout, String message) 
 	throws LBException
-//    throws KeyStoreException,IOException,NoSuchAlgorithmException,KeyManagementException
     {
 
       try {
 	SSL lbsock = new SSL();
 
-	lbsock.setProxy(keyStoreSender);
+	lbsock.setCredentials(cred);
 	Socket sock = lbsock.connect(host,port,timeout);
 	PrintStream s = new PrintStream(sock.getOutputStream(),false);
 
@@ -57,16 +56,7 @@ public class SSLSend {
 	s.flush();
 	s.close();
       } 
-      catch (KeyStoreException e) {
-	throw new LBException(e);
-      }
       catch (IOException e) {
-	throw new LBException(e);
-      }
-      catch (NoSuchAlgorithmException e) {
-	throw new LBException(e);
-      }
-      catch (KeyManagementException e) {
 	throw new LBException(e);
       }
     }

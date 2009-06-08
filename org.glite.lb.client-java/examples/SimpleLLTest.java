@@ -26,7 +26,7 @@ public class SimpleLLTest {
         ctx.setTimeout(5);
         ctx.setAddress("localhost");
         ctx.setPort(9002);
-        ctx.setPathToCertificate(args[0]);
+        ctx.setCredentials(new LBCredentials(args[0],null));
         ctx.setPrefix("/tmp/dglog.paja6_testProxy6");
         EventRunning running = new EventRunning();
         running.setNode("node");

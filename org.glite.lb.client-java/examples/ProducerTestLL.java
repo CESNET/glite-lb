@@ -133,7 +133,7 @@ public class ProducerTestLL {
              * Example:
              * ctx.setPathToCertificate("/home/paja6/myCertificate.p12");
              */
-            ctx.setPathToCertificate(args[9]);
+            ctx.setCredentials(new LBCredentials(args[9],null));
             System.out.println("pathToCertificate: " + args[9]);
 
             /* Path to directory where will be saved files with logs until inter-logger sends 

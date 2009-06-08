@@ -207,7 +207,7 @@ public class Notification {
      */
     public JobStatus receive(int timeout) throws LBException {
         SSL ssl = new SSL();
-        ssl.setProxy(keyStore);
+        ssl.setCredentials(lbCredent);
         ILProtoReceiver receiver = null;
         String received = null;
         try {
@@ -225,12 +225,6 @@ public class Notification {
             notifId = parser.getNotifId();
             return parser.getJobInfo();
         } catch (IOException ex) {
-            throw new LBException(ex);
-        } catch (KeyManagementException ex) {
-            throw new LBException(ex);
-        } catch (KeyStoreException ex) {
-            throw new LBException(ex);
-        } catch (NoSuchAlgorithmException ex) {
             throw new LBException(ex);
         } catch (ParserConfigurationException ex) {
             throw new LBException(ex);

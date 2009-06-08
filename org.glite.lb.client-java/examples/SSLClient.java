@@ -1,4 +1,5 @@
 import org.glite.lb.SSLSend;
+import org.glite.lb.LBCredentials;
 
 public class SSLClient {
 	public static void main(String[] args) {
@@ -6,7 +7,7 @@ public class SSLClient {
 		SSLSend	ssl = new SSLSend();
 
 		try {
-			ssl.send(args[0],"localhost",9002,100,"baff");
+			ssl.send(new LBCredentials(args[0],null),"localhost",9002,100,"baff");
 		}
 		catch (Exception e) {
 			System.err.println(e);
