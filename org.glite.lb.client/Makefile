@@ -152,7 +152,7 @@ EXAMPLES_CL_THR_SRC:=user_jobs_threaded.c
 EXAMPLES_CL_THR:=${EXAMPLES_CL_THR_SRC:.c=}
 
 MAN_GZ:=glite-lb-logevent.1.gz glite-lb-notify.1.gz
-MAN8_GZ:=glite-lb-dump.8.gz glite-lb-load.8.gz glite-lb-purge.8.gz
+MAN8_GZ:=glite-lb-dump.8.gz glite-lb-load.8.gz
 MAN = $(MAN_GZ:.gz=)
 MAN8 = $(MAN8_GZ:.gz=)
 
