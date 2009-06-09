@@ -17,7 +17,7 @@ import org.glite.wsdl.types.lb.QueryRecValue;
 import org.glite.wsdl.types.lb.QueryRecord;
 import org.glite.wsdl.types.lb.StatName;
 import org.glite.wsdl.types.lb.Timeval;
-
+import org.apache.axis.AxisFault;
 
 
 /**
@@ -240,7 +240,18 @@ public class QueryDemo {
                     System.out.println(jobStatusToString(statusit.next()));
                 }
             }
-          } catch (Exception e) { e.printStackTrace(); }
+          } catch (Exception e)
+	  {
+		Throwable cause = e.getCause();
+
+		if (cause != null && cause instanceof AxisFault) {
+			cause.printStackTrace();
+		}
+		else {
+			System.err.println("Oops");
+			e.printStackTrace();
+		}
+	  }
         }
     }
 }

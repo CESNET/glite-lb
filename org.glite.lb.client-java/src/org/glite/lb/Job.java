@@ -126,11 +126,7 @@ public class Job {
             throw new IllegalStateException("serverConnection is null, please set it");
         if (jobId == null)
             throw new IllegalStateException("jobId is null, please set it");
-        try {
-            return serverConnection.jobState(jobId.toString(), flags);
-        } catch (LBException ex) {
-            throw new LBException(ex);
-        }
+        return serverConnection.jobState(jobId.toString(), flags);
     }
   
 	/** 

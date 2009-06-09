@@ -17,7 +17,7 @@ examples: ${EXAMPLES}
 
 
 ${EXAMPLES}: %.class: %.java
-	${jdk_prefix}/bin/javac -cp build/classes/:${stagedir}/share/java/jobid-api-java.jar $<
+	${jdk_prefix}/bin/javac -cp build/classes/:${stagedir}/share/java/jobid-api-java.jar:`ls ${axis_prefix}/lib/*.jar | tr '\012' :` $<
 
 
 check:
