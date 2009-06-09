@@ -3,7 +3,9 @@
  * and open the template in the editor.
  */
 
-package org.glite.lb;
+import org.glite.lb.Notification;
+import org.glite.lb.LBCredentials;
+import org.glite.lb.LBException;
 
 import java.util.Date;
 import java.util.logging.Level;
