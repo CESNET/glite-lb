@@ -357,9 +357,10 @@ install:
 	${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${PREFIX}/lib/modules
 	ln -sf liblcas_lb.so ${PREFIX}/lib/modules/lcas_lb.mod
 
-	for f in dbsetup.sql dbsetup-migrate2transactions.sql index.conf.template; do \
+	for f in dbsetup.sql index.conf.template; do \
 		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${PREFIX}/etc; \
 	done
+	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${PREFIX}/etc
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
 

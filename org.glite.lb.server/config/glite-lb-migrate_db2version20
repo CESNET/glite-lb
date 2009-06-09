@@ -59,6 +59,22 @@ if [ "$SERVER" -a "$PROXY" ]; then
 fi
 
 
+# convert for transactions (if very old DB)
+cat <<EOF | mysql -u lbserver $DB_NAME
+ALTER TABLE jobs ENGINE=innodb;
+ALTER TABLE users ENGINE=innodb;
+ALTER TABLE events ENGINE=innodb;
+ALTER TABLE short_fields ENGINE=innodb;
+ALTER TABLE long_fields ENGINE=innodb;
+ALTER TABLE states ENGINE=innodb;
+ALTER TABLE status_tags ENGINE=innodb;
+ALTER TABLE server_state ENGINE=innodb;
+ALTER TABLE acls ENGINE=innodb;
+ALTER TABLE notif_registrations ENGINE=innodb;
+ALTER TABLE notif_jobs ENGINE=innodb;
+EOF
+
+
 # add new columns
 mysql -u lbserver $DB_NAME -e "ALTER TABLE jobs ADD proxy bool not null"
 mysql -u lbserver $DB_NAME -e "ALTER TABLE jobs ADD server bool not null"

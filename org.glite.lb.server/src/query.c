@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <syslog.h>
 #include <errno.h>
 #include <time.h>
 #include <assert.h>
@@ -169,11 +170,20 @@ int edg_wll_QueryEventsServer(
 			/* Check non-indexed event conditions */
 			if ( convert_event_head(ctx, res+2, out+i) || edg_wll_get_event_flesh(ctx, n, out+i) )
 			{
-				free(res[1]);
-				free(res[2]);
-				memset(out+i, 0, sizeof(*out));
-				glite_lbu_FreeStmt(&sh);
-				goto cleanup;
+				char	*et,*ed, *dbjob;
+
+			/* Most likely sort of internal inconsistency. 
+			 * Must not be fatal -- just complain
+			 */
+				edg_wll_Error(ctx,&et,&ed);
+
+				dbjob = res[2];
+				fprintf(stderr,"%s event %d: %s (%s)\n",dbjob,n,et,ed);
+				syslog(LOG_WARNING,"%s event %d: %s (%s)",dbjob,n,et,ed);
+				free(et); free(ed);
+				edg_wll_ResetError(ctx);
+
+				goto fetch_cycle_cleanup;
 			}
 
 			if ( !match_flesh_conditions(out+i,event_conditions) || check_strict_jobid(ctx,out[i].any.jobId) )
