@@ -23,6 +23,8 @@ int edg_wll_UserJobsServer(
 	char	*userid, *stmt = NULL,
 		*res = NULL;
 	char	*can_peername;
+	char	*srv_name = NULL;
+	int	name_len;
 	int	njobs = 0,ret,i,idx;
 	edg_wlc_JobId	*out = NULL;
 	glite_lbu_Statement	sth = NULL;
@@ -63,14 +65,23 @@ int edg_wll_UserJobsServer(
 	out = malloc(sizeof(*out)*(njobs+1));
 	memset(out,0,sizeof(*out)*(njobs+1));
 	
+	name_len = asprintf(&srv_name, "https://%s:%d/", 
+		ctx->srvName, ctx->srvPort);
+	idx = 0;
 	for (i=0; (ret = edg_wll_FetchRow(ctx,sth,1,NULL,&res)); i++) {
 		if (ret < 0) goto err;
-		if ((ret = edg_wlc_JobIdParse(res,out+i))) {
+		if (strncmp(res, srv_name, name_len)){
+			njobs--;
+			continue;
+		}
+		if ((ret = edg_wlc_JobIdParse(res,out+idx))) {
 			edg_wll_SetError(ctx,errno,res);
 			goto err;
 		}
+		idx++;
 		free(res); res = NULL;
 	}
+	free(srv_name);
 
 	if (states) {
 		edg_wll_QueryRec	oc[2],*ocp[2] = { oc, NULL };
