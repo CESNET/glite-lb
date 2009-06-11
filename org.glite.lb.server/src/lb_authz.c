@@ -13,12 +13,13 @@
 #include <libxml/parser.h> 
 #undef WITHOUT_TRIO
 
-#include "glite/security/voms/voms_apic.h"
 #include "glite/jobid/strmd5.h"
 #include "glite/jobid/cjobid.h"
 #include "glite/lbu/trio.h"
 #include "db_supp.h"
 #include <glite/security/lcas/lcas_pem.h>
+
+#include "glite/security/voms/voms_apic.h"
 
 /* XXX should be defined in gridsite-gacl.h */
 GRSTgaclEntry *GACLparseEntry(xmlNodePtr cur);
