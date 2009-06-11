@@ -636,6 +636,10 @@ int main(int argc, char *argv[])
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 	}
+#ifdef GLITE_LB_SERVER_WITH_WS
+	free(ws_port);
+	ws_port = NULL;
+#endif
 	if (mode & SERVICE_PROXY) {	/* proxy stuff */
 		struct sockaddr_un      a;
 
@@ -695,6 +699,7 @@ int main(int argc, char *argv[])
 	/* Just check the database and let it be. The slaves do the job. */
 	edg_wll_InitContext(&ctx);
 	if (wait_for_open(ctx, dbstring)) {
+		edg_wll_Close(ctx);
 		edg_wll_FreeContext(ctx);
 		return 1;
 	}
@@ -1520,6 +1525,8 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 		if (dbfail_string1) free(dbfail_string1);
 		edg_wll_Error(ctx,&errt,&errd);
 		asprintf(&dbfail_string1,"%s (%s)\n",errt,errd);
+		free(errt);
+		free(errd);
 		if (dbfail_string1 != NULL) {
 			if (dbfail_string2 == NULL || strcmp(dbfail_string1,dbfail_string2)) {
 				if (dbfail_string2) free(dbfail_string2);
@@ -1542,6 +1549,8 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 	if (err) {
 		edg_wll_Error(ctx,&errt,&errd);
 		asprintf(&dbfail_string1,"%s (%s)\n",errt,errd);
+		free(errt);
+		free(errd);
 		dprintf(("[%d]: %s\n", getpid(), dbfail_string1));
 		if (!debug) syslog(LOG_ERR,dbfail_string1);
 		free(dbfail_string1);
