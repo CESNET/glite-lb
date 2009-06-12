@@ -3,10 +3,10 @@
 numjobs=10
 
 # XXX - there must be better way to find stage
-STAGEDIR=/home/michal/shared/egee/jra1-head/stage
-. $STAGEDIR/sbin/perftest_common.sh
+STAGEDIR=$GLITE_LOCATION
+. $GLITE_LOCATION/sbin/perftest_common.sh
 
-LOGEVENT=${LOGEVENT:-$STAGEDIR/bin/glite-lb-logevent}
+LOGEVENT=${LOGEVENT:-$GLITE_LOCATION/bin/glite-lb-logevent}
 
 DEBUG=${DEBUG:-0}
 
@@ -63,36 +63,36 @@ echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 
 group_a_test_n () 
 {
-    PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-proxy
+    PERFTEST_CONSUMER=$GLITE_LOCATION/bin/glite-lb-bkserverd
     i=$1
-    CONSUMER_ARGS="-d --perf-sink $i -p /tmp/proxy.perf" 
+    CONSUMER_ARGS="-P -d --perf-sink $i -o /tmp/proxy.perf -D /tmp -t 1 " 
     export PERFTEST_NAME="proxy_test_$i"
     echo -n "${i})"
     run_test proxy $numjobs
     print_result
     # purge jobs from database
     # we have to start proxy again 
-    $PERFTEST_CONSUMER -d -p /tmp/proxy.perf -s 1 >/dev/null 2>&1  &
+    $PERFTEST_CONSUMER -P -d -o /tmp/proxy.perf -D /tmp -t 1 >/dev/null 2>&1  &
     PID=$!
-    purge_proxy `$LOGJOBS -n $numjobs`
+    purge_proxy `for file in ${JOB_FILE[*]}; do $LOGJOBS -f $file -n $numjobs; done | sort | uniq`
     sleep 2
     shutdown $PID
 }
 
 group_a_test_5 ()
 {
-    PERFTEST_COMPONENT="$STAGEDIR/bin/glite-lb-proxy"
-    COMPONENT_ARGS="-d -p /tmp/proxy.perf --proxy-il-sock /tmp/interlogger.perf  --proxy-il-fprefix /tmp/perftest.log"
+    PERFTEST_COMPONENT="$GLITE_LOCATION/bin/glite-lb-bkserverd"
+    COMPONENT_ARGS="-P -d -o /tmp/proxy.perf --proxy-il-sock /tmp/interlogger.perf  --proxy-il-fprefix /tmp/perftest.log -D /tmp -t 1 "
 
-    PERFTEST_CONSUMER="$STAGEDIR/bin/glite-lb-interlogd-perf-empty"
+    PERFTEST_CONSUMER="$GLITE_LOCATION/bin/glite-lb-interlogd-perf-empty"
     CONSUMER_ARGS="-d -s /tmp/interlogger.perf --file-prefix=/tmp/perftest.log"
     export PERFTEST_NAME="proxy_test_5"
     echo -n "5)"
     run_test proxy $numjobs
     print_result
-    $PERFTEST_COMPONENT -d -p /tmp/proxy.perf -s 1 >/dev/null 2>&1  &
+    $PERFTEST_COMPONENT -P -d -o /tmp/proxy.perf -t 1 -D /tmp  >/dev/null 2>&1  &
     PID=$!
-    purge_proxy `$LOGJOBS -n $numjobs`
+    purge_proxy `for file in ${JOB_FILE[*]}; do $LOGJOBS -f $file -n $numjobs; done | sort | uniq`
     sleep 2
     shutdown $PID
     rm -f /tmp/perftest.log.*
@@ -109,7 +109,8 @@ then
 	echo -n "Your choice: "
 	read -e TEST_VARIANT
     done
-    echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
+    #echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
+    print_result_header
 fi
 
 if [[ "x$TEST_VARIANT" = "x*" ]]
