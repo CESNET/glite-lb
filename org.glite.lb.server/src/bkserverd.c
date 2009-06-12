@@ -753,13 +753,13 @@ int main(int argc, char *argv[])
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_OVERLOAD, SLAVE_OVERLOAD);
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_CONNS_MAX, SLAVE_CONNS_MAX);
 
+	to = (struct timeval){CONNECT_TIMEOUT, 0};
 	if (mode & SERVICE_SERVER) {
-		to = (struct timeval){CONNECT_TIMEOUT, 0};
 		glite_srvbones_set_param(GLITE_SBPARAM_CONNECT_TIMEOUT, &to);
-		to.tv_sec = request_timeout;
 	}
 	// proxy using default from srvbones, 5s
 
+	to.tv_sec = request_timeout;
 	glite_srvbones_set_param(GLITE_SBPARAM_REQUEST_TIMEOUT, &to);
 	to = (struct timeval){IDLE_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_IDLE_TIMEOUT, &to);
