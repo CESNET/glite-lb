@@ -21,6 +21,8 @@
 typedef struct {
   char *event;
   int   job_index;
+  int   need_parent;
+  int   need_seed;
 } job_events_t;
 
 static pthread_mutex_t perftest_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -169,7 +171,9 @@ read_events(int fd)
 			goto nomem;
 		events[i].event = d;
 		events[i].job_index = 0; 
-		
+                events[i].need_parent = 0;
+		events[i].need_seed = 0;
+
 		/* copy key by key, look for JOBID, PARENT, SEED and NSUBJOBS */
 		for(p = q = line; q < line + len ; p = q) {
 
@@ -205,8 +209,16 @@ read_events(int fd)
 				}
 			} else if(strncmp(p, "DG.REGJOB.PARENT", 16) == 0) {
 				/* omit, will be filled in later */
+				events[i].need_parent = 1;
+				if(*(q-1) == '\n') {
+					*d++ = '\n';
+				}
 			} else if(strncmp(p, "DG.REGJOB.SEED", 14) == 0) {
 				/* omit for now */
+				events[i].need_seed = 1;
+				if(*(q-1) == '\n') {
+					*d++ = '\n';
+				}
 			} else if(strncmp(p, "DG.REGJOB.NSUBJOBS", 18) == 0) {
 				int val;
 
@@ -367,7 +379,7 @@ glite_wll_perftest_init(const char *host,
 
 
 /** 
- * This produces njobs jobids, one for each call.
+ * This produces njobs*(nsubjobs+1) jobids, one for each call.
  *
  * WARNING: do not mix calls to this function with calls to produceEventString!
  */
@@ -375,6 +387,7 @@ char *
 glite_wll_perftest_produceJobId()
 {
 	char *jobid;
+	static int n_cur_subjob = 0;
 
 	if(pthread_mutex_lock(&perftest_lock) < 0)
 		abort();
@@ -386,8 +399,12 @@ glite_wll_perftest_produceJobId()
 		return(NULL);
 	}
 
-	jobid = jobids[(nsubjobs+1)*cur_job++];
+	jobid = jobids[(nsubjobs+1)*cur_job + n_cur_subjob];
 
+	if(++n_cur_subjob > nsubjobs) {
+		n_cur_subjob = 0;
+		cur_job++;
+	}
 	if(cur_job >= njobs) 
 		cur_job = -1;
 		
@@ -432,7 +449,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 	if(jobi >= njobs) {
 		
 		/* construct termination event */
-		if((len=trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USERTAG "\n",
+		if((len=trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USER EDG_WLL_FORMAT_USERTAG "\n",
 				      "now", /* date */
 				      "localhost", /* host */
 				      "highest", /* level */
@@ -442,6 +459,7 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 				      "UserTag", /* event */
 				      jobids[0], /* jobid */
 				      "UI=999980:NS=9999999980:WM=999980:BH=9999999980:JSS=999980:LM=999980:LRMS=999980:APP=999980", /* sequence */
+				      "me", /* user */
 				      PERFTEST_END_TAG_NAME,
 				      PERFTEST_END_TAG_VALUE)) < 0) {
 			fprintf(stderr, "produceEventString: error creating termination event\n");
@@ -459,6 +477,8 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 		
 
 	} else {
+		char *parent = NULL;
+		char *seed = NULL;
 
 		/* is this the first event? */
 		if(first) {
@@ -470,18 +490,30 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 			first = 0;
 		}
 		
+		/* fill parent if needed */
+		if(events[cur_event].need_parent) {
+			trio_asprintf(&parent, "DG.REGJOB.PARENT=\"%s\"", 
+				      (nsubjobs > 0) ? jobids[jobi*(nsubjobs+1)] : "");
+		}
+		/* fill seed if needed */
+		if(events[cur_event].need_seed) {
+			trio_asprintf(&seed, "DG.REGJOB.SEED=\"%s\"",
+				      test_name);
+		}
 		/* return current event with jobid filled in */
-		if((len=trio_asprintf(&e, "DG.JOBID=\"%s\" DG.REGJOB.PARENT=\"%s\" DG.REGJOB.SEED=\"%s\" DG.REGJOB.NSUBJOBS=\"%d\" %s", 
+		if((len=trio_asprintf(&e, "DG.JOBID=\"%s\" %s %s %s", 
 				      jobids[jobi*(nsubjobs+1) + cur_subjob], 
-				      (nsubjobs > 0) ? jobids[jobi*(nsubjobs+1)] : "",
-				      test_name,
-				      nsubjobs,
+				      parent ? parent : "",
+				      seed ? seed : "",
+				      /* nsubjobs, */
 				      events[cur_event].event)) < 0) {
 			fprintf(stderr, "produceEventString: error generating event\n");
 			if(pthread_mutex_unlock(&perftest_lock) < 0)
 				abort();
 			return(-1);
 		}
+		if(parent) free(parent);
+		if(seed) free(seed);
 		*jobid = jobids[jobi*(nsubjobs+1) + cur_subjob];
 
 		/* advance to the next job and/or event */
