@@ -295,7 +295,7 @@ main(int argc, char *argv[])
 				break;
 
 			case DEST_DUMP:
-				printf("%s\n", event);
+				printf("%s", event);
 				break;
 
 			default:
