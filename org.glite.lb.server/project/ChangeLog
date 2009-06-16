@@ -78,3 +78,6 @@
 - Support for JDL changes in JDL-based notifications
 - Initial implementation of WS notifications
 
+2.0.2-2
+- build wrt. voms 1.9.8 (globus-less)
+
