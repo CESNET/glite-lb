@@ -10,6 +10,9 @@ LOGEVENT=${LOGEVENT:-$GLITE_LOCATION/bin/glite-lb-logevent}
 
 DEBUG=${DEBUG:-0}
 
+DBNAME=${DBNAME:-lbserver20}
+export LBDB=lbserver/@localhost:$DBNAME
+
 SILENT=0
 while getopts "t:n:s" OPTION 
 do
@@ -40,8 +43,13 @@ purge_proxy ()
 {
     for jobid in $@
     do
-	$LOGEVENT -x -S /tmp/proxy.perfstore.sock -c $SEQCODE -j $jobid -s UserInterface -e Abort --reason Purge > /dev/null 2>&1
-    done
+      cat <<EOF
+UPDATE acls, jobs SET acls.refcnt = acls.refcnt - 1 WHERE jobs.dg_jobid="$jobid" AND jobs.aclid=acls.aclid;
+DELETE FROM jobs,states,e,short_fields,long_fields,status_tags USING states  LEFT JOIN events AS e ON (e.jobid = states.jobid) LEFT JOIN jobs ON (jobs.jobid = states.jobid) LEFT JOIN short_fields ON (short_fields.jobid = e.jobid AND short_fields.event = e.event) LEFT JOIN long_fields ON (long_fields.jobid = e.jobid AND long_fields.event = e.event) LEFT JOIN status_tags ON (status_tags.jobid = states.jobid) WHERE jobs.dg_jobid="$jobid";
+
+EOF
+#$LOGEVENT -x -S /tmp/proxy.perfstore.sock -c $SEQCODE -j $jobid -s UserInterface -e Abort --reason Purge > /dev/null 2>&1
+    done | mysql -u lbserver $DBNAME
 }
 
 group_a () {
@@ -72,11 +80,11 @@ group_a_test_n ()
     print_result
     # purge jobs from database
     # we have to start proxy again 
-    $PERFTEST_CONSUMER -P -d -o /tmp/proxy.perf -D /tmp -t 1 >/dev/null 2>&1  &
-    PID=$!
+    #$PERFTEST_CONSUMER -P -d -o /tmp/proxy.perf -D /tmp -t 1 >/dev/null 2>&1  &
+    #PID=$!
     purge_proxy `for file in ${JOB_FILE[*]}; do $LOGJOBS -f $file -n $numjobs; done | sort | uniq`
-    sleep 2
-    shutdown $PID
+    #sleep 2
+    #shutdown $PID
 }
 
 group_a_test_5 ()
@@ -90,11 +98,11 @@ group_a_test_5 ()
     echo -n "5)"
     run_test proxy $numjobs
     print_result
-    $PERFTEST_COMPONENT -P -d -o /tmp/proxy.perf -t 1 -D /tmp  >/dev/null 2>&1  &
-    PID=$!
+    #$PERFTEST_COMPONENT -P -d -o /tmp/proxy.perf -t 1 -D /tmp  >/dev/null 2>&1  &
+    #PID=$!
     purge_proxy `for file in ${JOB_FILE[*]}; do $LOGJOBS -f $file -n $numjobs; done | sort | uniq`
-    sleep 2
-    shutdown $PID
+    #sleep 2
+    #shutdown $PID
     rm -f /tmp/perftest.log.*
 }
 
