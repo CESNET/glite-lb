@@ -25,9 +25,6 @@ EOF
 SERVER=""
 PROXY=""
 
-#default DB name (may be overriden by -d option)
-DB_NAME="lbserver20"
-
 while getopts "spd:h" OPTION 
 do
     case "$OPTION" in 
@@ -56,6 +53,16 @@ fi
 if [ "$SERVER" -a "$PROXY" ]; then
 	usage;
 	exit;
+fi
+
+
+# default DB name (for server or proxy, overriden by -d option)
+if [ -z "$DB_NAME" ]; then
+	if [ "$SERVER" ]; then
+		DB_NAME="lbserver20"
+	else
+		DB_NAME="lbproxy"
+	fi
 fi
 
 
