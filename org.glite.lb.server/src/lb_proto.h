@@ -18,7 +18,8 @@ extern edg_wll_ErrorCode edg_wll_Proto(
 	char *,		/* IN: HTTP message body */
 	char **, 	/* OUT: HTTP response line */
 	char ***,	/* OUT: HTTP response headers */
-	char **		/* OUT: HTTP response body */
+	char **,	/* OUT: HTTP response body */
+	int *		/* OUT: HTTP error code */
 );
 
 typedef struct _notifInfo{

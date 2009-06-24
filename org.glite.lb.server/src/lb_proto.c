@@ -565,7 +565,8 @@ errV21:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
 
 edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	char *request,char **headers,char *messageBody,
-	char **response,char ***headersOut,char **bodyOut)
+	char **response,char ***headersOut,char **bodyOut,
+	int *httpErr)
 {
 	char *requestPTR = NULL, *message = NULL;
 	int	ret = HTTP_OK;
@@ -1190,6 +1191,8 @@ err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
 		*bodyOut = message;
 
 	if (requestPTR) free(requestPTR);
+
+	*httpErr = ret;
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }

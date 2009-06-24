@@ -1144,51 +1144,67 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 }
 
 #ifdef GLITE_LB_SERVER_WITH_WS
+int bk_init_ws_connection(struct clnt_data_t *cdata, glite_gsplugin_Context *gsplugin_ctx)
+{
+	struct soap             *soap = NULL;
+	int err = 0;
+
+	if ( glite_gsplugin_init_context(gsplugin_ctx) ) {
+                fprintf(stderr, "Couldn't create gSOAP plugin context");
+                return -1;
+        }
+
+        if ( !(soap = soap_new()) ) {
+                fprintf(stderr, "Couldn't create soap environment");
+                goto err;
+        }
+
+        soap_init2(soap, SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
+    if ( soap_set_namespaces(soap, namespaces) ) { 
+                soap_done(soap);
+                perror("Couldn't set soap namespaces");
+                goto err;
+        }
+    if ( soap_register_plugin_arg(soap, glite_gsplugin, *gsplugin_ctx) ) {
+                soap_done(soap);
+                perror("Couldn't set soap namespaces");
+                goto err;
+        }
+
+	glite_gsplugin_use_credential(*gsplugin_ctx, mycred);
+        cdata->soap = soap;
+
+	return 0;
+err:
+	if ( *gsplugin_ctx ) glite_gsplugin_free_context(*gsplugin_ctx);
+        if ( soap ) soap_destroy(soap);
+
+	return err;
+}
+
 int bk_handle_ws_connection(int conn, struct timeval *timeout, void *data)
 {
     struct clnt_data_t	   *cdata = (struct clnt_data_t *) data;
-	struct soap			   *soap = NULL;
-	glite_gsplugin_Context	gsplugin_ctx;
-	int						rv = 0;
+	glite_gsplugin_Context	gsplugin_ctx = NULL;
+	int			rv = 0;
+	int 			err = 0;
 
-
-	if ( glite_gsplugin_init_context(&gsplugin_ctx) ) {
-		fprintf(stderr, "Couldn't create gSOAP plugin context");
+	if ((err = bk_init_ws_connection(cdata, &gsplugin_ctx)))
 		return -1;
-	}
 
-	if ( !(soap = soap_new()) ) {
-		fprintf(stderr, "Couldn't create soap environment");
-		goto err;
-	}
-
-	soap_init2(soap, SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
-    if ( soap_set_namespaces(soap, namespaces) ) { 
-		soap_done(soap);
-		perror("Couldn't set soap namespaces");
-		goto err;
-	}
-    if ( soap_register_plugin_arg(soap, glite_gsplugin, gsplugin_ctx) ) {
-		soap_done(soap);
-		perror("Couldn't set soap namespaces");
-		goto err;
-	}
-	if ( (rv = bk_handle_connection(conn, timeout, data)) ) {
-		soap_done(soap);
+	if ( (rv = bk_handle_connection(conn, timeout, data)) ){
+		soap_done(cdata->soap);
 		goto err;
 	}
 	glite_gsplugin_set_connection(gsplugin_ctx, &cdata->ctx->connections->serverConnection->gss);
-	glite_gsplugin_use_credential(gsplugin_ctx, mycred);
-	cdata->soap = soap;
-
 
 	return 0;
 
 err:
 	if ( gsplugin_ctx ) glite_gsplugin_free_context(gsplugin_ctx);
-	if ( soap ) soap_destroy(soap);
+	if ( cdata->soap ) soap_destroy(cdata->soap);
 
-	return rv? : -1;
+	return rv ? : -1;
 }
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
@@ -1357,13 +1373,38 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
 	struct timeval		before, after;
 	int	err;
+	char    *resp = NULL, **hdrOut = NULL, *bodyOut = NULL;
+	int 	httpErr;
 
 	/*
 	 *	serve the request
 	 */
 	memcpy(&ctx->p_tmp_timeout, timeout, sizeof(ctx->p_tmp_timeout));
 	gettimeofday(&before, NULL);
-	if ( edg_wll_ServerHTTP(ctx) && (err = handle_server_error(ctx))) return err;
+	err = edg_wll_AcceptHTTP(ctx, &resp, &hdrOut, &bodyOut, &httpErr);
+	if (httpErr != HTTP_BADREQ){
+		if (err && (err = handle_server_error(ctx))){
+			edg_wll_DoneHTTP(ctx, resp, hdrOut, bodyOut);
+		        free(resp);
+		        free(bodyOut);
+		        // hdrOut are static
+			return err;
+		}
+	}
+#ifdef GLITE_LB_SERVER_WITH_WS
+	else{
+		glite_gsplugin_Context  gsplugin_ctx = NULL;
+		bk_init_ws_connection(cdata, &gsplugin_ctx);
+		glite_gsplugin_set_connection(gsplugin_ctx, &ctx->connections->serverConnection->gss);
+		// write back buffer
+		//bk_accept_ws()
+	}
+#endif
+
+	edg_wll_DoneHTTP(ctx, resp, hdrOut, bodyOut);
+	free(resp);
+	free(bodyOut);
+	// hdrOut are static
 
 	gettimeofday(&after, NULL);
 	if ( decrement_timeout(timeout, before, after) ) {
