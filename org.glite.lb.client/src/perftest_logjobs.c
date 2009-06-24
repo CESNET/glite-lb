@@ -16,6 +16,8 @@ extern int edg_wll_DoLogEventDirect(edg_wll_Context context, edg_wll_LogLine log
 #define DEFAULT_SOCKET "/tmp/interlogger.sock"
 #define DEFAULT_PREFIX EDG_WLL_LOG_PREFIX_DEFAULT
 
+#define EVENTS_USER_PRESENT
+
 /*
 extern char *optarg;
 extern int opterr,optind;
@@ -102,9 +104,11 @@ int edg_wll_DoLogEventIl(
 	char *unique, *event_file;
 	static int num_event = 0;
 	char *event;
+
+#if !defined(EVENTS_USER_PRESENT)
 	const char *user = " DG.USER=\"michal\"\n";
 
-	/* we must fill in DG.USER */
+	/* fill in DG.USER */
 	/* we need room for user (=strlen(user)), terminating \0 (+1),
 	   but we overwrite trailing \n (-1) */
 	event = realloc(logline, len + strlen(user));
@@ -114,6 +118,9 @@ int edg_wll_DoLogEventIl(
 	/* it really does not matter WHERE the key is, so append it at the end */
 	memmove(event + len - 1, user, strlen(user) + 1);
 	len += strlen(user) - 1;
+#else
+	event = logline;
+#endif
 
 	if(!nofile) {
 		ret = edg_wlc_JobIdParse(jobid, &jid);
@@ -259,16 +266,37 @@ main(int argc, char *argv[])
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
 					fprintf(stderr,"edg_wll_DoLogEventProxy(): %s (%s)\n",et,ed);
+					fprintf(stderr,"Event:\n%s\n", event);
 					exit(1);
 				}
 				break;
 				
 			case DEST_LL:
+#if defined(EVENTS_USER_PRESENT)
+				/* erase DG.USER, will be added by LL */
+				do {
+					char *p = strstr(event, "DG.USER");
+
+					if(p != NULL) {
+						char *s = strchr(p+9, '"');
+						if(s == NULL) {
+							s = strstr(p+7, "DG.");
+							if(s == NULL) {
+								s = event + len - 1;
+							}
+						} else {
+							while(*++s == ' ') ;
+						}
+						memmove(p, s, event + len + 1 - s);
+					}
+				} while(0);
+#endif
 				ctx->p_tmp_timeout = ctx->p_log_timeout;
 				if (edg_wll_DoLogEvent(ctx,event)) {
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
 					fprintf(stderr,"edg_wll_DoLogEvent(): %s (%s)\n",et,ed);
+					fprintf(stderr,"Event:\n%s\n", event);
 					exit(1);
 				}
 				break;
@@ -280,6 +308,7 @@ main(int argc, char *argv[])
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
 					fprintf(stderr,"edg_wll_DoLogEventDirect(): %s (%s)\n",et,ed);
+					fprintf(stderr,"Event:\n%s\n", event);
 					exit(1);
 				}
 				break;
@@ -290,6 +319,7 @@ main(int argc, char *argv[])
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
 					fprintf(stderr,"edg_wll_DoLogEventIl(): %s (%s)\n",et,ed);
+					fprintf(stderr,"Event:\n%s\n", event);
 					exit(1);
 				}
 				break;
