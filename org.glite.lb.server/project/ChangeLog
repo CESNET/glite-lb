@@ -81,3 +81,7 @@
 2.0.2-2
 - build wrt. voms 1.9.8 (globus-less)
 
+2.0.2-3
+- Makefile relies on the libdir variable
+- New configure script
+
