@@ -65,7 +65,7 @@ SUFFIXES = .T
 DEBUG:=-g -O0 -Wall
 
 GRIDSITE_CFLAGS = -I${gridsite_prefix}/include `xml2-config --cflags`
-GRIDSITE_LIBS = -L${gridsite_prefix}/${archlib} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
+GRIDSITE_LIBS = -L${gridsite_prefix}/${libdir} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
 
 LCAS_CFLAGS=-I${lcas_prefix}/include
 
@@ -126,12 +126,6 @@ XSLTPROC:=xsltproc --novalid
 
 gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${gsoap_prefix}/bin; else echo ${gsoap_prefix}; fi }
 
-archlib:=lib
-host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64) 
-    archlib:=lib64
-endif
-
 ifneq (${expat_prefix},/usr)
 	expatlib := -L${expat_prefix}/lib
 endif
@@ -143,8 +137,8 @@ endif
 ifeq (${nothrflavour},gcc32dbg)
 	vomsflavour :=
 endif
-VOMS_LIBS:=-L${voms_prefix}/${archlib} -lvomsapi${vomsflavour}
-LCAS_LIBS:=-L${lcas_prefix}/${archlib} -llcas
+VOMS_LIBS:=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
+LCAS_LIBS:=-L${lcas_prefix}/${libdir} -llcas
 
 #EXT_LIBS:= \
 #	${expatlib} -lexpat \
@@ -152,7 +146,7 @@ LCAS_LIBS:=-L${lcas_prefix}/${archlib} -llcas
 #	-lvomsc${vomsflavour} \
 
 ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/${archlib} -L${classads_prefix}/lib
+	classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib
 endif
 
 classadslib := ${classadslib} -lclassad
