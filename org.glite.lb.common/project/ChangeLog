@@ -38,3 +38,7 @@
 - check mandatory events fields even if they contain enum types
 - RSS time in context
 
+7.0.2-2
+- Makefile relies on the libdir variable
+- New configure script
+
