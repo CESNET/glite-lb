@@ -1,8 +1,16 @@
 glite_location:=${GLITE_LOCATION}
 glite_prefix:=${glite_location}
 
-nothrflavour=gcc32dbg
-thrflavour=gcc32dbgpthr
+host_cpu:=${shell uname -m}
+ifeq (${host_cpu},x86_64)
+	LDFLAGS:=-L${glite_prefix}/lib64 -L${glite_prefix}/lib
+	nothrflavour=gcc64dbg
+	thrflavour=gcc64dbgpthr
+else
+	LDFLAGS:=-L${glite_prefix}/lib
+	nothrflavour=gcc32dbg
+	thrflavour=gcc32dbgpthr
+endif
 
 CC:=gcc
 CXX:=g++
@@ -24,20 +32,13 @@ CFLAGS:=${DEBUG} \
 
 CXXFLAGS:=${CFLAGS}
 
-host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64)
-	LDFLAGS:=-L${glite_prefix}/lib64 
-else
-	LDFLAGS:=-L${glite_prefix}/lib
-endif
-
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS} 
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
-EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c notify.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c user_jobs.c job_status.c
+EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c user_jobs.c job_status.c
 EXAMPLES:=${EXAMPLES_SRC:.c=}
 
 # TODO: migrate them here from branch_RC31_3

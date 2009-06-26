@@ -6,7 +6,11 @@
 #include <errno.h>
 
 #include "glite/jobid/cjobid.h"
+#ifdef BUILDING_LB_CLIENT
 #include "consumer.h"
+#else
+#include "glite/lb/consumer.h"
+#endif
 
 
 static struct option opts[] = {

@@ -3,7 +3,11 @@
 #include <time.h>
 #include <string.h>
 
+#ifdef BUILDING_LB_CLIENT
 #include "statistics.h"
+#else
+#include "glite/lb/statistics.h"
+#endif
 
 
 int main(int argc,char **argv)

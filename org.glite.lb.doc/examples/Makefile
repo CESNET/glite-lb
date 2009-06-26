@@ -1,8 +1,16 @@
 glite_location:=${GLITE_LOCATION}
 glite_prefix:=${glite_location}
 
-nothrflavour=gcc32dbg
-thrflavour=gcc32dbgpthr
+host_cpu:=${shell uname -m}
+ifeq (${host_cpu},x86_64)
+	LDFLAGS:=-L${glite_prefix}/lib64 -L${glite_prefix}/lib
+	nothrflavour=gcc64dbg
+	thrflavour=gcc64dbgpthr
+else
+	LDFLAGS:=-L${glite_prefix}/lib
+	nothrflavour=gcc32dbg
+	thrflavour=gcc32dbgpthr
+endif
 
 CC:=gcc
 CXX:=g++
@@ -23,13 +31,6 @@ CFLAGS:=${DEBUG} \
 	-D_GNU_SOURCE 
 
 CXXFLAGS:=${CFLAGS}
-
-host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64)
-	LDFLAGS:=-L${glite_prefix}/lib64 
-else
-	LDFLAGS:=-L${glite_prefix}/lib
-endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}

@@ -7,7 +7,11 @@
 #include <time.h>
 
 #include "glite/lb/context-int.h"
+#ifdef BUILDING_LB_CLIENT
 #include "consumer.h"
+#else
+#include "glite/lb/consumer.h"
+#endif
 #include "glite/lb/xml_conversions.h"
 #include "glite/lb/jobstat.h"
 
