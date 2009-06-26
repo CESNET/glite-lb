@@ -99,13 +99,11 @@ TEST_INC:=-I${cppunit_prefix}/include
 
 # TODO: merge - check the 64bit stuff
 #             - and what about the new JOBID lib?
-archlib:=lib
 host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64)
-	archlib:=lib64
-	LDFLAGS:=-L${stagedir}/lib64 -L${stagedir}/lib ${COVERAGE_FLAGS}
+ifeq (${libdir},lib)
+	LDFLAGS:=-L${stagedir}/lib ${COVERAGE_FLAGS}
 else
-	LDFLAGS:=-L${stagedir}/lib
+	LDFLAGS:=-L${stagedir}/${libdir} -L${stagedir}/lib ${COVERAGE_FLAGS}
 endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}

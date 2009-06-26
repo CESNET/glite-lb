@@ -8,12 +8,6 @@ package=glite-lb-state-machine
 version=0.2.0
 PREFIX=/opt/glite
 
-archlib:=lib
-host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64)
-    archlib:=lib64
-endif
-
 -include Makefile.inc
 
 VPATH = ../src:../interface
@@ -43,7 +37,7 @@ LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/${archlib} -L${classads_prefix}/lib 
+	classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib 
 endif
 
 classadslib := ${classadslib} -lclassad
