@@ -17,3 +17,7 @@
 1.0.0-6
 - updated configure
 
+1.0.0-7
+- Makefile relies on the libdir variable
+- New configure script
+
