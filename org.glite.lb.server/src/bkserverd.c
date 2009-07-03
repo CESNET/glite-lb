@@ -1144,12 +1144,13 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 }
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-int bk_init_ws_connection(struct clnt_data_t *cdata, glite_gsplugin_Context *gsplugin_ctx)
+int bk_init_ws_connection(struct clnt_data_t *cdata)
 {
 	struct soap             *soap = NULL;
+	glite_gsplugin_Context  gsplugin_ctx = NULL;
 	int err = 0;
 
-	if ( glite_gsplugin_init_context(gsplugin_ctx) ) {
+	if ( glite_gsplugin_init_context(&gsplugin_ctx) ) {
                 fprintf(stderr, "Couldn't create gSOAP plugin context");
                 return -1;
         }
@@ -1160,23 +1161,23 @@ int bk_init_ws_connection(struct clnt_data_t *cdata, glite_gsplugin_Context *gsp
         }
 
         soap_init2(soap, SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
-    if ( soap_set_namespaces(soap, namespaces) ) { 
+	if ( soap_set_namespaces(soap, namespaces) ) { 
                 soap_done(soap);
                 perror("Couldn't set soap namespaces");
                 goto err;
         }
-    if ( soap_register_plugin_arg(soap, glite_gsplugin, *gsplugin_ctx) ) {
+	if ( soap_register_plugin_arg(soap, glite_gsplugin, gsplugin_ctx) ) {
                 soap_done(soap);
                 perror("Couldn't set soap namespaces");
                 goto err;
         }
 
-	glite_gsplugin_use_credential(*gsplugin_ctx, mycred);
+	glite_gsplugin_use_credential(gsplugin_ctx, mycred);
         cdata->soap = soap;
 
 	return 0;
 err:
-	if ( *gsplugin_ctx ) glite_gsplugin_free_context(*gsplugin_ctx);
+	if ( gsplugin_ctx ) glite_gsplugin_free_context(gsplugin_ctx);
         if ( soap ) soap_destroy(soap);
 
 	return err;
@@ -1189,19 +1190,20 @@ int bk_handle_ws_connection(int conn, struct timeval *timeout, void *data)
 	int			rv = 0;
 	int 			err = 0;
 
-	if ((err = bk_init_ws_connection(cdata, &gsplugin_ctx)))
+	if ((err = bk_init_ws_connection(cdata)))
 		return -1;
 
 	if ( (rv = bk_handle_connection(conn, timeout, data)) ){
 		soap_done(cdata->soap);
 		goto err;
 	}
+
+	gsplugin_ctx = glite_gsplugin_get_context(cdata->soap);
 	glite_gsplugin_set_connection(gsplugin_ctx, &cdata->ctx->connections->serverConnection->gss);
 
 	return 0;
 
 err:
-	if ( gsplugin_ctx ) glite_gsplugin_free_context(gsplugin_ctx);
 	if ( cdata->soap ) soap_destroy(cdata->soap);
 
 	return rv ? : -1;
@@ -1367,13 +1369,41 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 	return 0;
 }
 
+static int
+try_accept_ws(int conn, struct timeval *timeout, void *cdata, char *req, size_t len)
+{
+	edg_wll_Context ctx = ((struct clnt_data_t *) cdata)->ctx;
+	glite_gsplugin_Context  gsplugin_ctx = NULL;
+	struct soap *soap = NULL;
+	int err;
+
+	err = bk_init_ws_connection(cdata);
+	if (err)
+		return err;
+	soap = ((struct clnt_data_t *) cdata)->soap;
+	gsplugin_ctx = glite_gsplugin_get_context(soap);
+	err = edg_wll_gss_unread(&ctx->connections->serverConnection->gss, req, len);
+	if (err)
+		goto end;
+	glite_gsplugin_set_connection(gsplugin_ctx, &ctx->connections->serverConnection->gss);
+	bk_accept_ws(conn, timeout, cdata);
+
+	err = 0;
+end:
+	soap_destroy(soap);
+	glite_gsplugin_free_context(gsplugin_ctx);
+
+	return err;
+}
+
+
 
 int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 {
 	edg_wll_Context		ctx = ((struct clnt_data_t *) cdata)->ctx;
 	struct timeval		before, after;
 	int	err;
-	char    *resp = NULL, **hdrOut = NULL, *bodyOut = NULL;
+	char    *body = NULL, *resp = NULL, **hdrOut = NULL, *bodyOut = NULL;
 	int 	httpErr;
 
 	/*
@@ -1381,29 +1411,31 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 	 */
 	memcpy(&ctx->p_tmp_timeout, timeout, sizeof(ctx->p_tmp_timeout));
 	gettimeofday(&before, NULL);
-	err = edg_wll_AcceptHTTP(ctx, &resp, &hdrOut, &bodyOut, &httpErr);
+	err = edg_wll_AcceptHTTP(ctx, &body, &resp, &hdrOut, &bodyOut, &httpErr);
 	if (httpErr != HTTP_BADREQ){
 		if (err && (err = handle_server_error(ctx))){
 			edg_wll_DoneHTTP(ctx, resp, hdrOut, bodyOut);
 		        free(resp);
 		        free(bodyOut);
+                        if (body)
+				free(body);
 		        // hdrOut are static
 			return err;
 		}
 	}
-#ifdef GLITE_LB_SERVER_WITH_WS
-	else{
-		glite_gsplugin_Context  gsplugin_ctx = NULL;
-		bk_init_ws_connection(cdata, &gsplugin_ctx);
-		glite_gsplugin_set_connection(gsplugin_ctx, &ctx->connections->serverConnection->gss);
-		// write back buffer
-		//bk_accept_ws()
-	}
-#endif
 
-	edg_wll_DoneHTTP(ctx, resp, hdrOut, bodyOut);
+	err = 0;
+#ifdef GLITE_LB_SERVER_WITH_WS
+	if (httpErr == HTTP_BADREQ)
+		err = try_accept_ws(conn, timeout, cdata, body, strlen(body) + 1);
+#endif
+	if (!err)
+		edg_wll_DoneHTTP(ctx, resp, hdrOut, bodyOut);
+
 	free(resp);
 	free(bodyOut);
+	if (body)
+		free(body);
 	// hdrOut are static
 
 	gettimeofday(&after, NULL);
