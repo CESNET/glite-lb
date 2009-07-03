@@ -59,6 +59,7 @@ static struct option opts[] = {
 	{ "proxy",	 	no_argument, NULL, 'x' },
 	{ "sock",	 	required_argument, NULL, 'X' },
 	{"target-runtime",	required_argument, NULL, 't'},
+	{"background",		required_argument, NULL, 'b'},
 	{ NULL,			no_argument, NULL,  0 }
 };
 
@@ -81,7 +82,8 @@ static void usage(char *me)
 		"	-m, --server                L&B server machine name\n"
 		"	-x, --proxy		    purge L&B proxy\n"
 		"	-X, --sock <path>	    purge L&B proxy using default socket path\n"
-		"	-t, --target-runtime NNN[smhd]	throttle purge to the estimated target runtime\n",
+		"	-t, --target-runtime NNN[smhd]	throttle purge to the estimated target runtime\n"
+		"	-b, --background 	    purge on the background\n",
 		me);
 }
 
@@ -89,7 +91,7 @@ int main(int argc,char *argv[])
 {
 	edg_wll_PurgeRequest *request;
 	edg_wll_PurgeResult *result;
-	int	i, timeout;
+	int	i, timeout, background;
 	char *server = NULL;
 
 	char *me;
@@ -114,8 +116,9 @@ int main(int argc,char *argv[])
 	edg_wll_InitContext(&ctx);
 
 	/* get arguments */
-	while ((opt = getopt_long(argc,argv,"a:c:n:e:o:j:m:rlsidhvxX:t:",opts,NULL)) != EOF) {
+	while ((opt = getopt_long(argc,argv,"a:c:n:e:o:j:m:rlsidhvxX:t:b:",opts,NULL)) != EOF) {
 		timeout=-1;
+		background=-1;
 
 		switch (opt) {
 
@@ -202,9 +205,15 @@ int main(int argc,char *argv[])
 				request->target_runtime=timeout; 
 			}
 			break;
+		case 'b':
+			background = atoi(optarg);
+			break;
 		case 'h':
 		case '?': usage(me); return 1;
 		}
+
+		if ((background == -1 && request->target_runtime) || background)
+			request->flags |= EDG_WLL_PURGE_BACKGROUND;
 	}
 
 	/* read the jobIds from file, if wanted */

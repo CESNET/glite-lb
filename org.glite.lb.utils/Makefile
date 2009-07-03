@@ -110,7 +110,7 @@ install:
 	done
 
 clean:
-	rm -rfv ${UTILS} statistics ${MAN_GZ} ${MAN8_GZ} *.{lo,o} .libs/
+	rm -rfv ${ALLUTILS} statistics ${MAN_GZ} ${MAN8_GZ} *.{lo,o} .libs/
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.o: %.c

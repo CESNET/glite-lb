@@ -9,6 +9,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <signal.h>
 
 #include "glite/jobid/cjobid.h"
 #include "glite/lbu/trio.h"
@@ -33,6 +34,8 @@
 #define DUMP_FILE_STORAGE					"/tmp/"
 
 #define sizofa(a) (sizeof(a)/sizeof((a)[0]))
+
+extern volatile sig_atomic_t purge_quit;
 
 static const char* const resp_headers[] = {
 	"Cache-Control: no-cache",
@@ -252,7 +255,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 	if (request->jobs) {
 
 	for (jobs_to_exa=0; request->jobs[jobs_to_exa]; jobs_to_exa++);
-	for (i=0; request->jobs[i]; i++) {
+	for (i=0; request->jobs[i] && !purge_quit; i++) {
 		if (edg_wlc_JobIdParse(request->jobs[i],&job)) {
 			fprintf(stderr,"%s: parse error\n",request->jobs[i]);
 			parse = 1;
@@ -264,6 +267,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 			}
 			else {
 				purge_throttle(jobs_to_exa, purge_end, &time_per_job, &target_runtime);
+				if (purge_quit) break;
 
 				switch (purge_one(ctx,job,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,ctx->isProxy)) {
 					case 0: if (request->flags & EDG_WLL_PURGE_LIST_JOBS) {
@@ -304,7 +308,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 		if ((jobs_to_exa = edg_wll_ExecSQL(ctx, (ctx->isProxy) ? "select dg_jobid from jobs where proxy='1'" :
 			"select dg_jobid from jobs where server='1'", &s)) < 0) goto abort;
 
-		while (edg_wll_FetchRow(ctx,s,1,NULL,&job_s) > 0) {
+		while (edg_wll_FetchRow(ctx,s,1,NULL,&job_s) > 0 && !purge_quit) {
 			if (edg_wlc_JobIdParse(job_s,&job)) {
 				fprintf(stderr,"%s: parse error (internal inconsistency !)\n",job_s);
 				parse = 1;
@@ -320,6 +324,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 				}
 
 				purge_throttle(jobs_to_exa, purge_end, &time_per_job, &target_runtime);
+				if (purge_quit) break;
 
 				memset(&stat,0,sizeof stat);
 				if (edg_wll_JobStatusServer(ctx,job,0,&stat)) {  /* FIXME: replace by intJobStatus ?? */
