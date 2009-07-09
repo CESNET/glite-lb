@@ -6,6 +6,7 @@ lbprefix=lb
 package=glite-lb-client
 version=0.0.0
 PREFIX=/opt/glite
+log4c_prefix=/usr
 
 nothrflavour=gcc32
 thrflavour=gcc32pthr
@@ -43,7 +44,7 @@ endif
 
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
-	-I${stagedir}/include -I${top_srcdir}/src \
+	-I${stagedir}/include -I${top_srcdir}/src -I${log4c_prefix}/include \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
@@ -63,7 +64,7 @@ INSTALL:=libtool --mode=install install
 
 COMMON_LIB:=-lglite_lb_common
 
-TRIO_LIB:=-lglite_lbu_trio
+EXT_LIB:=-lglite_lbu_trio -L${log4c_prefix}/lib -llog4c
 
 GLITE_GSS_LIB:=-lglite_security_gss
 
@@ -115,10 +116,10 @@ default: all
 all compile: $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
 
 glite-lb-logd: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${TRIO_LIB}
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-perf: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${TRIO_LIB}
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-nofile: ${LOGD_NOBJS}
 	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} 
@@ -182,6 +183,7 @@ ifdef LB_PERF
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${PREFIX}/sbin
 endif
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
+	${INSTALL} -m 644 ${top_srcdir}/config/log4crc.example ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8

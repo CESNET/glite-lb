@@ -103,39 +103,56 @@ static sighandler_t mysignal(int num,sighandler_t handler)
  *----------------------------------------------------------------------
  *
  * handle_signal -
- *	USR1 - increase the verbosity of the program
- *	USR2 - decrease the verbosity of the program
+ *      HUP  - reread log4crc
+ *	USR1 - set all priorities to DEBUG
+ *	USR2 - set all priorities back to initial values
  *
  *----------------------------------------------------------------------
  */
 void handle_signal(int num) {
-	if (num != SIGCHLD) edg_wll_ll_log(LOG_NOTICE,"Received signal %d\n", num);
+	if (num != SIGCHLD) glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Received signal %d\n", num);
 	switch (num) {
-		case SIGUSR1:
-			if (edg_wll_ll_log_level < LOG_DEBUG) edg_wll_ll_log_level++;
-			edg_wll_ll_log(LOG_NOTICE,"Logging level is now %d\n", edg_wll_ll_log_level);
-			break;
-		case SIGUSR2:
-			if (edg_wll_ll_log_level > LOG_EMERG) edg_wll_ll_log_level--;
-			edg_wll_ll_log(LOG_NOTICE,"Logging level is now %d\n", edg_wll_ll_log_level);
-			break;
-		case SIGPIPE:
-			edg_wll_ll_log(LOG_NOTICE,"Broken pipe, lost communication channel.\n");
-			break;
-		case SIGCHLD:
-			while (wait3(NULL,WNOHANG,NULL) > 0);
-			break;
-		case SIGINT:
-		case SIGTERM:
-		case SIGQUIT:
-			if (confirm_sock) {
-				edg_wll_ll_log(LOG_NOTICE,"Closing confirmation socket.\n");
-				close(confirm_sock);
-				unlink(confirm_sock_name);
-			}
-			exit(1);
-			break;
-		default: break;
+	case SIGHUP:
+		log4c_reread();
+		glite_common_log_priority_security = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_SECURITY));
+		glite_common_log_priority_access = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_ACCESS));
+		glite_common_log_priority_control = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_CONTROL));
+		/* TODO: probably also restart parent logd process? */
+		break;
+	case SIGUSR1:
+		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_SECURITY),LOG_PRIORITY_DEBUG);
+		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_ACCESS),LOG_PRIORITY_DEBUG);
+		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_CONTROL),LOG_PRIORITY_DEBUG);
+		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,
+			"Logging priority is now %s\n", log4c_priority_to_string(LOG_PRIORITY_DEBUG));
+		break;
+	case SIGUSR2:
+		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_SECURITY),glite_common_log_priority_security);
+		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_ACCESS),glite_common_log_priority_access);
+		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_CONTROL),glite_common_log_priority_control);
+		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,
+			"Logging priority is now %s for %s, %s for %s and %s for %s\n", 
+			log4c_priority_to_string(glite_common_log_priority_security),LOG_CATEGORY_SECURITY,
+			log4c_priority_to_string(glite_common_log_priority_access),LOG_CATEGORY_ACCESS,
+			log4c_priority_to_string(glite_common_log_priority_control),LOG_CATEGORY_CONTROL);
+		break;
+	case SIGPIPE:
+		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Broken pipe, lost communication channel.\n");
+		break;
+	case SIGCHLD:
+		while (wait3(NULL,WNOHANG,NULL) > 0);
+		break;
+	case SIGINT:
+	case SIGTERM:
+	case SIGQUIT:
+		if (confirm_sock) {
+			glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Closing confirmation socket.\n");
+			close(confirm_sock);
+			unlink(confirm_sock_name);
+		}
+		exit(1);
+		break;
+	default: break;
 	}
 }
 
@@ -166,31 +183,31 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     timeout.tv_sec = ACCEPT_TIMEOUT;
     timeout.tv_usec = 0;
     getpeername(socket,(struct sockaddr *) &peer,&alen);
-    edg_wll_ll_log(LOG_DEBUG,"Accepting connection (remaining timeout %d.%06d sec)\n",
+    glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Accepting connection (remaining timeout %d.%06d sec)\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
     if ((ret = edg_wll_gss_accept(cred_handle,socket,&timeout,&con, &gss_stat)) < 0) {
-	edg_wll_ll_log(LOG_DEBUG,"timeout after gss_accept is %d.%06d sec\n",
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"timeout after gss_accept is %d.%06d sec\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
-        edg_wll_ll_log(LOG_ERR,"%s: edg_wll_gss_accept() failed\n",inet_ntoa(peer.sin_addr));
+        glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: edg_wll_gss_accept() failed\n",inet_ntoa(peer.sin_addr));
 	return edg_wll_log_proto_server_failure(ret,&gss_stat,"edg_wll_gss_accept() failed\n");
     }
 
     /* authenticate */
-    edg_wll_ll_log(LOG_INFO,"Processing authentication:\n");
+    glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Processing authentication:\n");
     ret = edg_wll_gss_get_client_conn(&con, &client, &gss_stat);
     if (ret) {
         char *gss_err;
         edg_wll_gss_get_error(&gss_stat, "Cannot read client identification", &gss_err);
-        edg_wll_ll_log(LOG_WARNING, "%s: %s\n", inet_ntoa(peer.sin_addr),gss_err);
+        glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN, "%s: %s\n", inet_ntoa(peer.sin_addr),gss_err);
         free(gss_err);
     }
 
     if (ret || client->flags & EDG_WLL_GSS_FLAG_ANON) {
-	edg_wll_ll_log(LOG_INFO,"  User not authenticated, setting as \"%s\". \n",EDG_WLL_LOG_USER_DEFAULT);
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"  User not authenticated, setting as \"%s\". \n",EDG_WLL_LOG_USER_DEFAULT);
 	subject=strdup(EDG_WLL_LOG_USER_DEFAULT);
     } else {
-	edg_wll_ll_log(LOG_INFO,"  User successfully authenticated as:\n");
-	edg_wll_ll_log(LOG_INFO, "   %s\n", client->name);
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"  User successfully authenticated as:\n");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO, "   %s\n", client->name);
 	subject=strdup(client->name);
     }
     if (client)
@@ -202,19 +219,19 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     
     while (timeout.tv_sec > 0) {
 	count++;
-	edg_wll_ll_log(LOG_DEBUG,"Waiting for data delivery no. %d (remaining timeout %d.%06d sec)\n",
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Waiting for data delivery no. %d (remaining timeout %d.%06d sec)\n",
 		count, (int)timeout.tv_sec, (int) timeout.tv_usec);
 	FD_SET(con.sock,&fdset);
 	fd = select(con.sock+1,&fdset,NULL,NULL,&timeout);
 	switch (fd) {
 	case 0: /* timeout */
-		edg_wll_ll_log(LOG_DEBUG,"Connection timeout expired\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Connection timeout expired\n");
 		timeout.tv_sec = 0; 
 		break;
 	case -1: /* error */
 		switch(errno) {
 		case EINTR:
-			edg_wll_ll_log(LOG_DEBUG,"XXX: Waking up (remaining timeout %d.%06d sec)\n",
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"XXX: Waking up (remaining timeout %d.%06d sec)\n",
 				(int)timeout.tv_sec, (int) timeout.tv_usec);
 			continue;
 		default:
@@ -224,19 +241,19 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
 		}
 		break;
 	default:
-		edg_wll_ll_log(LOG_DEBUG,"Waking up (remaining timeout %d.%06d sec)\n",
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Waking up (remaining timeout %d.%06d sec)\n",
 			(int)timeout.tv_sec, (int) timeout.tv_usec);
 		break;
 	}
 	if (FD_ISSET(con.sock,&fdset)) {
 		ret = edg_wll_log_proto_server(&con,&timeout,subject,file_name_prefix,noipc,noparse);
 		if (ret != 0) {
-			edg_wll_ll_log(LOG_DEBUG,"timeout after edg_wll_log_proto_server is %d.%06d sec\n",
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"timeout after edg_wll_log_proto_server is %d.%06d sec\n",
 				(int)timeout.tv_sec, (int) timeout.tv_usec);
 			if (ret != EDG_WLL_GSS_ERROR_EOF) 
-				edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): Error\n");
+				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): Error\n");
 			else if (count == 1)
-				edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): Error. EOF occured.\n");
+				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): Error. EOF occured.\n");
 			timeout.tv_sec = 0;
 			timeout.tv_usec = 0;
 			break;
@@ -249,10 +266,10 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     }
 
 doit_end:
-	edg_wll_ll_log(LOG_DEBUG, "Closing descriptor '%d'...",con.sock);
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG, "Closing descriptor '%d'...",con.sock);
 	edg_wll_gss_close(&con, NULL);
 	if (con.sock == -1) 
-		edg_wll_ll_log(LOG_DEBUG, "o.k.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG, "o.k.\n");
 	if (subject) free(subject);
 	return ret;
 }
@@ -322,34 +339,38 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 			usage(argv[0]); exit(0);
 	}
    }
+   if (debug) {
+	glite_common_log_init(LOG_PRIORITY_DEBUG); 
+   } else {
 #ifdef LB_PERF
-   edg_wll_ll_log_init(verbose ? LOG_INFO : LOG_ERR);
+   glite_common_log_init(verbose ? LOG_PRIORITY_INFO : LOG_PRIORITY_NOTSET);
 #else
-   edg_wll_ll_log_init(verbose ? LOG_DEBUG : LOG_INFO);
+   glite_common_log_init(verbose ? LOG_PRIORITY_DEBUG : LOG_PRIORITY_NOTSET);
 #endif
-   edg_wll_ll_log(LOG_INFO,"Initializing...\n");
+   }
+   glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Initializing...\n");
 
    /* check noParse */
    if (noParse) {
-	edg_wll_ll_log(LOG_INFO,"Parse messages for correctness... [no]\n");
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Parse messages for correctness... [no]\n");
    } else {
-	edg_wll_ll_log(LOG_INFO,"Parse messages for correctness... [yes]\n");
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Parse messages for correctness... [yes]\n");
    }
 
    /* check noIPC */
    if (noIPC) {
-	edg_wll_ll_log(LOG_INFO,"Send messages also to inter-logger... [no]\n");
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Send messages also to inter-logger... [no]\n");
    } else {
-	edg_wll_ll_log(LOG_INFO,"Send messages also to inter-logger... [yes]\n");
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Send messages also to inter-logger... [yes]\n");
    }
 
    /* check prefix correctness */
    if (strlen(prefix) > FILENAME_MAX - 34) {
-	edg_wll_ll_log(LOG_CRIT,"Too long prefix (%s) for file names, would not be able to write to log files. Exiting.\n",prefix);
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"Too long prefix (%s) for file names, would not be able to write to log files. Exiting.\n",prefix);
 	exit(1);
    }
    /* TODO: check for write permisions */
-   edg_wll_ll_log(LOG_INFO,"Messages will be stored with the filename prefix \"%s\".\n",prefix);
+   glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Messages will be stored with the filename prefix \"%s\".\n",prefix);
 
    if (CAcert_dir)
 	setenv("X509_CERT_DIR", CAcert_dir, 1);
@@ -358,7 +379,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    if (mysignal(SIGUSR1, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGUSR2, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGPIPE, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
-   if (mysignal(SIGHUP,  SIG_DFL) == SIG_ERR) { perror("signal"); exit(1); }
+   if (mysignal(SIGHUP,  handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGINT,  handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGQUIT, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGTERM, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
@@ -373,25 +394,25 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &gss_stat);
    if (ret) {
 	/* XXX DK: call edg_wll_gss_get_error() */
-	edg_wll_ll_log(LOG_CRIT,"Failed to get GSI credentials. Exiting.\n");
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"Failed to get GSI credentials. Exiting.\n");
 	exit(1);
    }
 
    if (cred->name!=NULL) {
-	edg_wll_ll_log(LOG_INFO,"Server running with certificate: %s\n",cred->name);
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Server running with certificate: %s\n",cred->name);
    } else if (noAuth) {
-	edg_wll_ll_log(LOG_INFO,"Server running without certificate\n");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Server running without certificate\n");
    }
 
    /* do listen */
-   edg_wll_ll_log(LOG_INFO,"Listening on port %d\n",port);
+   glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Listening on port %d\n",port);
    listener_fd = do_listen(port);
    if (listener_fd == -1) {
-	edg_wll_ll_log(LOG_CRIT,"Failed to listen on port %d\n",port);
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_FATAL,"Failed to listen on port %d\n",port);
 	edg_wll_gss_release_cred(&cred, NULL);
 	exit(-1);
    } else {
-	edg_wll_ll_log(LOG_DEBUG,"Listener's socket descriptor is '%d'\n",listener_fd);
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Listener's socket descriptor is '%d'\n",listener_fd);
    }
 
    client_addr_len = sizeof(client_addr);
@@ -399,11 +420,11 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 
    /* daemonize */
    if (debug) {
-	edg_wll_ll_log(LOG_INFO,"Running as daemon... [no]\n");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Running as daemon... [no]\n");
    } else {
-	edg_wll_ll_log(LOG_INFO,"Running as daemon... [yes]\n");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Running as daemon... [yes]\n");
 	if (daemon(0,0) < 0) {
-		edg_wll_ll_log(LOG_CRIT,"Failed to run as daemon. Exiting.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_FATAL,"Failed to run as daemon. Exiting.\n");
 		SYSTEM_ERROR("daemon");
 		exit(1);
 	}
@@ -415,26 +436,26 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    while (1) {
         int opt;
 
-	edg_wll_ll_log(LOG_INFO,"Accepting incomming connections...\n");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Accepting incomming connections...\n");
 	client_fd = accept(listener_fd, (struct sockaddr *) &client_addr,
 			&client_addr_len);
 	if (client_fd < 0) {
 		close(listener_fd);
-		edg_wll_ll_log(LOG_CRIT,"Failed to accept incomming connections\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_FATAL,"Failed to accept incomming connections\n");
 		SYSTEM_ERROR("accept");
 		edg_wll_gss_release_cred(&cred, NULL);
 		exit(-1);
 	} else {
-		edg_wll_ll_log(LOG_DEBUG,"Incomming connection on socket '%d'\n",client_fd);
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Incomming connection on socket '%d'\n",client_fd);
 	}
 
 	opt = 0;
 	if (setsockopt(client_fd,IPPROTO_TCP,TCP_CORK,(const void *) &opt,sizeof opt)) {
-		edg_wll_ll_log(LOG_WARNING,"Can't reset TCP_CORK\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN,"Can't reset TCP_CORK\n");
 	}
 	opt = 1;
 	if (setsockopt(client_fd,IPPROTO_TCP,TCP_NODELAY,(const void *) &opt,sizeof opt)) {
-		edg_wll_ll_log(LOG_WARNING,"Can't set TCP_NODELAY\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN,"Can't set TCP_NODELAY\n");
 	}
 
 	switch (edg_wll_gss_watch_creds(cert_file,&cert_mtime)) {
@@ -443,15 +464,15 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	case 1:
 		ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,&gss_stat);
 		if (ret) {
-			edg_wll_ll_log(LOG_WARNING,"Reloading credentials failed, continue with older\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN,"Reloading credentials failed, continue with older\n");
 		} else {
-			edg_wll_ll_log(LOG_DEBUG,"Reloading credentials succeeded\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Reloading credentials succeeded\n");
 			edg_wll_gss_release_cred(&cred, NULL);
 			cred = newcred;
 		}
 		break;
 	case -1:
-		edg_wll_ll_log(LOG_WARNING,"edg_wll_gss_watch_creds failed\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed\n");
 		break;
 	}
 
@@ -464,12 +485,12 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	if (childpid == 0) {
 		ret = doit(client_fd,cred,prefix,noIPC,noParse);
 		if (client_fd) close(client_fd);
-		edg_wll_ll_log(LOG_DEBUG,"Exiting.\n", 
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Exiting.\n", 
 			CONNECTION_TIMEOUT);
 		exit(0);
 	}
 	if (childpid > 0) {
-		edg_wll_ll_log(LOG_DEBUG,"Forked a new child with PID %d\n",childpid);
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Forked a new child with PID %d\n",childpid);
 		if (client_fd) close(client_fd);
 	}
 #else

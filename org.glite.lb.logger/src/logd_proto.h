@@ -15,6 +15,7 @@ extern "C" {
 
 
 #include <syslog.h>
+#include <log4c.h>
 
 #include "glite/lb/log_proto.h"
 #include "glite/security/glite_gss.h"
@@ -22,16 +23,42 @@ extern "C" {
 int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout, char *name, char *prefix, int noipc, int noparse);
 int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, const char *text);
 
+/* locallogger daemon error handling */
+/* gLite common logging recommendations v1.1 https://twiki.cern.ch/twiki/pub/EGEE/EGEEgLite/logging.html */
+
+#define LOG_CATEGORY_NAME 	"root"
+#define LOG_CATEGORY_SECURITY 	"glite-common-logging-security"
+#define LOG_CATEGORY_ACCESS 	"glite-common-logging-access"
+#define LOG_CATEGORY_CONTROL 	"glite-common-logging-control"
+
+/* other priorities may be added, see include/log4c/priority.h */
+#define LOG_PRIORITY_FATAL 	LOG4C_PRIORITY_FATAL
+#define LOG_PRIORITY_ERROR 	LOG4C_PRIORITY_ERROR
+#define LOG_PRIORITY_WARN  	LOG4C_PRIORITY_WARN
+#define LOG_PRIORITY_INFO  	LOG4C_PRIORITY_INFO
+#define LOG_PRIORITY_DEBUG 	LOG4C_PRIORITY_DEBUG
+#define LOG_PRIORITY_NOTSET	LOG4C_PRIORITY_NOTSET
+
+#define glite_common_log_security(priority,msg) glite_common_log_msg(LOG_CATEGORY_SECURITY,priority,msg)
+#define glite_common_log_access(priority,msg)   glite_common_log_msg(LOG_CATEGORY_ACCESS,priority,msg)
+#define glite_common_log_control(priority,msg)  glite_common_log_msg(LOG_CATEGORY_CONTROL,priority,msg)
+
 #define SYSTEM_ERROR(my_err) { \
 	if (errno !=0 ) \
-		edg_wll_ll_log(LOG_ERR,"%s: %s\n",my_err,strerror(errno)); \
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s\n",my_err,strerror(errno)); \
 	else \
-		edg_wll_ll_log(LOG_ERR,"%s\n",my_err); }
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s\n",my_err); }
 
-/* locallogger daemon error handling */
-extern int edg_wll_ll_log_level;
-void edg_wll_ll_log_init(int level);
-void edg_wll_ll_log(int level, const char *fmt, ...);
+extern int glite_common_log_priority_security;
+extern int glite_common_log_priority_access;
+extern int glite_common_log_priority_control;
+
+int glite_common_log_init(int a_priority);
+int glite_common_log_fini(void);
+// int  glite_common_log_setappender(char *catName, char *appName);
+// void edg_wll_ll_log(int level, const char *fmt, ...);
+void glite_common_log_msg(char *catName,int a_priority, char *msg);
+void glite_common_log(char *catName,int a_priority, const char* a_format,...);
 
 
 /* fcntl defaults */

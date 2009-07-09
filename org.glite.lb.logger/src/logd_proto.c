@@ -23,7 +23,9 @@ static const int one = 1;
 
 extern char* socket_path;
 
-int edg_wll_ll_log_level;
+int glite_common_log_priority_security;
+int glite_common_log_priority_access;
+int glite_common_log_priority_control;
 
 #define tv_sub(a,b) {\
 	(a).tv_usec -= (b).tv_usec;\
@@ -48,16 +50,16 @@ static int send_answer_back(edg_wll_GssConnection *con, int answer, struct timev
 	u_int8_t ans_end[4];
 	edg_wll_GssStatus	gss_stat;
 
-	edg_wll_ll_log(LOG_INFO,"Sending answer \"%d\" back to client...",answer);
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Sending answer \"%d\" back to client...",answer);
         ans_end[0] = ans & 0xff; ans >>= 8;
         ans_end[1] = ans & 0xff; ans >>= 8;
         ans_end[2] = ans & 0xff; ans >>= 8;
         ans_end[3] = ans;
 	if ((err = edg_wll_gss_write_full(con,ans_end,4,timeout,&count, &gss_stat)) < 0 ) {
-		edg_wll_ll_log(LOG_INFO,"error.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"error.\n");
 		return edg_wll_log_proto_server_failure(err,&gss_stat,"Error sending answer");
 	} else {
-		edg_wll_ll_log(LOG_INFO,"o.k.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"o.k.\n");
 		return 0;
 	}
 }
@@ -86,7 +88,7 @@ int init_confirmation()
 	/* create socket */
 	if((confirm_sock=socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
 		SYSTEM_ERROR("socket");
-		edg_wll_ll_log(LOG_ERR,"init_confirmation(): error creating socket\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"init_confirmation(): error creating socket\n");
 		return(-1);
 	}
 
@@ -98,7 +100,7 @@ int init_confirmation()
 	/* bind the socket */
 	if(bind(confirm_sock, (struct sockaddr *)&saddr, sizeof(saddr.sun_path)) < 0) {
 		SYSTEM_ERROR("bind");
-		edg_wll_ll_log(LOG_ERR,"init_confirmation(): error binding socket\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"init_confirmation(): error binding socket\n");
 		close(confirm_sock);
 		unlink(confirm_sock_name);
 		return(-1);
@@ -107,7 +109,7 @@ int init_confirmation()
 	/* and listen */
 	if(listen(confirm_sock, 5) < 0) {
 		SYSTEM_ERROR("listen");
-		edg_wll_ll_log(LOG_ERR,"init_confirmation(): error listening on socket\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"init_confirmation(): error listening on socket\n");
 		close(confirm_sock);
 		unlink(confirm_sock_name);
 		return(-1);
@@ -137,7 +139,7 @@ int wait_for_confirmation(struct timeval *timeout, int *code)
 	/* wait for confirmation at most timeout seconds */
 	if ((tmp=select(confirm_sock+1, &fds, NULL, NULL, timeout?&to:NULL)) < 0) {
 		SYSTEM_ERROR("select");
-		edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error selecting socket\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"wait_for_confirmation(): error selecting socket\n");
 		ret = -1;
 	} else {
 		if (tmp == 0)
@@ -147,12 +149,12 @@ int wait_for_confirmation(struct timeval *timeout, int *code)
 			ret = 1;
 			if(nsd < 0) {
 				SYSTEM_ERROR("accept");
-				edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error accepting a connection on a socket\n");
+				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"wait_for_confirmation(): error accepting a connection on a socket\n");
 				ret = -1;
 			} else {
 				if(recv(nsd, code, sizeof(*code), MSG_NOSIGNAL) < 0) {
 					SYSTEM_ERROR("recv");
-					edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error receiving a message from a socket\n");
+					glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"wait_for_confirmation(): error receiving a message from a socket\n");
 					ret = -1;
 				}
 				close(nsd);
@@ -200,7 +202,7 @@ int do_listen(int port)
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sock == -1) { 
 		SYSTEM_ERROR("socket"); 
-		edg_wll_ll_log(LOG_ERR,"do_listen(): error creating socket\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"do_listen(): error creating socket\n");
 		return -1; 
 	}
 
@@ -208,14 +210,14 @@ int do_listen(int port)
 	ret = bind(sock, (struct sockaddr *)&my_addr, sizeof(my_addr));
 	if (ret == -1) { 
 		SYSTEM_ERROR("bind"); 
-		edg_wll_ll_log(LOG_ERR,"do_listen(): error binding socket\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"do_listen(): error binding socket\n");
 		return -1; 
 	}
 
 	ret = listen(sock, 5);
 	if (ret == -1) { 
 		SYSTEM_ERROR("listen"); 
-		edg_wll_ll_log(LOG_ERR,"do_listen(): error listening on socket\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"do_listen(): error listening on socket\n");
 		close(sock); 
 		return -1; 
 	}
@@ -267,12 +269,12 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 
 	/* init */
 	if (edg_wll_InitContext(&context) != 0) {
-		edg_wll_ll_log(LOG_ERR,"edg_wll_InitContex(): error.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_InitContex(): error.\n");
 		answer = ENOMEM; 
 		goto edg_wll_log_proto_server_end; 
 	}
 	if (edg_wll_ResetError(context) != 0) { 
-		edg_wll_ll_log(LOG_ERR,"edg_wll_ResetError(): error.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_ResetError(): error.\n");
 		answer = ENOMEM; 
 		goto edg_wll_log_proto_server_end;
 	}
@@ -284,7 +286,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 		snprintf(confirm_sock_name, sizeof(confirm_sock_name), "/tmp/dglogd_sock_%ld", lllid);
 		if ((filedesc = open(confirm_sock_name,O_CREAT)) == -1) {
 			if (errno == EEXIST) {
-				edg_wll_ll_log(LOG_WARNING,"Warning: LLLID %ld already in use.\n",lllid);
+				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN,"Warning: LLLID %ld already in use.\n",lllid);
 			} else {
 				SYSTEM_ERROR("open");
 			}
@@ -295,84 +297,84 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 		}
 	}
 	if (!unique) {
-		edg_wll_ll_log(LOG_ERR,"Cannot determine the unique long local-logger id (LLLID)!\n",lllid);
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"Cannot determine the unique long local-logger id (LLLID)!\n",lllid);
 		return EAGAIN;
 	}
-	edg_wll_ll_log(LOG_INFO,"Long local-logger id (LLLID): %ld\n",lllid);
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Long local-logger id (LLLID): %ld\n",lllid);
 
 	/* receive socket header */
-	edg_wll_ll_log(LOG_INFO,"Reading socket header...");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Reading socket header...");
 	memset(header, 0, EDG_WLL_LOG_SOCKET_HEADER_LENGTH+1);
 	if ((err = edg_wll_gss_read_full(con, header, EDG_WLL_LOG_SOCKET_HEADER_LENGTH, timeout, &count, &gss_stat)) < 0) {
 		if (err == EDG_WLL_GSS_ERROR_EOF) {
-			edg_wll_ll_log(LOG_INFO,"no data available.\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"no data available.\n");
 			answer = err;
 			answer_sent = 1; /* i.e. do not try to send answer back */
 		} else {
-			edg_wll_ll_log(LOG_INFO,"error.\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"error.\n");
 			answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving header");
 		}
 		goto edg_wll_log_proto_server_end;
 	} else {
-		edg_wll_ll_log(LOG_INFO,"o.k.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"o.k.\n");
 	}
 
-	edg_wll_ll_log(LOG_DEBUG,"Checking socket header...");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Checking socket header...");
 	header[EDG_WLL_LOG_SOCKET_HEADER_LENGTH] = '\0';
 	if (strncmp(header,EDG_WLL_LOG_SOCKET_HEADER,EDG_WLL_LOG_SOCKET_HEADER_LENGTH)) {
 		/* not the proper socket header text */
-		edg_wll_ll_log(LOG_DEBUG,"error.\n");
-		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): invalid socket header\n");
-		edg_wll_ll_log(LOG_DEBUG,"edg_wll_log_proto_server(): read header '%s' instead of '%s'\n",
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"error.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): invalid socket header\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"edg_wll_log_proto_server(): read header '%s' instead of '%s'\n",
 				header,EDG_WLL_LOG_SOCKET_HEADER);
 		answer = EINVAL;
 		goto edg_wll_log_proto_server_end;
 	} else {
-		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"o.k.\n");
 	}
 
 /* XXX: obsolete
-	edg_wll_ll_log(LOG_DEBUG,"Reading message priority...");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Reading message priority...");
 	count = 0;
 	if ((err = edg_wll_gss_read_full(con, &priority, sizeof(priority), timeout, &count, &gss_stat)) < 0) {
-		edg_wll_ll_log(LOG_DEBUG,"error.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"error.\n");
 		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving message priority");
                 goto edg_wll_log_proto_server_end;
         } else {
-		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"o.k.\n");
 	}
 */
 
-        edg_wll_ll_log(LOG_DEBUG,"Reading message size...");
+        glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Reading message size...");
 	count = 0;
 	if ((err = edg_wll_gss_read_full(con, size_end, 4, timeout, &count,&gss_stat)) < 0) {
-		edg_wll_ll_log(LOG_DEBUG,"error.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"error.\n");
 		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving message size");
                 goto edg_wll_log_proto_server_end;
 	} else {
-		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"o.k.\n");
 	}
 	size = size_end[3]; size <<=8; 
 	size |= size_end[2]; size <<=8; 
 	size |= size_end[1]; size <<=8; 
 	size |= size_end[0];
-        edg_wll_ll_log(LOG_DEBUG,"Checking message size...");
+        glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Checking message size...");
 	if (size <= 0) {
-		edg_wll_ll_log(LOG_DEBUG,"error.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"error.\n");
 		/* probably wrong size in the header or nothing to read */
-		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): invalid size read from socket header\n");
-		edg_wll_ll_log(LOG_DEBUG,"Read size '%d'.\n",size);
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): invalid size read from socket header\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Read size '%d'.\n",size);
 		answer = EINVAL;
 		goto edg_wll_log_proto_server_end;
 	} else {
-		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
-		edg_wll_ll_log(LOG_DEBUG,"- Size read from header: %d bytes.\n",size);
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"o.k.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"- Size read from header: %d bytes.\n",size);
 	}
 
 	/* format the DG.LLLID string */
 	if (asprintf(&dglllid,"DG.LLLID=%ld ",lllid) == -1) {
 		SYSTEM_ERROR("asprintf");
-		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): nomem for DG.LLLID\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): nomem for DG.LLLID\n");
 		answer = ENOMEM;
 		goto edg_wll_log_proto_server_end;
 	}
@@ -382,7 +384,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	name_esc = glite_lbu_EscapeULM(name);
 	if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
 		SYSTEM_ERROR("asprintf");
-		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): nomem for DG.USER\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): nomem for DG.USER\n");
 		answer = ENOMEM;
 		goto edg_wll_log_proto_server_end;
 	}
@@ -392,7 +394,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	msg_size = dglllid_size + dguser_size + size + 1;
 	if ((msg = malloc(msg_size)) == NULL) {
 		SYSTEM_ERROR("malloc");
-		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): out of memory for allocating message\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): out of memory for allocating message\n");
 		answer = ENOMEM;
 		goto edg_wll_log_proto_server_end;
 	}
@@ -401,52 +403,52 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	strncpy(msg_begin,dguser,dguser_size);
 
 	/* receive message */
-	edg_wll_ll_log(LOG_INFO,"Reading message from socket...");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Reading message from socket...");
 	buf = msg_begin + dguser_size;
 	count = 0;
 	if ((err = edg_wll_gss_read_full(con, buf, size, timeout, &count, &gss_stat)) < 0) {
-		edg_wll_ll_log(LOG_INFO,"error.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"error.\n");
 		answer = edg_wll_log_proto_server_failure(err,&gss_stat,"Error receiving message");
 		goto edg_wll_log_proto_server_end;
 	} else {
-		edg_wll_ll_log(LOG_INFO,"o.k.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"o.k.\n");
 	}       
 
 	if (buf[count] != '\0') buf[count] = '\0';
 
 	/* parse message and get jobId and priority from it */
 	if (!noparse && strstr(msg, "DG.TYPE=\"command\"") == NULL) {
-		edg_wll_ll_log(LOG_INFO,"Parsing message for correctness...");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Parsing message for correctness...");
 		if (edg_wll_ParseEvent(context,msg_begin,&event) != 0) { 
-			edg_wll_ll_log(LOG_INFO,"error.\n");
-			edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): edg_wll_ParseEvent error\n");
-			edg_wll_ll_log(LOG_ERR,"edg_wll_ParseEvent(): %s\n",context->errDesc);
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"error.\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): edg_wll_ParseEvent error\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_ParseEvent(): %s\n",context->errDesc);
 			answer = edg_wll_Error(context,NULL,NULL);
 			goto edg_wll_log_proto_server_end;
 		} else {
-			edg_wll_ll_log(LOG_INFO,"o.k.\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"o.k.\n");
 		}
-		edg_wll_ll_log(LOG_DEBUG,"Getting jobId from message...");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Getting jobId from message...");
 		jobId = edg_wlc_JobIdGetUnique(event->any.jobId);
 		priority = event->any.priority;
 		edg_wll_FreeEvent(event);
 		event->any.priority = priority;
-		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"o.k.\n");
 	} else {
 		if ((event = edg_wll_InitEvent(EDG_WLL_EVENT_UNDEF)) == NULL) {
-			edg_wll_ll_log(LOG_ERR, "edg_wll_InitEvent(): out of memory\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR, "edg_wll_InitEvent(): out of memory\n");
 			answer = ENOMEM;
 			goto edg_wll_log_proto_server_end;
 		}
-		edg_wll_ll_log(LOG_DEBUG,"Getting jobId from message...");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Getting jobId from message...");
 		jobId = edg_wll_GetJobId(msg);
 		if (!jobId || edg_wlc_JobIdParse(jobId,&j)) {
-			edg_wll_ll_log(LOG_DEBUG,"error.\n");
-			edg_wll_ll_log(LOG_ERR,"ParseJobId(%s)\n",jobId?jobId:"NULL");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"error.\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"ParseJobId(%s)\n",jobId?jobId:"NULL");
 			answer = EINVAL;
 			goto edg_wll_log_proto_server_end;
 		} else {
-			edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"o.k.\n");
 		}
 		free(jobId);
 		jobId = edg_wlc_JobIdGetUnique(j);
@@ -462,37 +464,37 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	/* if not command, save message to file */
 	if(strstr(msg, "DG.TYPE=\"command\"") == NULL) {
 		/* compose the name of the log file */
-//		edg_wll_ll_log(LOG_DEBUG,"Composing filename from prefix \"%s\" and unique jobId \"%s\"...",prefix,jobId);
+//		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Composing filename from prefix \"%s\" and unique jobId \"%s\"...",prefix,jobId);
 		count = strlen(prefix);
 		strncpy(outfilename,prefix,count); count_total=count;
 		strncpy(outfilename+count_total,".",1); count_total+=1; count=strlen(jobId);
 		strncpy(outfilename+count_total,jobId,count); count_total+=count;
 		outfilename[count_total]='\0';
-//		edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+//		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"o.k.\n");
 
 		/* fopen and properly handle the filelock */
 #ifdef LOGD_NOFILE
-		edg_wll_ll_log(LOG_NOTICE,"NOT writing message to \"%s\".\n",outfilename);
+		glite_common_log(LOG_CATEGORY_NAME,LOG_NOTICE,"NOT writing message to \"%s\".\n",outfilename);
 		filepos = 0;
 #else
-		edg_wll_ll_log(LOG_INFO,"Writing message to \"%s\"...",outfilename);
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Writing message to \"%s\"...",outfilename);
 		if ( edg_wll_log_event_write(context, outfilename, msg, FCNTL_ATTEMPTS, FCNTL_TIMEOUT, &filepos) ) {
 			char *errd;
 			SYSTEM_ERROR("edg_wll_log_event_write");
 			answer = edg_wll_Error(context, NULL, &errd);
-			edg_wll_ll_log(LOG_ERR,"edg_wll_log_event_write error: %s\n",errd);
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_event_write error: %s\n",errd);
 			free(errd);
 			goto edg_wll_log_proto_server_end;
-		} else edg_wll_ll_log(LOG_INFO,"o.k.\n");
+		} else glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"o.k.\n");
 #endif
 	} else {
 		filepos = 0;
 	}
 
 #ifdef LB_PERF
-	edg_wll_ll_log(LOG_INFO,"Calling perftest\n");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Calling perftest\n");
 	glite_wll_perftest_consumeEventString(msg);
-	edg_wll_ll_log(LOG_INFO,"o.k.\n");
+	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"o.k.\n");
 #endif
 
 	/* if not priority send now the answer back to client */
@@ -505,17 +507,17 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	/* send message via IPC (UNIX socket) */
 	if (!noipc) {
 		if (event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) {
-			edg_wll_ll_log(LOG_DEBUG,"Initializing 2nd UNIX socket (%s) for priority messages confirmation...",confirm_sock_name);
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Initializing 2nd UNIX socket (%s) for priority messages confirmation...",confirm_sock_name);
 			if(init_confirmation() < 0) { 
-				edg_wll_ll_log(LOG_DEBUG,"error.\n");
+				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"error.\n");
 				answer = errno; 
 				goto edg_wll_log_proto_server_end; 
 			} else {
-				edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"o.k.\n");
 			}
 		}	  
 
-		edg_wll_ll_log(LOG_DEBUG,
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,
 			"Sending via IPC (UNIX socket \"%s\")\n\t"
 			"the message position %ld (%d bytes)",
 			socket_path, filepos, sizeof(filepos));
@@ -523,29 +525,29 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 			char *errd;
 			SYSTEM_ERROR("edg_wll_log_event_send");
 			answer = edg_wll_Error(context, NULL, &errd);
-			edg_wll_ll_log(LOG_ERR,"edg_wll_log_event_send error: %s\n",errd);
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_event_send error: %s\n",errd);
 			free(errd);
 			goto edg_wll_log_proto_server_end_1;
-		} else edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
+		} else glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"o.k.\n");
 
 		if (event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) {
-			edg_wll_ll_log(LOG_INFO,"Waiting for confirmation...");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Waiting for confirmation...");
 			if ((count = wait_for_confirmation(timeout, &answer)) < 0) {
-				edg_wll_ll_log(LOG_INFO,"error.\n");
-				edg_wll_ll_log(LOG_ERR,"wait_for_confirmation(): error.\n"); 
+				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"error.\n");
+				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"wait_for_confirmation(): error.\n"); 
 				answer = errno;
 			} else {
-				edg_wll_ll_log(LOG_INFO,"o.k.\n");
+				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"o.k.\n");
 				if (count == 0) {
-					edg_wll_ll_log(LOG_DEBUG,"Waking up, timeout expired.\n");
+					glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Waking up, timeout expired.\n");
 					answer = EAGAIN;
 				} else {
-					edg_wll_ll_log(LOG_DEBUG,"Confirmation received, waking up.\n");
+					glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Confirmation received, waking up.\n");
 				}
 			}
 		}
 	} else {
-		edg_wll_ll_log(LOG_DEBUG,"NOT sending via IPC.\n");
+		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"NOT sending via IPC.\n");
 	}
 
 edg_wll_log_proto_server_end:
@@ -562,7 +564,7 @@ edg_wll_log_proto_server_end:
 	if (msg) free(msg);
 	if (event) free(event);
 
-//	edg_wll_ll_log(LOG_INFO,"Done.\n");
+//	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Done.\n");
 
 	return answer;
 
@@ -593,16 +595,16 @@ int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, cons
 	}
 	switch(code) {
 		case EDG_WLL_GSS_ERROR_EOF: 
-			edg_wll_ll_log(LOG_ERR,"%s: %s, EOF occured\n", func, text);	
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, EOF occured\n", func, text);	
 			ret = EAGAIN;
 			break;
 		case EDG_WLL_GSS_ERROR_TIMEOUT: 
-			edg_wll_ll_log(LOG_ERR,"%s: %s, timeout expired\n", func, text);	
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, timeout expired\n", func, text);	
 			ret = EAGAIN;
 			break;
 		case EDG_WLL_GSS_ERROR_ERRNO: 
 			SYSTEM_ERROR(func);
-			edg_wll_ll_log(LOG_ERR,"%s: %s, system error occured\n", func, text);	
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, system error occured\n", func, text);	
 			ret = EAGAIN;
 			break;
 		case EDG_WLL_GSS_ERROR_GSS:
@@ -610,13 +612,13 @@ int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, cons
 			   char *gss_err;
 
 			   edg_wll_gss_get_error(gss_code, "GSS error occured", &gss_err);
-			   edg_wll_ll_log(LOG_ERR,"%s: %s, %s\n", func, text, gss_err);
+			   glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, %s\n", func, text, gss_err);
 			   free(gss_err);
 			   ret = EAGAIN;
 			   break;
 			}
 		default:
-			edg_wll_ll_log(LOG_ERR,"%s: %s, unknown error occured\n");
+			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, unknown error occured\n");
 			break;
 	}
 	return ret;
@@ -625,13 +627,49 @@ int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, cons
 /*
  *----------------------------------------------------------------------
  *
- * edg_wll_ll_log_init - initialize the logging level
+ * glite_common_log_init - initialize the logging level
  *
  *----------------------------------------------------------------------
  */
-void edg_wll_ll_log_init(int level) {
-	edg_wll_ll_log_level = level;
+int glite_common_log_init(int a_priority) {
+	int ret = log4c_init();
+
+	if (a_priority != LOG_PRIORITY_NOTSET) {
+		/* override initial priority values */
+                log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_SECURITY),a_priority);
+                log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_ACCESS),a_priority);
+                log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_CONTROL),a_priority);
+		glite_common_log_priority_security = a_priority;
+		glite_common_log_priority_access = a_priority;
+		glite_common_log_priority_control = a_priority;
+	} else {
+		glite_common_log_priority_security = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_SECURITY));
+		glite_common_log_priority_access = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_ACCESS));
+		glite_common_log_priority_control = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_CONTROL));
+	}
+
+	return ret;
 }
+
+/*
+int  glite_common_log_setappender(char *catName, char *appName) {
+	log4c_category_set_appender(log4c_category_get(catName)
+                                  ,log4c_appender_get(appName));
+	return(0);
+}
+*/
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * glite_common_log_fini - finish and explicitly call the log4c cleanup routine
+ *
+ *----------------------------------------------------------------------
+ */
+int glite_common_log_fini() {
+        return(log4c_fini());
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -641,7 +679,8 @@ void edg_wll_ll_log_init(int level) {
  *
  *----------------------------------------------------------------------
  */
-void edg_wll_ll_log(int level, const char *fmt, ...) {
+/*
+void glite_common_log(LOG_CATEGORY_NAME,int level, const char *fmt, ...) {
 	char *err_text;
 	va_list fmt_args;
 
@@ -649,9 +688,9 @@ void edg_wll_ll_log(int level, const char *fmt, ...) {
 	vasprintf(&err_text, fmt, fmt_args);
 	va_end(fmt_args);
 
-	if(level <= edg_wll_ll_log_level) 
+	if(level <= glite_common_log_level) 
 		fprintf(stderr, "[%d] %s", (int) getpid(), err_text);
-	if(level <= LOG_ERR) {
+	if(level <= LOG_PRIORITY_ERROR) {
 		openlog(NULL, LOG_PID | LOG_CONS, LOG_DAEMON);
 		syslog(level, "%s", err_text);
 		closelog();
@@ -659,3 +698,25 @@ void edg_wll_ll_log(int level, const char *fmt, ...) {
 
 	if (err_text) free(err_text);
 }
+*/
+
+void glite_common_log_msg(char *catName,int a_priority, char *msg) {
+	const log4c_category_t* a_category = log4c_category_get(catName);
+
+	if (log4c_category_is_priority_enabled(a_category, a_priority)) {
+		log4c_category_log(log4c_category_get(catName), a_priority, msg);
+	}
+}
+
+void glite_common_log(char *catName,int a_priority, const char* a_format,...) {
+	const log4c_category_t* a_category = log4c_category_get(catName);
+
+	if (log4c_category_is_priority_enabled(a_category, a_priority)) {
+		va_list va;
+
+		va_start(va, a_format);
+		log4c_category_vlog(a_category, a_priority, a_format, va);
+		va_end(va);
+	}
+}
+

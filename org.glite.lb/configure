@@ -48,6 +48,7 @@ my %extern_prefix = (
 	jdk => '/usr',
 	libtar => '/usr',
 	axis => '/usr',
+	log4c => '/usr',
 );
 
 my %jar = (
@@ -295,7 +296,7 @@ BEGIN{
 	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager/ ],
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
-	'lb.logger' => [ qw/cppunit:B/ ],
+	'lb.logger' => [ qw/cppunit:B log4c/ ],
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
