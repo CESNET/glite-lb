@@ -14,6 +14,7 @@
 #include <errno.h>
 
 #include "glite/lbu/escape.h"
+#include "glite/lbu/log.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
 
@@ -595,16 +596,16 @@ int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, cons
 	}
 	switch(code) {
 		case EDG_WLL_GSS_ERROR_EOF: 
-			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, EOF occured\n", func, text);	
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: %s, EOF occured\n", func, text);	
 			ret = EAGAIN;
 			break;
 		case EDG_WLL_GSS_ERROR_TIMEOUT: 
-			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, timeout expired\n", func, text);	
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: %s, timeout expired\n", func, text);	
 			ret = EAGAIN;
 			break;
 		case EDG_WLL_GSS_ERROR_ERRNO: 
 			SYSTEM_ERROR(func);
-			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, system error occured\n", func, text);	
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: %s, system error occured\n", func, text);	
 			ret = EAGAIN;
 			break;
 		case EDG_WLL_GSS_ERROR_GSS:
@@ -612,111 +613,15 @@ int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, cons
 			   char *gss_err;
 
 			   edg_wll_gss_get_error(gss_code, "GSS error occured", &gss_err);
-			   glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, %s\n", func, text, gss_err);
+			   glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: %s, %s\n", func, text, gss_err);
 			   free(gss_err);
 			   ret = EAGAIN;
 			   break;
 			}
 		default:
-			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: %s, unknown error occured\n");
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_ERROR,"%s: %s, unknown error occured\n");
 			break;
 	}
 	return ret;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * glite_common_log_init - initialize the logging level
- *
- *----------------------------------------------------------------------
- */
-int glite_common_log_init(int a_priority) {
-	int ret = log4c_init();
-
-	if (a_priority != LOG_PRIORITY_NOTSET) {
-		/* override initial priority values */
-                log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_SECURITY),a_priority);
-                log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_ACCESS),a_priority);
-                log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_CONTROL),a_priority);
-		glite_common_log_priority_security = a_priority;
-		glite_common_log_priority_access = a_priority;
-		glite_common_log_priority_control = a_priority;
-	} else {
-		glite_common_log_priority_security = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_SECURITY));
-		glite_common_log_priority_access = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_ACCESS));
-		glite_common_log_priority_control = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_CONTROL));
-	}
-
-	return ret;
-}
-
-/*
-int  glite_common_log_setappender(char *catName, char *appName) {
-	log4c_category_set_appender(log4c_category_get(catName)
-                                  ,log4c_appender_get(appName));
-	return(0);
-}
-*/
-
-/*
- *----------------------------------------------------------------------
- *
- * glite_common_log_fini - finish and explicitly call the log4c cleanup routine
- *
- *----------------------------------------------------------------------
- */
-int glite_common_log_fini() {
-        return(log4c_fini());
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * edg_wll_ll_log - print to stderr according to logging level
- *   serious messages are also written to syslog
- *
- *----------------------------------------------------------------------
- */
-/*
-void glite_common_log(LOG_CATEGORY_NAME,int level, const char *fmt, ...) {
-	char *err_text;
-	va_list fmt_args;
-
-	va_start(fmt_args, fmt);
-	vasprintf(&err_text, fmt, fmt_args);
-	va_end(fmt_args);
-
-	if(level <= glite_common_log_level) 
-		fprintf(stderr, "[%d] %s", (int) getpid(), err_text);
-	if(level <= LOG_PRIORITY_ERROR) {
-		openlog(NULL, LOG_PID | LOG_CONS, LOG_DAEMON);
-		syslog(level, "%s", err_text);
-		closelog();
-	}
-
-	if (err_text) free(err_text);
-}
-*/
-
-void glite_common_log_msg(char *catName,int a_priority, char *msg) {
-	const log4c_category_t* a_category = log4c_category_get(catName);
-
-	if (log4c_category_is_priority_enabled(a_category, a_priority)) {
-		log4c_category_log(log4c_category_get(catName), a_priority, msg);
-	}
-}
-
-void glite_common_log(char *catName,int a_priority, const char* a_format,...) {
-	const log4c_category_t* a_category = log4c_category_get(catName);
-
-	if (log4c_category_is_priority_enabled(a_category, a_priority)) {
-		va_list va;
-
-		va_start(va, a_format);
-		log4c_category_vlog(a_category, a_priority, a_format, va);
-		va_end(va);
-	}
 }
 

@@ -15,6 +15,7 @@
 #include <getopt.h>
 #include <errno.h>
 
+#include "glite/lbu/log.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/timeouts.h"
 #include "logd_proto.h"
@@ -104,8 +105,8 @@ static sighandler_t mysignal(int num,sighandler_t handler)
  *
  * handle_signal -
  *      HUP  - reread log4crc
- *	USR1 - set all priorities to DEBUG
- *	USR2 - set all priorities back to initial values
+ *	USR1 - print priorities of all standard categories
+ *	USR2 - print priorities of all LB categories
  *
  *----------------------------------------------------------------------
  */
@@ -114,27 +115,29 @@ void handle_signal(int num) {
 	switch (num) {
 	case SIGHUP:
 		log4c_reread();
-		glite_common_log_priority_security = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_SECURITY));
-		glite_common_log_priority_access = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_ACCESS));
-		glite_common_log_priority_control = log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_CONTROL));
 		/* TODO: probably also restart parent logd process? */
 		break;
 	case SIGUSR1:
-		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_SECURITY),LOG_PRIORITY_DEBUG);
-		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_ACCESS),LOG_PRIORITY_DEBUG);
-		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_CONTROL),LOG_PRIORITY_DEBUG);
-		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,
-			"Logging priority is now %s\n", log4c_priority_to_string(LOG_PRIORITY_DEBUG));
-		break;
-	case SIGUSR2:
-		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_SECURITY),glite_common_log_priority_security);
-		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_ACCESS),glite_common_log_priority_access);
-		log4c_category_set_priority(log4c_category_get(LOG_CATEGORY_CONTROL),glite_common_log_priority_control);
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,
 			"Logging priority is now %s for %s, %s for %s and %s for %s\n", 
-			log4c_priority_to_string(glite_common_log_priority_security),LOG_CATEGORY_SECURITY,
-			log4c_priority_to_string(glite_common_log_priority_access),LOG_CATEGORY_ACCESS,
-			log4c_priority_to_string(glite_common_log_priority_control),LOG_CATEGORY_CONTROL);
+			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_SECURITY))),
+			LOG_CATEGORY_SECURITY,
+			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_ACCESS))),
+			LOG_CATEGORY_ACCESS,
+			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_CONTROL))),
+			LOG_CATEGORY_CONTROL);
+		break;
+	case SIGUSR2:
+		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,
+			"Logging priority is now %s for %s, %s for %s, %s for %s and %s for %s\n", 
+			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB))),
+			LOG_CATEGORY_LB,
+			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_LOGD))),
+			LOG_CATEGORY_LB_LOGD,
+			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_IL))),
+			LOG_CATEGORY_LB_IL,
+			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_SERVER))),
+			LOG_CATEGORY_LB_SERVER);
 		break;
 	case SIGPIPE:
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Broken pipe, lost communication channel.\n");
@@ -183,31 +186,30 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     timeout.tv_sec = ACCEPT_TIMEOUT;
     timeout.tv_usec = 0;
     getpeername(socket,(struct sockaddr *) &peer,&alen);
-    glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Accepting connection (remaining timeout %d.%06d sec)\n",
+    glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Accepting connection (remaining timeout %d.%06d sec)\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
     if ((ret = edg_wll_gss_accept(cred_handle,socket,&timeout,&con, &gss_stat)) < 0) {
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"timeout after gss_accept is %d.%06d sec\n",
+	glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_DEBUG,"timeout after gss_accept is %d.%06d sec\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
-        glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"%s: edg_wll_gss_accept() failed\n",inet_ntoa(peer.sin_addr));
+// TODO:       glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: edg_wll_gss_accept() failed\n",inet_ntoa(peer.sin_addr));
 	return edg_wll_log_proto_server_failure(ret,&gss_stat,"edg_wll_gss_accept() failed\n");
     }
 
     /* authenticate */
-    glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Processing authentication:\n");
+    glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_DEBUG,"Processing authentication:\n");
     ret = edg_wll_gss_get_client_conn(&con, &client, &gss_stat);
     if (ret) {
         char *gss_err;
         edg_wll_gss_get_error(&gss_stat, "Cannot read client identification", &gss_err);
-        glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN, "%s: %s\n", inet_ntoa(peer.sin_addr),gss_err);
+        glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN, "%s: %s\n", inet_ntoa(peer.sin_addr),gss_err);
         free(gss_err);
     }
 
     if (ret || client->flags & EDG_WLL_GSS_FLAG_ANON) {
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"  User not authenticated, setting as \"%s\". \n",EDG_WLL_LOG_USER_DEFAULT);
+	glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"  User not authenticated, setting as \"%s\". \n",EDG_WLL_LOG_USER_DEFAULT);
 	subject=strdup(EDG_WLL_LOG_USER_DEFAULT);
     } else {
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"  User successfully authenticated as:\n");
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO, "   %s\n", client->name);
+	glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_INFO,"  User successfully authenticated as: %s\n",client->name);
 	subject=strdup(client->name);
     }
     if (client)
@@ -219,19 +221,19 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     
     while (timeout.tv_sec > 0) {
 	count++;
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Waiting for data delivery no. %d (remaining timeout %d.%06d sec)\n",
+	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Waiting for data delivery no. %d (remaining timeout %d.%06d sec)\n",
 		count, (int)timeout.tv_sec, (int) timeout.tv_usec);
 	FD_SET(con.sock,&fdset);
 	fd = select(con.sock+1,&fdset,NULL,NULL,&timeout);
 	switch (fd) {
 	case 0: /* timeout */
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Connection timeout expired\n");
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Connection timeout expired\n");
 		timeout.tv_sec = 0; 
 		break;
 	case -1: /* error */
 		switch(errno) {
 		case EINTR:
-			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"XXX: Waking up (remaining timeout %d.%06d sec)\n",
+			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"XXX: Waking up (remaining timeout %d.%06d sec)\n",
 				(int)timeout.tv_sec, (int) timeout.tv_usec);
 			continue;
 		default:
@@ -241,19 +243,20 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
 		}
 		break;
 	default:
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Waking up (remaining timeout %d.%06d sec)\n",
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Waking up (remaining timeout %d.%06d sec)\n",
 			(int)timeout.tv_sec, (int) timeout.tv_usec);
 		break;
 	}
 	if (FD_ISSET(con.sock,&fdset)) {
 		ret = edg_wll_log_proto_server(&con,&timeout,subject,file_name_prefix,noipc,noparse);
+		// TODO: put into edg_wll_log_proto_server?
 		if (ret != 0) {
-			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"timeout after edg_wll_log_proto_server is %d.%06d sec\n",
+			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"timeout after edg_wll_log_proto_server is %d.%06d sec\n",
 				(int)timeout.tv_sec, (int) timeout.tv_usec);
 			if (ret != EDG_WLL_GSS_ERROR_EOF) 
-				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): Error\n");
+				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"edg_wll_log_proto_server(): Error\n");
 			else if (count == 1)
-				glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_ERROR,"edg_wll_log_proto_server(): Error. EOF occured.\n");
+				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"edg_wll_log_proto_server(): Error. EOF occured.\n");
 			timeout.tv_sec = 0;
 			timeout.tv_usec = 0;
 			break;
@@ -266,7 +269,7 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     }
 
 doit_end:
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG, "Closing descriptor '%d'...",con.sock);
+	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG, "Closing descriptor '%d'...",con.sock);
 	edg_wll_gss_close(&con, NULL);
 	if (con.sock == -1) 
 		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG, "o.k.\n");
@@ -339,14 +342,9 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 			usage(argv[0]); exit(0);
 	}
    }
-   if (debug) {
-	glite_common_log_init(LOG_PRIORITY_DEBUG); 
-   } else {
-#ifdef LB_PERF
-   glite_common_log_init(verbose ? LOG_PRIORITY_INFO : LOG_PRIORITY_NOTSET);
-#else
-   glite_common_log_init(verbose ? LOG_PRIORITY_DEBUG : LOG_PRIORITY_NOTSET);
-#endif
+   if (glite_common_log_init()) {
+	fprintf(stderr,"glite_common_log_init() failed, exiting.");
+	exit(1);
    }
    glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Initializing...\n");
 
