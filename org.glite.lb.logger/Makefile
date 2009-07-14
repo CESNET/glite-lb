@@ -122,25 +122,25 @@ glite-lb-logd-perf: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-nofile: ${LOGD_NOBJS}
-	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} 
+	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-perf-nofile: ${LOGD_NOBJS}
-	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} 
+	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIB}
 
 glite-lb-interlogd: ${INTERLOG_OBJS}
-	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour} 
+	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
 glite-lb-notif-interlogd: ${INTERLOG_NOBJS}
-	${LINK} -o $@ ${INTERLOG_NOBJS} ${COMMON_LIB}_${thrflavour}
+	${LINK} -o $@ ${INTERLOG_NOBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
 glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
-	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}_${thrflavour}
+	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
 glite-lb-interlogd-perf-empty: ${INTERLOG_EMPTY_OBJS}
-	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}_${thrflavour}
+	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
 glite-lb-ws-interlogd: ${INTERLOG_WOBJS}
-	${LINK} -o $@ ${INTERLOG_WOBJS} ${COMMON_LIB}_${thrflavour}
+	${LINK} -o $@ ${INTERLOG_WOBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
 #glite-lb-interlogd-perf-inline-empty: ${INTERLOG_INLINE_EMPTY_OBJS}
 #	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
