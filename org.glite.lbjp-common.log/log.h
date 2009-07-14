@@ -20,7 +20,7 @@ extern "C" {
 #define LOG_CATEGORY_CONTROL    "CONTROL"
 #define LOG_CATEGORY_LB 	"LB"
 #define LOG_CATEGORY_LB_LOGD 	"LB.LOGD"
-#define LOG_CATEGORY_LB_IL 	"LB.IL"
+#define LOG_CATEGORY_LB_IL 	"LB.INTERLOGD"
 #define LOG_CATEGORY_LB_SERVER 	"LB.SERVER"
 
 /* default priorities */
@@ -64,7 +64,6 @@ static inline int glite_common_log_fini(void) {
 	return 0;
 #endif
 }
-
 
 /** 
  * Log a message with the specified priority.
@@ -111,7 +110,13 @@ static inline void glite_common_log(char *catName,int a_priority, const char* a_
 #endif
 }
 
+/*
+ * Rereads any log4crc files that have changed
+ */
 static inline void glite_common_log_reread(void) {
+#ifndef WITHOUT_LOG4C
+	log4c_reread();
+#endif
 }
 
 #ifdef __cplusplus
