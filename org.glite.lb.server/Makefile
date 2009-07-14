@@ -68,6 +68,7 @@ GRIDSITE_CFLAGS = -I${gridsite_prefix}/include `xml2-config --cflags`
 GRIDSITE_LIBS = -L${gridsite_prefix}/${archlib} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
 
 LCAS_CFLAGS=-I${lcas_prefix}/include
+LOG4C_CFLAGS=-I${log4c_prefix}/include
 
 CFLAGS:= \
 	${WS_CFLAGS} ${DEBUG} \
@@ -80,7 +81,7 @@ CFLAGS:= \
 	-I${classads_prefix}/include -I${classads_prefix}/include/classad \
 	-I${voms_prefix}/include \
 	${COVERAGE_FLAGS} \
-	$(GRIDSITE_CFLAGS) ${LCAS_CFLAGS}\
+	$(GRIDSITE_CFLAGS) ${LCAS_CFLAGS} ${LOG4C_CFLAGS} \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB \
 	-I${globus_prefix}/include/${nothrflavour} #gridsite needs this
 
@@ -145,6 +146,7 @@ ifeq (${nothrflavour},gcc32dbg)
 endif
 VOMS_LIBS:=-L${voms_prefix}/${archlib} -lvomsapi${vomsflavour}
 LCAS_LIBS:=-L${lcas_prefix}/${archlib} -llcas
+LOG4C_LIBS:=-L${log4c_prefix}/lib -llog4c
 
 #EXT_LIBS:= \
 #	${expatlib} -lexpat \
@@ -162,7 +164,8 @@ EXT_LIBS:=  \
 	${GRIDSITE_LIBS} \
 	${classadslib} \
 	${LCAS_LIBS} \
-	${VOMS_LIBS}
+	${VOMS_LIBS} \
+	${LOG4C_LIBS} 
 
 COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio -lglite_lbu_maildir
 
