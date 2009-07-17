@@ -37,6 +37,12 @@ extern "C" {
         else \
                 glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_ERROR,"%s\n",my_err); }
 
+#define SYSTEM_FATAL(my_err) { \
+        if (errno !=0 ) \
+                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"%s: %s\n",my_err,strerror(errno)); \
+        else \
+                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"%s\n",my_err); }
+
 /* logging functions */
 
 /**
