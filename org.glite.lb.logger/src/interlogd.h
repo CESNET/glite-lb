@@ -6,6 +6,7 @@
 #include "il_error.h"
 #include "glite/security/glite_gss.h"
 #include "glite/lb/il_msg.h"
+#include "glite/lbu/log.h"
 
 #include <pthread.h>
 #include <sys/time.h>

@@ -60,7 +60,9 @@ send_confirmation(long lllid, int code)
   }
   ret = 1;
 
-  il_log(LOG_DEBUG, "  sent code %d back to client\n", code);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "  sent code %d back to client", 
+		   code);
 
  out:
   close(sock);
@@ -188,7 +190,9 @@ event_queue_connect(struct event_queue *eq)
     if(pthread_mutex_unlock(&cred_handle_lock) < 0)
 	    abort();
     
-    il_log(LOG_DEBUG, "    trying to connect to %s:%d\n", eq->dest_name, eq->dest_port);
+    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		     "    trying to connect to %s:%d", 
+		     eq->dest_name, eq->dest_port);
     ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
 	    abort();
@@ -197,7 +201,7 @@ event_queue_connect(struct event_queue *eq)
     if(local_cred_handle != cred_handle && local_cred_handle->counter == 0) {
 	    edg_wll_gss_release_cred(&local_cred_handle->creds, NULL);
 	    free(local_cred_handle);
-	    il_log(LOG_DEBUG, "   freed credentials, not used anymore\n");
+	    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, "   freed credentials, not used anymore");
     }
     if(pthread_mutex_unlock(&cred_handle_lock) < 0) 
 	    abort();
@@ -278,7 +282,9 @@ event_queue_send(struct event_queue *eq)
     if(event_queue_get(eq, &msg) < 0) 
       return(-1);
 
-    il_log(LOG_DEBUG, "    trying to deliver event at offset %d for job %s\n", msg->offset, msg->job_id_s);
+    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		     "    trying to deliver event at offset %d for job %s", 
+		     msg->offset, msg->job_id_s);
 
 #ifdef LB_PERF
     if(!nosend) {
@@ -303,7 +309,8 @@ event_queue_send(struct event_queue *eq)
 			eq->timeout = 1;
 		    } else {
 			eq->timeout = TIMEOUT;
-		        il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
+		        glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, "  error reading server %s reply: %s", 
+					 eq->dest_name, error_get_msg());
                     }
 		    return(0);
 	    }
@@ -317,7 +324,9 @@ event_queue_send(struct event_queue *eq)
     }
 #endif
     
-    il_log(LOG_DEBUG, "    event sent, server %s replied with %d, %s\n", eq->dest_name, code, rep);
+    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		     "    event sent, server %s replied with %d, %s", 
+		     eq->dest_name, code, rep);
     free(rep);
 
     /* the reply is back here */
@@ -350,7 +359,9 @@ event_queue_send(struct event_queue *eq)
 
       if((ret == 0) &&
 	 (error_get_maj() != IL_OK))
-	  il_log(LOG_ERR, "send_event: %s\n", error_get_msg());
+	      glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+			       "send_event: %s", 
+			       error_get_msg());
 	
       event_queue_remove(eq);
       eq->first_event_sent = 1;

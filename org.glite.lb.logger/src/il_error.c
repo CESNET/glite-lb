@@ -14,11 +14,8 @@ extern void _start (void), etext (void);
 #endif
 
 #include "glite/security/glite_gss.h"
-
 #include "il_error.h"
 
-
-extern int log_level;
 
 static pthread_key_t err_key;
 
@@ -55,7 +52,7 @@ error_get_err ()
 
 
 int
-init_errors(int level)
+init_errors()
 {
   static pthread_once_t error_once = PTHREAD_ONCE_INIT;
   struct error_inf *err;
@@ -78,9 +75,6 @@ init_errors(int level)
   err->msg = malloc(IL_ERR_MSG_LEN + 1);
   if(err->msg == NULL) 
 	  return(-1);
-
-  if(level)
-    log_level = level;
 
 #ifdef LB_PROF
   monstartup((u_long)&_start, (u_long)&etext);

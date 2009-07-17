@@ -36,7 +36,9 @@ input_queue_attach()
   if(connect(sock, (struct sockaddr *)&saddr, sizeof(saddr.sun_path)) < 0) {
 	  if(errno == ECONNREFUSED) {
 		  /* socket present, but no one at the other end; remove it */
-		  il_log(LOG_WARNING, "  removing stale input socket %s\n", socket_path);
+		  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
+				   "  removing stale input socket %s", 
+				   socket_path);
 		  unlink(socket_path);
 	  }
 	  /* ignore other errors for now */
@@ -292,7 +294,8 @@ input_queue_get(il_octet_string_t **buffer, long *offset, int timeout)
   case -1: /* error */
 	  switch(errno) {
 	  case EINTR:
-		  il_log(LOG_DEBUG, "  interrupted while waiting for event!\n");
+		  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+				   "  interrupted while waiting for event!");
 		  return(0);
 
 	  default:

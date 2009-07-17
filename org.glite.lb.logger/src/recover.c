@@ -14,25 +14,30 @@ void *
 recover_thread(void *q)
 {
 	if(init_errors(0) < 0) {
-		il_log(LOG_ERR, "Error initializing thread specific data, exiting!");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
+				 "Error initializing thread specific data, exiting!");
 		pthread_exit(NULL);
 	}
 
 	while(1) {
-		il_log(LOG_INFO, "Looking up event files...\n");
+		glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+				 "Looking up event files.");
 		if(event_store_init(file_prefix) < 0) {
-			il_log(LOG_ERR, "recover_thread: %s\n", error_get_msg());
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, 
+					 "recover_thread: %s", error_get_msg());
 			exit(1);
 		}
 		if(event_store_recover_all() < 0) {
-			il_log(LOG_ERR, "recover_thread: %s\n", error_get_msg());
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, 
+					 "recover_thread: %s", error_get_msg());
 			exit(1);
 		}
 		if(event_store_cleanup() < 0) {
-			il_log(LOG_ERR, "recover_thread: %s\n", error_get_msg());
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, 
+					 "recover_thread: %s", error_get_msg());
 			exit(1);
 		}
-		il_log(LOG_INFO, "Reloading certificate...\n");
+		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, "Checking for new certificate.");
 		if (edg_wll_gss_watch_creds(cert_file, &cert_mtime) > 0) {
 			edg_wll_GssCred new_creds = NULL;
 			int ret;
@@ -46,18 +51,22 @@ recover_thread(void *q)
 				if(cred_handle && cred_handle->counter == 0) {
 					edg_wll_gss_release_cred(&cred_handle->creds, NULL);
 					free(cred_handle);
-					il_log(LOG_DEBUG, "  freed old credentials\n");
+					glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, 
+							 "  freed old credentials");
 				}
 				cred_handle = malloc(sizeof(*cred_handle));
 				if(cred_handle == NULL) {
-					il_log(LOG_CRIT, "Failed to allocate structure for credentials.\n");
+					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, 
+							 "Failed to allocate structure for credentials.");
 					exit(EXIT_FAILURE);
 				}
 				cred_handle->creds = new_creds;
 				cred_handle->counter = 0;
 				if(pthread_mutex_unlock(&cred_handle_lock) < 0)
 					abort();
-				il_log(LOG_INFO, "New certificate found and deployed.\n");
+				glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, 
+						 "New certificate %s found and deployed.",
+						 new_creds->name);
 			}
 		}
 		sleep(INPUT_TIMEOUT);

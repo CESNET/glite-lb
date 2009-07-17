@@ -213,8 +213,9 @@ event_store_create(char *job_id_s, const char *filename)
   es->rotate_index = filename ? fname2index(filename) : 0;
   IL_EVENT_ID_FREE(job_id);
 
-  il_log(LOG_DEBUG, "  creating event store for id %s, filename %s, rotate index %lld\n",
-	 job_id_s, es->event_file_name, es->rotate_index);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "  creating event store for id %s, filename %s, rotate index %lld",
+		   job_id_s, es->event_file_name, es->rotate_index);
 
   if(pthread_rwlock_init(&es->commit_lock, NULL))
           abort();
@@ -368,8 +369,9 @@ event_store_quarantine(struct event_store *es)
 	}
 
 	/* actually rename the file */
-	il_log(LOG_DEBUG, "    renaming damaged event file from %s to %s\n",
-	       es->event_file_name, newname);
+	glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+			 "    renaming damaged event file from %s to %s",
+			 es->event_file_name, newname);
 	if(rename(es->event_file_name, newname) < 0) {
 		set_error(IL_SYS, errno, "event_store_quarantine: error renaming event file");
 		return(-1);
@@ -432,8 +434,9 @@ event_store_rotate_file(struct event_store *es)
 	}
 
 	/* actually rename the file */
-	il_log(LOG_DEBUG, "    renaming too large event file from %s to %s\n",
-	       es->event_file_name, newname);
+	glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
+			 "    renaming too large event file from %s to %s",
+			 es->event_file_name, newname);
 	if(rename(es->event_file_name, newname) < 0) {
 		set_error(IL_SYS, errno, "event_store_rotate_file: error renaming event file");
 		return(-1);
@@ -556,7 +559,9 @@ event_store_recover(struct event_store *es)
   if(pthread_rwlock_wrlock(&es->offset_lock))
 	  abort();
 
-  il_log(LOG_DEBUG, "  reading events from %s\n", es->event_file_name);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "  reading events from %s", 
+		   es->event_file_name);
 
   /* open event file */
   ef = fopen(es->event_file_name, "r");
@@ -592,7 +597,9 @@ event_store_recover(struct event_store *es)
   /* check the file modification time and size to avoid unnecessary operations */
   memset(&stbuf, 0, sizeof(stbuf));
   if(fstat(fd, &stbuf) < 0) {
-	  il_log(LOG_ERR, "    could not stat event file %s: %s\n", es->event_file_name, strerror(errno));
+	  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+			   "    could not stat event file %s: %s", 
+			   es->event_file_name, strerror(errno));
 	  fclose(ef);
 	  event_store_unlock(es);
 	  if(pthread_rwlock_unlock(&es->offset_lock))
@@ -600,7 +607,8 @@ event_store_recover(struct event_store *es)
 	  return -1;
   } else {
 	  if((es->offset == stbuf.st_size) && (es->last_modified == stbuf.st_mtime)) {
-		  il_log(LOG_DEBUG, "  event file not modified since last visit, skipping\n");
+		  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+				   "  event file not modified since last visit, skipping");
 		  fclose(ef);
 		  event_store_unlock(es);
 		  if(pthread_rwlock_unlock(&es->offset_lock))
@@ -634,9 +642,12 @@ event_store_recover(struct event_store *es)
 			  last = es->last_committed_bs;
 	  }
 
-	  il_log(LOG_DEBUG, "    setting starting file position to  %ld\n", last);
-	  il_log(LOG_DEBUG, "    bytes sent to logging server: %d\n", es->last_committed_ls);
-	  il_log(LOG_DEBUG, "    bytes sent to bookkeeping server: %d\n", es->last_committed_bs);
+	  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			   "    setting starting file position to  %ld", last);
+	  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			   "    bytes sent to logging server: %d", es->last_committed_ls);
+	  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			   "    bytes sent to bookkeeping server: %d", es->last_committed_bs);
 
 	  if(last > 0) {
 		  int c;
@@ -656,9 +667,9 @@ event_store_recover(struct event_store *es)
 		     even if the offset points at EOF */
 		  if((c=fgetc(ef)) != EVENT_SEPARATOR) {
 			  /* Houston, we have got a problem */
-			  il_log(LOG_WARNING,
-				 "    file position %ld does not point at the beginning of event string, backing off!\n",
-				 last);
+			  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN,
+					   "    file position %ld does not point at the beginning of event string, backing off!",
+					   last);
 			  /* now, where were we? */
 			  if(es->offset) {
 				  /* next try will be with
@@ -708,7 +719,8 @@ event_store_recover(struct event_store *es)
     int r;
 
     /* fpos holds the starting position of event_s in file */
-    il_log(LOG_DEBUG, "    reading event at %ld\n", fpos);
+    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		     "    reading event at %ld", fpos);
 
     last_ls = es->last_committed_ls;
     last_bs = es->last_committed_bs;
@@ -726,7 +738,8 @@ event_store_recover(struct event_store *es)
 	    free(event_s);
     }
     if(msg == NULL) {
-	    il_log(LOG_ALERT, "    event file corrupted! I will try to move it to quarantine (ie. rename it).\n");
+	    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+			     "    event file corrupted! I will try to move it to quarantine (ie. rename it).");
 	    /* actually do not bother if quarantine succeeded or not - we could not do more */
 	    event_store_quarantine(es);
 	    fclose(ef);
@@ -738,14 +751,16 @@ event_store_recover(struct event_store *es)
     msg->generation = es->generation;
 
 #ifdef IL_NOTIFICATIONS
-    il_log(LOG_DEBUG, "DEBUG: message dest %s, last dest %s, known dest %s\n",
-	   msg->dest, last_dest, eq_b ? eq_b->dest : "none");
+    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		     "message dest %s, last dest %s, known dest %s",
+		     msg->dest, last_dest, eq_b ? eq_b->dest : "none");
     /* check message destination */
     if(msg->dest == NULL) {
             /* the message does not have destination itself, use destination cached for notification id */
 	    if(eq_b == NULL) {
 		    /* no destination is known for notification id, commit it immediately */
-		    il_log(LOG_DEBUG, "    message has no known destination, will not be sent\n");
+		    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+				     "    message has no known destination, will not be sent");
 		    event_store_commit(es, msg->ev_len, 0, msg->generation);
 	    }
     } else {
@@ -774,7 +789,8 @@ event_store_recover(struct event_store *es)
     /* first enqueue to the LS */
     if(!bs_only && (last >= last_ls)) {
 
-      il_log(LOG_DEBUG, "      queuing event at %ld to logging server\n", last);
+	    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			     "      queuing event at %ld to logging server", last);
 
       /* TODO: throttling for the log server queue? */
       if(enqueue_msg(eq_l, msg) < 0) {
@@ -790,9 +806,11 @@ event_store_recover(struct event_store *es)
     	  break;
       } else if(r > 0) {
 	      throttle = 1;
-	      il_log(LOG_DEBUG, "      queue max length limit reached, event at %ld throttled\n", fpos);
+	      glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
+			       "      queue max length limit reached, event at %ld throttled", fpos);
       } else {
-	      il_log(LOG_DEBUG, "      queuing event at %ld to bookkeeping server\n", last);
+	      glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			       "      queuing event at %ld to bookkeeping server", last);
       }
     }
     server_msg_free(msg);
@@ -811,7 +829,9 @@ event_store_recover(struct event_store *es)
 
 #if defined(IL_NOTIFICATIONS)
   /* check if we have to move events to new destination */
-  il_log(LOG_DEBUG, "    last destination %s, last known destination %s\n", last_dest, eq_b ? eq_b->dest : "none");
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "    last destination %s, last known destination %s", 
+		   last_dest, eq_b ? eq_b->dest : "none");
   if(last_dest && strcmp(last_dest, eq_b->dest)) {
 	  struct event_queue *eq_dest = queue_list_get(last_dest);
 
@@ -823,7 +843,8 @@ event_store_recover(struct event_store *es)
 		  /* move all events with this notif_id from eq_b to eq_dest */
 		  event_queue_move_events(eq_b, eq_dest, cmp_jobid, es->job_id_s);
 		  eq_b = eq_dest;
-		  il_log(LOG_DEBUG, "    all messages for notif id %s are now destined to %s\n",
+		  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
+				   "    all messages for notif id %s are now destined to %s",
 			 es->job_id_s, eq_b->dest);
 		  if(event_queue_create_thread(eq_b) < 0) {
 			  ret = -1;
@@ -853,13 +874,15 @@ event_store_recover(struct event_store *es)
 
   es->offset = last;
   es->last_modified = stbuf.st_mtime;
-  il_log(LOG_DEBUG, "  event store offset set to %ld\n", last);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "  event store offset set to %ld", last);
 
   if(msg)
     server_msg_free(msg);
 
   fclose(ef);
-  il_log(LOG_DEBUG, "  finished reading events with %d\n", ret);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "  finished reading events with %d", ret);
 
   if(pthread_rwlock_unlock(&es->offset_lock))
 	  abort();
@@ -1022,20 +1045,23 @@ event_store_clean(struct event_store *es)
   /* prevent sender threads from updating */
   event_store_lock(es);
 
-  il_log(LOG_DEBUG, "  trying to cleanup event store %s\n", es->job_id_s);
-  il_log(LOG_DEBUG, "    bytes sent to logging server: %d\n", es->last_committed_ls);
-  il_log(LOG_DEBUG, "    bytes sent to bookkeeping server: %d\n", es->last_committed_bs);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "  trying to cleanup event store %s", es->job_id_s);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "    bytes sent to logging server: %d", es->last_committed_ls);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "    bytes sent to bookkeeping server: %d", es->last_committed_bs);
 
   /* preliminary check to avoid opening event file */
   /* if the positions differ, some events still have to be sent */
   if(es->last_committed_ls != es->last_committed_bs) {
     event_store_unlock(es);
-    il_log(LOG_DEBUG, "  not all events sent, cleanup aborted\n");
+    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		     "  not all events sent, cleanup aborted");
     return(0);
   }
 
   if(fd = pthread_rwlock_wrlock(&es->offset_lock)) {
-	  fprintf(stderr, "Fatal locking error: %s\n", strerror(fd));
 	  abort();
   }
 
@@ -1049,7 +1075,8 @@ event_store_clean(struct event_store *es)
     event_store_unlock(es);
     if(pthread_rwlock_unlock(&es->offset_lock))
 	    abort();
-    il_log(LOG_ERR,  "  event_store_clean: error opening event file: %s\n", strerror(errno));
+    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR,  
+		     "  event_store_clean: error opening event file: %s", strerror(errno));
     return(1);
   }
 
@@ -1061,7 +1088,8 @@ event_store_clean(struct event_store *es)
   efl.l_start = 0;
   efl.l_len = 0;
   if(fcntl(fd, F_SETLK, &efl) < 0) {
-    il_log(LOG_DEBUG, "    could not lock event file, cleanup aborted\n");
+	  glite_comon_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+			  "    could not lock event file, cleanup aborted");
     fclose(ef);
     event_store_unlock(es);
     if(pthread_rwlock_unlock(&es->offset_lock))
@@ -1086,17 +1114,20 @@ event_store_clean(struct event_store *es)
   }
 
   last = ftell(ef);
-  il_log(LOG_DEBUG, "    total bytes in file: %d\n", last);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		   "    total bytes in file: %d", last);
 
   if(es->last_committed_ls < last) {
     fclose(ef);
     event_store_unlock(es);
     if(pthread_rwlock_unlock(&es->offset_lock))
 	    abort();
-    il_log(LOG_DEBUG, "    events still waiting in queue, cleanup aborted\n");
+    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		     "    events still waiting in queue, cleanup aborted");
     return(0);
   } else if( es->last_committed_ls > last) {
-	  il_log(LOG_WARNING, "  warning: event file seems to shrink!\n");
+	  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+			   "  warning: event file seems to shrink!");
 	  /* XXX - in that case we can not continue because there may be
 	     some undelivered events referring to that event store */
 	  fclose(ef);
@@ -1107,7 +1138,8 @@ event_store_clean(struct event_store *es)
   }
 
   /* now we are sure that all events were sent and the event queues are empty */
-  il_log(LOG_INFO, "    removing event file %s\n", es->event_file_name);
+  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
+		   "    removing event file %s", es->event_file_name);
 
   /* remove the event file */
   unlink(es->event_file_name);
@@ -1255,7 +1287,8 @@ event_store_release(struct event_store *es)
 
 	if(pthread_rwlock_unlock(&es->use_lock))
 		abort();
-	il_log(LOG_DEBUG, "  released lock on %s (%s)\n", es->job_id_s, es->event_file_name);
+	glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			 "  released lock on %s (%s)", es->job_id_s, es->event_file_name);
 	return(0);
 }
 
@@ -1275,10 +1308,11 @@ event_store_from_file(char *filename)
 
 #endif
 
-	il_log(LOG_INFO, "  attaching to event file: %s\n", filename);
+	glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
+			 "  attaching to event file: %s", filename);
 
 	if(strstr(filename, "quarantine") != NULL) {
-		il_log(LOG_INFO, "  file name belongs to quarantine, not touching that.\n");
+		glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, "  file name belongs to quarantine, not touching that.");
 		return(0);
 	}
 
@@ -1322,9 +1356,11 @@ event_store_from_file(char *filename)
 #else
 	job_id_s = edg_wll_GetJobId(event_s);
 #endif
-	il_log(LOG_DEBUG, "  event id: '%s'\n", job_id_s);
+	glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			 "  event id: '%s'", job_id_s);
 	if(job_id_s == NULL) {
-		il_log(LOG_NOTICE, "  skipping file, could not parse event\n");
+		glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+				 "  skipping file, could not parse event");
 		ret = 0;
 		goto out;
 	}
@@ -1472,9 +1508,11 @@ event_store_init(char *prefix)
 	      } else {
 		      /* could not stat file, remove ctl */
 		      strcat(ef, s);
-		      il_log(LOG_DEBUG, "  removing stale file %s\n", ef);
+		      glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+				       "  removing stale file %s", ef);
 		      if(unlink(ef))
-			      il_log(LOG_ERR, "  could not remove file %s: %s\n", ef, strerror(errno));
+			      glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+					       "  could not remove file %s: %s\n", ef, strerror(errno));
 
 	      }
 	      free(ef);
@@ -1505,7 +1543,9 @@ event_store_recover_all()
 	  /* recover this event store */
 	  /* no need to lock use_lock in event_store, the store_list_lock is in place */
 	  if(event_store_recover(sl->es) < 0) {
-		  il_log(LOG_ERR, "  error recovering event store %s:\n    %s\n", sl->es->event_file_name, error_get_msg());
+		  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+				   "  error recovering event store %s:  %s", 
+				   sl->es->event_file_name, error_get_msg());
 		  clear_error();
 	  }
 	  sl = sl->next;
@@ -1528,8 +1568,9 @@ event_store_remove(struct event_store *es)
 
   switch(event_store_clean(es)) {
   case 0:
-    il_log(LOG_DEBUG, "  event store not removed, still used\n");
-    return(0);
+	  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			   "  event store not removed, still used");
+	  return(0);
 
   case 1:
     if(pthread_rwlock_wrlock(&store_list_lock) < 0) {
@@ -1588,7 +1629,8 @@ event_store_cleanup()
 	  /* one event store at time */
 	  ret = pthread_rwlock_trywrlock(&sl->es->use_lock);
 	  if(ret == EBUSY) {
-		  il_log(LOG_DEBUG, "  event_store %s is in use by another thread\n",
+		  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+				   "  event_store %s is in use by another thread",
 			 sl->es->job_id_s);
 		  sl = slnext;
 		  continue;
@@ -1610,8 +1652,9 @@ event_store_cleanup()
 		  break;
 
 	  case -1:
-		  il_log(LOG_ERR, "  error removing event store %s (file %s):\n    %s\n",
-			 sl->es->job_id_s, sl->es->event_file_name, error_get_msg());
+		  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+				   "  error removing event store %s (file %s):   %s",
+				   sl->es->job_id_s, sl->es->event_file_name, error_get_msg());
 		  /* event_store_release(sl->es); */
 		  clear_error();
 		  /* go on to the next */

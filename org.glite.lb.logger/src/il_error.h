@@ -21,13 +21,11 @@ struct error_inf {
   char *msg;
 };
 
-int init_errors(int);
+int init_errors();
 int set_error(int, long, char *);
 int clear_error();
 int error_get_maj();
 long error_get_min();
 char *error_get_msg();
-
-int il_log(int, char *, ...);
 
 #endif

@@ -283,8 +283,49 @@ decode_switches (int argc, char **argv)
 
 
 void handle_signal(int num) {
-    il_log(LOG_DEBUG, "Received signal %d\n", num);
-    killflg++;
+
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Received signal %d\n", num);
+
+	switch(num) {
+	case SIGHUP:
+		log4c_reread();
+		break;
+
+	case SIGUSR1:
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+				 "Logging priority is now %s for %s, %s for %s and %s for %s\n", 
+				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_SECURITY))),
+				 LOG_CATEGORY_SECURITY,
+				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_ACCESS))),
+				 LOG_CATEGORY_ACCESS,
+				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_CONTROL))),
+				 LOG_CATEGORY_CONTROL);
+		break;
+
+	case SIGUSR2:
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+				 "Logging priority is now %s for %s, %s for %s, %s for %s and %s for %s\n", 
+				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB))),
+				 LOG_CATEGORY_LB,
+				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_LOGD))),
+				 LOG_CATEGORY_LB_LOGD,
+				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_IL))),
+				 LOG_CATEGORY_LB_IL,
+				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_SERVER))),
+				 LOG_CATEGORY_LB_SERVER);
+		break;
+
+	case SIGPIPE:
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Broken pipe, lost communication channel.\n");
+		break;
+
+	case SIGINT:
+	case SIGTERM:
+	case SIGQUIT:
+		killflg++;
+		break;
+
+	}
 }
 
 
@@ -305,10 +346,15 @@ main (int argc, char **argv)
 
   i = decode_switches (argc, argv);
 
+  if(glite_common_log_init()) {
+	  fprintf(stderr, "glite_common_log_init() failed, exiting.\n");
+	  exit(EXIT_FAILURE);
+  }
+
   /* check for reasonable queue lengths */
   if(queue_size_low == 0 && queue_size_high > 0 ||
      queue_size_low > queue_size_high) {
-	  fprintf(stderr, "max queue length -Q must be greater than low queue length -q, both or none must be specified!\n");
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "max queue length -Q must be greater than low queue length -q, both or none must be specified!");
 	  exit(EXIT_FAILURE);
   }
 
@@ -318,23 +364,26 @@ main (int argc, char **argv)
     bs_only = 1;
   }
 
-  if(init_errors(verbose ? LOG_DEBUG : LOG_WARNING)) {
-    fprintf(stderr, "Failed to initialize error message subsystem. Exiting.\n");
-    exit(EXIT_FAILURE);
+  /* initialize error reporting */
+  if(init_errors()) {
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to initialize error message subsystem. Exiting.");
+	  exit(EXIT_FAILURE);
   }
 
   if (signal(SIGPIPE, SIG_IGN) == SIG_ERR
       || signal(SIGABRT, handle_signal) == SIG_ERR
       || signal(SIGTERM, handle_signal) == SIG_ERR
       || signal(SIGINT, handle_signal) == SIG_ERR) {
-    perror("signal");
-    exit(EXIT_FAILURE);
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to setup signal handlers: %s, exiting.",
+			   strerror(errno));
+	  exit(EXIT_FAILURE);
   }
 
   if(!debug &&
      (daemon(0,0) < 0)) {
-    perror("daemon");
-    exit(EXIT_FAILURE);
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to daemonize itself: %s, exiting.",
+			   strerror(errno));
+	  exit(EXIT_FAILURE);
   }
 
 #ifdef LB_PERF
@@ -346,21 +395,23 @@ main (int argc, char **argv)
 			  njobs);
 #endif
 
-  il_log(LOG_INFO, "Initializing input queue...\n");
   if(input_queue_attach() < 0) {
-    il_log(LOG_CRIT, "Failed to initialize input queue: %s\n", error_get_msg());
-    exit(EXIT_FAILURE);
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to initialize input queue: %s", 
+			   error_get_msg());
+	  exit(EXIT_FAILURE);
   }
+  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Initialized input queue.");
 
   /* initialize output queues */
-  il_log(LOG_INFO, "Initializing event queues...\n");
   if(queue_list_init(log_server) < 0) {
-    il_log(LOG_CRIT, "Failed to initialize output event queues: %s\n", error_get_msg());
-    exit(EXIT_FAILURE);
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to initialize output event queues: %s", 
+			   error_get_msg());
+	  exit(EXIT_FAILURE);
   }
+  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Initialized event queues.");
   if(lazy_close)
-	  il_log(LOG_DEBUG, "  using lazy mode when closing connections, timeout %d\n",
-		 default_close_timeout);
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "  using lazy mode when closing connections, timeout %d",
+			   default_close_timeout);
 
   /* get credentials */
   if (CAcert_dir)
@@ -368,7 +419,7 @@ main (int argc, char **argv)
   edg_wll_gss_watch_creds(cert_file,&cert_mtime);
   cred_handle = malloc(sizeof(*cred_handle));
   if(cred_handle == NULL) {
-	  il_log(LOG_CRIT, "Failed to allocate structure for credentials.\n");
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to allocate structure for credentials.");
 	  exit(EXIT_FAILURE);
   }
   cred_handle->creds = NULL;
@@ -376,25 +427,24 @@ main (int argc, char **argv)
   ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred_handle->creds, &gss_stat);
   if (ret) {
      char *gss_err = NULL;
-     char *str;
 
      if (ret == EDG_WLL_GSS_ERROR_GSS)
 	edg_wll_gss_get_error(&gss_stat, "edg_wll_gss_acquire_cred_gsi()", &gss_err);
-     asprintf(&str, "Failed to load GSI credential: %s\n",
-	      (gss_err) ? gss_err : "edg_wll_gss_acquire_cred_gsi() failed");
-     il_log(LOG_CRIT, str);
-     free(str);
+     glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_FATAL, "Failed to load GSI credential: %s, exiting.",
+		      (gss_err) ? gss_err : "edg_wll_gss_acquire_cred_gsi() failed");
      if (gss_err)
 	free(gss_err);
      exit(EXIT_FAILURE);
   }
+  glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "Using certificate %s", cred_handle->creds->name);
 
 #ifndef PERF_EMPTY
   /* find all unsent events waiting in files */
 #ifdef LB_PERF
   if(norecover) {
 	  if(event_store_init(file_prefix) < 0) {
-		  il_log(LOG_CRIT, "Failed to init event stores: %s\n", error_get_msg());
+		  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to initialize event stores: %s", 
+				   error_get_msg());
 		  exit(EXIT_FAILURE);
 	  }
   } else
@@ -402,26 +452,26 @@ main (int argc, char **argv)
   {
 	  pthread_t rid;
 
-	  il_log(LOG_INFO, "Starting recovery thread...\n");
 	  if(pthread_create(&rid, NULL, recover_thread, NULL) < 0) {
-		  il_log(LOG_CRIT, "Failed to start recovery thread: %s\n", strerror(errno));
+		  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to start recovery thread: %s", strerror(errno));
 		  exit(EXIT_FAILURE);
 	  }
 	  pthread_detach(rid);
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Started recovery thread.");
   }
 #endif
 
-  il_log(LOG_INFO, "Entering main loop...\n");
+  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Entering main loop.");
 
   /* do the work */
   if(loop() < 0) {
-    il_log(LOG_CRIT, "Fatal error: %s\n", error_get_msg());
-    if (killflg) {
-      input_queue_detach();
-      exit(EXIT_FAILURE);
-    }
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Fatal error: %s", error_get_msg());
+	  if (killflg) {
+		  input_queue_detach();
+		  exit(EXIT_FAILURE);
+	  }
   }
-  il_log(LOG_INFO, "Done!\n");
+  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Done!");
   input_queue_detach();
 
   exit (0);
