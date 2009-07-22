@@ -552,10 +552,12 @@ edg_wll_ErrorCode edg_wll_RestoreSubjobState(
 
 	if (edg_wll_QueryEventsServer(ctx,1, (const edg_wll_QueryRec **)jc, 
 				(const edg_wll_QueryRec **)ec, &events_p)) {
+		glite_jobid_free(parent_job);
 		free(jc);
 		free(ec);
 		return edg_wll_Error(ctx, NULL, NULL);
 	}
+	glite_jobid_free(parent_job);
 	free(jc);
 	free(ec);
 
