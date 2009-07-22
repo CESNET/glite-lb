@@ -212,7 +212,7 @@ int main(int argc,char *argv[])
 		case '?': usage(me); return 1;
 		}
 
-		if ((background == -1 && request->target_runtime) || background)
+		if ((background == -1 && request->target_runtime) || background > 0)
 			request->flags |= EDG_WLL_PURGE_BACKGROUND;
 	}
 
