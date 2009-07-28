@@ -138,49 +138,107 @@ export data are written for use by lgcmon/R-GMA
 In addition to those, YAIM LB module uses following parameters:
 \texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{GLITE\_HOME\_DIR},\texttt{SITE\_EMAIL}.
 
-\subsubsection{Migration from different HW}
+\subsubsection{Migration to a different OS version}
+\label{inst:OSmigration}
+Migration of a LB server to different machine is possible using
+following simple procedure (just file copy of the MySQL database). We
+tested the migration from SL4 32bit (mysql 4.1.22-2) to SL5 64bit
+(mysql 5.0.45-7).
 
-Changing hostname is quite problematic due to job id changes. Moving database to the new different machine is possible.
-
-The most quick way is to move \verb'/var/lib/mysql' data directory directly to the target machine. MySQL servers need to be stopped. You may need to restore file contexts in case of enabled SELinux. For example, commands on the target machine:
-
-\begin{verbatim}
-service mysqld stop
-cd /var/lib
-tar xf /tmp/lb.tar
-restorecond -R mysql
-service mysqld start
-\end{verbatim}
-
-
-\subsubsection{Migration from previous versions}
-
-Although new LB server versions are backwards compatible with already 
-stored data (without need for conversion) usually, it is necessary to recreate
-LB database from scratch or to change its database schema at some points.
-Database schema changes are not (currently) performed automatically 
-during YAIM configuration since they take a lot time and temporary disk
-space.  
-
-There were two such notable upgrades:
+Steps:
 \begin{itemize}
-\item Version 1.4.3 of \texttt{glite-lb-server} package. This \LB server version introduced optional use of database transactions for \LB database updates in order to improve their performace. This feature is switched on by default when underlaying MySQL database uses transactional InnoDB tables. For new installations, YAIM configuration process will create transactional database automatically.
-
-\item \LB version 2.0.  This version features merged \LB server and proxy services using single database, pointers to purged jobs (``zombies'') and other improvements requiring database schema changes.
+\item \emph{Prepare a new machine.} The new machine must get the same hostname 
+ as the old machine had. It is a part of job ids stored in the database.
+\item \emph{Move data.} Just stop the MySQL server and move
+ \verb'/var/lib/mysql' data directory directly to the target machine.
+\item \emph{(optional) Restore file contexts.} You may need to restore file 
+ contexts in case of enabled SELinux. For example, commands on the target 
+ machine:
+ \begin{verbatim}
+ service mysqld stop
+ cd /var/lib
+ tar xf /tmp/lb.tar
+ restorecond -R mysql
+ service mysqld start
+ \end{verbatim}
 \end{itemize}
 
-\pagebreak Before migration some database tuning is required. Especially parameter \texttt{innodb\_buffer\_pool\_size} needs to be increased, to support bigger transactions. For details see Section~\ref{inst:db_tuning}.
+\subsubsection{Migration of database to support transactions}
+Started from version 1.4.3 of the \texttt{glite-lb-server}
+package, the \LB server introduced optional use of database
+transactions for \LB database updates in order to improve their
+performace. This feature is switched on by default when underlying
+MySQL database uses transactional InnoDB tables. For new
+installations, YAIM configuration process will create transactional
+database automatically. For existing LB server database the migration 
+process is not automatically handled.
 
-Existing databases can be then converted using provided shell script. Use \verb'-s' parameter to convert database used by \LB server previously and \verb'-p' to convert database used by \LB proxy before:
-\begin{quote}
-\verb'/opt/glite/etc/glite-lb-migrate_db2version20 -s'
-\end{quote}
+Warning: There are two types of \LB database based on the fact that
+you can have a \LB server or \LB proxy. For more information about \LB
+proxy please see \ref{inst:LBproxy}.
 
-Optionally, unnecesary index can be dropped (this operation is likely to take a lot of time when applied to large database):
-\begin{quote}
-\verb'mysql -u lbserver lbserver20 -e "alter table events drop index host"'
-\end{quote}
+Steps:
+\begin{itemize}
+ \item \emph{Stop the server.} Stop both a \LB server and a MySQL
+ server. Making a fresh backup copy of database is a good idea.
+ \item \emph{Before migration some database tuning is
+ required.} Especially parameter \texttt{innodb\_buffer\_pool\_size}
+ needs to be increased, to support bigger transactions. For details
+ see Section~\ref{inst:db_tuning}.
+ \item \emph{Database type.} Check if you have a \LB server or a \LB
+ proxy. In the following step you must properly set the switch
+ \verb'-s' (server) or \verb'-p' (proxy).
+ \item \emph{Database conversion.} Use provided shell script (with the proper
+  switch from previous step):
+  \begin{quote}
+  \verb'/opt/glite/etc/glite-lb-migrate_db2version20 {-s|-p}'
+  \end{quote}
+ \item \emph{Start the servers.} MySQL and \LB. Check logs.
+\end{itemize}
 
+
+\subsubsection{Migration to \LB 2.0}
+The migration process of existing \LB 1.x database to the \LB 2.0 is
+not handled automatically. The database schema change is required due
+to support of merged \LB server and proxy services using single
+database, pointers to purged jobs (``zombies'') and other
+improvements.
+
+Warning: There are two types of \LB database based on the fact that
+you can have a \LB server or \LB proxy. For more information about \LB
+proxy please see \ref{inst:LBproxy}.
+
+Steps:
+\begin{itemize}
+ \item \emph{Stop the server and upgrade to \LB 2.0.} Stop both a \LB
+ server and a MySQL server. Making a fresh backup copy of database is
+ a good idea. Do the upgrade to \LB 2.0, optionally you can move the
+ database to new OS in this step (see \ref{inst:OSmigration}).
+ \item \emph{Before migration some database tuning is
+ required.} Especially parameter \texttt{innodb\_buffer\_pool\_size}
+ needs to be increased, to support bigger transactions. For details
+ see Section~\ref{inst:db_tuning}.
+ \item \emph{Database type.} Check if you have a \LB server or a \LB
+ proxy. In the following step you must properly set the switch
+ \verb'-s' (server) or \verb'-p' (proxy).
+ \item \emph{Database conversion.} Use provided shell script (with the proper
+  switch from previous step):
+  \begin{quote}
+  \verb'/opt/glite/etc/glite-lb-migrate_db2version20 {-s|-p}'
+  \end{quote}
+ \item \emph{(Optional) Drop unnecesary index.} This operation is
+  likely to take a lot of time when applied to large database.
+  \begin{quote}
+  \verb'mysql -u lbserver lbserver20 -e "alter table events drop index host"'
+  \end{quote}
+ \item \emph{(Optional) Check the \LB indexes.} You may need to add
+ LastUpdateTime for monitoring services. See \ref{maintain:index}.
+ \item \emph{Start the servers.} MySQL and \LB. Check logs.
+\end{itemize}
+
+This migration procedure is tested in following environment: LB 1.9.x
+from RPMs SL4 32bit (mysql 4.1.22-2), LB server node, migration to SL5
+64bit (mysql 5.0.45-7) LB2.0 RPM. 
 
 %\TODO{automated conversion through YAIM ?}
 
@@ -302,6 +360,9 @@ disk separate from OS and MySQL log files (\texttt{innodb\_log\_group\_home\_dir
 \end{itemize}
 
 \subsection{\LB proxy}
+\label{inst:LBproxy}
+TODO: Describe LB Proxy migration here.
+
 
 All necessary configuration of standalone \LB proxy is done by YAIM,
 previous \LB server section applies to merged server+proxy setups (\LBnew only).
