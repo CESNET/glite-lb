@@ -3,6 +3,7 @@
 
 #ident "$Header"
 
+#include <signal.h>
 #include "glite/lb/context.h"
 
 extern volatile sig_atomic_t purge_quit;
