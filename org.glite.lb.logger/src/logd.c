@@ -25,7 +25,6 @@
 #endif
 
 static const char rcsid[] = "@(#)$Id$";
-static int verbose = 0;
 static int debug = 0;
 static int port = EDG_WLL_LOG_PORT_DEFAULT;
 static char *prefix = EDG_WLL_LOG_PREFIX_DEFAULT;
@@ -45,7 +44,6 @@ extern char confirm_sock_name[256];
 static struct option const long_options[] = {
 	{ "help", no_argument, 0, 'h' },
 	{ "version", no_argument, 0, 'V' },
-	{ "verbose", no_argument, 0, 'v' },
 	{ "debug", no_argument, 0, 'd' },
 	{ "port", required_argument, 0, 'p' },
 	{ "file-prefix", required_argument, 0, 'f' },
@@ -77,7 +75,6 @@ usage(char *program_name) {
 		"-h, --help                 display this help and exit\n"
 		"-V, --version              output version information and exit\n"
 		"-d, --debug                do not run as daemon\n"
-		"-v, --verbose              print extensive debug output\n"
 		"-p, --port <num>           port to listen\n"
 		"-f, --file-prefix <prefix> path and prefix for event files\n"
 		"-c, --cert <file>          location of server certificate\n"
@@ -114,7 +111,7 @@ void handle_signal(int num) {
 	if (num != SIGCHLD) glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Received signal %d\n", num);
 	switch (num) {
 	case SIGHUP:
-		log4c_reread();
+		glite_common_log_reread();
 		/* TODO: probably also restart parent logd process? */
 		break;
 	case SIGUSR1:
@@ -188,11 +185,31 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     getpeername(socket,(struct sockaddr *) &peer,&alen);
     glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Accepting connection (remaining timeout %d.%06d sec)\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
+
+/* XXX: ugly workaround, we may detect false expired certificated
+ * probably due to bug in Globus GSS/SSL. */
+#define _EXPIRED_CERTIFICATE_MESSAGE "certificate has expired"
+
     if ((ret = edg_wll_gss_accept(cred_handle,socket,&timeout,&con, &gss_stat)) < 0) {
 	glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_DEBUG,"timeout after gss_accept is %d.%06d sec\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
-// TODO:       glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: edg_wll_gss_accept() failed\n",inet_ntoa(peer.sin_addr));
-	return edg_wll_log_proto_server_failure(ret,&gss_stat,"edg_wll_gss_accept() failed\n");
+	if ( ret == EDG_WLL_GSS_ERROR_TIMEOUT ) {
+		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: Client authentication failed - timeout reached, closing.\n",inet_ntoa(peer.sin_addr));
+	} else if (ret == EDG_WLL_GSS_ERROR_GSS) {
+		char *gss_err;
+
+		edg_wll_gss_get_error(&gss_stat, "Client authentication failed", &gss_err);
+		if (strstr(gss_err,_EXPIRED_CERTIFICATE_MESSAGE)) {
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: false expired certificate: %s\n",inet_ntoa(peer.sin_addr),gss_err);
+			free(gss_err);
+			return -1;
+		}
+		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: GSS error: %s, closing.\n",inet_ntoa(peer.sin_addr),gss_err);
+		free(gss_err);
+	} else {
+		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: Client authentication failed, closing.\n",inet_ntoa(peer.sin_addr));
+	}
+	return 1;
     }
 
     /* authenticate */
@@ -269,10 +286,9 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     }
 
 doit_end:
-	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG, "Closing descriptor '%d'...",con.sock);
 	edg_wll_gss_close(&con, NULL);
 	if (con.sock == -1) 
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG, "o.k.\n");
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN, "Error closing descriptor '%d'.",con.sock);
 	if (subject) free(subject);
 	return ret;
 }
@@ -311,7 +327,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    while ((opt = getopt_long(argc,argv,
 	"h"  /* help */
 	"V"  /* version */
-	"v"  /* verbose */
 	"d"  /* debug */
 	"p:" /* port */
 	"f:" /* file prefix */
@@ -326,7 +341,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 
 	switch (opt) {
 		case 'V': fprintf(stdout,"%s:\t%s\n",argv[0],rcsid); exit(0);
-		case 'v': verbose = 1; break;
 		case 'd': debug = 1; break;
 		case 'p': port = atoi(optarg); break;
 		case 'f': prefix = optarg; break;
@@ -397,20 +411,20 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    }
 
    if (cred->name!=NULL) {
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Server running with certificate: %s\n",cred->name);
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Server running with certificate: %s\n",cred->name);
    } else if (noAuth) {
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Server running without certificate\n");
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Server running without certificate\n");
    }
 
    /* do listen */
-   glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Listening on port %d\n",port);
+   glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Listening on port %d\n",port);
    listener_fd = do_listen(port);
    if (listener_fd == -1) {
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_FATAL,"Failed to listen on port %d\n",port);
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"Failed to listen on port %d\n",port);
 	edg_wll_gss_release_cred(&cred, NULL);
 	exit(-1);
    } else {
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Listener's socket descriptor is '%d'\n",listener_fd);
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_DEBUG,"Listener's socket descriptor is '%d'\n",listener_fd);
    }
 
    client_addr_len = sizeof(client_addr);
@@ -418,11 +432,11 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 
    /* daemonize */
    if (debug) {
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Running as daemon... [no]\n");
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Running as daemon... [no]\n");
    } else {
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Running as daemon... [yes]\n");
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Running as daemon... [yes]\n");
 	if (daemon(0,0) < 0) {
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_FATAL,"Failed to run as daemon. Exiting.\n");
+		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"Failed to run as daemon. Exiting.\n");
 		SYSTEM_ERROR("daemon");
 		exit(1);
 	}
@@ -434,26 +448,26 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    while (1) {
         int opt;
 
-	glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_INFO,"Accepting incomming connections...\n");
+	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_INFO,"Accepting incomming connections...\n");
 	client_fd = accept(listener_fd, (struct sockaddr *) &client_addr,
 			&client_addr_len);
 	if (client_fd < 0) {
 		close(listener_fd);
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_FATAL,"Failed to accept incomming connections\n");
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_FATAL,"Failed to accept incomming connections\n");
 		SYSTEM_ERROR("accept");
 		edg_wll_gss_release_cred(&cred, NULL);
 		exit(-1);
 	} else {
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Incomming connection on socket '%d'\n",client_fd);
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Incomming connection on socket '%d'\n",client_fd);
 	}
 
 	opt = 0;
 	if (setsockopt(client_fd,IPPROTO_TCP,TCP_CORK,(const void *) &opt,sizeof opt)) {
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN,"Can't reset TCP_CORK\n");
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Can't reset TCP_CORK\n");
 	}
 	opt = 1;
 	if (setsockopt(client_fd,IPPROTO_TCP,TCP_NODELAY,(const void *) &opt,sizeof opt)) {
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN,"Can't set TCP_NODELAY\n");
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Can't set TCP_NODELAY\n");
 	}
 
 	switch (edg_wll_gss_watch_creds(cert_file,&cert_mtime)) {
@@ -462,15 +476,15 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	case 1:
 		ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,&gss_stat);
 		if (ret) {
-			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN,"Reloading credentials failed, continue with older\n");
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"Reloading credentials failed, continue with older\n");
 		} else {
-			glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Reloading credentials succeeded\n");
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_DEBUG,"Reloading credentials succeeded\n");
 			edg_wll_gss_release_cred(&cred, NULL);
 			cred = newcred;
 		}
 		break;
 	case -1:
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed\n");
+		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed\n");
 		break;
 	}
 
@@ -483,12 +497,12 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	if (childpid == 0) {
 		ret = doit(client_fd,cred,prefix,noIPC,noParse);
 		if (client_fd) close(client_fd);
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Exiting.\n", 
+		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_DEBUG,"Exiting.\n", 
 			CONNECTION_TIMEOUT);
 		exit(0);
 	}
 	if (childpid > 0) {
-		glite_common_log(LOG_CATEGORY_NAME,LOG_PRIORITY_DEBUG,"Forked a new child with PID %d\n",childpid);
+		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_DEBUG,"Forked a new child with PID %d\n",childpid);
 		if (client_fd) close(client_fd);
 	}
 #else

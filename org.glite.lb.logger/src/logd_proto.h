@@ -19,7 +19,6 @@ extern "C" {
 #include "glite/security/glite_gss.h"
 
 int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout, char *name, char *prefix, int noipc, int noparse);
-int edg_wll_log_proto_server_failure(int code, edg_wll_GssStatus *gss_code, const char *text);
 
 /* fcntl defaults */
 #define FCNTL_ATTEMPTS		5
