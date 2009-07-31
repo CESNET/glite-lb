@@ -46,3 +46,6 @@
 - Fixed handling messages with destination not set
 - Additional logging output
 
+2.0.4-1
+- Man page update
+
