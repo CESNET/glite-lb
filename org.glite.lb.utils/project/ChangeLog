@@ -13,3 +13,7 @@
 2.0.2-1
 - glite-lb-bkpurge-offline.sh deletes from events_flesh as well
 
+2.0.3-1
+- Man page update
+- Support for background purge funcionality
+

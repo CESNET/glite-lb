@@ -85,3 +85,8 @@
 - Makefile relies on the libdir variable
 - New configure script
 
+2.0.3-1
+- Updated migration script
+- Memleak fixes
+- Support for background purge funcionality
+
