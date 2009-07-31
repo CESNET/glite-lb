@@ -173,25 +173,20 @@ installations, YAIM configuration process will create transactional
 database automatically. For existing LB server database the migration 
 process is not automatically handled.
 
-Warning: There are two types of \LB database based on the fact that
-you can have a \LB server or \LB proxy. For more information about \LB
-proxy please see \ref{inst:LBproxy}.
+Note: If you want to add transaction when migrating to \LB 2.0 skip
+this section and use \LB 2.0 migration procedure. The migration of
+database to support transactions is included in \LB 2.0 migration procedure.
 
 Steps:
 \begin{itemize}
  \item \emph{Stop the server.} Stop both a \LB server and a MySQL
  server. Making a fresh backup copy of database is a good idea.
- \item \emph{Before migration some database tuning is
- required.} Especially parameter \texttt{innodb\_buffer\_pool\_size}
- needs to be increased, to support bigger transactions. For details
- see Section~\ref{inst:db_tuning}.
- \item \emph{Database type.} Check if you have a \LB server or a \LB
- proxy. In the following step you must properly set the switch
- \verb'-s' (server) or \verb'-p' (proxy).
- \item \emph{Database conversion.} Use provided shell script (with the proper
-  switch from previous step):
+ \item \emph{Database conversion.} Use provided SQL script:
   \begin{quote}
-  \verb'/opt/glite/etc/glite-lb-migrate_db2version20 {-s|-p}'
+   \begin{verbatim}
+mysql -u lbserver lbserver20 \
+        </opt/glite/etc/glite-lb-dbsetup-migrate2transactions.sql
+   \end{verbatim}
   \end{quote}
  \item \emph{Start the servers.} MySQL and \LB. Check logs.
 \end{itemize}
