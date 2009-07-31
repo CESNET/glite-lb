@@ -1088,7 +1088,7 @@ event_store_clean(struct event_store *es)
   efl.l_start = 0;
   efl.l_len = 0;
   if(fcntl(fd, F_SETLK, &efl) < 0) {
-	  glite_comon_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+	  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
 			  "    could not lock event file, cleanup aborted");
     fclose(ef);
     event_store_unlock(es);
