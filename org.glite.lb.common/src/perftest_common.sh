@@ -87,6 +87,7 @@ print_result_header()
     do
       printf " %14s " $desc
     done
+    printf "\n"
     #echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 }
 
