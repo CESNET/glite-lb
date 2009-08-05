@@ -159,9 +159,12 @@ run_test()
     for file in ${JOB_FILE[*]}
     do
 	[[ $DEBUG -gt 0 ]] && echo -e "\n\nRunning test with input $file"
+	savePERFTEST_NAME=$PERFTEST_NAME
+	PERFTEST_NAME="${PERFTEST_NAME}_${JOB_DESC[i]}"
 	linesbefore=`grep PERFTEST $CONSUMER_LOG|wc -l`
 	$LOGJOBS $lj_flags -f $file >> $PRODUCER_LOG 2>&1
 	linesafter=`grep PERFTEST $CONSUMER_LOG|wc -l`
+	PERFTEST_NAME=$savePERFTEST_NAME
 	# if there are no new lines in the log, give it some time
 	[[ $linesbefore -eq $linesafter ]] && sleep 5
 	linesafter=`grep PERFTEST $CONSUMER_LOG|wc -l`
