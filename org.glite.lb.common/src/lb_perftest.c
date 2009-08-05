@@ -34,6 +34,7 @@ static int nsubjobs = 0;
 static job_events_t *events;
 static int nevents;
 static char **jobids;
+static char *final_jobid;
 
 static int cur_event = 0;
 static int cur_job = 0;
@@ -330,6 +331,26 @@ glite_wll_perftest_init(const char *host,
 	/* we suppose nsubjobs was filled in by read_events() */
 
 
+	/* generate final_jobid */
+	do {
+		glite_jobid_t jobid;
+
+		if(glite_wll_perftest_createJobId(dest_host,
+						  dest_port,
+						  test_user,
+						  test_name,
+						  n,
+						  &jobid) != 0) {
+			fprintf(stderr, "produceJobId: error creating jobid\n");
+			return(-1);
+		}
+		if((final_jobid=edg_wlc_JobIdUnparse(jobid)) == NULL) {
+			fprintf(stderr, "produceJobId: error unparsing jobid\n");
+			return(-1);
+		}
+		glite_jobid_free(jobid);
+	} while(0);
+
 	/* generate jobids[0..njobs-1, 0..nsubjobs] */
 	jobids = calloc(njobs*(nsubjobs + 1), sizeof(char*));
 	if(jobids == NULL) {
@@ -393,20 +414,26 @@ glite_wll_perftest_produceJobId()
 		abort();
 
 	/* is there anything to send? */
-	if(cur_job < 0) {
+	if(cur_job < -1) {
 		if(pthread_mutex_unlock(&perftest_lock) < 0)
 			abort();
 		return(NULL);
 	}
 
-	jobid = jobids[(nsubjobs+1)*cur_job + n_cur_subjob];
+	if(cur_job >=0) {
+		jobid = jobids[(nsubjobs+1)*cur_job + n_cur_subjob];
 
-	if(++n_cur_subjob > nsubjobs) {
-		n_cur_subjob = 0;
-		cur_job++;
+
+		if(++n_cur_subjob > nsubjobs) {
+			n_cur_subjob = 0;
+			cur_job++;
+		}
+		if(cur_job >= njobs) 
+			cur_job = -1;
+	} else {
+		jobid = final_jobid;
+		cur_job = -2;
 	}
-	if(cur_job >= njobs) 
-		cur_job = -1;
 		
 	if(pthread_mutex_unlock(&perftest_lock) < 0)
 		abort();
@@ -433,48 +460,81 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 		abort();
 
 	/* is there anything to send? */
-	if(cur_event < 0) {
+	if(cur_event < -1) {
 		if(pthread_mutex_unlock(&perftest_lock) < 0)
 			abort();
 		return(0);
 	}
 
-	/* use index to get current subjob */
-	cur_subjob = events[cur_event].job_index;
+	if(cur_event >= 0) {
+                /* use index to get current subjob */
+		cur_subjob = events[cur_event].job_index;
 
-	/* current job index */
-	jobi = cur_group*group_size + cur_job;
+		/* current job index */
+		jobi = cur_group*group_size + cur_job;
+	} else {
+		cur_subjob = -1;
+		jobi = -1;
+	}
 
 	/* did we send all events? */
-	if(jobi >= njobs) {
+	if((cur_event < 0) || (jobi >= njobs)) {
 		
-		/* construct termination event */
-		if((len=trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USER EDG_WLL_FORMAT_USERTAG "\n",
-				      "now", /* date */
-				      "localhost", /* host */
-				      "highest", /* level */
-				      0, /* priority */
-				      "UserInterface", /* source */
-				      "me again", /* source instance */
-				      "UserTag", /* event */
-				      jobids[0], /* jobid */
-				      "UI=999980:NS=9999999980:WM=999980:BH=9999999980:JSS=999980:LM=999980:LRMS=999980:APP=999980", /* sequence */
-				      "me", /* user */
-				      PERFTEST_END_TAG_NAME,
-				      PERFTEST_END_TAG_VALUE)) < 0) {
-			fprintf(stderr, "produceEventString: error creating termination event\n");
-			if(pthread_mutex_unlock(&perftest_lock) < 0)
-				abort();
-			return(-1);
+		if(cur_event >= 0) {
+			/* construct registration event (necessary for the termination event to travel through proxy) */
+			if((len=trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USER EDG_WLL_FORMAT_REGJOB "\n",
+					      "now", /* date */
+					      "localhost", /* host */
+					      "highest", /* level */
+					      0, /* priority */
+					      "UserInterface", /* source */
+					      "me again", /* source instance */
+					      "RegJob", /* event */
+					      final_jobid, /* jobid */
+					      "UI=999980:NS=9999999980:WM=999980:BH=9999999980:JSS=999980:LM=999980:LRMS=999980:APP=999980", /* sequence */
+					      "me", /* user */
+					      "[ ]", /* jdl */
+					      "localhost", /* regjob ns */
+					      "", /* parent */
+					      "SIMPLE", /* job type */
+					      0, /* subjobs */
+					      "" /*seed */
+				    )) < 0) {
+				fprintf(stderr, "produceEventString: error creating registration event\n");
+				if(pthread_mutex_unlock(&perftest_lock) < 0)
+					abort();
+				return(-1);
+			}
+			/* and refuse to produce more */
+			cur_job = -1;
+			cur_event = -1;
+			cur_subjob = -1;
+		} else {
+			/* construct termination event */
+			if((len=trio_asprintf(&e, EDG_WLL_FORMAT_COMMON EDG_WLL_FORMAT_USER EDG_WLL_FORMAT_USERTAG "\n",
+					      "now", /* date */
+					      "localhost", /* host */
+					      "highest", /* level */
+					      0, /* priority */
+					      "UserInterface", /* source */
+					      "me again", /* source instance */
+					      "UserTag", /* event */
+					      final_jobid, /* jobid */
+					      "UI=999980:NS=9999999980:WM=999980:BH=9999999980:JSS=999980:LM=999980:LRMS=999980:APP=999980", /* sequence */
+					      "me", /* user */
+					      PERFTEST_END_TAG_NAME,
+					      PERFTEST_END_TAG_VALUE)) < 0) {
+				fprintf(stderr, "produceEventString: error creating termination event\n");
+				if(pthread_mutex_unlock(&perftest_lock) < 0)
+					abort();
+				return(-1);
+			}
+			/* and refuse to produce more */
+			cur_job = -1;
+			cur_event = -2;
+			cur_subjob = -1;
 		}
 		*jobid = jobids[0];
-
-		/* and refuse to produce more */
-		cur_job = -1;
-		cur_event = -1;
-		cur_subjob = -1;
-
-		
 
 	} else {
 		char *parent = NULL;
