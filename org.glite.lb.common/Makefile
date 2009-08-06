@@ -221,7 +221,7 @@ install:
 		mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
 		${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
 	fi ;
-#???		${STAGE_PERFTEST} ;
+	${STAGE_PERFTEST} ;
 	mkdir -p ${PREFIX}/share/build/m4
 	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4
 
