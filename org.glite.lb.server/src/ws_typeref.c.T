@@ -531,6 +531,7 @@ int edg_wll_SoapToQueryRec(
 		edg_wll_SoapToJobStatCode(*(collection->statName), &(out->attr_id.state));
 		break;
 	case EDG_WLL_QUERY_ATTR_USERTAG:
+	case EDG_WLL_QUERY_ATTR_JDL_ATTR:
 		out->attr_id.tag = strdup(collection->tagName);
 		break;
 	default:
