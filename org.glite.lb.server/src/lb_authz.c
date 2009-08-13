@@ -3,10 +3,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <syslog.h>
 
 #include "glite/lb/context-int.h"
 #include "lb_authz.h"
+#include "glite/lbu/log.h"
 
 #ifndef NO_VOMS
 
@@ -662,6 +662,8 @@ edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
 
 		for ( ; ; )
 		{
+			 glite_common_log(LOG_CATEGORY_LB_SERVER_DB, 
+				LOG_PRIORITY_DEBUG, q1);
 			if ( edg_wll_ExecSQL(ctx, q1, NULL) > 0 )
 				goto end;
 
@@ -675,6 +677,8 @@ edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
 						"update acls set refcnt = refcnt+%d "
 						"where aclid = '%|Ss'",
 						incr, aclid);
+			glite_common_log(LOG_CATEGORY_LB_SERVER_DB,  
+                                LOG_PRIORITY_DEBUG, q2);
 			if ( edg_wll_ExecSQL(ctx, q2, NULL) < 0 )
 				continue;
 
@@ -688,18 +692,21 @@ edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
 				"where aclid='%|Ss' and refcnt>=%d",
 				-incr, aclid, -incr);
 
+		glite_common_log(LOG_CATEGORY_LB_SERVER_DB,  
+                                LOG_PRIORITY_DEBUG, q1);
 		if ( edg_wll_ExecSQL(ctx, q1, NULL) > 0 )
 		{
 			trio_asprintf(&q2,
 						"delete from acls "
 						"where aclid='%|Ss' and refcnt=0",
 						aclid);
+			glite_common_log(LOG_CATEGORY_LB_SERVER_DB,  
+                                LOG_PRIORITY_DEBUG, q2);
 			edg_wll_ExecSQL(ctx, q2, NULL);
 		}
 		else
 		{
-			fprintf(stderr, "ACL with ID: %s has invalid reference count\n", aclid);
-			syslog(LOG_WARNING, "ACL with ID: %s has invalid reference count\n", aclid);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "ACL with ID: %s has invalid reference count", aclid);
 		}
 	}
 
@@ -775,6 +782,8 @@ edg_wll_UpdateACL(edg_wll_Context ctx, glite_jobid_const_t job,
 	 trio_asprintf(&stmt,
 	    "update jobs set aclid='%|Ss' where jobid='%|Ss' and ISNULL(aclid)",
 	    new_aclid, md5_jobid);
+      glite_common_log(LOG_CATEGORY_LB_SERVER_DB,
+         LOG_PRIORITY_DEBUG, stmt);
       updated = edg_wll_ExecSQL(ctx, stmt, NULL);
       free(stmt); stmt = NULL;
 
@@ -819,6 +828,8 @@ int edg_wll_GetACL(edg_wll_Context ctx, glite_jobid_const_t jobid, edg_wll_Acl *
 	trio_asprintf(&q,
 		"select aclid from jobs where jobid = '%|Ss'", jobstr);
 
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB,
+        	LOG_PRIORITY_DEBUG, q);
 	if (edg_wll_ExecSQL(ctx, q, &stmt) < 0 ||
 		edg_wll_FetchRow(ctx, stmt, 1, NULL, &acl_id) < 0) {
 		goto end;
@@ -835,6 +846,8 @@ int edg_wll_GetACL(edg_wll_Context ctx, glite_jobid_const_t jobid, edg_wll_Acl *
 
 	trio_asprintf(&q,
 		"select value from acls where aclid = '%|Ss'", acl_id);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB,
+        	LOG_PRIORITY_DEBUG, q);
 	if (edg_wll_ExecSQL(ctx, q, &stmt) < 0 ||
 		edg_wll_FetchRow(ctx, stmt, 1, NULL, &acl_str) < 0) {
 		goto end;

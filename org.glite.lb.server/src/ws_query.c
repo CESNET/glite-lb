@@ -5,6 +5,7 @@
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/xml_conversions.h"
 
+#include "glite/lbu/log.h"
 
 #include "soap_version.h"
 #include "glite/security/glite_gsplugin.h"
@@ -40,7 +41,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__GetVersion(
 	struct _lbe__GetVersion *in,
 	struct _lbe__GetVersionResponse *out)
 {
-	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
+	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, 
+		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	out->version = soap_strdup(soap, VERSION);
 
@@ -59,7 +61,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	int	flags;
 
 
-	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
+	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG,
+		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	if ( edg_wlc_JobIdParse(in->jobid, &j) )
 	{
@@ -75,7 +78,10 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 
 		cjobid = edg_wlc_JobIdUnparse(j);
 		cflags = edg_wll_stat_flags_to_string(flags);
-		dprintf(("[%d] \n\t<flags>%s</flags>\n\t<jobId>%s</jobId>\n\n",getpid(),cflags,cjobid));
+		glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, 
+			LOG_PRIORITY_DEBUG, 
+			"[%d] \n\t<flags>%s</flags>\n\t<jobId>%s</jobId>\n",
+			getpid(), cflags, cjobid);
 		free(cjobid);
 		free(cflags);
 	}
@@ -106,7 +112,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	int                ret = SOAP_FAULT;
 
 
-	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
+	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG,
+		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	out->states = soap_malloc(soap, sizeof(*out->states));
 	out->jobs = soap_malloc(soap, sizeof(*out->jobs));
@@ -129,10 +136,10 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 		if (edg_wll_QueryJobsRequestToXML(ctx, 
 				(const edg_wll_QueryRec **) conditions, 
 				flags, &message)) {
-			dprintf(("[%d] %s\n",getpid(),"edg_wll_QueryJobsRequestToXML() returned error"));
+			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, "[%d] %s", getpid(), "edg_wll_QueryJobsRequestToXML() returned error");
 		}
 		else {
-			dprintf(("[%d] \n%s\n\n",getpid(),message));
+			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, "[%d] \n%s\n", getpid(), message);
 		}
 		free(message);
 	}
@@ -163,7 +170,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__UserJobs(
 	edg_wll_JobStat	*states;
 
 
-	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
+	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, 
+		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	memset(out, 0, sizeof *out);
@@ -196,7 +204,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 	int			ret = SOAP_OK;
 
 
-	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
+	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG,
+		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	edg_wll_ResetError(ctx);
 	if ( edg_wll_SoapToQueryCondsExt(in->jobConditions, in->__sizejobConditions, 
@@ -224,10 +233,10 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 				(const edg_wll_QueryRec **) job_conditions, 
 				(const edg_wll_QueryRec **) event_conditions,
 				&message)) {
-			dprintf(("[%d] %s\n",getpid(),"edg_wll_QueryEventsRequestToXML() returned error"));
+			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, "[%d] %s", getpid(), "edg_wll_QueryEventsRequestToXML() returned error");
 		}
 		else {
-			dprintf(("[%d] \n%s\n\n",getpid(),message));
+			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, "[%d] \n%s\n", getpid(), message);
 		}
 		free(message);
 	}
@@ -298,7 +307,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifNew(
 	edg_wll_NotifId		nid = NULL;
 	int			ret = SOAP_OK;
 
-	dprintf(("[%d] WS call %s\n",getpid(),__FUNCTION__));
+	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, 
+		"[%d] WS call %s\n", getpid(), __FUNCTION__);
 
 	edg_wll_ResetError(ctx);
 	if ( edg_wll_SoapToQueryCondsExt(in->conditions, in->__sizeconditions, &conditions) )
@@ -447,3 +457,4 @@ static void freeEvents(edg_wll_Event *events)
 		free(events);
 	}
 }
+

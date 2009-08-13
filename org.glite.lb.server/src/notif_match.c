@@ -11,6 +11,7 @@
 
 #include "glite/lb/context-int.h"
 #include "glite/lbu/trio.h"
+#include "glite/lbu/log.h"
 
 #include "lb_authz.h"
 #include "lb_xml_parse.h"
@@ -88,14 +89,15 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS,cond_where ? cond_where : "",cond_and_where ? cond_and_where : "");
 
 	free(ju); ju = NULL;
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, jobq);
 
 	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
 
 	while ((ret = edg_wll_FetchRow(ctx,jobs,sizeof(jobc)/sizeof(jobc[0]),NULL,jobc)) > 0) {
 		if (now > (expires = glite_lbu_DBToTime(jobc[2]))) {
 			edg_wll_NotifExpired(ctx,jobc[0]);
-			if (debug) fprintf(stderr,"[%d] NOTIFY:%s expired at %s UTC\n",
-					getpid(),jobc[0],asctime(gmtime(&expires)));
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "[%d] NOTIFY:%s expired at %s UTC", 
+				getpid(),jobc[0],asctime(gmtime(&expires)));
 		}
 		else if (notif_match_conditions(ctx,oldstat,stat,jobc[4]) &&
 				notif_check_acl(ctx,stat,jobc[3]))
@@ -103,11 +105,8 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			char			   *dest, *aux;
 			int					port;
 
-			if (debug) {
-				fprintf(stderr,"NOTIFY: %s, job %s\n",jobc[0],
-					ju = edg_wlc_JobIdGetUnique(stat->jobId));
-				free(ju); ju = NULL;
-			}
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %s, job %s", jobc[0], ju = edg_wlc_JobIdGetUnique(stat->jobId));
+			free(ju); ju = NULL;
 
 			dest = strdup(jobc[1]);
 			if ( !(aux = strchr(dest, ':')) )
@@ -156,6 +155,8 @@ int edg_wll_NotifExpired(edg_wll_Context ctx,const char *notif)
 
 	trio_asprintf(&dn,"delete from notif_registrations where notifid='%|Ss'",notif);
 	trio_asprintf(&dj,"delete from notif_jobs where notifid='%|Ss'",notif);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, dn);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, dj);
 
 	if (edg_wll_ExecSQL(ctx,dn,NULL) < 0 ||
 		edg_wll_ExecSQL(ctx,dj,NULL) < 0)
@@ -163,7 +164,8 @@ int edg_wll_NotifExpired(edg_wll_Context ctx,const char *notif)
 		char	*et,*ed;
 		edg_wll_Error(ctx,&et,&ed);
 
-		syslog(LOG_WARNING,"delete notification %s: %s (%s)",notif,et,ed);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, 
+			"delete notification %s: %s (%s)", notif, et, ed);		
 		free(et); free(ed);
 	}
 
@@ -181,8 +183,9 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *old
 	if (!cond) return 1;
 
 	if (parseJobQueryRec(ctx,cond,strlen(cond),&c)) {
-		fputs("notif_match_conditions(): parseJobQueryRec failed\n",stderr);
-		syslog(LOG_ERR,"notif_match_conditions(): parseJobQueryRec failed");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
+			"notif_match_conditions(): parseJobQueryRec failed");
+
 		return 1;
 	}
 

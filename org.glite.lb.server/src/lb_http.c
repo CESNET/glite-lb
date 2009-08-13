@@ -9,6 +9,8 @@
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"
 
+#include "glite/lbu/log.h"
+
 #include "lb_http.h"
 #include "lb_proto.h"
 
@@ -26,12 +28,16 @@ int edg_wll_AcceptHTTP(edg_wll_Context ctx, char **body, char **resp, char ***hd
 	if ( ctx->isProxy ) err = edg_wll_http_recv_proxy(ctx,&req,&hdr,body);
 	else err = edg_wll_http_recv(ctx,&req,&hdr,body,ctx->connections->serverConnection);
 
-	if (req) {
-		dprintf(("[%d] request: %s\n",getpid(),req));
-	} else {
-		dprintf(("no request\n"));
-	}
-	if (body && *body) dprintf(("request body:\n%s\n\n",*body));
+	if (req)
+		glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, 
+			LOG4C_PRIORITY_DEBUG, "[%d] request: %s", 
+			getpid(), req);
+	else
+		glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, 
+                        LOG4C_PRIORITY_DEBUG, "no request");
+	if (body && *body) 
+		glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, 
+                        LOG4C_PRIORITY_DEBUG, "request body:\n%s",*body);
 
 	if (!err) {
 		if ((err = edg_wll_Proto(ctx,req,hdr,*body,resp,hdrOut,bodyOut,httpErr)))

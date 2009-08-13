@@ -13,6 +13,8 @@
 #include "glite/lb/jobstat.h"
 #include "glite/lb/context-int.h"
 
+#include "glite/lbu/log.h"
+
 #include "glite/jobid/strmd5.h"
 
 #include "stats.h"
@@ -71,7 +73,8 @@ int edg_wll_InitStatistics(edg_wll_Context ctx)
 		stats[i].map = mmap(NULL,sizeof zero,PROT_READ|PROT_WRITE,MAP_SHARED,stats[i].fd,0);
 		if (stats[i].map == MAP_FAILED) return edg_wll_SetError(ctx,errno,"mmap()");
 
-		dprintf(("stats: using %s\n",fname));
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, 
+			"stats: using %s",fname);
 		unlink(fname);
 	}
 	return 0;
@@ -135,8 +138,9 @@ static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,
 	if (!jobstat->destination) return 0;
 	edg_wll_ResetError(ctx);
 
-	dprintf(("inc_counter: destination %s, stats %d\n",jobstat->destination,
-			(int) (stats - (edg_wll_Stats *) default_stats)));
+	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+		"inc_counter: destination %s, stats %d\n",
+		jobstat->destination, (int) (stats - (edg_wll_Stats *) default_stats));
 
 	if (flock(stats->fd,LOCK_EX)) return edg_wll_SetError(ctx,errno,"flock()");
 
@@ -165,7 +169,8 @@ static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,
 
 	/* not found, initialize new */
 	if (i == stats->grpno) {
-		dprintf(("group %s not found\n",sig));
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+			"group %s not found",sig);
 		if (stats->grpno) {
 			char	*zero = calloc(1,stats->grpsize);
 			munmap(stats->map,stats->grpno * stats->grpsize);
@@ -182,7 +187,8 @@ static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,
 		}
 		stats->grpno++;
 		stats->map->grpno++;
-		dprintf(("allocated\n"));
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+			"allocated");
 
 		g = (struct edg_wll_stats_group *) (
 				((char *) stats->map) + stats->grpsize * i);
@@ -197,7 +203,9 @@ static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,
 		strcpy(g->sig,sig);
 		g->last_update = now;
 	}
-	else dprintf(("group %s found at %d\n",sig,i));
+	else 
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+			"group %s found at %d", sig, i);
 
 	a = g->archive;
 	for (i=0; stats->archives[i].interval; i++) {
@@ -223,7 +231,9 @@ static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,
 
 		/* now we can do IT */
 		a->cells[a->ptr].cnt++;
-		dprintf(("update archive %d, cell %d to %d\n",i,a->ptr,a->cells[a->ptr].cnt));
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+			"update archive %d, cell %d to %d",
+			i, a->ptr, a->cells[a->ptr].cnt);
 
 		/* go to next archive */
 		a = archive_skip(a,stats->archives[i].length);
@@ -334,7 +344,8 @@ int edg_wll_StateRateServer(
 		}
 	}
 
-	dprintf(("best match: archive %d, interval %ld\n",matchi,match));
+	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, 
+		"best match: archive %d, interval %ld", matchi, match);
 
 	if (matchi < 0) {
 		if (*from > g->last_update) {
@@ -356,7 +367,8 @@ int edg_wll_StateRateServer(
 	afrom = g->last_update - g->last_update % i
 			- (stats->archives[matchi].length-1)*i;
 
-	dprintf(("archive from %ld = %s",afrom,ctime(&afrom)));
+	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+		"archive from %ld = %s", afrom, ctime(&afrom));
 
 	if (afrom > *from) *from = afrom;
 	if (afrom + stats->archives[matchi].length * i < *to) *to = afrom + stats->archives[matchi].length * i;
@@ -368,30 +380,33 @@ int edg_wll_StateRateServer(
 	for (j=0; j<stats->archives[matchi].length; j++,afrom += i) {
 		struct edg_wll_stats_cell 	*c = a->cells + ((a->ptr+j+1) % stats->archives[matchi].length);
 
-		dprintf(("cell %d (abs %d): ",j,(a->ptr+j+1) % stats->archives[matchi].length));
+		 glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+			"cell %d (abs %d): ",
+			j, (a->ptr+j+1) % stats->archives[matchi].length);
 		if (c->cnt < 0) {
-			dprintf(("invalid\n"));
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "invalid");
 			continue; /* invalid cell */
 		}
 
-		dprintf(("search %ld in %ld, %ld\n",*from,afrom,afrom+i));
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+			"search %ld in %ld, %ld\n", *from, afrom, afrom+i);
 
 		if (*from >= afrom && *from < afrom+i) {
 			match += *from - afrom;
 			*rate += c->cnt * (1.0 - ((float) *from-afrom)/i);
-			dprintf(("matched from: match %ld, rate %f\n",match,*rate));
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched from: match %ld, rate %f", match, *rate);
 		}
 		else if (*from < afrom && *to >= afrom) {
 			match += i;
 			*rate += c->cnt;
-			dprintf(("matched in: match %ld, rate %f\n",match,*rate));
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched in: match %ld, rate %f", match, *rate);
 		}
 
 		if (*to >= afrom && *to < afrom+i) {
 			match -= i-(*to-afrom);
 			*rate -= c->cnt * (((float) i)-(*to - afrom))/i;
 
-			dprintf(("matched to: match %ld, rate %f\n",match,*rate));
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %ld, rate %f", match, *rate);
 
 		/* asi blbost 
 			if (j == stats->archives[matchi].length - 1

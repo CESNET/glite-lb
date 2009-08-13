@@ -19,7 +19,6 @@
 #include <netdb.h>
 #include <limits.h>
 #include <assert.h>
-#include <syslog.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
@@ -40,6 +39,7 @@
 #include "glite/lb/context.h"
 #include "glite/lb/mini_http.h"
 #include "glite/lb/context-int.h"
+#include "glite/lbu/log.h"
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -485,16 +485,20 @@ int main(int argc, char *argv[])
 	setlinebuf(stdout);
 	setlinebuf(stderr);
 
-	dprintf(("\n"));
-	if (mode & SERVICE_PROXY) dprintf(("Starting LB proxy service\n"));
-	if (mode & SERVICE_SERVER) dprintf(("Starting LB server service\n"));
-	dprintf(("\n"));
+	if (glite_common_log_init()) {
+		fprintf(stderr,"glite_common_log_init() failed, exiting.\n");
+		exit(1);
+	}
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Initializing...");
+
+	if (mode & SERVICE_PROXY) glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Starting LB proxy service");
+	if (mode & SERVICE_SERVER) glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Starting LB server service");
 
 	// XXX: workaround for only preudoparallel job registration
 	//	we need at least 2 slaves to avoid locking misbehaviour
 	if ((mode == SERVICE_PROXY_SERVER) && (slaves == 1)) {
-		dprintf(("WARNING: Running both proxy and server services enforces at least 2 slaves\n"));
-		dprintf(("Starting 2 slaves\n"));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Running both proxy and server services enforces at least 2 slaves");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Starting 2 slaves");
 		slaves = 2;
 	}
 
@@ -510,7 +514,7 @@ int main(int argc, char *argv[])
 		{
 			if ( !kill(opid,0) )
 			{
-				fprintf(stderr,"%s: another instance running, pid = %d\n",argv[0],opid);
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "%s: another instance running, pid = %d", argv[0], opid);
 				return 1;
 			}
 			else if (errno != ESRCH) { perror("kill()"); return 1; }
@@ -524,12 +528,17 @@ int main(int argc, char *argv[])
 	if (fclose(fpid) != 0) { perror(pidfile); return 1; }
 
 	if (mode & SERVICE_SERVER) {
-		if (check_mkdir(dumpStorage)) exit(1);
-		if (check_mkdir(purgeStorage)) exit(1);
+		if (check_mkdir(dumpStorage)){
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for dump files not redy!");
+			exit(1);
+		}
+		if (check_mkdir(purgeStorage)){
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for purge files not redy!");
+			exit(1);
+		}
 		if ( jpreg ) {
 			if ( glite_lbu_MaildirInit(jpregDir) ) {
-				dprintf(("[%d] glite_lbu_MaildirInit failed: %s\n", getpid(), lbm_errdesc));
-				if (!debug) syslog(LOG_CRIT, "glite_lbu_MaildirInit failed: %s", lbm_errdesc);
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "[%d] glite_lbu_MaildirInit failed: %s", getpid(), lbm_errdesc);
 				exit(1);
 			}
 		}
@@ -552,54 +561,60 @@ int main(int argc, char *argv[])
 			fake_port = atoi(port); 
 		}
 
-		dprintf(("Server address: %s:%d\n", fake_host, fake_port));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server address: %s:%d", fake_host, fake_port);
 	}
 	if ((mode & SERVICE_SERVER)) {
 		service_table[SRV_SERVE].conn = socket(PF_INET, SOCK_STREAM, 0);
-		if ( service_table[SRV_SERVE].conn < 0 ) { perror("socket()"); return 1; }
+		if ( service_table[SRV_SERVE].conn < 0 ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
+			return 1; 
+		}
 		a.sin_family = AF_INET;
 		a.sin_port = htons(atoi(port));
 		a.sin_addr.s_addr = INADDR_ANY;
 		setsockopt(service_table[SRV_SERVE].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 		if ( bind(service_table[SRV_SERVE].conn, (struct sockaddr *) &a, sizeof(a)) )
 		{ 
-			char	buf[100];
-
-			snprintf(buf,sizeof(buf),"bind(%d)",atoi(port));
-			perror(buf);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%d)",atoi(port));
 			return 1;
 		}
-		if ( listen(service_table[SRV_SERVE].conn, CON_QUEUE) ) { perror("listen()"); return 1; }
+		if ( listen(service_table[SRV_SERVE].conn, CON_QUEUE) ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()");
+			return 1; 
+		}
 
 		service_table[SRV_STORE].conn = socket(PF_INET, SOCK_STREAM, 0);
-		if ( service_table[SRV_STORE].conn < 0) { perror("socket()"); return 1; }
+		if ( service_table[SRV_STORE].conn < 0) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
+			return 1; 
+		}
 		a.sin_family = AF_INET;
 		a.sin_port = htons(atoi(port)+1);
 		a.sin_addr.s_addr = INADDR_ANY;
 		setsockopt(service_table[SRV_STORE].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 		if ( bind(service_table[SRV_STORE].conn, (struct sockaddr *) &a, sizeof(a)))
 		{
-			char	buf[100];
-
-			snprintf(buf,sizeof(buf), "bind(%d)", atoi(port)+1);
-			perror(buf);
+			 glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%d)", atoi(port)+1);
 			return 1;
 		}
-		if ( listen(service_table[SRV_STORE].conn, CON_QUEUE) ) { perror("listen()"); return 1; }
+		if ( listen(service_table[SRV_STORE].conn, CON_QUEUE) ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()"); 
+			return 1; 
+		}
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 		service_table[SRV_WS].conn = socket(PF_INET, SOCK_STREAM, 0);
-		if ( service_table[SRV_WS].conn < 0) { perror("socket()"); return 1; }
+		if ( service_table[SRV_WS].conn < 0) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
+			return 1; 
+		}
 		a.sin_family = AF_INET;
 		a.sin_port = htons(atoi(ws_port));
 		a.sin_addr.s_addr = INADDR_ANY;
 		setsockopt(service_table[SRV_WS].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 		if ( bind(service_table[SRV_WS].conn, (struct sockaddr *) &a, sizeof(a)))
 		{
-			char	buf[100];
-
-			snprintf(buf, sizeof(buf), "bind(%d)", atoi(ws_port));
-			perror(buf);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%d)", atoi(ws_port));
 			return 1;
 		}
 		if ( listen(service_table[SRV_WS].conn, CON_QUEUE) ) { perror("listen()"); return 1; }
@@ -607,8 +622,7 @@ int main(int argc, char *argv[])
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 		if (!server_cert || !server_key)
-			fprintf(stderr, "%s: key or certificate file not specified"
-							" - unable to watch them for changes!\n", argv[0]);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s: key or certificate file not specified  - unable to watch them for changes!", argv[0]);
 
 		if ( cadir ) setenv("X509_CERT_DIR", cadir, 1);
 		edg_wll_gss_watch_creds(server_cert, &cert_mtime);
@@ -616,7 +630,7 @@ int main(int argc, char *argv[])
 		{
 			int	i;
 
-			dprintf(("Server identity: %s\n",mycred->name));
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server identity: %s", mycred->name);
 			server_subject = strdup(mycred->name);
 			for ( i = 0; super_users && super_users[i]; i++ ) ;
 			super_users = realloc(super_users, (i+2)*sizeof(*super_users));
@@ -624,15 +638,18 @@ int main(int argc, char *argv[])
 			super_users[i+1] = NULL;
 		}
 		else {
-			dprintf(("Server running unauthenticated\n"));
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Server running unauthenticated");
 			server_subject = strdup("anonymous LB");
 		}
 
-		if ( noAuth ) dprintf(("Server in promiscuous mode\n"));
-		dprintf(("Server listening at %d,%d (accepting protocols: " COMP_PROTO " and compatible) ...\n",atoi(port),atoi(port)+1));
+		if ( noAuth ) 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server in promiscuous mode");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
+			"Server listening at %d,%d (accepting protocols: " COMP_PROTO " and compatible) ...", atoi(port), atoi(port)+1);
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-		dprintf(("Server listening at %d (accepting web service protocol) ...\n", atoi(ws_port)));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+		"Server listening at %d (accepting web service protocol) ...", atoi(ws_port));
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 	}
@@ -640,7 +657,10 @@ int main(int argc, char *argv[])
 		struct sockaddr_un      a;
 
 		service_table[SRV_SERVE_PROXY].conn = socket(PF_UNIX, SOCK_STREAM, 0);
-		if ( service_table[SRV_SERVE_PROXY].conn < 0 ) { perror("socket()"); return 1; }
+		if ( service_table[SRV_SERVE_PROXY].conn < 0 ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
+			return 1; 
+		}
 		memset(&a, 0, sizeof(a));
 		a.sun_family = AF_UNIX;
 		sprintf(sock_serve, "%s%s", socket_path_prefix, "serve.sock");
@@ -648,23 +668,29 @@ int main(int argc, char *argv[])
 
 		if( connect(service_table[SRV_SERVE_PROXY].conn, (struct sockaddr *)&a, sizeof(a.sun_path)) < 0) {
 			if( errno == ECONNREFUSED ) {
-				dprintf(("removing stale input socket %s\n", sock_serve));
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "removing stale input socket %s", sock_serve);
 				unlink(sock_serve);
 			}
-		} else { perror("another instance of lb-proxy is running"); return 1; }
+		} else { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "another instance of lb-proxy is running");
+			return 1; 
+		}
 
 		if ( bind(service_table[SRV_SERVE_PROXY].conn, (struct sockaddr *) &a, sizeof(a)) < 0 ) {
-			char	buf[100];
-
-			snprintf(buf, sizeof(buf), "bind(%s)", sock_serve);
-			perror(buf);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s)", sock_serve);
 			return 1;
 		}
 
-		if ( listen(service_table[SRV_SERVE_PROXY].conn, con_queue) ) { perror("listen()"); return 1; }
+		if ( listen(service_table[SRV_SERVE_PROXY].conn, con_queue) ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()");
+			return 1; 
+		}
 
 		service_table[SRV_STORE_PROXY].conn = socket(PF_UNIX, SOCK_STREAM, 0);
-		if ( service_table[SRV_STORE_PROXY].conn < 0 ) { perror("socket()"); return 1; }
+		if ( service_table[SRV_STORE_PROXY].conn < 0 ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
+			return 1; 
+		}
 		memset(&a, 0, sizeof(a));
 		a.sun_family = AF_UNIX;
 		sprintf(sock_store, "%s%s", socket_path_prefix, "store.sock");
@@ -672,21 +698,25 @@ int main(int argc, char *argv[])
 
 		if( connect(service_table[SRV_STORE_PROXY].conn, (struct sockaddr *)&a, sizeof(a.sun_path)) < 0) {
 			if( errno == ECONNREFUSED ) {
-				dprintf(("removing stale input socket %s\n", sock_store));
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "removing stale input socket %s", sock_store);
 				unlink(sock_store);
 			}
-		} else { perror("another instance of lb-proxy is running"); return 1; }
+		} else { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "another instance of lb-proxy is running");
+			return 1; 
+		}
 
 		if ( bind(service_table[SRV_STORE_PROXY].conn, (struct sockaddr *) &a, sizeof(a))) {
-			char	buf[100];
-
-			snprintf(buf, sizeof(buf), "bind(%s)", sock_store);
-			perror(buf);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s)", sock_store);
+			
 			return 1;
 		}
-		if ( listen(service_table[SRV_STORE_PROXY].conn, con_queue) ) { perror("listen()"); return 1; }
+		if ( listen(service_table[SRV_STORE_PROXY].conn, con_queue) ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()");
+			return 1; 
+		}
 
-		dprintf(("Proxy listening at %s, %s ...\n", sock_store, sock_serve));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Proxy listening at %s, %s ...", sock_store, sock_serve);
 	}
 
 	if (!dbstring) dbstring = getenv("LBDB");
@@ -704,22 +734,22 @@ int main(int argc, char *argv[])
 		char	*et,*ed;
 		glite_lbu_DBError(ctx->dbctx,&et,&ed);
 
-		fprintf(stderr,"%s: open database: %s (%s)\n",argv[0],et,ed);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "%s: open database: %s (%s)", argv[0], et, ed);
 		free(et); free(ed);
 		return 1;
 	}
 	edg_wll_Close(ctx);
 	ctx->dbctx = NULL;
-	fprintf(stderr, "[%d]: DB '%s'\n", getpid(), dbstring);
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "[%d]: DB '%s'", getpid(), dbstring);
 
 	if ((ctx->dbcaps & GLITE_LBU_DB_CAP_INDEX) == 0) {
-		fprintf(stderr,"%s: missing index support in DB layer\n",argv[0]);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "%s: missing index support in DB layer", argv[0]);
 		return 1;
 	}
 	if ((ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS) == 0)
-		fprintf(stderr, "[%d]: transactions aren't supported!\n", getpid());
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d]: transactions aren't supported!", getpid());
 	if (transactions >= 0) {
-		fprintf(stderr, "[%d]: transactions forced from %d to %d\n", getpid(), ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS ? 1 : 0, transactions);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d]: transactions forced from %d to %d", getpid(), ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS ? 1 : 0, transactions);
 		ctx->dbcaps &= ~GLITE_LBU_DB_CAP_TRANSACTIONS;
 		ctx->dbcaps |= transactions ? GLITE_LBU_DB_CAP_TRANSACTIONS : 0;
 	}
@@ -730,7 +760,7 @@ int main(int argc, char *argv[])
 
 	if ( !debug ) {
 		if (daemon(1,0) == -1) {
-			perror("deamon()");
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "deamon()");
 			exit(1);
 		}
 #ifdef LB_PERF
@@ -741,8 +771,6 @@ int main(int argc, char *argv[])
 		if (!fpid) { perror(pidfile); return 1; }
 		fprintf(fpid,"%d",getpid());
 		fclose(fpid);
-
-		openlog(name,LOG_PID,LOG_DAEMON);
 	} else {
 		setpgid(0, getpid());
 	}
@@ -856,7 +884,7 @@ int bk_clnt_data_init(void **data)
 		return -1;
 	}
 
-	dprintf(("[%d] opening database ...\n", getpid()));
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "[%d] opening database ...", getpid());
 	wait_for_open(ctx, dbstring);
 	glite_lbu_DBSetCaps(ctx->dbctx, use_dbcaps);
 	cdata->dbctx = ctx->dbctx;
@@ -867,8 +895,8 @@ int bk_clnt_data_init(void **data)
 		char	   *et, *ed;
 
 		edg_wll_Error(ctx,&et,&ed);
-		dprintf(("[%d]: query_job_indices(): %s: %s, no custom indices available\n",getpid(),et,ed));
-		if (!debug) syslog(LOG_ERR,"[%d]: query_job_indices(): %s: %s, no custom indices available\n",getpid(),et,ed);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[%d]: query_job_indices(): %s: %s, no custom indices available", getpid(), et, ed);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, "[%d]: query_job_indices(): %s: %s, no custom indices available", getpid(), et, ed);
 		free(et);
 		free(ed);
 	}
@@ -879,7 +907,9 @@ int bk_clnt_data_init(void **data)
 		char	*et,*ed;
 		edg_wll_Error(ctx,&et,&ed);
 
-		dprintf(("[%d]: query notif indices: %s: %s\n",getpid(),et,ed));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[%d]: query notif indices: %s: %s", getpid(), et, ed);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, "[%d]: query notif indices: %s: %s", getpid(), et, ed);	
+	
 		free(et); free(ed);
 	}
 	cdata->notif_index = notif_index;
@@ -923,17 +953,22 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	case 0: break;
 	case 1:
 		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, &gss_code) ) {
-			dprintf(("[%d] reloading credentials successful\n", getpid()));
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "[%d] reloading credentials successful", getpid());
 			edg_wll_gss_release_cred(&mycred, NULL);
 			mycred = newcred;
-		} else { dprintf(("[%d] reloading credentials failed, using old ones\n", getpid())); }
+		} else { 
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] reloading credentials failed, using old ones");
+		}
 		break;
-	case -1: dprintf(("[%d] edg_wll_gss_watch_creds failed\n", getpid())); break;
+	case -1: 
+		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] edg_wll_gss_watch_creds failed", getpid());
+		break;
 	}
 
 	if ( edg_wll_InitContext(&ctx) )
 	{
-		fprintf(stderr, "Couldn't create context");
+		//fprintf(stderr, "Couldn't create context");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Couldn't create context");
 		return -1;
 	}
 	cdata->ctx = ctx;
@@ -983,16 +1018,16 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	switch ( h_errno )
 	{
 	case NETDB_SUCCESS:
-		if (name) dprintf(("[%d] connection from %s:%d (%s)\n",
-					getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port), name));
+		if (name) 
+			glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_INFO, "[%d] connection from %s:%d (%s)", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port), name); 
 		free(ctx->connections->serverConnection->peerName);
 		ctx->connections->serverConnection->peerName = name;
 		name = NULL;
 		break;
 
 	default:
-		if (debug) fprintf(stderr, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
-		dprintf(("[%d] connection from %s:%d\n", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port)));
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_DEBUG, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_INFO,"[%d] connection from %s:%d", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port));
 		free(ctx->connections->serverConnection->peerName);
 		ctx->connections->serverConnection->peerName = strdup(inet_ntoa(a.sin_addr));
 		break;
@@ -1001,8 +1036,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	gettimeofday(&now, 0);
 	if ( decrement_timeout(timeout, conn_start, now) )
 	{
-		if (debug) fprintf(stderr, "gethostbyaddr() timeout");
-		else syslog(LOG_ERR, "gethostbyaddr(): timeout");
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR, "gethostbyaddr() timeout"); 
 		free(name);
 
 		return -1;
@@ -1032,20 +1066,14 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 			{
 				if ( strcmp(name, server_name))
 				{
-					if (debug) fprintf(stderr, "different server endpoint names (%s,%s),"
-									       		" check DNS PTR records\n", name, server_name);
-					else syslog(LOG_ERR,"different server endpoint names (%s,%s),"
-											" check DNS PTR records\n", name, server_name);
+					glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR, "different server endpoint names (%s,%s), check DNS PTR records", name, server_name);
 				}
 			}
 			else server_name = strdup(name);
 			break;
 
 		default:
-			if ( debug )
-				fprintf(stderr, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
-			else
-				syslog(LOG_ERR,"gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
+				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
 			if ( server_name != NULL )
 				ctx->srvName = strdup(server_name);
 			break;
@@ -1063,25 +1091,20 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	{
 		if ( ret == EDG_WLL_GSS_ERROR_TIMEOUT )
 		{
-			dprintf(("[%d] %s: Client authentication failed - timeout reached, closing.\n", getpid(),ctx->connections->serverConnection->peerName));
-			if (!debug) syslog(LOG_ERR, "%s: Client authentication failed - timeout reached",ctx->connections->serverConnection->peerName);
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] %s: Client authentication failed - timeout reached, closing.", getpid(),ctx->connections->serverConnection->peerName);
 		}
 		else if (ret == EDG_WLL_GSS_ERROR_GSS) {
 			edg_wll_SetErrorGss(ctx,"Client authentication",&gss_code);
 			if (strstr(ctx->errDesc,_EXPIRED_CERTIFICATE_MESSAGE)) {
-				dprintf(("[%d] %s: false expired certificate: %s\n",getpid(),ctx->connections->serverConnection->peerName,ctx->errDesc));
-				if (!debug) syslog(LOG_ERR,"[%d] %s: false expired certificate: %s",getpid(),ctx->connections->serverConnection->peerName,ctx->errDesc);
+				glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] %s: false expired certificate: %s",getpid(),ctx->connections->serverConnection->peerName,ctx->errDesc);
 				edg_wll_FreeContext(ctx);
 				return -1;
 			}
-                       dprintf(("[%d] %s: GSS error: %s, closing.\n", getpid(),ctx->connections->serverConnection->peerName,ctx->errDesc));
-                       if (!debug) syslog(LOG_ERR, "%s: GSS error: %s",ctx->connections->serverConnection->peerName,ctx->errDesc);
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] %s: GSS error: %s", getpid(), ctx->connections->serverConnection->peerName, ctx->errDesc);
 		}
 		else
 		{
-			dprintf(("[%d] %s: Client authentication failed, closing.\n", getpid(),ctx->connections->serverConnection->peerName));
-			if (!debug) syslog(LOG_ERR, "%s: Client authentication failed",ctx->connections->serverConnection->peerName);
-
+			 glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] %s: Client authentication failed", getpid(), ctx->connections->serverConnection->peerName);
 		}
 		edg_wll_FreeContext(ctx);
 		return 1;
@@ -1089,14 +1112,13 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 	ret = edg_wll_gss_get_client_conn(&ctx->connections->serverConnection->gss, &client, NULL);
 	if (ret || client->flags & EDG_WLL_GSS_FLAG_ANON) {
-		dprintf(("[%d] anonymous client\n",getpid()));
+		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "[%d] anonymous client",getpid());
 		ctx->peerName = NULL;
 	} else {
 		if (ctx->peerName) free(ctx->peerName);
 		ctx->peerName = strdup(client->name);
 		edg_wll_gss_free_princ(client);
-
-		dprintf(("[%d] client DN: %s\n",getpid(),ctx->peerName));
+		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "[%d] client DN: %s",getpid(),ctx->peerName);
 	}
 
 	if ( edg_wll_SetVomsGroups(ctx, &ctx->connections->serverConnection->gss, server_cert, server_key, vomsdir, cadir) )
@@ -1104,25 +1126,25 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		char *errt, *errd;
 
 		edg_wll_Error(ctx, &errt, &errd);
-		dprintf(("[%d] %s (%s)\n[%d]\tignored, continuing without VOMS\n", getpid(), errt, errd,getpid()));
+		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "[%d] %s (%s)\n[%d]\tignored, continuing without VOMS", getpid(), errt, errd,getpid());
 		free(errt); free(errd);
 		edg_wll_ResetError(ctx); 
 	}
-	if (debug && ctx->vomsGroups.len > 0)
+	if (ctx->vomsGroups.len > 0)
 	{
 		int i;
   
-		dprintf(("[%d] client's VOMS groups:\n",getpid()));
+		 glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, "[%d] client's VOMS groups:",getpid());
 		for ( i = 0; i < ctx->vomsGroups.len; i++ )
-			dprintf(("\t%s:%s\n", ctx->vomsGroups.val[i].vo, ctx->vomsGroups.val[i].name));
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, "\t%s:%s", ctx->vomsGroups.val[i].vo, ctx->vomsGroups.val[i].name);
 	}
-	if (debug && ctx->fqans && *(ctx->fqans))
+	if (ctx->fqans && *(ctx->fqans))
 	{
 		char **f;
 
-		dprintf(("[%d] client's FQANs:\n",getpid()));
+		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, "[%d] client's FQANs:",getpid());
 		for (f = ctx->fqans; f && *f; f++)
-			dprintf(("\t%s\n", *f));
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, "\t%s", *f);
 	}
 	
 	/* used also to reset start_time after edg_wll_ssl_accept! */
@@ -1151,24 +1173,28 @@ int bk_init_ws_connection(struct clnt_data_t *cdata)
 	int err = 0;
 
 	if ( glite_gsplugin_init_context(&gsplugin_ctx) ) {
-                fprintf(stderr, "Couldn't create gSOAP plugin context");
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR, 
+			"Couldn't create gSOAP plugin context");
                 return -1;
         }
 
         if ( !(soap = soap_new()) ) {
-                fprintf(stderr, "Couldn't create soap environment");
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+			"Couldn't create soap environment");
                 goto err;
         }
 
         soap_init2(soap, SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
 	if ( soap_set_namespaces(soap, namespaces) ) { 
                 soap_done(soap);
-                perror("Couldn't set soap namespaces");
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+			"Couldn't set soap namespaces");
                 goto err;
         }
 	if ( soap_register_plugin_arg(soap, glite_gsplugin, gsplugin_ctx) ) {
                 soap_done(soap);
-                perror("Couldn't set soap namespaces");
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+			"Couldn't set soap namespaces");
                 goto err;
         }
 
@@ -1217,7 +1243,8 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 	struct timeval		conn_start, now;
 
         if ( edg_wll_InitContext(&ctx) ) {
-		dprintf(("Couldn't create context"));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+			"Couldn't create context");
 		return -1;
 	}
 	cdata->ctx = ctx;
@@ -1254,7 +1281,8 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 	
 	ctx->connProxy = (edg_wll_ConnProxy *) calloc(1, sizeof(edg_wll_ConnProxy));
 	if ( !ctx->connProxy ) {
-		perror("calloc");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+			"calloc");
 		edg_wll_FreeContext(ctx);
 
 		return -1;
@@ -1262,7 +1290,8 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 
 	gettimeofday(&conn_start, 0);
 	if ( edg_wll_plain_accept(conn, &ctx->connProxy->conn) ) {
-		perror("accept");
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+			"accept");
 		edg_wll_FreeContext(ctx);
 
 		return -1;
@@ -1270,9 +1299,8 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 
 	gettimeofday(&now, 0);
 	if ( decrement_timeout(timeout, conn_start, now) ) {
-		if (debug) fprintf(stderr, "edg_wll_plain_accept() timeout");
-		else syslog(LOG_ERR, "edg_wll_plain_accept(): timeout");
-
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_WARN,
+			"edg_wll_plain_accept(): timeout");
 		return -1;
 	}
 
@@ -1296,8 +1324,8 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EPIPE:
 	case EIO:
 	case EDG_WLL_IL_PROTO:
-		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-		if (!debug) syslog(LOG_ERR,"%s (%s)", errt, errd);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
+			"[%d] %s (%s)", getpid(), errt, errd);
 		/*	fallthrough
 		 */
 	case ENOTCONN:
@@ -1313,7 +1341,8 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EEXIST:
 	case EDG_WLL_ERROR_NOINDEX:
 	case E2BIG:
-		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+			"[%d] %s (%s)", getpid(), errt, errd);
 		break;
 	case EINVAL:
 	case EDG_WLL_ERROR_PARSE_BROKEN_ULM:
@@ -1324,8 +1353,8 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EDG_WLL_ERROR_PARSE_OK_WITH_EXTRA_FIELDS:
 	case EDG_WLL_ERROR_JOBID_FORMAT:
 	case EDG_WLL_ERROR_MD5_CLASH:
-		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-		if ( !debug ) syslog(LOG_ERR,"%s (%s)", errt, errd);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+			"[%d] %s (%s)", getpid(), errt, errd);
 		/*
 		 *	no action for non-fatal errors
 		 */
@@ -1335,8 +1364,8 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EDG_WLL_ERROR_DB_CALL:
 	case EDG_WLL_ERROR_SERVER_RESPONSE:
 	default:
-		dprintf(("[%d] %s (%s)\n", getpid(), errt, errd));
-		if (!debug) syslog(LOG_CRIT,"%s (%s)",errt,errd);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL,
+		"[%d] %s (%s)", getpid(), errt, errd);
 		/*
 		 *	unknown error - do rather return (<0) (slave will be killed)
 		 */
@@ -1361,8 +1390,8 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 
 	gettimeofday(&after, NULL);
 	if ( decrement_timeout(timeout, before, after) ) {
-		if (debug) fprintf(stderr, "Serving store connection timed out");
-		else syslog(LOG_ERR, "Serving store connection timed out");
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_WARN,
+			"Serving store connection timed out");
 		return ETIMEDOUT;
 	}
 
@@ -1435,8 +1464,9 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 
 	gettimeofday(&after, NULL);
 	if ( decrement_timeout(timeout, before, after) ) {
-		if (debug) fprintf(stderr, "Serving store connection timed out");
-		else syslog(LOG_ERR, "Serving store connection timed out");
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_WARN,
+			"Serving store connection timed out");
+		
 		return ETIMEDOUT;
 	}
 
@@ -1491,8 +1521,8 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 
 	if ( err ) {
 		// soap_print_fault(struct soap *soap, FILE *fd) maybe useful here
-		dprintf(("[%d] SOAP error (bk_accept_ws) \n", getpid()));
-		if (!debug) syslog(LOG_CRIT,"SOAP error (bk_accept_ws)");
+		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+			"[%d] SOAP error (bk_accept_ws)", getpid());
 		return ECANCELED;
 	}
 
@@ -1587,14 +1617,14 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 	while (((err = edg_wll_Open(ctx, (char *) dbstring)) != EDG_WLL_ERROR_DB_INIT) && err) {
 		if (dbfail_string1) free(dbfail_string1);
 		edg_wll_Error(ctx,&errt,&errd);
-		asprintf(&dbfail_string1,"%s (%s)\n",errt,errd);
+		asprintf(&dbfail_string1,"%s (%s)",errt,errd);
 		if (dbfail_string1 != NULL) {
 			if (dbfail_string2 == NULL || strcmp(dbfail_string1,dbfail_string2)) {
 				if (dbfail_string2) free(dbfail_string2);
 				dbfail_string2 = dbfail_string1;
 				dbfail_string1 = NULL;
-				dprintf(("[%d]: %s\nStill trying ...\n",getpid(),dbfail_string2));
-				if (!debug) syslog(LOG_ERR,dbfail_string2);
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d]: %s\nStill trying ...",getpid(),dbfail_string2);
+				
 			}
 		}
 		sleep(5);
@@ -1603,15 +1633,15 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 	if (dbfail_string1) free(dbfail_string1);
 	if (dbfail_string2 != NULL) {
 		free(dbfail_string2);
-		dprintf(("[%d]: DB connection established\n",getpid()));
-		if (!debug) syslog(LOG_INFO,"DB connection established\n");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+			"[%d]: DB connection established",getpid());
 	}
 
 	if (err) {
 		edg_wll_Error(ctx,&errt,&errd);
-		asprintf(&dbfail_string1,"%s (%s)\n",errt,errd);
-		dprintf(("[%d]: %s\n", getpid(), dbfail_string1));
-		if (!debug) syslog(LOG_ERR,dbfail_string1);
+		asprintf(&dbfail_string1,"%s (%s)",errt,errd);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+			"[%d]: %s", getpid(), dbfail_string1);
 		free(dbfail_string1);
 	}
 
@@ -1772,8 +1802,8 @@ static int read_roots(const char *file)
 	char	buf[BUFSIZ];
 
 	if (!roots) {
-		syslog(LOG_WARNING,"%s: %m, continuing without --super-users-file",file);
-		dprintf(("%s: %s, continuing without --super-users-file\n",file,strerror(errno)));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
+			"%s: %s, continuing without --super-users-file",file,strerror(errno));
 		return 0;
 	}
 
@@ -1805,30 +1835,28 @@ static int check_mkdir(const char *dir)
 		{
 			if ( mkdir(dir, S_IRWXU) )
 			{
-				dprintf(("[%d] %s: %s\n", getpid(), dir, strerror(errno)));
-				if (!debug) syslog(LOG_CRIT, "%s: %m", dir);
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[%d] %s: %s", getpid(), dir, strerror(errno));
 				return 1;
 			}
 		}
 		else
 		{
-			dprintf(("[%d] %s: %s\n", getpid(), dir, strerror(errno)));
-			if (!debug) syslog(LOG_CRIT, "%s: %m", dir);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[%d] %s: %s", getpid(), dir, strerror(errno));
 			return 1;
 		}
 	}
 
 	if (!S_ISDIR(sbuf.st_mode))
 	{
-		dprintf(("[%d] %s: not a directory\n", getpid(),dir));
-		if (!debug) syslog(LOG_CRIT,"%s: not a directory",dir);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
+			"[%d] %s: not a directory", getpid(),dir);
 		return 1;
 	}
 
 	if (access(dir, R_OK | W_OK))
 	{
-		dprintf(("[%d] %s: directory is not readable/writable\n", getpid(),dir));
-		if (!debug) syslog(LOG_CRIT,"%s: directory is not readable/writable",dir);
+		 glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
+			"[%d] %s: directory is not readable/writable", getpid(),dir);
 		return 1;
 	}
 		

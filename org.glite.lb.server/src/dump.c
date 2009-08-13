@@ -3,13 +3,13 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
-#include <syslog.h>
 #include <assert.h>
 #include <unistd.h>
 #include <errno.h>
 
 #include "glite/lbu/trio.h"
 #include "glite/jobid/cjobid.h"
+#include  "glite/lbu/log.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
@@ -68,7 +68,8 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 			"order by arrived",
 			ctx->srvName,ctx->srvPort,
 			from_s,to_s);
-
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	
 	if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto clean;
 
 	while ((ret = edg_wll_FetchRow(ctx,q,sizeof(res)/sizeof(res[0]),NULL,res)) > 0) {
@@ -85,8 +86,7 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 		 * Must not be fatal -- just complain
 		 */
 			edg_wll_Error(ctx,&et,&ed);
-			fprintf(stderr,"%s event %d: %s (%s)\n",res[1],event,et,ed);
-			syslog(LOG_WARNING,"%s event %d: %s (%s)",res[1],event,et,ed);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s event %d: %s (%s)", res[1], event, et, ed);
 			free(et); free(ed);
 			for (i=0; i<sizofa(res); i++) free(res[i]);
 			edg_wll_ResetError(ctx);

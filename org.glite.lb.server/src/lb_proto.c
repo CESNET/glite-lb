@@ -13,6 +13,7 @@
 #include "glite/lb/xml_conversions.h"
 #include "glite/jobid/strmd5.h"
 #include "glite/lbu/trio.h"
+#include "glite/lbu/log.h"
 
 #include "lb_proto.h"
 #include "lb_text.h"
@@ -219,6 +220,7 @@ static int getUserNotifications(edg_wll_Context ctx, char *user, char ***notifid
                 "from notif_registrations "
                 "where userid='%s'",
                 user);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
         if (edg_wll_ExecSQL(ctx, q, &notifs) < 0) goto err;
         free(q); q = NULL;
 
@@ -228,7 +230,8 @@ static int getUserNotifications(edg_wll_Context ctx, char *user, char ***notifid
                 n++;
                 *notifids = realloc(*notifids, n*sizeof(**notifids));
                 (*notifids)[n-1] = strdup(notifc[n-1]);
-                printf("Notif %s found\n", notifc[n-1]);
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+			"Notif %s found", notifc[n-1]);
         }
 	if (n){
 		*notifids = realloc(*notifids, (n+1)*sizeof(**notifids));
@@ -249,6 +252,7 @@ static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
                 "from notif_registrations "
                 "where notifid='%s'",
                 notifId);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 	if (edg_wll_ExecSQL(ctx, q, &notif) < 0) goto err;
         free(q); q = NULL;
 
@@ -1196,3 +1200,4 @@ err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }
+

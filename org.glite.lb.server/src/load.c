@@ -3,7 +3,6 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
-#include <syslog.h>
 #include <assert.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -13,6 +12,7 @@
 #include <errno.h>
 
 #include "glite/lbu/trio.h"
+#include "glite/lbu/log.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
@@ -94,7 +94,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 					total = 0,
 					written;
 
-			fprintf(stderr, "Can't store event: %s\n", errdesc);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Can't store event: %s", errdesc);
 			if ( reject_fd == -1 )
 			{
 				char   *s, *s1;
@@ -113,7 +113,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 					reject_fd = edg_wll_CreateFileStorage(ctx,FILE_TYPE_LOAD,NULL,&(result->server_file));
 				if ( reject_fd == -1 )
 					goto cycle_clean;
-				printf("New reject file %s created\n", result->server_file);
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "New reject file %s created", result->server_file);
 				free(s1);
 			}
 			/*	Save the line into "reject_file"
@@ -221,3 +221,4 @@ static int read_line(char **buff, size_t *maxsize, int fd)
 		i++;
 	}
 }
+

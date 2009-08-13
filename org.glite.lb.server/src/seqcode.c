@@ -4,6 +4,7 @@
 
 #include "glite/lbu/trio.h"
 #include "glite/lb/context-int.h"
+#include "glite/lbu/log.h"
 
 #include "get_events.h"
 #include "store.h"
@@ -36,6 +37,8 @@ int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, co
 
 	if ( stmt == NULL ) return edg_wll_SetError(ctx, ENOMEM, NULL);
 
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	
 	if ( (nstates = edg_wll_ExecSQL(ctx, stmt, &sh)) < 0 ) goto cleanup;
 	if ( nstates == 0 ) {
 		edg_wll_SetError(ctx, ENOENT, "no state in DB");
@@ -63,3 +66,4 @@ cleanup:
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
+

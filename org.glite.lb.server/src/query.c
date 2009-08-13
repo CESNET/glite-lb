@@ -17,6 +17,7 @@
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
 
+#include "glite/lbu/log.h"
 
 #include "get_events.h"
 #include "index.h"
@@ -143,7 +144,8 @@ int edg_wll_QueryEventsServer(
 		else if ( !q )
 			q = qbase;
 
-//		printf("\nquery: %s\n\n", q);
+		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
+			q);
 		ret = edg_wll_ExecSQL(ctx, q, &sh);
 		if ( limit )
 			free(q);
@@ -409,7 +411,8 @@ int edg_wll_QueryJobsServer(
 		else if ( !q )
 			q = qbase;
 
-//		printf("\nquery: %s\n\n", q);
+		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
+			q);
 		ret = edg_wll_ExecSQL(ctx, q, &sh);
 		if ( limit )
 			free(q);
@@ -541,7 +544,8 @@ limit_cycle_cleanup:
 						"(s.suffix_id = j.suffix_id) AND (p.prefix_id = j.prefix_id)) AS result "
 						"WHERE %s", zomb_where);	
 
-
+			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, 
+				LOG_PRIORITY_DEBUG, zquery);
 			j = edg_wll_ExecSQL(ctx,zquery,&sh);
 
 			if (j > 0) {
@@ -1745,3 +1749,4 @@ static int is_all_query(const edg_wll_QueryRec **jc)
 
 	return 0;
 }
+

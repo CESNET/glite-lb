@@ -9,6 +9,7 @@
 #include "glite/jobid/strmd5.h"
 #include "glite/lbu/trio.h"
 #include "glite/lb/context-int.h"
+#include "glite/lbu/log.h"
 
 #include "jobstat.h"
 #include "db_supp.h"
@@ -40,6 +41,7 @@ int edg_wll_UserJobsServer(
 	free(can_peername);
 
 	trio_asprintf(&stmt,"select cert_subj from users where userid = '%|Ss'",userid);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	switch (edg_wll_ExecSQL(ctx,stmt,&sth)) {
 		case 0: edg_wll_SetError(ctx,ENOENT,ctx->peerName);
@@ -57,6 +59,7 @@ int edg_wll_UserJobsServer(
 	free(res); res = NULL;
 
 	trio_asprintf(&stmt,"select dg_jobid from jobs where userid = '%|Ss' and grey='0'",userid);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	switch (njobs = edg_wll_ExecSQL(ctx,stmt,&sth)) {
 		case 0: edg_wll_SetError(ctx,ENOENT,ctx->peerName);
 		case -1: goto err;
@@ -117,3 +120,4 @@ err:
 
 	return err;
 }
+

@@ -4,9 +4,9 @@
 #include <unistd.h>
 #include <stdio.h>
 
-
 #include "glite/lbu/db.h"
 #include "glite/lb/context-int.h"
+#include "glite/lbu/log.h"
 
 extern int 	debug;	// declared and set in bkserver.c
 
@@ -98,21 +98,18 @@ int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
 	ret = edg_wll_Error(ctx,NULL,NULL);
 
 	if (ret == EDG_WLL_ERROR_DB_TRANS_DEADLOCK) {
-		if (debug)
-			printf("[%d]: DB deadlock detected. Rolling back transaction and retrying... \n",getpid());
-		else 
-			syslog(LOG_INFO,"[%d]: DB deadlock detected. Rolling back transaction and retrying... \n",getpid());
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
+			"[%d]: DB deadlock detected. Rolling back transaction "
+			"and retrying... \n", getpid());
 
 		edg_wll_ResetError(ctx);
 		return !edg_wll_Rollback(ctx);
 	}
 	if (ret == EDG_WLL_ERROR_DB_LOST_CONNECTION) {
-		if (debug)
-			printf("[%d]: Lost connection to DB. "
-				"Rolling back transaction and retrying... \n",getpid());
-		else 
-			syslog(LOG_INFO,"[%d]: Lost connection to DB. "
-				"Rolling back transaction and retrying... \n",getpid());
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
+			"[%d]: Lost connection to DB. "
+			"Rolling back transaction and retrying... \n",
+			getpid());
 
 		edg_wll_ResetError(ctx);
 		return !edg_wll_Rollback(ctx);

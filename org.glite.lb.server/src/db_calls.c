@@ -5,6 +5,7 @@
 
 #include "glite/jobid/cjobid.h"
 #include "glite/lbu/trio.h"
+#include "glite/lbu/log.h"
 
 #include "glite/lb/context-int.h"
 
@@ -26,10 +27,12 @@ int edg_wll_jobMembership(edg_wll_Context ctx, glite_jobid_const_t job)
         dbjob = edg_wlc_JobIdGetUnique(job);
 
         trio_asprintf(&stmt,"select proxy,server from jobs where jobid = '%|Ss' for update",dbjob);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
         ret = edg_wll_ExecSQL(ctx,stmt,&q);
         if (ret <= 0) {
                 if (ret == 0) {
-                        fprintf(stderr,"%s: no such job\n",dbjob);
+			glite_common_log(LOG_CATEGORY_CONTROL, 
+				LOG_PRIORITY_WARN, "%s: no such job",dbjob);
                         edg_wll_SetError(ctx,ENOENT,dbjob);
                 }
                 goto clean;
@@ -42,7 +45,7 @@ int edg_wll_jobMembership(edg_wll_Context ctx, glite_jobid_const_t job)
                 if (strcmp(res[1],"0")) result += DB_SERVER_JOB;
         }
         else {
-		fprintf(stderr,"Error retrieving proxy&server fields of jobs table. Missing column?\n");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Error retrieving proxy&server fields of jobs table. Missing column?");
                 edg_wll_SetError(ctx,ENOENT,dbjob);
         }
         glite_lbu_FreeStmt(&q);
@@ -72,6 +75,7 @@ int edg_wll_LockJobRow(edg_wll_Context ctx, const char *job, int lock_mode)
 	else
 		trio_asprintf(&stmt, "select * from jobs where jobid='%|Ss' lock in share mode", job);
 
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	if ((nr = edg_wll_ExecSQL(ctx,stmt,&sh)) < 0) goto cleanup;
 	if (nr == 0) {
 		char *err;

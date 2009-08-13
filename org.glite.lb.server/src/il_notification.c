@@ -13,13 +13,13 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
-#include <syslog.h>
 
 #include "glite/lbu/escape.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/log_proto.h"
+#include "glite/lbu/log.h"
 
 #include "il_notification.h"
 #include "lb_xml_parse.h"
@@ -183,8 +183,8 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 
 		if(ret) edg_wll_UpdateError(context, ret, "edg_wll_NotifJobStatus()");
 		edg_wll_Error(context,&et,&ed);
-		fprintf(stderr,"%s - %s\n", ed, et);
-		syslog(LOG_INFO,"%s - %s\n", ed, et);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, 
+			"%s - %s\n", ed, et);
 		edg_wll_ResetError(context);
 		free(et); 
 		free(ed);

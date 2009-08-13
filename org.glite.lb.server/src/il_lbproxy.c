@@ -1,11 +1,12 @@
 #ident "$Header$"
 
-#include <syslog.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "glite/lb/context-int.h"
 #include "glite/lb/log_proto.h"
+#include "glite/lbu/log.h"
 
 #include "il_lbproxy.h"
 
@@ -61,7 +62,8 @@ edg_wll_EventSendProxy(
 	
 		edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_event_send()");
 		edg_wll_Error(ctx, &errt, &errd);
-		syslog(LOG_ERR,"%s (%s)", errt, errd);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
+			"%s (%s)", errt, errd);
 		free(errt); free(errd);
 		_err(-1);
 	}
