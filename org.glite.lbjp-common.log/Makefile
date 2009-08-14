@@ -12,7 +12,6 @@ log4c_prefix=/usr
 -include ./project/version.properties
 
 HEADER=log.h
-EXAMPLE=log4crc.example
 
 default: compile
 
@@ -25,7 +24,9 @@ install: compile
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix} 
 	install -m 644 ${HEADER} ${PREFIX}/include/${globalprefix}/${lbutilsprefix} 
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	install -m 644 ${EXAMPLE} LICENSE ${PREFIX}/share/doc/${package}-${version}
+	install -m 644 LICENSE ${PREFIX}/share/doc/${package}-${version}
+	mkdir -p ${PREFIX}/etc
+	install -m 644 log4crc.example ${PREFIX}/etc/log4crc
 clean:
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
