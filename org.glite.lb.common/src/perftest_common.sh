@@ -168,6 +168,7 @@ run_test()
 	# if there are no new lines in the log, give it some time
 	[[ $linesbefore -eq $linesafter ]] && sleep 5
 	linesafter=`grep PERFTEST $CONSUMER_LOG|wc -l`
+	[[ $DEBUG -gt 0 ]] && echo "Lines before " $linesbefore ", after " $linesafter
 	if [[ $linesbefore -eq $linesafter ]]
 	then
 	    [[ $DEBUG -gt 0 ]] && echo "Test failed - consumer did not report timestamp."
@@ -182,6 +183,9 @@ run_test()
 	i=$(($i + 1))
     done
     # clean up
+    mv $PRODUCER_LOG ${PRODUCER_LOG}.${PERFTEST_NAME}
+    mv $CONSUMER_LOG ${CONSUMER_LOG}.${PERFTEST_NAME}
+    mv $COMPONENT_LOG ${COMPONENT_LOG}.${PERFTEST_NAME}
     shutdown $COMPONENT_PID
     shutdown $CONSUMER_PID
     [[ $DEBUG -gt 1 ]] && killall tail
