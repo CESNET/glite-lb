@@ -45,7 +45,7 @@ purge_proxy ()
     do
       cat <<EOF
 UPDATE acls, jobs SET acls.refcnt = acls.refcnt - 1 WHERE jobs.dg_jobid="$jobid" AND jobs.aclid=acls.aclid;
-DELETE FROM jobs,states,e,short_fields,long_fields,status_tags USING states  LEFT JOIN events AS e ON (e.jobid = states.jobid) LEFT JOIN jobs ON (jobs.jobid = states.jobid) LEFT JOIN short_fields ON (short_fields.jobid = e.jobid AND short_fields.event = e.event) LEFT JOIN long_fields ON (long_fields.jobid = e.jobid AND long_fields.event = e.event) LEFT JOIN status_tags ON (status_tags.jobid = states.jobid) WHERE jobs.dg_jobid="$jobid";
+DELETE FROM jobs,states,e,ef,short_fields,long_fields,status_tags USING states  LEFT JOIN events AS e ON (e.jobid = states.jobid) LEFT JOIN events_flesh AS ef ON (ef.jobid = states.jobid) LEFT JOIN jobs ON (jobs.jobid = states.jobid) LEFT JOIN short_fields ON (short_fields.jobid = e.jobid AND short_fields.event = e.event) LEFT JOIN long_fields ON (long_fields.jobid = e.jobid AND long_fields.event = e.event) LEFT JOIN status_tags ON (status_tags.jobid = states.jobid) WHERE jobs.dg_jobid="$jobid";
 
 EOF
 #$LOGEVENT -x -S /tmp/proxy.perfstore.sock -c $SEQCODE -j $jobid -s UserInterface -e Abort --reason Purge > /dev/null 2>&1
@@ -73,7 +73,7 @@ group_a_test_n ()
 {
     PERFTEST_CONSUMER=$GLITE_LOCATION/bin/glite-lb-bkserverd
     i=$1
-    CONSUMER_ARGS="-P -d --perf-sink $i -o /tmp/proxy.perf -D /tmp -t 1 " 
+    CONSUMER_ARGS="-P -d --silent --perf-sink $i -o /tmp/proxy.perf -D /tmp -t 1 " 
     export PERFTEST_NAME="proxy_test_$i"
     echo -n "${i})"
     run_test proxy $numjobs
@@ -82,7 +82,7 @@ group_a_test_n ()
     # we have to start proxy again 
     #$PERFTEST_CONSUMER -P -d -o /tmp/proxy.perf -D /tmp -t 1 >/dev/null 2>&1  &
     #PID=$!
-    purge_proxy `for file in ${JOB_FILE[*]}; do $LOGJOBS -f $file -n $numjobs; done | sort | uniq`
+    purge_proxy `i=0; for file in ${JOB_FILE[*]}; do sPN=$PERFTEST_NAME; PERFTEST_NAME="${PERFTEST_NAME}_${JOB_DESC[i]}"; $LOGJOBS -f $file -n $numjobs 2>/dev/null; PERFTEST_NAME=$sPN; i=$(($i + 1)); done | sort | uniq`
     #sleep 2
     #shutdown $PID
 }
@@ -90,7 +90,7 @@ group_a_test_n ()
 group_a_test_5 ()
 {
     PERFTEST_COMPONENT="$GLITE_LOCATION/bin/glite-lb-bkserverd"
-    COMPONENT_ARGS="-P -d -o /tmp/proxy.perf --proxy-il-sock /tmp/interlogger.perf  --proxy-il-fprefix /tmp/perftest.log -D /tmp -t 1 "
+    COMPONENT_ARGS="-P -d --silent -o /tmp/proxy.perf --proxy-il-sock /tmp/interlogger.perf  --proxy-il-fprefix /tmp/perftest.log -D /tmp -t 1 "
 
     PERFTEST_CONSUMER="$GLITE_LOCATION/bin/glite-lb-interlogd-perf-empty"
     CONSUMER_ARGS="-d -s /tmp/interlogger.perf --file-prefix=/tmp/perftest.log"
@@ -100,7 +100,7 @@ group_a_test_5 ()
     print_result
     #$PERFTEST_COMPONENT -P -d -o /tmp/proxy.perf -t 1 -D /tmp  >/dev/null 2>&1  &
     #PID=$!
-    purge_proxy `for file in ${JOB_FILE[*]}; do $LOGJOBS -f $file -n $numjobs; done | sort | uniq`
+    purge_proxy `i=0; for file in ${JOB_FILE[*]}; do sPN=$PERFTEST_NAME; PERFTEST_NAME="${PERFTEST_NAME}_${JOB_DESC[i]}"; $LOGJOBS -f $file -n $numjobs 2>/dev/null ; PERFTEST_NAME=$sPN; i=$(($i + 1)); done | sort | uniq`
     #sleep 2
     #shutdown $PID
     rm -f /tmp/perftest.log.*
