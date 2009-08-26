@@ -11,6 +11,9 @@ fi
 
 . $STAGEDIR/sbin/perftest_common.sh
 
+DBNAME=${DBNAME:-lbserver20}
+export LBDB=lbserver/@localhost:$DBNAME
+
 DEBUG=${DEBUG:-0}
 # CONSUMER_ARGS=
 # PERFTEST_COMPONENT=
@@ -75,7 +78,7 @@ group_a_test_b () {
     echo -n "b)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm -f \{\} \;
 }
 
 
@@ -145,7 +148,7 @@ group_b_test_a ()
     echo -n "a)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_b_test_b () 
@@ -154,7 +157,7 @@ group_b_test_b ()
     echo -n "b)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_b_test_c () 
@@ -163,7 +166,7 @@ group_b_test_c ()
     echo -n "c)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_b_test_x ()
@@ -172,7 +175,7 @@ group_b_test_x ()
     echo -n "x)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_b_test_d ()
@@ -186,7 +189,7 @@ group_b_test_e ()
     echo -n "e)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 # echo "-------------------------------"
@@ -254,7 +257,7 @@ echo ""
 fi
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
-CONSUMER_ARGS="-d --perf-sink=1 -p 10500 -w 10503"
+CONSUMER_ARGS="--silent -S /tmp -D /tmp -t 1 -d --perf-sink=1 -p 10500 -w 10503"
 PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-interlogd-perf
 LOGJOBS_ARGS=" -m localhost:10500 $COMM_ARGS"
 }
@@ -265,7 +268,7 @@ group_c_test_a ()
     echo -n "a)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_b ()
@@ -274,7 +277,7 @@ group_c_test_b ()
     echo -n "b)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_c ()
@@ -283,7 +286,7 @@ group_c_test_c ()
     echo -n "c)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_x () 
@@ -292,7 +295,7 @@ group_c_test_x ()
     echo -n "x)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_d ()
@@ -301,7 +304,7 @@ group_c_test_d ()
     echo -n "d)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_e ()
@@ -310,7 +313,7 @@ group_c_test_e ()
     echo -n "e)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
    
@@ -357,6 +360,7 @@ do
 
     for variant in $TEST_VARIANT
     do
+    	export PERFTEST_NAME="il_${group}${variant}"
 	group_${group}_test_${variant}
     done
 done
