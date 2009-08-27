@@ -670,6 +670,11 @@ static edg_wll_ErrorCode get_job_parent(edg_wll_Context ctx, glite_jobid_const_t
 		goto err;
 	}
 
+	if (strcmp(out, "*no parent job*") == 0) {
+		edg_wll_SetError(ctx,ENOENT,"No matching events found");
+		goto err;
+	}
+
 	ret = glite_jobid_recreate((const char*) ctx->srvName,
 			ctx->srvPort, (const char *) out, parent);
 
