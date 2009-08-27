@@ -16,6 +16,12 @@ unset creds port
 
 start()
 {
+	case "$GLITE_LB_TYPE" in
+	proxy)
+		echo 'Not starting logd and interlogger, proxy only instance (GLITE_LB_TYPE=proxy).'
+		return 0
+	esac
+
 	if test -z "$GLITE_USER" ;then
 		echo 'Error: GLITE_USER is not set'
 		echo FAILED
