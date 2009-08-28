@@ -97,6 +97,11 @@ edg_wll_NotifCancelRegId(edg_wll_Context context,
 			 edg_wll_NotifId reg_id);
 
 
+/**
+ * Check and perform notifications.
+ */
+int edg_wll_NotifMatch(edg_wll_Context context, const edg_wll_JobStat *oldstat, const edg_wll_JobStat *stat);
+
 #ifdef __cplusplus
 }
 #endif

@@ -15,6 +15,7 @@
 #include "il_lbproxy.h"
 #include "jobstat.h"
 #include "db_supp.h"
+#include "il_notification.h"
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -23,7 +24,6 @@
 
 
 extern int unset_proxy_flag(edg_wll_Context, edg_wlc_JobId);
-extern int edg_wll_NotifMatch(edg_wll_Context, const edg_wll_JobStat *, const edg_wll_JobStat *);
 extern int enable_lcas;
 
 

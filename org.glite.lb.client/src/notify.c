@@ -198,7 +198,7 @@ int main(int argc,char **argv)
 				for (sti = 0; sti < strlen(statelist); sti++) 
 					if (statelist[sti] == ',') stdelims++;
 				conditions[i] = (edg_wll_QueryRec *)calloc(stdelims+2,sizeof(edg_wll_QueryRec));
-				while(single = strtok(statelist, ",")) {
+				while((single = strtok(statelist, ","))) {
 					single_code = edg_wll_StringToStat(single);
 					if (single_code != -1) {
 						conditions[i][statno].attr = EDG_WLL_QUERY_ATTR_STATUS;

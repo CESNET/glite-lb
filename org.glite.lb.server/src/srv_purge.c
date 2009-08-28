@@ -30,6 +30,7 @@
 #include "db_calls.h"
 #include "db_supp.h"
 #include "jobstat.h"
+#include "il_notification.h"
 
 
 #define DUMP_FILE_STORAGE					"/tmp/"
@@ -45,7 +46,7 @@ static const char* const resp_headers[] = {
 
 static int purge_check(edg_wll_Context ctx, edg_wll_JobStat *stat, time_t start, time_t *timeout);
 static int purge_one_with_subjobs(edg_wll_Context ctx, edg_wll_JobStat	*stat, int dumpfile, const edg_wll_PurgeRequest *request, edg_wll_PurgeResult *result, int *njobs, int *parse);
-static int purge_one(edg_wll_Context ctx,glite_jobid_const_t,int,int,int);
+static int purge_one(edg_wll_Context ctx,edg_wll_JobStat *,int,int,int);
 int unset_proxy_flag(edg_wll_Context ctx, glite_jobid_const_t job);
 static int unset_server_flag(edg_wll_Context ctx, glite_jobid_const_t job);
 int job_exists(edg_wll_Context ctx, glite_jobid_const_t job);
@@ -191,7 +192,11 @@ int edg_wll_CreateFileStorage(edg_wll_Context ctx, char *file_type, char *prefix
 
 int edg_wll_PurgeServerProxy(edg_wll_Context ctx, glite_jobid_const_t job)
 {
-	switch ( purge_one(ctx, job, -1, 1, 1) ) {
+	edg_wll_JobStat stat;
+
+	memset(&stat, 0, sizeof stat);
+	stat.jobId = (glite_jobid_t)job;
+	switch ( purge_one(ctx, &stat, -1, 1, 1) ) {
 		case 0:
 		case ENOENT:
 			return(edg_wll_ResetError(ctx));
@@ -621,11 +626,10 @@ static int purge_check(edg_wll_Context ctx, edg_wll_JobStat *stat, time_t start,
 #define GRAN 32
 
 static int purge_one_with_subjobs(edg_wll_Context ctx, edg_wll_JobStat *stat, int dumpfile, const edg_wll_PurgeRequest *request, edg_wll_PurgeResult *result, int *njobs, int *parse) {
-	glite_jobid_t subjob = NULL;
 	char *job_s;
 	int i;
 
-	if (purge_one(ctx,stat->jobId,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,ctx->isProxy)) return edg_wll_Error(ctx, NULL, NULL);
+	if (purge_one(ctx,stat,dumpfile,request->flags&EDG_WLL_PURGE_REALLY_PURGE,ctx->isProxy)) return edg_wll_Error(ctx, NULL, NULL);
 
 /* XXX: change with the streaming interface */
 	if (request->flags & EDG_WLL_PURGE_LIST_JOBS) {
@@ -640,15 +644,9 @@ static int purge_one_with_subjobs(edg_wll_Context ctx, edg_wll_JobStat *stat, in
 	/* purge the subjobs */
 	if (stat->children_num && stat->children) {
 		for (i = 0; i < stat->children_num && stat->children[i]; i++) {
-			if (glite_jobid_parse(stat->children[i], &subjob)) {
-				fprintf(stderr,"%s: parse error (internal inconsistency !)\n",stat->children[i]);
-				*parse = 1;
-			}
-			if (purge_one(ctx, subjob, dumpfile, request->flags&EDG_WLL_PURGE_REALLY_PURGE,ctx->isProxy)) {
-				glite_jobid_free(subjob);
+			if (purge_one(ctx, stat->children_states + i, dumpfile, request->flags&EDG_WLL_PURGE_REALLY_PURGE,ctx->isProxy)) {
 				return edg_wll_Error(ctx, NULL, NULL);
 			}
-			glite_jobid_free(subjob);
 
 			if (request->flags & EDG_WLL_PURGE_LIST_JOBS) {
 				if (*njobs % GRAN == 0 || !result->jobs)
@@ -664,7 +662,7 @@ static int purge_one_with_subjobs(edg_wll_Context ctx, edg_wll_JobStat *stat, in
 }
 
 
-int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, int purge_from_proxy_only)
+int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int purge_from_proxy_only)
 {
 	char	*dbjob = NULL;
 	char	*stmt = NULL;
@@ -674,6 +672,8 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 	char	*prefix = NULL, *suffix = NULL, *root = NULL;
 	char	*prefix_id = NULL, *suffix_id = NULL;
 	int	sql_retval;
+	glite_jobid_const_t job = stat->jobId;
+	edg_wll_JobStat new_stat;
 
 	edg_wll_ResetError(ctx);
 	if ( !purge && dump < 0 ) return 0;
@@ -860,6 +860,11 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 			}
 			glite_lbu_FreeStmt(&q);
 			free(stmt); stmt = NULL;
+
+			/* notifications */
+			memcpy(&new_stat, stat, sizeof new_stat);
+			new_stat.state = EDG_WLL_JOB_PURGED;
+			edg_wll_NotifMatch(ctx, stat, &new_stat);
 		}
 
 		if (dump >= 0) 
