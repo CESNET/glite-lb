@@ -113,6 +113,7 @@
 	_code_	OK		The job terminated by itself.
 	_code_	FAILED		The job disappeared from LRMS.
 	_code_	CANCELLED	The job was cancelled by user request.
+	_code_	KILLED 		The job was killed (in Job Wrapper).
 	string	reason		Detailed description why the job was terminated.
 	_optional_
 	int	exit_code	Exit code of the job's process.
@@ -147,7 +148,7 @@
 @type RegJob		New job registration.
 	string	jdl		Job description of the job being registered.
 	_optional_
-	string	ns		NetworkServer handling the newly registered job.
+	string	ns		NetworkServer/CE endpoint etc. handling the newly registered job.
 	jobid	parent		Grid job id of the parent job registering this new one.
 	_optional_
 
@@ -159,6 +160,7 @@
 	_code_	COLLECTION	The job is collection (containing static set of subjobs).
 	_code_	PBS		PBS job
 	_code_	CONDOR		Condor job
+	_code_	CREAM		CREAM job
 	
 	int	nsubjobs	Number of subjobs this job plans to spawn.
 	_optional_
@@ -220,10 +222,20 @@
 	_optional_
 
 @type Suspend		Job execution (queuing) was suspended.
+	int	status_code	Classification of the attempt to suspend the job (REQ, REFUSE, DONE or ABORT).
+	_code_	REQ		The request was acknowledged.
+	_code_	REFUSE		The request was declined by this component.
+	_code_	DONE		The request was completed by whole system.
+	_code_	ABORT		The request was refused by whole system.
 	string	reason		Reason for the suspend.
 	_optional_
 
 @type Resume		Job execution (queuing) was resumed.
+	int	status_code	Classification of the attempt to resume the job (REQ, REFUSE, DONE or ABORT).
+	_code_	REQ		The request was acknowledged.
+	_code_	REFUSE		The request was declined by this component.
+	_code_	DONE		The request was completed by whole system.
+	_code_	ABORT		The request was refused by whole system.
 	string	reason		Reason for the resume.
 	_optional_
 
@@ -333,3 +345,26 @@
 @type CondorError		Any Error occured
 	string	error_desc	Error reason
 
+
+@flesh CREAM
+
+@type CREAMStart	Start processing registered job
+
+@type CREAMPurge	Purge request (by user)
+
+@type CREAMStore
+	int	command		Command to store
+	_code_	CMDSTART		Start registered job
+	_code_	CMDCANCEL		Cancel job
+	_code_	CMDPURGE		Purge request
+	_code_	CMDSUSPEND		Suspend running job
+	_code_	CMDRESUME		Resume suspended job
+	string	cmdid		Id of the command in store
+	int	result		store phase/result
+	_code_	START
+	_code_	OK
+	_code_	FAILED
+
+@type CREAMBlahCall	Processing command and calling BLAH
+	int	command		The command
+	string	cmdid		Id of the command, as stored previously
