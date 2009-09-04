@@ -13,8 +13,11 @@
         <category name="root" priority="notice"/>
 
         <category name="SECURITY" priority="error" appender="syslog"/>
+        <category name="SECURITY" priority="fatal" appender="stderr"/>
         <category name="ACCESS" priority="error" appender="syslog"/>
+        <category name="ACCESS" priority="fatal" appender="stderr"/>
         <category name="CONTROL" priority="error" appender="syslog"/>
+        <category name="CONTROL" priority="fatal" appender="stderr"/>
 
         <!-- category name="LB" priority="debug" appender="stdout"/-->
         <!-- category name="LB.LOGD" priority="debug" appender="stdout"/-->
