@@ -1,7 +1,7 @@
-package org.glite.lb;
 
 import java.util.Random;
 import org.glite.jobid.Jobid;
+import org.glite.lb.*;
 
 /**
  * This class shows how to work with ContextIL.

@@ -1,7 +1,7 @@
-package org.glite.lb;
 
 import java.util.Random;
 import org.glite.jobid.Jobid;
+import org.glite.lb.*;
 
 /**
  * This class shows how to work with ContextIL.
@@ -14,7 +14,7 @@ public class ProducerTestLL {
 
         if (args.length != 12) {
             System.out.println("How to use test class:\n" +
-                    "you have to set 13 arguments in this order, if the choice is optional \"\" or text has to be set:\n" +
+                    "you have to set 12 arguments in this order, if the choice is optional \"\" or text has to be set:\n" +
                     "1. jobid in format \"https://somewhere:port/unique_part\" (required)\n" +
                     "2. source, enum constant from class Sources, determines which part of sequence code will be increased (required)\n" +
                     "3. flag (required)\n" +
@@ -25,7 +25,8 @@ public class ProducerTestLL {
                     "8. proxy server address (required)\n" +
                     "9. proxy server port, default value is 9002 (optional)\n" +
                     "10. path to user's certificate (required)\n" + 
-                    "11. path to directory where will be saved files with logs until inter-logger sends the content.");
+                    "11. path to directory where will be saved files with logs until inter-logger sends the content.\n" +
+		    "12. worker node name for example event.");
         } else {
             /* Create new instance of jobid, you can use other constructors too (see org.glite.jobid.api_java.Jobid.java) 
              * Examples:

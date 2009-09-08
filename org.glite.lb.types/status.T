@@ -12,6 +12,7 @@ int	jobtype		Type of job
 	_code_ COLLECTION	parent of collection of jobs
 	_code_ PBS		PBS job
 	_code_ CONDOR		Condor job
+	_code_ CREAM		CREAM job
 jobid	parent_job	parent job of subjob
 
 string	seed		string used for generation of subjob IDs
@@ -129,6 +130,32 @@ string	condor_reason	Glued reasons/errors leading to pending events
 string	condor_error_desc	Glued error descriptions from error events
 
 _pad_	25
+
+int	cream_state
+	_null_	-1
+	_code_	REGISTERED
+	_code_	PENDING
+	_code_	IDLE
+	_code_	RUNNING
+	_code_	REALLYRUNNING
+	_code_	HELD
+	_code_	DONEOK
+	_code_	DONEFAILED
+	_code_	ABORTED
+
+string	cream_owner
+string	cream_endpoint
+string	cream_jdl
+string	cream_reason
+string	cream_lrms_id
+string	cream_node
+int	cream_done_code		Uses done_code enum
+	_null_	-1
+int	cream_exit_code
+bool	cream_canceling
+string	cream_cancel_reason
+int	cream_cpu_time
+int	cream_jw_status		Users jw_status enum
 
 @type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.
 @type Waiting		Accepted by WMS, waiting for resource allocation.

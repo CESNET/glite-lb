@@ -354,17 +354,54 @@
 
 @type CREAMStore
 	int	command		Command to store
-	_code_	CMDSTART		Start registered job
-	_code_	CMDCANCEL		Cancel job
-	_code_	CMDPURGE		Purge request
-	_code_	CMDSUSPEND		Suspend running job
-	_code_	CMDRESUME		Resume suspended job
+	_code_	CMDSTART	Start registered job
+	_code_	CMDCANCEL	Cancel job
+	_code_	CMDPURGE	Purge request
+	_code_	CMDSUSPEND	Suspend running job
+	_code_	CMDRESUME	Resume suspended job
 	string	cmdid		Id of the command in store
+	_optional_
 	int	result		store phase/result
 	_code_	START
 	_code_	OK
 	_code_	FAILED
 
-@type CREAMBlahCall	Processing command and calling BLAH
+@type CREAMCall	Processing command and calling BLAH or LRMS
+	logsrc	callee	
 	int	command		The command
 	string	cmdid		Id of the command, as stored previously
+	_optional_
+	int	result
+	_code_  START
+	_code_  OK
+	_code_  FAIL 
+	string	reason
+	_optional_
+
+@type CREAMRuning
+	string	node
+
+@type CREAMReallyRunning
+
+@type CREAMDone
+	int	status_code
+	_code_	OK
+	_code_	FAILED
+	_code_	CANCELLED
+	_code_	KILLED
+	string	reason
+	_optional_
+	int	exit_code
+	_null_	-1
+
+@type CREAMCancel
+	int	status_code
+	_code_	REQ
+	_code_	REFUSE
+	_code_	DONE
+	_code_	ABORT
+	string	reason
+	_optional_
+
+@type CREAMAbort
+	string	reason
