@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 {
 	char *src = NULL,*job = NULL,*server = NULL,*seq,*jdl = NULL, *seed = NULL;
 	int lbproxy = 0;
-	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0, pbs=0;
+	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0, pbs=0, cream=0, type;
 	edg_wll_Context	ctx;
 	edg_wlc_JobId	jobid,*subjobs;
 
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:P")) {
+		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:Pc")) {
 			case 'x': lbproxy = 1; break;
 			case 'X': lbproxy = 1; 
 				  edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, optarg);
@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
 			case 'S': reg_subjobs = 1; break;
 			case 'C': collection = 1; break;
 			case 'P': pbs = 1; break;
+			case 'c': cream = 1; break;
 			case 'l': jdl = (char *) strdup(optarg); break;
 			case 'e': seed = strdup(optarg); break;
 			case '?': usage(argv[0]); exit(EINVAL);
@@ -95,13 +96,17 @@ int main(int argc, char *argv[])
 	}
 
 	edg_wll_SetParam(ctx,EDG_WLL_PARAM_SOURCE,edg_wll_StringToSource(src));
-	if (lbproxy) {
-		if (edg_wll_RegisterJobProxy(ctx,jobid,
-			pbs ? EDG_WLL_REGJOB_PBS
-			    : (num_subjobs ? 
-				(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG) 
+
+	type = pbs ? EDG_WLL_REGJOB_PBS
+		: (cream ? EDG_WLL_REGJOB_CREAM
+			: (num_subjobs ?
+				(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG)
 				:EDG_WLL_REGJOB_SIMPLE
-				),
+			  )
+		  );
+
+	if (lbproxy) {
+		if (edg_wll_RegisterJobProxy(ctx,jobid,type,
 			jdl ? jdl : "blabla", "NS",
 			num_subjobs,seed,&subjobs))
 		{
@@ -111,12 +116,7 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 	} else {
-		if (edg_wll_RegisterJobSync(ctx,jobid,
-			pbs ? EDG_WLL_REGJOB_PBS
-			    : (num_subjobs ? 
-				(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG) 
-				:EDG_WLL_REGJOB_SIMPLE
-				),
+		if (edg_wll_RegisterJobSync(ctx,jobid,type,
 			jdl ? jdl : "blabla", "NS",
 			num_subjobs,seed,&subjobs))
 		{

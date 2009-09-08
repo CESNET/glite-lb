@@ -52,6 +52,9 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			case EDG_WLL_REGJOB_CONDOR:
 				js->pub.jobtype = EDG_WLL_STAT_CONDOR;
 				break;
+			case EDG_WLL_REGJOB_CREAM:
+				js->pub.jobtype = EDG_WLL_STAT_CREAM;
+				break;
 			default:
 				trio_asprintf(errstring,"unknown job type %d in registration",e->regJob.jobtype);
 				return RET_FAIL;
@@ -66,6 +69,8 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			return processEvent_PBS(js,e,ev_seq,strict,errstring);
 		case EDG_WLL_STAT_CONDOR: 
 			return processEvent_Condor(js,e,ev_seq,strict,errstring);
+		case EDG_WLL_STAT_CREAM:
+			return RET_OK;		/* TODO: mulac */
 		case -1: return RET_UNREG;
 		default: 
 			trio_asprintf(errstring,"undefined job type %d",js->pub.jobtype);

@@ -240,6 +240,7 @@ edg_wll_QueryResults edg_wll_StringToQResult(const char *name);
 #define EDG_WLL_SEQ_DUPLICATE   11
 #define EDG_WLL_SEQ_PBS		2
 #define EDG_WLL_SEQ_CONDOR	3
+#define EDG_WLL_SEQ_CREAM	4
 
 /**
  * initial sequence code for BigHelper

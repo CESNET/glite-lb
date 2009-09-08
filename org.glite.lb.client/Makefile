@@ -56,6 +56,8 @@ l_SRC = \
 	failed_subjob.l \
 	aborted.l \
 	cancelled.l \
+	cream_registered.l \
+	cream_pending.l
 
 # TODO: missing resubmission_deep
 #	shallow_resub_complex.l shallow_resub_simple.l shallow_resub_simple2.l \

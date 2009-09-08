@@ -26,6 +26,8 @@
 // undefine to disable support for -l option
 #define ENABLE_REASON_LENGTH
 
+static int flesh_seq(int);
+
 int main(int argc, char *argv[])
 {
 	char	/* *fmt,*fname = NULL,*/ *fmt_arg=NULL;
@@ -45,6 +47,7 @@ int main(int argc, char *argv[])
         edg_wll_Source src;
 	edg_wll_EventCode event = EDG_WLL_EVENT_UNDEF;
 	edg_wlc_JobId jobid = 0;
+	int seq = EDG_WLL_SEQ_NORMAL;
         int (*logev)(edg_wll_Context context,
 		     edg_wll_EventCode event,
 		     char *fmt, ...);
@@ -161,6 +164,8 @@ int main(int argc, char *argv[])
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_LEVEL,
 			 (deb) ? EDG_WLL_LEVEL_DEBUG : EDG_WLL_LEVEL_SYSTEM);
 
+	seq = flesh_seq(event);
+
 	if ( use_lbproxy ) {
 		if ( !lbproxy_user ) {
 			edg_wll_GssCred		gss_cred = NULL;
@@ -173,14 +178,14 @@ int main(int argc, char *argv[])
 		}
 		if ( lbproxy_store_sock )
 			edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, lbproxy_store_sock);
-		if (edg_wll_SetLoggingJobProxy(ctx,jobid,code,lbproxy_user,EDG_WLL_SEQ_NORMAL)) {
+		if (edg_wll_SetLoggingJobProxy(ctx,jobid,code,lbproxy_user,seq)) {
 			char 	*et,*ed;
 			edg_wll_Error(ctx,&et,&ed);
 			fprintf(stderr,"SetLoggingJobProxy(%s,%s,%s): %s (%s)\n",jobid_s,code,lbproxy_user,et,ed);
 			exit(1);
 		}
 	} else {
-		if (edg_wll_SetLoggingJob(ctx,jobid,code,EDG_WLL_SEQ_NORMAL)) {
+		if (edg_wll_SetLoggingJob(ctx,jobid,code,seq)) {
 			char 	*et,*ed;
 			edg_wll_Error(ctx,&et,&ed);
 			fprintf(stderr,"SetLoggingJob(%s,%s): %s (%s)\n",jobid_s,code,et,ed);
@@ -188,7 +193,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (noinc) edg_wll_SetSequenceCode(ctx,code,EDG_WLL_SEQ_NORMAL);
+	if (noinc) edg_wll_SetSequenceCode(ctx,code,seq);
 
 #ifdef ENABLE_REASON_LENGTH
 	if (elength > 200000000) {
@@ -298,4 +303,24 @@ gen qq{\t    //edg_wll_Log$t();
 #endif
 
 	return err;
+}
+
+static int flesh_seq(int event)
+{
+	switch (event) {
+@@@{
+	%seq = ( CREAM => 'CREAM', 'PBS' => 'PBS', 'gLite' => 'NORMAL', Condor=>'CONDOR' );
+	for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
+	       $event->getTypes)
+	{
+		selectType $event $t;
+
+		my $type = uc $t;
+		my $sf = $seq{$event->{flesh}->{$t}};
+
+		print "\t\tcase EDG_WLL_EVENT_$type: return EDG_WLL_SEQ_$sf;\n";
+	}
+@@@}
+	default: return -1;
+	}
 }

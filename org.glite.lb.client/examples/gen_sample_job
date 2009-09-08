@@ -96,6 +96,16 @@ awk -F, $NESTED \
 /-e ReallyRunning/	{ if (checkNOP(3) == 0) logit(); 
 		  	next;}
 
+/-e CREAMStart/	{ logit(); next;}
+/-e CREAMStore/	{ logit(); next;}
+/-e CREAMPurge/	{ logit(); next;}
+/-e CREAMCall/	{ logit(); next;}
+/-e CREAMRunning/	{ logit(); next;}
+/-e CREAMReallyRunning/	{ logit(); next;}
+/-e CREAMDone/	{ logit(); next;}
+/-e CREAMCancel/	{ logit(); next;}
+/-e CREAMAbort/	{ logit(); next;}
+
 # shell escape (for sequence number branching)
 
 /^!/		{ print substr($0,2,(length($0) - 1)); }

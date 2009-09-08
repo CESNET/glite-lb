@@ -279,6 +279,8 @@ static const char* const srcNames[] = {
 	"LRMS",
 	"Application",
 	"LBServer",
+	"CreamCore",
+	"BLAH",
 };
 
 edg_wll_Source edg_wll_StringToSource(const char *name)
@@ -351,6 +353,9 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 		case EDG_WLL_SEQ_CONDOR:
 			ret = strdup(ctx->p_seqcode.condor);
 			break;
+		case EDG_WLL_SEQ_CREAM:
+			ret = strdup("");	/* XXX: not yet */
+			break;
 		default:
 			edg_wll_SetError(ctx,EINVAL,"edg_wll_GetSequenceCode(): sequence code type");
 			return NULL;
@@ -391,7 +396,8 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 					&c[EDG_WLL_SOURCE_APPLICATION],
 					&c[EDG_WLL_SOURCE_LB_SERVER]);
 
-			assert(EDG_WLL_SOURCE__LAST == 10);
+			/* XXX: can't be true anymore. What was the reason for assert()? 
+			assert(EDG_WLL_SOURCE__LAST == 10); */
 			if (res == EDG_WLL_SOURCE_LB_SERVER-1) {
 				/* pre-collections compatibility */
 				c[EDG_WLL_SOURCE_LB_SERVER] = 0;
@@ -421,6 +427,8 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			else
 				strncpy(ctx->p_seqcode.condor, seqcode_str, sizeof(ctx->p_seqcode.condor));
 			break;
+		case EDG_WLL_SEQ_CREAM:
+			break; /* XXX: not yet */
 		default:
 			return edg_wll_SetError(ctx, EINVAL,
 				"edg_wll_SetSequenceCode(): unrecognized value of seq_type parameter");
@@ -447,6 +455,7 @@ int edg_wll_IncSequenceCode(edg_wll_Context ctx)
 			ctx->p_seqcode.c[ctx->p_source]++;
 			break;
 		case EDG_WLL_SEQ_PBS:
+		case EDG_WLL_SEQ_CREAM:
 			/* no action */
 			break;
 		default:
