@@ -378,7 +378,7 @@
 	string	reason
 	_optional_
 
-@type CREAMRuning
+@type CREAMRunning
 	string	node
 
 @type CREAMReallyRunning
