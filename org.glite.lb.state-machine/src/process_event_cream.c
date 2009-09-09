@@ -56,6 +56,9 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				js->pub.cream_state = EDG_WLL_STAT_REGISTERED;
 			}
 			if (USABLE_DATA(res)) {
+				rep_cond(js->pub.cream_owner, js->pub.owner);
+				rep_cond(js->pub.cream_jdl, e->regJob.jdl);
+				rep_cond(js->pub.cream_endpoint, e->regJob.ns);
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMSTART:
@@ -105,6 +108,9 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_RUNNING;
 				js->pub.cream_state = EDG_WLL_STAT_RUNNING;
+				if (e->any.source == EDG_WLL_SOURCE_LRMS) {
+					js->pub.cream_jw_status = EDG_WLL_STAT_WRAPPER_RUNNING;
+				}
 			}
 			if (USABLE_DATA(res)) {
 				js->pub.cream_node = e->CREAMRunning.node;
@@ -114,6 +120,9 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_RUNNING;
 				js->pub.cream_state = EDG_WLL_STAT_REALLYRUNNING;
+				if (e->any.source == EDG_WLL_SOURCE_LRMS) {
+					js->pub.cream_jw_status = EDG_WLL_STAT_PAYLOAD_RUNNING;
+				}
 			}
 			if (USABLE_DATA(res)) {
 			}
@@ -122,6 +131,9 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_DONE;
 				js->pub.cream_state = (e->CREAMDone.status_code == EDG_WLL_DONE_OK) ? EDG_WLL_STAT_DONEOK : EDG_WLL_STAT_DONEFAILED;
+				if (e->any.source == EDG_WLL_SOURCE_LRMS) {
+					js->pub.cream_jw_status = EDG_WLL_STAT_DONE;
+				}
 			}
 			if (USABLE_DATA(res)) {
 				js->pub.cream_done_code = e->CREAMDone.status_code;
@@ -137,7 +149,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				}
 			}
 			if (USABLE_DATA(res)) {
-				js->pub.cream_cancel_reason = e->CREAMCancel.reason;
+				js->pub.cream_reason = e->CREAMCancel.reason;
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMABORT:
