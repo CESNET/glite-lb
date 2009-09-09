@@ -153,7 +153,6 @@ int	cream_done_code		Uses done_code enum
 	_null_	-1
 int	cream_exit_code
 bool	cream_canceling
-string	cream_cancel_reason
 int	cream_cpu_time
 int	cream_jw_status		Users jw_status enum
 
