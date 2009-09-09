@@ -303,6 +303,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	my $tu = uc $t;
 	my $tl = lcfirst $t;
 	if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
+	if ($tl =~ m/^cREAM/) { $tl = ucfirst $tl; }
 	if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 	gen $indent."case EDG_WLL_EVENT_$tu : \n";
 	selectType $event $t;
@@ -357,6 +358,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	my $tu = uc $t;
 	my $tl = lcfirst $t;
 	if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
+	if ($tl =~ m/^cREAM/) { $tl = ucfirst $tl; }
 	if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 	gen $indent."case EDG_WLL_EVENT_$tu :\n";
 	selectType $event $t;

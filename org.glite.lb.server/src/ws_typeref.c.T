@@ -34,6 +34,7 @@ sub eventFieldAssign {
 	$tn = $f->{type};
 	$native_en = lcfirst $e;
 	if ($native_en =~ m/^pBS/) { $native_en = ucfirst $native_en; }
+	if ($native_en =~ m/^cREAM/) { $native_en = ucfirst $native_en; }
 	if ($native_en =~ m/^condor/) { $native_en = ucfirst $native_en; }
 	$native_fn = $f->{name};
 	$soap_en = $e;
@@ -1114,6 +1115,7 @@ static int edg_wll_SoapToEvent(
 				} else {
 					$act = lcfirst $name;
 					if ($act =~ m/^pBS/) { $act = ucfirst $act; }
+					if ($act =~ m/^cREAM/) { $act = ucfirst $act; }
 					if ($act =~ m/^condor/) { $act = ucfirst $act; }
 				}
 				my $usuc = $fn;

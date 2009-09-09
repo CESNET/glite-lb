@@ -53,8 +53,8 @@ COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_secur
 PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
 	${classadslib} -lstdc++ ${expatlib} -lexpat\
 
-PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo lb_plugin.lo
-MACHINE_OBJS:=seqcode_aux.o process_event.o process_event_pbs.o process_event_condor.o
+PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo process_event_cream.lo lb_plugin.lo
+MACHINE_OBJS:=seqcode_aux.o process_event.o process_event_pbs.o process_event_condor.o process_event_cream.o
 
 PLUGIN_LIB=glite_lb_plugin.la
 MACHINE_LIB=libglite_lb_statemachine.a

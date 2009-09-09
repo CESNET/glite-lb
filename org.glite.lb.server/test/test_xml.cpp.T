@@ -49,6 +49,7 @@ static char * compare_events(const edg_wll_Event *e1, const edg_wll_Event *e2)
 		my $tu = uc $t;
 		my $tl = lcfirst $t;
 		if ($tl =~ m/^pBS/) { $tl = ucfirst $tl; }
+		if ($tl =~ m/^cREAM/) { $tl = ucfirst $tl; }
 		if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 
 		selectType $event $t;

@@ -42,6 +42,7 @@ sub typeswitch {
 		if($ctype{$f->{type}}) {
   		  my $cstr = $ftype eq '_common_' ? 'any' : lcfirst $ftype;
 		  if ($cstr =~ m/^pBS/) { $cstr = ucfirst $cstr; }
+		  if ($cstr =~ m/^cREAM/) { $cstr = ucfirst $cstr; }
 		  if ($cstr =~ m/^condor/) { $cstr = ucfirst $cstr; }
 		  my $cname = getName $f 'C';
 		  gen "$indent\tcase Event::".uc($f->{name}).": return(cev->$cstr.$cname);\n";
@@ -51,6 +52,7 @@ sub typeswitch {
 		  # conversion from int to string (well, enum to string)
   		  my $cstr = $ftype eq '_common_' ? 'any' : lcfirst $ftype;
 		  if ($cstr =~ m/^pBS/) { $cstr = ucfirst $cstr; }
+		  if ($cstr =~ m/^cREAM/) { $cstr = ucfirst $cstr; }
 		  if ($cstr =~ m/^condor/) { $cstr = ucfirst $cstr; }
 		  my $cname = getName $f 'C';
 		  my $fn = $ftype eq '_common_' ? "" : ucfirst $ftype;

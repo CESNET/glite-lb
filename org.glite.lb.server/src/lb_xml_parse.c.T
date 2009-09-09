@@ -1513,6 +1513,7 @@ int edg_wll_QueryEventsToXML(edg_wll_Context ctx, edg_wll_Event *eventsOut, char
 				my $n = $f->{null};
 				$t = lcfirst $t;
 				if ($t =~ m/^pBS/) { $t = ucfirst $t; }
+				if ($t =~ m/^cREAM/) { $t = ucfirst $t; }
 				if ($t =~ m/^condor/) { $t = ucfirst $t; }
                                 gen "\t\tedg_wll_add_$ft\_to_XMLBody(&pomB, eventsOut[i].$t.$_, \"$_\", $n);\n";
                         }

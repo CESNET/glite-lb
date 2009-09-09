@@ -69,8 +69,8 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			return processEvent_PBS(js,e,ev_seq,strict,errstring);
 		case EDG_WLL_STAT_CONDOR: 
 			return processEvent_Condor(js,e,ev_seq,strict,errstring);
-		case EDG_WLL_STAT_CREAM:
-			return RET_OK;		/* TODO: mulac */
+		case EDG_WLL_STAT_CREAM: 
+			return processEvent_Cream(js,e,ev_seq,strict,errstring);
 		case -1: return RET_UNREG;
 		default: 
 			trio_asprintf(errstring,"undefined job type %d",js->pub.jobtype);
