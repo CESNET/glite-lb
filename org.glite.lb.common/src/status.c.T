@@ -204,6 +204,38 @@ char *edg_wll_JWStatToString(enum edg_wll_StatJw_status statCode)
         return strdup(jw_statNames[statCode]);
 }
 
+static const char * const cream_statNames[] = {
+@@@{
+                my $f = selectField $status cream_state;
+                if ($f->{codes}) {
+                        for (@{$f->{codes}}) {
+                                my $lc = lc $_->{name};
+				my $uc = ucfirst $lc;
+                                gen qq{
+!       "$uc",
+}; 
+                        } 
+                }
+@@@}
+};
+
+enum edg_wll_StatCream_state edg_wll_StringToCreamStat(const char *name)
+{
+        unsigned int     i;
+
+        for (i=0; i<sizeof(cream_statNames)/sizeof(cream_statNames[0]); i++)
+                if (strcasecmp(cream_statNames[i],name) == 0) return (enum edg_wll_StatCream_state) i;
+        return (enum edg_wll_StatCream_state) -1; 
+}
+
+char *edg_wll_CreamStatToString(enum edg_wll_StatCream_state statCode)
+{
+        if ((int)statCode < 0 || statCode >= sizeof(cream_statNames)/sizeof(cream_statNames[0])) return (char *) NULL; 
+        return strdup(cream_statNames[statCode]);
+}
+
+
+
 char *edg_wll_JDLField(edg_wll_JobStat *stat, const char *field_name)
 {
 	char *extr_val;

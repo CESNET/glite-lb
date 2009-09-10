@@ -215,7 +215,11 @@ static void printstat(edg_wll_JobStat stat, int level)
 		case EDG_WLL_STAT_CONDOR:
 			printf("%sjobtype : CONDOR\n", ind);
                         break;
+		case EDG_WLL_STAT_CREAM:
+			printf("%sjobtype : CREAM\n", ind);
+                        break;
 		default:
+			printf("%sjobtype : UNKNOWN\n", ind);
 			break;
 	}
 	printf("%sparent_job : %s\n", ind,
@@ -311,6 +315,25 @@ static void printstat(edg_wll_JobStat stat, int level)
 		printf("%spbs_exit_status : %d\n", ind, stat.pbs_exit_status);
 		printf("%spbs_error_desc : %s%s\n", ind, 
 			(stat.pbs_error_desc) ? "\n" : "", stat.pbs_error_desc);
+	}
+
+	/* CREAM state section */
+	if (stat.jobtype == EDG_WLL_STAT_CREAM) {
+		char 	*cream_stat_name = edg_wll_JWStatToString(stat.cream_state);
+
+		printf("%scream_state : %s\n", ind, cream_stat_name);
+		printf("%scream_owner : %s\n", ind, stat.cream_owner);
+		printf("%scream_endpoint : %s\n", ind, stat.cream_endpoint);
+		printf("%scream_reason : %s\n", ind, stat.cream_reason);
+		printf("%scream_lrms_id : %s\n", ind, stat.cream_lrms_id);
+		printf("%scream_node : %s\n", ind, stat.cream_node);
+		printf("%scream_done_code : %d\n", ind, stat.cream_done_code);
+		printf("%scream_exit_code : %d\n", ind, stat.cream_exit_code);
+		printf("%scream_cancelling : %d\n", ind, stat.cream_cancelling);
+		printf("%scream_cpu_time : %d\n", ind, stat.cream_cpu_time);
+		printf("%scream_jw_status : %d\n", ind, stat.cream_jw_status);
+
+		free(cream_stat_name);
 	}
 
 	printf("\n");	
