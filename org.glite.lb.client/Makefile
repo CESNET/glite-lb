@@ -57,7 +57,12 @@ l_SRC = \
 	aborted.l \
 	cancelled.l \
 	cream_registered.l \
-	cream_pending.l
+	cream_pending.l \
+	cream_idle.l \
+	cream_running.l \
+	cream_reallyrunning.l \
+	cream_done.l \
+	cream_failed.l \
 
 # TODO: missing resubmission_deep
 #	shallow_resub_complex.l shallow_resub_simple.l shallow_resub_simple2.l \

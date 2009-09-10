@@ -382,6 +382,7 @@
 
 @type CREAMRunning
 	string	node
+	_optional_
 
 @type CREAMReallyRunning
 
@@ -394,6 +395,7 @@
 	string	reason
 	_optional_
 	int	exit_code
+	_optional_
 	_null_	-1
 
 @type CREAMCancel
