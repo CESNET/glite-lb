@@ -43,6 +43,14 @@ extern "C" {
  */
 typedef char *edg_wll_LogLine;
 
+enum edg_wll_CREAMCommand {
+	EDG_WLL_CREAM_CMD_UNDEFINED = 0,
+	EDG_WLL_CREAM_CMD_START = 0,
+	EDG_WLL_CREAM_CMD_CANCEL = 0,
+	EDG_WLL_CREAM_CMD_PURGE = 0,
+	EDG_WLL_CREAM_CMD_SUSPEND = 0,
+	EDG_WLL_CREAM_CMD_RESUME = 0,
+};
 
 /**
  * \typedef edg_wll_EventCode
@@ -154,6 +162,8 @@ extern char *edg_wll_KeyNameToString(edg_wll_KeyNameCode key);
  * related StringTo_code and _code_ToString function prototypes
  */
 @@@{
+
+%enum_done = ();
 $indent = "\t";
 selectType $event '_common_';
 for ($event->getFieldsOrdered) {
@@ -163,6 +173,9 @@ for ($event->getFieldsOrdered) {
 		my $fnu = uc $fn;
 		my $c = "${fn}"; # new code
 		my $enum = "enum edg_wll\_$c"; # new enum name
+
+		next if $enum_done{$enum};
+		$enum_done{$enum} = 1;
 
 # enum
 		gen qq{
@@ -213,6 +226,8 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 			my $c = "$t${fn}"; # new code
 			my $enum = "enum edg_wll\_$c"; # new enum name
 
+			next if $enum_done{$enum};
+			$enum_done{$enum} = 1;
 # enum
 			gen qq{
 /**
@@ -231,7 +246,12 @@ $enum \{
 				$main::defined_undefs{$tu} = 1;
 			}
 			for (@{$f->{codes}}) {
-				gen $indent."EDG_WLL_$tu$_->{name},\t/**< $_->{comment} */ \n";
+				my $alias = '';
+				if ($f->{ptype} ne $t) {
+					my $ptu = uc($f->{ptype}) .'_';
+					$alias = " = EDG_WLL_$ptu$_->{name}";
+			       	} 
+				gen $indent."EDG_WLL_$tu$_->{name}$alias,\t/**< $_->{comment} */ \n";
 			}
 			gen "};\n";
 

@@ -67,7 +67,9 @@ int main(int argc, char *argv[])
 	    };
 
 	    $type = { type=>'char *',defval=>'NULL' } if $f->{codes};
-
+            warn "$fn: $vars{$fn}->{type} to $type->{type}\n"
+			 if $vars{$fn} && ($vars{$fn}->{type} ne $type->{type}
+				|| $vars{$fn}->{defval} ne $type->{defval});
 	    $vars{$fn} = $type;
 	}
     }

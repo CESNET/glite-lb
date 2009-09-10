@@ -39,10 +39,15 @@ sub selectField {
 sub addField {
 	my $self = shift;
 	my $field = shift;
+
 	
 	die "unselected type" unless $self->{type};
 	$self->{fields}->{$self->{type}}->{$field->{name}} = $field;
 	$self->selectField($field->{name});
+
+	my $f = $self->{field};
+	my $t = $self->{type};
+	push @{$field->{refs}},"$t:$f";
 	1;
 }
 
@@ -102,12 +107,17 @@ sub load {
 			my $f = $self->getField();
 			$f->{index} = 1;
 		}
+		elsif ($ftype eq '_ref_') {
+			my ($rt,$rf) = split /:/,$fname;
+			$self->addField(my $f = $self->{fields}->{$rt}->{$rf});
+		}
 		elsif ($ftype eq '_pad_') {
 			my $f = $self->getField();
 			$f->{pad} = $fname;
 		}
 		else {
 			my $f = new StructField $fname,$ftype,$comment,$.;
+			$f->{ptype} = $self->{type};
 			$self->addField($f);
 		}
 	}

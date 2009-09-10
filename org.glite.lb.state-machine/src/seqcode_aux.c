@@ -219,8 +219,6 @@ int edg_wll_compare_seq(const char *a, const char *b)
 	if (!strstr(b, "LBS")) snprintf(scb,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",b);
 	else snprintf(scb,EDG_WLL_SEQ_SIZE,"%s",b);
 
-	assert(EDG_WLL_SOURCE__LAST == 10);
-
 	res =  sscanf(sca, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
@@ -231,7 +229,7 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&c[EDG_WLL_SOURCE_LRMS],
 			&c[EDG_WLL_SOURCE_APPLICATION],
 			&c[EDG_WLL_SOURCE_LB_SERVER]);
-	if (res != EDG_WLL_SOURCE__LAST-1) {
+	if (res != 9) {
 /* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", sca); */
 		fprintf(stderr, "unparsable sequence code %s\n", sca);
 		return -1;
@@ -247,7 +245,7 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&d[EDG_WLL_SOURCE_LRMS],
 			&d[EDG_WLL_SOURCE_APPLICATION],
 			&d[EDG_WLL_SOURCE_LB_SERVER]);
-	if (res != EDG_WLL_SOURCE__LAST-1) {
+	if (res != 9) {
 /* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", scb); */
 		fprintf(stderr, "unparsable sequence code %s\n", scb);
 		return 1;

@@ -42,11 +42,13 @@ done
 
 test \( -z "$BKSERVER_HOST" \) -a \( -z "$EDG_JOBID" \) && usage
 
+if [[ $0 =~ "cream_" ]]; then TYPE=-c; fi
+
 if [ -z "$EDG_JOBID" ] 
 then
 	# initial sequence code & jobid (normaly returned by job_reg)
 	EDG_JOBID=
-	SCRIPT=`$JOB_REG $LBPROXY_REG -m $BKSERVER_HOST -s UserInterface | tail -n 2`
+	SCRIPT=`$JOB_REG $TYPE $LBPROXY_REG -m $BKSERVER_HOST -s UserInterface | tail -n 2`
 	eval $SCRIPT
 	test -z "$EDG_JOBID" && exit 4
 	echo EDG_JOBID=$EDG_JOBID

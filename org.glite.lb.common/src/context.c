@@ -354,7 +354,7 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 			ret = strdup(ctx->p_seqcode.condor);
 			break;
 		case EDG_WLL_SEQ_CREAM:
-			ret = strdup("");	/* XXX: not yet */
+			ret = strdup("no_seqcodes_with_CREAM");	/* XXX: not yet */
 			break;
 		default:
 			edg_wll_SetError(ctx,EINVAL,"edg_wll_GetSequenceCode(): sequence code type");

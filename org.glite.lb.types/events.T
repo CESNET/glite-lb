@@ -368,8 +368,10 @@
 
 @type CREAMCall	Processing command and calling BLAH or LRMS
 	logsrc	callee	
-	int	command		The command
+	_ref_	CREAMStore:command
 	string	cmdid		Id of the command, as stored previously
+	_optional_
+	string	destid	
 	_optional_
 	int	result
 	_code_  START
