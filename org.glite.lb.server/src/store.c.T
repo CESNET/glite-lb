@@ -125,6 +125,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 ||
 	    edg_wll_FetchRow(ctx,sh,1,NULL,&max) < 0) goto clean;
 	glite_lbu_FreeStmt(&sh); 
+	free(stmt);
 	
 	next = (max && *max) ? atoi(max) : 0;
 	free(max);
@@ -374,6 +375,7 @@ err:
 	if (stmt) glite_lbu_FreeStmt(&stmt);
 	free(subj);
 	free(userid);
+	free(unique);
 	if (q) free(q);
 	if (owner) free(owner);
 
