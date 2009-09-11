@@ -178,7 +178,7 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 }
 
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
-int edg_wll_JobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
+int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
 {
         char *pomA = NULL, *pomB = NULL;
 	int pomL = 0;
@@ -192,7 +192,7 @@ int edg_wll_JobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 
 	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)));
 	free(chstat);
-	TR("owner","%s",stat.owner);
+	TR("Owner","%s",stat.owner);
 	TR("Condor Id","%s",stat.condorId);
 	TR("Globus Id","%s",stat.globusId);
 	TR("Local Id","%s",stat.localId);
@@ -249,6 +249,52 @@ int edg_wll_JobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 	free(jdl);
 	free(rsl);
         return 0;
+}
+
+int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
+{
+	char *chid, *pomA = NULL, *pomB = NULL, *jdl;
+	int pomL = 0;
+
+	jdl = strdup("");
+
+	chid = edg_wlc_JobIdUnparse(stat.jobId);
+
+	TR("Status", "%s", edg_wll_CreamStatToString(stat.cream_state));
+	TR("Owner", "%s", stat.cream_owner);
+	TR("Endpoint", "%s", stat.cream_endpoint);
+	TR("Reason", "%s", stat.cream_reason);
+	TR("LRMS id", "%s", stat.cream_lrms_id);
+	TR("Node", "%s", stat.cream_node);
+	TR("Cancelling", "%s", stat.cream_cancelling > 0 ? "YES" : "NO");
+	TR("CPU time", "%d", stat.cream_cpu_time);
+	TR("Done code", "%d", stat.cream_done_code);
+        TR("Exit code", "%d", stat.cream_exit_code);
+
+	/*
+                cream_jw_status
+        */
+	
+	if (stat.jdl){
+                char *jdl_unp;
+                if (pretty_print(stat.jdl, &jdl_unp) == 0)
+                        asprintf(&jdl,"<h3>Job description</h3>\r\n"
+                                "<pre>%s</pre>\r\n",jdl_unp);
+                else
+                        asprintf(&jdl,"<h3>Job description (not a ClassAd)"
+                                "</h3>\r\n<pre>%s</pre>\r\n",stat.jdl);
+        }
+	 asprintf(&pomA, "<html>\r\n\t<body>\r\n"
+                        "<h2>%s</h2>\r\n"
+                        "<table halign=\"left\">%s</table>"
+                        "%s"
+                        "\t</body>\r\n</html>",
+                        chid,pomB,jdl);
+        free(pomB); free(jdl);
+
+        *message = pomA;
+
+	return 0;
 }
 
 char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)

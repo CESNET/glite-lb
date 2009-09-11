@@ -687,7 +687,16 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				case 0: if (text) 
 						edg_wll_JobStatusToText(ctx,stat,&message); 
 					else if (html)
-						edg_wll_JobStatusToHTML(ctx,stat,&message);
+						switch(stat.jobtype){
+						case EDG_WLL_STAT_CREAM:
+							edg_wll_CreamJobStatusToHTML(ctx,stat,&message);
+							break;
+						default:
+							//XXX need some more implementations
+							edg_wll_GeneralJobStatusToHTML(ctx,stat,&message);
+							break;
+						}
+					
 					else ret = HTTP_OK;
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;

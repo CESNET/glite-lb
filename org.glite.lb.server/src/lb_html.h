@@ -9,7 +9,8 @@
 #include "lb_proto.h"
 
 int edg_wll_QueryToHTML(edg_wll_Context,edg_wll_Event *,char **);
-int edg_wll_JobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **);
+int edg_wll_GeneralJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **);
+int edg_wll_CreamJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **);
 int edg_wll_UserInfoToHTML(edg_wll_Context, edg_wlc_JobId *, char **);
 int edg_wll_UserNotifsToHTML(edg_wll_Context ctx, char **notifids, char **message);
 int edg_wll_NotificationToHTML(edg_wll_Context ctx, notifInfo *ni, char **message);
