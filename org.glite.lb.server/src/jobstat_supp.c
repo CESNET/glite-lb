@@ -535,6 +535,18 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_string(ret, stat->condor_dest_host);
 	if (ret) ret = enc_string(ret, stat->condor_reason);
 	if (ret) ret = enc_string(ret, stat->condor_error_desc);
+	if (ret) ret = enc_int(ret, stat->cream_state);
+	if (ret) ret = enc_string(ret, stat->cream_owner);
+	if (ret) ret = enc_string(ret, stat->cream_endpoint);
+	if (ret) ret = enc_string(ret, stat->cream_jdl);
+	if (ret) ret = enc_string(ret, stat->cream_reason);
+	if (ret) ret = enc_string(ret, stat->cream_lrms_id);
+	if (ret) ret = enc_string(ret, stat->cream_node);
+	if (ret) ret = enc_int(ret, stat->cream_done_code);
+	if (ret) ret = enc_int(ret, stat->cream_exit_code);
+	if (ret) ret = enc_int(ret, stat->cream_cancelling);
+	if (ret) ret = enc_int(ret, stat->cream_cpu_time);
+	if (ret) ret = enc_int(ret, stat->cream_jw_status);
 
 	return ret;
 }
@@ -620,6 +632,18 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
 	if (tmp_in != NULL) stat->condor_dest_host = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->condor_reason = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->condor_error_desc = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_state = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_owner = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_endpoint = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_jdl = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_reason = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_lrms_id = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_node = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_done_code = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_exit_code = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_cancelling = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_cpu_time = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_jw_status = dec_int(tmp_in, &tmp_in);
 
 	*rest = tmp_in;
 
