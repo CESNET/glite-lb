@@ -100,7 +100,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 
 			}
 			if (USABLE_DATA(res)) {
-				js->pub.cream_reason = e->CREAMCall.reason;
+				rep(js->pub.cream_reason, e->CREAMCall.reason);
 			}
 			break;
 
@@ -113,7 +113,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				}
 			}
 			if (USABLE_DATA(res)) {
-				js->pub.cream_node = e->CREAMRunning.node;
+				rep(js->pub.cream_node, e->CREAMRunning.node);
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMREALLYRUNNING:
@@ -138,7 +138,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			if (USABLE_DATA(res)) {
 				js->pub.cream_done_code = e->CREAMDone.status_code;
 				js->pub.cream_exit_code = e->CREAMDone.exit_code;
-				js->pub.cream_reason = e->CREAMDone.reason;
+				rep(js->pub.cream_reason, e->CREAMDone.reason);
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMCANCEL:
@@ -149,7 +149,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				}
 			}
 			if (USABLE_DATA(res)) {
-				js->pub.cream_reason = e->CREAMCancel.reason;
+				rep(js->pub.cream_reason, e->CREAMCancel.reason);
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMABORT:
@@ -158,7 +158,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				js->pub.cream_state = EDG_WLL_STAT_ABORTED;
 			}
 			if (USABLE_DATA(res)) {
-				js->pub.cream_reason = e->CREAMAbort.reason;
+				rep(js->pub.cream_reason, e->CREAMAbort.reason);
 			}
 			break;
 
