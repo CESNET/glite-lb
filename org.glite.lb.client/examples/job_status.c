@@ -319,11 +319,12 @@ static void printstat(edg_wll_JobStat stat, int level)
 
 	/* CREAM state section */
 	if (stat.jobtype == EDG_WLL_STAT_CREAM) {
-		char 	*cream_stat_name = edg_wll_JWStatToString(stat.cream_state);
+		char 	*cream_stat_name = edg_wll_CreamStatToString(stat.cream_state);
 
 		printf("%scream_state : %s\n", ind, cream_stat_name);
 		printf("%scream_owner : %s\n", ind, stat.cream_owner);
 		printf("%scream_endpoint : %s\n", ind, stat.cream_endpoint);
+		printf("%scream_jdl : %s\n", ind, stat.cream_jdl);
 		printf("%scream_reason : %s\n", ind, stat.cream_reason);
 		printf("%scream_lrms_id : %s\n", ind, stat.cream_lrms_id);
 		printf("%scream_node : %s\n", ind, stat.cream_node);
