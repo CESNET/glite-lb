@@ -197,7 +197,7 @@ extern char *edg_wll_JWStatToString(enum edg_wll_StatJw_status);
 /** 
  * Convert numeric CREAM status code to string representation
  */
-extern char *edg_wll_CreamStatToString(enum edg_wll_StatCream_status);
+extern char *edg_wll_CreamStatToString(enum edg_wll_StatCream_state);
 
 /** 
  * Extract a variable from the JDL attribute 
