@@ -7,13 +7,13 @@ public static void main(String[] args)
 {
 
    int i;
-   String srv = null,socket = null,prefix = null,lib = null;
+   String srv = null,socket = null,prefix = null,lib = "glite_lb_sendviasocket";
 
    for (i = 0; i < args.length; i++) {
 	if (args[i].equals("-m")) srv = args[++i];
 	else if (args[i].equals("-s")) socket = args[++i];
 	else if (args[i].equals("-f")) prefix = args[++i];
-	else if (args[i].equals("-l")) lib = args[++i];
+	else if (args[i].equals("-l")) lib = args[++i];		/* needs java.library.path */
    }
 
    try {

@@ -11,7 +11,8 @@ all compile:
 		-Dreference.jobid-api-java.jar=${stagedir}/share/java/jobid-api-java.jar \
 		-Dreference.trustmanager.jar=${trustmanager_prefix}/share/java/glite-security-trustmanager.jar \
 		-Daxis.classpath=`ls ${axis_prefix}/lib/*.jar | tr '\012' :` 
-	cd src_c && make PREFIX=${PREFIX}
+	javah -classpath build/classes -jni org.glite.lb.ContextIL
+	cd src_c && make PREFIX=${PREFIX} JAVA_HOME=${jdk_prefix} topdir=..
 
 examples: ${EXAMPLES}
 

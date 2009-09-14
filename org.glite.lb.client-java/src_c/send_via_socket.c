@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "org_glite_lb_ContextIL.h"
+
 #define tv_sub(a, b) {\
 	(a).tv_usec -= (b).tv_usec;\
 	(a).tv_sec -= (b).tv_sec;\
@@ -125,7 +127,8 @@ edg_wll_socket_write_full(
     jint msg_size_j, 
     jint conn_attempts_j, 
     jint timeout_int_j)*/
-JNIEXPORT jint JNICALL Java_org_glite_lb_client_1java_ContextIL_sendToSocket
+JNIEXPORT jint JNICALL
+Java_org_glite_lb_ContextIL_sendToSocket
    (JNIEnv *env, 
     jobject jobj, 
     jstring socket_path_j, 

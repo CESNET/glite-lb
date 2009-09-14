@@ -63,7 +63,7 @@ public class ContextIL extends Context {
             throw new IllegalArgumentException("ContextIL prefix");
         }
 
-        String message = "DG.LLLID=\"0\"" + super.createMessage(event);
+        String message = "DG.LLLID=\"0\"" + super.createMessage(event) +"\n";
 
 	String file = prefix + "." + getJobid().getUnique();
 
