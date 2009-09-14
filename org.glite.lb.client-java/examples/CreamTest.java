@@ -6,8 +6,18 @@ public class CreamTest {
 public static void main(String[] args)
 {
 
+   int i;
+   String srv = null,socket = null,prefix = null,lib = null;
+
+   for (i = 0; i < args.length; i++) {
+	if (args[i].equals("-m")) srv = args[++i];
+	else if (args[i].equals("-s")) socket = args[++i];
+	else if (args[i].equals("-f")) prefix = args[++i];
+	else if (args[i].equals("-l")) lib = args[++i];
+   }
+
    try {
-	String[] srvpart = args[0].split(":");
+	String[] srvpart = srv.split(":");
 	int srvport = Integer.parseInt(srvpart[1]);
 	Jobid	job = new Jobid(srvpart[0],srvport);
 
@@ -28,14 +38,14 @@ public static void main(String[] args)
 
 	System.out.println("JOBID="+job);
 
+	ContextIL	ctx = new ContextIL(prefix,socket,lib);
+	ctx.setSource(Sources.EDG_WLL_SOURCE_CREAM_CORE);
+	ctx.setJobid(job);
+	ctx.setSeqCode(new SeqCode(SeqCode.CREAM,"no_seqcodes_with_cream"));
+	ctx.setUser(ctxd.getUser());
 
-
-/*
-	reg.setJdl
-
-
-	ContextIL	ctx = new ContextIL();
-*/
+	reg.setJdl("[\n\ttest = \"hellow, world\";\n]");
+	ctx.log(reg);
 	
 
    } catch (Exception e)

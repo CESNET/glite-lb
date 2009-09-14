@@ -39,7 +39,6 @@ public class ContextDirect extends Context
 			ssl.setCredentials(cred);
 			Socket sock = ssl.connect(server,port+1,timeout);
 			setUser(ssl.myDN());
-System.out.println("setUser("+ssl.myDN()+")");
 			try { il = new ILProto(sock); }
 			catch (Throwable e) { throw new LBException(e); }
 		}

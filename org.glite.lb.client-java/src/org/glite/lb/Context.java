@@ -13,7 +13,6 @@ import org.glite.jobid.Jobid;
  */
 public abstract class Context {
 
-    private int id;
     private int source;
     private int flag;
     private String host;
@@ -44,17 +43,13 @@ public abstract class Context {
      *  or flag < 0 or source <=0 || >= 9 
      * 
      */
-    public Context(int id,
-            int source,
+    public Context(int source,
             int flag,
             String host,
             String user,
             String prog,
             String srcInstance,
             Jobid jobid) {
-        if (id < 0) {
-            id = new Random().nextInt();
-        }
 
         if (source <= -1 || source > Sources.EDG_WLL_SOURCE_LB_SERVER) {
             throw new IllegalArgumentException("Context source");
@@ -88,7 +83,6 @@ public abstract class Context {
             throw new IllegalArgumentException("Context jobid");
         }
 
-        this.id = id;
         this.source = source;
         this.flag = flag;
         this.host = host;
@@ -211,8 +205,7 @@ public abstract class Context {
 
         if (seqCode != null) seqCode.incrementSeqCode(source);
 
-        output = ("DG.LLLID=" + id +
-                " DG.USER=\"" + Escape.ulm(user) + "\"" +
+        output = (" DG.USER=\"" + Escape.ulm(user) + "\"" +
                 " DATE=" + date +
                 " HOST=\"" + Escape.ulm(host) + "\"" +
                 " PROG=" + Escape.ulm(prog) +
@@ -271,28 +264,6 @@ public abstract class Context {
         }
 
         this.host = host;
-    }
-
-    /**
-     * Gets message id.
-     * 
-     * @return message id
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * Sets message id.
-     * 
-     * @param id message id
-     * @throws java.lang.IllegalArgumentException if id is lower than 0
-     */
-    public void setId(int id) {
-        if (id < 0) {
-            throw new IllegalArgumentException("Context id");
-        }
-        this.id = id;
     }
 
     /**
