@@ -332,7 +332,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 		printf("%scream_exit_code : %d\n", ind, stat.cream_exit_code);
 		printf("%scream_cancelling : %d\n", ind, stat.cream_cancelling);
 		printf("%scream_cpu_time : %d\n", ind, stat.cream_cpu_time);
-		printf("%scream_jw_status : %d\n", ind, stat.cream_jw_status);
+		printf("%scream_jw_status : %s\n", ind,  edg_wll_JWStatToString(stat.cream_jw_status));
 
 		free(cream_stat_name);
 	}

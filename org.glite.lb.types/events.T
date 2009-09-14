@@ -367,7 +367,7 @@
 	_code_	FAILED
 
 @type CREAMCall	Processing command and calling BLAH or LRMS
-	logsrc	callee	
+	logsrc	callee		Called component	
 	_ref_	CREAMStore:command
 	string	cmdid		Id of the command, as stored previously
 	_optional_
