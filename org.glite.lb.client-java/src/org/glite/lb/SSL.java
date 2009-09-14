@@ -80,4 +80,26 @@ public class SSL {
 	catch (IOException e) { throw new LBException(e); }
     }
 
+    private static String slashDN(String dn) {
+	    String f[] = dn.split(",");
+	    int	i;
+	    String out = new String();
+
+	    /* XXX: proxy */
+	    for (i=f.length-1; i>=0 && f[i].indexOf("=proxy") == -1; i--) 
+		    out += "/" + f[i];
+
+	    return out;
+    }
+
+    public String myDN()
+    {
+	    java.security.cert.Certificate[] cert = sess.getLocalCertificates();
+	    java.security.cert.X509Certificate xcert =
+		    (java.security.cert.X509Certificate) cert[0];
+	
+	    return slashDN(xcert.getSubjectX500Principal().getName());
+    }
+
+
 }

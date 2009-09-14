@@ -15,12 +15,17 @@ import java.net.Socket;
  *
  * @author Kopac
  */
-public class ILProtoReceiver {
+public class ILProto {
 
     private Socket socket = null;
     private InputStream inStream = null;
     private OutputStream outStream = null;
-    private static final String magicWord = "6 michal";
+    private static final String magicWordXXX = "6 michal";
+    private static final String magicWord = "michal";
+    private int min,maj;
+    private String err;
+    private byte[] buf;
+    private int bufptr,bufsiz;
 
     /**
      * construcor initializes the class' socket, inStream and outStream attributes
@@ -28,7 +33,7 @@ public class ILProtoReceiver {
      * @param socket an SSLSocket
      * @throws java.io.IOException
      */
-    public ILProtoReceiver(Socket socket) throws IOException {
+    public ILProto(Socket socket) throws IOException {
         this.socket = socket;
         inStream = this.socket.getInputStream();
         outStream = this.socket.getOutputStream();
@@ -42,6 +47,7 @@ public class ILProtoReceiver {
      * the info about its length
      * @throws IOException
      */
+    /* XXX: weird implementation, should follow C */
     public String receiveMessage() throws IOException{
         byte[] b = new byte[17];
         int i = 0;
@@ -56,7 +62,7 @@ public class ILProtoReceiver {
             //read in the rest of the message
             int j = 0;
             while(i != length || j == -1) {
-                j = inStream.read(notification, i, length);
+                j = inStream.read(notification, i, length-i);
                 i=i+j;
             }
             String retString = checkWord(notification);
@@ -66,6 +72,43 @@ public class ILProtoReceiver {
             return retString.split(" ", 2)[1];
         }
     }
+
+    public void sendMessage(String msg) throws IOException
+    {
+	    newbuf(magicWord.length() + msg.length() + 100);
+	    put_string(magicWord);
+	    put_string(msg);
+	    String hdr = String.format("%16d\n",bufptr);
+	    outStream.write(hdr.getBytes());
+
+	    writebuf();
+	    outStream.flush();
+    }
+
+    public int receiveReply() throws IOException,LBException
+    {
+	    newbuf(17);
+
+	    if (readbuf(17) != 17) {
+		    throw new LBException("reading IL proto header");
+	    }
+	    int		len = Integer.parseInt((new String(buf)).trim());
+
+	    newbuf(len);
+	    if (readbuf(len) < len) {
+		    throw new LBException("incomplete IL message");
+	    }
+
+	    rewind();
+	    this.maj = get_int();
+	    this.min = get_int();
+	    this.err = get_string();
+
+	    return this.maj;
+    }
+
+    public int errMin() { return min; }
+    public String errMsg() { return err; }
 
     /**
      * private method that checks, if the magic word is present in the notification
@@ -81,7 +124,7 @@ public class ILProtoReceiver {
         }
         String word = new String(notification, 0, i+1);
         word.trim();
-        if(!word.equals(magicWord)) {
+        if(!word.equals(magicWordXXX)) {
             return null;
         } else {
             return new String(notification, i+1, notification.length - i + 1);
@@ -134,5 +177,62 @@ public class ILProtoReceiver {
             j++;
         }
         return arrayToFill;
+    }
+
+    private void newbuf(int size) {
+	    buf = new byte[size];
+	    bufptr = 0;
+	    bufsiz = size;
+    }
+
+    private void rewind() { bufptr = 0; }
+
+    private int readbuf(int size) throws IOException {
+	    int r,total = 0;
+	   
+	    while (size > 0 && (r = inStream.read(buf,bufptr,size)) > 0) {
+		    bufptr += r;
+		    size -= r;
+		    total += r;
+	    }
+	    return total;
+    }
+
+    private void writebuf() throws IOException {
+	    outStream.write(buf,0,bufptr);
+    }
+
+    private void _put_int(int ii)
+    {
+    	String s = new String() + ii;
+	byte[] b = s.getBytes();
+	int i;
+
+	for (i=0; i<b.length; i++) buf[bufptr++] = b[i];
+    }
+    private void put_int(int i) { _put_int(i); buf[bufptr++] = '\n'; }
+    private void put_string(String s) {
+	   int	i;
+	   byte b[] = s.getBytes();
+    	   _put_int(b.length);
+	   buf[bufptr++] = ' ';
+	   for (i=0; i<b.length; i++) buf[bufptr++] = b[i];
+	   buf[bufptr++] = '\n';
+    }
+
+/* FIXME: sanity checks */
+    private int get_int() {
+	    int	i,o;
+
+	    for (i=0; Character.isDigit(buf[bufptr+i]); i++);
+	    o = Integer.parseInt(new String(buf,bufptr,i));
+	    bufptr += i+1;
+	    return o;
+    }
+    private String get_string() {
+	    int len = get_int();
+	    String out = new String(buf,bufptr,len);
+	    bufptr += len+1;
+	    return out;
     }
 }

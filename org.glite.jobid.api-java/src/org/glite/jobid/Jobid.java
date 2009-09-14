@@ -47,11 +47,10 @@ public class Jobid {
             throw new IllegalArgumentException("Jobid port");
         }
         
-        if (bkserver.indexOf("https://") == -1) {
-            throw new IllegalArgumentException("wrong jobid https");
-        }
-        
-        this.bkserver = bkserver;
+        if (bkserver.indexOf("https://") == -1)
+		this.bkserver = "https://" + bkserver;
+        else this.bkserver = bkserver;
+
         this.port = port;
         
         MessageDigest digest = null;
@@ -71,8 +70,9 @@ public class Jobid {
             digest.update(unique.getBytes(),0,unique.length());
             Base64 base64 = new Base64();
             byte[] tmp = base64.encode(digest.digest());
-            unique = new CheckedString(new String(tmp, 0, tmp.length-2)).toString();
-            
+            unique = new String(tmp, 0, tmp.length-2);
+	    unique = unique.replaceAll("/", "_");
+	    unique = unique.replaceAll("\\+", "-");
         } catch (NoSuchAlgorithmException ex) {
             System.err.println(ex);
             System.exit(-1);
@@ -106,7 +106,7 @@ public class Jobid {
         
         this.bkserver = bkserver;
         this.port = port;
-        this.unique = (new CheckedString(unique)).toString();
+        this.unique = unique;
     }
     
     /**
@@ -138,7 +138,7 @@ public class Jobid {
         
         this.bkserver = bkserverS;
         this.port = portS.intValue();
-        this.unique = (new CheckedString(uniqueS)).toString();
+        this.unique = uniqueS;
     }
 
     /**
@@ -186,7 +186,7 @@ public class Jobid {
             throw new IllegalArgumentException("Jobid unique");
         }
         
-        this.unique = (new CheckedString(unique)).toString();
+        this.unique = unique;
     }
 
     /**

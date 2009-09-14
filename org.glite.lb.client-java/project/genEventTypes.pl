@@ -52,7 +52,23 @@ qq{		${fnuu}_${cu},
 };
 				}
 				print E
-qq{\}
+qq{	\}
+	public static String ${fnu}ToString($fnu e) \{
+		String out = "UNDEF";
+		switch (e) \{
+};
+				for (@{$f->{codes}}) {
+					my $cu = uc $_->{name};
+					print E
+qq{
+			case ${fnuu}_${cu}: out = "$cu";
+};
+				}
+				print E
+qq{
+		\}
+		return out;
+	\}
 };
 			}
 			else {
@@ -74,7 +90,6 @@ qq{	private $t $fn;
 		}
 
 		print E
-
 qq{	public String ulm() \{
 		return (" " +
 };
@@ -85,12 +100,18 @@ qq{	public String ulm() \{
 			my $fn = $f->{name};
 			my $t = getType $f;
 			my $fnu = ucfirst $fn;
+			while ($fnu =~ /_([a-z])/) {
+				my $u = uc $1;
+				$fnu =~ s/_$1/$u/;
+			}
 			my $fnuu = uc $fn;
 			my $val = $t eq 'String' ? 
-		 		"new CheckedString($fn).toString()" : $fn;
+		 		"($fn == null ? \"\" : Escape.ulm($fn))" :
+				$f->{codes} ? "Escape.ulm(${fnu}ToString($fn))" :
+				$fn;
 
 			print E
-qq{		"DG.$uuc.$fnuu=\\"" + $val + "\\"" +
+qq{		" DG.$uuc.$fnuu=\\"" + $val + "\\"" +
 };
 		}
 

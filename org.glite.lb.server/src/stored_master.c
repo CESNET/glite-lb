@@ -12,6 +12,7 @@
 #include "glite/lb/il_msg.h"
 #include "glite/lb/lb_plain_io.h"
 #include "glite/lb/context-int.h"
+#include "glite/lbu/log.h"
 
 #include "store.h"
 
@@ -92,6 +93,7 @@ int edg_wll_StoreProtoServer(edg_wll_Context ctx)
 	else
 #endif
 
+	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG,buf);
 	handle_il_message(ctx,buf);
 	free(buf);
 

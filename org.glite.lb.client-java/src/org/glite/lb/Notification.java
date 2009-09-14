@@ -208,16 +208,16 @@ public class Notification {
     public JobStatus receive(int timeout) throws LBException {
         SSL ssl = new SSL();
         ssl.setCredentials(lbCredent);
-        ILProtoReceiver receiver = null;
+        ILProto receiver = null;
         String received = null;
         try {
             if(socket == null) {
                 socket = ssl.accept(port, timeout);
             }
-            receiver = new ILProtoReceiver(socket);
+            receiver = new ILProto(socket);
             if((received = receiver.receiveMessage()) == null) {
                 socket = ssl.accept(port, timeout);
-                receiver = new ILProtoReceiver(socket);
+                receiver = new ILProto(socket);
                 received = receiver.receiveMessage();
             }
             receiver.sendReply(0, 0, "success");

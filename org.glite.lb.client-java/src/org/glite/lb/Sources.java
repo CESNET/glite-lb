@@ -1,5 +1,7 @@
 package org.glite.lb;
 
+/* FIXME: cleanup required */
+
 /**
  * Enum which represents type if sources.
  * 
@@ -16,14 +18,22 @@ public class Sources {
     public static final int EDG_WLL_SOURCE_LRMS = 7;
     public static final int EDG_WLL_SOURCE_APPLICATION = 8;
     public static final int EDG_WLL_SOURCE_LB_SERVER = 9;
+    public static final int EDG_WLL_SOURCE_CREAM_CORE = 10;
+    public static final int EDG_WLL_SOURCE_BLAH = 11;
     
     public int source;
     
     public Sources() {
 	this.source = 0;
     }
+
+    public static void check(int source) {
+	if (source < 1 || source > 11) 
+		throw new IllegalArgumentException("lb.Source");
+    }
     
     public Sources(int source) {
+	check(source);
 	this.source = source;
     }
 }
