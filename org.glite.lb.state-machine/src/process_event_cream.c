@@ -137,7 +137,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			}
 			if (USABLE_DATA(res)) {
 				js->pub.cream_done_code = e->CREAMDone.status_code;
-				js->pub.cream_exit_code = e->CREAMDone.exit_code;
+				if (e->CREAMDone.exit_code != -1) js->pub.cream_exit_code = e->CREAMDone.exit_code;
 				rep(js->pub.cream_reason, e->CREAMDone.reason);
 			}
 			break;
