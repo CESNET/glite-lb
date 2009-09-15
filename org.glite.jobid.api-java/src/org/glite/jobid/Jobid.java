@@ -104,7 +104,10 @@ public class Jobid {
             throw new IllegalArgumentException("Jobid unique");
         }
         
-        this.bkserver = bkserver;
+        if (bkserver.indexOf("https://") == -1)
+		this.bkserver = "https://" + bkserver;
+        else this.bkserver = bkserver;
+
         this.port = port;
         this.unique = unique;
     }
