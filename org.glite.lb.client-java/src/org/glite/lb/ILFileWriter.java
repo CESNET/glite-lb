@@ -50,7 +50,7 @@ public class ILFileWriter {
 
                     BufferedWriter bufferedFileWriter = new BufferedWriter(fileWriter);
 
-                    bufferedFileWriter.write(message + '\n');
+                    bufferedFileWriter.write(message);
                     bufferedFileWriter.flush();
 
                     if (file.exists()) {

@@ -51,6 +51,7 @@ public abstract class Event {
      */
     public abstract String getEventType();
 
+/*
     public String info() {
         String date = "";
         if (arrived != null) {
@@ -65,6 +66,7 @@ public abstract class Event {
                 "DG.EVNT=\""+getEventType()+"\" "+"DG.JOBID=\""+jobId+"\" "+
                 "DG.SEQCODE=\""+seqcode+"\" "+"DG.USER=\""+user+"\""+ulm();
     }
+*/
 
     /**
      * Get and set methods for Event attributes.

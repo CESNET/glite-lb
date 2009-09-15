@@ -30,10 +30,11 @@ public static void main(String[] args)
 	ctxd.setJobid(job);
 	ctxd.setSeqCode(new SeqCode(SeqCode.CREAM,"no_seqcodes_with_cream"));
 
+
+/* initial registration goes directly */
 	EventRegJob	reg = new EventRegJob();
 	reg.setNs("https://where.is.cream:1234");
 	reg.setJobtype(EventRegJob.Jobtype.JOBTYPE_CREAM);
-
 	ctxd.log(reg);
 
 	System.out.println("JOBID="+job);
@@ -44,8 +45,12 @@ public static void main(String[] args)
 	ctx.setSeqCode(new SeqCode(SeqCode.CREAM,"no_seqcodes_with_cream"));
 	ctx.setUser(ctxd.getUser());
 
+/* 2nd registration with JDL, via IL */
 	reg.setJdl("[\n\ttest = \"hellow, world\";\n]");
 	ctx.log(reg);
+
+	Event e = new EventCREAMStart();
+	ctx.log(e);
 	
 
    } catch (Exception e)

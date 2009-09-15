@@ -26,6 +26,7 @@ public class ContextLL extends Context {
         this.port = port;
     }
 
+/* XXX
     public ContextLL(int id,
             int source,
             int flag,
@@ -54,6 +55,7 @@ public class ContextLL extends Context {
         this.address = address;
     }
 
+*/
     @Override
     public void log(Event event) throws LBException {
         if (event == null) {

@@ -1,5 +1,7 @@
 package org.glite.lb;
 
+import java.text.SimpleDateFormat;
+
 import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Random;
@@ -184,28 +186,14 @@ public abstract class Context {
             srcInstance = new String("");
         }
 
-        String output;
-        String date = "";
-        String tmp;
-        date = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-        tmp = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
-        date += "00".substring(0, 2 - tmp.length()) + tmp;
-        tmp = String.valueOf(Calendar.getInstance().get(Calendar.DATE));
-        date += "00".substring(0, 2 - tmp.length()) + tmp;
-        tmp = String.valueOf(Calendar.getInstance().get(Calendar.HOUR));
-        date += "00".substring(0, 2 - tmp.length()) + tmp;
-        tmp = String.valueOf(Calendar.getInstance().get(Calendar.MINUTE));
-        date += "00".substring(0, 2 - tmp.length()) + tmp;
-        tmp = String.valueOf(Calendar.getInstance().get(Calendar.SECOND));
-        date += "00".substring(0, 2 - tmp.length()) + tmp;
-        date += ".";
-        tmp = String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND));
-        String tmp2 = "000".substring(0, 3 - tmp.length()) + tmp;
-        date += tmp2 + "000000".substring(tmp.length(), 6);
-
+	Calendar cal = Calendar.getInstance();
+	cal.set(Calendar.ZONE_OFFSET,0);
+	SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+	String date = df.format(cal.getTime()) + "000";
+	
         if (seqCode != null) seqCode.incrementSeqCode(source);
 
-        output = (" DG.USER=\"" + Escape.ulm(user) + "\"" +
+        String output = (" DG.USER=\"" + Escape.ulm(user) + "\"" +
                 " DATE=" + date +
                 " HOST=\"" + Escape.ulm(host) + "\"" +
                 " PROG=" + Escape.ulm(prog) +

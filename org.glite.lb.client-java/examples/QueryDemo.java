@@ -175,7 +175,7 @@ public class QueryDemo {
             List<Event> events = myJob.getEvents();
             System.out.println("Found "+events.size()+" events:");
             for (int i=0;i<events.size();i++) {
-                System.out.println("Event: " + events.get(i).info());
+                System.out.println("Event: " + events.get(i).ulm());
             }
 
             /**

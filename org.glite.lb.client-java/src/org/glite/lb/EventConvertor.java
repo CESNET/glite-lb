@@ -95,7 +95,7 @@ public class EventConvertor {
         if (jobId != null) event.setJobId(new Jobid(jobId));
         if (level != null) event.setLevel(getLevelFromString(level.getValue()));
         if (priority != null) event.setPriority(priority);
-        if (seqcode != null) event.setSeqcode(new SeqCode(seqcode));
+        if (seqcode != null) event.setSeqcode(new SeqCode(SeqCode.NORMAL,seqcode));	/* XXX */
         if (source != null) event.setSource(getSourceFromString(source.getValue()));
         if (srcInstance != null) event.setSrcInstance(srcInstance);
         if (timestamp != null) event.setTimestamp(new Timeval(timestamp.getTvSec(), timestamp.getTvUsec()));
