@@ -254,13 +254,17 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
 {
 	char *chid, *pomA = NULL, *pomB = NULL, *jdl;
+	char *lbstat, *creamstat;
 	int pomL = 0;
 
 	jdl = strdup("");
 
 	chid = edg_wlc_JobIdUnparse(stat.jobId);
 
-	TR("Status", "%s", edg_wll_CreamStatToString(stat.cream_state));
+	TR("Status", "%s", (lbstat = edg_wll_StatToString(stat.state)));
+	free(lbstat);
+	TR("CREAM Status", "%s", (creamstat = edg_wll_CreamStatToString(stat.cream_state)));
+	free(creamstat);
 	TR("Owner", "%s", stat.cream_owner);
 	TR("Endpoint", "%s", stat.cream_endpoint);
 	TR("Reason", "%s", stat.cream_reason);
