@@ -16,6 +16,7 @@ public class SeqCode {
     
     private int[] seqCode = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     private int type = 0;
+    private String cream_code;
     
     /**
      * Empty constructor which creates new instance of SeqCode with all values
@@ -39,11 +40,12 @@ public class SeqCode {
      * 
      * @param part part of sequence number which will be increased
      */
-    public void incrementSeqCode(int part) {
+    public void incrementSeqCode(Sources src) {
+	int part = src.source;
 	switch (type) {
 		case NORMAL:
 		case DUPLICATE:
-		        if (part <= -1 || part >= Sources.EDG_WLL_SOURCE_LB_SERVER)
+		        if (src == null)
 				throw new IllegalArgumentException("SeqCode part");
        	 		seqCode[part-1]++;
 			break;
@@ -81,7 +83,9 @@ public class SeqCode {
 				currentPosition = colonPosition + 1;
 			}
 			break;
-		case CREAM: break;
+		case CREAM: 
+			cream_code = seqCodeString;
+			break;
 		default: throw new IllegalArgumentException("unsupported seqcode type " + type);
 	}
 	this.type = type;
@@ -128,7 +132,7 @@ public class SeqCode {
 			output += "0000000000".substring(0, 6 - tmp.length ()) + tmp;
 			return output;
 		case CREAM: 
-			return "no_seqcodes_with_cream";
+			return cream_code;
 		default:
 			throw new IllegalArgumentException("unitialized seqcode");
 	}

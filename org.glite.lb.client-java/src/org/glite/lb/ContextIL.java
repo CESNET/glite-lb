@@ -28,6 +28,7 @@ public class ContextIL extends Context {
      * Creates new instance of ContextIL.
      */
     public ContextIL() {
+	this.prefix = "/var/glite/log/dglogd.log";
     }
 
     public ContextIL(String prefix) {
@@ -54,7 +55,7 @@ public class ContextIL extends Context {
      * @param event event
      * @throws java.lang.IllegalArgumentException if event, prefix or path
      */
-    public void log(Event event) {
+    public void log(Event event) throws LBException {
         if (event == null) {
             throw new IllegalArgumentException("ContextIL event");
         }

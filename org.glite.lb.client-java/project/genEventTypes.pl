@@ -12,7 +12,6 @@
 		print E
 qq{
 package org.glite.lb;
-import org.glite.jobid.CheckedString;
 import org.glite.jobid.Jobid;
 
 public class Event$uc extends Event \{
@@ -61,7 +60,7 @@ qq{	\}
 					my $cu = uc $_->{name};
 					print E
 qq{
-			case ${fnuu}_${cu}: out = "$cu";
+			case ${fnuu}_${cu}: out = "$cu"; break;
 };
 				}
 				print E

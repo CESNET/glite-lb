@@ -69,7 +69,7 @@ public class ProducerTestLL {
 
             /* Source indicates source of the message, it is constant from org.glite.lb.client_java.Sources class
              * and determines which part of sequence number will be increased.
-             * Example: ctx.setSource(Sources.EDG_WLL_SOURCE_LRMS);
+             * Example: ctx.setSource(Sources.LRMS);
              * In this case we have to use method which converts args[2] to Sources. In real environment it will
              * not be used.
              */

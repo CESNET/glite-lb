@@ -26,7 +26,7 @@ public static void main(String[] args)
 
 	ContextDirect	ctxd = new ContextDirect(srvpart[0],srvport);
 	ctxd.setCredentials(cred);
-	ctxd.setSource(Sources.EDG_WLL_SOURCE_CREAM_CORE);
+	ctxd.setSource(new Sources(Sources.CREAM_CORE));
 	ctxd.setJobid(job);
 	ctxd.setSeqCode(new SeqCode(SeqCode.CREAM,"no_seqcodes_with_cream"));
 
@@ -40,9 +40,9 @@ public static void main(String[] args)
 	System.out.println("JOBID="+job);
 
 	ContextIL	ctx = new ContextIL(prefix,socket,lib);
-	ctx.setSource(Sources.EDG_WLL_SOURCE_CREAM_CORE);
+	ctx.setSource(new Sources(Sources.CREAM_CORE));
 	ctx.setJobid(job);
-	ctx.setSeqCode(new SeqCode(SeqCode.CREAM,"no_seqcodes_with_cream"));
+	ctx.setSeqCode(new SeqCode(SeqCode.CREAM,"no_seqcodes_with_cream_cheat_duplicate"));
 	ctx.setUser(ctxd.getUser());
 
 /* 2nd registration with JDL, via IL */
@@ -51,7 +51,19 @@ public static void main(String[] args)
 
 	Event e = new EventCREAMStart();
 	ctx.log(e);
+
+	EventCREAMStore store = new EventCREAMStore();
+	store.setResult(EventCREAMStore.Result.RESULT_START);
+	store.setCommand(EventCREAMStore.Command.COMMAND_CMDSTART);
+	ctx.log(store);
+
+	EventCREAMCall call = new EventCREAMCall();
+	call.setCallee(new Sources(Sources.LRMS));
+	call.setDestid("fake_Torque_ID");
+	call.setResult(EventCREAMCall.Result.RESULT_OK);
+	call.setCommand(EventCREAMCall.Command.COMMAND_CMDSTART);
 	
+	ctx.log(call);
 
    } catch (Exception e)
    {

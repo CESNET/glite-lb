@@ -113,17 +113,17 @@ public class EventConvertor {
     private Sources getSourceFromString(String from) {
         if (from == null) throw new IllegalArgumentException("from cannot be null");
 
-        Sources source = new Sources(Sources.EDG_WLL_SOURCE_NONE);
+        Sources source = new Sources(Sources.NONE);
 
-        if (from.equals(EventSource._UserInterface)) source = new Sources(Sources.EDG_WLL_SOURCE_USER_INTERFACE);
-        else if (from.equals(EventSource._NetworkServer)) source = new Sources(Sources.EDG_WLL_SOURCE_NETWORK_SERVER);
-        else if (from.equals(EventSource._WorkloadManager)) source = new Sources(Sources.EDG_WLL_SOURCE_WORKLOAD_MANAGER);
-        else if (from.equals(EventSource._BigHelper)) source = new Sources(Sources.EDG_WLL_SOURCE_BIG_HELPER);
-        else if (from.equals(EventSource._JobSubmission)) source = new Sources(Sources.EDG_WLL_SOURCE_JOB_SUBMISSION);
-        else if (from.equals(EventSource._LogMonitor)) source = new Sources(Sources.EDG_WLL_SOURCE_LOG_MONITOR);
-        else if (from.equals(EventSource._LRMS)) source = new Sources(Sources.EDG_WLL_SOURCE_LRMS);
-        else if (from.equals(EventSource._Application)) source = new Sources(Sources.EDG_WLL_SOURCE_APPLICATION);
-        else if (from.equals(EventSource._LBServer)) source = new Sources(Sources.EDG_WLL_SOURCE_LB_SERVER);
+        if (from.equals(EventSource._UserInterface)) source = new Sources(Sources.USER_INTERFACE);
+        else if (from.equals(EventSource._NetworkServer)) source = new Sources(Sources.NETWORK_SERVER);
+        else if (from.equals(EventSource._WorkloadManager)) source = new Sources(Sources.WORKLOAD_MANAGER);
+        else if (from.equals(EventSource._BigHelper)) source = new Sources(Sources.BIG_HELPER);
+        else if (from.equals(EventSource._JobSubmission)) source = new Sources(Sources.JOB_SUBMISSION);
+        else if (from.equals(EventSource._LogMonitor)) source = new Sources(Sources.LOG_MONITOR);
+        else if (from.equals(EventSource._LRMS)) source = new Sources(Sources.LRMS);
+        else if (from.equals(EventSource._Application)) source = new Sources(Sources.APPLICATION);
+        else if (from.equals(EventSource._LBServer)) source = new Sources(Sources.LB_SERVER);
 
         return source;
     }
@@ -177,7 +177,7 @@ public class EventConvertor {
         org.glite.wsdl.types.lb.EventAccepted wsdlEvent = event.getAccepted();
         EventAccepted ev = new EventAccepted();
 
-        Sources source = new Sources(Sources.EDG_WLL_SOURCE_NONE);
+        Sources source = new Sources(Sources.NONE);
         if (wsdlEvent.getFrom() != null) {
             source = getSourceFromString(wsdlEvent.getFrom().getValue());
         }
@@ -773,7 +773,7 @@ public class EventConvertor {
 
         if (wsdlEvent.getFrom() != null) {
             ev.setFrom(getSourceFromString(wsdlEvent.getFrom().getValue()));
-        } else ev.setFrom(new Sources(Sources.EDG_WLL_SOURCE_NONE));
+        } else ev.setFrom(new Sources(Sources.NONE));
         if (wsdlEvent.getFromHost() != null) ev.setFromHost(wsdlEvent.getFromHost());
         if (wsdlEvent.getFromInstance() != null) ev.setFromInstance(wsdlEvent.getFromInstance());
         if (wsdlEvent.getReason() != null) ev.setReason(wsdlEvent.getReason());
@@ -898,7 +898,7 @@ public class EventConvertor {
 
         if (wsdlEvent.getDestination() != null) {
             ev.setDestination(getSourceFromString(wsdlEvent.getDestination().getValue()));
-        } else ev.setDestination(new Sources(Sources.EDG_WLL_SOURCE_NONE));
+        } else ev.setDestination(new Sources(Sources.NONE));
 
         if (wsdlEvent.getJob() != null) ev.setJob(wsdlEvent.getJob());
         if (wsdlEvent.getReason() != null) ev.setReason(wsdlEvent.getReason());

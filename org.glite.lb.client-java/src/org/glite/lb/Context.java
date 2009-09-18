@@ -15,7 +15,7 @@ import org.glite.jobid.Jobid;
  */
 public abstract class Context {
 
-    private int source;
+    private Sources source;
     private int flag;
     private String host;
     private String user;
@@ -45,7 +45,7 @@ public abstract class Context {
      *  or flag < 0 or source <=0 || >= 9 
      * 
      */
-    public Context(int source,
+    public Context(Sources src,
             int flag,
             String host,
             String user,
@@ -53,7 +53,7 @@ public abstract class Context {
             String srcInstance,
             Jobid jobid) {
 
-        if (source <= -1 || source > Sources.EDG_WLL_SOURCE_LB_SERVER) {
+        if (src == null) {
             throw new IllegalArgumentException("Context source");
         }
 
@@ -85,37 +85,13 @@ public abstract class Context {
             throw new IllegalArgumentException("Context jobid");
         }
 
-        this.source = source;
+        this.source = src;
         this.flag = flag;
         this.host = host;
         this.user = user;
         this.prog = prog;
         this.srcInstance = srcInstance;
         this.jobid = jobid;
-    }
-
-    /**
-     * Converts Sources enum constants to defined string
-     * @param sourceEnum Sources enum constant
-     * @return String representation of Sources enum constants
-     * @throws IllegalArgumentException if wrong source type is set
-     */
-    private String recognizeSource(int sourceEnum) {
-        switch (sourceEnum) {
-            case Sources.EDG_WLL_SOURCE_NONE: return "Undefined";
-            case Sources.EDG_WLL_SOURCE_USER_INTERFACE: return "UserInterface";
-            case Sources.EDG_WLL_SOURCE_NETWORK_SERVER: return "NetworkServer";
-            case Sources.EDG_WLL_SOURCE_WORKLOAD_MANAGER: return "WorkloadManager";
-            case Sources.EDG_WLL_SOURCE_BIG_HELPER: return "BigHelper";
-            case Sources.EDG_WLL_SOURCE_JOB_SUBMISSION: return "JobController";
-            case Sources.EDG_WLL_SOURCE_LOG_MONITOR: return "LogMonitor";
-            case Sources.EDG_WLL_SOURCE_LRMS: return "LRMS";
-            case Sources.EDG_WLL_SOURCE_APPLICATION: return "Application";
-            case Sources.EDG_WLL_SOURCE_LB_SERVER: return "LBServer";
-            case Sources.EDG_WLL_SOURCE_CREAM_CORE: return "CreamCore";
-            case Sources.EDG_WLL_SOURCE_BLAH: return "BLAH";
-            default: throw new IllegalArgumentException("wrong source type");
-        }
     }
 
     /**
@@ -160,8 +136,6 @@ public abstract class Context {
             throw new IllegalArgumentException("Context seqCode");
         }
 
-	Sources.check(source);
-
         if (flag < 0) {
             throw new IllegalArgumentException("Context flag");
         }
@@ -199,7 +173,7 @@ public abstract class Context {
                 " PROG=" + Escape.ulm(prog) +
                 " LVL=SYSTEM" +
                 " DG.PRIORITY=0" +
-                " DG.SOURCE=\"" + recognizeSource(source) + "\"" +
+                " DG.SOURCE=\"" + source + "\"" +
                 " DG.SRC_INSTANCE=\"" + Escape.ulm(srcInstance) + "\"" +
                 " DG.EVNT=\"" + event.getEventType() + "\"" +
                 " DG.JOBID=\"" + jobid + "\"" +
@@ -323,7 +297,7 @@ public abstract class Context {
      * Gets source which represents which part of sequence code will be changed
      * @return source
      */
-    public int getSource() {
+    public Sources getSource() {
         return source;
     }
 
@@ -332,9 +306,8 @@ public abstract class Context {
      * @param source source
      * @throws java.lang.IllegalArgumentException if source is null
      */
-    public void setSource(int source) {
-	Sources.check(source);
-        this.source = source;
+    public void setSource(Sources src) {
+        this.source = src;
     }
 
     /**

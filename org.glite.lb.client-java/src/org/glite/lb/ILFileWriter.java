@@ -4,8 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 
@@ -26,62 +26,42 @@ public class ILFileWriter {
      * @param message message which will be written
      * @param repeatWriteToFile count of attempts to write to file in case of failure
      */
-    public static Long write(String prefix, String message, int repeatWriteToFile) {
+    public static Long write(String prefix, String message, int repeatWriteToFile) throws LBException {
         FileWriter fileWriter = null;
-        Long fileLength = null;
-        RandomAccessFile raf = null;
+        long fileLength = 0;
         FileLock fileLock = null;
         File file;
 
         for (int i = 0; i < repeatWriteToFile; i++) {
             try {
                 file = new File(prefix);
-                raf = new RandomAccessFile(file, "rw");
-                FileChannel fileChannel = raf.getChannel();
+		FileOutputStream out = new FileOutputStream(file,true);
+                FileChannel fileChannel = out.getChannel();
 
                 fileLock = fileChannel.tryLock();
                 if (fileLock != null) {
                     if (!file.exists()) {
                         continue;
                     }
-                    fileLength = new Long(raf.length());
-                    fileWriter = new FileWriter(file, true);
-                    //true means append data at the end of file
-
-                    BufferedWriter bufferedFileWriter = new BufferedWriter(fileWriter);
-
-                    bufferedFileWriter.write(message);
-                    bufferedFileWriter.flush();
+                    fileLength = file.length();
+		    out.write(message.getBytes());
+		    fileLock.release();
+		    out.close();
 
                     if (file.exists()) {
                         break;
                     }
                 }
-            } catch (FileNotFoundException ex) {
-                System.err.println(ex);
-            } catch (IOException ex) {
-                System.err.println(ex);
-            } catch (Exception ex) {
-                System.err.println(ex);
-            } finally {
+            } catch (Throwable ex) {
                 if (fileLock != null) {
                     try {
                         fileLock.release();
-                    } catch (IOException ex) {
-                        System.err.println(ex);
-                    }
+                    } catch (IOException ex2) { }
                 }
-
-                try {
-                    raf.close();
-                } catch (IOException ex) {
-                    System.err.println(ex);
-                } catch (NullPointerException ex) {
-                    System.err.println(ex);
-                }
+		throw new LBException(ex);
             }
         }
 
-        return fileLength;
+        return new Long(fileLength);
     }
 }

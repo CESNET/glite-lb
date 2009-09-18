@@ -43,7 +43,7 @@ public class ProducerTestIL {
              * SeqCode seqCode = new SeqCode();
              * seqCode.getSeqCodeFromString("UI=000001:NS=0000000002:WM=000003:BH=0000000004:" + 
              * "JSS=000005:LM=000006:LRMS=000007:APP=000008:LBS=000009"); 
-             * seqCode.incrementSeqCode(Sources.EDG_WLL_SOURCE_USER_INTERFACE); 
+             * seqCode.incrementSeqCode(Sources.USER_INTERFACE); 
              * resulting sequence code will be 
              * UI=000002:NS=0000000002:WM=000003:BH=0000000004:JSS=000005:LM=000006:LRMS=000007:APP=000008:LBS=000009
              */
@@ -67,7 +67,7 @@ public class ProducerTestIL {
 
             /* Source indicates source of the message, it is constant from org.glite.lb.client_java.Sources class
              * and determines which part of sequence number will be increased.
-             * Example: ctx.setSource(Sources.EDG_WLL_SOURCE_LRMS);
+             * Example: ctx.setSource(Sources.LRMS);
              * In this case we have to use method which converts args[2] to Sources. In real environment it will
              * not be used.
              */
