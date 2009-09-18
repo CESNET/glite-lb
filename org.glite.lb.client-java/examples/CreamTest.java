@@ -34,7 +34,7 @@ public static void main(String[] args)
 /* initial registration goes directly */
 	EventRegJob	reg = new EventRegJob();
 	reg.setNs("https://where.is.cream:1234");
-	reg.setJobtype(EventRegJob.Jobtype.JOBTYPE_CREAM);
+	reg.setJobtype(EventRegJob.Jobtype.CREAM);
 	ctxd.log(reg);
 
 	System.out.println("JOBID="+job);
@@ -53,15 +53,15 @@ public static void main(String[] args)
 	ctx.log(e);
 
 	EventCREAMStore store = new EventCREAMStore();
-	store.setResult(EventCREAMStore.Result.RESULT_START);
-	store.setCommand(EventCREAMStore.Command.COMMAND_CMDSTART);
+	store.setResult(EventCREAMStore.Result.START);
+	store.setCommand(EventCREAMStore.Command.CMDSTART);
 	ctx.log(store);
 
 	EventCREAMCall call = new EventCREAMCall();
 	call.setCallee(new Sources(Sources.LRMS));
 	call.setDestid("fake_Torque_ID");
-	call.setResult(EventCREAMCall.Result.RESULT_OK);
-	call.setCommand(EventCREAMCall.Command.COMMAND_CMDSTART);
+	call.setResult(EventCREAMCall.Result.OK);
+	call.setCommand(EventCREAMCall.Command.CMDSTART);
 	
 	ctx.log(call);
 

@@ -202,8 +202,8 @@ public class EventConvertor {
         if (wsdlEvent.getReason()!=null) ev.setReason(wsdlEvent.getReason());
 
         if(wsdlEvent.getStatusCode() != null) {
-            ev.setStatusCode(EventCancel.StatusCode.valueOf("STATUS_CODE_" + wsdlEvent.getStatusCode().getValue()));
-        } else ev.setStatusCode(EventCancel.StatusCode.STATUS_CODE_UNDEFINED);
+            ev.setStatusCode(EventCancel.StatusCode.valueOf(wsdlEvent.getStatusCode().getValue()));
+        } else ev.setStatusCode(EventCancel.StatusCode.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -218,22 +218,22 @@ public class EventConvertor {
         EventChangeACL ev = new EventChangeACL();
 
         if (wsdlEvent.getOperation() != null) {
-            ev.setOperation(EventChangeACL.Operation.valueOf("OPERATION_" + wsdlEvent.getOperation().getValue()));
-        } else ev.setOperation(EventChangeACL.Operation.OPERATION_UNDEFINED);
+            ev.setOperation(EventChangeACL.Operation.valueOf(wsdlEvent.getOperation().getValue()));
+        } else ev.setOperation(EventChangeACL.Operation.UNDEFINED);
 
         if (wsdlEvent.getPermission()!= null) {
-            ev.setPermission(EventChangeACL.Permission.valueOf("PERMISSION_" + wsdlEvent.getPermission().getValue()));
-        } else ev.setPermission(EventChangeACL.Permission.PERMISSION_UNDEFINED);
+            ev.setPermission(EventChangeACL.Permission.valueOf(wsdlEvent.getPermission().getValue()));
+        } else ev.setPermission(EventChangeACL.Permission.UNDEFINED);
 
         if (wsdlEvent.getPermissionType() != null) {
-            ev.setPermissionType(EventChangeACL.PermissionType.valueOf("PERMISSION_TYPE_" + wsdlEvent.getPermissionType().getValue()));
-        } else ev.setPermissionType(EventChangeACL.PermissionType.PERMISSION_TYPE_UNDEFINED);
+            ev.setPermissionType(EventChangeACL.PermissionType.valueOf(wsdlEvent.getPermissionType().getValue()));
+        } else ev.setPermissionType(EventChangeACL.PermissionType.UNDEFINED);
 
         if (wsdlEvent.getUserId() != null) ev.setUserId(wsdlEvent.getUserId());
 
         if (wsdlEvent.getUserIdType() != null) {
-            ev.setUserIdType(EventChangeACL.UserIdType.valueOf("USER_ID_TYPE_" + wsdlEvent.getUserIdType().getValue()));
-        } else ev.setUserIdType(EventChangeACL.UserIdType.USER_ID_TYPE_UNDEFINED);
+            ev.setUserIdType(EventChangeACL.UserIdType.valueOf(wsdlEvent.getUserIdType().getValue()));
+        } else ev.setUserIdType(EventChangeACL.UserIdType.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -263,8 +263,8 @@ public class EventConvertor {
         EventClear ev = new EventClear();
 
         if (wsdlEvent.getReason() != null) {
-            ev.setReason(EventClear.Reason.valueOf("REASON_" + wsdlEvent.getReason().getValue()));
-        } else ev.setReason(EventClear.Reason.REASON_UNDEFINED);
+            ev.setReason(EventClear.Reason.valueOf(wsdlEvent.getReason().getValue()));
+        } else ev.setReason(EventClear.Reason.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -338,8 +338,8 @@ public class EventConvertor {
 
         if (ev.getOwner() != null) ev.setOwner(wsdlEvent.getOwner());
         if (wsdlEvent.getStatusCode() != null) {
-            ev.setStatusCode(EventCondorReject.StatusCode.valueOf("STATUS_CODE_" + wsdlEvent.getStatusCode().getValue()));
-        } else ev.setStatusCode(EventCondorReject.StatusCode.STATUS_CODE_UNDEFINED);
+            ev.setStatusCode(EventCondorReject.StatusCode.valueOf(wsdlEvent.getStatusCode().getValue()));
+        } else ev.setStatusCode(EventCondorReject.StatusCode.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -357,8 +357,8 @@ public class EventConvertor {
         ev.setQuantity(wsdlEvent.getQuantity());
         if (ev.getUnit() != null) ev.setUnit(wsdlEvent.getUnit());
         if (wsdlEvent.getUsage() != null) {
-            ev.setUsage(EventCondorResourceUsage.Usage.valueOf("USAGE_" + wsdlEvent.getUsage().getValue()));
-        } else ev.setUsage(EventCondorResourceUsage.Usage.USAGE_UNDEFINED);
+            ev.setUsage(EventCondorResourceUsage.Usage.valueOf(wsdlEvent.getUsage().getValue()));
+        } else ev.setUsage(EventCondorResourceUsage.Usage.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -477,8 +477,8 @@ public class EventConvertor {
         ev.setExitCode(wsdlEvent.getExitCode());
         if (wsdlEvent.getReason() != null) ev.setReason(wsdlEvent.getReason());
         if (wsdlEvent.getStatusCode() != null) {
-            ev.setStatusCode(EventDone.StatusCode.valueOf("STATUS_CODE_" + wsdlEvent.getStatusCode().getValue()));
-        } else ev.setStatusCode(EventDone.StatusCode.STATUS_CODE_UNDEFINED);
+            ev.setStatusCode(EventDone.StatusCode.valueOf(wsdlEvent.getStatusCode().getValue()));
+        } else ev.setStatusCode(EventDone.StatusCode.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -496,8 +496,8 @@ public class EventConvertor {
         if (wsdlEvent.getQueue() != null) ev.setQueue(wsdlEvent.getQueue());
         if (wsdlEvent.getReason() != null) ev.setReason(wsdlEvent.getReason());
         if (wsdlEvent.getResult() != null) {
-            ev.setResult(EventEnQueued.Result.valueOf("RESULT_" + wsdlEvent.getResult().getValue()));
-        } else ev.setResult(EventEnQueued.Result.RESULT_UNDEFINED);
+            ev.setResult(EventEnQueued.Result.valueOf(wsdlEvent.getResult().getValue()));
+        } else ev.setResult(EventEnQueued.Result.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -514,8 +514,8 @@ public class EventConvertor {
         if (wsdlEvent.getHelperName() != null) ev.setHelperName(wsdlEvent.getHelperName());
         if (wsdlEvent.getHelperParams() != null) ev.setHelperParams(wsdlEvent.getHelperParams());
         if (wsdlEvent.getSrcRole() != null) {
-            ev.setSrcRole(EventHelperCall.SrcRole.valueOf("SRC_ROLE_" + wsdlEvent.getSrcRole().getValue()));
-        } else ev.setSrcRole(EventHelperCall.SrcRole.SRC_ROLE_UNDEFINED);
+            ev.setSrcRole(EventHelperCall.SrcRole.valueOf(wsdlEvent.getSrcRole().getValue()));
+        } else ev.setSrcRole(EventHelperCall.SrcRole.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -532,8 +532,8 @@ public class EventConvertor {
         if (wsdlEvent.getHelperName() != null) ev.setHelperName(wsdlEvent.getHelperName());
         if (wsdlEvent.getRetval() != null) ev.setRetval(wsdlEvent.getRetval());
         if (wsdlEvent.getSrcRole() != null) {
-            ev.setSrcRole(EventHelperReturn.SrcRole.valueOf("SRC_ROLE_" + wsdlEvent.getSrcRole().getValue()));
-        } else ev.setSrcRole(EventHelperReturn.SrcRole.SRC_ROLE_UNDEFINED);
+            ev.setSrcRole(EventHelperReturn.SrcRole.valueOf(wsdlEvent.getSrcRole().getValue()));
+        } else ev.setSrcRole(EventHelperReturn.SrcRole.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -698,8 +698,8 @@ public class EventConvertor {
         }
         if (wsdlEvent.getUnit() != null) ev.setUnit(wsdlEvent.getUnit());
         if (wsdlEvent.getUsage() != null) {
-            ev.setUsage(EventPBSResourceUsage.Usage.valueOf("USAGE_" + wsdlEvent.getUsage().getValue()));
-        } else ev.setUsage(EventPBSResourceUsage.Usage.USAGE_UNDEFINED);
+            ev.setUsage(EventPBSResourceUsage.Usage.valueOf(wsdlEvent.getUsage().getValue()));
+        } else ev.setUsage(EventPBSResourceUsage.Usage.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
@@ -793,8 +793,8 @@ public class EventConvertor {
         if (wsdlEvent.getJdl() != null) ev.setJdl(wsdlEvent.getJdl());
 
         if (wsdlEvent.getJobtype() != null) {
-            ev.setJobtype(EventRegJob.Jobtype.valueOf("JOBTYPE_" + wsdlEvent.getJobtype().getValue()));
-        } else ev.setJobtype(EventRegJob.Jobtype.JOBTYPE_UNDEFINED);
+            ev.setJobtype(EventRegJob.Jobtype.valueOf(wsdlEvent.getJobtype().getValue()));
+        } else ev.setJobtype(EventRegJob.Jobtype.UNDEFINED);
 
         if (wsdlEvent.getNs() != null) ev.setNs(wsdlEvent.getNs());
 
@@ -834,8 +834,8 @@ public class EventConvertor {
 
         if (wsdlEvent.getReason() != null) ev.setReason(wsdlEvent.getReason());
         if (wsdlEvent.getResult() != null) {
-            ev.setResult(EventResubmission.Result.valueOf("RESULT_" + wsdlEvent.getResult().getValue()));
-        } else ev.setResult(EventResubmission.Result.RESULT_UNDEFINED);
+            ev.setResult(EventResubmission.Result.valueOf(wsdlEvent.getResult().getValue()));
+        } else ev.setResult(EventResubmission.Result.UNDEFINED);
         if (wsdlEvent.getTag() != null) ev.setTag(wsdlEvent.getTag());
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
@@ -904,8 +904,8 @@ public class EventConvertor {
         if (wsdlEvent.getReason() != null) ev.setReason(wsdlEvent.getReason());
 
         if (wsdlEvent.getResult() != null) {
-            ev.setResult(EventTransfer.Result.valueOf("RESULT_" + wsdlEvent.getResult().getValue()));
-        } else ev.setResult(EventTransfer.Result.RESULT_UNDEFINED);
+            ev.setResult(EventTransfer.Result.valueOf(wsdlEvent.getResult().getValue()));
+        } else ev.setResult(EventTransfer.Result.UNDEFINED);
 
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),

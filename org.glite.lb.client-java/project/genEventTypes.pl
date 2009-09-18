@@ -42,33 +42,35 @@ public class Event$uc extends Event \{
 				$t = $fnu;
 				print E
 qq{	public enum $fnu \{ 
-		${fnuu}_UNDEFINED,
+		UNDEFINED,
 };
 				for (@{$f->{codes}}) {
 					my $cu = uc $_->{name};
 					print E
-qq{		${fnuu}_${cu},
+qq{		${cu},
 };
 				}
+
 				print E
-qq{	\}
-	public static String ${fnu}ToString($fnu e) \{
-		String out = "UNDEF";
-		switch (e) \{
+qq{	\};
 };
-				for (@{$f->{codes}}) {
-					my $cu = uc $_->{name};
-					print E
-qq{
-			case ${fnuu}_${cu}: out = "$cu"; break;
-};
-				}
-				print E
-qq{
-		\}
-		return out;
-	\}
-};
+#	public static String ${fnu}ToString($fnu e) \{
+#		String out = "UNDEF";
+#		switch (e) \{
+#};
+#				for (@{$f->{codes}}) {
+#					my $cu = uc $_->{name};
+#					print E
+#qq{
+#			case ${fnu}.${cu}: out = "$cu"; break;
+#};
+#				}
+#				print E
+#qq{
+#		\}
+#		return out;
+#	\}
+#};
 			}
 			else {
 				$t = $f->getType;
@@ -106,7 +108,7 @@ qq{	public String ulm() \{
 			my $fnuu = uc $fn;
 			my $val = $t eq 'String' ? 
 		 		"($fn == null ? \"\" : Escape.ulm($fn))" :
-				$f->{codes} ? "Escape.ulm(${fnu}ToString($fn))" :
+				$f->{codes} ? "Escape.ulm(${fn}.toString())" :
 				$fn;
 
 			print E
