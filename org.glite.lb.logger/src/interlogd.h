@@ -61,8 +61,13 @@
 
 // #define TIMEOUT      5
 extern int TIMEOUT;
+#ifdef LB_PERF
+#define INPUT_TIMEOUT (1)
+#define EXIT_TIMEOUT  (20)
+#else
 #define INPUT_TIMEOUT (60)
 #define EXIT_TIMEOUT (1*60)
+#endif
 
 typedef struct cred_handle {
 	edg_wll_GssCred creds;
