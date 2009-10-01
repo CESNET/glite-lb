@@ -38,3 +38,6 @@
 3.2.2-1
 - Fix edg_wll_NotifDrop prototype (#34649).
 
+3.2.2-2
+- Module repacked
+
