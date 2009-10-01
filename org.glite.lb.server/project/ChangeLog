@@ -47,3 +47,6 @@
 - Reflect job conditions while processing queries for events (#32390)
 - WS example fix
 
+1.9.2-2
+- Module repacked
+
