@@ -26,3 +26,6 @@
 - Makefile relies on the libdir variable
 - New configure script
 
+1.0.1-3
+- Module repacked.
+
