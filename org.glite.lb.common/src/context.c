@@ -279,8 +279,8 @@ static const char* const srcNames[] = {
 	"LRMS",
 	"Application",
 	"LBServer",
-	"CreamCore",
-	"BLAH",
+	"CREAMInterface",
+	"CREAMExecutor",
 };
 
 edg_wll_Source edg_wll_StringToSource(const char *name)

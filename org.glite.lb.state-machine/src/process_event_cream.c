@@ -95,7 +95,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 		case EDG_WLL_EVENT_CREAMCALL:
 			if (USABLE(res)) {
 				// BLAH -> LRMS
-				if (e->any.source == EDG_WLL_SOURCE_BLAH && e->CREAMCall.callee == EDG_WLL_SOURCE_LRMS) {
+				if (e->any.source == EDG_WLL_SOURCE_CREAM_EXECUTOR && e->CREAMCall.callee == EDG_WLL_SOURCE_LRMS) {
 					js->pub.state = EDG_WLL_JOB_SCHEDULED;
 					js->pub.cream_state = EDG_WLL_STAT_IDLE;
 				}
