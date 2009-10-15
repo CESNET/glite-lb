@@ -420,5 +420,5 @@
 	int	result
 	_code_	ARRIVED
 	_code_	DONE
-	string	desc
+	string	descr
 	_optional_
