@@ -365,6 +365,8 @@
 	_code_	START
 	_code_	OK
 	_code_	FAILED
+	string	reason		failure_reason
+	_optional_
 
 @type CREAMCall	Processing command and calling BLAH or LRMS
 	logsrc	callee		Called component	
@@ -376,7 +378,7 @@
 	int	result
 	_code_  START
 	_code_  OK
-	_code_  FAIL 
+	_code_  FAILED
 	string	reason
 	_optional_
 
