@@ -62,6 +62,7 @@
 		float=>'"float"',
 		double=>'"double"',
 		logsrc=>'"Sources"',
+		timeval=>'"Timeval"',
 	}
 );
 

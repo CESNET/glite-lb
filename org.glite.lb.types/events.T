@@ -411,3 +411,14 @@
 
 @type CREAMAbort
 	string	reason
+
+@type CREAMStatus
+	string	old_state
+	string	new_state
+	timeval	orig_timestamp
+	_optional_
+	int	result
+	_code_	ARRIVED
+	_code_	DONE
+	string	desc
+	_optional_
