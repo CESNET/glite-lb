@@ -715,7 +715,7 @@ int main(int argc, char *argv[])
 	}
 	edg_wll_Close(ctx);
 	ctx->dbctx = NULL;
-	fprintf(stderr, "[%d]: DB '%s'\n", getpid(), dbstring);
+	dprintf(("[%d]: DB '%s'\n", getpid(), dbstring ? : "default"));
 
 	if ((ctx->dbcaps & GLITE_LBU_DB_CAP_INDEX) == 0) {
 		fprintf(stderr,"%s: missing index support in DB layer\n",argv[0]);
