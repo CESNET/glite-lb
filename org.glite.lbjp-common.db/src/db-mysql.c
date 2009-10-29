@@ -40,7 +40,7 @@
 
 #define USE_TRANS(CTX) ((CTX->generic.caps & GLITE_LBU_DB_CAP_TRANSACTIONS) != 0)
 #define LOAD(SYM, SYM2) if ((*(void **)(&mysql_module.SYM) = dlsym(mysql_module.lib, SYM2)) == NULL) { \
-	err = ERR(ctx, ENOENT, "can't load symbol %s from mysql library (%s)", SYM2, dlerror()); \
+	err = ERR(ctx, ENOENT, "can't load symbol '%s' from mysql library (%s)", SYM2, dlerror()); \
 	break; \
 }
 
@@ -208,7 +208,7 @@ int glite_lbu_InitDBContextMysql(glite_lbu_DBContext *ctx_gen) {
 	if (!ctx) return ENOMEM;
 	*ctx_gen = (glite_lbu_DBContext)ctx;
 
-	/* dynamic load the mysql library */
+	/* dynamic load the client library */
 	pthread_mutex_lock(&mysql_module.lock);
 	if (!mysql_module.lib) {
 		mysql_module.lib = dlopen(MYSQL_SONAME, RTLD_LAZY | RTLD_LOCAL);
@@ -282,8 +282,8 @@ int glite_lbu_DBConnectMysql(glite_lbu_DBContext ctx_gen, const char *cs) {
 	glite_lbu_DBContextMysql ctx = (glite_lbu_DBContextMysql)ctx_gen;
 
 	if (db_connect(ctx, cs, &ctx->mysql) != 0 ||
-	    glite_lbu_ExecSQL(ctx_gen, "SET AUTOCOMMIT=1", NULL) < 0 ||
-	    glite_lbu_ExecSQL(ctx_gen, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ", NULL) < 0)
+	    glite_lbu_ExecSQLMysql(ctx_gen, "SET AUTOCOMMIT=1", NULL) < 0 ||
+	    glite_lbu_ExecSQLMysql(ctx_gen, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ", NULL) < 0)
 		return STATUS(ctx);
 	else
 		return 0;
@@ -333,8 +333,8 @@ int glite_lbu_TransactionMysql(glite_lbu_DBContext ctx_gen) {
 
 	CLR_ERR(ctx);
 	if (USE_TRANS(ctx)) {
-		if (glite_lbu_ExecSQL(ctx_gen, "SET AUTOCOMMIT=0", NULL) < 0) goto err;
-		if (glite_lbu_ExecSQL(ctx_gen, "BEGIN", NULL) < 0) goto err;
+		if (glite_lbu_ExecSQLMysql(ctx_gen, "SET AUTOCOMMIT=0", NULL) < 0) goto err;
+		if (glite_lbu_ExecSQLMysql(ctx_gen, "BEGIN", NULL) < 0) goto err;
 		ctx->in_transaction = 1;
 	}
 err:
@@ -347,8 +347,8 @@ int glite_lbu_CommitMysql(glite_lbu_DBContext ctx_gen) {
 
 	CLR_ERR(ctx);
 	if (USE_TRANS(ctx)) {
-		if (glite_lbu_ExecSQL(ctx_gen, "COMMIT", NULL) < 0) goto err;
-		if (glite_lbu_ExecSQL(ctx_gen, "SET AUTOCOMMIT=1", NULL) < 0) goto err;
+		if (glite_lbu_ExecSQLMysql(ctx_gen, "COMMIT", NULL) < 0) goto err;
+		if (glite_lbu_ExecSQLMysql(ctx_gen, "SET AUTOCOMMIT=1", NULL) < 0) goto err;
 		ctx->in_transaction = 0;
 	}
 err:
@@ -361,8 +361,8 @@ int glite_lbu_RollbackMysql(glite_lbu_DBContext ctx_gen) {
 
 	CLR_ERR(ctx);
 	if (USE_TRANS(ctx)) { 
-		if (glite_lbu_ExecSQL(ctx_gen, "ROLLBACK", NULL) < 0) goto err;
-		if (glite_lbu_ExecSQL(ctx_gen, "SET AUTOCOMMIT=1", NULL) < 0) goto err;
+		if (glite_lbu_ExecSQLMysql(ctx_gen, "ROLLBACK", NULL) < 0) goto err;
+		if (glite_lbu_ExecSQLMysql(ctx_gen, "SET AUTOCOMMIT=1", NULL) < 0) goto err;
 		ctx->in_transaction = 0;
 	}
 err:
@@ -751,7 +751,7 @@ int glite_lbu_ExecPreparedStmtMysql_v(glite_lbu_Statement stmt_gen, int n, va_li
 		if (ret == -1) {
 			if (mysql_module.mysql_stmt_errno(stmt->stmt) == ER_UNKNOWN_STMT_HANDLER) {
 				// expired the prepared command ==> restore it
-				if (glite_lbu_PrepareStmt(stmt->generic.ctx, stmt->sql, &newstmt) == -1) goto failed;
+				if (glite_lbu_PrepareStmtMysql(stmt->generic.ctx, stmt->sql, &newstmt) == -1) goto failed;
 				glite_lbu_FreeStmt_int(stmt);
 				memcpy(stmt, newstmt, sizeof(struct glite_lbu_StatementMysql_s));
 				prepare_retry--;
@@ -928,7 +928,7 @@ static int transaction_test(glite_lbu_DBContext ctx, int *caps) {
 	(*caps) &= ~GLITE_LBU_DB_CAP_TRANSACTIONS;
 
 	if ((retval = glite_lbu_ExecSQLMysql(ctx, "SHOW TABLES", &stmt)) <= 0 || glite_lbu_FetchRowMysql(stmt, 1, NULL, table) < 0) goto quit;
-	glite_lbu_FreeStmt(&stmt);
+	glite_lbu_FreeStmtMysql(&stmt);
 
 	trio_asprintf(&cmd, "SHOW CREATE TABLE %|Ss", table[0]);
 	if (glite_lbu_ExecSQLMysql(ctx, cmd, &stmt) <= 0 || (retval = glite_lbu_FetchRowMysql(stmt, 2, NULL, res)) < 0 ) goto quit;
