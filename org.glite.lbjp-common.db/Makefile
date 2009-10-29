@@ -88,12 +88,10 @@ check_soname:
 		fi \
 	fi
 
-db.lo: check_soname
-
-libglite_lbu_db.la: ${LOBJS}
+libglite_lbu_db.la: check_soname ${LOBJS}
 	${LINK} -o $@ $+ ${EXT_LIBS}
 
-libglite_lbu_dbtest.la: ${LTESTOBJS}
+libglite_lbu_dbtest.la: check_soname ${LTESTOBJS}
 	${LINK} -o $@ $+ ${EXT_LIBS}
 
 dbtest.lo dbtest.o: db.c db.h
@@ -168,4 +166,4 @@ db_test.lo: libglite_lbu_dbtest.la db.h db-int.h db_test.c
 db-mysql.lo: db-mysql.c db-int.h db.h
 db-pg.lo: db-pg.c db-int.h db.h
 
-.PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage
+.PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage check_soname
