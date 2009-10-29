@@ -6,13 +6,10 @@ distdir=.
 globalprefix=glite
 lbutilsprefix=lbu
 package=glite-lb-utils-db
-version=0.2.0
 PREFIX=/opt/glite
-flavour=gcc32thr
 
-glite_location=/opt/glite
 mysql-devel_prefix=/opt/mysql
-mysql_version=4.1.11
+postgresql_prefix=/opt
 cppunit_prefix=/opt/cppunit
 thrflavour=gcc32pthr
 nothrflavour=gcc32
@@ -32,22 +29,31 @@ ifeq (${host_cpu},x86_64)
 	archlib:=lib64
 endif   
 
-MYSQL_SONAME:=$(shell ../project/get_soname.sh ${mysql-devel_prefix}/${archlib} ${mysql_prefix}/${archlib} ${mysql-devel_prefix}/lib ${mysql_prefix}/lib)
+MYSQL_SONAME:=$(shell ../project/get_soname.sh mysqlclient ${mysql-devel_prefix}/${archlib} ${mysql_prefix}/${archlib} ${mysql-devel_prefix}/lib ${mysql_prefix}/lib)
+PSQL_SONAME:=$(shell ../project/get_soname.sh pq ${postgresql_prefix}/${archlib} ${postgresql_prefix}/lib)
 
-MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/mysql -DMYSQL_SONAME=\"${MYSQL_SONAME}\"
-MYSQL_LIBS=-lz
+MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/mysql
+PSQL_CPPFLAGS=-I`pg_config --includedir`
+
 
 CFLAGS:= \
 	${DEBUG} \
-	-DVERSION=\"${version}\" \
+	-DVERSION=\"${module.version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
-	${MYSQL_CPPFLAGS} \
 	-D_GNU_SOURCE
 
 ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE
+endif
+ifneq (${mysql-devel_prefix},no)
+	OBJS:=${OBJS} db-mysql.o
+	CFLAGS:=${CFLAGS} -DMYSQL_SONAME=\"${MYSQL_SONAME}\"
+endif
+ifneq (${postgresql_prefix},no)
+	OBJS:=${OBJS} db-pg.o
+	CFLAGS:=${CFLAGS} -DPSQL_SONAME=\"${PSQL_SONAME}\"
 endif
 
 TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
@@ -59,9 +65,9 @@ COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
-EXT_LIBS:=${MYSQL_LIBS} -lglite_lbu_trio -lpthread -ldl
-OBJS:=db.o
-TESTOBJS:=dbtest.o
+EXT_LIBS:=-lglite_lbu_trio -lpthread -ldl
+TESTOBJS:=${OBJS} dbtest.o
+OBJS:=${OBJS} db.o
 HDRS:=db.h
 LOBJS:=${OBJS:.o=.lo}
 LTESTOBJS:=${TESTOBJS:.o=.lo}
@@ -69,18 +75,26 @@ LTESTOBJS:=${TESTOBJS:.o=.lo}
 default all: compile doc
 
 check_soname:
-	if [ "${MYSQL_SONAME}" = notfound ]; then \
-		echo "MySQL shared library not found!"; \
-		false; \
+	if [ "${mysql-devel_prefix}" != no ]; then \
+		if [ "${MYSQL_SONAME}" = notfound ]; then \
+			echo "MySQL shared library not found!"; \
+			false; \
+		fi \
+	fi
+	if [ "${postgresql_prefix}" != no ]; then \
+		if [ "${PSQL_SONAME}" = notfound ]; then \
+			echo "PostgreSQL shared library not found!"; \
+			false; \
+		fi \
 	fi
 
 db.lo: check_soname
 
 libglite_lbu_db.la: ${LOBJS}
-	${LINK} -o $@ $< ${EXT_LIBS}
+	${LINK} -o $@ $+ ${EXT_LIBS}
 
 libglite_lbu_dbtest.la: ${LTESTOBJS}
-	${LINK} -o $@ $< ${EXT_LIBS}
+	${LINK} -o $@ $+ ${EXT_LIBS}
 
 dbtest.lo dbtest.o: db.c db.h
 	${COMPILE} -DGLITE_LBU_DEFAULT_RESULT_BUFFER_LENGTH=10 -c $< -o $@
@@ -107,7 +121,7 @@ doc:
 
 olddoc:
 	cp ${top_srcdir}/doc/*.dox .
-	echo "PROJECT_NUMBER = ${version}" >> C.dox
+	echo "PROJECT_NUMBER = ${module.version}" >> C.dox
 	doxygen C.dox
 
 stage: compile
@@ -116,22 +130,22 @@ stage: compile
 dist: distsrc distbin
 
 distsrc:
-	mkdir -p ${top_srcdir}/${package}-${version}
-	cd ${top_srcdir} && GLOBIGNORE="${package}-${version}" && cp -Rf * ${package}-${version}
-	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${version}
-	rm -rf ${top_srcdir}/${package}-${version}
+	mkdir -p ${top_srcdir}/${package}-${module.version}
+	cd ${top_srcdir} && GLOBIGNORE="${package}-${module.version}" && cp -Rf * ${package}-${module.version}
+	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${module.version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${module.version}
+	rm -rf ${top_srcdir}/${package}-${module.version}
 
 distbin:
 	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
-	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
+	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${module.version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
         
 install: all
 	-mkdir -p ${PREFIX}/lib
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/share/doc/${package}-${module.version}
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	-cp -r C ${PREFIX}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${module.version}
+	-cp -r C ${PREFIX}/share/doc/${package}-${module.version}
 	${INSTALL} -m 755 "libglite_lbu_db.la" "${PREFIX}/lib/libglite_lbu_db.la"; \
 	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 
@@ -140,10 +154,18 @@ clean:
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 	rm -rvf db_expire db_test
 
+db-mysql.o db-mysql.lo: db-mysql.c
+	${COMPILE} ${MYSQL_CPPFLAGS} -c $<
+
+db-pg.o db-pg.lo: db-pg.c
+	${COMPILE} ${PSQL_CPPFLAGS} -c $<
+
 %.o %.lo: %.c
 	${COMPILE} -c $<
 
-db.lo: db.c db.h
-db_test.lo: libglite_lbu_dbtest.la db.h db_test.c
+db.lo: db.c db.h db-int.h
+db_test.lo: libglite_lbu_dbtest.la db.h db-int.h db_test.c
+db-mysql.lo: db-mysql.c db-int.h db.h
+db-pg.lo: db-pg.c db-int.h db.h
 
 .PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage

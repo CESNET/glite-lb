@@ -1,9 +1,6 @@
 #ifndef GLITE_LBU_DB_H
 #define GLITE_LBU_DB_H
 
-#ident "$Header$"
-
-
 #include <time.h>
 #include <stdarg.h>
 
@@ -20,12 +17,13 @@ extern "C" {
  * Database modul module API (LB & JP Utils).
  *
  * There are two ways to access DB here:
+ *
  * - simple:
- *
  * SQL commands as single string. All values are incorporated in the SQL command strings. Proper escaping is required.
- * - enhanced:
  *
+ * - enhanced:
  * Prepared SQL commands with separated parameters, functions PrepareStmt() and ExecPreparedStmt(). All values are delivered in separated buffers. Its faster for multiple using and more secure.
+ *
  * @{
  */
 
@@ -105,6 +103,16 @@ typedef enum {
 
 
 /**
+ * Supported DB backends.
+ */
+typedef enum {
+	GLITE_LBU_DB_BACKEND_MYSQL = 0,
+	GLITE_LBU_DB_BACKEND_PSQL,
+	GLITE_LBU_DB_BACKEND_LAST
+} glite_lbu_DBBackendNo;
+
+
+/**
  * Get error state from DB context.
  *
  * \param[in]  ctx   context to work with
@@ -115,11 +123,21 @@ int glite_lbu_DBError(glite_lbu_DBContext ctx, char **text, char **desc);
 
 
 /**
+ * Clear the error from DB context.
+ *
+ * \param[in] ctx  context to work with
+ */
+int glite_lbu_DBClearError(glite_lbu_DBContext ctx);
+
+
+/**
  * Initialize the database context.
  *
  * \param[out] ctx   result context
+ * \param[in]  backend  required database backend
+ * \return     error code
  */
-int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx);
+int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx, int backend);
 
 
 /**
@@ -257,7 +275,7 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
  * \param[in]   t    the converted time
  * \param[out]  str  result allocated string
  */
-void glite_lbu_TimeToDB(time_t t, char **str);
+void glite_lbu_TimeToDB(glite_lbu_DBContext ctx, time_t t, char **str);
 
 
 /** 
@@ -268,7 +286,7 @@ void glite_lbu_TimeToDB(time_t t, char **str);
  * \param[in]   t    the converted time
  * \param[out]  str  result allocated string
  */
-void glite_lbu_TimestampToDB(double t, char **str);
+void glite_lbu_TimestampToDB(glite_lbu_DBContext ctx, double t, char **str);
 
 
 /**
@@ -276,10 +294,21 @@ void glite_lbu_TimestampToDB(double t, char **str);
  *
  * String is expected in database for (ISO format).
  *
+ * \param[in] ctx  context to work with
  * \param[in] str  the converted string
  * \return         result time
  */
-time_t glite_lbu_DBToTime(const char *str);
+time_t glite_lbu_DBToTime(glite_lbu_DBContext ctx, const char *str);
+
+
+/**
+ * Convert database-specific time string to time (double).
+ *
+ * \param[in] ctx  context to work with
+ * \param[in] str  the converted string
+ * \return         result time
+ * */
+double glite_lbu_DBToTimestamp(glite_lbu_DBContext ctx, const char *str);
 
 
 /**
