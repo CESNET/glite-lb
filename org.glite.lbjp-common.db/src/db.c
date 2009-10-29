@@ -222,7 +222,7 @@ int glite_lbu_FetchRow(glite_lbu_Statement stmt, unsigned int n, unsigned long *
 
 
 void glite_lbu_FreeStmt(glite_lbu_Statement *stmt) {
-	if (!stmt || !VALID((*stmt)->ctx->backend)) return;
+	if (!stmt || !*stmt || !VALID((*stmt)->ctx->backend)) return;
 	return backends[(*stmt)->ctx->backend]->freeStmt(stmt);
 }
 

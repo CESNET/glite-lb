@@ -94,7 +94,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
 
 	while ((ret = edg_wll_FetchRow(ctx,jobs,sizeof(jobc)/sizeof(jobc[0]),NULL,jobc)) > 0) {
-		if (now > (expires = glite_lbu_DBToTime(jobc[2]))) {
+		if (now > (expires = glite_lbu_StrToTime(jobc[2]))) {
 			edg_wll_NotifExpired(ctx,jobc[0]);
 			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "[%d] NOTIFY:%s expired at %s UTC", 
 				getpid(),jobc[0],asctime(gmtime(&expires)));

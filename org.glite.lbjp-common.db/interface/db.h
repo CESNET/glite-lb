@@ -311,6 +311,13 @@ time_t glite_lbu_DBToTime(glite_lbu_DBContext ctx, const char *str);
 double glite_lbu_DBToTimestamp(glite_lbu_DBContext ctx, const char *str);
 
 
+/* Generic helper time convert functions. */
+void glite_lbu_TimeToStr(time_t t, char **str);
+void glite_lbu_TimestampToStr(double t, char **str);
+time_t glite_lbu_StrToTime(const char *str);
+double glite_lbu_StrToTimestamp(const char *str);
+
+
 /**
  * Init data structure for buffered insert
  *

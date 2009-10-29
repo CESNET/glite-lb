@@ -53,7 +53,3 @@ int glite_lbu_DBSetError(glite_lbu_DBContext ctx, int code, const char *func, in
 
 void glite_lbu_TimeToStrGeneric(time_t t, char **str, const char *amp);
 void glite_lbu_TimestampToStrGeneric(double t, char **str, const char *amp);
-void glite_lbu_TimeToStr(time_t t, char **str);
-void glite_lbu_TimestampToStr(double t, char **str);
-time_t glite_lbu_StrToTime(const char *str);
-double glite_lbu_StrToTimestamp(const char *str);
