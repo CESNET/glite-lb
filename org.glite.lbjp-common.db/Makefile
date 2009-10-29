@@ -97,7 +97,10 @@ libglite_lbu_dbtest.la: check_soname ${LTESTOBJS}
 dbtest.lo dbtest.o: db.c db.h
 	${COMPILE} -DGLITE_LBU_DEFAULT_RESULT_BUFFER_LENGTH=10 -c $< -o $@
 
-db_test: db_test.lo libglite_lbu_dbtest.la
+db_test_mysql: db_test_mysql.lo libglite_lbu_dbtest.la
+	${LINK} -o $@ $+ ${EXT_LIBS}
+
+db_test_psql: db_test_psql.lo libglite_lbu_dbtest.la
 	${LINK} -o $@ $+ ${EXT_LIBS}
 
 db_expire: db_expire.lo libglite_lbu_dbtest.la
@@ -113,7 +116,7 @@ test_coverage:
 	cd coverage && $(MAKE) -f ../Makefile top_srcdir=../../ COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage" check
 	cd coverage && for i in `echo ${OBJS} | tr ' ' '\012' | sort -u`; do gcov $$i ; done
 
-examples: db_test db_expire
+examples: db_test_mysql db_test_psql db_expire
 
 doc:
 
@@ -150,7 +153,7 @@ install: all
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
-	rm -rvf db_expire db_test
+	rm -rvf db_expire db_test db_test_mysql db_test_psql
 
 db-mysql.o db-mysql.lo: db-mysql.c
 	${COMPILE} ${MYSQL_CPPFLAGS} -c $<
@@ -158,11 +161,18 @@ db-mysql.o db-mysql.lo: db-mysql.c
 db-pg.o db-pg.lo: db-pg.c
 	${COMPILE} ${PSQL_CPPFLAGS} -c $<
 
+db_test_mysql.o db_test_mysql.lo: db_test.c
+	${COMPILE} -DMYSQL_BACKEND=1 -c $< -o $@
+
+db_test_psql.o db_test_psql.lo: db_test.c
+	${COMPILE} -DPSQL_BACKEND=1 -c $< -o $@
+
 %.o %.lo: %.c
 	${COMPILE} -c $<
 
 db.lo: db.c db.h db-int.h
-db_test.lo: libglite_lbu_dbtest.la db.h db-int.h db_test.c
+db_test_psql.lo: libglite_lbu_dbtest.la db.h db-int.h db_test.c
+db_test_mysql.lo: libglite_lbu_dbtest.la db.h db-int.h db_test.c
 db-mysql.lo: db-mysql.c db-int.h db.h
 db-pg.lo: db-pg.c db-int.h db.h
 

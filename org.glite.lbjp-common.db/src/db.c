@@ -158,14 +158,18 @@ int glite_lbu_DBError(glite_lbu_DBContext ctx, char **text, char **desc) {
 
 
 int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx, int backend) {
+	int ret;
+
 	if (!VALID(backend)) return EINVAL;
 	if (backends[backend]->backend != backend) return ENOTSUP;
-	return backends[backend]->initContext(ctx);
+	ret = backends[backend]->initContext(ctx);
+	if (ctx && *ctx) (*ctx)->backend = backend;
+	return ret;
 }
 
 
 void glite_lbu_FreeDBContext(glite_lbu_DBContext ctx) {
-	if (!VALID(ctx->backend)) return;
+	if (!ctx || !VALID(ctx->backend)) return;
 
 	free(ctx->err.desc);
 	ctx->err.desc = NULL;
