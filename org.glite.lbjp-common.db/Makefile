@@ -9,7 +9,7 @@ package=glite-lb-utils-db
 PREFIX=/opt/glite
 
 mysql-devel_prefix=/opt/mysql
-postgresql_prefix=/opt
+postgresql_prefix=/usr
 cppunit_prefix=/opt/cppunit
 thrflavour=gcc32pthr
 nothrflavour=gcc32
