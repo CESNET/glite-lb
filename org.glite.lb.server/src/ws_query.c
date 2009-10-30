@@ -409,6 +409,15 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifDrop(
 	return SOAP_OK;
 }
 
+SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityStatus(
+	struct soap*,
+	struct _lb4ague__GetActivityStatusRequest *in,
+	struct _lb4ague__GetActivityStatusResponse *out)
+{
+	/* TODO */
+	return SOAP_OK;
+}
+
 static void freeQueryRecsExt(edg_wll_QueryRec **qr) {
 	int i, j;
 

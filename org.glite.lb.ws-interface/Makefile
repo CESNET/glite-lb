@@ -27,13 +27,16 @@ STAGETO=interface
 
 WSDL=LB.wsdl LBTypes.wsdl
 
-all compile: ${WSDL} ${doc}
+all compile: ${WSDL} ${doc} glue2.xsd
 
 check: 
 	@echo No unit test required for interface-only module.
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
+
+glue2.xsd:
+	wget -O glue2.xsd http://schemas.ogf.org/glue/2008/05/spec_2.0_d42_r01 || cp ${top_srcdir}/src/glue2.xsd .
 
 install:
 	-mkdir -p ${PREFIX}/${STAGETO}
@@ -43,7 +46,8 @@ install:
 	-test -f LB.html && install -m 644 LB.html ${PREFIX}/share/doc/${package}-${version}
 # install the generated stuff instead
 #	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
-	install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
+	install -m 644 ${WSDL} glue2.xsd ${PREFIX}/${STAGETO}
+	install -m 644 ${top_srcdir}/src/lb4agu.wsdl ${PREFIX}/${STAGETO}
 
 # JP has its own version anyway
 #	if [ x${DOSTAGE} = xyes ]; then \

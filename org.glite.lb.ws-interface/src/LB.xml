@@ -30,6 +30,7 @@
 	</doc>
 
 	<import namespace="http://glite.org/wsdl/services/lb" location="LBTypes.wsdl"/>
+	<import namespace="http://glite.org/wsdl/services/lb4agu" location="lb4agu.wsdl"/>
 
 	<fault name="genericFault"/>
 

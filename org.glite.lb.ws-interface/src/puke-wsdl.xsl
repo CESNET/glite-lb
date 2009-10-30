@@ -8,6 +8,7 @@
 	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
 
 	xmlns:lb="http://glite.org/wsdl/services/lb"
+	xmlns:lb4agu="http://glite.org/wsdl/services/lb4agu"
 	xmlns:lbe="http://glite.org/wsdl/elements/lb"
 	xmlns:lbt="http://glite.org/wsdl/types/lb">
 
@@ -281,6 +282,10 @@
 			<documentation><xsl:value-of select="text()"/></documentation>
 			<port name="{/service/@name}" binding="{/service/@prefix}:{/service/@name}">
 				<soap:address location="http://test.glite.org/{/service/@prefix}:8080"/>
+			</port>
+			<!--- XXX -->
+			<port name="LoggingAndBookkeepingExecution" binding="lb4agu:LoggingAndBookkeepingExecution">
+				<soap:address location="http://test.glite.org/lb:8080"/>
 			</port>
 
 		</service>
