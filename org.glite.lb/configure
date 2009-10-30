@@ -49,6 +49,7 @@ my %extern_prefix = (
 	libtar => '/usr',
 	axis => '/usr',
 	log4c => '/usr',
+	postgresql => '/usr'
 );
 
 my %jar = (
@@ -303,7 +304,7 @@ BEGIN{
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
-	'lbjp-common.db' => [ qw/mysql:R mysql-devel:B/ ],
+	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
 	'lbjp-common.log' => [ qw// ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
