@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 /* make utility and C++ compiler in Windows NT fails to find this symbol */ 
-#if defined(WIN32) && !defined(isascii)
+#if defined(WIN32) && !defined(isascii) && !defined(HAVE_IASCII)
 # define isascii ((unsigned)(x) < 0x80)
 #endif
 

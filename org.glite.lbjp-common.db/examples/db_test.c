@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <glite/lbu/trio.h>
+
 #include "db.h"
 
 #define CS "testuser/@localhost:test"

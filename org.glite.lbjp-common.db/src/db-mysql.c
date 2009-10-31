@@ -12,7 +12,18 @@
 #include <stdarg.h>
 #include <dlfcn.h>
 #include <pthread.h>
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+#ifndef STDCALL
+#define STDCALL __stdcall
+#endif
+#else
+#define STDCALL
+#endif
 
 #include <mysql.h>
 #include <mysqld_error.h>
@@ -96,36 +107,36 @@ typedef struct {
 	void *lib;
 	pthread_mutex_t lock;
 
-	void *(*mysql_init)(void *);
-	unsigned long (*mysql_get_client_version)(void);
-	int (*mysql_options)(MYSQL *mysql, enum mysql_option option, const char *arg);
-	unsigned int (*mysql_errno)(MYSQL *mysql);
-	const char *(*mysql_error)(MYSQL *mysql);
-	unsigned int (*mysql_stmt_errno)(MYSQL_STMT *stmt);
-	const char *(*mysql_stmt_error)(MYSQL_STMT *stmt);
-	MYSQL *(*mysql_real_connect)(MYSQL *mysql, const char *host, const char *user, const char *passwd, const char *db, unsigned int port, const char *unix_socket, unsigned long client_flag);
-	void (*mysql_close)(MYSQL *mysql);
-	int (*mysql_query)(MYSQL *mysql, const char *stmt_str);
-	MYSQL_RES *(*mysql_store_result)(MYSQL *mysql);
-	void (*mysql_free_result)(MYSQL_RES *result);
-	my_ulonglong (*mysql_affected_rows)(MYSQL *mysql);
-	my_bool (*mysql_stmt_close)(MYSQL_STMT *);
-	unsigned int (*mysql_num_fields)(MYSQL_RES *result);
-	unsigned long *(*mysql_fetch_lengths)(MYSQL_RES *result);
-	my_bool (*mysql_stmt_bind_result)(MYSQL_STMT *stmt, MYSQL_BIND *bind);
-	int (*mysql_stmt_prepare)(MYSQL_STMT *stmt, const char *stmt_str, unsigned long length);
-	int (*mysql_stmt_store_result)(MYSQL_STMT *stmt);
-	MYSQL_ROW (*mysql_fetch_row)(MYSQL_RES *result);
-	MYSQL_FIELD *(*mysql_fetch_field)(MYSQL_RES *result);
-	const char *(*mysql_get_server_info)(MYSQL *mysql);
-	MYSQL_STMT *(*mysql_stmt_init)(MYSQL *mysql);
-	my_bool (*mysql_stmt_bind_param)(MYSQL_STMT *stmt, MYSQL_BIND *bind);
-	int (*mysql_stmt_execute)(MYSQL_STMT *stmt);
-	int (*mysql_stmt_fetch)(MYSQL_STMT *stmt);
-	my_ulonglong (*mysql_stmt_insert_id)(MYSQL_STMT *stmt);
-	my_ulonglong (*mysql_stmt_affected_rows)(MYSQL_STMT *stmt);
-	MYSQL_RES *(*mysql_stmt_result_metadata)(MYSQL_STMT *stmt);
-	int (*mysql_stmt_fetch_column)(MYSQL_STMT *stmt, MYSQL_BIND *bind, unsigned int column, unsigned long offset);
+	void * STDCALL(*mysql_init)(void *);
+	unsigned long STDCALL(*mysql_get_client_version)(void);
+	int STDCALL(*mysql_options)(MYSQL *mysql, enum mysql_option option, const char *arg);
+	unsigned int STDCALL(*mysql_errno)(MYSQL *mysql);
+	const char *STDCALL(*mysql_error)(MYSQL *mysql);
+	unsigned int STDCALL(*mysql_stmt_errno)(MYSQL_STMT *stmt);
+	const char *STDCALL(*mysql_stmt_error)(MYSQL_STMT *stmt);
+	MYSQL * STDCALL(*mysql_real_connect)(MYSQL *mysql, const char *host, const char *user, const char *passwd, const char *db, unsigned int port, const char *unix_socket, unsigned long client_flag);
+	void STDCALL(*mysql_close)(MYSQL *mysql);
+	int STDCALL(*mysql_query)(MYSQL *mysql, const char *stmt_str);
+	MYSQL_RES *STDCALL(*mysql_store_result)(MYSQL *mysql);
+	void STDCALL(*mysql_free_result)(MYSQL_RES *result);
+	my_ulonglong STDCALL(*mysql_affected_rows)(MYSQL *mysql);
+	my_bool STDCALL(*mysql_stmt_close)(MYSQL_STMT *);
+	unsigned int STDCALL(*mysql_num_fields)(MYSQL_RES *result);
+	unsigned long *STDCALL(*mysql_fetch_lengths)(MYSQL_RES *result);
+	my_bool STDCALL(*mysql_stmt_bind_result)(MYSQL_STMT *stmt, MYSQL_BIND *bind);
+	int STDCALL(*mysql_stmt_prepare)(MYSQL_STMT *stmt, const char *stmt_str, unsigned long length);
+	int STDCALL(*mysql_stmt_store_result)(MYSQL_STMT *stmt);
+	MYSQL_ROW STDCALL(*mysql_fetch_row)(MYSQL_RES *result);
+	MYSQL_FIELD *STDCALL(*mysql_fetch_field)(MYSQL_RES *result);
+	const char *STDCALL(*mysql_get_server_info)(MYSQL *mysql);
+	MYSQL_STMT *STDCALL(*mysql_stmt_init)(MYSQL *mysql);
+	my_bool STDCALL(*mysql_stmt_bind_param)(MYSQL_STMT *stmt, MYSQL_BIND *bind);
+	int STDCALL(*mysql_stmt_execute)(MYSQL_STMT *stmt);
+	int STDCALL(*mysql_stmt_fetch)(MYSQL_STMT *stmt);
+	my_ulonglong STDCALL(*mysql_stmt_insert_id)(MYSQL_STMT *stmt);
+	my_ulonglong STDCALL(*mysql_stmt_affected_rows)(MYSQL_STMT *stmt);
+	MYSQL_RES *STDCALL(*mysql_stmt_result_metadata)(MYSQL_STMT *stmt);
+	int STDCALL(*mysql_stmt_fetch_column)(MYSQL_STMT *stmt, MYSQL_BIND *bind, unsigned int column, unsigned long offset);
 } mysql_module_t;
 
 
@@ -249,7 +260,9 @@ int glite_lbu_InitDBContextMysql(glite_lbu_DBContext *ctx_gen) {
 			ver_u = mysql_module.mysql_get_client_version();
 			if (ver_u != MYSQL_VERSION_ID) {
 				fprintf(stderr,"Warning: MySQL library version mismatch (compiled '%d', runtime '%d')", MYSQL_VERSION_ID, ver_u);
+#ifdef SYSLOG_H
 				syslog(LOG_WARNING,"MySQL library version mismatch (compiled '%d', runtime '%d')", MYSQL_VERSION_ID, ver_u);
+#endif
 			}
 
 			pthread_mutex_unlock(&mysql_module.lock);

@@ -1,3 +1,8 @@
+#ifdef WIN32
+#define asprintf(STR, FMT...) trio_asprintf((STR), ##FMT)
+#define vasprintf(STR, FMT, VARGS) trio_asprintf((STR), (FMT), (VARGS))
+#define strcasestr(H,N) strstr((H), (N))
+#endif
 
 #define dprintf(CTX, FMT...) if ((CTX)->caps & GLITE_LBU_DB_CAP_ERRORS) fprintf(stderr, ##FMT)
 

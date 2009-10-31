@@ -42,7 +42,8 @@ CFLAGS:= \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
-	-D_GNU_SOURCE
+	-D_GNU_SOURCE \
+	-DHAVE_SYSLOG_H=1
 
 ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE

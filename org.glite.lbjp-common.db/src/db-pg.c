@@ -22,6 +22,12 @@
 #include "db.h"
 #include "db-int.h"
 
+#ifdef WIN32
+#define STDCALL __stdcall
+#else
+#define STDCALL
+#endif
+
 #define DB_CONNECT_TIMEOUT "20"
 
 #ifdef LOG
@@ -58,26 +64,26 @@ typedef struct {
 	pthread_mutex_t lock;
 
 	/* functions from 8.3.8 client library version (libpq-fe.h) */
-	PGconn *(*PQconnectdb)(const char *conninfo);
-	ConnStatusType (*PQstatus)(const PGconn *conn);
-	void (*PQfinish)(PGconn *conn);
-	char *(*PQerrorMessage)(const PGconn *conn);
-	int (*PQnfields)(const PGresult *res);
-	char *(*PQgetvalue)(const PGresult *res, int tup_num, int field_num);
-	int (*PQgetlength)(const PGresult *res, int tup_num, int field_num);
-	void (*PQclear)(PGresult *res);
-	PGresult *(*PQexec)(PGconn *conn, const char *query);
-	ExecStatusType (*PQresultStatus)(const PGresult *res);
-	char *(*PQresultErrorMessage)(const PGresult *res);
-	char *(*PQcmdTuples)(PGresult *res);
-	int (*PQntuples)(const PGresult *res);
-	char *(*PQfname)(const PGresult *res, int field_num);
-	unsigned char *(*PQescapeByteaConn)(PGconn *conn,
+	PGconn *STDCALL(*PQconnectdb)(const char *conninfo);
+	ConnStatusType STDCALL(*PQstatus)(const PGconn *conn);
+	void STDCALL(*PQfinish)(PGconn *conn);
+	char *STDCALL(*PQerrorMessage)(const PGconn *conn);
+	int STDCALL(*PQnfields)(const PGresult *res);
+	char *STDCALL(*PQgetvalue)(const PGresult *res, int tup_num, int field_num);
+	int STDCALL(*PQgetlength)(const PGresult *res, int tup_num, int field_num);
+	void STDCALL(*PQclear)(PGresult *res);
+	PGresult *STDCALL(*PQexec)(PGconn *conn, const char *query);
+	ExecStatusType STDCALL(*PQresultStatus)(const PGresult *res);
+	char *STDCALL(*PQresultErrorMessage)(const PGresult *res);
+	char *STDCALL(*PQcmdTuples)(PGresult *res);
+	int STDCALL(*PQntuples)(const PGresult *res);
+	char *STDCALL(*PQfname)(const PGresult *res, int field_num);
+	unsigned char *STDCALL(*PQescapeByteaConn)(PGconn *conn,
 		const unsigned char *from, size_t from_length,
 		size_t *to_length);
-	unsigned char *(*PQunescapeBytea)(const unsigned char *strtext,
+	unsigned char *STDCALL(*PQunescapeBytea)(const unsigned char *strtext,
 		size_t *retbuflen);
-	void (*PQfreemem)(void *ptr);
+	void STDCALL(*PQfreemem)(void *ptr);
 } psql_module_t;
 
 
