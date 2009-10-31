@@ -1,9 +1,6 @@
 /**
  * Simple postgres module with org.glite.lbjp-common.db interface.
  * 
- * Limitations:
- *  - binary results as escaped strings
- *
  * PostgreSQL limitations:
  *  - prepared commands requires server >= 8.2
  */
@@ -27,7 +24,6 @@
 
 #define DB_CONNECT_TIMEOUT "20"
 
-#define LOG 1
 #ifdef LOG
   #define lprintf(FMT...) fprintf(stdout, "[db-pg] %s: ", __FUNCTION__); fprintf(stdout, ##FMT);
 #else
@@ -312,6 +308,8 @@ int glite_lbu_RollbackPsql(glite_lbu_DBContext ctx_gen __attribute((unused))) {
 int glite_lbu_FetchRowPsql(glite_lbu_Statement stmt_gen, unsigned int maxn, unsigned long *lengths, char **results) {
 	glite_lbu_StatementPsql stmt = (glite_lbu_StatementPsql)stmt_gen;
 	unsigned int i, n;
+	size_t len;
+	char *s;
 
 	if (stmt->row >= stmt->nrows) return 0;
 
@@ -325,10 +323,11 @@ int glite_lbu_FetchRowPsql(glite_lbu_Statement stmt_gen, unsigned int maxn, unsi
 		return -1;
 	}
 	for (i = 0; i < n; i++) {
-		results[i] = psql_module.PQgetvalue(stmt->res, stmt->row, i);
 		/* sanity check for internal error (NULL when invalid row) */
-		results[i] = strdup(results[i] ? : "");
-		if (lengths) lengths[i] = psql_module.PQgetlength(stmt->res, stmt->row, i);
+		s = psql_module.PQgetvalue(stmt->res, stmt->row, i) ? : "";
+		s = psql_module.PQunescapeBytea(s, &len);
+		results[i] = strdup(s);
+		if (lengths) lengths[i] = len;
 	}
 
 	stmt->row++;

@@ -33,7 +33,7 @@ MYSQL_SONAME:=$(shell ../project/get_soname.sh mysqlclient ${mysql-devel_prefix}
 PSQL_SONAME:=$(shell ../project/get_soname.sh pq ${postgresql_prefix}/${archlib} ${postgresql_prefix}/lib)
 
 MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/mysql
-PSQL_CPPFLAGS=-I`pg_config --includedir`
+PSQL_CPPFLAGS:=-I${postgresql_prefix}/include
 
 
 CFLAGS:= \
