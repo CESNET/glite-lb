@@ -281,6 +281,29 @@ static void read_source(const edg_wll_Args* o, char* arg, char* par)
 	*(edg_wll_Source*)o->value = s;
 }
 
+/* FIXME: parse timeval from string correctly */
+static void read_timeval(const edg_wll_Args* o, char* arg, char* par)
+{
+    int v = 0;
+    if (!par)
+    {
+        printf("Option: %s  - missing timeval value\n", arg);
+        exit(1);
+    }
+    sscanf(par, "%i", &v);
+    if (o->min != o->max)
+    {
+        if (v < o->min && v > o->max)
+        {
+            printf("Option: %s  - value: %d  out of range <%d, %d>",
+                   arg, v, o->min, o->max);
+            exit(1);
+        }
+    }
+    if (o->value)
+        *(int*)o->value = v;
+}
+
 static void show_help(const edg_wll_Args* o, int prefix)
 {
     unsigned max = 0;
@@ -499,6 +522,9 @@ static int findOpt(opt_ctx_t* ctx, int olong)
 	exit(0);
     //case EDG_WLL_ARGS_SUBOPTIONS:
 	//parse_suboptions((const edg_wll_Args*)o->value, arg, par, regname);
+    case EDG_WLL_ARGS_TIMEVAL:
+	read_timeval(o, arg, par);
+	break;
     default:
 	printf("FIXME: unhandle option type %d\n", o->type);
         break;

@@ -27,6 +27,7 @@
 #define ENABLE_REASON_LENGTH
 
 static int flesh_seq(int);
+static const struct timeval null_timeval = {0,0};
 
 int main(int argc, char *argv[])
 {
@@ -104,7 +105,8 @@ int main(int argc, char *argv[])
 	"glite_jobid_t", "EDG_WLL_ARGS_JOBID",
 	"edg_wll_NotifId", "EDG_WLL_ARGS_NOTIFID",
 	"edg_wll_Source", "EDG_WLL_ARGS_SOURCE",
-	"uint16_t", "EDG_WLL_ARGS_UINT16"
+	"uint16_t", "EDG_WLL_ARGS_UINT16",
+	"struct timeval", "EDG_WLL_ARGS_TIMEVAL"
 		  );
     my %vars = ();
     for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
