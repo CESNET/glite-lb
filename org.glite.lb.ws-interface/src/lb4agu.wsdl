@@ -13,14 +13,10 @@
 <documentation>CVS revision: $Header$</documentation>
 
 <wsdl:types>
-<!--
-	<xsd:schema 
-		targetNamespace="http://schemas.ogf.org/glue/2008/05/spec_2.0_d42_r01"
-		elementFormDefault="unqualified" attributeFormDefault="unqualified">
-	</xsd:schema>
--->
+	<xsd:schema targetNamespace="http://glite.org/wsdl/elements/lb4agu" 
+		elementFormDefault="unqualified" 
+		attributeFormDefault="unqualified">
 
-	<xsd:schema targetNamespace="http://glite.org/wsdl/elements/lb4agu" elementFormDefault="unqualified" attributeFormDefault="unqualified">
 	<xsd:import namespace="http://schemas.ogf.org/glue/2008/05/spec_2.0_d42_r01" schemaLocation="glue2.xsd"/>
 	
 	<xsd:element name="GetActivityStatusRequest">
@@ -39,8 +35,23 @@
 		</xsd:complexType>
 	</xsd:element>
 	
+	<xsd:element name="GetActivityInfoRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="id" type="glue:ID_t" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="GetActivityInfoResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="status" type="glue:ComputingActivityState_t" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
 	</xsd:schema>
-
 </wsdl:types>
 
 <!-- Messages -->
@@ -55,18 +66,19 @@
 	</wsdl:part>
 </wsdl:message>
 
-<!--
 <wsdl:message name="GetActivityInfoRequest">
-	<wsdl:part name="input" element="glue:Activity_t">
+	<wsdl:part name="input" element="lb4ague:GetActivityInfoRequest">
 		<wsdl:documentation>List of jobIDs</wsdl:documentation>
 	</wsdl:part>
 </wsdl:message>
+
 <wsdl:message name="GetActivityInfoResponse">
-	<wsdl:part name="output" element="glue:???">
+	<wsdl:part name="output" element="lb4ague:GetActivityInfoResponse">
 		<wsdl:documentation>List of complete job states (incl. history?)</wsdl:documentation>
 	</wsdl:part>
 </wsdl:message>
 
+<!--
 <wsdl:message name="QueryActivityInfoRequest">
 	<wsdl:part name="input" element="glue:Activity_t">
 		<wsdl:documentation>Some desctiption of jobs to retrieve???</wsdl:documentation>
@@ -77,8 +89,8 @@
 		<wsdl:documentation>List of complete job states (incl. history?)???</wsdl:documentation>
 	</wsdl:part>
 </wsdl:message>
-
 -->
+
 
 <!-- Execution Port-Type -->
 <wsdl:portType name="LoggingAndBookkeepingExecutionPortType">
@@ -88,44 +100,42 @@
 		<wsdl:output name="o" message="lb4agu:GetActivityStatusResponse" />
 		<wsdl:fault name="f" message="lb:genericFault" />
 	</wsdl:operation>
-<!--
+
 	<wsdl:operation name="GetActivityInfo">
 		<wsdl:documentation>Return complete state information (history?) of given jobs.</wsdl:documentation>
-		<wsdl:input name="i" message="lb:GetActivityInfoRequest" />
-		<wsdl:output name="o" message="lb:GetActivityInfoRequest" />
+		<wsdl:input name="i" message="lb4agu:GetActivityInfoRequest" />
+		<wsdl:output name="o" message="lb4agu:GetActivityInfoResponse" />
 		<wsdl:fault name="f" message="lb:genericFault" />
 	</wsdl:operation>
--->
 </wsdl:portType>
 
 <binding name="LoggingAndBookkeepingExecution" type="lb4agu:LoggingAndBookkeepingExecutionPortType">
-	<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
-	<wsdl:operation name="GetActivityStatus">
-      <soap:operation style="document" />
-      <wsdl:input name="i">
-        <soap:body use="literal" />
-      </wsdl:input>
-      <wsdl:output name="o">
-        <soap:body use="literal" />
-      </wsdl:output>
-      <wsdl:fault name="f">
-        <soap:fault name="f" use="literal" />
-      </wsdl:fault>
-    </wsdl:operation>
-<!--
-	<wsdl:operation name="GetActivityInfo">
-      <soap:operation style="document" />
-      <wsdl:input name="i">
-        <soap:body use="literal" />
-      </wsdl:input>
-      <wsdl:output name="o">
-        <soap:body use="literal" />
-      </wsdl:output>
-      <wsdl:fault name="f">
-        <soap:fault name="f" use="literal" />
-      </wsdl:fault>
-    </wsdl:operation>
--->
+<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+<wsdl:operation name="GetActivityStatus">
+	<soap:operation style="document" />
+	<wsdl:input name="i">
+	<soap:body use="literal" />
+	</wsdl:input>
+	<wsdl:output name="o">
+	<soap:body use="literal" />
+	</wsdl:output>
+	<wsdl:fault name="f">
+	<soap:fault name="f" use="literal" />
+	</wsdl:fault>
+</wsdl:operation>
+
+<wsdl:operation name="GetActivityInfo">
+<soap:operation style="document" />
+	<wsdl:input name="i">
+	<soap:body use="literal" />
+	</wsdl:input>
+	<wsdl:output name="o">
+	<soap:body use="literal" />
+	</wsdl:output>
+	<wsdl:fault name="f">
+	<soap:fault name="f" use="literal" />
+	</wsdl:fault>
+</wsdl:operation>
 </binding>
 
 

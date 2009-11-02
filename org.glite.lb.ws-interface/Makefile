@@ -74,7 +74,7 @@ ${WSDL}: %.wsdl: %.xml puke-wsdl.xsl
 LB.html: doc.xml LBTypes.xml LB.xml puke-ug.xsl
 	${XSLTPROC} --novalid ../src/puke-ug.xsl $< >doc-html.xml
 	-${TIDY} -xml -m doc-html.xml
-	${XMLLINT} --valid --noout doc-html.xml
+#	${XMLLINT} --valid --noout doc-html.xml
 	${XSLTPROC} --stringparam  chapter.autolabel 0 ${docbookxls} doc-html.xml >$@
 	-${TIDY} -asxhtml -m $@
 

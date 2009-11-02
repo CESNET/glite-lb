@@ -189,7 +189,7 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_OBJS:= \
 		${BKSERVER_BASE_OBJS} \
 		${GSOAP_FILES_PREFIX}C.o ${GSOAP_FILES_PREFIX}Server.o \
-		ws_query.o ws_fault.o ws_typeref.o
+		ws_query.o ws_lb4agu.o ws_fault.o ws_typeref.o
 
 	BKSERVER_LIBS= \
 		${SRVBONES_LIB} \
