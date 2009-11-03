@@ -1,7 +1,7 @@
 top_srcdir=..
 stagedir=.
 package=glite-lb-harvester
-version=0.0.0
+module.version=0.0.0
 PREFIX=/opt/glite
 
 archlib:=lib
@@ -14,6 +14,7 @@ endif
 
 -include Makefile.inc
 -include ../project/version.properties
+version:=${module.version}
 
 CC=gcc
 VPATH=${top_srcdir}/src
@@ -45,9 +46,9 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	-mkdir -p ${PREFIX}/bin ${PREFIX}/doc/${package}
+	-mkdir -p ${PREFIX}/bin ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 755 harvester ${PREFIX}/bin/glite-lb-harvester
-	${INSTALL} -m 444 README ${PREFIX}/doc/${package}
+	${INSTALL} -m 444 ../doc/README ${PREFIX}/share/doc/${package}-${version}
 
 clean:
 	rm -rfv *.o *.lo .libs/ harvester harvester-dbg
