@@ -42,7 +42,7 @@ int component_seqcode(const char *a, edg_wll_Source index)
 	if (!strstr(a, "LBS")) snprintf(sc,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",a);
 	else snprintf(sc,EDG_WLL_SEQ_SIZE,"%s",a);
 
-	res =  sscanf(sc, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+	res =  sscanf(sc, EDG_WLL_SEQ_FORMAT_SCANF,
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -71,7 +71,7 @@ char * set_component_seqcode(char *a,edg_wll_Source index,int val)
 	if (!strstr(a, "LBS")) snprintf(sc,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",a);
 	else snprintf(sc,EDG_WLL_SEQ_SIZE,"%s",a);
 
-	res =  sscanf(sc, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+	res =  sscanf(sc, EDG_WLL_SEQ_FORMAT_SCANF,
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -88,8 +88,7 @@ char * set_component_seqcode(char *a,edg_wll_Source index,int val)
 	}
 
 	c[index] = val;
-	trio_asprintf(&ret,"UI=%06d:NS=%010d:WM=%06d:BH=%010d:JSS=%06d"
-                                ":LM=%06d:LRMS=%06d:APP=%06d:LBS=%06d",
+	trio_asprintf(&ret, EDG_WLL_SEQ_FORMAT_PRINTF,
                         c[EDG_WLL_SOURCE_USER_INTERFACE],
                         c[EDG_WLL_SOURCE_NETWORK_SERVER],
                         c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -219,7 +218,7 @@ int edg_wll_compare_seq(const char *a, const char *b)
 	if (!strstr(b, "LBS")) snprintf(scb,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",b);
 	else snprintf(scb,EDG_WLL_SEQ_SIZE,"%s",b);
 
-	res =  sscanf(sca, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+	res =  sscanf(sca, EDG_WLL_SEQ_FORMAT_SCANF,
 			&c[EDG_WLL_SOURCE_USER_INTERFACE],
 			&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -235,7 +234,7 @@ int edg_wll_compare_seq(const char *a, const char *b)
 		return -1;
 	}
 
-	res =  sscanf(scb, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+	res =  sscanf(scb, EDG_WLL_SEQ_FORMAT_SCANF,
 			&d[EDG_WLL_SOURCE_USER_INTERFACE],
 			&d[EDG_WLL_SOURCE_NETWORK_SERVER],
 			&d[EDG_WLL_SOURCE_WORKLOAD_MANAGER],

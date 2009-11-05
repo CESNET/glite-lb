@@ -31,6 +31,9 @@ extern "C" {
 #define EDG_WLL_SEQ_SIZE      	(sizeof(EDG_WLL_SEQ_NULL))
 #define EDG_WLL_SEQ_PBS_SIZE	(sizeof(EDG_WLL_SEQ_PBS_NULL))
 #define EDG_WLL_SEQ_CONDOR_SIZE EDG_WLL_SEQ_PBS_SIZE
+#define EDG_WLL_SEQ_FORMAT_PRINTF	"UI=%06d:NS=%010d:WM=%06d:BH=%010d:JSS=%06d:LM=%06d:LRMS=%06d:APP=%06d:LBS=%06d"
+#define EDG_WLL_SEQ_FORMAT_SCANF	"UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d"
+#define EDG_WLL_SEQ_FORMAT_NUMBER	9
 
 typedef struct _edg_wll_SeqCode {
 	unsigned int	type;				/* seq code type    */

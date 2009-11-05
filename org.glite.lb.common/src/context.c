@@ -335,8 +335,7 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 			/* fall through */
 		case EDG_WLL_SEQ_NORMAL:
 			c = &ctx->p_seqcode.c[0];
-			asprintf(&ret, "UI=%06d:NS=%010d:WM=%06d:BH=%010d:JSS=%06d"
-						":LM=%06d:LRMS=%06d:APP=%06d:LBS=%06d",
+			asprintf(&ret, EDG_WLL_SEQ_FORMAT_PRINTF,
 					c[EDG_WLL_SOURCE_USER_INTERFACE],
 					c[EDG_WLL_SOURCE_NETWORK_SERVER],
 					c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -385,7 +384,7 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			}
 
 			c = &ctx->p_seqcode.c[0];
-			res =  sscanf(seqcode_str, "UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d",
+			res =  sscanf(seqcode_str, EDG_WLL_SEQ_FORMAT_SCANF,
 					&c[EDG_WLL_SOURCE_USER_INTERFACE],
 					&c[EDG_WLL_SOURCE_NETWORK_SERVER],
 					&c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -401,7 +400,7 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			if (res == EDG_WLL_SOURCE_LB_SERVER-1) {
 				/* pre-collections compatibility */
 				c[EDG_WLL_SOURCE_LB_SERVER] = 0;
-			} else if (res != EDG_WLL_SOURCE__LAST-1)
+			} else if (res != EDG_WLL_SEQ_FORMAT_NUMBER)
 				return edg_wll_SetError(ctx, EINVAL,
 					"edg_wll_SetSequenceCode(): syntax error in sequence code");
 
