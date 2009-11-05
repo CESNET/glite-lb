@@ -100,9 +100,14 @@ init() {
 
 	jobreg="$GLITE_LOCATION/examples/glite-lb-job_reg -m `hostname -f`:${GLITE_LB_TEST_SERVER_PORT} -s UserInterface"
 	logev="$GLITE_LOCATION/bin/glite-lb-logevent -x -S `pwd`/LB/proxy.sockstore.sock -U localhost"
-	rtm=`pwd`/rtm
-	if [ ! -x "$rtm" ]; then
-		rtm=glite-lb-harvester
+	for dir in "`pwd`" "`pwd`/../build" "$GLITE_LOCATION/bin"; do
+		if [ -x "$dir/glite-lb-harvester-dbg" ]; then
+			rtm="$dir/glite-lb-harvester-dbg"
+		fi
+	done
+	if [ -z "$rtm" ]; then
+		echo "glite-lb-harvester-dbg not found"
+		return 1
 	fi
 
 	if echo "$GLITE_RTM_TEST_ADDITIONAL_ARGS" | grep -- '[^-]\?\(--old\>\|-o\>\)' >/dev/null; then
@@ -218,7 +223,7 @@ run_daemons() {
 	fi
 	if [ -e "`pwd`/LB/proxy-il.sock" ]; then
 		if [ "`lsof -t $(pwd)/LB/proxy-il.sock | wc -l`" != "0" ]; then
-			echo "Notification interlogger already running (using LB/proxy-il.sock, `lsof -t $(pwd)/LB/proxy-il.sock`)"
+			echo "Proxy interlogger already running (using LB/proxy-il.sock, `lsof -t $(pwd)/LB/proxy-il.sock`)"
 			quit=1
 		fi
 	fi
@@ -354,6 +359,7 @@ kill_daemons() {
 	[ ! -z "$pid3" ] && kill -9 $pid3 2>/dev/null
 	[ ! -z "$pid4" ] && kill -9 $pid4 2>/dev/null
 	rm -f "${GLITE_LB_TEST_PIDFILE}" "${GLITE_RTM_TEST_PIDFILE}"
+	rm -f `pwd`/LB/*.sock
 }
 
 
@@ -424,7 +430,7 @@ pg_get() {
 		return $?
 	fi
 	result="`cat psql.tmp`"
-	lines=`wc -l psql.tmp | cut -f1 -d' '`
+	lines=`wc -l psql.tmp | sed 's/^[ ]*//' | cut -f1 -d' '`
 #	rm psql.tmp
 	return 0
 }
@@ -470,7 +476,7 @@ my_get() {
 		return $?
 	fi
 	result=`cat mysql.tmp | tail -n +2`
-	lines=`echo "$result" | grep -v '^$' | wc -l`
+	lines=`echo "$result" | grep -v '^$' | wc -l | sed 's/^[ ]*//'`
 	echo "`date '+%Y-%m-%d %H:%M:%S'` $lines lines" >> log
 	if [ ! -z "$result" ]; then
 		echo "$result" | sed -e 's/\(.*\)/\t\1/' >> log
