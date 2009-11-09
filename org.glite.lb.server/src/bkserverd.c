@@ -25,6 +25,7 @@
 #include <arpa/nameser.h>
 #include <resolv.h>
 #include <ares.h>
+#include <ares_version.h>
 #include <errno.h>
 
 #ifdef GLITE_LB_SERVER_WITH_WS
@@ -1582,7 +1583,11 @@ struct asyn_result {
 };
 
 /* ares callback handler for ares_gethostbyaddr()       */
+#if ARES_VERSION >= 0x010500
+static void callback_handler(void *arg, int status, int timeouts, struct hostent *h)
+#else
 static void callback_handler(void *arg, int status, struct hostent *h)
+#endif
 {
 	struct asyn_result *arp = (struct asyn_result *) arg;
 
