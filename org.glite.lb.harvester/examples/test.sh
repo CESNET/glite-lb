@@ -100,9 +100,12 @@ init() {
 
 	jobreg="$GLITE_LOCATION/examples/glite-lb-job_reg -m `hostname -f`:${GLITE_LB_TEST_SERVER_PORT} -s UserInterface"
 	logev="$GLITE_LOCATION/bin/glite-lb-logevent -x -S `pwd`/LB/proxy.sockstore.sock -U localhost"
-	for dir in "`pwd`" "`pwd`/../build" "$GLITE_LOCATION/bin"; do
+	for dir in "$GLITE_LOCATION/bin" "`pwd`/../build" "`pwd`"; do
 		if [ -x "$dir/glite-lb-harvester-dbg" ]; then
 			rtm="$dir/glite-lb-harvester-dbg"
+		fi
+		if [ -x "$dir/harvester-dbg" ]; then
+			rtm="$dir/harvester-dbg"
 		fi
 	done
 	if [ -z "$rtm" ]; then

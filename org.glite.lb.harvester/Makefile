@@ -25,8 +25,12 @@ LDFLAGS:=${LDFLAGS}
 LIBS:=-L${stagedir}/${archlib} -L${stagedir}/lib \
 	-lglite_lb_common_${thrflavour} \
 	-lglite_lb_client_${thrflavour} \
-	-lglite_lbu_db \
 	-lpthread
+
+ifneq ($(GLITE_LB_HARVESTER_WITH_LBU_DB),no)
+CPPFLAGS:=$(CPPFLAGS) -DWITH_LBU_DB=1
+LIBS:=$(LIBS) -lglite_lbu_db
+endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CPPFLAGS} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
@@ -61,7 +65,7 @@ harvester-dbg: harvester-dbg.o
 	${LINK} -o $@ $+ ${LDFLAGS} ${LIBS}
 
 harvester-dbg.o: harvester.c
-	${COMPILE} -Werror -DLOG=1 -DRTM_SQL_STORAGE_ENABLED=1 -c $< -o $@
+	${COMPILE} -Werror -DLOG=1 -DWITH_RTM_SQL_STORAGE=1 -c $< -o $@
 
 %.o: %.c
 	${COMPILE} -c $<
