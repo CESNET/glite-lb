@@ -68,16 +68,14 @@ For example:
 Stop
 ====
 
-There are two "end modes":
-
-1) temporary: stop and keep all registered notification ids, notifications
-   are queued in L&B notification daemons for later delivery
+In non-daemon mode CTRL-C can be used, in daemon mode using specified
+pidfile:
 
  kill `cat /var/run/glite-lb-harvester.pid`
 
-2) full stop: with cleanup of the all notification ids
+pidfile will vanish after exit.
 
- kill -2 `cat /var/run/glite-lb-harvester.pid`
-(or just CTRL-C if not daemonized)
+All notifications are preserved on LB servers, and will expire later. You can
+purge them now, if they won't be needed:
 
-pidfile will vanish after successful cleaning up and exiting.
+ glite-lb-harvester --cleanup

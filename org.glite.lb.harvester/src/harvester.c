@@ -152,6 +152,7 @@ typedef struct {
 	char *dbcs;  // DB connection string
 	char *cert, *key;
 	int ttl;     // requested time to live (validity) of the notifications
+	int cleanup;        // if to clean up notifications on LB servers
 	int wlcg;           // dashboard messaging
 	int wlcg_no_remove; // don't remove temporary files (for debugging)
 	char *wlcg_binary;  // path msg-publish binary
@@ -207,6 +208,7 @@ static const struct option opts[] = {
  	{ "key",	required_argument,	NULL,	'K'},
 	{ "wlcg",	no_argument,		NULL,	'w'},
 	{ "old",	no_argument,		NULL,	'o'},
+	{ "cleanup",	no_argument,		NULL,	'l'},
 	{ NULL, 	no_argument, 		NULL, 	0}
 };
 
@@ -224,6 +226,7 @@ config_t config = {
 	cert: NULL,
 	key: NULL,
 	ttl: RTM_NOTIF_TTL,
+	cleanup: 0,
 	wlcg: 0,
 	silly: 0,
 
@@ -1754,22 +1757,24 @@ int reconcile_config_db() {
 	edg_wll_Context ctx = NULL;
 	edg_wll_NotifId notifid;
 
-	if (config.silly) {
-		typestart = RTM_NOTIF_TYPE_OLD;
-		typeend = RTM_NOTIF_TYPE_OLD;
-	} else {
-		typestart = RTM_NOTIF_TYPE_STATUS;
-		typeend = RTM_NOTIF_TYPE_JDL;
-	}
-	n = db.n;
-	for (i = 0; i < config.nservers; i++) {
-		a = config.notifs + i;
-		for (type = typestart; type <= typeend; type++)
-		{
-			b = db_search_notif_by_server(db.notifs, n, a->server, a->port, type);
-			if (!b) b = db_add_notif(NULL, type, 0, 0, 0, strdup(a->server), a->port, 1);
-			else lprintf(NULL, INF, "found previous notification '%s' (%s)", b->id_str, rtm_notiftype2str(b->type));
-			b->active = 1;
+	if (!config.cleanup) {
+		if (config.silly) {
+			typestart = RTM_NOTIF_TYPE_OLD;
+			typeend = RTM_NOTIF_TYPE_OLD;
+		} else {
+			typestart = RTM_NOTIF_TYPE_STATUS;
+			typeend = RTM_NOTIF_TYPE_JDL;
+		}
+		n = db.n;
+		for (i = 0; i < config.nservers; i++) {
+			a = config.notifs + i;
+			for (type = typestart; type <= typeend; type++)
+			{
+				b = db_search_notif_by_server(db.notifs, n, a->server, a->port, type);
+				if (!b) b = db_add_notif(NULL, type, 0, 0, 0, strdup(a->server), a->port, 1);
+				else lprintf(NULL, INF, "found previous notification '%s' (%s)", b->id_str, rtm_notiftype2str(b->type));
+				b->active = 1;
+			}
 		}
 	}
 
@@ -1824,6 +1829,7 @@ void usage(const char *prog) {
 		"	-C, --cert         X509 certificate file\n"
 		"	-K, --key          X509 key file\n"
 		"	-o, --old          \"silly\" mode for old L&B 3.1 servers\n"
+		"	-l, --cleanup      clean up the notifications and exit\n"
 		"	-w, --wlcg         enable messaging for dashboard\n"
 		"	--wlcg-binary      full path to msg-publish binary\n"
 		"	--wlcg-topic       topic for msg-publish\n"
@@ -1910,6 +1916,9 @@ int config_preload(int argn, char *argv[]) {
 		case 'K':
 			free(config.key);
 			config.key = strdup(optarg);
+			break;
+		case 'l':
+			config.cleanup = 1;
 			break;
 		case 'w':
 			config.wlcg = 1;
@@ -2074,15 +2083,9 @@ void handle_signal(int num) {
 	lprintf(NULL, INF, "received signal %d", num);
 	switch (num) {
 	case SIGINT:
-		quit = RTM_QUIT_CLEANUP;
-		break;
-
 	case SIGTERM:
-		quit = RTM_QUIT_PRESERVE;
-		break;
-
 	default:
-		quit = RTM_QUIT_CLEANUP;
+		quit = RTM_QUIT_PRESERVE;
 		break;
 	}
 }
@@ -2257,8 +2260,13 @@ int main(int argn, char *argv[]) {
 
 	// load previous notifications
 	if (load_notifs()) goto quit;
-	// compare lb servers from configuration and notifications
-	if (reconcile_config_db(&config, &db)) goto quit;
+	// compare lb servers from configuration and notifications,
+	// or clean up and exit if specified
+	if (reconcile_config_db()) goto quit;
+	if (config.cleanup) {
+		retval = RTM_EXIT_OK;
+		goto quit;
+	}
 
 	// signal handler
 	sa.sa_handler = handle_signal;
