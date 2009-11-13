@@ -3,6 +3,7 @@ stagedir=.
 package=glite-lb-harvester
 module.version=0.0.0
 PREFIX=/opt/glite
+globus_prefix=/opt/globus
 
 archlib:=lib
 thrflavour:=gcc32dbgpthr
@@ -19,7 +20,8 @@ version:=${module.version}
 CC=gcc
 VPATH=${top_srcdir}/src
 
-CPPFLAGS:=-I${stagedir}/include -D_GNU_SOURCE -D_REENTRANT ${CPPFLAGS}
+GLOBUS_CPPFLAGS:=-I${globus_prefix}/include/${thrflavour}
+CPPFLAGS:=${GLOBUS_CPPFLAGS} -I${stagedir}/include -D_GNU_SOURCE -D_REENTRANT ${CPPFLAGS}
 CFLAGS:=-W -Wall -g -O2 ${CFLAGS}
 LDFLAGS:=${LDFLAGS} 
 LIBS:=-L${stagedir}/${archlib} -L${stagedir}/lib \
