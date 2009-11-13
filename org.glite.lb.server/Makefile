@@ -146,15 +146,20 @@ LCAS_LIBS:=-L${lcas_prefix}/${libdir} -llcas
 #	-lvomsc${vomsflavour} \
 
 ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib
+	CLASSADS_LIBS := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib
 endif
+CLASSADS_LIBS := ${CLASSADS_LIBS} -lclassad
 
-classadslib := ${classadslib} -lclassad
+ifneq (${cares_prefix},/usr)
+	CARES_LIBS := -L${cares_prefix}/${libdir} -L${cares_prefix}/lib
+endif
+CARES_LIBS := ${CARES_LIBS} -lcares
 
 EXT_LIBS:=  \
-	-lz -lcares\
+	-lz \
 	${GRIDSITE_LIBS} \
-	${classadslib} \
+	${CLASSADS_LIBS} \
+	${CARES_LIBS} \
 	${LCAS_LIBS} \
 	${VOMS_LIBS}
 
