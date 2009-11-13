@@ -445,6 +445,7 @@ int edg_wll_QueryJobsServer(
 			if ( check_strict_jobid(ctx, jobs_out[i]) )
 			{
 				edg_wlc_JobIdFree(jobs_out[i]);
+				edg_wll_ResetError(ctx);        /* check_strict_jobid() sets it */
 				goto fetch_cycle_cleanup;
 			}
 			
