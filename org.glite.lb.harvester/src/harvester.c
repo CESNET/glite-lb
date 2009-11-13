@@ -29,7 +29,9 @@
 #include <glite/lbu/db.h>
 #endif
 #include <glite/lb/context.h>
+#ifndef WITH_OLD_LB
 #include <glite/lb/connpool.h>
+#endif
 #include <glite/lb/notification.h>
 #include <glite/lb/consumer.h>
 
@@ -105,6 +107,25 @@
 #define WLCG_BINARY "/opt/lcg/bin/msg-publish"
 #define WLCG_CONFIG "/opt/lcg/etc/msg/msg-publish.conf.wlcg"
 #define WLCG_TOPIC "org.wlcg.usage.jobStatus"
+
+
+#ifdef WITH_OLD_LB
+#define glite_jobid_t edg_wlc_JobId
+#define glite_jobid_create edg_wlc_JobIdCreate
+#define glite_jobid_recreate edg_wlc_JobIdRecreate
+#define glite_jobid_dup edg_wlc_JobIdDup
+#define glite_jobid_free edg_wlc_JobIdFree
+#define glite_jobid_parse edg_wlc_JobIdParse
+#define glite_jobid_unparse edg_wlc_JobIdUnparse
+#define glite_jobid_getServer edg_wlc_JobIdGetServer
+#define glite_jobid_getServerParts edg_wlc_JobIdGetServerParts
+#define glite_jobid_getUnique edg_wlc_JobIdGetUnique
+#endif
+#ifndef GLITE_JOBID_DEFAULT_PORT
+#define GLITE_JOBID_DEFAULT_PORT GLITE_WMSC_JOBID_DEFAULT_PORT
+#define edg_wll_NotifNew(CTX, CONDS, FLAGS, SOCK, LADDR, ID, VALID) edg_wll_NotifNew((CTX), (CONDS), (SOCK), (LADDR), (ID), (VALID))
+#define edg_wll_JDLField(STAT, NAME) NULL
+#endif
 
 // TODO: ipv6? :-)
 
@@ -254,6 +275,12 @@ static int listen_port = 0;
 #define lprintf_dbctx(T, LEVEL, FMT, ARGS...) \
 	if ((LEVEL) <= config.debug) lprintf_dbctx_func((T), (LEVEL), (FMT), ##ARGS)
 
+#ifdef WITH_OLD_LB
+int edg_wll_gss_initialize() {
+	if (globus_module_activate(GLOBUS_GSI_GSSAPI_MODULE) != GLOBUS_SUCCESS) return EINVAL;
+	return 0;
+}
+#endif
 
 void lvprintf_func(thread_t *t, const char *description, int level, const char *fmt, va_list ap) {
 	char prefix[10];
@@ -440,7 +467,6 @@ int wlcg_store_message(thread_t *t, __attribute((unused))notif_t *notif, edg_wll
 	jobid_str = stat->jobId ? glite_jobid_unparse(stat->jobId) : strdup("Unknown");
 	glite_jobid_getServerParts(stat->jobId, &lbhost, &port);
 	state_str = edg_wll_StatToString(stat->state);
-	// TODO: what to send without JDL?
 	vo = edg_wll_JDLField(stat,"VirtualOrganisation") ? : strdup("Unknown");
 
 	if (!t->dash_filename || !t->dash_fd) {
@@ -1490,20 +1516,11 @@ void *notify_thread(void *thread_data) {
 				memset(condition2, 0, sizeof(condition2));
 				flags = 0;
 				switch(notif->type) {
+#ifndef WITH_OLD_LB
 				case RTM_NOTIF_TYPE_STATUS:
 					conditions[0] = condition;
 					condition[0].attr = EDG_WLL_QUERY_ATTR_STATUS;
 					condition[0].op = EDG_WLL_QUERY_OP_CHANGED;
-					break;
-				case RTM_NOTIF_TYPE_OLD:
-					flags = EDG_WLL_STAT_CLASSADS;
-					break;
-				case RTM_NOTIF_TYPE_DONE:
-					conditions[0] = condition;
-					condition[0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-					condition[0].op = EDG_WLL_QUERY_OP_EQUAL;
-					condition[0].value.i = EDG_WLL_JOB_DONE;
-					flags = EDG_WLL_STAT_CHILDREN;
 					break;
 				case RTM_NOTIF_TYPE_JDL:
 					conditions[0] = condition;
@@ -1514,6 +1531,17 @@ void *notify_thread(void *thread_data) {
 					condition2[0].attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
 					condition2[0].op = EDG_WLL_QUERY_OP_CHANGED;
 					flags = EDG_WLL_STAT_CLASSADS;
+					break;
+#endif
+				case RTM_NOTIF_TYPE_OLD:
+					flags = EDG_WLL_STAT_CLASSADS;
+					break;
+				case RTM_NOTIF_TYPE_DONE:
+					conditions[0] = condition;
+					condition[0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+					condition[0].op = EDG_WLL_QUERY_OP_EQUAL;
+					condition[0].value.i = EDG_WLL_JOB_DONE;
+					flags = EDG_WLL_STAT_CHILDREN;
 					break;
 				default:
 					assert(notif->type != notif->type); // unknown type
@@ -1953,6 +1981,12 @@ int config_preload(int argn, char *argv[]) {
 		if (!config.wlcg_config) config.wlcg_config = strdup(WLCG_CONFIG);
 		if (!config.wlcg_topic) config.wlcg_topic = strdup(WLCG_TOPIC);
 	}
+#ifdef WITH_OLD_LB
+	if (!config.silly) {
+		lprintf(NULL, WRN, "compiled with older LB library, switching on silly mode");
+		config.silly = 1;
+	}
+#endif
 
 	if ((s = getenv("GLITE_LB_HARVESTER_NO_REMOVE")) != NULL) {
 		if (s[0] != '0' && strcasecmp(s, "false") != 0) config.wlcg_no_remove = 1;
@@ -1970,6 +2004,7 @@ int config_preload(int argn, char *argv[]) {
 		lprintf(NULL, INF, "debug level: %d", config.debug);
 		lprintf(NULL, INF, "daemonize: %s", config.daemonize ? "enabled" : "disabled");
 		lprintf(NULL, INF, "fork guard: %s", config.guard ? "enabled" : "disabled");
+		lprintf(NULL, INF, "silly compatibility mode: %s", config.silly ? "enabled" : "disabled");
 	}
 
 	return 0;
@@ -2235,11 +2270,13 @@ int main(int argn, char *argv[]) {
 		goto quit_guard;
 	}
 
+#ifndef WITH_OLD_LB
 	// connection pool manually (just for tuning memory leaks)
 	if (!edg_wll_initConnections()) {
 		lprintf(NULL, ERR, "can't initialize LB connections");
 		goto quit_guard;
 	}
+#endif
 
 #ifdef WITH_LBU_DB
 	// database
@@ -2369,7 +2406,9 @@ quit:
 	edg_wll_FreeContext(ctx);
 	db_free_notifs();
 	config_free();
+#ifndef WITH_OLD_LB
 	edg_wll_poolFree();
+#endif
 
 	return retval;
 

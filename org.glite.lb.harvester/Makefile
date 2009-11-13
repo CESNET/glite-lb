@@ -33,6 +33,9 @@ ifneq ($(GLITE_LB_HARVESTER_WITH_LBU_DB),no)
 CPPFLAGS:=$(CPPFLAGS) -DWITH_LBU_DB=1
 LIBS:=$(LIBS) -lglite_lbu_db
 endif
+ifeq ($(GLITE_LB_HARVESTER_WITH_OLD_LB),yes)
+CPPFLAGS:=$(CPPFLAGS) -DWITH_OLD_LB=1
+endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CPPFLAGS} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
