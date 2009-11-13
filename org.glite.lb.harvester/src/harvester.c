@@ -1644,7 +1644,7 @@ void *notify_thread(void *thread_data) {
 					i--;
 					continue;
 				}
-				lprintf(t, INF, "bound %d. notification '%s' (%s)", i, notif->id_str, rtm_notiftype2str(notif->type));
+				lprintf(t, INF, "bound %d. notification '%s' (%s), valid: %s", i, notif->id_str, rtm_notiftype2str(notif->type), time2str(t, notif->valid));
 				rtm_update_error_state(t, notif, i, 0);
 				// no bootstrap here, reliable delivery will send changes
 				updated = 1;
@@ -1994,6 +1994,7 @@ int config_preload(int argn, char *argv[]) {
 
 	if (INF <= config.debug) {
 		lprintf(NULL, INF, "threads: %d", config.nthreads);
+		lprintf(NULL, INF, "notifs ttl: %d", config.ttl);
 		lprintf(NULL, INF, "historic dive: %d", config.dive);
 		if (config.dbcs) {
 			lprintf(NULL, INF, "database storage: '%s'", config.dbcs);

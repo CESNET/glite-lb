@@ -347,6 +347,22 @@ start_harvester() {
 }
 
 
+cleanup_harvester() {
+	echo -n "cleaning up..."
+	X509_USER_KEY=${X509_USER_KEY} X509_USER_CERT=${X509_USER_CERT} \
+	${rtm} \
+	  -m $GLITE_RTM_TEST_DB \
+	  --cleanup \
+	  --debug 12 ${GLITE_RTM_TEST_ADDITIONAL_ARGS} >`pwd`/RTM/glite-rtm-test-cleanup.log 2>&1
+	if [ x"$?" != x"0" ]; then
+		cat `pwd`/RTM/glite-rtm-test-cleanup.log
+		echo FAILED
+		return 1
+	fi
+	echo -n "OK "
+}
+
+
 kill_daemons() {
 	pid1=`cat ${GLITE_LB_TEST_PIDFILE} 2>/dev/null`
 	[ -f "${GLITE_RTM_TEST_PIDFILE}" ] && pid2=`cat ${GLITE_RTM_TEST_PIDFILE}`
@@ -606,6 +622,14 @@ test_cleanup() {
 		return 0
 	fi
 
+	echo -n "$n_notifs notifications..."
+	my_get "SELECT notifid FROM notif_registrations" || return 1
+	if [ "$lines" != "$n_notifs" ]; then
+		echo "FAIL"
+		return 0
+	fi
+
+	cleanup_harvester || return $?
 	echo -n "0 notifications..."
 	my_get "SELECT notifid FROM notif_registrations" || return 1
 	if [ "$lines" != "0" ]; then
