@@ -384,7 +384,10 @@ for my $jar (keys %need_jars) {
 	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
 	'lb.types' => [ qw// ],
-	'lb.harvester' => [ qw/jobid.api-c lbjp-common.trio lbjp-common.db lb.common lb.client/ ],
+	'lb.harvester' => [ qw/
+		jobid.api-c lbjp-common.trio lbjp-common.db lb.common lb.client
+		security.gss
+	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],

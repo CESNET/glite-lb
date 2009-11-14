@@ -21,20 +21,23 @@ CC=gcc
 VPATH=${top_srcdir}/src
 
 GLOBUS_CPPFLAGS:=-I${globus_prefix}/include/${thrflavour}
-CPPFLAGS:=${GLOBUS_CPPFLAGS} -I${stagedir}/include -D_GNU_SOURCE -D_REENTRANT ${CPPFLAGS}
+CPPFLAGS:=-I${stagedir}/include -D_GNU_SOURCE -D_REENTRANT ${CPPFLAGS}
 CFLAGS:=-W -Wall -g -O2 ${CFLAGS}
 LDFLAGS:=${LDFLAGS} 
 LIBS:=-L${stagedir}/${archlib} -L${stagedir}/lib \
 	-lglite_lb_common_${thrflavour} \
 	-lglite_lb_client_${thrflavour} \
-	-lpthread
+	-lpthread -lglite_security_gss_${thrflavour}
 
 ifneq ($(GLITE_LB_HARVESTER_WITH_LBU_DB),no)
 CPPFLAGS:=$(CPPFLAGS) -DWITH_LBU_DB=1
 LIBS:=$(LIBS) -lglite_lbu_db
 endif
 ifeq ($(GLITE_LB_HARVESTER_WITH_OLD_LB),yes)
-CPPFLAGS:=$(CPPFLAGS) -DWITH_OLD_LB=1
+CPPFLAGS:=${GLOBUS_CPPFLAGS} $(CPPFLAGS) -DWITH_OLD_LB=1
+LIBS:=$(LIBS) -lglite_wmsutils_cjobid
+else
+LIBS:=$(LIBS) -lglite_jobid
 endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CPPFLAGS} ${CFLAGS}
@@ -64,10 +67,10 @@ clean:
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 harvester: harvester.o
-	${LINK} -o $@ $+ ${LDFLAGS} ${LIBS}
+	${LINK} -o $@ $+ ${LIBS}
 
 harvester-dbg: harvester-dbg.o
-	${LINK} -o $@ $+ ${LDFLAGS} ${LIBS}
+	${LINK} -o $@ $+ ${LIBS}
 
 harvester-dbg.o: harvester.c
 	${COMPILE} -Werror -DLOG=1 -DWITH_RTM_SQL_STORAGE=1 -c $< -o $@
