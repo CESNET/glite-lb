@@ -1,5 +1,6 @@
 #ident "$Header$"
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -9,9 +10,11 @@
 #include <string.h>
 #include <syslog.h>
 #include <fcntl.h>
+#include <stdarg.h>
+#include <errno.h>
 
+#include "glite/lbu/escape.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/escape.h"
 #include "glite/lb/events_parse.h"
 
 #include "logd_proto.h"
@@ -376,7 +379,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	dglllid_size = strlen(dglllid);
 
 	/* format the DG.USER string */
-	name_esc = edg_wll_LogEscape(name);
+	name_esc = glite_lbu_EscapeULM(name);
 	if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
 		SYSTEM_ERROR("asprintf");
 		edg_wll_ll_log(LOG_ERR,"edg_wll_log_proto_server(): nomem for DG.USER\n");
@@ -493,7 +496,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 #endif
 
 	/* if not priority send now the answer back to client */
-	if (!event->any.priority) {
+	if (!(event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT))) {
 		if (!send_answer_back(con,answer,timeout)) { 
 			answer_sent = 1;
 		}
@@ -501,7 +504,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 
 	/* send message via IPC (UNIX socket) */
 	if (!noipc) {
-		if (event->any.priority) {
+		if (event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) {
 			edg_wll_ll_log(LOG_DEBUG,"Initializing 2nd UNIX socket (%s) for priority messages confirmation...",confirm_sock_name);
 			if(init_confirmation() < 0) { 
 				edg_wll_ll_log(LOG_DEBUG,"error.\n");
@@ -525,7 +528,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 			goto edg_wll_log_proto_server_end_1;
 		} else edg_wll_ll_log(LOG_DEBUG,"o.k.\n");
 
-		if (event->any.priority) {
+		if (event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) {
 			edg_wll_ll_log(LOG_INFO,"Waiting for confirmation...");
 			if ((count = wait_for_confirmation(timeout, &answer)) < 0) {
 				edg_wll_ll_log(LOG_INFO,"error.\n");

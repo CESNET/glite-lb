@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -102,7 +103,8 @@ static
 int
 gss_reader(void *user_data, char *buffer, int max_len)
 {
-  int ret, len;
+  int ret;
+  size_t len;
   struct reader_data *data = (struct reader_data *)user_data;
   edg_wll_GssStatus gss_stat;
 
@@ -165,6 +167,7 @@ event_queue_connect(struct event_queue *eq)
   int ret;
   struct timeval tv;
   edg_wll_GssStatus gss_stat;
+  cred_handle_t *local_cred_handle;
 
   assert(eq != NULL);
 
@@ -172,16 +175,34 @@ event_queue_connect(struct event_queue *eq)
   if(!nosend) {
 #endif
 
-  if(eq->gss.context == GSS_C_NO_CONTEXT) {
+  if(eq->gss.context == NULL) {
 
     tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;
+
+    /* get pointer to the credentials */
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
 	    abort();
-    il_log(LOG_DEBUG, "    trying to connect to %s:%d\n", eq->dest_name, eq->dest_port);
-    ret = edg_wll_gss_connect(cred_handle, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
+    local_cred_handle = cred_handle;
+    local_cred_handle->counter++;
     if(pthread_mutex_unlock(&cred_handle_lock) < 0)
 	    abort();
+    
+    il_log(LOG_DEBUG, "    trying to connect to %s:%d\n", eq->dest_name, eq->dest_port);
+    ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
+    if(pthread_mutex_lock(&cred_handle_lock) < 0)
+	    abort();
+    /* check if we need to release the credentials */
+    --local_cred_handle->counter;
+    if(local_cred_handle != cred_handle && local_cred_handle->counter == 0) {
+	    OM_uint32	min_stat;
+	    gss_release_cred(&min_stat,&local_cred_handle->creds);
+	    free(local_cred_handle);
+	    il_log(LOG_DEBUG, "   freed credentials, not used anymore\n");
+    }
+    if(pthread_mutex_unlock(&cred_handle_lock) < 0) 
+	    abort();
+
     if(ret < 0) {
       char *gss_err = NULL;
 
@@ -190,7 +211,7 @@ event_queue_connect(struct event_queue *eq)
       set_error(IL_DGGSS, ret,
 	        (ret == EDG_WLL_GSS_ERROR_GSS) ? gss_err : "event_queue_connect: edg_wll_gss_connect");
       if (gss_err) free(gss_err);
-      eq->gss.context = GSS_C_NO_CONTEXT;
+      eq->gss.context = NULL;
       eq->timeout = TIMEOUT;
       return(0);
     }
@@ -213,9 +234,9 @@ event_queue_close(struct event_queue *eq)
   if(!nosend) {
 #endif
 
-  if(eq->gss.context != GSS_C_NO_CONTEXT) {
+  if(eq->gss.context != NULL) {
     edg_wll_gss_close(&eq->gss, NULL);
-    eq->gss.context = GSS_C_NO_CONTEXT;
+    eq->gss.context = NULL;
   }
 #ifdef LB_PERF
   }
@@ -237,7 +258,7 @@ event_queue_send(struct event_queue *eq)
 #ifdef LB_PERF
   if(!nosend) {
 #endif
-  if(eq->gss.context == GSS_C_NO_CONTEXT)
+  if(eq->gss.context == NULL)
     return(0);
 #ifdef LB_PERF
   }
@@ -262,16 +283,10 @@ event_queue_send(struct event_queue *eq)
 #ifdef LB_PERF
     if(!nosend) {
 #endif
-      if(msg->len) {
+	if (msg->len) {
 	    tv.tv_sec = TIMEOUT;
 	    tv.tv_usec = 0;
 	    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
-	    /* commented out due to the conflict with following ljocha's code
-	    if(ret < 0) {
-		    eq->timeout = TIMEOUT;
-		    return(0);
-	    }
-	    */
 	    if(ret < 0) {
 	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && events_sent > 0)
 	        eq->timeout = 0;
@@ -292,8 +307,8 @@ event_queue_send(struct event_queue *eq)
                     }
 		    return(0);
 	    }
-      } 
-      else { code = LB_OK; code_min = 0; rep = strdup("not sending empty message"); }
+	}
+	else { code = LB_OK; code_min = 0; rep = strdup("not sending empty message"); }
 #ifdef LB_PERF
     } else {
 	    glite_wll_perftest_consumeEventIlMsg(msg->msg+17);
@@ -322,7 +337,7 @@ event_queue_send(struct event_queue *eq)
     default: /* LB_DBERR, LB_PROTO */
       /* the event was not accepted by the server */
       /* update the event pointer */
-      if(event_store_commit(msg->es, msg->ev_len, queue_list_is_log(eq)) < 0) 
+        if(event_store_commit(msg->es, msg->ev_len, queue_list_is_log(eq), msg->generation) < 0)
 	/* failure committing message, this is bad */
 	return(-1);
       /* if we have just delivered priority message from the queue, send confirmation */

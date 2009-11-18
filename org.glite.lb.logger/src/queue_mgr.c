@@ -4,7 +4,8 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "glite/lb/consumer.h"
+#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/lb/context.h"
 
 #include "interlogd.h"
 
@@ -88,7 +89,7 @@ queue_list_add(struct queue_list **ql, const char *dest, struct event_queue *eq)
     return(-1);
   }
   el->queue = eq;
-  el->next = queues;
+  el->next = *ql;
   *ql = el;
   return 0;
 }

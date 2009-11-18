@@ -23,6 +23,8 @@ public:
 			: fd(afd), event(NONE) {}
 
 
+		virtual ~WorkDescription();
+
 	protected:
 		enum Event { NONE, READY, TIMEOUT, ERROR } event;
 		void doWork();

@@ -3,9 +3,12 @@
 #include "SocketInput.H"
 #include "PlainConnection.H"
 #include "HTTPTransport.H"
+#include "EventManager.H"
 
 const int num_threads = 2;
 const char *sock_path = "/tmp/il_sock";
+
+EventManager theEventManager();
 
 int main(int argc, char *argv[])
 {
@@ -16,8 +19,10 @@ int main(int argc, char *argv[])
 
 	// create unix socket with plain IO and HTTP transport
 	input = new SocketInput(sock_path, 
-				&PlainConnection::theFactory, 
-				&HTTPTransport::theFactory);
+				PlainConnection::Factory::instance(), 
+				HTTPTransport::Factory::instance());
+	// and add the socket to pool
+	ThreadPool::instance()->setWorkAccept(input);
 
 	// start worker threads
 	ThreadPool::instance()->startWorkers(num_threads);

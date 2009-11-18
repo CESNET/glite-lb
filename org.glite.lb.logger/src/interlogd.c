@@ -4,15 +4,14 @@
    interlogger - collect events from local-logger and send them to logging and bookkeeping servers
 
 */
+#include <stdio.h>
 #include <getopt.h>
 #include <string.h>
 #include <signal.h>
 #include <pthread.h>
-
-#include <globus_common.h>
+#include <errno.h>
 
 #include "interlogd.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/log_proto.h"
 #include "glite/security/glite_gss.h"
 #ifdef LB_PERF
@@ -35,7 +34,7 @@ int killflg = 0;
 
 int TIMEOUT = DEFAULT_TIMEOUT;
 
-gss_cred_id_t cred_handle = GSS_C_NO_CREDENTIAL;
+cred_handle_t *cred_handle = NULL;
 pthread_mutex_t cred_handle_lock = PTHREAD_MUTEX_INITIALIZER;
 
 time_t key_mtime = 0, cert_mtime = 0;
@@ -58,6 +57,7 @@ static void usage (int status)
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
 	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers (default, timeout==0 means turn lazy off)\n"
+	       "  -p, --parallel [<num>]     use <num> parallel streams to the same server\n"
 #ifdef LB_PERF
 	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
 	       "  -S, --nosync               PERFTEST: do not check logd files for lost events\n"
@@ -80,6 +80,8 @@ char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
 int lazy_close = 1;
 int default_close_timeout;
+size_t max_store_size;
+int parallel = 0;
 #ifdef LB_PERF
 int nosend = 0, norecover=0, nosync=0, noparse=0;
 char *event_source = NULL;
@@ -106,6 +108,8 @@ static struct option const long_options[] =
   {"log-server", required_argument, 0, 'l'},
   {"socket", required_argument, 0, 's'},
   {"lazy", optional_argument, 0, 'L'},
+  {"max-store", required_argument, 0, 'M'},
+  {"parallel", optional_argument, 0, 'p'},
 #ifdef LB_PERF
   {"nosend", no_argument, 0, 'n'},
   {"nosync", no_argument, 0, 'S'},
@@ -139,8 +143,9 @@ decode_switches (int argc, char **argv)
 			   "k:"          /* key */
 			   "C:"          /* CA dir */
 			   "b"  /* only bookeeping */
-                           "l:" /* log server */
+               "l:" /* log server */
 			   "d" /* debug */
+			   "p" /* parallel */
 #ifdef LB_PERF
 			   "n" /* nosend */
 			   "S" /* nosync */
@@ -150,9 +155,10 @@ decode_switches (int argc, char **argv)
 			   "e:" /* event file */
 			   "j:" /* num jobs */
 #endif
-#endif			   
+#endif
 			   "L::" /* lazy */
-			   "s:", /* socket */
+			   "s:" /* socket */
+			   "M:" /* max-store */,
 			   long_options, (int *) 0)) != EOF)
     {
       switch (c)
@@ -202,7 +208,7 @@ decode_switches (int argc, char **argv)
 
 	case 'L':
 		lazy_close = 1;
-		if(optarg) 
+		if(optarg)
 		        default_close_timeout = atoi(optarg);
 			if(default_close_timeout == 0) {
 				default_close_timeout = TIMEOUT;
@@ -210,6 +216,17 @@ decode_switches (int argc, char **argv)
 			}
 		else
 			default_close_timeout = TIMEOUT;
+		break;
+
+	case 'M':
+		max_store_size = atoi(optarg);
+		break;
+
+	case 'p':
+		if(optarg)
+			parallel = atoi(optarg);
+		else
+			parallel = 4;
 		break;
 
 #ifdef LB_PERF
@@ -253,6 +270,7 @@ void handle_signal(int num) {
     il_log(LOG_DEBUG, "Received signal %d\n", num);
     killflg++;
 }
+
 
 int
 main (int argc, char **argv)
@@ -321,11 +339,18 @@ main (int argc, char **argv)
 	  il_log(LOG_DEBUG, "  using lazy mode when closing connections, timeout %d\n",
 		 default_close_timeout);
 
+  /* get credentials */
   if (CAcert_dir)
      setenv("X509_CERT_DIR", CAcert_dir, 1);
-
   edg_wll_gss_watch_creds(cert_file,&cert_mtime);
-  ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred_handle, NULL, &gss_stat);
+  cred_handle = malloc(sizeof(*cred_handle));
+  if(cred_handle == NULL) {
+	  il_log(LOG_CRIT, "Failed to allocate structure for credentials.\n");
+	  exit(EXIT_FAILURE);
+  }
+  cred_handle->creds = NULL;
+  cred_handle->counter = 0;
+  ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred_handle->creds, NULL, &gss_stat);
   if (ret) {
      char *gss_err = NULL;
      char *str;
@@ -333,17 +358,12 @@ main (int argc, char **argv)
      if (ret == EDG_WLL_GSS_ERROR_GSS)
 	edg_wll_gss_get_error(&gss_stat, "edg_wll_gss_acquire_cred_gsi()", &gss_err);
      asprintf(&str, "Failed to load GSI credential: %s\n",
-	      (gss_err) ? gss_err : "edg_wll_gss_acquire_cred_gsi() failed"); 
+	      (gss_err) ? gss_err : "edg_wll_gss_acquire_cred_gsi() failed");
      il_log(LOG_CRIT, str);
      free(str);
      if (gss_err)
 	free(gss_err);
      exit(EXIT_FAILURE);
-  }
-  
-  if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS)	{
-  	il_log(LOG_CRIT, "Failed to initialize Globus common module\n");
-  	exit(EXIT_FAILURE);
   }
 
 #ifndef PERF_EMPTY
@@ -356,7 +376,7 @@ main (int argc, char **argv)
 	  }
   } else
 #endif
-  { 
+  {
 	  pthread_t rid;
 
 	  il_log(LOG_INFO, "Starting recovery thread...\n");

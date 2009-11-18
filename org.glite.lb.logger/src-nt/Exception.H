@@ -4,4 +4,10 @@
 class Exception {
 };
 
+class FatalException {
+};
+
+
+#define E_ASSERT(a) if(!(a)) { throw new FatalException; }
+
 #endif

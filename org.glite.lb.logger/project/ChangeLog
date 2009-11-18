@@ -22,13 +22,22 @@
 - fixed sending empty events
 - do not syslog "error reading server reply" unnecessarily
 
-1.4.11-1
-- Support chconfig in startup scripts (#27055)
-- Proper kill signal handling (#36470)
+2.0.0-1
+- LB 2.0 release
 
-1.4.11-2
-- L&B server export to MSG
+2.0.0-2
+- fixed configure to work in etics
 
-1.4.11-3
-- Module Repacked
+2.0.0-3
+- Fixed typos in the Makefile
 
+2.0.0-4
+- configure script update (globus flavors added to configure call)
+
+2.0.1-1
+- (from 1.4.11-1) Support chconfig in startup scripts (#27055)
+- (from 1.4.11-1) Proper kill signal handling (#36470)
+
+2.0.2-1
+- implemented multi-file event store, avoiding ever-growing files
+  in the case of heavy traffic notifications

@@ -1,22 +1,23 @@
 #ident "$Header$"
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <signal.h>
 #include <unistd.h> 
 #include <string.h>
 #include <getopt.h>
-
-#include <globus_common.h>
+#include <errno.h>
 
 #include "glite/lb/context-int.h"
+#include "glite/lb/timeouts.h"
 #include "logd_proto.h"
-#include "glite/lb/consumer.h"
 #include "glite/security/glite_gss.h"
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -146,17 +147,14 @@ void handle_signal(int num) {
  *----------------------------------------------------------------------
  */
 static int
-doit(int socket, gss_cred_id_t cred_handle, char *file_name_prefix, int noipc, int noparse)
+doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc, int noparse)
 {
     char 	*subject;
     int 	ret,fd,count;
     struct timeval timeout;
     edg_wll_GssConnection	con;
     edg_wll_GssStatus	gss_stat;
-    gss_buffer_desc	gss_token = GSS_C_EMPTY_BUFFER;
-    gss_name_t	client_name = GSS_C_NO_NAME;
-    OM_uint32	min_stat;
-    gss_OID	name_type = GSS_C_NO_OID;
+    edg_wll_GssPrincipal client = NULL;
     fd_set fdset;
     struct sockaddr_in	peer;
     socklen_t	alen = sizeof peer;
@@ -179,34 +177,24 @@ doit(int socket, gss_cred_id_t cred_handle, char *file_name_prefix, int noipc, i
 
     /* authenticate */
     edg_wll_ll_log(LOG_INFO,"Processing authentication:\n");
-    gss_stat.major_status = gss_inquire_context(&gss_stat.minor_status, con.context,
-	                                        &client_name, NULL, NULL, NULL, NULL,
-						NULL, NULL);
-    if (GSS_ERROR(gss_stat.major_status)) {
-       char *gss_err;
-       edg_wll_gss_get_error(&gss_stat, "Cannot read client identification", &gss_err);
-       edg_wll_ll_log(LOG_WARNING, "%s: %s\n", inet_ntoa(peer.sin_addr),gss_err);
-       free(gss_err);
-    } else {
-       gss_stat.major_status = gss_display_name(&gss_stat.minor_status, client_name,
-	                                        &gss_token, &name_type);
-       if (GSS_ERROR(gss_stat.major_status)) {
-	  char *gss_err;
-	  edg_wll_gss_get_error(&gss_stat, "Cannot process client identification", &gss_err);
-	  edg_wll_ll_log(LOG_WARNING, "%s: %s\n",inet_ntoa(peer.sin_addr),gss_err);
-	  free(gss_err);
-       }
+    ret = edg_wll_gss_get_client_conn(&con, &client, &gss_stat);
+    if (ret) {
+        char *gss_err;
+        edg_wll_gss_get_error(&gss_stat, "Cannot read client identification", &gss_err);
+        edg_wll_ll_log(LOG_WARNING, "%s: %s\n", inet_ntoa(peer.sin_addr),gss_err);
+        free(gss_err);
     }
 
-    if (GSS_ERROR(gss_stat.major_status) || edg_wll_gss_oid_equal(name_type, GSS_C_NT_ANONYMOUS)) {
+    if (ret || client->flags & EDG_WLL_GSS_FLAG_ANON) {
 	edg_wll_ll_log(LOG_INFO,"  User not authenticated, setting as \"%s\". \n",EDG_WLL_LOG_USER_DEFAULT);
 	subject=strdup(EDG_WLL_LOG_USER_DEFAULT);
     } else {
 	edg_wll_ll_log(LOG_INFO,"  User successfully authenticated as:\n");
-	edg_wll_ll_log(LOG_INFO, "   %s\n", (char *)gss_token.value);
-	subject=gss_token.value;
-	memset(&gss_token.value, 0, sizeof(gss_token.value));
+	edg_wll_ll_log(LOG_INFO, "   %s\n", client->name);
+	subject=strdup(client->name);
     }
+    if (client)
+	edg_wll_gss_free_princ(client);
 
     /* get and process the data */
     timeout.tv_sec = CONNECTION_TIMEOUT;
@@ -266,10 +254,6 @@ doit_end:
 	if (con.sock == -1) 
 		edg_wll_ll_log(LOG_DEBUG, "o.k.\n");
 	if (subject) free(subject);
-	if (gss_token.length)
-		gss_release_buffer(&min_stat, &gss_token);
-	if (client_name != GSS_C_NO_NAME)
-		gss_release_name(&min_stat, &client_name);
 	return ret;
 }
 
@@ -291,12 +275,9 @@ int main(int argc, char *argv[])
    struct sockaddr_in client_addr;
    int client_addr_len;
 
-   char *my_subject_name = NULL;
-
    time_t	cert_mtime = 0, key_mtime = 0;
-   OM_uint32	min_stat;
    edg_wll_GssStatus	gss_stat;
-   gss_cred_id_t	cred = GSS_C_NO_CREDENTIAL;
+   edg_wll_GssCred	cred = NULL;
 
 
    setlinebuf(stdout);
@@ -373,18 +354,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    if (CAcert_dir)
 	setenv("X509_CERT_DIR", CAcert_dir, 1);
 
-   /* initialize Globus common module */
-/* XXX: obsolete?
-   edg_wll_ll_log(LOG_INFO,"Initializing Globus common module...");
-   if (globus_module_activate(GLOBUS_COMMON_MODULE) != GLOBUS_SUCCESS) {
-	edg_wll_ll_log(LOG_NOTICE,"no.\n");
-	edg_wll_ll_log(LOG_CRIT, "Failed to initialize Globus common module. Exiting.\n");
-	exit(1);
-   } else {
-	edg_wll_ll_log(LOG_INFO,"yes.\n");
-   }
-*/
-
    /* initialize signal handling */
    if (mysignal(SIGUSR1, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGUSR2, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
@@ -401,25 +370,17 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
  
    edg_wll_gss_watch_creds(cert_file,&cert_mtime);
    /* XXX DK: support noAuth */
-   ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &my_subject_name, 
-		&gss_stat);
+   ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &gss_stat);
    if (ret) {
 	/* XXX DK: call edg_wll_gss_get_error() */
 	edg_wll_ll_log(LOG_CRIT,"Failed to get GSI credentials. Exiting.\n");
 	exit(1);
    }
 
-   if (my_subject_name!=NULL) {
-	edg_wll_ll_log(LOG_INFO,"Server running with certificate: %s\n",my_subject_name);
-	free(my_subject_name);
+   if (cred->name!=NULL) {
+	edg_wll_ll_log(LOG_INFO,"Server running with certificate: %s\n",cred->name);
    } else if (noAuth) {
 	edg_wll_ll_log(LOG_INFO,"Server running without certificate\n");
-#if 0
-   /* XXX DK: */    
-   } else {
-	edg_wll_ll_log(LOG_CRIT,"No server credential found. Exiting.\n");
-	exit(1);
-#endif
    }
 
    /* do listen */
@@ -427,7 +388,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    listener_fd = do_listen(port);
    if (listener_fd == -1) {
 	edg_wll_ll_log(LOG_CRIT,"Failed to listen on port %d\n",port);
-	gss_release_cred(&min_stat, &cred);
+	edg_wll_gss_release_cred(&cred, NULL);
 	exit(-1);
    } else {
 	edg_wll_ll_log(LOG_DEBUG,"Listener's socket descriptor is '%d'\n",listener_fd);
@@ -452,6 +413,8 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
     * Main loop
     */
    while (1) {
+        int opt;
+
 	edg_wll_ll_log(LOG_INFO,"Accepting incomming connections...\n");
 	client_fd = accept(listener_fd, (struct sockaddr *) &client_addr,
 			&client_addr_len);
@@ -459,22 +422,31 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 		close(listener_fd);
 		edg_wll_ll_log(LOG_CRIT,"Failed to accept incomming connections\n");
 		SYSTEM_ERROR("accept");
-		gss_release_cred(&min_stat, &cred);
+		edg_wll_gss_release_cred(&cred, NULL);
 		exit(-1);
 	} else {
 		edg_wll_ll_log(LOG_DEBUG,"Incomming connection on socket '%d'\n",client_fd);
 	}
 
+	opt = 0;
+	if (setsockopt(client_fd,IPPROTO_TCP,TCP_CORK,(const void *) &opt,sizeof opt)) {
+		edg_wll_ll_log(LOG_WARNING,"Can't reset TCP_CORK\n");
+	}
+	opt = 1;
+	if (setsockopt(client_fd,IPPROTO_TCP,TCP_NODELAY,(const void *) &opt,sizeof opt)) {
+		edg_wll_ll_log(LOG_WARNING,"Can't set TCP_NODELAY\n");
+	}
+
 	switch (edg_wll_gss_watch_creds(cert_file,&cert_mtime)) {
-	gss_cred_id_t newcred;
+	edg_wll_GssCred newcred;
 	case 0: break;
 	case 1:
-		ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,NULL,&gss_stat);
+		ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,&gss_stat);
 		if (ret) {
 			edg_wll_ll_log(LOG_WARNING,"Reloading credentials failed, continue with older\n");
 		} else {
 			edg_wll_ll_log(LOG_DEBUG,"Reloading credentials succeeded\n");
-			gss_release_cred(&min_stat, &cred);
+			edg_wll_gss_release_cred(&cred, NULL);
 			cred = newcred;
 		}
 		break;
@@ -509,6 +481,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 
 end:
 	if (listener_fd) close(listener_fd);
-	gss_release_cred(&min_stat, &cred);
+	edg_wll_gss_release_cred(&cred, NULL);
 	exit(ret);
 }

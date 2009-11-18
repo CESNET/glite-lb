@@ -3,6 +3,7 @@
 
 #include "ThreadPool.H"
 #include "Transport.H"
+#include "Singleton.H"
 
 #include <string>
 
@@ -10,20 +11,18 @@ class HTTPTransport:
 	public Transport
 {
 public:
-	class Factory: public Transport::Factory {
+
+	// factory class
+	class Factory: public Transport::Factory, 
+		       public Singleton<HTTPTransport::Factory>  {
 	public:
-		virtual Transport *newTransport(Connection *conn) const {
-			if(conn) 
-				return(new HTTPTransport(conn));
-			else 
-				return NULL;
+		virtual Transport *newTransport() const {
+			return(new HTTPTransport());
 		}
 	};
 
-	static Factory theFactory;
-
-	HTTPTransport(Connection *conn) 
-		: Transport(conn),
+	HTTPTransport() 
+		: Transport(),
 		  state(NONE),
 		  request(), headers(), body(NULL), pos(NULL),
 		  content_length(0)
@@ -31,12 +30,9 @@ public:
 
 	virtual ~HTTPTransport();
 
-
-protected:
-	// from ThreadPool::WorkDescription
-	virtual void onReady();
-	virtual void onTimeout();
-	virtual void onError();
+	virtual int receive(Connection *conn, Message* &msg);
+	virtual int send(Connection *conn, Message* msg);
+	virtual void reset();
 
 private:
 	enum { NONE, 
@@ -51,6 +47,7 @@ private:
 	unsigned int content_length;
 
 	int parseHeader(const char *s, unsigned int len);
+	void serializeHeaders(Message *msg);
 };
 
 

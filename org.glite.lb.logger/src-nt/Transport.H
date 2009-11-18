@@ -2,25 +2,32 @@
 #define _TRANSPORT_H
 
 #include "Connection.H"
+#include "Message.H"
 
-
-class Transport: public ThreadPool::WorkDescription {
+// Transport implements transport protocol 
+//  - reads/writes messages using Connection interface
+//  - 
+class Transport {
 public:
+
+	// 
 	class Factory {
 	public:
-		virtual Transport *newTransport(Connection *conn) const = 0;
+		virtual Transport *newTransport() const = 0;
+
+		virtual ~Factory() 
+			{}
 	};
 
-	Transport(Connection *a_conn) 
-		: conn(a_conn),
-		  ThreadPool::WorkDescription(a_conn ? a_conn->getFD() : -1)
+	//
+	Transport() 
 		{}
 
-	virtual ~Transport() 
-		{ if(conn) delete conn; }
+	virtual ~Transport();
 
-protected:
-	Connection *conn;
-
+	// 
+	virtual int receive(Connection *conn, Message* &msg) = 0;
+	virtual int send(Connection *conn, Message* msg) = 0;
+	virtual void reset() = 0;
 };
 #endif

@@ -8,6 +8,8 @@ public:
 	public:
 		virtual Connection *newConnection(int fd) const = 0;
 		virtual Connection *accept(int fd) const = 0;
+
+		virtual ~Factory() {}
 	};
 
 	class Endpoint {

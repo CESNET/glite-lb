@@ -2,22 +2,23 @@
 #define _PLAIN_CONNECTION_H
 
 #include "Connection.H"
-
+#include "Singleton.H"
 
 class PlainConnection: 
 	public Connection
 {
 public:
-	class Factory: public Connection::Factory {
+	class Factory: public Connection::Factory, 
+		       public Singleton<PlainConnection::Factory> {
 	public:
  		virtual Connection *newConnection(int fd) const {
 			return new PlainConnection(fd);
 		}
 
 		virtual Connection *accept(int fd) const;
-	};
 
-	static Factory theFactory;
+		virtual ~Factory() {}
+	};
 
 	PlainConnection(int a_fd): Connection(a_fd)
 		{}

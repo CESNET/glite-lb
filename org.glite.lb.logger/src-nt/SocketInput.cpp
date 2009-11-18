@@ -6,7 +6,8 @@
 
 #include "ThreadPool.H"
 #include "SocketInput.H"
-
+#include "InputChannel.H"
+#include "Exception.H"
 
 
 // create unix domain socket for input
@@ -21,6 +22,7 @@ SocketInput::SocketInput(const char *path,
 	saddr.sun_family = AF_UNIX;
 	strcpy(saddr.sun_path, path);
 	fd = socket(PF_UNIX, SOCK_STREAM, 0);
+	if(fd < 0) throw new Exception;
 	if(connect(fd, (struct sockaddr*)&saddr, sizeof(saddr.sun_path)) < 0) {
 		if(errno == ECONNREFUSED) {
 			unlink(saddr.sun_path);
@@ -29,9 +31,10 @@ SocketInput::SocketInput(const char *path,
 		// another instance running
 		// throw new Exception
 	}
-	bind(fd, (struct sockaddr *)&saddr, sizeof(saddr));
-	listen(fd, SOCK_QUEUE_MAX);
-	ThreadPool::instance()->setWorkAccept(this);
+	if(bind(fd, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) 
+		throw new Exception;
+	if(listen(fd, SOCK_QUEUE_MAX) < 0)
+		throw new Exception;
 }
 
 
@@ -48,8 +51,9 @@ void
 SocketInput::onReady()
 {
 	Connection *conn = cFactory->accept(fd);
-	Transport  *trans = tFactory->newTransport(conn);
-	ThreadPool::instance()->queueWorkRead(trans);
+	Transport  *trans = tFactory->newTransport();
+	InputChannel *channel = new InputChannel(conn, trans);
+	channel->start();
 }
 
 

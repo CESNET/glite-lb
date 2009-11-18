@@ -180,7 +180,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 
 	/* catchup with all neccessary event files */
 	if(job_id_s) {
-		struct event_store *es = event_store_find(job_id_s);
+		struct event_store *es = event_store_find(job_id_s, NULL);
 
 		if(es == NULL) {
 			goto cmd_error;
@@ -356,17 +356,19 @@ handle_msg(il_octet_string_t *event, long offset)
   
 	/* sync event store with IPC (if neccessary)
 	 * This MUST be called before inserting event into output queue! */
-	if((es = event_store_find(msg->job_id_s)) == NULL) 
+	if((es = event_store_find(msg->job_id_s, NULL)) == NULL) 
 		return(-1);
 	msg->es = es;
-
+	
 #ifdef LB_PERF
 	if(nosync) 
 		ret = 1;
 	else 
 #endif
 		ret = event_store_sync(es, offset);
+	/* no longer informative:
 	il_log(LOG_DEBUG, "  syncing event store at %d with event at %d, result %d\n", es->offset, offset, ret);
+	*/
 	if(ret < 0) {
 		il_log(LOG_ERR, "    handle_msg: error syncing event store:\n      %s\n", error_get_msg());
 		/* XXX should error during event store recovery cause us to drop the message? */
@@ -431,7 +433,7 @@ loop()
 {
 	/* receive events */
 	while(1) {
-		il_octet_string_t msg;
+		il_octet_string_t *msg;
 		long offset;
 		int ret;
     
@@ -456,17 +458,17 @@ loop()
 		}
 
 #ifdef PERF_EMPTY
-		glite_wll_perftest_consumeEventString(msg.data);
-		free(msg.data);
+		glite_wll_perftest_consumeEventString(msg->data);
+		free(msg->data);
 		continue;
 #endif
 
 #ifdef INTERLOGD_HANDLE_CMD		
-		ret = handle_cmd(&msg, offset);
+		ret = handle_cmd(msg, offset);
 		if(ret == 0)
 #endif
-			ret = handle_msg(&msg, offset);
-		free(msg.data);
+			ret = handle_msg(msg, offset);
+		if(msg->data) free(msg->data);
 		if(ret < 0)
 			switch (error_get_maj()) {
 				case IL_SYS:

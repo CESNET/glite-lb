@@ -134,7 +134,7 @@ public:
 class ThreadPoolTest: public CppUnit::TestFixture
 {
 	CPPUNIT_TEST_SUITE( ThreadPoolTest );
-//	CPPUNIT_TEST( testWorkQueue );
+	CPPUNIT_TEST( testWorkQueue );
 	CPPUNIT_TEST( testPoll );
 	CPPUNIT_TEST( testAccept );
 	CPPUNIT_TEST_SUITE_END();

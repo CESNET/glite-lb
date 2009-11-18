@@ -243,14 +243,19 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
  */
 #ifdef PERF_EVENTS_INLINE
 int
-input_queue_get(il_octet_string *buffer, long *offset, int timeout)
+input_queue_get(il_octet_string **buffer, long *offset, int timeout)
 {
 	static long o = 0;
 	int len;
 	char *jobid;
+	static il_octet_string_t my_buffer;
 
-	len = glite_wll_perftest_produceEventString(&buffer->data, &jobid);
-	buffer->len = len;
+	assert(buffer != NULL);
+
+	*buffer = &my_buffer;
+
+	len = glite_wll_perftest_produceEventString(&my_buffer.data, &jobid);
+	my_buffer.len = len;
 	if(len) {
 		o += len;
 		*offset = o;
@@ -261,13 +266,16 @@ input_queue_get(il_octet_string *buffer, long *offset, int timeout)
 }
 #else
 int
-input_queue_get(il_octet_string_t *buffer, long *offset, int timeout)
+input_queue_get(il_octet_string_t **buffer, long *offset, int timeout)
 {
   fd_set fds;
   struct timeval tv;
   int msg_len;
+  static il_octet_string_t my_buffer;
 
   assert(buffer != NULL);
+
+  *buffer = &my_buffer;
 
   FD_ZERO(&fds);
   FD_SET(sock, &fds);
@@ -300,16 +308,16 @@ input_queue_get(il_octet_string_t *buffer, long *offset, int timeout)
     return(-1);
   }
 
-  read_event(accepted, offset, buffer);
+  read_event(accepted, offset, &my_buffer);
   close(accepted);
 
-  if(buffer->data == NULL) {
+  if(my_buffer.data == NULL) {
     if(error_get_maj() != IL_OK)
       return(-1);
     else
       return(0);
   }
     
-  return(buffer->len);
+  return(my_buffer.len);
 }
 #endif

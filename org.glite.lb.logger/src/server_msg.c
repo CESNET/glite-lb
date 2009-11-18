@@ -7,7 +7,6 @@
 #include "interlogd.h"
 #include "glite/lb/il_msg.h" 
 #include "glite/lb/events_parse.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/context.h"
 
 static
@@ -17,7 +16,7 @@ create_msg(il_octet_string_t *ev, char **buffer, long *receipt, time_t *expires)
   char *p;  int  len;
   char *event = ev->data;
 
-  *receipt = 0;
+  *receipt = 0L;
 
 #if defined(INTERLOGD_EMS)
   /* find DG.LLLID */
@@ -42,18 +41,19 @@ create_msg(il_octet_string_t *ev, char **buffer, long *receipt, time_t *expires)
       int n;
       
       p += 12; /* skip the key and = */
-      if((n = atoi(p)) == 0) {
+      n = atoi(p);
+      if((n & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) == 0) {
 	/* normal asynchronous message */
-	*receipt = 0;
+	      *receipt = 0L;
       }
     } else {
       /* could not find priority key */
-      *receipt = 0;
+      *receipt = 0L;
     }
     
   } else {
     /* could not find local logger PID, confirmation can not be sent */
-    *receipt = 0;
+    *receipt = 0L;
   }
 #endif
 
@@ -119,11 +119,12 @@ server_msg_copy(struct server_msg *src)
   msg->receipt_to = src->receipt_to;
   msg->offset = src->offset;
 #if defined(IL_NOTIFICATIONS)
-  msg->dest_name = strdup(src->dest_name);
+  msg->dest_name = src->dest_name ? strdup(src->dest_name) : NULL;
   msg->dest_port = src->dest_port;
-  msg->dest = strdup(src->dest);
+  msg->dest = src->dest ? strdup(src->dest) : NULL;
 #endif
   msg->expires = src->expires;
+  msg->generation = src->generation;
   return(msg);
 }
 
@@ -144,13 +145,16 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 
 
 #if defined(IL_NOTIFICATIONS)
-	edg_wll_InitContext(&context);
 
 	/* parse the notification event */
-	if((ret=edg_wll_ParseNotifEvent(context, event->data, &notif_event))) {
+	edg_wll_InitContext(&context);
+	ret=edg_wll_ParseNotifEvent(context, event->data, &notif_event);
+	edg_wll_FreeContext(context);
+	if(ret) {
 		set_error(IL_LBAPI, ret, "server_msg_init: error parsing notification event");
 		return(-1);
 	}
+
 	/* FIXME: check for allocation error */
 	if(notif_event->notification.dest_host && 
 	   (strlen(notif_event->notification.dest_host) > 0)) {
