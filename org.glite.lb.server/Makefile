@@ -117,9 +117,9 @@ INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
+# hack to fix bug #59393
 GLOBUS_LIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour} \
+	-lssl_${nothrflavour}
 
 #ifeq ($(shell ls ${gsoap_prefix}/bin/soapcpp2),${gsoap_prefix}/bin/soapcpp2)
 #	gsoap_bin_prefix := ${gsoap_prefix}/bin
@@ -168,6 +168,7 @@ ifneq (${classads_prefix},/usr)
 endif
 
 EXT_LIBS:=  \
+	${GLOBUS_LIBS} \
 	${mysqlib} -lmysqlclient -lz -lcares\
 	${GRIDSITE_LIBS} \
 	${classadslib} \
