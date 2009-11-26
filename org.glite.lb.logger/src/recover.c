@@ -60,6 +60,6 @@ recover_thread(void *q)
 				il_log(LOG_INFO, "New certificate found and deployed.\n");
 			}
 		}
-		sleep(INPUT_TIMEOUT);
+		sleep(RECOVER_TIMEOUT);
 	}
 }

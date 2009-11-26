@@ -60,7 +60,8 @@
 
 // #define TIMEOUT      5
 extern int TIMEOUT;
-#define INPUT_TIMEOUT (60)
+#define INPUT_TIMEOUT (5)
+#define RECOVER_TIMEOUT (60)
 #define EXIT_TIMEOUT (1*60)
 
 typedef struct cred_handle {

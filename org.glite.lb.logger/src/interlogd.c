@@ -420,11 +420,13 @@ main (int argc, char **argv)
     il_log(LOG_CRIT, "Fatal error: %s\n", error_get_msg());
     if (killflg) {
       input_queue_detach();
+      unlink(pidfile);
       exit(EXIT_FAILURE);
     }
   }
   il_log(LOG_INFO, "Done!\n");
   input_queue_detach();
+  unlink(pidfile);
 
   exit (0);
 }
