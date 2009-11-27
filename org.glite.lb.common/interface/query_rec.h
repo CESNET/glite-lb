@@ -148,6 +148,9 @@ typedef struct _edg_wll_PurgeRequest {
 #define EDG_WLL_PURGE_SERVER_DUMP	4
 /** TODO: stream the dump info to the client */
 #define EDG_WLL_PURGE_CLIENT_DUMP	8
+/** purge the jobs on background,
+    nifty for the throttled purging using target_runtime */
+#define EDG_WLL_PURGE_BACKGROUND	16
 /* ! when addning new constant, add it also to common/xml_conversions.c ! */
 
 /** Desired purge estimated time.

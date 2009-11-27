@@ -838,6 +838,14 @@ char *edg_wll_purge_flags_to_string(int flags)
                 }
                 else asprintf(&cflags,"%s","client_dump");
         }
+        if (flags & EDG_WLL_PURGE_BACKGROUND) {
+                if (cflags) {
+                        asprintf(&temp_cflags,"%s+%s",cflags,"background");
+                        free(cflags);
+                        cflags=temp_cflags;
+                }
+                else asprintf(&cflags,"%s","background");
+        }
 
         if (!cflags) cflags = strdup("");
 
@@ -858,6 +866,7 @@ int edg_wll_string_to_purge_flags(char *cflags)
 		if (!strcmp(sflag,"list_jobs")) flags = flags | EDG_WLL_PURGE_LIST_JOBS;
 		if (!strcmp(sflag,"server_dump")) flags = flags | EDG_WLL_PURGE_SERVER_DUMP;
 		if (!strcmp(sflag,"client_dump")) flags = flags | EDG_WLL_PURGE_CLIENT_DUMP;
+		if (!strcmp(sflag,"background")) flags = flags | EDG_WLL_PURGE_BACKGROUND;
 		sflag = strtok_r(NULL, "+", &last);
 	} 
 

@@ -7,7 +7,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#ifdef BUILDING_LB_CLIENT
 #include "producer.h"
+#else
+#include "glite/lb/producer.h"
+#endif
 #include "glite/jobid/cjobid.h"
 
 static void slave();

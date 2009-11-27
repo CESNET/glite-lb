@@ -65,7 +65,7 @@ SUFFIXES = .T
 DEBUG:=-g -O0 -Wall
 
 GRIDSITE_CFLAGS = -I${gridsite_prefix}/include `xml2-config --cflags`
-GRIDSITE_LIBS = -L${gridsite_prefix}/${archlib} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
+GRIDSITE_LIBS = -L${gridsite_prefix}/${libdir} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
 
 LCAS_CFLAGS=-I${lcas_prefix}/include
 LOG4C_CFLAGS=-I${log4c_prefix}/include
@@ -127,12 +127,6 @@ XSLTPROC:=xsltproc --novalid
 
 gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${gsoap_prefix}/bin; else echo ${gsoap_prefix}; fi }
 
-archlib:=lib
-host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64) 
-    archlib:=lib64
-endif
-
 ifneq (${expat_prefix},/usr)
 	expatlib := -L${expat_prefix}/lib
 endif
@@ -144,8 +138,8 @@ endif
 ifeq (${nothrflavour},gcc32dbg)
 	vomsflavour :=
 endif
-VOMS_LIBS:=-L${voms_prefix}/${archlib} -lvomsapi${vomsflavour}
-LCAS_LIBS:=-L${lcas_prefix}/${archlib} -llcas
+VOMS_LIBS:=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
+LCAS_LIBS:=-L${lcas_prefix}/${libdir} -llcas
 LOG4C_LIBS:=-L${log4c_prefix}/lib -llog4c
 
 #EXT_LIBS:= \
@@ -154,15 +148,20 @@ LOG4C_LIBS:=-L${log4c_prefix}/lib -llog4c
 #	-lvomsc${vomsflavour} \
 
 ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/${archlib} -L${classads_prefix}/lib
+	CLASSADS_LIBS := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib
 endif
+CLASSADS_LIBS := ${CLASSADS_LIBS} -lclassad
 
-classadslib := ${classadslib} -lclassad
+ifneq (${cares_prefix},/usr)
+	CARES_LIBS := -L${cares_prefix}/${libdir} -L${cares_prefix}/lib
+endif
+CARES_LIBS := ${CARES_LIBS} -lcares
 
 EXT_LIBS:=  \
-	-lz -lcares\
+	-lz \
 	${GRIDSITE_LIBS} \
-	${classadslib} \
+	${CLASSADS_LIBS} \
+	${CARES_LIBS} \
 	${LCAS_LIBS} \
 	${VOMS_LIBS} \
 	${LOG4C_LIBS} 
@@ -360,9 +359,10 @@ install:
 	${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${PREFIX}/lib/modules
 	ln -sf liblcas_lb.so ${PREFIX}/lib/modules/lcas_lb.mod
 
-	for f in dbsetup.sql dbsetup-migrate2transactions.sql index.conf.template; do \
+	for f in dbsetup.sql index.conf.template; do \
 		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${PREFIX}/etc; \
 	done
+	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${PREFIX}/etc
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
 

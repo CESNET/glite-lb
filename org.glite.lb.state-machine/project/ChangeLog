@@ -13,3 +13,11 @@
 1.0.0-5
 - use hostname to identify network server rather than IP (RTM compatibility)
 - don't crash on null sequence codes
+
+1.0.0-6
+- updated configure
+
+1.0.0-7
+- Makefile relies on the libdir variable
+- New configure script
+

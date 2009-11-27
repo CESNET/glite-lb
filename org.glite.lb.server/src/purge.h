@@ -3,7 +3,10 @@
 
 #ident "$Header"
 
+#include <signal.h>
 #include "glite/lb/context.h"
+
+extern volatile sig_atomic_t purge_quit;
 
 /** Server side implementation
  *  besides output to the SSL stream (in the context) it may produce

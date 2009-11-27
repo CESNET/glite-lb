@@ -5,6 +5,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include <expat.h>
 
@@ -61,6 +63,8 @@ static const char* const response_headers_html[] = {
         NULL
 };
 
+volatile sig_atomic_t purge_quit = 0;
+
 extern int edg_wll_NotifNewServer(edg_wll_Context,
 				edg_wll_QueryRec const * const *, int flags, char const *,
 				const edg_wll_NotifId, time_t *);
@@ -81,6 +85,7 @@ char *edg_wll_HTTPErrorMessage(int errCode)
 	
 	switch (errCode) {
 		case HTTP_OK: msg = "OK"; break;
+		case HTTP_ACCEPTED: msg = "Accepted"; break;
 		case HTTP_BADREQ: msg = "Bad Request"; break;
 		case HTTP_UNAUTH: msg = "Unauthorized"; break;
 		case HTTP_NOTFOUND: msg = "Not Found"; break;
@@ -376,6 +381,11 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 	free(conds);
 	free(can_peername);
 
+	return 0;
+}
+
+static int hup_handler(int sig) {
+	purge_quit = 1;
 	return 0;
 }
 
@@ -913,7 +923,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		else if (!strncmp(requestPTR,KEY_PURGE_REQUEST,sizeof(KEY_PURGE_REQUEST)-1)) {
 			edg_wll_PurgeRequest    request;
 			edg_wll_PurgeResult	result;
-			int			fatal = 0;
+			struct sigaction	sa;
+			sigset_t		sset;
+			int			fatal = 0, retval;
 
 			ctx->p_tmp_timeout.tv_sec = 86400;  
 
@@ -921,6 +933,37 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			memset(&result,0,sizeof(result));
 
 			if ( !parsePurgeRequest(ctx,messageBody,(int (*)()) edg_wll_StringToStat,&request) ) {
+				/* do throttled purge on background if requested */
+				if ((request.flags & EDG_WLL_PURGE_BACKGROUND)) {
+					retval = fork();
+
+					switch (retval) {
+					case 0: /* forked cleaner */
+						memset(&sa, 0, sizeof(sa));
+						sa.sa_handler = hup_handler;
+						sigaction(SIGTERM, &sa, NULL);
+						sigaction(SIGINT, &sa, NULL);
+
+						sigemptyset(&sset);
+						sigaddset(&sset, SIGTERM);
+						sigaddset(&sset, SIGINT);
+						sigprocmask(SIG_UNBLOCK, &sset, NULL);
+						sigemptyset(&sset);
+						sigaddset(&sset, SIGCHLD);
+						sigprocmask(SIG_BLOCK, &sset, NULL);
+						break;
+					case -1: /* err */
+						ret = HTTP_INTERNAL;
+						edg_wll_SetError(ctx, errno, "can't fork purge process");
+						goto err;
+					default: /* client request handler */
+						ret = HTTP_ACCEPTED;
+						/* to end this parent */
+						edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, edg_wll_HTTPErrorMessage(ret));
+						goto err;
+					}
+				}
+
 				switch ( edg_wll_PurgeServer(ctx, (const edg_wll_PurgeRequest *)&request, &result)) {
 					case 0: if (html) ret =  HTTP_NOTIMPL;
 						else ret = HTTP_OK;
@@ -947,6 +990,15 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					for ( i = 0; result.jobs[i]; i++ )
 						free(result.jobs[i]);
 					free(result.jobs);
+				}
+
+				/* forked cleaner sends no results */
+				if ((request.flags & EDG_WLL_PURGE_BACKGROUND)) {
+					*response = NULL;
+					free(message);
+					message = NULL;
+					if (requestPTR) free(requestPTR);
+					exit(0);
 				}
 
 			}
@@ -1196,9 +1248,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
 	*headersOut = (char **) (html ? response_headers_html : response_headers_dglb);
-	if ((ret != HTTP_OK) && text)
+	if ((ret != HTTP_OK && ret != HTTP_ACCEPTED) && text)
                 *bodyOut = edg_wll_ErrorToText(ctx,ret);
-	else if ((ret != HTTP_OK) && html)
+	else if ((ret != HTTP_OK && ret != HTTP_ACCEPTED) && html)
 		*bodyOut = edg_wll_ErrorToHTML(ctx,ret);
 	else
 		*bodyOut = message;

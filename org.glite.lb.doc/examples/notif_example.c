@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 
 	/*register*/
 	if (edg_wll_NotifNew(ctx, (edg_wll_QueryRec const* const*)conditions, 
-           -1, NULL, &notif_id, &valid)) {
+           0, -1, NULL, &notif_id, &valid)) {
 	        char    *et,*ed;
 
                 edg_wll_Error(ctx,&et,&ed);

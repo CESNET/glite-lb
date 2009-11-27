@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <stdlib.h> 
+#include <cstring> 
 #include <fstream>
 
 #include <cppunit/extensions/HelperMacros.h>

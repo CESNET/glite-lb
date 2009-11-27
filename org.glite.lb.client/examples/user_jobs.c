@@ -6,7 +6,11 @@
 
 #include "glite/lb/context.h"
 #include "glite/lb/xml_conversions.h"
+#ifdef BUILDING_LB_CLIENT
 #include "consumer.h"
+#else
+#include "glite/lb/consumer.h"
+#endif
 
 int use_proxy = 0;
 

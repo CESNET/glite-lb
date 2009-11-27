@@ -23,14 +23,8 @@ VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples
 
 DEBUG:=-g -O0 -W -Wall
 
-archlib:=lib
-host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64) 
-	archlib:=lib64
-endif   
-
-MYSQL_SONAME:=$(shell ../project/get_soname.sh mysqlclient ${mysql-devel_prefix}/${archlib} ${mysql_prefix}/${archlib} ${mysql-devel_prefix}/lib ${mysql_prefix}/lib)
-PSQL_SONAME:=$(shell ../project/get_soname.sh pq ${postgresql_prefix}/${archlib} ${postgresql_prefix}/lib)
+MYSQL_SONAME:=$(shell ../project/get_soname.sh mysqlclient ${mysql-devel_prefix}/${libdir} ${mysql_prefix}/${libdir} ${mysql-devel_prefix}/lib ${mysql_prefix}/lib)
+PSQL_SONAME:=$(shell ../project/get_soname.sh pq ${postgresql_prefix}/${libdir} ${postgresql_prefix}/lib)
 
 MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/mysql
 PSQL_CPPFLAGS:=-I${postgresql_prefix}/include

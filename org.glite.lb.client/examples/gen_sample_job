@@ -132,4 +132,3 @@ function logit()
 	print "send_log_ev" ff;
 }
 ' $1
-

@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include "glite/jobid/cjobid.h"
 #include "glite/lb/context.h"
@@ -407,7 +408,7 @@ loop()
 		int ret;
 
 		if(killflg)
-			exit(0);
+			return (0);
 
 		clear_error();
 		if((ret = input_queue_get(&msg, &offset, INPUT_TIMEOUT)) < 0)

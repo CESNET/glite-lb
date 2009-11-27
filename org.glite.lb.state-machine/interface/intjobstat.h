@@ -14,7 +14,7 @@
 /* where Z.XX is version from indent + 1 (version after commit), Y = Z+1 */
 /* and DESCRIPTION is short hit why version changed		*/
 
-#define INTSTAT_VERSION "revision 2.7 - usertag sequences"
+#define INTSTAT_VERSION "revision 2.8 - undef status time"
 //                      ".... MAX LENGTH 32 BYTES !! ...."
 
 // Internal error codes 

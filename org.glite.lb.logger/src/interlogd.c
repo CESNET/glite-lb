@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "interlogd.h"
 #include "glite/lb/log_proto.h"
@@ -22,10 +23,13 @@
 #if defined(IL_NOTIFICATIONS)
 #define DEFAULT_PREFIX "/tmp/notif_events"
 #define DEFAULT_SOCKET "/tmp/notif_interlogger.sock"
+#define DEFAULT_PIDFILE "/var/glite/glite-lb-notif-interlogd.pid"
 #else
 #define DEFAULT_PREFIX EDG_WLL_LOG_PREFIX_DEFAULT
 #define DEFAULT_SOCKET "/tmp/interlogger.sock"
+#define DEFAULT_PIDFILE  "/var/glite/glite-lb-interlogd.pid"
 #endif
+
 
 
 /* The name the program was run with, stripped of any leading path. */
@@ -38,6 +42,8 @@ cred_handle_t *cred_handle = NULL;
 pthread_mutex_t cred_handle_lock = PTHREAD_MUTEX_INITIALIZER;
 
 time_t key_mtime = 0, cert_mtime = 0;
+
+static char *pidfile = DEFAULT_PIDFILE;
 
 static void usage (int status)
 {
@@ -54,6 +60,7 @@ static void usage (int status)
 	       "  -k, --key  <file>          location of server private key\n"
 	       "  -C, --CAdir <dir>          directory containing CA certificates\n"
 	       "  -b, --book                 send events to bookkeeping server only\n"
+	       "  -i, --pidfile		     pid file\n"
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
 	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers (default, timeout==0 means turn lazy off)\n"
@@ -109,6 +116,7 @@ static struct option const long_options[] =
   {"key", required_argument, 0, 'k'},
   {"book", no_argument, 0, 'b'},
   {"CAdir", required_argument, 0, 'C'},
+  {"pidfile", required_argument, 0, 'i'},
   {"log-server", required_argument, 0, 'l'},
   {"socket", required_argument, 0, 's'},
   {"lazy", optional_argument, 0, 'L'},
@@ -149,6 +157,7 @@ decode_switches (int argc, char **argv)
 			   "k:"          /* key */
 			   "C:"          /* CA dir */
 			   "b"  /* only bookeeping */
+			   "i:"  /* pidfile*/
                "l:" /* log server */
 			   "d" /* debug */
 			   "p" /* parallel */
@@ -204,6 +213,10 @@ decode_switches (int argc, char **argv)
 
 	case 'l':
 	  log_server = strdup(optarg);
+	  break;
+
+	case 'i': 
+	  pidfile = strdup(optarg);
 	  break;
 
 	case 'C':
@@ -336,6 +349,7 @@ main (int argc, char **argv)
   char *p;
   edg_wll_GssStatus gss_stat;
   int ret;
+  FILE *pidf;
 
   program_name = argv[0];
 
@@ -379,12 +393,23 @@ main (int argc, char **argv)
 	  exit(EXIT_FAILURE);
   }
 
+/* just try it before deamonizing to be able to complain aloud */
+  if (!(pidf = fopen(pidfile,"w"))) {
+	perror(pidfile);
+	exit(EXIT_FAILURE);
+  }
+  fclose(pidf);
+
   if(!debug &&
      (daemon(0,0) < 0)) {
 	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to daemonize itself: %s, exiting.",
 			   strerror(errno));
 	  exit(EXIT_FAILURE);
   }
+
+  pidf = fopen(pidfile,"w"); assert(pidf); /* XXX */
+  fprintf(pidf,"%d\n",getpid());
+  fclose(pidf);
 
 #ifdef LB_PERF
   /* this must be called after installing signal handlers */
@@ -468,11 +493,13 @@ main (int argc, char **argv)
 	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Fatal error: %s", error_get_msg());
 	  if (killflg) {
 		  input_queue_detach();
+		  unlink(pidfile);
 		  exit(EXIT_FAILURE);
 	  }
   }
   glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Done!");
   input_queue_detach();
+  unlink(pidfile);
 
   exit (0);
 }

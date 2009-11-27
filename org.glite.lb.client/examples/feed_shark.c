@@ -7,7 +7,11 @@
 #include <errno.h>
 #include <sysexits.h>
 
+#ifdef BUILDING_LB_CLIENT
 #include "notification.h"
+#else
+#include "glite/lb/notification.h"
+#endif
 
 static void usage(const char *);
 static void printstat(edg_wll_JobStat, int);

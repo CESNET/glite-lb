@@ -48,9 +48,10 @@ int edg_wll_jobMembership(edg_wll_Context ctx, glite_jobid_const_t job)
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Error retrieving proxy&server fields of jobs table. Missing column?");
                 edg_wll_SetError(ctx,ENOENT,dbjob);
         }
-        glite_lbu_FreeStmt(&q);
 
 clean:
+        glite_lbu_FreeStmt(&q);
+
 	free(res[0]); free(res[1]);
         free(dbjob);
         free(stmt);

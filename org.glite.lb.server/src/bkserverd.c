@@ -24,6 +24,7 @@
 #include <arpa/nameser.h>
 #include <resolv.h>
 #include <ares.h>
+#include <ares_version.h>
 #include <errno.h>
 
 #ifdef GLITE_LB_SERVER_WITH_WS
@@ -653,6 +654,10 @@ int main(int argc, char *argv[])
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 	}
+#ifdef GLITE_LB_SERVER_WITH_WS
+	free(ws_port);
+	ws_port = NULL;
+#endif
 	if (mode & SERVICE_PROXY) {	/* proxy stuff */
 		struct sockaddr_un      a;
 
@@ -725,6 +730,7 @@ int main(int argc, char *argv[])
 	/* Just check the database and let it be. The slaves do the job. */
 	edg_wll_InitContext(&ctx);
 	if (wait_for_open(ctx, dbstring)) {
+		edg_wll_Close(ctx);
 		edg_wll_FreeContext(ctx);
 		return 1;
 	}
@@ -740,16 +746,16 @@ int main(int argc, char *argv[])
 	}
 	edg_wll_Close(ctx);
 	ctx->dbctx = NULL;
-	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "[%d]: DB '%s'", getpid(), dbstring);
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "DB '%s'", dbstring ? : "default");
 
 	if ((ctx->dbcaps & GLITE_LBU_DB_CAP_INDEX) == 0) {
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "%s: missing index support in DB layer", argv[0]);
 		return 1;
 	}
 	if ((ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS) == 0)
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d]: transactions aren't supported!", getpid());
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "transactions aren't supported!");
 	if (transactions >= 0) {
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d]: transactions forced from %d to %d", getpid(), ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS ? 1 : 0, transactions);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "transactions forced from %d to %d", ctx->dbcaps & GLITE_LBU_DB_CAP_TRANSACTIONS ? 1 : 0, transactions);
 		ctx->dbcaps &= ~GLITE_LBU_DB_CAP_TRANSACTIONS;
 		ctx->dbcaps |= transactions ? GLITE_LBU_DB_CAP_TRANSACTIONS : 0;
 	}
@@ -1618,6 +1624,8 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 		if (dbfail_string1) free(dbfail_string1);
 		edg_wll_Error(ctx,&errt,&errd);
 		asprintf(&dbfail_string1,"%s (%s)",errt,errd);
+		free(errt);
+		free(errd);
 		if (dbfail_string1 != NULL) {
 			if (dbfail_string2 == NULL || strcmp(dbfail_string1,dbfail_string2)) {
 				if (dbfail_string2) free(dbfail_string2);
@@ -1640,6 +1648,8 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 	if (err) {
 		edg_wll_Error(ctx,&errt,&errd);
 		asprintf(&dbfail_string1,"%s (%s)",errt,errd);
+		free(errt);
+		free(errd);
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
 			"[%d]: %s", getpid(), dbfail_string1);
 		free(dbfail_string1);
@@ -1671,7 +1681,11 @@ struct asyn_result {
 };
 
 /* ares callback handler for ares_gethostbyaddr()       */
+#if ARES_VERSION >= 0x010500
+static void callback_handler(void *arg, int status, int timeouts, struct hostent *h)
+#else
 static void callback_handler(void *arg, int status, struct hostent *h)
+#endif
 {
 	struct asyn_result *arp = (struct asyn_result *) arg;
 

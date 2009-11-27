@@ -33,3 +33,15 @@
 - Connection pool for notifications.
 - Enable reading collection events in performance tests
 
+7.0.2-1
+- don't use hard-wired types for ACLs events but the ones generated automatically
+- check mandatory events fields even if they contain enum types
+- RSS time in context
+
+7.0.2-2
+- Makefile relies on the libdir variable
+- New configure script
+
+7.0.3-1
+- Support for background purge funcionality
+

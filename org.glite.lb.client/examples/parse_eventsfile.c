@@ -5,7 +5,11 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#ifdef BUILDING_LB_CLIENT
 #include "producer.h"
+#else
+#include "glite/lb/producer.h"
+#endif
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
 

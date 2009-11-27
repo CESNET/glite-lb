@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <syslog.h>
 #include <errno.h>
 #include <time.h>
 #include <assert.h>
@@ -111,7 +112,7 @@ int edg_wll_QueryEventsServer(
 	trio_asprintf(&qbase,"SELECT e.event,j.userid,j.dg_jobid,e.code,"
 		"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived,e.seqcode "
 		"FROM events e,users u,jobs j%s "
-		"WHERE %se.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
+		"WHERE %se.jobid=j.jobid AND j.grey=0 AND e.userid=u.userid AND e.code != %d "
 		"%s %s %s %s %s %s",
 		where_flags & FL_SEL_STATUS ? ",states s"	: "",
 		where_flags & FL_SEL_STATUS ? "s.jobid=j.jobid AND " : "",
@@ -171,11 +172,20 @@ int edg_wll_QueryEventsServer(
 			/* Check non-indexed event conditions */
 			if ( convert_event_head(ctx, res+2, out+i) || edg_wll_get_event_flesh(ctx, n, out+i) )
 			{
-				free(res[1]);
-				free(res[2]);
-				memset(out+i, 0, sizeof(*out));
-				glite_lbu_FreeStmt(&sh);
-				goto cleanup;
+				char	*et,*ed, *dbjob;
+
+			/* Most likely sort of internal inconsistency. 
+			 * Must not be fatal -- just complain
+			 */
+				edg_wll_Error(ctx,&et,&ed);
+
+				dbjob = res[2];
+				fprintf(stderr,"%s event %d: %s (%s)\n",dbjob,n,et,ed);
+				syslog(LOG_WARNING,"%s event %d: %s (%s)",dbjob,n,et,ed);
+				free(et); free(ed);
+				edg_wll_ResetError(ctx);
+
+				goto fetch_cycle_cleanup;
 			}
 
 			if ( !match_flesh_conditions(out+i,event_conditions) || check_strict_jobid(ctx,out[i].any.jobId) )
@@ -377,13 +387,13 @@ int edg_wll_QueryJobsServer(
 
 	if ( (where_flags & FL_SEL_STATUS) )
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s AND %s ORDER BY j.jobid", 
+						 "FROM jobs j, states s WHERE j.jobid=s.jobid AND j.grey=0 %s %s AND %s ORDER BY j.jobid", 
 						(job_where) ? "AND" : "",
 						(job_where) ? job_where : "",
 						(ctx->isProxy) ? "j.proxy='1'" : "j.server='1'");
 	else
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j WHERE %s %s %s "
+						 "FROM jobs j WHERE j.grey=0 AND %s %s %s "
 						 "ORDER BY j.jobid", 
 						(job_where) ? job_where : "",
 						(job_where) ? "AND" : "",

@@ -65,9 +65,10 @@ extern int TIMEOUT;
 #define INPUT_TIMEOUT (1)
 #define EXIT_TIMEOUT  (20)
 #else
-#define INPUT_TIMEOUT (60)
+#define INPUT_TIMEOUT (5)
 #define EXIT_TIMEOUT (1*60)
 #endif
+#define RECOVER_TIMEOUT (60)
 
 typedef struct cred_handle {
 	edg_wll_GssCred creds;

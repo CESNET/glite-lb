@@ -69,6 +69,6 @@ recover_thread(void *q)
 						 new_creds->name);
 			}
 		}
-		sleep(INPUT_TIMEOUT);
+		sleep(RECOVER_TIMEOUT);
 	}
 }

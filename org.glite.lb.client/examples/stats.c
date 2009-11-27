@@ -1,8 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <string.h>
 
+#ifdef BUILDING_LB_CLIENT
 #include "statistics.h"
+#else
+#include "glite/lb/statistics.h"
+#endif
 
 
 int main(int argc,char **argv)
@@ -17,8 +22,8 @@ int main(int argc,char **argv)
 
 	edg_wll_InitContext(&ctx);
 
-	if (argc != 2) { 
-		fprintf(stderr,"usage: %s <CE name>\n",argv[0]);
+	if (argc < 3) { 
+		fprintf(stderr,"usage: %s CE major [minor]\n",argv[0]);
 		return 1;
 	}	
 
@@ -58,7 +63,7 @@ int main(int argc,char **argv)
 	to = now;
 	from = now - 60;
 
-	if (edg_wll_StateRate(ctx,group,EDG_WLL_JOB_DONE,EDG_WLL_STAT_FAILED,
+	if (edg_wll_StateRate(ctx,group,atoi(argv[2]),argc >=4 ? atoi(argv[3]) : 0,
 				&from,&to,&val,&from_res,&to_res))
 	{
 		char	*et,*ed;

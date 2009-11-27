@@ -51,26 +51,20 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS} \
 	-DBUILDING_LB_COMMON 
 
-archlib:=lib
-host_cpu:=${shell uname -m}
-ifeq (${host_cpu},x86_64)
-    archlib:=lib64
-endif
-
 ifneq (${expat_prefix},/usr)
-	EXPAT_LIBS:=-L${expat_prefix}/${archlib} -L${expat_prefix}/lib
+	EXPAT_LIBS:=-L${expat_prefix}/${libdir} -L${expat_prefix}/lib
 endif
 
 EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 
 ifneq (${classads_prefix},/usr)
-        classadslib := -L${classads_prefix}/${archlib} -L${classads_prefix}/lib 
+        classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib 
 endif
 
 classadslib := ${classadslib} -lclassad
 
 
-LDFLAGS:=-L${stagedir}/${archlib} -L${stagedir}/lib \
+LDFLAGS:=-L${stagedir}/${libdir} -L${stagedir}/lib \
 	${COVERAGE_FLAGS}
 
 EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${classadslib}

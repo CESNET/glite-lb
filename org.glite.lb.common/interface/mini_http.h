@@ -25,6 +25,7 @@
 
 /* subset of HTTP codes we return */
 #define HTTP_OK			200
+#define HTTP_ACCEPTED		202
 #define HTTP_BADREQ		400
 #define HTTP_UNAUTH		401
 #define HTTP_NOTFOUND		404

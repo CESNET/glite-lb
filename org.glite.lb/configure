@@ -26,6 +26,7 @@ my $lbjp_tag = '';
 my $jp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
+my $libdir = 'lib';
 
 my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
 my %enable_nodes;
@@ -40,6 +41,7 @@ my %extern_prefix = (
 	gsoap => '/usr',
 	mysql => '/usr',
 	'mysql-devel' => '',
+	'mysql-server' => '',
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
@@ -94,6 +96,7 @@ my @opts = (
 	'security-tag=s' => \$sec_tag,
 	'jobid-tag=s' => \$jobid_tag,
 	'help' => \$help,
+	'libdir=s' => \$libdir,
 );
 
 for (@nodes) {
@@ -112,6 +115,7 @@ my @keeparg = @ARGV;
 GetOptions @opts or die "Errors parsing command line\n";
 
 $extern_prefix{'mysql-devel'}=$extern_prefix{mysql} if $extern_prefix{'mysql-devel'} eq '';
+$extern_prefix{'mysql-server'}=$extern_prefix{mysql} if $extern_prefix{'mysql-server'} eq '';
 
 if ($help) { usage(); exit 0; }
 
@@ -298,7 +302,7 @@ BEGIN{
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B log4c/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql cppunit:B gsoap:B classads voms lcas gridsite log4c/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite log4c/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
 	'lb.ws-interface' => [],
@@ -374,7 +378,7 @@ for my $jar (keys %need_jars) {
 		jobid.api-c
 		security.gsoap-plugin security.gss
 	/ ],
-	'lb.state-machine' => [ qw/lb.common lbjp-common.jp-interface security.gss/ ],
+	'lb.state-machine' => [ qw/lb.types:B lb.common lbjp-common.jp-interface security.gss/ ],
 	'lb.utils' => [ qw/
 		lbjp-common.jp-interface
 		jobid.api-c
@@ -497,6 +501,7 @@ PREFIX = $prefix
 stagedir = $stagedir
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
+libdir = $libdir
 };
 
 	for (@{$need_externs{$short}}) {
@@ -619,7 +624,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --module $subsys.$module @copts
+configure = cd $confdir && \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
@@ -678,6 +683,7 @@ General options (defaults in []):
   --thrflavour=flavour
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
   --listmodules=subsys          list modules of a subsystem
+  --libdir=libdir		typically [lib,lib64] postfix
   
 Mode of operation:
   --mode={checkout|build|etics}	what to do [build]

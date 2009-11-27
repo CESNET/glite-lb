@@ -12,10 +12,19 @@ GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-$GLITE_LOCATION/var}
 
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
+LL_PIDFILE=${LL_PIDFILE:-$GLITE_LOCATION_VAR/glite-lb-logd.pid}
+IL_PIDFILE=${IL_PIDFILE:-$GLITE_LOCATION_VAR/glite-lb-interlogd.pid}
+
 unset creds port
 
 start()
 {
+	case "$GLITE_LB_TYPE" in
+	proxy)
+		echo 'Not starting logd and interlogger, proxy only instance (GLITE_LB_TYPE=proxy).'
+		return 0
+	esac
+
 	if test -z "$GLITE_USER" ;then
 		echo 'Error: GLITE_USER is not set'
 		echo FAILED
@@ -43,21 +52,36 @@ start()
 	echo -n Starting glite-lb-logd ...
         (cd /tmp && ls -f /tmp |grep ^dglogd_sock_ |xargs rm -f)
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-logd \
-		$creds $port $sock $fprefix" && echo " done" || echo " FAILED"
+		-i $LL_PIDFILE $creds $port $sock $fprefix" && echo " done" || echo " FAILED"
 
 	echo -n Starting glite-lb-interlogd ...
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-interlogd \
-		$creds $sock $fprefix" && echo " done" || echo " FAILED"
+		-i $IL_PIDFILE $creds $sock $fprefix" && echo " done" || echo " FAILED"
+}
+
+killwait()
+{
+	pidfile=$1
+	if [ -f $pidfile ] && pid=`cat $pidfile` && kill $pid 2>/dev/null; then
+		cnt=0
+		while ps p $pid 2>/dev/null >/dev/null; do
+			sleep 1;
+			cnt=`expr $cnt + 1`
+			if [ $cnt = 120 ]; then break; fi
+		done
+		if [ $cnt = 100 ]; then echo " can't stop"
+		else echo " done"; fi
+	else
+		echo " not running"
+	fi
 }
 
 stop()
 {
 		echo -n Stopping glite-lb-logd ...
-		killall glite-lb-logd
-		echo " done"
+		killwait $LL_PIDFILE
 		echo -n Stopping glite-lb-interlogd ...
-		killall glite-lb-interlogd
-		echo " done"
+		killwait $IL_PIDFILE
 }
 
 status()

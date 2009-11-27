@@ -197,7 +197,7 @@ int edg_wll_JobStatusServer(
 								glite_jobid_t	subjob;
 								intJobStat	js_real;
 								char		*name;
-								int		port;
+								unsigned int		port;
 
 
 								js = &js_real;
@@ -274,7 +274,7 @@ int edg_wll_JobStatusServer(
 									glite_jobid_t	subjob;
 									intJobStat	js_real;
 									char		*name;
-									int		port;
+									unsigned int		port;
 
 
 									js = &js_real;
@@ -406,6 +406,9 @@ int edg_wll_intJobStatus(
 
 	edg_wll_QueryRec	jqr[2];
 	edg_wll_QueryRec        **jqra;
+	glite_lbu_Statement	sh;
+	char			*stmt, *out;
+	struct timeval		ts, mints = {tv_sec:0, tv_usec:0};
 
 /* Processing */
 	edg_wll_ResetError(ctx);
@@ -446,10 +449,12 @@ int edg_wll_intJobStatus(
 	if (edg_wll_QueryEventsServer(ctx,1, (const edg_wll_QueryRec **)jqra, NULL, &events)) {
 		if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
 			if (edg_wll_RestoreSubjobState(ctx, job, intstat)) {
-				destroy_intJobStat(intstat);
-				free(jqra);
-				free(intstat->pub.owner); intstat->pub.owner = NULL;
-				return edg_wll_Error(ctx, NULL, NULL);
+				if (edg_wll_Error(ctx, NULL, NULL) != ENOENT) {
+					destroy_intJobStat(intstat);
+					free(jqra);
+					free(intstat->pub.owner); intstat->pub.owner = NULL;
+					return edg_wll_Error(ctx, NULL, NULL);
+				}
 			}
 		}
 		else {
@@ -458,25 +463,29 @@ int edg_wll_intJobStatus(
                 	return edg_wll_Error(ctx, NULL, NULL);
 		}
 	}
-	else {
+	edg_wll_ResetError(ctx);
+
+	{
 		free(jqra);
 
-		for (num_events = 0; events[num_events].type != EDG_WLL_EVENT_UNDEF;
+		for (num_events = 0; events && events[num_events].type != EDG_WLL_EVENT_UNDEF;
 			num_events++);
-
-		if (num_events == 0) {
-			free(intstat->pub.owner); intstat->pub.owner = NULL;
-			return edg_wll_SetError(ctx,ENOENT,NULL);
-		}
 
 		for (i = 0; i < num_events; i++) {
 			res = processEvent(intstat, &events[i], i, be_strict, &errstring);
 			if (res == RET_FATAL || res == RET_INTERNAL) { /* !strict */
 				intErr = 1; break;
 			}
+			ts = events[i].any.timestamp;
+			if (!mints.tv_sec && !mints.tv_usec
+			    || ts.tv_sec < mints.tv_sec
+			    || (ts.tv_sec == mints.tv_sec && ts.tv_usec < mints.tv_usec)) mints = ts;
 		}
+		/* no events or status computation error */
 		if (intstat->pub.state == EDG_WLL_JOB_UNDEF) {
 			intstat->pub.state = EDG_WLL_JOB_UNKNOWN;
+			if (num_events) intstat->pub.lastUpdateTime = mints;
+			else intstat->pub.lastUpdateTime.tv_sec = 1;
 		}
 
 
@@ -491,6 +500,20 @@ int edg_wll_intJobStatus(
 		/* XXX intstat->pub.expectUpdate = eval_expect_update(intstat, &intstat->pub.expectFrom); */
 		intErr = edg_wlc_JobIdDup(job, &intstat->pub.jobId);
 		if (intErr) return edg_wll_SetError(ctx, intErr, NULL);
+
+		/* don't update status of grey jobs */
+		md5_jobid = glite_jobid_getUnique(job);
+		trio_asprintf(&stmt, "select grey from jobs where jobid='%|Ss'", md5_jobid);
+		free(md5_jobid);
+		if (edg_wll_ExecSQL(ctx, stmt, &sh) < 0 ||
+		    (res = edg_wll_FetchRow(ctx, sh, 1, NULL, &out)) < 0) {
+			free(stmt);
+			return edg_wll_Error(ctx, NULL, NULL);
+		}
+		if (!out || strcmp(out, "0") != 0) update_db = 0;
+		glite_lbu_FreeStmt(&sh);
+		free(stmt);
+		free(out);
 
 		if (update_db) {
 			int tsq = num_events - 1;
@@ -555,10 +578,12 @@ edg_wll_ErrorCode edg_wll_RestoreSubjobState(
 
 	if (edg_wll_QueryEventsServer(ctx,1, (const edg_wll_QueryRec **)jc, 
 				(const edg_wll_QueryRec **)ec, &events_p)) {
+		glite_jobid_free(parent_job);
 		free(jc);
 		free(ec);
 		return edg_wll_Error(ctx, NULL, NULL);
 	}
+	glite_jobid_free(parent_job);
 	free(jc);
 	free(ec);
 
@@ -647,6 +672,11 @@ static edg_wll_ErrorCode get_job_parent(edg_wll_Context ctx, glite_jobid_const_t
 
 	if (!edg_wll_FetchRow(ctx,sh,1,NULL,&out)) {
 		edg_wll_SetError(ctx,ENOENT,md5_jobid);
+		goto err;
+	}
+
+	if (strcmp(out, "*no parent job*") == 0) {
+		edg_wll_SetError(ctx,ENOENT,"No matching events found");
 		goto err;
 	}
 

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <signal.h>
 
 #include "glite/jobid/cjobid.h"
 #include "glite/lbu/trio.h"
@@ -36,6 +37,8 @@
 #define DUMP_FILE_STORAGE					"/tmp/"
 
 #define sizofa(a) (sizeof(a)/sizeof((a)[0]))
+
+extern volatile sig_atomic_t purge_quit;
 
 static const char* const resp_headers[] = {
 	"Cache-Control: no-cache",
@@ -263,7 +266,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 	if (request->jobs) {
 
 	for (jobs_to_exa=0; request->jobs[jobs_to_exa]; jobs_to_exa++);
-	for (i=0; request->jobs[i]; i++) {
+	for (i=0; request->jobs[i] && !purge_quit; i++) {
 		if (edg_wlc_JobIdParse(request->jobs[i],&job)) {
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "%s: parse error\n", request->jobs[i]);
 			parse = 1;
@@ -275,6 +278,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 			}
 			else {
 				purge_throttle(jobs_to_exa, purge_end, &time_per_job, &target_runtime);
+				if (purge_quit) break;
 
 				memset(&stat,0,sizeof stat);
 				if (edg_wll_JobStatusServer(ctx,job,EDG_WLL_STAT_CHILDSTAT | EDG_WLL_STAT_CHILDREN,&stat)) {
@@ -328,7 +332,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 		if ((jobs_to_exa = edg_wll_ExecSQL(ctx, (ctx->isProxy) ? "select dg_jobid from jobs where proxy='1'" :
 			"select dg_jobid from jobs where server='1'", &s)) < 0) goto abort;
 
-		while (edg_wll_FetchRow(ctx,s,1,NULL,&job_s) > 0) {
+		while (edg_wll_FetchRow(ctx,s,1,NULL,&job_s) > 0 && !purge_quit) {
 			if (edg_wlc_JobIdParse(job_s,&job)) {
 				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "%s: parse error (internal inconsistency !)", job_s);
 				parse = 1;
@@ -342,6 +346,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 				}
 
 				purge_throttle(jobs_to_exa, purge_end, &time_per_job, &target_runtime);
+				if (purge_quit) break;
 
 				memset(&stat,0,sizeof stat);
 				if (edg_wll_JobStatusServer(ctx,job,EDG_WLL_STAT_CHILDSTAT | EDG_WLL_STAT_CHILDREN,&stat)) {
@@ -739,10 +744,12 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 
 			// get job prefix/suffix before its state is deleted
 			if ( jobtype == EDG_WLL_NUMBER_OF_JOBTYPES) goto rollback;
-			if ( get_jobid_suffix(ctx, job, jobtype, &root, &suffix) ) goto rollback;
-			if ( get_jobid_prefix(ctx, job, jobtype, &prefix) ) goto rollback;
-			
-		
+			if (get_jobid_suffix(ctx, job, jobtype, &root, &suffix)
+			 || get_jobid_prefix(ctx, job, jobtype, &prefix)) {
+				fprintf(stderr,"[%d] unknown job type of the '%s'.\n", getpid(), dbjob);
+				syslog(LOG_WARNING,"Warning: unknown job type of the '%s'", dbjob);
+				edg_wll_ResetError(ctx);
+			}
 		}
 
 		if ( purge )
@@ -766,7 +773,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 			free(stmt); stmt = NULL;
 		}
 
-		if ( purge )
+		if ( purge && prefix && suffix )
 		{
 			/* Store zombie prefix */
 		

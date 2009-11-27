@@ -68,6 +68,10 @@ environment variable.
 Don't run as daemon (do not fork and put itself into background).
 
 .TP
+.BI \-i " FILE" "\fR,\fP --pidfile " FILE
+Store process id into this file rather than default /var/glite/glite-lb-[notif]-interlogd.pid
+
+.TP
 .BI \-f " PREFIX" "\fR,\fP --file-prefix " PREFIX
 .I PREFIX 
 is path prefix of the event files.
@@ -134,10 +138,10 @@ Print help and exit.
 .I /tmp/interlogger.sock
 Default name of local socket.
 .TP
-.I /tmp/dglogd.log*
+.I /var/glite/log/dglogd.log*
 Default location of event files.
 
-.I /tmp/dglogd.log*.ctl
+.I /var/glite/log/dglogd.log*.ctl
 Interlogger's control files keeping the information on status of
 the corresponding event file wrt. delivery to the target server.
 

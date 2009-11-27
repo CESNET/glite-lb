@@ -12,7 +12,7 @@
 #ifdef BUILDING_LB_CLIENT
 #include "producer.h"
 #else
-#include "producer.h"
+#include "glite/lb/producer.h"
 #endif
 
 static struct option opts[] = {
