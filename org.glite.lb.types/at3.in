@@ -5,7 +5,9 @@ use File::Basename;
 my $lines = $ENV{AT3_LINES};
 
 my $prefix;
-BEGIN{ $prefix = '%PREFIX%'; }
+use File::Basename;
+
+BEGIN{ $prefix = dirname($0)."/.."; }
 
 use lib "$prefix/share/perl";
 use gLite::LB::MultiStruct;
