@@ -11,7 +11,6 @@ use Getopt::Long;
 
 my $pwd = `pwd`; chomp $pwd;
 my $prefix = $pwd.'/stage';
-my $stagedir;
 my $staged;
 my $module;
 my $thrflavour = 'gcc64dbgpthr';
@@ -21,13 +20,8 @@ my $help = 0;
 my $listmodules;
 my $version;
 my $output;
-my $lb_tag = '';
-my $lbjp_tag = '';
-my $jp_tag = '';
-my $sec_tag = '';
-my $jobid_tag = '';
 
-my @nodes = qw/client server logger utils doc ws-test db jpprimary jpindex jpclient/;
+my @nodes = qw/client server logger utils client-java doc ws-test/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -37,16 +31,11 @@ my %extern_prefix = (
 	cppunit => '/usr',
 	expat => '/usr',
 	globus => '/opt/globus',
-	jglobus => '/opt/globus',
 	gsoap => '/usr',
 	mysql => '/usr',
-	'mysql-devel' => '',
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
-	ant => '/usr',
-	jdk => '/usr',
-	libtar => '/usr',
 );
 
 my %jar = (
@@ -65,11 +54,10 @@ my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
-	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test/], 
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
-	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
-	'jobid' => [qw/api-c api-cpp/],
-	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
+	'lbjp-common' => [qw/db maildir server-bones trio/],
+	'jobid' => [qw/api-c api-cpp api-java/],
 	);
 
 
@@ -83,12 +71,6 @@ my @opts = (
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
 	'output=s' => \$output,
-	'stage=s' => \$stagedir,
-	'lb-tag=s' => \$lb_tag,
-	'lbjp-common-tag=s' => \$lbjp_tag,
-	'jp-tag=s' => \$jp_tag,
-	'security-tag=s' => \$sec_tag,
-	'jobid-tag=s' => \$jobid_tag,
 	'help' => \$help,
 );
 
@@ -106,8 +88,6 @@ push @opts,"with-$_=s",\$jar{$_} for keys %jar;
 my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
-
-$extern_prefix{'mysql-devel'}=$extern_prefix{mysql} if $extern_prefix{'mysql-devel'} eq '';
 
 if ($help) { usage(); exit 0; }
 
@@ -132,7 +112,7 @@ die "--enable-* and --disable-* are mutually exclusive\n"
 die "--module cannot be used with --enable-* or --disable-*\n"
 	if $module && ($en || $dis);
 
-die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},@{$lbmodules{security}},{$lbmodules{jp}};
+die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},@{$lbmodules{security}};
 
 if ($dis) {
 	for (@nodes) {
@@ -143,8 +123,6 @@ if ($dis) {
 if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
-
-$stagedir = $prefix unless $stagedir;
 
 if ($mode eq 'build') {
 	print "Writing config.status\n";
@@ -158,11 +136,10 @@ my @modules;
 my %aux;
 
 if ($module) {
-#	push @modules,split(/[,.]+/,$module);
 	push @modules,$module;
 }
 else {
-	@modules = map(($extranodmod{$_} ? $extranodmod{$_} : 'lb.'.$_),(keys %enable_nodes));
+	@modules = map 'lb.'.($extranodmod{$_} ? $extranodmod{$_} : $_),keys %enable_nodes;
 	
 	my $n;
 
@@ -228,7 +205,7 @@ sub mode_build {
 		my %ldeps; undef %ldeps;  
 		@ldeps{@{$deps{$_}}} = 1;
 		for my $x (split /,/,$staged) { delete $ldeps{$x}; }
-		my @dnames = $module ? () : keys %ldeps;
+		my @dnames = keys %ldeps;
 	
 		my $full = full($_);
 		my $build = $topbuild{$_} ? '': '/build';
@@ -241,81 +218,33 @@ sub mode_build {
 	
 sub mode_checkout() {
 	for (@modules) {
-		my $module = $_;
-		my $tag = "";
-		if ($lb_tag){
-			for (@{$lbmodules{lb}}){
-				if ("lb.".$_ eq $module){
-					$tag = '-r '.$lb_tag;
-				}
-			}	
-		}
-		if ($lbjp_tag){
-			for (@{$lbmodules{'lbjp-common'}}){
-				if ("lbjp-common.".$_ eq $module){
-                                        $tag = '-r '.$lbjp_tag;
-                                }
-			}
-		}
-		if ($jp_tag){
-			for (@{$lbmodules{'jp'}}){
-	                        if ("jp.".$_ eq $module){
-                                        $tag = '-r '.$jp_tag;
-	                        }
-                        }
-		}
-		if ($sec_tag){
-			for (@{$lbmodules{security}}){
-				if ("security.".$_ eq $module){
-                                        $tag = '-r '.$sec_tag;
-                                }
-			}
-		}
-		if ($jobid_tag){
-			for (@{$lbmodules{jobid}}){
-				if ("jobid.".$_ eq $module){
-                                        $tag = '-r '.$jobid_tag;
-                                }
-			}
-		}
-		#if (grep {"lb.".$_ eq $module} @{$lbmodules{lb}}){
-		#	print "found";
-		#}
 		$_ = full($_);
 		print "\n*** Checking out $_\n";
-		system("cvs checkout  $tag $_") == 0 or die "cvs checkout $tag $_: $?\n";
+		system("cvs checkout $_") == 0 or die "cvs checkout $_: $?\n";
 	}
 }
 
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
-	'lb.client-java' => [ qw/ant:B jglobus jdk:B/ ],
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql cppunit:B gsoap:B classads voms lcas gridsite/ ],
+	'lb.server' => [ qw/globus expat cares mysql cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
-	'lbjp-common.db' => [ qw/mysql:R mysql-devel:B/ ],
+	'lbjp-common.db' => [ qw/mysql/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
-	'lbjp-common.trio' => [ qw/cppunit:B/ ],
-	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
-	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
-	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares gsoap:B/ ],
+	'lbjp-common.trio' => [ qw// ],
+	'security.gss' =>  [ qw/globus cares cppunit:B/ ],
+	'security.gsoap-plugin' =>  [ qw/cppunit:B globus cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
-	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
-	'jp.client' => [ qw/gsoap libtar globus_essentials:R globus:B/ ],
-        'jp.doc' => [],
-        'jp.index' => [ qw/gsoap globus_essentials:R globus:B/ ],
-        'jp.primary' => [ qw/classads gsoap libtar globus_essentials:R globus:B/ ],
-        'jp.server-common' => [],
-        'jp.ws-interface' => [],
+	'jobid.api-java' =>  [ qw// ],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -365,9 +294,9 @@ for my $jar (keys %need_jars) {
 		jobid.api-c
 		security.gsoap-plugin security.gss
 	/ ],
-	'lb.state-machine' => [ qw/lb.types:B lb.common lbjp-common.jp-interface security.gss/ ],
+	'lb.state-machine' => [ qw/lb.common jp.common security.gss/ ],
 	'lb.utils' => [ qw/
-		lbjp-common.jp-interface
+		jp.common
 		jobid.api-c
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine
@@ -385,31 +314,7 @@ for my $jar (keys %need_jars) {
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
 
-	'lbjp-common.jp-interface' => [ qw/lbjp-common.db jobid.api-c/ ],
-
-	'jp.client' => [ qw/
-                jp.ws-interface
-                lbjp-common.jp-interface lbjp-common.maildir
-                jobid.api-c
-                security.gsoap-plugin
-        / ],
-	'jp.doc' => [ qw// ],
-	'jp.index' => [ qw/
-                jp.server-common jp.ws-interface
-                lbjp-common.jp-interface lbjp-common.trio lbjp-common.db lbjp-common.server-bones
-                security.gsoap-plugin
-        / ],
-	'jp.primary' => [ qw/
-                jobid.api-c
-                jp.server-common jp.ws-interface
-                lb.state-machine
-                lbjp-common.jp-interface lbjp-common.trio lbjp-common.db lbjp-common.server-bones
-                security.gsoap-plugin
-        / ],
-	'jp.server-common' => [ qw/ 
-                lbjp-common.jp-interface lbjp-common.db
-        / ],
-	'jp.ws-interface' => [ qw// ],
+	'jp.common' => [ qw/lbjp-common.db/ ],
 );
 
 for my $ext (keys %deps_aux) {
@@ -424,13 +329,7 @@ for my $ext (keys %deps_aux) {
 
 %extrafull = ( gridsite=>'org.gridsite.core');
 
-#( java => 'client-java' );
-%extranodmod = (
-	db => 'lbjp-common.db',
-	jpprimary => 'jp.primary',
-	jpindex => 'jp.index',
-	jpclient => 'jp.client',
-);
+# %extranodmod = ( java => 'client-java' );
 
 my @t = qw/lb.client-java jobid.api-java lb.types/;
 @topbuild{@t} = (1) x ($#t+1);
@@ -450,9 +349,8 @@ sub mkinc
 lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
-lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
-jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
-/;
+lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio
+jp.common/;
 	@aux{@m} = (1) x ($#m+1);
 
 	my $short = shift;
@@ -481,7 +379,7 @@ jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
 
 	print MKINC qq{
 PREFIX = $prefix
-stagedir = $stagedir
+stagedir = $prefix
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 };
@@ -506,15 +404,14 @@ my %etics_externs;
 my %etics_projects;
 BEGIN{
 	%etics_externs = (
-		globus_essentials=>'vdt_globus_essentials',
-		globus=>'globus',
+		globus=>'vdt_globus_essentials',
 		cares=>'c-ares',
-		voms=>'org.glite.security.voms-api-cpp',
+		voms=>'org.glite.security.voms-api-c',
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
 	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials/],
+		vdt=>[qw/globus/],
 		'org.glite'=>[qw/voms gridsite lcas/],
 	);
 };
@@ -549,16 +446,14 @@ sub mode_etics {
 	@ge{@{$etics_projects{'org.glite'}}} = (1) x ($#{$etics_projects{'org.glite'}}+1);
 
 	for (@{$need_externs{"$subsys.$module"}}) {
-	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 		push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
-	    }
 	}
 
 	for (@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		push @copts,"--with-$_ \${$eext.location}/$_*.jar";
+		push @copts,"--with-$_=\${$_.location}/$_-`echo \${$_.version} | sed 's/\\([0-9]*\\.[0-9]*\\)\\.[0-9]*/\\1/'`.jar";
 	}
 
 
@@ -605,7 +500,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --module $subsys.$module @copts
+configure = cd $confdir && \${moduleName}/configure --prefix=\${prefix} --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
@@ -663,7 +558,7 @@ General options (defaults in []):
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
   --thrflavour=flavour
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
-  --listmodules=subsys          list modules of a subsystem
+  --listmodules=subsys		list modules of a subsystem
   
 Mode of operation:
   --mode={checkout|build|etics}	what to do [build]
@@ -673,11 +568,6 @@ What to build:
   --enable-NODE			build this "node" (set of modules) only. Available nodes are
 					@{$lbmodules{lb}},@{$lbmodules{security}}
   --disable-NODE		don't build this node
-  --lb-tag=tag			checkout LB modules with specific tag
-  --jp-tag=tag			checkout JP modules with specific tag
-  --lbjp-common-tag=tag         checkout lbjp-common modules with specific tag
-  --security-tag=tag		checkout security modules with specific tag
-  --jobid-tag=tag		checkout jobid modules with specific tag
 
 Dependencies:
   --with-EXTERNAL=PATH		where to look for an external. Required externals
