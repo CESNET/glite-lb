@@ -1,3 +1,19 @@
+--
+-- Inicialization (replace pgsql by actual postgres superuser):
+--
+-- 1) grant privileges, someting like this in $data/pg_hba.conf:
+--     local all all trust
+--
+-- 2) create user:
+--     createuser -U pgsql rtm
+--
+-- 3) crate database:
+--     createuser -U pgsql rtm
+--
+-- 4) create tables:
+--     psql -U rtm rtm < test.sql
+--
+
 CREATE TABLE "jobs" (
 	jobid VARCHAR PRIMARY KEY,
 	lb VARCHAR,
@@ -15,10 +31,14 @@ CREATE TABLE "jobs" (
 );
 
 CREATE TABLE "lb20" (
-	lb VARCHAR,
-	port INTEGER,
+	ip TEXT NOT NULL,
+	branch TEXT NOT NULL,
+	serv_version TEXT NOT NULL,
+	monitored BOOLEAN DEFAULT FALSE,
+	last_seen DATE,
+	first_seen DATE,
 
-	PRIMARY KEY(lb, port)
+	PRIMARY KEY(ip)
 );
 
 CREATE TABLE "notifs" (
