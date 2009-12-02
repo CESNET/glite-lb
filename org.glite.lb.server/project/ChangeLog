@@ -56,3 +56,6 @@
 1.9.3-3
 - Module repacked
 
+1.9.4-1
+- Fix mixed SSL build for versions 1.9.3-x (#59393)
+
