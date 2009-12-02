@@ -306,7 +306,6 @@ JobStatus.cpp: StatusAttrNames.pl
 
 EventAttrNames.pl StatusAttrNames.pl:
 	rm -f $@
-	test -r ${stagedir}/share/${lbprefix}/at3/$@
 	ln -s ${stagedir}/share/${lbprefix}/at3/$@ $@
 
 dist: distsrc distbin
