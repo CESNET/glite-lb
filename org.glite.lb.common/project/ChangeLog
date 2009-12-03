@@ -45,3 +45,6 @@
 7.0.3-1
 - Support for background purge funcionality
 
+7.0.4-1
+- Fixed test initiation in Makefile
+
