@@ -1,5 +1,7 @@
 We are really sorry that it took us so long to reply to this GGUS
-ticket, however we took all the comments and suggestions really
+ticket, we thaought that there must be a prize for the longest ticket one day.
+
+Seriously, we took all the comments and suggestions really
 seriously and during the gLite restructuring we made all the required
 changes and among others we now have a completely new documentation both
 for Logging and Bookkeeping (LB) and Job Provenance (JP).
@@ -29,16 +31,14 @@ documents:
 
 The official web location for these documents is now
 http://egee.cesnet.cz/en/JRA1/LB
-and links to these documents were updated on all the following webs:
+and links to these documents were updated hopefully on all the following webs:
 
-TODO honik, ljocha:
 http://glite.web.cern.ch/glite/documentation/default.asp
 http://glite.web.cern.ch/glite/packages/R3.1/deployment/glite-LB/glite-LB.asp
 http://egee-jra1-wm.mi.infn.it/egee-jra1-wm
 https://twiki.cern.ch/twiki/bin/view/EGEE/Glite-LB
 https://twiki.cern.ch/twiki/bin/view/EGEE/Egee3Jra1
 
-TODO honik, ljocha:
 The old LB User's Guide was removed from
 https://edms.cern.ch/document/571273/2
 
@@ -88,7 +88,8 @@ LBDG together with the programming examples.
 > supported (Protocol versions incompatible)'. I'm glad to know now but
 > I would have preferred reading it in the docs.
 
-TODO michal, sitera: All this is now mentioned in LBDG Section 4.
+TODO michal, sitera: 
+Reply was: All this is now mentioned in LBDG Section 4.
 
 > Section 2.2.2,
 > example 1 ("Job status", p. 13)
@@ -102,6 +103,7 @@ TODO michal, sitera: All this is now mentioned in LBDG Section 4.
 > docs ?
 
 TODO michal, sitera: consumer_api.tex, see \label{JS}
+Reply was: See LBDG Section 4.3.4 and above mentioned examples.
 
 > example 2 ("All user's jobs" p. 14) does not work: it misses the
 > calling of
@@ -113,11 +115,14 @@ TODO michal, sitera: consumer_api.tex, see \label{JS}
 > vars, it is not mentioned.
 
 TODO michal, sitera: consumer_api.c, see \label{JQ-auj}
+Reply was: Please try the new examples provided.
+
 
 > One more thing about this example : output can be HUGE! Better mention
 > it...
 
-TODO michal, sitera: Mentioned :).
+TODO michal, sitera: 
+Reply was: Mentioned :).
 
 > example "querying user tags", p. 17
 > I haven't managed to get it working and after quite a few tries I'm
@@ -130,12 +135,15 @@ TODO michal, sitera: Mentioned :).
 > or VO I'm using (I tried under 'esr' and 'dteam' VOs)?
 
 TODO michal, sitera: consumer_api.c, see \label{JQ_ut}
+Reply was: Please try the new examples provided.
+
 
 > I had no more chance with example "All jobs marked as red" p. 19 and
 > the event query. Is there some available code somewhere that does
 > successfully query some user tag?
 
 TODO michal, sitera: consumer_api.c, see \label{ASQ_allred}
+Reply was: Please try the new examples provided.
 
 
 > 3/ The reference
