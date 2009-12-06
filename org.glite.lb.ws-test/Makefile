@@ -18,7 +18,7 @@ voms_prefix=/opt/voms
 
 version=${module.version}
 
-CEXAMPLES:=ws_getversion ws_jobstat ws_joblog
+CEXAMPLES:=ws_getversion ws_jobstat ws_joblog ws_lb4agu_GetActivityStatus
 #TODO ws_query_ex 
 
 default all: ${CEXAMPLES}
