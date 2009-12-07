@@ -61,7 +61,8 @@ echo "1) before parsing"
 echo "2) after parsing, before storing into database"
 echo "3) after storing into db, before computing state"
 echo "4) after computing state, before sending to IL"
-echo "5) by IL"
+echo "5) by IL on input socket"
+echo "6) by IL at delivery"
 echo ""
 LOGJOBS_ARGS="-s /tmp/proxy.perf"
 }
@@ -106,6 +107,25 @@ group_a_test_5 ()
     rm -f /tmp/perftest.log.*
 }
 
+group_a_test_6 ()
+{
+    PERFTEST_COMPONENT="$GLITE_LOCATION/bin/glite-lb-bkserverd"
+    COMPONENT_ARGS="-P -d --silent -o /tmp/proxy.perf --proxy-il-sock /tmp/interlogger.perf  --proxy-il-fprefix /tmp/perftest.log -D /tmp -t 1 "
+
+    PERFTEST_CONSUMER="$GLITE_LOCATION/bin/glite-lb-interlogd-perf"
+    CONSUMER_ARGS="-d --nosend -s /tmp/interlogger.perf --file-prefix=/tmp/perftest.log"
+    export PERFTEST_NAME="proxy_test_6"
+    echo -n "6)"
+    run_test proxy $numjobs
+    print_result
+    #$PERFTEST_COMPONENT -P -d -o /tmp/proxy.perf -t 1 -D /tmp  >/dev/null 2>&1  &
+    #PID=$!
+    purge_proxy `i=0; for file in ${JOB_FILE[*]}; do sPN=$PERFTEST_NAME; PERFTEST_NAME="${PERFTEST_NAME}_${JOB_DESC[i]}"; $LOGJOBS -f $file -n $numjobs 2>/dev/null ; PERFTEST_NAME=$sPN; i=$(($i + 1)); done | sort | uniq`
+    #sleep 2
+    #shutdown $PID
+    rm -f /tmp/perftest.log.*
+}
+
 group="a"
 
 group_$group
@@ -123,12 +143,12 @@ fi
 
 if [[ "x$TEST_VARIANT" = "x*" ]]
 then
-   TEST_VARIANT="1 2 3 4 5"
+   TEST_VARIANT="1 2 3 4 5 6"
 fi
 
 for variant in $TEST_VARIANT
 do
-    if [[ "$variant" = "5" ]]
+    if [[ "$variant" = "5" || "$variant" = "6" ]]
     then
 	group_${group}_test_${variant}
     else
