@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 
 # version known to support enough from document/literal to work
-use SOAP::Lite 0.69;
+#use SOAP::Lite 0.69;
+use SOAP::Lite;
 
 use Data::Dumper;
 
@@ -26,7 +27,7 @@ $c = SOAP::Lite
 
 
 # TODO: replace with $srv/lb/?wsdl once it works
-service $c 'LB.wsdl';
+service $c "file://$ENV{PWD}/LB.wsdl";
 
 $c->serializer->register_ns('http://glite.org/wsdl/services/lb4agu','lb4agu');
 # ns $c 'http://glite.org/wsdl/elements/lb';
@@ -37,7 +38,7 @@ $req = SOAP::Data->value(
 
 on_fault $c sub { print Dumper($_[1]->fault); $fault = 1; };
 
-$resp = $c -> JobStatus($req);
+$resp = $c -> GetActivityStatus($req);
 
 print Dumper($resp->result),"\n";
 
