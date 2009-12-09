@@ -67,6 +67,7 @@ int main(int argc,char** argv)
 	in = soap_malloc(mydlo, sizeof(*in));
 	out = soap_malloc(mydlo, sizeof(*out));
 	in->id[0] = soap_strdup(mydlo, jobid);
+	in->__sizeid = 1;
 
 	switch (err = soap_call___lb4agu__GetActivityStatus(mydlo, server, "",in,out)) {
 	case SOAP_OK:
