@@ -15,6 +15,8 @@
 
 extern int debug;
 
+#define LB_GLUE_STATE_PREFIX "urn:org.glite.lb"
+
 SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityStatus(
 	struct soap* soap,
 	struct _lb4ague__GetActivityStatusRequest *in,
@@ -30,10 +32,12 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityStatus(
 
 	if (!in) return SOAP_FAULT;
 	if (!in->id) return SOAP_FAULT;
-	out = soap_malloc(soap, sizeof(*out));
+	out->status = soap_malloc(soap, in->__sizeid * (sizeof(char *)));
 
 	/* process each request individually: */
-	for (i=0; in->id[i]; i++) {
+	for (i=0; i<in->__sizeid; i++) {
+		char	buf[1000],*stat = NULL;
+
 		/* first parse jobId */
 		if ( edg_wlc_JobIdParse(in->id[i], &j) ) {
 			edg_wll_SetError(ctx, EINVAL, in->id[i]);
@@ -63,8 +67,12 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityStatus(
 		}
 
 		/* fill in the response fields */
-		out->status[i] = edg_wll_StatToString(s.state);
+		snprintf(buf,sizeof buf,LB_GLUE_STATE_PREFIX ":%s",stat = edg_wll_StatToString(s.state));
+		buf[sizeof(buf) - 1] = 0;
+		out->status[i] = soap_strdup(soap,buf);
+		free(stat);
 	}
+	out->__sizestatus = in->__sizeid;
 
 	return SOAP_OK;
 }
