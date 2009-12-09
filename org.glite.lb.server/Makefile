@@ -146,15 +146,20 @@ LCAS_LIBS:=-L${lcas_prefix}/${libdir} -llcas
 #	-lvomsc${vomsflavour} \
 
 ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib
+	CLASSADS_LIBS := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib
 endif
+CLASSADS_LIBS := ${CLASSADS_LIBS} -lclassad
 
-classadslib := ${classadslib} -lclassad
+ifneq (${cares_prefix},/usr)
+	CARES_LIBS := -L${cares_prefix}/${libdir} -L${cares_prefix}/lib
+endif
+CARES_LIBS := ${CARES_LIBS} -lcares
 
 EXT_LIBS:=  \
-	-lz -lcares\
+	-lz \
 	${GRIDSITE_LIBS} \
-	${classadslib} \
+	${CLASSADS_LIBS} \
+	${CARES_LIBS} \
 	${LCAS_LIBS} \
 	${VOMS_LIBS}
 
@@ -290,7 +295,7 @@ LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 	rm -f LBTypes.wsdl
 
 test.xml: test_xml
-	./test_xml
+	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_xml
 
 test_xml: test_xml.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
@@ -308,7 +313,7 @@ test_query_events: ${query_events_objs}
 	${TEST_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib}
 
 test.soapconv: test_soap_conv
-	./test_soap_conv
+	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_soap_conv
 
 test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<

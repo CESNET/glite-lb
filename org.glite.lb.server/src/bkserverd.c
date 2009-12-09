@@ -25,6 +25,7 @@
 #include <arpa/nameser.h>
 #include <resolv.h>
 #include <ares.h>
+#include <ares_version.h>
 #include <errno.h>
 
 #ifdef GLITE_LB_SERVER_WITH_WS
@@ -715,7 +716,7 @@ int main(int argc, char *argv[])
 	}
 	edg_wll_Close(ctx);
 	ctx->dbctx = NULL;
-	fprintf(stderr, "[%d]: DB '%s'\n", getpid(), dbstring);
+	dprintf(("[%d]: DB '%s'\n", getpid(), dbstring ? : "default"));
 
 	if ((ctx->dbcaps & GLITE_LBU_DB_CAP_INDEX) == 0) {
 		fprintf(stderr,"%s: missing index support in DB layer\n",argv[0]);
@@ -1582,7 +1583,11 @@ struct asyn_result {
 };
 
 /* ares callback handler for ares_gethostbyaddr()       */
+#if ARES_VERSION >= 0x010500
+static void callback_handler(void *arg, int status, int timeouts, struct hostent *h)
+#else
 static void callback_handler(void *arg, int status, struct hostent *h)
+#endif
 {
 	struct asyn_result *arp = (struct asyn_result *) arg;
 
