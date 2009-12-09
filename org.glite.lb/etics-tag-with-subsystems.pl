@@ -279,6 +279,7 @@ usage: $0 [-c <current configuration>] module.name
 	close(NEWCONF);
 
 	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n");
+	printf(EXEC "etics-commit\n");
 
 
 	# **********************************
