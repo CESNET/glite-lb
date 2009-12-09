@@ -167,7 +167,7 @@ mkreports:
 	-mkdir -p ${REPORTS}
 
 check.parse: test_parse
-	./test_parse ${REPORTS}/parse.xml
+	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_parse ${REPORTS}/parse.xml
 
 test_parse: parse.o test_main.cpp
 	${LINKXX} -o test_parse parse.o ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
