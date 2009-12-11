@@ -14,6 +14,8 @@ GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-/var/glite}
 
 [ -n "$GLITE_LB_SERVER_PIDFILE" ] && pidfile=$GLITE_LB_SERVER_PIDFILE ||
 	pidfile=$GLITE_LOCATION_VAR/glite-lb-bkserverd.pid
+[ -n "$GLITE_LB_HARVESTER_PIDFILE" ] && pidfile_harve=$GLITE_LB_HARVESTER_PIDFILE ||
+	pidfile_harve=$GLITE_LOCATION_VAR/glite-lb-harvester.pid
 [ -z "$GLITE_LB_NOTIF_SOCK" ] && GLITE_LB_NOTIF_SOCK="/tmp/glite-lb-notif.sock"
 [ -n "$GLITE_JP_IMPORTER_PIDFILE" ] && jp_importer_pidfile=$GLITE_JP_IMPORTER_PIDFILE ||
 	jp_importer_pidfile=$GLITE_LOCATION_VAR/glite-jp-importer.pid
@@ -29,12 +31,12 @@ start()
 	fi
 
 	[ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
-		creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
+		creds="--cert $GLITE_HOST_CERT --key $GLITE_HOST_KEY"
 
 	if test -z "$creds"; then
 		if su - $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem"; then
 			echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
-			creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
+			creds="--cert /etc/grid-security/hostcert.pem --key /etc/grid-security/hostkey.pem"
 		fi
 	fi
 
@@ -115,6 +117,18 @@ start()
 			$jpps $creds $GLITE_JP_IMPORTER_ARGS" \
 		&& echo " done" || echo " FAILED"
 	fi
+
+	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true" ; then
+		if test -x $GLITE_LOCATION/bin/glite-lb-harvester; then
+			echo -n Starting glite-lb-harvester ...
+			su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-harvester \
+				$creds --daemon --pidfile $pidfile_harve $GLITE_LB_MSG_OPTIONS \
+				$GLITE_LB_HARVESTER_OTHER_OPTIONS" \
+			&& echo " done" || echo " FAILED"
+		else
+			echo Warning: glite-lb-harvester not installed, MSG notifications will not work
+		fi
+	fi
 }
 
 stop_daemon()
@@ -171,8 +185,12 @@ stop()
 	echo done
 
 	stop_daemon "glite-lb-bkserverd" $pidfile
-	if test x"$GLITE_LB_EXPORT_ENABLED" = x"true"; then
+	if test -f $jp_importer_pidfile -o x"$GLITE_LB_EXPORT_ENABLED" = x"true"; then
 		stop_daemon "glite-jp-importer" $jp_importer_pidfile
+	fi
+	if test -f $pidfile_harve -o x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
+		stop_daemon "glite-lb-harvester" $pidfile_harve && \
+		echo "Use 'glite-lb-harvester --cleanup' for quicker cleanup, if active notifications are not needed anymore.";
 	fi
 }
 
@@ -191,6 +209,9 @@ status()
 	status_daemon "glite-lb-bkserverd" "$pidfile" || retval=1
 	if test x"$GLITE_LB_EXPORT_ENABLED" = x"true"; then
 		status_daemon "glite-jp-importer" "$jp_importer_pidfile" || retval=1
+	fi
+	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
+		status_daemon "glite-lb-harvester" "$pidfile_harve" || retval=1
 	fi
 
 	return $retval
