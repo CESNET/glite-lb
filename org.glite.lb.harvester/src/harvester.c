@@ -108,8 +108,8 @@
 
 #define WLCG_FILENAME_TEMPLATE "/tmp/wlcg_%02d_XXXXXX"
 #define WLCG_COMMAND_MESSAGE "/opt/lcg/bin/msg-publish -c /opt/lcg/etc/msg-publish.conf org.wlcg.usage.jobStatus %s"
-#define WLCG_BINARY "/opt/lcg/bin/msg-publish"
-#define WLCG_CONFIG "/opt/lcg/etc/msg/msg-publish.conf.wlcg"
+#define WLCG_BINARY "/usr/bin/msg-publish"
+#define WLCG_CONFIG "/etc/msg-publish/msg-publish.conf"
 #define WLCG_TOPIC "org.wlcg.usage.jobStatus"
 
 
