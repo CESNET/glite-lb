@@ -422,3 +422,21 @@
 	_code_	DONE
 	string	descr
 	_optional_
+
+@type FileTransfer	transfer job logs progress
+	string	src		Source of file transfer.
+	string	dest		Destination of file transfer.
+	int     result          Result code of the file transfer attemp.
+        _code_  START           The sending component has started or is about to start the file transfer.
+        _code_  OK              The file was transfered successfully.
+        _code_  FAIL            The file transfer failed (see reason)
+	string	reason		The reason of file transfer failure.
+
+@type Sandbox		event for logging relationship between (compute) job and (file) transfer job
+	int	type		Type of sandbox.
+	_code_	INPUT
+	_code_	OUTPUT
+	string	transfer_job	Jobid of transfer job (collection) containing set of file transfers (subjobs).
+	_optional_
+	string  compute_job	Jobid of (compute) job the sandbox belongs. Exclusive with transfer_job.
+	_optional_	
