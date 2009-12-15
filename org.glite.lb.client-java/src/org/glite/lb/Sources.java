@@ -18,8 +18,8 @@ public class Sources {
     public static final int LRMS = 7;
     public static final int APPLICATION = 8;
     public static final int LB_SERVER = 9;
-    public static final int CREAM_EXECUTOR = 10;
-    public static final int CREAM_INTERFACE = 11;
+    public static final int CREAM_INTERFACE = 10;
+    public static final int CREAM_EXECUTOR = 11;
 
     public int source;
     private String[] names = {
@@ -33,8 +33,8 @@ public class Sources {
 	"LRMS",
 	"Application",
 	"LBServer",
-	"CREAMCore",
-	"BLAH",
+	"CREAMInterface",
+	"CREAMExecutor",
     };
     
     public Sources() {
