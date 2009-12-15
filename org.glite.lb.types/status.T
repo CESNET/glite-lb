@@ -5,17 +5,17 @@ _index_
 
 int	jobtype		Type of job
 	_null_	-1
-	_code_ SIMPLE		simple job
-	_code_ DAG		composite job
+	_code_ SIMPLE			simple job
+	_code_ DAG			composite job
 	_code_ _PARTITIONABLE_UNUSED	placholder for unused code
 	_code_ _PARTITIONED_UNUSED	placholder for unused code
-	_code_ COLLECTION	parent of collection of jobs
-	_code_ PBS		PBS job
-	_code_ CONDOR		Condor job
-	_code_ CREAM		CREAM job
-	_code_ SANDBOX		SANDBOX job containing file transfers
-	_code_ FILE_TRANSFER	subjobs of SANDBOX job
-jobid	parent_job	parent job of subjob
+	_code_ COLLECTION		parent of collection of jobs
+	_code_ PBS			PBS job
+	_code_ CONDOR			Condor job
+	_code_ CREAM			CREAM job
+	_code_ FILE_TRANSFER_COLLECTION	job containing all file transfers (i.e. sandbox)
+	_code_ FILE_TRANSFER		subjob holding one file transfer
+jobid	parent_job			parent job of subjob
 
 string	seed		string used for generation of subjob IDs
 int	children_num	number of subjobs
@@ -101,6 +101,9 @@ int	jw_status		Status of Job wrapper
 	_code_	DONE		JW finished
 cclassad	jdl_classad	Unparsed JDL classad
 
+jobid	isb_transfer		Input sandbox corresponding to the job
+jobid	osb_transfer		Output sandbox corresponding to the job
+
 _pad_	55
 
 string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
@@ -160,26 +163,15 @@ int	cream_jw_status		Users jw_status enum
 
 _pad_	30
 
-jobid	sandbox_input		Input sandbox corresponding to compute job
-jobid	sandbox_output		Output sandbox corresponding to compute job
-
-jobid	sandbox_compute		Compute job corresponding to sandbox
-int	sandbox_type		Type of sandbox
+jobid	ft_compute_job		Compute job corresponding to file transfer
+int	ft_sandbox_type		Type of sandbox
 	_null_  -1
 	_code_	INPUT
 	_code_	OUTPUT
-
-_pad_	20
-
 string	ft_src			File transfer source
 string	ft_dest			File transfer destination
-int	ft_result		Result of ft
-	_null_	-1
-	_code_	START
-	_code_	OK
-	_code_	FAIL
-string	ft_reason	
 
+_pad_	20
 
 @type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.
 @type Waiting		Accepted by WMS, waiting for resource allocation.
