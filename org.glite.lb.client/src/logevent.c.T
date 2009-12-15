@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	int     elength = 0;
 #endif
 	edg_wll_Context	ctx;
-        edg_wll_Source src;
+        edg_wll_Source source;
 	edg_wll_EventCode event = EDG_WLL_EVENT_UNDEF;
 	edg_wlc_JobId jobid = 0;
 	int seq = EDG_WLL_SEQ_NORMAL;
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 	    { EDG_WLL_ARGS_STRING, "U", "lbproxy-user-dn", "User certificate DN L&B Proxy store socket path", &lbproxy_user },
 
 	    { EDG_WLL_ARGS_STRING, "m", "machine", 0, &server },
-	    { EDG_WLL_ARGS_SOURCE, "s", "source", "event source (see -s help)", &src },
+	    { EDG_WLL_ARGS_SOURCE, "s", "source", "event source (see -s help)", &source },
 	    { EDG_WLL_ARGS_STRING, "i", "source-instance", "event source instance", &src_instance },
 	    { EDG_WLL_ARGS_STRING, "j", "jobid", "JobId", &jobid_s },
 	    { EDG_WLL_ARGS_STRING, "c", "sequence", "event sequence code", &code },
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr,"%s: unknown or unspecified event\n",argv[0]);
 		exit(1);
 	}
-	edg_wll_SetParam(ctx, EDG_WLL_PARAM_SOURCE, src);
+	edg_wll_SetParam(ctx, EDG_WLL_PARAM_SOURCE, source);
 	if (src_instance) edg_wll_SetParam(ctx, EDG_WLL_PARAM_INSTANCE, src_instance);
 	edg_wll_SetParam(ctx, EDG_WLL_PARAM_LEVEL,
 			 (deb) ? EDG_WLL_LEVEL_DEBUG : EDG_WLL_LEVEL_SYSTEM);

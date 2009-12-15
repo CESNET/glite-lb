@@ -433,7 +433,7 @@
 	string	reason		The reason of file transfer failure.
 
 @type Sandbox		event for logging relationship between (compute) job and (file) transfer job
-	int	type		Type of sandbox.
+	int	variant		Type of sandbox.
 	_code_	INPUT
 	_code_	OUTPUT
 	string	transfer_job	Jobid of transfer job (collection) containing set of file transfers (subjobs).
