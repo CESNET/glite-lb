@@ -156,6 +156,29 @@ bool	cream_cancelling
 int	cream_cpu_time
 int	cream_jw_status		Users jw_status enum
 
+_pad_	30
+
+jobid	sandbox_input		Input sandbox corresponding to compute job
+jobid	sandbox_output		Output sandbox corresponding to compute job
+
+jobid	sandbox_compute		Compute job corresponding to sandbox
+int	sandbox_type		Type of sandbox
+	_null_  -1
+	_code_	INPUT
+	_code_	OUTPUT
+
+_pad_	20
+
+string	ft_src			File transfer source
+string	ft_dest			File transfer destination
+int	ft_result		Result of ft
+	_null_	-1
+	_code_	START
+	_code_	OK
+	_code_	FAIL
+string	ft_reason	
+
+
 @type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.
 @type Waiting		Accepted by WMS, waiting for resource allocation.
 @type Ready		Matching resources found.
