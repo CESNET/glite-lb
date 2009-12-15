@@ -13,6 +13,8 @@ int	jobtype		Type of job
 	_code_ PBS		PBS job
 	_code_ CONDOR		Condor job
 	_code_ CREAM		CREAM job
+	_code_ SANDBOX		SANDBOX job containing file transfers
+	_code_ FILE_TRANSFER	subjobs of SANDBOX job
 jobid	parent_job	parent job of subjob
 
 string	seed		string used for generation of subjob IDs
