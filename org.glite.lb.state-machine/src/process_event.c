@@ -29,6 +29,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 int processEvent_Condor(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
+int processEvent_FileTransfer(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
+int processEvent_FileTransferCollection(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 
 int add_stringlist(char ***lptr, const char *new_item);
 
@@ -56,6 +58,12 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			case EDG_WLL_REGJOB_CREAM:
 				js->pub.jobtype = EDG_WLL_STAT_CREAM;
 				break;
+			case EDG_WLL_REGJOB_FILE_TRANSFER:
+				js->pub.jobtype = EDG_WLL_STAT_FILE_TRANSFER;
+				break;
+			case EDG_WLL_REGJOB_FILE_TRANSFER_COLLECTION:
+				js->pub.jobtype = EDG_WLL_STAT_FILE_TRANSFER_COLLECTION;
+				break;
 			default:
 				trio_asprintf(errstring,"unknown job type %d in registration",e->regJob.jobtype);
 				return RET_FAIL;
@@ -72,6 +80,10 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			return processEvent_Condor(js,e,ev_seq,strict,errstring);
 		case EDG_WLL_STAT_CREAM: 
 			return processEvent_Cream(js,e,ev_seq,strict,errstring);
+		case EDG_WLL_STAT_FILE_TRANSFER:
+			return processEvent_FileTransfer(js,e,ev_seq,strict,errstring);
+		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
+			return processEvent_FileTransferCollection(js,e,ev_seq,strict,errstring);
 		case -1: return RET_UNREG;
 		default: 
 			trio_asprintf(errstring,"undefined job type %d",js->pub.jobtype);

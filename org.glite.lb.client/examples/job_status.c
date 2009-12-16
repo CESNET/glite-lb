@@ -222,6 +222,12 @@ static void printstat(edg_wll_JobStat stat, int level)
 		case EDG_WLL_STAT_CREAM:
 			printf("%sjobtype : CREAM\n", ind);
                         break;
+		case EDG_WLL_STAT_FILE_TRANSFER:
+			printf("%sjobtype : FILE_TRANSFER\n", ind);
+                        break;
+		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
+			printf("%sjobtype : FILE_TRANSFER_COLLECTION\n", ind);
+                        break;
 		default:
 			printf("%sjobtype : UNKNOWN\n", ind);
 			break;
