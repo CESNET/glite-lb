@@ -495,7 +495,7 @@ int edg_wll_intJobStatus(
 
 	if (intErr) {
 		destroy_intJobStat(intstat);
-		return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, NULL);
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, errstring);
 	} else {
 		/* XXX intstat->pub.expectUpdate = eval_expect_update(intstat, &intstat->pub.expectFrom); */
 		intErr = edg_wlc_JobIdDup(job, &intstat->pub.jobId);
