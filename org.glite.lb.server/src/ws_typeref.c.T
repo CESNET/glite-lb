@@ -854,6 +854,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 
 				$upper_cn = $code->{name};
 				$enum_value = "${enum_value_prefix}${upper_cn}";
+				$upper_cn =~ s/_/_USCORE/g;
 				$soap_enum_value = "lbt__${soap_en}${soap_fn}__${upper_cn}";
 				gen "\tcase $soap_enum_value: *out = $enum_value; break;\n"
 			}
@@ -885,6 +886,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 
 				$upper_cn = $code->{name};
 				$enum_value = "${enum_value_prefix}${upper_cn}";
+				$upper_cn =~ s/_/_USCORE/g;
 				$soap_enum_value = "lbt__${soap_en}${soap_fn}__${upper_cn}";
 				gen "\tcase $enum_value: $target = $soap_enum_value; break;\n"
 			}
