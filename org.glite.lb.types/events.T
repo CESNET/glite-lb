@@ -161,6 +161,8 @@
 	_code_	PBS		PBS job
 	_code_	CONDOR		Condor job
 	_code_	CREAM		CREAM job
+        _code_	FILE_TRANSFER_COLLECTION File transfer collection
+        _code_	FILE_TRANSFER            File transfer
 	
 	int	nsubjobs	Number of subjobs this job plans to spawn.
 	_optional_
@@ -423,9 +425,12 @@
 	string	descr
 	_optional_
 
-@type FileTransfer	transfer job logs progress
+@type FileTransferRegister	register file transfer
 	string	src		Source of file transfer.
 	string	dest		Destination of file transfer.
+
+
+@type FileTransfer	transfer job logs progress
 	int     result          Result code of the file transfer attemp.
         _code_  START           The sending component has started or is about to start the file transfer.
         _code_  OK              The file was transfered successfully.
