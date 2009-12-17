@@ -226,7 +226,7 @@ static void read_event(const edg_wll_Args* o, char* arg, char* par)
 	if (strcmp(par, "help") == 0)
 	{
 	    // list type
-	    int i;
+	    int i, k = EDG_WLL_EVENT_UNDEF + 1;
 	    printf("Available events:   extra options\n");
 /* XXX: holes in edg_wll_EventCode */
 	    for (i = EDG_WLL_EVENT_UNDEF + 1; i < EDG_WLL_EVENT__LAST; i++)
@@ -236,10 +236,10 @@ static void read_event(const edg_wll_Args* o, char* arg, char* par)
 		{
                     int j = 0;
 		    printf("  %s:  ", e);
-		    while (eventTags[i][j])
-			printf("%s ", eventTags[i][j++]);
+		    while (eventTags[k][j])
+			printf("%s ", eventTags[k][j++]);
                     fputc('\n', stdout);
-
+		    k++;
 		    free(e);
 		}
 	    }
