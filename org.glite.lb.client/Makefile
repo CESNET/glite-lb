@@ -63,6 +63,10 @@ l_SRC = \
 	cream_reallyrunning.l \
 	cream_done.l \
 	cream_failed.l \
+	submitted_ft_reg.l \
+	running_ft.l \
+	done_ft.l \
+	aborted_ft.l \
 
 # TODO: missing resubmission_deep
 #	shallow_resub_complex.l shallow_resub_simple.l shallow_resub_simple2.l \

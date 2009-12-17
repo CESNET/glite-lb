@@ -58,6 +58,60 @@ int processEvent_FileTransfer(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				;
 			}
 			break;
+		case EDG_WLL_EVENT_FILETRANSFERREGISTER:
+			if (USABLE(res)) {
+				;
+			}
+			if (USABLE_DATA(res)) {
+				rep(js->pub.ft_src, e->fileTransferRegister.src);
+				rep(js->pub.ft_dest, e->fileTransferRegister.dest);
+			}
+			break;
+		case EDG_WLL_EVENT_FILETRANSFER:
+			if (USABLE(res)) {
+				switch (e->fileTransfer.result) {
+					case EDG_WLL_FILETRANSFER_START:
+						js->pub.state = EDG_WLL_JOB_RUNNING;
+						break;
+					case EDG_WLL_FILETRANSFER_OK:
+						js->pub.state = EDG_WLL_JOB_DONE;
+						js->pub.done_code = EDG_WLL_STAT_OK;
+						break;
+					case EDG_WLL_FILETRANSFER_FAIL:
+						js->pub.state = EDG_WLL_JOB_DONE;
+						js->pub.done_code = EDG_WLL_STAT_FAILED;
+						rep(js->pub.failure_reasons, e->fileTransfer.reason);
+						break;
+					default:
+						break;
+				}
+			}
+			if (USABLE_DATA(res)) {
+				;
+			}
+			break;
+		case EDG_WLL_EVENT_ABORT:
+			if (USABLE(res)) {
+				js->pub.state = EDG_WLL_JOB_ABORTED;
+				js->pub.remove_from_proxy = 1;
+				rep(js->pub.reason, e->abort.reason);
+				rep(js->pub.location, "none");
+			}
+			break;
+		case EDG_WLL_EVENT_SANDBOX:
+			if (USABLE_DATA(res)) {
+				if (e->sandbox.variant == EDG_WLL_SANDBOX_INPUT)
+					js->pub.ft_sandbox_type = EDG_WLL_STAT_INPUT;
+
+				if (e->sandbox.variant == EDG_WLL_SANDBOX_OUTPUT)
+					js->pub.ft_sandbox_type = EDG_WLL_STAT_OUTPUT;
+
+				if (e->sandbox.compute_job) {
+					edg_wlc_JobIdFree(js->pub.ft_compute_job);
+					edg_wlc_JobIdParse(e->sandbox.compute_job,&js->pub.ft_compute_job);
+				}
+			}
+			break;
 		default:
 			break;
 	}

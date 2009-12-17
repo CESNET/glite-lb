@@ -511,6 +511,8 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_strlist(ret, stat->user_fqans);
 	if (ret) ret = enc_int(ret, stat->sandbox_retrieved);
 	if (ret) ret = enc_int(ret, stat->jw_status);
+	if (ret) ret = enc_jobid(ret, stat->isb_transfer);
+	if (ret) ret = enc_jobid(ret, stat->osb_transfer);
 	if (ret) ret = enc_string(ret, stat->pbs_state);
 	if (ret) ret = enc_string(ret, stat->pbs_queue);
 	if (ret) ret = enc_string(ret, stat->pbs_owner);
@@ -547,6 +549,10 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_int(ret, stat->cream_cancelling);
 	if (ret) ret = enc_int(ret, stat->cream_cpu_time);
 	if (ret) ret = enc_int(ret, stat->cream_jw_status);
+	if (ret) ret = enc_jobid(ret, stat->ft_compute_job);
+	if (ret) ret = enc_int(ret, stat->ft_sandbox_type);
+	if (ret) ret = enc_string(ret, stat->ft_src);
+	if (ret) ret = enc_string(ret, stat->ft_dest);
 
 	return ret;
 }
@@ -608,6 +614,8 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->user_fqans = dec_strlist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->sandbox_retrieved = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->jw_status = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->isb_transfer = dec_jobid(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->osb_transfer = dec_jobid(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_state = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_queue = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_owner = dec_string(tmp_in, &tmp_in);
@@ -644,6 +652,11 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
 	if (tmp_in != NULL) stat->cream_cancelling = dec_int(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->cream_cpu_time = dec_int(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->cream_jw_status = dec_int(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->ft_compute_job = dec_jobid(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->ft_sandbox_type = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->ft_src = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->ft_dest = dec_string(tmp_in, &tmp_in);
+	
 
 	*rest = tmp_in;
 

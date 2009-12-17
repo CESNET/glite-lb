@@ -201,7 +201,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 	s = edg_wll_StatToString(stat.state); 
 /* print whole flat structure */
 	printf("%sstate : %s\n", ind, s);
-	printf("%sjobId : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.jobId));
+	printf("%sjobId : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.jobId)); free(j1);
 	printf("%sowner : %s\n", ind, stat.owner);
 	switch (stat.jobtype) {
 		case EDG_WLL_STAT_SIMPLE:
@@ -309,7 +309,10 @@ static void printstat(edg_wll_JobStat stat, int level)
         }
 	printf("%ssandbox_retrieved : %d\n", ind, stat.sandbox_retrieved);
 	printf("%sjw_status : %s\n", ind, edg_wll_JWStatToString(stat.jw_status));
-
+	
+	printf("%sisb_transfer : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.isb_transfer)); free(j1);
+	printf("%sosb_transfer : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.osb_transfer)); free(j1);
+	
 	/* PBS state section */
 	if (stat.jobtype == EDG_WLL_STAT_PBS) {
 		printf("%spbs_state : %s\n", ind, stat.pbs_state);
@@ -347,9 +350,20 @@ static void printstat(edg_wll_JobStat stat, int level)
 		free(cream_stat_name);
 	}
 
+	/* File Transfer section */
+	printf("%sft_compute_job : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.ft_compute_job)); free(j1);
+	if (stat.ft_sandbox_type == EDG_WLL_STAT_INPUT)
+		printf("%sft_sandbox_type : INPUT\n", ind);
+	else  if (stat.ft_sandbox_type == EDG_WLL_STAT_OUTPUT)
+		printf("%sft_sandbox_type : OUTPUT\n", ind);
+	else
+		printf("%sft_sandbox_type : UNKNOWN\n", ind);
+	printf("%sft_src : %s\n", ind, stat.ft_src);
+	printf("%sft_dest : %s\n", ind, stat.ft_dest);
+	
+
 	printf("\n");	
 	
-	free(j1);
 	free(j2);
 	free(s);
 }
