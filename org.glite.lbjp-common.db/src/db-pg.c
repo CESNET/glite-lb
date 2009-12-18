@@ -3,6 +3,7 @@
  * 
  * PostgreSQL limitations:
  *  - prepared commands requires server >= 8.2
+ *  - binary data need to be handled manually (libpq limitation)
  */
 
 #include <sys/types.h>
@@ -78,11 +79,9 @@ typedef struct {
 	char *STDCALL(*PQcmdTuples)(PGresult *res);
 	int STDCALL(*PQntuples)(const PGresult *res);
 	char *STDCALL(*PQfname)(const PGresult *res, int field_num);
-	unsigned char *STDCALL(*PQescapeByteaConn)(PGconn *conn,
-		const unsigned char *from, size_t from_length,
-		size_t *to_length);
-	unsigned char *STDCALL(*PQunescapeBytea)(const unsigned char *strtext,
-		size_t *retbuflen);
+	size_t STDCALL(*PQescapeStringConn)(PGconn *conn,
+		char *to, const char *from, size_t length,
+		int *error);
 	void STDCALL(*PQfreemem)(void *ptr);
 } psql_module_t;
 
@@ -174,8 +173,7 @@ int glite_lbu_InitDBContextPsql(glite_lbu_DBContext *ctx_gen) {
 			LOAD(PQcmdTuples, "PQcmdTuples");
 			LOAD(PQntuples, "PQntuples");
 			LOAD(PQfname, "PQfname");
-			LOAD(PQescapeByteaConn, "PQescapeByteaConn");
-			LOAD(PQunescapeBytea, "PQunescapeBytea");
+			LOAD(PQescapeStringConn, "PQescapeStringConn");
 			LOAD(PQfreemem, "PQfreemem");
 
 			pthread_mutex_unlock(&psql_module.lock);
@@ -314,7 +312,6 @@ int glite_lbu_RollbackPsql(glite_lbu_DBContext ctx_gen __attribute((unused))) {
 int glite_lbu_FetchRowPsql(glite_lbu_Statement stmt_gen, unsigned int maxn, unsigned long *lengths, char **results) {
 	glite_lbu_StatementPsql stmt = (glite_lbu_StatementPsql)stmt_gen;
 	unsigned int i, n;
-	size_t len;
 	char *s;
 
 	if (stmt->row >= stmt->nrows) return 0;
@@ -331,9 +328,8 @@ int glite_lbu_FetchRowPsql(glite_lbu_Statement stmt_gen, unsigned int maxn, unsi
 	for (i = 0; i < n; i++) {
 		/* sanity check for internal error (NULL when invalid row) */
 		s = psql_module.PQgetvalue(stmt->res, stmt->row, i) ? : "";
-		s = psql_module.PQunescapeBytea(s, &len);
 		results[i] = strdup(s);
-		if (lengths) lengths[i] = len;
+		if (lengths) lengths[i] = strlen(s);
 	}
 
 	stmt->row++;
@@ -510,18 +506,18 @@ int glite_lbu_ExecPreparedStmtPsql_v(glite_lbu_Statement stmt_gen, int n, va_lis
 		case GLITE_LBU_DB_TYPE_MEDIUMTEXT:
 		case GLITE_LBU_DB_TYPE_LONGBLOB:
 		case GLITE_LBU_DB_TYPE_LONGTEXT: {
-			unsigned char *tmp, *s;
+			char *tmp, *s;
 			unsigned long binary_len;
-			size_t result_len;
 
-			s = (unsigned char *)va_arg(ap, char *);
+			s = va_arg(ap, char *);
 			binary_len = va_arg(ap, unsigned long);
 			lprintf("blob, len = %lu, ptr = %p\n", binary_len, s);
 			if (s) {
-				tmp = psql_module.PQescapeByteaConn(ctx->conn, s, binary_len, &result_len);
+				tmp = malloc(2*binary_len + 1);
+				psql_module.PQescapeStringConn(ctx->conn, tmp, s, binary_len, NULL);
 				asprintf(&tmpdata[i], "'%s'", tmp);
 				lprintf("escaped: '%s'\n", tmpdata[i]);
-				psql_module.PQfreemem(tmp);
+				free(tmp);
 			} else
 				tmpdata[i] = strdup("NULL");
 			break;
