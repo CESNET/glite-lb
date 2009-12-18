@@ -184,7 +184,7 @@ typedef struct {
 	char *wlcg_config;  // msg config file
 	char *wlcg_topic;   // msg topic
 	int wlcg_flush;     // send message for eachnotification
-	int silly;          // old LB 3.1 mode
+	int silly;          // old LB 1.9 mode
 
 	int nservers;
 	notif_t *notifs;
@@ -1842,7 +1842,7 @@ exit:
 
 int reconcile_threads() {
 	int iserver, ithread, inotif, gran, mod, nnotifs;
-	int j, oldn, type, typestart, typeend;
+	int i, j, oldn, type, typestart, typeend;
 	notif_t *a, *b;
 	edg_wll_Context ctx = NULL;
 	edg_wll_NotifId notifid;
@@ -1901,7 +1901,10 @@ int reconcile_threads() {
 				inotif++;
 			}
 		}
-		assert(db.n % nnotifs == 0); // each server all notifs
+		j = 0;
+		for (i = 0; i < db.n; i++)
+			if (db.notifs[i].active) j++;
+		assert(j % nnotifs == 0); // each server all notifs
 	}
 
 	if (edg_wll_InitContext(&ctx) != 0) {
@@ -1947,14 +1950,14 @@ void usage(const char *prog) {
 		"	                   in seconds (%d)\n"
 		"	-H, --history      historic dive in seconds (<=0 is unlimited)\n"
 		"	-c, --config       config file name (list of LB servers), precedence before " RTM_DB_TABLE_LBS " table\n"
+#ifdef WITH_LBU_DB
+		"	-m, --pg           db connection string (user/pwd@server:dbname) to " RTM_DB_TABLE_LBS " table\n"
+#endif
 		"	-n, --notifs       file for persistent information about active\n"
 		"	                   notifications\n"
-#ifdef WITH_LBU_DB
-		"	-m, --pg           db connection string (user/pwd@server:dbname)\n"
-#endif
 		"	-C, --cert         X509 certificate file\n"
 		"	-K, --key          X509 key file\n"
-		"	-o, --old          \"silly\" mode for old L&B 3.1 servers\n"
+		"	-o, --old          \"silly\" mode for old L&B 1.9 servers\n"
 		"	-l, --cleanup      clean up the notifications and exit\n"
 		"	-w, --wlcg         enable messaging for dashboard\n"
 		"	--wlcg-binary      full path to msg-publish binary\n"
@@ -2115,6 +2118,7 @@ int config_load() {
 	FILE *f;
 	void *tmp;
 	int i, n;
+	int major, minor, sub, version;
 #ifdef WITH_LBU_DB
 	char *results[2];
 	char *result = NULL;
@@ -2164,13 +2168,24 @@ int config_load() {
 
 		config.notifs = calloc(n, sizeof(notif_t));
 		config.nservers = 0;
-		if ((err = glite_lbu_ExecSQL(db.dbctx, "SELECT DISTINCT ip FROM " RTM_DB_TABLE_LBS, &stmt)) < 0) {
+		if ((err = glite_lbu_ExecSQL(db.dbctx, "SELECT DISTINCT ip, serv_version FROM " RTM_DB_TABLE_LBS, &stmt)) < 0) {
 			goto err;
 		}
 		while (config.nservers < n && (err = glite_lbu_FetchRow(stmt, 2, NULL, results)) > 0) {
-			config.notifs[config.nservers].server = strdup(results[0]);
-			config.notifs[config.nservers++].port = GLITE_JOBID_DEFAULT_PORT;
+			if (sscanf(results[1], "%d.%d.%d", &major, &minor, &sub) != 3) {
+				lprintf(NULL, ERR, "can't parse LB server version '%s'", results[1]);
+				free(results[1]);
+				break;
+			}
+			version = 10000 * major + 100 * minor + sub;
+			if (version >= 20000 || config.silly) {
+				config.notifs[config.nservers].server = strdup(results[0]);
+				config.notifs[config.nservers++].port = GLITE_JOBID_DEFAULT_PORT;
+			} else {
+				lprintf(NULL, INF, "skipped older LB server %s (version '%s')", results[0], results[1]);
+			}
 			free(results[0]);
+			free(results[1]);
 		}
 		if (err < 0) goto err;
 		glite_lbu_FreeStmt(&stmt);
