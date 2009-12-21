@@ -2452,6 +2452,22 @@ int main(int argn, char *argv[]) {
 
 	// load configurations
 	if (config_load()) goto quit;
+#ifdef WITH_OLD_LB
+	// other client certificate settings ignored by older globus,
+	// using environment (certificate the same for all threads)
+	{
+		char *s;
+
+		if (config.cert) {
+			asprintf(&s, "X509_USER_CERT=%s", config.cert);
+			putenv(s);
+		}
+		if (config.key) {
+			asprintf(&s, "X509_USER_KEY=%s", config.key);
+			putenv(s);
+		}
+	}
+#endif
 
 	// load previous notifications
 	if (load_notifs()) goto quit;
