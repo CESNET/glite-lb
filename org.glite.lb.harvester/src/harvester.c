@@ -159,7 +159,7 @@ typedef struct {
 	int dash_fd;
 #ifdef WITH_LBU_DB
 	glite_lbu_DBContext dbctx;
-	glite_lbu_Statement insertcmd, updatecmd, updatecmd_vo;
+	glite_lbu_Statement insertcmd, updatecmd, updatecmd_vo, updatecmd_mon;
 	int dbcaps;
 #endif
 } thread_t;
@@ -833,6 +833,42 @@ static int db_save_notifs(thread_t *t) {
 	}
 #endif
 
+#if defined(WITH_LBU_DB)
+	int i, ret;
+	notif_t *notif;
+
+	//
+	// Keep monitored flag when:
+	// 1) used and opened DB
+	// 2) LB servers not from config file
+	//
+	if (t && t->dbctx && !config.config_file) {
+		for (i = 0; i < t->nservers; i++) {
+			notif = t->notifs + i;
+
+			if (notif->type == RTM_NOTIF_TYPE_OLD || notif->type == RTM_NOTIF_TYPE_JDL) {
+				lprintf(t, DBG, "changing monitored flag of %d. notification for %s:%d to %d", i, notif->server, notif->port, notif->error ? 0 : 1);
+				if ((t->dbcaps & GLITE_LBU_DB_CAP_PREPARED) == 0) {
+					char *sql;
+
+					trio_asprintf(&sql, "UPDATE " DBAMP RTM_DB_TABLE_LBS DBAMP " SET monitored=%s WHERE ip='%|Ss'", notif->error ? "false" : "true", notif->server);
+					ret = glite_lbu_ExecSQL(t->dbctx, sql, NULL);
+					free(sql);
+				} else {
+					ret = glite_lbu_ExecPreparedStmt(t->updatecmd_mon, 2,
+						GLITE_LBU_DB_TYPE_BOOLEAN, notif->error ? 0 : 1,
+						GLITE_LBU_DB_TYPE_VARCHAR, notif->server
+					);
+				}
+				if (ret == -1) {
+					lprintf_dbctx(t, ERR, "can't update monitored flag in " RTM_DB_TABLE_LBS " table");
+					return 1;
+				}
+			}
+		}
+	}
+#endif
+
 #if defined(WITH_RTM_SQL_STORAGE) && defined(WITH_LBU_DB)
 	if (!db.dbctx) return db_save_notifs_file(t);
 	else return db_save_notifs_sql(t);
@@ -1332,16 +1368,15 @@ int load_notifs_sql() {
 		goto quit;
 	}
 	while ((err = glite_lbu_FetchRow(stmt, 8, NULL, results)) > 0) {
-		if (results[0] && results[0][0]) notifidstr = results[0];
-		else {
-			notifidstr = NULL;
-			free(results[0]);
-		}
+		if (results[0] && results[0][0]) notifidstr = strdup(results[0]);
+		else notifidstr = NULL;
+		free(results[0]);
 		results[0] = NULL;
 
 		if ((type = rtm_str2notiftype(results[1])) == -1) {
 			lprintf(NULL, ERR, "unknown notification type '%s' in '%s'", results[1], notifidstr);
 			for (i = 0; i < 8; i++) free(results[i]);
+			free(notifidstr);
 			continue;
 		}
 		free(results[1]);
@@ -1368,7 +1403,7 @@ int load_notifs_sql() {
 		if (results[5] && results[5][0]) errcnt = atoi(results[5]);
 		free(results[5]);
 
-		if ((new_notif = db_add_notif(notifidstr, type, valid, refresh, last_update, results[6], atoi(results[7]), 0, errcnt)) == NULL) {
+		if ((new_notif = db_add_notif(notifidstr, type, valid, refresh, last_update, (results[6] && !notifidstr) ? strdup(results[6]) : NULL, atoi(results[7]), 0, errcnt)) == NULL) {
 			free(notifidstr);
 			free(results[6]);
 			free(results[7]);
@@ -1489,9 +1524,11 @@ void *notify_thread(void *thread_data) {
 			    "SET ce=$1, queue=$2, rb=$3, ui=$4, state=$5, state_entered=$6, rtm_timestamp=$7, active=$8, state_changed=$9, registered=$10 WHERE jobid=$11 AND lb=$12", 
 			&t->updatecmd) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_JOBS DBAMP " "
 			    "SET ce=$1, queue=$2, rb=$3, ui=$4, state=$5, state_entered=$6, rtm_timestamp=$7, active=$8, state_changed=$9, registered=$10, vo=$11 WHERE jobid=$12 AND lb=$13", 
-			&t->updatecmd_vo) != 0) {
+			&t->updatecmd_vo) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_LBS DBAMP " "
+			    "SET monitored=$1 WHERE ip=$2",
+			&t->updatecmd_mon)) {
 				lprintf_dbctx(t, ERR, "can't create prepare commands");
-				lprintf(t, DBG, "insertcmd=%p, updatecmd=%p, updatecmd_vo=%p", t->insertcmd, t->updatecmd, t->updatecmd_vo);
+				lprintf(t, DBG, "insertcmd=%p, updatecmd=%p, updatecmd_vo=%p, updatecmd_mon=%p", t->insertcmd, t->updatecmd, t->updatecmd_vo, t->updatecmd_mon);
 				quit = RTM_QUIT_PRESERVE;
 			}
 		}
@@ -1831,6 +1868,7 @@ exit:
 	if (t->insertcmd) glite_lbu_FreeStmt(&t->insertcmd);
 	if (t->updatecmd) glite_lbu_FreeStmt(&t->updatecmd);
 	if (t->updatecmd_vo) glite_lbu_FreeStmt(&t->updatecmd_vo);
+	if (t->updatecmd_mon) glite_lbu_FreeStmt(&t->updatecmd_mon);
 	db_free(t, t->dbctx);
 #endif
 	if (ctx) edg_wll_FreeContext(ctx);
@@ -2274,7 +2312,7 @@ int main(int argn, char *argv[]) {
 			if (fscanf(f, "%255[^\n\r]", s) == 1) {
 				if (kill(atoi(s),0)) {
 					lprintf(NULL, WRN, "stale pidfile, pid = %s, pidfile '%s'", s, config.pidfile);
-					rewind(f);
+					fclose(f);
 				}
 				else {
 					lprintf(NULL, ERR, "another instance running, pid = %s, pidfile '%s'", s, config.pidfile);
