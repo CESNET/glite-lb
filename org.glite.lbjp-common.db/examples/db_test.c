@@ -6,6 +6,11 @@
  *   mysqladmin -u root -p create test
  *   mysql -u root -p -e 'GRANT ALL on test.* to testuser@localhost'
  *
+ * Or postgres:
+ *
+ *   createuser -U postgres testuser
+ *   createdb -U postgres --owner testuser test
+ *
  * Use CS environment variable when using different user/pwd@machine:dbname.
  */
 
@@ -13,10 +18,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "glite/lbu/db.h"
+#include <glite/lbu/trio.h>
+
+#include "db.h"
 
 #define CS "testuser/@localhost:test"
-#if defined(DB_BACKEND) && DB_BACKEND == postgresql
+
+#ifdef PSQL_BACKEND
 #define CREATE_CMD "CREATE TABLE \"data\" (\n\
     \"id\"    INTEGER NOT NULL,\n\
     \"user\"  VARCHAR(32) NOT NULL,\n\
@@ -24,7 +32,12 @@
     PRIMARY KEY (\"id\")\n\
 )"
 #define AMP "\""
+#define INSERT_CMD "INSERT INTO " AMP "data" AMP " (" AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP ") VALUES ($1, $2, $3)"
+#define SELECT_CMD "SELECT " AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP " FROM " AMP "data" AMP " WHERE " AMP "user" AMP " = $1"
+#define DB_TEST_BACKEND GLITE_LBU_DB_BACKEND_PSQL
+
 #else
+
 #define CREATE_CMD "CREATE TABLE data (\n\
     `id`    INT NOT NULL,\n\
     `user`  VARCHAR(32) NOT NULL,\n\
@@ -33,12 +46,14 @@
     INDEX(`user`)\n\
 ) engine=innodb"
 #define AMP "`"
+#define INSERT_CMD "INSERT INTO " AMP "data" AMP " (" AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP ") VALUES (?, ?, ?)"
+#define SELECT_CMD "SELECT " AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP " FROM " AMP "data" AMP " WHERE " AMP "user" AMP " = ?"
+#define DB_TEST_BACKEND GLITE_LBU_DB_BACKEND_MYSQL
 #endif
+
 #define DROP_CMD "DROP TABLE " AMP "data" AMP
 #define INSERT_TRIO_CMD "INSERT INTO " AMP "data" AMP " (" AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP ") VALUES (%d, %s, %s)"
 #define SELECT_TRIO_CMD "SELECT " AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP " FROM " AMP "data" AMP " WHERE " AMP "user" AMP " = '%s'"
-#define INSERT_CMD "INSERT INTO " AMP "data" AMP " (" AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP ") VALUES (?, ?, ?)"
-#define SELECT_CMD "SELECT " AMP "id" AMP ", " AMP "user" AMP ", " AMP "info" AMP " FROM " AMP "data" AMP " WHERE " AMP "user" AMP " = ?"
 
 #define dprintf(ARGS) { printf("%s: ", name); printf ARGS; }
 
@@ -77,7 +92,7 @@ int main(int argn __attribute((unused)), char *argv[]) {
 	int caps;
 
 #ifndef NO_PREPARED
-	char blob1[] = "Guess: blob or \000string?";
+	char blob1[] = "Guess: blob or _string?"; blob1[15] = 0;
 	char blob2[] = {0, 1, 2, 3, 4, 5};
 #endif
 
@@ -92,7 +107,7 @@ int main(int argn __attribute((unused)), char *argv[]) {
 
 	// init
 	dprintf(("connecting to %s...\n", cs));
-	if (glite_lbu_InitDBContext(&ctx) != 0) goto failctx;
+	if (glite_lbu_InitDBContext(&ctx, DB_TEST_BACKEND) != 0) goto failctx;
 	if (glite_lbu_DBConnect(ctx, cs) != 0) goto failctx;
 	if ((caps = glite_lbu_DBQueryCaps(ctx)) == -1) goto failcon;
 #ifndef NO_PREPARED

@@ -170,7 +170,7 @@ static char *to_sql_string(edg_wll_JobStat const *stat,int offset)
 static char *to_sql_timeval(edg_wll_JobStat const *stat,int offset)
 {
 	char	*out;
-	glite_lbu_TimeToDB( ((struct timeval *) (((char *) stat) + offset))->tv_sec, &out );
+	glite_lbu_TimeToStr( ((struct timeval *) (((char *) stat) + offset))->tv_sec, &out );
 	return out;
 }
 
@@ -378,17 +378,17 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 				break;
 			case EDG_WLL_QUERY_ATTR_TIME:
 				if (stat->stateEnterTimes)
-					glite_lbu_TimeToDB(stat->stateEnterTimes[job_index_cols[i].qrec.attr_id.state+1], &data);
+					glite_lbu_TimeToStr(stat->stateEnterTimes[job_index_cols[i].qrec.attr_id.state+1], &data);
 				else data = strdup("0");
 				break;
 			case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 				asprintf(&data, "%d", stat->resubmitted);
 				break;
 			case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
-				glite_lbu_TimeToDB(stat->stateEnterTime.tv_sec, &data);
+				glite_lbu_TimeToStr(stat->stateEnterTime.tv_sec, &data);
 				break;
 			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
-				glite_lbu_TimeToDB(stat->lastUpdateTime.tv_sec, &data);
+				glite_lbu_TimeToStr(stat->lastUpdateTime.tv_sec, &data);
 				break;
 			case EDG_WLL_QUERY_ATTR_JDL_ATTR: // This is not the correct way to handle jdl searches.
                                 /* There's no way to index individual JDL attributes */
@@ -398,12 +398,12 @@ edg_wll_ErrorCode edg_wll_IColumnsSQLPart(edg_wll_Context ctx,
 				break;
 /*			case EDG_WLL_QUERY_ATTR_STATEENTERTIME: /// XXX: Which way of handling this is correct?
 				if (stat->stateEnterTime)
-					glite_lbu_TimeToDB(stat->stateEnterTime, &data);
+					glite_lbu_TimeToStr(stat->stateEnterTime, &data);
 				else data = strdup("0");
 				break;
 			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 				if (stat->lastUpdateTime)
-					glite_lbu_TimeToDB(stat->lastUpdateTime, &data);
+					glite_lbu_TimeToStr(stat->lastUpdateTime, &data);
 				else data = strdup("0");
 				break;*/
 

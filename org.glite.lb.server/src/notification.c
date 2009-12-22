@@ -89,7 +89,7 @@ int edg_wll_NotifNewServer(
 		*valid = time(NULL) + ctx->notifDuration;	
 	adjust_validity(ctx,valid);
 
-	glite_lbu_TimeToDB(*valid, &time_s);
+	glite_lbu_TimeToStr(*valid, &time_s);
 	if ( !time_s )
 	{
 		edg_wll_SetError(ctx, errno, NULL);
@@ -205,7 +205,7 @@ int edg_wll_NotifBindServer(
 			*valid = time(NULL) + ctx->notifDuration;	
 		adjust_validity(ctx,valid);
 
-		glite_lbu_TimeToDB(*valid, &time_s);
+		glite_lbu_TimeToStr(*valid, &time_s);
 		if ( !time_s )
 		{
 			edg_wll_SetError(ctx, errno, "Formating validity time");
@@ -379,7 +379,7 @@ int edg_wll_NotifRefreshServer(
 			*valid = time(NULL) + ctx->notifDuration;	
 		adjust_validity(ctx,valid);
 
-		glite_lbu_TimeToDB(*valid, &time_s);
+		glite_lbu_TimeToStr(*valid, &time_s);
 		if ( !time_s )
 		{
 			edg_wll_SetError(ctx, errno, "Formating validity time");
@@ -685,7 +685,7 @@ static int update_notif(
 		int	expires;
 		
 		*v2 = 0;
-		expires = glite_lbu_DBToTime(v+1);
+		expires = glite_lbu_StrToTime(v+1);
 /*
  		printf("edg_wll_NotifChangeIL(ctx, %s, %s, %d)\n",
 				nid_s? nid_s: "nid", host, port);
@@ -820,7 +820,7 @@ static int check_notif_age(edg_wll_Context ctx, const edg_wll_NotifId nid) {
 	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
 		goto cleanup;
 
-	glite_lbu_TimeToDB(now, &time_s);
+	glite_lbu_TimeToStr(now, &time_s);
 	if ( !time_s )
 	{
 		edg_wll_SetError(ctx, errno, NULL);
