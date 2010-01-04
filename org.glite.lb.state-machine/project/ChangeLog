@@ -21,3 +21,6 @@
 - Makefile relies on the libdir variable
 - New configure script
 
+1.0.1-1
+- Recompute state for unknown jobs to allow purging
+
