@@ -1,3 +1,8 @@
 1.0.0-1
 - Initial version
 
+1.0.1-1
+- Reflect updates in the database module
+- Adjusted grey job purges (purge undefined jobs etc.)
+- Minor memleak fixes
+
