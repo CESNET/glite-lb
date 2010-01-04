@@ -94,3 +94,7 @@
 - Consider arch libdir when linking c-ares
 - Checking the c-ares version, fix for c-ares >= 1.5.0.
 
+2.0.5-1
+- Reflect updates in the database module
+- Adjusted grey job purges (purge undefined jobs etc.)
+
