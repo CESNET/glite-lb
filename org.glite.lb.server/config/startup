@@ -122,7 +122,8 @@ start()
 		if test -x $GLITE_LOCATION/bin/glite-lb-harvester; then
 			echo -n Starting glite-lb-harvester ...
 			su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-harvester \
-				$creds --daemon --pidfile $pidfile_harve $GLITE_LB_MSG_OPTIONS \
+				$creds --daemon --pidfile $pidfile_harve $GLITE_LB_HARVESTER_MSG_OPTIONS \
+				--config ${GLITE_LOCATION}/etc/glite-lb-harvester.conf \
 				$GLITE_LB_HARVESTER_OTHER_OPTIONS" \
 			&& echo " done" || echo " FAILED"
 		else
