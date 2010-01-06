@@ -569,7 +569,7 @@ int wlcg_send_message(thread_t *t) {
 			if (status) {
 				lprintf(t, WRN, "%s exited with %d", config.wlcg_binary, status);
 			} else {
-				lprintf(t, INF, "%s exited successfully", config.wlcg_binary);
+				lprintf(t, DBG, "%s exited successfully", config.wlcg_binary);
 				if (!config.wlcg_no_remove) remove(t->dash_filename);
 			}
 		} else {
