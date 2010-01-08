@@ -1,1 +1,0 @@
-TEST=1; ./stage/sbin/glite-lb-perftest_logjobs -d proxy -m scientific.civ.zcu.cz:10000 -f stage/examples/perftest/perf_simple_avg_events.log -n 1000 -p /tmp/perftest_michal.log -s /tmp/proxy_michal.perf
