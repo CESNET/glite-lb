@@ -37,7 +37,7 @@ ifeq ($(GLITE_LB_HARVESTER_WITH_OLD_LB),yes)
 CPPFLAGS:=${GLOBUS_CPPFLAGS} $(CPPFLAGS) -DWITH_OLD_LB=1
 LIBS:=$(LIBS) -lglite_wmsutils_cjobid
 else
-LIBS:=$(LIBS) -lglite_jobid
+LIBS:=$(LIBS) -lglite_jobid -lglite_lbu_trio
 endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CPPFLAGS} ${CFLAGS}
