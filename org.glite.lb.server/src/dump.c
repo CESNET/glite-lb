@@ -55,8 +55,8 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 		return edg_wll_Error(ctx,NULL,NULL);
 	}
 
-	glite_lbu_TimeToStr(from, &from_s);
-	glite_lbu_TimeToStr(to, &to_s);
+	glite_lbu_TimeToDB(from, &from_s);
+	glite_lbu_TimeToDB(to, &to_s);
 
 	trio_asprintf(&stmt,
 			"select event,dg_jobid,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived "
@@ -175,7 +175,7 @@ static int handle_specials(edg_wll_Context ctx,time_t *t)
 				case ENOENT: *t = 0; 
 					     edg_wll_ResetError(ctx);
 					     break;
-				case 0: *t = glite_lbu_StrToTime(time_s); 
+				case 0: *t = glite_lbu_DBToTime(time_s); 
 					assert(*t >= 0);
 					break;
 				default: break;
@@ -190,7 +190,7 @@ static int handle_specials(edg_wll_Context ctx,time_t *t)
 static char *time_to_string(time_t t, char **ptr) {
 	char *s;
 
-	glite_lbu_TimeToStr(t, &s);
+	glite_lbu_TimeToDB(t, &s);
 	s[strlen(s) - 1] = '\0';
 	*ptr = s;
 

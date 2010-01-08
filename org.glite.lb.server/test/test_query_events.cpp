@@ -112,7 +112,7 @@ int QueryEventsTest::ExecStmt(const char *qry, glite_lbu_Statement *stmt_out)
 }
 
 extern "C" {
-int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx, int backend) { return 0; }
+int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx) { return 0; }
 void glite_lbu_FreeDBContext(glite_lbu_DBContext ctx) { }
 int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char*str) { return 0; }
 void glite_lbu_DBClose(glite_lbu_DBContext ctx) { }
@@ -145,8 +145,8 @@ void glite_lbu_FreeStmt(glite_lbu_Statement *) {}
 int debug;
 
 int glite_lbu_QueryColumns(glite_lbu_Statement stmt, char**cols) { return 0; }
-void glite_lbu_TimeToStr(long t, char **s) { *s = NULL; }
-time_t glite_lbu_StrToTime(const char *c) { return (time_t)-1; }
+void glite_lbu_TimeToDB(long t, char **s) { *s = NULL; }
+time_t glite_lbu_DBToTime(const char *c) { return (time_t)-1; }
 
 int glite_lbu_Transaction(glite_lbu_DBContext ctx) { return 0; }
 int glite_lbu_Commit(glite_lbu_DBContext ctx) { return 0; }

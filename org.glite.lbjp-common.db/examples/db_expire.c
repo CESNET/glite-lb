@@ -80,7 +80,7 @@ int main(int argn __attribute((unused)), char *argv[]) {
 
 	// init
 	dprintf(("connecting to %s...\n", cs));
-	if (glite_lbu_InitDBContext(&ctx, GLITE_LBU_DB_BACKEND_MYSQL) != 0) {
+	if (glite_lbu_InitDBContext(&ctx) != 0) {
 		print_error(ctx);
 		goto failctx;
 	}

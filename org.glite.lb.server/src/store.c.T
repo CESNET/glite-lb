@@ -61,13 +61,13 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 
 	lowercase_usertag(e);
 	jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
-	glite_lbu_TimeToStr(e->any.timestamp.tv_sec, &stamp);
+	glite_lbu_TimeToDB(e->any.timestamp.tv_sec, &stamp);
 	ssrc = edg_wll_SourceToString(e->any.source);
 
 	if ( ctx->event_load )
-		glite_lbu_TimeToStr(e->any.arrived.tv_sec, &now_s);
+		glite_lbu_TimeToDB(e->any.arrived.tv_sec, &now_s);
 	else
-		glite_lbu_TimeToStr(time(NULL), &now_s);
+		glite_lbu_TimeToDB(time(NULL), &now_s);
 
 	edg_wll_ResetError(ctx);
 	switch (check_auth(ctx,e)) {

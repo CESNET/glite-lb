@@ -790,14 +790,14 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 		case EDG_WLL_QUERY_ATTR_TIME:
 		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
-			glite_lbu_TimeToStr(ec[m][n].value.t.tv_sec, &dbt);
+			glite_lbu_TimeToDB(ec[m][n].value.t.tv_sec, &dbt);
 			if ( conds )
 			{
 				if ( ec[m][n].op == EDG_WLL_QUERY_OP_WITHIN )
 				{
 					trio_asprintf(&aux, "%s", dbt);
 					free(dbt);
-					glite_lbu_TimeToStr(ec[m][n].value2.t.tv_sec, &dbt);
+					glite_lbu_TimeToDB(ec[m][n].value2.t.tv_sec, &dbt);
 					trio_asprintf(&out, "%s OR (e.time_stamp >= %s AND e.time_stamp <= %s)", conds, aux, dbt);
 					free(aux);
 				}
@@ -814,7 +814,7 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 			{
 				trio_asprintf(&aux, "%s", dbt);
 				free(dbt);
-				glite_lbu_TimeToStr(ec[m][n].value2.t.tv_sec, &dbt);
+				glite_lbu_TimeToDB(ec[m][n].value2.t.tv_sec, &dbt);
 				trio_asprintf(&conds, "(e.time_stamp >= %s AND e.time_stamp <= %s)", aux, dbt);
 				free(aux);
 			}
@@ -1078,14 +1078,14 @@ static char *jc_to_head_where(
 
 			*where_flags |= FL_SEL_STATUS;
 
-			glite_lbu_TimeToStr(jc[m][n].value.t.tv_sec, &dbt);
+			glite_lbu_TimeToDB(jc[m][n].value.t.tv_sec, &dbt);
 			if ( conds )
 			{
 				if ( jc[m][n].op == EDG_WLL_QUERY_OP_WITHIN )
 				{
 					trio_asprintf(&aux, "%s", dbt);
 					free(dbt);
-					glite_lbu_TimeToStr(jc[m][n].value2.t.tv_sec, &dbt);
+					glite_lbu_TimeToDB(jc[m][n].value2.t.tv_sec, &dbt);
 					trio_asprintf(&tmps, "%s OR (s.%s >= %s AND s.%s <= %s)", conds, cname, aux, cname, dbt);
 					free(dbt);
 					free(aux);
@@ -1100,7 +1100,7 @@ static char *jc_to_head_where(
 			{
 				trio_asprintf(&aux, "%s", dbt);
 				free(dbt);
-				glite_lbu_TimeToStr(jc[m][n].value2.t.tv_sec, &dbt);
+				glite_lbu_TimeToDB(jc[m][n].value2.t.tv_sec, &dbt);
 				trio_asprintf(&conds, "(s.%s >= %s AND s.%s <= %s)", cname, aux, cname, dbt);
 				free(dbt);
 				free(aux);
@@ -1374,7 +1374,7 @@ int convert_event_head(edg_wll_Context ctx,char **f,edg_wll_Event *e)
 	e->any.user = f[4];
 	f[4] = NULL;
 	
-	e->any.timestamp.tv_sec = glite_lbu_StrToTime(f[5]);
+	e->any.timestamp.tv_sec = glite_lbu_DBToTime(f[5]);
 	free(f[5]); f[5] = NULL;
 	
 	e->any.timestamp.tv_usec = atoi(f[6]);
@@ -1383,7 +1383,7 @@ int convert_event_head(edg_wll_Context ctx,char **f,edg_wll_Event *e)
 	e->any.level = atoi(f[7]); 
 	free(f[7]); f[7] = NULL;
 
-	e->any.arrived.tv_sec = glite_lbu_StrToTime(f[8]); 
+	e->any.arrived.tv_sec = glite_lbu_DBToTime(f[8]); 
 	e->any.arrived.tv_usec = 0;
 	free(f[8]); f[8] = NULL;
 
