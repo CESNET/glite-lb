@@ -33,3 +33,6 @@
 - Multiple DB backends supported
 - API enhanced to support multiple database backends
 
+2.0.0-2
+- Repacked, configuration depends on newer postgres version
+
