@@ -416,6 +416,7 @@
 
 @type CREAMStatus
 	string	old_state
+	_optional_
 	string	new_state
 	timeval	orig_timestamp
 	_optional_
