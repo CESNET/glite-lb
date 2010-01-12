@@ -13,7 +13,7 @@ getopts('b:c:h');
 $module = shift;
 
 $usage = qq{
-usage: $0 -b <branch> [-c configuration] module.name
+usage: $0 -b <branch> [-c configuration] subsystem.name
 
 	-b	Name of the 'b'ranch to base the configuration on.
 		The branch must already exist in CVS!
