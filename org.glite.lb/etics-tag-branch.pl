@@ -135,7 +135,7 @@ usage: $0 -b <branch> [-c configuration] module.name
 	printf (EXEC "    etics-configuration add -i $TMPDIR/$newconfig.ini.$$\n"); 
 	printf (EXEC "else\n"); 
 	printf (EXEC "    echo Congiguration already exists ... call etics-configuration modify\n"); 
-	printf (EXEC "    echo etics-configuration modify -i $TMPDIR/$newconfig.ini.$$\n"); 
+	printf (EXEC "    etics-configuration modify -i $TMPDIR/$newconfig.ini.$$\n"); 
 	printf (EXEC "fi\n\n"); 
 	printf (EXEC "etics-commit\n\n");
 
