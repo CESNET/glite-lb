@@ -30,6 +30,16 @@ static int compare_timestamps(struct timeval a, struct timeval b)
 	return 0;
 }
 
+/* XXX lookup table */
+static char *cream_states[EDG_WLL_NUMBER_OF_CREAM_STATES];
+
+static int stringToCreamStat(char *s) {
+	int	i;
+	for (i=0; i<EDG_WLL_NUMBER_OF_CREAM_STATES && strcmp(s,cream_states[i]); i++);
+
+	return i==EDG_WLL_NUMBER_OF_CREAM_STATES ? -1 : i;
+}
+
 
 // XXX move this defines into some common place to be reusable
 #define USABLE(res) ((res) == RET_OK)
@@ -42,6 +52,11 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 	edg_wll_JobStatCode     old_state = js->pub.state;
 	int			res = RET_OK;
 
+	if (!cream_states[0]) {
+		int	i;
+		for (i=0; i<EDG_WLL_NUMBER_OF_CREAM_STATES; i++)
+			cream_states[i] = edg_wll_CreamStatToString(i);
+	}
 
 /*	not used in CREAM
 	if ((js->last_seqcode != NULL) &&
@@ -93,19 +108,25 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMCALL:
-			if (USABLE(res)) {
-				// BLAH -> LRMS
-				if (e->any.source == EDG_WLL_SOURCE_CREAM_EXECUTOR && e->CREAMCall.callee == EDG_WLL_SOURCE_LRMS) {
-					js->pub.state = EDG_WLL_JOB_SCHEDULED;
-					js->pub.cream_state = EDG_WLL_STAT_IDLE;
+			if (e->any.source == EDG_WLL_SOURCE_CREAM_EXECUTOR &&
+				e->CREAMCall.callee == EDG_WLL_SOURCE_LRMS &&
+				e->CREAMCall.command == EDG_WLL_CREAM_CMD_START &&
+				e->CREAMCall.result == EDG_WLL_CREAMCALL_OK)
+			{
+				if (USABLE(res)) {
+					// BLAH -> LRMS
+						js->pub.state = EDG_WLL_JOB_SCHEDULED;
+						js->pub.cream_state = EDG_WLL_STAT_IDLE;
+					}
+	
+				if (USABLE_DATA(res)) {
+					rep(js->pub.cream_reason, e->CREAMCall.reason);
 				}
-
-			}
-			if (USABLE_DATA(res)) {
-				rep(js->pub.cream_reason, e->CREAMCall.reason);
 			}
 			break;
 
+/* not used, replaced by CREAMSTATUS */
+#if 0
 		case EDG_WLL_EVENT_CREAMRUNNING:
 			if (USABLE(res)) {
 				js->pub.state = EDG_WLL_JOB_RUNNING;
@@ -143,6 +164,8 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				rep(js->pub.cream_reason, e->CREAMDone.reason);
 			}
 			break;
+#endif
+
 		case EDG_WLL_EVENT_CREAMCANCEL:
 			if (USABLE(res)) {
 				if (e->CREAMCancel.status_code == EDG_WLL_CANCEL_DONE) {
@@ -161,6 +184,40 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			}
 			if (USABLE_DATA(res)) {
 				rep(js->pub.cream_reason, e->CREAMAbort.reason);
+			}
+			break;
+
+		case EDG_WLL_EVENT_CREAMSTATUS:
+			if (USABLE(res) && e->CREAMStatus.result == EDG_WLL_CREAMSTATUS_DONE)
+			{
+				switch (js->pub.cream_state = stringToCreamStat(e->CREAMStatus.new_state))
+				{
+					/* XXX: should not arrive */
+					case EDG_WLL_STAT_REGISTERED:
+					case EDG_WLL_NUMBER_OF_CREAM_STATES:
+						break;
+
+					case EDG_WLL_STAT_PENDING: js->pub.state = EDG_WLL_JOB_WAITING; break;
+					case EDG_WLL_STAT_IDLE: js->pub.state = EDG_WLL_JOB_SCHEDULED; break;
+					case EDG_WLL_STAT_RUNNING:
+						js->pub.state = EDG_WLL_JOB_RUNNING;
+						js->pub.jw_status = EDG_WLL_STAT_WRAPPER_RUNNING;
+						break;
+					case EDG_WLL_STAT_REALLYRUNNING:
+						js->pub.state = EDG_WLL_JOB_RUNNING;
+						js->pub.jw_status = EDG_WLL_STAT_PAYLOAD_RUNNING;
+						break;
+					case EDG_WLL_STAT_HELD: /* TODO */ break;
+					case EDG_WLL_STAT_DONEOK:
+						js->pub.state = EDG_WLL_JOB_DONE;
+						js->pub.done_code = EDG_WLL_STAT_OK;
+						break;
+					case EDG_WLL_STAT_DONEFAILED:
+						js->pub.state = EDG_WLL_JOB_DONE;
+						js->pub.done_code = EDG_WLL_STAT_FAILED;
+						break;
+					case EDG_WLL_STAT_ABORTED: js->pub.state = EDG_WLL_JOB_ABORTED; break;
+				}
 			}
 			break;
 
