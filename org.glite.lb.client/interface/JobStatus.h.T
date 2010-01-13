@@ -95,8 +95,10 @@ public:
 !	enum \{
 };
 			for (@{$f->{codes}}) {
+				my $name = $_->{name};
+				$name =~ tr/-/_/; 
 				gen qq{
-!		$n\_$_->{name},	/**< $_->{comment} */
+!		$n\_$name,	/**< $_->{comment} */
 };
 			}
 			gen qq{
