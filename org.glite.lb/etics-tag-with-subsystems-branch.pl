@@ -165,7 +165,7 @@ usage: $0 -b <branch> [-c configuration] subsystem.name
         printf (EXEC "    echo Congiguration already exists ... call etics-configuration modify\n");
         printf (EXEC "    etics-configuration modify -i $TMPDIR/$newconfig.ini.$$\n");
         printf (EXEC "fi\n\n");
-        printf(EXEC "echo etics-commit\n");
+        printf(EXEC "etics-commit\n");
 
 
         # **********************************
