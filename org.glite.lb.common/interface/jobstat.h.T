@@ -41,6 +41,7 @@ extern "C" {
 };
 			for (@{$f->{codes}}) {
 				my $uc = uc $_->{name};
+				$uc =~ tr/-/_/;
 				gen qq{
 !	EDG_WLL_STAT_$uc,		/**< $_->{comment} */
 };

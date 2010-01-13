@@ -144,8 +144,8 @@ int	cream_state
 	_code_	RUNNING
 	_code_	REALLYRUNNING
 	_code_	HELD
-	_code_	DONEOK
-	_code_	DONEFAILED
+	_code_	DONE-OK
+	_code_	DONE-FAILED
 	_code_	ABORTED
 
 string	cream_owner
