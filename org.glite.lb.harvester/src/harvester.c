@@ -479,6 +479,41 @@ const char *rtm_notiftype2str(int type) {
 }
 
 
+/**
+ * Cut the network server hostname from the full URL (got from RegJob event).
+ *
+ * Formats (only the first one should be in the wild):
+ *	https://wms2.egee.cesnet.cz:7443/glite_wms_wmproxy_server
+ *	wms2.egee.cesnet.cz
+ *	147.228.1.129
+ *	HTTPS://[2001:0f68:0000:0000:0000:0000:1986:69af]:80/
+ *	2001:0f68::1986:69af
+ */
+char* rtm_ns2hostname(const char *network_server) {
+	char *ns, *pos;
+	size_t len;
+
+	if (strncasecmp(network_server, "https://", 8) == 0) {
+		ns = strdup(network_server + 8);
+		// first backslash - path
+		pos = strchr(ns, '/');
+		if (pos) pos[0] = '\0';
+		// last colon - port separator
+		pos = strrchr(ns, ':');
+		if (pos) pos[0] = '\0';
+		// brackets - IPv6 address
+		len = strlen(ns);
+		if (len >= 2 && ns[0] == '[' && ns[len - 1] == ']') {
+			pos = strndup(ns + 1, len - 2);
+			free(ns);
+			ns = pos;
+		}
+		return ns;
+	} else
+		return strdup(network_server);
+}
+
+
 void wlcg_timeval2str(struct timeval *t, char **str) {
 	struct tm	*tm;
 
@@ -491,13 +526,14 @@ void wlcg_timeval2str(struct timeval *t, char **str) {
 int wlcg_store_message(thread_t *t, __attribute((unused))notif_t *notif, edg_wll_JobStat *stat) {
 	unsigned int port;
 	int status = 0;
-	char *jobid_str = NULL, *state_str = NULL, *vo = NULL, *lbhost = NULL;
+	char *jobid_str = NULL, *state_str = NULL, *vo = NULL, *lbhost = NULL, *network_host = NULL;
 	char *wlcg_last_update_time_str = NULL, *wlcg_state_start_time_str = NULL;
 
 	jobid_str = stat->jobId ? glite_jobid_unparse(stat->jobId) : strdup("Unknown");
 	glite_jobid_getServerParts(stat->jobId, &lbhost, &port);
 	state_str = edg_wll_StatToString(stat->state);
 	vo = edg_wll_JDLField(stat,"VirtualOrganisation") ? : strdup("Unknown");
+	network_host = stat->network_server ? rtm_ns2hostname(stat->network_server) : NULL;
 
 	if (!t->dash_filename || !t->dash_fd) {
 		free(t->dash_filename);
@@ -527,13 +563,14 @@ DoneCode: %d\n\
 destSite: %s\n\
 condorId: %s\n\
 StatusReason: %s\n\
-EOT\n", jobid_str, state_str, stat->owner, vo, lbhost, port, stat->network_server ? : "unknown", wlcg_last_update_time_str, wlcg_state_start_time_str, stat->exit_code, stat->done_code, stat->destination ? : "NULLByPublisher", stat->condorId ? : "0", stat->reason && stat->reason[strspn(stat->reason, " \t\n\r")] != '\0' ? stat->reason : "UNAVAILABLE By Publisher");
+EOT\n", jobid_str, state_str, stat->owner, vo, lbhost, port, network_host ? : "unknown", wlcg_last_update_time_str, wlcg_state_start_time_str, stat->exit_code, stat->done_code, stat->destination ? : "NULLByPublisher", stat->condorId ? : "0", stat->reason && stat->reason[strspn(stat->reason, " \t\n\r")] != '\0' ? stat->reason : "UNAVAILABLE By Publisher");
 
 	free(wlcg_last_update_time_str);
 	free(wlcg_state_start_time_str);
 quit:
 	free(jobid_str);
 	free(lbhost);
+	free(network_host);
 	free(state_str);
 	free(vo);
 	return status;
@@ -921,7 +958,7 @@ static int db_store_change(__attribute((unused))thread_t *t, notif_t *notif, __a
 		else queue = "unknown";
 		colon = strchr(ce, ':');
 		if (colon) colon[0] = '\0';
-		rb = stat->network_server ? : "unknown";
+		rb = stat->network_server ? rtm_ns2hostname(stat->network_server) : "unknown";
 		ui = stat->ui_host ? : "unknown";
 		state = state_str ? : "unknown";
 		state_entered = stat->stateEnterTime.tv_sec + stat->stateEnterTime.tv_usec / 1000000.0;
