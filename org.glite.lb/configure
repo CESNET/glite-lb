@@ -76,7 +76,7 @@ my %lbmodules = (
 	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
-	'jobid' => [qw/api-c api-cpp api-java/],
+	'jobid' => [qw/api-c api-cpp/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	);
 
