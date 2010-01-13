@@ -20,14 +20,16 @@ my $mode = 'build';
 my $help = 0;
 my $listmodules;
 my $version;
+my $branch;
 my $output;
 my $lb_tag = '';
 my $lbjp_tag = '';
 my $jp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
+my $libdir = 'lib';
 
-my @nodes = qw/client server logger utils doc ws-test db jpprimary jpindex jpclient/;
+my @nodes = qw/client server logger utils doc ws-test db jpprimary jpindex jpclient harvester/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -41,16 +43,22 @@ my %extern_prefix = (
 	gsoap => '/usr',
 	mysql => '/usr',
 	'mysql-devel' => '',
+	'mysql-server' => '',
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
+	trustmanager => '/opt/glite',
 	ant => '/usr',
 	jdk => '/usr',
 	libtar => '/usr',
+	axis => '/usr',
+	log4c => '/usr',
+	postgresql => '/usr'
 );
 
 my %jar = (
-	'commons-codec' => '/usr/share/java/commons-codec-1.3.jar',
+	'commons-codec' => '/usr/share/java/commons-codec.jar',
+	'commons-lang' => '/usr/share/java/commons-lang.jar',
 );
 
 
@@ -82,6 +90,7 @@ my @opts = (
 	'mode=s' => \$mode,
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
+	'branch=s' => \$branch,
 	'output=s' => \$output,
 	'stage=s' => \$stagedir,
 	'lb-tag=s' => \$lb_tag,
@@ -90,6 +99,7 @@ my @opts = (
 	'security-tag=s' => \$sec_tag,
 	'jobid-tag=s' => \$jobid_tag,
 	'help' => \$help,
+	'libdir=s' => \$libdir,
 );
 
 for (@nodes) {
@@ -108,6 +118,7 @@ my @keeparg = @ARGV;
 GetOptions @opts or die "Errors parsing command line\n";
 
 $extern_prefix{'mysql-devel'}=$extern_prefix{mysql} if $extern_prefix{'mysql-devel'} eq '';
+$extern_prefix{'mysql-server'}=$extern_prefix{mysql} if $extern_prefix{'mysql-server'} eq '';
 
 if ($help) { usage(); exit 0; }
 
@@ -117,8 +128,8 @@ if ($listmodules) {
 	exit 0;
 }
 
-warn "$0: --version and --output make sense only in --mode=etics\n"
-	if ($version || $output) && $mode ne 'etics';
+warn "$0: --version, --branch and --output make sense only in --mode=etics\n"
+	if ($version || $output || $branch) && $mode ne 'etics';
 
 my $en;
 for (keys %enable_nodes) { $en = 1 if $enable_nodes{$_}; }
@@ -290,23 +301,24 @@ sub mode_checkout() {
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
-	'lb.client-java' => [ qw/ant:B jglobus jdk:B/ ],
-	'lb.common' => [ qw/expat cppunit:B classads/ ],
+	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager/ ],
+	'lb.common' => [ qw/expat cares:B cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql cppunit:B gsoap:B classads voms lcas gridsite/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
-	'lbjp-common.db' => [ qw/mysql:R mysql-devel:B/ ],
+	'lb.harvester' => [ qw/postgresql:R/ ],
+	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
-	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares gsoap:B/ ],
+	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
@@ -329,6 +341,7 @@ for my $ext (keys %need_externs_aux) {
 
 %need_jars = (
 	'jobid.api-java' => [ qw/commons-codec/ ],
+	'lb.client-java' => [ qw/commons-lang/ ],
 );
 
 for my $jar (keys %need_jars) {
@@ -346,6 +359,7 @@ for my $jar (keys %need_jars) {
 	/ ],
 	'lb.client-java' => [ qw/
 		lb.types:B
+		lb.ws-interface:B
 		jobid.api-java
 	/ ],
 	'lb.common' => [ qw/
@@ -375,6 +389,10 @@ for my $jar (keys %need_jars) {
 	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
 	'lb.types' => [ qw// ],
+	'lb.harvester' => [ qw/
+		jobid.api-c lbjp-common.trio lbjp-common.db lb.common lb.client
+		security.gss
+	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
@@ -447,7 +465,7 @@ sub mkinc
 	my %aux;
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
@@ -484,6 +502,7 @@ PREFIX = $prefix
 stagedir = $stagedir
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
+libdir = $libdir
 };
 
 	for (@{$need_externs{$short}}) {
@@ -512,6 +531,7 @@ BEGIN{
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
+		trustmanager=>'org.glite.security.trustmanager',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials/],
@@ -561,8 +581,16 @@ sub mode_etics {
 		push @copts,"--with-$_ \${$eext.location}/$_*.jar";
 	}
 
+	my $conf;
+	my $conftag;
 
-	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
+	if ($branch) {
+		$conf = "glite-${subsys}-${module}_$branch"; 
+		$conftag = $branch; }
+	else {
+		$conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
+		$conftag = $conf; }
+#	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
@@ -580,7 +608,7 @@ description = org.glite.$subsys.$module
 projectName = org.glite
 age = $age
 deploymentType = None
-tag = $conf
+tag = $conftag
 version = $major.$minor.$rev
 path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz
 
@@ -605,7 +633,7 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --module $subsys.$module @copts
+configure = cd $confdir && \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
@@ -664,6 +692,7 @@ General options (defaults in []):
   --thrflavour=flavour
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
   --listmodules=subsys          list modules of a subsystem
+  --libdir=libdir		typically [lib,lib64] postfix
   
 Mode of operation:
   --mode={checkout|build|etics}	what to do [build]
