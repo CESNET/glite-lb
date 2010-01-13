@@ -20,6 +20,7 @@ my $mode = 'build';
 my $help = 0;
 my $listmodules;
 my $version;
+my $branch;
 my $output;
 my $lb_tag = '';
 my $lbjp_tag = '';
@@ -72,10 +73,10 @@ my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
-	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test harvester/], 
+	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
-	'jobid' => [qw/api-c api-cpp api-java/],
+	'jobid' => [qw/api-c api-cpp/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	);
 
@@ -89,6 +90,7 @@ my @opts = (
 	'mode=s' => \$mode,
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
+	'branch=s' => \$branch,
 	'output=s' => \$output,
 	'stage=s' => \$stagedir,
 	'lb-tag=s' => \$lb_tag,
@@ -126,8 +128,8 @@ if ($listmodules) {
 	exit 0;
 }
 
-warn "$0: --version and --output make sense only in --mode=etics\n"
-	if ($version || $output) && $mode ne 'etics';
+warn "$0: --version, --branch and --output make sense only in --mode=etics\n"
+	if ($version || $output || $branch) && $mode ne 'etics';
 
 my $en;
 for (keys %enable_nodes) { $en = 1 if $enable_nodes{$_}; }
@@ -310,7 +312,7 @@ BEGIN{
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/postgresql:R/ ],
-	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
+	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
@@ -579,8 +581,16 @@ sub mode_etics {
 		push @copts,"--with-$_ \${$eext.location}/$_*.jar";
 	}
 
+	my $conf;
+	my $conftag;
 
-	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
+	if ($branch) {
+		$conf = "glite-${subsys}-${module}_$branch"; 
+		$conftag = $branch; }
+	else {
+		$conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
+		$conftag = $conf; }
+#	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
@@ -598,7 +608,7 @@ description = org.glite.$subsys.$module
 projectName = org.glite
 age = $age
 deploymentType = None
-tag = $conf
+tag = $conftag
 version = $major.$minor.$rev
 path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz
 
