@@ -212,6 +212,7 @@
 	port	dest_port	Port number the notification is sent to.
 	int     expires         When the notification expires
 	string	jobstat		Status of the job (the notification content).
+	string	dest_url	Destination URL (preferred over host and port).
 
 
 @type ResourceUsage	Resource (CPU, memory etc.) consumption.
