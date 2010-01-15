@@ -17,6 +17,8 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-event-delivery.sh} & Implemented & Tries to register a job and log events. Checks if the registration worked and events resulted in state change accordingly. \\
 \hline
+{\tt lb-test-https.sh} & Proposed & Test the HTTPs interface. \\
+\hline
 {\tt lb-test-logevent.sh} & Implemented & Test if local logger accepts events correctly (i.e. returns 0). \\
 \hline
 {\tt lb-test-il-recovery.sh} & Implemented & Tests if iterlogger recovers correctly and processes events logged in between when restarted. \\
@@ -36,6 +38,8 @@ This subsection gives a comprehensive overview of all system functionality tests
 {\tt lb-test-notif-recovery.sh} & Implemented & Test if notification client receives notifications correctly upon restart.  \\
 \hline
 {\tt lb-test-purge.pl} & Implemented & Test that LB server purge works correctly. \\
+\hline
+{\tt lb-test-wild.pl} & Implemented & Test LB "in the wild" (test with real-life WMS). \\
 \hline
 \end{tabularx}
 
@@ -391,3 +395,23 @@ do nothing (i.e. nothing was left in the database).
 The example \path{org.glite.lb.client/examples/purge\_test} does exactly this sequence of steps,
 including the checks.
 \end{hints}
+
+\chapter{LB ``In the Wild''---Real-World WMS Test}
+\req\ All \LB services running, working grid infrastructure accessible (including permissions). 
+
+\what
+\begin{enumerate}
+\item Submit a simple \emph{hello-world}-type job.
+\item Submit a simple job and cancel it.
+\item Submit a collection of simple jobs.
+\item Submit a collection and cancel it. 
+\item Submit a simple job that is sure to fail.
+\item Submit a collection of jobs, one of which is sure to fail. 
+\end{enumerate}
+
+In all above cases: Watch the life cycle. Check the resulting state (\emph{Cleared}, \emph{Cancelled} or \emph{Aborted}). Check events received in the course of job execution; events from all relevant components must be present (NS, WM, JC, LM, and LRMS). 
+
+\how\ \ctblb{lb-test-wild.pl}
+
+\result\ Jobs were submitted. Cancel operation worked where applicable. Resulting state was as expected (\emph{Cleared}, \emph{Cancelled} or \emph{Aborted}). Events were received from all components as expected.
+
