@@ -18,7 +18,7 @@ endif
 version:=${module.version}
 
 CC=gcc
-VPATH=${top_srcdir}/src
+VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
 GLOBUS_CPPFLAGS:=-I${globus_prefix}/include/${thrflavour}
 CPPFLAGS:=-I${stagedir}/include -D_GNU_SOURCE -D_REENTRANT ${CPPFLAGS}
@@ -46,24 +46,26 @@ INSTALL:=libtool --mode=install install
 
 default: all
 
-compile all: harvester
+compile all: harvester doc
 
 check:
 
 debug: harvester-dbg
 
-doc:
+doc: glite-lb-harvester.8
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	-mkdir -p ${PREFIX}/bin ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${PREFIX}/bin ${PREFIX}/share/doc/${package}-${version} ${PREFIX}/share/man/man8
 	${INSTALL} -m 755 harvester ${PREFIX}/bin/glite-lb-harvester
 	${INSTALL} -m 444 ../doc/README ${PREFIX}/share/doc/${package}-${version}
+	${INSTALL} -m 444 glite-lb-harvester.8 ${PREFIX}/share/man/man8
 
 clean:
-	rm -rfv *.o *.lo .libs/ harvester harvester-dbg
+	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs
+	rm -rvf harvester harvester-dbg glite-lb-harvester.*
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 harvester: harvester.o
@@ -78,4 +80,8 @@ harvester-dbg.o: harvester.c
 %.o: %.c
 	${COMPILE} -c $<
 
-.PHONY: default all compike debug check doc stage install clean
+%.8: %.sgml
+	docbook2man $<
+	mv $(@:.8=.1) $@
+
+.PHONY: default all compile debug check doc stage install clean

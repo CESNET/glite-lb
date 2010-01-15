@@ -2030,6 +2030,7 @@ void usage(const char *prog) {
 #endif
 		"	-n, --notifs       file for persistent information about active\n"
 		"	                   notifications\n"
+		"	-p, --port         listen only on this port (default: use any)\n"
 		"	-C, --cert         X509 certificate file\n"
 		"	-K, --key          X509 key file\n"
 		"	-o, --old          \"silly\" mode for old L&B 1.9 servers\n"
