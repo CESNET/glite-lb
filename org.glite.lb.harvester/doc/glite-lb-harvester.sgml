@@ -98,6 +98,11 @@
 			</group></arg>
 
 			<arg><group choice='plain'>
+				<arg>-u</arg>
+				<arg>--no-purge</arg>
+			</group></arg>
+
+			<arg><group choice='plain'>
 				<arg>-w</arg>
 				<arg>--wlcg</arg>
 			</group></arg>
@@ -291,6 +296,15 @@ X509 key file.
 Cleans up all active notifications and quits.
 				</para><para>
 Each  notification automatically expires. But if you know, than notifications used in previous run of L&amp;B harvester won;t be needed, it is recommended to clean up the notifications and spare the resources on L&amp;B servers (queue with undelivered notification messages and matching rules).
+				</para></listitem>
+			</varlistentry>
+
+			<varlistentry>
+				<term><option>-u</option>|<option>--no-purge</option></term>
+				<listitem><para>
+By default jobs are purged from local database when purged on L&amp;B server. This option forces keeping all jobs in database, only with changed state to 'Purged'.
+				</para><para>
+For using together with <option>-m</option> (<option>--pg</option>).
 				</para></listitem>
 			</varlistentry>
 

@@ -100,7 +100,9 @@ init() {
 
 	jobreg="$GLITE_LOCATION/examples/glite-lb-job_reg -m `hostname -f`:${GLITE_LB_TEST_SERVER_PORT} -s UserInterface"
 	logev="$GLITE_LOCATION/bin/glite-lb-logevent -x -S `pwd`/LB/proxy.sockstore.sock -U localhost"
-	for dir in "$GLITE_LOCATION/bin" "`pwd`/../build" "`pwd`"; do
+	purge="$GLITE_LOCATION/bin/glite-lb-purge"
+	[ -x "$purge" ] || purge="$GLITE_LOCATION/sbin/glite-lb-purge"
+	for dir in "$GLITE_LOCATION/examlpes" "`pwd`/../build" "`pwd`"; do
 		if [ -x "$dir/glite-lb-harvester-dbg" ]; then
 			rtm="$dir/glite-lb-harvester-dbg"
 		fi
@@ -732,7 +734,7 @@ EOF
 		echo "FAIL"
 		return 0
 	fi
-	echo -n "OK"
+	echo -n "OK "
 
 	echo -n "changed after waiting..."
 	ev -s WorkloadManager -e EnQueued --queue "very long and chaotic queue" --destination LogMonitor --dest_host localhost --dest_instance pid$$ --job "(car 'testing=true)"  --result=OK || return $?
@@ -745,6 +747,40 @@ EOF
 	ev -s NetworkServer -e EnQueued --queue "very long and chaotic queue" --job="[ VirtualOrganisation=\"TestingVO3\";]" --result OK || return $?
 	pg_wait 10 "SELECT jobid, state FROM jobs WHERE state='Waiting' AND vo='TestingVO3'" || return $?
 	if [ -z "$result" ]; then
+		echo "FAIL"
+		return 0
+	fi
+
+	ok=1
+	echo "OK"
+}
+
+
+test_purge() {
+	ok=0
+
+	echo -n "purge."
+	pg_get "SELECT jobid FROM jobs" || return $?
+	if [ -z "$lines" -o $lines -le 0  ]; then
+		echo "no jobs! FAIL"
+		return 0
+	fi
+	echo -n "P"
+	jobunique=`echo "$result" | head -n 1 | tr -d '\n'`
+	jobid="https://`hostname -f`:${GLITE_LB_TEST_SERVER_PORT}/$jobunique"
+	echo $jobid > jobs
+	echo "${purge} -a1 -c1 -n1 -e1 -o1 -m "`hostname -f`:${GLITE_LB_TEST_SERVER_PORT}" -j jobs" >> log
+	echo "  jobs = `cat jobs` | tr -d '\n'" >> log
+	X509_USER_KEY=${X509_USER_KEY} X509_USER_CERT=${X509_USER_CERT} ${purge} -l -a1 -c1 -n1 -e1 -o1 -m "`hostname -f`:${GLITE_LB_TEST_SERVER_PORT}" -j jobs 2> purge-err.tmp >purge.tmp
+	if [ $? -ne 0 ]; then
+		echo " FAIL!"
+		return 2;
+	fi
+	rm -f jobs
+	echo -n "R "
+
+	pg_wait 10 "SELECT * FROM jobs WHERE jobid='$jobunique'" 0 || return $?
+	if [ x"$lines" != x"0" ]; then
 		echo "FAIL"
 		return 0
 	fi
@@ -804,6 +840,10 @@ test() {
 	echo -n "JDL: "
 	test_jdl || fatal
 	if [ $ok != 1 ]; then quit; fi
+
+#	echo -n "Purge: "
+#	test_purge || fatal
+#	if [ $ok != 1]; then quit; fi
 }
 
 

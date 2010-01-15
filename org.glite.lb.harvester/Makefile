@@ -46,7 +46,7 @@ INSTALL:=libtool --mode=install install
 
 default: all
 
-compile all: harvester doc
+compile all: harvester doc debug
 
 check:
 
@@ -58,8 +58,10 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	-mkdir -p ${PREFIX}/bin ${PREFIX}/share/doc/${package}-${version} ${PREFIX}/share/man/man8
+	-mkdir -p ${PREFIX}/bin ${PREFIX}/examples ${PREFIX}/share/doc/${package}-${version} ${PREFIX}/share/man/man8
 	${INSTALL} -m 755 harvester ${PREFIX}/bin/glite-lb-harvester
+	${INSTALL} -m 755 harvester-dbg ${PREFIX}/examples/glite-lb-harvester-dbg
+	${INSTALL} -m 755 ../examples/test.sh ${PREFIX}/examples/glite-lb-harvester-test.sh
 	${INSTALL} -m 444 ../doc/README ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 444 glite-lb-harvester.8 ${PREFIX}/share/man/man8
 
@@ -75,7 +77,7 @@ harvester-dbg: harvester-dbg.o
 	${LINK} -o $@ $+ ${LIBS}
 
 harvester-dbg.o: harvester.c
-	${COMPILE} -Werror -DLOG=1 -DWITH_RTM_SQL_STORAGE=1 -c $< -o $@
+	${COMPILE} -DLOG=1 -DWITH_RTM_SQL_STORAGE=1 -c $< -o $@
 
 %.o: %.c
 	${COMPILE} -c $<
