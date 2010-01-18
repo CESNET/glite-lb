@@ -90,3 +90,16 @@
 - Memleak fixes
 - Support for background purge funcionality
 
+2.0.3-2
+- Rebuild with lb.state-machine 1.0.2-1
+
+---
+Crystal ball:
+2.0.4-1
+- Consider arch libdir when linking c-ares
+- Checking the c-ares version, fix for c-ares >= 1.5.0.
+
+2.0.5-1
+- Reflect updates in the database module
+- Adjusted grey job purges (purge undefined jobs etc.)
+
