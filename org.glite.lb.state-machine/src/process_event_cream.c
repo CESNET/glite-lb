@@ -33,14 +33,6 @@ static int compare_timestamps(struct timeval a, struct timeval b)
 /* XXX lookup table */
 static char *cream_states[EDG_WLL_NUMBER_OF_CREAM_STATES];
 
-static int stringToCreamStat(char *s) {
-	int	i;
-	for (i=0; i<EDG_WLL_NUMBER_OF_CREAM_STATES && strcmp(s,cream_states[i]); i++);
-
-	return i==EDG_WLL_NUMBER_OF_CREAM_STATES ? -1 : i;
-}
-
-
 // XXX move this defines into some common place to be reusable
 #define USABLE(res) ((res) == RET_OK)
 #define USABLE_DATA(res) (1)
@@ -188,6 +180,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			break;
 
 		case EDG_WLL_EVENT_CREAMSTATUS:
+			printf("EDG_WLL_EVENT_CREAMSTATUS\n");
 			if (USABLE(res) && e->CREAMStatus.result == EDG_WLL_CREAMSTATUS_DONE)
 			{
 				switch (js->pub.cream_state = stringToCreamStat(e->CREAMStatus.new_state))
@@ -208,11 +201,11 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 						js->pub.jw_status = EDG_WLL_STAT_PAYLOAD_RUNNING;
 						break;
 					case EDG_WLL_STAT_HELD: /* TODO */ break;
-					case EDG_WLL_STAT_DONEOK:
+					case EDG_WLL_STAT_DONE_OK:
 						js->pub.state = EDG_WLL_JOB_DONE;
 						js->pub.done_code = EDG_WLL_STAT_OK;
 						break;
-					case EDG_WLL_STAT_DONEFAILED:
+					case EDG_WLL_STAT_DONE_FAILED:
 						js->pub.state = EDG_WLL_JOB_DONE;
 						js->pub.done_code = EDG_WLL_STAT_FAILED;
 						break;
