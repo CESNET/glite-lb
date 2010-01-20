@@ -3,6 +3,10 @@
 
 #ident "$Header$"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "il_error.h"
 #include "glite/security/glite_gss.h"
 #include "glite/lb/il_msg.h"
@@ -167,7 +171,7 @@ struct event_queue {
 	edg_wll_GssConnection   gss;            /* GSS connection */
 	char                   *dest_name;
 	int                     dest_port;
-	char		       *dest;
+	char		       	   *dest;
 	int                     timeout;        /* queue timeout */
 	struct event_queue_msg *tail;           /* last message in the queue */
 	struct event_queue_msg *head;           /* first message in the queue */
@@ -189,12 +193,13 @@ struct event_queue {
 	int                     times_empty;    /* number of times the queue was emptied */
 	int                     max_len;        /* max queue length */
 	int                     cur_len;        /* current length */
-	int			throttling;	/* event insertion suspend flag */
-	int			first_event_sent; /* connection can be preempted by server */
+	int						throttling;		/* event insertion suspend flag */
+	int						first_event_sent; /* connection can be preempted by server */
 	/* delivery methods */
 	int 		(*event_queue_connect)(struct event_queue *);
 	int 		(*event_queue_send)(struct event_queue *);
 	int 		(*event_queue_close)(struct event_queue *);
+	void				   *plugin_data;	/* opaque data used by output plugins */
 };
 
 struct il_output_plugin {
@@ -293,5 +298,9 @@ int loop();
 
 /* recover thread */
 void *recover_thread(void*);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
