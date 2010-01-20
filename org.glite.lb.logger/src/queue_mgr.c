@@ -123,6 +123,8 @@ queue_list_get(char *job_id_s)
   char *dest;
   struct queue_list *q;
   struct event_queue *eq;
+  struct il_output_plugin *outp;
+
 #if !defined(IL_NOTIFICATIONS)
   IL_EVENT_ID_T job_id;
 
@@ -136,8 +138,10 @@ queue_list_get(char *job_id_s)
 
   dest = jobid2dest(job_id);
   edg_wlc_JobIdFree(job_id);
+  outp = NULL;
 #else
   dest = job_id_s;
+  outp = plugin_get(dest);
 #endif
 
   if(dest == NULL) 
@@ -149,7 +153,7 @@ queue_list_get(char *job_id_s)
 #endif
     return(q->queue);
   } else {
-    eq = event_queue_create(dest);
+    eq = event_queue_create(dest, outp);
     if(eq)
       queue_list_add(&queues, dest, eq);
 #if !defined(IL_NOTIFICATIONS)
@@ -172,7 +176,7 @@ queue_list_init(char *ls)
 {
 #if !defined(IL_NOTIFICATIONS)
   /* create queue for log server */
-  log_queue = event_queue_create(ls);
+  log_queue = event_queue_create(ls, NULL);
   if(log_queue == NULL)
     return(-1);
 #endif

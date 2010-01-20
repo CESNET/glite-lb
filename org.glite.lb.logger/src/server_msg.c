@@ -156,8 +156,15 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 	}
 
 	/* FIXME: check for allocation error */
-	if(notif_event->notification.dest_host && 
+	if(notif_event->notification.dest_url &&
+		(strlen(notif_event->notification.dest_url) > 0)) {
+		/* destination URL */
+		msg->dest = strdup(notif_event->notification.dest_url);
+		msg->dest_name = NULL;
+		msg->dest_port = 0;
+	} else if(notif_event->notification.dest_host &&
 	   (strlen(notif_event->notification.dest_host) > 0)) {
+		/* destination host and port */
 		msg->dest_name = strdup(notif_event->notification.dest_host);
 		msg->dest_port = notif_event->notification.dest_port;
 		asprintf(&msg->dest, "%s:%d", msg->dest_name, msg->dest_port);

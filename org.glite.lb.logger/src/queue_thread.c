@@ -54,8 +54,8 @@ queue_thread(void *q)
 	}
   
 	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
-			 "  started new thread for delivery to %s:%d", 
-			 eq->dest_name, eq->dest_port);
+			 "  started new thread for delivery to %s",
+			 eq->dest);
 
 	pthread_cleanup_push(queue_thread_cleanup, q); 
 
@@ -77,10 +77,10 @@ queue_thread(void *q)
 			if(lazy_close && close_timeout) {
 				ret = event_queue_wait(eq, close_timeout);
 				if(ret == 1) {/* timeout? */
-					event_queue_close(eq);
+					(*eq->event_queue_close)(eq);
 					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
-							 "  connection to %s:%d closed",
-							 eq->dest_name, eq->dest_port);
+							 "  connection to %s closed",
+							 eq->dest);
 				}
 				close_timeout = 0;
 			} else {
@@ -89,7 +89,7 @@ queue_thread(void *q)
 					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
 							 "  thread idle for more than %d seconds, exiting", 
 							 exit_timeout);
-					event_queue_close(eq);
+					(*eq->event_queue_close)(eq);
 					event_queue_cond_unlock(eq);
 					pthread_exit((void*)0);
 				}
@@ -118,10 +118,10 @@ queue_thread(void *q)
 
 			/* deliver pending events */
 			glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
-					 "  attempting delivery to %s:%d", 
-					 eq->dest_name, eq->dest_port);
+					 "  attempting delivery to %s",
+					 eq->dest);
 			/* connect to server */
-			if((ret=event_queue_connect(eq)) == 0) {
+			if((ret=(*eq->event_queue_connect)(eq)) == 0) {
 				/* not connected */
 				if(error_get_maj() != IL_OK)
 					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
@@ -129,17 +129,17 @@ queue_thread(void *q)
 #if defined(IL_NOTIFICATIONS)
 				glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
 						 "    could not connect to client %s, waiting for retry", 
-						 eq->dest_name);
+						 eq->dest);
 #else
 				glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
 						 "    could not connect to bookkeeping server %s, waiting for retry", 
-						 eq->dest_name);
+						 eq->dest);
 #endif
 				retrycnt++;
 			} else {
 				retrycnt = 0;
 				/* connected, send events */
-				switch(ret=event_queue_send(eq)) {
+				switch(ret=(*eq->event_queue_send)(eq)) {
 					
 				case 0:
 					/* there was an error and we still have events to send */
@@ -155,7 +155,7 @@ queue_thread(void *q)
 					/* hey, we are done for now */
 					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
 							 "  all events for %s sent", 
-							 eq->dest_name);
+							 eq->dest);
 					break;
 					
 				default:
@@ -172,10 +172,10 @@ queue_thread(void *q)
 				if((ret == 1) && lazy_close)
 					close_timeout = default_close_timeout;
 				else {
-					event_queue_close(eq);
+					(*eq->event_queue_close)(eq);
 					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG,
-							 "  connection to %s:%d closed",
-							 eq->dest_name, eq->dest_port);
+							 "  connection to %sclosed",
+							 eq->dest);
 				}
 			}
 		} 

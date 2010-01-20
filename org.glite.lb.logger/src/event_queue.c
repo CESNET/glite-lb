@@ -22,10 +22,10 @@ struct event_queue_msg {
 };
 
 struct event_queue *
-event_queue_create(char *server_name)
+event_queue_create(char *server_name, struct il_output_plugin *output)
 {
   struct event_queue *eq;
-  char *p;
+  char *p,*s, c;
 
   if((eq = malloc(sizeof(*eq))) == NULL) {
     set_error(IL_NOMEM, ENOMEM, "event_queue_create: error allocating event queue");
@@ -36,18 +36,48 @@ event_queue_create(char *server_name)
 
   eq->dest = strdup(server_name);
 
-  p = strchr(server_name, ':');
-  if(p)
+  s = strstr(server_name, "://");
+  if(s == NULL) {
+	  s = server_name;
+  } else {
+	  s = s + 3;
+  }
+  p = strchr(s, ':');
+  if(p) {
     *p++ = 0;
+    c = ':';
+  } else {
+	  p = strchr(s, '/');
+	  if(p) {
+		  *p++ = 0;
+		  c = '/';
+	  }
+  }
   eq->dest_name = strdup(server_name);
   if(p)
-    *(p-1) = ':';
+    *(p-1) = c;
 
 #if defined(IL_NOTIFICATIONS) || defined(IL_WS)
-  eq->dest_port = atoi(p);
+  if(p && c == ':') {
+	  eq->dest_port = atoi(p);
+  } else {
+	  eq->dest_port = 0; // use whatever default there is for given url scheme
+  }
 #else
-  eq->dest_port = p ? atoi(p)+1 : GLITE_JOBID_DEFAULT_PORT+1;
+	  eq->dest_port = p && c == ':' ? atoi(p)+1 : GLITE_JOBID_DEFAULT_PORT+1;
 #endif
+
+  /* setup output functions */
+  if(output != NULL) {
+    eq->event_queue_connect = output->event_queue_connect;
+    eq->event_queue_send = output->event_queue_send;
+    eq->event_queue_close = output->event_queue_close;
+  } else {
+    eq->event_queue_connect = event_queue_connect;
+    eq->event_queue_send = event_queue_send;
+    eq->event_queue_close = event_queue_close;
+  }
+
   /* create all necessary locks */
   if(pthread_rwlock_init(&eq->update_lock, NULL)) {
     set_error(IL_SYS, errno, "event_queue_create: error creating update lock");

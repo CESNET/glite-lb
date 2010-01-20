@@ -191,8 +191,19 @@ struct event_queue {
 	int                     cur_len;        /* current length */
 	int			throttling;	/* event insertion suspend flag */
 	int			first_event_sent; /* connection can be preempted by server */
+	/* delivery methods */
+	int 		(*event_queue_connect)(struct event_queue *);
+	int 		(*event_queue_send)(struct event_queue *);
+	int 		(*event_queue_close)(struct event_queue *);
 };
 
+struct il_output_plugin {
+	int 	(*event_queue_connect)(struct event_queue *);
+	int 	(*event_queue_send)(struct event_queue *);
+	int 	(*event_queue_close)(struct event_queue *);
+	int		(*plugin_init)();
+	int		(*plugin_supports_scheme)(const char *);
+};
 
 /* credential destructor */
 void cred_handle_destroy(void *);
@@ -207,7 +218,7 @@ int server_msg_is_priority(struct server_msg *);
 int server_msg_free(struct server_msg *);
 
 /* general event queue methods */
-struct event_queue *event_queue_create(char *);
+struct event_queue *event_queue_create(char *, struct il_output_plugin *);
 int event_queue_free(struct event_queue *);
 int event_queue_empty(struct event_queue *);
 int event_queue_insert(struct event_queue *, struct server_msg *);
@@ -272,6 +283,10 @@ int event_store_release(struct event_store *);
 int parse_header(const char *, il_http_message_t *);
 int receive_http(void *, int (*)(void *, char *, const int), il_http_message_t *);
 #endif
+
+/* plugin functions */
+int plugin_init(const char *);
+struct il_output_plugin *plugin_get(const char *);
 
 /* master main loop */
 int loop();
