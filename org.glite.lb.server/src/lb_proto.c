@@ -231,12 +231,12 @@ static int getUserNotifications(edg_wll_Context ctx, char *user, char ***notifid
 
         int n = 0;
         *notifids = NULL;
-        while(edg_wll_FetchRow(ctx, notifs, sizeof(notifc)/sizeof(notifc[0]), NULL, notifc)){
+        while(edg_wll_FetchRow(ctx, notifs, 1, NULL, notifc)){
                 n++;
                 *notifids = realloc(*notifids, n*sizeof(**notifids));
-                (*notifids)[n-1] = strdup(notifc[n-1]);
+                (*notifids)[n-1] = strdup(notifc[0]);
 		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
-			"Notif %s found", notifc[n-1]);
+			"Notif %s found", notifc[0]);
         }
 	if (n){
 		*notifids = realloc(*notifids, (n+1)*sizeof(**notifids));
