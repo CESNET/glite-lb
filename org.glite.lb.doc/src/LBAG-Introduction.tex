@@ -59,6 +59,14 @@ The optimal $M:N$ ratio strongly depends on the rate of user queries
 and number of evaluated notifications,
 and it must be determined empirically for each specific installation.
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.9\hsize]{LB-components}
+\caption{\LB deployment -- overall picture} 
+\label{f:comp}
+\end{figure}
+
+
 \subsubsection{Hybrid \LB server-proxy}
 \label{deploy-hybrid}
 
@@ -74,6 +82,13 @@ WMS, expected load of upto 30--50 kjobs/day, and not very heavy user-generated
 load.
 
 The functionality is available for \LBnew only.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.9\hsize]{LB-components-LB-WMS}
+\caption{\LB deployment with combined server-proxy}
+\label{f:comp-query}
+\end{figure}
 
 
 \subsubsection{\LB server on WMS node}
