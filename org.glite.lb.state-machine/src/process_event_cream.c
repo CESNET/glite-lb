@@ -183,7 +183,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			printf("EDG_WLL_EVENT_CREAMSTATUS\n");
 			if (USABLE(res) && e->CREAMStatus.result == EDG_WLL_CREAMSTATUS_DONE)
 			{
-				switch (js->pub.cream_state = stringToCreamStat(e->CREAMStatus.new_state))
+				switch (js->pub.cream_state = edg_wll_StringToCreamStat(e->CREAMStatus.new_state))
 				{
 					/* XXX: should not arrive */
 					case EDG_WLL_STAT_REGISTERED:
