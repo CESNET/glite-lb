@@ -551,13 +551,13 @@ library):
 using namespace glite::jobid;
 glite_jobid_t cjobid;
 
-JobId *jobid = new JobId(cjobid);
+JobId jobid(cjobid);
 \end{lstlisting}
 \emph{Note:} This creates copy of the structure, the original structure has to be
 deallocated as usual.
 \item parsed from the string:
 \begin{lstlisting}
-JobId jobid(std::string("https://some.host:9000/OirOgeWh_F9sfMZjnIPYhQ"));
+JobId jobid("https://some.host:9000/OirOgeWh_F9sfMZjnIPYhQ");
 \end{lstlisting}
 \item from the components:
 \begin{lstlisting}
