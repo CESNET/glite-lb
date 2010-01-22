@@ -10,3 +10,8 @@
 - Less verbosity in reporting single notifications
 - Fixed postgres dependency
 
+1.0.3-1
+- Extended documentation
+- Fixed purging
+- Fixed build issues
+
