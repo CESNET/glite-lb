@@ -111,7 +111,7 @@ int edg_wll_QueryJobs(
 	edg_wll_Context			context,
 	const edg_wll_QueryRec *	conditions,
 	int				flags,
-	edg_wlc_JobId **		jobs,
+	glite_jobid_t **		jobs,
 	edg_wll_JobStat **		states
 );
 
@@ -128,7 +128,7 @@ int edg_wll_QueryJobsExt(
 	edg_wll_Context			context,
 	const edg_wll_QueryRec **	conditions,
 	int				flags,
-	edg_wlc_JobId **		jobs,
+	glite_jobid_t **		jobs,
 	edg_wll_JobStat **		states
 );
 
@@ -141,7 +141,7 @@ int edg_wll_QueryJobsProxy(
 	edg_wll_Context			context,
 	const edg_wll_QueryRec *	conditions,
 	int				flags,
-	edg_wlc_JobId **		jobs,
+	glite_jobid_t **		jobs,
 	edg_wll_JobStat **		states
 );
 
@@ -153,7 +153,7 @@ int edg_wll_QueryJobsExtProxy(
 	edg_wll_Context			context,
 	const edg_wll_QueryRec **	conditions,
 	int				flags,
-	edg_wlc_JobId **		jobs,
+	glite_jobid_t **		jobs,
 	edg_wll_JobStat **		states
 );
 
@@ -223,7 +223,7 @@ int edg_wll_JobLogProxy(
  */
 int edg_wll_UserJobs(
 	edg_wll_Context		context,
-	edg_wlc_JobId **	jobs,
+	glite_jobid_t **	jobs,
 	edg_wll_JobStat	**	states
 );
 
@@ -235,7 +235,7 @@ int edg_wll_UserJobs(
  */
 int edg_wll_UserJobsProxy(
 	edg_wll_Context		context,
-	edg_wlc_JobId **	jobs,
+	glite_jobid_t **	jobs,
 	edg_wll_JobStat	**	states
 );
 
@@ -274,7 +274,7 @@ int edg_wll_GetServerLimit(
  */
 int edg_wll_QueryListener(
 	edg_wll_Context	context,
-	edg_wlc_JobId		jobId,
+	glite_jobid_const_t		jobId,
 	const char *	name,
 	char **		host,
 	uint16_t *	port
@@ -286,7 +286,7 @@ int edg_wll_QueryListener(
  */
 int edg_wll_QueryListenerProxy(
 	edg_wll_Context	context,
-	edg_wlc_JobId		jobId,
+	glite_jobid_const_t		jobId,
 	const char *	name,
 	char **		host,
 	uint16_t *	port

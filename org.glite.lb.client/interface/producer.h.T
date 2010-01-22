@@ -197,7 +197,7 @@ extern int edg_wll_RegisterJob(
 	const char *		ns,
 	int			num_subjobs,
 	const char *		seed,
-	edg_wlc_JobId **	subjobs
+	glite_jobid_t **	subjobs
 );
 
 /** 
@@ -212,7 +212,7 @@ extern int edg_wll_RegisterJobSync(
 	const char *		ns,
 	int			num_subjobs,
 	const char *		seed,
-	edg_wlc_JobId **	subjobs
+	glite_jobid_t **	subjobs
 );
 
 /**
@@ -243,7 +243,7 @@ extern int edg_wll_RegisterJobProxy(
 	const char *		ns,
 	int			num_subjobs,
 	const char *		seed,
-	edg_wlc_JobId **	subjobs
+	glite_jobid_t **	subjobs
 );
 
 #ifdef LB_PERF
@@ -256,7 +256,7 @@ extern int edg_wll_RegisterJobProxyOld(
 	const char *		ns,
 	int			num_subjobs,
 	const char *		seed,
-	edg_wlc_JobId **	subjobs
+	glite_jobid_t **	subjobs
 );
 
 /* register only to LBProxy 		*/
@@ -270,7 +270,7 @@ extern int edg_wll_RegisterJobProxyOnly(
 	const char *		ns,
 	int			num_subjobs,
 	const char *		seed,
-	edg_wlc_JobId **	subjobs
+	glite_jobid_t **	subjobs
 );
 #endif
 
@@ -292,7 +292,7 @@ extern int edg_wll_RegisterSubjobs(
 	glite_jobid_const_t	parent,
 	char const * const *	jdls,
 	const char *		ns,
-	edg_wlc_JobId const *	subjobs
+	glite_jobid_t const *	subjobs
 );
 
 
@@ -312,7 +312,7 @@ extern int edg_wll_RegisterSubjobsProxy(
 	glite_jobid_const_t	parent,
 	char const * const *	jdls,
 	const char *		ns,
-	edg_wlc_JobId const *	subjobs
+	glite_jobid_t const *	subjobs
 );
 
 /**
@@ -326,7 +326,7 @@ extern int edg_wll_GenerateSubjobIds(
 	glite_jobid_const_t	parent,
 	int			num_subjobs,
 	const char *		seed,
-	edg_wlc_JobId **	subjobs
+	glite_jobid_t **	subjobs
 );
 
 

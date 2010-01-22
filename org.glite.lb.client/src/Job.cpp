@@ -62,7 +62,7 @@ Job::status(int flags) const
   try {
     edg_wll_JobStat	*cstat = jobStatus.c_ptr();
     int ret = edg_wll_JobStatus(server.getContext(),
-				const_cast<glite_jobid_t>(jobId.c_jobid()), 
+				jobId.c_jobid(), 
 				flags,
 				cstat);
     check_result(ret,
@@ -91,7 +91,7 @@ Job::log(std::vector<Event> &eventList) const
 
   try {
     context = server.getContext();
-    result = edg_wll_JobLog(context, const_cast<glite_jobid_t>(jobId.c_jobid()), &events);
+    result = edg_wll_JobLog(context, jobId.c_jobid(), &events);
     if (result == E2BIG) {
 	    edg_wll_Error(context, NULL, &errstr);
 	    check_result(edg_wll_GetParam(context,
@@ -147,7 +147,7 @@ Job::queryListener(std::string const & name) const
 
   try {
     int ret = edg_wll_QueryListener(server.getContext(),
-				    const_cast<glite_jobid_t>(jobId.c_jobid()),
+				    jobId.c_jobid(),
 				    name.c_str(),
 				    &c_host,
 				    &port);

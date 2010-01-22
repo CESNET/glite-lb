@@ -270,7 +270,7 @@ char * edg_wll_GetSequenceCode(
  */
 int edg_wll_GetLoggingJob(
 	const edg_wll_Context	context,
-	edg_wlc_JobId	*jobid_out
+	glite_jobid_t	*jobid_out
 );
 
 /*

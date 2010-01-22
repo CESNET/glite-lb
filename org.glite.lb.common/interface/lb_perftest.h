@@ -43,6 +43,6 @@ glite_wll_perftest_createJobId(const char *bkserver,
 			       const char *test_user,
 			       const char *test_name,
 			       int job_num,
-			       edg_wlc_JobId *jobid);
+			       glite_jobid_t *jobid);
 
 #endif /* GLITE_LB_PERFTEST_H */

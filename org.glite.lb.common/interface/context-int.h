@@ -145,7 +145,7 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	char		*p_key_filename;
 	time_t		purge_timeout[EDG_WLL_NUMBER_OF_STATCODES];
 /* producer part */
-	edg_wlc_JobId	p_jobid;
+	glite_jobid_t	p_jobid;
 	edg_wll_SeqCode	p_seqcode;
 	int		count_statistics;
 
@@ -199,7 +199,7 @@ extern int edg_wll_IncSequenceCode(edg_wll_Context ctx);
 
 extern void edg_wll_FreeParams(edg_wll_Context context);
 
-extern int edg_wll_GenerateSubjobIds(edg_wll_Context, glite_jobid_const_t, int, const char *, edg_wlc_JobId **);
+extern int edg_wll_GenerateSubjobIds(edg_wll_Context, glite_jobid_const_t, int, const char *, glite_jobid_t **);
 
 #ifdef __cplusplus
 }

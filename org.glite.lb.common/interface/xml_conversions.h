@@ -52,7 +52,7 @@ typedef struct _edg_wll_XML_ctx {
 	enum edg_wll_QueryType	type;	
 	edg_wll_QueryRec        **conditions;
 	int		    	flags;
-        edg_wlc_JobId 	    	*jobsOutGlobal;   
+        glite_jobid_t 	    	*jobsOutGlobal;   
         edg_wll_Event       	*eventsOutGlobal;
         edg_wll_JobStat     	*jobStatGlobal;
         edg_wll_JobStat     	jobStatSingleGlobal;
@@ -81,7 +81,7 @@ typedef struct _edg_wll_XML_ctx {
 	time_t                  statsFrom, statsTo;
 	float                   statsRate, statsDuration;
 	int                     statsResFrom, statsResTo;
-	edg_wlc_JobId		jobId;
+	glite_jobid_t		jobId;
 	char			*source;
 	char			*seqCode;
 	int			errCode;
@@ -123,7 +123,7 @@ void edg_wll_add_taglist_to_XMLBody(char **body,  const edg_wll_TagValue *toAdd,
 void edg_wll_add_time_t_list_to_XMLBody(char **body, const time_t *toAdd, const char *tag, char *(*indexToTag)(), const char *indent, const int from, const int to);
 void edg_wll_add_cclassad_to_XMLBody(char **body, void *toAdd, const char *tag, const char *null);
 char *edg_wll_from_string_to_string(edg_wll_XML_ctx *XMLCtx);
-edg_wlc_JobId edg_wll_from_string_to_jobid(edg_wll_XML_ctx *XMLCtx);
+glite_jobid_t edg_wll_from_string_to_jobid(edg_wll_XML_ctx *XMLCtx);
 edg_wll_NotifId edg_wll_from_string_to_notifid(edg_wll_XML_ctx *XMLCtx);
 edg_wll_JobStatCode edg_wll_from_string_to_edg_wll_JobStatCode(edg_wll_XML_ctx *XMLCtx);
 int edg_wll_from_string_to_int(edg_wll_XML_ctx *XMLCtx);

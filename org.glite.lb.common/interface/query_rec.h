@@ -100,7 +100,7 @@ typedef struct _edg_wll_QueryRec {
 		int	i;	/**< integer query attribute value */
 		char	*c;	/**< character query attribute value */
 		struct timeval	t;	/**< time query attribute value */
-		glite_jobid_t	j;	/**< JobId query attribute value */
+		glite_jobid_const_t	j;	/**< JobId query attribute value */
 	} value, value2;
 } edg_wll_QueryRec;
 

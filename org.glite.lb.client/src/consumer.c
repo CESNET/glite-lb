@@ -284,7 +284,7 @@ int edg_wll_JobLog(
 
 	j[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
 	j[0].op = EDG_WLL_QUERY_OP_EQUAL;
-	j[0].value.j = (glite_jobid_t) job;
+	j[0].value.j = job;
 
 	e[0].attr = EDG_WLL_QUERY_ATTR_LEVEL;
 	e[0].op = EDG_WLL_QUERY_OP_LESS;
@@ -307,7 +307,7 @@ int edg_wll_JobStatus(
 
 	j[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
 	j[0].op = EDG_WLL_QUERY_OP_EQUAL;
-	j[0].value.j = (glite_jobid_t) job;
+	j[0].value.j = job;
 	j[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 
 	ret = edg_wll_QueryJobs(ctx,j,flags,NULL,&statesOut);
@@ -335,7 +335,7 @@ int edg_wll_JobStatus(
 
 
 	
-int edg_wll_QueryListener(edg_wll_Context ctx, edg_wlc_JobId job, const char *name, char** host, uint16_t *port) {
+int edg_wll_QueryListener(edg_wll_Context ctx, glite_jobid_const_t job, const char *name, char** host, uint16_t *port) {
 
 	int 		i;
 	edg_wll_Event      	*events = NULL;
@@ -570,7 +570,7 @@ int edg_wll_JobStatusProxy(
 	
 int edg_wll_QueryListenerProxy(
 		edg_wll_Context ctx,
-		edg_wlc_JobId job,
+		glite_jobid_const_t job,
 		const char *name,
 		char** host,
 		uint16_t *port) 
