@@ -78,7 +78,8 @@ LOGD_NOBJS:=${LOGD_OBJS:.o=.no}
 INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 	recover.o send_event.o \
 	event_queue.o event_store.o il_master.o interlogd.o \
-	queue_mgr.o server_msg.o queue_thread.o
+	queue_mgr.o server_msg.o queue_thread.o \
+	plugin_mgr.o
 
 WS_INTERLOG_OBJS:=il_error.o input_queue_socket_http.o \
 	recover.o http.o send_event_http.o \
