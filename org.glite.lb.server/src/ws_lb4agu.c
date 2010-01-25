@@ -94,6 +94,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityInfo(
 	if (!in->id) return SOAP_FAULT;
 	out = soap_malloc(soap, sizeof(*out));
 
+	GLITE_SECURITY_GSOAP_LIST_CREATE(soap, out, status, struct glue__ComputingActivity_USCOREt, 1);
+
 	/* process each request individually: */
 	for (i=0; in->id[i]; i++) {
 		/* first parse jobId */
@@ -125,8 +127,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityInfo(
 		}
 
 		/* fill in the response fields */
-		out->status->ID = in->id[i];
-		out->status->State = edg_wll_StatToString(s.state);
+		GLITE_SECURITY_GSOAP_LIST_GET(out->status, i)->ID = in->id[i];
+		GLITE_SECURITY_GSOAP_LIST_GET(out->status, i)->State = edg_wll_StatToString(s.state);
 	}
 
 	return SOAP_OK;

@@ -263,7 +263,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	if ($tl =~ m/^condor/) { $tl = ucfirst $tl; }
 	my $free = "";
 	gen $indent."case EDG_WLL_EVENT_$tu :\n";
-	gen "\t\{";
+	gen "\t\{\n";
 	selectType $event $t;
 # if there are some _code_, convert them from string:
 	for ($event->getFieldsOrdered) {
@@ -271,19 +271,23 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		my $fn = $f->{name};
 		my $fnu = ucfirst $fn;
 		if ($f->{codes}) {
-			gen "\tchar \*$fn\_code = edg_wll\_$t${fnu}ToString(event->$tl.$fn);\n"; 
+			gen "\t\tchar \*$fn\_code = edg_wll\_$t${fnu}ToString(event->$tl.$fn);\n"; 
 			$free = $free . "free($fn\_code); ";
 		}
-		if ($f->{type} eq 'jobid') {
-			gen "\tchar \*$fn\_str = edg_wlc_JobIdUnparse(event->$tl.$fn);\n";
+		elsif ($f->{type} eq 'jobid') {
+			gen "\t\tchar \*$fn\_str = edg_wlc_JobIdUnparse(event->$tl.$fn);\n";
 			$free .= "free($fn\_str); ";
 		}
-		if ($f->{type} eq 'notifid') {
-			gen "\tchar \*$fn\_str = edg_wll_NotifIdUnparse(event->$tl.$fn);\n";
+		elsif ($f->{type} eq 'notifid') {
+			gen "\t\tchar \*$fn\_str = edg_wll_NotifIdUnparse(event->$tl.$fn);\n";
 			$free .= "free($fn\_str); ";
 		}
-		if ($ULMasString{$f->{type}}) {
-			gen "\tchar \*$fn\_str = ".$f->getType()."ToString(event->$tl.$fn);\n";
+		elsif ($f->{type} eq 'timeval') {
+			gen "\t\tchar $fn\_str[ULM_DATE_STRING_LENGTH + 1];\n";
+			gen "\t\t".toString $f "event->$tl.$fn", "$fn\_str"; gen "\n";
+		}
+		elsif ($ULMasString{$f->{type}}) {
+			gen "\t\tchar \*$fn\_str = ".$f->getType()."ToString(event->$tl.$fn);\n";
 			$free .= "free($fn\_str); ";
 		}
 	}
@@ -295,7 +299,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		gen "\t\tif (!nonulls.$tl.$fn) nonulls.$tl.$fn = \"\";\n"
 			if $f->{type} eq 'string';
 	}
-	gen "\tif (trio_asprintf(&var,EDG_WLL_FORMAT_$tu";
+	gen "\t\tif (trio_asprintf(&var,EDG_WLL_FORMAT_$tu";
 # now format remaining parapteres for trio_asprintf:
 	for ($event->getFieldsOrdered) {
 		my $f = selectField $event $_;
@@ -303,7 +307,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		if ($f->{codes}) {
 			gen ",$fn\_code";
 		}
-		elsif ($f->{type} eq 'jobid' || $f->{type} eq 'notifid' || $ULMasString{$f->{type}}) {
+		elsif ($f->{type} eq 'jobid' || $f->{type} eq 'notifid' || $f->{type} eq 'timeval' || $ULMasString{$f->{type}}) {
 			gen ",$fn\_str?$fn\_str:\"\"";
 		} else {
 			gen ",nonulls.$tl.$fn";
@@ -311,7 +315,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	}
 	gen ") == -1 ) \{\n";
 		gen "\t".$indent.$free."NOMEM \}\n";
-	if ($free) { gen "\t$free\n"; }
+	if ($free) { gen "\t\t$free\n"; }
 	gen "\t\}\n";
 	gen $indent.$indent."break;\n";
 }

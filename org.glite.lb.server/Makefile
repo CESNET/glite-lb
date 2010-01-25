@@ -293,9 +293,7 @@ ${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c 
 #	{ sleep 16 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; }
 
 LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
-	cp ${stagedir}/interface/LBTypes.wsdl .
-	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl
-	rm -f LBTypes.wsdl
+	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -I${stagedir}/interface -o $@ ${stagedir}/interface/LB.wsdl
 
 test.xml: test_xml
 	./test_xml
@@ -313,7 +311,7 @@ query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o ind
 
 test_query_events: ${query_events_objs}
 	${LINKXX} -o $@ ${query_events_objs} \
-	${TEST_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib}
+	${TEST_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib} ${LOG4C_LIBS}
 
 test.soapconv: test_soap_conv
 	./test_soap_conv

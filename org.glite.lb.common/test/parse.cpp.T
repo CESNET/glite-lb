@@ -96,6 +96,8 @@ void EventParseTest::$l()
 					$value = "edg_wlc_JobIdParse(\"https://some.host:1234/x67qr549qc\",&e1->$l.$fn);";
 				} elsif ($f->{type} eq "notifid") { 
 					$value = "edg_wll_NotifIdParse(\"https://some.host:1234/NOTIF:x67qr549qc\",&e1->$l.$fn);";
+				} elsif ($f->{type} eq "timeval") { 
+					$value = "e1->$l.$fn.tv_sec = 326890800; e1->$l.$fn.tv_usec = 1;";
 				} else { 
 					gen "% FIXME: unknown type $f->{type} for $fn \n"; 
 				}

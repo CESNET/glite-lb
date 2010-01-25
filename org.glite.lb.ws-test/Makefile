@@ -73,9 +73,7 @@ clean:
 
 
 LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
-	cp ${stagedir}/interface/LBTypes.wsdl .
-	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl
-	rm -f LBTypes.wsdl
+	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -I${stagedir}/interface -o $@ ${stagedir}/interface/LB.wsdl
 
 soap_version.h:
 	${gsoap_bin_prefix}/soapcpp2 /dev/null 
