@@ -763,10 +763,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback; 
 			free(stmt); stmt = NULL;
-		}
 
-		if ( purge )
-		{
 			trio_asprintf(&stmt,"delete from status_tags where jobid = '%|Ss'",dbjob);
 			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback;
@@ -867,8 +864,11 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 			}
 			glite_lbu_FreeStmt(&q);
 			free(stmt); stmt = NULL;
+		}
 
-			/* notifications */
+		if ( purge )
+		{
+			// notifications
 			memcpy(&new_stat, stat, sizeof new_stat);
 			new_stat.state = EDG_WLL_JOB_PURGED;
 			edg_wll_NotifMatch(ctx, stat, &new_stat);
