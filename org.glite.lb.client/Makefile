@@ -147,7 +147,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=${LB_PERF_TOOLS}
-EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c test_changed_jdl.c reg_sandbox_transfer.c
+EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c test_changed_jdl.c reg_sandbox_transfer.c done_failed_events.c
 EXAMPLES:=${EXAMPLES_SRC:.c=}
 
 # TODO: migrate them here from branch_RC31_3
