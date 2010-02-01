@@ -937,9 +937,16 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		char *errt, *errd;
 
 		edg_wll_Error(ctx, &errt, &errd);
-		dprintf(("[%d] %s (%s)\n[%d]\tignored, continuing without VOMS\n", getpid(), errt, errd,getpid()));
-		free(errt); free(errd);
-		edg_wll_ResetError(ctx); 
+		if (ctx->connections->serverConnection->gss.context != GSS_C_NO_CONTEXT) {
+			dprintf(("[%d] %s (%s)\n[%d]\tignored, continuing without VOMS\n", getpid(), errt, errd,getpid()));
+			free(errt); free(errd);
+			edg_wll_ResetError(ctx); 
+		} else {
+			dprintf(("[%d] %s (%s)\n[%d]\trequest aborted\n", getpid(), errt, errd,getpid()));
+			free(errt); free(errd);
+			edg_wll_FreeContext(ctx);
+			return 1;
+		}
 	}
 	if (debug && ctx->vomsGroups.len > 0)
 	{
