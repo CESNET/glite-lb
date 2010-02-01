@@ -142,7 +142,7 @@ int	cream_state
 	_code_	PENDING
 	_code_	IDLE
 	_code_	RUNNING
-	_code_	REALLYRUNNING
+	_code_	REALLY-RUNNING
 	_code_	HELD
 	_code_	DONE-OK
 	_code_	DONE-FAILED
