@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cstdlib>
+#include <cstring>
 #include <stdsoap2.h>
 
 #include <cppunit/extensions/HelperMacros.h>

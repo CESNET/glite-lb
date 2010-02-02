@@ -1,4 +1,6 @@
 #include <fstream>
+#include <cstdlib>
+#include <cstring>
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/CompilerOutputter.h>
