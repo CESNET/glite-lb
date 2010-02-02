@@ -246,6 +246,10 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 			ctx->connections->connPool[index].peerPort,index);
 #endif  
 
+	// Unlock the pool here but lock the connection in question
+	edg_wll_connectionTryLock(ctx, index);
+	edg_wll_poolUnlock();
+
 #if 0
 	/* acquire gss credentials */
 	ret = edg_wll_gss_acquire_cred_gsi(
@@ -324,7 +328,10 @@ edg_wll_log_connect_err:
 edg_wll_log_connect_end:
 	if (index >= 0) edg_wll_connectionTryLock(ctx, index);
 
-	edg_wll_poolUnlock();
+//	edg_wll_poolUnlock();
+//      ZS, 2 Feb 2010: Overall pool lock replaced with a connection-specific 
+//      lock for the most part
+
 
 #ifdef EDG_WLL_LOG_STUB
 	if (answer) {

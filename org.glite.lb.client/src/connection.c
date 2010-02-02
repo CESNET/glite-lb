@@ -305,6 +305,10 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
         #endif
 
 	*connToUse = index;
+
+	//Lock the select connection, unlock the rest of the pool 
+	edg_wll_connectionTryLock(ctx, index);
+	edg_wll_poolUnlock(); 
 	
 	/* Old Comment: support anonymous connections, perhaps add a flag to the connPool
 	 * struct specifying whether or not this connection shall be authenticated
@@ -412,7 +416,9 @@ ok:
 
 end:
 
-	edg_wll_poolUnlock(); /* One way or the other, there are no more pool-wide operations */
+//	edg_wll_poolUnlock(); /* One way or the other, there are no more pool-wide operations */
+//	ZS, 2 Feb 2010: Overall pool lock replaced with a connection-specific 
+//	lock for the most part
 
 //	xxxxx
 

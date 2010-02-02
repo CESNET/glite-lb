@@ -250,6 +250,8 @@ edg_wll_Connections* edg_wll_initConnections() {
         printf("Entering edg_wll_initConnections\n");
     #endif
 
+    edg_wll_poolLock();
+
     if((connectionsHandle.connPool == NULL) &&
        (connectionsHandle.poolSize > 0)) { /* We need to allocate memory for the connPool and connectionLock arrays */ 
 
@@ -277,6 +279,7 @@ edg_wll_Connections* edg_wll_initConnections() {
         connectionsHandle.serverConnection = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
     }
 
+    edg_wll_poolUnlock();
 
   return (&connectionsHandle);
 }
