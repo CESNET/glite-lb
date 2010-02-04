@@ -586,10 +586,12 @@ sub mode_etics {
 
 	if ($branch) {
 		$conf = "glite-${subsys}-${module}_$branch"; 
-		$conftag = $branch; }
+		$conftag = $branch; 
+		$dwpath = ""; }
 	else {
 		$conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
-		$conftag = $conf; }
+		$conftag = $conf; 
+		$dwpath = "path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz\n"; }
 #	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
@@ -610,8 +612,7 @@ age = $age
 deploymentType = None
 tag = $conftag
 version = $major.$minor.$rev
-path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz
-
+$dwpath
 [Platform-default:VcsCommand]
 displayName = None
 description = None

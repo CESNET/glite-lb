@@ -244,9 +244,11 @@ usage: $0 [-c <current configuration>] module.name
 
 	printf (NEWCONF "[Configuration-$newconfig]\nprofile = None\nmoduleName = $module\ndisplayName = $newconfig\ndescription = None\nprojectName = org.glite\nage = $age\ntag = $tag\nversion = $major.$minor.$revision\npath = None\n\n");
 
-	printf (NEWCONF "[Platform-default:VcsCommand]\ndisplayName = None\ndescription = HEAD CVS commands\ntag = cvs -d \${vcsroot} tag -R \${tag} \${moduleName}\nbranch = None\ncommit = None\ncheckout = cvs -d \${vcsroot} co -r \${tag} \${moduleName}\n\n");
+#	printf (NEWCONF "[Platform-default:VcsCommand]\ndisplayName = None\ndescription = HEAD CVS commands\ntag = cvs -d \${vcsroot} tag -R \${tag} \${moduleName}\nbranch = None\ncommit = None\ncheckout = cvs -d \${vcsroot} co -r \${tag} \${moduleName}\n\n");
 
-	printf (NEWCONF "[Platform-default:Environment]\nHOME = \${workspaceDir}\n\n[Hierarchy]\n");
+#	printf (NEWCONF "[Platform-default:Environment]\nHOME = \${workspaceDir}");
+
+	printf (NEWCONF "\n\n[Hierarchy]\n");
 
 	foreach $m (@modules) {
 	        open MOD, "$m/project/version.properties" or die "$m/project/version.properties: $?\n";
