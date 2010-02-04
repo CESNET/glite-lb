@@ -195,7 +195,7 @@ logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
 
 notify: notify.o
-	${LINKXX} -o $@ notify.o ${PLUSLIB} ${EXT_LIB} 
+	${LINKXX} -o $@ notify.o ${PLUSLIB} ${EXT_LIB} ${PLUS_EXTRA_LIB}
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
