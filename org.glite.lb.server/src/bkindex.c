@@ -406,10 +406,7 @@ static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_
 							if (edg_wll_intJobStatus(ctx, jobid, 0, stat, 1, 0)) {
 								free(stat);
 								stat = NULL;
-								if (edg_wll_Error(ctx,NULL,NULL) != 0) {
-									if (edg_wll_Error(ctx,NULL,NULL) != ENOENT) do_exit(ctx, EX_SOFTWARE);
-									edg_wll_ResetError(ctx);
-								}
+								if (edg_wll_Error(ctx,NULL,NULL) != ENOENT) do_exit(ctx, EX_SOFTWARE);
 							}
 						}
 					}

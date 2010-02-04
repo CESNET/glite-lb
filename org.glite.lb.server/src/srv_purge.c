@@ -666,12 +666,10 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 
 			// get job prefix/suffix before its state is deleted
 			if ( jobtype == EDG_WLL_NUMBER_OF_JOBTYPES) goto rollback;
-			if (get_jobid_suffix(ctx, job, jobtype, &root, &suffix)
-			 || get_jobid_prefix(ctx, job, jobtype, &prefix)) {
-				fprintf(stderr,"[%d] unknown job type of the '%s'.\n", getpid(), dbjob);
-				syslog(LOG_WARNING,"Warning: unknown job type of the '%s'", dbjob);
-				edg_wll_ResetError(ctx);
-			}
+			if ( get_jobid_suffix(ctx, job, jobtype, &root, &suffix) ) goto rollback;
+			if ( get_jobid_prefix(ctx, job, jobtype, &prefix) ) goto rollback;
+			
+		
 		}
 
 		if ( purge )
@@ -692,7 +690,7 @@ int purge_one(edg_wll_Context ctx,glite_jobid_const_t job,int dump, int purge, i
 			free(stmt); stmt = NULL;
 		}
 
-		if ( purge && prefix && suffix )
+		if ( purge )
 		{
 			/* Store zombie prefix */
 		

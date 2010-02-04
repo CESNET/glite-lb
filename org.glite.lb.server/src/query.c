@@ -111,7 +111,7 @@ int edg_wll_QueryEventsServer(
 	trio_asprintf(&qbase,"SELECT e.event,j.userid,j.dg_jobid,e.code,"
 		"e.prog,e.host,u.cert_subj,e.time_stamp,e.usec,e.level,e.arrived,e.seqcode "
 		"FROM events e,users u,jobs j%s "
-		"WHERE %se.jobid=j.jobid AND j.grey=0 AND e.userid=u.userid AND e.code != %d "
+		"WHERE %se.jobid=j.jobid AND e.userid=u.userid AND e.code != %d "
 		"%s %s %s %s %s %s",
 		where_flags & FL_SEL_STATUS ? ",states s"	: "",
 		where_flags & FL_SEL_STATUS ? "s.jobid=j.jobid AND " : "",
@@ -385,13 +385,13 @@ int edg_wll_QueryJobsServer(
 
 	if ( (where_flags & FL_SEL_STATUS) )
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j, states s WHERE j.jobid=s.jobid AND j.grey=0 %s %s AND %s ORDER BY j.jobid", 
+						 "FROM jobs j, states s WHERE j.jobid=s.jobid %s %s AND %s ORDER BY j.jobid", 
 						(job_where) ? "AND" : "",
 						(job_where) ? job_where : "",
 						(ctx->isProxy) ? "j.proxy='1'" : "j.server='1'");
 	else
 		trio_asprintf(&qbase,"SELECT DISTINCT j.dg_jobid,j.userid "
-						 "FROM jobs j WHERE j.grey=0 AND %s %s %s "
+						 "FROM jobs j WHERE %s %s %s "
 						 "ORDER BY j.jobid", 
 						(job_where) ? job_where : "",
 						(job_where) ? "AND" : "",

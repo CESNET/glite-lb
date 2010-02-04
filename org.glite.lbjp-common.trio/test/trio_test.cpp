@@ -1,5 +1,4 @@
 #include <iostream>
-#indlude <cstring>
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TestFixture.h>

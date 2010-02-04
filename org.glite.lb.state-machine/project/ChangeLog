@@ -21,3 +21,9 @@
 - Makefile relies on the libdir variable
 - New configure script
 
+1.0.1-1
+- Recompute state for unknown jobs to allow purging
+
+1.0.2-1
+- Do not override network server endpoint with data from transfer event
+

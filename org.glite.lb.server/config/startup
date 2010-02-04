@@ -19,10 +19,6 @@ GLITE_JP_LOCATION=${GLITE_JP_LOCATION:-$GLITE_LOCATION}
 [ -n "$GLITE_JP_IMPORTER_PIDFILE" ] && jp_importer_pidfile=$GLITE_JP_IMPORTER_PIDFILE ||
 	jp_importer_pidfile=$GLITE_LOCATION_VAR/glite-jp-importer.pid
 
-GLITE_LB_TYPE=${GLITE_LB_TYPE:-'server'} # server, proxy, both
-GLITE_LB_PROXY_SOCK=${GLITE_LB_PROXY_SOCK:-'/tmp/glite-lbproxy-ilog.sock'}
-GLITE_LB_PROXY_FPREFIX=${GLITE_LB_PROXY_FPREFIX:-'/tmp/glite-lbproxy-ilog_events'}
-
 unset creds port
 
 start()
@@ -95,23 +91,12 @@ start()
 			GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d >> $GLITE_LOCATION_VAR/notif-il.log 2>&1 &"
 		fi
 	fi
-	case "$GLITE_LB_TYPE" in
-	proxy)
-		proxy="-P --proxy-il-sock $GLITE_LB_PROXY_SOCK --proxy-il-fprefix $GLITE_LB_PROXY_FPREFIX"
-		;;
-	both)
-		proxy="-B --proxy-il-sock $GLITE_LB_PROXY_SOCK --proxy-il-fprefix $GLITE_LB_PROXY_FPREFIX"
-		;;
-	*)
-		proxy=''
-		;;
-	esac
 
 	echo -n Starting glite-lb-bkserverd ...
 	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
 		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
-		$super $creds -i $pidfile $port $wport $dumpdir $purgedir $lbreg_maildir $proxy\
+		$super $creds -i $pidfile $port $wport $dumpdir $purgedir $lbreg_maildir\
 		$GLITE_LB_SERVER_OTHER_OPTIONS" \
 	&& echo " done" || echo " FAILED"
 
@@ -131,17 +116,6 @@ start()
 			-i $jp_importer_pidfile $jpreg_maildir $jpdump_maildir $sandbox_maildir \
 			$jpps $creds $GLITE_JP_IMPORTER_ARGS" \
 		&& echo " done" || echo " FAILED"
-	fi
-
-	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both" ; then
-		if test -x $GLITE_LOCATION/bin/glite-lb-notif-interlogd; then
-			echo -n Starting glite-lb-interlogd for proxy ...
-			su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-interlogd \
-				-f $GLITE_LB_PROXY_FPREFIX -s $GLITE_LB_PROXY_SOCK \
-				$creds $GLITE_LB_PREFIX_OTHER_OPTIONS" && echo " done" || echo " FAILED"
-		else
-			echo Warning: glite-lb-interlogd not installed, logging to LB proxy will not work
-		fi
 	fi
 }
 
@@ -194,44 +168,25 @@ status_daemon()
 
 stop()
 {
-	LC_ALL=C
-
 	echo -n Stopping glite-lb-notif-interlogd ...
 	killall glite-lb-notif-interlogd
-	echo " done"
+	echo done
 
 	stop_daemon "glite-lb-bkserverd" $pidfile
 	if test x"$GLITE_LB_EXPORT_ENABLED" = x"true"; then
 		stop_daemon "glite-jp-importer" $jp_importer_pidfile
-	fi
-
-	pid=`netstat -anp --unix  2>/dev/null | grep "^unix .* LISTEN.* ${GLITE_LB_PROXY_SOCK}$"`
-	if test x"$pid" = x"" ; then
-		echo "glite-lb-interlogd for proxy not running"
-	else
-		pid=`echo $pid | sed -e 's/.*LISTEN[A-Z]*  *[^ ][^ ]*  *\([0-9]*\).*/\1/'`
-		echo -n Stopping glite-lb-interlogd for proxy \($pid\) ...
-		kill "$pid"
-		echo " done"
 	fi
 }
 
 status()
 {
 	retval=0
-	LC_ALL=C
 
+	LC_ALL=C
 	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_NOTIF_SOCK}$" >/dev/null 2>&1 ;then
 		echo glite-lb-notif-interlogd running
 	else
 		echo glite-lb-notif-interlogd not running
-		retval=1
-	fi
-
-	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_PROXY_SOCK}$" >/dev/null 2>&1 ;then
-		echo glite-lb-interlogd for proxy running
-	else
-		echo glite-lb-interlogd for proxy not running
 		retval=1
 	fi
 
