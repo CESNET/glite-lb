@@ -26,7 +26,7 @@ int main(int argc,char **argv) {
 	time_t	from,to;
 	int	i, err = 0;
 
-	edg_wll_QueryRec	cond[3];	/* [2] is terminator */
+	edg_wll_QueryRec	cond[3],jcond[2];	/* [2] is terminator */
 	edg_wll_Event	*events = NULL;
 
 	edg_wll_InitContext(&ctx);
@@ -60,6 +60,12 @@ int main(int argc,char **argv) {
 
 	to = mktime(&tm);
 
+	memset(jcond,0,sizeof jcond);
+
+	jcond[0].attr = EDG_WLL_QUERY_ATTR_OWNER;
+	jcond[0].op = EDG_WLL_QUERY_OP_UNEQUAL;
+	jcond[0].value.c = "nonexistent";
+
 	memset(cond,0,sizeof cond);
 	cond[0].attr = EDG_WLL_QUERY_ATTR_TIME;
 	cond[0].op = EDG_WLL_QUERY_OP_WITHIN;
@@ -69,7 +75,7 @@ int main(int argc,char **argv) {
 	cond[1].attr = EDG_WLL_QUERY_ATTR_EVENT_TYPE;
 	cond[1].value.i = EDG_WLL_EVENT_DONE;
 	
-	if (edg_wll_QueryEventsProxy(ctx,NULL,cond,&events)) {
+	if (edg_wll_QueryEvents(ctx,jcond,cond,&events)) {
 		char	*et,*ed;
 		et = ed = NULL;
 
