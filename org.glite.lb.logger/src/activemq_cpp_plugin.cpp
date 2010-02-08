@@ -311,7 +311,7 @@ event_queue_close(struct event_queue *eq)
 
 extern "C"
 int
-plugin_init(const char *s)
+plugin_init(const char *config)
 {
 	std::string brokerURI;
 
@@ -351,4 +351,4 @@ plugin_supports_scheme(const char *scheme)
 
 cms::Connection *OutputPlugin::connection = NULL;
 cms::ConnectionFactory *OutputPlugin::connectionFactory = NULL;
-const char *OutputPlugin::SCHEME = "x-msg://";
+const char *OutputPlugin::SCHEME = "x-msg:";

@@ -23,7 +23,7 @@ static struct plugin_list *plugins = NULL;
 		return -1; \
 	}
 
-int plugin_init(const char *plugin_name)
+int plugin_init(const char *plugin_name, const char *cfg)
 {
 	char err[256];
 	void *dl_handle;
@@ -45,13 +45,13 @@ int plugin_init(const char *plugin_name)
 	}
 
 	plugin->next = plugins;
-	DL_RESOLVESYM(plugin->plugin_def.plugin_init, dl_handle, "plugin_init", int(*)());
+	DL_RESOLVESYM(plugin->plugin_def.plugin_init, dl_handle, "plugin_init", int(*)(char *));
 	DL_RESOLVESYM(plugin->plugin_def.plugin_supports_scheme, dl_handle,  "plugin_supports_scheme", int(*)(const char *));
 	DL_RESOLVESYM(plugin->plugin_def.event_queue_connect, dl_handle, "event_queue_connect", int (*)(struct event_queue*));
 	DL_RESOLVESYM(plugin->plugin_def.event_queue_send, dl_handle, "event_queue_send", int (*)(struct event_queue *));
 	DL_RESOLVESYM(plugin->plugin_def.event_queue_close, dl_handle, "event_queue_close", int (*)(struct event_queue *));
 
-	return (*plugin->plugin_def.plugin_init)();
+	return (*plugin->plugin_def.plugin_init)(cfg);
 }
 
 

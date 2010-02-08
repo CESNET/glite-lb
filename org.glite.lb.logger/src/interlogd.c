@@ -60,13 +60,14 @@ static void usage (int status)
 	       "  -k, --key  <file>          location of server private key\n"
 	       "  -C, --CAdir <dir>          directory containing CA certificates\n"
 	       "  -b, --book                 send events to bookkeeping server only\n"
-	       "  -i, --pidfile		     pid file\n"
+	       "  -i, --pidfile		         pid file\n"
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
 	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers (default, timeout==0 means turn lazy off)\n"
 	       "  -p, --parallel [<num>]     use <num> parallel streams to the same server\n"
 	       "  -q, --queue-low <num>      queue length that enables another insertions\n"
 	       "  -Q, --queue-high <num>     max queue length\n"
+		   "  -F, --conf <file>			 load configuration from config file\n"
 #ifdef LB_PERF
 	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
 	       "  -S, --nosync               PERFTEST: do not check logd files for lost events\n"
@@ -104,6 +105,8 @@ char *key_file  = NULL;
 char *CAcert_dir = NULL;
 char *log_server = NULL;
 char *socket_path = DEFAULT_SOCKET;
+static char *conf_file = NULL;
+static char *config = NULL;
 
 static struct option const long_options[] =
 {
@@ -124,6 +127,7 @@ static struct option const long_options[] =
   {"parallel", optional_argument, 0, 'p'},
   {"queue_size_low", required_argument, 0, 'q'},
   {"queue_size_high", required_argument, 0, 'Q'},
+  {"conf", required_argument, 0, 'F'},
 #ifdef LB_PERF
   {"nosend", no_argument, 0, 'n'},
   {"nosync", no_argument, 0, 'S'},
@@ -163,6 +167,7 @@ decode_switches (int argc, char **argv)
 			   "p" /* parallel */
 			   "q:"
 			   "Q:"
+			   "F:" /* conf file */
 #ifdef LB_PERF
 			   "n" /* nosend */
 			   "S" /* nosync */
@@ -258,6 +263,10 @@ decode_switches (int argc, char **argv)
 		queue_size_high = atoi(optarg);
 		break;
 
+	case 'F':
+		conf_file = strdup(optarg);
+		break;
+
 #ifdef LB_PERF
 	case 'n':
 		nosend = 1;
@@ -292,6 +301,38 @@ decode_switches (int argc, char **argv)
     }
 
   return optind;
+}
+
+
+char *load_conf_file(char *filename)
+{
+	struct stat fs;
+	FILE *cf;
+	char *s;
+
+	if(stat(filename, &fs) < 0) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+				"Could not stat config file %s: %s\n", filename, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	s = malloc(fs.st_size);
+	if(s == NULL) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Not enough memory for config file");
+		exit(EXIT_FAILURE);
+	}
+	cf = fopen(filename, "r");
+	if(cf == NULL) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+				"Error opening config file %s: %s\n", filename, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	if(fread(s, fs.st_size, 1, cf) != fs.st_size) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+				"Error reading config file %s: %s\n", filename, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	fclose(cf);
+	return s;
 }
 
 
@@ -363,6 +404,11 @@ main (int argc, char **argv)
   if(glite_common_log_init()) {
 	  fprintf(stderr, "glite_common_log_init() failed, exiting.\n");
 	  exit(EXIT_FAILURE);
+  }
+
+  /* parse config file, if any */
+  if(conf_file != NULL) {
+	  config = load_conf_file(conf_file);
   }
 
   /* check for reasonable queue lengths */
