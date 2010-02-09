@@ -206,7 +206,7 @@ struct il_output_plugin {
 	int 	(*event_queue_connect)(struct event_queue *);
 	int 	(*event_queue_send)(struct event_queue *);
 	int 	(*event_queue_close)(struct event_queue *);
-	int		(*plugin_init)(const char *);
+	int		(*plugin_init)(char *);
 	int		(*plugin_supports_scheme)(const char *);
 };
 
@@ -290,7 +290,7 @@ int receive_http(void *, int (*)(void *, char *, const int), il_http_message_t *
 #endif
 
 /* plugin functions */
-int plugin_init(const char *, const char *);
+int plugin_mgr_init(const char *, char *);
 struct il_output_plugin *plugin_get(const char *);
 
 /* master main loop */

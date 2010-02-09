@@ -29,7 +29,7 @@
 #include <assert.h>
 #include <string.h>
 #include <errno.h>
-
+#include <sys/param.h>
 
 class OutputPlugin : public cms::ExceptionListener {
 
@@ -311,9 +311,38 @@ event_queue_close(struct event_queue *eq)
 
 extern "C"
 int
-plugin_init(const char *config)
+plugin_init(char *config)
 {
+	char *s, *p;
+	char key[MAXPATHLEN], val[MAXPATHLEN];
+	int ret;
 	std::string brokerURI;
+
+	s = strstr(config, "[msg]");
+	if(s == NULL) {
+		set_error(IL_DL, ENOENT, "plugin_init: missing required configuration section [msg]\n");
+		return -1;
+	}
+	s = strchr(s, '\n');
+	if(s) s++;
+	while(s) {
+		if(*s == 0 || *s == '[')
+			break;
+		p = strchr(s, '\n');
+		if(p) *p = 0;
+		ret = sscanf(s, " %s =%s", key, val);
+		if(p) *p = '\n';
+		if(ret == 2) {
+			if(strcmp(key, "broker") == 0) {
+				brokerURI.assign(val);
+			}
+		}
+		s = p;
+	}
+	if(brokerURI.length() == 0) {
+		set_error(IL_DL, ENOENT, "plugin_init: broker uri not configured\n");
+		return -1;
+	}
 
 	try {
 		activemq::library::ActiveMQCPP::initializeLibrary();
@@ -332,8 +361,8 @@ plugin_init(const char *config)
 				OutputPlugin::connectionFactory = NULL;
 			}
 		} catch(cms::CMSException &e) {
-
 		}
+		set_error(IL_DL, 0, (char*)e.what());
 		return -1;
 	}
 

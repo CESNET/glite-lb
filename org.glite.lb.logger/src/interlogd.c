@@ -535,7 +535,7 @@ main (int argc, char **argv)
 		  if(p) *p = '\n';
 		  if(ret > 0) {
 			  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "  loading plugin %s\n", name);
-			  if(plugin_init(name, config) < 0) {
+			  if(plugin_mgr_init(name, config) < 0) {
 				  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Failed to load plugin %s: %s\n", name, error_get_msg());
 			  }
 		  }

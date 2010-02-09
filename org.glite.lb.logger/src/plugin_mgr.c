@@ -23,7 +23,7 @@ static struct plugin_list *plugins = NULL;
 		return -1; \
 	}
 
-int plugin_init(const char *plugin_name, const char *cfg)
+int plugin_mgr_init(const char *plugin_name, char *cfg)
 {
 	char err[256];
 	void *dl_handle;
