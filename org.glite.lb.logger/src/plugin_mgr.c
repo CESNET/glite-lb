@@ -19,7 +19,7 @@ static struct plugin_list *plugins = NULL;
 	var = (type) dlsym(handle, name); \
 	if(var == NULL) { \
 		snprintf(err, sizeof(err), "plugin_init: error resolving %s: %s", name, dlerror()); \
-		set_error(IL_SYS, errno, err); \
+		set_error(IL_DL, ENOENT, err); \
 		return -1; \
 	}
 

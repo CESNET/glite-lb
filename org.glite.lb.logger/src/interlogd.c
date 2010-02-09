@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 
 #include "interlogd.h"
 #include "glite/lb/log_proto.h"
@@ -316,7 +317,7 @@ char *load_conf_file(char *filename)
 				"Could not stat config file %s: %s\n", filename, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	s = malloc(fs.st_size);
+	s = malloc(fs.st_size + 1);
 	if(s == NULL) {
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Not enough memory for config file");
 		exit(EXIT_FAILURE);
@@ -327,12 +328,13 @@ char *load_conf_file(char *filename)
 				"Error opening config file %s: %s\n", filename, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	if(fread(s, fs.st_size, 1, cf) != fs.st_size) {
+	if(fread(s, fs.st_size, 1, cf) != 1) {
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
 				"Error reading config file %s: %s\n", filename, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	fclose(cf);
+	s[fs.st_size] = 0;
 	return s;
 }
 
@@ -509,6 +511,37 @@ main (int argc, char **argv)
      exit(EXIT_FAILURE);
   }
   glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "Using certificate %s", cred_handle->creds->name);
+
+  /* parse config, initialize plugins */
+  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Initializing plugins:\n");
+  if(config) {
+	  char *s = strstr(config, "[interlogd]");
+	  char *p;
+	  char name[MAXPATHLEN+1];
+
+	  /* next line */
+	  s = strchr(s, '\n');
+	  if(s) s++;
+	  while(s) {
+		  if(*s == 0 || *s == '[')
+			  break;
+		  /* parse line */
+		  p = strchr(s, '\n');
+		  if(p) {
+			  *p = 0;
+		  }
+		  /* XXX possible overflow by long line in config file */
+		  ret = sscanf(s, " plugin =%s", name);
+		  if(p) *p = '\n';
+		  if(ret > 0) {
+			  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "  loading plugin %s\n", name);
+			  if(plugin_init(name, config) < 0) {
+				  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Failed to load plugin %s: %s\n", name, error_get_msg());
+			  }
+		  }
+		  s = p;
+	  }
+  }
 
 #ifndef PERF_EMPTY
   /* find all unsent events waiting in files */

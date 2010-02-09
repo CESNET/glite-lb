@@ -12,7 +12,8 @@ enum err_code_maj { /* minor =                   */
   IL_PROTO,         /*     LB_*                  */
   IL_LBAPI,         /*     dgLBErrCode           */
   IL_DGGSS,         /*     EDG_WLL_GSS_*         */
-  IL_HOST           /*     h_errno               */
+  IL_HOST,          /*     h_errno               */
+  IL_DL             /*     dlerror               */
 };
 
 struct error_inf {
