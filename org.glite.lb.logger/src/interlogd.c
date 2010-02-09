@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <assert.h>
+#include <sys/stat.h>
 
 #include "interlogd.h"
 #include "glite/lb/log_proto.h"
