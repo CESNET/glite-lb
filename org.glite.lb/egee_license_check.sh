@@ -1,5 +1,33 @@
 #!/bin/bash
-
+#$Header
+#
+# Copyright (c) Members of the EGEE Collaboration. 2004-2010.
+# See http://www.eu-egee.org/partners for details on the copyright holders.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# -----------------------------------------------------------------------
+# This script searches source files for occurrence of EGEE copyright and
+# license. In case of either of them missing, the appropriate text is 
+# added as comments.
+# 
+# Argument (optional):
+#	Directory to search. Default is '.'
+#
+# Modify the final section to search for other types of files.
+#
+# - ZS -
+#
 
 if [ "$1" = "" ]; then 
 	echo "No directory given. Using \".\""
@@ -85,63 +113,89 @@ return $ret
 
 function fix_c_style_sources() 
 {
-srcfile=$1
-let TOTALFOUND=$TOTALFOUND+1		
 
-lineno=`grep -n -E "\$H[e]ader: /cvs" $srcfile | sed 's/:.*$//'`
-if [ "$lineno" == "" ]; then
-	lineno=0
-fi
-let nextlineno=$lineno+1
+filelist=`find $DIR -type f -name "$1"`
+for srcfile in $filelist
+do
+	check_file $srcfile
+	checkresult=$?
 
-printf "$srcfile: Needs fixing ($checkresult), lineno $lineno, $nextlineno\n"
+	if [ "$checkresult" -gt "0" ]; then
 
-head -n $lineno $srcfile > $TMPDIR/egee_license.$$.swp
-printf "/*\n" >> $TMPDIR/egee_license.$$.swp
-if [ "$checkresult" == "1" ] || [ "$checkresult" == "3" ]; then
-	printf "$COPYRIGHT\n\n" >> $TMPDIR/egee_license.$$.swp
-	let TOTALFIXEDCOP=$TOTALFIXEDCOP+1
-fi
-if [ "$checkresult" -gt "1" ]; then
-	printf "$LICENSE\n" >> $TMPDIR/egee_license.$$.swp
-	let TOTALFIXEDLIC=$TOTALFIXEDLIC+1
-fi
-printf "*/\n\n" >> $TMPDIR/egee_license.$$.swp
-tail -n +$nextlineno $srcfile >> $TMPDIR/egee_license.$$.swp
+		let TOTALFOUND=$TOTALFOUND+1		
+
+		lineno=`grep -n -E "\$H[e]ader: /cvs" $srcfile | sed 's/:.*$//'`
+		if [ "$lineno" == "" ]; then
+			lineno=0
+		fi
+		let nextlineno=$lineno+1
+
+		printf "$srcfile: Needs fixing ($checkresult), lineno $lineno, $nextlineno\n"
+
+		head -n $lineno $srcfile > $TMPDIR/egee_license.$$.swp
+		printf "/*\n" >> $TMPDIR/egee_license.$$.swp
+		if [ "$checkresult" == "1" ] || [ "$checkresult" == "3" ]; then
+			printf "$COPYRIGHT\n\n" >> $TMPDIR/egee_license.$$.swp
+			let TOTALFIXEDCOP=$TOTALFIXEDCOP+1
+		fi
+		if [ "$checkresult" -gt "1" ]; then
+			printf "$LICENSE\n" >> $TMPDIR/egee_license.$$.swp
+			let TOTALFIXEDLIC=$TOTALFIXEDLIC+1
+		fi
+		printf "*/\n\n" >> $TMPDIR/egee_license.$$.swp
+		tail -n +$nextlineno $srcfile >> $TMPDIR/egee_license.$$.swp
+
+		cp -f $TMPDIR/egee_license.$$.swp $srcfile
+	else
+		printf "$srcfile $checkresult [OK]\n"
+	fi
+done
 }
 
 function fix_sh_style_sources()
 {
-srcfile=$1
+filelist=`find $DIR -type f -name "$1"`
 prefix=$2
-let TOTALFOUND=$TOTALFOUND+1
+for srcfile in $filelist
+do
+	check_file $srcfile
+	checkresult=$?
 
-lineno=`grep -n -E "\$H[e]ader: /cvs" $srcfile | sed 's/:.*$//'`
-shlineno=`head -n 1 $srcfile | grep -n '^#! */' | sed 's/:.*$//'`
-if [ "$lineno" == "" ]; then
-        lineno=0
-fi
-if [ "$shlineno" == "" ]; then
-        shlineno=0
-fi
-if [ "$shlineno" -gt "$lineno" ]; then
-	lineno=$shlineno
-fi
+	if [ "$checkresult" -gt "0" ]; then
+		let TOTALFOUND=$TOTALFOUND+1
 
-let nextlineno=$lineno+1
+		lineno=`grep -n -E "\$H[e]ader: /cvs" $srcfile | sed 's/:.*$//'`
+		shlineno=`head -n 1 $srcfile | grep -n '^#! */' | sed 's/:.*$//'`
+		if [ "$lineno" == "" ]; then
+			lineno=0
+		fi
+		if [ "$shlineno" == "" ]; then
+			shlineno=0
+		fi
+		if [ "$shlineno" -gt "$lineno" ]; then
+			lineno=$shlineno
+		fi
 
-printf "$srcfile: Needs fixing ($checkresult), lineno $lineno, $nextlineno\n"
+		let nextlineno=$lineno+1
 
-head -n $lineno $srcfile > $TMPDIR/egee_license.$$.swp
-if [ "$checkresult" == "1" ] || [ "$checkresult" == "3" ]; then
-        printf "$COPYRIGHT\n\n" | sed "s/^/$prefix /" >> $TMPDIR/egee_license.$$.swp
-        let TOTALFIXEDCOP=$TOTALFIXEDCOP+1
-fi
-if [ "$checkresult" -gt "1" ]; then
-        printf "$LICENSE\n" | sed "s/^/$prefix /" >> $TMPDIR/egee_license.$$.swp
-        let TOTALFIXEDLIC=$TOTALFIXEDLIC+1
-fi
-tail -n +$nextlineno $srcfile >> $TMPDIR/egee_license.$$.swp
+		printf "$srcfile: Needs fixing ($checkresult), lineno $lineno, $nextlineno\n"
+
+		head -n $lineno $srcfile > $TMPDIR/egee_license.$$.swp
+		printf "$prefix\n" >> $TMPDIR/egee_license.$$.swp
+		if [ "$checkresult" == "1" ] || [ "$checkresult" == "3" ]; then
+			printf "$COPYRIGHT\n\n" | sed "s/^/$prefix /" >> $TMPDIR/egee_license.$$.swp
+			let TOTALFIXEDCOP=$TOTALFIXEDCOP+1
+		fi
+		if [ "$checkresult" -gt "1" ]; then
+			printf "$LICENSE\n" | sed "s/^/$prefix /" >> $TMPDIR/egee_license.$$.swp
+			let TOTALFIXEDLIC=$TOTALFIXEDLIC+1
+		fi
+		printf "$prefix\n" >> $TMPDIR/egee_license.$$.swp
+		tail -n +$nextlineno $srcfile >> $TMPDIR/egee_license.$$.swp
+	else
+		printf "$srcfile $checkresult [OK]\n"
+	fi
+done
 }
 
 
@@ -181,98 +235,34 @@ rm $TMPDIR/egee*swp
 
 #ANSI C files
 echo Processing ANSI C files
-filelist=`find $DIR -name "*.[ch]"`
-
-for srcfile in $filelist
-do
-	check_file $srcfile
-	checkresult=$?
-
-	if [ "$checkresult" -gt "0" ]; then
-		fix_c_style_sources $srcfile
-	else
-		printf "$srcfile $checkresult [OK]\n"
-	fi
-done
+fix_c_style_sources "*.[ch]"
 
 #CPP files
 echo Processing C++ files
-filelist=`find $DIR -iname "*.cpp"`
-
-for srcfile in $filelist
-do
-	check_file $srcfile
-	checkresult=$?
-
-	if [ "$checkresult" -gt "0" ]; then
-		fix_c_style_sources $srcfile
-	else
-		printf "$srcfile $checkresult [OK]\n"
-	fi
-done
+fix_c_style_sources "*.cpp"
 
 #Java files
 echo Processing Java files
-filelist=`find $DIR -iname "*.cpp"`
+fix_c_style_sources "*.java"
 
-for srcfile in $filelist
-do
-	check_file $srcfile
-	checkresult=$?
+#c.T and h.T files
+echo Processing c.T and h.T files
+fix_c_style_sources "*.[ch].T"
 
-	if [ "$checkresult" -gt "0" ]; then
-		fix_c_style_sources $srcfile
-	else
-		printf "$srcfile $checkresult [OK]\n"
-	fi
-done
+#cpp.T files
+echo Processing cpp.T files
+fix_c_style_sources "*.cpp.T"
 
 #sh files
 echo Processing shell files
-filelist=`find $DIR -iname "*.sh"`
-
-for srcfile in $filelist
-do
-	check_file $srcfile
-	checkresult=$?
-
-	if [ "$checkresult" -gt "0" ]; then
-		fix_sh_style_sources $srcfile '#'
-	else
-		printf "$srcfile $checkresult [OK]\n"
-	fi
-done
+fix_sh_style_sources "*.sh" '#'
 
 #TeX files
 echo Processing TeX files
-filelist=`find $DIR -iname "*.tex"`
-
-for srcfile in $filelist
-do
-	check_file $srcfile
-	checkresult=$?
-
-	if [ "$checkresult" -gt "0" ]; then
-		fix_sh_style_sources $srcfile '%'
-	else
-		printf "$srcfile $checkresult [OK]\n"
-	fi
-done
+fix_sh_style_sources "*.tex" '%'
 
 #Perl files
 echo Processing Perl files
-filelist=`find $DIR -iname "*.pl"`
-
-for srcfile in $filelist
-do
-	check_file $srcfile
-	checkresult=$?
-
-	if [ "$checkresult" -gt "0" ]; then
-		fix_sh_style_sources $srcfile '#'
-	else
-		printf "$srcfile $checkresult [OK]\n"
-	fi
-done
+fix_sh_style_sources "*.pl" '#'
 
 printf "\n\nTotal files found:\t $TOTALFOUND\nTotal copyrights fixed:\t $TOTALFIXEDCOP\nTotal licenses fixed:\t $TOTALFIXEDLIC\n";
