@@ -88,7 +88,7 @@ function fix_c_style_sources()
 srcfile=$1
 let TOTALFOUND=$TOTALFOUND+1		
 
-lineno=`grep -n "\$Header$srcfile | sed 's/:.*$//'`
+lineno=`grep -n -E "\$H[e]ader: /cvs" $srcfile | sed 's/:.*$//'`
 if [ "$lineno" == "" ]; then
 	lineno=0
 fi
@@ -116,7 +116,7 @@ srcfile=$1
 prefix=$2
 let TOTALFOUND=$TOTALFOUND+1
 
-lineno=`grep -n "\$Header$srcfile | sed 's/:.*$//'`
+lineno=`grep -n -E "\$H[e]ader: /cvs" $srcfile | sed 's/:.*$//'`
 shlineno=`head -n 1 $srcfile | grep -n '^#! */' | sed 's/:.*$//'`
 if [ "$lineno" == "" ]; then
         lineno=0
