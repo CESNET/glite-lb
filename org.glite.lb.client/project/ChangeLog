@@ -58,3 +58,5 @@
 - Minor fixes in example builds
 - stats extended for any job state
 
+4.0.3-2
+- install libraries into $libdir
