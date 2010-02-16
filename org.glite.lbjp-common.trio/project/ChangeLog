@@ -10,3 +10,5 @@
 1.0.0-5
 - configure script update
 
+1.0.0-6
+- install libraries into $libdir
