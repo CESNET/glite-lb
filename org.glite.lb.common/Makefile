@@ -79,8 +79,8 @@ ifdef LB_PROF
 endif
 
 COMPILE:=libtool --mode=compile ${CC}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 OBJS:=${JOBID_OBJS} ${PERF_OBJS} lb_plain_io.o events.o mini_http.o query_rec.o \
@@ -201,16 +201,16 @@ olddoc: generate events.tex status.tex
 	doxygen CPP.dox
 
 install: 
-	mkdir -p ${PREFIX}/lib
+	mkdir -p ${PREFIX}/${libdir}
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
-	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${MAILDIR_LIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${MAILDIR_LIB} ${PREFIX}/${libdir}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 #	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ;
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ;
 	${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} ;
-	${INSTALL} -m 644 ${STATICLIB} ${THRSTATICLIB} ${PREFIX}/lib;
+	${INSTALL} -m 644 ${STATICLIB} ${THRSTATICLIB} ${PREFIX}/${libdir};
 	if [ x${LB_STANDALONE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
 		${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
