@@ -35,14 +35,14 @@ CFLAGS:= \
 	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
-LDFLAGS:=-L${stagedir}/lib
+LDFLAGS:=-L${stagedir}/${libdir}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS} 
-SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir}  ${LDFLAGS} 
+SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/${libdir}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 ifneq (${expat_prefix},/usr)
@@ -76,7 +76,7 @@ statistics: ${STATISTICS_OBJS}
 	${LINK} -rdynamic -o $@ ${STATISTICS_OBJS} ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
 
 state_history: state_history.o
-	${LINK} -o $@ state_history.o -L${stagedir}/lib -lglite_lb_statemachine ${PLUS_LIB}
+	${LINK} -o $@ state_history.o -lglite_lb_statemachine ${PLUS_LIB}
 
 check: compile 
 
@@ -94,7 +94,7 @@ stage: compile
 
 install:
 	-mkdir -p ${PREFIX}/bin 
-	-mkdir -p ${PREFIX}/lib
+	-mkdir -p ${PREFIX}/${libdir}
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/share/man/man1
 	-mkdir -p ${PREFIX}/share/man/man8
