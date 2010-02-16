@@ -34,7 +34,7 @@ LIBLOBJS:=${LIBOBJS:.o=.lo}
 
 LIB:=libglite_jobid.la
 
-TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit -ldl
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit -ldl
 TEST_INC:=-I${cppunit_prefix}/include
 
 compile all: ${LIB}
@@ -44,7 +44,7 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split /\./,"${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ${LIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib 
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/${libdir}
 
 check: compile base64_test
 	./base64_test base64_test.xml
@@ -58,9 +58,9 @@ clean:
 	rm -rvf log.xml project rpmbuild RPMS tgz
 
 install: ${LIB}
-	mkdir -p ${PREFIX}/lib
+	mkdir -p ${PREFIX}/${libdir}
 	mkdir -p ${PREFIX}/include/${globalprefix}/${jobidprefix}
-	${INSTALL} -m 644 ${LIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LIB} ${PREFIX}/${libdir}
 	(cd ${top_srcdir}/interface; ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${jobidprefix})
 
 
