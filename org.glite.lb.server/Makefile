@@ -87,20 +87,20 @@ CFLAGS:= \
 CXXFLAGS:=${CFLAGS}
 
 ifdef LB_PROF
-	SRVBONES_LIB:= ${stagedir}/lib/libglite_lbu_server_bones.la
-	LB_COMMON_LIB:=${stagedir}/lib/libglite_lb_common_${nothrflavour}.la
-	LB_UTILS_DB_LIB:=${stagedir}/lib/libglite_lbu_db.la
+	SRVBONES_LIB:= ${stagedir}/${libdir}/libglite_lbu_server_bones.la
+	LB_COMMON_LIB:=${stagedir}/${libdir}/libglite_lb_common_${nothrflavour}.la
+	LB_UTILS_DB_LIB:=${stagedir}/${libdir}/libglite_lbu_db.la
 	CFLAGS:=${CFLAGS} -pg -g
 	LDFLAGS:=${LDFLAGS} -pg
 else
-	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lbu_server_bones
-	LB_COMMON_LIB:=-L${stagedir}/lib -lglite_lb_common_${nothrflavour}
-	LB_UTILS_DB_LIB:=-L${stagedir}/lib -lglite_lbu_db
-	LDFLAGS:= -L${stagedir}/lib
+	SRVBONES_LIB:= -L${stagedir}/${libdir} -lglite_lbu_server_bones
+	LB_COMMON_LIB:=-L${stagedir}/${libdir} -lglite_lb_common_${nothrflavour}
+	LB_UTILS_DB_LIB:=-L${stagedir}/${libdir} -lglite_lbu_db
+	LDFLAGS:= -L${stagedir}/${libdir}
 endif
 
-# LB_MACHINE_LIB:=${stagedir}/lib/libglite_lb_statemachine.a
-LB_MACHINE_LIB:=-L${stagedir}/lib -lglite_lb_statemachine
+# LB_MACHINE_LIB:=${stagedir}/${libdir}/libglite_lb_statemachine.a
+LB_MACHINE_LIB:=-L${stagedir}/${libdir} -lglite_lb_statemachine
 
 ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE
@@ -111,11 +111,11 @@ TEST_INC:=-I${cppunit_prefix}/include
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS} 
-SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir}  ${LDFLAGS} 
+SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/${libdir}
 # XXX: not used? LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 #ifeq ($(shell ls ${gsoap_prefix}/bin/soapcpp2),${gsoap_prefix}/bin/soapcpp2)
@@ -158,7 +158,7 @@ EXT_LIBS:=  \
 	${LCAS_LIBS} \
 	${VOMS_LIBS}
 
-COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio -lglite_lbu_maildir
+COMMON_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio -lglite_lbu_maildir
 
 BKSERVER_BASE_OBJS:= \
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
@@ -171,10 +171,10 @@ BKSERVER_BASE_OBJS:= \
 gsoap_version ?= ${gsoap_default_version}
 
 dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
-ifeq ($(shell test -f ${stagedir}/lib/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
+ifeq ($(shell test -f ${stagedir}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
 	langflavour:=_c
 endif
-GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_OBJS:= \
@@ -216,10 +216,10 @@ WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault
 WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
 	-lglite_lb_common_${nothrflavour}
 
-# WS_CLIENT_LIBS:= -L${stagedir}/lib \
+# WS_CLIENT_LIBS:= -L${stagedir}/${libdir} \
 #                 -lglite_lb_client_${nothrflavour} \
 #                 -lglite_lb_common_${nothrflavour} \
-#                 -L${gsoap_prefix}/lib -lgsoap \
+#                 -L${gsoap_prefix}/${libdir} -lgsoap \
 #                 -lglite_security_gsoap_plugin_${nothrflavour} \
 #                 ${EXT_LIBS}
 # 
@@ -290,7 +290,7 @@ LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 	rm -f LBTypes.wsdl
 
 test.xml: test_xml
-	./test_xml
+	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_xml
 
 test_xml: test_xml.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
@@ -308,7 +308,7 @@ test_query_events: ${query_events_objs}
 	${TEST_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib}
 
 test.soapconv: test_soap_conv
-	./test_soap_conv
+	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_soap_conv
 
 test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
@@ -338,7 +338,7 @@ install:
 	-mkdir -p ${PREFIX}/bin ${PREFIX}/etc ${PREFIX}/etc/init.d ${PREFIX}/interface
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/share/man/man1
-	-mkdir -p ${PREFIX}/lib
+	-mkdir -p ${PREFIX}/${libdir}
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	mkdir -p ${PREFIX}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
@@ -347,9 +347,9 @@ install:
 	for p in bkserverd bkindex mon-db; do \
 		${INSTALL} -m 755 "glite-lb-$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
-	-mkdir -p ${PREFIX}/lib/modules
-	${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${PREFIX}/lib/modules
-	ln -sf liblcas_lb.so ${PREFIX}/lib/modules/lcas_lb.mod
+	-mkdir -p ${PREFIX}/${libdir}/modules
+	${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${PREFIX}/${libdir}/modules
+	ln -sf liblcas_lb.so ${PREFIX}/${libdir}/modules/lcas_lb.mod
 
 	for f in dbsetup.sql index.conf.template; do \
 		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${PREFIX}/etc; \
@@ -360,7 +360,7 @@ install:
 
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix})
-	install -m 644 ${STATIC_LIB_BK} ${PREFIX}/lib
+	install -m 644 ${STATIC_LIB_BK} ${PREFIX}/${libdir}
 	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
 ifdef LB_PERF
