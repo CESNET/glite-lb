@@ -47,3 +47,4 @@
 
 7.0.3-2
 - install libraries into $libdir
+- buildtime dependency on c-ares
