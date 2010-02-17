@@ -349,7 +349,8 @@ endif
 	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${PREFIX}/examples/glite-lb-notify.pl
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
-	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4/
+	sed "s/%LIBDIR%/${libdir}/" ${top_srcdir}/m4/glite_lb_client.m4 > glite_lb_client.m4
+	${INSTALL} -m 644 glite_lb_client.m4 ${PREFIX}/share/build/m4/
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
