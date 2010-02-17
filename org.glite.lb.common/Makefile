@@ -167,13 +167,13 @@ mkreports:
 	-mkdir -p ${REPORTS}
 
 check.parse: test_parse
-	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_parse ${REPORTS}/parse.xml
+	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_parse ${REPORTS}/parse.xml
 
 test_parse: parse.o test_main.cpp
 	${LINKXX} -o test_parse parse.o ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
 
 check.il: il_test
-	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${LD_LIBRARY_PATH} ./il_test ${REPORTS}/il.xml
+	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./il_test ${REPORTS}/il.xml
 
 il_test: il_test.o il_int_test.o il_string_test.o il_msg_test.o
 	${LINKXX} -o $@ $+ ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
