@@ -151,6 +151,7 @@ static char				*server_subject = NULL;
 static time_t			purge_timeout[EDG_WLL_NUMBER_OF_STATCODES];
 static time_t			notif_duration_max = 60*60*24,
 				notif_duration = 60*60*2;
+int				proxy_purge = 0;
 
 static edg_wll_GssCred	mycred = NULL;
 time_t					cert_mtime = 0;
@@ -212,11 +213,12 @@ static struct option opts[] = {
 	{"con-queue",	1,	NULL,	'q'},
 	{"proxy-il-sock",	1,	NULL,	'W'},
 	{"proxy-il-fprefix",	1,	NULL,	'Z'},
+	{"proxy-purge",	0,	NULL,	'G'},
 	{"rss-time", 	1,	NULL,	'I'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:I:"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:GI:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -272,6 +274,7 @@ static void usage(char *me)
 		"\t-q,--con-queue\t size of the connection queue (accept)\n"
 		"\t-W,--proxy-il-sock\t socket to send events to\n"
 		"\t-Z,--proxy-il-fprefix\t file prefix for events\n"
+		"\t-G,--proxy-purge\t enable automatic purge on proxy service (disabled by default)\n"
 		"\t-I,--rss-time age\t (in seconds) of job states published via RSS\n"
 
 	,me);
@@ -475,6 +478,8 @@ int main(int argc, char *argv[])
 		case 'W': lbproxy_ilog_socket_path = strdup(optarg); 
 			  break;
 		case 'Z': lbproxy_ilog_file_prefix = strdup(optarg);
+			  break;
+		case 'G': proxy_purge = 1;
 			  break;
 		case 'I': rss_time = atol(optarg);
 			  break;

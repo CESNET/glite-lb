@@ -24,6 +24,7 @@ enum lb_srv_perf_sink sink_mode;
 /* XXX: referenced global variables, unsed in mon */
 char	*server_key,*server_cert;
 int	enable_lcas;
+int	proxy_purge;
 
 static struct option opts[] = {
 	{ "mysql",1,NULL,'m' },

@@ -25,6 +25,7 @@
 
 extern int unset_proxy_flag(edg_wll_Context, edg_wlc_JobId);
 extern int enable_lcas;
+extern int proxy_purge;
 
 
 static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *oldstat, edg_wll_JobStat *newstat, int reg_to_JP);
@@ -95,7 +96,7 @@ db_store(edg_wll_Context ctx, char *event)
 		}
 		if (edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, &oldstat, &newstat)) goto rollback;
 		
-		if (newstat.remove_from_proxy) 
+		if (proxy_purge && newstat.remove_from_proxy) 
 			if (edg_wll_PurgeServerProxy(ctx, ev->any.jobId)) goto rollback;
 	}
 
