@@ -399,7 +399,7 @@
 	_code_	KILLED
 	string	reason
 	_optional_
-	int	exit_code
+	string	exit_code
 	_optional_
 	_null_	-1
 
@@ -425,6 +425,12 @@
 	_code_	ARRIVED
 	_code_	DONE
 	string	descr
+	_optional_
+	 string  exit_code
+        _optional_
+	string worker_node
+	_optional_
+	string LRMS_jobid
 	_optional_
 
 @type FileTransferRegister	register file transfer
