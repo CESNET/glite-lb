@@ -268,6 +268,21 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
 	TR("Owner", "%s", stat.cream_owner);
 	TR("Endpoint", "%s", stat.cream_endpoint);
 	TR("Reason", "%s", stat.cream_reason);
+	
+	if ( (stat.stateEnterTime.tv_sec) || (stat.stateEnterTime.tv_usec) ) {
+                time_t  time = stat.stateEnterTime.tv_sec;
+                TR("State entered","%s",ctime(&time));
+        }
+        else
+                TR("State entered", "%s", NULL);
+        if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
+                time_t  time = stat.lastUpdateTime.tv_sec;
+                TR("Last update","%s",ctime(&time));
+        }
+        else
+                TR("Last update", "%s", NULL);
+
+
 	TR("LRMS id", "%s", stat.cream_lrms_id);
 	TR("Node", "%s", stat.cream_node);
 	TR("Cancelling", "%s", stat.cream_cancelling > 0 ? "YES" : "NO");
@@ -279,14 +294,14 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
                 cream_jw_status
         */
 	
-	if (stat.jdl){
+	if (stat.cream_jdl){
                 char *jdl_unp;
-                if (pretty_print(stat.jdl, &jdl_unp) == 0)
+                if (pretty_print(stat.cream_jdl, &jdl_unp) == 0)
                         asprintf(&jdl,"<h3>Job description</h3>\r\n"
                                 "<pre>%s</pre>\r\n",jdl_unp);
                 else
                         asprintf(&jdl,"<h3>Job description (not a ClassAd)"
-                                "</h3>\r\n<pre>%s</pre>\r\n",stat.jdl);
+                                "</h3>\r\n<pre>%s</pre>\r\n",stat.cream_jdl);
         }
 	 asprintf(&pomA, "<html>\r\n\t<body>\r\n"
                         "<h2>%s</h2>\r\n"

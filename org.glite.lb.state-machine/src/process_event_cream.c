@@ -116,48 +116,6 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				}
 			}
 			break;
-
-/* not used, replaced by CREAMSTATUS */
-#if 0
-		case EDG_WLL_EVENT_CREAMRUNNING:
-			if (USABLE(res)) {
-				js->pub.state = EDG_WLL_JOB_RUNNING;
-				js->pub.cream_state = EDG_WLL_STAT_RUNNING;
-				if (e->any.source == EDG_WLL_SOURCE_LRMS) {
-					js->pub.cream_jw_status = EDG_WLL_STAT_WRAPPER_RUNNING;
-				}
-			}
-			if (USABLE_DATA(res)) {
-				rep(js->pub.cream_node, e->CREAMRunning.node);
-			}
-			break;
-		case EDG_WLL_EVENT_CREAMREALLYRUNNING:
-			if (USABLE(res)) {
-				js->pub.state = EDG_WLL_JOB_RUNNING;
-				js->pub.cream_state = EDG_WLL_STAT_REALLYRUNNING;
-				if (e->any.source == EDG_WLL_SOURCE_LRMS) {
-					js->pub.cream_jw_status = EDG_WLL_STAT_PAYLOAD_RUNNING;
-				}
-			}
-			if (USABLE_DATA(res)) {
-			}
-			break;
-		case EDG_WLL_EVENT_CREAMDONE:
-			if (USABLE(res)) {
-				js->pub.state = EDG_WLL_JOB_DONE;
-				js->pub.cream_state = (e->CREAMDone.status_code == EDG_WLL_DONE_OK) ? EDG_WLL_STAT_DONEOK : EDG_WLL_STAT_DONEFAILED;
-				if (e->any.source == EDG_WLL_SOURCE_LRMS) {
-					js->pub.cream_jw_status = EDG_WLL_STAT_DONE;
-				}
-			}
-			if (USABLE_DATA(res)) {
-				js->pub.cream_done_code = e->CREAMDone.status_code;
-				if (e->CREAMDone.exit_code != -1) js->pub.cream_exit_code = e->CREAMDone.exit_code;
-				rep(js->pub.cream_reason, e->CREAMDone.reason);
-			}
-			break;
-#endif
-
 		case EDG_WLL_EVENT_CREAMCANCEL:
 			if (USABLE(res)) {
 				if (e->CREAMCancel.status_code == EDG_WLL_CANCEL_DONE) {
@@ -180,7 +138,6 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			break;
 
 		case EDG_WLL_EVENT_CREAMSTATUS:
-			printf("EDG_WLL_EVENT_CREAMSTATUS\n");
 			if (USABLE(res) && e->CREAMStatus.result == EDG_WLL_CREAMSTATUS_DONE)
 			{
 				switch (js->pub.cream_state = edg_wll_StringToCreamStat(e->CREAMStatus.new_state))
@@ -196,7 +153,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 						js->pub.state = EDG_WLL_JOB_RUNNING;
 						js->pub.jw_status = EDG_WLL_STAT_WRAPPER_RUNNING;
 						break;
-					case EDG_WLL_STAT_REALLYRUNNING:
+					case EDG_WLL_STAT_REALLY_RUNNING:
 						js->pub.state = EDG_WLL_JOB_RUNNING;
 						js->pub.jw_status = EDG_WLL_STAT_PAYLOAD_RUNNING;
 						break;
@@ -211,6 +168,12 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 						break;
 					case EDG_WLL_STAT_ABORTED: js->pub.state = EDG_WLL_JOB_ABORTED; break;
 				}
+				if (e->CREAMStatus.exit_code && strcmp(e->CREAMStatus.exit_code, "N/A"))
+					js->pub.cream_exit_code = atoi(e->CREAMStatus.exit_code);
+				if (js->pub.cream_node) free(js->pub.cream_node);
+				js->pub.cream_node = strdup(e->CREAMStatus.worker_node);
+				if (js->pub.cream_lrms_id) free(js->pub.cream_lrms_id);
+				js->pub.cream_lrms_id = strdup(e->CREAMStatus.LRMS_jobid);
 			}
 			break;
 
