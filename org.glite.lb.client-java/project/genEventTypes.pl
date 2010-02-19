@@ -45,7 +45,7 @@ public class Event$uc extends Event \{
 qq{	public enum $fnu \{ 
 		UNDEFINED,
 };
-				$init = " = ${fnu}::UNDEFINED";
+				$init = " = ${fnu}.UNDEFINED";
 				for (@{$f->{codes}}) {
 					my $cu = uc $_->{name};
 					print E
