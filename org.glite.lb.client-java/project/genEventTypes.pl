@@ -31,6 +31,7 @@ public class Event$uc extends Event \{
 			my $fnu = ucfirst $fn;
 			my $fnuu = uc $fn;
 			my $t;
+			my $init;
 	
 			while ($fnu =~ /_([a-z])/) {
 				my $u = uc $1;
@@ -44,6 +45,7 @@ public class Event$uc extends Event \{
 qq{	public enum $fnu \{ 
 		UNDEFINED,
 };
+				$init = " = ${fnu}::UNDEFINED";
 				for (@{$f->{codes}}) {
 					my $cu = uc $_->{name};
 					print E
@@ -74,10 +76,9 @@ qq{	\};
 			}
 			else {
 				$t = $f->getType;
+				$init = $f->{null} && $main::DefaultNullValue{$f->{type}} ne $f->{null} ? " = $f->{null}" : "";
 			}
 	
-	my $init = $f->{null} && $main::DefaultNullValue{$f->{type}} ne $f->{null} ?
-		" = $f->{null}" : "";
 
 # XXX: handle nulls in setXX() ?
 			print E
