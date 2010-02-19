@@ -5,6 +5,7 @@
 	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
 	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
 	xmlns:lb="http://glite.org/wsdl/services/lb" 
+	xmlns:lbe="http://glite.org/wsdl/elements/lb" 
 	xmlns:lb4ague="http://glite.org/wsdl/elements/lb4agu" 
 	xmlns:lb4agu="http://glite.org/wsdl/services/lb4agu" 
 	xmlns:glue="http://schemas.ogf.org/glue/2008/05/spec_2.0_d42_r01"
@@ -92,20 +93,26 @@
 -->
 
 
+<wsdl:message name="genericFault">
+    <wsdl:part name="genericFault" element="lbe:genericFault" />
+</wsdl:message>
+
+
+
 <!-- Execution Port-Type -->
 <wsdl:portType name="LoggingAndBookkeepingExecutionPortType">
 	<wsdl:operation name="GetActivityStatus">
 		<wsdl:documentation>Return states of given jobs.</wsdl:documentation>
 		<wsdl:input name="i" message="lb4agu:GetActivityStatusRequest" />
 		<wsdl:output name="o" message="lb4agu:GetActivityStatusResponse" />
-		<wsdl:fault name="f" message="lb:genericFault" />
+		<wsdl:fault name="f" message="lb4agu:genericFault" />
 	</wsdl:operation>
 
 	<wsdl:operation name="GetActivityInfo">
 		<wsdl:documentation>Return complete state information (history?) of given jobs.</wsdl:documentation>
 		<wsdl:input name="i" message="lb4agu:GetActivityInfoRequest" />
 		<wsdl:output name="o" message="lb4agu:GetActivityInfoResponse" />
-		<wsdl:fault name="f" message="lb:genericFault" />
+		<wsdl:fault name="f" message="lb4agu:genericFault" />
 	</wsdl:operation>
 </wsdl:portType>
 
