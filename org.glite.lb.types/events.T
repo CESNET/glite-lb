@@ -401,7 +401,6 @@
 	_optional_
 	string	exit_code
 	_optional_
-	_null_	-1
 
 @type CREAMCancel
 	int	status_code
