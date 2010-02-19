@@ -76,9 +76,12 @@ qq{	\};
 				$t = $f->getType;
 			}
 	
+	my $init = $f->{null} && $main::DefaultNullValue{$f->{type}} ne $f->{null} ?
+		" = $f->{null}" : "";
+
 # XXX: handle nulls in setXX() ?
 			print E
-qq{	private $t $fn;
+qq{	private $t $fn $init;
 
 	public $t get$fnu() \{
 		return $fn;
