@@ -345,7 +345,7 @@ for my $jar (keys %need_jars) {
 	'lb.client' => [ qw/
 		lb.types:B lb.common
 		lbjp-common.trio
-		jobid.api-cpp jobid.api-c
+		jobid.api-cpp:B jobid.api-c
 		security.gss
 	/ ],
 	'lb.client-java' => [ qw/
@@ -353,7 +353,7 @@ for my $jar (keys %need_jars) {
 		jobid.api-java
 	/ ],
 	'lb.common' => [ qw/
-		jobid.api-cpp jobid.api-c
+		jobid.api-cpp:B jobid.api-c
 		lb.types:B lbjp-common.trio security.gss
 	/ ],
 	'lb.doc' => [ qw/lb.types:B/ ],
