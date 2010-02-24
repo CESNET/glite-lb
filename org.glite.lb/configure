@@ -585,9 +585,35 @@ sub mode_etics {
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
-	my $buildroot = $topbuild{"$subsys.$module"} ? '' : "build.root = build\n";
+	my $buildroot = $topbuild{"$subsys.$module"} ? '' : "build.root = build";
 
 	my $confdir = $topbuild{"$subsys.$module"} ? '..' : '../..';
+
+	my $package_description = "";
+	my $package_summary = "";
+
+	if (-e "org.glite.$subsys.$module/project/package.description") {
+		open V, "org.glite.$subsys.$module/project/package.description";
+		$package_description = join ("", <V>);
+		close V;
+		chomp $package_description;
+		$package_description =~ s/\n/\\n/g; 
+		$package_description = "package.description = $package_description";
+	} 
+	else { 
+		print STDERR "package.description not found for $subsys.$module!\n"; }
+
+	if (-e "org.glite.$subsys.$module/project/package.summary") {
+		open V, "org.glite.$subsys.$module/project/package.summary";
+		$package_summary = join ("", <V>);
+		close V;
+		chomp $package_summary;
+		$package_summary =~ s/\n/\\n/g; 
+		$package_summary = "package.summary = $package_summary";
+	} 
+	else { 
+		print STDERR "package.summary not found for $subsys.$module!\n"; }
+
 
 	print STDERR "Writing $file\n";
 	print C qq{
@@ -629,6 +655,8 @@ checkstyle = None
 
 [Platform-default:Property]
 $buildroot
+$package_description
+$package_summary
 
 [Platform-default:DynamicDependency]
 
