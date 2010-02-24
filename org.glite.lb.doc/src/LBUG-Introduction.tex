@@ -629,6 +629,13 @@ the same job may be refused with a ``no such job'' error report.
 Therefore submission of a job to the WMS is the only synchronous event
 logging that does not return until the job is successfully registered with
 the \LB server.
+Moreover, the initial registration is sent by the \LB client library in
+parallel to \LB proxy (Sect.~\ref{s:proxy}) and \LB server. 
+
+On the other hand, even the registration event may carry large data
+(e.g. JDL of huge job collection). Therefore 
+also an additional asychronous variant is used, causing two job registration
+events appear typically.
 
 % explicitní -- user tagy, ACL
 However, the user may also store information into the \LB explicitly
