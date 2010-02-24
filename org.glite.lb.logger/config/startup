@@ -17,6 +17,23 @@ IL_PIDFILE=${IL_PIDFILE:-$GLITE_LOCATION_VAR/glite-lb-interlogd.pid}
 
 unset creds port
 
+start_daemon()
+{
+	local name="$1"
+	local pidfile="$2"
+	local cmd="$3"
+
+	if [ -f "$pidfile" ]; then
+		if kill -0 `cat $pidfile`; then
+			return 0
+		fi
+		echo -n "Warning: stalled $pidfile for $name"
+		rm -f "$pidfile"
+	fi
+	echo -n "Starting $name ..."
+	su - $GLITE_USER -c "$cmd" && echo " done" || echo " FAILED"
+}
+
 start()
 {
 	case "$GLITE_LB_TYPE" in
@@ -49,14 +66,12 @@ start()
 
 	mkdir -p /var/glite/log 
 	chown $GLITE_USER /var/glite/log
-	echo -n Starting glite-lb-logd ...
         (cd /tmp && ls -f /tmp |grep ^dglogd_sock_ |xargs rm -f)
-	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-logd \
-		-i $LL_PIDFILE $creds $port $sock $fprefix" && echo " done" || echo " FAILED"
+	start_daemon "glite-lb-logd" "$LL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-logd \
+		-i $LL_PIDFILE $creds $port $sock $fprefix"
 
-	echo -n Starting glite-lb-interlogd ...
-	su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-interlogd \
-		-i $IL_PIDFILE $creds $sock $fprefix" && echo " done" || echo " FAILED"
+	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-interlogd \
+		-i $IL_PIDFILE $creds $sock $fprefix"
 }
 
 killwait()
