@@ -152,6 +152,7 @@ string	cream_owner
 string	cream_endpoint
 string	cream_jdl
 string	cream_reason
+string  cream_failure_reason
 string	cream_lrms_id
 string	cream_node
 int	cream_done_code		Uses done_code enum

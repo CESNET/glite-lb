@@ -427,6 +427,8 @@
 	_optional_
 	 string  exit_code
         _optional_
+	string failure_reason
+	_optional_
 	string worker_node
 	_optional_
 	string LRMS_jobid
