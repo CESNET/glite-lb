@@ -26,7 +26,7 @@ my $lbjp_tag = '';
 my $jp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
-my $libdir = 'lib';
+my $libdir = getlibdir();
 
 my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
 my %enable_nodes;
@@ -695,6 +695,52 @@ sub gsoap_version {
 	}
 	close S;
 	return $gsoap_version;
+}
+
+sub getlibdir {
+        $libdir="lib";
+
+        open INP, "uname -s | "; # Check kernel name
+        $kname= <INP>;
+        chomp($kname);
+        close INP;
+
+        if ( $kname == "Linux") {
+                $arch = ("x86_64\npowerpc\nppc64\n");
+
+                open INP, "uname -p | "; # Check processor type
+                $procname= <INP>;
+                chomp($procname);
+                close INP;
+
+                if ($arch =~/^$procname\n/) {
+                        $libdir="lib64";
+                        return ($libdir); }
+
+                open INP, "uname -m | "; # Check machine hardware
+                $machname= <INP>;
+                chomp($machname);
+                close INP;
+
+                if ($arch =~/^$machname\n/) {
+                        $libdir="lib64";
+                        return ($libdir); }
+
+                # special cases (hyperlink lib64, Debian)
+                if (-l "/usr/lib64") {
+                        $libdir="lib"; }
+
+                # if /usr/lib64 doesn't exist at all (AIX)
+                unless ( -e "/usr/lib64" ) {
+                        $libdir="lib"; }
+        }
+
+        if ( $kname == "SunOS") {
+                if (-e "/usr/lib/64") {
+                $libdir="lib/64"; }
+        }
+
+        return $libdir;
 }
 
 
