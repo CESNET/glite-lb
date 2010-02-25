@@ -128,6 +128,8 @@ can be done then. Available parameters specific to LB server are:
 export data are written for use by lgcmon/R-GMA 
 (default: \texttt{/var/glite/logging/status.log}
 \item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --other 60d})
+
+According to local retention policy you may want to use different purge timeouts (for example WLCG would need \texttt{--cleared 90d --aborted 90d --cancelled 90d --other 90d}).
 \item \texttt{GLITE\_LB\_EXPORT\_ENABLED} -- set to \texttt{true} for export to JP, installed glite-lb-client and glite-jp-client are needed (default: \texttt{false})
 \item \texttt{GLITE\_LB\_EXPORT\_JPPS} -- Job Provenance Primary Storage where to export purged jobs, required if export to JP is enabled
 \item \texttt{GLITE\_JP\_LOCATION} -- optional parameter for combining LB and JP subsystems on the different locations
