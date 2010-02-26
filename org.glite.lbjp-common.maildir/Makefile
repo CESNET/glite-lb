@@ -32,10 +32,10 @@ CFLAGS:= \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
 
-LDFLAGS:=-L${stagedir}/lib ${COVERAGE_FLAGS}
+LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 EXT_LIBS:=
@@ -69,10 +69,10 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 install: all
-	-mkdir -p ${PREFIX}/lib
+	-mkdir -p ${PREFIX}/${libdir}
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
-	${INSTALL} -m 755 "libglite_lbu_maildir.la" "${PREFIX}/lib/libglite_lbu_maildir.la"; \
+	${INSTALL} -m 755 "libglite_lbu_maildir.la" "${PREFIX}/${libdir}/libglite_lbu_maildir.la"; \
 	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 
 clean:

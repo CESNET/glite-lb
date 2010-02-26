@@ -48,10 +48,10 @@ CFLAGS:=${DEBUG} \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
 
-LDFLAGS:=-L${stagedir}/lib \
+LDFLAGS:=-L${stagedir}/${libdir} \
 	${COVERAGE_FLAGS} 
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 #ifneq (${expat_prefix},/usr)

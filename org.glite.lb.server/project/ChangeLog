@@ -103,3 +103,6 @@ Crystal ball:
 - Reflect updates in the database module
 - Adjusted grey job purges (purge undefined jobs etc.)
 
+2.0.3-3
+- install libraries into $libdir
+- buildtime dependency pn c-ares

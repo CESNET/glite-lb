@@ -17,3 +17,5 @@
 - Man page update
 - Support for background purge funcionality
 
+2.0.3-2
+- install libraries into $libdir

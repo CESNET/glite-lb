@@ -24,7 +24,7 @@ ifdef LB_PROF
 endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 STATICLIB:=libglite_lbu_server_bones.a
@@ -64,9 +64,9 @@ doc:
 
 install:
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
-	mkdir -p ${PREFIX}/lib
-	${INSTALL} -m 644 ${LTLIB} ${PREFIX}/lib
-	${INSTALL} -m 644 ${STATICLIB} ${PREFIX}/lib ; \
+	mkdir -p ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${LTLIB} ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${STATICLIB} ${PREFIX}/${libdir} ; \
 	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 
 clean:

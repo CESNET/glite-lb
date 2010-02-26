@@ -7,6 +7,9 @@
 1.0.0-4
 - configure script update
 
+1.0.0-5
+- install libraries into $libdir
+
 1.0.1-1
 - additional includes in base64_test to fix build on Deb5
 
