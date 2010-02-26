@@ -95,6 +95,11 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 					default:
 						break;
 				}
+				if (e->CREAMStore.reason){
+					if (js->pub.cream_reason) 
+						free(js->pub.cream_reason);
+					js->pub.cream_reason = strdup(e->CREAMStore.reason);
+				}
 			}
 			if (USABLE_DATA(res)) {
 			}
@@ -109,6 +114,10 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 					// BLAH -> LRMS
 						js->pub.state = EDG_WLL_JOB_SCHEDULED;
 						js->pub.cream_state = EDG_WLL_STAT_IDLE;
+						if (e->CREAMStore.reason){
+							free(js->pub.cream_reason);
+							js->pub.cream_reason = strdup(e->CREAMStore.reason);
+						}
 					}
 	
 				if (USABLE_DATA(res)) {
@@ -170,10 +179,21 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				}
 				if (e->CREAMStatus.exit_code && strcmp(e->CREAMStatus.exit_code, "N/A"))
 					js->pub.cream_exit_code = atoi(e->CREAMStatus.exit_code);
-				if (js->pub.cream_node) free(js->pub.cream_node);
-				js->pub.cream_node = strdup(e->CREAMStatus.worker_node);
-				if (js->pub.cream_lrms_id) free(js->pub.cream_lrms_id);
-				js->pub.cream_lrms_id = strdup(e->CREAMStatus.LRMS_jobid);
+				if (e->CREAMStatus.worker_node){ /*XXX should never be false */
+					if (js->pub.cream_node) 
+						free(js->pub.cream_node);
+					js->pub.cream_node = strdup(e->CREAMStatus.worker_node);
+				}
+				if (e->CREAMStatus.LRMS_jobid){ /*XXX should never be false */
+					if (js->pub.cream_lrms_id) 
+						free(js->pub.cream_lrms_id);
+					js->pub.cream_lrms_id = strdup(e->CREAMStatus.LRMS_jobid);
+				}
+				if (e->CREAMStatus.failure_reason){
+					if (js->pub.cream_failure_reason) 
+						free(js->pub.cream_failure_reason);
+					js->pub.cream_failure_reason = strdup(e->CREAMStatus.failure_reason);
+				}
 			}
 			break;
 

@@ -267,7 +267,9 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
 	free(creamstat);
 	TR("Owner", "%s", stat.cream_owner);
 	TR("Endpoint", "%s", stat.cream_endpoint);
+	TR("Worker node", "%s", stat.cream_node);
 	TR("Reason", "%s", stat.cream_reason);
+	TR("Failure reason", "%s", stat.cream_failure_reason);
 	
 	if ( (stat.stateEnterTime.tv_sec) || (stat.stateEnterTime.tv_usec) ) {
                 time_t  time = stat.stateEnterTime.tv_sec;
