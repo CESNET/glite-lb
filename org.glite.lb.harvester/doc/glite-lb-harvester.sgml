@@ -128,14 +128,14 @@
 	<refsect1>
 		<title>DESCRIPTION</title>
 		<para>
-L&amp;B Harvester gathers information about jobs from L&amp;B servers using effective
+L&amp;B Harvester gathers information about jobs from L&amp;B servers using efficient
 L&amp;B notification mechanism. It manages notifications and keeps them in
 a persistent storage (file or database table) to reuse later on next launch.
 It takes care about refreshing notifications and queries L&amp;B servers back when
-some notification on expires.
+some notification expires.
 
 The tool was initially written for Real Time Monitor (project at Imperial
-College in London), later was extended with MSG publish messaging mechanism for WLCG.
+College in London), later was extended by MSG publish messaging mechanism for WLCG.
 		</para>
 	</refsect1>
 

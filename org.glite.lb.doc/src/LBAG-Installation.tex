@@ -140,11 +140,11 @@ According to local retention policy you may want to use different purge timeouts
 \item \texttt{GLITE\_LB\_TYPE} -- type of the \LB service: server, proxy, both (default: server)
 \item \texttt{GLITE\_LB\_HARVESTER\_ENABLED} -- set to \texttt{true} for sending notification, used mainly for export to MSG publish system (default: \texttt{false})
 \item \texttt{GLITE\_LB\_HARVESTER\_MSG\_OPTIONS} -- additional options for MSG publish (default: \texttt{--wlcg})
-\item \texttt{GLITE\_LB\_INDEX\_OWNER} -- when specified, add (\texttt{true}) or drop (\texttt{false}) 'owner' index (default: no index created or dropped)
+\item \texttt{GLITE\_LB\_INDEX\_OWNER} -- when specified, add (\texttt{true}) or drop (\texttt{false}) 'owner' index (default: 'owner' index not created or dropped)
 \end{itemize}
 
 In addition to those, YAIM LB module uses following parameters:
-\texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{GLITE\_HOME\_DIR},\texttt{SITE\_EMAIL}.
+\texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{SITE\_EMAIL}.
 
 \subsubsection{Migration to a different OS version}
 \label{inst:OSmigration}
@@ -373,6 +373,25 @@ previous \LB server section applies to merged server+proxy setups (\LBnew only).
 \subsection{\LB logger}
 
 All necessary configuration of normal \LB logger is done by YAIM.
+
+\subsection{\LB harvester}
+
+\LB Harvester gathers information about jobs from \LB servers using efficient
+\LB notification mechanism. It manages notifications and keeps them in
+a persistent storage (file or database table) to reuse later on next launch.
+It takes care of refreshing notifications and queries \LB servers back when
+some notification expires.
+
+It is not intended for normal usage. You will need Harvester for sending notifications to MSG publish infrastructure, but only for older \LB server releases (gLite 3.1.x, support since gLite 3.1.19). Example of YAIM configuration:
+
+\begin{verbatim}
+GLITE_LB_HARVESTER_ENABLED=true
+GLITE_LB_HARVESTER_MSG_OPTIONS="--wlcg-topic=org.wlcg.usage.jobStatus 
+ --wlcg-config=/etc/msg-publish/msg-publish.conf 
+ --wlcg-binary=/usr/bin/msg-publish"
+\end{verbatim}
+
+Since gLite 3.2.1, \LB Harvester is not needed for MSG publish. Notifications are reliably delivered by interlogger instead. Delivery can be switched on in this case by \texttt{GLITE\_LB\_MSG\_ENABLED} and \texttt{GLITE\_LB\_MSG\_BROKER} YAIM options.
 
 \subsection{Smoke tests}
 
