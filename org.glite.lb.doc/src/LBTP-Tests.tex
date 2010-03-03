@@ -9,6 +9,8 @@ This subsection gives a comprehensive overview of all system functionality tests
 
 \subsubsection{Test Scripts}
 
+Besides pure System Functionality Tests, this list also includes In-the-Wild tests and Regression Tests discussed in a few following chapters. They are used in the same manner and, typically, on the same occasions, which is why they are all listed in the same place. 
+
 \begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
      {\bf Executable} & {\bf Status} & {\bf Use} \\
@@ -17,7 +19,7 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-event-delivery.sh} & Implemented & Tries to register a job and log events. Checks if the registration worked and events resulted in state change accordingly. \\
 \hline
-{\tt lb-test-https.sh} & Proposed & Test the HTTPs interface. \\
+{\tt lb-test-https.sh} & Implemented & Test the HTTPs interface. \\
 \hline
 {\tt lb-test-logevent.sh} & Implemented & Test if local logger accepts events correctly (i.e. returns 0). \\
 \hline
@@ -39,7 +41,9 @@ This subsection gives a comprehensive overview of all system functionality tests
 \hline
 {\tt lb-test-purge.pl} & Implemented & Test that LB server purge works correctly. \\
 \hline
-{\tt lb-test-wild.pl} & Implemented & Test LB "in the wild" (test with real-life WMS). \\
+{\tt lb-test-wild.pl} & Implemented & Test LB ``in the wild'' (test with real-life WMS). \\
+\hline
+{\tt lb-test-bdii.sh} & Implemented & Test LB server is published correctly over BDII. \\
 \hline
 \end{tabularx}
 
@@ -414,4 +418,22 @@ In all above cases: Watch the life cycle. Check the resulting state (\emph{Clear
 \how\ \ctblb{lb-test-wild.pl}
 
 \result\ Jobs were submitted. Cancel operation worked where applicable. Resulting state was as expected (\emph{Cleared}, \emph{Cancelled} or \emph{Aborted}). Events were received from all components as expected.
+
+\section{Regression testing}
+
+\subsection{Publishing Correct Service Version over BDII}
+\req\ All \LB and BDII services running.
+
+\what
+\begin{enumerate}
+\item Regression test for bug 55482 (\texttt{http://savannah.cern.ch/bugs/?55482})
+\item Query for information on the server.
+\item Check version returned by the query.
+\end{enumerate}
+
+\how\ \ctblb{lb-test-bdii.sh}
+
+\result\ Query returns proper service status. Proper LB Server version is returned.
+
+\note\ The test script returns a version number, which you have to check manually. Automated checking will be implemented in the future.
 
