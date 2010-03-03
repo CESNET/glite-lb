@@ -698,7 +698,13 @@ sub gsoap_version {
 }
 
 sub getlibdir {
-        $libdir="lib";
+	if ( -e "/etc/debian_version") { # We are on Debian
+		$lib64="lib";
+		$lib32="lib32";	}
+	else { # Another distribution
+		$lib64="lib64";
+		$lib32="lib";	}
+        $libdir=$lib32;
 
         open INP, "uname -s | "; # Check kernel name
         $kname= <INP>;
@@ -714,8 +720,7 @@ sub getlibdir {
                 close INP;
 
                 if ($arch =~/^$procname\n/) {
-                        $libdir="lib64";
-                        return ($libdir); }
+                        return ($lib64); }
 
                 open INP, "uname -m | "; # Check machine hardware
                 $machname= <INP>;
@@ -723,16 +728,15 @@ sub getlibdir {
                 close INP;
 
                 if ($arch =~/^$machname\n/) {
-                        $libdir="lib64";
-                        return ($libdir); }
+                        return ($lib64); }
 
                 # special cases (hyperlink lib64, Debian)
                 if (-l "/usr/lib64") {
-                        $libdir="lib"; }
+                        $libdir=$lib32; }
 
                 # if /usr/lib64 doesn't exist at all (AIX)
                 unless ( -e "/usr/lib64" ) {
-                        $libdir="lib"; }
+                        $libdir=$lib32; }
         }
 
         if ( $kname == "SunOS") {
@@ -742,7 +746,6 @@ sub getlibdir {
 
         return $libdir;
 }
-
 
 sub usage {
 	my @ext = keys %extern_prefix;
