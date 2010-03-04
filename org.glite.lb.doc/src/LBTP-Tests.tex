@@ -435,5 +435,5 @@ In all above cases: Watch the life cycle. Check the resulting state (\emph{Clear
 
 \result\ Query returns proper service status. Proper LB Server version is returned.
 
-\note\ The test script returns a version number, which you have to check manually. Automated checking will be implemented in the future.
+\note\ The test will also ask the \LB server for a version number through its WS interface, and compare the two values. This, however, will not be done if the machine you use to run the tests does not have the proper binaries installed (\texttt{glite-lb-ws\_getversion}), or if you do not make a proxy certificate available. Should that be the case, the test only checks if a version is returned and prints it out, without comparing.
 
