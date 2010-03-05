@@ -10,11 +10,12 @@
 #include <errno.h>
 #include <netdb.h>
 #include <assert.h>
-#include <syslog.h>
 #include <sys/time.h>
 #include <time.h>
 #include <stdarg.h>
 #include <signal.h>
+
+#include "glite/lbu/log.h"
 
 #include "srvbones.h"
 
@@ -53,6 +54,7 @@ static int		set_slave_reqs_max = SLAVE_REQS_MAX;
 static struct timeval	set_idle_to = {IDLE_TIMEOUT, 0};
 static struct timeval	set_connect_to = {CONNECT_TIMEOUT, 0};
 static struct timeval	set_request_to = {REQUEST_TIMEOUT, 0};
+static char		*set_log_category = NULL;
 
 static int dispatchit(int, int, int);
 static int do_sendmsg(int, int, unsigned long, int);
@@ -66,13 +68,14 @@ static void glite_srvbones_set_slaves_ct(int);
 static void glite_srvbones_set_slave_overload(int);
 static void glite_srvbones_set_slave_conns_max(int);
 static void set_timeout(struct timeval *,struct timeval *);
+static void glite_srvbones_set_log_category(char *);
 
 int glite_srvbones_set_param(glite_srvbones_param_t param, ...)
 {
 	va_list ap;
 
 	if ( running ) {
-		dprintf(("Attempting to set srv-bones parameter on running server"));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Attempting to set srv-bones parameter on running server");
 		return -1;
 	}
 
@@ -90,6 +93,8 @@ int glite_srvbones_set_param(glite_srvbones_param_t param, ...)
 		set_timeout(&set_connect_to,va_arg(ap,struct timeval *)); break;
 	case GLITE_SBPARAM_REQUEST_TIMEOUT:
 		set_timeout(&set_request_to,va_arg(ap,struct timeval *)); break;
+	case GLITE_SBPARAM_LOG_REQ_CATEGORY:
+		glite_srvbones_set_log_category(va_arg(ap,char*)); break;
 	}
 	va_end(ap);
 
@@ -117,11 +122,13 @@ int glite_srvbones_run(
 
 	setlinebuf(stdout);
 	setlinebuf(stderr);
-	dprintf(("Master pid %d\n", getpid()));
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+		"Master pid %d", getpid());
 
 	if ( socketpair(AF_UNIX, SOCK_STREAM, 0, sock_slave) )
 	{
-		perror("socketpair()");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
+			"socketpair()");
 		return 1;
 	}
 
@@ -166,8 +173,7 @@ int glite_srvbones_run(
 
 		if ( ret == -1 && errno != EINTR )
 		{
-			if ( debug ) perror("select()");
-			else syslog(LOG_CRIT,"select(): %m");
+			glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR, "select()");
 
 			return 1;
 		}
@@ -179,26 +185,27 @@ int glite_srvbones_run(
 			while ( (pid = waitpid(-1, &pstat, WNOHANG)) > 0 )
 			{
 				if (WIFEXITED(pstat)) {
-					dprintf(("[master] Slave %d exited with return code %d.\n", pid, WEXITSTATUS(pstat)));
-					if (WEXITSTATUS(pstat)) {
-						syslog(LOG_ERR, "Slave %d exited with return code %d.\n", pid, WEXITSTATUS(pstat));
-					}
+					glite_common_log(LOG_CATEGORY_CONTROL, WEXITSTATUS(pstat) ? LOG_PRIORITY_ERROR : LOG_PRIORITY_INFO, "[master] Slave %d exited with return code %d.", pid, WEXITSTATUS(pstat));
+					
 				} 
 				if (WIFSIGNALED(pstat)) {
-					dprintf(("[master] Slave %d terminated with signal %d.\n", pid, WTERMSIG(pstat)));
+					int logged = 0;
 					switch (WTERMSIG(pstat)) {
 						case SIGINT:
 						case SIGTERM:
 						case SIGUSR1: if (die) break;
 						default:
-							syslog(LOG_ERR, "Slave %d terminated with signal %d.\n", pid, WTERMSIG(pstat));
+							glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[master] Slave %d terminated with signal %d.", pid, WTERMSIG(pstat));
+							logged = 1;
 							break;
 					}
+					if (! logged)
+						glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "[master] Slave %d terminated with signal %d.", pid, WTERMSIG(pstat));
 				}
 				if ( !die )
 				{
 					int newpid = slave(slave_data_init, sock_slave[1]);
-					dprintf(("[master] Servus mortuus [%d] miraculo resurrexit [%d]\n", pid, newpid));
+					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[master] Servus mortuus [%d] miraculo resurrexit [%d]", pid, newpid);
 				}
 			}
 			child_died = 0;
@@ -229,8 +236,7 @@ int glite_srvbones_run(
 				break;
 	}
 
-	dprintf(("[master] Terminating on signal %d\n", die));
-	if (!debug) syslog(LOG_INFO, "Terminating on signal %d\n", die);
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "[master] Terminating on signal %d", die);
 	kill(0, die);
 
 	return 0;
@@ -249,15 +255,16 @@ int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile,
 	}
 	lfd = open(logfile ? logfile : custom_logfile,O_CREAT|O_TRUNC|O_WRONLY,0600);
 	if (lfd < 0) {
-		fprintf(stderr,"%s: %s: %s\n",servername,logfile,strerror(errno));
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, 
+			"%s: %s: %s",servername,logfile,strerror(errno));
 		free(logfile);
 		return 0;
 	}
-//	printf("logfile: %s\n", logfile ? logfile : custom_logfile);
 	free(logfile);
 
 	if (daemon(0,1) == -1) {
-		perror("can't daemonize");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL,
+			"can't daemonize");
 		return 0;
 	}
 	dup2(lfd,1);
@@ -268,7 +275,6 @@ int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile,
 	} else {
 		pidfile = strdup(custom_pidfile);
 	}
-//	printf("pidfile: %s\n", pidfile ? pidfile : custom_pidfile);
 	setpgrp(); /* needs for signalling */
 	master = getpid();
 	fpid = fopen(pidfile,"r");
@@ -280,18 +286,25 @@ int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile,
 		{
 			if ( !kill(opid,0) )
 			{
-				fprintf(stderr,"%s: another instance running, pid = %d\n",servername,opid);
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "%s: another instance running, pid = %d", servername, opid);
 				return 0;
 			}
-			else if (errno != ESRCH) { perror("kill()"); return 0; }
+			else if (errno != ESRCH) { 
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "kill()");
+				return 0; 
+			}
 		}
 		fclose(fpid);
-	} else if (errno != ENOENT) { perror(pidfile); free(pidfile); return 0; }
+	} else if (errno != ENOENT) { 
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, pidfile);
+		free(pidfile); 
+		return 0; 
+	}
 
 	if (((fpid = fopen(pidfile, "w")) == NULL) || 
 	    (fprintf(fpid, "%d", getpid()) <= 0) ||
 	    (fclose(fpid) != 0)) { 
-		perror(pidfile); 
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, pidfile);
 		free(pidfile); 
 		return 0;
 	}
@@ -310,7 +323,9 @@ static int dispatchit(int sock_slave, int sock, int sidx)
 
 	alen = sizeof(a);
 	if ( (conn = accept(sock, (struct sockaddr *)&a, &alen)) < 0 )
-	{ 
+	{
+		//TODO: check debug according to previous version 
+#if 0		
 		if (debug)
 		{
 			perror("accept()");
@@ -322,21 +337,28 @@ static int dispatchit(int sock_slave, int sock, int sidx)
 			sleep(5);
 			return -1;
 		}
+#endif
+		glite_common_log(set_log_category, LOG_PRIORITY_WARN, "accept()");
+		sleep(5);
+		return -1;
 	}
 
 	getpeername(conn, (struct sockaddr *)&a, &alen);
 	pom = (char *) &a.sin_addr.s_addr;
 	if (a.sin_family  == PF_LOCAL) {
-		dprintf(("[master] %s connection from local socket\n",
-					services[sidx].id? services[sidx].id: ""));
+		glite_common_log(set_log_category,
+			 LOG_PRIORITY_DEBUG, 
+			"[master] %s connection from local socket", 
+			services[sidx].id ? services[sidx].id : "");
 	}
 	else {
-		dprintf(("[master] %s connection from %d.%d.%d.%d:%d\n",
-					services[sidx].id? services[sidx].id: "",
-					(int)pom[0], (int)pom[1], (int)pom[2], (int)pom[3],
-					ntohs(a.sin_port)));
+		glite_common_log(set_log_category, 
+                         LOG_PRIORITY_DEBUG,
+			"[master] %s connection from %d.%d.%d.%d:%d",
+                        services[sidx].id ? services[sidx].id : "",
+                        (int)pom[0], (int)pom[1], (int)pom[2], (int)pom[3],
+                        ntohs(a.sin_port));
 	}
-
 
 	ret = 0;
 	if (    (   clnt_dispatched < clnt_accepted	/* wraparound */
@@ -345,21 +367,24 @@ static int dispatchit(int sock_slave, int sock, int sidx)
 	{
 		/*	all done
 		 */ 
-		dprintf(("[master] Dispatched %lu, last known served %lu\n",
-				clnt_dispatched-1, clnt_accepted));
+		glite_common_log(set_log_category,
+                         LOG_PRIORITY_DEBUG,
+			"[master] Dispatched %lu, last known served %lu",
+			clnt_dispatched-1, clnt_accepted);
 	}
 	else
 	{
 		services[sidx].on_reject_hnd(conn);
-		dprintf(("[master] Rejected new connection due to overload\n"));
-		if ( !debug ) syslog(LOG_ERR, "Rejected new connection due to overload\n");
+		glite_common_log(set_log_category,
+                         LOG_PRIORITY_ERROR,
+			"[master] Rejected new connection due to overload");
 	}
 
 	close(conn);
 	if (ret)
 	{
-		perror("sendmsg()");
-		if ( !debug ) syslog(LOG_ERR, "sendmsg(): %m");
+		glite_common_log(set_log_category,
+                         LOG4C_PRIORITY_WARN, "sendmsg()");
 	}
 
 
@@ -409,8 +434,9 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 	if (   (sockflags = fcntl(sock, F_GETFL, 0)) < 0
 		|| fcntl(sock, F_SETFL, sockflags | O_NONBLOCK) < 0 )
 	{
-		dprintf(("[%d] fcntl(master_sock): %s\n", getpid(), strerror(errno)));
-		if ( !debug ) syslog(LOG_CRIT, "fcntl(master_sock): %m");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
+			"[%d] fcntl(master_sock): %s", 
+			getpid(), strerror(errno));
 		exit(1);
 	}
 
@@ -457,8 +483,7 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 		case -1:
 			if ( errno != EINTR )
 			{
-				dprintf(("[%d] select(): %s\n", getpid(), strerror(errno)));
-				if ( !debug ) syslog(LOG_CRIT, "select(): %m");
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[%d] select(): %s", getpid(), strerror(errno));
 				exit(1);
 			}
 			continue;
@@ -480,7 +505,7 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 			 */
 			int		rv;
 
-			dprintf(("[%d] incoming request\n", getpid()));
+			glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "[%d] incoming request", getpid());
 
 			if ( !services[srv].on_request_hnd )
 			{
@@ -494,13 +519,13 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 					if (services[srv].on_disconnect_hnd
 							&& (rv = services[srv].on_disconnect_hnd(conn,NULL,clnt_data)))
 					{
-						dprintf(("[%d] disconnect handler: %s, terminating\n",getpid(),strerror(rv)));
+						glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "[%d] disconnect handler: %s, terminating",getpid(),strerror(rv));
 						exit(1);
 					}
 					close(conn);
 					conn = -1;
 					srv = -1;
-					dprintf(("[%d] Connection closed\n", getpid()));
+					glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "[%d] Connection closed", getpid());
 				}
 				else if (rv > 0) {
 					/*	non-fatal error -> close connection and contiue
@@ -509,17 +534,17 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 					close(conn);
 					conn = -1;
 					srv = -1;
-					dprintf(("[%d] %s, connection closed\n",getpid(),strerror(rv)));
+					glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "[%d] %s, connection closed",getpid(),strerror(rv));
 					continue;
 				}
 				else if ( rv < 0 ) {
 					/*	unknown error -> clasified as FATAL -> kill slave
 					 */
-					dprintf(("[%d] %s, terminating\n",getpid(),strerror(-rv)));
+					glite_common_log(set_log_category, LOG_PRIORITY_INFO, "[%d] %s, terminating",getpid(),strerror(-rv));
 					exit(1);
 				}
 				else {
-					dprintf(("[%d] request done\n", getpid()));
+					glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "[%d] request done", getpid());
 					gettimeofday(&client_done, NULL);
 				}
 
@@ -542,8 +567,8 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 			case EINTR: /* XXX: signals are blocked */
 		 	case EAGAIN:
 				continue;
-			default: dprintf(("[%d] recvmsg(): %s\n", getpid(), strerror(errno)));
-				if (!debug) syslog(LOG_CRIT,"recvmsg(): %m\n");
+			default: 
+				glite_common_log(set_log_category, LOG_PRIORITY_ERROR, "[%d] recvmsg(): %s", getpid(), strerror(errno));
 				exit(1);
 			}
 			kick_client = KICK_LOAD;
@@ -558,7 +583,7 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 			close(conn);
 			conn = -1;
 			srv = -1;
-			dprintf(("[%d] Connection closed, %s\n", getpid(), kicks[kick_client]));
+			glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "[%d] Connection closed, %s", getpid(), kicks[kick_client]);
 		}
 
 		if ( newconn >= 0 )
@@ -572,26 +597,27 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 			switch ( send(sock, &seq, sizeof(seq), 0) )
 			{
 			case -1:
-				if (debug) perror("send()");
-				else syslog(LOG_CRIT, "send(): %m\n");
+				glite_common_log(set_log_category, LOG_PRIORITY_ERROR, "send()");
 				exit(1);
 				
 			case sizeof(seq):
 				break;
 				
-			default: dprintf(("[%d] send(): incomplete message\n", getpid()));
+			default: 
+				glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "[%d] send(): incomplete message", getpid());
 				exit(1);
 			}
 	
 			req_cnt++;
-			dprintf(("[%d] serving %s connection %lu\n", getpid(),
-					services[srv].id? services[srv].id: "", seq));
+			glite_common_log(set_log_category, 
+				LOG_PRIORITY_DEBUG, 
+				"[%d] serving %s connection %lu", getpid(),
+				services[srv].id ? services[srv].id : "", seq);
 	
 			connflags = fcntl(conn, F_GETFL, 0);
 			if ( fcntl(conn, F_SETFL, connflags | O_NONBLOCK) < 0 )
 			{
-				dprintf(("[%d] can't set O_NONBLOCK mode (%s), closing.\n", getpid(), strerror(errno)));
-				if ( !debug ) syslog(LOG_ERR, "can't set O_NONBLOCK mode (%s), closing.\n", strerror(errno));
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d] can't set O_NONBLOCK mode (%s), closing.", getpid(), strerror(errno));
 				close(conn);
 				conn = srv = -1;
 				continue;
@@ -601,8 +627,7 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 			if (   services[srv].on_new_conn_hnd
 				&& (ret = services[srv].on_new_conn_hnd(conn, to.tv_sec >= 0 ? &to : NULL, clnt_data)) )
 			{
-				dprintf(("[%d] Connection not established, err = %d.\n", getpid(),ret));
-				if ( !debug ) syslog(LOG_ERR, "Connection not established, err = %d.\n",ret);
+				glite_common_log(set_log_category, LOG_PRIORITY_WARN, "[%d] Connection not established, err = %d.", getpid(),ret);
 				close(conn);
 				conn = srv = -1;
 				if (ret < 0) exit(1);
@@ -615,15 +640,15 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 
 	if ( die )
 	{
-		dprintf(("[%d] Terminating on signal %d\n", getpid(), die));
-		if ( !debug ) syslog(LOG_INFO, "Terminating on signal %d", die);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+			"[%d] Terminating on signal %d", getpid(), die);
 	}
 
 	if (conn >= 0  && services[srv].on_disconnect_hnd )
 		services[srv].on_disconnect_hnd(conn, NULL, clnt_data);
 
-	dprintf(("[%d] Terminating after %d requests\n", getpid(), req_cnt));
-	if ( !debug ) syslog(LOG_INFO, "Terminating after %d requests", req_cnt);
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+		"[%d] Terminating after %d requests", getpid(), req_cnt);
 
 
 	exit(0);
@@ -750,4 +775,10 @@ static void set_timeout(struct timeval *to, struct timeval *val)
 		*to = *val;
 	}
 	else to->tv_sec = -1;
+}
+
+static void glite_srvbones_set_log_category(char *log_category)
+{
+	free(set_log_category);
+	set_log_category = strdup(log_category);
 }

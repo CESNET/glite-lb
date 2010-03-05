@@ -15,7 +15,11 @@ CC=gcc
 VPATH=${top_srcdir}/src:${top_srcdir}/examples
 
 DEBUG:=-g -O0 -Wall
-CFLAGS:= ${DEBUG} -I${top_srcdir}/interface -D_GNU_SOURCE
+CFLAGS:= ${DEBUG} \
+	-I${top_srcdir}/interface \
+	-I${stagedir}/include \
+	-I${log4c_prefix}/include \
+	-D_GNU_SOURCE 
 LDFLAGS:=
 
 ifdef LB_PROF
@@ -24,9 +28,10 @@ ifdef LB_PROF
 endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} ${LOG4C_LIBS}
 INSTALL:=libtool --mode=install install
 
+LOG4C_LIBS:=-L${log4c_prefix}/lib -llog4c
 STATICLIB:=libglite_lbu_server_bones.a
 LTLIB:=libglite_lbu_server_bones.la
 
@@ -44,7 +49,7 @@ ${STATICLIB}: ${OBJS}
 	ranlib $@
 
 ${LTLIB}: ${LOBJS}
-	${LINK} -o $@ ${LOBJS}
+	${LINK} -o $@ ${LOBJS} ${LOG4C_LIBS}
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes

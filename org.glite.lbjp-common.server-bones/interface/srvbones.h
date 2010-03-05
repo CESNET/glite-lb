@@ -14,6 +14,7 @@ typedef enum _glite_srvbones_param_t {
 	GLITE_SBPARAM_IDLE_TIMEOUT,		/**< keep idle connection that long (timeval) */
 	GLITE_SBPARAM_CONNECT_TIMEOUT,		/**< timeout for establishing a connection (timeval) */
 	GLITE_SBPARAM_REQUEST_TIMEOUT,		/**< timeout for a single request (timeval)*/
+	GLITE_SBPARAM_LOG_REQ_CATEGORY,		/**< common logging requests category (char*) */
 } glite_srvbones_param_t;
 
 typedef int (*slave_data_init_hnd)(void **);
