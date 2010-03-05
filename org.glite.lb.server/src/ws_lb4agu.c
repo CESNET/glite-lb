@@ -27,7 +27,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityStatus(
 	edg_wll_JobStat	s;
 	int		i,flags;
 
-	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG,
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG,
 		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	if (!in) return SOAP_FAULT;
@@ -52,7 +52,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityStatus(
 
 			cjobid = edg_wlc_JobIdUnparse(j);
 			cflags = edg_wll_stat_flags_to_string(flags);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS,
+			glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST,
 				LOG_PRIORITY_DEBUG,
 				"[%d] \n\t<flags>%s</flags>\n\t<jobId>%s</jobId>\n",
 				getpid(), cflags, cjobid);
@@ -87,7 +87,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityInfo(
 	edg_wll_JobStat	s;
 	int		i,flags;
 
-	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG,
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG,
 		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	if (!in) return SOAP_FAULT;
@@ -112,9 +112,9 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityInfo(
 
 			cjobid = edg_wlc_JobIdUnparse(j);
 			cflags = edg_wll_stat_flags_to_string(flags);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS,
+			glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST,
 				LOG_PRIORITY_DEBUG,
-				"[%d] \n\t<flags>%s</flags>\n\t<jobId>%s</jobId>\n",
+				"[%d] \t<flags>%s</flags>\n\t<jobId>%s</jobId>",
 				getpid(), cflags, cjobid);
 			free(cjobid);
 			free(cflags);

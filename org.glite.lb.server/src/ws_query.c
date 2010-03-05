@@ -41,7 +41,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__GetVersion(
 	struct _lbe__GetVersion *in,
 	struct _lbe__GetVersionResponse *out)
 {
-	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, 
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, 
 		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	out->version = soap_strdup(soap, VERSION);
@@ -61,7 +61,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 	int	flags;
 
 
-	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG,
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG,
 		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	if ( edg_wlc_JobIdParse(in->jobid, &j) )
@@ -78,9 +78,9 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 
 		cjobid = edg_wlc_JobIdUnparse(j);
 		cflags = edg_wll_stat_flags_to_string(flags);
-		glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, 
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, 
 			LOG_PRIORITY_DEBUG, 
-			"[%d] \n\t<flags>%s</flags>\n\t<jobId>%s</jobId>\n",
+			"[%d] \t<flags>%s</flags>\n\t<jobId>%s</jobId>",
 			getpid(), cflags, cjobid);
 		free(cjobid);
 		free(cflags);
@@ -112,7 +112,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	int                ret = SOAP_FAULT;
 
 
-	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG,
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG,
 		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	out->states = soap_malloc(soap, sizeof(*out->states));
@@ -136,10 +136,10 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 		if (edg_wll_QueryJobsRequestToXML(ctx, 
 				(const edg_wll_QueryRec **) conditions, 
 				flags, &message)) {
-			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, "[%d] %s", getpid(), "edg_wll_QueryJobsRequestToXML() returned error");
+			glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "[%d] %s", getpid(), "edg_wll_QueryJobsRequestToXML() returned error");
 		}
 		else {
-			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, "[%d] \n%s\n", getpid(), message);
+			glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "[%d] %s", getpid(), message);
 		}
 		free(message);
 	}
@@ -170,7 +170,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__UserJobs(
 	edg_wll_JobStat	*states;
 
 
-	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, 
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, 
 		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
@@ -204,7 +204,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 	int			ret = SOAP_OK;
 
 
-	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG,
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG,
 		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	edg_wll_ResetError(ctx);
@@ -233,10 +233,10 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 				(const edg_wll_QueryRec **) job_conditions, 
 				(const edg_wll_QueryRec **) event_conditions,
 				&message)) {
-			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, "[%d] %s", getpid(), "edg_wll_QueryEventsRequestToXML() returned error");
+			glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "[%d] %s", getpid(), "edg_wll_QueryEventsRequestToXML() returned error");
 		}
 		else {
-			glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, "[%d] \n%s\n", getpid(), message);
+			glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "[%d] %s", getpid(), message);
 		}
 		free(message);
 	}
@@ -307,8 +307,8 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifNew(
 	edg_wll_NotifId		nid = NULL;
 	int			ret = SOAP_OK;
 
-	glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, LOG_PRIORITY_DEBUG, 
-		"[%d] WS call %s\n", getpid(), __FUNCTION__);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, 
+		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	edg_wll_ResetError(ctx);
 	if ( edg_wll_SoapToQueryCondsExt(in->conditions, in->__sizeconditions, &conditions) )

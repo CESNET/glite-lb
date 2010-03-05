@@ -252,7 +252,7 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 					if (!attr[0] || !attr[1]) { unexp() break;}
                                         if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
-					printf("\nchecking time attr\n%s = %s (%d)\n\n", attr[0], attr[1], edg_wll_StringToStat(attr[1]));
+					//printf("\nchecking time attr\n%s = %s (%d)\n\n", attr[0], attr[1], edg_wll_StringToStat(attr[1]));
 				}
 				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr = i+1;
 			}

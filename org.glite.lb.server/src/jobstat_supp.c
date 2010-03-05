@@ -8,7 +8,6 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <regex.h>
-#include <syslog.h>
 
 #include "glite/jobid/cjobid.h"
 #include "glite/lbu/trio.h"

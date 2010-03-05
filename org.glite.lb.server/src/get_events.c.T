@@ -15,9 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <syslog.h>
 
 #include "glite/lbu/trio.h"
+#include "glite/lbu/log.h"
 #include "get_events.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
@@ -38,6 +38,8 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 	edg_wll_ResetError(ctx);
 
 	trio_asprintf(&q, "select ulm from events_flesh where jobid = '%|Ss' and event = %d", jobid, n);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+
 	if ((ret=edg_wll_ExecSQL(ctx,q,&sh)) < 0) goto cleanup;
 	if (edg_wll_FetchRow(ctx,sh,1,NULL,&nameval[0]) == 1) {
 		//fprintf(stderr, "got ulm: '%s'\n", nameval[0]);
@@ -61,6 +63,8 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 		trio_asprintf(&q,"select name,value from %s "
 				"where jobid = '%|Ss' and event = %d ",
 				tables[t],jobid,n);
+		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
+			q);
 
 		if ((ret=edg_wll_ExecSQL(ctx,q,&sh)) < 0) goto cleanup;
 
@@ -99,8 +103,9 @@ static void edg_wll_set_event_field_warn(
 {
 	char *e = edg_wll_EventToString(event->any.type);
 
-	fprintf(stderr, "edg_wll_set_event_field: bad field:"
-		"code=\"%s\" name=\"%s\" value=\"%s\"\n",
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, 
+		"edg_wll_set_event_field: bad field:"
+		"code=\"%s\" name=\"%s\" value=\"%s\"",
 		e, name, value);
 	free(e);
 	/* XXX edg_wll_Log */

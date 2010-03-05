@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <syslog.h>
 #include <errno.h>
 #include <time.h>
 #include <assert.h>
@@ -180,8 +179,7 @@ int edg_wll_QueryEventsServer(
 				edg_wll_Error(ctx,&et,&ed);
 
 				dbjob = res[2];
-				fprintf(stderr,"%s event %d: %s (%s)\n",dbjob,n,et,ed);
-				syslog(LOG_WARNING,"%s event %d: %s (%s)",dbjob,n,et,ed);
+				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_WARN, "%s event %d: %s (%s)", dbjob, n, et, ed);
 				free(et); free(ed);
 				edg_wll_ResetError(ctx);
 

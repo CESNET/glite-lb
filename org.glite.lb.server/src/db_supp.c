@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <errno.h>
-#include <syslog.h>
 #include <unistd.h>
 #include <stdio.h>
 
@@ -100,7 +99,7 @@ int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
 	if (ret == EDG_WLL_ERROR_DB_TRANS_DEADLOCK) {
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
 			"[%d]: DB deadlock detected. Rolling back transaction "
-			"and retrying... \n", getpid());
+			"and retrying...", getpid());
 
 		edg_wll_ResetError(ctx);
 		return !edg_wll_Rollback(ctx);
@@ -108,7 +107,7 @@ int edg_wll_TransNeedRetry(edg_wll_Context ctx) {
 	if (ret == EDG_WLL_ERROR_DB_LOST_CONNECTION) {
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
 			"[%d]: Lost connection to DB. "
-			"Rolling back transaction and retrying... \n",
+			"Rolling back transaction and retrying...",
 			getpid());
 
 		edg_wll_ResetError(ctx);

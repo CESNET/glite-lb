@@ -492,7 +492,7 @@ int main(int argc, char *argv[])
 	setlinebuf(stderr);
 
 	if (glite_common_log_init()) {
-		fprintf(stderr,"glite_common_log_init() failed, exiting.\n");
+		fprintf(stderr,"glite_common_log_init() failed, exiting.");
 		exit(1);
 	}
 	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Initializing...");
@@ -802,6 +802,7 @@ int main(int argc, char *argv[])
 	glite_srvbones_set_param(GLITE_SBPARAM_REQUEST_TIMEOUT, &to);
 	to = (struct timeval){IDLE_TIMEOUT, 0};
 	glite_srvbones_set_param(GLITE_SBPARAM_IDLE_TIMEOUT, &to);
+	glite_srvbones_set_param(GLITE_SBPARAM_LOG_REQ_CATEGORY, LOG_CATEGORY_LB_SERVER_REQUEST);
 
 	switch (mode) {
 		case SERVICE_PROXY:
@@ -906,8 +907,7 @@ int bk_clnt_data_init(void **data)
 		char	   *et, *ed;
 
 		edg_wll_Error(ctx,&et,&ed);
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[%d]: query_job_indices(): %s: %s, no custom indices available", getpid(), et, ed);
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, "[%d]: query_job_indices(): %s: %s, no custom indices available", getpid(), et, ed);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d]: query_job_indices(): %s: %s, no custom indices available", getpid(), et, ed);
 		free(et);
 		free(ed);
 	}
@@ -918,8 +918,7 @@ int bk_clnt_data_init(void **data)
 		char	*et,*ed;
 		edg_wll_Error(ctx,&et,&ed);
 
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[%d]: query notif indices: %s: %s", getpid(), et, ed);
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, "[%d]: query notif indices: %s: %s", getpid(), et, ed);	
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d]: query notif indices: %s: %s", getpid(), et, ed);
 	
 		free(et); free(ed);
 	}
@@ -968,7 +967,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 			edg_wll_gss_release_cred(&mycred, NULL);
 			mycred = newcred;
 		} else { 
-			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] reloading credentials failed, using old ones");
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] reloading credentials failed, using old ones");
 		}
 		break;
 	case -1: 
@@ -1030,15 +1029,15 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	{
 	case NETDB_SUCCESS:
 		if (name) 
-			glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_INFO, "[%d] connection from %s:%d (%s)", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port), name); 
+			glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_INFO, "[%d] connection from %s:%d (%s)", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port), name); 
 		free(ctx->connections->serverConnection->peerName);
 		ctx->connections->serverConnection->peerName = name;
 		name = NULL;
 		break;
 
 	default:
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_DEBUG, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_INFO,"[%d] connection from %s:%d", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port));
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_INFO,"[%d] connection from %s:%d", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port));
 		free(ctx->connections->serverConnection->peerName);
 		ctx->connections->serverConnection->peerName = strdup(inet_ntoa(a.sin_addr));
 		break;
@@ -1047,7 +1046,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	gettimeofday(&now, 0);
 	if ( decrement_timeout(timeout, conn_start, now) )
 	{
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR, "gethostbyaddr() timeout"); 
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_WARN, "gethostbyaddr() timeout"); 
 		free(name);
 
 		return -1;
@@ -1077,7 +1076,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 			{
 				if ( strcmp(name, server_name))
 				{
-					glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR, "different server endpoint names (%s,%s), check DNS PTR records", name, server_name);
+					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "different server endpoint names (%s,%s), check DNS PTR records", name, server_name);
 				}
 			}
 			else server_name = strdup(name);
@@ -1111,7 +1110,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 				edg_wll_FreeContext(ctx);
 				return -1;
 			}
-			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] %s: GSS error: %s", getpid(), ctx->connections->serverConnection->peerName, ctx->errDesc);
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] %s: GSS error: %s", getpid(), ctx->connections->serverConnection->peerName, ctx->errDesc);
 		}
 		else
 		{
@@ -1184,13 +1183,13 @@ int bk_init_ws_connection(struct clnt_data_t *cdata)
 	int err = 0;
 
 	if ( glite_gsplugin_init_context(&gsplugin_ctx) ) {
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR, 
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
 			"Couldn't create gSOAP plugin context");
                 return -1;
         }
 
         if ( !(soap = soap_new()) ) {
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
 			"Couldn't create soap environment");
                 goto err;
         }
@@ -1198,13 +1197,13 @@ int bk_init_ws_connection(struct clnt_data_t *cdata)
         soap_init2(soap, SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
 	if ( soap_set_namespaces(soap, namespaces) ) { 
                 soap_done(soap);
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
 			"Couldn't set soap namespaces");
                 goto err;
         }
 	if ( soap_register_plugin_arg(soap, glite_gsplugin, gsplugin_ctx) ) {
                 soap_done(soap);
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
 			"Couldn't set soap namespaces");
                 goto err;
         }
@@ -1301,7 +1300,7 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 
 	gettimeofday(&conn_start, 0);
 	if ( edg_wll_plain_accept(conn, &ctx->connProxy->conn) ) {
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
 			"accept");
 		edg_wll_FreeContext(ctx);
 
@@ -1310,7 +1309,7 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 
 	gettimeofday(&now, 0);
 	if ( decrement_timeout(timeout, conn_start, now) ) {
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_WARN,
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
 			"edg_wll_plain_accept(): timeout");
 		return -1;
 	}
@@ -1352,7 +1351,7 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EEXIST:
 	case EDG_WLL_ERROR_NOINDEX:
 	case E2BIG:
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
 			"[%d] %s (%s)", getpid(), errt, errd);
 		break;
 	case EINVAL:
@@ -1364,7 +1363,7 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EDG_WLL_ERROR_PARSE_OK_WITH_EXTRA_FIELDS:
 	case EDG_WLL_ERROR_JOBID_FORMAT:
 	case EDG_WLL_ERROR_MD5_CLASH:
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
 			"[%d] %s (%s)", getpid(), errt, errd);
 		/*
 		 *	no action for non-fatal errors
@@ -1401,7 +1400,7 @@ int bk_accept_store(int conn, struct timeval *timeout, void *cdata)
 
 	gettimeofday(&after, NULL);
 	if ( decrement_timeout(timeout, before, after) ) {
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_WARN,
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_WARN,
 			"Serving store connection timed out");
 		return ETIMEDOUT;
 	}
@@ -1475,7 +1474,7 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 
 	gettimeofday(&after, NULL);
 	if ( decrement_timeout(timeout, before, after) ) {
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_WARN,
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_WARN,
 			"Serving store connection timed out");
 		
 		return ETIMEDOUT;
@@ -1532,7 +1531,7 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 
 	if ( err ) {
 		// soap_print_fault(struct soap *soap, FILE *fd) maybe useful here
-		glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_ERROR,
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_WARN,
 			"[%d] SOAP error (bk_accept_ws)", getpid());
 		return ECANCELED;
 	}
@@ -1655,7 +1654,7 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 		asprintf(&dbfail_string1,"%s (%s)",errt,errd);
 		free(errt);
 		free(errd);
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
 			"[%d]: %s", getpid(), dbfail_string1);
 		free(dbfail_string1);
 	}

@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <syslog.h>
 #include <assert.h>
 #include <string.h>
 #include <time.h>
@@ -282,13 +281,13 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 	for (prg.jobs_to_exa=0; request->jobs[prg.jobs_to_exa]; prg.jobs_to_exa++);
 	for (i=0; request->jobs[i] && !purge_quit; i++) {
 		if (edg_wlc_JobIdParse(request->jobs[i],&job)) {
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "%s: parse error\n", request->jobs[i]);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "%s: parse error", request->jobs[i]);
 			prg.parse = 1;
 			prg.jobs_to_exa--;
 		}
 		else {
 			if (check_strict_jobid(ctx,job)) {
-				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s: not my job\n", request->jobs[i]);
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s: not my job", request->jobs[i]);
 				prg.parse = 1;
 				prg.jobs_to_exa--;
 			}
@@ -764,8 +763,10 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 			if ( jobtype == EDG_WLL_NUMBER_OF_JOBTYPES) goto rollback;
 			if (get_jobid_suffix(ctx, job, jobtype, &root, &suffix)
 			 || get_jobid_prefix(ctx, job, jobtype, &prefix)) {
-				fprintf(stderr,"[%d] unknown job type of the '%s'.\n", getpid(), dbjob);
-				syslog(LOG_WARNING,"Warning: unknown job type of the '%s'", dbjob);
+				glite_common_log(LOG_CATEGORY_CONTROL, 
+					LOG_PRIORITY_WARN, 
+					"[%d] unknown job type of the '%s'.", 
+					getpid(), dbjob);
 				edg_wll_ResetError(ctx);
 			}
 		}
@@ -874,7 +875,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 					
 					asprintf(&msg,"Warning: erasing job %s that already existed in this LB "
 						"(reused jobid or corruped DB) (%s: %s)",job_s,et,ed);
-					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d] %s\n", getpid(), msg);
+					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d] %s", getpid(), msg);
 					free(et); free(ed); free(msg); free(job_s);
 					edg_wll_ResetError(ctx);
 				}

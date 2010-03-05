@@ -29,14 +29,14 @@ int edg_wll_AcceptHTTP(edg_wll_Context ctx, char **body, char **resp, char ***hd
 	else err = edg_wll_http_recv(ctx,&req,&hdr,body,ctx->connections->serverConnection);
 
 	if (req)
-		glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, 
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, 
 			LOG4C_PRIORITY_DEBUG, "[%d] request: %s", 
 			getpid(), req);
 	else
-		glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, 
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, 
                         LOG4C_PRIORITY_DEBUG, "no request");
 	if (body && *body) 
-		glite_common_log(LOG_CATEGORY_LB_SERVER_ACCESS, 
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, 
                         LOG4C_PRIORITY_DEBUG, "request body:\n%s",*body);
 
 	if (!err) {

@@ -15,11 +15,11 @@
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
-#include <syslog.h>
 #include <ctype.h>
 
 #include "glite/jobid/strmd5.h"
 #include "glite/lbu/trio.h"
+#include "glite/lbu/log.h"
 
 #include "glite/lb/events_parse.h"
 #include "glite/lb/context-int.h"
@@ -85,6 +85,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 	}
 
 	trio_asprintf(&stmt,"select userid from jobs where jobid='%|Ss'", jobid);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 || edg_wll_FetchRow(ctx,sh,1,NULL,&userid) < 0) goto clean;
 	if (sh) glite_lbu_FreeStmt(&sh);
@@ -100,6 +101,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 		ssrc,e->any.host,
 		stamp,e->any.timestamp.tv_usec,
 		e->any.level,userid, e->any.seqcode);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0) goto clean;
 	nr = edg_wll_FetchRow(ctx,sh,1,NULL,&dummy);
@@ -121,6 +123,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 	trio_asprintf(&stmt,
 		"select nevents from jobs "
 		"where jobid = '%|Ss'",jobid);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 ||
 	    edg_wll_FetchRow(ctx,sh,1,NULL,&max) < 0) goto clean;
@@ -140,6 +143,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 		ssrc,e->any.host,
 		stamp,e->any.timestamp.tv_usec,
 		now_s, e->any.level,userid, e->any.seqcode);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto clean;
 	free(stmt); stmt = NULL;
@@ -148,6 +152,7 @@ int edg_wll_StoreEvent(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,int 
 	trio_asprintf(&stmt,
 		"update jobs set nevents='%d'"
 		"where jobid = '%|Ss'", next+1, jobid);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto clean;
 	free(stmt); stmt = NULL;
@@ -174,6 +179,7 @@ static int store_user(edg_wll_Context ctx,const char *userid,const char *subj)
 
 	trio_asprintf(&stmt,"insert into users(userid,cert_subj) "
 		"values ('%|Ss','%|Ss')",userid,subj);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST)
@@ -223,6 +229,7 @@ static int store_job(edg_wll_Context ctx,glite_jobid_const_t job,const char *use
 		trio_asprintf(&stmt,"insert into jobs(jobid,dg_jobid,userid,proxy,server,grey) "
 			"values ('%|Ss','%|Ss','%|Ss', '%|Sd', '%|Sd', '%|Sd')",jobid,jobstr,userid,proxy,server,grey);
 	}
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
 		if (edg_wll_Error(ctx,NULL,NULL) == EEXIST && !update) 
@@ -245,6 +252,8 @@ static int set_job_grey(edg_wll_Context ctx, char *jobid)
 	char *stmt;
 
 	trio_asprintf(&stmt,"update jobs set grey='1' where jobid='%|Ss'", jobid);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
 	edg_wll_ExecSQL(ctx,stmt,NULL); 
 
 	free(stmt);
@@ -286,6 +295,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 
 
 	trio_asprintf(&q,"select proxy,server,grey from jobs where jobid='%|Ss' for update", unique);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 
 	nar = edg_wll_ExecSQL(ctx,q,&stmt);
 	free(q); q = NULL;
@@ -348,6 +358,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 			{
 				trio_asprintf(&q,"select u.cert_subj from jobs j, users u "
 							"where j.jobid='%|Ss' and u.userid=j.userid",unique);
+				glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 
 				if (edg_wll_ExecSQL(ctx,q,&stmt) < 0
 					|| edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0
@@ -364,6 +375,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 			if ( (!strcmp(res[0],"0") && ctx->isProxy) || (!strcmp(res[1],"0") && !ctx->isProxy) ) {
 				trio_asprintf(&q,"update jobs set server='1', proxy='1' where jobid='%|Ss'",
 					unique);
+				glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 				if (edg_wll_ExecSQL(ctx,q,NULL) < 0) goto err;
 				free(q); q = NULL;
 			}
@@ -456,6 +468,7 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,char
 			"values ('%|Ss',%d,'%|Ss','%|Ss')",
 			strlen(f[i].val) <= SHORT_LEN ? "short_fields" : "long_fields",
 			jobid,no,f[i].key,f[i].val);
+		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
 		free(stmt);
@@ -467,12 +480,16 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,char
 		trio_asprintf(&stmt,"insert into short_fields(jobid,event,name,value) "
 			"values ('%|Ss',%d,'SRC_INSTANCE','%|Ss')",
 			jobid,no,e->any.src_instance);
+		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
 		free(stmt);
 	}
 #else
 	if (!ulm) ulm = edg_wll_UnparseEvent(ctx, e);
 	trio_asprintf(&stmt, "insert into events_flesh (jobid, event, ulm) values ('%|Ss', %d, '%|Ss')", jobid, no, ulm);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
 #endif
 
@@ -560,6 +577,7 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 
 	trio_asprintf(&q,"select u.cert_subj from jobs j, users u "
 				"where j.jobid='%|Ss' and u.userid=j.userid",jobid);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 
 	if (edg_wll_ExecSQL(ctx,q,&stmt) < 0
 		|| edg_wll_FetchRow(ctx,stmt,1,NULL,&owner) < 0
@@ -692,6 +710,8 @@ int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 	/* get userid of parent job */
 	jobid = edg_wlc_JobIdGetUnique(e->jobId);
 	trio_asprintf(&stmt,"select userid from jobs where jobid='%|Ss'", jobid);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 || edg_wll_FetchRow(ctx,sh,1,NULL,&userid) < 0) goto err;
 
 	for (i=0; i<e->nsubjobs; i++) {
@@ -721,8 +741,7 @@ int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 
 		if (err) {
 			job_s = edg_wlc_JobIdUnparse(subjobs[i]);
-			fprintf(stderr,"%s: %s (%s)\n",job_s,et,ed);
-			syslog(LOG_ERR,"%s: %s (%s)",job_s,et,ed);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "%s: %s (%s)", job_s, et, ed);
 			free(job_s); free(et); free(ed);
 			edg_wll_ResetError(ctx);
 		}
@@ -757,24 +776,32 @@ int edg_wll_delete_event(edg_wll_Context ctx,const char *jobid,int event)
 	trio_asprintf(&stmt,
 		"delete from short_fields where jobid='%|Ss' and event=%d",
 		jobid,event);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
 	edg_wll_ExecSQL(ctx,stmt,NULL);
 	free(stmt);
 
 	trio_asprintf(&stmt,
 		"delete from long_fields where jobid='%|Ss' and event=%d",
 		jobid,event);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
 	edg_wll_ExecSQL(ctx,stmt,NULL);
 	free(stmt);
 
 	trio_asprintf(&stmt,
 		"delete from events_flesh where jobid='%|Ss' and event=%d",
 		jobid,event);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
 	edg_wll_ExecSQL(ctx,stmt,NULL);
 	free(stmt);
 
 	trio_asprintf(&stmt,
 		"delete from events where jobid='%|Ss' and event=%d",
 		jobid,event);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
 	edg_wll_ExecSQL(ctx,stmt,NULL);
 	free (stmt);
 

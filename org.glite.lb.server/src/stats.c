@@ -131,7 +131,9 @@ static struct edg_wll_stats_archive *archive_skip(
 static int stats_remap(edg_wll_Stats *stats)
 {
 	int newgrpno = stats->map->grpno;
-	dprintf(("stats_remap: size changed (%d != %d), remap",stats->grpno,newgrpno));
+	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+		"stats_remap: size changed (%d != %d), remap",
+		stats->grpno, newgrpno);
 	munmap(stats->map,(stats->grpno ? stats->grpno : 1) * stats->grpsize);
 	stats->map = mmap(NULL,newgrpno * stats->grpsize,
 			PROT_READ|PROT_WRITE,MAP_SHARED,stats->fd,0);
@@ -158,7 +160,7 @@ static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,
 	edg_wll_ResetError(ctx);
 
 	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
-		"inc_counter: destination %s, stats %d\n",
+		"inc_counter: destination %s, stats %d",
 		jobstat->destination, (int) (stats - (edg_wll_Stats *) default_stats));
 
 	if (flock(stats->fd,LOCK_EX)) return edg_wll_SetError(ctx,errno,"flock()");
@@ -340,7 +342,8 @@ int edg_wll_StateRateServer(
 	}
 
 	if (i == stats->grpno) {
-		dprintf(("no match: %s\n",sig));
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, 
+			"no match: %s\n",sig);
 		edg_wll_SetError(ctx,ENOENT,"no matching group");
 		goto cleanup;
 	}
@@ -411,7 +414,7 @@ int edg_wll_StateRateServer(
 		}
 
 		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
-			"search %ld in %ld, %ld\n", *from, afrom, afrom+i);
+			"search %ld in %ld, %ld", *from, afrom, afrom+i);
 
 		if (*from >= afrom && *from < afrom+i) {
 			match += *from - afrom;
