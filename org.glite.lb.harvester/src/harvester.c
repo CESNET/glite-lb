@@ -937,6 +937,7 @@ static notif_t *db_search_notif_by_server(notif_t *notifs, int n, const char *se
 }
 
 
+#ifdef WITH_LBU_DB
 typedef struct {
 	char *lb;
 	char *jobid;
@@ -1085,6 +1086,7 @@ quit:
 	free(rtm_timestamp_str);
 	free(regtime_str);
 }
+#endif
 
 
 static int db_store_change(thread_t *t, notif_t *notif, __attribute((unused))int index, edg_wll_JobStat *stat) {
@@ -1217,7 +1219,7 @@ int rtm_summary(edg_wll_Context ctx, db_t *db) {
 				// report error jobids and skip the job (do nothing)
 				// TODO
 			}
-			for (k = 0; k < iquery; k++) glite_jobid_free(lbquery[k].value.j);
+			for (k = 0; k < iquery; k++) glite_jobid_free((glite_jobid_t)lbquery[k].value.j);
 
 			if (err == 0) {
 				for (k = 0; jobstates[k].state != EDG_WLL_JOB_UNDEF; k++) {
@@ -1239,7 +1241,7 @@ int rtm_summary(edg_wll_Context ctx, db_t *db) {
 			iquery++;
 			qr->attr = EDG_WLL_QUERY_ATTR_JOBID;
 			qr->op = EDG_WLL_QUERY_OP_EQUAL;
-			glite_jobid_parse(jobids[ijob], &qr->value.j);
+			glite_jobid_parse(jobids[ijob], (glite_jobid_t *)&qr->value.j);
 			free(jobids[ijob]); jobids[ijob] = NULL;
 			ijob++;
 		}
@@ -2270,8 +2272,8 @@ int config_load() {
 	FILE *f;
 	void *tmp;
 	int i, n;
-	int major, minor, sub, version;
 #ifdef WITH_LBU_DB
+	int major, minor, sub, version;
 	char *results[2];
 	char *result = NULL;
 	glite_lbu_Statement stmt = NULL;
