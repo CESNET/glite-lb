@@ -18,6 +18,8 @@ nothrflavour=gcc32
 -include Makefile.inc
 -include ../project/version.properties
 
+version=${module.version}
+
 CC=gcc
 
 VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples
@@ -43,10 +45,25 @@ OBJS:=maildir.o
 HDRS:=maildir.h
 LOBJS:=${OBJS:.o=.lo}
 
+# In order to use libtool versioning correcty, we must have:
+#
+# current = major + minor + offset
+# revision = patch
+# age = minor
+#
+# where offset is a sum of maximal released minor's of all previous major's
+# 
+
+# counted minors: n/a
+offset=0
+
+version_info:=-version-info ${shell \
+	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
+
 default all: compile doc
 
 libglite_lbu_maildir.la: ${LOBJS}
-	${LINK} -o $@ $< ${EXT_LIBS}
+	${LINK} ${version_info} -o $@ $< ${EXT_LIBS}
 
 compile: libglite_lbu_maildir.la
 

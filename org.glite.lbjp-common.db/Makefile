@@ -17,6 +17,8 @@ nothrflavour=gcc32
 -include Makefile.inc
 -include ../project/version.properties
 
+version=${module.version}
+
 CC=gcc
 
 VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples
@@ -67,6 +69,21 @@ HDRS:=db.h
 LOBJS:=${OBJS:.o=.lo}
 LTESTOBJS:=${TESTOBJS:.o=.lo}
 
+# In order to use libtool versioning correcty, we must have:
+#
+# current = major + minor + offset
+# revision = patch
+# age = minor
+#
+# where offset is a sum of maximal released minor's of all previous major's
+# 
+
+# counted minors: 1.0
+offset=0
+
+version_info:=-version-info ${shell \
+	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
+
 default all: compile doc
 
 check_soname:
@@ -84,10 +101,10 @@ check_soname:
 	fi
 
 libglite_lbu_db.la: check_soname ${LOBJS}
-	${LINK} -o $@ $+ ${EXT_LIBS}
+	${LINK} ${version_info} -o $@ $+ ${EXT_LIBS}
 
 libglite_lbu_dbtest.la: check_soname ${LTESTOBJS}
-	${LINK} -o $@ $+ ${EXT_LIBS}
+	${LINK} ${version_info} -o $@ $+ ${EXT_LIBS}
 
 dbtest.lo dbtest.o: db.c db.h
 	${COMPILE} -DGLITE_LBU_DEFAULT_RESULT_BUFFER_LENGTH=10 -c $< -o $@

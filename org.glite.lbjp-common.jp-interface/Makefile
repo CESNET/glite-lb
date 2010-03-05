@@ -18,14 +18,27 @@ gsoap_prefix=/software/gsoap-2.6
 CC=gcc
 
 -include Makefile.inc
+-include ../project/version.properties
 
+version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/project:${jpproject}
 
 DEBUG:=-g -O0 -W -Wno-sign-compare
 CFLAGS:=${DEBUG} -D_GNU_SOURCE -I. -I${top_srcdir}/interface -I${stagedir}/include
 
+# In order to use libtool versioning correcty, we must have:
+#
+# current = major + minor + offset
+# revision = patch
+# age = minor
+#
+# where offset is a sum of maximal released minor's of all previous major's
+# 
+
+# counted minors: n/a
 offset=0
+
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 

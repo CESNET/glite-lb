@@ -13,6 +13,8 @@ lbuprefix=lbu
 -include Makefile.inc
 -include ../project/version.properties
 
+version=${module.version}
+
 VPATH=${top_srcdir}/src:${top_srcdir}/test::${top_srcdir}/doc
 
 CC=gcc

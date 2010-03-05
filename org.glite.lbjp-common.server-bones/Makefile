@@ -12,6 +12,8 @@ CC=gcc
 -include Makefile.inc
 -include ../project/version.properties
 
+version=${module.version}
+
 VPATH=${top_srcdir}/src:${top_srcdir}/examples
 
 DEBUG:=-g -O0 -Wall
@@ -40,6 +42,21 @@ LOBJS:=${OBJS:.o=.lo}
 
 HDRS:=srvbones.h
 
+# In order to use libtool versioning correcty, we must have:
+#
+# current = major + minor + offset
+# revision = patch
+# age = minor
+#
+# where offset is a sum of maximal released minor's of all previous major's
+# 
+
+# counted minors: n/a
+offset=0
+
+version_info:=-version-info ${shell \
+	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
+
 default all: compile
 
 compile: ${STATICLIB} ${LTLIB} example
@@ -49,7 +66,7 @@ ${STATICLIB}: ${OBJS}
 	ranlib $@
 
 ${LTLIB}: ${LOBJS}
-	${LINK} -o $@ ${LOBJS} ${LOG4C_LIBS}
+	${LINK} ${version_info} -o $@ ${LOBJS} ${LOG4C_LIBS}
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
