@@ -312,7 +312,7 @@ BEGIN{
 	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
 	'lbjp-common.log' => [ qw// ],
 	'lbjp-common.maildir' => [ qw// ],
-	'lbjp-common.server-bones' => [ qw// ],
+	'lbjp-common.server-bones' => [ qw/log4c/ ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
