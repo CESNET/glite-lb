@@ -434,6 +434,8 @@
 	string LRMS_jobid
 	_optional_
 
+@flesh Transfer
+
 @type FileTransferRegister	register file transfer
 	string	src		Source of file transfer.
 	string	dest		Destination of file transfer.
@@ -445,9 +447,10 @@
         _code_  OK              The file was transfered successfully.
         _code_  FAIL            The file transfer failed (see reason)
 	string	reason		The reason of file transfer failure.
+	_optional_
 
 @type Sandbox		event for logging relationship between (compute) job and (file) transfer job
-	int	variant		Type of sandbox.
+	int	sandbox_type		Type of sandbox.
 	_code_	INPUT
 	_code_	OUTPUT
 	string	transfer_job	Jobid of transfer job (collection) containing set of file transfers (subjobs).

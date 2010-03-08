@@ -100,10 +100,10 @@ int processEvent_FileTransfer(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			break;
 		case EDG_WLL_EVENT_SANDBOX:
 			if (USABLE_DATA(res)) {
-				if (e->sandbox.variant == EDG_WLL_SANDBOX_INPUT)
+				if (e->sandbox.sandbox_type == EDG_WLL_SANDBOX_INPUT)
 					js->pub.ft_sandbox_type = EDG_WLL_STAT_INPUT;
 
-				if (e->sandbox.variant == EDG_WLL_SANDBOX_OUTPUT)
+				if (e->sandbox.sandbox_type == EDG_WLL_SANDBOX_OUTPUT)
 					js->pub.ft_sandbox_type = EDG_WLL_STAT_OUTPUT;
 
 				if (e->sandbox.compute_job) {

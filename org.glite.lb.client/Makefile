@@ -147,7 +147,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=${LB_PERF_TOOLS}
-EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c test_changed_jdl.c reg_sandbox_transfer.c done_failed_events.c
+EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c test_changed_jdl.c done_failed_events.c
 EXAMPLES:=${EXAMPLES_SRC:.c=}
 
 # TODO: migrate them here from branch_RC31_3
@@ -177,9 +177,9 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ifdef LB_STANDALONE
-compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent notify examples ${MAN_GZ} ${MAN8_GZ}
+compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${MAN8_GZ}
 else
-compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent notify examples ${MAN_GZ} ${MAN8_GZ}
+compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${MAN8_GZ}
 endif
 
 generate: ${GEN_HDRS}
@@ -207,6 +207,9 @@ logevent: logevent.o args.o
 
 notify: notify.o
 	${LINKXX} -o $@ notify.o ${PLUSLIB} ${EXT_LIB} 
+
+register_sandbox: %: %.o
+	${LINK} -o $@ $@.o ${LIB} ${EXT_LIB}
 
 ${TOOLS} ${EXAMPLES}: %: %.o
 	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
@@ -341,7 +344,7 @@ ifndef LB_STANDALONE
 #	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
 #       cp -r ${top_srcdir}/doc/api/{Makefile,api.tex,fig} ${PREFIX}/share/doc/${package}-${version}/api
 endif
-	for p in logevent notify; do \
+	for p in logevent notify register_sandbox; do \
 		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
 	done
 	for p in ${TOOLS} ; do \
@@ -358,13 +361,14 @@ endif
 	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${PREFIX}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${PREFIX}/sbin/glite-lb-export.sh"
 	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${PREFIX}/examples/glite-lb-notify.pl
+	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${PREFIX}/examples/glite-lb-sandbox_transfers.sh
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4/
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
-	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
+	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent  register_sandbox ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/

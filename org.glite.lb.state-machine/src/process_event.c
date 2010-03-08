@@ -952,12 +952,12 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			break;
 		case EDG_WLL_EVENT_SANDBOX:
 			if (USABLE_DATA(res, strict)) {
-				if ((e->sandbox.variant == EDG_WLL_SANDBOX_INPUT) && e->sandbox.transfer_job) {
+				if ((e->sandbox.sandbox_type == EDG_WLL_SANDBOX_INPUT) && e->sandbox.transfer_job) {
 					edg_wlc_JobIdFree(js->pub.isb_transfer);
 					edg_wlc_JobIdParse(e->sandbox.transfer_job,&js->pub.isb_transfer);
 				}
 
-				if ((e->sandbox.variant == EDG_WLL_SANDBOX_OUTPUT) && e->sandbox.transfer_job) {
+				if ((e->sandbox.sandbox_type == EDG_WLL_SANDBOX_OUTPUT) && e->sandbox.transfer_job) {
 					edg_wlc_JobIdFree(js->pub.osb_transfer);
 					edg_wlc_JobIdParse(e->sandbox.transfer_job,&js->pub.osb_transfer);
 				}
