@@ -18,13 +18,14 @@ voms_prefix=/opt/voms
 
 version=${module.version}
 
-CEXAMPLES:=ws_getversion ws_jobstat ws_joblog ws_lb4agu_GetActivityStatus
+CEXAMPLES:=ws_getversion ws_jobstat ws_joblog ws_lb4agu_GetActivityStatus ws_lb4agu_GetActivityInfo
 #TODO ws_query_ex 
 
 default all: ${CEXAMPLES}
 
 VPATH=${top_srcdir}/examples
 CC=gcc
+DEBUG:=-g -O0 -Wall
 CFLAGS=-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${globus_prefix}/include/${nothrflavour} \
