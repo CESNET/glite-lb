@@ -117,12 +117,11 @@ int main(int argc,char **argv)
 		edg_wll_JobStatCode single_code;
 		int statno, stdelims, sti;
 
-		
-
-		conditions = (edg_wll_QueryRec **)calloc(7,sizeof(edg_wll_QueryRec *));
+#define MAX_NEW_CONDS 7
+		conditions = (edg_wll_QueryRec **)calloc(MAX_NEW_CONDS + 1,sizeof(edg_wll_QueryRec *));
 		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 
-		while ((c = getopt_long(argc-1,argv+1,"j:o:v:n:s:a:t:f:cOS:",long_options,&option_index)) > 0) switch (c) {
+		while ((c = getopt_long(argc-1,argv+1,"j:o:v:n:s:a:t:f:cOS:",long_options,&option_index)) > 0) { switch (c) {
 			case 'j':
 				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
@@ -198,7 +197,7 @@ int main(int argc,char **argv)
 				for (sti = 0; sti < strlen(statelist); sti++) 
 					if (statelist[sti] == ',') stdelims++;
 				conditions[i] = (edg_wll_QueryRec *)calloc(stdelims+2,sizeof(edg_wll_QueryRec));
-				while(single = strtok(statelist, ",")) {
+				while((single = strtok(statelist, ","))) {
 					single_code = edg_wll_StringToStat(single);
 					if (single_code != -1) {
 						conditions[i][statno].attr = EDG_WLL_QUERY_ATTR_STATUS;
@@ -216,6 +215,10 @@ int main(int argc,char **argv)
 				break; 
 			default:
 				usage("new"); return EX_USAGE;
+			}
+			if (i > MAX_NEW_CONDS) {
+				usage("new"); return EX_USAGE;
+			}
 		}
 
 		if ( !edg_wll_NotifNew(ctx,
@@ -422,14 +425,16 @@ receive_err:
 		}
 
 		conditions = (edg_wll_QueryRec **)calloc(2,sizeof(edg_wll_QueryRec *));
-		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
-		conditions[1] = (edg_wll_QueryRec *)calloc(3, sizeof(edg_wll_QueryRec));
 	
+		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 		conditions[0][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
 		conditions[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
 		conditions[0][0].value.j = jid;
 
-		/*conditions[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+		conditions[1] = NULL;
+
+		/*conditions[1] = (edg_wll_QueryRec *)calloc(3, sizeof(edg_wll_QueryRec));
+		conditions[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
 		conditions[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
 		conditions[1][0].value.i = EDG_WLL_JOB_DONE;
 
