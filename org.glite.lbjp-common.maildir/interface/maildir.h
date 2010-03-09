@@ -1,6 +1,8 @@
 #ifndef GLITE_LBU_MAILDIR_H
 #define GLITE_LBU_MAILDIR_H
 
+#include <time.h>
+
 /*
  * Functions for reading and writing messages via
  * maildir protocol.

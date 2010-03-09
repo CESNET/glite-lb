@@ -42,7 +42,7 @@ done
 
 test \( -z "$BKSERVER_HOST" \) -a \( -z "$EDG_JOBID" \) && usage
 
-if [[ $0 =~ "cream_" ]]; then TYPE=-c; fi
+if echo "$0" | grep "cream_" >/dev/null; then TYPE=-c; fi
 
 if [ -z "$EDG_JOBID" ] 
 then

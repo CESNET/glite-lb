@@ -16,8 +16,8 @@ int edg_wll_SetErrorDB(edg_wll_Context ctx) {
 
 	if (ctx->dbctx) {
 		code = glite_lbu_DBError(ctx->dbctx, NULL, &ed);
-		if (code == EDEADLOCK) code = EDG_WLL_ERROR_DB_TRANS_DEADLOCK;
-		if (code == ERESTART) code = EDG_WLL_ERROR_DB_LOST_CONNECTION;
+		if (code == EDEADLK) code = EDG_WLL_ERROR_DB_TRANS_DEADLOCK;
+		if (code == ENOTCONN) code = EDG_WLL_ERROR_DB_LOST_CONNECTION;
 		edg_wll_SetError(ctx, code, ed);
 		free(ed);
 	} else {

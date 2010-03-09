@@ -418,7 +418,7 @@ int glite_lbu_QueryIndicesMysql(glite_lbu_DBContext ctx_gen, const char *table, 
 	size_t	i,j,ret;
 
 /* XXX: "show index from" columns. Matches at least MySQL 4.0.11 */
-	char	*sql, *showcol[12];
+	char	*sql, *showcol[13];
 	int	Key_name,Seq_in_index,Column_name,Sub_part;
 
 	char	**keys = NULL;
@@ -549,14 +549,14 @@ int glite_lbu_ExecSQLMysql(glite_lbu_DBContext ctx_gen, const char *cmd, glite_l
 				case CR_SERVER_LOST:
 				case CR_SERVER_GONE_ERROR:
 					if (ctx->in_transaction) {
-						ERR(ctx, ERESTART, mysql_module.mysql_error(ctx->mysql));
+						ERR(ctx, ENOTCONN, mysql_module.mysql_error(ctx->mysql));
 						return -1;
 					}
 					else if (retry_nr <= 0) 
 						do_reconnect = 1;
 					break;
 				case ER_LOCK_DEADLOCK:
-					ERR(ctx, EDEADLOCK, mysql_module.mysql_error(ctx->mysql));
+					ERR(ctx, EDEADLK, mysql_module.mysql_error(ctx->mysql));
 					return -1;
 					break;	
 				default:

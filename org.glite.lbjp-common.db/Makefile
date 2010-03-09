@@ -25,6 +25,12 @@ VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples
 
 DEBUG:=-g -O0 -W -Wall
 
+os=${shell uname}
+DL_LIBS:=
+ifeq (${os},Linux)
+  DL_LIBS:=-ldl
+endif
+
 MYSQL_SONAME:=$(shell ../project/get_soname.sh mysqlclient ${mysql-devel_prefix}/${libdir} ${mysql_prefix}/${libdir} ${mysql-devel_prefix}/lib ${mysql_prefix}/lib)
 PSQL_SONAME:=$(shell ../project/get_soname.sh pq ${postgresql_prefix}/${libdir} ${postgresql_prefix}/lib)
 
@@ -62,7 +68,7 @@ COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
-EXT_LIBS:=-lglite_lbu_trio -lpthread -ldl
+EXT_LIBS:=-lglite_lbu_trio -lpthread ${DL_LIBS}
 TESTOBJS:=${OBJS} dbtest.o
 OBJS:=${OBJS} db.o
 HDRS:=db.h

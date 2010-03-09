@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <errno.h>
 
+#if defined(FREEBSD) || defined(__FreeBSD__)
+#define TCP_CORK TCP_NOPUSH
+#endif
+
 #include "glite/lbu/log.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/timeouts.h"
@@ -26,6 +30,8 @@
 #endif
 
 #define DEFAULT_PIDFILE "/var/glite/glite-lb-logd.pid"
+
+typedef void (*logd_handler_t)(int);
 
 static const char rcsid[] = "@(#)$Id$";
 static int debug = 0;
@@ -93,7 +99,7 @@ usage(char *program_name) {
 		program_name,program_name);
 }
 
-static sighandler_t mysignal(int num,sighandler_t handler)
+static logd_handler_t mysignal(int num,logd_handler_t handler)
 {
 	struct sigaction	sa,osa;
 

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "glite/lbu/trio.h"

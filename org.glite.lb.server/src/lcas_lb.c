@@ -1,5 +1,10 @@
 #ident "$Header$"
 
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <glite/security/lcas/lcas_modules.h>
 
 static char *modname = "lcas_lb";

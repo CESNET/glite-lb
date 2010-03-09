@@ -7,10 +7,10 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
 #include <dlfcn.h>
-#include <malloc.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/stat.h>

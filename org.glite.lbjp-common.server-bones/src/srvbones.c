@@ -275,7 +275,7 @@ int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile,
 	} else {
 		pidfile = strdup(custom_pidfile);
 	}
-	setpgrp(); /* needs for signalling */
+	setpgid(0, 0); /* needs for signalling */
 	master = getpid();
 	fpid = fopen(pidfile,"r");
 	if ( fpid )

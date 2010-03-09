@@ -7,9 +7,11 @@
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/un.h>
 #include <sys/uio.h>
 #include <errno.h>
+#include <string.h>
 
 
 #include <cclassad.h>

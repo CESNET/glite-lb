@@ -1,6 +1,7 @@
 #ident "$Header$"
 
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/un.h>
 #include <time.h>
 #include <unistd.h>
@@ -20,6 +21,10 @@
 #include "prod_proto.h"
 #include "producer.h"
 #include "connection.h"
+
+#if defined(FREEBSD) || defined(__FreeBSD__) && !defined(TCP_CORK)
+#define TCP_CORK TCP_NOPUSH
+#endif
 
 static const char* socket_path="/tmp/lb_proxy_store.sock";
 

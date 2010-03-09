@@ -719,7 +719,7 @@ int register_subjobs_embryonic(edg_wll_Context ctx,const edg_wll_RegJobEvent *e)
 
 		/* save jobid-userid relation into jobs table */
 	        if ((err = store_job(ctx, subjobs[i], userid, proxy, server, 0, 0)))
-			if (edg_wll_Error(ctx,&et,&ed) == EDEADLOCK) goto err;
+			if (edg_wll_Error(ctx,&et,&ed) == EDEADLK) goto err;
 
 		/* interchange variable parts (jobids) in values */
 		/* there are only two occurences of subjob jobid */
