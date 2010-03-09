@@ -66,6 +66,7 @@ int main(int argc,char** argv)
 
 	in = soap_malloc(mydlo, sizeof(*in));
 	out = soap_malloc(mydlo, sizeof(*out));
+	in->id = soap_malloc(mydlo,sizeof(in->id[0]));
 	in->id[0] = soap_strdup(mydlo, jobid);
 	in->__sizeid = 1;
 
