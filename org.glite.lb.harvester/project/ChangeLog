@@ -15,3 +15,6 @@
 - Fixed purging
 - Fixed build issues
 
+1.0.4-1
+- Fixed 'nodb' build issues
+
