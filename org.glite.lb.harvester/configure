@@ -26,7 +26,7 @@ my $lbjp_tag = '';
 my $jp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
-my $libdir = 'lib';
+my $libdir = getlibdir();
 
 my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
 my %enable_nodes;
@@ -312,7 +312,7 @@ BEGIN{
 	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
 	'lbjp-common.log' => [ qw// ],
 	'lbjp-common.maildir' => [ qw// ],
-	'lbjp-common.server-bones' => [ qw// ],
+	'lbjp-common.server-bones' => [ qw/log4c/ ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
@@ -585,9 +585,35 @@ sub mode_etics {
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
-	my $buildroot = $topbuild{"$subsys.$module"} ? '' : "build.root = build\n";
+	my $buildroot = $topbuild{"$subsys.$module"} ? '' : "build.root = build";
 
 	my $confdir = $topbuild{"$subsys.$module"} ? '..' : '../..';
+
+	my $package_description = "";
+	my $package_summary = "";
+
+	if (-e "org.glite.$subsys.$module/project/package.description") {
+		open V, "org.glite.$subsys.$module/project/package.description";
+		$package_description = join ("", <V>);
+		close V;
+		chomp $package_description;
+		$package_description =~ s/\n/\\n/g; 
+		$package_description = "package.description = $package_description";
+	} 
+	else { 
+		print STDERR "package.description not found for $subsys.$module!\n"; }
+
+	if (-e "org.glite.$subsys.$module/project/package.summary") {
+		open V, "org.glite.$subsys.$module/project/package.summary";
+		$package_summary = join ("", <V>);
+		close V;
+		chomp $package_summary;
+		$package_summary =~ s/\n/\\n/g; 
+		$package_summary = "package.summary = $package_summary";
+	} 
+	else { 
+		print STDERR "package.summary not found for $subsys.$module!\n"; }
+
 
 	print STDERR "Writing $file\n";
 	print C qq{
@@ -629,6 +655,8 @@ checkstyle = None
 
 [Platform-default:Property]
 $buildroot
+$package_description
+$package_summary
 
 [Platform-default:DynamicDependency]
 
@@ -669,6 +697,55 @@ sub gsoap_version {
 	return $gsoap_version;
 }
 
+sub getlibdir {
+	if ( -e "/etc/debian_version") { # We are on Debian
+		$lib64="lib";
+		$lib32="lib32";	}
+	else { # Another distribution
+		$lib64="lib64";
+		$lib32="lib";	}
+        $libdir=$lib32;
+
+        open INP, "uname -s | "; # Check kernel name
+        $kname= <INP>;
+        chomp($kname);
+        close INP;
+
+        if ( $kname == "Linux") {
+                $arch = ("x86_64\npowerpc\nppc64\n");
+
+                open INP, "uname -p | "; # Check processor type
+                $procname= <INP>;
+                chomp($procname);
+                close INP;
+
+                if ($arch =~/^$procname\n/) {
+                        return ($lib64); }
+
+                open INP, "uname -m | "; # Check machine hardware
+                $machname= <INP>;
+                chomp($machname);
+                close INP;
+
+                if ($arch =~/^$machname\n/) {
+                        return ($lib64); }
+
+                # special cases (hyperlink lib64, Debian)
+                if (-l "/usr/lib64") {
+                        $libdir=$lib32; }
+
+                # if /usr/lib64 doesn't exist at all (AIX)
+                unless ( -e "/usr/lib64" ) {
+                        $libdir=$lib32; }
+        }
+
+        if ( $kname == "SunOS") {
+                if (-e "/usr/lib/64") {
+                $libdir="lib/64"; }
+        }
+
+        return $libdir;
+}
 
 sub usage {
 	my @ext = keys %extern_prefix;
