@@ -537,6 +537,7 @@ static char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_string(ret, stat->condor_reason);
 	if (ret) ret = enc_string(ret, stat->condor_error_desc);
 	if (ret) ret = enc_int(ret, stat->cream_state);
+	if (ret) ret = enc_string(ret, stat->cream_id);
 	if (ret) ret = enc_string(ret, stat->cream_owner);
 	if (ret) ret = enc_string(ret, stat->cream_endpoint);
 	if (ret) ret = enc_string(ret, stat->cream_jdl);
@@ -641,6 +642,7 @@ static edg_wll_JobStat* dec_JobStat(char *in, char **rest)
 	if (tmp_in != NULL) stat->condor_reason = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->condor_error_desc = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->cream_state = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->cream_id = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->cream_owner = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->cream_endpoint = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->cream_jdl = dec_string(tmp_in, &tmp_in);

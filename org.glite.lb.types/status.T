@@ -148,6 +148,7 @@ int	cream_state
 	_code_	DONE-FAILED
 	_code_	ABORTED
 
+string  cream_id
 string	cream_owner
 string	cream_endpoint
 string	cream_jdl

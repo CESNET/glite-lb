@@ -261,6 +261,7 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
 
 	chid = edg_wlc_JobIdUnparse(stat.jobId);
 
+	TR("CREAM ID", "%s", stat.cream_id);
 	TR("Status", "%s", (lbstat = edg_wll_StatToString(stat.state)));
 	free(lbstat);
 	TR("CREAM Status", "%s", (creamstat = edg_wll_CreamStatToString(stat.cream_state)));

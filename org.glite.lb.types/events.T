@@ -355,6 +355,11 @@
 
 @type CREAMPurge	Purge request (by user)
 
+@type CREAMAccepted          Accepting job (successful counterpart to Transfer).
+        string  local_jobid     New job id as assigned by the receiving component.
+        _optional_
+
+
 @type CREAMStore
 	int	command		Command to store
 	_code_	CMDSTART	Start registered job

@@ -73,6 +73,13 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			break;
 		case EDG_WLL_EVENT_CREAMPURGE:
 			// no state transition
+			break;
+		case EDG_WLL_EVENT_CREAMACCEPTED:
+			if (USABLE(res)){
+				free(js->pub.cream_id);
+				js->pub.cream_id = strdup(e->CREAMAccepted.local_jobid);
+			}
+			break;
 		case EDG_WLL_EVENT_CREAMSTORE:
 			if (USABLE(res)) {
 				switch (e->CREAMStore.command) {
@@ -107,14 +114,14 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 		case EDG_WLL_EVENT_CREAMCALL:
 			if (e->any.source == EDG_WLL_SOURCE_CREAM_EXECUTOR &&
 				e->CREAMCall.callee == EDG_WLL_SOURCE_LRMS &&
-				e->CREAMCall.command == EDG_WLL_CREAM_CMD_START &&
+				e->CREAMCall.command == EDG_WLL_CREAMCALL_CMDSTART &&
 				e->CREAMCall.result == EDG_WLL_CREAMCALL_OK)
 			{
 				if (USABLE(res)) {
 					// BLAH -> LRMS
 						js->pub.state = EDG_WLL_JOB_SCHEDULED;
 						js->pub.cream_state = EDG_WLL_STAT_IDLE;
-						if (e->CREAMStore.reason){
+						if (e->CREAMCall.reason){
 							free(js->pub.cream_reason);
 							js->pub.cream_reason = strdup(e->CREAMStore.reason);
 						}
@@ -122,6 +129,18 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 	
 				if (USABLE_DATA(res)) {
 					rep(js->pub.cream_reason, e->CREAMCall.reason);
+				}
+			}
+			if (e->CREAMCall.command == EDG_WLL_CREAMCALL_CMDCANCEL &&
+                                e->CREAMCall.result == EDG_WLL_CREAMCALL_OK)
+			{
+				if (USABLE(res)){
+					js->pub.cream_cancelling = 1;
+				}
+				if (e->CREAMCall.reason)
+				{
+					free(js->pub.cream_reason);
+					js->pub.cream_reason = strdup(e->CREAMCall.reason);
 				}
 			}
 			break;
