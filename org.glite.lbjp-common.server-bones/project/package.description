@@ -1,7 +1,0 @@
-Skeleton of multi-process network server.
-Implements a server listening on several ports, incoming requests are passed
-to slave processes, client connections are kept on specific slaves unless
-there is higher input load etc.
-The library provides callback handles on connection initialization, incoming
-request handling, etc. 
-
