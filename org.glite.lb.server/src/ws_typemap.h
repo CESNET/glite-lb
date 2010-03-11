@@ -68,6 +68,8 @@
 #define LRMS		lbt__eventSource__LRMS
 #define Application	lbt__eventSource__Application
 #define LBServer	lbt__eventSource__LBServer
+#define CREAMInterface	lbt__eventSource__CREAMInterface
+#define CREAMExecutor	lbt__eventSource__CREAMExecutor
 
 #endif
 

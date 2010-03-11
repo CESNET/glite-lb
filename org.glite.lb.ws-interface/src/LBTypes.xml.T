@@ -208,6 +208,8 @@
 			<val name="LRMS"/>
 			<val name="Application"/>
 			<val name="LBServer"/>
+			<val name="CREAMInterface"/>
+			<val name="CREAMExecutor"/>
 		</enum>
 
 		<struct name="stateEnterTimesItem">

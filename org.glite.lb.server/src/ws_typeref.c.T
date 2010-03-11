@@ -29,7 +29,7 @@
 #
 sub eventFieldAssign {
 	my ($indent, $src, $dst, $e, $f, $is_common) = @_;
-	my ($tn, $soap_en, $soap_fn, $native_en, $native_fn, $func_name, $source, $dest);
+	my ($tn, $soap_en, $soap_fn, $native_en, $native_fn, $soap_En, $soap_Fn, $func_name, $source, $dest);
 
 	$tn = $f->{type};
 	$native_en = lcfirst $e;
@@ -94,7 +94,7 @@ sub eventFieldAssign {
 
 sub eventFieldFree {
 	my ($indent, $dst, $e, $f) = @_;
-	my ($tn, $soap_fn, $dest);
+	my ($tn, $soap_en, $soap_fn, $dest);
 
 	$tn = $f->{type};
 	$soap_en = $e;
@@ -781,7 +781,7 @@ int edg_wll_UserJobsResToSoap(
 
 static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
 {
-	assert(EDG_WLL_SOURCE_LB_SERVER + 1 == EDG_WLL_SOURCE__LAST);
+	assert(EDG_WLL_SOURCE_CREAM_EXECUTOR + 1 == EDG_WLL_SOURCE__LAST);
 
 	switch ( in ) {
         case UserInterface: *out = EDG_WLL_SOURCE_USER_INTERFACE; break;
@@ -793,6 +793,8 @@ static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
         case LRMS: *out = EDG_WLL_SOURCE_LRMS; break;
         case Application: *out = EDG_WLL_SOURCE_APPLICATION; break;
         case LBServer: *out = EDG_WLL_SOURCE_LB_SERVER; break;
+        case CREAMInterface: *out = EDG_WLL_SOURCE_CREAM_INTERFACE; break;
+        case CREAMExecutor: *out = EDG_WLL_SOURCE_CREAM_EXECUTOR; break;
         default: assert(0); break;
         }
 }
@@ -823,7 +825,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 		my $f = selectField $event $_;
 
 		if ($f->{codes}) {
-			my ($fn, $enum_name, $enum_value_prefix, $func2C_name, $func2S_name);
+			my ($fn, $soap_fn, $upper_fn, $enum_name, $soap_enum_name, $enum_value_prefix, $func2C_name, $func2S_name);
 
 			$fn = ucfirst $f->{name};
 			$upper_fn = uc $f->{name};
@@ -850,7 +852,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 				gen "\tswitch(in) {\n";
 			}
 			foreach $code (@{$f->{codes}}) {
-				my ($enum_value, $soap_enum_value);
+				my ($enum_value, $soap_enum_value, $upper_cn);
 
 				$upper_cn = $code->{name};
 				$enum_value = "${enum_value_prefix}${upper_cn}";
@@ -882,7 +884,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 			}
 			gen "\tswitch(in) {\n";
 			foreach $code (@{$f->{codes}}) {
-				my ($enum_value, $soap_enum_value);
+				my ($enum_value, $soap_enum_value, $upper_cn);
 
 				$upper_cn = $code->{name};
 				$enum_value = "${enum_value_prefix}${upper_cn}";
@@ -905,7 +907,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 
 static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 {
-	assert(EDG_WLL_SOURCE_LB_SERVER + 1 == EDG_WLL_SOURCE__LAST);
+	assert(EDG_WLL_SOURCE_CREAM_EXECUTOR + 1 == EDG_WLL_SOURCE__LAST);
 
 	switch ( in ) {
 	        case EDG_WLL_SOURCE_USER_INTERFACE: *out = UserInterface; break;
@@ -917,6 +919,8 @@ static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 	        case EDG_WLL_SOURCE_LRMS: *out = LRMS; break;
         	case EDG_WLL_SOURCE_APPLICATION: *out = Application; break;
 		case EDG_WLL_SOURCE_LB_SERVER: *out = LBServer; break;
+		case EDG_WLL_SOURCE_CREAM_INTERFACE: *out = CREAMInterface; break;
+		case EDG_WLL_SOURCE_CREAM_EXECUTOR: *out = CREAMExecutor; break;
         	case EDG_WLL_SOURCE_NONE:
         	case EDG_WLL_SOURCE__LAST:
 		default:
