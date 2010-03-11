@@ -168,6 +168,8 @@
 	_optional_
 	string	seed		Seed for subjob id generation.
 	_optional_
+	string	wms_dn		DN of WMS handling the job
+	_optional_
 
 @type Chkpt		Application-specific checkpoint record.
 	string	tag		Application specific checkpoint tag.

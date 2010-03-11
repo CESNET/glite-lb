@@ -624,6 +624,7 @@ edg_wll_ErrorCode intJobStat_embryonic(
 	stat->pub.jobtype = EDG_WLL_STAT_SIMPLE;
 	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
 	stat->pub.lastUpdateTime = e->timestamp;
+	// TODO: update job ACL according to e->wms_dn
 
 err:
 	return edg_wll_Error(ctx,NULL,NULL);

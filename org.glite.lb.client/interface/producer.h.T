@@ -48,6 +48,7 @@ require '../src/uiwrap.T';
 
 /**
  * Formats a logging message and sends it asynchronously to local-logger
+ * (the connection is through GSS)
  * \brief generic asynchronous logging function
  * \param[in,out] context	context to work with,
  * \param[in] event		type of the event,
@@ -68,6 +69,7 @@ extern int edg_wll_LogEvent(
 
 /**
  * Formats a logging message and sends it synchronously to local-logger
+ * (the connection is through GSS)
  * \brief generic synchronous logging function
  * \param[in,out] context	context to work with,
  * \param[in] event		type of the event,
@@ -90,6 +92,7 @@ extern int edg_wll_LogEventSync(
 
 /**
  * Formats a logging message and sends it synchronously to L&B Proxy
+ * (the connection is through UNIX socket)
  * \brief generic synchronous logging function
  * \param[in,out] context	context to work with,
  * \param[in] event		type of the event,
@@ -168,13 +171,13 @@ extern int edg_wll_SetLoggingJobProxy(
 
 /**
  * Register job with L&B service.
- * Done via logging REGJOB event, may generate subjob id's and create
- * the parent-children associations.
- * Set the job as current for the context and initialize sequence code.
+ * Done via logging REGJOB event directly to LB server (the connection is asynchronous through GSS)
+ * - may generate subjob id's and create the parent-children associations,
+ * - set the job as current for the context and initialize sequence code,
+ * - partitionable jobs should set num_subjobs=0 initially, 
+ *   and re-register when the number of subjobs becomes known.
  *
- * Partitionable jobs should set num_subjobs=0 initially,
- * and re-register when number of subjobs becomes known.
- *
+ * \brief asynchronous job registration
  * \param[in,out] context 	context to work with
  * \param[in] job 		jobId
  * \param[in] type 		EDG_WLL_JOB_SIMPLE,  EDG_WLL_JOB_DAG, or EDG_WLL_JOB_PARTITIONABLE
@@ -188,7 +191,8 @@ extern int edg_wll_SetLoggingJobProxy(
 
 /* backward compatibility */
 #define EDG_WLL_JOB_SIMPLE	EDG_WLL_REGJOB_SIMPLE
- 
+#define edg_wll_RegisterJobAsync	edg_wll_RegisterJob 
+
 extern int edg_wll_RegisterJob(
 	edg_wll_Context		context,
 	glite_jobid_const_t	job,
@@ -217,12 +221,13 @@ extern int edg_wll_RegisterJobSync(
 
 /**
  * Register job with L&B Proxy service.
- * Done via logging REGJOB event, may generate subjob id's and create
- * the parent-children associations.
- * Set the job as current for the context and initialize sequence code.
- *
- * Partitionable jobs should set num_subjobs=0 initially,
- * and re-register when number of subjobs becomes known.
+ * Done via logging REGJOB event in parallel both 
+ * to LB proxy (through UNIX socket) and 
+ * to LB server (through GSS)
+ * - may generate subjob id's and create the parent-children associations,
+ * - set the job as current for the context and initialize sequence code,
+ * - partitionable jobs should set num_subjobs=0 initially,
+ *   and re-register when number of subjobs becomes known.
  *
  * \param[in,out] context	context to work with
  * \param[in] job		jobId
@@ -244,6 +249,36 @@ extern int edg_wll_RegisterJobProxy(
 	int			num_subjobs,
 	const char *		seed,
 	glite_jobid_t **	subjobs
+);
+
+/** 
+ * Job registration with an extra ACL specifying WMS to acces the job
+ * (the connection to LB server is asynchronous through GSS)
+ * \param[in] wms_dn 		DN of WMS handling the job
+ */
+
+extern int edg_wll_RegisterJobACL(
+	edg_wll_Context		context,
+	glite_jobid_const_t	job,
+	enum edg_wll_RegJobJobtype	type,
+	const char *		jdl,
+	const char *		ns,
+	int			num_subjobs,
+	const char *		seed,
+	glite_jobid_t **	subjobs,
+	char **			wms_dn
+);
+
+extern int edg_wll_RegisterJobProxyACL(
+	edg_wll_Context		context,
+	glite_jobid_const_t	job,
+	enum edg_wll_RegJobJobtype	type,
+	const char *		jdl,
+	const char *		ns,
+	int			num_subjobs,
+	const char *		seed,
+	glite_jobid_t **	subjobs,
+	char **			wms_dn
 );
 
 #ifdef LB_PERF

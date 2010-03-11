@@ -387,7 +387,7 @@ static int edg_wll_LogEventMaster(
 		if (ret) goto edg_wll_logeventmaster_end;
 	}
 
-	if (flags & (EDG_WLL_LOGFLAG_LOCAL|EDG_WLL_LOGFLAG_PROXY|EDG_WLL_LOGFLAG_DIRECT) == 0) {
+	if ((flags & (EDG_WLL_LOGFLAG_LOCAL|EDG_WLL_LOGFLAG_PROXY|EDG_WLL_LOGFLAG_DIRECT)) == 0) {
 		edg_wll_SetError(ctx,ret = EINVAL,"edg_wll_LogEventMaster(): no known flag specified");
 	}
 #endif
@@ -752,13 +752,14 @@ static int edg_wll_RegisterJobMaster(
 	glite_jobid_const_t	parent,
         int                     num_subjobs,
         const char *            seed,
-        edg_wlc_JobId **        subjobs)
+        edg_wlc_JobId **        subjobs,
+	char **			wms_dn)
 {
-	char	*seq,*type_s,*parent_s;
-	int	err = 0;
+	char	*seq,*type_s,*parent_s,*wms_dn_s;
+	int	err = 0,i;
 	struct timeval sync_to;
 
-	seq = type_s = parent_s = NULL;
+	seq = type_s = parent_s = wms_dn_s = NULL;
 
 	edg_wll_ResetError(ctx);
 	memcpy(&sync_to, &ctx->p_sync_timeout, sizeof sync_to);
@@ -783,6 +784,16 @@ static int edg_wll_RegisterJobMaster(
 		goto edg_wll_registerjobmaster_end;
 	}
 	parent_s = parent ? edg_wlc_JobIdUnparse(parent) : strdup("");
+	if (wms_dn) {
+		char *aux,*aux2;
+		aux2 = strdup("");
+		for (i=0; wms_dn[i]; i++) {
+			asprintf(&aux,"%s\n%s",aux2,wms_dn[i]);
+			free(aux2); aux2 = aux; aux = NULL;
+		}
+		wms_dn_s = strdup(aux2);
+		free(aux2); aux2 = NULL;
+	}
 
 	if ( ((flags & (EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_LOCAL)) == 
 				(EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_LOCAL)) ||
@@ -796,7 +807,7 @@ static int edg_wll_RegisterJobMaster(
 	if (edg_wll_SetLoggingJob(ctx,job,NULL,EDG_WLL_SEQ_NORMAL) == 0) {
 		err = edg_wll_LogEventMaster(ctx, flags,
 			EDG_WLL_EVENT_REGJOB, EDG_WLL_FORMAT_REGJOB,
-			(char *)jdl, ns, parent_s, type_s, num_subjobs, seed);
+			(char *)jdl, ns, parent_s, type_s, num_subjobs, seed, wms_dn_s);
 		if (err) {
 			edg_wll_UpdateError(ctx,0,"edg_wll_RegisterJobMaster(): unable to register with bkserver");
 			goto edg_wll_registerjobmaster_end;
@@ -830,7 +841,7 @@ int edg_wll_RegisterJobSync(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_SYNC,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_SYNC,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,NULL);
 }
 
 /**
@@ -849,19 +860,16 @@ int edg_wll_RegisterJob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_ASYNC,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_ASYNC,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,NULL);
 }
-
-#ifndef LB_SERIAL_REG
 
 /**
  *-----------------------------------------------------------------------
- * Register one job with L&B Proxy service 
+ * Asynchronous job registration with an extra ACL specifying WMS to acces the job 
  * \note simple wrapper around edg_wll_RegisterJobMaster()
- * this is new (!LB_SERIAL_REG) edg_wll_RegisterJobProxy 
  *-----------------------------------------------------------------------
  */
-int edg_wll_RegisterJobProxy(
+int edg_wll_RegisterJobACL(
         edg_wll_Context         ctx,
         glite_jobid_const_t     job,
         enum edg_wll_RegJobJobtype	type,
@@ -869,17 +877,41 @@ int edg_wll_RegisterJobProxy(
         const char *            ns,
         int                     num_subjobs,
         const char *            seed,
-        edg_wlc_JobId **        subjobs)
+        edg_wlc_JobId **        subjobs,
+	char **			wms_dn)
 {
-	char	*seq,*type_s;
+	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_ASYNC,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,wms_dn);
+}
+
+
+#ifndef LB_SERIAL_REG
+
+/**
+ *-----------------------------------------------------------------------
+ * Register job with L&B Proxy service.
+ *-----------------------------------------------------------------------
+ */
+
+int edg_wll_RegisterJobProxyMaster(
+        edg_wll_Context         ctx,
+        glite_jobid_const_t     job,
+        enum edg_wll_RegJobJobtype	type,
+        const char *            jdl,
+        const char *            ns,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs,
+	char **			wms_dn)
+{
+	char	*seq,*type_s,*wms_dn_s;
 	edg_wll_LogLine	logline = NULL;
-	int	ret = 0,n,count,fd;
+	int	ret = 0,n,count,fd,i;
 	struct timeval sync_to;
 	edg_wll_GssConnection   con_bkserver;
 	edg_wll_PlainConnection con_lbproxy;
 	fd_set fdset;
 
-	seq = type_s = NULL;
+	seq = type_s = wms_dn_s = NULL;
 
 	edg_wll_ResetError(ctx);
 	memcpy(&sync_to, &ctx->p_sync_timeout, sizeof sync_to);
@@ -893,6 +925,16 @@ int edg_wll_RegisterJobProxy(
 	if (!type_s) {
 		edg_wll_SetError(ctx,EINVAL,"edg_wll_RegisterJobProxy(): no jobtype specified");
 		goto edg_wll_registerjobproxy_end;
+	}
+	if (wms_dn) {
+		char *aux,*aux2;
+		aux2 = strdup("");
+		for (i=0; wms_dn[i]; i++) {
+			asprintf(&aux,"%s\n%s",aux2,wms_dn[i]);
+			free(aux2); aux2 = aux; aux = NULL;
+		}
+		wms_dn_s = strdup(aux2);
+		free(aux2); aux2 = NULL;
 	}
 	if ((type == EDG_WLL_REGJOB_DAG || 
 	     type == EDG_WLL_REGJOB_PARTITIONED ||
@@ -918,7 +960,7 @@ int edg_wll_RegisterJobProxy(
 	/* format the RegJob event message */
 	if (edg_wll_FormatLogLine(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_PROXY,
 		EDG_WLL_EVENT_REGJOB,&logline,
-		EDG_WLL_FORMAT_REGJOB,(char *)jdl,ns,"",type_s,num_subjobs,seed) != 0 ) {
+		EDG_WLL_FORMAT_REGJOB,(char *)jdl,ns,"",type_s,num_subjobs,seed,wms_dn_s) != 0 ) {
 		edg_wll_UpdateError(ctx,EINVAL,"edg_wll_RegisterJobProxy(): edg_wll_FormatLogLine() error");
 		goto edg_wll_registerjobproxy_end; 
 	}       
@@ -1022,6 +1064,46 @@ edg_wll_registerjobproxy_end:
 /**
  *-----------------------------------------------------------------------
  * Register one job with L&B Proxy service 
+ * \note simple wrapper around edg_wll_RegisterJobProxyMaster()
+ * this is new (!LB_SERIAL_REG) edg_wll_RegisterJobProxy 
+ *-----------------------------------------------------------------------
+ */
+int edg_wll_RegisterJobProxy(
+        edg_wll_Context         ctx,
+        glite_jobid_const_t     job,
+        enum edg_wll_RegJobJobtype	type,
+        const char *            jdl,
+        const char *            ns,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs)
+{
+        return edg_wll_RegisterJobProxyMaster(ctx,job,type,jdl,ns,num_subjobs,seed,subjobs,NULL);
+}
+
+/**
+ *-----------------------------------------------------------------------
+ * Proxy job registration with an extra ACL specifying WMS to acces the job 
+ * \note simple wrapper around edg_wll_RegisterJobProxyMaster()
+ *-----------------------------------------------------------------------
+ */
+int edg_wll_RegisterJobProxyACL(
+        edg_wll_Context         ctx,
+        glite_jobid_const_t     job,
+        enum edg_wll_RegJobJobtype      type,
+        const char *            jdl,
+        const char *            ns,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs,
+        char **                 wms_dn)
+{
+        return edg_wll_RegisterJobProxyMaster(ctx,job,type,jdl,ns,num_subjobs,seed,subjobs,wms_dn);
+}
+
+/**
+ *-----------------------------------------------------------------------
+ * Register one job with L&B Proxy service 
  * \note simple wrapper around edg_wll_RegisterJobMaster()
  * this is original edg_wll_RegisterJobProxy 
  *-----------------------------------------------------------------------
@@ -1037,7 +1119,7 @@ int edg_wll_RegisterJobProxyOld(
         edg_wlc_JobId **        subjobs)
 {
 	/* first register with bkserver and then with L&B Proxy */
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,NULL);
 }
 
 #else /* LB_SERIAL_REG */
@@ -1060,7 +1142,22 @@ int edg_wll_RegisterJobProxy(
         edg_wlc_JobId **        subjobs)
 {
 	/* first register with bkserver and then with L&B Proxy */
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,NULL);
+}
+
+int edg_wll_RegisterJobProxyACL(
+        edg_wll_Context         ctx,
+        glite_jobid_const_t     job,
+        enum edg_wll_RegJobJobtype	type,
+        const char *            jdl,
+        const char *            ns,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs,
+        char **                 wms_dn)
+{
+	/* first register with bkserver and then with L&B Proxy */
+	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,wms_dn);
 }
 
 #endif /* LB_SERIAL_REG */
@@ -1082,7 +1179,7 @@ int edg_wll_RegisterJobProxyOnly(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,NULL);
 }
 
 /**
@@ -1103,7 +1200,7 @@ int edg_wll_RegisterSubjob(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_LOCAL,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_LOCAL,job,type,jdl,ns,parent,num_subjobs,seed,subjobs,NULL);
 }
 
 /**
@@ -1124,7 +1221,7 @@ int edg_wll_RegisterSubjobProxy(
         const char *            seed,
         edg_wlc_JobId **        subjobs)
 {
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,parent,num_subjobs,seed,subjobs);
+	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,parent,num_subjobs,seed,subjobs,NULL);
 }
 
 /**
