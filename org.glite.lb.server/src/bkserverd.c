@@ -58,6 +58,7 @@ enum lb_srv_perf_sink sink_mode;
 #include "db_calls.h"
 #include "db_supp.h"
 #include "openserver.h"
+#include "authz_policy.h"
 
 #ifdef GLITE_LB_SERVER_WITH_WS
 #  if GSOAP_VERSION < 20700
@@ -166,6 +167,8 @@ static int		con_queue = CON_QUEUE;
 static char             host[300];
 static char *           port;
 static time_t		rss_time = 60*60;
+static char *		policy_file = NULL;
+struct _edg_wll_authz_policy	authz_policy = { NULL, 0};
 
 
 
@@ -215,10 +218,11 @@ static struct option opts[] = {
 	{"proxy-il-fprefix",	1,	NULL,	'Z'},
 	{"proxy-purge",	0,	NULL,	'G'},
 	{"rss-time", 	1,	NULL,	'I'},
+	{"policy",	1,	NULL,	'l'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:GI:"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:GI:l:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -275,7 +279,8 @@ static void usage(char *me)
 		"\t-W,--proxy-il-sock\t socket to send events to\n"
 		"\t-Z,--proxy-il-fprefix\t file prefix for events\n"
 		"\t-G,--proxy-purge\t enable automatic purge on proxy service (disabled by default)\n"
-		"\t-I,--rss-time age\t (in seconds) of job states published via RSS\n"
+		"\t-I,--rss-time\t age (in seconds) of job states published via RSS\n"
+		"\t-l,--policy\tauthorization policy file\n"
 
 	,me);
 }
@@ -483,6 +488,8 @@ int main(int argc, char *argv[])
 			  break;
 		case 'I': rss_time = atol(optarg);
 			  break;
+		case 'l': policy_file = strdup(optarg);
+			  break;
 		case '?': usage(name); return 1;
 	}
 
@@ -532,6 +539,15 @@ int main(int argc, char *argv[])
 	if (!fpid) { perror(pidfile); return 1; }
 	if (fprintf(fpid, "%d", getpid()) <= 0) { perror(pidfile); return 1; }
 	if (fclose(fpid) != 0) { perror(pidfile); return 1; }
+
+	if (policy_file && parse_server_policy(ctx, policy_file, &authz_policy)) {
+		char *et, *ed;
+
+		edg_wll_Error(ctx,&et,&ed);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Cannot load server policy: %s: %s\n", et, ed);
+		return 1;
+	}
+
 
 	if (mode & SERVICE_SERVER) {
 		if (check_mkdir(dumpStorage)){
@@ -1004,6 +1020,14 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->hardJobsLimit = hardJobsLimit;
 	ctx->hardEventsLimit = hardEventsLimit;
 	if ( noAuth ) ctx->noAuth = 1;
+	if ( authz_policy.num ) {
+		int i;
+		for (i=0; i < authz_policy.num; i++)
+			edg_wll_add_authz_rule(ctx, &ctx->authz_policy,
+				(authz_policy.rules[i]).action,
+				(authz_policy.rules[i]).attr_id,
+				(authz_policy.rules[i]).attr_value);
+	}
 	ctx->rgma_export = rgma_export;
 	memcpy(ctx->purge_timeout, purge_timeout, sizeof(ctx->purge_timeout));
 

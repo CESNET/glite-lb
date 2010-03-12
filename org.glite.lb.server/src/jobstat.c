@@ -24,6 +24,7 @@
 #include "stats.h"
 #include "db_supp.h"
 #include "db_calls.h"
+#include "authz_policy.h"
 
 #define DAG_ENABLE	1
 
@@ -71,6 +72,26 @@ static char* matched_substr(char *in, regmatch_t match)
 	return s;
 }
 
+static int
+check_jobstat_authz(edg_wll_Context ctx,
+	char *owner,
+	edg_wll_Acl acl,
+	int *flags)
+{
+	*flags = 0;
+	if (ctx->noAuth)
+		return 1;
+	if (ctx->peerName && edg_wll_gss_equal_subj(ctx->peerName, owner))
+		return 1;
+	if (acl && edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ) == 0)
+		return 1;
+	edg_wll_ResetError(ctx);
+	if (check_authz_policy(ctx, &ctx->authz_policy, READ_RTM)) {
+		*flags |= READ_RTM;
+		return 1;
+	}
+	return 0;
+}
 
 int edg_wll_JobStatusServer(
 	edg_wll_Context	ctx,
@@ -95,6 +116,7 @@ int edg_wll_JobStatusServer(
 	char *out[1], *out_stat[3];
 	glite_lbu_Statement sh = NULL;
 	int num_sub, num_f, i, ii;
+	int authz_flags = 0;
 
 
 	edg_wll_ResetError(ctx);
@@ -125,19 +147,11 @@ int edg_wll_JobStatusServer(
 		
 		if (edg_wll_GetACL(ctx, job, &acl)) goto rollback;
 
-		/* authorization check */
-		if ( !(ctx->noAuth) &&
-		    (!(ctx->peerName) ||  !edg_wll_gss_equal_subj(ctx->peerName, stat->owner))) {
-		      if ((acl == NULL) || edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ)) {
-			 if (acl) {
-				goto rollback;
-			 } else {
-				edg_wll_SetError(ctx,EPERM, "not owner, no ACL is set");
-				goto rollback;
-			 }
-		      }
+		if (check_jobstat_authz(ctx, stat->owner, acl, &authz_flags) == 0) {
+			edg_wll_SetError(ctx, EPERM, "not owner");
+			goto rollback;
 		}
-
+			
 		if (acl) {
 			stat->acl = strdup(acl->string);
 			edg_wll_FreeAcl(acl);
@@ -379,6 +393,18 @@ rollback:
 
 	free(string_jobid);
 	free(md5_jobid);
+
+	if (authz_flags && authz_flags & READ_RTM) {
+		edg_wll_JobStat new_stat;
+
+		memset(&new_stat, 0, sizeof(new_stat));
+		new_stat.state = stat->state;
+		/* XXX save anything else */
+
+		edg_wll_FreeStatus(stat);
+		memset(stat, 0, sizeof(*stat));
+		edg_wll_CpyStatus(&new_stat, stat);
+	}
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
