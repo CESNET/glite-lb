@@ -82,12 +82,6 @@ Send the messages to interlogger through the UNIX socket
 The value has to be same as used in the cooperating glite-lb-interlogd.
 
 .TP
-.BI \-i " FILE" "\fR,\fP --pidfile " FILE
-Store pid into 
-.I FILE\fR.\fP
-Defaults to /var/glite/glite-lb-logd.pid.
-
-.TP
 .B "-V\fR,\fP --version"
 Print version and exit.
 
@@ -121,7 +115,7 @@ Dangerous, for debugging only! Don't use at all.
 Default name of local socket.
 
 .TP
-.I /var/glite/log/dglogd.log*
+.I /tmp/dglogd.log*
 Default location of the event storage files.
 .TP
 No configuration files needed.

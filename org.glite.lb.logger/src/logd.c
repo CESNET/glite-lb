@@ -13,7 +13,6 @@
 #include <unistd.h> 
 #include <string.h>
 #include <getopt.h>
-#include <assert.h>
 #include <errno.h>
 
 #include "glite/lb/context-int.h"
@@ -24,14 +23,11 @@
 #include "glite/lb/lb_perftest.h"
 #endif
 
-#define DEFAULT_PIDFILE "/var/glite/glite-lb-logd.pid"
-
 static const char rcsid[] = "@(#)$Id$";
 static int verbose = 0;
 static int debug = 0;
 static int port = EDG_WLL_LOG_PORT_DEFAULT;
 static char *prefix = EDG_WLL_LOG_PREFIX_DEFAULT;
-static char *pidfile = DEFAULT_PIDFILE;
 static char *cert_file = NULL;
 static char *key_file = NULL;
 static char *CAcert_dir = NULL;
@@ -55,7 +51,6 @@ static struct option const long_options[] = {
 	{ "cert", required_argument, 0, 'c' },
 	{ "key", required_argument, 0, 'k' },
 	{ "CAdir", required_argument, 0, 'C' },
-	{ "pidfile",required_argument, 0, 'i' },
 	{ "socket",required_argument, 0, 's' },
 	{ "noAuth", no_argument, 0, 'x' },
 	{ "noIPC", no_argument, 0, 'y' },
@@ -88,7 +83,6 @@ usage(char *program_name) {
 		"-k, --key  <file>          location of server private key\n"
 		"-C, --CAdir <dir>          directory containing CA certificates\n"
 		"-s, --socket <dir>         interlogger's socket to send messages to\n"
-		"-i, --pidfile <file>       pid file\n"
 		"--noAuth                   do not check caller's identity\n"
 		"--noIPC                    do not send messages to inter-logger\n"
 		"--noParse                  do not parse messages for correctness\n",
@@ -139,7 +133,6 @@ void handle_signal(int num) {
 				close(confirm_sock);
 				unlink(confirm_sock_name);
 			}
-			unlink(pidfile);
 			exit(1);
 			break;
 		default: break;
@@ -276,7 +269,6 @@ int main(int argc, char *argv[])
    int ret;
    int childpid;
    int opt;
-   FILE *pidf;
 
    int listener_fd;
    int client_fd;
@@ -307,7 +299,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	"k:" /* key */
 	"C:" /* CA dir */
 	"s:" /* socket */
-	"i:" /* pidfile */
 	"x"  /* noAuth */
 	"y"  /* noIPC */
 	"z",  /* noParse */
@@ -323,7 +314,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 		case 'k': key_file = optarg; break;
 		case 'C': CAcert_dir = optarg; break;
 		case 's': socket_path = optarg; break;
-		case 'i': pidfile = optarg; break;
 		case 'x': noAuth = 1; break;
 		case 'y': noIPC = 1; break;
 		case 'z': noParse = 1; break;
@@ -407,14 +397,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    client_addr_len = sizeof(client_addr);
    bzero((char *) &client_addr, client_addr_len);
 
-/* just try it before deamonizing to be able to complain aloud */
-  if (!(pidf = fopen(pidfile,"w"))) {
-        perror(pidfile);
-        exit(-1);
-  }
-  fclose(pidf);
-
-
    /* daemonize */
    if (debug) {
 	edg_wll_ll_log(LOG_INFO,"Running as daemon... [no]\n");
@@ -426,10 +408,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 		exit(1);
 	}
    }
-
-  pidf = fopen(pidfile,"w"); assert(pidf); /* XXX */
-  fprintf(pidf,"%d\n",getpid());
-  fclose(pidf);
 
    /*
     * Main loop

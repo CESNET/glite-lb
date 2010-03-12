@@ -12,8 +12,7 @@ default: compile
 compile: at3
 
 at3: at3.in
-	#XXX: sed "s?%PREFIX%?${stagedir}?" at3.in >$@
-	cp at3.in $@
+	sed "s?%PREFIX%?${stagedir}?" at3.in >$@
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}

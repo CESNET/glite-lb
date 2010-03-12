@@ -36,10 +36,7 @@ INSTALL:=libtool --mode=install install
 
 GSOAP_FILES_PREFIX:= bk_ws_
 dotless_gsoap_ver:=${shell echo ${gsoap_default_version} | tr -d . }
-ifeq ($(shell test -f ${stagedir}/lib/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
-	langflavour:=_c
-endif
-GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o
 # ws_typeref.o
@@ -79,6 +76,6 @@ LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 
 soap_version.h:
 	${gsoap_bin_prefix}/soapcpp2 /dev/null 
-	perl -ne '$$. == 2 && /.*([0-9]+)\.([0-9]+)\.([0-9]+)([a-z]?).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n#define GSOAP_VERSION_LETTER '\''".($$4?$$4:"\\0")."'\''\n",$$1,$$2,$$3' soapH.h >$@
+	perl -ne '$$. == 2 && /.*([0-9]+)\.([0-9]+)\.([0-9]+)([a-z]).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n#define GSOAP_VERSION_LETTER '\''$$4'\''\n",$$1,$$2,$$3' soapH.h >$@
 	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
 
