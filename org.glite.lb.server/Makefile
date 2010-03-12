@@ -97,7 +97,7 @@ else
 	SRVBONES_LIB:= -L${stagedir}/lib -lglite_lbu_server_bones
 	LB_COMMON_LIB:=-L${stagedir}/lib -lglite_lb_common_${nothrflavour}
 	LB_UTILS_DB_LIB:=-L${stagedir}/lib -lglite_lbu_db
-	LDFLAGS:= -L${stagedir}/lib
+	LDFLAGS:= -L${stagedir}/lib -L${stagedir}/${libdir}
 endif
 
 # LB_MACHINE_LIB:=${stagedir}/lib/libglite_lb_statemachine.a
@@ -140,7 +140,6 @@ ifeq (${nothrflavour},gcc32dbg)
 endif
 VOMS_LIBS:=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
 LCAS_LIBS:=-L${lcas_prefix}/${libdir} -llcas
-LOG4C_LIBS:=-L${log4c_prefix}/lib -llog4c
 
 #EXT_LIBS:= \
 #	${expatlib} -lexpat \
@@ -163,10 +162,9 @@ EXT_LIBS:=  \
 	${CLASSADS_LIBS} \
 	${CARES_LIBS} \
 	${LCAS_LIBS} \
-	${VOMS_LIBS} \
-	${LOG4C_LIBS} 
+	${VOMS_LIBS}
 
-COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio -lglite_lbu_maildir
+COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio -lglite_lbu_maildir -lglite_lbu_log
 
 BKSERVER_BASE_OBJS:= \
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
@@ -180,10 +178,10 @@ BKSERVER_BASE_OBJS:= \
 gsoap_version ?= ${gsoap_default_version}
 
 dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
-ifeq ($(shell test -f ${stagedir}/lib/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
+ifeq ($(shell test -f ${stagedir}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
 	langflavour:=_c
 endif
-GSOAP_LIB:=-L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_OBJS:= \
@@ -199,7 +197,8 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 		${GSOAP_LIB} \
 		${EXT_LIBS} \
 		${classadslib} \
-		-lglite_lbu_maildir
+		-lglite_lbu_maildir \
+		-lglite_lbu_log
 else
 	BKSERVER_OBJS:= ${BKSERVER_BASE_OBJS}
 		
@@ -211,7 +210,8 @@ else
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS} \
 		${classadslib} \
-		-lglite_lbu_maildir
+		-lglite_lbu_maildir \
+		-lglite_lbu_log
 endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
@@ -312,7 +312,7 @@ query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o ind
 
 test_query_events: ${query_events_objs}
 	${LINKXX} -o $@ ${query_events_objs} \
-	${TEST_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib} ${LOG4C_LIBS}
+	${TEST_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib} -lglite_lbu_log
 
 test.soapconv: test_soap_conv
 	./test_soap_conv

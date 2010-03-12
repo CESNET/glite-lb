@@ -64,7 +64,7 @@ INSTALL:=libtool --mode=install install
 
 COMMON_LIB:=-lglite_lb_common
 
-EXT_LIB:=-lglite_lbu_trio -L${log4c_prefix}/lib -llog4c
+EXT_LIB:=-lglite_lbu_trio -lglite_lbu_log
 
 GLITE_GSS_LIB:=-lglite_security_gss
 

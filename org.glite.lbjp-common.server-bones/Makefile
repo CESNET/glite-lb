@@ -22,7 +22,7 @@ CFLAGS:= ${DEBUG} \
 	-I${stagedir}/include \
 	-I${log4c_prefix}/include \
 	-D_GNU_SOURCE 
-LDFLAGS:=
+LDFLAGS:=-L${stagedir}/${libdir}
 
 ifdef LB_PROF
 	CFLAGS:= ${CFLAGS} -pg -g
@@ -30,10 +30,9 @@ ifdef LB_PROF
 endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} ${LOG4C_LIBS}
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
-LOG4C_LIBS:=-L${log4c_prefix}/lib -llog4c
 STATICLIB:=libglite_lbu_server_bones.a
 LTLIB:=libglite_lbu_server_bones.la
 
@@ -66,7 +65,7 @@ ${STATICLIB}: ${OBJS}
 	ranlib $@
 
 ${LTLIB}: ${LOBJS}
-	${LINK} ${version_info} -o $@ ${LOBJS} ${LOG4C_LIBS}
+	${LINK} ${version_info} -o $@ ${LOBJS} -lglite_lbu_log
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
@@ -86,9 +85,9 @@ doc:
 
 install:
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
-	mkdir -p ${PREFIX}/lib
-	${INSTALL} -m 644 ${LTLIB} ${PREFIX}/lib
-	${INSTALL} -m 644 ${STATICLIB} ${PREFIX}/lib ; \
+	mkdir -p ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${LTLIB} ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${STATICLIB} ${PREFIX}/${libdir} ; \
 	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 
 clean:
