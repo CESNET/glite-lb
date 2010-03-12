@@ -136,7 +136,7 @@ string	condor_error_desc	Glued error descriptions from error events
 
 _pad_	25
 
-int	cream_state
+int	cream_state	CREAM job state
 	_null_	-1
 	_code_	REGISTERED
 	_code_	PENDING
@@ -148,19 +148,20 @@ int	cream_state
 	_code_	DONE-FAILED
 	_code_	ABORTED
 
-string  cream_id
-string	cream_owner
-string	cream_endpoint
-string	cream_jdl
-string	cream_reason
-string  cream_failure_reason
-string	cream_lrms_id
-string	cream_node
-int	cream_done_code		Uses done_code enum
+string  cream_id		CREAM local job id
+string	cream_owner		Job owner
+string	cream_endpoint		Address of the CREAM service
+string	cream_jdl		JDL passed to the CREAM
+string	cream_reason		Reason of the state or command
+string  cream_failure_reason 	Reason of any failure
+string	cream_lrms_id		LRMS local id
+string	cream_node		Worker node where the job is executed
+int	cream_done_code		Job done code, uses done_code enum
 	_null_	-1
-int	cream_exit_code
-bool	cream_cancelling
-int	cream_cpu_time
+int	cream_exit_code		Job exit code
+	_null_ -1
+bool	cream_cancelling 	Cancellation request in process
+int	cream_cpu_time		Consumed CPU time
 int	cream_jw_status		Users jw_status enum
 
 _pad_	30
