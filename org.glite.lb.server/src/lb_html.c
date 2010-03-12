@@ -127,10 +127,10 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 	return 0;
 }
 
-#define TR(name,type,field) \
+#define TR(name,type,field,null) \
 { \
 	int l; \
-	if (field){ \
+	if (field != null){ \
 		l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
 			"<td>" type "</td></tr>", (field)); \
 	} \
@@ -151,9 +151,9 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 	flags = edg_wll_stat_flags_to_string(ni->flags);
 	printf("flags %d - %s", ni->flags, flags);
 
-	TR("Destination", "%s", ni->destination);
-	TR("Valid until", "%s", ni->valid);
-	TR("Flags", "%s", flags);
+	TR("Destination", "%s", ni->destination, NULL);
+	TR("Valid until", "%s", ni->valid, NULL);
+	TR("Flags", "%s", flags, NULL);
         free(flags);
 
 	if (! edg_wll_Condition_Dump(ni, &cond, 0)){
@@ -190,36 +190,36 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	
         chid = edg_wlc_JobIdUnparse(stat.jobId);
 
-	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)));
+	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)), NULL);
 	free(chstat);
-	TR("Owner","%s",stat.owner);
-	TR("Condor Id","%s",stat.condorId);
-	TR("Globus Id","%s",stat.globusId);
-	TR("Local Id","%s",stat.localId);
-	TR("Reason","%s",stat.reason);
+	TR("Owner","%s",stat.owner, NULL);
+	TR("Condor Id","%s",stat.condorId, NULL);
+	TR("Globus Id","%s",stat.globusId, NULL);
+	TR("Local Id","%s",stat.localId, NULL);
+	TR("Reason","%s",stat.reason, NULL);
 	if ( (stat.stateEnterTime.tv_sec) || (stat.stateEnterTime.tv_usec) ) {
 		time_t  time = stat.stateEnterTime.tv_sec;
-		TR("State entered","%s",ctime(&time));
+		TR("State entered","%s",ctime(&time), NULL);
 	}
 	else
-		TR("State entered", "%s", NULL);
+		TR("State entered", "%s", NULL, NULL);
         if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
 		time_t  time = stat.lastUpdateTime.tv_sec;
-		TR("Last update","%s",ctime(&time));
+		TR("Last update","%s",ctime(&time), NULL);
 	}
 	else
-		TR("Last update", "%s", NULL);
-	TR("Expect update","%s",stat.expectUpdate ? "YES" : "NO");
-	TR("Expect update from","%s",stat.expectFrom);
-	TR("Location","%s",stat.location);
-	TR("Destination","%s",stat.destination);
-	TR("Cancelling","%s",stat.cancelling>0 ? "YES" : "NO");
-	TR("Cancel reason","%s",stat.cancelReason);
-	TR("CPU time","%d",stat.cpuTime);
+		TR("Last update", "%s", NULL, NULL);
+	TR("Expect update","%s",stat.expectUpdate ? "YES" : "NO", NULL);
+	TR("Expect update from","%s",stat.expectFrom, NULL);
+	TR("Location","%s",stat.location, NULL);
+	TR("Destination","%s",stat.destination, NULL);
+	TR("Cancelling","%s",stat.cancelling>0 ? "YES" : "NO", NULL);
+	TR("Cancel reason","%s",stat.cancelReason, NULL);
+	TR("CPU time","%d",stat.cpuTime, 0);
 
 	
-	TR("Done code","%d",stat.done_code);
-	TR("Exit code","%d",stat.exit_code);
+	TR("Done code","%d",stat.done_code, -1);
+	TR("Exit code","%d",stat.exit_code, -1);
 
 	if (stat.jdl){
 		char *jdl_unp;
@@ -261,37 +261,37 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
 
 	chid = edg_wlc_JobIdUnparse(stat.jobId);
 
-	TR("CREAM ID", "%s", stat.cream_id);
-	TR("Status", "%s", (lbstat = edg_wll_StatToString(stat.state)));
+	TR("CREAM ID", "%s", stat.cream_id, NULL);
+	TR("Status", "%s", (lbstat = edg_wll_StatToString(stat.state)), NULL);
 	free(lbstat);
-	TR("CREAM Status", "%s", (creamstat = edg_wll_CreamStatToString(stat.cream_state)));
+	TR("CREAM Status", "%s", (creamstat = edg_wll_CreamStatToString(stat.cream_state)), NULL);
 	free(creamstat);
-	TR("Owner", "%s", stat.cream_owner);
-	TR("Endpoint", "%s", stat.cream_endpoint);
-	TR("Worker node", "%s", stat.cream_node);
-	TR("Reason", "%s", stat.cream_reason);
-	TR("Failure reason", "%s", stat.cream_failure_reason);
+	TR("Owner", "%s", stat.cream_owner, NULL);
+	TR("Endpoint", "%s", stat.cream_endpoint, NULL);
+	TR("Worker node", "%s", stat.cream_node, NULL);
+	TR("Reason", "%s", stat.cream_reason, NULL);
+	TR("Failure reason", "%s", stat.cream_failure_reason, NULL);
 	
 	if ( (stat.stateEnterTime.tv_sec) || (stat.stateEnterTime.tv_usec) ) {
                 time_t  time = stat.stateEnterTime.tv_sec;
-                TR("State entered","%s",ctime(&time));
+                TR("State entered","%s",ctime(&time), NULL);
         }
         else
-                TR("State entered", "%s", NULL);
+                TR("State entered", "%s", NULL, NULL);
         if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
                 time_t  time = stat.lastUpdateTime.tv_sec;
-                TR("Last update","%s",ctime(&time));
+                TR("Last update","%s",ctime(&time), NULL);
         }
         else
-                TR("Last update", "%s", NULL);
+                TR("Last update", "%s", NULL, NULL);
 
 
-	TR("LRMS id", "%s", stat.cream_lrms_id);
-	TR("Node", "%s", stat.cream_node);
-	TR("Cancelling", "%s", stat.cream_cancelling > 0 ? "YES" : "NO");
-	TR("CPU time", "%d", stat.cream_cpu_time);
-	TR("Done code", "%d", stat.cream_done_code);
-        TR("Exit code", "%d", stat.cream_exit_code);
+	TR("LRMS id", "%s", stat.cream_lrms_id, NULL);
+	TR("Node", "%s", stat.cream_node, NULL);
+	TR("Cancelling", "%s", stat.cream_cancelling > 0 ? "YES" : "NO", NULL);
+	TR("CPU time", "%d", stat.cream_cpu_time, 0);
+	TR("Done code", "%d", stat.cream_done_code, -1);
+        TR("Exit code", "%d", stat.cream_exit_code, -1);
 
 	/*
                 cream_jw_status
