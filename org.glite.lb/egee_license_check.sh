@@ -119,10 +119,10 @@ for srcfile in $filelist
 do
 	check_file $srcfile
 	checkresult=$?
+	let TOTALFOUND=$TOTALFOUND+1		
 
 	if [ "$checkresult" -gt "0" ]; then
 
-		let TOTALFOUND=$TOTALFOUND+1		
 
 		lineno=`grep -n -E "\$H[e]ader: /cvs" $srcfile | sed 's/:.*$//'`
 		if [ "$lineno" == "" ]; then
@@ -160,9 +160,9 @@ for srcfile in $filelist
 do
 	check_file $srcfile
 	checkresult=$?
+	let TOTALFOUND=$TOTALFOUND+1
 
 	if [ "$checkresult" -gt "0" ]; then
-		let TOTALFOUND=$TOTALFOUND+1
 
 		lineno=`grep -n -E "\$H[e]ader: /cvs" $srcfile | sed 's/:.*$//'`
 		shlineno=`head -n 1 $srcfile | grep -n '^#! */' | sed 's/:.*$//'`
@@ -192,6 +192,8 @@ do
 		fi
 		printf "$prefix\n" >> $TMPDIR/egee_license.$$.swp
 		tail -n +$nextlineno $srcfile >> $TMPDIR/egee_license.$$.swp
+
+		cp -f $TMPDIR/egee_license.$$.swp $srcfile
 	else
 		printf "$srcfile $checkresult [OK]\n"
 	fi
@@ -230,9 +232,6 @@ See http://www.eu-egee.org/partners for details on the copyright holders.'
 stripped_copyright=`printf "$COPYRIGHT" | sed --posix --regexp-extended -e 's/[[:digit:]]{4}( ?[,-] ?[0-9]{4})*//' | tr -d '[[:space:]]'`
 stripped_license=`printf "$LICENSE" | tr -d '[[:space:]]'`
 
-# XXX: for testing. May be removed later:
-rm $TMPDIR/egee*swp
-
 #ANSI C files
 echo Processing ANSI C files
 fix_c_style_sources "*.[ch]"
@@ -259,7 +258,7 @@ fix_sh_style_sources "*.sh" '#'
 
 #TeX files
 echo Processing TeX files
-fix_sh_style_sources "*.tex" '%'
+fix_sh_style_sources "*.tex" '%%'
 
 #Perl files
 echo Processing Perl files
