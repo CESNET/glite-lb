@@ -1086,6 +1086,7 @@ void destroy_intJobStat(intJobStat *p)
 void init_intJobStat(intJobStat *p)
 {
 	memset(p, 0, sizeof(intJobStat));
+	edg_wll_InitStatus(&(p->pub));
 	p->pub.jobtype = -1 /* why? EDG_WLL_STAT_SIMPLE */;
 	p->pub.children_hist = (int*) calloc(1+EDG_WLL_NUMBER_OF_STATCODES, sizeof(int));
 	p->pub.children_hist[0] = EDG_WLL_NUMBER_OF_STATCODES;
