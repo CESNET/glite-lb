@@ -26,7 +26,7 @@ install: compile
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	install -m 644 LICENSE ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/etc
-	install -m 644 log4crc.example ${PREFIX}/etc/log4crc
+	install -m 644 log4crc.example ${PREFIX}/etc/glite-lb-log4crc
 clean:
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 

@@ -15,7 +15,7 @@ GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-$GLITE_LOCATION/var}
 LL_PIDFILE=${LL_PIDFILE:-$GLITE_LOCATION_VAR/glite-lb-logd.pid}
 IL_PIDFILE=${IL_PIDFILE:-$GLITE_LOCATION_VAR/glite-lb-interlogd.pid}
 
-unset creds port
+unset creds port log4c
 
 start_daemon()
 {
@@ -31,7 +31,7 @@ start_daemon()
 		rm -f "$pidfile"
 	fi
 	echo -n "Starting $name ..."
-	su - $GLITE_USER -c "$cmd" && echo " done" || echo " FAILED"
+	su - $GLITE_USER -c "$log4c $cmd" && echo " done" || echo " FAILED"
 }
 
 start()
@@ -63,6 +63,14 @@ start()
 	[ -n "$GLITE_LB_LOGGER_PORT" ] && port="--port $GLITE_LB_LOGGER_PORT"
 	[ -n "$GLITE_LB_IL_SOCK" ] && sock="--socket $GLITE_LB_IL_SOCK"
 	[ -n "$GLITE_LB_IL_FPREFIX" ] && fprefix="--file-prefix $GLITE_LB_IL_FPREFIX"
+
+	log4c="$GLITE_LOCATION/etc/glite-lb-log4crc"
+	if test -f "$log4c"; then
+		log4c="LOG4C_RCPATH='$log4c'";
+	else
+		echo "$0: WARNING: config file '$log4c' not found." >&2
+		unset log4c
+	fi
 
 	mkdir -p /var/glite/log 
 	chown $GLITE_USER /var/glite/log

@@ -26,7 +26,7 @@ GLITE_LB_PROXY_FPREFIX=${GLITE_LB_PROXY_FPREFIX:-'/tmp/glite-lbproxy-ilog_events
 IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-interlogd.pid
 NOTIF_IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-notif-interlogd.pid
 
-unset creds port
+unset creds port log4c
 
 start_daemon()
 {
@@ -42,7 +42,7 @@ start_daemon()
 		rm -f "$pidfile"
 	fi
 	echo -n "Starting $name ..."
-	su - $GLITE_USER -c "$cmd" && echo " done" || echo " FAILED"
+	su - $GLITE_USER -c "$log4c $cmd" && echo " done" || echo " FAILED"
 }
 
 stop_daemon()
@@ -109,6 +109,14 @@ start()
 			echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
 			creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
 		fi
+	fi
+
+	log4c="$GLITE_LOCATION/etc/glite-lb-log4crc"
+	if test -f "$log4c"; then
+		log4c="LOG4C_RCPATH='$log4c'";
+	else
+		echo "$0: WARNING: config file '$log4c' not found." >&2
+		unset log4c
 	fi
 
 	[ -z "$GLITE_LB_EXPORT_DUMPDIR" ] && GLITE_LB_EXPORT_DUMPDIR=$GLITE_LOCATION_VAR/dump
