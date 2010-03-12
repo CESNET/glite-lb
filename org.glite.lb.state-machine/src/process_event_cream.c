@@ -76,8 +76,8 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			break;
 		case EDG_WLL_EVENT_CREAMACCEPTED:
 			if (USABLE(res)){
-				free(js->pub.cream_id);
-				js->pub.cream_id = strdup(e->CREAMAccepted.local_jobid);
+				rep(js->pub.cream_id, e->CREAMAccepted.local_jobid);
+				rep(js->pub.globusId, e->CREAMAccepted.local_jobid);
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMSTORE:
@@ -102,11 +102,8 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 					default:
 						break;
 				}
-				if (e->CREAMStore.reason){
-					if (js->pub.cream_reason) 
-						free(js->pub.cream_reason);
-					js->pub.cream_reason = strdup(e->CREAMStore.reason);
-				}
+				rep_cond(js->pub.cream_reason, e->CREAMStore.reason);
+				rep_cond(js->pub.reason, e->CREAMStore.reason);
 			}
 			if (USABLE_DATA(res)) {
 			}
@@ -121,14 +118,13 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 					// BLAH -> LRMS
 						js->pub.state = EDG_WLL_JOB_SCHEDULED;
 						js->pub.cream_state = EDG_WLL_STAT_IDLE;
-						if (e->CREAMCall.reason){
-							free(js->pub.cream_reason);
-							js->pub.cream_reason = strdup(e->CREAMStore.reason);
-						}
+						rep_cond(js->pub.cream_reason, e->CREAMCall.reason);
+						rep_cond(js->pub.reason, e->CREAMCall.reason);
 					}
 	
 				if (USABLE_DATA(res)) {
 					rep(js->pub.cream_reason, e->CREAMCall.reason);
+					rep(js->pub.reason, e->CREAMCall.reason);
 				}
 			}
 			if (e->CREAMCall.command == EDG_WLL_CREAMCALL_CMDCANCEL &&
@@ -136,12 +132,10 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			{
 				if (USABLE(res)){
 					js->pub.cream_cancelling = 1;
+					js->pub.cancelling = 1;
 				}
-				if (e->CREAMCall.reason)
-				{
-					free(js->pub.cream_reason);
-					js->pub.cream_reason = strdup(e->CREAMCall.reason);
-				}
+				rep_cond(js->pub.cream_reason, e->CREAMCall.reason);
+				rep_cond(js->pub.reason, e->CREAMCall.reason);
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMCANCEL:
@@ -153,6 +147,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			}
 			if (USABLE_DATA(res)) {
 				rep(js->pub.cream_reason, e->CREAMCancel.reason);
+				rep(js->pub.reason, e->CREAMCancel.reason);
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMABORT:
@@ -162,6 +157,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			}
 			if (USABLE_DATA(res)) {
 				rep(js->pub.cream_reason, e->CREAMAbort.reason);
+				rep(js->pub.reason, e->CREAMAbort.reason);
 			}
 			break;
 
@@ -197,21 +193,37 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 					case EDG_WLL_STAT_ABORTED: js->pub.state = EDG_WLL_JOB_ABORTED; break;
 				}
 				if (e->CREAMStatus.exit_code && strcmp(e->CREAMStatus.exit_code, "N/A"))
+				{
 					js->pub.cream_exit_code = atoi(e->CREAMStatus.exit_code);
+					js->pub.exit_code = atoi(e->CREAMStatus.exit_code);
+				}
 				if (e->CREAMStatus.worker_node){ /*XXX should never be false */
 					if (js->pub.cream_node) 
 						free(js->pub.cream_node);
 					js->pub.cream_node = strdup(e->CREAMStatus.worker_node);
+					if (js->pub.ce_node)
+						free(js->pub.ce_node);
+					js->pub.ce_node = strdup(e->CREAMStatus.worker_node);
 				}
 				if (e->CREAMStatus.LRMS_jobid){ /*XXX should never be false */
 					if (js->pub.cream_lrms_id) 
 						free(js->pub.cream_lrms_id);
 					js->pub.cream_lrms_id = strdup(e->CREAMStatus.LRMS_jobid);
+					if (js->pub.localId)
+						free(js->pub.localId);
+					js->pub.localId = strdup(e->CREAMStatus.LRMS_jobid);
 				}
 				if (e->CREAMStatus.failure_reason){
 					if (js->pub.cream_failure_reason) 
 						free(js->pub.cream_failure_reason);
 					js->pub.cream_failure_reason = strdup(e->CREAMStatus.failure_reason);
+					if (js->pub.failure_reasons){
+						char *glued_reasons;
+						asprintf(&glued_reasons,"%s\n", e->CREAMStatus.failure_reason);
+						rep(js->pub.failure_reasons, glued_reasons);
+					}
+					else 
+						asprintf(&(js->pub.failure_reasons),"%s", e->CREAMStatus.failure_reason);
 				}
 			}
 			break;
