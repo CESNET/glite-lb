@@ -154,7 +154,7 @@ extern int edg_wll_SetLoggingJob(
 
 /**
  * Set a current job for given context.
- * \note Should be called before any logging call.
+ * \note Should be called before any call logging to lbproxy.
  * \param[in,out] context 	context to work with
  * \param[in] job 		further logging calls are related to this job
  * \param[in] code 		sequence code as obtained from previous component
@@ -204,6 +204,8 @@ extern int edg_wll_RegisterJob(
 	glite_jobid_t **	subjobs
 );
 
+#if 0
+DEPRECATED?
 /** 
  * Synchronous variant of edg_wll_RegisterJob
  */
@@ -218,6 +220,8 @@ extern int edg_wll_RegisterJobSync(
 	const char *		seed,
 	glite_jobid_t **	subjobs
 );
+#endif
+#define edg_wll_RegisterJobSync edg_wll_RegisterJob
 
 /**
  * Register job with L&B Proxy service.
@@ -257,7 +261,7 @@ extern int edg_wll_RegisterJobProxy(
  * \param[in] wms_dn 		DN of WMS handling the job
  */
 
-extern int edg_wll_RegisterJobACL(
+extern int edg_wll_RegisterJobExt(
 	edg_wll_Context		context,
 	glite_jobid_const_t	job,
 	enum edg_wll_RegJobJobtype	type,
@@ -266,10 +270,11 @@ extern int edg_wll_RegisterJobACL(
 	int			num_subjobs,
 	const char *		seed,
 	glite_jobid_t **	subjobs,
-	char **			wms_dn
+	char **			wms_dn,
+	int			flags
 );
 
-extern int edg_wll_RegisterJobProxyACL(
+extern int edg_wll_RegisterJobProxyExt(
 	edg_wll_Context		context,
 	glite_jobid_const_t	job,
 	enum edg_wll_RegJobJobtype	type,
@@ -278,22 +283,11 @@ extern int edg_wll_RegisterJobProxyACL(
 	int			num_subjobs,
 	const char *		seed,
 	glite_jobid_t **	subjobs,
-	char **			wms_dn
+	char **			wms_dn,
+	int			flags
 );
 
 #ifdef LB_PERF
-/* original register to LBProxy 	*/
-extern int edg_wll_RegisterJobProxyOld(
-	edg_wll_Context		context,
-	glite_jobid_const_t	job,
-	enum edg_wll_RegJobJobtype	type,
-	const char *		jdl,
-	const char *		ns,
-	int			num_subjobs,
-	const char *		seed,
-	glite_jobid_t **	subjobs
-);
-
 /* register only to LBProxy 		*/
 /* useful for performance measurements	*/
 

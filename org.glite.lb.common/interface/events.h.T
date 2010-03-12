@@ -441,13 +441,14 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 
 /* Flags (priority bits) defining the type of logging */
 
-#define EDG_WLL_LOGFLAG_ASYNC   0 /**< asynchronous logging */
-#define EDG_WLL_LOGFLAG_SYNC_COMPAT    1 /**< synchronous logging in previous versions*/
-#define EDG_WLL_LOGFLAG_SYNC    2 /**< synchronous logging */
-#define EDG_WLL_LOGFLAG_LOCAL   4 /**< logging to local logger */
-#define EDG_WLL_LOGFLAG_PROXY   8 /**< logging to L&B Proxy */
-#define EDG_WLL_LOGFLAG_DIRECT  16 /**< logging directly to bkserver */
-#define EDG_WLL_LOGFLAG_INTERNAL  32 /**< internally generated event, don't forward */
+#define EDG_WLL_LOGFLAG_ASYNC		0 /**< asynchronous logging */
+#define EDG_WLL_LOGFLAG_SYNC_COMPAT	1 /**< synchronous logging in previous versions*/
+#define EDG_WLL_LOGFLAG_SYNC		2 /**< synchronous logging */
+#define EDG_WLL_LOGFLAG_LOCAL		4 /**< logging to local logger */
+#define EDG_WLL_LOGFLAG_PROXY		8 /**< logging to L&B Proxy */
+#define EDG_WLL_LOGFLAG_DIRECT		16 /**< logging directly to bkserver */
+#define EDG_WLL_LOGFLAG_INTERNAL	32 /**< internally generated event, don't forward */
+#define EDG_WLL_LOGLFLAG_EXCL		64 /**< exclusive flag, to be used with RegisterJob only (if job already exists, than registration fails) */
 
 /*
  *@} end of group

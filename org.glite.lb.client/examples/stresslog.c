@@ -141,17 +141,17 @@ for (i = 0; i<njobs; i++) {
 			// fprintf(stdout,"%d: %s\n",i,buf);
 			asprintf(&logline,"DG.JOBID=\"%s\" %s",job,buf);
 			if (lbproxy) {
-				if (edg_wll_DoLogEventProxy(ctx,logline)) {
+				if (edg_wll_DoLogEventServer(ctx,EDG_WLL_LOGFLAG_PROXY,logline)) {
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"edg_wll_DoLogEventProxy(): %s (%s)\n",et,ed);
+					fprintf(stderr,"edg_wll_DoLogEventServer(): %s (%s)\n",et,ed);
 					exit(1);
 				}
 			} else if (lbdirect) {
-				if (edg_wll_DoLogEventDirect(ctx,logline)) {
+				if (edg_wll_DoLogEventServer(ctx,EDG_WLL_LOGFLAG_DIRECT,logline)) {
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"edg_wll_DoLogEvent(): %s (%s)\n",et,ed);
+					fprintf(stderr,"edg_wll_DoLogEventServer(): %s (%s)\n",et,ed);
 					exit(1);
 				}
 			} else {
