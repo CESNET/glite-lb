@@ -158,6 +158,7 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	char		**super_users;
 
 	time_t          rssTime;
+	_edg_wll_authz_policy	authz_policy;
 )
 
 /* to be used internally: set, update and and clear the error information in 

@@ -145,6 +145,10 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		free(ctx->fqans);
 		ctx->fqans = NULL;
 	}
+	if (ctx->authz_policy.num) {
+		for (i = 0; i < ctx->authz_policy.num; i++)
+			free((ctx->authz_policy.rules[i]).attr_value);
+	}
 	
 	if (ctx->jpreg_dir) free(ctx->jpreg_dir);
 	if (ctx->serverIdentity) free(ctx->serverIdentity);
@@ -567,3 +571,26 @@ int edg_wll_SetErrorGss(edg_wll_Context ctx, const char *desc, edg_wll_GssStatus
    free(err_msg);
    return ctx->errCode;
 }
+
+int
+edg_wll_add_authz_rule(edg_wll_Context ctx,
+		       edg_wll_authz_policy policy,
+		       int action,
+		       int attr_id,
+		       char *attr_value)
+{
+    struct _edg_wll_authz_rule *tmp = policy->rules;
+
+    tmp = realloc(tmp, (policy->num + 1) * sizeof(*tmp));
+    if (tmp == NULL)
+        return edg_wll_SetError(ctx, ENOMEM, NULL);;
+
+    tmp->action = action;
+    tmp->attr_id = attr_id;
+    tmp->attr_value = strdup(attr_value);
+
+    policy->rules = tmp;
+    policy->num++;
+    return 0;
+}
+
