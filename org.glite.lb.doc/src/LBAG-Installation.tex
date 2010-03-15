@@ -76,6 +76,7 @@ glite-jobid-api-c & gLite jobId C API library \\
 % pro beh LB neni triba
 % glite-jp-common & JP common files \\ 
 glite-lbjp-common-db & database access layer \\
+glite-lbjp-common-log & glite common logging format implementation \\
 glite-lbjp-common-maildir & persistent request spool management \\
 glite-lbjp-common-server-bones & multi-process server building library \\
 glite-lbjp-common-trio & extended printf implementation \\
@@ -87,7 +88,26 @@ where all \verb'glite-lbjp-common-*' packages are common both to \LB and
 Job Provenance (\JP).
 
 \subsection{Common logging format}
-\TODO{once implemented, describe the log4crc configuration}
+\LB service follows the \textbf{gLite common logging recommendations v1.1}:
+\begin{center}
+\url{https://twiki.cern.ch/twiki/pub/EGEE/EGEEgLite/logging.html}. 
+\end{center}
+
+The implementation is done in the \texttt{glite-lbjp-common-log} package and it 
+uses \texttt{log4c} (\url{http://log4c.sourceforge.net})
+and its configuration file \texttt{log4crc}. Two examples are provided
+\begin{itemize}
+\item \texttt{log4crc.example-production} - this file is now being installed to
+\texttt{\$GLITE\_LOCATION/etc/glite-lb-log4crc} and startup scripts
+use it by setting the \texttt{LOG4C\_RCPATH} environment variable,
+\item \texttt{log4crc.example-debugging} - this file may be useful to copy to
+\texttt{~/.log4crc} (or by setting the \texttt{LOG4C\_RCPATH} environment variable
+to this file) to obtain detailed debugging output.
+\end{itemize}
+One can debug only specific parts of the LB system, for example
+by uncommenting \texttt{LB.SERVER.DB} cathegory in the \texttt{log4crc} file,
+one gets only the debugging info related to the underlying database subsystem calls.
+
 
 \subsection{\LB server}
 
