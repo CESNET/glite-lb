@@ -66,6 +66,7 @@ install: compile
 	${INSTALL} -m 644 ${top_srcdir}/src/log.h ${PREFIX}/include/${globalprefix}/${lbutilsprefix} 
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/README ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/etc
 	${INSTALL} -m 644 ${top_srcdir}/src/log4crc.* ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/src/log4crc.example-production ${PREFIX}/etc/glite-lb-log4crc
