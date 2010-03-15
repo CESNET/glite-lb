@@ -1,3 +1,1 @@
-L&B Harvester gathers information about jobs from L&B servers using efficient L&B notification mechanism. It manages notifications and keeps them in a persistent storage (file or database table) to reuse later on next launch. It takes care about refreshing notifications and queries L&B servers back when some notification expires.
-
-The tool was initially written for Real Time Monitor (project at Imperial College in London), later was extended by MSG publish messaging mechanism for WLCG.
+L&B Harvester gathers job info from L&B servers using efficient L&B notifications. It manages notifications and keeps track of them for reuse on next launch. It takes care of refreshing notifications and querying L&B back once a notification expires.
