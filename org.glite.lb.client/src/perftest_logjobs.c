@@ -279,10 +279,10 @@ main(int argc, char *argv[])
 			switch(dest) {
 			case DEST_PROXY:
 				ctx->p_tmp_timeout = ctx->p_sync_timeout;
-				if (edg_wll_DoLogEventProxy(ctx,event)) {
+				if (edg_wll_DoLogEventServer(ctx,EDG_WLL_LOGFLAG_PROXY,event)) {
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"edg_wll_DoLogEventProxy(): %s (%s)\n",et,ed);
+					fprintf(stderr,"edg_wll_DoLogEventServer(): %s (%s)\n",et,ed);
 					fprintf(stderr,"Event:\n%s\n", event);
 					exit(1);
 				}
@@ -321,10 +321,10 @@ main(int argc, char *argv[])
 			case DEST_BKSERVER:
 				ctx->p_tmp_timeout = ctx->p_log_timeout;
 				edg_wlc_JobIdParse(jobid, &ctx->p_jobid);
-				if (edg_wll_DoLogEventDirect(ctx, event)) {
+				if (edg_wll_DoLogEventServer(ctx,EDG_WLL_LOGFLAG_DIRECT,event)) {
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
-					fprintf(stderr,"edg_wll_DoLogEventDirect(): %s (%s)\n",et,ed);
+					fprintf(stderr,"edg_wll_DoLogEventServer(): %s (%s)\n",et,ed);
 					fprintf(stderr,"Event:\n%s\n", event);
 					exit(1);
 				}

@@ -995,138 +995,120 @@ int edg_wll_RegisterJobProxyOnly(
 {
 	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,NULL);
 }
+
+/**
+ *-----------------------------------------------------------------------
+ * Register one job with L&B Proxy service
+ * \note simple wrapper around edg_wll_RegisterJobMaster()
+ * this is original edg_wll_RegisterJobProxy, krept only for performance measuring
+ *-----------------------------------------------------------------------
+ */
+int edg_wll_RegisterJobProxyOld(
+        edg_wll_Context         ctx,
+        glite_jobid_const_t     job,
+        enum edg_wll_RegJobJobtype      type,
+        const char *            jdl,
+        const char *            ns,
+        int                     num_subjobs,
+        const char *            seed,
+        edg_wlc_JobId **        subjobs)
+{
+	int	ret=0;
+
+        /* first register with bkserver ... */
+        ret=edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_DIRECT,
+		job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,NULL);
+	if (ret) return ret;
+
+        /* ... and then with L&B Proxy */
+        ret=edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_PROXY,
+		job,type,jdl,ns,NULL,num_subjobs,seed,subjobs,NULL);
+
+	return ret;
+}
+
 #endif
 
 /**
  *-----------------------------------------------------------------------
- * Register one subjob with L&B service
+ * Master function for registering batch of subjobs 
  * \note simple wrapper around edg_wll_RegisterJobMaster()
  *-----------------------------------------------------------------------
  */
-static
-int edg_wll_RegisterSubjob(
-        edg_wll_Context         ctx,
-        glite_jobid_const_t     job,
-        enum edg_wll_RegJobJobtype	type,
-        const char *            jdl,
-        const char *            ns,
-	glite_jobid_const_t	parent,
-        int                     num_subjobs,
-        const char *            seed,
-        edg_wlc_JobId **        subjobs)
+static int edg_wll_RegisterSubjobsMaster(
+	edg_wll_Context 	ctx,
+	int			logging_flags,
+	glite_jobid_const_t 	parent,
+	char const * const * 	jdls, 
+	const char * 		ns, 
+	edg_wlc_JobId const * 	subjobs)
 {
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_LOCAL,job,type,jdl,ns,parent,num_subjobs,seed,subjobs,NULL);
-}
+	char const * const	*pjdl;
+	edg_wlc_JobId const	*psubjob;
+	edg_wlc_JobId		oldctxjob;
+	char *			oldctxseq;
+	int                     errcode = 0;
+	char *                  errdesc = NULL;
 
-/**
- *-----------------------------------------------------------------------
- * Register one subjob with L&B Proxy service
- * \note simple wrapper around edg_wll_RegisterJobMaster()
- *-----------------------------------------------------------------------
- */
-static
-int edg_wll_RegisterSubjobProxy(
-        edg_wll_Context         ctx,
-        glite_jobid_const_t     job,
-        enum edg_wll_RegJobJobtype	type,
-        const char *            jdl,
-        const char *            ns,
-	glite_jobid_const_t	parent,
-        int                     num_subjobs,
-        const char *            seed,
-        edg_wlc_JobId **        subjobs)
-{
-	return edg_wll_RegisterJobMaster(ctx,EDG_WLL_LOGFLAG_PROXY,job,type,jdl,ns,parent,num_subjobs,seed,subjobs,NULL);
+	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
+	oldctxseq = edg_wll_GetSequenceCode(ctx);
+
+	pjdl = jdls;
+	psubjob = subjobs;
+	
+	while (*pjdl != NULL) {
+		if (edg_wll_RegisterJobMaster(ctx, logging_flags,
+			*psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
+			ns, parent, 0, NULL, NULL, NULL) != 0) {
+			errcode = edg_wll_Error(ctx, NULL, &errdesc);
+			goto edg_wll_registersubjobsmaster_end;
+		}
+		pjdl++; psubjob++;
+	}
+
+edg_wll_registersubjobsmaster_end:
+	edg_wll_SetLoggingJobMaster(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL,logging_flags);
+
+	if (errcode) {
+                edg_wll_SetError(ctx, errcode, errdesc);
+                free(errdesc);
+        }
+	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 /**
  *-----------------------------------------------------------------------
  * Register batch of subjobs with L&B service
- * \note simple wrapper around edg_wll_RegisterSubjob()
+ * \note simple wrapper around edg_wll_RegisterSubjobsMaster()
  *-----------------------------------------------------------------------
- */
+ */ 
 int edg_wll_RegisterSubjobs(
-	edg_wll_Context 	ctx,
-	glite_jobid_const_t 	parent,
-	char const * const * 	jdls, 
-	const char * 		ns, 
-	edg_wlc_JobId const * 	subjobs)
+        edg_wll_Context         ctx,
+        glite_jobid_const_t     parent,
+        char const * const *    jdls,
+        const char *            ns, 
+        edg_wlc_JobId const *   subjobs)
 {
-	char const * const	*pjdl;
-	edg_wlc_JobId const	*psubjob;
-	edg_wlc_JobId		oldctxjob;
-	char *			oldctxseq;
-	int                     errcode = 0;
-	char *                  errdesc = NULL;
-
-	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
-	oldctxseq = edg_wll_GetSequenceCode(ctx);
-
-	pjdl = jdls;
-	psubjob = subjobs;
-	
-	while (*pjdl != NULL) {
-		if (edg_wll_RegisterSubjob(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
-						ns, parent, 0, NULL, NULL) != 0) {
-			errcode = edg_wll_Error(ctx, NULL, &errdesc);
-			goto edg_wll_registersubjobs_end;
-		}
-		pjdl++; psubjob++;
-	}
-
-edg_wll_registersubjobs_end:
-	edg_wll_SetLoggingJob(ctx, oldctxjob, oldctxseq, EDG_WLL_SEQ_NORMAL);
-
-	if (errcode) {
-                edg_wll_SetError(ctx, errcode, errdesc);
-                free(errdesc);
-        }
-	return edg_wll_Error(ctx, NULL, NULL);
+	return edg_wll_RegisterSubjobsMaster(ctx,EDG_WLL_LOGFLAG_LOCAL,
+		parent, jdls, ns, subjobs);
 }
 
 /**
  *-----------------------------------------------------------------------
  * Register batch of subjobs with L&B Proxy service
- * \note simple wrapper around edg_wll_RegisterSubjobProxy()
+ * \note simple wrapper around edg_wll_RegisterSubjobsMaster()
  *-----------------------------------------------------------------------
- */
+ */ 
 int edg_wll_RegisterSubjobsProxy(
-	edg_wll_Context 	ctx,
-	glite_jobid_const_t 	parent,
-	char const * const * 	jdls, 
-	const char * 		ns, 
-	edg_wlc_JobId const * 	subjobs)
+        edg_wll_Context         ctx,
+        glite_jobid_const_t     parent,
+        char const * const *    jdls,
+        const char *            ns, 
+        edg_wlc_JobId const *   subjobs)
 {
-	char const * const	*pjdl;
-	edg_wlc_JobId const	*psubjob;
-	edg_wlc_JobId		oldctxjob;
-	char *			oldctxseq;
-	int                     errcode = 0;
-	char *                  errdesc = NULL;
+	return edg_wll_RegisterSubjobsMaster(ctx,EDG_WLL_LOGFLAG_PROXY,
+		parent, jdls, ns, subjobs);
 
-	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
-	oldctxseq = edg_wll_GetSequenceCode(ctx);
-
-	pjdl = jdls;
-	psubjob = subjobs;
-	
-	while (*pjdl != NULL) {
-		if (edg_wll_RegisterSubjobProxy(ctx, *psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
-						ns, parent, 0, NULL, NULL) != 0) {
-			errcode = edg_wll_Error(ctx, NULL, &errdesc);
-			goto edg_wll_registersubjobsproxy_end;
-		}
-		pjdl++; psubjob++;
-	}
-
-edg_wll_registersubjobsproxy_end:
-	edg_wll_SetLoggingJobProxy(ctx, oldctxjob, oldctxseq, NULL, EDG_WLL_SEQ_NORMAL);
-
-	if (errcode) {
-                edg_wll_SetError(ctx, errcode, errdesc);
-                free(errdesc);
-        }
-	return edg_wll_Error(ctx, NULL, NULL);
 }
 
 /**
