@@ -128,7 +128,7 @@ static int edg_wll_JobStatusToGlueComputingActivity(
 	free(s); s=NULL;
 
 	// BaseType (required, xsd:string) = "Activity"?
-	js->BaseType = soap_strdup(soap,"Activity");
+	GLITE_SECURITY_GSOAP_SET_FIXED(soap,js->BaseType,"Activity");
 
 	// CreationTime (optional, xsd:dateTime) = submission time?
 	js->CreationTime = soap_malloc(soap,sizeof *js->CreationTime);
@@ -346,8 +346,11 @@ static int edg_wll_JobStatusToGlueComputingActivity(
 		js->Extensions->Extension = soap_malloc(soap,i*sizeof js->Extensions->Extension[0]);
 
 		for (i=0; src->user_tags[i].tag; i++) {
-			js->Extensions->Extension[i].Key = soap_strdup(soap,src->user_tags[i].tag);
-			js->Extensions->Extension[i].__item = soap_strdup(soap,src->user_tags[i].value);
+			GLITE_SECURITY_GSOAP_LIST_TYPE(glue,Extension_USCOREt)
+				e = js->Extensions->Extension;
+
+			GLITE_SECURITY_GSOAP_LIST_GET(e,i)->Key = soap_strdup(soap,src->user_tags[i].tag);
+			GLITE_SECURITY_GSOAP_LIST_GET(e,i)->__item = soap_strdup(soap,src->user_tags[i].value);
 		}
 	}
 	else js->Extensions = NULL;
