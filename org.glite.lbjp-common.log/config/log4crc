@@ -19,10 +19,10 @@
         <category name="CONTROL" priority="error" appender="syslog"/>
         <category name="CONTROL" priority="fatal" appender="stderr"/>
 
-        <!-- category name="LB" priority="debug" appender="stdout"/-->
-        <!-- category name="LB.LOGD" priority="debug" appender="stdout"/-->
-        <!-- category name="LB.INTERLOGD" priority="debug" appender="stdout"/-->
-        <!-- category name="LB.SERVER" priority="debug" appender="stdout"/-->
+        <!-- category name="LB" priority="debug" appender="stderr"/-->
+        <!-- category name="LB.LOGD" priority="debug" appender="stderr"/-->
+        <!-- category name="LB.INTERLOGD" priority="debug" appender="stderr"/-->
+        <!-- category name="LB.SERVER" priority="debug" appender="stderr"/-->
 
         <!-- default appenders ===================================== -->
         <appender name="stdout" type="stream" layout="basic"/>
