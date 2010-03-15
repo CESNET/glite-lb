@@ -19,14 +19,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
-/* gLite common logging recommendations v1.1 https://twiki.cern.ch/twiki/pub/EGEE/EGEEgLite/logging.html */
+/* gLite common logging recommendations v1.1 
+   https://twiki.cern.ch/twiki/pub/EGEE/EGEEgLite/logging.html */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <log4c.h>
 
 /* default categories */
 #define LOG_CATEGORY_NAME       	"root"
@@ -40,25 +38,15 @@ extern "C" {
 #define LOG_CATEGORY_LB_SERVER_DB  	"LB.SERVER.DB"
 #define LOG_CATEGORY_LB_SERVER_REQUEST	"LB.SERVER.REQUEST"
 
-/* default priorities */
-#define LOG_PRIORITY_FATAL      LOG4C_PRIORITY_FATAL
-#define LOG_PRIORITY_ERROR      LOG4C_PRIORITY_ERROR
-#define LOG_PRIORITY_WARN       LOG4C_PRIORITY_WARN
-#define LOG_PRIORITY_INFO       LOG4C_PRIORITY_INFO
-#define LOG_PRIORITY_DEBUG      LOG4C_PRIORITY_DEBUG
-#define LOG_PRIORITY_NOTSET     LOG4C_PRIORITY_NOTSET
-
-#define SYSTEM_ERROR(my_err) { \
-        if (errno !=0 ) \
-                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_ERROR,"%s: %s\n",my_err,strerror(errno)); \
-        else \
-                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_ERROR,"%s\n",my_err); }
-
-#define SYSTEM_FATAL(my_err) { \
-        if (errno !=0 ) \
-                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"%s: %s\n",my_err,strerror(errno)); \
-        else \
-                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"%s\n",my_err); }
+/* default priorities
+ * - follow LOG4C_PRIORITY_* defined in <log4c/priority.h> 
+ */
+#define LOG_PRIORITY_FATAL      000	// LOG4C_PRIORITY_FATAL
+#define LOG_PRIORITY_ERROR      300	// LOG4C_PRIORITY_ERROR
+#define LOG_PRIORITY_WARN       400	// LOG4C_PRIORITY_WARN
+#define LOG_PRIORITY_INFO       600	// LOG4C_PRIORITY_INFO
+#define LOG_PRIORITY_DEBUG      700	// LOG4C_PRIORITY_DEBUG
+#define LOG_PRIORITY_NOTSET     900	// LOG4C_PRIORITY_NOTSET
 
 /* logging functions */
 
@@ -97,6 +85,20 @@ extern void glite_common_log(char *catName,int a_priority, const char* a_format,
  * Rereads any log4crc files that have changed
  */
 extern void glite_common_log_reread(void);
+
+
+/* simple wrappers around glite_common_log() that include also errno */
+#define glite_common_log_SYS_ERROR(my_err) { \
+        if (errno !=0 ) \
+                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_ERROR,"%s: %s\n",my_err,strerror(errno)); \
+        else \
+                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_ERROR,"%s\n",my_err); }
+
+#define glite_common_log_SYS_FATAL(my_err) { \
+        if (errno !=0 ) \
+                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"%s: %s\n",my_err,strerror(errno)); \
+        else \
+                glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"%s\n",my_err); }
 
 #ifdef __cplusplus
 }

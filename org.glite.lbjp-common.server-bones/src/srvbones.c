@@ -401,7 +401,7 @@ static int dispatchit(int sock_slave, int sock, int sidx)
 	if (ret)
 	{
 		glite_common_log(set_log_category,
-                         LOG4C_PRIORITY_WARN, "sendmsg()");
+                         LOG_PRIORITY_WARN, "sendmsg()");
 	}
 
 

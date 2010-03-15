@@ -20,7 +20,6 @@ DEBUG:=-g -O0 -Wall
 CFLAGS:= ${DEBUG} \
 	-I${top_srcdir}/interface \
 	-I${stagedir}/include \
-	-I${log4c_prefix}/include \
 	-D_GNU_SOURCE 
 LDFLAGS:=-L${stagedir}/${libdir}
 

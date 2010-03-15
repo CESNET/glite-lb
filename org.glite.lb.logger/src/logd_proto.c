@@ -81,7 +81,7 @@ static int handle_gss_failures(int code, edg_wll_GssStatus *gss_code, const char
 			ret = EAGAIN;
 			break;
 		case EDG_WLL_GSS_ERROR_ERRNO: 
-			SYSTEM_ERROR(func);
+			glite_common_log_SYS_ERROR(func);
 			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: %s, system error occured\n", func, text);	
 			ret = EAGAIN;
 			break;
@@ -152,7 +152,7 @@ int init_confirmation()
 
 	/* create socket */
 	if((confirm_sock=socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
-		SYSTEM_ERROR("socket");
+		glite_common_log_SYS_ERROR("socket");
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"init_confirmation(): error creating socket\n");
 		return(-1);
 	}
@@ -164,7 +164,7 @@ int init_confirmation()
 
 	/* bind the socket */
 	if(bind(confirm_sock, (struct sockaddr *)&saddr, sizeof(saddr.sun_path)) < 0) {
-		SYSTEM_ERROR("bind");
+		glite_common_log_SYS_ERROR("bind");
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"init_confirmation(): error binding socket\n");
 		close(confirm_sock);
 		unlink(confirm_sock_name);
@@ -173,7 +173,7 @@ int init_confirmation()
 
 	/* and listen */
 	if(listen(confirm_sock, 5) < 0) {
-		SYSTEM_ERROR("listen");
+		glite_common_log_SYS_ERROR("listen");
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"init_confirmation(): error listening on socket\n");
 		close(confirm_sock);
 		unlink(confirm_sock_name);
@@ -203,7 +203,7 @@ int wait_for_confirmation(struct timeval *timeout, int *code)
 
 	/* wait for confirmation at most timeout seconds */
 	if ((tmp=select(confirm_sock+1, &fds, NULL, NULL, timeout?&to:NULL)) < 0) {
-		SYSTEM_ERROR("select");
+		glite_common_log_SYS_ERROR("select");
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"wait_for_confirmation(): error selecting socket\n");
 		ret = -1;
 	} else {
@@ -213,12 +213,12 @@ int wait_for_confirmation(struct timeval *timeout, int *code)
 			int nsd = accept(confirm_sock, NULL, NULL);
 			ret = 1;
 			if(nsd < 0) {
-				SYSTEM_ERROR("accept");
+				glite_common_log_SYS_ERROR("accept");
 				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"wait_for_confirmation(): error accepting a connection on a socket\n");
 				ret = -1;
 			} else {
 				if(recv(nsd, code, sizeof(*code), MSG_NOSIGNAL) < 0) {
-					SYSTEM_ERROR("recv");
+					glite_common_log_SYS_ERROR("recv");
 					glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"wait_for_confirmation(): error receiving a message from a socket\n");
 					ret = -1;
 				}
@@ -266,7 +266,7 @@ int do_listen(int port)
 
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sock == -1) { 
-		SYSTEM_ERROR("socket"); 
+		glite_common_log_SYS_ERROR("socket"); 
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"do_listen(): error creating socket\n");
 		return -1; 
 	}
@@ -274,14 +274,14 @@ int do_listen(int port)
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 	ret = bind(sock, (struct sockaddr *)&my_addr, sizeof(my_addr));
 	if (ret == -1) { 
-		SYSTEM_ERROR("bind"); 
+		glite_common_log_SYS_ERROR("bind"); 
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"do_listen(): error binding socket\n");
 		return -1; 
 	}
 
 	ret = listen(sock, 5);
 	if (ret == -1) { 
-		SYSTEM_ERROR("listen"); 
+		glite_common_log_SYS_ERROR("listen"); 
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"do_listen(): error listening on socket\n");
 		close(sock); 
 		return -1; 
@@ -353,7 +353,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 			if (errno == EEXIST) {
 				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Warning: LLLID %ld already in use.\n",lllid);
 			} else {
-				SYSTEM_ERROR("open");
+				glite_common_log_SYS_ERROR("open");
 			}
 		} else {
 			unique = 1;
@@ -432,7 +432,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 
 	/* format the DG.LLLID string */
 	if (asprintf(&dglllid,"DG.LLLID=%ld ",lllid) == -1) {
-		SYSTEM_ERROR("asprintf");
+		glite_common_log_SYS_ERROR("asprintf");
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"edg_wll_log_proto_server(): nomem for DG.LLLID\n");
 		answer = ENOMEM;
 		goto edg_wll_log_proto_server_end;
@@ -442,7 +442,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	/* format the DG.USER string */
 	name_esc = glite_lbu_EscapeULM(name);
 	if (asprintf(&dguser,"DG.USER=\"%s\" ",name_esc) == -1) {
-		SYSTEM_ERROR("asprintf");
+		glite_common_log_SYS_ERROR("asprintf");
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"edg_wll_log_proto_server(): nomem for DG.USER\n");
 		answer = ENOMEM;
 		goto edg_wll_log_proto_server_end;
@@ -452,7 +452,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	/* allocate enough memory for all data */
 	msg_size = dglllid_size + dguser_size + size + 1;
 	if ((msg = malloc(msg_size)) == NULL) {
-		SYSTEM_ERROR("malloc");
+		glite_common_log_SYS_ERROR("malloc");
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"edg_wll_log_proto_server(): out of memory for allocating message\n");
 		answer = ENOMEM;
 		goto edg_wll_log_proto_server_end;
@@ -533,7 +533,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 		if ( edg_wll_log_event_write(context, outfilename, msg, FCNTL_ATTEMPTS, FCNTL_TIMEOUT, &filepos) ) {
 			char *errd;
 			// FIXME: there is probably not a correct errno
-			SYSTEM_ERROR("edg_wll_log_event_write");
+			glite_common_log_SYS_ERROR("edg_wll_log_event_write");
 			answer = edg_wll_Error(context, NULL, &errd);
 			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"edg_wll_log_event_write error: %s\n",errd);
 			free(errd);
@@ -571,8 +571,8 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 
 		if ( edg_wll_log_event_send(context, socket_path, filepos, msg, msg_size, CONNECT_ATTEMPTS, timeout) ) {
 			char *errd;
-			// FIXME: probably also not a SYSTEM ERROR
-			SYSTEM_ERROR("edg_wll_log_event_send");
+			// XXX: probably not a SYSTEM ERROR
+			// glite_common_log_SYS_ERROR("edg_wll_log_event_send");
 			answer = edg_wll_Error(context, NULL, &errd);
 			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"edg_wll_log_event_send error: %s\n",errd);
 			free(errd);

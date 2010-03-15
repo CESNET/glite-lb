@@ -284,7 +284,7 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
 				(int)timeout.tv_sec, (int) timeout.tv_usec);
 			continue;
 		default:
-			SYSTEM_ERROR("select");
+			glite_common_log_SYS_ERROR("select");
 			timeout.tv_sec = 0;
 			break;
 		}
@@ -478,7 +478,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Running as daemon... [yes]\n");
 	if (daemon(0,0) < 0) {
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"Failed to run as daemon. Exiting.\n");
-		SYSTEM_ERROR("daemon");
+		glite_common_log_SYS_ERROR("daemon");
 		exit(1);
 	}
    }
@@ -499,7 +499,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	if (client_fd < 0) {
 		close(listener_fd);
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_FATAL,"Failed to accept incomming connections\n");
-		SYSTEM_ERROR("accept");
+		glite_common_log_SYS_ERROR("accept");
 		edg_wll_gss_release_cred(&cred, NULL);
 		exit(-1);
 	} else {
@@ -536,7 +536,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	/* FORK - change next line if fork() is not needed (for debugging for example) */
 #if 1
 	if ((childpid = fork()) < 0) {
-		SYSTEM_ERROR("fork");
+		glite_common_log_SYS_ERROR("fork");
 		if (client_fd) close(client_fd);
 	}
 	if (childpid == 0) {

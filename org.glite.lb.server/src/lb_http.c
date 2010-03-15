@@ -47,14 +47,14 @@ int edg_wll_AcceptHTTP(edg_wll_Context ctx, char **body, char **resp, char ***hd
 
 	if (req)
 		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, 
-			LOG4C_PRIORITY_DEBUG, "[%d] request: %s", 
+			LOG_PRIORITY_DEBUG, "[%d] request: %s", 
 			getpid(), req);
 	else
 		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, 
-                        LOG4C_PRIORITY_DEBUG, "no request");
+                        LOG_PRIORITY_DEBUG, "no request");
 	if (body && *body) 
 		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, 
-                        LOG4C_PRIORITY_DEBUG, "request body:\n%s",*body);
+                        LOG_PRIORITY_DEBUG, "request body:\n%s",*body);
 
 	if (!err) {
 		if ((err = edg_wll_Proto(ctx,req,hdr,*body,resp,hdrOut,bodyOut,httpErr)))

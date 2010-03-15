@@ -301,8 +301,8 @@ BEGIN{
 	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager/ ],
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
-	'lb.logger' => [ qw/cppunit:B log4c/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite log4c/ ],
+	'lb.logger' => [ qw/cppunit:B/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
 	'lb.ws-interface' => [],
@@ -310,9 +310,9 @@ BEGIN{
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/postgresql:R/ ],
 	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
-	'lbjp-common.log' => [ qw// ],
+	'lbjp-common.log' => [ qw/log4c/ ],
 	'lbjp-common.maildir' => [ qw// ],
-	'lbjp-common.server-bones' => [ qw/log4c/ ],
+	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
@@ -449,7 +449,7 @@ for my $ext (keys %deps_aux) {
 	jpclient => 'jp.client',
 );
 
-my @t = qw/lb.client-java jobid.api-java lb.types lbjp-common.log/;
+my @t = qw/lb.client-java jobid.api-java lb.types/;
 @topbuild{@t} = (1) x ($#t+1);
 }
 

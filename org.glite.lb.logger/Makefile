@@ -6,7 +6,6 @@ lbprefix=lb
 package=glite-lb-client
 version=0.0.0
 PREFIX=/opt/glite
-log4c_prefix=/usr
 
 nothrflavour=gcc32
 thrflavour=gcc32pthr
@@ -44,7 +43,7 @@ endif
 
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
-	-I${stagedir}/include -I${top_srcdir}/src -I${log4c_prefix}/include \
+	-I${stagedir}/include -I${top_srcdir}/src \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 

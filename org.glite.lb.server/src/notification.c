@@ -694,7 +694,7 @@ static int update_notif(
 	trio_asprintf(&aux, "%s where notifid='%|Ss'", stmt, nid_s);
 	free(stmt);
 	stmt = aux;
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG4C_PRIORITY_DEBUG, stmt);
+	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if ( (ret = edg_wll_ExecSQL(ctx, stmt, NULL)) < 0 )
 		goto cleanup;
@@ -703,7 +703,7 @@ static int update_notif(
 		free(stmt);
 		trio_asprintf(&stmt,
 				"select notifid from notif_registrations where notifid='%|Ss'", nid_s);
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG4C_PRIORITY_DEBUG, stmt);
+		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 		ret = edg_wll_ExecSQL(ctx, stmt, NULL);
 		if ( ret == 0 )
 			edg_wll_SetError(ctx, ENOENT, "Unknown notification ID");
