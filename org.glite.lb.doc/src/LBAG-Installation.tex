@@ -95,15 +95,15 @@ Job Provenance (\JP).
 
 The implementation is done in the \texttt{glite-lbjp-common-log} package and it 
 uses \texttt{log4c} (\url{http://log4c.sourceforge.net})
-and its configuration file \texttt{log4crc}. Two examples are provided
-\begin{itemize}
-\item \texttt{log4crc.example-production} - this file is now being installed to
-\texttt{\$GLITE\_LOCATION/etc/glite-lb-log4crc} and startup scripts
-use it by setting the \texttt{LOG4C\_RCPATH} environment variable,
-\item \texttt{log4crc.example-debugging} - this file may be useful to copy to
-\texttt{~/.log4crc} (or by setting the \texttt{LOG4C\_RCPATH} environment variable
+and its configuration file \texttt{log4crc}. 
+
+There is one configuration file \texttt{\$GLITE\_LOCATION/etc/glite-lb-log4crc}
+that startup scripts use by setting the \texttt{LOG4C\_RCPATH} environment
+variable.
+
+A file \texttt{log4crc.example-debugging} may be useful to copy to
+\texttt{\$HOME/.log4crc} (or by setting the \texttt{LOG4C\_RCPATH} environment variable
 to this file) to obtain detailed debugging output.
-\end{itemize}
 One can debug only specific parts of the LB system, for example
 by uncommenting \texttt{LB.SERVER.DB} cathegory in the \texttt{log4crc} file,
 one gets only the debugging info related to the underlying database subsystem calls.
