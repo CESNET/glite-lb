@@ -312,7 +312,7 @@ for ($event->getFieldsOrdered) {
 	my $f = selectField $event $_;
 	my $fn = $f->{name};
 	my $tn = $f->getType;
-	gen $indent."$tn\t\t$fn;\t\\\n";
+	gen $indent."$tn\t\t$fn /**<< $f->{comment} */;\t\\\n";
 }
 gen "\n";
 @@@}

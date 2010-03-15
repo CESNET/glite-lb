@@ -40,7 +40,7 @@ PSQL_CPPFLAGS:=-I${postgresql_prefix}/include -I${postgresql_prefix}/include/pos
 
 CFLAGS:= \
 	${DEBUG} \
-	-DVERSION=\"${module.version}\" \
+	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
@@ -59,13 +59,13 @@ ifneq (${postgresql_prefix},no)
 	CFLAGS:=${CFLAGS} -DPSQL_SONAME=\"${PSQL_SONAME}\"
 endif
 
-TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
-LDFLAGS:=-L${stagedir}/lib ${COVERAGE_FLAGS}
+LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 EXT_LIBS:=-lglite_lbu_trio -lpthread ${DL_LIBS}
@@ -140,7 +140,7 @@ doc:
 
 olddoc:
 	cp ${top_srcdir}/doc/*.dox .
-	echo "PROJECT_NUMBER = ${module.version}" >> C.dox
+	echo "PROJECT_NUMBER = ${version}" >> C.dox
 	doxygen C.dox
 
 stage: compile
@@ -149,23 +149,23 @@ stage: compile
 dist: distsrc distbin
 
 distsrc:
-	mkdir -p ${top_srcdir}/${package}-${module.version}
-	cd ${top_srcdir} && GLOBIGNORE="${package}-${module.version}" && cp -Rf * ${package}-${module.version}
-	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${module.version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${module.version}
-	rm -rf ${top_srcdir}/${package}-${module.version}
+	mkdir -p ${top_srcdir}/${package}-${version}
+	cd ${top_srcdir} && GLOBIGNORE="${package}-${version}" && cp -Rf * ${package}-${version}
+	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${version}
+	rm -rf ${top_srcdir}/${package}-${version}
 
 distbin:
 	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
-	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${module.version}_bin.tar.gz *; cd $$save_dir
+	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
         
 install: all
-	-mkdir -p ${PREFIX}/lib
-	-mkdir -p ${PREFIX}/share/doc/${package}-${module.version}
+	-mkdir -p ${PREFIX}/${libdir}
+	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${module.version}
-	-cp -r C ${PREFIX}/share/doc/${package}-${module.version}
-	${INSTALL} -m 755 "libglite_lbu_db.la" "${PREFIX}/lib/libglite_lbu_db.la"; \
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	-cp -r C ${PREFIX}/share/doc/${package}-${version}
+	${INSTALL} -m 755 "libglite_lbu_db.la" "${PREFIX}/${libdir}/libglite_lbu_db.la"; \
 	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 
 clean:

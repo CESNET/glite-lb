@@ -43,7 +43,7 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 
-LINK:=libtool --mode=link ${CC} ${LDFLAGS} -rpath ${stagedir}/lib ${version_info}
+LINK:=libtool --mode=link ${CC} ${LDFLAGS} -rpath ${stagedir}/${libdir} ${version_info}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
@@ -53,13 +53,13 @@ HDRS:=types.h context.h attr.h known_attr.h backend.h builtin_plugins.h file_plu
 SRCS:=context.c attr.c utils.c indexdb.c
 OBJS:=${SRCS:.c=.lo}
 THROBJS:=${OBJS:.o=.thr.lo}
-LIBS:=-L${stagedir}/lib -lglite_jobid -lglite_lbu_db
+LIBS:=-L${stagedir}/${libdir} -lglite_jobid -lglite_lbu_db
 THRLIBS:=${LIBS}
 
 commonlib:= libglite_jp_common_${nothrflavour}.la
 commonlib_thr:= libglite_jp_common_${thrflavour}.la
 
-TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit -ldl
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit -ldl
 TEST_INC:=-I${cppunit_prefix}/include
 
 
@@ -88,8 +88,8 @@ stage: compile
 install:
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${jpprefix}
 	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${jpprefix}
-	-mkdir -p ${PREFIX}/lib
-	${INSTALL} -m 755 ${commonlib} ${commonlib_thr} ${PREFIX}/lib
+	-mkdir -p ${PREFIX}/${libdir}
+	${INSTALL} -m 755 ${commonlib} ${commonlib_thr} ${PREFIX}/${libdir}
 
 clean:
 	rm -rvf *.o *.lo .libs lib*

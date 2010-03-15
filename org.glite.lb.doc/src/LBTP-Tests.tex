@@ -435,6 +435,17 @@ In all above cases: Watch the life cycle. Check the resulting state (\emph{Clear
 
 \result\ Jobs were submitted. Cancel operation worked where applicable. Resulting state was as expected (\emph{Cleared}, \emph{Cancelled} or \emph{Aborted}). Events were received from all components as expected.
 
+\note\ The test runs automatically. Bear in mind that in a real-life grid, even valid jobs may not always finish succesf
+ully. Analyze failures and re-run if necessary.
+
+\note\ The number of jobs to generate may be specified using the \texttt{-n} argument
+
+\note\ Job submissions are limited to VOCE CEs in normal circumstances. Use the \texttt{-w} argument to override. 
+
+\note\ Due to the nature of grid computing, this test may take hours to complete!  
+
+
+
 \section{Regression testing}
 
 \subsection{Publishing Correct Service Version over BDII}

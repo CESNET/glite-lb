@@ -29,11 +29,11 @@ CFLAGS:= \
 	-I${top_srcdir}/interface 
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib  ${LDFLAGS} 
-SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/lib
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir}  ${LDFLAGS} 
+SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/${libdir}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/lib ${LDFLAGS}
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 ifneq (${classads_prefix},/usr)
@@ -43,8 +43,8 @@ endif
 classadslib := ${classadslib} -lclassad
 
 EXT_LIBS:=
-COMMON_LIBS:= -L${stagedir}/lib  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
-PLUGIN_LIBS:= -L${stagedir}/lib -lglite_lb_common_${nothrflavour}\
+COMMON_LIBS:= -L${stagedir}/${libdir}  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
+PLUGIN_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common_${nothrflavour}\
 	${classadslib} -lstdc++ ${expatlib} -lexpat\
 
 PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo process_event_cream.lo lb_plugin.lo  process_event_file_transfer.lo process_event_file_transfer_collection.lo
@@ -73,9 +73,9 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install:
-	-mkdir -p ${PREFIX}/lib ${PREFIX}/interface ${PREFIX}/include/glite/lb
-	install -m 644 ${MACHINE_LIB} ${PREFIX}/lib 
-	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/lib
+	-mkdir -p ${PREFIX}/${libdir} ${PREFIX}/interface ${PREFIX}/include/glite/lb
+	install -m 644 ${MACHINE_LIB} ${PREFIX}/${libdir} 
+	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/${libdir}
 	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${PREFIX}/interface
 	install -m 644 lb-job-attrs2.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${PREFIX}/interface

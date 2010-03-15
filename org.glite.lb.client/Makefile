@@ -187,26 +187,26 @@ generate: ${GEN_HDRS}
 default: all
 
 ${LIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/lib \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/${libdir} \
 			${COMMON_LIB} ${TRIO_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}/lib \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}/${libdir} \
 			${COMMON_LIB_THR} ${TRIO_LIB} \
 			-lglite_security_gss_${thrflavour}
 
 ${PLUSLIB}: ${PLUSOBJS} ${LIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/lib ${LIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/lib ${THRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
 
 logevent: logevent.o args.o
 	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
 
 notify: notify.o
-	${LINKXX} -o $@ notify.o ${PLUSLIB} ${EXT_LIB} 
+	${LINKXX} -o $@ notify.o ${PLUSLIB} ${EXT_LIB} ${PLUS_EXTRA_LIB}
 
 register_sandbox: %: %.o
 	${LINK} -o $@ $@.o ${LIB} ${EXT_LIB}
@@ -322,7 +322,7 @@ install:
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/sbin
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
-	mkdir -p ${PREFIX}/lib
+	mkdir -p ${PREFIX}/${libdir}
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}/api
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
 	mkdir -p ${PREFIX}/share/man/man1
@@ -330,10 +330,10 @@ install:
 	mkdir -p ${PREFIX}/share/man/man8
 	mkdir -p ${PREFIX}/share/build/m4
 ifdef LB_STANDALONE
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/${libdir}
 else
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/lib
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/${libdir}
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
@@ -364,7 +364,8 @@ endif
 	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${PREFIX}/examples/glite-lb-sandbox_transfers.sh
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
-	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4/
+	sed "s/%LIBDIR%/${libdir}/" ${top_srcdir}/m4/glite_lb_client.m4 > glite_lb_client.m4
+	${INSTALL} -m 644 glite_lb_client.m4 ${PREFIX}/share/build/m4/
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/

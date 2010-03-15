@@ -17,6 +17,7 @@ limitations under the License.
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <unistd.h>
+#include <cstdlib>
 
 extern "C" {
 #include <string.h>

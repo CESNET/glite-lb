@@ -303,6 +303,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		printf(EXEC "\n#Add new configuration\netics-configuration modify -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n"); }
 	else { # New configuration needs to be created
 	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n"); }
+	printf(EXEC "etics-commit\n");
 
 
 	# **********************************

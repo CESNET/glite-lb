@@ -16,6 +16,9 @@ limitations under the License.
 */
 
 #include <iostream>
+#include <cstdlib>
+#include <cstring>
+//#include <string.h>
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TestFixture.h>

@@ -17,6 +17,8 @@ limitations under the License.
 
 #include <assert.h>
 #include <fstream>
+#include <cstdlib>
+#include <cstring>
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TestFixture.h>

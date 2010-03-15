@@ -20,6 +20,7 @@ my $mode = 'build';
 my $help = 0;
 my $listmodules;
 my $version;
+my $branch;
 my $output;
 my $lb_tag = '';
 my $lbjp_tag = '';
@@ -88,6 +89,7 @@ my @opts = (
 	'mode=s' => \$mode,
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
+	'branch=s' => \$branch,
 	'output=s' => \$output,
 	'stage=s' => \$stagedir,
 	'lb-tag=s' => \$lb_tag,
@@ -125,8 +127,8 @@ if ($listmodules) {
 	exit 0;
 }
 
-warn "$0: --version and --output make sense only in --mode=etics\n"
-	if ($version || $output) && $mode ne 'etics';
+warn "$0: --version, --branch and --output make sense only in --mode=etics\n"
+	if ($version || $output || $branch) && $mode ne 'etics';
 
 my $en;
 for (keys %enable_nodes) { $en = 1 if $enable_nodes{$_}; }
@@ -299,10 +301,10 @@ BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
 	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager/ ],
-	'lb.common' => [ qw/expat cppunit:B classads/ ],
+	'lb.common' => [ qw/expat cares:B cppunit:B classads/ ],
 	'lb.doc' => [],
-	'lb.logger' => [ qw/cppunit:B log4c/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite log4c/ ],
+	'lb.logger' => [ qw/cppunit:B/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
 	'lb.ws-interface' => [],
@@ -310,7 +312,7 @@ BEGIN{
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/postgresql:R/ ],
 	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
-	'lbjp-common.log' => [ qw// ],
+	'lbjp-common.log' => [ qw/log4c/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
@@ -352,7 +354,7 @@ for my $jar (keys %need_jars) {
 	'lb.client' => [ qw/
 		lb.types:B lb.common
 		lbjp-common.trio
-		jobid.api-cpp jobid.api-c
+		jobid.api-cpp:B jobid.api-c
 		security.gss
 	/ ],
 	'lb.client-java' => [ qw/
@@ -361,7 +363,7 @@ for my $jar (keys %need_jars) {
 		jobid.api-java
 	/ ],
 	'lb.common' => [ qw/
-		jobid.api-cpp jobid.api-c
+		jobid.api-cpp:B jobid.api-c
 		lb.types:B lbjp-common.trio security.gss
 	/ ],
 	'lb.doc' => [ qw/lb.types:B/ ],
@@ -449,7 +451,7 @@ for my $ext (keys %deps_aux) {
 	jpclient => 'jp.client',
 );
 
-my @t = qw/lb.client-java jobid.api-java lb.types lbjp-common.log/;
+my @t = qw/lb.client-java jobid.api-java lb.types/;
 @topbuild{@t} = (1) x ($#t+1);
 }
 
@@ -580,8 +582,18 @@ sub mode_etics {
 		push @copts,"--with-$_ \${$eext.location}/$_*.jar";
 	}
 
+	my $conf;
+	my $conftag;
 
-	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
+	if ($branch) {
+		$conf = "glite-${subsys}-${module}_$branch"; 
+		$conftag = $branch; 
+		$dwpath = ""; }
+	else {
+		$conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
+		$conftag = $conf; 
+		$dwpath = "path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz\n"; }
+#	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
@@ -625,10 +637,9 @@ description = org.glite.$subsys.$module
 projectName = org.glite
 age = $age
 deploymentType = None
-tag = $conf
+tag = $conftag
 version = $major.$minor.$rev
-path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz
-
+$dwpath
 [Platform-default:VcsCommand]
 displayName = None
 description = None

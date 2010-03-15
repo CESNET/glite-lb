@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <cstring>
 
 
 extern "C" {

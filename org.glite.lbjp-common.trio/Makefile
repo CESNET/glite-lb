@@ -24,8 +24,8 @@ DEBUG:=-g -O0 -Wall
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION
 
 COMPILE:=libtool --mode=compile ${CC}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/lib ${LDFLAGS} 
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/lib ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 REPORTS:=${top_srcdir}/reports
@@ -98,11 +98,11 @@ distbin:
 	rm -rf tmpbuilddir
 
 install: all
-	-mkdir -p ${PREFIX}/lib
+	-mkdir -p ${PREFIX}/${libdir}
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbuprefix}
-	${INSTALL} -m 644 ${LTLIB} ${STATICLIB} ${PREFIX}/lib
+	${INSTALL} -m 644 ${LTLIB} ${STATICLIB} ${PREFIX}/${libdir}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbuprefix})
 
