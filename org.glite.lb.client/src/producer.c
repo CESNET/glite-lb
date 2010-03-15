@@ -40,8 +40,6 @@ limitations under the License.
 #ifdef FAKE_VERSION
 int edg_wll_DoLogEvent(edg_wll_Context ctx, edg_wll_LogLine logline);
 int edg_wll_DoLogEventServer(edg_wll_Context ctx, int flags, edg_wll_LogLine logline);
-// int edg_wll_DoLogEventProxy(edg_wll_Context ctx, edg_wll_LogLine logline);
-// int edg_wll_DoLogEventDirect(edg_wll_Context ctx, edg_wll_LogLine logline);
 #else
 
 /**
