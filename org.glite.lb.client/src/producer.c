@@ -730,12 +730,10 @@ static int edg_wll_SetLoggingJobMaster(
 		if (!code) {
 			if (edg_wll_QuerySequenceCodeProxy(ctx, job, &code_loc))
 				goto edg_wll_setloggingjobmaster_end;	
-		} else {
-			code_loc = strdup(code);
 		}
 	}
 		
-	if (!edg_wll_SetSequenceCode(ctx,code_loc,seq_code_flags)) {
+	if (!edg_wll_SetSequenceCode(ctx, code ? code : code_loc, seq_code_flags)) {
 		edg_wll_IncSequenceCode(ctx);
 	}
 	
