@@ -377,7 +377,7 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 			ret = strdup("no_seqcodes_with_CREAM");	/* XXX: not yet */
 			break;
 		default:
-			edg_wll_SetError(ctx,EINVAL,"edg_wll_GetSequenceCode(): sequence code type");
+			edg_wll_SetError(ctx,EINVAL,"edg_wll_GetSequenceCode(): unknown sequence code type");
 			return NULL;
 	}
 	
