@@ -86,6 +86,7 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
                        int              port,
 		       const char      *owner,
                        int              flags,
+		       int		authz_flags,
 		       int		expires,
 		       const edg_wll_JobStat notif_job_stat);
 

@@ -40,7 +40,7 @@ limitations under the License.
 
 #include "il_notification.h"
 #include "lb_xml_parse.h"
-
+#include "authz_policy.h"
 
 
 #define FCNTL_ATTEMPTS		5
@@ -172,6 +172,7 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
                        int              port,
 		       const char      *owner,
                        int		flags,
+		       int		authz_flags,
 		       int		expires,
 		       const edg_wll_JobStat notif_job_stat)
 {
@@ -186,6 +187,8 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		stat.condor_jdl = NULL;
 		stat.rsl = NULL;
 	}
+	if (authz_flags)
+		blacken_fields(&stat, authz_flags);
 
 	if(edg_wll_JobStatusToXML(context, stat, &xml_data)) 
 		goto out;

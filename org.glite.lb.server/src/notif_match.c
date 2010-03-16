@@ -35,9 +35,10 @@ limitations under the License.
 #include "il_notification.h"
 #include "db_supp.h"
 #include "index.h"
+#include "authz_policy.h"
 
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *);
-static int notif_check_acl(edg_wll_Context,const edg_wll_JobStat *,const char *);
+static int notif_check_acl(edg_wll_Context,const edg_wll_JobStat *,const char *, int *);
 
 extern int debug;
 
@@ -48,7 +49,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[6];
 	glite_lbu_Statement	jobs = NULL;
-	int	ret,i;
+	int	ret,i,authz_flags = 0;
 	time_t	expires,now = time(NULL);
 	
 	char *cond_where = NULL;
@@ -116,7 +117,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 				getpid(),jobc[0],asctime(gmtime(&expires)));
 		}
 		else if (notif_match_conditions(ctx,oldstat,stat,jobc[4]) &&
-				notif_check_acl(ctx,stat,jobc[3]))
+				notif_check_acl(ctx,stat,jobc[3], &authz_flags))
 		{
 			char			   *dest, *aux;
 			int					port;
@@ -144,7 +145,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			/* XXX: only temporary hack!!!
 			 */
 			ctx->p_instance = strdup("");
-			if ( edg_wll_NotifJobStatus(ctx, nid, dest, port, jobc[3], atoi(jobc[5]), expires, *stat) )
+			if ( edg_wll_NotifJobStatus(ctx, nid, dest, port, jobc[3], atoi(jobc[5]), authz_flags, expires, *stat) )
 			{
 				free(dest);
 				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
@@ -222,30 +223,41 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *old
  * effective VOMS groups of the recipient are not available here, should be 
  * probably stored along with the registration.
  */
-static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip)
+static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip, int *authz_flags)
 {
 	edg_wll_Acl	acl = calloc(1,sizeof *acl);
 	int		ret;
+	struct _edg_wll_GssPrincipal_data princ;
+
+	memset(&princ, 0, sizeof(princ));
+	*authz_flags = 0;
 
 	edg_wll_ResetError(ctx);
 	if (strcmp(stat->owner,recip) == 0
 		|| edg_wll_amIroot(recip,NULL,ctx->super_users)) return 1;
 
-	if (stat->acl == NULL) return 0;
+	if (stat->acl) {
+		ret = edg_wll_DecodeACL(stat->acl,&acl->value);
+		if (ret) {
+			edg_wll_FreeAcl(acl);
+			edg_wll_SetError(ctx,EINVAL,"decoding ACL");
+			return 0;
+		}
 
-	ret = edg_wll_DecodeACL(stat->acl,&acl->value);
-	if (ret) {
+		acl->string = stat->acl; 
+		ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ);
+		acl->string = NULL;
 		edg_wll_FreeAcl(acl);
-		edg_wll_SetError(ctx,EINVAL,"decoding ACL");
-		return 0;
+		if (ret == 0)
+			return 1;
+		edg_wll_ResetError(ctx);
 	}
 
-	acl->string = stat->acl; 
+	princ.name = (char *)recip;
+	if (check_authz_policy(&ctx->authz_policy, &princ, STATUS_FOR_RTM)) {
+		*authz_flags |= STATUS_FOR_RTM;
+                return 1;
+	}
 
-	ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ);
-
-	acl->string = NULL;
-	edg_wll_FreeAcl(acl);
-
-	return !ret;
+	return 0;
 }

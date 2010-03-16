@@ -95,6 +95,8 @@ check_jobstat_authz(edg_wll_Context ctx,
 	edg_wll_Acl acl,
 	int *flags)
 {
+	struct _edg_wll_GssPrincipal_data princ;
+
 	*flags = 0;
 	if (ctx->noAuth)
 		return 1;
@@ -103,7 +105,9 @@ check_jobstat_authz(edg_wll_Context ctx,
 	if (acl && edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ) == 0)
 		return 1;
 	edg_wll_ResetError(ctx);
-	if (check_authz_policy(ctx, &ctx->authz_policy, STATUS_FOR_RTM)) {
+	princ.name = ctx->peerName;
+	princ.fqans = ctx->fqans;
+	if (check_authz_policy(&ctx->authz_policy, &princ, STATUS_FOR_RTM)) {
 		*flags |= STATUS_FOR_RTM;
 		return 1;
 	}
@@ -411,17 +415,8 @@ rollback:
 	free(string_jobid);
 	free(md5_jobid);
 
-	if (authz_flags && authz_flags & STATUS_FOR_RTM) {
-		edg_wll_JobStat new_stat;
-
-		memset(&new_stat, 0, sizeof(new_stat));
-		new_stat.state = stat->state;
-		/* XXX save anything else */
-
-		edg_wll_FreeStatus(stat);
-		memset(stat, 0, sizeof(*stat));
-		edg_wll_CpyStatus(&new_stat, stat);
-	}
+	if (authz_flags)
+		blacken_fields(stat, authz_flags);
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }

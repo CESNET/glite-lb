@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <glite/lb/context-int.h>
 #include <glite/lb/authz.h>
+#include <glite/security/glite_gss.h>
 
 typedef enum {
     ACTION_UNDEF	= 0,
@@ -49,12 +50,15 @@ int
 parse_server_policy(edg_wll_Context ctx, const char *filename, edg_wll_authz_policy policy);
 
 int
-check_authz_policy(edg_wll_Context, edg_wll_authz_policy, authz_action);
+check_authz_policy(edg_wll_authz_policy, edg_wll_GssPrincipal, authz_action);
 
 authz_action
 find_authz_action(const char *name);
 
 authz_attr_id
 find_authz_attr(const char *name);
+
+int
+blacken_fields(edg_wll_JobStat *, int flags);
 
 #endif

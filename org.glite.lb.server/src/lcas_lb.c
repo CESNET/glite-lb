@@ -46,12 +46,15 @@ plugin_confirm_authorization(lcas_request_t request, lcas_cred_id_t lcas_cred)
    char *user_dn;
    int ret;
    edg_wll_Context ctx;
+   struct _edg_wll_GssPrincipal_data princ;
    X509 *cert = NULL;
    STACK_OF(X509) * chain = NULL;
    void *cred = NULL;
    struct vomsdata *voms_info = NULL;
    int err;
    authz_action action;
+
+   memset(&princ, 0, sizeof(princ));
 
    lcas_log_debug(1,"\t%s-plugin: checking LB access policy\n",
 		  modname);
@@ -64,14 +67,13 @@ plugin_confirm_authorization(lcas_request_t request, lcas_cred_id_t lcas_cred)
       goto end;
    }
 
-
    user_dn = lcas_get_dn(lcas_cred);
    if (user_dn == NULL) {
       lcas_log(0, "lcas.mod-lb() error: user DN empty\n");
       ret = LCAS_MOD_FAIL;
       goto end;
    }
-   ctx->peerName = strdup(user_dn);
+   princ.name = user_dn;
 
    cred = lcas_get_gss_cred(lcas_cred);
    if (cred == NULL) {
@@ -92,10 +94,10 @@ plugin_confirm_authorization(lcas_request_t request, lcas_cred_id_t lcas_cred)
 
       ret = VOMS_RetrieveFromCred(cred, RECURSE_CHAIN, voms_info, &err);
       if (ret == 1)
-          edg_wll_get_fqans(ctx, voms_info, &ctx->fqans);
+          edg_wll_get_fqans(ctx, voms_info, &princ.fqans);
    }
 
-   ret = check_authz_policy(ctx, edg_wll_get_server_policy(), action);
+   ret = check_authz_policy(edg_wll_get_server_policy(), &princ, action);
    ret = (ret == 1) ? LCAS_MOD_SUCCESS : LCAS_MOD_FAIL;
 
 end:

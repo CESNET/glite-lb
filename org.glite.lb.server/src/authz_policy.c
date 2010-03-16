@@ -41,7 +41,8 @@ static int num_attrs =
 
 
 int
-check_authz_policy(edg_wll_Context ctx, edg_wll_authz_policy policy,
+check_authz_policy(edg_wll_authz_policy policy,
+		   edg_wll_GssPrincipal principal,
 		   authz_action action)
 {
     int i;
@@ -59,11 +60,11 @@ check_authz_policy(edg_wll_Context ctx, edg_wll_authz_policy policy,
 	    return 1;
         switch (r->attr_id) {
             case ATTR_SUBJECT:
-		if (edg_wll_gss_equal_subj(r->attr_value, ctx->peerName))
+		if (edg_wll_gss_equal_subj(r->attr_value, principal->name))
 		    return 1;
 		break;
 	    case ATTR_FQAN:
-		for (f = ctx->fqans; f && *f; f++)
+		for (f = principal->fqans; f && *f; f++)
 		    if (strcmp(r->attr_value, *f) == 0)
 			return 1;
 		break;
@@ -95,4 +96,23 @@ find_authz_attr(const char *name)
 	if (strcmp(attr_id_names[i].name, name) == 0)
 	    return attr_id_names[i].id;
     return ATTR_UNDEF;
+}
+
+int
+blacken_fields(edg_wll_JobStat *stat, int flags)
+{
+    edg_wll_JobStat new_stat;
+
+    memset(&new_stat, 0, sizeof(new_stat));
+
+    if (flags & STATUS_FOR_RTM) {
+	new_stat.state = stat->state;
+	/* XXX save anything else */
+    }
+
+    edg_wll_FreeStatus(stat);
+    memset(stat, 0, sizeof(*stat));
+    edg_wll_CpyStatus(&new_stat, stat);
+    edg_wll_FreeStatus(&new_stat);
+    return 0;
 }
