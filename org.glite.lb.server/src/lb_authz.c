@@ -43,9 +43,10 @@ GRSTgaclEntry *GACLparseEntry(xmlNodePtr cur);
 
 extern char *server_key;
 extern char *server_cert;
+extern struct _edg_wll_authz_policy authz_policy;
 
-static int 
-get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
+int 
+edg_wll_get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
       	  char ***fqans)
 {
    struct voms **voms_cert = NULL;
@@ -188,7 +189,7 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
    if (ret)
       goto end;
 
-   ret = get_fqans(ctx, voms_info, &ctx->fqans);
+   ret = edg_wll_get_fqans(ctx, voms_info, &ctx->fqans);
 
 end:
    edg_wll_gss_free_princ(principal);
@@ -908,9 +909,22 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
    int ret;
 
    /* XXX make a real RSL ? */
-   request = edg_wll_EventToString(ev->any.type);
-   if (request == NULL)
-      return edg_wll_SetError(ctx, EINVAL, "Unknown event type");
+
+   switch (ev->any.type) {
+	case EDG_WLL_EVENT_REGJOB:
+	case EDG_WLL_EVENT_USERTAG:
+	case EDG_WLL_EVENT_CHANGEACL:
+	case EDG_WLL_EVENT_NOTIFICATION:
+	case EDG_WLL_EVENT_RESOURCEUSAGE:
+	case EDG_WLL_EVENT_REALLYRUNNING:
+	case EDG_WLL_EVENT_SUSPEND:
+	case EDG_WLL_EVENT_RESUME:
+	     request = "LOG_GENERAL_EVENTS";
+	     break;
+	default:
+	     request = "LOG_WMS_EVENTS";
+	     break;
+   }
 
    ret = edg_wll_gss_get_client_pem(&ctx->connections->serverConnection->gss,
 				    server_cert, server_key,
@@ -969,3 +983,8 @@ int edg_wll_amIroot(const char *subj, char **fqans,char **super_users)
 	return 0;
 }
 
+edg_wll_authz_policy
+edg_wll_get_server_policy()
+{
+    return &authz_policy;
+}

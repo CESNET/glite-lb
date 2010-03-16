@@ -23,6 +23,11 @@ limitations under the License.
 #include <string.h>
 
 #include <glite/security/lcas/lcas_modules.h>
+#include <glite/security/lcas/lcas_utils.h>
+#include <glite/security/voms/voms_apic.h>
+#include <glite/lb/context.h>
+#include "authz_policy.h"
+#include "lb_authz.h"
 
 static char *modname = "lcas_lb";
 static char *authfile = NULL;
@@ -30,135 +35,77 @@ static char *authfile = NULL;
 int
 plugin_initialize(int argc, char *argv[])
 {
-   int i;
-
-   lcas_log_debug(1, "%s-plugin_initialize(): passed arguments:\n",modname);
-   for (i=0; i < argc; i++)
-      lcas_log_debug(1, "\targ %d is %s\n", i,argv[i]);
-
-   if (argc > 1)
-      authfile = lcas_findfile(argv[1]);
-
-   if (authfile == NULL) {
-      lcas_log(0,"\t%s-plugin_initialize() error:"
-                 ":access control policy file required!\n",
-               modname);
-      return LCAS_MOD_NOFILE;
-   }
-
-   if (lcas_getfexist(1, authfile) == NULL) {
-      lcas_log(0, "\t%s-plugin_initialize() error:"
-		  "Cannot find access control policy file: %s\n",
-	       modname, authfile);
-      return LCAS_MOD_NOFILE;
-   }
+   lcas_log_debug(1, "%s-plugin_initialize()\n",modname);
 
    return LCAS_MOD_SUCCESS;
-}
-
-static char *
-get_event_name(lcas_request_t request)
-{
-   char *rsl = (char *) request;
-
-   if (request == NULL)
-      return NULL;
-
-   return strdup(rsl);
-}
-
-static int
-check_db_file(char *event, char *user_dn)
-{
-   FILE *db_file = NULL;
-   char line[1024];
-   int found = 0, inside_block = 0, found_event = 0;
-   char *p, *q;
-   int ret;
-
-   if (event == NULL || user_dn == NULL)
-      return LCAS_MOD_FAIL;
-
-   db_file = fopen(authfile, "r");
-   if (db_file == NULL) {
-      lcas_log_debug(1, "Failed to open policy file %s: %s\n",
-                     authfile, strerror(errno));
-      return LCAS_MOD_FAIL;
-   }
-
-   ret = LCAS_MOD_FAIL;
-   while (fgets(line, sizeof(line), db_file) != NULL) {
-      p = strchr(line, '\n');
-      if (p)
-         *p = '\0';
-      p = line;
-      if (*p == '#')
-         continue;
-
-      while (*p == ' ')
-         p++;
-
-      if (inside_block) {
-        q = strchr(p, '}');
-        if (q)
-           *q = '\0';
-        if (found_event && ((strcmp(p, user_dn) == 0) || *p == '*')) {
-           found = 1;
-           break;
-        }
-        if (q) {
-           inside_block = 0;
-        }
-      } else {
-        q = strchr(p, '=');
-        if (q == NULL)
-           continue;
-        *q = '\0';
-        inside_block = 1;
-        if (strncmp(p, event, strlen(event)) == 0 || *p == '*')
-           found_event = 1;
-      }
-   }
-   fclose(db_file);
-
-   if (found)
-      ret = LCAS_MOD_SUCCESS;
-
-   lcas_log_debug(1, "access %s\n",
-                  (ret == LCAS_MOD_SUCCESS) ? "granted" : "denied");
-
-   return ret;
 }
 
 int
 plugin_confirm_authorization(lcas_request_t request, lcas_cred_id_t lcas_cred)
 {
    char *user_dn;
-   char *event = NULL;
    int ret;
+   edg_wll_Context ctx;
+   X509 *cert = NULL;
+   STACK_OF(X509) * chain = NULL;
+   void *cred = NULL;
+   struct vomsdata *voms_info = NULL;
+   int err;
+   authz_action action;
 
    lcas_log_debug(1,"\t%s-plugin: checking LB access policy\n",
 		  modname);
 
-   event = get_event_name(request);
-   if (event == NULL) {
-      lcas_log_debug(1,"\t%s-plugin_confirm_authorization(): no event name specified\n",
-                     modname);
-      return LCAS_MOD_FAIL;
-   }
+   edg_wll_InitContext(&ctx);
 
-   user_dn = lcas_get_dn(lcas_cred);
-   if (user_dn == NULL) {
-      lcas_log(0, "lcas.mod-lcas_get_fabric_authorization() error: user DN empty\n");
+   if ((action = find_authz_action(request)) == ACTION_UNDEF) {
+      lcas_log(0, "lcas.mod-lb() error: unsupported action\n");
       ret = LCAS_MOD_FAIL;
       goto end;
    }
 
-   ret = check_db_file(event, user_dn);
+
+   user_dn = lcas_get_dn(lcas_cred);
+   if (user_dn == NULL) {
+      lcas_log(0, "lcas.mod-lb() error: user DN empty\n");
+      ret = LCAS_MOD_FAIL;
+      goto end;
+   }
+   ctx->peerName = strdup(user_dn);
+
+   cred = lcas_get_gss_cred(lcas_cred);
+   if (cred == NULL) {
+      lcas_log(0, "lcas.mod-lb() warning: user gss credential empty\n");
+#if 0
+      ret = LCAS_MOD_FAIL;
+      goto end;
+#endif
+   }
+
+   if (cred) {
+      voms_info = VOMS_Init(NULL, NULL);
+      if (voms_info == NULL) {
+	  lcas_log(0, "lcas.mod-lb() failed to initialize VOMS\n");
+	      ret = LCAS_MOD_FAIL; 
+	      goto end;
+      }
+
+      ret = VOMS_RetrieveFromCred(cred, RECURSE_CHAIN, voms_info, &err);
+      if (ret == 1)
+          edg_wll_get_fqans(ctx, voms_info, &ctx->fqans);
+   }
+
+   ret = check_authz_policy(ctx, edg_wll_get_server_policy(), action);
+   ret = (ret == 1) ? LCAS_MOD_SUCCESS : LCAS_MOD_FAIL;
 
 end:
-   if (event)
-      free(event);
+   edg_wll_FreeContext(ctx);
+   if (voms_info)
+      VOMS_Destroy(voms_info);
+   if (cert)
+      X509_free(cert);
+   if (chain)
+      sk_X509_pop_free(chain, X509_free);
 
    return ret; 
 }
@@ -175,15 +122,3 @@ plugin_terminate()
 
    return LCAS_MOD_SUCCESS;
 }
-
-#if 0
-int
-main(int argc, char *argv[])
-{
-   authfile = "lcas_lb.db";
-
-   check_db_file(argv[1], argv[2]);
-
-   return 0;
-}
-#endif
