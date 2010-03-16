@@ -24,7 +24,9 @@ limitations under the License.
 typedef enum {
     ACTION_UNDEF	= 0,
     READ_ALL		= 2,
-    READ_RTM		= 4,
+    STATUS_FOR_RTM	= 4,
+    LOG_WMS_EVENTS	= 8,
+    LOG_GENERAL_EVENTS	= 16,
 } authz_action;
 
 typedef struct action_name {

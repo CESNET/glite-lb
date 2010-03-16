@@ -23,7 +23,9 @@ limitations under the License.
 
 struct action_name action_names[] = {
     { READ_ALL,		"READ_ALL" },
-    { READ_RTM,		"READ_RTM" },
+    { STATUS_FOR_RTM,	"STATUS_FOR_RTM" },
+    { LOG_WMS_EVENTS,	"LOG_WMS_EVENTS" },
+    { LOG_GENERAL_EVENTS,	"LOG_GENERAL_EVENTS" },
 };
 
 static int num_actions =
@@ -52,7 +54,9 @@ check_authz_policy(edg_wll_Context ctx, edg_wll_authz_policy policy,
     for (i = 0; i < policy->num; i++) {
         r = policy->rules + i;
         if (r->action != action)
-            break;
+            continue;
+	if (strcmp(r->attr_value, ".*") == 0)
+	    return 1;
         switch (r->attr_id) {
             case ATTR_SUBJECT:
 		if (edg_wll_gss_equal_subj(r->attr_value, ctx->peerName))

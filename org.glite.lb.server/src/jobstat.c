@@ -103,8 +103,8 @@ check_jobstat_authz(edg_wll_Context ctx,
 	if (acl && edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ) == 0)
 		return 1;
 	edg_wll_ResetError(ctx);
-	if (check_authz_policy(ctx, &ctx->authz_policy, READ_RTM)) {
-		*flags |= READ_RTM;
+	if (check_authz_policy(ctx, &ctx->authz_policy, STATUS_FOR_RTM)) {
+		*flags |= STATUS_FOR_RTM;
 		return 1;
 	}
 	return 0;
@@ -411,7 +411,7 @@ rollback:
 	free(string_jobid);
 	free(md5_jobid);
 
-	if (authz_flags && authz_flags & READ_RTM) {
+	if (authz_flags && authz_flags & STATUS_FOR_RTM) {
 		edg_wll_JobStat new_stat;
 
 		memset(&new_stat, 0, sizeof(new_stat));
