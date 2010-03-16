@@ -757,7 +757,7 @@ int edg_wll_SetLoggingJob(
         const char *code,
         int seq_code_flags)
 {
-	return edg_wll_SetLoggingJobMaster(ctx,job,NULL,code,seq_code_flags,/* XXX */ 0);
+	return edg_wll_SetLoggingJobMaster(ctx,job,code,NULL,seq_code_flags,/* XXX */ 0);
 }
 
 int edg_wll_SetLoggingJobProxy(
@@ -767,7 +767,7 @@ int edg_wll_SetLoggingJobProxy(
         const char *user,
         int seq_code_flags)
 {
-	return edg_wll_SetLoggingJobMaster(ctx,job,user,code,seq_code_flags,EDG_WLL_LOGFLAG_PROXY);
+	return edg_wll_SetLoggingJobMaster(ctx,job,code,user,seq_code_flags,EDG_WLL_LOGFLAG_PROXY);
 }
 
 /**
