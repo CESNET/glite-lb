@@ -47,6 +47,7 @@ my %extern_prefix = (
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
 	trustmanager => '/opt/glite',
+	utiljava => '/opt/glite',
 	ant => '/usr',
 	jdk => '/usr',
 	libtar => '/usr',
@@ -300,7 +301,7 @@ sub mode_checkout() {
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
-	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager/ ],
+	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager utiljava/ ],
 	'lb.common' => [ qw/expat cares:B cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
@@ -533,6 +534,7 @@ BEGIN{
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
 		trustmanager=>'org.glite.security.trustmanager',
+		utiljava=>'org.glite.security.util-java',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials/],
