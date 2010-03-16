@@ -92,10 +92,10 @@ file=$1
 
 stripped_contents=`cat ${file} |
 sed --posix --regexp-extended \
-    -e 's:^[[:space:]]*(\#|//|/\*|\*)[[:space:]]*::' \
-    -e 's:[[:space:]]*(\#|//|\*/|\*)[[:space:]]*$::' \
+    -e 's:^[[:space:]]*(\#|//|/\*|\*|\%)[[:space:]]*::' \
+    -e 's:[[:space:]]*(\#|//|\*/|\*|\%)[[:space:]]*$::' \
     -e 's/[[:digit:]]{4}( ?[,-] ?[0-9]{4})*//' |
-tr -d '[[:space:]]'`
+tr -d '[\/[:space:]]'`
 
 # is copyright present?
 echo ${stripped_contents} | grep -q ${stripped_copyright} 2>/dev/null
@@ -229,8 +229,8 @@ limitations under the License.'
 COPYRIGHT='Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 See http://www.eu-egee.org/partners for details on the copyright holders.'
 
-stripped_copyright=`printf "$COPYRIGHT" | sed --posix --regexp-extended -e 's/[[:digit:]]{4}( ?[,-] ?[0-9]{4})*//' | tr -d '[[:space:]]'`
-stripped_license=`printf "$LICENSE" | tr -d '[[:space:]]'`
+stripped_copyright=`printf "$COPYRIGHT" | sed --posix --regexp-extended -e 's/[[:digit:]]{4}( ?[,-] ?[0-9]{4})*//' | tr -d '[\/[:space:]]'`
+stripped_license=`printf "$LICENSE" | tr -d '[\/[:space:]]'`
 
 #ANSI C files
 echo Processing ANSI C files

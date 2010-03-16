@@ -104,8 +104,9 @@ usage: $0 -b <branch> [-c configuration] subsystem.name
 		# **********************************
 		# Make sure the branch exists
 		# **********************************
-
-		die "Branch $branch does not exist for this module\n" if system("cvs status -v $module/project/version.properties | grep \"(branch:\" | grep -w $branch");
+		if ( $branch ne "HEAD" ) {
+			die "Branch $branch does not exist for this module\n" if system("cvs status -v $module/project/version.properties | grep \"(branch:\" | grep -w $branch");
+		}
 
 	}
 
