@@ -557,6 +557,7 @@ int main(int argc, char *argv[])
 	if (fprintf(fpid, "%d", getpid()) <= 0) { perror(pidfile); return 1; }
 	if (fclose(fpid) != 0) { perror(pidfile); return 1; }
 
+	edg_wll_InitContext(&ctx);
 	if (policy_file && parse_server_policy(ctx, policy_file, &authz_policy)) {
 		char *et, *ed;
 
@@ -766,7 +767,6 @@ int main(int argc, char *argv[])
 	if (!dbstring) dbstring = strdup(DEFAULTCS);
 		
 	/* Just check the database and let it be. The slaves do the job. */
-	edg_wll_InitContext(&ctx);
 	if (wait_for_open(ctx, dbstring)) {
 		edg_wll_Close(ctx);
 		edg_wll_FreeContext(ctx);

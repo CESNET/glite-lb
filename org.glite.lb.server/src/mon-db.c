@@ -42,6 +42,7 @@ enum lb_srv_perf_sink sink_mode;
 char	*server_key,*server_cert;
 int	enable_lcas;
 int	proxy_purge;
+struct _edg_wll_authz_policy authz_policy;
 
 static struct option opts[] = {
 	{ "mysql",1,NULL,'m' },
