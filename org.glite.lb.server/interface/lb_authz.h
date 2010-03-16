@@ -26,7 +26,8 @@ extern "C" {
 
 #ifndef NO_GACL
 #include <gridsite.h>
-#endif 
+#endif
+#include <glite/security/voms/voms_apic.h>
 
 typedef struct _edg_wll_Acl {
 #ifndef NO_GACL
@@ -84,6 +85,12 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev);
 
 int edg_wll_amIroot(const char *subj, char **fqans,char **super_users);
 
+edg_wll_authz_policy
+edg_wll_get_server_policy();
+
+int
+edg_wll_get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
+                  char ***fqans);
 
 #ifdef __cplusplus
 }
