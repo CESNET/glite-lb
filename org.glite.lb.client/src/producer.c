@@ -733,10 +733,10 @@ static int edg_wll_SetLoggingJobMaster(
 		} else {
 			code_loc = strdup(code);
 		}
+	}
 		
-		if (!edg_wll_SetSequenceCode(ctx,code_loc,seq_code_flags)) {
-			edg_wll_IncSequenceCode(ctx);
-		}
+	if (!edg_wll_SetSequenceCode(ctx,code_loc,seq_code_flags)) {
+		edg_wll_IncSequenceCode(ctx);
 	}
 	
 edg_wll_setloggingjobmaster_end:
