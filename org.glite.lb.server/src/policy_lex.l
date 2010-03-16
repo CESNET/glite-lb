@@ -31,6 +31,7 @@ permit		{ return PERMIT; }
 		} 
 [={}]		{ return *yytext; }
 "\n"		{ lineno++; }
+#[^\n]*\n	;
 [ \t]+		;
 .		{ return *yytext; }
 %%
