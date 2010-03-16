@@ -597,14 +597,15 @@ edg_wll_add_authz_rule(edg_wll_Context ctx,
 		       char *attr_value)
 {
     struct _edg_wll_authz_rule *tmp = policy->rules;
+    int num = policy->num;
 
-    tmp = realloc(tmp, (policy->num + 1) * sizeof(*tmp));
+    tmp = realloc(tmp, (num + 1) * sizeof(*tmp));
     if (tmp == NULL)
         return edg_wll_SetError(ctx, ENOMEM, NULL);;
 
-    tmp->action = action;
-    tmp->attr_id = attr_id;
-    tmp->attr_value = strdup(attr_value);
+    tmp[num].action = action;
+    tmp[num].attr_id = attr_id;
+    tmp[num].attr_value = strdup(attr_value);
 
     policy->rules = tmp;
     policy->num++;
