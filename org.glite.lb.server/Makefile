@@ -256,7 +256,7 @@ LCAS_PLUGIN_LIB:=liblcas_lb.la
 EXAMPLES=
 
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
-	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS}
+	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS} -Wl,--export-dynamic
 
 glite-lb-bkindex: ${INDEX_OBJS}
 	${LINKXX} -o $@ ${INDEX_OBJS} ${INDEX_LIBS}
@@ -327,7 +327,7 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 	ranlib $@
 
 ${LCAS_PLUGIN_LIB}: ${LCAS_PLUGIN_LOBJS}
-	${LINK} -o $@ $<
+	${LINK} -o $@ $^
 
 doc: ${MAN_GZ}
 
