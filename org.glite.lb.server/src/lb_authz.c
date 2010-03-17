@@ -888,26 +888,35 @@ int
 check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
 {
    char *pem_string = NULL;
-   char *request = NULL;
+   const char *request = NULL;
    int ret;
+   authz_action action;
 
    /* XXX make a real RSL ? */
 
    switch (ev->any.type) {
 	case EDG_WLL_EVENT_REGJOB:
+	     action = REGISTER_JOBS;
+	     break;
+
+	case EDG_WLL_EVENT_CURDESCR:
 	case EDG_WLL_EVENT_USERTAG:
 	case EDG_WLL_EVENT_CHANGEACL:
-	case EDG_WLL_EVENT_NOTIFICATION:
-	case EDG_WLL_EVENT_RESOURCEUSAGE:
-	case EDG_WLL_EVENT_REALLYRUNNING:
-	case EDG_WLL_EVENT_SUSPEND:
-	case EDG_WLL_EVENT_RESUME:
-	     request = "LOG_GENERAL_EVENTS";
+	     action = LOG_GENERAL_EVENTS;
 	     break;
+
+	case EDG_WLL_EVENT_RUNNING:
+	case EDG_WLL_EVENT_REALLYRUNNING:
+	case EDG_WLL_EVENT_DONE:
+	     action = LOG_CE_EVENTS;
+	     break;
+
 	default:
-	     request = "LOG_WMS_EVENTS";
+	     action = LOG_WMS_EVENTS;
 	     break;
    }
+
+   request = (char *) action2name(action);
 
    ret = edg_wll_gss_get_client_pem(&ctx->connections->serverConnection->gss,
 				    server_cert, server_key,
@@ -932,7 +941,7 @@ int edg_wll_amIroot(const char *subj, char **fqans,edg_wll_authz_policy policy)
 	princ.name = (char *) subj;
 	princ.fqans = fqans;
 
-	return check_authz_policy(policy, &princ, READ_ALL);
+	return check_authz_policy(policy, &princ, ADMIN_ACCESS);
 }
 
 edg_wll_authz_policy

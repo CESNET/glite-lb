@@ -22,10 +22,13 @@ limitations under the License.
 #include "authz_policy.h"
 
 struct action_name action_names[] = {
-    { READ_ALL,		"READ_ALL" },
+    { ADMIN_ACCESS,	"ADMIN_ACCESS" },
     { STATUS_FOR_RTM,	"STATUS_FOR_RTM" },
     { LOG_WMS_EVENTS,	"LOG_WMS_EVENTS" },
+    { LOG_CE_EVENTS,	"LOG_CE_EVENTS" },
     { LOG_GENERAL_EVENTS,	"LOG_GENERAL_EVENTS" },
+    { GET_STATISTICS,	"GET_STATISTICS" },
+    { REGISTER_JOBS,	"REGISTER_JOBS" },	
 };
 
 static int num_actions =
@@ -87,6 +90,17 @@ find_authz_action(const char *name)
     return ACTION_UNDEF;
 }
 
+const char *
+action2name(authz_action a)
+{
+    int i;
+
+    for (i = 0; i < num_actions; i++)
+	if (action_names[i].action == a)
+	    return action_names[i].name;
+    return NULL;
+}
+
 authz_attr_id
 find_authz_attr(const char *name)
 {
@@ -103,11 +117,25 @@ blacken_fields(edg_wll_JobStat *stat, int flags)
 {
     edg_wll_JobStat new_stat;
 
-    memset(&new_stat, 0, sizeof(new_stat));
+    edg_wll_InitStatus(&new_stat);
 
     if (flags & STATUS_FOR_RTM) {
 	new_stat.state = stat->state;
-	/* XXX save anything else */
+	edg_wlc_JobIdDup(stat->jobId, &new_stat.jobId);
+	if (stat->destination)
+	    new_stat.destination = strdup(stat->destination);
+	if (stat->network_server)
+	    new_stat.network_server = strdup(stat->network_server);
+	new_stat.stateEnterTime = stat->stateEnterTime;
+	new_stat.lastUpdateTime = stat->lastUpdateTime;
+	if (stat->stateEnterTimes) {
+	    int i = 1 + stat->stateEnterTimes[0];
+	    new_stat.stateEnterTimes = malloc(sizeof(*stat->stateEnterTimes)*i);
+	    memcpy(new_stat.stateEnterTimes, stat->stateEnterTimes,
+		   sizeof(*stat->stateEnterTimes)*i);
+	}
+	if (stat->ui_host)
+	    new_stat.ui_host = strdup(stat->ui_host);
     }
 
     edg_wll_FreeStatus(stat);

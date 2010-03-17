@@ -24,10 +24,13 @@ limitations under the License.
 
 typedef enum {
     ACTION_UNDEF	= 0,
-    READ_ALL		= 2,
-    STATUS_FOR_RTM	= 4,
-    LOG_WMS_EVENTS	= 8,
-    LOG_GENERAL_EVENTS	= 16,
+    ADMIN_ACCESS	= 1 << 0,
+    STATUS_FOR_RTM	= 1 << 1,
+    LOG_WMS_EVENTS	= 1 << 2,
+    LOG_CE_EVENTS	= 1 << 3,
+    LOG_GENERAL_EVENTS	= 1 << 4,
+    GET_STATISTICS	= 1 << 5,
+    REGISTER_JOBS	= 1 << 6,
 } authz_action;
 
 typedef struct action_name {
@@ -37,8 +40,8 @@ typedef struct action_name {
 
 typedef enum {
     ATTR_UNDEF		= 0,
-    ATTR_SUBJECT	= 2,
-    ATTR_FQAN		= 4,
+    ATTR_SUBJECT	= 1,
+    ATTR_FQAN		= 2,
 } authz_attr_id;
 
 struct attr_id_name {
@@ -54,6 +57,9 @@ check_authz_policy(edg_wll_authz_policy, edg_wll_GssPrincipal, authz_action);
 
 authz_action
 find_authz_action(const char *name);
+
+const char *
+action2name(authz_action);
 
 authz_attr_id
 find_authz_attr(const char *name);
