@@ -25,8 +25,6 @@ limitations under the License.
 #include "lb_authz.h"
 #include "glite/lbu/log.h"
 
-#ifndef NO_VOMS
-
 #include <libxml/parser.h> 
 #undef WITHOUT_TRIO
 
@@ -216,22 +214,6 @@ edg_wll_FreeVomsGroups(edg_wll_VomsGroups *groups)
 	 free(groups->val[len].name);
    }
 }
-
-#else /* NO_VOMS */
-
-int
-edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *server_cert,
-	char *server_key, char *voms_dir, char *ca_dir)
-{
-	return 0;
-}
-
-void edg_wll_FreeVomsGroups(edg_wll_VomsGroups *groups) {}
-
-#endif
-
-
-#if !defined(NO_VOMS) && !defined(NO_GACL)
 
 static int
 parse_creds(edg_wll_Context ctx, edg_wll_VomsGroups *groups, char **fqans,
@@ -942,40 +924,12 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
    return ret;
 }
 
-#else /* VOMS & GACL */
-
-
-int edg_wll_CheckACL(edg_wll_Context ctx, edg_wll_Acl acl, int requested_perm) { return EPERM; }
-
-#ifndef NO_GACL
-int edg_wll_EncodeACL(GRSTgaclAcl *acl, char **str) { return 0; }
-int edg_wll_DecodeACL(char *buf, GRSTgaclAcl **result_acl) { return 0; }
-#else
-int edg_wll_EncodeACL(void *acl, char **str) { return 0; }
-int edg_wll_DecodeACL(char *buf, void **result_acl) { return 0; }
-#endif
-
-int edg_wll_InitAcl(edg_wll_Acl *acl) { return 0; }
-void edg_wll_FreeAcl(edg_wll_Acl acl) { }
-int edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
-                         char *aclid, int incr) { return 0; }
-int edg_wll_UpdateACL(edg_wll_Context ctx, glite_jobid_const_t job,
-                  char *user_id, int user_id_type,
-                  int permission, int perm_type, int operation) { return 0; }
-int edg_wll_GetACL(edg_wll_Context ctx, glite_jobid_const_t jobid, edg_wll_Acl *acl) { return 0; }
-
-
-#endif
-
-
 int edg_wll_amIroot(const char *subj, char **fqans,edg_wll_authz_policy policy)
 {
-	int	i;
-	char	**f;
 	struct _edg_wll_GssPrincipal_data princ;
 
 	memset(&princ, 0, sizeof(princ));
-	princ.name = subj;
+	princ.name = (char *) subj;
 	princ.fqans = fqans;
 
 	return check_authz_policy(policy, &princ, READ_ALL);
