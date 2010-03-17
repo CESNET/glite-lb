@@ -850,15 +850,10 @@ static int edg_wll_RegisterJobMaster(
 	}
 
 	if (flags & EDG_WLL_LOGFLAG_PROXY) {
-		/* XXX: it was here but we don't know why 
 		edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
 		seq = edg_wll_GetSequenceCode(ctx);
-		*/
-		err=edg_wll_SetLoggingJobProxy(ctx,job,/* seq */ NULL,NULL,EDG_WLL_SEQ_NORMAL);
-	} else {
-		err=edg_wll_SetLoggingJob(ctx,job,NULL,EDG_WLL_SEQ_NORMAL);
 	}
-	// ret=edg_wll_SetLoggingJobMaster(ctx,job,seq,NULL,EDG_WLL_SEQ_NORMAL,flags);
+	err=edg_wll_SetLoggingJobMaster(ctx,job,seq,NULL,EDG_WLL_SEQ_NORMAL,flags);
 
 	if (err != 0) {
                 edg_wll_UpdateError(ctx,EINVAL,"edg_wll_RegisterJobMaster(): unable to set logging job");
