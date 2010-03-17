@@ -274,7 +274,7 @@ static void usage(char *me)
 		"\t-J, --jpreg-dir\t JP registration temporary files prefix (implies '-j')\n"
 		"\t-j, --enable-jpreg-export\t enable JP registration export (disabled by default)\n"
 		"\t--super-user\t user allowed to bypass authorization and indexing\n"
-		"\t--super-users-file (depricated)\t the same but read the subjects from a file\n"
+		"\t--super-users-file (deprecated)\t the same but read the subjects from a file\n"
 		"\t--no-index=1\t don't enforce indices for superusers\n"
 		"\t          =2\t don't enforce indices at all\n"
 		"\t--strict-locking=1\t lock jobs also on storing events (may be slow)\n"
@@ -472,7 +472,7 @@ int main(int argc, char *argv[])
 		case 'i': strcpy(pidfile,optarg); pidfile_forced = 1; break;
 		case 'R': add_root(ctx, optarg); break;
 		case 'F': glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL,
-				"%s: Option --super-users-file is depricated, specify policy using --policy instead");
+				"%s: Option --super-users-file is deprecated, specify policy using --policy instead");
 			  return 1;
 		case 'x': noIndex = atoi(optarg);
 			  if (noIndex < 0 || noIndex > 2) { usage(name); return 1; }
