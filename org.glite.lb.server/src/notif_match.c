@@ -234,7 +234,7 @@ static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const
 
 	edg_wll_ResetError(ctx);
 	if (strcmp(stat->owner,recip) == 0
-		|| edg_wll_amIroot(recip,NULL,ctx->super_users)) return 1;
+		|| edg_wll_amIroot(recip,NULL,&ctx->authz_policy)) return 1;
 
 	if (stat->acl) {
 		ret = edg_wll_DecodeACL(stat->acl,&acl->value);

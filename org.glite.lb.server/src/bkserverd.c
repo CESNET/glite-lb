@@ -157,7 +157,6 @@ static char			   *dbstring = NULL,*fake_host = NULL;
 int        				transactions = -1;
 int					use_dbcaps = 0;
 static int				fake_port = 0;
-static char			  **super_users = NULL;
 static int				slaves = 10;
 static char			   *purgeStorage = EDG_PURGE_STORAGE;
 static char			   *dumpStorage = EDG_DUMP_STORAGE;
@@ -275,7 +274,7 @@ static void usage(char *me)
 		"\t-J, --jpreg-dir\t JP registration temporary files prefix (implies '-j')\n"
 		"\t-j, --enable-jpreg-export\t enable JP registration export (disabled by default)\n"
 		"\t--super-user\t user allowed to bypass authorization and indexing\n"
-		"\t--super-users-file\t the same but read the subjects from a file\n"
+		"\t--super-users-file (depricated)\t the same but read the subjects from a file\n"
 		"\t--no-index=1\t don't enforce indices for superusers\n"
 		"\t          =2\t don't enforce indices at all\n"
 		"\t--strict-locking=1\t lock jobs also on storing events (may be slow)\n"
@@ -304,8 +303,7 @@ static void usage(char *me)
 
 static int wait_for_open(edg_wll_Context,const char *);
 static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
-static int add_root(char *);
-static int read_roots(const char *);
+static int add_root(edg_wll_Context, char *);
 static int asyn_gethostbyaddr(char **, const char *, int, int, struct timeval *);
 static int parse_limits(char *, int *, int *, int *);
 static int check_mkdir(const char *);
@@ -426,6 +424,7 @@ int main(int argc, char *argv[])
 	purge_timeout[EDG_WLL_JOB_CLEARED] = 60*60*24*3;
 	purge_timeout[EDG_WLL_JOB_ABORTED] = 60*60*24*7;
 	purge_timeout[EDG_WLL_JOB_CANCELLED] = 60*60*24*7;
+	edg_wll_InitContext(&ctx);
 
 	while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
 		case 'A': enable_lcas = 1; break;
@@ -471,9 +470,10 @@ int main(int argc, char *argv[])
 		case 'X': notif_ilog_socket_path = strdup(optarg); break;
 		case 'Y': notif_ilog_file_prefix = strdup(optarg); break;
 		case 'i': strcpy(pidfile,optarg); pidfile_forced = 1; break;
-		case 'R': add_root(optarg); break;
-		case 'F': if (read_roots(optarg)) return 1;
-			  break;
+		case 'R': add_root(ctx, optarg); break;
+		case 'F': glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL,
+				"%s: Option --super-users-file is depricated, specify policy using --policy instead");
+			  return 1;
 		case 'x': noIndex = atoi(optarg);
 			  if (noIndex < 0 || noIndex > 2) { usage(name); return 1; }
 			  break;
@@ -557,7 +557,6 @@ int main(int argc, char *argv[])
 	if (fprintf(fpid, "%d", getpid()) <= 0) { perror(pidfile); return 1; }
 	if (fclose(fpid) != 0) { perror(pidfile); return 1; }
 
-	edg_wll_InitContext(&ctx);
 	if (policy_file && parse_server_policy(ctx, policy_file, &authz_policy)) {
 		char *et, *ed;
 
@@ -668,14 +667,9 @@ int main(int argc, char *argv[])
 		edg_wll_gss_watch_creds(server_cert, &cert_mtime);
 		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &gss_code) )
 		{
-			int	i;
-
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server identity: %s", mycred->name);
 			server_subject = strdup(mycred->name);
-			for ( i = 0; super_users && super_users[i]; i++ ) ;
-			super_users = realloc(super_users, (i+2)*sizeof(*super_users));
-			super_users[i] = strdup(mycred->name);
-			super_users[i+1] = NULL;
+			add_root(ctx, server_subject);
 		}
 		else {
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Server running unauthenticated");
@@ -1201,17 +1195,15 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	/* used also to reset start_time after edg_wll_ssl_accept! */
 	/* gettimeofday(&start_time,0); */
 	
-	ctx->noAuth = noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,super_users);
+	ctx->noAuth = noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
 	switch ( noIndex )
 	{
 	case 0: ctx->noIndex = 0; break;
-	case 1: ctx->noIndex = edg_wll_amIroot(ctx->peerName, ctx->fqans,super_users); break;
+	case 1: ctx->noIndex = edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy); break;
 	case 2: ctx->noIndex = 1; break;
 	}
 	ctx->strict_locking = strict_locking;
 	ctx->greyjobs = greyjobs;
-
-	ctx->super_users = super_users;
 
 	return 0;
 }
@@ -1318,7 +1310,6 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 	ctx->noIndex = 1;
 
 	/* required to match superuser-authorized notifications */
-	ctx->super_users = super_users;
 
 	if (fake_host)
 	{
@@ -1827,53 +1818,16 @@ static int asyn_gethostbyaddr(char **name, const char *addr,int len, int type, s
 	return (ar.err);
 }
 
-static int add_root(char *root)
+static int add_root(edg_wll_Context ctx, char *root)
 {
-	char *null_suffix, **tmp;
-	int i, cnt;
+	int attr_id = ATTR_SUBJECT;
 
-	for (cnt = 0; super_users && super_users[cnt]; cnt++)
-		;
-	/* try to be compliant with the new FQAN format that excludes
-	   the Capability and empty Role components */
-	null_suffix = strstr(root, "/Role=NULL/Capability=NULL");
-	if (null_suffix == NULL)
-		null_suffix = strstr(root, "/Capability=NULL");
-	i = (null_suffix == NULL) ? 0 : 1;
-
-	tmp = realloc(super_users, (cnt+2+i) * sizeof super_users[0]);
-	if (tmp == NULL)
-		return ENOMEM;
-	super_users = tmp;
-	super_users[cnt] = strdup(root);
-	if (null_suffix) {
-		*null_suffix = '\0'; /* changes the input, should be harmless */
-		super_users[++cnt] = strdup(root);
+	if (strncmp(root, "FQAN:", 5) == 0){
+		root += 5;
+		attr_id = ATTR_FQAN;
 	}
-	super_users[++cnt] = NULL;
-
-	return 0;
-}
-
-static int read_roots(const char *file)
-{
-	FILE	*roots = fopen(file,"r");
-	char	buf[BUFSIZ];
-
-	if (!roots) {
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
-			"%s: %s, continuing without --super-users-file",file,strerror(errno));
-		return 0;
-	}
-
-	while (fgets(buf,sizeof buf,roots) != NULL) {
-		char	*nl;
-		nl = strchr(buf,'\n');
-		if (nl) *nl = 0;
-		add_root(buf);
-	}
-
-	fclose(roots);
+	edg_wll_add_authz_rule(ctx, &authz_policy, READ_ALL,
+			       attr_id, root);
 
 	return 0;
 }

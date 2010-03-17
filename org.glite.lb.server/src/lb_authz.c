@@ -34,6 +34,7 @@ limitations under the License.
 #include "glite/jobid/cjobid.h"
 #include "glite/lbu/trio.h"
 #include "db_supp.h"
+#include "authz_policy.h"
 #include <glite/security/lcas/lcas_pem.h>
 
 #include "glite/security/voms/voms_apic.h"
@@ -967,20 +968,17 @@ int edg_wll_GetACL(edg_wll_Context ctx, glite_jobid_const_t jobid, edg_wll_Acl *
 #endif
 
 
-int edg_wll_amIroot(const char *subj, char **fqans,char **super_users)
+int edg_wll_amIroot(const char *subj, char **fqans,edg_wll_authz_policy policy)
 {
 	int	i;
 	char	**f;
+	struct _edg_wll_GssPrincipal_data princ;
 
-	if (!subj && !fqans ) return 0;
-	for (i=0; super_users && super_users[i]; i++)
-		if (strncmp(super_users[i], "FQAN:", 5) == 0) {
-			for (f = fqans; f && *f; f++)
-				if (strcmp(*f, super_users[i]+5) == 0) return 1;
-		} else
-			if (edg_wll_gss_equal_subj(subj,super_users[i])) return 1;
+	memset(&princ, 0, sizeof(princ));
+	princ.name = subj;
+	princ.fqans = fqans;
 
-	return 0;
+	return check_authz_policy(policy, &princ, READ_ALL);
 }
 
 edg_wll_authz_policy
