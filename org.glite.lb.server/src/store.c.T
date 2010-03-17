@@ -350,6 +350,28 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		if (store_user(ctx,userid,can_peername)) goto err;
 		if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
 			userid, ctx->isProxy, local_job, grey, 0 )) goto err;
+		if (event->any.type == EDG_WLL_EVENT_REGJOB && event->regJob.wms_dn) {
+			char *names = strdup(event->regJob.wms_dn);
+			char *p, *name;
+			int ret;
+
+			name = names;
+			while ((p = strchr(name, '\n'))) {
+				*p = '\0';
+				ret = edg_wll_UpdateACL(ctx, event->any.jobId, name,
+							EDG_WLL_CHANGEACL_DN,
+							EDG_WLL_CHANGEACL_READ,
+							EDG_WLL_CHANGEACL_ALLOW,
+							EDG_WLL_CHANGEACL_ADD);
+				if (ret) { 
+					free(names);
+					goto err;
+				}
+				name = p+1;
+			}
+			free(names);
+		}
+
 		*register_to_JP = (local_job) ? REG_JOB_TO_JP : 0;
 	}
 	else {
@@ -641,7 +663,6 @@ edg_wll_ErrorCode intJobStat_embryonic(
 	stat->pub.jobtype = EDG_WLL_STAT_SIMPLE;
 	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
 	stat->pub.lastUpdateTime = e->timestamp;
-	// TODO: update job ACL according to e->wms_dn
 
 err:
 	return edg_wll_Error(ctx,NULL,NULL);
