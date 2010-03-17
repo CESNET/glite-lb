@@ -234,7 +234,7 @@ stripped_license=`printf "$LICENSE" | tr -d '[\/[:space:]]'`
 
 #ANSI C files
 echo Processing ANSI C files
-fix_c_style_sources "*.[chH]"
+fix_c_style_sources "*.[chCH]"
 
 #CPP files
 echo Processing C++ files
