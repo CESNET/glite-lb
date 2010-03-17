@@ -227,14 +227,14 @@ See the License for the specific language governing permissions and
 limitations under the License.'
 
 COPYRIGHT='Copyright (c) Members of the EGEE Collaboration. 2004-2010.
-See http://www.eu-egee.org/partners for details on the copyright holders.'
+See http://www.eu-egee.org/partners/ for details on the copyright holders.'
 
 stripped_copyright=`printf "$COPYRIGHT" | sed --posix --regexp-extended -e 's/[[:digit:]]{4}( ?[,-] ?[0-9]{4})*//' | tr -d '[\/[:space:]]'`
 stripped_license=`printf "$LICENSE" | tr -d '[\/[:space:]]'`
 
 #ANSI C files
 echo Processing ANSI C files
-fix_c_style_sources "*.[ch]"
+fix_c_style_sources "*.[chH]"
 
 #CPP files
 echo Processing C++ files
@@ -257,11 +257,16 @@ echo Processing shell files
 fix_sh_style_sources "*.sh" '#'
 
 #TeX files
-echo Processing TeX files
-fix_sh_style_sources "*.tex" '%%'
+#echo Processing TeX files
+#fix_sh_style_sources "*.tex" '%%'
 
 #Perl files
 echo Processing Perl files
 fix_sh_style_sources "*.pl" '#'
+
+#LB configure files
+echo Processing configure files /Perl/ -- specific for LB
+fix_sh_style_sources "configure" '#'
+
 
 printf "\n\nTotal files found:\t $TOTALFOUND\nTotal copyrights fixed:\t $TOTALFIXEDCOP\nTotal licenses fixed:\t $TOTALFIXEDLIC\n";
