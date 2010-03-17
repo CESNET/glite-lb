@@ -842,7 +842,7 @@ static int edg_wll_RegisterJobMaster(
 		char *aux,*aux2;
 		aux2 = strdup("");
 		for (i=0; wms_dn[i]; i++) {
-			asprintf(&aux,"%s\n%s",aux2,wms_dn[i]);
+			asprintf(&aux,"%s%s\n",aux2,wms_dn[i]);
 			free(aux2); aux2 = aux; aux = NULL;
 		}
 		wms_dn_s = strdup(aux2);
