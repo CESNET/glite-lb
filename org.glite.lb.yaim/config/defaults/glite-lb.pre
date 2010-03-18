@@ -1,0 +1,3 @@
+### Default values to some glite-LB variables
+# backward compatible default location of GLITE_LOCATION_VAR
+GLITE_LOCATION_VAR=/var/glite
