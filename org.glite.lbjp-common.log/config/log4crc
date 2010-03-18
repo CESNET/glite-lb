@@ -23,6 +23,7 @@
         <!-- category name="LB.LOGD" priority="debug" appender="stderr"/-->
         <!-- category name="LB.INTERLOGD" priority="debug" appender="stderr"/-->
         <!-- category name="LB.SERVER" priority="debug" appender="stderr"/-->
+        <!-- category name="LB.HARVESTER" priority="*" appender="syslog"/-->
 
         <!-- default appenders ===================================== -->
         <appender name="stdout" type="stream" layout="basic"/>

@@ -35,7 +35,9 @@ limitations under the License.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef WITH_OLD_LB
 #include <syslog.h>
+#endif
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -44,10 +46,10 @@ limitations under the License.
 #ifdef WITH_LBU_DB
 #include <glite/lbu/trio.h>
 #include <glite/lbu/db.h>
-#include <glite/lbu/log.h>
 #endif
 #include <glite/lb/context.h>
 #ifndef WITH_OLD_LB
+#include <glite/lbu/log.h>
 #include <glite/lb/connpool.h>
 #endif
 #include <glite/lb/notification.h>
@@ -223,6 +225,7 @@ typedef struct {
 
 static const char rcsid[] = "@(#)$Id$";
 
+#ifdef WITH_OLD_LB
 static int rtm2syslog[] = {
 	LOG_ERR,
 	LOG_WARNING,
@@ -230,6 +233,15 @@ static int rtm2syslog[] = {
 	LOG_DEBUG,
 	LOG_DEBUG,
 };
+#else
+static int rtm2log4c[] = {
+	LOG_PRIORITY_ERROR, // errors
+	LOG_PRIORITY_WARN,  // warnings
+	LOG_PRIORITY_INFO,  // progress
+	LOG_PRIORITY_DEBUG, // debugging
+	LOG_PRIORITY_NOTSET // insane logging
+};
+#endif
 
 static const struct option opts[] = {
 	{ "wlcg-binary", required_argument, 	NULL,   0},
@@ -320,9 +332,13 @@ void lvprintf_func(thread_t *t, const char *description, int level, const char *
 
 	if (level <= WRN && !config.daemonize) fprintf(stderr, RTM_TTY_RED);
 	if (config.daemonize) {
+#ifdef WITH_OLD_LB
 		openlog(NULL, LOG_PID | LOG_CONS, LOG_DAEMON);
 		syslog(rtm2syslog[level], "%s", line);
 		closelog();
+#else
+		glite_common_log(LOG_CATEGORY_LB_HARVESTER, rtm2log4c[level], line);
+#endif
 	} else {
 		fputs(line, stderr);
 	}
@@ -2464,6 +2480,12 @@ int main(int argn, char *argv[]) {
 		}
 	}
 	if (config.daemonize) {
+#ifndef WITH_OLD_LB
+		if (glite_common_log_init()) {
+			fprintf(stderr,"glite_common_log_init() failed, exiting.");
+			exit(RTM_EXIT_ERROR);
+		}
+#endif
 		if (daemon(0, 0) == -1) {
 			lprintf(NULL, ERR, "can't daemonize: %s", strerror(errno));
 			goto quit_guard0;
@@ -2686,6 +2708,9 @@ quit:
 	if (config.pidfile && !config.guard) {
 		if (remove(config.pidfile) == -1) lprintf(NULL, WRN, "can't remove pidfile '%s': %s", config.pidfile, strerror(errno));
 	}
+#ifdef WITH_OLD_LB
+	if (config.daemonize) glite_common_log_fini();
+#endif
 
 #ifdef WITH_LBU_DB
 	db_free(NULL, db.dbctx);
