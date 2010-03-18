@@ -1867,7 +1867,7 @@ static int add_root(edg_wll_Context ctx, char *root)
 		root += 5;
 		attr_id = ATTR_FQAN;
 	}
-	edg_wll_add_authz_rule(ctx, &authz_policy, READ_ALL,
+	edg_wll_add_authz_rule(ctx, &authz_policy, ADMIN_ACCESS,
 			       attr_id, root);
 
 	return 0;
