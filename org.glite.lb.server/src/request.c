@@ -77,6 +77,10 @@ create_reply(const edg_wll_Context ctx, char **buf)
     err_code = LB_NOMEM;
     break;
 
+  case EPERM:
+	  err_code = LB_PERM;
+	  break;
+
   case EDG_WLL_IL_PROTO:
     err_code = LB_PROTO;
     break;
