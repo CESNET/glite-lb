@@ -718,6 +718,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 						case EDG_WLL_STAT_CREAM:
 							edg_wll_CreamJobStatusToHTML(ctx,stat,&message);
 							break;
+						case EDG_WLL_STAT_FILE_TRANSFER:
+							edg_wll_FileTransferStatusToHTML(ctx,stat,&message);
+							break;
 						default:
 							//XXX need some more implementations
 							edg_wll_GeneralJobStatusToHTML(ctx,stat,&message);

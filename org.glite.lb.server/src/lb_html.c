@@ -161,6 +161,23 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 	free(pomA); pomA=NULL; \ 
 }
 
+#define TRL(name,type,field,null) \
+{ \
+        int l; \
+        if (field != null){ \
+                l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
+                        "<td><a href=\"" type " \"" type "</td></tr>", (field), (field)); \
+        } \
+        else{ \
+                l = asprintf(&pomA,"<tr><th align=\"left\"><span style=\"color:grey\">" name \
+                        "</span></th></tr>"); \
+        } \
+        pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
+        strcpy(pomB+pomL, pomA); \
+        pomL += l; \
+        free(pomA); pomA=NULL; \ 
+}
+
 int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
 	char *pomA = NULL, *pomB = NULL, *flags, *cond;
 	int pomL = 0;
@@ -237,6 +254,9 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	
 	TR("Done code","%d",stat.done_code, -1);
 	TR("Exit code","%d",stat.exit_code, -1);
+
+	TRL("Input sandbox", "%s", stat.isb_transfer, NULL);
+	TRL("Output sandbox", "%s", stat.osb_transfer, NULL);
 
 	if (stat.jdl){
 		char *jdl_unp;
@@ -334,6 +354,93 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
         *message = pomA;
 
 	return 0;
+}
+
+int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
+{
+        char *pomA = NULL, *pomB = NULL;
+        int pomL = 0;
+        char    *chid,*chcj,*chsbt;
+
+        chid = edg_wlc_JobIdUnparse(stat.jobId);
+
+        //TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)), NULL);
+        //free(chstat);
+        TR("Owner","%s",stat.owner, NULL);
+	chcj = edg_wlc_JobIdUnparse(stat.ft_compute_job);
+	TRL("Compute job", "%s", chcj, NULL);
+	free(chcj);
+	
+	switch(stat.ft_sandbox_type){
+		case EDG_WLL_STAT_INPUT: chsbt = strdup("INPUT");
+			break;
+		case EDG_WLL_STAT_OUTPUT: chsbt = strdup("OUTPUT");
+			break;
+		default: chsbt = NULL;
+			break;
+	}
+	if (chsbt) free(chsbt);
+	TR("Sandbox type", "%s", chsbt, NULL);
+	TR("File transfer source", "%s", stat.ft_src, NULL);
+	TR("File transfer destination", "%s", stat.ft_dest, NULL);
+        /*TR("Condor Id","%s",stat.condorId, NULL);
+        TR("Globus Id","%s",stat.globusId, NULL);
+        TR("Local Id","%s",stat.localId, NULL);
+        TR("Reason","%s",stat.reason, NULL);
+        if ( (stat.stateEnterTime.tv_sec) || (stat.stateEnterTime.tv_usec) ) {
+                time_t  time = stat.stateEnterTime.tv_sec;
+                TR("State entered","%s",ctime(&time), NULL);
+        }
+        else
+                TR("State entered", "%s", NULL, NULL);
+        if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
+                time_t  time = stat.lastUpdateTime.tv_sec;
+                TR("Last update","%s",ctime(&time), NULL);
+        }
+        else
+                TR("Last update", "%s", NULL, NULL);
+        TR("Expect update","%s",stat.expectUpdate ? "YES" : "NO", NULL);
+        TR("Expect update from","%s",stat.expectFrom, NULL);
+        TR("Location","%s",stat.location, NULL);
+        TR("Destination","%s",stat.destination, NULL);
+        TR("Cancelling","%s",stat.cancelling>0 ? "YES" : "NO", NULL);
+        TR("Cancel reason","%s",stat.cancelReason, NULL);
+        TR("CPU time","%d",stat.cpuTime, 0);
+
+
+        TR("Done code","%d",stat.done_code, -1);
+        TR("Exit code","%d",stat.exit_code, -1);
+
+        TRL("Input sandbox", "%s", stat.isb_transfer, NULL);
+        TRL("Output sandbox", "%s", stat.osb_transfer, NULL);
+
+	if (stat.jdl){
+                char *jdl_unp;
+                if (pretty_print(stat.jdl, &jdl_unp) == 0)
+                        asprintf(&jdl,"<h3>Job description</h3>\r\n"
+                                "<pre>%s</pre>\r\n",jdl_unp);
+                else
+                        asprintf(&jdl,"<h3>Job description (not a ClassAd)"
+                                "</h3>\r\n<pre>%s</pre>\r\n",stat.jdl);
+        }
+
+        if (stat.rsl) asprintf(&rsl,"<h3>RSL</h3>\r\n"
+                "<pre>%s</pre>\r\n",stat.rsl);*/
+
+
+        asprintf(&pomA, "<html>\r\n\t<body>\r\n"
+                        "<h2>%s</h2>\r\n"
+                        "<table halign=\"left\">%s</table>"
+                        "\t</body>\r\n</html>",
+                        chid,pomB);
+        free(pomB);
+
+        *message = pomA;
+
+        free(chid);
+        //free(jdl);
+        //free(rsl);
+        return 0;
 }
 
 char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)
