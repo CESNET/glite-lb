@@ -22,6 +22,7 @@ limitations under the License.
 #include <string.h>
 
 #include "glite/lb/context-int.h"
+#include "glite/lbu/log.h"
 #include "openserver.h"
 #include "db_supp.h"
 
@@ -32,7 +33,7 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 	char *cols[20];
 	glite_lbu_Statement stmt;
 
-	if (!ctx->dbctx && glite_lbu_InitDBContext((glite_lbu_DBContext*) &ctx->dbctx, GLITE_LBU_DB_BACKEND_MYSQL) != 0) {
+	if (!ctx->dbctx && glite_lbu_InitDBContext((glite_lbu_DBContext*) &ctx->dbctx, GLITE_LBU_DB_BACKEND_MYSQL, LOG_CATEGORY_LB_SERVER_DB) != 0) {
 		char *ed;
 
 		glite_lbu_DBError(ctx->dbctx, NULL, &ed);
