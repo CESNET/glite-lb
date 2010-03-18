@@ -208,7 +208,7 @@ static int get_client_address(
 			edg_wll_SetError(ctx, EADDRNOTAVAIL, "getnameinfo() failed");
 			goto err;
     		}
-		freeadrinfo(ai);
+		freeaddrinfo(ai);
 
 		e = getaddrinfo((const char *) hostnum, NULL, &hints, & ai);
 		if (e) {
