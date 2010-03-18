@@ -353,6 +353,8 @@ event_queue_send(struct event_queue *eq)
     case LB_NOMEM:
 	    /* NOT USED: case LB_SYS:  */
 	    /* NOT USED: case LB_AUTH: */
+	case LB_PERM:
+	case LB_DBERR:
       /* non fatal errors (for us) */
       eq->timeout = TIMEOUT;
       return(0);
@@ -360,7 +362,7 @@ event_queue_send(struct event_queue *eq)
     case LB_OK:
       /* event succesfully delivered */
       
-    default: /* LB_DBERR, LB_PROTO */
+    default: /* LB_PROTO */
       /* the event was not accepted by the server */
       /* update the event pointer */
         if(event_store_commit(msg->es, msg->ev_len, queue_list_is_log(eq), msg->generation) < 0)
