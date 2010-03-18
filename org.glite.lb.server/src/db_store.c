@@ -55,6 +55,7 @@ db_store(edg_wll_Context ctx, char *event)
   int			seq, reg_to_JP = 0, local_job;
   edg_wll_JobStat	newstat;
   edg_wll_JobStat	oldstat;
+  int			ret;
 
 
   edg_wll_ResetError(ctx);
@@ -90,7 +91,11 @@ db_store(edg_wll_Context ctx, char *event)
 		goto commit;
   	}
 
-	if (edg_wll_StoreEvent(ctx, ev, event, &seq)) goto rollback;
+	ret = edg_wll_StoreEvent(ctx, ev, event, &seq);
+	if (ret ) {
+		if (ret == EEXIST) edg_wll_ResetError(ctx);
+		goto rollback;
+	}
 	
 	if ( ev->any.type == EDG_WLL_EVENT_CHANGEACL ) {
 		if (edg_wll_UpdateACL(ctx, ev->any.jobId,
