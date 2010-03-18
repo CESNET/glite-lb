@@ -155,7 +155,7 @@ int glite_lbu_DBClearError(glite_lbu_DBContext ctx);
  * \param[in]  backend  required database backend
  * \return     error code
  */
-int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx, int backend);
+int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx, int backend, char *log_category);
 
 
 /**
@@ -417,6 +417,7 @@ long int glite_lbu_Lastid(glite_lbu_Statement stmt);
  * @} database group
  */
 
+static char *set_log_category;
 
 #ifdef __cplusplus
 }

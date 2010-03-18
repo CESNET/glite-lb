@@ -68,7 +68,7 @@ COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
-EXT_LIBS:=-lglite_lbu_trio -lpthread ${DL_LIBS}
+EXT_LIBS:=-lglite_lbu_trio -lglite_lbu_log -lpthread ${DL_LIBS}
 TESTOBJS:=${OBJS} dbtest.o
 OBJS:=${OBJS} db.o
 HDRS:=db.h

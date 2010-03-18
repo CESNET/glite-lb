@@ -29,9 +29,6 @@ limitations under the License.
 #include <stdarg.h>
 #include <dlfcn.h>
 #include <pthread.h>
-#ifdef HAVE_SYSLOG_H
-#include <syslog.h>
-#endif
 
 #ifdef WIN32
 #include <windows.h>
@@ -48,6 +45,7 @@ limitations under the License.
 #include <errmsg.h>
 
 #include "glite/lbu/trio.h"
+#include "glite/lbu/log.h"
 #include "db.h"
 #include "db-int.h"
 
@@ -449,6 +447,7 @@ int glite_lbu_QueryIndicesMysql(glite_lbu_DBContext ctx_gen, const char *table, 
 	Key_name = Seq_in_index = Column_name = Sub_part = -1;
 
 	asprintf(&sql, "show index from %s", table);
+	glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, sql);
 	if (glite_lbu_ExecSQLMysql(ctx_gen,sql,&stmt)<0) {
 		free(sql);
 		return STATUS(ctx);
@@ -957,10 +956,12 @@ static int transaction_test(glite_lbu_DBContext ctx, int *caps) {
 
 	(*caps) &= ~GLITE_LBU_DB_CAP_TRANSACTIONS;
 
+	glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "SHOW TABLES");
 	if ((retval = glite_lbu_ExecSQLMysql(ctx, "SHOW TABLES", &stmt)) <= 0 || glite_lbu_FetchRowMysql(stmt, 1, NULL, table) < 0) goto quit;
 	glite_lbu_FreeStmtMysql(&stmt);
 
 	trio_asprintf(&cmd, "SHOW CREATE TABLE %|Ss", table[0]);
+	glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, cmd);
 	if (glite_lbu_ExecSQLMysql(ctx, cmd, &stmt) <= 0 || (retval = glite_lbu_FetchRowMysql(stmt, 2, NULL, res)) < 0 ) goto quit;
 	if (retval != 2 || strcmp(res[0], table[0])) {
 		ERR(ctx, EIO, "unexpected show create result");
