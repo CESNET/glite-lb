@@ -166,7 +166,7 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
         int l; \
         if (field != null){ \
                 l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
-                        "<td><a href=\"" type " \"" type "</td></tr>", (field), (field)); \
+                        "<td><a href=\""type"\">" type "</a></td></tr>", (field), (field)); \
         } \
         else{ \
                 l = asprintf(&pomA,"<tr><th align=\"left\"><span style=\"color:grey\">" name \
@@ -216,13 +216,15 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 {
         char *pomA = NULL, *pomB = NULL;
 	int pomL = 0;
-	char	*chid,*chstat;
+	char	*chid,*chstat,*chis = NULL, *chos = NULL;
 	char	*jdl,*rsl;
 
 	jdl = strdup("");
 	rsl = strdup("");
 	
         chid = edg_wlc_JobIdUnparse(stat.jobId);
+	if (stat.isb_transfer) chis = edg_wlc_JobIdUnparse(stat.isb_transfer);
+	if (stat.osb_transfer) chos = edg_wlc_JobIdUnparse(stat.osb_transfer);
 
 	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)), NULL);
 	free(chstat);
@@ -255,8 +257,8 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	TR("Done code","%d",stat.done_code, -1);
 	TR("Exit code","%d",stat.exit_code, -1);
 
-	TRL("Input sandbox", "%s", stat.isb_transfer, NULL);
-	TRL("Output sandbox", "%s", stat.osb_transfer, NULL);
+	TRL("Input sandbox", "%s", chis, NULL);
+	TRL("Output sandbox", "%s", chos, NULL);
 
 	if (stat.jdl){
 		char *jdl_unp;
@@ -283,6 +285,8 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
         *message = pomA;
 
 	free(chid);
+	if (chis) free(chis);
+	if (chos) free(chos);
 	free(jdl);
 	free(rsl);
         return 0;
@@ -379,7 +383,6 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 		default: chsbt = NULL;
 			break;
 	}
-	if (chsbt) free(chsbt);
 	TR("Sandbox type", "%s", chsbt, NULL);
 	TR("File transfer source", "%s", stat.ft_src, NULL);
 	TR("File transfer destination", "%s", stat.ft_dest, NULL);
@@ -437,6 +440,7 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 
         *message = pomA;
 
+	if (chsbt) free(chsbt);
         free(chid);
         //free(jdl);
         //free(rsl);
