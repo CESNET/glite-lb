@@ -368,8 +368,6 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 
         chid = edg_wlc_JobIdUnparse(stat.jobId);
 
-        //TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)), NULL);
-        //free(chstat);
         TR("Owner","%s",stat.owner, NULL);
 	chcj = edg_wlc_JobIdUnparse(stat.ft_compute_job);
 	TRL("Compute job", "%s", chcj, NULL);
@@ -386,50 +384,6 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 	TR("Sandbox type", "%s", chsbt, NULL);
 	TR("File transfer source", "%s", stat.ft_src, NULL);
 	TR("File transfer destination", "%s", stat.ft_dest, NULL);
-        /*TR("Condor Id","%s",stat.condorId, NULL);
-        TR("Globus Id","%s",stat.globusId, NULL);
-        TR("Local Id","%s",stat.localId, NULL);
-        TR("Reason","%s",stat.reason, NULL);
-        if ( (stat.stateEnterTime.tv_sec) || (stat.stateEnterTime.tv_usec) ) {
-                time_t  time = stat.stateEnterTime.tv_sec;
-                TR("State entered","%s",ctime(&time), NULL);
-        }
-        else
-                TR("State entered", "%s", NULL, NULL);
-        if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
-                time_t  time = stat.lastUpdateTime.tv_sec;
-                TR("Last update","%s",ctime(&time), NULL);
-        }
-        else
-                TR("Last update", "%s", NULL, NULL);
-        TR("Expect update","%s",stat.expectUpdate ? "YES" : "NO", NULL);
-        TR("Expect update from","%s",stat.expectFrom, NULL);
-        TR("Location","%s",stat.location, NULL);
-        TR("Destination","%s",stat.destination, NULL);
-        TR("Cancelling","%s",stat.cancelling>0 ? "YES" : "NO", NULL);
-        TR("Cancel reason","%s",stat.cancelReason, NULL);
-        TR("CPU time","%d",stat.cpuTime, 0);
-
-
-        TR("Done code","%d",stat.done_code, -1);
-        TR("Exit code","%d",stat.exit_code, -1);
-
-        TRL("Input sandbox", "%s", stat.isb_transfer, NULL);
-        TRL("Output sandbox", "%s", stat.osb_transfer, NULL);
-
-	if (stat.jdl){
-                char *jdl_unp;
-                if (pretty_print(stat.jdl, &jdl_unp) == 0)
-                        asprintf(&jdl,"<h3>Job description</h3>\r\n"
-                                "<pre>%s</pre>\r\n",jdl_unp);
-                else
-                        asprintf(&jdl,"<h3>Job description (not a ClassAd)"
-                                "</h3>\r\n<pre>%s</pre>\r\n",stat.jdl);
-        }
-
-        if (stat.rsl) asprintf(&rsl,"<h3>RSL</h3>\r\n"
-                "<pre>%s</pre>\r\n",stat.rsl);*/
-
 
         asprintf(&pomA, "<html>\r\n\t<body>\r\n"
                         "<h2>%s</h2>\r\n"
@@ -442,8 +396,6 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 
 	if (chsbt) free(chsbt);
         free(chid);
-        //free(jdl);
-        //free(rsl);
         return 0;
 }
 
