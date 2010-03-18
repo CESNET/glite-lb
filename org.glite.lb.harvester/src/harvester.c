@@ -44,6 +44,7 @@ limitations under the License.
 #ifdef WITH_LBU_DB
 #include <glite/lbu/trio.h>
 #include <glite/lbu/db.h>
+#include <glite/lbu/log.h>
 #endif
 #include <glite/lb/context.h>
 #ifndef WITH_OLD_LB
@@ -681,7 +682,7 @@ static int db_init(thread_t *t, glite_lbu_DBContext *dbctx) {
 	int err, dbcaps;
 
 	if (config.dbcs) {
-		if ((err = glite_lbu_InitDBContext(dbctx, GLITE_LBU_DB_BACKEND_PSQL)) != 0) {
+		if ((err = glite_lbu_InitDBContext(dbctx, GLITE_LBU_DB_BACKEND_PSQL, LOG_CATEGORY_LB_HARVESTER_DB)) != 0) {
 			lprintf_dbctx(t, ERR, "can't initialize DB context");
 			return err;
 		}
