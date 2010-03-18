@@ -70,6 +70,7 @@ edg_wll_QueryRec	**indices_out;
 	struct elem_attr {
 		int	attr;
 		char	*val;
+		int	intval;
 	}			attr;
 }
 
@@ -122,9 +123,9 @@ job_index_elem	: '[' elem_attr ';' elem_attr opt_elem_attr ']'
 		*type = $2.attr == TYPE ? $2.val :
 				$4.attr == TYPE ? $4.val :
 				$5.attr == TYPE ? $5.val : NULL;
-	int	prefix = $2.attr == PREFIX ? (int) $2.val :
-				$4.attr == PREFIX ? (int) $4.val :
-				$5.attr == PREFIX ? (int) $5.val : 0;
+	int	prefix = $2.attr == PREFIX ? $2.intval :
+				$4.attr == PREFIX ? $4.intval :
+				$5.attr == PREFIX ? $5.intval : 0;
 
 
 	if (!name) bailout("`name' required");
@@ -157,7 +158,7 @@ job_index_elem	: '[' elem_attr ';' elem_attr opt_elem_attr ']'
 
 elem_attr	: TYPE '=' string	{ $$.attr = TYPE; $$.val = $3; }
 		| NAME '=' string	{ $$.attr = NAME; $$.val = $3; }
-		| PREFIX '=' int	{ $$.attr = PREFIX; $$.val = (char *) $3; }
+		| PREFIX '=' int	{ $$.attr = PREFIX; $$.intval = $3; }
 		;
 
 opt_elem_attr	: 	{ $$.attr = 0; $$.val = NULL; }
