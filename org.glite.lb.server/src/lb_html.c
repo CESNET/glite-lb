@@ -23,6 +23,7 @@ limitations under the License.
 #include "pretty_print_wrapper.h"
 
 #include "glite/lb/context-int.h"
+#include "glite/lb/xml_conversions.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -35,33 +36,6 @@ limitations under the License.
 #else
 #define UNUSED_VAR
 #endif
-
-static char *xmlToHTML(char *xml) {
-	char *html = strdup("");
-	int i = 0;
-	int j = 0;
-	while (xml[i]){
-		if (xml[i] == '<'){
-			html = realloc(html, (j+strlen("&lt;")+1)*sizeof(*html) );
-			strcpy(html+j, "&lt;");
-			j += strlen("&lt;");
-		}
-		else if (xml[i] == '>'){
-			html = realloc(html, (j+strlen("&gt;")+1)*sizeof(*html) );
-			strcpy(html+j, "&gt;");
-			j += strlen("&gt;");
-		}
-		else{
-			html = realloc(html, (j+2)*sizeof(*html));
-			html[j] = xml[i];
-			j++;
-		}
-		i++;
-	}
-	html[j] = 0;
-
-	return html;
-}
 
 int edg_wll_QueryToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut UNUSED_VAR, char **message UNUSED_VAR)
 {
@@ -147,7 +121,7 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 #define TR(name,type,field,null) \
 { \
 	int l; \
-	if (field != null){ \
+	if ((field) != (null)){ \
 		l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
 			"<td>" type "</td></tr>", (field)); \
 	} \
@@ -158,13 +132,14 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 	pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
 	strcpy(pomB+pomL, pomA); \
 	pomL += l; \
-	free(pomA); pomA=NULL; \ 
+	free(pomA); \
+	pomA=NULL; \
 }
 
 #define TRL(name,type,field,null) \
 { \
         int l; \
-        if (field != null){ \
+        if ((field) != (null)){ \
                 l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
                         "<td><a href=\""type"\">" type "</a></td></tr>", (field), (field)); \
         } \
@@ -175,11 +150,12 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
         pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
         strcpy(pomB+pomL, pomA); \
         pomL += l; \
-        free(pomA); pomA=NULL; \ 
+        free(pomA); \
+	pomA=NULL; \
 }
 
 int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
-	char *pomA = NULL, *pomB = NULL, *flags, *cond;
+	char *pomA = NULL, *pomB = NULL, *flags = NULL, *cond;
 	int pomL = 0;
 
 	flags = edg_wll_stat_flags_to_string(ni->flags);
@@ -238,13 +214,13 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		TR("State entered","%s",ctime(&time), NULL);
 	}
 	else
-		TR("State entered", "%s", NULL, NULL);
+		TR("State entered", "%s", (char*)NULL, NULL);
         if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
 		time_t  time = stat.lastUpdateTime.tv_sec;
 		TR("Last update","%s",ctime(&time), NULL);
 	}
 	else
-		TR("Last update", "%s", NULL, NULL);
+		TR("Last update", "%s", (char*)NULL, NULL);
 	TR("Expect update","%s",stat.expectUpdate ? "YES" : "NO", NULL);
 	TR("Expect update from","%s",stat.expectFrom, NULL);
 	TR("Location","%s",stat.location, NULL);
@@ -318,13 +294,13 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
                 TR("State entered","%s",ctime(&time), NULL);
         }
         else
-                TR("State entered", "%s", NULL, NULL);
+                TR("State entered", "%s", (char*)NULL, NULL);
         if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
                 time_t  time = stat.lastUpdateTime.tv_sec;
                 TR("Last update","%s",ctime(&time), NULL);
         }
         else
-                TR("Last update", "%s", NULL, NULL);
+                TR("Last update", "%s", (char*)NULL, NULL);
 
 
 	TR("LRMS id", "%s", stat.cream_lrms_id, NULL);
