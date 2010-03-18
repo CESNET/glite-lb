@@ -303,8 +303,8 @@ static void usage(char *me)
 
 static int wait_for_open(edg_wll_Context,const char *);
 static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
+static int asyn_gethostbyaddr(char **, char **, const struct sockaddr *, int, struct timeval *, int );
 static int add_root(edg_wll_Context, char *);
-static int asyn_gethostbyaddr(char **, const char *, int, int, struct timeval *);
 static int parse_limits(char *, int *, int *, int *);
 static int check_mkdir(const char *);
 
@@ -390,7 +390,10 @@ struct clnt_data_t {
 int main(int argc, char *argv[])
 {
 	int			i;
-	struct sockaddr_in	a;
+	struct addrinfo *ai;
+	struct addrinfo hints;
+	char *portstr = NULL;
+	int 	gaie;
 	int					opt, pidfile_forced = 0;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *name;
@@ -602,62 +605,98 @@ int main(int argc, char *argv[])
 
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server address: %s:%d", fake_host, fake_port);
 	}
+
+	memset (&hints, '\0', sizeof (hints));
+	hints.ai_flags = AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_STREAM;
+
 	if ((mode & SERVICE_SERVER)) {
-		service_table[SRV_SERVE].conn = socket(PF_INET, SOCK_STREAM, 0);
-		if ( service_table[SRV_SERVE].conn < 0 ) { 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
-			return 1; 
-		}
-		a.sin_family = AF_INET;
-		a.sin_port = htons(atoi(port));
-		a.sin_addr.s_addr = INADDR_ANY;
-		setsockopt(service_table[SRV_SERVE].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-		if ( bind(service_table[SRV_SERVE].conn, (struct sockaddr *) &a, sizeof(a)) )
-		{ 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%d)",atoi(port));
+		gaie = getaddrinfo (NULL, port, &hints, &ai);
+		if (gaie != 0) {
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (gaie));
 			return 1;
 		}
+		if (ai == NULL) {
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no return");
+			return 1;
+		}
+		service_table[SRV_SERVE].conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+		if ( service_table[SRV_SERVE].conn < 0 ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
+			freeaddrinfo(ai);
+			return 1; 
+		}
+		setsockopt(service_table[SRV_SERVE].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+		if ( bind(service_table[SRV_SERVE].conn, ai->ai_addr, ai->ai_addrlen) )
+		{ 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s)", port);
+			freeaddrinfo(ai);
+			return 1;
+		}
+		freeaddrinfo(ai);
 		if ( listen(service_table[SRV_SERVE].conn, CON_QUEUE) ) { 
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()");
 			return 1; 
 		}
 
-		service_table[SRV_STORE].conn = socket(PF_INET, SOCK_STREAM, 0);
-		if ( service_table[SRV_STORE].conn < 0) { 
+		asprintf(&portstr, "%d", atoi(port)+1);
+		gaie = getaddrinfo (NULL, portstr, &hints, &ai);
+		if (gaie != 0) {
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (gaie));
+			return 1;
+		}
+		if (ai == NULL) {
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no return");
+			return 1;
+		}
+		service_table[SRV_STORE].conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+		if ( service_table[SRV_STORE].conn < 0 ) { 
+			freeaddrinfo(ai);
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
 			return 1; 
 		}
-		a.sin_family = AF_INET;
-		a.sin_port = htons(atoi(port)+1);
-		a.sin_addr.s_addr = INADDR_ANY;
 		setsockopt(service_table[SRV_STORE].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-		if ( bind(service_table[SRV_STORE].conn, (struct sockaddr *) &a, sizeof(a)))
-		{
-			 glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%d)", atoi(port)+1);
+		if ( bind(service_table[SRV_STORE].conn, ai->ai_addr, ai->ai_addrlen) )
+		{ 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s)", portstr);
+			freeaddrinfo(ai);
 			return 1;
 		}
+		freeaddrinfo(ai);
 		if ( listen(service_table[SRV_STORE].conn, CON_QUEUE) ) { 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()"); 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()");
 			return 1; 
 		}
+		free(portstr); portstr = NULL;
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-		service_table[SRV_WS].conn = socket(PF_INET, SOCK_STREAM, 0);
-		if ( service_table[SRV_WS].conn < 0) { 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
-			return 1; 
-		}
-		a.sin_family = AF_INET;
-		a.sin_port = htons(atoi(ws_port));
-		a.sin_addr.s_addr = INADDR_ANY;
-		setsockopt(service_table[SRV_WS].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-		if ( bind(service_table[SRV_WS].conn, (struct sockaddr *) &a, sizeof(a)))
-		{
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%d)", atoi(ws_port));
+		gaie = getaddrinfo (NULL, ws_port, &hints, &ai);
+		if (gaie != 0) {
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (gaie));
 			return 1;
 		}
-		if ( listen(service_table[SRV_WS].conn, CON_QUEUE) ) { perror("listen()"); return 1; }
-
+		if (ai == NULL) {
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no return");
+			return 1;
+		}
+		service_table[SRV_WS].conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+		if ( service_table[SRV_WS].conn < 0 ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
+			freeaddrinfo(ai);
+			return 1; 
+		}
+		setsockopt(service_table[SRV_WS].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+		if ( bind(service_table[SRV_WS].conn, ai->ai_addr, ai->ai_addrlen) )
+		{ 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s)",ws_port);
+			freeaddrinfo(ai);
+			return 1;
+		}
+		freeaddrinfo(ai);
+		if ( listen(service_table[SRV_WS].conn, CON_QUEUE) ) { 
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()");
+			return 1; 
+		}
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 		if (!server_cert || !server_key)
@@ -978,10 +1017,12 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	edg_wll_GssStatus	gss_code;
 	struct timeval		dns_to = {DNS_TIMEOUT, 0},
 						conn_start, now;
-	struct sockaddr_in	a;
+	struct sockaddr_storage	a;
 	socklen_t					alen;
-	char			   *server_name = NULL,
-					   *name = NULL;
+	char			*server_name = NULL,
+				*port =NULL,
+				*name_num = NULL,
+				*name = NULL;
 	int					h_errno, ret;
 
 
@@ -1047,10 +1088,6 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	
 	edg_wll_initConnections();
 
-	alen = sizeof(a);
-	getpeername(conn, (struct sockaddr *)&a, &alen);
-	ctx->connections->serverConnection->peerName = strdup(inet_ntoa(a.sin_addr));
-	ctx->connections->serverConnection->peerPort = ntohs(a.sin_port);
 	ctx->count_statistics = count_statistics;
 
 	ctx->serverIdentity = strdup(server_subject);
@@ -1059,25 +1096,31 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 	gettimeofday(&conn_start, 0);
 
-	h_errno = asyn_gethostbyaddr(&name, (char *)&a.sin_addr.s_addr,sizeof(a.sin_addr.s_addr), AF_INET, &dns_to);
+	alen = sizeof(a);
+	getpeername(conn, (struct sockaddr *)&a, &alen);
+	h_errno = asyn_gethostbyaddr(&name_num, &port, (struct sockaddr *)&a, alen, &dns_to, 1);
+	ctx->connections->serverConnection->peerPort = atoi(port);
+	h_errno = asyn_gethostbyaddr(&name, NULL, (struct sockaddr *)&a, alen, &dns_to, 0);
 	switch ( h_errno )
 	{
 	case NETDB_SUCCESS:
 		if (name) 
-			glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_INFO, "[%d] connection from %s:%d (%s)", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port), name); 
+			glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_INFO, "[%d] connection from %s:%s (%s)", getpid(), name_num, port, name); 
 		free(ctx->connections->serverConnection->peerName);
 		ctx->connections->serverConnection->peerName = name;
 		name = NULL;
 		break;
 
 	default:
-		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
-		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_INFO,"[%d] connection from %s:%d", getpid(), inet_ntoa(a.sin_addr), ntohs(a.sin_port));
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "gethostbyaddr(%s): %s", name_num, hstrerror(h_errno));
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_INFO,"[%d] connection from %s:%s", getpid(), name_num, port);
 		free(ctx->connections->serverConnection->peerName);
-		ctx->connections->serverConnection->peerName = strdup(inet_ntoa(a.sin_addr));
+		ctx->connections->serverConnection->peerName = strdup(name_num);
 		break;
 	}
 	
+	free(port);
+
 	gettimeofday(&now, 0);
 	if ( decrement_timeout(timeout, conn_start, now) )
 	{
@@ -1099,9 +1142,9 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	
 		dns_to.tv_sec = DNS_TIMEOUT;
 		dns_to.tv_usec = 0;
-		h_errno = asyn_gethostbyaddr(&name,
-						(char *) &a.sin_addr.s_addr,sizeof(a.sin_addr.s_addr),
-						AF_INET,&dns_to);
+		h_errno = asyn_gethostbyaddr(&name, &port,
+						(struct sockaddr *) &a, alen,
+						&dns_to, 0);
 
 		switch ( h_errno )
 		{
@@ -1118,12 +1161,13 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 			break;
 
 		default:
-				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "gethostbyaddr(%s): %s", inet_ntoa(a.sin_addr), hstrerror(h_errno));
+				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "gethostbyaddr(%s): %s", name_num, hstrerror(h_errno));
 			if ( server_name != NULL )
 				ctx->srvName = strdup(server_name);
 			break;
 		}
-		ctx->srvPort = ntohs(a.sin_port);
+		ctx->srvPort = atoi(port);
+		free(port); port = NULL;
 	}
 
 /* XXX: ugly workaround, we may detect false expired certificated
@@ -1712,24 +1756,22 @@ static void free_hostent(struct hostent *h){
 }
 
 struct asyn_result {
-	struct hostent *ent;
+	char		*host;
+	char		*service;
 	int		err;
 };
 
-/* ares callback handler for ares_gethostbyaddr()       */
-#if ARES_VERSION >= 0x010500
-static void callback_handler(void *arg, int status, int timeouts, struct hostent *h)
-#else
-static void callback_handler(void *arg, int status, struct hostent *h)
-#endif
+/* ares callback handler for ares_getnameinfo() */
+void callback_handler(void *arg, int status, char *node, char *service)
 {
 	struct asyn_result *arp = (struct asyn_result *) arg;
 
 	switch (status) {
 	   case ARES_SUCCESS:
-		if (h && h->h_name) {
-			arp->ent->h_name = strdup(h->h_name);		
-			if (arp->ent->h_name == NULL) {
+		if (node||service) {
+			if (node) arp->host = strdup(node);		
+			if (service) arp->service = strdup(service);		
+			if (arp->host == NULL && arp->service == NULL) {
 				arp->err = NETDB_INTERNAL;
 			} else {
 				arp->err = NETDB_SUCCESS;
@@ -1753,7 +1795,7 @@ static void callback_handler(void *arg, int status, struct hostent *h)
 	}
 }
 
-static int asyn_gethostbyaddr(char **name, const char *addr,int len, int type, struct timeval *timeout)
+static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr *addr, int len, struct timeval *timeout, int numeric)
 {
 	struct asyn_result ar;
 	ares_channel channel;
@@ -1761,18 +1803,19 @@ static int asyn_gethostbyaddr(char **name, const char *addr,int len, int type, s
 	fd_set readers, writers;
 	struct timeval tv, *tvp;
 	struct timeval start_time,check_time;
-
+	int 	flags = 0;
 
 /* start timer */
         gettimeofday(&start_time,0);
 
 /* ares init */
         if ( ares_init(&channel) != ARES_SUCCESS ) return(NETDB_INTERNAL);
-	ar.ent = (struct hostent *) malloc (sizeof(*ar.ent));
-	memset((void *) ar.ent, 0, sizeof(*ar.ent));
+	memset((void *) &ar, 0, sizeof(ar));
 
 /* query DNS server asynchronously */
-	ares_gethostbyaddr(channel, addr, len, type, callback_handler, (void *) &ar);
+	if (name) flags |= ARES_NI_LOOKUPHOST | ( numeric? ARES_NI_NUMERICHOST : 0);
+	if (service) flags |= ARES_NI_LOOKUPSERVICE | ( numeric? ARES_NI_NUMERICSERV : 0);
+	ares_getnameinfo(channel, addr, len, flags, (ares_nameinfo_callback)callback_handler, (void *) &ar);
 
 /* wait for result */
         while (1) {
@@ -1785,7 +1828,6 @@ static int asyn_gethostbyaddr(char **name, const char *addr,int len, int type, s
                 gettimeofday(&check_time,0);
 		if (decrement_timeout(timeout, start_time, check_time)) {
 			ares_destroy(channel);
-			free_hostent(ar.ent);
 			return(TRY_AGAIN);
 		}
 		start_time = check_time;
@@ -1795,7 +1837,6 @@ static int asyn_gethostbyaddr(char **name, const char *addr,int len, int type, s
                 switch ( select(nfds, &readers, &writers, NULL, tvp) ) {
 			case -1: if (errno != EINTR) {
 					ares_destroy(channel);
-				  	free_hostent(ar.ent);
 				  	return NETDB_INTERNAL;
 				 } else
 					continue;
@@ -1812,8 +1853,8 @@ static int asyn_gethostbyaddr(char **name, const char *addr,int len, int type, s
 	ares_destroy(channel);
 		
 	if (ar.err == NETDB_SUCCESS) {
-		*name = strdup(ar.ent->h_name); 
-		free_hostent(ar.ent); 
+		if (name) *name = ar.host;
+		if (service) *service = ar.service;
 	}
 	return (ar.err);
 }

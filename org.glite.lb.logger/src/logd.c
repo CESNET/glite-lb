@@ -32,6 +32,7 @@ limitations under the License.
 #include <getopt.h>
 #include <assert.h>
 #include <errno.h>
+#include <netdb.h>
 
 #if defined(FREEBSD) || defined(__FreeBSD__)
 #define TCP_CORK TCP_NOPUSH
@@ -203,8 +204,9 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     edg_wll_GssStatus	gss_stat;
     edg_wll_GssPrincipal client = NULL;
     fd_set fdset;
-    struct sockaddr_in	peer;
+    struct sockaddr_storage	peer;
     socklen_t	alen = sizeof peer;
+    char 	peerhost[64], peerserv[16];
 
     ret = count = 0;
     FD_ZERO(&fdset);
@@ -215,6 +217,13 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     getpeername(socket,(struct sockaddr *) &peer,&alen);
     glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Accepting connection (remaining timeout %d.%06d sec)\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
+    
+    ret = getnameinfo ((struct sockaddr *) &peer, alen, 
+		peerhost, sizeof(peerhost), peerserv, sizeof(peerserv), NI_NUMERICHOST | NI_NUMERICSERV);
+    if (ret) {
+	glite_common_log(LOG_CATEGORY_ACCESS, LOG_PRIORITY_WARN, "getnameinfo: %s", gai_strerror (ret));
+	strcpy(peerhost, "unknown"); strcpy(peerserv, "unknown"); 
+    }
 
 /* XXX: ugly workaround, we may detect false expired certificated
  * probably due to bug in Globus GSS/SSL. */
@@ -224,20 +233,20 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
 	glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_DEBUG,"timeout after gss_accept is %d.%06d sec\n",
 		(int)timeout.tv_sec, (int) timeout.tv_usec);
 	if ( ret == EDG_WLL_GSS_ERROR_TIMEOUT ) {
-		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: Client authentication failed - timeout reached, closing.\n",inet_ntoa(peer.sin_addr));
+		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: Client authentication failed - timeout reached, closing.\n",peerhost);
 	} else if (ret == EDG_WLL_GSS_ERROR_GSS) {
 		char *gss_err;
 
 		edg_wll_gss_get_error(&gss_stat, "Client authentication failed", &gss_err);
 		if (strstr(gss_err,_EXPIRED_CERTIFICATE_MESSAGE)) {
-			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: false expired certificate: %s\n",inet_ntoa(peer.sin_addr),gss_err);
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: false expired certificate: %s\n",peerhost,gss_err);
 			free(gss_err);
 			return -1;
 		}
-		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: GSS error: %s, closing.\n",inet_ntoa(peer.sin_addr),gss_err);
+		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: GSS error: %s, closing.\n",peerhost,gss_err);
 		free(gss_err);
 	} else {
-		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: Client authentication failed, closing.\n",inet_ntoa(peer.sin_addr));
+		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"%s: Client authentication failed, closing.\n",peerhost);
 	}
 	return 1;
     }
@@ -248,7 +257,7 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
     if (ret) {
         char *gss_err;
         edg_wll_gss_get_error(&gss_stat, "Cannot read client identification", &gss_err);
-        glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN, "%s: %s\n", inet_ntoa(peer.sin_addr),gss_err);
+        glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN, "%s: %s\n", peerhost,gss_err);
         free(gss_err);
     }
 
@@ -339,7 +348,7 @@ int main(int argc, char *argv[])
 
    int listener_fd;
    int client_fd;
-   struct sockaddr_in client_addr;
+   struct sockaddr_storage client_addr;
    int client_addr_len;
 
    time_t	cert_mtime = 0, key_mtime = 0;

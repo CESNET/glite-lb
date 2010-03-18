@@ -332,10 +332,10 @@ int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile,
 
 static int dispatchit(int sock_slave, int sock, int sidx)
 {
-	struct sockaddr_in	a;
-	unsigned char	   *pom;
-	int					conn,
-						alen, ret;
+	struct sockaddr_storage	a;
+	char			peerhost[64], peerserv[16];
+	int			conn, ret;
+	socklen_t		alen;
 
 
 	alen = sizeof(a);
@@ -361,20 +361,25 @@ static int dispatchit(int sock_slave, int sock, int sidx)
 	}
 
 	getpeername(conn, (struct sockaddr *)&a, &alen);
-	pom = (char *) &a.sin_addr.s_addr;
-	if (a.sin_family  == PF_LOCAL) {
+	if (a.ss_family  == PF_LOCAL) {
 		glite_common_log(set_log_category,
 			 LOG_PRIORITY_DEBUG, 
 			"[master] %s connection from local socket", 
 			services[sidx].id ? services[sidx].id : "");
 	}
 	else {
+		ret = getnameinfo ((struct sockaddr *) &a, alen,
+			peerhost, sizeof(peerhost), peerserv, sizeof(peerserv), NI_NUMERICHOST | NI_NUMERICSERV);
+    		if (ret) {
+        		glite_common_log(set_log_category, LOG_PRIORITY_WARN, "getnameinfo: %s", gai_strerror (ret));
+        			strcpy(peerhost, "unknown"); strcpy(peerserv, "unknown");
+    		}
+
 		glite_common_log(set_log_category, 
                          LOG_PRIORITY_DEBUG,
-			"[master] %s connection from %d.%d.%d.%d:%d",
+			"[master] %s connection from %s:%s",
                         services[sidx].id ? services[sidx].id : "",
-                        (int)pom[0], (int)pom[1], (int)pom[2], (int)pom[3],
-                        ntohs(a.sin_port));
+                        peerhost, peerserv);
 	}
 
 	ret = 0;

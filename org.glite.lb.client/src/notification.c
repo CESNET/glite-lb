@@ -96,26 +96,53 @@ static void get_name_and_port(const char *address, char **name, int *port)
 
 static int my_bind(edg_wll_Context ctx, const char *name, int port, int *fd)
 {
-	struct  sockaddr_in     a;
-	socklen_t               alen = sizeof(a);
-	int			sock;
-		
-	sock = socket(PF_INET,SOCK_STREAM,0);
-	if (sock<0) 
-		return  edg_wll_SetError(ctx, errno, "socket() failed");
+	int		sock;
+	int		ret;
+	struct addrinfo	*ai;
+	struct addrinfo	hints;
+	char 		*portstr = NULL;
 
-	a.sin_family = AF_INET;
-	a.sin_port = htons(port);
-	a.sin_addr.s_addr = name? inet_addr(name): htonl(INADDR_ANY);
+	asprintf(&portstr, "%d", port);
+	if (portstr == NULL) {
+		return edg_wll_SetError(ctx, ENOMEM, "my_bind(): ENOMEM converting port number");
+	}
+
+	memset (&hints, '\0', sizeof (hints));
+	hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_STREAM;
+
+	ret = getaddrinfo (name, portstr, &hints, &ai);
+	free(portstr);
+	if (ret != 0) {
+		return edg_wll_SetError(ctx, EADDRNOTAVAIL, gai_strerror(ret));
+	}
+	if (ai == NULL) {
+		return edg_wll_SetError(ctx, EADDRNOTAVAIL, "no result from getaddrinfo");
+	}
+
+	sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+	if (sock == -1) { 
+		freeaddrinfo(ai);
+		return  edg_wll_SetError(ctx, errno, "socket() failed");
+	}
 
 //	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-	if (bind(sock,(struct sockaddr *)&a,alen))
-		return  edg_wll_SetError(ctx, errno, "bind() failed");
+	ret = bind(sock, ai->ai_addr, ai->ai_addrlen);
+	if (ret == -1) { 
+		edg_wll_SetError(ctx, errno, "bind() failed");
+		close(sock); 
+		freeaddrinfo(ai);
+		return edg_wll_Error(ctx, NULL, NULL);
+	}
+	freeaddrinfo(ai);
 
-	
-	if (listen(sock,CON_QUEUE)) 
-		return edg_wll_SetError(ctx, errno, "listen() failed");
-	
+	ret = listen(sock, CON_QUEUE);
+	if (ret == -1) { 
+		edg_wll_SetError(ctx, errno, "listen() failed");
+		close(sock); 
+		return edg_wll_Error(ctx, NULL, NULL);
+	}
+
 	*fd = sock;
 	
 	return edg_wll_Error(ctx,NULL,NULL);
@@ -150,33 +177,45 @@ static int get_client_address(
 		char **address) 
 	
 {
-	struct  sockaddr_in	a;
+	struct  sockaddr_storage	a;
 	socklen_t		alen = sizeof(a);
-	struct hostent 		*he;
+	int			e;
 	char 			*name = NULL;
 	int			port = 0;
+	struct addrinfo *ai;
+	struct addrinfo hints;
+	char 		hostnum[64], hostnum1[64], portnum[16];
 	
+	memset (&hints, '\0', sizeof (hints));
+	hints.ai_flags = AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_STREAM;
 	
 	if (address_override) {
-		struct in_addr in;
 		
 		get_name_and_port(address_override, &name, &port);
 		
-		if ( (he = gethostbyname((const char *) name)) == NULL) {
-			edg_wll_SetError(ctx, errno, "gethostbyname() failed");
+		e = getaddrinfo((const char *) name, NULL, &hints, & ai);
+		if (e) {
+			edg_wll_SetError(ctx, EADDRNOTAVAIL, "getaddrinfo() failed");
 			goto err;
 		}
-		
+
 		free(name);
 	       	
-		memmove(&in.s_addr, he->h_addr_list[0], sizeof(in.s_addr));
-		name = strdup(inet_ntoa(in));
-	
-		if ( (he = gethostbyname((const char *) name)) == NULL) {
-			edg_wll_SetError(ctx, errno, "gethostbyname() failed");
+		e = getnameinfo ((struct sockaddr *) ai->ai_addr, ai->ai_addrlen,
+                	hostnum, sizeof(hostnum), NULL, 0, NI_NUMERICHOST );
+    		if (e) {
+			edg_wll_SetError(ctx, EADDRNOTAVAIL, "getnameinfo() failed");
+			goto err;
+    		}
+		freeadrinfo(ai);
+
+		e = getaddrinfo((const char *) hostnum, NULL, &hints, & ai);
+		if (e) {
+			edg_wll_SetError(ctx, EADDRNOTAVAIL, "getaddrinfo() failed");
 			goto err;
 		}
-	
+
 		/* Test whether open sockket represents the same address as address_override
 		 * if not, close ctx->notifSock and bind to new socket corresponding to 
 		 * address_override
@@ -185,7 +224,19 @@ static int get_client_address(
 			if (getsockname(ctx->notifSock, (struct sockaddr *) &a, &alen)) 
 				return edg_wll_SetError(ctx, errno, "getsockname() failed");
 			
-			if ( (strcmp(inet_ntoa(a.sin_addr), name)) || (ntohs(a.sin_port) != port) ) {
+			e = getnameinfo ((struct sockaddr *) &a, alen,
+                		NULL, 0, portnum, sizeof(portnum), NI_NUMERICSERV );
+    			if (e) {
+				edg_wll_SetError(ctx, EADDRNOTAVAIL, "getnameinfo() failed");
+				goto err;
+    			}
+			e = getnameinfo ((struct sockaddr *) &a, alen,
+                		hostnum1, sizeof(hostnum1), NULL, 0, NI_NUMERICHOST );
+    			if (e) {
+				edg_wll_SetError(ctx, EADDRNOTAVAIL, "getnameinfo() failed");
+				goto err;
+    			}
+			if ( (strcmp(hostnum1, hostnum)) || (atoi(portnum) != port) ) {
 				
 				if (close(ctx->notifSock)) {
 					edg_wll_SetError(ctx, errno, "close() failed");
@@ -217,10 +268,13 @@ static int get_client_address(
 		if (getsockname(fd == -1 ? ctx->notifSock : fd,(struct sockaddr *)  &a, &alen)) 
 			return edg_wll_SetError(ctx, errno, "getsockname() failed");
 
-		if (a.sin_addr.s_addr == INADDR_ANY)
-			asprintf(address,"0.0.0.0:%d", ntohs(a.sin_port));
-		else
-			asprintf(address,"%s:%d", inet_ntoa(a.sin_addr), ntohs(a.sin_port));
+		e = getnameinfo ((struct sockaddr *) &a, alen,
+                	hostnum, sizeof(hostnum), portnum, sizeof(portnum), NI_NUMERICSERV );
+    		if (e) {
+			edg_wll_SetError(ctx, EADDRNOTAVAIL, "getnameinfo() failed");
+			goto err;
+    		}
+		asprintf(address,"%s:%s", hostnum, portnum);
 	}
 
 err:

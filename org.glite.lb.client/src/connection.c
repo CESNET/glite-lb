@@ -688,7 +688,7 @@ int edg_wll_accept(edg_wll_Context ctx, int fd)
 	time_t lifetime = 0;
 	struct stat statinfo;
 	int acquire_cred = 0;
-        struct sockaddr_in	a;
+        struct sockaddr_storage	a;
         socklen_t		alen;
 	edg_wll_GssStatus	gss_code;
 

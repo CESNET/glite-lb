@@ -29,6 +29,7 @@ limitations under the License.
 #include <fcntl.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <netdb.h>
 
 #include "glite/lbu/escape.h"
 #include "glite/lbu/log.h"
@@ -257,27 +258,47 @@ int do_listen(int port)
 {
 	int                ret;
 	int                sock;
-	struct sockaddr_in my_addr;
+	struct addrinfo	*ai;
+	struct addrinfo	hints;
+	char 		*portstr = NULL;
 
-	memset(&my_addr, 0, sizeof(my_addr));
-	my_addr.sin_family = AF_INET;
-	my_addr.sin_addr.s_addr = INADDR_ANY;
-	my_addr.sin_port = htons(port);
+	asprintf(&portstr, "%d", port);
+	if (portstr == NULL) {
+		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"do_listen(): ENOMEM converting port number\n");
+		return -1;
+	}
 
-	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	memset (&hints, '\0', sizeof (hints));
+	hints.ai_flags = AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_STREAM;
+
+	ret = getaddrinfo (NULL, portstr, &hints, &ai);
+	if (ret != 0) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (ret));
+		return -1;
+	}
+	if (ai == NULL) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no return");
+		return -1;
+	}
+
+	sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 	if (sock == -1) { 
 		glite_common_log_SYS_ERROR("socket"); 
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"do_listen(): error creating socket\n");
+		freeaddrinfo(ai);
 		return -1; 
 	}
 
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-	ret = bind(sock, (struct sockaddr *)&my_addr, sizeof(my_addr));
+	ret = bind(sock, ai->ai_addr, ai->ai_addrlen);
 	if (ret == -1) { 
 		glite_common_log_SYS_ERROR("bind"); 
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"do_listen(): error binding socket\n");
+		freeaddrinfo(ai);
 		return -1; 
 	}
+	freeaddrinfo(ai);
 
 	ret = listen(sock, 5);
 	if (ret == -1) { 
