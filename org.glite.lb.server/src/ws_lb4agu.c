@@ -275,7 +275,7 @@ static int edg_wll_JobStatusToGlueComputingActivity(
 
 	// UsedTotalCPUTime (optional, xsd:unsignedLong) = cpuTime?
 	// TODO: put resource usage once available
-	if ((src->cpuTime) && (src->cpuTime != -1)) {
+	if (src->cpuTime != -1) {
 		js->UsedTotalCPUTime = soap_malloc(soap,sizeof *js->UsedTotalCPUTime);
 		*js->UsedTotalCPUTime = src->cpuTime;
 	}
