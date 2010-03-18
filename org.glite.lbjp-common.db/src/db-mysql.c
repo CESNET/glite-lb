@@ -276,7 +276,7 @@ int glite_lbu_InitDBContextMysql(glite_lbu_DBContext *ctx_gen) {
 			// check the runtime version
 			ver_u = mysql_module.mysql_get_client_version();
 			if (ver_u != MYSQL_VERSION_ID) {
-				fprintf(stderr,"Warning: MySQL library version mismatch (compiled '%d', runtime '%d')", MYSQL_VERSION_ID, ver_u);
+				fprintf(stderr,"Warning: MySQL library version mismatch (compiled '%d', runtime '%d')\n", MYSQL_VERSION_ID, ver_u);
 #ifdef SYSLOG_H
 				syslog(LOG_WARNING,"MySQL library version mismatch (compiled '%d', runtime '%d')", MYSQL_VERSION_ID, ver_u);
 #endif
