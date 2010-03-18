@@ -169,7 +169,7 @@ install: all
 	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
 
 clean:
-	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
+	rm -rvf *.o *.lo *.loT .libs lib* *.c *.h *.dox C/ CPP/
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 	rm -rvf db_expire db_test db_test_mysql db_test_psql
 

@@ -124,7 +124,7 @@ int main(int argn __attribute((unused)), char *argv[]) {
 
 	// init
 	dprintf(("connecting to %s...\n", cs));
-	if (glite_lbu_InitDBContext(&ctx, DB_TEST_BACKEND) != 0) goto failctx;
+	if (glite_lbu_InitDBContext(&ctx, DB_TEST_BACKEND, NULL) != 0) goto failctx;
 	if (glite_lbu_DBConnect(ctx, cs) != 0) goto failctx;
 	if ((caps = glite_lbu_DBQueryCaps(ctx)) == -1) goto failcon;
 #ifndef NO_PREPARED

@@ -98,7 +98,7 @@ int glite_lbu_DBSetError(glite_lbu_DBContext ctx, int code, const char *func, in
 		va_end(ap);
 	} else
 		ctx->err.desc = NULL;
-	glite_common_log(set_log_category, LOG_PRIORITY_WARN, 
+	glite_common_log(ctx->log_category, LOG_PRIORITY_WARN, 
 		"[db %d] %s:%d %s\n", getpid(), func, line, ctx->err.desc);
 	return code;
 }
@@ -184,8 +184,10 @@ int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx, int backend, char *log_cat
 	if (!VALID(backend)) return EINVAL;
 	if (backends[backend]->backend != backend) return ENOTSUP;
 	ret = backends[backend]->initContext(ctx);
-	if (ctx && *ctx) (*ctx)->backend = backend;
-	set_log_category = log_category;
+	if (ctx && *ctx) {
+		(*ctx)->backend = backend;
+		(*ctx)->log_category = log_category;
+	}
 	return ret;
 }
 
@@ -363,7 +365,7 @@ static int flush_bufferd_insert(glite_lbu_bufInsert bi)
 	
 	trio_asprintf(&stmt, "insert into %|Ss(%|Ss) values %s;",
 		bi->table_name, bi->columns, vals);
-	glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log(bi->ctx->log_category, LOG_PRIORITY_DEBUG, stmt);
 
 	if (glite_lbu_ExecSQL(bi->ctx,stmt,NULL) < 0) {
                 if (STATUS(bi->ctx) == EEXIST)

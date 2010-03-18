@@ -417,8 +417,6 @@ long int glite_lbu_Lastid(glite_lbu_Statement stmt);
  * @} database group
  */
 
-static char *set_log_category;
-
 #ifdef __cplusplus
 }
 #endif

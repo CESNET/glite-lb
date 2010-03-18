@@ -246,7 +246,7 @@ int glite_lbu_DBConnectPsql(glite_lbu_DBContext ctx_gen, const char *cs) {
 	else pgcs = pgcsbuf;
 	free(buf);
 
-	 glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, 
+	 glite_common_log(ctx_gen->log_category, LOG_PRIORITY_DEBUG, 
 		"connection string = %s\n", pgcs);
 	ctx->conn = psql_module.PQconnectdb(pgcs);
 	free(pgcsbuf);
@@ -284,7 +284,7 @@ int glite_lbu_DBQueryCapsPsql(glite_lbu_DBContext ctx_gen) {
 	int has_prepared = 0;
 	char *res = NULL;
 
-	glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "SHOW server_version");
+	glite_common_log(ctx_gen->log_category, LOG_PRIORITY_DEBUG, "SHOW server_version");
 	if (glite_lbu_ExecSQLPsql(ctx_gen, "SHOW server_version", &stmt) == -1) return -1;
 	switch (glite_lbu_FetchRowPsql(stmt, 1, NULL, &res)) {
 	case 1:
@@ -368,7 +368,7 @@ void glite_lbu_FreeStmtPsql(glite_lbu_Statement *stmt_gen) {
 	if (stmt->res) psql_module.PQclear(stmt->res);
 	if (stmt->name) {
 		asprintf(&sql, "DEALLOCATE %s", stmt->name);
-		glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, sql);
+		glite_common_log(ctx->generic.log_category, LOG_PRIORITY_DEBUG, sql);
 		stmt->res = psql_module.PQexec(ctx->conn, sql);
 		free(sql);
 		psql_module.PQclear(stmt->res);
@@ -388,7 +388,7 @@ int glite_lbu_ExecSQLPsql(glite_lbu_DBContext ctx_gen, const char *cmd, glite_lb
 	PGresult *res;
 
 	//lprintf("command = %s\n", cmd);
-	glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "command = %s\n", cmd);
+	glite_common_log(ctx_gen->log_category, LOG_PRIORITY_DEBUG, "command = %s\n", cmd);
 	if (stmt_out) *stmt_out = NULL;
 	if ((res = psql_module.PQexec(ctx->conn, cmd)) == NULL) {
 		ctx->generic.err.code = ENOMEM;
@@ -462,7 +462,7 @@ int glite_lbu_PrepareStmtPsql(glite_lbu_DBContext ctx_gen, const char *sql, glit
 	asprintf(&stmt->name, "%s%d", prepared_names[i], ++ctx->prepared_counts[i]);
 
 	asprintf(&sqlPrep, "PREPARE %s AS %s", stmt->name, stmt->sql);
-	glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, sqlPrep);
+	glite_common_log(ctx_gen->log_category, LOG_PRIORITY_DEBUG, sqlPrep);
 	res = psql_module.PQexec(ctx->conn, sqlPrep);
 	if (psql_module.PQresultStatus(res) != PGRES_COMMAND_OK) {
 		asprintf(&s, "error preparing command: %s", psql_module.PQerrorMessage(ctx->conn));
@@ -533,13 +533,13 @@ int glite_lbu_ExecPreparedStmtPsql_v(glite_lbu_Statement stmt_gen, int n, va_lis
 
 			s = va_arg(ap, char *);
 			binary_len = va_arg(ap, unsigned long);
-			glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, 
+			glite_common_log(ctx->generic.log_category, LOG_PRIORITY_DEBUG, 
 				"blob, len = %lu, ptr = %p\n", binary_len, s);
 			if (s) {
 				tmp = malloc(2*binary_len + 1);
 				psql_module.PQescapeStringConn(ctx->conn, tmp, s, binary_len, NULL);
 				asprintf(&tmpdata[i], "'%s'", tmp);
-				glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "escaped: '%s'\n", tmpdata[i]);
+				glite_common_log(ctx->generic.log_category, LOG_PRIORITY_DEBUG, "escaped: '%s'\n", tmpdata[i]);
 				free(tmp);
 			} else
 				tmpdata[i] = strdup("NULL");
@@ -573,7 +573,7 @@ int glite_lbu_ExecPreparedStmtPsql_v(glite_lbu_Statement stmt_gen, int n, va_lis
 			break;
 
 		default:
-			glite_common_log(set_log_category, LOG_PRIORITY_DEBUG,
+			glite_common_log(ctx->generic.log_category, LOG_PRIORITY_DEBUG,
 				"unknown type %d\n", type);
 			set_error(ctx, EINVAL, "unimplemented type");
 			goto quit;
@@ -592,7 +592,7 @@ int glite_lbu_ExecPreparedStmtPsql_v(glite_lbu_Statement stmt_gen, int n, va_lis
 	}
 	if (n) strcat(sql, ")");
 
-	glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, sql);
+	glite_common_log(ctx->generic.log_category, LOG_PRIORITY_DEBUG, sql);
 	stmt->res = psql_module.PQexec(ctx->conn, sql);
 	status = psql_module.PQresultStatus(stmt->res);
 	if (status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK) {

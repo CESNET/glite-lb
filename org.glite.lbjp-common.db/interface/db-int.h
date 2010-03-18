@@ -30,6 +30,7 @@ struct glite_lbu_DBContext_s {
 		char *desc;
 	} err;
 	int caps;
+	char *log_category;
 };
 typedef struct glite_lbu_DBContext_s glite_lbu_DBContext_t;
 
