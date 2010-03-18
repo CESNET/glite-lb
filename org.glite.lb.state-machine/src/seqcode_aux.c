@@ -52,7 +52,7 @@ limitations under the License.
 
 int component_seqcode(const char *a, edg_wll_Source index)
 {
-	unsigned int    c[EDG_WLL_SOURCE__LAST];
+	unsigned int    c[EDG_WLL_SEQ_FORMAT_NUMBER+1];
 	int		res;
 	char		sc[EDG_WLL_SEQ_SIZE];
 
@@ -69,7 +69,7 @@ int component_seqcode(const char *a, edg_wll_Source index)
 			&c[EDG_WLL_SOURCE_LRMS],
 			&c[EDG_WLL_SOURCE_APPLICATION],
 			&c[EDG_WLL_SOURCE_LB_SERVER]);
-	if (res != EDG_WLL_SOURCE__LAST-1) {
+	if (res != EDG_WLL_SEQ_FORMAT_NUMBER) {
 /* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", sc); */
 		fprintf(stderr, "unparsable sequence code %s\n", sc);
 		return -1;
@@ -80,7 +80,7 @@ int component_seqcode(const char *a, edg_wll_Source index)
 
 char * set_component_seqcode(char *a,edg_wll_Source index,int val)
 {
-	unsigned int    c[EDG_WLL_SOURCE__LAST];
+	unsigned int    c[EDG_WLL_SEQ_FORMAT_NUMBER+1];
 	int		res;
 	char 		*ret;
 	char		sc[EDG_WLL_SEQ_SIZE];
@@ -98,7 +98,7 @@ char * set_component_seqcode(char *a,edg_wll_Source index,int val)
 			&c[EDG_WLL_SOURCE_LRMS],
 			&c[EDG_WLL_SOURCE_APPLICATION],
 			&c[EDG_WLL_SOURCE_LB_SERVER]);
-	if (res != EDG_WLL_SOURCE__LAST-1) {
+	if (res != EDG_WLL_SEQ_FORMAT_NUMBER) {
 /* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", sc); */
 		fprintf(stderr, "unparsable sequence code %s\n", sc);
 		return NULL;
@@ -221,8 +221,8 @@ edg_wll_CondorEventSource get_condor_event_source(const char *condor_seq_num) {
 
 int edg_wll_compare_seq(const char *a, const char *b)
 {
-	unsigned int    c[EDG_WLL_SOURCE__LAST];
-	unsigned int    d[EDG_WLL_SOURCE__LAST];
+	unsigned int    c[EDG_WLL_SEQ_FORMAT_NUMBER+1];
+	unsigned int    d[EDG_WLL_SEQ_FORMAT_NUMBER+1];
 	int		res, i;
 	char		sca[EDG_WLL_SEQ_SIZE], scb[EDG_WLL_SEQ_SIZE];
 
@@ -245,7 +245,7 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&c[EDG_WLL_SOURCE_LRMS],
 			&c[EDG_WLL_SOURCE_APPLICATION],
 			&c[EDG_WLL_SOURCE_LB_SERVER]);
-	if (res != 9) {
+	if (res != EDG_WLL_SEQ_FORMAT_NUMBER) {
 /* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", sca); */
 		fprintf(stderr, "unparsable sequence code %s\n", sca);
 		return -1;
@@ -261,13 +261,13 @@ int edg_wll_compare_seq(const char *a, const char *b)
 			&d[EDG_WLL_SOURCE_LRMS],
 			&d[EDG_WLL_SOURCE_APPLICATION],
 			&d[EDG_WLL_SOURCE_LB_SERVER]);
-	if (res != 9) {
+	if (res != EDG_WLL_SEQ_FORMAT_NUMBER) {
 /* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", scb); */
 		fprintf(stderr, "unparsable sequence code %s\n", scb);
 		return 1;
 	}
 
-	for (i = EDG_WLL_SOURCE_USER_INTERFACE ; i < EDG_WLL_SOURCE__LAST; i++) {
+	for (i = EDG_WLL_SOURCE_USER_INTERFACE ; i <= EDG_WLL_SEQ_FORMAT_NUMBER; i++) {
 		if (c[i] < d[i]) return -1;
 		if (c[i] > d[i]) return  1;
 	}
