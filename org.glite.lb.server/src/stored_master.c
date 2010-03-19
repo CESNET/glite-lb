@@ -80,54 +80,6 @@ gss_reader(void *user_data, char *buffer, int max_len)
   return(ret);
 }
 
-
-// XXX: for easier merge from RC31_3
-//	after merge, it would be possible to glue
-//	edg_wll_StoreProtoProxy and edg_wll_StoreProtoServer together
-int edg_wll_StoreProto(edg_wll_Context ctx) 
-{
-	if (ctx->isProxy) return(edg_wll_StoreProtoProxy(ctx));
-	else return(edg_wll_StoreProtoServer(ctx));
-}
-
-
-int edg_wll_StoreProtoServer(edg_wll_Context ctx)
-{
-	char	*buf;
-	size_t	len;
-	int	ret;
-	size_t	total;
-	edg_wll_GssStatus	gss_code;
-
-	edg_wll_ResetError(ctx);
-	ret = read_il_data(ctx, &buf, gss_reader);
-	if (ret == -1) 
-	  return edg_wll_SetError(ctx,EIO,"interlogger protocol error");
-	if (ret < 0)
-	  return edg_wll_Error(ctx,NULL,NULL);
-#ifdef LB_PERF
-	if (sink_mode == GLITE_LB_SINK_PARSE) glite_wll_perftest_consumeEventIlMsg(buf);
-	else
-#endif
-
-	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG,buf);
-	handle_il_message(ctx,buf);
-	free(buf);
-
-	if ((len = create_reply(ctx,&buf)) > 0) {
-		if ((ret = edg_wll_gss_write_full(&ctx->connections->serverConnection->gss,buf,len,&ctx->p_tmp_timeout,&total,&gss_code)) < 0)
-			edg_wll_SetError(ctx,
-				ret == EDG_WLL_GSS_ERROR_TIMEOUT ? 
-					ETIMEDOUT : EDG_WLL_ERROR_GSS,
-				"write reply");
-		free(buf);
-	}
-	else edg_wll_SetError(ctx,E2BIG,"create_reply()");
-
-	return edg_wll_Error(ctx,NULL,NULL);
-}
-
-
 static
 int
 gss_plain_reader(void *user_data, char *buffer, int max_len)
@@ -145,43 +97,51 @@ gss_plain_reader(void *user_data, char *buffer, int max_len)
   return(ret);
 }
 
-
-int edg_wll_StoreProtoProxy(edg_wll_Context ctx)
+int edg_wll_StoreProto(edg_wll_Context ctx) 
 {
-	char	*buf,
-			*errd = NULL;
-	int		len, ret,
-			err = 0;
+        char    *buf;
+        size_t  len;
+        int     ret;
+        size_t  total;
+        edg_wll_GssStatus       gss_code;
 
-
-	edg_wll_ResetError(ctx);
-	ret = read_il_data(ctx, &buf, gss_plain_reader);
-	if (ret == -1) 
-	  return edg_wll_SetError(ctx,EIO,"interlogger protocol error");
-	if (ret < 0)
-	  return edg_wll_Error(ctx,NULL,NULL);
-#ifdef LB_PERF
-	if (sink_mode == GLITE_LB_SINK_PARSE) glite_wll_perftest_consumeEventIlMsg(buf);
-	else
-#endif
-	if ( !(ret = handle_il_message(ctx, buf)) ) {
-		if ( (err = edg_wll_Error(ctx, NULL, &errd)) ) edg_wll_ResetError(ctx);
-	}
-	free(buf);
-
+	 edg_wll_ResetError(ctx);
 	
-	if ( (len = create_reply(ctx, &buf)) > 0 ) {
-		if ( edg_wll_plain_write_full(&ctx->connProxy->conn, buf, len, &ctx->p_tmp_timeout) < 0 ) {
-			if ( errd ) free(errd);
-			return edg_wll_SetError(ctx, errno, "StoreProtoProxy() - sending reply");
-		}
-		free(buf);
+	if (ctx->isProxy) {
+		 ret = read_il_data(ctx, &buf, gss_plain_reader);
+	} else {
+		ret = read_il_data(ctx, &buf, gss_reader);
 	}
-	else ret = edg_wll_SetError(ctx, E2BIG, "create_reply()");
 
-	if ( err ) {
-		edg_wll_SetError(ctx, err, errd);
-		free(errd);
-	}
-	return ret? edg_wll_Error(ctx, NULL, NULL): 0;
+	if (ret == -1)
+		return edg_wll_SetError(ctx,EIO,"StoreProto(): interlogger protocol error");
+	if (ret < 0)
+		return edg_wll_Error(ctx,NULL,NULL);
+#ifdef LB_PERF
+        if (sink_mode == GLITE_LB_SINK_PARSE) glite_wll_perftest_consumeEventIlMsg(buf);
+        else
+#endif
+        glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG,buf);
+	handle_il_message(ctx, buf);
+        free(buf);
+
+	if ( (len = create_reply(ctx, &buf)) > 0 ) {
+		if (ctx->isProxy) {
+			if ((ret = edg_wll_plain_write_full(&ctx->connProxy->conn, 
+				buf, len, &ctx->p_tmp_timeout)) < 0) {
+			edg_wll_UpdateError(ctx,
+				ret == EDG_WLL_GSS_ERROR_TIMEOUT ? 
+					ETIMEDOUT : EDG_WLL_ERROR_GSS,
+				"StoreProto(): error sending reply");
+			}
+		} else {
+			if ((ret = edg_wll_gss_write_full(&ctx->connections->serverConnection->gss,
+				buf,len,&ctx->p_tmp_timeout,&total,&gss_code)) < 0) {
+			edg_wll_UpdateError(ctx, errno, "StoreProto(): error sending reply");
+			}
+		}
+	} else ret = edg_wll_UpdateError(ctx, E2BIG, "StoreProto(): error creating reply");
+
+	return edg_wll_Error(ctx,NULL,NULL);
 }
+
