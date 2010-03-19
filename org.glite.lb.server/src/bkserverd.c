@@ -1811,6 +1811,7 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 	struct timeval start_time,check_time;
 	int 	flags = 0;
 	int	err = NETDB_INTERNAL;
+	struct sockaddr_in	v4;
 
 /* start timer */
         gettimeofday(&start_time,0);
@@ -1818,6 +1819,14 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 /* ares init */
         if ( ares_init(&channel) != ARES_SUCCESS ) return(NETDB_INTERNAL);
 	memset((void *) &ar, 0, sizeof(ar));
+
+	if (addr->sa_family == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&((struct sockaddr_in6 *)addr)->sin6_addr)) {
+		v4.sin_family = AF_INET;
+		v4.sin_port = ((struct sockaddr_in6 *)addr)->sin6_port;
+		v4.sin_addr.s_addr = ((struct sockaddr_in6 *)addr)->sin6_addr.in6_u.u6_addr32[3];
+		addr = (struct sockaddr *) &v4;
+		len = sizeof(v4);
+	} 
 
 /* query DNS server asynchronously */
 	if (name) flags |= ARES_NI_LOOKUPHOST | ( numeric? ARES_NI_NUMERICHOST : 0);
