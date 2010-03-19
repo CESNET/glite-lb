@@ -392,6 +392,11 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 					edg_wll_SetError(ctx,EPERM,"Job already registered with different owner. Rejecting event.");
 					goto err;
 				}
+
+				if (event->any.priority & EDG_WLL_LOGLFLAG_EXCL) {
+					edg_wll_SetError(ctx,EEXIST,"Job with given jobid already exists. Rejecting event.");
+					goto err;
+				}
 			}
 
 			/* update job membership if needed */
