@@ -254,8 +254,8 @@ static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const
 	}
 
 	princ.name = (char *)recip;
-	if (check_authz_policy(&ctx->authz_policy, &princ, STATUS_FOR_RTM)) {
-		*authz_flags |= STATUS_FOR_RTM;
+	if (check_authz_policy(&ctx->authz_policy, &princ, STATUS_FOR_MONITORING)) {
+		*authz_flags |= STATUS_FOR_MONITORING;
                 return 1;
 	}
 

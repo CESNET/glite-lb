@@ -25,7 +25,7 @@ limitations under the License.
 typedef enum {
     ACTION_UNDEF	= 0,
     ADMIN_ACCESS	= ~0,
-    STATUS_FOR_RTM	= 1 << 1,
+    STATUS_FOR_MONITORING = 1 << 1,
     LOG_WMS_EVENTS	= 1 << 2,
     LOG_CE_EVENTS	= 1 << 3,
     LOG_GENERAL_EVENTS	= 1 << 4,

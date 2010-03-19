@@ -23,7 +23,7 @@ limitations under the License.
 
 struct action_name action_names[] = {
     { ADMIN_ACCESS,	"ADMIN_ACCESS" },
-    { STATUS_FOR_RTM,	"STATUS_FOR_RTM" },
+    { STATUS_FOR_MONITORING,	"STATUS_FOR_MONITORING" },
     { LOG_WMS_EVENTS,	"LOG_WMS_EVENTS" },
     { LOG_CE_EVENTS,	"LOG_CE_EVENTS" },
     { LOG_GENERAL_EVENTS,	"LOG_GENERAL_EVENTS" },
@@ -119,7 +119,7 @@ blacken_fields(edg_wll_JobStat *stat, int flags)
 
     edg_wll_InitStatus(&new_stat);
 
-    if (flags & STATUS_FOR_RTM) {
+    if (flags & STATUS_FOR_MONITORING) {
 	new_stat.state = stat->state;
 	edg_wlc_JobIdDup(stat->jobId, &new_stat.jobId);
 	if (stat->jdl)
