@@ -26,6 +26,7 @@ limitations under the License.
 #include <string.h>
 #include <signal.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <errno.h>
 #include <assert.h>
 #include <sys/stat.h>
@@ -362,10 +363,11 @@ void handle_signal(int num) {
 
 	switch(num) {
 	case SIGHUP:
-		log4c_reread();
+		glite_common_log_reread();
 		break;
 
 	case SIGUSR1:
+		/* FIXME:
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
 				 "Logging priority is now %s for %s, %s for %s and %s for %s\n", 
 				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_SECURITY))),
@@ -374,9 +376,11 @@ void handle_signal(int num) {
 				 LOG_CATEGORY_ACCESS,
 				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_CONTROL))),
 				 LOG_CATEGORY_CONTROL);
+		*/
 		break;
 
 	case SIGUSR2:
+		/* FIXME:
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
 				 "Logging priority is now %s for %s, %s for %s, %s for %s and %s for %s\n", 
 				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB))),
@@ -387,6 +391,7 @@ void handle_signal(int num) {
 				 LOG_CATEGORY_LB_IL,
 				 log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_SERVER))),
 				 LOG_CATEGORY_LB_SERVER);
+		*/
 		break;
 
 	case SIGPIPE:
@@ -432,8 +437,8 @@ main (int argc, char **argv)
   }
 
   /* check for reasonable queue lengths */
-  if(queue_size_low == 0 && queue_size_high > 0 ||
-     queue_size_low > queue_size_high) {
+  if((queue_size_low == 0 && queue_size_high > 0) ||
+     (queue_size_low > queue_size_high)) {
 	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "max queue length -Q must be greater than low queue length -q, both or none must be specified!");
 	  exit(EXIT_FAILURE);
   }

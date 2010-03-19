@@ -145,6 +145,7 @@ void handle_signal(int num) {
 		/* TODO: probably also restart parent logd process? */
 		break;
 	case SIGUSR1:
+		/* FIXME: 
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,
 			"Logging priority is now %s for %s, %s for %s and %s for %s\n", 
 			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_SECURITY))),
@@ -153,8 +154,10 @@ void handle_signal(int num) {
 			LOG_CATEGORY_ACCESS,
 			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_CONTROL))),
 			LOG_CATEGORY_CONTROL);
+		*/
 		break;
 	case SIGUSR2:
+		/* FIXME: 
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,
 			"Logging priority is now %s for %s, %s for %s, %s for %s and %s for %s\n", 
 			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB))),
@@ -165,6 +168,7 @@ void handle_signal(int num) {
 			LOG_CATEGORY_LB_IL,
 			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_SERVER))),
 			LOG_CATEGORY_LB_SERVER);
+		*/
 		break;
 	case SIGPIPE:
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Broken pipe, lost communication channel.\n");
@@ -324,7 +328,6 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
 
     }
 
-doit_end:
 	edg_wll_gss_close(&con, NULL);
 	if (con.sock == -1) 
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN, "Error closing descriptor '%d'.",con.sock);
@@ -349,9 +352,9 @@ int main(int argc, char *argv[])
    int listener_fd;
    int client_fd;
    struct sockaddr_storage client_addr;
-   int client_addr_len;
+   socklen_t client_addr_len;
 
-   time_t	cert_mtime = 0, key_mtime = 0;
+   time_t	cert_mtime = 0;
    edg_wll_GssStatus	gss_stat;
    edg_wll_GssCred	cred = NULL;
 
@@ -566,7 +569,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 #endif
     } /* while */
 
-end:
 	if (listener_fd) close(listener_fd);
 	edg_wll_gss_release_cred(&cred, NULL);
 	exit(ret);
