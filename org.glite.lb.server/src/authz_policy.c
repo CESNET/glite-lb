@@ -122,6 +122,8 @@ blacken_fields(edg_wll_JobStat *stat, int flags)
     if (flags & STATUS_FOR_RTM) {
 	new_stat.state = stat->state;
 	edg_wlc_JobIdDup(stat->jobId, &new_stat.jobId);
+	if (stat->jdl)
+	    new_stat.jdl = strdup(stat->jdl);
 	if (stat->destination)
 	    new_stat.destination = strdup(stat->destination);
 	if (stat->network_server)
