@@ -141,34 +141,27 @@ void handle_signal(int num) {
 	if (num != SIGCHLD) glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Received signal %d\n", num);
 	switch (num) {
 	case SIGHUP:
+		/* TODO: reload all external configurations, see
+		https://rt3.cesnet.cz/rt/Ticket/Display.html?id=24879 */
 		glite_common_log_reread();
-		/* TODO: probably also restart parent logd process? */
 		break;
 	case SIGUSR1:
-		/* FIXME: 
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,
 			"Logging priority is now %s for %s, %s for %s and %s for %s\n", 
-			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_SECURITY))),
+			glite_common_log_priority_to_string(glite_common_log_get_priority(LOG_CATEGORY_SECURITY)),
 			LOG_CATEGORY_SECURITY,
-			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_ACCESS))),
+			glite_common_log_priority_to_string(glite_common_log_get_priority(LOG_CATEGORY_ACCESS)),
 			LOG_CATEGORY_ACCESS,
-			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_CONTROL))),
+			glite_common_log_priority_to_string(glite_common_log_get_priority(LOG_CATEGORY_CONTROL)),
 			LOG_CATEGORY_CONTROL);
-		*/
 		break;
 	case SIGUSR2:
-		/* FIXME: 
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,
-			"Logging priority is now %s for %s, %s for %s, %s for %s and %s for %s\n", 
-			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB))),
+			"Logging priority is now %s for %s and %s for %s\n", 
+			glite_common_log_priority_to_string(glite_common_log_get_priority(LOG_CATEGORY_LB)),
 			LOG_CATEGORY_LB,
-			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_LOGD))),
-			LOG_CATEGORY_LB_LOGD,
-			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_IL))),
-			LOG_CATEGORY_LB_IL,
-			log4c_priority_to_string(log4c_category_get_priority(log4c_category_get(LOG_CATEGORY_LB_SERVER))),
-			LOG_CATEGORY_LB_SERVER);
-		*/
+			glite_common_log_priority_to_string(glite_common_log_get_priority(LOG_CATEGORY_LB_LOGD)),
+			LOG_CATEGORY_LB_LOGD);
 		break;
 	case SIGPIPE:
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Broken pipe, lost communication channel.\n");
