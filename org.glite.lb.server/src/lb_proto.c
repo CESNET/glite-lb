@@ -1145,7 +1145,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					case EPERM : ret = HTTP_UNAUTH; break;
 					case EDG_WLL_ERROR_NOINDEX: ret = HTTP_UNAUTH; break;
 					case ENOMEM: fatal = 1; ret = HTTP_INTERNAL; break;
-					default: ret = HTTP_INTERNAL; break;
+					default: ret = HTTP_UNAVAIL; break;
 				}
 				/* glue errors (if eny) to XML responce */ 
 				if (!html && !fatal)
