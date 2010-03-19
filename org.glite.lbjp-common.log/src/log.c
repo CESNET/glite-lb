@@ -93,6 +93,40 @@ void glite_common_log(char *catName,int a_priority, const char* a_format,...) {
 #endif
 }
 
+const char *glite_common_log_priority_to_string(int a_priority) {
+#ifndef WITHOUT_LOG4C
+	return log4c_priority_to_string(a_priority);
+#else
+	char *out;
+
+	switch (priority) {
+	case LOG_PRIORITY_FATAL: out=strdup("FATAL");	break;
+	case LOG_PRIORITY_ERROR: out=strdup("ERROR");	break;
+	case LOG_PRIORITY_WARN:  out=strdup("WARNING");	break;
+	case LOG_PRIORITY_INFO:  out=strdup("INFO");	break;
+	case LOG_PRIORITY_DEBUG: out=strdup("DEBUG");	break;
+	case LOG_PRIORITY_NOTSET:
+	default:
+		out=strdup("PRIORITY_NOT_SET");	
+	}
+	return out;
+#endif
+}
+
+/**
+ * Returns priority of a given category
+ */
+int glite_common_log_get_priority(const char *catName) {
+#ifndef WITHOUT_LOG4C
+	return log4c_category_get_priority(log4c_category_get(catName));
+#else
+	/* if not LOG4C, mapping of priorities to categories 
+	 * must be specified somehow differently (not specified at the moment)
+	 */
+	return LOG_PRIORITY_NOTSET;
+#endif
+}
+
 /*
  * Rereads any log4crc files that have changed
  */

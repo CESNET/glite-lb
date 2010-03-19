@@ -37,7 +37,6 @@ extern "C" {
 #define LOG_CATEGORY_LB_SERVER 		"LB.SERVER"
 #define LOG_CATEGORY_LB_SERVER_DB  	"LB.SERVER.DB"
 #define LOG_CATEGORY_LB_SERVER_REQUEST	"LB.SERVER.REQUEST"
-#define LOG_CATEGORY_LB_HARVESTER       "LB.HARVESTER"
 #define LOG_CATEGORY_LB_HARVESTER_DB    "LB.HARVESTER.DB"
 
 /* default priorities
@@ -69,7 +68,7 @@ extern int glite_common_log_fini(void);
 /** 
  * Log a message with the specified priority.
  * @param catName category name
- * @param a_priority The priority of this log message.
+ * @param a_priority priority of this log message.
  * @param msg message
  **/
 extern void glite_common_log_msg(char *catName,int a_priority, char *msg);
@@ -83,11 +82,22 @@ extern void glite_common_log_msg(char *catName,int a_priority, char *msg);
  **/
 extern void glite_common_log(char *catName,int a_priority, const char* a_format,...);
 
-/*
+/**
+ * Returns priority as a string 
+ * @param a_priority priority number
+ */
+extern const char *glite_common_log_priority_to_string(int a_priority);
+
+/**
+ * Returns priority of a given category
+ * @param catName category name
+ */
+extern int glite_common_log_get_priority(const char *catName);
+
+/**
  * Rereads any log4crc files that have changed
  */
 extern void glite_common_log_reread(void);
-
 
 /* simple wrappers around glite_common_log() that include also errno */
 #define glite_common_log_SYS_ERROR(my_err) { \
