@@ -83,7 +83,7 @@ static void get_name_and_port(const char *address, char **name, int *port)
 	char *n = NULL, *p;
 	
 	n = strdup(address);
-	p = strchr(n, ':');
+	p = strrchr(n, ':');
 	if (p)
 	{
 		*port = atoi(p+1);
