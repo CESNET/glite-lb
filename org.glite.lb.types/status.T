@@ -138,15 +138,15 @@ _pad_	25
 
 int	cream_state	CREAM job state
 	_null_	-1
-	_code_	REGISTERED
-	_code_	PENDING
-	_code_	IDLE
-	_code_	RUNNING
-	_code_	REALLY-RUNNING
-	_code_	HELD
-	_code_	DONE-OK
-	_code_	DONE-FAILED
-	_code_	ABORTED
+	_code_	REGISTERED	registered
+	_code_	PENDING		pending
+	_code_	IDLE		idle
+	_code_	RUNNING		running
+	_code_	REALLY-RUNNING	really-running
+	_code_	HELD		held
+	_code_	DONE-OK		done-ok
+	_code_	DONE-FAILED	done-failed
+	_code_	ABORTED		aborted
 
 string  cream_id		CREAM local job id
 string	cream_owner		Job owner
@@ -169,8 +169,8 @@ _pad_	30
 jobid	ft_compute_job		Compute job corresponding to file transfer
 int	ft_sandbox_type		Type of sandbox
 	_null_  -1
-	_code_	INPUT
-	_code_	OUTPUT
+	_code_	INPUT		input
+	_code_	OUTPUT		output
 string	ft_src			File transfer source
 string	ft_dest			File transfer destination
 

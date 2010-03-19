@@ -372,73 +372,73 @@
 	string	cmdid		Id of the command in store
 	_optional_
 	int	result		store phase/result
-	_code_	START
-	_code_	OK
-	_code_	FAILED
+	_code_	START		start
+	_code_	OK		ok
+	_code_	FAILED		failed
 	string	reason		failure_reason
 	_optional_
 
 @type CREAMCall	Processing command and calling BLAH or LRMS
-	logsrc	callee		Called component	
+	logsrc	callee		Called component
 	_ref_	CREAMStore:command
 	string	cmdid		Id of the command, as stored previously
 	_optional_
-	string	destid	
+	string	destid		Destination ID
 	_optional_
-	int	result
-	_code_  START
-	_code_  OK
-	_code_  FAILED
-	string	reason
+	int	result		Result code of the CREAM call (START, OK, REFUSED or FAIL)
+	_code_  START		start
+	_code_  OK		ok
+	_code_  FAILED		failed
+	string	reason		Reason for the possible CREAM call failure
 	_optional_
 
 @type CREAMRunning
-	string	node
+	string	node		Node where CREAM job is running
 	_optional_
 
 @type CREAMReallyRunning
 
 @type CREAMDone
-	int	status_code
-	_code_	OK
-	_code_	FAILED
-	_code_	CANCELLED
-	_code_	KILLED
-	string	reason
+	int	status_code	Status code of the CREAM Done
+	_code_	OK		ok
+	_code_	FAILED		failed
+	_code_	CANCELLED	cancelled
+	_code_	KILLED		killed
+	string	reason		Reason for the status
 	_optional_
-	string	exit_code
+	string	exit_code	Exit code
 	_optional_
 
 @type CREAMCancel
-	int	status_code
-	_code_	REQ
-	_code_	REFUSE
-	_code_	DONE
-	_code_	ABORT
-	string	reason
+	int	status_code	Status code of CREAM Cancel
+	_code_	REQ		req
+	_code_	REFUSE		refuse
+	_code_	DONE		done
+	_code_	ABORT		abort
+	string	reason		Reason for cancelling the job
 	_optional_
 
 @type CREAMAbort
-	string	reason
+	string	reason		Reason for aborting the job
 
 @type CREAMStatus
-	string	old_state
+	string	old_state	Old status
 	_optional_
-	string	new_state
-	timeval	orig_timestamp
+	string	new_state	New status
+	timeval	orig_timestamp	Original timestamp of the job state change
 	_optional_
-	int	result
-	_code_	ARRIVED
-	_code_	DONE
-	string	descr
+	int	result		Result of the job state change
+	_code_	ARRIVED		arrived
+	_code_	DONE		done
+	string	descr		More detailed description
 	_optional_
-	 string  exit_code
+	 string  exit_code	Exit code
         _optional_
-	string failure_reason
+	string failure_reason	Reason for the failure
 	_optional_
-	string worker_node
+	string worker_node	Worker node
 	_optional_
-	string LRMS_jobid
+	string LRMS_jobid	jobId from the LRMS
 	_optional_
 
 @flesh Transfer
@@ -458,8 +458,8 @@
 
 @type Sandbox		event for logging relationship between (compute) job and (file) transfer job
 	int	sandbox_type		Type of sandbox.
-	_code_	INPUT
-	_code_	OUTPUT
+	_code_	INPUT		input
+	_code_	OUTPUT		output
 	string	transfer_job	Jobid of transfer job (collection) containing set of file transfers (subjobs).
 	_optional_
 	string  compute_job	Jobid of (compute) job the sandbox belongs. Exclusive with transfer_job.
