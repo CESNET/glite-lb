@@ -290,6 +290,21 @@ int edg_wll_GetLoggingJob(
 	glite_jobid_t	*jobid_out
 );
 
+/**
+ * Generate or regenerate set of subjob ID's.
+ * Calls the same algorithm used to generate subjob ID's in edg_wll_RegisterJob().
+ * Local semantics only, server is not contacted.
+ */
+
+int edg_wll_GenerateSubjobIds(
+        edg_wll_Context         context,
+        glite_jobid_const_t     parent,
+        int                     num_subjobs,
+        const char *            seed,
+        glite_jobid_t **        subjobs
+);
+
+
 /*
  *@} end of group
  */

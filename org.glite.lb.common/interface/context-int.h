@@ -217,8 +217,6 @@ extern int edg_wll_IncSequenceCode(edg_wll_Context ctx);
 
 extern void edg_wll_FreeParams(edg_wll_Context context);
 
-extern int edg_wll_GenerateSubjobIds(edg_wll_Context, glite_jobid_const_t, int, const char *, glite_jobid_t **);
-
 #ifdef __cplusplus
 }
 #endif
