@@ -675,6 +675,7 @@ edg_wll_HandleCounterACL(edg_wll_Context ctx, edg_wll_Acl acl,
 			/*
 			 *	row allready in DB
 			 */
+			edg_wll_ResetError(ctx);
 			if ( !q2 ) trio_asprintf(&q2,
 						"update acls set refcnt = refcnt+%d "
 						"where aclid = '%|Ss'",
