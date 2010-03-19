@@ -413,7 +413,7 @@ for my $jar (keys %need_jars) {
 		security.gss lbjp-common.log
 	/ ],
 	'lb.yaim' => [ qw// ],
-	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
+	'lbjp-common.db' => [ qw/lbjp-common.trio lbjp-common.log/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw/lbjp-common.log/ ],
 	'lbjp-common.trio' => [ qw// ],
