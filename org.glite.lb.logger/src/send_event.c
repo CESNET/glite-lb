@@ -20,9 +20,7 @@ limitations under the License.
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -153,7 +151,7 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
 {
   char *msg=NULL;
   int ret, code;
-  int len, l;
+  int len;
   struct timeval tv;
   struct reader_data data;
 

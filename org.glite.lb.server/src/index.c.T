@@ -138,7 +138,7 @@ static int parse_indices(edg_wll_Context ctx,char **keys,char ***column_names,co
 				free(ed);
 				return code;
 			}
-#warning: TODO: needed Sub_part in value???
+// XXX: needed Sub_part in value???
 //      	               else idx[nkeys][j].value.i = atoi(showcol[Sub_part]);
 		}
 		nkeys++;

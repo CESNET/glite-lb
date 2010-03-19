@@ -515,8 +515,8 @@ int edg_wll_intJobStatus(
 				intErr = 1; break;
 			}
 			ts = events[i].any.timestamp;
-			if (!mints.tv_sec && !mints.tv_usec
-			    || ts.tv_sec < mints.tv_sec
+			if ((!mints.tv_sec && !mints.tv_usec)
+			    || (ts.tv_sec < mints.tv_sec)
 			    || (ts.tv_sec == mints.tv_sec && ts.tv_usec < mints.tv_usec)) mints = ts;
 		}
 		/* no events or status computation error */

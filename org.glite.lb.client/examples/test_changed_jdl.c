@@ -23,7 +23,8 @@ limitations under the License.
 int main(int argc,char **argv)
 {
 	edg_wll_Context	ctx;
-	edg_wll_QueryRec	chj[2], chs[2], *ch2[3] = { chj, chs, NULL };
+	edg_wll_QueryRec	chj[2], chs[2];
+	const edg_wll_QueryRec const	*ch2[3] = { chj, chs, NULL };
 	char	*et,*ed;
 	edg_wll_NotifId	id;
 	edg_wll_JobStat	stat;

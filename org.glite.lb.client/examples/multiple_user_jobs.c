@@ -25,7 +25,7 @@ limitations under the License.
 
 int use_proxy = 0;
 
-int (*user_jobs)(edg_wll_Context, edg_wlc_JobId **, edg_wll_JobStat **);
+int (*user_jobs)(edg_wll_Context, glite_jobid_t **, edg_wll_JobStat **);
 
 
 void
@@ -56,7 +56,7 @@ int main(int argc,char **argv)
 	no_of_runs = argc-1;
 
 	p_ctx = (edg_wll_Context*) calloc (sizeof(edg_wll_Context), no_of_runs);
-	jobs = (edg_wlc_JobId**) calloc (sizeof(edg_wlc_JobId*), no_of_runs);
+	jobs = (glite_jobid_t**) calloc (sizeof(glite_jobid_t*), no_of_runs);
 	states = (edg_wll_JobStat**) calloc (sizeof(edg_wll_JobStat*), no_of_runs);
 
 	user_jobs = edg_wll_UserJobs;
@@ -73,7 +73,7 @@ int main(int argc,char **argv)
 		printf("Jobs retrieved using file No. %d (%s)\n"
 			"------------------------------------------\n", k + 1, argv[k + 1]);
 		for (i=0; states[k][i].state != EDG_WLL_JOB_UNDEF; i++) {	
-			char *id = edg_wlc_JobIdUnparse(states[k][i].jobId),
+			char *id = glite_jobid_unparse(states[k][i].jobId),
 			     *st = edg_wll_StatToString(states[k][i].state);
 			
 			if (!states[k][i].parent_job) {
@@ -85,10 +85,10 @@ int main(int argc,char **argv)
 					printf("%s  %s .... %s %s\n", (states[k][i].jobtype==EDG_WLL_STAT_DAG)?"DAG ":"COLL",id, st, (states[k][i].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[k][i].done_code) : "");
 					for (j=0; states[k][j].state != EDG_WLL_JOB_UNDEF; j++) {
 						if (states[k][j].parent_job) {
-							char *par_id = edg_wlc_JobIdUnparse(states[k][j].parent_job);
+							char *par_id = glite_jobid_unparse(states[k][j].parent_job);
 							
 							if (!strcmp(id,par_id)) {
-								char *sub_id = edg_wlc_JobIdUnparse(states[k][j].jobId),
+								char *sub_id = glite_jobid_unparse(states[k][j].jobId),
 								     *sub_st = edg_wll_StatToString(states[k][j].state);
 								
 								printf(" `-       %s .... %s %s\n", sub_id, sub_st, (states[k][j].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[k][j].done_code) : "");
@@ -112,7 +112,7 @@ err:
 	if  (jobs) {
 		for (k=0; k < no_of_runs; k++) {
 			if (jobs[k])
-				for (i=0; jobs[k][i]; i++)  edg_wlc_JobIdFree(jobs[i]);	
+				for (i=0; jobs[k][i]; i++)  glite_jobid_free(*jobs[i]);	
 		}
 		free(jobs);
 	}

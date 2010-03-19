@@ -52,8 +52,6 @@ limitations under the License.
 
 static int store_user(edg_wll_Context,const char *,const char *); 
 static int store_job(edg_wll_Context,glite_jobid_const_t,const char *, int, int, int, int);
-/* FIXME: 'set_job_grey' defined but not used */
-static int set_job_grey(edg_wll_Context ctx, char *jobid);
 static int store_flesh(edg_wll_Context,edg_wll_Event *,const char *ulm, char *,int);
 /* FIXME: 'check_dup' defined but not used */
 static int check_dup(edg_wll_Context,edg_wll_Event *);
@@ -263,19 +261,6 @@ err:
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
-
-static int set_job_grey(edg_wll_Context ctx, char *jobid)
-{
-	char *stmt;
-
-	trio_asprintf(&stmt,"update jobs set grey='1' where jobid='%|Ss'", jobid);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
-
-	edg_wll_ExecSQL(ctx,stmt,NULL); 
-
-	free(stmt);
-	return edg_wll_Error(ctx,NULL,NULL);
-}
 
 /* test whether job shares LB proxy and server DB or not */
 int is_job_local(edg_wll_Context ctx, glite_jobid_const_t jobId) 

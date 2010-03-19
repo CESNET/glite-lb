@@ -27,6 +27,7 @@ limitations under the License.
 #include <stdlib.h>
 #include <time.h>
 #include <assert.h>
+#include <ctype.h>
 
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))
@@ -36,7 +37,7 @@ limitations under the License.
 
 #define TR(type, field) \
 	if (field){ \
-		int l = asprintf(&pomA, type, (field)); \ 
+		int l = asprintf(&pomA, type, (field)); \
 		pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1));	\
 		strcpy(pomB+pomL, pomA); \
 		pomL += l; \
@@ -49,7 +50,7 @@ limitations under the License.
 		pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
 		strcpy(pomB+pomL, pomA); \
                 pomL += l; \
-                free(pomA); pomA = NULL; \ 
+                free(pomA); pomA = NULL; \
 	}
 
 

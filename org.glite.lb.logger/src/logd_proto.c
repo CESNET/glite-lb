@@ -336,10 +336,8 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	int	i,answer,answer_sent;
 	int	msg_sock;
 	char    *msg,*msg_begin;
-	FILE	*outfile;
-	int	filedesc,filelock_status,flags;
+	int	filedesc,filelock_status;
 	long	filepos;
-	struct flock filelock;
 	int	priority;
 	long	lllid;
 	int	unique;

@@ -38,6 +38,7 @@ limitations under the License.
 #include "get_events.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/events_parse.h"
+#include "glite/lb/ulm_parse.h"
 #include "db_supp.h"
 
 static void edg_wll_set_event_field(edg_wll_Event *,char *,char *);

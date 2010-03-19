@@ -295,7 +295,7 @@ static void free_QueryRec(edg_wll_QueryRec *qr)
 	{
 	case EDG_WLL_QUERY_ATTR_JOBID:
 	case EDG_WLL_QUERY_ATTR_PARENT:
-		edg_wlc_JobIdFree(qr->value.j);
+		glite_jobid_free((glite_jobid_t)qr->value.j);
 		break;
 
 	case EDG_WLL_QUERY_ATTR_STATUS:
@@ -438,7 +438,7 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 	{
 	case EDG_WLL_QUERY_ATTR_JOBID:
 	case EDG_WLL_QUERY_ATTR_PARENT:
-		if ( edg_wlc_JobIdParse(tmps, &cond->value.j) )
+		if ( glite_jobid_parse(tmps, (glite_jobid_t *)&cond->value.j) )
 		{
 			fprintf(stderr,"%s: %s: cannot parse jobId\n", myname, tmps);
 			return NULL;
@@ -801,6 +801,7 @@ static void printconds(edg_wll_QueryRec **cond)
 			case EDG_WLL_QUERY_OP_LESS: printf("<"); break;
 			case EDG_WLL_QUERY_OP_GREATER: printf(">"); break;
 			case EDG_WLL_QUERY_OP_WITHIN: printf("@"); break;
+			case EDG_WLL_QUERY_OP_CHANGED: printf("->"); break;
 			}
 			switch ( cond[i][j].attr )
 			{

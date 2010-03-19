@@ -36,8 +36,7 @@ extern char *optarg;
 extern int opterr,optind;
 
 extern int edg_wll_DoLogEvent(edg_wll_Context context, edg_wll_LogLine logline);
-extern int edg_wll_DoLogEventProxy(edg_wll_Context context, edg_wll_LogLine logline);
-extern int edg_wll_DoLogEventDirect(edg_wll_Context context, edg_wll_LogLine logline);
+extern int edg_wll_DoLogEventServer(edg_wll_Context context, int flags,edg_wll_LogLine logline);
 
 static const char *me;
 

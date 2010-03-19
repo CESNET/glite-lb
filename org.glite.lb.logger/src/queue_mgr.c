@@ -20,6 +20,7 @@ limitations under the License.
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "glite/jobid/cjobid.h"
 #include "glite/lb/context.h"
@@ -35,7 +36,9 @@ struct queue_list {
 #endif
 };
 
+#if !defined(IL_NOTIFICATIONS)
 static struct event_queue *log_queue;
+#endif
 static struct queue_list  *queues;
 
 

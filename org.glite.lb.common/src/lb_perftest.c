@@ -34,6 +34,7 @@ limitations under the License.
 
 #include "lb_perftest.h"
 #include "il_msg.h"
+#include "context-int.h"
 
 typedef struct {
   char *event;

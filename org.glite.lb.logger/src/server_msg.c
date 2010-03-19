@@ -20,6 +20,7 @@ limitations under the License.
 #include <errno.h>
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "interlogd.h"
 #include "glite/lb/il_msg.h" 
@@ -74,9 +75,7 @@ create_msg(il_octet_string_t *ev, char **buffer, long *receipt, time_t *expires)
   }
 #endif
 
-  if(p = strstr(event, "DG.EXPIRES")) {
-	  int n;
-
+  if((p = strstr(event, "DG.EXPIRES")) != NULL) {
 	  p += 11;
 	  *expires = atoi(p);
   }

@@ -34,6 +34,8 @@ limitations under the License.
 #include "glite/jobid/cjobid.h"
 #include "glite/lb/notifid.h"
 #include "glite/lb/events.h"
+#include "glite/lb/context.h"
+#include "glite/lb/context-int.h"
 
 #include "producer.h"
 #include "args.h"

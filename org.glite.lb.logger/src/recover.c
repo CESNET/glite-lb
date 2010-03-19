@@ -18,6 +18,7 @@ limitations under the License.
 
 
 #include <stdio.h>
+#include <unistd.h>
 #include <assert.h>
 #include <errno.h>
 

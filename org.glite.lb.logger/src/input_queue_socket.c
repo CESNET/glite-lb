@@ -95,7 +95,6 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
 {
   char *buffer, *p, *n;
   int  len, alen, i, chunk_size = DEFAULT_CHUNK_SIZE;
-  static char buf[1024];
 
   msg->data = NULL;
   msg->len = 0;
@@ -128,7 +127,6 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
 	 (alen - (p - buffer)) is the free space,
   */ 
  
-#if 1
   /* Reading events - optimized version. Attempts to increase chunks read by recv
    * when there are more data, reads directly into destination memory (instead of 
    * copying from static buffer) etc.
@@ -171,55 +169,6 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
 		  p = (n == NULL) ? p + len : n - 1;
 	  }
   } while ( (len > 0) && (n == NULL) );
-
-#else
-  /* Reading events - original version.
-   * Appears to behave quite good, anyway.
-   */
-  while((len=recv(sock, buf, sizeof(buf), MSG_PEEK | MSG_NOSIGNAL)) > 0) {
-
-    /* we have to be prepared for sizeof(buf) bytes */
-    if(alen - (p - buffer) < (int)sizeof(buf)) {
-      alen += 8192;
-      n = realloc(buffer, alen);
-      if(n == NULL) {
-	free(buffer);
-	set_error(IL_NOMEM, ENOMEM, "read_event: no room for event");
-	return(-1);
-      }
-      p = p - buffer + n;
-      buffer = n;
-    }
-
-    /* copy all relevant bytes from buffer */
-    n = (char*)memccpy(p, buf, EVENT_SEPARATOR, len);
-    if(n) {
-	    /* separator found */
-	    n--; /* but do not preserve it */
-	    i = n - p;
-	    p = n;
-    } else {
-	    /* separator not found */
-	    i = len;
-	    p += len;
-    }
-   /* This was definitely slowing us down:
-    *    for(i=0; (i < len) && (buf[i] != EVENT_SEPARATOR); i++) 
-    *    *p++ = buf[i];
-    */
-
-    /* remove the data from queue */
-    if(i > 0) 
-      if(recv(sock, buf, i, MSG_NOSIGNAL) != i) {
-	set_error(IL_SYS, errno, "read_event: error reading data");
-	free(buffer);
-	return(-1);
-      }
-    if(i < len)
-      /* the event is complete */
-      break;
-  }
-#endif
 
   /* terminate buffer */
   *p = 0;

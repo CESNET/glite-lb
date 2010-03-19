@@ -26,9 +26,7 @@ limitations under the License.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 #include <fcntl.h>
 #include <sys/param.h>
 
@@ -247,19 +245,6 @@ event_store_create(char *job_id_s, const char *filename)
 
 static
 int
-event_store_lock_ro(struct event_store *es)
-{
-  assert(es != NULL);
-
-  if(pthread_rwlock_rdlock(&es->commit_lock))
-    abort();
-
-  return(0);
-}
-
-
-static
-int
 event_store_lock(struct event_store *es)
 {
   assert(es != NULL);
@@ -427,7 +412,7 @@ event_store_rotate_file(struct event_store *es)
 	for(num = 0; num < 256; num++) {
 		struct stat st;
 
-		snprintf(newname, MAXPATHLEN, "%s.%d%03d", es->event_file_name, timestamp, num);
+		snprintf(newname, MAXPATHLEN, "%s.%d%03d", es->event_file_name, (int) timestamp, num);
 		newname[MAXPATHLEN] = 0;
 		if(stat(newname, &st) < 0) {
 			if(errno == ENOENT) {
@@ -501,6 +486,7 @@ event_store_recover_jobid(struct event_store *es)
 	return 0;
 }
 
+#if defined(IL_NOTIFICATIONS)
 static
 int
 cmp_jobid(struct server_msg *msg, void *data)
@@ -531,6 +517,7 @@ cmp_jobid_set_exp(struct server_msg *msg, void *data)
 	}
 	return 0;
 }
+#endif
 
 /*
  * event_store_recover()
@@ -930,48 +917,6 @@ event_store_sync(struct event_store *es, long offset)
   ret = event_store_recover_jobid(es);
   ret = (ret < 0) ? ret : 0;
   return(ret);
-
-#if 0
-  event_store_lock_ro(es);
-  if(es->offset == offset)
-    /* we are up to date */
-    ret = 1;
-  else if(es->offset > offset)
-    /* we have already seen this event */
-    ret = 0;
-  else {
-    /* es->offset < offset, i.e. we have missed some events */
-    event_store_unlock(es);
-    ret = event_store_recover(es);
-    /* XXX possible room for intervention by another thread - is there
-     * any other thread messing with us?
-     * 1) After recover() es->offset is set at the end of file.
-     * 2) es->offset is set only by recover() and next().
-     * 3) Additional recover can not do much harm.
-     * 4) And next() is only called by the same thread as sync().
-     * 5) use_lock is in place, so no cleanup possible
-      * => no one is messing with us right now */
-    event_store_lock_ro(es);
-    if(ret < 0)
-      ret = -1;
-    else
-	    if(es->offset <= offset) {
-		    /* Apparently there is something wrong - we are receiving an event
-		     * which is beyond the end of file. Someone must have removed the file
-		     * when we were not looking. The question is - what should we do with the event?
-		     * We have to send it, as this is the only one occasion when we see it.
-		     * However, we must not allow the es->offset to be set using this event,
-		     * as it would point after the end of file. Sort this out in event_store_next().
-		     */
-		    ret = 1;
-	    } else if(es->offset > offset) {
-		    /* we have seen at least this event */
-		    ret = 0;
-	    }
-  }
-  event_store_unlock(es);
-  return(ret);
-#endif
 }
 
 
@@ -980,24 +925,10 @@ event_store_next(struct event_store *es, long offset, int len)
 {
   assert(es != NULL);
 
-  /* Commented out due to the fact that offset as received on socket
+  /* offset as received on socket
    * has little to do with real event file at the moment. es->offset
    * handling is left solely to the event_store_recover().
    */
-
-#if 0
-  event_store_lock(es);
-  /* Whoa, be careful now. The es->offset points right after the last enqueued event,
-   * but it may not be the offset of the event WE have just enqueued, because:!
-   *  1) someone could have removed the event file behind our back
-   *  2) the file could have been recover()ed and more events read
-   * In either case the offset should not be moved.
-   */
-  if(es->offset == offset) {
-	  es->offset += len;
-  }
-  event_store_unlock(es);
-#endif
 
   return(0);
 }
@@ -1078,7 +1009,7 @@ event_store_clean(struct event_store *es)
     return(0);
   }
 
-  if(fd = pthread_rwlock_wrlock(&es->offset_lock)) {
+  if((fd = pthread_rwlock_wrlock(&es->offset_lock)) != 0) {
 	  abort();
   }
 
@@ -1321,8 +1252,6 @@ event_store_from_file(char *filename)
 #if defined(IL_NOTIFICATIONS)
 	edg_wll_Event *notif_event;
 	edg_wll_Context context;
-	char *dest_name = NULL;
-
 #endif
 
 	glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
@@ -1366,6 +1295,7 @@ event_store_from_file(char *filename)
 	/*  XXX: what was that good for?
 	if(notif_event->notification.dest_host &&
 	   (strlen(notif_event->notification.dest_host) > 0)) {
+		char *dest_name = NULL;
 		asprintf(&dest_name, "%s:%d", notif_event->notification.dest_host, notif_event->notification.dest_port);
 	}
 	*/

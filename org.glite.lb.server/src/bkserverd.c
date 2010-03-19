@@ -89,7 +89,6 @@ enum lb_srv_perf_sink sink_mode;
 #endif /* GLITE_LB_SERVER_WITH_WS */
 
 extern int edg_wll_StoreProto(edg_wll_Context ctx);
-extern int edg_wll_StoreProtoProxy(edg_wll_Context ctx);
 
 extern char *lbproxy_ilog_socket_path;
 extern char *lbproxy_ilog_file_prefix;
@@ -1737,25 +1736,6 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 
 	return err;
 }
-
-#if 0
-static void free_hostent(struct hostent *h){
-	int i;
-
-	if (h) {
-		if (h->h_name) free(h->h_name);
-		if (h->h_aliases) {
-			for (i=0; h->h_aliases[i]; i++) free(h->h_aliases[i]);
-			free(h->h_aliases);
-		}
-		if (h->h_addr_list) {
-			for (i=0; h->h_addr_list[i]; i++) free(h->h_addr_list[i]);
-	        	free(h->h_addr_list);
-		}
-		free(h);
-	}
-}
-#endif
 
 struct asyn_result {
 	char		*host;
