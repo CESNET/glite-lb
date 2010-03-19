@@ -35,6 +35,7 @@ limitations under the License.
 #include "ws_fault.h"
 #include "ws_typeref.h"
 #include "lb_proto.h"
+#include "server_notification.h"
 
 #if GSOAP_VERSION <= 20602
 #define __lb__GetVersion __ns1__GetVersion
@@ -193,7 +194,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__UserJobs(
 	ctx = (edg_wll_Context) glite_gsplugin_get_udata(soap);
 	memset(out, 0, sizeof *out);
 	if (edg_wll_UserJobsServer(ctx, &jobs, &states) != 0) goto fault;
-	if (edg_wll_UserJobsResToSoap(soap, jobs, states, out) != SOAP_OK) {
+	if (edg_wll_UserJobsResToSoap(soap, (glite_jobid_const_t *)jobs, (const edg_wll_JobStat *)states, out) != SOAP_OK) {
 		edg_wll_SetError(ctx, ENOMEM, "Couldn't create internal structures");
 		goto freefault;
 	}
@@ -345,7 +346,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__NotifNew(
 	}
 
 	out->valid = in->valid ? *in->valid : 0;
-	if (edg_wll_NotifNewServer(ctx,conditions,flags,in->destination,nid,&out->valid)) {
+	if (edg_wll_NotifNewServer(ctx,(const edg_wll_QueryRec **)conditions,flags,in->destination,nid,&out->valid)) {
 		edg_wll_ErrToFault(ctx, soap);
 		ret = SOAP_FAULT;
 		goto cleanup;

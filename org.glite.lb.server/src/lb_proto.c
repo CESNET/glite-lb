@@ -37,6 +37,7 @@ limitations under the License.
 #include "lb_proto.h"
 #include "lb_text.h"
 #include "lb_html.h"
+#include "lb_rss.h"
 #include "stats.h"
 #include "jobstat.h"
 #include "get_events.h"
@@ -44,6 +45,7 @@ limitations under the License.
 #include "lb_xml_parse.h"
 #include "lb_xml_parse_V21.h"
 #include "db_supp.h"
+#include "server_notification.h"
 
 
 #define METHOD_GET      "GET "
@@ -81,19 +83,6 @@ static const char* const response_headers_html[] = {
 };
 
 volatile sig_atomic_t purge_quit = 0;
-
-extern int edg_wll_NotifNewServer(edg_wll_Context,
-				edg_wll_QueryRec const * const *, int flags, char const *,
-				const edg_wll_NotifId, time_t *);
-extern int edg_wll_NotifBindServer(edg_wll_Context,
-				const edg_wll_NotifId, const char *, time_t *);
-extern int edg_wll_NotifChangeServer(edg_wll_Context,
-				const edg_wll_NotifId, edg_wll_QueryRec const * const *,
-				edg_wll_NotifChangeOp);
-extern int edg_wll_NotifRefreshServer(edg_wll_Context,
-				const edg_wll_NotifId, time_t *);
-extern int edg_wll_NotifDropServer(edg_wll_Context, edg_wll_NotifId);
-
 
 
 char *edg_wll_HTTPErrorMessage(int errCode)
@@ -391,7 +380,7 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 		return -1;
 	}
 
-	edg_wll_QueryJobsServer(ctx, conds, 0, &jobsOut, statesOut);
+	edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conds, 0, &jobsOut, statesOut);
 
 	for (i = 0; conds[i]; i++)
 		free(conds[i]);
@@ -401,9 +390,8 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 	return 0;
 }
 
-static int hup_handler(int sig) {
+static void hup_handler(int sig) {
 	purge_quit = 1;
-	return 0;
 }
 
 edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
