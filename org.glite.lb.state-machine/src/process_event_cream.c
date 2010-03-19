@@ -83,6 +83,8 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				rep_cond(js->pub.cream_owner, js->pub.owner);
 				rep_cond(js->pub.cream_jdl, e->regJob.jdl);
 				rep_cond(js->pub.cream_endpoint, e->regJob.ns);
+				rep_cond(js->pub.destination, e->regJob.ns);
+				rep_cond(js->pub.network_server, e->regJob.ns);
 			}
 			break;
 		case EDG_WLL_EVENT_CREAMSTART:
@@ -202,10 +204,12 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 					case EDG_WLL_STAT_DONE_OK:
 						js->pub.state = EDG_WLL_JOB_DONE;
 						js->pub.done_code = EDG_WLL_STAT_OK;
+						js->pub.cream_done_code = EDG_WLL_STAT_OK;
 						break;
 					case EDG_WLL_STAT_DONE_FAILED:
 						js->pub.state = EDG_WLL_JOB_DONE;
 						js->pub.done_code = EDG_WLL_STAT_FAILED;
+						js->pub.cream_done_code = EDG_WLL_STAT_FAILED;
 						break;
 					case EDG_WLL_STAT_ABORTED: js->pub.state = EDG_WLL_JOB_ABORTED; break;
 				}
