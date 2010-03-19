@@ -119,6 +119,9 @@ int edg_wll_Condition_Dump(notifInfo *ni, char **output, int oneline){
 				case EDG_WLL_QUERY_OP_WITHIN: GS ("within");
 					break;
 				case EDG_WLL_QUERY_OP_UNEQUAL: GS ("!=");
+					break;
+				case EDG_WLL_QUERY_OP_CHANGED: GS ("->");
+					break;
 			}
 			char *buf;
 			switch (l2->attr){
@@ -137,11 +140,11 @@ int edg_wll_Condition_Dump(notifInfo *ni, char **output, int oneline){
                         	        break;
 	                        case EDG_WLL_QUERY_ATTR_STATUS:
 					if (l2->op == EDG_WLL_QUERY_OP_WITHIN)
-                                                asprintf(&buf, "%i and %i",
+                                                asprintf(&buf, "%s and %s",
                                                         edg_wll_StatToString((edg_wll_JobStatCode)l2->value.i), 
 							edg_wll_StatToString((edg_wll_JobStatCode)l2->value2.i));
 					else
-						asprintf(&buf, "%i", edg_wll_StatToString((edg_wll_JobStatCode)l2->value.i));
+						asprintf(&buf, "%s", edg_wll_StatToString((edg_wll_JobStatCode)l2->value.i));
 					GS(buf);
 					free(buf);
         	                        break;
