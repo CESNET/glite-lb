@@ -1738,6 +1738,7 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 	return err;
 }
 
+#if 0
 static void free_hostent(struct hostent *h){
 	int i;
 
@@ -1754,6 +1755,7 @@ static void free_hostent(struct hostent *h){
 		free(h);
 	}
 }
+#endif
 
 struct asyn_result {
 	char		*host;
@@ -1762,7 +1764,11 @@ struct asyn_result {
 };
 
 /* ares callback handler for ares_getnameinfo() */
-void callback_handler(void *arg, int status, char *node, char *service)
+#if ARES_VERSION >= 0x010500
+void callback_ares_getnameinfo(void *arg, int status, int timeouts, char *node, char *service)
+#else
+void callback_ares_getnameinfo(void *arg, int status, char *node, char *service)
+#endif
 {
 	struct asyn_result *arp = (struct asyn_result *) arg;
 
@@ -1804,6 +1810,7 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 	struct timeval tv, *tvp;
 	struct timeval start_time,check_time;
 	int 	flags = 0;
+	int	err = NETDB_INTERNAL;
 
 /* start timer */
         gettimeofday(&start_time,0);
@@ -1815,7 +1822,7 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 /* query DNS server asynchronously */
 	if (name) flags |= ARES_NI_LOOKUPHOST | ( numeric? ARES_NI_NUMERICHOST : 0);
 	if (service) flags |= ARES_NI_LOOKUPSERVICE | ( numeric? ARES_NI_NUMERICSERV : 0);
-	ares_getnameinfo(channel, addr, len, flags, (ares_nameinfo_callback)callback_handler, (void *) &ar);
+	ares_getnameinfo(channel, addr, len, flags, (ares_nameinfo_callback)callback_ares_getnameinfo, (void *) &ar);
 
 /* wait for result */
         while (1) {
@@ -1849,14 +1856,14 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 
         }
 
-	
-	ares_destroy(channel);
-		
 	if (ar.err == NETDB_SUCCESS) {
 		if (name) *name = ar.host;
 		if (service) *service = ar.service;
 	}
-	return (ar.err);
+	err = ar.err;
+
+	ares_destroy(channel);
+	return err;
 }
 
 static int add_root(edg_wll_Context ctx, char *root)
