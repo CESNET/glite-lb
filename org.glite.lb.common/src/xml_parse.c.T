@@ -666,7 +666,7 @@ static void startNotifResult(void *data, const char *el, const char **attr)
                                 if (!strcmp(attr[i],"code"))
                                         XMLCtx->errCode = atoi(attr[i+1]);
                                 else if (!strcmp(attr[i],"desc"))
-                                        XMLCtx->errDesc = strdup(attr[i+1]);
+                                        XMLCtx->errDesc = glite_lbu_EscapeXML(attr[i+1]);
                                 else { unexpError() }
                         }       
                         break;          
