@@ -446,7 +446,7 @@ int edg_wll_intJobStatus(
 	edg_wll_QueryRec        **jqra;
 	glite_lbu_Statement	sh;
 	char			*stmt, *out;
-	struct timeval		ts, mints = {tv_sec:0, tv_usec:0};
+	struct timeval		ts, maxts = {tv_sec:0, tv_usec:0};
 
 /* Processing */
 	edg_wll_ResetError(ctx);
@@ -515,14 +515,14 @@ int edg_wll_intJobStatus(
 				intErr = 1; break;
 			}
 			ts = events[i].any.timestamp;
-			if ((!mints.tv_sec && !mints.tv_usec)
-			    || (ts.tv_sec < mints.tv_sec)
-			    || (ts.tv_sec == mints.tv_sec && ts.tv_usec < mints.tv_usec)) mints = ts;
+			if ((!maxts.tv_sec && !maxts.tv_usec)
+			    || (ts.tv_sec > maxts.tv_sec)
+			    || (ts.tv_sec == maxts.tv_sec && ts.tv_usec > maxts.tv_usec)) maxts = ts;
 		}
 		/* no events or status computation error */
 		if (intstat->pub.state == EDG_WLL_JOB_UNDEF) {
 			intstat->pub.state = EDG_WLL_JOB_UNKNOWN;
-			if (num_events) intstat->pub.lastUpdateTime = mints;
+			if (num_events) intstat->pub.lastUpdateTime = maxts;
 			else intstat->pub.lastUpdateTime.tv_sec = 1;
 		}
 
