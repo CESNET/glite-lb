@@ -37,13 +37,10 @@ INSTALL:=libtool --mode=install install
 
 GSOAP_FILES_PREFIX:= bk_ws_
 dotless_gsoap_ver:=${shell echo ${gsoap_default_version} | tr -d . }
-ifeq ($(shell test -f ${stagedir}/lib/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
-	langflavour:=_c
-endif
 ifeq ($(shell test -f ${stagedir}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
 	langflavour:=_c
 endif
-GSOAP_LIB:=-L${stagedir}/${libdir} -L${stagedir}/lib -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o
 # ws_typeref.o
