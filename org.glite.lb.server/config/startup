@@ -129,10 +129,17 @@ start()
 
 	log4c="$GLITE_LOCATION/etc/glite-lb-log4crc"
 	if test -f "$log4c"; then
-		log4c="LOG4C_RCPATH='$log4c'";
+		log4c="LOG4C_RCPATH='$log4c'"
 	else
 		echo "$0: WARNING: config file '$log4c' not found." >&2
 		unset log4c
+	fi
+
+	policy="$GLITE_LOCATION/etc/glite-lb-authz.conf"
+	if test -f "$policy"; then
+		policy="--policy '$policy'"
+	else
+		unset policy
 	fi
 
 	[ -z "$GLITE_LB_EXPORT_DUMPDIR" ] && GLITE_LB_EXPORT_DUMPDIR=$GLITE_LOCATION_VAR/dump
@@ -202,7 +209,7 @@ start()
 	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
 		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
-		$super $creds -i $BK_PIDFILE $port $wport $dumpdir $purgedir $lbreg_maildir $proxy\
+		$super $creds -i $BK_PIDFILE $port $wport $dumpdir $purgedir $lbreg_maildir $proxy $policy\
 		$GLITE_LB_SERVER_OTHER_OPTIONS"
 
 	if test -x $GLITE_LOCATION/bin/glite-lb-notif-interlogd; then

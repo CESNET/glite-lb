@@ -43,6 +43,57 @@ function config_glite_lb_setenv(){
   yaimgridpath_append LD_LIBRARY_PATH $classads_prefix/${classads_libarch:-lib}
 }
 
+function config_glite_lb_authz() {
+	superusers="$1"
+	rtm="$2"
+
+	superusers="`echo \"$superusers\"| grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\" }\n\t}\n/'`"
+	rtm="`echo \"$rtm\"| grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\" }\n\t}\n/'`"
+
+	cat <<EOF > "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
+resource "LB" {
+
+action "ADMIN_ACCESS" {
+$superusers
+}
+
+action "STATUS_FOR_MONITORING" {
+$rtm
+}
+
+action "LOG_WMS_EVENTS" {
+	rule permit {
+		subject = ".*"
+		fqan = "/VO/Role=WMS"
+	}
+}
+
+action "LOG_GENERAL_EVENTS" {
+	rule permit {
+		subject = ".*"
+	}
+}
+
+}
+EOF
+	# something changed
+	if test -f "$GLITE_LOCATION/etc/glite-lb-authz.conf"; then
+		diff -w "$GLITE_LOCATION/etc/glite-lb-authz.conf" "$GLITE_LOCATION/etc/glite-lb-authz.conf.new" >/dev/null
+		if test "$?" != "0"; then
+			yaimlog WARNING "Original authz configuration moved to '$GLITE_LOCATION/etc/glite-lb-authz.conf.yaimorig'"
+			mv "$GLITE_LOCATION/etc/glite-lb-authz.conf" "$GLITE_LOCATION/etc/glite-lb-authz.conf.yaimorig"
+		fi
+	fi
+
+	# superusers file deprecated
+	if test -s "${GLITE_LOCATION}/etc/LB-super-users"; then
+		yaimlog WARNING "Found old superusers file '${GLITE_LOCATION}/etc/LB-super-users', check 'ADMIN_ACCESS' section in glite-lb-authz.conf"
+		mv "${GLITE_LOCATION}/etc/LB-super-users" "${GLITE_LOCATION}/etc/LB-super-users.old"
+	fi
+
+	mv "$GLITE_LOCATION/etc/glite-lb-authz.conf.new" "$GLITE_LOCATION/etc/glite-lb-authz.conf"
+}
+
 function config_glite_lb() {
 
   #############################################
@@ -217,14 +268,7 @@ EOF
     echo "${GLITE_LOCATION}/etc/init.d/glite-lb-bkserverd" >> ${GLITE_LOCATION}/etc/gLiteservices
   fi
 
-  if [ -z "$GLITE_LB_SUPER_USERS" ]; then
-    touch ${GLITE_LOCATION}/etc/LB-super-users
-  else
-    echo "$GLITE_LB_SUPER_USERS" > ${GLITE_LOCATION}/etc/LB-super-users
-  fi
-  if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
-    echo "$GLITE_LB_RTM_DN" >> ${GLITE_LOCATION}/etc/LB-super-users
-  fi
+  config_glite_lb_authz "$GLITE_LB_SUPER_USERS" "$GLITE_LB_RTM_DN"
 
   if [ ! -f ${GLITE_LOCATION}/etc/glite-lb-harvester.conf ]; then
     echo $HOSTNAME > ${GLITE_LOCATION}/etc/glite-lb-harvester.conf
