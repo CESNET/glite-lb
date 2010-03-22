@@ -84,11 +84,18 @@ void glite_common_log(char *catName,int a_priority, const char* a_format,...) {
                 log4c_category_vlog(a_category, a_priority, a_format, va);
                 va_end(va);
         }
+	if (a_priority == LOG_PRIORITY_FATAL) {
+		va_list	va;
+		va_start(va,a_format);
+		vfprintf(stderr,a_format,va);
+		fputc('\n',stderr);
+		va_end(va);
+	}
 #else
 	va_list va;
 
 	va_start(va, a_format);
-	vprintf(va, a_format);
+	vprintf(a_format,va);
 	va_end(va);
 #endif
 }
