@@ -137,7 +137,7 @@ start()
 
 	policy="$GLITE_LOCATION/etc/glite-lb-authz.conf"
 	if test -f "$policy"; then
-		policy="--policy '$policy'"
+		policy="--enable-lcas --policy '$policy'"
 	else
 		unset policy
 	fi

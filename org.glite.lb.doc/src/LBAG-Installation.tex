@@ -170,7 +170,7 @@ According to local retention policy you may want to use different purge timeouts
 \item \texttt{GLITE\_LB\_EXPORT\_JPPS} -- Job Provenance Primary Storage where to export purged jobs, required if export to JP is enabled
 \item \texttt{GLITE\_JP\_LOCATION} -- optional parameter for combining LB and JP subsystems on the different locations
 \item \texttt{GLITE\_LB\_RTM\_ENABLED} -- enable settings for Real Time Monitor - indexes and additional access (default: false)
-\item \texttt{GLITE\_LB\_RTM\_DN} -- DN using to get notifications from \LB server\\
+\item \texttt{GLITE\_LB\_RTM\_DN} -- DNs using to get notifications from \LB server\\
 (default: \texttt{heppc24.hep.ph.ic.ac.uk} machine certificate)
 \item \texttt{GLITE\_LB\_SUPER\_USERS} -- additional super-users (default: empty)
 \item \texttt{GLITE\_LB\_TYPE} -- type of the \LB service: server, proxy, both (default: server)
@@ -181,6 +181,8 @@ According to local retention policy you may want to use different purge timeouts
 
 In addition to those, YAIM LB module uses following parameters:
 \texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{SITE\_EMAIL}.
+
+Lists separated by comma (\texttt{GLITE\_LB\_RTM\_DN} and \texttt{GLITE\_LB\_SUPER\_USERS}).
 
 \subsubsection{Migration to a different OS version}
 \label{inst:OSmigration}

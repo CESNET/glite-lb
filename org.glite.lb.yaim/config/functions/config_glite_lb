@@ -47,18 +47,22 @@ function config_glite_lb_authz() {
 	superusers="$1"
 	rtm="$2"
 
-	superusers="`echo \"$superusers\"| grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\" }\n\t}\n/'`"
-	rtm="`echo \"$rtm\"| grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\" }\n\t}\n/'`"
+	superusers="`echo \"$superusers\"| grep -v ^$ | tr ',' '\n' | sed 's/\(.*\)/\t\tsubject = \"\1\"/'`"
+	rtm="`echo \"$rtm\"| grep -v ^$ | tr ',' '\n' | sed 's/\(.*\)/\t\tsubject = \"\1\"/'`"
 
 	cat <<EOF > "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
 resource "LB" {
 
 action "ADMIN_ACCESS" {
+	rule permit {
 $superusers
+	}
 }
 
 action "STATUS_FOR_MONITORING" {
+	rule permit {
 $rtm
+	}
 }
 
 action "LOG_WMS_EVENTS" {
@@ -88,7 +92,9 @@ EOF
 	# superusers file deprecated
 	if test -s "${GLITE_LOCATION}/etc/LB-super-users"; then
 		yaimlog WARNING "Found old superusers file '${GLITE_LOCATION}/etc/LB-super-users', check 'ADMIN_ACCESS' section in glite-lb-authz.conf"
-		mv "${GLITE_LOCATION}/etc/LB-super-users" "${GLITE_LOCATION}/etc/LB-super-users.old"
+		echo "# deprecated file, replaced by ADMIN_ACCESS action in glite-lb-authz.conf" > "${GLITE_LOCATION}/etc/LB-super-users.old"
+		cat "${GLITE_LOCATION}/etc/LB-super-users" >> "${GLITE_LOCATION}/etc/LB-super-users.old"
+		rm "${GLITE_LOCATION}/etc/LB-super-users"
 	fi
 
 	mv "$GLITE_LOCATION/etc/glite-lb-authz.conf.new" "$GLITE_LOCATION/etc/glite-lb-authz.conf"
@@ -268,7 +274,11 @@ EOF
     echo "${GLITE_LOCATION}/etc/init.d/glite-lb-bkserverd" >> ${GLITE_LOCATION}/etc/gLiteservices
   fi
 
-  config_glite_lb_authz "$GLITE_LB_SUPER_USERS" "$GLITE_LB_RTM_DN"
+  if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
+    config_glite_lb_authz "$GLITE_LB_SUPER_USERS" "$GLITE_LB_RTM_DN"
+  else
+    config_glite_lb_authz "$GLITE_LB_SUPER_USERS" ""
+  fi
 
   if [ ! -f ${GLITE_LOCATION}/etc/glite-lb-harvester.conf ]; then
     echo $HOSTNAME > ${GLITE_LOCATION}/etc/glite-lb-harvester.conf
