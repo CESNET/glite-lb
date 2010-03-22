@@ -321,9 +321,8 @@ doit(int socket, edg_wll_GssCred cred_handle, char *file_name_prefix, int noipc,
 
     }
 
+	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG, "Closing descriptor %d.",con.sock);
 	edg_wll_gss_close(&con, NULL);
-	if (con.sock == -1) 
-		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN, "Error closing descriptor '%d'.",con.sock);
 	if (subject) free(subject);
 	return ret;
 }
