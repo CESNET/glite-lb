@@ -424,6 +424,7 @@ loop()
 		long offset;
 		int ret;
 
+		do_handle_signal();
 		if(killflg)
 			return (0);
 

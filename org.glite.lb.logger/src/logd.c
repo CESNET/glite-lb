@@ -123,7 +123,6 @@ static logd_handler_t mysignal(int num,logd_handler_t handler)
 
 	memset(&sa,0,sizeof(sa));
 	sa.sa_handler = handler;
-	sa.sa_flags = SA_RESTART;
 	return sigaction(num,&sa,&osa) ? SIG_ERR : osa.sa_handler;
 }
 
@@ -137,9 +136,20 @@ static logd_handler_t mysignal(int num,logd_handler_t handler)
  *
  *----------------------------------------------------------------------
  */
-void handle_signal(int num) {
-	if (num != SIGCHLD) glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Received signal %d\n", num);
-	switch (num) {
+
+static int received_signal = 0;
+
+static void handle_signal(int num)
+{
+	received_signal = num;
+}
+
+void do_handle_signal() {
+
+	if (received_signal == 0) return;
+	
+	if (received_signal != SIGCHLD) glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Received signal %d\n", received_signal);
+	switch (received_signal) {
 	case SIGHUP:
 		/* TODO: reload all external configurations, see
 		https://rt3.cesnet.cz/rt/Ticket/Display.html?id=24879 */
@@ -182,6 +192,8 @@ void handle_signal(int num) {
 		break;
 	default: break;
 	}
+
+	received_signal = 0;
 }
 
 /*
@@ -495,12 +507,15 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
     * Main loop
     */
    while (1) {
-        int opt;
+        int opt,my_errno;
 
 	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_INFO,"Accepting incomming connections...\n");
 	client_fd = accept(listener_fd, (struct sockaddr *) &client_addr,
 			&client_addr_len);
+	my_errno = errno;
+	do_handle_signal();
 	if (client_fd < 0) {
+		if (my_errno == EINTR) continue;
 		close(listener_fd);
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_FATAL,"Failed to accept incomming connections\n");
 		glite_common_log_SYS_ERROR("accept");

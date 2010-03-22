@@ -356,12 +356,21 @@ char *load_conf_file(char *filename)
 	return s;
 }
 
+static int	received_signal = 0;
 
-void handle_signal(int num) {
+static void handle_signal(int num)
+{
+	received_signal	= num;
+}
 
-	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Received signal %d\n", num);
 
-	switch(num) {
+void do_handle_signal() {
+
+	if (received_signal == 0) return;
+
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Received signal %d\n", received_signal);
+
+	switch(received_signal) {
 	case SIGHUP:
 		/* TODO: reload all external configurations, see
 		https://rt3.cesnet.cz/rt/Ticket/Display.html?id=24879 */
@@ -399,7 +408,10 @@ void handle_signal(int num) {
 		break;
 
 	}
+
+	received_signal = 0;
 }
+
 
 
 int

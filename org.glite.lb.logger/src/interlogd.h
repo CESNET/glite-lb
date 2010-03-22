@@ -312,6 +312,7 @@ struct il_output_plugin *plugin_get(const char *);
 
 /* master main loop */
 int loop();
+void do_handle_signal();
 
 /* recover thread */
 void *recover_thread(void*);
