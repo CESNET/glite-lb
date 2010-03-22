@@ -298,16 +298,6 @@ man: ${MAN_GZ} ${MAN8_GZ}
 stage:  compile
 	$(MAKE) install PREFIX=${stagedir}
 
-# TODO: restructuring - cleanup the documentation
-doc:
-
-olddoc: generate
-	cp ${top_srcdir}/doc/*.dox .
-	echo "PROJECT_NUMBER = ${version}" >> C.dox
-	echo "PROJECT_NUMBER = ${version}" >> CPP.dox
-	doxygen C.dox
-	doxygen CPP.dox
-
 Event.h Event.cpp: EventAttrNames.pl
 
 JobStatus.h JobStatus.cpp: StatusAttrNames.pl
@@ -323,8 +313,7 @@ install:
 	mkdir -p ${PREFIX}/sbin
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	mkdir -p ${PREFIX}/${libdir}
-	mkdir -p ${PREFIX}/share/doc/${package}-${version}/api
-	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
+	mkdir -p ${PREFIX}/share/doc
 	mkdir -p ${PREFIX}/share/man/man1
 	mkdir -p ${PREFIX}/examples
 	mkdir -p ${PREFIX}/share/man/man8
