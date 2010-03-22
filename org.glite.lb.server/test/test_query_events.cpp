@@ -131,7 +131,7 @@ int QueryEventsTest::ExecStmt(const char *qry, glite_lbu_Statement *stmt_out)
 }
 
 extern "C" {
-int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx, int backend) { return 0; }
+int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx, int backend, char *log_category) { return 0; }
 void glite_lbu_FreeDBContext(glite_lbu_DBContext ctx) { }
 int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char*str) { return 0; }
 void glite_lbu_DBClose(glite_lbu_DBContext ctx) { }
