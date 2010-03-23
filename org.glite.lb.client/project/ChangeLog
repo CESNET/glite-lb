@@ -60,3 +60,12 @@
 
 4.0.3-2
 - install libraries into $libdir
+
+4.1.0-1
+- Support for CREAM jobs
+- Support for logging sandbox transfers as jobs of a specific type
+- Memory allocation fixes
+- Relation 'changed' used in queries implemented for other relevant attributes rather than just Job State
+- Connection Pool locking fixed (Savannah bug #37081)
+- Extended with WMS DNs and other flags (producer API cleanup)
+
