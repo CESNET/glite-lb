@@ -9,3 +9,10 @@
 
 1.0.0-5
 - install libraries into $libdir
+
+2.0.0-1
+- Fixed library version numbering
+- Introduction of the common logginf format
+- Improved portability
+- IPv6 compliance
+
