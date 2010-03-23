@@ -8,3 +8,6 @@
 - configure script update
 - compatibility with g++ 4.3.2 
 
+1.0.0-5
+- module rebuilt
+
