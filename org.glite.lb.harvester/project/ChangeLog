@@ -18,3 +18,7 @@
 1.0.4-1
 - Fixed 'nodb' build issues
 
+1.0.5-1
+- Adopted the Common logging format
+- First release of the harvester module integrated into the L&B subsystem (2.1 and later)
+
