@@ -9,3 +9,8 @@
 
 1.0.0-4
 - install libraries into $libdir
+
+2.0.0-1
+- Fixed library version numbering
+- Improved portability
+
