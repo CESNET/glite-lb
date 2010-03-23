@@ -329,6 +329,7 @@ BEGIN{
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/postgresql:R/ ],
 	'lb.yaim' => [ qw/glite-yaim-core:R/ ],
+	'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
 	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
 	'lbjp-common.log' => [ qw/log4c/ ],
 	'lbjp-common.maildir' => [ qw// ],
@@ -413,6 +414,10 @@ for my $jar (keys %need_jars) {
 		security.gss lbjp-common.log
 	/ ],
 	'lb.yaim' => [ qw// ],
+	'lb.glite-LB' => [ qw/
+		lb.logger:R lb.server:R lb.utils:R lb.doc:R
+		lb.ws-test:R lb.harvester:R lb.yaim:R
+	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio lbjp-common.log/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw/lbjp-common.log/ ],
@@ -553,10 +558,18 @@ BEGIN{
 		lcas=>'org.glite.security.lcas',
 		trustmanager=>'org.glite.security.trustmanager',
 		utiljava=>'org.glite.security.util-java',
+		gpt=>'gpt',
+		fetchcrl=>'fetch-crl',
+		gip_release=>'glite-info-provider-release',
+		gip_service=>'glite-info-provider-service',
+		bdii=>'bdii',
+		glite_version=>'glite-version',
+		glite_info_templates=>'glite-info-templates',
+		glue_schema=>'glue-schema',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials/],
-		'org.glite'=>[qw/voms gridsite lcas/],
+		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema/],
 	);
 };
 
