@@ -28,7 +28,7 @@ my $sec_tag = '';
 my $jobid_tag = '';
 my $libdir = 'lib';
 
-my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
+my @nodes = qw/client server logger utils doc ws-test db jpprimary jpindex jpclient/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -38,6 +38,7 @@ my %extern_prefix = (
 	cppunit => '/usr',
 	expat => '/usr',
 	globus => '/opt/globus',
+	jglobus => '/opt/globus',
 	gsoap => '/usr',
 	mysql => '/usr',
 	'mysql-devel' => '',
@@ -45,18 +46,13 @@ my %extern_prefix = (
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
-	trustmanager => '/opt/glite',
 	ant => '/usr',
 	jdk => '/usr',
 	libtar => '/usr',
-	axis => '/usr',
-	log4c => '/usr',
-	postgresql => '/usr'
 );
 
 my %jar = (
-	'commons-codec' => '/usr/share/java/commons-codec.jar',
-	'commons-lang' => '/usr/share/java/commons-lang.jar',
+	'commons-codec' => '/usr/share/java/commons-codec-1.3.jar',
 );
 
 
@@ -71,10 +67,10 @@ my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester/], 
+	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
-	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface/],
-	'jobid' => [qw/api-c api-cpp api-java/],
+	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
+	'jobid' => [qw/api-c api-cpp/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	);
 
@@ -298,19 +294,17 @@ sub mode_checkout() {
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
-	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager/ ],
+	'lb.client-java' => [ qw/ant:B jglobus jdk:B/ ],
 	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
-	'lb.logger' => [ qw/cppunit:B log4c/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite log4c/ ],
+	'lb.logger' => [ qw/cppunit:B/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
-	'lb.harvester' => [ qw/postgresql:R/ ],
-	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
-	'lbjp-common.log' => [ qw// ],
+	'lbjp-common.db' => [ qw/mysql:R mysql-devel:B/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
@@ -339,7 +333,6 @@ for my $ext (keys %need_externs_aux) {
 
 %need_jars = (
 	'jobid.api-java' => [ qw/commons-codec/ ],
-	'lb.client-java' => [ qw/commons-lang/ ],
 );
 
 for my $jar (keys %need_jars) {
@@ -357,7 +350,6 @@ for my $jar (keys %need_jars) {
 	/ ],
 	'lb.client-java' => [ qw/
 		lb.types:B
-		lb.ws-interface:B
 		jobid.api-java
 	/ ],
 	'lb.common' => [ qw/
@@ -367,14 +359,13 @@ for my $jar (keys %need_jars) {
 	'lb.doc' => [ qw/lb.types:B/ ],
 	'lb.logger' => [ qw/
 		lbjp-common.trio
-		lbjp-common.log
 		jobid.api-c
 		lb.common
 		security.gss
 	/ ],
 	'lb.server' => [ qw/
 		lb.ws-interface lb.types:B lb.common lb.state-machine
-		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir lbjp-common.log
+		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir
 		jobid.api-c
 		security.gsoap-plugin security.gss
 	/ ],
@@ -388,10 +379,6 @@ for my $jar (keys %need_jars) {
 	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
 	'lb.types' => [ qw// ],
-	'lb.harvester' => [ qw/
-		jobid.api-c lbjp-common.trio lbjp-common.db lb.common lb.client
-		security.gss
-	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
@@ -449,7 +436,7 @@ for my $ext (keys %deps_aux) {
 	jpclient => 'jp.client',
 );
 
-my @t = qw/lb.client-java jobid.api-java lb.types lbjp-common.log/;
+my @t = qw/lb.client-java jobid.api-java lb.types/;
 @topbuild{@t} = (1) x ($#t+1);
 }
 
@@ -464,10 +451,10 @@ sub mkinc
 	my %aux;
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
-lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
+lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
 /;
 	@aux{@m} = (1) x ($#m+1);
@@ -530,7 +517,6 @@ BEGIN{
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
-		trustmanager=>'org.glite.security.trustmanager',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials/],
