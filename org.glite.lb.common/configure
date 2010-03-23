@@ -89,7 +89,7 @@ my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester/], 
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp api-java/],
@@ -328,6 +328,8 @@ BEGIN{
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/postgresql:R/ ],
+	'lb.yaim' => [ qw/glite-yaim-core:R/ ],
+	'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
 	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
 	'lbjp-common.log' => [ qw/log4c/ ],
 	'lbjp-common.maildir' => [ qw// ],
@@ -409,9 +411,14 @@ for my $jar (keys %need_jars) {
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/
 		jobid.api-c lbjp-common.trio lbjp-common.db lb.common lb.client
-		security.gss
+		security.gss lbjp-common.log
 	/ ],
-	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
+	'lb.yaim' => [ qw// ],
+	'lb.glite-LB' => [ qw/
+		lb.logger:R lb.server:R lb.utils:R lb.doc:R
+		lb.ws-test:R lb.harvester:R lb.yaim:R
+	/ ],
+	'lbjp-common.db' => [ qw/lbjp-common.trio lbjp-common.log/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw/lbjp-common.log/ ],
 	'lbjp-common.trio' => [ qw// ],
@@ -483,7 +490,7 @@ sub mkinc
 	my %aux;
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
@@ -551,10 +558,18 @@ BEGIN{
 		lcas=>'org.glite.security.lcas',
 		trustmanager=>'org.glite.security.trustmanager',
 		utiljava=>'org.glite.security.util-java',
+		gpt=>'gpt',
+		fetchcrl=>'fetch-crl',
+		gip_release=>'glite-info-provider-release',
+		gip_service=>'glite-info-provider-service',
+		bdii=>'bdii',
+		glite_version=>'glite-version',
+		glite_info_templates=>'glite-info-templates',
+		glue_schema=>'glue-schema',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials/],
-		'org.glite'=>[qw/voms gridsite lcas/],
+		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema/],
 	);
 };
 
