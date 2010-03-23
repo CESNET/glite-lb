@@ -10,6 +10,9 @@ CC:=gcc
 CXX:=g++
 
 -include Makefile.inc
+-include ../project/version.properties
+
+version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test
 CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=0 perl ${top_srcdir}/project/check_version.pl
@@ -39,7 +42,17 @@ TEST_INC:=-I${cppunit_prefix}/include
 
 compile all: ${LIB}
 
-offset=0
+# In order to use libtool versioning correcty, we must have:
+#
+# current = major + minor + offset
+# revision = patch
+# age = minor
+#
+# where offset is a sum of maximal released minor's of all previous major's
+# 
+
+# counted minors: N/A
+offset=-1
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split /\./,"${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
