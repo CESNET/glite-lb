@@ -34,8 +34,13 @@
 
 2.0.0-1
 - Multiple DB backends supported
+  - support for postgresql (only used by LB Harvester)
 - API enhanced to support multiple database backends
 
 2.0.0-2
 - Repacked, configuration depends on newer postgres version
 
+2.0.1-1
+- Minor enhancements
+- Repacked for new lbjp-common release
+ 
