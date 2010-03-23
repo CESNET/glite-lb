@@ -18,3 +18,7 @@
 
 1.0.0-7
 - install libraries into $libdir
+
+2.0.0-1
+- Fixed library version numbering
+
