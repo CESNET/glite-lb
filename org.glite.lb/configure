@@ -89,7 +89,7 @@ my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim/], 
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp api-java/],
