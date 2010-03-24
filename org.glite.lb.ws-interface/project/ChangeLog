@@ -16,3 +16,7 @@
 3.0.1-1
 - Initial implementation of WS notifications
 
+3.1.0-1
+- Primitive AGU compatibility
+- Support for CREAM jobs
+
