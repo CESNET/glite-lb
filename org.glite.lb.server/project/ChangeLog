@@ -105,4 +105,26 @@ Crystal ball:
 
 2.0.3-3
 - install libraries into $libdir
-- buildtime dependency pn c-ares
+- buildtime dependency on c-ares
+
+2.1.0-1
+- Advanced Autorization (used by LCAS plugin too, old configuration file not supported anymore)
+- Adoption of the Common Logging Format
+- Fixed startup script (Savannah Bug #29081)
+- Memory consumption limits applied to notification delivery.
+- IPv6 fixes
+- Automatic immediate proxy purge disabled by default
+- WS connetions handled on main port, too
+- Relation 'changed' implemented for other relevant attributes rather than just Job State
+- Relation 'within' implemented for more relevant attributes
+- Duplicated events are not reported back to sending component
+- Cancelled subjob treated as Done when computing state of collection
+- Support for logging sandbox transfers as jobs of a specific type
+- Support for CREAM jobs
+- Improved error reporting from notification calls
+- Improved smooth purging in collections
+- Notifications on job purge
+- RegJob event WMS_DN implementation
+- RegJob event EDG_WLL_LOGLFLAG_EXCL implementation
+- Primitive AGU compatibility
+
