@@ -335,7 +335,7 @@ BEGIN{
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
-	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
+	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B/ ],
 	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
