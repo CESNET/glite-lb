@@ -51,3 +51,14 @@
 
 2.0.4-2
 - install libraries into $libdir
+
+2.1.0-1
+- Compliance with the Common Logging Format
+- Fixed startup script (Savannah Bug #29081)
+- Addressed memory consumption (Savannah Bug #48164)
+- Improved portability
+- IPv6 fixes
+- SIGHUP handling
+- Warnings on expected server connection disconnections removed
+- Database and permission errors from server handled by wait&retry
+
