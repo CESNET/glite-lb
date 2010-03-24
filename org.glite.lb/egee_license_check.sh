@@ -104,6 +104,10 @@ if [ "$r1" -eq "1" ]; then
 	# if not, try other known copyrights
 	echo ${stripped_contents} | grep -q "${stripped_gpl_copyright}" 2>/dev/null
 	r1=$?
+	if [ "$r1" -eq "1" ]; then
+		echo ${stripped_contents} | grep -q "${stripped_trio_copyright}" 2>/dev/null
+		r1=$?
+	fi
 fi
 
 # is license present?
@@ -113,6 +117,10 @@ if [ "$r2" -eq "1" ]; then
 	# if not, try other known licenses
 	echo ${stripped_contents} | grep -q "${stripped_gpl_license}" 2>/dev/null
 	r2=$?
+	if [ "$r2" -eq "1" ]; then
+		echo ${stripped_contents} | grep -q "${stripped_trio_license}" 2>/dev/null
+		r2=$?
+	fi
 fi
 
 ret=$(( r1 + r2 * 2 ))
@@ -242,11 +250,18 @@ See http://www.eu-egee.org/partners/ for details on the copyright holders.'
 GPLCOPYRIGHT='Copyright (C) 2000-2007, Robert van Engelen, Genivia Inc., All Rights Reserved.'
 GPLLICENSE='The contents of this file are subject to the gSOAP Public License'
 
+TRIOCOPYRIGHT='Copyright (C) 1998 Bjorn Reese and Daniel Stenberg.'
+TRIOLICENSE='Copyright (C) 1998 Bjorn Reese and Daniel Stenberg.'
+
 stripped_copyright=`printf "$COPYRIGHT" | sed --posix --regexp-extended -e 's/[[:digit:]]{4}( ?[,-] ?[0-9]{4})*//' | tr -d '[\/[:space:],]'`
 stripped_license=`printf "$LICENSE" | tr -d '[\/[:space:],]'`
 
 stripped_gpl_copyright=`printf "$GPLCOPYRIGHT" | sed --posix --regexp-extended -e 's/[[:digit:]]{4}( ?[,-] ?[0-9]{4})*//' | tr -d '[\/[:space:],]'`
 stripped_gpl_license=`printf "$GPLLICENSE" | tr -d '[\/[:space:],]'`
+
+# Specific treatment for TRIO!
+stripped_trio_copyright=`printf "$TRIOCOPYRIGHT" | sed --posix --regexp-extended -e 's/[[:digit:]]{4}( ?[,-] ?[0-9]{4})*//' | tr -d '[\/[:space:],]'`
+stripped_trio_license=`printf "$TRIOCOPYRIGHT" | sed --posix --regexp-extended -e 's/[[:digit:]]{4}( ?[,-] ?[0-9]{4})*//' | tr -d '[\/[:space:],]'`
 
 
 #ANSI C files
