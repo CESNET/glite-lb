@@ -29,3 +29,8 @@
 
 1.0.2-2
 - install libraries into $libdir
+
+1.1.0-1
+- Support for logging sandbox transfers as jobs of a specific type
+- Support for CREAM jobs
+
