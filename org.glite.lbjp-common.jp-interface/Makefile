@@ -74,7 +74,7 @@ ${commonlib_thr}: ${THROBJS}
 	${LINK} -o $@ ${THROBJS} ${THRLIBS}
 
 check: type_test
-	LD_LIBRARY_PATH=${log4c_prefix}/${libdir}:${LD_LIBRARY_PATH} ./type_test type_test.xml
+	LD_LIBRARY_PATH=${log4c_prefix}/${libdir}:${log4c_prefix}/lib:${LD_LIBRARY_PATH} ./type_test type_test.xml
 
 type_test: %: %.cpp compile
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
