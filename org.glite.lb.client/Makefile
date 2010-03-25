@@ -105,17 +105,10 @@ CXXFLAGS:=${CFLAGS}
 
 EXT_LIB:=
 
-TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
-# TODO: merge - check the 64bit stuff
-#             - and what about the new JOBID lib?
-host_cpu:=${shell uname -m}
-ifeq (${libdir},lib)
-	LDFLAGS:=-L${stagedir}/lib ${COVERAGE_FLAGS}
-else
-	LDFLAGS:=-L${stagedir}/${libdir} -L${stagedir}/lib ${COVERAGE_FLAGS}
-endif
+LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}

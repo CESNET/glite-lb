@@ -106,7 +106,7 @@ ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE
 endif
 
-TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
@@ -127,7 +127,7 @@ XSLTPROC:=xsltproc --novalid
 gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${gsoap_prefix}/bin; else echo ${gsoap_prefix}; fi }
 
 ifneq (${expat_prefix},/usr)
-	expatlib := -L${expat_prefix}/lib
+	expatlib := -L${expat_prefix}/${libdir} -L${expat_prefix}/lib
 endif
 
 vomsflavour := _${nothrflavour}

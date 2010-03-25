@@ -29,7 +29,7 @@ LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 REPORTS:=${top_srcdir}/reports
-TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit -ldl
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit -ldl
 TEST_INC:=-I${cppunit_prefix}/include
 
 

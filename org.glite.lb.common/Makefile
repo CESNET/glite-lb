@@ -70,7 +70,7 @@ LDFLAGS:=-L${stagedir}/${libdir} -L${stagedir}/lib \
 EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${classadslib}
 EXT_THRLIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${classadslib}
 
-TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
 ifdef LB_PROF

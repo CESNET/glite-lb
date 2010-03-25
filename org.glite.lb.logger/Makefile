@@ -67,7 +67,7 @@ EXT_LIB:=-lglite_lbu_trio -lglite_lbu_log
 
 GLITE_GSS_LIB:=-lglite_security_gss
 
-TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
 LOGD_OBJS:= logd_proto.o logd.o

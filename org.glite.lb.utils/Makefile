@@ -46,7 +46,7 @@ LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 ifneq (${expat_prefix},/usr)
-	expatlib := -L${expat_prefix}/lib
+	expatlib := -L${expat_prefix}/${libdir} -L${expat_prefix}/lib
 endif
 
 EXT_LIBS:= \
