@@ -31,6 +31,7 @@ function config_glite_lb_setenv(){
 
   cares_prefix=${INSTALL_ROOT:-/opt}/c-ares
   classads_prefix=${INSTALL_ROOT:-/opt}/classads
+  log4c_prefix=${INSTALL_ROOT:-/opt}/log4c
   if [ x`uname -m` = xx86_64 ]; then
     if [ -d "$cares_prefix/lib64" ]; then
       cares_libarch=lib64
@@ -38,9 +39,13 @@ function config_glite_lb_setenv(){
     if [ -d "$classads_prefix/lib64" ]; then
       classads_libarch=lib64
     fi
+    if [ -d "$log4c_prefix/lib64" ]; then
+      log4c_libarch=lib64
+    fi
   fi
   yaimgridpath_append LD_LIBRARY_PATH $cares_prefix/${cares_libarch:-lib}
   yaimgridpath_append LD_LIBRARY_PATH $classads_prefix/${classads_libarch:-lib}
+  yaimgridpath_append LD_LIBRARY_PATH $log4c_prefix/${log4c_libarch:-lib}
 }
 
 function config_glite_lb_authz() {
@@ -68,7 +73,6 @@ $rtm
 action "LOG_WMS_EVENTS" {
 	rule permit {
 		subject = ".*"
-		fqan = "/VO/Role=WMS"
 	}
 }
 
