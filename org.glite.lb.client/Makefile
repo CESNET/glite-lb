@@ -313,7 +313,7 @@ install:
 	mkdir -p ${PREFIX}/sbin
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
 	mkdir -p ${PREFIX}/${libdir}
-	mkdir -p ${PREFIX}/share/doc
+	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples/
 	mkdir -p ${PREFIX}/share/man/man1
 	mkdir -p ${PREFIX}/examples
 	mkdir -p ${PREFIX}/share/man/man8
