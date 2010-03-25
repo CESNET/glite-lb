@@ -43,7 +43,7 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-job-states.sh} & Implemented & Test that job state queries return correctly and that testing jobs are in expected states. \\
 \hline
-{\tt lb-test-proxy-delivery.sh} & Implemented & Test correct event delivery through LB proxy. \\
+{\tt lb-test-proxy-delivery.sh} & Implemented & Test correct event delivery through \LB proxy. \\
 \hline
 {\tt lb-test-ws.sh} & Implemented & Query events and job states through the Web-Service interface. \\
 \hline
@@ -55,17 +55,21 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-notif-recovery.sh} & Implemented & Test if notification client receives notifications correctly upon restart.  \\
 \hline
-{\tt lb-test-purge.pl} & Implemented & Test that LB server purge works correctly. \\
+{\tt lb-test-purge.pl} & Implemented & Test that \LB server purge works correctly. \\
 \hline
-{\tt lb-test-wild.pl} & Implemented & Test LB ``in the wild'' (test with real-life WMS). \\
+{\tt lb-test-wild.pl} & Implemented & Test \LB ``in the wild'' (test with real-life WMS). \\
 \hline
-{\tt lb-test-bdii.sh} & Implemented & Test LB server is published correctly over BDII. \\
+{\tt lb-test-bdii.sh} & Implemented & Test \LB server is published correctly over BDII. \\
+\hline
+{\tt lb-test-sandbox-transfer.sh} & Implemented & Test \LB's support for logging sandbox transfers. \\
+\hline
+{\tt lb-test-changeacl.sh} & Implemented & Test proper parsing of \code{ChangeACL} events. \\
 \hline
 \end{tabularx}
 
 \subsubsection{Event logging examples}
 
-There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds various example files---both binaries and scripts. There is---among others---a suite of scripts aimed at testing event delivery and the proper operation of the LB state machine. Scripts named {\tt glite-lb-<state>.sh}---where {\tt <state>} corresponds with a job state---can be used to generate sequences of events that will always get an existing job into that state. (For example the {\tt glite-lb-running.sh} script logs a series of 12 events resulting in the job state turning to running.) Some of these scripts are used by system functionality tests detailed bellow but all of them can also be used for manual testing.
+There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds various example files---both binaries and scripts. There is---among others---a suite of scripts aimed at testing event delivery and the proper operation of the \LB state machine. Scripts named {\tt glite-lb-<state>.sh}---where {\tt <state>} corresponds with a job state---can be used to generate sequences of events that will always get an existing job into that state. (For example the {\tt glite-lb-running.sh} script logs a series of 12 events resulting in the job state turning to running.) Some of these scripts are used by system functionality tests detailed bellow but all of them can also be used for manual testing.
 
 \subsection{Event delivery}
 
@@ -203,7 +207,7 @@ events (e.g. destination computing element) wrt. the values reported in the job 
 %\TODO{query all my jobs, query one job, query with some structured conditions, some other queries that caused problems in the past, ...}
 
 
-\subsection{LB server and proxy combined test}
+\subsection{\LB server and proxy combined test}
 
 \req\ running \path{glite-lb-proxy}, \path{glite-lb-interlogd} and
 \path{glite-lb-bkserverd}
@@ -415,6 +419,51 @@ do nothing (i.e. nothing was left in the database).
 The example \path{org.glite.lb.client/examples/purge\_test} does exactly this sequence of steps,
 including the checks.
 \end{hints}
+
+\subsubsection{Sandbox Transfers}
+
+\req\ All \LB\ services running
+
+\what\
+\begin{enumerate}
+\item Register a compute job.
+\item Register input sandbox trasfer.
+\item Register output sandbox transfer.
+\item Generate events to trigger job state changes in one of the sandbox transfer jobs.
+	\begin{enumerate}
+        \item Start the transfer and check that state has changed appropriately.
+        \item Finish the transfer and check that state has changed appropriately. 
+	\end{enumerate}
+\item Use another sandbox transfer job registered above to start, then fail the transfer and check that this is reflected by the resulting transfer job status. 
+\item Check that the compute job and its sandbox transfer jobs link up correctly. 
+
+\end{enumerate}
+
+\how\ \ctblb{lb-test-sandbox-transfer.sh}
+
+\note\ The test includes artificial delays. Takes approx. 50\,s to finish.
+
+\result\ Job states should change on event delivery as expect, related jobs should ``know'' their IDs.
+
+\subsubsection{ACL Parsing}
+
+\req\ All \LB\ services running
+
+\what\
+\begin{enumerate}
+\item Register a job.
+\item Send a \code{CahngeACL} event to add authorized user.
+\item Check job status to see if the event was processed correctly.
+\end{enumerate}
+
+\how\ \ctblb{lb-test-changeacl.sh}
+
+\note\ The test includes artificial delays. Takes approx. 15\,s to finish.
+
+\note\ This test does not check if the setting actually takes effect. Implementing that functionality -- relying on the use of at least two different identities -- in an automated test is rather challenging. 
+
+\result\ The \emph{test~DN} should be listed in the job's ACL.
+
 
 \section{LB ``In the Wild''---Real-World WMS Test}
 \req\ All \LB services running, working grid infrastructure accessible (including permissions). 
