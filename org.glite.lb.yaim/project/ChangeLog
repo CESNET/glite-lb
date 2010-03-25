@@ -2,3 +2,6 @@
 - Moved from org.glite.yaim.lb
 - Cleanup
 
+4.2.3-1
+- Added log4c package
+
