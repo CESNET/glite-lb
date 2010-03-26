@@ -58,18 +58,30 @@ function config_glite_lb_authz() {
 	cat <<EOF > "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
 resource "LB" {
 
+EOF
+	if test ! -z "$superusers"; then
+		cat <<EOF >> "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
 action "ADMIN_ACCESS" {
 	rule permit {
 $superusers
 	}
 }
 
+EOF
+	fi
+
+	if test ! -z "$rtm"; then
+		cat <<EOF >> "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
 action "STATUS_FOR_MONITORING" {
 	rule permit {
 $rtm
 	}
 }
 
+EOF
+	fi
+
+	cat <<EOF >> "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
 action "LOG_WMS_EVENTS" {
 	rule permit {
 		subject = ".*"
