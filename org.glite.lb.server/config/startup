@@ -251,6 +251,15 @@ stop()
 	fi
 
 	stop_daemon "glite-lb-interlogd" $PROXY_IL_PIDFILE
+
+	# for L&B <= 2.0
+	LC_ALL=C
+	if netstat -an --unix | grep "^unix .* LISTEN.* $GLITE_LB_NOTIF_SOCK" >/dev/null 2>&1 ;then
+		killall -9 glite-lb-notif-interlogd
+	fi
+	if netstat -an --unix | grep "^unix .* LISTEN.* $GLITE_LB_PROXY_SOCK" >/dev/null 2>&1 ;then
+		killall -9 glite-lb-interlogd
+	fi
 }
 
 status()
