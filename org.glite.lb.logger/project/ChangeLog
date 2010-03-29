@@ -62,3 +62,6 @@
 - Warnings on expected server connection disconnections removed
 - Database and permission errors from server handled by wait&retry
 
+2.1.1-1
+- Startup script update
+

@@ -128,3 +128,6 @@ Crystal ball:
 - RegJob event EDG_WLL_LOGLFLAG_EXCL implementation
 - Primitive AGU compatibility
 
+2.1.1-1
+- Startup script update
+
