@@ -82,10 +82,22 @@ EOF
 	fi
 
 	cat <<EOF >> "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
+action "REGISTER_JOBS" {
+        rule permit {
+                subject = ".*"
+        }
+}
+
 action "LOG_WMS_EVENTS" {
 	rule permit {
 		subject = ".*"
 	}
+}
+
+action "LOG_CE_EVENTS" {
+        rule permit {
+                subject = ".*"
+        }
 }
 
 action "LOG_GENERAL_EVENTS" {
@@ -279,6 +291,29 @@ $logfile {
 }
 EOF
 
+  # LCAS plugin
+  # config file
+  lcas_libarch=lib
+  if [ x`uname -m` = xx86_64 ]; then
+    if [ -f "$GLITE_LOCATION/lib64/modules/lcas_lb.mod" ]; then
+      lcas_libarch=lib64
+    fi
+  fi
+  lcas_plugin="$GLITE_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
+  mkdir -p /opt/glite/etc/lcas
+  echo "pluginname=\"$lcas_plugin\"" > /opt/glite/etc/lcas/lcas.db
+  # log file
+  logfile=/var/log/glite/glite-lb-lcas.log
+  touch $logfile
+  chown $GLITE_USER:$GLITE_USER $logfile
+  cat > /etc/logrotate.d/lcas <<EOF
+$logfile {
+    weekly
+    compress
+    rotate 4
+    missingok
+}
+EOF
 
   # Start services
   if [ ! -f ${GLITE_LOCATION}/etc/gLiteservices ] ; then

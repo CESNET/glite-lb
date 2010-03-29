@@ -136,10 +136,12 @@ start()
 	fi
 
 	policy="$GLITE_LOCATION/etc/glite-lb-authz.conf"
+	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-lcas.log'"
 	if test -f "$policy"; then
 		policy="--enable-lcas --policy '$policy'"
 	else
 		unset policy
+		unset lcas_log
 	fi
 
 	[ -z "$GLITE_LB_EXPORT_DUMPDIR" ] && GLITE_LB_EXPORT_DUMPDIR=$GLITE_LOCATION_VAR/dump
@@ -206,7 +208,7 @@ start()
 		;;
 	esac
 
-	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-bkserverd \
+	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$lcas_log $GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
 		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
 		$super $creds -i $BK_PIDFILE $port $wport $dumpdir $purgedir $lbreg_maildir $proxy $policy\
