@@ -907,6 +907,11 @@ CE's should be penalized or completely avoided
 when RB decides where jobs get submitted.
 
 
+\subsubsection{CREAM jobs}
+In \LB 2.1, the basic support for CREAM jobs is implemented. The \LB gather events from CREAM performing both mapping CREAM attributes to WMS attributes (if possible) and storing CREAM-specific atributes. Thus, the jobs submitted directly to computing element can be tracked by \LB as well as data from WMS are extended. The CREAM job states are mapped to \LB ones according to Appendix \ref{a:creammapping}.
+
+CREAM events are generated from CREAM executor and LRMS, the generic event CREAMStatus is generated when the CREAM notifies that the job status has been changed.
+
 \subsubsection{Non-gLite event sources}
 \label{sec:nonglite}
 

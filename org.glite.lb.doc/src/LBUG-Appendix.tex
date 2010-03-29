@@ -120,3 +120,20 @@ CONNPOOL\_SIZE &
 For backward compatibility, all \verb'GLITE_WMS_*' variables can be prefixed by
 \verb'EDG_WL_' instead, for example \verb'EDG_WL_LOG_DESTINATION'.
 
+\newpage
+\subsection{CREAM Job States Mapping}
+\label{a:creammapping}
+
+\begin{tabularx}{\textwidth}{>{\bfseries}lX}
+CREAM state 	& \LB state \\
+Registered	& Submited \\
+Pending 	& Waiting \\
+Idle		& Scheduled \\
+Running		& Running \\
+Really Running	& Running \\
+% Held
+Done OK		& Done \\
+Done Failed	& Done \\
+Aborted		& Aborted \\
+Cancelled	& Cancelled \\
+\end{tabularx}
