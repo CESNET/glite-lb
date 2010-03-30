@@ -82,12 +82,15 @@ rule		: RULE PERMIT '{' assignments '}'
 		}
 		;
 
-assignments	: assignment assignments
+assignments	:
+		{
+			$$ = NULL;
+		}
+		| assignment assignments
 		{
 			$1->next = $2;
 			$$ = $1;
 		}
-		| assignment
 		;
 
 assignment	: LITERAL '=' STRING
