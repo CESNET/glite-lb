@@ -182,7 +182,7 @@ static int		con_queue = CON_QUEUE;
 static char             host[300];
 static char *           port;
 static time_t		rss_time = 60*60;
-static char *		policy_file = NULL;
+char *		policy_file = NULL;
 struct _edg_wll_authz_policy	authz_policy = { NULL, 0};
 
 

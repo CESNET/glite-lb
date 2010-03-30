@@ -41,7 +41,6 @@ limitations under the License.
 
 
 extern int unset_proxy_flag(edg_wll_Context, edg_wlc_JobId);
-extern int enable_lcas;
 extern int proxy_purge;
 
 
@@ -66,7 +65,7 @@ db_store(edg_wll_Context ctx, char *event)
 
   local_job = is_job_local(ctx, ev->any.jobId);
 
-  if (enable_lcas && check_store_authz(ctx, ev) != 0)
+  if (check_store_authz(ctx, ev) != 0)
     goto err;
 
 #ifdef LB_PERF

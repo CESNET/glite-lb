@@ -47,6 +47,7 @@ char	*server_key,*server_cert;
 int	enable_lcas;
 int	proxy_purge;
 struct _edg_wll_authz_policy authz_policy;
+char    *policy_file = NULL;
 
 static struct option opts[] = {
 	{ "mysql",1,NULL,'m' },

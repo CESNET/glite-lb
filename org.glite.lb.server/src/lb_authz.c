@@ -43,6 +43,8 @@ GRSTgaclEntry *GACLparseEntry(xmlNodePtr cur);
 extern char *server_key;
 extern char *server_cert;
 extern struct _edg_wll_authz_policy authz_policy;
+extern int enable_lcas;
+extern char *policy_file;
 
 int 
 edg_wll_get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
@@ -892,8 +894,11 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
    const char *request = NULL;
    int ret;
    authz_action action;
+   struct _edg_wll_GssPrincipal_data princ;
 
-   /* XXX make a real RSL ? */
+   /* by default the server is open to any authenticated client */
+   if (policy_file == NULL)
+        return 0;
 
    switch (ev->any.type) {
 	case EDG_WLL_EVENT_REGJOB:
@@ -917,19 +922,29 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
 	     break;
    }
 
-   request = (char *) action2name(action);
+   princ.name = ctx->peerName;
+   princ.fqans = ctx->fqans;
+   ret = check_authz_policy(&ctx->authz_policy, &princ, action);
+   if (ret == 1)
+      return 0;
 
-   ret = edg_wll_gss_get_client_pem(&ctx->connections->serverConnection->gss,
-				    server_cert, server_key,
-                                    &pem_string);
-   if (ret)
-      return edg_wll_SetError(ctx, ret, "Failed to extract client's PEM string");
+   ret = EPERM;
+   if (enable_lcas) {
+      /* XXX make a real RSL ? */
+      request = (char *) action2name(action);
 
-   ret = lcas_pem(pem_string, request);
+      ret = edg_wll_gss_get_client_pem(&ctx->connections->serverConnection->gss,
+				       server_cert, server_key,
+                                       &pem_string);
+      if (ret)
+         return edg_wll_SetError(ctx, ret, "Failed to extract client's PEM string");
+
+      ret = lcas_pem(pem_string, request);
+      free(pem_string);
+   }
+
    if (ret)
       ret = edg_wll_SetError(ctx, EPERM, "Not allowed to log events here");
-
-   free(pem_string);
 
    return ret;
 }
