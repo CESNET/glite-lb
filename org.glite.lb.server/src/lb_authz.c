@@ -21,6 +21,8 @@ limitations under the License.
 #include <unistd.h>
 #include <errno.h>
 
+#include <glite/security/lcas/lcas_pem.h>
+#include "glite/security/voms/voms_apic.h"
 #include "glite/lb/context-int.h"
 #include "lb_authz.h"
 #include "glite/lbu/log.h"
@@ -33,9 +35,7 @@ limitations under the License.
 #include "glite/lbu/trio.h"
 #include "db_supp.h"
 #include "authz_policy.h"
-#include <glite/security/lcas/lcas_pem.h>
 
-#include "glite/security/voms/voms_apic.h"
 
 /* XXX should be defined in gridsite-gacl.h */
 GRSTgaclEntry *GACLparseEntry(xmlNodePtr cur);
