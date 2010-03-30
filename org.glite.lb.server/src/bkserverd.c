@@ -1096,8 +1096,15 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	gettimeofday(&conn_start, 0);
 
 	alen = sizeof(a);
-	getpeername(conn, (struct sockaddr *)&a, &alen);
-	h_errno = asyn_gethostbyaddr(&name_num, &port, (struct sockaddr *)&a, alen, &dns_to, 1);
+	memset(&a, 0, sizeof a);
+	if (getpeername(conn, (struct sockaddr *)&a, &alen) != 0) {
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_ERROR, "getpeername(): %s", strerror(errno));
+		return -1;
+	}
+	if ((h_errno = asyn_gethostbyaddr(&name_num, &port, (struct sockaddr *)&a, alen, &dns_to, 1)) != 0) {
+		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_ERROR, "gethostbyaddr(): %s", hstrerror(h_errno));
+		return -1;
+	}
 	ctx->connections->serverConnection->peerPort = atoi(port);
 	h_errno = asyn_gethostbyaddr(&name, NULL, (struct sockaddr *)&a, alen, &dns_to, 0);
 	switch ( h_errno )
