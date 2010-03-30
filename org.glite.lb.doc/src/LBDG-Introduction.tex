@@ -93,7 +93,7 @@ and external dependencies:
 
 For platforms supported by gLite officially all the required packages
 can be downloaded from \url{http://www.glite.org}.
-However, \LB\ is fairly portable and it can be build on other
+However, \LB\ is fairly portable and it can be built on other
 platforms fairly smoothly.
 
 Detailed instructions on getting the sources, including the required
@@ -513,7 +513,7 @@ source file, line and method the exception was thrown from (possibly
 accumulating information from other exception). 
 
 \marginpar{Reference counting}%
-When the C++ \LB library calls return allocated structures, they are
+When the C \LB library calls return allocated structures, they are
 encapsulated within C++ accessor objects. Copying the C++ object does
 not copy the underlying structure, it increases the reference count
 instead, making use of the same allocated data. The reference count is
@@ -545,7 +545,7 @@ glite/lb/LoggingExceptions.h & Exception class for \LB--specific errors.\\
 
 \subsubsection{Building Programs}
 The recommended way to build programs using the C++ \LB library is,
-like in the C case, use the \verb'libtool' utility:
+like in the C case, to use the \verb'libtool' utility:
 \begin{verbatim}
 flavour=gcc32dbg
 libtool --mode=compile gcc -c example1.c util.c \
@@ -588,8 +588,8 @@ JobId jobid(Hostname("some.host"));
 In that case new unique part is generated automatically.
 \end{itemize}
 Apart from that there are the usual copy constructor and assignment
-operator that do the deep copy, and the destructor that deallocates
-the memory.
+operator that make deep copy of the object, and the destructor that
+deallocates the memory.
 
 \marginpar{Data access}%
 The \verb'JobId' class provides methods for obtaining the host, port
@@ -603,6 +603,8 @@ representations. The following example illustrates these features:
 JobId a(Hostname("me"));
 JobId b(Hostname("me"));
 
+cout << "jobid host and port: " << a.host() << ", " <<
+a.port() << endl;
 cout << (a < b) ? a.unique() : b.unique() << " comes first" << endl;
 cout << "Complete jobid: " << a.toString() << endl;
 \end{lstlisting}
@@ -610,9 +612,11 @@ cout << "Complete jobid: " << a.toString() << endl;
 \subsubsection{Exception}
 The \verb'glite::lb::Exception' is a base class for all exceptions
 thrown by the \LB library. It inherits from \verb'std::runtime_error'
-and adds no additional members or methods except constructors:
+and adds no additional members or methods except constructors. The
+typical usage is this:
 \begin{lstlisting}
 try {
+  // some code with LB calls
 } catch (glite::lb::Exception &e) {
 	cerr << "LB library exception: " << e.what() << endl;
 }

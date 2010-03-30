@@ -270,7 +270,7 @@ The query condition is the following:
 
 \lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=queryrec-end\ queryrec]{cons_example2.c}
 
-As clearly seen, there are three lists supplied to
+As can be clearly seen, there are three lists supplied to
 \texttt{edg\_wll\_QueryJobsExt()}. The first list specifies the owner of the
 job, the second list provides the required status (\texttt{Running}) and
 the last list specifies the two destinations.
@@ -324,7 +324,6 @@ demonstrated in the client example \texttt{job\_log.c} (in the client module).
 
 
 \subsection{C++ Language Binding}
-\TODO{michal}
 The querying C++ \LB API is modelled after the C \LB API using these basic principles:
 \begin{itemize}
 \item queries are expressed as vectors of
@@ -355,10 +354,27 @@ specific queries. \\
 \end{table}
 
 \subsubsection{QueryRecord}
+The \verb'glite::lb::QueryRecord' class serves as the base for mapping
+the \LB query language into C++, similarly to the C counterpart
+\verb'edg_wll_QueryRecord'. The \verb'QueryRecord' object represents
+condition on value of single attribute:
+\begin{lstlisting}
+  using namespace glite::lb;
+
+  QueryRecord a(QueryRecord::OWNER, QueryRecord::EQUAL, "me");
+\end{lstlisting}
+The \verb'QueryRecord' class defines symbolic names for attributes (in
+fact just aliases to \verb'EDG_WLL_QUERY_ATTR_' symbols described in table\
+\ref{t:cqueryattr}) and for conditionals (aliases to
+\verb'EDG_WLL_QUERY_OP_' symbols, table\ \ref{t:cqueryop}). The last
+parameter to the \verb'QueryRecord' constructor is the attribute
+value.
+
+
 
 \subsubsection{Event}
 The objects of class \verb'glite::lb::Event' are returned by the \LB event
-queries. The \verb'Event' class introduces symbolic names for event
+queries. The \verb'Event' class intgstr	roduces symbolic names for event
 type (enum \verb'Event::Type'), event attributes (enum
 \verb'Event::Attr') and their types (enum
 \verb'Event::AttrType'), feature not available through the C API, as
