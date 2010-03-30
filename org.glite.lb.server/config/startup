@@ -127,13 +127,7 @@ start()
 		fi
 	fi
 
-	log4c="$GLITE_LOCATION/etc/glite-lb-log4crc"
-	if test -f "$log4c"; then
-		log4c="LOG4C_RCPATH='$log4c'"
-	else
-		echo "$0: WARNING: config file '$log4c' not found." >&2
-		unset log4c
-	fi
+	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc'"
 
 	policy="$GLITE_LOCATION/etc/glite-lb-authz.conf"
 	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-lcas.log'"

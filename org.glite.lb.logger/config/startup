@@ -80,13 +80,7 @@ start()
 	[ -n "$GLITE_LB_IL_SOCK" ] && sock="--socket $GLITE_LB_IL_SOCK"
 	[ -n "$GLITE_LB_IL_FPREFIX" ] && fprefix="--file-prefix $GLITE_LB_IL_FPREFIX"
 
-	log4c="$GLITE_LOCATION/etc/glite-lb-log4crc"
-	if test -f "$log4c"; then
-		log4c="LOG4C_RCPATH='$log4c'";
-	else
-		echo "$0: WARNING: config file '$log4c' not found." >&2
-		unset log4c
-	fi
+	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc'"
 
 	mkdir -p /var/glite/log 
 	chown $GLITE_USER /var/glite/log
