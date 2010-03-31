@@ -23,11 +23,15 @@ limitations under the License.
 #include <errno.h>
 
 /*headers*/
-#include "glite/jobid/cjobid.h" 
-#include "glite/lb/events.h"
-#include "glite/lb/consumer.h" 
+#include "glite/jobid/JobId.h" 
+#include "glite/lb/ServerConnection.h" 
+#include "glite/lb/Job.h"
 /*end headers*/
 
+#include "iostream"
+
+using namespace glite::lb;
+using namespace std;
 
 static struct option opts[] = {
 	{"help",		0,	NULL,	'h'},
@@ -39,13 +43,12 @@ static struct option opts[] = {
 
 static void usage(char *me)
 {
-	fprintf(stderr, "usage: %s [option]\n"
-			"\t-h, --help      Shows this screen.\n"
-			"\t-s, --server    Server address.\n"
-			"\t-p, --port      Query server port.\n"
-			"\t-j, --jobid     ID of requested job.\n"
-			"\t-u, --user      User DN.\n"
-			, me);
+	cerr <<  "usage: " << me << " [option]\n" 
+		"\t-h, --help      Shows this screen.\n"
+		"\t-s, --server    Server address.\n"
+		"\t-p, --port      Query server port.\n"
+		"\t-j, --jobid     ID of requested job.\n"
+		"\t-u, --user      User DN.\n";
 }
 
 
@@ -53,7 +56,6 @@ int main(int argc, char *argv[])
 {
 	char			   *server, *jobid_s, *user;
 	int					opt, err = 0;
-	edg_wlc_JobId           	jobid = NULL;
 	long				i;
 	int port = 0;
 
@@ -72,66 +74,38 @@ int main(int argc, char *argv[])
 	//if ( !server ) { fprintf(stderr, "LB proxy socket not given\n"); return 1; }
 
 	/*variables*/
-	edg_wll_Context		ctx;
-	edg_wll_QueryRec	jc[4];
-	edg_wll_JobStat		*statesOut = NULL;
-	edg_wlc_JobId		*jobsOut = NULL;
+	ServerConnection          lb_server;
+	glite::jobid::JobId       jobid;
+	std::vector<QueryRecord>  job_cond;
+	std::vector<JobStatus>    statesOut;
 	/*end variables*/
 
-	if ( (errno = edg_wlc_JobIdParse(jobid_s, &jobid)) ) { perror(jobid_s); return 1; }
+	try {
+		/*queryserver*/
+		jobid = glite::jobid::JobId(jobid_s);
 
-	/*context*/
-	edg_wll_InitContext(&ctx);
-	
-	edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER, server);
-	if (port) edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER_PORT, port);
-	/*end context*/
+		lb_server.setQueryServer(jobid.host(), jobid.port());
+		/*end queryserver*/
 
-	/*queryrec*/
-	jc[0].attr = EDG_WLL_QUERY_ATTR_OWNER;
-	jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
-	jc[0].value.c = NULL;
-	jc[1].attr = EDG_WLL_QUERY_ATTR_STATUS;
-	jc[1].op = EDG_WLL_QUERY_OP_EQUAL;
-	jc[1].value.i = EDG_WLL_JOB_RUNNING;
-	jc[2].attr = EDG_WLL_QUERY_ATTR_DESTINATION;
-	jc[2].op = EDG_WLL_QUERY_OP_EQUAL;
-	jc[2].value.c = "XYZ";
-	jc[3].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-	/*end queryrec*/
+		/*querycond*/
+		job_cond.push_back(QueryRecord(QueryRecord::OWNER, QueryRecord::EQUAL, std::string(user)));
+		job_cond.push_back(QueryRecord(QueryRecord::STATUS, QueryRecord::EQUAL, JobStatus::RUNNING));
+		job_cond.push_back(QueryRecord(QueryRecord::DESTINATION, QueryRecord::EQUAL, std::string("xyz")));
+		/*end querycond*/
 
-	/*query*/
-	err = edg_wll_QueryJobs(ctx, jc, 0, &jobsOut, &statesOut); //* \label{l:queryjobs}
-	if ( err == E2BIG ) {
-		fprintf(stderr,"Warning: only limited result returned!\n");
-		return 0;
-	} else if (err) {
-		char	*et,*ed;
-		
-		edg_wll_Error(ctx,&et,&ed);
-		fprintf(stderr,"%s: edg_wll_QueryJobs(): %s (%s)\n",argv[0],et,ed);
+		/*query*/
+		statesOut = lb_server.queryJobStates(job_cond, 0);  //* \label{l:queryjobs}
+		/*end query*/
+			
+		/*printstates*/
+		for (i = 0; i< statesOut.size(); i++ ) {
+			cout << "jobId : " <<  statesOut[i].getValJobId(JobStatus::JOB_ID).toString() << endl;
+			cout << "state : " <<  statesOut[i].name() << endl << endl;
+		}
+		/*end printstates*/
 
-		free(et); free(ed);
+	} catch(std::exception e) {
+		cerr << e.what() << endl;
 	}
-	/*end query*/
-
-	/*printstates*/
-	for (i = 0; statesOut[i].state; i++ ) {
-		printf("jobId : %s\n", edg_wlc_JobIdUnparse(statesOut[i].jobId));
-		printf("state : %s\n\n", edg_wll_StatToString(statesOut[i].state));
-	}
-	/*end printstates*/
-
-	if ( jobsOut ) {
-		for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
-		free(jobsOut);
-	}
-	if ( statesOut ) {
-		for (i=0; statesOut[i].state; i++) edg_wll_FreeStatus(&statesOut[i]);
-		free(statesOut);
-	}
-
-	edg_wll_FreeContext(ctx);
-
-	return err;
+	return 0;
 }
