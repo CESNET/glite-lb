@@ -80,7 +80,7 @@ start()
 	[ -n "$GLITE_LB_IL_SOCK" ] && sock="--socket $GLITE_LB_IL_SOCK"
 	[ -n "$GLITE_LB_IL_FPREFIX" ] && fprefix="--file-prefix $GLITE_LB_IL_FPREFIX"
 
-	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc'"
+	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc/lb'"
 
 	mkdir -p /var/glite/log 
 	chown $GLITE_USER /var/glite/log

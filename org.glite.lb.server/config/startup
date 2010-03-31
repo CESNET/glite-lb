@@ -127,12 +127,13 @@ start()
 		fi
 	fi
 
-	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc'"
+	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc/lb'"
 
-	policy="$GLITE_LOCATION/etc/glite-lb-authz.conf"
-	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-lcas.log'"
+	policy="$GLITE_LOCATION/etc/lb/glite-lb-authz.conf"
+	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-lcas.log' LCAS_ETC_DIR='/opt/glite/etc/lb'"
 	if test -f "$policy"; then
-		policy="--enable-lcas --policy '$policy'"
+		# lcas not enabled by default yet
+		policy="--policy '$policy'"
 	else
 		unset policy
 		unset lcas_log
@@ -170,10 +171,6 @@ start()
 
 		# target Job Provenance
 		[ -n "$GLITE_LB_EXPORT_JPPS" ] && jpps="--jpps $GLITE_LB_EXPORT_JPPS"
-	fi
-
-	if test -r "$GLITE_LOCATION/etc/LB-super-users"; then
-		super="--super-users-file $GLITE_LOCATION/etc/LB-super-users"
 	fi
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2

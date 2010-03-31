@@ -341,7 +341,7 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 install:
-	-mkdir -p ${PREFIX}/bin ${PREFIX}/etc ${PREFIX}/etc/init.d ${PREFIX}/interface
+	-mkdir -p ${PREFIX}/bin ${PREFIX}/etc/lb ${PREFIX}/etc/init.d ${PREFIX}/interface
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/share/man/man1
 	-mkdir -p ${PREFIX}/${libdir}
@@ -358,9 +358,9 @@ install:
 	ln -sf liblcas_lb.so ${PREFIX}/${libdir}/modules/lcas_lb.mod
 
 	for f in dbsetup.sql index.conf.template; do \
-		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${PREFIX}/etc; \
+		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${PREFIX}/etc/lb; \
 	done
-	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${PREFIX}/etc
+	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${PREFIX}/etc/lb
 
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
 

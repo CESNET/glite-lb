@@ -54,13 +54,14 @@ function config_glite_lb_authz() {
 
 	superusers="`echo \"$superusers\"| grep -v ^$ | tr ',' '\n' | sed 's/\(.*\)/\t\tsubject = \"\1\"/'`"
 	rtm="`echo \"$rtm\"| grep -v ^$ | tr ',' '\n' | sed 's/\(.*\)/\t\tsubject = \"\1\"/'`"
+	authconf="$GLITE_LOCATION/etc/lb/glite-lb-authz.conf"
 
-	cat <<EOF > "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
+	cat <<EOF > "$authconf".new
 resource "LB" {
 
 EOF
 	if test ! -z "$superusers"; then
-		cat <<EOF >> "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
+		cat <<EOF >> "$authconf".new
 action "ADMIN_ACCESS" {
 	rule permit {
 $superusers
@@ -71,7 +72,7 @@ EOF
 	fi
 
 	if test ! -z "$rtm"; then
-		cat <<EOF >> "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
+		cat <<EOF >> "$authconf".new
 action "STATUS_FOR_MONITORING" {
 	rule permit {
 $rtm
@@ -81,7 +82,7 @@ $rtm
 EOF
 	fi
 
-	cat <<EOF >> "$GLITE_LOCATION/etc/glite-lb-authz.conf.new"
+	cat <<EOF >> "$authconf".new
 action "REGISTER_JOBS" {
         rule permit {
                 subject = ".*"
@@ -109,11 +110,11 @@ action "LOG_GENERAL_EVENTS" {
 }
 EOF
 	# something changed
-	if test -f "$GLITE_LOCATION/etc/glite-lb-authz.conf"; then
-		diff -w "$GLITE_LOCATION/etc/glite-lb-authz.conf" "$GLITE_LOCATION/etc/glite-lb-authz.conf.new" >/dev/null
+	if test -f "$authconf"; then
+		diff -w "$authconf" "$authconf".new >/dev/null
 		if test "$?" != "0"; then
-			yaimlog WARNING "Original authz configuration moved to '$GLITE_LOCATION/etc/glite-lb-authz.conf.yaimorig'"
-			mv "$GLITE_LOCATION/etc/glite-lb-authz.conf" "$GLITE_LOCATION/etc/glite-lb-authz.conf.yaimorig"
+			yaimlog WARNING "Original authz configuration moved to '$authconf.yaimorig'"
+			mv "$authconf" "$authconf".yaimorig
 		fi
 	fi
 
@@ -125,7 +126,7 @@ EOF
 		rm "${GLITE_LOCATION}/etc/LB-super-users"
 	fi
 
-	mv "$GLITE_LOCATION/etc/glite-lb-authz.conf.new" "$GLITE_LOCATION/etc/glite-lb-authz.conf"
+	mv "$authconf".new "$authconf"
 }
 
 function config_glite_lb() {
@@ -194,7 +195,7 @@ function config_glite_lb() {
 
   if [ ! $? = 0 ]; then
     mysql -u root --password="$MYSQL_PASSWORD" -e "CREATE DATABASE lbserver20"
-    mysql --password="$MYSQL_PASSWORD" lbserver20 < ${INSTALL_ROOT}/glite/etc/glite-lb-dbsetup.sql
+    mysql --password="$MYSQL_PASSWORD" lbserver20 < ${INSTALL_ROOT}/glite/etc/lb/glite-lb-dbsetup.sql
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver IDENTIFIED BY '' WITH GRANT OPTION;"
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@'$HOSTNAME' IDENTIFIED BY '' WITH GRANT OPTION;"
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@localhost IDENTIFIED BY '' WITH GRANT OPTION;"
@@ -300,15 +301,14 @@ EOF
     fi
   fi
   lcas_plugin="$GLITE_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
-  mkdir -p /opt/glite/etc/lcas
-  echo "pluginname=\"$lcas_plugin\"" > /opt/glite/etc/lcas/lcas.db
+  echo "pluginname=\"$lcas_plugin\"" > ${INSTALL_ROOT}/etc/lb/lcas.db
   # log file
   logfile=/var/log/glite/glite-lb-lcas.log
   touch $logfile
   chown $GLITE_USER:$GLITE_USER $logfile
-  cat > /etc/logrotate.d/lcas <<EOF
+  cat > /etc/logrotate.d/lb-lcas <<EOF
 $logfile {
-    weekly
+    daily
     compress
     rotate 4
     missingok
@@ -331,8 +331,8 @@ EOF
     config_glite_lb_authz "$GLITE_LB_SUPER_USERS" ""
   fi
 
-  if [ ! -f ${GLITE_LOCATION}/etc/glite-lb-harvester.conf ]; then
-    echo $HOSTNAME > ${GLITE_LOCATION}/etc/glite-lb-harvester.conf
+  if [ ! -f ${GLITE_LOCATION}/etc/lb/glite-lb-harvester.conf ]; then
+    echo $HOSTNAME > ${GLITE_LOCATION}/etc/lb/glite-lb-harvester.conf
   fi
 
   . /opt/glite/etc/profile.d/grid-env.sh

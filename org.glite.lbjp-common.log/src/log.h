@@ -39,6 +39,7 @@ extern "C" {
 #define LOG_CATEGORY_LB_SERVER_REQUEST	"LB.SERVER.REQUEST"
 #define LOG_CATEGORY_LB_HARVESTER	"LB.HARVESTER"
 #define LOG_CATEGORY_LB_HARVESTER_DB    "LB.HARVESTER.DB"
+#define LOG_CATEGORY_LB_AUTHZ           "LB.AUTHZ"
 
 /* default priorities
  * - follow LOG4C_PRIORITY_* defined in <log4c/priority.h> 

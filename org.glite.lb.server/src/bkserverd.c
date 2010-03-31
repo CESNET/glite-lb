@@ -567,6 +567,27 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	if (enable_lcas) {
+		char s[3];
+
+		switch (glite_common_log_get_priority(LOG_CATEGORY_LB_AUTHZ)) {
+		case LOG_PRIORITY_FATAL:
+		case LOG_PRIORITY_ERROR:
+		case LOG_PRIORITY_WARN:
+			i = 0;
+			break;
+		case LOG_PRIORITY_INFO:
+			i = 1;
+			break;
+		case LOG_PRIORITY_DEBUG:
+			i = 2;
+			break;
+		default:
+			i = 0;
+		}
+		snprintf(s, 3, "%d", i);
+		setenv("LCAS_DEBUG_LEVEL", s, 1);
+	}
 
 	if (mode & SERVICE_SERVER) {
 		if (check_mkdir(dumpStorage)){
