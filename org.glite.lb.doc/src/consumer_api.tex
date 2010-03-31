@@ -223,8 +223,9 @@ The table~\ref{t:cqueryop} shows all supported query operations.
 
 
 \subsubsection{Query Jobs Examples}
+\label{s:qjobs}
 
-The simplest case corresponds to the situation when an exact job ID
+The simplest use case corresponds to the situation when an exact job ID
 is known and the only information requested is the job status. The job ID
 format is described in~\cite{djra1.4}. In \LBnew, it is also possible to
 query all jobs belonging to a specified user, VO or RB.
@@ -365,12 +366,15 @@ condition on value of single attribute:
 \end{lstlisting}
 The \verb'QueryRecord' class defines symbolic names for attributes (in
 fact just aliases to \verb'EDG_WLL_QUERY_ATTR_' symbols described in table\
-\ref{t:cqueryattr}) and for conditionals (aliases to
+\ref{t:cqueryattr}) and for logical operations (aliases to
 \verb'EDG_WLL_QUERY_OP_' symbols, table\ \ref{t:cqueryop}). The last
 parameter to the \verb'QueryRecord' constructor is the attribute
 value.
 
-
+There are constructors with additional arguments for specific
+attribute conditions or logical operators that require it, \ie\
+the \verb'QueryRecord::WITHIN' operator and queries about state enter
+times. 
 
 \subsubsection{Event}
 The objects of class \verb'glite::lb::Event' are returned by the \LB event
@@ -402,8 +406,8 @@ The following example demonstrates this by printing event name and attributes:
 \lstinputlisting[title={\bf File:}\lstname,numbers=left,linerange=event-end\ event]{util.C}
 
 \subsubsection{JobStatus}
-The \verb'glite::lb::JobStatus' serves as a result type of job status
-queries in the same way the \verb'glite::lb::Event' serves in event
+The \verb'glite::lb::JobStatus' is a result type of job status
+queries in the same way the \verb'glite::lb::Event' is used in event
 queries. The \verb'JobStatus' class provides symbolic names for job
 states (enum \verb'JobStatus::Code'), state attributes
 (enum \verb'JobStatus::Attr') and their types (enum
@@ -433,6 +437,50 @@ and attributes):
 \lstinputlisting[title={\bf File:}\lstname,numbers=left,linerange=status-end\ status]{util.C}
 
 \subsubsection{ServerConnection}\label{s:ServerConnection}
+The \verb'glite::lb::ServerConnection' class represents particular \LB
+server and allows for queries not specific to particular job (these
+are separated into \verb'glite::lb:Job' class). The
+\verb'ServerConnection' instance thus encapsulates client part of
+\verb'edg_wll_Context' and general query methods.
+
+There are accessor methods for every consumer context parameter listed
+in table \ref{t:ccontext}, \eg for \verb'EDG_WLL_PARAM_QUERY_SERVER'
+we have the following methods:
+\begin{lstlisting}
+void setQueryServer(const std::string& host, int port);
+std::pair<std::string, int> getQueryServer() const;
+\end{lstlisting}
+We can also use the generic accessors for the parameter types
+\verb'Int', \verb'String' and \verb'Time', \eg:
+\begin{lstlisting}
+void setParam(edg_wll_ContextParam name, int value);
+int getParamInt(edg_wll_ContextParam name) const;
+\end{lstlisting}
+
+The C++ API uses \verb'std::vector' instead of \verb'NULL' terminated
+arrays for both query condition lists and results. 
+
+Now we can show the first example of job query from section
+\ref{s:qjobs} rewritten in C++. First we have to include the headers:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=headers-end\ headers]{cons_example1.cpp}
+
+Define variables:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=variables-end\ variables]{cons_example1.cpp}
+
+Initialize server object:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=queryserver-end\ queryserver]{cons_example1.cpp}
+
+Create the query condition vector:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=querycond-end\ querycond]{cons_example1.cpp}
+
+Perform the query:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=query-end\ query]{cons_example1.cpp}
+
+Print the results:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=printstates-end\ printstates]{cons_example1.cpp}
+
+The operations can throw an exception, so the code should be enclosed
+within try--catch clause.
 
 \subsubsection{Job}
 
