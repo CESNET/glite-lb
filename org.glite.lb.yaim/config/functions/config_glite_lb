@@ -54,7 +54,7 @@ function config_glite_lb_authz() {
 
 	superusers="`echo \"$superusers\"| grep -v ^$ | tr ',' '\n' | sed 's/\(.*\)/\t\tsubject = \"\1\"/'`"
 	rtm="`echo \"$rtm\"| grep -v ^$ | tr ',' '\n' | sed 's/\(.*\)/\t\tsubject = \"\1\"/'`"
-	authconf="$GLITE_LOCATION/etc/lb/glite-lb-authz.conf"
+	authconf="$GLITE_LOCATION/etc/glite-lb/glite-lb-authz.conf"
 
 	cat <<EOF > "$authconf".new
 resource "LB" {
@@ -195,7 +195,7 @@ function config_glite_lb() {
 
   if [ ! $? = 0 ]; then
     mysql -u root --password="$MYSQL_PASSWORD" -e "CREATE DATABASE lbserver20"
-    mysql --password="$MYSQL_PASSWORD" lbserver20 < ${INSTALL_ROOT}/glite/etc/lb/glite-lb-dbsetup.sql
+    mysql --password="$MYSQL_PASSWORD" lbserver20 < ${INSTALL_ROOT}/glite/etc/glite-lb/glite-lb-dbsetup.sql
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver IDENTIFIED BY '' WITH GRANT OPTION;"
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@'$HOSTNAME' IDENTIFIED BY '' WITH GRANT OPTION;"
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@localhost IDENTIFIED BY '' WITH GRANT OPTION;"
@@ -301,7 +301,7 @@ EOF
     fi
   fi
   lcas_plugin="$GLITE_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
-  echo "pluginname=\"$lcas_plugin\"" > ${INSTALL_ROOT}/etc/lb/lcas.db
+  echo "pluginname=\"$lcas_plugin\"" > ${INSTALL_ROOT}/etc/glite-lb/lcas.db
   # log file
   logfile=/var/log/glite/glite-lb-lcas.log
   touch $logfile
@@ -331,8 +331,8 @@ EOF
     config_glite_lb_authz "$GLITE_LB_SUPER_USERS" ""
   fi
 
-  if [ ! -f ${GLITE_LOCATION}/etc/lb/glite-lb-harvester.conf ]; then
-    echo $HOSTNAME > ${GLITE_LOCATION}/etc/lb/glite-lb-harvester.conf
+  if [ ! -f ${GLITE_LOCATION}/etc/glite-lb/glite-lb-harvester.conf ]; then
+    echo $HOSTNAME > ${GLITE_LOCATION}/etc/glite-lb/glite-lb-harvester.conf
   fi
 
   . /opt/glite/etc/profile.d/grid-env.sh

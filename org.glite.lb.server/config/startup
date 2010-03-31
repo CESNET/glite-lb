@@ -127,10 +127,10 @@ start()
 		fi
 	fi
 
-	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc/lb'"
+	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc/glite-lb'"
 
-	policy="$GLITE_LOCATION/etc/lb/glite-lb-authz.conf"
-	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-lcas.log' LCAS_ETC_DIR='/opt/glite/etc/lb'"
+	policy="$GLITE_LOCATION/etc/glite-lb/glite-lb-authz.conf"
+	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-lcas.log' LCAS_ETC_DIR='/opt/glite/etc/glite-lb'"
 	if test -f "$policy"; then
 		# lcas not enabled by default yet
 		policy="--policy '$policy'"
