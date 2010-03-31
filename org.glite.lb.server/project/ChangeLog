@@ -131,3 +131,9 @@ Crystal ball:
 2.1.1-1
 - Startup script update
 
+2.1.2-1
+- LB internal authZ routine used as a primary option to check access rights on consumer side.
+  - LCAS can be configured to provide additional authZ.
+- AuthZ settings allow empty attributes
+- Additional error handling code
+

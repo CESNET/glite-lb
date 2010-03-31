@@ -65,3 +65,6 @@
 2.1.1-1
 - Startup script update
 
+2.1.2-1
+- Startup script update: log4c config file name hardcoded to 'log4crc'
+
