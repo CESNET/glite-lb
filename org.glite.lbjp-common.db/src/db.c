@@ -151,6 +151,7 @@ time_t glite_lbu_StrToTime(const char *str) {
 
 	if (tz) setenv("TZ", tz, 1);
 	else unsetenv("TZ");
+	tzset();
 
 	return t;
 }
@@ -164,6 +165,8 @@ double glite_lbu_StrToTimestamp(const char *str) {
 	memset(&tm,0,sizeof(tm));
 	tz = getenv("TZ");
 	setenv("TZ", "UTC", 1);
+	tzset();
+
 	sscanf(str,"%4d-%02d-%02d %02d:%02d:%lf",
 		&tm.tm_year,&tm.tm_mon,&tm.tm_mday,
 		&tm.tm_hour,&tm.tm_min,&sec);
@@ -175,6 +178,7 @@ double glite_lbu_StrToTimestamp(const char *str) {
 
 	if (tz) setenv("TZ", tz, 1);
 	else unsetenv("TZ");
+	tzset();
 
 	return t;
 }
