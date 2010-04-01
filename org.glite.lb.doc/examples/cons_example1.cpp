@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 		/*end querycond*/
 
 		/*query*/
-		statesOut = lb_server.queryJobStates(job_cond, 0);  //* \label{l:queryjobs}
+		statesOut = lb_server.queryJobStates(job_cond, 0);  //* \label{l:cppqueryjobs}
 		/*end query*/
 			
 		/*printstates*/
