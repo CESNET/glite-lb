@@ -329,7 +329,7 @@ The querying C++ \LB API is modelled after the C \LB API using these basic princ
 \begin{itemize}
 \item queries are expressed as vectors of
 \verb'glite::lb::QueryRecord' instances,
-\item \LB context and query methods are represented by class
+\item \LB context and general query methods are represented by class
 \verb'glite::lb::ServerConnection',
 \item \LB job specific queries are encapsulated within class
 \verb'glite::lb::Job',
@@ -360,9 +360,9 @@ the \LB query language into C++, similarly to the C counterpart
 \verb'edg_wll_QueryRecord'. The \verb'QueryRecord' object represents
 condition on value of single attribute:
 \begin{lstlisting}
-  using namespace glite::lb;
+using namespace glite::lb;
 
-  QueryRecord a(QueryRecord::OWNER, QueryRecord::EQUAL, "me");
+QueryRecord a(QueryRecord::OWNER, QueryRecord::EQUAL, "me");
 \end{lstlisting}
 The \verb'QueryRecord' class defines symbolic names for attributes (in
 fact just aliases to \verb'EDG_WLL_QUERY_ATTR_' symbols described in table\
@@ -374,7 +374,15 @@ value.
 There are constructors with additional arguments for specific
 attribute conditions or logical operators that require it, \ie\
 the \verb'QueryRecord::WITHIN' operator and queries about state enter
-times. 
+times. The query condition ``job that started running between \verb'start'
+and \verb'end' times' can be represented in the following way:
+\begin{lstlisting}
+struct timeval start, end;
+
+QueryRecord a(QueryRecord::TIME, QueryRecord::WITHIN, JobStatus::RUNNING, 
+              start, end);
+\end{lstlisting}
+
 
 \subsubsection{Event}
 The objects of class \verb'glite::lb::Event' are returned by the \LB event
@@ -450,7 +458,7 @@ we have the following methods:
 void setQueryServer(const std::string& host, int port);
 std::pair<std::string, int> getQueryServer() const;
 \end{lstlisting}
-We can also use the generic accessors for the parameter types
+We can also use the generic accessors defined for the parameter types
 \verb'Int', \verb'String' and \verb'Time', \eg:
 \begin{lstlisting}
 void setParam(edg_wll_ContextParam name, int value);
@@ -458,7 +466,14 @@ int getParamInt(edg_wll_ContextParam name) const;
 \end{lstlisting}
 
 The C++ API uses \verb'std::vector' instead of \verb'NULL' terminated
-arrays for both query condition lists and results. 
+arrays for both query condition lists and results. The C++ API does
+not differentiate simple and extended queries by method name
+(\verb'queryJobs' and \verb'queryJobsExt' in C) but by parameter
+type (\verb'vector<QueryRecord>'
+vs. \verb'vector<vector<QueryRecord>>'). On the other hand there are
+different methods for obtaining \jobid's (\verb'queryJobs') or
+full job states (\verb'queryJobStates') as well as convenience methods
+for getting user jobs.
 
 Now we can show the first example of job query from section
 \ref{s:qjobs} rewritten in C++. First we have to include the headers:
@@ -481,6 +496,13 @@ Print the results:
 
 The operations can throw an exception, so the code should be enclosed
 within try--catch clause.
+
+The second example rewritten to C++ looks like that; first the query
+condition vector:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=queryrec-end\ queryrec]{cons_example2.cpp}
+
+The query itself:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=query-end\ query]{cons_example2.cpp}
 
 \subsubsection{Job}
 
