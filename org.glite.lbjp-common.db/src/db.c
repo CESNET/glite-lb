@@ -134,25 +134,36 @@ void glite_lbu_TimestampToStr(double t, char **str) {
 
 time_t glite_lbu_StrToTime(const char *str) {
 	struct tm       tm;
+	char *tz;
+	time_t t;
 
 	memset(&tm,0,sizeof(tm));
-	putenv("TZ=UTC"); tzset();
+	tz = getenv("TZ");
+	setenv("TZ", "UTC", 1);
+	tzset();
+
 	sscanf(str,"%4d-%02d-%02d %02d:%02d:%02d",
 	        &tm.tm_year,&tm.tm_mon,&tm.tm_mday,
         	&tm.tm_hour,&tm.tm_min,&tm.tm_sec);
 	tm.tm_year -= 1900;
 	tm.tm_mon--;
+	t =  mktime(&tm);
 
-	return mktime(&tm);
+	if (tz) setenv("TZ", tz, 1);
+	else unsetenv("TZ");
+
+	return t;
 }
 
 
 double glite_lbu_StrToTimestamp(const char *str) {
 	struct tm	tm;
-	double	sec;
+	double	sec, t;
+	char *tz;
 
 	memset(&tm,0,sizeof(tm));
-	putenv("TZ=UTC"); tzset();
+	tz = getenv("TZ");
+	setenv("TZ", "UTC", 1);
 	sscanf(str,"%4d-%02d-%02d %02d:%02d:%lf",
 		&tm.tm_year,&tm.tm_mon,&tm.tm_mday,
 		&tm.tm_hour,&tm.tm_min,&sec);
@@ -160,7 +171,12 @@ double glite_lbu_StrToTimestamp(const char *str) {
 	tm.tm_mon--;
 	tm.tm_sec = sec;
 
-	return (sec - tm.tm_sec) + mktime(&tm);
+	t = (sec - tm.tm_sec) + mktime(&tm);
+
+	if (tz) setenv("TZ", tz, 1);
+	else unsetenv("TZ");
+
+	return t;
 }
 
 
