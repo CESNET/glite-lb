@@ -43,7 +43,7 @@ Then verbose log \$GLITE\_LOCATION\_VAR/lb.log
 Beware that these can grow huge easily.
 \end{sloppypar}
 
-\textbf{\LBold only:} not available for \LB proxy, \verb'-d' and output redirection
+\textbf{\LBver{1.x} only:} not available for \LB proxy, \verb'-d' and output redirection
 have to be added manually if necessary.
 
 \subsubsection{Changing index configuration}
@@ -261,9 +261,9 @@ Therefore routine purging is not required theoretically.
 However, frozen jobs which never reach such a~state may occur in an unstable environment,
 and they may cumulate in \LB proxy database for ever.
 Therefore occasional purging is recommended too.
-\LBnew supports \verb'-x' option of \verb'glite-lb-purge', allowing
+\LBver{2.x} supports \verb'-x' option of \verb'glite-lb-purge', allowing
 to purge \LB proxy database too.
-With \LBold the emergency purge procedure described bellow is the only option.
+With \LBver{1.x} the emergency purge procedure described bellow is the only option.
 
 \paragraph{Emergency purge}
 
@@ -367,8 +367,8 @@ total times) are available.
 
 % API
 The data are available via statistics calls of the client API,
-see \verb'statistics.h' for details (coming with glite-lb-client in \LBnew,
-glite-lb-client-interface in \LBold).
+see \verb'statistics.h' for details (coming with glite-lb-client in \LBver{2.x},
+glite-lb-client-interface in \LBver{1.x}).
 The call specifies the group and job state of interest, as well as queried
 time interval.
 The interval is fitted to the running counter series as accurately as possible,
@@ -574,8 +574,8 @@ By default \LB server runs as one master process,
 and 10 slave processes.
 Threads are not used.
 
-Master pid is stored in the file \verb'$HOME/edg-bkserverd.pid' (\LBold)
-or in the file \verb'$HOME/glite-lb-bkserverd.pid' (\LBnew) respectively.
+Master pid is stored in the file \verb'$HOME/edg-bkserverd.pid' (\LBver{1.x})
+or in the file \verb'$HOME/glite-lb-bkserverd.pid' (\LBver{2.x}) respectively.
 Number of slaves can be set with \verb'-s, --slaves' option,
 pid file location with~\verb'-i, --pidfile'.
 
@@ -598,15 +598,15 @@ It can be changed with \verb'--notif-il-sock'.
 \verb'/tmp/lb_proxy_server.sock' (queries) and 
 \verb'/tmp/lb_proxy_store.sock' (incoming events).
 
-\LBnew: as proxy and server are merged, the mode of operation determines
+\LBver{2.x}: as proxy and server are merged, the mode of operation determines
 the actual server ports (network or UNIX).
 Notifications are not delivered from proxy-only mode.
 
-\item[IPC.] \LBold only: mutual exclusion of server slaves is done
+\item[IPC.] \LBver{1.x} only: mutual exclusion of server slaves is done
 via SYSV semaphores. The semset key is obtained by calling ftok(3) on 
 the pid file.
 
-\LBnew does not use semaphores anymore.
+\LBver{2.x} does not use semaphores anymore.
 
 \item[Database.]
 Server data are stored in MySQL database. Normal setup assumes ``server scenario'', 

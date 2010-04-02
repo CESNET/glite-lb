@@ -23,12 +23,13 @@ binary form packed as .tar.gz. Recent attempts to multiplatform porting and
 recent ETICS building system development promise a future possibility to
 distribute the software in other distribution formats, e.g. DEB packages. 
 
-In \LBold, the list of all LB packages was the following:
+In \LBver{1.x}, the list of all LB packages was the following:
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-lb-common & common files \\ 
 glite-lb-client & client library and CLI tools\\ 
 glite-lb-client-interface & client library interface (header files) \\ 
+glite-lb-harvester & enhanced \LB notification client (since \LBver{1.10}) \\
 glite-lb-logger & local-logger and inter-logger \\ 
 glite-lb-proxy & proxy (restricted server used by WMS)\\ 
 glite-lb-server & server \\ 
@@ -38,13 +39,14 @@ glite-lb-ws-interface & web service interface  \\
 glite-security-gsoap-plugin & GSS wrapper and GSS plugin for gSoap
 \end{tabularx}
 
-In \LBnew, the code has been restructured quite a lot, especially the dependencies were lightened,
+In \LBver{2.0}, the code has been restructured quite a lot, especially the dependencies were lightened,
 and the new list of packages is now the following:
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-lb-doc & documentation \\ 
 glite-lb-common & common files \\ 
 glite-lb-client & client library and CLI tools\\ 
+glite-lb-harvester & enhanced \LB notification client \\
 glite-lb-logger & local-logger and inter-logger \\
 glite-lb-server & server, including merged proxy functionality \\
 glite-lb-state-machine & state machine and LB plugin for Job Provenance \\ 
@@ -59,8 +61,8 @@ for example by issuing the command
 \end{verbatim}
 
 Some of the LB packages depend also on other gLite packages, different 
-due to the restructuring of \LBnew.
-For \LBold they are:
+due to the restructuring since \LBver{2.0}.
+For \LBver{1.x} they are:
 
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
@@ -69,7 +71,7 @@ glite-jp-common & Job Provenance auxiliary library \\
 \end{tabularx}
 
 \noindent
-And for \LBnew:
+And for \LBver{2.x}:
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-jobid-api-c & gLite jobId C API library \\ 
@@ -88,7 +90,7 @@ where all \verb'glite-lbjp-common-*' packages are common both to \LB and
 Job Provenance (\JP).
 
 \subsection{Common logging format}
-\LB service follows the \textbf{gLite common logging recommendations v1.1}:
+Since \LBver{2.1} \LB service follows the \textbf{gLite common logging recommendations v1.1}:
 \begin{center}
 \url{https://twiki.cern.ch/twiki/pub/EGEE/EGEEgLite/logging.html}. 
 \end{center}
@@ -97,13 +99,13 @@ The implementation is done in the \texttt{glite-lbjp-common-log} package and it
 uses \texttt{log4c} (\url{http://log4c.sourceforge.net})
 and its configuration file \texttt{log4crc}. 
 
-There is one configuration file \texttt{\$GLITE\_LOCATION/etc/glite-lb-log4crc}
+There is one configuration file \texttt{\$GLITE\_LOCATION/etc/glite-lb/log4crc}
 that startup scripts use by setting the \texttt{LOG4C\_RCPATH} environment
 variable.
 
 A file \texttt{log4crc.example-debugging} may be useful to copy to
 \texttt{\$HOME/.log4crc} (or by setting the \texttt{LOG4C\_RCPATH} environment variable
-to this file) to obtain detailed debugging output.
+to a directory containing the \texttt{log4crc} file) to obtain detailed debugging output.
 One can debug only specific parts of the LB system, for example
 by uncommenting \texttt{LB.SERVER.DB} cathegory in the \texttt{log4crc} file,
 one gets only the debugging info related to the underlying database subsystem calls.
@@ -314,11 +316,11 @@ The default startup script checks for existence of
 /opt/glite/etc/LB-super-users and uses it eventually.
 
 \subsubsection{Authorization of event originators}
-\LBold allowed anyone possessing a trusted digital certificate to send an
+\LBver{1.x} allowed anyone possessing a trusted digital certificate to send an
 arbitrary event to the \LB server. While enabling an easy setup, such an
 arrangement does not comply with some contemporary requirements, \eg job
 traceability, since the data could be distorted by a malicious user.  In order
-to strengthen trustworthiness of data provided, the \LBnew server has
+to strengthen trustworthiness of data provided, the \LBver{2.0} server has
 introduced an authorization mechanism to control the originators of events.
 The authorization model presumes a set of trusted components that are only
 allowed to send some types of events, while other types can be logged by any
@@ -408,18 +410,18 @@ disk separate from OS and MySQL log files (\texttt{innodb\_log\_group\_home\_dir
 
 All necessary configuration of \LB proxy is done by YAIM,
 and described with gLite WMS installation elsewhere.
-Previous \LB server section applies to merged server+proxy setups (\LBnew only).
+Previous \LB server section applies to merged server+proxy setups (since \LBver{2.0}).
 
 A~special care must be taken when an existing \LB proxy database
-is migrated to \LBnew.
-In general, this is not a~typical scenario -- \LBnew server in proxy mode
+is migrated to \LBver{2.x}.
+In general, this is not a~typical scenario -- \LBver{2.x} server in proxy mode
 on WMS node is introduced with a~major WMS upgrade, and it is expeced
 to be installed from scratch rather than migrated, preserving \LB proxy data.
 
 If the migration is really needed, \verb'glite-lb-migrate_db2version20'
 script should be run with~\verb'-p' (Sect~\ref{inst:migrate20}).
 However, the \LB database name remains \verb'lbproxy' while
-the \LBnew binaries expect unified \verb'lbserver20' by default.
+the \LBver{2.x} binaries expect unified \verb'lbserver20' by default.
 Because renaming a~MySQL database is a~non-trivial, error prone task,
 the recommended workaround is to add the following variable setting
 
@@ -518,7 +520,7 @@ Finally the
 
 Send events via \LB proxy. Checks the proxy functionality.
 
-\req Running \LB proxy, in standalone package for \LBold, or
+\req Running \LB proxy, in standalone package for \LBver{1.x}, or
 \LB server running with \verb'-P' (proxy only) or \verb'-B' (both server and proxy)
 options.
 

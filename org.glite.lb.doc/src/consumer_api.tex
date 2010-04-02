@@ -214,7 +214,7 @@ The table~\ref{t:cqueryop} shows all supported query operations.
 \lstinline'EDG_WLL_QUERY_OP_GREATER' & Attribute is less than the operand value. \\
 \lstinline'EDG_WLL_QUERY_OP_WITHIN' & Attribute is in given interval. \\
 \lstinline'EDG_WLL_QUERY_OP_UNEQUAL' & Attribute is not equal to the operand value. \\
-\lstinline'EDG_WLL_QUERY_OP_CHANGED' & Attribute has changed from last check (supported since \LBnew in notification matching). \\
+\lstinline'EDG_WLL_QUERY_OP_CHANGED' & Attribute has changed from last check (supported since \LBver{2.0} in notification matching). \\
 \end{tabularx}
 \caption{Query record specific operations.}
 \label{t:cqueryop}
@@ -227,7 +227,7 @@ The table~\ref{t:cqueryop} shows all supported query operations.
 
 The simplest use case corresponds to the situation when an exact job ID
 is known and the only information requested is the job status. The job ID
-format is described in~\cite{djra1.4}. In \LBnew, it is also possible to
+format is described in~\cite{djra1.4}. Since \LBver{2.0}, it is also possible to
 query all jobs belonging to a specified user, VO or RB.
 
 The following example shows how to retrieve the status information

@@ -36,6 +36,26 @@ Complete list of all job' states together with their description follows.
 \end{figure}
 
 \newpage
+\subsection{CREAM Job States Mapping}
+Support of CREAM jobs is available since \LBver{2.1}. This is the implemented
+mapping of job states between CREAM and \LB:
+\label{a:creammapping}
+
+\begin{tabularx}{\textwidth}{>{\bfseries}lX}
+CREAM state 	& \LB state \\
+Registered	& Submited \\
+Pending 	& Waiting \\
+Idle		& Scheduled \\
+Running		& Running \\
+Really Running	& Running \\
+% Held
+Done OK		& Done \\
+Done Failed	& Done \\
+Aborted		& Aborted \\
+Cancelled	& Cancelled \\
+\end{tabularx}
+
+\newpage
 \section{Environment variables}
 \label{a:environment}
 
@@ -120,20 +140,3 @@ CONNPOOL\_SIZE &
 For backward compatibility, all \verb'GLITE_WMS_*' variables can be prefixed by
 \verb'EDG_WL_' instead, for example \verb'EDG_WL_LOG_DESTINATION'.
 
-\newpage
-\subsection{CREAM Job States Mapping}
-\label{a:creammapping}
-
-\begin{tabularx}{\textwidth}{>{\bfseries}lX}
-CREAM state 	& \LB state \\
-Registered	& Submited \\
-Pending 	& Waiting \\
-Idle		& Scheduled \\
-Running		& Running \\
-Really Running	& Running \\
-% Held
-Done OK		& Done \\
-Done Failed	& Done \\
-Aborted		& Aborted \\
-Cancelled	& Cancelled \\
-\end{tabularx}

@@ -22,7 +22,7 @@ is available in ANSI~C binding, most of the querying capabilities also in C++.
 These APIs are provided as sets of C/C++ header files and shared libraries.
 The library implements communication protocol with other \LB components
 (logger and server), including encryption, authentication etc.
-\LBnew provides an experimental Java binding of the logging API.
+Since \LBver{2.0} an experimental Java binding of the logging API is available.
 
 We do not describe the API here in detail; it is documented in~\LB Developer's
 Guide\cite{lbdg},
@@ -36,7 +36,7 @@ The query interface is also available as a~web-service provided by the
 
 Finally, certain frequent queries (all user's jobs, single job status, \dots)
 are available as HTML pages (by pointing ordinary web browser to the \LB server
-endpoint), or as simple text queries (\LBnew only) intended for scripts.
+endpoint), or as simple text queries (since \LBver{2.0}) intended for scripts.
 See~%
 \ifx\insideUG\undefined
 \cite{lbug}
@@ -142,7 +142,7 @@ pending events belonging to this handle accordingly.
 
 \emph{\LB proxy} is the implementation of the concept of local view on job state (see
 \ifx\insideUG\undefined{\cite{lbug}}\else{Sect.~\ref{local}}\fi). Since
-\LBnew, \LB proxy is intergrated into \LB server executable.  When deployed (on
+\LBver{2.0}, \LB proxy is intergrated into \LB server executable.  When deployed (on
 the WMS node in the current gLite middleware) it takes over the role of the
 local-logger daemon---it accepts the incoming events, stores them in files, and
 forwards them to the inter-logger.

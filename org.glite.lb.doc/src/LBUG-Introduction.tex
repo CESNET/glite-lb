@@ -606,7 +606,7 @@ add and remove entries in the ACL arbitrarily using the \LB API or
 command-line tools (see~\ref{e:change-acl}). Each entry of an ACL can
 specify either a user subject name, a name of a VOMS group, or an attribute
 specified in the Full qualified attribute name format (the FQAN support is
-only available in \LBnew). An ACL assigned to a job is returned as part of 
+available since \LBver{2.0}). An ACL assigned to a job is returned as part of 
 job status information.
 
 Besides of using the ACLs, the \LB administrator can also specify a~set of
@@ -706,8 +706,8 @@ information, but confortably wait for server to inform the user.
 User registers for notifications via notification client \verb'glite-lb-notify', described in Section
 \ref{s:lb-notify}. 
 Conditions under which the notification is sent can be specified. For example - job XY reaches status
-DONE. In \LBold, one or more JOBID's are required in the condition and only a single occurence 
-of a specific attribute is allowed among ANDed conditions. In \LBnew, more complex conditions are allowed.
+DONE. In \LBver{1.x}, one or more JOBID's are required in the condition and only a single occurence 
+of a specific attribute is allowed among ANDed conditions. In \LBver{2.x}, more complex conditions are allowed.
 
 The registration is then delivered to \LB server where it is stored.
 At the same time, server generates a unique notification ID for the registration and returns it to the
