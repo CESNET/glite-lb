@@ -465,15 +465,38 @@ void setParam(edg_wll_ContextParam name, int value);
 int getParamInt(edg_wll_ContextParam name) const;
 \end{lstlisting}
 
-The C++ API uses \verb'std::vector' instead of \verb'NULL' terminated
-arrays for both query condition lists and results. The C++ API does
+The \verb'ServerConnection' class provides methods for both event and job queries:
+\begin{lstlisting}
+void queryJobs(const std::vector<QueryRecord>& query,
+	       std::vector<glite::jobid::JobId>& jobList) const;
+
+void queryJobs(const std::vector<std::vector<QueryRecord> >& query,
+	       std::vector<glite::jobid::JobId>& jobList) const;
+
+void queryJobStates(const std::vector<QueryRecord>& query, 
+		    int flags,
+		    std::vector<JobStatus> & states) const;
+
+void queryJobStates(const std::vector<std::vector<QueryRecord> >& query, 
+		    int flags,
+		    std::vector<JobStatus> & states) const;
+
+void queryEvents(const std::vector<QueryRecord>& job_cond,
+		 const std::vector<QueryRecord>& event_cond,
+		 std::vector<Event>& events) const;
+
+void queryEvents(const std::vector<std::vector<QueryRecord> >& job_cond,
+		 const std::vector<std::vector<QueryRecord> >& event_cond,
+		 std::vector<Event>& eventList) const;
+\end{lstlisting}
+You can see that we use \verb'std::vector' instead of \verb'NULL' terminated
+arrays for both query condition lists and results. The API does
 not differentiate simple and extended queries by method name
-(\verb'queryJobs' and \verb'queryJobsExt' in C) but by parameter
+(\verb'queryJobs' and \verb'queryJobsExt' in C), but by parameter
 type (\verb'vector<QueryRecord>'
 vs. \verb'vector<vector<QueryRecord>>'). On the other hand there are
-different methods for obtaining \jobid's (\verb'queryJobs') or
-full job states (\verb'queryJobStates') as well as convenience methods
-for getting user jobs.
+different methods for obtaining \jobid's and full job states as well 
+as convenience methods for getting user jobs. 
 
 Now we can show the first example of job query from section
 \ref{s:qjobs} rewritten in C++. First we have to include the headers:
@@ -505,6 +528,22 @@ The query itself:
 \lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=query-end\ query]{cons_example2.cpp}
 
 \subsubsection{Job}
+The \verb'glite::lb::Job' class encapsulates \LB server queries
+specific for particular job as well as client part of context. The
+\verb'Job' object provides method for getting the job status and the
+event log (\ie all events belonging to the job):
+\begin{lstlisting}
+JobStatus status(int flags) const;
+
+void log(std::vector<Event> &events) const;
+\end{lstlisting}
+
+\marginpar{\bf Important!}%
+It is important to notice that \verb'Job' objects contain
+\verb'ServerConnection' as private member and thus encapsulate client
+part of context. That makes them relatively heavy--weight objects and
+therefore it is not recommended to create too many instances, but
+reuse one instance by assigning different \jobid's to it.
 
 
 \subsection{Web-Services Binding}\label{s:Consumer-API-WS}
