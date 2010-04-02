@@ -3,4 +3,5 @@
 
 1.0.1-1
 - log4c config file name hardcoded to 'log4crc'
-
+- config files moved
+- LCAS logging configuration from log4c
