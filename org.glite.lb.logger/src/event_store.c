@@ -865,7 +865,7 @@ event_store_recover(struct event_store *es)
   }
 
   /* if the expiration changed, set new one */
-  if(last_exp != notifid_map_get_expiration(es->job_id_s)) {
+  if(eq_b && last_exp != notifid_map_get_expiration(es->job_id_s)) {
 	  struct cmp_exp_data data;
 
 	  notifid_map_set_expiration(es->job_id_s, last_exp);
