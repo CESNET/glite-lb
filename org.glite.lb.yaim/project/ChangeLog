@@ -11,3 +11,6 @@
 4.2.5-1
 - LCAS deployment updates
 
+4.2.6-1
+- Configuration files moved from /etc to /etc/lb
+
