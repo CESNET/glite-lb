@@ -22,6 +22,7 @@
         <!-- category name="LB" priority="debug" appender="stderr"/-->
         <!-- category name="LB.LOGD" priority="debug" appender="stderr"/-->
         <!-- category name="LB.INTERLOGD" priority="debug" appender="stderr"/-->
+        <!-- category name="LB.NOTIFINTERLOGD" priority="debug" appender="stderr"/-->
         <!-- category name="LB.SERVER" priority="debug" appender="stderr"/-->
         <!-- category name="LB.AUTHZ" priority="debug" appender="syslog"/-->
         <!-- category name="LB.HARVESTER" priority="*" appender="syslog"/-->
