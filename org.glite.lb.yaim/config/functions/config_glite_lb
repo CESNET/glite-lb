@@ -195,7 +195,7 @@ function config_glite_lb() {
 
   if [ ! $? = 0 ]; then
     mysql -u root --password="$MYSQL_PASSWORD" -e "CREATE DATABASE lbserver20"
-    mysql --password="$MYSQL_PASSWORD" lbserver20 < ${INSTALL_ROOT}/glite/etc/glite-lb/glite-lb-dbsetup.sql
+    mysql --password="$MYSQL_PASSWORD" lbserver20 < ${GLITE_LOCATION}/etc/glite-lb/glite-lb-dbsetup.sql
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver IDENTIFIED BY '' WITH GRANT OPTION;"
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@'$HOSTNAME' IDENTIFIED BY '' WITH GRANT OPTION;"
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@localhost IDENTIFIED BY '' WITH GRANT OPTION;"
@@ -301,7 +301,7 @@ EOF
     fi
   fi
   lcas_plugin="$GLITE_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
-  echo "pluginname=\"$lcas_plugin\"" > ${INSTALL_ROOT}/etc/glite-lb/lcas.db
+  echo "pluginname=\"$lcas_plugin\"" > ${GLITE_LOCATION}/etc/glite-lb/lcas.db
   # log file
   logfile=/var/log/glite/glite-lb-lcas.log
   touch $logfile
@@ -335,7 +335,7 @@ EOF
     echo $HOSTNAME > ${GLITE_LOCATION}/etc/glite-lb/glite-lb-harvester.conf
   fi
 
-  . /opt/glite/etc/profile.d/grid-env.sh
+  . ${GLITE_LOCATION}/etc/profile.d/grid-env.sh
   ${GLITE_LOCATION}/etc/init.d/glite-lb-bkserverd stop
   #Temporary workaround to kill glite-lb-*-interlogd
   ps ax | grep -v grep | grep glite-lb-notif-interlogd > /dev/null
