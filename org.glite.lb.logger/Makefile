@@ -44,14 +44,13 @@ endif
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src \
-  	-I${log4c_prefix}/include \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
 
 LDFLAGS:=-L${stagedir}/${libdir} \
-         -L${log4c_prefix}/lib \
 	${COVERAGE_FLAGS} 
+
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
@@ -80,7 +79,6 @@ INTERLOG_OBJS:=il_error.o input_queue_socket.o \
 	recover.o send_event.o plugin_mgr.o \
 	event_queue.o event_store.o il_master.o interlogd.o \
 	queue_mgr.o server_msg.o queue_thread.o \
-	plugin_mgr.o
 
 WS_INTERLOG_OBJS:=il_error.o input_queue_socket_http.o \
 	recover.o http.o send_event_http.o plugin_mgr.o \

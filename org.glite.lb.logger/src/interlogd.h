@@ -75,7 +75,7 @@ extern "C" {
 #define IL_EVENT_GET_UNIQUE(a) edg_wlc_JobIdGetUnique((a))
 #define IL_EVENT_ID_FREE(a)    edg_wlc_JobIdFree((a))
 #define IL_EVENT_ID_PARSE(a,b) edg_wlc_JobIdParse((a),(b))
-#define IL_LOG_CATEGORY        LOG_CATEGORY_IL_LB
+#define IL_LOG_CATEGORY        LOG_CATEGORY_LB_IL
 
 #endif
 
