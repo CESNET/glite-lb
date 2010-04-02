@@ -38,7 +38,7 @@ recover_thread(void *q)
 	}
 
 	while(1) {
-		glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 				 "Looking up event files.");
 		if(event_store_init(file_prefix) < 0) {
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, 

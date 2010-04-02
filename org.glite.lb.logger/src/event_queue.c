@@ -352,7 +352,7 @@ event_queue_move_events(struct event_queue *eq_s,
 	eq_s->tail = NULL;
 	while(p) {
 		if((*cmp_func)(p->msg, data)) {
-			glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 					 "      moving event at offset %d(%d) from %s:%d to %s:%d",
 					 p->msg->offset, p->msg->generation, eq_s->dest_name, eq_s->dest_port,
 			   eq_d ? eq_d->dest_name : "trash", eq_d ? eq_d->dest_port : -1);

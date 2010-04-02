@@ -96,7 +96,7 @@ queue_thread(void *q)
 				ret = event_queue_wait(eq, close_timeout);
 				if(ret == 1) {/* timeout? */
 					(*eq->event_queue_close)(eq);
-					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 							 "  connection to %s closed",
 							 eq->dest);
 				}
@@ -129,27 +129,27 @@ queue_thread(void *q)
 		event_queue_cond_unlock(eq);
 		
 		/* discard expired events */
-		glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, "  discarding expired events");
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "  discarding expired events");
 		now = time(NULL);
 		event_queue_move_events(eq, NULL, cmp_expires, &now);
 		if(!event_queue_empty(eq)) {
 
 			/* deliver pending events */
-			glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 					 "  attempting delivery to %s",
 					 eq->dest);
 			/* connect to server */
 			if((ret=(*eq->event_queue_connect)(eq)) == 0) {
 				/* not connected */
 				if(error_get_maj() != IL_OK)
-					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
 							 "queue_thread: %s", error_get_msg());
 #if defined(IL_NOTIFICATIONS)
-				glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
+				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO, 
 						 "    could not connect to client %s, waiting for retry", 
 						 eq->dest);
 #else
-				glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_INFO, 
+				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO, 
 						 "    could not connect to bookkeeping server %s, waiting for retry", 
 						 eq->dest);
 #endif
@@ -162,23 +162,23 @@ queue_thread(void *q)
 				case 0:
 					/* there was an error and we still have events to send */
 					if(error_get_maj() != IL_OK)
-						glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+						glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
 								 "queue_thread: %s", 
 								 error_get_msg());
-					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 							 "  events still waiting");
 					break;
 					
 				case 1:
 					/* hey, we are done for now */
-					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 							 "  all events for %s sent", 
 							 eq->dest);
 					break;
 					
 				default:
 					/* internal error */
-					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 							 "queue_thread: %s", 
 							 error_get_msg());
 					exit = 1;      
@@ -191,7 +191,7 @@ queue_thread(void *q)
 					close_timeout = default_close_timeout;
 				else {
 					(*eq->event_queue_close)(eq);
-					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG,
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG,
 							 "  connection to %sclosed",
 							 eq->dest);
 				}
@@ -205,7 +205,7 @@ queue_thread(void *q)
 
 		/* Check if we are flushing and if we are, report status to master */
 		if(eq->flushing == 1) {
-			glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 					 "    flushing mode detected, reporting status");
 			/* 0 - events waiting, 1 - events sent, < 0 - some error */
 			eq->flush_result = ret;
@@ -224,7 +224,7 @@ queue_thread(void *q)
 		   which may cure server kicking us out after given number of connections */
 #ifndef LB_PERF
 		if((ret == 0) && (retrycnt > 0)) {
-			glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 					 "    sleeping");
 			event_queue_sleep(eq);
 		}

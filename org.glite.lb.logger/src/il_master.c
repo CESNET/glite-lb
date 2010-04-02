@@ -101,7 +101,7 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 #if defined(INTERLOGD_FLUSH)
 			if(strcmp(++r, "\"flush\"")) {
 #endif
-				glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, "command %s not implemented", 
+				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, "command %s not implemented", 
 						 r);
 				ret = -1;
 				continue;
@@ -150,7 +150,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 		return(0);
 
 #if defined(INTERLOGD_FLUSH)
-	glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, "received FLUSH command");
+	glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "received FLUSH command");
 
 	/* catchup with all neccessary event files */
 	if(job_id_s) {
@@ -164,7 +164,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 		   no need to lock the event_store at all */
 		event_store_release(es);
 		if(result < 0) {
-			glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 					 "  error trying to catch up with event file: %s",
 					 error_get_msg());
 			clear_error();
@@ -173,7 +173,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 	  /* this call does not fail :-) */
 	  event_store_recover_all();
 
-	glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, "  alerting threads to report status");
+	glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "  alerting threads to report status");
 
 	/* prevent threads from reporting too early */
 	if(pthread_mutex_lock(&flush_lock) < 0) {
@@ -229,7 +229,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 	while(num_replies < num_threads) {
 		int ret;
 		if((ret=pthread_cond_timedwait(&flush_cond, &flush_lock, &endtime)) < 0) {
-			glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 					 "    error waiting for thread reply: %s", 
 					 strerror(errno));
 			result = (ret == ETIMEDOUT) ? 0 : -1;
@@ -259,7 +259,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 					if(eq->flushing == 2) {
 						eq->flushing = 0;
 						num_replies++;
-						glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+						glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 								 "    thread reply: %d", 
 								 eq->flush_result);
 						result = ((result == 1) || (eq->flush_result < 0))  ?
@@ -300,7 +300,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 	if(job_id_s) free(job_id_s);
 	result = send_confirmation(receipt, result);
 	if(result <= 0)
-		glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 				 "handle_cmd: error sending status: %s", 
 				 error_get_msg());
 	return(1);
@@ -331,7 +331,7 @@ handle_msg(il_octet_string_t *event, long offset)
 
 	/* convert event to message for server */
 	if((msg = server_msg_create(event, offset)) == NULL) {
-		glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
 				 "    handle_msg: error parsing event '%s': %s", 
 				 event, error_get_msg());
 		return(0);
@@ -353,7 +353,7 @@ handle_msg(il_octet_string_t *event, long offset)
 	il_log(LOG_DEBUG, "  syncing event store at %d with event at %d, result %d\n", es->offset, offset, ret);
 	*/
 	if(ret < 0) {
-		glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 				 "    handle_msg: error syncing event store: %s", 
 				 error_get_msg());
 		/* XXX should error during event store recovery cause us to drop the message? */
@@ -379,7 +379,7 @@ handle_msg(il_octet_string_t *event, long offset)
 	eq_s = queue_list_get(msg->job_id_s);
 #endif
 	if(eq_s == NULL) {
-		glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 				 "    handle_msg: apropriate queue not found: %s", 
 				 error_get_msg());
 		clear_error();
@@ -432,7 +432,7 @@ loop()
 		if((ret = input_queue_get(&msg, &offset, INPUT_TIMEOUT)) < 0)
 		{
 			if(error_get_maj() == IL_PROTO) {
-				glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 						 "  premature EOF while receiving event");
 				/* problems with socket input, try to catch up from files */
 #ifndef PERF_EMPTY
@@ -465,7 +465,7 @@ loop()
 					return (ret);
 					break;
 				default:
-    					glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+    					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 							 "Error: %s", 
 							 error_get_msg());
 					break;

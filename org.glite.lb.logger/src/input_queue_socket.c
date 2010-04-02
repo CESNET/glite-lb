@@ -260,7 +260,7 @@ input_queue_get(il_octet_string_t **buffer, long *offset, int timeout)
   case -1: /* error */
 	  switch(errno) {
 	  case EINTR:
-		  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, 
+		  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
 				   "  interrupted while waiting for event!");
 		  return(0);
 

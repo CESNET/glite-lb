@@ -394,7 +394,7 @@ void do_handle_signal() {
 				 glite_common_log_priority_to_string(glite_common_log_get_priority(LOG_CATEGORY_LB)),
 				 LOG_CATEGORY_LB,
 				 glite_common_log_priority_to_string(glite_common_log_get_priority(LOG_CATEGORY_LB_IL)),
-				 LOG_CATEGORY_LB_IL);
+				 IL_LOG_CATEGORY);
 		break;
 
 	case SIGPIPE:

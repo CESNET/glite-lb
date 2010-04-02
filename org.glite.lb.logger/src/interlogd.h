@@ -64,6 +64,7 @@ extern "C" {
 #define IL_EVENT_GET_UNIQUE(a) edg_wll_NotifIdGetUnique((a))
 #define IL_EVENT_ID_FREE(a)    edg_wll_NotifIdFree((a))
 #define IL_EVENT_ID_PARSE(a,b) edg_wll_NotifIdParse((a),(b))
+#define IL_LOG_CATEGORY        LOG_CATEGORY_LB_ILNOTIF
 
 #else
 
@@ -74,6 +75,7 @@ extern "C" {
 #define IL_EVENT_GET_UNIQUE(a) edg_wlc_JobIdGetUnique((a))
 #define IL_EVENT_ID_FREE(a)    edg_wlc_JobIdFree((a))
 #define IL_EVENT_ID_PARSE(a,b) edg_wlc_JobIdParse((a),(b))
+#define IL_LOG_CATEGORY        LOG_CATEGORY_IL_LB
 
 #endif
 

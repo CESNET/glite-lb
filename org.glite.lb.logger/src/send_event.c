@@ -75,7 +75,7 @@ send_confirmation(long lllid, int code)
   }
   ret = 1;
 
-  glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 		   "  sent code %d back to client", 
 		   code);
 
@@ -205,7 +205,7 @@ event_queue_connect(struct event_queue *eq)
     if(pthread_mutex_unlock(&cred_handle_lock) < 0)
 	    abort();
     
-    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 		     "    trying to connect to %s:%d", 
 		     eq->dest_name, eq->dest_port);
     ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
@@ -216,7 +216,7 @@ event_queue_connect(struct event_queue *eq)
     if(local_cred_handle != cred_handle && local_cred_handle->counter == 0) {
 	    edg_wll_gss_release_cred(&local_cred_handle->creds, NULL);
 	    free(local_cred_handle);
-	    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, "   freed credentials, not used anymore");
+	    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "   freed credentials, not used anymore");
     }
     if(pthread_mutex_unlock(&cred_handle_lock) < 0) 
 	    abort();
@@ -297,7 +297,7 @@ event_queue_send(struct event_queue *eq)
     if(event_queue_get(eq, &msg) < 0) 
       return(-1);
 
-    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 		     "    trying to deliver event at offset %d for job %s", 
 		     msg->offset, msg->job_id_s);
 
@@ -324,7 +324,7 @@ event_queue_send(struct event_queue *eq)
 			eq->timeout = 1;
 		    } else {
 			eq->timeout = TIMEOUT;
-		        glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_WARN, "  error reading server %s reply: %s", 
+		        glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, "  error reading server %s reply: %s", 
 					 eq->dest_name, error_get_msg());
                     }
 		    return(0);
@@ -339,7 +339,7 @@ event_queue_send(struct event_queue *eq)
     }
 #endif
     
-    glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_DEBUG, 
+    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 		     "    event sent, server %s replied with %d, %s", 
 		     eq->dest_name, code, rep);
     free(rep);
@@ -376,7 +376,7 @@ event_queue_send(struct event_queue *eq)
 
       if((ret == 0) &&
 	 (error_get_maj() != IL_OK))
-	      glite_common_log(LOG_CATEGORY_LB_IL, LOG_PRIORITY_ERROR, 
+	      glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 			       "send_event: %s", 
 			       error_get_msg());
 	
