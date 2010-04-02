@@ -68,3 +68,7 @@
 2.1.2-1
 - Startup script update: log4c config file name hardcoded to 'log4crc'
 
+2.1.3-1
+- Configuration files moved from /etc to /etc/lb
+- LCAS logging temporarily disabled
+ 
