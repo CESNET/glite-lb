@@ -44,3 +44,6 @@
 - Minor enhancements
 - Repacked for new lbjp-common release
  
+2.0.2-1
+- Fixed timezone handling
+
