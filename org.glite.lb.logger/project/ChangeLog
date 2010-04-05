@@ -72,3 +72,7 @@
 - Configuration files moved from /etc to /etc/lb
 - LCAS logging temporarily disabled
  
+2.1.4-1
+- Introduce a separate logging category for notification interlogger
+- Fix problem with dropping unused notoifications
+
