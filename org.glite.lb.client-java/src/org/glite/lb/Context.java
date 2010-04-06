@@ -20,8 +20,9 @@ package org.glite.lb;
 import java.text.SimpleDateFormat;
 
 import java.net.UnknownHostException;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
+import java.util.SimpleTimeZone;
 import org.glite.jobid.Jobid;
 
 /**
@@ -177,10 +178,9 @@ public abstract class Context {
             srcInstance = new String("");
         }
 
-	Calendar cal = Calendar.getInstance();
-	cal.set(Calendar.ZONE_OFFSET,0);
 	SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-	String date = df.format(cal.getTime()) + "000";
+	df.setTimeZone(new SimpleTimeZone(0, "UTC"));
+	String date = df.format(new Date()) + "000";
 	
         if (seqCode != null) seqCode.incrementSeqCode(source);
 
