@@ -212,6 +212,11 @@ extern enum edg_wll_StatJw_status edg_wll_StringToJWStat(const char *);
  */
 extern char *edg_wll_JWStatToString(enum edg_wll_StatJw_status);
 
+/**
+ * Convert string CREAM status to numeric code.
+ */
+extern enum edg_wll_StatCream_state edg_wll_StringToCreamStat(const char *name);
+
 /** 
  * Convert numeric CREAM status code to string representation
  */

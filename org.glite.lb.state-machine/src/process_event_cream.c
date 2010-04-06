@@ -17,6 +17,7 @@ limitations under the License.
 */
 
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,15 +38,6 @@ limitations under the License.
 #else
 #define UNUSED_VAR
 #endif
-
-static int compare_timestamps(struct timeval a, struct timeval b)
-{
-	if ( (a.tv_sec > b.tv_sec) || 
-		((a.tv_sec == b.tv_sec) && (a.tv_usec > b.tv_usec)) ) return 1;
-	if ( (a.tv_sec < b.tv_sec) ||
-                ((a.tv_sec == b.tv_sec) && (a.tv_usec < b.tv_usec)) ) return -1;
-	return 0;
-}
 
 /* XXX lookup table */
 static char *cream_states[EDG_WLL_NUMBER_OF_CREAM_STATES];
