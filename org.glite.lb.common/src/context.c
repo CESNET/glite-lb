@@ -162,9 +162,18 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		free(ctx->fqans);
 		ctx->fqans = NULL;
 	}
-	if (ctx->authz_policy.num) {
-		for (i = 0; i < ctx->authz_policy.num; i++)
-			free((ctx->authz_policy.rules[i]).attr_value);
+	if (ctx->authz_policy.actions_num) {
+		for (i = 0; i < ctx->authz_policy.actions_num; i++) {
+			int j;
+			struct _edg_wll_authz_attr *a;
+			for (j = 0; j < ctx->authz_policy.actions[i].rules_num; j++) {
+				a = ctx->authz_policy.actions[i].rules[j].attrs;
+				if (a && a->value)
+					free(a->value);
+			}
+			free(ctx->authz_policy.actions[i].rules);
+		}
+		free (ctx->authz_policy.actions);
 	}
 	
 	if (ctx->jpreg_dir) free(ctx->jpreg_dir);
@@ -590,25 +599,65 @@ int edg_wll_SetErrorGss(edg_wll_Context ctx, const char *desc, edg_wll_GssStatus
 }
 
 int
-edg_wll_add_authz_rule(edg_wll_Context ctx,
-		       edg_wll_authz_policy policy,
-		       int action,
-		       int attr_id,
-		       char *attr_value)
+edg_wll_add_authz_attr(edg_wll_Context ctx,
+                       struct _edg_wll_authz_rule *rule,
+                       int id,
+                       char *value)
 {
-    struct _edg_wll_authz_rule *tmp = policy->rules;
-    int num = policy->num;
+    struct _edg_wll_authz_attr *attrs = rule->attrs;
+    int num = rule->attrs_num;
 
-    tmp = realloc(tmp, (num + 1) * sizeof(*tmp));
-    if (tmp == NULL)
-        return edg_wll_SetError(ctx, ENOMEM, NULL);;
+    attrs = realloc(rule->attrs, (num + 1) * sizeof(*attrs));
+    if (attrs == NULL)
+	return edg_wll_SetError(ctx, ENOMEM, NULL);
 
-    tmp[num].action = action;
-    tmp[num].attr_id = attr_id;
-    tmp[num].attr_value = strdup(attr_value);
+    attrs[num].id = id;
+    attrs[num].value = strdup(value);
+    rule->attrs = attrs;
+    rule->attrs_num++;
 
-    policy->rules = tmp;
-    policy->num++;
     return 0;
 }
 
+int
+edg_wll_add_authz_rule(edg_wll_Context ctx,
+		       edg_wll_authz_policy policy,
+		       int action,
+		       struct _edg_wll_authz_rule *rule)
+{
+    struct _edg_wll_authz_rule *rules;
+    struct _edg_wll_authz_action *a = policy->actions;
+    int idx;
+    int num, i;
+
+    num = policy->actions_num;
+    for (idx = 0; idx < num; idx++)
+	if (policy->actions[idx].id == action)
+	    break;
+
+    if (idx == num) {
+	a = realloc(policy->actions, (num + 1) * sizeof(*a));
+	if (a == NULL)
+	    return edg_wll_SetError(ctx, ENOMEM, NULL);
+	a[num].id = action;
+	a[num].rules = NULL;
+	a[num].rules_num = 0;
+	policy->actions = a;
+	policy->actions_num++;
+    }
+
+    num = policy->actions[idx].rules_num;
+    rules = policy->actions[idx].rules;
+    rules = realloc(rules, (num + 1) * sizeof(*rules));
+    if (rules == NULL)
+        return edg_wll_SetError(ctx, ENOMEM, NULL);
+    rules[num].attrs = NULL;
+    rules[num].attrs_num = 0;
+    for (i=0; i < rule->attrs_num; i++)
+	edg_wll_add_authz_attr(ctx, &rules[num],
+			       rule->attrs[i].id, rule->attrs[i].value);
+    policy->actions[idx].rules = rules;
+    policy->actions[idx].rules_num++;
+
+    return 0;
+}

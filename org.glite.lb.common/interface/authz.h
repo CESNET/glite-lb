@@ -36,15 +36,25 @@ typedef struct _edg_wll_VomsGroups {
 	edg_wll_VomsGroup *val;
 } edg_wll_VomsGroups;
 
+typedef struct _edg_wll_authz_attr {
+	int id;
+	char *value;
+} _edg_wll_authz_attr;
+
 typedef struct _edg_wll_authz_rule {
-	int action;
-	int attr_id;
-	char *attr_value;
+	struct _edg_wll_authz_attr *attrs;
+	size_t attrs_num;
 } _edg_wll_authz_rule;
 
-typedef struct _edg_wll_authz_policy {
+typedef struct _edg_wll_authz_action {
+	int id;
 	struct _edg_wll_authz_rule *rules;
-	int num;
+	int rules_num;
+} _edg_wll_authz_action;
+	
+typedef struct _edg_wll_authz_policy {
+	struct _edg_wll_authz_action *actions;
+	int actions_num;
 } _edg_wll_authz_policy;
 
 typedef struct _edg_wll_authz_policy *edg_wll_authz_policy;
@@ -53,8 +63,14 @@ int
 edg_wll_add_authz_rule(edg_wll_Context ctx,
 		       edg_wll_authz_policy policy,
 		       int action,
-		       int attr_id,
-		       char *attr_value);
+		       struct _edg_wll_authz_rule *);
+
+int
+edg_wll_add_authz_attr(edg_wll_Context ctx,
+		       struct _edg_wll_authz_rule *rule,
+		       int id,
+		       char *value);
+		       
 
 #ifdef __cplusplus 
 }
