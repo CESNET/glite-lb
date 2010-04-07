@@ -52,37 +52,21 @@ function config_glite_lb_authz() {
 	superusers="$1"
 	rtm="$2"
 
-	superusers="`echo \"$superusers\"| grep -v ^$ | tr ',' '\n' | sed 's/\(.*\)/\t\tsubject = \"\1\"/'`"
-	rtm="`echo \"$rtm\"| grep -v ^$ | tr ',' '\n' | sed 's/\(.*\)/\t\tsubject = \"\1\"/'`"
+	superusers="`echo \"$superusers\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\"\n\t}/'`"
+	rtm="`echo \"$rtm\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\"\n\t}/'`"
 	authconf="$GLITE_LOCATION/etc/glite-lb/glite-lb-authz.conf"
 
 	cat <<EOF > "$authconf".new
 resource "LB" {
 
-EOF
-	if test ! -z "$superusers"; then
-		cat <<EOF >> "$authconf".new
 action "ADMIN_ACCESS" {
-	rule permit {
 $superusers
-	}
 }
 
-EOF
-	fi
-
-	if test ! -z "$rtm"; then
-		cat <<EOF >> "$authconf".new
 action "STATUS_FOR_MONITORING" {
-	rule permit {
 $rtm
-	}
 }
 
-EOF
-	fi
-
-	cat <<EOF >> "$authconf".new
 action "REGISTER_JOBS" {
         rule permit {
                 subject = ".*"
