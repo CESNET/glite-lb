@@ -247,13 +247,12 @@ parse_creds(edg_wll_Context ctx, edg_wll_VomsGroups *groups, char **fqans,
    cred = NULL; /* GACLnewUser() doesn't copy content, just store the pointer */
 
    for (i = 0; i < groups->len; i++) {
-      cred = GRSTgaclCredNew("voms-cred");
+      cred = GRSTgaclCredNew("voms");
       if (cred == NULL) {
 	 edg_wll_SetError(ctx, ENOMEM, "Failed to create GACL voms-cred credential");
 	 goto fail;
       }
-      if (!GRSTgaclCredAddValue(cred, "vo", groups->val[i].vo) ||
-	  !GRSTgaclCredAddValue(cred, "group", groups->val[i].name)) {
+      if (!GRSTgaclCredAddValue(cred, "fqan", groups->val[i].name)) {
          edg_wll_SetError(ctx, EINVAL, "Failed to populate GACL voms-cred credential");
 	 goto fail;
       }
