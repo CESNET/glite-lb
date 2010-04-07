@@ -42,6 +42,44 @@ struct attr_id_name attr_id_names[] = {
 static int num_attrs =
     sizeof(attr_id_names) / sizeof(attr_id_names[0]);
 
+static int
+check_rule(_edg_wll_authz_rule *rule, edg_wll_GssPrincipal principal)
+{
+    int i, found;
+    char **f;
+    _edg_wll_authz_attr *a;
+
+    if (rule->attrs_num == 0)
+	return 0;
+
+    for (i = 0; i < rule->attrs_num; i++) {
+	a = rule->attrs + i;
+	if (strcmp(a->value, ".*") == 0)
+	    continue;
+
+	switch (a->id) {
+	    case ATTR_SUBJECT:
+		if (!edg_wll_gss_equal_subj(a->value, principal->name))
+		    return 0;
+		break;
+	    case ATTR_FQAN:
+		found = 0;
+		for (f = principal->fqans; f && *f; f++)
+		    if (strcmp(a->value, *f) == 0) {
+			found = 1;
+			break;
+		}
+		if (!found)
+		    return 0;
+		break;
+	    default:
+		return 0;
+	}
+    }
+
+    return 1;
+}
+
 
 int
 check_authz_policy(edg_wll_authz_policy policy,
@@ -49,33 +87,24 @@ check_authz_policy(edg_wll_authz_policy policy,
 		   authz_action action)
 {
     int i;
-    char **f;
-    _edg_wll_authz_rule *r;
+    _edg_wll_authz_action *a;
 
     if (policy == NULL)
         return 0;
 
-    for (i = 0; i < policy->num; i++) {
-        r = policy->rules + i;
-        if (r->action != action)
-            continue;
-	if (strcmp(r->attr_value, ".*") == 0)
-	    return 1;
-        switch (r->attr_id) {
-            case ATTR_SUBJECT:
-		if (edg_wll_gss_equal_subj(r->attr_value, principal->name))
-		    return 1;
-		break;
-	    case ATTR_FQAN:
-		for (f = principal->fqans; f && *f; f++)
-		    if (strcmp(r->attr_value, *f) == 0)
-			return 1;
-		break;
-	    default:
-		break;
-        }
+    for (i = 0; i < policy->actions_num; i++) {
+	if (policy->actions[i].id == action)
+	   break;
     }
+    if (i == policy->actions_num)
+	/* Access denied by default */
+	return 0;
 
+    a = policy->actions + i;
+    for (i = 0; i < a->rules_num; i++) {
+	if (check_rule(a->rules+i, principal))
+	    return 1;
+    }
     return 0;
 }
 

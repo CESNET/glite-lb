@@ -21,25 +21,26 @@ extern unsigned lineno;
 
 extern FILE *yyin;
 
-struct _assigs {
-    int id;
-    char *value;
-    struct _assigs *next;
-} _assigs;
-
-struct _assigs *assigs = NULL;
+struct _rules {
+    struct _edg_wll_authz_rule *rule;
+    struct _rules *next;
+} _rules;
 
 %}
 
 %union {
     char *string;
-    struct _assigs *assigs;
+    struct _rules *rules;
+    struct _edg_wll_authz_rule *rule;
+    struct _edg_wll_authz_attr *attr;
 }
 
 %token RESOURCE ACTION RULE PERMIT
 %token <string> STRING
 %token <string> LITERAL
-%type <assigs> assignment assignments
+%type <attr> assignment
+%type <rule> assignments
+%type <rules> rule rules
 
 %start policy
 
@@ -58,38 +59,47 @@ actions		:
 
 action		: ACTION STRING '{' rules '}'
 		{
-			struct _assigs *a;
+			struct _rules *r;
+
 			authz_action ac = find_authz_action($2);
 
 			if (ac == ACTION_UNDEF)
 				set_error("undefined action '%s'", $2);
 
-			for (a = assigs; a; a = a->next) {
+			for (r = $4; r; r = r->next) {
 				edg_wll_add_authz_rule(parse_ctx, parse_policy,
-					ac, a->id, a->value);
+					ac, r->rule);
 			}
-			assigs = NULL; /* XXX */
 		}
 		;
 
-rules		: 
+rules		:
+		{
+			$$ = NULL;
+		}
 		| rule rules
+		{
+			$1->next = $2;
+			$$ = $1;
+		}
 		;
 
 rule		: RULE PERMIT '{' assignments '}'
 		{
-			assigs = $4;
+			$$ = malloc(sizeof(*$$));
+			$$->rule = $4;
+			$$->next = NULL;
 		}
 		;
 
 assignments	:
 		{
-			$$ = NULL;
+			$$ = calloc(1, sizeof(*$$));
 		}
 		| assignment assignments
 		{
-			$1->next = $2;
-			$$ = $1;
+			edg_wll_add_authz_attr(parse_ctx, $2, $1->id, $1->value);
+			$$ = $2;
 		}
 		;
 
@@ -100,7 +110,6 @@ assignment	: LITERAL '=' STRING
 			if ($$->id == ATTR_UNDEF)
 				set_error("undefined attribute '%s'", $1);
 			$$->value = $3;
-			$$->next = NULL;
 		}
 		;
 

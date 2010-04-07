@@ -1092,13 +1092,14 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->hardJobsLimit = hardJobsLimit;
 	ctx->hardEventsLimit = hardEventsLimit;
 	if ( noAuth ) ctx->noAuth = 1;
-	if ( authz_policy.num ) {
-		int i;
-		for (i=0; i < authz_policy.num; i++)
-			edg_wll_add_authz_rule(ctx, &ctx->authz_policy,
-				(authz_policy.rules[i]).action,
-				(authz_policy.rules[i]).attr_id,
-				(authz_policy.rules[i]).attr_value);
+	if ( authz_policy.actions_num ) {
+		int i,j;
+		for (i=0; i < authz_policy.actions_num; i++)
+			for (j = 0; j < authz_policy.actions[i].rules_num; j++)
+				edg_wll_add_authz_rule(ctx,
+					&ctx->authz_policy,
+					authz_policy.actions[i].id,
+					&authz_policy.actions[i].rules[j]);
 	}
 	ctx->rgma_export = rgma_export;
 	memcpy(ctx->purge_timeout, purge_timeout, sizeof(ctx->purge_timeout));
@@ -1885,14 +1886,18 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 
 static int add_root(edg_wll_Context ctx, char *root)
 {
-	int attr_id = ATTR_SUBJECT;
+	struct _edg_wll_authz_attr attr;
+	struct _edg_wll_authz_rule rule;
 
+	attr.value = root;
+	attr.id = ATTR_SUBJECT;
 	if (strncmp(root, "FQAN:", 5) == 0){
 		root += 5;
-		attr_id = ATTR_FQAN;
+		attr.id = ATTR_FQAN;
 	}
-	edg_wll_add_authz_rule(ctx, &authz_policy, ADMIN_ACCESS,
-			       attr_id, root);
+	rule.attrs = &attr;
+	rule.attrs_num = 1;
+	edg_wll_add_authz_rule(ctx, &authz_policy, ADMIN_ACCESS, &rule);
 
 	return 0;
 }
