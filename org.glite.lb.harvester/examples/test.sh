@@ -122,7 +122,7 @@ init() {
 	logev="$GLITE_LOCATION/bin/glite-lb-logevent -x -S `pwd`/LB/proxy.sockstore.sock -U localhost"
 	purge="$GLITE_LOCATION/bin/glite-lb-purge"
 	[ -x "$purge" ] || purge="$GLITE_LOCATION/sbin/glite-lb-purge"
-	for dir in "$GLITE_LOCATION/examlpes" "`pwd`/../build" "`pwd`"; do
+	for dir in "$GLITE_LOCATION/examples" "`pwd`/../build" "`pwd`"; do
 		if [ -x "$dir/glite-lb-harvester-dbg" ]; then
 			rtm="$dir/glite-lb-harvester-dbg"
 		fi

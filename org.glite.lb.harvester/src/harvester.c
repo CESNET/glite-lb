@@ -1011,7 +1011,7 @@ typedef struct {
 //
 static void db_store_change_perform_sql(thread_t *t, edg_wll_JobStatCode state, db_job_t *rec) {
 	char *state_entered_str = NULL, *rtm_timestamp_str = NULL, *regtime_str = NULL;
-	char *sql = NULL, *sql2 = NULL, *sql_part = NULL;
+	char *sql = NULL, *sql2 = NULL, *sql_part = NULL, *tmp = NULL;
 	const char *active = "true", *state_changed = "true";
 
 	if (state == EDG_WLL_JOB_PURGED) {
@@ -1040,10 +1040,14 @@ static void db_store_change_perform_sql(thread_t *t, edg_wll_JobStatCode state, 
 			glite_lbu_TimestampToDB(t->dbctx, rec->rtm_timestamp, &rtm_timestamp_str);
 			glite_lbu_TimeToDB(t->dbctx, rec->registered, &regtime_str);
 
-			if (rec->vo) trio_asprintf(&sql_part, ", vo='%|Ss' ", rec->vo);
-			if (rec->rb) trio_asprintf(&sql_part, ", rb='%|Ss' ", rec->rb);
-			if (!sql_part) sql_part = strdup(" ");
-			trio_asprintf(&sql, "UPDATE " RTM_DB_TABLE_JOBS " SET ce='%|Ss', queue='%|Ss', ui='%|Ss', state='%|Ss', state_entered=%s, rtm_timestamp=%s, active=%s, state_changed=%s, registered=%s%sWHERE jobid='%|Ss' AND lb='%|Ss'", rec->ce, rec->queue, rec->ui, rec->state, state_entered_str, rtm_timestamp_str, active, state_changed, regtime_str, sql_part, rec->unique_str, rec->lb);
+			if (rec->vo) trio_asprintf(&sql_part, ", vo='%|Ss'", rec->vo);
+			if (rec->rb) {
+				trio_asprintf(&tmp, "%s, rb='%|Ss'", sql_part ? : "", rec->rb);
+				free(sql_part);
+				sql_part = tmp;
+				tmp = NULL;
+			}
+			trio_asprintf(&sql, "UPDATE " RTM_DB_TABLE_JOBS " SET ce='%|Ss', queue='%|Ss', ui='%|Ss', state='%|Ss', state_entered=%s, rtm_timestamp=%s, active=%s, state_changed=%s, registered=%s%s WHERE jobid='%|Ss' AND lb='%|Ss'", rec->ce, rec->queue, rec->ui, rec->state, state_entered_str, rtm_timestamp_str, active, state_changed, regtime_str, sql_part ? : "", rec->unique_str, rec->lb);
 			lprintf(t, INS, "update: %s", sql);
 			switch (glite_lbu_ExecSQL(t->dbctx, sql, NULL)) {
 			case -1:
