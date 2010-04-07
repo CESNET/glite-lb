@@ -198,7 +198,7 @@ and the server started up.
 Then the dump files can be loaded back with complementary
 \verb'glite-lb-load' utility.
 
-Server superuser privileges (see section~\ref{inst:superusers}) are required to run \verb'glite-lb-dump' and \verb'glite-lb-load'.
+Server privileges granting \verb'ADMIN_ACCESS' (see section~\ref{inst:authz}) are required to run \verb'glite-lb-dump' and \verb'glite-lb-load'.
 Dumping the events does not interfere with normal server operation.
 
 This backup strategy can interfere with too aggressive setting of old
@@ -246,7 +246,7 @@ It is recommended (and the default YAIM setup does so, via
 the \verb'glite-lb-export.sh' wrapper) to run the purge
 command periodically from cron.
 
-Server superuser privileges (see section~\ref{inst:superusers}) are required to run \verb'glite-lb-purge'.
+Server privileges granting \verb'ADMIN_ACCESS' (see section~\ref{inst:authz}) are required to run \verb'glite-lb-purge'.
 
 If the server database has already grown huge, the purge operation can take
 rather long and hit the \LB server operation timeout. At client side, \ie the
@@ -339,6 +339,7 @@ wiki page:
 \url{http://egee.cesnet.cz/mediawiki/index.php/LB_purge_and_export_to_JP}.
 
 \subsubsection{On-line monitoring and statistics}
+\label{maintain:statistics}
 
 \paragraph{CE reputability rank}
 
