@@ -52,6 +52,8 @@ cat <<EOF
    GLITE_PG_ROOT_USER..............postgres root user (default: postgres)
    GLITE_LB_TEST_SERVER_PORT.......(default 10000)
    GLITE_LB_TEST_PIDFILE...........(default /tmp/glite-lb-test.pid)
+   GLITE_LB_NOTIF_IL_PIDFILE.......(default /tmp/glite-lb-notif-il-test.pid)
+   GLITE_LB_PROXY_IL_PIDFILE.......(default /tmp/glite-lb-proxy-il-test.pid)
    GLITE_RTM_TEST_PIDFILE..........(default /tmp/glite-rtm-test.pid)
    GLITE_RTM_TEST_TTL..............notif validity (default 60 seconds)
    GLITE_RTM_TEST_ADDITIONAL_ARGS..additional arguments for harvester
@@ -97,7 +99,7 @@ init() {
 	DB_HOST=`echo $GLITE_LB_TEST_DB| sed 's!^.*@!!' | sed 's!:.*!!'`
 	DB_NAME=`echo $GLITE_LB_TEST_DB| sed 's!^.*:!!'`
 	MYSQL_ARGS="-u ${GLITE_MYSQL_ROOT_USER:-root}"
-	[ -z "$GLITE_MYSQL_ROOT_PASSWORD" ] || ARGS="--password=${GLITE_MYSQL_ROOT_PASSWORD} $MYSQL_ARGS"
+	[ -z "$GLITE_MYSQL_ROOT_PASSWORD" ] || MYSQL_ARGS="--password=${GLITE_MYSQL_ROOT_PASSWORD} $MYSQL_ARGS"
 
 	if [ -z "$GLITE_RTM_TEST_DB" ]; then
 		GLITE_RTM_TEST_DB="rtm/@localhost:rtmtest"
@@ -111,6 +113,8 @@ init() {
 	#other stuff
 	GLITE_LB_TEST_SERVER_PORT=${GLITE_LB_TEST_SERVER_PORT:-"10000"}
 	GLITE_LB_TEST_PIDFILE=${GLITE_LB_TEST_PIDFILE:-"/tmp/glite-lb-test.pid"}
+	GLITE_LB_NOTIF_IL_PIDFILE=${GLITE_LB_NOTIF_IL_PIDFILE:-"/tmp/glite-lb-notif-il-test.pid"}
+	GLITE_LB_PROXY_IL_PIDFILE=${GLITE_LB_PROXY_IL_PIDFILE:-"/tmp/glite-lb-proxy-il-test.pid"}
 	GLITE_RTM_TEST_PIDFILE=${GLITE_RTM_TEST_PIDFILE:-"/tmp/glite-rtm-test.pid"}
 	GLITE_RTM_TEST_TTL=${GLITE_RTM_TEST_TTL:-"60"}
 
@@ -158,7 +162,7 @@ create_db() {
 		echo -n "."
 		mysql $MYSQL_ARGS -e "GRANT ALL on $DB_NAME.* to $DB_USER@$DB_HOST" && \
 		echo -n "."
-		mysql -u $DB_USER $DB_NAME -h $DB_HOST < $GLITE_LOCATION/etc/glite-lb-dbsetup.sql || return $?
+		mysql -u $DB_USER $DB_NAME -h $DB_HOST < $GLITE_LOCATION/etc/glite-lb/glite-lb-dbsetup.sql || return $?
 		echo -n "."
 		mkdir -p `pwd`/LB
 		cat > `pwd`/LB/glite-lb-index.conf << EOF
@@ -262,7 +266,7 @@ run_daemons() {
 	  -D `pwd`/LB/dump -S `pwd`/LB/purge \
 	  -V `pwd`/LB/voms \
 	  --notif-il-sock `pwd`/LB/notif.sock --notif-il-fprefix `pwd`/LB/notif-data \
-	  --super-user "$identity" > `pwd`/LB/glite-lb-test-pre.log 2>&1
+	> `pwd`/LB/glite-lb-test-pre.log 2>&1
 	if [ x"$?" != x"0" ]; then
 		cat `pwd`/LB/glite-lb-test-pre.log
 		echo FAILED
@@ -275,7 +279,8 @@ run_daemons() {
 	echo -n "L"
 	X509_USER_KEY=${X509_USER_KEY} X509_USER_CERT=${X509_USER_CERT} \
 	$GLITE_LOCATION/bin/glite-lb-interlogd \
-	  --file-prefix `pwd`/LB/proxy-data --socket `pwd`/LB/proxy-il.sock > `pwd`/LB/glite-interlog-test-pre.log 2>&1
+	  --file-prefix `pwd`/LB/proxy-data --socket `pwd`/LB/proxy-il.sock \
+	  --pidfile $GLITE_LB_PROXY_IL_PIDFILE > `pwd`/LB/glite-interlog-test-pre.log 2>&1
 	if [ x"$?" != x"0" ]; then
 		cat `pwd`/LB/glite-interlog-test-pre.log
 		echo FAILED
@@ -289,7 +294,8 @@ run_daemons() {
 	echo -n "N"
 	X509_USER_KEY=${X509_USER_KEY} X509_USER_CERT=${X509_USER_CERT} \
 	$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
-	  --file-prefix `pwd`/LB/notif-data --socket `pwd`/LB/notif.sock > `pwd`/LB/glite-notif-test-pre.log 2>&1
+	  --file-prefix `pwd`/LB/notif-data --socket `pwd`/LB/notif.sock \
+	  --pidfile $GLITE_LB_NOTIF_IL_PIDFILE > `pwd`/LB/glite-notif-test-pre.log 2>&1
 	if [ x"$?" != x"0" ]; then
 		cat `pwd`/LB/glite-notif-test-pre.log
 		echo FAILED
@@ -395,7 +401,7 @@ kill_daemons() {
 	[ ! -z "$pid2" ] && kill -9 $pid2 2>/dev/null
 	[ ! -z "$pid3" ] && kill -9 $pid3 2>/dev/null
 	[ ! -z "$pid4" ] && kill -9 $pid4 2>/dev/null
-	rm -f "${GLITE_LB_TEST_PIDFILE}" "${GLITE_RTM_TEST_PIDFILE}"
+	rm -f "${GLITE_LB_TEST_PIDFILE}" "${GLITE_RTM_TEST_PIDFILE}" "${GLITE_LB_NOTIF_IL_PIDFILE}" "${GLITE_LB_PROXY_IL_PIDFILE}"
 	rm -f `pwd`/LB/*.sock
 }
 
