@@ -1627,7 +1627,7 @@ void *notify_thread(void *thread_data) {
 	struct timeval to;
 	edg_wll_JobStat jobstat, *jobstates;
 	notif_t *notif, *notif_jdl;
-	edg_wll_QueryRec *conditions[3] = { NULL, NULL, NULL }, condition[2], condition2[2];
+	edg_wll_QueryRec *conditions[3] = { NULL, NULL, NULL }, condition[3], condition2[2];
 	int sock = -1, updated = 0, error = 0, received = 0;
 	thread_t *t = (thread_t *)thread_data;
 	edg_wll_Context ctx = NULL;
@@ -1776,6 +1776,9 @@ void *notify_thread(void *thread_data) {
 					condition[0].attr = EDG_WLL_QUERY_ATTR_STATUS;
 					condition[0].op = EDG_WLL_QUERY_OP_EQUAL;
 					condition[0].value.i = EDG_WLL_JOB_WAITING;
+					condition[1].attr = EDG_WLL_QUERY_ATTR_STATUS;
+					condition[1].op = EDG_WLL_QUERY_OP_EQUAL;
+					condition[1].value.i = EDG_WLL_JOB_SUBMITTED;
 					condition2[0].attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
 					condition2[0].op = EDG_WLL_QUERY_OP_CHANGED;
 					flags = EDG_WLL_STAT_CLASSADS;
