@@ -781,7 +781,7 @@ static int db_save_notifs_file(thread_t *t) {
 	char *filename = NULL;
 	int retval = 1;
 	notif_t *notif;
-	int i;
+	int i, cnt;
 	char *valid_str = NULL, *refresh_str = NULL, *last_update_str = NULL, *id_str = NULL;
 
 	asprintf(&filename, "%s-new", config.notif_file);
@@ -790,6 +790,7 @@ static int db_save_notifs_file(thread_t *t) {
 		goto quit;
 	}
 
+	cnt = 0;
 	for (i = 0; i < db.n; i++) {
 		notif = db.notifs + i;
 		if (!notif->active) {
@@ -805,6 +806,7 @@ static int db_save_notifs_file(thread_t *t) {
 			rtm_timestamp2str(notif->last_update, &last_update_str);
 
 			fprintf(f, RTM_FILE_NOTIF_PRINTF, id_str, rtm_notiftype2str(notif->type), valid_str, refresh_str, last_update_str, notif->error);
+			cnt++;
 
 			free(valid_str); valid_str = NULL;
 			free(refresh_str); refresh_str = NULL;
@@ -819,12 +821,15 @@ static int db_save_notifs_file(thread_t *t) {
 		goto quit;
 	}
 	retval = 0;
+
+	if (!cnt) unlink(config.notif_file);
+
 quit:
 	free(filename);
 	free(valid_str);
 	free(refresh_str);
 	free(last_update_str);
-	return 0;
+	return retval;
 }
 
 
@@ -1454,7 +1459,7 @@ int load_notifs_file() {
 	int retval = 1;
 
 	if ((f = fopen(config.notif_file, "rt")) == NULL) {
-		lprintf(NULL, WRN, "WARNING: can't open notification file '%s'", config.notif_file);
+		if (errno != ENOENT) lprintf(NULL, WRN, "WARNING: can't open notification file '%s'", config.notif_file);
 		return 0;
 	}
 
