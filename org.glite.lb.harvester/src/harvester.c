@@ -526,28 +526,40 @@ const char *rtm_notiftype2str(int type) {
  *	HTTPS://[2001:0f68:0000:0000:0000:0000:1986:69af]:80/
  *	2001:0f68::1986:69af
  */
-char* rtm_ns2hostname(const char *network_server) {
+char* rtm_url_parse(const char *url, int only_hostname) {
 	char *ns, *pos;
 	size_t len;
 
-	if (strncasecmp(network_server, "https://", 8) == 0) {
-		ns = strdup(network_server + 8);
-		// first backslash - path
-		pos = strchr(ns, '/');
-		if (pos) pos[0] = '\0';
-		// last colon - port separator
-		pos = strrchr(ns, ':');
-		if (pos) pos[0] = '\0';
-		// brackets - IPv6 address
-		len = strlen(ns);
-		if (len >= 2 && ns[0] == '[' && ns[len - 1] == ']') {
-			pos = strndup(ns + 1, len - 2);
-			free(ns);
-			ns = pos;
+	if (strncasecmp(url, "https://", 8) == 0) {
+		ns = strdup(url + 8);
+		if (only_hostname) {
+			// first backslash - path
+			pos = strchr(ns, '/');
+			if (pos) pos[0] = '\0';
+			// last colon - port separator
+			pos = strrchr(ns, ':');
+			if (pos) pos[0] = '\0';
+			// brackets - IPv6 address
+			len = strlen(ns);
+			if (len >= 2 && ns[0] == '[' && ns[len - 1] == ']') {
+				pos = strndup(ns + 1, len - 2);
+				free(ns);
+				ns = pos;
+			}
 		}
 		return ns;
 	} else
-		return strdup(network_server);
+		return strdup(url);
+}
+
+
+char *rtm_url2hostname(const char *url) {
+	return rtm_url_parse(url, 1);
+}
+
+
+char *rtm_url2stripped(const char *url) {
+	return rtm_url_parse(url, 0);
 }
 
 
@@ -570,7 +582,7 @@ int wlcg_store_message(thread_t *t, __attribute((unused))notif_t *notif, edg_wll
 	glite_jobid_getServerParts(stat->jobId, &lbhost, &port);
 	state_str = edg_wll_StatToString(stat->state);
 	vo = edg_wll_JDLField(stat,"VirtualOrganisation") ? : strdup("Unknown");
-	network_host = stat->network_server ? rtm_ns2hostname(stat->network_server) : NULL;
+	network_host = stat->network_server ? rtm_url2hostname(stat->network_server) : NULL;
 
 	if (!t->dash_filename || !t->dash_fd) {
 		free(t->dash_filename);
@@ -1137,7 +1149,7 @@ static int db_store_change(thread_t *t, notif_t *notif, __attribute((unused))int
 	if (config.dbcs && t->dbctx) {
 		db_job_t rec;
 		char *colon;
-		char *unique_str = NULL, *network_server = NULL;
+		char *unique_str = NULL, *network_server = NULL, *destination = NULL;
 
 		memset(&rec, 0, sizeof rec);
 		// L&B server
@@ -1147,7 +1159,8 @@ static int db_store_change(thread_t *t, notif_t *notif, __attribute((unused))int
 		rec.unique_str = unique_str;
 		rec.jobid = jobid_str;
 		// CE
-		rec.ce = stat->destination ? : "unknown";
+		destination = stat->destination ? rtm_url2stripped(stat->destination) : strdup("unknown");
+		rec.ce = destination;
 		// queue
 		rec.queue = strchr(rec.ce, '/');
 		if (rec.queue) *rec.queue++='\0';
@@ -1157,7 +1170,7 @@ static int db_store_change(thread_t *t, notif_t *notif, __attribute((unused))int
 		// Virtual Organization
 		rec.vo = vo;
 		// Resource Broker
-		network_server = stat->network_server ? rtm_ns2hostname(stat->network_server) : strdup("unknown");
+		network_server = stat->network_server ? rtm_url2hostname(stat->network_server) : strdup("unknown");
 		rec.rb = network_server;
 		// UI
 		rec.ui = stat->ui_host ? : "unknown";
@@ -1175,6 +1188,7 @@ static int db_store_change(thread_t *t, notif_t *notif, __attribute((unused))int
 
 		free(unique_str);
 		free(network_server);
+		free(destination);
 	}
 #endif
 
