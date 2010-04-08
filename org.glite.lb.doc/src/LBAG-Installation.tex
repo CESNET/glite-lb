@@ -296,8 +296,18 @@ to meet specific needs.
 
 \subsubsection{Authorization policy}
 \label{inst:authz}
-Certain operations on the \LB server are considered privileged and
-special authorization is required to invoke them. For example, a privileged
+The \LB server applies a quite strict access control policy on the
+operations provided to the clients to ensure a sufficient level of data
+protection. By default, the information about a job is only available to the
+owner of the job. The job owner can specify an ACL assigned to their jobs
+specifying permissions granted to other users so that they could access the
+job records, too. More information about the ACL management can be found in
+the \LB Users' guide.
+
+Apart from using the ACLs, the \LB server administrator can also set a
+server-level policy granting rights to perform particular operation on \LB
+server that are considered privileged.
+For example, a privileged
 user can access data about jobs owned by other users, bypassing the default
 \LB access control mechanism. \LBver{2.1} specifies several categories of
 rights that can be granted to the users:
@@ -317,10 +327,11 @@ server, the other ones make it possible to define a web of trusted sources
 passing events to the \LB server.
 
 \verb'ADMIN_ACCESS' is the most powefull privilege allowing to bypass any
-authorization controls on the server. It replaces the superuser role, which
+authorization checks on the server. It replaces the superuser role, which
 existed in \LBver{2.0} and older. Note, that the \verb'--super-users'
 command-line option still exists and translates internally into granting
-\verb'ADMIN_ACCESS'. 
+\verb'ADMIN_ACCESS'. The \LB server's identity is automatically added to
+this category.
 
 When granted to a user, the \verb'STATUS_FOR_MONITORING' right allows the user to
 query statuses of all jobs maintaned by the server, however only a small
@@ -355,7 +366,10 @@ Especially, being granted the \verb'LOG_GENERAL_EVENTS' right is not sufficient 
 change ACLs on jobs of other people, etc.
 
 The \LB policy is specified in a policy configuration file that must be given
-in the server configuration. The format of the policy is a subset of the
+in the server configuration. Specifying the policy file also triggers the
+enforcement of access policy rights, especially the ones describing the event
+sources. If the policy is not enabled, the \LB server accepts events from any
+logger with a trusted certificate. The format of the policy is a subset of the
 Simplified policy langauge introduced by the Argus gLite authorization
 service\footnote{\url{https://twiki.cern.ch/twiki/bin/view/EGEE/SimplifiedPolicyLanguage}}.
 Unlike the Argus language, the \LB policy supports only certificate subject
