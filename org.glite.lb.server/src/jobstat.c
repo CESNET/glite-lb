@@ -107,6 +107,8 @@ check_jobstat_authz(edg_wll_Context ctx,
 	edg_wll_ResetError(ctx);
 	princ.name = ctx->peerName;
 	princ.fqans = ctx->fqans;
+	if (check_authz_policy(&ctx->authz_policy, &princ, READ_ALL))
+		return 1;
 	if (check_authz_policy(&ctx->authz_policy, &princ, STATUS_FOR_MONITORING)) {
 		*flags |= STATUS_FOR_MONITORING;
 		return 1;

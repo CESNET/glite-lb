@@ -303,7 +303,7 @@ static void usage(char *me)
 static int wait_for_open(edg_wll_Context,const char *);
 static int decrement_timeout(struct timeval *, struct timeval, struct timeval);
 static int asyn_gethostbyaddr(char **, char **, const struct sockaddr *, int, struct timeval *, int );
-static int add_root(edg_wll_Context, char *);
+static int add_root(edg_wll_Context, char *, authz_action);
 static int parse_limits(char *, int *, int *, int *);
 static int check_mkdir(const char *);
 
@@ -472,7 +472,7 @@ int main(int argc, char *argv[])
 		case 'X': notif_ilog_socket_path = strdup(optarg); break;
 		case 'Y': notif_ilog_file_prefix = strdup(optarg); break;
 		case 'i': strcpy(pidfile,optarg); pidfile_forced = 1; break;
-		case 'R': add_root(ctx, optarg); break;
+		case 'R': add_root(ctx, optarg, ADMIN_ACCESS); break;
 		case 'F': glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL,
 				"%s: Option --super-users-file is deprecated, specify policy using --policy instead");
 			  return 1;
@@ -728,7 +728,8 @@ int main(int argc, char *argv[])
 		{
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server identity: %s", mycred->name);
 			server_subject = strdup(mycred->name);
-			add_root(ctx, server_subject);
+			add_root(ctx, server_subject, READ_ALL);
+			add_root(ctx, server_subject, PURGE);
 		}
 		else {
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Server running unauthenticated");
@@ -1884,20 +1885,20 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 	return err;
 }
 
-static int add_root(edg_wll_Context ctx, char *root)
+static int add_root(edg_wll_Context ctx, char *root, authz_action action)
 {
 	struct _edg_wll_authz_attr attr;
 	struct _edg_wll_authz_rule rule;
 
-	attr.value = root;
 	attr.id = ATTR_SUBJECT;
 	if (strncmp(root, "FQAN:", 5) == 0){
 		root += 5;
 		attr.id = ATTR_FQAN;
 	}
+	attr.value = root;
 	rule.attrs = &attr;
 	rule.attrs_num = 1;
-	edg_wll_add_authz_rule(ctx, &authz_policy, ADMIN_ACCESS, &rule);
+	edg_wll_add_authz_rule(ctx, &authz_policy, action, &rule);
 
 	return 0;
 }

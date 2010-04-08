@@ -31,6 +31,8 @@ typedef enum {
     LOG_GENERAL_EVENTS	= 1 << 4,
     GET_STATISTICS	= 1 << 5,
     REGISTER_JOBS	= 1 << 6,
+    READ_ALL		= 1 << 7,
+    PURGE		= 1 << 8,
 } authz_action;
 
 typedef struct action_name {

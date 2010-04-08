@@ -29,6 +29,8 @@ struct action_name action_names[] = {
     { LOG_GENERAL_EVENTS,	"LOG_GENERAL_EVENTS" },
     { GET_STATISTICS,	"GET_STATISTICS" },
     { REGISTER_JOBS,	"REGISTER_JOBS" },	
+    { READ_ALL, "READ_ALL" },
+    { PURGE, "PURGE" },
 };
 
 static int num_actions =

@@ -35,6 +35,7 @@ limitations under the License.
 #include "glite/jobid/strmd5.h"
 
 #include "stats.h"
+#include "authz_policy.h"
 static int stats_inc_counter(edg_wll_Context,const edg_wll_JobStat *,edg_wll_Stats *);
 static int stats_record_duration(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,edg_wll_Stats *);
 
@@ -306,12 +307,16 @@ int edg_wll_StateRateServer(
 	char	*sig = NULL;
 	time_t	afrom,ato;
 	long	match;
+	struct _edg_wll_GssPrincipal_data princ;
+
+        princ.name = ctx->peerName;
+        princ.fqans = ctx->fqans;
 
 	edg_wll_ResetError(ctx);
 
 	switch (ctx->count_statistics) {
 		case 0: return edg_wll_SetError(ctx,ENOSYS,NULL);
-		case 1: if (!ctx->noAuth) return edg_wll_SetError(ctx,EPERM,NULL);
+		case 1: if (!ctx->noAuth && !check_authz_policy(&ctx->authz_policy, &princ, GET_STATISTICS)) return edg_wll_SetError(ctx,EPERM,NULL);
 			break;
 		case 2: break;
 		default: abort();
