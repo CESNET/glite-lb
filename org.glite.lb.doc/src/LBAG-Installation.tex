@@ -314,6 +314,8 @@ rights that can be granted to the users:
 
 \begin{itemize}
 \item \verb'ADMIN_ACCESS'
+\item \verb'READ_ALL'
+\item \verb'PURGE'
 \item \verb'STATUS_FOR_MONITORING'
 \item \verb'GET_STATISTICS'
 \item \verb'REGISTER_JOBS'
@@ -322,16 +324,21 @@ rights that can be granted to the users:
 \item \verb'LOG_GENERAL_EVENTS'
 \end{itemize}
 
-While the first three categories concern with acquring data from the \LB
-server, the other ones make it possible to define a web of trusted sources
+The first action disables all authorization checks. The next four categories concern with acquring data from the \LB
+server, while the other ones make it possible to define a web of trusted sources
 passing events to the \LB server.
 
 \verb'ADMIN_ACCESS' is the most powefull privilege allowing to bypass any
 authorization checks on the server. It replaces the superuser role, which
 existed in \LBver{2.0} and older. Note, that the \verb'--super-users'
 command-line option still exists and translates internally into granting
-\verb'ADMIN_ACCESS'. The \LB server's identity is automatically added to
-this category.
+\verb'ADMIN_ACCESS'.
+
+\verb'READ_ALL' enables to access all job information stored on the server.
+\verb'PURGE' grants the privilege to ask for purging the \LB database.  The \LB
+server's identity is automatically assigned the \verb'READ_ALL' and
+\verb'PURGE' so that these operations are available \eg to a cron script
+running on \LB node.
 
 When granted to a user, the \verb'STATUS_FOR_MONITORING' right allows the user to
 query statuses of all jobs maintaned by the server, however only a small
