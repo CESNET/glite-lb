@@ -141,3 +141,5 @@ Crystal ball:
 - Configuration files moved from /etc to /etc/lb
 - Minor type conversion fix
 
+2.1.4-1
+- Broader authorization policy format
