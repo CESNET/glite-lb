@@ -22,3 +22,7 @@
 - Adopted the Common logging format
 - First release of the harvester module integrated into the L&B subsystem (2.1 and later)
 
+1.0.6-1
+- Resource Broker from JDL for CREAM jobs
+- For CE stripping protocol from destination
+- Test script updates
