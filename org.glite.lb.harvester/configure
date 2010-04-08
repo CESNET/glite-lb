@@ -475,6 +475,10 @@ for my $ext (keys %deps_aux) {
 	jpclient => 'jp.client',
 );
 
+%obsoletes = (
+	'lb.yaim' => [ qq/glite-yaim-lb/ ],
+);
+
 my @t = qw/lb.client-java jobid.api-java lb.types/;
 @topbuild{@t} = (1) x ($#t+1);
 }
@@ -695,16 +699,21 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts
+configure = cd $confdir && /usr/bin/perl \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
 $buildroot
 $package_description
 $package_summary
+};
+	for (@{$obsoletes{"$subsys.$module"}}) {
+		print C "package.obsoletes = $_\n";
+		print C "package.replaces = $_\n";
+	}
 
+	print C qq{
 [Platform-default:DynamicDependency]
-
 };
 	for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
