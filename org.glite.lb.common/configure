@@ -327,15 +327,15 @@ BEGIN{
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
-	'lb.harvester' => [ qw/postgresql:R/ ],
-	'lb.yaim' => [ qw/glite-yaim-core:R/ ],
+	'lb.harvester' => [ qw// ],
+	'lb.yaim' => [ qw/yaim_core:R/ ],
 	'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
 	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
 	'lbjp-common.log' => [ qw/log4c/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
-	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
+	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B/ ],
 	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
@@ -475,6 +475,10 @@ for my $ext (keys %deps_aux) {
 	jpclient => 'jp.client',
 );
 
+%obsoletes = (
+	'lb.yaim' => [ qq/glite-yaim-lb/ ],
+);
+
 my @t = qw/lb.client-java jobid.api-java lb.types/;
 @topbuild{@t} = (1) x ($#t+1);
 }
@@ -490,7 +494,7 @@ sub mkinc
 	my %aux;
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
@@ -566,10 +570,11 @@ BEGIN{
 		glite_version=>'glite-version',
 		glite_info_templates=>'glite-info-templates',
 		glue_schema=>'glue-schema',
+		yaim_core=>'org.glite.yaim.core',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials/],
-		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema/],
+		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 	);
 };
 
@@ -694,16 +699,21 @@ init = None
 install = make install
 clean = make clean
 test = make check
-configure = cd $confdir && \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts
+configure = cd $confdir && /usr/bin/perl \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts
 checkstyle = None
 
 [Platform-default:Property]
 $buildroot
 $package_description
 $package_summary
+};
+	for (@{$obsoletes{"$subsys.$module"}}) {
+		print C "package.obsoletes = $_\n";
+		print C "package.replaces = $_\n";
+	}
 
+	print C qq{
 [Platform-default:DynamicDependency]
-
 };
 	for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
