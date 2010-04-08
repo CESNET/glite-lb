@@ -513,7 +513,7 @@ static int check_notif_request(
 	char	**destination)
 {
 	char	   *nid_s = NULL,
-			   *stmt, *user, *dest = NULL;
+			   *stmt = NULL, *user, *dest = NULL;
 	int			ret;
 	glite_lbu_Statement	s = NULL;
 
@@ -731,7 +731,7 @@ static int update_notif(
 			char *errt, *errd;
 
 			edg_wll_Error(ctx, &errt, &errd);
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "edg_wll_NotifChangeIL(): %s (%s)");
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "edg_wll_NotifChangeIL(): %s (%s)", errt, errd);
 			free(errt);
 			free(errd);
 		}

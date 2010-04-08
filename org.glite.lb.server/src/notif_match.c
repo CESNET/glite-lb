@@ -235,6 +235,9 @@ static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const
 	edg_wll_ResetError(ctx);
 	if (strcmp(stat->owner,recip) == 0
 		|| edg_wll_amIroot(recip,NULL,&ctx->authz_policy)) return 1;
+	princ.name = (char *)recip;
+	if (check_authz_policy(&ctx->authz_policy, &princ, READ_ALL))
+		return 1;
 
 	if (stat->acl) {
 		ret = edg_wll_DecodeACL(stat->acl,&acl->value);
@@ -253,7 +256,6 @@ static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const
 		edg_wll_ResetError(ctx);
 	}
 
-	princ.name = (char *)recip;
 	if (check_authz_policy(&ctx->authz_policy, &princ, STATUS_FOR_MONITORING)) {
 		*authz_flags |= STATUS_FOR_MONITORING;
                 return 1;
