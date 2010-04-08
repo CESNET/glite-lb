@@ -34,3 +34,5 @@
 - Support for logging sandbox transfers as jobs of a specific type
 - Support for CREAM jobs
 
+1.1.1-1
+- JDL status field for CREAM jobs too (for notifications)
