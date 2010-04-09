@@ -65,7 +65,7 @@ db_store(edg_wll_Context ctx, char *event)
 
   local_job = is_job_local(ctx, ev->any.jobId);
 
-  if (check_store_authz(ctx, ev) != 0)
+  if (!ctx->isProxy && check_store_authz(ctx, ev) != 0)
     goto err;
 
 #ifdef LB_PERF
