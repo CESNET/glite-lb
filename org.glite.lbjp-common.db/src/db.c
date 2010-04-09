@@ -132,41 +132,58 @@ void glite_lbu_TimestampToStr(double t, char **str) {
 }
 
 
-time_t glite_lbu_StrToTime(const char *str) {
-	struct tm       tm;
+static time_t tm2time(struct tm *tm) {
+	static struct tm tm_last = { tm_year:0, tm_mon:0 };
+	static time_t t = (time_t)-1;
+	static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 	char *tz;
-	time_t t;
 
-	memset(&tm,0,sizeof(tm));
-	tz = getenv("TZ");
-	setenv("TZ", "UTC", 1);
-	tzset();
+	pthread_mutex_lock(&lock);
+	if (tm->tm_year == tm_last.tm_year && tm->tm_mon == tm_last.tm_mon) {
+		t = t + (tm->tm_sec - tm_last.tm_sec)
+		      + (tm->tm_min - tm_last.tm_min) * 60
+		      + (tm->tm_hour - tm_last.tm_hour) * 3600
+		      + (tm->tm_mday - tm_last.tm_mday) * 86400;
+		memcpy(&tm_last, tm, sizeof tm_last);
+	} else {
+		tz = getenv("TZ");
+		if (tz) tz = strdup(tz);
+		setenv("TZ", "UTC", 1);
+		tzset();
 
-	sscanf(str,"%4d-%02d-%02d %02d:%02d:%02d",
-	        &tm.tm_year,&tm.tm_mon,&tm.tm_mday,
-        	&tm.tm_hour,&tm.tm_min,&tm.tm_sec);
-	tm.tm_year -= 1900;
-	tm.tm_mon--;
-	t =  mktime(&tm);
+		t =  mktime(tm);
+		memcpy(&tm_last, tm, sizeof tm_last);
 
-	if (tz) setenv("TZ", tz, 1);
-	else unsetenv("TZ");
-	tzset();
+		if (tz) setenv("TZ", tz, 1);
+		else unsetenv("TZ");
+		free(tz);
+		tzset();
+	}
+	pthread_mutex_unlock(&lock);
 
 	return t;
 }
 
 
-double glite_lbu_StrToTimestamp(const char *str) {
-	struct tm	tm;
-	double	sec, t;
-	char *tz;
+time_t glite_lbu_StrToTime(const char *str) {
+	struct tm       tm;
 
 	memset(&tm,0,sizeof(tm));
-	tz = getenv("TZ");
-	setenv("TZ", "UTC", 1);
-	tzset();
+	sscanf(str,"%4d-%02d-%02d %02d:%02d:%02d",
+	        &tm.tm_year,&tm.tm_mon,&tm.tm_mday,
+        	&tm.tm_hour,&tm.tm_min,&tm.tm_sec);
+	tm.tm_year -= 1900;
+	tm.tm_mon--;
 
+	return tm2time(&tm);
+}
+
+
+double glite_lbu_StrToTimestamp(const char *str) {
+	struct tm	tm;
+	double	sec;
+
+	memset(&tm,0,sizeof(tm));
 	sscanf(str,"%4d-%02d-%02d %02d:%02d:%lf",
 		&tm.tm_year,&tm.tm_mon,&tm.tm_mday,
 		&tm.tm_hour,&tm.tm_min,&sec);
@@ -174,13 +191,7 @@ double glite_lbu_StrToTimestamp(const char *str) {
 	tm.tm_mon--;
 	tm.tm_sec = sec;
 
-	t = (sec - tm.tm_sec) + mktime(&tm);
-
-	if (tz) setenv("TZ", tz, 1);
-	else unsetenv("TZ");
-	tzset();
-
-	return t;
+	return (sec - tm.tm_sec) + tm2time(&tm);
 }
 
 

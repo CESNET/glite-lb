@@ -21,7 +21,7 @@ version=${module.version}
 
 CC=gcc
 
-VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples
+VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples:${top_srcdir}/test
 
 DEBUG:=-g -O0 -W -Wall
 
@@ -65,7 +65,9 @@ TEST_INC:=-I${cppunit_prefix}/include
 LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
+COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 EXT_LIBS:=-lglite_lbu_trio -lglite_lbu_log -lpthread ${DL_LIBS}
@@ -124,10 +126,13 @@ db_test_psql: db_test_psql.lo libglite_lbu_dbtest.la
 db_expire: db_expire.lo libglite_lbu_dbtest.la
 	${LINK} -o $@ $+ ${EXT_LIBS}
 
+timezone: timezone.lo libglite_lbu_db.la
+	${LINKXX} -o $@ $+ ${TEST_LIBS} ${EXT_LIBS}
+
 compile: libglite_lbu_db.la
 
-check:
-	-echo No checks here yet.
+check: timezone
+	./timezone
 
 test_coverage:
 	-mkdir coverage
@@ -171,7 +176,7 @@ install: all
 clean:
 	rm -rvf *.o *.lo *.loT .libs lib* *.c *.h *.dox C/ CPP/
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
-	rm -rvf db_expire db_test db_test_mysql db_test_psql
+	rm -rvf db_expire db_test db_test_mysql db_test_psql timezone
 
 db-mysql.o db-mysql.lo: db-mysql.c
 	${COMPILE} ${MYSQL_CPPFLAGS} -c $<
@@ -184,6 +189,9 @@ db_test_mysql.o db_test_mysql.lo: db_test.c
 
 db_test_psql.o db_test_psql.lo: db_test.c
 	${COMPILE} -DPSQL_BACKEND=1 -c $< -o $@
+
+timezone.o timezone.lo: timezone.cpp
+	${COMPILEXX} -c $< -o $@ ${TEST_INC}
 
 %.o %.lo: %.c
 	${COMPILE} -c $<
