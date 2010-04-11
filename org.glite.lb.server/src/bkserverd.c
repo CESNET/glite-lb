@@ -1382,6 +1382,16 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 	ctx->noAuth = 1;
 	ctx->noIndex = 1;
 
+	if ( authz_policy.actions_num ) {
+		int i,j;
+		for (i=0; i < authz_policy.actions_num; i++)
+			for (j = 0; j < authz_policy.actions[i].rules_num; j++)
+				edg_wll_add_authz_rule(ctx,
+					&ctx->authz_policy,
+					authz_policy.actions[i].id,
+					&authz_policy.actions[i].rules[j]);
+	}
+
 	/* required to match superuser-authorized notifications */
 
 	if (fake_host)
