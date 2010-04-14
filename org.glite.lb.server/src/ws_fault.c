@@ -56,8 +56,7 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 		free(ed);
 	}
 
-/* FIXME: assignment from incompatible pointer type */
-	detail = soap_faultdetail(soap);
+	detail = (struct SOAP_ENV__Detail *)soap_faultdetail(soap);
 	detail->__type = GFNUM;
 #if GSOAP_VERSION >= 20700
 	detail->fault = f;
@@ -69,40 +68,4 @@ void edg_wll_ErrToFault(const edg_wll_Context ctx,struct soap *soap)
 	soap_receiver_fault(soap,"An error occurred, see detail",NULL);
 	if (soap->version == 2) soap->fault->SOAP_ENV__Detail = detail;
 	else soap->fault->detail = detail;
-}
-
-
-void edg_wll_FaultToErr(const struct soap *soap,edg_wll_Context ctx)
-{
-	struct SOAP_ENV__Detail	*detail;
-	struct lbt__genericFault	*f;
-
-	if (!soap->fault) {
-		edg_wll_SetError(ctx,EINVAL,"SOAP: (no error info)");
-		return;
-	}
-
-	detail = soap->version == 2 ? soap->fault->SOAP_ENV__Detail : soap->fault->detail;
-	if (detail->__type == GFNUM) {
-#if GSOAP_VERSION >= 20709
-		f = (struct lbt__genericFault *)detail->fault;
-#elif GSOAP_VERSION >= 20700
-		f = ((struct _genericFault *) detail->fault)
-			->lbe__genericFault;
-#else
-		f = ((struct _genericFault *) detail->value)
-			->lbe__genericFault;
-#endif
-		if (f) edg_wll_SetError(ctx,f->code,f->description);
-		else edg_wll_SetError(ctx, EIO, "no or not parsable error from SOAP");
-	}
-	else {
-		char	*s;
-
-		if (detail->__any) asprintf(&s, "SOAP: %s", detail->__any);
-		else asprintf(&s,"SOAP: %s", soap->version == 2 ?
-			GLITE_SECURITY_GSOAP_REASON(soap) : soap->fault->faultstring);
-		edg_wll_SetError(ctx,EINVAL,s);
-		free(s);
-	}
 }

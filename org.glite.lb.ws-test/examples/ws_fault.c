@@ -15,6 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#define _GNU_SOURCE 1
+
 #include <string.h>
 #include <stdio.h>
 
@@ -26,10 +28,8 @@ limitations under the License.
 
 
 #if GSOAP_VERSION >= 20709
-  #define GFITEM reason
   #define GFNUM SOAP_TYPE_lbt__genericFault
 #else
-  #define GFITEM lbe__genericFault
   #define GFNUM SOAP_TYPE__genericFault
 #endif
 
@@ -40,14 +40,14 @@ int glite_lb_FaultToErr(const struct soap *soap,char **text)
 	struct lbt__genericFault	*f;
 
 	if (!soap->fault) {
-		*text = NULL;
+		*text = strdup("SOAP: (no error info)");
 		return EINVAL;
 	}
 
 	detail = soap->version == 2 ? soap->fault->SOAP_ENV__Detail : soap->fault->detail;
 	if (detail->__type == GFNUM) {
 #if GSOAP_VERSION >= 20709
-		f = detail->lbe__genericFault;
+		f = (struct lbt__genericFault *)detail->fault;
 #elif GSOAP_VERSION >= 20700
 		f = ((struct _genericFault *) detail->fault)
 			->lbe__genericFault;
@@ -55,11 +55,17 @@ int glite_lb_FaultToErr(const struct soap *soap,char **text)
 		f = ((struct _genericFault *) detail->value)
 			->lbe__genericFault;
 #endif
-		*text = strdup(f->description);
-		return f->code;
+		if (f && (f->description || f->text)) {
+			*text = strdup(f->description ? : f->text);
+			return f->code;
+		} else { 
+			*text = strdup("no or not parsable error from SOAP");
+			return EINVAL;
+		}
 	}
 	else {
-		asprintf(text,"SOAP: %s", soap->version == 2 ?
+		if (detail->__any) asprintf(text, "SOAP: %s", detail->__any);
+		else asprintf(text,"SOAP: %s", soap->version == 2 ?
 			GLITE_SECURITY_GSOAP_REASON(soap) : soap->fault->faultstring);
 		return EINVAL;
 	}

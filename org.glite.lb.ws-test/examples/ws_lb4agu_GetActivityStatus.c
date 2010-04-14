@@ -23,6 +23,7 @@ limitations under the License.
 #include "glite/security/glite_gscompat.h"
 
 #include "bk_ws_H.h"
+#include "ws_fault.h"
 
 #include "LoggingAndBookkeeping.nsmap"
 
@@ -51,6 +52,7 @@ int main(int argc,char** argv)
 	char						*server = "http://localhost:9003/",
 							*jobid = NULL,
 							*name = NULL;
+	int						ret_code = 1;
 
 
 	name = strrchr(argv[0],'/');
@@ -82,9 +84,10 @@ int main(int argc,char** argv)
 
 
 	in = soap_malloc(mydlo, sizeof(*in));
-	out = soap_malloc(mydlo, sizeof(*out));
+	in->id = soap_malloc(mydlo, 1 * sizeof(char *));
 	in->id[0] = soap_strdup(mydlo, jobid);
 	in->__sizeid = 1;
+	out = soap_malloc(mydlo, sizeof(*out));
 
 	switch (err = soap_call___lb4agu__GetActivityStatus(mydlo, server, "",in,out)) {
 	case SOAP_OK:
@@ -96,6 +99,8 @@ int main(int argc,char** argv)
 		soap_begin_send(outsoap);
 		soap_put_PointerTo_lb4ague__GetActivityStatusResponse(outsoap,&out,"status","http://glite.org/wsdl/services/lb4agu:GetActivityStatusResponse");
 		soap_end_send(outsoap);
+
+		ret_code = 0;
 		}
 		break;
 	case SOAP_FAULT: 
@@ -106,8 +111,8 @@ int main(int argc,char** argv)
 
 		err = glite_lb_FaultToErr(mydlo,&et);
 		fprintf(stderr,"%s: %s (%s)\n",argv[0],strerror(err),et);
-		exit(1);
 		}
+		break;
 	default:
 		fprintf(stderr,"err = %d\n",err);
 		soap_print_fault(mydlo,stderr);
@@ -118,5 +123,5 @@ int main(int argc,char** argv)
     free(mydlo);
     glite_gsplugin_free_context(gsplugin_ctx);
 
-    return 0;
+    return ret_code;
 }

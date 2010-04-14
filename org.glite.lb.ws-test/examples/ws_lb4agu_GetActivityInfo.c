@@ -23,6 +23,7 @@ limitations under the License.
 #include "glite/security/glite_gscompat.h"
 
 #include "bk_ws_H.h"
+#include "ws_fault.h"
 
 #include "LoggingAndBookkeeping.nsmap"
 
@@ -51,6 +52,7 @@ int main(int argc,char** argv)
 	char						*server = "http://localhost:9003/",
 							*jobid = NULL,
 							*name = NULL;
+	int						ret_code = 1;
 
 
 	name = strrchr(argv[0],'/');
@@ -97,6 +99,8 @@ int main(int argc,char** argv)
 		soap_begin_send(outsoap);
 		soap_put_PointerTo_lb4ague__GetActivityInfoResponse(outsoap,&out,"status","http://glite.org/wsdl/services/lb4agu:GetActivityInfoResponse");
 		soap_end_send(outsoap);
+
+		ret_code = 0;
 		}
 		break;
 	case SOAP_FAULT: 
@@ -107,8 +111,8 @@ int main(int argc,char** argv)
 
 		err = glite_lb_FaultToErr(mydlo,&et);
 		fprintf(stderr,"%s: %s (%s)\n",argv[0],strerror(err),et);
-		exit(1);
 		}
+		break;
 	default:
 		fprintf(stderr,"err = %d\n",err);
 		soap_print_fault(mydlo,stderr);
@@ -119,5 +123,5 @@ int main(int argc,char** argv)
     free(mydlo);
     glite_gsplugin_free_context(gsplugin_ctx);
 
-    return 0;
+    return ret_code;
 }

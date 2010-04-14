@@ -52,14 +52,14 @@ int main(int argc,char** argv)
 	struct soap				*mydlo = soap_new();
 	struct _lbe__QueryEventsResponse	out,*outp = &out;
 	struct _lbe__QueryEvents		in;	
-	int					opt, err, i;
+	int					opt, err;
 	char					*server = "http://localhost:9003/",
 						*jobid = NULL,
 						*name = NULL;
 
 
-	struct lbt__queryConditions	qc,*qcp;	
-	struct lbt__queryRecord		qr,*qrp;
+	struct lbt__queryConditions	*qcp;
+	struct lbt__queryRecord		*qrp;
 	struct lbt__queryRecValue	qv;
 
 	name = strrchr(argv[0],'/');
@@ -89,21 +89,19 @@ int main(int argc,char** argv)
 		return 1;
 	}
 
-	qcp = &qc;
-	in.jobConditions = &qcp;
-	in.__sizejobConditions = 1;
+	GLITE_SECURITY_GSOAP_LIST_CREATE(mydlo, &in, jobConditions, struct lbt__queryConditions, 1);
+	qcp = GLITE_SECURITY_GSOAP_LIST_GET(in.jobConditions, 0);
 	in.eventConditions = NULL;
 	in.__sizeeventConditions = 0;
 
-	memset(&qc,0,sizeof qc);
-	qc.attr = lbt__queryAttr__JOBID;
-	qc.__sizerecord = 1;
-	qc.record = &qrp;
-	qrp = &qr;
+	memset(qcp,0,sizeof(*qcp));
+	qcp->attr = lbt__queryAttr__JOBID;
+	GLITE_SECURITY_GSOAP_LIST_CREATE(mydlo, qcp, record, struct lbt__queryRecord, 1);
+	qrp = GLITE_SECURITY_GSOAP_LIST_GET(qcp->record, 0);
 
-	memset(&qr,0,sizeof qr);
-	qr.op = lbt__queryOp__EQUAL;
-	qr.value1 = &qv;
+	memset(qrp,0,sizeof(*qrp));
+	qrp->op = lbt__queryOp__EQUAL;
+	qrp->value1 = &qv;
 
 	GLITE_SECURITY_GSOAP_CHOICE_SET(&qv,c,lbt,queryRecValue,2,jobid);
 
