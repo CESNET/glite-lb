@@ -92,7 +92,7 @@ my %lbmodules = (
 	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
-	'jobid' => [qw/api-c api-cpp api-java/],
+	'jobid' => [qw/api-c api-cpp/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	);
 
@@ -328,7 +328,7 @@ BEGIN{
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/postgresql:R/ ],
-	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
+	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
@@ -370,7 +370,7 @@ for my $jar (keys %need_jars) {
 	'lb.client' => [ qw/
 		lb.types:B lb.common
 		lbjp-common.trio
-		jobid.api-cpp jobid.api-c
+		jobid.api-cpp:B jobid.api-c
 		security.gss
 	/ ],
 	'lb.client-java' => [ qw/
@@ -379,7 +379,7 @@ for my $jar (keys %need_jars) {
 		jobid.api-java
 	/ ],
 	'lb.common' => [ qw/
-		jobid.api-cpp jobid.api-c
+		jobid.api-cpp:B jobid.api-c
 		lb.types:B lbjp-common.trio security.gss
 	/ ],
 	'lb.doc' => [ qw/lb.types:B/ ],
@@ -602,10 +602,12 @@ sub mode_etics {
 
 	if ($branch) {
 		$conf = "glite-${subsys}-${module}_$branch"; 
-		$conftag = $branch; }
+		$conftag = $branch; 
+		$dwpath = ""; }
 	else {
 		$conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
-		$conftag = $conf; }
+		$conftag = $conf; 
+		$dwpath = "path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz\n"; }
 #	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
@@ -626,8 +628,7 @@ age = $age
 deploymentType = None
 tag = $conftag
 version = $major.$minor.$rev
-path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz
-
+$dwpath
 [Platform-default:VcsCommand]
 displayName = None
 description = None
