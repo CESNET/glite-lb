@@ -1016,6 +1016,9 @@ static subjobClassCodes class(edg_wll_JobStat *stat)
 				// failed & cancelled
 				return(SUBJOB_CLASS_REST);
 			break;
+		case EDG_WLL_JOB_CANCELLED:
+			return(SUBJOB_CLASS_CLEARED);
+			break;
 		case EDG_WLL_JOB_ABORTED:
 			return(SUBJOB_CLASS_ABORTED);
 			break;
