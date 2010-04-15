@@ -16,3 +16,5 @@
 1.0.1-1
 - make the READ permission be compatible with the value used previously
 
+1.0.2-1
+- Fix build with binary version of this module
