@@ -67,7 +67,7 @@ my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
-	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test/], 
+	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test glite-LB/], 
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp/],
@@ -304,6 +304,7 @@ BEGIN{
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
+	'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R yaim:R/ ],
 	'lbjp-common.db' => [ qw/mysql:R mysql-devel:B/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
@@ -345,7 +346,7 @@ for my $jar (keys %need_jars) {
 	'lb.client' => [ qw/
 		lb.types:B lb.common
 		lbjp-common.trio
-		jobid.api-cpp jobid.api-c
+		jobid.api-cpp:B jobid.api-c
 		security.gss
 	/ ],
 	'lb.client-java' => [ qw/
@@ -353,7 +354,7 @@ for my $jar (keys %need_jars) {
 		jobid.api-java
 	/ ],
 	'lb.common' => [ qw/
-		jobid.api-cpp jobid.api-c
+		jobid.api-cpp:B jobid.api-c
 		lb.types:B lbjp-common.trio security.gss
 	/ ],
 	'lb.doc' => [ qw/lb.types:B/ ],
@@ -379,6 +380,10 @@ for my $jar (keys %need_jars) {
 	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
 	'lb.types' => [ qw// ],
+	'lb.glite-LB' => [ qw/
+		lb.logger:R lb.server:R lb.utils:R lb.doc:R
+		lb.ws-test:R
+	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
@@ -517,10 +522,21 @@ BEGIN{
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
+		trustmanager=>'org.glite.security.trustmanager',
+		utiljava=>'org.glite.security.util-java',
+		yaim=>'org.glite.yaim.lb',
+		gpt=>'gpt',
+		fetchcrl=>'fetch-crl',
+		gip_release=>'glite-info-provider-release',
+		gip_service=>'glite-info-provider-service',
+		bdii=>'bdii',
+		glite_version=>'glite-version',
+		glite_info_templates=>'glite-info-templates',
+		glue_schema=>'glue-schema',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials/],
-		'org.glite'=>[qw/voms gridsite lcas/],
+		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim/],
 	);
 };
 
