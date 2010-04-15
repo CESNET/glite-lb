@@ -60,3 +60,7 @@
 
 4.0.3-2
 - install libraries into $libdir
+
+4.0.4-1
+- Connection pool lock optimization and fixes
+- Rare crash fixes in notify example
