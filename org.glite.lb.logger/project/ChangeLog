@@ -51,3 +51,6 @@
 
 2.0.4-2
 - install libraries into $libdir
+
+2.0.6-1
+- Pidfiles support in daemons
