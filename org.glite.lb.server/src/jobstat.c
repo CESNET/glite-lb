@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+#ident "$Header$"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -1060,6 +1060,9 @@ static subjobClassCodes class(edg_wll_JobStat *stat)
 			else
 				// failed & cancelled
 				return(SUBJOB_CLASS_REST);
+			break;
+		case EDG_WLL_JOB_CANCELLED:
+			return(SUBJOB_CLASS_CLEARED);
 			break;
 		case EDG_WLL_JOB_ABORTED:
 			return(SUBJOB_CLASS_ABORTED);

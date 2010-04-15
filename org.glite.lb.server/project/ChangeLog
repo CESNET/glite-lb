@@ -93,6 +93,9 @@
 2.0.3-2
 - Rebuild with lb.state-machine 1.0.2-1
 
+2.0.6-1
+- Fixed collection state with cancelled subjobs
+
 ---
 Crystal ball:
 2.0.4-1
