@@ -48,9 +48,3 @@
 7.0.3-2
 - install libraries into $libdir
 - buildtime dependency on c-ares
-
-7.0.4-1
-- Fixed test initiation in Makefile
-
-7.0.4-2
-- Buildtime dependency on c-ares
