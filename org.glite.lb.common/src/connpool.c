@@ -1,20 +1,3 @@
-/*
-Copyright (c) Members of the EGEE Collaboration. 2004-2010.
-See http://www.eu-egee.org/partners for details on the copyright holders.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 #include "connpool.h"
 
 #ifdef GLITE_LB_THREADED
@@ -267,8 +250,6 @@ edg_wll_Connections* edg_wll_initConnections() {
         printf("Entering edg_wll_initConnections\n");
     #endif
 
-    edg_wll_poolLock();
-
     if((connectionsHandle.connPool == NULL) &&
        (connectionsHandle.poolSize > 0)) { /* We need to allocate memory for the connPool and connectionLock arrays */ 
 
@@ -296,7 +277,6 @@ edg_wll_Connections* edg_wll_initConnections() {
         connectionsHandle.serverConnection = (edg_wll_ConnPool *) calloc(1, sizeof(edg_wll_ConnPool));
     }
 
-    edg_wll_poolUnlock();
 
   return (&connectionsHandle);
 }
