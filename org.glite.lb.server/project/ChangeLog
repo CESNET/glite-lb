@@ -112,3 +112,6 @@
 2.0.7-1
 - Starting proxy support
 - Fixed collection state with cancelled subjobs
+
+2.0.8-1
+- Rebuild with gridsite 1.5.10.5-3
