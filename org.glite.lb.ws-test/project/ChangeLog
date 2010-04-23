@@ -23,3 +23,7 @@
 1.1.0-1
 - Primitive AGU compatibility
 
+1.1.1-1
+- LB 4 AGU fixes
+- Updated WS error handling
+
