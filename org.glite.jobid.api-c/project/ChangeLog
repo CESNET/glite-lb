@@ -17,3 +17,6 @@
 - Generic lbdir settings in the Makefile
 - Fixed package description and summary
 
+1.0.3-1
+- Fix library versioning
+
