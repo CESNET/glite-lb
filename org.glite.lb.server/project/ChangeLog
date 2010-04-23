@@ -143,3 +143,8 @@ Crystal ball:
 
 2.1.4-1
 - Broader authorization policy format
+
+2.1.5-1
+- READ_ALL and PURGE authorization
+- Refactoring of WS error handling
+
