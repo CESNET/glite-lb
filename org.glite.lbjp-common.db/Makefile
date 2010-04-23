@@ -132,7 +132,7 @@ timezone: timezone.lo libglite_lbu_db.la
 compile: libglite_lbu_db.la
 
 check: timezone
-	./timezone
+	LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${log4c_prefix}/${libdir} ./timezone
 
 test_coverage:
 	-mkdir coverage
