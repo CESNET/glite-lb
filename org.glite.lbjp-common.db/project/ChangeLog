@@ -47,3 +47,7 @@
 2.0.2-1
 - Fixed timezone handling
 
+2.0.3-1
+- More timezone handling fixes and optimization
+- Unit test
+
