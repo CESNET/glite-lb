@@ -78,7 +78,7 @@ echo ""
 fi
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
-CONSUMER_ARGS="-d $COMM_ARGS"
+CONSUMER_ARGS="-i /tmp/perftest_il.pid -d $COMM_ARGS"
 }
 
 group_a_test_a () 
@@ -160,7 +160,7 @@ LOGJOBS_ARGS=" $COMM_ARGS"
 
 group_b_test_a ()
 {
-    CONSUMER_ARGS="-d --nosend --noparse $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend --noparse $COMM_ARGS"
     echo -n "a)"
     run_test il $numjobs
     print_result
@@ -169,7 +169,7 @@ group_b_test_a ()
 
 group_b_test_b () 
 {
-    CONSUMER_ARGS="-d --nosend --nosync $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend --nosync $COMM_ARGS"
     echo -n "b)"
     run_test il $numjobs
     print_result
@@ -178,7 +178,7 @@ group_b_test_b ()
 
 group_b_test_c () 
 {
-    CONSUMER_ARGS="-d --nosend --norecover $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend --norecover $COMM_ARGS"
     echo -n "c)"
     run_test il $numjobs
     print_result
@@ -187,7 +187,7 @@ group_b_test_c ()
 
 group_b_test_x ()
 {
-    CONSUMER_ARGS="-d --nosend --nosync --norecover $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend --nosync --norecover $COMM_ARGS"
     echo -n "x)"
     run_test il $numjobs
     print_result
@@ -201,7 +201,7 @@ group_b_test_d ()
 
 group_b_test_e ()
 {
-    CONSUMER_ARGS="-d --nosend $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend $COMM_ARGS"
     echo -n "e)"
     run_test il $numjobs
     print_result
@@ -280,7 +280,7 @@ LOGJOBS_ARGS=" -m localhost:10500 $COMM_ARGS"
 
 group_c_test_a ()
 {
-    COMPONENT_ARGS="-d  --noparse $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --noparse $COMM_ARGS"
     echo -n "a)"
     run_test il $numjobs
     print_result
@@ -289,7 +289,7 @@ group_c_test_a ()
 
 group_c_test_b ()
 {
-    COMPONENT_ARGS="-d  --nosync $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --nosync $COMM_ARGS"
     echo -n "b)"
     run_test il $numjobs
     print_result
@@ -298,7 +298,7 @@ group_c_test_b ()
 
 group_c_test_c ()
 {
-    COMPONENT_ARGS="-d  --norecover $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --norecover $COMM_ARGS"
     echo -n "c)"
     run_test il $numjobs
     print_result
@@ -307,7 +307,7 @@ group_c_test_c ()
 
 group_c_test_x () 
 {
-    COMPONENT_ARGS="-d  --nosync --norecover $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --nosync --norecover $COMM_ARGS"
     echo -n "x)"
     run_test il $numjobs
     print_result
@@ -316,7 +316,7 @@ group_c_test_x ()
 
 group_c_test_d ()
 {
-    COMPONENT_ARGS="-d  --lazy=10 --nosync --norecover $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --lazy=10 --nosync --norecover $COMM_ARGS"
     echo -n "d)"
     run_test il $numjobs
     print_result
@@ -325,7 +325,7 @@ group_c_test_d ()
 
 group_c_test_e ()
 {
-    COMPONENT_ARGS="-d $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d $COMM_ARGS"
     echo -n "e)"
     run_test il $numjobs
     print_result

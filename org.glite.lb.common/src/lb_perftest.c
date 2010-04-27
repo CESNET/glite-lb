@@ -516,7 +516,8 @@ glite_wll_perftest_produceEventString(char **event, char **jobid)
 					      "", /* parent */
 					      "SIMPLE", /* job type */
 					      0, /* subjobs */
-					      "" /*seed */
+					      "", /*seed */
+					      "" /* WMS DN */
 				    )) < 0) {
 				fprintf(stderr, "produceEventString: error creating registration event\n");
 				if(pthread_mutex_unlock(&perftest_lock) < 0)
