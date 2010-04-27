@@ -99,6 +99,15 @@ stop()
 		killwait $LL_PIDFILE
 		echo -n Stopping glite-lb-interlogd ...
 		killwait $IL_PIDFILE
+
+	# for L&B <= 2.0.5
+	LC_ALL=C
+	if netstat -an --inet | grep "^tcp .* 0.0.0.0:${GLITE_LB_LOGGER_PORT:-9002} .*LISTEN" >/dev/null 2>&1 ;then
+		killall -9 glite-lb-logd
+	fi
+	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_IL_SOCK:-/tmp/interlogger.sock}$" >/dev/null 2>&1 ;then
+		killall -9 glite-lb-interlogd
+	fi
 }
 
 status()

@@ -40,7 +40,7 @@ GLITE_LB_TYPE=${GLITE_LB_TYPE:-'server'} # server, proxy, both
 GLITE_LB_PROXY_SOCK=${GLITE_LB_PROXY_SOCK:-'/tmp/glite-lbproxy-ilog.sock'}
 GLITE_LB_PROXY_FPREFIX=${GLITE_LB_PROXY_FPREFIX:-'/tmp/glite-lbproxy-ilog_events'}
 
-IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-interlogd.pid
+PROXY_IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-interlogd.pid
 NOTIF_IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-notif-interlogd.pid
 
 unset creds port
@@ -140,7 +140,7 @@ start()
 		su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
 			-f $GLITE_LB_NOTIF_FPREFIX -s $GLITE_LB_NOTIF_SOCK \
 			-i $NOTIF_IL_PIDFILE -M 10485760 \
-			$creds $GLITE_LB_NOTIF_OTHER_OPTIONS" && echo " done" || echo " FAILED"
+			$creds $GLITE_LB_NOTIF_IL_OTHER_OPTIONS" && echo " done" || echo " FAILED"
 	else
 		echo Warning: glite-lb-notif-interlogd not installed, LB notifications will not work
 	fi
@@ -154,11 +154,11 @@ start()
 	fi
 
 	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both" ; then
-		if test -x $GLITE_LOCATION/bin/glite-lb-notif-interlogd; then
+		if test -x $GLITE_LOCATION/bin/glite-lb-interlogd; then
 			echo -n Starting glite-lb-interlogd for proxy ...
 			su - $GLITE_USER -c "$GLITE_LOCATION/bin/glite-lb-interlogd \
 				-f $GLITE_LB_PROXY_FPREFIX -s $GLITE_LB_PROXY_SOCK \
-				-i $IL_PIDFILE \
+				-i $PROXY_IL_PIDFILE \
 				$creds $GLITE_LB_PREFIX_OTHER_OPTIONS" && echo " done" || echo " FAILED"
 		else
 			echo Warning: glite-lb-interlogd not installed, logging to LB proxy will not work
@@ -221,15 +221,21 @@ stop()
 	echo " done"
 
 	stop_daemon "glite-lb-bkserverd" $pidfile
-	if test x"$GLITE_LB_EXPORT_ENABLED" = x"true"; then
-		stop_daemon "glite-jp-importer" $jp_importer_pidfile
-	fi
+	stop_daemon "glite-jp-importer" $jp_importer_pidfile 2>/dev/null
 
-	if test -f $IL_PIDFILE; then
-		stop_daemon glite-lb-interlogd $IL_PIDFILE
+	if test -f $PROXY_IL_PIDFILE; then
+		stop_daemon glite-lb-interlogd $PROXY_IL_PIDFILE
 		echo "done"
 	else 
 		echo "glite-lb-interlogd for proxy not running"
+	fi
+
+	# for L&B <= 2.0.5
+	if netstat -an --unix | grep "^unix .* LISTEN.* $GLITE_LB_NOTIF_SOCK" >/dev/null 2>&1 ;then
+		killall -9 glite-lb-notif-interlogd
+	fi
+	if netstat -an --unix | grep "^unix .* LISTEN.* $GLITE_LB_PROXY_SOCK" >/dev/null 2>&1 ;then
+		killall -9 glite-lb-interlogd
 	fi
 }
 
