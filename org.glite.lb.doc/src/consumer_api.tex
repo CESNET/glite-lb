@@ -520,12 +520,26 @@ Print the results:
 The operations can throw an exception, so the code should be enclosed
 within try--catch clause.
 
-The second example rewritten to C++ looks like that; first the query
+The second example rewritten to C++ is shown here; first the query
 condition vector:
 \lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=queryrec-end\ queryrec]{cons_example2.cpp}
 
 The query itself:
 \lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=query-end\ query]{cons_example2.cpp}
+
+The third example shows event query (as opposed to job state query in
+the first two examples). We are looking for events of jobs, that were
+in past painted (tagged by user) green, but now they are red. The
+necessary query condition vectors are here:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=queryrec-end\ queryrec]{cons_example3.cpp}
+
+The query itself:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=query-end\ query]{cons_example3.cpp}
+
+The resulting event vector is dumped using the utility function
+\verb'dumpEvent()' listed above:
+\lstinputlisting[title={\bf File: }\lstname,numbers=left,linerange=printevents-end\ printevents]{cons_example3.cpp}
+
 
 \subsubsection{Job}
 The \verb'glite::lb::Job' class encapsulates \LB server queries
@@ -539,7 +553,7 @@ void log(std::vector<Event> &events) const;
 \end{lstlisting}
 
 \marginpar{\bf Important!}%
-It is important to notice that \verb'Job' objects contain
+It is important to notice that \verb'Job' contain
 \verb'ServerConnection' as private member and thus encapsulate client
 part of context. That makes them relatively heavy--weight objects and
 therefore it is not recommended to create too many instances, but
