@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 {
 	string		server_s, jobid_s, user;
 	int		opt, err = 0;
-	glite_jobid_t   jobid = NULL;
+	glite::jobid::JobId   jobid;
 	long 		i;
 	int             port = 0;
 	
@@ -76,22 +76,20 @@ int main(int argc, char *argv[])
 	}
 
         /*variables*/
-	ServerConnection    server;
-	Event               *eventsOut;
-	vector<ServerConnection::QueryRec>    jc;
-	vector<ServerConnection::QueryRec>    ec;
+	ServerConnection       lb_server;
+	vector<Event>          eventsOut;
+	vector<QueryRecord>    jc;
+	vector<QueryRecord>    ec;
 	/*end variables*/
 
-	if ( (errno = edg_wlc_JobIdParse(jobid_s, &jobid)) ) { perror(jobid_s); return 1; }
+	try {
+		/*context*/
+		jobid = glite::jobid::JobId(jobid_s);
+		
+		lb_server.setQueryServer(jobid.host(), jobid.port());
+		/*end context*/
 
-	/*context*/
-	edg_wll_InitContext(&ctx);
-	
-	edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER, server);
-	if (port) edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER_PORT, port);
-	/*end context*/
-
-	/*queryrec*/
+		/*queryrec*/
 	jc[0].attr = EDG_WLL_QUERY_ATTR_USERTAG;
 	jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
 	jc[0].attr_id.tag = "color";
