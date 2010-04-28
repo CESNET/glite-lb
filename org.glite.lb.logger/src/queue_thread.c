@@ -251,6 +251,8 @@ queue_thread(void *q)
 int
 event_queue_create_thread(struct event_queue *eq)
 {
+	pthread_attr_t attr;
+
 	assert(eq != NULL);
 
 	event_queue_lock(eq);
@@ -262,7 +264,9 @@ event_queue_create_thread(struct event_queue *eq)
 	}
 
 	/* create the thread itself */
-	if(pthread_create(&eq->thread_id, NULL, queue_thread, eq) < 0) {
+	pthread_attr_init(&attr);
+	pthread_attr_setstacksize(&attr, 16384);
+	if(pthread_create(&eq->thread_id, &attr, queue_thread, eq) < 0) {
 		eq->thread_id = 0;
 		set_error(IL_SYS, errno, "event_queue_create_thread: error creating new thread");
 		event_queue_unlock(eq);
