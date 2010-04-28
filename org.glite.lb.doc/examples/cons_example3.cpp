@@ -53,7 +53,7 @@ static void usage(char *me)
 
 int main(int argc, char *argv[])
 {
-	string		server_s, jobid_s, user;
+	char 		*server_s, *jobid_s, *user;
 	int		opt, err = 0;
 	glite::jobid::JobId   jobid;
 	long 		i;
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 		case '?': usage(argv[0]); return 1;
 		}
 	
-	if ( jobid_s.empty() ) { 
+	if ( !jobid_s ) { 
 		cerr <<  "JobId not given\n"; return 1; 
 	}
 
@@ -83,56 +83,30 @@ int main(int argc, char *argv[])
 	/*end variables*/
 
 	try {
+	  
 		/*context*/
-		jobid = glite::jobid::JobId(jobid_s);
-		
-		lb_server.setQueryServer(jobid.host(), jobid.port());
+		lb_server.setQueryServer(server_s, port);
 		/*end context*/
 
 		/*queryrec*/
-	jc[0].attr = EDG_WLL_QUERY_ATTR_USERTAG;
-	jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
-	jc[0].attr_id.tag = "color";
-	jc[0].value.c = "red";
-	jc[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-	ec[0].attr = EDG_WLL_QUERY_ATTR_USERTAG;
-	ec[0].op = EDG_WLL_QUERY_OP_EQUAL;
-	ec[0].attr_id.tag = "color";
-	ec[0].value.c = "green";
-	ec[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-	/*end queryrec*/
+		jc.push_back(QueryRecord("color", QueryRecord::EQUAL, "red"));
+		ec.push_back(QueryRecord("color", QueryRecord::EQUAL, "green"));
+		/*end queryrec*/
 
-	/*query*/
-	err = edg_wll_QueryEvents(ctx, jc, ec, &eventsOut); 
-	/*end query*/
+		/*query*/
+		events_out = lb_server.queryEvents(jc,ec);
+		/*end query*/
 
-	if ( err == E2BIG ) {
-		fprintf(stderr,"Warning: only limited result returned!\n");
-		return 0;
-	} else if (err) {
-		char	*et,*ed;
-		
-		edg_wll_Error(ctx,&et,&ed);
-		fprintf(stderr,"%s: edg_wll_QueryEvents(): %s (%s)\n",argv[0],et,ed);
 
-		free(et); free(ed);
+		/*printevents*/
+		for(i = 0; i < eventsOut.size(); i++) {
+			dumpEvent(&(eventsOut[i]));
+		}
+		/*end printevents*/
+
+	} catch(std::exception e) {
+		cerr << e.what() << endl;
 	}
 
-	if ( err == ENOENT ) return err;
-
-	/*printevents*/
-	for (i = 0; eventsOut && (eventsOut[i].type); i++ ) {
-		//printf("jobId : %s\n", edg_wlc_JobIdUnparse(eventsOut[i].jobId));
-		printf("event : %s\n\n", edg_wll_EventToString(eventsOut[i].type));
-	}
-	/*end printevents*/
-
-	if ( eventsOut ) {
-		for (i=0; &(eventsOut[i]); i++) edg_wll_FreeEvent(&(eventsOut[i]));
-		free(eventsOut);
-	}
-
-	edg_wll_FreeContext(ctx);
-
-	return err;
+	return 0;
 }
