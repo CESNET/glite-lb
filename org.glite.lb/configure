@@ -55,6 +55,7 @@ my %extern_prefix = (
 	cppunit => '/usr',
 	expat => '/usr',
 	globus => '/opt/globus',
+	myproxy => '/opt/myproxy',
 	gsoap => '/usr',
 	mysql => '/usr',
 	'mysql-devel' => '',
@@ -90,7 +91,7 @@ my %topbuild;
 
 my %lbmodules = (
 	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
-	'security' => [qw/gss gsoap-plugin/],
+	'security' => [qw/gss gsoap-plugin proxyrenewal/],
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
@@ -338,6 +339,7 @@ BEGIN{
 	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B/ ],
 	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
 	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
+	'security.proxyrenewal' =>  [ qw/voms globus:B myproxy/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
@@ -424,6 +426,7 @@ for my $jar (keys %need_jars) {
 	'lbjp-common.trio' => [ qw// ],
 	'security.gss' =>  [ qw// ],
 	'security.gsoap-plugin' =>  [ qw/security.gss/ ],
+	'security.proxyrenewal' =>  [ qw// ],
 	'jobid.api-c' =>  [ qw// ],
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
@@ -556,6 +559,7 @@ BEGIN{
 	%etics_externs = (
 		globus_essentials=>'vdt_globus_essentials',
 		globus=>'globus',
+		myproxy=>'myproxy',
 		cares=>'c-ares',
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
@@ -573,7 +577,7 @@ BEGIN{
 		yaim_core=>'org.glite.yaim.core',
 	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials/],
+		vdt=>[qw/globus globus_essentials myproxy/],
 		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 	);
 };
