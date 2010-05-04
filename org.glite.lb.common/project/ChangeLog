@@ -54,3 +54,8 @@
 
 7.0.4-2
 - Buildtime dependency on c-ares
+
+7.0.5-1
+- Comments for common event fields
+- Locking in connPool initiation
+
