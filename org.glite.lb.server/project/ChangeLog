@@ -115,3 +115,7 @@
 
 2.0.7-2
 - Rebuild with gridsite 1.5.10.5-3
+
+2.0.8-1
+- Startup script fixes
+
