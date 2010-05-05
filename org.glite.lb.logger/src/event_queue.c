@@ -44,7 +44,7 @@ event_queue_create(char *server_name)
   struct event_queue *eq;
   char *p;
 
-  p = strchr(server_name, ':');
+  p = strrchr(server_name, ':');
   
   if(p) 
     *p++ = 0;
