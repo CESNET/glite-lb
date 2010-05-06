@@ -58,3 +58,5 @@
 2.0.7-1
 - Startup script fixes
 
+2.0.8-1
+- Compatibility with IPv6 compliant clients
