@@ -6,22 +6,6 @@
 # it is copied on tagging 
 
 # $Header$
-#
-# Copyright (c) Members of the EGEE Collaboration. 2004-2010.
-# See http://www.eu-egee.org/partners/ for details on the copyright holders.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-#     http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 
 use Getopt::Long;
 
@@ -36,7 +20,6 @@ my $mode = 'build';
 my $help = 0;
 my $listmodules;
 my $version;
-my $branch;
 my $output;
 my $lb_tag = '';
 my $lbjp_tag = '';
@@ -45,7 +28,7 @@ my $sec_tag = '';
 my $jobid_tag = '';
 my $libdir = 'lib';
 
-my @nodes = qw/client server logger utils doc ws-test db jpprimary jpindex jpclient harvester/;
+my @nodes = qw/client server logger utils doc ws-test db jpprimary jpindex jpclient/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -63,18 +46,13 @@ my %extern_prefix = (
 	voms => '/opt/glite',
 	gridsite => '/opt/glite',
 	lcas => '/opt/glite',
-	trustmanager => '/opt/glite',
 	ant => '/usr',
 	jdk => '/usr',
 	libtar => '/usr',
-	axis => '/usr',
-	log4c => '/usr',
-	postgresql => '/usr'
 );
 
 my %jar = (
-	'commons-codec' => '/usr/share/java/commons-codec.jar',
-	'commons-lang' => '/usr/share/java/commons-lang.jar',
+	'commons-codec' => '/usr/share/java/commons-codec-1.3.jar',
 );
 
 
@@ -92,7 +70,7 @@ my %lbmodules = (
 	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test/], 
 	'security' => [qw/gss gsoap-plugin/],
 	'lbjp-common' => [qw/db maildir server-bones trio jp-interface/],
-	'jobid' => [qw/api-c api-cpp api-java/],
+	'jobid' => [qw/api-c api-cpp/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	);
 
@@ -106,7 +84,6 @@ my @opts = (
 	'mode=s' => \$mode,
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
-	'branch=s' => \$branch,
 	'output=s' => \$output,
 	'stage=s' => \$stagedir,
 	'lb-tag=s' => \$lb_tag,
@@ -144,8 +121,8 @@ if ($listmodules) {
 	exit 0;
 }
 
-warn "$0: --version, --branch and --output make sense only in --mode=etics\n"
-	if ($version || $output || $branch) && $mode ne 'etics';
+warn "$0: --version and --output make sense only in --mode=etics\n"
+	if ($version || $output) && $mode ne 'etics';
 
 my $en;
 for (keys %enable_nodes) { $en = 1 if $enable_nodes{$_}; }
@@ -317,8 +294,8 @@ sub mode_checkout() {
 BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads/ ],
-	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager/ ],
-	'lb.common' => [ qw/expat cares:B cppunit:B classads/ ],
+	'lb.client-java' => [ qw/ant:B jglobus jdk:B/ ],
+	'lb.common' => [ qw/expat cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite/ ],
@@ -327,14 +304,13 @@ BEGIN{
 	'lb.ws-interface' => [],
 	'lb.ws-test' => [ qw/gsoap:B/ ],
 	'lb.types' => [ qw// ],
-	'lb.harvester' => [ qw/postgresql:R/ ],
-	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
+	'lbjp-common.db' => [ qw/mysql:R mysql-devel:B/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B/ ],
 	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
-	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
+	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
@@ -357,7 +333,6 @@ for my $ext (keys %need_externs_aux) {
 
 %need_jars = (
 	'jobid.api-java' => [ qw/commons-codec/ ],
-	'lb.client-java' => [ qw/commons-lang/ ],
 );
 
 for my $jar (keys %need_jars) {
@@ -375,7 +350,6 @@ for my $jar (keys %need_jars) {
 	/ ],
 	'lb.client-java' => [ qw/
 		lb.types:B
-		lb.ws-interface:B
 		jobid.api-java
 	/ ],
 	'lb.common' => [ qw/
@@ -405,10 +379,6 @@ for my $jar (keys %need_jars) {
 	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
 	'lb.types' => [ qw// ],
-	'lb.harvester' => [ qw/
-		jobid.api-c lbjp-common.trio lbjp-common.db lb.common lb.client
-		security.gss
-	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
@@ -481,7 +451,7 @@ sub mkinc
 	my %aux;
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
@@ -547,7 +517,6 @@ BEGIN{
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
 		lcas=>'org.glite.security.lcas',
-		trustmanager=>'org.glite.security.trustmanager',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials/],
@@ -597,16 +566,8 @@ sub mode_etics {
 		push @copts,"--with-$_ \${$eext.location}/$_*.jar";
 	}
 
-	my $conf;
-	my $conftag;
 
-	if ($branch) {
-		$conf = "glite-${subsys}-${module}_$branch"; 
-		$conftag = $branch; }
-	else {
-		$conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
-		$conftag = $conf; }
-#	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
+	my $conf = "glite-$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
@@ -624,7 +585,7 @@ description = org.glite.$subsys.$module
 projectName = org.glite
 age = $age
 deploymentType = None
-tag = $conftag
+tag = $conf
 version = $major.$minor.$rev
 path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz
 
