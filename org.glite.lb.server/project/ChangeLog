@@ -119,3 +119,5 @@
 2.0.8-1
 - Startup script fixes
 
+2.0.9-1
+- Compatibility with IPv6 compliant clients
