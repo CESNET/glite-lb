@@ -40,7 +40,7 @@ GLITE_LB_TYPE=${GLITE_LB_TYPE:-'server'} # server, proxy, both
 GLITE_LB_PROXY_SOCK=${GLITE_LB_PROXY_SOCK:-'/tmp/glite-lbproxy-ilog.sock'}
 GLITE_LB_PROXY_FPREFIX=${GLITE_LB_PROXY_FPREFIX:-'/tmp/glite-lbproxy-ilog_events'}
 
-PROXY_IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-interlogd.pid
+PROXY_IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-proxy-interlogd.pid
 NOTIF_IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-notif-interlogd.pid
 
 unset creds port
