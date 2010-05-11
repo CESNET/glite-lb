@@ -68,3 +68,6 @@
 4.0.5-1
 - Compatibility with IPv6 compliant clients
 
+4.0.6-1
+- Install glite_lb.m4 rather than glite_lb_client.m4
+  
