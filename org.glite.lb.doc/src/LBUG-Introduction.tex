@@ -144,8 +144,10 @@ to know where to find the appropriate \LB database too.
 While it is possible to devise a global service where each job registers
 its jobid together with the address of the appropriate database, such a
 service could easily become a bottleneck. We opted for another solution,
-to keep the address of the \LB database within the jobid. This way,
-finding appropriate \LB database address becomes a local operation
+to keep the address of the \LB database within the jobid (actually,
+fully qualified hostname is strongly recommended instead of numeric address
+and numeric IPv6 address is not supported for backward compatibility reasons).
+This way, finding appropriate \LB database address becomes a local operation
 (at most parsing the jobid) and users can use the same mechanism when
 connecting to the \LB database to retrieve information about a particular
 job (users know its jobid). To simplify the situation even further, 

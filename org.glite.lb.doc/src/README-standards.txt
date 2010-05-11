@@ -64,6 +64,8 @@ IETF Standard, for IPv6 related specifications see http://www.ipv6.org/specs.htm
 - all communication in LB must be modified to fully support IPv6
 - affected modules: [org.glite.]jobid, security.gss, security.gsoap-plugin, lb.common, 
 lb.client, lb.logger, lb.server
+- done as of release 2.1 (IPv6 is fully supported except use of numeric
+  IPv6 address in jobid)
 
 [SNMP] Simple Network Management Protocol (SNMP), Version 3 
 IETF Standard, for list of related RFCs see http://en.wikipedia.org/wiki/SNMP#RFCs
