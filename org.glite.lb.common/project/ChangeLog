@@ -59,3 +59,6 @@
 - Comments for common event fields
 - Locking in connPool initiation
 
+7.0.6-1
+- Remove glite_lb_common.m4 (replaced by glite_lb.m4 from lb.client)
+
