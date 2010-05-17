@@ -71,3 +71,6 @@
 4.0.6-1
 - Install glite_lb.m4 rather than glite_lb_client.m4
   
+4.0.7-1
+- hard-coded 'lib' fixed in glite_lb.m4
+
