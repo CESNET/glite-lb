@@ -247,6 +247,10 @@ int main(int argc,char **argv)
 					valid);
 		edg_wll_NotifIdFree(id_out);
 		if (attr == EDG_WLL_QUERY_ATTR_JOBID) edg_wlc_JobIdFree(jid);
+		if (edg_wll_Error(ctx,&errt,&errd)) {
+			fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
+			return EX_IOERR;
+		}
 	}
 	else if ( !strcmp(argv[1], "bind") )
 	{
@@ -275,6 +279,10 @@ int main(int argc,char **argv)
 		if ( !edg_wll_NotifBind(ctx, nid, sock, fake_addr, &valid) )
 			printf("valid until: %s (%ld)\n", TimeToStr(valid), valid);
 		edg_wll_NotifIdFree(nid);
+		if (edg_wll_Error(ctx,&errt,&errd)) {
+			fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
+			return EX_IOERR;
+		}
 	}
 	else if ( !strcmp(argv[1], "receive") )
 	{
