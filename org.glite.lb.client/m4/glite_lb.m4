@@ -61,7 +61,19 @@ AC_DEFUN([AC_GLITE_LB],
     if test -z "$GLITE_LDFLAGS" ; then
 	AC_GLITE
     fi
-    ac_glite_lb_libdir=`basename -- $GLITE_LDFLAGS`
+    case $GLITE_LDFLAGS in
+	*lib64* ) 
+		ac_glite_lb_libdir=lib64
+		;;
+
+	*lib32* ) 
+		ac_glite_lb_libdir=lib32
+		;;
+
+	* )
+		ac_glite_lb_libdir=lib
+		;;
+    esac
 
 
     if test -n "$ac_glite_lb_prefix" ; then
