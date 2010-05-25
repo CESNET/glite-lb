@@ -58,11 +58,17 @@ AC_DEFUN([AC_GLITE_LB],
 
     AC_SEC_GSOAP_PLUGIN
 
-    if test -n "ac_glite_lb_prefix" ; then
+    if test -z "$GLITE_LDFLAGS" ; then
+	AC_GLITE
+    fi
+    ac_glite_lb_libdir=`basename -- $GLITE_LDFLAGS`
+
+
+    if test -n "$ac_glite_lb_prefix" ; then
 	dnl
 	dnl 
 	dnl
-	ac_glite_lb_lib="-L$ac_glite_lb_prefix/%LIBDIR%"
+	ac_glite_lb_lib="-L$ac_glite_lb_prefix/$ac_glite_lb_libdir"
 	GLITE_LB_THR_CLIENT_LIBS="$ac_glite_lb_lib -lglite_lb_client_$GLOBUS_THR_FLAVOR"
 	GLITE_LB_THR_CLIENTPP_LIBS="$ac_glite_lb_lib -lglite_lb_clientpp_$GLOBUS_THR_FLAVOR"
 	GLITE_LB_THR_COMMON_LIBS="$ac_glite_lb_lib -lglite_lb_common_$GLOBUS_THR_FLAVOR $SEC_GSOAP_PLUGIN_GSS_THR_LIBS"
