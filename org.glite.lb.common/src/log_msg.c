@@ -200,8 +200,11 @@ try_again:
 		edg_wll_SetError(ctx, errno, "ftell()");
 		goto cleanup;
 	}
-	if ( fputs(msg, outfile) == EOF ) {
-		edg_wll_SetError(ctx, errno, "fputs()");
+	i = strlen(msg);
+	if( i != fwrite(msg, sizeof(char), i, outfile)) {
+		edg_wll_SetError(ctx, errno, "fwrite()");
+		/* partially written message may corrupt event file */
+		ftruncate(filedesc, *filepos);
 		goto cleanup;
 	}
 	if ( fflush(outfile) == EOF ) {
