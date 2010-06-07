@@ -35,14 +35,14 @@ extern int opterr,optind;
 
 static void usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-x|-X non-default_sock_path] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-P] [-l jdl_file] [-e seed]\n", me);
+	fprintf(stderr,"usage: %s [-m bkserver] [-x|-X non-default_sock_path] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-P] [-l jdl_file] [-e seed] [-E]\n", me);
 }
 
 int main(int argc, char *argv[])
 {
 	char *src = NULL,*job = NULL,*server = NULL,*seq,*jdl = NULL, *seed = NULL;
 	int lbproxy = 0;
-	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0, pbs=0, cream=0, type;
+	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0, pbs=0, cream=0, type, flags=0;
 	edg_wll_Context	ctx;
 	edg_wlc_JobId	jobid,*subjobs;
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:Pc")) {
+		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:PcE")) {
 			case 'x': lbproxy = 1; break;
 			case 'X': lbproxy = 1; 
 				  edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, optarg);
@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
 			case 'c': cream = 1; break;
 			case 'l': jdl = (char *) strdup(optarg); break;
 			case 'e': seed = strdup(optarg); break;
+			case 'E': flags = flags | EDG_WLL_LOGLFLAG_EXCL; break;
 			case '?': usage(argv[0]); exit(EINVAL);
 			case -1: done = 1; break;
 		}
@@ -137,6 +138,19 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 	} else {
+		
+		if (flags) {
+			//printf("Registering with edg_wll_RegisterJobExt(). Flags = %d\n", flags);
+			if (edg_wll_RegisterJobExt(ctx,jobid,type,
+				jdl ? jdl : "blabla", "NS",
+				num_subjobs,seed,&subjobs,NULL,flags))
+			{
+				char 	*et,*ed;
+				edg_wll_Error(ctx,&et,&ed);
+				fprintf(stderr,"edg_wll_RegisterJobExt(%s): %s (%s)\n",job,et,ed);
+				exit(1);
+			}
+		} else {
 		if (edg_wll_RegisterJobSync(ctx,jobid,type,
 			jdl ? jdl : "blabla", "NS",
 			num_subjobs,seed,&subjobs))
@@ -145,6 +159,7 @@ int main(int argc, char *argv[])
 			edg_wll_Error(ctx,&et,&ed);
 			fprintf(stderr,"edg_wll_RegisterJobSync(%s): %s (%s)\n",job,et,ed);
 			exit(1);
+		}
 		}
 	}
 
