@@ -17,7 +17,7 @@ version=${module.version}
 
 CC=gcc
 
-VPATH:=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc
+VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
@@ -61,6 +61,8 @@ INSTALL:=libtool --mode=install install
 #EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
 #
 #EXT_LIBS:= ${EXPAT_LIBS}
+
+HDRS:=interlogd.h il_error.h
 
 COMMON_LIB:=-lglite_lb_common
 
@@ -176,6 +178,7 @@ install:
 	-mkdir -p ${PREFIX}/etc/init.d
 	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
 	-mkdir -p ${PREFIX}/share/man/man8
+	-mkdir -p ${PREFIX}/include/glite/lb
 	${INSTALL} -m 755 ${LOGD} ${PREFIX}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${PREFIX}/bin
 	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin
@@ -186,6 +189,7 @@ ifdef LB_PERF
 endif
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
+	( cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} )
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
 
