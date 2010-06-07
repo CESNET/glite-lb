@@ -17,7 +17,7 @@ version=${module.version}
 
 CC=gcc
 
-VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc
+VPATH:=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
@@ -43,7 +43,7 @@ endif
 
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
-	-I${stagedir}/include -I${top_srcdir}/src \
+	-I${stagedir}/include -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
