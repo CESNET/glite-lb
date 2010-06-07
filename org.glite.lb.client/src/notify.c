@@ -130,9 +130,10 @@ int main(int argc,char **argv)
 			{"state", required_argument, 0, 'S'},
 			{0, 0, 0, 0}};
            	int option_index = 0;
-		char *single, *statelist;
+		char *single, *statelist, *notif_server;
 		edg_wll_JobStatCode single_code;
 		int statno, stdelims, sti;
+		unsigned int notif_server_port;
 
 #define MAX_NEW_CONDS 7
 		conditions = (edg_wll_QueryRec **)calloc(MAX_NEW_CONDS + 1,sizeof(edg_wll_QueryRec *));
@@ -150,6 +151,13 @@ int main(int argc,char **argv)
 				}
 				conditions[i][0].value.j = jid;
 				i++;
+				edg_wll_GetParam(ctx, EDG_WLL_PARAM_NOTIF_SERVER, &notif_server);
+				if (!notif_server) {
+					glite_jobid_getServerParts(jid, &notif_server, &notif_server_port); 
+					edg_wll_SetParam(ctx, EDG_WLL_PARAM_NOTIF_SERVER, notif_server);
+					edg_wll_SetParamInt(ctx, EDG_WLL_PARAM_NOTIF_SERVER_PORT, notif_server_port);
+				}
+				free(notif_server);
 				break;
 			case 'o':
 				if (excl) { usage("new"); return EX_USAGE; } else excl = 1;
