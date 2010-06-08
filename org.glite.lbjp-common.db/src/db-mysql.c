@@ -1007,14 +1007,24 @@ static int FetchRowSimple(glite_lbu_DBContextMysql ctx, MYSQL_RES *result, unsig
 	for (i=0; i<nr; i++) {
 		if (lengths) lengths[i] = len[i];
 		if (len[i]) {
-			results[i] = malloc(len[i] + 1);
+			if ((results[i] = malloc(len[i] + 1)) == NULL)
+				goto nomem;
 			memcpy(results[i], row[i], len[i]);
 			results[i][len[i]] = '\000';
-		} else
-			results[i] = strdup("");
+		} else {
+			if ((results[i] = strdup("")) == NULL)
+				goto nomem;
+		}
 	}
 
 	return nr;
+nomem:
+	for (nr = i, i = 0; i < nr; i++) {
+		free(results[i]);
+		results[i] = NULL;
+	}
+	ERR(ctx, ENOMEM, "insufficient memory for field data");
+	return -1;
 }
 
 
@@ -1042,7 +1052,10 @@ static int FetchRowPrepared(glite_lbu_DBContextMysql ctx, glite_lbu_StatementMys
 		binds[i].buffer_type = MYSQL_TYPE_VAR_STRING;
 		binds[i].buffer_length = GLITE_LBU_DEFAULT_RESULT_BUFFER_LENGTH - 1;
 		binds[i].length = &lengths[i];
-		binds[i].buffer = results[i] = calloc(1, GLITE_LBU_DEFAULT_RESULT_BUFFER_LENGTH);
+		if ((binds[i].buffer = results[i] = calloc(1, GLITE_LBU_DEFAULT_RESULT_BUFFER_LENGTH)) == NULL) {
+			ERR(ctx, ENOMEM, "insufficient memory for field data");
+			goto failed;
+		}
 	}
 	if (mysql_module.mysql_stmt_bind_result(stmt->stmt, binds) != 0) goto failedstmt;
 

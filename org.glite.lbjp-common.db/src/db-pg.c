@@ -348,12 +348,20 @@ int glite_lbu_FetchRowPsql(glite_lbu_Statement stmt_gen, unsigned int maxn, unsi
 	for (i = 0; i < n; i++) {
 		/* sanity check for internal error (NULL when invalid row) */
 		s = psql_module.PQgetvalue(stmt->res, stmt->row, i) ? : "";
-		results[i] = strdup(s);
+		if ((results[i] = strdup(s)) == NULL)
+			goto nomem;
 		if (lengths) lengths[i] = strlen(s);
 	}
 
 	stmt->row++;
 	return n;
+nomem:
+	for (n = i, i = 0; i < n; i++) {
+		free(results[i]);
+		results[i] = NULL;
+	}
+	set_error(stmt->generic.ctx, ENOMEM, "insufficient memory for field data");
+	return -1;
 }
 
 
