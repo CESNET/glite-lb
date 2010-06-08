@@ -27,6 +27,48 @@ function config_glite_lb_setenv(){
   yaimgridenv_set GLITE_LB_HARVESTER_ENABLED ${GLITE_LB_HARVESTER_ENABLED:-false}
   yaimgridenv_set GLITE_LB_HARVESTER_MSG_OPTIONS "${GLITE_LB_HARVESTER_MSG_OPTIONS:---wlcg}"
 
+  #
+  # default L&B mode (proxy/server/both) according to the node list,
+  # admin can specify GLITE_LB_TYPE, the value is overrided as needed
+  #
+  # behaviour:
+  #   LB:       default 'server', no overriding
+  #   WMS:      default 'proxy', override to 'both' if needed
+  #   WMS & LB: default 'both', override to 'both' if needed
+  #
+  use_proxy=0
+  use_server=0
+  case "$NODE_TYPE_LIST" in
+    *WMS*) use_proxy=1 ;;
+  esac
+  case "$NODE_TYPE_LIST" in
+    *LB*) use_server=1 ;;
+  esac
+  if [ "x${GLITE_LB_TYPE}" = "x" ]; then
+    # default
+    if [ $use_server -eq 1 ]; then
+      if [ $use_proxy -eq 1 ]; then
+        GLITE_LB_TYPE=both
+      else
+        GLITE_LB_TYPE=server
+      fi
+    else
+      if [ $use_proxy -eq 1 ]; then
+        GLITE_LB_TYPE=proxy
+      fi
+    fi
+  else
+    # override if needed
+    if [ $use_proxy -eq 1 ]; then
+      case "$GLITE_LB_TYPE" in
+        *proxy*|*both*)
+          ;;
+        *)
+          yaimlog WARNING "Overriding L&B mode from '$GLITE_LB_TYPE' to 'both'"
+          GLITE_LB_TYPE=both
+      esac
+    fi
+  fi
   yaimgridenv_set GLITE_LB_TYPE ${GLITE_LB_TYPE:-server}
 
   cares_prefix=${INSTALL_ROOT:-/opt}/c-ares
@@ -120,6 +162,8 @@ function config_glite_lb() {
   #############################################
 	
   HOSTNAME=`hostname -f`
+
+  yaimlog INFO "Configuring nodes [$NODE_TYPE_LIST], using L&B mode: $GLITE_LB_TYPE"
 
   # Redefine GLITE_HOME_DIR to make sure we retrieve the correct HOME directory of user glite
   GLITE_HOME_DIR=`getent passwd ${GLITE_USER} | cut -d: -f6`

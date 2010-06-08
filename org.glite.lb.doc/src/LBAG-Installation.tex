@@ -175,7 +175,7 @@ According to local retention policy you may want to use different purge timeouts
 \item \texttt{GLITE\_LB\_RTM\_DN} -- DNs using to get notifications from \LB server\\
 (default: \texttt{heppc24.hep.ph.ic.ac.uk} machine certificate)
 \item \texttt{GLITE\_LB\_SUPER\_USERS} -- additional super-users (default: empty)
-\item \texttt{GLITE\_LB\_TYPE} -- type of the \LB service: server, proxy, both (default: server)
+\item \texttt{GLITE\_LB\_TYPE} -- type of the \LB service: server, proxy, both (default: autodetect, \LB node only: 'server', WMS node only: proxy, \LB and WMS: 'both')
 \item \texttt{GLITE\_LB\_HARVESTER\_ENABLED} -- set to \texttt{true} for sending notification, used mainly for export to MSG publish system (default: \texttt{false})
 \item \texttt{GLITE\_LB\_HARVESTER\_MSG\_OPTIONS} -- additional options for MSG publish (default: \texttt{--wlcg})
 \item \texttt{GLITE\_LB\_INDEX\_OWNER} -- when specified, add (\texttt{true}) or drop (\texttt{false}) 'owner' index (default: 'owner' index not created or dropped)
