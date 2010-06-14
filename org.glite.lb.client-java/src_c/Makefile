@@ -4,6 +4,8 @@
 CC=gcc
 PATH_TO_JAVA=${JAVA_HOME}
 
+OS=$(shell uname | tr '[:upper:]' '[:lower:]')
+
 LIB=libglite_lb_sendviasocket.la
 OBJ=send_via_socket.lo
 
@@ -15,7 +17,7 @@ ${LIB}: ${OBJ}
 	libtool --mode=link ${CC} -rpath ${PREFIX}/${libdir} -o $@ ${OBJ}
 
 %.lo: %.c
-	libtool --mode=compile ${CC} -I.. -I${PATH_TO_JAVA}/include -I${PATH_TO_JAVA}/include/linux -c $<
+	libtool --mode=compile ${CC} -I.. -I${PATH_TO_JAVA}/include -I${PATH_TO_JAVA}/include/$(OS) -c $<
 
 install: compile
 	-mkdir -p ${PREFIX}/${libdir}

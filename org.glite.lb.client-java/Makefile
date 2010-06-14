@@ -35,7 +35,7 @@ build-c:
 	${JAVAH} -classpath build -jni -d build org.glite.lb.ContextIL
 	-mkdir -p build/c
 	-ln -s ../../src_c/Makefile build/c
-	cd build/c && make PREFIX=${PREFIX} JAVA_HOME=${jdk_prefix} topdir=../..
+	cd build/c && $(MAKE) PREFIX=${PREFIX} JAVA_HOME=${jdk_prefix} topdir=../..
 
 examples: ${EXAMPLES}
 
@@ -60,10 +60,10 @@ check:
 install:
 	mkdir -p ${PREFIX}/share/java
 	cp build/lb-client-java.jar ${PREFIX}/share/java
-	cd build/c && make install PREFIX=${PREFIX}
+	cd build/c && $(MAKE) install PREFIX=${PREFIX}
 
 clean:
 	rm -rf build
-	cd src_c && make clean
+	cd src_c && $(MAKE) clean
 
 
