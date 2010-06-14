@@ -1,21 +1,28 @@
 -include Makefile.inc
 
 # broken 
-# SimpleLLTest.class ProducerTestLL.class ProducerTestIL.class
+# SimpleLLTest.class ProducerTestLL.class ProducerTestIL.class CreamTest.java
 
-EXAMPLES := SSLClient.class SSLServer.class QueryDemo.class NotificationExample.class CreamTest.class
+FULL_EXAMPLES := $(addprefix examples/,SSLClient.java SSLServer.java QueryDemo.java NotificationExample.java)
+SSL_EXAMPLES := $(addprefix examples/simple-ssl/,MyX509KeyManager.java MyX509TrustManager.java ExampleSSLSocketFactory.java LBClientSSL.java)
+TM_EXAMPLES := $(addprefix examples/simple-trustmanager/,LBClientTM.java)
 
-VPATH := examples
+VPATH := examples examples/simple-ssl examples/simple-trustmanager
 
 JAVAC:=${jdk_prefix}/bin/javac
 JAVAH:=${jdk_prefix}/bin/javah
 JAVA:=${jdk_prefix}/bin/java
 
-all compile: genevents genws compile-java build-jar build-c
+GEN:=${stagedir}/sbin/glite-lb-at3 project/genEventTypes.pl
+AT3DIR:=${stagedir}/share/lb/at3
+axis_classpath:=$(shell ls ${axis_prefix}/lib/*.jar | tr '\012' :)
+trustmanager_classpath:=${trustmanager_prefix}/share/java/glite-security-trustmanager.jar
+
+all compile: genevents genws compile-java build-jar examples build-c
 
 compile-java:
 	${JAVAC} \
-		-classpath ${commons-lang_jar}:${stagedir}/share/java/jobid-api-java.jar:${trustmanager_prefix}/share/java/glite-security-trustmanager.jar:${utiljava_prefix}/share/java/glite-security-util-java.jar:`ls ${axis_prefix}/lib/*.jar | tr '\012' :` \
+		-classpath ${commons-lang_jar}:${stagedir}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath} \
 		-d build \
 		src/org/glite/lb/*.java \
 		build/gen/*.java \
@@ -27,9 +34,10 @@ compile-java:
 		build/axis/org/glite/wsdl/elements/lb/*.java \
 		build/axis/holders/StringArrayHolder.java
 
-build-jar:
-	cd build && ${jdk_prefix}/bin/jar cf lb-client-java.jar holders org
+build-jar: lb-client-java.jar
 
+lb-client-java.jar:
+	cd build && ${jdk_prefix}/bin/jar cf lb-client-java.jar holders org
 
 build-c:
 	${JAVAH} -classpath build -jni -d build org.glite.lb.ContextIL
@@ -37,22 +45,28 @@ build-c:
 	-ln -s ../../src_c/Makefile build/c
 	cd build/c && make PREFIX=${PREFIX} JAVA_HOME=${jdk_prefix} topdir=../..
 
-examples: ${EXAMPLES}
+examples: build/examples
 
-GEN:=${stagedir}/sbin/glite-lb-at3 project/genEventTypes.pl
-AT3DIR:=${stagedir}/share/lb/at3
-axis_classpath:=`ls ${axis_prefix}/lib/*.jar | tr '\012' :`
+build/examples: ${FULL_EXAMPLES} ${SSL_EXAMPLES} ${TM_EXAMPLES}
+	-mkdir -p build/examples/src/simple-ssl build/examples/src/simple-trustmanager
+	${jdk_prefix}/bin/javac -d build/examples -cp build:build/examples:${stagedir}/share/java/jobid-api-java.jar:${axis_classpath} ${FULL_EXAMPLES}
+	${jdk_prefix}/bin/javac -d build/examples -cp build:build/examples:${axis_classpath} ${SSL_EXAMPLES}
+	${jdk_prefix}/bin/javac -d build/examples -cp build:${trustmanager_classpath}:${axis_classpath} ${TM_EXAMPLES}
+	cp ${FULL_EXAMPLES} build/examples/src
+	cp ${SSL_EXAMPLES} build/examples/src/simple-ssl
+	cp ${TM_EXAMPLES} build/examples/src/simple-trustmanager
+	cd build/examples && ${jdk_prefix}/bin/jar cf lb-client-java-examples.jar src org $(addsuffix .class,$(basename $(notdir ${FULL_EXAMPLES})))
 
-genevents:
+genevents: build/gen
+
+build/gen:
 	-mkdir -p build/gen
 	${GEN} build/gen
 
-genws: 
+genws: build/axis
+
+build/axis:
 	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java -o build/axis ${stagedir}/interface/LB.wsdl
-
-${EXAMPLES}: %.class: %.java
-	${jdk_prefix}/bin/javac -d build -cp build:build/classes/:${stagedir}/share/java/jobid-api-java.jar:`ls ${axis_prefix}/lib/*.jar | tr '\012' :` $<
-
 
 check:
 	@echo "No check"
@@ -60,10 +74,11 @@ check:
 install:
 	mkdir -p ${PREFIX}/share/java
 	cp build/lb-client-java.jar ${PREFIX}/share/java
+	cp build/examples/lb-client-java-examples.jar ${PREFIX}/share/java
 	cd build/c && make install PREFIX=${PREFIX}
 
 clean:
 	rm -rf build
 	cd src_c && make clean
 
-
+.PHONY: all compile compile-java build-jar build-c examples genevents genws check install clean

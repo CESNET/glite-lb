@@ -15,11 +15,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.glite.wsdl.services.lb.example;
+package org.glite.lb.examples.ssl;
 
 import org.apache.log4j.Logger;
-import org.glite.wsdl.services.lb.stubs.LoggingAndBookkeepingPortType;
-import org.glite.wsdl.services.lb.stubs.LoggingAndBookkeeping_ServiceLocator;
+import org.glite.wsdl.services.lb.LoggingAndBookkeepingPortType;
+import org.glite.wsdl.services.lb.LoggingAndBookkeepingLocator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,12 +41,12 @@ import java.util.Enumeration;
  * @author Martin Kuba makub@ics.muni.cz
  * @version $Id$
  */
-public class LBClientExample {
-    static Logger log = Logger.getLogger(LBClientExample.class);
+public class LBClientSSL {
+    static Logger log = Logger.getLogger(LBClientSSL.class);
 
     public static void main(String[] args) throws Exception {
         if(args.length<2) {
-            System.out.println("usage: java LBClientExample <keystore.p12> <password> [<url>]");
+            System.out.println("usage: java LBClientSSL <keystore.p12> <password> [<url>]");
             System.exit(-1);
         }
         File keyfile = new File(args[0]);
@@ -76,7 +76,7 @@ public class LBClientExample {
         ExampleSSLSocketFactory.registerForAxis(certs, key, trustedCertAuths);
 
         //get client stub
-        LoggingAndBookkeepingPortType lb = new LoggingAndBookkeeping_ServiceLocator().getLoggingAndBookkeeping(url);
+        LoggingAndBookkeepingPortType lb = new LoggingAndBookkeepingLocator().getLoggingAndBookkeeping(url);
 
         //call the service
         String version = lb.getVersion(null);

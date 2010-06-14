@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.glite.wsdl.services.lb.example;
+package org.glite.lb.examples.trustmanager;
 
 import java.net.URL;
 import org.apache.axis.AxisFault;
@@ -23,12 +23,14 @@ import org.apache.axis.AxisProperties;
 import org.apache.log4j.Logger;
 import org.apache.log4j.ConsoleAppender;
 
-import org.glite.security.trustmanager.ContextWrapper;
+import org.glite.wsdl.services.lb.LoggingAndBookkeepingLocator;
+import org.glite.wsdl.services.lb.LoggingAndBookkeepingPortType;
+import org.glite.wsdl.types.lb.JobStatus;
 
-import org.glite.wsdl.services.lb.stubs.LoggingAndBookkeeping_ServiceLocator;
-import org.glite.wsdl.services.lb.stubs.LoggingAndBookkeepingPortType;
-import org.glite.wsdl.services.lb.stubs.JobStatus;
-
+/**
+ * Example client of LoggingAndBookkeeping web service. It uses cryptography
+ * included in the gLite security trustmanager.
+ */
 public class LBClientTM {
 	private static String proxyFile = null;
 	private static String endpoint = "https://localhost:9003";
@@ -38,10 +40,6 @@ public class LBClientTM {
 		if (args.length > 0) proxyFile = args[0];
 		if (args.length > 1) endpoint = args[1];
 
-		ConsoleAppender ca = new ConsoleAppender(new org.apache.log4j.SimpleLayout());
-//		ca.activateOptions();
-		log.addAppender(ca);
-		
 		log.info("endpoint being used "+ endpoint);
 		if (proxyFile != null) log.info("proxy location being used " + proxyFile);
 		
@@ -54,15 +52,15 @@ public class LBClientTM {
 		System.setProperty("sslProtocol", "SSLv3");
 		AxisProperties.setProperty("axis.socketSecureFactory","org.glite.security.trustmanager.axis.AXISSocketFactory");
 		// certificate based authentication */
-//		System.setProperty("sslCertFile","/home/valtri/.cert/hostcert.pem");
-//		System.setProperty("sslKey","/home/valtri/.cert/hostkey.pem");
+//		System.setProperty("sslCertFile","/home/glite/.cert/hostcert.pem");
+//		System.setProperty("sslKey","/home/glite/.cert/hostkey.pem");
 //		System.setProperty("sslKeyPasswd","");
 		
 		// proxy based authentication
 		if (proxyFile != null) System.setProperty("gridProxyFile", proxyFile);
 		
 		try {
-			LoggingAndBookkeeping_ServiceLocator loc = new LoggingAndBookkeeping_ServiceLocator();
+			LoggingAndBookkeepingLocator loc = new LoggingAndBookkeepingLocator();
 			String sn = loc.getLoggingAndBookkeepingWSDDServiceName();
 			log.info(" service name " + sn);
 			
