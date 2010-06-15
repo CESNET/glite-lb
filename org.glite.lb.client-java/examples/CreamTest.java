@@ -43,7 +43,7 @@ public static void main(String[] args)
 
 	ContextDirect	ctxd = new ContextDirect(srvpart[0],srvport);
 	ctxd.setCredentials(cred);
-	ctxd.setSource(new Sources(Sources.CREAM_CORE));
+	ctxd.setSource(new Sources(Sources.CREAM_EXECUTOR));
 	ctxd.setJobid(job);
 	ctxd.setSeqCode(new SeqCode(SeqCode.CREAM,"no_seqcodes_with_cream"));
 
@@ -57,7 +57,7 @@ public static void main(String[] args)
 	System.out.println("JOBID="+job);
 
 	ContextIL	ctx = new ContextIL(prefix,socket,lib);
-	ctx.setSource(new Sources(Sources.CREAM_CORE));
+	ctx.setSource(new Sources(Sources.CREAM_EXECUTOR));
 	ctx.setJobid(job);
 	ctx.setSeqCode(new SeqCode(SeqCode.CREAM,"no_seqcodes_with_cream_cheat_duplicate"));
 	ctx.setUser(ctxd.getUser());
