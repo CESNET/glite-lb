@@ -184,6 +184,7 @@ static char *           port;
 static time_t		rss_time = 60*60;
 char *		policy_file = NULL;
 struct _edg_wll_authz_policy	authz_policy = { NULL, 0};
+static int 		exclusive_zombies = 0;
 
 
 
@@ -234,10 +235,11 @@ static struct option opts[] = {
 	{"proxy-purge",	0,	NULL,	'G'},
 	{"rss-time", 	1,	NULL,	'I'},
 	{"policy",	1,	NULL,	'l'},
+	{"exclusive-zombies",	0,	NULL,	'E'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:GI:l:"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:GI:l:E"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -296,6 +298,7 @@ static void usage(char *me)
 		"\t-G,--proxy-purge\t enable automatic purge on proxy service (disabled by default)\n"
 		"\t-I,--rss-time\t age (in seconds) of job states published via RSS\n"
 		"\t-l,--policy\tauthorization policy file\n"
+		"\t-E,--exclusive-zombies\twith 'exclusive' flag, avoid reusing even zombified JobIDs\n"
 
 	,me);
 }
@@ -508,6 +511,8 @@ int main(int argc, char *argv[])
 		case 'I': rss_time = atol(optarg);
 			  break;
 		case 'l': policy_file = strdup(optarg);
+			  break;
+		case 'E': exclusive_zombies = 1;
 			  break;
 		case '?': usage(name); return 1;
 	}
@@ -1277,6 +1282,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	}
 	ctx->strict_locking = strict_locking;
 	ctx->greyjobs = greyjobs;
+	ctx->exclusive_zombies = exclusive_zombies;
 
 	return 0;
 }
