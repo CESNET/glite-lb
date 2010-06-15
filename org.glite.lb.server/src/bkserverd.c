@@ -184,7 +184,7 @@ static char *           port;
 static time_t		rss_time = 60*60;
 char *		policy_file = NULL;
 struct _edg_wll_authz_policy	authz_policy = { NULL, 0};
-static int 		exclusive_zombies = 0;
+static int 		exclusive_zombies = 1;
 
 
 
@@ -235,7 +235,7 @@ static struct option opts[] = {
 	{"proxy-purge",	0,	NULL,	'G'},
 	{"rss-time", 	1,	NULL,	'I'},
 	{"policy",	1,	NULL,	'l'},
-	{"exclusive-zombies",	0,	NULL,	'E'},
+	{"exclusive-zombies-off",	0,	NULL,	'E'},
 	{NULL,0,NULL,0}
 };
 
@@ -298,7 +298,7 @@ static void usage(char *me)
 		"\t-G,--proxy-purge\t enable automatic purge on proxy service (disabled by default)\n"
 		"\t-I,--rss-time\t age (in seconds) of job states published via RSS\n"
 		"\t-l,--policy\tauthorization policy file\n"
-		"\t-E,--exclusive-zombies\twith 'exclusive' flag, avoid reusing even zombified JobIDs\n"
+		"\t-E,--exclusive-zombies-off\twith 'exclusive' flag, allow reusing IDs of purged jobs\n"
 
 	,me);
 }
@@ -512,7 +512,7 @@ int main(int argc, char *argv[])
 			  break;
 		case 'l': policy_file = strdup(optarg);
 			  break;
-		case 'E': exclusive_zombies = 1;
+		case 'E': exclusive_zombies = 0;
 			  break;
 		case '?': usage(name); return 1;
 	}
