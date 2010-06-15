@@ -10,4 +10,5 @@ install:
 check:
 
 clean:
-	echo TODO
+	${ant_prefix}/bin/ant clean
+	rm -rvf log.xml project/glite-jobid-api-java.spec rpmbuild/ RPMS/ tgz/

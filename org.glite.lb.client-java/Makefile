@@ -65,5 +65,6 @@ install:
 clean:
 	rm -rf build
 	cd src_c && $(MAKE) clean
+	rm -rvf log.xml project/org.glite.lb.client-java.spec rpmbuild RPMS tgz
 
 

@@ -69,9 +69,8 @@ install:
 	done
 
 clean:
-	rm -rf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES}
-	
-
+	rm -rvf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES}
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -I${stagedir}/interface -o $@ ${stagedir}/interface/LB.wsdl

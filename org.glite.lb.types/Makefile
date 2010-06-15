@@ -28,6 +28,6 @@ install: compile
 	
 clean:
 	rm -vf at3
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/glite-lb-types.spec rpmbuild/ RPMS/ tgz/
 
 check:

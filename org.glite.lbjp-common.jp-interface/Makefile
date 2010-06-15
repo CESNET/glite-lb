@@ -94,6 +94,7 @@ install:
 clean:
 	rm -rvf *.o *.lo .libs lib*
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -vf type_test type_test.xml
 	rm -f glite jp
 
 %.thr.lo: %.c

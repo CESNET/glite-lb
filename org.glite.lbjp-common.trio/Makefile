@@ -82,7 +82,6 @@ runtest: trio_test
 trio_test: trio_test.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 	${LINKXX} -o $@ trio_test.o ${LTLIB} ${TEST_LIBS}
-	
 
 dist: distsrc distbin
 
@@ -108,6 +107,7 @@ install: all
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
+	rm -vf trio_test
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 	
 %.o: %.c

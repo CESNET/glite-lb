@@ -57,7 +57,7 @@ install:
 #	fi
 
 clean:
-	rm -rvf *.h *.html *.xml *.wsdl
+	rm -vf *.h *.html *.xml *.wsdl glue2-copy.xsd
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
 
 %.xml: %.xml.T
