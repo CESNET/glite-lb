@@ -1,9 +1,9 @@
 -include Makefile.inc
 
 # broken 
-# SimpleLLTest.class ProducerTestLL.class ProducerTestIL.class CreamTest.java
+# SimpleLLTest.class ProducerTestLL.class ProducerTestIL.class
 
-FULL_EXAMPLES := $(addprefix examples/,SSLClient.java SSLServer.java QueryDemo.java NotificationExample.java)
+FULL_EXAMPLES := $(addprefix examples/,SSLClient.java SSLServer.java QueryDemo.java NotificationExample.java CreamTest.java)
 SSL_EXAMPLES := $(addprefix examples/simple-ssl/,MyX509KeyManager.java MyX509TrustManager.java ExampleSSLSocketFactory.java LBClientSSL.java)
 TM_EXAMPLES := $(addprefix examples/simple-trustmanager/,LBClientTM.java)
 
