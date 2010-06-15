@@ -54,13 +54,11 @@ dnl - GLITE_STATIC_LB_NOTHR_COMMON_LIBS
 
 AC_DEFUN([AC_GLITE_LB],
 [
+    AC_REQUIRE([AC_GLITE])
     ac_glite_lb_prefix=$GLITE_LOCATION
 
     AC_SEC_GSOAP_PLUGIN
 
-    if test -z "$GLITE_LDFLAGS" ; then
-	AC_GLITE
-    fi
     case $GLITE_LDFLAGS in
 	*lib64* ) 
 		ac_glite_lb_libdir=lib64
@@ -87,8 +85,8 @@ AC_DEFUN([AC_GLITE_LB],
 	GLITE_LB_NOTHR_CLIENT_LIBS="$ac_glite_lb_lib -lglite_lb_client_$GLOBUS_NOTHR_FLAVOR"
 	GLITE_LB_NOTHR_CLIENTPP_LIBS="$ac_glite_lb_lib -lglite_lb_clientpp_$GLOBUS_NOTHR_FLAVOR"
         GLITE_LB_NOTHR_COMMON_LIBS="$ac_glite_lb_lib -lglite_lb_common_$GLOBUS_NOTHR_FLAVOR $SEC_GSOAP_PLUGIN_GSS_NOTHR_LIBS"
-	GLITE_STATIC_LB_NOTHR_CLIENT_LIBS="$ac_glite_lb_prefix/%LIBDIR%/libglite_lb_client_$GLOBUS_NOTHR_FLAVOR.a"
-	GLITE_STATIC_LB_NOTHR_COMMON_LIBS="$ac_glite_lb_prefix/%LIBDIR%/libglite_lb_common_$GLOBUS_NOTHR_FLAVOR.a $SEC_GSOAP_PLUGIN_GSS_STATIC_NOTHR_LIBS"
+	GLITE_STATIC_LB_NOTHR_CLIENT_LIBS="$ac_glite_lb_prefix/$ac_glite_lb_libdir/libglite_lb_client_$GLOBUS_NOTHR_FLAVOR.a"
+	GLITE_STATIC_LB_NOTHR_COMMON_LIBS="$ac_glite_lb_prefix/$ac_glite_lb_libdir/libglite_lb_common_$GLOBUS_NOTHR_FLAVOR.a $SEC_GSOAP_PLUGIN_GSS_STATIC_NOTHR_LIBS"
 	ifelse([$2], , :, [$2])
     else
 	GLITE_LB_THR_CLIENT_LIBS=""
