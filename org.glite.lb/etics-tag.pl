@@ -315,7 +315,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 
 	system("chmod +x \"$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh\"");
 
-	printf("\n\n---------\nFinished!\n\nExecution script written in:\t$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh\nChangeLog candidate written in:\t$tmpChangeLog\n");
+	printf("\n\n---------\nDone!\n\nExecution script written in:\t$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh\nChangeLog candidate written in:\t$tmpChangeLog\n");
 	printf("Old configuration stored in:\t$TMPDIR/$currentconfig.ini.$$\n") if (defined $opt_g);
 	printf("New configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
 

@@ -195,5 +195,5 @@ usage: $0 -b <branch> [-c configuration] subsystem.name
 
         system("chmod +x \"$TMPDIR/etics-tag-with-subsystems-${subsysname}_$branch.sh\"");
 
-        printf("\n\n---------\nFinished!\n\nExecution script written in:\t$TMPDIR/etics-tag-with-subsystems-${subsysname}_$branch.sh\nNew configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
+        printf("\n\n---------\nDone!\n\nExecution script written in:\t$TMPDIR/etics-tag-with-subsystems-${subsysname}_$branch.sh\nNew configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
 
