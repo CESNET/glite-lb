@@ -55,8 +55,16 @@
 7.0.4-2
 - Buildtime dependency on c-ares
 
+7.0.5-1
+- Comments for common event fields
+- Locking in connPool initiation
+
+7.0.6-1
+- Remove glite_lb_common.m4 (replaced by glite_lb.m4 from lb.client)
+
 7.1.0-1
 - Advanced Autorization
 
 7.1.1-1
 - Broader authorization policy format
+

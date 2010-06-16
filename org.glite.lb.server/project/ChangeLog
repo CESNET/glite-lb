@@ -93,19 +93,34 @@
 2.0.3-2
 - Rebuild with lb.state-machine 1.0.2-1
 
----
-Crystal ball:
+2.0.3-3
+- install libraries into $libdir
+- buildtime dependency pn c-ares
+
 2.0.4-1
 - Consider arch libdir when linking c-ares
 - Checking the c-ares version, fix for c-ares >= 1.5.0.
 
 2.0.5-1
 - Reflect updates in the database module
-- Adjusted grey job purges (purge undefined jobs etc.)
+- Adjusted grey job purges
+- Purge undefined or unknown jobs
 
-2.0.3-3
-- install libraries into $libdir
-- buildtime dependency on c-ares
+2.0.6-1
+- Fixed collection state with cancelled subjobs
+
+2.0.7-1
+- Starting proxy support
+- Fixed collection state with cancelled subjobs
+
+2.0.7-2
+- Rebuild with gridsite 1.5.10.5-3
+
+2.0.8-1
+- Startup script fixes
+
+2.0.9-1
+- Compatibility with IPv6 compliant clients
 
 2.1.0-1
 - Advanced Autorization (used by LCAS plugin too, old configuration file not supported anymore)

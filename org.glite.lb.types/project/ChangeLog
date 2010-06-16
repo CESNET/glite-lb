@@ -18,3 +18,5 @@
 - Support for CREAM jobs
 - Type comments made complete
 
+1.0.2-1
+- Fix build with binary version of this module

@@ -61,6 +61,19 @@
 4.0.3-2
 - install libraries into $libdir
 
+4.0.4-1
+- Connection pool lock optimization and fixes
+- Rare crash fixes in notify example
+
+4.0.5-1
+- Compatibility with IPv6 compliant clients
+
+4.0.6-1
+- Install glite_lb.m4 rather than glite_lb_client.m4
+  
+4.0.7-1
+- hard-coded 'lib' fixed in glite_lb.m4
+
 4.1.0-1
 - Support for CREAM jobs
 - Support for logging sandbox transfers as jobs of a specific type

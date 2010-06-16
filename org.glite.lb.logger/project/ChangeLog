@@ -52,6 +52,15 @@
 2.0.4-2
 - install libraries into $libdir
 
+2.0.6-1
+- Pidfiles support in daemons
+
+2.0.7-1
+- Startup script fixes
+
+2.0.8-1
+- Compatibility with IPv6 compliant clients
+
 2.1.0-1
 - Compliance with the Common Logging Format
 - Fixed startup script (Savannah Bug #29081)

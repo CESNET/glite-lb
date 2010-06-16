@@ -416,7 +416,7 @@ for my $jar (keys %need_jars) {
 	'lb.yaim' => [ qw// ],
 	'lb.glite-LB' => [ qw/
 		lb.logger:R lb.server:R lb.utils:R lb.doc:R
-		lb.ws-test:R lb.harvester:R lb.yaim:R
+		lb.ws-test:R lb.harvester:R lb.yaim:R lb.client-java:R
 	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio lbjp-common.log/ ],
 	'lbjp-common.maildir' => [ qw// ],
