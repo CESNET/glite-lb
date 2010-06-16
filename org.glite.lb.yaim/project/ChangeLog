@@ -19,3 +19,8 @@
 
 4.2.8-1
 - Updated autorization policy format
+
+4.2.9-1
+- Fixed handling of target 'clean' in the Makefile
+- Configuration tuned to improve support for collocated WMS/L&B and standalone WMS scenarios
+
