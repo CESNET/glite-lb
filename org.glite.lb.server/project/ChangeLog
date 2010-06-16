@@ -163,3 +163,6 @@
 - READ_ALL and PURGE authorization
 - Refactoring of WS error handling
 
+2.1.6-1
+- Implemented checking of zombie jobs for JobID exclusivity
+
