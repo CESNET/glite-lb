@@ -330,7 +330,7 @@ BEGIN{
 	'lb.harvester' => [ qw// ],
 	'lb.yaim' => [ qw/yaim_core:R/ ],
 	'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
-	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B/ ],
+	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B cppunit:B log4c:B/ ],
 	'lbjp-common.log' => [ qw/log4c/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw// ],
@@ -416,7 +416,7 @@ for my $jar (keys %need_jars) {
 	'lb.yaim' => [ qw// ],
 	'lb.glite-LB' => [ qw/
 		lb.logger:R lb.server:R lb.utils:R lb.doc:R
-		lb.ws-test:R lb.harvester:R lb.yaim:R
+		lb.ws-test:R lb.harvester:R lb.yaim:R lb.client-java:R
 	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio lbjp-common.log/ ],
 	'lbjp-common.maildir' => [ qw// ],
