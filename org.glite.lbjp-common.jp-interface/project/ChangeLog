@@ -22,3 +22,6 @@
 2.0.0-1
 - Fixed library version numbering
 
+2.0.1-1
+- Fixed target 'clean' in the Makefile
+ 
