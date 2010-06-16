@@ -20,3 +20,6 @@
 - Primitive AGU compatibility
 - Support for CREAM jobs
 
+3.1.1-1
+- Fixed handling of target 'clean' in the Makefile
+
