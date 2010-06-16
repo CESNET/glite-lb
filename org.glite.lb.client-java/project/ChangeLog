@@ -1,5 +1,0 @@
-1.0.1-1
-- Initial release of the client-java module.
-
-1.0.2-1
-- Fixed time zone in UTC times in events
