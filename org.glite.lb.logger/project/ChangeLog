@@ -85,3 +85,6 @@
 - Introduce a separate logging category for notification interlogger
 - Fix problem with dropping unused notoifications
 
+2.1.5-1
+- Perftest script accepts argument -i to save pidfile in /tmp
+
