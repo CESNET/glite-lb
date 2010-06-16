@@ -68,3 +68,6 @@
 7.1.1-1
 - Broader authorization policy format
 
+7.1.2-1
+- A new property included in context
+
