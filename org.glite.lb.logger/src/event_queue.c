@@ -44,11 +44,6 @@ event_queue_create(char *server_name, struct il_output_plugin *output)
   struct event_queue *eq;
   char *p,*s, c;
 
-  p = strrchr(server_name, ':');
-  
-  if(p) 
-    *p++ = 0;
-
   if((eq = malloc(sizeof(*eq))) == NULL) {
     set_error(IL_NOMEM, ENOMEM, "event_queue_create: error allocating event queue");
     return(NULL);
