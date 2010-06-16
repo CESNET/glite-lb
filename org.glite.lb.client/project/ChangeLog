@@ -82,3 +82,7 @@
 - Connection Pool locking fixed (Savannah bug #37081)
 - Extended with WMS DNs and other flags (producer API cleanup)
 
+4.1.1-1
+- Job registration example supports the 'exclusive' flag
+- Notification client can read server address from JobID
+ 
