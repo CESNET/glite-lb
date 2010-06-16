@@ -29,3 +29,7 @@
 1.1.1-1
 - LB 4 AGU fixes
 - Updated WS error handling
+
+1.1.2-1
+- Fixed handling of target 'clean' in the Makefile
+
