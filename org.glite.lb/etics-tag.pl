@@ -201,7 +201,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		system("cp $module/project/ChangeLog $tmpChangeLog");
 
 		unless ($increment eq "n") {system("echo $major.$minor.$revision-$age >> $tmpChangeLog");}
-		if ($increment eq "a") {system("echo \"- Module rebuilt >> $tmpChangeLog");}
+		if ($increment eq "a") {system("echo \"- Module rebuilt\" >> $tmpChangeLog");}
 
 		$ChangeLogRet=system("vim $tmpChangeLog");
 
