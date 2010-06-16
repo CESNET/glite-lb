@@ -20,3 +20,7 @@
 
 1.0.2-1
 - Fix build with binary version of this module
+
+1.1.1-1
+- Fixed handling of target 'clean' in the Makefile
+
