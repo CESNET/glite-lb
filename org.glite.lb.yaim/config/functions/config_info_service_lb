@@ -49,7 +49,7 @@ SERVICE_LC=lbserver
 
 SERVICE_HOST=`hostname -f`
 
-if [ ! -f ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf.template ]; then
+if [ ! -f ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf.template ]; then
   yaimlog ERROR "The template file for glite-info-service-${SERVICE_LC}.conf.template was not found in ${INFO_SERVICE_CONFIG}."
   exit 1
 fi
@@ -79,7 +79,7 @@ cat << EOF > ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wra
 export PATH=$PATH:${INFO_SERVICE_SCRIPT}
 export ${SERVICE}_HOST=${SERVICE_HOST}
 ${INFO_SERVICE_SCRIPT}/glite-info-service ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
-${INFO_SERVICE_SCRIPT}/glite-info-service-glue2 ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
+${INFO_SERVICE_SCRIPT}/glite-info-glue2-simple ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
 EOF
 
 chmod +x ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wrapper 
