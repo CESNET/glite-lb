@@ -39,7 +39,7 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-logevent.sh} & Implemented & Test if local logger accepts events correctly (i.e. returns 0). \\
 \hline
-{\tt lb-test-il-recovery.sh} & Implemented & Tests if iterlogger recovers correctly and processes events logged in between when restarted. \\
+{\tt lb-test-il-recovery.sh} & Implemented & Tests if interlogger recovers correctly and processes events logged in between when restarted. \\
 \hline
 {\tt lb-test-job-states.sh} & Implemented & Test that job state queries return correctly and that testing jobs are in expected states. \\
 \hline
@@ -427,7 +427,7 @@ including the checks.
 \what\
 \begin{enumerate}
 \item Register a compute job.
-\item Register input sandbox trasfer.
+\item Register input sandbox transfer.
 \item Register output sandbox transfer.
 \item Generate events to trigger job state changes in one of the sandbox transfer jobs.
 	\begin{enumerate}
@@ -452,7 +452,7 @@ including the checks.
 \what\
 \begin{enumerate}
 \item Register a job.
-\item Send a \code{CahngeACL} event to add authorized user.
+\item Send a \code{ChangeACL} event to add authorized user.
 \item Check job status to see if the event was processed correctly.
 \end{enumerate}
 
@@ -480,12 +480,11 @@ including the checks.
 
 In all above cases: Watch the life cycle. Check the resulting state (\emph{Cleared}, \emph{Cancelled} or \emph{Aborted}). Check events received in the course of job execution; events from all relevant components must be present (NS, WM, JC, LM, and LRMS). 
 
-\how\ \ctblb{lb-test-wild.pl}
+\how\ \ctblb{lb-test-wild.sh}
 
 \result\ Jobs were submitted. Cancel operation worked where applicable. Resulting state was as expected (\emph{Cleared}, \emph{Cancelled} or \emph{Aborted}). Events were received from all components as expected.
 
-\note\ The test runs automatically. Bear in mind that in a real-life grid, even valid jobs may not always finish succesf
-ully. Analyze failures and re-run if necessary.
+\note\ The test runs automatically. Bear in mind that in a real-life grid, even valid jobs may not always finish successfully. Analyze failures and re-run if necessary.
 
 \note\ The number of jobs to generate may be specified using the \texttt{-n} argument
 
