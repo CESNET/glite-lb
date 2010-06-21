@@ -53,9 +53,10 @@ struct edg_wll_stats_group {
 
 
 typedef struct {
-	enum { STATS_UNDEF = 0, STATS_COUNT, STATS_DURATION }	type;
+	enum { STATS_UNDEF = 0, STATS_COUNT, STATS_DURATION, STATS_DURATION_FROMTO }	type;
 	edg_wll_QueryRec	*group;
-	edg_wll_JobStatCode	major;
+	edg_wll_JobStatCode	base_state;
+	edg_wll_JobStatCode     final_state;
 	int			minor;
 	struct _edg_wll_StatsArchive {
 		int	interval,length;
@@ -89,6 +90,19 @@ int edg_wll_StateDurationServer(
 	float	*duration,
 	int	*res_from,
 	int	*res_to
+);
+
+int edg_wll_StateDurationFromToServer(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     base_state,
+        edg_wll_JobStatCode     final_state,
+        int                     minor,
+        time_t  *from,
+        time_t  *to,
+        float   *duration,
+        int     *res_from,
+        int     *res_to
 );
 
 #endif /* GLITE_LB_STATS_H */

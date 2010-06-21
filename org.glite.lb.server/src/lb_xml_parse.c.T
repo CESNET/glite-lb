@@ -442,7 +442,7 @@ static void startStatsRequest(void *data, const char *el, const char **attr)
 		case 1: if (!strcasecmp(el,"and")) {
 				XMLCtx->jobQueryRec_begin = XML_GetCurrentByteIndex(XMLCtx->p);
 			}
-			else if ( (strcasecmp(el,"major")) && (strcasecmp(el,"minor")) && 
+			else if ( (strcasecmp(el,"base_state")) && (strcasecmp(el,"final_state")) && (strcasecmp(el,"minor")) && 
 				(strcasecmp(el,"from")) && (strcasecmp(el,"to")) ) unexp()
 			break;
 		case 2: /* fall through */
@@ -919,10 +919,14 @@ static void endStatsRequest(void *data, const char *el UNUSED_VAR)
         edg_wll_XML_ctx *XMLCtx = data;
 
         if (XMLCtx->level == 2) {
-                if (!strcmp(XMLCtx->element,"major")) {
-			XMLCtx->statsMajor = 
+                if (!strcmp(XMLCtx->element,"base_state")) {
+			XMLCtx->statsBaseState = 
 				edg_wll_from_string_to_edg_wll_JobStatCode(XMLCtx);
 		}
+		else if (!strcmp(XMLCtx->element,"final_state")) {
+                        XMLCtx->statsFinalState =
+                                edg_wll_from_string_to_edg_wll_JobStatCode(XMLCtx);
+                }
 		else if (!strcmp(XMLCtx->element,"minor")) {
 			XMLCtx->statsMinor = edg_wll_from_string_to_int(XMLCtx);
 		}
@@ -1284,7 +1288,7 @@ int parseLoadRequest(edg_wll_Context ctx, char *messageBody, edg_wll_LoadRequest
 
 
 /* parse Stats request from client */
-int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_QueryRec ***conditions, edg_wll_JobStatCode *major, int *minor, time_t *from, time_t *to) 
+int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_QueryRec ***conditions, edg_wll_JobStatCode *base_state, edg_wll_JobStatCode *final_state, int *minor, time_t *from, time_t *to) 
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -1294,7 +1298,8 @@ int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 	/* returns emty variables as default; only some variables will be filled in */
 	/* depending on vaule of XMLCtx.notifFunction */
 	*function = NULL;
-	*major = EDG_WLL_JOB_UNDEF;
+	*base_state = EDG_WLL_JOB_UNDEF;
+	*final_state = EDG_WLL_JOB_UNDEF;
 	*minor = 0;
 	*from = 0;
 	*to = 0;
@@ -1340,7 +1345,8 @@ int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 
 		*function = NULL;
 		*conditions = NULL;
-		*major = EDG_WLL_JOB_UNDEF;
+		*base_state = EDG_WLL_JOB_UNDEF;
+		*final_state = EDG_WLL_JOB_UNDEF;
 		*minor = 0;
 		*from = 0;
 		*to = 0;
@@ -1348,7 +1354,8 @@ int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 	else {
 		*function = XMLCtx.statsFunction;
 		*conditions = XMLCtx.statsConditions;
-		*major = XMLCtx.statsMajor;
+		*base_state = XMLCtx.statsBaseState;
+		*final_state = XMLCtx.statsFinalState;
 		*minor = XMLCtx.statsMinor;
 		*from = XMLCtx.statsFrom;
 		*to = XMLCtx.statsTo;

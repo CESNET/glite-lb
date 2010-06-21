@@ -1190,15 +1190,14 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		else if (!strncmp(requestPTR,KEY_STATS_REQUEST,sizeof(KEY_STATS_REQUEST)-1)) {
 			char *function;
 			edg_wll_QueryRec **conditions;
-			edg_wll_JobStatCode major = EDG_WLL_JOB_UNDEF;
+			edg_wll_JobStatCode base = EDG_WLL_JOB_UNDEF;
+			edg_wll_JobStatCode final = EDG_WLL_JOB_UNDEF;
 			time_t from, to;
 			int i, j, minor, res_from, res_to;
 			float rate = 0, duration = 0;
 			
-			
-			
         	        if (parseStatsRequest(ctx, messageBody, &function, &conditions, 
-						&major, &minor, &from, &to))
+						&base, &final, &minor, &from, &to))
 				ret = HTTP_BADREQ;
 			else {
 				int     fatal = 0, err = 0;
@@ -1207,12 +1206,17 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				// navratove chyby nejsou zname, nutno predelat dle aktualni situace
 				if (!strcmp(function,"Rate")) 
 					err = edg_wll_StateRateServer(ctx,
-						conditions[0], major, minor, 
+						conditions[0], base, minor, 
 						&from, &to, &rate, &res_from, &res_to); 
 				else if (!strcmp(function,"Duration"))
 					err = edg_wll_StateDurationServer(ctx,
-						conditions[0], major, minor, 
+						conditions[0], base, minor, 
 						&from, &to, &duration, &res_from, &res_to); 
+				else if (!strcmp(function, "DurationFromTo"))
+					err = edg_wll_StateDurationFromToServer(
+						ctx, conditions[0], base, final,
+                                                minor, &from, &to, &duration,
+                                                &res_from, &res_to);
 				
 				switch (err) {
 					case 0: if (html) ret = HTTP_NOTIMPL;

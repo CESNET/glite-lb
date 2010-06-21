@@ -52,7 +52,7 @@ int edg_wll_QuerySequenceCodeResultToXML(edg_wll_Context ctx, char *source, char
 
 int edg_wll_StatsResultToXML(edg_wll_Context,time_t,time_t,float,float,int,int,char **);
 
-int parseStatsRequest(edg_wll_Context,char *,char **,edg_wll_QueryRec ***,edg_wll_JobStatCode *,int *,time_t *,time_t *);
+int parseStatsRequest(edg_wll_Context,char *,char **,edg_wll_QueryRec ***,edg_wll_JobStatCode *,edg_wll_JobStatCode *,int *,time_t *,time_t *);
 
 
 #ifdef __cplusplus

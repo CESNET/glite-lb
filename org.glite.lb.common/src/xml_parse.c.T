@@ -2978,7 +2978,8 @@ int edg_wll_StatsRequestToXML(
                 edg_wll_Context 	ctx, 
 		const char		*function,
 		const edg_wll_QueryRec 	*cond,
-		edg_wll_JobStatCode     major,
+		edg_wll_JobStatCode     base_state,
+		edg_wll_JobStatCode     final_state,
 		int			minor,
 		time_t			*from,
 		time_t			*to,
@@ -2996,7 +2997,8 @@ int edg_wll_StatsRequestToXML(
 
 	pomA = strdup("");
 	
-	edg_wll_add_edg_wll_JobStatCode_to_XMLBody(&pomA, major, "major", EDG_WLL_JOB_UNDEF);
+	edg_wll_add_edg_wll_JobStatCode_to_XMLBody(&pomA, base_state, "base_state", EDG_WLL_JOB_UNDEF);
+	edg_wll_add_edg_wll_JobStatCode_to_XMLBody(&pomA, final_state, "final_state", EDG_WLL_JOB_UNDEF);
 	edg_wll_add_int_to_XMLBody(&pomA, minor, "minor", -1);
 	edg_wll_add_time_t_to_XMLBody(&pomA, *from, "from", 0); 
 	edg_wll_add_time_t_to_XMLBody(&pomA, *to, "to", 0); 

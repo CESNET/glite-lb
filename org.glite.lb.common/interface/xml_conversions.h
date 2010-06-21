@@ -93,7 +93,8 @@ typedef struct _edg_wll_XML_ctx {
 	time_t			notifValidity;
 	char                    *statsFunction;
 	edg_wll_QueryRec        **statsConditions;
-	edg_wll_JobStatCode     statsMajor;
+	edg_wll_JobStatCode     statsBaseState;
+	edg_wll_JobStatCode     statsFinalState;
 	int                     statsMinor;
 	time_t                  statsFrom, statsTo;
 	float                   statsRate, statsDuration;

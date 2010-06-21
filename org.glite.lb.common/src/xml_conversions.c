@@ -86,7 +86,8 @@ void edg_wll_initXMLCtx(edg_wll_XML_ctx *c) {
 	c->bound = 0;
 	c->statsFunction = NULL;
 	c->statsConditions = NULL;
-	c->statsMajor = EDG_WLL_JOB_UNDEF;
+	c->statsBaseState = EDG_WLL_JOB_UNDEF;
+	c->statsFinalState = EDG_WLL_JOB_UNDEF;
 	c->statsMinor = 0;
 	c->statsRate = 0;
 	c->statsDuration = 0;
