@@ -99,7 +99,7 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/${libdir}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
+#	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
 
 %.lo %.o: %.cpp
 	${COMPILEXX} -c $< -o $@
