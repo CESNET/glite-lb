@@ -45,7 +45,7 @@ my $sec_tag = '';
 my $jobid_tag = '';
 my $libdir = getlibdir();
 
-my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
+my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -70,7 +70,10 @@ my %extern_prefix = (
 	libtar => '/usr',
 	axis => '/usr',
 	log4c => '/usr',
-	postgresql => '/usr'
+	postgresql => '/usr',
+	activemq => '/opt/activemq-cpp-library',
+	apr => '/opt/apr',
+	aprutil => '/opt/apr-util'
 );
 
 my %jar = (
@@ -90,7 +93,7 @@ my %deps_type;
 my %topbuild;
 
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
+	'lb' => [ qw/client client-java common doc logger logger-msg server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
 	'security' => [qw/gss gsoap-plugin proxyrenewal/],
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp api-java/],
@@ -322,6 +325,7 @@ BEGIN{
 	'lb.common' => [ qw/expat cares:B cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
+	'lb.logger-msg' => [ qw/cppunit:B activemq apr aprutil/ ],
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
@@ -394,6 +398,9 @@ for my $jar (keys %need_jars) {
 		jobid.api-c
 		lb.common
 		security.gss
+	/ ],
+	'lb.logger-msg' => [ qw/
+		lb.logger
 	/ ],
 	'lb.server' => [ qw/
 		lb.ws-interface lb.types:B lb.common lb.state-machine
@@ -497,7 +504,7 @@ sub mkinc
 	my %aux;
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
 security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
@@ -575,6 +582,9 @@ BEGIN{
 		glite_info_templates=>'glite-info-templates',
 		glue_schema=>'glue-schema',
 		yaim_core=>'org.glite.yaim.core',
+		activemq=>'activemq-cpp-library',
+		apr=>'apr-dev',
+		aprutil=>'aprutil-dev',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials myproxy/],
