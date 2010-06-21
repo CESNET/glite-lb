@@ -66,7 +66,7 @@ int edg_wll_StateRate(
 	
 	edg_wll_ResetError(ctx);
 
-	edg_wll_StatsRequestToXML(ctx, "Rate", group, major, minor, from, to, &send_mess);
+	edg_wll_StatsRequestToXML(ctx, "Rate", group, major, EDG_WLL_JOB_UNDEF, minor, from, to, &send_mess);
 	
 	if (set_server_name_and_port(ctx, NULL))
 		goto err;
@@ -112,7 +112,7 @@ int edg_wll_StateDuration(
 	
 	edg_wll_ResetError(ctx);
 
-	edg_wll_StatsRequestToXML(ctx, "Duration", group, major, minor, from, to, &send_mess);
+	edg_wll_StatsRequestToXML(ctx, "Duration", group, major, EDG_WLL_JOB_UNDEF, minor, from, to, &send_mess);
 	
 	if (set_server_name_and_port(ctx, NULL))
 		goto err;
@@ -134,6 +134,54 @@ err:
 	free(message);
 
 	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+
+/** Compute average time for which jobs moves from one to second specified state.
+ */
+
+int edg_wll_StateDurationFromTo(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     base,
+        edg_wll_JobStatCode     final,
+	int	*minor,
+        time_t  *from,
+        time_t  *to,
+        float   *duration,
+        int     *res_from,
+        int     *res_to
+)
+{
+        char    *response = NULL, *send_mess = NULL, *message = NULL;
+        float   not_returned;
+
+
+        edg_wll_ResetError(ctx);
+
+        edg_wll_StatsRequestToXML(ctx, "DurationFromTo", group, base, final, minor, from, to, &send_mess);
+
+        if (set_server_name_and_port(ctx, NULL))
+                goto err;
+
+        ctx->p_tmp_timeout = ctx->p_query_timeout;
+
+        if (edg_wll_http_send_recv(ctx, "POST /statsRequest HTTP/1.1",request_headers, send_mess,
+                        &response,NULL,&message))
+                goto err;
+
+        if (http_check_status(ctx,response))
+                goto err;
+
+        edg_wll_ParseStatsResult(ctx,message, from, to, &not_returned,
+                        duration, res_from, res_to);
+
+err:
+        free(response);
+        free(message);
+
+        return edg_wll_Error(ctx,NULL,NULL);
 }
 
 

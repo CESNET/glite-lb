@@ -68,7 +68,18 @@ int edg_wll_StateDuration(
 	int	*res_to
 );
 
-
+int edg_wll_StateDurationFromTo(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     base,
+        edg_wll_JobStatCode     final,
+        int     *minor,
+        time_t  *from,
+        time_t  *to,
+        float   *duration,
+        int     *res_from,
+        int     *res_to
+);
 
 #ifdef __cplusplus
 }
