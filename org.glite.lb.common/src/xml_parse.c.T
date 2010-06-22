@@ -2975,6 +2975,19 @@ int edg_wll_QuerySequenceCodeToXML(
 
 /* construct Message-Body of Request-Line for edg_wll_StateRate function */
 int edg_wll_StatsRequestToXML(
+                edg_wll_Context         ctx,
+                const char              *function,
+                const edg_wll_QueryRec  *cond,
+                edg_wll_JobStatCode     major,
+                int                     minor,
+                time_t                  *from,
+                time_t                  *to,
+                char 			**message)
+{
+	return edg_wll_StatsDurationFTRequestToXML(ctx, function, cond, major, EDG_WLL_JOB_UNDEF, minor, from, to, message);
+}
+
+int edg_wll_StatsDurationFTRequestToXML(
                 edg_wll_Context 	ctx, 
 		const char		*function,
 		const edg_wll_QueryRec 	*cond,
@@ -2983,7 +2996,7 @@ int edg_wll_StatsRequestToXML(
 		int			minor,
 		time_t			*from,
 		time_t			*to,
-                char **message)
+                char 			**message)
 {
 	char *pomA=NULL, *pomB=NULL, *pomC=NULL;
 	const edg_wll_QueryRec **conditions;
