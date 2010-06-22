@@ -50,7 +50,7 @@ int plugin_mgr_init(const char *plugin_name, char *cfg)
 	dl_handle = dlopen(plugin_name, RTLD_LAZY);
 	if(dl_handle == NULL) {
 		snprintf(err, sizeof(err), "plugin_init: error opening dynamic library: %s", dlerror());
-		set_error(IL_SYS, errno, err);
+		set_error(IL_SYS, ENOENT, err);
 		return -1;
 	}
 	dlerror();
