@@ -66,7 +66,7 @@ int edg_wll_StateRate(
 	
 	edg_wll_ResetError(ctx);
 
-	edg_wll_StatsRequestToXML(ctx, "Rate", group, major, EDG_WLL_JOB_UNDEF, minor, from, to, &send_mess);
+	edg_wll_StatsRequestToXML(ctx, "Rate", group, major, minor, from, to, &send_mess);
 	
 	if (set_server_name_and_port(ctx, NULL))
 		goto err;
@@ -112,7 +112,7 @@ int edg_wll_StateDuration(
 	
 	edg_wll_ResetError(ctx);
 
-	edg_wll_StatsRequestToXML(ctx, "Duration", group, major, EDG_WLL_JOB_UNDEF, minor, from, to, &send_mess);
+	edg_wll_StatsRequestToXML(ctx, "Duration", group, major, minor, from, to, &send_mess);
 	
 	if (set_server_name_and_port(ctx, NULL))
 		goto err;
@@ -146,7 +146,7 @@ int edg_wll_StateDurationFromTo(
         const edg_wll_QueryRec  *group,
         edg_wll_JobStatCode     base,
         edg_wll_JobStatCode     final,
-	int	*minor,
+	int	minor,
         time_t  *from,
         time_t  *to,
         float   *duration,
@@ -160,7 +160,7 @@ int edg_wll_StateDurationFromTo(
 
         edg_wll_ResetError(ctx);
 
-        edg_wll_StatsRequestToXML(ctx, "DurationFromTo", group, base, final, minor, from, to, &send_mess);
+        edg_wll_StatsDurationFTRequestToXML(ctx, "DurationFromTo", group, base, final, minor, from, to, &send_mess);
 
         if (set_server_name_and_port(ctx, NULL))
                 goto err;

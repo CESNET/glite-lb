@@ -73,7 +73,7 @@ int edg_wll_StateDurationFromTo(
         const edg_wll_QueryRec  *group,
         edg_wll_JobStatCode     base,
         edg_wll_JobStatCode     final,
-        int     *minor,
+        int     minor,
         time_t  *from,
         time_t  *to,
         float   *duration,
