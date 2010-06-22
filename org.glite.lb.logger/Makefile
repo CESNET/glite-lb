@@ -51,7 +51,8 @@ CFLAGS:=${DEBUG} \
 LDFLAGS:=-L${stagedir}/${libdir} \
 	${COVERAGE_FLAGS} 
 
-LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+COMPILE:=libtool --mode=compile ${CC} -rpath ${stagedir}/${libdir}
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
@@ -87,8 +88,8 @@ WS_INTERLOG_OBJS:=il_error.o input_queue_socket_http.o \
 	event_queue.o event_store_http.o il_master.o interlogd.o \
 	queue_mgr_http.o server_msg_http.o queue_thread.o
 
-INTERLOG_NOBJS:=${INTERLOG_OBJS:.o=.no}
-INTERLOG_WOBJS:=${WS_INTERLOG_OBJS:.o=.wo}
+INTERLOG_NOTIF_OBJS:=${INTERLOG_OBJS:.o=.notif.lo}
+INTERLOG_WS_OBJS:=${WS_INTERLOG_OBJS:.o=.ws.o}
 INTERLOG_PERF_OBJS:=${INTERLOG_OBJS:.o=.perf.o}
 INTERLOG_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.empty.o}
 #INTERLOG_INLINE_EMPTY_OBJS:=${INTERLOG_OBJS:.o=.io}
@@ -133,8 +134,8 @@ glite-lb-logd-perf-nofile: ${LOGD_NOBJS}
 glite-lb-interlogd: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
-glite-lb-notif-interlogd: ${INTERLOG_NOBJS}
-	${LINK} -o $@ ${INTERLOG_NOBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
+glite-lb-notif-interlogd: ${INTERLOG_NOTIF_OBJS}
+	${LINK} -export-dynamic -o $@ ${INTERLOG_NOTIF_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
 glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
 	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
@@ -142,8 +143,8 @@ glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
 glite-lb-interlogd-perf-empty: ${INTERLOG_EMPTY_OBJS}
 	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
-glite-lb-ws-interlogd: ${INTERLOG_WOBJS}
-	${LINK} -o $@ ${INTERLOG_WOBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
+glite-lb-ws-interlogd: ${INTERLOG_WS_OBJS}
+	${LINK} -o $@ ${INTERLOG_WS_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
 #glite-lb-interlogd-perf-inline-empty: ${INTERLOG_INLINE_EMPTY_OBJS}
 #	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
@@ -193,13 +194,13 @@ endif
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
 
-${INTERLOG_NOBJS}: %.no: %.c
-	${CC} ${CFLAGS} -DIL_NOTIFICATIONS -c $< -o $@
+${INTERLOG_NOTIF_OBJS}: %.notif.lo: %.c
+	${COMPILE} ${CFLAGS} -DIL_NOTIFICATIONS -c $< -o $@
 
 ${INTERLOG_OBJS}: %.o: %.c
-	${CC} ${CFLAGS} -c $< -o $@
+	${COMPILE} ${CFLAGS} -c $< -o $@
 
-${INTERLOG_WOBJS}: %.wo: %.c
+${INTERLOG_WS_OBJS}: %.ws.o: %.c
 	${CC} ${CFLAGS} -DIL_WS -c $< -o $@
 
 ${INTERLOG_EMPTY_OBJS}: %.empty.o: %.c
