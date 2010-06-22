@@ -354,7 +354,7 @@ plugin_init(char *config)
 				brokerURI.assign(val);
 			}
 		}
-		s = p;
+		s = p + 1;
 	}
 	if(brokerURI.length() == 0) {
 		set_error(IL_DL, ENOENT, "plugin_init: broker uri not configured\n");
