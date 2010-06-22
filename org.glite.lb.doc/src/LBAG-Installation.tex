@@ -29,7 +29,7 @@ In \LBver{1.x}, the list of all LB packages was the following:
 glite-lb-common & common files \\ 
 glite-lb-client & client library and CLI tools\\ 
 glite-lb-client-interface & client library interface (header files) \\ 
-glite-lb-harvester & enhanced \LB notification client (since \LBver{1.10}) \\
+%glite-lb-harvester & enhanced \LB notification client (since \LBver{1.10}) \\
 glite-lb-logger & local-logger and inter-logger \\ 
 glite-lb-proxy & proxy (restricted server used by WMS)\\ 
 glite-lb-server & server \\ 
@@ -39,19 +39,21 @@ glite-lb-ws-interface & web service interface  \\
 glite-security-gsoap-plugin & GSS wrapper and GSS plugin for gSoap
 \end{tabularx}
 
-In \LBver{2.0}, the code has been restructured quite a lot, especially the dependencies were lightened,
+Starting with \LBver{2.0}, the code has been restructured quite a lot, especially the dependencies were lightened,
 and the new list of packages is now the following:
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-lb-doc & documentation \\ 
 glite-lb-common & common files \\ 
 glite-lb-client & client library and CLI tools\\ 
-glite-lb-harvester & enhanced \LB notification client \\
+glite-lb-client-java & Java implementation of the client (since \LBver{2.1})\\ 
+glite-lb-harvester & enhanced \LB notification client (since \LBver{2.1})\\
 glite-lb-logger & local-logger and inter-logger \\
 glite-lb-server & server, including merged proxy functionality \\
 glite-lb-state-machine & state machine and LB plugin for Job Provenance \\ 
 glite-lb-utils & auxiliary utilities \\
 glite-lb-ws-interface & web service interface \\
+glite-lb-yaim & YAIM initialization scripts for \LB (since \LBver{2.1}) \\
 \end{tabularx}
 
 More detailed description together with the dependencies can be read directly from each package,
@@ -164,7 +166,7 @@ can be done then. Available parameters specific to LB server are:
 \item \texttt{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory)
 \item \texttt{GLITE\_WMS\_LCGMON\_FILE} -- pathname of file where job state
 export data are written for use by lgcmon/R-GMA 
-(default: \texttt{/var/glite/logging/status.log}
+(default: \texttt{/var/glite/logging/status.log}). \emph{Note: This feature is now obsolete and only available in \LBver{1.x}.}
 \item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --other 60d})
 
 According to local retention policy you may want to use different purge timeouts (for example WLCG would need \texttt{--cleared 90d --aborted 90d --cancelled 90d --other 90d}).
@@ -221,9 +223,9 @@ installations, YAIM configuration process will create transactional
 database automatically. For existing LB server database the migration 
 process is not automatically handled.
 
-Note: If you want to add transaction when migrating to \LB 2.0 skip
-this section and use \LB 2.0 migration procedure. The migration of
-database to support transactions is included in \LB 2.0 migration procedure.
+Note: If you want to add transaction when migrating to \LB 2.x skip
+this section and use \LB 2.x migration procedure. The migration of
+database to support transactions is included in \LB 2.x migration procedure.
 
 Steps:
 \begin{itemize}
@@ -240,9 +242,9 @@ mysql -u lbserver lbserver20 \
 \end{itemize}
 
 
-\subsubsection{Migration to \LB 2.0}
+\subsubsection{Migration to \LB 2.x}
 \label{inst:migrate20}
-The migration process of existing \LB 1.x database to the \LB 2.0 is
+The migration process of existing \LB 1.x database to the \LB 2.x is
 not handled automatically. The database schema change is required due
 to support of merged \LB server and proxy services using single
 database, pointers to purged jobs (``zombies'') and other
@@ -250,18 +252,18 @@ improvements.
 
 Warning: There are two types of \LB database based on the fact that
 you can have a \LB server or \LB proxy. For more information about \LB
-proxy please see \ref{inst:LBproxy}.
+proxy please see \ref{inst:LBproxy}
 
 Steps:
 \begin{itemize}
- \item \emph{Stop the server and upgrade to \LB 2.0.} Stop both a \LB
+ \item \emph{Stop the server and upgrade to \LB 2.x.} Stop both a \LB
  server and a MySQL server. Making a fresh backup copy of database is
- a good idea. Do the upgrade to \LB 2.0, optionally you can move the
+ a good idea. Do the upgrade to \LB 2.x, optionally you can move the
  database to new OS in this step (see \ref{inst:OSmigration}).
  \item \emph{Before migration some database tuning is
  required.} Especially parameter \texttt{innodb\_buffer\_pool\_size}
  needs to be increased, to support bigger transactions. For details
- see Section~\ref{inst:db_tuning}.
+ see Section~\ref{inst:db_tuning}
  \item \emph{Database type.} Check if you have a \LB server or a \LB
  proxy. In the following step you must properly set the switch
  \verb'-s' (server) or \verb'-p' (proxy).
@@ -276,7 +278,7 @@ Steps:
   \verb'mysql -u lbserver lbserver20 -e "alter table events drop index host"'
   \end{quote}
  \item \emph{(Optional) Check the \LB indexes.} You may need to add
- LastUpdateTime for monitoring services. See \ref{maintain:index}.
+ LastUpdateTime for monitoring services. See \ref{maintain:index}
  \item \emph{Start the servers.} MySQL and \LB. Check logs.
 \end{itemize}
 
@@ -433,6 +435,8 @@ should be followed to set up the LCAS layer properly.
 
 \subsubsection{Export to R-GMA}
 
+\emph{Note: This feature is now obsolete and only available in \LBver{1.x}.}
+
 {\sloppy
 \LB server can export information on job state changes to R-GMA infrastructure through \verb'lcgmon' 
 in real time. This export is enabled by YAIM by default and uses \verb'GLITE_WMS_LCGMON_FILE' 
@@ -454,7 +458,7 @@ Initial YAIM configuration creates a cron job which runs once a day and purges o
 data (jobs in Cleared state after two days, Aborted and Cancelled after 15 days, and other jobs 
 after 60 days of inactivity). It is recommended to run the cron jobs more often (in order to purge less jobs
 during single run) if event queue backlogs form in client WMS machines when the purging cron jobs is running.
-For details on setting job purge timeouts, see Sect.~\ref{run:purge}.
+For details on setting job purge timeouts, see Sect.~\ref{run:purge}
 
 
 \subsubsection{Exploiting parallelism}
