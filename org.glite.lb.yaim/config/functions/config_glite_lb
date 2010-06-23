@@ -105,7 +105,7 @@ action "ADMIN_ACCESS" {
 $superusers
 }
 
-action "STATUS_FOR_MONITORING" {
+action "READ_ALL" {
 $rtm
 }
 
