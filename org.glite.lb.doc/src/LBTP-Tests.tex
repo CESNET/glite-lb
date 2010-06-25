@@ -65,6 +65,8 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-changeacl.sh} & Implemented & Test proper parsing of \code{ChangeACL} events. \\
 \hline
+{\tt lb-test-statistics.sh} & Implemented & Test statistic functions provided by \LB \\
+\hline
 \end{tabularx}
 
 \subsubsection{Event logging examples}
@@ -463,6 +465,26 @@ including the checks.
 \note\ This test does not check if the setting actually takes effect. Implementing that functionality -- relying on the use of at least two different identities -- in an automated test is rather challenging. 
 
 \result\ The \emph{test~DN} should be listed in the job's ACL.
+
+\subsubsection{Statistics}
+
+\req\ All \LB\ services running
+
+\what\
+\begin{enumerate}
+\item Register a series of jobs.
+\item Generate events to push jobs to a given state.
+\item Run statistics to calculate rate of jobs reaching that state. 
+\item Query for average time needed by test jobs to go from one state to another.
+\item Check if the statistics returned reasonable results. 
+\end{enumerate}
+
+\how\ \ctblb{lb-test-statistics.sh}
+
+\note\ The test includes artificial delays. Takes approx. 30\,s to finish.
+
+\result\ Meaningful values should be returned by both tests. 
+
 
 
 \section{LB ``In the Wild''---Real-World WMS Test}
