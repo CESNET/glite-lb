@@ -51,7 +51,7 @@ CFLAGS:=${DEBUG} \
 LDFLAGS:=-L${stagedir}/${libdir} \
 	${COVERAGE_FLAGS} 
 
-COMPILE:=libtool --mode=compile ${CC} -rpath ${stagedir}/${libdir}
+COMPILE:=libtool --mode=compile ${CC} 
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
@@ -228,5 +228,5 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 	${CXX} ${CFLAGS} ${TEST_INC} -c $< -o $@
 
 clean:
-	rm -rvf .libs/ *.o *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ}
+	rm -rvf .libs/ *.o *.lo ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/

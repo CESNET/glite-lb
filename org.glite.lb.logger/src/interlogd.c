@@ -567,7 +567,7 @@ main (int argc, char **argv)
 				  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Failed to load plugin %s: %s\n", name, error_get_msg());
 			  }
 		  }
-		  s = p;
+		  s = p + 1;
 	  }
   }
 

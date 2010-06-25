@@ -70,7 +70,7 @@ event_queue_create(char *server_name, struct il_output_plugin *output)
 		  c = '/';
 	  }
   }
-  eq->dest_name = strdup(server_name);
+  eq->dest_name = strdup(s);
   if(p)
     *(p-1) = c;
 
@@ -81,7 +81,7 @@ event_queue_create(char *server_name, struct il_output_plugin *output)
 	  eq->dest_port = 0; // use whatever default there is for given url scheme
   }
 #else
-	  eq->dest_port = p && c == ':' ? atoi(p)+1 : GLITE_JOBID_DEFAULT_PORT+1;
+          eq->dest_port = (p && c == ':') ? atoi(p)+1 : GLITE_JOBID_DEFAULT_PORT+1;
 #endif
 
   /* setup output functions */
