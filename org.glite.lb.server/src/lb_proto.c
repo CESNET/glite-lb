@@ -940,7 +940,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			memset(&request,0,sizeof(request));
 			memset(&result,0,sizeof(result));
 
-			if ( !parsePurgeRequest(ctx,messageBody,(int (*)()) edg_wll_StringToStat,&request) ) {
+			if (parsePurgeRequest(ctx,messageBody,(int (*)()) edg_wll_StringToStat,&request))
+				ret = HTTP_BADREQ;
+			else {
 				/* do throttled purge on background if requested */
 				if ((request.flags & EDG_WLL_PURGE_BACKGROUND)) {
 					retval = fork();
