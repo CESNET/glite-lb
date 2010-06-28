@@ -1982,6 +1982,9 @@ edg_wll_ErrorCode edg_wll_ParsePurgeResult(edg_wll_Context ctx, char *messageBod
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
 
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
+
 	errno = 0;
 	edg_wll_ResetError(ctx);
 	edg_wll_initXMLCtx(&XMLCtx);
@@ -2052,6 +2055,9 @@ edg_wll_ErrorCode edg_wll_ParseDumpResult(edg_wll_Context ctx, char *messageBody
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
 
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
+
 	errno = 0;
 	edg_wll_ResetError(ctx);
 	edg_wll_initXMLCtx(&XMLCtx);
@@ -2113,6 +2119,9 @@ edg_wll_ErrorCode edg_wll_ParseLoadResult(edg_wll_Context ctx, char *messageBody
 	edg_wll_XML_ctx XMLCtx;
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
+
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
 
 	errno = 0;
 	edg_wll_ResetError(ctx);
@@ -2250,6 +2259,9 @@ edg_wll_ErrorCode edg_wll_ParseNotifResult(edg_wll_Context ctx, char *messageBod
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
 
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
+
 	errno = 0;
 	edg_wll_ResetError(ctx);
 	edg_wll_initXMLCtx(&XMLCtx);
@@ -2310,6 +2322,9 @@ edg_wll_ErrorCode edg_wll_ParseQuerySequenceCodeResult(edg_wll_Context ctx, char
 	edg_wll_XML_ctx XMLCtx;
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
+
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
 
 	errno = 0;
 	edg_wll_ResetError(ctx);
@@ -2372,6 +2387,9 @@ edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBod
 	edg_wll_XML_ctx XMLCtx;
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
+
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
 
 	errno = 0;
 	edg_wll_ResetError(ctx);
