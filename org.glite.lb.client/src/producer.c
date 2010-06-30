@@ -178,7 +178,6 @@ int edg_wll_DoLogEventServer(
 		if ((ret = edg_wll_log_direct_connect(ctx,&con_bkserver))) {
 			edg_wll_UpdateError(ctx,EAGAIN,"edg_wll_DoLogEventServer(): edg_wll_log_direct_connect error");
 			goto edg_wll_DoLogEventServer_end;
-			goto inc_seq_code;
 		}
 		count++;
 	}
@@ -223,7 +222,7 @@ int edg_wll_DoLogEventServer(
 		case 0: /* timeout */
 			edg_wll_UpdateError(ctx,EAGAIN,"edg_wll_DoLogEventServer(): select() timeouted");
 			count = 0;
-			goto inc_seq_code; 
+			goto edg_wll_DoLogEventServer_end; 
 			break;
 		case -1: /* error */
 			switch(errno) {
@@ -231,7 +230,7 @@ int edg_wll_DoLogEventServer(
 				continue;
 			default:
 				edg_wll_UpdateError(ctx,errno,"edg_wll_DoLogEventServer(): select() error"); 
-				goto inc_seq_code; 
+				goto edg_wll_DoLogEventServer_end; 
 			}
 		default:
 			break;
@@ -243,7 +242,7 @@ int edg_wll_DoLogEventServer(
 			/* read answer from lbproxy */
 			if ((ret = edg_wll_log_proxy_read(ctx,&con_lbproxy)) == -1) {
 				edg_wll_UpdateError(ctx,EAGAIN,"edg_wll_DoLogEventServer(): edg_wll_log_proxy_read error");
-				goto inc_seq_code; 
+				goto edg_wll_DoLogEventServer_end; 
 			}
 			count -= 1;
 		}	
@@ -251,14 +250,11 @@ int edg_wll_DoLogEventServer(
 			/* read answer from bkserver */
 			if ((ret = edg_wll_log_direct_read(ctx,&con_bkserver)) == -1) {
 				edg_wll_UpdateError(ctx,EAGAIN,"edg_wll_DoLogEventServer(): edg_wll_log_direct_read error");
-				goto inc_seq_code; 
+				goto edg_wll_DoLogEventServer_end; 
 			}
 			count -= 1;
 		}	
 	}
-
-inc_seq_code:
-	edg_wll_IncSequenceCode(ctx);   /* XXX: should not fail, called second time */
 
 edg_wll_DoLogEventServer_end:
 	edg_wll_log_proxy_close(ctx,&con_lbproxy);
@@ -406,6 +402,8 @@ static int edg_wll_LogEventMasterVa(
 //	va_list	fmt_args;
 	int     ret = 0;
 	edg_wll_LogLine in = NULL, out = NULL;
+        int     err_store;
+        char    *err_desc_store = NULL;
 
 	if ((flags & (EDG_WLL_LOGFLAG_LOCAL|EDG_WLL_LOGFLAG_PROXY|EDG_WLL_LOGFLAG_DIRECT)) == 0) {
 		return edg_wll_SetError(ctx,ret = EINVAL,"edg_wll_LogEventMaster(): no known flag specified");
@@ -448,9 +446,17 @@ edg_wll_logeventmaster_end:
 	if (in) free(in);
 	if (out) free(out);
 
-	if (!ret) if(edg_wll_IncSequenceCode(ctx)) {
+        if (ctx->errCode) { 
+                err_store = ctx->errCode;
+                err_desc_store = strdup(ctx->errDesc); }
+
+	if(edg_wll_IncSequenceCode(ctx)) {
 		edg_wll_SetError(ctx,ret = EINVAL,"edg_wll_LogEventMaster(): edg_wll_IncSequenceCode failed");
 	}
+
+	if (err_desc_store) {
+		edg_wll_SetError(ctx, err_store, err_desc_store);
+		free(err_desc_store); }
 
 	if (ret) edg_wll_UpdateError(ctx,0,"Logging library ERROR: ");
 
