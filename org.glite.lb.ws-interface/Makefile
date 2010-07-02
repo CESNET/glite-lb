@@ -58,7 +58,7 @@ install:
 
 clean:
 	rm -vf *.h *.html *.xml *.wsdl glue2-copy.xsd
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 %.xml: %.xml.T
 	rm -f $@

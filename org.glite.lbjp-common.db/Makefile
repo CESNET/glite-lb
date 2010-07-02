@@ -175,7 +175,7 @@ install: all
 
 clean:
 	rm -rvf *.o *.lo *.loT .libs lib* *.c *.h *.dox C/ CPP/
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 	rm -rvf db_expire db_test db_test_mysql db_test_psql timezone
 
 db-mysql.o db-mysql.lo: db-mysql.c

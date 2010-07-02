@@ -353,7 +353,7 @@ clean:
 	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent  register_sandbox ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 check_version:
 	${CHECK_VERSION} ${stagedir}/include/glite/lb/common_version.h

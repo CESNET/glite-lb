@@ -11,4 +11,4 @@ check:
 
 clean:
 	${ant_prefix}/bin/ant clean
-	rm -rvf log.xml project/glite-jobid-api-java.spec rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/glite-jobid-api-java.spec rpmbuild/ RPMS/ tgz/ debian/

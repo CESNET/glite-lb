@@ -76,7 +76,7 @@ install: compile
 
 clean:
 	rm -rvf *.o *.lo .libs lib*
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 check:
 

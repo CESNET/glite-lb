@@ -76,7 +76,7 @@ install:
 
 clean:
 	rm -rvf LBUG* LBAG* LBDG* LBTP* events.tex status.tex ver.tex comment*
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 
 # dependencies:

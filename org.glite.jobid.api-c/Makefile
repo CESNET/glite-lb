@@ -69,7 +69,7 @@ base64_test: %: %.cpp compile
 clean:
 	rm -rvf *.o *.lo .libs/ lib* *.c *.cpp *.h
 	rm -vf base64_test base64_test.xml
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 install: ${LIB}
 	mkdir -p ${PREFIX}/${libdir}

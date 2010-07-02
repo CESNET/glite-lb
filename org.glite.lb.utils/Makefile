@@ -111,7 +111,7 @@ install:
 
 clean:
 	rm -rfv ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ} *.lo *.o .libs/
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} -c $<
