@@ -35,7 +35,7 @@ limitations under the License.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef WITH_OLD_LB
+#if defined(WITH_OLD_LB) || !defined(USE_LOG4C)
 #include <syslog.h>
 #endif
 #include <errno.h>
@@ -225,7 +225,7 @@ typedef struct {
 
 static const char rcsid[] = "@(#)$Id$";
 
-#ifdef WITH_OLD_LB
+#if defined(WITH_OLD_LB) || !defined(USE_LOG4C)
 static int rtm2syslog[] = {
 	LOG_ERR,
 	LOG_WARNING,
@@ -332,7 +332,7 @@ void lvprintf_func(thread_t *t, const char *description, int level, const char *
 
 	if (level <= WRN && !config.daemonize) fprintf(stderr, RTM_TTY_RED);
 	if (config.daemonize) {
-#ifdef WITH_OLD_LB
+#if defined(WITH_OLD_LB) || !defined(USE_LOG4C)
 		openlog(NULL, LOG_PID | LOG_CONS, LOG_DAEMON);
 		syslog(rtm2syslog[level], "%s", line);
 		closelog();
@@ -2740,7 +2740,7 @@ quit:
 	if (config.pidfile && !config.guard) {
 		if (remove(config.pidfile) == -1) lprintf(NULL, WRN, "can't remove pidfile '%s': %s", config.pidfile, strerror(errno));
 	}
-#ifdef WITH_OLD_LB
+#ifndef WITH_OLD_LB
 	if (config.daemonize) glite_common_log_fini();
 #endif
 
