@@ -607,10 +607,11 @@ BEGIN{
 			sl5_ia32_gcc412 => { aprSuffix => '1' },
 			deb5_ia32_gcc432 => { aprSuffix => '1.0' },
 			slc4_x86_64_gcc346 => { aprSuffix => '0' },
-			default => { 
-				'package.RPMSLocation' => '${moduleDir}/RPMTMP/RPMS',
-				'package.SRPMSLocation' => '${moduleDir}/RPMTMP/SRPMS',
-			}
+# unused in 1.5.18
+#			default => { 
+#				'package.RPMSLocation' => '${moduleDir}/RPMTMP/RPMS',
+#				'package.SRPMSLocation' => '${moduleDir}/RPMTMP/SRPMS',
+#			}
 		},
 	);
 };
@@ -708,11 +709,11 @@ sub mode_etics {
 
 	if ($subsys eq 'gridsite') {
 		if ($module eq 'core') {
-			my $flags = 'prefix=${prefix} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
+			my $flags = 'RELEASE_VERSION=${age}.\${platformFamily} prefix=${prefix} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
 
 			$cmd{compile} = "make $flags build";
 			$cmd{install} = "make $flags install";
-			$cmd{packaging} = "make RELEASE_VERSION=${age}.\${platformFamily} $flags rpm";
+			$cmd{packaging} = "make $flags rpm";
 		}
 		else {
 			$cmd{packaging} = "echo building nothing, org.gridsite.core make rpm step will create this";
