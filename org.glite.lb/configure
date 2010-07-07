@@ -421,6 +421,7 @@ for my $jar (keys %need_jars) {
 	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio lbjp-common.log/ ],
 	'lbjp-common.maildir' => [ qw// ],
+	'lbjp-common.log' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw/lbjp-common.log/ ],
 	'lbjp-common.trio' => [ qw// ],
 	'security.gss' =>  [ qw// ],
