@@ -37,6 +37,7 @@ int edg_wll_UpdateStatistics(
 struct edg_wll_stats_cell {
 	int	cnt;
 	float	value;
+	float 	value2;
 };
 
 struct edg_wll_stats_archive {
@@ -101,6 +102,7 @@ int edg_wll_StateDurationFromToServer(
         time_t  *from,
         time_t  *to,
         float   *duration,
+	float   *dispersion,
         int     *res_from,
         int     *res_to
 );

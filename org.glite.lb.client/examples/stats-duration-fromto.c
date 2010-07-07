@@ -34,7 +34,7 @@ int main(int argc,char **argv)
 	time_t	now,from,to;
 	char	*cfrom,*cto;
 	int	from_res,to_res;
-	float	val;
+	float	duration, dispersion;
 
 
 	edg_wll_InitContext(&ctx);
@@ -55,8 +55,7 @@ int main(int argc,char **argv)
         to = now;
         from = now - 600;
 
-	if (edg_wll_StateDurationFromTo(ctx,group,atoi(argv[2]),atoi(argv[3]),argc >=5 ? atoi(argv[4]) : 0,
-				&from,&to,&val,&from_res,&to_res))
+	if (edg_wll_StateDurationFromTo(ctx,group,atoi(argv[2]),atoi(argv[3]),argc >=5 ? atoi(argv[4]) : 0, &from,&to,&duration,&dispersion,&from_res,&to_res))
 	{
 		char	*et,*ed;
 		edg_wll_Error(ctx,&et,&ed);
@@ -70,9 +69,10 @@ int main(int argc,char **argv)
 	cto[strlen(cto)-1] = 0;
 
 	printf("Average duration at \"%s\": %f s\n"
+	       "Dispersion index: %f\n"
 	       "  Measuered from %s to %s\n"
 	       "  With resolution from %d to %d s\n",
-	       argv[1],val,cfrom,cto,from_res,to_res);
+	       argv[1],duration,dispersion,cfrom,cto,from_res,to_res);
 
 	return 0;
 }

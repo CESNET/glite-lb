@@ -727,8 +727,9 @@ static void startStatsResult(void *data, const char *el, const char **attr)
                         }       
                         break;          
                 case 1: if (strcasecmp(el,"from") && strcasecmp(el,"to") &&
-				strcasecmp(el,"rate") && strcasecmp(el,"duration") &&
-				strcasecmp(el,"res_from") && strcasecmp(el,"res_to")) 
+				strcasecmp(el,"rate") && strcasecmp(el,"duration") && 
+				strcasecmp(el,"dispersion") && strcasecmp(el,"res_from") &&
+				strcasecmp(el,"res_to")) 
 					unexpWarning()
                         break;  
                 default: unexpWarning()
@@ -1321,6 +1322,8 @@ static void endStatsResult(void *data, const char *el UNUSED_VAR)
                         XMLCtx->statsRate = edg_wll_from_string_to_float(XMLCtx);
                 else if (!strcmp(XMLCtx->element,"duration"))
                         XMLCtx->statsDuration = edg_wll_from_string_to_float(XMLCtx);
+		else if (!strcmp(XMLCtx->element,"dispersion"))
+                        XMLCtx->statsDispersion = edg_wll_from_string_to_float(XMLCtx);
                 else if (!strcmp(XMLCtx->element,"res_from"))
                         XMLCtx->statsResFrom = edg_wll_from_string_to_int(XMLCtx);
                 else if (!strcmp(XMLCtx->element,"res_to"))
@@ -2382,7 +2385,7 @@ edg_wll_ErrorCode edg_wll_ParseQuerySequenceCodeResult(edg_wll_Context ctx, char
 
 
 /* parse statistics result from client */
-edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float *rate, float *duration, int *res_from, int *res_to)
+edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float *rate, float *duration, float *dispersion, int *res_from, int *res_to)
 {
 	edg_wll_XML_ctx XMLCtx;
 	edg_wll_ErrorCode errorCode;
@@ -2421,6 +2424,7 @@ edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBod
 		*to = -1;
 		*rate = 0;
 		*duration = 0;
+		*dispersion = 0;
 		*res_from = -1;
 		*res_to = -1;
 	} else {
@@ -2428,6 +2432,7 @@ edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBod
 		*to = XMLCtx.statsTo;
 		*rate = XMLCtx.statsRate;
 		*duration = XMLCtx.statsDuration;
+		*dispersion = XMLCtx.statsDispersion;
 		*res_from = XMLCtx.statsResFrom;
 		*res_to = XMLCtx.statsResTo;
 	}

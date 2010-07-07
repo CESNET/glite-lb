@@ -91,6 +91,7 @@ void edg_wll_initXMLCtx(edg_wll_XML_ctx *c) {
 	c->statsMinor = 0;
 	c->statsRate = 0;
 	c->statsDuration = 0;
+	c->statsDispersion = 0;
 	c->statsFrom = 0;
 	c->statsTo = 0;
 	c->statsResFrom = 0;

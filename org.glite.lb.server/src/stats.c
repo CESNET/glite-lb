@@ -25,6 +25,7 @@ limitations under the License.
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
+#include <math.h>
 
 #include "glite/lb/events.h"
 #include "glite/lb/jobstat.h"
@@ -366,6 +367,7 @@ static int stats_record_duration_fromto(
 			/* now we can do IT */
 	                a->cells[a->ptr].cnt++;
 			a->cells[a->ptr].value += (float)timedif;
+			a->cells[a->ptr].value2 += (float)timedif * (float)timedif;
         	        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
                 	        "update archive %d, cell %d incremented to %f",
                         	i, a->ptr, a->cells[a->ptr].value);
@@ -460,7 +462,7 @@ int edg_wll_StateRateServer(
 
 	edg_wll_ResetError(ctx);
 
-	if (err = findStat(ctx, group, major, EDG_WLL_JOB_UNDEF, minor, from, to, &stats)) return err;
+	if ((err = findStat(ctx, group, major, EDG_WLL_JOB_UNDEF, minor, from, to, &stats))) return err;
 
 	/* remap the file if someone changed its size */
 	if (stats->map->grpno != stats->grpno)
@@ -614,11 +616,12 @@ int edg_wll_StateDurationFromToServer(
         time_t  *from,
         time_t  *to,
         float   *duration,
+	float   *dispersion,
         int     *res_from,
         int     *res_to
 )
 {
-	 edg_wll_Stats *stats = default_stats;   /* XXX: hardcoded */
+	edg_wll_Stats *stats = default_stats;   /* XXX: hardcoded */
         struct edg_wll_stats_group      *g;
         struct edg_wll_stats_archive    *a;
         int     i,j,matchi;
@@ -630,7 +633,7 @@ int edg_wll_StateDurationFromToServer(
 
         edg_wll_ResetError(ctx);
 
-	if (err = findStat(ctx, group, base_state, final_state, minor, from, to, &stats)) return err;
+	if ((err = findStat(ctx, group, base_state, final_state, minor, from, to, &stats))) return err;
 
 	/* remap the file if someone changed its size */
         if (stats->map->grpno != stats->grpno)
@@ -712,6 +715,7 @@ int edg_wll_StateDurationFromToServer(
 
         rate = 0.0f;
 	*duration = 0.0f;
+	*dispersion = 0.0f;
         match = 0;
 
 	for (j=0; j<stats->archives[matchi].length; j++,afrom += i) {
@@ -750,19 +754,20 @@ int edg_wll_StateDurationFromToServer(
 		}
 		printf("diff: %ld\n", diff);
 		match += diff;
-		rate += c->cnt * (float)diff/i;
+		rate += c->cnt * (float)diff;
 		if (c->cnt)
                 	*duration += (float)diff * c->value/c->cnt;
+		*dispersion += (float)diff * c->value2;
 
 		if (*to >= afrom && *to < afrom+i) { 
-			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, rate %f, duration %f", match, rate, *duration);
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, duration %f, dispersion %f", match, *duration, *disperson);
 			break;
 		}
         }
-	printf("XXX %f %f %ld\n", rate, *duration, match);
-        rate /= match;
 	*duration /= match;
-	printf("YYY %f %f %ld\n", rate, *duration, match);
+	*dispersion /= match;
+	rate /= match;
+	*dispersion = sqrtf(1/(rate-1) * ((*dispersion) - rate*(*duration)));
 
 cleanup:
 	free(sig);

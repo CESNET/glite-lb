@@ -77,6 +77,7 @@ int edg_wll_StateDurationFromTo(
         time_t  *from,
         time_t  *to,
         float   *duration,
+	float   *dispersion,
         int     *res_from,
         int     *res_to
 );

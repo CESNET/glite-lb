@@ -81,7 +81,7 @@ int edg_wll_StateRate(
 		goto err;
 
   	edg_wll_ParseStatsResult(ctx,message, from, to, rate, 
-			&not_returned, res_from, res_to);
+			&not_returned, &not_returned, res_from, res_to);
 
 err:
 	free(response);
@@ -127,7 +127,7 @@ int edg_wll_StateDuration(
 		goto err;
 
   	edg_wll_ParseStatsResult(ctx,message, from, to, &not_returned, 
-			duration, res_from, res_to);
+			duration, &not_returned, res_from, res_to);
 
 err:
 	free(response);
@@ -150,6 +150,7 @@ int edg_wll_StateDurationFromTo(
         time_t  *from,
         time_t  *to,
         float   *duration,
+	float   *dispersion,
         int     *res_from,
         int     *res_to
 )
@@ -175,7 +176,7 @@ int edg_wll_StateDurationFromTo(
                 goto err;
 
         edg_wll_ParseStatsResult(ctx,message, from, to, &not_returned,
-                        duration, res_from, res_to);
+                        duration, dispersion, res_from, res_to);
 
 err:
         free(response);

@@ -2075,6 +2075,7 @@ int edg_wll_StatsResultToXML(
 		time_t to,
 		float rate,
 		float duration,
+		float dispersion,
 		int res_from,
 		int res_to,
                 char **message)
@@ -2087,6 +2088,7 @@ int edg_wll_StatsResultToXML(
 	edg_wll_add_time_t_to_XMLBody(&pomA, to, "to", -1);
 	edg_wll_add_float_to_XMLBody(&pomA, rate, "rate", 0);
 	edg_wll_add_float_to_XMLBody(&pomA, duration, "duration", 0);
+	edg_wll_add_float_to_XMLBody(&pomA, dispersion, "dispersion", 0);
 	edg_wll_add_int_to_XMLBody(&pomA, res_from, "res_from", -1);
 	edg_wll_add_int_to_XMLBody(&pomA, res_to, "res_to", -1);
 
