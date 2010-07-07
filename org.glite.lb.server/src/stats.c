@@ -760,7 +760,7 @@ int edg_wll_StateDurationFromToServer(
 		*dispersion += (float)diff * c->value2;
 
 		if (*to >= afrom && *to < afrom+i) { 
-			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, duration %f, dispersion %f", match, *duration, *disperson);
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, duration %f, dispersion %f", match, *duration, *dispersion);
 			break;
 		}
         }
