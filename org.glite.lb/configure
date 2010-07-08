@@ -610,11 +610,8 @@ BEGIN{
 			deb5_ia32_gcc432 => { aprSuffix => '1.0' },
 			slc4_x86_64_gcc346 => { aprSuffix => '0' },
 			slc4_ia32_gcc346 => { aprSuffix => '0' },
-# unused in 1.5.18
-#			default => { 
-#				'package.RPMSLocation' => '${moduleDir}/RPMTMP/RPMS',
-#				'package.SRPMSLocation' => '${moduleDir}/RPMTMP/SRPMS',
-#			}
+			default => { 
+			}
 		},
 	);
 };
@@ -690,7 +687,7 @@ sub mode_etics {
 		close V;
 		chomp $package_description;
 		$package_description =~ s/\n/\\n/g; 
-		$package_description = "package.description = $package_description";
+		$package_description = "package.description = $package_description\n";
 	} 
 	else { 
 		print STDERR "package.description not found for $subsys.$module!\n"; }
@@ -701,7 +698,7 @@ sub mode_etics {
 		close V;
 		chomp $package_summary;
 		$package_summary =~ s/\n/\\n/g; 
-		$package_summary = "package.summary = $package_summary";
+		$package_summary = "package.summary = $package_summary\n";
 	} 
 	else { 
 		print STDERR "package.summary not found for $subsys.$module!\n"; }
@@ -774,9 +771,10 @@ checkstyle = None
 
 [Platform-default:Property]
 $buildroot
-$package_description
-$package_summary
-$defprops
+aprSuffix = 0
+package.RPMSLocation = \${moduleDir}/RPMTMP/RPMS
+package.SRPMSLocation = \${moduleDir}/RPMTMP/SRPMS
+$package_description$package_summary$defprops
 };
 	for (@{$obsoletes{"$subsys.$module"}}) {
 		print C "package.obsoletes = $_\n";
@@ -790,7 +788,10 @@ $defprops
 		for my $p (keys %{$platform_properties{"$subsys.$module"}->{$pp}}) {
 			print C $p . ' = ' . $platform_properties{"$subsys.$module"}->{$pp}->{$p} . "\n";
 		}
-		print C "\n";
+		print C q{package.RPMSLocation = ${moduleDir}/RPMTMP/RPMS
+package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
+};
+		print C "$package_description$package_summary\n";
 	}
 
 	print C qq{
