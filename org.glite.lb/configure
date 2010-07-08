@@ -606,8 +606,10 @@ BEGIN{
 		'gridsite.core' => {
 			sl5_x86_64_gcc412 => { aprSuffix => '1' },
 			sl5_ia32_gcc412 => { aprSuffix => '1' },
+			deb5_x86_64_gcc432 => { aprSuffix => '1.0' },
 			deb5_ia32_gcc432 => { aprSuffix => '1.0' },
 			slc4_x86_64_gcc346 => { aprSuffix => '0' },
+			slc4_ia32_gcc346 => { aprSuffix => '0' },
 # unused in 1.5.18
 #			default => { 
 #				'package.RPMSLocation' => '${moduleDir}/RPMTMP/RPMS',
