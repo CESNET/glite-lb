@@ -724,14 +724,29 @@ static void startStatsResult(void *data, const char *el, const char **attr)
                                 else if (!strcmp(attr[i],"desc"))
                                         XMLCtx->errDesc = strdup(attr[i+1]);
                                 else { unexpError() }
-                        }       
+                        }      
+			XMLCtx->statsGroup = (char**)malloc(1*sizeof(char*));
+			XMLCtx->statsGroup[0] = NULL;
+			XMLCtx->position = -1;
+	
                         break;          
-                case 1: if (strcasecmp(el,"from") && strcasecmp(el,"to") &&
-				strcasecmp(el,"rate") && strcasecmp(el,"duration") && 
-				strcasecmp(el,"dispersion") && strcasecmp(el,"res_from") &&
-				strcasecmp(el,"res_to")) 
-					unexpWarning()
-                        break;  
+		case 1: if (strcasecmp(el,"from") && strcasecmp(el,"to") &&
+			strcasecmp(el,"res_from") && strcasecmp(el,"res_to") &&
+			strcasecmp(el, "stat"))
+				unexpWarning()
+			if (strcasecmp(el, "stat") == 0){
+				XMLCtx->position++;
+				XMLCtx->statsGroup = (char**)realloc(XMLCtx->statsGroup, (XMLCtx->position+2)*sizeof(char*));
+                                XMLCtx->statsGroup[XMLCtx->position+1] = NULL;
+                                XMLCtx->statsRate = (float*)realloc(XMLCtx->statsRate, (XMLCtx->position+1)*sizeof(float));
+                                XMLCtx->statsDuration = (float*)realloc(XMLCtx->statsDuration, (XMLCtx->position+1)*sizeof(float));
+                                XMLCtx->statsDispersion = (float*)realloc(XMLCtx->statsDispersion, (XMLCtx->position+1)*sizeof(float));
+			}
+			break;
+		case 2: if (strcasecmp(el,"rate") && strcasecmp(el,"duration") 
+			&& strcasecmp(el,"dispersion") && strcasecmp(el,"group"))
+				unexpWarning()
+			break;
                 default: unexpWarning()
                          break;
         }       
@@ -1318,16 +1333,24 @@ static void endStatsResult(void *data, const char *el UNUSED_VAR)
                         XMLCtx->statsFrom = edg_wll_from_string_to_time_t(XMLCtx);
                 else if (!strcmp(XMLCtx->element,"to"))
                         XMLCtx->statsTo = edg_wll_from_string_to_time_t(XMLCtx);
-                else if (!strcmp(XMLCtx->element,"rate"))
-                        XMLCtx->statsRate = edg_wll_from_string_to_float(XMLCtx);
-                else if (!strcmp(XMLCtx->element,"duration"))
-                        XMLCtx->statsDuration = edg_wll_from_string_to_float(XMLCtx);
-		else if (!strcmp(XMLCtx->element,"dispersion"))
-                        XMLCtx->statsDispersion = edg_wll_from_string_to_float(XMLCtx);
                 else if (!strcmp(XMLCtx->element,"res_from"))
                         XMLCtx->statsResFrom = edg_wll_from_string_to_int(XMLCtx);
                 else if (!strcmp(XMLCtx->element,"res_to"))
                         XMLCtx->statsResTo = edg_wll_from_string_to_int(XMLCtx);
+	}
+	else if (XMLCtx->level == 3){
+		if (!strcmp(XMLCtx->element,"rate"))
+                        XMLCtx->statsRate[XMLCtx->position] = 
+				edg_wll_from_string_to_float(XMLCtx);
+                else if (!strcmp(XMLCtx->element,"duration"))
+                        XMLCtx->statsDuration[XMLCtx->position] = 
+				edg_wll_from_string_to_float(XMLCtx);
+                else if (!strcmp(XMLCtx->element,"dispersion"))
+                        XMLCtx->statsDispersion[XMLCtx->position] = 
+				edg_wll_from_string_to_float(XMLCtx);
+                else if (!strcmp(XMLCtx->element,"group"))
+                        XMLCtx->statsGroup[XMLCtx->position] = 
+				edg_wll_from_string_to_string(XMLCtx);
 	}
 
 	edg_wll_freeBuf(XMLCtx);
@@ -2385,11 +2408,12 @@ edg_wll_ErrorCode edg_wll_ParseQuerySequenceCodeResult(edg_wll_Context ctx, char
 
 
 /* parse statistics result from client */
-edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float *rate, float *duration, float *dispersion, int *res_from, int *res_to)
+edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float **rate, float **duration, float **dispersion, char ***group, int *res_from, int *res_to)
 {
 	edg_wll_XML_ctx XMLCtx;
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
+	int i;
 
 	if (!messageBody)
 		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
@@ -2422,17 +2446,30 @@ edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBod
 	if ((errorCode = edg_wll_Error(ctx,NULL,NULL))) {
 		*from = -1;
 		*to = -1;
-		*rate = 0;
-		*duration = 0;
-		*dispersion = 0;
+		*rate = NULL;
+		*duration = NULL;
+		*dispersion = NULL;
+		*group = NULL;
 		*res_from = -1;
 		*res_to = -1;
 	} else {
 		*from = XMLCtx.statsFrom;
 		*to = XMLCtx.statsTo;
-		*rate = XMLCtx.statsRate;
-		*duration = XMLCtx.statsDuration;
-		*dispersion = XMLCtx.statsDispersion;
+		*rate = NULL;
+                *duration = NULL;
+                *dispersion = NULL;
+		*group = NULL;
+		for (i = 0; XMLCtx.statsGroup[i]; i++){
+			*rate = (float*)realloc(*rate, (i+1)*sizeof(float));
+                        (*rate)[i] = XMLCtx.statsRate[i];
+                        *duration = (float*)realloc(*duration, (i+1)*sizeof(float));
+                        (*duration)[i] = XMLCtx.statsDuration[i];
+                        *dispersion = (float*)realloc(*dispersion, (i+1)*sizeof(float));
+                        (*dispersion)[i] = XMLCtx.statsDispersion[i];
+                        *group = (char**)realloc(*group, (i+2)*sizeof(char*));
+                        (*group)[i] = strdup(XMLCtx.statsGroup[i]);
+                        (*group)[i+1] = NULL;
+		}
 		*res_from = XMLCtx.statsResFrom;
 		*res_to = XMLCtx.statsResTo;
 	}

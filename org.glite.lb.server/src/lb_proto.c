@@ -1196,7 +1196,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			edg_wll_JobStatCode final = EDG_WLL_JOB_UNDEF;
 			time_t from, to;
 			int i, j, minor, res_from, res_to;
-			float rate = 0, duration = 0, dispersion = 0;
+			float *rates = NULL, *durations = NULL , *dispersions = NULL;
+			char **groups = NULL;
 			
         	        if (parseStatsRequest(ctx, messageBody, &function, &conditions, 
 						&base, &final, &minor, &from, &to))
@@ -1209,16 +1210,19 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				if (!strcmp(function,"Rate")) 
 					err = edg_wll_StateRateServer(ctx,
 						conditions[0], base, minor, 
-						&from, &to, &rate, &res_from, &res_to); 
+						&from, &to, &rates, &groups, 
+						&res_from, &res_to); 
 				else if (!strcmp(function,"Duration"))
 					err = edg_wll_StateDurationServer(ctx,
 						conditions[0], base, minor, 
-						&from, &to, &duration, &res_from, &res_to); 
+						&from, &to, &durations, &groups,
+						&res_from, &res_to); 
 				else if (!strcmp(function, "DurationFromTo"))
 					err = edg_wll_StateDurationFromToServer(
 						ctx, conditions[0], base, final,
-                                                minor, &from, &to, &duration,
-                                                &dispersion, &res_from, &res_to);
+                                                minor, &from, &to, &durations,
+                                                &dispersions, &groups, 
+						&res_from, &res_to);
 				
 				switch (err) {
 					case 0: if (html) ret = HTTP_NOTIMPL;
@@ -1236,9 +1240,18 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				/* glue errors (if eny) to XML responce */ 
 				if (!html && !fatal)
 					if (edg_wll_StatsResultToXML(ctx, from,
-						to, rate, duration, dispersion,
+						to, rates, durations, 
+						dispersions, groups,
 						res_from, res_to, &message))
 						ret = HTTP_INTERNAL;
+				if (rates) free(rates);
+				if (durations) free(durations);
+				if (dispersions) free(dispersions);
+				if (groups){
+					for(i = 0; groups[i]; i++)
+						free(groups[i]);
+					free(groups);
+				}
 			}
 			
 			free(function);

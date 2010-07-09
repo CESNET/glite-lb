@@ -97,7 +97,8 @@ typedef struct _edg_wll_XML_ctx {
 	edg_wll_JobStatCode     statsFinalState;
 	int                     statsMinor;
 	time_t                  statsFrom, statsTo;
-	float                   statsRate, statsDuration, statsDispersion;
+	float                   *statsRate, *statsDuration, *statsDispersion;
+	char			**statsGroup;
 	int                     statsResFrom, statsResTo;
 	glite_jobid_t		jobId;
 	char			*source;

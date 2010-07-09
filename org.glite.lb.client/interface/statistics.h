@@ -46,7 +46,8 @@ int edg_wll_StateRate(
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*rate,
+	float	**rates,
+	char	***groups,
 	int	*res_from,
 	int	*res_to
 );
@@ -63,7 +64,8 @@ int edg_wll_StateDuration(
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*duration,
+	float	**durations,
+	char 	***groups,
 	int	*res_from,
 	int	*res_to
 );
@@ -76,8 +78,9 @@ int edg_wll_StateDurationFromTo(
         int     minor,
         time_t  *from,
         time_t  *to,
-        float   *duration,
-	float   *dispersion,
+        float   **durations,
+	float   **dispersions,
+	char	***groups,
         int     *res_from,
         int     *res_to
 );

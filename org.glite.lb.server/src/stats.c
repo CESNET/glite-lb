@@ -221,6 +221,7 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
                 }
 
                 strcpy((*g)->sig,sig);
+		(*g)->destination = strdup(jobstat->destination);
                 (*g)->last_update = jobstat->stateEnterTime.tv_sec; //now;
         }
         else
@@ -439,58 +440,23 @@ static int findStat(
 	return 0;
 }
 
-int edg_wll_StateRateServer(
-	edg_wll_Context	ctx,
-	const edg_wll_QueryRec	*group,
-	edg_wll_JobStatCode	major,
-	int			minor,
-	time_t	*from, 
-	time_t	*to,
-	float	*rate,
-	int	*res_from,
-	int	*res_to
+static int stateRateRequest(
+	edg_wll_Context ctx,
+	edg_wll_Stats *stats,
+	struct edg_wll_stats_group    *g,
+	time_t  *from, 
+        time_t  *to,
+        float   *rate,
+        int     *res_from,
+        int     *res_to
 )
 {
-	edg_wll_Stats *stats = default_stats;   /* XXX: hardcoded */
-	struct edg_wll_stats_group	*g;
-	struct edg_wll_stats_archive	*a;
-	int	i,j,matchi;
-	char	*sig = NULL;
-	time_t	afrom,ato;
-	long	match, diff;
-	int	err;
+	struct edg_wll_stats_archive    *a;
+        int     i,j,matchi;
+	time_t  afrom,ato;
+        long    match, diff;
 
 	edg_wll_ResetError(ctx);
-
-	if ((err = findStat(ctx, group, major, EDG_WLL_JOB_UNDEF, minor, from, to, &stats))) return err;
-
-	/* remap the file if someone changed its size */
-	if (stats->map->grpno != stats->grpno)
-	{	
-		if (flock(stats->fd,LOCK_EX)) return edg_wll_SetError(ctx,errno,"flock()");
-		if (stats_remap(stats)) {
-			edg_wll_SetError(ctx,errno,"shmem remap failed");
-			goto cleanup;
-		}
-	}
-
-	if (flock(stats->fd,LOCK_SH)) return edg_wll_SetError(ctx,errno,"flock()");
-
-	/* XXX */
-	sig = str2md5base64(group->value.c);
-
-
-	for (i=0, g=stats->map; i<stats->grpno; i++) {
-		if (!strcmp(sig,g->sig)) break;
-		g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
-	}
-
-	if (i == stats->grpno) {
-		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, 
-			"no match: %s\n",sig);
-		edg_wll_SetError(ctx,ENOENT,"no matching group");
-		goto cleanup;
-	}
 
 	match = 0;
 	matchi = -1;
@@ -580,16 +546,107 @@ int edg_wll_StateRateServer(
                 *rate += c->cnt * (float)diff/i;
 
                 if (*to >= afrom && *to < afrom+i) {
-                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, rate %f", match, rate);
+                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, rate %f", match, *rate);
                         break;
                 }
 	}
 	*rate /= match;
 
 cleanup:
-	free(sig);
-	flock(stats->fd,LOCK_UN);
-	return edg_wll_Error(ctx,NULL,NULL);
+        return edg_wll_Error(ctx,NULL,NULL);
+}
+
+int edg_wll_StateRateServer(
+	edg_wll_Context	ctx,
+	const edg_wll_QueryRec	*group,
+	edg_wll_JobStatCode	major,
+	int			minor,
+	time_t	*from, 
+	time_t	*to,
+	float	**rates,
+	char 	***groups,
+	int	*res_from,
+	int	*res_to
+)
+{
+	edg_wll_Stats *stats = default_stats;   /* XXX: hardcoded */
+	struct edg_wll_stats_group    *g;
+	int     i;
+	char    *sig = NULL;	
+	int     err;
+
+	edg_wll_ResetError(ctx);
+	*rates = NULL; *groups = NULL;
+
+	if ((err = findStat(ctx, group, major, EDG_WLL_JOB_UNDEF, minor, from, to, &stats))) return err;
+
+	/* remap the file if someone changed its size */
+	if (stats->map->grpno != stats->grpno)
+	{	
+		if (flock(stats->fd,LOCK_EX)) return edg_wll_SetError(ctx,errno,"flock()");
+		if (stats_remap(stats)) {
+			edg_wll_SetError(ctx,errno,"shmem remap failed");
+			goto cleanup;
+		}
+	}
+
+	if (flock(stats->fd,LOCK_SH)) return edg_wll_SetError(ctx,errno,"flock()");
+
+	if (strcmp(group->value.c, "ALL")){
+		/* single group */
+		sig = str2md5base64(group->value.c);
+
+		*rates = (float*)malloc(2*sizeof((*rates)[0])); 
+		(*rates)[0] = (*rates)[1] = 0;
+		*groups = (char**)malloc(2*sizeof((*groups)[0])); 
+		(*groups)[0] = (*groups)[1] = NULL;
+
+		for (i=0, g=stats->map; i<stats->grpno; i++) {
+			if (!strcmp(sig,g->sig)) break;
+			g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
+		}
+
+		if (i == stats->grpno) {
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, 
+				"no match: %s\n",sig);
+			edg_wll_SetError(ctx,ENOENT,"no matching group");
+			free(*rates); *rates = NULL;
+			free(*groups); *groups = NULL;
+			goto cleanup;
+		}
+
+		if ((err = stateRateRequest(ctx, stats, g, from, to, &((*rates)[0]), res_from, res_to))){
+			free(*rates);
+                        free(*groups);
+			goto cleanup;
+		}
+		(*groups)[0] = strdup(g->destination); 
+	}
+	else{
+		/* all groups */
+		*rates = (float*)malloc(stats->grpno * sizeof((*rates)[0]));
+		*groups = (char**)malloc((stats->grpno+1) * sizeof((*groups)[0]));
+		for (i=0, g=stats->map; i<stats->grpno; i++) {
+			(*rates)[i] = 0;
+			(*groups)[i] = NULL;
+			if ((err = stateRateRequest(ctx, stats, g, from, to, &((*rates)[i]), res_from, res_to)))
+	                        continue; //TODO in fact breaks results here
+			(*groups)[i] = strdup(g->destination);
+			g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
+                }
+		(*groups)[i] = NULL;
+		if (i == 0){
+			edg_wll_SetError(ctx,ENOENT,"no matching group");
+                        free(*rates); *rates = NULL;
+                        free(*groups); *groups = NULL;
+                        goto cleanup;
+		}
+	}
+
+cleanup:
+        free(sig);
+        flock(stats->fd,LOCK_UN);
+        return edg_wll_Error(ctx,NULL,NULL);
 }
 
 int edg_wll_StateDurationServer(
@@ -599,7 +656,8 @@ int edg_wll_StateDurationServer(
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*duration,
+	float	**duration,
+	char	***groups,
 	int	*res_from,
 	int	*res_to
 )
@@ -607,61 +665,25 @@ int edg_wll_StateDurationServer(
 	return edg_wll_SetError(ctx,ENOSYS,NULL);
 }
 
-int edg_wll_StateDurationFromToServer(
+static int stateDurationFromToRequest(
         edg_wll_Context ctx,
-        const edg_wll_QueryRec  *group,
-        edg_wll_JobStatCode     base_state,
-	edg_wll_JobStatCode     final_state,
-        int                     minor,
+        edg_wll_Stats *stats,
+        struct edg_wll_stats_group    *g,
         time_t  *from,
         time_t  *to,
         float   *duration,
-	float   *dispersion,
+	float	*dispersion,
         int     *res_from,
         int     *res_to
 )
 {
-	edg_wll_Stats *stats = default_stats;   /* XXX: hardcoded */
-        struct edg_wll_stats_group      *g;
-        struct edg_wll_stats_archive    *a;
+	struct edg_wll_stats_archive    *a;
         int     i,j,matchi;
-        char    *sig = NULL;
         time_t  afrom,ato;
         long    match, diff;
-	float 	rate;
-	int 	err;
+	float	rate;
 
-        edg_wll_ResetError(ctx);
-
-	if ((err = findStat(ctx, group, base_state, final_state, minor, from, to, &stats))) return err;
-
-	/* remap the file if someone changed its size */
-        if (stats->map->grpno != stats->grpno)
-        {       
-                if (flock(stats->fd,LOCK_EX)) return edg_wll_SetError(ctx,errno,"flock()");
-                if (stats_remap(stats)) {
-                        edg_wll_SetError(ctx,errno,"shmem remap failed");
-                        goto cleanup;
-                }
-        }
-
-        if (flock(stats->fd,LOCK_SH)) return edg_wll_SetError(ctx,errno,"flock()");
-
-        /* XXX */
-        sig = str2md5base64(group->value.c);
-
-
-        for (i=0, g=stats->map; i<stats->grpno; i++) {
-                if (!strcmp(sig,g->sig)) break;
-                g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
-        }
-
-        if (i == stats->grpno) {
-                glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
-                        "no match: %s\n",sig);
-                edg_wll_SetError(ctx,ENOENT,"no matching group");
-                goto cleanup;
-        }
+	edg_wll_ResetError(ctx);
 
 	match = 0;
         matchi = -1;
@@ -684,13 +706,13 @@ int edg_wll_StateDurationFromToServer(
                 }
         }
 
-	 glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+         glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
                 "best match: archive %d, interval %ld", matchi, match);
 
-	if (matchi < 0) {
+        if (matchi < 0) {
                 if (*from > g->last_update) {
                         /* special case -- we are sure that nothing arrived */
-			*duration = 0.0f;
+                        *duration = 0.0f;
                         *res_from = *res_to = stats->archives[0].interval;
                         goto cleanup;
                 }
@@ -714,8 +736,8 @@ int edg_wll_StateDurationFromToServer(
         if (afrom + stats->archives[matchi].length * i < *to) *to = afrom + stats->archives[matchi].length * i;
 
         rate = 0.0f;
-	*duration = 0.0f;
-	*dispersion = 0.0f;
+        *duration = 0.0f;
+        *dispersion = 0.0f;
         match = 0;
 
 	for (j=0; j<stats->archives[matchi].length; j++,afrom += i) {
@@ -732,42 +754,141 @@ int edg_wll_StateDurationFromToServer(
                 glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
                         "search %ld in %ld, %ld", *from, afrom, afrom+i);
 
-		// (from, to) is inside (afrom, afrom+i)
-		if (*from >= afrom && *to < afrom+i) {
-			printf("branch 1, (%ld %ld), %ld %ld\n", *from, *to, afrom, afrom+i);
-			diff = *to - *from;
-		}
-		// (afrom, afrom+i) is inside (from, to)
-		else if (*from < afrom && *to >= afrom+i) {
-			printf("branch 2, (%ld %ld), %ld %ld\n", *from, *to, afrom, afrom+i);			
-			diff = i;
-		}
-		// from is in (afrom, afrom+i)
-		else if (*from >= afrom && *from < afrom+i) {
-			printf("branch 3, (%ld %ld), %ld %ld\n", *from, *to, afrom, afrom+i);
-			diff = afrom+i - *from;
-		}
-		// to is in (afrom, afrom+i)
-		else if (*to >= afrom && *to < afrom+i) {
-			printf("branch 4, (%ld %ld), (%ld %ld)\n", *from, *to, afrom, afrom+i);
-			diff = afrom+i - *to;
-		}
-		printf("diff: %ld\n", diff);
-		match += diff;
-		rate += c->cnt * (float)diff;
-		if (c->cnt)
-                	*duration += (float)diff * c->value/c->cnt;
-		*dispersion += (float)diff * c->value2;
+                // (from, to) is inside (afrom, afrom+i)
+                if (*from >= afrom && *to < afrom+i) {
+                        printf("branch 1, (%ld %ld), %ld %ld\n", *from, *to, afrom, afrom+i);
+                        diff = *to - *from;
+                }
+                // (afrom, afrom+i) is inside (from, to)
+                else if (*from < afrom && *to >= afrom+i) {
+                        printf("branch 2, (%ld %ld), %ld %ld\n", *from, *to, afrom, afrom+i);
+                        diff = i;
+                }
+                // from is in (afrom, afrom+i)
+                else if (*from >= afrom && *from < afrom+i) {
+                        printf("branch 3, (%ld %ld), %ld %ld\n", *from, *to, afrom, afrom+i);
+                        diff = afrom+i - *from;
+                }
+                // to is in (afrom, afrom+i)
+                else if (*to >= afrom && *to < afrom+i) {
+                        printf("branch 4, (%ld %ld), (%ld %ld)\n", *from, *to, afrom, afrom+i);
+                        diff = afrom+i - *to;
+                }
+                printf("diff: %ld\n", diff);
+                match += diff;
+                rate += c->cnt * (float)diff;
+                if (c->cnt)
+                        *duration += (float)diff * c->value/c->cnt;
+                *dispersion += (float)diff * c->value2;
 
-		if (*to >= afrom && *to < afrom+i) { 
-			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, duration %f, dispersion %f", match, *duration, *dispersion);
-			break;
-		}
+                if (*to >= afrom && *to < afrom+i) {
+                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, duration %f, dispersion %f", match, *duration, *dispersion);
+                        break;
+                }
         }
-	*duration /= match;
-	*dispersion /= match;
-	rate /= match;
-	*dispersion = sqrtf(1/(rate-1) * ((*dispersion) - rate*(*duration)));
+        *duration /= match;
+        *dispersion /= match;
+        rate /= match;
+        *dispersion = sqrtf(1/(rate-1) * ((*dispersion) - rate*(*duration)));
+
+cleanup:
+        return edg_wll_Error(ctx,NULL,NULL);
+}
+
+int edg_wll_StateDurationFromToServer(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     base_state,
+	edg_wll_JobStatCode     final_state,
+        int                     minor,
+        time_t  *from,
+        time_t  *to,
+        float   **durations,
+	float   **dispersions,
+	char	***groups,
+        int     *res_from,
+        int     *res_to
+)
+{
+	edg_wll_Stats *stats = default_stats;   /* XXX: hardcoded */
+        struct edg_wll_stats_group      *g;
+        char    *sig = NULL;
+	int 	err;
+	int 	i;
+
+        edg_wll_ResetError(ctx);
+	*durations = NULL;
+	*dispersions = NULL;
+	*groups = NULL;
+
+	if ((err = findStat(ctx, group, base_state, final_state, minor, from, to, &stats))) return err;
+
+	/* remap the file if someone changed its size */
+        if (stats->map->grpno != stats->grpno)
+        {       
+                if (flock(stats->fd,LOCK_EX)) return edg_wll_SetError(ctx,errno,"flock()");
+                if (stats_remap(stats)) {
+                        edg_wll_SetError(ctx,errno,"shmem remap failed");
+                        goto cleanup;
+                }
+        }
+
+        if (flock(stats->fd,LOCK_SH)) return edg_wll_SetError(ctx,errno,"flock()");
+
+	if (strcmp(group->value.c, "ALL")){
+		/* single group */
+	        sig = str2md5base64(group->value.c);
+		*durations = (float*)malloc(1*sizeof((*durations)[0]));
+                (*durations)[0] = 0;
+		*dispersions = (float*)malloc(1*sizeof((*dispersions)[0]));
+                (*dispersions)[0] = 0;
+		*groups = (char**)malloc(2*sizeof((*groups)[0]));
+                (*groups)[0] = (*groups)[1] = NULL;
+
+	        for (i=0, g=stats->map; i<stats->grpno; i++) {
+        	        if (!strcmp(sig,g->sig)) break;
+                	g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
+	        }
+
+        	if (i == stats->grpno) {
+                	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+                        	"no match: %s\n",sig);
+	                edg_wll_SetError(ctx,ENOENT,"no matching group");
+        	        goto cleanup;
+        	}
+
+		if ((err = stateDurationFromToRequest(ctx, stats, g, from, to, &((*durations)[0]), &((*dispersions)[0]), res_from, res_to))){
+			free(*durations);
+			free(*dispersions);
+			free(*groups);
+			goto cleanup;
+		}
+		(*groups)[0] = strdup(g->destination);
+	}
+	else{
+		/* all groups */
+		*durations = (float*)malloc(stats->grpno * sizeof((*durations)[0]));
+		*dispersions = (float*)malloc(stats->grpno * sizeof((*dispersions)[0]));
+		*groups = (char**)malloc((stats->grpno+1) * sizeof((*groups)[0]));
+
+		for (i=0, g=stats->map; i<stats->grpno; i++) {
+			(*durations)[i] = 0;
+			(*dispersions)[i] = 0;
+			(*groups)[i] = NULL;
+			if ((err = stateDurationFromToRequest(ctx, stats, g, from, to, &((*durations)[i]), &((*dispersions)[i]), res_from, res_to)))
+				continue; //TODO in fact breaks results here
+			(*groups)[i] = strdup(g->destination);
+			g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
+		}
+		(*groups)[i] = NULL;
+                if (i == 0){
+                        edg_wll_SetError(ctx,ENOENT,"no matching group");
+                        free(*durations); *durations = NULL;
+			free(*dispersions); *dispersions = NULL;
+                        free(*groups); *groups = NULL;
+                        goto cleanup;
+                }
+	}
 
 cleanup:
 	free(sig);

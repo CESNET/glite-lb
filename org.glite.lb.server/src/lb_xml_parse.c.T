@@ -2073,24 +2073,36 @@ int edg_wll_StatsResultToXML(
                 edg_wll_Context ctx,
 		time_t from,
 		time_t to,
-		float rate,
-		float duration,
-		float dispersion,
+		float *rates,
+		float *durations,
+		float *dispersions,
+		char  **groups,
 		int res_from,
 		int res_to,
                 char **message)
 {
         char *pomA, *pomB;
-
+	int i;
 
 	pomA = strdup("");
 	edg_wll_add_time_t_to_XMLBody(&pomA, from, "from", -1);
 	edg_wll_add_time_t_to_XMLBody(&pomA, to, "to", -1);
-	edg_wll_add_float_to_XMLBody(&pomA, rate, "rate", 0);
-	edg_wll_add_float_to_XMLBody(&pomA, duration, "duration", 0);
-	edg_wll_add_float_to_XMLBody(&pomA, dispersion, "dispersion", 0);
 	edg_wll_add_int_to_XMLBody(&pomA, res_from, "res_from", -1);
-	edg_wll_add_int_to_XMLBody(&pomA, res_to, "res_to", -1);
+        edg_wll_add_int_to_XMLBody(&pomA, res_to, "res_to", -1);
+
+	if (groups) for (i = 0; groups[i]; i++){
+		asprintf(&pomB, "%s\t\t<stat>\n", pomA);
+		pomA = pomB;
+		edg_wll_add_string_to_XMLBody(&pomA, groups[i], "group", NULL);
+		if (rates)
+			edg_wll_add_float_to_XMLBody(&pomA, rates[i], "rate", 0);
+		if (durations)
+			edg_wll_add_float_to_XMLBody(&pomA, durations[i], "duration", 0);
+		if (dispersions)
+			edg_wll_add_float_to_XMLBody(&pomA, dispersions[i], "dispersion", 0);
+		asprintf(&pomB, "%s\t\t</stat>\n", pomA);
+		pomA = pomB;
+	}
 
 	if (ctx->errDesc || ctx->errCode)
 		trio_asprintf(&pomB,"%s code=\"%d\" desc=\"%|Xs\">\r\n%s%s",
@@ -2098,6 +2110,8 @@ int edg_wll_StatsResultToXML(
 	else
 		trio_asprintf(&pomB,"%s>\r\n%s%s", STATS_RESULT_BEGIN, pomA, STATS_RESULT_END);
 	free(pomA);
+
+	printf("XXX %s XXX\n", pomB);
 
         *message = pomB;
         return 0;

@@ -89,9 +89,10 @@ void edg_wll_initXMLCtx(edg_wll_XML_ctx *c) {
 	c->statsBaseState = EDG_WLL_JOB_UNDEF;
 	c->statsFinalState = EDG_WLL_JOB_UNDEF;
 	c->statsMinor = 0;
-	c->statsRate = 0;
-	c->statsDuration = 0;
-	c->statsDispersion = 0;
+	c->statsRate = NULL;
+	c->statsDuration = NULL;
+	c->statsDispersion = NULL;
+	c->statsGroup = NULL; 
 	c->statsFrom = 0;
 	c->statsTo = 0;
 	c->statsResFrom = 0;
@@ -105,11 +106,20 @@ void edg_wll_initXMLCtx(edg_wll_XML_ctx *c) {
 
 
 void edg_wll_freeXMLCtx(edg_wll_XML_ctx *c) {
+	int i;
         if (c->char_buf) free(c->char_buf);
         if (c->errtxt) free(c->errtxt);
         if (c->warntxt) free(c->warntxt);
 	if (c->XML_tag) free(c->XML_tag);
 	if (c->XML_tag2) free(c->XML_tag2);
+	if (c->statsRate) free(c->statsRate);
+	if (c->statsDuration) free(c->statsDuration);
+	if (c->statsDispersion) free(c->statsDispersion);
+	if (c->statsGroup){
+		for (i = 0; c->statsGroup[i]; i++)
+			free(c->statsGroup[i]);
+		free(c->statsGroup);
+	}
 }
 
 

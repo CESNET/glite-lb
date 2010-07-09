@@ -50,7 +50,7 @@ int edg_wll_IndexedAttrsToXML(edg_wll_Context ctx, char **message);
 int edg_wll_NotifResultToXML(edg_wll_Context ctx, time_t validity, char **message);
 int edg_wll_QuerySequenceCodeResultToXML(edg_wll_Context ctx, char *source, char **message);
 
-int edg_wll_StatsResultToXML(edg_wll_Context,time_t,time_t,float,float,float,int,int,char **);
+int edg_wll_StatsResultToXML(edg_wll_Context,time_t,time_t,float*,float*,float*,char**,int,int,char **);
 
 int parseStatsRequest(edg_wll_Context,char *,char **,edg_wll_QueryRec ***,edg_wll_JobStatCode *,edg_wll_JobStatCode *,int *,time_t *,time_t *);
 

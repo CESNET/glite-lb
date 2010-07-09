@@ -34,7 +34,10 @@ int main(int argc,char **argv)
 	time_t	now,from,to;
 	char	*cfrom,*cto;
 	int	from_res,to_res;
-	float	val;
+	float	*vals;
+	char	**groups;
+	int 	i;
+	char 	ce = NULL;
 
 
 	edg_wll_InitContext(&ctx);
@@ -81,7 +84,7 @@ int main(int argc,char **argv)
 	from = now - 60;
 
 	if (edg_wll_StateRate(ctx,group,atoi(argv[2]),argc >=4 ? atoi(argv[3]) : 0,
-				&from,&to,&val,&from_res,&to_res))
+				&from,&to,&vals,&groups,&from_res,&to_res))
 	{
 		char	*et,*ed;
 		edg_wll_Error(ctx,&et,&ed);
@@ -94,11 +97,16 @@ int main(int argc,char **argv)
 	cfrom[strlen(cfrom)-1] = 0;
 	cto[strlen(cto)-1] = 0;
 
-	printf("Average failure rate at \"%s\": %f jobs/s\n"
-	       "  Measuered from %s to %s\n"
-	       "  With resolution from %d to %d s\n",
-	       argv[1],val,cfrom,cto,from_res,to_res);
+	for (i = 0; groups[i]; i++)
+		printf("Average failure rate at \"%s\": %f jobs/s\n"
+		       "  Measuered from %s to %s\n"
+		       "  With resolution from %d to %d s\n",
+	       		/*argv[1]*/groups[i],vals[i],cfrom,cto,from_res,to_res);
 
+	free(vals);
+	for (i = 0; groups[i]; i++)
+		free(groups[i]);
+	free(groups);
 	return 0;
 }
 

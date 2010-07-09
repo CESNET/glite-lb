@@ -48,6 +48,7 @@ struct edg_wll_stats_archive {
 struct edg_wll_stats_group {
 	int	grpno;
 	char	sig[33];
+	char	*destination;
 	time_t	last_update;
 	struct edg_wll_stats_archive	archive[1];
 };
@@ -75,7 +76,8 @@ int edg_wll_StateRateServer(
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*rate,
+	float	**rates,
+	char	***groups,
 	int	*res_from,
 	int	*res_to
 );
@@ -88,7 +90,8 @@ int edg_wll_StateDurationServer(
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*duration,
+	float	**duration,
+	char	***groups,
 	int	*res_from,
 	int	*res_to
 );
@@ -101,8 +104,9 @@ int edg_wll_StateDurationFromToServer(
         int                     minor,
         time_t  *from,
         time_t  *to,
-        float   *duration,
-	float   *dispersion,
+        float   **duration,
+	float   **dispersion,
+	char	***groups,
         int     *res_from,
         int     *res_to
 );

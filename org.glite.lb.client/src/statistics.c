@@ -55,13 +55,14 @@ int edg_wll_StateRate(
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*rate,
+	float	**rates,
+	char	***groups,
 	int	*res_from,
 	int	*res_to)
 
 {	
 	char	*response = NULL, *send_mess = NULL, *message = NULL;
-	float	not_returned;
+	float	*not_returned;
 	
 	
 	edg_wll_ResetError(ctx);
@@ -80,8 +81,8 @@ int edg_wll_StateRate(
 	if (http_check_status(ctx,response))
 		goto err;
 
-  	edg_wll_ParseStatsResult(ctx,message, from, to, rate, 
-			&not_returned, &not_returned, res_from, res_to);
+  	edg_wll_ParseStatsResult(ctx,message, from, to, rates, 
+		&not_returned, &not_returned, groups, res_from, res_to);
 
 err:
 	free(response);
@@ -102,12 +103,13 @@ int edg_wll_StateDuration(
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*duration,
+	float	**durations,
+	char	***groups,
 	int	*res_from,
 	int	*res_to)
 {
 	char	*response = NULL, *send_mess = NULL, *message = NULL;
-	float	not_returned;
+	float	*not_returned;
 	
 	
 	edg_wll_ResetError(ctx);
@@ -127,7 +129,7 @@ int edg_wll_StateDuration(
 		goto err;
 
   	edg_wll_ParseStatsResult(ctx,message, from, to, &not_returned, 
-			duration, &not_returned, res_from, res_to);
+		durations, &not_returned, groups, res_from, res_to);
 
 err:
 	free(response);
@@ -149,14 +151,15 @@ int edg_wll_StateDurationFromTo(
 	int	minor,
         time_t  *from,
         time_t  *to,
-        float   *duration,
-	float   *dispersion,
+        float   **durations,
+	float   **dispersions,
+	char	***groups,
         int     *res_from,
         int     *res_to
 )
 {
         char    *response = NULL, *send_mess = NULL, *message = NULL;
-        float   not_returned;
+        float   *not_returned;
 
 
         edg_wll_ResetError(ctx);
@@ -176,7 +179,7 @@ int edg_wll_StateDurationFromTo(
                 goto err;
 
         edg_wll_ParseStatsResult(ctx,message, from, to, &not_returned,
-                        duration, dispersion, res_from, res_to);
+                        durations, dispersions, groups, res_from, res_to);
 
 err:
         free(response);
