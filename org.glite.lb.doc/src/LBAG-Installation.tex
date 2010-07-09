@@ -202,8 +202,9 @@ Steps:
 \item \emph{Move data.} Just stop the MySQL server and move
  \verb'/var/lib/mysql' data directory directly to the target machine.
 \item \emph{(optional) Restore file contexts.} You may need to restore file 
- contexts in case of enabled SELinux. For example, commands on the target 
- machine:
+ contexts in case of enabled SELinux.
+\end{itemize}
+For example, commands on the target machine:
  \begin{verbatim}
  service mysqld stop
  cd /var/lib
@@ -211,7 +212,6 @@ Steps:
  restorecond -R mysql
  service mysqld start
  \end{verbatim}
-\end{itemize}
 
 \subsubsection{Migration of database to support transactions}
 Started from version 1.4.3 of the \texttt{glite-lb-server}
