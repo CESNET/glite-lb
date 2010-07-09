@@ -592,7 +592,7 @@ int edg_wll_StateRateServer(
 
 	if (flock(stats->fd,LOCK_SH)) return edg_wll_SetError(ctx,errno,"flock()");
 
-	if (strcmp(group->value.c, "ALL")){
+	if (group->value.c){
 		/* single group */
 		sig = str2md5base64(group->value.c);
 
@@ -835,7 +835,7 @@ int edg_wll_StateDurationFromToServer(
 
         if (flock(stats->fd,LOCK_SH)) return edg_wll_SetError(ctx,errno,"flock()");
 
-	if (strcmp(group->value.c, "ALL")){
+	if (group->value.c){
 		/* single group */
 	        sig = str2md5base64(group->value.c);
 		*durations = (float*)malloc(1*sizeof((*durations)[0]));

@@ -48,7 +48,10 @@ int main(int argc,char **argv)
 /* the only supported grouping for now */
 	group[0].attr = EDG_WLL_QUERY_ATTR_DESTINATION;
 	group[0].op = EDG_WLL_QUERY_OP_EQUAL;
-	group[0].value.c = argv[1];
+	if (strcmp(argv[1], "ALL"))
+		group[0].value.c = argv[1];
+	else
+		group[0].value.c = NULL;
 	group[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 
 

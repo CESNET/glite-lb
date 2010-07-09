@@ -2566,7 +2566,9 @@ int edg_wll_JobQueryRecToXML(
 	                                        edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "location", NULL);
 	                                        break;
 	                                case EDG_WLL_QUERY_ATTR_DESTINATION:
-	                                        edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "destination", NULL);
+	                                        conditions[row][i].value.c ?
+							edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "destination", NULL) :
+							edg_wll_add_string_to_XMLBody(&pomValue, "", "destination", NULL);
 	                                        break;
 	                                case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
 	                                        edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "networkserver", NULL);
