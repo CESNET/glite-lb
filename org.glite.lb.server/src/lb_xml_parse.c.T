@@ -2111,8 +2111,6 @@ int edg_wll_StatsResultToXML(
 		trio_asprintf(&pomB,"%s>\r\n%s%s", STATS_RESULT_BEGIN, pomA, STATS_RESULT_END);
 	free(pomA);
 
-	printf("XXX %s XXX\n", pomB);
-
         *message = pomB;
         return 0;
 }
