@@ -108,7 +108,7 @@ int edg_wll_StateRates(
 	if (http_check_status(ctx,response))
 		goto err;
 
-  	edg_wll_ParseStatsResult(ctx,message, from, to, rates, 
+  	edg_wll_ParseStatsResultFull(ctx,message, from, to, rates, 
 		&not_returned, &not_returned, groups, res_from, res_to);
 
 err:
@@ -182,7 +182,7 @@ int edg_wll_StateDurations(
 	if (http_check_status(ctx,response))
 		goto err;
 
-  	edg_wll_ParseStatsResult(ctx,message, from, to, &not_returned, 
+  	edg_wll_ParseStatsResultFull(ctx,message, from, to, &not_returned, 
 		durations, &not_returned, groups, res_from, res_to);
 
 err:
@@ -266,7 +266,7 @@ int edg_wll_StateDurationsFromTo(
         if (http_check_status(ctx,response))
                 goto err;
 
-        edg_wll_ParseStatsResult(ctx,message, from, to, &not_returned,
+        edg_wll_ParseStatsResultFull(ctx,message, from, to, &not_returned,
                         durations, dispersions, groups, res_from, res_to);
 
 err:

@@ -86,7 +86,7 @@ int main(int argc,char **argv)
 	to = now;
 	from = now - 60;
 
-	if (edg_wll_StateRate(ctx,group,atoi(argv[2]),argc >=4 ? atoi(argv[3]) : 0,
+	if (edg_wll_StateRates(ctx,group,atoi(argv[2]),argc >=4 ? atoi(argv[3]) : 0,
 				&from,&to,&vals,&groups,&from_res,&to_res))
 	{
 		char	*et,*ed;

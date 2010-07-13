@@ -2408,7 +2408,38 @@ edg_wll_ErrorCode edg_wll_ParseQuerySequenceCodeResult(edg_wll_Context ctx, char
 
 
 /* parse statistics result from client */
-edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float **rate, float **duration, float **dispersion, char ***group, int *res_from, int *res_to)
+
+/* this is backward-compatible version, edg_wll_ParseStatsResultFull is prefered*/
+edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float *rate, float *duration, int *res_from, int *res_to)
+{
+	float *rates, *durations, *dispersions;
+	char **groups;
+	edg_wll_ErrorCode ret;
+	int i;
+
+	ret = edg_wll_ParseStatsResultFull(ctx, messageBody, from, to, &rates, &durations, &dispersions, &groups, res_from, res_to);
+
+	if (groups && groups[0]){
+		if (rates) {
+			*rate = rates[0];
+			free(rates);
+		}
+		if (durations) {
+			*duration = durations[0];
+			free(durations);
+		}
+		if (dispersions)
+			free(dispersions);
+		for(i = 0; groups[i]; i++)  
+			free(groups[i]);
+	}
+	if (groups)
+		free(groups);
+
+	return ret;
+}
+
+edg_wll_ErrorCode edg_wll_ParseStatsResultFull(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float **rate, float **duration, float **dispersion, char ***group, int *res_from, int *res_to)
 {
 	edg_wll_XML_ctx XMLCtx;
 	edg_wll_ErrorCode errorCode;
