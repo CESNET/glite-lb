@@ -49,6 +49,33 @@ static int set_server_name_and_port(edg_wll_Context, const edg_wll_QueryRec **);
  */
 
 int edg_wll_StateRate(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     major,
+        int                     minor,
+        time_t  *from,
+        time_t  *to,
+        float   *rate,
+        int     *res_from,
+        int     *res_to)
+
+{
+	float *rates = NULL;
+	char **groups = NULL;
+	int i;
+
+	edg_wll_StateRates(ctx, group, major, minor, from, to, &rates, &groups, res_from, res_to);
+	if (groups && groups[0]){
+		*rate = rates[0];
+		free(rates);
+		for (i = 0; groups[i]; i++)
+			free(groups[i]);
+		free(groups);
+	}
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int edg_wll_StateRates(
 	edg_wll_Context	ctx,
 	const edg_wll_QueryRec	*group,
 	edg_wll_JobStatCode	major,
@@ -97,6 +124,33 @@ err:
  */
 
 int edg_wll_StateDuration(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     major,
+        int                     minor,
+        time_t  *from,
+        time_t  *to,
+        float   *duration,
+        int     *res_from,
+        int     *res_to)
+{
+	float *durations;
+	char **groups;
+	int i;
+
+	edg_wll_StateDurations(ctx, group, major, minor, from, to, &durations, &groups, res_from, res_to);
+	if (groups && groups[0]){
+                *duration = durations[0];
+                free(durations);
+                for (i = 0; groups[i]; i++)
+                        free(groups[i]);
+                free(groups);
+        }
+
+        return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int edg_wll_StateDurations(
 	edg_wll_Context	ctx,
 	const edg_wll_QueryRec	*group,
 	edg_wll_JobStatCode	major,
@@ -144,6 +198,40 @@ err:
  */
 
 int edg_wll_StateDurationFromTo(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     base,
+        edg_wll_JobStatCode     final,
+        int     minor,
+        time_t  *from,
+        time_t  *to,
+        float   *duration,
+        float   *dispersion,
+        int     *res_from,
+        int     *res_to
+)
+{
+	float *durations;
+	float *dispersions;
+	char **groups;
+	int i;
+	
+	edg_wll_StateDurationsFromTo(ctx, group, base, final, minor, from, to, 
+		&durations, &dispersions, &groups, res_from, res_to);
+	if (groups && groups[0]){
+                *duration = durations[0];
+		*dispersion = dispersions[0];
+                free(durations);
+		free(dispersions);
+                for (i = 0; groups[i]; i++)
+                        free(groups[i]);
+                free(groups);
+        }
+
+        return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int edg_wll_StateDurationsFromTo(
         edg_wll_Context ctx,
         const edg_wll_QueryRec  *group,
         edg_wll_JobStatCode     base,

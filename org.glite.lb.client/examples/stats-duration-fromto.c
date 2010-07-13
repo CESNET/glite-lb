@@ -59,7 +59,7 @@ int main(int argc,char **argv)
         to = now;
         from = now - 600;
 
-	if (edg_wll_StateDurationFromTo(ctx,group,atoi(argv[2]),atoi(argv[3]),
+	if (edg_wll_StateDurationsFromTo(ctx,group,atoi(argv[2]),atoi(argv[3]),
 		argc >=5 ? atoi(argv[4]) : 0, &from,&to,&durations,&dispersions,
 		&groups,&from_res,&to_res))
 	{
