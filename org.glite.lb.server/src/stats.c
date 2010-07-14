@@ -789,7 +789,10 @@ static int stateDurationFromToRequest(
         *duration /= match;
         *dispersion /= match;
         rate /= match;
-        *dispersion = sqrtf(1/(rate-1) * ((*dispersion) - rate*(*duration)));
+	if (rate > 1)
+	        *dispersion = sqrtf(1/(rate-1) * ((*dispersion) - rate*(*duration)));
+	else
+		*dispersion = 0;
 
 cleanup:
         return edg_wll_Error(ctx,NULL,NULL);
