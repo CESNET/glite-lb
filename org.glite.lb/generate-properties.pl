@@ -31,7 +31,7 @@ usage: $0 [-p] -a|module.name [module.name ...]|-c configuration [configuration 
         -h      Display this help
 	-p	Single line output for Etics web interface
 	-a	Process all subdirectories in . rather than getting lists
-	-c	Download subsystem configurations from Etics and parse dependencies
+	-c	Download subsystem configurations from Etics and parse hierarchy
 
 };
 
