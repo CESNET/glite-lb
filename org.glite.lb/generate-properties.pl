@@ -26,17 +26,18 @@ if ($TMPDIR eq "") {$TMPDIR="/tmp";}
 
 
 $usage = qq{
-usage: $0 [-p] -a|module.name [module.name ...]
+usage: $0 [-p] -a|module.name [module.name ...]|-c configuration [configuration ...]
 
         -h      Display this help
 	-p	Single line output for Etics web interface
 	-a	Process all subdirectories in . rather than getting lists
+	-c	Download subsystem configurations from Etics and parse dependencies
 
 };
 
 if ($#ARGV < 0) {die $usage};
 
-getopts('pha');
+getopts('phac');
 
 if (defined $opt_h) {die $usage};
 if (defined $opt_p) {
@@ -96,7 +97,38 @@ if (defined $opt_a) { # All subdirectories
 		}
 	}
 }
-else { # Listed subsystems 
+else { 
+if (defined $opt_c) { # Configurations
+	my $output = "";
+	while ($subsys = shift) {
+		$module = $subsys;
+		$module =~ s/_[a-zA-Z]*_.*//;	
+		$module =~ s/glite-/glite\./;	
+		$module =~ s/gridsite-/gridsite\./;	
+		system("etics-configuration prepare -o $TMPDIR/subsys.INI.$$.tmp -c $subsys org.$module");
+		open FILE, "$TMPDIR/subsys.INI.$$.tmp" or die $!;
+		$hierarchy = 0;
+		while (my $line = <FILE>) {
+			if ($line =~ /^\[Hierarchy\]/) { $hierarchy = 1; }
+			else {
+				if ($line =~ /^\[.*\]/) { $hierarchy = 0; }
+				else {
+					if ($hierarchy eq 1) {
+						$line =~ /^(\S*)\s*=\s*(\S*)$/;
+						unless ($1 eq "") {
+							$output = $output . "$pair_separator_front$1.DEFAULT$eq_separator$2$pair_separator_back";
+						}
+					}
+				}
+			}
+		}
+		close FILE,
+		system("rm -f $TMPDIR/subsys.INI.$$.tmp");
+	}
+	print $output;
+}
+else {
+# Listed subsystems 
 	while ($module = shift) {
 		chomp($module);
         	#Clean possible trailing '/' (even multiple occurrences :-) from module name
@@ -110,6 +142,6 @@ else { # Listed subsystems
 			GetDefault ($m);
 		}
 	}
-}
+} }
 
 if (defined $opt_p) { printf "\n"; }
