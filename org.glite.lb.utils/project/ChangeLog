@@ -26,3 +26,7 @@
 2.0.4-2
 - Module rebuilt
 
+2.0.5-1
+- Fixed target 'clean' in the Makefile to handle debian builds and improve portability
+- Handle situations with no jobs while purging
+
