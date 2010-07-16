@@ -23,3 +23,6 @@
 1.0.4-1
 - Fixed libtool version numbering
 
+1.0.5-1
+- Fixed target 'clean' in the Makefile
+
