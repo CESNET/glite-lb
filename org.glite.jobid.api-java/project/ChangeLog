@@ -4,3 +4,6 @@
 1.0.2-1
 - Fixed target 'clean' in the Makefile
 
+1.0.3-1
+- Target 'clean' fixed to handle debian builds as well
+
