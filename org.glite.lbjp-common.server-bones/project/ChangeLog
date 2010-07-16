@@ -19,3 +19,7 @@
 2.0.0-2
 - Module rebuilt
 
+2.0.1-1
+- Fixed format of the package description file
+- Fixed target 'clean' in the Makefile
+
