@@ -86,3 +86,10 @@
 - Job registration example supports the 'exclusive' flag
 - Notification client can read server address from JobID
  
+4.1.2-1
+- Fixed target 'clean' in the Makefile
+- Extended job state transition statistics
+- Extended statistics example
+- More automation in m4 macros
+- Fixed propagation of error codes received from server
+
