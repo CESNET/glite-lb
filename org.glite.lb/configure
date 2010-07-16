@@ -499,31 +499,6 @@ for my $ext (keys %deps_aux) {
 	'gridsite' => '',
 );
 
-%platform_mappings = (
-	'sl5_ia32_gcc432' => {
-		'commons-lang' => 'jakarta-commons-lang',
-		'commons-codec' => 'jakarta-commons-codec',
-	},
-	'sl5_x86_64_gcc412' => {
-		'commons-lang' => 'jakarta-commons-lang',
-		'commons-codec' => 'jakarta-commons-codec',
-	},
-	'slc4_ia32_gcc346' => {
-		'commons-lang' => 'jakarta-commons-lang',
-		'commons-codec' => 'jakarta-commons-codec',
-	},
-	'slc4_x86_64_gcc346' => {
-		'commons-lang' => 'jakarta-commons-lang',
-		'commons-codec' => 'jakarta-commons-codec',
-	},
-	'deb5_x86_64_gcc432' => {
-		'commons-lang' => 'commons-lang',     #libcommons-lang-java
-		'commons-codec' => 'commons-codec',   #libcommons-codec-java
-	},
-);
-%platform_mappings_names = ();
-for (keys %platform_mappings) { map { $platform_mapping_names{$_} = 1; } keys %{$platform_mappings{$_}}; }
-
 my @k = keys %deps_aux;
 @buildroot{@k} = ('build') x ($#k+1);
 
@@ -819,39 +794,26 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 		print C "$package_description$package_summary\n";
 	}
 
-	for my $plat ('default', sort keys %platform_mappings) {
-		my @print_deps = ();
+	print C qq{
+[Platform-default:DynamicDependency]
+};
+	for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
+		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
-			my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
-
-			my $proj = 'externals';
-			for my $p (keys %etics_projects) {
-				for $m (@{$etics_projects{$p}}) {
-					$proj = $p if $m eq $_;
-				}
-			}
-
-			my $type = $need_externs_type{"$subsys.$module"}->{$_};
-			if (not exists $platform_mapping_names{$eext} and $plat eq 'default' or exists $platform_mappings{$plat}{$eext}) {
-				if (exists $platform_mappings{$plat}{$eext}) { $eext =  $platform_mappings{$plat}{$eext}; }
-				push @print_deps, "$proj|$eext = $type";
-			}
-
-		}
-
-		if ($plat eq 'default') {
-			for (@{$deps{"$subsys.$module"}}) {
-				my $type = $deps_type{"$subsys.$module"}->{$_};
-				push @print_deps, "org.glite|org.glite.$_ = $type";
+		my $proj = 'externals';
+		for my $p (keys %etics_projects) {
+			for $m (@{$etics_projects{$p}}) {
+				$proj = $p if $m eq $_;
 			}
 		}
 
-		if ($#print_deps >= 0) {
-			print C "[Platform-$plat:DynamicDependency]\n";
-			print C join "\n", @print_deps;
-			print C "\n\n";
-		}
+		my $type = $need_externs_type{"$subsys.$module"}->{$_};
+		print C "$proj|$eext = $type\n";
+	}
+
+	for (@{$deps{"$subsys.$module"}}) {
+		my $type = $deps_type{"$subsys.$module"}->{$_};
+		print C "org.glite|org.glite.$_ = $type\n";
 	}
 
 	close C;
