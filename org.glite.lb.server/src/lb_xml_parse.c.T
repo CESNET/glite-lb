@@ -2095,11 +2095,11 @@ int edg_wll_StatsResultToXML(
 		pomA = pomB;
 		edg_wll_add_string_to_XMLBody(&pomA, groups[i], "group", NULL);
 		if (rates)
-			edg_wll_add_float_to_XMLBody(&pomA, rates[i], "rate", 0);
+			edg_wll_add_float_to_XMLBody(&pomA, rates[i], "rate", -1.0f);
 		if (durations)
-			edg_wll_add_float_to_XMLBody(&pomA, durations[i], "duration", 0);
+			edg_wll_add_float_to_XMLBody(&pomA, durations[i], "duration", -1.0f);
 		if (dispersions)
-			edg_wll_add_float_to_XMLBody(&pomA, dispersions[i], "dispersion", 0);
+			edg_wll_add_float_to_XMLBody(&pomA, dispersions[i], "dispersion", -1.0f);
 		asprintf(&pomB, "%s\t\t</stat>\n", pomA);
 		pomA = pomB;
 	}
@@ -2110,7 +2110,7 @@ int edg_wll_StatsResultToXML(
 	else
 		trio_asprintf(&pomB,"%s>\r\n%s%s", STATS_RESULT_BEGIN, pomA, STATS_RESULT_END);
 	free(pomA);
-
+printf("XXX %s XXX\n", pomB);
         *message = pomB;
         return 0;
 }
