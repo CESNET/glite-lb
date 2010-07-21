@@ -483,12 +483,6 @@ static int stateRateRequest(
 		"best match: archive %d, interval %ld", matchi, match);
 
 	if (matchi < 0) {
-		if (*from > g->last_update) {
-			/* special case -- we are sure that nothing arrived */
-			*rate = 0;
-			*res_from = *res_to = stats->archives[0].interval;
-			goto cleanup;
-		}
 		edg_wll_SetError(ctx,ENOENT,"no data available");
 		goto cleanup;
 	}
@@ -710,12 +704,6 @@ static int stateDurationFromToRequest(
                 "best match: archive %d, interval %ld", matchi, match);
 
         if (matchi < 0) {
-                if (*from > g->last_update) {
-                        /* special case -- we are sure that nothing arrived */
-                        *duration = 0.0f;
-                        *res_from = *res_to = stats->archives[0].interval;
-                        goto cleanup;
-                }
                 edg_wll_SetError(ctx,ENOENT,"no data available");
                 goto cleanup;
         }
