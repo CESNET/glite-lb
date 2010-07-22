@@ -62,6 +62,10 @@ static edg_wll_Stats default_stats[] = {
 	{ STATS_DURATION, default_group, EDG_WLL_JOB_SCHEDULED, 0, 0, default_archives },
 	{ STATS_DURATION, default_group, EDG_WLL_JOB_RUNNING, 0, 0, default_archives },
 	{ STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SUBMITTED, EDG_WLL_JOB_RUNNING, 0, default_archives },
+	{ STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SUBMITTED, EDG_WLL_JOB_DONE, EDG_WLL_STAT_OK, default_archives },
+        { STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SUBMITTED, EDG_WLL_JOB_DONE, EDG_WLL_STAT_FAILED, default_archives },
+        { STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_RUNNING, EDG_WLL_JOB_DONE, EDG_WLL_STAT_OK, default_archives },
+        { STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_RUNNING, EDG_WLL_JOB_DONE, EDG_WLL_STAT_FAILED, default_archives },
 	{ STATS_UNDEF, }
 	
 };
@@ -134,6 +138,12 @@ int edg_wll_UpdateStatistics(
 		case STATS_DURATION_FROMTO:
 			if (!from) continue;
 			if ((to->state == stats[i].final_state) && (from->state != to->state))
+				switch (to->state) {
+                                        case EDG_WLL_JOB_DONE:
+                                                if (to->done_code != stats[i].minor) continue;
+                                                break;
+                                        default: break;
+                                }
 				stats_record_duration_fromto(ctx, from, to, stats+i);
 			break;
 		default: break;
@@ -505,7 +515,6 @@ static int stateRateRequest(
 	*rate = 0;
 	match = 0;
 
-
 	for (j=0; j<stats->archives[matchi].length; j++,afrom += i) {
 		struct edg_wll_stats_cell 	*c = a->cells + ((a->ptr+j+1) % stats->archives[matchi].length);
 
@@ -544,7 +553,9 @@ static int stateRateRequest(
                         break;
                 }
 	}
-	*rate /= match;
+
+	if (match > 0)
+		*rate /= match;
 
 cleanup:
         return edg_wll_Error(ctx,NULL,NULL);
@@ -744,25 +755,20 @@ static int stateDurationFromToRequest(
 
                 // (from, to) is inside (afrom, afrom+i)
                 if (*from >= afrom && *to < afrom+i) {
-                        printf("branch 1, (%ld %ld), %ld %ld\n", *from, *to, afrom, afrom+i);
                         diff = *to - *from;
                 }
                 // (afrom, afrom+i) is inside (from, to)
                 else if (*from < afrom && *to >= afrom+i) {
-                        printf("branch 2, (%ld %ld), %ld %ld\n", *from, *to, afrom, afrom+i);
                         diff = i;
                 }
                 // from is in (afrom, afrom+i)
                 else if (*from >= afrom && *from < afrom+i) {
-                        printf("branch 3, (%ld %ld), %ld %ld\n", *from, *to, afrom, afrom+i);
                         diff = afrom+i - *from;
                 }
                 // to is in (afrom, afrom+i)
                 else if (*to >= afrom && *to < afrom+i) {
-                        printf("branch 4, (%ld %ld), (%ld %ld)\n", *from, *to, afrom, afrom+i);
                         diff = afrom+i - *to;
                 }
-                printf("diff: %ld\n", diff);
                 match += diff;
                 rate += c->cnt * (float)diff;
                 if (c->cnt)
@@ -774,13 +780,15 @@ static int stateDurationFromToRequest(
                         break;
                 }
         }
-        *duration /= match;
-        *dispersion /= match;
-        rate /= match;
-	if (rate > 1)
-	        *dispersion = sqrtf(1/(rate-1) * ((*dispersion) - rate*(*duration)));
-	else
-		*dispersion = 0;
+	if (match > 0){
+	        *duration /= match;
+        	*dispersion /= match;
+	        rate /= match;
+		if (rate > 1)
+	        	*dispersion = sqrtf(1/(rate-1) * ((*dispersion) - rate*(*duration)));
+		else
+			*dispersion = 0;
+	}
 
 cleanup:
         return edg_wll_Error(ctx,NULL,NULL);
