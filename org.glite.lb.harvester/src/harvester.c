@@ -1450,7 +1450,7 @@ quit:
 
 int load_notifs_file() {
 	FILE *f;
-	char *results[5];
+	char *results[RTM_FILE_NOTIF_NUM];
 	notif_t *new_notif;
 	int err;
 	char *notifidstr;
