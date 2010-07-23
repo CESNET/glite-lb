@@ -850,7 +850,7 @@ static int stateDurationFromToRequest(
         	*dispersion /= match;
 	        rate /= match;
 		if (rate > 1)
-	        	*dispersion = sqrtf(1/(rate-1) * ((*dispersion) - rate*(*duration)));
+	        	*dispersion = sqrtf(1/(rate-1) * ((*dispersion) - rate*((*duration)*(*duration))));
 		else
 			*dispersion = 0;
 	}
