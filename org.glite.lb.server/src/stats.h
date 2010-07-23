@@ -19,6 +19,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include<search.h>
 
 #include "glite/lb/context.h"
 #include "glite/lb/events.h"
@@ -48,7 +52,7 @@ struct edg_wll_stats_archive {
 struct edg_wll_stats_group {
 	int	grpno;
 	char	sig[33];
-	char	*destination;
+	char	destination[256];
 	time_t	last_update;
 	struct edg_wll_stats_archive	archive[1];
 };
@@ -67,6 +71,7 @@ typedef struct {
 	int	fd;
 	struct edg_wll_stats_group	*map;
 	int	grpno,grpsize;
+	struct hsearch_data *htab;
 } edg_wll_Stats;
 
 int edg_wll_StateRateServer(

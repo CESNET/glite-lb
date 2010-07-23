@@ -36,6 +36,9 @@ limitations under the License.
 #include "glite/jobid/strmd5.h"
 
 #include "stats.h"
+
+#define GROUPS_HASHTABLE_SIZE 8192
+
 static int stats_inc_counter(edg_wll_Context,const edg_wll_JobStat *,edg_wll_Stats *);
 static int stats_record_duration(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,edg_wll_Stats *);
 static int stats_record_duration_fromto(edg_wll_Context ctx, const edg_wll_JobStat *from, const edg_wll_JobStat *to, edg_wll_Stats *stats);
@@ -100,6 +103,16 @@ int edg_wll_InitStatistics(edg_wll_Context ctx)
 		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, 
 			"stats: using %s",fname);
 		unlink(fname);
+
+		stats[i].htab = (struct hsearch_data*)malloc(sizeof(*(stats[i].htab)));
+		memset(stats[i].htab, 0, sizeof(*(stats[i].htab)));
+		if (!hcreate_r(GROUPS_HASHTABLE_SIZE, stats[i].htab)){
+			 glite_common_log(LOG_CATEGORY_CONTROL, 
+				LOG_PRIORITY_WARN,
+				"Cannot create hash table for stats!");
+			free(stats[i].htab);
+			stats[i].htab = NULL;
+		}
 	}
 	return 0;
 }
@@ -137,7 +150,7 @@ int edg_wll_UpdateStatistics(
 			break;
 		case STATS_DURATION_FROMTO:
 			if (!from) continue;
-			if ((to->state == stats[i].final_state) && (from->state != to->state))
+			if ((to->state == stats[i].final_state) && (from->state != to->state)){
 				switch (to->state) {
                                         case EDG_WLL_JOB_DONE:
                                                 if (to->done_code != stats[i].minor) continue;
@@ -145,6 +158,7 @@ int edg_wll_UpdateStatistics(
                                         default: break;
                                 }
 				stats_record_duration_fromto(ctx, from, to, stats+i);
+			}
 			break;
 		default: break;
 	}
@@ -164,6 +178,10 @@ static struct edg_wll_stats_archive *archive_skip(
 
 static int stats_remap(edg_wll_Stats *stats)
 {
+	struct edg_wll_stats_group *g;
+	ENTRY   search, *found;
+	int 	i;
+
 	int newgrpno = stats->map->grpno;
 	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
 		"stats_remap: size changed (%d != %d), remap",
@@ -176,28 +194,66 @@ static int stats_remap(edg_wll_Stats *stats)
 		return -1;
 	}
 	assert(stats->map->grpno == newgrpno);
+
+	if (stats->htab){
+		for (i = stats->grpno; i < newgrpno; i++){
+			g = (struct edg_wll_stats_group *) (
+                                ((char *) stats->map) + stats->grpsize * i );
+			search.key = strdup(g->sig);
+			search.data = (void*)g;
+			if (!hsearch_r(search, ENTER, &found, stats->htab)){
+				glite_common_log(LOG_CATEGORY_LB_SERVER,
+                                        LOG_PRIORITY_WARN,
+                                        "Hash table full, using linear search instead!");
+                                hdestroy_r(stats->htab);
+                                stats->htab = NULL;
+				break;
+			}
+		}
+	}
+
 	stats->grpno = newgrpno;
 	return 0;
 }
 
+static void stats_search_existing_group(edg_wll_Stats *stats, struct edg_wll_stats_group **g, char *sig)
+{
+	ENTRY   search, *found;
+	int 	i;
+ 
+	if (stats->htab){
+                search.key = sig;
+                hsearch_r(search, FIND, &found, stats->htab);
+                if (found && strcmp(sig, found->key) == 0)
+                        *g = (struct edg_wll_stats_group*)found->data;
+                else
+                        *g = NULL;
+        }
+        else{
+                for (i=0; i<stats->grpno; i++) {
+                       *g = (struct edg_wll_stats_group *) (
+                                ((char *) stats->map) + stats->grpsize * i
+                        );
+                        if (!strcmp(sig,(*g)->sig)) break;
+                }
+                if (i == stats->grpno)
+                        *g = NULL;
+        }
+} 
 
 static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobstat,edg_wll_Stats *stats, struct edg_wll_stats_group **g)
 {
 	int 	i, j;
 	char    *sig = NULL;
 	struct edg_wll_stats_archive    *a;
+	ENTRY 	search, *found;
 
 	sig = str2md5base64(jobstat->destination);
 
-        for (i=0; i<stats->grpno; i++) {
-                *g = (struct edg_wll_stats_group *) (
-                                ((char *) stats->map) + stats->grpsize * i
-                        );
-                if (!strcmp(sig,(*g)->sig)) break;
-        }
+	stats_search_existing_group(stats, g, sig);
 
 	/* not found, initialize new */
-        if (i == stats->grpno) {
+        if (*g == NULL) {
                 glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
                         "group %s not found",sig);
                 if (stats->grpno) {
@@ -221,7 +277,7 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
                         "allocated");
 
                 *g = (struct edg_wll_stats_group *) (
-                                ((char *) stats->map) + stats->grpsize * i);
+                                ((char *) stats->map) + stats->grpsize * (stats->grpno-1));
 
                 /* invalidate all cells in all archives */
                 a = (*g)->archive;
@@ -231,12 +287,24 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
                 }
 
                 strcpy((*g)->sig,sig);
-		(*g)->destination = strdup(jobstat->destination);
+		strncpy((*g)->destination, jobstat->destination, 256);
                 (*g)->last_update = jobstat->stateEnterTime.tv_sec; //now;
+
+		if (stats->htab){
+			search.key = strdup(sig);
+			search.data = (void*)(*g);
+			if (!hsearch_r(search, ENTER, &found, stats->htab)){
+				glite_common_log(LOG_CATEGORY_LB_SERVER,
+					LOG_PRIORITY_WARN,
+					"Hash table full, using linear search instead!");
+					hdestroy_r(stats->htab);
+					stats->htab = NULL;
+			}
+		}
         }
         else
                 glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
-                        "group %s found at %d", sig, i);
+                        "group %s found", sig);
 
 	free(sig);
 
@@ -606,12 +674,9 @@ int edg_wll_StateRateServer(
 		*groups = (char**)malloc(2*sizeof((*groups)[0])); 
 		(*groups)[0] = (*groups)[1] = NULL;
 
-		for (i=0, g=stats->map; i<stats->grpno; i++) {
-			if (!strcmp(sig,g->sig)) break;
-			g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
-		}
+		stats_search_existing_group(stats, &g, sig);
 
-		if (i == stats->grpno) {
+		if (g == NULL) {
 			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, 
 				"no match: %s\n",sig);
 			edg_wll_SetError(ctx,ENOENT,"no matching group");
@@ -844,12 +909,9 @@ int edg_wll_StateDurationFromToServer(
 		*groups = (char**)malloc(2*sizeof((*groups)[0]));
                 (*groups)[0] = (*groups)[1] = NULL;
 
-	        for (i=0, g=stats->map; i<stats->grpno; i++) {
-        	        if (!strcmp(sig,g->sig)) break;
-                	g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
-	        }
+		stats_search_existing_group(stats, &g, sig);
 
-        	if (i == stats->grpno) {
+        	if (g == NULL) {
                 	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
                         	"no match: %s\n",sig);
 	                edg_wll_SetError(ctx,ENOENT,"no matching group");
