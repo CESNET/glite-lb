@@ -37,7 +37,7 @@ limitations under the License.
 
 #include "stats.h"
 
-#define GROUPS_HASHTABLE_SIZE 8192
+#define GROUPS_HASHTABLE_SIZE 1024
 
 static int stats_inc_counter(edg_wll_Context,const edg_wll_JobStat *,edg_wll_Stats *);
 static int stats_record_duration(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,edg_wll_Stats *);
@@ -106,7 +106,8 @@ int edg_wll_InitStatistics(edg_wll_Context ctx)
 
 		stats[i].htab = (struct hsearch_data*)malloc(sizeof(*(stats[i].htab)));
 		memset(stats[i].htab, 0, sizeof(*(stats[i].htab)));
-		if (!hcreate_r(GROUPS_HASHTABLE_SIZE, stats[i].htab)){
+		stats[i].htab_size = GROUPS_HASHTABLE_SIZE;
+		if (!hcreate_r(stats[i].htab_size, stats[i].htab)){
 			 glite_common_log(LOG_CATEGORY_CONTROL, 
 				LOG_PRIORITY_WARN,
 				"Cannot create hash table for stats!");
@@ -165,6 +166,43 @@ int edg_wll_UpdateStatistics(
 	return 0;
 }
 
+static int stats_double_htable(edg_wll_Stats *stats){
+	 struct edg_wll_stats_group *g;
+	ENTRY   search, *found;
+        int     i;
+
+	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_INFO,
+		"Hash table full, refilling.");
+        hdestroy_r(stats->htab);
+	memset(stats->htab, 0, sizeof(*(stats->htab)));
+	stats->htab_size *= 2;
+	if (!hcreate_r(stats->htab_size, stats->htab)){
+        	glite_common_log(LOG_CATEGORY_CONTROL,
+                                LOG_PRIORITY_WARN,
+                                "Cannot enlarge hash table for stats! Using linear search instead.");
+                        free(stats->htab);
+                        stats->htab = NULL;
+			return -1;
+                }
+	for (i=0; i<stats->grpno; i++) {
+        	g = (struct edg_wll_stats_group *) (
+                	((char *) stats->map) + stats->grpsize * i
+                );
+		search.key = strdup(g->sig);
+		search.data = (void*)g;
+		if (! hsearch_r(search, ENTER, &found, stats->htab)){
+			glite_common_log(LOG_CATEGORY_LB_SERVER,
+                        	LOG_PRIORITY_WARN,
+                                "Unexpected error in hsearch_r, switching to linear search!");
+                        hdestroy_r(stats->htab);
+			free(stats->htab);
+                        stats->htab = NULL;
+			return -1;
+		}
+	}
+	return 0;
+}
+
 static struct edg_wll_stats_archive *archive_skip(
 		const struct edg_wll_stats_archive *a,
 		int	len)
@@ -202,11 +240,7 @@ static int stats_remap(edg_wll_Stats *stats)
 			search.key = strdup(g->sig);
 			search.data = (void*)g;
 			if (!hsearch_r(search, ENTER, &found, stats->htab)){
-				glite_common_log(LOG_CATEGORY_LB_SERVER,
-                                        LOG_PRIORITY_WARN,
-                                        "Hash table full, using linear search instead!");
-                                hdestroy_r(stats->htab);
-                                stats->htab = NULL;
+				stats_double_htable(stats); // all is filled now, can break
 				break;
 			}
 		}
@@ -248,6 +282,7 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
 	struct edg_wll_stats_archive    *a;
 	ENTRY 	search, *found;
 
+	asprintf(&jobstat->destination, "fake dest %i", rand()%10);
 	sig = str2md5base64(jobstat->destination);
 
 	stats_search_existing_group(stats, g, sig);
@@ -287,18 +322,14 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
                 }
 
                 strcpy((*g)->sig,sig);
-		strncpy((*g)->destination, jobstat->destination, 256);
+		strncpy((*g)->destination, jobstat->destination, STATS_DEST_SIZE);
                 (*g)->last_update = jobstat->stateEnterTime.tv_sec; //now;
 
 		if (stats->htab){
 			search.key = strdup(sig);
 			search.data = (void*)(*g);
 			if (!hsearch_r(search, ENTER, &found, stats->htab)){
-				glite_common_log(LOG_CATEGORY_LB_SERVER,
-					LOG_PRIORITY_WARN,
-					"Hash table full, using linear search instead!");
-					hdestroy_r(stats->htab);
-					stats->htab = NULL;
+				stats_double_htable(stats);
 			}
 		}
         }

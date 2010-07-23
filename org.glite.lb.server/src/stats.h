@@ -29,6 +29,8 @@ limitations under the License.
 #include "glite/lb/jobstat.h"
 #include "glite/lb/query_rec.h"
 
+#define STATS_DEST_SIZE 256
+
 int edg_wll_InitStatistics(edg_wll_Context);
 
 int edg_wll_UpdateStatistics(
@@ -52,7 +54,7 @@ struct edg_wll_stats_archive {
 struct edg_wll_stats_group {
 	int	grpno;
 	char	sig[33];
-	char	destination[256];
+	char	destination[STATS_DEST_SIZE];
 	time_t	last_update;
 	struct edg_wll_stats_archive	archive[1];
 };
@@ -71,6 +73,7 @@ typedef struct {
 	int	fd;
 	struct edg_wll_stats_group	*map;
 	int	grpno,grpsize;
+	unsigned htab_size;
 	struct hsearch_data *htab;
 } edg_wll_Stats;
 
