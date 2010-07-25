@@ -37,7 +37,7 @@ limitations under the License.
 
 #include "stats.h"
 
-#define GROUPS_HASHTABLE_SIZE 1024
+#define GROUPS_HASHTABLE_SIZE 1000
 
 static int stats_inc_counter(edg_wll_Context,const edg_wll_JobStat *,edg_wll_Stats *);
 static int stats_record_duration(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,edg_wll_Stats *);
@@ -177,7 +177,7 @@ static int stats_double_htable(edg_wll_Stats *stats){
 	memset(stats->htab, 0, sizeof(*(stats->htab)));
 	stats->htab_size *= 2;
 	if (!hcreate_r(stats->htab_size, stats->htab)){
-        	glite_common_log(LOG_CATEGORY_CONTROL,
+        	glite_common_log(LOG_CATEGORY_LB_SERVER,
                                 LOG_PRIORITY_WARN,
                                 "Cannot enlarge hash table for stats! Using linear search instead.");
                         free(stats->htab);
@@ -234,13 +234,21 @@ static int stats_remap(edg_wll_Stats *stats)
 	assert(stats->map->grpno == newgrpno);
 
 	if (stats->htab){
+		while (newgrpno*100 > stats->htab_size*80)
+			stats_double_htable(stats);
 		for (i = stats->grpno; i < newgrpno; i++){
 			g = (struct edg_wll_stats_group *) (
                                 ((char *) stats->map) + stats->grpsize * i );
 			search.key = strdup(g->sig);
 			search.data = (void*)g;
 			if (!hsearch_r(search, ENTER, &found, stats->htab)){
-				stats_double_htable(stats); // all is filled now, can break
+				/* This should never happen */
+				glite_common_log(LOG_CATEGORY_LB_SERVER,
+	                                LOG_PRIORITY_ERROR,
+					"Cannot insert new element into stats hash table. Switching to linear search.");
+				hdestroy_r(stats->htab);
+				free(stats->htab);
+				stats->htab = NULL;
 				break;
 			}
 		}
@@ -282,7 +290,6 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
 	struct edg_wll_stats_archive    *a;
 	ENTRY 	search, *found;
 
-	asprintf(&jobstat->destination, "fake dest %i", rand()%10);
 	sig = str2md5base64(jobstat->destination);
 
 	stats_search_existing_group(stats, g, sig);
@@ -322,14 +329,22 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
                 }
 
                 strcpy((*g)->sig,sig);
-		strncpy((*g)->destination, jobstat->destination, STATS_DEST_SIZE);
+		strncpy((*g)->destination, jobstat->destination, STATS_DEST_SIZE); // redundant, no string larger than STATS_DEST_SIZE should pass here
                 (*g)->last_update = jobstat->stateEnterTime.tv_sec; //now;
 
+		if (stats->grpno*100 > stats->htab_size*80)
+			stats_double_htable(stats);
 		if (stats->htab){
 			search.key = strdup(sig);
 			search.data = (void*)(*g);
 			if (!hsearch_r(search, ENTER, &found, stats->htab)){
-				stats_double_htable(stats);
+				/* This should never happen */
+                                glite_common_log(LOG_CATEGORY_LB_SERVER,
+                                        LOG_PRIORITY_ERROR,
+                                        "Cannot insert new element into stats hash table. Switching to linear search.");
+				hdestroy_r(stats->htab);
+                                free(stats->htab);
+                                stats->htab = NULL;
 			}
 		}
         }
@@ -350,7 +365,19 @@ static int stats_inc_counter(edg_wll_Context ctx,const edg_wll_JobStat *jobstat,
 	time_t	now = jobstat->stateEnterTime.tv_sec;
 
 	/* XXX: we support destination grouping only */
-	if (!jobstat->destination) return 0;
+	if (!jobstat->destination){ 
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_WARN,
+			"Only grouping by destination is supported!");
+		return 0;
+	}
+
+	/* XXX: we support destination length up to STATS_DEST_SIZE only */
+	if (strlen(jobstat->destination) >= STATS_DEST_SIZE){
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_WARN,
+			"Destination %s omitted from statistics (only size smaller that %i characters supported)!", jobstat->destination, STATS_DEST_SIZE);
+		return 0;
+	}
+
 	edg_wll_ResetError(ctx);
 
 	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
@@ -430,6 +457,14 @@ static int stats_record_duration_fromto(
 
 	/* XXX: we support destination grouping only */
         if (!to->destination) return 0;
+
+	/* XXX: we support destination length up to STATS_DEST_SIZE only */
+        if (strlen(to->destination) >= STATS_DEST_SIZE){
+                glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_WARN,
+                        "Destination %s omitted from statistics (only size smaller that %i characters supported)!", to->destination, STATS_DEST_SIZE);
+                return 0;
+        }
+
         edg_wll_ResetError(ctx);
 
 	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
