@@ -171,3 +171,9 @@
 - More robust reaction to errors while parsing client requests
 - Extended job state transition statistics
 
+2.1.8-1
+- Statistics turned on by default
+- Old implementation of statistics optimized
+- Memory handling bug fixes
+- Two sets of statistic functions implemented for bw compatibility
+
