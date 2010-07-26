@@ -24,3 +24,8 @@
 - Fixed handling of target 'clean' in the Makefile
 - Configuration tuned to improve support for collocated WMS/L&B and standalone WMS scenarios
 
+4.2.10-1
+- Makefile modified to fix debian builds
+- DB listens on internal address
+- Publishing L&B service in GLUE 2.0
+
