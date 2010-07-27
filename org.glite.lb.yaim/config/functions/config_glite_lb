@@ -209,7 +209,10 @@ function config_glite_lb() {
     mv /etc/my.cnf /etc/my.cnf.orig
     sed 's/\[mysqld\]/[mysqld]\nskip-networking/' /etc/my.cnf.orig > /etc/my.cnf
     rm -f /etc/my.cnf.orig
-    /etc/init.d/mysqld stop
+    ps ax | grep -v grep |grep mysqld_safe > /dev/null 2>&1
+    if [ $? = 0 ] ; then
+      /etc/init.d/mysqld stop
+    fi
   fi
 
   /sbin/chkconfig mysqld on
