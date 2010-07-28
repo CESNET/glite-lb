@@ -614,7 +614,7 @@ int main(int argc, char *argv[])
 	if (mode & SERVICE_SERVER) {
 		if ( fake_host )
 		{
-			char	*p = strchr(fake_host,':');
+			char	*p = strrchr(fake_host,':');
 
 			if (p)
 			{
@@ -1897,7 +1897,14 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
         }
 
 	if (ar.err == NETDB_SUCCESS) {
-		if (name) *name = ar.host;
+		if (name) {
+			if (numeric && addr->sa_family == AF_INET6) {
+				asprintf(name,"[%s]",ar.host);
+				free(ar.host);
+			} else {
+				*name = ar.host;
+			}
+		}
 		if (service) *service = ar.service;
 	}
 	err = ar.err;

@@ -274,7 +274,7 @@ int main(int argc,char *argv[])
 
 	if ( server )
 	{
-		char *p = strchr(server, ':');
+		char *p = strrchr(server, ':');
 		if ( p )
 		{
 			edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER_PORT, atoi(p+1));
