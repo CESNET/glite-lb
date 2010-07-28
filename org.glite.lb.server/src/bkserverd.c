@@ -1839,6 +1839,11 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 	int	err = NETDB_INTERNAL;
 	struct sockaddr_in	v4;
 
+	if (!numeric && addr->sa_family == AF_INET6) {
+		/* don't bother, c-ares up to version 1.7.3 has fatal bug */
+		return NETDB_INTERNAL;
+	}
+
 /* start timer */
         gettimeofday(&start_time,0);
 
