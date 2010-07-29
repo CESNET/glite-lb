@@ -671,10 +671,11 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 	/* GET /[jobId]: Job Status */
 		else if (*requestPTR=='/'
-			&& strncmp(requestPTR, "/RSS", strlen("/RSS")) 
-			&& strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
-			&& *(requestPTR+strlen("/NOTIF")-1) != ':'
-			&& !isspace(*(requestPTR+strlen("/NOTIF")-1))) {
+			&& strncmp(requestPTR, "/RSS:", strlen("/RSS:")) 
+			&& ( strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
+			     || *(requestPTR+strlen("/NOTIF")) != ':'
+			        && !isspace(*(requestPTR+strlen("/NOTIF"))))
+			) {
 			edg_wlc_JobId jobId = NULL;
 			char *pom1,*fullid = NULL;
 			edg_wll_JobStat stat;
