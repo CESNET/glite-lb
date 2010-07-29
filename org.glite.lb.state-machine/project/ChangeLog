@@ -43,3 +43,6 @@
 1.1.2-1
 - Fixed target 'clean' in the Makefile to handle debian builds
 
+1.1.2-2
+- Module rebuilt
+
