@@ -177,3 +177,8 @@
 - Memory handling bug fixes
 - Two sets of statistic functions implemented for bw compatibility
 
+2.1.9-1
+- Support for IPv6 literal addresses
+- Fixed jobid detection in HTTP GET requests
+- Provisional handling of c-ares name translation bugs
+
