@@ -75,3 +75,6 @@
 - Fixed target 'clean' in the Makefile to handle debian builds
 - Extended job state transition statistics
 
+7.1.4-1
+- Hostname parsing adjusted to handle IPv6 addresses
+
