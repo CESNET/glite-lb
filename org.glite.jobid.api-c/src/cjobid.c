@@ -166,11 +166,12 @@ int glite_jobid_parse(const char *idString, glite_jobid_t *jobId)
     pom1 = strchr(pom, '/');
 
     if (!pom1) { free(pom); free(out); return EINVAL; }
+    pom1[0] = '\0';
 
     pom2 = strrchr(pom, ':');
     if (pom2 && strchr(pom2,']')) pom2 = NULL;
 
-    if ( pom2 && (pom1 > pom2)) {
+    if ( pom2 ) {
 	pom[pom2-pom]     = '\0';
 	out->BShost  = strdup(pom);
 	pom[pom1-pom]     = '\0';
