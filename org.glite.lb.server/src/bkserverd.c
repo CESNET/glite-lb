@@ -1582,7 +1582,7 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 		return err;
 	}
 
-	if (httpErr == HTTP_BADREQ)
+	if (httpErr == HTTP_BADREQ && body)
 		err = try_accept_ws(conn, timeout, cdata, body, strlen(body) + 1);
 	if (httpErr != HTTP_BADREQ || err)
 		edg_wll_DoneHTTP(ctx, resp, hdrOut, bodyOut);
