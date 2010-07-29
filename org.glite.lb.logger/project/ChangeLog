@@ -91,3 +91,7 @@
 2.1.6-1
 - Fixed target 'clean' in the Makefile to handle debian builds
 
+2.1.7-1
+- Hostname parsing adjusted to handle IPv6 addresses
+- Default file locations updated in documentation
+
