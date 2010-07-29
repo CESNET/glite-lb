@@ -29,3 +29,7 @@
 - DB listens on internal address
 - Publishing L&B service in GLUE 2.0
 
+4.2.11-1
+- Inteligent post-configuration restarting of MySQL
+- Using glue2 template for BDII
+
