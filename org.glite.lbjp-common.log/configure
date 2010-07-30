@@ -489,6 +489,7 @@ for my $ext (keys %deps_aux) {
 	'jobid' => 'org.glite',
 	'lbjp-common' => 'org.glite',
 	'gridsite' => 'org',
+	'security' => 'org.glite',
 );
 
 %conf_prefix = (
@@ -497,6 +498,7 @@ for my $ext (keys %deps_aux) {
 	'jobid' => 'glite-',
 	'lbjp-common' => 'glite-',
 	'gridsite' => '',
+	'security' => 'glite-',
 );
 
 my @k = keys %deps_aux;
