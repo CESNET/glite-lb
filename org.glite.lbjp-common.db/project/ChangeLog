@@ -57,3 +57,6 @@
 2.0.4-1
 - Fixed target 'clean' in the Makefile
 
+2.0.4-2
+- Module rebuilt
+
