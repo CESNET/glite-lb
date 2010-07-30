@@ -29,3 +29,6 @@
 - Fixed target 'clean' in the Makefile
 - Fixed format of the package description file
 
+2.0.2-2
+- Module rebuilt
+
