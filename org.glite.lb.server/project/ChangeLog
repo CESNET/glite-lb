@@ -182,3 +182,6 @@
 - Fixed jobid detection in HTTP GET requests
 - Provisional handling of c-ares name translation bugs
 
+2.1.10-1
+- Fixed precedence in selecting IPv6/IPv4
+
