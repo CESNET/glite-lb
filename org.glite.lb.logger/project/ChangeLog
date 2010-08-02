@@ -95,3 +95,6 @@
 - Hostname parsing adjusted to handle IPv6 addresses
 - Default file locations updated in documentation
 
+2.1.8-1
+- Fixed propagation of error messages
+
