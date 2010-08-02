@@ -1839,6 +1839,14 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 	int	err = NETDB_INTERNAL;
 	struct sockaddr_in	v4;
 
+	if (addr->sa_family == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&((struct sockaddr_in6 *)addr)->sin6_addr)) {
+		v4.sin_family = AF_INET;
+		v4.sin_port = ((struct sockaddr_in6 *)addr)->sin6_port;
+		v4.sin_addr.s_addr = *(in_addr_t *) &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr[12];
+		addr = (struct sockaddr *) &v4;
+		len = sizeof(v4);
+	} 
+
 	if (!numeric && addr->sa_family == AF_INET6) {
 		/* don't bother, c-ares up to version 1.7.3 has fatal bug */
 		return NETDB_INTERNAL;
@@ -1850,14 +1858,6 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 /* ares init */
         if ( ares_init(&channel) != ARES_SUCCESS ) return(NETDB_INTERNAL);
 	memset((void *) &ar, 0, sizeof(ar));
-
-	if (addr->sa_family == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&((struct sockaddr_in6 *)addr)->sin6_addr)) {
-		v4.sin_family = AF_INET;
-		v4.sin_port = ((struct sockaddr_in6 *)addr)->sin6_port;
-		v4.sin_addr.s_addr = *(in_addr_t *) &((struct sockaddr_in6 *)addr)->sin6_addr.s6_addr[12];
-		addr = (struct sockaddr *) &v4;
-		len = sizeof(v4);
-	} 
 
 /* query DNS server asynchronously */
 	if (name) flags |= ARES_NI_LOOKUPHOST | ( numeric? ARES_NI_NUMERICHOST : 0);
