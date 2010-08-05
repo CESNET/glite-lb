@@ -11,21 +11,20 @@ function config_glite_lb_setenv(){
     yaimlog ERROR "The home directory of ${GLITE_USER} doesn't exist. Check whether the user ${GLITE_USER} was properly created"
     exit ${YEX_NOSUCHFILE}
   fi
-  yaimgridenv_set GLITE_JP_LOCATION ${GLITE_JP_LOCATION:-}
-  yaimgridenv_set GLITE_WMS_QUERY_TIMEOUT ${GLITE_WMS_QUERY_TIMEOUT:-300}
+  yaimgridenv_set GLITE_WMS_QUERY_TIMEOUT "${GLITE_WMS_QUERY_TIMEOUT}"
   yaimgridenv_set GLITE_HOST_CERT ${GLITE_HOME_DIR:-/home/glite}/.certs/hostcert.pem
   yaimgridenv_set GLITE_HOST_KEY ${GLITE_HOME_DIR:-/home/glite}/.certs/hostkey.pem
-  yaimgridenv_set X509_CERT_DIR /etc/grid-security/certificates
-  yaimgridenv_set X509_VOMS_DIR /etc/grid-security/vomsdir
+  yaimgridenv_set X509_CERT_DIR "${X509_CERT_DIR}"
+  yaimgridenv_set X509_VOMS_DIR "${X509_VOMS_DIR}"
 
   yaimgridenv_set GLITE_LB_EXPORT_ENABLED ${GLITE_LB_EXPORT_ENABLED:-false}
-  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 15d --cancelled 15d --other 60d}"
+  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS}"
   yaimgridenv_set GLITE_LB_EXPORT_JPPS ${GLITE_LB_EXPORT_JPPS:-}
-  yaimgridenv_set GLITE_LB_RTM_ENABLED ${GLITE_LB_RTM_ENABLED:-false}
-  yaimgridenv_set GLITE_LB_RTM_DN "${GLITE_LB_RTM_DN:-/C=UK/O=eScience/OU=Imperial/L=Physics/CN=heppc24.hep.ph.ic.ac.uk/Email=janusz.martyniak@imperial.ac.uk}"
-  yaimgridenv_set GLITE_LB_SUPER_USERS "${GLITE_LB_SUPER_USERS:-}"
-  yaimgridenv_set GLITE_LB_HARVESTER_ENABLED ${GLITE_LB_HARVESTER_ENABLED:-false}
-  yaimgridenv_set GLITE_LB_HARVESTER_MSG_OPTIONS "${GLITE_LB_HARVESTER_MSG_OPTIONS:---wlcg}"
+  yaimgridenv_set GLITE_JP_LOCATION "${GLITE_JP_LOCATION}"
+
+  yaimgridenv_set GLITE_LB_SERVER_OTHER_OPTIONS "${GLITE_LB_SERVER_OTHER_OPTIONS}"
+  yaimgridenv_set GLITE_LB_NOTIF_IL_OTHER_OPTIONS "${GLITE_LB_NOTIF_IL_OTHER_OPTIONS}"
+  yaimgridenv_set GLITE_LB_PROXY_IL_OTHER_OPTIONS "${GLITE_LB_PROXY_IL_OTHER_OPTIONS}"
 
   #
   # default L&B mode (proxy/server/both) according to the node list,
