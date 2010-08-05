@@ -73,8 +73,8 @@ my %extern_prefix = (
 );
 
 my %jar = (
-	'commons-codec' => '/usr/share/java/commons-codec.jar',
-	'commons-lang' => '/usr/share/java/commons-lang.jar',
+	'jakarta-commons-codec' => '/usr/share/java/commons-codec.jar',
+	'jakarta-commons-lang' => '/usr/share/java/commons-lang.jar',
 );
 
 
@@ -360,8 +360,8 @@ for my $ext (keys %need_externs_aux) {
 }
 
 %need_jars = (
-	'jobid.api-java' => [ qw/commons-codec/ ],
-	'lb.client-java' => [ qw/commons-lang/ ],
+	'jobid.api-java' => [ qw/jakarta-commons-codec/ ],
+	'lb.client-java' => [ qw/jakarta-commons-lang/ ],
 );
 
 for my $jar (keys %need_jars) {
@@ -657,7 +657,7 @@ sub mode_etics {
 	for (@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		push @copts,"--with-$_ \${$eext.location}/$_*.jar";
+		push @copts,"--with-$_ \${$eext.location}/usr/share/java/$_*.jar";
 	}
 
 	my $conf;

@@ -15,7 +15,7 @@ all compile: genevents genws compile-java build-jar build-c
 
 compile-java:
 	${JAVAC} \
-		-classpath ${commons-lang_jar}:${stagedir}/share/java/jobid-api-java.jar:${trustmanager_prefix}/share/java/glite-security-trustmanager.jar:${utiljava_prefix}/share/java/glite-security-util-java.jar:`ls ${axis_prefix}/lib/*.jar | tr '\012' :` \
+		-classpath ${jakarta-commons-lang_jar}:${stagedir}/share/java/jobid-api-java.jar:${trustmanager_prefix}/share/java/glite-security-trustmanager.jar:${utiljava_prefix}/share/java/glite-security-util-java.jar:`ls ${axis_prefix}/lib/*.jar | tr '\012' :` \
 		-d build \
 		src/org/glite/lb/*.java \
 		build/gen/*.java \
