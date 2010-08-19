@@ -315,7 +315,7 @@ static int read_jobIds(const char *file, char ***jobs_out)
 			fprintf(stderr, "Error reading file\n");
 			return 1;
 		}
-                nl = strchr(buf,'\n');
+                nl = strrchr(buf,'\n');
                 if (nl) *nl = 0;
 		/* TODO: check if it is really jobId, e.g. by edg_wlc_JobIdParse() */
 

@@ -79,7 +79,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *stat)
 			free(ju);
 
 			dest = strdup(jobc[1]);
-			if ( !(aux = strchr(dest, ':')) )
+			if ( !(aux = strrchr(dest, ':')) )
 			{
 				edg_wll_SetError(ctx, EINVAL, "Can't parse notification destination");
 				free(dest);

@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 	dprintf(("generating jobids..."));
 	{
 		char *name=server?server:strdup(PROXY_SERVER);
-		char *p = strchr(name,':');
+		char *p = strrchr(name,':');
 		int  port;
 
 		if (p)  { *p=0; port = atoi(p+1); }

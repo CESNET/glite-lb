@@ -125,12 +125,13 @@ int edg_wll_NotifNewServer(
 	{
 		char   *aux;
 
-		if ( !(aux = strchr(address_override, ':')) )
+		if ( !(aux = strrchr(address_override, ':')) )
 		{
 			edg_wll_SetError(ctx, EINVAL, "Addres overrirde not in format host:port");
 			goto cleanup;
 		}
-		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) )
+		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) ||
+		     !strncmp(address_override, "::", aux-address_override) )
 			trio_asprintf(&addr_s, "%s:%s", ctx->connections->serverConnection->peerName, aux+1);
 	}
 
@@ -228,12 +229,13 @@ int edg_wll_NotifBindServer(
 	{
 		char   *aux;
 
-		if ( !(aux = strchr(address_override, ':')) )
+		if ( !(aux = strrchr(address_override, ':')) )
 		{
 			edg_wll_SetError(ctx, EINVAL, "Addres overrirde not in format host:port");
 			goto cleanup;
 		}
-		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) )
+		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) ||
+		     !strncmp(address_override, "::", aux-address_override) )
 			trio_asprintf(&addr_s, "%s:%s", ctx->connections->serverConnection->peerName, aux+1);
 	}
 
