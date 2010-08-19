@@ -63,3 +63,6 @@
 - Support for starting up LB harvester
 - Fixed handling of wrong certificate file permissions
 
+1.9.5-2
+- Module rebuilt
+

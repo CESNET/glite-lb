@@ -6,3 +6,7 @@
 
 2.5.1-1
 - source element of genericFault is now optional
+
+2.5.1-2
+- source element of genericFault is now optional
+
