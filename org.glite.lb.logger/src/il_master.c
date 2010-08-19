@@ -1,10 +1,28 @@
 #ident "$Header$"
+/*
+Copyright (c) Members of the EGEE Collaboration. 2004-2010.
+See http://www.eu-egee.org/partners for details on the copyright holders.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/context.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/il_string.h"
@@ -15,66 +33,21 @@
 #include "glite/lb/lb_perftest.h"
 #endif
 
-static
 int
-cmp_jobid(struct server_msg *msg, void *data) 
-{
-	char *job_id_s = (char*)data;
-	return strcmp(msg->job_id_s, job_id_s) == 0;
-}
-
-static
-int
-cmp_jobid_set_exp(struct server_msg *msg, void *data)
-{
-	struct server_msg *m = (struct server_msg *)data;
-
-	if(strcmp(msg->job_id_s, m->job_id_s) == 0) {
-		msg->expires = m->expires;
-	}
-	return 0;
-}
-
-
-int 
 enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 {
-#if defined(IL_NOTIFICATIONS)
-	struct event_queue *eq_known;
-
-	/* now we have a new event with possibly changed destination,
-	   so check for the already known destination and possibly move 
-	   events from the original output queue to a new one */
-	eq_known = notifid_map_get_dest(msg->job_id_s);
-	if(eq != eq_known) {
-		/* client has changed delivery address for this notification */
-		if(notifid_map_set_dest(msg->job_id_s, eq) < 0) 
-			return(-1);
-		/* move all events with this notif_id from eq_known to eq */
-		if(eq_known != NULL) {
-			event_queue_move_events(eq_known, eq, cmp_jobid, msg->job_id_s);
-			/* XXX - we should kill the old queue too */
-		}
-	}
-
-	/* if the expiration changed, set new one */
-	if(msg->expires != notifid_map_get_expiration(msg->job_id_s)) {
-		notifid_map_set_expiration(msg->job_id_s, msg->expires);
-		/* set expiration for all events with this notif id */
-		event_queue_move_events(eq, NULL, cmp_jobid_set_exp, msg);
-	}
-#endif
+	int ret;
 
 	/* fire thread to take care of this queue */
-	if(event_queue_create_thread(eq) < 0) 
+	if(event_queue_create_thread(eq) < 0)
 		return(-1);
-	
+
 #if defined(IL_NOTIFICATIONS)
-	/* if there are no data to send, do not send anything 
+	/* if there are no data to send, do not send anything
 	   (messsage was just to change the delivery address) */
 	/* CORRECTION - let the message pass through the output queue
 	   to commit it properly and keep event_store in sync */
-	/* if(msg->len == 0) 
+	/* if(msg->len == 0)
 		return(0);
 	*/
 #endif
@@ -82,18 +55,18 @@ enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 	event_queue_cond_lock(eq);
 
 	/* insert new event */
-	if(event_queue_insert(eq, msg) < 0) {
+	if((ret = event_queue_insert(eq, msg)) < 0) {
 		event_queue_cond_unlock(eq);
-		return(-1);
+		return ret;
 	}
-      
+
 	/* signal thread that we have a new message */
 	event_queue_signal(eq);
 
 	/* allow thread to continue */
 	event_queue_cond_unlock(eq);
 
-	return(0);
+	return ret;
 }
 
 
@@ -103,7 +76,7 @@ pthread_cond_t flush_cond = PTHREAD_COND_INITIALIZER;
 #endif /* INTERLOGD_FLUSH */
 
 #ifdef INTERLOGD_HANDLE_CMD
-static 
+static
 int
 parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 {
@@ -125,10 +98,11 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 			continue;
 		}
 		if(strncmp(token, "DG.COMMAND", r - token) == 0) {
-#if defined(INTERLOGD_FLUSH)			
+#if defined(INTERLOGD_FLUSH)
 			if(strcmp(++r, "\"flush\"")) {
 #endif
-				il_log(LOG_WARNING, "  command %s not implemented\n", r);
+				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, "command %s not implemented", 
+						 r);
 				ret = -1;
 				continue;
 #if defined(INTERLOGD_FLUSH)
@@ -136,7 +110,7 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 #endif
 		} else if(strncmp(token, "DG.JOBID", r - token) == 0) {
 			char  *p;
-      
+
 			r += 2; /* skip =" */
 			p = index(r, '"');
 			if(p == NULL) { ret = -1; continue; }
@@ -147,7 +121,7 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
 		} else if(strncmp(token, "DG.LLLID", r - token) == 0) {
 			sscanf(++r, "%ld", receipt);
 		}
-    
+
 	}
 	return(0);
 }
@@ -159,8 +133,8 @@ parse_cmd(char *event, char **job_id_s, long *receipt, int *timeout)
  *  -1 - failure
  */
 
-static 
-int 
+static
+int
 handle_cmd(il_octet_string_t *event, long offset)
 {
 	char *job_id_s;
@@ -172,15 +146,15 @@ handle_cmd(il_octet_string_t *event, long offset)
 	struct timeval  tv;
 
 	/* parse command */
-	if(parse_cmd(event->data, &job_id_s, &receipt, &timeout) < 0) 
+	if(parse_cmd(event->data, &job_id_s, &receipt, &timeout) < 0)
 		return(0);
 
 #if defined(INTERLOGD_FLUSH)
-	il_log(LOG_DEBUG, "  received FLUSH command\n");
+	glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "received FLUSH command");
 
 	/* catchup with all neccessary event files */
 	if(job_id_s) {
-		struct event_store *es = event_store_find(job_id_s);
+		struct event_store *es = event_store_find(job_id_s, NULL);
 
 		if(es == NULL) {
 			goto cmd_error;
@@ -190,15 +164,16 @@ handle_cmd(il_octet_string_t *event, long offset)
 		   no need to lock the event_store at all */
 		event_store_release(es);
 		if(result < 0) {
-			il_log(LOG_ERR, "  error trying to catch up with event file: %s\n",
-			       error_get_msg());
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
+					 "  error trying to catch up with event file: %s",
+					 error_get_msg());
 			clear_error();
 		}
-	} else 
+	} else
 	  /* this call does not fail :-) */
 	  event_store_recover_all();
 
-	il_log(LOG_DEBUG, "  alerting threads to report status\n");
+	glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "  alerting threads to report status");
 
 	/* prevent threads from reporting too early */
 	if(pthread_mutex_lock(&flush_lock) < 0) {
@@ -254,11 +229,13 @@ handle_cmd(il_octet_string_t *event, long offset)
 	while(num_replies < num_threads) {
 		int ret;
 		if((ret=pthread_cond_timedwait(&flush_cond, &flush_lock, &endtime)) < 0) {
-			il_log(LOG_ERR, "    error waiting for thread reply: %s\n", strerror(errno));
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
+					 "    error waiting for thread reply: %s", 
+					 strerror(errno));
 			result = (ret == ETIMEDOUT) ? 0 : -1;
 			break;
 		}
-		
+
 		/* collect results from reporting threads */
 		if(job_id_s) {
 			/* find appropriate queue */
@@ -269,7 +246,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 				if(eq->flushing == 2) {
 					eq->flushing = 0;
 					num_replies++;
-					result = ((result == 1) || (eq->flush_result < 0))  ? 
+					result = ((result == 1) || (eq->flush_result < 0))  ?
 						eq->flush_result : result;
 				}
 				event_queue_cond_unlock(eq);
@@ -282,8 +259,10 @@ handle_cmd(il_octet_string_t *event, long offset)
 					if(eq->flushing == 2) {
 						eq->flushing = 0;
 						num_replies++;
-						il_log(LOG_DEBUG, "    thread reply: %d\n", eq->flush_result);
-						result = ((result == 1) || (eq->flush_result < 0))  ? 
+						glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+								 "    thread reply: %d", 
+								 eq->flush_result);
+						result = ((result == 1) || (eq->flush_result < 0))  ?
 							eq->flush_result : result;
 					}
 					event_queue_cond_unlock(eq);
@@ -297,7 +276,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 			if(eq->flushing == 2) {
 				eq->flushing = 0;
 				num_replies++;
-				result = ((result == 1) || (eq->flush_result < 0))  ? 
+				result = ((result == 1) || (eq->flush_result < 0))  ?
 					eq->flush_result : result;
 			}
 			event_queue_cond_unlock(eq);
@@ -305,7 +284,7 @@ handle_cmd(il_octet_string_t *event, long offset)
 	}
 
 	/* prevent deadlock in next flush */
-	if(pthread_mutex_unlock(&flush_lock) < 0) 
+	if(pthread_mutex_unlock(&flush_lock) < 0)
 		abort();
 
 
@@ -320,8 +299,10 @@ handle_cmd(il_octet_string_t *event, long offset)
 	}
 	if(job_id_s) free(job_id_s);
 	result = send_confirmation(receipt, result);
-	if(result <= 0) 
-		il_log(LOG_ERR, "handle_cmd: error sending status: %s\n", error_get_msg());
+	if(result <= 0)
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
+				 "handle_cmd: error sending status: %s", 
+				 error_get_msg());
 	return(1);
 
 
@@ -335,10 +316,10 @@ cmd_error:
 #endif /* INTERLOGD_HANDLE_CMD */
 
 
-static 
+static
 int
 handle_msg(il_octet_string_t *event, long offset)
-{ 
+{
 	struct server_msg *msg = NULL;
 #if !defined(IL_NOTIFICATIONS)
 	struct event_queue *eq_l;
@@ -350,25 +331,31 @@ handle_msg(il_octet_string_t *event, long offset)
 
 	/* convert event to message for server */
 	if((msg = server_msg_create(event, offset)) == NULL) {
-		il_log(LOG_ERR, "    handle_msg: error parsing event '%s':\n      %s\n", event, error_get_msg());
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
+				 "    handle_msg: error parsing event '%s': %s", 
+				 event, error_get_msg());
 		return(0);
 	}
-  
+
 	/* sync event store with IPC (if neccessary)
 	 * This MUST be called before inserting event into output queue! */
-	if((es = event_store_find(msg->job_id_s)) == NULL) 
+	if((es = event_store_find(msg->job_id_s, NULL)) == NULL)
 		return(-1);
 	msg->es = es;
 
 #ifdef LB_PERF
-	if(nosync) 
+	if(nosync)
 		ret = 1;
-	else 
+	else
 #endif
 		ret = event_store_sync(es, offset);
+	/* no longer informative:
 	il_log(LOG_DEBUG, "  syncing event store at %d with event at %d, result %d\n", es->offset, offset, ret);
+	*/
 	if(ret < 0) {
-		il_log(LOG_ERR, "    handle_msg: error syncing event store:\n      %s\n", error_get_msg());
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
+				 "    handle_msg: error syncing event store: %s", 
+				 error_get_msg());
 		/* XXX should error during event store recovery cause us to drop the message? */
 		/* Probably no, because the attempt to recover means we have missed some events,
 		   and delivery of this one will not move offset ahead. So try our best and deliver it
@@ -391,8 +378,10 @@ handle_msg(il_octet_string_t *event, long offset)
 #else
 	eq_s = queue_list_get(msg->job_id_s);
 #endif
-	if(eq_s == NULL) { 
-		il_log(LOG_ERR, "    handle_msg: apropriate queue not found: %s\n", error_get_msg());
+	if(eq_s == NULL) {
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
+				 "    handle_msg: apropriate queue not found: %s", 
+				 error_get_msg());
 		clear_error();
 	} else {
 		if(enqueue_msg(eq_s, msg) < 0)
@@ -426,29 +415,31 @@ err:
 
 
 
-int 
+int
 loop()
 {
 	/* receive events */
 	while(1) {
-		il_octet_string_t msg;
+		il_octet_string_t *msg;
 		long offset;
 		int ret;
-    
+
+		do_handle_signal();
 		if(killflg)
-			exit(0);
+			return (0);
 
 		clear_error();
-		if((ret = input_queue_get(&msg, &offset, INPUT_TIMEOUT)) < 0) 
+		if((ret = input_queue_get(&msg, &offset, INPUT_TIMEOUT)) < 0)
 		{
 			if(error_get_maj() == IL_PROTO) {
-				il_log(LOG_DEBUG, "  premature EOF while receiving event\n");
+				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+						 "  premature EOF while receiving event");
 				/* problems with socket input, try to catch up from files */
 #ifndef PERF_EMPTY
 				event_store_recover_all();
 #endif
 				continue;
-			} else 
+			} else
 				return(-1);
 		}
 		else if(ret == 0) {
@@ -456,25 +447,27 @@ loop()
 		}
 
 #ifdef PERF_EMPTY
-		glite_wll_perftest_consumeEventString(msg.data);
-		free(msg.data);
+		glite_wll_perftest_consumeEventString(msg->data);
+		free(msg->data);
 		continue;
 #endif
 
-#ifdef INTERLOGD_HANDLE_CMD		
-		ret = handle_cmd(&msg, offset);
+#ifdef INTERLOGD_HANDLE_CMD
+		ret = handle_cmd(msg, offset);
 		if(ret == 0)
 #endif
-			ret = handle_msg(&msg, offset);
-		free(msg.data);
+			ret = handle_msg(msg, offset);
+		if(msg->data) free(msg->data);
 		if(ret < 0)
 			switch (error_get_maj()) {
 				case IL_SYS:
 				case IL_NOMEM:
 					return (ret);
 					break;
-				default: 
-    					il_log(LOG_ERR, "Error: %s\n", error_get_msg());
+				default:
+    					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
+							 "Error: %s", 
+							 error_get_msg());
 					break;
 			}
 	} /* while */

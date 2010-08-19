@@ -1,9 +1,27 @@
 #ident "$Header$"
+/*
+Copyright (c) Members of the EGEE Collaboration. 2004-2010.
+See http://www.eu-egee.org/partners for details on the copyright holders.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 
 #include <stdio.h>
 #include <assert.h>
 #include <errno.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include "interlogd.h"
 
@@ -13,7 +31,7 @@ queue_thread_cleanup(void *q)
 {
 	struct event_queue *eq = (struct event_queue *)q;
 
-	il_log(LOG_WARNING, "thread %d exits\n", eq->thread_id);
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "thread %d exits", eq->thread_id);
 
 	/* unlock all held locks */
 	/* FIXME: check that the thread always exits when holding these locks;
@@ -48,11 +66,14 @@ queue_thread(void *q)
 	int exit_timeout = EXIT_TIMEOUT;
 
 	if(init_errors(0) < 0) {
-		il_log(LOG_ERR, "Error initializing thread specific data, exiting!");
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
+				 "Error initializing thread specific data, exiting!");
 		pthread_exit(NULL);
 	}
   
-	il_log(LOG_DEBUG, "  started new thread for delivery to %s:%d\n", eq->dest_name, eq->dest_port);
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
+			 "  started new thread for delivery to %s",
+			 eq->dest);
 
 	pthread_cleanup_push(queue_thread_cleanup, q); 
 
@@ -74,23 +95,28 @@ queue_thread(void *q)
 			if(lazy_close && close_timeout) {
 				ret = event_queue_wait(eq, close_timeout);
 				if(ret == 1) {/* timeout? */
-					event_queue_close(eq);
-					il_log(LOG_DEBUG, "  connection to %s:%d closed\n",
-					       eq->dest_name, eq->dest_port);
+					(*eq->event_queue_close)(eq);
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+							 "  connection to %s closed",
+							 eq->dest);
 				}
 				close_timeout = 0;
 			} else {
 				ret = event_queue_wait(eq, exit_timeout);
 				if(ret == 1) {
-					il_log(LOG_INFO, "  thread idle for more than %d seconds, exiting\n", exit_timeout);
-					event_queue_close(eq);
+					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
+							 "  thread idle for more than %d seconds, exiting", 
+							 exit_timeout);
+					(*eq->event_queue_close)(eq);
 					event_queue_cond_unlock(eq);
 					pthread_exit((void*)0);
 				}
 			}
 			if(ret < 0) {
 				/* error waiting */
-				il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, 
+						 "queue_thread: %s", 
+						 error_get_msg());
 				event_queue_cond_unlock(eq);
 				pthread_exit((void*)-1);
 			}
@@ -103,44 +129,58 @@ queue_thread(void *q)
 		event_queue_cond_unlock(eq);
 		
 		/* discard expired events */
-		il_log(LOG_DEBUG, "  discarding expired events\n");
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "  discarding expired events");
 		now = time(NULL);
 		event_queue_move_events(eq, NULL, cmp_expires, &now);
 		if(!event_queue_empty(eq)) {
 
 			/* deliver pending events */
-			il_log(LOG_DEBUG, "  attempting delivery to %s:%d\n", eq->dest_name, eq->dest_port);
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+					 "  attempting delivery to %s",
+					 eq->dest);
 			/* connect to server */
-			if((ret=event_queue_connect(eq)) == 0) {
+			if((ret=(*eq->event_queue_connect)(eq)) == 0) {
 				/* not connected */
 				if(error_get_maj() != IL_OK)
-					il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
+							 "queue_thread: %s", error_get_msg());
 #if defined(IL_NOTIFICATIONS)
-				il_log(LOG_INFO, "    could not connect to client %s, waiting for retry\n", eq->dest_name);
+				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO, 
+						 "    could not connect to client %s, waiting for retry", 
+						 eq->dest);
 #else
-				il_log(LOG_INFO, "    could not connect to bookkeeping server %s, waiting for retry\n", eq->dest_name);
+				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO, 
+						 "    could not connect to bookkeeping server %s, waiting for retry", 
+						 eq->dest);
 #endif
 				retrycnt++;
 			} else {
 				retrycnt = 0;
 				/* connected, send events */
-				switch(ret=event_queue_send(eq)) {
+				switch(ret=(*eq->event_queue_send)(eq)) {
 					
 				case 0:
 					/* there was an error and we still have events to send */
 					if(error_get_maj() != IL_OK)
-						il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
-					il_log(LOG_DEBUG, "  events still waiting\n");
+						glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
+								 "queue_thread: %s", 
+								 error_get_msg());
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+							 "  events still waiting");
 					break;
 					
 				case 1:
 					/* hey, we are done for now */
-					il_log(LOG_DEBUG, "  all events for %s sent\n", eq->dest_name);
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+							 "  all events for %s sent", 
+							 eq->dest);
 					break;
 					
 				default:
 					/* internal error */
-					il_log(LOG_ERR, "queue_thread: %s\n", error_get_msg());
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
+							 "queue_thread: %s", 
+							 error_get_msg());
 					exit = 1;      
 					break;
 					
@@ -150,9 +190,10 @@ queue_thread(void *q)
 				if((ret == 1) && lazy_close)
 					close_timeout = default_close_timeout;
 				else {
-					event_queue_close(eq);
-					il_log(LOG_DEBUG, "  connection to %s:%d closed\n",
-					       eq->dest_name, eq->dest_port);
+					(*eq->event_queue_close)(eq);
+					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG,
+							 "  connection to %sclosed",
+							 eq->dest);
 				}
 			}
 		} 
@@ -164,7 +205,8 @@ queue_thread(void *q)
 
 		/* Check if we are flushing and if we are, report status to master */
 		if(eq->flushing == 1) {
-			il_log(LOG_DEBUG, "    flushing mode detected, reporting status\n");
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+					 "    flushing mode detected, reporting status");
 			/* 0 - events waiting, 1 - events sent, < 0 - some error */
 			eq->flush_result = ret;
 			eq->flushing = 2;
@@ -182,7 +224,8 @@ queue_thread(void *q)
 		   which may cure server kicking us out after given number of connections */
 #ifndef LB_PERF
 		if((ret == 0) && (retrycnt > 0)) {
-			il_log(LOG_WARNING, "    sleeping\n");
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+					 "    sleeping");
 			event_queue_sleep(eq);
 		}
 #endif
@@ -208,18 +251,22 @@ queue_thread(void *q)
 int
 event_queue_create_thread(struct event_queue *eq)
 {
+	pthread_attr_t attr;
+
 	assert(eq != NULL);
 
 	event_queue_lock(eq);
 
 	/* if there is a thread already, just return */
-	if(eq->thread_id > 0) {
+	if(eq->thread_id != 0) {
 		event_queue_unlock(eq);
 		return(0);
 	}
 
 	/* create the thread itself */
-	if(pthread_create(&eq->thread_id, NULL, queue_thread, eq) < 0) {
+	pthread_attr_init(&attr);
+	pthread_attr_setstacksize(&attr, 16384);
+	if(pthread_create(&eq->thread_id, &attr, queue_thread, eq) < 0) {
 		eq->thread_id = 0;
 		set_error(IL_SYS, errno, "event_queue_create_thread: error creating new thread");
 		event_queue_unlock(eq);

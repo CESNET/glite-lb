@@ -1,4 +1,20 @@
 #!/bin/bash
+#
+# Copyright (c) Members of the EGEE Collaboration. 2004-2010.
+# See http://www.eu-egee.org/partners for details on the copyright holders.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 numjobs=10
 
@@ -11,11 +27,14 @@ fi
 
 . $STAGEDIR/sbin/perftest_common.sh
 
+DBNAME=${DBNAME:-lbserver20}
+export LBDB=lbserver/@localhost:$DBNAME
+
 DEBUG=${DEBUG:-0}
 # CONSUMER_ARGS=
 # PERFTEST_COMPONENT=
 # COMPONENT_ARGS=
-#LOGJOBS_ARGS="" 
+LOGJOBS_ARGS="-s /tmp/interlogger.perftest" 
 
 check_test_files || exit 1
 
@@ -59,7 +78,7 @@ echo ""
 fi
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
-CONSUMER_ARGS="-d $COMM_ARGS"
+CONSUMER_ARGS="-i /tmp/perftest_il.pid -d $COMM_ARGS"
 }
 
 group_a_test_a () 
@@ -75,7 +94,7 @@ group_a_test_b () {
     echo -n "b)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm -f \{\} \;
 }
 
 
@@ -141,38 +160,38 @@ LOGJOBS_ARGS=" $COMM_ARGS"
 
 group_b_test_a ()
 {
-    CONSUMER_ARGS="-d --nosend --noparse $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend --noparse $COMM_ARGS"
     echo -n "a)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_b_test_b () 
 {
-    CONSUMER_ARGS="-d --nosend --nosync $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend --nosync $COMM_ARGS"
     echo -n "b)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_b_test_c () 
 {
-    CONSUMER_ARGS="-d --nosend --norecover $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend --norecover $COMM_ARGS"
     echo -n "c)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_b_test_x ()
 {
-    CONSUMER_ARGS="-d --nosend --nosync --norecover $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend --nosync --norecover $COMM_ARGS"
     echo -n "x)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_b_test_d ()
@@ -182,11 +201,11 @@ group_b_test_d ()
 
 group_b_test_e ()
 {
-    CONSUMER_ARGS="-d --nosend $COMM_ARGS"
+    CONSUMER_ARGS="-i /tmp/perftest_il.pid -d --nosend $COMM_ARGS"
     echo -n "e)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 # echo "-------------------------------"
@@ -254,63 +273,63 @@ echo ""
 fi
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
-CONSUMER_ARGS="-d --perf-sink=1"
+CONSUMER_ARGS="--silent -S /tmp -D /tmp -t 1 -d --perf-sink=1 -p 10500 -w 10503"
 PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-interlogd-perf
-LOGJOBS_ARGS=" $COMM_ARGS"
+LOGJOBS_ARGS=" -m localhost:10500 $COMM_ARGS"
 }
 
 group_c_test_a ()
 {
-    COMPONENT_ARGS="-d  --noparse $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --noparse $COMM_ARGS"
     echo -n "a)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_b ()
 {
-    COMPONENT_ARGS="-d  --nosync $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --nosync $COMM_ARGS"
     echo -n "b)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_c ()
 {
-    COMPONENT_ARGS="-d  --norecover $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --norecover $COMM_ARGS"
     echo -n "c)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_x () 
 {
-    COMPONENT_ARGS="-d  --nosync --norecover $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --nosync --norecover $COMM_ARGS"
     echo -n "x)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_d ()
 {
-    COMPONENT_ARGS="-d  --lazy=10 --nosync --norecover $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --lazy=10 --nosync --norecover $COMM_ARGS"
     echo -n "d)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
 group_c_test_e ()
 {
-    COMPONENT_ARGS="-d $COMM_ARGS"
+    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d $COMM_ARGS"
     echo -n "e)"
     run_test il $numjobs
     print_result
-    rm -f /tmp/perftest.log.*
+    find /tmp -maxdepth 1 -name perftest.log.\* -exec rm \{\} \;
 }
 
    
@@ -344,7 +363,7 @@ do
 	    echo -n "Your choice: "
 	    read -e TEST_VARIANT
 	done
-	echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
+	print_result_header
     fi
 
     if [[ "x$TEST_VARIANT" = "x*" ]]
@@ -357,6 +376,7 @@ do
 
     for variant in $TEST_VARIANT
     do
+    	export PERFTEST_NAME="il_${group}${variant}"
 	group_${group}_test_${variant}
     done
 done

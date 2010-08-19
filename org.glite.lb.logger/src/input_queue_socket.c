@@ -1,4 +1,21 @@
 #ident "$Header$"
+/*
+Copyright (c) Members of the EGEE Collaboration. 2004-2010.
+See http://www.eu-egee.org/partners for details on the copyright holders.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -36,7 +53,9 @@ input_queue_attach()
   if(connect(sock, (struct sockaddr *)&saddr, sizeof(saddr.sun_path)) < 0) {
 	  if(errno == ECONNREFUSED) {
 		  /* socket present, but no one at the other end; remove it */
-		  il_log(LOG_WARNING, "  removing stale input socket %s\n", socket_path);
+		  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
+				   "  removing stale input socket %s", 
+				   socket_path);
 		  unlink(socket_path);
 	  }
 	  /* ignore other errors for now */
@@ -76,7 +95,6 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
 {
   char *buffer, *p, *n;
   int  len, alen, i, chunk_size = DEFAULT_CHUNK_SIZE;
-  static char buf[1024];
 
   msg->data = NULL;
   msg->len = 0;
@@ -109,7 +127,6 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
 	 (alen - (p - buffer)) is the free space,
   */ 
  
-#if 1
   /* Reading events - optimized version. Attempts to increase chunks read by recv
    * when there are more data, reads directly into destination memory (instead of 
    * copying from static buffer) etc.
@@ -153,55 +170,6 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
 	  }
   } while ( (len > 0) && (n == NULL) );
 
-#else
-  /* Reading events - original version.
-   * Appears to behave quite good, anyway.
-   */
-  while((len=recv(sock, buf, sizeof(buf), MSG_PEEK | MSG_NOSIGNAL)) > 0) {
-
-    /* we have to be prepared for sizeof(buf) bytes */
-    if(alen - (p - buffer) < (int)sizeof(buf)) {
-      alen += 8192;
-      n = realloc(buffer, alen);
-      if(n == NULL) {
-	free(buffer);
-	set_error(IL_NOMEM, ENOMEM, "read_event: no room for event");
-	return(-1);
-      }
-      p = p - buffer + n;
-      buffer = n;
-    }
-
-    /* copy all relevant bytes from buffer */
-    n = (char*)memccpy(p, buf, EVENT_SEPARATOR, len);
-    if(n) {
-	    /* separator found */
-	    n--; /* but do not preserve it */
-	    i = n - p;
-	    p = n;
-    } else {
-	    /* separator not found */
-	    i = len;
-	    p += len;
-    }
-   /* This was definitely slowing us down:
-    *    for(i=0; (i < len) && (buf[i] != EVENT_SEPARATOR); i++) 
-    *    *p++ = buf[i];
-    */
-
-    /* remove the data from queue */
-    if(i > 0) 
-      if(recv(sock, buf, i, MSG_NOSIGNAL) != i) {
-	set_error(IL_SYS, errno, "read_event: error reading data");
-	free(buffer);
-	return(-1);
-      }
-    if(i < len)
-      /* the event is complete */
-      break;
-  }
-#endif
-
   /* terminate buffer */
   *p = 0;
 
@@ -243,14 +211,19 @@ read_event(int sock, long *offset, il_octet_string_t *msg)
  */
 #ifdef PERF_EVENTS_INLINE
 int
-input_queue_get(il_octet_string *buffer, long *offset, int timeout)
+input_queue_get(il_octet_string **buffer, long *offset, int timeout)
 {
 	static long o = 0;
 	int len;
 	char *jobid;
+	static il_octet_string_t my_buffer;
 
-	len = glite_wll_perftest_produceEventString(&buffer->data, &jobid);
-	buffer->len = len;
+	assert(buffer != NULL);
+
+	*buffer = &my_buffer;
+
+	len = glite_wll_perftest_produceEventString(&my_buffer.data, &jobid);
+	my_buffer.len = len;
 	if(len) {
 		o += len;
 		*offset = o;
@@ -261,13 +234,16 @@ input_queue_get(il_octet_string *buffer, long *offset, int timeout)
 }
 #else
 int
-input_queue_get(il_octet_string_t *buffer, long *offset, int timeout)
+input_queue_get(il_octet_string_t **buffer, long *offset, int timeout)
 {
   fd_set fds;
   struct timeval tv;
   int msg_len;
+  static il_octet_string_t my_buffer;
 
   assert(buffer != NULL);
+
+  *buffer = &my_buffer;
 
   FD_ZERO(&fds);
   FD_SET(sock, &fds);
@@ -284,7 +260,8 @@ input_queue_get(il_octet_string_t *buffer, long *offset, int timeout)
   case -1: /* error */
 	  switch(errno) {
 	  case EINTR:
-		  il_log(LOG_DEBUG, "  interrupted while waiting for event!\n");
+		  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
+				   "  interrupted while waiting for event!");
 		  return(0);
 
 	  default:
@@ -300,16 +277,16 @@ input_queue_get(il_octet_string_t *buffer, long *offset, int timeout)
     return(-1);
   }
 
-  read_event(accepted, offset, buffer);
+  read_event(accepted, offset, &my_buffer);
   close(accepted);
 
-  if(buffer->data == NULL) {
+  if(my_buffer.data == NULL) {
     if(error_get_maj() != IL_OK)
       return(-1);
     else
       return(0);
   }
     
-  return(buffer->len);
+  return(my_buffer.len);
 }
 #endif

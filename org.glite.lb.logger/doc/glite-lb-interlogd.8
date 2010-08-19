@@ -1,4 +1,4 @@
-.TH EDG-WL-INTERLOGD 8 "May 2003" "EU DataGrid Project" "Logging&Bookkeeping"
+.TH GLITE-LB-INTERLOGD 8 "April 2008" "EU EGEE Project" "Logging&Bookkeeping"
 
 .SH NAME
 glite-lb-interlogd - interlogger daemon
@@ -68,6 +68,10 @@ environment variable.
 Don't run as daemon (do not fork and put itself into background).
 
 .TP
+.BI \-i " FILE" "\fR,\fP --pidfile " FILE
+Store process id into this file rather than default /var/glite/glite-lb-[notif]-interlogd.pid
+
+.TP
 .BI \-f " PREFIX" "\fR,\fP --file-prefix " PREFIX
 .I PREFIX 
 is path prefix of the event files.
@@ -120,6 +124,10 @@ Be lazy when closing connections to servers (default,
 .I TIMEOUT\fR
 ==0 means turn lazy off).
 
+.TP
+.BI "-h\fR,\fP --help"
+Print help and exit.
+
 .\".SH USAGE
 .\" Add any additional description here
 
@@ -130,10 +138,10 @@ Be lazy when closing connections to servers (default,
 .I /tmp/interlogger.sock
 Default name of local socket.
 .TP
-.I /tmp/dglogd.log*
+.I /var/glite/log/dglogd.log*
 Default location of event files.
 
-.I /tmp/dglogd.log*.ctl
+.I /var/glite/log/dglogd.log*.ctl
 Interlogger's control files keeping the information on status of
 the corresponding event file wrt. delivery to the target server.
 
@@ -166,10 +174,10 @@ If
 is set, it is used to locate proxy certificate file.
 
 .SH REPORTING BUGS
-Please, report all bugs to EU DataGrid Bug Tracking System located at http://marianne.in2p3.fr/datagrid/bugzilla
+Please, report all bugs to EU EGEE Bug Tracking System located at https://savannah.cern.ch
 
 .SH SEE ALSO
 .B te-lb-bkserverd\fR(8),\fP glite-lb-logd\fR(8),\fP glite-lb-logevent\fR(1),\fP
 
 .SH AUTHOR
-EU DataGrid Work Package 1, CESNET group.
+EU EGEE, JRA1.

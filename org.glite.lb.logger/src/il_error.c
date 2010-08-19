@@ -1,4 +1,21 @@
 #ident "$Header$"
+/*
+Copyright (c) Members of the EGEE Collaboration. 2004-2010.
+See http://www.eu-egee.org/partners for details on the copyright holders.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 
 #include <errno.h>
 #include <stdio.h>
@@ -13,15 +30,9 @@
 extern void _start (void), etext (void);
 #endif
 
-/* XXX DK: */
-#include <err.h> // SSL header file 
-
 #include "glite/security/glite_gss.h"
-
 #include "il_error.h"
 
-
-extern int log_level;
 
 static pthread_key_t err_key;
 
@@ -31,6 +42,8 @@ static
 void
 error_key_delete(void *err)
 {
+  if(((struct error_inf*)err)->msg)
+    free(((struct error_inf*)err)->msg);
   free(err);
 }
 
@@ -56,7 +69,7 @@ error_get_err ()
 
 
 int
-init_errors(int level)
+init_errors()
 {
   static pthread_once_t error_once = PTHREAD_ONCE_INIT;
   struct error_inf *err;
@@ -79,9 +92,6 @@ init_errors(int level)
   err->msg = malloc(IL_ERR_MSG_LEN + 1);
   if(err->msg == NULL) 
 	  return(-1);
-
-  if(level)
-    log_level = level;
 
 #ifdef LB_PROF
   monstartup((u_long)&_start, (u_long)&etext);
@@ -108,11 +118,6 @@ set_error(int code, long minor, char *msg)
 
   case IL_HOST:
     snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, hstrerror(err->code_min));
-    break;
-
-  /* XXX DK: je tahle hodnota k necemu potreba? */
-  case IL_AUTH:
-    snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, ERR_error_string(err->code_min, NULL));
     break;
 
   case IL_DGGSS:

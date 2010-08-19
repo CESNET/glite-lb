@@ -1,10 +1,26 @@
 #ident "$Header$"
+/*
+Copyright (c) Members of the EGEE Collaboration. 2004-2010.
+See http://www.eu-egee.org/partners for details on the copyright holders.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 
 #include <assert.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
+#include <stdio.h>
 #include <unistd.h>
-#endif
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -15,7 +31,7 @@
  *   - L/B server protocol handling routines 
  */
 
-#include "glite/wmsutils/jobid/cjobid.h"
+#include "glite/jobid/cjobid.h"
 #include "glite/lb/il_string.h"
 #include "glite/lb/context.h"
 
@@ -59,7 +75,9 @@ send_confirmation(long lllid, int code)
   }
   ret = 1;
 
-  il_log(LOG_DEBUG, "  sent code %d back to client\n", code);
+  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+		   "  sent code %d back to client", 
+		   code);
 
  out:
   close(sock);
@@ -102,7 +120,8 @@ static
 int
 gss_reader(void *user_data, char *buffer, int max_len)
 {
-  int ret, len;
+  int ret;
+  size_t len;
   struct reader_data *data = (struct reader_data *)user_data;
   edg_wll_GssStatus gss_stat;
 
@@ -132,7 +151,7 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
 {
   char *msg=NULL;
   int ret, code;
-  int len, l;
+  int len;
   struct timeval tv;
   struct reader_data data;
 
@@ -165,6 +184,7 @@ event_queue_connect(struct event_queue *eq)
   int ret;
   struct timeval tv;
   edg_wll_GssStatus gss_stat;
+  cred_handle_t *local_cred_handle;
 
   assert(eq != NULL);
 
@@ -172,16 +192,35 @@ event_queue_connect(struct event_queue *eq)
   if(!nosend) {
 #endif
 
-  if(eq->gss.context == GSS_C_NO_CONTEXT) {
+  if(eq->gss.context == NULL) {
 
     tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;
+
+    /* get pointer to the credentials */
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
 	    abort();
-    il_log(LOG_DEBUG, "    trying to connect to %s:%d\n", eq->dest_name, eq->dest_port);
-    ret = edg_wll_gss_connect(cred_handle, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
+    local_cred_handle = cred_handle;
+    local_cred_handle->counter++;
     if(pthread_mutex_unlock(&cred_handle_lock) < 0)
 	    abort();
+    
+    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+		     "    trying to connect to %s:%d", 
+		     eq->dest_name, eq->dest_port);
+    ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
+    if(pthread_mutex_lock(&cred_handle_lock) < 0)
+	    abort();
+    /* check if we need to release the credentials */
+    --local_cred_handle->counter;
+    if(local_cred_handle != cred_handle && local_cred_handle->counter == 0) {
+	    edg_wll_gss_release_cred(&local_cred_handle->creds, NULL);
+	    free(local_cred_handle);
+	    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "   freed credentials, not used anymore");
+    }
+    if(pthread_mutex_unlock(&cred_handle_lock) < 0) 
+	    abort();
+
     if(ret < 0) {
       char *gss_err = NULL;
 
@@ -190,10 +229,11 @@ event_queue_connect(struct event_queue *eq)
       set_error(IL_DGGSS, ret,
 	        (ret == EDG_WLL_GSS_ERROR_GSS) ? gss_err : "event_queue_connect: edg_wll_gss_connect");
       if (gss_err) free(gss_err);
-      eq->gss.context = GSS_C_NO_CONTEXT;
+      eq->gss.context = NULL;
       eq->timeout = TIMEOUT;
       return(0);
     }
+    eq->first_event_sent = 0;
   }
 
 #ifdef LB_PERF
@@ -213,10 +253,11 @@ event_queue_close(struct event_queue *eq)
   if(!nosend) {
 #endif
 
-  if(eq->gss.context != GSS_C_NO_CONTEXT) {
+  if(eq->gss.context != NULL) {
     edg_wll_gss_close(&eq->gss, NULL);
-    eq->gss.context = GSS_C_NO_CONTEXT;
+    eq->gss.context = NULL;
   }
+  eq->first_event_sent = 0;
 #ifdef LB_PERF
   }
 #endif
@@ -231,13 +272,12 @@ event_queue_close(struct event_queue *eq)
 int 
 event_queue_send(struct event_queue *eq)
 {
-  int events_sent = 0;
   assert(eq != NULL);
 
 #ifdef LB_PERF
   if(!nosend) {
 #endif
-  if(eq->gss.context == GSS_C_NO_CONTEXT)
+  if(eq->gss.context == NULL)
     return(0);
 #ifdef LB_PERF
   }
@@ -257,23 +297,19 @@ event_queue_send(struct event_queue *eq)
     if(event_queue_get(eq, &msg) < 0) 
       return(-1);
 
-    il_log(LOG_DEBUG, "    trying to deliver event at offset %d for job %s\n", msg->offset, msg->job_id_s);
+    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+		     "    trying to deliver event at offset %d for job %s", 
+		     msg->offset, msg->job_id_s);
 
 #ifdef LB_PERF
     if(!nosend) {
 #endif
-      if(msg->len) {
+	if (msg->len) {
 	    tv.tv_sec = TIMEOUT;
 	    tv.tv_usec = 0;
 	    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
-	    /* commented out due to the conflict with following ljocha's code
 	    if(ret < 0) {
-		    eq->timeout = TIMEOUT;
-		    return(0);
-	    }
-	    */
-	    if(ret < 0) {
-	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && events_sent > 0)
+	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && eq->first_event_sent )
 	        eq->timeout = 0;
 	      else
 	        eq->timeout = TIMEOUT;
@@ -282,18 +318,19 @@ event_queue_send(struct event_queue *eq)
  	    
 	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
-		    if (events_sent>0) {
+		    if (eq->first_event_sent) {
 			/* could be expected server connection preemption */
 			clear_error();
 			eq->timeout = 1;
 		    } else {
 			eq->timeout = TIMEOUT;
-		        il_log(LOG_ERR, "  error reading server %s reply:\n    %s\n", eq->dest_name, error_get_msg());
+		        glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, "  error reading server %s reply: %s", 
+					 eq->dest_name, error_get_msg());
                     }
 		    return(0);
 	    }
-      } 
-      else { code = LB_OK; code_min = 0; rep = strdup("not sending empty message"); }
+	}
+	else { code = LB_OK; code_min = 0; rep = strdup("not sending empty message"); }
 #ifdef LB_PERF
     } else {
 	    glite_wll_perftest_consumeEventIlMsg(msg->msg+17);
@@ -302,7 +339,9 @@ event_queue_send(struct event_queue *eq)
     }
 #endif
     
-    il_log(LOG_DEBUG, "    event sent, server %s replied with %d, %s\n", eq->dest_name, code, rep);
+    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
+		     "    event sent, server %s replied with %d, %s", 
+		     eq->dest_name, code, rep);
     free(rep);
 
     /* the reply is back here */
@@ -312,6 +351,8 @@ event_queue_send(struct event_queue *eq)
     case LB_NOMEM:
 	    /* NOT USED: case LB_SYS:  */
 	    /* NOT USED: case LB_AUTH: */
+	case LB_PERM:
+	case LB_DBERR:
       /* non fatal errors (for us) */
       eq->timeout = TIMEOUT;
       return(0);
@@ -319,10 +360,10 @@ event_queue_send(struct event_queue *eq)
     case LB_OK:
       /* event succesfully delivered */
       
-    default: /* LB_DBERR, LB_PROTO */
+    default: /* LB_PROTO */
       /* the event was not accepted by the server */
       /* update the event pointer */
-      if(event_store_commit(msg->es, msg->ev_len, queue_list_is_log(eq)) < 0) 
+        if(event_store_commit(msg->es, msg->ev_len, queue_list_is_log(eq), msg->generation) < 0)
 	/* failure committing message, this is bad */
 	return(-1);
       /* if we have just delivered priority message from the queue, send confirmation */
@@ -335,10 +376,12 @@ event_queue_send(struct event_queue *eq)
 
       if((ret == 0) &&
 	 (error_get_maj() != IL_OK))
-	  il_log(LOG_ERR, "send_event: %s\n", error_get_msg());
+	      glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
+			       "send_event: %s", 
+			       error_get_msg());
 	
       event_queue_remove(eq);
-      events_sent++;
+      eq->first_event_sent = 1;
       break;
       
     } /* switch */

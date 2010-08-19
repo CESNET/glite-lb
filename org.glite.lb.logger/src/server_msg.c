@@ -1,13 +1,30 @@
 #ident "$Header$"
+/*
+Copyright (c) Members of the EGEE Collaboration. 2004-2010.
+See http://www.eu-egee.org/partners for details on the copyright holders.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 
 #include <errno.h>
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "interlogd.h"
 #include "glite/lb/il_msg.h" 
 #include "glite/lb/events_parse.h"
-#include "glite/lb/consumer.h"
 #include "glite/lb/context.h"
 
 static
@@ -17,7 +34,7 @@ create_msg(il_octet_string_t *ev, char **buffer, long *receipt, time_t *expires)
   char *p;  int  len;
   char *event = ev->data;
 
-  *receipt = 0;
+  *receipt = 0L;
 
 #if defined(INTERLOGD_EMS)
   /* find DG.LLLID */
@@ -42,24 +59,23 @@ create_msg(il_octet_string_t *ev, char **buffer, long *receipt, time_t *expires)
       int n;
       
       p += 12; /* skip the key and = */
-      if((n = atoi(p)) == 0) {
+      n = atoi(p);
+      if((n & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) == 0) {
 	/* normal asynchronous message */
-	*receipt = 0;
+	      *receipt = 0L;
       }
     } else {
       /* could not find priority key */
-      *receipt = 0;
+      *receipt = 0L;
     }
     
   } else {
     /* could not find local logger PID, confirmation can not be sent */
-    *receipt = 0;
+    *receipt = 0L;
   }
 #endif
 
-  if(p = strstr(event, "DG.EXPIRES")) {
-	  int n;
-
+  if((p = strstr(event, "DG.EXPIRES")) != NULL) {
 	  p += 11;
 	  *expires = atoi(p);
   }
@@ -119,11 +135,12 @@ server_msg_copy(struct server_msg *src)
   msg->receipt_to = src->receipt_to;
   msg->offset = src->offset;
 #if defined(IL_NOTIFICATIONS)
-  msg->dest_name = strdup(src->dest_name);
+  msg->dest_name = src->dest_name ? strdup(src->dest_name) : NULL;
   msg->dest_port = src->dest_port;
-  msg->dest = strdup(src->dest);
+  msg->dest = src->dest ? strdup(src->dest) : NULL;
 #endif
   msg->expires = src->expires;
+  msg->generation = src->generation;
   return(msg);
 }
 
@@ -144,16 +161,26 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 
 
 #if defined(IL_NOTIFICATIONS)
-	edg_wll_InitContext(&context);
 
 	/* parse the notification event */
-	if((ret=edg_wll_ParseNotifEvent(context, event->data, &notif_event))) {
+	edg_wll_InitContext(&context);
+	ret=edg_wll_ParseNotifEvent(context, event->data, &notif_event);
+	edg_wll_FreeContext(context);
+	if(ret) {
 		set_error(IL_LBAPI, ret, "server_msg_init: error parsing notification event");
 		return(-1);
 	}
+
 	/* FIXME: check for allocation error */
-	if(notif_event->notification.dest_host && 
+	if(notif_event->notification.dest_url &&
+		(strlen(notif_event->notification.dest_url) > 0)) {
+		/* destination URL */
+		msg->dest = strdup(notif_event->notification.dest_url);
+		msg->dest_name = NULL;
+		msg->dest_port = 0;
+	} else if(notif_event->notification.dest_host &&
 	   (strlen(notif_event->notification.dest_host) > 0)) {
+		/* destination host and port */
 		msg->dest_name = strdup(notif_event->notification.dest_host);
 		msg->dest_port = notif_event->notification.dest_port;
 		asprintf(&msg->dest, "%s:%d", msg->dest_name, msg->dest_port);
