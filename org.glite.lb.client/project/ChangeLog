@@ -47,3 +47,6 @@
 3.2.3-2
 - Module rebuilt
 
+3.2.4-1
+- Fixed parsing of server:port pairs to handle IPv6 literals (compatibility with newer clients)
+
