@@ -719,6 +719,7 @@ static int do_sendmsg(int to_sock, int sock, unsigned long clnt_dispatched, int 
 	sendiov.iov_base = sendbuf;
 	sendiov.iov_len = sizeof(sendbuf);
 
+	memset(buf, 0, sizeof(buf));
 	msg.msg_control = buf;
 	msg.msg_controllen = sizeof buf;
 

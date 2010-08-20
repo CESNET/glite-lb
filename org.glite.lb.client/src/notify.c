@@ -375,9 +375,6 @@ int main(int argc,char **argv)
 			if (tout.tv_sec < 0) tout.tv_sec = 0;
 			tout.tv_usec = 0;
 
-			edg_wll_FreeStatus(&stat);
-			stat.state = EDG_WLL_JOB_UNDEF;
-		
 			if ( (err = edg_wll_NotifReceive(ctx, sock, &tout, &stat, &recv_nid)) ) {
 				edg_wll_NotifIdFree(recv_nid);
 				recv_nid = NULL; 
@@ -385,8 +382,10 @@ int main(int argc,char **argv)
 				if (err != ETIMEDOUT) goto receive_err;
 			}
 			else glite_lb_print_stat_fields(fields,&stat);
+			edg_wll_FreeStatus(&stat);
+			stat.state = EDG_WLL_JOB_UNDEF;
 
-			if ((now = time(NULL)) >= client_tout) return 0;
+			if ((now = time(NULL)) >= client_tout) goto cleanup;
 
 			if (refresh && now >= do_refresh) {
 				valid = now + opt_valid;
@@ -533,13 +532,12 @@ cleanup:
 		free(conditions);
 	}
 	
-	edg_wll_NotifCloseFd(ctx);
-	
 	if (edg_wll_Error(ctx,&errt,&errd))
 		fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
 
+	edg_wll_NotifCloseFd(ctx);
 	edg_wll_FreeContext(ctx);
+	edg_wll_poolFree();
 
-	
 	return 0;
 }
