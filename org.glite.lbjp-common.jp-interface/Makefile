@@ -25,7 +25,7 @@ version=${module.version}
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/project:${jpproject}
 
 DEBUG:=-g -O0 -W -Wno-sign-compare
-CFLAGS:=${DEBUG} -D_GNU_SOURCE -I. -I${top_srcdir}/interface -I${stagedir}/include
+CFLAGS:=${CFLAGS} ${DEBUG} -D_GNU_SOURCE -I. -I${top_srcdir}/interface -I${stagedir}/include
 
 # In order to use libtool versioning correcty, we must have:
 #

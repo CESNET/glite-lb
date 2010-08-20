@@ -42,13 +42,13 @@ else
 endif
 
 DEBUG:=-g -O0
-CFLAGS:=${DEBUG} \
+CFLAGS:=${CFLAGS} ${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
 
-LDFLAGS:=-L${stagedir}/${libdir} \
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} \
 	${COVERAGE_FLAGS} 
 
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}

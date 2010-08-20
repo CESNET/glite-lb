@@ -38,7 +38,7 @@ MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/
 PSQL_CPPFLAGS:=-I${postgresql_prefix}/include -I${postgresql_prefix}/include/postgresql
 
 
-CFLAGS:= \
+CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
@@ -62,7 +62,7 @@ endif
 TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
-LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}

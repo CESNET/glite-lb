@@ -39,7 +39,7 @@ TRIO_LIB:=-lglite_lbu_trio
 PERF_HDRS:=lb_perftest.h
 PERF_OBJS:=lb_perftest.o
 
-CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
+CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
 	-I${top_srcdir}/test \
 	-I${stagedir}/include \
@@ -64,7 +64,7 @@ endif
 classadslib := ${classadslib} -lclassad
 
 
-LDFLAGS:=-L${stagedir}/${libdir} -L${stagedir}/lib \
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} -L${stagedir}/lib \
 	${COVERAGE_FLAGS}
 
 EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${classadslib}

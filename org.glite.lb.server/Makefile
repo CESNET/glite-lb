@@ -69,7 +69,7 @@ GRIDSITE_LIBS = -L${gridsite_prefix}/${libdir} -L${gridsite_prefix}/lib -lgridsi
 
 LCAS_CFLAGS=-I${lcas_prefix}/include
 
-CFLAGS:= \
+CFLAGS:= ${CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
@@ -96,7 +96,7 @@ else
 	SRVBONES_LIB:= -L${stagedir}/${libdir} -lglite_lbu_server_bones
 	LB_COMMON_LIB:=-L${stagedir}/${libdir} -lglite_lb_common_${nothrflavour}
 	LB_UTILS_DB_LIB:=-L${stagedir}/${libdir} -lglite_lbu_db
-	LDFLAGS:= -L${stagedir}/${libdir}
+	LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir}
 endif
 
 # LB_MACHINE_LIB:=${stagedir}/${libdir}/libglite_lb_statemachine.a

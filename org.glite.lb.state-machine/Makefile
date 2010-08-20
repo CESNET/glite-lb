@@ -22,7 +22,7 @@ SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
 
-CFLAGS:= \
+CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
 	-I${classads_prefix}/include -I${classads_prefix}/include/classad \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \

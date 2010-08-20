@@ -93,7 +93,7 @@ COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
 TRIO_LIB:=-lglite_lbu_trio
 
-CFLAGS:=${DEBUG} \
+CFLAGS:=${CFLAGS} ${DEBUG} \
 	-I. \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
@@ -108,7 +108,7 @@ EXT_LIB:=
 TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
-LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}

@@ -21,7 +21,7 @@ CC=gcc
 
 DEBUG:=-g -O0 -Wall
 
-CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION
+CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION
 
 COMPILE:=libtool --mode=compile ${CC}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
