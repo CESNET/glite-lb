@@ -35,3 +35,6 @@
 1.4.11-4
 - Module rebuilt
 
+1.4.12-1
+- Fixed parsing of server:port pairs to handle IPv6 literals (compatibility with newer clients)
+
