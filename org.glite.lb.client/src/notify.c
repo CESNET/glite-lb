@@ -381,9 +381,11 @@ int main(int argc,char **argv)
 
 				if (err != ETIMEDOUT) goto receive_err;
 			}
-			else glite_lb_print_stat_fields(fields,&stat);
-			edg_wll_FreeStatus(&stat);
-			stat.state = EDG_WLL_JOB_UNDEF;
+			else {
+				glite_lb_print_stat_fields(fields,&stat);
+				edg_wll_FreeStatus(&stat);
+				stat.state = EDG_WLL_JOB_UNDEF;
+			}
 
 			if ((now = time(NULL)) >= client_tout) goto cleanup;
 
