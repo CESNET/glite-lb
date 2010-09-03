@@ -135,7 +135,7 @@ glite-lb-interlogd: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
 
 glite-lb-notif-interlogd: ${INTERLOG_NOTIF_OBJS}
-	${LINK} -export-dynamic -o $@ ${INTERLOG_NOTIF_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
+	${LINK} -export-dynamic -o $@ ${INTERLOG_NOTIF_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB} 
 
 glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
 	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}

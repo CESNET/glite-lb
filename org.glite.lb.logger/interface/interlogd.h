@@ -162,9 +162,7 @@ struct event_store {
 	pthread_rwlock_t commit_lock;      /* lock to prevent simultaneous updates to last_committed_* */
 	pthread_rwlock_t offset_lock;      /* lock to prevent simultaneous updates offset */
 	pthread_rwlock_t use_lock;         /* lock to prevent struct deallocation */
-#if defined(IL_NOTIFICATIONS)
 	char     *dest;                    /* host:port destination */
-#endif
 };
 
 
@@ -177,11 +175,9 @@ struct server_msg {
 	struct event_store     *es;             /* cache for corresponding event store */
 	int                     generation;     /* event store genereation */
 	long                    receipt_to;     /* receiver (long local-logger id - LLLID) of delivery confirmation (for priority messages) */
-#if defined(IL_NOTIFICATIONS)
 	char                   *dest_name;
 	int                     dest_port;
 	char                   *dest;
-#endif
 	time_t                  expires;        /* time (in seconds from epoch) the message expires */
 };
 
@@ -194,20 +190,16 @@ struct event_queue {
 	int                     timeout;        /* queue timeout */
 	struct event_queue_msg *tail;           /* last message in the queue */
 	struct event_queue_msg *head;           /* first message in the queue */
-#if defined(INTERLOGD_EMS)
 	struct event_queue_msg *tail_ems;       /* last priority message in the queue (or NULL) */
 	struct event_queue_msg *mark_this;      /* mark message for removal */
 	struct event_queue_msg *mark_prev;      /* predecessor of the marked message */
-#endif
 	pthread_t               thread_id;      /* id of associated thread */
 	pthread_rwlock_t        update_lock;    /* mutex for queue updates */
 	pthread_mutex_t         cond_lock;      /* mutex for condition variable */
 	pthread_cond_t          ready_cond;     /* condition variable for message arrival */
-#if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
 	int                     flushing;
 	int                     flush_result;   /* result of flush operation */
 	pthread_cond_t          flush_cond;     /* condition variable for flush operation */
-#endif
 	/* statistics */
 	int                     times_empty;    /* number of times the queue was emptied */
 	int                     max_len;        /* max queue length */
