@@ -487,6 +487,8 @@ for my $ext (keys %deps_aux) {
 
 %obsoletes = (
 	'lb.yaim' => [ qq/glite-yaim-lb/ ],
+	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
+	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
 );
 
 my @t = qw/lb.client-java jobid.api-java lb.types/;
