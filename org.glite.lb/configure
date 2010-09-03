@@ -94,8 +94,8 @@ my %topbuild;
 
 my %lbmodules = (
 	'lb' => [ qw/client client-java common doc logger logger-msg server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
-	'security' => [qw/gss gsoap-plugin proxyrenewal/],
-	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface/],
+	'security' => [qw/proxyrenewal/],
+	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface gss gsoap-plugin/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	);
@@ -341,8 +341,8 @@ BEGIN{
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B/ ],
-	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
-	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
+	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
+	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
 	'security.proxyrenewal' =>  [ qw/voms globus:B myproxy/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
@@ -380,7 +380,7 @@ for my $jar (keys %need_jars) {
 		lb.types:B lb.common
 		lbjp-common.trio
 		jobid.api-cpp:B jobid.api-c
-		security.gss
+		lbjp-common.gss
 	/ ],
 	'lb.client-java' => [ qw/
 		lb.types:B
@@ -389,7 +389,7 @@ for my $jar (keys %need_jars) {
 	/ ],
 	'lb.common' => [ qw/
 		jobid.api-cpp:B jobid.api-c
-		lb.types:B lbjp-common.trio security.gss
+		lb.types:B lbjp-common.trio lbjp-common.gss
 	/ ],
 	'lb.doc' => [ qw/lb.types:B/ ],
 	'lb.logger' => [ qw/
@@ -397,7 +397,7 @@ for my $jar (keys %need_jars) {
 		lbjp-common.log
 		jobid.api-c
 		lb.common
-		security.gss
+		lbjp-common.gss
 	/ ],
 	'lb.logger-msg' => [ qw/
 		lb.logger
@@ -406,21 +406,21 @@ for my $jar (keys %need_jars) {
 		lb.ws-interface lb.types:B lb.common lb.state-machine
 		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir lbjp-common.log
 		jobid.api-c
-		security.gsoap-plugin security.gss
+		lbjp-common.gsoap-plugin lbjp-common.gss
 	/ ],
-	'lb.state-machine' => [ qw/lb.types:B lb.common lbjp-common.jp-interface security.gss/ ],
+	'lb.state-machine' => [ qw/lb.types:B lb.common lbjp-common.jp-interface lbjp-common.gss/ ],
 	'lb.utils' => [ qw/
 		lbjp-common.jp-interface
 		jobid.api-c
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine
 	/ ],
-	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
+	'lb.ws-test' => [ qw/lbjp-common.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/
 		jobid.api-c lbjp-common.trio lbjp-common.db lb.common lb.client
-		security.gss lbjp-common.log
+		lbjp-common.gss lbjp-common.log
 	/ ],
 	'lb.yaim' => [ qw// ],
 	'lb.glite-LB' => [ qw/
@@ -431,8 +431,8 @@ for my $jar (keys %need_jars) {
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw/lbjp-common.log/ ],
 	'lbjp-common.trio' => [ qw// ],
-	'security.gss' =>  [ qw// ],
-	'security.gsoap-plugin' =>  [ qw/security.gss/ ],
+	'lbjp-common.gss' =>  [ qw// ],
+	'lbjp-common.gsoap-plugin' =>  [ qw/lbjp-common.gss/ ],
 	'security.proxyrenewal' =>  [ qw// ],
 	'jobid.api-c' =>  [ qw// ],
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
@@ -444,20 +444,20 @@ for my $jar (keys %need_jars) {
                 jp.ws-interface
                 lbjp-common.jp-interface lbjp-common.maildir
                 jobid.api-c
-                security.gsoap-plugin
+                lbjp-common.gsoap-plugin
         / ],
 	'jp.doc' => [ qw// ],
 	'jp.index' => [ qw/
                 jp.server-common jp.ws-interface
                 lbjp-common.jp-interface lbjp-common.trio lbjp-common.db lbjp-common.server-bones
-                security.gsoap-plugin
+                lbjp-common.gsoap-plugin
         / ],
 	'jp.primary' => [ qw/
                 jobid.api-c
                 jp.server-common jp.ws-interface
                 lb.state-machine
                 lbjp-common.jp-interface lbjp-common.trio lbjp-common.db lbjp-common.server-bones
-                security.gsoap-plugin
+                lbjp-common.gsoap-plugin
         / ],
 	'jp.server-common' => [ qw/ 
                 lbjp-common.jp-interface lbjp-common.db
@@ -505,7 +505,7 @@ sub mkinc
 	undef %aux;
 	my @m=qw/
 lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
-security.gss security.gsoap-plugin
+lbjp-common.gss lbjp-common.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
