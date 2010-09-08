@@ -26,6 +26,7 @@ limitations under the License.
 #include <errno.h>
 #include <time.h>
 #include <math.h>
+#include <search.h>
 
 #include "glite/lb/events.h"
 #include "glite/lb/jobstat.h"
