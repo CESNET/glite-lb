@@ -338,12 +338,14 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
 
 int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
 {
-        char *pomA = NULL, *pomB = NULL;
+        char *pomA = NULL, *pomB = NULL, *lbstat;
         int pomL = 0;
         char    *chid,*chcj,*chsbt;
 
         chid = edg_wlc_JobIdUnparse(stat.jobId);
 
+	TR("Status", "%s", (lbstat = edg_wll_StatToString(stat.state)), NULL);
+	free(lbstat);
         TR("Owner","%s",stat.owner, NULL);
 	chcj = edg_wlc_JobIdUnparse(stat.ft_compute_job);
 	TRL("Compute job", "%s", chcj, NULL);
