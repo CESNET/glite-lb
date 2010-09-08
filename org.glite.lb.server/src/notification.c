@@ -671,13 +671,6 @@ static int update_notif(
 	}
 	if ( dest )
 	{
-		host = strrchr(dest, ':');
-		port = atoi(host+1);
-		if ( !(host = strndup(dest, host-dest)) )
-		{
-			edg_wll_SetError(ctx, errno, "updating notification records");
-			goto cleanup;
-		}
 		trio_asprintf(&aux, "%s destination='%|Ss'", stmt, dest);
 		free(stmt);
 		stmt = aux;
@@ -719,7 +712,7 @@ static int update_notif(
 		 */
 	}
 
-	if ( host || valid) {
+	if ( dest || valid) {
 		char	*v = strdup(valid),*v2 = strchr(v+1,'\'');
 		int	expires;
 		
@@ -729,7 +722,7 @@ static int update_notif(
  		printf("edg_wll_NotifChangeIL(ctx, %s, %s, %d)\n",
 				nid_s? nid_s: "nid", host, port);
 */
-		if ( edg_wll_NotifChangeIL(ctx, nid, host, port, expires) ) {
+		if ( edg_wll_NotifChangeIL(ctx, nid, dest, expires) ) {
 			char *errt, *errd;
 
 			edg_wll_Error(ctx, &errt, &errd);

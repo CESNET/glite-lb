@@ -60,8 +60,7 @@ extern char *notif_ilog_file_prefix;
 int
 edg_wll_NotifSend(edg_wll_Context       context,
 	          edg_wll_NotifId       reg_id,
-		  const char           *host,
-                  int                   port,
+		  const char           *dest_url,
 		  const char           *owner,
 		  int			expires,
                   const char           *notif_data);
@@ -82,8 +81,7 @@ edg_wll_NotifSend(edg_wll_Context       context,
 int
 edg_wll_NotifJobStatus(edg_wll_Context	context,
 		       edg_wll_NotifId	reg_id,
-		       const char      *host,
-                       int              port,
+		       const char      *dest_url,
 		       const char      *owner,
                        int              flags,
 		       int		authz_flags,
@@ -101,8 +99,7 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 int 
 edg_wll_NotifChangeIL(edg_wll_Context context,
                                edg_wll_NotifId reg_id,
-                               const char      *host,
-                               int             port,
+                               const char      *dest_url,
 			       int		expires);
 
 /** Cancel registration.

@@ -119,23 +119,12 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 		else if (notif_match_conditions(ctx,oldstat,stat,jobc[4]) &&
 				notif_check_acl(ctx,stat,jobc[3], &authz_flags))
 		{
-			char			   *dest, *aux;
-			int					port;
+			char			   *dest;
 
 			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %s, job %s", jobc[0], ju = edg_wlc_JobIdGetUnique(stat->jobId));
 			free(ju); ju = NULL;
 
-			dest = strdup(jobc[1]);
-			if ( !(aux = strrchr(dest, ':')) )
-			{
-				edg_wll_SetError(ctx, EINVAL, "Can't parse notification destination");
-				free(dest);
-				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
-				goto err;
-			}
-			*aux = 0;
-			aux++;
-			port = atoi(aux);
+			dest = jobc[1];
 			
 			if (   edg_wll_NotifIdSetUnique(&nid, jobc[0]) )
 			{
@@ -145,13 +134,11 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			/* XXX: only temporary hack!!!
 			 */
 			ctx->p_instance = strdup("");
-			if ( edg_wll_NotifJobStatus(ctx, nid, dest, port, jobc[3], atoi(jobc[5]), authz_flags, expires, *stat) )
+			if ( edg_wll_NotifJobStatus(ctx, nid, dest, jobc[3], atoi(jobc[5]), authz_flags, expires, *stat) )
 			{
-				free(dest);
 				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
 				goto err;
 			}
-			free(dest);
 		}
 		
 		for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);

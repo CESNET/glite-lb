@@ -58,8 +58,7 @@ int
 notif_create_ulm(
 	edg_wll_Context	context,
 	edg_wll_NotifId	reg_id,
-	const char	*host,
-	const uint16_t	port,
+	const char	*dest_url,
 	const char	*owner,
 	int		expires,
 	const char	*notif_data,
@@ -68,6 +67,8 @@ notif_create_ulm(
 {
 	int		ret;
 	edg_wll_Event	*event=NULL;
+	char		*host = NULL;
+	uint16_t	port = 0;
 
 	*ulm_data = NULL;
 	*reg_id_s = NULL;
@@ -81,8 +82,24 @@ notif_create_ulm(
 	if (context->p_instance) event->notification.src_instance = strdup(context->p_instance);
 	event->notification.notifId = edg_wll_NotifIdDup(reg_id);
 	if (owner) event->notification.owner = strdup(owner);
-	if (host) event->notification.dest_host = strdup(host);
-	event->notification.dest_port = port;
+	if (dest_url) {
+		if (strstr(dest_url, "//")) {
+		// using complete URL
+			event->notification.dest_url = strdup(dest_url);
+		} else {
+		// using plain host:port
+			host = strrchr(dest_url, ':');
+			port = atoi(host+1);
+			if ( !(host = strndup(dest_url, host-dest_url)) )
+			{
+				edg_wll_SetError(context, ret = errno, "updating notification records");
+				goto out;
+			}
+			event->notification.dest_host = host;
+			event->notification.dest_port = port;
+			host = NULL;
+		}
+	}
 	if (notif_data) event->notification.jobstat = strdup(notif_data);
 
 	event->notification.expires = expires;
@@ -112,8 +129,7 @@ out:
 int
 edg_wll_NotifSend(edg_wll_Context       context,
 	          edg_wll_NotifId       reg_id,
-		  const char           *host,
-                  int                   port,
+		  const char           *dest_url,
 		  const char           *owner,
 		  int			expires,
                   const char           *notif_data)
@@ -127,8 +143,7 @@ edg_wll_NotifSend(edg_wll_Context       context,
 
 	if((ret=notif_create_ulm(context, 
 				 reg_id, 
-				 host, 
-				 port, 
+				 dest_url,
 				 owner, 
 				 expires,
 				 notif_data,
@@ -169,8 +184,7 @@ out:
 int
 edg_wll_NotifJobStatus(edg_wll_Context	context,
 		       edg_wll_NotifId	reg_id,
-		       const char      *host,
-                       int              port,
+		       const char      *dest_url,
 		       const char      *owner,
                        int		flags,
 		       int		authz_flags,
@@ -199,7 +213,7 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		goto out;
 	}
 
-	if ((ret=edg_wll_NotifSend(context, reg_id, host, port, owner, expires, xml_esc_data))) {
+	if ((ret=edg_wll_NotifSend(context, reg_id, dest_url, owner, expires, xml_esc_data))) {
 		char *ed = NULL, *et = NULL;
 
 		if(ret) edg_wll_UpdateError(context, ret, "edg_wll_NotifJobStatus()");
@@ -221,11 +235,10 @@ out:
 int 
 edg_wll_NotifChangeIL(edg_wll_Context context,
                                edg_wll_NotifId reg_id,
-                               const char      *host,
-                               int             port,
+                               const char      *dest_url,
 			       int	       expires)
 {
-	return(edg_wll_NotifSend(context, reg_id, host, port, "", expires, ""));
+	return(edg_wll_NotifSend(context, reg_id, dest_url, "", expires, ""));
 }
 
 
@@ -234,6 +247,6 @@ edg_wll_NotifCancelRegId(edg_wll_Context context,
 			 edg_wll_NotifId reg_id)
 {
 /* XXX: Jan 1 1970 00:00:01 -- quite sure to make it expire immediately */
-	return(edg_wll_NotifSend(context, reg_id, NULL, 0, "", 1, ""));
+	return(edg_wll_NotifSend(context, reg_id, NULL, "", 1, ""));
 }
 
