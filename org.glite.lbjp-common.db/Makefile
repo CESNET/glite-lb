@@ -38,7 +38,7 @@ MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/
 PSQL_CPPFLAGS:=-I${postgresql_prefix}/include -I${postgresql_prefix}/include/postgresql
 
 
-CFLAGS:= \
+CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
@@ -62,7 +62,7 @@ endif
 TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
-LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
@@ -132,7 +132,7 @@ timezone: timezone.lo libglite_lbu_db.la
 compile: libglite_lbu_db.la
 
 check: timezone
-	./timezone
+	LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${log4c_prefix}/${libdir} ./timezone
 
 test_coverage:
 	-mkdir coverage
@@ -175,7 +175,7 @@ install: all
 
 clean:
 	rm -rvf *.o *.lo *.loT .libs lib* *.c *.h *.dox C/ CPP/
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 	rm -rvf db_expire db_test db_test_mysql db_test_psql timezone
 
 db-mysql.o db-mysql.lo: db-mysql.c

@@ -26,7 +26,7 @@ SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
 
-CFLAGS:= \
+CFLAGS:= ${CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
@@ -35,7 +35,7 @@ CFLAGS:= \
 	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
-LDFLAGS:=-L${stagedir}/${libdir}
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir}  ${LDFLAGS} 
@@ -110,8 +110,8 @@ install:
 	done
 
 clean:
-	rm -rfv ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ} *.{lo,o} .libs/
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rfv ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ} *.lo *.o .libs/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} -c $<

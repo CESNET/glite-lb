@@ -17,11 +17,11 @@ version=${module.version}
 VPATH=${top_srcdir}/src:${top_srcdir}/examples
 
 DEBUG:=-g -O0 -Wall
-CFLAGS:= ${DEBUG} \
+CFLAGS:= ${CFLAGS} ${DEBUG} \
 	-I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	-D_GNU_SOURCE 
-LDFLAGS:=-L${stagedir}/${libdir}
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir}
 
 ifdef LB_PROF
 	CFLAGS:= ${CFLAGS} -pg -g
@@ -91,7 +91,7 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* srv_example cnt_example
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} -c $<

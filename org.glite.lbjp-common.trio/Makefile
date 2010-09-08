@@ -21,7 +21,7 @@ CC=gcc
 
 DEBUG:=-g -O0 -Wall
 
-CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION
+CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION
 
 COMPILE:=libtool --mode=compile ${CC}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
@@ -82,7 +82,6 @@ runtest: trio_test
 trio_test: trio_test.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 	${LINKXX} -o $@ trio_test.o ${LTLIB} ${TEST_LIBS}
-	
 
 dist: distsrc distbin
 
@@ -108,7 +107,8 @@ install: all
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -vf trio_test
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 	
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

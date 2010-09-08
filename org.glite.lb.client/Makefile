@@ -93,7 +93,7 @@ COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
 TRIO_LIB:=-lglite_lbu_trio
 
-CFLAGS:=${DEBUG} \
+CFLAGS:=${CFLAGS} ${DEBUG} \
 	-I. \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
@@ -108,7 +108,7 @@ EXT_LIB:=
 TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
-LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
@@ -140,7 +140,7 @@ PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
 
 TOOLS:=${LB_PERF_TOOLS}
-EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c test_changed_jdl.c done_failed_events.c
+EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c stats-duration-fromto.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c test_changed_jdl.c done_failed_events.c
 EXAMPLES:=${EXAMPLES_SRC:.c=}
 
 # TODO: migrate them here from branch_RC31_3
@@ -346,15 +346,14 @@ endif
 	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${PREFIX}/examples/glite-lb-sandbox_transfers.sh
 	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
-	sed "s/%LIBDIR%/${libdir}/" ${top_srcdir}/m4/glite_lb_client.m4 > glite_lb_client.m4
-	${INSTALL} -m 644 glite_lb_client.m4 ${PREFIX}/share/build/m4/
+	${INSTALL} -m 644 ${top_srcdir}/m4/glite_lb.m4 ${PREFIX}/share/build/m4/
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
 	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent  register_sandbox ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 check_version:
 	${CHECK_VERSION} ${stagedir}/include/glite/lb/common_version.h

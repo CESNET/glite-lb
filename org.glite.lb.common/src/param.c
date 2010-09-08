@@ -83,7 +83,7 @@ static int extract_port(edg_wll_ContextParam param,int dflt)
 {
 	char	*p = NULL,*s = mygetenv(param);
 
-        if (s) p = strchr(s,':');
+        if (s) p = strrchr(s,':');
 	return	p ? atoi(p+1) : dflt;
 }
 
@@ -100,7 +100,7 @@ static char *extract_host(edg_wll_ContextParam param,const char *dflt)
 	s = mygetenv(param);
 	if (!s && !dflt) return NULL;
 	s = strdup(s?s:dflt),
-	p = strchr(s,':');
+	p = strrchr(s,':');
 	if (p) *p = 0;
 	return s;
 }

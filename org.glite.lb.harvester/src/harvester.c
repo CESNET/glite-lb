@@ -21,7 +21,6 @@ limitations under the License.
  * Real time monitor.
  */
 
-#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -35,13 +34,14 @@ limitations under the License.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef WITH_OLD_LB
+#if defined(WITH_OLD_LB) || !defined(USE_LOG4C)
 #include <syslog.h>
 #endif
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
+#include <netdb.h>
 #include <glite/security/glite_gss.h>
 #ifdef WITH_LBU_DB
 #include <glite/lbu/trio.h>
@@ -151,8 +151,6 @@ limitations under the License.
 #endif
 #endif
 
-// TODO: ipv6? :-)
-
 typedef struct {
 	edg_wll_NotifId id;  // notification context (after bootstrap/rebind)
 	char *id_str;        // notification id string
@@ -225,7 +223,7 @@ typedef struct {
 
 static const char rcsid[] = "@(#)$Id$";
 
-#ifdef WITH_OLD_LB
+#if defined(WITH_OLD_LB) || !defined(USE_LOG4C)
 static int rtm2syslog[] = {
 	LOG_ERR,
 	LOG_WARNING,
@@ -332,7 +330,7 @@ void lvprintf_func(thread_t *t, const char *description, int level, const char *
 
 	if (level <= WRN && !config.daemonize) fprintf(stderr, RTM_TTY_RED);
 	if (config.daemonize) {
-#ifdef WITH_OLD_LB
+#if defined(WITH_OLD_LB) || !defined(USE_LOG4C)
 		openlog(NULL, LOG_PID | LOG_CONS, LOG_DAEMON);
 		syslog(rtm2syslog[level], "%s", line);
 		closelog();
@@ -1452,7 +1450,7 @@ quit:
 
 int load_notifs_file() {
 	FILE *f;
-	char *results[5];
+	char *results[RTM_FILE_NOTIF_NUM];
 	notif_t *new_notif;
 	int err;
 	char *notifidstr;
@@ -1632,7 +1630,6 @@ void db_free_notifs() {
 
 
 void *notify_thread(void *thread_data) {
-	struct sockaddr_in addr;
 	int i, j, err;
 	time_t now, bootstrap;
 	edg_wll_NotifId notifid;
@@ -1644,7 +1641,9 @@ void *notify_thread(void *thread_data) {
 	thread_t *t = (thread_t *)thread_data;
 	edg_wll_Context ctx = NULL;
 	int flags = 0;
-
+	struct addrinfo *ai = NULL;
+	struct addrinfo hints;
+	char *portstr;
 	const int	one = 1;
 
 	lprintf(t, DBG, "thread started");
@@ -1659,8 +1658,26 @@ void *notify_thread(void *thread_data) {
 	if (config.cert) edg_wll_SetParam(ctx, EDG_WLL_PARAM_X509_CERT, config.cert);
 	if (config.key) edg_wll_SetParam(ctx, EDG_WLL_PARAM_X509_KEY, config.key);
 
-	// socket
-	if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+	// listen
+	memset(&hints, 0, sizeof hints);
+	hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_STREAM;
+	asprintf(&portstr, "%d", listen_port ? (listen_port + t->id) : 0);
+	if (!portstr) {
+		lprintf(t, ERR, "can't convert port number: ENOMEM");
+		goto exit;
+	}
+	err = getaddrinfo(NULL, portstr, &hints, &ai);
+	free(portstr); portstr = NULL;
+	if (err != 0) {
+		lprintf(t, ERR, "getaddrinfo() failed: %s", gai_strerror(err));
+		goto exit;
+	}
+	if (!ai) {
+		lprintf(t, ERR, "no result from getaddrinfo()");
+		goto exit;
+	}
+	if ((sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)) < 0) {
 		lprintf(t, ERR, "can't create socket: %s", strerror(errno));
 		goto exit;
 	}
@@ -1668,11 +1685,7 @@ void *notify_thread(void *thread_data) {
 
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 
-	memset(&addr, 0, sizeof addr);
-	addr.sin_family = AF_INET;
-	if (listen_port) addr.sin_port = htons(listen_port + t->id);
-	addr.sin_addr.s_addr = INADDR_ANY;
-	if (bind(sock, (const struct sockaddr*)&addr, sizeof addr) != 0) {
+	if (bind(sock, ai->ai_addr, ai->ai_addrlen) != 0) {
 		lprintf(t, ERR, "can't bind socket: %s, port = %d", strerror(errno), listen_port ? listen_port + t->id : -1);
 		goto exit;
 	}
@@ -1680,6 +1693,7 @@ void *notify_thread(void *thread_data) {
 		lprintf(t, ERR, "can't listen on socket: %s", strerror(errno));
 		goto exit;
 	}
+	freeaddrinfo(ai); ai = NULL;
 
 #ifdef WITH_LBU_DB
 	if (db_init(t, &t->dbctx) == 0)
@@ -2018,6 +2032,7 @@ cont:
 
 exit:	
 	if (sock != -1) close(sock);
+	if (ai) freeaddrinfo(ai);
 //	for (i = 0; conditions[i]; i++) free(conditions[i]);
 	if (t->nservers && quit != RTM_QUIT_PRESERVE && quit != RTM_QUIT_RELOAD) {
 		for (i = 0; i < t->nservers; i++) {
@@ -2740,7 +2755,7 @@ quit:
 	if (config.pidfile && !config.guard) {
 		if (remove(config.pidfile) == -1) lprintf(NULL, WRN, "can't remove pidfile '%s': %s", config.pidfile, strerror(errno));
 	}
-#ifdef WITH_OLD_LB
+#ifndef WITH_OLD_LB
 	if (config.daemonize) glite_common_log_fini();
 #endif
 

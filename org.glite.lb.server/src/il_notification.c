@@ -123,7 +123,7 @@ edg_wll_NotifSend(edg_wll_Context       context,
 	long			filepos;
 	char		   *ulm_data,
 				   *reg_id_s,
-				   *event_file;
+				   *event_file = NULL;
 
 	if((ret=notif_create_ulm(context, 
 				 reg_id, 
@@ -158,8 +158,9 @@ edg_wll_NotifSend(edg_wll_Context       context,
 	ret = 0;
 
 out:
-	if(ulm_data) free(ulm_data);
-	if(reg_id_s) free(reg_id_s);
+	free(event_file);
+	free(ulm_data);
+	free(reg_id_s);
 	if(ret) edg_wll_UpdateError(context, ret, "edg_wll_NotifSend()");
 	return(ret);
 }

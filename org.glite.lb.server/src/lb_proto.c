@@ -671,10 +671,11 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 	/* GET /[jobId]: Job Status */
 		else if (*requestPTR=='/'
-			&& strncmp(requestPTR, "/RSS", strlen("/RSS")) 
-			&& strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
-			&& *(requestPTR+strlen("/NOTIF")-1) != ':'
-			&& !isspace(*(requestPTR+strlen("/NOTIF")-1))) {
+			&& strncmp(requestPTR, "/RSS:", strlen("/RSS:")) 
+			&& ( strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
+			     || *(requestPTR+strlen("/NOTIF")) != ':'
+			        && !isspace(*(requestPTR+strlen("/NOTIF"))))
+			) {
 			edg_wlc_JobId jobId = NULL;
 			char *pom1,*fullid = NULL;
 			edg_wll_JobStat stat;
@@ -940,7 +941,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			memset(&request,0,sizeof(request));
 			memset(&result,0,sizeof(result));
 
-			if ( !parsePurgeRequest(ctx,messageBody,(int (*)()) edg_wll_StringToStat,&request) ) {
+			if (parsePurgeRequest(ctx,messageBody,(int (*)()) edg_wll_StringToStat,&request))
+				ret = HTTP_BADREQ;
+			else {
 				/* do throttled purge on background if requested */
 				if ((request.flags & EDG_WLL_PURGE_BACKGROUND)) {
 					retval = fork();
@@ -1190,15 +1193,15 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		else if (!strncmp(requestPTR,KEY_STATS_REQUEST,sizeof(KEY_STATS_REQUEST)-1)) {
 			char *function;
 			edg_wll_QueryRec **conditions;
-			edg_wll_JobStatCode major = EDG_WLL_JOB_UNDEF;
+			edg_wll_JobStatCode base = EDG_WLL_JOB_UNDEF;
+			edg_wll_JobStatCode final = EDG_WLL_JOB_UNDEF;
 			time_t from, to;
 			int i, j, minor, res_from, res_to;
-			float rate = 0, duration = 0;
-			
-			
+			float *rates = NULL, *durations = NULL , *dispersions = NULL;
+			char **groups = NULL;
 			
         	        if (parseStatsRequest(ctx, messageBody, &function, &conditions, 
-						&major, &minor, &from, &to))
+						&base, &final, &minor, &from, &to))
 				ret = HTTP_BADREQ;
 			else {
 				int     fatal = 0, err = 0;
@@ -1207,12 +1210,20 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				// navratove chyby nejsou zname, nutno predelat dle aktualni situace
 				if (!strcmp(function,"Rate")) 
 					err = edg_wll_StateRateServer(ctx,
-						conditions[0], major, minor, 
-						&from, &to, &rate, &res_from, &res_to); 
+						conditions[0], base, minor, 
+						&from, &to, &rates, &groups, 
+						&res_from, &res_to); 
 				else if (!strcmp(function,"Duration"))
 					err = edg_wll_StateDurationServer(ctx,
-						conditions[0], major, minor, 
-						&from, &to, &duration, &res_from, &res_to); 
+						conditions[0], base, minor, 
+						&from, &to, &durations, &groups,
+						&res_from, &res_to); 
+				else if (!strcmp(function, "DurationFromTo"))
+					err = edg_wll_StateDurationFromToServer(
+						ctx, conditions[0], base, final,
+                                                minor, &from, &to, &durations,
+                                                &dispersions, &groups, 
+						&res_from, &res_to);
 				
 				switch (err) {
 					case 0: if (html) ret = HTTP_NOTIMPL;
@@ -1229,9 +1240,19 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				}
 				/* glue errors (if eny) to XML responce */ 
 				if (!html && !fatal)
-					if (edg_wll_StatsResultToXML(ctx, from, to, rate, 
-							duration, res_from, res_to, &message))
+					if (edg_wll_StatsResultToXML(ctx, from,
+						to, rates, durations, 
+						dispersions, groups,
+						res_from, res_to, &message))
 						ret = HTTP_INTERNAL;
+				if (rates) free(rates);
+				if (durations) free(durations);
+				if (dispersions) free(dispersions);
+				if (groups){
+					for(i = 0; groups[i]; i++)
+						free(groups[i]);
+					free(groups);
+				}
 			}
 			
 			free(function);

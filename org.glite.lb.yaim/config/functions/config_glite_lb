@@ -11,22 +11,63 @@ function config_glite_lb_setenv(){
     yaimlog ERROR "The home directory of ${GLITE_USER} doesn't exist. Check whether the user ${GLITE_USER} was properly created"
     exit ${YEX_NOSUCHFILE}
   fi
-  yaimgridenv_set GLITE_JP_LOCATION ${GLITE_JP_LOCATION:-}
-  yaimgridenv_set GLITE_WMS_QUERY_TIMEOUT ${GLITE_WMS_QUERY_TIMEOUT:-300}
+  yaimgridenv_set GLITE_WMS_QUERY_TIMEOUT "${GLITE_WMS_QUERY_TIMEOUT}"
   yaimgridenv_set GLITE_HOST_CERT ${GLITE_HOME_DIR:-/home/glite}/.certs/hostcert.pem
   yaimgridenv_set GLITE_HOST_KEY ${GLITE_HOME_DIR:-/home/glite}/.certs/hostkey.pem
-  yaimgridenv_set X509_CERT_DIR /etc/grid-security/certificates
-  yaimgridenv_set X509_VOMS_DIR /etc/grid-security/vomsdir
+  yaimgridenv_set X509_CERT_DIR "${X509_CERT_DIR}"
+  yaimgridenv_set X509_VOMS_DIR "${X509_VOMS_DIR}"
 
   yaimgridenv_set GLITE_LB_EXPORT_ENABLED ${GLITE_LB_EXPORT_ENABLED:-false}
-  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 15d --cancelled 15d --other 60d}"
+  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS}"
   yaimgridenv_set GLITE_LB_EXPORT_JPPS ${GLITE_LB_EXPORT_JPPS:-}
-  yaimgridenv_set GLITE_LB_RTM_ENABLED ${GLITE_LB_RTM_ENABLED:-false}
-  yaimgridenv_set GLITE_LB_RTM_DN "${GLITE_LB_RTM_DN:-/C=UK/O=eScience/OU=Imperial/L=Physics/CN=heppc24.hep.ph.ic.ac.uk/Email=janusz.martyniak@imperial.ac.uk}"
-  yaimgridenv_set GLITE_LB_SUPER_USERS "${GLITE_LB_SUPER_USERS:-}"
-  yaimgridenv_set GLITE_LB_HARVESTER_ENABLED ${GLITE_LB_HARVESTER_ENABLED:-false}
-  yaimgridenv_set GLITE_LB_HARVESTER_MSG_OPTIONS "${GLITE_LB_HARVESTER_MSG_OPTIONS:---wlcg}"
+  yaimgridenv_set GLITE_JP_LOCATION "${GLITE_JP_LOCATION}"
 
+  yaimgridenv_set GLITE_LB_SERVER_OTHER_OPTIONS "${GLITE_LB_SERVER_OTHER_OPTIONS}"
+  yaimgridenv_set GLITE_LB_NOTIF_IL_OTHER_OPTIONS "${GLITE_LB_NOTIF_IL_OTHER_OPTIONS}"
+  yaimgridenv_set GLITE_LB_PROXY_IL_OTHER_OPTIONS "${GLITE_LB_PROXY_IL_OTHER_OPTIONS}"
+
+  #
+  # default L&B mode (proxy/server/both) according to the node list,
+  # admin can specify GLITE_LB_TYPE, the value is overrided as needed
+  #
+  # behaviour:
+  #   LB:       default 'server', no overriding
+  #   WMS:      default 'proxy', override to 'both' if needed
+  #   WMS & LB: default 'both', override to 'both' if needed
+  #
+  use_proxy=0
+  use_server=0
+  case "$NODE_TYPE_LIST" in
+    *WMS*) use_proxy=1 ;;
+  esac
+  case "$NODE_TYPE_LIST" in
+    *LB*) use_server=1 ;;
+  esac
+  if [ "x${GLITE_LB_TYPE}" = "x" ]; then
+    # default
+    if [ $use_server -eq 1 ]; then
+      if [ $use_proxy -eq 1 ]; then
+        GLITE_LB_TYPE=both
+      else
+        GLITE_LB_TYPE=server
+      fi
+    else
+      if [ $use_proxy -eq 1 ]; then
+        GLITE_LB_TYPE=proxy
+      fi
+    fi
+  else
+    # override if needed
+    if [ $use_proxy -eq 1 ]; then
+      case "$GLITE_LB_TYPE" in
+        *proxy*|*both*)
+          ;;
+        *)
+          yaimlog WARNING "Overriding L&B mode from '$GLITE_LB_TYPE' to 'both'"
+          GLITE_LB_TYPE=both
+      esac
+    fi
+  fi
   yaimgridenv_set GLITE_LB_TYPE ${GLITE_LB_TYPE:-server}
 
   cares_prefix=${INSTALL_ROOT:-/opt}/c-ares
@@ -63,7 +104,7 @@ action "ADMIN_ACCESS" {
 $superusers
 }
 
-action "STATUS_FOR_MONITORING" {
+action "READ_ALL" {
 $rtm
 }
 
@@ -121,6 +162,8 @@ function config_glite_lb() {
 	
   HOSTNAME=`hostname -f`
 
+  yaimlog INFO "Configuring nodes [$NODE_TYPE_LIST], using L&B mode: $GLITE_LB_TYPE"
+
   # Redefine GLITE_HOME_DIR to make sure we retrieve the correct HOME directory of user glite
   GLITE_HOME_DIR=`getent passwd ${GLITE_USER} | cut -d: -f6`
   if [ "x${GLITE_HOME_DIR}" = "x" ]; then
@@ -156,6 +199,18 @@ function config_glite_lb() {
     if [ ! $? = 0 ]; then
       echo "[mysqld]" >> /etc/my.cnf
       echo "max_allowed_packet=17M" >> /etc/my.cnf
+    fi
+  fi
+
+  # disable network, restart mysql, if needd
+  grep "skip-networking" /etc/my.cnf > /dev/null
+  if [ ! $? = 0 ]; then
+    mv /etc/my.cnf /etc/my.cnf.orig
+    sed 's/\[mysqld\]/[mysqld]\nskip-networking/' /etc/my.cnf.orig > /etc/my.cnf
+    rm -f /etc/my.cnf.orig
+    ps ax | grep -v grep |grep mysqld_safe > /dev/null 2>&1
+    if [ $? = 0 ] ; then
+      /etc/init.d/mysqld stop
     fi
   fi
 

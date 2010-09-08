@@ -282,7 +282,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 {
 	char 		*unique = edg_wlc_JobIdGetUnique(event->any.jobId);
 	char            *q = NULL, *userid = NULL, *subj = NULL, *owner = NULL;
-	glite_lbu_Statement    stmt = NULL;
+	glite_lbu_Statement    stmt = NULL, stmt_zomb = NULL;
 	int             nar, grey = 0;
 	char		*can_peername = NULL;
 	int             local_job = is_job_local(ctx, event->any.jobId);
@@ -310,7 +310,6 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 	if (nar < 0) goto err;
 	else if (nar == 0) {
 		/* Job not stored yet */
-
 		if (event->any.type == EDG_WLL_EVENT_REGJOB) {
 
 		/* XXX: directness is checked by any.user == peerName. Not perfect but better than event flags. */
@@ -320,6 +319,18 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 				goto err;
 
 			}
+			if ((event->any.priority & EDG_WLL_LOGLFLAG_EXCL) && ctx->exclusive_zombies) {
+				trio_asprintf(&q,"select jobid from zombie_jobs "
+					"where zombie_jobs.jobid='%|Ss'",unique);
+
+				if (edg_wll_ExecSQL(ctx,q,&stmt_zomb) > 0) {
+					edg_wll_SetError(ctx,EEXIST,"Zombie job with given jobid already exists. Rejecting event.");
+					goto err;
+				}
+				if (stmt_zomb) { glite_lbu_FreeStmt(&stmt_zomb); stmt_zomb = NULL; }
+				free (q); q = NULL;
+			}
+
 			/* else OK */
 		}
 		else {
@@ -653,6 +664,7 @@ edg_wll_ErrorCode intJobStat_embryonic(
 	stat->pub.jobtype = EDG_WLL_STAT_SIMPLE;
 	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
 	stat->pub.lastUpdateTime = e->timestamp;
+	stat->pub.stateEnterTime = e->timestamp;
 
 err:
 	return edg_wll_Error(ctx,NULL,NULL);

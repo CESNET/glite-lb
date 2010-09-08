@@ -239,9 +239,7 @@ stop()
 	stop_daemon "glite-lb-notif-interlogd" $NOTIF_IL_PIDFILE
 
 	stop_daemon "glite-lb-bkserverd" $BK_PIDFILE
-	if test x"$GLITE_LB_EXPORT_ENABLED" = x"true"; then
-		stop_daemon "glite-jp-importer" $jp_importer_pidfile
-	fi
+	stop_daemon "glite-jp-importer" $jp_importer_pidfile
 
 	stop_daemon "glite-lb-interlogd" $PROXY_IL_PIDFILE
 

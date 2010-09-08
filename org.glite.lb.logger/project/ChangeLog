@@ -52,6 +52,15 @@
 2.0.4-2
 - install libraries into $libdir
 
+2.0.6-1
+- Pidfiles support in daemons
+
+2.0.7-1
+- Startup script fixes
+
+2.0.8-1
+- Compatibility with IPv6 compliant clients
+
 2.1.0-1
 - Compliance with the Common Logging Format
 - Fixed startup script (Savannah Bug #29081)
@@ -75,4 +84,17 @@
 2.1.4-1
 - Introduce a separate logging category for notification interlogger
 - Fix problem with dropping unused notoifications
+
+2.1.5-1
+- Perftest script accepts argument -i to save pidfile in /tmp
+
+2.1.6-1
+- Fixed target 'clean' in the Makefile to handle debian builds
+
+2.1.7-1
+- Hostname parsing adjusted to handle IPv6 addresses
+- Default file locations updated in documentation
+
+2.1.8-1
+- Fixed propagation of error messages
 

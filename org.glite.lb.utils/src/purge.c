@@ -244,6 +244,11 @@ int main(int argc,char *argv[])
 		} else {
 			dprintf(("yes.\n"));
 		}
+		if (!jobs) {
+			dprintf(("File empty.\n"));
+			goto main_end;
+		}
+
 		request->jobs = jobs;
 	}
 
@@ -269,7 +274,7 @@ int main(int argc,char *argv[])
 
 	if ( server )
 	{
-		char *p = strchr(server, ':');
+		char *p = strrchr(server, ':');
 		if ( p )
 		{
 			edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER_PORT, atoi(p+1));
@@ -371,7 +376,7 @@ static int read_jobIds(const char *file, char ***jobs_out)
 		}
                 jobs[cnt++] = strdup(buf);
         }
-	jobs[cnt] = NULL;
+	if (jobs) jobs[cnt] = NULL;
 
         fclose(jobIds);
 	*jobs_out = jobs;

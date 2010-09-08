@@ -308,5 +308,5 @@ usage: $0 [-c <current configuration>] module.name
 
 	system("chmod +x \"$TMPDIR/tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\"");
 
-	printf("\n\n---------\nFinished!\n\nExecution script written in:\t$TMPDIR/tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\nNew configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
+	printf("\n\n---------\nDone!\n\nExecution script written in:\t$TMPDIR/tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\nNew configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
 

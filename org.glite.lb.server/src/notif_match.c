@@ -126,7 +126,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			free(ju); ju = NULL;
 
 			dest = strdup(jobc[1]);
-			if ( !(aux = strchr(dest, ':')) )
+			if ( !(aux = strrchr(dest, ':')) )
 			{
 				edg_wll_SetError(ctx, EINVAL, "Can't parse notification destination");
 				free(dest);
@@ -225,9 +225,9 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *old
  */
 static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip, int *authz_flags)
 {
-	edg_wll_Acl	acl = calloc(1,sizeof *acl);
 	int		ret;
 	struct _edg_wll_GssPrincipal_data princ;
+	edg_wll_Acl	acl = NULL;
 
 	memset(&princ, 0, sizeof(princ));
 	*authz_flags = 0;
@@ -240,6 +240,7 @@ static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const
 		return 1;
 
 	if (stat->acl) {
+		acl =  calloc(1,sizeof *acl);
 		ret = edg_wll_DecodeACL(stat->acl,&acl->value);
 		if (ret) {
 			edg_wll_FreeAcl(acl);

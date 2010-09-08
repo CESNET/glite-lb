@@ -36,3 +36,13 @@
 
 1.1.1-1
 - JDL status field for CREAM jobs too (for notifications)
+
+1.1.1-2
+- Module rebuilt
+
+1.1.2-1
+- Fixed target 'clean' in the Makefile to handle debian builds
+
+1.1.2-2
+- Module rebuilt
+

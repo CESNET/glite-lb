@@ -166,7 +166,7 @@ usage: $0 -b <branch> [-c configuration] module.name
 
 	system("chmod +x \"$TMPDIR/etics-tag-$module.$branch.sh\"");
 
-	printf("\n\n---------\nFinished!\n\nExecution script written in:\t$TMPDIR/etics-tag-$module.$branch.sh\n");
+	printf("\n\n---------\nDone!\n\nExecution script written in:\t$TMPDIR/etics-tag-$module.$branch.sh\n");
 	printf("Old configuration stored in:\t$TMPDIR/$currentconfig.ini.$$\n") if (defined $opt_g);
 	printf("New configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
 

@@ -17,3 +17,16 @@
 - Generic lbdir settings in the Makefile
 - Fixed package description and summary
 
+1.0.3-1
+- Fix library versioning
+
+1.0.4-1
+- Fixed libtool version numbering
+
+1.0.5-1
+- Fixed target 'clean' in the Makefile
+
+1.0.6-1
+- Support for IPv6 literal addresses
+- Fixed notification ID parsing
+

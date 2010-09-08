@@ -1,7 +1,7 @@
 -include Makefile.inc
 
 all compile:
-	${ant_prefix}/bin/ant -Dfile.reference.commons-codec.jar=${commons-codec_jar}
+	${ant_prefix}/bin/ant -Dfile.reference.commons-codec.jar=${jakarta-commons-codec_jar}
 
 install:
 	mkdir -p ${PREFIX}/share/java
@@ -10,4 +10,5 @@ install:
 check:
 
 clean:
-	echo TODO
+	${ant_prefix}/bin/ant clean
+	rm -rvf log.xml project/glite-jobid-api-java.spec rpmbuild/ RPMS/ tgz/ debian/

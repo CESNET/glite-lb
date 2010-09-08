@@ -130,9 +130,10 @@ int main(int argc,char **argv)
 			{"state", required_argument, 0, 'S'},
 			{0, 0, 0, 0}};
            	int option_index = 0;
-		char *single, *statelist;
+		char *single, *statelist, *notif_server;
 		edg_wll_JobStatCode single_code;
 		int statno, stdelims, sti;
+		unsigned int notif_server_port;
 
 #define MAX_NEW_CONDS 7
 		conditions = (edg_wll_QueryRec **)calloc(MAX_NEW_CONDS + 1,sizeof(edg_wll_QueryRec *));
@@ -150,6 +151,13 @@ int main(int argc,char **argv)
 				}
 				conditions[i][0].value.j = jid;
 				i++;
+				edg_wll_GetParam(ctx, EDG_WLL_PARAM_NOTIF_SERVER, &notif_server);
+				if (!notif_server) {
+					glite_jobid_getServerParts(jid, &notif_server, &notif_server_port); 
+					edg_wll_SetParam(ctx, EDG_WLL_PARAM_NOTIF_SERVER, notif_server);
+					edg_wll_SetParamInt(ctx, EDG_WLL_PARAM_NOTIF_SERVER_PORT, notif_server_port);
+				}
+				free(notif_server);
 				break;
 			case 'o':
 				if (excl) { usage("new"); return EX_USAGE; } else excl = 1;
@@ -247,6 +255,10 @@ int main(int argc,char **argv)
 					valid);
 		edg_wll_NotifIdFree(id_out);
 		if (attr == EDG_WLL_QUERY_ATTR_JOBID) edg_wlc_JobIdFree(jid);
+		if (edg_wll_Error(ctx,&errt,&errd)) {
+			fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
+			return EX_IOERR;
+		}
 	}
 	else if ( !strcmp(argv[1], "bind") )
 	{
@@ -275,6 +287,10 @@ int main(int argc,char **argv)
 		if ( !edg_wll_NotifBind(ctx, nid, sock, fake_addr, &valid) )
 			printf("valid until: %s (%ld)\n", TimeToStr(valid), valid);
 		edg_wll_NotifIdFree(nid);
+		if (edg_wll_Error(ctx,&errt,&errd)) {
+			fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
+			return EX_IOERR;
+		}
 	}
 	else if ( !strcmp(argv[1], "receive") )
 	{
@@ -359,18 +375,19 @@ int main(int argc,char **argv)
 			if (tout.tv_sec < 0) tout.tv_sec = 0;
 			tout.tv_usec = 0;
 
-			edg_wll_FreeStatus(&stat);
-			stat.state = EDG_WLL_JOB_UNDEF;
-		
 			if ( (err = edg_wll_NotifReceive(ctx, sock, &tout, &stat, &recv_nid)) ) {
 				edg_wll_NotifIdFree(recv_nid);
 				recv_nid = NULL; 
 
 				if (err != ETIMEDOUT) goto receive_err;
 			}
-			else glite_lb_print_stat_fields(fields,&stat);
+			else {
+				glite_lb_print_stat_fields(fields,&stat);
+				edg_wll_FreeStatus(&stat);
+				stat.state = EDG_WLL_JOB_UNDEF;
+			}
 
-			if ((now = time(NULL)) >= client_tout) return 0;
+			if ((now = time(NULL)) >= client_tout) goto cleanup;
 
 			if (refresh && now >= do_refresh) {
 				valid = now + opt_valid;
@@ -517,13 +534,12 @@ cleanup:
 		free(conditions);
 	}
 	
-	edg_wll_NotifCloseFd(ctx);
-	
 	if (edg_wll_Error(ctx,&errt,&errd))
 		fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
 
+	edg_wll_NotifCloseFd(ctx);
 	edg_wll_FreeContext(ctx);
+	edg_wll_poolFree();
 
-	
 	return 0;
 }

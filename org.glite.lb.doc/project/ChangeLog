@@ -18,6 +18,10 @@
 1.0.3-1
 - Updates to the User Guide, Admin Guide and Test Plan Test Suite Documentation
 
+1.0.4-1
+- Admin Guide updates - installation and migration
+- Test Plan updates
+
 1.1.0-1
 - Documentation updated to follow development
 
@@ -39,3 +43,20 @@
 
 1.1.6-1
 - Documented new authorization functions
+
+1.1.7-1
+- More docs for authorization functions
+
+1.1.8-1
+- Minor updates in the Admin Guide and Test Plan
+
+1.1.9-1
+- Fixed target 'clean' in the Makefile to handle debian builds
+- Updated references to L&B versions
+- General grammar and typo fixes
+- A new shared FAQ section prepared
+- Documentation for new TestPlan tests
+
+1.1.9-2
+- Module rebuilt
+

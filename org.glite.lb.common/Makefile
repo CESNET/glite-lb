@@ -39,7 +39,7 @@ TRIO_LIB:=-lglite_lbu_trio
 PERF_HDRS:=lb_perftest.h
 PERF_OBJS:=lb_perftest.o
 
-CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
+CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
 	-I${top_srcdir}/test \
 	-I${stagedir}/include \
@@ -64,7 +64,7 @@ endif
 classadslib := ${classadslib} -lclassad
 
 
-LDFLAGS:=-L${stagedir}/${libdir} -L${stagedir}/lib \
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} -L${stagedir}/lib \
 	${COVERAGE_FLAGS}
 
 EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${classadslib}
@@ -216,12 +216,10 @@ install:
 		${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
 	fi ;
 	${STAGE_PERFTEST} ;
-	mkdir -p ${PREFIX}/share/build/m4
-	${INSTALL} -m 644 ${top_srcdir}/m4/*.m4 ${PREFIX}/share/build/m4
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

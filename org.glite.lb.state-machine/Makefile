@@ -22,7 +22,7 @@ SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
 
-CFLAGS:= \
+CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
 	-I${classads_prefix}/include -I${classads_prefix}/include/classad \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
@@ -88,7 +88,7 @@ install:
 clean:
 	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB}
 	rm -rfv job_attrs.h job_attrs2.h lb-job-attrs2.xsd glite-jpis-config.xml
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 check:
 	@echo No tests yet

@@ -18,3 +18,16 @@
 - Support for CREAM jobs
 - Type comments made complete
 
+1.0.2-1
+- Fix build with binary version of this module
+
+1.1.1-1
+- Fixed handling of target 'clean' in the Makefile
+
+1.1.2-1
+- Fixed target 'clean' in the Makefile to handle debian builds
+- Backward compatibility fixes in event types
+
+1.1.2-2
+- Module rebuilt
+

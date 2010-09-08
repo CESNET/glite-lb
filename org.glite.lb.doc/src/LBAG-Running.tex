@@ -165,7 +165,7 @@ Non-default listening socket have to be specified via \verb'-p' option then.
 
 \LB server only, not supported by proxy.
 
-(This functionality should not be confused with per-job dumps, Sect.~\ref{inst:purge} and \ref{run:purge}.)
+(This functionality should not be confused with per-job dumps, Sect.~\ref{inst:purge} and \ref{run:purge})
 
 Besides setting up \LB server database on a~reliable storage or
 backing it up directly (Sect.~\ref{inst:backup})
@@ -488,8 +488,8 @@ file with \verb'.ctl' suffix.
 
 \begin{sloppypar}
 In case of emergency (\eg corrupted file) the files can be examined
-with \verb'glite-lb-parse_eventsfile' %
-\footnote{Not fully supported tool, installed by \texttt{glite-lb-client} package among examples.}.
+with \verb'glite-lb-parse_eventsfile'.\footnote{Not fully supported tool, installed
+by \texttt{glite-lb-client} package among examples.}
 It is possible to hand-edit the event files in emergency (remove corrupted lines).
 However, glite-lb-interlogd must not be running, and the corresponding .ctl file
 must be removed.
@@ -505,8 +505,8 @@ a~working \LB server) is unlikely.
 On the other hand, if it happens,
 and an event with such a~jobid is logged,
 \eg due to a~third-party job processing software bug,
-glite-lb-interlogd keeps trying to deliver it indefinitely%
-\footnote{Unless event expiration is set, though it is not done for normal events.}.
+glite-lb-interlogd keeps trying to deliver it indefinitely.\footnote{Unless
+event expiration is set, though it is not done for normal events.}
 The unsuccessful attempts are reported via syslog.
 The only solution is manual
 removal of the corresponding files

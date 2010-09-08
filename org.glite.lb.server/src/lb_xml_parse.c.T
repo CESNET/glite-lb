@@ -442,7 +442,7 @@ static void startStatsRequest(void *data, const char *el, const char **attr)
 		case 1: if (!strcasecmp(el,"and")) {
 				XMLCtx->jobQueryRec_begin = XML_GetCurrentByteIndex(XMLCtx->p);
 			}
-			else if ( (strcasecmp(el,"major")) && (strcasecmp(el,"minor")) && 
+			else if ( (strcasecmp(el,"base_state")) && (strcasecmp(el,"final_state")) && (strcasecmp(el,"minor")) && 
 				(strcasecmp(el,"from")) && (strcasecmp(el,"to")) ) unexp()
 			break;
 		case 2: /* fall through */
@@ -919,10 +919,14 @@ static void endStatsRequest(void *data, const char *el UNUSED_VAR)
         edg_wll_XML_ctx *XMLCtx = data;
 
         if (XMLCtx->level == 2) {
-                if (!strcmp(XMLCtx->element,"major")) {
-			XMLCtx->statsMajor = 
+                if (!strcmp(XMLCtx->element,"base_state")) {
+			XMLCtx->statsBaseState = 
 				edg_wll_from_string_to_edg_wll_JobStatCode(XMLCtx);
 		}
+		else if (!strcmp(XMLCtx->element,"final_state")) {
+                        XMLCtx->statsFinalState =
+                                edg_wll_from_string_to_edg_wll_JobStatCode(XMLCtx);
+                }
 		else if (!strcmp(XMLCtx->element,"minor")) {
 			XMLCtx->statsMinor = edg_wll_from_string_to_int(XMLCtx);
 		}
@@ -1284,7 +1288,7 @@ int parseLoadRequest(edg_wll_Context ctx, char *messageBody, edg_wll_LoadRequest
 
 
 /* parse Stats request from client */
-int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_QueryRec ***conditions, edg_wll_JobStatCode *major, int *minor, time_t *from, time_t *to) 
+int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, edg_wll_QueryRec ***conditions, edg_wll_JobStatCode *base_state, edg_wll_JobStatCode *final_state, int *minor, time_t *from, time_t *to) 
 {
 	int	ret;
 	edg_wll_XML_ctx 	XMLCtx;
@@ -1294,7 +1298,8 @@ int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 	/* returns emty variables as default; only some variables will be filled in */
 	/* depending on vaule of XMLCtx.notifFunction */
 	*function = NULL;
-	*major = EDG_WLL_JOB_UNDEF;
+	*base_state = EDG_WLL_JOB_UNDEF;
+	*final_state = EDG_WLL_JOB_UNDEF;
 	*minor = 0;
 	*from = 0;
 	*to = 0;
@@ -1340,7 +1345,8 @@ int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 
 		*function = NULL;
 		*conditions = NULL;
-		*major = EDG_WLL_JOB_UNDEF;
+		*base_state = EDG_WLL_JOB_UNDEF;
+		*final_state = EDG_WLL_JOB_UNDEF;
 		*minor = 0;
 		*from = 0;
 		*to = 0;
@@ -1348,7 +1354,8 @@ int parseStatsRequest(edg_wll_Context ctx, char *messageBody, char **function, e
 	else {
 		*function = XMLCtx.statsFunction;
 		*conditions = XMLCtx.statsConditions;
-		*major = XMLCtx.statsMajor;
+		*base_state = XMLCtx.statsBaseState;
+		*final_state = XMLCtx.statsFinalState;
 		*minor = XMLCtx.statsMinor;
 		*from = XMLCtx.statsFrom;
 		*to = XMLCtx.statsTo;
@@ -2066,22 +2073,36 @@ int edg_wll_StatsResultToXML(
                 edg_wll_Context ctx,
 		time_t from,
 		time_t to,
-		float rate,
-		float duration,
+		float *rates,
+		float *durations,
+		float *dispersions,
+		char  **groups,
 		int res_from,
 		int res_to,
                 char **message)
 {
         char *pomA, *pomB;
-
+	int i;
 
 	pomA = strdup("");
 	edg_wll_add_time_t_to_XMLBody(&pomA, from, "from", -1);
 	edg_wll_add_time_t_to_XMLBody(&pomA, to, "to", -1);
-	edg_wll_add_float_to_XMLBody(&pomA, rate, "rate", 0);
-	edg_wll_add_float_to_XMLBody(&pomA, duration, "duration", 0);
 	edg_wll_add_int_to_XMLBody(&pomA, res_from, "res_from", -1);
-	edg_wll_add_int_to_XMLBody(&pomA, res_to, "res_to", -1);
+        edg_wll_add_int_to_XMLBody(&pomA, res_to, "res_to", -1);
+
+	if (groups) for (i = 0; groups[i]; i++){
+		asprintf(&pomB, "%s\t\t<stat>\n", pomA);
+		pomA = pomB;
+		edg_wll_add_string_to_XMLBody(&pomA, groups[i], "group", NULL);
+		if (rates)
+			edg_wll_add_float_to_XMLBody(&pomA, rates[i], "rate", -1.0f);
+		if (durations)
+			edg_wll_add_float_to_XMLBody(&pomA, durations[i], "duration", -1.0f);
+		if (dispersions)
+			edg_wll_add_float_to_XMLBody(&pomA, dispersions[i], "dispersion", -1.0f);
+		asprintf(&pomB, "%s\t\t</stat>\n", pomA);
+		pomA = pomB;
+	}
 
 	if (ctx->errDesc || ctx->errCode)
 		trio_asprintf(&pomB,"%s code=\"%d\" desc=\"%|Xs\">\r\n%s%s",
@@ -2089,7 +2110,7 @@ int edg_wll_StatsResultToXML(
 	else
 		trio_asprintf(&pomB,"%s>\r\n%s%s", STATS_RESULT_BEGIN, pomA, STATS_RESULT_END);
 	free(pomA);
-
+printf("XXX %s XXX\n", pomB);
         *message = pomB;
         return 0;
 }

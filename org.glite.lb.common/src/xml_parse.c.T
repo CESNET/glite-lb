@@ -724,13 +724,29 @@ static void startStatsResult(void *data, const char *el, const char **attr)
                                 else if (!strcmp(attr[i],"desc"))
                                         XMLCtx->errDesc = strdup(attr[i+1]);
                                 else { unexpError() }
-                        }       
+                        }      
+			XMLCtx->statsGroup = (char**)malloc(1*sizeof(char*));
+			XMLCtx->statsGroup[0] = NULL;
+			XMLCtx->position = -1;
+	
                         break;          
-                case 1: if (strcasecmp(el,"from") && strcasecmp(el,"to") &&
-				strcasecmp(el,"rate") && strcasecmp(el,"duration") &&
-				strcasecmp(el,"res_from") && strcasecmp(el,"res_to")) 
-					unexpWarning()
-                        break;  
+		case 1: if (strcasecmp(el,"from") && strcasecmp(el,"to") &&
+			strcasecmp(el,"res_from") && strcasecmp(el,"res_to") &&
+			strcasecmp(el, "stat"))
+				unexpWarning()
+			if (strcasecmp(el, "stat") == 0){
+				XMLCtx->position++;
+				XMLCtx->statsGroup = (char**)realloc(XMLCtx->statsGroup, (XMLCtx->position+2)*sizeof(char*));
+                                XMLCtx->statsGroup[XMLCtx->position+1] = NULL;
+                                XMLCtx->statsRate = (float*)realloc(XMLCtx->statsRate, (XMLCtx->position+1)*sizeof(float));
+                                XMLCtx->statsDuration = (float*)realloc(XMLCtx->statsDuration, (XMLCtx->position+1)*sizeof(float));
+                                XMLCtx->statsDispersion = (float*)realloc(XMLCtx->statsDispersion, (XMLCtx->position+1)*sizeof(float));
+			}
+			break;
+		case 2: if (strcasecmp(el,"rate") && strcasecmp(el,"duration") 
+			&& strcasecmp(el,"dispersion") && strcasecmp(el,"group"))
+				unexpWarning()
+			break;
                 default: unexpWarning()
                          break;
         }       
@@ -1317,14 +1333,24 @@ static void endStatsResult(void *data, const char *el UNUSED_VAR)
                         XMLCtx->statsFrom = edg_wll_from_string_to_time_t(XMLCtx);
                 else if (!strcmp(XMLCtx->element,"to"))
                         XMLCtx->statsTo = edg_wll_from_string_to_time_t(XMLCtx);
-                else if (!strcmp(XMLCtx->element,"rate"))
-                        XMLCtx->statsRate = edg_wll_from_string_to_float(XMLCtx);
-                else if (!strcmp(XMLCtx->element,"duration"))
-                        XMLCtx->statsDuration = edg_wll_from_string_to_float(XMLCtx);
                 else if (!strcmp(XMLCtx->element,"res_from"))
                         XMLCtx->statsResFrom = edg_wll_from_string_to_int(XMLCtx);
                 else if (!strcmp(XMLCtx->element,"res_to"))
                         XMLCtx->statsResTo = edg_wll_from_string_to_int(XMLCtx);
+	}
+	else if (XMLCtx->level == 3){
+		if (!strcmp(XMLCtx->element,"rate"))
+                        XMLCtx->statsRate[XMLCtx->position] = 
+				edg_wll_from_string_to_float(XMLCtx);
+                else if (!strcmp(XMLCtx->element,"duration"))
+                        XMLCtx->statsDuration[XMLCtx->position] = 
+				edg_wll_from_string_to_float(XMLCtx);
+                else if (!strcmp(XMLCtx->element,"dispersion"))
+                        XMLCtx->statsDispersion[XMLCtx->position] = 
+				edg_wll_from_string_to_float(XMLCtx);
+                else if (!strcmp(XMLCtx->element,"group"))
+                        XMLCtx->statsGroup[XMLCtx->position] = 
+				edg_wll_from_string_to_string(XMLCtx);
 	}
 
 	edg_wll_freeBuf(XMLCtx);
@@ -1982,6 +2008,9 @@ edg_wll_ErrorCode edg_wll_ParsePurgeResult(edg_wll_Context ctx, char *messageBod
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
 
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
+
 	errno = 0;
 	edg_wll_ResetError(ctx);
 	edg_wll_initXMLCtx(&XMLCtx);
@@ -2052,6 +2081,9 @@ edg_wll_ErrorCode edg_wll_ParseDumpResult(edg_wll_Context ctx, char *messageBody
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
 
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
+
 	errno = 0;
 	edg_wll_ResetError(ctx);
 	edg_wll_initXMLCtx(&XMLCtx);
@@ -2113,6 +2145,9 @@ edg_wll_ErrorCode edg_wll_ParseLoadResult(edg_wll_Context ctx, char *messageBody
 	edg_wll_XML_ctx XMLCtx;
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
+
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
 
 	errno = 0;
 	edg_wll_ResetError(ctx);
@@ -2250,6 +2285,9 @@ edg_wll_ErrorCode edg_wll_ParseNotifResult(edg_wll_Context ctx, char *messageBod
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
 
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
+
 	errno = 0;
 	edg_wll_ResetError(ctx);
 	edg_wll_initXMLCtx(&XMLCtx);
@@ -2311,6 +2349,9 @@ edg_wll_ErrorCode edg_wll_ParseQuerySequenceCodeResult(edg_wll_Context ctx, char
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
 
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
+
 	errno = 0;
 	edg_wll_ResetError(ctx);
 	edg_wll_initXMLCtx(&XMLCtx);
@@ -2367,11 +2408,46 @@ edg_wll_ErrorCode edg_wll_ParseQuerySequenceCodeResult(edg_wll_Context ctx, char
 
 
 /* parse statistics result from client */
+
+/* this is backward-compatible version, edg_wll_ParseStatsResultFull is prefered*/
 edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float *rate, float *duration, int *res_from, int *res_to)
+{
+	float *rates, *durations, *dispersions;
+	char **groups;
+	edg_wll_ErrorCode ret;
+	int i;
+
+	ret = edg_wll_ParseStatsResultFull(ctx, messageBody, from, to, &rates, &durations, &dispersions, &groups, res_from, res_to);
+
+	if (groups && groups[0]){
+		if (rates) {
+			*rate = rates[0];
+			free(rates);
+		}
+		if (durations) {
+			*duration = durations[0];
+			free(durations);
+		}
+		if (dispersions)
+			free(dispersions);
+		for(i = 0; groups[i]; i++)  
+			free(groups[i]);
+	}
+	if (groups)
+		free(groups);
+
+	return ret;
+}
+
+edg_wll_ErrorCode edg_wll_ParseStatsResultFull(edg_wll_Context ctx, char *messageBody, time_t *from, time_t *to, float **rate, float **duration, float **dispersion, char ***group, int *res_from, int *res_to)
 {
 	edg_wll_XML_ctx XMLCtx;
 	edg_wll_ErrorCode errorCode;
 	XML_Char *encoding = "ISO-8859-1";
+	int i;
+
+	if (!messageBody)
+		return edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, "Parse error: empty response");
 
 	errno = 0;
 	edg_wll_ResetError(ctx);
@@ -2401,15 +2477,30 @@ edg_wll_ErrorCode edg_wll_ParseStatsResult(edg_wll_Context ctx, char *messageBod
 	if ((errorCode = edg_wll_Error(ctx,NULL,NULL))) {
 		*from = -1;
 		*to = -1;
-		*rate = 0;
-		*duration = 0;
+		*rate = NULL;
+		*duration = NULL;
+		*dispersion = NULL;
+		*group = NULL;
 		*res_from = -1;
 		*res_to = -1;
 	} else {
 		*from = XMLCtx.statsFrom;
 		*to = XMLCtx.statsTo;
-		*rate = XMLCtx.statsRate;
-		*duration = XMLCtx.statsDuration;
+		*rate = NULL;
+                *duration = NULL;
+                *dispersion = NULL;
+		*group = NULL;
+		for (i = 0; XMLCtx.statsGroup[i]; i++){
+			*rate = (float*)realloc(*rate, (i+1)*sizeof(float));
+                        (*rate)[i] = XMLCtx.statsRate[i];
+                        *duration = (float*)realloc(*duration, (i+1)*sizeof(float));
+                        (*duration)[i] = XMLCtx.statsDuration[i];
+                        *dispersion = (float*)realloc(*dispersion, (i+1)*sizeof(float));
+                        (*dispersion)[i] = XMLCtx.statsDispersion[i];
+                        *group = (char**)realloc(*group, (i+2)*sizeof(char*));
+                        (*group)[i] = strdup(XMLCtx.statsGroup[i]);
+                        (*group)[i+1] = NULL;
+		}
 		*res_from = XMLCtx.statsResFrom;
 		*res_to = XMLCtx.statsResTo;
 	}
@@ -2506,7 +2597,9 @@ int edg_wll_JobQueryRecToXML(
 	                                        edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "location", NULL);
 	                                        break;
 	                                case EDG_WLL_QUERY_ATTR_DESTINATION:
-	                                        edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "destination", NULL);
+	                                        conditions[row][i].value.c ?
+							edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "destination", NULL) :
+							edg_wll_add_string_to_XMLBody(&pomValue, "", "destination", NULL);
 	                                        break;
 	                                case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
 	                                        edg_wll_add_string_to_XMLBody(&pomValue, conditions[row][i].value.c, "networkserver", NULL);
@@ -2975,14 +3068,28 @@ int edg_wll_QuerySequenceCodeToXML(
 
 /* construct Message-Body of Request-Line for edg_wll_StateRate function */
 int edg_wll_StatsRequestToXML(
+                edg_wll_Context         ctx,
+                const char              *function,
+                const edg_wll_QueryRec  *cond,
+                edg_wll_JobStatCode     major,
+                int                     minor,
+                time_t                  *from,
+                time_t                  *to,
+                char 			**message)
+{
+	return edg_wll_StatsDurationFTRequestToXML(ctx, function, cond, major, EDG_WLL_JOB_UNDEF, minor, from, to, message);
+}
+
+int edg_wll_StatsDurationFTRequestToXML(
                 edg_wll_Context 	ctx, 
 		const char		*function,
 		const edg_wll_QueryRec 	*cond,
-		edg_wll_JobStatCode     major,
+		edg_wll_JobStatCode     base_state,
+		edg_wll_JobStatCode     final_state,
 		int			minor,
 		time_t			*from,
 		time_t			*to,
-                char **message)
+                char 			**message)
 {
 	char *pomA=NULL, *pomB=NULL, *pomC=NULL;
 	const edg_wll_QueryRec **conditions;
@@ -2996,7 +3103,8 @@ int edg_wll_StatsRequestToXML(
 
 	pomA = strdup("");
 	
-	edg_wll_add_edg_wll_JobStatCode_to_XMLBody(&pomA, major, "major", EDG_WLL_JOB_UNDEF);
+	edg_wll_add_edg_wll_JobStatCode_to_XMLBody(&pomA, base_state, "base_state", EDG_WLL_JOB_UNDEF);
+	edg_wll_add_edg_wll_JobStatCode_to_XMLBody(&pomA, final_state, "final_state", EDG_WLL_JOB_UNDEF);
 	edg_wll_add_int_to_XMLBody(&pomA, minor, "minor", -1);
 	edg_wll_add_time_t_to_XMLBody(&pomA, *from, "from", 0); 
 	edg_wll_add_time_t_to_XMLBody(&pomA, *to, "to", 0); 

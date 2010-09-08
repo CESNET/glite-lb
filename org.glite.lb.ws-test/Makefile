@@ -26,7 +26,7 @@ default all: ${CEXAMPLES}
 VPATH=${top_srcdir}/examples
 CC=gcc
 DEBUG:=-g -O0 -Wall
-CFLAGS=-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
+CFLAGS:=${CFLAGS} -I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${globus_prefix}/include/${nothrflavour} \
 	${DEBUG}
@@ -69,9 +69,8 @@ install:
 	done
 
 clean:
-	rm -rf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES}
-	
-
+	rm -rvf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES}
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
 	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -I${stagedir}/interface -o $@ ${stagedir}/interface/LB.wsdl

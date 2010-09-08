@@ -49,19 +49,47 @@ static int set_server_name_and_port(edg_wll_Context, const edg_wll_QueryRec **);
  */
 
 int edg_wll_StateRate(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     major,
+        int                     minor,
+        time_t  *from,
+        time_t  *to,
+        float   *rate,
+        int     *res_from,
+        int     *res_to)
+
+{
+	float *rates = NULL;
+	char **groups = NULL;
+	int i;
+
+	edg_wll_StateRates(ctx, group, major, minor, from, to, &rates, &groups, res_from, res_to);
+	if (groups && groups[0]){
+		*rate = rates[0];
+		free(rates);
+		for (i = 0; groups[i]; i++)
+			free(groups[i]);
+		free(groups);
+	}
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int edg_wll_StateRates(
 	edg_wll_Context	ctx,
 	const edg_wll_QueryRec	*group,
 	edg_wll_JobStatCode	major,
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*rate,
+	float	**rates,
+	char	***groups,
 	int	*res_from,
 	int	*res_to)
 
 {	
 	char	*response = NULL, *send_mess = NULL, *message = NULL;
-	float	not_returned;
+	float	*not_returned;
 	
 	
 	edg_wll_ResetError(ctx);
@@ -80,8 +108,8 @@ int edg_wll_StateRate(
 	if (http_check_status(ctx,response))
 		goto err;
 
-  	edg_wll_ParseStatsResult(ctx,message, from, to, rate, 
-			&not_returned, res_from, res_to);
+  	edg_wll_ParseStatsResultFull(ctx,message, from, to, rates, 
+		&not_returned, &not_returned, groups, res_from, res_to);
 
 err:
 	free(response);
@@ -96,18 +124,46 @@ err:
  */
 
 int edg_wll_StateDuration(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     major,
+        int                     minor,
+        time_t  *from,
+        time_t  *to,
+        float   *duration,
+        int     *res_from,
+        int     *res_to)
+{
+	float *durations;
+	char **groups;
+	int i;
+
+	edg_wll_StateDurations(ctx, group, major, minor, from, to, &durations, &groups, res_from, res_to);
+	if (groups && groups[0]){
+                *duration = durations[0];
+                free(durations);
+                for (i = 0; groups[i]; i++)
+                        free(groups[i]);
+                free(groups);
+        }
+
+        return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int edg_wll_StateDurations(
 	edg_wll_Context	ctx,
 	const edg_wll_QueryRec	*group,
 	edg_wll_JobStatCode	major,
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*duration,
+	float	**durations,
+	char	***groups,
 	int	*res_from,
 	int	*res_to)
 {
 	char	*response = NULL, *send_mess = NULL, *message = NULL;
-	float	not_returned;
+	float	*not_returned;
 	
 	
 	edg_wll_ResetError(ctx);
@@ -126,14 +182,98 @@ int edg_wll_StateDuration(
 	if (http_check_status(ctx,response))
 		goto err;
 
-  	edg_wll_ParseStatsResult(ctx,message, from, to, &not_returned, 
-			duration, res_from, res_to);
+  	edg_wll_ParseStatsResultFull(ctx,message, from, to, &not_returned, 
+		durations, &not_returned, groups, res_from, res_to);
 
 err:
 	free(response);
 	free(message);
 
 	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+
+
+/** Compute average time for which jobs moves from one to second specified state.
+ */
+
+int edg_wll_StateDurationFromTo(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     base,
+        edg_wll_JobStatCode     final,
+        int     minor,
+        time_t  *from,
+        time_t  *to,
+        float   *duration,
+        float   *dispersion,
+        int     *res_from,
+        int     *res_to
+)
+{
+	float *durations;
+	float *dispersions;
+	char **groups;
+	int i;
+	
+	edg_wll_StateDurationsFromTo(ctx, group, base, final, minor, from, to, 
+		&durations, &dispersions, &groups, res_from, res_to);
+	if (groups && groups[0]){
+                *duration = durations[0];
+		*dispersion = dispersions[0];
+                free(durations);
+		free(dispersions);
+                for (i = 0; groups[i]; i++)
+                        free(groups[i]);
+                free(groups);
+        }
+
+        return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int edg_wll_StateDurationsFromTo(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     base,
+        edg_wll_JobStatCode     final,
+	int	minor,
+        time_t  *from,
+        time_t  *to,
+        float   **durations,
+	float   **dispersions,
+	char	***groups,
+        int     *res_from,
+        int     *res_to
+)
+{
+        char    *response = NULL, *send_mess = NULL, *message = NULL;
+        float   *not_returned;
+
+
+        edg_wll_ResetError(ctx);
+
+        edg_wll_StatsDurationFTRequestToXML(ctx, "DurationFromTo", group, base, final, minor, from, to, &send_mess);
+
+        if (set_server_name_and_port(ctx, NULL))
+                goto err;
+
+        ctx->p_tmp_timeout = ctx->p_query_timeout;
+
+        if (edg_wll_http_send_recv(ctx, "POST /statsRequest HTTP/1.1",request_headers, send_mess,
+                        &response,NULL,&message))
+                goto err;
+
+        if (http_check_status(ctx,response))
+                goto err;
+
+        edg_wll_ParseStatsResultFull(ctx,message, from, to, &not_returned,
+                        durations, dispersions, groups, res_from, res_to);
+
+err:
+        free(response);
+        free(message);
+
+        return edg_wll_Error(ctx,NULL,NULL);
 }
 
 

@@ -264,6 +264,10 @@ File prefix for events.
 .BI -G\fR,\fP --proxy-purge
 Enable automatic purging of the jobs in terminal state for proxy service (disabled by default, purging cron job installed by YAIM).
 
+.TP
+.BI -E\fR,\fP --exclusive-zombies-off
+Disable checking of purged jobs when registering jobs with the EDG_WLL_LOGLFLAG_EXCL flag set. 
+
 .\".SH USAGE
 .\" Add any additional description here
 

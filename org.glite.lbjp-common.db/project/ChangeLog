@@ -47,3 +47,16 @@
 2.0.2-1
 - Fixed timezone handling
 
+2.0.3-1
+- More timezone handling fixes and optimization
+- Unit test
+
+2.0.3-2
+- Module rebuilt
+
+2.0.4-1
+- Fixed target 'clean' in the Makefile
+
+2.0.4-2
+- Module rebuilt
+

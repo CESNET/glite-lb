@@ -125,6 +125,7 @@ int edg_wll_NotifNewServer(
 			goto cleanup;
 		}
 		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) || 
+		     !strncmp(address_override, "[::]", aux-address_override) ||
 		     !strncmp(address_override, "::", aux-address_override) )
 			trio_asprintf(&addr_s, "%s:%s", ctx->connections->serverConnection->peerName, aux+1);
 	}
@@ -248,6 +249,7 @@ int edg_wll_NotifBindServer(
 				goto rollback;
 			}
 			if ( !strncmp(address_override, "0.0.0.0", aux-address_override) ||
+			     !strncmp(address_override, "[::]", aux-address_override) ||
 			     !strncmp(address_override, "::", aux-address_override) )
 				trio_asprintf(&addr_s, "%s:%s", ctx->connections->serverConnection->peerName, aux+1);
 		}
@@ -669,7 +671,7 @@ static int update_notif(
 	}
 	if ( dest )
 	{
-		host = strchr(dest, ':');
+		host = strrchr(dest, ':');
 		port = atoi(host+1);
 		if ( !(host = strndup(dest, host-dest)) )
 		{

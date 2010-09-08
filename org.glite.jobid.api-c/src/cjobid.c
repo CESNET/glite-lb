@@ -84,7 +84,7 @@ int glite_jobid_recreate(const char* bkserver, int port, const char *unique, gli
         return EINVAL;
 
     out->BShost = strdup(bkserver);
-    portbeg = strchr(out->BShost, ':');
+    portbeg = strrchr(out->BShost, ':');
     if (portbeg) {
 	*portbeg = 0;
         /* try to get port number */
@@ -164,11 +164,14 @@ int glite_jobid_parse(const char *idString, glite_jobid_t *jobId)
 
     pom = strdup(idString + sizeof(GLITE_JOBID_PROTO_PREFIX) - 1);
     pom1 = strchr(pom, '/');
-    pom2 = strchr(pom, ':');
 
     if (!pom1) { free(pom); free(out); return EINVAL; }
+    pom1[0] = '\0';
 
-    if ( pom2 && (pom1 > pom2)) {
+    pom2 = strrchr(pom, ':');
+    if (pom2 && strchr(pom2,']')) pom2 = NULL;
+
+    if ( pom2 ) {
 	pom[pom2-pom]     = '\0';
 	out->BShost  = strdup(pom);
 	pom[pom1-pom]     = '\0';

@@ -227,20 +227,10 @@
 	_optional_
 
 @type Suspend		Job execution (queuing) was suspended.
-	int	status_code	Classification of the attempt to suspend the job (REQ, REFUSE, DONE or ABORT).
-	_code_	REQ		The request was acknowledged.
-	_code_	REFUSE		The request was declined by this component.
-	_code_	DONE		The request was completed by whole system.
-	_code_	ABORT		The request was refused by whole system.
 	string	reason		Reason for the suspend.
 	_optional_
 
 @type Resume		Job execution (queuing) was resumed.
-	int	status_code	Classification of the attempt to resume the job (REQ, REFUSE, DONE or ABORT).
-	_code_	REQ		The request was acknowledged.
-	_code_	REFUSE		The request was declined by this component.
-	_code_	DONE		The request was completed by whole system.
-	_code_	ABORT		The request was refused by whole system.
 	string	reason		Reason for the resume.
 	_optional_
 
@@ -440,6 +430,25 @@
 	_optional_
 	string LRMS_jobid	jobId from the LRMS
 	_optional_
+
+@type CREAMSuspend		Job execution (queuing) was suspended.
+	int	status_code	Classification of the attempt to suspend the job (REQ, REFUSE, DONE or ABORT).
+	_code_	REQ		The request was acknowledged.
+	_code_	REFUSE		The request was declined by this component.
+	_code_	DONE		The request was completed by whole system.
+	_code_	ABORT		The request was refused by whole system.
+	string	reason		Reason for the suspend.
+	_optional_
+
+@type CREAMResume		Job execution (queuing) was resumed.
+	int	status_code	Classification of the attempt to resume the job (REQ, REFUSE, DONE or ABORT).
+	_code_	REQ		The request was acknowledged.
+	_code_	REFUSE		The request was declined by this component.
+	_code_	DONE		The request was completed by whole system.
+	_code_	ABORT		The request was refused by whole system.
+	string	reason		Reason for the resume.
+	_optional_
+
 
 @flesh Transfer
 

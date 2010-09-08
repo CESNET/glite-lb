@@ -42,13 +42,13 @@ else
 endif
 
 DEBUG:=-g -O0
-CFLAGS:=${DEBUG} \
+CFLAGS:=${CFLAGS} ${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
 
-LDFLAGS:=-L${stagedir}/${libdir} \
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} \
 	${COVERAGE_FLAGS} 
 
 COMPILE:=libtool --mode=compile ${CC} 
@@ -228,5 +228,5 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 	${CXX} ${CFLAGS} ${TEST_INC} -c $< -o $@
 
 clean:
-	rm -rvf .libs/ *.o *.lo ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ}
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ}
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/

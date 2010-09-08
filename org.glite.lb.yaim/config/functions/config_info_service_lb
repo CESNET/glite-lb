@@ -49,8 +49,8 @@ SERVICE_LC=lbserver
 
 SERVICE_HOST=`hostname -f`
 
-if [ ! -f ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf.template ]; then
-  yaimlog ERROR "The template file for glite-info-service-${SERVICE_LC}.conf.template was not found in ${INFO_SERVICE_CONFIG}."
+if [ ! -f ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf.template ]; then
+  yaimlog ERROR "The template file for glite-info-glue2-${SERVICE_LC}.conf.template was not found in ${INFO_SERVICE_CONFIG}."
   exit 1
 fi
 
@@ -60,10 +60,10 @@ if [ ! -f ${INFO_SERVICE_SCRIPT}/glite-info-service ]; then
 fi
 
 yaimlog DEBUG "Delete a previous version of the glite-info-service-${SERVICE_LC}.conf if it exists"
-rm -rf ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf
+rm -rf ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf
 
-yaimlog DEBUG "Create the glite-info-service-${SERVICE_LC}.conf file out of the template file"
-cp ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf.template ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf
+yaimlog DEBUG "Create the glite-info-glue2-${SERVICE_LC}.conf file out of the template file"
+cp ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf.template ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf
 
 # Note: the configuration file may need to be altered if non standard values have been used. 
 
@@ -78,8 +78,8 @@ cat << EOF > ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wra
 #!/bin/sh
 export PATH=$PATH:${INFO_SERVICE_SCRIPT}
 export ${SERVICE}_HOST=${SERVICE_HOST}
-${INFO_SERVICE_SCRIPT}/glite-info-service ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
-${INFO_SERVICE_SCRIPT}/glite-info-service-glue2 ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
+${INFO_SERVICE_SCRIPT}/glite-info-service ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf $SITE_NAME
+${INFO_SERVICE_SCRIPT}/glite-info-glue2-simple ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf $SITE_NAME
 EOF
 
 chmod +x ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wrapper 

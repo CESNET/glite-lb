@@ -25,7 +25,7 @@ version=${module.version}
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/project:${jpproject}
 
 DEBUG:=-g -O0 -W -Wno-sign-compare
-CFLAGS:=${DEBUG} -D_GNU_SOURCE -I. -I${top_srcdir}/interface -I${stagedir}/include
+CFLAGS:=${CFLAGS} ${DEBUG} -D_GNU_SOURCE -I. -I${top_srcdir}/interface -I${stagedir}/include
 
 # In order to use libtool versioning correcty, we must have:
 #
@@ -93,7 +93,8 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib*
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -vf type_test type_test.xml
 	rm -f glite jp
 
 %.thr.lo: %.c

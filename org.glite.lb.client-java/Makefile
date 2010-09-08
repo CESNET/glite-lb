@@ -22,7 +22,7 @@ all compile: genevents genws compile-java build-jar examples build-c
 
 compile-java:
 	${JAVAC} \
-		-classpath ${commons-lang_jar}:${stagedir}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath} \
+		-classpath ${jakarta-commons-lang_jar}:${stagedir}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath} \
 		-d build \
 		src/org/glite/lb/*.java \
 		build/gen/*.java \
@@ -43,7 +43,7 @@ build-c:
 	${JAVAH} -classpath build -jni -d build org.glite.lb.ContextIL
 	-mkdir -p build/c
 	-ln -s ../../src_c/Makefile build/c
-	cd build/c && make PREFIX=${PREFIX} JAVA_HOME=${jdk_prefix} topdir=../..
+	cd build/c && $(MAKE) PREFIX=${PREFIX} JAVA_HOME=${jdk_prefix} topdir=../..
 
 examples: build/examples
 
@@ -75,10 +75,11 @@ install:
 	mkdir -p ${PREFIX}/share/java
 	cp build/lb-client-java.jar ${PREFIX}/share/java
 	cp build/examples/lb-client-java-examples.jar ${PREFIX}/share/java
-	cd build/c && make install PREFIX=${PREFIX}
+	cd build/c && $(MAKE) install PREFIX=${PREFIX}
 
 clean:
 	rm -rf build
-	cd src_c && make clean
+	cd src_c && $(MAKE) clean
+	rm -rvf log.xml project/org.glite.lb.client-java.spec rpmbuild/ RPMS/ tgz/ debian/
 
 .PHONY: all compile compile-java build-jar build-c examples genevents genws check install clean

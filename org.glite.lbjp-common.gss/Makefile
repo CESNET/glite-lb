@@ -46,13 +46,13 @@ default: all
 DEBUG:=-g -O0 -W -Wall -Wno-unused-parameter
 # not for globus, gsoap: -Werror
 
-CFLAGS:= ${DEBUG} \
+CFLAGS:= ${CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I. -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION
 
-LDFLAGS:=${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 

@@ -148,7 +148,7 @@ static int				noAuth = 0;
 static int				noIndex = 0;
 static int				strict_locking = 0;
 static int greyjobs = 0;
-static int count_statistics = 0;
+static int count_statistics = 1;
 static int				hardJobsLimit = 0;
 static int				hardEventsLimit = 0;
 static int				hardRespSizeLimit = 0;
@@ -184,6 +184,7 @@ static char *           port;
 static time_t		rss_time = 60*60;
 char *		policy_file = NULL;
 struct _edg_wll_authz_policy	authz_policy = { NULL, 0};
+static int 		exclusive_zombies = 1;
 
 
 
@@ -234,10 +235,11 @@ static struct option opts[] = {
 	{"proxy-purge",	0,	NULL,	'G'},
 	{"rss-time", 	1,	NULL,	'I'},
 	{"policy",	1,	NULL,	'l'},
+	{"exclusive-zombies-off",	0,	NULL,	'E'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:GI:l:"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:GI:l:E"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -296,6 +298,7 @@ static void usage(char *me)
 		"\t-G,--proxy-purge\t enable automatic purge on proxy service (disabled by default)\n"
 		"\t-I,--rss-time\t age (in seconds) of job states published via RSS\n"
 		"\t-l,--policy\tauthorization policy file\n"
+		"\t-E,--exclusive-zombies-off\twith 'exclusive' flag, allow reusing IDs of purged jobs\n"
 
 	,me);
 }
@@ -509,6 +512,8 @@ int main(int argc, char *argv[])
 			  break;
 		case 'l': policy_file = strdup(optarg);
 			  break;
+		case 'E': exclusive_zombies = 0;
+			  break;
 		case '?': usage(name); return 1;
 	}
 
@@ -609,7 +614,7 @@ int main(int argc, char *argv[])
 	if (mode & SERVICE_SERVER) {
 		if ( fake_host )
 		{
-			char	*p = strchr(fake_host,':');
+			char	*p = strrchr(fake_host,':');
 
 			if (p)
 			{
@@ -1277,6 +1282,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	}
 	ctx->strict_locking = strict_locking;
 	ctx->greyjobs = greyjobs;
+	ctx->exclusive_zombies = exclusive_zombies;
 
 	return 0;
 }
@@ -1576,7 +1582,7 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 		return err;
 	}
 
-	if (httpErr == HTTP_BADREQ)
+	if (httpErr == HTTP_BADREQ && body)
 		err = try_accept_ws(conn, timeout, cdata, body, strlen(body) + 1);
 	if (httpErr != HTTP_BADREQ || err)
 		edg_wll_DoneHTTP(ctx, resp, hdrOut, bodyOut);
@@ -1833,13 +1839,6 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 	int	err = NETDB_INTERNAL;
 	struct sockaddr_in	v4;
 
-/* start timer */
-        gettimeofday(&start_time,0);
-
-/* ares init */
-        if ( ares_init(&channel) != ARES_SUCCESS ) return(NETDB_INTERNAL);
-	memset((void *) &ar, 0, sizeof(ar));
-
 	if (addr->sa_family == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&((struct sockaddr_in6 *)addr)->sin6_addr)) {
 		v4.sin_family = AF_INET;
 		v4.sin_port = ((struct sockaddr_in6 *)addr)->sin6_port;
@@ -1847,6 +1846,18 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
 		addr = (struct sockaddr *) &v4;
 		len = sizeof(v4);
 	} 
+
+	if (!numeric && addr->sa_family == AF_INET6) {
+		/* don't bother, c-ares up to version 1.7.3 has fatal bug */
+		return NETDB_INTERNAL;
+	}
+
+/* start timer */
+        gettimeofday(&start_time,0);
+
+/* ares init */
+        if ( ares_init(&channel) != ARES_SUCCESS ) return(NETDB_INTERNAL);
+	memset((void *) &ar, 0, sizeof(ar));
 
 /* query DNS server asynchronously */
 	if (name) flags |= ARES_NI_LOOKUPHOST | ( numeric? ARES_NI_NUMERICHOST : 0);
@@ -1886,7 +1897,14 @@ static int asyn_gethostbyaddr(char **name, char **service, const struct sockaddr
         }
 
 	if (ar.err == NETDB_SUCCESS) {
-		if (name) *name = ar.host;
+		if (name) {
+			if (numeric && addr->sa_family == AF_INET6) {
+				asprintf(name,"[%s]",ar.host);
+				free(ar.host);
+			} else {
+				*name = ar.host;
+			}
+		}
 		if (service) *service = ar.service;
 	}
 	err = ar.err;

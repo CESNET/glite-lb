@@ -75,14 +75,14 @@ endif
 #	DEBUG:=${DEBUG} -DCHECK_GSOAP_VERSION
 #endif
 
-CFLAGS:= ${DEBUG} \
+CFLAGS:= ${CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-DWITH_NONAMESPACES \
 	-I. -I${top_srcdir}/interface \
 	-I${stagedir}/include \
 	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION -DWITH_IPV6
 
-LDFLAGS:=${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}

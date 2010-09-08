@@ -142,7 +142,11 @@ set_error(int code, long minor, char *msg)
     case EDG_WLL_GSS_ERROR_HERRNO:
       snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, hstrerror(errno));
       break;
+
+    default:
+      strncpy(err->msg, msg, IL_ERR_MSG_LEN);
     }
+    break;
 
   default:
 	  strncpy(err->msg, msg, IL_ERR_MSG_LEN);

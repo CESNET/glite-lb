@@ -59,7 +59,7 @@ event_queue_create(char *server_name, struct il_output_plugin *output)
   } else {
 	  s = s + 3;
   }
-  p = strchr(s, ':');
+  p = strrchr(s, ':');
   if(p) {
     *p++ = 0;
     c = ':';

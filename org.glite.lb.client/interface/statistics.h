@@ -46,29 +46,82 @@ int edg_wll_StateRate(
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*rate,
+	float	*rates,
 	int	*res_from,
 	int	*res_to
 );
 
+int edg_wll_StateRates(
+        edg_wll_Context context,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     major,
+        int                     minor,
+        time_t  *from,
+        time_t  *to,
+        float   **rates,
+        char    ***groups,
+        int     *res_from,
+        int     *res_to
+);
 
 /** Compute average time for which jobs stay in the specified state.
  * \see edg_wll_StateRate for description of parameters.
  */
 
 int edg_wll_StateDuration(
+        edg_wll_Context context,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     major,
+        int                     minor,
+        time_t  *from,
+        time_t  *to,
+        float   *duration,
+        int     *res_from,
+        int     *res_to
+);
+
+int edg_wll_StateDurations(
 	edg_wll_Context	context,
 	const edg_wll_QueryRec	*group,
 	edg_wll_JobStatCode	major,
 	int			minor,
 	time_t	*from, 
 	time_t	*to,
-	float	*duration,
+	float	**durations,
+	char 	***groups,
 	int	*res_from,
 	int	*res_to
 );
 
+int edg_wll_StateDurationFromTo(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     base,
+        edg_wll_JobStatCode     final,
+        int     minor,
+        time_t  *from,
+        time_t  *to,
+        float   *durations,
+        float   *dispersions,
+        int     *res_from,
+        int     *res_to
+);
 
+
+int edg_wll_StateDurationsFromTo(
+        edg_wll_Context ctx,
+        const edg_wll_QueryRec  *group,
+        edg_wll_JobStatCode     base,
+        edg_wll_JobStatCode     final,
+        int     minor,
+        time_t  *from,
+        time_t  *to,
+        float   **durations,
+	float   **dispersions,
+	char	***groups,
+        int     *res_from,
+        int     *res_to
+);
 
 #ifdef __cplusplus
 }

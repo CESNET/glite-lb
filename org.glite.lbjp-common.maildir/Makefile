@@ -26,7 +26,7 @@ VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples
 
 DEBUG:=-g -O0 -W -Wall
 
-CFLAGS:= \
+CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
@@ -34,7 +34,7 @@ CFLAGS:= \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
 
-LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
@@ -94,7 +94,7 @@ install: all
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 %.o %.lo: %.c
 	${COMPILE} -c $<

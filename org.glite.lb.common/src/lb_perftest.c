@@ -311,7 +311,7 @@ glite_wll_perftest_init(const char *host,
 	{
 		char *p;
 
-		p = strchr(host, ':');
+		p = strrchr(host, ':');
   		if(p) 
 			*p = 0;
 		dest_host = strdup(host);
