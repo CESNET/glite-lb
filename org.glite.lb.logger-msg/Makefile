@@ -22,10 +22,12 @@ VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
+ACTIVEMQ_CPPFLAGS=`PKG_CONFIG_PATH=${activemq_prefix}/lib/pkgconfig pkg-config --cflags activemq-cpp`
+
 DEBUG:=-g -O0
-CFLAGS:=${DEBUG} \
+CFLAGS:=${CFLAGS} ${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src \
-	-I${activemq_prefix}/include/activemq-cpp-3.1.1 \
+	${ACTIVEMQ_CPPFLAGS} \
 	-I${apr_prefix}/include \
 	-I${aprutil_prefix}/include \
 	-D_GNU_SOURCE \
@@ -106,5 +108,5 @@ install:
 
 
 clean:
-	rm -rvf .libs/ *.o *.lo ${PLUGIN} ${MAN_GZ}
+	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
