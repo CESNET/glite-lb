@@ -191,7 +191,15 @@ static int get_client_address(
 	hints.ai_socktype = SOCK_STREAM;
 	
 	if (address_override) {
-		
+		// complete dest URL ==> pass the URL furhter without listening
+		if (strstr(address_override, "//")) {
+			// close the socket if opened
+			if (ctx->notifSock >= 0) {
+				close(ctx->notifSock);
+				ctx->notifSock = -1;
+			}
+		} else {
+
 		get_name_and_port(address_override, &name, &port);
 		
 		e = getaddrinfo((const char *) name, NULL, &hints, & ai);
@@ -252,7 +260,8 @@ static int get_client_address(
 			if (my_bind(ctx, name, port, &(ctx->notifSock))) 
 				goto err;
 		}
-		
+		} // complete URL
+
 		*address = strdup(address_override);
 	}
 	else {	// address_override == NULL
