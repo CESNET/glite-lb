@@ -22,7 +22,7 @@ VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
-ACTIVEMQ_CPPFLAGS=`PKG_CONFIG_PATH=${activemq_prefix}/lib/pkgconfig pkg-config --cflags activemq-cpp`
+ACTIVEMQ_CPPFLAGS=`PKG_CONFIG_PATH=${activemq_prefix}/${libdir}/pkgconfig pkg-config --cflags activemq-cpp`
 
 DEBUG:=-g -O0
 CFLAGS:=${CFLAGS} ${DEBUG} \
