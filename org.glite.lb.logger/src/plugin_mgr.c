@@ -79,6 +79,9 @@ plugin_get(const char *scheme)
 {
 	struct plugin_list *outp;
 
+	if(scheme == NULL) {
+	  return NULL;
+	}
 	for(outp = plugins; outp != NULL; outp = outp->next) {
 		if((outp->plugin_def.plugin_supports_scheme)(scheme)) {
 			return &outp->plugin_def;
