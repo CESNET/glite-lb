@@ -422,7 +422,10 @@ event_queue_close(struct event_queue *eq)
 {
 	OutputPlugin *output = (OutputPlugin*)eq->plugin_data;
 
-	assert(output != NULL);
+	if(output == NULL) {
+		// nothing to close
+		return 0;
+	}
 
 	try { 
 		output->close();
