@@ -189,7 +189,7 @@ static int stats_double_htable(edg_wll_Stats *stats){
                 	((char *) stats->map) + stats->grpsize * i
                 );
 		search.key = strdup(g->sig);
-		search.data = (void*)g;
+		search.data = (void*)((long)i);
 		if (! hsearch_r(search, ENTER, &found, stats->htab)){
 			glite_common_log(LOG_CATEGORY_LB_SERVER,
                         	LOG_PRIORITY_WARN,
@@ -240,7 +240,7 @@ static int stats_remap(edg_wll_Stats *stats)
 			g = (struct edg_wll_stats_group *) (
                                 ((char *) stats->map) + stats->grpsize * i );
 			search.key = strdup(g->sig);
-			search.data = (void*)g;
+			search.data = (void*)((long)i);
 			if (!hsearch_r(search, ENTER, &found, stats->htab)){
 				/* This should never happen */
 				glite_common_log(LOG_CATEGORY_LB_SERVER,
@@ -267,7 +267,8 @@ static void stats_search_existing_group(edg_wll_Stats *stats, struct edg_wll_sta
                 search.key = sig;
                 hsearch_r(search, FIND, &found, stats->htab);
                 if (found && strcmp(sig, found->key) == 0)
-                        *g = (struct edg_wll_stats_group*)found->data;
+			*g = (struct edg_wll_stats_group *) (
+                                ((char *) stats->map) + stats->grpsize * (long)found->data);
                 else
                         *g = NULL;
         }
@@ -290,6 +291,7 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
 	struct edg_wll_stats_archive    *a;
 	ENTRY 	search, *found;
 
+	//asprintf(&(jobstat->destination), "fake destination %i", rand()%10);
 	sig = str2md5base64(jobstat->destination);
 
 	stats_search_existing_group(stats, g, sig);
@@ -336,7 +338,7 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
 			stats_double_htable(stats);
 		if (stats->htab){
 			search.key = strdup(sig);
-			search.data = (void*)(*g);
+			search.data = (void*)((long)(stats->grpno-1));
 			if (!hsearch_r(search, ENTER, &found, stats->htab)){
 				/* This should never happen */
                                 glite_common_log(LOG_CATEGORY_LB_SERVER,
