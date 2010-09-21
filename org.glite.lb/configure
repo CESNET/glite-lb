@@ -691,7 +691,7 @@ sub mode_etics {
 		$conftag = $subsys eq 'gridsite' ? "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : 
 			"$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; }
 	if ($emi) {
-		$age = "${age}_emi";
+		$age = "${age}emi";
 	} 
 
 	my $file = $output ? $output : "$conf.ini";
