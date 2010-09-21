@@ -117,6 +117,7 @@ my @opts = (
 	'jobid-tag=s' => \$jobid_tag,
 	'help' => \$help,
 	'libdir=s' => \$libdir,
+	'emi' => \$emi,
 );
 
 for (@nodes) {
@@ -501,6 +502,15 @@ for my $ext (keys %deps_aux) {
 	'security' => 'glite-',
 );
 
+%emi_conf_prefix = (
+	'lb' => 'emi-',
+	'jp' => 'emi-',
+	'jobid' => 'emi-',
+	'lbjp-common' => 'emi-',
+	'gridsite' => '',
+	'security' => 'emi-',
+);
+
 my @k = keys %deps_aux;
 @buildroot{@k} = ('build') x ($#k+1);
 
@@ -662,18 +672,28 @@ sub mode_etics {
 
 	my $conf;
 	my $conftag;
+	my $confprefix;
 
 	$dwpath = "path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz\n";
+
+	if ($emi) { $confprefix = $emi_conf_prefix{$subsys} }
+	else { $confprefix = $conf_prefix{$subsys} }
+
 	if ($branch) {
-		$conf = "$conf_prefix{$subsys}${subsys}-${module}_$branch"; 
+		$conf = "$confprefix${subsys}-${module}_$branch"; 
 		$conftag = $branch;
 		# forced low age number
 		$age = $branch eq 'HEAD' ? '0head' : '0dev'; }
 	else {
-		$conf = "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
+		$conf = "$confprefix$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
 
 # XXX: gridsite hack
-		$conftag = $subsys eq 'gridsite' ? "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : $conf; }
+		$conftag = $subsys eq 'gridsite' ? "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : 
+			"$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; }
+	if ($emi) {
+		$age = "${age}-emi";
+	} 
+
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
@@ -910,6 +930,7 @@ General options (defaults in []):
   --version=maj.min.rev-age	specify version here instead of reading version.properties
   --branch=branch		CVS branch/etics name suffix (HEAD, branch_2_1, ...)
   --libdir=libdir		typically [lib,lib64] postfix
+  --emi				generate configurations with emi flavor in mode 'etics'
   
 Mode of operation:
   --mode={checkout|build|etics}	what to do [build]
