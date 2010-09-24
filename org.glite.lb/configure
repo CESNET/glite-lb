@@ -804,7 +804,7 @@ $buildroot
 aprSuffix = 0
 package.RPMSLocation = \${moduleDir}/RPMTMP/RPMS
 package.SRPMSLocation = \${moduleDir}/RPMTMP/SRPMS
-package.preserve.libtool = true
+package.preserve.libtool = false
 $package_description$package_summary$defprops};
 
 	for (@{$obsoletes{"$subsys.$module"}}) {
