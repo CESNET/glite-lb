@@ -98,3 +98,6 @@
 2.1.8-1
 - Fixed propagation of error messages
 
+2.1.9-1
+- Makefile adopts compilation and linking flags from the environment.
+
