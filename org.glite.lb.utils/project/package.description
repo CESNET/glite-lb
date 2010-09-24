@@ -1,1 +1,0 @@
-glite-lb-utils are gLite LB utilities used for dumping (glite-lb-dump) and purging (glite-lb-purge) data from LB server, for loading (glite-lb-load) data to server, for real time monitoring (glite-lb-mon) and post-mortem statistics (glite-lb-statistics).
