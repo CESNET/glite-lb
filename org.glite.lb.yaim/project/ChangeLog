@@ -33,3 +33,7 @@
 - Inteligent post-configuration restarting of MySQL
 - Using glue2 template for BDII
 
+4.2.12-1
+- Defaults moved from config_glite_lb script to glite-lb.pre conf file
+- Environment variables cleanup
+
