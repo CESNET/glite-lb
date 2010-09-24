@@ -33,3 +33,6 @@
 2.0.6-1
 - Hostname parsing adjusted to handle IPv6 addresses
 
+2.0.7-1
+- Makefile adopts compilation and linking flags from the environment.
+
