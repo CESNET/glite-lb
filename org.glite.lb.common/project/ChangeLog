@@ -78,3 +78,6 @@
 7.1.4-1
 - Hostname parsing adjusted to handle IPv6 addresses
 
+7.1.5-1
+- Makefile adopts compilation and linking flags from the environment
+
