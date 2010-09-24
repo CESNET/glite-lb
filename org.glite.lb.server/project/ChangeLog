@@ -185,3 +185,8 @@
 2.1.10-1
 - Fixed precedence in selecting IPv6/IPv4
 
+2.1.11-1
+- Makefile adopts compilation and linking flags from the environment.
+- Memory handling fixes
+- stateEnterTime initialization for collection jobs (fix for bug #71913).
+
