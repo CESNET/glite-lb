@@ -870,7 +870,7 @@ static int edg_wll_RegisterJobMaster(
 	/* send the RegJob event message */
         if ((err = edg_wll_LogEventMaster(ctx,flags,
                 EDG_WLL_EVENT_REGJOB, EDG_WLL_FORMAT_REGJOB,
-		(char *)jdl,ns,parent,type_s,num_subjobs,seed,wms_dn_s)) != 0 ) {
+		(char *)jdl,ns,parent_s,type_s,num_subjobs,seed,wms_dn_s)) != 0 ) {
                 edg_wll_UpdateError(ctx,EINVAL,"edg_wll_RegisterJobMaster(): unable to register job");
                 goto edg_wll_registerjobmaster_end; 
         }    
