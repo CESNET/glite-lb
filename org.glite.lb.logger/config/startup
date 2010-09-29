@@ -50,6 +50,35 @@ start_daemon()
 	su - $GLITE_USER -c "$log4c $cmd" && echo " done" || echo " FAILED"
 }
 
+status_daemon()
+{
+	local name="$1"
+	local pidfile="$2"
+
+	if [ -f "$pidfile" ]; then
+		pid=`cat "$pidfile"`
+		if kill -0 $pid >/dev/null 2>&1; then
+			echo "$name running as $pid"
+		else
+			echo "$name not running (stalled pidfile)"
+			return 1
+		fi
+	else
+		case "$GLITE_LB_TYPE" in
+		proxy)
+			echo "$name not running (disabled)"
+			return 0
+			;;
+		*)
+			echo "$name not running"
+			return 1
+			;;
+		esac
+	fi
+
+	return 0
+}
+
 start()
 {
 	case "$GLITE_LB_TYPE" in
@@ -118,7 +147,7 @@ stop()
 
 	# for L&B <= 2.0
 	LC_ALL=C
-	if netstat -an --inet | grep "^tcp .* 0.0.0.0:${GLITE_LB_LOGGER_PORT:-9002} .*LISTEN" >/dev/null 2>&1 ;then
+	if netstat -an --inet --inet6 | grep "^tcp .* \(::\|0.0.0.0\):${GLITE_LB_LOGGER_PORT:-9002} .*LISTEN" >/dev/null 2>&1 ;then
 		killall -9 glite-lb-logd
 	fi
 	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_IL_SOCK:-/tmp/interlogger.sock}$" >/dev/null 2>&1 ;then
@@ -128,19 +157,12 @@ stop()
 
 status()
 {
-	LC_ALL=C
-	if netstat -an --inet | grep "^tcp .* 0.0.0.0:${GLITE_LB_LOGGER_PORT:-9002} .*LISTEN" >/dev/null 2>&1 ;then
-	echo glite-lb-logd running
-	else
-	echo glite-lb-logd not running
-	return 1
-	fi
-	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_IL_SOCK:-/tmp/interlogger.sock}$" >/dev/null 2>&1 ;then
-	echo glite-lb-interlogd running
-	else
-	echo glite-lb-interlogd not running
-	return 1
-	fi
+	retval=0
+
+	status_daemon "glite-lb-logd" "$LL_PIDFILE" || retval=1
+	status_daemon "glite-lb-interlogd" "$LL_PIDFILE" || retval=1
+
+	return $retval
 }
 
 case x$1 in
