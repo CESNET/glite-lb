@@ -667,7 +667,7 @@ sub mode_etics {
 	for (@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		push @copts,"--with-$_ \${$eext.location}$jar{$_}.jar";
+		push @copts,"--with-$_ \${$eext.location}$jar{$_}";
 	}
 
 	my $conf;
