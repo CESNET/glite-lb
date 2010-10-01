@@ -101,3 +101,6 @@
 2.1.9-1
 - Makefile adopts compilation and linking flags from the environment.
 
+2.1.10-1
+- Use pidfiles for checking status of daemons rather than port scanning.
+
