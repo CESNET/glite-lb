@@ -121,7 +121,7 @@ int edg_wll_NotifNewServer(
 
 		if ( !(aux = strrchr(address_override, ':')) )
 		{
-			edg_wll_SetError(ctx, EINVAL, "Addres overrirde not in format host:port");
+			edg_wll_SetError(ctx, EINVAL, "Addres override not in format host:port");
 			goto cleanup;
 		}
 		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) || 
@@ -245,7 +245,7 @@ int edg_wll_NotifBindServer(
 
 			if ( !(aux = strrchr(address_override, ':')) )
 			{
-				edg_wll_SetError(ctx, EINVAL, "Addres overrirde not in format host:port");
+				edg_wll_SetError(ctx, EINVAL, "Addres override not in format host:port");
 				goto rollback;
 			}
 			if ( !strncmp(address_override, "0.0.0.0", aux-address_override) ||
