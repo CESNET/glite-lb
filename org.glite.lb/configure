@@ -550,6 +550,7 @@ security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
+px.proxyrenewal
 /;
 	@aux{@m} = (1) x ($#m+1);
 
