@@ -200,8 +200,6 @@ static int get_client_address(
 			goto err;
 		}
 
-		free(name);
-	       	
 		e = getnameinfo ((struct sockaddr *) ai->ai_addr, ai->ai_addrlen,
                 	hostnum, sizeof(hostnum), NULL, 0, NI_NUMERICHOST );
     		if (e) {
