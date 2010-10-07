@@ -14,7 +14,7 @@ ifeq (${host_cpu},x86_64)
 endif   
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 version:=${module.version}
 
 CC=gcc
@@ -58,12 +58,13 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	-mkdir -p ${PREFIX}/bin ${PREFIX}/examples ${PREFIX}/share/doc/${package}-${version} ${PREFIX}/share/man/man8
+	-mkdir -p ${PREFIX}/bin ${PREFIX}/examples ${PREFIX}/share/doc/${package}-${version} ${PREFIX}/share/man/man8 ${PREFIX}/etc/init.d
 	${INSTALL} -m 755 harvester ${PREFIX}/bin/glite-lb-harvester
 	${INSTALL} -m 755 harvester-dbg ${PREFIX}/examples/glite-lb-harvester-dbg
-	${INSTALL} -m 755 ../examples/test.sh ${PREFIX}/examples/glite-lb-harvester-test.sh
-	${INSTALL} -m 444 ../doc/README ${PREFIX}/share/doc/${package}-${version}
+	${INSTALL} -m 755 ${top_srcdir}/examples/test.sh ${PREFIX}/examples/glite-lb-harvester-test.sh
+	${INSTALL} -m 444 ${top_srcdir}/doc/README ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 444 glite-lb-harvester.8 ${PREFIX}/share/man/man8
+	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-harvester
 
 clean:
 	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs
