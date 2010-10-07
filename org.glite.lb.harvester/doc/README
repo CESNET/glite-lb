@@ -14,9 +14,15 @@ College in London), later was extended with messaging mechanism for WLCG.
 Requirements
 ============
 
-- lastUpdateTime index on L&B servers
-- harvester identity in super users file on L&B servers
+Configuration on L&B servers:
+- lastUpdateTime index
+- harvester identity in super users file
 
+Or the yaim parameters in site-info.def:
+  GLITE_LB_RTM_ENABLED=true
+  GLITE_LB_RTM_DN="certificate subject"
+
+See also L&B Admin Guide.
 
 Launch (with msg-publish sending messages)
 =========================================
