@@ -37,7 +37,6 @@ int main(int argc,char **argv)
 	float	*vals;
 	char	**groups;
 	int 	i;
-	char 	ce = NULL;
 
 
 	edg_wll_InitContext(&ctx);
