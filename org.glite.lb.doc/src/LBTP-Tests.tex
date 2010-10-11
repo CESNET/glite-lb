@@ -217,7 +217,7 @@ events (e.g. destination computing element) wrt. the values reported in the job 
 \what\ Register jobs with \code{edg\_wll\_RegisterJobProxy}, log events
 using \code{edg\_wll\_LogEventProxy} and check the job states against
 both lbproxy (using \code{edg\_wll\_JobStatusProxy}) and bkserver
-(using \code{edg\_wll\_JobStatus}). Pay special attention to job reaching final 
+(using \code{edg\_wll\_JobStatus}). Also test job collections and registration, including registration of subjobs. Pay special attention to job reaching final 
 job status and to the automatic purge from proxy.
 
 %  - check the timeouts. - ??tam byly nejaky timeouty???
@@ -243,6 +243,7 @@ job status and to the automatic purge from proxy.
 lbproxy and probably with a small delay also at the bkserver. Jobs that reach the final job state
 are really purged from the proxy.
 
+\note\ The test includes artificial delays. Takes approx. 50\,s to finish.
 
 
 \subsection{WS interface}
