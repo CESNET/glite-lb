@@ -88,6 +88,7 @@ There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds vario
 \item Register jobs with \code{edg\_wll\_RegisterJob} 
 \item Log reasonable sequences of events with \code{edg\_wll\_Log*}, both through logger and/or proxy
 \item Check with \code{edg\_wll\_JobLog} that the events got delivered afterwards (approx. 10s).
+\item Also check delivery and processing of events related to collections.
 \end{enumerate}
 
 \how\ \ctblb{lb-test-event-delivery.sh}
@@ -102,15 +103,9 @@ There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds vario
 % - rename the script, tidy it
 % - create some meaningful sequence of events for logEvents
 
-\note\ The test includes artificial delays. Takes approx. 25\,s to finish.
+\note\ The test includes artificial delays. Takes approx. 60\,s to finish.
 
 \result\ All sub tests (API calls) should return 0. The same events that were logged must be returned.
-
-\begin{hints}
-There is approx. 1 min time window in which the local logger files exist.
-They can be grabbed and used for comparing the events later in~\ref{recover}.
-\end{hints}
-
 
 
 \subsubsection{Job registration only}
