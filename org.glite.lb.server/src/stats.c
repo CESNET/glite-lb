@@ -48,6 +48,7 @@ static struct _edg_wll_StatsArchive default_archives[] = {
 	{ 10, 60 },
 	{ 60, 30 },
 	{ 900, 12 },
+	{ 3600, 168 },
 	{ 0, 0 }
 };
 
@@ -67,6 +68,7 @@ static edg_wll_Stats default_stats[] = {
 	{ STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SUBMITTED, EDG_WLL_JOB_RUNNING, 0, default_archives },
 	{ STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SUBMITTED, EDG_WLL_JOB_DONE, EDG_WLL_STAT_OK, default_archives },
         { STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SUBMITTED, EDG_WLL_JOB_DONE, EDG_WLL_STAT_FAILED, default_archives },
+	{ STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SCHEDULED, EDG_WLL_JOB_RUNNING, 0, default_archives },
         { STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_RUNNING, EDG_WLL_JOB_DONE, EDG_WLL_STAT_OK, default_archives },
         { STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_RUNNING, EDG_WLL_JOB_DONE, EDG_WLL_STAT_FAILED, default_archives },
 	{ STATS_UNDEF, }
@@ -754,8 +756,8 @@ int edg_wll_StateRateServer(
 		}
 
 		if ((err = stateRateRequest(ctx, stats, g, from, to, &((*rates)[0]), res_from, res_to))){
-			free(*rates);
-                        free(*groups);
+			free(*rates); *rates = NULL;
+                        free(*groups); *groups = NULL;
 			goto cleanup;
 		}
 		(*groups)[0] = strdup(g->destination); 
@@ -987,9 +989,9 @@ int edg_wll_StateDurationFromToServer(
         	}
 
 		if ((err = stateDurationFromToRequest(ctx, stats, g, from, to, &((*durations)[0]), &((*dispersions)[0]), res_from, res_to))){
-			free(*durations);
-			free(*dispersions);
-			free(*groups);
+			free(*durations); *durations = NULL;
+			free(*dispersions); *dispersions = NULL;
+			free(*groups); *groups = NULL; 
 			goto cleanup;
 		}
 		(*groups)[0] = strdup(g->destination);
