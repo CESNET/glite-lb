@@ -36,6 +36,7 @@ limitations under the License.
 #include "glite/lb/events.h"
 #include "glite/lb/context.h"
 #include "glite/lb/context-int.h"
+#include "glite/lb/ulm_parse.h"
 
 #include "producer.h"
 #include "args.h"
@@ -269,30 +270,35 @@ $indent = "\t";
 	       $event->getTypes) {
 
         my $tu = uc $t;
-	gen $indent."case EDG_WLL_EVENT_$tu :\n";
+	gen $indent."case EDG_WLL_EVENT_${tu}: {\n";
 
 	selectType $event $t;
 	my $argl = "";
+	my $values = "";
+	my $frees = "";
 	for ($event->getFieldsOrdered) {
 	    my $f = selectField $event $_;
 	    my $fn = $f->getName;
-	    my $ft;
+	    my $fdecl = $f->{codes} ? 'char *' : $f->getType;
+	    my $ft = $f->{type};
 
-#	    gen {  $fn  $f->{codes} };
-	    if ($f->{codes}) {
-#                        $ft = "enum edg_wll\_$t" . ucfirst $fn;
-		$ft = "char *";
+	    if ($ft eq 'timeval') {
+gen "\t    char s_${fn}[ULM_DATE_STRING_LENGTH + 1];\n";
+		$values .= "\n\t    ".$f->toString($fn, "s_${fn}");
+		$argl .= ", s_${fn}";
+	    } elsif ($ft eq 'jobid' or $ft eq 'notifid' or $ULMasString{$ft}) {
+gen "\t    char *s_${fn};\n";
+		$values .= "\n\t    ".$f->toString($fn, "s_${fn}");
+		$frees .= "\n\t    free(s_$fn);";
+		$argl .= ", s_${fn}";
 	    } else {
-		$ft = $f->getType;
+		$argl .= ", $fn";
 	    }
-
-	    $fn = $f->getType()."ToString($fn)" if $ULMasString{$f->{type}};
-
-	    $argl = $argl . ", ";
-	    $argl = $argl . $fn;
 	}
-gen qq{\t    //edg_wll_Log$t();
-\t    err |= logev(ctx, EDG_WLL_EVENT_$tu, EDG_WLL_FORMAT_${tu}$argl);
+gen qq{$values
+\t    //edg_wll_Log$t();
+\t    err |= logev(ctx, EDG_WLL_EVENT_$tu, EDG_WLL_FORMAT_${tu}$argl);$frees
+\t    \}
 \t    break;
 };
     }

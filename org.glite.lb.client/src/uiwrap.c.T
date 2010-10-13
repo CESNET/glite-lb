@@ -24,6 +24,7 @@ limitations under the License.
 #include <stdlib.h>
 #include "glite/jobid/cjobid.h"
 #include "producer.h"
+#include "glite/lb/ulm_parse.h"
 
 @@@{
 $PRINTPROTOTYPESONLY = 0;

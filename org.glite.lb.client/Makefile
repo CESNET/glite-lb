@@ -274,7 +274,7 @@ perftest_logjobs.o: perftest_logjobs.c
 
 examples: ${EXAMPLES} ${EXAMPLES_PLUS} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 
-check: compile 
+check: compile check.api
 # shut up check.producer
 
 check.producer: producer_test
@@ -285,6 +285,15 @@ producer_test: producer_test.o prod_proto_test.o
 
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${TEST_INC} $<
+
+check.api: api_test
+	./api_test
+
+api_test.o: %.o: %.cpp uiwrap.c
+	${CXX} -c ${CXXFLAGS} ${TEST_INC} $<
+
+api_test: api_test.o
+	${LINKXX} -o $@ ${LIB} ${COMMON_LIB} ${TEST_LIBS} $+ ${EXT_LIB}
 
 man: ${MAN_GZ} ${MAN8_GZ}
 
@@ -349,7 +358,7 @@ endif
 	${INSTALL} -m 644 ${top_srcdir}/m4/glite_lb.m4 ${PREFIX}/share/build/m4/
 
 clean:
-	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
+	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test api_test notify C/ CPP/
 	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent  register_sandbox ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl
@@ -359,4 +368,4 @@ check_version:
 	${CHECK_VERSION} ${stagedir}/include/glite/lb/common_version.h
 
 
-.PHONY: default all compile examples check stage install clean check_version
+.PHONY: default all compile examples check stage install clean check_version check.producer check.api
