@@ -41,3 +41,6 @@
 1.0.8-2
 - Module rebuilt
 
+1.0.9-1
+- Separated start-up script for L&B harvester.
+
