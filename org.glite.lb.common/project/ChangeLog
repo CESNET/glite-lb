@@ -81,3 +81,8 @@
 7.1.5-1
 - Makefile adopts compilation and linking flags from the environment
 
+7.1.6-1
+- revision of the perl code generator (fixed jobid, notifid and timeval types, mainly in logging functions)
+- fixed toString perl method for logsrc (duplicated line)
+- new client API test (simple run for SEGV check)
+
