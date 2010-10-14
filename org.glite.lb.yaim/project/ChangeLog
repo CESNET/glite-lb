@@ -37,3 +37,6 @@
 - Defaults moved from config_glite_lb script to glite-lb.pre conf file
 - Environment variables cleanup
 
+4.2.13-1
+- Simplified harvester configuration
+
