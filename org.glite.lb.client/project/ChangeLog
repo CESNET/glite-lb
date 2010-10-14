@@ -99,3 +99,11 @@
 4.1.4-1
 - Memory handling fixes
 
+4.1.5-1
+- revision of the perl code generator (fixed jobid, notifid and timeval types, mainly in logging functions)
+- fixed toString perl method for logsrc (duplicated line)
+- new client API test (simple run for SEGV check)
+- Statistics example extended
+- Support for jobid type options in logevent
+- General code polishing
+
