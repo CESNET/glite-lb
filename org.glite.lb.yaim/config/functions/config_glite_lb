@@ -25,6 +25,7 @@ function config_glite_lb_setenv(){
   yaimgridenv_set GLITE_LB_SERVER_OTHER_OPTIONS "${GLITE_LB_SERVER_OTHER_OPTIONS}"
   yaimgridenv_set GLITE_LB_NOTIF_IL_OTHER_OPTIONS "${GLITE_LB_NOTIF_IL_OTHER_OPTIONS}"
   yaimgridenv_set GLITE_LB_PROXY_IL_OTHER_OPTIONS "${GLITE_LB_PROXY_IL_OTHER_OPTIONS}"
+  yaimgridenv_set GLITE_LB_HARVESTER_OTHER_OPTIONS "${GLITE_LB_HARVESTER_OTHER_OPTIONS}"
 
   #
   # default L&B mode (proxy/server/both) according to the node list,

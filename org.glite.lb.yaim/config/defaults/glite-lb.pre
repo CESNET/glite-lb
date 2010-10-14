@@ -49,3 +49,5 @@ GLITE_LB_SERVER_OTHER_OPTIONS=
 GLITE_LB_NOTIF_IL_OTHER_OPTIONS=
 # proxy interlogger additional options
 GLITE_LB_PROXY_IL_OTHER_OPTIONS=
+# harvester additional options
+GLITE_LB_HARVESTER_OTHER_OPTIONS=
