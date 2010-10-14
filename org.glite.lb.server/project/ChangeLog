@@ -190,3 +190,8 @@
 - Memory handling fixes
 - stateEnterTime initialization for collection jobs (fix for bug #71913).
 
+2.1.12-1
+- Fixed status reporting in the startup script
+- General code polishing
+- Fixes in statistics
+
