@@ -250,6 +250,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 	purge_ctx_t prg;
 	struct _edg_wll_GssPrincipal_data princ;
 
+	memset(&princ, 0, sizeof princ);
 	princ.name = ctx->peerName;
         princ.fqans = ctx->fqans;
 
