@@ -489,7 +489,7 @@ static int stats_record_duration_fromto(
 	time_t base = to->stateEnterTimes[stats->base_state+1];
 	time_t final =  to->stateEnterTimes[stats->final_state+1];
 	time_t timedif = final-base;
-	if (base && final){  /* final should be always not null*/
+	if (base && final && (final > base)){  /* final should be always not null*/
 		a = g->archive;
 
 		for (i=0; stats->archives[i].interval; i++) {
@@ -666,6 +666,8 @@ static int stateRateRequest(
 
 		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
                         "search %ld in %ld, %ld", *from, afrom, afrom+i);
+
+		diff = 0.0f;
 
                 // (from, to) is inside (afrom, afrom+i)
                 if (*from >= afrom && *to < afrom+i) {
@@ -891,6 +893,8 @@ static int stateDurationFromToRequest(
 
                 glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
                         "search %ld in %ld, %ld", *from, afrom, afrom+i);
+
+		diff = 0.0f;
 
                 // (from, to) is inside (afrom, afrom+i)
                 if (*from >= afrom && *to < afrom+i) {
