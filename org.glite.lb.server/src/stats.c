@@ -787,6 +787,8 @@ int edg_wll_StateRateServer(
                         free(*groups); *groups = NULL;
                         goto cleanup;
 		}
+		else
+                        edg_wll_ResetError(ctx); // reset error comming from stateDurationFromToRequest, some of them has worked
 	}
 
 cleanup:
@@ -1031,6 +1033,8 @@ int edg_wll_StateDurationFromToServer(
                         free(*groups); *groups = NULL;
                         goto cleanup;
                 }
+		else
+			edg_wll_ResetError(ctx); // reset error comming from stateDurationFromToRequest, some of them has worked
 	}
 
 cleanup:
