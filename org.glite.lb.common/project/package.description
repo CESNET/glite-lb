@@ -1,1 +1,0 @@
-glite-lb-common is a package containing gLite LB common files shared by client and daemons. This package contains the LB common library and all necessary header files.
