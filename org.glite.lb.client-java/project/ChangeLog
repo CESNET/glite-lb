@@ -17,3 +17,6 @@
 1.0.5-1
 - Makefile fix for use of jakarta-commons-* external modules
 
+1.0.5-2
+- Module rebuilt
+
