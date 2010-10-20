@@ -55,6 +55,7 @@ my %extern_prefix = (
 	cppunit => '/usr',
 	expat => '/usr',
 	globus => '/opt/globus',
+	myproxy => '/opt/myproxy',
 	gsoap => '/usr',
 	mysql => '/usr',
 	'mysql-devel' => '',
@@ -95,6 +96,7 @@ my %lbmodules = (
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache shared commands core/ ],
+	'px' => [ qw/proxyrenewal glite-PX myproxy-yaim/ ],
 	);
 
 
@@ -349,6 +351,9 @@ BEGIN{
         'jp.server-common' => [],
         'jp.ws-interface' => [],
 	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
+	'px.proxyrenewal' => [ qw/globus:B myproxy voms/ ],
+	'px.glite-PX' => [qw/myproxy:R/],
+	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -458,6 +463,10 @@ for my $jar (keys %need_jars) {
 	'jp.ws-interface' => [ qw// ],
 
 	'gridsite.core' => [ qw/build.common-cpp:B/ ],
+
+	'px.proxyrenewal' => [ qw// ],
+	'px.glite-PX' => [qw/px.myproxy-yaim:R/],
+	'px.myproxy-yaim' => [],
 );
 
 for my $ext (keys %deps_aux) {
@@ -482,6 +491,8 @@ for my $ext (keys %deps_aux) {
 
 %obsoletes = (
 	'lb.yaim' => [ qq/glite-yaim-lb/ ],
+	'px.proxyrenewal' => [ qq/glite-security-proxyrenewal/ ],
+	'px.myproxy-yaim' => [ qq/glite-yaim-myproxy/ ],
 );
 
 %cvs_prefix = (
@@ -491,6 +502,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'org.glite',
 	'gridsite' => 'org',
 	'security' => 'org.glite',
+	'px' => 'org.glite',
 );
 
 %conf_prefix = (
@@ -500,6 +512,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'glite-',
 	'gridsite' => '',
 	'security' => 'glite-',
+	'px' => 'glite-',
 );
 
 %emi_conf_prefix = (
@@ -509,6 +522,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'emi-',
 	'gridsite' => '',
 	'security' => 'emi-',
+	'px' => 'emi-',
 );
 
 my @k = keys %deps_aux;
@@ -536,6 +550,7 @@ security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
+px.proxyrenewal px.myproxy-yaim px.glite-PX
 /;
 	@aux{@m} = (1) x ($#m+1);
 
@@ -593,6 +608,7 @@ BEGIN{
 	%etics_externs = (
 		globus_essentials=>'vdt_globus_essentials',
 		globus=>'globus',
+		myproxy=>'myproxy',
 		cares=>'c-ares',
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
@@ -610,7 +626,7 @@ BEGIN{
 		yaim_core=>'org.glite.yaim.core',
 	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials/],
+		vdt=>[qw/globus globus_essentials myproxy/],
 		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 	);
 
@@ -667,7 +683,7 @@ sub mode_etics {
 	for (@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		push @copts,"--with-$_ \${$eext.location}$jar{$_}.jar";
+		push @copts,"--with-$_ \${$eext.location}$jar{$_}";
 	}
 
 	my $conf;
