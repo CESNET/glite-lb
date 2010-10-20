@@ -42,3 +42,6 @@
 1.1.4-1
 - Makefile adopts compilation and linking flags from the environment.
 
+1.1.4-2
+- Module rebuilt
+
