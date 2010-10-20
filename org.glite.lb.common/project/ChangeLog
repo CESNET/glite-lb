@@ -86,3 +86,6 @@
 - fixed toString perl method for logsrc (duplicated line)
 - new client API test (simple run for SEGV check)
 
+7.1.6-2
+- Module rebuilt
+
