@@ -104,3 +104,6 @@
 2.1.10-1
 - Use pidfiles for checking status of daemons rather than port scanning.
 
+2.1.10-2
+- Module rebuilt
+
