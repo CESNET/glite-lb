@@ -28,6 +28,7 @@ limitations under the License.
 #include "interlogd.h"
 
 struct queue_list {
+  struct queue_list *queues;
   struct event_queue *queue;
   char   *dest;
   struct queue_list *next;
@@ -91,9 +92,8 @@ int
 queue_list_add(struct queue_list **ql, const char *dest, struct event_queue *eq)
 {
   struct queue_list *el;
-  
+
   assert(dest != NULL);
-  assert(eq != NULL);
   assert(ql != NULL);
 
   el = malloc(sizeof(*el));
@@ -168,19 +168,18 @@ queue_list_get(char *job_id_s)
     return(NULL);
   
   if(queue_list_find(queues, dest, &q, NULL)) {
-#if !defined(IL_NOTIFICATIONS)
-    free(dest);
-#endif
-    return(q->queue);
+    /* queue found for given destination */
+    eq = q->queue;
   } else {
+    /* no queue for given destination found */
     eq = event_queue_create(dest, outp);
     if(eq)
       queue_list_add(&queues, dest, eq);
-#if !defined(IL_NOTIFICATIONS)
-    free(dest);
-#endif
-    return(eq);
   }
+#if !defined(IL_NOTIFICATIONS)
+  free(dest);
+#endif
+  return eq;
 }
 
 

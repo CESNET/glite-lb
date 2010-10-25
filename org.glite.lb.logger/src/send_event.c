@@ -147,7 +147,7 @@ gss_reader(void *user_data, char *buffer, int max_len)
  */
 static
 int 
-get_reply(struct event_queue *eq, char **buf, int *code_min)
+get_reply(struct event_queue *eq, struct queue_thread *me, char **buf, int *code_min)
 {
   char *msg=NULL;
   int ret, code;
@@ -157,7 +157,7 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
 
   tv.tv_sec = TIMEOUT;
   tv.tv_usec = 0;
-  data.gss = &eq->gss;
+  data.gss = &me->gss;
   data.timeout = &tv;
   len = read_il_data(&data, &msg, gss_reader);
   if(len < 0) {
@@ -179,7 +179,7 @@ get_reply(struct event_queue *eq, char **buf, int *code_min)
  *  Returns: 0 - not connected, timeout set, 1 - OK
  */
 int 
-event_queue_connect(struct event_queue *eq)
+event_queue_connect(struct event_queue *eq, struct queue_thread *me)
 {
   int ret;
   struct timeval tv;
@@ -187,12 +187,13 @@ event_queue_connect(struct event_queue *eq)
   cred_handle_t *local_cred_handle;
 
   assert(eq != NULL);
+  assert(me != NULL);
 
 #ifdef LB_PERF
   if(!nosend) {
 #endif
 
-  if(eq->gss.context == NULL) {
+  if(me->gss.context == NULL) {
 
     tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;
@@ -208,7 +209,7 @@ event_queue_connect(struct event_queue *eq)
     glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 		     "    trying to connect to %s:%d", 
 		     eq->dest_name, eq->dest_port);
-    ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &eq->gss, &gss_stat);
+    ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &me->gss, &gss_stat);
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
 	    abort();
     /* check if we need to release the credentials */
@@ -229,11 +230,11 @@ event_queue_connect(struct event_queue *eq)
       set_error(IL_DGGSS, ret,
 	        (ret == EDG_WLL_GSS_ERROR_GSS) ? gss_err : "event_queue_connect: edg_wll_gss_connect");
       if (gss_err) free(gss_err);
-      eq->gss.context = NULL;
-      eq->timeout = TIMEOUT;
+      me->gss.context = NULL;
+      me->timeout = TIMEOUT;
       return(0);
     }
-    eq->first_event_sent = 0;
+    me->first_event_sent = 0;
   }
 
 #ifdef LB_PERF
@@ -245,19 +246,20 @@ event_queue_connect(struct event_queue *eq)
 
 
 int
-event_queue_close(struct event_queue *eq)
+event_queue_close(struct event_queue *eq, struct queue_thread *me)
 {
   assert(eq != NULL);
+  assert(me != NULL);
 
 #ifdef LB_PERF
   if(!nosend) {
 #endif
 
-  if(eq->gss.context != NULL) {
-    edg_wll_gss_close(&eq->gss, NULL);
-    eq->gss.context = NULL;
+  if(me->gss.context != NULL) {
+    edg_wll_gss_close(&me->gss, NULL);
+    me->gss.context = NULL;
   }
-  eq->first_event_sent = 0;
+  me->first_event_sent = 0;
 #ifdef LB_PERF
   }
 #endif
@@ -270,14 +272,15 @@ event_queue_close(struct event_queue *eq)
  *   Returns: -1 - system error, 0 - not send, 1 - queue empty
  */
 int 
-event_queue_send(struct event_queue *eq)
+event_queue_send(struct event_queue *eq, struct queue_thread *me)
 {
   assert(eq != NULL);
+  assert(me != NULL);
 
 #ifdef LB_PERF
   if(!nosend) {
 #endif
-  if(eq->gss.context == NULL)
+  if(me->gss.context == NULL)
     return(0);
 #ifdef LB_PERF
   }
@@ -294,8 +297,8 @@ event_queue_send(struct event_queue *eq)
 
     clear_error();
 
-    if(event_queue_get(eq, &msg) < 0) 
-      return(-1);
+    if(event_queue_get(eq, me, &msg) == 0) 
+      return(1);
 
     glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 		     "    trying to deliver event at offset %d for job %s", 
@@ -307,23 +310,23 @@ event_queue_send(struct event_queue *eq)
 	if (msg->len) {
 	    tv.tv_sec = TIMEOUT;
 	    tv.tv_usec = 0;
-	    ret = edg_wll_gss_write_full(&eq->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
+	    ret = edg_wll_gss_write_full(&me->gss, msg->msg, msg->len, &tv, &bytes_sent, &gss_stat);
 	    if(ret < 0) {
-	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && eq->first_event_sent )
-	        eq->timeout = 0;
+	      if (ret == EDG_WLL_GSS_ERROR_ERRNO && errno == EPIPE && me->first_event_sent )
+	        me->timeout = 0;
 	      else
-	        eq->timeout = TIMEOUT;
+	        me->timeout = TIMEOUT;
 	      return(0);
 	    }
  	    
-	    if((code = get_reply(eq, &rep, &code_min)) < 0) {
+	    if((code = get_reply(eq, me, &rep, &code_min)) < 0) {
 		    /* could not get the reply properly, so try again later */
-		    if (eq->first_event_sent) {
+		    if (me->first_event_sent) {
 			/* could be expected server connection preemption */
 			clear_error();
-			eq->timeout = 1;
+			me->timeout = 1;
 		    } else {
-			eq->timeout = TIMEOUT;
+			me->timeout = TIMEOUT;
 		        glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, "  error reading server %s reply: %s", 
 					 eq->dest_name, error_get_msg());
                     }
@@ -354,7 +357,7 @@ event_queue_send(struct event_queue *eq)
 	case LB_PERM:
 	case LB_DBERR:
       /* non fatal errors (for us) */
-      eq->timeout = TIMEOUT;
+      me->timeout = TIMEOUT;
       return(0);
 	
     case LB_OK:
@@ -380,8 +383,8 @@ event_queue_send(struct event_queue *eq)
 			       "send_event: %s", 
 			       error_get_msg());
 	
-      event_queue_remove(eq);
-      eq->first_event_sent = 1;
+      event_queue_remove(eq, me);
+      me->first_event_sent = 1;
       break;
       
     } /* switch */

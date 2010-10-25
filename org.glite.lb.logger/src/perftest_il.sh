@@ -17,6 +17,7 @@
 #
 
 numjobs=10
+parallel=1
 
 # XXX - there must be better way to find stage
 if [ -z "${GLITE_LOCATION}" ]; then
@@ -44,7 +45,7 @@ COMM_ARGS="-s /tmp/interlogger.perftest --file-prefix=/tmp/perftest.log"
 #TEST_VARIANT=
 
 SILENT=0
-while getopts "G:t:n:s" OPTION 
+while getopts "G:t:n:sp:" OPTION 
 do
     case "$OPTION" in 
     "G") TEST_GROUP=$OPTARG
@@ -57,6 +58,9 @@ do
     ;;
 
     "s") SILENT=1
+    ;;
+
+    "p") parallel=$OPTARG
     ;;
 
     esac
@@ -273,7 +277,7 @@ echo ""
 fi
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
-CONSUMER_ARGS="--silent -S /tmp -D /tmp -t 1 -d --perf-sink=1 -p 10500 -w 10503"
+CONSUMER_ARGS="-g --silent -S /tmp -D /tmp -t 1 -d --perf-sink=1 -p 10500 -w 10503"
 PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-interlogd-perf
 LOGJOBS_ARGS=" -m localhost:10500 $COMM_ARGS"
 }
@@ -316,7 +320,7 @@ group_c_test_x ()
 
 group_c_test_d ()
 {
-    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d  --lazy=10 --nosync --norecover $COMM_ARGS"
+    COMPONENT_ARGS="-p $parallel -i /tmp/perftest_il.pid -d  --lazy=10 --nosync --norecover $COMM_ARGS"
     echo -n "d)"
     run_test il $numjobs
     print_result
@@ -325,7 +329,7 @@ group_c_test_d ()
 
 group_c_test_e ()
 {
-    COMPONENT_ARGS="-i /tmp/perftest_il.pid -d $COMM_ARGS"
+    COMPONENT_ARGS="-p $parallel -i /tmp/perftest_il.pid -d $COMM_ARGS"
     echo -n "e)"
     run_test il $numjobs
     print_result

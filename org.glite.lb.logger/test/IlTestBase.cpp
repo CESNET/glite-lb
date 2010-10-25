@@ -25,8 +25,15 @@ const char *IlTestBase::msg_enc = "             429\n6 michal\n415 DATE=20040831
 
 const struct server_msg IlTestBase::smsg = {
 	"https://some.host:1234/x67qr549qc",
+	0L,
 	(char*)IlTestBase::msg_enc,
 	strlen(IlTestBase::msg_enc),
 	strlen(IlTestBase::msg) + 1,
-	NULL
+	NULL,
+	0,
+	0L,
+	"some.host",
+	1234,
+	"some.host:1234",
+	0
 };

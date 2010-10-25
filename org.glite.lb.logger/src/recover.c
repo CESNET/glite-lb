@@ -87,6 +87,10 @@ recover_thread(void *q)
 						 new_creds->name);
 			}
 		}
+#ifndef LB_PERF
 		sleep(RECOVER_TIMEOUT);
+#else
+		sleep(2);
+#endif
 	}
 }

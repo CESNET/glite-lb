@@ -33,7 +33,9 @@ class server_msgTest: public CppUnit::TestFixture
 public:
 
 	void setUp() {
-		msg = server_msg_create((char *)IlTestBase::msg);
+		il_octet_string d = { len: strlen((char*)IlTestBase::msg), data: (char*)IlTestBase::msg };
+					
+		msg = server_msg_create(&d, 0);
 	}
 
 	void tearDown() {

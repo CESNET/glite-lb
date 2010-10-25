@@ -35,11 +35,12 @@ limitations under the License.
 
 int
 enqueue_msg(struct event_queue *eq, struct server_msg *msg)
+/* global: parallel */
 {
 	int ret;
 
 	/* fire thread to take care of this queue */
-	if(event_queue_create_thread(eq) < 0)
+	if(event_queue_create_thread(eq, parallel) < 0)
 		return(-1);
 
 #if defined(IL_NOTIFICATIONS)

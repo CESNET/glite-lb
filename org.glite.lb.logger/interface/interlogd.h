@@ -182,18 +182,23 @@ struct server_msg {
 };
 
 
-struct event_queue {
+struct queue_thread {
+	pthread_t               thread_id;      /* id's of associated threads */
 	edg_wll_GssConnection   gss;            /* GSS connection */
+	char                   *jobid;
+	int                     timeout;        /* queue timeout */
+	int			first_event_sent; /* connection can be preempted by server */
+	struct event_queue_msg *current;        /* current message being sent */
+};
+
+struct event_queue {
 	char                   *dest_name;
 	int                     dest_port;
-	char		       	   *dest;
-	int                     timeout;        /* queue timeout */
-	struct event_queue_msg *tail;           /* last message in the queue */
+	char		       *dest;
 	struct event_queue_msg *head;           /* first message in the queue */
 	struct event_queue_msg *tail_ems;       /* last priority message in the queue (or NULL) */
-	struct event_queue_msg *mark_this;      /* mark message for removal */
-	struct event_queue_msg *mark_prev;      /* predecessor of the marked message */
-	pthread_t               thread_id;      /* id of associated thread */
+	int                     num_threads;    /* number of delivery threads */
+	struct queue_thread    *thread;         /* info for delivery threads */
 	pthread_rwlock_t        update_lock;    /* mutex for queue updates */
 	pthread_mutex_t         cond_lock;      /* mutex for condition variable */
 	pthread_cond_t          ready_cond;     /* condition variable for message arrival */
@@ -204,19 +209,18 @@ struct event_queue {
 	int                     times_empty;    /* number of times the queue was emptied */
 	int                     max_len;        /* max queue length */
 	int                     cur_len;        /* current length */
-	int						throttling;		/* event insertion suspend flag */
-	int						first_event_sent; /* connection can be preempted by server */
+	int			throttling;	/* event insertion suspend flag */
 	/* delivery methods */
-	int 		(*event_queue_connect)(struct event_queue *);
-	int 		(*event_queue_send)(struct event_queue *);
-	int 		(*event_queue_close)(struct event_queue *);
-	void				   *plugin_data;	/* opaque data used by output plugins */
+	int 		(*event_queue_connect)(struct event_queue *, struct queue_thread *);
+	int 		(*event_queue_send)(struct event_queue *, struct queue_thread *);
+	int 		(*event_queue_close)(struct event_queue *, struct queue_thread *);
+	void		       *plugin_data;	/* opaque data used by output plugins */
 };
 
 struct il_output_plugin {
-	int 	(*event_queue_connect)(struct event_queue *);
-	int 	(*event_queue_send)(struct event_queue *);
-	int 	(*event_queue_close)(struct event_queue *);
+	int 	(*event_queue_connect)(struct event_queue *, struct queue_thread *);
+	int 	(*event_queue_send)(struct event_queue *, struct queue_thread *);
+	int 	(*event_queue_close)(struct event_queue *, struct queue_thread *);
 	int		(*plugin_init)(char *);
 	int		(*plugin_supports_scheme)(const char *);
 };
@@ -238,27 +242,27 @@ struct event_queue *event_queue_create(char *, struct il_output_plugin *);
 int event_queue_free(struct event_queue *);
 int event_queue_empty(struct event_queue *);
 int event_queue_insert(struct event_queue *, struct server_msg *);
-int event_queue_get(struct event_queue *, struct server_msg **);
-int event_queue_remove(struct event_queue *);
+int event_queue_get(struct event_queue *, struct queue_thread *, struct server_msg **);
+int event_queue_remove(struct event_queue *, struct queue_thread *);
 int event_queue_enqueue(struct event_queue *, char *);
 /* helper */
 int enqueue_msg(struct event_queue *, struct server_msg *);
 int event_queue_move_events(struct event_queue *, struct event_queue *, int (*)(struct server_msg *, void *), void *);
 
 /* protocol event queue methods */
-int event_queue_connect(struct event_queue *);
-int event_queue_send(struct event_queue *);
-int event_queue_close(struct event_queue *);
+int event_queue_connect(struct event_queue *, struct queue_thread *);
+int event_queue_send(struct event_queue *, struct queue_thread *);
+int event_queue_close(struct event_queue *, struct queue_thread *);
 int send_confirmation(long, int);
 
 /* thread event queue methods */
-int event_queue_create_thread(struct event_queue *);
+int event_queue_create_thread(struct event_queue *, int);
 int event_queue_lock(struct event_queue *);
 int event_queue_unlock(struct event_queue *);
 int event_queue_lock_ro(struct event_queue *);
 int event_queue_signal(struct event_queue *);
 int event_queue_wait(struct event_queue *, int);
-int event_queue_sleep(struct event_queue *);
+int event_queue_sleep(struct event_queue *, int);
 int event_queue_wakeup(struct event_queue *);
 int event_queue_cond_lock(struct event_queue *);
 int event_queue_cond_unlock(struct event_queue *);

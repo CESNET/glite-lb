@@ -30,8 +30,10 @@ void
 queue_thread_cleanup(void *q)
 {
 	struct event_queue *eq = (struct event_queue *)q;
+	pthread_t my_id = pthread_self();
+	int me;
 
-	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "thread %d exits", eq->thread_id);
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "thread %d exits", my_id);
 
 	/* unlock all held locks */
 	/* FIXME: check that the thread always exits when holding these locks;
@@ -41,7 +43,12 @@ queue_thread_cleanup(void *q)
 	*/
   
 	/* clear thread id */
-	eq->thread_id = 0;
+	for(me = 0; me < eq->num_threads; me++) {
+		if(my_id == eq->thread[me].thread_id) {
+			eq->thread[me].thread_id = 0;
+			break;
+		}
+	}
 }
 
 
@@ -60,6 +67,8 @@ void *
 queue_thread(void *q)
 {
 	struct event_queue *eq = (struct event_queue *)q;
+	struct queue_thread *me;
+	pthread_t my_id;
 	int ret, exit;
 	int retrycnt;
 	int close_timeout = 0;
@@ -75,6 +84,18 @@ queue_thread(void *q)
 			 "  started new thread for delivery to %s",
 			 eq->dest);
 
+	my_id = pthread_self();
+	for(me = eq->thread; me - eq->thread < eq->num_threads; me++) {
+		if(my_id == me->thread_id) {
+			break;
+		}
+	}
+	if(me - eq->thread >= eq->num_threads) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR,
+				 "Error looking up thread identity, exiting!");
+		pthread_exit(NULL);
+	}
+
 	pthread_cleanup_push(queue_thread_cleanup, q); 
 
 	event_queue_cond_lock(eq);
@@ -87,7 +108,7 @@ queue_thread(void *q)
 
 		/* if there are no events, wait for them */
 		ret = 0;
-		while (event_queue_empty(eq) 
+		while (event_queue_empty(eq)
 #if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
 		       && (eq->flushing != 1)
 #endif
@@ -95,7 +116,7 @@ queue_thread(void *q)
 			if(lazy_close && close_timeout) {
 				ret = event_queue_wait(eq, close_timeout);
 				if(ret == 1) {/* timeout? */
-					(*eq->event_queue_close)(eq);
+					(*eq->event_queue_close)(eq, me);
 					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 							 "  connection to %s closed",
 							 eq->dest);
@@ -105,9 +126,10 @@ queue_thread(void *q)
 				ret = event_queue_wait(eq, exit_timeout);
 				if(ret == 1) {
 					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
-							 "  thread idle for more than %d seconds, exiting", 
+							 "  thread %x idle for more than %d seconds, exiting", 
+							 me,
 							 exit_timeout);
-					(*eq->event_queue_close)(eq);
+					(*eq->event_queue_close)(eq, me);
 					event_queue_cond_unlock(eq);
 					pthread_exit((void*)0);
 				}
@@ -120,6 +142,7 @@ queue_thread(void *q)
 				event_queue_cond_unlock(eq);
 				pthread_exit((void*)-1);
 			}
+			/* sleep only once when there is no event available for this particular thread */
 		}  /* END while(empty) */
     
 
@@ -128,36 +151,41 @@ queue_thread(void *q)
 		 */
 		event_queue_cond_unlock(eq);
 		
-		/* discard expired events */
-		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "  discarding expired events");
-		now = time(NULL);
-		event_queue_move_events(eq, NULL, cmp_expires, &now);
+		/* discard expired events - only the first thread */
+		if(me == eq->thread) {
+		  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "  thread %x: discarding expired events", me);
+			now = time(NULL);
+			event_queue_move_events(eq, NULL, cmp_expires, &now);
+		}
 		if(!event_queue_empty(eq)) {
 
 			/* deliver pending events */
 			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-					 "  attempting delivery to %s",
+					 "  thread %x: attempting delivery to %s",
+					 me,
 					 eq->dest);
 			/* connect to server */
-			if((ret=(*eq->event_queue_connect)(eq)) == 0) {
+			if((ret=(*eq->event_queue_connect)(eq, me)) == 0) {
 				/* not connected */
 				if(error_get_maj() != IL_OK)
 					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
 							 "queue_thread: %s", error_get_msg());
 #if defined(IL_NOTIFICATIONS)
 				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO, 
-						 "    could not connect to client %s, waiting for retry", 
+						 "    thread %x: could not connect to client %s, waiting for retry", 
+						 me,
 						 eq->dest);
 #else
 				glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO, 
-						 "    could not connect to bookkeeping server %s, waiting for retry", 
+						 "    thread %x: could not connect to bookkeeping server %s, waiting for retry", 
+						 me,
 						 eq->dest);
 #endif
 				retrycnt++;
 			} else {
 				retrycnt = 0;
 				/* connected, send events */
-				switch(ret=(*eq->event_queue_send)(eq)) {
+				switch(ret=(*eq->event_queue_send)(eq, me)) {
 					
 				case 0:
 					/* there was an error and we still have events to send */
@@ -166,13 +194,14 @@ queue_thread(void *q)
 								 "queue_thread: %s", 
 								 error_get_msg());
 					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-							 "  events still waiting");
+							 "  thread %x: events still waiting", me);
 					break;
 					
 				case 1:
 					/* hey, we are done for now */
 					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-							 "  all events for %s sent", 
+							 "  thread %x: all events for %s sent", 
+							 me,
 							 eq->dest);
 					break;
 					
@@ -190,9 +219,10 @@ queue_thread(void *q)
 				if((ret == 1) && lazy_close)
 					close_timeout = default_close_timeout;
 				else {
-					(*eq->event_queue_close)(eq);
+					(*eq->event_queue_close)(eq, me);
 					glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG,
-							 "  connection to %sclosed",
+							 "  thread %x: connection to %s closed",
+							 me,
 							 eq->dest);
 				}
 			}
@@ -218,6 +248,15 @@ queue_thread(void *q)
 #else
 #endif
 
+		event_queue_lock(eq);
+		if(me->jobid) {
+			free(me->jobid); 
+			me->jobid = NULL;
+			me->current = NULL;
+		}
+		event_queue_unlock(eq);
+
+
 		/* if there was some error with server, sleep for a while */
 		/* iff !event_queue_empty() */
 		/* also allow for one more try immediately after server disconnect,
@@ -225,8 +264,8 @@ queue_thread(void *q)
 #ifndef LB_PERF
 		if((ret == 0) && (retrycnt > 0)) {
 			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-					 "    sleeping");
-			event_queue_sleep(eq);
+					 "    thread %x: sleeping", me);
+			event_queue_sleep(eq, me->timeout);
 		}
 #endif
 
@@ -249,33 +288,43 @@ queue_thread(void *q)
 
 
 int
-event_queue_create_thread(struct event_queue *eq)
+event_queue_create_thread(struct event_queue *eq, int num_threads)
 {
 	pthread_attr_t attr;
+	int i;
 
 	assert(eq != NULL);
 
 	event_queue_lock(eq);
 
-	/* if there is a thread already, just return */
-	if(eq->thread_id != 0) {
-		event_queue_unlock(eq);
-		return(0);
+	eq->num_threads = num_threads;
+
+	/* create thread data */
+	if(NULL == eq->thread) {
+		eq->thread = calloc(num_threads, sizeof(*eq->thread));
+		if(NULL == eq->thread) {
+			set_error(IL_NOMEM, ENOMEM, "event_queue_create: error allocating data for threads");
+			event_queue_unlock(eq);
+			return -1;
+		}
 	}
 
-	/* create the thread itself */
-	pthread_attr_init(&attr);
-	pthread_attr_setstacksize(&attr, 65536); 
-	if(pthread_create(&eq->thread_id, &attr, queue_thread, eq) < 0) {
-		eq->thread_id = 0;
-		set_error(IL_SYS, errno, "event_queue_create_thread: error creating new thread");
-		event_queue_unlock(eq);
-		return(-1);
+	/* create the threads itself */
+	for(i = 0; i < eq->num_threads; i++) {
+		pthread_attr_init(&attr);
+		pthread_attr_setstacksize(&attr, 65536); 
+		if(eq->thread[i].thread_id == 0) {
+			if(pthread_create(&eq->thread[i].thread_id, &attr, queue_thread, eq) < 0) {
+				eq->thread[i].thread_id = 0;
+				set_error(IL_SYS, errno, "event_queue_create_thread: error creating new thread");
+				event_queue_unlock(eq);
+				return(-1);
+			}
+		}
+		/* the thread is never going to be joined */
+		pthread_detach(eq->thread[i].thread_id);
 	}
 
-	/* the thread is never going to be joined */
-	pthread_detach(eq->thread_id);
-	
 	event_queue_unlock(eq);
 
 	return(1);
@@ -384,7 +433,7 @@ event_queue_wait(struct event_queue *eq, int timeout)
 }
 
 
-int event_queue_sleep(struct event_queue *eq)
+int event_queue_sleep(struct event_queue *eq, int timeout)
 {
 #if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
 	struct timespec ts;
@@ -394,7 +443,7 @@ int event_queue_sleep(struct event_queue *eq)
 	assert(eq != NULL);
 
 	gettimeofday(&tv, NULL);
-	ts.tv_sec = tv.tv_sec + eq->timeout;
+	ts.tv_sec = tv.tv_sec + timeout;
 	ts.tv_nsec = 1000 * tv.tv_usec;
 	if((ret=pthread_cond_timedwait(&eq->flush_cond, &eq->cond_lock, &ts)) < 0) {
 		if(ret != ETIMEDOUT) {
@@ -406,7 +455,7 @@ int event_queue_sleep(struct event_queue *eq)
 		}
 	}
 #else
-	sleep(eq->timeout);
+	sleep(timeout);
 #endif
 	return(0);
 }

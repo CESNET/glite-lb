@@ -71,7 +71,7 @@ EXT_LIB:=-lglite_lbu_trio -lglite_lbu_log
 
 GLITE_GSS_LIB:=-lglite_security_gss
 
-TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
+TEST_LIBS:=-L${cppunit_prefix}/lib -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
 LOGD_OBJS:= logd_proto.o logd.o
@@ -106,7 +106,7 @@ INTERLOG_TEST_OBJS:= \
 	input_queue_socket.o \
 	input_queue_socketTest.o \
 	send_event.o \
-	plugin_mgr. o \
+	plugin_mgr.o \
 	event_queue.o \
 	event_queueTest.o \
 	IlTestBase.o \
@@ -172,7 +172,7 @@ check.ll:
 	-echo commented out -- fix needed
 
 check.il: ${INTERLOG_TEST_OBJS}
-	${LINKXX} -o $@ ${COMMON_LIB}_${thrflavour} ${GLITE_GSS_LIB}_${nothrflavour} ${TEST_LIBS} -lpthread $+
+	${LINKXX} -o $@ ${COMMON_LIB}_${thrflavour} ${TEST_LIBS} ${EXT_LIB} -lpthread $+
 
 install:
 	-mkdir -p ${PREFIX}/bin

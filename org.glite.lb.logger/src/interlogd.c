@@ -113,7 +113,7 @@ int default_close_timeout;
 size_t max_store_size;
 size_t queue_size_low = 0;
 size_t queue_size_high = 0;
-int parallel = 0;
+int parallel = 1;
 #ifdef LB_PERF
 int nosend = 0, norecover=0, nosync=0, noparse=0;
 char *event_source = NULL;
@@ -182,9 +182,9 @@ decode_switches (int argc, char **argv)
 			   "C:"          /* CA dir */
 			   "b"  /* only bookeeping */
 			   "i:"  /* pidfile*/
-               "l:" /* log server */
+			   "l:" /* log server */
 			   "d" /* debug */
-			   "p" /* parallel */
+			   "p::" /* parallel */
 			   "q:"
 			   "Q:"
 			   "F:" /* conf file */
@@ -593,6 +593,7 @@ main (int argc, char **argv)
   }
 #endif
 
+  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Using %d threads for parallel delivery.", parallel);
   glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Entering main loop.");
 
   /* do the work */

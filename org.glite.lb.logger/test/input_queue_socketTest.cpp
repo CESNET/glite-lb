@@ -71,15 +71,15 @@ public:
 
 
 	void input_queue_getTest() {
-		char *event;
+		il_octet_string_t *event;
 		long offset;
 		int ret;
 
 		ret = input_queue_get(&event, &offset, 10);
 		CPPUNIT_ASSERT( ret >= 0 );
 		CPPUNIT_ASSERT_EQUAL( 0L, offset );
-		CPPUNIT_ASSERT_EQUAL( string(IlTestBase::msg), string(event) );
-		free(event);
+		CPPUNIT_ASSERT_EQUAL( string(IlTestBase::msg), string(event->data) );
+		free(event->data);
 	}
 };
 

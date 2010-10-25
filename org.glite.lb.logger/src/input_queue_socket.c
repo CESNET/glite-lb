@@ -28,7 +28,7 @@ limitations under the License.
 #include "interlogd.h"
 
 
-static const int   SOCK_QUEUE_MAX = 50;
+static const int   SOCK_QUEUE_MAX = 100;
 extern char *socket_path;
 
 static int sock;

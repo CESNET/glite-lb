@@ -850,7 +850,7 @@ event_store_recover(struct event_store *es)
 		  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO, 
 				   "    all messages for notif id %s are now destined to %s",
 			 es->job_id_s, eq_b->dest);
-		  if(event_queue_create_thread(eq_b) < 0) {
+		  if(event_queue_create_thread(eq_b, parallel) < 0) {
 			  ret = -1;
 		  } else {
 			  event_queue_cond_lock(eq_b);
