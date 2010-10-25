@@ -74,7 +74,6 @@ static struct option const long_options[] = {
 	{ "file", required_argument, NULL, 'f'},
 	{ "num", required_argument, NULL, 'n'},
 	{ "machine", required_argument, NULL, 'm'},
-	{ "nofile", no_argument, NULL, 'N'},
 	{ "skip", optional_argument, NULL, 'P'},
 	{ "sock", required_argument, NULL, 's'},
 	{ "file-prefix", required_argument, NULL, 'p'},
@@ -82,7 +81,6 @@ static struct option const long_options[] = {
 };
 
 
-int nofile = 0;
 char *logfile_prefix = DEFAULT_PREFIX;
 char *il_socket = NULL;
 
@@ -98,8 +96,7 @@ usage(char *program_name)
 		"-f, --file <filename>    name of the file with prototyped job events\n"
 		"-n, --num <numjobs>      number of jobs to generate\n"
 		"-P, --skip [<numevents>] number of events to skip when sending to IL by IPC\n"
-		"-p, --file-prefix <name> file prefix of event files\n"
-		"-N, --nofile             do not store events in file for interlogger (if dst==IL)\n",
+		"-p, --file-prefix <name> file prefix of event files\n",
 	program_name);
 }
 
@@ -138,47 +135,43 @@ int edg_wll_DoLogEventIl(
 #else
 	event = logline;
 #endif
+	edg_wll_ResetError(context);
 
-	if(!nofile) {
-		ret = edg_wlc_JobIdParse(jobid, &jid);
-		if(ret != 0) {
-			fprintf(stderr, "error parsing jobid %s\n", jobid);
-			return(edg_wll_SetError(context, ret, "edg_wlc_JobIdParse()"));
-		}
-		unique = edg_wlc_JobIdGetUnique(jid);
-		if(unique == NULL) {
-			edg_wlc_JobIdFree(jid);
-			return(edg_wll_SetError(context, ENOMEM, "edg_wlc_JobIdGetUnique()"));
-		}
-		asprintf(&event_file, "%s.%s", logfile_prefix, unique);
-		if(!event_file) {
-			free(unique);
-			edg_wlc_JobIdFree(jid);
-			return(edg_wll_SetError(context, ENOMEM, "asprintf()"));
-		}
-		if(edg_wll_log_event_write(context, event_file, event,
-					   context->p_tmp_timeout.tv_sec > FCNTL_ATTEMPTS ? context->p_tmp_timeout.tv_sec : FCNTL_ATTEMPTS,
-					   FCNTL_TIMEOUT,
-					   &filepos)) {
-			edg_wll_UpdateError(context, 0, "edg_wll_log_event_write()");
-			free(unique);
-			edg_wlc_JobIdFree(jid);
-			free(event_file);
-		}
+	ret = edg_wlc_JobIdParse(jobid, &jid);
+	if(ret != 0) {
+		fprintf(stderr, "error parsing jobid %s\n", jobid);
+		return(edg_wll_SetError(context, ret, "edg_wlc_JobIdParse()"));
 	}
-	if(nofile || 
-	   (skip < 0) || 
-	   ((skip > 0) && (++num_event % skip == 0)))
-		ret = edg_wll_log_event_send(context, il_socket, filepos, 
-					     event, len, 1, 
-					     &context->p_tmp_timeout);
-	if(!nofile) {
+	unique = edg_wlc_JobIdGetUnique(jid);
+	if(unique == NULL) {
+		edg_wlc_JobIdFree(jid);
+		return(edg_wll_SetError(context, ENOMEM, "edg_wlc_JobIdGetUnique()"));
+	}
+	asprintf(&event_file, "%s.%s", logfile_prefix, unique);
+	if(!event_file) {
 		free(unique);
 		edg_wlc_JobIdFree(jid);
-		free(event_file);
-	} else {
-		filepos += len;
+		return(edg_wll_SetError(context, ENOMEM, "asprintf()"));
 	}
+	if(ret = edg_wll_log_event_write(context, event_file, event,
+					 context->p_tmp_timeout.tv_sec > FCNTL_ATTEMPTS ? context->p_tmp_timeout.tv_sec : FCNTL_ATTEMPTS,
+					 FCNTL_TIMEOUT,
+					 &filepos)) {
+		// edg_wll_UpdateError(context, 0, "edg_wll_log_event_write()");
+	} else {
+		if((skip < 0) || 
+		   ((skip > 0) && (++num_event % skip == 0))) {
+			/* ret = */ edg_wll_log_event_send(context, il_socket, filepos, 
+							   event, len, 3, 
+							   &context->p_tmp_timeout);
+		}
+	}
+	
+	free(unique);
+	edg_wlc_JobIdFree(jid);
+	free(event_file);
+
+	filepos += len;
 
 	return(ret);
 }
@@ -202,6 +195,7 @@ main(int argc, char *argv[])
 		DEST_BKSERVER,
 		DEST_DUMP,
 	} dest = 0;
+	struct timeval log_timeout = { tv_sec: 2, tv_usec: 0 };
 
 
 	edg_wll_InitContext(&ctx);
@@ -219,7 +213,6 @@ main(int argc, char *argv[])
 		case 'p': logfile_prefix = (char*) strdup(optarg); break;
 		case 's': il_socket = (char*) strdup(optarg); break;
 		case 'n': num_jobs = atoi(optarg); break;
-		case 'N': nofile = 1; break;
 		case 'P': skip = optarg ? atoi(optarg) : 0; break;
 		case 'h': 
 		default:
@@ -331,7 +324,7 @@ main(int argc, char *argv[])
 				break;
 
 			case DEST_IL:
-				ctx->p_tmp_timeout = ctx->p_log_timeout;
+				ctx->p_tmp_timeout = log_timeout; /* ctx->p_log_timeout */;
 				if (edg_wll_DoLogEventIl(ctx, event, jobid, len, skip)) {
 					char    *et,*ed;
 					edg_wll_Error(ctx,&et,&ed);
