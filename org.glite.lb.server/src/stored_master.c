@@ -118,11 +118,13 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 	if (ret < 0)
 		return edg_wll_Error(ctx,NULL,NULL);
 #ifdef LB_PERF
-        if (sink_mode == GLITE_LB_SINK_PARSE) glite_wll_perftest_consumeEventIlMsg(buf);
-        else
+        if (sink_mode == GLITE_LB_SINK_PARSE)  glite_wll_perftest_consumeEventIlMsg(buf);
+        else 
 #endif
-        glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG,buf);
-	handle_il_message(ctx, buf);
+        { 
+                glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG,buf);
+	        handle_il_message(ctx, buf);
+        }
         free(buf);
 
 	if ( (len = create_reply(ctx, &buf)) > 0 ) {
