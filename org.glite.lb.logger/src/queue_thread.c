@@ -108,7 +108,7 @@ queue_thread(void *q)
 
 		/* if there are no events, wait for them */
 		ret = 0;
-		while (event_queue_empty(eq)
+		while ((event_queue_empty(eq) || event_queue_get(eq, me, NULL) == 0)
 #if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)
 		       && (eq->flushing != 1)
 #endif
@@ -142,7 +142,6 @@ queue_thread(void *q)
 				event_queue_cond_unlock(eq);
 				pthread_exit((void*)-1);
 			}
-			/* sleep only once when there is no event available for this particular thread */
 		}  /* END while(empty) */
     
 
@@ -157,8 +156,8 @@ queue_thread(void *q)
 			now = time(NULL);
 			event_queue_move_events(eq, NULL, cmp_expires, &now);
 		}
-		if(!event_queue_empty(eq)) {
-
+		if(!event_queue_empty(eq) && event_queue_get(eq, me, NULL) != 0) {
+		  
 			/* deliver pending events */
 			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 					 "  thread %x: attempting delivery to %s",
@@ -250,7 +249,6 @@ queue_thread(void *q)
 
 		event_queue_lock(eq);
 		if(me->jobid) {
-			free(me->jobid); 
 			me->jobid = NULL;
 			me->current = NULL;
 		}

@@ -320,7 +320,7 @@ group_c_test_x ()
 
 group_c_test_d ()
 {
-    COMPONENT_ARGS="-p $parallel -i /tmp/perftest_il.pid -d  --lazy=10 --nosync --norecover $COMM_ARGS"
+    COMPONENT_ARGS="-p$parallel -i /tmp/perftest_il.pid -d  --lazy=10 --nosync --norecover $COMM_ARGS"
     echo -n "d)"
     run_test il $numjobs
     print_result
@@ -329,7 +329,7 @@ group_c_test_d ()
 
 group_c_test_e ()
 {
-    COMPONENT_ARGS="-p $parallel -i /tmp/perftest_il.pid -d $COMM_ARGS"
+    COMPONENT_ARGS="-p$parallel -i /tmp/perftest_il.pid -d $COMM_ARGS"
     echo -n "e)"
     run_test il $numjobs
     print_result

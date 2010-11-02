@@ -268,11 +268,9 @@ event_queue_get(struct event_queue *eq, struct queue_thread *me, struct server_m
   int found;
 
   assert(eq != NULL);
-  assert(msg != NULL);
 
   event_queue_lock(eq);
   if(me->jobid) {
-	  free(me->jobid);
 	  me->jobid = NULL;
 	  me->current = NULL;
   }
@@ -301,11 +299,10 @@ event_queue_get(struct event_queue *eq, struct queue_thread *me, struct server_m
 	  }
 	  el = el->prev;
   } while(el != eq->head);
-  if(found) {
+  if(found && msg) {
 	  me->current = el;
-	  me->jobid = strdup(el->msg->job_id_s);
+	  me->jobid = el->msg->job_id_s;
 	  *msg = el->msg;
-  } else {
   }
   event_queue_unlock(eq);
 
@@ -393,6 +390,9 @@ event_queue_remove(struct event_queue *eq, struct queue_thread *me)
   if(eq->cur_len <= queue_size_low) {
 	  eq->throttling = 0;
   }
+  
+  me->current = NULL;
+  me->jobid = NULL;
 
   event_queue_unlock(eq);
   /* end of critical section */
