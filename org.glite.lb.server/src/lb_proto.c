@@ -642,16 +642,16 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	/* GET /: Current User Jobs */
 		else if (requestPTR[0]=='/' && (requestPTR[1]==' ' || requestPTR[1]=='?')) {
                 	edg_wlc_JobId *jobsOut = NULL;
+			edg_wll_JobStat *statesOut = NULL;
 			int	i, flags;
 			
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
-// FIXME: edg_wll_UserJobs should take flags as parameter
-			switch (edg_wll_UserJobsServer(ctx,&jobsOut,NULL)) {
+			switch (edg_wll_UserJobsServer(ctx, EDG_WLL_STAT_CHILDREN, &jobsOut, &statesOut)) {
 				case 0: if (text)
 						edg_wll_UserInfoToText(ctx, jobsOut, &message);
 					else if (html)
-						edg_wll_UserInfoToHTML(ctx, jobsOut, &message);
+						edg_wll_UserInfoToHTML(ctx, jobsOut, statesOut, &message);
 					else ret = HTTP_OK;
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
@@ -699,7 +699,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				edg_wll_SetError(ctx,EDG_WLL_ERROR_JOBID_FORMAT,fullid);
 				ret = HTTP_BADREQ;
 			}
-			else switch (edg_wll_JobStatusServer(ctx,jobId,EDG_WLL_STAT_CLASSADS,&stat)) {
+			else switch (edg_wll_JobStatusServer(ctx,jobId,EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN,&stat)) {
 				case 0: if (text) 
 						edg_wll_JobStatusToText(ctx,stat,&message); 
 					else if (html)

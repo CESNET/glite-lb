@@ -44,10 +44,12 @@ int edg_wll_QueryToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 }
 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, char **message)
+int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, edg_wll_JobStat *statsOut, char **message)
 {
+	//TODO remove quadratic complexity one day...
+
         char *pomA = NULL, *pomB;
-        int i = 0;
+        int i = 0, j;
 
         /* head */
         pomB = strdup("");
@@ -55,12 +57,42 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
         while (jobsOut && jobsOut[i]) {
                 char    *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
 
-                asprintf(&pomA,"%s\t\t <li> <a href=\"%s\">%s</a>\r\n",
-                        pomB, chid,chid);
+		if (! statsOut[i].parent_job){
+			asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
+        	        	pomB, chid,chid);
+	                free(pomB);
+        	        pomB = pomA;
+			if (statsOut[i].jobtype == EDG_WLL_STAT_COLLECTION){
+				asprintf(&pomA,"%s\t\t <ul>\r\n", pomB);
+                                free(pomB);
+                                pomB = pomA;
+				j = 0;
+				while (jobsOut[j]) {
+					char *chid_parent = edg_wlc_JobIdUnparse(statsOut[j].parent_job);
+					if (chid_parent && (strcmp(chid, chid_parent) == 0)){
+						char *chid_children = edg_wlc_JobIdUnparse(jobsOut[j]);
+						asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
+			                               	pomB, chid_children,chid_children);
+						free(chid_children);
+			                        free(pomB);
+                        			pomB = pomA;
+					}
+					free(chid_parent);
+					j++;
+				}
+				asprintf(&pomA,"%s\t\t </ul>\r\n", pomB);
+                                free(pomB);
+                                pomB = pomA;
+			}
+			free(chid);
+		}
 
-                free(chid);
+// stat.jobtype == EDG_WLL_STAT_COLLECTION
+// if (stat.parent_job) chpa = edg_wlc_JobIdUnparse(stat.parent_job);
+
+                /*free(chid);
                 free(pomB);
-                pomB = pomA;
+                pomB = pomA;*/
                 i++;
         }
 
@@ -192,16 +224,20 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 {
         char *pomA = NULL, *pomB = NULL;
 	int pomL = 0;
-	char	*chid,*chstat,*chis = NULL, *chos = NULL;
-	char	*jdl,*rsl;
+	char	*chid,*chstat,*chis = NULL, *chos = NULL, *chpa = NULL;
+	char	*jdl,*rsl,*children;
+	int	i;
 
 	jdl = strdup("");
 	rsl = strdup("");
+	children = strdup("");
 	
         chid = edg_wlc_JobIdUnparse(stat.jobId);
 	if (stat.isb_transfer) chis = edg_wlc_JobIdUnparse(stat.isb_transfer);
 	if (stat.osb_transfer) chos = edg_wlc_JobIdUnparse(stat.osb_transfer);
+	if (stat.parent_job) chpa = edg_wlc_JobIdUnparse(stat.parent_job);
 
+	TRL("Parent job", "%s", chpa, NULL);
 	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)), NULL);
 	free(chstat);
 	TR("Owner","%s",stat.owner, NULL);
@@ -249,13 +285,21 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	if (stat.rsl) asprintf(&rsl,"<h3>RSL</h3>\r\n"
 		"<pre>%s</pre>\r\n",stat.rsl);
 
+	if ((stat.jobtype == EDG_WLL_STAT_COLLECTION) && (stat.children_num > 0)){
+		asprintf(&children, "<h3>Children</h3>\r\n");
+		for (i = 0; i < stat.children_num; i++){
+			asprintf(&pomA,"%s\t\t <li/> <a href=\"%s\">%s</a>\r\n",
+                        children, stat.children[i], stat.children[i]);
+			children = pomA;
+		}
+	}
 
         asprintf(&pomA, "<html>\r\n\t<body>\r\n"
 			"<h2>%s</h2>\r\n"
 			"<table halign=\"left\">%s</table>"
-			"%s%s"
+			"%s%s%s"
 			"\t</body>\r\n</html>",
-                	chid,pomB,jdl,rsl);
+                	chid,pomB,jdl,rsl, children);
         free(pomB);
 
         *message = pomA;
@@ -263,8 +307,10 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	free(chid);
 	if (chis) free(chis);
 	if (chos) free(chos);
+	if (chpa) free(chpa);
 	free(jdl);
 	free(rsl);
+	free(children);
         return 0;
 }
 

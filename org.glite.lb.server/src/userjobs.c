@@ -35,8 +35,10 @@ limitations under the License.
 
 int edg_wll_UserJobsServer(
 	edg_wll_Context ctx,
+	int flags,
 	edg_wlc_JobId	**jobs,
-	edg_wll_JobStat	**states)
+	edg_wll_JobStat	**states
+)
 {
 	char	*userid, *stmt = NULL,
 		*res = NULL;
@@ -118,7 +120,7 @@ int edg_wll_UserJobsServer(
 		*states = calloc(njobs+1, sizeof(**states));
 		idx = 0;
 		for (i = 0; i < njobs; i++) {
-			if (edg_wll_JobStatusServer(ctx, out[idx], -1, &(*states)[idx]) != 0)
+			if (edg_wll_JobStatusServer(ctx, out[idx], flags, &(*states)[idx]) != 0)
 				edg_wll_ResetError(ctx);
 			idx++;
 		}
