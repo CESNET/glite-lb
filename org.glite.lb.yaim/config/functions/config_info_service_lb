@@ -49,6 +49,10 @@ SERVICE_LC=lbserver
 
 SERVICE_HOST=`hostname -f`
 
+if [ ! -f ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf.template ]; then
+  yaimlog ERROR "The template file glite-info-service-${SERVICE_LC}.conf.template was not found in ${INFO_SERVICE_CONFIG}."
+  exit 1
+fi
 if [ ! -f ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf.template ]; then
   yaimlog ERROR "The template file for glite-info-glue2-${SERVICE_LC}.conf.template was not found in ${INFO_SERVICE_CONFIG}."
   exit 1
@@ -58,10 +62,18 @@ if [ ! -f ${INFO_SERVICE_SCRIPT}/glite-info-service ]; then
   yaimlog ERROR "The script file for glite-info-service was not found in ${INFO_SERVICE_SCRIPT}."
   exit 1
 fi
+if [ ! -f ${INFO_SERVICE_SCRIPT}/glite-info-glue2-simple ]; then
+  yaimlog ERROR "The script file for glite-info-glue2-simple was not found in ${INFO_SERVICE_SCRIPT}."
+  exit 1
+fi
 
 yaimlog DEBUG "Delete a previous version of the glite-info-service-${SERVICE_LC}.conf if it exists"
 rm -rf ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf
+yaimlog DEBUG "Delete a previous version of the glite-info-glue2-${SERVICE_LC}.conf if it exists"
+rm -rf ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf
 
+yaimlog DEBUG "Create the glite-info-service-${SERVICE_LC}.conf file out of the template file"
+cp ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf.template ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf
 yaimlog DEBUG "Create the glite-info-glue2-${SERVICE_LC}.conf file out of the template file"
 cp ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf.template ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf
 
@@ -78,7 +90,7 @@ cat << EOF > ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wra
 #!/bin/sh
 export PATH=$PATH:${INFO_SERVICE_SCRIPT}
 export ${SERVICE}_HOST=${SERVICE_HOST}
-${INFO_SERVICE_SCRIPT}/glite-info-service ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf $SITE_NAME
+${INFO_SERVICE_SCRIPT}/glite-info-service ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
 ${INFO_SERVICE_SCRIPT}/glite-info-glue2-simple ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf $SITE_NAME
 EOF
 
