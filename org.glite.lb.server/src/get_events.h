@@ -27,6 +27,15 @@ limitations under the License.
 extern "C" {
 #endif
 
+/* queryjobs callback
+ *
+ * called for each found jobs, should free the structures if unused
+ * 
+ * after last job: called with jobid=NULL, stat=NULL
+ *                 current error status in ctx
+ */
+typedef int edg_wll_QueryJobs_cb(edg_wll_Context ctx, glite_jobid_t jobid, edg_wll_JobStat *stat, void *);
+
 #if 0	/* rel 1 */
 char *edg_wll_jobid_to_user( edg_wll_Context, char *);
 void edg_wll_set_event_field_warn( edg_wll_Event *, char *, char *);
@@ -43,6 +52,8 @@ int edg_wll_get_event_flesh(edg_wll_Context,int,edg_wll_Event *);
 int edg_wll_QueryEventsServer(edg_wll_Context,int,const edg_wll_QueryRec **,const edg_wll_QueryRec **,edg_wll_Event **);
 
 int edg_wll_QueryJobsServer(edg_wll_Context, const edg_wll_QueryRec **, int, edg_wlc_JobId **, edg_wll_JobStat **);
+
+int edg_wll_QueryJobsServerStream(edg_wll_Context, const edg_wll_QueryRec **, int, edg_wll_QueryJobs_cb *, void *);
 
 void edg_wll_SortEvents(edg_wll_Event *);
 
