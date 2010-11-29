@@ -10,8 +10,6 @@ version=0.0.0
 PREFIX=/opt/glite
 
 globus_prefix=/opt/globus
-nothrflavour=gcc32
-thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 gsoap_prefix=/software/gsoap-2.6
 
@@ -56,29 +54,39 @@ THROBJS:=${OBJS:.o=.thr.lo}
 LIBS:=-L${stagedir}/${libdir} -lglite_jobid -lglite_lbu_db
 THRLIBS:=${LIBS}
 
-commonlib:= libglite_jp_common_${nothrflavour}.la
+CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit -ldl
+CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
+
+commonlib_nothr:= libglite_jp_common_${nothrflavour}.la
 commonlib_thr:= libglite_jp_common_${thrflavour}.la
-
-TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit -ldl
-TEST_INC:=-I${cppunit_prefix}/include
-
+commonlib:= libglite_jp_common.la
+ifeq (${thrflavour},)
+lib_LTLIBRARIES=${commonlib}
+default_commonlib=${commonlib}
+else
+lib_LTLIBRARIES=${commonlib_nothr} ${commonlib_thr}
+default_commonlib=${commonlib_nothr}
+endif
 
 default all: compile
 
-compile: ${commonlib} ${commonlib_thr}
+compile: ${lib_LTLIBRARIES}
 
-${commonlib}: ${OBJS}
+${commonlib_nothr}: ${OBJS}
 	${LINK} -o $@ ${OBJS} ${LIBS}
 
 ${commonlib_thr}: ${THROBJS}
 	${LINK} -o $@ ${THROBJS} ${THRLIBS}
 
+${commonlib}: ${OBJS}
+	${LINK} -o $@ ${OBJS} ${LIBS}
+
 check: type_test
 	LD_LIBRARY_PATH=${log4c_prefix}/${libdir}:${log4c_prefix}/lib:${LD_LIBRARY_PATH} ./type_test type_test.xml
 
 type_test: %: %.cpp compile
-	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ $@.o ${commonlib} ${TEST_LIBS} 
+	${CXX} -c ${CFLAGS} ${CPPUNIT_CFLAGS} $<
+	${LINKXX} -o $@ $@.o ${default_commonlib} ${CPPUNIT_LIBS} 
 
 doc:
 
@@ -89,7 +97,7 @@ install:
 	-mkdir -p ${PREFIX}/include/${globalprefix}/${jpprefix}
 	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${jpprefix}
 	-mkdir -p ${PREFIX}/${libdir}
-	${INSTALL} -m 755 ${commonlib} ${commonlib_thr} ${PREFIX}/${libdir}
+	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${PREFIX}/${libdir}
 
 clean:
 	rm -rvf *.o *.lo .libs lib*
