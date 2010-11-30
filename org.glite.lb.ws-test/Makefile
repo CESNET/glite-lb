@@ -5,8 +5,6 @@ PREFIX=/opt/glite
 
 glite_location=/opt/glite
 globus_prefix=/opt/globus
-nothrflavour=gcc32
-thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 cares_prefix=/opt/c-ares
 gsoap_prefix=/opt/gsoap
@@ -23,12 +21,20 @@ CEXAMPLES:=ws_getversion ws_jobstat ws_joblog ws_lb4agu_GetActivityStatus ws_lb4
 
 default all: ${CEXAMPLES}
 
+GLOBUS_GSSAPI_GSI_CFLAGS?=-I${globus_prefix}/include/${nothrflavour}
+
+ifeq (${thrflavour},)
+default_flavour=
+else
+default_flavour=_${nothrflavour}
+endif
+
 VPATH=${top_srcdir}/examples
 CC=gcc
 DEBUG:=-g -O0 -Wall
 CFLAGS:=${CFLAGS} -I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
-	-I${globus_prefix}/include/${nothrflavour} \
+	${GLOBUS_GSSAPI_GSI_CFLAGS} \
 	${DEBUG}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
@@ -37,10 +43,10 @@ INSTALL:=libtool --mode=install install
 
 GSOAP_FILES_PREFIX:= bk_ws_
 dotless_gsoap_ver:=${shell echo ${gsoap_default_version} | tr -d . }
-ifeq ($(shell test -f ${stagedir}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
+ifeq ($(shell test -f ${stagedir}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}_c.so && echo ok),ok)
 	langflavour:=_c
 endif
-GSOAP_LIB:=-L${stagedir}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o
 # ws_typeref.o
