@@ -40,7 +40,7 @@ start_daemon()
 	local cmd="$3"
 
 	if [ -f "$pidfile" ]; then
-		if ps p `cat $pidfile` >/dev/null 2>&1; then
+		if kill -0 `cat $pidfile`; then
 			return 0
 		fi
 		echo -n "Warning: stalled $pidfile for $name"
@@ -57,7 +57,7 @@ status_daemon()
 
 	if [ -f "$pidfile" ]; then
 		pid=`cat "$pidfile"`
-		if ps p $pid >/dev/null 2>&1; then
+		if kill -0 $pid >/dev/null 2>&1; then
 			echo "$name running as $pid"
 		else
 			echo "$name not running (stalled pidfile)"
