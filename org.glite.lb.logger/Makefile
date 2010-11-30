@@ -7,9 +7,6 @@ package=glite-lb-client
 version=0.0.0
 PREFIX=/opt/glite
 
-nothrflavour=gcc32
-thrflavour=gcc32pthr
-
 -include Makefile.inc
 -include ../project/version.properties
 
@@ -41,14 +38,22 @@ else
 	WS_INTERLOGD:=glite-lb-ws-interlogd
 endif
 
+ifeq (${thrflavour},)
+default_thrflavour=
+default_nothrflavour=
+else
+default_thrflavour=_${thrflavour}
+default_nothrflavour=_${nothrflavour}
+endif
+
 DEBUG:=-g -O0
-CFLAGS:=${DEBUG} \
+CFLAGS:=${CFLAGS} ${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
 
-LDFLAGS:=-L${stagedir}/${libdir} \
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} \
 	${COVERAGE_FLAGS} 
 
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
@@ -68,8 +73,8 @@ EXT_LIB:=-lglite_lbu_trio -lglite_lbu_log
 
 GLITE_GSS_LIB:=-lglite_security_gss
 
-TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
-TEST_INC:=-I${cppunit_prefix}/include
+CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
+CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 
 LOGD_OBJS:= logd_proto.o logd.o
 
@@ -117,35 +122,35 @@ default: all
 all compile: $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
 
 glite-lb-logd: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-perf: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-nofile: ${LOGD_NOBJS}
-	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-perf-nofile: ${LOGD_NOBJS}
-	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}_${nothrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-interlogd: ${INTERLOG_OBJS}
-	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
 
 glite-lb-notif-interlogd: ${INTERLOG_NOBJS}
-	${LINK} -o $@ ${INTERLOG_NOBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${INTERLOG_NOBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
 
 glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
-	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
 
 glite-lb-interlogd-perf-empty: ${INTERLOG_EMPTY_OBJS}
-	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
 
 glite-lb-ws-interlogd: ${INTERLOG_WOBJS}
-	${LINK} -o $@ ${INTERLOG_WOBJS} ${COMMON_LIB}_${thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${INTERLOG_WOBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
 
 #glite-lb-interlogd-perf-inline-empty: ${INTERLOG_INLINE_EMPTY_OBJS}
 #	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
-#		${COMMON_LIB}_${thrflavour}
+#		${COMMON_LIB}${default_thrflavour}
 
 ${MAN_GZ}: ${MAN}
 	rm -f ${MAN_GZ} ${MAN}
@@ -162,14 +167,14 @@ check:
 # check.ll check.il
 
 #check.ll: logd_proto_test.o ll_test.o
-#	${LINKXX} -o $@ ${COMMON_LIB}_${nothrflavour} ${EXT_LIBS} ${TEST_LIBS} $+
+#	${LINKXX} -o $@ ${COMMON_LIB}${default_nothrflavour} ${EXT_LIBS} ${CPPUNIT_LIBS} $+
 #	./check.ll
 
 check.ll:
 	-echo commented out -- fix needed
 
 check.il: ${INTERLOG_TEST_OBJS}
-	${LINKXX} -o $@ ${COMMON_LIB}_${thrflavour} ${GLITE_GSS_LIB}_${nothrflavour} ${TEST_LIBS} -lpthread $+
+	${LINKXX} -o $@ ${COMMON_LIB}${default_thrflavour} ${GLITE_GSS_LIB}${default_nothrflavour} ${CPPUNIT_LIBS} -lpthread $+
 
 install:
 	-mkdir -p ${PREFIX}/bin
@@ -217,11 +222,11 @@ logd_proto_test.o: %.o: %.c
 	${CC} ${CFLAGS} -c $< -o $@
 
 ll_test.o: %.o: %.cpp
-	${CXX} ${CFLAGS} ${TEST_INC} -c $< -o $@
+	${CXX} ${CFLAGS} ${CPPUNIT_CFLAGS} -c $< -o $@
 
 il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest.o event_storeTest.o: %.o: %.cpp
-	${CXX} ${CFLAGS} ${TEST_INC} -c $< -o $@
+	${CXX} ${CFLAGS} ${CPPUNIT_CFLAGS} -c $< -o $@
 
 clean:
 	rm -rvf .libs/ *.o *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ}
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
