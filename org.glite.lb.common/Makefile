@@ -8,8 +8,6 @@ package=glite-lb-common
 version=0.0.0
 PREFIX=/opt/glite
 
-nothrflavour=gcc32
-thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 
 -include Makefile.inc
@@ -39,39 +37,36 @@ TRIO_LIB:=-lglite_lbu_trio
 PERF_HDRS:=lb_perftest.h
 PERF_OBJS:=lb_perftest.o
 
-CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
+
+ifneq (${expat_prefix},/usr)
+        expatlib := -L${expat_prefix}/${libdir} -L${expat_prefix}/lib 
+endif
+ifneq (${classads_prefix},/usr)
+        classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib 
+endif
+
+CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
+CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
+EXPAT_CFLAGS?=-I${expat_prefix}/include
+EXPAT_LIBS?=${expatlib} -lexpat
+CLASSADS_CFLAGS?=-I${classads_prefix}/include -I${classads_prefix}/include/classad
+CLASSADS_LIBS?=${classadslib} -lclassad
+
+CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
 	-I${top_srcdir}/test \
 	-I${stagedir}/include \
-	-I${expat_prefix}/include \
-	-I${classads_prefix}/include \
-	-I${classads_prefix}/include/classad \
+	${EXPAT_CFLAGS} \
+	${CLASSADS_CFLAGS} \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
 	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS} \
 	-DBUILDING_LB_COMMON 
 
-ifneq (${expat_prefix},/usr)
-	EXPAT_LIBS:=-L${expat_prefix}/${libdir} -L${expat_prefix}/lib
-endif
-
-EXPAT_LIBS:=${EXPAT_LIBS} -lexpat
-
-ifneq (${classads_prefix},/usr)
-        classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib 
-endif
-
-classadslib := ${classadslib} -lclassad
-
-
-LDFLAGS:=-L${stagedir}/${libdir} -L${stagedir}/lib \
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} -L${stagedir}/lib \
 	${COVERAGE_FLAGS}
 
-EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${classadslib}
-EXT_THRLIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${classadslib}
-
-TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
-TEST_INC:=-I${cppunit_prefix}/include
+EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${CLASSADS_LIBS}
 
 ifdef LB_PROF
         CFLAGS:= ${CFLAGS} -pg -g
@@ -99,12 +94,24 @@ HDRS:=context.h context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
 	query_rec.h timeouts.h LoggingExceptions.h CountRef.h ${PERF_HDRS} 
 GEN_HDRS:=events.h jobstat.h common_version.h
 
-STATICLIB:=libglite_lb_common_${nothrflavour}.a
+NOTHRSTATICLIB:=libglite_lb_common_${nothrflavour}.a
 THRSTATICLIB:=libglite_lb_common_${thrflavour}.a
-LTLIB:=libglite_lb_common_${nothrflavour}.la
+STATICLIB:=libglite_lb_common.a
+NOTHRLTLIB:=libglite_lb_common_${nothrflavour}.la
 THRLTLIB:=libglite_lb_common_${thrflavour}.la
+LTLIB:=libglite_lb_common.la
 
 REPORTS:=${top_srcdir}/reports
+
+ifeq (${thrflavour},)
+lib_LTLIBRARIES=${LTLIB}
+lib_LIBRARIES=${STATICLIB}
+default_commonlib=${LTLIB}
+else
+lib_LTLIBRARIES=${THRLTLIB} ${THRLTLIB}
+lib_LIBRARIES=${NOTHRSTATICLIB} ${THRSTATICLIB}
+default_commonlib=${NOTHRLTLIB}
+endif
 
 ifdef LB_PERF
 STAGE_PERFTEST=mkdir -p ${PREFIX}/examples/perftest; \
@@ -121,7 +128,7 @@ generate: ${GEN_HDRS}
 common_version.h: ${top_srcdir}/project/version.properties
 	echo "#define GLITE_LB_COMMON_VERSION \"${version}\"" >$@
 
-all compile: generate ${STATICLIB} ${LTLIB} ${THRSTATICLIB} ${THRLTLIB}
+all compile: generate ${lib_LTLIBRARIES} ${lib_LIBRARIES}
 
 # In order to use libtool versioning correcty, we must have:
 #
@@ -138,7 +145,18 @@ offset=2
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
+ifeq (${thrflavour},)
 ${STATICLIB}: ${OBJS}
+	ar crv $@ ${OBJS}
+	ranlib $@
+
+${LTLIB}: ${OBJS}
+	${LINKXX} ${version_info} -o $@ ${LOBJS} \
+		-lglite_security_gss \
+		${EXT_LIBS} \
+		-lm
+else
+${NOTHRSTATICLIB}: ${OBJS}
 	ar crv $@ ${OBJS}
 	ranlib $@
 
@@ -146,7 +164,7 @@ ${THRSTATICLIB}: ${THROBJS}
 	ar crv $@ ${THROBJS}
 	ranlib $@
 
-${LTLIB}: ${OBJS}
+${NOTHRLTLIB}: ${OBJS}
 	${LINKXX} ${version_info} -o $@ ${LOBJS} \
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS} \
@@ -155,8 +173,9 @@ ${LTLIB}: ${OBJS}
 ${THRLTLIB}: ${THROBJS}
 	${LINKXX} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss_${thrflavour} \
-		${EXT_THRLIBS} \
+		${EXT_LIBS} \
 		-lm
+endif
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
@@ -170,13 +189,13 @@ check.parse: test_parse
 	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_parse ${REPORTS}/parse.xml
 
 test_parse: parse.o test_main.cpp
-	${LINKXX} -o test_parse parse.o ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
+	${LINKXX} -o test_parse parse.o ${default_commonlib} ${CPPUNIT_LIBS} ${EXT_LIBS}
 
 check.il: il_test
 	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./il_test ${REPORTS}/il.xml
 
 il_test: il_test.o il_int_test.o il_string_test.o il_msg_test.o
-	${LINKXX} -o $@ $+ ${LTLIB} ${TEST_LIBS} ${EXT_LIBS}
+	${LINKXX} -o $@ $+ ${default_commonlib} ${CPPUNIT_LIBS} ${EXT_LIBS}
 
 test_coverage:
 	-mkdir coverage
@@ -203,14 +222,14 @@ olddoc: generate events.tex status.tex
 install: 
 	mkdir -p ${PREFIX}/${libdir}
 	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
-	${INSTALL} -m 644 ${LTLIB} ${THRLTLIB} ${MAILDIR_LIB} ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${PREFIX}/${libdir}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
 #	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
 	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ;
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ;
 	${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} ;
-	${INSTALL} -m 644 ${STATICLIB} ${THRSTATICLIB} ${PREFIX}/${libdir};
+	${INSTALL} -m 644 ${lib_LIBRARIES} ${PREFIX}/${libdir};
 	if [ x${LB_STANDALONE} = xyes ]; then \
 		mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
 		${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
@@ -219,13 +238,13 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<
 
 il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp test_main.cpp
-	${CXX} -c ${CFLAGS} ${TEST_INC} $<
+	${CXX} -c ${CFLAGS} ${CPPUNIT_CFLAGS} $<
 
 %.thr.o: %.c
 	${COMPILE} ${CFLAGS} -D_REENTRANT -DGLITE_LB_THREADED -o $@ -c $<
