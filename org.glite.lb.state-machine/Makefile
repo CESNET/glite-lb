@@ -20,11 +20,22 @@ AT3=${stagedir}/sbin/glite-lb-at3
 
 SUFFIXES = .T 
 
+ifneq (${classads_prefix},/usr)
+	classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib 
+endif
+ifneq (${expat_prefix},/usr)
+	expatlib := -L${expat_prefix}/${libdir} -L${expat_prefix}/lib 
+endif
+CLASSADS_CFLAGS?=-I${classads_prefix}/include -I${classads_prefix}/include/classad
+CLASSADS_LIBS?=${classadslib} -lclassad
+EXPAT_CFLAGS?=
+EXPAT_LIBS?=${expatlib} -lexpat
+
 DEBUG:=-g -O0 -Wall
 
-CFLAGS:= \
+CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
-	-I${classads_prefix}/include -I${classads_prefix}/include/classad \
+	${CLASSADS_CFLAGS} \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface 
 
@@ -36,16 +47,14 @@ INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
-ifneq (${classads_prefix},/usr)
-	classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib 
+ifeq (${thrflavour},)
+default_flavour=
+else
+default_flavour=_${nothrflavour}
 endif
-
-classadslib := ${classadslib} -lclassad
-
-EXT_LIBS:=
-COMMON_LIBS:= -L${stagedir}/${libdir}  -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour}
-PLUGIN_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common_${nothrflavour}\
-	${classadslib} -lstdc++ ${expatlib} -lexpat\
+COMMON_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${defaultflavour} -lglite_security_gss${defaultflavour}
+PLUGIN_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${defaultflavour} \
+	${CLASSADS_LIBS} -lstdc++ ${EXPAT_LIBS}
 
 PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo process_event_cream.lo lb_plugin.lo  process_event_file_transfer.lo process_event_file_transfer_collection.lo
 MACHINE_OBJS:=seqcode_aux.o process_event.o process_event_pbs.o process_event_condor.o process_event_cream.o process_event_file_transfer.o process_event_file_transfer_collection.o
@@ -88,7 +97,7 @@ install:
 clean:
 	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB}
 	rm -rfv job_attrs.h job_attrs2.h lb-job-attrs2.xsd glite-jpis-config.xml
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 check:
 	@echo No tests yet
