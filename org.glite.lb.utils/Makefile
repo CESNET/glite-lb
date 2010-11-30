@@ -7,8 +7,6 @@ package=glite-lb-utils
 version=0.0.0
 PREFIX=/opt/glite
 
-nothrflavour=gcc32
-thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 gsoap_prefix=/opt/gsoap
 
@@ -26,16 +24,23 @@ SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
 
-CFLAGS:= \
+ifneq (${expat_prefix},/usr)
+	expatlib := -L${expat_prefix}/${libdir} -L${expat_prefix}/lib
+endif
+EXPAT_CFLAGS?=-I${expat_prefix}/include
+EXPAT_LIB?=${expatlib} -lexpat
+GSOAP_CFLAGS?=-I${gsoap_prefix}/include -I${gsoap_prefix}/
+
+CFLAGS:= ${CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
-	-I${expat_prefix}/include \
-	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
+	${EXPAT_CFLAGS} \
+	${GSOAP_CFLAGS} \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
-LDFLAGS:=-L${stagedir}/${libdir}
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir}  ${LDFLAGS} 
@@ -45,16 +50,19 @@ INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
-ifneq (${expat_prefix},/usr)
-	expatlib := -L${expat_prefix}/${libdir} -L${expat_prefix}/lib
-endif
+EXT_LIBS:= ${EXPAT_LIBS}
 
-EXT_LIBS:= \
-	${expatlib} -lexpat
+ifeq (${thrflavour},)
+COMMON_LIB:=-lglite_lb_common
+CLIENT_LIB:=-lglite_lb_client
+PLUS_LIB:=-lglite_lb_clientpp
+JP_LIBS:=-lglite_jp_common
+else
 COMMON_LIB:=-lglite_lb_common_${nothrflavour}
 CLIENT_LIB:=-lglite_lb_client_${nothrflavour}
 PLUS_LIB:=-lglite_lb_clientpp_${nothrflavour}
 JP_LIBS:=-lglite_jp_common_${nothrflavour}
+endif
 
 UTILS:=mon purge dump load dump_exporter
 ALLUTILS:=${UTILS} state_history statistics
@@ -110,8 +118,8 @@ install:
 	done
 
 clean:
-	rm -rfv ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ} *.{lo,o} .libs/
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rfv ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ} *.lo *.o .libs/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} -c $<
