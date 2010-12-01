@@ -6,9 +6,6 @@ lbprefix=lb
 package=glite-lb-client
 version=0.0.0
 
-nothrflavour=gcc32
-thrflavour=gcc32pthr
-
 CC:=gcc
 CXX:=g++
 
@@ -89,11 +86,12 @@ ifdef LB_PERF
 	LB_PERF_FLAGS:=-DLB_PERF
 	LB_PERF_TOOLS:=perftest_logjobs perftest_jobreg
 endif
-COMMON_LIB:=-lglite_lb_common_${nothrflavour}
+COMMON_LIB_NOTHR:=-lglite_lb_common_${nothrflavour}
 COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
+COMMON_LIB:=-lglite_lb_common
 TRIO_LIB:=-lglite_lbu_trio
 
-CFLAGS:=${DEBUG} \
+CFLAGS:=${CFLAGS} ${DEBUG} \
 	-I. \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}/include \
@@ -105,10 +103,10 @@ CXXFLAGS:=${CFLAGS}
 
 EXT_LIB:=
 
-TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
-TEST_INC:=-I${cppunit_prefix}/include
+CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
+CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 
-LDFLAGS:=-L${stagedir}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
@@ -133,11 +131,30 @@ PLUSTHROBJS:=${PLUSOBJS:.o=.thr.o}
 PLUSLOBJS:=${PLUSOBJS:.o=.lo}
 PLUSTHRLOBJS:=${PLUSOBJS:.o=.thr.lo}
 
-LIB:=libglite_lb_client_${nothrflavour}.la
+NOTHRLIB:=libglite_lb_client_${nothrflavour}.la
 THRLIB:=libglite_lb_client_${thrflavour}.la
-
-PLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
+LIB:=libglite_lb_client.la
+NOTHRPLUSLIB:=libglite_lb_clientpp_${nothrflavour}.la
 THRPLUSLIB:=libglite_lb_clientpp_${thrflavour}.la
+PLUSLIB:=libglite_lb_clientpp.la
+ifeq (${thrflavour},)
+c_LIBRARIES=${LIB}
+plus_LIBRARIES=${PLUSLIB}
+default_clientlib=${LIB}
+default_clientpluslib=${PLUSLIB}
+default_commonlib=${COMMON_LIB}
+default_clientlib_thr=${LIB}
+default_commonlib_thr=${COMMON_LIB}
+else
+c_LIBRARIES=${NOTHRLIB} ${THRLIB}
+plus_LIBRARIES=${NOTHRPLUSLIB} ${THRPLUSLIB}
+default_clientlib=${NOTHRLIB}
+default_clientpluslib=${NOTHRPLUSLIB}
+default_commonlib=${COMMON_LIB_NOTHR}
+default_clientlib_thr=${THRLIB}
+default_commonlib_thr=${COMMON_LIB_THR}
+endif
+lib_LTLIBRARIES=${c_LIBRARIES} ${plus_LIBRARIES}
 
 TOOLS:=${LB_PERF_TOOLS}
 EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c test_changed_jdl.c done_failed_events.c
@@ -170,18 +187,27 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ifdef LB_STANDALONE
-compile all: generate ${LIB} ${THRLIB} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${MAN8_GZ}
+compile all: generate ${c_LIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${MAN8_GZ}
 else
-compile all: check_version generate ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${MAN8_GZ}
+compile all: check_version generate ${lib_LTLIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${MAN8_GZ}
 endif
 
 generate: ${GEN_HDRS}
 
 default: all
 
+ifeq (${thrflavour},)
 ${LIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/${libdir} \
 			${COMMON_LIB} ${TRIO_LIB} \
+			-lglite_security_gss
+
+${PLUSLIB}: ${PLUSOBJS} ${LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
+else
+${NOTHRLIB}: ${LIBOBJS}
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/${libdir} \
+			${COMMON_LIB_NOTHR} ${TRIO_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
@@ -189,31 +215,32 @@ ${THRLIB}: ${LIBTHROBJS}
 			${COMMON_LIB_THR} ${TRIO_LIB} \
 			-lglite_security_gss_${thrflavour}
 
-${PLUSLIB}: ${PLUSOBJS} ${LIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
+${NOTHRPLUSLIB}: ${PLUSOBJS} ${NOTHRLIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/${libdir} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
 	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
+endif
 
 logevent: logevent.o args.o
-	${LINK} -o $@ logevent.o args.o ${LIB} ${EXT_LIB} 
+	${LINK} -o $@ logevent.o args.o ${default_clientlib} ${EXT_LIB} 
 
 notify: notify.o
-	${LINKXX} -o $@ notify.o ${PLUSLIB} ${EXT_LIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} -o $@ notify.o ${default_clientpluslib} ${EXT_LIB} ${PLUS_EXTRA_LIB}
 
 register_sandbox: %: %.o
-	${LINK} -o $@ $@.o ${LIB} ${EXT_LIB}
+	${LINK} -o $@ $@.o ${default_clientlib} ${EXT_LIB}
 
 ${TOOLS} ${EXAMPLES}: %: %.o
-	${LINK} -o $@ $< ${LIB} ${EXT_LIB} 
+	${LINK} -o $@ $< ${default_clientlib} ${EXT_LIB} 
 
 ${EXAMPLES_CL}: %: %.o
-	${LINK} -o $@ $< ${LIB} ${COMMON_LIB} ${EXT_LIB} 
+	${LINK} -o $@ $< ${default_clientlib} ${default_commonlib} ${EXT_LIB} 
 
 ${EXAMPLES_CL_THR}: %: %.o
-	${LINK} -o $@ $< ${THRLIB} ${COMMON_LIB_THR} ${EXT_LIB} 
+	${LINK} -o $@ $< ${default_clientlib_thr} ${default_commonlib_thr} ${EXT_LIB} 
 
-${TOOLS}: ${LIB}
+${TOOLS}: ${default_clientlib}
 
 ${PLUSOBJS}: %.o: %.cpp
 	${CXXCOMPILE} -c $<
@@ -221,10 +248,10 @@ ${PLUSOBJS}: %.o: %.cpp
 ${PLUSTHROBJS}: %.thr.o: %.cpp
 	${CXXCOMPILE} -o $@ -c $<
 
-${EXAMPLES_PLUS}: ${PLUSLIB}
+${EXAMPLES_PLUS}: ${default_clientpluslib}
 
 ${EXAMPLES_PLUS}: %: %.o
-	${LINKXX} -o $@ $< ${PLUSLIB}
+	${LINKXX} -o $@ $< ${default_clientpluslib}
 
 ${LIBOBJS}: %.o: %.c
 	${COMPILE} -c $<
@@ -281,10 +308,10 @@ check.producer: producer_test
 	./producer_test
 
 producer_test: producer_test.o prod_proto_test.o
-	${LINKXX} -o $@ ${LIB} ${TEST_LIBS} $+ ${EXT_LIB}
+	${LINKXX} -o $@ ${default_clientlib} ${CPPUNIT_LIBS} $+ ${EXT_LIB}
 
 producer_test.o: %.o: %.cpp
-	${CXX} -c ${CXXFLAGS} ${TEST_INC} $<
+	${CXX} -c ${CXXFLAGS} ${CPPUNIT_CFLAGS} $<
 
 man: ${MAN_GZ} ${MAN8_GZ}
 
@@ -312,10 +339,9 @@ install:
 	mkdir -p ${PREFIX}/share/man/man8
 	mkdir -p ${PREFIX}/share/build/m4
 ifdef LB_STANDALONE
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${c_LIBRARIES} ${PREFIX}/${libdir}
 else
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PLUSLIB} ${THRPLUSLIB} ${PREFIX}/${libdir}
-	${INSTALL} -m 644 ${LIB} ${THRLIB} ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${PREFIX}/${libdir}
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
@@ -350,10 +376,10 @@ endif
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
-	rm -rvf ${LIB} ${THRLIB} ${TOOLS} logevent  register_sandbox ${PLUSLIB} ${THRPLUSLIB} ${MAN_GZ} ${MAN8_GZ}
+	rm -rvf ${lib_LTLIBRARIES} ${TOOLS} logevent  register_sandbox ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 check_version:
 	${CHECK_VERSION} ${stagedir}/include/glite/lb/common_version.h
