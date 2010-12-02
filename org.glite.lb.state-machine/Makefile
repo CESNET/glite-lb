@@ -52,8 +52,8 @@ default_flavour=
 else
 default_flavour=_${nothrflavour}
 endif
-COMMON_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${defaultflavour} -lglite_security_gss${defaultflavour}
-PLUGIN_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${defaultflavour} \
+COMMON_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${default_flavour} -lglite_security_gss${defaultflavour}
+PLUGIN_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${default_flavour} \
 	${CLASSADS_LIBS} -lstdc++ ${EXPAT_LIBS}
 
 PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo process_event_cream.lo lb_plugin.lo  process_event_file_transfer.lo process_event_file_transfer_collection.lo
