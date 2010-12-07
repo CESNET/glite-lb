@@ -26,6 +26,7 @@ limitations under the License.
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 
 #include "context-int.h"
 
