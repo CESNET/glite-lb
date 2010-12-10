@@ -9,8 +9,6 @@ PREFIX=/opt/glite
 
 # gridsite requires openssl libraries, we want to include the ones from globus
 globus_prefix=/opt/globus
-nothrflavour=gcc32
-thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 cares_prefix=/opt/c-ares
 gsoap_prefix=/opt/gsoap
@@ -64,6 +62,20 @@ SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
 
+ifeq (${thrflavour},)
+default_flavour=
+vomsflavour:=
+else
+default_flavour=_${nothrflavour}
+vomsflavour:=_${nothrflavour}
+ifeq (${nothrflavour},gcc32) 
+	vomsflavour :=
+endif 
+ifeq (${nothrflavour},gcc32dbg)
+	vomsflavour :=
+endif
+endif
+
 GRIDSITE_CFLAGS?=-I${gridsite_prefix}/include `xml2-config --cflags`
 GRIDSITE_LIBS?=-L${gridsite_prefix}/${libdir} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
 
@@ -85,8 +97,12 @@ LIBCARES_LIBS?=${cares_libs} -lcares
 GSOAP_CFLAGS?=-I${gsoap_prefix}/include -I${gsoap_prefix}/
 EXPAT_CFLAGS?=-I${expat_prefix}/include
 GLOBUS_GSSAPI_GSI_CFLAGS?=-I${globus_prefix}/include/${nothrflavour}
+
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
 CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
+
+VOMS_CFLAGS?=-I${voms_prefix}/include -I${voms_prefix}/include/glite/security
+VOMS_LIBS?=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
 
 CFLAGS:= ${CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
@@ -97,19 +113,13 @@ CFLAGS:= ${CFLAGS} \
 	${EXPAT_CFLAGS} \
 	${LIBCARES_CFLAGS} \
 	${CLASSADS_CFLAGS} \
-	-I${voms_prefix}/include \
+	${VOMS_CFLAGS} \
 	${COVERAGE_FLAGS} \
 	$(GRIDSITE_CFLAGS) ${LCAS_CFLAGS} \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB \
 	${GLOBUS_GSSAPI_GSI_CFLAGS} #gridsite needs this
 
 CXXFLAGS:=${CFLAGS}
-
-ifeq (${thrflavour},)
-default_flavour=
-else
-default_flavour=_${nothrflavour}
-endif
 
 ifdef LB_PROF
 	SRVBONES_LIB:= ${stagedir}/${libdir}/libglite_lbu_server_bones.la
@@ -140,15 +150,6 @@ LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${gsoap_prefix}/bin; else echo ${gsoap_prefix}; fi }
-
-vomsflavour := _${nothrflavour}
-ifeq (${nothrflavour},gcc32) 
-	vomsflavour :=
-endif 
-ifeq (${nothrflavour},gcc32dbg)
-	vomsflavour :=
-endif
-VOMS_LIBS:=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
 
 EXT_LIBS:=  \
 	-lz \

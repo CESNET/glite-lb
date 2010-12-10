@@ -22,7 +22,7 @@ limitations under the License.
 #include <errno.h>
 
 #include <glite/security/lcas/lcas_pem.h>
-#include "glite/security/voms/voms_apic.h"
+#include "voms/voms_apic.h"
 #include "glite/lb/context-int.h"
 #include "lb_authz.h"
 #include "glite/lbu/log.h"
