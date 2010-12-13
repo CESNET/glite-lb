@@ -21,6 +21,7 @@ limitations under the License.
 #include <unistd.h>
 #include <errno.h>
 
+#include <openssl/x509.h>
 #include <glite/security/lcas/lcas_pem.h>
 #include "voms/voms_apic.h"
 #include "glite/lb/context-int.h"
