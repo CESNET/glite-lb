@@ -63,6 +63,10 @@ ${CEXAMPLES}: %: %.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ $@.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
 %.o %.lo: %.c soap_version.h ${SOAP_FILES}
+	cat ${gsoap_prefix}/include/stdsoap2.h || true
+	cat ${gsoap_prefix}/stdsoap2.h || true
+	${CC} ${CFLAGS} -H $< || true
+	${CC} ${CFLAGS} -E $< || true
 	${COMPILE} -c $<
 
 check:
