@@ -105,6 +105,7 @@ VOMS_CFLAGS?=-I${voms_prefix}/include -I${voms_prefix}/include/glite/security
 VOMS_LIBS?=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
 
 CFLAGS:= ${CFLAGS} \
+	${GLOBUS_GSSAPI_GSI_CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	 ${GSOAP_CFLAGS} \
@@ -116,8 +117,7 @@ CFLAGS:= ${CFLAGS} \
 	${VOMS_CFLAGS} \
 	${COVERAGE_FLAGS} \
 	$(GRIDSITE_CFLAGS) ${LCAS_CFLAGS} \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB \
-	${GLOBUS_GSSAPI_GSI_CFLAGS} #gridsite needs this
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB
 
 CXXFLAGS:=${CFLAGS}
 
