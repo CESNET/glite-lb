@@ -414,10 +414,6 @@ int main(int argc, char *argv[])
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
 
-	memset(host, 0, sizeof host);
-	edg_wll_gss_gethostname(host,sizeof host);
-	host[sizeof host - 1] = 0;
-
 	asprintf(&port, "%d", GLITE_JOBID_DEFAULT_PORT);
 #ifdef GLITE_LB_SERVER_WITH_WS
 	asprintf(&ws_port, "%d", GLITE_JOBID_DEFAULT_PORT+3);
@@ -430,6 +426,10 @@ int main(int argc, char *argv[])
 	purge_timeout[EDG_WLL_JOB_ABORTED] = 60*60*24*7;
 	purge_timeout[EDG_WLL_JOB_CANCELLED] = 60*60*24*7;
 	edg_wll_InitContext(&ctx);
+
+	memset(host, 0, sizeof host);
+	edg_wll_gss_gethostname(host,sizeof host);
+	host[sizeof host - 1] = 0;
 
 	while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
 		case 'A': enable_lcas = 1; break;
