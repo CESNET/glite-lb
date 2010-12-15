@@ -78,6 +78,9 @@ typedef struct _edg_wll_GssCred_data *edg_wll_GssCred;
 int
 edg_wll_gss_initialize(void);
 
+void
+edg_wll_gss_finalize(void);
+
 int
 edg_wll_gss_acquire_cred_gsi(const char *cert_file,
 		             const char *key_file,

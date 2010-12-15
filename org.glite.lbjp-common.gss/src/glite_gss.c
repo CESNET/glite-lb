@@ -59,6 +59,8 @@ struct asyn_result {
 	int		err;
 };
 
+static int globus_common_activated = 0;
+
 static int decrement_timeout(struct timeval *timeout, struct timeval before, struct timeval after)
 {
         (*timeout).tv_sec = (*timeout).tv_sec - (after.tv_sec - before.tv_sec);
@@ -1165,15 +1167,30 @@ edg_wll_gss_reject(int sock)
 int
 edg_wll_gss_initialize(void)
 {
-   int ret;
+   int ret = 0;
 
-   ret = globus_module_activate(GLOBUS_GSI_GSSAPI_MODULE);
-   if (ret != GLOBUS_SUCCESS) {
+   if (globus_module_activate(GLOBUS_GSI_GSSAPI_MODULE) != GLOBUS_SUCCESS) {
       errno = EINVAL;
       ret = EDG_WLL_GSS_ERROR_ERRNO;
    }
+
+   if (globus_module_activate(GLOBUS_COMMON_MODULE) == GLOBUS_SUCCESS)
+	globus_common_activated = 1;
+
    return ret;
 }
+
+
+void
+edg_wll_gss_finalize(void)
+{
+   globus_module_deactivate(GLOBUS_GSI_GSSAPI_MODULE);
+   if (globus_common_activated) {
+      globus_module_deactivate(GLOBUS_COMMON_MODULE);
+      globus_common_activated = 0;
+   }
+}
+
 
 int
 edg_wll_gss_release_cred(edg_wll_GssCred *cred, edg_wll_GssStatus* gss_code)
@@ -1457,13 +1474,10 @@ edg_wll_gss_gethostname(char *name, int len)
 {
    int ret;
 
-   ret = globus_module_activate(GLOBUS_COMMON_MODULE);
-   if (ret != GLOBUS_SUCCESS) {
+   if (globus_common_activated)
+      ret = globus_libc_gethostname(name, len);
+   else
       ret = gethostname(name, len);
-      return ret;
-   }
-   ret = globus_libc_gethostname(name, len);
-   globus_module_deactivate(GLOBUS_COMMON_MODULE);
 
    return ret;
 }
