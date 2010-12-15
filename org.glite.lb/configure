@@ -146,7 +146,7 @@ my %lbmodules = (
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache shared commands core/ ],
-	'px' => [ qw/proxyrenewal glite-PX myproxy-yaim/ ],
+	'px' => [ qw/proxyrenewal glite-PX myproxy-yaim myproxy-config/ ],
 	);
 
 
@@ -431,6 +431,7 @@ BEGIN{
 	'px.proxyrenewal' => [ qw/globus:B myproxy voms/ ],
 	'px.glite-PX' => [qw/myproxy:R fetchcrl:R gip_service:R bdii:R glite_version:R/],
 	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
+	'px.myproxy-config' => [],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -544,6 +545,7 @@ for my $jar (keys %need_jars) {
 	'px.proxyrenewal' => [ qw// ],
 	'px.glite-PX' => [qw/px.myproxy-yaim:R/],
 	'px.myproxy-yaim' => [],
+	'px.myproxy-config' => [],
 );
 
 for my $ext (keys %deps_aux) {
@@ -627,7 +629,7 @@ security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
-px.proxyrenewal px.myproxy-yaim px.glite-PX
+px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
 /;
 	@aux{@m} = (1) x ($#m+1);
 
