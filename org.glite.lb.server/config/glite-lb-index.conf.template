@@ -1,8 +1,0 @@
-[
-	JobIndices = {
-		[ type = "system"; name = "owner" ],
-		[ type = "system"; name = "location" ],
-		[ type = "system"; name = "destination" ],
-		[ type = "system"; name = "lastUpdateTime" ]
-	}
-]
