@@ -107,3 +107,7 @@
 2.1.10-2
 - Module rebuilt
 
+2.1.11-1
+- Makefile a configuration updated to work across org.glite & EMI
+- BDII status reporting fixed (ggus #62737)
+
