@@ -32,3 +32,6 @@
 2.0.2-2
 - Module rebuilt
 
+2.0.3-1
+- Makefile adopts compilation and linking flags from the environment.
+
