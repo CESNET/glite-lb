@@ -1,1 +1,0 @@
-glite-security-gss wraps GSS functions (and several non-GSS Globus calls) to a secure network communication library with strict timing control (via timeout arguments) of all remote operations.
