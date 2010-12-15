@@ -89,3 +89,7 @@
 7.1.6-2
 - Module rebuilt
 
+7.1.7-1
+- Makefile a configuration updated to work across org.glite & EMI
+- Connection pool initialization fixed for multi-threaded apps. (fix for bug #76175)
+
