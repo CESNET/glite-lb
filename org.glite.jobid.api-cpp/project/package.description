@@ -1,1 +1,0 @@
-C++ API handling gLite jobid. It is a thin wrapper of the C implementation (glite-jobid-api-c).
