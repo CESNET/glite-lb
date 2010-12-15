@@ -1,1 +1,0 @@
-glite-security-gsoap-plugin is plugin for gSoap providing secured communication via GSS, as well as strict timing control of all operations via glite-security-gss.
