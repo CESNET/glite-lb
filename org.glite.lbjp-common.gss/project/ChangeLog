@@ -37,3 +37,8 @@
 2.1.4-1
 - Support IPv6 literal adresses.
 
+2.1.5-1
+- EMI build (flavor-less globus, pkg-config, ...)
+- fix using globus in thread environment
+- new finalize function
+
