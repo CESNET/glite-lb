@@ -37,3 +37,6 @@
 1.1.3-2
 - Module rebuilt
 
+1.1.4-1
+- Configure updated to work across org.glite & EMI
+
