@@ -51,3 +51,6 @@
 - Makefile a configuration updated to work across org.glite & EMI
 - BDII status reporting fixed
 
+1.0.10-2
+- Module rebuilt
+
