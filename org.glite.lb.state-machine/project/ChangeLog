@@ -55,3 +55,6 @@
 1.1.4-1
 - Makefile, configuration and header includes updated to work across org.glite & EMI
 
+1.1.4-2
+- Module rebuilt
+
