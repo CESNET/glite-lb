@@ -48,3 +48,6 @@
 1.1.5-1
 - Makefile a configuration updated to work across org.glite & EMI
 
+1.1.5-2
+- Module rebuilt
+
