@@ -45,35 +45,82 @@ my $sec_tag = '';
 my $jobid_tag = '';
 my $libdir = getlibdir();
 
-my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
+my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
 my %enable_nodes;
 my %disable_nodes;
 
-my %extern_prefix = (
-	cares => '/opt/c-ares',
-	classads => '/opt/classads',
-	cppunit => '/usr',
-	expat => '/usr',
-	globus => '/opt/globus',
-	myproxy => '/opt/myproxy',
-	gsoap => '/usr',
-	mysql => '/usr',
-	'mysql-devel' => '',
-	'mysql-server' => '',
-	voms => '/opt/glite',
-	gridsite => '/opt/glite',
-	lcas => '/opt/glite',
-	trustmanager => '/opt/glite',
-	utiljava => '/opt/glite',
-	ant => '/usr',
-	jdk => '/usr',
-	libtar => '/usr',
-	axis => '/usr',
-	log4c => '/usr',
-	postgresql => '/usr',
-	activemq => '/opt/activemq-cpp-library',
-	apr => '/opt/apr',
-	aprutil => '/opt/apr-util'
+my %externs = (
+	cares => {
+		prefix => '/opt/c-ares',
+		pkg => 'libcares'
+	},
+	classads => {
+		prefix=> '/opt/classads',
+		pkg => 'classads'
+	},
+	cppunit => {
+		prefix=> '/usr',
+		pkg => 'cppunit'
+	},
+	expat => {
+		prefix=> '/usr',
+		pkg => 'expat'
+	},
+	globus => {
+		prefix=> '/opt/globus',
+		pkg => 'globus-gssapi-gsi'
+	},
+	myproxy => {
+		prefix=> '/opt/myproxy',
+		pkg => 'myproxy'
+	},
+	gsoap => {
+		prefix=> '/usr',
+		pkg => 'gsoap'
+	},
+	mysql => {
+		prefix=> '/usr'
+	},
+	'mysql-devel' => {
+		prefix=> ''
+	},
+	'mysql-server' => {
+		prefix => ''
+	},
+	voms => {
+		prefix => '/opt/glite',
+		pkg => 'voms-1.0'
+	},
+	gridsite => {
+		prefix => '/opt/glite'
+	},
+	lcas => {
+		prefix => '/opt/glite'
+	},
+	trustmanager => {
+		prefix => '/opt/glite'
+	},
+	utiljava => {
+		prefix=> '/opt/glite'
+	},
+	ant => {
+		prefix=> '/usr'
+	},
+	jdk => {
+		prefix=> '/usr'
+	},
+	libtar => {
+		prefix=> '/usr'
+	},
+	axis => {
+		prefix=> '/usr'
+	},
+	log4c => {
+		prefix=> '/usr'
+	},
+	postgresql => {
+		prefix=> '/usr'
+	}
 );
 
 my %jar = (
@@ -93,12 +140,13 @@ my %deps_type;
 my %buildroot;
 
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger logger-msg server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
-	'security' => [qw/proxyrenewal/],
-	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface gss gsoap-plugin/],
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
+	'security' => [qw/gss gsoap-plugin/],
+	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache shared commands core/ ],
+	'px' => [ qw/proxyrenewal glite-PX myproxy-yaim myproxy-config/ ],
 	);
 
 
@@ -106,8 +154,8 @@ my @opts = (
 	'prefix=s' => \$prefix,
 	'staged=s' => \$staged,
 	'module=s' => \$module,
-	'thrflavour=s' => \$thrflavour,
-	'nothrflavour=s' => \$nothrflavour,
+	'thrflavour:s' => \$thrflavour,
+	'nothrflavour:s' => \$nothrflavour,
 	'mode=s' => \$mode,
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
@@ -121,6 +169,7 @@ my @opts = (
 	'jobid-tag=s' => \$jobid_tag,
 	'help' => \$help,
 	'libdir=s' => \$libdir,
+	'emi' => \$emi,
 );
 
 for (@nodes) {
@@ -131,15 +180,15 @@ for (@nodes) {
 	push @opts,"enable-$_",\$enable_nodes{$_};
 }
 
-push @opts,"with-$_=s",\$extern_prefix{$_} for keys %extern_prefix;
+push @opts,"with-$_=s",\$externs{$_}{withprefix} for keys %externs;
 push @opts,"with-$_=s",\$jar{$_} for keys %jar;
 
 my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
 
-$extern_prefix{'mysql-devel'}=$extern_prefix{mysql} if $extern_prefix{'mysql-devel'} eq '';
-$extern_prefix{'mysql-server'}=$extern_prefix{mysql} if $extern_prefix{'mysql-server'} eq '';
+$externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
+$externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
 
 if ($help) { usage(); exit 0; }
 
@@ -166,6 +215,32 @@ die "--module cannot be used with --enable-* or --disable-*\n"
 
 die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},@{$lbmodules{security}},{$lbmodules{jp}};
 
+if ($mode eq 'build') { for my $ext (keys %externs) {
+	if (defined $externs{$ext}{withprefix}) { $externs{$ext}{prefix} = $externs{$ext}{withprefix}; }
+	elsif (defined $externs{$ext}{pkg}) {
+		my ($prefix, $flag);
+		my $pkg = $externs{$ext}{pkg};
+		my $flagname = uc $externs{$ext}{pkg};
+		$flagname =~ s/-[0-9\.]*$//;
+		$flagname =~ s/-/_/g;
+
+		print "Checking $pkg ... ";
+		`pkg-config "$pkg" --exists >/dev/null`;
+		if ($? == 0) {
+			$externs{$ext}{prefix}=`pkg-config $pkg --variable=prefix`;
+			chomp $externs{$ext}{prefix};
+			print "$externs{$ext}{prefix}\n";
+
+			$flag=`pkg-config $pkg --cflags`;
+			$externs{$ext}{flags} .= "${flagname}_CFLAGS=$flag" if ($flag);
+			$flag=`pkg-config $pkg --libs`;
+			$externs{$ext}{flags} .= "${flagname}_LIBS=$flag" if ($flag);
+		} else {
+			print "(using default)\n";
+		}
+	}
+} }
+
 if ($dis) {
 	for (@nodes) {
 		$enable_nodes{$_} = 1 unless $disable_nodes{$_};
@@ -181,7 +256,7 @@ $stagedir = $prefix unless $stagedir;
 if ($mode eq 'build') {
 	print "Writing config.status\n";
 	open CONF,">config.status" or die "config.status: $!\n";
-	print CONF "$0 @keeparg\n";
+	print CONF "PKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH} $0 @keeparg\n";
 	close CONF;
 }
 
@@ -227,8 +302,9 @@ sub mode_build {
 	@myjars = keys %aux;
 	
 	print "\nRequired externals:\n";
-	print "\t$_: $extern_prefix{$_}\n" for @ext;
+	print "\t$_: $externs{$_}{prefix}\n" for @ext;
 	print "\t$_: $jar{$_}\n" for @myjars;
+	for (@ext) { if (defined($externs{$_}{flags})) { print "$externs{$_}{flags}"; } };
 	print "\nThis is a poor-man configure, it's up to you to have sources and externals there\n\n";
 	
 	mkinc($_) for @modules;
@@ -325,7 +401,6 @@ BEGIN{
 	'lb.common' => [ qw/expat cares:B cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
-	'lb.logger-msg' => [ qw/cppunit:B activemq apr aprutil/ ],
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
@@ -341,9 +416,8 @@ BEGIN{
 	'lbjp-common.server-bones' => [ qw// ],
 	'lbjp-common.trio' => [ qw/cppunit:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B/ ],
-	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
-	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
-	'security.proxyrenewal' =>  [ qw/voms globus:B myproxy/ ],
+	'security.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
+	'security.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
@@ -354,6 +428,10 @@ BEGIN{
         'jp.server-common' => [],
         'jp.ws-interface' => [],
 	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
+	'px.proxyrenewal' => [ qw/globus:B myproxy voms/ ],
+	'px.glite-PX' => [qw/myproxy:R fetchcrl:R gip_service:R bdii:R glite_version:R/],
+	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
+	'px.myproxy-config' => [],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -381,7 +459,7 @@ for my $jar (keys %need_jars) {
 		lb.types:B lb.common
 		lbjp-common.trio
 		jobid.api-cpp:B jobid.api-c
-		lbjp-common.gss
+		security.gss
 	/ ],
 	'lb.client-java' => [ qw/
 		lb.types:B
@@ -390,7 +468,7 @@ for my $jar (keys %need_jars) {
 	/ ],
 	'lb.common' => [ qw/
 		jobid.api-cpp:B jobid.api-c
-		lb.types:B lbjp-common.trio lbjp-common.gss
+		lb.types:B lbjp-common.trio security.gss
 	/ ],
 	'lb.doc' => [ qw/lb.types:B/ ],
 	'lb.logger' => [ qw/
@@ -398,30 +476,27 @@ for my $jar (keys %need_jars) {
 		lbjp-common.log
 		jobid.api-c
 		lb.common
-		lbjp-common.gss
-	/ ],
-	'lb.logger-msg' => [ qw/
-		lb.logger
+		security.gss
 	/ ],
 	'lb.server' => [ qw/
 		lb.ws-interface lb.types:B lb.common lb.state-machine
 		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir lbjp-common.log
 		jobid.api-c
-		lbjp-common.gsoap-plugin lbjp-common.gss
+		security.gsoap-plugin security.gss
 	/ ],
-	'lb.state-machine' => [ qw/lb.types:B lb.common lbjp-common.jp-interface lbjp-common.gss/ ],
+	'lb.state-machine' => [ qw/lb.types:B lb.common lbjp-common.jp-interface security.gss/ ],
 	'lb.utils' => [ qw/
 		lbjp-common.jp-interface
 		jobid.api-c
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine
 	/ ],
-	'lb.ws-test' => [ qw/lbjp-common.gsoap-plugin lb.ws-interface/ ],
+	'lb.ws-test' => [ qw/security.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/
 		jobid.api-c lbjp-common.trio lbjp-common.db lb.common lb.client
-		lbjp-common.gss lbjp-common.log
+		security.gss lbjp-common.log
 	/ ],
 	'lb.yaim' => [ qw// ],
 	'lb.glite-LB' => [ qw/
@@ -433,9 +508,8 @@ for my $jar (keys %need_jars) {
 	'lbjp-common.log' => [ qw// ],
 	'lbjp-common.server-bones' => [ qw/lbjp-common.log/ ],
 	'lbjp-common.trio' => [ qw// ],
-	'lbjp-common.gss' =>  [ qw// ],
-	'lbjp-common.gsoap-plugin' =>  [ qw/lbjp-common.gss/ ],
-	'security.proxyrenewal' =>  [ qw// ],
+	'security.gss' =>  [ qw// ],
+	'security.gsoap-plugin' =>  [ qw/security.gss/ ],
 	'jobid.api-c' =>  [ qw// ],
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
@@ -446,20 +520,20 @@ for my $jar (keys %need_jars) {
                 jp.ws-interface
                 lbjp-common.jp-interface lbjp-common.maildir
                 jobid.api-c
-                lbjp-common.gsoap-plugin
+                security.gsoap-plugin
         / ],
 	'jp.doc' => [ qw// ],
 	'jp.index' => [ qw/
                 jp.server-common jp.ws-interface
                 lbjp-common.jp-interface lbjp-common.trio lbjp-common.db lbjp-common.server-bones
-                lbjp-common.gsoap-plugin
+                security.gsoap-plugin
         / ],
 	'jp.primary' => [ qw/
                 jobid.api-c
                 jp.server-common jp.ws-interface
                 lb.state-machine
                 lbjp-common.jp-interface lbjp-common.trio lbjp-common.db lbjp-common.server-bones
-                lbjp-common.gsoap-plugin
+                security.gsoap-plugin
         / ],
 	'jp.server-common' => [ qw/ 
                 lbjp-common.jp-interface lbjp-common.db
@@ -467,6 +541,11 @@ for my $jar (keys %need_jars) {
 	'jp.ws-interface' => [ qw// ],
 
 	'gridsite.core' => [ qw/build.common-cpp:B/ ],
+
+	'px.proxyrenewal' => [ qw// ],
+	'px.glite-PX' => [qw/px.myproxy-yaim:R/],
+	'px.myproxy-yaim' => [],
+	'px.myproxy-config' => [],
 );
 
 for my $ext (keys %deps_aux) {
@@ -491,8 +570,8 @@ for my $ext (keys %deps_aux) {
 
 %obsoletes = (
 	'lb.yaim' => [ qq/glite-yaim-lb/ ],
-	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
-	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
+	'px.proxyrenewal' => [ qq/glite-security-proxyrenewal/ ],
+	'px.myproxy-yaim' => [ qq/glite-yaim-myproxy/ ],
 );
 
 %cvs_prefix = (
@@ -502,6 +581,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'org.glite',
 	'gridsite' => 'org',
 	'security' => 'org.glite',
+	'px' => 'org.glite',
 );
 
 %conf_prefix = (
@@ -511,6 +591,17 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'glite-',
 	'gridsite' => '',
 	'security' => 'glite-',
+	'px' => 'glite-',
+);
+
+%emi_conf_prefix = (
+	'lb' => 'emi-',
+	'jp' => 'emi-',
+	'jobid' => 'emi-',
+	'lbjp-common' => 'emi-',
+	'gridsite' => '',
+	'security' => 'emi-',
+	'px' => 'emi-',
 );
 
 my @k = keys %deps_aux;
@@ -533,11 +624,12 @@ sub mkinc
 	my %aux;
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
-lbjp-common.gss lbjp-common.gsoap-plugin
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
+security.gss security.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
+px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
 /;
 	@aux{@m} = (1) x ($#m+1);
 
@@ -574,7 +666,8 @@ libdir = $libdir
 };
 
 	for (@{$need_externs{$short}}) {
-		print MKINC "${_}_prefix = $extern_prefix{$_}\n"
+		print MKINC "${_}_prefix = $externs{$_}{prefix}\n";
+		print MKINC "$externs{$_}{flags}" if defined $externs{$_}{flags};
 	}
 
 	for (@{$need_jars{$short}}) {
@@ -611,9 +704,6 @@ BEGIN{
 		glite_info_templates=>'glite-info-templates',
 		glue_schema=>'glue-schema',
 		yaim_core=>'org.glite.yaim.core',
-		activemq=>'activemq-cpp-library',
-		apr=>'apr-dev',
-		aprutil=>'aprutil-dev',
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials myproxy/],
@@ -666,30 +756,46 @@ sub mode_etics {
 	for (@{$need_externs{"$subsys.$module"}}) {
 	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
-		push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
+		if ($emi) {
+			if ($ge{$_} and not defined $externs{$_}{pkg}) {
+				push @copts, "--with-$_=\${stageDir}";
+			}
+		} else {
+			push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
+		}
 	    }
 	}
 
 	for (@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		push @copts,"--with-$_ \${$eext.location}/usr/share/java/$_*.jar";
+		push @copts,"--with-$_ \${$eext.location}$jar{$_}" if (not $emi);
 	}
 
 	my $conf;
 	my $conftag;
+	my $confprefix;
 
 	$dwpath = "path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz\n";
+
+	if ($emi) { $confprefix = $emi_conf_prefix{$subsys} }
+	else { $confprefix = $conf_prefix{$subsys} }
+
 	if ($branch) {
-		$conf = "$conf_prefix{$subsys}${subsys}-${module}_$branch"; 
+		$conf = "$confprefix${subsys}-${module}_$branch"; 
 		$conftag = $branch;
 		# forced low age number
 		$age = $branch eq 'HEAD' ? '0head' : '0dev'; }
 	else {
-		$conf = "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
+		$conf = "$confprefix$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
 
 # XXX: gridsite hack
-		$conftag = $subsys eq 'gridsite' ? "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : $conf; }
+		$conftag = $subsys eq 'gridsite' ? "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : 
+			"$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; }
+	if ($emi) {
+		$age = "${age}emi";
+	} 
+
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
@@ -739,7 +845,8 @@ sub mode_etics {
 		}
 	}
 	else {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
+		my $flavours = $emi ? "--thrflavour= --nothrflavour=" : "--thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor}";
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
@@ -800,8 +907,9 @@ $buildroot
 aprSuffix = 0
 package.RPMSLocation = \${moduleDir}/RPMTMP/RPMS
 package.SRPMSLocation = \${moduleDir}/RPMTMP/SRPMS
-$package_description$package_summary$defprops
-};
+package.preserve.libtool = false
+$package_description$package_summary$defprops};
+
 	for (@{$obsoletes{"$subsys.$module"}}) {
 		print C "package.obsoletes = $_\n";
 		print C "package.replaces = $_\n";
@@ -848,7 +956,7 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 sub gsoap_version {
 	local $_;
 	my $gsoap_version;
-	open S,"$extern_prefix{gsoap}/bin/soapcpp2 -v 2>&1 |" or die "$extern_prefix{gsoap}/bin/soapcpp2: $!\n";
+	open S,"$externs{gsoap}{prefix}/bin/soapcpp2 -v 2>&1 |" or die "$externs{gsoap}{prefix}/bin/soapcpp2: $!\n";
 
 	while ($_ = <S>) {
 		chomp;
@@ -910,7 +1018,7 @@ sub getlibdir {
 }
 
 sub usage {
-	my @ext = keys %extern_prefix;
+	my @ext = keys %externs;
 	my @myjars, keys %jar;
 
 	print STDERR qq{
@@ -925,6 +1033,7 @@ General options (defaults in []):
   --version=maj.min.rev-age	specify version here instead of reading version.properties
   --branch=branch		CVS branch/etics name suffix (HEAD, branch_2_1, ...)
   --libdir=libdir		typically [lib,lib64] postfix
+  --emi				generate configurations with emi flavor in mode 'etics'
   
 Mode of operation:
   --mode={checkout|build|etics}	what to do [build]
