@@ -49,28 +49,78 @@ my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary j
 my %enable_nodes;
 my %disable_nodes;
 
-my %extern_prefix = (
-	cares => '/opt/c-ares',
-	classads => '/opt/classads',
-	cppunit => '/usr',
-	expat => '/usr',
-	globus => '/opt/globus',
-	myproxy => '/opt/myproxy',
-	gsoap => '/usr',
-	mysql => '/usr',
-	'mysql-devel' => '',
-	'mysql-server' => '',
-	voms => '/opt/glite',
-	gridsite => '/opt/glite',
-	lcas => '/opt/glite',
-	trustmanager => '/opt/glite',
-	utiljava => '/opt/glite',
-	ant => '/usr',
-	jdk => '/usr',
-	libtar => '/usr',
-	axis => '/usr',
-	log4c => '/usr',
-	postgresql => '/usr'
+my %externs = (
+	cares => {
+		prefix => '/opt/c-ares',
+		pkg => 'libcares'
+	},
+	classads => {
+		prefix=> '/opt/classads',
+		pkg => 'classads'
+	},
+	cppunit => {
+		prefix=> '/usr',
+		pkg => 'cppunit'
+	},
+	expat => {
+		prefix=> '/usr',
+		pkg => 'expat'
+	},
+	globus => {
+		prefix=> '/opt/globus',
+		pkg => 'globus-gssapi-gsi'
+	},
+	myproxy => {
+		prefix=> '/opt/myproxy',
+		pkg => 'myproxy'
+	},
+	gsoap => {
+		prefix=> '/usr',
+		pkg => 'gsoap'
+	},
+	mysql => {
+		prefix=> '/usr'
+	},
+	'mysql-devel' => {
+		prefix=> ''
+	},
+	'mysql-server' => {
+		prefix => ''
+	},
+	voms => {
+		prefix => '/opt/glite',
+		pkg => 'voms-1.0'
+	},
+	gridsite => {
+		prefix => '/opt/glite'
+	},
+	lcas => {
+		prefix => '/opt/glite'
+	},
+	trustmanager => {
+		prefix => '/opt/glite'
+	},
+	utiljava => {
+		prefix=> '/opt/glite'
+	},
+	ant => {
+		prefix=> '/usr'
+	},
+	jdk => {
+		prefix=> '/usr'
+	},
+	libtar => {
+		prefix=> '/usr'
+	},
+	axis => {
+		prefix=> '/usr'
+	},
+	log4c => {
+		prefix=> '/usr'
+	},
+	postgresql => {
+		prefix=> '/usr'
+	}
 );
 
 my %jar = (
@@ -104,8 +154,8 @@ my @opts = (
 	'prefix=s' => \$prefix,
 	'staged=s' => \$staged,
 	'module=s' => \$module,
-	'thrflavour=s' => \$thrflavour,
-	'nothrflavour=s' => \$nothrflavour,
+	'thrflavour:s' => \$thrflavour,
+	'nothrflavour:s' => \$nothrflavour,
 	'mode=s' => \$mode,
 	'listmodules=s' => \$listmodules,
 	'version=s' => \$version,
@@ -130,15 +180,15 @@ for (@nodes) {
 	push @opts,"enable-$_",\$enable_nodes{$_};
 }
 
-push @opts,"with-$_=s",\$extern_prefix{$_} for keys %extern_prefix;
+push @opts,"with-$_=s",\$externs{$_}{withprefix} for keys %externs;
 push @opts,"with-$_=s",\$jar{$_} for keys %jar;
 
 my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
 
-$extern_prefix{'mysql-devel'}=$extern_prefix{mysql} if $extern_prefix{'mysql-devel'} eq '';
-$extern_prefix{'mysql-server'}=$extern_prefix{mysql} if $extern_prefix{'mysql-server'} eq '';
+$externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
+$externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
 
 if ($help) { usage(); exit 0; }
 
@@ -165,6 +215,32 @@ die "--module cannot be used with --enable-* or --disable-*\n"
 
 die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},@{$lbmodules{security}},{$lbmodules{jp}};
 
+if ($mode eq 'build') { for my $ext (keys %externs) {
+	if (defined $externs{$ext}{withprefix}) { $externs{$ext}{prefix} = $externs{$ext}{withprefix}; }
+	elsif (defined $externs{$ext}{pkg}) {
+		my ($prefix, $flag);
+		my $pkg = $externs{$ext}{pkg};
+		my $flagname = uc $externs{$ext}{pkg};
+		$flagname =~ s/-[0-9\.]*$//;
+		$flagname =~ s/-/_/g;
+
+		print "Checking $pkg ... ";
+		`pkg-config "$pkg" --exists >/dev/null`;
+		if ($? == 0) {
+			$externs{$ext}{prefix}=`pkg-config $pkg --variable=prefix`;
+			chomp $externs{$ext}{prefix};
+			print "$externs{$ext}{prefix}\n";
+
+			$flag=`pkg-config $pkg --cflags`;
+			$externs{$ext}{flags} .= "${flagname}_CFLAGS=$flag" if ($flag);
+			$flag=`pkg-config $pkg --libs`;
+			$externs{$ext}{flags} .= "${flagname}_LIBS=$flag" if ($flag);
+		} else {
+			print "(using default)\n";
+		}
+	}
+} }
+
 if ($dis) {
 	for (@nodes) {
 		$enable_nodes{$_} = 1 unless $disable_nodes{$_};
@@ -180,7 +256,7 @@ $stagedir = $prefix unless $stagedir;
 if ($mode eq 'build') {
 	print "Writing config.status\n";
 	open CONF,">config.status" or die "config.status: $!\n";
-	print CONF "$0 @keeparg\n";
+	print CONF "PKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH} $0 @keeparg\n";
 	close CONF;
 }
 
@@ -226,8 +302,9 @@ sub mode_build {
 	@myjars = keys %aux;
 	
 	print "\nRequired externals:\n";
-	print "\t$_: $extern_prefix{$_}\n" for @ext;
+	print "\t$_: $externs{$_}{prefix}\n" for @ext;
 	print "\t$_: $jar{$_}\n" for @myjars;
+	for (@ext) { if (defined($externs{$_}{flags})) { print "$externs{$_}{flags}"; } };
 	print "\nThis is a poor-man configure, it's up to you to have sources and externals there\n\n";
 	
 	mkinc($_) for @modules;
@@ -587,7 +664,8 @@ libdir = $libdir
 };
 
 	for (@{$need_externs{$short}}) {
-		print MKINC "${_}_prefix = $extern_prefix{$_}\n"
+		print MKINC "${_}_prefix = $externs{$_}{prefix}\n";
+		print MKINC "$externs{$_}{flags}" if defined $externs{$_}{flags};
 	}
 
 	for (@{$need_jars{$short}}) {
@@ -869,7 +947,7 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 sub gsoap_version {
 	local $_;
 	my $gsoap_version;
-	open S,"$extern_prefix{gsoap}/bin/soapcpp2 -v 2>&1 |" or die "$extern_prefix{gsoap}/bin/soapcpp2: $!\n";
+	open S,"$externs{gsoap}{prefix}/bin/soapcpp2 -v 2>&1 |" or die "$externs{gsoap}{prefix}/bin/soapcpp2: $!\n";
 
 	while ($_ = <S>) {
 		chomp;
@@ -931,7 +1009,7 @@ sub getlibdir {
 }
 
 sub usage {
-	my @ext = keys %extern_prefix;
+	my @ext = keys %externs;
 	my @myjars, keys %jar;
 
 	print STDERR qq{

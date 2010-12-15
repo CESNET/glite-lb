@@ -754,14 +754,20 @@ sub mode_etics {
 	for (@{$need_externs{"$subsys.$module"}}) {
 	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
-		push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
+		if ($emi) {
+			if ($ge{$_} and not defined $externs{$_}{pkg}) {
+				push @copts, "--with-$_=\${stageDir}";
+			}
+		} else {
+			push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
+		}
 	    }
 	}
 
 	for (@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		push @copts,"--with-$_ \${$eext.location}$jar{$_}";
+		push @copts,"--with-$_ \${$eext.location}$jar{$_}" if (not $emi);
 	}
 
 	my $conf;
@@ -837,7 +843,8 @@ sub mode_etics {
 		}
 	}
 	else {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor} --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
+		my $flavours = $emi ? "--thrflavour= --nothrflavour=" : "--thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor}";
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
