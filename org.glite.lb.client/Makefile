@@ -167,7 +167,7 @@ EXAMPLES:=${EXAMPLES_SRC:.c=}
 EXAMPLES_CL_SRC:=user_jobs.c job_status.c multiple_user_jobs.c
 EXAMPLES_CL:=${EXAMPLES_CL_SRC:.c=}
 
-EXAMPLES_CL_THR_SRC:=user_jobs_threaded.c
+EXAMPLES_CL_THR_SRC:=user_jobs_threaded.c job_status_threaded.c
 EXAMPLES_CL_THR:=${EXAMPLES_CL_THR_SRC:.c=}
 
 MAN_GZ:=glite-lb-logevent.1.gz glite-lb-notify.1.gz
