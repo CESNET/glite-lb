@@ -67,6 +67,8 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-statistics.sh} & Implemented & Test statistic functions provided by \LB \\
 \hline
+{\tt lb-test-threaded.sh} & Implemented & Rudimentary test for threaded clients \LB \\
+\hline
 \end{tabularx}
 
 \subsubsection{Event logging examples}
@@ -481,6 +483,22 @@ including the checks.
 
 \result\ Meaningful values should be returned by both tests. 
 
+\subsubsection{Multi-Threaded Operation}
+
+\req\ \LB\ server running
+
+\what\
+\begin{enumerate}
+\item Register a series of jobs.
+\item Run a client using multiple threads to query the server simultaneously.
+\item Check if all threads finished OK.
+\end{enumerate}
+
+\how\ \ctblb{lb-test-threaded.sh}
+
+\note\ The is not a thorough test. It is not capable of discovering rare or improbable problems but it will check the essentials of multi-threaded opration.
+
+\result\ The test must not hang. Meaningful results (albeit errors) must be returned by all threads.
 
 
 \section{LB ``In the Wild''---Real-World WMS Test}

@@ -23,6 +23,7 @@ limitations under the License.
 #include <errno.h>
 #include <time.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "glite/lb/context-int.h"
 #ifdef BUILDING_LB_CLIENT
@@ -40,7 +41,7 @@ static char 	*myname;
 
 void *thread_meat(char *jobid) {
 	edg_wll_Context	ctx;
-	int		result=0;
+	int result=0, retries;
 
 	if ( edg_wll_InitContext(&ctx) ) {
 		fprintf(stderr,"cannot initialize edg_wll_Context\n");
@@ -63,9 +64,15 @@ void *thread_meat(char *jobid) {
 	}
 	else free(bserver);
 
-	if (edg_wll_JobStatus(ctx, job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT, &status)) {
-		dgerr(ctx,"edg_wll_JobStatus"); result = 1; 
-	} else printstat_oneline(status,0);
+	for (retries = 6; retries > 0; retries--) {
+		if (edg_wll_JobStatus(ctx, job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT, &status)) {
+			dgerr(ctx,"edg_wll_JobStatus"); result = 1; 
+		} else {
+			printstat_oneline(status,0);
+			break;
+		}
+		sleep(3); 
+	}
 
 	if (job) edg_wlc_JobIdFree(job);
 //	if (status.state) edg_wll_FreeStatus(&status);
