@@ -550,7 +550,7 @@ for my $jar (keys %need_jars) {
 	'gridsite.core' => [ qw/build.common-cpp:B/ ],
 
 	'px.proxyrenewal' => [ qw// ],
-	'px.glite-PX' => [qw/px.myproxy-yaim:R/],
+	'px.glite-PX' => [qw/px.myproxy-yaim:R px.myproxy-config:R/],
 	'px.myproxy-yaim' => [],
 	'px.myproxy-config' => [],
 );
@@ -872,6 +872,11 @@ sub mode_etics {
 		}
 		else {
 			$cmd{packaging} = "echo building nothing, org.gridsite.core make rpm step will create this";
+		}
+	}
+	elsif ($subsys eq 'px') {
+		if ($module eq 'myproxy-config') {
+			$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 		}
 	}
 	else {
