@@ -997,6 +997,7 @@ sub gsoap_version {
 		chomp;
 
 		$gsoap_version = $1 if /The gSOAP Stub and Skeleton Compiler for C and C\+\+ ([.[:digit:][:alpha:]]+)$/;
+		$gsoap_version = $1 if /The gSOAP code generator for C and C\+\+, soapcpp2 release ([.[:digit:][:alpha:]]+)$/;
 	}
 	close S;
 	return $gsoap_version;
