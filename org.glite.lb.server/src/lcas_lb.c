@@ -59,7 +59,11 @@ plugin_confirm_authorization(lcas_request_t request, lcas_cred_id_t lcas_cred)
    lcas_log_debug(1,"\t%s-plugin: checking LB access policy\n",
 		  modname);
 
-   edg_wll_InitContext(&ctx);
+   if (edg_wll_InitContext(&ctx) != 0) {
+     lcas_log(0, "Couldn't create L&B context\n");
+     ret = LCAS_MOD_FAIL;
+     goto end;
+   }
 
    if ((action = find_authz_action(request)) == ACTION_UNDEF) {
       lcas_log(0, "lcas.mod-lb() error: unsupported action\n");

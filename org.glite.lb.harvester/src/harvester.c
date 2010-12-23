@@ -2705,7 +2705,10 @@ int main(int argn, char *argv[]) {
 		}
 	}
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		lprintf(NULL, ERR, "can't init LB context");
+		goto quit;
+	}
 	if (config.cert) edg_wll_SetParam(ctx, EDG_WLL_PARAM_X509_CERT, config.cert);
 	if (config.key) edg_wll_SetParam(ctx, EDG_WLL_PARAM_X509_KEY, config.key);
 	last_summary = 0;

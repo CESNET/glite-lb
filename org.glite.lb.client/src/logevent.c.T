@@ -155,7 +155,10 @@ int main(int argc, char *argv[])
 			  "[-s source_id] -e event [key=value ...]");
 
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context\n");
+		exit(1);
+	}
 
 	/* log the event - priority/normal/proxy */
 	logev = (pri) ? edg_wll_LogEventSync : edg_wll_LogEvent;

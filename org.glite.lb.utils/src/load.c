@@ -101,7 +101,10 @@ int main(int argc,char *argv[])
 	}
 
 	/* initialize context */
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		exit(1);
+	}
 	if ( server )
 	{
 		char *p = strrchr(server, ':');

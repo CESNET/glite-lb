@@ -429,7 +429,10 @@ int main(int argc, char *argv[])
 	purge_timeout[EDG_WLL_JOB_CLEARED] = 60*60*24*3;
 	purge_timeout[EDG_WLL_JOB_ABORTED] = 60*60*24*7;
 	purge_timeout[EDG_WLL_JOB_CANCELLED] = 60*60*24*7;
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context, exiting.\n");
+		exit(1);
+	}
 
 	while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
 		case 'A': enable_lcas = 1; break;

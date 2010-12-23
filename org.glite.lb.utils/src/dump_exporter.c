@@ -150,7 +150,10 @@ int main(int argc, char **argv)
 
 	ret = 0;
 	memset(&buf, 0, sizeof(buf));
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		exit(1);
+	}
 	while ( 1 ) {
 		int		rl_ret,
 				written,

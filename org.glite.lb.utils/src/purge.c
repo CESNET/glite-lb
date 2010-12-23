@@ -130,7 +130,10 @@ int main(int argc,char *argv[])
 	if (me) me++; else me=argv[0];
 
 	/* initialize context */
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		exit(1);
+	}
 
 	/* get arguments */
 	while ((opt = getopt_long(argc,argv,"a:c:n:e:o:j:m:rlsidhvxX:t:b:",opts,NULL)) != EOF) {

@@ -78,7 +78,10 @@ int main(int argc,char **argv)
 		case '?': usage(); exit(EX_USAGE);
 	}
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		exit(1);
+	}
 	for (i = 1; i<EDG_WLL_NUMBER_OF_STATCODES; i++) jobs[i] = 0;
 	if (edg_wll_Open(ctx,dbstring)) do_exit(ctx,EX_UNAVAILABLE);
 	if ((caps = glite_lbu_DBQueryCaps(ctx->dbctx)) < 0 || !(caps & GLITE_LBU_DB_CAP_INDEX)) do_exit(ctx,EX_SOFTWARE);

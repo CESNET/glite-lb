@@ -107,7 +107,10 @@ int main(int argc,char **argv)
 //	sleep(20);
 
 	me = argv[0];
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		exit(1);
+	}
 
 	if ( argc < 2 ) {
 		usage(NULL); goto cleanup;

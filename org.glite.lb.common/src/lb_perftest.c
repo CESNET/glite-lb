@@ -282,7 +282,10 @@ glite_wll_perftest_init(const char *host,
 {
 	edg_wll_Context ctx;
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "edg_wll_InitContext() failed\n");
+		return(-1);
+	}
 
 	if(trio_asprintf(&termination_string, EDG_WLL_FORMAT_USERTAG,
 		    PERFTEST_END_TAG_NAME, PERFTEST_END_TAG_VALUE) < 0)

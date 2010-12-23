@@ -38,8 +38,13 @@ static void free_voms_groups(edg_wll_VomsGroups *);
 
 int edg_wll_InitContext(edg_wll_Context *ctx)
 {
-	int i;
+	int i, ret;
 	edg_wll_Context out	= (edg_wll_Context) malloc(sizeof(*out));
+	union {
+		int i;
+		char *s;
+		struct timeval *tv;
+	} null;
 
 	if (!out) return ENOMEM;
 	memset(out,0,sizeof(*out));
@@ -48,16 +53,23 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	out->allowAnonymous = 1;
 	out->notifSock	= -1;
 
-	/* XXX */
-	for (i=0; i<EDG_WLL_PARAM__LAST; i++) edg_wll_SetParam(out,i,NULL);
+	memset(&null, 0, sizeof null);
+	for (i=0; i<EDG_WLL_PARAM__LAST; i++) {
+		if ((ret = edg_wll_SetParam(out,i,null)) != 0) {
+			edg_wll_FreeParams(out);
+			free(out);
+			return ret;
+		}
+	}
 
 	out->p_tmp_timeout.tv_sec = out->p_log_timeout.tv_sec;
 	out->p_tmp_timeout.tv_usec = out->p_log_timeout.tv_usec;
 
-        out->connections = edg_wll_initConnections();
 	out->connNotif = (edg_wll_Connections *) calloc(1, sizeof(edg_wll_Connections));
-	edg_wll_initConnNotif(out->connNotif);
 	out->connProxy = (edg_wll_ConnProxy *) calloc(1, sizeof(edg_wll_ConnProxy));
+	if (!out->connNotif || !out->connProxy) goto enomem;
+	out->connections = edg_wll_initConnections();
+	edg_wll_initConnNotif(out->connNotif);
 	out->connProxy->conn.sock = -1;
 //	out->connToUse = -1;
 
@@ -75,6 +87,12 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 #endif
 
 	return 0;
+enomem:
+	edg_wll_FreeParams(out);
+	free(out->connNotif);
+	free(out->connProxy);
+	free(out);
+	return ENOMEM;
 }
 
 void edg_wll_FreeContext(edg_wll_Context ctx)

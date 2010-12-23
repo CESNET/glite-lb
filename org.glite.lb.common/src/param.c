@@ -243,14 +243,16 @@ int edg_wll_SetParamInt(edg_wll_Context ctx,edg_wll_ContextParam param,int val)
 				ctx->p_query_results = val;
 			}
 			else {
-				char	*s = extract_split(param,'/',0);
-				if (s) {
-					val = edg_wll_StringToQResult(s);
-					if (!val) return edg_wll_SetError(ctx,EINVAL,"can't parse query result parameter name");
-					ctx->p_query_results = val;
-					free(s);
-				}
-				return edg_wll_SetError(ctx,EINVAL,"can't parse query result parameter name");
+				if (mygetenv(param)) {
+					char	*s = extract_split(param,'/',0);
+					if (s) {
+						val = edg_wll_StringToQResult(s);
+						if (!val) return edg_wll_SetError(ctx,EINVAL,"can't parse query result parameter name");
+						ctx->p_query_results = val;
+						free(s);
+					} else
+						return edg_wll_SetError(ctx,EINVAL,"can't parse query result parameter name");
+				} // else default EDG_WLL_QUERYRES_UNDEF
 			}
 			break;
 		case EDG_WLL_PARAM_CONNPOOL_SIZE:
@@ -269,14 +271,16 @@ int edg_wll_SetParamInt(edg_wll_Context ctx,edg_wll_ContextParam param,int val)
 				ctx->p_source = val;
 			}
 			else {
-				char	*s = extract_split(param,'/',0);
-				if (s) {
-					val = edg_wll_StringToSource(s);
-					if (!val) return edg_wll_SetError(ctx,EINVAL,"can't parse source name");
-					ctx->p_source = val;
-					free(s);
-				}
-				return edg_wll_SetError(ctx,EINVAL,"can't parse source name");
+				if (mygetenv(param)) {
+					char	*s = extract_split(param,'/',0);
+					if (s) {
+						val = edg_wll_StringToSource(s);
+						if (!val) return edg_wll_SetError(ctx,EINVAL,"can't parse source name");
+						ctx->p_source = val;
+						free(s);
+					} else
+						return edg_wll_SetError(ctx,EINVAL,"can't parse source name");
+				} // else default EDG_WLL_SOURCE_NONE
 			}
 			break;
 		default:

@@ -61,7 +61,10 @@ int main (int argc, char ** argv)
 	}
 
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		exit(1);
+	}
 	jc[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
 	jc[0].op = EDG_WLL_QUERY_OP_EQUAL;
 

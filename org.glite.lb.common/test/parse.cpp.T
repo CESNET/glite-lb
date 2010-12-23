@@ -73,7 +73,10 @@ void EventParseTest::$l()
 	edg_wll_Event   *e1,*e2;
 	char    *line,*et,*ed;
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		std::cerr << std::string("edg_wll_InitContext() failed") << std::endl;
+		exit(1);
+	}
 	e1 = edg_wll_InitEvent(EDG_WLL_EVENT_$u);
 
 	gettimeofday(&e1->any.timestamp,NULL);

@@ -96,7 +96,10 @@ int main(int argc,char **argv)
 		default:	usage(argv[0]); exit(1);
 	}
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		exit(1);
+	}
 
 	if (!jobid_s || type == EDG_WLL_SANDBOX_SANDBOX_TYPE_UNDEFINED
 			|| !from || !to)

@@ -110,7 +110,10 @@ int main(int argc,char **argv)
 		else fname = argv[optind];
 	}
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.");
+		exit(1);
+	}
 	if (!dbstring) dbstring = DEFAULTCS;
 	if (edg_wll_Open(ctx,dbstring)) do_exit(ctx,EX_UNAVAILABLE);
 	if ((ctx->dbcaps = glite_lbu_DBQueryCaps(ctx->dbctx)) == -1) do_exit(ctx, EX_SOFTWARE);
