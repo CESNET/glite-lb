@@ -140,6 +140,7 @@ my %extranodmod;
 my %deps;
 my %deps_type;
 my %buildroot;
+my (%etics_externs, %etics_projects, %etics_projects_emi, %etics_externs_emi);
 
 my %lbmodules = (
 	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
@@ -192,6 +193,11 @@ GetOptions @opts or die "Errors parsing command line\n";
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
 $projectname = $emi ? 'emi' : 'org.glite';
+if ($emi) {
+	for $_ (keys %etics_externs_emi) {
+		$etics_externs{$_} = $etics_externs_emi{$_};
+	}
+}
 
 if ($help) { usage(); exit 0; }
 
@@ -692,9 +698,6 @@ libdir = $libdir
 	close MKINC;
 }
 
-my %etics_externs;
-my %etics_projects;
-my %etics_externs_emi;
 BEGIN{
 	%etics_externs = (
 		globus_essentials=>'vdt_globus_essentials',
@@ -720,11 +723,15 @@ BEGIN{
 		globus_essentials=>'globus-gssapi-gsi',
 		globus=>'globus-gssapi-gsi-devel',
 		gridsite=>'emi.gridsite.shared',
-		yaim_core=>'emi.yaim.core'
+		yaim_core=>'emi.yaim.yaim-core'
 	);
 	%etics_projects = (
 		vdt=>[qw/globus globus_essentials myproxy/],
 		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
+	);
+	%etics_projects_emi = (
+		vdt=>'externs',
+		'org.glite'=>'emi',
 	);
 
 	%platform_properties = (
@@ -740,11 +747,6 @@ BEGIN{
 		},
 	);
 };
-if ($emi) {
-	for $_ (keys %etics_externs_emi) {
-		$etics_externs{$_} = $etics_externs_emi{$_};
-	}
-}
 
 sub mode_etics {
 	$fmod = shift;
@@ -907,6 +909,7 @@ description = $cvs_prefix{$subsys}.$subsys.$module
 projectName = $projectname
 age = $age
 deploymentType = None
+vcsroot = :pserver:anonymous\@glite.cvs.cern.ch:/cvs/glite
 tag = $conftag
 version = $major.$minor.$rev
 $dwpath
@@ -968,8 +971,8 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 
 		my $proj = 'externals';
 		for my $p (keys %etics_projects) {
-			if ($emi and $p eq 'org.glite') {
-				$p = $projectname;
+			if ($emi and defined $etics_projects_emi{$p}) {
+				$p = $etics_projects_emi{$p};
 			}
 			for $m (@{$etics_projects{$p}}) {
 				$proj = $p if $m eq $_;
