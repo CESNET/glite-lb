@@ -78,11 +78,9 @@ my %externs = (
 	},
 	'myproxy-server' => {
 		prefix=> '/opt/globus',
-		pkg => 'myproxy-server'
 	},
 	'myproxy-client' => {
 		prefix=> '/opt/globus',
-		pkg => 'myproxy-client'
 	},
 	gsoap => {
 		prefix=> '/usr',
@@ -447,10 +445,10 @@ BEGIN{
         'jp.server-common' => [],
         'jp.ws-interface' => [],
 	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B myproxy_essentials voms/ ],
-	'px.glite-PX' => [qw/myproxy_server:R fetchcrl:R gip_service:R bdii:R glite_version:R/],
+	'px.proxyrenewal' => [ qw/globus:B myproxy-essentials voms/ ],
+	'px.glite-PX' => [qw/myproxy-server:R fetchcrl:R gip_service:R bdii:R glite_version:R/],
 	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
-	'px.myproxy-config' => [ qw/myproxy_client:R/ ],
+	'px.myproxy-config' => [ qw/myproxy-client:R/ ],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -710,9 +708,9 @@ BEGIN{
 	%etics_externs = (
 		globus_essentials=>'vdt_globus_essentials',
 		globus=>'globus',
-		myproxy_essentials=>'myproxy-essentials',
-		myproxy_server=>'myproxy-server',
-		myproxy_client=>'myproxy-client',
+		'myproxy-essentials'=>'myproxy_essentials',
+		'myproxy-server'=>'myproxy_server',
+		'myproxy-client'=>'myproxy_client',
 		cares=>'c-ares',
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
@@ -736,7 +734,7 @@ BEGIN{
 		yaim_core=>'emi.yaim.yaim-core'
 	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials myproxy_server myproxy_client myproxy_essentials/],
+		vdt=>[qw/globus globus_essentials/],
 		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 	);
 	%etics_projects_emi = (
@@ -886,11 +884,9 @@ sub mode_etics {
 			$cmd{packaging} = "echo building nothing, org.gridsite.core make rpm step will create this";
 		}
 	}
-	elsif ($subsys eq 'px') {
-		if ($module eq 'myproxy-config') {
-			$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
-			$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
-		}
+	elsif ($subsys eq 'px' and $module eq 'myproxy-config') {
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
+		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
 		my $flavours = $emi ? "--thrflavour= --nothrflavour=" : "--thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor}";
