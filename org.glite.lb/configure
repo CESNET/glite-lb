@@ -72,9 +72,17 @@ my %externs = (
 		prefix=> '/opt/globus',
 		pkg => 'globus-gssapi-gsi'
 	},
-	myproxy => {
-		prefix=> '/opt/myproxy',
+	'myproxy-essentials' => {
+		prefix=> '/opt/globus',
 		pkg => 'myproxy'
+	},
+	'myproxy-server' => {
+		prefix=> '/opt/globus',
+		pkg => 'myproxy-server'
+	},
+	'myproxy-client' => {
+		prefix=> '/opt/globus',
+		pkg => 'myproxy-client'
 	},
 	gsoap => {
 		prefix=> '/usr',
@@ -439,10 +447,10 @@ BEGIN{
         'jp.server-common' => [],
         'jp.ws-interface' => [],
 	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B myproxy voms/ ],
-	'px.glite-PX' => [qw/myproxy:R fetchcrl:R gip_service:R bdii:R glite_version:R/],
+	'px.proxyrenewal' => [ qw/globus:B myproxy_essentials voms/ ],
+	'px.glite-PX' => [qw/myproxy_server:R fetchcrl:R gip_service:R bdii:R glite_version:R/],
 	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
-	'px.myproxy-config' => [],
+	'px.myproxy-config' => [ qw/myproxy_client:R/ ],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -557,7 +565,7 @@ for my $jar (keys %need_jars) {
 
 	'px.proxyrenewal' => [ qw// ],
 	'px.glite-PX' => [qw/px.myproxy-yaim:R px.myproxy-config:R/],
-	'px.myproxy-yaim' => [],
+	'px.myproxy-yaim' => [ qw/px.myproxy-config:R/ ],
 	'px.myproxy-config' => [],
 );
 
@@ -702,7 +710,9 @@ BEGIN{
 	%etics_externs = (
 		globus_essentials=>'vdt_globus_essentials',
 		globus=>'globus',
-		myproxy=>'myproxy',
+		myproxy_essentials=>'myproxy-essentials',
+		myproxy_server=>'myproxy-server',
+		myproxy_client=>'myproxy-client',
 		cares=>'c-ares',
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
@@ -726,7 +736,7 @@ BEGIN{
 		yaim_core=>'emi.yaim.yaim-core'
 	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials myproxy/],
+		vdt=>[qw/globus globus_essentials myproxy_server myproxy_client myproxy_essentials/],
 		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 	);
 	%etics_projects_emi = (
