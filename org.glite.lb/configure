@@ -445,10 +445,10 @@ BEGIN{
         'jp.server-common' => [],
         'jp.ws-interface' => [],
 	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B myproxy-essentials voms/ ],
-	'px.glite-PX' => [qw/myproxy-server:R fetchcrl:R gip_service:R bdii:R glite_version:R/],
+	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-essentials voms/ ],
+	'px.glite-PX' => [qw/myproxy-server:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
 	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
-	'px.myproxy-config' => [ qw/myproxy-client:R/ ],
+	'px.myproxy-config' => [ qw/myproxy-client:R/ ], # in myproxy-config.spec
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -591,7 +591,7 @@ for my $ext (keys %deps_aux) {
 	'lb.yaim' => [ qq/glite-yaim-lb/ ],
 	'px.proxyrenewal' => [ qq/glite-security-proxyrenewal/ ],
 	'px.myproxy-yaim' => [ qq/glite-yaim-myproxy/ ],
-	'px.myproxy-config' => [ qq/myproxy-config/ ],
+	'px.myproxy-config' => [ qq/myproxy-config/ ], # in myproxy-config.spec
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
 );
