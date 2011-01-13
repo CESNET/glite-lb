@@ -87,7 +87,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 			sprintf(errs, "Error parsing event at line %d", i);
 			if ( !edg_wll_Error(ctx,NULL,NULL) )
 				edg_wll_SetError(ctx, EINVAL, errs);
-			fprintf(stderr, errs);
+			fprintf(stderr, "%s", errs);
 			continue;
 		}
 		edg_wll_ULMDateToTimeval(buff, &(event->any.arrived));

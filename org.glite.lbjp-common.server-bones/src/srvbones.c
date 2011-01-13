@@ -313,7 +313,7 @@ int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile,
 		}
 		fclose(fpid);
 	} else if (errno != ENOENT) { 
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, pidfile);
+		glite_common_log_msg(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, pidfile);
 		free(pidfile); 
 		return 0; 
 	}
@@ -321,7 +321,7 @@ int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile,
 	if (((fpid = fopen(pidfile, "w")) == NULL) || 
 	    (fprintf(fpid, "%d", getpid()) <= 0) ||
 	    (fclose(fpid) != 0)) { 
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, pidfile);
+		glite_common_log_msg(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, pidfile);
 		free(pidfile); 
 		return 0;
 	}

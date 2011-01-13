@@ -140,7 +140,7 @@ int edg_wll_NotifNewServer(
 					"values ('%|Ss','%|Ss',%s,'%|Ss', '<and>%|Ss</and>', '%d')",
 					nid_s, addr_s? addr_s: address_override, time_s, owner, xml_conds, flags);
 
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
 			q);
 		if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
 			goto rollback;
@@ -156,7 +156,7 @@ int edg_wll_NotifNewServer(
 			trio_asprintf(&q,
 					"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
 					nid_s, jobs[i]);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, 
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, 
 				LOG_PRIORITY_DEBUG, q);
 			if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
 				goto rollback;
@@ -164,7 +164,7 @@ int edg_wll_NotifNewServer(
 		else {
 			trio_asprintf(&q,"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
 					nid_s,NOTIF_ALL_JOBS);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB,
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB,
 				LOG_PRIORITY_DEBUG, q);
 			if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 ) goto rollback;
 
@@ -330,7 +330,7 @@ int edg_wll_NotifChangeServer(
 				/*	Format DB insert statement
 				 */
 				trio_asprintf(&q, "delete from  notif_jobs where notifid='%|Ss'", nid_s);
-				glite_common_log(LOG_CATEGORY_LB_SERVER_DB,
+				glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB,
 					LOG_PRIORITY_DEBUG, q);
 				if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
 					goto rollback;
@@ -341,7 +341,7 @@ int edg_wll_NotifChangeServer(
 					trio_asprintf(&q,
 							"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
 							nid_s, jobs[i]);
-					glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+					glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 					if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
 					{
 						/*	XXX: Remove uncoplete registration?
@@ -349,11 +349,11 @@ int edg_wll_NotifChangeServer(
 						 */
 						free(q);
 						trio_asprintf(&q, "delete from notif_jobs where notifid='%|Ss'", nid_s);
-						glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+						glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 						edg_wll_ExecSQL(ctx, q, NULL);
 						free(q);
 						trio_asprintf(&q,"delete from notif_registrations where notifid='%|Ss'", nid_s);
-						glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+						glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 						edg_wll_ExecSQL(ctx, q, NULL);
 						goto rollback;
 					}
@@ -467,7 +467,7 @@ static char *get_user(edg_wll_Context ctx, int create)
 	}
 	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 	trio_asprintf(&q, "select userid from users where cert_subj='%|Ss'", can_peername);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 	if ( edg_wll_ExecSQL(ctx, q, &stmt) < 0 )
 		goto cleanup;
 
@@ -487,7 +487,7 @@ static char *get_user(edg_wll_Context ctx, int create)
 	free(q);
 	trio_asprintf(&q, "insert into users(userid,cert_subj) values ('%|Ss','%|Ss')",
 			userid, can_peername);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 	if ( edg_wll_ExecSQL(ctx, q, NULL) < 0 )
 	{
 		if ( edg_wll_Error(ctx,NULL,NULL) != EEXIST )
@@ -536,7 +536,7 @@ static int check_notif_request(
 				"select destination from notif_registrations "
 				"where notifid='%|Ss' and userid='%|Ss' FOR UPDATE",
 				nid_s, user);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if ( (ret = edg_wll_ExecSQL(ctx, stmt, &s)) < 0 )
 		goto cleanup;
@@ -545,7 +545,7 @@ static int check_notif_request(
 		free(stmt);
 		trio_asprintf(&stmt,
 					"select notifid from notif_registrations where notifid='%|Ss'", nid_s);
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, 
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, 
 			stmt);
 		ret = edg_wll_ExecSQL(ctx, stmt, NULL);
 		if ( ret == 0 )
@@ -698,7 +698,7 @@ static int update_notif(
 	trio_asprintf(&aux, "%s where notifid='%|Ss'", stmt, nid_s);
 	free(stmt);
 	stmt = aux;
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if ( (ret = edg_wll_ExecSQL(ctx, stmt, NULL)) < 0 )
 		goto cleanup;
@@ -707,7 +707,7 @@ static int update_notif(
 		free(stmt);
 		trio_asprintf(&stmt,
 				"select notifid from notif_registrations where notifid='%|Ss'", nid_s);
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 		ret = edg_wll_ExecSQL(ctx, stmt, NULL);
 		if ( ret == 0 )
 			edg_wll_SetError(ctx, ENOENT, "Unknown notification ID");
@@ -818,12 +818,12 @@ static int drop_notif_request(edg_wll_Context ctx, const edg_wll_NotifId nid) {
 		goto rollback;
 
 	trio_asprintf(&stmt, "delete from notif_registrations where notifid='%|Ss'", nid_s);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	if ( edg_wll_ExecSQL(ctx, stmt, NULL) < 0 )
 		goto rollback;
 	free(stmt);
 	trio_asprintf(&stmt, "delete from notif_jobs where notifid='%|Ss'", nid_s);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	if ( edg_wll_ExecSQL(ctx, stmt, NULL) < 0 ) 
 		goto rollback;
 	edg_wll_NotifCancelRegId(ctx, nid);
@@ -869,7 +869,7 @@ static int check_notif_age(edg_wll_Context ctx, const edg_wll_NotifId nid) {
 	}
 
 	trio_asprintf(&q, "select notifid from notif_registrations WHERE notifid='%|Ss' AND valid < %s", nid_s, time_s);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 	if ( (ret = edg_wll_ExecSQL(ctx, q, NULL)) < 0 )
 		goto cleanup;
 

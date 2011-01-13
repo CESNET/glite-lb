@@ -477,7 +477,7 @@ int main(int argc, char *argv[])
 		case 'i': strcpy(pidfile,optarg); pidfile_forced = 1; break;
 		case 'R': add_root(ctx, optarg, ADMIN_ACCESS); break;
 		case 'F': glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL,
-				"%s: Option --super-users-file is deprecated, specify policy using --policy instead");
+				"%s: Option --super-users-file is deprecated, specify policy using --policy instead", argv[0]);
 			  return 1;
 		case 'x': noIndex = atoi(optarg);
 			  if (noIndex < 0 || noIndex > 2) { usage(name); return 1; }
@@ -1061,7 +1061,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 			edg_wll_gss_release_cred(&mycred, NULL);
 			mycred = newcred;
 		} else { 
-			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] reloading credentials failed, using old ones");
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] reloading credentials failed, using old ones", getpid());
 		}
 		break;
 	case -1: 

@@ -396,7 +396,7 @@ static int flush_bufferd_insert(glite_lbu_bufInsert bi)
 	
 	trio_asprintf(&stmt, "insert into %|Ss(%|Ss) values %s;",
 		bi->table_name, bi->columns, vals);
-	glite_common_log(bi->ctx->log_category, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(bi->ctx->log_category, LOG_PRIORITY_DEBUG, stmt);
 
 	if (glite_lbu_ExecSQL(bi->ctx,stmt,NULL) < 0) {
                 if (STATUS(bi->ctx) == EEXIST)

@@ -85,7 +85,7 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 			"order by arrived",
 			ctx->srvName,ctx->srvPort,
 			from_s,to_s);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	
 	if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto clean;
 

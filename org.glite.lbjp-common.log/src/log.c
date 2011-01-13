@@ -59,7 +59,7 @@ void glite_common_log_msg(char *catName,int a_priority, char *msg) {
         const log4c_category_t* a_category = log4c_category_get(catName);
 
         if (log4c_category_is_priority_enabled(a_category, a_priority)) {
-                log4c_category_log(log4c_category_get(catName), a_priority, msg);
+                log4c_category_log(log4c_category_get(catName), a_priority, "%s", msg);
         }
 #else
 	printf(msg);

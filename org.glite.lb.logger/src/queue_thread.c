@@ -31,7 +31,7 @@ queue_thread_cleanup(void *q)
 {
 	struct event_queue *eq = (struct event_queue *)q;
 
-	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "thread %d exits", eq->thread_id);
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "thread %p exits", eq->thread_id);
 
 	/* unlock all held locks */
 	/* FIXME: check that the thread always exits when holding these locks;

@@ -56,7 +56,7 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 	edg_wll_ResetError(ctx);
 
 	trio_asprintf(&q, "select ulm from events_flesh where jobid = '%|Ss' and event = %d", jobid, n);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 
 	if ((ret=edg_wll_ExecSQL(ctx,q,&sh)) < 0) goto cleanup;
 	if (edg_wll_FetchRow(ctx,sh,1,NULL,&nameval[0]) == 1) {
@@ -81,8 +81,8 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 		trio_asprintf(&q,"select name,value from %s "
 				"where jobid = '%|Ss' and event = %d ",
 				tables[t],jobid,n);
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
-			q);
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB,
+			LOG_PRIORITY_DEBUG, q);
 
 		if ((ret=edg_wll_ExecSQL(ctx,q,&sh)) < 0) goto cleanup;
 

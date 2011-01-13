@@ -689,7 +689,7 @@ static int stateRateRequest(
                 *rate += c->cnt * (float)diff/i;
 
                 if (*to >= afrom && *to < afrom+i) {
-                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, rate %f", match, *rate);
+                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %ld, rate %f", match, *rate);
                         break;
                 }
 	}
@@ -921,7 +921,7 @@ static int stateDurationFromToRequest(
                 *dispersion += (float)diff * c->value2;
 
                 if (*to >= afrom && *to < afrom+i) {
-                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, duration %f, dispersion %f", match, *duration, *dispersion);
+                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %ld, duration %f, dispersion %f", match, *duration, *dispersion);
                         break;
                 }
         }

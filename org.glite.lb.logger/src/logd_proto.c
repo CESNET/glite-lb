@@ -97,7 +97,7 @@ static int handle_gss_failures(int code, edg_wll_GssStatus *gss_code, const char
 			   break;
 			}
 		default:
-			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_ERROR,"%s: %s, unknown error occured\n");
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_ERROR,"%s: %s, unknown error occured\n", func, text);
 			break;
 	}
 	return ret;
@@ -381,7 +381,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 		}
 	}
 	if (!unique) {
-		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"Cannot determine the unique long local-logger id (LLLID)!\n",lllid);
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"Cannot determine the unique long local-logger id (LLLID %ld)!\n",lllid);
 		return EAGAIN;
 	}
 	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_INFO,"Long local-logger id (LLLID): %ld ... [ok]\n",lllid);
@@ -598,7 +598,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 			goto edg_wll_log_proto_server_end_1;
 		} else glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,
 			"Sending via IPC (UNIX socket \"%s\")\n\t"
-			"the message position %ld (%d bytes)... [ok]",
+			"the message position %ld (%ld bytes)... [ok]",
 			socket_path, filepos, sizeof(filepos));
 
 		if (event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) {

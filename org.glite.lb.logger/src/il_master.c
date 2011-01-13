@@ -333,7 +333,7 @@ handle_msg(il_octet_string_t *event, long offset)
 	if((msg = server_msg_create(event, offset)) == NULL) {
 		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, 
 				 "    handle_msg: error parsing event '%s': %s", 
-				 event, error_get_msg());
+				 event->data, error_get_msg());
 		return(0);
 	}
 
