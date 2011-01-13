@@ -16,7 +16,7 @@ log4c_prefix=/usr
 version=${module.version}
 
 CC=gcc
-VPATH=${top_srcdir}/interface:${top_srcdir}/src
+VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/tests
 
 LOG4C_CFLAGS:=-I${log4c_prefix}/include
 LOG4C_LIBS:=-L${log4c_prefix}/${libdir} -L${log4c_prefix}/lib -llog4c
@@ -78,10 +78,14 @@ clean:
 	rm -rvf *.o *.lo .libs lib*
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
-check:
+check: test
+	LOG4C_RCPATH=${top_srcdir}/tests ./test
 
 ${LTLIB}: ${LOBJS}
 	${LINK} ${version_info} -o $@ $+ ${LOG4C_LIBS}
+
+test: test.o
+	${LINK} -o $@ $+ ${LTLIB} ${LOG4C_LIBS}
 
 %.o %.lo: %.c
 	${COMPILE} -c $<
