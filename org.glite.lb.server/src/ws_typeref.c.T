@@ -248,6 +248,14 @@ int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt
 			gen "\tjs->$usuc->tvUsec = src->$_.tv_usec;\n";
 		} elsif ($ft eq 'string') {
 			gen "\tjs->$usuc = soap_strdup(soap,src->$_);\n";
+		} elsif ($f->{null}) {
+			gen qq{
+!	if (src->$_ == $f->{null}) js->$usuc = NULL;
+!	else {
+!		js->$usuc = soap_malloc(soap,sizeof *js->$usuc);
+!		*js->$usuc = src->$_;
+!	}
+};
 		} else { gen "\tjs->$usuc = src->$_;\n"; }
 	}
 @@@}
@@ -318,6 +326,8 @@ void edg_wll_SoapToStatus(struct soap *soap,struct lbt__jobStatus const *src,edg
 		} elsif ($ft eq 'string') {
 			gen "\tdest->$_ = src->$usuc;\n";
 			gen "\tsoap_unlink(soap,src->$usuc);\n";
+		} elsif ($f->{null}) {
+			gen "\tdest->$_ = (src->$usuc) ? *(src->$usuc) : $f->{null};\n";
 		} else {
 			gen "\tdest->$_ = src->$usuc;\n";
 }

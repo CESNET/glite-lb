@@ -80,6 +80,7 @@
 		}
 
 		my $comment = getComment $f;
+# XXX: if null value is specified, the field can be optional
 		if ($name eq 'stateEnterTimes' || $name eq 'childrenHist') {
 # XXX: stateEnterTimes and childrenHist are the only case of enum-indexed array
 			gen qq{
@@ -87,9 +88,11 @@
 };
 		}
 		else {
-# XXX: currently nothing is "optional" as we don't know from status.T 
+# orig XXX: currently nothing is "optional" as we don't know from status.T 
+# XXX: if null is defined, the field is optional
+			my $opt = $f->{null} ? 'yes' : 'no';
 			gen qq{
-!				<elem name="$name" type="$type" list="$list" optional="no">$comment</elem>
+!				<elem name="$name" type="$type" list="$list" optional="$opt">$comment</elem>
 };
 		}
 	}

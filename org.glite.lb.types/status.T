@@ -163,6 +163,7 @@ int	cream_exit_code		Job exit code
 bool	cream_cancelling 	Cancellation request in process
 int	cream_cpu_time		Consumed CPU time
 int	cream_jw_status		Users jw_status enum
+	_null_ -1
 
 _pad_	30
 
