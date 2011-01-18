@@ -47,6 +47,7 @@ limitations under the License.
 #define HTTP_UNAUTH		401
 #define HTTP_NOTFOUND		404
 #define HTTP_NOTALLOWED		405
+#define HTTP_GONE		410
 #define HTTP_UNSUPPORTED	415 
 #define HTTP_INTERNAL		500
 #define HTTP_NOTIMPL		501

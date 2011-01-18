@@ -101,6 +101,7 @@ char *edg_wll_HTTPErrorMessage(int errCode)
 		case HTTP_INTERNAL: msg = "Internal Server Error"; break;
 		case HTTP_UNAVAIL: msg = "Service Unavailable"; break;
 		case HTTP_INVALID: msg = "Invalid Data"; break;
+		case HTTP_GONE: msg = "Gone"; break;
 		default: msg = "Unknown error"; break;
 	}
 
@@ -535,6 +536,7 @@ edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
 						break;
 					case ENOENT: ret = HTTP_NOTFOUND; break;
 					case EPERM: ret = HTTP_UNAUTH; break;
+					case EIDRM: ret = HTTP_GONE; break;
 					case EDG_WLL_ERROR_NOINDEX: ret = HTTP_UNAUTH; break;
 					case ENOMEM: fatal = 1; ret = HTTP_INTERNAL; break;
 					default: ret = HTTP_INTERNAL; break;
@@ -656,6 +658,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
 				case EPERM: ret = HTTP_UNAUTH; break;
+				case EIDRM: ret = HTTP_GONE; break;
 				case EDG_WLL_ERROR_NOINDEX: ret = HTTP_UNAVAIL; break;
 				default: ret = HTTP_INTERNAL; break;
 			}
@@ -721,6 +724,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				case ENOENT: ret = HTTP_NOTFOUND; break;
 				case EINVAL: ret = HTTP_INVALID; break;
 				case EPERM : ret = HTTP_UNAUTH; break;
+				case EIDRM : ret = HTTP_GONE; break;
 				default: ret = HTTP_INTERNAL; break;
 			}
 			if (!html && (ret != HTTP_INTERNAL))
@@ -902,6 +906,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					case EINVAL: ret = HTTP_UNAUTH; break;
 					case EDG_WLL_ERROR_NOINDEX: ret = HTTP_UNAUTH; break;
 					case ENOMEM: fatal = 1; ret = HTTP_INTERNAL; break;
+					case EIDRM: ret = HTTP_GONE; break;
 					default: ret = HTTP_INTERNAL; break;
 				}
 				if (!html && !fatal)

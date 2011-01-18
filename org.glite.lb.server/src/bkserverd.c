@@ -1475,9 +1475,7 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EEXIST:
 	case EDG_WLL_ERROR_NOINDEX:
 	case E2BIG:
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
-			"[%d] %s (%s)", getpid(), errt, errd);
-		break;
+	case EIDRM:
 	case EINVAL:
 	case EDG_WLL_ERROR_PARSE_BROKEN_ULM:
 	case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:

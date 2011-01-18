@@ -443,6 +443,7 @@ int edg_wll_QueryJobsServerStream(
 						j = 0,
 						ret = 0,
 						eperm = 0,
+						eidrm = 0,
 						limit = 0, offset = 0,
 						limit_loop = 1,
 						where_flags = 0,
@@ -653,25 +654,19 @@ limit_cycle_cleanup:
 				LOG_PRIORITY_DEBUG, zquery);
 			j = edg_wll_ExecSQL(ctx,zquery,&sh);
 
-			if (j > 0) {
-				n = 0;
-				while ( (ret=edg_wll_FetchRow(ctx,sh,sizofa(res),NULL,res)) > 0 ) {
-					edg_wlc_JobIdParse(res[0], &jobid);
-					edg_wlc_JobIdParse(res[0], &status.jobId);
-					status.state = EDG_WLL_JOB_PURGED;
-					free(res[0]); free(res[1]); free(res[2]);
-					if (cb(ctx, jobid, &status, data) != 0)
-						goto cleanup;
-					n++;
-				}
-			}
+			if (j > 0) eidrm = 1;
+
 			glite_lbu_FreeStmt(&sh);
+			free (zquery);
 		}
 	}
 
 	if ( !n ) {
 		if (eperm) edg_wll_SetError(ctx, EPERM, "matching jobs found but authorization failed");
-		else edg_wll_SetError(ctx, ENOENT, "no matching jobs found");
+		else {
+			if (eidrm) edg_wll_SetError(ctx, EIDRM, "matching job already purged");
+			else edg_wll_SetError(ctx, ENOENT, "no matching jobs found");
+		}
 	}
 
 	// finish

@@ -548,6 +548,7 @@ int http_check_status(
 			break;
 		/* soft errors - some useful data may be returned too */
 		case HTTP_UNAUTH: /* EPERM */
+		case HTTP_GONE: /*EIDRM*/
 		case HTTP_NOTFOUND: /* ENOENT */
 		case HTTP_NOTIMPL: /* ENOSYS */
 		case HTTP_UNAVAIL: /* EAGAIN */
