@@ -127,18 +127,18 @@ my %externs = (
 	},
 	postgresql => {
 		prefix=> '/usr'
-	}
+	},
 	activemq => {
 		prefix=>'/opt/activemq-cpp-library'
-	}
+	},
 	apr => {
 		prefix=>'/opt/apr',
 		pkg => 'apr-1'
-	}
+	},
 	aprutil => {
 		prefix=>'/opt/apr-util',
 		pkg => 'apr-util-1'
-	}
+	},
 );
 
 my %jar = (
