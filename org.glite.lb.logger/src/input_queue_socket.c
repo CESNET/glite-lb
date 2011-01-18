@@ -251,6 +251,8 @@ input_queue_get(il_octet_string_t **buffer, long *offset, int timeout)
   tv.tv_sec = timeout;
   tv.tv_usec = 0;
   
+  utime(socket_path, NULL);
+
   msg_len = select(sock + 1, &fds, NULL, NULL, timeout >= 0 ? &tv : NULL);
   switch(msg_len) {
      
