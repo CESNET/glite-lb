@@ -27,8 +27,6 @@ limitations under the License.
 #include "db_supp.h"
 #include "index.h"
 
-extern int debug;
-
 #define const_len(c)	(sizeof((c))-1)
 
 static int parse_indices(edg_wll_Context ctx,char **keys,char ***column_names,const char **built_in_indices,edg_wll_QueryRec *** index_out,char ***keys_out);

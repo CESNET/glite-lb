@@ -40,8 +40,6 @@ limitations under the License.
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *);
 static int notif_check_acl(edg_wll_Context,const edg_wll_JobStat *,const char *, int *);
 
-extern int debug;
-
 int edg_wll_NotifExpired(edg_wll_Context,const char *);
 
 int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_wll_JobStat *stat)

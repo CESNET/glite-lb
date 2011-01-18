@@ -31,9 +31,6 @@ limitations under the License.
 #include "lb_http.h"
 #include "lb_proto.h"
 
-extern int debug;
-#define dprintf(x) if (debug) printf x
-
 
 int edg_wll_AcceptHTTP(edg_wll_Context ctx, char **body, char **resp, char ***hdrOut, char **bodyOut, int *httpErr)
 {

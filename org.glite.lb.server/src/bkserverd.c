@@ -128,10 +128,6 @@ extern void _start (void), etext (void);
 #define GLITE_LBPROXY_SOCK_PREFIX       "/tmp/lb_proxy_"
 #endif
 
-#ifndef dprintf
-#define dprintf(x)		{ if (debug) printf x; }
-#endif
-
 #define sizofa(a)		(sizeof(a)/sizeof((a)[0]))
 
 #define	SERVICE_PROXY		DB_PROXY_JOB
@@ -220,7 +216,6 @@ static struct option opts[] = {
 	{"notif-il-fprefix",	1, NULL,	'Y'},
 	{"count-statistics",	1, NULL,	'T'},
 	{"request-timeout",	1, NULL,	't'},
-	{"silent",	0, NULL, 'z' },
 #ifdef LB_PERF
 	{"perf-sink",           1, NULL,        'K'},
 #endif
@@ -263,7 +258,7 @@ static void usage(char *me)
 		"\t-w, --wsport\t port to serve the web services requests\n"
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 		"\t-m, --mysql\t database connect string\n"
-		"\t-d, --debug\t don't run as daemon, additional diagnostics\n"
+		"\t-d, --debug\t don't run as daemon\n"
 		"\t-r, --rgmaexport write state info to RGMA interface\n"
 		"\t-n, --noauth\t don't check user identity with result owner\n"
 		"\t-s, --slaves\t number of slave servers to fork\n"
@@ -284,7 +279,6 @@ static void usage(char *me)
 		"\t--count-statistics=1\t count certain statistics on jobs\n"
 		"\t                  =2\t ... and allow anonymous access\n"
 		"\t-t, --request-timeout\t request timeout for one client\n"
-		"\t--silent\t don't print diagnostic, even if -d is on\n"
 #ifdef LB_PERF
 		"\t-K, --perf-sink\t where to sink events\n"
 #endif
@@ -407,7 +401,6 @@ int main(int argc, char *argv[])
 	edg_wll_GssStatus	gss_code;
 	struct timeval		to;
 	int 			request_timeout = REQUEST_TIMEOUT;
-	int			silent = 0;
 	char 			socket_path_prefix[PATH_MAX] = GLITE_LBPROXY_SOCK_PREFIX;
 
 
@@ -447,7 +440,6 @@ int main(int argc, char *argv[])
 		case 'w': free(ws_port); ws_port = strdup(optarg); break;
 #endif /* GLITE_LB_SERVER_WITH_WS */
 		case 'd': debug = 1; break;
-		case 'z': silent = 1; break;
 		case 'r': rgma_export = 1; break;
 		case 'm': dbstring = optarg; break;
 		case 'n': noAuth = 1; break;
@@ -880,8 +872,6 @@ int main(int argc, char *argv[])
 	} else {
 		setpgid(0, getpid());
 	}
-
-	if (silent) debug = 0;
 
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVES_COUNT, slaves);
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVE_OVERLOAD, SLAVE_OVERLOAD);

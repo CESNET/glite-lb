@@ -47,16 +47,11 @@ limitations under the License.
 #define NEW_CLIENT_DURATION	10		/* how long a client is considered new, i.e. busy
 						   connection is not closed to serve other clients */
 
-#ifndef dprintf
-#define dprintf(x)			{ if (debug) printf x; }
-#endif
-
 #ifdef LB_PROF
 extern void _start (void), etext (void);
 #endif
 
 static int		running = 0;
-static int		debug = 0;
 static volatile int	die = 0,
 			child_died = 0;
 static unsigned long	clnt_dispatched = 0,
@@ -135,7 +130,6 @@ int glite_srvbones_run(
 
 	services = service_table;
 	services_ct = table_sz;
-	debug = dbg;
 
 	setlinebuf(stdout);
 	setlinebuf(stderr);
@@ -341,20 +335,6 @@ static int dispatchit(int sock_slave, int sock, int sidx)
 	alen = sizeof(a);
 	if ( (conn = accept(sock, (struct sockaddr *)&a, &alen)) < 0 )
 	{
-		//TODO: check debug according to previous version 
-#if 0		
-		if (debug)
-		{
-			perror("accept()");
-			return 1; 
-		}
-		else
-		{
-			syslog(LOG_ERR, "accept(): %m");
-			sleep(5);
-			return -1;
-		}
-#endif
 		glite_common_log(set_log_category, LOG_PRIORITY_WARN, "accept()");
 		sleep(5);
 		return -1;

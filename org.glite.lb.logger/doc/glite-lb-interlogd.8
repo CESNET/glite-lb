@@ -65,7 +65,7 @@ environment variable.
 
 .TP
 .B "-d\fR,\fP --debug"
-Don't run as daemon (do not fork and put itself into background).
+Don't run as daemon (do not fork and put itself into background). Additional diagnostics are not enabled, they can be configured through log4c instead.
 
 .TP
 .BI \-i " FILE" "\fR,\fP --pidfile " FILE
@@ -109,10 +109,6 @@ As the logging is not implemented yet this option should not be used.
 .BI -s " PATH" "\fR,\fP --socket " PATH
 Listen for events sent by glite-lb-logd at the UNIX socket
 .I PATH.
-
-.TP
-.B "-v\fR,\fP --verbose"
-Print extensive debug output.
 
 .TP
 .B "-V\fR,\fP --version"

@@ -31,8 +31,6 @@ limitations under the License.
 #include "ws_typeref.h"
 #include "jobstat.h"
 
-extern int debug;
-
 #define LB_GLUE_STATE_PREFIX "urn:org.glite.lb"
 
 /**
@@ -75,7 +73,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityStatus(
 		}
 
 		flags = 0;
-		if (debug) {
+		if (glite_common_log_get_priority(LOG_CATEGORY_LB_SERVER_REQUEST) >= LOG_PRIORITY_DEBUG) {
 			char *cjobid = NULL, *cflags = NULL;
 
 			cjobid = edg_wlc_JobIdUnparse(j);
@@ -411,7 +409,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb4agu__GetActivityInfo(
 		}
 
 		flags = EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN;
-		if (debug) {
+		if (glite_common_log_get_priority(LOG_CATEGORY_LB_SERVER_REQUEST) >= LOG_PRIORITY_DEBUG) {
 			char *cjobid = NULL, *cflags = NULL;
 
 			cjobid = edg_wlc_JobIdUnparse(j);

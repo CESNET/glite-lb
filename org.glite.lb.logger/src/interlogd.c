@@ -74,7 +74,6 @@ static void usage (int status)
 	       "  -h, --help                 display this help and exit\n"
 	       "  -V, --version              output version information and exit\n"
 	       "  -d, --debug                do not run as daemon\n"
-	       "  -v, --verbose              print extensive debug output\n"
 	       "  -f, --file-prefix <prefix> path and prefix for event files\n"
 	       "  -c, --cert <file>          location of server certificate\n"
 	       "  -k, --key  <file>          location of server private key\n"
@@ -105,7 +104,6 @@ static void usage (int status)
 
 /* Option flags and variables */
 static int debug;
-static int verbose = 0;
 char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
 int lazy_close = 1;
@@ -132,7 +130,6 @@ static struct option const long_options[] =
 {
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'V'},
-  {"verbose", no_argument, 0, 'v'},
   {"debug", no_argument, 0, 'd'},
   {"file-prefix", required_argument, 0, 'f'},
   {"cert", required_argument, 0, 'c'},
@@ -176,7 +173,6 @@ decode_switches (int argc, char **argv)
 			   "f:"  /* file prefix */
 			   "h"	/* help */
 			   "V"	/* version */
-			   "v"  /* verbose */
 			   "c:"          /* certificate */
 			   "k:"          /* key */
 			   "C:"          /* CA dir */
@@ -208,10 +204,6 @@ decode_switches (int argc, char **argv)
 	case 'V':
 	  printf ("interlogger %s\n", VERSION);
 	  exit (0);
-
-	case 'v':
-	  verbose = 1;
-	  break;
 
 	case 'h':
 	  usage (0);

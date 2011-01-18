@@ -45,9 +45,6 @@ limitations under the License.
 #define __lb__QueryEvents __ns1__QueryEvents
 #endif
 
-extern int debug;
-#define dprintf(x) if (debug) printf x
-
 static void freeQueryRecsExt(edg_wll_QueryRec **qr);
 static void freeJobIds(edg_wlc_JobId *jobs);
 static void freeJobStats(edg_wll_JobStat *stats);
@@ -91,7 +88,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__JobStatus(
 
 	edg_wll_SoapToJobStatFlags(in->flags, &flags);
 	
-	if (debug) {
+	if (glite_common_log_get_priority(LOG_CATEGORY_LB_SERVER_REQUEST) >= LOG_PRIORITY_DEBUG) {
 		char *cjobid = NULL, *cflags = NULL;
 
 		cjobid = edg_wlc_JobIdUnparse(j);
@@ -148,7 +145,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryJobs(
 	}
 	edg_wll_SoapToJobStatFlags(in->flags, &flags);
 
-	if (debug) {
+	if (glite_common_log_get_priority(LOG_CATEGORY_LB_SERVER_REQUEST) >= LOG_PRIORITY_DEBUG) {
 		char *message = NULL;
 
 		if (edg_wll_QueryJobsRequestToXML(ctx, 
@@ -244,7 +241,7 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__QueryEvents(
 		goto cleanup;
 	}
 
-	if (debug) {
+	if (glite_common_log_get_priority(LOG_CATEGORY_LB_SERVER_REQUEST) >= LOG_PRIORITY_DEBUG) {
 		char *message = NULL;
 
 		if (edg_wll_QueryEventsRequestToXML(ctx, 

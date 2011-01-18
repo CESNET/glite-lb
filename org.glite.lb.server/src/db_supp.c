@@ -24,8 +24,6 @@ limitations under the License.
 #include "glite/lb/context-int.h"
 #include "glite/lbu/log.h"
 
-extern int 	debug;	// declared and set in bkserver.c
-
 
 int edg_wll_SetErrorDB(edg_wll_Context ctx) {
 	int code;
