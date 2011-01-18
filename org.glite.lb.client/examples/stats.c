@@ -70,31 +70,6 @@ int main(int argc,char **argv)
 	to = now;
 	from = now - (time_t)era;
 	
-/* not implemented yet
-	if (edg_wll_StateDuration(ctx,group,EDG_WLL_JOB_SCHEDULED,0,
-				&from,&to,&val,&from_res,&to_res))
-	{
-		char	*et,*ed;
-		edg_wll_Error(ctx,&et,&ed);
-		fprintf(stderr,"edg_wll_StateDuration(): %s, %s\n",et,ed);
-		return 1;
-	}
-
-	cfrom = strdup(ctime(&from));
-	cto = strdup(ctime(&to));
-	cfrom[strlen(cfrom)-1] = 0;
-	cto[strlen(cto)-1] = 0;
-
-	printf("Average queue traversal time at \"%s\": %f s\n"
-	       "  Measuered from %s to %s\n"
-	       "  With resolution from %d to %d s\n",
-	       argv[CEidx],val,cfrom,cto,from_res,to_res);
-
-*/
-
-	to = now;
-	from = now - 60;
-
 	if (edg_wll_StateRates(ctx,group,atoi(argv[MAJidx]),argc >= (argOK+1) ? atoi(argv[MINidx]) : 0,
 				&from,&to,&vals,&groups,&from_res,&to_res))
 	{

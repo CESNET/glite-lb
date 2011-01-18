@@ -54,7 +54,7 @@ int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, co
 
 	if ( stmt == NULL ) return edg_wll_SetError(ctx, ENOMEM, NULL);
 
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	
 	if ( (nstates = edg_wll_ExecSQL(ctx, stmt, &sh)) < 0 ) goto cleanup;
 	if ( nstates == 0 ) {

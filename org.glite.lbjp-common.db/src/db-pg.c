@@ -376,7 +376,7 @@ void glite_lbu_FreeStmtPsql(glite_lbu_Statement *stmt_gen) {
 	if (stmt->res) psql_module.PQclear(stmt->res);
 	if (stmt->name) {
 		asprintf(&sql, "DEALLOCATE %s", stmt->name);
-		glite_common_log(ctx->generic.log_category, LOG_PRIORITY_DEBUG, sql);
+		glite_common_log_msg(ctx->generic.log_category, LOG_PRIORITY_DEBUG, sql);
 		stmt->res = psql_module.PQexec(ctx->conn, sql);
 		free(sql);
 		psql_module.PQclear(stmt->res);
@@ -470,7 +470,7 @@ int glite_lbu_PrepareStmtPsql(glite_lbu_DBContext ctx_gen, const char *sql, glit
 	asprintf(&stmt->name, "%s%d", prepared_names[i], ++ctx->prepared_counts[i]);
 
 	asprintf(&sqlPrep, "PREPARE %s AS %s", stmt->name, stmt->sql);
-	glite_common_log(ctx_gen->log_category, LOG_PRIORITY_DEBUG, sqlPrep);
+	glite_common_log_msg(ctx_gen->log_category, LOG_PRIORITY_DEBUG, sqlPrep);
 	res = psql_module.PQexec(ctx->conn, sqlPrep);
 	if (psql_module.PQresultStatus(res) != PGRES_COMMAND_OK) {
 		asprintf(&s, "error preparing command: %s", psql_module.PQerrorMessage(ctx->conn));
@@ -600,7 +600,7 @@ int glite_lbu_ExecPreparedStmtPsql_v(glite_lbu_Statement stmt_gen, int n, va_lis
 	}
 	if (n) strcat(sql, ")");
 
-	glite_common_log(ctx->generic.log_category, LOG_PRIORITY_DEBUG, sql);
+	glite_common_log_msg(ctx->generic.log_category, LOG_PRIORITY_DEBUG, sql);
 	stmt->res = psql_module.PQexec(ctx->conn, sql);
 	status = psql_module.PQresultStatus(stmt->res);
 	if (status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK) {

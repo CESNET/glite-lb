@@ -67,6 +67,8 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-statistics.sh} & Implemented & Test statistic functions provided by \LB \\
 \hline
+{\tt lb-test-threaded.sh} & Implemented & Rudimentary test for threaded clients \LB \\
+\hline
 \end{tabularx}
 
 \subsubsection{Event logging examples}
@@ -88,6 +90,7 @@ There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds vario
 \item Register jobs with \code{edg\_wll\_RegisterJob} 
 \item Log reasonable sequences of events with \code{edg\_wll\_Log*}, both through logger and/or proxy
 \item Check with \code{edg\_wll\_JobLog} that the events got delivered afterwards (approx. 10s).
+\item Also check delivery and processing of events related to collections.
 \end{enumerate}
 
 \how\ \ctblb{lb-test-event-delivery.sh}
@@ -102,15 +105,9 @@ There is an {\tt examples} subdirectory in {\tt GLITE\_LOCATION}. It holds vario
 % - rename the script, tidy it
 % - create some meaningful sequence of events for logEvents
 
-\note\ The test includes artificial delays. Takes approx. 25\,s to finish.
+\note\ The test includes artificial delays. Takes approx. 60\,s to finish.
 
 \result\ All sub tests (API calls) should return 0. The same events that were logged must be returned.
-
-\begin{hints}
-There is approx. 1 min time window in which the local logger files exist.
-They can be grabbed and used for comparing the events later in~\ref{recover}.
-\end{hints}
-
 
 
 \subsubsection{Job registration only}
@@ -217,7 +214,7 @@ events (e.g. destination computing element) wrt. the values reported in the job 
 \what\ Register jobs with \code{edg\_wll\_RegisterJobProxy}, log events
 using \code{edg\_wll\_LogEventProxy} and check the job states against
 both lbproxy (using \code{edg\_wll\_JobStatusProxy}) and bkserver
-(using \code{edg\_wll\_JobStatus}). Pay special attention to job reaching final 
+(using \code{edg\_wll\_JobStatus}). Also test job collections and registration, including registration of subjobs. Pay special attention to job reaching final 
 job status and to the automatic purge from proxy.
 
 %  - check the timeouts. - ??tam byly nejaky timeouty???
@@ -243,6 +240,7 @@ job status and to the automatic purge from proxy.
 lbproxy and probably with a small delay also at the bkserver. Jobs that reach the final job state
 are really purged from the proxy.
 
+\note\ The test includes artificial delays. Takes approx. 50\,s to finish.
 
 
 \subsection{WS interface}
@@ -485,6 +483,22 @@ including the checks.
 
 \result\ Meaningful values should be returned by both tests. 
 
+\subsubsection{Multi-Threaded Operation}
+
+\req\ \LB\ server running
+
+\what\
+\begin{enumerate}
+\item Register a series of jobs.
+\item Run a client using multiple threads to query the server simultaneously.
+\item Check if all threads finished OK.
+\end{enumerate}
+
+\how\ \ctblb{lb-test-threaded.sh}
+
+\note\ The is not a thorough test. It is not capable of discovering rare or improbable problems but it will check the essentials of multi-threaded opration.
+
+\result\ The test must not hang. Meaningful results (albeit errors) must be returned by all threads.
 
 
 \section{LB ``In the Wild''---Real-World WMS Test}

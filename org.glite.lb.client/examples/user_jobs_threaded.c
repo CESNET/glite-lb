@@ -178,7 +178,7 @@ int main(int argc,char **argv)
 {
         thread_code_args arguments = { NULL, 0, 0, 1, 1,NULL };
 	int	i,rc,status,opt;
-	int	thr_num = 10;	// default
+	int	thr_num = 10;
 
 
         while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {

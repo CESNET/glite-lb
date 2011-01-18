@@ -9,8 +9,6 @@ PREFIX=/opt/glite
 
 # gridsite requires openssl libraries, we want to include the ones from globus
 globus_prefix=/opt/globus
-nothrflavour=gcc32
-thrflavour=gcc32pthr
 expat_prefix=/opt/expat
 cares_prefix=/opt/c-ares
 gsoap_prefix=/opt/gsoap
@@ -64,37 +62,74 @@ SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
 
-GRIDSITE_CFLAGS = -I${gridsite_prefix}/include `xml2-config --cflags`
-GRIDSITE_LIBS = -L${gridsite_prefix}/${libdir} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
+ifeq (${thrflavour},)
+default_flavour=
+vomsflavour:=
+else
+default_flavour=_${nothrflavour}
+vomsflavour:=_${nothrflavour}
+ifeq (${nothrflavour},gcc32) 
+	vomsflavour :=
+endif 
+ifeq (${nothrflavour},gcc32dbg)
+	vomsflavour :=
+endif
+endif
 
-LCAS_CFLAGS=-I${lcas_prefix}/include
+GRIDSITE_CFLAGS?=-I${gridsite_prefix}/include `xml2-config --cflags`
+GRIDSITE_LIBS?=-L${gridsite_prefix}/${libdir} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
+
+LCAS_CFLAGS?=-I${lcas_prefix}/include -I${lcas_prefix}/include/glite/security
+LCAS_LIBS?=-L${lcas_prefix}/${libdir} -llcas
+
+ifneq (${classads_prefix},/usr)
+	classads_libs := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib
+endif
+CLASSADS_CFLAGS?=-I${classads_prefix}/include -I${classads_prefix}/include/classad
+CLASSADS_LIBS?=${classads_libs} -lclassad
+
+ifneq (${cares_prefix},/usr)
+	cares_libs := -L${cares_prefix}/${libdir} -L${cares_prefix}/lib
+endif
+LIBCARES_CFLAGS?=-I${cares_prefix}/include
+LIBCARES_LIBS?=${cares_libs} -lcares
+
+GSOAP_CFLAGS?=-I${gsoap_prefix}/include -I${gsoap_prefix}/
+EXPAT_CFLAGS?=-I${expat_prefix}/include
+GLOBUS_GSSAPI_GSI_CFLAGS?=-I${globus_prefix}/include/${nothrflavour}
+
+CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
+CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
+
+VOMS_CFLAGS?=-I${voms_prefix}/include -I${voms_prefix}/include/glite/security
+VOMS_LIBS?=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
 
 CFLAGS:= ${CFLAGS} \
+	${GLOBUS_GSSAPI_GSI_CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
-	-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
+	 ${GSOAP_CFLAGS} \
 	-I${stagedir}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
-	-I${expat_prefix}/include \
-	-I${cares_prefix}/include \
-	-I${classads_prefix}/include -I${classads_prefix}/include/classad \
-	-I${voms_prefix}/include \
+	${EXPAT_CFLAGS} \
+	${LIBCARES_CFLAGS} \
+	${CLASSADS_CFLAGS} \
+	${VOMS_CFLAGS} \
 	${COVERAGE_FLAGS} \
 	$(GRIDSITE_CFLAGS) ${LCAS_CFLAGS} \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB \
-	-I${globus_prefix}/include/${nothrflavour} #gridsite needs this
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB
 
 CXXFLAGS:=${CFLAGS}
 
 ifdef LB_PROF
 	SRVBONES_LIB:= ${stagedir}/${libdir}/libglite_lbu_server_bones.la
-	LB_COMMON_LIB:=${stagedir}/${libdir}/libglite_lb_common_${nothrflavour}.la
+	LB_COMMON_LIB:=${stagedir}/${libdir}/libglite_lb_common${default_flavour}.la
 	LB_UTILS_DB_LIB:=${stagedir}/${libdir}/libglite_lbu_db.la
 	CFLAGS:=${CFLAGS} -pg -g
 	LDFLAGS:=${LDFLAGS} -pg
 else
 	SRVBONES_LIB:= -L${stagedir}/${libdir} -lglite_lbu_server_bones
-	LB_COMMON_LIB:=-L${stagedir}/${libdir} -lglite_lb_common_${nothrflavour}
+	LB_COMMON_LIB:=-L${stagedir}/${libdir} -lglite_lb_common${default_flavour}
 	LB_UTILS_DB_LIB:=-L${stagedir}/${libdir} -lglite_lbu_db
 	LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir}
 endif
@@ -106,64 +141,25 @@ ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE
 endif
 
-TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
-TEST_INC:=-I${cppunit_prefix}/include
-
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir}  ${LDFLAGS} 
 SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/${libdir}
-# XXX: not used? LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
-#ifeq ($(shell ls ${gsoap_prefix}/bin/soapcpp2),${gsoap_prefix}/bin/soapcpp2)
-#	gsoap_bin_prefix := ${gsoap_prefix}/bin
-#else
-#	gsoap_bin_prefix := ${gsoap_prefix}
-#endif
-
 gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${gsoap_prefix}/bin; else echo ${gsoap_prefix}; fi }
-
-ifneq (${expat_prefix},/usr)
-	expatlib := -L${expat_prefix}/${libdir} -L${expat_prefix}/lib
-endif
-
-vomsflavour := _${nothrflavour}
-ifeq (${nothrflavour},gcc32) 
-	vomsflavour :=
-endif 
-ifeq (${nothrflavour},gcc32dbg)
-	vomsflavour :=
-endif
-VOMS_LIBS:=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
-LCAS_LIBS:=-L${lcas_prefix}/${libdir} -llcas
-
-#EXT_LIBS:= \
-#	${expatlib} -lexpat \
-#	${GRIDSITE_LIBS} \
-#	-lvomsc${vomsflavour} \
-
-ifneq (${classads_prefix},/usr)
-	CLASSADS_LIBS := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib
-endif
-CLASSADS_LIBS := ${CLASSADS_LIBS} -lclassad
-
-ifneq (${cares_prefix},/usr)
-	CARES_LIBS := -L${cares_prefix}/${libdir} -L${cares_prefix}/lib
-endif
-CARES_LIBS := ${CARES_LIBS} -lcares
 
 EXT_LIBS:=  \
 	-lz \
 	${GRIDSITE_LIBS} \
 	${CLASSADS_LIBS} \
-	${CARES_LIBS} \
+	${LIBCARES_LIBS} \
 	${LCAS_LIBS} \
 	${VOMS_LIBS}
 
-COMMON_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common_${nothrflavour} -lglite_security_gss_${nothrflavour} -lglite_lbu_trio -lglite_lbu_maildir -lglite_lbu_log
+COMMON_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${default_flavour} -lglite_security_gss${default_flavour} -lglite_lbu_trio -lglite_lbu_maildir -lglite_lbu_log
 
 BKSERVER_BASE_OBJS:= \
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
@@ -177,10 +173,10 @@ BKSERVER_BASE_OBJS:= \
 gsoap_version ?= ${gsoap_default_version}
 
 dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
-ifeq ($(shell test -f ${stagedir}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}_c.so && echo ok),ok)
+ifeq ($(shell test -f ${stagedir}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}_c.so && echo ok),ok)
 	langflavour:=_c
 endif
-GSOAP_LIB:=-L${stagedir}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}_${nothrflavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour}
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_OBJS:= \
@@ -206,7 +202,7 @@ else
 		${LB_COMMON_LIB} \
 		${LB_MACHINE_LIB} \
 		${LB_UTILS_DB_LIB} \
-		-lglite_security_gss_${nothrflavour} \
+		-lglite_security_gss${default_flavour} \
 		${EXT_LIBS} \
 		${classadslib} \
 		-lglite_lbu_maildir \
@@ -221,16 +217,8 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
 INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${LB_MACHINE_LIB} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
-WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common_${nothrflavour} \
-	-lglite_lb_common_${nothrflavour}
-
-# WS_CLIENT_LIBS:= -L${stagedir}/${libdir} \
-#                 -lglite_lb_client_${nothrflavour} \
-#                 -lglite_lb_common_${nothrflavour} \
-#                 -L${gsoap_prefix}/${libdir} -lgsoap \
-#                 -lglite_security_gsoap_plugin_${nothrflavour} \
-#                 ${EXT_LIBS}
-# 
+WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common${default_flavour} \
+	-lglite_lb_common${default_flavour}
 
 HDRS=index.h lb_authz.h store.h
 
@@ -299,8 +287,8 @@ test.xml: test_xml
 	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_xml
 
 test_xml: test_xml.cpp
-	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${LB_COMMON_LIB} ${TEST_LIBS}
+	${CXX} -c ${CFLAGS} ${CPPUNIT_CFLAGS} $<
+	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${LB_COMMON_LIB} ${CPPUNIT_LIBS}
 
 test.query: test_query_events
 	# XXX coredumps ./test_query_events
@@ -311,14 +299,14 @@ query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o ind
 
 test_query_events: ${query_events_objs}
 	${LINKXX} -o $@ ${query_events_objs} \
-	${TEST_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib} -lglite_lbu_log
+	${CPPUNIT_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib} -lglite_lbu_log
 
 test.soapconv: test_soap_conv
 	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_soap_conv
 
 test_soap_conv: test_soap_conv.cpp ${WS_CLIENT_OBJS}
-	${CXX} -c ${CFLAGS} ${TEST_INC} $<
-	${LINKXX} -o $@ test_soap_conv.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${TEST_LIBS}
+	${CXX} -c ${CFLAGS} ${CPPUNIT_CFLAGS} $<
+	${LINKXX} -o $@ test_soap_conv.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS} ${CPPUNIT_LIBS}
 
 examples: ${EXAMPLES}
 
@@ -403,7 +391,7 @@ clean:
 	${CXXCOMPILE} -c $<
 
 test_query_events.o: %.o: %.cpp
-	${CXX} -c ${CFLAGS} ${TEST_INC} $<
+	${CXX} -c ${CFLAGS} ${CPPUNIT_CFLAGS} $<
 
 
 %.lo: %.c

@@ -185,3 +185,23 @@
 2.1.10-1
 - Fixed precedence in selecting IPv6/IPv4
 
+2.1.11-1
+- Makefile adopts compilation and linking flags from the environment.
+- Memory handling fixes
+- stateEnterTime initialization for collection jobs (fix for bug #71913).
+
+2.1.12-1
+- Fixed status reporting in the startup script
+- General code polishing
+- Fixes in statistics
+
+2.1.12-2
+- Module rebuilt
+
+2.1.13-1
+- Makefile, configuration and header includes updated to work across org.glite & EMI
+- BDII status reporting fixed (ggus #62737)
+
+2.1.13-2
+- Module rebuilt
+

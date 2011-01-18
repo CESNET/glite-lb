@@ -98,3 +98,19 @@
 2.1.8-1
 - Fixed propagation of error messages
 
+2.1.9-1
+- Makefile adopts compilation and linking flags from the environment.
+
+2.1.10-1
+- Use pidfiles for checking status of daemons rather than port scanning.
+
+2.1.10-2
+- Module rebuilt
+
+2.1.11-1
+- Makefile a configuration updated to work across org.glite & EMI
+- BDII status reporting fixed (ggus #62737)
+
+2.1.11-2
+- Module rebuilt
+

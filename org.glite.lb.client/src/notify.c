@@ -26,6 +26,7 @@ limitations under the License.
 
 #include "glite/security/glite_gss.h"
 #include "glite/lb/context.h"
+#include "glite/lb/connpool.h"
 #include "notification.h"
 
 #include "stat_fields.h"

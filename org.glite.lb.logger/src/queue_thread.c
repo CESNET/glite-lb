@@ -33,7 +33,7 @@ queue_thread_cleanup(void *q)
 	pthread_t my_id = pthread_self();
 	int me;
 
-	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "thread %d exits", my_id);
+	glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "thread %p exits", my_id);
 
 	/* unlock all held locks */
 	/* FIXME: check that the thread always exits when holding these locks;

@@ -88,7 +88,6 @@
 		notifid=>'qq{$dst = edg_wll_NotifIdUnparse($src);}',
 #		level=>'qq{$dst = edg_wll_LevelToString($src);}',
 		logsrc=>'qq{$dst = edg_wll_SourceToString($src);}',
-		logsrc=>'qq{$dst = edg_wll_StringToSource($src);}',
 		cclassad=>'qq{$dst = NULL;}',
 #	strlist, intlist, stslist are used only in consumer API, they don't need toString method
 	}

@@ -4,7 +4,7 @@
 <log4c version="1.2.1">
 
         <config>
-                <bufsize>0</bufsize>
+                <bufsize>1024</bufsize>
                 <debug level="0"/>
                 <nocleanup>0</nocleanup>
         </config>
@@ -17,18 +17,19 @@
         <category name="CONTROL" priority="debug" appender="stderr"/>
         <category name="LB" priority="debug" appender="stderr"/>
 
-	<!-- to debug only a particular LB component use: -->
+	<!-- to debug only a particular LB component, or to change priority, use: -->
         <!-- category name="LB.LOGD" priority="debug" appender="stderr"/-->
         <!-- category name="LB.INTERLOGD" priority="debug" appender="stderr"/-->
         <!-- category name="LB.NOTIFINTERLOGD" priority="debug" appender="stderr"/-->
         <!-- category name="LB.SERVER" priority="debug" appender="stderr"/-->
         <!-- category name="LB.SERVER.DB" priority="debug" appender="stderr"/-->
         <!-- category name="LB.SERVER.REQUEST" priority="debug" appender="stderr"/-->
+        <!-- category name="LB.HARVESTER.DB" priority="debug" appender="stderr"/-->
 
         <!-- default appenders ===================================== -->
-        <appender name="stdout" type="stream" layout="basic"/>
-        <appender name="stderr" type="stream" layout="basic"/>
-        <appender name="syslog" type="syslog" layout="dated"/>
+        <appender name="stdout" type="stream" layout="dated"/>
+        <appender name="stderr" type="stream" layout="dated"/>
+        <appender name="syslog" type="syslog" layout="basic"/>
 
         <!-- default layouts ======================================= -->
         <layout name="basic" type="basic"/>

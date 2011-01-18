@@ -210,7 +210,7 @@ int edg_wll_JobStatusServer(
 
 				trio_asprintf(&stmt, "SELECT version,int_status,jobid FROM states WHERE parent_job='%|Ss'", md5_jobid);
 				if (stmt != NULL) {
-					glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+					glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 					num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
 					if (num_sub >=0 ) {
 						i = 0;
@@ -298,7 +298,7 @@ int edg_wll_JobStatusServer(
 					// Get child states from the database
 					trio_asprintf(&stmt, "SELECT version,status,jobid FROM states WHERE parent_job='%|Ss'", md5_jobid);
 					if (stmt != NULL) {
-						glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+						glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 						num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
 						if (num_sub >=0 ) {
 							while ((num_f = edg_wll_FetchRow(ctx, sh, sizeof(out_stat)/sizeof(out_stat[0]), NULL, out_stat)) == 3 ) {
@@ -379,7 +379,7 @@ int edg_wll_JobStatusServer(
 						"WHERE s.parent_job='%|Ss' AND s.jobid=j.jobid",
 					md5_jobid);
 				if (stmt != NULL) {
-					glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+					glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 					num_sub = edg_wll_ExecSQL(ctx, stmt, &sh);
 					if (num_sub >=0 ) {
 						while ((num_f = edg_wll_FetchRow(ctx, sh, sizeof(out)/sizeof(out[0]), NULL, out)) == 1 ) {
@@ -674,7 +674,7 @@ static char *job_owner(edg_wll_Context ctx,char *md5_jobid)
 		edg_wll_SetError(ctx,ENOMEM, NULL);
 		return NULL;
 	}
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) >= 0) {
 		f=edg_wll_FetchRow(ctx,sh,1,NULL,&out);
 		if (f == 0) {
@@ -706,7 +706,7 @@ static edg_wll_ErrorCode get_job_parent(edg_wll_Context ctx, glite_jobid_const_t
 		edg_wll_SetError(ctx,ENOMEM, NULL);
 		goto err;
 	}
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0) goto err;
 
@@ -823,7 +823,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 					"(jobid,seq,name,value) values "
 					"('%|Ss',%d,'%|Ss','%|Ss')",
 					jobid_md5, seq, (*tagp).tag, (*tagp).value);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, 
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, 
 				LOG_PRIORITY_DEBUG, stmt);
 
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) {
@@ -857,7 +857,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 		parent_md5, icvalues,
 		jobid_md5);
 	free(icvalues);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if ((dbret = edg_wll_ExecSQL(ctx,stmt,NULL)) < 0) goto cleanup;
 	free(stmt); stmt = NULL;
@@ -874,7 +874,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 			INTSTAT_VERSION, parent_md5, icvalues);
 		free(icnames); free(icvalues);
 
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, 
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, 
 			LOG_PRIORITY_DEBUG, stmt);
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
 		free(stmt); stmt = NULL;
@@ -890,7 +890,7 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 	if (update) {
 		trio_asprintf(&stmt, "delete from status_tags "
 			"where jobid ='%|Ss' and seq<%d", jobid_md5, seq);
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, 
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, 
 			LOG_PRIORITY_DEBUG, stmt);
 		if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
 		free(stmt); stmt = NULL;
@@ -921,7 +921,7 @@ edg_wll_ErrorCode edg_wll_StoreIntStateEmbryonic(edg_wll_Context ctx,
 			",parent_job%s) "
 		"values (%s)",
 		icnames, values);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto cleanup;
 
@@ -971,7 +971,7 @@ edg_wll_ErrorCode edg_wll_LoadIntState(edg_wll_Context ctx,
 	if (stmt == NULL) {
 		return edg_wll_SetError(ctx, ENOMEM, NULL);
 	}
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	
 	if ((nstates = edg_wll_ExecSQL(ctx,stmt,&sh)) < 0) goto cleanup;
 	if (nstates == 0) {
@@ -1338,7 +1338,7 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, glite_jobid_co
         if (stmt==NULL) {
                 return edg_wll_SetError(ctx,ENOMEM, NULL);
         }
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
         if (edg_wll_ExecSQL(ctx,stmt,&sh) >= 0) {
                 f=edg_wll_FetchRow(ctx,sh,1,NULL,&out);
@@ -1390,7 +1390,7 @@ edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context ctx, glite_jobid_
 	}
 
 //printf ("\n\n\n Would like to run SQL statament: %s\n\n\n\n", stmt);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
         if ((dbret = edg_wll_ExecSQL(ctx,stmt,NULL)) < 0) goto cleanup;
 

@@ -649,9 +649,9 @@ event_store_recover(struct event_store *es)
 	  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 			   "    setting starting file position to  %ld", last);
 	  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-			   "    bytes sent to logging server: %d", es->last_committed_ls);
+			   "    bytes sent to logging server: %ld", es->last_committed_ls);
 	  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-			   "    bytes sent to bookkeeping server: %d", es->last_committed_bs);
+			   "    bytes sent to bookkeeping server: %ld", es->last_committed_bs);
 
 	  if(last > 0) {
 		  int c;
@@ -996,9 +996,9 @@ event_store_clean(struct event_store *es)
   glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 		   "  trying to cleanup event store %s", es->job_id_s);
   glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-		   "    bytes sent to logging server: %d", es->last_committed_ls);
+		   "    bytes sent to logging server: %ld", es->last_committed_ls);
   glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-		   "    bytes sent to bookkeeping server: %d", es->last_committed_bs);
+		   "    bytes sent to bookkeeping server: %ld", es->last_committed_bs);
 
   /* preliminary check to avoid opening event file */
   /* if the positions differ, some events still have to be sent */
@@ -1063,7 +1063,7 @@ event_store_clean(struct event_store *es)
 
   last = ftell(ef);
   glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-		   "    total bytes in file: %d", last);
+		   "    total bytes in file: %ld", last);
 
   if(es->last_committed_ls < last) {
     fclose(ef);

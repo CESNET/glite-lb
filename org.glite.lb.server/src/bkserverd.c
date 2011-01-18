@@ -414,10 +414,6 @@ int main(int argc, char *argv[])
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
 
-	memset(host, 0, sizeof host);
-	edg_wll_gss_gethostname(host,sizeof host);
-	host[sizeof host - 1] = 0;
-
 	asprintf(&port, "%d", GLITE_JOBID_DEFAULT_PORT);
 #ifdef GLITE_LB_SERVER_WITH_WS
 	asprintf(&ws_port, "%d", GLITE_JOBID_DEFAULT_PORT+3);
@@ -433,6 +429,10 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Couldn't create L&B context, exiting.\n");
 		exit(1);
 	}
+
+	memset(host, 0, sizeof host);
+	edg_wll_gss_gethostname(host,sizeof host);
+	host[sizeof host - 1] = 0;
 
 	while ((opt = getopt_long(argc,argv,get_opt_string,opts,NULL)) != EOF) switch (opt) {
 		case 'A': enable_lcas = 1; break;
@@ -480,7 +480,7 @@ int main(int argc, char *argv[])
 		case 'i': strcpy(pidfile,optarg); pidfile_forced = 1; break;
 		case 'R': add_root(ctx, optarg, ADMIN_ACCESS); break;
 		case 'F': glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL,
-				"%s: Option --super-users-file is deprecated, specify policy using --policy instead");
+				"%s: Option --super-users-file is deprecated, specify policy using --policy instead", argv[0]);
 			  return 1;
 		case 'x': noIndex = atoi(optarg);
 			  if (noIndex < 0 || noIndex > 2) { usage(name); return 1; }
@@ -1064,7 +1064,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 			edg_wll_gss_release_cred(&mycred, NULL);
 			mycred = newcred;
 		} else { 
-			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] reloading credentials failed, using old ones");
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] reloading credentials failed, using old ones", getpid());
 		}
 		break;
 	case -1: 

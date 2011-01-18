@@ -24,7 +24,7 @@ $GLITE_LB_LOCATION="./org.glite.lb";
 
 if ($TMPDIR eq "") {$TMPDIR="/tmp";}
 
-getopts('i:c:m:gh');
+getopts('i:c:m:p:gh');
 
 $module = shift;
 
@@ -38,6 +38,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	-g	Generate old configuration for comparison
 	-c	Use this configuration (\d+\.\d+\.\d+-\S+) rather than parsing version.properties
 	-m	Use this as a CVS commit message instead of the script's default.
+	-p	Specify project ("org.glite" / "emi"). Default: autodetect. 
 	-h	Display this help
 
 };
@@ -60,7 +61,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		case "none" {$increment="n"}
 		else {$increment=$opt_i};
 	}
-	
+
 
 	if (defined $opt_c) {
 	
@@ -106,6 +107,25 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		$current_tag="$current_prefix" . "$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
 	}
 
+	if (defined $opt_p) {
+		$project=$opt_p;
+		if (($project ne "emi")&&($project ne "org.glite")) {die "Only projects \"emi\" or \"org.glite\" are recognized";}
+	}
+	else {
+		system("etics-list-configuration > $TMPDIR/etics-tag-proj_configs.$$.tmp");
+
+		if ( !system("grep -x \"org.glite.HEAD\" $TMPDIR/etics-tag-proj_configs.$$.tmp > /dev/null") ) { $project = "org.glite"; }
+		else {
+			if ( !system("grep -x \"emi.HEAD\" $TMPDIR/etics-tag-proj_configs.$$.tmp > /dev/null") ) { $project = "emi"; }
+			else { die "Unable to autodetect project. Run from workspace root or specify by -p" }
+		}
+
+		system("rm $TMPDIR/etics-tag-proj_configs.$$.tmp");
+	}
+
+	if ($project eq "emi") { $proj_opt = " --emi"; }
+	else { $proj_opt = ""; }
+	
 	# According to the documentation, symbolic names in the 'cvs log' output are sorted by age so this should be OK
 	#$current_tag=`cvs log -h $module/Makefile | grep \"_R_\" | head -n 1`;
 	#$current_tag=~s/^\s//;
@@ -197,6 +217,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	if (-r "$module/project/ChangeLog") { # ChangeLog exists (where expected). Proceed.
 
 		$tmpChangeLog="$TMPDIR/$module.ChangeLog.$$";
+		if ( $project eq "emi" ) { $tmpChangeLog=~s/org\.glite/emi/; }
 
 		system("cp $module/project/ChangeLog $tmpChangeLog");
 
@@ -269,13 +290,15 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	$newconfig="$module_$module" . "_R_$major" . "_$minor" . "_$revision" . "_$age";
 	$newconfig=~s/^org.//;
 	$newconfig=~s/\./-/g;
+	if ( $project eq "emi" ) { $newconfig=~s/^glite/emi/; }
+
 
 	$module=~/([^\.]+?)\.([^\.]+?)$/;
 	$subsysname=$1;
 	$modulename=$2;
 
-	printf("Module=$module\nname=$modulename\nsubsys=$subsysname\n");
-	system("$GLITE_LB_LOCATION/configure --mode=etics --module $subsysname.$modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age");
+	printf("Project=$project\nModule=$module\nname=$modulename\nsubsys=$subsysname\n");
+	system("$GLITE_LB_LOCATION/configure --mode=etics --module $subsysname.$modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age $proj_opt");
 
 #	printf("\nCurrent configuration:\t$currentconfig\nNew configuration:\t$newconfig\n\nPreparing...\n");
 #
@@ -301,9 +324,9 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 #	close(NEWCONF);
 
 	if ($increment eq "n") { # There was no version change and the configuration should already exist
-		printf(EXEC "\n#Add new configuration\netics-configuration modify -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n"); }
+		printf(EXEC "\n#Modify new configuration\netics-configuration modify -i $TMPDIR/$newconfig.ini.$$\n"); }
 	else { # New configuration needs to be created
-	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n"); }
+	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$\n"); }
 	printf(EXEC "etics-commit\n");
 
 

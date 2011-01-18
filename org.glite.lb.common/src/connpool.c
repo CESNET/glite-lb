@@ -276,9 +276,10 @@ edg_wll_Connections* edg_wll_initConnections() {
             #ifdef GLITE_LB_THREADED
                 printf("Thread %d ",pthread_self());
             #endif
-            printf("Initializng connections AND THE CONNECTION POOL\n");
+            printf("Initializing connections AND THE CONNECTION POOL\n");
         #endif
 
+        edg_wll_gss_initialize();
 
         connectionsHandle.connPool = (edg_wll_ConnPool *) calloc(connectionsHandle.poolSize, sizeof(edg_wll_ConnPool));
         for (i=0; i<connectionsHandle.poolSize; i++) {

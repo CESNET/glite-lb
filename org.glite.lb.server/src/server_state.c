@@ -35,7 +35,7 @@ int edg_wll_GetServerState(edg_wll_Context ctx,const char *name,char **val)
 	trio_asprintf(&stmt,"select value from server_state "
 			"where prefix = 'https://%|Ss:%d' and name = '%|Ss'",
 			ctx->srvName,ctx->srvPort,name);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	switch (edg_wll_ExecSQL(ctx,stmt,&q)) {
 		case 0: edg_wll_SetError(ctx,ENOENT,name); break;
@@ -55,7 +55,7 @@ int edg_wll_SetServerState(edg_wll_Context ctx,const char *name,const char *val)
 	trio_asprintf(&stmt,"insert into server_state (prefix,name,value) "
 			"values ('https://%|Ss:%d','%|Ss','%|Ss')",
 			ctx->srvName,ctx->srvPort,name,val);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	switch(edg_wll_ExecSQL(ctx,stmt,NULL)) {
 		case 1: break;
@@ -65,7 +65,7 @@ int edg_wll_SetServerState(edg_wll_Context ctx,const char *name,const char *val)
 						 "where prefix = 'https://%|Ss:%d' "
 						 "and name = '%|Ss'",
 						 val,ctx->srvName,ctx->srvPort,name);
-				glite_common_log(LOG_CATEGORY_LB_SERVER_DB, 
+				glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, 
 					LOG_PRIORITY_DEBUG, stmt);
 				 edg_wll_ExecSQL(ctx,stmt,NULL);
 			 }

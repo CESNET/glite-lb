@@ -49,6 +49,7 @@ static struct _edg_wll_StatsArchive default_archives[] = {
 	{ 10, 60 },
 	{ 60, 30 },
 	{ 900, 12 },
+	{ 3600, 168 },
 	{ 0, 0 }
 };
 
@@ -68,6 +69,7 @@ static edg_wll_Stats default_stats[] = {
 	{ STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SUBMITTED, EDG_WLL_JOB_RUNNING, 0, default_archives },
 	{ STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SUBMITTED, EDG_WLL_JOB_DONE, EDG_WLL_STAT_OK, default_archives },
         { STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SUBMITTED, EDG_WLL_JOB_DONE, EDG_WLL_STAT_FAILED, default_archives },
+	{ STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_SCHEDULED, EDG_WLL_JOB_RUNNING, 0, default_archives },
         { STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_RUNNING, EDG_WLL_JOB_DONE, EDG_WLL_STAT_OK, default_archives },
         { STATS_DURATION_FROMTO, default_group, EDG_WLL_JOB_RUNNING, EDG_WLL_JOB_DONE, EDG_WLL_STAT_FAILED, default_archives },
 	{ STATS_UNDEF, }
@@ -190,7 +192,7 @@ static int stats_double_htable(edg_wll_Stats *stats){
                 	((char *) stats->map) + stats->grpsize * i
                 );
 		search.key = strdup(g->sig);
-		search.data = (void*)g;
+		search.data = (void*)((long)i);
 		if (! hsearch_r(search, ENTER, &found, stats->htab)){
 			glite_common_log(LOG_CATEGORY_LB_SERVER,
                         	LOG_PRIORITY_WARN,
@@ -241,7 +243,7 @@ static int stats_remap(edg_wll_Stats *stats)
 			g = (struct edg_wll_stats_group *) (
                                 ((char *) stats->map) + stats->grpsize * i );
 			search.key = strdup(g->sig);
-			search.data = (void*)g;
+			search.data = (void*)((long)i);
 			if (!hsearch_r(search, ENTER, &found, stats->htab)){
 				/* This should never happen */
 				glite_common_log(LOG_CATEGORY_LB_SERVER,
@@ -268,7 +270,8 @@ static void stats_search_existing_group(edg_wll_Stats *stats, struct edg_wll_sta
                 search.key = sig;
                 hsearch_r(search, FIND, &found, stats->htab);
                 if (found && strcmp(sig, found->key) == 0)
-                        *g = (struct edg_wll_stats_group*)found->data;
+			*g = (struct edg_wll_stats_group *) (
+                                ((char *) stats->map) + stats->grpsize * (long)found->data);
                 else
                         *g = NULL;
         }
@@ -291,6 +294,7 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
 	struct edg_wll_stats_archive    *a;
 	ENTRY 	search, *found;
 
+	//asprintf(&(jobstat->destination), "fake destination %i", rand()%10);
 	sig = str2md5base64(jobstat->destination);
 
 	stats_search_existing_group(stats, g, sig);
@@ -337,7 +341,7 @@ static int stats_search_group(edg_wll_Context ctx, const edg_wll_JobStat *jobsta
 			stats_double_htable(stats);
 		if (stats->htab){
 			search.key = strdup(sig);
-			search.data = (void*)(*g);
+			search.data = (void*)((long)(stats->grpno-1));
 			if (!hsearch_r(search, ENTER, &found, stats->htab)){
 				/* This should never happen */
                                 glite_common_log(LOG_CATEGORY_LB_SERVER,
@@ -486,7 +490,7 @@ static int stats_record_duration_fromto(
 	time_t base = to->stateEnterTimes[stats->base_state+1];
 	time_t final =  to->stateEnterTimes[stats->final_state+1];
 	time_t timedif = final-base;
-	if (base && final){  /* final should be always not null*/
+	if (base && final && (final > base)){  /* final should be always not null*/
 		a = g->archive;
 
 		for (i=0; stats->archives[i].interval; i++) {
@@ -664,6 +668,8 @@ static int stateRateRequest(
 		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
                         "search %ld in %ld, %ld", *from, afrom, afrom+i);
 
+		diff = 0.0f;
+
                 // (from, to) is inside (afrom, afrom+i)
                 if (*from >= afrom && *to < afrom+i) {
                         diff = *to - *from;
@@ -684,7 +690,7 @@ static int stateRateRequest(
                 *rate += c->cnt * (float)diff/i;
 
                 if (*to >= afrom && *to < afrom+i) {
-                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, rate %f", match, *rate);
+                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %ld, rate %f", match, *rate);
                         break;
                 }
 	}
@@ -711,7 +717,7 @@ int edg_wll_StateRateServer(
 {
 	edg_wll_Stats *stats = default_stats;   /* XXX: hardcoded */
 	struct edg_wll_stats_group    *g;
-	int     i;
+	int     i, shift;
 	char    *sig = NULL;	
 	int     err;
 
@@ -753,8 +759,8 @@ int edg_wll_StateRateServer(
 		}
 
 		if ((err = stateRateRequest(ctx, stats, g, from, to, &((*rates)[0]), res_from, res_to))){
-			free(*rates);
-                        free(*groups);
+			free(*rates); *rates = NULL;
+                        free(*groups); *groups = NULL;
 			goto cleanup;
 		}
 		(*groups)[0] = strdup(g->destination); 
@@ -763,21 +769,27 @@ int edg_wll_StateRateServer(
 		/* all groups */
 		*rates = (float*)malloc(stats->grpno * sizeof((*rates)[0]));
 		*groups = (char**)malloc((stats->grpno+1) * sizeof((*groups)[0]));
+		shift = 0;
 		for (i=0, g=stats->map; i<stats->grpno; i++) {
-			(*rates)[i] = 0;
-			(*groups)[i] = NULL;
-			if ((err = stateRateRequest(ctx, stats, g, from, to, &((*rates)[i]), res_from, res_to)))
-	                        continue; //TODO in fact breaks results here
-			(*groups)[i] = strdup(g->destination);
+			(*rates)[i-shift] = 0;
+			(*groups)[i-shift] = NULL;
+			if ((err = stateRateRequest(ctx, stats, g, from, to, &((*rates)[i-shift]), res_from, res_to))){
+				shift++;
+				g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
+	                        continue;
+			}
+			(*groups)[i-shift] = strdup(g->destination);
 			g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
                 }
-		(*groups)[i] = NULL;
+		(*groups)[i-shift] = NULL;
 		if (i == 0){
 			edg_wll_SetError(ctx,ENOENT,"no matching group");
                         free(*rates); *rates = NULL;
                         free(*groups); *groups = NULL;
                         goto cleanup;
 		}
+		else
+                        edg_wll_ResetError(ctx); // reset error comming from stateDurationFromToRequest, some of them has worked
 	}
 
 cleanup:
@@ -885,6 +897,8 @@ static int stateDurationFromToRequest(
                 glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
                         "search %ld in %ld, %ld", *from, afrom, afrom+i);
 
+		diff = 0.0f;
+
                 // (from, to) is inside (afrom, afrom+i)
                 if (*from >= afrom && *to < afrom+i) {
                         diff = *to - *from;
@@ -908,7 +922,7 @@ static int stateDurationFromToRequest(
                 *dispersion += (float)diff * c->value2;
 
                 if (*to >= afrom && *to < afrom+i) {
-                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %d, duration %f, dispersion %f", match, *duration, *dispersion);
+                        glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "matched to: match %ld, duration %f, dispersion %f", match, *duration, *dispersion);
                         break;
                 }
         }
@@ -945,7 +959,7 @@ int edg_wll_StateDurationFromToServer(
         struct edg_wll_stats_group      *g;
         char    *sig = NULL;
 	int 	err;
-	int 	i;
+	int 	i, shift;
 
         edg_wll_ResetError(ctx);
 	*durations = NULL;
@@ -986,9 +1000,9 @@ int edg_wll_StateDurationFromToServer(
         	}
 
 		if ((err = stateDurationFromToRequest(ctx, stats, g, from, to, &((*durations)[0]), &((*dispersions)[0]), res_from, res_to))){
-			free(*durations);
-			free(*dispersions);
-			free(*groups);
+			free(*durations); *durations = NULL;
+			free(*dispersions); *dispersions = NULL;
+			free(*groups); *groups = NULL; 
 			goto cleanup;
 		}
 		(*groups)[0] = strdup(g->destination);
@@ -998,17 +1012,21 @@ int edg_wll_StateDurationFromToServer(
 		*durations = (float*)malloc(stats->grpno * sizeof((*durations)[0]));
 		*dispersions = (float*)malloc(stats->grpno * sizeof((*dispersions)[0]));
 		*groups = (char**)malloc((stats->grpno+1) * sizeof((*groups)[0]));
+		shift = 0;
 
 		for (i=0, g=stats->map; i<stats->grpno; i++) {
-			(*durations)[i] = 0;
-			(*dispersions)[i] = 0;
-			(*groups)[i] = NULL;
-			if ((err = stateDurationFromToRequest(ctx, stats, g, from, to, &((*durations)[i]), &((*dispersions)[i]), res_from, res_to)))
-				continue; //TODO in fact breaks results here
-			(*groups)[i] = strdup(g->destination);
+			(*durations)[i-shift] = 0;
+			(*dispersions)[i-shift] = 0;
+			(*groups)[i-shift] = NULL;
+			if ((err = stateDurationFromToRequest(ctx, stats, g, from, to, &((*durations)[i-shift]), &((*dispersions)[i-shift]), res_from, res_to))){
+				shift++;
+				g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
+				continue;
+			}
+			(*groups)[i-shift] = strdup(g->destination);
 			g = (struct edg_wll_stats_group *) (((char *) g) + stats->grpsize);
 		}
-		(*groups)[i] = NULL;
+		(*groups)[i-shift] = NULL;
                 if (i == 0){
                         edg_wll_SetError(ctx,ENOENT,"no matching group");
                         free(*durations); *durations = NULL;
@@ -1016,6 +1034,8 @@ int edg_wll_StateDurationFromToServer(
                         free(*groups); *groups = NULL;
                         goto cleanup;
                 }
+		else
+			edg_wll_ResetError(ctx); // reset error comming from stateDurationFromToRequest, some of them has worked
 	}
 
 cleanup:

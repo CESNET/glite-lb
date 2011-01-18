@@ -301,7 +301,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
       return(1);
 
     glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-		     "    trying to deliver event at offset %d for job %s", 
+		     "    trying to deliver event at offset %ld for job %s", 
 		     msg->offset, msg->job_id_s);
 
 #ifdef LB_PERF

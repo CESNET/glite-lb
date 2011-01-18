@@ -27,9 +27,12 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		my $sfn = $fn;
 		my $ft = "const ";
 		my $fc = $f->getComment;
-		if ($ULMasString{$f->{type}}) {
-			$decl .= "\tchar *s_$fn = ".$f->getType()."ToString($fn);\n";
-			$free .= "\tif (s_$fn) free(s_$fn);\n";
+		if ($f->{type} eq 'timeval') {
+			$decl .= "\tchar s_$fn".'[ULM_DATE_STRING_LENGTH + 1]; '.$f->toString($fn, "s_$fn")."\n";
+			$sfn = "s_$fn";
+		} elsif ($f->{type} eq 'jobid' or $f->{type} eq 'notifid' or $ULMasString{$f->{type}}) {
+			$decl .= "\tchar *s_$fn; ".$f->toString($fn, "s_$fn")."\n";
+			$free .= "\tfree(s_$fn);\n";
 			$sfn = "s_$fn";
 		}
                 if ($f->{codes}) {

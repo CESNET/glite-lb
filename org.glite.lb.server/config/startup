@@ -51,7 +51,7 @@ start_daemon()
 	local cmd="$3"
 
 	if [ -f "$pidfile" ]; then
-		if kill -0 `cat $pidfile`; then
+		if ps p `cat $pidfile` >/dev/null 2>&2; then
 			return 0
 		fi
 		echo -n "Warning: stalled $pidfile for $name"
@@ -71,7 +71,7 @@ stop_daemon()
 		echo -n Stopping $name \($pid\) ...
 		kill $pid
 		try=0
-		while kill -0 $pid >/dev/null 2>&1; do 
+		while ps p $pid >/dev/null 2>&1; do 
 			sleep 1;
 			try=`expr $try + 1`
 			if [ $try = 20 ]; then
@@ -92,18 +92,24 @@ status_daemon()
 {
 	local name="$1"
 	local pidfile="$2"
+	local enabled="$3"
 
 	if [ -f "$pidfile" ]; then
 		pid=`cat "$pidfile"`
-		if kill -0 $pid >/dev/null 2>&1; then
-			echo $name running as $pid 
+		if ps p $pid >/dev/null 2>&1; then
+			echo "$name running as $pid"
 		else
-			echo $name not running
+			echo "$name not running (stalled pidfile)"
 			return 1
 		fi
 	else
-		echo $name not running
-		return 1
+		if test -n "$enabled" -a x"$enabled" = x"0"; then
+			echo "$name not running (disabled)"
+			return 0
+		else
+			echo "$name not running"
+			return 1
+		fi
 	fi
 
 	return 0
@@ -256,14 +262,20 @@ stop()
 status()
 {
 	retval=0
+	proxy=0
+	jp=0
+	test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both" \
+		&& proxy=1
+	test x"$GLITE_LB_EXPORT_ENABLED" = x"true" && jp=1
 
-	status_daemon "glite-lb-notif-interlogd" "$NOTIF_IL_PIDFILE" || retval=1
-	status_daemon "glite-lb-interlogd for proxy" "$PROXY_IL_PIDFILE" || retval=1
-
-	status_daemon "glite-lb-bkserverd" "$BK_PIDFILE" || retval=1
-	if test x"$GLITE_LB_EXPORT_ENABLED" = x"true"; then
-		status_daemon "glite-jp-importer" "$jp_importer_pidfile" || retval=1
-	fi
+	status_daemon "glite-lb-notif-interlogd" "$NOTIF_IL_PIDFILE" \
+		|| retval=1
+	status_daemon "glite-lb-interlogd for proxy" "$PROXY_IL_PIDFILE" \
+		$proxy || retval=1
+	status_daemon "glite-lb-bkserverd" "$BK_PIDFILE" \
+		|| retval=1
+	status_daemon "glite-jp-importer" "$jp_importer_pidfile" $jp \
+		|| retval=1
 
 	return $retval
 }

@@ -44,7 +44,7 @@ int edg_wll_jobMembership(edg_wll_Context ctx, glite_jobid_const_t job)
         dbjob = edg_wlc_JobIdGetUnique(job);
 
         trio_asprintf(&stmt,"select proxy,server from jobs where jobid = '%|Ss' for update",dbjob);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
         ret = edg_wll_ExecSQL(ctx,stmt,&q);
         if (ret <= 0) {
                 if (ret == 0) {
@@ -93,7 +93,7 @@ int edg_wll_LockJobRow(edg_wll_Context ctx, const char *job, int lock_mode)
 	else
 		trio_asprintf(&stmt, "select * from jobs where jobid='%|Ss' lock in share mode", job);
 
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	if ((nr = edg_wll_ExecSQL(ctx,stmt,&sh)) < 0) goto cleanup;
 	if (nr == 0) {
 		char *err;

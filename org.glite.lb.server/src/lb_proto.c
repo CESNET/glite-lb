@@ -231,7 +231,7 @@ static int getUserNotifications(edg_wll_Context ctx, char *user, char ***notifid
                 "from notif_registrations "
                 "where userid='%s'",
                 user);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
         if (edg_wll_ExecSQL(ctx, q, &notifs) < 0) goto err;
         free(q); q = NULL;
 
@@ -263,7 +263,7 @@ static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
                 "from notif_registrations "
                 "where notifid='%s'",
                 notifId);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 	if (edg_wll_ExecSQL(ctx, q, &notif) < 0) goto err;
         free(q); q = NULL;
 

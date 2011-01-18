@@ -23,6 +23,10 @@ limitations under the License.
 #include <sys/time.h>  	/* for ULCconvertDate */
 #include <time.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*========= DATA =====================================================*/
 
 #define ULM_DATE_STRING_LENGTH	21
@@ -60,5 +64,9 @@ extern char *	edg_wll_ULMGetValueAt ( p_edg_wll_ULMFields, int );
 extern double 	edg_wll_ULMDateToDouble( const char *s );
 void 		edg_wll_ULMDateToTimeval( const char *s, struct timeval *tv );
 extern int 	edg_wll_ULMTimevalToDate( long sec, long usec, char *dstr );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* GLITE_LB_ULM_PARSE_H */

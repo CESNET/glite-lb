@@ -18,3 +18,6 @@
 1.0.3-2
 - Module rebuilt
 
+1.0.4-1
+- Makefile adopts compilation and linking flags from the environment.
+

@@ -83,7 +83,7 @@ extern void glite_common_log_msg(char *catName,int a_priority, char *msg);
  * @param a_format Format specifier for the string to write in the log file.
  * @param ... The arguments for a_format 
  **/
-extern void glite_common_log(char *catName,int a_priority, const char* a_format,...);
+extern void glite_common_log(char *catName,int a_priority, const char* a_format,...) __attribute__((format(printf, 3, 4)));
 
 /**
  * Returns priority as a string 

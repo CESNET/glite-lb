@@ -321,6 +321,18 @@ static void read_timeval(const edg_wll_Args* o, char* arg, char* par)
         *(int*)o->value = v;
 }
 
+static void read_jobid(const edg_wll_Args* o, char* arg, char* par)
+{
+	glite_jobid_t jobid = NULL;
+
+	if (glite_jobid_parse(par, &jobid) != 0) {
+		fprintf(stderr, "ERROR %s  can't parse %s: %s\n", arg, par, strerror(errno));
+		exit(1);
+	}
+	if (o->value) *(glite_jobid_t *)o->value = jobid;
+	else glite_jobid_free(jobid);
+}
+
 static void show_help(const edg_wll_Args* o, int prefix)
 {
     unsigned max = 0;
@@ -541,6 +553,9 @@ static int findOpt(opt_ctx_t* ctx, int olong)
 	//parse_suboptions((const edg_wll_Args*)o->value, arg, par, regname);
     case EDG_WLL_ARGS_TIMEVAL:
 	read_timeval(o, arg, par);
+	break;
+    case EDG_WLL_ARGS_JOBID:
+	read_jobid(o, arg, par);
 	break;
     default:
 	printf("FIXME: unhandle option type %d\n", o->type);

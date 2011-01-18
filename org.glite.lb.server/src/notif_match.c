@@ -106,7 +106,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS,cond_where ? cond_where : "",cond_and_where ? cond_and_where : "");
 
 	free(ju); ju = NULL;
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, jobq);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, jobq);
 
 	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
 
@@ -159,8 +159,8 @@ int edg_wll_NotifExpired(edg_wll_Context ctx,const char *notif)
 
 	trio_asprintf(&dn,"delete from notif_registrations where notifid='%|Ss'",notif);
 	trio_asprintf(&dj,"delete from notif_jobs where notifid='%|Ss'",notif);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, dn);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, dj);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, dn);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, dj);
 
 	if (edg_wll_ExecSQL(ctx,dn,NULL) < 0 ||
 		edg_wll_ExecSQL(ctx,dj,NULL) < 0)

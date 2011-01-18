@@ -33,3 +33,12 @@
 2.0.6-1
 - Hostname parsing adjusted to handle IPv6 addresses
 
+2.0.7-1
+- Makefile adopts compilation and linking flags from the environment.
+
+2.0.7-2
+- Module rebuilt
+
+2.0.8-1
+- Makefile a configuration updated to work across org.glite & EMI
+

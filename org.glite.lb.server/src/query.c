@@ -161,7 +161,7 @@ int edg_wll_QueryEventsServer(
 		else if ( !q )
 			q = qbase;
 
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
 			q);
 		ret = edg_wll_ExecSQL(ctx, q, &sh);
 		if ( limit )
@@ -512,7 +512,7 @@ int edg_wll_QueryJobsServerStream(
 		else if ( !q )
 			q = qbase;
 
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG,
 			q);
 		ret = edg_wll_ExecSQL(ctx, q, &sh);
 		if ( limit )
@@ -649,7 +649,7 @@ limit_cycle_cleanup:
 						"(s.suffix_id = j.suffix_id) AND (p.prefix_id = j.prefix_id)) AS result "
 						"WHERE %s", zomb_where);	
 
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, 
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, 
 				LOG_PRIORITY_DEBUG, zquery);
 			j = edg_wll_ExecSQL(ctx,zquery,&sh);
 

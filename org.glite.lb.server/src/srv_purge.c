@@ -250,6 +250,7 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 	purge_ctx_t prg;
 	struct _edg_wll_GssPrincipal_data princ;
 
+	memset(&princ, 0, sizeof princ);
 	princ.name = ctx->peerName;
         princ.fqans = ctx->fqans;
 
@@ -795,17 +796,17 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 		if ( purge )
 		{
 			trio_asprintf(&stmt,"delete from jobs where jobid = '%|Ss'",dbjob);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback;
 			free(stmt); stmt = NULL;
 
 			trio_asprintf(&stmt,"delete from states where jobid = '%|Ss'",dbjob);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback; 
 			free(stmt); stmt = NULL;
 
 			trio_asprintf(&stmt,"delete from status_tags where jobid = '%|Ss'",dbjob);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback;
 			free(stmt); stmt = NULL;
 		}
@@ -816,7 +817,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 		
 			// See if that prefix is already stored in the database	
 			trio_asprintf(&stmt,"select prefix_id from zombie_prefixes where prefix = '%|Ss'", prefix);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 			sql_retval = edg_wll_ExecSQL(ctx,stmt,&q);
 			free(stmt); stmt = NULL;
@@ -827,7 +828,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 				glite_lbu_FreeStmt(&q);
 
 				trio_asprintf(&stmt,"insert into zombie_prefixes (prefix) VALUES ('%|Ss')", prefix);
-				glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+				glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 				if (edg_wll_ExecSQL(ctx,stmt,&q) <= 0) goto rollback;
 
@@ -836,7 +837,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 
 				// The record should exist now, however we need to look up the prefix_id 
 				trio_asprintf(&stmt,"select prefix_id from zombie_prefixes where prefix = '%|Ss'", prefix);
-				glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+				glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 				if (edg_wll_ExecSQL(ctx,stmt,&q) <= 0) goto rollback;
 				free(stmt); stmt = NULL;
@@ -849,7 +850,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 
 			// See if that suffix is already stored in the database	
 			trio_asprintf(&stmt,"select suffix_id from zombie_suffixes where suffix = '%|Ss'", suffix);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 			sql_retval = edg_wll_ExecSQL(ctx,stmt,&q);
 			free(stmt); stmt = NULL;
@@ -860,7 +861,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 				glite_lbu_FreeStmt(&q);
 
 				trio_asprintf(&stmt,"insert into zombie_suffixes (suffix) VALUES ('%|Ss')", suffix);
-				glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+				glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 				if (edg_wll_ExecSQL(ctx,stmt,&q) <= 0) goto rollback;
 
@@ -869,7 +870,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 
 				// The record should exist now, however we need to look up the suffix_id 
 				trio_asprintf(&stmt,"select suffix_id from zombie_suffixes where suffix = '%|Ss'", suffix);
-				glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+				glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 				if (edg_wll_ExecSQL(ctx,stmt,&q) <= 0) goto rollback;
 				free(stmt); stmt = NULL;
@@ -882,7 +883,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 
 			trio_asprintf(&stmt,"insert into zombie_jobs (jobid, prefix_id, suffix_id)"
 					" VALUES ('%|Ss', '%|Ss', '%|Ss')", root, prefix_id, suffix_id);
-			glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 			if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) {
 				if (edg_wll_Error(ctx, NULL, NULL) == EEXIST) {
@@ -926,7 +927,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 				"where jobid='%|Ss' "
 				"order by event", dbjob);
 
-		glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 		if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto rollback;
 		free(stmt); stmt = NULL;
@@ -980,7 +981,7 @@ int unset_proxy_flag(edg_wll_Context ctx, glite_jobid_const_t job)
 
 	dbjob = glite_jobid_getUnique(job);
 	trio_asprintf(&stmt,"update jobs set proxy='0' where jobid='%|Ss'", dbjob);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	free(dbjob);
 
 	return(edg_wll_ExecSQL(ctx,stmt,NULL));
@@ -996,7 +997,7 @@ int unset_server_flag(edg_wll_Context ctx, glite_jobid_const_t job)
 
 	dbjob = glite_jobid_getUnique(job);
 	trio_asprintf(&stmt,"update jobs set server='0' where jobid='%|Ss'", dbjob);
-	glite_common_log(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	free(dbjob);
 
 	return(edg_wll_ExecSQL(ctx,stmt,NULL));

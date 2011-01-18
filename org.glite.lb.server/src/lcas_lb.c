@@ -22,9 +22,9 @@ limitations under the License.
 #include <stdlib.h>
 #include <string.h>
 
-#include <glite/security/lcas/lcas_modules.h>
-#include <glite/security/lcas/lcas_utils.h>
-#include <glite/security/voms/voms_apic.h>
+#include "lcas/lcas_modules.h"
+#include "lcas/lcas_utils.h"
+#include "voms/voms_apic.h"
 #include <glite/lb/context.h>
 #include "authz_policy.h"
 #include "lb_authz.h"

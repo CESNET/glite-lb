@@ -27,7 +27,7 @@ extern "C" {
 #ifndef NO_GACL
 #include <gridsite.h>
 #endif
-#include <glite/security/voms/voms_apic.h>
+#include <voms/voms_apic.h>
 
 typedef struct _edg_wll_Acl {
 #ifndef NO_GACL

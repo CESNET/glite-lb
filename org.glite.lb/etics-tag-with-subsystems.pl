@@ -23,7 +23,7 @@ $TMPDIR=$ENV{'TMPDIR'};
 
 if ($TMPDIR eq "") {$TMPDIR="/tmp";}
 
-getopts('c:h');
+getopts('c:p:h');
 
 $module = shift;
 
@@ -33,6 +33,7 @@ $usage = qq{
 usage: $0 [-c <current configuration>] module.name
 
         -c      Use this configuration (\d+\.\d+\.\d+-\S+) rather than parsing version.properties
+        -p      Specify project ("org.glite" / "emi"). Default: autodetect. 
         -h      Display this help
 
 };
@@ -84,6 +85,26 @@ usage: $0 [-c <current configuration>] module.name
 		$current_prefix="$current_prefix" . "_R_";
 		$current_tag="$current_prefix" . "$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
 	}
+
+        if (defined $opt_p) {
+                $project=$opt_p;
+                if (($project ne "emi")&&($project ne "org.glite")) {die "Only projects \"emi\" or \"org.glite\" are recognized";}
+        }
+        else {
+                system("etics-list-configuration > $TMPDIR/etics-tag-proj_configs.$$.tmp");
+
+                if ( !system("grep -x \"org.glite.HEAD\" $TMPDIR/etics-tag-proj_configs.$$.tmp > /dev/null") ) { $project = "org.glite"; }
+                else {
+                        if ( !system("grep -x \"emi.HEAD\" $TMPDIR/etics-tag-proj_configs.$$.tmp > /dev/null") ) { $project = "emi"; }
+                        else { die "Unable to autodetect project. Run from workspace root or specify by -p" }
+                }
+
+                system("rm $TMPDIR/etics-tag-proj_configs.$$.tmp");
+        }
+
+        if ($project eq "emi") { $proj_opt = " --emi"; $proj_suffix = "emi" }
+        else { $proj_opt = ""; }
+
 
 	# According to the documentation, symbolic names in the 'cvs log' output are sorted by age so this should be OK
 	#$current_tag=`cvs log -h $module/Makefile | grep \"_R_\" | head -n 1`;
@@ -252,13 +273,16 @@ usage: $0 [-c <current configuration>] module.name
 	$newconfig="$module_$module" . "_R_$major" . "_$minor" . "_$revision" . "_$age";
 	$newconfig=~s/^org.//;
 	$newconfig=~s/\./-/g;
+	if ( $project eq "emi" ) { $newconfig=~s/^glite/emi/; }
 
+	$moduleName=$module;
+	if ( $project eq "emi" ) { $moduleName=~s/^org.glite/emi/; }
 
 	printf("\nNew configuration:\t$newconfig\n\nPreparing...\n");
 
 	open NEWCONF, ">", "$TMPDIR/$newconfig.ini.$$" or die $!;
 
-	printf (NEWCONF "[Configuration-$newconfig]\nprofile = None\nmoduleName = $module\ndisplayName = $newconfig\ndescription = None\nprojectName = org.glite\nage = $age\ntag = $tag\nversion = $major.$minor.$revision\npath = None\n\n");
+	printf (NEWCONF "[Configuration-$newconfig]\nprofile = None\nmoduleName = $moduleName\ndisplayName = $newconfig\ndescription = None\nprojectName = $project\nage = $age$proj_suffix\ntag = $tag\nversion = $major.$minor.$revision\npath = None\n\n");
 
 #	printf (NEWCONF "[Platform-default:VcsCommand]\ndisplayName = None\ndescription = HEAD CVS commands\ntag = cvs -d \${vcsroot} tag -R \${tag} \${moduleName}\nbranch = None\ncommit = None\ncheckout = cvs -d \${vcsroot} co -r \${tag} \${moduleName}\n\n");
 
@@ -287,6 +311,7 @@ usage: $0 [-c <current configuration>] module.name
 		$modconfig="$m_$m" . "_R_$m_major" . "_$m_minor" . "_$m_revision" . "_$m_age";
 		$modconfig=~s/^org.//;
 		$modconfig=~s/\./-/g;
+		if ( $project eq "emi" ) { $modconfig=~s/^glite/emi/; }
 
 #		system("echo $m = $modconfig >> $TMPDIR/$newconfig.ini.$$");
 		printf(NEWCONF "$m = $modconfig\n");
