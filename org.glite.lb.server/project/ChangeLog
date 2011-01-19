@@ -205,3 +205,8 @@
 2.1.13-2
 - Module rebuilt
 
+2.1.14-1
+- Fixed lcas linking issues for EMI builds
+- Fixed build-time warnings in logging output calls
+- Fixed emty set handling issues in statistics
+
