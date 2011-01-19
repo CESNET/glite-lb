@@ -336,7 +336,17 @@ and tries to upload the files into JP.
 
 Details, including the configuration variables, are covered at the following
 wiki page:
+
 \url{http://egee.cesnet.cz/mediawiki/index.php/LB_purge_and_export_to_JP}.
+
+\paragraph{Persistent Information on Purged Jobs (``Zombies'')}
+
+Since \LB version 2.0, the JobID of a purged job is not fully discarded but stored in a separate table. A query for the status of such job returns \emph{Identifier removed}.\footnote{As of \LB\,3.0. In 2.0 and 2.1 releases an empty job status structure was returned with job state set to \emph{purged}.} There are two purposes to this arrangement:
+
+\begin{enumerate}
+\item Confirming that the job existed and that its details have been exported to Job Provenance (if deployed and configured),
+\item Preventing reuse of the JobID in case of flag \code{EDG\_WLL\_LOGLFLAG\_EXCL} set on registration.
+\end{enumerate}
 
 \subsubsection{On-line monitoring and statistics}
 \label{maintain:statistics}
