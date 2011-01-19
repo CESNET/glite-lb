@@ -788,6 +788,9 @@ int edg_wll_StateRateServer(
                         free(*groups); *groups = NULL;
                         goto cleanup;
 		}
+		else if (i == shift){ // found groups, but all empty
+                        edg_wll_SetError(ctx,ENOENT,"no data available");
+                }
 		else
                         edg_wll_ResetError(ctx); // reset error comming from stateDurationFromToRequest, some of them has worked
 	}
@@ -1034,6 +1037,8 @@ int edg_wll_StateDurationFromToServer(
                         free(*groups); *groups = NULL;
                         goto cleanup;
                 }
+		else if (i == shift)
+                        edg_wll_SetError(ctx,ENOENT,"no data available");
 		else
 			edg_wll_ResetError(ctx); // reset error comming from stateDurationFromToRequest, some of them has worked
 	}
