@@ -97,6 +97,7 @@ OutputPlugin::connect(const std::string &topic)
 		current_connection->start();
 		releaseConnection();
 	} catch (cms::CMSException &e) {
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "OutputPlugin::connect exception: %s", e.what());
 		releaseConnection();
 		cleanup();
 		throw e;
@@ -222,11 +223,23 @@ OutputPlugin::close()
 void
 OutputPlugin::cleanup()
 {
-	close();
+	try {
+		close();
+	} catch(cms::CMSException &e) {
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "activemq_cpp_plugin: close exception: %s", e.what());
+	}
 	pthread_rwlock_wrlock(&connection_lock);
 	if(connection && current_connection == connection) {
-		connection->close();
-		delete connection;
+		try {
+			connection->close();
+		} catch(cms::CMSException &e) {
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "activemq_cpp_plugin: connection close exception: %s", e.what());
+		}
+		try {
+			delete connection;
+		} catch(cms::CMSException &e) {
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "activemq_cpp_plugin: cleanup exception: %s", e.what());
+		}
 		connection = NULL;
 		current_connection = NULL;
 	}
