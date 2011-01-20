@@ -22,20 +22,29 @@ VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
-ACTIVEMQ_CPPFLAGS=`PKG_CONFIG_PATH=${activemq_prefix}/${libdir}/pkgconfig pkg-config --cflags activemq-cpp`
+ACTIVEMQ_CFLAGS?=`PKG_CONFIG_PATH=${activemq_prefix}/${libdir}/pkgconfig pkg-config --cflags activemq-cpp`
+ACTIVEMQ_LIBS?=-L${activemq_prefix}/${libdir} -lactivemq-cpp
+
+APR_CFLAGS?=-I${apr_prefix}/include
+APR_LIBS?=-L${apr_prefix}/${libdir} -lapr-1
+
+APR_UTIL_CFLAGS?=-I${apr_util_prefix}/include
+APR_UTIL_LIBS?=-L${aprutil_prefix}/${libdir} -laprutil-1
+
+CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
+CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 
 DEBUG:=-g -O0
 CFLAGS:=${CFLAGS} ${DEBUG} \
 	-I${stagedir}/include -I${top_srcdir}/src \
-	${ACTIVEMQ_CPPFLAGS} \
-	-I${apr_prefix}/include \
-	-I${aprutil_prefix}/include \
+	${ACTIVEMQ_CFLAGS} \
+	${APR_CFLAGS} \
+	${APR_UTIL_CFLAGS} \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
 
-LDFLAGS:=-L${stagedir}/${libdir} \
-	-L${activemq_prefix}/${libdir} \
+LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} \
 	-L${aprutil_prefix}/${libdir} \
 	-L${apr_prefix}/${libdir} \
 	${COVERAGE_FLAGS} 
@@ -58,12 +67,9 @@ HDRS:=
 
 COMMON_LIB:=
 
-EXT_LIB:=-lactivemq-cpp -lapr-1 -laprutil-1
+EXT_LIB:=${ACTIVEMQ_LIBS} ${APR_LIBS} ${APR_UTIL_LIBS}
 
 GLITE_GSS_LIB:=
-
-TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
-TEST_INC:=-I${cppunit_prefix}/include
 
 PLUGIN_OBJS:=activemq_cpp_plugin.o
 PLUGIN_LOBJS:=${PLUGIN_OBJS:.o=.lo}

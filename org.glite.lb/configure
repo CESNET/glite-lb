@@ -129,7 +129,8 @@ my %externs = (
 		prefix=> '/usr'
 	},
 	activemq => {
-		prefix=>'/opt/activemq-cpp-library'
+		prefix=>'/opt/activemq-cpp-library',
+		pkg => 'activemq-cpp'
 	},
 	apr => {
 		prefix=>'/opt/apr',
