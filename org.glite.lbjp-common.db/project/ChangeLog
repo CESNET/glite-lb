@@ -66,3 +66,6 @@
 2.0.5-1
 - Fixed build-time warnings in logging calls
 
+2.0.5-2
+- Module rebuilt
+
