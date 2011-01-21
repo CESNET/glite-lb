@@ -44,8 +44,6 @@ my $jp_tag = '';
 my $sec_tag = '';
 my $jobid_tag = '';
 my $libdir = getlibdir();
-my $projectname;
-
 
 my @nodes = qw/client server logger utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
 my %enable_nodes;
@@ -57,7 +55,7 @@ my %externs = (
 		pkg => 'libcares'
 	},
 	classads => {
-		prefix=> '/usr',
+		prefix=> '/opt/classads',
 		pkg => 'classads'
 	},
 	cppunit => {
@@ -72,15 +70,9 @@ my %externs = (
 		prefix=> '/opt/globus',
 		pkg => 'globus-gssapi-gsi'
 	},
-	'myproxy-essentials' => {
-		prefix=> '/opt/globus',
+	myproxy => {
+		prefix=> '/opt/myproxy',
 		pkg => 'myproxy'
-	},
-	'myproxy-server' => {
-		prefix=> '/opt/globus',
-	},
-	'myproxy-client' => {
-		prefix=> '/opt/globus',
 	},
 	gsoap => {
 		prefix=> '/usr',
@@ -146,7 +138,6 @@ my %extranodmod;
 my %deps;
 my %deps_type;
 my %buildroot;
-my (%etics_externs, %etics_projects, %etics_projects_emi, %etics_externs_emi);
 
 my %lbmodules = (
 	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
@@ -198,17 +189,11 @@ GetOptions @opts or die "Errors parsing command line\n";
 
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
-$projectname = $emi ? 'emi' : 'org.glite';
-if ($emi) {
-	for $_ (keys %etics_externs_emi) {
-		$etics_externs{$_} = $etics_externs_emi{$_};
-	}
-}
 
 if ($help) { usage(); exit 0; }
 
 if ($listmodules) {
-	my @m = map "$projectname.$listmodules.$_",@{$lbmodules{$listmodules}};
+	my @m = map "org.glite.$listmodules.$_",@{$lbmodules{$listmodules}};
 	print "@m\n";
 	exit 0;
 }
@@ -251,7 +236,7 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 			$flag=`pkg-config $pkg --libs`;
 			$externs{$ext}{flags} .= "${flagname}_LIBS=$flag" if ($flag);
 		} else {
-			print "(using default $externs{$ext}{prefix})\n";
+			print "(using default)\n";
 		}
 	}
 } }
@@ -445,10 +430,10 @@ BEGIN{
         'jp.server-common' => [],
         'jp.ws-interface' => [],
 	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-essentials voms/ ],
-	'px.glite-PX' => [qw/myproxy-server:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
+	'px.proxyrenewal' => [ qw/globus:B myproxy voms/ ],
+	'px.glite-PX' => [qw/myproxy:R fetchcrl:R gip_service:R bdii:R glite_version:R/],
 	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
-	'px.myproxy-config' => [ qw/myproxy-client:R/ ], # in myproxy-config.spec
+	'px.myproxy-config' => [],
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -562,8 +547,8 @@ for my $jar (keys %need_jars) {
 	'gridsite.core' => [ qw/build.common-cpp:B/ ],
 
 	'px.proxyrenewal' => [ qw// ],
-	'px.glite-PX' => [qw/px.myproxy-yaim:R px.myproxy-config:R/],
-	'px.myproxy-yaim' => [ qw/px.myproxy-config:R/ ],
+	'px.glite-PX' => [qw/px.myproxy-yaim:R/],
+	'px.myproxy-yaim' => [],
 	'px.myproxy-config' => [],
 );
 
@@ -591,7 +576,7 @@ for my $ext (keys %deps_aux) {
 	'lb.yaim' => [ qq/glite-yaim-lb/ ],
 	'px.proxyrenewal' => [ qq/glite-security-proxyrenewal/ ],
 	'px.myproxy-yaim' => [ qq/glite-yaim-myproxy/ ],
-	'px.myproxy-config' => [ qq/myproxy-config/ ], # in myproxy-config.spec
+	'px.myproxy-config' => [ qq/myproxy-config/ ],
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
 );
@@ -704,13 +689,13 @@ libdir = $libdir
 	close MKINC;
 }
 
+my %etics_externs;
+my %etics_projects;
 BEGIN{
 	%etics_externs = (
 		globus_essentials=>'vdt_globus_essentials',
 		globus=>'globus',
-		'myproxy-essentials'=>'myproxy_essentials',
-		'myproxy-server'=>'myproxy_server',
-		'myproxy-client'=>'myproxy_client',
+		myproxy=>'myproxy',
 		cares=>'c-ares',
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
@@ -727,19 +712,9 @@ BEGIN{
 		glue_schema=>'glue-schema',
 		yaim_core=>'org.glite.yaim.core',
 	);
-	%etics_externs_emi = (
-		globus_essentials=>'globus-gssapi-gsi',
-		globus=>'globus-gssapi-gsi-devel',
-		gridsite=>'emi.gridsite.shared',
-		yaim_core=>'emi.yaim.yaim-core'
-	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials/],
+		vdt=>[qw/globus globus_essentials myproxy/],
 		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
-	);
-	%etics_projects_emi = (
-		vdt=>'externs',
-		'org.glite'=>'emi',
 	);
 
 	%platform_properties = (
@@ -806,14 +781,12 @@ sub mode_etics {
 
 	my $conf;
 	my $conftag;
-	my ($confprefix, $nameprefix);
+	my $confprefix;
 
 	$dwpath = "path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz\n";
 
-	$confprefix = $emi ? $emi_conf_prefix{$subsys} : $conf_prefix{$subsys};
-	$nameprefix = $confprefix;
-	$nameprefix =~ s/-$//;
-	$nameprefix =~ s/-/\./g;
+	if ($emi) { $confprefix = $emi_conf_prefix{$subsys} }
+	else { $confprefix = $conf_prefix{$subsys} }
 
 	if ($branch) {
 		$conf = "$confprefix${subsys}-${module}_$branch"; 
@@ -868,13 +841,7 @@ sub mode_etics {
 
 	if ($subsys eq 'gridsite') {
 		if ($module eq 'core') {
-			my $flags;
-
-			if ($emi) {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix} libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
-			} else {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
-			}
+			my $flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
 
 			$cmd{compile} = "make $flags build";
 			$cmd{install} = "make $flags install";
@@ -883,10 +850,6 @@ sub mode_etics {
 		else {
 			$cmd{packaging} = "echo building nothing, org.gridsite.core make rpm step will create this";
 		}
-	}
-	elsif ($subsys eq 'px' and $module eq 'myproxy-config') {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
-		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
 		my $flavours = $emi ? "--thrflavour= --nothrflavour=" : "--thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor}";
@@ -902,20 +865,23 @@ sub mode_etics {
 		$defprops .= $p . ' = ' . $platform_properties{"$subsys.$module"}->{default}->{$p} . "\n";
 	}
 
-	my $checkoutcmd = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module";
-	$checkoutcmd .= "; ln -s \${moduleName} $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null || true" if ($emi);
+	my $checkoutcmd;
+	if ($conftag eq 'HEAD') {
+		$checkoutcmd = "cvs -d \${vcsroot} co -A \${moduleName}";
+	} else {
+		$checkoutcmd = "cvs -d \${vcsroot} co -r \${tag} \${moduleName}";
+	}
 
 	print STDERR "Writing $file\n";
 	print C qq{
 [Configuration-$conf]
 profile = None
-moduleName = $projectname.$subsys.$module
+moduleName = $cvs_prefix{$subsys}.$subsys.$module
 displayName = $conf
 description = $cvs_prefix{$subsys}.$subsys.$module
-projectName = $projectname
+projectName = org.glite
 age = $age
 deploymentType = None
-vcsroot = :pserver:anonymous\@glite.cvs.cern.ch:/cvs/glite
 tag = $conftag
 version = $major.$minor.$rev
 $dwpath
@@ -977,9 +943,6 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 
 		my $proj = 'externals';
 		for my $p (keys %etics_projects) {
-			if ($emi and defined $etics_projects_emi{$p}) {
-				$p = $etics_projects_emi{$p};
-			}
 			for $m (@{$etics_projects{$p}}) {
 				$proj = $p if $m eq $_;
 			}
@@ -991,7 +954,7 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 
 	for (@{$deps{"$subsys.$module"}}) {
 		my $type = $deps_type{"$subsys.$module"}->{$_};
-		print C "$projectname|$projectname.$_ = $type\n";
+		print C "org.glite|org.glite.$_ = $type\n";
 	}
 
 	close C;
@@ -1006,7 +969,6 @@ sub gsoap_version {
 		chomp;
 
 		$gsoap_version = $1 if /The gSOAP Stub and Skeleton Compiler for C and C\+\+ ([.[:digit:][:alpha:]]+)$/;
-		$gsoap_version = $1 if /The gSOAP code generator for C and C\+\+, soapcpp2 release ([.[:digit:][:alpha:]]+)$/;
 	}
 	close S;
 	return $gsoap_version;
