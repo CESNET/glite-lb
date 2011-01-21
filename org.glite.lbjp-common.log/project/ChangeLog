@@ -21,3 +21,8 @@
 1.0.4-1
 - Makefile adopts compilation and linking flags from the environment.
 
+1.0.5-1
+- Increase message size -- syslog can use it (RFC #3164).
+- Workaround for a bug in log4c included in configuration (non-zero buffer required)
+- Fixes to build-time warnings in logging calls
+
