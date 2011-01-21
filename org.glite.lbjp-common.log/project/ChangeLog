@@ -26,3 +26,6 @@
 - Workaround for a bug in log4c included in configuration (non-zero buffer required)
 - Fixes to build-time warnings in logging calls
 
+1.0.5-2
+- Module rebuilt
+
