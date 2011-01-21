@@ -42,3 +42,6 @@
 - fix using globus in thread environment
 - new finalize function
 
+2.1.5-2
+- Module rebuilt
+
