@@ -1,1 +1,0 @@
-Multi-process network server. A server listening on multiple ports, passing inbound requests to slaves and maintaining connections to specific slaves if possible. The library provides callback handles on connection init, incoming request, etc.
