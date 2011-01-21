@@ -117,3 +117,6 @@
 2.1.12-1
 - Fixed build-time warnings in logging output calls
 
+2.1.12-2
+- Module rebuilt
+
