@@ -213,3 +213,6 @@
 2.1.14-2
 - Module rebuilt
 
+2.1.15-1
+- Startup scripts remove stale sockets (fix to bug #77357)
+
