@@ -123,3 +123,6 @@
 4.1.7-2
 - Module rebuilt
 
+4.1.8-1
+- Optimized handling of simultaneous proxy&direct logging (fix for bug #77366)
+
