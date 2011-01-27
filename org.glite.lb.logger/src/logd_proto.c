@@ -492,7 +492,7 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 		// glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_TRACE,"Read message: \"%s\"\n",msg);
 	}       
 
-	if (buf[count] != '\0') buf[count] = '\0';
+	buf[count] = '\0';
 
 	/* parse message and get jobId and priority from it */
 	if (!noparse && strstr(msg, "DG.TYPE=\"command\"") == NULL) {
