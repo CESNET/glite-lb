@@ -60,3 +60,6 @@
 1.0.10-4
 - Module rebuilt
 
+1.0.11-1
+- Startup scripts remove stale sockets (fix tu bug #77357)
+
