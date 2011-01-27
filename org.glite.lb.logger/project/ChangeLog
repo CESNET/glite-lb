@@ -120,3 +120,7 @@
 2.1.12-2
 - Module rebuilt
 
+2.1.13-1
+- Optimized recovery from errors affecting single jobs (fix to bug #77365)
+- Startup scripts remove stale sockets (fix to bug #77357)
+
