@@ -573,19 +573,17 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 		if (!send_answer_back(con,answer,timeout)) { 
 			answer_sent = 1;
 		}
+		if(init_confirmation() < 0) { 
+			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Error initializing 2nd UNIX socket (%s) for priority messages confirmation.\n",confirm_sock_name); 
+			answer = errno; 
+			goto edg_wll_log_proto_server_end; 
+		} else {
+			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Initializing 2nd UNIX socket (%s) for priority messages confirmation...[ok]\n",confirm_sock_name);
+		}
 	} 
 
 	/* send message via IPC (UNIX socket) */
 	if (!noipc) {
-		if (event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) {
-			if(init_confirmation() < 0) { 
-				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Error initializing 2nd UNIX socket (%s) for priority messages confirmation.\n",confirm_sock_name); 
-				answer = errno; 
-				goto edg_wll_log_proto_server_end; 
-			} else {
-				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Initializing 2nd UNIX socket (%s) for priority messages confirmation...[ok]\n",confirm_sock_name);
-			}
-		}	  
 
 		if ( edg_wll_log_event_send(context, socket_path, filepos, msg, msg_size, CONNECT_ATTEMPTS, timeout) ) {
 			char *errd;
@@ -600,22 +598,23 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 			"the message position %ld (%ld bytes)... [ok]",
 			socket_path, filepos, sizeof(filepos));
 
-		if (event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) {
-			if ((count = wait_for_confirmation(timeout, &answer)) < 0) {
-				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Error waiting for confirmation.\n");
-				answer = errno;
-			} else {
-				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Waiting for confirmation... [ok].\n");
-				if (count == 0) {
-					glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Waking up, timeout expired.\n");
-					answer = EAGAIN;
-				} else {
-					glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Confirmation received, waking up.\n");
-				}
-			}
-		}
 	} else {
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"NOT sending via IPC.\n");
+	}
+
+	if (event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) {
+		if ((count = wait_for_confirmation(timeout, &answer)) < 0) {
+			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Error waiting for confirmation.\n");
+			answer = errno;
+		} else {
+			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Waiting for confirmation... [ok].\n");
+			if (count == 0) {
+				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Waking up, timeout expired.\n");
+				answer = EAGAIN;
+			} else {
+				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Confirmation received, waking up.\n");
+			}
+		}
 	}
 
 edg_wll_log_proto_server_end:
