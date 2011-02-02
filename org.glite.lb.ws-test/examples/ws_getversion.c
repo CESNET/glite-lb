@@ -33,6 +33,7 @@ limitations under the License.
 static struct option opts[] = {
 	{"help",	0,	NULL,	'h'},
 	{"server",	1,	NULL,	'm'},
+	{"interface",	0,	NULL,	'i'},
 };
 
 static void usage(char *me)
@@ -40,6 +41,7 @@ static void usage(char *me)
 	fprintf(stderr,"usage: %s [option]\n"
 		"\t-h, --help      Shows this screen.\n"
 		"\t-m, --server    BK server address:port.\n"
+		"\t-i, --interface Get web-service interface version (server version is returned by default).\n"
 		, me);
 }
 
@@ -47,20 +49,20 @@ int main(int argc,char** argv)
 {
 	glite_gsplugin_Context		gsplugin_ctx;
 	struct soap			soap;
-	struct _lbe__GetVersion		in;
-	struct _lbe__GetVersionResponse	out;
 	int				opt, err;
 	char				*server = "http://localhost:9003/",
 					*name = NULL;
-
+	int				iface = 0;
+	char				*version = NULL;
 
 	name = strrchr(argv[0],'/');
 	if (name) name++; else name = argv[0];
 
-	while ((opt = getopt_long(argc, argv, "hm:", opts, NULL)) != EOF) switch (opt)
+	while ((opt = getopt_long(argc, argv, "hm:i", opts, NULL)) != EOF) switch (opt)
 	{
 	case 'h': usage(name); return 0;
 	case 'm': server = optarg; break;
+	case 'i': iface = 1; break;
 	case '?': usage(name); return 1;
 	}
 
@@ -75,11 +77,27 @@ int main(int argc,char** argv)
 		return 1;
 	}
 
-    memset(&in, 0, sizeof(in));
-    memset(&out, 0, sizeof(out));
-    switch (err = soap_call___lb__GetVersion(&soap, server, "", &in, &out))
+	if (iface) {
+		struct _lbe__GetInterfaceVersion		in;
+		struct _lbe__GetInterfaceVersionResponse	out;
+
+		memset(&in, 0, sizeof(in));
+		memset(&out, 0, sizeof(out));
+		err = soap_call___lb__GetInterfaceVersion(&soap, server, "", &in, &out);
+		if (err == SOAP_OK) version = out.version;
+	} else {
+		struct _lbe__GetVersion		in;
+		struct _lbe__GetVersionResponse	out;
+
+		memset(&in, 0, sizeof(in));
+		memset(&out, 0, sizeof(out));
+		err = soap_call___lb__GetVersion(&soap, server, "", &in, &out);
+		if (err == SOAP_OK) version = out.version;
+	}
+
+    switch (err)
 	{
-	case SOAP_OK: printf("Server version: %s\n", out.version); break;
+	case SOAP_OK: printf("%s version: %s\n", iface ? "Interface" : "Server", version); break;
 	case SOAP_FAULT: 
 	case SOAP_SVR_FAULT:
 		{

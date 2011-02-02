@@ -27,7 +27,7 @@ STAGETO=interface
 
 WSDL=LB.wsdl LBTypes.wsdl
 
-all compile: ${WSDL} ${doc} glue2-copy.xsd
+all compile: ${WSDL} ${doc} glue2-copy.xsd ws_interface_version.h
 
 check: 
 	@echo No unit test required for interface-only module.
@@ -49,6 +49,7 @@ install:
 	install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
 	install -m 644 glue2-copy.xsd ${PREFIX}/${STAGETO}/glue2.xsd
 	install -m 644 ${top_srcdir}/src/lb4agu.wsdl ${PREFIX}/${STAGETO}
+	install -m 644 ws_interface_version.h ${PREFIX}/include/${globalprefix}/${lbprefix}
 
 # JP has its own version anyway
 #	if [ x${DOSTAGE} = xyes ]; then \
@@ -78,3 +79,5 @@ LB.html: doc.xml LBTypes.xml LB.xml puke-ug.xsl
 	${XSLTPROC} --stringparam  chapter.autolabel 0 ${docbookxls} doc-html.xml >$@
 	-${TIDY} -asxhtml -m $@
 
+ws_interface_version.h: ${top_srcdir}/project/version.properties
+	echo "#define GLITE_LB_WS_INTERFACE_VERSION \"${version}\"" >$@

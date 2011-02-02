@@ -41,6 +41,12 @@
 			<output name="version" type="xsd:string">Returned version.</output>
 			<fault name="genericFault" type="genericFault"> Any error. </fault>
 		</op>
+		<op name="GetInterfaceVersion">
+			Return version of the service interface.
+			<input name="dummy" type="xsd:string" optional="yes">Dummy parameter (workaround for gSoap).</input>
+			<output name="version" type="xsd:string">Returned version.</output>
+			<fault name="genericFault" type="genericFault"> Any error. </fault>
+		</op>
 		<op name="JobStatus">
 			Query state of a single job.
 			<input name="jobid" type="xsd:string"> Id of the queried job. </input>

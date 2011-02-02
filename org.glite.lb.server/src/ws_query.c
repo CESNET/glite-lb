@@ -21,6 +21,7 @@ limitations under the License.
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_parse.h"
 #include "glite/lb/xml_conversions.h"
+#include "glite/lb/ws_interface_version.h"
 
 #include "glite/lbu/log.h"
 
@@ -60,6 +61,20 @@ SOAP_FMAC5 int SOAP_FMAC6 __lb__GetVersion(
 		"[%d] WS call %s", getpid(), __FUNCTION__);
 
 	out->version = soap_strdup(soap, VERSION);
+
+	return out->version ? SOAP_OK : SOAP_FAULT;
+}
+
+
+SOAP_FMAC5 int SOAP_FMAC6 __lb__GetInterfaceVersion(
+	struct soap* soap,
+	struct _lbe__GetInterfaceVersion *in,
+	struct _lbe__GetInterfaceVersionResponse *out)
+{
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, 
+		"[%d] WS call %s", getpid(), __FUNCTION__);
+
+	out->version = soap_strdup(soap, GLITE_LB_WS_INTERFACE_VERSION);
 
 	return out->version ? SOAP_OK : SOAP_FAULT;
 }
