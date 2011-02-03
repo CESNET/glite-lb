@@ -62,6 +62,7 @@ install: compile
 	${INSTALL} -m 755 harvester ${PREFIX}/bin/glite-lb-harvester
 	${INSTALL} -m 755 harvester-dbg ${PREFIX}/examples/glite-lb-harvester-dbg
 	${INSTALL} -m 755 ${top_srcdir}/examples/test.sh ${PREFIX}/examples/glite-lb-harvester-test.sh
+	${INSTALL} -m 444 ${top_srcdir}/examples/test.sql ${PREFIX}/etc/glite-lb/harvester-test-dbsetup.sql
 	${INSTALL} -m 444 ${top_srcdir}/doc/README ${PREFIX}/share/doc/${package}-${version}
 	${INSTALL} -m 444 glite-lb-harvester.8 ${PREFIX}/share/man/man8
 	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-harvester
