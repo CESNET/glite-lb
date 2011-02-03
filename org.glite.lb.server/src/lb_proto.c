@@ -642,7 +642,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		}
 
 	/* GET /: Current User Jobs */
-		else if (requestPTR[0]=='/' && (requestPTR[1]==' ' || requestPTR[1]=='?')) {
+		else if (requestPTR[0]=='/' && 
+			(requestPTR[1]==' ' || !strncmp(requestPTR+1, "/?text", strlen("/?text")))) {
                 	edg_wlc_JobId *jobsOut = NULL;
 			edg_wll_JobStat *statesOut = NULL;
 			int	i, flags;
@@ -674,6 +675,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 	/* GET /[jobId]: Job Status */
 		else if (*requestPTR=='/'
+			&& strncmp(requestPTR, "/?wsdl", strlen("/?wsdl"))
+			&& strncmp(requestPTR, "/?types", strlen("/?types"))
+			&& strncmp(requestPTR, "/?agu", strlen("/?agu"))
 			&& strncmp(requestPTR, "/RSS:", strlen("/RSS:")) 
 			&& ( strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
 			     || *(requestPTR+strlen("/NOTIF")) != ':'
@@ -711,6 +715,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 							edg_wll_CreamJobStatusToHTML(ctx,stat,&message);
 							break;
 						case EDG_WLL_STAT_FILE_TRANSFER:
+						case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
 							edg_wll_FileTransferStatusToHTML(ctx,stat,&message);
 							break;
 						default:
@@ -793,7 +798,30 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	                        edg_wll_SetError(ctx, ENOENT, "current index configuration does not support RSS feeds");
 			}
 			edg_wll_RSSFeed(ctx, states, requestPTR, &message);
-
+	/*GET /?wsdl */
+#define WSDL_LB "LB.wsdl"
+#define WSDL_LBTYPES "LBTypes.wsdl"
+#define WSDL_LB4AGU "lb4agu.wsdl"
+		} else if (strncmp(requestPTR, "/?wsdl", strlen("/?wsdl")) == 0) {
+			char *filename;
+			asprintf(&filename, "%s/interface/%s", getenv("GLITE_LOCTION"), WSDL_LB);
+			if (edg_wll_WSDLOutput(ctx, &message, filename))
+				ret = HTTP_INTERNAL;
+			free(filename);
+	/* GET /?types */
+		} else if (strncmp(requestPTR, "/?types", strlen("/?types")) == 0) {
+                        char *filename;
+                        asprintf(&filename, "%s/interface/%s", getenv("GLITE_LOCTION"), WSDL_LBTYPES);
+                        if (edg_wll_WSDLOutput(ctx, &message, filename))
+                                ret = HTTP_INTERNAL;
+			free(filename);
+	/* GET /?agu */
+                } else if (strncmp(requestPTR, "/?agu", strlen("/?agu")) == 0) {
+                        char *filename;
+                        asprintf(&filename, "%s/interface/%s", getenv("GLITE_LOCTION"), WSDL_LB4AGU);
+                        if (edg_wll_WSDLOutput(ctx, &message, filename))
+                                ret = HTTP_INTERNAL;
+			free(filename);
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
 		free(requestPTR); requestPTR = NULL;

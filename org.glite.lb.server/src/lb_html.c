@@ -25,11 +25,14 @@ limitations under the License.
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
 
+#include "glite/lbu/log.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <assert.h>
+#include <errno.h>
 
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))
@@ -384,9 +387,11 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
 
 int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
 {
-        char *pomA = NULL, *pomB = NULL, *lbstat;
-        int pomL = 0;
+        char *pomA = NULL, *pomB = NULL, *lbstat, *children;
+        int pomL = 0, i;
         char    *chid,*chcj,*chsbt;
+
+	children = strdup("");
 
         chid = edg_wlc_JobIdUnparse(stat.jobId);
 
@@ -396,31 +401,97 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 	chcj = edg_wlc_JobIdUnparse(stat.ft_compute_job);
 	TRL("Compute job", "%s", chcj, NULL);
 	free(chcj);
-	
-	switch(stat.ft_sandbox_type){
-		case EDG_WLL_STAT_INPUT: chsbt = strdup("INPUT");
-			break;
-		case EDG_WLL_STAT_OUTPUT: chsbt = strdup("OUTPUT");
-			break;
-		default: chsbt = NULL;
-			break;
+
+	if (stat.jobtype == EDG_WLL_STAT_FILE_TRANSFER){
+		switch(stat.ft_sandbox_type){
+			case EDG_WLL_STAT_INPUT: chsbt = strdup("INPUT");
+				break;
+			case EDG_WLL_STAT_OUTPUT: chsbt = strdup("OUTPUT");
+				break;
+			default: chsbt = NULL;
+				break;
+		}
+		TR("Sandbox type", "%s", chsbt, NULL);
+		TR("File transfer source", "%s", stat.ft_src, NULL);
+		TR("File transfer destination", "%s", stat.ft_dest, NULL);
 	}
-	TR("Sandbox type", "%s", chsbt, NULL);
-	TR("File transfer source", "%s", stat.ft_src, NULL);
-	TR("File transfer destination", "%s", stat.ft_dest, NULL);
+	else if ((stat.jobtype == EDG_WLL_STAT_FILE_TRANSFER_COLLECTION) && (stat.children_num > 0)){
+		asprintf(&children, "<h3>Children</h3>\r\n");
+                for (i = 0; i < stat.children_num; i++){
+                        asprintf(&pomA,"%s\t\t <li/> <a href=\"%s\">%s</a>\r\n",
+                        children, stat.children[i], stat.children[i]);
+                        children = pomA;
+                }
+	}
 
         asprintf(&pomA, "<html>\r\n\t<body>\r\n"
                         "<h2>%s</h2>\r\n"
-                        "<table halign=\"left\">%s</table>"
+                        "<table halign=\"left\">%s</table>\r\n"
+			"%s\n"
                         "\t</body>\r\n</html>",
-                        chid,pomB);
+                        chid, pomB, children);
         free(pomB);
 
         *message = pomA;
 
 	if (chsbt) free(chsbt);
         free(chid);
+	free(children);
         return 0;
+}
+
+// replace s1 to s2 in text
+static int replace_substr(char **text, char *s1, char *s2){
+	int l1, l2;
+	char *out;
+
+	char *p = strstr(*text, s1);
+	if (! p) return -1; // exit if s1 not found
+
+	l1 = strlen(s1);
+	l2 = strlen(s2);
+	out = (char*)malloc((strlen(*text)+l2-l1+1)*sizeof(char));
+	
+	strncpy(out, *text, p-*text);
+	out[p-*text] = 0;
+	sprintf(out+(p-*text), "%s%s", s2, p+l1);
+
+	free(*text);
+	*text = out;
+}
+
+int edg_wll_WSDLOutput(edg_wll_Context ctx UNUSED_VAR, char **message, char *filename){
+	FILE *f;
+	char *wsdl, *p, *start;
+	int i, b;
+
+	if ((f = fopen(filename, "r")) == NULL){
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s not found!\n", filename);
+		edg_wll_SetError(ctx, ENOENT, "WSDL File not found!");
+		return -1;
+	}
+
+	// load wsdl
+	wsdl = (char*)malloc(4096*sizeof(char));
+	i = 1;
+	while ((b = fread(wsdl+(i-1)*4096, sizeof(char), 4096, f)) == 4096){
+		i++;
+		wsdl = (char*)realloc(wsdl, 4096*i*sizeof(char));
+	}
+	wsdl[(i-1)*4096+b] = 0;
+
+	// fix imports
+	char *addr;
+	asprintf(&addr, "https://%s:%i/?types", ctx->srvName, ctx->srvPort);
+	replace_substr(&wsdl, "LBTypes.wsdl", addr);
+	free(addr);
+	asprintf(&addr, "https://%s:%i/?agu", ctx->srvName, ctx->srvPort);
+	replace_substr(&wsdl, "lb4agu.wsdl", addr);
+	free(addr);
+
+	*message = wsdl;
+	
+	return 0;
 }
 
 char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)
