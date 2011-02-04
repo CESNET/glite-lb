@@ -674,10 +674,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	        } 
 
 	/* GET /[jobId]: Job Status */
-		else if (*requestPTR=='/'
-			&& strncmp(requestPTR, "/?wsdl", strlen("/?wsdl"))
-			&& strncmp(requestPTR, "/?types", strlen("/?types"))
-			&& strncmp(requestPTR, "/?agu", strlen("/?agu"))
+		else if (*requestPTR=='/' && requestPTR[1] != '?'
 			&& strncmp(requestPTR, "/RSS:", strlen("/RSS:")) 
 			&& ( strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
 			     || *(requestPTR+strlen("/NOTIF")) != ':'
@@ -822,6 +819,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                         if (edg_wll_WSDLOutput(ctx, &message, filename))
                                 ret = HTTP_INTERNAL;
 			free(filename);
+		} else if (strncmp(requestPTR, "/?version", strlen("/?version")) == 0) {
+			asprintf(&message, "%s", VERSION);
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
 		free(requestPTR); requestPTR = NULL;
