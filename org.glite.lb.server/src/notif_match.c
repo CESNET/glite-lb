@@ -46,7 +46,8 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[6];
 	glite_lbu_Statement	jobs = NULL;
-	int	ret,i,authz_flags = 0;
+	int	ret,authz_flags = 0;
+	size_t i;
 	time_t	expires,now = time(NULL);
 	
 	char *cond_where = NULL;

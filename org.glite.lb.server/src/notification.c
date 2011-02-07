@@ -176,6 +176,7 @@ int edg_wll_NotifNewServer(
 				goto rollback;
 		}
 		else {
+			free(q);
 			trio_asprintf(&q,"insert into notif_jobs(notifid,jobid) values ('%|Ss','%|Ss')",
 					nid_s,NOTIF_ALL_JOBS);
 			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB,
@@ -693,7 +694,7 @@ static int update_notif(
 {
 	char	*nid_s = NULL, *host = NULL,
 		*stmt = NULL, *aux = NULL;
-	int	ret, port = 0;
+	int	ret = 0;
 
 
 	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
