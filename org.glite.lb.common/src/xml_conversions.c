@@ -751,63 +751,30 @@ void *edg_wll_from_string_to_cclassad(edg_wll_XML_ctx *XMLCtx)
 /* various conversion functions					*/
 
 
+static void append_flag(char **cflags, const char *cflag) {
+	char *temp_cflags;
+
+	if (*cflags) {
+		asprintf(&temp_cflags, "%s+%s", *cflags, cflag);
+		free(*cflags);
+		*cflags = temp_cflags;
+	} else
+		asprintf(cflags, "%s", cflag);
+}
+
 char *edg_wll_stat_flags_to_string(int flags)
 {
-        char *cflags = NULL, *temp_cflags = NULL;
+	char *cflags = NULL;
 
-
-        if (flags & EDG_WLL_STAT_CLASSADS) asprintf(&cflags,"%s","classadd");
-        if (flags & EDG_WLL_STAT_CHILDREN) {
-                if (cflags) {
-                        asprintf(&temp_cflags,"%s+%s",cflags,"children");
-                        free(cflags);
-                        cflags=temp_cflags;
-                }
-                else asprintf(&cflags,"%s","children");
-        }
-        if (flags & EDG_WLL_STAT_CHILDSTAT) {
-                if (cflags) {
-                        asprintf(&temp_cflags,"%s+%s",cflags,"childstat");
-                        free(cflags);
-                        cflags=temp_cflags;
-                }
-                else asprintf(&cflags,"%s","childstat");
-        }
-        if (flags & EDG_WLL_STAT_NO_JOBS) {
-                if (cflags) {
-                        asprintf(&temp_cflags,"%s+%s",cflags,"no_jobs");
-                        free(cflags);
-                        cflags=temp_cflags;
-                }
-                else asprintf(&cflags,"%s","no_jobs");
-        }
-        if (flags & EDG_WLL_STAT_NO_STATES) {
-                if (cflags) {
-                        asprintf(&temp_cflags,"%s+%s",cflags,"no_states");
-                        free(cflags);
-                        cflags=temp_cflags;
-                }
-                else asprintf(&cflags,"%s","no_states");
-        }
-
-        if (flags & EDG_WLL_STAT_CHILDHIST_FAST) {
-                if (cflags) {
-                        asprintf(&temp_cflags,"%s+%s",cflags,"childhist_fast");
-                        free(cflags);
-                        cflags=temp_cflags;
-                }
-                else asprintf(&cflags,"%s","childhist_fast");
-        }
-
-        if (flags & EDG_WLL_STAT_CHILDHIST_THOROUGH) {
-                if (cflags) {
-                        asprintf(&temp_cflags,"%s+%s",cflags,"childhist_thorough");
-                        free(cflags);
-                        cflags=temp_cflags;
-                }
-                else asprintf(&cflags,"%s","childhist_thorough");
-        }
-
+        if (flags & EDG_WLL_STAT_CLASSADS)       append_flag(&cflags, "classadd");
+        if (flags & EDG_WLL_STAT_CHILDREN)       append_flag(&cflags, "children");
+        if (flags & EDG_WLL_STAT_CHILDSTAT)      append_flag(&cflags, "childstat");
+        if (flags & EDG_WLL_STAT_NO_JOBS)        append_flag(&cflags, "no_jobs");
+        if (flags & EDG_WLL_STAT_NO_STATES)      append_flag(&cflags, "no_states");
+        if (flags & EDG_WLL_STAT_CHILDHIST_FAST) append_flag(&cflags, "childhist_fast");
+        if (flags & EDG_WLL_STAT_CHILDHIST_THOROUGH) append_flag(&cflags, "childhist_thorough");
+        if (flags & EDG_WLL_NOTIF_BOOTSTRAP)     append_flag(&cflags, "bootstrap");
+        if (flags & EDG_WLL_NOTIF_VOLATILE)      append_flag(&cflags, "volatile");
         if (!cflags) cflags = strdup("");
 
         return(cflags);
@@ -830,6 +797,8 @@ int edg_wll_string_to_stat_flags(char *cflags)
 		if (!strcmp(sflag,"no_states")) flags = flags | EDG_WLL_STAT_NO_STATES;
                 if (!strcmp(sflag,"childhist_fast")) flags = flags | EDG_WLL_STAT_CHILDHIST_FAST;
                 if (!strcmp(sflag,"childhist_thorough")) flags = flags | EDG_WLL_STAT_CHILDHIST_THOROUGH;
+		if (!strcmp(sflag,"bootstrap")) flags = flags | EDG_WLL_NOTIF_BOOTSTRAP;
+		if (!strcmp(sflag,"volatile")) flags = flags | EDG_WLL_NOTIF_VOLATILE;
 		sflag = strtok_r(NULL, "+", &last);
 	} 
 

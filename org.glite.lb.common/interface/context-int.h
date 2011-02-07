@@ -178,6 +178,9 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	_edg_wll_authz_policy	authz_policy;
 
 	int		exclusive_zombies;
+
+	int		(*processRequest_cb)(edg_wll_Context ctx);
+	void		*processRequestUserData;
 )
 
 /* to be used internally: set, update and and clear the error information in 

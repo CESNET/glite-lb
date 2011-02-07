@@ -55,6 +55,7 @@ static void usage(char *cmd)
 			"    owner		Match this owner DN\n"
 			"    requested_validity	Validity of notification req. in seconds\n"
 			"    flags		0 - return basic status, 1 - return also JDL in status\n"
+			"         		256 - bootstrap stream (send all existing jobs too)\n"
 			"    network_server	Match only this network server (WMS entry point)\n"
 			"    -O			Match owner - credentials are retrieved from environment\n"
 			"    -c			Match only on state change\n"

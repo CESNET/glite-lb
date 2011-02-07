@@ -1573,6 +1573,12 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 		return err;
 	}
 
+	// additional actions (notification stream)
+	if (ctx->processRequest_cb) {
+		ctx->processRequest_cb(ctx);
+		ctx->processRequest_cb = NULL;
+	}
+
 	if (httpErr == HTTP_BADREQ && body)
 		err = try_accept_ws(conn, timeout, cdata, body, strlen(body) + 1);
 	if (httpErr != HTTP_BADREQ || err)
@@ -1646,6 +1652,12 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 		glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_WARN,
 			"[%d] SOAP error (bk_accept_ws)", getpid());
 		return ECANCELED;
+	}
+
+	// additional actions (notification stream)
+	if (ctx->processRequest_cb) {
+		ctx->processRequest_cb(ctx);
+		ctx->processRequest_cb = NULL;
 	}
 
 	return ENOTCONN;

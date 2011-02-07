@@ -117,6 +117,11 @@ edg_wll_NotifCancelRegId(edg_wll_Context context,
  */
 int edg_wll_NotifMatch(edg_wll_Context context, const edg_wll_JobStat *oldstat, const edg_wll_JobStat *stat);
 
+/**
+ * Check permissions on job status.
+ */
+int edg_wll_NotifCheckACL(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip, int *authz_flags);
+
 #ifdef __cplusplus
 }
 #endif

@@ -38,7 +38,6 @@ limitations under the License.
 #include "authz_policy.h"
 
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *);
-static int notif_check_acl(edg_wll_Context,const edg_wll_JobStat *,const char *, int *);
 
 int edg_wll_NotifExpired(edg_wll_Context,const char *);
 
@@ -115,7 +114,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 				getpid(),jobc[0],asctime(gmtime(&expires)));
 		}
 		else if (notif_match_conditions(ctx,oldstat,stat,jobc[4]) &&
-				notif_check_acl(ctx,stat,jobc[3], &authz_flags))
+				edg_wll_NotifCheckACL(ctx,stat,jobc[3], &authz_flags))
 		{
 			char			   *dest;
 
@@ -208,7 +207,7 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *old
  * effective VOMS groups of the recipient are not available here, should be 
  * probably stored along with the registration.
  */
-static int notif_check_acl(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip, int *authz_flags)
+int edg_wll_NotifCheckACL(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip, int *authz_flags)
 {
 	int		ret;
 	struct _edg_wll_GssPrincipal_data princ;
