@@ -366,18 +366,17 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	/* look for the unique unused long local-logger id (LLLID) */
 	lllid = 1000*getpid();
 	for (i=0; (i<1000)&&(!unique); i++) {
+		struct stat statbuf;
 		lllid += i;
 		snprintf(confirm_sock_name, sizeof(confirm_sock_name), "/tmp/dglogd_sock_%ld", lllid);
-		if ((filedesc = open(confirm_sock_name,O_CREAT)) == -1) {
-			if (errno == EEXIST) {
-				glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Warning: LLLID %ld already in use.\n",lllid);
-			} else {
-				glite_common_log_SYS_ERROR("open");
-			}
+		if ((filedesc = stat(confirm_sock_name,&statbuf)) == 0) {
+			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Warning: LLLID %ld already in use.\n",lllid);
 		} else {
-			unique = 1;
-			close(filedesc); filedesc = 0;
-			unlink(confirm_sock_name);
+			if (errno == ENOENT) {
+				unique = 1;
+			} else {
+				glite_common_log_SYS_ERROR("stat");
+			}
 		}
 	}
 	if (!unique) {
