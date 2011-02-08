@@ -77,7 +77,7 @@ PLUGIN_LIB:=activemq_cpp_plugin.la
 
 default: all 
 
-all compile: ${PLUGIN_LIB}
+all compile: ${PLUGIN_LIB} 
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${EXT_LIB}

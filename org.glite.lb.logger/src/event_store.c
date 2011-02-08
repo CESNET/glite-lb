@@ -1390,6 +1390,11 @@ event_store_init(char *prefix)
 	 s[4] == '\0')
 	continue;
 
+      /* skip all statistic files */
+      if((s=strstr(entry->d_name, ".stat")) != NULL &&
+	 s[5] == '\0')
+	continue;
+
       s = malloc(strlen(dir) + strlen(entry->d_name) + 2);
       if(s == NULL) {
 	free(dir);

@@ -241,6 +241,7 @@ event_queue_connect(struct event_queue *eq, struct queue_thread *me)
   }
 #endif
 
+  eq->last_connected = time(NULL);
   return(1);
 }
 
@@ -354,8 +355,8 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
     case LB_NOMEM:
 	    /* NOT USED: case LB_SYS:  */
 	    /* NOT USED: case LB_AUTH: */
-	case LB_PERM:
-	case LB_DBERR:
+
+    case LB_DBERR:
       /* non fatal errors (for us) */
       me->timeout = TIMEOUT;
       return(0);
@@ -363,6 +364,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
     case LB_OK:
       /* event succesfully delivered */
       
+    case LB_PERM:
     default: /* LB_PROTO */
       /* the event was not accepted by the server */
       /* update the event pointer */
@@ -385,6 +387,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 	
       event_queue_remove(eq, me);
       me->first_event_sent = 1;
+      eq->last_sent = time(NULL);
       break;
       
     } /* switch */

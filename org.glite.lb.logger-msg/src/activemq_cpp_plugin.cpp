@@ -324,6 +324,7 @@ event_queue_connect(struct event_queue *eq, struct queue_thread *me)
 		return 0;
 	}
 	me->first_event_sent = 0;
+	eq->last_connected= time(NULL);
 	return 1;
 }
 
@@ -417,6 +418,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 	    }
 	    event_queue_remove(eq, me);
 	    me->first_event_sent = 1;
+	    eq->last_sent = time(NULL);
 	}
 	edg_wll_FreeContext(context);
 	return 1;

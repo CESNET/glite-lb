@@ -22,6 +22,7 @@ limitations under the License.
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/param.h>
 
 #include "interlogd.h"
 
@@ -61,6 +62,33 @@ cmp_expires(struct server_msg *msg, void *data)
   time_t *t = (time_t*)data;
   return (msg->expires > 0) && (msg->expires < *t);
 }
+
+extern char *file_prefix;
+
+static 
+void
+event_queue_write_stat(struct event_queue *eq) {
+	FILE *statfile;
+	char fn[MAXPATHLEN];
+
+	snprintf(fn, sizeof(fn), "%s.%s.stat", file_prefix, eq->dest_name);
+	statfile = fopen(fn, "w");
+	if(NULL == statfile) {
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN,
+				 "Error opening destination stat file %s: %s", 
+				 fn, strerror(errno));
+		return;
+	}
+	if(fprintf(statfile, "last_connected=%ld\nlast_sent=%ld\n",
+		   eq->last_connected,
+		   eq->last_sent) < 0) {
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN,
+				 "Error writing destination statistics into %s: %s",
+				 fn, strerror(errno));
+	}
+	fclose(statfile);
+}
+
 
 static
 void *
@@ -225,6 +253,7 @@ queue_thread(void *q)
 							 eq->dest);
 				}
 			}
+			event_queue_write_stat(eq);
 		} 
 
 #if defined(INTERLOGD_HANDLE_CMD) && defined(INTERLOGD_FLUSH)

@@ -210,6 +210,8 @@ struct event_queue {
 	int                     max_len;        /* max queue length */
 	int                     cur_len;        /* current length */
 	int			throttling;	/* event insertion suspend flag */
+	time_t                  last_connected; /* time of the last successful connection */
+	time_t                  last_sent;      /* time the last event was sent */
 	/* delivery methods */
 	int 		(*event_queue_connect)(struct event_queue *, struct queue_thread *);
 	int 		(*event_queue_send)(struct event_queue *, struct queue_thread *);
