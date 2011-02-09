@@ -124,3 +124,9 @@
 - Optimized recovery from errors affecting single jobs (fix to bug #77365)
 - Startup scripts remove stale sockets (fix to bug #77357)
 
+2.1.14-1
+- Prevent interlogger.sock from being deleted by tmpwatch
+- Do not fail on insufficient disk space in /tmp/ when not really necessary
+- Fixed behavior of the --noIPC option
+- Minor memory handling bug fixed
+
