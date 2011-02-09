@@ -1759,7 +1759,7 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 				if (dbfail_string2) free(dbfail_string2);
 				dbfail_string2 = dbfail_string1;
 				dbfail_string1 = NULL;
-				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "[%d]: %s\nStill trying ...",getpid(),dbfail_string2);
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[%d]: %s\nStill trying ...",getpid(),dbfail_string2);
 				
 			}
 		}
