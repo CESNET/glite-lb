@@ -216,3 +216,6 @@
 2.1.15-1
 - Startup scripts remove stale sockets (fix to bug #77357)
 
+2.1.16-1
+- Increased severity for DB open errors
+
