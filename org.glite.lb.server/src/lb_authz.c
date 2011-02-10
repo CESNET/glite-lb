@@ -247,7 +247,7 @@ parse_creds(edg_wll_Context ctx, edg_wll_VomsGroups *groups, char **fqans,
    }
    cred = NULL; /* GACLnewUser() doesn't copy content, just store the pointer */
 
-   for (i = 0; i < groups->len; i++) {
+   for (i = 0; groups && i < groups->len; i++) {
       cred = GRSTgaclCredNew("voms");
       if (cred == NULL) {
 	 edg_wll_SetError(ctx, ENOMEM, "Failed to create GACL voms-cred credential");
@@ -426,6 +426,20 @@ change_acl(edg_wll_Context ctx, GRSTgaclAcl *acl, GRSTgaclEntry *entry, int oper
    return edg_wll_SetError(ctx,EINVAL,"Unknown ACL operation requested");
 }
 
+static GRSTgaclPerm
+perm_lb2gacl(enum edg_wll_ChangeACLPermission permission)
+{
+    switch (permission) {
+	case EDG_WLL_CHANGEACL_READ:
+            return GRST_PERM_READ;
+	case EDG_WLL_CHANGEACL_TAG:
+            return GRST_PERM_WRITE;
+	default:
+            break;
+    }
+    return GRST_PERM_NONE;
+}
+
 static int
 edg_wll_change_acl(edg_wll_Context ctx, edg_wll_Acl acl, char *user_id,
 		   int user_id_type, int permission, int perm_type,
@@ -433,7 +447,8 @@ edg_wll_change_acl(edg_wll_Context ctx, edg_wll_Acl acl, char *user_id,
 {
    GRSTgaclCred *cred = NULL;
    GRSTgaclEntry *entry = NULL;
-   int ret,p;
+   GRSTgaclPerm p;
+   int ret;
 
    GRSTgaclInit();
 
@@ -455,13 +470,10 @@ edg_wll_change_acl(edg_wll_Context ctx, edg_wll_Acl acl, char *user_id,
       goto end;
    }
 
-   switch (permission) {
-      case EDG_WLL_CHANGEACL_READ:
-          p = EDG_WLL_CHANGEACL_READ;
-	  break;
-      default:
-          ret = edg_wll_SetError(ctx,EINVAL,"Unknown permission for ACL");
-	  goto end;
+   p = perm_lb2gacl(permission);
+   if (p == GRST_PERM_NONE) {
+      ret = edg_wll_SetError(ctx,EINVAL,"Unknown permission for ACL");
+      goto end;
    }
 
    if (perm_type == EDG_WLL_CHANGEACL_ALLOW)
@@ -491,27 +503,41 @@ end:
 }
 
 int
-edg_wll_CheckACL(edg_wll_Context ctx, edg_wll_Acl acl, int requested_perm)
+edg_wll_CheckACL_princ(edg_wll_Context ctx, edg_wll_Acl acl,
+		       int requested_perm, edg_wll_GssPrincipal princ)
 {
    int ret;
    GRSTgaclUser *user = NULL;
-   unsigned int perm;
+   GRSTgaclPerm perm, p;
 
    if (acl == NULL || acl->value == NULL)
       return edg_wll_SetError(ctx,EINVAL,"CheckACL");
 
-   if (!ctx->peerName) return edg_wll_SetError(ctx,EPERM,"CheckACL");
+   if (princ == NULL || princ->name == NULL)
+      return edg_wll_SetError(ctx,EPERM,"CheckACL");
 
-   ret = parse_creds(ctx, &ctx->vomsGroups, ctx->fqans, ctx->peerName, &user);
+   ret = parse_creds(ctx, NULL, princ->fqans, princ->name, &user);
    if (ret)
       return edg_wll_Error(ctx,NULL,NULL);
 
    perm = GRSTgaclAclTestUser(acl->value, user);
 
    GRSTgaclUserFree(user);
+
+   p = perm_lb2gacl(requested_perm);
    
-   if (perm & requested_perm) return edg_wll_ResetError(ctx);
+   if (perm & p) return edg_wll_ResetError(ctx);
    else return edg_wll_SetError(ctx,EPERM,"CheckACL");
+}
+
+int
+edg_wll_CheckACL(edg_wll_Context ctx, edg_wll_Acl acl, int requested_perm)
+{
+   struct _edg_wll_GssPrincipal_data princ;
+
+   princ.name = ctx->peerName;
+   princ.fqans = ctx->fqans;
+   return edg_wll_CheckACL_princ(ctx, acl, requested_perm, &princ);
 }
 
 int
@@ -896,10 +922,6 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
    authz_action action;
    struct _edg_wll_GssPrincipal_data princ;
 
-   /* by default the server is open to any authenticated client */
-   if (policy_file == NULL)
-        return 0;
-
    switch (ev->any.type) {
 	case EDG_WLL_EVENT_REGJOB:
 	     action = REGISTER_JOBS;
@@ -922,13 +944,6 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
 	     break;
    }
 
-   princ.name = ctx->peerName;
-   princ.fqans = ctx->fqans;
-   ret = check_authz_policy(&ctx->authz_policy, &princ, action);
-   if (ret == 1)
-      return 0;
-
-   ret = EPERM;
    if (enable_lcas) {
       /* XXX make a real RSL ? */
       request = (char *) action2name(action);
@@ -941,12 +956,23 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
 
       ret = lcas_pem(pem_string, request);
       free(pem_string);
+      if (ret)
+	 goto end;
    }
 
-   if (ret)
-      ret = edg_wll_SetError(ctx, EPERM, "Not allowed to log events here");
+   /* by default the server is open to any authenticated client */
+   if (policy_file == NULL)
+        return 0;
 
-   return ret;
+   princ.name = ctx->peerName;
+   princ.fqans = ctx->fqans;
+   ret = check_authz_policy(&ctx->authz_policy, &princ, action);
+   if (ret == 1)
+      return 0;
+
+end:
+   edg_wll_SetError(ctx, EPERM, "Not allowed to log events here");
+   return EPERM;
 }
 
 int edg_wll_amIroot(const char *subj, char **fqans,edg_wll_authz_policy policy)

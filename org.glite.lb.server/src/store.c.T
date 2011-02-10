@@ -604,6 +604,26 @@ static int check_dup(edg_wll_Context ctx,edg_wll_Event *e)
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 
+static int
+check_acl(edg_wll_Context ctx,edg_wll_Event *e, enum edg_wll_ChangeACLPermission p)
+{
+	int ret;
+	edg_wll_Acl acl = NULL;
+	struct _edg_wll_GssPrincipal_data princ;
+
+	memset(&princ, 0, sizeof(princ));
+
+	ret = edg_wll_GetACL(ctx, e->any.jobId, &acl);
+	if (ret)
+		return EPERM;
+
+	/* XXX don't have VOMS attributes here */
+	princ.name = e->any.user;
+	ret = edg_wll_CheckACL_princ(ctx, acl, p, &princ);
+	edg_wll_FreeAcl(acl);
+	return ret;
+}
+
 static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 {
 	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
@@ -632,8 +652,13 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 		case EDG_WLL_SOURCE_USER_INTERFACE:
 		case EDG_WLL_SOURCE_LRMS:
 		case EDG_WLL_SOURCE_APPLICATION:
-			if (!edg_wll_gss_equal_subj(owner,e->any.user)) 
-				edg_wll_SetError(ctx,EPERM,"check_auth()");
+			if (edg_wll_gss_equal_subj(owner,e->any.user))
+				break;
+			if (e->any.type == EDG_WLL_EVENT_USERTAG &&
+			    check_acl(ctx, e, EDG_WLL_CHANGEACL_TAG) == 0)
+				break;
+		
+			edg_wll_SetError(ctx,EPERM,"check_auth()");
 			break;
 		default:
 			/* XXX: just don't allow anonymous */

@@ -72,6 +72,9 @@ extern int
 edg_wll_CheckACL(edg_wll_Context, edg_wll_Acl, int);
 
 extern int
+edg_wll_CheckACL_princ(edg_wll_Context, edg_wll_Acl, int, edg_wll_GssPrincipal);
+
+extern int
 edg_wll_GetACL(edg_wll_Context, glite_jobid_const_t, edg_wll_Acl *);
 
 extern int
