@@ -197,6 +197,7 @@
 	int	permission	ACL permission to change.
 	_null_	0
 	_code_	READ		Get job information
+	_code_	TAG		Add a user tag
 	int	permission_type	Type of permission requested.
 	_null_	-1
 	_code_	ALLOW		Grant the permission specified
