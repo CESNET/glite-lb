@@ -84,6 +84,7 @@ usage: $0 [-c <current configuration>] module.name
 		$current_prefix=~s/\./-/g;
 		$current_prefix="$current_prefix" . "_R_";
 		$current_tag="$current_prefix" . "$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
+		$current_tag=~s/^emi-/glite-/;
 	}
 
         if (defined $opt_p) {
