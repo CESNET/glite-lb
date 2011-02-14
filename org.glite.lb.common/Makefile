@@ -139,7 +139,7 @@ all compile: generate ${lib_LTLIBRARIES} ${lib_LIBRARIES}
 # where offset is a sum of maximal released minor's of all previous major's
 # 
 
-# counted minors: 1.1, 3.1
+# counted minors: 1.1, 2.0, 3.1, 4.0, 5.1, 6.1, 7.1
 offset=2
 
 version_info:=-version-info ${shell \
