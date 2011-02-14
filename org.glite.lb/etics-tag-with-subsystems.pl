@@ -286,6 +286,8 @@ usage: $0 [-c <current configuration>] module.name
 
 	printf (NEWCONF "[Configuration-$newconfig]\nprofile = None\nmoduleName = $moduleName\ndisplayName = $newconfig\ndescription = None\nprojectName = $project\nage = $age$proj_suffix\ntag = $tag\nversion = $major.$minor.$revision\npath = None\n\n");
 
+	if ( $project eq "emi" ) { printf (NEWCONF "[Platform-default:Property]\npackage.prefix = /opt/emi\n\n"); }
+
 #	printf (NEWCONF "[Platform-default:VcsCommand]\ndisplayName = None\ndescription = HEAD CVS commands\ntag = cvs -d \${vcsroot} tag -R \${tag} \${moduleName}\nbranch = None\ncommit = None\ncheckout = cvs -d \${vcsroot} co -r \${tag} \${moduleName}\n\n");
 
 #	printf (NEWCONF "[Platform-default:Environment]\nHOME = \${workspaceDir}");
