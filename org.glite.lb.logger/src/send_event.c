@@ -355,14 +355,16 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
     case LB_NOMEM:
 	    /* NOT USED: case LB_SYS:  */
 	    /* NOT USED: case LB_AUTH: */
-
     case LB_DBERR:
-      /* non fatal errors (for us) */
-      me->timeout = TIMEOUT;
-      return(0);
+	    /* check minor code */
+	    if(!(ENOENT == code_min)) {
+		    /* non fatal errors (for us) */
+		    eq->timeout = TIMEOUT;
+		    return(0);
+	    }
 	
     case LB_OK:
-      /* event succesfully delivered */
+      /* event 'succesfully' delivered */
       
     case LB_PERM:
     default: /* LB_PROTO */

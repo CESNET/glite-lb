@@ -30,6 +30,7 @@ GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-$GLITE_LOCATION/var}
 
 LL_PIDFILE=${LL_PIDFILE:-$GLITE_LOCATION_VAR/glite-lb-logd.pid}
 IL_PIDFILE=${IL_PIDFILE:-$GLITE_LOCATION_VAR/glite-lb-interlogd.pid}
+IL_SOCKFILE=/tmp/interlogger.sock
 
 unset creds port log4c
 
@@ -38,13 +39,20 @@ start_daemon()
 	local name="$1"
 	local pidfile="$2"
 	local cmd="$3"
+	local stale="$4"
 
 	if [ -f "$pidfile" ]; then
 		if ps p `cat $pidfile` >/dev/null 2>&1; then
 			return 0
 		fi
-		echo -n "Warning: stalled $pidfile for $name"
+		echo "Warning: stale $pidfile for $name"
 		rm -f "$pidfile"
+		if [ -n "$stale" ]; then
+			for file in $stale; do
+				echo "Warning: stale $file for $name"
+				rm -f "$file"
+			done
+		fi
 	fi
 	echo -n "Starting $name ..."
 	su - $GLITE_USER -c "$log4c $cmd" && echo " done" || echo " FAILED"
@@ -60,7 +68,7 @@ status_daemon()
 		if ps p $pid >/dev/null 2>&1; then
 			echo "$name running as $pid"
 		else
-			echo "$name not running (stalled pidfile)"
+			echo "$name not running (stale pidfile)"
 			return 1
 		fi
 	else
@@ -118,7 +126,7 @@ start()
 		-i $LL_PIDFILE $creds $port $sock $fprefix"
 
 	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-interlogd \
-		-i $IL_PIDFILE $creds $sock $fprefix"
+		-i $IL_PIDFILE $creds $sock $fprefix" "$IL_SOCKFILE"
 }
 
 killwait()
@@ -150,7 +158,7 @@ stop()
 	if netstat -an --inet --inet6 | grep "^tcp .* \(::\|0.0.0.0\):${GLITE_LB_LOGGER_PORT:-9002} .*LISTEN" >/dev/null 2>&1 ;then
 		killall -9 glite-lb-logd
 	fi
-	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_IL_SOCK:-/tmp/interlogger.sock}$" >/dev/null 2>&1 ;then
+	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_IL_SOCK:-$IL_SOCKFILE}$" >/dev/null 2>&1 ;then
 		killall -9 glite-lb-interlogd
 	fi
 }

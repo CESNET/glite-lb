@@ -250,6 +250,8 @@ input_queue_get(il_octet_string_t **buffer, long *offset, int timeout)
   
   tv.tv_sec = timeout;
   tv.tv_usec = 0;
+
+  utime(socket_path, NULL);
   
   utime(socket_path, NULL);
 

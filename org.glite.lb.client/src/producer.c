@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 
-#include <sys/types.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -154,14 +154,12 @@ int edg_wll_DoLogEventServer(
         edg_wll_PlainConnection con_lbproxy;
         edg_wll_GssConnection   con_bkserver;
         fd_set fdset;
-	int count,fd,fd_n;
+	int count,fd,fd_n,proxy_answer=0,direct_answer=0;
 	int answer = EAGAIN, ret = 0;
 
         edg_wll_ResetError(ctx);
         memset(&con_lbproxy, 0, sizeof(con_lbproxy));
         memset(&con_bkserver, 0, sizeof(con_bkserver));
-
-	FD_ZERO(&fdset);
 
 	/* CONNECT */
 	count=0;
@@ -202,12 +200,15 @@ int edg_wll_DoLogEventServer(
 
 	/* READ ANSWER */
 	while (count > 0) {
+
+		FD_ZERO(&fdset);
+
 		fd_n=0;
-		if (flags & EDG_WLL_LOGFLAG_DIRECT) {
+		if ((flags & EDG_WLL_LOGFLAG_DIRECT)&&(!direct_answer)) {
 			FD_SET(con_bkserver.sock,&fdset);
 			if (con_bkserver.sock > fd_n) fd_n = con_bkserver.sock;
 		}
-		if (flags & EDG_WLL_LOGFLAG_PROXY) {
+		if ((flags & EDG_WLL_LOGFLAG_PROXY)&&(!proxy_answer)) {
 			FD_SET(con_lbproxy.sock,&fdset);
 			if (con_lbproxy.sock > fd_n) fd_n = con_lbproxy.sock;
 		}
@@ -245,6 +246,7 @@ int edg_wll_DoLogEventServer(
 				goto edg_wll_DoLogEventServer_end; 
 			}
 			count -= 1;
+			proxy_answer = 1;
 		}	
 		if (FD_ISSET(con_bkserver.sock,&fdset)) {
 			/* read answer from bkserver */
@@ -253,6 +255,7 @@ int edg_wll_DoLogEventServer(
 				goto edg_wll_DoLogEventServer_end; 
 			}
 			count -= 1;
+			direct_answer = 1;
 		}	
 	}
 

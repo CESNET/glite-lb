@@ -96,3 +96,15 @@
 7.1.7-2
 - Module rebuilt
 
+7.1.8-1
+- Fixed warning output.
+
+7.1.8-2
+- Module rebuilt
+
+7.1.8-3
+- Module rebuilt
+
+7.1.9-1
+- Prevent interlogger files from getting corrupted when disk is full
+

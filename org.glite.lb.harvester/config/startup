@@ -44,6 +44,8 @@ if [ -n "$GLITE_LB_HARVESTER_CONFIG" ]; then
 fi
 [ -n "$GLITE_LB_HARVESTER_DBCS" ] && conf="$conf -m $GLITE_LB_HARVESTER_DBCS"
 
+HARVESTER_NOTIFSFILE=/var/tmp/notifs.txt
+
 unset creds port log4c
 
 [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
@@ -61,13 +63,20 @@ start_daemon()
 	local name="$1"
 	local pidfile="$2"
 	local cmd="$3"
+	local stale="$4"
 
 	if [ -f "$pidfile" ]; then
 		if kill -0 `cat $pidfile`; then
 			return 0
 		fi
-		echo -n "Warning: stalled $pidfile for $name"
+		echo "Warning: stale $pidfile for $name"
 		rm -f "$pidfile"
+		if [ -n "$stale" ]; then
+			for file in $stale; do
+				echo "Warning: stale $file for $name"
+				rm -f "$file"
+			done
+		fi
 	fi
 	echo -n "Starting $name ..."
 	su - $GLITE_USER -c "$log4c $cmd" && echo " done" || echo " FAILED"
@@ -111,7 +120,7 @@ status_daemon()
 		if kill -0 $pid >/dev/null 2>&1; then
 			echo "$name running as $pid"
 		else
-			echo "$name not running (stalled pidfile)"
+			echo "$name not running (stale pidfile)"
 			return 1
 		fi
 	else
@@ -143,7 +152,7 @@ start()
 
 	start_daemon glite-lb-harvester "$pidfile" "$GLITE_LOCATION/bin/glite-lb-harvester \
 		$creds $conf -i $pidfile -d $level $port --daemon\
-		$GLITE_LB_HARVESTER_OTHER_OPTIONS"
+		$GLITE_LB_HARVESTER_OTHER_OPTIONS" "$HARVESTER_NOTIFSFILE"
 }
 
 stop()
