@@ -220,6 +220,7 @@ usage: $0 [-c <current configuration>] module.name
 	chomp($age);
 
 	$tag="$current_prefix" . "$major" . "_$minor" . "_$revision" . "_$age";
+	$tag=~s/^emi-/glite-/;
 
 	printf("\nNew tag: $tag\n\n");
 
