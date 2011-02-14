@@ -359,7 +359,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 	    /* check minor code */
 	    if(!(ENOENT == code_min)) {
 		    /* non fatal errors (for us) */
-		    eq->timeout = TIMEOUT;
+		    me->timeout = TIMEOUT;
 		    return(0);
 	    }
 	
