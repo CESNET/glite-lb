@@ -140,7 +140,7 @@ all compile: generate ${lib_LTLIBRARIES} ${lib_LIBRARIES}
 # 
 
 # counted minors: 1.1, 2.0, 3.1, 4.0, 5.1, 6.1, 7.1
-offset=2
+offset=5
 
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }

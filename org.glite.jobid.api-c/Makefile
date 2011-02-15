@@ -51,8 +51,8 @@ compile all: ${LIB}
 # where offset is a sum of maximal released minor's of all previous major's
 # 
 
-# counted minors: N/A
-offset=-1
+# counted minors: 1.0
+offset=0
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split /\./,"${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 

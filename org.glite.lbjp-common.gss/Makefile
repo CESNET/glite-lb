@@ -28,9 +28,8 @@ version=${module.version}
 # where offset is a sum of maximal released minor's of all previous major's
 #
 
-# counted minors: gsoap-plugin 1.5
-# TODO: bump offset to 5 on next major change
-offset=-1
+# counted minors: gsoap-plugin 1.5, gss 2.1
+offset=6
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 

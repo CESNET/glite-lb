@@ -180,8 +180,8 @@ PLUS_EXTRA_LIB:=-lglite_jobid
 
 # version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
-# counted minor versions: 
-offset=0
+# counted minor versions: 1.0, 2.3, 3.2, 4.1
+offset=6
 
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
