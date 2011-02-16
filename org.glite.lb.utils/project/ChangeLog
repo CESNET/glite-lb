@@ -51,3 +51,8 @@
 2.0.8-4
 - Module rebuilt
 
+2.1.0-1
+- Fixes for parallel release in EMI & gLite
+- Check result of InitContext calls
+- Default parameter settings fixed.
+
