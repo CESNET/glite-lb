@@ -10,3 +10,6 @@
 1.0.3-2
 - Module rebuilt
 
+1.1.0-1
+- Fixes for parallel release in EMI & gLite
+
