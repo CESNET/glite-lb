@@ -33,3 +33,6 @@
 - Inteligent post-configuration restarting of MySQL
 - Using glue2 template for BDII
 
+4.3.0-1
+- Fixes for parallel release in EMI & gLite
+
