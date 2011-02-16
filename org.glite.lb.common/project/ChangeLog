@@ -108,3 +108,11 @@
 7.1.9-1
 - Prevent interlogger files from getting corrupted when disk is full
 
+8.0.0-1
+- Fixes for parallel release in EMI & gLite
+- Version numbering fixed
+- setup the streaming on bootstrap flag
+- Support for HTTP_GONE code
+- Check result of InitContext calls
+- Default parameter settings fixed
+
