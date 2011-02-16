@@ -1,1 +1,0 @@
-L&B Harvester gathers job info from L&B servers using efficient L&B notifications. It manages notifications and keeps track of them for reuse on next launch. It takes care of refreshing notifications and querying L&B back once a notification expires.
