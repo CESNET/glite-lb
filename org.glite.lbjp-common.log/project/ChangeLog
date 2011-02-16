@@ -21,3 +21,6 @@
 1.0.4-1
 - Makefile adopts compilation and linking flags from the environment.
 
+1.1.0-1
+- Fixes for parallel release in EMI & gLite
+
