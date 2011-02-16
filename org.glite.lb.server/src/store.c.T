@@ -41,7 +41,6 @@ limitations under the License.
 #include "glite/lb/events_parse.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/log_proto.h"	/* for EDG_WLL_LOG_USER_DEFAULT */
-#include "glite/lb/intjobstat_supp.h"
 
 #include "store.h"
 #include "get_events.h"
@@ -683,14 +682,14 @@ edg_wll_ErrorCode intJobStat_embryonic(
 	const edg_wll_RegJobEvent *e,
 	intJobStat *stat)
 {
-	if (edg_wlc_JobIdDup(jobid, &intJobStat_to_JobStat(stat)->jobId) ||
-		edg_wlc_JobIdDup(e->jobId, &intJobStat_to_JobStat(stat)->parent_job)) goto err;
-	intJobStat_to_JobStat(stat)->state = EDG_WLL_JOB_SUBMITTED;
-	intJobStat_to_JobStat(stat)->owner = strdup(e->user);
-	intJobStat_to_JobStat(stat)->jobtype = EDG_WLL_STAT_SIMPLE;
-	intJobStat_to_JobStat(stat)->stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
-	intJobStat_to_JobStat(stat)->lastUpdateTime = e->timestamp;
-	intJobStat_to_JobStat(stat)->stateEnterTime = e->timestamp;
+	if (edg_wlc_JobIdDup(jobid, &stat->pub.jobId) ||
+		edg_wlc_JobIdDup(e->jobId, &stat->pub.parent_job)) goto err;
+	stat->pub.state = EDG_WLL_JOB_SUBMITTED;
+	stat->pub.owner = strdup(e->user);
+	stat->pub.jobtype = EDG_WLL_STAT_SIMPLE;
+	stat->pub.stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
+	stat->pub.lastUpdateTime = e->timestamp;
+	stat->pub.stateEnterTime = e->timestamp;
 
 err:
 	return edg_wll_Error(ctx,NULL,NULL);
@@ -723,10 +722,10 @@ static edg_wll_ErrorCode states_values_embryonic(
 	if (jobid_md5 == NULL || parent_md5 == NULL || stat_enc == NULL) goto err;
 
 
-	if (edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, intJobStat_to_JobStat(stat), 1, icnames, &icvalues)) goto err;
+	if (edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, &stat->pub, 1, icnames, &icvalues)) goto err;
 	trio_asprintf(&stmt,
 		"'%|Ss',%d,%d,'%|Ss','%|Ss','%|Ss'%s",
-		jobid_md5, intJobStat_to_JobStat(stat)->state, 1, stat_enc,
+		jobid_md5, stat->pub.state, 1, stat_enc,
 		INTSTAT_VERSION, parent_md5, icvalues);
 	free(icvalues);
 

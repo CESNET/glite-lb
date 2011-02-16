@@ -446,7 +446,7 @@ static edg_wll_ErrorCode edg_wll_RefreshIColumns(edg_wll_Context ctx, void *job_
 							"cannot decode int_status for %s\n",res[4]);
 			}
 			if (stat != NULL) {
-				edg_wll_IColumnsSQLPart(ctx, job_index_cols, intJobStat_to_JobStat(stat), 0, NULL, &icvalues);
+				edg_wll_IColumnsSQLPart(ctx, job_index_cols, &stat->pub, 0, NULL, &icvalues);
 				trio_asprintf(&stmt, "update states set seq=%s%s where jobid='%|Ss'", res[2], icvalues, res[0]);
 				ret = edg_wll_ExecSQL(ctx, stmt, NULL);
 				free(icvalues);
