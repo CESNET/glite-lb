@@ -67,3 +67,6 @@
 1.1.4-5
 - Module rebuilt
 
+1.2.0-1
+- Fixes for parallel release in EMI & gLite
+
