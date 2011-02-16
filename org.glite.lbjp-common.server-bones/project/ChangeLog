@@ -30,3 +30,7 @@
 - Makefile adopts compilation and linking flags from the environment.
 - Memory handling fixes
 
+2.1.0-1
+- Documentation update and cleanup
+- Fixes for parallel release in EMI & gLite
+
