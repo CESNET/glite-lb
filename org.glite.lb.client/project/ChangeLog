@@ -126,3 +126,11 @@
 4.1.8-1
 - Optimized handling of simultaneous proxy&direct logging (fix for bug #77366)
 
+5.0.0-1
+- Fixes for parallel release in EMI & gLite
+- Version numbering fixed
+- Support for HTTP_GONE code
+- Check result of InitContexh call
+- dest_url support in notification client
+- Update performance tests behavior to match the new IL development
+
