@@ -57,7 +57,7 @@ PLUGIN_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${default_flavour} \
 	${CLASSADS_LIBS} -lstdc++ ${EXPAT_LIBS}
 
 PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo process_event_cream.lo lb_plugin.lo  process_event_file_transfer.lo process_event_file_transfer_collection.lo
-MACHINE_OBJS:=seqcode_aux.o process_event.o process_event_pbs.o process_event_condor.o process_event_cream.o process_event_file_transfer.o process_event_file_transfer_collection.o
+MACHINE_OBJS:=seqcode_aux.o process_event.o process_event_pbs.o process_event_condor.o process_event_cream.o process_event_file_transfer.o process_event_file_transfer_collection.o intjobstat_supp.o
 
 PLUGIN_LIB=glite_lb_plugin.la
 MACHINE_LIB=libglite_lb_statemachine.a
@@ -89,6 +89,7 @@ install:
 	install -m 644 lb-job-attrs2.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${PREFIX}/interface
 	install -m 644 ${top_srcdir}/interface/intjobstat.h ${PREFIX}/include/glite/lb
+	install -m 644 ${top_srcdir}/interface/intjobstat_supp.h ${PREFIX}/include/glite/lb
 	install -m 644 ${top_srcdir}/interface/process_event.h ${PREFIX}/include/glite/lb
 	install -m 644 ${top_srcdir}/interface/seqcode_aux.h ${PREFIX}/include/glite/lb
 	install -m 644 job_attrs.h ${PREFIX}/include/glite/lb

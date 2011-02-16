@@ -158,14 +158,14 @@ int edg_wll_JobStatusServer(
 
 
 		if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, -1 /*all events*/, &ijsp)) {
-			memcpy(stat, &(ijsp->pub), sizeof(ijsp->pub));
+			memcpy(stat, intJobStat_to_JobStat(ijsp), sizeof(*stat));
 			destroy_intJobStat_extension(ijsp);
 			free(ijsp);
 		} else {
 			if (edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store, 0)) {
 				goto rollback;
 			}
-			memcpy(stat, &(jobstat.pub), sizeof(jobstat.pub));
+			memcpy(stat, intJobStat_to_JobStat(&jobstat), sizeof(*stat));
 		}
 		
 		if (edg_wll_GetACL(ctx, job, &acl)) goto rollback;
@@ -224,7 +224,7 @@ int edg_wll_JobStatusServer(
 							if (!strcmp(INTSTAT_VERSION,out_stat[0])) {
 								js = dec_intJobStat(out_stat[1], &s_out);
 								if (s_out != NULL && js != NULL) {
-									stat->children_states[i] = js->pub;
+									stat->children_states[i] = *intJobStat_to_JobStat(js);
 									destroy_intJobStat_extension(js);
 									free(js);
 									i++; // Careful, this value will also be used further
@@ -248,7 +248,7 @@ int edg_wll_JobStatusServer(
 									goto rollback;
 								}
 								glite_jobid_free(subjob);
-								stat->children_states[i] = js->pub;
+								stat->children_states[i] = *intJobStat_to_JobStat(js);
 								destroy_intJobStat_extension(js);
 								i++; // Careful, this value will also be used further
 							}
@@ -325,7 +325,7 @@ int edg_wll_JobStatusServer(
 										goto rollback;
 									}
 									glite_jobid_free(subjob);
-									num_f = js->pub.state;
+									num_f = intJobStat_to_JobStat(js)->state;
 									if (num_f > EDG_WLL_JOB_UNDEF && num_f < EDG_WLL_NUMBER_OF_STATCODES)
 										stat->children_hist[num_f+1]++;
 
@@ -404,7 +404,7 @@ int edg_wll_JobStatusServer(
 		whole_cycle = 1;
 rollback:
 		if (!whole_cycle) { 
-			edg_wll_FreeStatus(&jobstat.pub);
+			edg_wll_FreeStatus(intJobStat_to_JobStat(&jobstat));
 			memset(stat, 0, sizeof(*stat));
 		}
 		destroy_intJobStat_extension(&jobstat);
@@ -462,9 +462,9 @@ int edg_wll_intJobStatus(
 	free(string_jobid);
 
 	/* can be already filled by public edg_wll_JobStat() */
-	if (intstat->pub.owner == NULL) {
+	if (intJobStat_to_JobStat(intstat)->owner == NULL) {
 		md5_jobid = edg_wlc_JobIdGetUnique(job);
-		if ( !(intstat->pub.owner = job_owner(ctx,md5_jobid)) ) {
+		if ( !(intJobStat_to_JobStat(intstat)->owner = job_owner(ctx,md5_jobid)) ) {
 			free(md5_jobid);
 			return edg_wll_Error(ctx,NULL,NULL);
 		}
@@ -492,14 +492,14 @@ int edg_wll_intJobStatus(
 				if (edg_wll_Error(ctx, NULL, NULL) != ENOENT) {
 					destroy_intJobStat(intstat);
 					free(jqra);
-					free(intstat->pub.owner); intstat->pub.owner = NULL;
+					free(intJobStat_to_JobStat(intstat)->owner); intJobStat_to_JobStat(intstat)->owner = NULL;
 					return edg_wll_Error(ctx, NULL, NULL);
 				}
 			}
 		}
 		else {
 			free(jqra);
-			free(intstat->pub.owner); intstat->pub.owner = NULL;
+			free(intJobStat_to_JobStat(intstat)->owner); intJobStat_to_JobStat(intstat)->owner = NULL;
                 	return edg_wll_Error(ctx, NULL, NULL);
 		}
 	}
@@ -522,10 +522,10 @@ int edg_wll_intJobStatus(
 			    || (ts.tv_sec == maxts.tv_sec && ts.tv_usec > maxts.tv_usec)) maxts = ts;
 		}
 		/* no events or status computation error */
-		if (intstat->pub.state == EDG_WLL_JOB_UNDEF) {
-			intstat->pub.state = EDG_WLL_JOB_UNKNOWN;
-			if (num_events) intstat->pub.lastUpdateTime = maxts;
-			else intstat->pub.lastUpdateTime.tv_sec = 1;
+		if (intJobStat_to_JobStat(intstat)->state == EDG_WLL_JOB_UNDEF) {
+			intJobStat_to_JobStat(intstat)->state = EDG_WLL_JOB_UNKNOWN;
+			if (num_events) intJobStat_to_JobStat(intstat)->lastUpdateTime = maxts;
+			else intJobStat_to_JobStat(intstat)->lastUpdateTime.tv_sec = 1;
 		}
 
 
@@ -538,7 +538,7 @@ int edg_wll_intJobStatus(
 		return edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, errstring);
 	} else {
 		/* XXX intstat->pub.expectUpdate = eval_expect_update(intstat, &intstat->pub.expectFrom); */
-		intErr = edg_wlc_JobIdDup(job, &intstat->pub.jobId);
+		intErr = edg_wlc_JobIdDup(job, &(intJobStat_to_JobStat(intstat)->jobId));
 		if (intErr) return edg_wll_SetError(ctx, intErr, NULL);
 
 		/* don't update status of grey jobs */
@@ -559,11 +559,11 @@ int edg_wll_intJobStatus(
 			int tsq = num_events - 1;
 			if (add_fqans && tsq == 0 && ctx->fqans != NULL) {
 				for (i=0; ctx->fqans[i]; i++);
-				intstat->pub.user_fqans = malloc(sizeof(*ctx->fqans)*(i+1));
+				intJobStat_to_JobStat(intstat)->user_fqans = malloc(sizeof(*ctx->fqans)*(i+1));
 				for (i=0; ctx->fqans[i]; i++) {
-					intstat->pub.user_fqans[i] = strdup(ctx->fqans[i]);
+					intJobStat_to_JobStat(intstat)->user_fqans[i] = strdup(ctx->fqans[i]);
 				}
-				intstat->pub.user_fqans[i] = NULL;
+				intJobStat_to_JobStat(intstat)->user_fqans[i] = NULL;
 			}
 
 			edg_wll_StoreIntState(ctx, intstat, tsq);
@@ -813,10 +813,10 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 	assert(strlen(INTSTAT_VERSION) <= 32);
 	
 	update = (seq > 0);
-	jobid_md5 = edg_wlc_JobIdGetUnique(stat->pub.jobId);
+	jobid_md5 = edg_wlc_JobIdGetUnique(intJobStat_to_JobStat(stat)->jobId);
 	stat_enc = enc_intJobStat(strdup(""), stat);
 
-	tagp = stat->pub.user_tags;
+	tagp = intJobStat_to_JobStat(stat)->user_tags;
 	if (tagp) {
 		while ((*tagp).tag != NULL) {
 			trio_asprintf(&stmt, "insert into status_tags"
@@ -842,18 +842,18 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 		}
 	}
 
-	parent_md5 = edg_wlc_JobIdGetUnique(stat->pub.parent_job);
+	parent_md5 = edg_wlc_JobIdGetUnique(intJobStat_to_JobStat(stat)->parent_job);
 	if (parent_md5 == NULL) parent_md5 = strdup("*no parent job*");
 
 
-	edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, &stat->pub, 0, NULL, &icvalues);
+	edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, intJobStat_to_JobStat(stat), 0, NULL, &icvalues);
 
 	trio_asprintf(&stmt,
 		"update states set "
 		"status=%d,seq=%d,int_status='%|Ss',version='%|Ss'"
 			",parent_job='%|Ss'%s "
 		"where jobid='%|Ss'",
-		stat->pub.state, seq, stat_enc, INTSTAT_VERSION,
+		intJobStat_to_JobStat(stat)->state, seq, stat_enc, INTSTAT_VERSION,
 		parent_md5, icvalues,
 		jobid_md5);
 	free(icvalues);
@@ -863,14 +863,14 @@ edg_wll_ErrorCode edg_wll_StoreIntState(edg_wll_Context ctx,
 	free(stmt); stmt = NULL;
 
 	if (dbret == 0) {
-		edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, &stat->pub, 1, &icnames, &icvalues);
+		edg_wll_IColumnsSQLPart(ctx, ctx->job_index_cols, intJobStat_to_JobStat(stat), 1, &icnames, &icvalues);
 		trio_asprintf(&stmt,
 			"insert into states"
 			"(jobid,status,seq,int_status,version"
 				",parent_job%s) "
 			"values ('%|Ss',%d,%d,'%|Ss','%|Ss','%|Ss'%s)",
 			icnames,
-			jobid_md5, stat->pub.state, seq, stat_enc,
+			jobid_md5, intJobStat_to_JobStat(stat)->state, seq, stat_enc,
 			INTSTAT_VERSION, parent_md5, icvalues);
 		free(icnames); free(icvalues);
 
@@ -1033,7 +1033,7 @@ static edg_wll_ErrorCode load_parent_intJobStat(edg_wll_Context ctx, intJobStat 
 {
 	if (*pis) return edg_wll_Error(ctx, NULL, NULL); // already loaded and locked
 
-	if (edg_wll_LoadIntState(ctx, cis->pub.parent_job, LOCK, - 1, pis))
+	if (edg_wll_LoadIntState(ctx, intJobStat_to_JobStat(cis)->parent_job, LOCK, - 1, pis))
 		goto err;
 
 	assert(*pis);	// deadlock would happen with next call of this function
@@ -1058,12 +1058,12 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 	else
 		event->any.user = strdup("LBProxy");
 
-	if (!edg_wll_SetSequenceCode(ctx,pis->last_seqcode,EDG_WLL_SEQ_NORMAL)) {
+	if (!edg_wll_SetSequenceCode(ctx,intJobStat_getLastSeqcode(pis),EDG_WLL_SEQ_NORMAL)) {
 		ctx->p_source = EDG_WLL_SOURCE_LB_SERVER;
                 edg_wll_IncSequenceCode(ctx);
         }
 	event->any.seqcode = edg_wll_GetSequenceCode(ctx);
-	edg_wlc_JobIdDup(pis->pub.jobId, &(event->any.jobId));
+	edg_wlc_JobIdDup(intJobStat_to_JobStat(pis)->jobId, &(event->any.jobId));
 	gettimeofday(&event->any.timestamp,0);
 	if (ctx->p_host) event->any.host = strdup(ctx->p_host);
 	event->any.level = ctx->p_level;
@@ -1072,8 +1072,8 @@ static int log_collectionState_event(edg_wll_Context ctx, edg_wll_JobStatCode st
 					
 	event->collectionState.state = edg_wll_StatToString(state);
 	event->collectionState.done_code = done_code;
-	event->collectionState.histogram = hist_to_string(pis->pub.children_hist);
-	edg_wlc_JobIdDup(cis->pub.jobId, &(event->collectionState.child));
+	event->collectionState.histogram = hist_to_string(intJobStat_to_JobStat(pis)->children_hist);
+	edg_wlc_JobIdDup(intJobStat_to_JobStat(cis)->jobId, &(event->collectionState.child));
 	event->collectionState.child_event = edg_wll_EventToString(ce->any.type);
 
 	ret = db_parent_store(ctx, event, pis);
@@ -1130,19 +1130,22 @@ static edg_wll_JobStatCode class_to_statCode(subjobClassCodes code)
 /* count parent state from subjob histogram */
 static edg_wll_JobStatCode process_Histogram(intJobStat *pis)
 {
-	if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_RUNNING)+1] > 0) {
+	if (intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_RUNNING)+1] > 0) {
 		return EDG_WLL_JOB_RUNNING;
 	}
-	else if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] == pis->pub.children_num) {
+	else if (intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] 
+		== intJobStat_to_JobStat(pis)->children_num) {
 		return EDG_WLL_JOB_CLEARED;
 	}
-	else if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1] 
-			+ pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] == pis->pub.children_num) {
+	else if (intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1] 
+			+ intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] 
+			== intJobStat_to_JobStat(pis)->children_num) {
 		return EDG_WLL_JOB_DONE;
 	}
-	else if (pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_ABORTED)+1]
-			+ pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1]
-			+ pis->pub.children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] == pis->pub.children_num) {
+	else if (intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_ABORTED)+1]
+			+ intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1]
+			+ intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_CLEARED)+1] 
+			== intJobStat_to_JobStat(pis)->children_num) {
 		return EDG_WLL_JOB_ABORTED;
 	}
 	else
@@ -1156,22 +1159,22 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 	edg_wll_JobStatCode	parent_new_state;
 
 
-	subjob_class = class(&cis->pub);
+	subjob_class = class(intJobStat_to_JobStat(cis));
 	subjob_class_old = class(subjob_stat_old);
 
 
 	if (subjob_class_old != subjob_class) {
 		if (load_parent_intJobStat(ctx, cis, &pis)) goto err;
 
-		pis->pub.children_hist[class_to_statCode(subjob_class)+1]++;
-		pis->pub.children_hist[class_to_statCode(subjob_class_old)+1]--;
+		intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(subjob_class)+1]++;
+		intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(subjob_class_old)+1]--;
 
-		edg_wll_StoreSubjobHistogram(ctx, cis->pub.parent_job, pis);
+		edg_wll_StoreSubjobHistogram(ctx, intJobStat_to_JobStat(cis)->parent_job, pis);
 
 
-		if (pis->pub.jobtype == EDG_WLL_STAT_COLLECTION) {
+		if (intJobStat_to_JobStat(pis)->jobtype == EDG_WLL_STAT_COLLECTION) {
 			parent_new_state = process_Histogram(pis);
-			if (pis->pub.state != parent_new_state) {
+			if (intJobStat_to_JobStat(pis)->state != parent_new_state) {
 				// XXX: we do not need  EDG_WLL_STAT_code any more
 				//	doneFailed subjob is stored in REST class and
 				//	inducting collection Waiting state
@@ -1212,7 +1215,7 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
 	char 		*oldstat_rgmaline = NULL;
 
 
-	edg_wll_CpyStatus(&ijsp->pub,oldstat);
+	edg_wll_CpyStatus(intJobStat_to_JobStat(ijsp),oldstat);
 
 	if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(ijsp);
 
@@ -1225,12 +1228,12 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
 	// XXX: store it in update_parent status ?? 
 	edg_wll_StoreIntState(ctx, ijsp, seq);
 
-	edg_wll_UpdateStatistics(ctx,oldstat,e,&ijsp->pub);
+	edg_wll_UpdateStatistics(ctx, oldstat, e, intJobStat_to_JobStat(ijsp));
 
 	if (ctx->rgma_export) write2rgma_chgstatus(ijsp, oldstat_rgmaline);
 
 	if (stat_out) {
-		edg_wll_CpyStatus(&ijsp->pub, stat_out);
+		edg_wll_CpyStatus(intJobStat_to_JobStat(ijsp), stat_out);
 	}
 
 	return edg_wll_Error(ctx, NULL, NULL);
@@ -1262,7 +1265,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 
 
 	if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, seq - 1, &ijsp)) {
-		edg_wll_CpyStatus(&ijsp->pub,oldstat);
+		edg_wll_CpyStatus(intJobStat_to_JobStat(ijsp),oldstat);
 
 		if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(ijsp);
 
@@ -1274,10 +1277,11 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		}
 		edg_wll_StoreIntState(ctx, ijsp, seq);
 
-		edg_wll_UpdateStatistics(ctx,oldstat,e,&ijsp->pub);
+		edg_wll_UpdateStatistics(ctx, oldstat, e, intJobStat_to_JobStat(ijsp));
 
 		/* check whether subjob state change does not change parent state */
-		if ((ijsp->pub.parent_job) && (oldstat->state != ijsp->pub.state)) { 
+		if ((intJobStat_to_JobStat(ijsp)->parent_job) 
+			&& (oldstat->state != intJobStat_to_JobStat(ijsp)->state)) { 
 			if (update_parent_status(ctx, oldstat, ijsp, e)) {
 				edg_wll_FreeStatus(oldstat);
 				memset(oldstat,0,sizeof *oldstat);
@@ -1288,7 +1292,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		if (ctx->rgma_export) write2rgma_chgstatus(ijsp, oldstat_rgmaline);
 
 		if (stat_out) {
-			memcpy(stat_out,&ijsp->pub,sizeof *stat_out);
+			memcpy(stat_out,intJobStat_to_JobStat(ijsp),sizeof *stat_out);
 			destroy_intJobStat_extension(ijsp);
 		}
 		else destroy_intJobStat(ijsp);
@@ -1304,12 +1308,12 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		   Right approach is computing parent status from scratch.
 		*/
 
-		edg_wll_UpdateStatistics(ctx,NULL,e,&jobstat.pub);
+		edg_wll_UpdateStatistics(ctx, NULL, e, intJobStat_to_JobStat(&jobstat));
 
 		if (ctx->rgma_export) write2rgma_status(&jobstat);
 
 		if (stat_out) {
-			memcpy(stat_out,&jobstat.pub,sizeof *stat_out);
+			memcpy(stat_out, intJobStat_to_JobStat(&jobstat), sizeof *stat_out);
 			destroy_intJobStat_extension(&jobstat);
 		}
 		else destroy_intJobStat(&jobstat);
@@ -1351,7 +1355,7 @@ edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context ctx, glite_jobid_co
 			// Ready to read the histogram from the record returned
 			rest = (char *)calloc(1,strlen(out));	
 			ijs = dec_intJobStat(out, &rest);
-			for (i=0;i<=EDG_WLL_NUMBER_OF_STATCODES;i++) hist[i] = ijs->pub.children_hist[i];
+			for (i=0;i<=EDG_WLL_NUMBER_OF_STATCODES;i++) hist[i] = intJobStat_to_JobStat(ijs)->children_hist[i];
 		}
         }
         glite_lbu_FreeStmt(&sh);
@@ -1381,7 +1385,7 @@ edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context ctx, glite_jobid_
                 "update states set "
                 "status=%d,int_status='%|Ss',version='%|Ss'"
                 "where jobid='%|Ss'",
-                ijs->pub.state, stat_enc, INTSTAT_VERSION, jobid_md5);
+                intJobStat_to_JobStat(ijs)->state, stat_enc, INTSTAT_VERSION, jobid_md5);
 
 	free(jobid_md5);
 

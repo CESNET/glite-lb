@@ -22,6 +22,7 @@ limitations under the License.
 #include "glite/lbu/trio.h"
 #include "glite/lb/context-int.h"
 #include "glite/lbu/log.h"
+#include "glite/lb/intjobstat_supp.h"
 
 #include "get_events.h"
 #include "store.h"
@@ -65,8 +66,8 @@ int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, co
 
 	istat = dec_intJobStat(res, &res_rest);
 	if ( res_rest  && istat ) {
-		*seqcode = istat->last_seqcode;
-		istat->last_seqcode = NULL;
+		*seqcode = intJobStat_getLastSeqcode(istat);
+		intJobStat_nullLastSeqcode(istat);
 	}
 	else edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_CALL,
 						"error decoding DB intJobStatus");
