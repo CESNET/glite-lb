@@ -63,3 +63,8 @@
 1.0.11-1
 - Startup scripts remove stale sockets (fix tu bug #77357)
 
+1.1.0-1
+- Fixes for parallel release in EMI & gLite
+- Separated start-up script for L&B harvester
+- Check result of InitContext calls
+
