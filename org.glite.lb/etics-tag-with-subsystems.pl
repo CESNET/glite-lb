@@ -315,7 +315,10 @@ usage: $0 [-c <current configuration>] module.name
 		$modconfig="$m_$m" . "_R_$m_major" . "_$m_minor" . "_$m_revision" . "_$m_age";
 		$modconfig=~s/^org.//;
 		$modconfig=~s/\./-/g;
-		if ( $project eq "emi" ) { $modconfig=~s/^glite/emi/; }
+		if ( $project eq "emi" ) { 
+			$modconfig=~s/^glite/emi/; 
+			$m=~s/^org.glite/emi/;
+		}
 
 #		system("echo $m = $modconfig >> $TMPDIR/$newconfig.ini.$$");
 		printf(NEWCONF "$m = $modconfig\n");
@@ -325,7 +328,7 @@ usage: $0 [-c <current configuration>] module.name
 
 	close(NEWCONF);
 
-	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$ -c $newconfig $module\n");
+	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$\n");
 	printf(EXEC "etics-commit\n");
 
 
