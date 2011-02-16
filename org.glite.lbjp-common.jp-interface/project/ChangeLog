@@ -35,3 +35,6 @@
 2.0.3-1
 - Makefile a configuration updated to work across org.glite & EMI
 
+2.1.0-1
+- Fixes for parallel release in EMI & gLite
+
