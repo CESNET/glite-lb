@@ -219,3 +219,20 @@
 2.1.16-1
 - Increased severity for DB open errors
 
+2.2.0-1
+- Fixes for parallel release in EMI & gLite
+- Extended authorization: Support for the TAG operation in the ACLs
+- Check result of InitContext calls
+- New notification flags added (+flags string creation simplified)
+- setup the streaming on bootstrap flag
+- perform streaming through deferred action in bkserverd
+- Documentation update and cleanup
+- Return EIDRM rather than an empty jobstate structure for zombies
+- Messaging support in server using dest_url.
+- Support for displaying collection status through the HTTPs interface
+- HTTP interface shows WSDL files
+- HTML displays major status of File Transfer jobs
+- State machine cleanup
+- New GetInterfaceVersion method implemented
+- Provisional handling of optional fileds in the WS intefrace
+
