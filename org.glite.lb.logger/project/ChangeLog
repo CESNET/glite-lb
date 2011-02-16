@@ -130,3 +130,10 @@
 - Fixed behavior of the --noIPC option
 - Minor memory handling bug fixed
 
+2.2.0-1
+- Fixes for parallel release in EMI & gLite
+- Plugin framework fixes
+- Implementation of parallel delivery to server
+- Documentation update and cleanup
+- Writing statistical info
+
