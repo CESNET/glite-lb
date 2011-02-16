@@ -30,8 +30,8 @@ limitations under the License.
 #include "glite/lbu/trio.h"
 #include "glite/lbu/db.h"
 #include "glite/lb/context-int.h"
-#include "glite/lb/intjobstat.h"
-#include "glite/lb/seqcode_aux.h"
+#include "intjobstat.h"
+#include "seqcode_aux.h"
 
 #include "glite/lb/jobstat.h"
 
