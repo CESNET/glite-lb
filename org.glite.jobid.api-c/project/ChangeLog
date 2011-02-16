@@ -30,3 +30,6 @@
 - Support for IPv6 literal addresses
 - Fixed notification ID parsing
 
+2.0.0-1
+- Version numbering fixed
+
