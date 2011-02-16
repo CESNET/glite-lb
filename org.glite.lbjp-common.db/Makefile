@@ -86,7 +86,7 @@ LTESTOBJS:=${TESTOBJS:.o=.lo}
 # where offset is a sum of maximal released minor's of all previous major's
 # 
 
-# counted minors: 1.0
+# counted minors: 1.0, 2.0
 offset=0
 
 version_info:=-version-info ${shell \

@@ -127,18 +127,19 @@ my %externs = (
 	},
 	postgresql => {
 		prefix=> '/usr'
-	}
+	},
 	activemq => {
-		prefix=>'/opt/activemq-cpp-library'
-	}
+		prefix=>'/opt/activemq-cpp-library',
+		pkg => 'activemq-cpp'
+	},
 	apr => {
 		prefix=>'/opt/apr',
 		pkg => 'apr-1'
-	}
+	},
 	aprutil => {
 		prefix=>'/opt/apr-util',
 		pkg => 'apr-util-1'
-	}
+	},
 );
 
 my %jar = (
@@ -827,9 +828,6 @@ sub mode_etics {
 # XXX: gridsite hack
 		$conftag = $subsys eq 'gridsite' ? "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : 
 			"$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; }
-	if ($emi) {
-		$age = "${age}emi";
-	} 
 
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
