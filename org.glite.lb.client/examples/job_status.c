@@ -220,6 +220,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 	printf("%sstate : %s\n", ind, s);
 	printf("%sjobId : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.jobId)); free(j1);
 	printf("%sowner : %s\n", ind, stat.owner);
+	printf("%spayload_owner : %s\n", ind, stat.payload_owner);
 	switch (stat.jobtype) {
 		case EDG_WLL_STAT_SIMPLE:
 			printf("%sjobtype : SIMPLE\n", ind);

@@ -244,6 +244,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)), NULL);
 	free(chstat);
 	TR("Owner","%s",stat.owner, NULL);
+	TR("Payload Owner","%s",stat.payload_owner, NULL);
 	TR("Condor Id","%s",stat.condorId, NULL);
 	TR("Globus Id","%s",stat.globusId, NULL);
 	TR("Local Id","%s",stat.localId, NULL);

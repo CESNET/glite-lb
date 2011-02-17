@@ -31,7 +31,7 @@ limitations under the License.
 /* where Z.XX is version from indent + 1 (version after commit), Y = Z+1 */
 /* and DESCRIPTION is short hit why version changed		*/
 
-#define INTSTAT_VERSION "revision 2.9 - file transfers"
+#define INTSTAT_VERSION "revision 2.10 - payload owner"
 //                      ".... MAX LENGTH 32 BYTES !! ...."
 
 // Internal error codes 
@@ -76,6 +76,8 @@ typedef struct _intJobStat {
 		struct timeval	last_pbs_event_timestamp;
 		int		pbs_reruning;		// true if rerun event arrived
 		char		**tag_seq_codes;
+		char 		*payload_owner_pending;
+		char 		*payload_owner_unconfirmed;
 
 		/*!! if adding new field, modify also destroy_intJobStat_extension() 	*
 		 *!! update dec/enc_intJobStat and increase INTSTAT_VERSION		*/

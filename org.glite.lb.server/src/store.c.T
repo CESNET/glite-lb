@@ -658,6 +658,9 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 			if (e->any.type == EDG_WLL_EVENT_USERTAG &&
 			    check_acl(ctx, e, EDG_WLL_CHANGEACL_TAG) == 0)
 				break;
+			if (e->any.type == EDG_WLL_EVENT_TAKEPAYLOADOWNERSHIP &&
+			    strcmp(e->any.user,EDG_WLL_LOG_USER_DEFAULT) != 0)
+				break;
 		
 			edg_wll_SetError(ctx,EPERM,"check_auth()");
 			break;

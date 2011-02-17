@@ -526,6 +526,7 @@ char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_int(ret, stat->jw_status);
 	if (ret) ret = enc_jobid(ret, stat->isb_transfer);
 	if (ret) ret = enc_jobid(ret, stat->osb_transfer);
+	if (ret) ret = enc_string(ret, stat->payload_owner);
 	if (ret) ret = enc_string(ret, stat->pbs_state);
 	if (ret) ret = enc_string(ret, stat->pbs_queue);
 	if (ret) ret = enc_string(ret, stat->pbs_owner);
@@ -631,6 +632,7 @@ edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->jw_status = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->isb_transfer = dec_jobid(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->osb_transfer = dec_jobid(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->payload_owner = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_state = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_queue = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_owner = dec_string(tmp_in, &tmp_in);
@@ -695,6 +697,8 @@ char *enc_intJobStat(char *old, intJobStat* stat)
 	if (ret) ret = enc_timeval(ret, stat->last_pbs_event_timestamp);
 	if (ret) ret = enc_int(ret, stat->pbs_reruning);
 	if (ret) ret = enc_strlist(ret, stat->tag_seq_codes);
+	if (ret) ret = enc_string(ret, stat->payload_owner_pending);
+	if (ret) ret = enc_string(ret, stat->payload_owner_unconfirmed);
 	return ret;
 }
 
@@ -739,6 +743,12 @@ intJobStat* dec_intJobStat(char *in, char **rest)
 		}
 		if (tmp_in != NULL) {
 			stat->tag_seq_codes = dec_strlist(tmp_in, &tmp_in);
+		}
+		if (tmp_in != NULL) {
+			stat->payload_owner_pending = dec_string(tmp_in, &tmp_in);
+		}
+		if (tmp_in != NULL) {
+			stat->payload_owner_unconfirmed = dec_string(tmp_in, &tmp_in);
 		}
 	} else if (tmp_in != NULL) {
 		edg_wll_FreeStatus(pubstat);

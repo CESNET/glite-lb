@@ -103,6 +103,7 @@ cclassad	jdl_classad	Unparsed JDL classad
 
 jobid	isb_transfer		Input sandbox corresponding to the job
 jobid	osb_transfer		Output sandbox corresponding to the job
+string	payload_owner		Owner of the actual job payload (e.g., for pilot jobs)
 
 _pad_	55
 

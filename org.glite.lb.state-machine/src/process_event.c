@@ -979,6 +979,26 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				}
 			}
 			break;
+		case EDG_WLL_EVENT_GRANTPAYLOADOWNERSHIP:
+			if (js->payload_owner_pending) {
+				if (edg_wll_gss_equal_subj(e->any.user, js->payload_owner_pending))
+					js->pub.payload_owner = js->payload_owner_pending;
+				else
+					free(js->payload_owner_pending);
+				js->payload_owner_pending = NULL;
+			} else
+				rep (js->payload_owner_unconfirmed, e->grantPayloadOwnership.payload_owner);
+			ignore_seq_code = 1;
+			break;
+		case EDG_WLL_EVENT_TAKEPAYLOADOWNERSHIP:
+			if (js->payload_owner_unconfirmed &&
+			    edg_wll_gss_equal_subj(e->any.user, js->payload_owner_unconfirmed)) {
+				js->pub.payload_owner = js->payload_owner_unconfirmed;
+				js->payload_owner_unconfirmed = NULL;
+			} else
+				rep (js->payload_owner_pending, e->any.user);
+			ignore_seq_code = 1;
+			break;
 
 		default:
 			goto bad_event;
@@ -1088,6 +1108,8 @@ void destroy_intJobStat_extension(intJobStat *p)
 		for (i=0; p->tag_seq_codes[i]; i++) free(p->tag_seq_codes[i]);
 		free(p->tag_seq_codes);
 	}
+	if (p->payload_owner_pending) free(p->payload_owner_pending);
+	if (p->payload_owner_unconfirmed) free(p->payload_owner_unconfirmed);
 
 	memset(p,0,sizeof(*p));
 }

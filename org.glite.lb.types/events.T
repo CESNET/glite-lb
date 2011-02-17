@@ -244,6 +244,11 @@
 	jobid   child		JobId of subjob, which triggered the state change.	
 	string	child_event	Event which triggered the state change.	
 
+@type GrantPayloadOwnership	Hand over ownership of actual job payload (e.g. of a pilot job)
+	string	payload_owner	Identity (certificate subject) of the payload owner.
+
+@type TakePayloadOwnership	Take over ownership of actual job payload
+
 @flesh PBS
 
 @type PBSQueued		Job enqued
@@ -474,3 +479,4 @@
 	_optional_
 	string  compute_job	Jobid of (compute) job the sandbox belongs. Exclusive with transfer_job.
 	_optional_	
+
