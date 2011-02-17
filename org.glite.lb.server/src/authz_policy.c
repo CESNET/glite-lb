@@ -18,6 +18,8 @@ limitations under the License.
 #include <stdlib.h>
 #include <string.h>
 
+#include <cclassad.h>
+
 #include <glite/security/glite_gss.h>
 #include "authz_policy.h"
 
@@ -43,6 +45,12 @@ struct attr_id_name attr_id_names[] = {
 
 static int num_attrs =
     sizeof(attr_id_names) / sizeof(attr_id_names[0]);
+
+const char *allowed_jdl_fields[] = {
+    "VirtualOrganisation",
+    "JobType",
+    "Type",
+};
 
 static int
 check_rule(_edg_wll_authz_rule *rule, edg_wll_GssPrincipal principal)
@@ -153,8 +161,23 @@ blacken_fields(edg_wll_JobStat *stat, int flags)
     if (flags & STATUS_FOR_MONITORING) {
 	new_stat.state = stat->state;
 	edg_wlc_JobIdDup(stat->jobId, &new_stat.jobId);
-	if (stat->jdl)
-	    new_stat.jdl = strdup(stat->jdl);
+	if (stat->jdl) {
+	    struct cclassad *ad, *new_ad;
+	    char *str;
+	    int i;
+
+	    ad = cclassad_create(stat->jdl);
+	    if (ad) {
+		new_ad = cclassad_create(NULL);
+		for (i = 0; i < sizeof(allowed_jdl_fields)/sizeof(allowed_jdl_fields[0]);i++)
+		    if (cclassad_evaluate_to_string(ad, allowed_jdl_fields[i], &str))
+			cclassad_insert_string(new_ad, allowed_jdl_fields[i], str);
+		new_stat.jdl = cclassad_unparse(new_ad);
+		cclassad_delete(ad);
+		cclassad_delete(new_ad);
+	    }
+	}
+	new_stat.jobtype = stat->jobtype;
 	if (stat->destination)
 	    new_stat.destination = strdup(stat->destination);
 	if (stat->network_server)
