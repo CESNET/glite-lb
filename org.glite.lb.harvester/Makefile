@@ -58,7 +58,11 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	-mkdir -p ${PREFIX}/bin ${PREFIX}/examples ${PREFIX}/share/doc/${package}-${version} ${PREFIX}/share/man/man8 ${PREFIX}/etc/init.d
+	-mkdir -p ${PREFIX}/bin ${PREFIX}/examples \
+		${PREFIX}/share/doc/${package}-${version} \
+		${PREFIX}/share/man/man8 \
+		${PREFIX}/etc/init.d \
+		${PREFIX}/etc/glite-lb
 	${INSTALL} -m 755 harvester ${PREFIX}/bin/glite-lb-harvester
 	${INSTALL} -m 755 harvester-dbg ${PREFIX}/examples/glite-lb-harvester-dbg
 	${INSTALL} -m 755 ${top_srcdir}/examples/test.sh ${PREFIX}/examples/glite-lb-harvester-test.sh
