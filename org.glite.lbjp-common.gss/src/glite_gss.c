@@ -828,6 +828,9 @@ edg_wll_gss_accept(edg_wll_GssCred cred, int sock, struct timeval *timeout,
    maj_stat = min_stat = min_stat2 = 0;
    memset(connection, 0, sizeof(*connection));
 
+   if (cred == NULL)
+	return EINVAL;
+
    /* GSI specific */
    ret_flags = GSS_C_GLOBUS_SSL_COMPATIBLE;
 
