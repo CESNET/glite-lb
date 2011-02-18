@@ -981,7 +981,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			break;
 		case EDG_WLL_EVENT_GRANTPAYLOADOWNERSHIP:
 			if (js->payload_owner_pending) {
-				if (edg_wll_gss_equal_subj(e->any.user, js->payload_owner_pending))
+				if (edg_wll_gss_equal_subj(e->grantPayloadOwnership.payload_owner, js->payload_owner_pending))
 					js->pub.payload_owner = js->payload_owner_pending;
 				else
 					free(js->payload_owner_pending);
