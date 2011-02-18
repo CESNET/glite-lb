@@ -91,16 +91,21 @@ static char* matched_substr(char *in, regmatch_t match)
 
 static int
 check_jobstat_authz(edg_wll_Context ctx,
-	char *owner,
+	edg_wll_JobStat *stat,
 	edg_wll_Acl acl,
 	int *flags)
 {
 	struct _edg_wll_GssPrincipal_data princ;
 
 	*flags = 0;
+
 	if (ctx->noAuth)
 		return 1;
-	if (ctx->peerName && edg_wll_gss_equal_subj(ctx->peerName, owner))
+	if (ctx->peerName == NULL)
+		return 0;
+	if (edg_wll_gss_equal_subj(ctx->peerName, stat->owner))
+		return 1;
+	if (stat->payload_owner && edg_wll_gss_equal_subj(ctx->peerName, stat->payload_owner))
 		return 1;
 	if (acl && edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ) == 0)
 		return 1;
@@ -170,7 +175,7 @@ int edg_wll_JobStatusServer(
 		
 		if (edg_wll_GetACL(ctx, job, &acl)) goto rollback;
 
-		if (check_jobstat_authz(ctx, stat->owner, acl, &authz_flags) == 0) {
+		if (check_jobstat_authz(ctx, stat, acl, &authz_flags) == 0) {
 			edg_wll_SetError(ctx, EPERM, "not owner");
 			goto rollback;
 		}

@@ -121,6 +121,13 @@ db_store(edg_wll_Context ctx, char *event)
 			if (edg_wll_PurgeServerProxy(ctx, ev->any.jobId)) goto rollback;
 	}
 
+	if ((ev->any.type == EDG_WLL_EVENT_TAKEPAYLOADOWNERSHIP || ev->any.type == EDG_WLL_EVENT_GRANTPAYLOADOWNERSHIP) &&
+		oldstat.payload_owner != newstat.payload_owner)
+			edg_wll_UpdateACL(ctx, ev->any.jobId,
+				newstat.payload_owner, EDG_WLL_CHANGEACL_DN,
+				EDG_WLL_CHANGEACL_TAG, EDG_WLL_CHANGEACL_ALLOW,
+				EDG_WLL_CHANGEACL_ADD);
+
 
 	if (ev->any.type == EDG_WLL_EVENT_REGJOB &&
 		(ev->regJob.jobtype == EDG_WLL_REGJOB_DAG ||

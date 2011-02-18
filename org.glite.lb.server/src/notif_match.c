@@ -220,6 +220,8 @@ int edg_wll_NotifCheckACL(edg_wll_Context ctx,const edg_wll_JobStat *stat,const 
 	edg_wll_ResetError(ctx);
 	if (strcmp(stat->owner,recip) == 0
 		|| edg_wll_amIroot(recip,NULL,&ctx->authz_policy)) return 1;
+	if (stat->payload_owner && strcmp(stat->payload_owner,recip) == 0)
+		return 1;
 	princ.name = (char *)recip;
 	if (check_authz_policy(&ctx->authz_policy, &princ, READ_ALL))
 		return 1;
