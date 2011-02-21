@@ -16,7 +16,7 @@ JAVA:=${jdk_prefix}/bin/java
 GEN:=${stagedir}/sbin/glite-lb-at3 project/genEventTypes.pl
 AT3DIR:=${stagedir}/share/lb/at3
 axis_classpath:=$(shell ls ${axis_prefix}/lib/*.jar | tr '\012' :)
-trustmanager_classpath:=${trustmanager_prefix}/share/java/glite-security-trustmanager.jar
+trustmanager_classpath:=${trustmanager_prefix}/share/java/glite-security-trustmanager.jar:${trustmanager_prefix}/share/java/trustmanager.jar:${trustmanager_prefix}/share/java/trustmanager-axis.jar
 
 all compile: genevents genws compile-java build-jar examples build-c
 
