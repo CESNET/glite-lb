@@ -127,18 +127,19 @@ my %externs = (
 	},
 	postgresql => {
 		prefix=> '/usr'
-	}
+	},
 	activemq => {
-		prefix=>'/opt/activemq-cpp-library'
-	}
+		prefix=>'/opt/activemq-cpp-library',
+		pkg => 'activemq-cpp'
+	},
 	apr => {
 		prefix=>'/opt/apr',
 		pkg => 'apr-1'
-	}
+	},
 	aprutil => {
 		prefix=>'/opt/apr-util',
 		pkg => 'apr-util-1'
-	}
+	},
 );
 
 my %jar = (
@@ -734,8 +735,14 @@ BEGIN{
 		gridsite=>'emi.gridsite.shared',
 		yaim_core=>'emi.yaim.yaim-core'
 	);
+	%etics_externs_emi = (
+		globus_essentials=>'globus-gssapi-gsi',
+		globus=>'globus-gssapi-gsi-devel',
+		gridsite=>'emi.gridsite.shared',
+		yaim_core=>'emi.yaim.yaim-core'
+	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials myproxy/],
+		vdt=>[qw/globus globus_essentials/],
 		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 	);
 	%etics_projects_emi = (
@@ -827,9 +834,6 @@ sub mode_etics {
 # XXX: gridsite hack
 		$conftag = $subsys eq 'gridsite' ? "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : 
 			"$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; }
-	if ($emi) {
-		$age = "${age}emi";
-	} 
 
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
