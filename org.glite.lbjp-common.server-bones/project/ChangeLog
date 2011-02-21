@@ -30,6 +30,12 @@
 - Makefile adopts compilation and linking flags from the environment.
 - Memory handling fixes
 
+2.0.3-1
+- Fixed build-time warnings in logging calls
+
+2.0.3-2
+- Module rebuilt
+
 2.1.0-1
 - Documentation update and cleanup
 - Fixes for parallel release in EMI & gLite

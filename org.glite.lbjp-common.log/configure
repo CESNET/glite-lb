@@ -735,8 +735,14 @@ BEGIN{
 		gridsite=>'emi.gridsite.shared',
 		yaim_core=>'emi.yaim.yaim-core'
 	);
+	%etics_externs_emi = (
+		globus_essentials=>'globus-gssapi-gsi',
+		globus=>'globus-gssapi-gsi-devel',
+		gridsite=>'emi.gridsite.shared',
+		yaim_core=>'emi.yaim.yaim-core'
+	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials myproxy/],
+		vdt=>[qw/globus globus_essentials/],
 		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 	);
 	%etics_projects_emi = (
