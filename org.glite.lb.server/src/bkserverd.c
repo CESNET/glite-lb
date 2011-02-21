@@ -732,7 +732,7 @@ int main(int argc, char *argv[])
 			add_root(ctx, server_subject, PURGE);
 		}
 		else {
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Server running unauthenticated");
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Server running unauthenticated");
 			server_subject = strdup("anonymous LB");
 		}
 
