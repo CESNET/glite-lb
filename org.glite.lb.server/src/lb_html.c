@@ -390,7 +390,7 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 {
         char *pomA = NULL, *pomB = NULL, *lbstat, *children;
         int pomL = 0, i;
-        char    *chid,*chcj,*chsbt;
+        char    *chid,*chcj,*chpar,*chsbt=NULL;
 
 	children = strdup("");
 
@@ -402,6 +402,9 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 	chcj = edg_wlc_JobIdUnparse(stat.ft_compute_job);
 	TRL("Compute job", "%s", chcj, NULL);
 	free(chcj);
+	chpar = edg_wlc_JobIdUnparse(stat.parent_job);
+        TRL("Parent job", "%s", chpar, NULL);
+        free(chpar);
 
 	if (stat.jobtype == EDG_WLL_STAT_FILE_TRANSFER){
 		switch(stat.ft_sandbox_type){
@@ -409,7 +412,7 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 				break;
 			case EDG_WLL_STAT_OUTPUT: chsbt = strdup("OUTPUT");
 				break;
-			default: chsbt = NULL;
+			default:
 				break;
 		}
 		TR("Sandbox type", "%s", chsbt, NULL);

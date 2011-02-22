@@ -72,7 +72,8 @@ int processEvent_FileTransfer(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				js->pub.state = EDG_WLL_JOB_SUBMITTED;
 			}
 			if (USABLE_DATA(res)) {
-				;
+				edg_wlc_JobIdFree(js->pub.parent_job);
+				edg_wlc_JobIdDup(e->regJob.parent, &js->pub.parent_job);
 			}
 			break;
 		case EDG_WLL_EVENT_FILETRANSFERREGISTER:
@@ -127,6 +128,12 @@ int processEvent_FileTransfer(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 					edg_wlc_JobIdFree(js->pub.ft_compute_job);
 					edg_wlc_JobIdParse(e->sandbox.compute_job,&js->pub.ft_compute_job);
 				}
+#if 0
+				else if (e->sandbox.transfer_job) { /* mutually exclusive with compute_job */
+					edg_wlc_JobIdFree(js->pub.parent_job);
+					edg_wlc_JobIdParse(e->sandbox.transfer_job, &js->pub.parent_job);
+				}
+#endif
 			}
 			break;
 		default:

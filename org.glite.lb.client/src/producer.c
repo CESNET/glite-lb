@@ -833,7 +833,8 @@ static int edg_wll_RegisterJobMaster(
 	}
 	if ((type == EDG_WLL_REGJOB_DAG || 
 	     type == EDG_WLL_REGJOB_PARTITIONED ||
-	     type == EDG_WLL_REGJOB_COLLECTION)
+	     type == EDG_WLL_REGJOB_COLLECTION ||
+	     type == EDG_WLL_REGJOB_FILE_TRANSFER_COLLECTION)
 		&& num_subjobs > 0) {
 		err = edg_wll_GenerateSubjobIds(ctx,job,num_subjobs,seed,subjobs);
 		edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
@@ -1039,8 +1040,10 @@ static int edg_wll_RegisterSubjobsMaster(
 	edg_wll_Context 	ctx,
 	int			logging_flags,
 	glite_jobid_const_t 	parent,
+	enum edg_wll_RegJobJobtype      type,
 	char const * const * 	jdls, 
 	const char * 		ns, 
+	int 			nsubjobs,
 	edg_wlc_JobId const * 	subjobs)
 {
 	char const * const	*pjdl;
@@ -1049,6 +1052,7 @@ static int edg_wll_RegisterSubjobsMaster(
 	char *			oldctxseq;
 	int                     errcode = 0;
 	char *                  errdesc = NULL;
+	int 			i;
 
 	if (edg_wll_GetLoggingJob(ctx, &oldctxjob)) return edg_wll_Error(ctx, NULL, NULL);
 	oldctxseq = edg_wll_GetSequenceCode(ctx);
@@ -1056,14 +1060,30 @@ static int edg_wll_RegisterSubjobsMaster(
 	pjdl = jdls;
 	psubjob = subjobs;
 	
-	while (*pjdl != NULL) {
-		if (edg_wll_RegisterJobMaster(ctx, logging_flags,
-			*psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
-			ns, parent, 0, NULL, NULL, NULL) != 0) {
-			errcode = edg_wll_Error(ctx, NULL, &errdesc);
-			goto edg_wll_registersubjobsmaster_end;
+	if (type == EDG_WLL_REGJOB_SIMPLE)
+		while (*pjdl != NULL) {
+			if (edg_wll_RegisterJobMaster(ctx, logging_flags,
+				*psubjob, EDG_WLL_REGJOB_SIMPLE, *pjdl,
+				ns, parent, 0, NULL, NULL, NULL) != 0) {
+				errcode = edg_wll_Error(ctx, NULL, &errdesc);
+				goto edg_wll_registersubjobsmaster_end;
+			}
+			pjdl++; psubjob++;
 		}
-		pjdl++; psubjob++;
+	else if (type == EDG_WLL_REGJOB_FILE_TRANSFER)
+		for (i = 0; i < nsubjobs; i++){
+	                if (edg_wll_RegisterJobMaster(ctx, logging_flags,
+                	        *psubjob, EDG_WLL_REGJOB_FILE_TRANSFER, NULL,
+        	                ns, parent, 0, NULL, NULL, NULL) != 0) {
+	                        errcode = edg_wll_Error(ctx, NULL, &errdesc);
+                        	goto edg_wll_registersubjobsmaster_end;
+                	}
+        	        psubjob++;
+	        }	
+	else {
+		errcode = 1;
+		errdesc = strdup("Unsupported job type.");
+		goto edg_wll_registersubjobsmaster_end;
 	}
 
 edg_wll_registersubjobsmaster_end:
@@ -1090,7 +1110,7 @@ int edg_wll_RegisterSubjobs(
         edg_wlc_JobId const *   subjobs)
 {
 	return edg_wll_RegisterSubjobsMaster(ctx,EDG_WLL_LOGFLAG_LOCAL,
-		parent, jdls, ns, subjobs);
+		parent, EDG_WLL_REGJOB_SIMPLE, jdls, ns, 0, subjobs);
 }
 
 /**
@@ -1107,8 +1127,19 @@ int edg_wll_RegisterSubjobsProxy(
         edg_wlc_JobId const *   subjobs)
 {
 	return edg_wll_RegisterSubjobsMaster(ctx,EDG_WLL_LOGFLAG_PROXY,
-		parent, jdls, ns, subjobs);
+		parent, EDG_WLL_REGJOB_SIMPLE, jdls, ns, 0, subjobs);
 
+}
+
+int edg_wll_RegisterFTSubjobs(
+        edg_wll_Context         ctx,
+        glite_jobid_const_t     parent,
+        const char *            ns,
+	int			nsubjobs,
+        edg_wlc_JobId const *   subjobs)
+{
+        return edg_wll_RegisterSubjobsMaster(ctx,EDG_WLL_LOGFLAG_LOCAL,
+                parent, EDG_WLL_REGJOB_FILE_TRANSFER, NULL, ns, nsubjobs, subjobs);
 }
 
 /**

@@ -930,6 +930,10 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 						js->pub.jobtype = EDG_WLL_STAT_COLLECTION;
 						js->pub.children_hist[EDG_WLL_JOB_UNKNOWN+1] = js->pub.children_num;
 						break;
+					case EDG_WLL_REGJOB_FILE_TRANSFER_COLLECTION:
+						js->pub.jobtype = EDG_WLL_STAT_FILE_TRANSFER_COLLECTION;
+						js->pub.children_hist[EDG_WLL_JOB_UNKNOWN+1] = js->pub.children_num;
+						break;
 					default:
 						break;
 				}

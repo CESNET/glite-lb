@@ -361,6 +361,22 @@ extern int edg_wll_RegisterSubjobsProxy(
 	glite_jobid_t const *	subjobs
 );
 
+/**
+ * Register file transfer subjobs in a batch.
+ * \param[in,out] context       context to work with
+ * \param[in] parent            parent's jobId
+ * \param[in] ns                network server contact
+ * \param[in] nsubjobs		number of subjobs
+ * \param[in] subjobs           array of jobid's in the same order
+ */
+
+extern int edg_wll_RegisterFTSubjobs(
+        edg_wll_Context         ctx,
+        glite_jobid_const_t     parent,
+        const char *            ns,
+        int                     nsubjobs,
+        edg_wlc_JobId const *   subjobs
+);
 
 /**
  * Change ACL for given job.

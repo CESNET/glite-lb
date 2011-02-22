@@ -197,7 +197,9 @@ int edg_wll_JobStatusServer(
 		}
 
 	#if DAG_ENABLE
-		if (stat->jobtype == EDG_WLL_STAT_DAG || stat->jobtype == EDG_WLL_STAT_COLLECTION) {
+		if (stat->jobtype == EDG_WLL_STAT_DAG || 
+			stat->jobtype == EDG_WLL_STAT_COLLECTION || 
+			stat->jobtype == EDG_WLL_STAT_FILE_TRANSFER_COLLECTION) {
 
 	//	XXX: The users does not want any histogram. What do we do about it? 
 	//		if ((!(flags & EDG_WLL_STAT_CHILDHIST_FAST))&&(!(flags & EDG_WLL_STAT_CHILDHIST_THOROUGH))) { /* No Histogram */
@@ -1157,6 +1159,23 @@ static edg_wll_JobStatCode process_Histogram(intJobStat *pis)
 		return EDG_WLL_JOB_WAITING;
 }
 
+static edg_wll_JobStatCode process_FT_Histogram(intJobStat *pis)
+{
+	if (intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_RUNNING)+1] > 0) {
+                return EDG_WLL_JOB_RUNNING;
+        }
+	else if (intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1] 
+		== intJobStat_to_JobStat(pis)->children_num) {
+		return EDG_WLL_JOB_DONE;
+	}
+	else if (intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_DONE)+1]
+		+ intJobStat_to_JobStat(pis)->children_hist[class_to_statCode(SUBJOB_CLASS_ABORTED)+1]
+		== intJobStat_to_JobStat(pis)->children_num)
+		return EDG_WLL_JOB_ABORTED;
+	else
+		return EDG_WLL_JOB_WAITING;
+}
+
 static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobStat *subjob_stat_old, intJobStat *cis, edg_wll_Event *ce)
 {
 	intJobStat		*pis = NULL;
@@ -1187,6 +1206,13 @@ static edg_wll_ErrorCode update_parent_status(edg_wll_Context ctx, edg_wll_JobSt
 				//	   supposing collection Done state to be always DoneOK
 				if (log_collectionState_event(ctx, parent_new_state, EDG_WLL_STAT_OK, cis, pis, ce))
 					goto err;
+			}
+		}
+		else if (intJobStat_to_JobStat(pis)->jobtype == EDG_WLL_STAT_FILE_TRANSFER_COLLECTION) {
+			parent_new_state = process_FT_Histogram(pis);
+			if (intJobStat_to_JobStat(pis)->state != parent_new_state) {
+				if (log_collectionState_event(ctx, parent_new_state, EDG_WLL_STAT_OK, cis, pis, ce))
+                                        goto err;
 			}
 		}
 	}

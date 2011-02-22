@@ -57,6 +57,7 @@ static int compare_timestamps(struct timeval a, struct timeval b)
 int processEvent_FileTransferCollection(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
 	edg_wll_JobStatCode     old_state = js->pub.state;
+	edg_wll_JobStatCode	new_state;
 	int			res = RET_OK;
 
 
@@ -72,9 +73,32 @@ int processEvent_FileTransferCollection(intJobStat *js, edg_wll_Event *e, int ev
 				js->pub.state = EDG_WLL_JOB_SUBMITTED;
 			}
 			if (USABLE_DATA(res)) {
-				;
+				js->pub.children_num = e->regJob.nsubjobs;
+				js->pub.children_hist[EDG_WLL_JOB_UNKNOWN+1] = js->pub.children_num;
 			}
 			break;
+		case EDG_WLL_EVENT_SANDBOX:
+                        if (USABLE_DATA(res)) {
+                                if (e->sandbox.sandbox_type == EDG_WLL_SANDBOX_INPUT)
+                                        js->pub.ft_sandbox_type = EDG_WLL_STAT_INPUT;
+
+                                if (e->sandbox.sandbox_type == EDG_WLL_SANDBOX_OUTPUT)
+                                        js->pub.ft_sandbox_type = EDG_WLL_STAT_OUTPUT;
+
+                                if (e->sandbox.compute_job) {
+                                        edg_wlc_JobIdFree(js->pub.ft_compute_job);
+                                        edg_wlc_JobIdParse(e->sandbox.compute_job,&js->pub.ft_compute_job);
+                                }
+                        }
+                        break;
+		case EDG_WLL_EVENT_COLLECTIONSTATE:
+                        new_state = edg_wll_StringToStat(e->collectionState.state);
+                        if (USABLE(res)) {
+                                js->pub.state = new_state;
+                                if (new_state == EDG_WLL_JOB_DONE)
+                                        js->pub.done_code = e->collectionState.done_code;
+                        }
+                        break;
 		default:
 			break;
 	}
