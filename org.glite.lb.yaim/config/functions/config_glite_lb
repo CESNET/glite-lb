@@ -2,6 +2,23 @@ function config_glite_lb_check(){
   requires $1 MYSQL_PASSWORD INSTALL_ROOT GLITE_LOCATION GLITE_LOCATION_VAR GLITE_USER
 }
 
+# check directory existence first
+# (most of the dependencies should be in default locations now)
+function config_glite_lb_libs_append() {
+  prefix="$1"
+
+  if [ x`uname -m` = xx86_64 ]; then
+    if [ -d "$prefix/lib64" ]; then
+      libarch=lib64
+    fi
+  fi
+  libarch=${libarch:-'lib'}
+
+  if [ -d "$prefix/$libarch" ]; then
+    yaimgridpath_append LD_LIBRARY_PATH "$prefix/$libarch"
+  fi
+}
+
 function config_glite_lb_setenv(){
 
   yaimgridenv_set GLITE_USER ${GLITE_USER:-glite}
@@ -70,23 +87,12 @@ function config_glite_lb_setenv(){
   fi
   yaimgridenv_set GLITE_LB_TYPE ${GLITE_LB_TYPE:-server}
 
-  cares_prefix=${INSTALL_ROOT:-/opt}/c-ares
-  classads_prefix=${INSTALL_ROOT:-/opt}/classads
-  log4c_prefix=${INSTALL_ROOT:-/opt}/log4c
-  if [ x`uname -m` = xx86_64 ]; then
-    if [ -d "$cares_prefix/lib64" ]; then
-      cares_libarch=lib64
-    fi
-    if [ -d "$classads_prefix/lib64" ]; then
-      classads_libarch=lib64
-    fi
-    if [ -d "$log4c_prefix/lib64" ]; then
-      log4c_libarch=lib64
-    fi
-  fi
-  yaimgridpath_append LD_LIBRARY_PATH $cares_prefix/${cares_libarch:-lib}
-  yaimgridpath_append LD_LIBRARY_PATH $classads_prefix/${classads_libarch:-lib}
-  yaimgridpath_append LD_LIBRARY_PATH $log4c_prefix/${log4c_libarch:-lib}
+  config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/c-ares
+  config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/classads
+  config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/log4c
+  config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/apr-dev
+  config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/aprutil-dev
+  config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/activemq-cpp-library
 }
 
 function config_glite_lb_authz() {

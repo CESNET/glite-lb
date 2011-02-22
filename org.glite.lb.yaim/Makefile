@@ -18,7 +18,13 @@ install:
 	for c in gip_lb glite_lb info_service_lb ; do \
 		install -m 0644 $(top_srcdir)/config/functions/config_$$c $(PREFIX)/yaim/functions; \
 	done
-	install -m 0644 $(top_srcdir)/config/node-info.d/glite-lb $(PREFIX)/yaim/node-info.d
+	# dirthy hack for EPEL - flavour-less globus not initialized by gpt
+	if test "x$(thrflavour)" = "x"; then \
+		grep -v config_globus_clients $(top_srcdir)/config/node-info.d/glite-lb > glite-lb; \
+		install -m 0644 glite-lb $(PREFIX)/yaim/node-info.d; \
+	else \
+		install -m 0644 $(top_srcdir)/config/node-info.d/glite-lb $(PREFIX)/yaim/node-info.d; \
+	fi
 	echo "$(package) $(module.version)-$(module.age)" > $(PREFIX)/yaim/etc/versions/$(package)
 
 stage:
