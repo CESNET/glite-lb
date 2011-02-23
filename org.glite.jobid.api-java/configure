@@ -50,6 +50,9 @@ my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db 
 my %enable_nodes;
 my %disable_nodes;
 
+# key:      internal package name (arguments, ...)
+# 'pkg':    pkg-config name
+# 'prefix': used when pkg-config fails
 my %externs = (
 	cares => {
 		prefix => '/opt/c-ares',
@@ -71,15 +74,18 @@ my %externs = (
 		prefix=> '/opt/globus',
 		pkg => 'globus-gssapi-gsi'
 	},
-	'myproxy-essentials' => {
+	'myproxy-devel' => {
 		prefix=> '/opt/globus',
 		pkg => 'myproxy'
 	},
 	'myproxy-server' => {
-		prefix=> '/opt/globus',
+		prefix=> '',
 	},
-	'myproxy-client' => {
-		prefix=> '/opt/globus',
+	'myproxy-libs' => {
+		prefix=> '',
+	},
+	'myproxy-admin' => {
+		prefix=> '',
 	},
 	gsoap => {
 		prefix=> '/usr',
@@ -446,10 +452,10 @@ BEGIN{
         'jp.server-common' => [],
         'jp.ws-interface' => [],
 	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-essentials voms/ ],
+	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms/ ],
 	'px.glite-PX' => [qw/myproxy-server:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
 	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
-	'px.myproxy-config' => [ qw/myproxy-client:R/ ], # in myproxy-config.spec
+	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -707,9 +713,10 @@ BEGIN{
 	%etics_externs = (
 		globus_essentials=>'vdt_globus_essentials',
 		globus=>'globus',
-		'myproxy-essentials'=>'myproxy_essentials',
-		'myproxy-server'=>'myproxy_server',
-		'myproxy-client'=>'myproxy_client',
+		'myproxy-devel'=>'myproxy-devel',
+		'myproxy-libs'=>'myproxy-libs',
+		'myproxy-server'=>'myproxy-server',
+		'myproxy-admin'=>'myproxy-admin',
 		cares=>'c-ares',
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
@@ -736,8 +743,8 @@ BEGIN{
 		yaim_core=>'emi.yaim.yaim-core'
 	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials myproxy/],
-		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
+		vdt=>[qw/globus globus_essentials gpt/],
+		'org.glite'=>[qw/voms gridsite lcas gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 	);
 	%etics_projects_emi = (
 		vdt=>'externs',
