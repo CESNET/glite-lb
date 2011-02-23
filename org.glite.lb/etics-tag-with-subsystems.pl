@@ -284,7 +284,7 @@ usage: $0 [-c <current configuration>] module.name
 
 	open NEWCONF, ">", "$TMPDIR/$newconfig.ini.$$" or die $!;
 
-	printf (NEWCONF "[Configuration-$newconfig]\nprofile = None\nmoduleName = $moduleName\ndisplayName = $newconfig\ndescription = None\nprojectName = $project\nage = $age$proj_suffix\ntag = $tag\nversion = $major.$minor.$revision\npath = None\n\n");
+	printf (NEWCONF "[Configuration-$newconfig]\nprofile = None\nmoduleName = $moduleName\ndisplayName = $newconfig\ndescription = None\nprojectName = $project\nage = $age\ntag = $tag\nversion = $major.$minor.$revision\npath = None\n\n");
 
 	if ( $project eq "emi" ) { printf (NEWCONF "[Platform-default:Property]\n\n"); }
 
