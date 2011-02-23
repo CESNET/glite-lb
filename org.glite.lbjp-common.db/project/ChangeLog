@@ -77,3 +77,6 @@
 - Notice allocation failures in database fetch.
 - Version numbering fixed
 
+3.0.0-2
+- Module rebuilt
+
