@@ -126,3 +126,6 @@
 4.1.8-1
 - Optimized handling of simultaneous proxy&direct logging (fix for bug #77366)
 
+4.1.9-1
+- Fixed default setting for GLITE_LB_EXPORT_PURGE_ARGS
+
