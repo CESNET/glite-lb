@@ -60,7 +60,13 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
         while (jobsOut && jobsOut[i]) {
                 char    *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
 
-		if (! statsOut[i].parent_job){
+		if ((statsOut[i].jobtype != EDG_WLL_STAT_FILE_TRANSFER_COLLECTION 
+			&& statsOut[i].jobtype != EDG_WLL_STAT_FILE_TRANSFER 
+			&& ! statsOut[i].parent_job )
+			|| ((statsOut[i].jobtype == EDG_WLL_STAT_FILE_TRANSFER_COLLECTION 
+			|| statsOut[i].jobtype == EDG_WLL_STAT_FILE_TRANSFER) 
+			&& ! statsOut[i].ft_compute_job)
+			){
 			asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
         	        	pomB, chid,chid);
 	                free(pomB);
@@ -90,12 +96,6 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 			free(chid);
 		}
 
-// stat.jobtype == EDG_WLL_STAT_COLLECTION
-// if (stat.parent_job) chpa = edg_wlc_JobIdUnparse(stat.parent_job);
-
-                /*free(chid);
-                free(pomB);
-                pomB = pomA;*/
                 i++;
         }
 
@@ -402,11 +402,11 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 	chcj = edg_wlc_JobIdUnparse(stat.ft_compute_job);
 	TRL("Compute job", "%s", chcj, NULL);
 	free(chcj);
-	chpar = edg_wlc_JobIdUnparse(stat.parent_job);
-        TRL("Parent job", "%s", chpar, NULL);
-        free(chpar);
 
 	if (stat.jobtype == EDG_WLL_STAT_FILE_TRANSFER){
+		chpar = edg_wlc_JobIdUnparse(stat.parent_job);
+	        TRL("Parent job", "%s", chpar, NULL);
+        	free(chpar);
 		switch(stat.ft_sandbox_type){
 			case EDG_WLL_STAT_INPUT: chsbt = strdup("INPUT");
 				break;
