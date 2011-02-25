@@ -105,7 +105,7 @@ my %externs = (
 	},
 	voms => {
 		prefix => '/opt/glite',
-		pkg => 'voms-1.0'
+		pkg => 'voms-2.0'
 	},
 	gridsite => {
 		prefix => '/opt/glite'
@@ -913,7 +913,7 @@ sub mode_etics {
 		my $localprefix = $emi ? '/usr' : '';
 		my $sysconfdir = ' --sysconfdir=/etc';
 		# exception for yaims in EMI for now: prefix /opt/glite
-		if ($emi and $module eq 'yaim') { $localprefix = '/opt/glite'; $sysconfdir = ''; }
+		if ($emi and ($module =~ /yaim/ or $module =~ /^glite-/)) { $localprefix = '/opt/glite'; $sysconfdir = ''; }
 		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --root=\${prefix} --prefix=${localprefix} --stage=\${stageDir} --sysroot=\${package.prefix}$sysconfdir --libdir=\${libdir} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
