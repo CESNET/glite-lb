@@ -26,8 +26,11 @@
 use Getopt::Long;
 
 my $pwd = `pwd`; chomp $pwd;
-my $prefix = $pwd.'/stage';
-my $stagedir;
+my $prefix = '/usr';
+my $stagedir = $pwd.'/stage';
+my $root = '';
+my $sysroot = '';
+my $sysconfdir;
 my $staged;
 my $module;
 my $thrflavour = 'gcc64dbgpthr';
@@ -102,7 +105,7 @@ my %externs = (
 	},
 	voms => {
 		prefix => '/opt/glite',
-		pkg => 'voms-1.0'
+		pkg => 'voms-2.0'
 	},
 	gridsite => {
 		prefix => '/opt/glite'
@@ -171,7 +174,7 @@ my %lbmodules = (
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache shared commands core/ ],
-	'px' => [ qw/proxyrenewal glite-PX myproxy-yaim myproxy-config/ ],
+	'px' => [ qw/proxyrenewal glite-PX myproxy-yaim/ ],
 	);
 
 
@@ -187,6 +190,9 @@ my @opts = (
 	'branch=s' => \$branch,
 	'output=s' => \$output,
 	'stage=s' => \$stagedir,
+	'root:s' => \$root,
+	'sysroot:s' => \$sysroot,
+	'sysconfdir:s' => \$sysconfdir,
 	'lb-tag=s' => \$lb_tag,
 	'lbjp-common-tag=s' => \$lbjp_tag,
 	'jp-tag=s' => \$jp_tag,
@@ -210,6 +216,12 @@ push @opts,"with-$_=s",\$jar{$_} for keys %jar;
 my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
+$prefix=~s/\/$//;
+$stage=~s/\/$//;
+$root=~s/\/$//;
+$sysroot=~s/\/$//;
+if (not $sysconfdir) { $sysconfdir = $prefix eq '/usr' ? '/etc' : "$prefix/etc"; }
+$sysconfdir=~s/\/$//;
 
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
@@ -281,7 +293,7 @@ if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
 
-$stagedir = $prefix unless $stagedir;
+$stagedir = $root.$prefix unless $stagedir;
 
 if ($mode eq 'build') {
 	print "Writing config.status\n";
@@ -370,7 +382,7 @@ sub mode_build {
 		my $full = full($_);
 		my $build = $buildroot{$_};
 	
-		print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install\n\n";
+		print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install DESTDIR=$stagedir\n\n";
 	}
 	
 	close MAK;
@@ -453,7 +465,7 @@ BEGIN{
         'jp.ws-interface' => [],
 	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
 	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms/ ],
-	'px.glite-PX' => [qw/myproxy-server:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
+	'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
 	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
 );
@@ -570,8 +582,8 @@ for my $jar (keys %need_jars) {
 	'gridsite.core' => [ qw/build.common-cpp:B/ ],
 
 	'px.proxyrenewal' => [ qw// ],
-	'px.glite-PX' => [qw/px.myproxy-yaim:R px.myproxy-config:R/],
-	'px.myproxy-yaim' => [ qw/px.myproxy-config:R/ ],
+	'px.glite-PX' => [qw/px.myproxy-yaim:R/],
+	'px.myproxy-yaim' => [ qw// ],
 	'px.myproxy-config' => [],
 );
 
@@ -684,9 +696,11 @@ px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
 
 	print "Creating $full/$buildroot{$_}/Makefile.inc\n";
 
-	print MKINC qq{
-PREFIX = $prefix
+	print MKINC qq{PREFIX = $root
+prefix = $prefix
 stagedir = $stagedir
+sysroot = $sysroot
+sysconfdir = $sysconfdir
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 libdir = $libdir
@@ -877,7 +891,7 @@ sub mode_etics {
 			my $flags;
 
 			if ($emi) {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix} libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
+				$flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix}/usr libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
 			} else {
 				$flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
 			}
@@ -896,7 +910,11 @@ sub mode_etics {
 	}
 	else {
 		my $flavours = $emi ? "--thrflavour= --nothrflavour=" : "--thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor}";
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
+		my $localprefix = $emi ? '/usr' : '';
+		my $sysconfdir = ' --sysconfdir=/etc';
+		# exception for yaims in EMI for now: prefix /opt/glite
+		if ($emi and ($module =~ /yaim/ or $module =~ /^glite-/)) { $localprefix = '/opt/glite'; $sysconfdir = ''; }
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --root=\${prefix} --prefix=${localprefix} --stage=\${stageDir} --sysroot=\${package.prefix}$sysconfdir --libdir=\${libdir} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
@@ -909,7 +927,7 @@ sub mode_etics {
 	}
 
 	my $checkoutcmd = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module";
-	$checkoutcmd .= "; ln -s \${moduleName} $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null || true" if ($emi);
+	$checkoutcmd .= "; test -e $cvs_prefix{$subsys}.$subsys.$module || ln -s \${moduleName} $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null" if ($emi);
 
 	print STDERR "Writing $file\n";
 	print C qq{
@@ -1077,6 +1095,10 @@ usage: $0 options
 
 General options (defaults in []):
   --prefix=PREFIX		destination directory [./stage]
+  --stage=DIR			staging directory [./stage]
+  --root=DIR			installation root (custom relocation root -> sysroot) []
+  --sysroot=DIR			system root (custom relocation root -> sysroot) []
+  --sysconfdir=DIR              system configuration directory [PREFIX/etc]
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
   --thrflavour=flavour
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
@@ -1087,7 +1109,7 @@ General options (defaults in []):
   --emi				generate configurations with emi flavor in mode 'etics'
   
 Mode of operation:
-  --mode={checkout|build|etics}	what to do [build]
+  --mode=\{checkout|build|etics\}	what to do [build]
   
 What to build:
   --module=module		build this module only (mostly in-Etics operation)
