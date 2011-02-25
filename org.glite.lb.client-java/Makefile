@@ -13,8 +13,8 @@ JAVAC:=${jdk_prefix}/bin/javac
 JAVAH:=${jdk_prefix}/bin/javah
 JAVA:=${jdk_prefix}/bin/java
 
-GEN:=${stagedir}/sbin/glite-lb-at3 project/genEventTypes.pl
-AT3DIR:=${stagedir}/share/lb/at3
+GEN:=${stagedir}${prefix}/sbin/glite-lb-at3 project/genEventTypes.pl
+AT3DIR:=${stagedir}${prefix}/share/glite-lb/at3
 axis_classpath:=$(shell ls ${axis_prefix}/lib/*.jar | tr '\012' :)
 trustmanager_classpath:=${trustmanager_prefix}/share/java/glite-security-trustmanager.jar:${trustmanager_prefix}/share/java/trustmanager.jar:${trustmanager_prefix}/share/java/trustmanager-axis.jar
 
@@ -22,7 +22,7 @@ all compile: genevents genws compile-java build-jar examples build-c
 
 compile-java:
 	${JAVAC} \
-		-classpath ${jakarta-commons-lang_jar}:${stagedir}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath} \
+		-classpath ${jakarta-commons-lang_jar}:${stagedir}${prefix}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath} \
 		-d build \
 		src/org/glite/lb/*.java \
 		build/gen/*.java \
@@ -49,7 +49,7 @@ examples: build/examples
 
 build/examples: ${FULL_EXAMPLES} ${SSL_EXAMPLES} ${TM_EXAMPLES}
 	-mkdir -p build/examples/src/simple-ssl build/examples/src/simple-trustmanager
-	${jdk_prefix}/bin/javac -d build/examples -cp build:build/examples:${stagedir}/share/java/jobid-api-java.jar:${axis_classpath} ${FULL_EXAMPLES}
+	${jdk_prefix}/bin/javac -d build/examples -cp build:build/examples:${stagedir}${prefix}/share/java/jobid-api-java.jar:${axis_classpath} ${FULL_EXAMPLES}
 	${jdk_prefix}/bin/javac -d build/examples -cp build:build/examples:${axis_classpath} ${SSL_EXAMPLES}
 	${jdk_prefix}/bin/javac -d build/examples -cp build:${trustmanager_classpath}:${axis_classpath} ${TM_EXAMPLES}
 	cp ${FULL_EXAMPLES} build/examples/src
@@ -66,15 +66,15 @@ build/gen:
 genws: build/axis
 
 build/axis:
-	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java -o build/axis ${stagedir}/interface/LB.wsdl
+	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java -o build/axis ${stagedir}${prefix}/interface/LB.wsdl
 
 check:
 	@echo "No check"
 
 install:
-	mkdir -p ${PREFIX}/share/java
-	cp build/lb-client-java.jar ${PREFIX}/share/java
-	cp build/examples/lb-client-java-examples.jar ${PREFIX}/share/java
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java
+	cp build/lb-client-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
+	cp build/examples/lb-client-java-examples.jar ${DESTDIR}${PREFIX}${prefix}/share/java
 	cd build/c && $(MAKE) install PREFIX=${PREFIX}
 
 clean:

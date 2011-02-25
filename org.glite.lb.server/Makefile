@@ -6,6 +6,8 @@ lbprefix=lb
 package=glite-lb-server
 version=0.2.0
 PREFIX=/opt/glite
+prefix=
+sysconfdir=/opt/glite/etc
 
 # gridsite requires openssl libraries, we want to include the ones from globus
 globus_prefix=/opt/globus
@@ -56,7 +58,7 @@ ifeq ($(gsoap_version),2.7.0)
 else
 	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples:${top_srcdir}/project
 endif
-AT3=${stagedir}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 
 SUFFIXES = .T 
 
@@ -109,7 +111,7 @@ CFLAGS:= ${CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	 ${GSOAP_CFLAGS} \
-	-I${stagedir}/include -I${top_srcdir}/src -I. \
+	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	${EXPAT_CFLAGS} \
 	${LIBCARES_CFLAGS} \
@@ -122,20 +124,20 @@ CFLAGS:= ${CFLAGS} \
 CXXFLAGS:=${CFLAGS}
 
 ifdef LB_PROF
-	SRVBONES_LIB:= ${stagedir}/${libdir}/libglite_lbu_server_bones.la
-	LB_COMMON_LIB:=${stagedir}/${libdir}/libglite_lb_common${default_flavour}.la
-	LB_UTILS_DB_LIB:=${stagedir}/${libdir}/libglite_lbu_db.la
+	SRVBONES_LIB:= ${stagedir}${prefix}/${libdir}/libglite_lbu_server_bones.la
+	LB_COMMON_LIB:=${stagedir}${prefix}/${libdir}/libglite_lb_common${default_flavour}.la
+	LB_UTILS_DB_LIB:=${stagedir}${prefix}/${libdir}/libglite_lbu_db.la
 	CFLAGS:=${CFLAGS} -pg -g
 	LDFLAGS:=${LDFLAGS} -pg
 else
-	SRVBONES_LIB:= -L${stagedir}/${libdir} -lglite_lbu_server_bones
-	LB_COMMON_LIB:=-L${stagedir}/${libdir} -lglite_lb_common${default_flavour}
-	LB_UTILS_DB_LIB:=-L${stagedir}/${libdir} -lglite_lbu_db
-	LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir}
+	SRVBONES_LIB:= -L${stagedir}${prefix}/${libdir} -lglite_lbu_server_bones
+	LB_COMMON_LIB:=-L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavour}
+	LB_UTILS_DB_LIB:=-L${stagedir}${prefix}/${libdir} -lglite_lbu_db
+	LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir}
 endif
 
-# LB_MACHINE_LIB:=${stagedir}/${libdir}/libglite_lb_statemachine.a
-LB_MACHINE_LIB:=-L${stagedir}/${libdir} -lglite_lb_statemachine
+# LB_MACHINE_LIB:=${stagedir}${prefix}/${libdir}/libglite_lb_statemachine.a
+LB_MACHINE_LIB:=-L${stagedir}${prefix}/${libdir} -lglite_lb_statemachine
 
 ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE
@@ -143,10 +145,10 @@ endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir}  ${LDFLAGS} 
-SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/${libdir}
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir}  ${LDFLAGS} 
+SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir}
 INSTALL:=libtool --mode=install install
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${gsoap_prefix}/bin; else echo ${gsoap_prefix}; fi }
@@ -159,7 +161,7 @@ EXT_LIBS:=  \
 	${LCAS_LIBS} \
 	${VOMS_LIBS}
 
-COMMON_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${default_flavour} -lglite_security_gss${default_flavour} -lglite_lbu_trio -lglite_lbu_maildir -lglite_lbu_log
+COMMON_LIBS:= -L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavour} -lglite_security_gss${default_flavour} -lglite_lbu_trio -lglite_lbu_maildir -lglite_lbu_log
 
 BKSERVER_BASE_OBJS:= \
 	bkserverd.o il_lbproxy.o get_events.o index.o jobstat.o jobstat_supp.o \
@@ -173,10 +175,10 @@ BKSERVER_BASE_OBJS:= \
 gsoap_version ?= ${gsoap_default_version}
 
 dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
-ifeq ($(shell test -f ${stagedir}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}_c.so && echo ok),ok)
+ifeq ($(shell test -f ${stagedir}${prefix}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}_c.so && echo ok),ok)
 	langflavour:=_c
 endif
-GSOAP_LIB:=-L${stagedir}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}${prefix}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour}
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_OBJS:= \
@@ -275,13 +277,13 @@ ${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c 
 # try several times -- LB.wsdl downloads BaseFault.xsd from www.ibm.com which may be failing
 # not used right now but may be useful one day
 # LB.xh: ws_typemap.dat
-#	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl || \
-#	{ sleep 1 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; } || \
-#	{ sleep 4 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; } || \
-#	{ sleep 16 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}/interface/LB.wsdl; }
+#	${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}${prefix}/interface/LB.wsdl || \
+#	{ sleep 1 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}${prefix}/interface/LB.wsdl; } || \
+#	{ sleep 4 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}${prefix}/interface/LB.wsdl; } || \
+#	{ sleep 16 ; ${gsoap_prefix}/bin/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -o $@ ${stagedir}${prefix}/interface/LB.wsdl; }
 
-LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
-	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -I${stagedir}/interface -o $@ ${stagedir}/interface/LB.wsdl
+LB.xh: ws_typemap.dat ${stagedir}${prefix}/interface/LB.wsdl
+	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/src/ws_typemap.dat -I${stagedir}${prefix}/interface -o $@ ${stagedir}${prefix}/interface/LB.wsdl
 
 test.xml: test_xml
 	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_xml
@@ -329,38 +331,38 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 install:
-	-mkdir -p ${PREFIX}/bin ${PREFIX}/etc/glite-lb ${PREFIX}/etc/init.d ${PREFIX}/interface
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	-mkdir -p ${PREFIX}/share/man/man1
-	-mkdir -p ${PREFIX}/${libdir}
-	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
-	mkdir -p ${PREFIX}/share/man/man8
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb ${DESTDIR}${PREFIX}${sysconfdir}/init.d
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
+	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	for p in bkserverd bkindex mon-db; do \
-		${INSTALL} -m 755 "glite-lb-$$p" "${PREFIX}/bin/glite-lb-$$p"; \
+		${INSTALL} -m 755 "glite-lb-$$p" "${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-$$p"; \
 	done
-	-mkdir -p ${PREFIX}/${libdir}/modules
-	${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${PREFIX}/${libdir}/modules
-	ln -sf liblcas_lb.so ${PREFIX}/${libdir}/modules/lcas_lb.mod
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules
+	${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules
+	ln -sf liblcas_lb.so ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules/lcas_lb.mod
 
 	for f in dbsetup.sql index.conf.template; do \
-		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${PREFIX}/etc/glite-lb; \
-		ln -sf "glite-lb/glite-lb-$$f" "${PREFIX}/etc/glite-lb-$$f"; \
+		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb; \
+		ln -sf "glite-lb/glite-lb-$$f" "${DESTDIR}${PREFIX}${sysconfdir}/glite-lb-$$f"; \
 	done
-	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${PREFIX}/etc/glite-lb
+	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
-	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-bkserverd
+	${INSTALL} -m 755 ${top_srcdir}/config/startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
 
-	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
-	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix})
-	install -m 644 ${STATIC_LIB_BK} ${PREFIX}/${libdir}
-	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${PREFIX}/include/${globalprefix}/${lbprefix}
-	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
+	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix})
+	install -m 644 ${STATIC_LIB_BK} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
+	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 ifdef LB_PERF
-	-mkdir -p ${PREFIX}/sbin
-	${INSTALL} -m 755 ${top_srcdir}/src/perftest_proxy.sh ${PREFIX}/sbin
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
+	${INSTALL} -m 755 ${top_srcdir}/src/perftest_proxy.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif
 
 clean:

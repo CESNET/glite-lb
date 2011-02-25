@@ -7,6 +7,7 @@ lbprefix=lb
 package=glite-lb-state-machine
 version=0.2.0
 PREFIX=/opt/glite
+prefix=
 
 -include Makefile.inc
 
@@ -16,7 +17,7 @@ default all: compile
 
 CC=gcc
 CXX=g++
-AT3=${stagedir}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 
 SUFFIXES = .T 
 
@@ -36,15 +37,15 @@ DEBUG:=-g -O0 -Wall
 CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
 	${CLASSADS_CFLAGS} \
-	-I${stagedir}/include -I${top_srcdir}/src -I. \
+	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface 
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir}  ${LDFLAGS} 
-SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}/${libdir}
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir}  ${LDFLAGS} 
+SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 ifeq (${thrflavour},)
@@ -52,8 +53,8 @@ default_flavour=
 else
 default_flavour=_${nothrflavour}
 endif
-COMMON_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${default_flavour} -lglite_security_gss${defaultflavour}
-PLUGIN_LIBS:= -L${stagedir}/${libdir} -lglite_lb_common${default_flavour} \
+COMMON_LIBS:= -L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavour} -lglite_security_gss${defaultflavour}
+PLUGIN_LIBS:= -L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavour} \
 	${CLASSADS_LIBS} -lstdc++ ${EXPAT_LIBS}
 
 PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo process_event_cream.lo lb_plugin.lo  process_event_file_transfer.lo process_event_file_transfer_collection.lo
@@ -82,18 +83,18 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install:
-	-mkdir -p ${PREFIX}/${libdir} ${PREFIX}/interface ${PREFIX}/include/glite/lb
-	install -m 644 ${MACHINE_LIB} ${PREFIX}/${libdir} 
-	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/${libdir}
-	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${PREFIX}/interface
-	install -m 644 lb-job-attrs2.xsd ${PREFIX}/interface
-	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${PREFIX}/interface
-	install -m 644 ${top_srcdir}/interface/intjobstat.h ${PREFIX}/include/glite/lb
-	install -m 644 ${top_srcdir}/interface/intjobstat_supp.h ${PREFIX}/include/glite/lb
-	install -m 644 ${top_srcdir}/interface/process_event.h ${PREFIX}/include/glite/lb
-	install -m 644 ${top_srcdir}/interface/seqcode_aux.h ${PREFIX}/include/glite/lb
-	install -m 644 job_attrs.h ${PREFIX}/include/glite/lb
-	install -m 644 job_attrs2.h ${PREFIX}/include/glite/lb
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir} ${DESTDIR}${PREFIX}${prefix}/interface ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
+	install -m 644 ${MACHINE_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir} 
+	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${DESTDIR}${PREFIX}${prefix}/interface
+	install -m 644 lb-job-attrs2.xsd ${DESTDIR}${PREFIX}${prefix}/interface
+	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${DESTDIR}${PREFIX}${prefix}/interface
+	install -m 644 ${top_srcdir}/interface/intjobstat.h ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
+	install -m 644 ${top_srcdir}/interface/intjobstat_supp.h ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
+	install -m 644 ${top_srcdir}/interface/process_event.h ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
+	install -m 644 ${top_srcdir}/interface/seqcode_aux.h ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
+	install -m 644 job_attrs.h ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
+	install -m 644 job_attrs2.h ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
 
 clean:
 	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB}

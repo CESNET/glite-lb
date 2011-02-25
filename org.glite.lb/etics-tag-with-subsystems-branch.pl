@@ -136,8 +136,6 @@ usage: $0 -b <branch> [-c configuration] subsystem.name
 
         printf (NEWCONF "[Configuration-$newconfig]\nprofile = None\nmoduleName = $module\ndisplayName = $newconfig\ndescription = None\nprojectName = org.glite\nage = $current_age\ntag = $branch\nversion = $current_major.$current_minor.$current_revision\npath = None\n\n");
 
-	if ( $project eq "emi" ) { printf (NEWCONF "[Platform-default:Property]\npackage.prefix = /opt/emi\n\n"); }
-
 #        printf (NEWCONF "[Platform-default:VcsCommand]\ndisplayName = None\ndescription = HEAD CVS commands\ntag = cvs -d \${vcsroot} tag -R \${tag} \${moduleName}\nbranch = None\ncommit = None\ncheckout = cvs -d \${vcsroot} co -r \${tag} \${moduleName}\n\n");
 
 #        printf (NEWCONF "[Platform-default:Environment]\nHOME = \${workspaceDir}");

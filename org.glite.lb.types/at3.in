@@ -27,10 +27,10 @@ BEGIN{ $prefix = dirname($0)."/.."; }
 
 use lib "$prefix/share/perl";
 use gLite::LB::MultiStruct;
-require "$prefix/share/lb/at3/types.T";
+require "$prefix/share/glite-lb/at3/types.T";
 
-my $eventsn = "$prefix/share/lb/at3/events.T";
-my $statusn = "$prefix/share/lb/at3/status.T";
+my $eventsn = "$prefix/share/glite-lb/at3/events.T";
+my $statusn = "$prefix/share/glite-lb/at3/status.T";
 
 my $indent = '';
 

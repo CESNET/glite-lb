@@ -7,6 +7,7 @@ globalprefix=glite
 package=gss
 version=1.0.0
 PREFIX=/opt/glite
+prefix=
 
 glite_location=/opt/glite
 globus_prefix=/opt/globus
@@ -43,14 +44,14 @@ DEBUG:=-g -O0 -W -Wall -Wno-unused-parameter
 CFLAGS:= ${CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I. -I${top_srcdir}/interface \
-	-I${stagedir}/include \
+	-I${stagedir}${prefix}/include \
 	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION
 
 LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
@@ -145,14 +146,14 @@ stage:
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 install:
-	-mkdir -p ${PREFIX}/${libdir}
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	-mkdir -p ${PREFIX}/include/glite/security
-	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${PREFIX}/${libdir}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/glite/security/
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security
+	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
 	if [ x${DOSTAGE} = xyes ]; then \
-		install -m 644 ${lib_LIBRARIES} ${PREFIX}/${libdir}; \
+		install -m 644 ${lib_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
 	fi
 
 clean:

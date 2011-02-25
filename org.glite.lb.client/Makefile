@@ -22,9 +22,9 @@ version=${module.version}
 VERSION_AHEAD=-3
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
-AT3=${stagedir}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 GENSAM=${top_srcdir}/examples/gen_sample_job
-CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${stagedir}/sbin/glite-lb-check_version.pl
+CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${stagedir}${prefix}/sbin/glite-lb-check_version.pl
 
 SUFFIXES = .T .l
 
@@ -94,7 +94,7 @@ TRIO_LIB:=-lglite_lbu_trio
 CFLAGS:=${CFLAGS} ${DEBUG} \
 	-I. \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
-	-I${stagedir}/include \
+	-I${stagedir}${prefix}/include \
 	${COVERAGE_FLAGS} \
 	-DBUILDING_LB_CLIENT \
 	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS}
@@ -106,7 +106,7 @@ EXT_LIB:=
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
 CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 
-LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
@@ -199,28 +199,28 @@ default: all
 
 ifeq (${thrflavour},)
 ${LIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB} ${TRIO_LIB} \
 			-lglite_security_gss
 
 ${PLUSLIB}: ${PLUSOBJS} ${LIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
 else
 ${NOTHRLIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB_NOTHR} ${TRIO_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB_THR} ${TRIO_LIB} \
 			-lglite_security_gss_${thrflavour}
 
 ${NOTHRPLUSLIB}: ${PLUSOBJS} ${NOTHRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}/${libdir} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
 endif
 
 logevent: logevent.o args.o
@@ -325,55 +325,55 @@ JobStatus.h JobStatus.cpp: StatusAttrNames.pl
 
 #EventAttrNames.pl:
 #	rm -f $@
-#	ln -s ${stagedir}/share/perl/gLite/LB/$@ $@
+#	ln -s ${stagedir}${prefix}/share/perl/gLite/LB/$@ $@
 
 dist: distsrc distbin
 
 install:
-	mkdir -p ${PREFIX}/bin
-	mkdir -p ${PREFIX}/sbin
-	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
-	mkdir -p ${PREFIX}/${libdir}
-	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples/
-	mkdir -p ${PREFIX}/share/man/man1
-	mkdir -p ${PREFIX}/examples
-	mkdir -p ${PREFIX}/share/man/man8
-	mkdir -p ${PREFIX}/share/build/m4
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/examples
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/build/m4
 ifdef LB_STANDALONE
-	${INSTALL} -m 644 ${c_LIBRARIES} ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${c_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 else
-	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${PREFIX}/${libdir}
+	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 endif
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-	${INSTALL} -m 644 ${top_srcdir}/doc/README-notify ${PREFIX}/share/doc/${package}-${version}
-	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) 
-	${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} 
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
+	${INSTALL} -m 644 ${top_srcdir}/doc/README-notify ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) 
+	${INSTALL} -m 644 ${GEN_HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} 
 ifndef LB_STANDALONE
-#	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
-#       cp -r ${top_srcdir}/doc/api/{Makefile,api.tex,fig} ${PREFIX}/share/doc/${package}-${version}/api
+#	cp -r C CPP ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+#       cp -r ${top_srcdir}/doc/api/{Makefile,api.tex,fig} ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
 endif
 	for p in logevent notify register_sandbox; do \
-		${INSTALL} -m 755 "$$p" "${PREFIX}/bin/glite-lb-$$p"; \
+		${INSTALL} -m 755 "$$p" "${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-$$p"; \
 	done
 	for p in ${TOOLS} ; do \
-		${INSTALL} -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
+		${INSTALL} -m 755 "$$p" "${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-$$p"; \
 	done
 # TODO: restructuring - do we really need binaries of the examples to be installed?
 	for p in ${EXAMPLES} ${EXAMPLES_PLUS} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS} ; do \
-		${INSTALL} -m 755 "$$p" "${PREFIX}/examples/glite-lb-$$p"; \
+		${INSTALL} -m 755 "$$p" "${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-$$p"; \
 	done
 	for p in ${EXAMPLES_SRC} ${EXAMPLES_PLUS_SRC} ${EXAMPLES_CL_SRC} ${EXAMPLES_CL_THR_SRC} ; do \
-		${INSTALL} -m 644 "${top_srcdir}/examples/$$p" "${PREFIX}/share/doc/${package}-${version}/examples/"; \
+		${INSTALL} -m 644 "${top_srcdir}/examples/$$p" "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"; \
 	done
-	${INSTALL} -m 644 ${top_srcdir}/examples/Makefile "${PREFIX}/share/doc/${package}-${version}/examples/"
-	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${PREFIX}/share/doc/${package}-${version}/examples/"
-	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${PREFIX}/sbin/glite-lb-export.sh"
-	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${PREFIX}/examples/glite-lb-notify.pl
-	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${PREFIX}/examples/glite-lb-sandbox_transfers.sh
-	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man1
-	${INSTALL} -m 644 ${MAN8_GZ} ${PREFIX}/share/man/man8
-	${INSTALL} -m 644 ${top_srcdir}/m4/glite_lb.m4 ${PREFIX}/share/build/m4/
+	${INSTALL} -m 644 ${top_srcdir}/examples/Makefile "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
+	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
+	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-export.sh"
+	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-notify.pl
+	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-sandbox_transfers.sh
+	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
+	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
+	${INSTALL} -m 644 ${top_srcdir}/m4/glite_lb.m4 ${DESTDIR}${PREFIX}${prefix}/share/build/m4/
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
@@ -383,7 +383,7 @@ clean:
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 check_version:
-	${CHECK_VERSION} ${stagedir}/include/glite/lb/common_version.h
+	${CHECK_VERSION} ${stagedir}${prefix}/include/glite/lb/common_version.h
 
 
 .PHONY: default all compile examples check stage install clean check_version

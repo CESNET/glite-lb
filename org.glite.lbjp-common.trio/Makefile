@@ -9,6 +9,7 @@ package=glite-lb-utils-trio
 version=0.0.0
 PREFIX=/opt/glite
 lbuprefix=lbu
+prefix=
 
 -include Makefile.inc
 -include ../project/version.properties
@@ -24,8 +25,8 @@ DEBUG:=-g -O0 -Wall
 CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION
 
 COMPILE:=libtool --mode=compile ${CC}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 REPORTS:=${top_srcdir}/reports
@@ -97,13 +98,13 @@ distbin:
 	rm -rf tmpbuilddir
 
 install: all
-	-mkdir -p ${PREFIX}/${libdir}
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
-	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbuprefix}
-	${INSTALL} -m 644 ${LTLIB} ${STATICLIB} ${PREFIX}/${libdir}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbuprefix})
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbuprefix}
+	${INSTALL} -m 644 ${LTLIB} ${STATICLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbuprefix})
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/

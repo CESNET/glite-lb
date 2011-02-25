@@ -36,7 +36,7 @@ CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 
 DEBUG:=-g -O0
 CFLAGS:=${CFLAGS} ${DEBUG} \
-	-I${stagedir}/include -I${top_srcdir}/src \
+	-I${stagedir}${prefix}/include -I${top_srcdir}/src \
 	${ACTIVEMQ_CFLAGS} \
 	${APR_CFLAGS} \
 	${APR_UTIL_CFLAGS} \
@@ -44,7 +44,7 @@ CFLAGS:=${CFLAGS} ${DEBUG} \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
 
-LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} \
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} \
 	-L${aprutil_prefix}/${libdir} \
 	-L${apr_prefix}/${libdir} \
 	${COVERAGE_FLAGS} 
@@ -52,9 +52,9 @@ LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} \
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
-SOLINK:=libtool --mode=link ${CXX} -module ${LDFLAGS} -rpath ${stagedir}/${libdir}
+SOLINK:=libtool --mode=link ${CXX} -module ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir}
 
 #ifneq (${expat_prefix},/usr)
 #	EXPAT_LIBS:=-L${expat_prefix}/lib
@@ -101,13 +101,13 @@ check:
 #	./check.ll
 
 install:
-	-mkdir -p ${PREFIX}/${libdir}
-	-mkdir -p ${PREFIX}/share/man/man8
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 755 ${PLUGIN_LIB} ${PREFIX}/${libdir}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-#	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
+#	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 
 %.lo %.o: %.cpp
 	${COMPILEXX} -c $< -o $@

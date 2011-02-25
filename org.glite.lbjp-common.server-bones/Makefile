@@ -6,6 +6,7 @@ lbutilsprefix=lbu
 package=glite-lb-server-bones
 version=0.0.1
 PREFIX=/opt/glite
+prefix=
 
 CC=gcc
 
@@ -19,9 +20,9 @@ VPATH=${top_srcdir}/src:${top_srcdir}/examples
 DEBUG:=-g -O0 -Wall
 CFLAGS:= ${CFLAGS} ${DEBUG} \
 	-I${top_srcdir}/interface \
-	-I${stagedir}/include \
+	-I${stagedir}${prefix}/include \
 	-D_GNU_SOURCE 
-LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir}
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir}
 
 ifdef LB_PROF
 	CFLAGS:= ${CFLAGS} -pg -g
@@ -29,7 +30,7 @@ ifdef LB_PROF
 endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS}
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 STATICLIB:=libglite_lbu_server_bones.a
@@ -83,11 +84,11 @@ cnt_example: cnt_example.o
 doc:
 
 install:
-	mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
-	mkdir -p ${PREFIX}/${libdir}
-	${INSTALL} -m 644 ${LTLIB} ${PREFIX}/${libdir}
-	${INSTALL} -m 644 ${STATICLIB} ${PREFIX}/${libdir} ; \
-	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 644 ${LTLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 644 ${STATICLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir} ; \
+	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 
 clean:
 	rm -rvf *.o *.lo .libs lib* srv_example cnt_example

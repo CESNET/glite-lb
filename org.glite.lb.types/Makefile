@@ -19,11 +19,11 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	mkdir -p ${PREFIX}/share/perl/gLite/LB ${PREFIX}/share/lb/at3 ${PREFIX}/sbin
-	install -m 644 ${PM} ${PREFIX}/share/perl/gLite/LB
-	install -m 644 ${T} ${PREFIX}/share/lb/at3
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/perl/gLite/LB ${DESTDIR}${PREFIX}${prefix}/share/glite-lb/at3 ${DESTDIR}${PREFIX}${prefix}/sbin
+	install -m 644 ${PM} ${DESTDIR}${PREFIX}${prefix}/share/perl/gLite/LB
+	install -m 644 ${T} ${DESTDIR}${PREFIX}${prefix}/share/glite-lb/at3
 	for p in ${SCRIPTS} ; do \
-		install -m 755 "$$p" "${PREFIX}/sbin/glite-lb-$$p"; \
+		install -m 755 "$$p" "${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-$$p"; \
 	done
 	
 clean:

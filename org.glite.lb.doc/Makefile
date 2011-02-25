@@ -6,6 +6,7 @@ lbprefix=lb
 package=glite-lb-doc
 version=0.0.0
 PREFIX=/opt/glite
+prefix=
 
 -include Makefile.inc
 -include ../project/version.properties
@@ -22,7 +23,7 @@ LATEX = $(KPATH) latex
 PDFLATEX = $(KPATH) pdflatex
 BIBTEX = $(KPATHBIB) bibtex
 DVIPS = $(KPATH) dvips
-AT3=${stagedir}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 INSTALL=install
 
 default all: generate doc
@@ -61,17 +62,17 @@ check:
 	@echo "No test"
 
 install:
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
-	$(INSTALL) -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-	$(INSTALL) -m 644 ${top_srcdir}/src/README ${PREFIX}/share/doc/${package}-${version}
-	$(INSTALL) -m 644 LBUG.pdf ${PREFIX}/share/doc/${package}-${version}
-	$(INSTALL) -m 644 LBAG.pdf ${PREFIX}/share/doc/${package}-${version}
-	$(INSTALL) -m 644 LBDG.pdf ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
+	${INSTALL} -m 644 ${top_srcdir}/src/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 LBUG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 LBAG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 LBDG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 # install DG example sources
 	for p in ${top_srcdir}/examples/*; do \
 		if [ "$$p" == "${top_srcdir}/examples/CVS" ]; then continue; fi; \
-		${INSTALL} -m 644 "$$p" "${PREFIX}/share/doc/${package}-${version}/examples"; \
+		${INSTALL} -m 644 "$$p" "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples"; \
 	done
 
 clean:

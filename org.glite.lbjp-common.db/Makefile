@@ -7,6 +7,7 @@ globalprefix=glite
 lbutilsprefix=lbu
 package=glite-lb-utils-db
 PREFIX=/opt/glite
+prefix=
 
 mysql-devel_prefix=/opt/mysql
 postgresql_prefix=/usr
@@ -41,7 +42,7 @@ PSQL_CPPFLAGS:=-I${postgresql_prefix}/include -I${postgresql_prefix}/include/pos
 CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
 	-DVERSION=\"${version}\" \
-	-I${stagedir}/include -I${top_srcdir}/src -I. \
+	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
@@ -62,12 +63,12 @@ endif
 TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
 TEST_INC:=-I${cppunit_prefix}/include
 
-LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 EXT_LIBS:=-lglite_lbu_trio -lglite_lbu_log -lpthread ${DL_LIBS}
@@ -161,17 +162,17 @@ distsrc:
 
 distbin:
 	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
-	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
+	save_dir=`pwd`; cd tmpbuilddir${stagedir}${prefix} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
 	rm -rf tmpbuilddir
         
 install: all
-	-mkdir -p ${PREFIX}/${libdir}
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	-cp -r C ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 755 "libglite_lbu_db.la" "${PREFIX}/${libdir}/libglite_lbu_db.la"; \
-	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-cp -r C ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 755 "libglite_lbu_db.la" "${DESTDIR}${PREFIX}${prefix}/${libdir}/libglite_lbu_db.la"; \
+	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 
 clean:
 	rm -rvf *.o *.lo *.loT .libs lib* *.c *.h *.dox C/ CPP/

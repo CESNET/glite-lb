@@ -7,6 +7,7 @@ globalprefix=glite
 package=gsoap-plugin
 version=1.0.0
 PREFIX=/opt/glite
+prefix=
 
 glite_location=/opt/glite
 gsoap_prefix=/opt/gsoap
@@ -76,17 +77,17 @@ CFLAGS:= ${CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-DWITH_NONAMESPACES \
 	-I. -I${top_srcdir}/interface \
-	-I${stagedir}/include \
+	-I${stagedir}${prefix}/include \
 	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION -DWITH_IPV6
 
 LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS}
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
-LINK_lang:=PATH=${top_srcdir}/project/libtoolhack:${PATH} libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS}
+LINK_lang:=PATH=${top_srcdir}/project/libtoolhack:${PATH} libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 ifeq (${lang},c)
 LINK_lang:=${LINK}
 endif
@@ -97,9 +98,9 @@ endif
 gsoaplibdir=$(shell if test -d "${gsoap_prefix}/${libdir}"; then echo "${gsoap_prefix}/${libdir}"; else echo "${gsoap_prefix}/lib"; fi)
 GSOAP_LIBS?=-L${gsoaplibdir} -lgsoap
 
-EX_NOTHRLIBS:=-L${stagedir}/${libdir} -lglite_security_gss_${nothrflavour}
-EX_THRLIBS:=-L${stagedir}/${libdir} -lglite_security_gss_${thrflavour}
-EX_LIBS:=-L${stagedir}/${libdir} -lglite_security_gss
+EX_NOTHRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${nothrflavour}
+EX_THRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${thrflavour}
+EX_LIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss
 HDRS:=glite_gsplugin.h glite_gscompat.h glite_gsplugin-int.h
 EXAMPLES:=wscalc_clt_ex wscalc_srv_ex wscalc_srv_ex2
 TESTS:=test_cxx
@@ -281,12 +282,12 @@ stage:
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 install:
-	-mkdir -p ${PREFIX}/${libdir}
-	-mkdir -p ${PREFIX}/include/glite/security
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	-mkdir -p ${PREFIX}/include/glite/security/
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/glite/security/
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
 	for v in ${gsoap_versions_noflavours}; do \
 		${MAKE} -C `echo $$v | tr -d .` -f ../Makefile install-soaplib gsoap_version=$$v lang= PREFIX=${PREFIX} top_srcdir=${top_srcdir}/.. || exit $?; \
 	done
@@ -296,7 +297,7 @@ install:
 	done
 
 install-soaplib:
-	${INSTALL} -m 755 ${lib_LTLIBRARIES_S} ${PREFIX}/${libdir}
+	${INSTALL} -m 755 ${lib_LTLIBRARIES_S} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 
 clean:
 	rm -rvf ${lib_LTLIBRARIES}

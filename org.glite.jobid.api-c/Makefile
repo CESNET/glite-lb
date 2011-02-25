@@ -57,7 +57,7 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split /\./,"${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ${LIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}/${libdir}
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}${prefix}/${libdir}
 
 check: compile base64_test
 	./base64_test base64_test.xml
@@ -72,10 +72,10 @@ clean:
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 install: ${LIB}
-	mkdir -p ${PREFIX}/${libdir}
-	mkdir -p ${PREFIX}/include/${globalprefix}/${jobidprefix}
-	${INSTALL} -m 644 ${LIB} ${PREFIX}/${libdir}
-	(cd ${top_srcdir}/interface; ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${jobidprefix})
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix}
+	${INSTALL} -m 644 ${LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	(cd ${top_srcdir}/interface; ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix})
 
 
 %.o: %.c

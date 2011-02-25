@@ -2,6 +2,7 @@ top_srcdir=..
 stagedir=.
 version=0.0.0
 PREFIX=/opt/glite
+prefix=
 
 glite_location=/opt/glite
 globus_prefix=/opt/globus
@@ -33,20 +34,20 @@ VPATH=${top_srcdir}/examples
 CC=gcc
 DEBUG:=-g -O0 -Wall
 CFLAGS:=${CFLAGS} -I${gsoap_prefix}/include -I${gsoap_prefix}/ \
-	-I${stagedir}/include -I${top_srcdir}/src -I. \
+	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	${GLOBUS_GSSAPI_GSI_CFLAGS} \
 	${DEBUG}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS}
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 GSOAP_FILES_PREFIX:= bk_ws_
 dotless_gsoap_ver:=${shell echo ${gsoap_default_version} | tr -d . }
-ifeq ($(shell test -f ${stagedir}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}_c.so && echo ok),ok)
+ifeq ($(shell test -f ${stagedir}${prefix}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}_c.so && echo ok),ok)
 	langflavour:=_c
 endif
-GSOAP_LIB:=-L${stagedir}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}${prefix}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o
 # ws_typeref.o
@@ -69,17 +70,17 @@ check:
 	@echo "No test"
 
 install:
-	mkdir -p ${PREFIX}/examples/
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/examples/
 	for f in ${CEXAMPLES}; do \
-		${INSTALL} -m 755 $$f ${PREFIX}/examples/glite-lb-$$f; \
+		${INSTALL} -m 755 $$f ${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-$$f; \
 	done
 
 clean:
 	rm -rvf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
-LB.xh: ws_typemap.dat ${stagedir}/interface/LB.wsdl
-	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -I${stagedir}/interface -o $@ ${stagedir}/interface/LB.wsdl
+LB.xh: ws_typemap.dat ${stagedir}${prefix}/interface/LB.wsdl
+	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -I${stagedir}${prefix}/interface -o $@ ${stagedir}${prefix}/interface/LB.wsdl
 
 soap_version.h:
 	${gsoap_bin_prefix}/soapcpp2 /dev/null 

@@ -8,7 +8,7 @@ lbutilsprefix=lbu
 package=glite-lb-utils-maildir
 version=1.0.0
 PREFIX=/opt/glite
-flavour=gcc32thr
+prefix=
 
 glite_location=/opt/glite
 cppunit_prefix=/opt/cppunit
@@ -29,15 +29,15 @@ DEBUG:=-g -O0 -W -Wall
 CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
 	-DVERSION=\"${version}\" \
-	-I${stagedir}/include -I${top_srcdir}/src -I. \
+	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE
 
-LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 EXT_LIBS:=
@@ -86,11 +86,11 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 install: all
-	-mkdir -p ${PREFIX}/${libdir}
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
-	${INSTALL} -m 755 "libglite_lbu_maildir.la" "${PREFIX}/${libdir}/libglite_lbu_maildir.la"; \
-	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${PREFIX}/include/${globalprefix}/${lbutilsprefix}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
+	${INSTALL} -m 755 "libglite_lbu_maildir.la" "${DESTDIR}${PREFIX}${prefix}/${libdir}/libglite_lbu_maildir.la"; \
+	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/

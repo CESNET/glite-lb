@@ -6,6 +6,8 @@ lbprefix=lb
 package=glite-lb-client
 version=0.0.0
 PREFIX=/opt/glite
+prefix=
+sysconfdir=/opt/glite/etc
 
 -include Makefile.inc
 -include ../project/version.properties
@@ -48,17 +50,17 @@ endif
 
 DEBUG:=-g -O0
 CFLAGS:=${CFLAGS} ${DEBUG} \
-	-I${stagedir}/include -I${top_srcdir}/src -I${top_srcdir}/interface \
+	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
 
-LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} \
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} \
 	${COVERAGE_FLAGS} 
 
 COMPILE:=libtool --mode=compile ${CC} 
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS}
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 #ifneq (${expat_prefix},/usr)
@@ -180,24 +182,24 @@ check.il: ${INTERLOG_TEST_OBJS}
 	${LINKXX} -o $@ ${COMMON_LIB}${default_thrflavour} ${CPPUNIT_LIBS} ${EXT_LIB} -lpthread $+
 
 install:
-	-mkdir -p ${PREFIX}/bin
-	-mkdir -p ${PREFIX}/etc/init.d
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	-mkdir -p ${PREFIX}/share/man/man8
-	-mkdir -p ${PREFIX}/include/glite/lb
-	${INSTALL} -m 755 ${LOGD} ${PREFIX}/bin
-	${INSTALL} -m 755 ${INTERLOGD} ${PREFIX}/bin
-	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${PREFIX}/bin
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin
+	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
+	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/bin
+	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
+	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 ifdef LB_PERF
-	-mkdir -p ${PREFIX}/sbin
-	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${PREFIX}/sbin
-	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${PREFIX}/sbin
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
+	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${DESTDIR}${PREFIX}${prefix}/sbin
+	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif
-	${INSTALL} -m 755 ${top_srcdir}/config/startup ${PREFIX}/etc/init.d/glite-lb-locallogger
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} )
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-	${INSTALL} -m 644 ${MAN_GZ} ${PREFIX}/share/man/man8
+	${INSTALL} -m 755 ${top_srcdir}/config/startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-locallogger
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	( cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} )
+	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
+	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 
 ${INTERLOG_NOTIF_OBJS}: %.notif.lo: %.c
 	${COMPILE} ${CFLAGS} -DIL_NOTIFICATIONS -c $< -o $@

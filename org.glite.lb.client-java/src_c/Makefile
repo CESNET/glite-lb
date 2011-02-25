@@ -14,14 +14,14 @@ VPATH=${topdir}/src_c
 compile: ${LIB}
 
 ${LIB}: ${OBJ}
-	libtool --mode=link ${CC} -rpath ${PREFIX}/${libdir} -o $@ ${OBJ}
+	libtool --mode=link ${CC} -rpath ${PREFIX}${prefix}/${libdir} -o $@ ${OBJ}
 
 %.lo: %.c
 	libtool --mode=compile ${CC} -I.. -I${PATH_TO_JAVA}/include -I${PATH_TO_JAVA}/include/$(OS) -c $<
 
 install: compile
-	-mkdir -p ${PREFIX}/${libdir}
-	libtool --mode=install install -m 755 ${LIB} ${PREFIX}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	libtool --mode=install install -m 755 ${LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 
 clean:
 	rm -rf ${OBJ} .libs ${LIB}

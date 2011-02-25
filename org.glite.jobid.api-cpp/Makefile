@@ -46,8 +46,8 @@ clean:
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 install: 
-	mkdir -p ${PREFIX}/include/${globalprefix}/${jobidprefix}
-	(cd ${top_srcdir}/interface; ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${jobidprefix})
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix}
+	(cd ${top_srcdir}/interface; ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix})
 
 
 %.o: %.c

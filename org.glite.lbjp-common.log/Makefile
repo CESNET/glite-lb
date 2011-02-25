@@ -8,6 +8,8 @@ lbutilsprefix=lbu
 package=glite-lbu-log
 version=0.0.0
 PREFIX=/opt/glite
+prefix=
+sysconfdir=/etc
 log4c_prefix=/usr
 
 -include Makefile.inc
@@ -25,14 +27,14 @@ DEBUG:=-g -O0 -W -Wall
 
 CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
-	-I${stagedir}/include -I${top_srcdir}/src \
+	-I${stagedir}${prefix}/include -I${top_srcdir}/src \
 	-I${top_srcdir}/interface \
 	${LOG4C_CFLAGS}
 
-LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir}
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 OBJS:=log.o
@@ -62,21 +64,22 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	mkdir -p ${PREFIX}/include/${globalprefix}/${lbutilsprefix} 
-	${INSTALL} -m 644 ${top_srcdir}/src/log.h ${PREFIX}/include/${globalprefix}/${lbutilsprefix} 
-	mkdir -p ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${top_srcdir}/README ${PREFIX}/share/doc/${package}-${version}
-	mkdir -p ${PREFIX}/etc/glite-lb
-	${INSTALL} -m 644 ${top_srcdir}/config/log4crc ${PREFIX}/etc/glite-lb/log4crc
-	${INSTALL} -m 644 ${top_srcdir}/config/log4crc ${PREFIX}/share/doc/${package}-${version}/log4crc.example-production
-	${INSTALL} -m 644 ${top_srcdir}/config/log4crc.debugging ${PREFIX}/share/doc/${package}-${version}/log4crc.example-debugging
-	mkdir -p ${PREFIX}/${libdir}
-	${INSTALL} -m 755 ${LTLIB} ${PREFIX}/${libdir}/${LTLIB}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix} 
+	${INSTALL} -m 644 ${top_srcdir}/src/log.h ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix} 
+	mkdir -p ${DESTDIE}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
+	${INSTALL} -m 644 ${top_srcdir}/config/log4crc ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb/log4crc
+	${INSTALL} -m 644 ${top_srcdir}/config/log4crc ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/log4crc.example-production
+	${INSTALL} -m 644 ${top_srcdir}/config/log4crc.debugging ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/log4crc.example-debugging
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 755 ${LTLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}/${LTLIB}
 
 clean:
 	rm -rvf *.o *.lo .libs lib*
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf test
 
 check: test
 	LOG4C_RCPATH=${top_srcdir}/tests ./test

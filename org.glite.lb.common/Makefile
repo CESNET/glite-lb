@@ -7,6 +7,7 @@ lbprefix=lb
 package=glite-lb-common
 version=0.0.0
 PREFIX=/opt/glite
+prefix=
 
 expat_prefix=/opt/expat
 
@@ -18,7 +19,7 @@ jobiddir=${top_srcdir}/../org.glite.jobid.api-c
 version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc
-AT3=${stagedir}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 
 SUFFIXES = .T
 
@@ -55,7 +56,7 @@ CLASSADS_LIBS?=${classadslib} -lclassad
 CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
 	-I${top_srcdir}/test \
-	-I${stagedir}/include \
+	-I${stagedir}${prefix}/include \
 	${EXPAT_CFLAGS} \
 	${CLASSADS_CFLAGS} \
 	${COVERAGE_FLAGS} \
@@ -63,7 +64,7 @@ CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS} \
 	-DBUILDING_LB_COMMON 
 
-LDFLAGS:=${LDFLAGS} -L${stagedir}/${libdir} -L${stagedir}/lib \
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} \
 	${COVERAGE_FLAGS}
 
 EXT_LIBS:= ${EXPAT_LIBS} ${JOBID_LIB} ${TRIO_LIB} ${CLASSADS_LIBS}
@@ -74,8 +75,8 @@ ifdef LB_PROF
 endif
 
 COMPILE:=libtool --mode=compile ${CC}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
 OBJS:=${JOBID_OBJS} ${PERF_OBJS} lb_plain_io.o events.o mini_http.o query_rec.o \
@@ -114,9 +115,9 @@ default_commonlib=${NOTHRLTLIB}
 endif
 
 ifdef LB_PERF
-STAGE_PERFTEST=mkdir -p ${PREFIX}/examples/perftest; \
-		${INSTALL} -m 644 ${top_srcdir}/examples/*.log ${PREFIX}/examples/perftest; \
-		mkdir -p ${PREFIX}/sbin; ${INSTALL} -m 755 ${top_srcdir}/src/perftest_common.sh ${PREFIX}/sbin
+STAGE_PERFTEST=mkdir -p ${DESTDIR}${PREFIX}${prefix}/examples/perftest; \
+		${INSTALL} -m 644 ${top_srcdir}/examples/*.log ${DESTDIR}${PREFIX}${prefix}/examples/perftest; \
+		mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin; ${INSTALL} -m 755 ${top_srcdir}/src/perftest_common.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 else
 STAGE_PERFTEST=true
 endif
@@ -220,19 +221,19 @@ olddoc: generate events.tex status.tex
 	doxygen CPP.dox
 
 install: 
-	mkdir -p ${PREFIX}/${libdir}
-	mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
-	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${PREFIX}/${libdir}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-#	cp -r C CPP ${PREFIX}/share/doc/${package}-${version}
-	mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix} ;
-	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix}) ;
-	${INSTALL} -m 644 ${GEN_HDRS} ${PREFIX}/include/${globalprefix}/${lbprefix} ;
-	${INSTALL} -m 644 ${lib_LIBRARIES} ${PREFIX}/${libdir};
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples
+	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
+#	cp -r C CPP ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} ;
+	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) ;
+	${INSTALL} -m 644 ${GEN_HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} ;
+	${INSTALL} -m 644 ${lib_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir};
 	if [ x${LB_STANDALONE} = xyes ]; then \
-		mkdir -p ${PREFIX}/include/glite/wmsutils/jobid ; \
-		${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${PREFIX}/include/glite/wmsutils/jobid/ ; \
+		mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/wmsutils/jobid ; \
+		${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${DESTDIR}${PREFIX}${prefix}/include/glite/wmsutils/jobid/ ; \
 	fi ;
 	${STAGE_PERFTEST} ;
 

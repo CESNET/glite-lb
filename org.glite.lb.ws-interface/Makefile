@@ -8,6 +8,7 @@ lbprefix=lb
 package=glite-lb-ws-interface
 version=0.0.0
 PREFIX=/opt/glite
+prefix=
 
 -include Makefile.inc
 -include ../project/version.properties
@@ -17,7 +18,7 @@ version=${module.version}
 SUFFIXES = .T
 
 VPATH=${top_srcdir}/src
-AT3=${stagedir}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 XSLTPROC:=xsltproc --nonet
 XMLLINT:=xmllint --nonet
 TIDY=tidy -i -q --show-warnings no --tidy-mark no --wrap 0
@@ -39,23 +40,23 @@ glue2-copy.xsd:
 	wget -O $@ http://schemas.ogf.org/glue/2008/05/spec_2.0_d42_r01 || cp ${top_srcdir}/src/glue2.xsd $@
 
 install:
-	-mkdir -p ${PREFIX}/${STAGETO}
-	-mkdir -p ${PREFIX}/share/doc/${package}-${version}/examples
-	-mkdir -p ${PREFIX}/include/${globalprefix}/${lbprefix}
-	install -m 644 ${top_srcdir}/LICENSE ${PREFIX}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && install -m 644 ChangeLog package.description package.summary ${PREFIX}/share/doc/${package}-${version} )
-	-test -f LB.html && install -m 644 LB.html ${PREFIX}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${STAGETO}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
+	install -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	( cd ${top_srcdir}/project && install -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
+	-test -f LB.html && install -m 644 LB.html ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 # install the generated stuff instead
-#	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
-	install -m 644 ${WSDL} ${PREFIX}/${STAGETO}
-	install -m 644 glue2-copy.xsd ${PREFIX}/${STAGETO}/glue2.xsd
-	install -m 644 ${top_srcdir}/src/lb4agu.wsdl ${PREFIX}/${STAGETO}
-	install -m 644 ws_interface_version.h ${PREFIX}/include/${globalprefix}/${lbprefix}
+#	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${DESTDIR}${PREFIX}${prefix}/${STAGETO}
+	install -m 644 ${WSDL} ${DESTDIR}${PREFIX}${prefix}/${STAGETO}
+	install -m 644 glue2-copy.xsd ${DESTDIR}${PREFIX}${prefix}/${STAGETO}/glue2.xsd
+	install -m 644 ${top_srcdir}/src/lb4agu.wsdl ${DESTDIR}${PREFIX}${prefix}/${STAGETO}
+	install -m 644 ws_interface_version.h ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 
 # JP has its own version anyway
 #	if [ x${DOSTAGE} = xyes ]; then \
-#		mkdir -p ${PREFIX}/share/lb; \
-#		install -m 644 ${top_srcdir}/src/puke-wsdl.xsl ${top_srcdir}/src/puke-ug.xsl ${PREFIX}/share/lb; \
+#		mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite-lb; \
+#		install -m 644 ${top_srcdir}/src/puke-wsdl.xsl ${top_srcdir}/src/puke-ug.xsl ${DESTDIR}${PREFIX}${prefix}/share/glite-lb; \
 #	fi
 
 clean:
