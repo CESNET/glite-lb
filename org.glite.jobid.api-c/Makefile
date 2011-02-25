@@ -57,7 +57,7 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split /\./,"${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ${LIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}${prefix}/${libdir}
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${stagedir}${prefix}/${libdir}
 
 check: compile base64_test
 	./base64_test base64_test.xml

@@ -66,7 +66,7 @@ stage: compile
 install: compile
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix} 
 	${INSTALL} -m 644 ${top_srcdir}/src/log.h ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix} 
-	mkdir -p ${DESTDIE}${PREFIX}${prefix}/share/doc/${package}-${version}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb

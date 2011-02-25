@@ -228,7 +228,7 @@ install:
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 #	cp -r C CPP ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} ;
-	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) ;
+	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) ;
 	${INSTALL} -m 644 ${GEN_HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} ;
 	${INSTALL} -m 644 ${lib_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir};
 	if [ x${LB_STANDALONE} = xyes ]; then \

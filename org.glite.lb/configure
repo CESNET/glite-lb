@@ -26,8 +26,8 @@
 use Getopt::Long;
 
 my $pwd = `pwd`; chomp $pwd;
-my $prefix = $pwd.'/stage';
-my $stagedir;
+my $prefix = '/usr';
+my $stagedir = $pwd.'/stage';
 my $root = '';
 my $sysroot = '';
 my $sysconfdir;
@@ -220,7 +220,7 @@ $prefix=~s/\/$//;
 $stage=~s/\/$//;
 $root=~s/\/$//;
 $sysroot=~s/\/$//;
-if (not $sysconfdir) { $sysconfdir = "$prefix/etc"; }
+if (not $sysconfdir) { $sysconfdir = $prefix eq '/usr' ? '/etc' : "$prefix/etc"; }
 $sysconfdir=~s/\/$//;
 
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
@@ -293,7 +293,7 @@ if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
 
-$stagedir = $prefix unless $stagedir;
+$stagedir = $root.$prefix unless $stagedir;
 
 if ($mode eq 'build') {
 	print "Writing config.status\n";
@@ -382,7 +382,7 @@ sub mode_build {
 		my $full = full($_);
 		my $build = $buildroot{$_};
 	
-		print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install\n\n";
+		print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install DESTDIR=$stagedir\n\n";
 	}
 	
 	close MAK;
