@@ -199,28 +199,28 @@ default: all
 
 ifeq (${thrflavour},)
 ${LIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${stagedir}${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB} ${TRIO_LIB} \
 			-lglite_security_gss
 
 ${PLUSLIB}: ${PLUSOBJS} ${LIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${stagedir}${prefix}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
 else
 ${NOTHRLIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${stagedir}${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB_NOTHR} ${TRIO_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${stagedir}${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB_THR} ${TRIO_LIB} \
 			-lglite_security_gss_${thrflavour}
 
 ${NOTHRPLUSLIB}: ${PLUSOBJS} ${NOTHRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${stagedir}${prefix}/${libdir} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${stagedir}${prefix}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
 endif
 
 logevent: logevent.o args.o
@@ -317,7 +317,7 @@ producer_test.o: %.o: %.cpp
 man: ${MAN_GZ} ${MAN8_GZ}
 
 stage:  compile
-	$(MAKE) install PREFIX=${stagedir}
+	$(MAKE) install PREFIX=${stagedir} staging=1
 
 Event.h Event.cpp: EventAttrNames.pl
 
@@ -343,6 +343,9 @@ ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${c_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 else
 	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	if test -n "${DESTDIR}" -o -n "${staging}"; then \
+		install -m 644 ${plus_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
+	fi
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
