@@ -304,6 +304,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 	printf("%sexpectUpdate : %d\n", ind, stat.expectUpdate);
 	printf("%sexpectFrom : %s\n", ind, stat.expectFrom);
 	printf("%sacl : %s\n", ind, stat.acl);
+	printf("%saccess rights : \n%s", ind, stat.access_rights);
 	printf("%spayload_running: %d\n", ind, stat.payload_running);
 	if (stat.possible_destinations) {
 		printf("%spossible_destinations : \n", ind);

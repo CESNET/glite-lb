@@ -995,3 +995,176 @@ edg_wll_get_server_policy()
 {
     return &authz_policy;
 }
+
+static GRSTgaclEntry *
+find_entry(edg_wll_Context ctx, GRSTgaclAcl *acl, GRSTgaclPerm perm,
+	   enum edg_wll_ChangeACLPermission_type perm_type)
+{
+    GRSTgaclEntry *entry;
+
+    if (acl == NULL) {
+	edg_wll_SetError(ctx, EINVAL, "Parsing ACL");
+	return NULL;
+    }
+
+    for (entry = acl->firstentry; entry != NULL; entry = entry->next) {
+	if (perm_type == EDG_WLL_CHANGEACL_ALLOW && entry->allowed == perm)
+	    return entry;
+	if (perm_type == EDG_WLL_CHANGEACL_DENY && entry->denied == perm)
+	    return entry;
+
+    }
+    return NULL;
+}
+
+static int
+aux_add_cred(edg_wll_Context ctx,
+	     GRSTgaclAcl *aux,
+	     GRSTgaclPerm perm,
+	     enum edg_wll_ChangeACLPermission_type perm_type,
+	     GRSTgaclCred *cred)
+{
+    GRSTgaclEntry *e;
+    int ret;
+
+    if (cred == NULL)
+	return edg_wll_SetError(ctx, ENOMEM, "Empty ACL to parse");
+
+    e = find_entry(ctx, aux, perm, perm_type);
+    if (e == NULL) {
+	e = GRSTgaclEntryNew();
+	if (e == NULL) {
+	    ret = edg_wll_SetError(ctx, ENOMEM, "Parsing ACL entry");
+	    goto end;
+	}
+	ret = GRSTgaclAclAddEntry(aux, e);
+	if (ret == 0) {
+	    GRSTgaclEntryFree(e);
+	    ret = edg_wll_SetError(ctx, ENOMEM, "Parsing ACL");
+	    goto end;
+	}
+	switch (perm_type) {
+	    case EDG_WLL_CHANGEACL_ALLOW:
+		GRSTgaclEntryAllowPerm(e, perm);
+		break;
+	    case EDG_WLL_CHANGEACL_DENY:
+		GRSTgaclEntryDenyPerm(e, perm);
+		break;
+	    default:
+		edg_wll_SetError(ctx, EINVAL, "Wrong permission type");
+		goto end;
+	}
+    }
+
+    ret = GRSTgaclEntryAddCred(e, cred);
+    if (ret == 0) {
+	ret = edg_wll_SetError(ctx, EINVAL, "Creating ACL entry");
+	goto end;
+    }
+
+    ret = 0;
+
+end:
+    return ret;
+}
+
+static int
+output_authz_rule(edg_wll_Context ctx,
+		  GRSTgaclAcl *aux,
+		  enum edg_wll_ChangeACLPermission permission,
+		  char **out)
+{
+    GRSTgaclPerm perm;
+    GRSTgaclEntry *allowed, *denied;
+    GRSTgaclCred *cred;
+    char *s = NULL, *dec = NULL;
+
+    if (out == NULL)
+	return edg_wll_SetError(ctx,EINVAL,"Error outputing ACL");
+
+    perm = perm_lb2gacl(permission);
+    if (perm == GRST_PERM_NONE)
+	return edg_wll_SetError(ctx,EINVAL,"Unknown permission for ACL");
+
+    allowed = find_entry(ctx, aux, perm, EDG_WLL_CHANGEACL_ALLOW);
+    denied = find_entry(ctx, aux, perm, EDG_WLL_CHANGEACL_DENY);
+    if (allowed || denied) {
+	asprintf(&s, "%s:\n", edg_wll_ChangeACLPermissionToString(permission));
+	if (allowed) {
+	    asprintf(&s, "%s\tallowed: ", s);
+	    for (cred = allowed->firstcred; cred; cred = cred->next) {
+		dec = GRSThttpUrlDecode(cred->auri);
+		asprintf(&s, "%s%s%s\n",
+			s,
+			(cred == allowed->firstcred) ? "" : "\t\t ",
+			dec);
+		free(dec);
+	    }
+	}
+	if (denied) {
+	    asprintf(&s, "%s\tdenied:  ", s);
+	    for (cred = denied->firstcred; cred; cred = cred->next) {
+		dec = GRSThttpUrlDecode(cred->auri);
+		asprintf(&s, "%s%s%s\n",
+			 s,
+			 (cred == denied->firstcred) ? "" : "\t\t",
+			 dec);
+		free(dec);
+	    }
+	}
+	asprintf(out, "%s%s",
+		 (*out == NULL) ? "" : *out,
+		 s);
+	free(s);
+    }
+    return 0;
+}
+
+/* The auxiliary GACL ACL below is used just as an convenient container easying the parsing. The 
+   structure is not used for any controling access */
+int
+edg_wll_acl_print(edg_wll_Context ctx, edg_wll_Acl a, char **policy)
+{
+    GRSTgaclEntry *entry;
+    GRSTgaclAcl *aux = NULL;
+    GRSTgaclAcl *acl;
+    char *pol = NULL;
+    int ret;
+
+    if (a == NULL || a->value == NULL)
+	edg_wll_SetError(ctx, EINVAL, "ACL not set");
+    acl = a->value;
+
+    aux = GRSTgaclAclNew();
+    if (aux == NULL)
+	return edg_wll_SetError(ctx, ENOMEM, "Creating ACLs");
+
+    for (entry = acl->firstentry; entry != NULL; entry = entry->next) {
+	if (entry->allowed != 0)
+	    aux_add_cred(ctx, aux, entry->allowed, EDG_WLL_CHANGEACL_ALLOW, entry->firstcred);
+	if (entry->denied != 0)
+	    aux_add_cred(ctx, aux, entry->denied, EDG_WLL_CHANGEACL_DENY, entry->firstcred);
+    }
+
+    ret = output_authz_rule(ctx, aux, EDG_WLL_CHANGEACL_READ, &pol);
+    if (ret)
+	goto end;
+
+    ret = output_authz_rule(ctx, aux, EDG_WLL_CHANGEACL_TAG, &pol);
+    if (ret)
+	goto end;
+
+    ret = 0;
+    *policy = pol;
+    pol = NULL;
+
+end:
+    if (pol)
+	free(pol);
+    /* prevent from free()ing allocated memory not allocated by us */
+    for (entry = aux->firstentry; entry != NULL; entry = entry->next)
+	entry->firstcred = NULL;
+    GRSTgaclAclFree(aux);
+
+    return ret;
+}

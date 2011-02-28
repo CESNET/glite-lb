@@ -181,6 +181,7 @@ int edg_wll_JobStatusServer(
 		}
 			
 		if (acl) {
+			edg_wll_acl_print(ctx, acl, &stat->access_rights);
 			stat->acl = strdup(acl->string);
 			edg_wll_FreeAcl(acl);
 			acl = NULL;

@@ -94,6 +94,8 @@ edg_wll_get_server_policy();
 int
 edg_wll_get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
                   char ***fqans);
+int
+edg_wll_acl_print(edg_wll_Context ctx, edg_wll_Acl a, char **policy);
 
 #ifdef __cplusplus
 }
