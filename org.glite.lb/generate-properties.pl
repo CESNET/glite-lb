@@ -103,9 +103,10 @@ if (defined $opt_c) { # Configurations
 	while ($subsys = shift) {
 		$module = $subsys;
 		$module =~ s/_[a-zA-Z]*_.*//;	
-		$module =~ s/glite-/glite\./;	
-		$module =~ s/gridsite-/gridsite\./;	
-		system("etics-configuration prepare -o $TMPDIR/subsys.INI.$$.tmp -c $subsys org.$module");
+		$module =~ s/^glite-/org.glite\./;	
+		$module =~ s/^gridsite-/org.gridsite\./;
+		$module =~ s/^emi-/emi\./;
+		system("etics-configuration prepare -o $TMPDIR/subsys.INI.$$.tmp -c $subsys $module");
 		open FILE, "$TMPDIR/subsys.INI.$$.tmp" or die $!;
 		$hierarchy = 0;
 		while (my $line = <FILE>) {
