@@ -60,14 +60,14 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${prefix}/examples \
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples \
 		${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} \
 		${DESTDIR}${PREFIX}${prefix}/share/man/man8 \
 		${DESTDIR}${PREFIX}${sysconfdir}/init.d \
 		${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	${INSTALL} -m 755 harvester ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-harvester
-	${INSTALL} -m 755 harvester-dbg ${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-harvester-dbg
-	${INSTALL} -m 755 ${top_srcdir}/examples/test.sh ${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-harvester-test.sh
+	${INSTALL} -m 755 harvester-dbg ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-harvester-dbg
+	${INSTALL} -m 755 ${top_srcdir}/examples/test.sh ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-harvester-test.sh
 	${INSTALL} -m 444 ${top_srcdir}/examples/test.sql ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb/harvester-test-dbsetup.sql
 	${INSTALL} -m 444 ${top_srcdir}/doc/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 444 glite-lb-harvester.8 ${DESTDIR}${PREFIX}${prefix}/share/man/man8

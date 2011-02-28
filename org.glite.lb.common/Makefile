@@ -115,8 +115,8 @@ default_commonlib=${NOTHRLTLIB}
 endif
 
 ifdef LB_PERF
-STAGE_PERFTEST=mkdir -p ${DESTDIR}${PREFIX}${prefix}/examples/perftest; \
-		${INSTALL} -m 644 ${top_srcdir}/examples/*.log ${DESTDIR}${PREFIX}${prefix}/examples/perftest; \
+STAGE_PERFTEST=mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/perftest; \
+		${INSTALL} -m 644 ${top_srcdir}/examples/*.log ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/perftest; \
 		mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin; ${INSTALL} -m 755 ${top_srcdir}/src/perftest_common.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 else
 STAGE_PERFTEST=true

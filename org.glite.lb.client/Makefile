@@ -187,6 +187,12 @@ offset=6
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
+ifeq (${project},emi)
+m4dir=${PREFIX}${prefix}/share/emi/build/m4
+else
+m4dir=${PREFIX}${prefix}/share/build/m4
+endif
+
 ifdef LB_STANDALONE
 compile all: generate ${c_LIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${MAN8_GZ}
 else
@@ -336,9 +342,9 @@ install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/examples
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/build/m4
+	mkdir -p ${DESTDIR}${m4dir}
 ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${c_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 else
@@ -362,9 +368,8 @@ endif
 	for p in ${TOOLS} ; do \
 		${INSTALL} -m 755 "$$p" "${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-$$p"; \
 	done
-# TODO: restructuring - do we really need binaries of the examples to be installed?
 	for p in ${EXAMPLES} ${EXAMPLES_PLUS} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS} ; do \
-		${INSTALL} -m 755 "$$p" "${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-$$p"; \
+		${INSTALL} -m 755 "$$p" "${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-$$p"; \
 	done
 	for p in ${EXAMPLES_SRC} ${EXAMPLES_PLUS_SRC} ${EXAMPLES_CL_SRC} ${EXAMPLES_CL_THR_SRC} ; do \
 		${INSTALL} -m 644 "${top_srcdir}/examples/$$p" "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"; \
@@ -372,11 +377,11 @@ endif
 	${INSTALL} -m 644 ${top_srcdir}/examples/Makefile "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-export.sh"
-	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-notify.pl
-	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-sandbox_transfers.sh
+	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-notify.pl
+	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-sandbox_transfers.sh
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
-	${INSTALL} -m 644 ${top_srcdir}/m4/glite_lb.m4 ${DESTDIR}${PREFIX}${prefix}/share/build/m4/
+	${INSTALL} -m 644 ${top_srcdir}/m4/glite_lb.m4 ${DESTDIR}${m4dir}/
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/

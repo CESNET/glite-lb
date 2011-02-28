@@ -70,9 +70,9 @@ check:
 	@echo "No test"
 
 install:
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/examples/
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/
 	for f in ${CEXAMPLES}; do \
-		${INSTALL} -m 755 $$f ${DESTDIR}${PREFIX}${prefix}/examples/glite-lb-$$f; \
+		${INSTALL} -m 755 $$f ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-$$f; \
 	done
 
 clean:
