@@ -33,6 +33,7 @@ typedef enum {
     REGISTER_JOBS	= 1 << 6,
     READ_ALL		= 1 << 7,
     PURGE		= 1 << 8,
+    GRANT_OWNERSHIP	= 1 << 9,
 } authz_action;
 
 typedef struct action_name {

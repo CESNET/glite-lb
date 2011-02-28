@@ -927,6 +927,10 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
 	     action = REGISTER_JOBS;
 	     break;
 
+	case EDG_WLL_EVENT_GRANTPAYLOADOWNERSHIP:
+	     action = GRANT_OWNERSHIP;
+	     break;
+
 	case EDG_WLL_EVENT_CURDESCR:
 	case EDG_WLL_EVENT_USERTAG:
 	case EDG_WLL_EVENT_CHANGEACL:
