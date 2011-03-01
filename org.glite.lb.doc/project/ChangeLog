@@ -81,3 +81,10 @@
 1.2.0-1
 - Documentation updated to cover new features to be released with EMI-1
 
+1.2.1-1
+- Documentation for new authz features
+  - Change job ownership
+  - Permissions to log user tags
+- Introduction on a sysconfdir option (for /etc vs /usr)
+- DESTDIR in makefiles
+
