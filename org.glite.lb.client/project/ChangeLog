@@ -134,3 +134,14 @@
 - dest_url support in notification client
 - Update performance tests behavior to match the new IL development
 
+5.0.1-1
+- Detectin project name in Makefile
+- Figed m4 file location
+- Relocation of examples for EMI
+- When staged, install rather not-relinked .la file for the dependent C++ library
+- Introduction on a sysconfdir option (for /etc vs /usr)
+- DESTDIR in makefiles
+- file trasfer collections -- initial implementation
+- A human-readable form of jobs ACLs
+- Setting the owner of job payload
+
