@@ -16,3 +16,6 @@
 1.1.0-2
 - Module rebuilt
 
+1.1.1-1
+- DESTDIR in makefiles
+
