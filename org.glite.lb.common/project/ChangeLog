@@ -116,3 +116,10 @@
 - Check result of InitContext calls
 - Default parameter settings fixed
 
+8.0.1-1
+- Detectin project name in Makefile
+- Figed m4 file location
+- When staged, install rather not-relinked .la file for the dependent C++ library
+- Introduction on a sysconfdir option (for /etc vs /usr)
+- DESTDIR in makefiles
+
