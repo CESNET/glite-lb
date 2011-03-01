@@ -236,3 +236,15 @@
 - New GetInterfaceVersion method implemented
 - Provisional handling of optional fileds in the WS intefrace
 
+2.2.1-1
+- Detecting project name in Makefile
+- When staged, install rather not-relinked .la file for the dependent C++ library
+- Introduction on a sysconfdir option (for /etc vs /usr)
+- DESTDIR in makefiles
+- file trasfer collections -- initial implementation
+- A human-readable form of jobs ACLs
+- Setting the owner of job payload
+- Server vs. state-machine restructuring
+- Increased severity if server authentication fails
+- Job list in HTML interface shows only compute jobs or sandboxes without associated compute job
+
