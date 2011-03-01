@@ -64,3 +64,9 @@
 - Fixes for parallel release in EMI & gLite
 - New GetInterfaceVersion method implemented
 
+1.2.1-1
+- DESTDIR in makefiles
+- root directory option (ETICS performs own files relocation)
+- Setting the owner of job payload
+- Introduction on a sysconfdir option (for /etc vs /usr)
+
