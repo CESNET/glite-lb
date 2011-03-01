@@ -80,3 +80,9 @@
 3.0.0-2
 - Module rebuilt
 
+3.0.1-1
+- Root directory option (ETICS performs own files relocation)
+- Prefix option as prefix inside stage
+- Sysconfdir option (for /etc vs /usr)
+- DESTDIR in makefiles
+
