@@ -1,8 +1,0 @@
-1.0.0-1
-- Initial version
-
-1.0.1-1
-- Detecting project name in Makefile
-- Introduction on a sysconfdir option (for /etc vs /usr)
-- DESTDIR in makefiles
-
