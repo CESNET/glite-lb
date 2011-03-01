@@ -49,3 +49,8 @@
 - New GetInterfaceVersion method implemented
 - Provisional handling of optional fileds in the WS intefrace
 
+3.2.1-1
+- DESTDIR in makefiles
+- root directory option (ETICS performs own files relocation)
+- Setting the owner of job payload
+
