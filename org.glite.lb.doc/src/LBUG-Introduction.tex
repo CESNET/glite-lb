@@ -931,4 +931,38 @@ Recently, there were also attempts to use \LB system to transport different type
 Certificate Revocation Lists or syslog messages. For a detailed description see 
 \cite{LB4CRL}.
 
+\subsubsection{Controlling access to job information}
+\label{sec:job-authz}
+Access to information about a job subjects to strong access control
+mechanism. By default, only the job owner is allowed to access the
+information about their jobs. There are, however, means how additional
+rights can be granted to other persons. The \LB server administrator can
+specify a server-level policy, which grants specific rights to all jobs
+stored in the server, please refer to the \LB Administrators' guide for
+more information.
 
+Besides the server-wide configuration, a job owner can also grant access to
+their jobs to other users. Each job can be assigned an Access control list
+(ACL), which specifyies which users are allowed to work with the job
+information. If a job owner wants other users to be allowed to obtain
+information about their job, they provide an ACL rule granting \verb'READ'
+access for the users. The users can be identified either by their X.509
+subject name or their VOMS attributes. As of \LBver{3.0}, it is also
+possible to grant a \verb'TAG' right, which allows multiple users to add
+user tags to the same job. The current ACL of a job is returned as a part
+of the job status. Management of the ACL entries is done using logging a
+special \LB event in a standard way (see \ref{e:change-acl} for particular
+examples).
+
+Starting from \LBver{3.0}, it is also possible to specify the owner of the
+actual payload of a job. The feature has been introduced for better support
+of multi-user pilot jobs, where the pilot submitter differs from the owner
+of actual payload. In order to set the payload owner, the job owner has to
+log a \verb'GrantPayloadOwnership' event which specifies the subject owner of the
+payload owner. This event is supposed to come from a pilot job factory
+which monitors the pilot jobs and keeps an overview about when a particular
+payload is started. The new payload owner has to confirm the transition
+with a \verb'TakePayloadOwnership' logged to the job using his or her
+credentials. The payload and job owners have the same rights to the jobs, 
+they both can query the job, etc. The identity of the current payload owner
+is returned as part of the job status information.

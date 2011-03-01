@@ -17,7 +17,7 @@
 \subsubsection{Example: Changing Job Access Control List}
 \label{e:change-acl}
 
-In order to change the Access Control List (ACL) for a job, a special event
+In order to change the Access Control List (ACL) for a job (see also \ref{sec:job-authz}), a special event
 \verb'ChangeACL' is used. This event can be logged by the job owner using the
 \verb'glite-lb-logevent' command (see also Sect.~\ref{glite-lb-logevent}).
 The general template for changing the ACL is as follows:
@@ -42,7 +42,8 @@ where
                \verb'DN', \verb'GROUP', and \verb'FQAN' can be given to
                specify X.500 name, VOMS group, or FQAN, respectively \\
 \verb'<permission>' & ACL permission to change, currently only \verb'READ' is
-               supported. \\
+               supported. Starting from \LBver{3.0}, the permission \verb'TAG' can
+               also be used.\\
 \verb'<permission_type>' & Type of permission requested. \verb'ALLOW' or
                \verb'DENY' can be specified. \\
 \verb'<operation>' & Operation requested to be performed with ACL. \verb'ADD'
@@ -76,7 +77,7 @@ Adding a VOMS attribute to the ACL:
 \begin{verbatim}
 glite-lb-logevent -e ChangeACL -s UserInterface -p -j <job_id>          \
         --user_id '/VOCE/Role=Administrator' --user_id_type FQAN        \
-        --permission READ --permission_type ALLOW                       \
+        --permission TAG --permission_type ALLOW                       \
         --operation ADD
 \end{verbatim}
 

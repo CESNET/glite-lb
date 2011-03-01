@@ -324,6 +324,7 @@ rights that can be granted to the users:
 \item \verb'LOG_WMS_EVENTS'
 \item \verb'LOG_CE_EVENTS'
 \item \verb'LOG_GENERAL_EVENTS'
+\item \verb'GRANT_OWNERSHIP' (\LBver{3.0})
 \end{itemize}
 
 The first action disables all authorization checks. The next four categories concern with acquring data from the \LB
@@ -371,8 +372,17 @@ nodes. The \verb'LOG_GENERAL_EVENTS' category comprises events that can be
 sent from any place on the grid, namely \verb'CURDESC', \verb'USERTAG', and
 \verb'CHANGEACL'. It is important to understand that these access control
 rules provides additional level to the existing authorization routines.
-Especially, being granted the \verb'LOG_GENERAL_EVENTS' right is not sufficient to
-change ACLs on jobs of other people, etc.
+In particular, being granted the \verb'LOG_GENERAL_EVENTS' right is not sufficient to
+e.g. change ACLs on jobs of other people and obtain an access to the job information.
+
+As of \LBver{3.0} it is possible for the job owner to hand over the ownership
+of the payload to another user, which eases handling \eg of pilot jobs. In
+order to set the payload owner, the job owner must log a
+\verb'GrantPayloadOwnership' event, where the identity of the new
+payload owner is introduced. The event can only originate from loggers
+described by the \verb'GRANT_OWNERSHIP' category of the policy file. More
+information and an example of ownership setting is given in the \LB Users'
+guide.
 
 The \LB policy is specified in a policy configuration file that must be given
 in the server configuration. Specifying the policy file also triggers the
@@ -418,6 +428,11 @@ resource "LB" {
     action "REGISTER_JOBS" {
         rule permit {
              subject = ".*"
+        }
+    }
+    action "GRANT_OWNERSHIP" {
+        rule permit {
+             fqan = "/VO/Pilot_job_factory"
         }
     }
 }

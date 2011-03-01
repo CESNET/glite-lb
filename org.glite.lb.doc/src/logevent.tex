@@ -64,3 +64,30 @@ For additional information see also manual page glite-lb-logevent(1).
 \input log_usertag.tex
 
 \input change_acl.tex
+
+\subsubsection{Example: Setting payload owner}
+\label{e:payload_owner}
+
+In order to change the owner of the payload (see also \ref{sec:job-authz}),
+a pair of \LB events is used. In order for a job owner to specify a new
+owner of the payload, the \verb'GrantPayloadOwnership' event is used, \eg:
+
+\begin{verbatim}
+glite-lb-logevent -e GrantPayloadOwnership -s UserInterface -j <job_id> \
+        --payload_owner <subject_name>
+\end{verbatim}
+
+where
+
+\begin{tabularx}{\textwidth}{>{\texttt}lX}
+\verb'<job_id>'    & specifies the job to change access to\\
+\verb'<subject_name_id>'   & specifies the X.509 subject name of the new payload user. \\
+\end{tabularx}
+
+The new payload owner confirm they accept the ownership using the
+\verb'TakePayloadOwnership' event. Note that this event event must be
+logged using the credentials of the new user:
+
+\begin{verbatim}
+glite-lb-logevent -e TakePayloadOwnership -s UserInterface -j <job_id>
+\end{verbatim}
