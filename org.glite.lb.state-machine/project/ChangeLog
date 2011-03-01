@@ -70,3 +70,10 @@
 1.2.0-1
 - Fixes for parallel release in EMI & gLite
 
+1.2.1-1
+- Detecting project name in Makefile
+- When staged, install rather not-relinked .la file for the dependent C++ library
+- Introduction on a sysconfdir option (for /etc vs /usr)
+- DESTDIR in makefiles
+- Server vs. state-machine restructuring
+
