@@ -27,8 +27,8 @@ use Getopt::Long;
 
 my $pwd = `pwd`; chomp $pwd;
 my $prefix = '/usr';
-my $stagedir = $pwd.'/stage';
-my $root = '';
+my $stagedir = undef;
+my $root = $pwd.'/stage';
 my $sysroot = '';
 my $sysconfdir;
 my $staged;
@@ -47,9 +47,10 @@ my $jp_tag = '';
 my $jobid_tag = '';
 my $libdir = getlibdir();
 my $projectname;
+my $project = '';
 
 
-my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester/;
+my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester glite-LB glite-PX/;
 my %enable_nodes;
 my %disable_nodes;
 
@@ -179,7 +180,7 @@ my %lbmodules = (
 
 
 my @opts = (
-	'prefix=s' => \$prefix,
+	'prefix:s' => \$prefix,
 	'staged=s' => \$staged,
 	'module=s' => \$module,
 	'thrflavour:s' => \$thrflavour,
@@ -200,6 +201,7 @@ my @opts = (
 	'help' => \$help,
 	'libdir=s' => \$libdir,
 	'emi' => \$emi,
+	'project=s' => \$project,
 );
 
 for (@nodes) {
@@ -225,7 +227,8 @@ $sysconfdir=~s/\/$//;
 
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
-$projectname = $emi ? 'emi' : 'org.glite';
+if (!$project) { $project = $emi ? 'emi' : 'glite'; }
+$projectname = ($project eq 'emi') ? 'emi' : 'org.glite';
 if ($emi) {
 	for $_ (keys %etics_externs_emi) {
 		$etics_externs{$_} = $etics_externs_emi{$_};
@@ -293,7 +296,7 @@ if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
 
-$stagedir = $root.$prefix unless $stagedir;
+$stagedir = $root unless $stagedir;
 
 if ($mode eq 'build') {
 	print "Writing config.status\n";
@@ -382,7 +385,7 @@ sub mode_build {
 		my $full = full($_);
 		my $build = $buildroot{$_};
 	
-		print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install DESTDIR=$stagedir\n\n";
+		print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install\n\n";
 	}
 	
 	close MAK;
@@ -696,7 +699,8 @@ px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
 
 	print "Creating $full/$buildroot{$_}/Makefile.inc\n";
 
-	print MKINC qq{PREFIX = $root
+	print MKINC qq{project = $project
+PREFIX = $root
 prefix = $prefix
 stagedir = $stagedir
 sysroot = $sysroot
@@ -905,7 +909,7 @@ sub mode_etics {
 		}
 	}
 	elsif ($subsys eq 'px' and $module eq 'myproxy-config') {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
@@ -914,7 +918,7 @@ sub mode_etics {
 		my $sysconfdir = ' --sysconfdir=/etc';
 		# exception for yaims in EMI for now: prefix /opt/glite
 		if ($emi and ($module =~ /yaim/ or $module =~ /^glite-/)) { $localprefix = '/opt/glite'; $sysconfdir = ''; }
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --root=\${prefix} --prefix=${localprefix} --stage=\${stageDir} --sysroot=\${package.prefix}$sysconfdir --libdir=\${libdir} --module $subsys.$module @copts";
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --root=\${prefix} --prefix=${localprefix} --stage=\${stageDir} --sysroot=\${package.prefix}$sysconfdir --libdir=\${libdir}  --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
