@@ -68,3 +68,8 @@
 - Separated start-up script for L&B harvester
 - Check result of InitContext calls
 
+1.1.1-1
+- Detecting project name in Makefile
+- Introduction on a sysconfdir option (for /etc vs /usr)
+- DESTDIR in makefiles
+
