@@ -56,3 +56,8 @@
 - Check result of InitContext calls
 - Default parameter settings fixed.
 
+2.1.1-1
+- DESTDIR in makefiles
+- root directory option (ETICS performs own files relocation)
+- Setting the owner of job payload
+
