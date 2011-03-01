@@ -36,3 +36,10 @@
 - Fixes for parallel release in EMI & gLite
 - CREAM_CORE->CREAM_EXECUTOR
 
+1.1.1-1
+- Detectin project name in Makefile
+- Figed m4 file location
+- When staged, install rather not-relinked .la file for the dependent C++ library
+- Introduction on a sysconfdir option (for /etc vs /usr)
+- DESTDIR in makefiles
+
