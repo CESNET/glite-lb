@@ -36,3 +36,8 @@
 4.3.0-1
 - Fixes for parallel release in EMI & gLite
 
+4.3.1-1
+- YAIM cleanup for EMI/EPEL
+- Introduction on a sysconfdir option (for /etc vs /usr)
+- DESTDIR in makefiles
+
