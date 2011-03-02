@@ -8,25 +8,35 @@ prefix=
 -include Makefile.inc
 -include ../project/version.properties
 
-all:
+yaim_prefix=/opt/glite
+node_info=${top_srcdir}/config/node-info.d/glite-lb
+node_info_project=${top_srcdir}/config/node-info.d/${project}/glite-lb
 
-install:
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/yaim/functions/
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/yaim/node-info.d
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/yaim/defaults
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/yaim/etc/versions
-	install -m 0644 $(top_srcdir)/config/defaults/glite-lb.pre ${DESTDIR}${PREFIX}${prefix}/yaim/defaults
-	for c in gip_lb glite_lb info_service_lb ; do \
-		install -m 0644 $(top_srcdir)/config/functions/config_$$c ${DESTDIR}${PREFIX}${prefix}/yaim/functions; \
-	done
-	# dirty hack for EPEL - flavour-less globus not initialized by gpt
-	if test "x$(thrflavour)" = "x"; then \
-		grep -v config_globus_clients $(top_srcdir)/config/node-info.d/glite-lb > glite-lb; \
-		install -m 0644 glite-lb ${DESTDIR}${PREFIX}${prefix}/yaim/node-info.d; \
+FILES=glite-lb.pre glite-lb
+
+all ${FILES}:
+	if test -f "${node_info_project}"; then \
+		cp ${node_info_project} . ; \
 	else \
-		install -m 0644 $(top_srcdir)/config/node-info.d/glite-lb ${DESTDIR}${PREFIX}${prefix}/yaim/node-info.d; \
+		cp ${node_info} . ; \
 	fi
-	echo "$(package) $(module.version)-$(module.age)" > ${DESTDIR}${PREFIX}${prefix}/yaim/etc/versions/$(package)
+	glite_var="${localstatedir}/glite"; \
+	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
+		glite_var="${localstatedir}"; \
+	fi; \
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $(top_srcdir)/config/defaults/glite-lb.pre > glite-lb.pre
+
+install: ${FILES}
+	mkdir -p ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/functions/
+	mkdir -p ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/node-info.d
+	mkdir -p ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/defaults
+	mkdir -p ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/etc/versions
+	for c in gip_lb glite_lb info_service_lb ; do \
+		install -m 0644 $(top_srcdir)/config/functions/config_$$c ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/functions; \
+	done
+	install -m 0644 glite-lb ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/node-info.d
+	install -m 0644 glite-lb.pre ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/defaults
+	echo "$(package) $(module.version)-$(module.age)" > ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/etc/versions/$(package)
 
 stage:
 	$(MAKE) install PREFIX=${stagedir}
@@ -34,6 +44,6 @@ stage:
 check:
 
 clean:
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/ ${FILES}
 
 .PHONY: default all check stage clean

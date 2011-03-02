@@ -17,23 +17,24 @@
 # limitations under the License.
 #
 
-GLITE_LOCATION=${GLITE_LOCATION:-/opt/glite}
-GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-/var/glite}
+GLITE_LB_LOCATION=${GLITE_LB_LOCATION:-/opt/glite}
+GLITE_LB_LOCATION_ETC=${GLITE_LB_LOCATION_ETC:-/opt/glite/etc}
+GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-/var/glite}
 
 [ -f /etc/glite.conf ] && . /etc/glite.conf
-[ -f $GLITE_LOCATION/etc/glite-wms.conf ] && . $GLITE_LOCATION/etc/glite-wms.conf
+[ -f $GLITE_LB_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LB_LOCATION_ETC/glite-wms.conf
 
-[ -f $GLITE_LOCATION/etc/lb.conf ] && . $GLITE_LOCATION/etc/lb.conf
-[ -f $GLITE_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LOCATION_VAR/etc/lb.conf
+[ -f $GLITE_LB_LOCATION/lb.conf ] && . $GLITE_LB_LOCATION_ETC/lb.conf
+[ -f $GLITE_LB_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LB_LOCATION_VAR/etc/lb.conf
 
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
-pidfile=${GLITE_LB_HARVESTER_PIDFILE:-"$GLITE_LOCATION_VAR/glite-lb-harvester.pid"}
+pidfile=${GLITE_LB_HARVESTER_PIDFILE:-"$GLITE_LB_LOCATION_VAR/glite-lb-harvester.pid"}
 level=${GLITE_LB_HARVESTER_DEBUG_LEVEL:-"1"}
 
 # database or configuration file needed
 # (using the file as default)
-etc=$GLITE_LOCATION/etc/glite-lb
+etc=$GLITE_LB_LOCATION/glite-lb
 [ -z "$GLITE_LB_HARVESTER_DBCS" -a -z "$GLITE_LB_HARVESTER_CONFIG" ] && GLITE_LB_HARVESTER_CONFIG=$etc/harvester.conf
 if [ -n "$GLITE_LB_HARVESTER_CONFIG" ]; then
 	[ ! -d "$etc" ] && mkdir -p "$etc"
@@ -144,13 +145,13 @@ start()
 		return 1
 	fi
 
-	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc/glite-lb'"
+	log4c="LOG4C_RCPATH='$GLITE_LB_LOCATION_ETC/glite-lb'"
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
 	[ -n "$GLITE_LB_HARVESTER_PORT" ] && port="-p $GLITE_LB_HARVESTER_PORT"
 
-	start_daemon glite-lb-harvester "$pidfile" "$GLITE_LOCATION/bin/glite-lb-harvester \
+	start_daemon glite-lb-harvester "$pidfile" "$GLITE_LB_LOCATION/bin/glite-lb-harvester \
 		$creds $conf -i $pidfile -d $level $port --daemon\
 		$GLITE_LB_HARVESTER_OTHER_OPTIONS" "$HARVESTER_NOTIFSFILE"
 }

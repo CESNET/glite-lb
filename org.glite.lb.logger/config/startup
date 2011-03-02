@@ -17,19 +17,19 @@
 # limitations under the License.
 #
 
-GLITE_LOCATION=${GLITE_LOCATION:-/opt/glite}
-GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-$GLITE_LOCATION/var}
+GLITE_LB_LOCATION=${GLITE_LB_LOCATION:-/opt/glite}
+GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-$GLITE_LB_LOCATION/var}
 
 [ -f /etc/glite.conf ] && . /etc/glite.conf
-[ -f $GLITE_LOCATION/etc/glite-wms.conf ] && . $GLITE_LOCATION/etc/glite-wms.conf
+[ -f $GLITE_LB_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LB_LOCATION_ETC/glite-wms.conf
 
-[ -f $GLITE_LOCATION/etc/lb.conf ] && . $GLITE_LOCATION/etc/lb.conf
-[ -f $GLITE_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LOCATION_VAR/etc/lb.conf
+[ -f $GLITE_LB_LOCATION_ETC/lb.conf ] && . $GLITE_LB_LOCATION_ETC/lb.conf
+[ -f $GLITE_LB_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LB_LOCATION_VAR/etc/lb.conf
 
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
-LL_PIDFILE=${LL_PIDFILE:-$GLITE_LOCATION_VAR/glite-lb-logd.pid}
-IL_PIDFILE=${IL_PIDFILE:-$GLITE_LOCATION_VAR/glite-lb-interlogd.pid}
+LL_PIDFILE=${LL_PIDFILE:-$GLITE_LB_LOCATION_VAR/glite-lb-logd.pid}
+IL_PIDFILE=${IL_PIDFILE:-$GLITE_LB_LOCATION_VAR/glite-lb-interlogd.pid}
 IL_SOCKFILE=/tmp/interlogger.sock
 
 unset creds port log4c
@@ -117,15 +117,15 @@ start()
 	[ -n "$GLITE_LB_IL_SOCK" ] && sock="--socket $GLITE_LB_IL_SOCK"
 	[ -n "$GLITE_LB_IL_FPREFIX" ] && fprefix="--file-prefix $GLITE_LB_IL_FPREFIX"
 
-	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc/glite-lb'"
+	log4c="LOG4C_RCPATH='$GLITE_LB_LOCATION_ETC/glite-lb'"
 
 	mkdir -p /var/glite/log 
 	chown $GLITE_USER /var/glite/log
         (cd /tmp && ls -f /tmp |grep ^dglogd_sock_ |xargs rm -f)
-	start_daemon "glite-lb-logd" "$LL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-logd \
+	start_daemon "glite-lb-logd" "$LL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-logd \
 		-i $LL_PIDFILE $creds $port $sock $fprefix"
 
-	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-interlogd \
+	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-interlogd \
 		-i $IL_PIDFILE $creds $sock $fprefix" "$IL_SOCKFILE"
 }
 

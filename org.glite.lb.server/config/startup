@@ -17,30 +17,30 @@
 # limitations under the License.
 #
 
-GLITE_LOCATION=${GLITE_LOCATION:-/opt/glite}
-GLITE_LOCATION_VAR=${GLITE_LOCATION_VAR:-/var/glite}
-GLITE_JP_LOCATION=${GLITE_JP_LOCATION:-$GLITE_LOCATION}
+GLITE_LB_LOCATION=${GLITE_LB_LOCATION:-/opt/glite}
+GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-/var/glite}
+GLITE_JP_LOCATION=${GLITE_JP_LOCATION:-$GLITE_LB_LOCATION}
 
 [ -f /etc/glite.conf ] && . /etc/glite.conf
-[ -f $GLITE_LOCATION/etc/glite-wms.conf ] && . $GLITE_LOCATION/etc/glite-wms.conf
+[ -f $GLITE_LB_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LB_LOCATION_ETC/glite-wms.conf
 
-[ -f $GLITE_LOCATION/etc/lb.conf ] && . $GLITE_LOCATION/etc/lb.conf
-[ -f $GLITE_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LOCATION_VAR/etc/lb.conf
+[ -f $GLITE_LB_LOCATION_ETC/lb.conf ] && . $GLITE_LB_LOCATION_ETC/lb.conf
+[ -f $GLITE_LB_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LB_LOCATION_VAR/etc/lb.conf
 
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
 [ -n "$GLITE_LB_SERVER_PIDFILE" ] && BK_PIDFILE=$GLITE_LB_SERVER_PIDFILE ||
-	BK_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-bkserverd.pid
+	BK_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-bkserverd.pid
 [ -z "$GLITE_LB_NOTIF_SOCK" ] && GLITE_LB_NOTIF_SOCK="/tmp/glite-lb-notif.sock"
 [ -n "$GLITE_JP_IMPORTER_PIDFILE" ] && jp_importer_pidfile=$GLITE_JP_IMPORTER_PIDFILE ||
-	jp_importer_pidfile=$GLITE_LOCATION_VAR/glite-jp-importer.pid
+	jp_importer_pidfile=$GLITE_LB_LOCATION_VAR/glite-jp-importer.pid
 
 GLITE_LB_TYPE=${GLITE_LB_TYPE:-'server'} # server, proxy, both
 GLITE_LB_PROXY_SOCK=${GLITE_LB_PROXY_SOCK:-'/tmp/glite-lbproxy-ilog.sock'}
 GLITE_LB_PROXY_FPREFIX=${GLITE_LB_PROXY_FPREFIX:-'/tmp/glite-lbproxy-ilog_events'}
 
-PROXY_IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-proxy-interlogd.pid
-NOTIF_IL_PIDFILE=$GLITE_LOCATION_VAR/glite-lb-notif-interlogd.pid
+PROXY_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-proxy-interlogd.pid
+NOTIF_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-notif-interlogd.pid
 
 unset creds port log4c
 
@@ -140,10 +140,10 @@ start()
 		fi
 	fi
 
-	log4c="LOG4C_RCPATH='$GLITE_LOCATION/etc/glite-lb'"
+	log4c="LOG4C_RCPATH='$GLITE_LB_LOCATION_ETC/glite-lb'"
 
-	policy="$GLITE_LOCATION/etc/glite-lb/glite-lb-authz.conf"
-	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-lcas.log' LCAS_ETC_DIR='/opt/glite/etc/glite-lb'"
+	policy="$GLITE_LB_LOCATION_ETC/glite-lb/glite-lb-authz.conf"
+	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-lcas.log' LCAS_ETC_DIR='$GLITE_LB_LOCATION_ETC/glite-lb'"
 	if test -f "$policy"; then
 		# lcas not enabled by default yet
 		policy="--policy '$policy'"
@@ -152,11 +152,11 @@ start()
 		unset lcas_log
 	fi
 
-	[ -z "$GLITE_LB_EXPORT_DUMPDIR" ] && GLITE_LB_EXPORT_DUMPDIR=$GLITE_LOCATION_VAR/dump
+	[ -z "$GLITE_LB_EXPORT_DUMPDIR" ] && GLITE_LB_EXPORT_DUMPDIR=$GLITE_LB_LOCATION_VAR/dump
 	dumpdir="--dump-prefix $GLITE_LB_EXPORT_DUMPDIR"
 	[ -d "$GLITE_LB_EXPORT_DUMPDIR" ] || mkdir -p "$GLITE_LB_EXPORT_DUMPDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_DUMPDIR"
 
-	[ -z "$GLITE_LB_EXPORT_PURGEDIR" ] && GLITE_LB_EXPORT_PURGEDIR=$GLITE_LOCATION_VAR/purge
+	[ -z "$GLITE_LB_EXPORT_PURGEDIR" ] && GLITE_LB_EXPORT_PURGEDIR=$GLITE_LB_LOCATION_VAR/purge
 	purgedir="--purge-prefix $GLITE_LB_EXPORT_PURGEDIR"
 	[ -d "$GLITE_LB_EXPORT_PURGEDIR" ] || mkdir -p "$GLITE_LB_EXPORT_PURGEDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_PURGEDIR"
 
@@ -167,18 +167,18 @@ start()
 		fi
 
 		# registrations
-		[ -z "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] && GLITE_LB_EXPORT_JPREG_MAILDIR=$GLITE_LOCATION_VAR/jpreg
+		[ -z "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] && GLITE_LB_EXPORT_JPREG_MAILDIR=$GLITE_LB_LOCATION_VAR/jpreg
 		jpreg_maildir="--reg-mdir $GLITE_LB_EXPORT_JPREG_MAILDIR"
 		lbreg_maildir="--jpreg-dir $GLITE_LB_EXPORT_JPREG_MAILDIR"
 		[ -d "$GLITE_LB_EXPORT_JPREG_MAILDIR" ] || mkdir -p "$GLITE_LB_EXPORT_JPREG_MAILDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_JPREG_MAILDIR"
 
 		# dumps
-		[ -z "$GLITE_LB_EXPORT_JPDUMP_MAILDIR" ] && GLITE_LB_EXPORT_JPDUMP_MAILDIR=$GLITE_LOCATION_VAR/jpdump
+		[ -z "$GLITE_LB_EXPORT_JPDUMP_MAILDIR" ] && GLITE_LB_EXPORT_JPDUMP_MAILDIR=$GLITE_LB_LOCATION_VAR/jpdump
 		jpdump_maildir="--dump-mdir $GLITE_LB_EXPORT_JPDUMP_MAILDIR"
 		[ -d "$GLITE_LB_EXPORT_JPDUMP_MAILDIR" ] || mkdir -p "$GLITE_LB_EXPORT_JPDUMP_MAILDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_JPDUMP_MAILDIR"
 
 		# sandboxes
-		[ -z "$GLITE_LB_EXPORT_SANDBOX_MAILDIR" ] && GLITE_LB_EXPORT_SANDBOX_MAILDIR=$GLITE_LOCATION_VAR/sandbox
+		[ -z "$GLITE_LB_EXPORT_SANDBOX_MAILDIR" ] && GLITE_LB_EXPORT_SANDBOX_MAILDIR=$GLITE_LB_LOCATION_VAR/sandbox
 		sandbox_maildir="--sandbox-mdir $GLITE_LB_EXPORT_SANDBOX_MAILDIR"
 		[ -d "$GLITE_LB_EXPORT_SANDBOX_MAILDIR" ] || mkdir -p "$GLITE_LB_EXPORT_SANDBOX_MAILDIR" && chown $GLITE_USER:$GLITE_GROUP -R "$GLITE_LB_EXPORT_SANDBOX_MAILDIR"
 
@@ -193,11 +193,11 @@ start()
 	[ -z "$GLITE_LB_NOTIF_FPREFIX" ] && GLITE_LB_NOTIF_FPREFIX="/var/tmp/glite-lb-notif"
 	if [ -n "$GLITE_LB_SERVER_DEBUG" ] ; then
 		if which tscat >/dev/null; then
-			GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -d -s 1 2>&1 | tscat >> $GLITE_LOCATION_VAR/lb.log &"
-			GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d 2>&1 | tscat >> $GLITE_LOCATION_VAR/notif-il.log &"
+			GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -d -s 1 2>&1 | tscat >> $GLITE_LB_LOCATION_VAR/lb.log &"
+			GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d 2>&1 | tscat >> $GLITE_LB_LOCATION_VAR/notif-il.log &"
 		else
-			GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -d -s 1 >> $GLITE_LOCATION_VAR/lb.log 2>&1 &"
-			GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d >> $GLITE_LOCATION_VAR/notif-il.log 2>&1 &"
+			GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -d -s 1 >> $GLITE_LB_LOCATION_VAR/lb.log 2>&1 &"
+			GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d >> $GLITE_LB_LOCATION_VAR/notif-il.log 2>&1 &"
 		fi
 	fi
 	case "$GLITE_LB_TYPE" in
@@ -212,14 +212,14 @@ start()
 		;;
 	esac
 
-	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$lcas_log $GLITE_LOCATION/bin/glite-lb-bkserverd \
+	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$lcas_log $GLITE_LB_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
 		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
 		$super $creds -i $BK_PIDFILE $port $wport $dumpdir $purgedir $lbreg_maildir $proxy $policy\
 		$GLITE_LB_SERVER_OTHER_OPTIONS" "/tmp/lb_proxy_serve.sock /tmp/lb_proxy_store.sock"
 
-	if test -x $GLITE_LOCATION/bin/glite-lb-notif-interlogd; then
-		start_daemon glite-lb-notif-interlogd "$NOTIF_IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
+	if test -x $GLITE_LB_LOCATION/bin/glite-lb-notif-interlogd; then
+		start_daemon glite-lb-notif-interlogd "$NOTIF_IL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-notif-interlogd \
 			-f $GLITE_LB_NOTIF_FPREFIX -s $GLITE_LB_NOTIF_SOCK \
 			-i $NOTIF_IL_PIDFILE -M 10485760 \
 			$creds $GLITE_LB_NOTIF_IL_OTHER_OPTIONS" "$GLITE_LB_NOTIF_SOCK"
@@ -236,8 +236,8 @@ start()
 	fi
 
 	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both" ; then
-		if test -x $GLITE_LOCATION/bin/glite-lb-interlogd; then
-			start_daemon "glite-lb-interlog for proxy" "$PROXY_IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-interlogd \
+		if test -x $GLITE_LB_LOCATION/bin/glite-lb-interlogd; then
+			start_daemon "glite-lb-interlog for proxy" "$PROXY_IL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-interlogd \
 				-f $GLITE_LB_PROXY_FPREFIX -s $GLITE_LB_PROXY_SOCK \
 				-i $PROXY_IL_PIDFILE \
 				$creds $GLITE_LB_PROXY_IL_OTHER_OPTIONS" "$GLITE_LB_PROXY_SOCK"

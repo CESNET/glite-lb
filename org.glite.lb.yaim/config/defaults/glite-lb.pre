@@ -4,8 +4,10 @@
 # system settings
 #
 
-# backward compatible default location of GLITE_LOCATION_VAR
-GLITE_LOCATION_VAR=/var/glite
+GLITE_LB_LOCATION='@glite_prefix@'
+GLITE_LB_LOCATION_ETC='@glite_etc@'
+GLITE_LB_LOCATION_VAR='@glite_var@'
+
 # query timeout
 GLITE_WMS_QUERY_TIMEOUT=300
 # CA certificates directory
@@ -23,7 +25,7 @@ GLITE_LB_EXPORT_PURGE_ARGS='--cleared 2d --aborted 15d --cancelled 15d --other 6
 GLITE_LB_EXPORT_ENABLED='false'
 # Job Provenance server
 GLITE_LB_EXPORT_JPPS=
-# prefix to the Job Provenance installation (if different from $GLITE_LOCATION)
+# prefix to the Job Provenance installation (if different from $GLITE_LB_LOCATION)
 GLITE_JP_LOCATION=
 
 #

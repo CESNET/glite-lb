@@ -1,5 +1,5 @@
 function config_glite_lb_check(){
-  requires $1 MYSQL_PASSWORD INSTALL_ROOT GLITE_LOCATION GLITE_LOCATION_VAR GLITE_USER
+  requires $1 MYSQL_PASSWORD INSTALL_ROOT GLITE_LOCATION GLITE_LB_LOCATION GLITE_LB_LOCATION_ETC GLITE_LB_LOCATION_VAR GLITE_USER
 }
 
 # check directory existence first
@@ -101,7 +101,7 @@ function config_glite_lb_authz() {
 
 	superusers="`echo \"$superusers\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\"\n\t}/'`"
 	rtm="`echo \"$rtm\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\"\n\t}/'`"
-	authconf="$GLITE_LOCATION/etc/glite-lb/glite-lb-authz.conf"
+	authconf="$GLITE_LB_LOCATION_ETC/glite-lb/glite-lb-authz.conf"
 
 	cat <<EOF > "$authconf".new
 resource "LB" {
@@ -150,11 +150,11 @@ EOF
 	fi
 
 	# superusers file deprecated
-	if test -s "${GLITE_LOCATION}/etc/LB-super-users"; then
-		yaimlog WARNING "Found old superusers file '${GLITE_LOCATION}/etc/LB-super-users', check 'ADMIN_ACCESS' section in glite-lb-authz.conf"
-		echo "# deprecated file, replaced by ADMIN_ACCESS action in glite-lb-authz.conf" > "${GLITE_LOCATION}/etc/LB-super-users.old"
-		cat "${GLITE_LOCATION}/etc/LB-super-users" >> "${GLITE_LOCATION}/etc/LB-super-users.old"
-		rm "${GLITE_LOCATION}/etc/LB-super-users"
+	if test -s "${GLITE_LB_LOCATION_ETC}/LB-super-users"; then
+		yaimlog WARNING "Found old superusers file '${GLITE_LB_LOCATION_ETC}/LB-super-users', check 'ADMIN_ACCESS' section in glite-lb-authz.conf"
+		echo "# deprecated file, replaced by ADMIN_ACCESS action in glite-lb-authz.conf" > "${GLITE_LB_LOCATION_ETC}/LB-super-users.old"
+		cat "${GLITE_LB_LOCATION_ETC}/LB-super-users" >> "${GLITE_LB_LOCATION_ETC}/LB-super-users.old"
+		rm "${GLITE_LB_LOCATION_ETC}/LB-super-users"
 	fi
 
 	mv "$authconf".new "$authconf"
@@ -184,9 +184,9 @@ function config_glite_lb() {
     return 1
   fi
 
-  LB_PURGE="$GLITE_LOCATION/bin/glite-lb-purge"
+  LB_PURGE="$GLITE_LB_LOCATION/bin/glite-lb-purge"
   if [ ! -x "$LB_PURGE" ]; then
-    LB_PURGE="$GLITE_LOCATION/sbin/glite-lb-purge"
+    LB_PURGE="$GLITE_LB_LOCATION/sbin/glite-lb-purge"
   fi
   if [ ! -x "$LB_PURGE" ]; then
     yaimlog ABORT "Purge utility not found! Install glite-lb-utils (or glite-lb-client in older version)"
@@ -240,7 +240,7 @@ function config_glite_lb() {
 
   if [ ! $? = 0 ]; then
     mysql -u root --password="$MYSQL_PASSWORD" -e "CREATE DATABASE lbserver20"
-    mysql --password="$MYSQL_PASSWORD" lbserver20 < ${GLITE_LOCATION}/etc/glite-lb/glite-lb-dbsetup.sql
+    mysql --password="$MYSQL_PASSWORD" lbserver20 < ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-dbsetup.sql
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver IDENTIFIED BY '' WITH GRANT OPTION;"
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@'$HOSTNAME' IDENTIFIED BY '' WITH GRANT OPTION;"
     mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@localhost IDENTIFIED BY '' WITH GRANT OPTION;"
@@ -256,7 +256,7 @@ function config_glite_lb() {
   # 1) if L&B with local harvester or L&B for Real Time Monitoring ==> lastUpdateTime needed
   # 2) if GLITE_LB_INDEX_OWNER specified ==> create/destroy owner index
   need_reindex=0
-  $GLITE_LOCATION/bin/glite-lb-bkindex -d 2>/dev/null | tail -n +3 | head -n -2 | sed 's/\([^,]\)$/\1,/' > /var/tmp/glite-lb-bkindexes.txt
+  $GLITE_LB_LOCATION/bin/glite-lb-bkindex -d 2>/dev/null | tail -n +3 | head -n -2 | sed 's/\([^,]\)$/\1,/' > /var/tmp/glite-lb-bkindexes.txt
   if [ x"$GLITE_LB_RTM_ENABLED" = x"true" -o x"GLITE_LB_HARVESTER_ENABLED" = x"true" ]; then
     # index for querying older jobs by real time monitor
     grep '\[ type = "system"; name = "lastUpdateTime" \]' /var/tmp/glite-lb-bkindexes.txt >/dev/null
@@ -284,7 +284,7 @@ function config_glite_lb() {
     fi
   fi
   if [ $need_reindex = 1 ]; then
-    cat << EOF | $GLITE_LOCATION/bin/glite-lb-bkindex -rv
+    cat << EOF | $GLITE_LB_LOCATION/bin/glite-lb-bkindex -rv
 [
 	JobIndices = {
 `cat /var/tmp/glite-lb-bkindexes.txt`
@@ -294,10 +294,10 @@ EOF
   fi
   rm -f /var/tmp/glite-lb-bkindexes.txt
 
-  mkdir -p $GLITE_LOCATION_VAR   # Needed to store PID of LB server 
+  mkdir -p $GLITE_LB_LOCATION_VAR   # Needed to store PID of LB server 
 
-  chown $GLITE_USER:$GLITE_USER $GLITE_LOCATION_VAR
-  chmod 0755 $GLITE_LOCATION_VAR
+  chown $GLITE_USER:$GLITE_USER $GLITE_LB_LOCATION_VAR
+  chmod 0755 $GLITE_LB_LOCATION_VAR
 
   mkdir -p $GLITE_HOME_DIR/.certs
   chown $GLITE_USER:$GLITE_USER $GLITE_HOME_DIR/.certs
@@ -322,7 +322,7 @@ EOF
 HOME=/
 MAILTO=$SITE_EMAIL
 
-1 1 * * * $GLITE_USER . /opt/glite/etc/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; $purge_target_runtime_cmd/opt/glite/sbin/glite-lb-export.sh >> $logfile 2>&1
+1 1 * * * $GLITE_USER . $GLITE_LOCATION/etc/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; $purge_target_runtime_cmd/opt/glite/sbin/glite-lb-export.sh >> $logfile 2>&1
 EOF
 
   touch $logfile
@@ -341,12 +341,12 @@ EOF
   # config file
   lcas_libarch=lib
   if [ x`uname -m` = xx86_64 ]; then
-    if [ -f "$GLITE_LOCATION/lib64/modules/lcas_lb.mod" ]; then
+    if [ -f "$GLITE_LB_LOCATION/lib64/modules/lcas_lb.mod" ]; then
       lcas_libarch=lib64
     fi
   fi
-  lcas_plugin="$GLITE_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
-  echo "pluginname=\"$lcas_plugin\"" > ${GLITE_LOCATION}/etc/glite-lb/lcas.db
+  lcas_plugin="$GLITE_LB_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
+  echo "pluginname=\"$lcas_plugin\"" > ${GLITE_LB_LOCATION_ETC}/glite-lb/lcas.db
   # log file
   logfile=/var/log/glite/glite-lb-lcas.log
   touch $logfile
@@ -361,13 +361,13 @@ $logfile {
 EOF
 
   # Start services
-  if [ ! -f ${GLITE_LOCATION}/etc/gLiteservices ] ; then
-    touch ${GLITE_LOCATION}/etc/gLiteservices
+  if [ ! -f ${GLITE_LB_LOCATION_ETC}/gLiteservices ] ; then
+    touch ${GLITE_LB_LOCATION_ETC}/gLiteservices
   fi
 
-  grep glite-lb-bkserverd ${GLITE_LOCATION}/etc/gLiteservices > /dev/null
+  grep glite-lb-bkserverd ${GLITE_LB_LOCATION_ETC}/gLiteservices > /dev/null
   if [ ! $? = 0 ] ; then
-    echo "${GLITE_LOCATION}/etc/init.d/glite-lb-bkserverd" >> ${GLITE_LOCATION}/etc/gLiteservices
+    echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd" >> ${GLITE_LOCATION}/etc/gLiteservices
   fi
 
   if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
@@ -376,12 +376,12 @@ EOF
     config_glite_lb_authz "$GLITE_LB_SUPER_USERS" ""
   fi
 
-  if [ ! -f ${GLITE_LOCATION}/etc/glite-lb/glite-lb-harvester.conf ]; then
-    echo $HOSTNAME > ${GLITE_LOCATION}/etc/glite-lb/glite-lb-harvester.conf
+  if [ ! -f ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf ]; then
+    echo $HOSTNAME > ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf
   fi
 
   . ${GLITE_LOCATION}/etc/profile.d/grid-env.sh
-  ${GLITE_LOCATION}/etc/init.d/glite-lb-bkserverd stop
+  ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd stop
   #Temporary workaround to kill glite-lb-*-interlogd
   ps ax | grep -v grep | grep glite-lb-notif-interlogd > /dev/null
   if [ $? = 0 ]; then
@@ -391,7 +391,7 @@ EOF
   if [ $? = 0 ]; then
     killall -9 /opt/glite/bin/glite-lb-interlogd
   fi  
-  ${GLITE_LOCATION}/etc/init.d/glite-lb-bkserverd start
+  ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd start
 
   if [ ! $? = 0 ] ; then
     yaimlog ABORT "Service glite-lb-bkserverd failed to start!"
