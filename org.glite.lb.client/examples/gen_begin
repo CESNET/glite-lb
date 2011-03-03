@@ -24,11 +24,13 @@ if [ `echo $(basename $0) | grep 'glite-lb-' | wc -l` = "1" ]; then
 	PREFIX=glite-lb-
 fi
 LOGFD=${LOGFD:-2}
-if [ -d `dirname $0`/../bin ]; then
-	BINDIR=`dirname $0`/../bin
-else
-	BINDIR=`dirname $0`
-fi
+BINDIR="`dirname $0`"
+for dir in "`dirname $0`/../bin" "`dirname $0`/../../../bin"; do
+	if [ -d "$dir" ]; then
+		BINDIR="$dir"
+		break;
+	fi
+done
 LOGEV=${LOGEV:-${BINDIR}/${PREFIX}logevent}${SUFFIX}
 JOB_REG=${JOB_REG:-`dirname $0`/${PREFIX}job_reg}${SUFFIX}
 EDG_JOBID=
