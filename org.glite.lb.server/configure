@@ -31,6 +31,7 @@ my $stagedir = undef;
 my $root = $pwd.'/stage';
 my $sysroot = '';
 my $sysconfdir;
+my $localstatedir;
 my $staged;
 my $module;
 my $thrflavour = 'gcc64dbgpthr';
@@ -193,7 +194,8 @@ my @opts = (
 	'stage=s' => \$stagedir,
 	'root:s' => \$root,
 	'sysroot:s' => \$sysroot,
-	'sysconfdir:s' => \$sysconfdir,
+	'sysconfdir=s' => \$sysconfdir,
+	'localstatedir=s' => \$localstatedir,
 	'lb-tag=s' => \$lb_tag,
 	'lbjp-common-tag=s' => \$lbjp_tag,
 	'jp-tag=s' => \$jp_tag,
@@ -223,7 +225,9 @@ $stage=~s/\/$//;
 $root=~s/\/$//;
 $sysroot=~s/\/$//;
 if (not $sysconfdir) { $sysconfdir = $prefix eq '/usr' ? '/etc' : "$prefix/etc"; }
+if (not $localstatedir) { $localstatedir = $prefix eq '/usr' ? '/var' : "$prefix/var"; }
 $sysconfdir=~s/\/$//;
+$localstatedir=~s/\/$//;
 
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
@@ -705,6 +709,7 @@ prefix = $prefix
 stagedir = $stagedir
 sysroot = $sysroot
 sysconfdir = $sysconfdir
+localstatedir = $localstatedir
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 libdir = $libdir
@@ -909,16 +914,13 @@ sub mode_etics {
 		}
 	}
 	elsif ($subsys eq 'px' and $module eq 'myproxy-config') {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --root=\${prefix} --prefix= --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
 		my $flavours = $emi ? "--thrflavour= --nothrflavour=" : "--thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor}";
-		my $localprefix = $emi ? '/usr' : '';
-		my $sysconfdir = ' --sysconfdir=/etc';
-		# exception for yaims in EMI for now: prefix /opt/glite
-		if ($emi and ($module =~ /yaim/ or $module =~ /^glite-/)) { $localprefix = '/opt/glite'; $sysconfdir = ''; }
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --root=\${prefix} --prefix=${localprefix} --stage=\${stageDir} --sysroot=\${package.prefix}$sysconfdir --libdir=\${libdir}  --project=\${projectName} --module $subsys.$module @copts";
+		my $local_prefix = $emi ? '/usr' : '';
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --root=\${prefix} --prefix=$local_prefix --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
