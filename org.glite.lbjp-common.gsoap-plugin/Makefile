@@ -189,7 +189,7 @@ ${NOTHRLTLIB_S}: ${OBJS_S}
 	${LINK_lang} ${version_info} -o $@ ${LOBJS_S} ${EX_NOTHRLIBS} ${GSOAP_DEFAULT_LIBS}
 
 ${THRLTLIB_S}: ${THROBJS_S}
-	${LINK_lang} ${version_info} -o $@ ${THRLOBJS_S} ${EX_THRLIBS}
+	${LINK_lang} ${version_info} -o $@ ${THRLOBJS_S} ${EX_THRLIBS} ${GSOAP_DEFAULT_LIBS}
 endif
 
 all compile: \
