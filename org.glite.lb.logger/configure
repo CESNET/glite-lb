@@ -443,7 +443,7 @@ BEGIN{
 	'lb.common' => [ qw/expat cares:B cppunit:B classads/ ],
 	'lb.doc' => [],
 	'lb.logger' => [ qw/cppunit:B/ ],
-	'lb.logger-msg' => [ qw/cppunit:B activemq apr aprutil/ ],
+	'lb.logger-msg' => [ qw/cppunit:B activemq/ ],
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite/ ],
 	'lb.state-machine' => [ qw/classads/ ],
 	'lb.utils' => [ qw/cppunit:B/ ],
