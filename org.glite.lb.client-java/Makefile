@@ -37,7 +37,7 @@ compile-java:
 build-jar: lb-client-java.jar
 
 lb-client-java.jar:
-	cd build && ${jdk_prefix}/bin/jar cfi lb-client-java.jar holders org
+	cd build && ${jdk_prefix}/bin/jar cf lb-client-java.jar holders org && ${jdk_prefix}/bin/jar i lb-client-java.jar
 
 build-c:
 	${JAVAH} -classpath build -jni -d build org.glite.lb.ContextIL
@@ -55,7 +55,7 @@ build/examples: ${FULL_EXAMPLES} ${SSL_EXAMPLES} ${TM_EXAMPLES}
 	cp ${FULL_EXAMPLES} build/examples/src
 	cp ${SSL_EXAMPLES} build/examples/src/simple-ssl
 	cp ${TM_EXAMPLES} build/examples/src/simple-trustmanager
-	cd build/examples && ${jdk_prefix}/bin/jar cfi lb-client-java-examples.jar src org $(addsuffix .class,$(basename $(notdir ${FULL_EXAMPLES})))
+	cd build/examples && ${jdk_prefix}/bin/jar cfi lb-client-java-examples.jar src org $(addsuffix .class,$(basename $(notdir ${FULL_EXAMPLES}))) && ${jdk_prefix}/bin/jar i lb-client-java-examples.jar
 
 genevents: build/gen
 
