@@ -41,3 +41,9 @@
 - Introduction on a sysconfdir option (for /etc vs /usr)
 - DESTDIR in makefiles
 
+4.3.2-1
+- Distinguish yaim prefix and glite prefix
+- /var directory location
+- product-specific GLITE_*_LOCATION* variables
+- project-specific yaim functions list file
+
