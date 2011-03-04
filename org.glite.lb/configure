@@ -785,6 +785,27 @@ BEGIN{
 			default => { 
 			}
 		},
+		'jobid.api-java' => {
+			default => { 'package.buildarch' => 'noarch' },
+		},
+		'lb.types' => {
+			default => { 'package.buildarch' => 'noarch' },
+		},
+		'lb.doc' => {
+			default => { 'package.buildarch' => 'noarch' },
+		},
+		'lb.ws-interface' => {
+			default => { 'package.buildarch' => 'noarch' },
+		},
+		'lb.yaim' => {
+			default => { 'package.buildarch' => 'noarch' },
+		},
+		'px.yaim' => {
+			default => { 'package.buildarch' => 'noarch' },
+		},
+		'px.myproxy-config' => {
+			default => { 'package.buildarch' => 'noarch' },
+		},
 	);
 };
 
