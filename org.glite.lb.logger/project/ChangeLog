@@ -142,3 +142,7 @@
 - When staged, install rather not-relinked .la file for the dependent C++ library
 - Introduction on a sysconfdir option (for /etc vs /usr)
 
+2.2.2-1
+- product-specific GLITE_*_LOCATION* variables
+- update startup scripts
+
