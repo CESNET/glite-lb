@@ -3,7 +3,6 @@ config_add_pool_env
 config_crl
 config_host_certs
 config_edgusers
-config_gip_only
 config_gip_lb
 config_info_service_lb
 config_gip_service_release
