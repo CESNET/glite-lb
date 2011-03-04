@@ -589,15 +589,18 @@ reported correctly.
 
 \req Installed glite-lb-client package, valid user's X509 credentials,
 known destination (address:port) of running \LB server.
-Can be invoked from any machine.
+Can be invoked from any machine. \newcounter{examplesfootnote}
+\footnote{Example scripts or binaries used here can be found either
+in \texttt{/opt/glite/examples} (if installed from a LB node repository) or
+\texttt{/usr/lib64/glite-lb/examples} (if installed from the EMI repository).} \setcounter{examplesfootnote}{\thefootnote}
 
 \how 
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-job_reg -m' \emph{server\_name:port}
+\verb'glite-lb-job_reg -m' \emph{server\_name:port}
 \end{quote}
 A~new jobid is generated and printed.  Run 
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-job_status' \emph{jobid}
+\verb'glite-lb-job_status' \emph{jobid}
 \end{quote}
 
 \result
@@ -612,17 +615,17 @@ Checks delivery of the events via \LB logger.
 
 \req Installed glite-lb-client package, valid user's X509 credentials,
 known destination (address:port) of running \LB server.
-Must be run on a~machine where glite-lb-logger package is set up and running.
+Must be run on a~machine where glite-lb-logger package is set up and running.\footnotemark[\theexamplesfootnote]
 
 \how
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-running.sh -m ' \emph{server\_name:port}
+\verb'glite-lb-running.sh -m ' \emph{server\_name:port}
 \end{quote}
 
 The command prints a~new jobid, followed by diagnostic messages as the events are logged. 
 Check the status of the new job with
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-job_status' \emph{jobid}
+\verb'glite-lb-job_status' \emph{jobid}
 \end{quote}
 
 \result
@@ -637,16 +640,16 @@ Send events via \LB proxy. Checks the proxy functionality.
 
 \req Running \LB proxy, in standalone package for \LBver{1.x}, or
 \LB server running with \verb'-P' (proxy only) or \verb'-B' (both server and proxy)
-options.
+options.\footnotemark[\theexamplesfootnote]
 
 \how Similar to Sect.~\ref{smoke-log}:
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-running.sh -x -m ' \emph{server\_name:port}
+\verb'glite-lb-running.sh -x -m ' \emph{server\_name:port}
 \end{quote}
 
 And check with:
 \begin{quote}
-\verb'/opt/glite/examples/glite-lb-job_status -x /tmp/lb_proxy_server.sock' \emph{jobid}
+\verb'glite-lb-job_status -x /tmp/lb_proxy_server.sock' \emph{jobid}
 \end{quote}
 
 
