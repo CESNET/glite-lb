@@ -145,3 +145,6 @@
 - A human-readable form of jobs ACLs
 - Setting the owner of job payload
 
+5.0.2-1
+- locations updated in examples
+
