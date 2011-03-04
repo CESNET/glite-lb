@@ -248,3 +248,8 @@
 - Increased severity if server authentication fails
 - Job list in HTML interface shows only compute jobs or sandboxes without associated compute job
 
+2.2.2-1
+- product-specific GLITE_*_LOCATION* variables
+- update startup scripts
+- Fixed treatment of glite location when searching for WSDLs.
+
