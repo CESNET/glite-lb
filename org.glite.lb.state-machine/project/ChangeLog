@@ -77,3 +77,6 @@
 - DESTDIR in makefiles
 - Server vs. state-machine restructuring
 
+1.2.1-2
+- Module rebuilt
+

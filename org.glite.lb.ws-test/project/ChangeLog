@@ -70,3 +70,6 @@
 - Setting the owner of job payload
 - Introduction on a sysconfdir option (for /etc vs /usr)
 
+1.2.1-2
+- Module rebuilt
+

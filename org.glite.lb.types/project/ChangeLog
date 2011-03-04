@@ -58,3 +58,6 @@
 - root directory option (ETICS performs own files relocation)
 - Setting the owner of job payload
 
+1.2.1-2
+- Module rebuilt
+
