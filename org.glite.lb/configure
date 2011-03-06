@@ -897,7 +897,8 @@ sub mode_etics {
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
-	my $buildroot = $buildroot{"$subsys.$module"} eq '' ? '#no build.root' : "build.root = " . $buildroot{"$subsys.$module"};
+	my $buildroot = "build.root = $cvs_prefix{$subsys}.$subsys.$module";
+	$buildroot .= '/'.$buildroot{"$subsys.$module"} unless ($buildroot{"$subsys.$module"} eq '');
 
 	my $confdir = $buildroot{"$subsys.$module"} eq '' ? '..' : '../..';
 
@@ -949,11 +950,11 @@ sub mode_etics {
 		}
 	}
 	elsif ($subsys eq 'px' and $module eq 'myproxy-config') {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --root=\${prefix} --prefix= --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{configure} = "cd $confdir && /usr/bin/perl $cvs_prefix{$subsys}.$subsys.$module/configure --root=\${prefix} --prefix= --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{configure} = "cd $confdir && /usr/bin/perl $cvs_prefix{$subsys}.$subsys.$module/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
@@ -965,10 +966,7 @@ sub mode_etics {
 		$defprops .= $p . ' = ' . $platform_properties{"$subsys.$module"}->{default}->{$p} . "\n";
 	}
 
-	my $checkoutcmd = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module";
-	if ("$project{etics_name}" ne "$cvs_prefix{$subsys}") { # moduleName initial part vs CVS prefix
-		$checkoutcmd .= "; test -e $cvs_prefix{$subsys}.$subsys.$module || ln -s \${moduleName} $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null";
-	}
+	my $checkoutcmd = "mkdir -v \${moduleName}; cd \${moduleName} && cvs -d \${vcsroot} co ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module";
 
 	print STDERR "Writing $file\n";
 	print C qq{
@@ -987,7 +985,7 @@ $dwpath
 [Platform-default:VcsCommand]
 displayName = None
 description = None
-tag = cvs -d \${vcsroot} tag -R \${tag} \${moduleName}
+tag = cd \${moduleName} && cvs -d \${vcsroot} tag -R \${tag} $cvs_prefix{$subsys}.$subsys.$module
 branch = None
 commit = None
 checkout = $checkoutcmd
