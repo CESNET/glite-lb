@@ -254,9 +254,17 @@ glite-lb-bkindex: ${INDEX_OBJS}
 glite-lb-mon-db: ${MONDB_OBJS}
 	${LINKXX} -o $@ ${MONDB_OBJS} ${MONDB_LIBS}
 
-compile: generate glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${MAN_GZ}
+compile: generate startup glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${MAN_GZ}
 
 generate: store.c index.c 
+
+startup: ${top_srcdir}/config/startup
+	glite_var="${localstatedir}/glite"; \
+	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
+		glite_var="${localstatedir}"; \
+	fi; \
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $< > $@
+	chmod +x $@
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -353,7 +361,7 @@ install:
 	done
 	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
-	${INSTALL} -m 755 ${top_srcdir}/config/startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
+	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix})
@@ -366,7 +374,7 @@ ifdef LB_PERF
 endif
 
 clean:
-	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} test* ${MAN_GZ} ${EXAMPLES}
+	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} test* ${MAN_GZ} ${EXAMPLES} startup
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 %.c: %.c.T

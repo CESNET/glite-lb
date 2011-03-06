@@ -48,7 +48,15 @@ INSTALL:=libtool --mode=install install
 
 default: all
 
-compile all: harvester doc debug
+compile all: startup harvester doc debug
+
+startup: ${top_srcdir}/config/startup
+	glite_var="${localstatedir}/glite"; \
+	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
+		glite_var="${localstatedir}"; \
+	fi; \
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $< > $@
+	chmod +x $@
 
 check:
 
@@ -75,7 +83,7 @@ install: compile
 
 clean:
 	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs
-	rm -rvf harvester harvester-dbg glite-lb-harvester.*
+	rm -rvf harvester harvester-dbg glite-lb-harvester.* startup
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 harvester: harvester.o

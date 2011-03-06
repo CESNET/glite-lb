@@ -124,7 +124,15 @@ MAN = $(MAN_GZ:.gz=)
 
 default: all 
 
-all compile: $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
+all compile: startup $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
+
+startup: ${top_srcdir}/config/startup
+	glite_var="${localstatedir}/glite"; \
+	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
+		glite_var="${localstatedir}"; \
+	fi; \
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $< > $@
+	chmod +x $@
 
 glite-lb-logd: ${LOGD_OBJS}
 	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
@@ -195,7 +203,7 @@ ifdef LB_PERF
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif
-	${INSTALL} -m 755 ${top_srcdir}/config/startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-locallogger
+	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-locallogger
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} )
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
@@ -235,5 +243,5 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 	${CXX} ${CFLAGS} ${CPPUNIT_CFLAGS} -c $< -o $@
 
 clean:
-	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ}
+	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ} startup
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
