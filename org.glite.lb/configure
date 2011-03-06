@@ -47,8 +47,8 @@ my $lbjp_tag = '';
 my $jp_tag = '';
 my $jobid_tag = '';
 my $libdir = getlibdir();
-my $projectname;
-my $project = '';
+my $project = 'glite';
+my (%projects, %project);
 
 
 my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester glite-LB glite-PX/;
@@ -202,7 +202,6 @@ my @opts = (
 	'jobid-tag=s' => \$jobid_tag,
 	'help' => \$help,
 	'libdir=s' => \$libdir,
-	'emi' => \$emi,
 	'project=s' => \$project,
 );
 
@@ -231,9 +230,8 @@ $localstatedir=~s/\/$//;
 
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
-if (!$project) { $project = $emi ? 'emi' : 'glite'; }
-$projectname = ($project eq 'emi') ? 'emi' : 'org.glite';
-if ($emi) {
+%project = %{$projects{$project}};
+if ($project eq 'emi') {
 	for $_ (keys %etics_externs_emi) {
 		$etics_externs{$_} = $etics_externs_emi{$_};
 	}
@@ -242,7 +240,7 @@ if ($emi) {
 if ($help) { usage(); exit 0; }
 
 if ($listmodules) {
-	my @m = map "$projectname.$listmodules.$_",@{$lbmodules{$listmodules}};
+	my @m = map "$project{etics_name}.$listmodules.$_",@{$lbmodules{$listmodules}};
 	print "@m\n";
 	exit 0;
 }
@@ -632,7 +630,7 @@ for my $ext (keys %deps_aux) {
 	'px' => 'org.glite',
 );
 
-%conf_prefix = (
+%cvs_tag_prefix = (
 	'lb' => 'glite-',
 	'jp' => 'glite-',
 	'jobid' => 'glite-',
@@ -641,13 +639,29 @@ for my $ext (keys %deps_aux) {
 	'px' => 'glite-',
 );
 
-%emi_conf_prefix = (
-	'lb' => 'emi-',
-	'jp' => 'emi-',
-	'jobid' => 'emi-',
-	'lbjp-common' => 'emi-',
-	'gridsite' => '',
-	'px' => 'emi-',
+%projects = (
+	glite => {
+		etics_name => 'org.glite',
+		conf_prefix => { %cvs_tag_prefix },
+		tag_prefix => { %cvs_tag_prefix },
+		flavours => '--thrflavour=${globus.thr.flavor} --nothrflavour=${globus.nothr.flavor}',
+		local_prefix => '',
+	},
+
+	emi => {
+		etics_name => 'emi',
+		conf_prefix => {
+			'lb' => 'emi-',
+			'jp' => 'emi-',
+			'jobid' => 'emi-',
+			'lbjp-common' => 'emi-',
+			'gridsite' => '',
+			'px' => 'emi-',
+		},
+		tag_prefix => { %cvs_tag_prefix },
+		flavours => '--thrflavour= --nothrflavour=',
+		local_prefix => '/usr',
+	},
 );
 
 my @k = keys %deps_aux;
@@ -841,7 +855,7 @@ sub mode_etics {
 	for (@{$need_externs{"$subsys.$module"}}) {
 	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
-		if ($emi) {
+		if ($project ne 'glite') {
 			if ($ge{$_} and not defined $externs{$_}{pkg}) {
 				push @copts, "--with-$_=\${stageDir}";
 			}
@@ -854,7 +868,7 @@ sub mode_etics {
 	for (@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 
-		push @copts,"--with-$_ \${$eext.location}$jar{$_}" if (not $emi);
+		push @copts,"--with-$_ \${$eext.location}$jar{$_}" if ($project eq 'glite');
 	}
 
 	my $conf;
@@ -863,7 +877,7 @@ sub mode_etics {
 
 	$dwpath = "path = \${projectName}/\${moduleName}/\${version}/\${platformName}/\${packageName}-\${version}-\${age}.tar.gz\n";
 
-	$confprefix = $emi ? $emi_conf_prefix{$subsys} : $conf_prefix{$subsys};
+	$confprefix = $project{conf_prefix}{$subsys};
 	$nameprefix = $confprefix;
 	$nameprefix =~ s/-$//;
 	$nameprefix =~ s/-/\./g;
@@ -877,8 +891,8 @@ sub mode_etics {
 		$conf = "$confprefix$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
 
 # XXX: gridsite hack
-		$conftag = $subsys eq 'gridsite' ? "$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : 
-			"$conf_prefix{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; }
+		$conftag = $subsys eq 'gridsite' ? "$project{tag_prefix}{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : 
+			"$project{tag_prefix}{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; }
 
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
@@ -920,7 +934,7 @@ sub mode_etics {
 		if ($module eq 'core') {
 			my $flags;
 
-			if ($emi) {
+			if ($project ne 'glite') {
 				$flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix}/usr libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
 			} else {
 				$flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
@@ -939,9 +953,7 @@ sub mode_etics {
 		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
-		my $flavours = $emi ? "--thrflavour= --nothrflavour=" : "--thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor}";
-		my $local_prefix = $emi ? '/usr' : '';
-		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --root=\${prefix} --prefix=$local_prefix --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
@@ -954,16 +966,18 @@ sub mode_etics {
 	}
 
 	my $checkoutcmd = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module";
-	$checkoutcmd .= "; test -e $cvs_prefix{$subsys}.$subsys.$module || ln -s \${moduleName} $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null" if ($emi);
+	if ("$project{etics_name}" ne "$cvs_prefix{$subsys}") { # moduleName initial part vs CVS prefix
+		$checkoutcmd .= "; test -e $cvs_prefix{$subsys}.$subsys.$module || ln -s \${moduleName} $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null";
+	}
 
 	print STDERR "Writing $file\n";
 	print C qq{
 [Configuration-$conf]
 profile = None
-moduleName = $projectname.$subsys.$module
+moduleName = $project{etics_name}.$subsys.$module
 displayName = $conf
 description = $cvs_prefix{$subsys}.$subsys.$module
-projectName = $projectname
+projectName = $project{etics_name}
 age = $age
 deploymentType = None
 vcsroot = :pserver:anonymous\@glite.cvs.cern.ch:/cvs/glite
@@ -1028,7 +1042,7 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 
 		my $proj = 'externals';
 		for my $p (keys %etics_projects) {
-			if ($emi and defined $etics_projects_emi{$p}) {
+			if ($project eq 'emi' and defined $etics_projects_emi{$p}) {
 				$p = $etics_projects_emi{$p};
 			}
 			for $m (@{$etics_projects{$p}}) {
@@ -1042,7 +1056,7 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 
 	for (@{$deps{"$subsys.$module"}}) {
 		my $type = $deps_type{"$subsys.$module"}->{$_};
-		print C "$projectname|$projectname.$_ = $type\n";
+		print C "$project{etics_name}|$project{etics_name}.$_ = $type\n";
 	}
 
 	close C;
@@ -1133,7 +1147,7 @@ General options (defaults in []):
   --version=maj.min.rev-age	specify version here instead of reading version.properties
   --branch=branch		CVS branch/etics name suffix (HEAD, branch_2_1, ...)
   --libdir=libdir		typically [lib,lib64] postfix
-  --emi				generate configurations with emi flavor in mode 'etics'
+  --project=PROJECT		build or generate etics for a project (glite/emi) [emi]
   
 Mode of operation:
   --mode=\{checkout|build|etics\}	what to do [build]

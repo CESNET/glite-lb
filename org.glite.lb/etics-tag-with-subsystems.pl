@@ -103,8 +103,8 @@ usage: $0 [-c <current configuration>] module.name
                 system("rm $TMPDIR/etics-tag-proj_configs.$$.tmp");
         }
 
-        if ($project eq "emi") { $proj_opt = " --emi"; $proj_suffix = "emi" }
-        else { $proj_opt = ""; }
+        if ($project eq "emi") { $proj_suffix = "emi" }
+        else { $proj_suffix = ""; }
 
 
 	# According to the documentation, symbolic names in the 'cvs log' output are sorted by age so this should be OK

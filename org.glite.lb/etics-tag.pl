@@ -123,8 +123,8 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		system("rm $TMPDIR/etics-tag-proj_configs.$$.tmp");
 	}
 
-	if ($project eq "emi") { $proj_opt = " --emi"; }
-	else { $proj_opt = ""; }
+	if ($project eq "emi") { $proj_opt = " --project=emi"; }
+	else { $proj_opt = "--project=glite"; }
 	
 	# According to the documentation, symbolic names in the 'cvs log' output are sorted by age so this should be OK
 	#$current_tag=`cvs log -h $module/Makefile | grep \"_R_\" | head -n 1`;
