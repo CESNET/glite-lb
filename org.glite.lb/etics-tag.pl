@@ -228,10 +228,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 
 		printf("Modified ChangeLog ready, ret code: $ChangeLogRet\n");
 
-		if (defined $opt_m) {$commit_message=$opt_m;}
-		else {$commit_message="Appended the description of changes regarding version $major.$minor.$revision-$age";}
-
-		printf(EXEC "#Update and commit the ChangeLog\ncp $tmpChangeLog $module/project/ChangeLog\ncvs commit -m \"$commit_message\" $module/project/ChangeLog\n\n");
+		printf(EXEC "#Update the ChangeLog\ncp $tmpChangeLog $module/project/ChangeLog\n\n");
 
 	}	
 
@@ -254,12 +251,6 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		close V;
 		printf(EXEC "EOF\n\n");
 
-
-		if (defined $opt_m) {$commit_message=$opt_m;}
-		else {$commit_message="Modified to reflect version $major.$minor.$revision-$age";}
-
-
-		printf(EXEC "cvs commit -m \"$commit_message\" $module/project/version.properties\n\n");
 	}
 
 
@@ -267,7 +258,18 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	# Update configure
 	# **********************************
 	
-	printf(EXEC "#Update and commit the \"configure\" script\ncp $GLITE_LB_LOCATION/configure $module/\ncvs commit -m \"The most recent version copied. Do not modify this instance (RW in $GLITE_LB_LOCATION).\" $module/configure\n\n");
+	printf(EXEC "#Update the \"configure\" script\ncp $GLITE_LB_LOCATION/configure $module/\n\n");
+
+	# **********************************
+	# Commit changes
+	# **********************************
+
+	if (defined $opt_m) {$commit_message=$opt_m;}
+        else {$commit_message="Updating version, ChangeLog and copying the most recent configure from $GLITE_LB_LOCATION for v. $major.$minor.$revision-$age";}
+
+	
+	printf(EXEC "#Commit changes\ncvs commit -m \"$commit_message\" $module/project/ChangeLog $module/project/version.properties $module/configure\n\n");
+
 
 	unless ($increment eq "n") {
 		# **********************************
