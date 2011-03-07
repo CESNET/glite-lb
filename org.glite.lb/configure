@@ -118,6 +118,9 @@ my %externs = (
 	trustmanager => {
 		prefix => '/opt/glite'
 	},
+	trustmanager_axis => {
+		prefix => '/opt/glite'
+	},
 	utiljava => {
 		prefix=> '/opt/glite'
 	},
@@ -168,7 +171,7 @@ my %extranodmod;
 my %deps;
 my %deps_type;
 my %buildroot;
-my (%etics_externs, %etics_projects, %etics_projects_emi, %etics_externs_emi);
+my (%etics_externs, %etics_projects);
 
 my %lbmodules = (
 	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB logger-msg/], 
@@ -228,14 +231,29 @@ if (not $localstatedir) { $localstatedir = $prefix eq '/usr' ? '/var' : "$prefix
 $sysconfdir=~s/\/$//;
 $localstatedir=~s/\/$//;
 
-$externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
+$externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
+
 %project = %{$projects{$project}};
-if ($project eq 'emi') {
-	for $_ (keys %etics_externs_emi) {
-		$etics_externs{$_} = $etics_externs_emi{$_};
+for $_ (keys %{$project{etics_externs}}) {
+	$etics_externs{$_} = $project{etics_externs}{$_};
+}
+for $_ (keys %{$project{etics_projects}}) {
+	$etics_projects{$_} = $project{etics_projects}{$_};
+}
+for $_ (keys %{$project{need_externs_aux}}) {
+	$need_externs_aux{$_} = $project{need_externs_aux}{$_};
+}
+for my $ext (keys %need_externs_aux) {
+	for (@{$need_externs_aux{$ext}}) {
+		my ($pkg, $type) =/([^:]*)(?::(.*))?/;
+		$type = 'BR' unless ($type);
+
+		push @{$need_externs{$ext}},$pkg;
+		$need_externs_type{$ext}->{$pkg} = $type;
 	}
 }
+
 
 if ($help) { usage(); exit 0; }
 
@@ -435,31 +453,46 @@ sub mode_checkout() {
 }
 
 BEGIN{
+%etics_externs = (
+	'myproxy-devel'=>'myproxy-devel',
+	'myproxy-libs'=>'myproxy-libs',
+	'myproxy-server'=>'myproxy-server',
+	'myproxy-admin'=>'myproxy-admin',
+	cares=>'c-ares',
+	voms=>'org.glite.security.voms-api-cpp',
+	utiljava=>'org.glite.security.util-java',
+	gpt=>'gpt',
+	fetchcrl=>'fetch-crl',
+	activemq=>'activemq-cpp-library',
+	apr=>'apr-dev',
+	aprutil=>'aprutil-dev',
+);
+
+%etics_projects = (
+);
+
 %need_externs_aux = (
-	'lb.client' => [ qw/cppunit:B classads/ ],
-	'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager utiljava/ ],
-	'lb.common' => [ qw/expat cares:B cppunit:B classads/ ],
-	'lb.doc' => [],
-	'lb.logger' => [ qw/cppunit:B/ ],
-	'lb.logger-msg' => [ qw/cppunit:B activemq/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite/ ],
-	'lb.state-machine' => [ qw/classads/ ],
-	'lb.utils' => [ qw/cppunit:B/ ],
+	'lb.client' => [ qw/cppunit:B classads libtool:B/ ],
+	'lb.common' => [ qw/expat cares:B cppunit:B classads libtool:B/ ],
+	'lb.doc' => [ qw/tetex-latex:B/ ],
+	'lb.logger' => [ qw/cppunit:B libtool:B/ ],
+	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B/ ],
+	'lb.state-machine' => [ qw/classads libtool:B/ ],
+	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
 	'lb.ws-interface' => [],
-	'lb.ws-test' => [ qw/gsoap:B/ ],
+	'lb.ws-test' => [ qw/gsoap:B libtool:B/ ],
 	'lb.types' => [ qw// ],
-	'lb.harvester' => [ qw// ],
-	'lb.yaim' => [ qw/yaim_core:R/ ],
-	'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
-	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B cppunit:B log4c:B/ ],
-	'lbjp-common.log' => [ qw/log4c/ ],
-	'lbjp-common.maildir' => [ qw// ],
-	'lbjp-common.server-bones' => [ qw// ],
-	'lbjp-common.trio' => [ qw/cppunit:B/ ],
-	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B/ ],
-	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B/ ],
-	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B/ ],
-	'jobid.api-c' =>  [ qw/cppunit:B/ ],
+	'lb.harvester' => [ qw/docbook-utils:B libtool:B/ ],
+	'lbjp-common.db' => [ qw/mysql:B mysql-devel:B postgresql:B cppunit:B log4c:B libtool:B/ ],
+	'lbjp-common.log' => [ qw/log4c libtool:B/ ],
+	'lbjp-common.maildir' => [ qw/libtool:B/ ],
+	'lbjp-common.server-bones' => [ qw/libtool:B/ ],
+	'lbjp-common.trio' => [ qw/cppunit:B libtool:B/ ],
+	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B libtool:B/ ],
+	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B libtool:B/ ],
+	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B libtool:B/ ],
+	'jobid.api-c' =>  [ qw/cppunit:B libtool:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
 	'jp.client' => [ qw/gsoap libtar globus_essentials:R globus:B/ ],
@@ -468,21 +501,10 @@ BEGIN{
         'jp.primary' => [ qw/classads gsoap libtar globus_essentials:R globus:B/ ],
         'jp.server-common' => [],
         'jp.ws-interface' => [],
-	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms/ ],
-	'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
-	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
+	'gridsite.core' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse:B libxml2:B openssl:B/ ],
+	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:R/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
 );
-
-for my $ext (keys %need_externs_aux) {
-	for (@{$need_externs_aux{$ext}}) {
-		/([^:]*)(?::(.*))?/;
-		push @{$need_externs{$ext}},$1;
-		my $type = $2 ? $2 : 'BR';
-		$need_externs_type{$ext}->{$1} = $type;
-	}
-}
 
 %need_jars = (
 	'jobid.api-java' => [ qw/jakarta-commons-codec/ ],
@@ -639,6 +661,15 @@ for my $ext (keys %deps_aux) {
 	'px' => 'glite-',
 );
 
+# ==== projects specification ====
+# etics_name ........... ETICS project name
+# conf_prefix .......... ETICS configurations name prefix
+# tag_prefix ........... VCS tag prefix
+# local_prefix ......... prefix (relative to stage)
+# etics_externs ........ ETICS modules names of externals
+# etics_projects ....... ETICS project names of externals
+# etics_externs_devel .. ETICS modules names of devel versions of externals
+# need_externs_aux ..... project-specific external dependencies
 %projects = (
 	glite => {
 		etics_name => 'org.glite',
@@ -646,6 +677,34 @@ for my $ext (keys %deps_aux) {
 		tag_prefix => { %cvs_tag_prefix },
 		flavours => '--thrflavour=${globus.thr.flavor} --nothrflavour=${globus.nothr.flavor}',
 		local_prefix => '',
+		etics_externs => {
+			globus_essentials=>'vdt_globus_essentials',
+			globus=>'globus',
+			gridsite=>'org.gridsite.shared',
+			yaim_core=>'org.glite.yaim.core',
+			gip_release=>'glite-info-provider-release',
+			gip_service=>'glite-info-provider-service',
+			bdii=>'bdii',
+			glite_version=>'glite-version',
+			glite_info_templates=>'glite-info-templates',
+			glue_schema=>'glue-schema',
+			trustmanager=>'org.glite.security.trustmanager',
+			axis=>'axis',
+			lcas=>'org.glite.security.lcas',
+		},
+		etics_externs_devel => {
+		},
+		etics_projects => {
+			vdt=>[qw/globus globus_essentials gpt/],
+			'org.glite'=>[qw/voms gridsite lcas gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
+		},
+		need_externs_aux => {
+			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager utiljava libtool:B/ ],
+			'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
+			'lb.yaim' => [ qw/yaim_core:R/ ],
+			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
+			'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
+		},
 	},
 
 	emi => {
@@ -661,6 +720,82 @@ for my $ext (keys %deps_aux) {
 		tag_prefix => { %cvs_tag_prefix },
 		flavours => '--thrflavour= --nothrflavour=',
 		local_prefix => '/usr',
+		etics_externs => {
+			globus_essentials=>'globus-gssapi-gsi',
+			globus=>'globus-gssapi-gsi-devel',
+			gridsite=>'emi.gridsite.shared',
+			yaim_core=>'emi.yaim.yaim-core',
+			yaim_bdii=>'emi.bdii.yaim-bdii',
+			gip_release=>'emi.bdii.glite-info-provider-release',
+			gip_service=>'emi.bdii.glite-info-provider-service',
+			bdii=>'emi.bdii.bdii-core',
+			glite_version=>'emi.misc.glite-version',
+			glite_info_templates=>'emi.misc.glite-info-templates',
+			glue_schema=>'emi.bdii.glue-schema',
+			trustmanager=>'emi.java-security.trustmanager',
+			trustmanager_axis=>'emi.java-security.trustmanager-axis',
+			axis=>'axis1.4',
+			lcas=>'emi.sac.lcas',
+		},
+		etics_externs_devel => {
+			cares => 'c-ares-devel',
+			classads => 'classads-devel',
+			cppunit => 'cppunit-devel',
+			expat => 'expat-devel',
+			gsoap => 'gsoap-devel',
+			voms => 'org.glite.security.voms-api-cpp',
+			libtar => 'libtar-devel',
+			log4c => 'log4c-devel',
+			postgresql => 'postgresql-devel',
+			curl => 'curl-devel',
+			fuse => 'fuse-devel',
+			libxml2 => 'libxml2-devel',
+			openssl => 'openssl-devel',
+		},
+		etics_projects => {
+			'emi'=>[qw/voms voms-devel gridsite lcas gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
+		},
+		need_externs_aux => {
+			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
+			'lb.glite-LB' => [ qw/fetchcrl:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
+			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
+			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
+			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
+		},
+	},
+);
+
+%platform_properties = (
+	'gridsite.core' => {
+		sl5_x86_64_gcc412 => { aprSuffix => '1' },
+		sl5_ia32_gcc412 => { aprSuffix => '1' },
+		deb5_x86_64_gcc432 => { aprSuffix => '1.0' },
+		deb5_ia32_gcc432 => { aprSuffix => '1.0' },
+		slc4_x86_64_gcc346 => { aprSuffix => '0' },
+		slc4_ia32_gcc346 => { aprSuffix => '0' },
+		default => { 
+		}
+	},
+	'jobid.api-java' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
+	'lb.types' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
+	'lb.doc' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
+	'lb.ws-interface' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
+	'lb.yaim' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
+	'px.yaim' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
+	'px.myproxy-config' => {
+		default => { 'package.buildarch' => 'noarch' },
 	},
 );
 
@@ -747,80 +882,6 @@ libdir = $libdir
 }
 
 BEGIN{
-	%etics_externs = (
-		globus_essentials=>'vdt_globus_essentials',
-		globus=>'globus',
-		'myproxy-devel'=>'myproxy-devel',
-		'myproxy-libs'=>'myproxy-libs',
-		'myproxy-server'=>'myproxy-server',
-		'myproxy-admin'=>'myproxy-admin',
-		cares=>'c-ares',
-		voms=>'org.glite.security.voms-api-cpp',
-		gridsite=>'org.gridsite.shared',
-		lcas=>'org.glite.security.lcas',
-		trustmanager=>'org.glite.security.trustmanager',
-		utiljava=>'org.glite.security.util-java',
-		gpt=>'gpt',
-		fetchcrl=>'fetch-crl',
-		gip_release=>'glite-info-provider-release',
-		gip_service=>'glite-info-provider-service',
-		bdii=>'bdii',
-		glite_version=>'glite-version',
-		glite_info_templates=>'glite-info-templates',
-		glue_schema=>'glue-schema',
-		yaim_core=>'org.glite.yaim.core',
-		activemq=>'activemq-cpp-library',
-		apr=>'apr-dev',
-		aprutil=>'aprutil-dev',
-	);
-	%etics_externs_emi = (
-		globus_essentials=>'globus-gssapi-gsi',
-		globus=>'globus-gssapi-gsi-devel',
-		gridsite=>'emi.gridsite.shared',
-		yaim_core=>'emi.yaim.yaim-core'
-	);
-	%etics_projects = (
-		vdt=>[qw/globus globus_essentials gpt/],
-		'org.glite'=>[qw/voms gridsite lcas gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
-	);
-	%etics_projects_emi = (
-		vdt=>'externs',
-		'org.glite'=>'emi',
-	);
-
-	%platform_properties = (
-		'gridsite.core' => {
-			sl5_x86_64_gcc412 => { aprSuffix => '1' },
-			sl5_ia32_gcc412 => { aprSuffix => '1' },
-			deb5_x86_64_gcc432 => { aprSuffix => '1.0' },
-			deb5_ia32_gcc432 => { aprSuffix => '1.0' },
-			slc4_x86_64_gcc346 => { aprSuffix => '0' },
-			slc4_ia32_gcc346 => { aprSuffix => '0' },
-			default => { 
-			}
-		},
-		'jobid.api-java' => {
-			default => { 'package.buildarch' => 'noarch' },
-		},
-		'lb.types' => {
-			default => { 'package.buildarch' => 'noarch' },
-		},
-		'lb.doc' => {
-			default => { 'package.buildarch' => 'noarch' },
-		},
-		'lb.ws-interface' => {
-			default => { 'package.buildarch' => 'noarch' },
-		},
-		'lb.yaim' => {
-			default => { 'package.buildarch' => 'noarch' },
-		},
-		'px.yaim' => {
-			default => { 'package.buildarch' => 'noarch' },
-		},
-		'px.myproxy-config' => {
-			default => { 'package.buildarch' => 'noarch' },
-		},
-	);
 };
 
 sub mode_etics {
@@ -850,10 +911,10 @@ sub mode_etics {
 
 	my @copts = ();
 	my %ge;
-	@ge{@{$etics_projects{'org.glite'}}} = (1) x ($#{$etics_projects{'org.glite'}}+1);
+	@ge{@{$etics_projects{$project{etics_name}}}} = (1) x ($#{$etics_projects{$project{etics_name}}}+1);
 
 	for (@{$need_externs{"$subsys.$module"}}) {
-	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/) {
+	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/ and (defined $externs{$_} or defined $jar{$_})) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 		if ($project ne 'glite') {
 			if ($ge{$_} and not defined $externs{$_}{pkg}) {
@@ -1037,18 +1098,24 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 };
 	for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
+		my $edev = $project{etics_externs_devel}{$_};
 
 		my $proj = 'externals';
 		for my $p (keys %etics_projects) {
-			if ($project eq 'emi' and defined $etics_projects_emi{$p}) {
-				$p = $etics_projects_emi{$p};
-			}
 			for $m (@{$etics_projects{$p}}) {
 				$proj = $p if $m eq $_;
 			}
 		}
 
 		my $type = $need_externs_type{"$subsys.$module"}->{$_};
+
+		if ($edev) {
+			if ($type eq 'B') {
+				$eext = $edev; # no runtime - change to devel pkg
+			} elsif ($type eq 'BR' or $type eq 'RB') {
+				print C "$proj|$edev = B\n"; # additional devel pkg
+			}
+		}
 		print C "$proj|$eext = $type\n";
 	}
 
