@@ -147,12 +147,12 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ifeq (${thrflavour},)
-${STATICLIB}: ${OBJS}
-	ar crv $@ ${OBJS}
+${STATICLIB}: ${THROBJS}
+	ar crv $@ ${THROBJS}
 	ranlib $@
 
-${LTLIB}: ${OBJS}
-	${LINKXX} ${version_info} -o $@ ${LOBJS} \
+${LTLIB}: ${THROBJS}
+	${LINKXX} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss \
 		${EXT_LIBS} \
 		-lm

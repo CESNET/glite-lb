@@ -205,12 +205,12 @@ default: all
 
 ifeq (${thrflavour},)
 ${LIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB} ${TRIO_LIB} \
 			-lglite_security_gss
 
 ${PLUSLIB}: ${PLUSTHROBJS} ${LIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
 else
 ${NOTHRLIB}: ${LIBOBJS}
 	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \

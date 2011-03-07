@@ -99,12 +99,12 @@ endif
 
 
 ifeq ($(thrflavour),)
-${GSS_STATICLIB}: ${GSS_THROBJS}
-	ar crv $@ ${GSS_THROBJS}
+${GSS_STATICLIB}: ${GSS_OBJS}
+	ar crv $@ ${GSS_OBJS}
 	ranlib $@
 
-${GSS_LTLIB}: ${GSS_THROBJS}
-	${LINK} ${version_info} -o $@ ${GSS_THRLOBJS} ${GLOBUS_GSSAPI_GSI_LIBS} ${LIBCARES_LIBS}
+${GSS_LTLIB}: ${GSS_OBJS}
+	${LINK} ${version_info} -o $@ ${GSS_LOBJS} ${GLOBUS_GSSAPI_GSI_LIBS} ${LIBCARES_LIBS}
 else
 ${GSS_NOTHRSTATICLIB}: ${GSS_OBJS}
 	ar crv $@ ${GSS_OBJS}
