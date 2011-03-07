@@ -35,14 +35,14 @@ extern int opterr,optind;
 
 static void usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-x|-X non-default_sock_path] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-P] [-l jdl_file] [-e seed] [-E]\n", me);
+	fprintf(stderr,"usage: %s [-m bkserver] [-x|-X non-default_sock_path] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-P] [-W] [-l jdl_file] [-e seed] [-E]\n", me);
 }
 
 int main(int argc, char *argv[])
 {
 	char *src = NULL,*job = NULL,*server = NULL,*seq,*jdl = NULL, *seed = NULL;
 	int lbproxy = 0;
-	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0, pbs=0, cream=0, type, flags=0;
+	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0, pbs=0, cream=0, type, flags=0, workflow = 0;
 	edg_wll_Context	ctx;
 	edg_wlc_JobId	jobid,*subjobs;
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:PcE")) {
+		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:PcEW")) {
 			case 'x': lbproxy = 1; break;
 			case 'X': lbproxy = 1; 
 				  edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, optarg);
@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
 			case 'l': jdl = (char *) strdup(optarg); break;
 			case 'e': seed = strdup(optarg); break;
 			case 'E': flags = flags | EDG_WLL_LOGLFLAG_EXCL; break;
+			case 'W': workflow = 1; break;
 			case '?': usage(argv[0]); exit(EINVAL);
 			case -1: done = 1; break;
 		}
@@ -119,13 +120,15 @@ int main(int argc, char *argv[])
 
 	edg_wll_SetParam(ctx,EDG_WLL_PARAM_SOURCE,edg_wll_StringToSource(src));
 
-	type = pbs ? EDG_WLL_REGJOB_PBS
+	type = workflow ? EDG_WLL_REGJOB_WORKFLOW : 
+		(pbs ? EDG_WLL_REGJOB_PBS
 		: (cream ? EDG_WLL_REGJOB_CREAM
 			: (num_subjobs ?
 				(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG)
 				:EDG_WLL_REGJOB_SIMPLE
 			  )
-		  );
+		  )
+		);
 
 	if (lbproxy) {
 		if (edg_wll_RegisterJobProxy(ctx,jobid,type,

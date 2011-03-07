@@ -163,6 +163,7 @@
 	_code_	CREAM		CREAM job
         _code_	FILE_TRANSFER_COLLECTION File transfer collection
         _code_	FILE_TRANSFER            File transfer
+	_code_	WORKFLOW	general workflow
 	
 	int	nsubjobs	Number of subjobs this job plans to spawn.
 	_optional_
@@ -480,3 +481,12 @@
 	string  compute_job	Jobid of (compute) job the sandbox belongs. Exclusive with transfer_job.
 	_optional_	
 
+
+@flesh Workflow
+
+@type WorkflowMember	this job implements a particular workflow node
+	jobid	parent		WF id (if not known with registration)
+	_optional_
+	string	node_id		Id of the WF node
+	int	node_instance	Instance (number) of the WF node execution
+	_optional_

@@ -15,6 +15,7 @@ int	jobtype		Type of job
 	_code_ CREAM			CREAM job
 	_code_ FILE_TRANSFER_COLLECTION	job containing all file transfers (i.e. sandbox)
 	_code_ FILE_TRANSFER		subjob holding one file transfer
+	_code_ WORKFLOW			general workflow
 jobid	parent_job			parent job of subjob
 
 string	seed		string used for generation of subjob IDs
@@ -176,6 +177,16 @@ int	ft_sandbox_type		Type of sandbox
 	_code_	OUTPUT		output
 string	ft_src			File transfer source
 string	ft_dest			File transfer destination
+
+_pad_	20
+
+string	wf_node			Id of WF node this job implements
+int	wn_node_instance	Instance (number) of the WF node execution
+
+strlist	wf_node_ids		Static list of WF node Ids
+	_special_	XMLstructured
+strlist node_jobs		Current JobIds of WF nodes
+	_special_	XMLstructured
 
 _pad_	20
 

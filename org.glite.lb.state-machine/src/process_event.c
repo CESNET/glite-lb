@@ -81,6 +81,9 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			case EDG_WLL_REGJOB_FILE_TRANSFER_COLLECTION:
 				js->pub.jobtype = EDG_WLL_STAT_FILE_TRANSFER_COLLECTION;
 				break;
+			case EDG_WLL_REGJOB_WORKFLOW:
+				js->pub.jobtype = EDG_WLL_STAT_WORKFLOW;
+				break;
 			default:
 				trio_asprintf(errstring,"unknown job type %d in registration",e->regJob.jobtype);
 				return RET_FAIL;
@@ -101,6 +104,8 @@ int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char 
 			return processEvent_FileTransfer(js,e,ev_seq,strict,errstring);
 		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
 			return processEvent_FileTransferCollection(js,e,ev_seq,strict,errstring);
+		case EDG_WLL_STAT_WORKFLOW:
+			return processEvent_Workflow(js,e,ev_seq,strict,errstring);
 		case -1: return RET_UNREG;
 		default: 
 			trio_asprintf(errstring,"undefined job type %d",js->pub.jobtype);
