@@ -690,7 +690,7 @@ edg_wll_ErrorCode intJobStat_embryonic(
 		edg_wlc_JobIdDup(e->jobId, &intJobStat_to_JobStat(stat)->parent_job)) goto err;
 	intJobStat_to_JobStat(stat)->state = EDG_WLL_JOB_SUBMITTED;
 	intJobStat_to_JobStat(stat)->owner = strdup(e->user);
-	intJobStat_to_JobStat(stat)->jobtype = EDG_WLL_STAT_SIMPLE;
+	intJobStat_to_JobStat(stat)->jobtype = e->jobtype;
 	intJobStat_to_JobStat(stat)->stateEnterTimes[1 + EDG_WLL_JOB_SUBMITTED] = (int)e->timestamp.tv_sec;
 	intJobStat_to_JobStat(stat)->lastUpdateTime = e->timestamp;
 	intJobStat_to_JobStat(stat)->stateEnterTime = e->timestamp;

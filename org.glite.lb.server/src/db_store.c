@@ -132,8 +132,8 @@ db_store(edg_wll_Context ctx, char *event)
 	if (ev->any.type == EDG_WLL_EVENT_REGJOB &&
 		(ev->regJob.jobtype == EDG_WLL_REGJOB_DAG ||
 		 ev->regJob.jobtype == EDG_WLL_REGJOB_PARTITIONED ||
-		 ev->regJob.jobtype == EDG_WLL_REGJOB_COLLECTION /*||
-		 ev->regJob.jobtype == EDG_WLL_REGJOB_FILE_TRANSFER_COLLECTION*/) &&
+		 ev->regJob.jobtype == EDG_WLL_REGJOB_COLLECTION ||
+		 ev->regJob.jobtype == EDG_WLL_REGJOB_FILE_TRANSFER_COLLECTION) &&
 		ev->regJob.nsubjobs > 0) { 
 
 			if (register_subjobs_embryonic(ctx,&ev->regJob)) goto rollback;
