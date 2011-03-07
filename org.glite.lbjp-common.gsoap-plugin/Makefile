@@ -149,18 +149,18 @@ THROBJS_S:=${OBJS_S:.o=.thr.o}
 THRLOBJS_S:=${OBJS_S:.o=.thr.lo}
 
 ifeq (${thrflavour},)
-${STATICLIB}: ${OBJS}
-	ar crv $@ ${OBJS}
+${STATICLIB}: ${THROBJS}
+	ar crv $@ ${THROBJS}
 	ranlib $@
 
-${LTLIB}: ${OBJS}
-	${LINK_lang} ${version_info} -o $@ ${LOBJS} ${EX_LIBS}
+${LTLIB}: ${THROBJS}
+	${LINK_lang} ${version_info} -o $@ ${THRLOBJS} ${EX_LIBS}
 
-${STATICLIB_S}: ${OBJS_S}
-	ar crv $@ ${OBJS_S}
+${STATICLIB_S}: ${THROBJS_S}
+	ar crv $@ ${THROBJS_S}
 	ranlib $@
 
-${LTLIB_S}: ${OBJS_S}
+${LTLIB_S}: ${THROBJS_S}
 	${LINK_lang} ${version_info} -o $@ ${LOBJS_S} ${EX_LIBS} ${GSOAP_DEFAULT_LIBS}
 else
 ${NOTHRSTATICLIB}: ${OBJS}
