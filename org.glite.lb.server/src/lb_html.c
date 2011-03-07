@@ -60,7 +60,13 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
         while (jobsOut && jobsOut[i]) {
                 char    *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
 
-		if ((statsOut[i].jobtype != EDG_WLL_STAT_FILE_TRANSFER_COLLECTION 
+		if (! statsOut){
+			 asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
+                                pomB, chid,chid);
+                        free(pomB);
+                        pomB = pomA;
+		}
+		else if ((statsOut[i].jobtype != EDG_WLL_STAT_FILE_TRANSFER_COLLECTION 
 			&& statsOut[i].jobtype != EDG_WLL_STAT_FILE_TRANSFER 
 			&& ! statsOut[i].parent_job )
 			|| ((statsOut[i].jobtype == EDG_WLL_STAT_FILE_TRANSFER_COLLECTION 
