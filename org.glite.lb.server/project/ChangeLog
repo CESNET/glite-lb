@@ -253,3 +253,8 @@
 - update startup scripts
 - Fixed treatment of glite location when searching for WSDLs.
 
+2.2.3-1
+- Proper default locations in startup scripts, generated during build
+- Embryonic registration for SB transfers collections
+- Show user's jobs when owner is not indexed
+
