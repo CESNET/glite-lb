@@ -365,13 +365,13 @@ $logfile {
 EOF
 
   # Start services
-  if [ ! -f ${GLITE_LB_LOCATION_ETC}/gLiteservices ] ; then
-    touch ${GLITE_LB_LOCATION_ETC}/gLiteservices
+  if [ ! -f @glite_etc@/gLiteservices ] ; then
+    touch @glite_etc@/gLiteservices
   fi
 
-  grep glite-lb-bkserverd ${GLITE_LB_LOCATION_ETC}/gLiteservices > /dev/null
+  grep glite-lb-bkserverd @glite_etc@/gLiteservices > /dev/null
   if [ ! $? = 0 ] ; then
-    echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd" >> ${GLITE_LOCATION}/etc/gLiteservices
+    echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd" >> @glite_etc@/gLiteservices
   fi
 
   if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
