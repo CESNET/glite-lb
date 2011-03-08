@@ -283,22 +283,23 @@ die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},{
 if ($mode eq 'build') { for my $ext (keys %externs) {
 	if (defined $externs{$ext}{withprefix}) { $externs{$ext}{prefix} = $externs{$ext}{withprefix}; }
 	elsif (defined $externs{$ext}{pkg}) {
-		my ($prefix, $flag);
+		my ($prefix, $flag, $env);
 		my $pkg = $externs{$ext}{pkg};
 		my $flagname = uc $externs{$ext}{pkg};
 		$flagname =~ s/-[0-9\.]*$//;
 		$flagname =~ s/-/_/g;
 
 		print "Checking $pkg ... ";
-		`pkg-config "$pkg" --exists >/dev/null`;
+		$env = "PKG_CONFIG_PATH=$stagedir$prefix/$libdir/pkgconfig";
+		`$env pkg-config $pkg --exists >/dev/null`;
 		if ($? == 0) {
-			$externs{$ext}{prefix}=`pkg-config $pkg --variable=prefix`;
+			$externs{$ext}{prefix}=`$env pkg-config $pkg --variable=prefix`;
 			chomp $externs{$ext}{prefix};
 			print "$externs{$ext}{prefix}\n";
 
-			$flag=`pkg-config $pkg --cflags`;
+			$flag=`$env pkg-config $pkg --cflags`;
 			$externs{$ext}{flags} .= "${flagname}_CFLAGS=$flag" if ($flag);
-			$flag=`pkg-config $pkg --libs`;
+			$flag=`$env pkg-config $pkg --libs`;
 			$externs{$ext}{flags} .= "${flagname}_LIBS=$flag" if ($flag);
 		} else {
 			print "(using default $externs{$ext}{prefix})\n";
