@@ -34,8 +34,8 @@ my $statusn = "$prefix/share/glite-lb/at3/status.T";
 
 my $indent = '';
 
-$event = new MultiStruct;
-$status = new MultiStruct;
+$event = new gLite::LB::MultiStruct;
+$status = new gLite::LB::MultiStruct;
 
 sub gen {
 	local $_ = shift;
@@ -59,7 +59,7 @@ my $startcode;
 while (<>) {
 	chomp;
 	if (/^\@\@\@LANG: (\S+)$/) {
-		$StructField::lang = $1;
+		$gLite::LB::StructField::lang = $1;
 		next;
 	}
 

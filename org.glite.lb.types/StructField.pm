@@ -1,4 +1,4 @@
-package StructField;
+package gLite::LB::StructField;
 
 $lang = 'C';
 1;

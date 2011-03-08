@@ -1,4 +1,4 @@
-package MultiStruct;
+package gLite::LB::MultiStruct;
 
 use gLite::LB::StructField;
 
@@ -116,7 +116,7 @@ sub load {
 			$f->{pad} = $fname;
 		}
 		else {
-			my $f = new StructField $fname,$ftype,$comment,$.;
+			my $f = new gLite::LB::StructField $fname,$ftype,$comment,$.;
 			$f->{ptype} = $self->{type};
 			$self->addField($f);
 		}
