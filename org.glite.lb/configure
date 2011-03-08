@@ -128,7 +128,7 @@ my %externs = (
 		prefix=> '/usr'
 	},
 	jdk => {
-		prefix=> '/usr'
+		prefix=> '/usr/java/latest'
 	},
 	libtar => {
 		prefix=> '/usr'
@@ -304,6 +304,21 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 			print "(using default $externs{$ext}{prefix})\n";
 		}
 	}
+	elsif ($ext eq 'jdk') {
+		my $jdk_prefix;
+
+		print "Looking for some caffein ... ";
+		if (defined $ENV{'JDK_HOME'}) {
+			$jdk_prefix = $ENV{'JDK_HOME'};
+			print "JDK_HOME=$jdk_prefix\n";
+		} elsif (defined $ENV{'JAVA_HOME'}) {
+			$jdk_prefix = $ENV{'JAVA_HOME'};
+			print "JAVA_HOME=$jdk_prefix\n";
+		} else {
+			print "(using default $externs{$ext}{prefix}))\n"
+		}
+		$externs{$ext}{prefix} = $jdk_prefix if ($jdk_prefix);
+	}
 } }
 
 if ($dis) {
@@ -321,7 +336,10 @@ $stagedir = $root unless $stagedir;
 if ($mode eq 'build') {
 	print "Writing config.status\n";
 	open CONF,">config.status" or die "config.status: $!\n";
-	print CONF "PKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH} $0 @keeparg\n";
+	for ('JDK_HOME', 'JAVA_HOME', 'PKG_CONFIG_PATH') {
+		print CONF "$_=$ENV{$_} " if (defined $ENV{$_});
+	}
+	print CONF "$0 @keeparg\n";
 	close CONF;
 }
 
@@ -743,7 +761,7 @@ for my $ext (keys %deps_aux) {
 			cppunit => 'cppunit-devel',
 			expat => 'expat-devel',
 			gsoap => 'gsoap-devel',
-			voms => 'org.glite.security.voms-api-cpp',
+			voms => 'org.glite.security.voms-api',
 			libtar => 'libtar-devel',
 			log4c => 'log4c-devel',
 			postgresql => 'postgresql-devel',
