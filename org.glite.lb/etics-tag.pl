@@ -221,17 +221,15 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 
 		system("cp $module/project/ChangeLog $tmpChangeLog");
 
-		unless ($increment eq "n") {system("echo $major.$minor.$revision-$age >> $tmpChangeLog");}
+		unless ($increment eq "n") {system("echo $major.$minor.$revision-$age >> $tmpChangeLog");
+			if ($increment eq "a") {system("echo \"- Module rebuilt\" >> $tmpChangeLog"); system("echo \"\" >> $tmpChangeLog");}
+			else { system("cvs log -S -N -r" . "$current_tag" . ":: $module | egrep -v \"^locks:|^access list:|^keyword substitution:|^total revisions:|^branch:|^description:|^head:|^RCS file:|^date:|^---|^===|^revision \" >> $tmpChangeLog"); }
 
-		if ($increment eq "a") {system("echo \"- Module rebuilt\" >> $tmpChangeLog"); system("echo \"\" >> $tmpChangeLog");}
-		else { system("cvs log -S -N -r" . "$current_tag" . ":: $module | egrep -v \"^locks:|^access list:|^keyword substitution:|^total revisions:|^branch:|^description:|^head:|^RCS file:|^date:|^---|^===|^revision \" >> $tmpChangeLog"); }
-
-		$ChangeLogRet=system("vim $tmpChangeLog");
-
+			$ChangeLogRet=system("vim $tmpChangeLog");
+		}
 		printf("Modified ChangeLog ready, ret code: $ChangeLogRet\n");
 
 		printf(EXEC "#Update the ChangeLog\ncp $tmpChangeLog $module/project/ChangeLog\n\n");
-
 	}	
 
 	unless ($increment eq "n") {
