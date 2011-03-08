@@ -146,3 +146,6 @@
 - product-specific GLITE_*_LOCATION* variables
 - update startup scripts
 
+2.2.3-1
+- Proper default locations in startup scripts, generated during build
+
