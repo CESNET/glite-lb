@@ -49,7 +49,8 @@ my $jobid_tag = '';
 my $libdir = getlibdir();
 my $project = 'glite';
 my (%projects, %project);
-
+my $debug = 0;
+my $pkg_config_env = (defined $ENV{PKG_CONFIG_PATH}) ? "$ENV{PKG_CONFIG_PATH}:" : '';
 
 my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester glite-LB glite-PX/;
 my %enable_nodes;
@@ -206,6 +207,7 @@ my @opts = (
 	'help' => \$help,
 	'libdir=s' => \$libdir,
 	'project=s' => \$project,
+	'debug' => \$debug,
 );
 
 for (@nodes) {
@@ -223,7 +225,7 @@ my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
 $prefix=~s/\/$//;
-$stage=~s/\/$//;
+$stagedir=~s/\/$// if ($stagedir);
 $root=~s/\/$//;
 $sysroot=~s/\/$//;
 if (not $sysconfdir) { $sysconfdir = $prefix eq '/usr' ? '/etc' : "$prefix/etc"; }
@@ -280,29 +282,45 @@ die "--module cannot be used with --enable-* or --disable-*\n"
 
 die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},{$lbmodules{jp}};
 
+if ($dis) {
+	for (@nodes) {
+		$enable_nodes{$_} = 1 unless $disable_nodes{$_};
+	}
+}
+
+if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
+
+for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
+
+$stagedir = $root unless $stagedir;
+
 if ($mode eq 'build') { for my $ext (keys %externs) {
-	if (defined $externs{$ext}{withprefix}) { $externs{$ext}{prefix} = $externs{$ext}{withprefix}; }
+	if (defined $externs{$ext} and defined $externs{$ext}{withprefix}) { $externs{$ext}{prefix} = $externs{$ext}{withprefix}; }
 	elsif (defined $externs{$ext}{pkg}) {
-		my ($prefix, $flag);
+		my ($flag, $env, $cmd, $ret);
 		my $pkg = $externs{$ext}{pkg};
 		my $flagname = uc $externs{$ext}{pkg};
 		$flagname =~ s/-[0-9\.]*$//;
 		$flagname =~ s/-/_/g;
 
 		print "Checking $pkg ... ";
-		`pkg-config "$pkg" --exists >/dev/null`;
-		if ($? == 0) {
-			$externs{$ext}{prefix}=`pkg-config $pkg --variable=prefix`;
+		$env = "PKG_CONFIG_PATH=$pkg_config_env$stagedir$prefix/$libdir/pkgconfig";
+		$cmd = "$env pkg-config $pkg --exists >/dev/null";
+		`$cmd`; $ret = $?;
+		print "('$cmd' => $ret)\n" if ($debug);
+		if ($ret == 0) {
+			$externs{$ext}{prefix}=`$env pkg-config $pkg --variable=prefix`;
 			chomp $externs{$ext}{prefix};
 			print "$externs{$ext}{prefix}\n";
 
-			$flag=`pkg-config $pkg --cflags`;
+			$flag=`$env pkg-config $pkg --cflags`;
 			$externs{$ext}{flags} .= "${flagname}_CFLAGS=$flag" if ($flag);
-			$flag=`pkg-config $pkg --libs`;
+			$flag=`$env pkg-config $pkg --libs`;
 			$externs{$ext}{flags} .= "${flagname}_LIBS=$flag" if ($flag);
 		} else {
 			print "(using default $externs{$ext}{prefix})\n";
 		}
+		print "\n" if ($debug);
 	}
 	elsif ($ext eq 'jdk') {
 		my $jdk_prefix;
@@ -320,18 +338,6 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 		$externs{$ext}{prefix} = $jdk_prefix if ($jdk_prefix);
 	}
 } }
-
-if ($dis) {
-	for (@nodes) {
-		$enable_nodes{$_} = 1 unless $disable_nodes{$_};
-	}
-}
-
-if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
-
-for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
-
-$stagedir = $root unless $stagedir;
 
 if ($mode eq 'build') {
 	print "Writing config.status\n";
@@ -385,7 +391,7 @@ sub mode_build {
 	@myjars = keys %aux;
 	
 	print "\nRequired externals:\n";
-	print "\t$_: $externs{$_}{prefix}\n" for @ext;
+	print "\t$_: ".($externs{$_}{prefix}?$externs{$_}{prefix}:'-')."\n" for @ext;
 	print "\t$_: $jar{$_}\n" for @myjars;
 	for (@ext) { if (defined($externs{$_}{flags})) { print "$externs{$_}{flags}"; } };
 	print "\nThis is a poor-man configure, it's up to you to have sources and externals there\n\n";
@@ -748,7 +754,6 @@ for my $ext (keys %deps_aux) {
 			gip_service=>'emi.bdii.glite-info-provider-service',
 			bdii=>'emi.bdii.bdii-core',
 			glite_version=>'emi.misc.glite-version',
-			glite_info_templates=>'emi.misc.glite-info-templates',
 			glue_schema=>'emi.bdii.glue-schema',
 			trustmanager=>'emi.java-security.trustmanager',
 			trustmanager_axis=>'emi.java-security.trustmanager-axis',
@@ -771,11 +776,11 @@ for my $ext (keys %deps_aux) {
 			openssl => 'openssl-devel',
 		},
 		etics_projects => {
-			'emi'=>[qw/voms voms-devel gridsite lcas gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
+			'emi'=>[qw/voms voms-devel gridsite lcas gip_release gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
 		},
 		need_externs_aux => {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
-			'lb.glite-LB' => [ qw/fetchcrl:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
+			'lb.glite-LB' => [ qw/fetchcrl:R gip_release:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
 			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
 			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
@@ -883,6 +888,7 @@ libdir = $libdir
 };
 
 	for (@{$need_externs{$short}}) {
+		next unless defined $externs{$_} and defined $externs{$_}{prefix};
 		print MKINC "${_}_prefix = $externs{$_}{prefix}\n";
 		print MKINC "$externs{$_}{flags}" if defined $externs{$_}{flags};
 	}
@@ -1033,7 +1039,7 @@ sub mode_etics {
 		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl $cvs_prefix{$subsys}.$subsys.$module/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{configure} = "cd $confdir && /usr/bin/perl $cvs_prefix{$subsys}.$subsys.$module/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts; chmod +x \${stageDir}$project{local_prefix}/sbin/glite-lb-at3 2>/dev/null";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
@@ -1174,7 +1180,7 @@ sub getlibdir {
         chomp($kname);
         close INP;
 
-        if ( $kname == "Linux") {
+        if ( $kname eq "Linux") {
                 $arch = ("x86_64\npowerpc\nppc64\n");
 
                 open INP, "uname -p | "; # Check processor type
@@ -1202,7 +1208,7 @@ sub getlibdir {
                         $libdir=$lib32; }
         }
 
-        if ( $kname == "SunOS") {
+        if ( $kname eq "SunOS") {
                 if (-e "/usr/lib/64") {
                 $libdir="lib/64"; }
         }
@@ -1231,6 +1237,7 @@ General options (defaults in []):
   --branch=branch		CVS branch/etics name suffix (HEAD, branch_2_1, ...)
   --libdir=libdir		typically [lib,lib64] postfix
   --project=PROJECT		build or generate etics for a project (glite/emi) [emi]
+  --debug			print more details
   
 Mode of operation:
   --mode=\{checkout|build|etics\}	what to do [build]
