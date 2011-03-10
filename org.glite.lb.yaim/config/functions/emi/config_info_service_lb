@@ -1,0 +1,95 @@
+##############################################################################
+# Copyright (c) Members of the EGEE Collaboration. 2004.
+# See http://www.eu-egee.org/partners/ for details on the copyright
+# holders.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##############################################################################
+#
+# NAME :        config_info_service_lb
+#
+# DESCRIPTION : This function configures the dynamic service publisher
+#               for site LB server node.
+#
+# AUTHORS :     Maria.Alandes.Pradillo@cern.ch
+#		salvet@ics.muni.cz
+#               
+# NOTES :       
+#
+# YAIM MODULE:  glite-yaim-lb
+#
+##############################################################################
+
+config_info_service_lb_check () {
+	requires $1 SITE_NAME INSTALL_ROOT
+}
+
+config_info_service_lb_setenv () {
+	yaimlog DEBUG "This function currently doesn't set any environment variables."
+}
+
+config_info_service_lb () {
+
+INFO_SERVICE_CONFIG='/etc/glite/info/service'
+INFO_SERVICE_SCRIPT='/usr/bin'
+INFO_PROVIDER_PATH='/var/run/bdii/gip/provider'
+
+SERVICE=LBSERVER
+SERVICE_LC=lbserver
+
+SERVICE_HOST=`hostname -f`
+
+if [ ! -x ${INFO_SERVICE_SCRIPT}/glite-info-service ]; then
+  yaimlog ERROR "The script file for glite-info-service was not found in ${INFO_SERVICE_SCRIPT}."
+  exit 1
+fi
+if [ ! -x ${INFO_SERVICE_SCRIPT}/glite-info-service-glue2 ]; then
+  yaimlog ERROR "The script file for glite-info-service-glue2 was not found in ${INFO_SERVICE_SCRIPT}."
+  exit 1
+fi
+
+yaimlog DEBUG "Delete a previous version of the *.conf if it exists"
+rm -rf ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf
+
+yaimlog DEBUG "Create the glite-info-glue2-${SERVICE_LC}.conf file out of the template file"
+cp ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf.template ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf
+if [ $? != 0 ]; then
+  yaimlog ERROR "Copying service template failed"
+  exit 1
+fi
+
+# Note: the configuration file may need to be altered if non standard values have been used. 
+
+yaimlog DEBUG "Delete a previous version of the glite-info-provider-service-${SERVICE_LC}-wrapper if it exists"
+rm -rf ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wrapper
+
+yaimlog DEBUG "Create the ${INFO_PROVIDER_PATH} in case it doesn't exist"
+mkdir -p ${INFO_PROVIDER_PATH} 
+
+yaimlog DEBUG "Create the glite-info-provider-service-${SERVICE_LC}-wrapper file"
+cat << EOF > ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wrapper
+#!/bin/sh
+export PATH=$PATH:${INFO_SERVICE_SCRIPT}
+export ${SERVICE}_HOST=${SERVICE_HOST}
+${INFO_SERVICE_SCRIPT}/glite-info-service ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
+${INFO_SERVICE_SCRIPT}/glite-info-service-glue2 ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
+EOF
+
+chmod +x ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wrapper 
+ 
+  
+return 0
+
+}
+
+
