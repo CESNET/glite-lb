@@ -70,7 +70,7 @@ l_SRC = \
 #	resubmission.l resubmitted.l
 
 
-sh_PROGS = $(l_SRC:.l=.sh)
+sh_PROGS = $(l_SRC:.l=.sh) 
 
 ifdef DEBUG
 	DEBUG:=-g -O0 -Wall -DEDG_WLL_LOG_STUB
@@ -160,6 +160,8 @@ TOOLS:=${LB_PERF_TOOLS}
 EXAMPLES_SRC:=log_usertag_proxy.c job_log.c job_reg.c feed_shark.c query_ext.c query_seq_code.c stats.c stats-duration-fromto.c abort_job.c change_acl.c stresslog.c flood_proxy.c dagids.c stress_context.c parse_eventsfile.c test_changed_jdl.c done_failed_events.c
 # sandbox_collection_reg_dummy.c
 EXAMPLES:=${EXAMPLES_SRC:.c=}
+
+SH_EXAMPLES:=pbs_running.sh notify.pl sandbox_transfers.sh
 
 # TODO: migrate them here from branch_RC31_3
 # EXAMPLES_PLUS_SRC:=indexed_attrs_plus.cpp job_status_plus.cpp query_events_plus.cpp listener.cpp user_jobs_plus.cpp job_log_plus.cpp notify_plus.cpp
@@ -374,11 +376,14 @@ endif
 	for p in ${EXAMPLES_SRC} ${EXAMPLES_PLUS_SRC} ${EXAMPLES_CL_SRC} ${EXAMPLES_CL_THR_SRC} ; do \
 		${INSTALL} -m 644 "${top_srcdir}/examples/$$p" "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"; \
 	done
+
+	for p in ${SH_EXAMPLES}; do \
+		${INSTALL} -m 755 ${top_srcdir}/examples/"$$p" "${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-$$p"; \
+	done
+
 	${INSTALL} -m 644 ${top_srcdir}/examples/Makefile "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-export.sh"
-	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-notify.pl
-	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-sandbox_transfers.sh
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/m4/glite_lb.m4 ${DESTDIR}${m4dir}/
