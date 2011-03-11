@@ -592,6 +592,7 @@ for my $jar (keys %need_jars) {
 	'lb.glite-LB' => [ qw/
 		lb.logger:R lb.server:R lb.utils:R lb.doc:R
 		lb.ws-test:R lb.harvester:R lb.yaim:R lb.client-java:R
+		lb.logger-msg:R
 	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio lbjp-common.log/ ],
 	'lbjp-common.maildir' => [ qw// ],
@@ -726,7 +727,7 @@ for my $ext (keys %deps_aux) {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager utiljava libtool:B/ ],
 			'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
 			'lb.yaim' => [ qw/yaim_core:R/ ],
-			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
+			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R nc:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
 		},
 	},
@@ -782,7 +783,7 @@ for my $ext (keys %deps_aux) {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
 			'lb.glite-LB' => [ qw/fetchcrl:R gip_release:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
 			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
-			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
+			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R nc:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
 		},
 	},
