@@ -1,1 +1,0 @@
-JAVA implemantation of the L&B service client. Supports producing (logging) events into L&B, event and job status queries, and receiving notifications.
