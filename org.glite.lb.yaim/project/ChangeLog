@@ -47,3 +47,7 @@
 - product-specific GLITE_*_LOCATION* variables
 - project-specific yaim functions list file
 
+4.3.3-1
+- Configuring BDII according to the documentation
+- Update for latest EMI yaim-core
+
