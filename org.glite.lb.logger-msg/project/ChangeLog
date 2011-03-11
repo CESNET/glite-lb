@@ -9,3 +9,6 @@
 1.0.2-1
 - No direct dependency on apr/apr-util
 
+1.0.2-2
+- Module rebuilt
+
