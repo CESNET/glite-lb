@@ -61,3 +61,6 @@
 1.2.1-2
 - Module rebuilt
 
+1.2.2-1
+- Full namespace declarations for rpm AutoReqProv
+
