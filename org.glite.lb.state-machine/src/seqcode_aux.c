@@ -137,6 +137,8 @@ int same_branch(const char *a, const char *b)
 		return(0);
 }
 
+#define PBS_SEQCODE_FORMAT "TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c"
+
 int edg_wll_compare_pbs_seq(const char *a,const char *b)
 {
 	char	timestamp_a[14], pos_a[10], src_a;
@@ -144,7 +146,7 @@ int edg_wll_compare_pbs_seq(const char *a,const char *b)
 	int	ev_code_a, ev_code_b;
 	int	res;
 
-	res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_a, pos_a, &ev_code_a, &src_a);	
+	res = sscanf(a,PBS_SEQCODE_FORMAT, timestamp_a, pos_a, &ev_code_a, &src_a);	
 
 	if (res != 4) {
 /* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", a); */
@@ -152,7 +154,7 @@ int edg_wll_compare_pbs_seq(const char *a,const char *b)
 		return -1;
 	}
 
-	res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_b, pos_b, &ev_code_b, &src_b);	
+	res = sscanf(b,PBS_SEQCODE_FORMAT, timestamp_b, pos_b, &ev_code_b, &src_b);	
 
 	if (res != 4) {
 /* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", b); */
@@ -195,7 +197,11 @@ int edg_wll_compare_pbs_seq(const char *a,const char *b)
 }
 
 edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num) {
-	switch (pbs_seq_num[EDG_WLL_SEQ_PBS_SIZE - 2]) {
+	char	src,scratch[BUFSIZ];
+	int	scratch_i;	
+	
+	sscanf(pbs_seq_num,PBS_SEQCODE_FORMAT,scratch,scratch,&scratch_i,&src);
+	switch (src) {
 		case 'c': return(EDG_WLL_PBS_EVENT_SOURCE_SCHEDULER);
 		case 's': return(EDG_WLL_PBS_EVENT_SOURCE_SERVER);
 		case 'm': return(EDG_WLL_PBS_EVENT_SOURCE_MOM);
