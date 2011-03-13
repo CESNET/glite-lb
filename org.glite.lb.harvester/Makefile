@@ -79,7 +79,7 @@ install: compile
 	${INSTALL} -m 444 ${top_srcdir}/examples/test.sql ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb/harvester-test-dbsetup.sql
 	${INSTALL} -m 444 ${top_srcdir}/doc/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 444 glite-lb-harvester.8 ${DESTDIR}${PREFIX}${prefix}/share/man/man8
-	${INSTALL} -m 755 ${top_srcdir}/config/startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-harvester
+	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-harvester
 
 clean:
 	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs
