@@ -25,7 +25,7 @@ limitations under the License.
 int main() {
 	struct soap *mydlo = NULL;
 	glite_gsplugin_Context gsplugin_ctx = NULL;
-	int ok1, ok2;
+	int ok1;
 
 	// test 1 - stdsoap2.c compatibility
 	if ((mydlo = soap_new()) == NULL) {
@@ -52,7 +52,7 @@ int main() {
 	soap_done(mydlo);
 	free(mydlo);
 	glite_gsplugin_free_context(gsplugin_ctx);
-	return ok1 && ok2;
+	return ok1;
 
 err:
 	if (gsplugin_ctx) glite_gsplugin_free_context(gsplugin_ctx);
