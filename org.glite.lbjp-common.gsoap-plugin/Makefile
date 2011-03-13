@@ -11,6 +11,7 @@ prefix=
 
 glite_location=/opt/glite
 gsoap_prefix=/opt/gsoap
+gsoapxx_prefix?=${gsoap_prefix}
 
 CC=gcc
 
@@ -50,6 +51,7 @@ ext_repository:=${shell if [ -d "${repository}/externals" ]; then \
 
 gsoap_version=${gsoap_default_version}
 gsoap_prefix?=${ext_repository}/${gsoap_name}/${gsoap_version}/${gsoap_platform}
+gsoapxx_prefix?=${gsoap_prefix}
 ifdef lang
 langflavour:=_${lang}
 langsuffix:=.${lang}
@@ -96,7 +98,17 @@ LINK_lang:=${LINKXX}
 endif
 
 gsoaplibdir=$(shell if test -d "${gsoap_prefix}/${libdir}"; then echo "${gsoap_prefix}/${libdir}"; else echo "${gsoap_prefix}/lib"; fi)
+gsoapxxlibdir=$(shell if test -d "${gsoapxx_prefix}/${libdir}"; then echo "${gsoapxx_prefix}/${libdir}"; else echo "${gsoapxx_prefix}/lib"; fi)
 GSOAP_LIBS?=-L${gsoaplibdir} -lgsoap
+GSOAPXX_LIBS?=-L${gsoapxxlibdir} -lgsoap++
+GSOAP_LIBS_lang:=${GSOAP_LIBS}
+ifeq (${lang},c)
+GSOAP_LIBS_lang:=${GSOAP_LIBS}
+endif
+ifeq (${lang},cxx)
+GSOAP_LIBS_lang:=${GSOAPXX_LIBS}
+endif
+
 
 EX_NOTHRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${nothrflavour}
 EX_THRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${thrflavour}
@@ -139,7 +151,7 @@ endif
 
 ifeq (${gsoap_version},${gsoap_default_version})
 OBJS_S:=glite_gsplugin${langsuffix}.o
-GSOAP_DEFAULT_LIBS:=${GSOAP_LIBS}
+GSOAP_DEFAULT_LIBS:=${GSOAP_LIBS_lang}
 else
 OBJS_S:=glite_gsplugin${langsuffix}.o stdsoap2${langsuffix}.o
 GSOAP_DEFAULT_LIBS:=

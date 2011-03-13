@@ -97,6 +97,10 @@ my %externs = (
 		prefix=> '/usr',
 		pkg => 'gsoap'
 	},
+	gsoapxx => {
+		prefix=> '/usr',
+		pkg => 'gsoap++'
+	},
 	mysql => {
 		prefix=> '/usr'
 	},
@@ -235,6 +239,7 @@ $localstatedir=~s/\/$//;
 
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
+$externs{'gsoapxx'}{prefix}=$externs{gsoap}{prefix} if $externs{'gsoapxx'}{prefix} eq '';
 
 %project = %{$projects{$project}};
 for $_ (keys %{$project{etics_externs}}) {
@@ -301,7 +306,7 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 		my $pkg = $externs{$ext}{pkg};
 		my $flagname = uc $externs{$ext}{pkg};
 		$flagname =~ s/-[0-9\.]*$//;
-		$flagname =~ s/-/_/g;
+		$flagname =~ y/-\+/_X/;
 
 		print "Checking $pkg ... ";
 		$env = "PKG_CONFIG_PATH=$pkg_config_env$stagedir$prefix/$libdir/pkgconfig";
@@ -515,7 +520,7 @@ BEGIN{
 	'lbjp-common.trio' => [ qw/cppunit:B libtool:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B libtool:B/ ],
 	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B libtool:B/ ],
-	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B libtool:B/ ],
+	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap gsoapxx libtool:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B libtool:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
@@ -692,6 +697,7 @@ for my $ext (keys %deps_aux) {
 # tag_prefix ........... VCS tag prefix
 # local_prefix ......... prefix (relative to stage)
 # etics_externs ........ ETICS modules names of externals
+#                        (${NAME.location}, ETICS conf. dependencies)
 # etics_projects ....... ETICS project names of externals
 # etics_externs_devel .. ETICS modules names of devel versions of externals
 # need_externs_aux ..... project-specific external dependencies
@@ -716,6 +722,7 @@ for my $ext (keys %deps_aux) {
 			trustmanager=>'org.glite.security.trustmanager',
 			axis=>'axis',
 			lcas=>'org.glite.security.lcas',
+			gsoapxx=>'-',
 		},
 		etics_externs_devel => {
 		},
@@ -760,6 +767,7 @@ for my $ext (keys %deps_aux) {
 			trustmanager_axis=>'emi.java-security.trustmanager-axis',
 			axis=>'axis1.4',
 			lcas=>'emi.sac.lcas',
+			gsoapxx=>'-',
 		},
 		etics_externs_devel => {
 			cares => 'c-ares-devel',
@@ -941,6 +949,7 @@ sub mode_etics {
 	for (@{$need_externs{"$subsys.$module"}}) {
 	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/ and (defined $externs{$_} or defined $jar{$_})) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
+		next if ($eext eq '-');
 		if ($project ne 'glite') {
 			if ($ge{$_} and not defined $externs{$_}{pkg}) {
 				push @copts, "--with-$_=\${stageDir}";
@@ -1124,6 +1133,7 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 	for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 		my $edev = $project{etics_externs_devel}{$_};
+		next if ($eext eq '-');
 
 		my $proj = 'externals';
 		for my $p (keys %etics_projects) {
