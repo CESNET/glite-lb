@@ -57,7 +57,7 @@ langflavour:=_${lang}
 langsuffix:=.${lang}
 endif
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples
+VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/interface
 
 default: all
 
@@ -113,7 +113,7 @@ endif
 EX_NOTHRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${nothrflavour}
 EX_THRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${thrflavour}
 EX_LIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss
-HDRS:=glite_gsplugin.h glite_gscompat.h glite_gsplugin-int.h
+HDRS:=glite_gsplugin.h glite_gsplugin-int.h
 EXAMPLES:=wscalc_clt_ex wscalc_srv_ex wscalc_srv_ex2
 TESTS:=test_cxx
 
@@ -206,7 +206,7 @@ endif
 
 all compile: \
 	${lib_LTLIBRARIES} \
-	all-libs-with-soap examples
+	all-libs-with-soap examples glite_gscompat.h
 
 check: check.cxx
 
@@ -288,6 +288,16 @@ ${GSOAP_FPREFIX}H.h ${GSOAP_FPREFIX}C.c ${GSOAP_FPREFIX}Server.c ${GSOAP_FPREFIX
 wscalc_clt_ex.o: wscalc_clt_ex.c
 	${CC} -c ${CFLAGS} -o $@ $<
 
+sizeof_soap.o: sizeof_soap.c stdsoap2.h
+	${COMPILE} -c $< -o $@
+
+sizeof_soap: sizeof_soap.o
+	${LINK} $< -o $@
+
+glite_gscompat.h: glite_gscompat.h.in sizeof_soap
+	size=${shell ./sizeof_soap}; \
+	sed "s/@sizeof_struct_soap@/$$size/" ${top_srcdir}/interface/glite_gscompat.h.in > $@
+
 doc:
 
 stage:
@@ -300,6 +310,7 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
+	${INSTALL} -m 644 glite_gscompat.h ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
 	for v in ${gsoap_versions_noflavours}; do \
 		${MAKE} -C `echo $$v | tr -d .` -f ../Makefile install-soaplib gsoap_version=$$v lang= PREFIX=${PREFIX} top_srcdir=${top_srcdir}/.. || exit $?; \
 	done
@@ -317,6 +328,7 @@ clean:
 	rm -rvf ${LTLIB_TEST_S}
 	rm -rvf *.c *.h *.xml *.nsmap *.o *.lo .libs ${EXAMPLES} ${TESTS}
 	rm -rvf CalcService.wsdl wscalc.xsd
+	rm -rvf glite_gscompat.h
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 	for v in ${gsoap_versions_noflavours} ${gsoap_versions_flavours}; do \
 		rm -rvf `echo $$v | tr -d .`; \

@@ -19,6 +19,7 @@ version=${module.version}
 
 CEXAMPLES:=ws_getversion ws_jobstat ws_joblog ws_lb4agu_GetActivityStatus ws_lb4agu_GetActivityInfo
 #TODO ws_query_ex 
+TESTS:=sizeof_soap_test
 
 default all: ${CEXAMPLES}
 
@@ -30,7 +31,7 @@ else
 default_flavour=_${nothrflavour}
 endif
 
-VPATH=${top_srcdir}/examples
+VPATH=${top_srcdir}/examples:${top_srcdir}/tests
 CC=gcc
 DEBUG:=-g -O0 -Wall
 CFLAGS:=${CFLAGS} -I${gsoap_prefix}/include -I${gsoap_prefix}/ \
@@ -63,11 +64,14 @@ ${SOAP_FILES}: %: LB.xh
 ${CEXAMPLES}: %: %.o ${WS_CLIENT_OBJS}
 	${LINK} -o $@ $@.o ${WS_CLIENT_OBJS} ${WS_CLIENT_LIBS}
 
+sizeof_soap_test: sizeof_soap_test.o
+	${LINK} -o $@ $<
+
 %.o %.lo: %.c soap_version.h ${SOAP_FILES}
 	${COMPILE} -c $<
 
-check:
-	@echo "No test"
+check: ${TESTS}
+	./sizeof_soap_test
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/
@@ -76,7 +80,7 @@ install:
 	done
 
 clean:
-	rm -rvf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES}
+	rm -rvf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES} ${TESTS}
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 
 LB.xh: ws_typemap.dat ${stagedir}${prefix}/interface/LB.wsdl

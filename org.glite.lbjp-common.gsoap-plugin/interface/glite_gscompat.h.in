@@ -20,6 +20,14 @@ limitations under the License.
 
 #ident "$Header: "
 
+/*
+ * for basic sanity check
+ *
+ * size of the soap structure can differs with compilation flags
+ * or with C/C++ compilers
+ */
+#define GSOAP_SIZEOF_STRUCT_SOAP @sizeof_struct_soap@
+
 #ifndef GSOAP_VERSION
   #error GSOAP_VERSION required
 #endif
