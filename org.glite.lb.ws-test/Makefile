@@ -37,6 +37,7 @@ DEBUG:=-g -O0 -Wall
 CFLAGS:=${CFLAGS} -I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	${GLOBUS_GSSAPI_GSI_CFLAGS} \
+	${GSOAP_CFLAGS} \
 	${DEBUG}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
@@ -73,6 +74,9 @@ sizeof_soap_test: sizeof_soap_test.o
 check: ${TESTS}
 	./sizeof_soap_test
 
+stage: all
+	$(MAKE) install PREFIX=${stagedir}
+
 install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/
 	for f in ${CEXAMPLES}; do \
@@ -91,3 +95,4 @@ soap_version.h:
 	perl -ne '$$. == 2 && /.*([0-9]+)\.([0-9]+)\.([0-9]+)([a-z]?).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n#define GSOAP_VERSION_LETTER '\''".($$4?$$4:"\\0")."'\''\n",$$1,$$2,$$3' soapH.h >$@
 	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
 
+.PHONY: default all check stage install clean

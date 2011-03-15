@@ -75,12 +75,29 @@ endif
 #	DEBUG:=${DEBUG} -DCHECK_GSOAP_VERSION
 #endif
 
+gsoaplibdir=$(shell if test -d "${gsoap_prefix}/${libdir}"; then echo "${gsoap_prefix}/${libdir}"; else echo "${gsoap_prefix}/lib"; fi)
+gsoapxxlibdir=$(shell if test -d "${gsoapxx_prefix}/${libdir}"; then echo "${gsoapxx_prefix}/${libdir}"; else echo "${gsoapxx_prefix}/lib"; fi)
+GSOAP_CFLAGS?=-I${gsoap_prefix}/include
+GSOAP_LIBS?=-L${gsoaplibdir} -lgsoap
+GSOAPXX_CFLAGS?=-I${gsoapxx_prefix}/include
+GSOAPXX_LIBS?=-L${gsoapxxlibdir} -lgsoap++
+GSOAP_LIBS_lang:=${GSOAP_LIBS}
+ifeq (${lang},c)
+GSOAP_CFLAGS_lang:=${GSOAP_CFLAGS}
+GSOAP_LIBS_lang:=${GSOAP_LIBS}
+endif
+ifeq (${lang},cxx)
+GSOAP_CFLAGS_lang:=${GSOAPXX_CFLAGS}
+GSOAP_LIBS_lang:=${GSOAPXX_LIBS}
+endif
+
+
 CFLAGS:= ${CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-DWITH_NONAMESPACES \
 	-I. -I${top_srcdir}/interface \
 	-I${stagedir}${prefix}/include \
-	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION -DWITH_IPV6
+	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION
 
 LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
@@ -96,19 +113,6 @@ endif
 ifeq (${lang},cxx)
 LINK_lang:=${LINKXX}
 endif
-
-gsoaplibdir=$(shell if test -d "${gsoap_prefix}/${libdir}"; then echo "${gsoap_prefix}/${libdir}"; else echo "${gsoap_prefix}/lib"; fi)
-gsoapxxlibdir=$(shell if test -d "${gsoapxx_prefix}/${libdir}"; then echo "${gsoapxx_prefix}/${libdir}"; else echo "${gsoapxx_prefix}/lib"; fi)
-GSOAP_LIBS?=-L${gsoaplibdir} -lgsoap
-GSOAPXX_LIBS?=-L${gsoapxxlibdir} -lgsoap++
-GSOAP_LIBS_lang:=${GSOAP_LIBS}
-ifeq (${lang},c)
-GSOAP_LIBS_lang:=${GSOAP_LIBS}
-endif
-ifeq (${lang},cxx)
-GSOAP_LIBS_lang:=${GSOAPXX_LIBS}
-endif
-
 
 EX_NOTHRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${nothrflavour}
 EX_THRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${thrflavour}
@@ -152,9 +156,13 @@ endif
 ifeq (${gsoap_version},${gsoap_default_version})
 OBJS_S:=glite_gsplugin${langsuffix}.o
 GSOAP_DEFAULT_LIBS:=${GSOAP_LIBS_lang}
+GSOAP_DEFAULT_CFLAGS:=${GSOAP_CFLAGS}
+GSOAPXX_DEFAULT_CFLAGS:=${GSOAPXX_CFLAGS}
 else
 OBJS_S:=glite_gsplugin${langsuffix}.o stdsoap2${langsuffix}.o
 GSOAP_DEFAULT_LIBS:=
+GSOAP_DEFAULT_CFLAGS:=-DWITH_IPV6
+GSOAPXX_DEFAULT_CFLAGS:=-DWITH_IPV6
 endif
 LOBJS_S:=${OBJS_S:.o=.lo}
 THROBJS_S:=${OBJS_S:.o=.thr.o}
@@ -289,7 +297,7 @@ wscalc_clt_ex.o: wscalc_clt_ex.c
 	${CC} -c ${CFLAGS} -o $@ $<
 
 sizeof_soap.o: sizeof_soap.c stdsoap2.h
-	${COMPILE} -c $< -o $@
+	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -c $< -o $@
 
 sizeof_soap: sizeof_soap.o
 	${LINK} $< -o $@
@@ -328,32 +336,32 @@ clean:
 	rm -rvf ${LTLIB_TEST_S}
 	rm -rvf *.c *.h *.xml *.nsmap *.o *.lo .libs ${EXAMPLES} ${TESTS}
 	rm -rvf CalcService.wsdl wscalc.xsd
-	rm -rvf glite_gscompat.h
+	rm -rvf glite_gscompat.h sizeof_soap
 	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
 	for v in ${gsoap_versions_noflavours} ${gsoap_versions_flavours}; do \
 		rm -rvf `echo $$v | tr -d .`; \
 	done
 
 %.c.o: %.c
-	${COMPILE} -o $@ -c $<
+	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<
 
 %.cxx.o: %.c
-	${COMPILEXX} -o $@ -c $<
+	${COMPILEXX} ${GSOAPXX_DEFAULT_CFLAGS} -o $@ -c $<
 
 %.o: %.c
-	${COMPILE} -o $@ -c $<
+	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<
 
 %.c.thr.o: %.c
-	${COMPILE} -o $@ -c $<
+	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<
 
 %.cxx.thr.o: %.c
-	${COMPILEXX} -o $@ -c $<
+	${COMPILEXX} ${GSOAPXX_DEFAULT_CFLAGS} -o $@ -c $<
 
 %.thr.o: %.c
-	${COMPILE} -o $@ -c $<
+	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<
 
 test_gsplugin_cxx.o: %.o: %.cpp stdsoap2.h
-	${COMPILEXX} -c ${GLOBUS_INC} $<
+	${COMPILEXX} ${GSOAPXX_DEFAULT_CFLAGS} -c ${GLOBUS_INC} $<
 
 glite_gsplugin${langsuffix}.o glite_gsplugin${langsuffix}.thr.o: soap_version.h
 
