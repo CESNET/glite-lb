@@ -109,7 +109,7 @@ int main(int argc,char** argv)
 		exit(1);
 		}
 	default: 
-		printf("???, err=%d\n", err);
+		fprintf(stderr,"???, err=%d\n", err);
 		soap_print_fault(&soap, stderr);
     }
 
