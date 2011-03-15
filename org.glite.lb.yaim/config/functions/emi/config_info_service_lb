@@ -42,7 +42,7 @@ config_info_service_lb () {
 
 INFO_SERVICE_CONFIG='/etc/glite/info/service'
 INFO_SERVICE_SCRIPT='/usr/bin'
-INFO_PROVIDER_PATH='/var/run/bdii/gip/provider'
+INFO_PROVIDER_PATH='/var/lib/bdii/gip/provider'
 
 SERVICE=LBSERVER
 SERVICE_LC=lbserver
@@ -53,18 +53,23 @@ if [ ! -x ${INFO_SERVICE_SCRIPT}/glite-info-service ]; then
   yaimlog ERROR "The script file for glite-info-service was not found in ${INFO_SERVICE_SCRIPT}."
   exit 1
 fi
-if [ ! -x ${INFO_SERVICE_SCRIPT}/glite-info-service-glue2 ]; then
-  yaimlog ERROR "The script file for glite-info-service-glue2 was not found in ${INFO_SERVICE_SCRIPT}."
+if [ ! -x ${INFO_SERVICE_SCRIPT}/glite-info-glue2-simple ]; then
+  yaimlog ERROR "The script file for glite-info-glue2-simple was not found in ${INFO_SERVICE_SCRIPT}."
   exit 1
 fi
 
 yaimlog DEBUG "Delete a previous version of the *.conf if it exists"
 rm -rf ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf
 
-yaimlog DEBUG "Create the glite-info-glue2-${SERVICE_LC}.conf file out of the template file"
+yaimlog DEBUG "Create the configuration files out of the template file"
 cp ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf.template ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf
 if [ $? != 0 ]; then
   yaimlog ERROR "Copying service template failed"
+  exit 1
+fi
+cp ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf.template ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf
+if [ $? != 0 ]; then
+  yaimlog ERROR "Copying glue2 service template failed"
   exit 1
 fi
 
@@ -82,14 +87,10 @@ cat << EOF > ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wra
 export PATH=$PATH:${INFO_SERVICE_SCRIPT}
 export ${SERVICE}_HOST=${SERVICE_HOST}
 ${INFO_SERVICE_SCRIPT}/glite-info-service ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
-${INFO_SERVICE_SCRIPT}/glite-info-service-glue2 ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
+${INFO_SERVICE_SCRIPT}/glite-info-glue2-simple ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf $SITE_NAME
 EOF
 
 chmod +x ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wrapper 
- 
-  
 return 0
 
 }
-
-

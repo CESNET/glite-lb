@@ -4,7 +4,6 @@ config_crl
 config_host_certs
 config_edgusers
 config_info_service_lb
-config_gip_service_release
 config_glite_lb
 config_glite_locallogger
 config_bdii_5.2
