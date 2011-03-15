@@ -538,27 +538,29 @@ main (int argc, char **argv)
 	  char *p;
 	  char name[MAXPATHLEN+1];
 
-	  /* next line */
-	  s = strchr(s, '\n');
-	  if(s) s++;
-	  while(s) {
-		  if(*s == 0 || *s == '[')
-			  break;
-		  /* parse line */
-		  p = strchr(s, '\n');
-		  if(p) {
-			  *p = 0;
-		  }
-		  /* XXX possible overflow by long line in config file */
-		  ret = sscanf(s, " plugin =%s", name);
-		  if(p) *p = '\n';
-		  if(ret > 0) {
-			  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "  loading plugin %s\n", name);
-			  if(plugin_mgr_init(name, config) < 0) {
-				  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Failed to load plugin %s: %s\n", name, error_get_msg());
+	  if(s) {
+		  /* next line */
+		  s = strchr(s, '\n');
+		  if(s) s++;
+		  while(s) {
+			  if(*s == 0 || *s == '[')
+				  break;
+			  /* parse line */
+			  p = strchr(s, '\n');
+			  if(p) {
+				  *p = 0;
 			  }
+			  /* XXX possible overflow by long line in config file */
+			  ret = sscanf(s, " plugin =%s", name);
+			  if(p) *p = '\n';
+			  if(ret > 0) {
+				  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "  loading plugin %s\n", name);
+				  if(plugin_mgr_init(name, config) < 0) {
+					  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Failed to load plugin %s: %s\n", name, error_get_msg());
+				  }
+			  }
+			  s = p + 1;
 		  }
-		  s = p + 1;
 	  }
   }
 
