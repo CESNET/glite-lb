@@ -72,7 +72,10 @@ int main(int argc,char **argv)
 	if (argc < 2)
 	    help(argv[0]);
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 
 	while ((opt=getopt(argc,argv,"r:d:xX:")) != -1)
 	    switch (opt) {

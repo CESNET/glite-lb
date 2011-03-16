@@ -67,7 +67,10 @@ main(int argc, char *argv[])
 		   break;
       }
 
-   edg_wll_InitContext(&ctx);
+   if (edg_wll_InitContext(&ctx) != 0) {
+      fprintf(stderr, "Couldn't create L&B context.\n");
+      return 1;
+   }
 
    if (edg_wlc_JobIdParse(argv[optind], &jobid)) {
       fprintf(stderr,"can't parse job ID\n");

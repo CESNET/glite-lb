@@ -198,7 +198,10 @@ main(int argc, char *argv[])
 	struct timeval log_timeout = { tv_sec: 2, tv_usec: 0 };
 
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 
 	opterr = 0;
 

@@ -65,7 +65,10 @@ static void slave(int num)
 
 
 	while (!stop) {
-		edg_wll_InitContext(&ctx);
+		if (edg_wll_InitContext(&ctx) != 0) {
+			fprintf(stderr, "Couldn't create L&B context.\n");
+			return 1;
+		}
 		edg_wll_SetParam(ctx, EDG_WLL_PARAM_SOURCE, EDG_WLL_SOURCE_WORKLOAD_MANAGER);
 
 		if (edg_wll_SetLoggingJobProxy(ctx,job,NULL,"/I/am/the/user",EDG_WLL_SEQ_NORMAL) && !stop) {

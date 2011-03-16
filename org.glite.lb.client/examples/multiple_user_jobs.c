@@ -63,7 +63,10 @@ int main(int argc,char **argv)
 	for ( i = 1; i <= no_of_runs; i++ ) {
 		printf ("Proxy file No. %d: %s\n",i,argv[i]);
 
-		edg_wll_InitContext(&p_ctx[i-1]);
+		if (edg_wll_InitContext(&p_ctx[i-1]) != 0) {
+			fprintf(stderr, "Couldn't create L&B context.\n");
+			return 1;
+		}
 		if (strcmp(argv[i],"default")) edg_wll_SetParam(p_ctx[i-1], EDG_WLL_PARAM_X509_PROXY, argv[i]);
 		if (user_jobs(p_ctx[i-1],&jobs[i-1],&states[i-1])) goto err;
 

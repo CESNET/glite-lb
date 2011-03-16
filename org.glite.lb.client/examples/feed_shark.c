@@ -41,7 +41,10 @@ int main(int argc,char *argv[])
 	time_t	valid = 0;
 	struct timeval	timeout;
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 
 /* parse options, reflect them in the LB context */
 	while ((o = getopt(argc,argv,"s:")) >= 0) switch (o) {

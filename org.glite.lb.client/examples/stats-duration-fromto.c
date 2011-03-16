@@ -38,7 +38,10 @@ int main(int argc,char **argv)
 	char	**groups;
 	int 	i;
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 
 	if (argc < 3) { 
 		fprintf(stderr,"usage: %s CE state_from state_to\n",argv[0]);

@@ -84,7 +84,10 @@ int main(int argc, char *argv[])
 
 	if ( (errno = edg_wlc_JobIdParse(jobid_s, &jobid)) ) { perror(jobid_s); return 1; }
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 
 	if ( !user ) {
 		/*

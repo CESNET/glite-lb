@@ -77,7 +77,10 @@ static void slave()
 		int	err;
 		char	*et,*ed;
 
-		edg_wll_InitContext(&ctx);
+		if (edg_wll_InitContext(&ctx) != 0) {
+			fprintf(stderr, "Couldn't create L&B context.\n");
+			return 1;
+		}
 		edg_wlc_JobIdParse("https://fake.server/fakejob",&job);
 
 		if ((err = edg_wll_SetLoggingJobProxy(ctx,job,NULL,"some user",0))) edg_wll_Error(ctx,&et,&ed);

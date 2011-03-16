@@ -46,7 +46,10 @@ int main(int argc,char **argv) {
 	edg_wll_QueryRec	cond[3],jcond[2];	/* [2] is terminator */
 	edg_wll_Event	*events = NULL;
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 
 	if (argc != 3) usage(argv[0]);
 

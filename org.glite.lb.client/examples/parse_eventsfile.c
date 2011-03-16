@@ -54,7 +54,11 @@ int main(int argc, char *argv[])
 	edg_wll_LogLine (*unparse)(edg_wll_Context context,edg_wll_Event *event);
 	const char *parse_str,*unparse_str;
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
+
 	opterr = 0;
 
 	me = strdup(argv[0]);

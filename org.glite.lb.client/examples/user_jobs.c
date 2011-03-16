@@ -63,7 +63,10 @@ int main(int argc,char **argv)
 		break; 	
 	}
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 	if ( user_jobs == edg_wll_UserJobsProxy  && owner )
 		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, owner);
 

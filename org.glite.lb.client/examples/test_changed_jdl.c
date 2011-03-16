@@ -30,7 +30,10 @@ int main(int argc,char **argv)
 	edg_wll_JobStat	stat;
 	time_t	valid = 0;
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 
 	memset(&chj,0,sizeof chj);
 	chj[0].op = EDG_WLL_QUERY_OP_CHANGED;

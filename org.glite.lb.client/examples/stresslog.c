@@ -56,7 +56,10 @@ int main(int argc, char *argv[])
 	edg_wlc_JobId	jobid,*subjobs;
 	FILE	*f;
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 
 	opterr = 0;
 

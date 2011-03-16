@@ -97,7 +97,10 @@ void *thread_code(thread_code_args *arguments) {
             user_jobs = edg_wll_UserJobsProxy;
         }
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+                pthread_exit(NULL);
+	}
 	if ( user_jobs == edg_wll_UserJobsProxy  && arguments->owner )
 		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, arguments->owner);
 

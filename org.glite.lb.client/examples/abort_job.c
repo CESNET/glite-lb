@@ -71,7 +71,10 @@ int main(int argc,char **argv)
 	scanf("%c",&a);
 	if (a != 'y' && a != 'Y') return 1;
 
-	edg_wll_InitContext(&ctx);
+	if (edg_wll_InitContext(&ctx) != 0) {
+		fprintf(stderr, "Couldn't create L&B context.\n");
+		return 1;
+	}
 
 	if (edg_wlc_JobIdParse(argv[1],&job)) {
 		fprintf(stderr,"%s: can't parse job ID\n",argv[1]);
