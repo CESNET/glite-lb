@@ -74,9 +74,9 @@ check_test_files()
 get_result()
 {
     tmpfile=`mktemp -p /tmp`
-    grep PERFTEST $CONSUMER_LOG > $tmpfile
+    grep -a PERFTEST $CONSUMER_LOG > $tmpfile
     . $tmpfile
-    grep PERFTEST $PRODUCER_LOG > $tmpfile
+    grep -a PERFTEST $PRODUCER_LOG > $tmpfile
     . $tmpfile
     rm $tmpfile
     [[ $DEBUG -gt 0 ]] && echo "Timestamps: from $PERFTEST_BEGIN_TIMESTAMP to $PERFTEST_END_TIMESTAMP"
@@ -177,13 +177,13 @@ run_test()
 	[[ $DEBUG -gt 0 ]] && echo -e "\n\nRunning test with input $file"
 	savePERFTEST_NAME=$PERFTEST_NAME
 	PERFTEST_NAME="${PERFTEST_NAME}_${JOB_DESC[i]}"
-	linesbefore=`grep PERFTEST $CONSUMER_LOG|wc -l`
+	linesbefore=`grep -a PERFTEST $CONSUMER_LOG|wc -l`
 	$LOGJOBS $lj_flags -f $file >> $PRODUCER_LOG 2>&1
-	linesafter=`grep PERFTEST $CONSUMER_LOG|wc -l`
+	linesafter=`grep -a PERFTEST $CONSUMER_LOG|wc -l`
 	PERFTEST_NAME=$savePERFTEST_NAME
 	# if there are no new lines in the log, give it some time
 	[[ $linesbefore -eq $linesafter ]] && sleep 5
-	linesafter=`grep PERFTEST $CONSUMER_LOG|wc -l`
+	linesafter=`grep -a PERFTEST $CONSUMER_LOG|wc -l`
 	[[ $DEBUG -gt 0 ]] && echo "Lines before " $linesbefore ", after " $linesafter
 	if [[ $linesbefore -eq $linesafter ]]
 	then

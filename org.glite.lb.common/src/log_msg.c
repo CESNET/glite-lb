@@ -210,10 +210,14 @@ try_again:
 	}
 	if ( fflush(outfile) == EOF ) {
 		edg_wll_SetError(ctx, errno, "fflush()");
+		/* partially written message may corrupt event file */
+		ftruncate(filedesc, *filepos);
 		goto cleanup;
 	}
 	if ( fsync(filedesc) < 0 ) {
 		edg_wll_SetError(ctx, errno, "fsync()");
+		/* partially written message may corrupt event file */
+		ftruncate(filedesc, *filepos);
 		goto cleanup;
 	}
 
