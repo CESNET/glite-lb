@@ -1,4 +1,3 @@
--include ../Makefile.inc
 -include ../../Makefile.inc
 
 CC=gcc

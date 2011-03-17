@@ -10,7 +10,7 @@ CC:=gcc
 CXX:=g++
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -325,7 +325,12 @@ man: ${MAN_GZ} ${MAN8_GZ}
 stage:  compile
 	$(MAKE) install PREFIX=${stagedir} staging=1
 
-Event.h Event.cpp: EventAttrNames.pl
+link:
+	-ln -s ${top_srcdir}/src/EventAttrNames.pl .
+	-ln -s ${top_srcdir}/src/StatusAttrNames.pl .
+	-ln -s ${top_srcdir}/src/uiwrap.T .
+
+Event.h Event.cpp: link
 
 JobStatus.h JobStatus.cpp: StatusAttrNames.pl
 
@@ -387,11 +392,11 @@ clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
 	rm -rvf ${lib_LTLIBRARIES} ${TOOLS} logevent  register_sandbox ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
-	rm -f EventAttrNames.pl
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -f EventAttrNames.pl StatusAttrNames.pl uiwrap.T
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 check_version:
 	${CHECK_VERSION} ${stagedir}${prefix}/include/glite/lb/common_version.h
 
 
-.PHONY: default all compile examples check stage install clean check_version
+.PHONY: default all compile examples check stage install clean check_version link

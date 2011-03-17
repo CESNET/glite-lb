@@ -11,7 +11,7 @@ nothrflavour=gcc32
 thrflavour=gcc32pthr
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -105,4 +105,4 @@ install:
 
 clean:
 	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ}
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/

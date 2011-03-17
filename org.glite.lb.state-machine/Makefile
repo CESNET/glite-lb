@@ -11,7 +11,7 @@ prefix=
 
 -include Makefile.inc
 
-VPATH = ../src:../interface
+VPATH = ${top_srcdir}/src:${top_srcdir}/interface
 
 default all: compile
 
@@ -99,7 +99,7 @@ install:
 clean:
 	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB}
 	rm -rfv job_attrs.h job_attrs2.h lb-job-attrs2.xsd glite-jpis-config.xml
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 check:
 	@echo No tests yet
@@ -129,10 +129,10 @@ lb_plugin.lo: lb_plugin.c job_attrs.h job_attrs2.h
 	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<
 
 job_attrs.h: lb-job-attrs.xsd job_attrs.xsl
-	${XSLTPROC} ../src/job_attrs.xsl $< >$@
+	${XSLTPROC} ${top_srcdir}/src/job_attrs.xsl $< >$@
 
 job_attrs2.h: lb-job-attrs2.xsd job_attrs2.xsl
-	${XSLTPROC} ../src/job_attrs2.xsl $< >$@
+	${XSLTPROC} ${top_srcdir}/src/job_attrs2.xsl $< >$@
 
 glite-jpis-config.xml: lb-job-attrs2.xsd jpis_config.xsl
-	${XSLTPROC} ../src/jpis_config.xsl lb-job-attrs2.xsd >$@
+	${XSLTPROC} ${top_srcdir}/src/jpis_config.xsl lb-job-attrs2.xsd >$@

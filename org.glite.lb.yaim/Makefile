@@ -6,7 +6,7 @@ PREFIX=/opt/glite
 prefix=
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 yaim_prefix=/opt/glite
 ifeq (${project},emi)
@@ -52,6 +52,6 @@ stage:
 check:
 
 clean:
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/ ${FILES}
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/ ${FILES}
 
 .PHONY: default all check install stage clean

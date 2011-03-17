@@ -1,19 +1,22 @@
+top_srcdir=.
+stagedir=../stage
+
 -include Makefile.inc
 
 # broken 
 # SimpleLLTest.class ProducerTestLL.class ProducerTestIL.class
 
-FULL_EXAMPLES := $(addprefix examples/,SSLClient.java SSLServer.java QueryDemo.java NotificationExample.java CreamTest.java)
-SSL_EXAMPLES := $(addprefix examples/simple-ssl/,MyX509KeyManager.java MyX509TrustManager.java ExampleSSLSocketFactory.java LBClientSSL.java)
-TM_EXAMPLES := $(addprefix examples/simple-trustmanager/,LBClientTM.java)
+FULL_EXAMPLES := $(addprefix ${top_srcdir}/examples/,SSLClient.java SSLServer.java QueryDemo.java NotificationExample.java CreamTest.java)
+SSL_EXAMPLES := $(addprefix ${top_srcdir}/examples/simple-ssl/,MyX509KeyManager.java MyX509TrustManager.java ExampleSSLSocketFactory.java LBClientSSL.java)
+TM_EXAMPLES := $(addprefix ${top_srcdir}/examples/simple-trustmanager/,LBClientTM.java)
 
-VPATH := examples examples/simple-ssl examples/simple-trustmanager
+VPATH := ${top_srcdir}/examples ${top_srcdir}/examples/simple-ssl ${top_srcdir}/examples/simple-trustmanager
 
 JAVAC:=${jdk_prefix}/bin/javac
 JAVAH:=${jdk_prefix}/bin/javah
 JAVA:=${jdk_prefix}/bin/java
 
-GEN:=${stagedir}${prefix}/sbin/glite-lb-at3 project/genEventTypes.pl
+GEN:=${stagedir}${prefix}/sbin/glite-lb-at3 ${top_srcdir}/project/genEventTypes.pl
 AT3DIR:=${stagedir}${prefix}/share/glite-lb/at3
 axis_classpath:=$(shell ls -1 ${axis_prefix}/lib/*.jar 2>/dev/null | tr '\012' :)
 trustmanager_classpath:=$(shell ls -1 ${trustmanager_prefix}/share/java/glite-security-trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager-axis.jar ${stagedir}${prefix}/share/java/trustmanager.jar ${stagedir}${prefix}/share/java/trustmanager-axis.jar 2>/dev/null | tr '\012' :)
@@ -24,7 +27,7 @@ compile-java:
 	${JAVAC} \
 		-classpath ${jakarta-commons-lang_jar}:${stagedir}${prefix}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath} \
 		-d build \
-		src/org/glite/lb/*.java \
+		${top_srcdir}/src/org/glite/lb/*.java \
 		build/gen/*.java \
 		build/axis/org/glite/wsdl/services/lb/*.java \
 		build/axis/org/glite/wsdl/services/lb4agu/*.java \
@@ -42,6 +45,7 @@ lb-client-java.jar:
 build-c:
 	${JAVAH} -classpath build -jni -d build org.glite.lb.ContextIL
 	-mkdir -p build/c
+	-ln -s ${top_srcdir}/src_c .
 	-ln -s ../../src_c/Makefile build/c
 	cd build/c && $(MAKE) PREFIX=${PREFIX} JAVA_HOME=${jdk_prefix} topdir=../..
 
@@ -71,6 +75,9 @@ build/axis:
 check:
 	@echo "No check"
 
+stage:
+	$(MAKE) install PREFIX=${stagedir}
+
 install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java
 	cp build/lb-client-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
@@ -79,7 +86,6 @@ install:
 
 clean:
 	rm -rf build
-	cd src_c && $(MAKE) clean
-	rm -rvf log.xml project/org.glite.lb.client-java.spec rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
-.PHONY: all compile compile-java build-jar build-c examples genevents genws check install clean
+.PHONY: all compile compile-java build-jar build-c examples genevents genws check stage install clean

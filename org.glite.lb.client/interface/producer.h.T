@@ -58,7 +58,7 @@ extern "C" {
 $PRINTPROTOTYPESONLY = 1;
 $PRINTDOC = 1;
 
-require '../src/uiwrap.T';
+require './uiwrap.T';
 
 @@@}
 

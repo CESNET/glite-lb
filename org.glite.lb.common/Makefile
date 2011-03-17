@@ -12,7 +12,7 @@ prefix=
 expat_prefix=/opt/expat
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 jobiddir=${top_srcdir}/../org.glite.jobid.api-c
 
@@ -126,7 +126,7 @@ default: all
 
 generate: ${GEN_HDRS}
 
-common_version.h: ${top_srcdir}/project/version.properties
+common_version.h: ${top_srcdi${top_srcdir}/project/version.properties
 	echo "#define GLITE_LB_COMMON_VERSION \"${version}\"" >$@
 
 all compile: generate ${lib_LTLIBRARIES} ${lib_LIBRARIES}
@@ -239,7 +239,7 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

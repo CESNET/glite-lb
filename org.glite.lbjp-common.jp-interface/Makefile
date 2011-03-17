@@ -17,7 +17,7 @@ gsoap_prefix=/software/gsoap-2.6
 CC=gcc
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -102,7 +102,7 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib*
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	rm -vf type_test type_test.xml
 	rm -f glite jp
 

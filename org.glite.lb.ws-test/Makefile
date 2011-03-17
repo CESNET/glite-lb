@@ -13,7 +13,7 @@ classads_prefix=/opt/classads
 voms_prefix=/opt/voms
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -85,7 +85,7 @@ install:
 
 clean:
 	rm -rvf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES} ${TESTS}
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 LB.xh: ws_typemap.dat ${stagedir}${prefix}/interface/LB.wsdl
 	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -I${stagedir}${prefix}/interface -o $@ ${stagedir}${prefix}/interface/LB.wsdl

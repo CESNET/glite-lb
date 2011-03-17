@@ -10,12 +10,11 @@ CC:=gcc
 CXX:=g++
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test
-CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=0 perl ${top_srcdir}/project/check_version.pl
 
 DEBUG:=-g -O0 -Wall
 
@@ -69,7 +68,10 @@ base64_test: %: %.cpp compile
 clean:
 	rm -rvf *.o *.lo .libs/ lib* *.c *.cpp *.h
 	rm -vf base64_test base64_test.xml
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+stage:
+	$(MAKE) install PREFIX=${stagedir}
 
 install: ${LIB}
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
@@ -82,4 +84,4 @@ install: ${LIB}
 	${COMPILE} -o $@ -c $< 
 
 
-.PHONY: default all compile check install clean
+.PHONY: default all compile check stage install clean

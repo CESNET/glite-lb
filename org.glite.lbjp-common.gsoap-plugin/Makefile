@@ -20,11 +20,13 @@ gsoap_versions_flavours?=2.7.10
 
 -include Makefile.inc
 -include ../Makefile.inc
--include ../project/version.properties
--include ../../project/version.properties
+
+top_srcdir2?=${top_srcdir}
+include ${top_srcdir2}/project/version.properties
 
 version=${module.version}
 gsoap_versions_flavours:=${shell if ! echo ${gsoap_versions_flavours} | grep '\<${gsoap_default_version}\>' >/dev/null; then echo "${gsoap_default_version} "; else echo ''; fi} ${gsoap_versions_flavours}
+top_srcdir_l2:=$(shell if echo ${top_srcdir} | grep '^/' >/dev/null; then echo "${top_srcdir}"; else echo "../${top_srcdir}"; fi)
 
 GSPLUGIN_DEBUG?=no
 GSPLUGIN_VERSION_CHECKING?=yes
@@ -57,7 +59,7 @@ langflavour:=_${lang}
 langsuffix:=.${lang}
 endif
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/interface
+VPATH=${top_srcdir2}/src:${top_srcdir2}/test:${top_srcdir2}/examples:${top_srcdir2}/interface
 
 default: all
 
@@ -95,7 +97,7 @@ endif
 CFLAGS:= ${CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-DWITH_NONAMESPACES \
-	-I. -I${top_srcdir}/interface \
+	-I. -I${top_srcdir2}/interface \
 	-I${stagedir}${prefix}/include \
 	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION
 
@@ -106,7 +108,7 @@ COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
-LINK_lang:=PATH=${top_srcdir}/project/libtoolhack:${PATH} libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINK_lang:=PATH=${top_srcdir2}/project/libtoolhack:${PATH} libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 ifeq (${lang},c)
 LINK_lang:=${LINK}
 endif
@@ -221,7 +223,7 @@ check: check.cxx
 # C/C++ compatibility test
 # (C flavour, gsoap 2.7.10 ==> C++ test fails)
 check.cxx:
-	${MAKE} lang=cxx -f ${top_srcdir}/Makefile ${LTLIB_TEST_S} test_cxx
+	${MAKE} lang=cxx -f ${top_srcdir2}/Makefile ${LTLIB_TEST_S} test_cxx
 	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_cxx
 
 examples: ${EXAMPLES}
@@ -230,13 +232,13 @@ all-libs-with-soap:
 	for v in ${gsoap_versions_noflavours}; do	\
 		dir=`echo $$v | tr -d .`; \
 		mkdir $$dir; \
-		${MAKE} -C $$dir -f ../Makefile gsoap_version=$$v top_srcdir=../.. lang= libs-with-soap || exit $?; \
+		${MAKE} -C $$dir -f ${top_srcdir_l2}/Makefile gsoap_version=$$v top_srcdir2=${top_srcdir_l2} lang= libs-with-soap || exit $?; \
 	done
 	for v in ${gsoap_versions_flavours}; do	\
 		dir=`echo $$v | tr -d .`; \
 		mkdir $$dir; \
-		${MAKE} -C $$dir -f ../Makefile gsoap_version=$$v top_srcdir=../.. lang=c libs-with-soap || exit $?; \
-		${MAKE} -C $$dir -f ../Makefile gsoap_version=$$v top_srcdir=../.. lang=cxx libs-with-soap || exit $?; \
+		${MAKE} -C $$dir -f ${top_srcdir_l2}/Makefile gsoap_version=$$v top_srcdir2=${top_srcdir_l2} lang=c libs-with-soap || exit $?; \
+		${MAKE} -C $$dir -f ${top_srcdir_l2}/Makefile gsoap_version=$$v top_srcdir2=${top_srcdir_l2} lang=cxx libs-with-soap || exit $?; \
 	done
 
 libs-with-soap: ${lib_LTLIBRARIES_S}
@@ -246,9 +248,9 @@ gsoap_srcname=gsoap-`echo ${gsoap_version} | cut -d. -f1,2`
 link-gsoap:
 	if [ ${gsoap_version} = ${gsoap_default_version} ]; then \
 		ln -sf ${gsoap_prefix}/include/stdsoap2.h stdsoap2.h; \
-	elif [ -f ${top_srcdir}/src/stdsoap2_${gsoap_version}.c ]; then \
-		ln -sf ${top_srcdir}/src/stdsoap2_${gsoap_version}.c stdsoap2.c; \
-		ln -sf ${top_srcdir}/src/stdsoap2_${gsoap_version}.h stdsoap2.h; \
+	elif [ -f ${top_srcdir2}/src/stdsoap2_${gsoap_version}.c ]; then \
+		ln -sf ${top_srcdir2}/src/stdsoap2_${gsoap_version}.c stdsoap2.c; \
+		ln -sf ${top_srcdir2}/src/stdsoap2_${gsoap_version}.h stdsoap2.h; \
 	elif [ -f ${ext_repository}/${gsoap_name}/${gsoap_version}/src/stdsoap2.c ]; then \
 		ln -sf ${ext_repository}/${gsoap_name}/${gsoap_version}/src/stdsoap2.[ch] .; \
 	elif [ -f ${ext_repository}/${gsoap_name}/${gsoap_version}/${gsoap_platform}/stdsoap2.c ]; then \
@@ -291,7 +293,7 @@ soapcpp:=${shell if [ -x ${gsoap_prefix}/bin/soapcpp2 ]; then \
 	fi}
 
 ${GSOAP_FPREFIX}H.h ${GSOAP_FPREFIX}C.c ${GSOAP_FPREFIX}Server.c ${GSOAP_FPREFIX}Client.c ${GSOAP_FPREFIX}ServerLib.c ${GSOAP_FPREFIX}ClientLib.c: calc.h.S
-	${soapcpp} -c -p ${GSOAP_FPREFIX} ${top_srcdir}/examples/calc.h.S
+	${soapcpp} -c -p ${GSOAP_FPREFIX} ${top_srcdir2}/examples/calc.h.S
 
 wscalc_clt_ex.o: wscalc_clt_ex.c
 	${CC} -c ${CFLAGS} -o $@ $<
@@ -304,7 +306,7 @@ sizeof_soap: sizeof_soap.o
 
 glite_gscompat.h: glite_gscompat.h.in sizeof_soap
 	size=${shell ./sizeof_soap}; \
-	sed "s/@sizeof_struct_soap@/$$size/" ${top_srcdir}/interface/glite_gscompat.h.in > $@
+	sed "s/@sizeof_struct_soap@/$$size/" ${top_srcdir2}/interface/glite_gscompat.h.in > $@
 
 doc:
 
@@ -316,15 +318,15 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
+	${INSTALL} -m 644 ${top_srcdir2}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	cd ${top_srcdir2}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
 	${INSTALL} -m 644 glite_gscompat.h ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
 	for v in ${gsoap_versions_noflavours}; do \
-		${MAKE} -C `echo $$v | tr -d .` -f ../Makefile install-soaplib gsoap_version=$$v lang= PREFIX=${PREFIX} top_srcdir=${top_srcdir}/.. || exit $?; \
+		${MAKE} -C `echo $$v | tr -d .` -f ${top_srcdir_l2}/Makefile install-soaplib gsoap_version=$$v lang= PREFIX=${PREFIX} top_srcdir2=${top_srcdir_l2} || exit $?; \
 	done
 	for v in ${gsoap_versions_flavours}; do \
-		${MAKE} -C `echo $$v | tr -d .` -f ../Makefile install-soaplib gsoap_version=$$v lang=c PREFIX=${PREFIX} top_srcdir=${top_srcdir}/.. || exit $?; \
-		${MAKE} -C `echo $$v | tr -d .` -f ../Makefile install-soaplib gsoap_version=$$v lang=cxx PREFIX=${PREFIX} top_srcdir=${top_srcdir}/.. || exit $?; \
+		${MAKE} -C `echo $$v | tr -d .` -f ${top_srcdir_l2}/Makefile install-soaplib gsoap_version=$$v lang=c PREFIX=${PREFIX} top_srcdir2=${top_srcdir_l2} || exit $?; \
+		${MAKE} -C `echo $$v | tr -d .` -f ${top_srcdir_l2}/Makefile install-soaplib gsoap_version=$$v lang=cxx PREFIX=${PREFIX} top_srcdir2=${top_srcdir_l2} || exit $?; \
 	done
 
 install-soaplib:
@@ -337,7 +339,7 @@ clean:
 	rm -rvf *.c *.h *.xml *.nsmap *.o *.lo .libs ${EXAMPLES} ${TESTS}
 	rm -rvf CalcService.wsdl wscalc.xsd
 	rm -rvf glite_gscompat.h sizeof_soap
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	for v in ${gsoap_versions_noflavours} ${gsoap_versions_flavours}; do \
 		rm -rvf `echo $$v | tr -d .`; \
 	done

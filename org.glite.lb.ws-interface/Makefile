@@ -11,7 +11,7 @@ PREFIX=/opt/glite
 prefix=
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -61,7 +61,7 @@ install:
 
 clean:
 	rm -vf *.h *.html *.xml *.wsdl glue2-copy.xsd
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 %.xml: %.xml.T
 	rm -f $@
@@ -69,17 +69,17 @@ clean:
 	chmod -w $@ >/dev/null
 
 ${WSDL}: %.wsdl: %.xml puke-wsdl.xsl
-	${XSLTPROC} ../src/puke-wsdl.xsl $< >$@
+	${XSLTPROC} ${top_srcdir}/src/puke-wsdl.xsl $< >$@
 	-${TIDY} -xml -m $@
 # XXX: obsolete:
 #	-perl -i -n -e 'if (/^\s*$$/) { $$empty .= "\n"; } elsif (/^\s*<(xsd:)?(enumeration|element|input|output|fault)/) { print $$_; $$empty = "";} else { print "$$empty$$_"; $$empty=""; }; ' $@
 
 LB.html: doc.xml LBTypes.xml LB.xml puke-ug.xsl
-	${XSLTPROC} --novalid ../src/puke-ug.xsl $< >doc-html.xml
+	${XSLTPROC} --novalid ${top_srcdir}/src/puke-ug.xsl $< >doc-html.xml
 	-${TIDY} -xml -m doc-html.xml
 #	${XMLLINT} --valid --noout doc-html.xml
 	${XSLTPROC} --stringparam  chapter.autolabel 0 ${docbookxls} doc-html.xml >$@
 	-${TIDY} -asxhtml -m $@
 
-ws_interface_version.h: ${top_srcdir}/project/version.properties
+ws_interface_version.h: ${top_srcdi${top_srcdir}/project/version.properties
 	echo "#define GLITE_LB_WS_INTERFACE_VERSION \"${version}\"" >$@

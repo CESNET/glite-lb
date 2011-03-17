@@ -41,7 +41,7 @@ EWL_BEGIN_NAMESPACE;
 
 @@@{
 
-require '../src/EventAttrNames.pl';
+require './EventAttrNames.pl';
 
 sub typeswitch {
 	my $ftype = shift;

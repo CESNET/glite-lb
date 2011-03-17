@@ -837,7 +837,7 @@ for my $ext (keys %deps_aux) {
 );
 
 my @k = keys %deps_aux;
-@buildroot{@k} = ('build') x ($#k+1);
+@buildroot{@k} = ('') x ($#k+1);
 
 my @t = qw/lb.client-java jobid.api-java lb.types/;
 @buildroot{@t} = ('') x ($#t+1);

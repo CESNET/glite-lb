@@ -20,7 +20,7 @@ lcas_prefix=/opt/glite
 gridsite_prefix=/opt/glite
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -245,6 +245,8 @@ LCAS_PLUGIN_LIB:=liblcas_lb.la
 
 EXAMPLES=
 
+TESTS=test_coverage test_xml test_query_events test_soap_conv
+
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS} -Wl,--export-dynamic
 
@@ -374,8 +376,8 @@ ifdef LB_PERF
 endif
 
 clean:
-	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} test* ${MAN_GZ} ${EXAMPLES} startup
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} startup
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 %.c: %.c.T
 	rm -f $@

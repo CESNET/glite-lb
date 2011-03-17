@@ -30,6 +30,6 @@ limitations under the License.
 $PRINTPROTOTYPESONLY = 0;
 $PRINTDOC = 0;
 
-require '../src/uiwrap.T';
+require './uiwrap.T';
 
 @@@}

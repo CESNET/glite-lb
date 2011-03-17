@@ -84,7 +84,7 @@ install: compile
 clean:
 	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs
 	rm -rvf harvester harvester-dbg glite-lb-harvester.* startup
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 harvester: harvester.o
 	${LINK} -o $@ $+ ${LIBS}

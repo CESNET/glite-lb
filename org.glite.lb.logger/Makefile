@@ -10,7 +10,7 @@ prefix=
 sysconfdir=/opt/glite/etc
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -244,4 +244,4 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 
 clean:
 	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ} startup
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/

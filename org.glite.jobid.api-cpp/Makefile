@@ -43,7 +43,7 @@ check: compile
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 install: 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix}

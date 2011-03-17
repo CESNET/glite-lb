@@ -12,7 +12,7 @@ expat_prefix=/opt/expat
 gsoap_prefix=/opt/gsoap
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -120,7 +120,7 @@ install:
 
 clean:
 	rm -rfv ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ} *.lo *.o .libs/
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} -c $<

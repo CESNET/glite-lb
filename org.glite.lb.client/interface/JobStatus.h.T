@@ -76,7 +76,7 @@ public:
 	 */
 	enum Attr {
 @@@{
-	require '../src/StatusAttrNames.pl';
+	require './StatusAttrNames.pl';
 	my %StatusAttrNums;
 	my $stno = 0;
 	for (@main::StatusAttrNames) {

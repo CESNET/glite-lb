@@ -11,7 +11,7 @@ prefix=
 CC=gcc
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -92,7 +92,7 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* srv_example cnt_example
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} -c $<

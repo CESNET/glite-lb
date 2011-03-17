@@ -13,7 +13,7 @@ sysconfdir=/etc
 log4c_prefix=/usr
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -78,7 +78,7 @@ install: compile
 
 clean:
 	rm -rvf *.o *.lo .libs lib*
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	rm -rvf test
 
 check: test

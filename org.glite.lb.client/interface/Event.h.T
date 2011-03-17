@@ -86,7 +86,7 @@ public:
 	enum Attr {
 @@@{
 
-	require "../src/EventAttrNames.pl";
+	require "./EventAttrNames.pl";
 	my %EventAttrNums;
 	my $evno = 0;
 	for (@main::EventAttrNames) {

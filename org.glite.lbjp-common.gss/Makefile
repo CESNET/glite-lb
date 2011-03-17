@@ -16,7 +16,7 @@ cppunit_prefix=/opt/cppunit
 CC=gcc
 
 -include Makefile.inc
--include ../project/version.properties
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -158,7 +158,7 @@ install:
 
 clean:
 	rm -rf *.o *.lo *.a *.la .libs test_gss
-	rm -rvf log.xml project/ rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c
 	${COMPILE} ${GLOBUS_GSSAPI_GSI_CFLAGS} ${LIBCARES_CFLAGS} -o $@ -c $<

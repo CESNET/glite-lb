@@ -34,7 +34,7 @@ EWL_BEGIN_NAMESPACE;
 
 @@@{
 
-require '../src/StatusAttrNames.pl';
+require './StatusAttrNames.pl';
 
 sub typeswitch {
         my ($ftype,$ctype,$resc) = @_;
