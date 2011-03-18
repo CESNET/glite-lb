@@ -50,6 +50,8 @@
 - DESTDIR in makefiles
 
 2.1.2-1
-
 - Relocatable build directory.
+
+2.1.2-2
+- Module rebuilt
 
