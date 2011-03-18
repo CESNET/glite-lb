@@ -77,3 +77,6 @@
 - Runtime dependency of gsoap-plugin on system's gsoap.
 - Proper flavor of the objects for the EPEL meal (threaded globus).
 
+3.0.2-2
+- Module rebuilt
+

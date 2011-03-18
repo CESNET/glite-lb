@@ -62,3 +62,6 @@
 - Relocatable build directory.
 - Proper flavor of the objects for the EPEL meal (threaded globus).
 
+3.0.2-2
+- Module rebuilt
+
