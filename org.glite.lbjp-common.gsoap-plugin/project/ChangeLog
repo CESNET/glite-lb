@@ -68,3 +68,12 @@
 3.0.1-2
 - Module rebuilt
 
+3.0.2-1
+
+- Relocatable build directory.
+- Fix compiler flags mismatch for modules compiled with system gsoap library.
+- Sanity check of gsoap structure size (gsoap-plugin vs ws-test module).
+- Link C++ flavoured gsoap-plugin with -lgsoap++ (problem on 32bit platforms).
+- Runtime dependency of gsoap-plugin on system's gsoap.
+- Proper flavor of the objects for the EPEL meal (threaded globus).
+

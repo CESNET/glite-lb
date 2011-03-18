@@ -57,3 +57,8 @@
 - Sysconfdir option (for /etc vs /usr)
 - DESTDIR in makefiles
 
+3.0.2-1
+
+- Relocatable build directory.
+- Proper flavor of the objects for the EPEL meal (threaded globus).
+
