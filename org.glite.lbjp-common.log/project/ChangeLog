@@ -44,3 +44,7 @@
 - Sysconfdir option (for /etc vs /usr)
 - DESTDIR in makefiles
 
+1.1.2-1
+
+- Relocatable build directory.
+
