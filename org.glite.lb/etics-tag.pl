@@ -230,12 +230,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 			if ($increment eq "a") {system("echo \"- Module rebuilt\" >> $tmpChangeLog"); system("echo \"\" >> $tmpChangeLog");}
 			else { system("cvs log -S -N -r" . "$current_tag" . ":: $module | egrep -v \"^locks:|^access list:|^keyword substitution:|^total revisions:|^branch:|^description:|^head:|^RCS file:|^date:|^---|^===|^revision \" >> $tmpChangeLog"); }
 				
-			$lastline=`cat $tmpChangeLog | wc -l`;
-			chomp($lastline);
-
-			printf("vim +$lastline +$editline $tmpChangeLog\n");
-
-			$ChangeLogRet=system("vim +$editline $tmpChangeLog");
+			$ChangeLogRet=system("vim +$editline -c \"norm z.\" $tmpChangeLog");
 		}
 		printf("Modified ChangeLog ready, ret code: $ChangeLogRet\n");
 
