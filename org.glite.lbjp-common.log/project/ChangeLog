@@ -45,6 +45,8 @@
 - DESTDIR in makefiles
 
 1.1.2-1
-
 - Relocatable build directory.
+
+1.1.2-2
+- Module rebuilt
 
