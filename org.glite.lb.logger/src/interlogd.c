@@ -479,6 +479,8 @@ main (int argc, char **argv)
   fprintf(pidf,"%d\n",getpid());
   fclose(pidf);
 
+  umask(S_IRWXG | S_IRWXO);
+
 #ifdef LB_PERF
   /* this must be called after installing signal handlers */
   glite_wll_perftest_init(NULL, /* host */

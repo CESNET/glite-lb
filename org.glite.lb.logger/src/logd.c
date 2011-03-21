@@ -18,6 +18,7 @@ limitations under the License.
 
 
 #include <stdio.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -514,6 +515,8 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
   pidf = fopen(pidfile,"w"); assert(pidf); /* XXX */
   fprintf(pidf,"%d\n",getpid());
   fclose(pidf);
+
+  umask(S_IRWXG | S_IRWXO);
 
    /*
     * Main loop

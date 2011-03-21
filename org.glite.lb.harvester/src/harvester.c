@@ -2624,6 +2624,7 @@ int main(int argn, char *argv[]) {
 	}
 
 	// child continues...
+	umask(S_IRWXG | S_IRWXO);
 
 	// threads && Globus
 	if (edg_wll_gss_initialize()) {

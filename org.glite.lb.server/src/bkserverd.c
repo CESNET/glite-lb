@@ -559,6 +559,8 @@ int main(int argc, char *argv[])
 	if (fprintf(fpid, "%d", getpid()) <= 0) { perror(pidfile); return 1; }
 	if (fclose(fpid) != 0) { perror(pidfile); return 1; }
 
+	umask(S_IRWXG | S_IRWXO);
+
 	if (policy_file && parse_server_policy(ctx, policy_file, &authz_policy)) {
 		char *et, *ed;
 
