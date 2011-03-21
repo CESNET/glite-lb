@@ -30,7 +30,7 @@ default all: generate doc
 
 generate: events.tex status.tex ver.tex
 
-doc: LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf
+doc: LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf LBTG.pdf
 
 # %.dvi: %.tex
 # 	$(LATEX) $<
@@ -69,6 +69,7 @@ install:
 	${INSTALL} -m 644 LBUG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 LBAG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 LBDG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 LBTG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 # install DG example sources
 	for p in ${top_srcdir}/examples/*; do \
 		if [ "$$p" == "${top_srcdir}/examples/CVS" ]; then continue; fi; \
@@ -96,7 +97,7 @@ LBUG.pdf: ${COMMON} \
 	LBUG-Introduction.tex components.tex \
 	LBUG-Tools.tex logevent.tex notify.tex log_usertag.tex change_acl.tex \
 	LBUG-Troubleshooting.tex \
-	LBUG-Appendix.tex events.tex status.tex
+	LBUG-Appendix.tex events.tex status.tex faq.tex
 
 LBAG.pdf: ${COMMON} \
 	LBAG.tex \
@@ -104,7 +105,7 @@ LBAG.pdf: ${COMMON} \
 	LBAG-Introduction.tex components.tex \
 	LBAG-Installation.tex \
 	LBAG-Running.tex \
-	LBAG-Troubleshooting.tex
+	LBAG-Troubleshooting.tex faq.tex
 
 LBDG.pdf: ${COMMON} \
 	LBDG.tex \
@@ -123,5 +124,11 @@ LBTP.pdf: ${COMMON} \
 	LBTP-Tests.tex \
 	LBTP-PerfTests.tex \
 	LBTP-InterTests.tex
+
+LBTG.pdf: ${COMMON} \
+	LBTG.tex \
+	LBTG-Abstract.tex \
+	LBAG-Troubleshooting.tex \
+	faq.tex
 
 .PHONY: all clean doc
