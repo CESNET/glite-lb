@@ -352,6 +352,7 @@ int main(int argc, char *argv[])
    int childpid;
    int opt;
    FILE *pidf;
+   sigset_t mask;
 
    int listener_fd;
    int client_fd;
@@ -436,16 +437,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    if (CAcert_dir)
 	setenv("X509_CERT_DIR", CAcert_dir, 1);
 
-   /* initialize signal handling */
-   if (mysignal(SIGUSR1, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
-   if (mysignal(SIGUSR2, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
-   if (mysignal(SIGPIPE, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
-   if (mysignal(SIGHUP,  handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
-   if (mysignal(SIGINT,  handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
-   if (mysignal(SIGQUIT, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
-   if (mysignal(SIGTERM, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
-   if (mysignal(SIGCHLD, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
-
 #ifdef LB_PERF
    glite_wll_perftest_init(NULL, NULL, NULL, NULL, 0);
 #endif
@@ -464,6 +455,27 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    } else if (noAuth) {
 	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Server running without certificate\n");
    }
+
+   /* initialize signal handling */
+   if (mysignal(SIGUSR1, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
+   if (mysignal(SIGUSR2, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
+   if (mysignal(SIGPIPE, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
+   if (mysignal(SIGHUP,  handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
+   if (mysignal(SIGINT,  handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
+   if (mysignal(SIGQUIT, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
+   if (mysignal(SIGTERM, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
+   if (mysignal(SIGCHLD, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
+
+   sigemptyset(&mask);
+   sigaddset(&mask, SIGUSR1);
+   sigaddset(&mask, SIGUSR2);
+   sigaddset(&mask, SIGPIPE);
+   sigaddset(&mask, SIGHUP);
+   sigaddset(&mask, SIGINT);
+   sigaddset(&mask, SIGQUIT);
+   sigaddset(&mask, SIGTERM);
+   sigaddset(&mask, SIGCHLD);
+   sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
    /* do listen */
    glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Listening on port %d\n",port);
