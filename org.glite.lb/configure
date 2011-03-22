@@ -806,6 +806,8 @@ for my $ext (keys %deps_aux) {
 	'gridsite.core' => {
 		sl5_x86_64_gcc412 => { aprSuffix => '1' },
 		sl5_ia32_gcc412 => { aprSuffix => '1' },
+		sl5_x86_64_gcc412EPEL => { aprSuffix => '1' },
+		sl5_ia32_gcc412EPEL => { aprSuffix => '1' },
 		deb5_x86_64_gcc432 => { aprSuffix => '1.0' },
 		deb5_ia32_gcc432 => { aprSuffix => '1.0' },
 		slc4_x86_64_gcc346 => { aprSuffix => '0' },
