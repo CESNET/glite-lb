@@ -64,3 +64,6 @@
 1.2.2-1
 - Full namespace declarations for rpm AutoReqProv
 
+1.2.3-1
+- Relocatable build directory
+
