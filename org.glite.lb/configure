@@ -120,7 +120,8 @@ my %externs = (
 		prefix => '/opt/glite'
 	},
 	lcas => {
-		prefix => '/opt/glite'
+		prefix => '/opt/glite',
+		pkg => 'lcas'
 	},
 	trustmanager => {
 		prefix => '/opt/glite'
