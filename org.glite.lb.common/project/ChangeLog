@@ -132,3 +132,8 @@
 8.0.2-2
 - Module rebuilt
 
+8.0.3-1
+- Relocatable build directory
+- Build system cleanup - removing obsolete files
+- Improved log file recovery in case of writing errors 
+
