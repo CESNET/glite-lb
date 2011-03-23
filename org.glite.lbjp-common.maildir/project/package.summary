@@ -1,1 +1,1 @@
-Single-purpose implementation of maildir-like queue. It is used to pass data from LB to JP.
+Single-purpose implementation of maildir-like queue. It is used to pass data from LB to JP
