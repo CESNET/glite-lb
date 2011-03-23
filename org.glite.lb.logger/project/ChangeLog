@@ -152,3 +152,9 @@
 2.2.3-2
 - Module rebuilt
 
+2.2.4-1
+- Relocatable build directory
+- Build system cleanup -- removing obsolete files
+- Fixed setting of umask to create event files not readable by others
+- Improved signal handling in logd
+

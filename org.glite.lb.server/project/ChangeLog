@@ -261,3 +261,9 @@
 2.2.3-2
 - Module rebuilt
 
+2.2.4-1
+- Relocatable build directory
+- Compiler flags mismatch for modules compiled with system gsoap library fixed
+- Build system cleanup -- removing obsolete files
+- Fixed seting of umask to create event files not readable by others
+
