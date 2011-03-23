@@ -386,15 +386,6 @@ EOF
 
   . ${GLITE_LOCATION}/etc/profile.d/grid-env.sh
   ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd stop
-  #Temporary workaround to kill glite-lb-*-interlogd
-  ps ax | grep -v grep | grep glite-lb-notif-interlogd > /dev/null
-  if [ $? = 0 ]; then
-    killall -9 /opt/glite/bin/glite-lb-notif-interlogd
-  fi  
-  ps ax | grep -v grep | grep glite-lb-interlogd > /dev/null
-  if [ $? = 0 ]; then
-    killall -9 /opt/glite/bin/glite-lb-interlogd
-  fi  
   ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd start
 
   if [ ! $? = 0 ] ; then
