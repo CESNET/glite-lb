@@ -51,3 +51,8 @@
 - Configuring BDII according to the documentation
 - Update for latest EMI yaim-core
 
+4.3.4-1
+- Relocatable build directory.
+- Fixed stopping of daemons on yaim rerun
+- Fixes for BDII
+
