@@ -676,6 +676,8 @@ for my $ext (keys %deps_aux) {
 	'px.myproxy-config' => [ qq/myproxy-config/ ], # in myproxy-config.spec
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
+	'lb.glite-LB' => [ qq/glite-LB/ ],
+	'px.glite-PX' => [ qq/glite-PX/ ],
 );
 
 %cvs_prefix = (
