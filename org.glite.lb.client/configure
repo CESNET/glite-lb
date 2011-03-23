@@ -52,9 +52,11 @@ my (%projects, %project);
 my $debug = 0;
 my $pkg_config_env = (defined $ENV{PKG_CONFIG_PATH}) ? "$ENV{PKG_CONFIG_PATH}:" : '';
 
-my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester glite-LB glite-PX/;
+my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester lb px proxyrenewal/;
+my @default_nodes = qw/lb px proxyrenewal/;
 my %enable_nodes;
 my %disable_nodes;
+my %default_nodes; @default_nodes{@default_nodes} = (1) x ($#default_nodes + 1);
 
 # key:      internal package name (arguments, ...)
 # 'pkg':    pkg-config name
@@ -96,6 +98,10 @@ my %externs = (
 	gsoap => {
 		prefix=> '/usr',
 		pkg => 'gsoap'
+	},
+	gsoapxx => {
+		prefix=> '/usr',
+		pkg => 'gsoap++'
 	},
 	mysql => {
 		prefix=> '/usr'
@@ -235,6 +241,7 @@ $localstatedir=~s/\/$//;
 
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
+$externs{'gsoapxx'}{prefix}=$externs{gsoap}{prefix} if $externs{'gsoapxx'}{prefix} eq '';
 
 %project = %{$projects{$project}};
 for $_ (keys %{$project{etics_externs}}) {
@@ -284,11 +291,11 @@ die "$module: unknown module\n" if $module && ! grep $module,@{$lbmodules{lb}},{
 
 if ($dis) {
 	for (@nodes) {
-		$enable_nodes{$_} = 1 unless $disable_nodes{$_};
+		$enable_nodes{$_} = 1 unless ($disable_nodes{$_} or not $default_nodes{$_});
 	}
 }
 
-if (!$en && !$dis) { $enable_nodes{$_} = 1 for (@nodes) } ;
+if (!$en && !$dis) { for (@nodes) { $enable_nodes{$_} = 1 if ($default_nodes{$_}) } };
 
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
 
@@ -301,7 +308,7 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 		my $pkg = $externs{$ext}{pkg};
 		my $flagname = uc $externs{$ext}{pkg};
 		$flagname =~ s/-[0-9\.]*$//;
-		$flagname =~ s/-/_/g;
+		$flagname =~ y/-\+/_X/;
 
 		print "Checking $pkg ... ";
 		$env = "PKG_CONFIG_PATH=$pkg_config_env$stagedir$prefix/$libdir/pkgconfig";
@@ -515,7 +522,7 @@ BEGIN{
 	'lbjp-common.trio' => [ qw/cppunit:B libtool:B/ ],
 	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B libtool:B/ ],
 	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B libtool:B/ ],
-	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap:B libtool:B/ ],
+	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap gsoapxx libtool:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B libtool:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
@@ -657,6 +664,9 @@ for my $ext (keys %deps_aux) {
 	jpprimary => 'jp.primary',
 	jpindex => 'jp.index',
 	jpclient => 'jp.client',
+	lb => 'lb.glite-LB',
+	px => 'px.glite-PX',
+	proxyrenewal => 'px.proxyrenewal'
 );
 
 %obsoletes = (
@@ -692,6 +702,7 @@ for my $ext (keys %deps_aux) {
 # tag_prefix ........... VCS tag prefix
 # local_prefix ......... prefix (relative to stage)
 # etics_externs ........ ETICS modules names of externals
+#                        (${NAME.location}, ETICS conf. dependencies)
 # etics_projects ....... ETICS project names of externals
 # etics_externs_devel .. ETICS modules names of devel versions of externals
 # need_externs_aux ..... project-specific external dependencies
@@ -716,6 +727,7 @@ for my $ext (keys %deps_aux) {
 			trustmanager=>'org.glite.security.trustmanager',
 			axis=>'axis',
 			lcas=>'org.glite.security.lcas',
+			gsoapxx=>'-',
 		},
 		etics_externs_devel => {
 		},
@@ -760,6 +772,7 @@ for my $ext (keys %deps_aux) {
 			trustmanager_axis=>'emi.java-security.trustmanager-axis',
 			axis=>'axis1.4',
 			lcas=>'emi.sac.lcas',
+			gsoapxx=>'-',
 		},
 		etics_externs_devel => {
 			cares => 'c-ares-devel',
@@ -793,6 +806,8 @@ for my $ext (keys %deps_aux) {
 	'gridsite.core' => {
 		sl5_x86_64_gcc412 => { aprSuffix => '1' },
 		sl5_ia32_gcc412 => { aprSuffix => '1' },
+		sl5_x86_64_gcc412EPEL => { aprSuffix => '1' },
+		sl5_ia32_gcc412EPEL => { aprSuffix => '1' },
 		deb5_x86_64_gcc432 => { aprSuffix => '1.0' },
 		deb5_ia32_gcc432 => { aprSuffix => '1.0' },
 		slc4_x86_64_gcc346 => { aprSuffix => '0' },
@@ -941,6 +956,7 @@ sub mode_etics {
 	for (@{$need_externs{"$subsys.$module"}}) {
 	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/ and (defined $externs{$_} or defined $jar{$_})) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
+		next if ($eext eq '-');
 		if ($project ne 'glite') {
 			if ($ge{$_} and not defined $externs{$_}{pkg}) {
 				push @copts, "--with-$_=\${stageDir}";
@@ -1040,7 +1056,7 @@ sub mode_etics {
 		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl $cvs_prefix{$subsys}.$subsys.$module/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts; chmod +x \${stageDir}$project{local_prefix}/sbin/glite-lb-at3 2>/dev/null";
+		$cmd{configure} = "chmod +x \${stageDir}$project{local_prefix}/sbin/glite-lb-at3 2>/dev/null; cd $confdir && /usr/bin/perl $cvs_prefix{$subsys}.$subsys.$module/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
@@ -1124,6 +1140,7 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 	for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
 		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
 		my $edev = $project{etics_externs_devel}{$_};
+		next if ($eext eq '-');
 
 		my $proj = 'externals';
 		for my $p (keys %etics_projects) {
@@ -1219,15 +1236,15 @@ sub getlibdir {
 
 sub usage {
 	my @ext = keys %externs;
-	my @myjars, keys %jar;
+	my @myjars = keys %jar;
 
 	print STDERR qq{
-usage: $0 options
+Usage: $0 options
 
 General options (defaults in []):
   --prefix=PREFIX		destination directory [./stage]
   --stage=DIR			staging directory [./stage]
-  --root=DIR			installation root (custom relocation root -> sysroot) []
+  --root=DIR			installation root (custom relocation root -> sysroot) [./stage]
   --sysroot=DIR			system root (custom relocation root -> sysroot) []
   --sysconfdir=DIR              system configuration directory [PREFIX/etc]
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
@@ -1244,22 +1261,29 @@ Mode of operation:
   --mode=\{checkout|build|etics\}	what to do [build]
   
 What to build:
-  --module=module		build this module only (mostly in-Etics operation)
-  --enable-NODE			build this "node" (set of modules) only. Available nodes are
-					@{$lbmodules{lb}}
+  --module=module		build this module only
+  --enable-NODE			build this "node" (set of modules) only
   --disable-NODE		don't build this node
   --lb-tag=tag			checkout LB modules with specific tag
   --jp-tag=tag			checkout JP modules with specific tag
   --lbjp-common-tag=tag         checkout lbjp-common modules with specific tag
   --jobid-tag=tag		checkout jobid modules with specific tag
 
-Dependencies:
-  --with-EXTERNAL=PATH		where to look for an external. Required externals
- 				(not all for all modules) are:
-					@ext
-  --with-JAR=JAR		where to look for jars. Required jars are:
-					@myjars
-				Summary of what will be used is always printed
+Dependencies (summary of what will be used is always printed):
+  --with-EXTERNAL=PATH		where to look for an external [autodetect]
+  --with-JAR=JAR		where to look for jars
+
+Available nodes:
+    @nodes
+
+Default nodes:
+    @default_nodes
+
+Externals (not all for all modules) are:
+    @ext
+
+External jars are:
+    @myjars
 
 };
 

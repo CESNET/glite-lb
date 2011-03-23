@@ -157,3 +157,8 @@
 5.0.3-3
 - Module rebuilt
 
+5.0.4-1
+- Relocatable build directory
+- Build system cleanup -- removing obsolete files
+- More context initialization checks.
+
