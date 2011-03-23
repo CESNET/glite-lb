@@ -94,3 +94,7 @@
 1.2.2-2
 - Module rebuilt
 
+1.2.3-1
+- Separate Troubleshooting Guide
+- Relocatable build directory
+
