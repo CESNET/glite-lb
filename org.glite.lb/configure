@@ -410,11 +410,11 @@ sub mode_build {
 	
 	open MAK,">Makefile" or die "Makefile: $!\n";
 	
-	print MAK "all: @modules\n\nclean:\n";
+	print MAK "all: @modules\n\nclean check:\n";
 	
 	for (@modules) {
 		my $full = full($_);
-		print MAK "\tcd $full/$buildroot{$_} && \${MAKE} clean\n"
+		print MAK "\tcd $full/$buildroot{$_} && \${MAKE} \$@\n"
 	}
 	
 	print MAK "\ndistclean:\n";
