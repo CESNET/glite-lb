@@ -85,10 +85,11 @@ clean:
 
 COMMON:=copyright.tex \
 	definitions.tex \
-	egee.cls \
+	emi.cls \
 	frontmatter.tex \
 	lbjp.bib \
 	versions.tex \
+	faq.tex \
 	ver.tex
 
 LBUG.pdf: ${COMMON} \
@@ -128,7 +129,6 @@ LBTP.pdf: ${COMMON} \
 LBTG.pdf: ${COMMON} \
 	LBTG.tex \
 	LBTG-Abstract.tex \
-	LBAG-Troubleshooting.tex \
-	faq.tex
+	LBAG-Troubleshooting.tex
 
 .PHONY: all clean doc
