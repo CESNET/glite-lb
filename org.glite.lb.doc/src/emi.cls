@@ -3,6 +3,9 @@
 % $Id$
 %
 % $Log$
+% Revision 1.1  2011/03/25 14:02:28  zsustr
+% Use ami document class
+%
 % Revision 1.1.1.1  2010/06/28 14:11:00  jwhite
 % EMI MJRA1.1 latex sources
 %
@@ -374,9 +377,9 @@
 %
 \def\ISTNumber{INFSO-RI-261611}
 \newsavebox{\@EGEELogo}
-\savebox{\@EGEELogo}{\includegraphics[height=0.75\headheight]{EMI}}
+\savebox{\@EGEELogo}{\includegraphics[height=0.75\headheight]{EMI_Logo_std.pdf}}
 \def\EGEELogo{\usebox{\@EGEELogo}}
-\def\LargeEGEELogo{\includegraphics[height=\headheight]{EMI_Logo_std.pdf}}
+\def\LargeEGEELogo{\includegraphics[height=0.7\headheight]{EMI_Logo_std.pdf}}
 \def\ISTLogo{\includegraphics[height=0.6\headheight]{e-infra}}
 \def\gLiteLogo{\includegraphics[width=0.6\textwidth]{glite}}
 \def\CESNETLogo{\includegraphics[height=0.8\headheight]{cesnet}}
