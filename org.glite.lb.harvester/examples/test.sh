@@ -36,8 +36,8 @@ cat <<EOF
 
  non-default configuration is possible via following env variables or
  using ~/.glite.conf:
+   GLITE_LB_LOCATION...............path to glite SW
    GLITE_LOCATION..................path to glite SW
-   GLOBUS_LOCATION.................path to globus SW
    GLITE_HOST_CERT.................path to host certificate
    GLITE_HOST_KEY..................path to host key
    GLITE_LB_TEST_DB................L&B connection string 
@@ -64,11 +64,19 @@ EOF
 
 init() {
 	# get the configuration
-	GLITE_LOCATION=${GLITE_LOCATION:-"/opt/glite"}
+	GLITE_LOCATION=${GLITE_LB_LOCATION:-$GLITE_LOCATION}
+	GLITE_LOCATION=${GLITE_LOCATION:-'/opt/glite'}
+	for dir in ${GLITE_LOCATION} ${GLITE_LOCATION}/lib64/glite-lb ${GLITE_LOCATION}/lib/glite-lb; do
+		GLITE_LB_LOCATION_EXAMPLES="$dir/examples"
+		if [ -d "$dir/examples" ]; then break; fi
+	done
+	for dir in "$GLITE_LOCATION_ETC" "$GLITE_LOCATION/etc" "$GLITE_LOCATION/../etc" '/etc'; do
+		GLITE_LOCATION_ETC="$dir";
+		if [ -d "$dir" ]; then break; fi
+	done
+
 	[ -f /etc/glite.conf ] && . /etc/glite.conf
 	[ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
-	
-	GLOBUS_LOCATION=${GLOBUS_LOCATION:-"/opt/globus"}
 	
         if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] ;then
 		X509_USER_CERT="$GLITE_HOST_CERT"
@@ -76,8 +84,8 @@ init() {
 	fi
 	
 #	if [ -z "$X509_USER_CERT" -o -z "$X509_USER_KEY" ] ; then
-		if [ -e "$GLOBUS_LOCATION/bin/grid-proxy-info" ] ; then
-			timeleft=`$GLOBUS_LOCATION/bin/grid-proxy-info 2>&1| \
+		if [ -e "`which grid-proxy-info`" ] ; then
+			timeleft=`grid-proxy-info 2>&1| \
 				grep timeleft| sed 's/^.* //'`
 			if [ "$timeleft" = "0:00:00" -o -z "$timeleft" ]; then 
 				echo "Proxy certificate check failed."\
@@ -88,7 +96,7 @@ init() {
 			echo "Can't check proxy cert (grid-proxy-info not found). If you do not have valid proxy certificate, set GLITE_HOST_KEY/GLITE_HOST_KEY - otherwise tests will fail!"
 		fi
 #	fi
-	identity=`X509_USER_KEY=${X509_USER_KEY} X509_USER_CERT=${X509_USER_CERT} $GLOBUS_LOCATION/bin/grid-proxy-info 2>&1| \
+	identity=`X509_USER_KEY=${X509_USER_KEY} X509_USER_CERT=${X509_USER_CERT} grid-proxy-info 2>&1| \
 		grep identity| sed 's/^[^/]*//'`
 
 	if [ -z "$GLITE_LB_TEST_DB" ]; then
@@ -118,11 +126,11 @@ init() {
 	GLITE_RTM_TEST_PIDFILE=${GLITE_RTM_TEST_PIDFILE:-"/tmp/glite-rtm-test.pid"}
 	GLITE_RTM_TEST_TTL=${GLITE_RTM_TEST_TTL:-"60"}
 
-	jobreg="$GLITE_LOCATION/examples/glite-lb-job_reg -m `hostname -f`:${GLITE_LB_TEST_SERVER_PORT} -s UserInterface"
+	jobreg="$GLITE_LB_LOCATION_EXAMPLES/glite-lb-job_reg -m `hostname -f`:${GLITE_LB_TEST_SERVER_PORT} -s UserInterface"
 	logev="$GLITE_LOCATION/bin/glite-lb-logevent -x -S `pwd`/LB/proxy.sockstore.sock -U localhost"
 	purge="$GLITE_LOCATION/bin/glite-lb-purge"
 	[ -x "$purge" ] || purge="$GLITE_LOCATION/sbin/glite-lb-purge"
-	for dir in "$GLITE_LOCATION/examples" "`pwd`/../build" "`pwd`"; do
+	for dir in "$GLITE_LB_LOCATION_EXAMPLES" "`pwd`/../build" "`pwd`"; do
 		if [ -x "$dir/glite-lb-harvester-dbg" ]; then
 			rtm="$dir/glite-lb-harvester-dbg"
 		fi
@@ -162,7 +170,7 @@ create_db() {
 		echo -n "."
 		mysql $MYSQL_ARGS -e "GRANT ALL on $DB_NAME.* to $DB_USER@$DB_HOST" && \
 		echo -n "."
-		mysql -u $DB_USER $DB_NAME -h $DB_HOST < $GLITE_LOCATION/etc/glite-lb/glite-lb-dbsetup.sql || return $?
+		mysql -u $DB_USER $DB_NAME -h $DB_HOST < $GLITE_LOCATION_ETC/glite-lb/glite-lb-dbsetup.sql || return $?
 		echo -n "."
 		mkdir -p `pwd`/LB
 		cat > `pwd`/LB/glite-lb-index.conf << EOF
@@ -179,6 +187,12 @@ EOF
 		cleanup_mysql || return $?
 	fi
 	echo -n "OK psql."
+	rm -f 'test.sql'
+	if [ -f "$GLITE_LOCATION/ETC/glite-lb/harvester-test-dbsetup.sql" ]; then
+		ln -s "$GLITE_LOCATION/ETC/glite-lb/harvester-test-dbsetup.sql" test.sql
+	else
+		wget --quiet -O 'test.sql' 'http://jra1mw.cvs.cern.ch/cgi-bin/jra1mw.cgi/org.glite.lb.harvester/examples/test.sql?revision=HEAD'
+	fi
 	if [ "x$need_new_rtm_db" = "x1" ]; then
 		dropdb $PG_ARGS "$RTM_NAME" >/dev/null 2>&1
 		echo -n "."
