@@ -31,7 +31,7 @@
 ##############################################################################
 
 config_info_service_lb_check () {
-	requires $1 SITE_NAME INSTALL_ROOT
+	requires $1 SITE_NAME
 }
 
 config_info_service_lb_setenv () {

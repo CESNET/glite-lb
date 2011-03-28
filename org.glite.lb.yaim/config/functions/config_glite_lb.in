@@ -14,7 +14,7 @@ function config_glite_lb_libs_append() {
   fi
   libarch=${libarch:-'lib'}
 
-  if [ -d "$prefix/$libarch" ]; then
+  if [ -d "$prefix/$libarch" -a "$prefix" != "/usr" ]; then
     yaimgridpath_append LD_LIBRARY_PATH "$prefix/$libarch"
   fi
 }
@@ -384,9 +384,9 @@ EOF
     echo $HOSTNAME > ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf
   fi
 
-  . ${GLITE_LOCATION}/etc/profile.d/grid-env.sh
-  ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd stop
-  ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd start
+  . /opt/glite/yaim/etc/grid-env-funcs.sh
+  . ${GRID_ENV_LOCATION}/grid-env.sh
+  ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd restart
 
   if [ ! $? = 0 ] ; then
     yaimlog ABORT "Service glite-lb-bkserverd failed to start!"
