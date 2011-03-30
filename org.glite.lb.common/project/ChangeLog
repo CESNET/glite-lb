@@ -137,3 +137,6 @@
 - Build system cleanup - removing obsolete files
 - Improved log file recovery in case of writing errors 
 
+8.0.3-2
+- Module rebuilt
+
