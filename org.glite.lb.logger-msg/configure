@@ -120,7 +120,8 @@ my %externs = (
 		prefix => '/opt/glite'
 	},
 	lcas => {
-		prefix => '/opt/glite'
+		prefix => '/opt/glite',
+		pkg => 'lcas'
 	},
 	trustmanager => {
 		prefix => '/opt/glite'
@@ -409,11 +410,11 @@ sub mode_build {
 	
 	open MAK,">Makefile" or die "Makefile: $!\n";
 	
-	print MAK "all: @modules\n\nclean:\n";
+	print MAK "all: @modules\n\nclean check:\n";
 	
 	for (@modules) {
 		my $full = full($_);
-		print MAK "\tcd $full/$buildroot{$_} && \${MAKE} clean\n"
+		print MAK "\tcd $full/$buildroot{$_} && \${MAKE} \$@\n"
 	}
 	
 	print MAK "\ndistclean:\n";
@@ -676,6 +677,8 @@ for my $ext (keys %deps_aux) {
 	'px.myproxy-config' => [ qq/myproxy-config/ ], # in myproxy-config.spec
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
+	'lb.glite-LB' => [ qq/glite-LB/ ],
+	'px.glite-PX' => [ qq/glite-PX/ ],
 );
 
 %cvs_prefix = (
@@ -739,7 +742,7 @@ for my $ext (keys %deps_aux) {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager utiljava libtool:B/ ],
 			'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
 			'lb.yaim' => [ qw/yaim_core:R/ ],
-			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R nc:R/],
+			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
 		},
 	},
@@ -796,7 +799,7 @@ for my $ext (keys %deps_aux) {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
 			'lb.glite-LB' => [ qw/fetchcrl:R gip_release:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
 			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
-			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R nc:R/],
+			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
 		},
 	},
