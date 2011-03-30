@@ -158,3 +158,6 @@
 - Fixed setting of umask to create event files not readable by others
 - Improved signal handling in logd
 
+2.2.4-2
+- Module rebuilt
+

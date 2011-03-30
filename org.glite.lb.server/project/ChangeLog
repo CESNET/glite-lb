@@ -267,3 +267,6 @@
 - Build system cleanup -- removing obsolete files
 - Fixed seting of umask to create event files not readable by others
 
+2.2.4-2
+- Module rebuilt
+
