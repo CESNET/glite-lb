@@ -88,3 +88,6 @@
 - Proper defaults in harvester startup script
 - Fixed setting of umask to create event files not readable by others
 
+1.1.5-1
+- Updated paths in harvester test
+
