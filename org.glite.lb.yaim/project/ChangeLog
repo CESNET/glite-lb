@@ -56,3 +56,6 @@
 - Fixed stopping of daemons on yaim rerun
 - Fixes for BDII
 
+4.3.5-1
+- Update due to latest changes in yaim-core
+
