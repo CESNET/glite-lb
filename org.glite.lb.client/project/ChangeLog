@@ -162,3 +162,6 @@
 - Build system cleanup -- removing obsolete files
 - More context initialization checks.
 
+5.0.4-2
+- Module rebuilt
+
