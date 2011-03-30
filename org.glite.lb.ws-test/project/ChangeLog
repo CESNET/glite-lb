@@ -82,3 +82,6 @@
 - Sanity check of gsoap structure size (gsoap-plugin vs ws-test module)
 - Some error messages redirected from stdout to stderr
 
+1.2.2-2
+- Module rebuilt
+
