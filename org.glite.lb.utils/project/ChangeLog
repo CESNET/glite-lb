@@ -71,3 +71,6 @@
 - Relocatable build directory
 - Build system cleanup -- removing obsolete files
 
+2.1.2-2
+- Module rebuilt
+
