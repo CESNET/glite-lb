@@ -326,7 +326,7 @@ EOF
 HOME=/
 MAILTO=$SITE_EMAIL
 
-1 1 * * * $GLITE_USER . $GLITE_LOCATION/etc/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; $purge_target_runtime_cmd/opt/glite/sbin/glite-lb-export.sh >> $logfile 2>&1
+1 1 * * * $GLITE_USER . @glite_etc@/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; $purge_target_runtime_cmd/opt/glite/sbin/glite-lb-export.sh >> $logfile 2>&1
 EOF
 
   touch $logfile
@@ -384,8 +384,7 @@ EOF
     echo $HOSTNAME > ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf
   fi
 
-  . /opt/glite/yaim/etc/grid-env-funcs.sh
-  . ${GRID_ENV_LOCATION}/grid-env.sh
+  . @glite_etc@/profile.d/grid-env.sh
   ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd restart
 
   if [ ! $? = 0 ] ; then
