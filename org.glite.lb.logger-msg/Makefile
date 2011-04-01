@@ -18,7 +18,7 @@ version=${module.version}
 CC=gcc
 CXX=gcc
 
-VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc
+VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
@@ -65,9 +65,11 @@ PLUGIN_OBJS:=activemq_cpp_plugin.o
 PLUGIN_LOBJS:=${PLUGIN_OBJS:.o=.lo}
 PLUGIN_LIB:=activemq_cpp_plugin.la
 
+EXAMPLES=glite-lb-cmsclient
+
 default: all 
 
-all compile: ${PLUGIN_LIB} 
+all compile: ${PLUGIN_LIB} ${EXAMPLES}
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${EXT_LIB}
@@ -76,6 +78,9 @@ ${MAN_GZ}: ${MAN}
 	rm -f ${MAN_GZ} ${MAN}
 	cp $? .
 	gzip -f $(notdir $?)
+
+glite-lb-cmsclient: cmsclient.o
+	$(CC) $< ${EXT_LIB} -o $@
 
 man: ${MAN_GZ}
 
@@ -96,6 +101,7 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 755 ${EXAMPLES} ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 #	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 
@@ -104,5 +110,5 @@ install:
 
 
 clean:
-	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ}
+	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ} ${EXAMPLES}
 	rm -rvf log.xml rpmbuild/ RPMS/ tgz/
