@@ -70,7 +70,7 @@ init() {
 		GLITE_LB_LOCATION_EXAMPLES="$dir/examples"
 		if [ -d "$dir/examples" ]; then break; fi
 	done
-	for dir in "$GLITE_LOCATION_ETC" "$GLITE_LOCATION/etc" "$GLITE_LOCATION/../etc" '/etc'; do
+	for dir in "$GLITE_LOCATION_ETC" "$GLITE_LB_LOCATION_ETC" "$GLITE_LOCATION/etc" '/etc'; do
 		GLITE_LOCATION_ETC="$dir";
 		if [ -d "$dir" ]; then break; fi
 	done
@@ -188,8 +188,8 @@ EOF
 	fi
 	echo -n "OK psql."
 	rm -f 'test.sql'
-	if [ -f "$GLITE_LOCATION/ETC/glite-lb/harvester-test-dbsetup.sql" ]; then
-		ln -s "$GLITE_LOCATION/ETC/glite-lb/harvester-test-dbsetup.sql" test.sql
+	if [ -f "$GLITE_LOCATION_ETC/glite-lb/harvester-test-dbsetup.sql" ]; then
+		ln -s "$GLITE_LOCATION_ETC/glite-lb/harvester-test-dbsetup.sql" test.sql
 	else
 		wget --quiet -O 'test.sql' 'http://jra1mw.cvs.cern.ch/cgi-bin/jra1mw.cgi/org.glite.lb.harvester/examples/test.sql?revision=HEAD'
 	fi
