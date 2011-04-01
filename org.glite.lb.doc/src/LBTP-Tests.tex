@@ -69,6 +69,8 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-threaded.sh} & Implemented & Rudimentary test for threaded clients \LB \\
 \hline
+{\tt lb-test-notif-msg.sh} & Implemented & Test delivery of \LB notifications over ActiveMQ \\
+\hline
 \end{tabularx}
 
 \subsubsection{Event logging examples}
@@ -289,38 +291,22 @@ Please see also \cite{lbug}, Section 2.4, for other possible scenarios how to te
 \what
 \begin{enumerate}
 \item Register a job.
-\item Start a~notification client (preferably on another machine),
+\item Start a~notification client,
 register with \code{edg\_wll\_NotifNew} for any state changes of the job,
-and repeatedly invoke \code{edg\_wll\_NotifReceive}.
-\item One by one send events triggering job state change.
+and invoke \code{edg\_wll\_NotifReceive}.
+\item Send events triggering job state changes.
 \end{enumerate}
 
 \how\ \ctblb{lb-test-notif.sh}
 
 \note\ The test includes artificial delays. Takes approx. 12\,s to finish.
 
-\result\ All the events should trigger notification reported by the running
+\result\ All the events should trigger notifications reported by the running
 notification client.
 
 \begin{hints}
 \path{glite-lb-notify} example can be used with its commands \path{new} and \path{receive}.
 \end{hints}
-
-
-
-%\subsubsection{Additional notification criteria}
-%\label{notif-complex}
-%\req\ All \LB\ services running
-%
-%\what\ Like~\ref{notif1} but include additional criteria,
-%e.g. job is scheduled for a~specific destination.
-%
-%\how\ \ctblb{lb-test-notif-additional.sh}
-%
-%\result\ Only notifications matching the criteria should be delivered.
-%
-% rozsireni dotazu o dalsi job
-
 
 
 \subsubsection{Include another job}
@@ -377,6 +363,29 @@ immediately.
 \result\ Delayed notifications should be received by the client almost
 immediately.
 
+
+\subsubsection{Delivery to ActiveMQ}
+\label{notif1}
+\req\ All \LB\ services running, ActiveMQ broker configured and running
+
+\what
+\begin{enumerate}
+\item Register a job.
+\item Start a~notification client,
+register with \code{edg\_wll\_NotifNew} for any state changes of the job,
+and listen for messages. 
+\end{enumerate}
+
+\how\ \ctblb{lb-test-notif-msg.sh}
+
+\note\ The test includes artificial delays. Takes approx. 12\,s to finish.
+
+\result\ All the events should trigger notifications that will be reported 
+through ActiveMQ messages.
+
+\begin{hints}
+\path{glite-lb-notify} example can be used with its commands \path{new} and \path{receive}.
+\end{hints}
 
 
 
