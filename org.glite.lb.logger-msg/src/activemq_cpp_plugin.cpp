@@ -44,7 +44,7 @@ extern "C" {
 #include <cms/Message.h>
 
 #include <string>
-#include <strstream>
+#include <sstream>
 
 #include <assert.h>
 #include <string.h>
@@ -121,7 +121,7 @@ OutputPlugin::createMessage(edg_wll_JobStat &state_out)
 	cms::TextMessage *cms_msg = session->createTextMessage();
 	char *s;
 	unsigned int i;
-	std::ostrstream body;
+	std::ostringstream body;
 
 	body << "{";
 	/* jobid */
@@ -186,7 +186,7 @@ OutputPlugin::createMessage(edg_wll_JobStat &state_out)
 	}
 	body << "}";
 
-	cms_msg->setText(body.str());
+	cms_msg->setText(body.str().c_str());
 	cms_msg->setStringProperty("Content-type", "text/javascript");
 
 	return cms_msg;
