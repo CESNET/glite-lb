@@ -159,7 +159,9 @@ Install and configure OS and basic services (certificates, CAs, time synchroniza
 
 YAIM configuration for \emph{glite-LB} node type 
 (\texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}) 
-can be done then. Available parameters specific to LB server are:
+can be done then.
+
+Available parameters specific to LB server are:
 
 %variable&meaning&default value &further details\\
 \begin{itemize}
@@ -172,15 +174,23 @@ export data are written for use by lgcmon/R-GMA
 According to local retention policy you may want to use different purge timeouts (for example WLCG would need \texttt{--cleared 90d --aborted 90d --cancelled 90d --other 90d}).
 \item \texttt{GLITE\_LB\_EXPORT\_ENABLED} -- set to \texttt{true} for export to JP, installed glite-lb-client and glite-jp-client are needed (default: \texttt{false})
 \item \texttt{GLITE\_LB\_EXPORT\_JPPS} -- Job Provenance Primary Storage where to export purged jobs, required if export to JP is enabled
-\item \texttt{GLITE\_JP\_LOCATION} -- optional parameter for combining LB and JP subsystems on the different locations
 \item \texttt{GLITE\_LB\_RTM\_ENABLED} -- enable settings for Real Time Monitor - indexes and additional access (default: false)
 \item \texttt{GLITE\_LB\_RTM\_DN} -- DNs using to get notifications from \LB server\\
 (default: \texttt{heppc24.hep.ph.ic.ac.uk} machine certificate)
 \item \texttt{GLITE\_LB\_SUPER\_USERS} -- additional super-users (default: empty)
 \item \texttt{GLITE\_LB\_TYPE} -- type of the \LB service: server, proxy, both (default: autodetect, \LB node only: 'server', WMS node only: proxy, \LB and WMS: 'both')
-\item \texttt{GLITE\_LB\_HARVESTER\_ENABLED} -- set to \texttt{true} for sending notification, used mainly for export to MSG publish system (default: \texttt{false})
+\item \texttt{GLITE\_LB\_HARVESTER\_ENABLED} -- set to \texttt{true} for sending notifications, used mainly for legacy export to MSG publish system (default: \texttt{false})
 \item \texttt{GLITE\_LB\_HARVESTER\_MSG\_OPTIONS} -- additional options for MSG publish (default: \texttt{--wlcg})
-\item \texttt{GLITE\_LB\_INDEX\_OWNER} -- when specified, add (\texttt{true}) or drop (\texttt{false}) 'owner' index (default: 'owner' index not created or dropped)
+\item \texttt{GLITE\_LB\_INDEX\_OWNER} -- when specified, add (\texttt{true}) or drop (\texttt{false}) 'owner' index (default: 'owner' index not touched)
+\item \texttt{GLITE\_LB\_MSG\_BROKER} -- hostname and port of MSG broker, empty for disabling MSG notifications (default: empty)
+\end{itemize}
+
+Additional helper parameters for \LB:
+\begin{itemize}
+\item \texttt{GLITE\_LB\_LOCATION} -- \LB prefix (default: /opt/glite or /usr)
+\item \texttt{GLITE\_LB\_LOCATION\_ETC} -- system config directory (default: /opt/glite/etc or /etc)
+\item \texttt{GLITE\_LB\_LOCATION\_VAR} -- gLite local state directory (default: /opt/glite/var or /var/glite)
+\item \texttt{GLITE\_JP\_LOCATION} -- can be used when JP subsystem location differs from LB (default: empty)
 \end{itemize}
 
 In addition to those, YAIM LB module uses following parameters:

@@ -1,0 +1,9 @@
+#
+# example configuration for export notifications to MSG system
+#
+
+[interlogd]
+plugin = activemq_cpp_plugin.so
+
+[msg]
+broker = tcp://dev.msg.cern.ch:6166

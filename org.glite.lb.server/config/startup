@@ -43,6 +43,9 @@ GLITE_LB_PROXY_FPREFIX=${GLITE_LB_PROXY_FPREFIX:-'/tmp/glite-lbproxy-ilog_events
 PROXY_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-proxy-interlogd.pid
 NOTIF_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-notif-interlogd.pid
 
+msgconf="$GLITE_LB_LOCATION_ETC/glite-lb/msg.conf"
+[ -f "$msgconf" ] && GLITE_LB_NOTIF_IL_OTHER_OPTIONS="$GLITE_LB_NOTIF_IL_OTHER_OPTIONS -F $msgconf"
+
 unset creds port log4c
 
 start_daemon()
