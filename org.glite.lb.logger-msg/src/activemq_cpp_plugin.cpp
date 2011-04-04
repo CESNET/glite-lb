@@ -124,6 +124,12 @@ OutputPlugin::createMessage(edg_wll_JobStat &state_out)
 	std::ostrstream body;
 
 	body << "{";
+	/* jobid */
+	s = glite_jobid_unparse(state_out.jobId);
+	if(s) {
+		body << "jobid: \"" << s << "\", ";
+		free(s);
+	}
 	/* ownerDn */
 	if(state_out.owner) {
 		body << "ownerDn: \"" << state_out.owner << "\", ";
@@ -233,7 +239,7 @@ OutputPlugin::cleanup()
 		try {
 			connection->close();
 		} catch(cms::CMSException &e) {
-			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "activemq_cpp_plugin: connection close exception: %s", e.what());
+			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "activemq_cpp_plugin: connection close  exception: %s", e.what());
 		}
 		try {
 			delete connection;
