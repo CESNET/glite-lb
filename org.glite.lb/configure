@@ -390,6 +390,7 @@ mode_etics($module) if $mode eq 'etics';
 
 sub mode_build {
 	print "\nBuilding modules: @modules\n";
+	print "Mode: "; print $module ? "single module" : "multiple modules"; print "\n";
 	
 	my @ext = map @{$need_externs{$_}},@modules;
 	my @myjars = map @{$need_jars{$_}},@modules;
@@ -405,42 +406,46 @@ sub mode_build {
 	print "\nThis is a poor-man configure, it's up to you to have sources and externals there\n\n";
 	
 	mkinc($_) for @modules;
-	
-	print "Creating Makefile\n";
-	
-	open MAK,">Makefile" or die "Makefile: $!\n";
-	
-	print MAK "all: @modules\n\nclean check:\n";
-	
-	for (@modules) {
-		my $full = full($_);
-		print MAK "\tcd $full/$buildroot{$_} && \${MAKE} \$@\n"
+
+	if ($module) {
+		print "Not creating summary Makefile\n" if $debug;
+	} else {
+		print "Creating Makefile\n";
+
+		open MAK,">Makefile" or die "Makefile: $!\n";
+
+		print MAK "all: @modules\n\nclean check:\n";
+
+		for (@modules) {
+			my $full = full($_);
+			print MAK "\tcd $full/$buildroot{$_} && \${MAKE} \$@\n"
+		}
+
+		print MAK "\ndistclean:\n";
+
+		for (@modules) {
+			my $full = full($_);
+			print MAK $buildroot{$_} eq '' ?
+				"\tcd $full && \${MAKE} distclean\n" :
+				"\trm -rf $full/$buildroot{$_}\n"
+		}
+
+		print MAK "\n";
+
+		for (@modules) {
+			my %ldeps; undef %ldeps;
+			@ldeps{@{$deps{$_}}} = 1;
+			for my $x (split /,/,$staged) { delete $ldeps{$x}; }
+			my @dnames = $module ? () : keys %ldeps;
+
+			my $full = full($_);
+			my $build = $buildroot{$_};
+
+			print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install\n\n";
+		}
+
+		close MAK;
 	}
-	
-	print MAK "\ndistclean:\n";
-	
-	for (@modules) {
-		my $full = full($_);
-		print MAK $buildroot{$_} eq '' ?
-			"\tcd $full && \${MAKE} distclean\n" :
-			"\trm -rf $full/$buildroot{$_}\n"
-	}
-	
-	print MAK "\n";
-	
-	for (@modules) {
-		my %ldeps; undef %ldeps;  
-		@ldeps{@{$deps{$_}}} = 1;
-		for my $x (split /,/,$staged) { delete $ldeps{$x}; }
-		my @dnames = $module ? () : keys %ldeps;
-	
-		my $full = full($_);
-		my $build = $buildroot{$_};
-	
-		print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install\n\n";
-	}
-	
-	close MAK;
 }
 	
 sub mode_checkout() {
@@ -902,21 +907,32 @@ px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
 		return;
 	}
 
+	my $top_srcdir = '.';
 	my $build = '';
-	
-	unless ($buildroot{$_} eq '') {
-		$build = "/$buildroot{$_}";
-		unless (-d "$full/$buildroot{$_}") {
-			mkdir "$full/$buildroot{$_}" or die "mkdir $full/$buildroot{$_}: $!\n";
+
+	if ($module) {
+		$top_srcdir = $0;
+		$top_srcdir =~ s,/?[^/]*$,,;
+		$top_srcdir =~ s,^$,\.,;
+	} else {
+		$build = "$full/";
+		unless ($buildroot{$_} eq '') {
+			$top_srcdir = '..';
+			$build .= "$buildroot{$_}/";
+			unless (-d "$build") {
+				mkdir "$build" or die "mkdir $build: $!\n";
+			}
 		}
-		unlink "$full/$buildroot{$_}/Makefile";
-		symlink "../Makefile","$full/$buildroot{$_}/Makefile" or die "symlink ../Makefile $full/$buildroot{$_}/Makefile: $!\n";
+	}
+	unless ($top_srcdir eq '.') {
+		unlink $build."Makefile";
+		symlink "$top_srcdir/Makefile",$build."Makefile" or die "symlink $top_srcdir/Makefile ".$build."Makefile: $!\n";
 	}
 
-	open MKINC,">$full/$buildroot{$_}/Makefile.inc"
-		or die "$full/$buildroot{$_}/Makefile.inc: $!\n";
+	open MKINC,">".$build."Makefile.inc"
+		or die $build."Makefile.inc: $!\n";
 
-	print "Creating $full/$buildroot{$_}/Makefile.inc\n";
+	print "Creating ".$build."Makefile.inc\n";
 
 	print MKINC qq{project = $project
 PREFIX = $root
@@ -928,6 +944,7 @@ localstatedir = $localstatedir
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 libdir = $libdir
+top_srcdir = $top_srcdir
 };
 
 	for (@{$need_externs{$short}}) {
@@ -1033,7 +1050,7 @@ sub mode_etics {
 	my $buildroot = "build.root = $cvs_prefix{$subsys}.$subsys.$module";
 	$buildroot .= '/'.$buildroot{"$subsys.$module"} unless ($buildroot{"$subsys.$module"} eq '');
 
-	my $confdir = $buildroot{"$subsys.$module"} eq '' ? '..' : '../..';
+	my $confdir = $buildroot{"$subsys.$module"} eq '' ? '.' : '..';
 
 	my $package_description = "";
 	my $package_summary = "";
@@ -1092,11 +1109,11 @@ sub mode_etics {
 		}
 	}
 	elsif ($subsys eq 'px' and $module eq 'myproxy-config') {
-		$cmd{configure} = "cd $confdir && /usr/bin/perl $cvs_prefix{$subsys}.$subsys.$module/configure --root=\${prefix} --prefix= --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{configure} = "/usr/bin/perl $confdir/configure --root=\${prefix} --prefix= --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
-		$cmd{configure} = "chmod +x \${stageDir}$project{local_prefix}/sbin/glite-lb-at3 2>/dev/null; cd $confdir && /usr/bin/perl $cvs_prefix{$subsys}.$subsys.$module/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{configure} = "chmod +x \${stageDir}$project{local_prefix}/sbin/glite-lb-at3 2>/dev/null; /usr/bin/perl $confdir/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
