@@ -925,6 +925,14 @@ px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
 	unless ($top_srcdir eq '.') {
 		unlink $build."Makefile";
 		symlink "$top_srcdir/Makefile",$build."Makefile" or die "symlink $top_srcdir/Makefile ".$build."Makefile: $!\n";
+		for my $file ('.pre', '.post', '.preun', '.postun changelog') {
+			my $pfile = "project/$file";
+			if (-f "$full/$pfile") {
+				mkdir "$build/project" unless (-d "$build/project");
+				unlink $build.$pfile;
+				symlink "../$top_srcdir/$pfile", $build.$pfile or die "symlink ../$top_srcdir/$pfile ".$build."$pfile: $!\n";
+			}
+		}
 	}
 
 	open MKINC,">".$build."Makefile.inc"
