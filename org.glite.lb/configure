@@ -1110,7 +1110,7 @@ sub mode_etics {
 		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
-		$cmd{configure} = "chmod +x \${stageDir}$project{local_prefix}/sbin/glite-lb-at3 2>/dev/null; /usr/bin/perl $confdir/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{configure} = "/usr/bin/perl $confdir/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
