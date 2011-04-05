@@ -1053,8 +1053,7 @@ sub mode_etics {
 	my $file = $output ? $output : "$conf.ini";
 	open C,">$file" or die "$file: $!\n";
 
-	my $buildroot = "build.root = $cvs_prefix{$subsys}.$subsys.$module";
-	$buildroot .= '/'.$buildroot{"$subsys.$module"} unless ($buildroot{"$subsys.$module"} eq '');
+	my $buildroot = $buildroot{"$subsys.$module"} eq '' ? '#no build.root' : "build.root = " . $buildroot{"$subsys.$module"};
 
 	my $confdir = $buildroot{"$subsys.$module"} eq '' ? '.' : '..';
 
@@ -1086,10 +1085,10 @@ sub mode_etics {
 	my %cmd;
 	@cmd{qw/configure compile test install packaging clean/} = ('None') x 6;
 	$cmd{clean} = 'make clean';
-	$cmd{checkout} = "mkdir -v \${moduleName}; cd \${moduleName} && cvs -d \${vcsroot} co ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module";
+	$cmd{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null";
 	#$cmd{checkout} = "(test -d \${moduleName}/.git && (cd \${moduleName}; git pull) || git clone http://scientific.zcu.cz/git/jra1mw.git \${moduleName})";
 	#$cmd{checkout} .= " && (cd \${moduleName}; git checkout ${tag})" unless ($conftag =~ /HEAD/);
-	$cmd{tag} = "cd \${moduleName} && cvs -d \${vcsroot} tag -R \${tag} $cvs_prefix{$subsys}.$subsys.$module";
+	$cmd{tag} = "cvs -d \${vcsroot} tag -R \${tag} ${moduleName}";
 
 	if ($subsys eq 'gridsite') {
 		$cmd{tag} = 'None';
