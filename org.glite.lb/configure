@@ -268,7 +268,8 @@ for my $ext (keys %need_externs_aux) {
 if ($help) { usage(); exit 0; }
 
 if ($listmodules) {
-	my @m = map "$project{etics_name}.$listmodules.$_",@{$lbmodules{$listmodules}};
+	my $name_prefix = ($listmodules eq 'gridsite' and $project eq 'glite') ? 'org' : $project{etics_name};
+	my @m = map "$name_prefix.$listmodules.$_",@{$lbmodules{$listmodules}};
 	print "@m\n";
 	exit 0;
 }
@@ -1078,7 +1079,7 @@ sub mode_etics {
 	@cmd{qw/configure compile test install packaging clean/} = ('None') x 6;
 	$cmd{clean} = 'make clean';
 	$cmd{checkout} = "mkdir -v \${moduleName}; cd \${moduleName} && cvs -d \${vcsroot} co ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module";
-	#$cmd{checkout} = "(test -d \${moduleName}/.git && (cd \${moduleName}; git pull) || git clone http://scientific.zcu.cz/jra1mw.git \${moduleName})";
+	#$cmd{checkout} = "(test -d \${moduleName}/.git && (cd \${moduleName}; git pull) || git clone http://scientific.zcu.cz/git/jra1mw.git \${moduleName})";
 	#$cmd{checkout} .= " && (cd \${moduleName}; git checkout ${tag})" unless ($conftag =~ /HEAD/);
 	$cmd{tag} = "cd \${moduleName} && cvs -d \${vcsroot} tag -R \${tag} $cvs_prefix{$subsys}.$subsys.$module";
 
@@ -1086,18 +1087,20 @@ sub mode_etics {
 		$cmd{tag} = 'None';
 
 		if ($module eq 'core') {
-			my $flags;
+			my ($flags, $prefix);
 
 			if ($project ne 'glite') {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix}/usr libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
+				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
+				$prefix = "prefix=${prefix}/usr";
 			} else {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily} prefix=${prefix} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
+				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
+				$prefix = "prefix=${prefix}";
 			}
 
 			$cmd{compile} = "echo 'make $flags' > build.sh\n\tmake $flags build";
 			$cmd{clean} = "rm -rvf build.sh; $cmd{clean}";
-			$cmd{install} = "make $flags install";
-			$cmd{packaging} = "make $flags rpm";
+			$cmd{install} = "make $prefix $flags install";
+			$cmd{packaging} = "make $prefix $flags rpm";
 		}
 		else {
 			$cmd{clean} = 'None';
