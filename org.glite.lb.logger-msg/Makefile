@@ -96,7 +96,7 @@ check:
 #	./check.ll
 
 install:
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/etc/glite-lb
