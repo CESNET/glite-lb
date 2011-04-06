@@ -59,3 +59,7 @@
 4.3.5-1
 - Update due to latest changes in yaim-core
 
+4.3.6-1
+- Basic deployment for notification of the MSG system
+- Automatic purge launch in cron fixed
+
