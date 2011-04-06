@@ -101,3 +101,8 @@
 1.2.4-1
 - Use emi document class
 
+1.2.5-1
+- Documentation for the basic deployment of notifications delivered over the MSG system
+- Switching to a new, officially sanctioned EMI class
+- Updates of command names
+
