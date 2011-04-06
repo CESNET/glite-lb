@@ -18,3 +18,8 @@
 1.0.3-2
 - Module rebuilt
 
+1.0.4-1
+- New MSG client example
+- Using stringstream instead of deprecated strstream
+- Sending jobid as part of status notification
+
