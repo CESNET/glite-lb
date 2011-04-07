@@ -181,13 +181,18 @@ my %deps_type;
 my %buildroot;
 my (%etics_externs, %etics_projects);
 
+#
+# modules of the subsystems
+#
+# additional modules from $project{modules} are automatically added
+#
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB logger-msg/], 
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim logger-msg/], 
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface gss gsoap-plugin/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache shared commands core devel slashgrid services service-clients gsexec/ ],
-	'px' => [ qw/proxyrenewal glite-PX myproxy-yaim/ ],
+	'px' => [ qw/proxyrenewal myproxy-yaim/ ],
 	);
 
 
@@ -262,6 +267,9 @@ for my $ext (keys %need_externs_aux) {
 		push @{$need_externs{$ext}},$pkg;
 		$need_externs_type{$ext}->{$pkg} = $type;
 	}
+}
+for $_ (keys %{$project{modules}}) {
+	push @{$lbmodules{$_}},@{$project{modules}{$_}};
 }
 
 
@@ -699,8 +707,13 @@ for my $ext (keys %deps_aux) {
 	'px.myproxy-config' => [ qq/myproxy-config/ ], # in myproxy-config.spec
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
-	'lb.glite-LB' => [ qq/glite-LB/ ],
-	'px.glite-PX' => [ qq/glite-PX/ ],
+);
+
+%conflicts = (
+	'lb.glite-LB' => [ qq/emi-lb/ ],
+	'px.glite-PX' => [ qq/emi-px/ ],
+	'lb.emi-lb' => [ qq/glite-LB/ ],
+	'px.emi-px' => [ qq/glite-PX/ ],
 );
 
 %cvs_prefix = (
@@ -732,6 +745,7 @@ for my $ext (keys %deps_aux) {
 # etics_externs_devel .. ETICS modules names of devel versions of externals
 # need_externs_aux ..... project-specific external dependencies
 # supported_platforms .. platforms supported by the project
+# modules .............. additional modules in subsystems
 %projects = (
 	glite => {
 		etics_name => 'org.glite',
@@ -770,6 +784,10 @@ for my $ext (keys %deps_aux) {
 			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
 		},
+		modules => {
+			'lb' => [ qw/glite-LB/ ],
+			'px' => [ qw/glite-PX/ ],
+		}
 	},
 
 	emi => {
@@ -832,6 +850,10 @@ for my $ext (keys %deps_aux) {
 			sl5_x86_64_gcc412EPEL => 1,
 			sl5_ia32_gcc412EPEL => 1,
 		},
+		modules => {
+			'lb' => [ qw/emi-lb/ ],
+			'px' => [ qw/emi-px/ ],
+		}
 	},
 );
 
@@ -1181,6 +1203,9 @@ $package_description$package_summary$defprops};
 	for (@{$obsoletes{"$subsys.$module"}}) {
 		print C "package.obsoletes = $_\n";
 		print C "package.replaces = $_\n";
+	}
+	for (@{$conflicts{"$subsys.$module"}}) {
+		print C "package.conflicts = $_\n";
 	}
 
 	for my $pp (keys %{$platform_properties{"$subsys.$module"}}) {
