@@ -138,6 +138,14 @@ int edg_wll_NotifNewServer(
 			edg_wll_SetError(ctx, EINVAL, "Addres override not in format host:port");
 			goto cleanup;
 		}
+		if ( strstr(address_override, "x-msg")) {
+			// XXX: Quick ugly hack. This will be made configurable soon
+			if ( !strstr(address_override,"x-msg://grid.emi.")) {
+				edg_wll_SetError(ctx, EINVAL, "This site requires that all topic names start with prefix 'grid.emi.'");
+				goto cleanup;
+			}
+		}
+
 		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) || 
 		     !strncmp(address_override, "[::]", aux-address_override) ||
 		     !strncmp(address_override, "::", aux-address_override) )
