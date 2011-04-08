@@ -181,13 +181,18 @@ my %deps_type;
 my %buildroot;
 my (%etics_externs, %etics_projects);
 
+#
+# modules of the subsystems
+#
+# additional modules from $project{modules} are automatically added
+#
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB logger-msg/], 
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim logger-msg/], 
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface gss gsoap-plugin/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache shared commands core devel slashgrid services service-clients gsexec/ ],
-	'px' => [ qw/proxyrenewal glite-PX myproxy-yaim/ ],
+	'px' => [ qw/proxyrenewal myproxy-yaim/ ],
 	);
 
 
@@ -262,6 +267,9 @@ for my $ext (keys %need_externs_aux) {
 		push @{$need_externs{$ext}},$pkg;
 		$need_externs_type{$ext}->{$pkg} = $type;
 	}
+}
+for $_ (keys %{$project{modules}}) {
+	push @{$lbmodules{$_}},@{$project{modules}{$_}};
 }
 
 
@@ -518,7 +526,7 @@ BEGIN{
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B/ ],
 	'lb.state-machine' => [ qw/classads libtool:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
-	'lb.ws-interface' => [],
+	'lb.ws-interface' => [ qw/libxslt:B/ ],
 	'lb.ws-test' => [ qw/gsoap:B libtool:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/docbook-utils:B libtool:B/ ],
@@ -530,7 +538,7 @@ BEGIN{
 	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B libtool:B/ ],
 	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B libtool:B/ ],
 	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap gsoapxx libtool:B/ ],
-	'jobid.api-c' =>  [ qw/cppunit:B libtool:B/ ],
+	'jobid.api-c' =>  [ qw/cppunit:B libtool:B openssl:B/ ],
 	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
 	'jp.client' => [ qw/gsoap libtar globus_essentials:R globus:B/ ],
@@ -543,7 +551,7 @@ BEGIN{
 	'gridsite.commands' => [ qw/curl:R openssl:R/ ],
 	'gridsite.apache' => [ qw/libxml2:R openssl:R curl:R/ ],
 	'gridsite.shared' => [ qw/libxml2:R openssl:R/ ],
-	'gridsite.devel' => [],
+	'gridsite.devel' => [ qw// ],
 	'gridsite.slashgrid' => [ qw/curl:R fuse-libs:R fuse:R/],
 	'gridsite.services' => [ qw/curl:R gsoap:R/ ],
 	'gridsite.service-clients' => [ qw/curl:R gsoap:R gsoapxx:R/ ],
@@ -616,6 +624,11 @@ for my $jar (keys %need_jars) {
 		lb.ws-test:R lb.harvester:R lb.yaim:R lb.client-java:R
 		lb.logger-msg:R
 	/ ],
+	'lb.emi-lb' => [ qw/
+		lb.logger:R lb.server:R lb.utils:R lb.doc:R
+		lb.ws-test:R lb.harvester:R lb.yaim:R lb.client-java:R
+		lb.logger-msg:R
+	/ ],
 	'lbjp-common.db' => [ qw/lbjp-common.trio lbjp-common.log/ ],
 	'lbjp-common.maildir' => [ qw// ],
 	'lbjp-common.log' => [ qw// ],
@@ -654,17 +667,18 @@ for my $jar (keys %need_jars) {
 	'jp.ws-interface' => [ qw// ],
 
 	'gridsite.core' => [ qw// ],
-	'gridsite.commands' => [ qw/gridsite.shared:R/ ],
-	'gridsite.apache' => [ qw/gridsite.shared:R/ ],
-	'gridsite.shared' => [ qw// ],
-	'gridsite.devel' => [ qw/gridsite.shared:R/ ],
-	'gridsite.slashgrid' => [ qw/gridsite.shared:R/],
-	'gridsite.services' => [ qw/gridsite.shared:R/ ],
-	'gridsite.service-clients' => [ qw/gridsite.shared:R/ ],
-	'gridsite.gsexec' => [ qw// ],
+	'gridsite.commands' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.apache' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.shared' => [ qw/gridsite.core:B / ],
+	'gridsite.devel' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.slashgrid' => [ qw/gridsite.core:B gridsite.shared:R/],
+	'gridsite.services' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.service-clients' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.gsexec' => [ qw/gridsite.core:B/ ],
 
 	'px.proxyrenewal' => [ qw// ],
 	'px.glite-PX' => [qw/px.myproxy-yaim:R/],
+	'px.emi-px' => [qw/px.myproxy-yaim:R/],
 	'px.myproxy-yaim' => [ qw// ],
 	'px.myproxy-config' => [],
 );
@@ -699,8 +713,13 @@ for my $ext (keys %deps_aux) {
 	'px.myproxy-config' => [ qq/myproxy-config/ ], # in myproxy-config.spec
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
-	'lb.glite-LB' => [ qq/glite-LB/ ],
-	'px.glite-PX' => [ qq/glite-PX/ ],
+);
+
+%conflicts = (
+	'lb.glite-LB' => [ qq/emi-lb/ ],
+	'px.glite-PX' => [ qq/emi-px/ ],
+	'lb.emi-lb' => [ qq/glite-LB/ ],
+	'px.emi-px' => [ qq/glite-PX/ ],
 );
 
 %cvs_prefix = (
@@ -732,6 +751,7 @@ for my $ext (keys %deps_aux) {
 # etics_externs_devel .. ETICS modules names of devel versions of externals
 # need_externs_aux ..... project-specific external dependencies
 # supported_platforms .. platforms supported by the project
+# modules .............. additional modules in subsystems
 %projects = (
 	glite => {
 		etics_name => 'org.glite',
@@ -766,10 +786,14 @@ for my $ext (keys %deps_aux) {
 		need_externs_aux => {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager utiljava libtool:B/ ],
 			'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
-			'lb.yaim' => [ qw/yaim_core:R/ ],
+			'lb.yaim' => [ qw/yaim_core:R perl-LDAP:R/ ],
 			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
 		},
+		modules => {
+			'lb' => [ qw/glite-LB/ ],
+			'px' => [ qw/glite-PX/ ],
+		}
 	},
 
 	emi => {
@@ -793,7 +817,7 @@ for my $ext (keys %deps_aux) {
 			yaim_bdii=>'emi.bdii.yaim-bdii',
 			gip_release=>'emi.bdii.glite-info-provider-release',
 			gip_service=>'emi.bdii.glite-info-provider-service',
-			bdii=>'emi.bdii.bdii-core',
+			bdii=>'emi.bdii.core',
 			glite_version=>'emi.misc.glite-version',
 			glue_schema=>'emi.bdii.glue-schema',
 			trustmanager=>'emi.java-security.trustmanager',
@@ -802,6 +826,7 @@ for my $ext (keys %deps_aux) {
 			lcas=>'emi.sac.lcas',
 			gsoapxx=>'-',
 			build_common_cpp=>'emi.misc.glite.build-common-cpp',
+			jdk=>'java',
 		},
 		etics_externs_devel => {
 			cares => 'c-ares-devel',
@@ -817,6 +842,7 @@ for my $ext (keys %deps_aux) {
 			libxml2 => 'libxml2-devel',
 			openssl => 'openssl-devel',
 			gridsite=>'emi.gridsite.devel',
+			jdk=>'java-devel',
 		},
 		etics_projects => {
 			'emi'=>[qw/voms voms-devel gridsite lcas gip_release gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
@@ -824,7 +850,7 @@ for my $ext (keys %deps_aux) {
 		need_externs_aux => {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
 			'lb.glite-LB' => [ qw/fetchcrl:R gip_release:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
-			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
+			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R perl-LDAP:R/ ],
 			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
 		},
@@ -832,6 +858,10 @@ for my $ext (keys %deps_aux) {
 			sl5_x86_64_gcc412EPEL => 1,
 			sl5_ia32_gcc412EPEL => 1,
 		},
+		modules => {
+			'lb' => [ qw/emi-lb/ ],
+			'px' => [ qw/emi-px/ ],
+		}
 	},
 );
 
@@ -1107,7 +1137,9 @@ sub mode_etics {
 			$cmd{compile} = "echo 'make $flags' > build.sh\n\tmake $flags build";
 			$cmd{clean} = "rm -rvf build.sh; $cmd{clean}";
 			$cmd{install} = "make $prefix $flags install";
-			$cmd{packaging} = "make $prefix $flags rpm";
+			$cmd{packaging} = "mkdir ${moduleDir}/src/tgz
+	make $prefix $flags rpm && \
+	cp ${moduleDir}/RPMTMP/SOURCES/gridsite-${version}.src.tar.gz ${moduleDir}/src/tgz";
 		}
 		else {
 			$cmd{clean} = 'None';
@@ -1173,14 +1205,17 @@ checkstyle = None
 [Platform-default:Property]
 $buildroot
 aprSuffix = 0
-package.RPMSLocation = \${moduleDir}/$cvs_prefix{$subsys}.$subsys.$module/RPMTMP/RPMS
-package.SRPMSLocation = \${moduleDir}/$cvs_prefix{$subsys}.$subsys.$module/RPMTMP/SRPMS
+package.RPMSLocation = \${moduleDir}/RPMTMP/RPMS
+package.SRPMSLocation = \${moduleDir}/RPMTMP/SRPMS
 package.preserve.libtool = false
 $package_description$package_summary$defprops};
 
 	for (@{$obsoletes{"$subsys.$module"}}) {
 		print C "package.obsoletes = $_\n";
 		print C "package.replaces = $_\n";
+	}
+	for (@{$conflicts{"$subsys.$module"}}) {
+		print C "package.conflicts = $_\n";
 	}
 
 	for my $pp (keys %{$platform_properties{"$subsys.$module"}}) {
@@ -1192,8 +1227,8 @@ $package_description$package_summary$defprops};
 		for my $p (keys %{$platform_properties{"$subsys.$module"}->{$pp}}) {
 			print C $p . ' = ' . $platform_properties{"$subsys.$module"}->{$pp}->{$p} . "\n";
 		}
-		print C "package.RPMSLocation = \${moduleDir}/$cvs_prefix{$subsys}.$subsys.$module/RPMTMP/RPMS
-package.SRPMSLocation = \${moduleDir}/$cvs_prefix{$subsys}.$subsys.$module/RPMTMP/SRPMS\n";
+		print C "package.RPMSLocation = \${moduleDir}/RPMTMP/RPMS
+package.SRPMSLocation = \${moduleDir}/RPMTMP/SRPMS\n";
 		print C "$package_description$package_summary\n";
 	}
 
