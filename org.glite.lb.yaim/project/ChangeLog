@@ -63,3 +63,6 @@
 - Basic deployment for notification of the MSG system
 - Automatic purge launch in cron fixed
 
+4.3.7-1
+- Search for message brokers dynamically in BDII.
+
