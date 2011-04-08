@@ -23,3 +23,6 @@
 - Using stringstream instead of deprecated strstream
 - Sending jobid as part of status notification
 
+1.0.5-1
+- Support for searching for message brokers dynamically in BDII.
+
