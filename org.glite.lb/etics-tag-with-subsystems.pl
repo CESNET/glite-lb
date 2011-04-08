@@ -122,7 +122,10 @@ usage: $0 [-c <current configuration>] module.name
 
 	$module=~/\.([^\.]+?)$/;	
 
-	@modules=split(/\s+/, `PATH=\$PATH:./:./org.glite.lb configure --listmodules $1`);
+        if ($project eq "emi") { $proj_switch = " --project=emi" }
+        else { $proj_switch = ""; }
+
+        @modules=split(/\s+/, `PATH=\$PATH:./:./org.glite.lb configure --listmodules $1$proj_switch`);
 
 	my $incmajor=0;
 	my $incminor=0;
@@ -135,14 +138,18 @@ usage: $0 [-c <current configuration>] module.name
 	# **********************************
 
 	foreach $m (@modules) {
-		printf("\n***$m\n");
+
+                if ($project eq "emi") {
+                        $m=~s/^emi\./org.glite./;
+                }
+		printf("***$m\n");
 
 		$old_major=-1; $old_minor=-1; $old_revision=-1; $old_age=-1;
 		$new_major=-1; $new_minor=-1; $new_revision=-1; $new_age=-1;
 
 		foreach $l (`cvs diff -r $current_prefix$current_major\_$current_minor\_$current_revision\_$current_age $m/project/version.properties | grep -E "module\.age|module\.version"`) {
 			chomp($l);
-			printf("$l\n");
+#			printf("$l\n");
 
 			if($l=~/<\s*module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
 				$old_major=$1;
