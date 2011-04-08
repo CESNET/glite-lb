@@ -123,7 +123,6 @@ static logd_handler_t mysignal(int num,logd_handler_t handler)
 	struct sigaction	sa,osa;
 
 	memset(&sa,0,sizeof(sa));
-	sigemptyset(&sa.sa_mask);
 	sa.sa_handler = handler;
 	return sigaction(num,&sa,&osa) ? SIG_ERR : osa.sa_handler;
 }
@@ -443,19 +442,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    glite_wll_perftest_init(NULL, NULL, NULL, NULL, 0);
 #endif
  
-   /* daemonize */
-   if (debug) {
-	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Running as daemon... [no]\n");
-   } else {
-	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Running as daemon... [yes]\n");
-	if (daemon(0,0) < 0) {
-		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"Failed to run as daemon. Exiting.\n");
-		glite_common_log_SYS_ERROR("daemon");
-		exit(1);
-	}
-   }
-
-   edg_wll_gss_initialize();
    edg_wll_gss_watch_creds(cert_file,&cert_mtime);
    /* XXX DK: support noAuth */
    ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &gss_stat);
@@ -472,16 +458,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    }
 
    /* initialize signal handling */
-#if 1
-   if(edg_wll_gss_set_signal_handler(SIGUSR1, handle_signal) < 0) { perror("signal"); exit(1); }
-   if(edg_wll_gss_set_signal_handler(SIGUSR2, handle_signal) < 0) { perror("signal"); exit(1); }
-   if(edg_wll_gss_set_signal_handler(SIGPIPE, handle_signal) < 0) { perror("signal"); exit(1); }
-   if(edg_wll_gss_set_signal_handler(SIGHUP, handle_signal) < 0) { perror("signal"); exit(1); }
-   if(edg_wll_gss_set_signal_handler(SIGINT, handle_signal) < 0) { perror("signal"); exit(1); }
-   if(edg_wll_gss_set_signal_handler(SIGQUIT, handle_signal) < 0) { perror("signal"); exit(1); }
-   if(edg_wll_gss_set_signal_handler(SIGTERM, handle_signal) < 0) { perror("signal"); exit(1); }
-   if(edg_wll_gss_set_signal_handler(SIGCHLD, handle_signal) < 0) { perror("signal"); exit(1); }
-#else
    if (mysignal(SIGUSR1, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGUSR2, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
    if (mysignal(SIGPIPE, handle_signal) == SIG_ERR) { perror("signal"); exit(1); }
@@ -501,7 +477,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    sigaddset(&mask, SIGTERM);
    sigaddset(&mask, SIGCHLD);
    sigprocmask(SIG_UNBLOCK, &mask, NULL);
-#endif
 
    /* do listen */
    glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Listening on port %d\n",port);
@@ -525,6 +500,18 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
   fclose(pidf);
 
 
+   /* daemonize */
+   if (debug) {
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Running as daemon... [no]\n");
+   } else {
+	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_INFO,"Running as daemon... [yes]\n");
+	if (daemon(0,0) < 0) {
+		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"Failed to run as daemon. Exiting.\n");
+		glite_common_log_SYS_ERROR("daemon");
+		exit(1);
+	}
+   }
+
   pidf = fopen(pidfile,"w"); assert(pidf); /* XXX */
   fprintf(pidf,"%d\n",getpid());
   fclose(pidf);
@@ -536,28 +523,12 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
     */
    while (1) {
         int opt,my_errno;
-	fd_set fds;
-	struct timeval tv;
-
 
 	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_INFO,"Accepting incomming connections...\n");
-	client_fd = 0;
-	while(0 == client_fd) {
-		FD_ZERO(&fds);
-		FD_SET(listener_fd, &fds);
-		tv.tv_sec = 2;
-		tv.tv_usec = 0;
-
-		client_fd = select(listener_fd + 1, &fds, NULL, NULL, &tv);
-		do_handle_signal();
-		if(client_fd < 0) {
-			glite_common_log_SYS_ERROR("select");
-			client_fd = 0;
-		}
-	}
 	client_fd = accept(listener_fd, (struct sockaddr *) &client_addr,
 			&client_addr_len);
 	my_errno = errno;
+	do_handle_signal();
 	if (client_fd < 0) {
 		if (my_errno == EINTR) continue;
 		close(listener_fd);
