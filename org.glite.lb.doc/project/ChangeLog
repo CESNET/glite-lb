@@ -106,3 +106,7 @@
 - Switching to a new, officially sanctioned EMI class
 - Updates of command names
 
+1.2.6-1
+- at3 and check_version utilities path
+- Documented searching for message brokers dynamically in BDII.
+
