@@ -18,7 +18,8 @@ version=${module.version}
 SUFFIXES = .T
 
 VPATH=${top_srcdir}/src
-AT3=${stagedir}${prefix}/sbin/glite-lb-at3
+at3prefix=$(shell at3dir=${prefix}/share/glite-lb/at3; if test -d ${stagedir}$$at3dir; then echo ${stagedir}${prefix}; else echo ${prefix}; fi)
+AT3=${at3prefix}/sbin/glite-lb-at3
 XSLTPROC:=xsltproc --nonet
 XMLLINT:=xmllint --nonet
 TIDY=tidy -i -q --show-warnings no --tidy-mark no --wrap 0
@@ -65,7 +66,7 @@ clean:
 
 %.xml: %.xml.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 ${WSDL}: %.wsdl: %.xml puke-wsdl.xsl

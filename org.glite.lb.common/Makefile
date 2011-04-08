@@ -19,7 +19,8 @@ jobiddir=${top_srcdir}/../org.glite.jobid.api-c
 version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc
-AT3=${stagedir}${prefix}/sbin/glite-lb-at3
+at3prefix=$(shell at3dir=${prefix}/share/glite-lb/at3; if test -d ${stagedir}$$at3dir; then echo ${stagedir}${prefix}; else echo ${prefix}; fi)
+AT3=${at3prefix}/sbin/glite-lb-at3
 
 SUFFIXES = .T
 
@@ -252,20 +253,20 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp test_
 
 %.h: %.h.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 %.c: %.c.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 %.cpp: %.cpp.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 %.tex: %.tex.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null

@@ -22,9 +22,11 @@ version=${module.version}
 VERSION_AHEAD=-3
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
-AT3=${stagedir}${prefix}/sbin/glite-lb-at3
+at3prefix=$(shell at3dir=${prefix}/share/glite-lb/at3; if test -d ${stagedir}$$at3dir; then echo ${stagedir}${prefix}; else echo ${prefix}; fi)
+AT3=${at3prefix}/sbin/glite-lb-at3
 GENSAM=${top_srcdir}/examples/gen_sample_job
-CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${stagedir}${prefix}/sbin/glite-lb-check_version.pl
+check_version_pl=$(shell sbin_dir=${stagedir}${prefix}/sbin; if test -f $${sbin_dir}/glite-lb-check_version.pl; then echo $${sbin_dir}; else echo ${prefix}/sbin; fi)/glite-lb-check_version.pl
+CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${check_version_pl}
 
 SUFFIXES = .T .l
 

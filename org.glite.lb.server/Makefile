@@ -58,7 +58,8 @@ ifeq ($(gsoap_version),2.7.0)
 else
 	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples:${top_srcdir}/project
 endif
-AT3=${stagedir}${prefix}/sbin/glite-lb-at3
+at3prefix=$(shell at3dir=${prefix}/share/glite-lb/at3; if test -d ${stagedir}$$at3dir; then echo ${stagedir}${prefix}; else echo ${prefix}; fi)
+AT3=${at3prefix}/sbin/glite-lb-at3
 
 SUFFIXES = .T 
 
@@ -278,7 +279,7 @@ test_coverage:
 
 lb_xml_parse.c: lb_xml_parse.c.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 ${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c ${GSOAP_FILES_PREFIX}ServerLib.c ${GSOAP_FILES_PREFIX}ClientLib.c LoggingAndBookkeeping.nsmap: LB.xh
@@ -381,7 +382,7 @@ clean:
 
 %.c: %.c.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 %.o: %.y
@@ -393,7 +394,7 @@ clean:
 
 %.cpp: %.cpp.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
 %.o %.lo: %.c

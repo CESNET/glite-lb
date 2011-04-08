@@ -16,8 +16,9 @@ JAVAC:=${jdk_prefix}/bin/javac
 JAVAH:=${jdk_prefix}/bin/javah
 JAVA:=${jdk_prefix}/bin/java
 
-GEN:=${stagedir}${prefix}/sbin/glite-lb-at3 ${top_srcdir}/project/genEventTypes.pl
-AT3DIR:=${stagedir}${prefix}/share/glite-lb/at3
+at3prefix=$(shell at3dir=${prefix}/share/glite-lb/at3; if test -d ${stagedir}$$at3dir; then echo ${stagedir}${prefix}; else echo ${prefix}; fi)
+GEN:=${at3prefix}/sbin/glite-lb-at3 ${top_srcdir}/project/genEventTypes.pl
+AT3DIR:=${at3prefix}/share/glite-lb/at3
 axis_classpath:=$(shell ls -1 ${axis_prefix}/lib/*.jar 2>/dev/null | tr '\012' :)
 trustmanager_classpath:=$(shell ls -1 ${trustmanager_prefix}/share/java/glite-security-trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager-axis.jar ${stagedir}${prefix}/share/java/trustmanager.jar ${stagedir}${prefix}/share/java/trustmanager-axis.jar 2>/dev/null | tr '\012' :)
 
