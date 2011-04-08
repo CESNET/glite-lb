@@ -143,3 +143,6 @@
 8.0.3-3
 - Module rebuilt
 
+8.0.4-1
+- at3 and check_version utilities path
+
