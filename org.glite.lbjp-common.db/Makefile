@@ -32,8 +32,8 @@ ifeq (${os},Linux)
   DL_LIBS:=-ldl
 endif
 
-MYSQL_SONAME:=$(shell ../project/get_soname.sh mysqlclient ${mysql-devel_prefix}/${libdir} ${mysql_prefix}/${libdir} ${mysql-devel_prefix}/lib ${mysql_prefix}/lib)
-PSQL_SONAME:=$(shell ../project/get_soname.sh pq ${postgresql_prefix}/${libdir} ${postgresql_prefix}/lib)
+MYSQL_SONAME:=$(shell ${top_srcdir}/project/get_soname.sh mysqlclient ${mysql-devel_prefix}/${libdir} ${mysql_prefix}/${libdir} ${mysql-devel_prefix}/lib ${mysql_prefix}/lib)
+PSQL_SONAME:=$(shell ${top_srcdir}/project/get_soname.sh pq ${postgresql_prefix}/${libdir} ${postgresql_prefix}/lib)
 
 MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/mysql
 PSQL_CPPFLAGS:=-I${postgresql_prefix}/include -I${postgresql_prefix}/include/postgresql
