@@ -41,7 +41,9 @@ GLITE_LB_RTM_ENABLED='false'
 # Real Time Monitoring identities (separated by comma)
 GLITE_LB_RTM_DN='/C=UK/O=eScience/OU=Imperial/L=Physics/CN=heppc24.hep.ph.ic.ac.uk/Email=janusz.martyniak@imperial.ac.uk'
 # MSG publish
-GLITE_LB_MSG_BROKER='tcp://egi-1.msg.cern.ch:6166'
+GLITE_LB_MSG_BROKER='true'
+GLITE_LB_MSG_NETWORK='PROD'
+LCG_GFAL_INFOSYS='lcg-bdii.cern.ch:2170'
 
 #
 # additional options

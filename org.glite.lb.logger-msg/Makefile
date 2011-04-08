@@ -6,6 +6,7 @@ lbprefix=lb
 package=glite-lb-logger-msg
 version=0.0.0
 PREFIX=/opt/glite
+sysconfdir=/opt/glite/etc
 
 nothrflavour=gcc32
 thrflavour=gcc32pthr
@@ -97,15 +98,16 @@ check:
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/etc/glite-lb
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite-lb
+	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 755 ${EXAMPLES} ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
-	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${prefix}/etc/glite-lb
-#	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
+	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
+	${INSTALL} -m 755 ${top_srcdir}/src/msg-brokers-openwire ${DESTDIR}${PREFIX}${prefix}/share/glite-lb
 
 %.lo %.o: %.cpp
 	${COMPILEXX} -c $< -o $@

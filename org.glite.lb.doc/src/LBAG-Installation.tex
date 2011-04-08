@@ -166,9 +166,6 @@ Available parameters specific to LB server are:
 %variable&meaning&default value &further details\\
 \begin{itemize}
 \item \texttt{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory)
-\item \texttt{GLITE\_WMS\_LCGMON\_FILE} -- pathname of file where job state
-export data are written for use by lgcmon/R-GMA 
-(default: \texttt{/var/glite/logging/status.log}). \emph{Note: This feature is now obsolete and only available in \LBver{1.x}.}
 \item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --other 60d})
 
 According to local retention policy you may want to use different purge timeouts (for example WLCG would need \texttt{--cleared 90d --aborted 90d --cancelled 90d --other 90d}).
@@ -179,18 +176,23 @@ According to local retention policy you may want to use different purge timeouts
 (default: \texttt{heppc24.hep.ph.ic.ac.uk} machine certificate)
 \item \texttt{GLITE\_LB\_SUPER\_USERS} -- additional super-users (default: empty)
 \item \texttt{GLITE\_LB\_TYPE} -- type of the \LB service: server, proxy, both (default: autodetect, \LB node only: 'server', WMS node only: proxy, \LB and WMS: 'both')
-\item \texttt{GLITE\_LB\_HARVESTER\_ENABLED} -- set to \texttt{true} for sending notifications, used mainly for legacy export to MSG publish system (default: \texttt{false})
-\item \texttt{GLITE\_LB\_HARVESTER\_MSG\_OPTIONS} -- additional options for MSG publish (default: \texttt{--wlcg})
 \item \texttt{GLITE\_LB\_INDEX\_OWNER} -- when specified, add (\texttt{true}) or drop (\texttt{false}) 'owner' index (default: 'owner' index not touched)
-\item \texttt{GLITE\_LB\_MSG\_BROKER} -- hostname and port of MSG broker, empty for disabling MSG notifications (default: empty)
+\item \texttt{GLITE\_LB\_MSG\_BROKER} -- URL of the MSG broker, 'auto' for looking in BDII, 'false' for disabling MSG notifications (default: auto)
+\item \texttt{GLITE\_LB\_MSG\_NETWORK} -- required network type when searching in BDII (default: PROD)
+\item \texttt{LCG\_GFAL\_INFOSYS} -- BDII servers (default: lcg-bdii.cern.ch:2170)
 \end{itemize}
 
-Additional helper parameters for \LB:
+Additional helper or legacy parameters for \LB:
 \begin{itemize}
 \item \texttt{GLITE\_LB\_LOCATION} -- \LB prefix (default: /opt/glite or /usr)
 \item \texttt{GLITE\_LB\_LOCATION\_ETC} -- system config directory (default: /opt/glite/etc or /etc)
 \item \texttt{GLITE\_LB\_LOCATION\_VAR} -- gLite local state directory (default: /opt/glite/var or /var/glite)
 \item \texttt{GLITE\_JP\_LOCATION} -- can be used when JP subsystem location differs from LB (default: empty)
+\item \texttt{GLITE\_LB\_HARVESTER\_ENABLED} -- set to \texttt{true} for sending notifications, used mainly for legacy export to MSG publish system (default: \texttt{false})
+\item \texttt{GLITE\_LB\_HARVESTER\_MSG\_OPTIONS} -- additional options for MSG publish (default: \texttt{--wlcg})
+\item \texttt{GLITE\_WMS\_LCGMON\_FILE} -- pathname of file where job state
+export data are written for use by lgcmon/R-GMA 
+(default: \texttt{/var/glite/logging/status.log}). \emph{Note: This feature is now obsolete and only available in \LBver{1.x}.}
 \end{itemize}
 
 In addition to those, YAIM LB module uses following parameters:
