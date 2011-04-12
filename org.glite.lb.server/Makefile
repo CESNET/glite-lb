@@ -58,8 +58,7 @@ ifeq ($(gsoap_version),2.7.0)
 else
 	VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples:${top_srcdir}/project
 endif
-at3prefix=$(shell at3dir=${prefix}/share/glite-lb/at3; if test -d ${stagedir}$$at3dir; then echo ${stagedir}${prefix}; else echo ${prefix}; fi)
-AT3=${at3prefix}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 
 SUFFIXES = .T 
 

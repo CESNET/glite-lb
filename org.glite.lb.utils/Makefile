@@ -127,6 +127,6 @@ clean:
 
 %.c: %.c.T
 	rm -f $@
-	${AT3} $< >$@ || rm -f $@
+	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 

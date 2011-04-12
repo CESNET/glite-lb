@@ -23,8 +23,7 @@ LATEX = $(KPATH) latex
 PDFLATEX = $(KPATH) pdflatex
 BIBTEX = $(KPATHBIB) bibtex
 DVIPS = $(KPATH) dvips
-at3prefix=$(shell at3dir=${prefix}/share/glite-lb/at3; if test -d ${stagedir}$$at3dir; then echo ${stagedir}${prefix}; else echo ${prefix}; fi)
-AT3=${at3prefix}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 INSTALL=install
 
 default all: generate doc
