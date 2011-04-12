@@ -124,11 +124,12 @@ containing the job state data, notification handle,
 and the current user's listener location.
 The event is passed to the \emph{notification inter-logger} 
 via persistent disk file and directly (see Fig.~\ref{f:comp-query}).
-The daemon delivers events in the standard way, using the specified
-listener as destination.
-In addition, the server generates control messages when the user re-subscribes,
+The daemon delivers events either in a standard way, using the specified
+listener as destination, or forwards them to a messaging broker for delivery through the messaging infrastructure.
+When using the standard delivery mechanism,
+the server generates control messages when the user re-subscribes,
 changing the listener location.
-Inter-logger recognizes these messages, and changes its routing of all
+Inter-logger recognizes these messages, and changes the routing of all
 pending events belonging to this handle accordingly.
 
 

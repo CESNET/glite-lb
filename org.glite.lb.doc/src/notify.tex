@@ -36,7 +36,7 @@ However, only a single active client for a notification is allowed.
 \LB server and port to contact must be specified with GLITE\_WMS\_NOTIF\_SERVER 
 environment variable.
 
-\verb'glite-lb-notify' is supported on in \LBver{2.x}. In \LBver{1.x}, \verb'glite-lb-notify' 
+\verb'glite-lb-notify' is supported by \LBver{2.x} and newer. In \LBver{1.x}, \verb'glite-lb-notify' 
 with very limited functionality can be found in \verb'examples' directory.
 
 \verb'glite-lb-notify' support these actions:
@@ -148,6 +148,7 @@ Destroy notification:
     https://skurut68-2.cesnet.cz:9100/NOTIF:tOsgB19Wz-M884anZufyUw
 \end{verbatim}
 
+
 \subsubsection{Example: Waiting for notifications on all user's jobs}
 
 Instead of waiting for one job, user may want to accept notification about 
@@ -207,6 +208,19 @@ returns:
 
 \end{verbatim}
 
+\subsubsection{Example: Registering for notifications to be delivered over ActiveMQ}
+\label{e:notifymsg}
+
+Delivering notification messages over the messaging infrastructure provided by ActiveMQ is a feature introduced in \LBver{3.0}. It uses the fake address capability (\texttt{-a} option) to specify messaging topic to use when generating messages.
+
+\begin{verbatim}
+  GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 glite-lb-notify new \
+   -O -a x-msg://grid.emi.lbexample
+\end{verbatim}
+
+Rather than using the \LB notification API to receive messages, tap to the given messaging topic (\texttt{grid.emi.lbexample} in our case) in the messaging infrastructure.
+
+Note that production environments can impose restrictions on topic names. In the context of EGI, for instance, the ``\texttt{grid.emi.}'' prefix is mandatory.
 
 \subsubsection{Example: Waiting for more notifications on one socket}
 

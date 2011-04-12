@@ -29,7 +29,7 @@ In \LBver{1.x}, the list of all LB packages was the following:
 glite-lb-common & common files \\ 
 glite-lb-client & client library and CLI tools\\ 
 glite-lb-client-interface & client library interface (header files) \\ 
-%glite-lb-harvester & enhanced \LB notification client (since \LBver{1.10}) \\
+glite-lb-harvester & enhanced \LB notification client (since \LBver{1.10}) \\
 glite-lb-logger & local-logger and inter-logger \\ 
 glite-lb-proxy & proxy (restricted server used by WMS)\\ 
 glite-lb-server & server \\ 
@@ -49,12 +49,14 @@ glite-lb-client & client library and CLI tools\\
 glite-lb-client-java & Java implementation of the client (since \LBver{2.1})\\ 
 glite-lb-harvester & enhanced \LB notification client (since \LBver{2.1})\\
 glite-lb-logger & local-logger and inter-logger \\
+glite-lb-logger-msg & plugin for message delivery over ActiveMQ (since \LBver{3.0}) \\
 glite-lb-server & server, including merged proxy functionality \\
 glite-lb-state-machine & state machine and LB plugin for Job Provenance \\ 
 glite-lb-utils & auxiliary utilities \\
 glite-lb-ws-interface & web service interface \\
 glite-lb-yaim & YAIM initialization scripts for \LB (since \LBver{2.1}) \\
 \end{tabularx}
+
 
 More detailed description together with the dependencies can be read directly from each package,
 for example by issuing the command 
@@ -80,12 +82,13 @@ glite-jobid-api-c & gLite jobId C API library \\
 % pro beh LB neni triba
 % glite-jp-common & JP common files \\ 
 glite-lbjp-common-db & database access layer \\
+glite-lbjp-common-jp-interface & interface to the Job Provenance service\\
 glite-lbjp-common-log & glite common logging format implementation \\
 glite-lbjp-common-maildir & persistent request spool management \\
 glite-lbjp-common-server-bones & multi-process server building library \\
 glite-lbjp-common-trio & extended printf implementation \\
-glite-security-gss & GSS wrapper \\
-glite-security-gsoap-plugin & GSS plugin for gSoap \\
+glite-lbjp-common-gss & GSS wrapper (formerly \emph{glite-security-gss})\\
+glite-lbjp-common-gsoap-plugin & GSS plugin for gSoap (formerly \emph{glite-security-gsoap-plugin})\\
 \end{tabularx}
 
 where all \verb'glite-lbjp-common-*' packages are common both to \LB and 
@@ -101,7 +104,7 @@ The implementation is done in the \texttt{glite-lbjp-common-log} package and it
 uses \texttt{log4c} (\url{http://log4c.sourceforge.net})
 and its configuration file \texttt{log4crc}. 
 
-There is one configuration file \texttt{\$GLITE\_LOCATION/etc/glite-lb/log4crc}
+There is one configuration file \texttt{$[$/opt/glite$]$/etc/glite-lb/log4crc}
 that startup scripts use by setting the \texttt{LOG4C\_RCPATH} environment
 variable.
 
@@ -155,7 +158,7 @@ offered load.
 
 \subsubsection{Standard installation}
 
-Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories) according to the \htmladdnormallink{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}. Then glite-LB metapackage from appropriate gLite software repository should be installed.
+Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories) according to the \htmladdnormallink{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}. Then \texttt{glite-LB} metapackage from appropriate gLite software repository should be installed. When using the EMI or UMD repository, the correct metapackage to use is \texttt{emi-lb}.
 
 YAIM configuration for \emph{glite-LB} node type 
 (\texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}) 
@@ -184,9 +187,9 @@ According to local retention policy you may want to use different purge timeouts
 
 Additional helper or legacy parameters for \LB:
 \begin{itemize}
-\item \texttt{GLITE\_LB\_LOCATION} -- \LB prefix (default: /opt/glite or /usr)
-\item \texttt{GLITE\_LB\_LOCATION\_ETC} -- system config directory (default: /opt/glite/etc or /etc)
-\item \texttt{GLITE\_LB\_LOCATION\_VAR} -- gLite local state directory (default: /opt/glite/var or /var/glite)
+\item \texttt{GLITE\_LB\_LOCATION} -- \LB prefix (default: \texttt{/opt/glite} or \texttt{/usr})
+\item \texttt{GLITE\_LB\_LOCATION\_ETC} -- system config directory (default: \texttt{/opt/glite/etc} or \texttt{/etc})
+\item \texttt{GLITE\_LB\_LOCATION\_VAR} -- gLite local state directory (default: \texttt{/opt/glite/var} or \texttt{/var/glite})
 \item \texttt{GLITE\_JP\_LOCATION} -- can be used when JP subsystem location differs from LB (default: empty)
 \item \texttt{GLITE\_LB\_HARVESTER\_ENABLED} -- set to \texttt{true} for sending notifications, used mainly for legacy export to MSG publish system (default: \texttt{false})
 \item \texttt{GLITE\_LB\_HARVESTER\_MSG\_OPTIONS} -- additional options for MSG publish (default: \texttt{--wlcg})
@@ -247,7 +250,7 @@ Steps:
   \begin{quote}
    \begin{verbatim}
 mysql -u lbserver lbserver20 \
-        </opt/glite/etc/glite-lb-dbsetup-migrate2transactions.sql
+        <[/opt/glite]/etc/glite-lb-dbsetup-migrate2transactions.sql
    \end{verbatim}
   \end{quote}
  \item \emph{Start the servers.} MySQL and \LB. Check logs.
@@ -282,7 +285,7 @@ Steps:
  \item \emph{Database conversion.} Use provided shell script (with the proper
   switch from previous step):
   \begin{quote}
-  \verb'/opt/glite/etc/glite-lb-migrate_db2version20 {-s|-p}'
+  \verb'[/opt/glite]/etc/glite-lb-migrate_db2version20 {-s|-p}'
   \end{quote}
  \item \emph{(Optional) Drop unnecesary index.} This operation is
   likely to take a lot of time when applied to large database.
@@ -305,6 +308,22 @@ There are no specific configuration changes required when migrating from \LBver{
 \emph{Note:} Upgrading from \LBver{2.x} provided by gLite \LB node repository to \LBver{3.0 or higher} provided by the EMI repository has never been tested.
 
 %\TODO{automated conversion through YAIM ?}
+
+\subsubsection{Connecting to the Messaging Infrastructure}
+\label{inst:messaging}
+
+As of \LBver{3.0}, the \LB server node becomes a producer of messages, which it delivers into the messaging infrastructure.
+
+Correct broker settings are infered from BDII by YAIM on configuration. By default, messaging-related settings are stored in file:
+
+  \begin{quote}
+	\begin{verbatim}
+[/opt/glite]/etc/glite-lb/msg.conf
+	\end{verbatim}
+  \end{quote}
+
+Alongside the broker address and port, \texttt{msg.conf} also specifies the messaging plugin to be used by the notification interlogger. Plugin settings should be correct \emph{ab initio} and do not require modification by administrators. Broker settings may require an adaptive change in case the currently configured broker disapears and automatic checks fail to switch the settings to another one on time.
+
 
 \subsubsection{Index configuration}
 
@@ -342,7 +361,7 @@ rights that can be granted to the users:
 \item \verb'LOG_WMS_EVENTS'
 \item \verb'LOG_CE_EVENTS'
 \item \verb'LOG_GENERAL_EVENTS'
-\item \verb'GRANT_OWNERSHIP' (\LBver{3.0})
+\item \verb'GRANT_OWNERSHIP' (since \LBver{3.0})
 \end{itemize}
 
 The first action disables all authorization checks. The next four categories concern with acquring data from the \LB
@@ -560,7 +579,7 @@ the recommended workaround is to add the following variable setting
 
 \verb'GLITE_LB_SERVER_OTHER_OPTIONS="--mysql lbserver/@localhost:lbproxy"' 
 
-into the gLite startup environment (\verb'/opt/glite/etc/profile.d') instead.
+into the gLite startup environment (\verb'[/opt/glite]/etc/profile.d') instead.
 This setting makes \LB server use the \verb'lbproxy' database instead of the default.
 
 \subsection{\LB logger}

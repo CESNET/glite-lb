@@ -455,7 +455,8 @@ The user may even re-subscribe (providing the original handle) with different
 listener location (\eg moving from office to home), and \LB re-routes
 the notifications generated in the meantime to the new destination.
 The \LB event delivery infrastructure is reused for the notification
-transport.
+transport. Alongside it, there is a possibility to deliver notification
+messages thourgh the messaging infratstructure.
 
 \subsubsection{Local views}\label{local}
 % motivace proxy
@@ -699,30 +700,30 @@ Complete reference of the query language can be found in~\LB Developer's Guide
 \cite{lbdg}.
 
 \subsubsection{Notifications}
-The other mode of user interactions are the \LB notifications.
+\LB notifications are the other mode of user interaction.
 
-\LB infrastructure enables its users to be notified when something interesting happens on a \LB server
-(typically job status change). It enables the user not to poll \LB server periodically to find changed
-information, but confortably wait for server to inform the user.
+The \LB infrastructure can notify its users when something interesting happens on an \LB server
+(typically a job status change). This allows users to wait comfortably until they are informed by the server, rather than having to poll the \LB server periodically to detect changes.
 
-User registers for notifications via notification client \verb'glite-lb-notify', described in Section
+Users register for notifications via the notification client \verb'glite-lb-notify', described in Section
 \ref{s:lb-notify} 
-Conditions under which the notification is sent can be specified. For example - job XY reaches status
+Conditions under which the notifications are sent can be specified. For example -- job XY reaches status
 DONE. In \LBver{1.x}, one or more JOBID's are required in the condition and only a single occurence 
-of a specific attribute is allowed among ANDed conditions. In \LBver{2.x}, more complex conditions are allowed.
+of a specific attribute is allowed among ANDed conditions. More complex conditions are allowed since \LBver{2.0}
 
-The registration is then delivered to \LB server where it is stored.
-At the same time, server generates a unique notification ID for the registration and returns it to the
+The registration is then delivered to the \LB server where it is stored.
+At the same time, the server generates a unique notification ID for the registration and returns it to the
 user.
 
-The registration exists only for limited amount of time. The validity is returned by \LB server together with
-the notification ID when registering. During this period user can attach to server and receive notifications,
-change conditions which triger notification, prolong validity of the registration, or remove the registration
-from \LB server. 
+The registration exists only for a limited amount of time. Validity information is returned by \LB server together with
+the notification ID when registering. During this period the user can attach to the server and receive notification messages,
+change conditions which triger the notification, prolong validity of the registration, or remove the registration
+from the \LB server. 
+It is also possible to specify on registration that notification messages for a given registration are not supposed to be delivered through the notification client but through the messaging infrastructure instead. 
 
-While the registration is valid, user is able repeatably connect to \LB server from different places in the
-network and continue receiving notifications associated with given notification ID. Notifications generated
-during the time when user is connected are stored and waiting when user reconnects. 
+While the registration is valid, the user is able to repeatably connect to the \LB server from different places in the
+network and continue receiving notifications associated with the given notification ID. When relying on \LB's event delivery infrastructure to deliver messages, even notifications generated
+while the user was not connected are stored and waiting until the user reconnects. 
 
 \subsubsection{Caveats}
 \LB is designed to perform well in the unreliable distributed Grid
