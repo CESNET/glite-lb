@@ -1551,3 +1551,31 @@ edg_wll_gss_unread(edg_wll_GssConnection *con, void *data, size_t len)
 
    return 0;
 }
+
+
+int
+edg_wll_gss_set_signal_handler(int signum,
+			       void (*handler_func)(int))
+{
+   int ret;
+
+   ret = globus_module_activate(GLOBUS_COMMON_MODULE);
+   if (ret != GLOBUS_SUCCESS) {
+	   struct sigaction	sa,osa;
+	   
+	   memset(&sa, 0, sizeof(sa));
+	   sigemptyset(&sa.sa_mask);
+	   sa.sa_handler = handler_func;
+	   ret = sigaction(signum, &sa, &osa);
+	   return ret;
+   }
+   ret = globus_callback_space_register_signal_handler(signum,
+						       GLOBUS_TRUE,
+						       (globus_callback_func_t)handler_func,
+						       (void *)signum,
+						       GLOBUS_CALLBACK_GLOBAL_SPACE);
+
+   globus_module_deactivate(GLOBUS_COMMON_MODULE);
+
+   return ret;
+}

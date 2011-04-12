@@ -181,6 +181,11 @@ edg_wll_gss_unread(edg_wll_GssConnection *connection,
                    void *data,
                    size_t len);
 
+
+int
+edg_wll_gss_set_signal_handler(int signum,
+			       void (*handler_func)(int));
+
 #ifdef __cplusplus
 } 
 #endif
