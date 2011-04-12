@@ -212,8 +212,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc AMQCPP_UNUSED, char* argv[] AMQCPP_UNUSED) {
-	if (argc <= 1) {
-		printf("Usage: %s BROKER\n", argv[0]);
+	if (argc <= 2) {
+		printf("Usage: %s <broker> <topic>\n", argv[0]);
 		return 1;
 	}
 
@@ -242,6 +242,7 @@ int main(int argc AMQCPP_UNUSED, char* argv[] AMQCPP_UNUSED) {
 	std::string brokerURI = "failover:(tcp://";
 	brokerURI += argv[1];
 	brokerURI += ")";
+
 //	std::string brokerURI =
 //		"failover:(tcp://harad.ics.muni.cz:61616"
 //		"?wireFormat=openwire"
@@ -256,7 +257,7 @@ int main(int argc AMQCPP_UNUSED, char* argv[] AMQCPP_UNUSED) {
 	// customize where the consumer listens, to have the consumer
 	// use a topic or queue set the 'useTopics' flag.
 	//============================================================
-	std::string destURI = "topic"; //?consumer.prefetchSize=1";
+	std::string destURI = argv[2]; //?consumer.prefetchSize=1";
 
 	//============================================================
 	// set to true to use topics instead of queues
