@@ -71,7 +71,7 @@ build/gen:
 genws: build/axis
 
 build/axis:
-	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java -o build/axis ${stagedir}${prefix}/interface/LB.wsdl
+	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java -o build/axis ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl
 
 check:
 	@echo "No check"

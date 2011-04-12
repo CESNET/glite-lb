@@ -87,8 +87,8 @@ clean:
 	rm -rvf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES} ${TESTS}
 	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
-LB.xh: ws_typemap.dat ${stagedir}${prefix}/interface/LB.wsdl
-	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -I${stagedir}${prefix}/interface -o $@ ${stagedir}${prefix}/interface/LB.wsdl
+LB.xh: ws_typemap.dat ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl
+	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -I${stagedir}${prefix}/share/wsdl/glite-lb -o $@ ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl
 
 soap_version.h:
 	${gsoap_bin_prefix}/soapcpp2 /dev/null 

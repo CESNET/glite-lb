@@ -69,6 +69,7 @@ limitations under the License.
 #define KEY_APP         "application/x-dglb"
 #define KEY_AGENT	"User-Agent"
 
+#define WSDL_PATH "share/wsdl/glite-lb"
 
 static const char* const response_headers_dglb[] = {
         "Cache-Control: no-cache",
@@ -404,10 +405,10 @@ static char *glite_location() {
 	if (!(location = getenv("GLITE_LB_LOCATION")))
 	if (!(location = getenv("GLITE_LOCATION")))
 	{
-		if (stat("/opt/glite/interfaces", &info) == 0 && S_ISDIR(info.st_mode))
+		if (stat("/opt/glite/" WSDL_PATH, &info) == 0 && S_ISDIR(info.st_mode))
 			location = "/opt/glite";
 		else 
-			if (stat("/usr/interfaces", &info) == 0 && S_ISDIR(info.st_mode))
+			if (stat("/usr/" WSDL_PATH, &info) == 0 && S_ISDIR(info.st_mode))
 				location = "/usr";
 	}
 
@@ -820,21 +821,21 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 #define WSDL_LB4AGU "lb4agu.wsdl"
 		} else if (strncmp(requestPTR, "/?wsdl", strlen("/?wsdl")) == 0) {
 			char *filename;
-			asprintf(&filename, "%s/interface/%s", glite_location(), WSDL_LB);
+			asprintf(&filename, "%s/" WSDL_PATH "/%s", glite_location(), WSDL_LB);
 			if (edg_wll_WSDLOutput(ctx, &message, filename))
 				ret = HTTP_INTERNAL;
 			free(filename);
 	/* GET /?types */
 		} else if (strncmp(requestPTR, "/?types", strlen("/?types")) == 0) {
                         char *filename;
-                        asprintf(&filename, "%s/interface/%s", glite_location(), WSDL_LBTYPES);
+                        asprintf(&filename, "%s/" WSDL_PATH "/%s", glite_location(), WSDL_LBTYPES);
                         if (edg_wll_WSDLOutput(ctx, &message, filename))
                                 ret = HTTP_INTERNAL;
 			free(filename);
 	/* GET /?agu */
                 } else if (strncmp(requestPTR, "/?agu", strlen("/?agu")) == 0) {
                         char *filename;
-                        asprintf(&filename, "%s/interface/%s", glite_location(), WSDL_LB4AGU);
+                        asprintf(&filename, "%s/" WSDL_PATH "/%s", glite_location(), WSDL_LB4AGU);
                         if (edg_wll_WSDLOutput(ctx, &message, filename))
                                 ret = HTTP_INTERNAL;
 			free(filename);

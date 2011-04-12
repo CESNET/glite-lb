@@ -25,7 +25,7 @@ XMLLINT:=xmllint --nonet
 TIDY=tidy -i -q --show-warnings no --tidy-mark no --wrap 0
 docbookxls:=http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl
 
-STAGETO=interface
+STAGETO=share/wsdl/glite-lb
 
 WSDL=LB.wsdl LBTypes.wsdl
 
