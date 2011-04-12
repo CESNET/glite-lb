@@ -56,7 +56,7 @@ and delivering the events to \LB servers where users can query for them
 \subsubsection{Standalone \LB server}
 \label{deploy-stand}
 
-This is the recommended standard production deployment.
+This is a recommended standard production deployment.
 
 \LB server is installed on a~dedicated machine,
 where no other grid services (gLite WMS in particular) run.
@@ -67,8 +67,8 @@ In this setup the full reported performance is achieved,
 currently up to several hundreds thousands jobs per day, with the goal
 of one million, see~\cite{lbtp}.
 
-Further performance can be gained with clustering $M$ WMS's and $N$ \LB's
-while configuring all WMS's to distribute jobs to the \LB's uniformly.
+Further performance can be gained with clustering $M$ WMSs and $N$ \LB{}s
+while configuring all WMSs to distribute jobs to the \LB{}s uniformly.
 In this setup bottlenecks emerging from \LB proxy to \LB server serialized
 communication are likely to be eliminated.
 The optimal $M:N$ ratio strongly depends on the rate of user queries
@@ -111,13 +111,13 @@ The functionality is available since \LBver{2.0}.
 
 \textbf{This setup is obsolete and very inefficient, hence discouraged.}
 
-Ancient \LB versions, where \LB proxy was not available yet,
+Ancient \LB versions ($<$\,1.2), where \LB proxy was not available yet,
 used to be frequently installed with \LB server on the WMS machine.
 With the introduction of \LB proxy it makes little sense anymore
 but, unfortunately, this setup still persists at some sites.
-It's consequence is doubling both CPU and disk load, yielding observable
+Its consequence is doubling both CPU and disk load, yielding observable
 performance degradation.
 
 Large production sites should consider standalone \LB server (Sect.~\ref{deploy-stand})
-instead, while for smaller sites new hybrid setup (Sect.~\ref{deploy-hybrid}) may
+instead, while for smaller sites the hybrid setup (Sect.~\ref{deploy-hybrid}) may
 be more appropriate.
