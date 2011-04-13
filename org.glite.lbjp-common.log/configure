@@ -237,7 +237,6 @@ my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
 $prefix=~s/\/$//;
-$stagedir=~s/\/$// if ($stagedir);
 $root=~s/\/$//;
 $sysroot=~s/\/$//;
 if (not $sysconfdir) { $sysconfdir = $prefix eq '/usr' ? '/etc' : "$prefix/etc"; }
@@ -310,6 +309,7 @@ if (!$en && !$dis) { for (@nodes) { $enable_nodes{$_} = 1 if ($default_nodes{$_}
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
 
 $stagedir = $root unless $stagedir;
+$stagedir=~s/\/$// if ($stagedir);
 
 if ($mode eq 'build') { for my $ext (keys %externs) {
 	if (defined $externs{$ext} and defined $externs{$ext}{withprefix}) { $externs{$ext}{prefix} = $externs{$ext}{withprefix}; }
@@ -523,8 +523,8 @@ BEGIN{
 	'lb.doc' => [ qw/tetex-latex:B/ ],
 	'lb.logger' => [ qw/cppunit:B libtool:B/ ],
 	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B/ ],
-	'lb.state-machine' => [ qw/classads libtool:B/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B libxml2/ ],
+	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
 	'lb.ws-interface' => [ qw/libxslt:B/ ],
 	'lb.ws-test' => [ qw/gsoap:B libtool:B/ ],
@@ -609,7 +609,7 @@ for my $jar (keys %need_jars) {
 		lbjp-common.jp-interface
 		jobid.api-c
 		lbjp-common.trio lbjp-common.maildir
-		lb.client lb.state-machine
+		lb.client lb.state-machine lb.types:B
 	/ ],
 	'lb.ws-test' => [ qw/lbjp-common.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
@@ -1116,8 +1116,9 @@ sub mode_etics {
 	@cmd{qw/configure compile test install packaging clean/} = ('None') x 6;
 	$cmd{clean} = 'make clean';
 	$cmd{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null";
-	#$cmd{checkout} = "(test -d \${moduleName}/.git && (cd \${moduleName}; git pull) || git clone http://scientific.zcu.cz/git/jra1mw.git \${moduleName})";
-	#$cmd{checkout} .= " && (cd \${moduleName}; git checkout ${tag})" unless ($conftag =~ /HEAD/);
+	#$cmd{checkout} = "(test -d jra1mw/.git && (cd jra1mw; git pull) || git clone http://scientific.zcu.cz/git/jra1mw.git)";
+	#$cmd{checkout} .= " && (cd jra1mw; git checkout \${tag})" unless ($conftag =~ /HEAD/);
+	#$cmd{checkout} .= " && ln -s jra1mw/$cvs_prefix{$subsys}.$subsys.$module \${moduleName}";
 	$cmd{tag} = "cvs -d \${vcsroot} tag -R \${tag} ${moduleName}";
 
 	if ($subsys eq 'gridsite') {
