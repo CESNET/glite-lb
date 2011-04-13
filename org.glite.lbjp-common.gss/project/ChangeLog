@@ -74,3 +74,6 @@
 3.0.2-5
 - Module rebuilt
 
+3.0.3-1
+- edg_wll_gss_set_signal_handler() added
+
