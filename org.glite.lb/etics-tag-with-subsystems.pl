@@ -144,6 +144,10 @@ usage: $0 [-c <current configuration>] module.name
                 }
 		printf("***$m\n");
 
+	        if ($project eq "emi") {
+			$m=~s/^emi\./org.glite./;
+		}
+
 		$old_major=-1; $old_minor=-1; $old_revision=-1; $old_age=-1;
 		$new_major=-1; $new_minor=-1; $new_revision=-1; $new_age=-1;
 
