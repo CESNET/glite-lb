@@ -167,3 +167,7 @@
 2.2.4-4
 - Module rebuilt
 
+2.2.5-1
+- Using proper method for setting signal handlers
+- Daemonize before initializing security
+
