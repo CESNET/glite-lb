@@ -73,3 +73,7 @@
 3.2.3-1
 - at3 and check_version utilities path
 
+3.2.4-1
+- at3 location detection reverted
+- '--stage=/' behaviour fixed in configure
+
