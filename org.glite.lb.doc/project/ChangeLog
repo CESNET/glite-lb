@@ -110,3 +110,11 @@
 - at3 and check_version utilities path
 - Documented searching for message brokers dynamically in BDII.
 
+1.2.7-1
+- at3 location detection reverted
+- '--stage=/' behaviour fixed in configure
+- Basic documentation for notifications over messaging
+- Better reflect version differences
+- Update on changes in L&B 3.0
+- Grammar fixes
+
