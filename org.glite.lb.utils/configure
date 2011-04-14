@@ -539,7 +539,7 @@ BEGIN{
 	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B libtool:B/ ],
 	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap gsoapxx libtool:B/ ],
 	'jobid.api-c' =>  [ qw/cppunit:B libtool:B openssl:B/ ],
-	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
+	'jobid.api-cpp' =>  [ qw/cppunit:B libtool:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
 	'jp.client' => [ qw/gsoap libtar globus_essentials:R globus:B/ ],
         'jp.doc' => [],
