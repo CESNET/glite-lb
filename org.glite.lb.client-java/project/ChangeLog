@@ -63,3 +63,8 @@
 - at3 and check_version utilities path
 - jdk -> java-devel
 
+1.1.5-1
+- at3 location detection reverted
+- '--stage=/' behaviour in fixed configure
+- wsdl files moved
+
