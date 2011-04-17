@@ -355,7 +355,7 @@ ifdef LB_STANDALONE
 	${INSTALL} -m 644 ${c_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 else
 	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	if test -n "${DESTDIR}" -o -n "${staging}"; then \
+	if test -n "${staging}"; then \
 		install -m 644 ${plus_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
 	fi
 endif
