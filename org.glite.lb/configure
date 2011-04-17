@@ -423,7 +423,9 @@ sub mode_build {
 
 		open MAK,">Makefile" or die "Makefile: $!\n";
 
-		print MAK "all: @modules\n\nclean check:\n";
+		print MAK "all: @modules\n\n";
+		print MAK "stage: ".(join '-stage ', @modules)."-stage\n\n";
+		print MAK "clean check install:\n";
 
 		for (@modules) {
 			my $full = full($_);
@@ -446,11 +448,13 @@ sub mode_build {
 			@ldeps{@{$deps{$_}}} = 1;
 			for my $x (split /,/,$staged) { delete $ldeps{$x}; }
 			my @dnames = $module ? () : keys %ldeps;
+			my $snames = $#dnames == -1 ? '' : join('-stage ', @dnames).'-stage';
 
 			my $full = full($_);
 			my $build = $buildroot{$_};
 
 			print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install\n\n";
+			print MAK "$_-stage: $snames\n\tcd $full/$build && \${MAKE} && \${MAKE} stage\n\n";
 		}
 
 		close MAK;

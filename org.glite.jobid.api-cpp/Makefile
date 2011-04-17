@@ -49,6 +49,8 @@ install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix}
 	(cd ${top_srcdir}/interface; ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix})
 
+stage:
+	${MAKE} install PREFIX=${stagedir} staging=1
 
 %.o: %.c
 	${COMPILE} -o $@ -c $< 
