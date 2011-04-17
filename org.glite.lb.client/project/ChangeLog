@@ -174,3 +174,5 @@
 5.0.5-2
 - Module rebuilt
 
+5.0.6-1
+- Using rpath only as $prefix/$libdir (fixes rpmlint rpath check in mock environment)
