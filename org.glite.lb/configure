@@ -720,10 +720,6 @@ for my $ext (keys %deps_aux) {
 );
 
 %conflicts = (
-	'lb.glite-LB' => [ qq/emi-lb/ ],
-	'px.glite-PX' => [ qq/emi-px/ ],
-	'lb.emi-lb' => [ qq/glite-LB/ ],
-	'px.emi-px' => [ qq/glite-PX/ ],
 );
 
 %cvs_prefix = (
@@ -819,7 +815,6 @@ for my $ext (keys %deps_aux) {
 			gridsite=>'emi.gridsite.shared',
 			yaim_core=>'emi.yaim.yaim-core',
 			yaim_bdii=>'emi.bdii.yaim-bdii',
-			gip_release=>'emi.bdii.glite-info-provider-release',
 			gip_service=>'emi.bdii.glite-info-provider-service',
 			bdii=>'emi.bdii.core',
 			glite_version=>'emi.misc.glite-version',
@@ -849,11 +844,11 @@ for my $ext (keys %deps_aux) {
 			jdk=>'java-devel',
 		},
 		etics_projects => {
-			'emi'=>[qw/voms voms-devel gridsite lcas gip_release gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
+			'emi'=>[qw/voms voms-devel gridsite lcas gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
 		},
 		need_externs_aux => {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
-			'lb.glite-LB' => [ qw/fetchcrl:R gip_release:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
+			'lb.glite-LB' => [ qw/fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
 			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R perl-LDAP:R/ ],
 			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
