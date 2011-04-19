@@ -40,7 +40,7 @@ glite-security-gsoap-plugin & GSS wrapper and GSS plugin for gSoap
 \end{tabularx}
 
 Starting with \LBver{2.0}, the code has been restructured quite a lot, especially the dependencies were lightened,
-and the new list of packages is now the following:
+and the new list of packages -- applicable also to \LBver{3.x} is now the following:
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-lb-doc & documentation \\ 
@@ -75,7 +75,7 @@ glite-jp-common & Job Provenance auxiliary library \\
 \end{tabularx}
 
 \noindent
-And for \LBver{2.x}:
+And for \LBver{2.0 and newer}:
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-jobid-api-c & gLite jobId C API library \\ 
@@ -158,11 +158,23 @@ offered load.
 
 \subsubsection{Standard installation}
 
-Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories) according to the \htmladdnormallink{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}. Then \texttt{glite-LB} metapackage from appropriate gLite software repository should be installed. When using the EMI or UMD repository, the correct metapackage to use is \texttt{emi-lb}.
+\begin{itemize}
+\item Installing from \textbf{EMI or UMD repository} (applies to \LBver{3.0} and higher):
 
-YAIM configuration for \emph{glite-LB} node type 
-(\texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}) 
-can be done then.
+Install and configure a clean system, the \textbf{EPEL} repository, and the \textbf{EMI} repository as per instructions given in \htmladdnormallink{https://twiki.cern.ch/twiki/bin/view/EMI/GenericInstallationConfigurationEMI1}{https://twiki.cern.ch/twiki/bin/view/EMI/GenericInstallationConfigurationEMI1}. Then install metapackage \texttt{emi-lb}.
+
+\item Installing from \textbf{gLite's note-type repository} (applies to \LBver{up to 2.1}):
+% XXX Don't forget to increase version if ever LB 3 releases with gLite
+
+Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories) according to the \htmladdnormallink{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}. Then install metapackage \texttt{glite-LB} from an appropriate gLite software repository.
+
+\end{itemize}
+
+YAIM configuration can be done then:
+
+\begin{quote}
+\texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}
+\end{quote}
 
 Available parameters specific to LB server are:
 
