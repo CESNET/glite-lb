@@ -1,6 +1,6 @@
 % emi.cls: 
 % Branched from egee.cls 1.6 
-% revision 1.1 [removed Activity and Lead Partner fields]
+% revision 2.0 [based on word template]
 % Emidio Giorgio -- emidio.giorgio@ct.infn.it 
 % March 31, 2011 
 
@@ -52,7 +52,9 @@
 \RequirePackage{url}
 
 \usepackage[hang,bf,small]{caption}
-
+\usepackage[T1]{fontenc}
+\usepackage[scaled]{helvet}
+\renewcommand*\familydefault{\sfdefault}
 %
 % We now define a new \if command to test for PDF being enabled.
 % It is important because loading graphicx overrides the definition
@@ -98,7 +100,8 @@
 %%
 % From Template file
 \geometry{centering,includeheadfoot}
-\geometry{a4paper,top=12.5mm,headheight=12.5mm,headsep=5mm,foot=\footsize,footskip=13.3mm,bottom=12.5mm}
+%\geometry{a4paper,top=12.5mm,headheight=12.5mm,headsep=5mm,foot=\footsize,footskip=13.3mm,bottom=12.5mm}
+\geometry{a4paper,top=15.5mm,headheight=20mm,headsep=5mm,foot=\footsize,footskip=13.3mm,bottom=12.5mm}
 \geometry{right=25mm,left=25mm}
 
 
@@ -110,8 +113,7 @@
 %%
 %% PAGE COLOUR DEFINITIONS
 %%
-\definecolor{blue}{rgb}{0.1,0.1,0.5}
-\definecolor{lightgrey}{gray}{0.65}
+
 
 
 % paulm's prefered name ...
@@ -137,7 +139,7 @@
 
 \def\ps@title{%
   \@defaultfooter
-  \def\@oddhead{\hbox to \textwidth{\LargeEMILogo\hfil\LargeCESNETLogo}}
+  \def\@oddhead{\hbox to \textwidth{\EMILogo\hfil\LargeCESNETLogo}}
 }
 
 \def\ps@headings{%
@@ -148,19 +150,21 @@
         \hbox to \textwidth{%
           \hbox to 0pt{\EMILogo\hss}%
           \hfil
-         \hbox to 8cm{%
-           \vbox to 0.75\headheight{%
-             \vfil
-             \parbox{8cm}{%
-               \centering\color{blue}%
-                \textbf{\MakeUppercase{\@title}}%
-%\ifx\@Subtitle\@empty\else
-%              \par\textbf{\scriptsize\@Subtitle}%
-%\fi
- }%
-             \vfil
-           }%
-         \hss}%
+
+%%          \hbox to 8cm{%
+%%            \vbox to 0.75\headheight{%
+%%              \vfil
+%%              \parbox{8cm}{%
+%%                \centering\color{blue}%
+%%                 \textbf{\MakeUppercase{\@title}}%
+%% %\ifx\@Subtitle\@empty\else
+%% %              \par\textbf{\scriptsize\@Subtitle}%
+%% %\fi
+%%  }%
+%%              \vfil
+%%            }%
+%%          \hss}%
+
          \hfil
 %\hbox to 0pt{\vrule width 1pt height 10pt depth 0pt \hss}%
 %%           {\scriptsize\setlength{\parskip}{0pt}\setlength{\topsep}{0pt}%
@@ -175,16 +179,19 @@
 %%                   }%
 %% %              }%
 %%           }%
+
 \hbox to 0pt{\hss\vbox to 0.75\headheight{%\hrule
-\tiny%\scriptsize
+\small
 \parfillskip0pt
 \leftskip 0pt plus 1fil
 \parskip0ex
-\textit{Doc.\ Identifier}:
+\textsc{Title}:
 \par
-\textbf{\@DocIdentifier}
-\vfil
+\textbf{\@title}
+
+
 \textit{Date}: \textbf{\@Date}
+\vfil
 %\hrule
 }}%
 %          \hbox to 4cm{\scriptsize
@@ -216,15 +223,17 @@
 \ifpdf
         \DeclareGraphicsExtensions{.jpg,.pdf,.png}
         \pdfcompresslevel=9
-%	\pdfinfo{ /Title (\@DocumentLink) }
 	\pdfinfo{ /Title (EMI) }
 \else   
         \DeclareGraphicsExtensions{.eps}
 \fi
 
-\def\frontboxwidth{10.6cm}%
+\def\frontboxwidth{11cm}%
 
-
+\definecolor{MyTeal}{rgb}{0,0.46,0.46}
+\definecolor{blue}{rgb}{0.05,0.26,0.5}
+%\definecolor{blue}{rgb}{0.1,0.1,0.5} %% egee blue
+\definecolor{lightgrey}{gray}{0.65}
 
 %%
 %% Define our title page
@@ -234,36 +243,44 @@
 \hbox{}% Force top of page
 \vfill
 {\centering
-        \Huge\bf\textsf{\textcolor{blue}{EMI}}\\[20mm]%
-        \LARGE\sc\textsf{\bf \@title}\\[5mm]%
-        \ifx\@Subtitle\@empty\else
-            \normalsize\textsf{\@Subtitle}\\[10mm]%
-        \fi
-		  \ifx\@DeliverableId\@empty\else
-            \LARGE\sc\textsf{\bf \@DeliverableId}\\[5mm]%
-        \fi
-}%
-\vfill
-\hbox to \textwidth{
-      \hfil
-      \vbox{
-      {\color{blue}\hrule width \frontboxwidth height 1mm depth 0pt}
-      \hbox to \frontboxwidth{\sf
-          \begin{tabularx}{\frontboxwidth}{l>{\raggedright\arraybackslash}X}
-                Document identifier: & \textbf{\@DocIdentifier}\\[3mm]
-                Document version: & \textbf{\@DocVersion}\\[3mm]
-                Date: & \textbf{\@Date}\\[3mm]
-                %Activity:& \textbf{\@Activity}\\[3mm]
-			%		 Lead Partner: & \textbf{\@LeadPartner}\\[3mm]
-                Document status: & \textbf{\@DocStatus}\\[3mm]
-                Document link:& \textbf{\@DocumentLink}\\[3mm]
-          \end{tabularx}
-     }
-      {\color{blue}\hrule width \frontboxwidth height 1mm depth 0pt}
-     }
+        \fontsize{30}{50}{\textbf{\textsc{\textcolor{blue}{European Middleware Initiative}}}}\\[40mm]%
+        %\Huge{\textbf{\textsc{\textcolor{blue}{European Middleware Initiative}}}}\\[20mm]%
+
+        \fontsize{22}{28}{\textbf{\textsc{\@title}}}\\[2mm]%
+        %\ifx\@Subtitle\@empty\else
+        %    \normalsize\textsf{\@Subtitle}\\[10mm]%
+        %\fi
 }
 \vfill
-{\sf\underline{Abstract}: \@Abstract}
+
+\begin{center}
+\hbox to \textwidth{
+     
+      \vbox{
+     
+      {\color{MyTeal}\hrule width \frontboxwidth height 1mm depth 0pt}  
+      
+      \hbox to \frontboxwidth{\sf
+      \begin{tabularx}{\frontboxwidth}{l>{\raggedright\arraybackslash}X} 
+\\ 
+                Document version: & \textbf{\@DocVersion}\\[3mm]
+                EMI Component Version: & \textbf{\@EMICompVersion}\\[3mm]
+                Date: & \textbf{\@Date}\\[3mm]
+                %Document status: & \textbf{\@DocStatus}\\[3mm]
+                
+      \end{tabularx}
+  
+     }
+     
+       {\color{MyTeal}\hrule width \frontboxwidth height 1mm depth 0pt}
+     %}%centering
+     }
+
+}
+\end{center}
+
+%\vfill
+%{\sf\underline{Abstract}: \@Abstract}
 \vfill
 \newpage  % end of the first page
 \pagestyle{headings}
@@ -315,30 +332,34 @@
 %
 % common constants
 %
-\def\ISTNumber{INFSO-RI-508833}
+%\def\ISTNumber{INFSO-RI-508833}
 \newsavebox{\@EMILogo}
-\savebox{\@EMILogo}{\includegraphics[height=0.75\headheight]{EMI_Logo_std}}
+%\savebox{\@EMILogo}{\includegraphics[height=0.75\headheight]{EMI_Logo_std}}
+\savebox{\@EMILogo}{\includegraphics[height=0.95\headheight]{EMI_Logo_std}}
 \def\EMILogo{\usebox{\@EMILogo}}
-\def\LargeEMILogo{\includegraphics[height=\headheight]{EMI_Logo_std}}
+%\def\LargeEMILogo{\includegraphics[height=\headheight]{EMI_Logo_std}}
+\def\SmallEMILogo{\includegraphics[height=\headheight]{EMI_Logo_std}}
 \def\LargeCESNETLogo{\includegraphics[height=\headheight]{cesnet}}
 % DEL \def\ISTLogo{\includegraphics[height=\headheight]{isi}}
 
 %
 % parameters to be supplied by the author
 %
-\def\Subtitle#1{\gdef\@Subtitle{#1}}
-\gdef\@Subtitle{\@latex@warning@no@line{No \noexpand\Subtitle given}}
+% EG : subtitle seems no more needed
+%\def\Subtitle#1{\gdef\@Subtitle{#1}}
+%\gdef\@Subtitle{\@latex@warning@no@line{No \noexpand\Subtitle given}}
 
-\def\DeliverableId#1{\gdef\@DeliverableId{#1}}
-\gdef\@DeliverableId{\@latex@warning@no@line{No \noexpand\DeliverableId given}}
+%\def\DeliverableId#1{\gdef\@DeliverableId{#1}}
+%\gdef\@DeliverableId{\@latex@warning@no@line{No \noexpand\DeliverableId given}}
 
-\def\DocIdentifier#1{\gdef\@DocIdentifier{#1}}
-\gdef\@DocIdentifier{\@latex@warning@no@line{No \noexpand\DocIdentifier given %
-        (e.g. EMI-NA2-TEC-edmsId-v0-1)}}
         
 \def\DocVersion#1{\gdef\@DocVersion{#1}}
 \gdef\@DocVersion{\@latex@warning@no@line{No \noexpand\DocVersion given %
         (e.g. 0.1.2)}}
+
+\def\EMICompVersion#1{\gdef\@EMICompVersion{#1}}
+\gdef\@EMICompVersion{\@latex@warning@no@line{No \noexpand\EMICompVersion given %
+        (e.g. 1.2.3)}}
 
 \def\Date#1{\gdef\@Date{#1}}
 \gdef\@Date{\@latex@warning@no@line{No \noexpand\Date given %
@@ -352,17 +373,14 @@
 %\gdef\@LeadPartner{\@latex@warning@no@line{No \noexpand\LeadPartner given %
 %        (e.g. CERN, RAL )}}
 
-\def\DocStatus#1{\gdef\@DocStatus{#1}}
-\gdef\@DocStatus{\@latex@warning@no@line{No \noexpand\DocStatus given %
-        (e.g. DRAFT, WORKING, DELIVERED)}}
+%\def\DocStatus#1{\gdef\@DocStatus{#1}}
+%\gdef\@DocStatus{\@latex@warning@no@line{No \noexpand\DocStatus given %
+%        (e.g. DRAFT, WORKING, DELIVERED)}}
 
 %\def\Dissemination#1{\gdef\@Dissemination{#1}}
 %\gdef\@Dissemination{\@latex@warning@no@line{No \noexpand\Dissemination given %
 %        (e.g. PUBLIC, INTERNAL, ...)}}
 
-\def\DocumentLink#1{\gdef\@DocumentLink{#1}}
-\gdef\@DocumentLink{\@latex@warning@no@line{No \noexpand\DocumentLink given %
-        (e.g. http://www.eu-emi.eu)}}
 
 \long\def\Abstract#1{\gdef\@Abstract{#1}}
 \gdef\@Abstract{\@latex@warning@no@line{No \noexpand\Abstract given}}
