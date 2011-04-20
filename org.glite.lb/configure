@@ -1133,18 +1133,18 @@ sub mode_etics {
 
 			if ($project ne 'glite') {
 				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
-				$prefix = "prefix=${prefix}/usr";
+				$prefix = 'prefix=${prefix}/usr';
 			} else {
 				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
-				$prefix = "prefix=${prefix}";
+				$prefix = 'prefix=${prefix}';
 			}
 
 			$cmd{compile} = "echo 'make $flags' > build.sh\n\tmake $flags build";
 			$cmd{clean} = "rm -rvf build.sh; $cmd{clean}";
 			$cmd{install} = "make $prefix $flags install";
-			$cmd{packaging} = "mkdir ${moduleDir}/src/tgz
+			$cmd{packaging} = "mkdir \${moduleDir}/RPMTMP/SOURCES \${moduleDir}/src/tgz
 	make $prefix $flags rpm && \
-	cp ${moduleDir}/RPMTMP/SOURCES/gridsite-${version}.src.tar.gz ${moduleDir}/src/tgz";
+	cp \${moduleDir}/RPMTMP/SOURCES/gridsite-\${version}.src.tar.gz \${moduleDir}/src/tgz";
 		}
 		else {
 			$cmd{clean} = 'None';
