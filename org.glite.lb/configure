@@ -722,6 +722,11 @@ for my $ext (keys %deps_aux) {
 %conflicts = (
 );
 
+%provides = (
+	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
+	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
+);
+
 %cvs_prefix = (
 	'lb' => 'org.glite',
 	'jp' => 'org.glite',
@@ -1216,6 +1221,9 @@ $package_description$package_summary$defprops};
 	}
 	for (@{$conflicts{"$subsys.$module"}}) {
 		print C "package.conflicts = $_\n";
+	}
+	for (@{$provides{"$subsys.$module"}}) {
+		print C "package.provides = $_\n";
 	}
 
 	for my $pp (keys %{$platform_properties{"$subsys.$module"}}) {
