@@ -596,6 +596,11 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
 );
 
+%provides = (
+        'lbjp-common.gss' => [ qq/glite-security-gss/ ],
+        'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
+);
+
 %cvs_prefix = (
 	'lb' => 'org.glite',
 	'jp' => 'org.glite',
@@ -955,6 +960,9 @@ $package_description$package_summary$defprops};
 		print C "package.obsoletes = $_\n";
 		print C "package.replaces = $_\n";
 	}
+        for (@{$provides{"$subsys.$module"}}) {
+                print C "package.provides = $_\n";
+        }
 
 	for my $pp (keys %{$platform_properties{"$subsys.$module"}}) {
 		next if $pp eq 'default';
