@@ -56,3 +56,6 @@
 2.1.4-1
 - Threaded gsoap-plugin linked with gsoap, too.
 
+2.1.4-2
+- Module rebuilt
+
