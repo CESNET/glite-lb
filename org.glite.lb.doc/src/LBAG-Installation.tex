@@ -187,14 +187,20 @@ According to local retention policy you may want to use different purge timeouts
 \item \texttt{GLITE\_LB\_EXPORT\_ENABLED} -- set to \texttt{true} for export to JP, installed glite-lb-client and glite-jp-client are needed (default: \texttt{false})
 \item \texttt{GLITE\_LB\_EXPORT\_JPPS} -- Job Provenance Primary Storage where to export purged jobs, required if export to JP is enabled
 \item \texttt{GLITE\_LB\_RTM\_ENABLED} -- enable settings for Real Time Monitor - indexes and additional access (default: false)
-\item \texttt{GLITE\_LB\_RTM\_DN} -- DNs using to get notifications from \LB server\\
-(default: \texttt{heppc24.hep.ph.ic.ac.uk} machine certificate)
-\item \texttt{GLITE\_LB\_SUPER\_USERS} -- additional super-users (default: empty)
 \item \texttt{GLITE\_LB\_TYPE} -- type of the \LB service: server, proxy, both (default: autodetect, \LB node only: 'server', WMS node only: proxy, \LB and WMS: 'both')
 \item \texttt{GLITE\_LB\_INDEX\_OWNER} -- when specified, add (\texttt{true}) or drop (\texttt{false}) 'owner' index (default: 'owner' index not touched)
 \item \texttt{GLITE\_LB\_MSG\_BROKER} -- URL of the MSG broker, 'auto' for looking in BDII, 'false' for disabling MSG notifications (default: auto)
 \item \texttt{GLITE\_LB\_MSG\_NETWORK} -- required network type when searching in BDII (default: PROD)
 \item \texttt{LCG\_GFAL\_INFOSYS} -- BDII servers (default: lcg-bdii.cern.ch:2170)
+\end{itemize}
+
+Authorization:
+\begin{itemize}
+\item \texttt{GLITE\_LB\_SUPER\_USERS} -- additional super-users (default: empty)
+\item \texttt{GLITE\_LB\_WMS\_DN} -- DNs of WMS servers (default: empty)
+\item \texttt{GLITE\_LB\_RTM\_DN} -- DNs using to get notifications from \LB server\\
+(default: \texttt{heppc24.hep.ph.ic.ac.uk} machine certificate)
+\item \texttt{GLITE\_LB\_AUTHZ\_<category>} -- more detailed tuning of access grants, see Section~\ref{inst:authz} (default: empty, '.*' for logging and job registrations)
 \end{itemize}
 
 Additional helper or legacy parameters for \LB:
@@ -213,7 +219,7 @@ export data are written for use by lgcmon/R-GMA
 In addition to those, YAIM LB module uses following parameters:
 \texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{SITE\_EMAIL}.
 
-Lists separated by comma (\texttt{GLITE\_LB\_RTM\_DN} and \texttt{GLITE\_LB\_SUPER\_USERS}).
+Lists are separated by comma.
 
 \subsubsection{Migration to a different OS version}
 \label{inst:OSmigration}

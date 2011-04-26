@@ -102,48 +102,34 @@ function config_glite_lb_setenv(){
 function config_glite_lb_authz() {
 	superusers="$1"
 	rtm="$2"
+	wms="$GLITE_LB_WMS_DN"
 
-	superusers="`echo \"$superusers\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\"\n\t}/'`"
-	rtm="`echo \"$rtm\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\"\n\t}/'`"
 	authconf="$GLITE_LB_LOCATION_ETC/glite-lb/glite-lb-authz.conf"
 
 	cat <<EOF > "$authconf".new
 resource "LB" {
+EOF
+	for section in ADMIN_ACCESS STATUS_FOR_MONITORING GET_STATISTICS REGISTER_JOBS READ_ALL PURGE GRANT_OWNERSHIP LOG_WMS_EVENTS LOG_CE_EVENTS LOG_GENERAL_EVENTS; do
+		eval value=\"$`echo GLITE_LB_AUTHZ_$section`\"
+		case "$section" in
+		ADMIN_ACCESS) value="$value,$superusers" ;;
+		READ_ALL) value="$value,$wms,$rtm" ;;
+		PURGE) value="$value,$wms" ;;
+		LOG_WMS_EVENTS) value="$value,$wms" ;;
+		esac
+		value="`echo \"$value\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\"\n\t}/'`"
+		cat <<EOF >> "$authconf".new
 
-action "ADMIN_ACCESS" {
-$superusers
+action "$section" {
+$value
 }
-
-action "READ_ALL" {
-$rtm
-}
-
-action "REGISTER_JOBS" {
-        rule permit {
-                subject = ".*"
-        }
-}
-
-action "LOG_WMS_EVENTS" {
-	rule permit {
-		subject = ".*"
-	}
-}
-
-action "LOG_CE_EVENTS" {
-        rule permit {
-                subject = ".*"
-        }
-}
-
-action "LOG_GENERAL_EVENTS" {
-	rule permit {
-		subject = ".*"
-	}
-}
+EOF
+	done
+	cat <<EOF >> "$authconf".new
 
 }
 EOF
+
 	# something changed
 	if test -f "$authconf"; then
 		diff -w "$authconf" "$authconf".new >/dev/null
