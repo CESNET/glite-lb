@@ -312,7 +312,7 @@ EOF
 HOME=/
 MAILTO=$SITE_EMAIL
 
-1 1 * * * $GLITE_USER . @glite_etc@/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; $purge_target_runtime_cmd/opt/glite/sbin/glite-lb-export.sh >> $logfile 2>&1
+1 1 * * * $GLITE_USER . @glite_etc@/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; $purge_target_runtime_cmd$GLITE_LB_LOCATION/sbin/glite-lb-export.sh >> $logfile 2>&1
 EOF
 
   touch $logfile
