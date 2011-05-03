@@ -304,6 +304,7 @@ EOF
 
   # Create cron for purging
   mkdir -p /var/log/glite
+  chown $GLITE_USER:$GLITE_USER /var/log/glite
   logfile=/var/log/glite/glite-lb-purger.log
   if $LB_PURGE --help 2>&1 | grep 'target-runtime' > /dev/null; then
     purge_target_runtime_cmd='export GLITE_LB_PURGE_TARGET_RUNTIME=84600s; '
