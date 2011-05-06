@@ -377,10 +377,13 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
         }
 	else{
 		*statesOut = NULL;
+		free(can_peername);
 		return -1;
 	}
 
-	edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conds, 0, &jobsOut, statesOut);
+	if (edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conds, 0, &jobsOut, statesOut)){
+		*statesOut = NULL;
+	}
 
 	for (i = 0; conds[i]; i++)
 		free(conds[i]);
@@ -779,7 +782,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 			// check if owner and lastupdatetime is indexed
 			idx = 0;
-			for (i = 0; ctx->job_index[i]; i++)
+			if (ctx->job_index) for (i = 0; ctx->job_index[i]; i++)
 				if (ctx->job_index[i]->attr == EDG_WLL_QUERY_ATTR_OWNER)
 					idx++;
 				else if (ctx->job_index[i]->attr == EDG_WLL_QUERY_ATTR_LASTUPDATETIME)
@@ -788,7 +791,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				ret = HTTP_NOTFOUND;
 	                        edg_wll_SetError(ctx, ENOENT, "current index configuration does not support RSS feeds");
 			}
-			edg_wll_RSSFeed(ctx, states, requestPTR, &message);
+			else
+				edg_wll_RSSFeed(ctx, states, requestPTR, &message);
 
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
