@@ -176,11 +176,11 @@ YAIM configuration can be done then:
 \texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}
 \end{quote}
 
-Available parameters specific to LB server are:
+Available parameters specific to LB server are (mandatory parameters are \textbf{highlighted}):
 
 %variable&meaning&default value &further details\\
 \begin{itemize}
-\item \texttt{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory)
+\item \textbf{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory)
 \item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --other 60d})
 
 According to local retention policy you may want to use different purge timeouts (for example WLCG would need \texttt{--cleared 90d --aborted 90d --cancelled 90d --other 90d}).
@@ -203,7 +203,7 @@ Authorization:
 \item \texttt{GLITE\_LB\_AUTHZ\_<category>} -- more detailed tuning of access grants, see Section~\ref{inst:authz} (default: empty, '.*' for logging and job registrations)
 \end{itemize}
 
-Additional helper or legacy parameters for \LB:
+Additional helper or legacy parameters:
 \begin{itemize}
 \item \texttt{GLITE\_LB\_LOCATION} -- \LB prefix (default: \texttt{/opt/glite} or \texttt{/usr})
 \item \texttt{GLITE\_LB\_LOCATION\_ETC} -- system config directory (default: \texttt{/opt/glite/etc} or \texttt{/etc})
@@ -216,8 +216,15 @@ export data are written for use by lgcmon/R-GMA
 (default: \texttt{/var/glite/logging/status.log}). \emph{Note: This feature is now obsolete and only available in \LBver{1.x}.}
 \end{itemize}
 
+
 In addition to those, YAIM LB module uses following parameters:
-\texttt{INSTALL\_ROOT}, \texttt{GLITE\_LOCATION\_VAR}, \texttt{GLITE\_USER}, \texttt{SITE\_EMAIL}.
+\begin{itemize}
+\item \texttt{INSTALL\_ROOT} -- installation root, shouldn't be changed (default: '/opt' or '/')
+\item \texttt{GLITE\_LOCATION\_VAR} -- directory for local state files (default: '/opt/glite/var' or '/var/glite')
+\item \texttt{GLITE\_USER} -- unprivileged user name (default: 'glite')
+\item \textbf{SITE\_NAME} -- site name (mandatory)
+\item \textbf{SITE\_EMAIL} -- site email, for cron scripts (mandatory)
+\end{itemize}
 
 Lists are separated by comma.
 
