@@ -72,7 +72,7 @@ install:
 	${INSTALL} -m 644 LBTG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 # install DG example sources
 	for p in ${top_srcdir}/examples/*; do \
-		if [ "$$p" == "${top_srcdir}/examples/CVS" ]; then continue; fi; \
+		if [ "$$p" = "${top_srcdir}/examples/CVS" ]; then continue; fi; \
 		${INSTALL} -m 644 "$$p" "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples"; \
 	done
 
