@@ -347,7 +347,13 @@ Correct broker settings are infered from BDII by YAIM on configuration. By defau
 	\end{verbatim}
   \end{quote}
 
-Alongside the broker address and port, \texttt{msg.conf} also specifies the messaging plugin to be used by the notification interlogger. Plugin settings should be correct \emph{ab initio} and do not require modification by administrators. Broker settings may require an adaptive change in case the currently configured broker disapears and automatic checks fail to switch the settings to another one on time.
+Overall, \texttt{msg.conf} specifies the following information:
+
+\begin{itemize}
+\item The messaging plugin to be used by the notification interlogger. Plugin settings should be correct \emph{ab initio} and do not require modification by administrators.
+\item Broker settings (attribute \texttt{broker}). They may require an adaptive change in case the currently configured broker disappears and automatic checks fail to switch the settings to another one on time.
+\item Permissible topic title prefixes (attribute \texttt{prefix}). Registrations for delivery to topics not matching the prefix will be rejected. In case no prefix is specified, \LB applies the default EGI prefix: \texttt{grid.emi.}
+\end{itemize}
 
 
 \subsubsection{Index configuration}
