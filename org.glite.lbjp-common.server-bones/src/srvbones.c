@@ -216,7 +216,7 @@ int glite_srvbones_run(
 				if ( !die )
 				{
 					int newpid = slave(slave_data_init, sock_slave[1]);
-					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[master] Servus mortuus [%d] miraculo resurrexit [%d]", pid, newpid);
+					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "[master] Servus mortuus [%d] miraculo resurrexit [%d]", pid, newpid);
 				}
 			}
 			child_died = 0;
