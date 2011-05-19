@@ -562,6 +562,8 @@ static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, enum e
         	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
 	        case EDG_WLL_STAT__PARTITIONED_UNUSED:
         	case EDG_WLL_STAT_COLLECTION:
+                case EDG_WLL_STAT_FILE_TRANSFER:
+                case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
 			// glite jobs, no suffix
 			*suffix = strdup("");
 			*unique = strdup(dbjob);
@@ -609,6 +611,8 @@ static int get_jobid_prefix(edg_wll_Context ctx, glite_jobid_const_t job, enum e
         	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
 	        case EDG_WLL_STAT__PARTITIONED_UNUSED:
         	case EDG_WLL_STAT_COLLECTION:
+		case EDG_WLL_STAT_FILE_TRANSFER:
+		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
 			// glite job prefix
 			ser = glite_jobid_getServer(job);
 			asprintf(prefix,"%s/",ser);
@@ -787,8 +791,8 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 			 || get_jobid_prefix(ctx, job, jobtype, &prefix)) {
 				glite_common_log(LOG_CATEGORY_CONTROL, 
 					LOG_PRIORITY_WARN, 
-					"[%d] unknown job type of the '%s'.", 
-					getpid(), dbjob);
+					"[%d] unknown job type %d of job %s.", 
+					getpid(), jobtype, dbjob);
 				edg_wll_ResetError(ctx);
 			}
 		}
