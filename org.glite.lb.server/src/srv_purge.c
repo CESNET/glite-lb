@@ -562,6 +562,7 @@ static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, enum e
         	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
 	        case EDG_WLL_STAT__PARTITIONED_UNUSED:
         	case EDG_WLL_STAT_COLLECTION:
+		case EDG_WLL_STAT_FILE_TRANSFER:
 			// glite jobs, no suffix
 			*suffix = strdup("");
 			*unique = strdup(dbjob);
@@ -609,6 +610,7 @@ static int get_jobid_prefix(edg_wll_Context ctx, glite_jobid_const_t job, enum e
         	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
 	        case EDG_WLL_STAT__PARTITIONED_UNUSED:
         	case EDG_WLL_STAT_COLLECTION:
+		case EDG_WLL_STAT_FILE_TRANSFER:
 			// glite job prefix
 			ser = glite_jobid_getServer(job);
 			asprintf(prefix,"%s/",ser);
