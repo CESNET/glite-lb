@@ -727,6 +727,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 	if ( !purge && dump < 0 ) return 0;
 
 	do {
+
         	if (edg_wll_Transaction(ctx)) goto err;
 
 		switch (edg_wll_jobMembership(ctx, job)) {
@@ -781,6 +782,7 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 
 		dbjob = glite_jobid_getUnique(job);	/* XXX: strict jobid already checked */
 
+
 		if ( purge )
 		{
 			enum edg_wll_StatJobtype jobtype = get_job_type(ctx, job);
@@ -791,10 +793,11 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 			 || get_jobid_prefix(ctx, job, jobtype, &prefix)) {
 				glite_common_log(LOG_CATEGORY_CONTROL, 
 					LOG_PRIORITY_WARN, 
-					"[%d] unknown job type %d of job %s.", 
+					"[%d] unknown job type %d of job %s", 
 					getpid(), jobtype, dbjob);
 				edg_wll_ResetError(ctx);
 			}
+
 		}
 
 		if ( purge )
