@@ -248,6 +248,10 @@ $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-serv
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'gsoapxx'}{prefix}=$externs{gsoap}{prefix} if $externs{'gsoapxx'}{prefix} eq '';
 
+$externs{'mysql-server'}{withprefix}=$externs{mysql}{withprefix} if $externs{'mysql-server'}{withprefix} eq '';
+$externs{'mysql-devel'}{wihtprefix}=$externs{mysql}{withprefix} if $externs{'mysql-devel'}{withprefix} eq '';
+$externs{'gsoapxx'}{withprefix}=$externs{gsoap}{withprefix} if $externs{'gsoapxx'}{withprefix} eq '';
+
 %project = %{$projects{$project}};
 for $_ (keys %{$project{etics_externs}}) {
 	$etics_externs{$_} = $project{etics_externs}{$_};
