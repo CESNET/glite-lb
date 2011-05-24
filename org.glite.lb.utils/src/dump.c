@@ -58,14 +58,31 @@ static struct option opts[] = {
 static void usage(char *me)
 {
 	fprintf(stderr,"usage: %s [option]\n"
-		"	-f, --from YYYYMMDDHHmmss   beginning of the time interval for events to be dumped\n"
-		"	-t, --to YYYYMMDDHHmmss     end of the time interval for events to be dumped\n"
+		"	-f, --from YYYYMMDDHHmmss   beginning of the time interval for events to be dumped*\n"
+		"	-t, --to YYYYMMDDHHmmss     end of the time interval for events to be dumped*\n"
 		"	-h, --help                  display this help\n"
 		"	-v, --version               display version\n"
 		"	-d, --debug                 diagnostic output\n"
-		"	-m, --server                L&B server machine name\n",
+		"	-m, --server                L&B server machine name\n\n"
+		"	* Special values for temporal arguments '-f' and '-t':\n"
+		"		'now'		    this exact moment\n"
+		"		'last_start'	    last dump starting time\n"
+		"		'last_end'	    last dump ending time\n",
 		me);
 }
+
+double ParseDate(const char *s) {
+	if (!strcmp(s,"now")) return EDG_WLL_DUMP_NOW;
+	if (!strcmp(s,"last_start")) return EDG_WLL_DUMP_LAST_START;
+	if (!strcmp(s,"last_end")) return EDG_WLL_DUMP_LAST_END;
+
+	if(strlen(s)<14) return -16;
+
+	int i;
+	for (i = 0; i<14; i++) if((s[i]<'0')||(s[i]>'9')) return -16;
+	
+	return edg_wll_ULMDateToDouble(s);	
+} 
 
 int main(int argc,char *argv[])
 {
@@ -76,7 +93,7 @@ int main(int argc,char *argv[])
 
 	char *me;
 	int opt;
-	edg_wll_Context	ctx;
+	edg_wll_Context	ctx = NULL;
 
 	/* initialize request to server defaults */
 	request = (edg_wll_DumpRequest *) calloc(1,sizeof(edg_wll_DumpRequest));
@@ -94,8 +111,8 @@ int main(int argc,char *argv[])
 
 		switch (opt) {
 
-		case 'f': request->from = (time_t) edg_wll_ULMDateToDouble(optarg); break;
-		case 't': request->to = (time_t) edg_wll_ULMDateToDouble(optarg); break;
+		case 'f': request->from = (time_t) ParseDate(optarg); break;
+		case 't': request->to = (time_t) ParseDate(optarg); break;
 		case 'm': server = optarg; break;
 		case 'd': debug = 1; break;
 		case 'v': fprintf(stdout,"%s:\t%s\n",me,rcsid); exit(0);
@@ -103,6 +120,13 @@ int main(int argc,char *argv[])
 		case '?': usage(me); return 1;
 		}
 	}
+
+	if(request->from < -15) {
+		fprintf(stdout, "Invalid 'from' date\n");
+		goto main_end; }
+	if(request->to < -15) {
+		fprintf(stdout, "Invalid 'to' date\n");
+		goto main_end; }
 
 	/* check request */
 	if (debug) {
