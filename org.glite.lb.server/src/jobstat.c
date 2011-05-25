@@ -637,6 +637,7 @@ edg_wll_ErrorCode edg_wll_RestoreSubjobState(
 
 	/* recreate job status of subjob */
 	err = intJobStat_embryonic(ctx, job, (const edg_wll_RegJobEvent *) &(events_p[0]), intstat);
+	//err = intJobStat_embryonic(ctx, job,  &(events_p[0].regJob), intstat);
 
 	for (i=0; events_p[i].type != EDG_WLL_EVENT_UNDEF ; i++) 
 		edg_wll_FreeEvent(&events_p[i]);
