@@ -1447,7 +1447,6 @@ static int handle_server_error(edg_wll_Context ctx)
 	int		err,ret = 0;
 
 	
-	errt = errd = NULL;
 	switch ( (err = edg_wll_Error(ctx, &errt, &errd)) )
 	{
 	case ETIMEDOUT:

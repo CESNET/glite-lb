@@ -86,6 +86,14 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 		connPTR->bufUse += len;
 		rdmore = 0;
 
+		if (connPTR->bufUse >= connPTR->bufSize) {
+			edg_wll_SetError(ctx,EINVAL,"HTTP Request too long");
+			free(connPTR->buf); connPTR->buf = NULL;
+			connPTR->bufUse = 0;
+			connPTR->bufSize = 0;
+			goto error; 
+		}
+
 		while (!rdmore && pstat != DONE) switch (pstat) {
 			char	*cr; 
 
@@ -181,7 +189,7 @@ edg_wll_ErrorCode edg_wll_http_recv_proxy(edg_wll_Context ctx,char **firstOut,ch
 	if ( !ctx->connProxy->buf ) {
 		ctx->connProxy->bufSize = BUFSIZ;
 		ctx->connProxy->bufUse = 0;
-		ctx->connProxy->buf = malloc(BUFSIZ);
+		ctx->connProxy->buf = malloc(ctx->connProxy->bufSize);
 	}
 
 	do {
