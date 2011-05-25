@@ -87,7 +87,7 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 		rdmore = 0;
 
 		if (connPTR->bufUse >= connPTR->bufSize) {
-			edg_wll_SetError(ctx,EINVAL,"HTTP Request too long");
+			edg_wll_SetError(ctx,E2BIG,"HTTP Request too long");
 			free(connPTR->buf); connPTR->buf = NULL;
 			connPTR->bufUse = 0;
 			connPTR->bufSize = 0;

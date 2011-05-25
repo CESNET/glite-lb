@@ -60,6 +60,9 @@ int edg_wll_AcceptHTTP(edg_wll_Context ctx, char **body, char **resp, char ***hd
 		if ((err = edg_wll_Proto(ctx,req,hdr,*body,resp,hdrOut,bodyOut,httpErr)))
 			edg_wll_Error(ctx,NULL,&err_desc);
 	}
+	else 
+		asprintf(resp,"HTTP/1.1 %d %s", HTTP_BADREQ, edg_wll_HTTPErrorMessage(HTTP_BADREQ));
+	
 
 	free(req);
 	if (hdr) {
