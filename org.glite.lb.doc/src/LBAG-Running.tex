@@ -35,6 +35,10 @@ as standard manual pages installed with the \LB packages.
 In normal operation \LB server sends error messages to syslog.
 Informational messages are generally avoided in order to prevent syslog congestion.
 
+Since \LBver{2.1}, the service implements a common logging format\footnote{\url{http://en.wikipedia.org/wiki/Common_Log_Format}} (see section\,\ref{inst:comlog}, page\,\pageref{inst:comlog}).
+
+For \LBver{2.0 and lower}, the following instructions apply:
+
 \begin{sloppypar}
 When tracing problems, GLITE\_LB\_SERVER\_DEBUG environment variable can be set to
 non-empty value when starting the service.
