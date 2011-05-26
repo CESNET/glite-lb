@@ -206,28 +206,28 @@ default: all
 
 ifeq (${thrflavour},)
 ${LIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB} ${TRIO_LIB} \
 			-lglite_security_gss
 
 ${PLUSLIB}: ${PLUSTHROBJS} ${LIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${prefix}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
 else
 ${NOTHRLIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB_NOTHR} ${TRIO_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} \
 			${COMMON_LIB_THR} ${TRIO_LIB} \
 			-lglite_security_gss_${thrflavour}
 
 ${NOTHRPLUSLIB}: ${PLUSOBJS} ${NOTHRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${prefix}/${libdir} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${prefix}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${PREFIX}${prefix}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
 endif
 
 logevent: logevent.o args.o
