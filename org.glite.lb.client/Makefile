@@ -399,5 +399,16 @@ clean:
 check_version:
 	${CHECK_VERSION} ${stagedir}${prefix}/include/glite/lb/common_version.h
 
+post-install:
+	for file in `ls -1 ${PREFIX}${prefix}/${libdir}/*.so.*`; do \
+		if test -h $$file; then continue; fi; \
+		orpath=`chrpath -l $$file 2>/dev/null`; \
+		if test $$? = 0 ; then \
+			rpath=`echo $$orpath | sed 's:.*RPATH=::' | sed "s:${PREFIX}:${sysroot}:g" | tr ':' '\n' | grep -v '^$$' | tr '\n' ':' | sed 's/:$$//'`; \
+			if test "$$orpath" = "$$rpath"; then continue; fi; \
+			chrpath -r $$rpath $$file; \
+			chrpath -d $$file; \
+		fi; \
+	done
 
-.PHONY: default all compile examples check stage install clean check_version link
+.PHONY: default all compile examples check stage install clean check_version link post-install
