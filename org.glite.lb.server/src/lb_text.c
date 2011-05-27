@@ -246,9 +246,15 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 int edg_wll_ConfigurationToText(edg_wll_Context ctx, char **message){
 	char *a = NULL, *b;
 	int pomL = 0;
+	int i;
 	b = strdup("");
-	TR("msg_brokers", "%s", ctx->msg_brokers);
-	TR("msg_prefixes", "%s", ctx->msg_prefixes);
+
+	if (ctx->msg_brokers)
+		for (i = 0; ctx->msg_brokers[i]; i++)
+			TR("msg_brokers", "%s", ctx->msg_brokers[i]);
+	if (ctx->msg_prefixes)
+		for (i = 0; ctx->msg_prefixes[i]; i++)
+			TR("msg_prefixes", "%s", ctx->msg_prefixes[i]);
 	
 	*message = b;
 
