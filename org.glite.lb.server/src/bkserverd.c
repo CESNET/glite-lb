@@ -1297,12 +1297,12 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->exclusive_zombies = exclusive_zombies;
 
 	for (totpref = 0; msg_prefixes[totpref]; totpref++);
-	ctx->msg_prefixes = (char**) calloc(sizeof(char*), totpref);
+	ctx->msg_prefixes = (char**) calloc(sizeof(char*), totpref+1);
 	for (npref = 0; npref<totpref; npref++) 
 		ctx->msg_prefixes[npref]=strdup(msg_prefixes[npref]);
 
 	for (totpref = 0; msg_brokers && msg_brokers[totpref]; totpref++);
-	ctx->msg_brokers = (char**) calloc(sizeof(char*), totpref);
+	ctx->msg_brokers = (char**) calloc(sizeof(char*), totpref+1);
 	for (npref = 0; npref<totpref; npref++) 
 		ctx->msg_brokers[npref]=strdup(msg_brokers[npref]);
 
