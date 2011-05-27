@@ -86,14 +86,6 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 		connPTR->bufUse += len;
 		rdmore = 0;
 
-		if (connPTR->bufUse >= connPTR->bufSize) {
-			edg_wll_SetError(ctx,E2BIG,"HTTP Request too long");
-			free(connPTR->buf); connPTR->buf = NULL;
-			connPTR->bufUse = 0;
-			connPTR->bufSize = 0;
-			goto error; 
-		}
-
 		while (!rdmore && pstat != DONE) switch (pstat) {
 			char	*cr; 
 
@@ -105,7 +97,14 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 					first = strdup(connPTR->buf);
 					bshift(cr-connPTR->buf+2);
 					pstat = HEAD;
-				} else rdmore = 1;
+				} else {
+					if (connPTR->bufUse >= connPTR->bufSize) {
+						edg_wll_SetError(ctx,E2BIG,"HTTP Request FIRST line too long");
+						free(connPTR->buf); connPTR->buf = NULL;
+						connPTR->bufUse = 0; connPTR->bufSize = 0;
+						goto error; }
+					rdmore = 1;
+				}
 				break;
 			case HEAD:
 				if ((cr = memchr(connPTR->buf,'\r',connPTR->bufUse)) &&
@@ -127,7 +126,14 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 						clen = atoi(connPTR->buf+sizeof(CONTENT_LENGTH)-1);
 	
 					bshift(cr-connPTR->buf+2);
-				} else rdmore = 1;
+				} else {
+					if (connPTR->bufUse >= connPTR->bufSize) {
+						edg_wll_SetError(ctx,E2BIG,"HTTP Request HEAD line too long");
+						free(connPTR->buf); connPTR->buf = NULL;
+						connPTR->bufUse = 0; connPTR->bufSize = 0;
+						goto error; }
+					rdmore = 1;
+				}
 				break;
 			case BODY:
 				if (connPTR->bufUse) {
@@ -207,7 +213,6 @@ edg_wll_ErrorCode edg_wll_http_recv_proxy(edg_wll_Context ctx,char **firstOut,ch
 
 		while (!rdmore && pstat != DONE) switch (pstat) {
 			char	*cr; 
-
 			case FIRST:
 				if ((cr = memchr(ctx->connProxy->buf,'\r',ctx->connProxy->bufUse)) &&
 					ctx->connProxy->bufUse >= cr-ctx->connProxy->buf+2 && cr[1] == '\n')
