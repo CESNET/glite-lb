@@ -243,6 +243,18 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
         return 0;
 }
 
+int edg_wll_ConfigurationToText(edg_wll_Context ctx, char **message){
+	char *a = NULL, *b;
+	int pomL = 0;
+	b = strdup("");
+	TR("msg_brokers", "%s", ctx->msg_brokers);
+	TR("msg_prefixes", "%s", ctx->msg_prefixes);
+	
+	*message = b;
+
+	return 0;
+}
+
 char *edg_wll_ErrorToText(edg_wll_Context ctx,int code)
 {
 	char	*out,*et,*ed;

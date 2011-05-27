@@ -839,8 +839,13 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                         if (edg_wll_WSDLOutput(ctx, &message, filename))
                                 ret = HTTP_INTERNAL;
 			free(filename);
+	/* GET /?version */
 		} else if (strncmp(requestPTR, "/?version", strlen("/?version")) == 0) {
 			asprintf(&message, "%s", VERSION);
+	/* GET /?configuration*/
+		} else if (strncmp(requestPTR, "/?configuration", strlen("/?configuration")) == 0) {
+			// also browser-readable HTML version here?
+			edg_wll_ConfigurationToText(ctx, &message);
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
 		free(requestPTR); requestPTR = NULL;
