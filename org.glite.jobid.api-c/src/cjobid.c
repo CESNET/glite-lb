@@ -59,17 +59,16 @@ int glite_jobid_recreate(const char* bkserver, int port, const char *unique, gli
         return EINVAL;
 
     if (unique == NULL) {
+	gettimeofday(&tv, NULL);
 	srandom(tv.tv_usec);
 	gethostname(hostname, 100);
 	he = gethostbyname(hostname);
 	if (!he) asprintf(&rndaddr,"%d.%d.%d.%d",rand()%256,rand()%256,rand()%256,rand()%256);
-	gettimeofday(&tv, NULL);
 
     	skip = strlen(hostname);
     	skip += sprintf(hostname + skip, "-IP:0x%x-pid:%d-rnd:%d-time:%d:%d",
 		    rndaddr ? rndaddr : *((int*)he->h_addr_list[0]),
 		    getpid(), (int)random(), (int)tv.tv_sec, (int)tv.tv_usec);
-	free(he);
 	free(rndaddr);
     }
 
