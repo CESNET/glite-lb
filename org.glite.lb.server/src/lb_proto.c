@@ -974,7 +974,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					default: /* client request handler */
 						ret = HTTP_ACCEPTED;
 						/* to end this parent */
-						edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, edg_wll_HTTPErrorMessage(ret));
+						edg_wll_SetError(ctx, EDG_WLL_ERROR_ACCEPTED_OK, edg_wll_HTTPErrorMessage(ret));
 						goto err;
 					}
 				}
@@ -994,7 +994,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					if (edg_wll_PurgeResultToXML(ctx, &result, &message))
 						ret = HTTP_INTERNAL;
 					else
-						printf("%s", message);
+						glite_common_log_msg(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, message);
 				}				
 
 				/* result is now packed in message, free it */	
@@ -1009,9 +1009,19 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 				/* forked cleaner sends no results */
 				if ((request.flags & EDG_WLL_PURGE_BACKGROUND)) {
-					*response = NULL;
+					char *et, *ed;
+
 					free(message);
 					message = NULL;
+					if (ret != HTTP_OK && ret != HTTP_ACCEPTED) {
+						edg_wll_Error(ctx, &et, &ed);
+						glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Background purge failed, %s (%s)",et, ed);
+						free(et);
+						free(ed);
+					} else {
+						glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Background purge done, %d jobs purged.", i - 1:);
+					}
+					*response = NULL;
 					if (requestPTR) free(requestPTR);
 					exit(0);
 				}

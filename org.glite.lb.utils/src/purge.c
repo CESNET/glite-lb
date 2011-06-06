@@ -108,7 +108,7 @@ int main(int argc,char *argv[])
 {
 	edg_wll_PurgeRequest *request;
 	edg_wll_PurgeResult *result;
-	int	i, timeout, background;
+	int	i, timeout, background, err = 1;
 	char *server = NULL;
 
 	char *me;
@@ -285,15 +285,19 @@ int main(int argc,char *argv[])
 
 	/* that is the Purge */
 	dprintf(("Running the edg_wll_Purge...\n"));
-	if (edg_wll_Purge(ctx, request, result) != 0) {
-		fprintf(stderr,"Error running the edg_wll_Purge().\n");
+	if ((err = edg_wll_Purge(ctx, request, result)) != 0) {
+		if (err == EDG_WLL_ERROR_ACCEPTED_OK) err = 0;
+		else fprintf(stderr,"Error running the edg_wll_Purge().\n");
 		printerr(ctx);
+
 		switch ( edg_wll_Error(ctx, NULL, NULL) )
 		{
 		case ENOENT:
 		case EPERM:
 		case EINVAL:
 			break;
+		case EDG_WLL_ERROR_ACCEPTED_OK:
+			/* fall-through */
 		default:
 			goto main_end;
 		}
@@ -326,7 +330,7 @@ main_end:
 	}
 	if (result) free(result);
 	edg_wll_FreeContext(ctx);
-	return 0;
+	return err != 0;
 }
 
 
