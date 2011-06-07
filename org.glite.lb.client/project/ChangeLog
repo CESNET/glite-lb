@@ -129,3 +129,6 @@
 4.1.9-1
 - Fixed default setting for GLITE_LB_EXPORT_PURGE_ARGS
 
+4.1.10-1
+- Proper handling of background purge error messages (fix for bug #77974)
+
