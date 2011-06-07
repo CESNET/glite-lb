@@ -51,3 +51,8 @@
 2.0.8-4
 - Module rebuilt
 
+2.0.9-1
+- Essential checking of temporal arguments to glite-lb-dump for validity
+- Support for special date values (now, last dump start/end) in glite-lb-dump
+- Proper handling of background purge error messages (fix for bug #77974)
+
