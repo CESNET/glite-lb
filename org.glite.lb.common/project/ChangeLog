@@ -108,3 +108,7 @@
 7.1.9-1
 - Prevent interlogger files from getting corrupted when disk is full
 
+7.1.10-1
+- Proper handling of background purge error messages (fix for bug #77974)
+- Better detection of excessively long lines in HTTP requests.
+
