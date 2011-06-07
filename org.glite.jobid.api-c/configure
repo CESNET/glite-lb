@@ -72,9 +72,15 @@ my %externs = (
 		prefix=> '/opt/globus',
 		pkg => 'globus-gssapi-gsi'
 	},
-	myproxy => {
-		prefix=> '/opt/myproxy',
+	'myproxy-essentials' => {
+		prefix=> '/opt/globus',
 		pkg => 'myproxy'
+	},
+	'myproxy-server' => {
+		prefix=> '/opt/globus',
+	},
+	'myproxy-client' => {
+		prefix=> '/opt/globus',
 	},
 	gsoap => {
 		prefix=> '/usr',
@@ -140,6 +146,7 @@ my %extranodmod;
 my %deps;
 my %deps_type;
 my %buildroot;
+my (%etics_externs, %etics_projects, %etics_projects_emi, %etics_externs_emi);
 
 my %lbmodules = (
 	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB/], 
@@ -192,6 +199,11 @@ GetOptions @opts or die "Errors parsing command line\n";
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
 $projectname = $emi ? 'emi' : 'org.glite';
+if ($emi) {
+	for $_ (keys %etics_externs_emi) {
+		$etics_externs{$_} = $etics_externs_emi{$_};
+	}
+}
 
 if ($help) { usage(); exit 0; }
 
@@ -433,10 +445,10 @@ BEGIN{
         'jp.server-common' => [],
         'jp.ws-interface' => [],
 	'gridsite.core' => [qw/httpd-devel:B gsoap:B globus:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B myproxy voms/ ],
-	'px.glite-PX' => [qw/myproxy:R fetchcrl:R gip_service:R bdii:R glite_version:R/],
+	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-essentials voms/ ],
+	'px.glite-PX' => [qw/myproxy-server:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
 	'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
-	'px.myproxy-config' => [],
+	'px.myproxy-config' => [ qw/myproxy-client:R/ ], # in myproxy-config.spec
 );
 
 for my $ext (keys %need_externs_aux) {
@@ -550,8 +562,8 @@ for my $jar (keys %need_jars) {
 	'gridsite.core' => [ qw/build.common-cpp:B/ ],
 
 	'px.proxyrenewal' => [ qw// ],
-	'px.glite-PX' => [qw/px.myproxy-yaim:R/],
-	'px.myproxy-yaim' => [],
+	'px.glite-PX' => [qw/px.myproxy-yaim:R px.myproxy-config:R/],
+	'px.myproxy-yaim' => [ qw/px.myproxy-config:R/ ],
 	'px.myproxy-config' => [],
 );
 
@@ -579,7 +591,7 @@ for my $ext (keys %deps_aux) {
 	'lb.yaim' => [ qq/glite-yaim-lb/ ],
 	'px.proxyrenewal' => [ qq/glite-security-proxyrenewal/ ],
 	'px.myproxy-yaim' => [ qq/glite-yaim-myproxy/ ],
-	'px.myproxy-config' => [ qq/myproxy-config/ ],
+	'px.myproxy-config' => [ qq/myproxy-config/ ], # in myproxy-config.spec
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
 );
@@ -692,14 +704,13 @@ libdir = $libdir
 	close MKINC;
 }
 
-my %etics_externs;
-my %etics_projects;
-my %etics_externs_emi;
 BEGIN{
 	%etics_externs = (
 		globus_essentials=>'vdt_globus_essentials',
 		globus=>'globus',
-		myproxy=>'myproxy',
+		'myproxy-essentials'=>'myproxy_essentials',
+		'myproxy-server'=>'myproxy_server',
+		'myproxy-client'=>'myproxy_client',
 		cares=>'c-ares',
 		voms=>'org.glite.security.voms-api-cpp',
 		gridsite=>'org.gridsite.shared',
@@ -720,11 +731,15 @@ BEGIN{
 		globus_essentials=>'globus-gssapi-gsi',
 		globus=>'globus-gssapi-gsi-devel',
 		gridsite=>'emi.gridsite.shared',
-		yaim_core=>'emi.yaim.core'
+		yaim_core=>'emi.yaim.yaim-core'
 	);
 	%etics_projects = (
-		vdt=>[qw/globus globus_essentials myproxy/],
+		vdt=>[qw/globus globus_essentials/],
 		'org.glite'=>[qw/voms gridsite lcas gpt gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
+	);
+	%etics_projects_emi = (
+		vdt=>'externs',
+		'org.glite'=>'emi',
 	);
 
 	%platform_properties = (
@@ -740,11 +755,6 @@ BEGIN{
 		},
 	);
 };
-if ($emi) {
-	for $_ (keys %etics_externs_emi) {
-		$etics_externs{$_} = $etics_externs_emi{$_};
-	}
-}
 
 sub mode_etics {
 	$fmod = shift;
@@ -874,6 +884,10 @@ sub mode_etics {
 			$cmd{packaging} = "echo building nothing, org.gridsite.core make rpm step will create this";
 		}
 	}
+	elsif ($subsys eq 'px' and $module eq 'myproxy-config') {
+		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
+		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
+	}
 	else {
 		my $flavours = $emi ? "--thrflavour= --nothrflavour=" : "--thrflavour=\${globus.thr.flavor} --nothrflavour=\${globus.nothr.flavor}";
 		$cmd{configure} = "cd $confdir && /usr/bin/perl \${moduleName}/configure $flavours --prefix=\${prefix} --stage=\${stageDir} --libdir=\${libdir} --module $subsys.$module @copts";
@@ -901,6 +915,7 @@ description = $cvs_prefix{$subsys}.$subsys.$module
 projectName = $projectname
 age = $age
 deploymentType = None
+vcsroot = :pserver:anonymous\@glite.cvs.cern.ch:/cvs/glite
 tag = $conftag
 version = $major.$minor.$rev
 $dwpath
@@ -962,8 +977,8 @@ package.SRPMSLocation = ${moduleDir}/RPMTMP/SRPMS
 
 		my $proj = 'externals';
 		for my $p (keys %etics_projects) {
-			if ($emi and $p eq 'org.glite') {
-				$p = $projectname;
+			if ($emi and defined $etics_projects_emi{$p}) {
+				$p = $etics_projects_emi{$p};
 			}
 			for $m (@{$etics_projects{$p}}) {
 				$proj = $p if $m eq $_;
@@ -991,6 +1006,7 @@ sub gsoap_version {
 		chomp;
 
 		$gsoap_version = $1 if /The gSOAP Stub and Skeleton Compiler for C and C\+\+ ([.[:digit:][:alpha:]]+)$/;
+		$gsoap_version = $1 if /The gSOAP code generator for C and C\+\+, soapcpp2 release ([.[:digit:][:alpha:]]+)$/;
 	}
 	close S;
 	return $gsoap_version;
