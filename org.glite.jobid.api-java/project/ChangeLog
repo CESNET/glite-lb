@@ -10,3 +10,6 @@
 1.0.3-2
 - Module rebuilt
 
+1.0.4-1
+- Makefile using external modules jakarta-commons-*
+
