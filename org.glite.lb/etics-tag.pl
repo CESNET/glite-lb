@@ -221,19 +221,21 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 
 		system("cp $module/project/ChangeLog $tmpChangeLog");
 
-		unless ($increment eq "n") {system("echo $major.$minor.$revision-$age >> $tmpChangeLog");}
-		if ($increment eq "a") {system("echo \"- Module rebuilt\" >> $tmpChangeLog"); system("echo \"\" >> $tmpChangeLog");}
 
-		$ChangeLogRet=system("vim $tmpChangeLog");
+		unless ($increment eq "n") {system("echo $major.$minor.$revision-$age >> $tmpChangeLog");
 
+			$editline=`cat $tmpChangeLog | wc -l`;
+			chomp($editline);
+
+			if ($increment eq "a") {system("echo \"- Module rebuilt\" >> $tmpChangeLog"); system("echo \"\" >> $tmpChangeLog");}
+			else { system("cvs log -S -N -r" . "$current_tag" . ":: $module | egrep -v \"^locks:|^access list:|^keyword substitution:|^total revisions:|^branch:|^description:|^head:|^RCS file:|^date:|^---|^===|^revision \" >> $tmpChangeLog"); }
+
+			$ChangeLogRet=system("vim +$editline -c \"norm z.\" $tmpChangeLog");
+		}
 		printf("Modified ChangeLog ready, ret code: $ChangeLogRet\n");
 
-		if (defined $opt_m) {$commit_message=$opt_m;}
-		else {$commit_message="Appended the description of changes regarding version $major.$minor.$revision-$age";}
-
-		printf(EXEC "#Update and commit the ChangeLog\ncp $tmpChangeLog $module/project/ChangeLog\ncvs commit -m \"$commit_message\" $module/project/ChangeLog\n\n");
-
-	}	
+		printf(EXEC "#Update the ChangeLog\ncp $tmpChangeLog $module/project/ChangeLog\n\n");
+        }
 
 	unless ($increment eq "n") {
 		# **********************************
