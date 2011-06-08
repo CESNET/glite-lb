@@ -293,3 +293,17 @@
 - '--stage=/' behaviour fixed in configure
 - wsdl files moved
 
+2.2.8-1
+- fixed empty RSS feed and disabling RSS with no indexing also on HEAD
+- Proper handling of background purge error messages (fix for bug #77974)
+- Handling HTTP requests that are too long to fit into the server-side buffer
+  - Throw error for HTTP requests longer than allocated buffer.
+- Minor fixes in server-side L&B dump code
+- Benign reaction to unknown event types in edg_wll_get_event_flesh() for forward compatibility
+- Refactoring of server state storing routine to avoid unnecessary error reports
+- fixed RSS feeds with disable indexing
+- fixed empty RSS feeds
+- Support zombification of single SB transfer jobs
+- Reading Messaging broker names and topic prefixes from a configuration file (option -F)
+- Publishing server configuration over HTTPs -- initial implementation
+
