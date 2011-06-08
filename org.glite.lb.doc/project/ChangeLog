@@ -123,3 +123,13 @@
 - Update on changes in L&B 3.0
 - Grammar fixes
 
+1.2.8-1
+- Portable syntax of test condition in install commands.
+- Extended information on logging
+- More on logging to syslog
+- A few typos fixed
+- Support for GLITE_LB_WMS_DN and GLITE_LB_AUTHZ_* yaim parameters
+- More thorough distinction between EMI and gLite installation
+- Polishing of the installation documentation
+- Switch to yet another EMI template
+
