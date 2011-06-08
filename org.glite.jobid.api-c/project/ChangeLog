@@ -60,3 +60,6 @@
 2.0.2-5
 - Module rebuilt
 
+2.0.3-1
+- Handling error returned by gethostbyname() (Savannah Bug #67627)
+
