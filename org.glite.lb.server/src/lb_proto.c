@@ -1076,7 +1076,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 						free(et);
 						free(ed);
 					} else {
-						glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Background purge done, %d jobs purged.", i - 1:);
+						glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Background purge done, %d jobs purged.", i - 1);
 					}
 					*response = NULL;
 					if (requestPTR) free(requestPTR);
