@@ -154,3 +154,8 @@
 - at3 location detection reverted
 - '--stage=/' behaviour fixed in configure
 
+8.0.6-1
+- Proper handling of background purge error messages (fix for bug #77974)
+- Better detection of excessively long lines in HTTP requests.
+- Interpretting Messaging broker names and topic prefixes
+
