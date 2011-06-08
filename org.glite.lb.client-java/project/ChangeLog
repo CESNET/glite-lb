@@ -71,3 +71,7 @@
 - '--stage=/' behaviour in fixed configure
 - wsdl files moved
 
+1.1.6-1
+- Distinguish between generated and non-generated java files for FindBugs etics plugin
+- Classes for non-generated files are built in build/classes directory now
+
