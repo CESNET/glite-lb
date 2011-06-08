@@ -30,6 +30,9 @@
 - Support for IPv6 literal addresses
 - Fixed notification ID parsing
 
+1.0.7-1
+- Handling error returned by gethostbyname() (Savannah Bug #67627)
+
 2.0.0-1
 - Version numbering fixed
 
