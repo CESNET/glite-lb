@@ -183,3 +183,9 @@
 5.0.6-1
 - Using rpath only as $prefix/$libdir (fixes rpmlint rpath check in mock environment)
 
+5.0.7-1
+- Fixed default setting for GLITE_LB_EXPORT_PURGE_ARGS
+- Proper handling of background purge error messages (fix for bug #77974)
+- Fix locations in automatic purge (SB #81646).
+- Makefile adjustments for eticsless build
+
