@@ -150,7 +150,7 @@ static int asyn_getservbyname2(int af, struct sockaddr_storage *addrOut, socklen
 	char	*name2, *p;
 	size_t	namelen;
 
-	name2 = name;
+	name2 = (char *)name;
 	namelen = strlen(name);
 	if (name[0]=='[' && name[namelen-1]==']') {
 		/* IPv6 literal, strip brackets */
@@ -266,12 +266,10 @@ do_connect(int *s, char const *hostname, int port, struct timeval *timeout)
 		case NETDB_SUCCESS:
 			break;
 		case TRY_AGAIN:
-			close(sock);
 			return EDG_WLL_GSS_ERROR_TIMEOUT;
 		case NETDB_INTERNAL: 
 			/* fall through */
 		default:
-			close(sock);
 			/* h_errno may be thread safe with Linux pthread libs,
 			 * but such an assumption is not portable
 			 */
@@ -544,6 +542,9 @@ destroy_proxy(char *proxy_file)
    return 0;
 }
 
+/** Load or reload credentials. It should be called regularly (credential files can be changed).
+ @see edg_wll_gss_watch_creds
+ */
 int
 edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wll_GssCred *cred,
       			     edg_wll_GssStatus* gss_code)
@@ -679,6 +680,7 @@ end:
 					                                              are in the bad state */
 #define _EXPIRED_ALERT_RETRY_DELAY 10   /* ms */
 
+/** Create a socket and initiate secured connection. */
 int 
 edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
 		    struct timeval *timeout, edg_wll_GssConnection *connection,
@@ -813,6 +815,7 @@ end:
    return ret;
 }
 
+/** Accept a new secured connection on the listening socket. */
 int
 edg_wll_gss_accept(edg_wll_GssCred cred, int sock, struct timeval *timeout,
 		   edg_wll_GssConnection *connection, edg_wll_GssStatus* gss_code)
@@ -898,6 +901,7 @@ end:
    return ret;
 }
 
+/** Send data over the opened connection. */
 int
 edg_wll_gss_write(edg_wll_GssConnection *connection, const void *buf, size_t bufsize,
 		  struct timeval *timeout, edg_wll_GssStatus* gss_code)
@@ -929,6 +933,7 @@ edg_wll_gss_write(edg_wll_GssConnection *connection, const void *buf, size_t buf
 }
 
 
+/** Read a data chunk through the opened connection. */
 int
 edg_wll_gss_read(edg_wll_GssConnection *connection, void *buf, size_t bufsize,
 		 struct timeval *timeout, edg_wll_GssStatus* gss_code)
@@ -994,6 +999,7 @@ end:
    return ret;
 }
 
+/** Read data from the opened connection, repeat reading up to 'bufsize' or end of the stream. */
 int
 edg_wll_gss_read_full(edg_wll_GssConnection *connection, void *buf, 
        		      size_t bufsize, struct timeval *timeout, size_t *total,
@@ -1028,6 +1034,7 @@ edg_wll_gss_read_full(edg_wll_GssConnection *connection, void *buf,
    return 0;
 }
 
+/** Send data over the opened connection. */
 int
 edg_wll_gss_write_full(edg_wll_GssConnection *connection, const void *buf,
                        size_t bufsize, struct timeval *timeout, size_t *total,
@@ -1036,7 +1043,7 @@ edg_wll_gss_write_full(edg_wll_GssConnection *connection, const void *buf,
    return edg_wll_gss_write(connection, buf, bufsize, timeout, gss_code);
 }
 
-/* Request credential reload each 60 seconds in order to work around
+/** Request credential reload each 60 seconds in order to work around
  * Globus bug (not reloading expired CRLs)
  */
 #define GSS_CRED_WATCH_LIMIT  60
@@ -1064,6 +1071,7 @@ edg_wll_gss_watch_creds(const char *proxy_file, time_t *last_time)
       return 0;
 }
 
+/** Close the connection. */
 int
 edg_wll_gss_close(edg_wll_GssConnection *con, struct timeval *timeout)
 {
@@ -1099,6 +1107,7 @@ edg_wll_gss_close(edg_wll_GssConnection *con, struct timeval *timeout)
    return 0;
 }
 
+/** Get error details. */
 int
 edg_wll_gss_get_error(edg_wll_GssStatus *gss_err, const char *prefix, char **msg)
 {
@@ -1167,6 +1176,10 @@ edg_wll_gss_reject(int sock)
 }
 
 
+/**
+ * Initialize routine of glite gss module.
+ * It activates globus modules, and it should be called before using other gss routines.
+ */
 int
 edg_wll_gss_initialize(void)
 {
@@ -1184,6 +1197,10 @@ edg_wll_gss_initialize(void)
 }
 
 
+/**
+ * Clean up routine of gss module.
+ * It can be called after using gss routines to free initializeted resources.
+ */
 void
 edg_wll_gss_finalize(void)
 {
@@ -1195,6 +1212,9 @@ edg_wll_gss_finalize(void)
 }
 
 
+/**
+ * Release the acquired credentials.
+ */
 int
 edg_wll_gss_release_cred(edg_wll_GssCred *cred, edg_wll_GssStatus* gss_code)
 {
@@ -1227,6 +1247,9 @@ edg_wll_gss_release_cred(edg_wll_GssCred *cred, edg_wll_GssStatus* gss_code)
    return ret;
 }
 
+/**
+ * Get information about the the connection - principal (display name).
+ */
 int
 edg_wll_gss_get_client_conn(edg_wll_GssConnection *connection,
                             edg_wll_GssPrincipal *principal,
@@ -1393,6 +1416,9 @@ end:
    return ret;
 }
 
+/**
+ * Get information about the the connection - pem string.
+ */
 int
 edg_wll_gss_get_client_pem(edg_wll_GssConnection *connection,
                            const char *my_cert_file, const char *my_key_file,
@@ -1460,6 +1486,9 @@ end:
    return ret;
 }
 
+/**
+ * Free the principal.
+ */
 void
 edg_wll_gss_free_princ(edg_wll_GssPrincipal principal)
 {
@@ -1472,6 +1501,9 @@ edg_wll_gss_free_princ(edg_wll_GssPrincipal principal)
    free(principal);
 }
 
+/**
+ * Get the hostname (using globus call if possible, or system's gethostbyname() if globus is not initialized).
+ */
 int
 edg_wll_gss_gethostname(char *name, int len)
 {
@@ -1485,6 +1517,9 @@ edg_wll_gss_gethostname(char *name, int len)
    return ret;
 }
 
+/**
+ * Normalize subject name (stripping email address, /CN=proxy, ...).
+ */
 char *
 edg_wll_gss_normalize_subj(char *in, int replace_in)
 {
@@ -1511,6 +1546,9 @@ edg_wll_gss_normalize_subj(char *in, int replace_in)
 	return new;
 }
 
+/**
+ * Compare subject names.
+ */
 int
 edg_wll_gss_equal_subj(const char *a, const char *b)
 {
@@ -1529,6 +1567,9 @@ edg_wll_gss_equal_subj(const char *a, const char *b)
 	return res;
 }
 
+/**
+ * Return data to the reading buffer.
+ */
 int
 edg_wll_gss_unread(edg_wll_GssConnection *con, void *data, size_t len)
 {
@@ -1553,14 +1594,23 @@ edg_wll_gss_unread(edg_wll_GssConnection *con, void *data, size_t len)
 }
 
 
+/**
+ * Signal handler compatible with globus.
+ * It is required to use this function instead of sigaction(), when using threaded globus flavour.
+ *
+ * As for many other gss routenes, edg_wll_initialize() must be called before using this routine.
+ * edg_wll_gss_set_signal_handler() will falback to sigaction() if gss is not initialized.
+ *
+ * @see edg_wll_initialize
+ */
 int
 edg_wll_gss_set_signal_handler(int signum,
 			       void (*handler_func)(int))
 {
    int ret;
+   intptr_t signum2; 
 
-   ret = globus_module_activate(GLOBUS_COMMON_MODULE);
-   if (ret != GLOBUS_SUCCESS) {
+   if (!globus_common_activated) {
 	   struct sigaction	sa,osa;
 	   
 	   memset(&sa, 0, sizeof(sa));
@@ -1569,13 +1619,23 @@ edg_wll_gss_set_signal_handler(int signum,
 	   ret = sigaction(signum, &sa, &osa);
 	   return ret;
    }
+
+   signum2 = signum;
    ret = globus_callback_space_register_signal_handler(signum,
 						       GLOBUS_TRUE,
 						       (globus_callback_func_t)handler_func,
-						       (void *)signum,
+						       (void *)signum2,
 						       GLOBUS_CALLBACK_GLOBAL_SPACE);
 
-   globus_module_deactivate(GLOBUS_COMMON_MODULE);
-
    return ret;
+}
+
+
+/**
+ * Check posix signals and performs signal handlers eventually.
+ * Required when using non-threaded globus flavour.
+ */
+void
+edg_wll_gss_poll_signal() {
+	globus_poll_nonblocking();
 }
