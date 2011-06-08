@@ -248,6 +248,10 @@ $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-serv
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'gsoapxx'}{prefix}=$externs{gsoap}{prefix} if $externs{'gsoapxx'}{prefix} eq '';
 
+$externs{'mysql-server'}{withprefix}=$externs{mysql}{withprefix} if $externs{'mysql-server'}{withprefix} eq '';
+$externs{'mysql-devel'}{wihtprefix}=$externs{mysql}{withprefix} if $externs{'mysql-devel'}{withprefix} eq '';
+$externs{'gsoapxx'}{withprefix}=$externs{gsoap}{withprefix} if $externs{'gsoapxx'}{withprefix} eq '';
+
 %project = %{$projects{$project}};
 for $_ (keys %{$project{etics_externs}}) {
 	$etics_externs{$_} = $project{etics_externs}{$_};
@@ -423,7 +427,9 @@ sub mode_build {
 
 		open MAK,">Makefile" or die "Makefile: $!\n";
 
-		print MAK "all: @modules\n\nclean check:\n";
+		print MAK "all: @modules\n\n";
+		print MAK "stage: ".(join '-stage ', @modules)."-stage\n\n";
+		print MAK "clean check install:\n";
 
 		for (@modules) {
 			my $full = full($_);
@@ -446,11 +452,13 @@ sub mode_build {
 			@ldeps{@{$deps{$_}}} = 1;
 			for my $x (split /,/,$staged) { delete $ldeps{$x}; }
 			my @dnames = $module ? () : keys %ldeps;
+			my $snames = $#dnames == -1 ? '' : join('-stage ', @dnames).'-stage';
 
 			my $full = full($_);
 			my $build = $buildroot{$_};
 
 			print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install\n\n";
+			print MAK "$_-stage: $snames\n\tcd $full/$build && \${MAKE} && \${MAKE} stage\n\n";
 		}
 
 		close MAK;
@@ -523,7 +531,7 @@ BEGIN{
 	'lb.doc' => [ qw/tetex-latex:B/ ],
 	'lb.logger' => [ qw/cppunit:B libtool:B/ ],
 	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B libxml2/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B libxml2 flex:B/ ],
 	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
 	'lb.ws-interface' => [ qw/libxslt:B/ ],
@@ -556,7 +564,7 @@ BEGIN{
 	'gridsite.services' => [ qw/curl:R gsoap:R/ ],
 	'gridsite.service-clients' => [ qw/curl:R gsoap:R gsoapxx:R/ ],
 	'gridsite.gsexec' => [ qw// ],
-	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:R/ ],
+	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
 );
 
@@ -716,10 +724,11 @@ for my $ext (keys %deps_aux) {
 );
 
 %conflicts = (
-	'lb.glite-LB' => [ qq/emi-lb/ ],
-	'px.glite-PX' => [ qq/emi-px/ ],
-	'lb.emi-lb' => [ qq/glite-LB/ ],
-	'px.emi-px' => [ qq/glite-PX/ ],
+);
+
+%provides = (
+	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
+	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
 );
 
 %cvs_prefix = (
@@ -815,7 +824,6 @@ for my $ext (keys %deps_aux) {
 			gridsite=>'emi.gridsite.shared',
 			yaim_core=>'emi.yaim.yaim-core',
 			yaim_bdii=>'emi.bdii.yaim-bdii',
-			gip_release=>'emi.bdii.glite-info-provider-release',
 			gip_service=>'emi.bdii.glite-info-provider-service',
 			bdii=>'emi.bdii.core',
 			glite_version=>'emi.misc.glite-version',
@@ -845,11 +853,11 @@ for my $ext (keys %deps_aux) {
 			jdk=>'java-devel',
 		},
 		etics_projects => {
-			'emi'=>[qw/voms voms-devel gridsite lcas gip_release gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
+			'emi'=>[qw/voms voms-devel gridsite lcas gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
 		},
 		need_externs_aux => {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
-			'lb.glite-LB' => [ qw/fetchcrl:R gip_release:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
+			'lb.glite-LB' => [ qw/fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
 			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R perl-LDAP:R/ ],
 			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
@@ -1129,18 +1137,18 @@ sub mode_etics {
 
 			if ($project ne 'glite') {
 				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
-				$prefix = "prefix=${prefix}/usr";
+				$prefix = 'prefix=${prefix}/usr';
 			} else {
 				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
-				$prefix = "prefix=${prefix}";
+				$prefix = 'prefix=${prefix}';
 			}
 
 			$cmd{compile} = "echo 'make $flags' > build.sh\n\tmake $flags build";
 			$cmd{clean} = "rm -rvf build.sh; $cmd{clean}";
 			$cmd{install} = "make $prefix $flags install";
-			$cmd{packaging} = "mkdir ${moduleDir}/src/tgz
+			$cmd{packaging} = "mkdir \${moduleDir}/RPMTMP/SOURCES \${moduleDir}/src/tgz
 	make $prefix $flags rpm && \
-	cp ${moduleDir}/RPMTMP/SOURCES/gridsite-${version}.src.tar.gz ${moduleDir}/src/tgz";
+	cp \${moduleDir}/RPMTMP/SOURCES/gridsite-\${version}.src.tar.gz \${moduleDir}/src/tgz";
 		}
 		else {
 			$cmd{clean} = 'None';
@@ -1217,6 +1225,9 @@ $package_description$package_summary$defprops};
 	}
 	for (@{$conflicts{"$subsys.$module"}}) {
 		print C "package.conflicts = $_\n";
+	}
+	for (@{$provides{"$subsys.$module"}}) {
+		print C "package.provides = $_\n";
 	}
 
 	for my $pp (keys %{$platform_properties{"$subsys.$module"}}) {
