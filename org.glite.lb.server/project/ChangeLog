@@ -219,6 +219,17 @@
 2.1.16-1
 - Increased severity for DB open errors
 
+2.1.17-1
+- Proper handling of background purge error messages (fix for bug #77974)
+- Handling HTTP requests that are too long to fit into the server-side buffer
+  - Throw error for HTTP requests longer than allocated buffer.
+- Minor fixes in server-side L&B dump code
+- Benign reaction to unknown event types in edg_wll_get_event_flesh() for forward compatibility
+- Refactoring of server state storing routine to avoid unnecessary error reports
+- fixed RSS feeds with disable indexing
+- fixed empty RSS feeds
+- Support zombification of single SB transfer jobs
+
 2.2.0-1
 - Fixes for parallel release in EMI & gLite
 - Extended authorization: Support for the TAG operation in the ACLs

@@ -568,7 +568,10 @@ int http_check_status(
 			break;
 		case HTTP_UNSUPPORTED:
 			edg_wll_SetError(ctx, ENOTSUP, "Protocol versions incompatible");
-			break;								
+			break;
+		case HTTP_ACCEPTED:
+			edg_wll_SetError(ctx,EDG_WLL_ERROR_ACCEPTED_OK,response+len);
+			break;
 		case HTTP_INTERNAL:
 			/* fall through */
 		default: 

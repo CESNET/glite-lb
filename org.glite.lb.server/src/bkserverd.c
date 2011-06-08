@@ -1469,7 +1469,6 @@ static int handle_server_error(edg_wll_Context ctx)
 	int		err,ret = 0;
 
 	
-	errt = errd = NULL;
 	switch ( (err = edg_wll_Error(ctx, &errt, &errd)) )
 	{
 	case ETIMEDOUT:
@@ -1477,6 +1476,7 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EPIPE:
 	case EIO:
 	case EDG_WLL_IL_PROTO:
+	case E2BIG:
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
 			"[%d] %s (%s)", getpid(), errt, errd);
 		/*	fallthrough
@@ -1493,8 +1493,10 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EPERM:
 	case EEXIST:
 	case EDG_WLL_ERROR_NOINDEX:
-	case E2BIG:
 	case EIDRM:
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
+			"[%d] %s (%s)", getpid(), errt, errd);
+		break;
 	case EINVAL:
 	case EDG_WLL_ERROR_PARSE_BROKEN_ULM:
 	case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
@@ -1510,7 +1512,16 @@ static int handle_server_error(edg_wll_Context ctx)
 		 *	no action for non-fatal errors
 		 */
 		break;
-		
+
+	case EDG_WLL_ERROR_ACCEPTED_OK:
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+			"[%d] %s (%s)", getpid(), errt, errd);
+		/*
+		 * 	all OK, but slave needs to be restarted
+		 */
+		ret = -EINPROGRESS;
+		break;
+
 	case EDG_WLL_ERROR_DB_INIT:
 	case EDG_WLL_ERROR_DB_CALL:
 	case EDG_WLL_ERROR_SERVER_RESPONSE:

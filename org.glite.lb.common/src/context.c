@@ -239,6 +239,8 @@ static const char* const errTexts[] = {
 	"Interlogger has events pending",
 	"Compared events differ",
 	"DB deadlock detected",
+	"DB connection lost",
+	"Background operation accepted",
 };
 
 const char *edg_wll_GetErrorText(int code) {

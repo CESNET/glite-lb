@@ -51,28 +51,39 @@ int edg_wll_GetServerState(edg_wll_Context ctx,const char *name,char **val)
 int edg_wll_SetServerState(edg_wll_Context ctx,const char *name,const char *val)
 {
 	char	*stmt = NULL;
+	int sql_retval;
 
-	trio_asprintf(&stmt,"insert into server_state (prefix,name,value) "
-			"values ('https://%|Ss:%d','%|Ss','%|Ss')",
-			ctx->srvName,ctx->srvPort,name,val);
+	// Check if record exists
+	trio_asprintf(&stmt,"select value from server_state "
+			"where prefix = 'https://%|Ss:%d' and name = '%|Ss'",
+			ctx->srvName,ctx->srvPort,name);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
-	switch(edg_wll_ExecSQL(ctx,stmt,NULL)) {
-		case 1: break;
-		case -1: if (edg_wll_Error(ctx,NULL,NULL) == EEXIST) {
-				 free(stmt);
-				 trio_asprintf(&stmt,"update server_state set value = '%|Ss' "
-						 "where prefix = 'https://%|Ss:%d' "
-						 "and name = '%|Ss'",
-						 val,ctx->srvName,ctx->srvPort,name);
-				glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, 
-					LOG_PRIORITY_DEBUG, stmt);
-				 edg_wll_ExecSQL(ctx,stmt,NULL);
-			 }
-			 break;
+	sql_retval = edg_wll_ExecSQL(ctx,stmt,NULL);
 
-		default: abort();
-	}
 	free(stmt);
+
+	if (!sql_retval) {
+		trio_asprintf(&stmt,"insert into server_state (prefix,name,value) "
+				"values ('https://%|Ss:%d','%|Ss','%|Ss')",
+				ctx->srvName,ctx->srvPort,name,val);
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+		edg_wll_ExecSQL(ctx,stmt,NULL);
+		free(stmt);
+	}
+	else {
+		if (sql_retval > 0) {
+			trio_asprintf(&stmt,"update server_state set value = '%|Ss' "
+					 "where prefix = 'https://%|Ss:%d' "
+					 "and name = '%|Ss'",
+					 val,ctx->srvName,ctx->srvPort,name);
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, 
+					LOG_PRIORITY_DEBUG, stmt);
+			edg_wll_ExecSQL(ctx,stmt,NULL);
+			free(stmt);
+		}
+		else abort();
+	 }
+
 	return edg_wll_Error(ctx,NULL,NULL);
 }

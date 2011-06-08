@@ -32,6 +32,9 @@
 1.0.5-6
 - Module rebuilt
 
+1.0.6-1
+- Support gcj java
+
 1.1.0-1
 - Fixes for parallel release in EMI & gLite
 - CREAM_CORE->CREAM_EXECUTOR

@@ -381,10 +381,13 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
         }
 	else{
 		*statesOut = NULL;
+		free(can_peername);
 		return -1;
 	}
 
-	edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conds, 0, &jobsOut, statesOut);
+	if (edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conds, 0, &jobsOut, statesOut)){
+		*statesOut = NULL;
+	}
 
 	for (i = 0; conds[i]; i++)
 		free(conds[i]);
@@ -805,7 +808,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 			// check if owner and lastupdatetime is indexed
 			idx = 0;
-			for (i = 0; ctx->job_index[i]; i++)
+			if (ctx->job_index) for (i = 0; ctx->job_index[i]; i++)
 				if (ctx->job_index[i]->attr == EDG_WLL_QUERY_ATTR_OWNER)
 					idx++;
 				else if (ctx->job_index[i]->attr == EDG_WLL_QUERY_ATTR_LASTUPDATETIME)
@@ -814,7 +817,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				ret = HTTP_NOTFOUND;
 	                        edg_wll_SetError(ctx, ENOENT, "current index configuration does not support RSS feeds");
 			}
-			edg_wll_RSSFeed(ctx, states, requestPTR, &message);
+			else
+				edg_wll_RSSFeed(ctx, states, requestPTR, &message);
 	/*GET /?wsdl */
 #define WSDL_LB "LB.wsdl"
 #define WSDL_LBTYPES "LBTypes.wsdl"
@@ -1027,7 +1031,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					default: /* client request handler */
 						ret = HTTP_ACCEPTED;
 						/* to end this parent */
-						edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, edg_wll_HTTPErrorMessage(ret));
+						edg_wll_SetError(ctx, EDG_WLL_ERROR_ACCEPTED_OK, edg_wll_HTTPErrorMessage(ret));
 						goto err;
 					}
 				}
@@ -1047,7 +1051,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					if (edg_wll_PurgeResultToXML(ctx, &result, &message))
 						ret = HTTP_INTERNAL;
 					else
-						printf("%s", message);
+						glite_common_log_msg(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, message);
 				}				
 
 				/* result is now packed in message, free it */	
@@ -1062,9 +1066,19 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 				/* forked cleaner sends no results */
 				if ((request.flags & EDG_WLL_PURGE_BACKGROUND)) {
-					*response = NULL;
+					char *et, *ed;
+
 					free(message);
 					message = NULL;
+					if (ret != HTTP_OK && ret != HTTP_ACCEPTED) {
+						edg_wll_Error(ctx, &et, &ed);
+						glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Background purge failed, %s (%s)",et, ed);
+						free(et);
+						free(ed);
+					} else {
+						glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Background purge done, %d jobs purged.", i - 1:);
+					}
+					*response = NULL;
 					if (requestPTR) free(requestPTR);
 					exit(0);
 				}

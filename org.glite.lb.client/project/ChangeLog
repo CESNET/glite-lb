@@ -126,6 +126,12 @@
 4.1.8-1
 - Optimized handling of simultaneous proxy&direct logging (fix for bug #77366)
 
+4.1.9-1
+- Fixed default setting for GLITE_LB_EXPORT_PURGE_ARGS
+
+4.1.10-1
+- Proper handling of background purge error messages (fix for bug #77974)
+
 5.0.0-1
 - Fixes for parallel release in EMI & gLite
 - Version numbering fixed
@@ -176,3 +182,4 @@
 
 5.0.6-1
 - Using rpath only as $prefix/$libdir (fixes rpmlint rpath check in mock environment)
+

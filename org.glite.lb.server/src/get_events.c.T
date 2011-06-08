@@ -65,12 +65,18 @@ int edg_wll_get_event_flesh(edg_wll_Context ctx,int n,edg_wll_Event *e)
 		edg_wll_ParseEvent(ctx,nameval[0],&f);
 		free(nameval[0]);
 
-		f->any.arrived = e->any.arrived;
-		edg_wll_FreeEvent(e);
+		if(f) {
+			f->any.arrived = e->any.arrived;
+			edg_wll_FreeEvent(e);
 
-		memcpy(e, f, sizeof *e);
-		free(f);
-		ret=edg_wll_CheckEvent(ctx,e);
+			memcpy(e, f, sizeof *e);
+			free(f);
+			ret=edg_wll_CheckEvent(ctx,e);
+		}
+		else {
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Unknown event type encountered during dump; jobid %s, event %d", jobid, n);
+			ret = EINVAL;
+		}
 	} else ret = ENOENT;
 	free(q); q = NULL;
 	glite_lbu_FreeStmt(&sh);
