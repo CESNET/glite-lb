@@ -147,6 +147,7 @@ static void handle_signal(int num)
 }
 
 void do_handle_signal() {
+	edg_wll_gss_poll_signal();
 
 	if (received_signal == 0) return;
 	
