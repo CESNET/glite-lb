@@ -1165,6 +1165,10 @@ sub mode_etics {
 		$cmd{compile} = 'make';
 		$cmd{test} = 'make check';
 		$cmd{install} = 'make install';
+		if ($subsys eq 'lb' and $module eq 'client') {
+			$cmd{compile} = "make rpath=$project{local_prefix}/\${libdir}";
+			$cmd{install} = "make install post-install rpath=$project{local_prefix}/\${libdir}";
+		}
 	}
 
 	my $defprops = '';
