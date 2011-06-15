@@ -113,6 +113,7 @@ EOF
 		eval value=\"$`echo GLITE_LB_AUTHZ_$section`\"
 		case "$section" in
 		ADMIN_ACCESS) value="$value,$superusers" ;;
+		GET_STATISTICS) value="$value,$wms" ;;
 		READ_ALL) value="$value,$wms,$rtm" ;;
 		PURGE) value="$value,$wms" ;;
 		LOG_WMS_EVENTS) value="$value,$wms" ;;
