@@ -57,7 +57,7 @@ This will give your WMS adequate rights to perform its operations and requests (
 
 \LB{}'s authorization settings can be found in file \texttt{[/opt/glite]/etc/glite-lb/glite-lb-authz.conf}
 
-Permit actions \texttt{PURGE} and \texttt{READ\_ALL} for your WMS and restart the \LB server.
+Permit actions \texttt{PURGE}, \texttt{READ\_ALL} and \texttt{GET\_STATISTICS} for your WMS and restart the \LB server.
 This will lead to results equivalent to \ref{FAQ:WMS_superusers_3_0_11}.
 For instance, change the adequate sections in \texttt{glite-lb-authz.conf} to:
 
@@ -69,6 +69,12 @@ action "READ_ALL" {
 }
 
 action "PURGE" {
+        rule permit {
+                subject = "/DC=cz/DC=cesnet-ca/O=CESNET/CN=wms01.cesnet.cz"
+        }
+}
+
+action "GET_STATISTICS" {
         rule permit {
                 subject = "/DC=cz/DC=cesnet-ca/O=CESNET/CN=wms01.cesnet.cz"
         }
