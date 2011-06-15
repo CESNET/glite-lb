@@ -224,11 +224,11 @@ According to local retention policy you may want to use different purge timeouts
 
 Authorization:
 \begin{itemize}
-\item \texttt{GLITE\_LB\_SUPER\_USERS} -- additional super-users (default: empty)
-\item \texttt{GLITE\_LB\_WMS\_DN} -- DNs of WMS servers (default: empty)
+\item \texttt{GLITE\_LB\_SUPER\_USERS} -- additional super-users (default: empty)\footnote{The use of this parameter is a FAQ. See section \ref{FAQ:WMS_superusers}.}
+\item \texttt{GLITE\_LB\_WMS\_DN} -- DNs of WMS servers (default: empty)\footnotemark[\thefootnote]
 \item \texttt{GLITE\_LB\_RTM\_DN} -- DNs using to get notifications from \LB server\\
 (default: \texttt{heppc24.hep.ph.ic.ac.uk} machine certificate)
-\item \texttt{GLITE\_LB\_AUTHZ\_<category>} -- more detailed tuning of access grants, see Section~\ref{inst:authz} (default: empty, '.*' for logging and job registrations)
+\item \texttt{GLITE\_LB\_AUTHZ\_<category>} -- more detailed tuning of access grants, see Section~\ref{inst:authz} (default: empty, '\texttt{.*}' for logging and job registrations)
 \end{itemize}
 
 Additional helper or legacy parameters:
