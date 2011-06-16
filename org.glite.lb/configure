@@ -1273,7 +1273,7 @@ package.SRPMSLocation = \${moduleDir}/RPMTMP/SRPMS\n";
 		print C "$package_description$package_summary\n";
 	}
 
-	for my $platform ('default', keys $project{supported_platforms}) {
+	for my $platform ('default', keys %{$project{supported_platforms}}) {
 		my $used = 0;
 
 		for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
