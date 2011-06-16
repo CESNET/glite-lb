@@ -171,3 +171,6 @@
 - Using proper method for setting signal handlers
 - Daemonize before initializing security
 
+2.2.6-1
+- Further globus signal handler fixes
+
