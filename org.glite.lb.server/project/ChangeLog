@@ -307,3 +307,6 @@
 - Reading Messaging broker names and topic prefixes from a configuration file (option -F)
 - Publishing server configuration over HTTPs -- initial implementation
 
+2.2.9-1
+- Proper permission category for statistics
+
