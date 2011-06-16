@@ -189,3 +189,7 @@
 - Fix locations in automatic purge (SB #81646).
 - Makefile adjustments for eticsless build
 
+5.0.8-1
+- Finalized ETICS+rpath+libtool mock build problem, workaround inside ETICS configurations now
+- Fixing rpath problem in mock builds
+
