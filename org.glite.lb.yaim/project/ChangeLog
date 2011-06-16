@@ -74,3 +74,7 @@
 - Fix locations in automatic purge (SB #81646)
 - Make directory with the logs writable (automatic purge runs under glite user)
 
+4.3.9-1
+- Added missing support for GET_STATISTICS auth section
+- Access to statistics granted to WMS_DN by yaim.
+
