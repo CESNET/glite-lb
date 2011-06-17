@@ -405,7 +405,7 @@ check_version:
 	${CHECK_VERSION} ${stagedir}${prefix}/include/glite/lb/common_version.h
 
 post-install:
-	rm -rfv ${PREFIX}${prefix}${libdir}/*.la
+	rm -rfv ${PREFIX}${prefix}/${libdir}/*.la
 
 post-install-rpath:
 	for file in `find ${PREFIX}${prefix}/${libdir} -type f` \
