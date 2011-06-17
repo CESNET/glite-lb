@@ -129,10 +129,10 @@ lb_plugin.lo: lb_plugin.c job_attrs.h job_attrs2.h
 	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<
 
 job_attrs.h: lb-job-attrs.xsd job_attrs.xsl
-	${XSLTPROC} ${top_srcdir}/src/job_attrs.xsl $< >$@
+	${XSLTPROC} ${top_srcdir}/src/job_attrs.xsl $< >$@ || ( rm -f $@; false)
 
 job_attrs2.h: lb-job-attrs2.xsd job_attrs2.xsl
-	${XSLTPROC} ${top_srcdir}/src/job_attrs2.xsl $< >$@
+	${XSLTPROC} ${top_srcdir}/src/job_attrs2.xsl $< >$@ || ( rm -f $@; false)
 
 glite-jpis-config.xml: lb-job-attrs2.xsd jpis_config.xsl
-	${XSLTPROC} ${top_srcdir}/src/jpis_config.xsl lb-job-attrs2.xsd >$@
+	${XSLTPROC} ${top_srcdir}/src/jpis_config.xsl lb-job-attrs2.xsd >$@ || ( rm -f $@; false)
