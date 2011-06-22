@@ -931,10 +931,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 						retCode;
  
 				if (flags & EDG_WLL_STAT_NO_JOBS) { 
-					flags -= EDG_WLL_STAT_NO_JOBS;
 					jobsOut = NULL;
 					if (flags & EDG_WLL_STAT_NO_STATES) {
-						flags -= EDG_WLL_STAT_NO_STATES;
 						statesOut = NULL;
 						retCode = edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, NULL, NULL);
 					}
@@ -943,7 +941,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				}
 				else {
 					if (flags & EDG_WLL_STAT_NO_STATES) {
-						flags -= EDG_WLL_STAT_NO_STATES;
 						statesOut = NULL;
 						retCode = edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, &jobsOut, NULL);
 					}

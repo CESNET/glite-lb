@@ -349,6 +349,7 @@ typedef struct {
 	glite_jobid_t *jobs;
 	edg_wll_JobStat *states;
 	size_t maxn, n;
+	int flags;
 } queryjobs_cb_data_t;
 
 
@@ -364,15 +365,19 @@ static int queryjobs_cb(edg_wll_Context ctx, glite_jobid_t jobid, edg_wll_JobSta
 			return edg_wll_SetError(ctx, errno ? : ENOMEM, NULL);
 		store->jobs = tmp;
 
-		if ((tmp = realloc(store->states, maxn * sizeof(*store->states))) == NULL)
-			return edg_wll_SetError(ctx, errno ? : ENOMEM, NULL);
-		store->states = tmp;
+		if (!(store->flags & EDG_WLL_STAT_NO_STATES)) {
+			if ((tmp = realloc(store->states, maxn * sizeof(*store->states))) == NULL)
+				return edg_wll_SetError(ctx, errno ? : ENOMEM, NULL);
+			store->states = tmp;
+		}
 
 		store->maxn = maxn;
 	}
 	store->jobs[n] = jobid;
-	if (status) store->states[n] = *status;
-	else memset(&store->states[n], 0, sizeof(*store->states));
+	if (!(store->flags & EDG_WLL_STAT_NO_STATES)) {
+		if (status) store->states[n] = *status;
+		else memset(&store->states[n], 0, sizeof(*store->states));
+	}
 	store->n++;
 
 	return 0;
@@ -390,6 +395,7 @@ int edg_wll_QueryJobsServer(
 	size_t i;
 
 	memset(&store, 0, sizeof store);
+	store.flags = flags;
 	if (edg_wll_QueryJobsServerStream(ctx, conditions, flags, queryjobs_cb, &store))
 		goto cleanup;
 
