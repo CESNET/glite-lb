@@ -19,6 +19,7 @@ limitations under the License.
 #include <stdlib.h>
 #include <string.h>
 #include <stdsoap2.h>
+#include <cclassad.h>
 
 #include "soap_version.h"
 #include "bk_ws_H.h"
@@ -248,6 +249,10 @@ int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt
 			gen "\tjs->$usuc->tvUsec = src->$_.tv_usec;\n";
 		} elsif ($ft eq 'string') {
 			gen "\tjs->$usuc = soap_strdup(soap,src->$_);\n";
+		} elsif ($ft eq 'cclassad') {
+			gen "\ts = cclassad_unparse(src->$_);\n";
+			gen "\tjs->$usuc = s ? soap_strdup(soap, s) : NULL;\n";
+			gen "\tfree(s);\n";
 		} elsif ($f->{null}) {
 			gen qq{
 !	if (src->$_ == $f->{null}) js->$usuc = NULL;
@@ -325,6 +330,9 @@ void edg_wll_SoapToStatus(struct soap *soap,struct lbt__jobStatus const *src,edg
 			gen "\tdest->$_.tv_usec = src->$usuc->tvUsec;\n";
 		} elsif ($ft eq 'string') {
 			gen "\tdest->$_ = src->$usuc;\n";
+			gen "\tsoap_unlink(soap,src->$usuc);\n";
+		} elsif ($ft eq 'cclassad') {
+			gen "\tdest->$_ = cclassad_create(src->$usuc);\n";
 			gen "\tsoap_unlink(soap,src->$usuc);\n";
 		} elsif ($f->{null}) {
 			gen "\tdest->$_ = (src->$usuc) ? *(src->$usuc) : $f->{null};\n";
