@@ -853,6 +853,25 @@ for my $ext (keys %deps_aux) {
 			sl5_x86_64_gcc412EPEL => {
 				'myproxy-devel' => 'myproxy-devel.x86_64',
 			},
+			sl6_x86_64_gcc444EPEL => {
+				'myproxy-devel' => 'myproxy-devel.x86_64',
+			},
+			deb6_x86_64_gcc445 => {
+				globus_essentials => 'globus-gssapi-gsi4',
+				globus => 'libglobus-gssapi-gsi-dev',
+				axis => 'libaxis-java',
+				cares => 'libc-ares2',
+				cppunit => 'libcppunit',
+				expat => 'libexpat1',
+				log4c => 'liblog4c3',
+				curl => 'libcurl3',
+				'mysql' => 'libmysqlclient6',
+				'mysql-devel' => 'libmysqlclient-dev',
+				libxslt => 'xsltproc',
+				'jakarta-commons-codec' => 'libcommons-codec-java',
+				'jakarta-commons-lang' => 'libcommons-lang-java',
+				'tetex-latex' => 'texlive-latex-extra',
+			},
 		},
 		etics_externs_devel => {
 			default => {
@@ -871,6 +890,19 @@ for my $ext (keys %deps_aux) {
 				gridsite=>'emi.gridsite.devel',
 				jdk=>'java-devel',
 			},
+			deb6_x86_64_gcc445 => {
+				cares => 'libc-ares-dev',
+				cppunit => 'libcppunit-dev',
+				expat => 'libexpat1-dev',
+				libtar => 'libtar-dev',
+				log4c => 'liblog4c-dev',
+				postgresql => 'libpq-dev',
+				curl => 'libcurl4-openssl-dev',
+				libxml2 => 'libxml2-dev',
+				openssl => 'libssl-dev',
+				'tetex-latex' => 'texlive-latex-extra',
+				libxslt=>'xsltproc',
+			},
 		},
 		etics_projects => {
 			'emi'=>[qw/voms voms-devel gridsite lcas gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
@@ -888,6 +920,8 @@ for my $ext (keys %deps_aux) {
 		supported_platforms => {
 			sl5_x86_64_gcc412EPEL => 1,
 			sl5_ia32_gcc412EPEL => 1,
+			sl6_x86_64_gcc444EPEL => 1,
+#			deb6_x86_64_gcc445 => 1,
 		},
 		modules => {
 			'lb' => [ qw/emi-lb/ ],
@@ -906,6 +940,8 @@ for my $ext (keys %deps_aux) {
 		deb5_ia32_gcc432 => { aprSuffix => '1.0' },
 		slc4_x86_64_gcc346 => { aprSuffix => '0' },
 		slc4_ia32_gcc346 => { aprSuffix => '0' },
+		sl6_x86_64_gcc444 => { aprSuffix => '1' },
+		deb6_x86_64_gcc445 => { aprSuffix => '1.0' },
 		default => { 
 		}
 	},
@@ -1283,24 +1319,25 @@ package.SRPMSLocation = \${moduleDir}/RPMTMP/SRPMS\n";
 
 	for my $platform ('default', keys %{$project{supported_platforms}}) {
 		my $used = 0;
+		my $output = '';
 
 		for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
-			my $eext = $etics_externs{$platform}{$_} ? $etics_externs{$platform}{$_} : $_;
+			my $eext = $etics_externs{$platform}{$_};
 			my $edev = $project{etics_externs_devel}{$platform}{$_};
-			next if ($eext eq '-');
-			# dependencies not listed in etics_externs only for
-			# default platform
-			if (not defined $etics_externs{$platform}{$_} and
-			    $platform ne 'default') {
+
+			# for the default platform using package of the same
+			# name for runtime dependency
+			if (not $eext) {
+				if ($platform eq 'default') {
+#print "default runtime $_ on default\n";
+					$eext = $_; }
+				else {
+#print "no runtime $_ on $platform\n";
+					$eext = '-'; }
+			}
+			if ($eext eq '-' and $edev eq '-') {
 #print "skipping $_ on $platform\n";
 				next;
-			}
-
-			if (not $used) {
-				print C qq{
-[Platform-$platform:DynamicDependency]
-};
-				$used = 1;
 			}
 
 			my $proj = 'externals';
@@ -1314,25 +1351,30 @@ package.SRPMSLocation = \${moduleDir}/RPMTMP/SRPMS\n";
 
 			if ($edev) {
 				if ($type eq 'B') {
-					$eext = $edev; # no runtime - change to devel pkg
+					# no runtime - change to devel pkg
+					$eext = $edev;
 				} elsif ($type eq 'BR' or $type eq 'RB') {
-					print C "$proj|$edev = B\n"; # additional devel pkg
+					# additional devel pkg
+					if ($edev ne '-') { $output .= "$proj|$edev = B\n"; }
 				}
 			}
-			print C "$proj|$eext = $type\n";
+			if ($eext ne '-') { $output .= "$proj|$eext = $type\n"; }
 		}
 
 		if ($platform eq 'default') {
 			for (@{$deps{"$subsys.$module"}}) {
 				my $type = $deps_type{"$subsys.$module"}->{$_};
 				if (not $used) {
-					print C qq{
-[Platform-$platform:DynamicDependency]
-};
 					$used = 1;
 				}
-				print C "$project{etics_name}|$project{etics_name}.$_ = $type\n";
+				$output .= "$project{etics_name}|$project{etics_name}.$_ = $type\n";
 			}
+		}
+
+		if ($output) {
+					print C qq{
+[Platform-$platform:DynamicDependency]
+$output};
 		}
 	}
 
@@ -1420,16 +1462,41 @@ sub reshuffle_platforms($$) {
 	}
 
 	for $_ (keys %blacklist) {
-		if (defined $data->{default}{$_}) {
-			$value = $data->{default}{$_};
-			$data->{default}{$_} = '-';
-#print "  deleted $_ from default\n";
+		$value = $data->{default}{$_} ? $data->{default}{$_} : $_;
+		for $platform (keys %$platforms) {
+			next if $platform eq 'default';
+			if (not defined $data->{$platform}{$_}) {
+				$data->{$platform}{$_} = $value;
+#print "added $value to $platform\n"
+			}
+		}
+		$data->{default}{$_} = '-';
+#print "deleted $_ from default\n";
+	}
+
+	# merge dependencies across the supported platforms
+	%blacklist = [];
+	for $platform (keys %$platforms) {
+		next if $platform eq 'default';
+		for $_ (keys %{$data->{$platform}}) {
+			$blacklist{$_} = 1;
+		}
+	}
+	for $_ (keys %blacklist) {
+		$value = undef;
+		$same = 1;
+		for $platform (keys %$platforms) {
+			if (not $value) { $value = $data->{$platform}{$_}; }
+			if (not $data->{$platform}{$_} or $value ne $data->{$platform}{$_}) {
+				$same = 0;
+				last;
+			}
+		}
+		if ($same and $value) {
+#print "merged dependency $_\n";
+			$data->{default}{$_} = $value;
 			for $platform (keys %$platforms) {
-				next if $platform eq 'default';
-				if (not defined $data->{$platform}{$_}) {
-					$data->{$platform}{$_} = $value;
-#print "  added $value to $platform\n"
-				}
+				delete $data->{$platform}{$_};
 			}
 		}
 	}
