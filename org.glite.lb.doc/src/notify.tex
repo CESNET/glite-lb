@@ -220,7 +220,9 @@ Delivering notification messages over the messaging infrastructure provided by A
 
 Rather than using the \LB notification API to receive messages, access the messaging infrastructure and tap into the given messaging topic (\texttt{grid.emi.lbexample} in our case).
 
-Note that production environments can impose restrictions on topic names. In the context of EGI, for instance, prefix ``\texttt{grid.emi.}'' is mandatory.
+Note that production environments can impose restrictions on topic names. In the context of EGI, for instance, prefix ``\texttt{grid.emi.}'' is mandatory. A full list of permissible topic may be obtained from the \LB Server's configuration page (Section \ref{s:findbroker}).
+
+Also note that in case you are unsure what messaging brokers are available in your grid environment, you can read that information in the \LB Server's configuration page (Section \ref{s:findbroker}).
 
 \subsubsection{Example: Waiting for more notifications on one socket}
 

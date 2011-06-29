@@ -73,6 +73,10 @@ where verbosity level can be from 0 to 3.
 
 
 \subsection{HTML and plain text interface}
+
+It is possible to use a standard Web browser or a command-line tool such as \texttt{wget} or \texttt{curl} to extract information from the \LB server. Although the querying power is higly limited, the HTTP or Plain Text interface can still serve as a simple tool to access information.
+
+\subsubsection{Job ID or Notification ID as URL}
 \label{simple}
 Since the gLite jobId has the form of a unique URL, it is possible to cut and paste it directly
 to the web browser to view the information about the job (esp. its status), e.g.
@@ -83,7 +87,7 @@ To list all user's jobs, it is possible to query only the \LB server address, e.
 \begin{verbatim}
   firefox https://pelargir.ics.muni.cz:9000
 \end{verbatim}
-To list all user's notification registration curently valid on a given \LB server, use a URL constructed as in folowing example:
+To list all user's notification registrations curently valid on a given \LB server, use a URL constructed as in folowing example:
 \begin{verbatim}
   firefox https://pelargir.ics.muni.cz:9000/NOTIF
 \end{verbatim}
@@ -93,6 +97,7 @@ A notification ID also have a form of URL. If you direct your browser to a parti
 \end{verbatim}
 In all cases it is necessary to have the user certificate installed in the browser.
 
+\subsubsection{Plain Text Modifier}
 
 Since \LBver{2.0}, it is also possible to obtain the above results in a machine readable 
 \verb'key=value' form by adding a suffix \verb'text' to the above URLs. For example
@@ -107,6 +112,21 @@ or
     --capath /etc/grid-security/certificates \ 
     https://pelargir.ics.muni.cz:9000/1234567890?text
 \end{verbatim}
+
+\subsubsection{\LB Server Configuration}
+
+As of \LBver{3.0}, it is also possible to use the HTTPs interface to retrieve essential information on \LB Server configuration. For example:
+\begin{verbatim}
+  firefox https://scientific65.zcu.cz:9010/?configuration
+\end{verbatim}
+
+Among others, the following fields may be discerned from the URL:
+
+\begin{tabularx}{\textwidth}{lX}
+\label{s:findbroker}
+\texttt{msg\_brokers} & A list of messaging brokers that \LB server uses to deliver messages.\\
+\texttt{msg\_prefixes} & A list of permissible prefixes that must be used in messaging topics.\\
+\end{tabularx}
 
 \subsection{Job state changes as an RSS feed}
 The \LB includes an RSS interface allowing users to keep trace of their jobs in a very simple way using an RSS reader. The parameters of the RSS feeds are predefined, so no configuration is required.
