@@ -773,6 +773,8 @@ char *edg_wll_stat_flags_to_string(int flags)
         if (flags & EDG_WLL_STAT_NO_STATES)      append_flag(&cflags, "no_states");
         if (flags & EDG_WLL_STAT_CHILDHIST_FAST) append_flag(&cflags, "childhist_fast");
         if (flags & EDG_WLL_STAT_CHILDHIST_THOROUGH) append_flag(&cflags, "childhist_thorough");
+        if (flags & EDG_WLL_NOTIF_TERMINAL_STATES)     append_flag(&cflags, "terminal_states");
+        if (flags & EDG_WLL_NOTIF_EVENT_SUMMARY)     append_flag(&cflags, "event_summary");
         if (flags & EDG_WLL_NOTIF_BOOTSTRAP)     append_flag(&cflags, "bootstrap");
         if (flags & EDG_WLL_NOTIF_VOLATILE)      append_flag(&cflags, "volatile");
         if (!cflags) cflags = strdup("");
@@ -797,6 +799,8 @@ int edg_wll_string_to_stat_flags(char *cflags)
 		if (!strcmp(sflag,"no_states")) flags = flags | EDG_WLL_STAT_NO_STATES;
                 if (!strcmp(sflag,"childhist_fast")) flags = flags | EDG_WLL_STAT_CHILDHIST_FAST;
                 if (!strcmp(sflag,"childhist_thorough")) flags = flags | EDG_WLL_STAT_CHILDHIST_THOROUGH;
+		if (!strcmp(sflag,"terminal_states")) flags = flags | EDG_WLL_NOTIF_TERMINAL_STATES;
+		if (!strcmp(sflag,"event_summary")) flags = flags | EDG_WLL_NOTIF_EVENT_SUMMARY;
 		if (!strcmp(sflag,"bootstrap")) flags = flags | EDG_WLL_NOTIF_BOOTSTRAP;
 		if (!strcmp(sflag,"volatile")) flags = flags | EDG_WLL_NOTIF_VOLATILE;
 		sflag = strtok_r(NULL, "+", &last);
