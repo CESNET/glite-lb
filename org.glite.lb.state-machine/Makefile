@@ -59,9 +59,10 @@ PLUGIN_LIBS:= -L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavou
 
 PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo process_event_cream.lo lb_plugin.lo  process_event_file_transfer.lo process_event_file_transfer_collection.lo
 MACHINE_OBJS:=seqcode_aux.o process_event.o process_event_pbs.o process_event_condor.o process_event_cream.o process_event_file_transfer.o process_event_file_transfer_collection.o intjobstat_supp.o
+MACHINE_LOBJS:=${MACHINE_OBJS:.o=.lo}
 
 PLUGIN_LIB=glite_lb_plugin.la
-MACHINE_LIB=libglite_lb_statemachine.a
+MACHINE_LIB=libglite_lb_statemachine.la
 
 XSD=lb-job-attrs2.xsd
 
@@ -69,12 +70,27 @@ default all: compile
 
 compile: ${MACHINE_LIB} ${PLUGIN_LIB} ${XSD}
 
+# In order to use libtool versioning correcty, we must have:
+#
+# current = major + minor + offset
+# revision = patch
+# age = minor
+#
+# where offset is a sum of maximal released minor's of all previous major's
+# 
+
+# counted minors: 1.0
+offset=0
+version_info:=-version-info ${shell \
+        perl -e '$$,=":"; @F=split /\./,"${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
+
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
 
 ${MACHINE_LIB}:  ${MACHINE_OBJS}
-	ar crv $@ ${MACHINE_OBJS}
-	-ranlib $@
+	${LINK} ${version_info} -o $@ ${MACHINE_LOBJS} 
+#	ar crv $@ ${MACHINE_OBJS}
+#	-ranlib $@
 
 
 doc:
@@ -84,7 +100,7 @@ stage: compile
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir} ${DESTDIR}${PREFIX}${prefix}/interface ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
-	install -m 644 ${MACHINE_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir} 
+	${INSTALL} -m 644 ${MACHINE_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir} 
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${DESTDIR}${PREFIX}${prefix}/interface
 	install -m 644 lb-job-attrs2.xsd ${DESTDIR}${PREFIX}${prefix}/interface
