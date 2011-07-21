@@ -5,11 +5,12 @@ distdir=.
 globalprefix=glite
 lbprefix=lb
 package=glite-lb-state-machine
-version=0.2.0
 PREFIX=/opt/glite
 prefix=
 
 -include Makefile.inc
+-include ${top_srcdir}/project/version.properties
+version=${module.version}
 
 VPATH = ${top_srcdir}/src:${top_srcdir}/interface
 
