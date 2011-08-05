@@ -192,6 +192,7 @@ _pad_	20
 @type Purged		Job has been purged from bookkeeping server (for LB-RGMA interface).
 
 @terminal Done
-@terminal Running
+@terminal Aborted
+@terminal Cancelled
 @terminal Cleared
 @terminal Purged
