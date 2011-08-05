@@ -95,6 +95,8 @@ typedef enum _edg_wll_JobStatCode {
 	EDG_WLL_NUMBER_OF_STATCODES /**< Number of meaningful status codes */
 } edg_wll_JobStatCode;
 
+extern const int EDG_WLL_JOB_TERMINAL_STATE[EDG_WLL_NUMBER_OF_STATCODES];
+
 /*!
  *
  * Pair tag = value.

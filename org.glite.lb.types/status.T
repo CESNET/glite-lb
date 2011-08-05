@@ -191,3 +191,7 @@ _pad_	20
 @type Unknown		Status cannot be determined.
 @type Purged		Job has been purged from bookkeeping server (for LB-RGMA interface).
 
+@terminal Done
+@terminal Running
+@terminal Cleared
+@terminal Purged

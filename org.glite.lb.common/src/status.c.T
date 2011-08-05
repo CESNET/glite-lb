@@ -26,6 +26,16 @@ limitations under the License.
 
 static const struct timeval null_timeval = {0,0};
 
+@@@{
+        my $sep = "const int EDG_WLL_JOB_TERMINAL_STATE[EDG_WLL_NUMBER_OF_STATCODES] = {0, ";
+        for my $term ($status->getTerminalStatusOrdered) {
+                gen qq{$sep $term};
+        $sep = ", ";
+        }
+        $sep = ", 0};";
+        gen qq{$sep};
+@@@}
+
 
 void edg_wll_FreeStatus(edg_wll_JobStat *stat)
 { 
