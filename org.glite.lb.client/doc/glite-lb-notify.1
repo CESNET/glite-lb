@@ -6,7 +6,7 @@ glite-lb-notify - Register and receive notification from L&B
 .SH SYNOPSIS
 .B glite-lb-notify 
 .br
-	\fBnew\fR [ { \fB-s\fI socket_fd\fR | \fB-a \fIfake_addr\fR } \fB-t \fIrequested_validity\fR \fB-j \fIjobid \fR| { \fB-o \fIowner \fR | \fB -O \fR } \fB-n \fInetwork_server \fR \fB-v\fI virtual_organization\fR \fB-c \fR \fB-f\fI flags\fR ] 
+	\fBnew\fR [ { \fB-s\fI socket_fd\fR | \fB-a \fIfake_addr\fR } \fB-t \fIrequested_validity\fR \fB-j \fIjobid \fR| { \fB-o \fIowner \fR | \fB -O \fR } \fB-n \fInetwork_server \fR \fB-v\fI virtual_organization\fR \fB-c\fR \fB-J\fR \fB-B\fR \fB-T\fR \fB-E\fR \fB-f\fI flags\fR ] 
 .br
 	\fBbind \fR [ { \fB-s\fI socket_fd\fR | \fB-a \fIfake_addr\fR } \fB-t \fIrequested_validity\fR ] \fInotifid\fR
 .br	
@@ -125,6 +125,37 @@ to get list of available fields.
 .B drop
 
 Drop the notification from the server, removing all messages on the way eventually.
+
+.SH \ 
+
+Options for the \fBnew\fR subcommand:
+.TP
+.B -o
+match on events for jobs belonging to the given \fIDN\fR.
+.TP
+.B -O
+match on events for jobs belonging to the current user.
+.TP
+.B -v
+match on events for jobs belonging to users from the given \fIVO\fR.
+.TP
+.B -c
+match only if job state has actually changed. Notification messages won't be sent for events that do not trigger job state change.
+.TP
+.B -S
+match only on jobs in certain \fIstates\fR listed in a comma-separated list.
+.TP
+.B -J
+pack JDL with the job status structure.
+.TP
+.B -B
+bootstrap -- send past events matching conditions.
+.TP
+.B -T
+match only on reaching a terminal state.
+.TP
+.B -E
+match only on reaching a terminal state and pack a summary of all events for that job.
 
 .SH EXAMPLE
 Installed with the package as share/examples/glite-lb-notify.pl.
