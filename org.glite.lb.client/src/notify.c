@@ -50,7 +50,7 @@ static void usage(char *cmd)
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity -j jobid  { -o owner | -O }  -n network_server -v virtual_organization --states state1,state2,... -c -S -J -B -T -E -f flags]\n"
+		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity -j jobid  { -o owner | -O }  -n network_server -v virtual_organization --state state1,state2,... -c -J -B -T -E -f flags]\n"
 			"    jobid		Job ID to connect notif. reg. with\n"
 			"    owner		Match this owner DN\n"
 			"    requested_validity	Validity of notification req. in seconds\n"
