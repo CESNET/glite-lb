@@ -184,8 +184,9 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *old
 
 	if (!cond) return 1;
 
-	if (!(flags & EDG_WLL_NOTIF_TERMINAL_STATES) || 
-		((flags & EDG_WLL_NOTIF_TERMINAL_STATES) && (EDG_WLL_JOB_TERMINAL_STATE[stat->state]))) {
+	if (!(flags & EDG_WLL_NOTIF_TERMINAL_STATES) || // Either there is no terminal flag
+		((flags & EDG_WLL_NOTIF_TERMINAL_STATES) && (EDG_WLL_JOB_TERMINAL_STATE[stat->state]) && // Or the new state is terminal
+			((stat->state!=EDG_WLL_JOB_PURGED) || !(EDG_WLL_JOB_TERMINAL_STATE[oldstat->state])))) { // And in case it is purged, it was not in a terminal state before
 
 		if (parseJobQueryRec(ctx,cond,strlen(cond),&c)) {
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
