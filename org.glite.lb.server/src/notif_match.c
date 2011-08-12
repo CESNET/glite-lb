@@ -37,7 +37,7 @@ limitations under the License.
 #include "index.h"
 #include "authz_policy.h"
 
-static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *);
+static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *, int flags);
 
 int edg_wll_NotifExpired(edg_wll_Context,const char *);
 
@@ -114,7 +114,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "[%d] NOTIFY:%s expired at %s UTC", 
 				getpid(),jobc[0],asctime(gmtime(&expires)));
 		}
-		else if (notif_match_conditions(ctx,oldstat,stat,jobc[4]) &&
+		else if (notif_match_conditions(ctx,oldstat,stat,jobc[4],atoi(jobc[5])) &&
 				edg_wll_NotifCheckACL(ctx,stat,jobc[3], &authz_flags))
 		{
 			char			   *dest;
@@ -177,29 +177,33 @@ int edg_wll_NotifExpired(edg_wll_Context ctx,const char *notif)
 }
 
 
-static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *oldstat, const edg_wll_JobStat *stat,const char *cond)
+static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *oldstat, const edg_wll_JobStat *stat,const char *cond, int flags)
 {
 	edg_wll_QueryRec	**c,**p;
-	int			match,i;
+	int			match = 0,i;
 
 	if (!cond) return 1;
 
-	if (parseJobQueryRec(ctx,cond,strlen(cond),&c)) {
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
-			"notif_match_conditions(): parseJobQueryRec failed");
+	if (!(flags & EDG_WLL_NOTIF_TERMINAL_STATES) || 
+		((flags & EDG_WLL_NOTIF_TERMINAL_STATES) && (EDG_WLL_JOB_TERMINAL_STATE[stat->state]))) {
 
-		return 1;
-	}
+		if (parseJobQueryRec(ctx,cond,strlen(cond),&c)) {
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, 
+				"notif_match_conditions(): parseJobQueryRec failed");
 
-	match = match_status(ctx,oldstat,stat,(const edg_wll_QueryRec **) c);
-	if ( c )
-	{
-		for (p = c; *p; p++) {
-			for (i=0; (*p)[i].attr; i++)
-				edg_wll_QueryRecFree((*p)+i);
-			free(*p);
+			return 1;
 		}
-		free(c);
+
+		match = match_status(ctx,oldstat,stat,(const edg_wll_QueryRec **) c);
+		if ( c )
+		{
+			for (p = c; *p; p++) {
+				for (i=0; (*p)[i].attr; i++)
+					edg_wll_QueryRecFree((*p)+i);
+				free(*p);
+			}
+			free(c);
+		}
 	}
 	return match;
 }
