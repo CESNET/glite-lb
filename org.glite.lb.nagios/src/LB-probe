@@ -1,0 +1,223 @@
+#!/bin/bash
+#
+# Copyright (c) Members of the EGEE Collaboration. 2004-2010.
+# See http://www.eu-egee.org/partners for details on the copyright holders.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# show help and usage
+progname=`basename $0`
+showHelp()
+{
+cat << EndHelpHeader
+Script for testing notification delivery
+
+Prerequisities:
+   - LB server
+   - Event logging chain
+   - Notification delivery chain (notification interlogger)
+   - environment variables set:
+
+     GLITE_WMS_QUERY_SERVER
+     GLITE_WMS_NOTIF_SERVER
+
+Tests called:
+
+    job registration
+    notification registration
+    logging events
+    receiving notifications
+
+Returned values:
+    Exit TEST_OK: Test Passed
+    Exit TEST_ERROR: Test Failed
+    Exit 2: Wrong Input
+
+EndHelpHeader
+
+	echo "Usage: $progname [OPTIONS]"
+	echo "Options:"
+	echo " -h | --help            Show this help message."
+	echo " -t | --text            Format output as plain ASCII text."
+	echo " -c | --color           Format output as text with ANSI colours (autodetected by default)."
+	echo " -x | --html            Format output as html."
+}
+
+function check_exec()
+{
+        if [ -z $1 ]; then
+                set_error "No binary to check"
+                return 1
+        fi
+        # XXX: maybe use bash's command type?
+        local ret=`which $1 2> /dev/null`
+        if [ -n "$ret" -a -x "$ret" ]; then
+                return 0
+        else
+                return 1
+        fi
+}
+
+function check_binaries()
+{
+        local ret=0
+        for file in $@
+        do
+                check_exec $file
+                if [ $? -gt 0 ]; then
+                        printf "\nfile $file not found\n"
+                        ret=1
+                fi
+        done
+        return $ret
+}
+
+function try_purge()
+{
+                        joblist=$1
+
+                        printf "\nPurging test job (Trying the best, result will not be tested)\n"
+
+                        glite-lb-purge -j ${joblist}
+                        rm ${joblist}
+}
+
+while test -n "$1"
+do
+	case "$1" in
+		"-h" | "--help") showHelp && exit 2 ;;
+		"-t" | "--text")  setOutputASCII ;;
+		"-c" | "--color") setOutputColor ;;
+		"-x" | "--html")  setOutputHTML ;;
+	esac
+	shift
+done
+
+##
+#  Starting the test
+#####################
+
+{
+printf "[LB Probe] Starting test"
+
+EXITCODE=0
+
+# check_binaries
+printf "\n[LB Probe] Testing if all binaries are available"
+check_binaries grid-proxy-info grep sed awk glite-lb-notify glite-lb-job_reg glite-lb-job_status glite-lb-done.sh glite-lb-purge
+if [ $? -gt 0 ]; then
+	printf "\n[LB Probe] Some Commands are unavailable\n\n"
+	exit 3
+fi
+
+printf "\n[LB Probe] Testing credentials"
+
+timeleft=`grid-proxy-info | grep -E "^timeleft" | sed "s/timeleft\s*:\s//"`
+
+if [ "$timeleft" = "" ]; then
+        printf "\n[LB Probe] Test failed -- No credentials\n\n"
+	exit 3
+else
+        if [ "$timeleft" = "0:00:00" ]; then
+                printf "\n[LB Probe] Test failed -- Credentials expired"
+		exit 3
+        else
+
+		# Register job:
+		printf "\n[LB Probe] Registering testing job "
+		jobid=`glite-lb-job_reg -m ${GLITE_WMS_QUERY_SERVER} -s application 2>&1 | grep "new jobid" | awk '{ print $3 }'`
+
+		if [ -z $jobid ]; then
+			printf " Failed to register job"
+			printf "\n[LB Probe] Test failed \n\n--- JOB REGISTRATION FAILED LOCALLY ---\n\n"
+			exit 2
+		else
+			printf "${jobid}"
+
+	                jobstate=`glite-lb-job_status ${jobid} | grep "state :" | awk '{print $3}'`
+                	if [ "${jobstate}" = "Submitted" ]; then
+				printf ", server side OK"
+                        else
+				printf "\n[LB Probe] Test failed -- Job has not been submitted to server\n\n--- L&B SERVER NOT RUNNING ---\n\n"
+				exit 2
+                        fi
+		fi
+	
+
+		# Register notification:
+		printf "\n[LB Probe] Registering notification "
+
+		notifid=`glite-lb-notify new -j ${jobid} | grep "notification ID" | awk '{ print $3 }'`
+
+		if [ -z $notifid ]; then
+			printf "\n[LB Probe] Test failed -- Failed to register notification\n\n--- L&B SERVER NOT RUNNING ---\n\n"
+			exit 2
+		else
+			printf "${notifid}"
+
+			printf "\n[LB Probe] Logging events resulting in state Done"
+			glite-lb-done.sh -j ${jobid} > /dev/null 2> /dev/null
+
+			glite-lb-notify receive -a 147.228.52.90:`expr $RANDOM+2000` -i 5 ${notifid} > $$_notifications.txt 2> /dev/null 
+
+			printf "\n[LB Probe] Checking job state"
+
+	                jobstate=`glite-lb-job_status ${jobid} | grep "state :" | awk '{print $3}'`
+                	if [ "${jobstate}" = "Submitted" ]; then
+				printf "\n[LB Probe] Test failed -- Job state has not changed\n\n--- EVENT DELIVERY CHAIN (LOGGER/INTERLOGGER) NOT RUNNING ---\n\n"
+				exit 2
+                        else
+				printf " -- ${jobstate}"
+                		if [ "${jobstate}" != "Done" ]; then
+					printf ", not Done. A Warning will be returned."
+					EXITCODE=1
+				fi
+                        fi
+
+			printf "\n[LB Probe] Checking if notifications were delivered"
+
+			grep ${jobid} $$_notifications.txt > /dev/null
+
+			if [ $? = 0 ]; then
+				printf ", OK"
+			else
+				printf "\n[LB Probe] Test failed -- Notifications were not delivered\n\n--- NOTIFICATION INTERLOGGER NOT RUNNING ---\n\n"
+				exit 2
+			fi
+
+			rm $$_notifications.txt
+
+			#Drop notification
+			printf "\n[LB Probe] Dropping the test notification (${notifid})"
+			dropresult=`glite-lb-notify drop ${notifid} 2>&1`
+			if [ -z $dropresult ]; then
+				printf "\n[LB Probe] Test OK"
+			else
+				printf "\n[LB Probe] Test failed"
+				printf " Failed to drop notification ${dropresult}"
+			fi
+
+			#Purge test job
+			joblist=$$_jobs_to_purge.txt
+			echo $jobid > ${joblist}
+#			try_purge ${joblist}
+
+		fi
+	fi
+fi
+
+printf "\n[LB Probe] Test finished\n\n"
+} 
+exit $EXITCODE
+
