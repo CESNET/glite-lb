@@ -84,7 +84,7 @@ function check_binaries()
         do
                 check_exec $file
                 if [ $? -gt 0 ]; then
-                        vprintf 3 "\nfile $file not found\n"
+                        vprintf 2 "\nfile $file not found\n"
                         ret=1
                 fi
         done
@@ -95,7 +95,7 @@ function try_purge()
 {
                         joblist=$1
 
-                        vprintf 2 "\n[LB Probe] Trying to purge test job"
+                        vprintf 1 "\n[LB Probe] Trying to purge test job"
 
                         glite-lb-purge -j ${joblist} > /dev/null 2> /dev/null
                         rm ${joblist}
@@ -140,6 +140,15 @@ do
 	shift
 done
 
+if [ $TIMEOUT -gt 0 ]; then
+mypid=$$
+(trap 'exit' TERM; sleep $TIMEOUT; vprintf 0 "UNKNOWN: Probe timed out\n"; kill -s SIGINT $mypid; exit 3)&
+watchpid=$!
+
+trap 'exit 3' INT
+
+fi
+
 export VERBLEVEL
 
 #Set path to L&B example commands used by the probe
@@ -147,7 +156,7 @@ for exdir in /usr/lib64/glite-lb/examples /usr/lib/glite-lb/examples /opt/glite/
 do
 	if [ -d "$exdir" ]; then
 		export PATH=$PATH:$exdir
-		vprintf 3 "[LB Probe] adding $exdir to PATH\n"
+		vprintf 2 "[LB Probe] adding $exdir to PATH\n"
 	fi
 done
 
@@ -193,7 +202,7 @@ if [ ! -z $SRVPORT ]; then
 	export GLITE_LB_SERVER_PORT=$portnumber
 fi
 
-if [ $VERBLEVEL -ge 2 ]; then
+if [ $VERBLEVEL -ge 3 ]; then
 	env | grep -E "GLITE_|PATH"
 	printf "*** $servername:$portnumber\n"
 fi
@@ -203,68 +212,68 @@ fi
 #####################
 
 {
-vprintf 2 "[LB Probe] Starting test"
+vprintf 1 "[LB Probe] Starting test"
 
 EXITCODE=0
 EXITMESSAGE=""
 
 # check_binaries
-vprintf 3 "\n[LB Probe] Testing if all binaries are available"
-check_binaries grid-proxy-info grep sed echo wc cat awk glite-lb-notify glite-lb-job_reg glite-lb-job_status glite-lb-purge glite-lb-ws_getversion glite-lb-logevent
+vprintf 2 "\n[LB Probe] Testing if all binaries are available"
+check_binaries grid-proxy-info grep sed echo wc cat awk kill glite-lb-notify glite-lb-job_reg glite-lb-job_status glite-lb-purge glite-lb-ws_getversion glite-lb-logevent 
 if [ $? -gt 0 ]; then
-	vprintf 2 "\n[LB Probe] Some Commands are unavailable\n\n"
+	vprintf 1 "\n[LB Probe] Some Commands are unavailable\n\n"
 	vprintf 0 "UNKNOWN: Some commands are not available\n"
 	exit 3
 fi
 
-vprintf 2 "\n[LB Probe] Testing credentials"
+vprintf 1 "\n[LB Probe] Testing credentials"
 
 timeleft=`grid-proxy-info | grep -E "^timeleft" | sed "s/timeleft\s*:\s//"`
 
 if [ "$timeleft" = "" ]; then
-        vprintf 2 "\n[LB Probe] Test failed -- No credentials\n\n"
+        vprintf 1 "\n[LB Probe] Test failed -- No credentials\n\n"
 	vprintf 0 "UNKNOWN: NO CREDENTIALS\n"
 	exit 3
 else
         if [ "$timeleft" = "0:00:00" ]; then
-                vprintf 2 "\n[LB Probe] Test failed -- Credentials expired\n\n"
+                vprintf 1 "\n[LB Probe] Test failed -- Credentials expired\n\n"
 		vprintf 0 "UNKNOWN: CREDENTIALS EXPIRED\n"
 		exit 3
         else
 		
-		vprintf 2 "\n[LB Probe] Getting server version"
+		vprintf 1 "\n[LB Probe] Getting server version"
 		serverversion=`glite-lb-ws_getversion -m $servername:$wsportnumber`
 		if [ -z "$serverversion" ]; then
-			vprintf 2 "\n[LB Probe] Test failed -- server did not respond\n\n"
+			vprintf 1 "\n[LB Probe] Test failed -- server did not respond\n\n"
 			vprintf 0 "DOWN: UNABLE TO GET SERVER VERSION\n"
 			exit 2
 		else
 			echo $serverversion | grep -E "version.*[0-9]+\.[0-9]+\.[0-9]+" > /dev/null
 			if [ $? = 0 ]; then
-				vprintf 3 ": $serverversion"
+				vprintf 2 ": $serverversion"
 			else
-				vprintf 2 " - unexpected output ($serverversion). A WARNING will be returned."
+				vprintf 1 " - unexpected output ($serverversion). A WARNING will be returned."
 				EXITMESSAGE="$EXITMESSAGE[Unexpected version output ($serverversion)]"
 				EXITCODE=1
 			fi
 		fi
 
 		# Register job:
-		vprintf 2 "\n[LB Probe] Registering testing job "
+		vprintf 1 "\n[LB Probe] Registering testing job "
 		jobid=`glite-lb-job_reg -m ${GLITE_WMS_QUERY_SERVER} -s application 2>&1 | grep "new jobid" | awk '{ print $3 }'`
 
 		if [ -z $jobid ]; then
-			vprintf 2 " Failed to register job\n[LB Probe] Test failed \n\n"
+			vprintf 1 " Failed to register job\n[LB Probe] Test failed \n\n"
 			vprintf 0 "DOWN: JOB REGISTRATION FAILED LOCALLY\n"
 			exit 2
 		else
-			vprintf 3 "${jobid}"
+			vprintf 2 "${jobid}"
 
 	                jobstate=`glite-lb-job_status ${jobid} | grep "state :" | awk '{print $3}'`
                 	if [ "${jobstate}" = "Submitted" ]; then
-				vprintf 3 ", server side OK"
+				vprintf 2 ", server side OK"
                         else
-				vprintf 2 "\n[LB Probe] Test failed -- Job has not been submitted to server\n\n"
+				vprintf 1 "\n[LB Probe] Test failed -- Job has not been submitted to server\n\n"
 				vprintf 0 "DOWN: L&B SERVER NOT RUNNING\n"
 				exit 2
                         fi
@@ -272,18 +281,18 @@ else
 	
 
 		# Register notification:
-		vprintf 2 "\n[LB Probe] Registering notification "
+		vprintf 1 "\n[LB Probe] Registering notification "
 
 		notifid=`glite-lb-notify new -j ${jobid} | grep "notification ID" | awk '{ print $3 }'`
 
 		if [ -z $notifid ]; then
-			vprintf 2 "\n[LB Probe] Test failed -- Failed to register notification\n\n"
+			vprintf 1 "\n[LB Probe] Test failed -- Failed to register notification\n\n"
 			vprintf 0 "DOWN: L&B SERVER NOT RUNNING\n"
 			exit 2
 		else
-			vprintf 3 "${notifid}"
+			vprintf 2 "${notifid}"
 
-			vprintf 2 "\n[LB Probe] Logging events resulting in state Cleared"
+			vprintf 1 "\n[LB Probe] Logging events resulting in state Cleared"
 			log_cleared ${jobid}
 
 			NOTIFFILE="/tmp/$$_notifications.txt"		
@@ -292,7 +301,7 @@ else
 	
 			TOREPS=4; #Repetitions before timeout
 			CLRNOTIFIED=0;
-			vprintf 2 "\n[LB Probe] Waiting for delivery/processing"
+			vprintf 1 "\n[LB Probe] Waiting for delivery/processing"
 			while [ $CLRNOTIFIED -eq 0 -a $TOREPS -gt 0 ]
 			do
 				glite-lb-notify receive -i 5 ${notifid} >> $NOTIFFILE 2> /dev/null 
@@ -304,30 +313,30 @@ else
 			glite-lb-job_status ${jobid} > $STATEFILE
 	                jobstate=`cat $STATEFILE | grep "state :" | awk '{print $3}'`
 
-			vprintf 2 "\n[LB Probe] Checking job state"
+			vprintf 1 "\n[LB Probe] Checking job state"
                 	if [ "${jobstate}" = "Submitted" ]; then
-				vprintf 2 "\n[LB Probe] Test failed -- Job state has not changed (${jobstate})\n\n"
+				vprintf 1 "\n[LB Probe] Test failed -- Job state has not changed (${jobstate})\n\n"
 				vprintf 0 "DOWN: EVENT DELIVERY CHAIN (LOGGER/INTERLOGGER) NOT RUNNING\n"
 				rm $NOTIFFILE $STATEFILE
 				exit 2
                         else
-				vprintf 3 " -- ${jobstate}"
+				vprintf 2 " -- ${jobstate}"
                 		if [ "${jobstate}" != "Cleared" ]; then
-					vprintf 3 ", not Cleared. A WARNING will be returned."
+					vprintf 2 ", not Cleared. A WARNING will be returned."
 					EXITMESSAGE="$EXITMESSAGE[Unexpected state of test job (${jobstate})]"
 					EXITCODE=1
 				fi
                         fi
 
-			vprintf 2 "\n[LB Probe] Checking if notifications were delivered"
+			vprintf 1 "\n[LB Probe] Checking if notifications were delivered"
 			NOTIFS=`cat $NOTIFFILE | wc -l`
 
 			grep ${jobid} $NOTIFFILE > /dev/null
 
 			if [ $? = 0 ]; then
-				vprintf 3 ", OK ($NOTIFS messages)"
+				vprintf 2 ", OK ($NOTIFS messages)"
 			else
-				vprintf 2 "\n[LB Probe] Test failed -- Notifications were not delivered\n\n"
+				vprintf 1 "\n[LB Probe] Test failed -- Notifications were not delivered\n\n"
 				vprintf 0 "DOWN: NOTIFICATION INTERLOGGER NOT RUNNING\n"
 				rm $NOTIFFILE $STATEFILE
 				exit 2
@@ -345,13 +354,14 @@ else
 			rm $NOTIFFILE $STATEFILE
 
 			#Drop notification
-			vprintf 2 "\n[LB Probe] Dropping the test notification (${notifid})"
+			vprintf 1 "\n[LB Probe] Dropping the test notification"
+			vprintf 2 " (${notifid})"
 			dropresult=`glite-lb-notify drop ${notifid} 2>&1`
 			if [ -z $dropresult ]; then
-				vprintf 3 ""
+				vprintf 2 ""
 			else
-				vprintf 2 "\n[LB Probe] Test failed"
-				vprintf 2 " Failed to drop notification ${dropresult}, A WARNING will be returned."
+				vprintf 1 "\n[LB Probe] Test failed"
+				vprintf 1 " Failed to drop notification ${dropresult}, A WARNING will be returned."
 				EXITMESSAGE="$EXITMESSAGE[Could not drop notification]"
 				EXITCODE=1
 			fi
@@ -365,7 +375,11 @@ else
 	fi
 fi
 
-vprintf 2 "\n[LB Probe] Test finished\n\n"
+if [ ! -z $watchpid ]; then
+	kill -s SIGTERM "$watchpid"
+fi
+
+vprintf 1 "\n[LB Probe] Test finished\n\n"
 }
 
 if [ $EXITCODE -eq 0 ]; then
