@@ -52,7 +52,7 @@ my (%projects, %project);
 my $debug = 0;
 my $pkg_config_env = (defined $ENV{PKG_CONFIG_PATH}) ? "$ENV{PKG_CONFIG_PATH}:" : '';
 
-my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester lb px proxyrenewal/;
+my @nodes = qw/client server logger logger-msg nagios utils client-java doc ws-test db jpprimary jpindex jpclient harvester lb px proxyrenewal/;
 my @default_nodes = qw/lb px proxyrenewal/;
 my %enable_nodes;
 my %disable_nodes;
@@ -179,7 +179,7 @@ my (%etics_externs, %etics_projects);
 # additional modules from $project{modules} are automatically added
 #
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim logger-msg/], 
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim logger-msg nagios/], 
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface gss gsoap-plugin/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
@@ -527,6 +527,7 @@ BEGIN{
 	'lb.doc' => [ qw/tetex-latex:B/ ],
 	'lb.logger' => [ qw/cppunit:B libtool:B/ ],
 	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B/ ],
+	'lb.nagios' => [ qw/globus_essentials:R/ ],
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B libxml2 flex:B/ ],
 	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
@@ -601,6 +602,10 @@ for my $jar (keys %need_jars) {
 	/ ],
 	'lb.logger-msg' => [ qw/
 		lb.logger
+	/ ],
+	'lb.nagios' => [ qw/
+		lb.client
+		lb.ws-test
 	/ ],
 	'lb.server' => [ qw/
 		lb.ws-interface lb.types:B lb.common lb.state-machine
@@ -985,7 +990,7 @@ sub mkinc
 	my %aux;
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.nagios lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
 lbjp-common.gss lbjp-common.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface lbjp-common.gss lbjp-common.gsoap-plugin
