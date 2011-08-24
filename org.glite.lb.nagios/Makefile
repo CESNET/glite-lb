@@ -16,6 +16,9 @@ install:
 stage:
 	$(MAKE) install PREFIX=${stagedir}
 
+check:
+	@echo "No test"
+
 clean:
 
-.PHONY: all install stage clean
+.PHONY: all install stage clean check
