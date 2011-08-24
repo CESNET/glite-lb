@@ -36,6 +36,7 @@ limitations under the License.
 #include "db_supp.h"
 #include "index.h"
 #include "authz_policy.h"
+#include "get_events.h"
 
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *, int flags);
 
@@ -46,12 +47,15 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[6];
 	glite_lbu_Statement	jobs = NULL;
-	int	ret,authz_flags = 0;
+	int	ret,flags,authz_flags = 0;
 	size_t i;
 	time_t	expires,now = time(NULL);
 	
 	char *cond_where = NULL;
 	char *cond_and_where = NULL;
+	char *summary = NULL;
+	int  summary_fetched = 0;
+	edg_wll_JobStat newstat = *stat; // shallow copy
 
 	edg_wll_ResetError(ctx);
 
@@ -109,17 +113,49 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
 
 	while ((ret = edg_wll_FetchRow(ctx,jobs,sizeof(jobc)/sizeof(jobc[0]),NULL,jobc)) > 0) {
+		flags = atoi(jobc[5]);
 		if (now > (expires = glite_lbu_StrToTime(jobc[2]))) {
 			edg_wll_NotifExpired(ctx,jobc[0]);
 			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "[%d] NOTIFY:%s expired at %s UTC", 
 				getpid(),jobc[0],asctime(gmtime(&expires)));
 		}
-		else if (notif_match_conditions(ctx,oldstat,stat,jobc[4],atoi(jobc[5])) &&
-				edg_wll_NotifCheckACL(ctx,stat,jobc[3], &authz_flags))
+		else if (notif_match_conditions(ctx,oldstat,&newstat,jobc[4],flags) &&
+				edg_wll_NotifCheckACL(ctx,&newstat,jobc[3], &authz_flags))
 		{
-			char			   *dest;
+			char			*dest;
+			edg_wll_QueryRec	 jc0[2], *jc[2];
+			char			*errt, *errd;
+			edg_wll_Event *events = NULL;
 
-			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %s, job %s", jobc[0], ju = edg_wlc_JobIdGetUnique(stat->jobId));
+			if (flags & EDG_WLL_NOTIF_EVENT_SUMMARY && !summary_fetched) {
+				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: summary for job %s", jobc[0]);
+				jc[0] = jc0;
+				jc[1] = NULL;
+				jc[0][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
+				jc[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+				jc[0][0].value.j = newstat.jobId;
+				jc[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+				if (edg_wll_QueryEventsServer(ctx, 1, (const edg_wll_QueryRec **)jc, NULL, &events) == 0) {
+					for (i = 0; events && events[i].type; i++);
+					asprintf(&summary, "{ summary: \"%zd events\" }", i);
+					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %zd events", i);
+
+					newstat.summary = strdup(summary);
+
+					for (i = 0; events && events[i].type; i++)
+						edg_wll_FreeEvent(&events[i]);
+					free(events);
+				} else {
+					edg_wll_Error(ctx, &errt, &errd);
+					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "NOTIFY: query summary events for %s failed, %s: %s", jobc[0], errt, errd);
+					free(errt);
+					free(errd);
+					edg_wll_ResetError(ctx);
+				}
+				summary_fetched = 1;
+			}
+
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %s, job %s", jobc[0], ju = edg_wlc_JobIdGetUnique(newstat.jobId));
 			free(ju); ju = NULL;
 
 			dest = jobc[1];
@@ -132,7 +168,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			/* XXX: only temporary hack!!!
 			 */
 			ctx->p_instance = strdup("");
-			if ( edg_wll_NotifJobStatus(ctx, nid, dest, jobc[3], atoi(jobc[5]), authz_flags, expires, *stat) )
+			if ( edg_wll_NotifJobStatus(ctx, nid, dest, jobc[3], atoi(jobc[5]), authz_flags, expires, newstat) )
 			{
 				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
 				goto err;
@@ -144,6 +180,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	if (ret < 0) goto err;
 	
 err:
+	free(summary);
 	free(ctx->p_instance); ctx->p_instance = NULL;
 	if ( nid ) edg_wll_NotifIdFree(nid);
 	free(jobq);
