@@ -43,12 +43,14 @@ Console output:
 
 EndHelpHeader
 
-	echo "Usage: $progname [-h] [-v[v[v]]] [server[:port]]"
+	echo "Usage: $progname [-h] [-v[v[v]]] [-H server] [-p port] [server[:port]]"
 	echo "Options:"
 	echo "    -h | --help       Show this help message."
 	echo "    -v[vv]            Verbosity level."
-	echo "    server:           Environmental variables are used if unspecified"
-	echo "    port:             Environmental variables or defaults are used if unspecified)"
+	echo "    -H <server>       server"
+	echo "    -p <server>       port"
+	echo "    <server>          Environmental variables are used if unspecified"
+	echo "    <port>            Environmental variables or defaults are used if unspecified)"
 	echo ""
 }
 
@@ -120,6 +122,7 @@ function log_cleared()
 }
 
 VERBLEVEL=0
+TIMEOUT=0
 
 while test -n "$1"
 do
@@ -128,6 +131,9 @@ do
 		"-v" )  VERBLEVEL=$(( $VERBLEVEL + 1 )) ;;
 		"-vv" )  VERBLEVEL=$(( $VERBLEVEL + 2 )) ;;
 		"-vvv" )  VERBLEVEL=$(( $VERBLEVEL + 3 )) ;;
+		"-H" ) shift && SRVPORT="${1}$SRVPORT" ;;
+		"-p" ) shift && SRVPORT="$SRVPORT:${1}" ;;
+		"-t" ) shift && TIMEOUT=$1 ;;
 		*) SRVPORT="$1" ;;
 #		"-t" | "--text")  setOutputASCII ;;
 	esac
