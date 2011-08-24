@@ -527,7 +527,7 @@ BEGIN{
 	'lb.doc' => [ qw/tetex-latex:B/ ],
 	'lb.logger' => [ qw/cppunit:B libtool:B/ ],
 	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B/ ],
-	'lb.nagios' => [ qw/globus_essentials:R/ ],
+	'lb.nagios' => [ qw/globus_proxy_utils:R/ ],
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B libxml2 flex:B/ ],
 	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
@@ -604,8 +604,9 @@ for my $jar (keys %need_jars) {
 		lb.logger
 	/ ],
 	'lb.nagios' => [ qw/
-		lb.client
-		lb.ws-test
+		lb.client:R
+		lb.ws-test:R
+		lb.utils:R
 	/ ],
 	'lb.server' => [ qw/
 		lb.ws-interface lb.types:B lb.common lb.state-machine
@@ -774,6 +775,7 @@ for my $ext (keys %deps_aux) {
 			default => {
 				globus_essentials=>'vdt_globus_essentials',
 				globus=>'globus',
+				globus_proxy_utils=>'vdt_globus_essentials',
 				gridsite=>'org.gridsite.shared',
 				yaim_core=>'org.glite.yaim.core',
 				gip_release=>'glite-info-provider-release',
@@ -796,7 +798,7 @@ for my $ext (keys %deps_aux) {
 			},
 		},
 		etics_projects => {
-			vdt=>[qw/globus globus_essentials gpt/],
+			vdt=>[qw/globus globus_essentials globus_proxy_utils gpt/],
 			'org.glite'=>[qw/voms gridsite lcas gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 		},
 		etics_locations => {
@@ -840,6 +842,7 @@ for my $ext (keys %deps_aux) {
 			default => {
 				globus_essentials=>'globus-gssapi-gsi',
 				globus=>'globus-gssapi-gsi-devel',
+				globus_proxy_utils=>'globus-proxy-utils',
 				gridsite=>'emi.gridsite.shared',
 				yaim_core=>'emi.yaim.yaim-core',
 				yaim_bdii=>'emi.bdii.yaim-bdii',
@@ -864,6 +867,7 @@ for my $ext (keys %deps_aux) {
 			deb6_x86_64_gcc445 => {
 				globus_essentials => 'globus-gssapi-gsi4',
 				globus => 'libglobus-gssapi-gsi-dev',
+				globus_proxy_utils=>'globus-proxy-utils',
 				axis => 'libaxis-java',
 				cares => 'libc-ares2',
 				cppunit => 'libcppunit',
