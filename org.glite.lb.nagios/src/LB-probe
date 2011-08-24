@@ -21,37 +21,43 @@ progname=`basename $0`
 showHelp()
 {
 cat << EndHelpHeader
-Script for testing notification delivery
-
-Prerequisities:
-   - LB server
-   - Event logging chain
-   - Notification delivery chain (notification interlogger)
-   - environment variables set:
-
-     GLITE_WMS_QUERY_SERVER
-     GLITE_WMS_NOTIF_SERVER
+Nagios probe for testing the status of L&B
 
 Tests called:
-
     job registration
     notification registration
     logging events
     receiving notifications
 
-Returned values:
-    Exit TEST_OK: Test Passed
-    Exit TEST_ERROR: Test Failed
-    Exit 2: Wrong Input
+Return values:
+    0: Passed
+    1: Warning
+    2: Critical
+    3: Unknown
+
+Console output:
+    OK|<time to transit from Registered to Cleared>
+    WARNING: <reason>
+    DOWN: <reason>
+    UNKNOWN: <reason>
 
 EndHelpHeader
 
-	echo "Usage: $progname [OPTIONS]"
+	echo "Usage: $progname [-h] [-v[v[v]]] [server[:port]]"
 	echo "Options:"
-	echo " -h | --help            Show this help message."
-	echo " -t | --text            Format output as plain ASCII text."
-	echo " -c | --color           Format output as text with ANSI colours (autodetected by default)."
-	echo " -x | --html            Format output as html."
+	echo "    -h | --help       Show this help message."
+	echo "    -v[vv]            Verbosity level."
+	echo "    server:           Environmental variables are used if unspecified"
+	echo "    port:             Environmental variables or defaults are used if unspecified)"
+	echo ""
+}
+
+function vprintf()
+{
+#	echo $1 le $VERBLEVEL
+	if [ $1 -le $VERBLEVEL ]; then
+		printf "$2"
+	fi
 }
 
 function check_exec()
@@ -76,7 +82,7 @@ function check_binaries()
         do
                 check_exec $file
                 if [ $? -gt 0 ]; then
-                        printf "\nfile $file not found\n"
+                        vprintf 3 "\nfile $file not found\n"
                         ret=1
                 fi
         done
@@ -87,137 +93,280 @@ function try_purge()
 {
                         joblist=$1
 
-                        printf "\nPurging test job (Trying the best, result will not be tested)\n"
+                        vprintf 2 "\n[LB Probe] Trying to purge test job"
 
-                        glite-lb-purge -j ${joblist}
+                        glite-lb-purge -j ${joblist} > /dev/null 2> /dev/null
                         rm ${joblist}
 }
+
+function log_cleared()
+{
+                EDG_WL_SEQUENCE="UI=000003:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000"
+
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s NetworkServer -e Accepted --from="UserInterface" --from_host="sending component hostname" --from_instance="sending component instance" --local_jobid="new jobId (Condor Globus ...)"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s NetworkServer -e EnQueued --queue="destination queue" --job="job description in receiver language" --result=OK --reason="detailed description of transfer"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s WorkloadManager -e DeQueued --queue="queue name" --local_jobid="new jobId assigned by the receiving component"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s WorkloadManager -e HelperCall --helper_name="name of the called component" --helper_params="parameters of the call" --src_role=CALLING`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s WorkloadManager -e Match --dest_id="${DESTINATION:-destination CE/queue}"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s WorkloadManager -e HelperReturn --helper_name="name of the called component" --retval="returned data" --src_role=CALLING`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s WorkloadManager -e EnQueued --queue="destination queue" --job="job description in receiver language" --result=OK --reason="detailed description of transfer"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s JobController -e DeQueued --queue="queue name" --local_jobid="new jobId assigned by the receiving component"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s JobController -e Transfer --destination="LRMS" --dest_host="destination hostname" --dest_instance="destination instance" --job="job description in receiver language" --result=OK --reason="detailed description of transfer" --dest_jobid="destination internal jobid"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s LogMonitor -e Accepted --from="JobController" --from_host="sending component hostname" --from_instance="sending component instance" --local_jobid="new jobId (Condor Globus ...)"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s LogMonitor -e Transfer --destination="LRMS" --dest_host="destination hostname" --dest_instance="destination instance" --job="job description in receiver language" --result=OK --reason="detailed description of transfer" --dest_jobid="destination internal jobid"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s LogMonitor -e Running --node="${CE_NODE:-worker node}"`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s LogMonitor -e Done --status_code=OK --reason="reason for the change" --exit_code=0`
+                EDG_WL_SEQUENCE=`glite-lb-logevent -j $1 -c $EDG_WL_SEQUENCE -s LogMonitor -e Clear --reason=USER`
+}
+
+VERBLEVEL=0
 
 while test -n "$1"
 do
 	case "$1" in
 		"-h" | "--help") showHelp && exit 2 ;;
-		"-t" | "--text")  setOutputASCII ;;
-		"-c" | "--color") setOutputColor ;;
-		"-x" | "--html")  setOutputHTML ;;
+		"-v" )  VERBLEVEL=$(( $VERBLEVEL + 1 )) ;;
+		"-vv" )  VERBLEVEL=$(( $VERBLEVEL + 2 )) ;;
+		"-vvv" )  VERBLEVEL=$(( $VERBLEVEL + 3 )) ;;
+		*) SRVPORT="$1" ;;
+#		"-t" | "--text")  setOutputASCII ;;
 	esac
 	shift
 done
+
+export VERBLEVEL
+
+#Set path to L&B example commands used by the probe
+for exdir in /usr/lib64/glite-lb/examples /usr/lib/glite-lb/examples /opt/glite/examples
+do
+	if [ -d "$exdir" ]; then
+		export PATH=$PATH:$exdir
+		vprintf 3 "[LB Probe] adding $exdir to PATH\n"
+	fi
+done
+
+#Extract srv:port from evnironmental variables, or vice versa
+if [ -z $SRVPORT ]; then
+	servername=`echo ${GLITE_WMS_QUERY_SERVER} | sed "s/:.*//"`
+	portnumber=`echo ${GLITE_WMS_QUERY_SERVER} | grep -o -E ":.*$" | sed 's/[^0-9]//g'`
+
+else
+	servername=`echo ${SRVPORT} | sed "s/:.*//"`
+	portnumber=`echo ${SRVPORT} | grep -o -E ":.*$" | sed 's/[^0-9]//g'`
+fi
+
+#exit if server not specified
+if [ -z $servername ]; then
+	vprintf 0 "UNKNOWN: No server specified\n"
+	exit 3
+fi
+
+#use default if server port is not specified
+if [ -z $portnumber ]; then
+	if [ -z $GLITE_LB_SERVER_PORT ]; then
+		portnumber=9000
+	else
+		portnumber=$GLITE_LB_SERVER_PORT
+	fi
+fi
+
+#use default if logger port is not specified
+if [ -z $GLITE_LB_LOGGER_PORT ]; then
+	GLITE_LB_LOGGER_PORT=`expr $portnumber + 2`
+fi
+
+wsportnumber=`expr $portnumber + 3`
+
+#override environmental variables if server/port was specified
+#if [ "$SRVPORT" != "" ]; then
+if [ ! -z $SRVPORT ]; then
+	export GLITE_WMS_QUERY_SERVER=$servername:$portnumber
+	export GLITE_WMS_NOTIF_SERVER=$servername:$portnumber
+	export GLITE_WMS_LOG_DESTINATION=$servername:`expr $portnumber + 2`
+	export GLITE_LB_LOGGER_PORT=`expr $portnumber + 2`
+	export GLITE_LB_SERVER_PORT=$portnumber
+fi
+
+if [ $VERBLEVEL -ge 2 ]; then
+	env | grep -E "GLITE_|PATH"
+	printf "*** $servername:$portnumber\n"
+fi
 
 ##
 #  Starting the test
 #####################
 
 {
-printf "[LB Probe] Starting test"
+vprintf 2 "[LB Probe] Starting test"
 
 EXITCODE=0
+EXITMESSAGE=""
 
 # check_binaries
-printf "\n[LB Probe] Testing if all binaries are available"
-check_binaries grid-proxy-info grep sed awk glite-lb-notify glite-lb-job_reg glite-lb-job_status glite-lb-done.sh glite-lb-purge
+vprintf 3 "\n[LB Probe] Testing if all binaries are available"
+check_binaries grid-proxy-info grep sed echo wc cat awk glite-lb-notify glite-lb-job_reg glite-lb-job_status glite-lb-purge glite-lb-ws_getversion glite-lb-logevent
 if [ $? -gt 0 ]; then
-	printf "\n[LB Probe] Some Commands are unavailable\n\n"
+	vprintf 2 "\n[LB Probe] Some Commands are unavailable\n\n"
+	vprintf 0 "UNKNOWN: Some commands are not available\n"
 	exit 3
 fi
 
-printf "\n[LB Probe] Testing credentials"
+vprintf 2 "\n[LB Probe] Testing credentials"
 
 timeleft=`grid-proxy-info | grep -E "^timeleft" | sed "s/timeleft\s*:\s//"`
 
 if [ "$timeleft" = "" ]; then
-        printf "\n[LB Probe] Test failed -- No credentials\n\n"
+        vprintf 2 "\n[LB Probe] Test failed -- No credentials\n\n"
+	vprintf 0 "UNKNOWN: NO CREDENTIALS\n"
 	exit 3
 else
         if [ "$timeleft" = "0:00:00" ]; then
-                printf "\n[LB Probe] Test failed -- Credentials expired"
+                vprintf 2 "\n[LB Probe] Test failed -- Credentials expired\n\n"
+		vprintf 0 "UNKNOWN: CREDENTIALS EXPIRED\n"
 		exit 3
         else
+		
+		vprintf 2 "\n[LB Probe] Getting server version"
+		serverversion=`glite-lb-ws_getversion -m $servername:$wsportnumber`
+		if [ -z "$serverversion" ]; then
+			vprintf 2 "\n[LB Probe] Test failed -- server did not respond\n\n"
+			vprintf 0 "DOWN: UNABLE TO GET SERVER VERSION\n"
+			exit 2
+		else
+			echo $serverversion | grep -E "version.*[0-9]+\.[0-9]+\.[0-9]+" > /dev/null
+			if [ $? = 0 ]; then
+				vprintf 3 ": $serverversion"
+			else
+				vprintf 2 " - unexpected output ($serverversion). A WARNING will be returned."
+				EXITMESSAGE="$EXITMESSAGE[Unexpected version output ($serverversion)]"
+				EXITCODE=1
+			fi
+		fi
 
 		# Register job:
-		printf "\n[LB Probe] Registering testing job "
+		vprintf 2 "\n[LB Probe] Registering testing job "
 		jobid=`glite-lb-job_reg -m ${GLITE_WMS_QUERY_SERVER} -s application 2>&1 | grep "new jobid" | awk '{ print $3 }'`
 
 		if [ -z $jobid ]; then
-			printf " Failed to register job"
-			printf "\n[LB Probe] Test failed \n\n--- JOB REGISTRATION FAILED LOCALLY ---\n\n"
+			vprintf 2 " Failed to register job\n[LB Probe] Test failed \n\n"
+			vprintf 0 "DOWN: JOB REGISTRATION FAILED LOCALLY\n"
 			exit 2
 		else
-			printf "${jobid}"
+			vprintf 3 "${jobid}"
 
 	                jobstate=`glite-lb-job_status ${jobid} | grep "state :" | awk '{print $3}'`
                 	if [ "${jobstate}" = "Submitted" ]; then
-				printf ", server side OK"
+				vprintf 3 ", server side OK"
                         else
-				printf "\n[LB Probe] Test failed -- Job has not been submitted to server\n\n--- L&B SERVER NOT RUNNING ---\n\n"
+				vprintf 2 "\n[LB Probe] Test failed -- Job has not been submitted to server\n\n"
+				vprintf 0 "DOWN: L&B SERVER NOT RUNNING\n"
 				exit 2
                         fi
 		fi
 	
 
 		# Register notification:
-		printf "\n[LB Probe] Registering notification "
+		vprintf 2 "\n[LB Probe] Registering notification "
 
 		notifid=`glite-lb-notify new -j ${jobid} | grep "notification ID" | awk '{ print $3 }'`
 
 		if [ -z $notifid ]; then
-			printf "\n[LB Probe] Test failed -- Failed to register notification\n\n--- L&B SERVER NOT RUNNING ---\n\n"
+			vprintf 2 "\n[LB Probe] Test failed -- Failed to register notification\n\n"
+			vprintf 0 "DOWN: L&B SERVER NOT RUNNING\n"
 			exit 2
 		else
-			printf "${notifid}"
+			vprintf 3 "${notifid}"
 
-			printf "\n[LB Probe] Logging events resulting in state Done"
-			glite-lb-done.sh -j ${jobid} > /dev/null 2> /dev/null
+			vprintf 2 "\n[LB Probe] Logging events resulting in state Cleared"
+			log_cleared ${jobid}
 
-			glite-lb-notify receive -a 147.228.52.90:`expr $RANDOM+2000` -i 5 ${notifid} > $$_notifications.txt 2> /dev/null 
+			NOTIFFILE="/tmp/$$_notifications.txt"		
+			STATEFILE="/tmp/$$_jobstat.txt"		
+			echo '' > $NOTIFFILE
+	
+			TOREPS=4; #Repetitions before timeout
+			CLRNOTIFIED=0;
+			vprintf 2 "\n[LB Probe] Waiting for delivery/processing"
+			while [ $CLRNOTIFIED -eq 0 -a $TOREPS -gt 0 ]
+			do
+				glite-lb-notify receive -i 5 ${notifid} >> $NOTIFFILE 2> /dev/null 
 
-			printf "\n[LB Probe] Checking job state"
+				CLRNOTIFIED=`cat $NOTIFFILE | grep -E "$jobid.*Cleared" | wc -l` > /dev/null
+				TOREPS=$(( $TOREPS - 1 ))
+			done
 
-	                jobstate=`glite-lb-job_status ${jobid} | grep "state :" | awk '{print $3}'`
+			glite-lb-job_status ${jobid} > $STATEFILE
+	                jobstate=`cat $STATEFILE | grep "state :" | awk '{print $3}'`
+
+			vprintf 2 "\n[LB Probe] Checking job state"
                 	if [ "${jobstate}" = "Submitted" ]; then
-				printf "\n[LB Probe] Test failed -- Job state has not changed\n\n--- EVENT DELIVERY CHAIN (LOGGER/INTERLOGGER) NOT RUNNING ---\n\n"
+				vprintf 2 "\n[LB Probe] Test failed -- Job state has not changed (${jobstate})\n\n"
+				vprintf 0 "DOWN: EVENT DELIVERY CHAIN (LOGGER/INTERLOGGER) NOT RUNNING\n"
+				rm $NOTIFFILE $STATEFILE
 				exit 2
                         else
-				printf " -- ${jobstate}"
-                		if [ "${jobstate}" != "Done" ]; then
-					printf ", not Done. A Warning will be returned."
+				vprintf 3 " -- ${jobstate}"
+                		if [ "${jobstate}" != "Cleared" ]; then
+					vprintf 3 ", not Cleared. A WARNING will be returned."
+					EXITMESSAGE="$EXITMESSAGE[Unexpected state of test job (${jobstate})]"
 					EXITCODE=1
 				fi
                         fi
 
-			printf "\n[LB Probe] Checking if notifications were delivered"
+			vprintf 2 "\n[LB Probe] Checking if notifications were delivered"
+			NOTIFS=`cat $NOTIFFILE | wc -l`
 
-			grep ${jobid} $$_notifications.txt > /dev/null
+			grep ${jobid} $NOTIFFILE > /dev/null
 
 			if [ $? = 0 ]; then
-				printf ", OK"
+				vprintf 3 ", OK ($NOTIFS messages)"
 			else
-				printf "\n[LB Probe] Test failed -- Notifications were not delivered\n\n--- NOTIFICATION INTERLOGGER NOT RUNNING ---\n\n"
+				vprintf 2 "\n[LB Probe] Test failed -- Notifications were not delivered\n\n"
+				vprintf 0 "DOWN: NOTIFICATION INTERLOGGER NOT RUNNING\n"
+				rm $NOTIFFILE $STATEFILE
 				exit 2
 			fi
 
-			rm $$_notifications.txt
+			if [ $VERBLEVEL -ge 3 ]; then
+				cat $NOTIFFILE
+			fi
+
+			regtime=`cat $STATEFILE | grep -E "^[\t ]+Submitted[\t ]+" | sed 's/[\t ]*Submitted[\t ]*//'`
+			clrtime=`cat $STATEFILE | grep -E "^[\t ]+Cleared[\t ]+" | sed 's/[\t ]*Cleared[\t ]*//'`
+			REGTIME=`date -d "$regtime" +%s`
+			CLRTIME=`date -d "$clrtime" +%s`
+
+			rm $NOTIFFILE $STATEFILE
 
 			#Drop notification
-			printf "\n[LB Probe] Dropping the test notification (${notifid})"
+			vprintf 2 "\n[LB Probe] Dropping the test notification (${notifid})"
 			dropresult=`glite-lb-notify drop ${notifid} 2>&1`
 			if [ -z $dropresult ]; then
-				printf "\n[LB Probe] Test OK"
+				vprintf 3 ""
 			else
-				printf "\n[LB Probe] Test failed"
-				printf " Failed to drop notification ${dropresult}"
+				vprintf 2 "\n[LB Probe] Test failed"
+				vprintf 2 " Failed to drop notification ${dropresult}, A WARNING will be returned."
+				EXITMESSAGE="$EXITMESSAGE[Could not drop notification]"
+				EXITCODE=1
 			fi
 
 			#Purge test job
-			joblist=$$_jobs_to_purge.txt
+			joblist="/tmp/$$_jobs_to_purge.txt"
 			echo $jobid > ${joblist}
-#			try_purge ${joblist}
+			try_purge ${joblist}
 
 		fi
 	fi
 fi
 
-printf "\n[LB Probe] Test finished\n\n"
-} 
+vprintf 2 "\n[LB Probe] Test finished\n\n"
+}
+
+if [ $EXITCODE -eq 0 ]; then
+	EXITMESSAGE="OK|`expr $CLRTIME - $REGTIME`s"
+else
+	EXITMESSAGE="WARNING: $EXITMESSAGE" 
+fi
+printf "$EXITMESSAGE\n"
 exit $EXITCODE
 
