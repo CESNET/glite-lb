@@ -124,7 +124,8 @@ LBTP.pdf: ${COMMON} \
 	LBTP-IntegrationTests.tex \
 	LBTP-Tests.tex \
 	LBTP-PerfTests.tex \
-	LBTP-InterTests.tex
+	LBTP-InterTests.tex \
+	LBTP-Nagios.tex
 
 LBTG.pdf: ${COMMON} \
 	LBTG.tex \

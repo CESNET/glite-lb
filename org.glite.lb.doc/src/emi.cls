@@ -54,6 +54,7 @@
 \usepackage[hang,bf,small]{caption}
 \usepackage[T1]{fontenc}
 \usepackage[scaled]{helvet}
+\usepackage{multirow}
 \renewcommand*\familydefault{\sfdefault}
 %
 % We now define a new \if command to test for PDF being enabled.
