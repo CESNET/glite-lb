@@ -25,8 +25,10 @@ limitations under the License.
 
 #ifdef BUILDING_LB_COMMON
 #include "events_parse.h"
+#include "events_json.h"
 #else
 #include "glite/lb/events_parse.h"
+#include "glite/lb/events_json.h"
 #endif
 
 class EventParseTest: public  CppUnit::TestFixture
@@ -144,6 +146,13 @@ void EventParseTest::$l()
 	if ((edg_wll_CompareEvents(ctx,e1,e2))) {
 		edg_wll_Error(ctx,&et,&ed);
 		CPPUNIT_ASSERT_MESSAGE(std::string("edg_wll_CompareEvents():") + et + " " + ed, 0);
+	}
+
+	free(line);
+	if (edg_wll_UnparseEventJSON(ctx, e1, &line)) {
+		CPPUNIT_ASSERT_MESSAGE(std::string("edg_wll_UnparseEventJSON() error"), 0);
+	} else {
+//		std::cerr << line << std::endl;
 	}
 
 	edg_wll_FreeEvent(e1); free(e1);

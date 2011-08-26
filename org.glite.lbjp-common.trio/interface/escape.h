@@ -68,9 +68,19 @@ char *glite_lbu_UnescapeXML(const char *);
  * \fn char *glite_lbu_EscapeSQL(const char *str)
  * \param str		a string to escape
  * \return		new (allocated) escaped string
- * \briefin given string (SQL) escape all unwanted characters
+ * \brief in given string (SQL) escape all unwanted characters
  */
 
 char *glite_lbu_EscapeSQL(const char *);
+
+
+/*!
+ * \fn char *glite_lbu_EscapeJSON(const char *str)
+ * \param str		a string to escape
+ * \return		new (allocated) escaped string
+ * \brief in given string (JSON) escape all unwanted characters
+ */
+
+char *glite_lbu_EscapeJSON(const char *in);
 
 #endif /* __EDG_WORKLOAD_LOGGING_COMMON_ESCAPE_H__ */

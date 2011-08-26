@@ -226,4 +226,20 @@ sub getAllFieldsOrdered {
 	} @names;
 }
 
+sub getMaxSize {
+	my $self = shift;
+	my $count = 0;
+	my @fields;
+
+	for my $t (keys %{$self->{fields}}) {
+		next if $t eq '_common_';
+		next if not exists $self->{fields}->{$t};
+		@fields = keys %{$self->{fields}->{$t}};
+		if ($#fields > $count) { $count = $#fields; }
+	}
+
+	@fields = keys %{$self->{fields}->{_common_}};
+	return $#fields + $count + 1 + 1;
+}
+
 1;
