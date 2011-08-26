@@ -26,6 +26,7 @@ limitations under the License.
 #include <assert.h>
 
 #include "glite/lb/context-int.h"
+#include "glite/lb/events_json.h"
 #include "glite/lbu/trio.h"
 #include "glite/lbu/log.h"
 
@@ -39,6 +40,7 @@ limitations under the License.
 #include "get_events.h"
 
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *, int flags);
+static int fetch_summary(edg_wll_Context ctx, edg_wll_JobStat *stat);
 
 int edg_wll_NotifExpired(edg_wll_Context,const char *);
 
@@ -122,30 +124,12 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 		else if (notif_match_conditions(ctx,oldstat,&newstat,jobc[4],flags) &&
 				edg_wll_NotifCheckACL(ctx,&newstat,jobc[3], &authz_flags))
 		{
-			char			*dest;
-			edg_wll_QueryRec	 jc0[2], *jc[2];
-			char			*errt, *errd;
-			edg_wll_Event *events = NULL;
+			char	*errt, *errd;
+			char	*dest;
 
 			if (flags & EDG_WLL_NOTIF_EVENT_SUMMARY && !summary_fetched) {
 				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: summary for job %s", jobc[0]);
-				jc[0] = jc0;
-				jc[1] = NULL;
-				jc[0][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
-				jc[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-				jc[0][0].value.j = newstat.jobId;
-				jc[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-				if (edg_wll_QueryEventsServer(ctx, 1, (const edg_wll_QueryRec **)jc, NULL, &events) == 0) {
-					for (i = 0; events && events[i].type; i++);
-					asprintf(&summary, "{ summary: \"%zd events\" }", i);
-					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %zd events", i);
-
-					newstat.summary = strdup(summary);
-
-					for (i = 0; events && events[i].type; i++)
-						edg_wll_FreeEvent(&events[i]);
-					free(events);
-				} else {
+				if (fetch_summary(ctx, &newstat) != 0) {
 					edg_wll_Error(ctx, &errt, &errd);
 					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "NOTIFY: query summary events for %s failed, %s: %s", jobc[0], errt, errd);
 					free(errt);
@@ -292,4 +276,76 @@ int edg_wll_NotifCheckACL(edg_wll_Context ctx,const edg_wll_JobStat *stat,const 
 	}
 
 	return 0;
+}
+
+
+#define SUMMARY_EMPTY "[]"
+#define SUMMARY_HEADER "[\n"
+#define SUMMARY_HEADER_SIZE 2
+#define SUMMARY_FOOTER "\n]"
+#define SUMMARY_FOOTER_SIZE 2
+#define SUMMARY_SEPARATOR ",\n"
+#define SUMMARY_SEPARATOR_SIZE 2
+
+static int fetch_summary(edg_wll_Context ctx, edg_wll_JobStat *stat) {
+	edg_wll_QueryRec	 jc0[2], *jc[2];
+	char			*event_str = NULL, *summary = NULL;
+	edg_wll_Event *events = NULL;
+	size_t	size, len, maxsize = 1024, newsize;
+	size_t i;
+	void *tmpptr;
+
+	jc[0] = jc0;
+	jc[1] = NULL;
+	jc[0][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
+	jc[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+	jc[0][0].value.j = stat->jobId;
+	jc[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+
+	if (edg_wll_QueryEventsServer(ctx, 1, (const edg_wll_QueryRec **)jc, NULL, &events) == 0) {
+		if (!events || !events[0].type) {
+			summary = strdup(SUMMARY_EMPTY);
+		} else {
+			summary = malloc(maxsize);
+			strcpy(summary, SUMMARY_HEADER);
+			size = SUMMARY_HEADER_SIZE;
+
+			for (i = 0; events && events[i].type; i++) {
+				if (edg_wll_UnparseEventJSON(ctx, events + i, &event_str) != 0) goto err;
+				len = strlen(event_str);
+				newsize = size + len + SUMMARY_SEPARATOR_SIZE + SUMMARY_FOOTER_SIZE + 1;
+				if (newsize > maxsize) {
+					maxsize <<= 1;
+					if (newsize > maxsize) maxsize = newsize;
+					if ((tmpptr = realloc(summary, maxsize)) == NULL) {
+						edg_wll_SetError(ctx, ENOMEM, NULL);
+						goto err;
+					}
+					summary = tmpptr;
+				}
+				strncpy(summary + size, event_str, len + 1);
+				size += len;
+				if (events[i+1].type) {
+					strcpy(summary + size, SUMMARY_SEPARATOR);
+					size += SUMMARY_SEPARATOR_SIZE;
+				}
+				free(event_str);
+				event_str = NULL;
+			}
+			strcpy(summary + size, SUMMARY_FOOTER);
+			size += SUMMARY_FOOTER_SIZE;
+		}
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %zd events in summary", i);
+
+		stat->summary = summary;
+		summary = NULL;
+	}
+
+err:
+	free(summary);
+	for (i = 0; events && events[i].type; i++)
+		edg_wll_FreeEvent(&events[i]);
+	free(events);
+
+	return edg_wll_Error(ctx, NULL, NULL);
 }
