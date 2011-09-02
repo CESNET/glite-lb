@@ -1561,7 +1561,7 @@ edg_wll_gss_equal_subj(const char *a, const char *b)
 	if (!an || !bn)
 		res = 0;
 	else 
-		res = !strcmp(an,bn);
+		res = !strcasecmp(an,bn);
 	
 	free(an); free(bn);
 	return res;
