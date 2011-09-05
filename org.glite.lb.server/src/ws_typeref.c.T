@@ -250,7 +250,7 @@ int edg_wll_StatusToSoap(struct soap *soap,edg_wll_JobStat const *src,struct lbt
 		} elsif ($ft eq 'string') {
 			gen "\tjs->$usuc = soap_strdup(soap,src->$_);\n";
 		} elsif ($ft eq 'cclassad') {
-			gen "\ts = cclassad_unparse(src->$_);\n";
+			gen "\ts = src->$_ ? cclassad_unparse(src->$_) : NULL;\n";
 			gen "\tjs->$usuc = s ? soap_strdup(soap, s) : NULL;\n";
 			gen "\tfree(s);\n";
 		} elsif ($f->{null}) {
@@ -332,8 +332,10 @@ void edg_wll_SoapToStatus(struct soap *soap,struct lbt__jobStatus const *src,edg
 			gen "\tdest->$_ = src->$usuc;\n";
 			gen "\tsoap_unlink(soap,src->$usuc);\n";
 		} elsif ($ft eq 'cclassad') {
-			gen "\tdest->$_ = cclassad_create(src->$usuc);\n";
-			gen "\tsoap_unlink(soap,src->$usuc);\n";
+			gen "\tif (src->$usuc) {";
+			gen "\t\tdest->$_ = cclassad_create(src->$usuc);\n";
+			gen "\t\tsoap_unlink(soap,src->$usuc);\n";
+			gen "\t}";
 		} elsif ($f->{null}) {
 			gen "\tdest->$_ = (src->$usuc) ? *(src->$usuc) : $f->{null};\n";
 		} else {
