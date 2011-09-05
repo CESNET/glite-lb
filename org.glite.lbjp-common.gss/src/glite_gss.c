@@ -61,6 +61,9 @@ struct asyn_result {
 
 static int globus_common_activated = 0;
 
+static void free_hostent(struct hostent *h);
+static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *addr,  int addrtype, int port, struct timeval *timeout, edg_wll_GssConnection *connection,
+                                edg_wll_GssStatus* gss_code);
 static int decrement_timeout(struct timeval *timeout, struct timeval before, struct timeval after)
 {
         (*timeout).tv_sec = (*timeout).tv_sec - (after.tv_sec - before.tv_sec);
@@ -81,31 +84,40 @@ static void callback_ares_gethostbyname(void *arg, int status, struct hostent *h
 #endif
 {
 	struct asyn_result *arp = (struct asyn_result *) arg;
+	int n_addr = 0;
+	int i = 0; 
 
 	switch (status) {
 	   case ARES_SUCCESS:
-		if (h && h->h_addr_list[0]) {
-			arp->ent->h_addr_list =
-				(char **) malloc(2 * sizeof(char *));
-			if (arp->ent->h_addr_list == NULL) {
-				arp->err = NETDB_INTERNAL;
-				break;
-			}
-			arp->ent->h_addr_list[0] =
-				malloc(h->h_length);
-			if (arp->ent->h_addr_list[0] == NULL) {
-				free(arp->ent->h_addr_list);
-				arp->err = NETDB_INTERNAL;
-				break;
-			}
-			memcpy(arp->ent->h_addr_list[0], h->h_addr_list[0],
-				h->h_length);
-			arp->ent->h_addr_list[1] = NULL;
-			arp->ent->h_addrtype = h->h_addrtype;
-			arp->err = NETDB_SUCCESS;
-		} else {
+		if (h == NULL || h->h_addr_list[0] == NULL){
 			arp->err = NO_DATA;
+			break;
 		}
+		/*how many addresses are there in h->h_addr_list*/
+		while (h->h_addr_list[n_addr])
+			n_addr++;
+		
+		arp->ent->h_addr_list = (char **) calloc((n_addr+1), sizeof(char *));
+		if (arp->ent->h_addr_list == NULL) {
+			arp->err = NETDB_INTERNAL;
+			break;
+		}
+		for (i = 0; i < n_addr; i++) {
+			arp->ent->h_addr_list[i] = malloc(h->h_length);
+			if (arp->ent->h_addr_list[i] == NULL) {
+				free_hostent (arp->ent);
+				arp->ent = NULL;	
+				arp->err = NETDB_INTERNAL;
+				break;
+			}
+			memcpy(arp->ent->h_addr_list[i], h->h_addr_list[i],
+				h->h_length);
+		}
+			/* rest of h members might be assigned here(name,aliases), not necessery now */
+			arp->ent->h_addr_list[n_addr] = NULL;
+			arp->ent->h_addrtype = h->h_addrtype;
+			arp->ent->h_length = h->h_length;
+			arp->err = NETDB_SUCCESS;
 		break;
 	    case ARES_EBADNAME:
 	    case ARES_ENOTFOUND:
@@ -139,8 +151,7 @@ static void free_hostent(struct hostent *h){
         }
 }
 
-static int asyn_getservbyname2(int af, struct sockaddr_storage *addrOut, socklen_t *a_len,char const *name, int port, struct timeval *timeout) {
-	struct asyn_result ar;
+static int asyn_getservbyname(int af, struct asyn_result *ar,char const *name, int port, struct timeval *timeout) {
 	ares_channel channel;
 	int nfds;
 	fd_set readers, writers;
@@ -168,11 +179,10 @@ static int asyn_getservbyname2(int af, struct sockaddr_storage *addrOut, socklen
 
 /* ares init */
 	if ( ares_init(&channel) != ARES_SUCCESS ) return(NETDB_INTERNAL);
-	ar.ent = (struct hostent *) calloc (sizeof(*ar.ent),1);
 
 /* query DNS server asynchronously */
 	ares_gethostbyname(channel, name2, af, callback_ares_gethostbyname,
-			   (void *) &ar);
+			   (void *) ar);
 
 /* wait for result */
 	while (1) {
@@ -185,7 +195,6 @@ static int asyn_getservbyname2(int af, struct sockaddr_storage *addrOut, socklen
 		gettimeofday(&check_time,0);
 		if (timeout && decrement_timeout(timeout, start_time, check_time)) {
 			ares_destroy(channel);
-			free_hostent(ar.ent);
 			return(TRY_AGAIN);
 		}
 		start_time = check_time;
@@ -195,7 +204,6 @@ static int asyn_getservbyname2(int af, struct sockaddr_storage *addrOut, socklen
 		switch ( select(nfds, &readers, &writers, NULL, tvp) ) {
 			case -1: if (errno != EINTR) {
 					ares_destroy(channel);
-				  	free_hostent(ar.ent);
 				  	return NETDB_INTERNAL;
 				 } else
 					continue;
@@ -206,31 +214,7 @@ static int asyn_getservbyname2(int af, struct sockaddr_storage *addrOut, socklen
 			default: ares_process(channel, &readers, &writers);
 		}
 	}
-
-	if (ar.err == NETDB_SUCCESS) {
-		struct sockaddr_in *p4 = (struct sockaddr_in *)addrOut;
-		struct sockaddr_in6 *p6 = (struct sockaddr_in6 *)addrOut;
-
-		memset(addrOut, 0, sizeof *addrOut);
-		addrOut->ss_family = ar.ent->h_addrtype;
-		switch (ar.ent->h_addrtype) {
-			case AF_INET:
-				memcpy(&p4->sin_addr,ar.ent->h_addr_list[0], sizeof(struct in_addr));
-				p4->sin_port = htons(port);
-				*a_len = sizeof (struct sockaddr_in);
-				break;
-			case AF_INET6:
-				memcpy(&p6->sin6_addr,ar.ent->h_addr_list[0], sizeof(struct in6_addr));
-				p6->sin6_port = htons(port);
-				*a_len = sizeof (struct sockaddr_in6);
-				break;
-			default:
-				return NETDB_INTERNAL;
-				break;
-		}
-	}
-	free_hostent(ar.ent); ar.ent = NULL;
-	err = ar.err;
+	err = ar->err;
 
 	/* literal conversion should always succeed */
 	if (name2 != name) free(name2-1); 
@@ -240,42 +224,38 @@ static int asyn_getservbyname2(int af, struct sockaddr_storage *addrOut, socklen
 	return err;
 }
 
-static int asyn_getservbyname(struct sockaddr_storage *addrOut, socklen_t *a_len,char const *name, int port, struct timeval *timeout) {
-	int res;
-
-	res = asyn_getservbyname2(AF_INET6, addrOut, a_len, name, port, timeout);
-	if (res != HOST_NOT_FOUND) return res;
-	res = asyn_getservbyname2(AF_INET, addrOut, a_len, name, port, timeout);
-	return res;
-}
-
 static int
-do_connect(int *s, char const *hostname, int port, struct timeval *timeout)
+do_connect(int *s, char *addr, int addrtype, int port, struct timeval *timeout)
 {
    int sock;
    struct timeval before,after,to;
    struct sockaddr_storage a;
+   struct sockaddr_storage *p_a=&a;
    socklen_t a_len;
    int sock_err;
    socklen_t err_len;
-   int h_errno;
    int	opt;
 
-   /* XXX todo: try multiple addresses */
-      switch (h_errno = asyn_getservbyname(&a, &a_len, hostname, port, timeout)) {
-		case NETDB_SUCCESS:
-			break;
-		case TRY_AGAIN:
-			return EDG_WLL_GSS_ERROR_TIMEOUT;
-		case NETDB_INTERNAL: 
-			/* fall through */
-		default:
-			/* h_errno may be thread safe with Linux pthread libs,
-			 * but such an assumption is not portable
-			 */
-			errno = h_errno;
-			return EDG_WLL_GSS_ERROR_HERRNO;
-      }
+   struct sockaddr_in *p4 = (struct sockaddr_in *)p_a;
+   struct sockaddr_in6 *p6 = (struct sockaddr_in6 *)p_a;
+
+   memset(p_a, 0, sizeof *p_a);
+   p_a->ss_family = addrtype;
+   switch (addrtype) {
+	case AF_INET:
+		memcpy(&p4->sin_addr, addr, sizeof(struct in_addr));
+		p4->sin_port = htons(port);
+		a_len = sizeof (struct sockaddr_in);
+		break;
+	case AF_INET6:
+		memcpy(&p6->sin6_addr, addr, sizeof(struct in6_addr));
+		p6->sin6_port = htons(port);
+		a_len = sizeof (struct sockaddr_in6);
+		break;
+	default:
+		return NETDB_INTERNAL;
+		break;
+   }
 
    sock = socket(a.ss_family, SOCK_STREAM, 0);
    if (sock < 0) return EDG_WLL_GSS_ERROR_ERRNO;
@@ -301,6 +281,7 @@ do_connect(int *s, char const *hostname, int port, struct timeval *timeout)
 			     case -1: close(sock);
 				      return EDG_WLL_GSS_ERROR_ERRNO;
 			     case 0: close(sock);
+					tv_sub(*timeout, *timeout);
 				     return EDG_WLL_GSS_ERROR_TIMEOUT;
 		     }
 		     gettimeofday(&after,NULL);
@@ -674,7 +655,66 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
 		    struct timeval *timeout, edg_wll_GssConnection *connection,
 		    edg_wll_GssStatus* gss_code)
 {
-   int sock, ret;
+   int ret;
+   struct asyn_result ar;
+   int h_errno;
+   int addr_types[] = {AF_INET6, AF_INET};
+   memset(connection, 0, sizeof(*connection));
+
+
+   int ipver = AF_INET6; //def value; try IPv6 first
+   int j;
+   for (j = 0; j< sizeof(addr_types)/sizeof(*addr_types); j++) {
+	ipver = addr_types[j];
+	ar.ent = (struct hostent *) calloc (1, sizeof(struct hostent));
+	switch (h_errno = asyn_getservbyname(ipver, &ar, hostname, port, timeout)) {
+		case NETDB_SUCCESS:
+			break;
+		case TRY_AGAIN:
+			ret = EDG_WLL_GSS_ERROR_TIMEOUT;
+			goto end;
+		case NETDB_INTERNAL: 
+			errno = h_errno;
+			ret = EDG_WLL_GSS_ERROR_HERRNO;
+			goto end; 
+		default:
+			/* h_errno may be thread safe with Linux pthread libs,
+			 * but such an assumption is not portable
+			 */
+			errno = h_errno;
+			ret = EDG_WLL_GSS_ERROR_HERRNO;
+			continue; 
+	}
+   
+	int i = 0;
+	while (ar.ent->h_addr_list[i])
+	{
+		ret = try_conn_and_auth (cred, hostname, ar.ent->h_addr_list[i], 
+					ar.ent->h_addrtype, port, timeout, connection, gss_code);
+		if (ret == 0)
+			goto end;
+		if (timeout->tv_sec < 0 ||(timeout->tv_sec == 0 && timeout->tv_usec <= 0))
+			goto end;
+		i++;
+	}
+	free_hostent(ar.ent);
+	ar.ent = NULL;
+   }
+
+   end:
+   if (ar.ent != NULL){
+	free_hostent(ar.ent);
+	ar.ent = NULL;
+   }
+   return ret;
+}
+
+/* try connection and authentication for the given addr*/
+static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *addr,  int addrtype, int port, struct timeval *timeout, edg_wll_GssConnection *connection,
+				edg_wll_GssStatus* gss_code) 
+{
+	int sock;
+	int ret = 0;
    OM_uint32 maj_stat, min_stat, min_stat2, req_flags;
    int context_established = 0;
    gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
@@ -685,12 +725,11 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
    int retry = _EXPIRED_ALERT_RETRY_COUNT;
 
    maj_stat = min_stat = min_stat2 = req_flags = 0;
-   memset(connection, 0, sizeof(*connection));
 
    /* GSI specific */
    req_flags = GSS_C_GLOBUS_SSL_COMPATIBLE;
 
-   ret = do_connect(&sock, hostname, port, timeout);
+   ret = do_connect(&sock, addr, addrtype, port, timeout);
    if (ret)
       return ret;
 
@@ -712,6 +751,7 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
    }
 
    free(servername);
+   servername = NULL;
    memset(&input_token, 0, sizeof(input_token));
 
    /* XXX if cred == GSS_C_NO_CREDENTIAL set the ANONYMOUS flag */
@@ -785,7 +825,6 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
 
    connection->sock = sock;
    connection->context = context;
-   servername = NULL;
    ret = 0;
 
 end:
@@ -795,7 +834,7 @@ end:
    }
    if (server != GSS_C_NO_NAME)
       gss_release_name(&min_stat2, &server);
-   if (servername == NULL)
+   if (servername != NULL)
       free(servername);
    if (ret)
       close(sock);
