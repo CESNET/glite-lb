@@ -55,7 +55,7 @@ For action \verb'new', command usage is:
 \begin{verbatim}
   glite-lb-notify new [ { -s socket_fd | -a fake_addr } -t requested_validity
            -j jobid  { -o owner | -O }  -n network_server 
-           -v virtual_organization --state state1,state2,... -c -J -B -T -E -f flags]
+           -v virtual_organization --state state1,state2,... -c -J -B -T -H -f flags]
 \end{verbatim}
 
 For action \verb'bind', command usage is:
@@ -99,7 +99,7 @@ where
 \texttt{  -J, -{}-jdl} & Attach JDL to job status being returned \\
 \texttt{  -B, -{}-bootstrap} & Also send past events matching conditions \\
 \texttt{  -T, -{}-terminal} & Notify only when a job reaches terminal state \\
-\texttt{  -E, -{}-summary} & Same as \texttt{-T} plus attach a summary of all job's events \\
+\texttt{  -H, -{}-history} & Same as \texttt{-T} plus attach a history of all job's events \\
 \end{tabularx}
 
 For additional information see also manual page glite-lb-notify(1).
