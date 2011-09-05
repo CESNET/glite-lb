@@ -657,18 +657,6 @@ end:
 
    return ret;
 }
-
-/* XXX XXX This is black magic. "Sometimes" server refuses the client with SSL
- *  * alert "certificate expired" even if it is not true. In this case the server
- *   * slave terminates (which helps, usually), and we can reconnect transparently.
- *    */
-
-/* This string appears in the error message in this case */
-#define _EXPIRED_ALERT_MESSAGE "function SSL3_READ_BYTES: sslv3 alert certificate expired"
-#define _EXPIRED_ALERT_RETRY_COUNT 10   /* default number of slaves, hope that not all
-					                                              are in the bad state */
-#define _EXPIRED_ALERT_RETRY_DELAY 10   /* ms */
-
 /* XXX XXX This is black magic. "Sometimes" server refuses the client with SSL
  *  * alert "certificate expired" even if it is not true. In this case the server
  *   * slave terminates (which helps, usually), and we can reconnect transparently.
