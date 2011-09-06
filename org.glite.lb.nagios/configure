@@ -969,6 +969,9 @@ for my $ext (keys %deps_aux) {
 	'lb.yaim' => {
 		default => { 'package.buildarch' => 'noarch' },
 	},
+	'lb.nagios' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
 	'px.yaim' => {
 		default => { 'package.buildarch' => 'noarch' },
 	},
