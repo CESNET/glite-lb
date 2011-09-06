@@ -1,1 +1,1 @@
-This is a nagios probe that checks the EMI L&B server. It is a shell-based script titled check_lb_server.
+This is a nagios probe, a shell script to check the L&B server.
