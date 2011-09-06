@@ -10,6 +10,7 @@ INSTALL=install
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/var/lib/grid-monitoring/emi.lb
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	chmod 750 ${DESTDIR}${PREFIX}/var/lib/grid-monitoring/emi.lb
 	-chown nagios:nagios ${DESTDIR}${PREFIX}/var/lib/grid-monitoring/emi.lb
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/libexec/grid-monitoring/probes/emi.lb
