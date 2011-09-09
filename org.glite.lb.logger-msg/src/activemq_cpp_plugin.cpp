@@ -184,6 +184,10 @@ OutputPlugin::createMessage(edg_wll_JobStat &state_out)
 	if(state_out.reason) {
 		body << "statusReason: \"" << state_out.reason << "\", ";
 	}
+	/* summaries */
+	if(state_out.summary) {
+		body << "summary: " << state_out.summary << ", ";
+	}
 	body << "}";
 
 	cms_msg->setText(body.str().c_str());
