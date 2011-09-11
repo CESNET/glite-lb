@@ -741,7 +741,10 @@ int main(int argc, char *argv[])
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s: key or certificate file not specified  - unable to watch them for changes!", argv[0]);
 
 		if ( cadir ) setenv("X509_CERT_DIR", cadir, 1);
-		edg_wll_gss_watch_creds(server_cert, &cert_mtime);
+		int ret;
+		ret = edg_wll_gss_watch_creds(server_cert, &cert_mtime);
+		if (ret < 0)
+        		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed, unable to access credentials\n");
 		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &gss_code) )
 		{
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server identity: %s", mycred->name);
@@ -1077,7 +1080,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		}
 		break;
 	case -1: 
-		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] edg_wll_gss_watch_creds failed", getpid());
+		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] edg_wll_gss_watch_creds failed, unable to access credentials", getpid());
 		break;
 	}
 
