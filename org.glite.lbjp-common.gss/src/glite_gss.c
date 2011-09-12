@@ -660,7 +660,7 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
    int h_errno;
    int addr_types[] = {AF_INET6, AF_INET};
    int ipver = AF_INET6; //def value; try IPv6 first
-   int j;
+   unsigned int j;
    int i;
 
    memset(connection, 0, sizeof(*connection));
@@ -1104,7 +1104,7 @@ edg_wll_gss_close(edg_wll_GssConnection *con, struct timeval *timeout)
 {
    OM_uint32 min_stat;
    gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
-   struct timeval def_timeout = { 0, 100000};
+   /*struct timeval def_timeout = { 0, 100000};*/
 
    if (con->context != GSS_C_NO_CONTEXT) {
       gss_delete_sec_context(&min_stat, (gss_ctx_id_t *)&con->context, &output_token);
