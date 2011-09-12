@@ -659,11 +659,11 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
    struct asyn_result ar;
    int h_errno;
    int addr_types[] = {AF_INET6, AF_INET};
-   memset(connection, 0, sizeof(*connection));
-
-
    int ipver = AF_INET6; //def value; try IPv6 first
    int j;
+   int i;
+
+   memset(connection, 0, sizeof(*connection));
    for (j = 0; j< sizeof(addr_types)/sizeof(*addr_types); j++) {
 	ipver = addr_types[j];
 	ar.ent = (struct hostent *) calloc (1, sizeof(struct hostent));
@@ -686,7 +686,7 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
 			continue; 
 	}
    
-	int i = 0;
+   	i = 0;
 	while (ar.ent->h_addr_list[i])
 	{
 		ret = try_conn_and_auth (cred, hostname, ar.ent->h_addr_list[i], 
