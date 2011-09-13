@@ -185,8 +185,8 @@ OutputPlugin::createMessage(edg_wll_JobStat &state_out)
 		body << "statusReason: \"" << state_out.reason << "\", ";
 	}
 	/* summaries */
-	if(state_out.summary) {
-		body << "summary: " << state_out.summary << ", ";
+	if(state_out.history) {
+		body << "history: " << state_out.history << ", ";
 	}
 	body << "}";
 

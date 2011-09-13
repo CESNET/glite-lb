@@ -40,7 +40,7 @@ limitations under the License.
 #include "get_events.h"
 
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *, int flags);
-static int fetch_summary(edg_wll_Context ctx, edg_wll_JobStat *stat);
+static int fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat);
 
 int edg_wll_NotifExpired(edg_wll_Context,const char *);
 
@@ -55,8 +55,8 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	
 	char *cond_where = NULL;
 	char *cond_and_where = NULL;
-	char *summary = NULL;
-	int  summary_fetched = 0;
+	char *history = NULL;
+	int  history_fetched = 0;
 	edg_wll_JobStat newstat = *stat; // shallow copy
 
 	edg_wll_ResetError(ctx);
@@ -127,16 +127,16 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			char	*errt, *errd;
 			char	*dest;
 
-			if (flags & EDG_WLL_NOTIF_EVENT_SUMMARY && !summary_fetched) {
-				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: summary for job %s", jobc[0]);
-				if (fetch_summary(ctx, &newstat) != 0) {
+			if (flags & EDG_WLL_NOTIF_HISTORY && !history_fetched) {
+				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: event history for job %s", jobc[0]);
+				if (fetch_history(ctx, &newstat) != 0) {
 					edg_wll_Error(ctx, &errt, &errd);
-					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "NOTIFY: query summary events for %s failed, %s: %s", jobc[0], errt, errd);
+					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "NOTIFY: query events for %s failed, %s: %s", jobc[0], errt, errd);
 					free(errt);
 					free(errd);
 					edg_wll_ResetError(ctx);
 				}
-				summary_fetched = 1;
+				history_fetched = 1;
 			}
 
 			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %s, job %s", jobc[0], ju = edg_wlc_JobIdGetUnique(newstat.jobId));
@@ -164,7 +164,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	if (ret < 0) goto err;
 	
 err:
-	free(summary);
+	free(history);
 	free(ctx->p_instance); ctx->p_instance = NULL;
 	if ( nid ) edg_wll_NotifIdFree(nid);
 	free(jobq);
@@ -279,17 +279,17 @@ int edg_wll_NotifCheckACL(edg_wll_Context ctx,const edg_wll_JobStat *stat,const 
 }
 
 
-#define SUMMARY_EMPTY "[]"
-#define SUMMARY_HEADER "[\n"
-#define SUMMARY_HEADER_SIZE 2
-#define SUMMARY_FOOTER "\n]"
-#define SUMMARY_FOOTER_SIZE 2
-#define SUMMARY_SEPARATOR ",\n"
-#define SUMMARY_SEPARATOR_SIZE 2
+#define HISTORY_EMPTY "[]"
+#define HISTORY_HEADER "[\n"
+#define HISTORY_HEADER_SIZE 2
+#define HISTORY_FOOTER "\n]"
+#define HISTORY_FOOTER_SIZE 2
+#define HISTORY_SEPARATOR ",\n"
+#define HISTORY_SEPARATOR_SIZE 2
 
-static int fetch_summary(edg_wll_Context ctx, edg_wll_JobStat *stat) {
+static int fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat) {
 	edg_wll_QueryRec	 jc0[2], *jc[2];
-	char			*event_str = NULL, *summary = NULL;
+	char			*event_str = NULL, *history = NULL;
 	edg_wll_Event *events = NULL;
 	size_t	size, len, maxsize = 1024, newsize;
 	size_t i;
@@ -304,45 +304,45 @@ static int fetch_summary(edg_wll_Context ctx, edg_wll_JobStat *stat) {
 
 	if (edg_wll_QueryEventsServer(ctx, 1, (const edg_wll_QueryRec **)jc, NULL, &events) == 0) {
 		if (!events || !events[0].type) {
-			summary = strdup(SUMMARY_EMPTY);
+			history = strdup(HISTORY_EMPTY);
 		} else {
-			summary = malloc(maxsize);
-			strcpy(summary, SUMMARY_HEADER);
-			size = SUMMARY_HEADER_SIZE;
+			history = malloc(maxsize);
+			strcpy(history, HISTORY_HEADER);
+			size = HISTORY_HEADER_SIZE;
 
 			for (i = 0; events && events[i].type; i++) {
 				if (edg_wll_UnparseEventJSON(ctx, events + i, &event_str) != 0) goto err;
 				len = strlen(event_str);
-				newsize = size + len + SUMMARY_SEPARATOR_SIZE + SUMMARY_FOOTER_SIZE + 1;
+				newsize = size + len + HISTORY_SEPARATOR_SIZE + HISTORY_FOOTER_SIZE + 1;
 				if (newsize > maxsize) {
 					maxsize <<= 1;
 					if (newsize > maxsize) maxsize = newsize;
-					if ((tmpptr = realloc(summary, maxsize)) == NULL) {
+					if ((tmpptr = realloc(history, maxsize)) == NULL) {
 						edg_wll_SetError(ctx, ENOMEM, NULL);
 						goto err;
 					}
-					summary = tmpptr;
+					history = tmpptr;
 				}
-				strncpy(summary + size, event_str, len + 1);
+				strncpy(history + size, event_str, len + 1);
 				size += len;
 				if (events[i+1].type) {
-					strcpy(summary + size, SUMMARY_SEPARATOR);
-					size += SUMMARY_SEPARATOR_SIZE;
+					strcpy(history + size, HISTORY_SEPARATOR);
+					size += HISTORY_SEPARATOR_SIZE;
 				}
 				free(event_str);
 				event_str = NULL;
 			}
-			strcpy(summary + size, SUMMARY_FOOTER);
-			size += SUMMARY_FOOTER_SIZE;
+			strcpy(history + size, HISTORY_FOOTER);
+			size += HISTORY_FOOTER_SIZE;
 		}
-		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %zd events in summary", i);
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: fetched %zd events", i);
 
-		stat->summary = summary;
-		summary = NULL;
+		stat->history = history;
+		history = NULL;
 	}
 
 err:
-	free(summary);
+	free(history);
 	for (i = 0; events && events[i].type; i++)
 		edg_wll_FreeEvent(&events[i]);
 	free(events);

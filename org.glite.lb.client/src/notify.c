@@ -211,7 +211,7 @@ int main(int argc,char **argv)
 			case 'T':
 				flags |= EDG_WLL_NOTIF_TERMINAL_STATES; break;
 			case 'H':
-				flags |= EDG_WLL_NOTIF_TERMINAL_STATES | EDG_WLL_NOTIF_EVENT_SUMMARY; break;
+				flags |= EDG_WLL_NOTIF_TERMINAL_STATES | EDG_WLL_NOTIF_HISTORY; break;
 			case 'c':
 				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
