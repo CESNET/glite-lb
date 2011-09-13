@@ -376,7 +376,7 @@ ifdef LB_PERF
 endif
 
 clean:
-	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} startup
+	rm -rvf *.c *.cpp *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} startup
 	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 %.c: %.c.T
