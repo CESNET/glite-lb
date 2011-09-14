@@ -24,6 +24,7 @@
 #
 
 use Getopt::Long;
+use POSIX qw(locale_h strftime);
 
 my $pwd = `pwd`; chomp $pwd;
 my $prefix = '/usr';
@@ -731,6 +732,7 @@ for my $ext (keys %deps_aux) {
 %provides = (
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
+	'lb.nagios' => [ qq/glite-lb-nagios-plugins/ ],
 );
 
 %cvs_prefix = (
@@ -995,6 +997,7 @@ sub full
 sub mkinc
 {
 	my %aux;
+	my ($old_locale, $date);
 	undef %aux;
 	my @m=qw/
 lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.nagios lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
@@ -1031,10 +1034,23 @@ px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
 			}
 		}
 	}
+
+	mkdir $build."project" unless (-d $build."project");
+	open PKGCHL,">".$build."project/changelog"
+		or die $build."project/changelog: $!\n";
+	$old_locale = setlocale(LC_TIME);
+	setlocale(LC_TIME, "C");
+	$date = strftime("%a %b %d %Y", gmtime());
+	setlocale(LC_TIME, $old_locale);
+	print PKGCHL qq{* $date CESNET team <emi-lb\@metacentrum.cz>
+- automatically generated package
+};
+	close PKGCHL;
+
 	unless ($top_srcdir eq '.') {
 		unlink $build."Makefile";
 		symlink "$top_srcdir/Makefile",$build."Makefile" or die "symlink $top_srcdir/Makefile ".$build."Makefile: $!\n";
-		for my $file ('.pre', '.post', '.preun', '.postun changelog') {
+		for my $file ('.pre', '.post', '.preun', '.postun') {
 			my $pfile = "project/$file";
 			if (-f "$full/$pfile") {
 				mkdir "$build/project" unless (-d "$build/project");

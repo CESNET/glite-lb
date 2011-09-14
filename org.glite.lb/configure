@@ -732,6 +732,7 @@ for my $ext (keys %deps_aux) {
 %provides = (
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
+	'lb.nagios' => [ qq/glite-lb-nagios-plugins/ ],
 );
 
 %cvs_prefix = (
