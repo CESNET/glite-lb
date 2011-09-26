@@ -329,6 +329,9 @@ static const char* const srcNames[] = {
 	"LBServer",
 	"CREAMInterface",
 	"CREAMExecutor",
+	"PBSServer",
+	"PBSMom",
+	"PBSScheduler"
 };
 
 edg_wll_Source edg_wll_StringToSource(const char *name)
