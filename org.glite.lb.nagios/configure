@@ -867,9 +867,8 @@ for my $ext (keys %deps_aux) {
 				'myproxy-devel' => 'myproxy-devel.x86_64',
 			},
 			deb6_x86_64_gcc445 => {
-				globus_essentials => 'globus-gssapi-gsi4',
+				globus_essentials => 'libglobus-gssapi-gsi4',
 				globus => 'libglobus-gssapi-gsi-dev',
-				globus_proxy_utils=>'globus-proxy-utils',
 				axis => 'libaxis-java',
 				cares => 'libc-ares2',
 				cppunit => 'libcppunit',
@@ -882,6 +881,9 @@ for my $ext (keys %deps_aux) {
 				'jakarta-commons-codec' => 'libcommons-codec-java',
 				'jakarta-commons-lang' => 'libcommons-lang-java',
 				'tetex-latex' => 'texlive-latex-extra',
+				'perl-LDAP' => 'libnet-ldap-perl',
+				'fuse-lib' => 'libfuse2',
+				'fuse' => 'fuse-utils',
 			},
 		},
 		etics_externs_devel => {
@@ -913,6 +915,8 @@ for my $ext (keys %deps_aux) {
 				openssl => 'libssl-dev',
 				'tetex-latex' => 'texlive-latex-extra',
 				libxslt=>'xsltproc',
+				'httpd-devel' => 'apache2-prefork-dev',
+				'fuse-devel' => 'libfuse-dev',
 			},
 		},
 		etics_projects => {
