@@ -329,7 +329,9 @@ static const char* const srcNames[] = {
 	"LBServer",
 	"CREAMInterface",
 	"CREAMExecutor",
+	"PBSClient",
 	"PBSServer",
+	"PBSMomSuperior",
 	"PBSMom",
 	"PBSScheduler"
 };
@@ -398,7 +400,14 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 					c[EDG_WLL_SOURCE_LB_SERVER]);
 			break;
 		case EDG_WLL_SEQ_PBS:
-			ret = strdup(ctx->p_seqcode.pbs);
+			c = &ctx->p_seqcode.c[0];
+			asprintf(&ret, EDG_WLL_SEQ_PBS_FORMAT_PRINTF,
+				 c[EDG_WLL_SOURCE_PBS_CLIENT],
+				 c[EDG_WLL_SOURCE_PBS_SERVER],
+				 c[EDG_WLL_SOURCE_PBS_SCHEDULER],
+				 c[EDG_WLL_SOURCE_PBS_SMOM],
+				 c[EDG_WLL_SOURCE_PBS_MOM]);
+			/* ret = strdup(ctx->p_seqcode.pbs); */
 			break;
 		case EDG_WLL_SEQ_CONDOR:
 			ret = strdup(ctx->p_seqcode.condor);
@@ -466,10 +475,27 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			}
 			break;
 		case EDG_WLL_SEQ_PBS:
+			/* original version
 			if (!seqcode_str) 
 				memset(&ctx->p_seqcode.pbs, 0, sizeof ctx->p_seqcode.pbs);
 			else
 				strncpy(ctx->p_seqcode.pbs, seqcode_str, sizeof(ctx->p_seqcode.pbs));
+			*/
+			if (!seqcode_str) {
+				memset(&ctx->p_seqcode.c, 0, sizeof(ctx->p_seqcode.c));
+				return 0;
+			}
+			c = ctx->p_seqcode.c;
+			res = sscanf(seqcode_str, EDG_WLL_SEQ_PBS_FORMAT_SCANF,
+				     &c[EDG_WLL_SOURCE_PBS_CLIENT],
+				     &c[EDG_WLL_SOURCE_PBS_SERVER],
+				     &c[EDG_WLL_SOURCE_PBS_SCHEDULER],
+				     &c[EDG_WLL_SOURCE_PBS_SMOM],
+				     &c[EDG_WLL_SOURCE_PBS_MOM]);
+			if(res != EDG_WLL_SEQ_PBS_FORMAT_NUMBER) {
+				return edg_wll_SetError(ctx, EINVAL,
+					"edg_wll_SetSequenceCode(): syntax error in sequence code");
+			}
 			break;
 		case EDG_WLL_SEQ_CONDOR:
 			if (!seqcode_str) 
@@ -494,6 +520,7 @@ int edg_wll_IncSequenceCode(edg_wll_Context ctx)
 	switch (ctx->p_seqcode.type) {
 		case EDG_WLL_SEQ_DUPLICATE:
 			/* fall through */
+		case EDG_WLL_SEQ_PBS:
 		case EDG_WLL_SEQ_NORMAL:
 			if (ctx->p_source <= EDG_WLL_SOURCE_NONE || 
 					ctx->p_source >= EDG_WLL_SOURCE__LAST) 
@@ -504,7 +531,6 @@ int edg_wll_IncSequenceCode(edg_wll_Context ctx)
 
 			ctx->p_seqcode.c[ctx->p_source]++;
 			break;
-		case EDG_WLL_SEQ_PBS:
 		case EDG_WLL_SEQ_CREAM:
 			/* no action */
 			break;

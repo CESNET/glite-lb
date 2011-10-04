@@ -253,9 +253,13 @@
 
 @type PBSInternalStateChange		Change of internal PBS job state
 	int	oldstate
+	_null_	-1
 	int     oldsubstate
+	_null_	-1
 	int	newstate
+	_null_	-1
 	int	newsubstate
+	_null_	-1
 
 
 @type PBSTransfer		Start, success, or failure of job transfer to another component.
