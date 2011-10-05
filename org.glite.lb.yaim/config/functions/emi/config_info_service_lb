@@ -72,6 +72,9 @@ if [ $? != 0 ]; then
   yaimlog ERROR "Copying glue2 service template failed"
   exit 1
 fi
+# workaround SB #85209 ($GLITE_LOCATION/etc in provider scripts)
+sed -i 's/\$GLITE_LOCATION//' ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf
+sed -i 's/\$GLITE_LOCATION//' ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf
 
 # Note: the configuration file may need to be altered if non standard values have been used. 
 
