@@ -53,7 +53,7 @@ doc: LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf LBTG.pdf
 	chmod -w $@ >/dev/null
 
 ver.tex:
-	@echo "\def\version{${version}}" > ver.tex
+	printf "\134def\134version{${version}}\n" > ver.tex
 
 stage: doc
 	$(MAKE) install PREFIX=${stagedir}
