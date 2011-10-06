@@ -385,8 +385,10 @@ int edg_wll_NotifChangeServer(
 
 	/*	Format notification ID
 	 */
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) ) {
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto err;
+	}
 
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;
@@ -631,8 +633,10 @@ static int check_notif_request(
 		return edg_wll_Error(ctx, NULL, NULL);
 	}
 
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) ) {
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto cleanup;
+	}
 
 	trio_asprintf(&stmt,
 				"select destination from notif_registrations "
@@ -759,7 +763,7 @@ static int update_notif(
 
 	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
 	{
-		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID.");
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto cleanup;
 	}
 
@@ -909,8 +913,10 @@ static int drop_notif_request(edg_wll_Context ctx, const edg_wll_NotifId nid) {
 
 	errCode = edg_wll_Error(ctx, NULL, &errDesc);	
 
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) ) {
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto rollback;
+	}
 
 	trio_asprintf(&stmt, "delete from notif_registrations where notifid='%|Ss'", nid_s);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
@@ -953,8 +959,10 @@ static int check_notif_age(edg_wll_Context ctx, const edg_wll_NotifId nid) {
 	     *q = NULL;
 	int ret;
 
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) ) {
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto cleanup;
+	}
 
 	glite_lbu_TimeToStr(now, &time_s);
 	if ( !time_s )
