@@ -946,20 +946,6 @@ for my $ext (keys %deps_aux) {
 );
 
 %platform_properties = (
-	'gridsite.core' => {
-		sl5_x86_64_gcc412 => { aprSuffix => '1' },
-		sl5_ia32_gcc412 => { aprSuffix => '1' },
-		sl5_x86_64_gcc412EPEL => { aprSuffix => '1' },
-		sl5_ia32_gcc412EPEL => { aprSuffix => '1' },
-		deb5_x86_64_gcc432 => { aprSuffix => '1.0' },
-		deb5_ia32_gcc432 => { aprSuffix => '1.0' },
-		slc4_x86_64_gcc346 => { aprSuffix => '0' },
-		slc4_ia32_gcc346 => { aprSuffix => '0' },
-		sl6_x86_64_gcc444 => { aprSuffix => '1' },
-		deb6_x86_64_gcc445 => { aprSuffix => '1.0' },
-		default => { 
-		}
-	},
 	'jobid.api-java' => {
 		default => { 'package.buildarch' => 'noarch' },
 	},
@@ -1226,29 +1212,34 @@ sub mode_etics {
 		$cmd{tag} = 'None';
 
 		if ($module eq 'core') {
-			my ($flags, $prefix, $make_patches);
+			my $flags;
 
 			if ($project ne 'glite') {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
-				$prefix = 'prefix=${prefix}/usr';
+				# don't evaluate pkg-config calls to get them into source package
+				$flags = 'RELEASE_VERSION=${age}.${platformFamily}
+	GSOAPDIR=\`pkg-config gsoap --variable=prefix\`
+	OPENSSL_GLOBUS_FLAGS=\`pkg-config globus-openssl --cflags\`
+	OPENSSL_GLOBUS_LIBS=\`pkg-config globus-openssl --libs\`';
 			} else {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
-				$prefix = 'prefix=${prefix}';
-			}
-			if ($project eq 'emi') {
-				# proper dependency name in spec-file
-				$cmd{checkout} .= " && \\
-	(cd \${moduleName}; test -f src/make-gridsite-spec.orig || sed -i.orig 's/\\(Buildrequires: libxml2-devel.*\\)/\\1,globus-gssapi-gsi-devel/' src/make-gridsite-spec)";
-				$make_patches = "
-	diff -up make-gridsite-spec.orig make-gridsite-spec > \${moduleDir}/RPMTMP/SOURCES/emi-deps.patch
-	diff -up make-gridsite-spec.orig make-gridsite-spec > \${moduleDir}/src/tgz/emi-deps.patch";
+				$flags = 'RELEASE_VERSION=${age}.${platformFamily}
+	GSOAPDIR=${gsoap.location}
+	OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor}
+	OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}
+	HTTPD_FLAGS=-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-1 -I${httpd-devel.location}/include/apr-1.0 -I${httpd-devel.location}/include/apr-0 -I${httpd-devel.location}/include/pcre';
 			}
 
-			$cmd{compile} = "echo 'make $flags' > build.sh\n\tmake $prefix $flags build";
-			$cmd{clean} = "rm -rvf build.sh \${moduleDir}/src/tgz; $cmd{clean}";
-			$cmd{install} = "make $prefix $flags install";
-			$cmd{packaging} = "mkdir -p \${moduleDir}/RPMTMP/SOURCES \${moduleDir}/src/tgz 2>/dev/null || true $make_patches
-	make $prefix $flags rpm && \
+			$cmd{configure} = "cat > Makefile.inc <<EOF
+	project = $project
+	libdir = $libdir
+	top_srcdir = ..
+	
+	$flags
+	EOF";
+			$cmd{compile} = "make prefix=\${prefix}$project{local_prefix}";
+			$cmd{clean} = "rm -rvf \${moduleDir}/src/tgz; $cmd{clean}";
+			$cmd{install} = "make prefix=\${prefix}$project{local_prefix} install";
+			$cmd{packaging} = "mkdir -p \${moduleDir}/RPMTMP/SOURCES \${moduleDir}/src/tgz 2>/dev/null || true
+	make prefix=\${prefix}$project{local_prefix} rpm && \
 	cp \${moduleDir}/RPMTMP/SOURCES/gridsite-\${version}.src.tar.gz \${moduleDir}/src/tgz";
 		}
 		else {
@@ -1318,7 +1309,6 @@ checkstyle = None
 
 [Platform-default:Property]
 $buildroot
-aprSuffix = 0
 package.RPMSLocation = \${moduleDir}/RPMTMP/RPMS
 package.SRPMSLocation = \${moduleDir}/RPMTMP/SRPMS
 package.preserve.libtool = false
