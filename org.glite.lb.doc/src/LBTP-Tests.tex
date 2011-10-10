@@ -73,6 +73,8 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-permissions.sh} & Implemented & Check ownership and permission settings for config and runtime files \\
 \hline
+{\tt lb-test-nagios-probe.sh} & Implemented & Run the nagios probe and check results \\
+\hline
 \end{tabularx}
 
 \subsubsection{Event logging examples}
@@ -531,6 +533,23 @@ including the checks.
 
 \result\ The status of all files should match the pre-determined mask.
 
+
+\subsubsection{Nagios probe}
+\label{permissions}
+\req\ All \LB\ services configured and running, nagios probe\footnote{see also page \pageref{s:nagios}} installed.
+
+\what
+\begin{enumerate}
+\item Check probe for presence
+\item Run the probe
+\item Check if text and exit code are OK or at least consistent
+\end{enumerate}
+
+\how\ \ctblb{lb-test-nagios-probe.sh}
+
+\result\ The probe has returned OK and exit code was 0.
+
+\note\ The probe includes artificial delays. The test takes approx. 10\,s to finish.
 
 
 \section{LB ``In the Wild''---Real-World WMS Test}
