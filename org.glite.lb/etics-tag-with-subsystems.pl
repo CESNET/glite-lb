@@ -235,7 +235,7 @@ usage: $0 [-c <current configuration>] module.name
 
 	printf("\nNew tag: $tag\n\n");
 
-	die "This tag already exists; reported by assertion" unless system("cvs log -h $module/Makefile | grep \"$tag\"");
+	die "This tag already exists; reported by assertion" unless system("cvs log -h $module/project/version.properties | grep \"$tag\"");
 
 	# **********************************
 	# Create the execution script
