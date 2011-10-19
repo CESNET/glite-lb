@@ -864,7 +864,7 @@ for my $ext (keys %deps_aux) {
 			sl5_x86_64_gcc412EPEL => {
 				'myproxy-devel' => 'myproxy-devel.x86_64',
 			},
-			sl6_x86_64_gcc444EPEL => {
+			sl6_x86_64_gcc445EPEL => {
 				'myproxy-devel' => 'myproxy-devel.x86_64',
 			},
 			deb6_x86_64_gcc445 => {
@@ -937,7 +937,7 @@ for my $ext (keys %deps_aux) {
 		supported_platforms => {
 			sl5_x86_64_gcc412EPEL => 1,
 			sl5_ia32_gcc412EPEL => 1,
-			sl6_x86_64_gcc444EPEL => 1,
+			sl6_x86_64_gcc445EPEL => 1,
 #			deb6_x86_64_gcc445 => 1,
 		},
 		modules => {
@@ -964,7 +964,7 @@ my %gridsite_deb = (
 		deb5_ia32_gcc432 =>  \%gridsite_deb,
 		slc4_x86_64_gcc346 => \%gridsite_rpm,
 		slc4_ia32_gcc346 => \%gridsite_rpm,
-		sl6_x86_64_gcc444 => \%gridsite_rpm,
+		sl6_x86_64_gcc445 => \%gridsite_rpm,
 		deb6_x86_64_gcc445 => \%gridsite_deb,
 	},
 	'jobid.api-java' => {
