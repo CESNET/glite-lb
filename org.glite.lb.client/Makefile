@@ -5,7 +5,6 @@ globalprefix=glite
 lbprefix=lb
 package=glite-lb-client
 version=0.0.0
-
 CC:=gcc
 CXX:=g++
 
@@ -20,6 +19,12 @@ version=${module.version}
 # we are (the number can be even negative).
 
 VERSION_AHEAD=-3
+
+# hacks needed for ETICS:
+# - rpath out of installation directory ${PREFIX}
+#   (the proper value is ${prefix}/${libdir})
+# - installed *.la files should be removed
+rpath?=${PREFIX}${prefix}/${libdir}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
 AT3=${stagedir}${prefix}/sbin/glite-lb-at3
@@ -107,7 +112,7 @@ EXT_LIB:=
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
 CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 
-LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} -L${PREFIX}${prefix}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
@@ -206,28 +211,28 @@ default: all
 
 ifeq (${thrflavour},)
 ${LIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${rpath} \
 			${COMMON_LIB} ${TRIO_LIB} \
 			-lglite_security_gss
 
 ${PLUSLIB}: ${PLUSTHROBJS} ${LIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${prefix}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${rpath} ${LIB} ${PLUS_EXTRA_LIB}
 else
 ${NOTHRLIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${rpath} \
 			${COMMON_LIB_NOTHR} ${TRIO_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${rpath} \
 			${COMMON_LIB_THR} ${TRIO_LIB} \
 			-lglite_security_gss_${thrflavour}
 
 ${NOTHRPLUSLIB}: ${PLUSOBJS} ${NOTHRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${prefix}/${libdir} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${rpath} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${prefix}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${rpath} ${THRLIB} ${PLUS_EXTRA_LIB}
 endif
 
 logevent: logevent.o args.o
@@ -399,5 +404,25 @@ clean:
 check_version:
 	${CHECK_VERSION} ${stagedir}${prefix}/include/glite/lb/common_version.h
 
+post-install:
+	rm -rfv ${PREFIX}${prefix}/${libdir}/*.la
 
-.PHONY: default all compile examples check stage install clean check_version link
+post-install-rpath:
+	for file in `find ${PREFIX}${prefix}/${libdir} -type f` \
+	            `find ${PREFIX}${prefix}/bin -type f` \
+	            `find ${PREFIX}${prefix}/sbin -type f` \
+	; do \
+		if test -h $$file; then continue; fi; \
+		orpath=`chrpath -l $$file 2>/dev/null`; \
+		if test $$? = 0 ; then \
+			orpath=`echo $$orpath | sed 's:.*RPATH=::'`; \
+			rpath=`echo $$orpath | sed "s:${PREFIX}${prefix}:${sysroot}${prefix}:g" | tr ':' '\n' | grep -v '^$$' | tr '\n' ':' | sed 's/:$$//'`; \
+			if test "$$orpath" = "$$rpath"; then continue; fi; \
+			echo "$$file"; \
+			echo " -> $$rpath"; \
+			chrpath -r $$rpath $$file; \
+			chrpath -d $$file; \
+		fi; \
+	done
+
+.PHONY: default all compile examples check stage install clean check_version link post-install post-install-rpath

@@ -87,6 +87,35 @@ int edg_wll_QueryToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 	free(a); a=NULL; \
 }
 
+#define TRS(name,type,field) \
+{ \
+        int l; \
+        if (field) \
+                l = asprintf(&a,"%s=" type "", \
+                        name, field); \
+        else \
+                l = asprintf(&a,"%s=", name); \
+        b = realloc(b, sizeof(*b)*(pomL+l+1)); \
+        strcpy(b+pomL, a); \
+        pomL += l; \
+        free(a); a=NULL; \
+}
+
+#define TRA(type,field) \
+{ \
+        int l; \
+        if (field) \
+                l = asprintf(&a,"," type "", \
+                        field); \
+        else \
+                l = asprintf(&a,"\n"); \
+        b = realloc(b, sizeof(*b)*(pomL+l+1)); \
+        strcpy(b+pomL, a); \
+        pomL += l; \
+        free(a); a=NULL; \
+}
+
+
 int edg_wll_UserInfoToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
 {
         char *a = NULL, *b;
@@ -241,6 +270,32 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 	free(jdl);
 	free(rsl);
         return 0;
+}
+
+int edg_wll_ConfigurationToText(edg_wll_Context ctx, char **message){
+	char *a = NULL, *b;
+	int pomL = 0;
+	int i;
+	b = strdup("");
+
+	if (ctx->msg_brokers)
+		for (i = 0; ctx->msg_brokers[i]; i++){
+			if (i == 0) TRS("msg_brokers", "%s", ctx->msg_brokers[i])
+			else TRA("%s", ctx->msg_brokers[i]);
+		}
+	if (i > 0)
+		TRA("%s", NULL);
+
+	if (ctx->msg_prefixes)
+		for (i = 0; ctx->msg_prefixes[i]; i++)
+			if (i == 0) TRS("msg_prefixes", "%s", ctx->msg_prefixes[i])
+			else TRA("%s", ctx->msg_prefixes[i]);
+	if (i > 0)
+                TRA("%s", NULL);
+	
+	*message = b;
+
+	return 0;
 }
 
 char *edg_wll_ErrorToText(edg_wll_Context ctx,int code)

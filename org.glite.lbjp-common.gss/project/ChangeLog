@@ -77,3 +77,11 @@
 3.0.3-1
 - edg_wll_gss_set_signal_handler() added
 
+3.0.4-1
+- Next stage for globus signal handler fixes:
+  - globus common module loaded only in edg_wll_initialize()
+  - using globus_poll_nonblocking() before checking signals in logger,
+    new function in gss (needed for non-threaded globus flavour)
+  - warning fixes (type cast, 32/64 portability)
+  - gss functions documented in code
+

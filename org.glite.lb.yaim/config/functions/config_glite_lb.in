@@ -113,6 +113,7 @@ EOF
 		eval value=\"$`echo GLITE_LB_AUTHZ_$section`\"
 		case "$section" in
 		ADMIN_ACCESS) value="$value,$superusers" ;;
+		GET_STATISTICS) value="$value,$wms" ;;
 		READ_ALL) value="$value,$wms,$rtm" ;;
 		PURGE) value="$value,$wms" ;;
 		LOG_WMS_EVENTS) value="$value,$wms" ;;
@@ -304,6 +305,7 @@ EOF
 
   # Create cron for purging
   mkdir -p /var/log/glite
+  chown $GLITE_USER:$GLITE_USER /var/log/glite
   logfile=/var/log/glite/glite-lb-purger.log
   if $LB_PURGE --help 2>&1 | grep 'target-runtime' > /dev/null; then
     purge_target_runtime_cmd='export GLITE_LB_PURGE_TARGET_RUNTIME=84600s; '

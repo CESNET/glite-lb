@@ -457,7 +457,9 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    }
 
    edg_wll_gss_initialize();
-   edg_wll_gss_watch_creds(cert_file,&cert_mtime);
+   ret = edg_wll_gss_watch_creds(cert_file,&cert_mtime);
+   if (ret < 0)
+   	glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed, unable to access credentials\n");
    /* XXX DK: support noAuth */
    ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &gss_stat);
    if (ret) {
@@ -593,7 +595,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 		}
 		break;
 	case -1:
-		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed\n");
+		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed, unable to access credentials\n");
 		break;
 	}
 

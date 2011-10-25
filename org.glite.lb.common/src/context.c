@@ -196,6 +196,20 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 	
 	if (ctx->jpreg_dir) free(ctx->jpreg_dir);
 	if (ctx->serverIdentity) free(ctx->serverIdentity);
+	if (ctx->msg_prefixes) {
+		char **fm;
+		for (fm = ctx->msg_prefixes; fm && *fm; fm++)
+			free(*fm);
+		free(ctx->msg_prefixes);
+		ctx->msg_prefixes = NULL;
+	}
+	if (ctx->msg_brokers) {
+		char **fm;
+		for (fm = ctx->msg_brokers; fm && *fm; fm++)
+			free(*fm);
+		free(ctx->msg_brokers);
+		ctx->msg_brokers = NULL;
+	}
 
 	edg_wll_FreeParams(ctx);
 
@@ -225,6 +239,8 @@ static const char* const errTexts[] = {
 	"Interlogger has events pending",
 	"Compared events differ",
 	"DB deadlock detected",
+	"DB connection lost",
+	"Background operation accepted",
 };
 
 const char *edg_wll_GetErrorText(int code) {
@@ -678,4 +694,54 @@ edg_wll_add_authz_rule(edg_wll_Context ctx,
     policy->actions[idx].rules_num++;
 
     return 0;
+}
+
+int
+edg_wll_ParseMSGConf(char *msg_conf, char ***brokers, char ***prefixes) {
+	FILE *conf;
+	char l[512];
+	char *data, *d_to_parse;
+	int inmsg = 0, ntoks;
+	char *tok_r = NULL;
+	char *token;
+	char **tokens;
+	
+
+	conf = fopen (msg_conf, "r");
+	if (conf == NULL) return -1; //Cannot open file
+
+	while( 1 ) {
+		fgets(l, 512, conf);
+		if ( feof(conf) ) break;
+
+		if (l[0] == '[') { // Detect section [msg]
+			if (!strncasecmp(l, "[msg]", 5)) inmsg = 1;
+			else inmsg = 0;
+		}
+		else if (inmsg) {
+			if ((!strncasecmp(l, "prefix", 6)) || (!strncasecmp(l, "broker", 6))) {
+				data=strchr(l, '=');
+				if (!data) return -2; // No '='
+//				data = data[1];
+				if (strlen(data) < 1) return -2; // No text after '='
+
+				tokens = NULL; ntoks = 0;
+				for (d_to_parse = data+1; ; d_to_parse = NULL) {
+					token = strtok_r(d_to_parse, " \t\n", &tok_r);
+					if (token == NULL) break;
+
+					tokens = (char**) realloc (tokens, sizeof(char**) * (ntoks + 2));
+					asprintf(&(tokens[ntoks]), "%s", token);
+					tokens[++ntoks] = NULL;	
+				} 
+
+				if (!strncasecmp(l, "prefix", 6)) *prefixes=tokens; 
+				else *brokers=tokens;
+			}
+
+		}
+
+	}
+	
+	return 0;
 }

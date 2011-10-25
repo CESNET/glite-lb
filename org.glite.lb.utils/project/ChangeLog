@@ -51,6 +51,11 @@
 2.0.8-4
 - Module rebuilt
 
+2.0.9-1
+- Essential checking of temporal arguments to glite-lb-dump for validity
+- Support for special date values (now, last dump start/end) in glite-lb-dump
+- Proper handling of background purge error messages (fix for bug #77974)
+
 2.1.0-1
 - Fixes for parallel release in EMI & gLite
 - Check result of InitContext calls
@@ -83,4 +88,9 @@
 2.1.3-1
 - at3 location detection reverted
 - '--stage=/' behaviour fixed in configure
+
+2.1.4-1
+> - Essential checking of temporal arguments to glite-lb-dump for validity
+> - Support for special date values (now, last dump start/end) in glite-lb-dump
+> - Proper handling of background purge error messages (fix for bug #77974)
 

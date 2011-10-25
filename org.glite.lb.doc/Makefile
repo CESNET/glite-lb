@@ -53,7 +53,7 @@ doc: LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf LBTG.pdf
 	chmod -w $@ >/dev/null
 
 ver.tex:
-	@echo "\def\version{${version}}" > ver.tex
+	printf "\134def\134version{${version}}\n" > ver.tex
 
 stage: doc
 	$(MAKE) install PREFIX=${stagedir}
@@ -72,7 +72,7 @@ install:
 	${INSTALL} -m 644 LBTG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 # install DG example sources
 	for p in ${top_srcdir}/examples/*; do \
-		if [ "$$p" == "${top_srcdir}/examples/CVS" ]; then continue; fi; \
+		if [ "$$p" = "${top_srcdir}/examples/CVS" ]; then continue; fi; \
 		${INSTALL} -m 644 "$$p" "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples"; \
 	done
 
@@ -124,7 +124,8 @@ LBTP.pdf: ${COMMON} \
 	LBTP-IntegrationTests.tex \
 	LBTP-Tests.tex \
 	LBTP-PerfTests.tex \
-	LBTP-InterTests.tex
+	LBTP-InterTests.tex \
+	LBTP-Nagios.tex
 
 LBTG.pdf: ${COMMON} \
 	LBTG.tex \

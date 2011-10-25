@@ -707,11 +707,11 @@ The \LB infrastructure can notify its users when something interesting happens o
 
 Users register for notifications via the notification client \verb'glite-lb-notify', described in Section
 \ref{s:lb-notify} 
-Conditions under which the notifications are sent can be specified. For example -- job XY reaches status
+Conditions under which the notifications are sent can be specified. For example -- job XY reaches state
 DONE. In \LBver{1.x}, one or more JOBID's are required in the condition and only a single occurence 
-of a specific attribute is allowed among ANDed conditions. More complex conditions are allowed since \LBver{2.0}
+of a specific attribute is allowed among ANDed conditions. More complex conditions are allowed since \LBver{2.0}, including specification of job owner, or requesting to receive notifications only on actual job state change. \LBver{3.0} introduces an option to deliver notification messages over OpenWire or STOMP-based messaging infrastructure.\footnote{Such as Apache's ActiveMQ.}
 
-The registration is then delivered to the \LB server where it is stored.
+Each registration is delivered to the \LB server where it is stored.
 At the same time, the server generates a unique notification ID for the registration and returns it to the
 user.
 
@@ -719,10 +719,10 @@ The registration exists only for a limited amount of time. Validity information 
 the notification ID when registering. During this period the user can attach to the server and receive notification messages,
 change conditions which triger the notification, prolong validity of the registration, or remove the registration
 from the \LB server. 
-It is also possible to specify on registration that notification messages for a given registration are not supposed to be delivered through the notification client but through the messaging infrastructure instead. 
 
 While the registration is valid, the user is able to repeatably connect to the \LB server from different places in the
-network and continue receiving notifications associated with the given notification ID. When relying on \LB's event delivery infrastructure to deliver messages, even notifications generated
+network and continue receiving notifications associated with the given notification ID.\footnote{Should the user have opted to receive notification messages over the messaging infrastructure, then---obviously---they need to connect to the correct topic on a messaging broker, rather than contacting the \LB sever. If unsure what messaging brokers are available in your grid environment, read that information from BDII or use the \LB Server's configuration page (Section \ref{s:findbroker}).
+} Notifications generated
 while the user was not connected are stored and waiting until the user reconnects. 
 
 \subsubsection{Caveats}

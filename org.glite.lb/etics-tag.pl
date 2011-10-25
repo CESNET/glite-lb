@@ -24,6 +24,56 @@ $GLITE_LB_LOCATION="./org.glite.lb";
 
 if ($TMPDIR eq "") {$TMPDIR="/tmp";}
 
+sub ConstructChangeLog {
+        my ($CCLtag,$CCLmod,$CCLchl) = @_;
+        my $orig_tag = "";
+        my $new_tag = "";
+        my $filename = "";
+
+	open(CHANGELOG, ">>$CCLchl");
+
+
+        open(CCLFILES, "cvs diff -r $CCLtag $CCLmod | grep -E '^RCS file' -A 2 | ");
+        while (<CCLFILES>) {
+                $inline=$_;
+                chomp($inline);
+
+                if($inline =~/^RCS file: \/cvs\/.*?\/(.*),.*$/) {
+                        $filename=$1;
+                        $orig_tag="";
+                        $new_tag="";
+                }
+                if ($inline =~/^retrieving revision ([0-9\.]*)/) {
+                        if ($orig_tag == "") {
+                                $orig_tag=$1;
+                        }
+                        else {
+                                $new_tag=$1;
+
+                                open(OUTLINES, "cvs log -S -N -r" . "$orig_tag" . "::$new_tag $filename | egrep -v \"^locks:|^access list:|^keyword substitution:|^total revisions:|^branch:|^description:|^head:|^RCS file:|^---|^===|^revision|^Working[ ]file: \" |");
+				$CCLnames = "";
+				while (<OUTLINES>) {
+					$logline=$_;
+					chomp($logline);
+					if ($logline=~/^date:.*author:\s+(.*?);\s+state.*/) {
+						unless ($CCLnames=~/$1/) {
+							$CCLnames = $CCLnames . ", $1";
+						}
+					}
+					else {
+						print CHANGELOG "$_";
+					}
+				}
+                                print CHANGELOG "		==$filename $orig_tag to $new_tag$CCLnames==";
+				close(OUTLINES);
+                        }
+                }
+        }
+        close(CCLFILES);
+	close(CHANGELOG);
+
+}
+
 getopts('i:c:m:p:gh');
 
 $module = shift;
@@ -228,7 +278,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 			chomp($editline);
 
 			if ($increment eq "a") {system("echo \"- Module rebuilt\" >> $tmpChangeLog"); system("echo \"\" >> $tmpChangeLog");}
-			else { system("cvs log -S -N -r" . "$current_tag" . ":: $module | egrep -v \"^locks:|^access list:|^keyword substitution:|^total revisions:|^branch:|^description:|^head:|^RCS file:|^date:|^---|^===|^revision \" >> $tmpChangeLog"); }
+			else { ConstructChangeLog($current_tag, $module, $tmpChangeLog); }
 				
 			$ChangeLogRet=system("vim +$editline -c \"norm z.\" $tmpChangeLog");
 		}

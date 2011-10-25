@@ -45,6 +45,7 @@ extern "C" {
 
 #include <string>
 #include <sstream>
+#include <cstdio>
 
 #include <assert.h>
 #include <string.h>

@@ -32,6 +32,9 @@
 1.0.5-6
 - Module rebuilt
 
+1.0.6-1
+- Support gcj java
+
 1.1.0-1
 - Fixes for parallel release in EMI & gLite
 - CREAM_CORE->CREAM_EXECUTOR
@@ -67,4 +70,8 @@
 - at3 location detection reverted
 - '--stage=/' behaviour in fixed configure
 - wsdl files moved
+
+1.1.6-1
+- Distinguish between generated and non-generated java files for FindBugs etics plugin
+- Classes for non-generated files are built in build/classes directory now
 

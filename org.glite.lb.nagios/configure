@@ -24,6 +24,7 @@
 #
 
 use Getopt::Long;
+use POSIX qw(locale_h strftime);
 
 my $pwd = `pwd`; chomp $pwd;
 my $prefix = '/usr';
@@ -731,6 +732,7 @@ for my $ext (keys %deps_aux) {
 %provides = (
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
+	'lb.nagios' => [ qq/glite-lb-nagios-plugins/ ],
 );
 
 %cvs_prefix = (
@@ -865,7 +867,7 @@ for my $ext (keys %deps_aux) {
 				'myproxy-devel' => 'myproxy-devel.x86_64',
 			},
 			deb6_x86_64_gcc445 => {
-				globus_essentials => 'globus-gssapi-gsi4',
+				globus_essentials => 'libglobus-gssapi-gsi4',
 				globus => 'libglobus-gssapi-gsi-dev',
 				globus_proxy_utils=>'globus-proxy-utils',
 				axis => 'libaxis-java',
@@ -880,6 +882,9 @@ for my $ext (keys %deps_aux) {
 				'jakarta-commons-codec' => 'libcommons-codec-java',
 				'jakarta-commons-lang' => 'libcommons-lang-java',
 				'tetex-latex' => 'texlive-latex-extra',
+				'perl-LDAP' => 'libnet-ldap-perl',
+				'fuse-lib' => 'libfuse2',
+				'fuse' => 'fuse-utils',
 			},
 		},
 		etics_externs_devel => {
@@ -911,6 +916,8 @@ for my $ext (keys %deps_aux) {
 				openssl => 'libssl-dev',
 				'tetex-latex' => 'texlive-latex-extra',
 				libxslt=>'xsltproc',
+				'httpd-devel' => 'apache2-prefork-dev',
+				'fuse-devel' => 'libfuse-dev',
 			},
 		},
 		etics_projects => {
@@ -969,6 +976,9 @@ for my $ext (keys %deps_aux) {
 	'lb.yaim' => {
 		default => { 'package.buildarch' => 'noarch' },
 	},
+	'lb.nagios' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
 	'px.yaim' => {
 		default => { 'package.buildarch' => 'noarch' },
 	},
@@ -992,6 +1002,7 @@ sub full
 sub mkinc
 {
 	my %aux;
+	my ($old_locale, $date);
 	undef %aux;
 	my @m=qw/
 lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.nagios lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
@@ -1028,10 +1039,23 @@ px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
 			}
 		}
 	}
+
+	mkdir $build."project" unless (-d $build."project");
+	open PKGCHL,">".$build."project/changelog"
+		or die $build."project/changelog: $!\n";
+	$old_locale = setlocale(LC_TIME);
+	setlocale(LC_TIME, "C");
+	$date = strftime("%a %b %d %Y", gmtime());
+	setlocale(LC_TIME, $old_locale);
+	print PKGCHL qq{* $date CESNET team <emi-lb\@metacentrum.cz>
+- automatically generated package
+};
+	close PKGCHL;
+
 	unless ($top_srcdir eq '.') {
 		unlink $build."Makefile";
 		symlink "$top_srcdir/Makefile",$build."Makefile" or die "symlink $top_srcdir/Makefile ".$build."Makefile: $!\n";
-		for my $file ('.pre', '.post', '.preun', '.postun changelog') {
+		for my $file ('.pre', '.post', '.preun', '.postun') {
 			my $pfile = "project/$file";
 			if (-f "$full/$pfile") {
 				mkdir "$build/project" unless (-d "$build/project");

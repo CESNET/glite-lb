@@ -214,6 +214,7 @@ typedef enum _edg_wll_ErrorCode {
 	EDG_WLL_ERROR_COMPARE_EVENTS, /**< Two compared events differ. */
 	EDG_WLL_ERROR_DB_TRANS_DEADLOCK,	/**< Deadlock detected during DB operation. */
 	EDG_WLL_ERROR_DB_LOST_CONNECTION,	/**< Lost connection to DB */
+	EDG_WLL_ERROR_ACCEPTED_OK,	/**< Deferred or background operation accepted. */
 } edg_wll_ErrorCode;
 
 /**

@@ -60,7 +60,7 @@ char *my_edg_wll_ULMGetValueAt( p_edg_wll_ULMFields, int );
 #define MISUSE { \
 	char *e = edg_wll_EventToString(eventcode); \
 	char *k =  edg_wll_KeyNameToString(keycode); \
-	sprintf(err_desc,"Key %s schouldn't be used for event type %s.", k,e); \
+	sprintf(err_desc,"Key %s shouldn't be used for event type %s.", k,e); \
 	free(e); \
 	free(k); \
 	ret=edg_wll_SetError(context,EDG_WLL_ERROR_PARSE_KEY_MISUSE,err_desc); \

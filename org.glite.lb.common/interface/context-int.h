@@ -172,7 +172,7 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	void		*notif_index_cols;
 	time_t		notifDurationMax;
 
-	char		**super_users;
+	char		**msg_prefixes;
 
 	time_t          rssTime;
 	_edg_wll_authz_policy	authz_policy;
@@ -181,6 +181,8 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 
 	int		(*processRequest_cb)(edg_wll_Context ctx);
 	void		*processRequestUserData;
+
+	char		**msg_brokers;
 )
 
 /* to be used internally: set, update and and clear the error information in 
@@ -221,6 +223,8 @@ extern int edg_wll_SetSequenceCode(edg_wll_Context, const char *, int);
 extern int edg_wll_IncSequenceCode(edg_wll_Context ctx);
 
 extern void edg_wll_FreeParams(edg_wll_Context context);
+
+extern int edg_wll_ParseMSGConf(char *msg_conf, char ***brokers, char ***prefixes);
 
 #ifdef __cplusplus
 }

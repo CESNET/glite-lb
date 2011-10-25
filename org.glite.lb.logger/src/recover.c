@@ -56,11 +56,13 @@ recover_thread(void *q)
 			exit(1);
 		}
 		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, "Checking for new certificate.");
-		if (edg_wll_gss_watch_creds(cert_file, &cert_mtime) > 0) {
+		int ret;
+		ret = edg_wll_gss_watch_creds(cert_file, &cert_mtime);
+		if (ret > 0) {
 			edg_wll_GssCred new_creds = NULL;
-			int ret;
 
-			ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file, 
+			int int_ret;
+			int_ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file, 
 				&new_creds, NULL);
 			if (new_creds != NULL) {
 				if(pthread_mutex_lock(&cred_handle_lock) < 0)
@@ -87,6 +89,9 @@ recover_thread(void *q)
 						 new_creds->name);
 			}
 		}
+		else if ( ret < 0)
+			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed, unable to access credetials\n");
+		
 #ifndef LB_PERF
 		sleep(RECOVER_TIMEOUT);
 #else

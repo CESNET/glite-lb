@@ -81,6 +81,8 @@ int edg_wll_NotifNewServer(
 	edg_wll_QueryRec  **nconds		= NULL;
 	char		*add_index = NULL;
 	notif_stream_t	*arg = NULL;
+	int npref, okpref;
+	char   *msgpref;
 
 
 	/*	Format notification ID
@@ -138,10 +140,30 @@ int edg_wll_NotifNewServer(
 			edg_wll_SetError(ctx, EINVAL, "Addres override not in format host:port");
 			goto cleanup;
 		}
-		if ( strstr(address_override, "x-msg")) {
-			// XXX: Quick ugly hack. This will be made configurable soon
-			if ( !strstr(address_override,"x-msg://grid.emi.")) {
-				edg_wll_SetError(ctx, EINVAL, "This site requires that all topic names start with prefix 'grid.emi.'");
+		if ( !strncmp(address_override, "x-msg", 5)) {
+			npref = 0; okpref = 0;
+			while (ctx->msg_prefixes[npref]) {
+				asprintf(&msgpref, "x-msg://%s", ctx->msg_prefixes[npref++]);
+				if ( !strncmp(address_override, msgpref, strlen(msgpref))) {
+					okpref = 1;
+					free(msgpref);
+					break;
+				}
+				free(msgpref);
+			}				
+			if (!okpref) {
+				char *prefmsg, *prefmsg2;
+				asprintf(&prefmsg,"This site requires that all topic names start with prefix %s", ctx->msg_prefixes[0]);
+				npref = 1;
+				while (ctx->msg_prefixes[npref]) {
+					prefmsg2 = prefmsg;
+					asprintf(&prefmsg,"%s or %s", prefmsg2, ctx->msg_prefixes[npref++]);
+					free(prefmsg2);
+				}
+	
+				glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, "Rejecting notification with disallowed prefix (%s)", address_override);
+				edg_wll_SetError(ctx, EINVAL, prefmsg);
+				free(prefmsg);
 				goto cleanup;
 			}
 		}
@@ -253,6 +275,8 @@ int edg_wll_NotifBindServer(
 {
 	char	*time_s = NULL,
 		*addr_s = NULL;
+	int npref, okpref;
+	char   *msgpref;
 
 
 	if ( !address_override )
@@ -297,10 +321,31 @@ int edg_wll_NotifBindServer(
 				edg_wll_SetError(ctx, EINVAL, "Addres override not in format host:port");
 				goto rollback;
 			}
-			if ( strstr(address_override, "x-msg")) {
-				// XXX: Quick ugly hack. This will be made configurable soon
-				if ( !strstr(address_override,"x-msg://grid.emi.")) {
-					edg_wll_SetError(ctx, EINVAL, "This site requires that all topic names start with prefix 'grid.emi.'");
+			if ( !strncmp(address_override, "x-msg", 5)) {
+
+				npref = 0; okpref = 0;
+				while (ctx->msg_prefixes[npref]) {
+					asprintf(&msgpref, "x-msg://%s", ctx->msg_prefixes[npref++]);
+					if ( !strncmp(address_override, msgpref, strlen(msgpref))) {
+						okpref = 1;
+						free(msgpref);
+						break;
+					}
+					free(msgpref);
+				}				
+				if (!okpref) {
+					char *prefmsg, *prefmsg2;
+					asprintf(&prefmsg,"This site requires that all topic names start with prefix %s", ctx->msg_prefixes[0]);
+					npref = 1;
+					while (ctx->msg_prefixes[npref]) {
+						prefmsg2 = prefmsg;
+						asprintf(&prefmsg,"%s or %s", prefmsg2, ctx->msg_prefixes[npref++]);
+						free(prefmsg2);
+					}
+
+					glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, "Rejecting notification with disallowed prefix (%s)", address_override);
+					edg_wll_SetError(ctx, EINVAL, prefmsg);
+					free(prefmsg);
 					goto rollback;
 				}
 			}
@@ -340,8 +385,10 @@ int edg_wll_NotifChangeServer(
 
 	/*	Format notification ID
 	 */
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) ) {
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto err;
+	}
 
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;
@@ -586,8 +633,10 @@ static int check_notif_request(
 		return edg_wll_Error(ctx, NULL, NULL);
 	}
 
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) ) {
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto cleanup;
+	}
 
 	trio_asprintf(&stmt,
 				"select destination from notif_registrations "
@@ -714,7 +763,7 @@ static int update_notif(
 
 	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
 	{
-		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID.");
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto cleanup;
 	}
 
@@ -864,8 +913,10 @@ static int drop_notif_request(edg_wll_Context ctx, const edg_wll_NotifId nid) {
 
 	errCode = edg_wll_Error(ctx, NULL, &errDesc);	
 
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) ) {
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto rollback;
+	}
 
 	trio_asprintf(&stmt, "delete from notif_registrations where notifid='%|Ss'", nid_s);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
@@ -908,8 +959,10 @@ static int check_notif_age(edg_wll_Context ctx, const edg_wll_NotifId nid) {
 	     *q = NULL;
 	int ret;
 
-	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) )
+	if ( !(nid_s = edg_wll_NotifIdGetUnique(nid)) ) {
+		edg_wll_SetError(ctx, EINVAL, "Malformed notification ID");
 		goto cleanup;
+	}
 
 	glite_lbu_TimeToStr(now, &time_s);
 	if ( !time_s )

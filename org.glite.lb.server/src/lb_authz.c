@@ -30,6 +30,7 @@ limitations under the License.
 
 #include <libxml/parser.h> 
 #undef WITHOUT_TRIO
+#include <gridsite-gacl.h>
 
 #include "glite/jobid/strmd5.h"
 #include "glite/jobid/cjobid.h"
@@ -38,8 +39,9 @@ limitations under the License.
 #include "authz_policy.h"
 
 
-/* XXX should be defined in gridsite-gacl.h */
+#if GRST_VERSION <= 010713
 GRSTgaclEntry *GACLparseEntry(xmlNodePtr cur);
+#endif
 
 extern char *server_key;
 extern char *server_cert;

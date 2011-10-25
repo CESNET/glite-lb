@@ -181,8 +181,8 @@ static time_t		rss_time = 60*60;
 char *		policy_file = NULL;
 struct _edg_wll_authz_policy	authz_policy = { NULL, 0};
 static int 		exclusive_zombies = 1;
-
-
+static char		**msg_brokers = NULL;
+static char		**msg_prefixes = NULL;
 
 
 static struct option opts[] = {
@@ -207,7 +207,8 @@ static struct option opts[] = {
 	{"jpreg-dir",	1, NULL,	'J'},
 	{"enable-jpreg-export",	1, NULL,	'j'},
 	{"super-user",	1, NULL,	'R'},
-	{"super-users-file",	1, NULL,'F'},
+//	{"super-users-file",	1, NULL,'F'},
+	{"msg-conf",	1, NULL,'F'},
 	{"no-index",	1, NULL,	'x'},
 	{"strict-locking",0, NULL,	'O'},
 	{"limits",	1, NULL,	'L'},
@@ -270,7 +271,6 @@ static void usage(char *me)
 		"\t-J, --jpreg-dir\t JP registration temporary files prefix (implies '-j')\n"
 		"\t-j, --enable-jpreg-export\t enable JP registration export (disabled by default)\n"
 		"\t--super-user\t user allowed to bypass authorization and indexing\n"
-		"\t--super-users-file (deprecated)\t the same but read the subjects from a file\n"
 		"\t--no-index=1\t don't enforce indices for superusers\n"
 		"\t          =2\t don't enforce indices at all\n"
 		"\t--strict-locking=1\t lock jobs also on storing events (may be slow)\n"
@@ -293,6 +293,7 @@ static void usage(char *me)
 		"\t-I,--rss-time\t age (in seconds) of job states published via RSS\n"
 		"\t-l,--policy\tauthorization policy file\n"
 		"\t-E,--exclusive-zombies-off\twith 'exclusive' flag, allow reusing IDs of purged jobs\n"
+		"\t-F,--msg-conf\t path to configuration file with messaging settings\n"
 
 	,me);
 }
@@ -402,6 +403,7 @@ int main(int argc, char *argv[])
 	struct timeval		to;
 	int 			request_timeout = REQUEST_TIMEOUT;
 	char 			socket_path_prefix[PATH_MAX] = GLITE_LBPROXY_SOCK_PREFIX;
+	char *			msg_conf = NULL;
 
 
 	name = strrchr(argv[0],'/');
@@ -471,9 +473,7 @@ int main(int argc, char *argv[])
 		case 'Y': notif_ilog_file_prefix = strdup(optarg); break;
 		case 'i': strcpy(pidfile,optarg); pidfile_forced = 1; break;
 		case 'R': add_root(ctx, optarg, ADMIN_ACCESS); break;
-		case 'F': glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL,
-				"%s: Option --super-users-file is deprecated, specify policy using --policy instead", argv[0]);
-			  return 1;
+		case 'F': msg_conf = strdup(optarg); break;
 		case 'x': noIndex = atoi(optarg);
 			  if (noIndex < 0 || noIndex > 2) { usage(name); return 1; }
 			  break;
@@ -567,6 +567,22 @@ int main(int argc, char *argv[])
 		edg_wll_Error(ctx,&et,&ed);
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Cannot load server policy: %s: %s\n", et, ed);
 		return 1;
+	}
+
+	if (msg_conf) {
+		int retv_msg;
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, "Parsing MSG conf file: %s", msg_conf);
+ 		retv_msg = edg_wll_ParseMSGConf(msg_conf, &msg_brokers, &msg_prefixes); 
+ 		if (retv_msg) {
+			switch(retv_msg) {
+				case -1: glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Error opening MSG conf file: %s", msg_conf); break;
+				case -2: glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Error parsing MSG conf file: %s", msg_conf); break;
+			}
+		}
+	}
+	if (!msg_prefixes) { // Prefixes not extracted from file, put in defaults
+		msg_prefixes = (char**) calloc(sizeof(char**), 2);
+		asprintf(&(msg_prefixes[0]), "grid.emi.");
 	}
 
 	if (enable_lcas) {
@@ -725,7 +741,10 @@ int main(int argc, char *argv[])
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s: key or certificate file not specified  - unable to watch them for changes!", argv[0]);
 
 		if ( cadir ) setenv("X509_CERT_DIR", cadir, 1);
-		edg_wll_gss_watch_creds(server_cert, &cert_mtime);
+		int ret;
+		ret = edg_wll_gss_watch_creds(server_cert, &cert_mtime);
+		if (ret < 0)
+        		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed, unable to access credentials\n");
 		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &gss_code) )
 		{
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server identity: %s", mycred->name);
@@ -1045,6 +1064,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 				*name_num = NULL,
 				*name = NULL;
 	int					h_errno, ret;
+	int			npref, totpref;
 
 
 
@@ -1060,7 +1080,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		}
 		break;
 	case -1: 
-		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] edg_wll_gss_watch_creds failed", getpid());
+		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] edg_wll_gss_watch_creds failed, unable to access credentials", getpid());
 		break;
 	}
 
@@ -1279,6 +1299,16 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->greyjobs = greyjobs;
 	ctx->exclusive_zombies = exclusive_zombies;
 
+	for (totpref = 0; msg_prefixes[totpref]; totpref++);
+	ctx->msg_prefixes = (char**) calloc(sizeof(char*), totpref+1);
+	for (npref = 0; npref<totpref; npref++) 
+		ctx->msg_prefixes[npref]=strdup(msg_prefixes[npref]);
+
+	for (totpref = 0; msg_brokers && msg_brokers[totpref]; totpref++);
+	ctx->msg_brokers = (char**) calloc(sizeof(char*), totpref+1);
+	for (npref = 0; npref<totpref; npref++) 
+		ctx->msg_brokers[npref]=strdup(msg_brokers[npref]);
+
 	return 0;
 }
 
@@ -1442,7 +1472,6 @@ static int handle_server_error(edg_wll_Context ctx)
 	int		err,ret = 0;
 
 	
-	errt = errd = NULL;
 	switch ( (err = edg_wll_Error(ctx, &errt, &errd)) )
 	{
 	case ETIMEDOUT:
@@ -1450,6 +1479,7 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EPIPE:
 	case EIO:
 	case EDG_WLL_IL_PROTO:
+	case E2BIG:
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
 			"[%d] %s (%s)", getpid(), errt, errd);
 		/*	fallthrough
@@ -1466,8 +1496,10 @@ static int handle_server_error(edg_wll_Context ctx)
 	case EPERM:
 	case EEXIST:
 	case EDG_WLL_ERROR_NOINDEX:
-	case E2BIG:
 	case EIDRM:
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
+			"[%d] %s (%s)", getpid(), errt, errd);
+		break;
 	case EINVAL:
 	case EDG_WLL_ERROR_PARSE_BROKEN_ULM:
 	case EDG_WLL_ERROR_PARSE_EVENT_UNDEF:
@@ -1483,7 +1515,16 @@ static int handle_server_error(edg_wll_Context ctx)
 		 *	no action for non-fatal errors
 		 */
 		break;
-		
+
+	case EDG_WLL_ERROR_ACCEPTED_OK:
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+			"[%d] %s (%s)", getpid(), errt, errd);
+		/*
+		 * 	all OK, but slave needs to be restarted
+		 */
+		ret = -EINPROGRESS;
+		break;
+
 	case EDG_WLL_ERROR_DB_INIT:
 	case EDG_WLL_ERROR_DB_CALL:
 	case EDG_WLL_ERROR_SERVER_RESPONSE:

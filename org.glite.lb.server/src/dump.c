@@ -50,7 +50,7 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 	char	*tmpfname;
 	time_t	start,end;
 	glite_lbu_Statement	q = NULL;
-	char		*res[10];
+	char		*res[11];
 	int	event;
 	edg_wll_Event	e;
 	int	ret,dump = 2;	/* TODO: manage dump file */
@@ -76,11 +76,11 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 	glite_lbu_TimeToStr(to, &to_s);
 
 	trio_asprintf(&stmt,
-			"select event,dg_jobid,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived "
+			"select event,dg_jobid,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived,seqcode "
 			"from events e,users u,jobs j "
 			"where u.userid=e.userid "
 			"and j.jobid = e.jobid "
-			"and j.dg_jobid like 'https://%|Ss:%d%%' "
+			"and j.dg_jobid like 'https://%|Ss:%d/%%' "
 			"and arrived > %s and arrived <= %s "
 			"order by arrived",
 			ctx->srvName,ctx->srvPort,

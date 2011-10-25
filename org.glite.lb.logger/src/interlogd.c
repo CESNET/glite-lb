@@ -512,7 +512,9 @@ main (int argc, char **argv)
   /* get credentials */
   if (CAcert_dir)
      setenv("X509_CERT_DIR", CAcert_dir, 1);
-  edg_wll_gss_watch_creds(cert_file,&cert_mtime);
+  ret = edg_wll_gss_watch_creds(cert_file,&cert_mtime);
+  if (ret < 0)
+	glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed, unable to access credentials\n");
   cred_handle = malloc(sizeof(*cred_handle));
   if(cred_handle == NULL) {
 	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to allocate structure for credentials.");

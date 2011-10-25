@@ -78,6 +78,11 @@
 1.1.11-3
 - Module rebuilt
 
+1.1.12-1
+- Extended information on logging
+- More on logging to syslog
+- A few typos fixed
+
 1.2.0-1
 - Documentation updated to cover new features to be released with EMI-1
 
@@ -117,4 +122,17 @@
 - Better reflect version differences
 - Update on changes in L&B 3.0
 - Grammar fixes
+
+1.2.8-1
+- Portable syntax of test condition in install commands.
+- Extended information on logging
+- More on logging to syslog
+- A few typos fixed
+- Support for GLITE_LB_WMS_DN and GLITE_LB_AUTHZ_* yaim parameters
+- More thorough distinction between EMI and gLite installation
+- Polishing of the installation documentation
+- Switch to yet another EMI template
+
+1.2.9-1
+- New FAQ on WMS and LB_SUPER_USERS
 

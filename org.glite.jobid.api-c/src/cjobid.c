@@ -51,6 +51,7 @@ int glite_jobid_recreate(const char* bkserver, int port, const char *unique, gli
     struct timeval tv;
     int skip;
     char* portbeg;
+    char* rndaddr = NULL;
 
     struct hostent* he;
 
@@ -58,16 +59,17 @@ int glite_jobid_recreate(const char* bkserver, int port, const char *unique, gli
         return EINVAL;
 
     if (unique == NULL) {
-	gethostname(hostname, 100);
-	he = gethostbyname(hostname);
-	assert(he->h_length > 0);
 	gettimeofday(&tv, NULL);
 	srandom(tv.tv_usec);
+	gethostname(hostname, 100);
+	he = gethostbyname(hostname);
+	if (!he) asprintf(&rndaddr,"%d.%d.%d.%d",rand()%256,rand()%256,rand()%256,rand()%256);
 
     	skip = strlen(hostname);
     	skip += sprintf(hostname + skip, "-IP:0x%x-pid:%d-rnd:%d-time:%d:%d",
-		    *((int*)he->h_addr_list[0]), getpid(), (int)random(),
-		    (int)tv.tv_sec, (int)tv.tv_usec);
+		    rndaddr ? rndaddr : *((int*)he->h_addr_list[0]),
+		    getpid(), (int)random(), (int)tv.tv_sec, (int)tv.tv_usec);
+	free(rndaddr);
     }
 
     *jobId = NULL;

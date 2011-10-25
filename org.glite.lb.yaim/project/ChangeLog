@@ -69,3 +69,12 @@
 4.3.7-2
 - Module rebuilt
 
+4.3.8-1
+- Support for GLITE_LB_WMS_DN and GLITE_LB_AUTHZ_* yaim parameters
+- Fix locations in automatic purge (SB #81646)
+- Make directory with the logs writable (automatic purge runs under glite user)
+
+4.3.9-1
+- Added missing support for GET_STATISTICS auth section
+- Access to statistics granted to WMS_DN by yaim.
+

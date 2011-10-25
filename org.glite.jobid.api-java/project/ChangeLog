@@ -10,6 +10,9 @@
 1.0.3-2
 - Module rebuilt
 
+1.0.4-1
+- Makefile using external modules jakarta-commons-*
+
 1.1.0-1
 - Fixes for parallel release in EMI & gLite
 
@@ -35,5 +38,8 @@
 - Module rebuilt
 
 1.1.3-5
+- Module rebuilt
+
+1.1.3-6
 - Module rebuilt
 

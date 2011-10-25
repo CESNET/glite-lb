@@ -381,7 +381,7 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
         }
 	else{
 		*statesOut = NULL;
-	        free(can_peername);
+		free(can_peername);
 		return -1;
 	}
 
@@ -843,8 +843,13 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                         if (edg_wll_WSDLOutput(ctx, &message, filename))
                                 ret = HTTP_INTERNAL;
 			free(filename);
+	/* GET /?version */
 		} else if (strncmp(requestPTR, "/?version", strlen("/?version")) == 0) {
 			asprintf(&message, "%s", VERSION);
+	/* GET /?configuration*/
+		} else if (strncmp(requestPTR, "/?configuration", strlen("/?configuration")) == 0) {
+			// also browser-readable HTML version here?
+			edg_wll_ConfigurationToText(ctx, &message);
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
 		free(requestPTR); requestPTR = NULL;
@@ -926,10 +931,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 						retCode;
  
 				if (flags & EDG_WLL_STAT_NO_JOBS) { 
-					flags -= EDG_WLL_STAT_NO_JOBS;
 					jobsOut = NULL;
 					if (flags & EDG_WLL_STAT_NO_STATES) {
-						flags -= EDG_WLL_STAT_NO_STATES;
 						statesOut = NULL;
 						retCode = edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, NULL, NULL);
 					}
@@ -938,7 +941,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				}
 				else {
 					if (flags & EDG_WLL_STAT_NO_STATES) {
-						flags -= EDG_WLL_STAT_NO_STATES;
 						statesOut = NULL;
 						retCode = edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conditions, flags, &jobsOut, NULL);
 					}
@@ -1026,7 +1028,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					default: /* client request handler */
 						ret = HTTP_ACCEPTED;
 						/* to end this parent */
-						edg_wll_SetError(ctx, EDG_WLL_ERROR_SERVER_RESPONSE, edg_wll_HTTPErrorMessage(ret));
+						edg_wll_SetError(ctx, EDG_WLL_ERROR_ACCEPTED_OK, edg_wll_HTTPErrorMessage(ret));
 						goto err;
 					}
 				}
@@ -1046,7 +1048,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					if (edg_wll_PurgeResultToXML(ctx, &result, &message))
 						ret = HTTP_INTERNAL;
 					else
-						printf("%s", message);
+						glite_common_log_msg(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, message);
 				}				
 
 				/* result is now packed in message, free it */	
@@ -1061,9 +1063,19 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 				/* forked cleaner sends no results */
 				if ((request.flags & EDG_WLL_PURGE_BACKGROUND)) {
-					*response = NULL;
+					char *et, *ed;
+
 					free(message);
 					message = NULL;
+					if (ret != HTTP_OK && ret != HTTP_ACCEPTED) {
+						edg_wll_Error(ctx, &et, &ed);
+						glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Background purge failed, %s (%s)",et, ed);
+						free(et);
+						free(ed);
+					} else {
+						glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Background purge done successfully.");
+					}
+					*response = NULL;
 					if (requestPTR) free(requestPTR);
 					exit(0);
 				}

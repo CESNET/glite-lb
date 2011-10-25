@@ -186,6 +186,9 @@ int
 edg_wll_gss_set_signal_handler(int signum,
 			       void (*handler_func)(int));
 
+void
+edg_wll_gss_poll_signal();
+
 #ifdef __cplusplus
 } 
 #endif
