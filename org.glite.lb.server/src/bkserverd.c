@@ -609,11 +609,11 @@ int main(int argc, char *argv[])
 
 	if (mode & SERVICE_SERVER) {
 		if (check_mkdir(dumpStorage)){
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for dump files not redy!");
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for dump files not ready!");
 			exit(1);
 		}
 		if (check_mkdir(purgeStorage)){
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for purge files not redy!");
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for purge files not ready!");
 			exit(1);
 		}
 		if ( jpreg ) {
