@@ -1,5 +1,13 @@
 #!/bin/sh
+### BEGIN INIT INFO
+# Provides: glite-lb-bkserverd
+# Description: L&B server daemon
+# Required-Start: $remote_fs $network $syslog
+# Required-Stop: $remote_fs $network $syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
 # chkconfig: 345 75 25
+### END INIT INFO
 #
 # Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 # See http://www.eu-egee.org/partners/ for details on the copyright holders.
@@ -294,7 +302,7 @@ status()
 case x$1 in
 	xstart)	start;;
 	xstop)	stop;;
-	xrestart) stop; start;;
+	xrestart|xforce-reload) stop; start;;
 	xstatus) status;;
 	x*)	echo usage: $0 start,stop,restart,status >&2
 		exit 1;;
