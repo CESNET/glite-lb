@@ -244,10 +244,7 @@ notify: notify.o
 register_sandbox: %: %.o
 	${LINK} -o $@ $@.o ${default_clientlib} ${EXT_LIB}
 
-${TOOLS} ${EXAMPLES}: %: %.o
-	${LINK} -o $@ $< ${default_clientlib} ${EXT_LIB} 
-
-${EXAMPLES_CL}: %: %.o
+${TOOLS} ${EXAMPLES} ${EXAMPLES_CL}: %: %.o
 	${LINK} -o $@ $< ${default_clientlib} ${default_commonlib} ${EXT_LIB} 
 
 ${EXAMPLES_CL_THR}: %: %.o
