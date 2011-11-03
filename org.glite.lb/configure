@@ -268,6 +268,10 @@ for my $ext (keys %need_externs_aux) {
 		$need_externs_type{$ext}->{$pkg} = $type;
 	}
 }
+if ($project eq 'emi') {
+	$extranodmod{lb} = 'lb.emi-lb';
+	$extranodmod{px} = 'lb.emi-lb';
+}
 for $_ (keys %{$project{modules}}) {
 	push @{$lbmodules{$_}},@{$project{modules}{$_}};
 }
@@ -851,7 +855,7 @@ for my $ext (keys %deps_aux) {
 				yaim_bdii=>'emi.bdii.yaim-bdii',
 				gip_service=>'emi.bdii.glite-info-provider-service',
 				bdii=>'emi.bdii.core',
-				glite_version=>'emi.misc.glite-version',
+				glite_version=>'emi.emi-version',
 				glue_schema=>'emi.bdii.glue-schema',
 				trustmanager=>'emi.java-security.trustmanager',
 				trustmanager_axis=>'emi.java-security.trustmanager-axis',
@@ -929,9 +933,9 @@ for my $ext (keys %deps_aux) {
 		},
 		need_externs_aux => {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
-			'lb.glite-LB' => [ qw/fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
+			'lb.emi-lb' => [ qw/fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
 			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R perl-LDAP:R/ ],
-			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
+			'px.emi-px' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
 		},
 		supported_platforms => {
@@ -1011,12 +1015,12 @@ sub mkinc
 	my ($old_locale, $date);
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.nagios lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.nagios lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB lb.emi-lb
 lbjp-common.gss lbjp-common.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface lbjp-common.gss lbjp-common.gsoap-plugin
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
-px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
+px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config px.emi-px
 /;
 	@aux{@m} = (1) x ($#m+1);
 
