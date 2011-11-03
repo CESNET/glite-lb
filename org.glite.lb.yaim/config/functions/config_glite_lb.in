@@ -314,7 +314,7 @@ EOF
 HOME=/
 MAILTO=$SITE_EMAIL
 
-1 1 * * * $GLITE_USER . /etc/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; printf "\`date "+%b %e %T"\` \`hostname -s\` \$0: "; $purge_target_runtime_cmd$GLITE_LB_LOCATION/sbin/glite-lb-export.sh >> $logfile 2>&1
+1 1 * * * $GLITE_USER . /etc/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; printf "\`date "+\%b \%e \%T"\` \`hostname -s\` glite-lb-export.sh: " >> $logfile; $purge_target_runtime_cmd$GLITE_LB_LOCATION/sbin/glite-lb-export.sh >> $logfile 2>&1
 EOF
 
   touch $logfile
