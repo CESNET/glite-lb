@@ -73,3 +73,6 @@
 2.1.3-1
 - Change log priority for slave suicide messages
 
+2.1.4-1
+- Quit parent process silently on background purge (improvement for SB #77974).
+
