@@ -193,3 +193,8 @@
 - Finalized ETICS+rpath+libtool mock build problem, workaround inside ETICS configurations now
 - Fixing rpath problem in mock builds
 
+5.0.9-1
+- Examples linked explicitely with L&B common library
+- Reduce memory consumption on query (SB #46437)
+- Support Debian 6 build
+
