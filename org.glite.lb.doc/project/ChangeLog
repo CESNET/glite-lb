@@ -136,3 +136,14 @@
 1.2.9-1
 - New FAQ on WMS and LB_SUPER_USERS
 
+1.2.10-1
+- Syntax fixed to work in both SL & Deb
+- New description of the Nagios probe
+- Typo fixes
+- Version info updated
+- New test for the Nagios probe
+- TestPlan sections reshuffled to match intended structure
+- More on messaging and related topics
+- New FAQ entry (Duplicate entry ... for key 1)
+- Architecture images updated - MSG added into the notification part
+
