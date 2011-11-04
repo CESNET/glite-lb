@@ -159,3 +159,6 @@
 - Better detection of excessively long lines in HTTP requests.
 - Interpretting Messaging broker names and topic prefixes
 
+8.0.7-1
+- Typo fix in error output
+
