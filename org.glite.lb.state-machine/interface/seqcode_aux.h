@@ -26,9 +26,8 @@ int before_deep_resubmission(const char *a, const char *b);
 int same_branch(const char *a, const char *b) ;
 
 int edg_wll_compare_pbs_seq(const char *a,const char *b);
-#define edg_wll_compare_condor_seq edg_wll_compare_pbs_seq
 
-edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num) ;
+int edg_wll_compare_condor_seq(const char *a,const char *b);
 
 edg_wll_CondorEventSource get_condor_event_source(const char *condor_seq_num) ;
 
