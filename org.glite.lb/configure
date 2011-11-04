@@ -137,7 +137,8 @@ my %externs = (
 		prefix=> '/usr'
 	},
 	jdk => {
-		prefix=> '/usr/java/latest'
+		prefix=> '/usr/java/latest',
+		locations => [ '/usr/java/latest', '/usr/lib/jvm/java' ],
 	},
 	libtar => {
 		prefix=> '/usr'
@@ -355,7 +356,14 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 			$jdk_prefix = $ENV{'JAVA_HOME'};
 			print "JAVA_HOME=$jdk_prefix\n";
 		} else {
-			print "(using default $externs{$ext}{prefix}))\n"
+			foreach my $i (0..$#{$externs{$ext}{locations}}) {
+				if (-e $externs{$ext}{locations}[$i]) {
+					$jdk_prefix=$externs{$ext}{locations}[$i];
+					print "(found directory $jdk_prefix)\n";
+					last;
+				}
+			}
+			print "(using default $externs{$ext}{prefix})\n" unless ($jdk_prefix);
 		}
 		$externs{$ext}{prefix} = $jdk_prefix if ($jdk_prefix);
 	}
