@@ -292,6 +292,8 @@
 
 @type PBSQueued		Job enqued
 	string	queue		Queue name
+	string	name		Job name
+	string  owner		Job owner
 
 @type PBSDequeued	Job dequeued
 
@@ -324,10 +326,10 @@
 	int	usage		Type of record
 	_code_	REQUESTED	Requested value
 	_code_	USED		Consumed quantity
-	string	name		Name of resource
-	double	quantity	The quantity
-	_optional_		Bypass need of 'null value'
-	string	unit		Units (sec, kB, etc.)
+	string	resource	Resource's name.
+	double	quantity	Resources's quantity (how much).
+	_optional_
+	string	unit		Units (sec, kB, etc.).
 
 @type PBSError		Any error occured
 	string	error_desc	Error reason
