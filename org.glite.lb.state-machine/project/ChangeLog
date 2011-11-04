@@ -98,3 +98,6 @@
 1.2.2-5
 - Module rebuilt
 
+1.2.3-1
+- Compile state machine as shared library
+
