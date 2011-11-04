@@ -78,3 +78,7 @@
 - Added missing support for GET_STATISTICS auth section
 - Access to statistics granted to WMS_DN by yaim.
 
+4.3.10-1
+- Prepend purger logging output with Common Logging Format niceties (SB #88502)
+- Workaround SB #85209 for glite-info-provider-service <= 1.7.0.
+
