@@ -310,3 +310,15 @@
 2.2.9-1
 - Proper permission category for statistics
 
+2.2.10-1
+- LSB-compliant init scripts
+- Fixed typos in error output
+- interlogger now reports edg_wll_gss_watch_creds failures (SB 84694)
+- GACLparseEntry() defined in gridsite-gacl.h now (SB #69635)
+- Show notification registrations only to their owners (SB #86774)
+- Quit parent process silently on background purge (improvement for SB #77974)
+- Use fewer memory on server during query, when states are not requested (SB #46437)
+- Correct reaction to erroneous output from notif ID parsing (SB #86772)
+- Fix crash in web services on empty classads
+- Fix classads (in job status structure) when using in web services
+
