@@ -171,7 +171,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 		}
 		if (USABLE_DATA(res)) {
 			/* this is going to be the first server taking care of the job */
-			rep(js->pub.network_server, e->RegJob.ns);
+			rep(js->pub.network_server, e->regJob.ns);
 		}
 		break;
 
@@ -199,8 +199,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			case EDG_WLL_PBSTRANSFER_OK:
 				/* update job location */
 				switch(e->PBSTransfer.destination) {
-				case EDG_WLL_SOURCE_SERVER:
-					rep(js->pub);
+				case EDG_WLL_SOURCE_PBS_SERVER:
 					break;
 				default:
 					/* where is it going? */
