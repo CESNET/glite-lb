@@ -85,3 +85,8 @@
   - warning fixes (type cast, 32/64 portability)
   - gss functions documented in code
 
+3.0.5-1
+- compiler warnings, cosmetic changes
+- LB/GSS rutines try connecting to alternate addresses
+- savannah bug #85224 fixed. DN matches are not case-sensitive anymore.
+
