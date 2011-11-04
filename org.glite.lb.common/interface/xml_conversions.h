@@ -153,6 +153,7 @@ uint16_t edg_wll_from_string_to_uint16_t(edg_wll_XML_ctx *XMLCtx);
 struct timeval edg_wll_from_string_to_timeval(edg_wll_XML_ctx *XMLCtx);
 time_t edg_wll_from_string_to_time_t(edg_wll_XML_ctx *XMLCtx);
 edg_wll_Source edg_wll_from_string_to_logsrc(edg_wll_XML_ctx *XMLCtx);
+edg_wll_TagValue *edg_wll_from_string_to_taglist(edg_wll_XML_ctx *XMLCtx);
 
 char *edg_wll_stat_flags_to_string(int flags);
 int edg_wll_string_to_stat_flags(char *cflags);

@@ -746,6 +746,11 @@ void *edg_wll_from_string_to_cclassad(edg_wll_XML_ctx *XMLCtx)
 	return (NULL);
 }
 
+edg_wll_TagValue *edg_wll_from_string_to_taglist(edg_wll_XML_ctx *XMLCtx)
+{
+	// not done yet
+	return(NULL);
+}
 
 /************************************************************************/
 /* various conversion functions					*/
