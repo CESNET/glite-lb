@@ -436,23 +436,25 @@ artificially.
 \item Purge all data on the server with \path{glite-lb-purge}
 \item Log two sets of jobs, separated with delay of at least 60s so
 that the sets can be distinguished from each other.
-\item \label{purgel}
+\item \label{purge1}
 Using \code{edg\_wll\_JobLog} retrieve events of all the jobs
 \item \label{purge2}
 Purge the first set of jobs (by specifying appropriate timestamp),
 letting the server dump the purged events.
 \item \label{purge3} Purge the other set of jobs, also dumping the events.
 \item \label{purge4} Run purge once more.
+\item Check if purged jobs turned into zombies.
+\item In addition, check if a \emph{cron} task exists to run the \emph{purge} operation regularly and that it logs its output correctly.
 \end{enumerate}
 
 \how\ \ctblb{lb-test-purge.pl}
 
-\note\ The test includes artificial delays. Takes approx. 2\,minutes to finish.
+\note\ The test includes artificial delays. Takes approx. 3.5\,minutes to finish.
 
-\note\ This test is destructive to your data. You need to run it with the \texttt{--i-want-to-purge} option to confirm your intention. Also, you need to provide the \LB server \texttt{address:port} explicitly as an argument to rule out any confusion. 
+\note\ This test is destructive to your data. You need to run it with the \texttt{-{}-i-want-to-purge} option to confirm your intention. Also, you need to provide the \LB server \texttt{address:port} explicitly as an argument to rule out any confusion. 
 
-\result\ The data dumped in steps \ref{purge1}, \ref{purge2} should be the
-same as retrieved in~\ref{purgel}. The final purge invocation should
+\result\ Data dumped in steps \ref{purge1} and \ref{purge2} should be the
+same as retrieved in~\ref{purge1}. The final purge invocation should
 do nothing (i.e. nothing was left in the database).
 
 % test_purge
