@@ -1,0 +1,5 @@
+/var/log/glite/glite-lb-server-purge.log /var/log/glite/glite-lb-proxy-purge.log {
+	weekly
+	rotate 4
+	missingok
+}

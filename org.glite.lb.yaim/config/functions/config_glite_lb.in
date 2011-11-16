@@ -1,5 +1,5 @@
 function config_glite_lb_check(){
-  requires $1 MYSQL_PASSWORD INSTALL_ROOT GLITE_LOCATION GLITE_LB_LOCATION GLITE_LB_LOCATION_ETC GLITE_LB_LOCATION_VAR GLITE_USER
+  requires $1 MYSQL_PASSWORD INSTALL_ROOT GLITE_LOCATION GLITE_LB_LOCATION GLITE_LB_LOCATION_VAR GLITE_LB_LOCATION_ETC
 }
 
 # check directory existence first
@@ -21,7 +21,7 @@ function config_glite_lb_libs_append() {
 
 function config_glite_lb_setenv(){
 
-  yaimgridenv_set GLITE_USER ${GLITE_USER:-glite}
+  yaimgridenv_set GLITE_USER glite
   # Redefine GLITE_HOME_DIR to make sure we retrieve the correct HOME directory of user glite
   GLITE_HOME_DIR=`getent passwd ${GLITE_USER} | cut -d: -f6`
   if [ "x${GLITE_HOME_DIR}" = "x" ]; then
@@ -285,11 +285,6 @@ EOF
   fi
   rm -f /var/tmp/glite-lb-bkindexes.txt
 
-  mkdir -p $GLITE_LB_LOCATION_VAR   # Needed to store PID of LB server 
-
-  chown $GLITE_USER:$GLITE_USER $GLITE_LB_LOCATION_VAR
-  chmod 0755 $GLITE_LB_LOCATION_VAR
-
   mkdir -p $GLITE_HOME_DIR/.certs
   chown $GLITE_USER:$GLITE_USER $GLITE_HOME_DIR/.certs
   chmod 0755 $GLITE_HOME_DIR/.certs
@@ -303,32 +298,6 @@ EOF
   chmod 0644 $GLITE_HOME_DIR/.certs/hostcert.pem
   chmod 0400 $GLITE_HOME_DIR/.certs/hostkey.pem
 
-  # Create cron for purging
-  mkdir -p /var/log/glite
-  chown $GLITE_USER:$GLITE_USER /var/log/glite
-  logfile=/var/log/glite/glite-lb-purger.log
-  if $LB_PURGE --help 2>&1 | grep 'target-runtime' > /dev/null; then
-    purge_target_runtime_cmd='export GLITE_LB_PURGE_TARGET_RUNTIME=84600s; '
-  fi
-  cat << EOF > /etc/cron.d/glite-lb-purge.cron
-HOME=/
-MAILTO=$SITE_EMAIL
-
-1 1 * * * $GLITE_USER . /etc/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; printf "\`date "+\%b \%e \%T"\` \`hostname -s\` glite-lb-export.sh: " >> $logfile; $purge_target_runtime_cmd$GLITE_LB_LOCATION/sbin/glite-lb-export.sh >> $logfile 2>&1
-EOF
-
-  touch $logfile
-  chown $GLITE_USER:$GLITE_USER $logfile
-
-  cat > /etc/logrotate.d/lb-purger <<EOF
-$logfile {
-    weekly
-    compress
-    rotate 4
-    missingok
-}
-EOF
-
   # LCAS plugin
   # config file
   lcas_libarch=lib
@@ -339,18 +308,6 @@ EOF
   fi
   lcas_plugin="$GLITE_LB_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
   echo "pluginname=\"$lcas_plugin\"" > ${GLITE_LB_LOCATION_ETC}/glite-lb/lcas.db
-  # log file
-  logfile=/var/log/glite/glite-lb-lcas.log
-  touch $logfile
-  chown $GLITE_USER:$GLITE_USER $logfile
-  cat > /etc/logrotate.d/lb-lcas <<EOF
-$logfile {
-    daily
-    compress
-    rotate 4
-    missingok
-}
-EOF
 
   # MSG publish
   if [ "$GLITE_LB_MSG_BROKER" = 'false' ]; then

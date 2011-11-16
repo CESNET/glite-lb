@@ -623,7 +623,7 @@ for my $jar (keys %need_jars) {
 		lb.utils:R
 	/ ],
 	'lb.server' => [ qw/
-		lb.ws-interface lb.types:B lb.common lb.state-machine
+		lb.ws-interface lb.types:B lb.common lb.state-machine lb.utils:R
 		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir lbjp-common.log
 		jobid.api-c
 		lbjp-common.gsoap-plugin lbjp-common.gss
