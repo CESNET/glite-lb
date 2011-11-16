@@ -46,6 +46,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 int processEvent_Condor(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
+int processData_Cream(intJobStat *js, edg_wll_Event *e);
 int processEvent_FileTransfer(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 int processEvent_FileTransferCollection(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 
@@ -331,6 +332,9 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		res = RET_LATE;
 	}
 
+	if (e->any.source == EDG_WLL_SOURCE_CREAM_EXECUTOR || e->any.source == EDG_WLL_SOURCE_CREAM_INTERFACE){
+                processData_Cream(js, e);
+        }
 
 	switch (e->any.type) {
 		case EDG_WLL_EVENT_TRANSFER:
@@ -1003,6 +1007,120 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				rep (js->payload_owner_pending, e->any.user);
 			ignore_seq_code = 1;
 			break;
+
+/************************************ CREAM events ****************************/
+		case EDG_WLL_EVENT_CREAMSTART:
+			break;
+
+		case EDG_WLL_EVENT_CREAMPURGE:
+			break;
+
+		case EDG_WLL_EVENT_CREAMACCEPTED:
+                        break;
+
+		case EDG_WLL_EVENT_CREAMSTORE:
+			if (USABLE(res, strict)) {
+				switch (e->CREAMStore.command) {
+					case EDG_WLL_CREAMSTORE_CMDSTART:
+						if (e->CREAMStore.result == EDG_WLL_CREAMSTORE_OK) {
+							js->pub.state = EDG_WLL_JOB_WAITING;
+							js->pub.cream_state = EDG_WLL_STAT_PENDING;
+						}
+						break;
+					 case EDG_WLL_CREAMSTORE_CMDSUSPEND:
+						if (e->CREAMStore.result == EDG_WLL_CREAMSTORE_OK) {
+                                                        js->pub.suspended = 1;
+                                                }
+						break;
+					 case EDG_WLL_CREAMSTORE_CMDRESUME:
+                                                if (e->CREAMStore.result == EDG_WLL_CREAMSTORE_OK) {
+                                                        js->pub.suspended = 0;
+                                                }
+                                                break;
+					default:
+						break;
+				}
+				rep_cond(js->pub.cream_reason, e->CREAMStore.reason);
+				rep_cond(js->pub.reason, e->CREAMStore.reason);
+			}
+			break;
+		case EDG_WLL_EVENT_CREAMCALL:
+			if (e->any.source == EDG_WLL_SOURCE_CREAM_EXECUTOR &&
+                                e->CREAMCall.callee == EDG_WLL_SOURCE_LRMS &&
+                                e->CREAMCall.command == EDG_WLL_CREAMCALL_CMDSTART &&
+                                e->CREAMCall.result == EDG_WLL_CREAMCALL_OK)
+			{
+				if (USABLE(res, strict)) {
+                                        // BLAH -> LRMS
+					js->pub.state = EDG_WLL_JOB_SCHEDULED;
+					js->pub.cream_state = EDG_WLL_STAT_IDLE;
+					rep_cond(js->pub.cream_reason, e->CREAMCall.reason);
+					rep_cond(js->pub.reason, e->CREAMCall.reason);
+				}
+			}
+			if (e->CREAMCall.command == EDG_WLL_CREAMCALL_CMDCANCEL &&
+                                e->CREAMCall.result == EDG_WLL_CREAMCALL_OK)
+                        {
+                                if (USABLE(res, strict)){
+                                        js->pub.cream_cancelling = 1;
+                                        js->pub.cancelling = 1;
+					 rep_cond(js->pub.cream_reason, e->CREAMCall.reason);
+	                                rep_cond(js->pub.reason, e->CREAMCall.reason);
+                                }
+                        }
+			break;
+		case EDG_WLL_EVENT_CREAMCANCEL:
+			if (USABLE(res, strict)) {
+                                if (e->CREAMCancel.status_code == EDG_WLL_CANCEL_DONE) {
+                                        js->pub.state = EDG_WLL_JOB_CANCELLED;
+                                        js->pub.cream_state = EDG_WLL_STAT_ABORTED;
+                                }
+				rep(js->pub.cream_reason, e->CREAMCancel.reason);
+                                rep(js->pub.reason, e->CREAMCancel.reason);
+                        }
+                        break;
+		case EDG_WLL_EVENT_CREAMABORT:
+                        if (USABLE(res, strict)) {
+                                js->pub.state = EDG_WLL_JOB_ABORTED;
+                                js->pub.cream_state = EDG_WLL_STAT_ABORTED;
+				rep(js->pub.cream_reason, e->CREAMAbort.reason);
+                                rep(js->pub.reason, e->CREAMAbort.reason);
+                        }
+                        break;
+		case EDG_WLL_EVENT_CREAMSTATUS:
+                        if (USABLE(res, strict) && e->CREAMStatus.result == EDG_WLL_CREAMSTATUS_DONE)
+                        {
+                                switch (js->pub.cream_state = edg_wll_StringToCreamStat(e->CREAMStatus.new_state))
+                                {
+                                        case EDG_WLL_STAT_REGISTERED:
+                                        case EDG_WLL_NUMBER_OF_CREAM_STATES:
+                                                break;
+
+                                        case EDG_WLL_STAT_PENDING: js->pub.state = EDG_WLL_JOB_WAITING; break;
+                                        case EDG_WLL_STAT_IDLE: js->pub.state = EDG_WLL_JOB_SCHEDULED; break;
+                                        case EDG_WLL_STAT_RUNNING:
+                                                js->pub.state = EDG_WLL_JOB_RUNNING;
+                                                js->pub.jw_status = EDG_WLL_STAT_WRAPPER_RUNNING;
+                                                break;
+                                        case EDG_WLL_STAT_REALLY_RUNNING:
+                                                js->pub.state = EDG_WLL_JOB_RUNNING;
+                                                js->pub.jw_status = EDG_WLL_STAT_PAYLOAD_RUNNING;
+                                                break;
+                                        case EDG_WLL_STAT_HELD: /* TODO */ break;
+                                        case EDG_WLL_STAT_DONE_OK:
+                                                js->pub.state = EDG_WLL_JOB_DONE;
+                                                js->pub.done_code = EDG_WLL_STAT_OK;
+                                                js->pub.cream_done_code = EDG_WLL_STAT_OK;
+                                                break;
+                                        case EDG_WLL_STAT_DONE_FAILED:
+                                                js->pub.state = EDG_WLL_JOB_DONE;
+                                                js->pub.done_code = EDG_WLL_STAT_FAILED;
+                                                js->pub.cream_done_code = EDG_WLL_STAT_FAILED;
+                                                break;
+                                        case EDG_WLL_STAT_ABORTED: js->pub.state = EDG_WLL_JOB_ABORTED; break;
+                                }
+                        }
+                        break;
 
 		default:
 			goto bad_event;

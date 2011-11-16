@@ -136,6 +136,13 @@ int processEvent_FileTransfer(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 #endif
 			}
 			break;
+		case EDG_WLL_EVENT_RESUBMISSION:
+                        if (USABLE(res)) {
+                                if (e->resubmission.result == EDG_WLL_RESUBMISSION_WONTRESUB) {
+                                        rep(js->pub.reason, e->resubmission.reason);
+                                }
+                        }
+                        break;
 		default:
 			break;
 	}
