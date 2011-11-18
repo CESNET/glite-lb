@@ -175,15 +175,6 @@ function config_glite_lb() {
     return 1
   fi
 
-  LB_PURGE="$GLITE_LB_LOCATION/bin/glite-lb-purge"
-  if [ ! -x "$LB_PURGE" ]; then
-    LB_PURGE="$GLITE_LB_LOCATION/sbin/glite-lb-purge"
-  fi
-  if [ ! -x "$LB_PURGE" ]; then
-    yaimlog ABORT "Purge utility not found! Install glite-lb-utils (or glite-lb-client in older version)"
-    return 1
-  fi
-
   chmod og+rx /var/lib/mysql/ 
   chown mysql:mysql /var/run/mysqld/
 
@@ -347,6 +338,9 @@ EOF
   if [ ! -f ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf ]; then
     echo $HOSTNAME > ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf
   fi
+
+  # upgrade from L&B <= 3.1.1
+  rm -fv /etc/cron.d/glite-lb-purge.cron /etc/logrotate.d/lb-purger /etc/logrotate.d/lb-lcas
 
   . @glite_etc@/profile.d/grid-env.sh
   ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd restart
