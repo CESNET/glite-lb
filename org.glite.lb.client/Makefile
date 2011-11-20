@@ -248,7 +248,7 @@ ${TOOLS} ${EXAMPLES} ${EXAMPLES_CL}: %: %.o
 	${LINK} -o $@ $< ${default_clientlib} ${default_commonlib} ${EXT_LIB} 
 
 ${EXAMPLES_CL_THR}: %: %.o
-	${LINK} -o $@ $< ${default_clientlib_thr} ${default_commonlib_thr} ${EXT_LIB} 
+	${LINK} -o $@ $< ${default_clientlib_thr} ${default_commonlib_thr} ${EXT_LIB} -lpthread
 
 ${TOOLS}: ${default_clientlib}
 
