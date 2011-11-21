@@ -187,6 +187,7 @@ my %lbmodules = (
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache shared commands core devel slashgrid services service-clients gsexec/ ],
 	'px' => [ qw/proxyrenewal myproxy-yaim/ ],
+	'canl' => [ qw/c/ ],
 	);
 
 
@@ -210,6 +211,7 @@ my @opts = (
 	'lbjp-common-tag=s' => \$lbjp_tag,
 	'jp-tag=s' => \$jp_tag,
 	'jobid-tag=s' => \$jobid_tag,
+	'canl-tag=s' => \$canl_tag,
 	'help' => \$help,
 	'libdir=s' => \$libdir,
 	'project=s' => \$project,
@@ -485,7 +487,7 @@ sub mode_checkout() {
 				}
 			}	
 		}
-		if ($lbjp_tag){
+		if ($lbjp_tag) {
 			for (@{$lbmodules{'lbjp-common'}}){
 				if ("lbjp-common.".$_ eq $module){
                                         $tag = '-r '.$lbjp_tag;
@@ -503,6 +505,13 @@ sub mode_checkout() {
 			for (@{$lbmodules{jobid}}){
 				if ("jobid.".$_ eq $module){
                                         $tag = '-r '.$jobid_tag;
+                                }
+			}
+		}
+		if ($canl_tag) {
+			for (@{$lbmodules{'canl'}}){
+				if ("canl.".$_ eq $module){
+                                        $tag = '-r '.$canl_tag;
                                 }
 			}
 		}
@@ -577,6 +586,7 @@ BEGIN{
 	'gridsite.1.5-compat' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B build_common_cpp:B doxygen:B/ ],
 	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
+	'canl.c' => [ qw/cares:B/ ],
 );
 
 %need_jars = (
@@ -705,6 +715,8 @@ for my $jar (keys %need_jars) {
 	'px.emi-px' => [qw/px.myproxy-yaim:R/],
 	'px.myproxy-yaim' => [ qw// ],
 	'px.myproxy-config' => [],
+
+	'canl.c' => [],
 );
 
 for my $ext (keys %deps_aux) {
@@ -717,7 +729,7 @@ for my $ext (keys %deps_aux) {
 }
 
 
-%extrafull = ( gridsite=>'org.gridsite.core');
+%extrafull = ( gridsite=>'org.gridsite.core', 'canl.c' => 'emi.canl.canl-c');
 
 #( java => 'client-java' );
 %extranodmod = (
@@ -727,7 +739,8 @@ for my $ext (keys %deps_aux) {
 	jpclient => 'jp.client',
 	lb => 'lb.glite-LB',
 	px => 'px.glite-PX',
-	proxyrenewal => 'px.proxyrenewal'
+	proxyrenewal => 'px.proxyrenewal',
+	canl => 'canl.c',
 );
 
 %obsoletes = (
@@ -755,6 +768,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'org.glite',
 	'gridsite' => 'org',
 	'px' => 'org.glite',
+	'canl' => 'emi',
 );
 
 %cvs_tag_prefix = (
@@ -764,6 +778,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'glite-',
 	'gridsite' => '',
 	'px' => 'glite-',
+	'canl' => 'emi-',
 );
 
 # ==== projects specification ====
@@ -849,6 +864,7 @@ for my $ext (keys %deps_aux) {
 			'lbjp-common' => 'emi-',
 			'gridsite' => 'emi-',
 			'px' => 'emi-',
+			'canl' => 'emi-',
 		},
 		tag_prefix => { %cvs_tag_prefix },
 		flavours => '--thrflavour= --nothrflavour=',
@@ -1014,7 +1030,11 @@ $buildroot{'gridsite.core'} = 'src';
 sub full
 {
 	my $short = shift;
-	return $extrafull{$short} ? $extrafull{$short} : 'org.glite.'.$short;
+	my $subsys = $short;
+	$subsys =~ s/\..*//;
+
+	my $cvs_prefix = exists $cvs_prefix{$subsys} ? $cvs_prefix{$subsys} : 'org.glite';
+	return $extrafull{$short} ? $extrafull{$short} : "$cvs_prefix.$short";
 }
 
 sub mkinc
@@ -1029,6 +1049,7 @@ jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface lbjp-common.gss lbjp-common.gsoap-plugin
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
 px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config px.emi-px
+canl.c
 /;
 	@aux{@m} = (1) x ($#m+1);
 
@@ -1136,12 +1157,13 @@ sub mode_etics {
 		($major,$minor,$rev,$age) = ($1,$2,$3,$4);
 	}
 	else { 
-		my $path = "$cvs_prefix{$subsys}.$subsys.$module/project";
+		my $full = full "$subsys.$module";
+		my $path = "$full/project";
 		if ($subsys eq 'gridsite') {
 			$path = "$cvs_prefix{$subsys}.$subsys.core/project";
 		}
 		open V,"$path/version.properties"
-			or die "$cvs_prefix{$subsys}.$subsys.$module/project/version.properties: $!\n";
+			or die "$path/version.properties: $!\n";
 	
 		while ($_ = <V>) {
 			chomp;
@@ -1210,8 +1232,10 @@ sub mode_etics {
 	my $package_description = "";
 	my $package_summary = "";
 
-	if (-e "$cvs_prefix{$subsys}.$subsys.$module/project/package.description") {
-		open V, "$cvs_prefix{$subsys}.$subsys.$module/project/package.description";
+	my $cvs_module = full "$subsys.$module";
+
+	if (-e "$cvs_module/project/package.description") {
+		open V, "$cvs_module/project/package.description";
 		$package_description = join ("", <V>);
 		close V;
 		chomp $package_description;
@@ -1221,8 +1245,8 @@ sub mode_etics {
 	else { 
 		print STDERR "package.description not found for $subsys.$module!\n"; }
 
-	if (-e "$cvs_prefix{$subsys}.$subsys.$module/project/package.summary") {
-		open V, "$cvs_prefix{$subsys}.$subsys.$module/project/package.summary";
+	if (-e "$cvs_module/project/package.summary") {
+		open V, "$cvs_module/project/package.summary";
 		$package_summary = join ("", <V>);
 		close V;
 		chomp $package_summary;
@@ -1233,10 +1257,10 @@ sub mode_etics {
 		print STDERR "package.summary not found for $subsys.$module!\n"; }
 
 	my %cmd;
-	$cmd_vcs{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null";
+	$cmd_vcs{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_module 2>/dev/null";
 	#$cmd_vcs{checkout} = "(test -d jra1mw/.git && (cd jra1mw; git pull) || git clone http://scientific.zcu.cz/git/jra1mw.git)";
 	#$cmd_vcs{checkout} .= " && (cd jra1mw; git checkout \${tag})" unless ($conftag =~ /HEAD/);
-	#$cmd_vcs{checkout} .= " && ln -s jra1mw/$cvs_prefix{$subsys}.$subsys.$module \${moduleName}";
+	#$cmd_vcs{checkout} .= " && ln -s jra1mw/$cvs_module \${moduleName}";
 	$cmd_vcs{tag} = "cvs -d \${vcsroot} tag -R \${tag} ${moduleName}";
 
 	$cmd{default}{init} = 'None';
@@ -1632,6 +1656,7 @@ What to build:
   --jp-tag=tag			checkout JP modules with specific tag
   --lbjp-common-tag=tag         checkout lbjp-common modules with specific tag
   --jobid-tag=tag		checkout jobid modules with specific tag
+  --canl-tag=tag		checkout canl modules with specific tag
 
 Dependencies (summary of what will be used is always printed):
   --with-EXTERNAL=PATH		where to look for an external [autodetect]
