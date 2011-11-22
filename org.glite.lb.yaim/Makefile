@@ -20,9 +20,8 @@ all ${FILES}:
 	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
 		glite_var="${localstatedir}"; \
 	fi; \
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $(top_srcdir)/config/defaults/glite-lb.pre > glite-lb.pre
-
-	sed -e 's:@glite_etc@:${sysconfdir}:' $(top_srcdir)/config/functions/config_glite_lb.in > config_glite_lb
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $(top_srcdir)/config/defaults/glite-lb.pre > glite-lb.pre; \
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $(top_srcdir)/config/functions/config_glite_lb.in > config_glite_lb
 
 	# metapackage info
 	echo -e "${gLiteCopyrightText}\n\n${gLiteLicenseText}" > LICENSE

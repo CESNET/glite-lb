@@ -1,5 +1,5 @@
 function config_glite_lb_check(){
-  requires $1 MYSQL_PASSWORD INSTALL_ROOT GLITE_LOCATION GLITE_LB_LOCATION GLITE_LB_LOCATION_VAR GLITE_LB_LOCATION_ETC
+  requires $1 MYSQL_PASSWORD INSTALL_ROOT GLITE_LOCATION
 }
 
 # check directory existence first
@@ -21,6 +21,7 @@ function config_glite_lb_libs_append() {
 
 function config_glite_lb_setenv(){
 
+  # Redefine GLITE_USER to value used in packages
   yaimgridenv_set GLITE_USER glite
   # Redefine GLITE_HOME_DIR to make sure we retrieve the correct HOME directory of user glite
   GLITE_HOME_DIR=`getent passwd ${GLITE_USER} | cut -d: -f6`
@@ -28,20 +29,20 @@ function config_glite_lb_setenv(){
     yaimlog ERROR "The home directory of ${GLITE_USER} doesn't exist. Check whether the user ${GLITE_USER} was properly created"
     exit ${YEX_NOSUCHFILE}
   fi
-  yaimgridenv_set GLITE_WMS_QUERY_TIMEOUT "${GLITE_WMS_QUERY_TIMEOUT}"
+  yaimgridenv_set GLITE_WMS_QUERY_TIMEOUT "${GLITE_WMS_QUERY_TIMEOUT:-300}"
   yaimgridenv_set GLITE_HOST_CERT ${GLITE_HOME_DIR:-/home/glite}/.certs/hostcert.pem
   yaimgridenv_set GLITE_HOST_KEY ${GLITE_HOME_DIR:-/home/glite}/.certs/hostkey.pem
-  yaimgridenv_set X509_CERT_DIR "${X509_CERT_DIR}"
-  yaimgridenv_set X509_VOMS_DIR "${X509_VOMS_DIR}"
+  yaimgridenv_set X509_CERT_DIR "${X509_CERT_DIR:-/etc/grid-security/certificates}"
+  yaimgridenv_set X509_VOMS_DIR "${X509_VOMS_DIR:-/etc/grid-security/vomsdir}"
 
   yaimgridenv_set GLITE_LB_EXPORT_ENABLED ${GLITE_LB_EXPORT_ENABLED:-false}
-  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS}"
+  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 15d --cancelled 15d --other 60d}"
   yaimgridenv_set GLITE_LB_EXPORT_JPPS ${GLITE_LB_EXPORT_JPPS:-}
 
-  yaimgridenv_set GLITE_LB_LOCATION "${GLITE_LB_LOCATION}"
-  yaimgridenv_set GLITE_LB_LOCATION_ETC "${GLITE_LB_LOCATION_ETC}"
-  yaimgridenv_set GLITE_LB_LOCATION_VAR "${GLITE_LB_LOCATION_VAR}"
-  yaimgridenv_set GLITE_JP_LOCATION "${GLITE_JP_LOCATION}"
+  yaimgridenv_set GLITE_LB_LOCATION "${GLITE_LB_LOCATION:-@glite_prefix@}"
+  yaimgridenv_set GLITE_LB_LOCATION_ETC "${GLITE_LB_LOCATION_ETC:-@glite_etc@}"
+  yaimgridenv_set GLITE_LB_LOCATION_VAR "${GLITE_LB_LOCATION_VAR:-@glite_var@}"
+  yaimgridenv_set GLITE_JP_LOCATION "${GLITE_JP_LOCATION:-}"
 
   yaimgridenv_set GLITE_LB_SERVER_OTHER_OPTIONS "${GLITE_LB_SERVER_OTHER_OPTIONS}"
   yaimgridenv_set GLITE_LB_NOTIF_IL_OTHER_OPTIONS "${GLITE_LB_NOTIF_IL_OTHER_OPTIONS}"
@@ -97,6 +98,25 @@ function config_glite_lb_setenv(){
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/apr-dev
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/aprutil-dev
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/activemq-cpp-library
+
+  GLITE_LB_RTM_ENABLED="${GLITE_LB_RTM_ENABLED:-false}"
+  GLITE_LB_MSG_BROKER="${GLITE_LB_MSG_BROKER:-true}"
+  GLITE_LB_MSG_NETWORK="${GLITE_LB_MSG_NETWORK:-PROD}"
+  LCG_GFAL_INFOSYS="${LCG_GFAL_INFOSYS:-lcg-bdii.cern.ch:2170}"
+
+  #GLITE_LB_SUPER_USERS="${GLITE_LB_SUPER_USERS:-}"
+  #GLITE_LB_WMS_DN="${GLITE_LB_WMS_DN:-}"
+  GLITE_LB_RTM_DN="${GLITE_LB_RTM_DN:-/C=UK/O=eScience/OU=Imperial/L=Physics/CN=heppc24.hep.ph.ic.ac.uk/Email=janusz.martyniak@imperial.ac.uk}"
+  #GLITE_LB_AUTHZ_ADMIN_ACCESS="${GLITE_LB_AUTHZ_ADMIN_ACCESS:-}"
+  #GLITE_LB_AUTHZ_READ_ALL="${GLITE_LB_AUTHZ_READ_ALL:-}"
+  #GLITE_LB_AUTHZ_READ_PURGE="${GLITE_LB_AUTHZ_READ_PURGE:-}"
+  #GLITE_LB_AUTHZ_STATUS_FOR_MONITORING="${GLITE_LB_AUTHZ_STATUS_FOR_MONITORING:-}"
+  #GLITE_LB_AUTHZ_GET_STATISTICS="${GLITE_LB_AUTHZ_GET_STATISTICS:-}"
+  #GLITE_LB_AUTHZ_GRANT_OWNERSHIP="${GLITE_LB_AUTHZ_GRANT_OWNERSHIP:-}"
+  GLITE_LB_AUTHZ_REGISTER_JOBS="${GLITE_LB_AUTHZ_REGISTER_JOBS:-.*}"
+  GLITE_LB_AUTHZ_LOG_WMS_EVENTS="${GLITE_LB_AUTHZ_LOG_WMS_EVENTS:-.*}"
+  GLITE_LB_AUTHZ_LOG_CE_EVENTS="${GLITE_LB_AUTHZ_LOG_CE_EVENTS:-.*}"
+  GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS="${GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS:-.*}"
 }
 
 function config_glite_lb_authz() {
