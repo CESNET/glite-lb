@@ -1706,7 +1706,7 @@ void *notify_thread(void *thread_data) {
 			    "SET ce=$1, queue=$2, ui=$3, state=$4, state_entered=$5, rtm_timestamp=$6, active=$7, state_changed=$8, registered=$9 WHERE jobid=$10 AND lb=$11", 
 			&t->updatecmd) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_JOBS DBAMP " "
 			    "SET vo=$1 WHERE jobid=$2 AND lb=$3", 
-			&t->updatecmd_vo) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_LBS DBAMP " "
+			&t->updatecmd_vo) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_JOBS DBAMP " "
 			    "SET rb=$1 WHERE jobid=$2 AND lb=$3",
 			&t->updatecmd_rb) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_LBS DBAMP " "
 			    "SET monitored=$1 WHERE ip=$2",
