@@ -586,7 +586,7 @@ BEGIN{
 	'gridsite.1.5-compat' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B build_common_cpp:B doxygen:B/ ],
 	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
-	'canl.c' => [ qw/cares:B openssl:B/ ],
+	'canl.c' => [ qw/cares:B openssl:B libtool:B/ ],
 );
 
 %need_jars = (
