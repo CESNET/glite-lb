@@ -60,7 +60,7 @@ class ZoneTest: public  CppUnit::TestFixture
 public:
 
 	void setUp() {
-		tz0 = getenv("TZ");
+		tz = tz0 = getenv("TZ");
 	}
 
 	void tearDown() {
