@@ -26,6 +26,7 @@ extern "C" {
 
 #include <sys/time.h>
 #include <stdlib.h>
+#include <gssapi.h>
 
 enum {
   EDG_WLL_GSS_OK		=  0,  /* no GSS errors */
@@ -50,6 +51,7 @@ typedef struct _edg_wll_GssConnection {
   int sock;
   char *buffer;
   size_t bufsize;
+  gss_OID authn_mech;
 } edg_wll_GssConnection;
 
 typedef struct _edg_wll_GssStatus {
@@ -61,10 +63,7 @@ typedef struct _edg_wll_GssPrincipal_data {
    char *name;
    unsigned int flags;
    char **fqans;
-#if 0
-   char **voms_groups; /* needed for legacy LB server authZ mechanism */
-   edg_wll_GssOid authn_mech;
-#endif
+   gss_OID authn_mech;
 } edg_wll_GssPrincipal_data;
 typedef struct _edg_wll_GssPrincipal_data *edg_wll_GssPrincipal;
 
@@ -98,6 +97,16 @@ edg_wll_gss_connect(edg_wll_GssCred cred,
 		    struct timeval *timeout,
 		    edg_wll_GssConnection *connection,
 		    edg_wll_GssStatus* gss_code);
+
+int
+edg_wll_gss_connect_ext(edg_wll_GssCred cred,
+			char const *hostname,
+                    	int port,
+			const char *service,
+			gss_OID_set mechs,
+                    	struct timeval *timeout,
+                    	edg_wll_GssConnection *connection,
+                    	edg_wll_GssStatus* gss_code);
 
 int
 edg_wll_gss_accept(edg_wll_GssCred cred,
@@ -135,6 +144,10 @@ edg_wll_gss_write_full(edg_wll_GssConnection *connection,
 		       struct timeval *timeout,
 		       size_t *total,
 		       edg_wll_GssStatus* gss_code);
+
+int
+edg_wll_gss_watch_creds_gsi(const char * proxy_file,
+			    time_t * proxy_mtime);
 
 int
 edg_wll_gss_watch_creds(const char * proxy_file,

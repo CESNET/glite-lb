@@ -34,7 +34,7 @@ offset=6
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test
+VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples
 
 default: all
 
@@ -138,6 +138,12 @@ test_coverage:
 	cd coverage && $(MAKE) -f ../Makefile top_srcdir=../../ COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage" check
 	cd coverage && for i in ${OBJS}; do gcov -o .libs/ $$i ; done
 
+gss_server: gss_server.o example_common.o
+	${LINK} -o $@ ${default_gss} $^ -lefence
+	
+gss_client: gss_client.o example_common.o
+	${LINK} -o $@ ${default_gss} $^ -lefence
+
 examples:
 
 doc:
@@ -157,7 +163,7 @@ install:
 	fi
 
 clean:
-	rm -rf *.o *.lo *.a *.la .libs test_gss
+	rm -rf *.o *.lo *.a *.la .libs test_gss gss_server gss_client
 	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
 %.o: %.c

@@ -35,6 +35,7 @@ limitations under the License.
 #include <errno.h>
 
 #include <globus_common.h>
+
 #include <gssapi.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
@@ -44,6 +45,10 @@ limitations under the License.
 #include <openssl/bio.h>
 
 #include "glite_gss.h"
+
+#ifndef GSS_C_GLOBUS_SSL_COMPATIBLE
+#define GSS_C_GLOBUS_SSL_COMPATIBLE	16384
+#endif
 
 #define tv_sub(a,b) {\
 	(a).tv_usec -= (b).tv_usec;\
@@ -61,9 +66,33 @@ struct asyn_result {
 
 static int globus_common_activated = 0;
 
-static void free_hostent(struct hostent *h);
-static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *addr,  int addrtype, int port, struct timeval *timeout, edg_wll_GssConnection *connection,
-                                edg_wll_GssStatus* gss_code);
+typedef struct gssapi_mech {
+    const char* name;
+    gss_OID_desc oid;
+} gssapi_mech;
+
+static
+struct gssapi_mech gssapi_mechs[] = {
+    { "Kerberos", {9, "\x2A\x86\x48\x86\xF7\x12\x01\x02\x02"} },
+    { "GSI", {9, "\x2b\x06\x01\x04\x01\x9b\x50\x01\x01"} },
+    { "EAP", {9, "\x2B\x06\x01\x04\x01\xA9\x4A\x16\x01"} },
+};
+
+static gss_OID
+get_oid(const char *mech);
+
+static void
+free_hostent(struct hostent *h);
+
+static int
+try_conn_and_auth(edg_wll_GssCred cred, char const *hostname,
+	          const char *service, gss_OID mech,
+		  char *addr,  int addrtype, int port, struct timeval *timeout,
+		  edg_wll_GssConnection *connection, edg_wll_GssStatus* gss_code);
+
+static int
+edg_wll_gss_oid_equal(const gss_OID a, const gss_OID b);
+
 static int decrement_timeout(struct timeval *timeout, struct timeval before, struct timeval after)
 {
         (*timeout).tv_sec = (*timeout).tv_sec - (after.tv_sec - before.tv_sec);
@@ -309,6 +338,18 @@ do_connect(int *s, char *addr, int addrtype, int port, struct timeval *timeout)
    return 0;
 }
 
+static gss_OID
+get_oid(const char *mech)
+{
+    unsigned int i;
+
+    for (i = 0; i < sizeof(gssapi_mechs)/sizeof(gssapi_mechs[0]); i++)
+	if (strcasecmp(mech, gssapi_mechs[i].name) == 0)
+	    return &gssapi_mechs[i].oid;
+
+    return GSS_C_NO_OID;
+}
+
 static int
 send_token(int sock, void *token, size_t token_length, struct timeval *to)
 {
@@ -365,13 +406,26 @@ end:
 }
 
 static int
-recv_token(int sock, void **token, size_t *token_length, struct timeval *to)
+send_gss_token(int sock, gss_OID mech, void *token, size_t token_length, struct timeval *to)
+{
+    int ret;
+    uint32_t net_len = htonl(token_length);
+
+    /* Don't use the usual message framing when using Globus GSI, in order to be
+       compatible with SSL on the wire. */
+    if (!edg_wll_gss_oid_equal(mech, get_oid("GSI"))) {
+	ret = send_token(sock, &net_len, 4, to);
+	if (ret)
+	    return ret;
+    }
+
+    return send_token(sock, token, token_length, to);
+}
+
+static int
+recv_token(int sock, void *token, size_t token_length, struct timeval *to)
 {
    ssize_t count;
-   char buf[4098];
-   char *t = NULL;
-   char *tmp;
-   size_t tl = 0;
    fd_set fds;
    struct timeval timeout,before,after;
    int ret;
@@ -381,7 +435,6 @@ recv_token(int sock, void **token, size_t *token_length, struct timeval *to)
       gettimeofday(&before,NULL);
    }
 
-   ret = 0;
    do {
       FD_ZERO(&fds);
       FD_SET(sock,&fds);
@@ -396,7 +449,7 @@ recv_token(int sock, void **token, size_t *token_length, struct timeval *to)
 	    break;
       }
       
-      count = read(sock, buf, sizeof(buf));
+      count = read(sock, token, token_length);
       if (count < 0) {
 	 if (errno == EINTR)
 	    continue;
@@ -407,22 +460,13 @@ recv_token(int sock, void **token, size_t *token_length, struct timeval *to)
       }
 
       if (count==0) {
-         if (tl==0) {
-            free(t);
-            return EDG_WLL_GSS_ERROR_EOF;
-         } else goto end;
+	  ret = EDG_WLL_GSS_ERROR_EOF;
+	  goto end;
       }
-      tmp=realloc(t, tl + count);
-      if (tmp == NULL) {
-	errno = ENOMEM;
-	free(t);
-	return EDG_WLL_GSS_ERROR_ERRNO;
-      }
-      t = tmp;
-      memcpy(t + tl, buf, count);
-      tl += count;
 
    } while (count < 0); /* restart on EINTR */
+
+   ret = count;
 
 end:
    if (to) {
@@ -435,13 +479,108 @@ end:
       }
    }
 
-   if (ret == 0) {
-      *token = t;
-      *token_length = tl;
-   } else
-      free(t);
-
    return ret;
+}
+
+/* similar to recv_token() but never returns partial data */
+static int
+read_token(int sock, void *token, size_t length, struct timeval *to)
+{
+    size_t remain = length;
+    char *buf = token;
+    int count;
+
+    while (remain > 0) {
+	count = recv_token(sock, buf, remain, to);
+	if (count < 0)
+	    return count;
+	buf += count;
+	remain -= count;
+    }
+
+    return length;
+}
+
+/*
+   SSL/TLS framing:
+   1st byte: SSL Handshake Record Type (\x16)
+   2nd-3rd bytes: SSL Version 3.0 (\x03 \x00)
+                  TLS Version 1.0 (\x03 \x01)
+   4th-5th bytes: Length
+*/
+#define SSLv3_HEADER "\x16\x03\x00"
+#define TLSv1_HEADER "\x16\x03\x01"
+
+static int
+is_ssl(unsigned char *header)
+{
+    if (memcmp(header, SSLv3_HEADER, 3) == 0)
+	return 1;
+    if (memcmp(header, TLSv1_HEADER, 3) == 0)
+	return 1;
+
+    return 0;
+    /* payload len == (size_t)(header[3]) << 8) | header[4]) + 5; */
+}
+
+
+static int
+recv_gss_token(int sock, gss_OID mech, void **token, size_t *token_length, struct timeval *to)
+{
+    int ret;
+    uint32_t len, net_len;
+    unsigned char *header;
+    char buf[4096];
+    char *b = NULL;
+
+    if (edg_wll_gss_oid_equal(mech, get_oid("GSI"))) {
+	ret = recv_token(sock, buf, sizeof(buf), to);
+	if (ret < 0)
+	    return ret;
+
+	*token = malloc(ret);
+	if (*token == NULL)
+	    return EDG_WLL_GSS_ERROR_ERRNO;
+
+	memcpy(*token, buf, ret);
+	*token_length = ret;
+
+	return 0;
+    }
+
+    ret = read_token(sock, &net_len, 4, to);
+    if (ret < 0)
+	return ret;
+
+    header = (unsigned char *)&net_len;
+    if (mech == GSS_C_NO_OID && is_ssl(header)) {
+	/* SSL detected. Let's return this fragment to the caller relying on
+	   the Globus libs being able to cope with partial messages. */
+	*token = malloc(4);
+	if (*token == NULL)
+	    return EDG_WLL_GSS_ERROR_ERRNO;
+
+	memcpy(*token, header, 4);
+	*token_length = 4;
+
+	return 0;
+    }
+
+    len =  ntohl(net_len);
+    b = malloc(len);
+    if (b == NULL)
+	return EDG_WLL_GSS_ERROR_ERRNO;
+
+    ret = read_token(sock, b, len, to);
+    if (ret < 0) {
+	free(b);
+	return ret;
+    }
+
+    *token = b;
+    *token_length = len;
+
+    return 0;
 }
 
 static int
@@ -524,6 +663,7 @@ destroy_proxy(char *proxy_file)
 }
 
 /** Load or reload credentials. It should be called regularly (credential files can be changed).
+  This call works only for GSSAPI from Globus.
  @see edg_wll_gss_watch_creds
  */
 int
@@ -534,6 +674,7 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
    gss_cred_id_t gss_cred = GSS_C_NO_CREDENTIAL;
    gss_buffer_desc buffer = GSS_C_EMPTY_BUFFER;
    gss_name_t gss_name = GSS_C_NO_NAME;
+   gss_OID_set_desc mechs;
    OM_uint32 lifetime;
    char *proxy_file = NULL;
    char *name = NULL;
@@ -544,14 +685,18 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
       return EINVAL;
 
    if (cert_file == NULL) {
+      mechs.count = 1;
+      mechs.elements = get_oid("GSI");
+      
       major_status = gss_acquire_cred(&minor_status, GSS_C_NO_NAME, 0,
-	    			      GSS_C_NO_OID_SET, GSS_C_BOTH,
+	    			      &mechs, GSS_C_BOTH,
 				      &gss_cred, NULL, NULL);
       if (GSS_ERROR(major_status)) {
 	 ret = EDG_WLL_GSS_ERROR_GSS;
 	 goto end;
       }
    } else {
+#ifndef NO_GLOBUS_GSSAPI
       proxy_file = (char *)cert_file;
       if (strcmp(cert_file, key_file) != 0 &&
 	  (ret = create_proxy(cert_file, key_file, &proxy_file))) {
@@ -567,13 +712,19 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
       }
       buffer.length = strlen(proxy_file);
 
-      major_status = gss_import_cred(&minor_status, &gss_cred, GSS_C_NO_OID, 1,
+      major_status = gss_import_cred(&minor_status, &gss_cred,
+				     get_oid("GSI"), 1,
 				     &buffer, 0, NULL);
       free(buffer.value);
       if (GSS_ERROR(major_status)) {
 	 ret = EDG_WLL_GSS_ERROR_GSS;
 	 goto end;
       }
+#else
+      errno = EINVAL;
+      ret = EDG_WLL_GSS_ERROR_ERRNO;
+      goto end;
+#endif
    }
 
   /* gss_import_cred() doesn't check validity of credential loaded, so let's
@@ -651,17 +802,19 @@ end:
 
 /** Create a socket and initiate secured connection. */
 int 
-edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
-		    struct timeval *timeout, edg_wll_GssConnection *connection,
-		    edg_wll_GssStatus* gss_code)
+edg_wll_gss_connect_ext(edg_wll_GssCred cred, char const *hostname, int port,
+			const char *service, gss_OID_set mechs, 
+		        struct timeval *timeout, edg_wll_GssConnection *connection,
+		        edg_wll_GssStatus* gss_code)
 {
    int ret;
    struct asyn_result ar;
    int h_errno;
    int addr_types[] = {AF_INET6, AF_INET};
    int ipver = AF_INET6; //def value; try IPv6 first
-   unsigned int j;
+   unsigned int j,k;
    int i;
+   gss_OID mech;
 
    memset(connection, 0, sizeof(*connection));
    for (j = 0; j< sizeof(addr_types)/sizeof(*addr_types); j++) {
@@ -689,13 +842,23 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
    	i = 0;
 	while (ar.ent->h_addr_list[i])
 	{
-		ret = try_conn_and_auth (cred, hostname, ar.ent->h_addr_list[i], 
+	    k = 0;
+	    do {
+		if (mechs == GSS_C_NO_OID_SET || mechs->count == 0)
+		    mech = GSS_C_NO_OID;
+		else
+		    mech = &mechs->elements[k];
+
+		ret = try_conn_and_auth (cred, hostname, service, mech,
+					ar.ent->h_addr_list[i], 
 					ar.ent->h_addrtype, port, timeout, connection, gss_code);
 		if (ret == 0)
 			goto end;
 		if (timeout->tv_sec < 0 ||(timeout->tv_sec == 0 && timeout->tv_usec <= 0))
 			goto end;
-		i++;
+		k++;
+	    } while (mechs != GSS_C_NO_OID_SET && k < mechs->count);
+	    i++;
 	}
 	free_hostent(ar.ent);
 	ar.ent = NULL;
@@ -709,32 +872,62 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
    return ret;
 }
 
-/* try connection and authentication for the given addr*/
-static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *addr,  int addrtype, int port, struct timeval *timeout, edg_wll_GssConnection *connection,
-				edg_wll_GssStatus* gss_code) 
+int
+edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
+                    struct timeval *timeout, edg_wll_GssConnection *connection,
+                    edg_wll_GssStatus* gss_code)
 {
-	int sock;
-	int ret = 0;
+    gss_OID_set_desc mechs = {.count = 0, .elements = GSS_C_NO_OID};
+    gss_OID oid;
+    const char *mech;
+
+    mech = getenv("GLITE_GSS_MECH");
+    if (mech == NULL)
+	mech = "GSI";
+
+    oid = get_oid(mech);
+    if (oid != GSS_C_NO_OID) {
+	mechs.elements = oid;
+	mechs.count = 1;
+    }
+
+    return edg_wll_gss_connect_ext(cred, hostname, port,
+				   NULL, &mechs,
+				   timeout, connection, gss_code);
+}
+
+/* try connection and authentication for the given addr*/
+static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname,
+			      const char *service, gss_OID mech,
+	                      char *addr,  int addrtype, int port,
+			      struct timeval *timeout, edg_wll_GssConnection *connection,
+			      edg_wll_GssStatus* gss_code) 
+{
+   int sock;
+   int ret = 0;
    OM_uint32 maj_stat, min_stat, min_stat2, req_flags;
    int context_established = 0;
    gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
    gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
    gss_name_t server = GSS_C_NO_NAME;
    gss_ctx_id_t context = GSS_C_NO_CONTEXT;
+   gss_cred_id_t gss_cred = GSS_C_NO_CREDENTIAL;
    char *servername = NULL;
    int retry = _EXPIRED_ALERT_RETRY_COUNT;
 
    maj_stat = min_stat = min_stat2 = req_flags = 0;
 
-   /* GSI specific */
-   req_flags = GSS_C_GLOBUS_SSL_COMPATIBLE;
+   if (edg_wll_gss_oid_equal(mech, get_oid("GSI"))) {
+       req_flags = GSS_C_GLOBUS_SSL_COMPATIBLE;
+       setenv("GLOBUS_GSSAPI_NAME_COMPATIBILITY", "STRICT_RFC2818", 0);
+   }
 
    ret = do_connect(&sock, addr, addrtype, port, timeout);
    if (ret)
       return ret;
 
-   /* XXX find appropriate fqdn */
-   asprintf (&servername, "host@%s", hostname);
+   asprintf(&servername, "%s@%s",
+	    (service) ? service : "host", hostname);
    if (servername == NULL) {
       errno = ENOMEM;
       ret = EDG_WLL_GSS_ERROR_ERRNO;
@@ -754,15 +947,15 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *
    servername = NULL;
    memset(&input_token, 0, sizeof(input_token));
 
-   /* XXX if cred == GSS_C_NO_CREDENTIAL set the ANONYMOUS flag */
+   if (cred && cred->gss_cred)
+       gss_cred = cred->gss_cred;
 
    do { /* XXX: the black magic above */
 
-   /* XXX prepsat na do {} while (maj_stat == CONT) a osetrit chyby*/
    while (!context_established) {
       /* XXX verify ret_flags match what was requested */
-      maj_stat = gss_init_sec_context(&min_stat, cred->gss_cred, &context,
-				      GSS_C_NO_NAME, GSS_C_NO_OID,
+      maj_stat = gss_init_sec_context(&min_stat, gss_cred, &context,
+				      server, mech,
 				      req_flags | GSS_C_MUTUAL_FLAG | GSS_C_CONF_FLAG,
 				      0, GSS_C_NO_CHANNEL_BINDINGS,
 				      &input_token, NULL, &output_token,
@@ -772,8 +965,18 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *
 	 input_token.length = 0;
       }
 
+      if (mech == GSS_C_NO_OID) {
+	  gss_OID oid;
+
+	  /* is it safe to inquire a partly-establised context? */
+	  maj_stat = gss_inquire_context(&min_stat, context, NULL, NULL,
+					 NULL, &oid, NULL, NULL, NULL);
+	  if (!GSS_ERROR(maj_stat))
+	      mech = oid;
+      }
+
       if (output_token.length != 0) {
-	 ret = send_token(sock, output_token.value, output_token.length, timeout);
+	 ret = send_gss_token(sock, mech, output_token.value, output_token.length, timeout);
 	 gss_release_buffer(&min_stat2, &output_token);
 	 if (ret)
 	    goto end;
@@ -784,7 +987,7 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *
 	    gss_delete_sec_context(&min_stat2, &context, &output_token);
 	    context = GSS_C_NO_CONTEXT;
       	    if (output_token.length) {
-		send_token(sock, output_token.value, output_token.length, timeout);
+		send_gss_token(sock, mech, output_token.value, output_token.length, timeout);
 	 	gss_release_buffer(&min_stat2, &output_token);
       	    }
 	 }
@@ -793,7 +996,7 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *
       }
 
       if(maj_stat & GSS_S_CONTINUE_NEEDED) {
-	 ret = recv_token(sock, &input_token.value, &input_token.length, timeout);
+	 ret = recv_gss_token(sock, mech, &input_token.value, &input_token.length, timeout);
 	 if (ret)
 	    goto end;
       } else
@@ -825,6 +1028,7 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *
 
    connection->sock = sock;
    connection->context = context;
+   connection->authn_mech = mech;
    ret = 0;
 
 end:
@@ -853,19 +1057,20 @@ edg_wll_gss_accept(edg_wll_GssCred cred, int sock, struct timeval *timeout,
    gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
    gss_name_t client_name = GSS_C_NO_NAME;
    gss_ctx_id_t context = GSS_C_NO_CONTEXT;
+   gss_cred_id_t gss_cred = GSS_C_NO_CREDENTIAL;
+   gss_OID mech = GSS_C_NO_OID;
    int ret;
 
    maj_stat = min_stat = min_stat2 = 0;
    memset(connection, 0, sizeof(*connection));
 
-   if (cred == NULL)
-	return EINVAL;
+   if (cred && cred->gss_cred)
+       gss_cred = cred->gss_cred;
 
-   /* GSI specific */
    ret_flags = GSS_C_GLOBUS_SSL_COMPATIBLE;
 
    do {
-      ret = recv_token(sock, &input_token.value, &input_token.length, timeout);
+      ret = recv_gss_token(sock, mech, &input_token.value, &input_token.length, timeout);
       if (ret)
 	 goto end;
 
@@ -873,9 +1078,9 @@ edg_wll_gss_accept(edg_wll_GssCred cred, int sock, struct timeval *timeout,
         gss_release_name(&min_stat2, &client_name);
 
       maj_stat = gss_accept_sec_context(&min_stat, &context,
-	    			        cred->gss_cred, &input_token,
+	    			        gss_cred, &input_token,
 					GSS_C_NO_CHANNEL_BINDINGS,
-					&client_name, NULL, &output_token,
+					&client_name, &mech, &output_token,
 					&ret_flags, NULL, NULL);
       if (input_token.length > 0) {
 	 free(input_token.value);
@@ -883,7 +1088,7 @@ edg_wll_gss_accept(edg_wll_GssCred cred, int sock, struct timeval *timeout,
       }
 
       if (output_token.length) {
-	 ret = send_token(sock, output_token.value, output_token.length, timeout);
+	 ret = send_gss_token(sock, mech, output_token.value, output_token.length, timeout);
 	 gss_release_buffer(&min_stat2, &output_token);
 	 if (ret)
 	    goto end;
@@ -895,7 +1100,7 @@ edg_wll_gss_accept(edg_wll_GssCred cred, int sock, struct timeval *timeout,
 	 gss_delete_sec_context(&min_stat2, &context, &output_token);
 	 context = GSS_C_NO_CONTEXT;
       	 if (output_token.length) {
-		send_token(sock, output_token.value, output_token.length, timeout);
+		send_gss_token(sock, mech, output_token.value, output_token.length, timeout);
 	 	gss_release_buffer(&min_stat2, &output_token);
       	 }
       }
@@ -915,6 +1120,7 @@ edg_wll_gss_accept(edg_wll_GssCred cred, int sock, struct timeval *timeout,
 
    connection->sock = sock;
    connection->context = context;
+   connection->authn_mech = mech;
    ret = 0;
 
 end:
@@ -952,7 +1158,8 @@ edg_wll_gss_write(edg_wll_GssConnection *connection, const void *buf, size_t buf
       return EDG_WLL_GSS_ERROR_GSS;
    }
 
-   ret = send_token(connection->sock, output_token.value, output_token.length,
+   ret = send_gss_token(connection->sock, connection->authn_mech,
+		    output_token.value, output_token.length,
 	            timeout);
    gss_release_buffer(&min_stat, &output_token);
 
@@ -987,12 +1194,15 @@ edg_wll_gss_read(edg_wll_GssConnection *connection, void *buf, size_t bufsize,
    }
 
    do {
-      ret = recv_token(connection->sock, &input_token.value, &input_token.length,
+      ret = recv_gss_token(connection->sock, connection->authn_mech,
+		       &input_token.value, &input_token.length,
 	               timeout);
       if (ret)
 	 return ret;
 
+      /* work around a Globus bug */
       ERR_clear_error();
+
       maj_stat = gss_unwrap(&min_stat, connection->context, &input_token,
 	  		    &output_token, NULL, NULL);
       gss_release_buffer(&min_stat2, &input_token);
@@ -1082,6 +1292,8 @@ edg_wll_gss_watch_creds(const char *proxy_file, time_t *last_time)
 
       now = time(NULL);
 
+      /* to work around a globus bug we enforce reloading credentials
+	 quite often */
       if ( now >= (*last_time+GSS_CRED_WATCH_LIMIT) ) {
               *last_time = now;
               return 1;
@@ -1096,6 +1308,12 @@ edg_wll_gss_watch_creds(const char *proxy_file, time_t *last_time)
       }
 
       return 0;
+}
+
+int
+edg_wll_gss_watch_creds_gsi(const char *proxy_file, time_t *last_time)
+{
+    return edg_wll_gss_watch_creds(proxy_file, last_time);
 }
 
 /** Close the connection. */
@@ -1131,6 +1349,7 @@ edg_wll_gss_close(edg_wll_GssConnection *con, struct timeval *timeout)
    memset(con, 0, sizeof(*con));
    con->context = GSS_C_NO_CONTEXT;
    con->sock = -1;
+   con->authn_mech = NULL;
    return 0;
 }
 
@@ -1212,10 +1431,12 @@ edg_wll_gss_initialize(void)
 {
    int ret = 0;
 
+#ifndef NO_GLOBUS_GSSAPI
    if (globus_module_activate(GLOBUS_GSI_GSSAPI_MODULE) != GLOBUS_SUCCESS) {
       errno = EINVAL;
       ret = EDG_WLL_GSS_ERROR_ERRNO;
    }
+#endif
 
    if (globus_module_activate(GLOBUS_COMMON_MODULE) == GLOBUS_SUCCESS)
 	globus_common_activated = 1;
@@ -1231,7 +1452,9 @@ edg_wll_gss_initialize(void)
 void
 edg_wll_gss_finalize(void)
 {
+#ifndef NO_GLOBUS_GSSAPI
    globus_module_deactivate(GLOBUS_GSI_GSSAPI_MODULE);
+#endif
    if (globus_common_activated) {
       globus_module_deactivate(GLOBUS_COMMON_MODULE);
       globus_common_activated = 0;
@@ -1344,6 +1567,9 @@ get_peer_cred(edg_wll_GssConnection *gss, const char *my_cert_file,
    STACK_OF(X509) *cert_chain = NULL;
    X509 *p_cert;
    char *orig_cert = NULL, *orig_key = NULL;
+
+   if (!edg_wll_gss_oid_equal(gss->authn_mech, get_oid("GSI")))
+       return EINVAL;
 
    maj_stat = gss_export_sec_context(&min_stat, (gss_ctx_id_t *) &gss->context,
 				     &buffer);
