@@ -968,7 +968,6 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname,
       if (mech == GSS_C_NO_OID) {
 	  gss_OID oid;
 
-	  /* is it safe to inquire a partly-establised context? */
 	  maj_stat = gss_inquire_context(&min_stat, context, NULL, NULL,
 					 NULL, &oid, NULL, NULL, NULL);
 	  if (!GSS_ERROR(maj_stat))
