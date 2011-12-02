@@ -26,6 +26,7 @@ limitations under the License.
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "glite/lbu/log.h"
 #include "srvbones.h"
 
 #ifndef dprintf
@@ -46,8 +47,8 @@ static int disconnect(int, struct timeval *, void *);
 static int echo(int, struct timeval *, void *);
 static int upper_echo(int, struct timeval *, void *);
 
-#define ECHO_PORT			9999
-#define UPPER_ECHO_PORT		9998
+#define ECHO_PORT		"9999"
+#define UPPER_ECHO_PORT		"9998"
 
 #define SRV_ECHO			0
 #define SRV_UPPER_ECHO		1
@@ -59,46 +60,21 @@ static struct glite_srvbones_service service_table[] = {
 
 int main(void)
 {
-	struct sockaddr_in	myaddr;
-
-
-	if (   ((service_table[SRV_ECHO].conn = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-		|| ((service_table[SRV_UPPER_ECHO].conn = socket(AF_INET, SOCK_STREAM, 0)) == -1) )
-	{
-		perror("socket");
+	if (glite_common_log_init()) {
+		fprintf(stderr,"glite_common_log_init() failed, exiting.");
 		exit(1);
 	}
 
-	bzero((char *) &myaddr, sizeof(myaddr));
-	myaddr.sin_family = AF_INET;
-	myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	myaddr.sin_port = htons(ECHO_PORT);
-	if ( bind(service_table[SRV_ECHO].conn, (struct sockaddr *)&myaddr, sizeof(myaddr)) == -1 )
-	{
-		perror("bind");
+	if (glite_srvbones_daemon_listen(NULL, ECHO_PORT, &service_table[SRV_ECHO].conn) != 0)
 		exit(1);
-	}
-	bzero((char *) &myaddr, sizeof(myaddr));
-	myaddr.sin_family = AF_INET;
-	myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	myaddr.sin_port = htons(UPPER_ECHO_PORT);
-	if ( bind(service_table[SRV_UPPER_ECHO].conn, (struct sockaddr *)&myaddr, sizeof(myaddr)) == -1 )
-	{
-		perror("bind");
-		exit(1);
-	}
 
-	if (   listen(service_table[SRV_ECHO].conn, 10)
-		|| listen(service_table[SRV_UPPER_ECHO].conn, 10) )
-	{
-		perror("listen()");
+	if (glite_srvbones_daemon_listen(NULL, UPPER_ECHO_PORT, &service_table[SRV_UPPER_ECHO].conn) != 0) {
+		close(service_table[SRV_ECHO].conn);
 		exit(1);
 	}
-
 
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVES_COUNT, 1);
 	glite_srvbones_run(NULL, service_table, sizofa(service_table), 1);
-
 
 	return 0;
 }
