@@ -92,6 +92,7 @@ int main(int argc, char **argv)
 				*me;
 	int			opt,
 				sock = -1,
+				fd,
 				n;
 	int	repeat = 1;
 
@@ -123,6 +124,7 @@ int main(int argc, char **argv)
 	}
 
 	n = strlen(msg? msg: DEF_MSG);
+	fd = fileno(stdout);
 	for (;repeat; repeat--) {
 		if ( writen(sock, msg? msg: DEF_MSG, n) != n )
 		{
@@ -134,12 +136,14 @@ int main(int argc, char **argv)
 		if ( n < 0 )
 		{
 			perror("read() reply error");
+			free(msg);
 			return 1;
 		}
-		writen(0, buff, n);
+		writen(fd, buff, n);
 	}
 	close(sock);
 
+	free(msg);
 	return 0;
 }
 

@@ -73,6 +73,8 @@ int main(void)
 		exit(1);
 	}
 
+	setpgid(0, getpid());
+
 	glite_srvbones_set_param(GLITE_SBPARAM_SLAVES_COUNT, 1);
 	glite_srvbones_run(NULL, service_table, sizofa(service_table), 1);
 
@@ -175,7 +177,6 @@ int readln(int fd, char *out, int nbytes)
 	static char		buffer[BUFFER_SZ];
 	static char	   *buffer_end = buffer;
 	int				n;
-
 
 	dprintf(("reading line\n"));
 	while ( 1 ) {
