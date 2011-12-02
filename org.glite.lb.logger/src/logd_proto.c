@@ -39,6 +39,9 @@ limitations under the License.
 
 #include "logd_proto.h"
 
+#define CON_QUEUE 5
+
+static const int zero = 0;
 static const int one = 1;
 
 extern char* socket_path;
@@ -129,6 +132,64 @@ static int send_answer_back(edg_wll_GssConnection *con, int answer, struct timev
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Answer \"%d\" succesfully sent back to client.\n",answer);
 		return 0;
 	}
+}
+
+static int daemon_listen(const char *name, char *port, int *conn_out) {
+	struct	addrinfo *ai;
+	struct	addrinfo hints;
+	int	conn;
+	int 	gaie;
+
+	memset (&hints, '\0', sizeof (hints));
+	hints.ai_flags = AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = AF_INET6;
+
+	gaie = getaddrinfo (name, port, &hints, &ai);
+	if (gaie != 0 || ai == NULL) {
+		hints.ai_family = 0;
+		gaie = getaddrinfo (NULL, port, &hints, &ai);
+	}
+
+	gaie = getaddrinfo (name, port, &hints, &ai);
+	if (gaie != 0) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (gaie));
+		return 1;
+	}
+	if (ai == NULL) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no result");
+		return 1;
+	}
+
+	conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+	if ( conn < 0 ) { 
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket(): %s", strerror(errno));
+		freeaddrinfo(ai);
+		return 1; 
+	}
+	setsockopt(conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+	if (ai->ai_family == AF_INET6)
+		setsockopt(conn, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(zero));
+
+	if ( bind(conn, ai->ai_addr, ai->ai_addrlen) )
+	{
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s): %s", port, strerror(errno));
+		close(conn);
+		freeaddrinfo(ai);
+		return 1;
+	}
+
+	if ( listen(conn, CON_QUEUE) ) { 
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen(): %s", strerror(errno));
+		close(conn);
+		freeaddrinfo(ai);
+		return 1; 
+	}
+
+	freeaddrinfo(ai);
+
+	*conn_out = conn;
+	return 0;
 }
 
 /*
@@ -259,8 +320,6 @@ int do_listen(int port)
 {
 	int                ret;
 	int                sock;
-	struct addrinfo	*ai;
-	struct addrinfo	hints;
 	char 		*portstr = NULL;
 
 	asprintf(&portstr, "%d", port);
@@ -269,45 +328,8 @@ int do_listen(int port)
 		return -1;
 	}
 
-	memset (&hints, '\0', sizeof (hints));
-	hints.ai_flags = AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
-	hints.ai_socktype = SOCK_STREAM;
-
-	ret = getaddrinfo (NULL, portstr, &hints, &ai);
-	if (ret != 0) {
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (ret));
+	if (daemon_listen(NULL, portstr, &sock) != 0)
 		return -1;
-	}
-	if (ai == NULL) {
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no return");
-		return -1;
-	}
-
-	sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-	if (sock == -1) { 
-		glite_common_log_SYS_ERROR("socket"); 
-		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"do_listen(): error creating socket\n");
-		freeaddrinfo(ai);
-		return -1; 
-	}
-
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-	ret = bind(sock, ai->ai_addr, ai->ai_addrlen);
-	if (ret == -1) { 
-		glite_common_log_SYS_ERROR("bind"); 
-		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"do_listen(): error binding socket\n");
-		freeaddrinfo(ai);
-		return -1; 
-	}
-	freeaddrinfo(ai);
-
-	ret = listen(sock, 5);
-	if (ret == -1) { 
-		glite_common_log_SYS_ERROR("listen"); 
-		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_ERROR,"do_listen(): error listening on socket\n");
-		close(sock); 
-		return -1; 
-	}
 
 	return sock;
 }
