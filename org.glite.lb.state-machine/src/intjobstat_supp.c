@@ -37,6 +37,9 @@ limitations under the License.
 
 
 /* TBD: share in whole logging or workload */
+
+/* XXX - how come this is not generated from .T when the JobStat structure is? */
+
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))
 #else
@@ -535,7 +538,8 @@ char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_string(ret, stat->pbs_scheduler);
 	if (ret) ret = enc_string(ret, stat->pbs_dest_host);
 	if (ret) ret = enc_int(ret, stat->pbs_pid);
-	if (ret) ret = enc_string(ret, stat->pbs_resource_usage);
+	if (ret) ret = enc_taglist(ret, stat->pbs_resource_requested);
+	if (ret) ret = enc_taglist(ret, stat->pbs_resource_usage);
 	if (ret) ret = enc_int(ret, stat->pbs_exit_status);
 	if (ret) ret = enc_string(ret, stat->pbs_error_desc);
 	if (ret) ret = enc_string(ret, stat->condor_status);
@@ -641,7 +645,8 @@ edg_wll_JobStat* dec_JobStat(char *in, char **rest)
         if (tmp_in != NULL) stat->pbs_scheduler = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_dest_host = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_pid = dec_int(tmp_in, &tmp_in);
-        if (tmp_in != NULL) stat->pbs_resource_usage = dec_string(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_resource_requested = dec_taglist(tmp_in, &tmp_in);
+        if (tmp_in != NULL) stat->pbs_resource_usage = dec_taglist(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_exit_status = dec_int(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->pbs_error_desc = dec_string(tmp_in, &tmp_in);
         if (tmp_in != NULL) stat->condor_status = dec_string(tmp_in, &tmp_in);

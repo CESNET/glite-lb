@@ -145,14 +145,14 @@ int edg_wll_compare_pbs_seq(const char *a,const char *b)
 	res = sscanf(a, EDG_WLL_SEQ_PBS_FORMAT_SCANF,
 		     &c[0], &c[1], &c[2], &c[3], &c[4]);
 	if(res != EDG_WLL_SEQ_PBS_FORMAT_NUMBER) {
-		fprintf(stderr, "unparsable sequence code %s\n", a);
+		fprintf(stderr, "unparsable sequence code %s: %d\n", a, res);
 		return -1;
 	}
 		     
 	res = sscanf(b, EDG_WLL_SEQ_PBS_FORMAT_SCANF,
 		     &d[0], &d[1], &d[2], &d[3], &d[4]);
 	if(res != EDG_WLL_SEQ_PBS_FORMAT_NUMBER) {
-		fprintf(stderr, "unparsable sequence code %s\n", b);
+		fprintf(stderr, "unparsable sequence code %s: %d\n", b, res);
 		return -1;
 	}
 
@@ -246,7 +246,7 @@ int edg_wll_compare_seq(const char *a, const char *b)
 	char		sca[EDG_WLL_SEQ_SIZE], scb[EDG_WLL_SEQ_SIZE];
 
 
-	if ( (strstr(a,"SMOM=") == a) && (strstr(b,"SMOM=") == b) ) 
+	if ( (strstr(a,"SMOM=") != NULL) && (strstr(b,"SMOM=") != NULL) ) 
 		return edg_wll_compare_pbs_seq(a,b);
 
 	if (!strstr(a, "LBS")) snprintf(sca,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",a);

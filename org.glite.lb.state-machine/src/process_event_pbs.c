@@ -357,8 +357,6 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			js->pub.state = EDG_WLL_JOB_DONE;
 		}
 		if (USABLE_DATA(res)) {
-			char *new_resource_usage;
-			
 			/*trio_asprintf(&new_resource_usage,"%s%s\t%s = %f [%s]",
 				      (js->pub.pbs_resource_usage) ? js->pub.pbs_resource_usage : "",
 				      (js->pub.pbs_resource_usage) ? "\n": "",
@@ -366,8 +364,15 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				      e->PBSResourceUsage.quantity,
 				      e->PBSResourceUsage.unit);
 			*/
-			if (js->pub.pbs_resource_usage) free(js->pub.pbs_resource_usage);
-			js->pub.pbs_resource_usage = new_resource_usage;
+			if(e->PBSResourceUsage.usage == EDG_WLL_PBSRESOURCEUSAGE_REQUESTED) {
+				if (js->pub.pbs_resource_requested) free(js->pub.pbs_resource_requested);
+				js->pub.pbs_resource_requested = edg_wll_CopyTagList(e->PBSResourceUsage.resources);
+			} else if(e->PBSResourceUsage.usage == EDG_WLL_PBSRESOURCEUSAGE_USED) {
+				if (js->pub.pbs_resource_usage) free(js->pub.pbs_resource_usage);
+				js->pub.pbs_resource_usage = edg_wll_CopyTagList(e->PBSResourceUsage.resources);
+			} else {
+				/* fprintf(stderr, "resource usage %d not recognized\n", e->PBSResourceUsage.usage); */
+			}
 		}
 		break;
 

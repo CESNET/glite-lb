@@ -31,7 +31,7 @@ limitations under the License.
 /* where Z.XX is version from indent + 1 (version after commit), Y = Z+1 */
 /* and DESCRIPTION is short hit why version changed		*/
 
-#define INTSTAT_VERSION "revision 2.10 - payload owner"
+#define INTSTAT_VERSION "revision 2.11 - payload owner"
 //                      ".... MAX LENGTH 32 BYTES !! ...."
 
 // Internal error codes 
