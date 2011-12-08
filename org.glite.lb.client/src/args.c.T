@@ -333,6 +333,18 @@ static void read_jobid(const edg_wll_Args* o, char* arg, char* par)
 	else glite_jobid_free(jobid);
 }
 
+static void read_taglist(const edg_wll_Args* o, char* arg, char* par)
+{
+	edg_wll_TagValue *list = NULL;
+
+	if(edg_wll_TagListParse(par, &list) != 0) {
+		fprintf(stderr, "ERROR %s  can't parse %s: %s\n", arg, par, strerror(errno));
+		exit(1);
+	}
+	if(o->value) *(edg_wll_TagValue **)o->value = list;
+	else /* FIXME: free it properly */ free(list);
+}
+
 static void show_help(const edg_wll_Args* o, int prefix)
 {
     unsigned max = 0;
@@ -556,6 +568,9 @@ static int findOpt(opt_ctx_t* ctx, int olong)
 	break;
     case EDG_WLL_ARGS_JOBID:
 	read_jobid(o, arg, par);
+	break;
+    case EDG_WLL_ARGS_TAGLIST:
+	read_taglist(o, arg, par);
 	break;
     default:
 	printf("FIXME: unhandle option type %d\n", o->type);

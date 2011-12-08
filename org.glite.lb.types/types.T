@@ -90,11 +90,13 @@
 		logsrc=>'qq{$dst = edg_wll_SourceToString($src);}',
 		cclassad=>'qq{$dst = NULL;}',
 #	strlist, intlist, stslist are used only in consumer API, they don't need toString method
+		taglist=>'qq{$dst = edg_wll_TagListToString($src);}',
 	}
 );
 
 %ULMasString = (
-	logsrc=>1
+	logsrc=>1,
+	taglist=>1
 );
 
 %fromString = (
@@ -111,6 +113,7 @@
 #		level=>'qq{$dst = edg_wll_StringToLevel($src);}',
 		logsrc=>'qq{$dst = edg_wll_StringToSource($src);}',
 #	strlist, intlist, stslist are used only in consumer API, they don't need fromString method
+		taglist=>'qq{edg_wll_TagListParse($src, &$dst);}',
 	}
 );
 
@@ -150,6 +153,7 @@
 		logsrc=>'"($a) == ($b)"',
 		timeval=>'"($a).tv_sec == ($b).tv_sec && ($a).tv_usec == ($b).tv_usec"',
 		cclassad=>'"($a == $b)"',
+		taglist=>'"($a == $b)"',
 	}
 );
 
@@ -166,5 +170,6 @@
 		notifid=>'"%s"',
 		logsrc=>'"%s"',
 		timeval=>'"%s"',
+		taglist=>'"%s"',
 	}
 );

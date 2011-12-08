@@ -33,6 +33,8 @@ limitations under the License.
 #include <inttypes.h>
 
 #include "glite/jobid/cjobid.h"
+#include "glite/lb/lb_types.h"
+
 
 #ifdef BUILDING_LB_COMMON
 #include "context.h"
@@ -115,6 +117,15 @@ extern edg_wll_EventCode edg_wll_StringToEvent(const char *name);
  */
 
 extern char *edg_wll_EventToString(edg_wll_EventCode event);
+
+
+/**
+ * Free allocated edg_wll_TagValue * list
+ * \param list IN: list to free
+ */
+extern void edg_wll_FreeTagList(
+	edg_wll_TagValue *list
+);
 
 
 /**

@@ -39,8 +39,80 @@ static const struct timeval null_timeval = {0,0};
 /* -- Internal function prototype -- */
 char *my_edg_wll_ULMGetValueAt( p_edg_wll_ULMFields, int );
 
+/* Function for parsing name=value tag lists */
+int edg_wll_TagListParse(const char *src, edg_wll_TagValue **list) {
+	int n = 0;
+	char *p;
+	edg_wll_TagValue *tag;
+
+	if(NULL == src)
+		return -1;
+
+	/* count tag=value pairs */
+	for(p = (char*)src; *p; p++) {
+		if(',' == *p) n++; /* counts empty tokens as well... */
+	}
+	/* one more for last empty struct */
+	n += 2;
+	
+	*list = (edg_wll_TagValue*)malloc(n*sizeof(edg_wll_TagValue));
+	if(NULL == *list) 
+		return -1;
+
+	for(p = strtok(src, ","), tag = *list; p; p = strtok(NULL, ","), tag++) {
+		char *s = strchr(p, '=');
+
+		if(NULL == s || '\0' == *(s+1)) 
+			continue;
+
+		*s = 0;
+		tag->tag = strdup(p);
+		*s = '=';
+		tag->value = strdup(s+1);
+	}
+	tag->tag = NULL;
+	tag->value = NULL;
+
+	return 0;
+}
+
+
+/* Function for stringifying name=value tag lists */
+char * edg_wll_TagListToString(edg_wll_TagValue *list) {
+	int len = 0;
+	edg_wll_TagValue *tag;
+	char *out, *p;
+
+	if(NULL == list) return NULL;
+
+	for(tag = list; tag->tag; tag++) {
+		len += strlen(tag->tag);
+		len += strlen(tag->value);
+		len++;
+	}
+	
+	out = malloc(len*sizeof(char));
+	if(NULL == out) return NULL;
+
+	*out = '\0';
+	p = out;
+	for(tag = list; tag->tag; tag++) {
+		if(p != out) {
+			strcat(p++, ",");
+		}
+		strcat(p, tag->tag);
+		p += strlen(tag->tag);
+		strcat(p++, "=");
+		strcat(p, tag->value);
+		p += strlen(tag->value);
+	}
+
+	return out;
+}
+
+
 /**
- * edg_wll_ParseEvent - parse ULM message to internal structures
+ * Edg_wll_ParseEvent - parse ULM message to internal structures
  * Calls: calloc, free, sprintf, strdup
  *        edg_wll_ULMNewParseTable, edg_wll_ULMFreeParseTable, edg_wll_ULMProcessParseTable,
  *        edg_wll_ULMGetNameAt, my_edg_wll_ULMGetValueAt, edg_wll_ULMDateToTimeval (edg_wll_ULMDateToDouble),
@@ -304,7 +376,8 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 			gen "\t\t".toString $f "event->$tl.$fn", "$fn\_str"; gen "\n";
 		}
 		elsif ($ULMasString{$f->{type}}) {
-			gen "\t\tchar \*$fn\_str = ".$f->getType()."ToString(event->$tl.$fn);\n";
+			#gen "\t\tchar \*$fn\_str = ".$f->getType()."ToString(event->$tl.$fn);\n";
+			gen "\t\t". $f->toString("event->$tl.$fn","char \*$fn\_str",)."\n";
 			$free .= "free($fn\_str); ";
 		}
 	}

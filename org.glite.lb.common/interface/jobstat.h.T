@@ -32,6 +32,7 @@ limitations under the License.
 #include <sys/time.h>
 
 #include "glite/jobid/cjobid.h"
+#include "glite/lb/lb_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,15 +95,6 @@ typedef enum _edg_wll_JobStatCode {
 @@@}
 	EDG_WLL_NUMBER_OF_STATCODES /**< Number of meaningful status codes */
 } edg_wll_JobStatCode;
-
-/*!
- *
- * Pair tag = value.
- */
-typedef struct _edg_wll_TagValue {
-        char *  tag;    /**< User-specified information tag */
-        char *  value;  /**< Value assigned to user-specified information tag */
-} edg_wll_TagValue;
 
 
 /*!

@@ -110,6 +110,7 @@ extern edg_wll_LogLine edg_wll_UnparseNotifEvent(
 	edg_wll_Event *	event
 );
 
+
 #ifdef __cplusplus
 }
 #endif

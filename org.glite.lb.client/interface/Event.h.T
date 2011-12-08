@@ -181,6 +181,7 @@ public:
 			NOTIFID_T,        /**< NotifId value. */
 			FLOAT_T,         /**< Float value.  */
 			DOUBLE_T,        /**< Double value.  */
+			TAGLIST_T,       /**< List of user tags (name = value pairs). */
 	};
 
 	Type 	type; /**< Type of the event as defined by Type. */

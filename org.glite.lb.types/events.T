@@ -326,10 +326,7 @@
 	int	usage		Type of record
 	_code_	REQUESTED	Requested value
 	_code_	USED		Consumed quantity
-	string	resource	Resource's name.
-	double	quantity	Resources's quantity (how much).
-	_optional_
-	string	unit		Units (sec, kB, etc.).
+	taglist resources	List of resources
 
 @type PBSError		Any error occured
 	string	error_desc	Error reason
