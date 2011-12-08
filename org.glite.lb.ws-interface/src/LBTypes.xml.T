@@ -184,7 +184,13 @@
 			my $f = selectField $event $_;
 			my $fn = $f->{name};
 			my $ftn = $f->getType;
+			my $type = $f->{type};
+			my $list = 'no';
 
+			if ($main::baseTypes{$type}) {
+				$ftn = eval $main::types{wsdl}->{$main::baseTypes{$type}};
+				$list = 'yes'
+			}		
 
 			$fn = $1.ucfirst $2 while $fn =~ /([[:alpha:]]*)_([[:alpha:]_]*)/;
 			$ftn = $tn . '_' . $fn if ($f->{codes});
@@ -193,7 +199,7 @@
 
 			my $comment = getComment $f;
 			my $opt = $f->{optional} ? 'yes' : 'no';
-			gen qq{\t\t\t\t<elem name="$fn" type="$ftn" optional="$opt">$comment</elem>
+			gen qq{\t\t\t\t<elem name="$fn" type="$ftn" list="$list" optional="$opt">$comment</elem>
 };
 		}
 		gen "</struct>\n\n";

@@ -64,7 +64,7 @@ sub eventFieldAssign {
 	};
 	$source = "$src->$native_en.$native_fn";
 	$dest = "VALUEEV_GET($dst, $soap_en)->$soap_fn";
-#	print STDERR "$src, $dst, $soap_en, $soap_fn, $native_fn, $tn, $usuc\n";
+	print STDERR "$src, $dst, $soap_en, $soap_fn, $native_fn, $tn, $usuc\n";
 
 	if ($tn eq 'int') {
 		if ($f->{codes}) {
@@ -103,6 +103,23 @@ sub eventFieldAssign {
 			gen $indent."$dest = soap_malloc(soap, sizeof(*$dst->$soap_fn));\n";
 			gen $indent."$dest->tag = soap_strdup(soap, $source.tag);\n";
 			gen $indent."$dest->value = soap_strdup(soap, $source.value);\n";
+	} elsif ($tn eq 'taglist') {
+			gen qq{
+!	{
+!		struct lbt__tagValue	*t;
+!               int i;
+!
+!		for (i=0; $source && $source\[i].tag; i++);
+!		/* GLITE_SECURITY_GSOAP_LIST_CREATE(soap, $dst, $soap_en.$soap_fn, struct lbt__tagValue, i); */
+!		GLITE_SECURITY_GSOAP_LIST_CREATE0(soap, $dest, VALUEEV_GET($dst,$soap_en)->__size$soap_fn, struct lbt__tagValue, i);
+!		for (i=0; $source && $source\[i].tag; i++) {
+!			t = GLITE_SECURITY_GSOAP_LIST_GET($dest, i);
+!			t->tag = soap_strdup(soap,$source\[i].tag);
+!			t->value = soap_strdup(soap,$source\[i].value);
+!		}
+!	}
+};
+
 	} else {
 		die "Unknown type $tn";
 	}
@@ -136,6 +153,20 @@ sub eventFieldFree {
 		gen $indent."	if ($dest->value) soap_dealloc(soap, $dest->value);\n";
 		gen $indent."	soap_dealloc(soap, $dest);\n";
 		gen $indent."}\n";
+	} elsif ($tn eq 'taglist') {
+		gen qq{
+!               if($dest) {
+!			struct lbt__tagValue *t;
+!			int i;
+!
+!			for(i=0; i < VALUEEV_GET($dst, $soap_en)->__size$soap_fn; i++) {
+!				t = GLITE_SECURITY_GSOAP_LIST_GET($dest, i);
+!				if(t->tag) soap_dealloc(soap, t->tag);
+!				if(t->value) soap_dealloc(soap, t->value);
+!			}
+!			GLITE_SECURITY_GSOAP_LIST_DESTROY0(soap, $dest, VALUEEV_GET($dst, $soap_en)->__size$soap_fn);
+!		}
+		};
 	} else {
 		die "Unknown type $tn";
 	}
