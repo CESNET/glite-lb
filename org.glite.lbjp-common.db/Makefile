@@ -5,7 +5,7 @@ stagedir=.
 distdir=.
 globalprefix=glite
 lbutilsprefix=lbu
-package=glite-lb-utils-db
+package=glite-lbjp-common-db
 PREFIX=/opt/glite
 prefix=
 
