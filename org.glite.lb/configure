@@ -935,8 +935,8 @@ for my $ext (keys %deps_aux) {
 				jdk=>'java-devel',
 			},
 			deb6_x86_64_gcc445 => {
-				cares => 'libc-ares-dev',
 				# mappings in ETICS project configuration
+				#cares => 'libc-ares-dev',
 				#cppunit => 'libcppunit-dev',
 				#expat => 'libexpat1-dev',
 				#libtar => 'libtar-dev',
@@ -1261,9 +1261,9 @@ sub mode_etics {
 
 	my %cmd;
 	$cmd_vcs{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_module 2>/dev/null";
-	#$cmd_vcs{checkout} = "(test -d jra1mw/.git && (cd jra1mw; git pull) || git clone http://scientific.zcu.cz/git/jra1mw.git)";
-	#$cmd_vcs{checkout} .= " && (cd jra1mw; git checkout \${tag})" unless ($conftag =~ /HEAD/);
-	#$cmd_vcs{checkout} .= " && ln -s jra1mw/$cvs_module \${moduleName}";
+	#$cmd_vcs{checkout} = "((test -d jra1mw/.git && (cd jra1mw; git pull)) || (git clone -q http://scientific.zcu.cz/git/jra1mw.git";
+	#$cmd_vcs{checkout} .= " && (cd jra1mw; git checkout -b \${tag} --track origin/epel)" unless ($conftag =~ /HEAD/);
+	#$cmd_vcs{checkout} .= ")) && (test -d \${moduleName} || ln -s jra1mw/$cvs_module \${moduleName})";
 	$cmd_vcs{tag} = "cvs -d \${vcsroot} tag -R \${tag} ${moduleName}";
 
 	$cmd{default}{init} = 'None';
