@@ -51,6 +51,8 @@ stage:
 check:
 
 clean:
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/ ${FILES}
 
-.PHONY: default all check install stage clean
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
+
+.PHONY: default all check install stage clean distclean

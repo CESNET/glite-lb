@@ -339,10 +339,12 @@ clean:
 	rm -rvf *.c *.h *.xml *.nsmap *.o *.lo .libs ${EXAMPLES} ${TESTS}
 	rm -rvf CalcService.wsdl wscalc.xsd
 	rm -rvf glite_gscompat.h sizeof_soap
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	for v in ${gsoap_versions_noflavours} ${gsoap_versions_flavours}; do \
 		rm -rvf `echo $$v | tr -d .`; \
 	done
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 %.c.o: %.c
 	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<

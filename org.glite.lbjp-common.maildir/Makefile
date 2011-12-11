@@ -94,11 +94,13 @@ install: all
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 %.o %.lo: %.c
 	${COMPILE} -c $<
 
 maildir.lo: maildir.c maildir.h
 
-.PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage
+.PHONY: default all compile check examples doc stage dist distsrc distbin install clean distclean test_coverage

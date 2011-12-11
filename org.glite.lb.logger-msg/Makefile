@@ -115,4 +115,6 @@ install:
 
 clean:
 	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ} ${EXAMPLES}
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/

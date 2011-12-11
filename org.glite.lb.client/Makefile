@@ -396,7 +396,9 @@ clean:
 	rm -rvf ${lib_LTLIBRARIES} ${TOOLS} logevent  register_sandbox ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl StatusAttrNames.pl uiwrap.T
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 check_version:
 	${CHECK_VERSION} ${stagedir}${prefix}/include/glite/lb/common_version.h
@@ -422,4 +424,4 @@ post-install-rpath:
 		fi; \
 	done
 
-.PHONY: default all compile examples check stage install clean check_version link post-install post-install-rpath
+.PHONY: default all compile examples check stage install clean distclean check_version link post-install post-install-rpath

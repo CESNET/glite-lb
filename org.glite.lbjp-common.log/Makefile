@@ -78,8 +78,10 @@ install: compile
 
 clean:
 	rm -rvf *.o *.lo .libs lib*
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	rm -rvf test
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 check: test
 	LOG4C_RCPATH=${top_srcdir}/tests ./test

@@ -92,7 +92,9 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* srv_example cnt_example
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 %.o %.lo: %.c
 	${COMPILE} -c $<

@@ -103,6 +103,8 @@ install:
 
 clean:
 	rm -rf build
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
-.PHONY: all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c examples genevents genws check stage install clean
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
+
+.PHONY: all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c examples genevents genws check stage install clean distclean

@@ -109,7 +109,9 @@ install: all
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
 	rm -vf trio_test
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
+
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

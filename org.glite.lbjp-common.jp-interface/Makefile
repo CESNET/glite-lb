@@ -102,9 +102,11 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib*
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	rm -vf type_test type_test.xml
 	rm -f glite jp
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 %.thr.lo: %.c
 	${COMPILE} -o $@ -c $<

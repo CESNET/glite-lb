@@ -244,4 +244,6 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 
 clean:
 	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ} startup
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/

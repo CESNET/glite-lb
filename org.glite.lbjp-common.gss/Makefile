@@ -158,7 +158,9 @@ install:
 
 clean:
 	rm -rf *.o *.lo *.a *.la .libs test_gss
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 %.o: %.c
 	${COMPILE} ${GLOBUS_GSSAPI_GSI_CFLAGS} ${LIBCARES_CFLAGS} -o $@ -c $<

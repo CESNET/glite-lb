@@ -43,7 +43,9 @@ check: compile
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 install: 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix}
@@ -56,4 +58,4 @@ stage:
 	${COMPILE} -o $@ -c $< 
 
 
-.PHONY: default all compile check install clean
+.PHONY: default all compile check install clean distclean
