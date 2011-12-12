@@ -6,8 +6,8 @@
 # Required-Stop: $remote_fs $network $syslog
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# chkconfig: 345 75 25
 ### END INIT INFO
+# chkconfig: 345 75 25
 #
 # Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 # See http://www.eu-egee.org/partners/ for details on the copyright holders.
@@ -29,6 +29,7 @@ GLITE_LB_LOCATION=${GLITE_LB_LOCATION:-'@glite_prefix@'}
 GLITE_LB_LOCATION_ETC=${GLITE_LB_LOCATION_ETC:-'@glite_etc@'}
 GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
 
+[ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
 [ -f /etc/glite.conf ] && . /etc/glite.conf
 [ -f $GLITE_LB_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LB_LOCATION_ETC/glite-wms.conf
 
