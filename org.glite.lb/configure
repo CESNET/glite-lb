@@ -553,7 +553,7 @@ BEGIN{
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B libxml2 flex:B/ ],
 	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
-	'lb.ws-interface' => [ qw/libxslt:B/ ],
+	'lb.ws-interface' => [ qw/libxslt:B tidy:B/ ],
 	'lb.ws-test' => [ qw/gsoap:B libtool:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/docbook-utils:B libtool:B/ ],
