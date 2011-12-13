@@ -222,7 +222,7 @@ olddoc: generate events.tex status.tex
 
 install: 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
