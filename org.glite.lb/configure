@@ -137,7 +137,8 @@ my %externs = (
 		prefix=> '/usr'
 	},
 	jdk => {
-		prefix=> '/usr/java/latest'
+		prefix=> '/usr/java/latest',
+		locations => [ '/usr/lib/jvm/java', '/usr/java/latest' ],
 	},
 	libtar => {
 		prefix=> '/usr'
@@ -186,6 +187,7 @@ my %lbmodules = (
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache shared commands core devel slashgrid services service-clients gsexec/ ],
 	'px' => [ qw/proxyrenewal myproxy-yaim/ ],
+	'canl' => [ qw/c/ ],
 	);
 
 
@@ -209,6 +211,7 @@ my @opts = (
 	'lbjp-common-tag=s' => \$lbjp_tag,
 	'jp-tag=s' => \$jp_tag,
 	'jobid-tag=s' => \$jobid_tag,
+	'canl-tag=s' => \$canl_tag,
 	'help' => \$help,
 	'libdir=s' => \$libdir,
 	'project=s' => \$project,
@@ -267,6 +270,10 @@ for my $ext (keys %need_externs_aux) {
 		push @{$need_externs{$ext}},$pkg;
 		$need_externs_type{$ext}->{$pkg} = $type;
 	}
+}
+if ($project eq 'emi') {
+	$extranodmod{lb} = 'lb.emi-lb';
+	$extranodmod{px} = 'px.emi-px';
 }
 for $_ (keys %{$project{modules}}) {
 	push @{$lbmodules{$_}},@{$project{modules}{$_}};
@@ -351,7 +358,14 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 			$jdk_prefix = $ENV{'JAVA_HOME'};
 			print "JAVA_HOME=$jdk_prefix\n";
 		} else {
-			print "(using default $externs{$ext}{prefix}))\n"
+			foreach my $i (0..$#{$externs{$ext}{locations}}) {
+				if (-e $externs{$ext}{locations}[$i]) {
+					$jdk_prefix=$externs{$ext}{locations}[$i];
+					print "(found directory $jdk_prefix)\n";
+					last;
+				}
+			}
+			print "(using default $externs{$ext}{prefix})\n" unless ($jdk_prefix);
 		}
 		$externs{$ext}{prefix} = $jdk_prefix if ($jdk_prefix);
 	}
@@ -473,7 +487,7 @@ sub mode_checkout() {
 				}
 			}	
 		}
-		if ($lbjp_tag){
+		if ($lbjp_tag) {
 			for (@{$lbmodules{'lbjp-common'}}){
 				if ("lbjp-common.".$_ eq $module){
                                         $tag = '-r '.$lbjp_tag;
@@ -491,6 +505,13 @@ sub mode_checkout() {
 			for (@{$lbmodules{jobid}}){
 				if ("jobid.".$_ eq $module){
                                         $tag = '-r '.$jobid_tag;
+                                }
+			}
+		}
+		if ($canl_tag) {
+			for (@{$lbmodules{'canl'}}){
+				if ("canl.".$_ eq $module){
+                                        $tag = '-r '.$canl_tag;
                                 }
 			}
 		}
@@ -532,7 +553,7 @@ BEGIN{
 	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B libxml2 flex:B/ ],
 	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
-	'lb.ws-interface' => [ qw/libxslt:B/ ],
+	'lb.ws-interface' => [ qw/libxslt:B tidy:B/ ],
 	'lb.ws-test' => [ qw/gsoap:B libtool:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/docbook-utils:B libtool:B/ ],
@@ -565,6 +586,7 @@ BEGIN{
 	'gridsite.1.5-compat' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B build_common_cpp:B doxygen:B/ ],
 	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
+	'canl.c' => [ qw/cares:B openssl:B libtool:B/ ],
 );
 
 %need_jars = (
@@ -611,7 +633,7 @@ for my $jar (keys %need_jars) {
 		lb.utils:R
 	/ ],
 	'lb.server' => [ qw/
-		lb.ws-interface lb.types:B lb.common lb.state-machine
+		lb.ws-interface lb.types:B lb.common lb.state-machine lb.utils:R
 		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir lbjp-common.log
 		jobid.api-c
 		lbjp-common.gsoap-plugin lbjp-common.gss
@@ -693,6 +715,8 @@ for my $jar (keys %need_jars) {
 	'px.emi-px' => [qw/px.myproxy-yaim:R/],
 	'px.myproxy-yaim' => [ qw// ],
 	'px.myproxy-config' => [],
+
+	'canl.c' => [],
 );
 
 for my $ext (keys %deps_aux) {
@@ -705,7 +729,7 @@ for my $ext (keys %deps_aux) {
 }
 
 
-%extrafull = ( gridsite=>'org.gridsite.core');
+%extrafull = ( gridsite=>'org.gridsite.core', 'canl.c' => 'emi.canl.canl-c');
 
 #( java => 'client-java' );
 %extranodmod = (
@@ -715,7 +739,8 @@ for my $ext (keys %deps_aux) {
 	jpclient => 'jp.client',
 	lb => 'lb.glite-LB',
 	px => 'px.glite-PX',
-	proxyrenewal => 'px.proxyrenewal'
+	proxyrenewal => 'px.proxyrenewal',
+	canl => 'canl.c',
 );
 
 %obsoletes = (
@@ -743,6 +768,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'org.glite',
 	'gridsite' => 'org',
 	'px' => 'org.glite',
+	'canl' => 'emi',
 );
 
 %cvs_tag_prefix = (
@@ -752,6 +778,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'glite-',
 	'gridsite' => '',
 	'px' => 'glite-',
+	'canl' => 'emi-',
 );
 
 # ==== projects specification ====
@@ -837,6 +864,7 @@ for my $ext (keys %deps_aux) {
 			'lbjp-common' => 'emi-',
 			'gridsite' => 'emi-',
 			'px' => 'emi-',
+			'canl' => 'emi-',
 		},
 		tag_prefix => { %cvs_tag_prefix },
 		flavours => '--thrflavour= --nothrflavour=',
@@ -851,7 +879,7 @@ for my $ext (keys %deps_aux) {
 				yaim_bdii=>'emi.bdii.yaim-bdii',
 				gip_service=>'emi.bdii.glite-info-provider-service',
 				bdii=>'emi.bdii.core',
-				glite_version=>'emi.misc.glite-version',
+				glite_version=>'emi.emi-version',
 				glue_schema=>'emi.bdii.glue-schema',
 				trustmanager=>'emi.java-security.trustmanager',
 				trustmanager_axis=>'emi.java-security.trustmanager-axis',
@@ -868,23 +896,25 @@ for my $ext (keys %deps_aux) {
 				'myproxy-devel' => 'myproxy-devel.x86_64',
 			},
 			deb6_x86_64_gcc445 => {
-				globus_essentials => 'libglobus-gssapi-gsi4',
-				globus => 'libglobus-gssapi-gsi-dev',
-				axis => 'libaxis-java',
-				cares => 'libc-ares2',
-				cppunit => 'libcppunit',
-				expat => 'libexpat1',
-				log4c => 'liblog4c3',
-				curl => 'libcurl3',
-				'mysql' => 'libmysqlclient6',
-				'mysql-devel' => 'libmysqlclient-dev',
-				libxslt => 'xsltproc',
-				'jakarta-commons-codec' => 'libcommons-codec-java',
-				'jakarta-commons-lang' => 'libcommons-lang-java',
-				'tetex-latex' => 'texlive-latex-extra',
-				'perl-LDAP' => 'libnet-ldap-perl',
-				'fuse-lib' => 'libfuse2',
-				'fuse' => 'fuse-utils',
+				axis => 'axis1.4',
+				# mappings in ETICS project configuration
+				#globus_essentials => 'libglobus-gssapi-gsi4',
+				#globus => 'libglobus-gssapi-gsi-dev',
+				#axis => 'libaxis-java',
+				#cares => 'libc-ares2',
+				#cppunit => 'libcppunit',
+				#expat => 'libexpat1',
+				#log4c => 'liblog4c3',
+				#curl => 'libcurl3',
+				#'mysql' => 'libmysqlclient16',
+				#'mysql-devel' => 'libmysqlclient-dev',
+				#libxslt => 'xsltproc',
+				#'jakarta-commons-codec' => 'libcommons-codec-java',
+				#'jakarta-commons-lang' => 'libcommons-lang-java',
+				#'tetex-latex' => 'texlive-latex-extra',
+				#'perl-LDAP' => 'libnet-ldap-perl',
+				#'fuse-lib' => 'libfuse2',
+				#'fuse' => 'fuse-utils',
 			},
 		},
 		etics_externs_devel => {
@@ -905,20 +935,21 @@ for my $ext (keys %deps_aux) {
 				jdk=>'java-devel',
 			},
 			deb6_x86_64_gcc445 => {
-				cares => 'libc-ares-dev',
-				cppunit => 'libcppunit-dev',
-				expat => 'libexpat1-dev',
-				libtar => 'libtar-dev',
-				log4c => 'liblog4c-dev',
-				postgresql => 'libpq-dev',
-				curl => 'libcurl4-openssl-dev',
-				libxml2 => 'libxml2-dev',
-				openssl => 'libssl-dev',
-				'tetex-latex' => 'texlive-latex-extra',
-				libxslt=>'xsltproc',
-				'httpd-devel' => 'apache2-prefork-dev',
-				'fuse-devel' => 'libfuse-dev',
-				gsoap => 'gsoap',
+				# mappings in ETICS project configuration
+				#cares => 'libc-ares-dev',
+				#cppunit => 'libcppunit-dev',
+				#expat => 'libexpat1-dev',
+				#libtar => 'libtar-dev',
+				#log4c => 'liblog4c-dev',
+				#postgresql => 'libpq-dev',
+				#curl => 'libcurl4-openssl-dev',
+				#libxml2 => 'libxml2-dev',
+				#openssl => 'libssl-dev',
+				#'tetex-latex' => 'texlive-latex-extra',
+				#libxslt=>'xsltproc',
+				#'httpd-devel' => 'apache2-prefork-dev',
+				#'fuse-devel' => 'libfuse-dev',
+				#gsoap => 'gsoap',
 			},
 		},
 		etics_projects => {
@@ -929,16 +960,16 @@ for my $ext (keys %deps_aux) {
 		},
 		need_externs_aux => {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
-			'lb.glite-LB' => [ qw/fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
+			'lb.emi-lb' => [ qw/fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
 			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R perl-LDAP:R/ ],
-			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
+			'px.emi-px' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
 		},
 		supported_platforms => {
 			sl5_x86_64_gcc412EPEL => 1,
 			sl5_ia32_gcc412EPEL => 1,
 			sl6_x86_64_gcc445EPEL => 1,
-#			deb6_x86_64_gcc445 => 1,
+			deb6_x86_64_gcc445 => 1,
 		},
 		modules => {
 			'lb' => [ qw/emi-lb/ ],
@@ -964,7 +995,7 @@ my %gridsite_deb = (
 		deb5_ia32_gcc432 =>  \%gridsite_deb,
 		slc4_x86_64_gcc346 => \%gridsite_rpm,
 		slc4_ia32_gcc346 => \%gridsite_rpm,
-		sl6_x86_64_gcc445 => \%gridsite_rpm,
+		sl6_x86_64_gcc445EPEL => \%gridsite_rpm,
 		deb6_x86_64_gcc445 => \%gridsite_deb,
 	},
 	'jobid.api-java' => {
@@ -1002,7 +1033,11 @@ $buildroot{'gridsite.core'} = 'src';
 sub full
 {
 	my $short = shift;
-	return $extrafull{$short} ? $extrafull{$short} : 'org.glite.'.$short;
+	my $subsys = $short;
+	$subsys =~ s/\..*//;
+
+	my $cvs_prefix = exists $cvs_prefix{$subsys} ? $cvs_prefix{$subsys} : 'org.glite';
+	return $extrafull{$short} ? $extrafull{$short} : "$cvs_prefix.$short";
 }
 
 sub mkinc
@@ -1011,12 +1046,13 @@ sub mkinc
 	my ($old_locale, $date);
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.nagios lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.nagios lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB lb.emi-lb
 lbjp-common.gss lbjp-common.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface lbjp-common.gss lbjp-common.gsoap-plugin
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
-px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
+px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config px.emi-px
+canl.c
 /;
 	@aux{@m} = (1) x ($#m+1);
 
@@ -1124,12 +1160,13 @@ sub mode_etics {
 		($major,$minor,$rev,$age) = ($1,$2,$3,$4);
 	}
 	else { 
-		my $path = "$cvs_prefix{$subsys}.$subsys.$module/project";
+		my $full = full "$subsys.$module";
+		my $path = "$full/project";
 		if ($subsys eq 'gridsite') {
 			$path = "$cvs_prefix{$subsys}.$subsys.core/project";
 		}
 		open V,"$path/version.properties"
-			or die "$cvs_prefix{$subsys}.$subsys.$module/project/version.properties: $!\n";
+			or die "$path/version.properties: $!\n";
 	
 		while ($_ = <V>) {
 			chomp;
@@ -1198,8 +1235,10 @@ sub mode_etics {
 	my $package_description = "";
 	my $package_summary = "";
 
-	if (-e "$cvs_prefix{$subsys}.$subsys.$module/project/package.description") {
-		open V, "$cvs_prefix{$subsys}.$subsys.$module/project/package.description";
+	my $cvs_module = full "$subsys.$module";
+
+	if (-e "$cvs_module/project/package.description") {
+		open V, "$cvs_module/project/package.description";
 		$package_description = join ("", <V>);
 		close V;
 		chomp $package_description;
@@ -1209,8 +1248,8 @@ sub mode_etics {
 	else { 
 		print STDERR "package.description not found for $subsys.$module!\n"; }
 
-	if (-e "$cvs_prefix{$subsys}.$subsys.$module/project/package.summary") {
-		open V, "$cvs_prefix{$subsys}.$subsys.$module/project/package.summary";
+	if (-e "$cvs_module/project/package.summary") {
+		open V, "$cvs_module/project/package.summary";
 		$package_summary = join ("", <V>);
 		close V;
 		chomp $package_summary;
@@ -1221,10 +1260,10 @@ sub mode_etics {
 		print STDERR "package.summary not found for $subsys.$module!\n"; }
 
 	my %cmd;
-	$cmd_vcs{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null";
-	#$cmd_vcs{checkout} = "(test -d jra1mw/.git && (cd jra1mw; git pull) || git clone http://scientific.zcu.cz/git/jra1mw.git)";
-	#$cmd_vcs{checkout} .= " && (cd jra1mw; git checkout \${tag})" unless ($conftag =~ /HEAD/);
-	#$cmd_vcs{checkout} .= " && ln -s jra1mw/$cvs_prefix{$subsys}.$subsys.$module \${moduleName}";
+	$cmd_vcs{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_module 2>/dev/null";
+	#$cmd_vcs{checkout} = "((test -d jra1mw/.git && (cd jra1mw; git pull)) || (git clone -q http://scientific.zcu.cz/git/jra1mw.git";
+	#$cmd_vcs{checkout} .= " && (cd jra1mw; git checkout -b \${tag} --track origin/epel)" unless ($conftag =~ /HEAD/);
+	#$cmd_vcs{checkout} .= ")) && (test -d \${moduleName} || ln -s jra1mw/$cvs_module \${moduleName})";
 	$cmd_vcs{tag} = "cvs -d \${vcsroot} tag -R \${tag} ${moduleName}";
 
 	$cmd{default}{init} = 'None';
@@ -1620,6 +1659,7 @@ What to build:
   --jp-tag=tag			checkout JP modules with specific tag
   --lbjp-common-tag=tag         checkout lbjp-common modules with specific tag
   --jobid-tag=tag		checkout jobid modules with specific tag
+  --canl-tag=tag		checkout canl modules with specific tag
 
 Dependencies (summary of what will be used is always printed):
   --with-EXTERNAL=PATH		where to look for an external [autodetect]

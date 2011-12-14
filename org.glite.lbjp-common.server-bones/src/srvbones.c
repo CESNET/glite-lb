@@ -46,6 +46,7 @@ limitations under the License.
 #define REQUEST_TIMEOUT		10		/* timeout for a single request */ 
 #define NEW_CLIENT_DURATION	10		/* how long a client is considered new, i.e. busy
 						   connection is not closed to serve other clients */
+#define CON_QUEUE		10		/* listen() connection queue */
 
 #ifdef LB_PROF
 extern void _start (void), etext (void);
@@ -322,6 +323,66 @@ int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile,
 
 	free(pidfile);
 	return 1;
+}
+
+int glite_srvbones_daemon_listen(const char *name, char *port, int *conn_out) {
+	struct	addrinfo *ai;
+	struct	addrinfo hints;
+	int	conn;
+	int 	gaie;
+	static const int zero = 0;
+	static const int one = 1;
+
+	memset (&hints, '\0', sizeof (hints));
+	hints.ai_flags = AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = AF_INET6;
+
+	gaie = getaddrinfo (name, port, &hints, &ai);
+	if (gaie != 0 || ai == NULL) {
+		hints.ai_family = 0;
+		gaie = getaddrinfo (NULL, port, &hints, &ai);
+	}
+
+	gaie = getaddrinfo (name, port, &hints, &ai);
+	if (gaie != 0) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (gaie));
+		return 1;
+	}
+	if (ai == NULL) {
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no result");
+		return 1;
+	}
+
+	conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+	if ( conn < 0 ) { 
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket(): %s", strerror(errno));
+		freeaddrinfo(ai);
+		return 1; 
+	}
+	setsockopt(conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+	if (ai->ai_family == AF_INET6)
+		setsockopt(conn, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(zero));
+
+	if ( bind(conn, ai->ai_addr, ai->ai_addrlen) )
+	{
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s): %s", port, strerror(errno));
+		close(conn);
+		freeaddrinfo(ai);
+		return 1;
+	}
+
+	if ( listen(conn, CON_QUEUE) ) { 
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen(): %s", strerror(errno));
+		close(conn);
+		freeaddrinfo(ai);
+		return 1; 
+	}
+
+	freeaddrinfo(ai);
+
+	*conn_out = conn;
+	return 0;
 }
 
 static int dispatchit(int sock_slave, int sock, int sidx)

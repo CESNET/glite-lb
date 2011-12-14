@@ -68,7 +68,9 @@ base64_test: %: %.cpp compile
 clean:
 	rm -rvf *.o *.lo .libs/ lib* *.c *.cpp *.h
 	rm -vf base64_test base64_test.xml
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 stage:
 	$(MAKE) install PREFIX=${stagedir}
@@ -84,4 +86,4 @@ install: ${LIB}
 	${COMPILE} -o $@ -c $< 
 
 
-.PHONY: default all compile check stage install clean
+.PHONY: default all compile check stage install clean distclean

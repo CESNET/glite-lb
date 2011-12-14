@@ -23,8 +23,7 @@ limitations under the License.
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <netdb.h>
 
 #ifndef dprintf
 #define dprintf(x) { if (debug) printf x; fflush(stdout); }
@@ -59,14 +58,42 @@ static void usage(char *me)
 }
 
 
+static int try_connect(char *addr, char *port) {
+	struct addrinfo		hints;
+	struct addrinfo		*ai_all = NULL, *ai;
+	int			gaie, sock = -1;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_ADDRCONFIG | AI_NUMERICHOST | AI_NUMERICSERV;
+	gaie = getaddrinfo(addr, port, &hints, &ai_all);
+	if (gaie != 0 || !ai_all) return -1;
+
+	for (ai = ai_all; ai; ai = ai->ai_next) {
+		sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+		if (sock == -1) continue;
+		if (connect(sock, ai->ai_addr, ai->ai_addrlen) == 0) {
+			break;
+		} else {
+			close(sock);
+			sock = -1;
+		}
+	}
+	freeaddrinfo(ai_all);
+
+	return sock;
+}
+
+
 int main(int argc, char **argv)
 {
-	struct sockaddr_in	addr;
-	char				buff[512],
-					   *me;
-	int					opt,
-						sock,
-						n;
+	char 			portstr[10];
+	char			buff[512],
+				*me;
+	int			opt,
+				sock = -1,
+				fd,
+				n;
 	int	repeat = 1;
 
 	me = strrchr(argv[0], '/');
@@ -88,21 +115,16 @@ int main(int argc, char **argv)
 		}
 	}
 
-	bzero((char *) &addr, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	addr.sin_port = htons(port);
-	if ( (sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
-	{
-		perror("socket");
+	snprintf(portstr, sizeof(portstr), "%d", port);
+
+	if ((sock = try_connect("127.0.0.1", portstr)) == -1 &&
+	    (sock = try_connect("::1", portstr)) == -1) {
+		fprintf(stderr, "can't connect\n");
 		exit(1);
 	}
-	if ( connect(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0 )
-	{
-		perror("connect");
-		exit(1);
-	}
+
 	n = strlen(msg? msg: DEF_MSG);
+	fd = fileno(stdout);
 	for (;repeat; repeat--) {
 		if ( writen(sock, msg? msg: DEF_MSG, n) != n )
 		{
@@ -114,12 +136,14 @@ int main(int argc, char **argv)
 		if ( n < 0 )
 		{
 			perror("read() reply error");
+			free(msg);
 			return 1;
 		}
-		writen(0, buff, n);
+		writen(fd, buff, n);
 	}
 	close(sock);
 
+	free(msg);
 	return 0;
 }
 

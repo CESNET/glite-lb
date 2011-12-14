@@ -3,7 +3,7 @@ top_srcdir=..
 stagedir=.
 globalprefix=glite
 lbprefix=lb
-package=glite-lb-client
+package=glite-lb-logger
 version=0.0.0
 PREFIX=/opt/glite
 prefix=
@@ -147,19 +147,19 @@ glite-lb-logd-perf-nofile: ${LOGD_NOBJS}
 	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-interlogd: ${INTERLOG_OBJS}
-	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
 
 glite-lb-notif-interlogd: ${INTERLOG_NOTIF_OBJS}
-	${LINK} -export-dynamic -o $@ ${INTERLOG_NOTIF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} 
+	${LINK} -export-dynamic -o $@ ${INTERLOG_NOTIF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
 
 glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
-	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
 
 glite-lb-interlogd-perf-empty: ${INTERLOG_EMPTY_OBJS}
-	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
 
 glite-lb-ws-interlogd: ${INTERLOG_WS_OBJS}
-	${LINK} -o $@ ${INTERLOG_WS_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${INTERLOG_WS_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
 
 #glite-lb-interlogd-perf-inline-empty: ${INTERLOG_INLINE_EMPTY_OBJS}
 #	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
@@ -244,4 +244,6 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 
 clean:
 	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ} startup
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/

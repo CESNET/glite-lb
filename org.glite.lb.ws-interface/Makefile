@@ -61,7 +61,9 @@ install:
 
 clean:
 	rm -vf *.h *.html *.xml *.wsdl glue2-copy.xsd
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 %.xml: %.xml.T
 	rm -f $@

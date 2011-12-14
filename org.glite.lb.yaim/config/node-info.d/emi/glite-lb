@@ -2,7 +2,6 @@ LB_FUNCTIONS="
 config_add_pool_env
 config_crl
 config_host_certs
-config_edgusers
 config_info_service_lb
 config_glite_lb
 config_glite_locallogger

@@ -51,7 +51,7 @@ Modify your \texttt{siteinfo.def}, specifying the DN of your WMS server in YAIM 
 Then rerun YAIM: 
 \texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}
 
-This will give your WMS adequate rights to perform its operations and requests (running purge, querying for statistics, etc.) but it will also grant it additional administrator rights (such as granting job ownership). On newer installations, the method explained in section \ref{FAQ:WMS_superusers_3_0_11} is preferrable.
+This will give your WMS adequate rights to perform its operations and requests (running purge, querying for statistics, etc.) but it will also grant it additional administrator rights (such as granting job ownership). On newer installations, the method explained in section \ref{FAQ:WMS_superusers_3_0_11} is preferable.
 
 \subsubsection{For \LBver {2.1 or higher}, without YAIM}
 
@@ -80,4 +80,17 @@ action "GET_STATISTICS" {
         }
 }
 \end{verbatim}
+
+\subsection{\LB Server Throws ``Duplicate entry~\dots~for key~1'' Errors}
+
+The \LB server will occasionally report errors through \emph{syslog} saying,
+
+\begin{verbatim}
+ERROR CONTROL - ... : File exists (Duplicate entry '...' for key 1) 
+\end{verbatim}
+
+These error messages are caused by certain portions of code that take care of storing database records for keys, which may or may not already exist in the database, and do so by trying to insert the record first (hence the key violation) and modify the record if the insert fails. This has the unfortunate side effect of the unsuccessful insert being reported as an \texttt{ERROR} in the logging output.
+
+Unless you are experiencing trouble with the specific data entity\footnote{Usually a \emph{Job~ID}} referenced in the error message, it is safe to disregard.
+
 

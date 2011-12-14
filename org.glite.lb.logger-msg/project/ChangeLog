@@ -29,3 +29,6 @@
 1.0.6-1
 - cmsclient example extended
 
+1.0.7-1
+- Support build with gcc 4.4.4 (SL6)
+

@@ -1,12 +1,14 @@
 top_srcdir=..
 stagedir=.
-package=emi-nagios-lb
+package=emi-lb-nagios-plugins
 version=0.0.0
 prefix=
 INSTALL=install
 
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
+
+version=${module.version}
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/var/lib/grid-monitoring/emi.lb

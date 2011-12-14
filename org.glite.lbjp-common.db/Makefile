@@ -5,7 +5,7 @@ stagedir=.
 distdir=.
 globalprefix=glite
 lbutilsprefix=lbu
-package=glite-lb-utils-db
+package=glite-lbjp-common-db
 PREFIX=/opt/glite
 prefix=
 
@@ -176,8 +176,10 @@ install: all
 
 clean:
 	rm -rvf *.o *.lo *.loT .libs lib* *.c *.h *.dox C/ CPP/
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	rm -rvf db_expire db_test db_test_mysql db_test_psql timezone
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 db-mysql.o db-mysql.lo: db-mysql.c
 	${COMPILE} ${MYSQL_CPPFLAGS} -c $<
@@ -203,4 +205,4 @@ db_test_mysql.lo: libglite_lbu_dbtest.la db.h db-int.h db_test.c
 db-mysql.lo: db-mysql.c db-int.h db.h
 db-pg.lo: db-pg.c db-int.h db.h
 
-.PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage check_soname
+.PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage check_soname distclean

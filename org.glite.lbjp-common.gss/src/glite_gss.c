@@ -790,9 +790,9 @@ end:
    return ret;
 }
 /* XXX XXX This is black magic. "Sometimes" server refuses the client with SSL
- *  * alert "certificate expired" even if it is not true. In this case the server
- *   * slave terminates (which helps, usually), and we can reconnect transparently.
- *    */
+ * alert "certificate expired" even if it is not true. In this case the server
+ * slave terminates (which helps, usually), and we can reconnect transparently.
+ */
 
 /* This string appears in the error message in this case */
 #define _EXPIRED_ALERT_MESSAGE "function SSL3_READ_BYTES: sslv3 alert certificate expired"
@@ -1309,6 +1309,7 @@ edg_wll_gss_watch_creds(const char *proxy_file, time_t *last_time)
       return 0;
 }
 
+/** Close the connection. */
 int
 edg_wll_gss_watch_creds_gsi(const char *proxy_file, time_t *last_time)
 {

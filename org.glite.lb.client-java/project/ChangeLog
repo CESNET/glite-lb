@@ -75,3 +75,6 @@
 - Distinguish between generated and non-generated java files for FindBugs etics plugin
 - Classes for non-generated files are built in build/classes directory now
 
+1.1.7-1
+- Build on Debian 6 and SL 6
+

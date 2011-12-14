@@ -77,6 +77,8 @@ limitations under the License.
 
 #define RTM_SUMMARY_JOBS 100
 
+#define CON_QUEUE 10
+
 #define RTM_DB_TABLE_JOBS "jobs"
 #define RTM_DB_TABLE_LBS "lb20"
 #define DBPAR(N) ("$" (N))
@@ -1629,6 +1631,69 @@ void db_free_notifs() {
 }
 
 
+static int daemon_listen(thread_t *t, const char *name, char *port, int *conn_out) {
+	struct	addrinfo *ai;
+	struct	addrinfo hints;
+	char	pretty_addr[256];
+	int	conn;
+	int 	gaie;
+	const int	zero = 0;
+	const int	one = 1;
+
+	memset (&hints, '\0', sizeof (hints));
+	hints.ai_flags = AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = AF_INET6;
+
+	gaie = getaddrinfo (name, port, &hints, &ai);
+	if (gaie != 0 || ai == NULL) {
+		hints.ai_family = 0;
+		gaie = getaddrinfo (NULL, port, &hints, &ai);
+	}
+
+	gaie = getaddrinfo (name, port, &hints, &ai);
+	if (gaie != 0) {
+		lprintf(t, ERR, "getaddrinfo: %s", gai_strerror (gaie));
+		return 1;
+	}
+	if (ai == NULL) {
+		lprintf(t, ERR, "getaddrinfo: no result");
+		return 1;
+	}
+
+	conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+	if ( conn < 0 ) {
+		lprintf(t, ERR, "socket(): %s", strerror(errno));
+		freeaddrinfo(ai);
+		return 1; 
+	}
+	lprintf(t, DBG, "socket created: %d", conn);
+	setsockopt(conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+	if (ai->ai_family == AF_INET6)
+		setsockopt(conn, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(zero));
+
+	if ( bind(conn, ai->ai_addr, ai->ai_addrlen) )
+	{
+		lprintf(t, ERR, "bind(%s): %s", port, strerror(errno));
+		close(conn);
+		freeaddrinfo(ai);
+		return 1;
+	}
+
+	if ( listen(conn, CON_QUEUE) ) {
+		lprintf(t, ERR, "listen(): %s", strerror(errno));
+		close(conn);
+		freeaddrinfo(ai);
+		return 1; 
+	}
+
+	freeaddrinfo(ai);
+
+	*conn_out = conn;
+	return 0;
+}
+
+
 void *notify_thread(void *thread_data) {
 	int i, j, err;
 	time_t now, bootstrap;
@@ -1641,10 +1706,7 @@ void *notify_thread(void *thread_data) {
 	thread_t *t = (thread_t *)thread_data;
 	edg_wll_Context ctx = NULL;
 	int flags = 0;
-	struct addrinfo *ai = NULL;
-	struct addrinfo hints;
 	char *portstr;
-	const int	one = 1;
 
 	lprintf(t, DBG, "thread started");
 
@@ -1659,41 +1721,13 @@ void *notify_thread(void *thread_data) {
 	if (config.key) edg_wll_SetParam(ctx, EDG_WLL_PARAM_X509_KEY, config.key);
 
 	// listen
-	memset(&hints, 0, sizeof hints);
-	hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
-	hints.ai_socktype = SOCK_STREAM;
 	asprintf(&portstr, "%d", listen_port ? (listen_port + t->id) : 0);
 	if (!portstr) {
 		lprintf(t, ERR, "can't convert port number: ENOMEM");
 		goto exit;
 	}
-	err = getaddrinfo(NULL, portstr, &hints, &ai);
-	free(portstr); portstr = NULL;
-	if (err != 0) {
-		lprintf(t, ERR, "getaddrinfo() failed: %s", gai_strerror(err));
+	if (daemon_listen(t, NULL, portstr, &sock) != 0)
 		goto exit;
-	}
-	if (!ai) {
-		lprintf(t, ERR, "no result from getaddrinfo()");
-		goto exit;
-	}
-	if ((sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)) < 0) {
-		lprintf(t, ERR, "can't create socket: %s", strerror(errno));
-		goto exit;
-	}
-	lprintf(t, DBG, "socket created: %d", sock);
-
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-
-	if (bind(sock, ai->ai_addr, ai->ai_addrlen) != 0) {
-		lprintf(t, ERR, "can't bind socket: %s, port = %d", strerror(errno), listen_port ? listen_port + t->id : -1);
-		goto exit;
-	}
-	if (listen(sock, 10) != 0) {
-		lprintf(t, ERR, "can't listen on socket: %s", strerror(errno));
-		goto exit;
-	}
-	freeaddrinfo(ai); ai = NULL;
 
 #ifdef WITH_LBU_DB
 	if (db_init(t, &t->dbctx) == 0)
@@ -1706,7 +1740,7 @@ void *notify_thread(void *thread_data) {
 			    "SET ce=$1, queue=$2, ui=$3, state=$4, state_entered=$5, rtm_timestamp=$6, active=$7, state_changed=$8, registered=$9 WHERE jobid=$10 AND lb=$11", 
 			&t->updatecmd) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_JOBS DBAMP " "
 			    "SET vo=$1 WHERE jobid=$2 AND lb=$3", 
-			&t->updatecmd_vo) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_LBS DBAMP " "
+			&t->updatecmd_vo) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_JOBS DBAMP " "
 			    "SET rb=$1 WHERE jobid=$2 AND lb=$3",
 			&t->updatecmd_rb) != 0 || glite_lbu_PrepareStmt(t->dbctx, "UPDATE " DBAMP RTM_DB_TABLE_LBS DBAMP " "
 			    "SET monitored=$1 WHERE ip=$2",
@@ -2032,7 +2066,6 @@ cont:
 
 exit:	
 	if (sock != -1) close(sock);
-	if (ai) freeaddrinfo(ai);
 //	for (i = 0; conditions[i]; i++) free(conditions[i]);
 	if (t->nservers && quit != RTM_QUIT_PRESERVE && quit != RTM_QUIT_RELOAD) {
 		for (i = 0; i < t->nservers; i++) {

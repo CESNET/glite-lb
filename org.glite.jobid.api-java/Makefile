@@ -19,6 +19,8 @@ check:
 
 clean:
 	${ant_prefix}/bin/ant ${ANT_ARGS} clean
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
-.PHONY: all compile stage install check clean
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
+
+.PHONY: all compile stage install check clean distclean

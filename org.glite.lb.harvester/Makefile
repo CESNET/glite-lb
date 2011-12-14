@@ -84,7 +84,9 @@ install: compile
 clean:
 	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs
 	rm -rvf harvester harvester-dbg glite-lb-harvester.* startup
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 harvester: harvester.o
 	${LINK} -o $@ $+ ${LIBS}
@@ -102,4 +104,4 @@ harvester-dbg.o: harvester.c
 	docbook2man $<
 	mv $(@:.8=.1) $@
 
-.PHONY: default all compile debug check doc stage install clean
+.PHONY: default all compile debug check doc stage install clean distclean

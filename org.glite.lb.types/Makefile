@@ -27,8 +27,10 @@ install: compile
 	install -m 755 ${top_srcdir}/check_version.pl ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-check_version.pl
 	
 clean:
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 check:
 
-.PHONY: default compile stage install check clean
+.PHONY: default compile stage install check clean distclean

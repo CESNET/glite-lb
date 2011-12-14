@@ -263,10 +263,14 @@ static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
         glite_lbu_Statement notif = NULL;
 	char *notifc[4] = {NULL, NULL, NULL, NULL};
 
+	char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
+        char *userid = strmd5(can_peername, NULL);
+
 	trio_asprintf(&q, "select destination, valid, conditions, flags "
                 "from notif_registrations "
-                "where notifid='%s'",
-                notifId);
+                "where notifid='%s' "
+		"and userid='%s'",
+                notifId, userid);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 	if (edg_wll_ExecSQL(ctx, q, &notif) < 0) goto err;
         free(q); q = NULL;
@@ -285,6 +289,7 @@ static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
 	return 0;
 
 err:
+	free(can_peername);
 	return  -1;
 }
 
@@ -782,6 +787,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                         *pom = 0;
 			if (getNotifInfo(ctx, strrchr(pomCopy, ':')+1, &ni)){
 				ret = HTTP_NOTFOUND;
+				edg_wll_SetError(ctx, ENOENT, "Notification ID not know.");
 				goto err;
 			}
 			free(pomCopy);

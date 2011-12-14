@@ -99,7 +99,6 @@ check:
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/etc/glite-lb
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite-lb
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
@@ -115,4 +114,6 @@ install:
 
 clean:
 	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ} ${EXAMPLES}
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/

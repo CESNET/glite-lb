@@ -139,7 +139,6 @@ extern void _start (void), etext (void);
 int					enable_lcas = 0;
 int						debug  = 0;
 int						rgma_export = 0;
-static const int		one = 1;
 static int				noAuth = 0;
 static int				noIndex = 0;
 static int				strict_locking = 0;
@@ -387,10 +386,7 @@ struct clnt_data_t {
 int main(int argc, char *argv[])
 {
 	int			i;
-	struct addrinfo *ai;
-	struct addrinfo hints;
 	char *portstr = NULL;
-	int 	gaie;
 	int					opt, pidfile_forced = 0;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *name;
@@ -609,11 +605,11 @@ int main(int argc, char *argv[])
 
 	if (mode & SERVICE_SERVER) {
 		if (check_mkdir(dumpStorage)){
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for dump files not redy!");
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for dump files not ready!");
 			exit(1);
 		}
 		if (check_mkdir(purgeStorage)){
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for purge files not redy!");
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Directory for purge files not ready!");
 			exit(1);
 		}
 		if ( jpreg ) {
@@ -644,97 +640,21 @@ int main(int argc, char *argv[])
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server address: %s:%d", fake_host, fake_port);
 	}
 
-	memset (&hints, '\0', sizeof (hints));
-	hints.ai_flags = AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
-	hints.ai_socktype = SOCK_STREAM;
-
 	if ((mode & SERVICE_SERVER)) {
-		gaie = getaddrinfo (NULL, port, &hints, &ai);
-		if (gaie != 0) {
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (gaie));
+		if (glite_srvbones_daemon_listen(NULL, port, &service_table[SRV_SERVE].conn) != 0) {
 			return 1;
-		}
-		if (ai == NULL) {
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no return");
-			return 1;
-		}
-		service_table[SRV_SERVE].conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-		if ( service_table[SRV_SERVE].conn < 0 ) { 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
-			freeaddrinfo(ai);
-			return 1; 
-		}
-		setsockopt(service_table[SRV_SERVE].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-		if ( bind(service_table[SRV_SERVE].conn, ai->ai_addr, ai->ai_addrlen) )
-		{ 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s)", port);
-			freeaddrinfo(ai);
-			return 1;
-		}
-		freeaddrinfo(ai);
-		if ( listen(service_table[SRV_SERVE].conn, CON_QUEUE) ) { 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()");
-			return 1; 
 		}
 
 		asprintf(&portstr, "%d", atoi(port)+1);
-		gaie = getaddrinfo (NULL, portstr, &hints, &ai);
-		if (gaie != 0) {
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (gaie));
+		if (glite_srvbones_daemon_listen(NULL, portstr, &service_table[SRV_STORE].conn) != 0) {
+			free(portstr);
 			return 1;
-		}
-		if (ai == NULL) {
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no return");
-			return 1;
-		}
-		service_table[SRV_STORE].conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-		if ( service_table[SRV_STORE].conn < 0 ) { 
-			freeaddrinfo(ai);
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
-			return 1; 
-		}
-		setsockopt(service_table[SRV_STORE].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-		if ( bind(service_table[SRV_STORE].conn, ai->ai_addr, ai->ai_addrlen) )
-		{ 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s)", portstr);
-			freeaddrinfo(ai);
-			return 1;
-		}
-		freeaddrinfo(ai);
-		if ( listen(service_table[SRV_STORE].conn, CON_QUEUE) ) { 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()");
-			return 1; 
 		}
 		free(portstr); portstr = NULL;
 
 #ifdef GLITE_LB_SERVER_WITH_WS
-		gaie = getaddrinfo (NULL, ws_port, &hints, &ai);
-		if (gaie != 0) {
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (gaie));
+		if (glite_srvbones_daemon_listen(NULL, ws_port, &service_table[SRV_WS].conn) != 0)
 			return 1;
-		}
-		if (ai == NULL) {
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: no return");
-			return 1;
-		}
-		service_table[SRV_WS].conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-		if ( service_table[SRV_WS].conn < 0 ) { 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "socket()");
-			freeaddrinfo(ai);
-			return 1; 
-		}
-		setsockopt(service_table[SRV_WS].conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-		if ( bind(service_table[SRV_WS].conn, ai->ai_addr, ai->ai_addrlen) )
-		{ 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "bind(%s)",ws_port);
-			freeaddrinfo(ai);
-			return 1;
-		}
-		freeaddrinfo(ai);
-		if ( listen(service_table[SRV_WS].conn, CON_QUEUE) ) { 
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "listen()");
-			return 1; 
-		}
 #endif	/* GLITE_LB_SERVER_WITH_WS */
 
 		if (!server_cert || !server_key)
@@ -2033,4 +1953,3 @@ static int decrement_timeout(struct timeval *timeout, struct timeval before, str
         if ( ((*timeout).tv_sec < 0) || (((*timeout).tv_sec == 0) && ((*timeout).tv_usec == 0)) ) return(1);
         else return(0);
 }
-

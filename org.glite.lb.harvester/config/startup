@@ -1,4 +1,12 @@
 #!/bin/sh
+### BEGIN INIT INFO
+# Provides: glite-lb-harvester
+# Description: L&B harvester deamon
+# Required-Start: $remote_fs $network $syslog
+# Required-Stop: $remote_fs $network $syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+### END INIT INFO
 # chkconfig: 345 75 25
 #
 # Copyright (c) Members of the EGEE Collaboration. 2004-2010.
@@ -21,6 +29,7 @@ GLITE_LB_LOCATION=${GLITE_LB_LOCATION:-'@glite_prefix@'}
 GLITE_LB_LOCATION_ETC=${GLITE_LB_LOCATION_ETC:-'@glite_etc@'}
 GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
 
+[ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
 [ -f /etc/glite.conf ] && . /etc/glite.conf
 [ -f $GLITE_LB_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LB_LOCATION_ETC/glite-wms.conf
 
@@ -185,7 +194,7 @@ cleanup()
 case x$1 in
 	xstart)	start;;
 	xstop)	stop;;
-	xrestart) stop; start;;
+	xrestart|xforce-reload) stop; start;;
 	xstatus) status;;
 	xcleanup) cleanup;;
 	x*)	echo usage: $0 start,stop,restart,status,cleanup >&2

@@ -110,6 +110,13 @@ extern int glite_srvbones_run(
  */
 int glite_srvbones_daemonize(const char *servername, const char *custom_pidfile, const char *custom_logfile);
 
+/**
+ * Create listening socket.
+ *
+ * \return 0 OK, non-zero error
+ */
+int glite_srvbones_daemon_listen(const char *name, char *port, int *conn_out);
+
 #ifdef __cplusplus
 }
 #endif

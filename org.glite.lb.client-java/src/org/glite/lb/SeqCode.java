@@ -30,6 +30,7 @@ public class SeqCode {
     public static final int PBS = 2;
     public static final int CONDOR = 4;
     public static final int CREAM = 4;
+    public static final int CREAMWMS = 5;
     
     private int[] seqCode = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     private int type = 0;
@@ -66,6 +67,11 @@ public class SeqCode {
 				throw new IllegalArgumentException("SeqCode part");
        	 		seqCode[part-1]++;
 			break;
+		case CREAMWMS:
+			if (src == null)
+                                throw new IllegalArgumentException("SeqCode part");
+			seqCode[src.LRMS-1] += 1000; //XXX hardcoded to add 1000 to LRMS when WMS jobs goes through CREAM
+			break;
 		default: break;
        	 }
     }
@@ -81,9 +87,10 @@ public class SeqCode {
 	switch (type) {
 		case NORMAL:
 		case DUPLICATE:
+		case CREAMWMS:
 			if (!seqCodeString.matches("UI=\\d{1,}:NS=\\d{1,}:WM=\\d{1,}:BH=\\d{1,}:" +
 			"JSS=\\d{1,}:LM=\\d{1,}:LRMS=\\d{1,}:APP=\\d{1,}:LBS=\\d{1,}")) {
-			throw new IllegalArgumentException("this is not correct sequence code");
+			throw new IllegalArgumentException("this is not correct sequence code: " + seqCodeString);
 			}
 			
 			int currentPosition = 0;
@@ -112,6 +119,7 @@ public class SeqCode {
 	switch (type) {
 		case NORMAL:
 		case DUPLICATE:
+		case CREAMWMS:
 			String tmp = Integer.toString(seqCode[0]);    
 			String output = "UI=";
 			output += "000000".substring(0, 6 - tmp.length ()) + tmp;
@@ -136,7 +144,7 @@ public class SeqCode {
 			tmp = Integer.toString(seqCode[5]);
 			output += "0000000000".substring(0, 6 - tmp.length ()) + tmp;
 			output += ":";
-			output += "LMRS=";
+			output += "LRMS=";
 			tmp = Integer.toString(seqCode[6]);
 			output += "0000000000".substring(0, 6 - tmp.length ()) + tmp;
 			output += ":";

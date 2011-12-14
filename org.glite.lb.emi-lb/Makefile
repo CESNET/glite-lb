@@ -1,6 +1,6 @@
 top_srcdir=..
 stagedir=.
-package=glite-lb-yaim
+package=glite-lb-emi-lb
 version=0.0.0
 PREFIX=/opt/glite
 prefix=
@@ -18,6 +18,8 @@ stage:
 check:
 
 clean:
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
-.PHONY: default all check install stage clean
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
+
+.PHONY: default all check install stage clean distclean

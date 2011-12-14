@@ -24,6 +24,7 @@
 #
 
 use Getopt::Long;
+use POSIX qw(locale_h strftime);
 
 my $pwd = `pwd`; chomp $pwd;
 my $prefix = '/usr';
@@ -52,7 +53,7 @@ my (%projects, %project);
 my $debug = 0;
 my $pkg_config_env = (defined $ENV{PKG_CONFIG_PATH}) ? "$ENV{PKG_CONFIG_PATH}:" : '';
 
-my @nodes = qw/client server logger logger-msg utils client-java doc ws-test db jpprimary jpindex jpclient harvester lb px proxyrenewal/;
+my @nodes = qw/client server logger logger-msg nagios utils client-java doc ws-test db jpprimary jpindex jpclient harvester lb px proxyrenewal/;
 my @default_nodes = qw/lb px proxyrenewal/;
 my %enable_nodes;
 my %disable_nodes;
@@ -136,7 +137,8 @@ my %externs = (
 		prefix=> '/usr'
 	},
 	jdk => {
-		prefix=> '/usr/java/latest'
+		prefix=> '/usr/java/latest',
+		locations => [ '/usr/lib/jvm/java', '/usr/java/latest' ],
 	},
 	libtar => {
 		prefix=> '/usr'
@@ -153,14 +155,6 @@ my %externs = (
 	activemq => {
 		prefix=>'/opt/activemq-cpp-library',
 		pkg => 'activemq-cpp'
-	},
-	apr => {
-		prefix=>'/opt/apr',
-		pkg => 'apr-1'
-	},
-	aprutil => {
-		prefix=>'/opt/apr-util',
-		pkg => 'apr-util-1'
 	},
 );
 
@@ -181,13 +175,19 @@ my %deps_type;
 my %buildroot;
 my (%etics_externs, %etics_projects);
 
+#
+# modules of the subsystems
+#
+# additional modules from $project{modules} are automatically added
+#
 my %lbmodules = (
-	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim glite-LB logger-msg/], 
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim logger-msg nagios/], 
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface gss gsoap-plugin/],
 	'jobid' => [qw/api-c api-cpp api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache shared commands core devel slashgrid services service-clients gsexec/ ],
-	'px' => [ qw/proxyrenewal glite-PX myproxy-yaim/ ],
+	'px' => [ qw/proxyrenewal myproxy-yaim/ ],
+	'canl' => [ qw/c/ ],
 	);
 
 
@@ -211,6 +211,7 @@ my @opts = (
 	'lbjp-common-tag=s' => \$lbjp_tag,
 	'jp-tag=s' => \$jp_tag,
 	'jobid-tag=s' => \$jobid_tag,
+	'canl-tag=s' => \$canl_tag,
 	'help' => \$help,
 	'libdir=s' => \$libdir,
 	'project=s' => \$project,
@@ -232,7 +233,6 @@ my @keeparg = @ARGV;
 
 GetOptions @opts or die "Errors parsing command line\n";
 $prefix=~s/\/$//;
-$stagedir=~s/\/$// if ($stagedir);
 $root=~s/\/$//;
 $sysroot=~s/\/$//;
 if (not $sysconfdir) { $sysconfdir = $prefix eq '/usr' ? '/etc' : "$prefix/etc"; }
@@ -244,10 +244,18 @@ $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-serv
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
 $externs{'gsoapxx'}{prefix}=$externs{gsoap}{prefix} if $externs{'gsoapxx'}{prefix} eq '';
 
+$externs{'mysql-server'}{withprefix}=$externs{mysql}{withprefix} if $externs{'mysql-server'}{withprefix} eq '';
+$externs{'mysql-devel'}{wihtprefix}=$externs{mysql}{withprefix} if $externs{'mysql-devel'}{withprefix} eq '';
+$externs{'gsoapxx'}{withprefix}=$externs{gsoap}{withprefix} if $externs{'gsoapxx'}{withprefix} eq '';
+
 %project = %{$projects{$project}};
-for $_ (keys %{$project{etics_externs}}) {
-	$etics_externs{$_} = $project{etics_externs}{$_};
+for my $platform (keys %{$project{etics_externs}}) {
+	for $_ (keys %{$project{etics_externs}{$platform}}) {
+		$etics_externs{$platform}{$_} = $project{etics_externs}{$platform}{$_};
+	}
 }
+reshuffle_platforms(\%etics_externs, $project{supported_platforms});
+reshuffle_platforms(\%{$project{etics_externs_devel}}, $project{supported_platforms});
 for $_ (keys %{$project{etics_projects}}) {
 	$etics_projects{$_} = $project{etics_projects}{$_};
 }
@@ -262,6 +270,13 @@ for my $ext (keys %need_externs_aux) {
 		push @{$need_externs{$ext}},$pkg;
 		$need_externs_type{$ext}->{$pkg} = $type;
 	}
+}
+if ($project eq 'emi') {
+	$extranodmod{lb} = 'lb.emi-lb';
+	$extranodmod{px} = 'px.emi-px';
+}
+for $_ (keys %{$project{modules}}) {
+	push @{$lbmodules{$_}},@{$project{modules}{$_}};
 }
 
 
@@ -302,6 +317,7 @@ if (!$en && !$dis) { for (@nodes) { $enable_nodes{$_} = 1 if ($default_nodes{$_}
 for (keys %enable_nodes) { delete $enable_nodes{$_} unless $enable_nodes{$_}; }
 
 $stagedir = $root unless $stagedir;
+$stagedir=~s/\/$// if ($stagedir);
 
 if ($mode eq 'build') { for my $ext (keys %externs) {
 	if (defined $externs{$ext} and defined $externs{$ext}{withprefix}) { $externs{$ext}{prefix} = $externs{$ext}{withprefix}; }
@@ -342,7 +358,14 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 			$jdk_prefix = $ENV{'JAVA_HOME'};
 			print "JAVA_HOME=$jdk_prefix\n";
 		} else {
-			print "(using default $externs{$ext}{prefix}))\n"
+			foreach my $i (0..$#{$externs{$ext}{locations}}) {
+				if (-e $externs{$ext}{locations}[$i]) {
+					$jdk_prefix=$externs{$ext}{locations}[$i];
+					print "(found directory $jdk_prefix)\n";
+					last;
+				}
+			}
+			print "(using default $externs{$ext}{prefix})\n" unless ($jdk_prefix);
 		}
 		$externs{$ext}{prefix} = $jdk_prefix if ($jdk_prefix);
 	}
@@ -415,7 +438,9 @@ sub mode_build {
 
 		open MAK,">Makefile" or die "Makefile: $!\n";
 
-		print MAK "all: @modules\n\nclean check:\n";
+		print MAK "all: @modules\n\n";
+		print MAK "stage: ".(join '-stage ', @modules)."-stage\n\n";
+		print MAK "clean check install:\n";
 
 		for (@modules) {
 			my $full = full($_);
@@ -438,11 +463,13 @@ sub mode_build {
 			@ldeps{@{$deps{$_}}} = 1;
 			for my $x (split /,/,$staged) { delete $ldeps{$x}; }
 			my @dnames = $module ? () : keys %ldeps;
+			my $snames = $#dnames == -1 ? '' : join('-stage ', @dnames).'-stage';
 
 			my $full = full($_);
 			my $build = $buildroot{$_};
 
 			print MAK "$_: @dnames\n\tcd $full/$build && \${MAKE} && \${MAKE} install\n\n";
+			print MAK "$_-stage: $snames\n\tcd $full/$build && \${MAKE} && \${MAKE} stage\n\n";
 		}
 
 		close MAK;
@@ -460,7 +487,7 @@ sub mode_checkout() {
 				}
 			}	
 		}
-		if ($lbjp_tag){
+		if ($lbjp_tag) {
 			for (@{$lbmodules{'lbjp-common'}}){
 				if ("lbjp-common.".$_ eq $module){
                                         $tag = '-r '.$lbjp_tag;
@@ -481,6 +508,13 @@ sub mode_checkout() {
                                 }
 			}
 		}
+		if ($canl_tag) {
+			for (@{$lbmodules{'canl'}}){
+				if ("canl.".$_ eq $module){
+                                        $tag = '-r '.$canl_tag;
+                                }
+			}
+		}
 		#if (grep {"lb.".$_ eq $module} @{$lbmodules{lb}}){
 		#	print "found";
 		#}
@@ -492,18 +526,18 @@ sub mode_checkout() {
 
 BEGIN{
 %etics_externs = (
-	'myproxy-devel'=>'myproxy-devel',
-	'myproxy-libs'=>'myproxy-libs',
-	'myproxy-server'=>'myproxy-server',
-	'myproxy-admin'=>'myproxy-admin',
-	cares=>'c-ares',
-	voms=>'org.glite.security.voms-api-cpp',
-	utiljava=>'org.glite.security.util-java',
-	gpt=>'gpt',
-	fetchcrl=>'fetch-crl',
-	activemq=>'activemq-cpp-library',
-	apr=>'apr-dev',
-	aprutil=>'aprutil-dev',
+	default => {
+		'myproxy-devel'=>'myproxy-devel',
+		'myproxy-libs'=>'myproxy-libs',
+		'myproxy-server'=>'myproxy-server',
+		'myproxy-admin'=>'myproxy-admin',
+		cares=>'c-ares',
+		voms=>'org.glite.security.voms-api-cpp',
+		utiljava=>'org.glite.security.util-java',
+		gpt=>'gpt',
+		fetchcrl=>'fetch-crl',
+		activemq=>'activemq-cpp-library',
+	},
 );
 
 %etics_projects = (
@@ -515,10 +549,11 @@ BEGIN{
 	'lb.doc' => [ qw/tetex-latex:B/ ],
 	'lb.logger' => [ qw/cppunit:B libtool:B/ ],
 	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B/ ],
-	'lb.state-machine' => [ qw/classads libtool:B/ ],
+	'lb.nagios' => [ qw/globus_proxy_utils:R/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B libxml2 flex:B/ ],
+	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
-	'lb.ws-interface' => [],
+	'lb.ws-interface' => [ qw/libxslt:B tidy:B/ ],
 	'lb.ws-test' => [ qw/gsoap:B libtool:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/docbook-utils:B libtool:B/ ],
@@ -530,8 +565,8 @@ BEGIN{
 	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B libtool:B/ ],
 	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B libtool:B/ ],
 	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap gsoapxx libtool:B/ ],
-	'jobid.api-c' =>  [ qw/cppunit:B libtool:B/ ],
-	'jobid.api-cpp' =>  [ qw/cppunit:B/ ],
+	'jobid.api-c' =>  [ qw/cppunit:B libtool:B openssl:B/ ],
+	'jobid.api-cpp' =>  [ qw/cppunit:B libtool:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
 	'jp.client' => [ qw/gsoap libtar globus_essentials:R globus:B/ ],
         'jp.doc' => [],
@@ -539,17 +574,19 @@ BEGIN{
         'jp.primary' => [ qw/classads gsoap libtar globus_essentials:R globus:B/ ],
         'jp.server-common' => [],
         'jp.ws-interface' => [],
-	'gridsite.core' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2 openssl:B build_common_cpp:B doxygen:B/ ],
+	'gridsite.core' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B build_common_cpp:B doxygen:B/ ],
 	'gridsite.commands' => [ qw/curl:R openssl:R/ ],
 	'gridsite.apache' => [ qw/libxml2:R openssl:R curl:R/ ],
 	'gridsite.shared' => [ qw/libxml2:R openssl:R/ ],
-	'gridsite.devel' => [],
-	'gridsite.slashgrid' => [ qw/curl:R fuse-libs:R fuse:R/],
+	'gridsite.devel' => [ qw// ],
+	'gridsite.slashgrid' => [ qw/curl:R fuse:R/],
 	'gridsite.services' => [ qw/curl:R gsoap:R/ ],
 	'gridsite.service-clients' => [ qw/curl:R gsoap:R gsoapxx:R/ ],
 	'gridsite.gsexec' => [ qw// ],
-	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:R/ ],
+	'gridsite.1.5-compat' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B build_common_cpp:B doxygen:B/ ],
+	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
+	'canl.c' => [ qw/cares:B openssl:B libtool:B/ ],
 );
 
 %need_jars = (
@@ -590,8 +627,13 @@ for my $jar (keys %need_jars) {
 	'lb.logger-msg' => [ qw/
 		lb.logger
 	/ ],
+	'lb.nagios' => [ qw/
+		lb.client:R
+		lb.ws-test:R
+		lb.utils:R
+	/ ],
 	'lb.server' => [ qw/
-		lb.ws-interface lb.types:B lb.common lb.state-machine
+		lb.ws-interface lb.types:B lb.common lb.state-machine lb.utils:R
 		lbjp-common.db lbjp-common.server-bones lbjp-common.trio lbjp-common.maildir lbjp-common.log
 		jobid.api-c
 		lbjp-common.gsoap-plugin lbjp-common.gss
@@ -601,7 +643,7 @@ for my $jar (keys %need_jars) {
 		lbjp-common.jp-interface
 		jobid.api-c
 		lbjp-common.trio lbjp-common.maildir
-		lb.client lb.state-machine
+		lb.client lb.state-machine lb.types:B
 	/ ],
 	'lb.ws-test' => [ qw/lbjp-common.gsoap-plugin lb.ws-interface/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
@@ -612,6 +654,11 @@ for my $jar (keys %need_jars) {
 	/ ],
 	'lb.yaim' => [ qw// ],
 	'lb.glite-LB' => [ qw/
+		lb.logger:R lb.server:R lb.utils:R lb.doc:R
+		lb.ws-test:R lb.harvester:R lb.yaim:R lb.client-java:R
+		lb.logger-msg:R
+	/ ],
+	'lb.emi-lb' => [ qw/
 		lb.logger:R lb.server:R lb.utils:R lb.doc:R
 		lb.ws-test:R lb.harvester:R lb.yaim:R lb.client-java:R
 		lb.logger-msg:R
@@ -654,19 +701,22 @@ for my $jar (keys %need_jars) {
 	'jp.ws-interface' => [ qw// ],
 
 	'gridsite.core' => [ qw// ],
-	'gridsite.commands' => [ qw/gridsite.shared:R/ ],
-	'gridsite.apache' => [ qw/gridsite.shared:R/ ],
-	'gridsite.shared' => [ qw// ],
-	'gridsite.devel' => [ qw/gridsite.shared:R/ ],
-	'gridsite.slashgrid' => [ qw/gridsite.shared:R/],
-	'gridsite.services' => [ qw/gridsite.shared:R/ ],
-	'gridsite.service-clients' => [ qw/gridsite.shared:R/ ],
-	'gridsite.gsexec' => [ qw// ],
+	'gridsite.commands' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.apache' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.shared' => [ qw/gridsite.core:B / ],
+	'gridsite.devel' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.slashgrid' => [ qw/gridsite.core:B gridsite.shared:R/],
+	'gridsite.services' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.service-clients' => [ qw/gridsite.core:B gridsite.shared:R/ ],
+	'gridsite.gsexec' => [ qw/gridsite.core:B/ ],
 
 	'px.proxyrenewal' => [ qw// ],
 	'px.glite-PX' => [qw/px.myproxy-yaim:R/],
+	'px.emi-px' => [qw/px.myproxy-yaim:R/],
 	'px.myproxy-yaim' => [ qw// ],
 	'px.myproxy-config' => [],
+
+	'canl.c' => [],
 );
 
 for my $ext (keys %deps_aux) {
@@ -679,7 +729,7 @@ for my $ext (keys %deps_aux) {
 }
 
 
-%extrafull = ( gridsite=>'org.gridsite.core');
+%extrafull = ( gridsite=>'org.gridsite.core', 'canl.c' => 'emi.canl.canl-c');
 
 #( java => 'client-java' );
 %extranodmod = (
@@ -689,7 +739,8 @@ for my $ext (keys %deps_aux) {
 	jpclient => 'jp.client',
 	lb => 'lb.glite-LB',
 	px => 'px.glite-PX',
-	proxyrenewal => 'px.proxyrenewal'
+	proxyrenewal => 'px.proxyrenewal',
+	canl => 'canl.c',
 );
 
 %obsoletes = (
@@ -699,8 +750,15 @@ for my $ext (keys %deps_aux) {
 	'px.myproxy-config' => [ qq/myproxy-config/ ], # in myproxy-config.spec
 	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
 	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
-	'lb.glite-LB' => [ qq/glite-LB/ ],
-	'px.glite-PX' => [ qq/glite-PX/ ],
+);
+
+%conflicts = (
+);
+
+%provides = (
+	'lbjp-common.gss' => [ qq/glite-security-gss/ ],
+	'lbjp-common.gsoap-plugin' => [ qq/glite-security-gsoap-plugin/ ],
+	'lb.nagios' => [ qq/glite-lb-nagios-plugins/ ],
 );
 
 %cvs_prefix = (
@@ -710,6 +768,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'org.glite',
 	'gridsite' => 'org',
 	'px' => 'org.glite',
+	'canl' => 'emi',
 );
 
 %cvs_tag_prefix = (
@@ -719,6 +778,7 @@ for my $ext (keys %deps_aux) {
 	'lbjp-common' => 'glite-',
 	'gridsite' => '',
 	'px' => 'glite-',
+	'canl' => 'emi-',
 );
 
 # ==== projects specification ====
@@ -730,8 +790,10 @@ for my $ext (keys %deps_aux) {
 #                        (${NAME.location}, ETICS conf. dependencies)
 # etics_projects ....... ETICS project names of externals
 # etics_externs_devel .. ETICS modules names of devel versions of externals
+# etics_locations ...... ETICS locations in ${NAME.location} properties
 # need_externs_aux ..... project-specific external dependencies
 # supported_platforms .. platforms supported by the project
+# modules .............. additional modules in subsystems
 %projects = (
 	glite => {
 		etics_name => 'org.glite',
@@ -740,35 +802,56 @@ for my $ext (keys %deps_aux) {
 		flavours => '--thrflavour=${globus.thr.flavor} --nothrflavour=${globus.nothr.flavor}',
 		local_prefix => '',
 		etics_externs => {
-			globus_essentials=>'vdt_globus_essentials',
-			globus=>'globus',
-			gridsite=>'org.gridsite.shared',
-			yaim_core=>'org.glite.yaim.core',
-			gip_release=>'glite-info-provider-release',
-			gip_service=>'glite-info-provider-service',
-			bdii=>'bdii',
-			glite_version=>'glite-version',
-			glite_info_templates=>'glite-info-templates',
-			glue_schema=>'glue-schema',
-			trustmanager=>'org.glite.security.trustmanager',
-			axis=>'axis',
-			lcas=>'org.glite.security.lcas',
-			gsoapxx=>'-',
-			build_common_cpp=>'org.glite.build.common-cpp',
+			default => {
+				globus_essentials=>'vdt_globus_essentials',
+				globus=>'globus',
+				globus_proxy_utils=>'vdt_globus_essentials',
+				gridsite=>'org.gridsite.shared',
+				yaim_core=>'org.glite.yaim.core',
+				gip_release=>'glite-info-provider-release',
+				gip_service=>'glite-info-provider-service',
+				bdii=>'bdii',
+				glite_version=>'glite-version',
+				glite_info_templates=>'glite-info-templates',
+				glue_schema=>'glue-schema',
+				trustmanager=>'org.glite.security.trustmanager',
+				axis=>'axis',
+				lcas=>'org.glite.security.lcas',
+				gsoapxx=>'-',
+				build_common_cpp=>'org.glite.build.common-cpp',
+				jdk=>'jdk',
+			},
 		},
 		etics_externs_devel => {
-			gridsite=>'org.gridsite.devel',
+			default => {
+				gridsite=>'org.gridsite.devel',
+			},
 		},
 		etics_projects => {
-			vdt=>[qw/globus globus_essentials gpt/],
+			vdt=>[qw/globus globus_essentials globus_proxy_utils gpt/],
 			'org.glite'=>[qw/voms gridsite lcas gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
+		},
+		etics_locations => {
+			'*' => '',
 		},
 		need_externs_aux => {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager utiljava libtool:B/ ],
 			'lb.glite-LB' => [ qw/fetchcrl:R gpt:R gip_release:R gip_service:R bdii:R glite_version:R glite_info_templates:R glue_schema:R/ ],
-			'lb.yaim' => [ qw/yaim_core:R/ ],
+			'lb.yaim' => [ qw/yaim_core:R perl-LDAP:R/ ],
 			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R gpt:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R/ ],
+		},
+		supported_platforms => {
+			sl5_x86_64_gcc412 => 1,
+			sl5_ia32_gcc412 => 1,
+			deb5_x86_64_gcc432 => 1,
+			deb5_ia32_gcc432 => 1,
+			slc4_x86_64_gcc346 => 1,
+			slc4_ia32_gcc346 => 1,
+		},
+		modules => {
+			'lb' => [ qw/glite-LB/ ],
+			'px' => [ qw/glite-PX/ ],
 		},
 	},
 
@@ -779,74 +862,141 @@ for my $ext (keys %deps_aux) {
 			'jp' => 'emi-',
 			'jobid' => 'emi-',
 			'lbjp-common' => 'emi-',
-			'gridsite' => '',
+			'gridsite' => 'emi-',
 			'px' => 'emi-',
+			'canl' => 'emi-',
 		},
 		tag_prefix => { %cvs_tag_prefix },
 		flavours => '--thrflavour= --nothrflavour=',
 		local_prefix => '/usr',
 		etics_externs => {
-			globus_essentials=>'globus-gssapi-gsi',
-			globus=>'globus-gssapi-gsi-devel',
-			gridsite=>'emi.gridsite.shared',
-			yaim_core=>'emi.yaim.yaim-core',
-			yaim_bdii=>'emi.bdii.yaim-bdii',
-			gip_release=>'emi.bdii.glite-info-provider-release',
-			gip_service=>'emi.bdii.glite-info-provider-service',
-			bdii=>'emi.bdii.bdii-core',
-			glite_version=>'emi.misc.glite-version',
-			glue_schema=>'emi.bdii.glue-schema',
-			trustmanager=>'emi.java-security.trustmanager',
-			trustmanager_axis=>'emi.java-security.trustmanager-axis',
-			axis=>'axis1.4',
-			lcas=>'emi.sac.lcas',
-			gsoapxx=>'-',
-			build_common_cpp=>'emi.misc.glite.build-common-cpp',
+			default => {
+				globus_essentials=>'globus-gssapi-gsi',
+				globus=>'globus-gssapi-gsi-devel',
+				globus_proxy_utils=>'globus-proxy-utils',
+				gridsite=>'emi.gridsite.shared',
+				yaim_core=>'emi.yaim.yaim-core',
+				yaim_bdii=>'emi.bdii.yaim-bdii',
+				gip_service=>'emi.bdii.glite-info-provider-service',
+				bdii=>'emi.bdii.core',
+				glite_version=>'emi.emi-version',
+				glue_schema=>'emi.bdii.glue-schema',
+				trustmanager=>'emi.java-security.trustmanager',
+				trustmanager_axis=>'emi.java-security.trustmanager-axis',
+				axis=>'axis1.4',
+				lcas=>'emi.sac.lcas',
+				gsoapxx=>'-',
+				build_common_cpp=>'emi.misc.glite.build-common-cpp',
+				jdk=>'java',
+			},
+			sl5_x86_64_gcc412EPEL => {
+				'myproxy-devel' => 'myproxy-devel.x86_64',
+			},
+			sl6_x86_64_gcc445EPEL => {
+				'myproxy-devel' => 'myproxy-devel.x86_64',
+			},
+			deb6_x86_64_gcc445 => {
+				axis => 'axis1.4',
+				# mappings in ETICS project configuration
+				#globus_essentials => 'libglobus-gssapi-gsi4',
+				#globus => 'libglobus-gssapi-gsi-dev',
+				#axis => 'libaxis-java',
+				#cares => 'libc-ares2',
+				#cppunit => 'libcppunit',
+				#expat => 'libexpat1',
+				#log4c => 'liblog4c3',
+				#curl => 'libcurl3',
+				#'mysql' => 'libmysqlclient16',
+				#'mysql-devel' => 'libmysqlclient-dev',
+				#libxslt => 'xsltproc',
+				#'jakarta-commons-codec' => 'libcommons-codec-java',
+				#'jakarta-commons-lang' => 'libcommons-lang-java',
+				#'tetex-latex' => 'texlive-latex-extra',
+				#'perl-LDAP' => 'libnet-ldap-perl',
+				#'fuse-lib' => 'libfuse2',
+				#'fuse' => 'fuse-utils',
+			},
 		},
 		etics_externs_devel => {
-			cares => 'c-ares-devel',
-			classads => 'classads-devel',
-			cppunit => 'cppunit-devel',
-			expat => 'expat-devel',
-			gsoap => 'gsoap-devel',
-			voms => 'org.glite.security.voms-api',
-			libtar => 'libtar-devel',
-			log4c => 'log4c-devel',
-			postgresql => 'postgresql-devel',
-			curl => 'curl-devel',
-			libxml2 => 'libxml2-devel',
-			openssl => 'openssl-devel',
-			gridsite=>'emi.gridsite.devel',
+			default => {
+				cares => 'c-ares-devel',
+				classads => 'classads-devel',
+				cppunit => 'cppunit-devel',
+				expat => 'expat-devel',
+				gsoap => 'gsoap-devel',
+				voms => 'org.glite.security.voms-api',
+				libtar => 'libtar-devel',
+				log4c => 'log4c-devel',
+				postgresql => 'postgresql-devel',
+				curl => 'curl-devel',
+				libxml2 => 'libxml2-devel',
+				openssl => 'openssl-devel',
+				gridsite=>'emi.gridsite.devel',
+				jdk=>'java-devel',
+			},
+			deb6_x86_64_gcc445 => {
+				# mappings in ETICS project configuration
+				#cares => 'libc-ares-dev',
+				#cppunit => 'libcppunit-dev',
+				#expat => 'libexpat1-dev',
+				#libtar => 'libtar-dev',
+				#log4c => 'liblog4c-dev',
+				#postgresql => 'libpq-dev',
+				#curl => 'libcurl4-openssl-dev',
+				#libxml2 => 'libxml2-dev',
+				#openssl => 'libssl-dev',
+				#'tetex-latex' => 'texlive-latex-extra',
+				#libxslt=>'xsltproc',
+				#'httpd-devel' => 'apache2-prefork-dev',
+				#'fuse-devel' => 'libfuse-dev',
+				#gsoap => 'gsoap',
+			},
 		},
 		etics_projects => {
-			'emi'=>[qw/voms voms-devel gridsite lcas gip_release gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
+			'emi'=>[qw/voms voms-devel gridsite lcas gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
+		},
+		etics_locations => {
+			axis => 'axis',
 		},
 		need_externs_aux => {
 			'lb.client-java' => [ qw/ant:B jdk:B axis:B trustmanager trustmanager_axis libtool:B/ ],
-			'lb.glite-LB' => [ qw/fetchcrl:R gip_release:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
-			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
-			'px.glite-PX' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
+			'lb.emi-lb' => [ qw/fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/ ],
+			'lb.yaim' => [ qw/yaim_core:R yaim_bdii:R perl-LDAP:R/ ],
+			'px.emi-px' => [qw/myproxy-server:R myproxy-admin:R fetchcrl:R gip_service:R bdii:R glite_version:R glue_schema:R/],
 			'px.myproxy-yaim' => [ qw/yaim_core:R yaim_bdii:R/ ],
 		},
 		supported_platforms => {
 			sl5_x86_64_gcc412EPEL => 1,
 			sl5_ia32_gcc412EPEL => 1,
+			sl6_x86_64_gcc445EPEL => 1,
+			deb6_x86_64_gcc445 => 1,
+		},
+		modules => {
+			'lb' => [ qw/emi-lb/ ],
+			'px' => [ qw/emi-px/ ],
 		},
 	},
 );
 
+my %gridsite_rpm = (
+	'package.RPMSLocation' => "\${moduleDir}/RPMTMP/RPMS",
+	'package.SRPMSLocation' => "\${moduleDir}/RPMTMP/SRPMS",
+);
+my %gridsite_deb = (
+	'package.DEBSLocation' => "\${moduleDir}/RPMTMP",
+);
 %platform_properties = (
 	'gridsite.core' => {
-		sl5_x86_64_gcc412 => { aprSuffix => '1' },
-		sl5_ia32_gcc412 => { aprSuffix => '1' },
-		sl5_x86_64_gcc412EPEL => { aprSuffix => '1' },
-		sl5_ia32_gcc412EPEL => { aprSuffix => '1' },
-		deb5_x86_64_gcc432 => { aprSuffix => '1.0' },
-		deb5_ia32_gcc432 => { aprSuffix => '1.0' },
-		slc4_x86_64_gcc346 => { aprSuffix => '0' },
-		slc4_ia32_gcc346 => { aprSuffix => '0' },
-		default => { 
-		}
+		sl5_x86_64_gcc412 => \%gridsite_rpm,
+		sl5_ia32_gcc412 => \%gridsite_rpm,
+		sl5_x86_64_gcc412EPEL => \%gridsite_rpm,
+		sl5_ia32_gcc412EPEL => \%gridsite_rpm,
+		deb5_x86_64_gcc432 =>  \%gridsite_deb,
+		deb5_ia32_gcc432 =>  \%gridsite_deb,
+		slc4_x86_64_gcc346 => \%gridsite_rpm,
+		slc4_ia32_gcc346 => \%gridsite_rpm,
+		sl6_x86_64_gcc445EPEL => \%gridsite_rpm,
+		deb6_x86_64_gcc445 => \%gridsite_deb,
 	},
 	'jobid.api-java' => {
 		default => { 'package.buildarch' => 'noarch' },
@@ -861,6 +1011,9 @@ for my $ext (keys %deps_aux) {
 		default => { 'package.buildarch' => 'noarch' },
 	},
 	'lb.yaim' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
+	'lb.nagios' => {
 		default => { 'package.buildarch' => 'noarch' },
 	},
 	'px.yaim' => {
@@ -880,20 +1033,26 @@ $buildroot{'gridsite.core'} = 'src';
 sub full
 {
 	my $short = shift;
-	return $extrafull{$short} ? $extrafull{$short} : 'org.glite.'.$short;
+	my $subsys = $short;
+	$subsys =~ s/\..*//;
+
+	my $cvs_prefix = exists $cvs_prefix{$subsys} ? $cvs_prefix{$subsys} : 'org.glite';
+	return $extrafull{$short} ? $extrafull{$short} : "$cvs_prefix.$short";
 }
 
 sub mkinc
 {
 	my %aux;
+	my ($old_locale, $date);
 	undef %aux;
 	my @m=qw/
-lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB
+lb.client lb.doc lb.state-machine lb.ws-interface lb.logger lb.logger-msg lb.nagios lb.types lb.common lb.server lb.utils lb.ws-test lb.client-java lb.harvester lb.yaim lb.glite-LB lb.emi-lb
 lbjp-common.gss lbjp-common.gsoap-plugin
 jobid.api-c jobid.api-cpp jobid.api-java
 lbjp-common.db lbjp-common.log lbjp-common.maildir lbjp-common.server-bones lbjp-common.trio lbjp-common.jp-interface lbjp-common.gss lbjp-common.gsoap-plugin
 jp.client jp.doc jp.index jp.primary jp.server-common jp.ws-interface
-px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
+px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config px.emi-px
+canl.c
 /;
 	@aux{@m} = (1) x ($#m+1);
 
@@ -922,10 +1081,23 @@ px.proxyrenewal px.myproxy-yaim px.glite-PX px.myproxy-config
 			}
 		}
 	}
+
+	mkdir $build."project" unless (-d $build."project");
+	open PKGCHL,">".$build."project/changelog"
+		or die $build."project/changelog: $!\n";
+	$old_locale = setlocale(LC_TIME);
+	setlocale(LC_TIME, "C");
+	$date = strftime("%a %b %d %Y", gmtime());
+	setlocale(LC_TIME, $old_locale);
+	print PKGCHL qq{* $date CESNET team <emi-lb\@metacentrum.cz>
+- automatically generated package
+};
+	close PKGCHL;
+
 	unless ($top_srcdir eq '.') {
 		unlink $build."Makefile";
 		symlink "$top_srcdir/Makefile",$build."Makefile" or die "symlink $top_srcdir/Makefile ".$build."Makefile: $!\n";
-		for my $file ('.pre', '.post', '.preun', '.postun changelog') {
+		for my $file ('.pre', '.post', '.preun', '.postun') {
 			my $pfile = "project/$file";
 			if (-f "$full/$pfile") {
 				mkdir "$build/project" unless (-d "$build/project");
@@ -979,7 +1151,7 @@ sub mode_etics {
 
 	die "$0: --module required with --etics\n" unless $fmod;
 	
-	my ($subsys,$module) = split /\./,$fmod;
+	my ($subsys,$module) = split /\./,$fmod,2;
 
 	my ($major,$minor,$rev,$age);
 
@@ -988,12 +1160,13 @@ sub mode_etics {
 		($major,$minor,$rev,$age) = ($1,$2,$3,$4);
 	}
 	else { 
-		my $path = "$cvs_prefix{$subsys}.$subsys.$module/project";
+		my $full = full "$subsys.$module";
+		my $path = "$full/project";
 		if ($subsys eq 'gridsite') {
 			$path = "$cvs_prefix{$subsys}.$subsys.core/project";
 		}
 		open V,"$path/version.properties"
-			or die "$cvs_prefix{$subsys}.$subsys.$module/project/version.properties: $!\n";
+			or die "$path/version.properties: $!\n";
 	
 		while ($_ = <V>) {
 			chomp;
@@ -1003,28 +1176,30 @@ sub mode_etics {
 		close V;
 	}
 
+	# XXX: --with ignored for platform-dependend packages
 	my @copts = ();
 	my %ge;
 	@ge{@{$etics_projects{$project{etics_name}}}} = (1) x ($#{$etics_projects{$project{etics_name}}}+1);
 
 	for (@{$need_externs{"$subsys.$module"}}) {
 	    if ($need_externs_type{"$subsys.$module"}->{$_}=~/B/ and (defined $externs{$_} or defined $jar{$_})) {
-		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
+		my $eext = $etics_externs{default}{$_} ? $etics_externs{default}{$_} : $_;
 		next if ($eext eq '-');
-		if ($project ne 'glite') {
+		if (defined $project{etics_locations}{'*'} or defined $project{etics_locations}{$_}) {
+			$eext = $project{etics_locations}{$_} if ($project{etics_locations}{$_});
+			push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
+		} else {
 			if ($ge{$_} and not defined $externs{$_}{pkg}) {
 				push @copts, "--with-$_=\${stageDir}";
 			}
-		} else {
-			push @copts,$ge{$_} ? "--with-$_=\${stageDir}" : "--with-$_=\${$eext.location}";
 		}
 	    }
 	}
 
 	for (@{$need_jars{"$subsys.$module"}}) {
-		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
+		my $eext = $etics_externs{default}{$_} ? $etics_externs{default}{$_} : $_;
 
-		push @copts,"--with-$_ \${$eext.location}$jar{$_}" if ($project eq 'glite');
+		push @copts,"--with-$_ \${$eext.location}$jar{$_}" if (defined $project{etics_locations}{'*'} or defined $project{etics_locations}{$_});
 	}
 
 	my $conf;
@@ -1060,8 +1235,10 @@ sub mode_etics {
 	my $package_description = "";
 	my $package_summary = "";
 
-	if (-e "$cvs_prefix{$subsys}.$subsys.$module/project/package.description") {
-		open V, "$cvs_prefix{$subsys}.$subsys.$module/project/package.description";
+	my $cvs_module = full "$subsys.$module";
+
+	if (-e "$cvs_module/project/package.description") {
+		open V, "$cvs_module/project/package.description";
 		$package_description = join ("", <V>);
 		close V;
 		chomp $package_description;
@@ -1071,8 +1248,8 @@ sub mode_etics {
 	else { 
 		print STDERR "package.description not found for $subsys.$module!\n"; }
 
-	if (-e "$cvs_prefix{$subsys}.$subsys.$module/project/package.summary") {
-		open V, "$cvs_prefix{$subsys}.$subsys.$module/project/package.summary";
+	if (-e "$cvs_module/project/package.summary") {
+		open V, "$cvs_module/project/package.summary";
 		$package_summary = join ("", <V>);
 		close V;
 		chomp $package_summary;
@@ -1083,47 +1260,103 @@ sub mode_etics {
 		print STDERR "package.summary not found for $subsys.$module!\n"; }
 
 	my %cmd;
-	@cmd{qw/configure compile test install packaging clean/} = ('None') x 6;
-	$cmd{clean} = 'make clean';
-	$cmd{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.$module 2>/dev/null";
-	#$cmd{checkout} = "(test -d \${moduleName}/.git && (cd \${moduleName}; git pull) || git clone http://scientific.zcu.cz/git/jra1mw.git \${moduleName})";
-	#$cmd{checkout} .= " && (cd \${moduleName}; git checkout ${tag})" unless ($conftag =~ /HEAD/);
-	$cmd{tag} = "cvs -d \${vcsroot} tag -R \${tag} ${moduleName}";
+	$cmd_vcs{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_module 2>/dev/null";
+	#$cmd_vcs{checkout} = "((test -d jra1mw/.git && (cd jra1mw; git pull)) || (git clone -q http://scientific.zcu.cz/git/jra1mw.git";
+	#$cmd_vcs{checkout} .= " && (cd jra1mw; git checkout -b \${tag} --track origin/epel)" unless ($conftag =~ /HEAD/);
+	#$cmd_vcs{checkout} .= ")) && (test -d \${moduleName} || ln -s jra1mw/$cvs_module \${moduleName})";
+	$cmd_vcs{tag} = "cvs -d \${vcsroot} tag -R \${tag} ${moduleName}";
+
+	$cmd{default}{init} = 'None';
+	$cmd{default}{configure} = 'None';
+	$cmd{default}{compile} = 'None';
+	$cmd{default}{test} = 'None';
+	$cmd{default}{install} = 'None';
+	$cmd{default}{packaging} = 'None';
+	$cmd{default}{clean} = 'make clean';
 
 	if ($subsys eq 'gridsite') {
-		$cmd{tag} = 'None';
+		$cmd_vcs{tag} = 'None';
 
 		if ($module eq 'core') {
-			my ($flags, $prefix);
+			my $flags;
 
 			if ($project ne 'glite') {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=`pkg-config gsoap --variable=prefix` OPENSSL_GLOBUS_FLAGS=`pkg-config globus-openssl --cflags` OPENSSL_GLOBUS_LIBS=`pkg-config globus-openssl --libs` FLAVOR_GLOBUS_EXT= HTTPD_FLAGS="-I/usr/include/httpd -I/usr/include/apache2 -I/usr/include/apr-${aprSuffix} -I/usr/include/pcre"';
-				$prefix = "prefix=${prefix}/usr";
+				# don't evaluate pkg-config calls to get them into source package
+				$flags = 'RELEASE_VERSION=${age}.${platformFamily}
+	GSOAPDIR=\`pkg-config gsoap --variable=prefix\`
+	OPENSSL_GLOBUS_FLAGS=\`pkg-config globus-openssl --cflags\`
+	OPENSSL_GLOBUS_LIBS=\`pkg-config globus-openssl --libs\`';
 			} else {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily} libdir=${libdir} GSOAPDIR=${gsoap.location} OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor} OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}/ FLAVOR_GLOBUS_EXT=_${globus.dbg.nothr.flavor} HTTPD_FLAGS="-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-${aprSuffix} -I${httpd-devel.location}/include/pcre"';
-				$prefix = "prefix=${prefix}";
+				$flags = 'RELEASE_VERSION=${age}.${platformFamily}
+	GSOAPDIR=${gsoap.location}
+	OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor}
+	OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}
+	HTTPD_FLAGS=-I${httpd-devel.location}/include/httpd -I${httpd-devel.location}/include/apache2 -I${httpd-devel.location}/include/apr-1 -I${httpd-devel.location}/include/apr-1.0 -I${httpd-devel.location}/include/apr-0 -I${httpd-devel.location}/include/pcre';
 			}
 
-			$cmd{compile} = "echo 'make $flags' > build.sh\n\tmake $flags build";
-			$cmd{clean} = "rm -rvf build.sh; $cmd{clean}";
-			$cmd{install} = "make $prefix $flags install";
-			$cmd{packaging} = "make $prefix $flags rpm";
+			$cmd{default}{configure} = "cat > Makefile.inc <<EOF
+	project = $project
+	top_srcdir = ..
+	$flags
+	EOF";
+			$cmd{default}{compile} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir}";
+			$cmd{default}{clean} = "rm -rvf \${moduleDir}/src/tgz; $cmd{default}{clean}";
+			$cmd{default}{install} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir} install";
+			$cmd{default}{packaging} = "mkdir -p \${moduleDir}/RPMTMP/SOURCES \${moduleDir}/src/tgz 2>/dev/null || true
+	make prefix=\${prefix}$project{local_prefix} rpm && \\
+	cp \${moduleDir}/RPMTMP/SOURCES/gridsite-\${version}.src.tar.gz \${moduleDir}/src/tgz";
+
+			for my $p ('deb5_x86_64_gcc432', 'deb5_ia32_gcc432', 'deb6_x86_64_gcc445', 'deb6_ia32_gcc445') {
+				$cmd{$p} = ();
+				for my $c (keys %{$cmd{default}}) { $cmd{$p}{$c} = $cmd{default}{$c}; }
+				$cmd{$p}{packaging} = "mkdir -p \${moduleDir}/RPMTMP/SOURCES \${moduleDir}/src/tgz 2>/dev/null || true
+	chmod +x \${moduleDir}/src/make-debian-files || true
+	make prefix=\${prefix}$project{local_prefix} deb && \\
+	cp \${moduleDir}/RPMTMP/gridsite_\${version}-\${age}.\${platformFamily}.tar.gz \${moduleDir}/src/tgz";
+			}
+		}
+		elsif ($module eq '1.5-compat') {
+			$cmd_vcs{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_prefix{$subsys}.$subsys.core 2>/dev/null";
+			$cmd{default}{init} = 'echo "/sbin/ldconfig" > project/.post
+	echo "/sbin/ldconfig" > project/.postun';
+			$cmd{default}{configure} = "cat > src/Makefile.inc <<EOF
+	project = emi
+	libdir = \${libdir}
+	MAJOR_VERSION=1
+	MINOR_VERSION=1.5
+	PATCH_VERSION=1.5.0
+	VERSION=\\\$(PATCH_VERSION)
+	RELEASE_VERSION=\${age}.\${platformFamily}
+	GSOAPDIR=\\`pkg-config gsoap --variable=prefix\\`
+	OPENSSL_GLOBUS_FLAGS=\\`pkg-config globus-openssl --cflags\\`
+	OPENSSL_GLOBUS_LIBS=\\`pkg-config globus-openssl --libs\\`
+	EOF";
+			$cmd{default}{compile} = "make -C src prefix=\${prefix}$project{local_prefix}
+	rm -fv project/debian.changelog";
+			$cmd{default}{install} = "make -C src prefix=\${prefix}$project{local_prefix} install-lib
+	rm -fv \${prefix}$project{local_prefix}/\${libdir}/libgridsite*.so.1
+	rm -fv \${prefix}$project{local_prefix}/\${libdir}/libgridsite*.so
+	rm -fv \${prefix}$project{local_prefix}/\${libdir}/libgridsite*.a";
 		}
 		else {
-			$cmd{clean} = 'None';
-			$cmd{packaging} = "echo building nothing, org.gridsite.core make rpm step will create this";
-			$cmd{checkout} = "mkdir -v \${moduleName} 2>/dev/null || true";
+			$cmd{default}{clean} = 'None';
+			$cmd{default}{packaging} = "echo building nothing, org.gridsite.core make rpm step will create this";
+			$cmd_vcs{checkout} = "mkdir -v \${moduleName} 2>/dev/null || true";
 		}
 	}
 	elsif ($subsys eq 'px' and $module eq 'myproxy-config') {
-		$cmd{configure} = "/usr/bin/perl $confdir/configure --root=\${prefix} --prefix= --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
-		$cmd{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
+		$cmd{default}{configure} = "/usr/bin/perl $confdir/configure --root=\${prefix} --prefix= --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{default}{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 	}
 	else {
-		$cmd{configure} = "/usr/bin/perl $confdir/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
-		$cmd{compile} = 'make';
-		$cmd{test} = 'make check';
-		$cmd{install} = 'make install';
+		$cmd{default}{configure} = "/usr/bin/perl $confdir/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+		$cmd{default}{compile} = 'make';
+		$cmd{default}{test} = 'make check';
+		$cmd{default}{install} = 'make install';
+		if ($subsys eq 'lb' and $module eq 'client') {
+			$cmd{default}{compile} = "make rpath=$project{local_prefix}/\${libdir}";
+			$cmd{default}{install} = "make install post-install rpath=$project{local_prefix}/\${libdir}";
+		}
 	}
 
 	my $defprops = '';
@@ -1149,32 +1382,37 @@ $dwpath
 [Platform-default:VcsCommand]
 displayName = None
 description = None
-tag = $cmd{tag}
+tag = $cmd_vcs{tag}
 branch = None
 commit = None
-checkout = $cmd{checkout}
+checkout = $cmd_vcs{checkout}
 
-[Platform-default:BuildCommand]
+};
+
+	for my $p (keys %cmd) {
+		next if $p ne 'default' and exists $project{supported_platforms} and not exists $project{supported_platforms}{$p};
+
+		print C qq{[Platform-$p:BuildCommand]
 postpublish = None
-packaging = $cmd{packaging}
+packaging = $cmd{$p}{packaging}
 displayName = None
 description = None
 doc = None
 prepublish = None
 publish = None
-compile = $cmd{compile}
-init = None
-install = $cmd{install}
-clean = $cmd{clean}
-test = $cmd{test}
-configure = $cmd{configure}
+compile = $cmd{$p}{compile}
+init = $cmd{$p}{init}
+install = $cmd{$p}{install}
+clean = $cmd{$p}{clean}
+test = $cmd{$p}{test}
+configure = $cmd{$p}{configure}
 checkstyle = None
 
-[Platform-default:Property]
+};
+	}
+
+	print C qq{[Platform-default:Property]
 $buildroot
-aprSuffix = 0
-package.RPMSLocation = \${moduleDir}/$cvs_prefix{$subsys}.$subsys.$module/RPMTMP/RPMS
-package.SRPMSLocation = \${moduleDir}/$cvs_prefix{$subsys}.$subsys.$module/RPMTMP/SRPMS
 package.preserve.libtool = false
 $package_description$package_summary$defprops};
 
@@ -1182,6 +1420,13 @@ $package_description$package_summary$defprops};
 		print C "package.obsoletes = $_\n";
 		print C "package.replaces = $_\n";
 	}
+	for (@{$conflicts{"$subsys.$module"}}) {
+		print C "package.conflicts = $_\n";
+	}
+	for (@{$provides{"$subsys.$module"}}) {
+		print C "package.provides = $_\n";
+	}
+	print C "\n";
 
 	for my $pp (keys %{$platform_properties{"$subsys.$module"}}) {
 		next if $pp eq 'default';
@@ -1192,41 +1437,68 @@ $package_description$package_summary$defprops};
 		for my $p (keys %{$platform_properties{"$subsys.$module"}->{$pp}}) {
 			print C $p . ' = ' . $platform_properties{"$subsys.$module"}->{$pp}->{$p} . "\n";
 		}
-		print C "package.RPMSLocation = \${moduleDir}/$cvs_prefix{$subsys}.$subsys.$module/RPMTMP/RPMS
-package.SRPMSLocation = \${moduleDir}/$cvs_prefix{$subsys}.$subsys.$module/RPMTMP/SRPMS\n";
 		print C "$package_description$package_summary\n";
 	}
 
-	print C qq{
-[Platform-default:DynamicDependency]
-};
-	for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
-		my $eext = $etics_externs{$_} ? $etics_externs{$_} : $_;
-		my $edev = $project{etics_externs_devel}{$_};
-		next if ($eext eq '-');
+	for my $platform ('default', keys %{$project{supported_platforms}}) {
+		my $used = 0;
+		my $output = '';
 
-		my $proj = 'externals';
-		for my $p (keys %etics_projects) {
-			for $m (@{$etics_projects{$p}}) {
-				$proj = $p if $m eq $_;
+		for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
+			my $eext = $etics_externs{$platform}{$_};
+			my $edev = $project{etics_externs_devel}{$platform}{$_};
+
+			# for the default platform using package of the same
+			# name for runtime dependency
+			if (not $eext) {
+				if ($platform eq 'default') {
+#print "default runtime $_ on default\n";
+					$eext = $_; }
+				else {
+#print "no runtime $_ on $platform\n";
+					$eext = '-'; }
+			}
+			if ($eext eq '-' and $edev eq '-') {
+#print "skipping $_ on $platform\n";
+				next;
+			}
+
+			my $proj = 'externals';
+			for my $p (keys %etics_projects) {
+				for $m (@{$etics_projects{$p}}) {
+					$proj = $p if $m eq $_;
+				}
+			}
+
+			my $type = $need_externs_type{"$subsys.$module"}->{$_};
+
+			if ($edev) {
+				if ($type eq 'B') {
+					# no runtime - change to devel pkg
+					$eext = $edev;
+				} elsif ($type eq 'BR' or $type eq 'RB') {
+					# additional devel pkg
+					if ($edev ne '-') { $output .= "$proj|$edev = B\n"; }
+				}
+			}
+			if ($eext ne '-') { $output .= "$proj|$eext = $type\n"; }
+		}
+
+		if ($platform eq 'default') {
+			for (@{$deps{"$subsys.$module"}}) {
+				my $type = $deps_type{"$subsys.$module"}->{$_};
+				if (not $used) {
+					$used = 1;
+				}
+				$output .= "$project{etics_name}|$project{etics_name}.$_ = $type\n";
 			}
 		}
 
-		my $type = $need_externs_type{"$subsys.$module"}->{$_};
-
-		if ($edev) {
-			if ($type eq 'B') {
-				$eext = $edev; # no runtime - change to devel pkg
-			} elsif ($type eq 'BR' or $type eq 'RB') {
-				print C "$proj|$edev = B\n"; # additional devel pkg
-			}
+		if ($output) {
+					print C qq{
+[Platform-$platform:DynamicDependency]
+$output};
 		}
-		print C "$proj|$eext = $type\n";
-	}
-
-	for (@{$deps{"$subsys.$module"}}) {
-		my $type = $deps_type{"$subsys.$module"}->{$_};
-		print C "$project{etics_name}|$project{etics_name}.$_ = $type\n";
 	}
 
 	close C;
@@ -1297,6 +1569,62 @@ sub getlibdir {
         return $libdir;
 }
 
+sub reshuffle_platforms($$) {
+	my ($data, $platforms) = @_;
+	my ($platform, %blacklist, $value);
+
+	return if not $platforms;
+
+	for $platform (keys %$data) {
+#print "plat: $platform: $data->{$platform}\n";
+		next if $platform eq 'default';
+		for $_ (keys %{$data->{$platform}}) {
+#print "  blacklist: $_ = $data->{$platform}{$_}\n";
+			$blacklist{$_} = 1;
+		}
+	}
+
+	for $_ (keys %blacklist) {
+		$value = $data->{default}{$_} ? $data->{default}{$_} : $_;
+		for $platform (keys %$platforms) {
+			next if $platform eq 'default';
+			if (not defined $data->{$platform}{$_}) {
+				$data->{$platform}{$_} = $value;
+#print "added $value to $platform\n"
+			}
+		}
+		$data->{default}{$_} = '-';
+#print "deleted $_ from default\n";
+	}
+
+	# merge dependencies across the supported platforms
+	%blacklist = [];
+	for $platform (keys %$platforms) {
+		next if $platform eq 'default';
+		for $_ (keys %{$data->{$platform}}) {
+			$blacklist{$_} = 1;
+		}
+	}
+	for $_ (keys %blacklist) {
+		$value = undef;
+		$same = 1;
+		for $platform (keys %$platforms) {
+			if (not $value) { $value = $data->{$platform}{$_}; }
+			if (not $data->{$platform}{$_} or $value ne $data->{$platform}{$_}) {
+				$same = 0;
+				last;
+			}
+		}
+		if ($same and $value) {
+#print "merged dependency $_\n";
+			$data->{default}{$_} = $value;
+			for $platform (keys %$platforms) {
+				delete $data->{$platform}{$_};
+			}
+		}
+	}
+}
+
 sub usage {
 	my @ext = keys %externs;
 	my @myjars = keys %jar;
@@ -1331,6 +1659,7 @@ What to build:
   --jp-tag=tag			checkout JP modules with specific tag
   --lbjp-common-tag=tag         checkout lbjp-common modules with specific tag
   --jobid-tag=tag		checkout jobid modules with specific tag
+  --canl-tag=tag		checkout canl modules with specific tag
 
 Dependencies (summary of what will be used is always printed):
   --with-EXTERNAL=PATH		where to look for an external [autodetect]

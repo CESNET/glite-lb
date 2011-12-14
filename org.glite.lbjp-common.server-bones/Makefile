@@ -3,7 +3,7 @@ top_srcdir=..
 stagedir=.
 globalprefix=glite
 lbutilsprefix=lbu
-package=glite-lb-server-bones
+package=glite-lbjp-common-server-bones
 version=0.0.1
 PREFIX=/opt/glite
 prefix=
@@ -70,15 +70,15 @@ ${LTLIB}: ${LOBJS}
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
-check:
-	-echo "No unit tests so far."
+check: example
+	LOG4C_RCPATH=${PREFIX}${sysconfdir}/glite-lb ${top_srcdir}/examples/run_test.sh
 
 example: srv_example cnt_example
 
-srv_example: srv_example.o
+srv_example: srv_example.o ${LTLIB}
 	${LINK} -o $@ ${LTLIB} srv_example.o
 
-cnt_example: cnt_example.o
+cnt_example: cnt_example.o ${LTLIB}
 	${LINK} -o $@ cnt_example.o
 
 doc:
@@ -92,7 +92,9 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* srv_example cnt_example
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 
-%.o: %.c
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
+
+%.o %.lo: %.c
 	${COMPILE} -c $<

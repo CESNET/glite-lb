@@ -222,8 +222,8 @@ olddoc: generate events.tex status.tex
 
 install: 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples
-	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 #	cp -r C CPP ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
@@ -239,7 +239,9 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

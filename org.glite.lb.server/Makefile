@@ -247,6 +247,9 @@ EXAMPLES=
 
 TESTS=test_coverage test_xml test_query_events test_soap_conv
 
+SCRIPTS=startup glite-lb-server-purge.cron glite-lb-proxy-purge.cron
+SCRIPTS_SRC=$(addprefix ${top_srcdir}/config/,${SCRIPTS})
+
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
 	${LINKXX} -o $@ ${BKSERVER_OBJS} ${BKSERVER_LIBS} -Wl,--export-dynamic
 
@@ -256,17 +259,16 @@ glite-lb-bkindex: ${INDEX_OBJS}
 glite-lb-mon-db: ${MONDB_OBJS}
 	${LINKXX} -o $@ ${MONDB_OBJS} ${MONDB_LIBS}
 
-compile: generate startup glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${MAN_GZ}
+compile: generate ${SCRIPTS} glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${MAN_GZ}
 
 generate: store.c index.c 
 
-startup: ${top_srcdir}/config/startup
+${SCRIPTS}: ${SCRIPTS_SRC}
 	glite_var="${localstatedir}/glite"; \
 	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
 		glite_var="${localstatedir}"; \
 	fi; \
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $< > $@
-	chmod +x $@
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" ${top_srcdir}/config/$@ > $@
 
 check: compile test.xml test.query
 	-echo check.query not complete yet
@@ -344,9 +346,11 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb ${DESTDIR}${PREFIX}${sysconfdir}/init.d
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
+	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d
+	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
@@ -364,6 +368,10 @@ install:
 	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
+	${INSTALL} -m 644 glite-lb-server-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-server-purge
+	${INSTALL} -m 644 glite-lb-proxy-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-proxy-purge
+	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-purge.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-purge
+	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-lcas.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-lcas
 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix})
@@ -376,8 +384,11 @@ ifdef LB_PERF
 endif
 
 clean:
-	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} startup
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+	rm -rvf *.c *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} ${SCRIPTS}
+	rm -rvf test_xml.cpp
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 %.c: %.c.T
 	rm -f $@

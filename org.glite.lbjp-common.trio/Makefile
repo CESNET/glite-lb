@@ -5,7 +5,7 @@ top_builddir=${top_srcdir}/${builddir}
 stagedir=.
 distdir=.
 globalprefix=glite
-package=glite-lb-utils-trio
+package=glite-lbjp-common-trio
 version=0.0.0
 PREFIX=/opt/glite
 lbuprefix=lbu
@@ -109,7 +109,9 @@ install: all
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
 	rm -vf trio_test
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
+
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

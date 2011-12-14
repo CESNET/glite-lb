@@ -48,6 +48,89 @@ static char *cream_states[EDG_WLL_NUMBER_OF_CREAM_STATES];
 #define rep(a,b) { free(a); a = (b == NULL) ? NULL : strdup(b); }
 #define rep_cond(a,b) { if (b) { free(a); a = strdup(b); } }
 
+int processData_Cream(intJobStat *js, edg_wll_Event *e)
+{
+	int			res = RET_OK;
+
+	switch (e->any.type) {
+		case EDG_WLL_EVENT_REGJOB:
+			if (USABLE_DATA(res)) {
+				rep_cond(js->pub.cream_owner, js->pub.owner);
+				rep_cond(js->pub.jdl, e->regJob.jdl);
+				rep_cond(js->pub.cream_jdl, e->regJob.jdl);
+				rep_cond(js->pub.cream_endpoint, e->regJob.ns);
+				rep_cond(js->pub.destination, e->regJob.ns);
+				rep_cond(js->pub.network_server, e->regJob.ns);
+			}
+			break;
+		case EDG_WLL_EVENT_CREAMSTART:
+			// nothing to be done
+			break;
+		case EDG_WLL_EVENT_CREAMPURGE:
+			// no state transition
+			break;
+		case EDG_WLL_EVENT_CREAMACCEPTED:
+			if (USABLE(res)){
+				rep(js->pub.cream_id, e->CREAMAccepted.local_jobid);
+				rep(js->pub.globusId, e->CREAMAccepted.local_jobid);
+			}
+			break;
+		case EDG_WLL_EVENT_CREAMSTATUS:
+			if (USABLE(res) && e->CREAMStatus.result == EDG_WLL_CREAMSTATUS_DONE)
+			{
+				if (e->CREAMStatus.exit_code && strcmp(e->CREAMStatus.exit_code, "N/A"))
+				{
+					js->pub.cream_exit_code = atoi(e->CREAMStatus.exit_code);
+					js->pub.exit_code = atoi(e->CREAMStatus.exit_code);
+				}
+				if (e->CREAMStatus.worker_node){ /*XXX should never be false */
+					if (js->pub.cream_node) 
+						free(js->pub.cream_node);
+					js->pub.cream_node = strdup(e->CREAMStatus.worker_node);
+					if (js->pub.ce_node)
+						free(js->pub.ce_node);
+					js->pub.ce_node = strdup(e->CREAMStatus.worker_node);
+				}
+				if (e->CREAMStatus.LRMS_jobid){ /*XXX should never be false */
+					if (js->pub.cream_lrms_id) 
+						free(js->pub.cream_lrms_id);
+					js->pub.cream_lrms_id = strdup(e->CREAMStatus.LRMS_jobid);
+					if (js->pub.localId)
+						free(js->pub.localId);
+					js->pub.localId = strdup(e->CREAMStatus.LRMS_jobid);
+				}
+				if (e->CREAMStatus.failure_reason){
+					if (js->pub.cream_failure_reason) 
+						free(js->pub.cream_failure_reason);
+					js->pub.cream_failure_reason = strdup(e->CREAMStatus.failure_reason);
+					if (js->pub.failure_reasons){
+						char *glued_reasons;
+						asprintf(&glued_reasons,"%s\n", e->CREAMStatus.failure_reason);
+						rep(js->pub.failure_reasons, glued_reasons);
+					}
+					else 
+						asprintf(&(js->pub.failure_reasons),"%s", e->CREAMStatus.failure_reason);
+				}
+			}
+			break;
+
+		case EDG_WLL_EVENT_USERTAG:
+			if (USABLE_DATA(res)) {
+				if (e->userTag.name != NULL && e->userTag.value != NULL) {
+					add_taglist(e->userTag.name, e->userTag.value, e->any.seqcode, js);
+				}
+			}
+			break;
+
+		default:
+			break;
+	}
+
+	if (! js->pub.location) js->pub.location = strdup("this is CREAM");
+
+	return RET_OK;
+}
+
 int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
 	edg_wll_JobStatCode     old_state = js->pub.state;
@@ -71,14 +154,6 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 				js->pub.state = EDG_WLL_JOB_SUBMITTED;
 				js->pub.cream_state = EDG_WLL_STAT_REGISTERED;
 			}
-			if (USABLE_DATA(res)) {
-				rep_cond(js->pub.cream_owner, js->pub.owner);
-				rep_cond(js->pub.jdl, e->regJob.jdl);
-				rep_cond(js->pub.cream_jdl, e->regJob.jdl);
-				rep_cond(js->pub.cream_endpoint, e->regJob.ns);
-				rep_cond(js->pub.destination, e->regJob.ns);
-				rep_cond(js->pub.network_server, e->regJob.ns);
-			}
 			break;
 		case EDG_WLL_EVENT_CREAMSTART:
 			// nothing to be done
@@ -87,10 +162,6 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 			// no state transition
 			break;
 		case EDG_WLL_EVENT_CREAMACCEPTED:
-			if (USABLE(res)){
-				rep(js->pub.cream_id, e->CREAMAccepted.local_jobid);
-				rep(js->pub.globusId, e->CREAMAccepted.local_jobid);
-			}
 			break;
 		case EDG_WLL_EVENT_CREAMSTORE:
 			if (USABLE(res)) {
@@ -206,48 +277,10 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 						break;
 					case EDG_WLL_STAT_ABORTED: js->pub.state = EDG_WLL_JOB_ABORTED; break;
 				}
-				if (e->CREAMStatus.exit_code && strcmp(e->CREAMStatus.exit_code, "N/A"))
-				{
-					js->pub.cream_exit_code = atoi(e->CREAMStatus.exit_code);
-					js->pub.exit_code = atoi(e->CREAMStatus.exit_code);
-				}
-				if (e->CREAMStatus.worker_node){ /*XXX should never be false */
-					if (js->pub.cream_node) 
-						free(js->pub.cream_node);
-					js->pub.cream_node = strdup(e->CREAMStatus.worker_node);
-					if (js->pub.ce_node)
-						free(js->pub.ce_node);
-					js->pub.ce_node = strdup(e->CREAMStatus.worker_node);
-				}
-				if (e->CREAMStatus.LRMS_jobid){ /*XXX should never be false */
-					if (js->pub.cream_lrms_id) 
-						free(js->pub.cream_lrms_id);
-					js->pub.cream_lrms_id = strdup(e->CREAMStatus.LRMS_jobid);
-					if (js->pub.localId)
-						free(js->pub.localId);
-					js->pub.localId = strdup(e->CREAMStatus.LRMS_jobid);
-				}
-				if (e->CREAMStatus.failure_reason){
-					if (js->pub.cream_failure_reason) 
-						free(js->pub.cream_failure_reason);
-					js->pub.cream_failure_reason = strdup(e->CREAMStatus.failure_reason);
-					if (js->pub.failure_reasons){
-						char *glued_reasons;
-						asprintf(&glued_reasons,"%s\n", e->CREAMStatus.failure_reason);
-						rep(js->pub.failure_reasons, glued_reasons);
-					}
-					else 
-						asprintf(&(js->pub.failure_reasons),"%s", e->CREAMStatus.failure_reason);
-				}
 			}
 			break;
 
 		case EDG_WLL_EVENT_USERTAG:
-			if (USABLE_DATA(res)) {
-				if (e->userTag.name != NULL && e->userTag.value != NULL) {
-					add_taglist(e->userTag.name, e->userTag.value, e->any.seqcode, js);
-				}
-			}
 			break;
 
 		default:
@@ -266,6 +299,7 @@ int processEvent_Cream(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict,
 	}
 	if (! js->pub.location) js->pub.location = strdup("this is CREAM");
 
+	processData_Cream(js, e);
 
 	return RET_OK;
 }

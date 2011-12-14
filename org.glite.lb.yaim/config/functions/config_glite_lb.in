@@ -1,5 +1,5 @@
 function config_glite_lb_check(){
-  requires $1 MYSQL_PASSWORD INSTALL_ROOT GLITE_LOCATION GLITE_LB_LOCATION GLITE_LB_LOCATION_ETC GLITE_LB_LOCATION_VAR GLITE_USER
+  requires $1 MYSQL_PASSWORD INSTALL_ROOT GLITE_LOCATION
 }
 
 # check directory existence first
@@ -21,27 +21,28 @@ function config_glite_lb_libs_append() {
 
 function config_glite_lb_setenv(){
 
-  yaimgridenv_set GLITE_USER ${GLITE_USER:-glite}
+  # Redefine GLITE_USER to value used in packages
+  yaimgridenv_set GLITE_USER glite
   # Redefine GLITE_HOME_DIR to make sure we retrieve the correct HOME directory of user glite
   GLITE_HOME_DIR=`getent passwd ${GLITE_USER} | cut -d: -f6`
   if [ "x${GLITE_HOME_DIR}" = "x" ]; then
     yaimlog ERROR "The home directory of ${GLITE_USER} doesn't exist. Check whether the user ${GLITE_USER} was properly created"
     exit ${YEX_NOSUCHFILE}
   fi
-  yaimgridenv_set GLITE_WMS_QUERY_TIMEOUT "${GLITE_WMS_QUERY_TIMEOUT}"
+  yaimgridenv_set GLITE_WMS_QUERY_TIMEOUT "${GLITE_WMS_QUERY_TIMEOUT:-300}"
   yaimgridenv_set GLITE_HOST_CERT ${GLITE_HOME_DIR:-/home/glite}/.certs/hostcert.pem
   yaimgridenv_set GLITE_HOST_KEY ${GLITE_HOME_DIR:-/home/glite}/.certs/hostkey.pem
-  yaimgridenv_set X509_CERT_DIR "${X509_CERT_DIR}"
-  yaimgridenv_set X509_VOMS_DIR "${X509_VOMS_DIR}"
+  yaimgridenv_set X509_CERT_DIR "${X509_CERT_DIR:-/etc/grid-security/certificates}"
+  yaimgridenv_set X509_VOMS_DIR "${X509_VOMS_DIR:-/etc/grid-security/vomsdir}"
 
   yaimgridenv_set GLITE_LB_EXPORT_ENABLED ${GLITE_LB_EXPORT_ENABLED:-false}
-  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS}"
+  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 15d --cancelled 15d --other 60d}"
   yaimgridenv_set GLITE_LB_EXPORT_JPPS ${GLITE_LB_EXPORT_JPPS:-}
 
-  yaimgridenv_set GLITE_LB_LOCATION "${GLITE_LB_LOCATION}"
-  yaimgridenv_set GLITE_LB_LOCATION_ETC "${GLITE_LB_LOCATION_ETC}"
-  yaimgridenv_set GLITE_LB_LOCATION_VAR "${GLITE_LB_LOCATION_VAR}"
-  yaimgridenv_set GLITE_JP_LOCATION "${GLITE_JP_LOCATION}"
+  yaimgridenv_set GLITE_LB_LOCATION "${GLITE_LB_LOCATION:-@glite_prefix@}"
+  yaimgridenv_set GLITE_LB_LOCATION_ETC "${GLITE_LB_LOCATION_ETC:-@glite_etc@}"
+  yaimgridenv_set GLITE_LB_LOCATION_VAR "${GLITE_LB_LOCATION_VAR:-@glite_var@}"
+  yaimgridenv_set GLITE_JP_LOCATION "${GLITE_JP_LOCATION:-}"
 
   yaimgridenv_set GLITE_LB_SERVER_OTHER_OPTIONS "${GLITE_LB_SERVER_OTHER_OPTIONS}"
   yaimgridenv_set GLITE_LB_NOTIF_IL_OTHER_OPTIONS "${GLITE_LB_NOTIF_IL_OTHER_OPTIONS}"
@@ -97,6 +98,25 @@ function config_glite_lb_setenv(){
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/apr-dev
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/aprutil-dev
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/activemq-cpp-library
+
+  GLITE_LB_RTM_ENABLED="${GLITE_LB_RTM_ENABLED:-false}"
+  GLITE_LB_MSG_BROKER="${GLITE_LB_MSG_BROKER:-true}"
+  GLITE_LB_MSG_NETWORK="${GLITE_LB_MSG_NETWORK:-PROD}"
+  LCG_GFAL_INFOSYS="${LCG_GFAL_INFOSYS:-lcg-bdii.cern.ch:2170}"
+
+  #GLITE_LB_SUPER_USERS="${GLITE_LB_SUPER_USERS:-}"
+  #GLITE_LB_WMS_DN="${GLITE_LB_WMS_DN:-}"
+  GLITE_LB_RTM_DN="${GLITE_LB_RTM_DN:-/C=UK/O=eScience/OU=Imperial/L=Physics/CN=heppc24.hep.ph.ic.ac.uk/Email=janusz.martyniak@imperial.ac.uk}"
+  #GLITE_LB_AUTHZ_ADMIN_ACCESS="${GLITE_LB_AUTHZ_ADMIN_ACCESS:-}"
+  #GLITE_LB_AUTHZ_READ_ALL="${GLITE_LB_AUTHZ_READ_ALL:-}"
+  #GLITE_LB_AUTHZ_READ_PURGE="${GLITE_LB_AUTHZ_READ_PURGE:-}"
+  #GLITE_LB_AUTHZ_STATUS_FOR_MONITORING="${GLITE_LB_AUTHZ_STATUS_FOR_MONITORING:-}"
+  #GLITE_LB_AUTHZ_GET_STATISTICS="${GLITE_LB_AUTHZ_GET_STATISTICS:-}"
+  #GLITE_LB_AUTHZ_GRANT_OWNERSHIP="${GLITE_LB_AUTHZ_GRANT_OWNERSHIP:-}"
+  GLITE_LB_AUTHZ_REGISTER_JOBS="${GLITE_LB_AUTHZ_REGISTER_JOBS:-.*}"
+  GLITE_LB_AUTHZ_LOG_WMS_EVENTS="${GLITE_LB_AUTHZ_LOG_WMS_EVENTS:-.*}"
+  GLITE_LB_AUTHZ_LOG_CE_EVENTS="${GLITE_LB_AUTHZ_LOG_CE_EVENTS:-.*}"
+  GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS="${GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS:-.*}"
 }
 
 function config_glite_lb_authz() {
@@ -172,15 +192,6 @@ function config_glite_lb() {
   # More strict check of GLITE_LB_EXPORT_JPPS variable only here.
   if [ x"$GLITE_LB_EXPORT_ENABLED" = x"true" -a -z "$GLITE_LB_EXPORT_JPPS" ]; then
     yaimlog ABORT "Job Provenance Primary Storage for export not set! (GLITE_LB_EXPORT_JPPS)"
-    return 1
-  fi
-
-  LB_PURGE="$GLITE_LB_LOCATION/bin/glite-lb-purge"
-  if [ ! -x "$LB_PURGE" ]; then
-    LB_PURGE="$GLITE_LB_LOCATION/sbin/glite-lb-purge"
-  fi
-  if [ ! -x "$LB_PURGE" ]; then
-    yaimlog ABORT "Purge utility not found! Install glite-lb-utils (or glite-lb-client in older version)"
     return 1
   fi
 
@@ -285,11 +296,6 @@ EOF
   fi
   rm -f /var/tmp/glite-lb-bkindexes.txt
 
-  mkdir -p $GLITE_LB_LOCATION_VAR   # Needed to store PID of LB server 
-
-  chown $GLITE_USER:$GLITE_USER $GLITE_LB_LOCATION_VAR
-  chmod 0755 $GLITE_LB_LOCATION_VAR
-
   mkdir -p $GLITE_HOME_DIR/.certs
   chown $GLITE_USER:$GLITE_USER $GLITE_HOME_DIR/.certs
   chmod 0755 $GLITE_HOME_DIR/.certs
@@ -303,32 +309,6 @@ EOF
   chmod 0644 $GLITE_HOME_DIR/.certs/hostcert.pem
   chmod 0400 $GLITE_HOME_DIR/.certs/hostkey.pem
 
-  # Create cron for purging
-  mkdir -p /var/log/glite
-  chown $GLITE_USER:$GLITE_USER /var/log/glite
-  logfile=/var/log/glite/glite-lb-purger.log
-  if $LB_PURGE --help 2>&1 | grep 'target-runtime' > /dev/null; then
-    purge_target_runtime_cmd='export GLITE_LB_PURGE_TARGET_RUNTIME=84600s; '
-  fi
-  cat << EOF > /etc/cron.d/glite-lb-purge.cron
-HOME=/
-MAILTO=$SITE_EMAIL
-
-1 1 * * * $GLITE_USER . @glite_etc@/profile.d/grid-env.sh ; export GLITE_LB_EXPORT_BKSERVER=$HOSTNAME; $purge_target_runtime_cmd$GLITE_LB_LOCATION/sbin/glite-lb-export.sh >> $logfile 2>&1
-EOF
-
-  touch $logfile
-  chown $GLITE_USER:$GLITE_USER $logfile
-
-  cat > /etc/logrotate.d/lb-purger <<EOF
-$logfile {
-    weekly
-    compress
-    rotate 4
-    missingok
-}
-EOF
-
   # LCAS plugin
   # config file
   lcas_libarch=lib
@@ -339,18 +319,6 @@ EOF
   fi
   lcas_plugin="$GLITE_LB_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
   echo "pluginname=\"$lcas_plugin\"" > ${GLITE_LB_LOCATION_ETC}/glite-lb/lcas.db
-  # log file
-  logfile=/var/log/glite/glite-lb-lcas.log
-  touch $logfile
-  chown $GLITE_USER:$GLITE_USER $logfile
-  cat > /etc/logrotate.d/lb-lcas <<EOF
-$logfile {
-    daily
-    compress
-    rotate 4
-    missingok
-}
-EOF
 
   # MSG publish
   if [ "$GLITE_LB_MSG_BROKER" = 'false' ]; then
@@ -390,6 +358,9 @@ EOF
   if [ ! -f ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf ]; then
     echo $HOSTNAME > ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf
   fi
+
+  # upgrade from L&B <= 3.1.1
+  rm -fv /etc/cron.d/glite-lb-purge.cron /etc/logrotate.d/lb-purger /etc/logrotate.d/lb-lcas
 
   . @glite_etc@/profile.d/grid-env.sh
   ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd restart

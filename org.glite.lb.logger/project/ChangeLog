@@ -174,3 +174,7 @@
 2.2.6-1
 - Further globus signal handler fixes
 
+2.2.7-1
+- LSB-compliant init scripts
+- interlogger now reports edg_wll_gss_watch_creds failures (SB 84694)
+

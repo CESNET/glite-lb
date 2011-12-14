@@ -78,7 +78,9 @@ install:
 
 clean:
 	rm -rvf LBUG* LBAG* LBDG* LBTP* events.tex status.tex ver.tex comment*
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 
 # dependencies:
@@ -132,4 +134,4 @@ LBTG.pdf: ${COMMON} \
 	LBTG-Abstract.tex \
 	LBAG-Troubleshooting.tex
 
-.PHONY: all clean doc
+.PHONY: default all generate doc stage check install clean distclean doc

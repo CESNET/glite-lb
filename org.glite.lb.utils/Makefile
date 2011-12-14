@@ -120,7 +120,9 @@ install:
 
 clean:
 	rm -rfv ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ} *.lo *.o .libs/
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 %.o: %.c
 	${COMPILE} -c $<
