@@ -322,3 +322,8 @@
 - Fix crash in web services on empty classads
 - Fix classads (in job status structure) when using in web services
 
+2.3.0-1
+- Preparation for a new multiplatform release
+- Extended support for Torque Jobs
+- Support for packing Job History with L&B notification
+
