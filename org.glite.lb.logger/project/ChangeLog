@@ -178,3 +178,6 @@
 - LSB-compliant init scripts
 - interlogger now reports edg_wll_gss_watch_creds failures (SB 84694)
 
+2.3.0-1
+- Preparation for a new multiplatform release
+
