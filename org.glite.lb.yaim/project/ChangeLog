@@ -82,3 +82,6 @@
 - Prepend purger logging output with Common Logging Format niceties (SB #88502)
 - Workaround SB #85209 for glite-info-provider-service <= 1.7.0.
 
+4.4.0-1
+- Preparation for a new multiplatform release
+
