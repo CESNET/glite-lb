@@ -78,3 +78,6 @@
 1.1.7-1
 - Build on Debian 6 and SL 6
 
+1.2.0-1
+- Preparation for a new multiplatform release
+
