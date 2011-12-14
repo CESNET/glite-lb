@@ -32,3 +32,6 @@
 1.0.7-1
 - Support build with gcc 4.4.4 (SL6)
 
+1.1.0-1
+- Preparation for a new multiplatform release
+
