@@ -76,3 +76,7 @@
 2.1.4-1
 - Quit parent process silently on background purge (improvement for SB #77974).
 
+2.2.0-1
+- Preparation for a new multiplatform release
+- Decrease the priority of the message about ended slave to stop scaring caring admins (SB #81369)
+
