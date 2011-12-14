@@ -147,3 +147,7 @@
 - New FAQ entry (Duplicate entry ... for key 1)
 - Architecture images updated - MSG added into the notification part
 
+1.3.0-1
+- Preparation for a new multiplatform release
+- Portable syntax of test condition in install commands.
+
