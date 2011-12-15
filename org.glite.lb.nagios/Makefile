@@ -10,6 +10,8 @@ INSTALL=install
 
 version=${module.version}
 
+all:
+
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/var/lib/grid-monitoring/emi.lb
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
@@ -26,5 +28,8 @@ check:
 	@echo "No test"
 
 clean:
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 .PHONY: all install stage clean check

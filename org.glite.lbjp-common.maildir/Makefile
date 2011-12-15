@@ -87,7 +87,6 @@ stage: compile
 
 install: all
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 	${INSTALL} -m 755 "libglite_lbu_maildir.la" "${DESTDIR}${PREFIX}${prefix}/${libdir}/libglite_lbu_maildir.la"; \
 	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
