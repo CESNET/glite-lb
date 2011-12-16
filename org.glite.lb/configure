@@ -297,8 +297,8 @@ if ($listmodules) {
 	exit 0;
 }
 
-warn "$0: --version, --branch and --output make sense only in --mode=etics\n"
-	if ($version || $output || $branch) && $mode ne 'etics';
+warn "$0: --branch and --output make sense only in --mode=etics\n"
+	if ($output || $branch) && $mode ne 'etics';
 
 my $en;
 for (keys %enable_nodes) { $en = 1 if $enable_nodes{$_}; }
@@ -1360,7 +1360,9 @@ sub mode_etics {
 		$conf = "$confprefix${subsys}-${module}_$branch"; 
 		$conftag = $branch;
 		# forced low age number
-		$age = $branch eq 'HEAD' ? '0head' : '0dev'; }
+		$age = $branch eq 'HEAD' ? '0head' : '0dev';
+		push @copts, '--version ${version}-${age}';
+	}
 	else {
 		$conf = "$confprefix$subsys-${module}_R_${major}_${minor}_${rev}_${age}"; 
 
