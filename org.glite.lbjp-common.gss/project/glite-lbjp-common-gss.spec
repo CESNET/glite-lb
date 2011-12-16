@@ -35,6 +35,7 @@ Group: System Environment/Libraries
 Summary: Development files for gLite GSS library
 Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
+Requires: globus-gssapi-gsi-devel
 Provides: %{name}%{?_isa} = %{version}-%{release}
 Provides: glite-security-gss
 Obsoletes: glite-security-gss < 2.1.5-1
