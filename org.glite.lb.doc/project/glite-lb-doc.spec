@@ -23,7 +23,7 @@ Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.doc/%{versi
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module lb.types
+/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module lb.doc
 make
 
 
