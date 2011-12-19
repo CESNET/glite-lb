@@ -60,10 +60,6 @@ exit 0
 
 %post
 /sbin/chkconfig --add glite-lb-locallogger
-if [ $1 -eq 1 ] ; then
-	# XXX: or rather to detect finalized set-up in the start-up scripts?
-	/sbin/chkconfig glite-lb-locallogger off
-fi
 
 
 %preun
@@ -75,7 +71,7 @@ fi
 
 %postun
 if [ "$1" -ge "1" ] ; then
-    /sbin/service glite-lb-locallogger restart >/dev/null 2>&1 || :
+    /sbin/service glite-lb-locallogger condrestart >/dev/null 2>&1 || :
 fi
 
 

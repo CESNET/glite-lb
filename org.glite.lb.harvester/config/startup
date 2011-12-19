@@ -197,6 +197,10 @@ case x$1 in
 	xrestart|xforce-reload) stop; start;;
 	xstatus) status;;
 	xcleanup) cleanup;;
+	xcondrestart|xtry-restart)
+		status >/dev/null 2>&1 || exit 0
+		stop; start
+		;;
 	x*)	echo usage: $0 start,stop,restart,status,cleanup >&2
 		exit 1;;
 esac

@@ -102,7 +102,7 @@ fi
 
 %postun
 if [ "$1" -ge "1" ] ; then
-    /sbin/service glite-lb-bkserverd restart >/dev/null 2>&1 || :
+    /sbin/service glite-lb-bkserverd condrestart >/dev/null 2>&1 || :
 fi
 
 

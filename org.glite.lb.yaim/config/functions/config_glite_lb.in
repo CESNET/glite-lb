@@ -339,14 +339,11 @@ EOF
     fi
   fi
 
-  # Start services
-  if [ ! -f @glite_etc@/gLiteservices ] ; then
-    touch @glite_etc@/gLiteservices
-  fi
-
-  grep glite-lb-bkserverd @glite_etc@/gLiteservices > /dev/null
-  if [ ! $? = 0 ] ; then
-    echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd" >> @glite_etc@/gLiteservices
+  # upgrade from L&B <= 3.1.1
+  # (legacy start-up stuff)
+  if [ -f @glite_etc@/gLiteservice ] ; then
+    grep -v 'glite-lb-bkserverd' > /tmp/gLiteservice
+    mv /tmp/gLiteservice @glite_etc@/gLiteservice
   fi
 
   if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
