@@ -37,7 +37,7 @@ Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Requires: globus-gssapi-gsi-devel
 Provides: %{name}%{?_isa} = %{version}-%{release}
-Provides: glite-security-gss
+Provides: glite-security-gss%{?_isa} = %{version}-%{release}
 Obsoletes: glite-security-gss < 2.1.5-1
 
 

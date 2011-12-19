@@ -11,7 +11,7 @@ Requires: glite-lb-client
 Requires: glite-lb-utils
 Requires: glite-lb-ws-test
 Requires: globus-proxy-utils
-Provides: glite-lb-nagios-plugins
+Provides: glite-lb-nagios-plugins = %{name}-%{version}-%{release}
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.nagios/%{version}/src/%{name}-@VERSION@.src.tar.gz

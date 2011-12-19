@@ -682,7 +682,7 @@ for my $jar (keys %need_jars) {
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
 
-	'lbjp-common.jp-interface' => [ qw/lbjp-common.db jobid.api-c/ ],
+	'lbjp-common.jp-interface' => [ qw/lbjp-common.trio lbjp-common.db jobid.api-c/ ],
 
 	'jp.client' => [ qw/
                 jp.ws-interface

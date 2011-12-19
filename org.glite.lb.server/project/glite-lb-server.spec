@@ -40,6 +40,9 @@ BuildRequires: voms
 BuildRequires: bison
 BuildRequires: chrpath
 Requires: mysql-server
+# for upgrade from EMI-1:
+# new function glite_srvbones_daemon_listen() in 2.2.0
+Requires: libglite-lbjp-common-server-bones%{?_isa} >= 2.2.0
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
@@ -87,23 +90,19 @@ exit 0
 
 
 %post
-/sbin/chkconfig --add glite-lb-bkserver
-if [ $1 -eq 1 ] ; then
-	# XXX: or rather to detect finalized set-up in the start-up scripts?
-	/sbin/chkconfig glite-lb-bkserver off
-fi
+/sbin/chkconfig --add glite-lb-bkserverd
 
 
 %preun
 if [ $1 -eq 0 ] ; then
-    /sbin/service glite-lb-bkserver stop >/dev/null 2>&1
-    /sbin/chkconfig --del glite-lb-bkserver
+    /sbin/service glite-lb-bkserverd stop >/dev/null 2>&1
+    /sbin/chkconfig --del glite-lb-bkserverd
 fi
 
 
 %postun
 if [ "$1" -ge "1" ] ; then
-    /sbin/service glite-lb-bkserver restart >/dev/null 2>&1 || :
+    /sbin/service glite-lb-bkserverd restart >/dev/null 2>&1 || :
 fi
 
 

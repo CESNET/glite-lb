@@ -39,7 +39,7 @@ Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Requires: glite-lbjp-common-gss-devel
 Provides: %{name}%{?_isa} = %{version}-%{release}
-Provides: glite-security-gsoap-plugin
+Provides: glite-security-gsoap-plugin%{?_isa} = %{version}-%{release}
 Obsoletes: glite-security-gsoap-plugin < 2.0.1-1
 
 
