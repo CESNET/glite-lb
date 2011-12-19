@@ -1,0 +1,34 @@
+Source: glite-lbjp-common-gsoap-plugin
+Priority: extra
+Maintainer: @MAINTAINER@
+Uploaders: @UPLOADERS@
+Build-Depends: debhelper (>= 7.0.50~), chrpath, libc-ares-dev, libcppunit-dev, libglite-lbjp-common-gss-dev, libglobus-gssapi-gsi-dev, gsoap, libtool
+Standards-Version: 3.9.1
+Section: libs
+Homepage: @URL@
+DM-Upload-Allowed: yes
+@DEBIAN_VCS@
+
+Package: libglite-lbjp-common-gsoap-plugin
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: @SUMMARY@
+@DEBIAN_DESCRIPTION@
+
+Package: libglite-lbjp-common-gsoap-plugin-dev
+Section: libdevel
+Architecture: any
+Provides: glite-lbjp-common-gsoap-plugin, glite-security-gsoap-plugin
+Depends: libglite-lbjp-common-gsoap-plugin (= ${binary:Version}), ${misc:Depends}
+Description: Development files for gLite gsoap-plugin
+ This package contains development libraries and header files for gLite
+ gsoap-plugin.
+
+Package: libglite-lbjp-common-gsoap-plugin-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: libglite-lbjp-common-gsoap-plugin (= ${binary:Version}), ${misc:Depends}
+Description: gLite gsoap-plugin library debugging symbols
+ This package contains debugging symbols for gLite gsoap-plugin library.
