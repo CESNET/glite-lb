@@ -25,6 +25,8 @@ GSS library.
 %package -n lib%{name}
 Summary: @SUMMARY@
 Group: System Environment/Libraries
+Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
+Obsoletes: glite-lbjp-common-gss%{?_isa} <= 3.1.0
 
 
 %description -n lib%{name}
@@ -38,7 +40,8 @@ Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Requires: globus-gssapi-gsi-devel
 Provides: %{name}%{?_isa} = %{version}-%{release}
 Provides: glite-security-gss%{?_isa} = %{version}-%{release}
-Obsoletes: glite-security-gss < 2.1.5-1
+Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
+Obsoletes: glite-lbjp-common-gss%{?_isa} <= 3.1.0
 
 
 %description -n %{name}-devel

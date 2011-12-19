@@ -28,6 +28,7 @@ L&B/JP common DB module.
 %package -n lib%{name}
 Summary: @SUMMARY@
 Group: System Environment/Libraries
+Obsoletes: glite-lbjp-common-db%{?_isa} <= 3.1.0
 
 
 %description -n lib%{name}
@@ -39,6 +40,7 @@ Summary: Development files for gLite L&B/JP common DB module
 Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Provides: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: glite-lbjp-common-db%{?_isa} <= 3.1.0
 
 
 %description -n %{name}-devel

@@ -30,6 +30,7 @@ L&B client library.
 %package -n lib%{name}
 Summary: @SUMMARY@
 Group: System Environment/Libraries
+Obsoletes: glite-lb-client%{?_isa} <= 5.1.0
 
 
 %description -n lib%{name}
@@ -44,6 +45,7 @@ Requires: glite-lb-common-devel
 Requires: glite-jobid-api-c-devel
 Requires: glite-jobid-api-cpp-devel
 Provides: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: glite-lb-client%{?_isa} <= 5.1.0
 
 
 %description -n %{name}-devel
@@ -54,6 +56,7 @@ client library.
 %package -n %{name}-progs
 Summary: gLite L&B client programs and examples
 Group: Applications/Communications
+Obsoletes: glite-lb-client%{?_isa} <= 5.1.0
 
 
 %description -n %{name}-progs

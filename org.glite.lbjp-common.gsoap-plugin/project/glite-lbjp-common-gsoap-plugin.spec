@@ -27,6 +27,8 @@ gsoap-plugin.
 %package -n lib%{name}
 Summary: @SUMMARY@
 Group: System Environment/Libraries
+Obsoletes: glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
+Obsoletes: glite-lbjp-common-gsoap-plugin%{?_isa} <= 3.1.0
 
 
 %description -n lib%{name}
@@ -40,7 +42,8 @@ Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Requires: glite-lbjp-common-gss-devel
 Provides: %{name}%{?_isa} = %{version}-%{release}
 Provides: glite-security-gsoap-plugin%{?_isa} = %{version}-%{release}
-Obsoletes: glite-security-gsoap-plugin < 2.0.1-1
+Obsoletes: glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
+Obsoletes: glite-lbjp-common-gsoap-plugin%{?_isa} <= 3.1.0
 
 
 %description -n %{name}-devel

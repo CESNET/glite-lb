@@ -24,6 +24,7 @@ Summary: @SUMMARY@
 Group: Development/Libraries
 Requires: libglite-jobid-api-c%{?_isa}
 Provides: %{name} = %{version}-%{release}
+Obsoletes: glite-jobid-api-cpp <= 1.2.0
 
 
 %description -n %{name}-devel

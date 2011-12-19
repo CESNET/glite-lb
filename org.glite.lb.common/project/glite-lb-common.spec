@@ -32,6 +32,7 @@ L&B common library.
 %package -n lib%{name}
 Summary: @SUMMARY@
 Group: System Environment/Libraries
+Obsoletes: glite-lb-common%{?_isa} <= 8.1.0
 
 
 %description -n lib%{name}
@@ -45,6 +46,7 @@ Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Requires: glite-jobid-api-c-devel
 Requires: glite-lbjp-common-gss-devel
 Provides: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: glite-lb-common%{?_isa} <= 8.1.0
 
 
 %description -n %{name}-devel

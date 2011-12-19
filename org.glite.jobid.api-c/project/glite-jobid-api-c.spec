@@ -23,6 +23,7 @@ jobid C library.
 %package -n lib%{name}
 Summary: @SUMMARY@
 Group: System Environment/Libraries
+Obsoletes: glite-jobid-api-c%{?_isa} <= 2.1.0
 
 
 %description -n lib%{name}
@@ -34,6 +35,7 @@ Summary: Development files for gLite jobid C library
 Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Provides: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: glite-jobid-api-c%{?_isa} <= 2.1.0
 
 
 %description -n %{name}-devel

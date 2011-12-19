@@ -23,6 +23,7 @@ L&B/JP common log module.
 %package -n lib%{name}
 Summary: @SUMMARY@
 Group: System Environment/Libraries
+Obsoletes: glite-lbjp-common-log%{?_isa} <= 1.2.0
 
 
 %description -n lib%{name}
@@ -34,6 +35,7 @@ Summary: Development files for gLite L&B/JP common log module
 Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Provides: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: glite-lbjp-common-log%{?_isa} <= 1.2.0
 
 
 %description -n %{name}-devel

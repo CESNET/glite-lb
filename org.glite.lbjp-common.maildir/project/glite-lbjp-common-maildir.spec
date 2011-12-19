@@ -21,6 +21,7 @@ L&B/JP common maildir library.
 %package -n lib%{name}
 Summary: @SUMMARY@
 Group: System Environment/Libraries
+Obsoletes: glite-lbjp-common-maildir%{?_isa} <= 2.2.0
 
 
 %description -n lib%{name}
@@ -32,6 +33,7 @@ Summary: Development files for gLite L&B/JP common maildir library
 Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Provides: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: glite-lbjp-common-maildir%{?_isa} <= 2.2.0
 
 
 %description -n %{name}-devel

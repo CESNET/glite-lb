@@ -31,6 +31,7 @@ L&B state machine.
 %package -n lib%{name}
 Summary: @SUMMARY@
 Group: System Environment/Libraries
+Obsoletes: glite-lb-state-machine%{?_isa} <= 1.3.0
 
 
 %description -n lib%{name}
@@ -43,6 +44,7 @@ Group: Development/Libraries
 Requires: lib%{name}%{?_isa} = %{version}-%{release}
 Requires: glite-lb-common-devel
 Provides: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: glite-lb-state-machine%{?_isa} <= 1.3.0
 
 
 %description -n %{name}-devel
