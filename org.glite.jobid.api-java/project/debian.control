@@ -1,0 +1,17 @@
+Source: glite-jobid-api-java
+Priority: extra
+Maintainer: @MAINTAINER@
+Uploaders: @UPLOADERS@
+Build-Depends: debhelper (>= 7.0.50~), ant, libcommons-codec-java, default-jdk
+Standards-Version: 3.9.1
+Section: libs
+Homepage: @URL@
+DM-Upload-Allowed: yes
+@DEBIAN_VCS@
+
+Package: glite-jobid-api-java
+Section: libs
+Architecture: all
+Depends: libcommons-codec-java, ${misc:Depends}
+Description: @SUMMARY@
+@DEBIAN_DESCRIPTION@
