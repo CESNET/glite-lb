@@ -7,8 +7,9 @@ License: Apache Software License
 Vendor: EMI
 Group: System Environment/Daemons
 BuildRequires: activemq-cpp-library
-BuildRequires: cppunit-devel
-BuildRequires: glite-lb-logger
+BuildRequires: cppunit-devel%{?_isa}
+BuildRequires: glite-lb-logger-devel%{?_isa}
+BuildRequires: glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires: libtool
 Requires: glite-lb-logger
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)

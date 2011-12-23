@@ -19,15 +19,14 @@ This is a virtual package providing runtime and development files for gLite
 jobid C++ API.
 
 
-%package -n %{name}-devel
+%package devel
 Summary: @SUMMARY@
 Group: Development/Libraries
-Requires: libglite-jobid-api-c%{?_isa}
+Requires: glite-jobid-api-c%{?_isa}
 Provides: %{name} = %{version}-%{release}
-Obsoletes: glite-jobid-api-cpp <= 1.2.0
 
 
-%description -n %{name}-devel
+%description devel
 @DESCRIPTION@
 
 
@@ -56,7 +55,7 @@ find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 rm -rf $RPM_BUILD_ROOT
 
 
-%files -n %{name}-devel
+%files devel
 %defattr(-,root,root)
 %dir /usr/include/glite
 %dir /usr/include/glite/jobid

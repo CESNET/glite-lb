@@ -6,13 +6,13 @@ Url: @URL@
 License: Apache Software License
 Vendor: EMI
 Group: System Environment/Daemons
-BuildRequires: cppunit-devel
+BuildRequires: cppunit-devel%{?_isa}
 BuildRequires: chrpath
-BuildRequires: glite-lb-common-devel
-BuildRequires: glite-jobid-api-c-devel
-BuildRequires: glite-lbjp-common-gss-devel
-BuildRequires: glite-lbjp-common-trio-devel
-BuildRequires: glite-lbjp-common-log-devel
+BuildRequires: glite-lb-common-devel%{?_isa}
+BuildRequires: glite-jobid-api-c-devel%{?_isa}
+BuildRequires: glite-lbjp-common-gss-devel%{?_isa}
+BuildRequires: glite-lbjp-common-trio-devel%{?_isa}
+BuildRequires: glite-lbjp-common-log-devel%{?_isa}
 BuildRequires: libtool
 Requires(post): chkconfig
 Requires(preun): chkconfig
@@ -24,6 +24,19 @@ Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.logger/%{ve
 
 %description
 @DESCRIPTION@
+
+
+%package devel
+Summary: Development files for gLite L&B logger
+Group: Development/Libraries
+Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires: glite-lb-common-devel%{?_isa}
+Requires: glite-lbjp-common-gss-devel%{?_isa}
+Requires: glite-lbjp-common-log-devel%{?_isa}
+
+
+%description devel
+This package contains header files for building plugins for gLite L&B logger.
 
 
 %prep
@@ -77,20 +90,23 @@ fi
 
 %files
 %defattr(-,root,root)
-%dir /usr/include/glite/
-%dir /usr/include/glite/lb/
 %dir /usr/share/doc/%{name}-%{version}/
 /etc/init.d/glite-lb-locallogger
 /usr/bin/glite-lb-notif-interlogd
 /usr/bin/glite-lb-interlogd
 /usr/bin/glite-lb-logd
-/usr/include/glite/lb/*.h
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/package.description
 /usr/share/doc/%{name}-%{version}/package.summary
 /usr/share/man/man8/glite-lb-interlogd.8.gz
 /usr/share/man/man8/glite-lb-logd.8.gz
+
+
+%files devel
+%dir /usr/include/glite/
+%dir /usr/include/glite/lb/
+/usr/include/glite/lb/*.h
 
 
 %changelog

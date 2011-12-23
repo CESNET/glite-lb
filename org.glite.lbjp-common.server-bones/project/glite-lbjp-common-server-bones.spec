@@ -1,11 +1,11 @@
-Summary: Virtual package for development with gLite L&B/JP common server-bones.
+Summary: @SUMMARY@
 Name: glite-lbjp-common-server-bones
 Version: @MAJOR@.@MINOR@.@REVISION@
 Release: @AGE@%{?dist}
 Url: @URL@
 License: Apache Software License
 Vendor: EMI
-Group: Development/Libraries
+Group: System Environment/Libraries
 BuildRequires: chrpath
 BuildRequires: glite-lbjp-common-log-devel
 BuildRequires: libtool
@@ -15,29 +15,16 @@ Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.se
 
 
 %description
-This is a virtual package providing runtime and development files for gLite
-L&B/JP common server-bones.
-
-
-%package -n lib%{name}
-Summary: @SUMMARY@
-Group: System Environment/Libraries
-Obsoletes: glite-lbjp-common-server-bones%{?_isa} <= 2.2.0
-
-
-%description -n lib%{name}
 @DESCRIPTION@
 
 
-%package -n %{name}-devel
+%package devel
 Summary: Development files for gLite L&B/JP common server-bones
 Group: Development/Libraries
-Requires: lib%{name}%{?_isa} = %{version}-%{release}
-Provides: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: glite-lbjp-common-server-bones%{?_isa} <= 2.2.0
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
 
-%description -n %{name}-devel
+%description devel
 This package contains development libraries and header files for gLite L&B/JP
 common server-bones.
 
@@ -63,23 +50,24 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 
-%post -n lib%{name} -p /sbin/ldconfig
+%post -p /sbin/ldconfig
 
 
-%postun -n lib%{name} -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 
-%files -n lib%{name}
+%files
 %defattr(-,root,root)
 /usr/%{_lib}/libglite_lbu_server_bones.so.@MAJOR@.@MINOR@.@REVISION@
 /usr/%{_lib}/libglite_lbu_server_bones.so.@MAJOR@
 
 
-%files -n %{name}-devel
+%files devel
 %defattr(-,root,root)
 %dir /usr/include/glite
 %dir /usr/include/glite/lbu

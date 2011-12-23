@@ -1,11 +1,11 @@
-Summary: Virtual package for development with gLite L&B client library
+Summary: @SUMMARY@
 Name: glite-lb-client
 Version: @MAJOR@.@MINOR@.@REVISION@
 Release: @AGE@%{?dist}
 Url: @URL@
 License: Apache Software License
 Vendor: EMI
-Group: Development/Libraries
+Group: System Environment/Libraries
 BuildRequires: classads
 BuildRequires: classads-devel
 BuildRequires: cppunit-devel
@@ -23,43 +23,29 @@ Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.client/%{ve
 
 
 %description
-This is a virtual package providing runtime and development files for gLite
-L&B client library.
-
-
-%package -n lib%{name}
-Summary: @SUMMARY@
-Group: System Environment/Libraries
-Obsoletes: glite-lb-client%{?_isa} <= 5.1.0
-
-
-%description -n lib%{name}
 @DESCRIPTION@
 
 
-%package -n %{name}-devel
+%package devel
 Summary: Development files for gLite L&B client library
 Group: Development/Libraries
-Requires: lib%{name}%{?_isa} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 Requires: glite-lb-common-devel
 Requires: glite-jobid-api-c-devel
 Requires: glite-jobid-api-cpp-devel
-Provides: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: glite-lb-client%{?_isa} <= 5.1.0
 
 
-%description -n %{name}-devel
+%description devel
 This package contains development libraries and header files for gLite L&B
 client library.
 
 
-%package -n %{name}-progs
+%package progs
 Summary: gLite L&B client programs and examples
-Group: Applications/Communications
-Obsoletes: glite-lb-client%{?_isa} <= 5.1.0
+Group: System Environment/Base
 
 
-%description -n %{name}-progs
+%description progs
 This package contains client programs and examples for gLite L&B.
 
 
@@ -89,13 +75,13 @@ find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > 
 rm -rf $RPM_BUILD_ROOT
 
 
-%post -n lib%{name} -p /sbin/ldconfig
+%post -p /sbin/ldconfig
 
 
-%postun -n lib%{name} -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 
-%files -n lib%{name}
+%files
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}/
 /usr/%{_lib}/libglite_lb_client.so.11.@MINOR@.@REVISION@
@@ -109,7 +95,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/doc/%{name}-%{version}/package.summary
 
 
-%files -n %{name}-devel
+%files devel
 %defattr(-,root,root)
 %dir /usr/share/emi/
 %dir /usr/share/emi/build/
@@ -128,7 +114,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/man/man8/glite-lb-load.8.gz
 
 
-%files -n %{name}-progs
+%files progs
 %defattr(-,root,root)
 %dir /usr/%{_lib}/glite-lb/
 %dir /usr/%{_lib}/glite-lb/examples/

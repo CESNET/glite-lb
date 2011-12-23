@@ -1,11 +1,11 @@
-Summary: Virtual package for development with gLite L&B/JP common log module
+Summary: @SUMMARY@
 Name: glite-lbjp-common-log
 Version: @MAJOR@.@MINOR@.@REVISION@
 Release: @AGE@%{?dist}
 Url: @URL@
 License: Apache Software License
 Vendor: EMI
-Group: Development/Libraries
+Group: System Environment/Libraries
 BuildRequires: chrpath
 BuildRequires: libtool
 BuildRequires: log4c-devel
@@ -16,29 +16,16 @@ Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.lo
 
 
 %description
-This is a virtual package providing runtime and development files for gLite
-L&B/JP common log module.
-
-
-%package -n lib%{name}
-Summary: @SUMMARY@
-Group: System Environment/Libraries
-Obsoletes: glite-lbjp-common-log%{?_isa} <= 1.2.0
-
-
-%description -n lib%{name}
 @DESCRIPTION@
 
 
-%package -n %{name}-devel
+%package devel
 Summary: Development files for gLite L&B/JP common log module
 Group: Development/Libraries
-Requires: lib%{name}%{?_isa} = %{version}-%{release}
-Provides: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: glite-lbjp-common-log%{?_isa} <= 1.2.0
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
 
-%description -n %{name}-devel
+%description devel
 This package contains development libraries and header files for gLite L&B/JP
 common log module.
 
@@ -68,13 +55,13 @@ find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > 
 rm -rf $RPM_BUILD_ROOT
 
 
-%post -n lib%{name} -p /sbin/ldconfig
+%post -p /sbin/ldconfig
 
 
-%postun -n lib%{name} -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 
-%files -n lib%{name}
+%files
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}
 %dir /etc/glite-lb
@@ -87,7 +74,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/%{_lib}/libglite_lbu_log.so.@MAJOR@
 
 
-%files -n %{name}-devel
+%files devel
 %defattr(-,root,root)
 %dir /usr/include/glite
 %dir /usr/include/glite/lbu

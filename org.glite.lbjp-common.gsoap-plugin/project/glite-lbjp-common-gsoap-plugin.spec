@@ -1,11 +1,11 @@
-Summary: Virtual package for development with gLite gsoap-plugin
+Summary: @SUMMARY@
 Name: glite-lbjp-common-gsoap-plugin
 Version: @MAJOR@.@MINOR@.@REVISION@
 Release: @AGE@%{?dist}
 Url: @URL@
 License: Apache Software License
 Vendor: EMI
-Group: Development/Libraries
+Group: System Environment/Libraries
 BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: chrpath
@@ -15,38 +15,25 @@ BuildRequires: gsoap-devel
 BuildRequires: glite-lbjp-common-gss-devel
 BuildRequires: libtool
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+Obsoletes: glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
 AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gsoap-plugin/%{version}/src/%{name}-@VERSION@.src.tar.gz
 
 
 %description
-This is a virtual package providing runtime and development files for gLite
-gsoap-plugin.
-
-
-%package -n lib%{name}
-Summary: @SUMMARY@
-Group: System Environment/Libraries
-Obsoletes: glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
-Obsoletes: glite-lbjp-common-gsoap-plugin%{?_isa} <= 3.1.0
-
-
-%description -n lib%{name}
 @DESCRIPTION@
 
 
-%package -n %{name}-devel
+%package devel
 Summary: Development files for gLite gsoap-plugin
 Group: Development/Libraries
-Requires: lib%{name}%{?_isa} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 Requires: glite-lbjp-common-gss-devel
-Provides: %{name}%{?_isa} = %{version}-%{release}
 Provides: glite-security-gsoap-plugin%{?_isa} = %{version}-%{release}
 Obsoletes: glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
-Obsoletes: glite-lbjp-common-gsoap-plugin%{?_isa} <= 3.1.0
 
 
-%description -n %{name}-devel
+%description devel
 This package contains development libraries and header files for gLite
 gsoap-plugin.
 
@@ -77,13 +64,13 @@ find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > 
 rm -rf $RPM_BUILD_ROOT
 
 
-%post -n lib%{name} -p /sbin/ldconfig
+%post -p /sbin/ldconfig
 
 
-%postun -n lib%{name} -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 
-%files -n lib%{name}
+%files
 %defattr(-,root,root)
 %dir /usr/share/doc/gsoap-plugin-%{version}
 %doc /usr/share/doc/gsoap-plugin-%{version}/LICENSE
@@ -91,7 +78,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/%{_lib}/libglite_security_gsoap_plugin_*.so.9
 
 
-%files -n %{name}-devel
+%files devel
 %defattr(-,root,root)
 %dir /usr/include/glite
 %dir /usr/include/glite/security

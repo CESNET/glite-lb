@@ -1,11 +1,11 @@
-Summary: Virtual package for development with gLite L&B common library
+Summary: @SUMMARY@
 Name: glite-lb-common
 Version: @MAJOR@.@MINOR@.@REVISION@
 Release: @AGE@%{?dist}
 Url: @URL@
 License: Apache Software License
 Vendor: EMI
-Group: Development/Libraries
+Group: System Environment/Libraries
 BuildRequires: c-ares-devel
 BuildRequires: chrpath
 BuildRequires: classads
@@ -25,31 +25,18 @@ Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.common/%{ve
 
 
 %description
-This is a virtual package providing runtime and development files for gLite
-L&B common library.
-
-
-%package -n lib%{name}
-Summary: @SUMMARY@
-Group: System Environment/Libraries
-Obsoletes: glite-lb-common%{?_isa} <= 8.1.0
-
-
-%description -n lib%{name}
 @DESCRIPTION@
 
 
-%package -n %{name}-devel
+%package devel
 Summary: Development files for gLite L&B common library
 Group: Development/Libraries
-Requires: lib%{name}%{?_isa} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 Requires: glite-jobid-api-c-devel
 Requires: glite-lbjp-common-gss-devel
-Provides: %{name}%{?_isa} = %{version}-%{release}
-Obsoletes: glite-lb-common%{?_isa} <= 8.1.0
 
 
-%description -n %{name}-devel
+%description devel
 This package contains development libraries and header files for gLite L&B
 common library.
 
@@ -80,13 +67,13 @@ find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > 
 rm -rf $RPM_BUILD_ROOT
 
 
-%post -n lib%{name} -p /sbin/ldconfig
+%post -p /sbin/ldconfig
 
 
-%postun -n lib%{name} -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 
-%files -n lib%{name}
+%files
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}/
 /usr/share/doc/%{name}-%{version}/LICENSE
@@ -97,7 +84,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/%{_lib}/libglite_lb_common.so.13
 
 
-%files -n %{name}-devel
+%files devel
 %defattr(-,root,root)
 %dir /usr/include/glite/
 %dir /usr/include/glite/lb/

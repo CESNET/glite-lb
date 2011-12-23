@@ -5,7 +5,7 @@ Release: @AGE@%{?dist}
 Url: @URL@
 License: Apache Software License
 Vendor: EMI
-Group: Applications/Communications
+Group: System Environment/Base
 BuildRequires: chrpath
 BuildRequires: gsoap-devel
 BuildRequires: glite-lb-ws-interface

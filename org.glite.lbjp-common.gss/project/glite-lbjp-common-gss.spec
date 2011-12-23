@@ -1,11 +1,11 @@
-Summary: Virtual package for development with gLite GSS library
+Summary: @SUMMARY@
 Name: glite-lbjp-common-gss
 Version: @MAJOR@.@MINOR@.@REVISION@
 Release: @AGE@%{?dist}
 Url: @URL@
 License: Apache Software License
 Vendor: EMI
-Group: Development/Libraries
+Group: System Environment/Libraries
 BuildRequires: c-ares-devel
 BuildRequires: c-ares
 BuildRequires: chrpath
@@ -13,38 +13,25 @@ BuildRequires: cppunit-devel
 BuildRequires: globus-gssapi-gsi-devel
 BuildRequires: libtool
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
 AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gss/%{version}/src/%{name}-@VERSION@.src.tar.gz
 
 
 %description
-This is a virtual package providing runtime and development files for gLite
-GSS library.
-
-
-%package -n lib%{name}
-Summary: @SUMMARY@
-Group: System Environment/Libraries
-Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
-Obsoletes: glite-lbjp-common-gss%{?_isa} <= 3.1.0
-
-
-%description -n lib%{name}
 @DESCRIPTION@
 
 
-%package -n %{name}-devel
+%package devel
 Summary: Development files for gLite GSS library
 Group: Development/Libraries
-Requires: lib%{name}%{?_isa} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 Requires: globus-gssapi-gsi-devel
-Provides: %{name}%{?_isa} = %{version}-%{release}
 Provides: glite-security-gss%{?_isa} = %{version}-%{release}
 Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
-Obsoletes: glite-lbjp-common-gss%{?_isa} <= 3.1.0
 
 
-%description -n %{name}-devel
+%description devel
 This package contains development libraries and header files for gLite GSS
 library.
 
@@ -74,13 +61,13 @@ find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > 
 rm -rf $RPM_BUILD_ROOT
 
 
-%post -n lib%{name} -p /sbin/ldconfig
+%post -p /sbin/ldconfig
 
 
-%postun -n lib%{name} -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 
-%files -n lib%{name}
+%files
 %defattr(-,root,root)
 %dir /usr/share/doc/gss-%{version}
 %doc /usr/share/doc/gss-%{version}/LICENSE
@@ -88,7 +75,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/%{_lib}/libglite_security_gss.so.9
 
 
-%files -n %{name}-devel
+%files devel
 %defattr(-,root,root)
 %dir /usr/include/glite
 %dir /usr/include/glite/security
