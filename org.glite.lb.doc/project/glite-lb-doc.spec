@@ -53,6 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/doc/%{name}-%{version}/LBUG.pdf
 /usr/share/doc/%{name}-%{version}/LBDG.pdf
 /usr/share/doc/%{name}-%{version}/LBTG.pdf
+/usr/share/doc/%{name}-%{version}/LBTP.pdf
 /usr/share/doc/%{name}-%{version}/package.summary
 /usr/share/doc/%{name}-%{version}/package.description
 

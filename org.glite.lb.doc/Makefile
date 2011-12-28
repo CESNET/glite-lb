@@ -70,6 +70,7 @@ install:
 	${INSTALL} -m 644 LBAG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 LBDG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 LBTG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 LBTP.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 # install DG example sources
 	for p in ${top_srcdir}/examples/*; do \
 		if [ "$$p" = "${top_srcdir}/examples/CVS" ]; then continue; fi; \
