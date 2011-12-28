@@ -54,7 +54,7 @@ binary-arch: install
 	dh_installcron
 	dh_install --fail-missing
 	dh_link
-	dh_strip --dbg-package=libglite-lbjp-common-gss-dbg
+	dh_strip --dbg-package=glite-lbjp-common-gss-dbg
 	dh_compress
 	dh_fixperms
 	dh_makeshlibs

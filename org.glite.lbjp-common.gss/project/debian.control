@@ -25,7 +25,7 @@ Description: Development files for gLite L&B/JP common gss library
  This package contains development libraries and header files for gLite gss
  library.
 
-Package: libglite-lbjp-common-gss-dbg
+Package: glite-lbjp-common-gss-dbg
 Section: debug
 Architecture: any
 Priority: extra

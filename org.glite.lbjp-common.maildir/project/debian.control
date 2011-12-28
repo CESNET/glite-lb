@@ -25,7 +25,7 @@ Description: Development files for gLite L&B/JP common maildir library
  This package contains development libraries and header files for gLite L&B/JP
  common maildir library.
 
-Package: libglite-lbjp-common-maildir-dbg
+Package: glite-lbjp-common-maildir-dbg
 Section: debug
 Architecture: any
 Priority: extra

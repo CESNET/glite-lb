@@ -53,7 +53,7 @@ binary-arch: install
 	dh_installcron
 	dh_install --fail-missing
 	dh_link
-	dh_strip --dbg-package=libglite-lbjp-common-jp-interface-dbg
+	dh_strip --dbg-package=glite-lbjp-common-jp-interface-dbg
 	dh_compress
 	dh_fixperms
 	dh_makeshlibs

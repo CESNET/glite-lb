@@ -25,7 +25,7 @@ Description: Development files for gLite gsoap-plugin
  This package contains development libraries and header files for gLite
  gsoap-plugin.
 
-Package: libglite-lbjp-common-gsoap-plugin-dbg
+Package: glite-lbjp-common-gsoap-plugin-dbg
 Section: debug
 Architecture: any
 Priority: extra
