@@ -93,10 +93,10 @@ doc: ${MAN_GZ} ${MAN8_GZ}
 
 ${MAN_GZ}: ${MAN}
 	cp $? .
-	gzip -f $(notdir $?)
+	gzip -9 -f $(notdir $?)
 ${MAN8_GZ}: ${MAN8}
 	cp $? .
-	gzip -f $(notdir $?)
+	gzip -9 -f $(notdir $?)
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes

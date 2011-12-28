@@ -272,11 +272,11 @@ ${LIBTHROBJS}: %.thr.o: %.c
 ${MAN_GZ}: ${MAN}
 	rm -f ${MAN_GZ} ${MAN}
 	cp $? .
-	gzip -f $(notdir $?)
+	gzip -9 -f $(notdir $?)
 
 ${MAN8_GZ}: ${MAN8}
 	cp $? .
-	gzip -f $(notdir $?)
+	gzip -9 -f $(notdir $?)
 
 perftest_logjobs.o: perftest_logjobs.c
 	${CC} ${CFLAGS} -DLB_PERF_DROP -c $<

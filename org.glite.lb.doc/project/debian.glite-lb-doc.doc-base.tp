@@ -1,0 +1,7 @@
+Document: glite-lb-doc-tp
+Title: Logging and Bookkeeping - Test Plan & Test Suite Documentation
+Abstract: L&B Test Plan document explains how to test the Logging and Bookkeeping (L&B) service. Two major categories of tests are described: integration tests (include installation, configuration and basic service ping tests) and system tests (basic functionality tests, performance and stress tests, interoperability tests and security tests).
+Section: Network/Monitoring
+
+Format: PDF
+Files: /usr/share/doc/glite-lb-doc/LBTP.pdf.gz

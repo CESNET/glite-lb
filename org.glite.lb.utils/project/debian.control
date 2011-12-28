@@ -1,0 +1,25 @@
+Source: glite-lb-utils
+Priority: extra
+Maintainer: @MAINTAINER@
+Uploaders: @UPLOADERS@
+Build-Depends: debhelper (>= 7.0.50~), chrpath, glite-lb-types, libcppunit-dev, libglite-jobid-api-c-dev, libglite-lb-client-dev, libglite-lb-state-machine-dev, libglite-lbjp-common-jp-interface-dev, libglite-lbjp-common-maildir-dev, libglite-lbjp-common-trio-dev
+Standards-Version: 3.9.1
+Section: misc
+Homepage: @URL@
+DM-Upload-Allowed: yes
+@DEBIAN_VCS@
+
+Package: glite-lb-utils
+Section: misc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: @SUMMARY@
+@DEBIAN_DESCRIPTION@
+
+Package: glite-lb-utils-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: glite-lb-utils (= ${binary:Version}), ${misc:Depends}
+Description: gLite L&B utils debugging symbols
+ This package contains debugging symbols for gLite L&B utils.

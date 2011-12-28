@@ -1,0 +1,5 @@
+usr/include/glite/lb/*.h
+usr/lib/lib*.so
+usr/share/doc/glite-lb-client/examples/*
+usr/share/emi/build/m4/*
+usr/share/man/*/*

@@ -47,7 +47,6 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/include/glite/
 %dir /usr/include/glite/lb/
 %dir /usr/share/doc/%{name}-%{version}/
-%dir /usr/share/doc/%{name}-%{version}/examples/
 %dir /usr/share/wsdl/
 %dir /usr/share/wsdl/glite-lb/
 /usr/include/glite/lb/ws_interface_version.h

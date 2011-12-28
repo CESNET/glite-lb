@@ -41,7 +41,7 @@ glue2-copy.xsd:
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${STAGETO}
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	install -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && install -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )

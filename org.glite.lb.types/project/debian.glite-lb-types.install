@@ -1,0 +1,3 @@
+usr/sbin/*
+usr/share/perl/gLite/LB/*.pm
+usr/share/glite-lb/at3/*.T

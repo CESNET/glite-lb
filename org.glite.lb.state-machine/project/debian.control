@@ -1,0 +1,34 @@
+Source: glite-lb-state-machine
+Priority: extra
+Maintainer: @MAINTAINER@
+Uploaders: @UPLOADERS@
+Build-Depends: debhelper (>= 7.0.50~), chrpath, glite-lb-types, libclassad-dev, libexpat1-dev, libglite-jobid-api-c-dev, libglite-lb-common-dev, libglite-lbjp-common-db-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-jp-interface-dev, libglite-lbjp-common-trio-dev, libtool, xsltproc
+Standards-Version: 3.9.1
+Section: libs
+Homepage: @URL@
+DM-Upload-Allowed: yes
+@DEBIAN_VCS@
+
+Package: libglite-lb-state-machine1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: @SUMMARY@
+@DEBIAN_DESCRIPTION@
+
+Package: libglite-lb-state-machine-dev
+Section: libdevel
+Architecture: any
+Provides: glite-lb-state-machine
+Depends: libglite-lb-state-machine1 (= ${binary:Version}), ${misc:Depends}, libglite-lb-common-dev, libglite-lbjp-common-gss-dev
+Description: Development files for gLite L&B state machine
+ This package contains development libraries and header files for gLite L&B
+ state machine.
+
+Package: glite-lb-state-machine-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: libglite-lb-state-machine1 (= ${binary:Version}), ${misc:Depends}, libglite-jobid-api-c-dev
+Description: gLite L&B state-machine debugging symbols
+ This package contains debugging symbols for gLite L&B state machine.

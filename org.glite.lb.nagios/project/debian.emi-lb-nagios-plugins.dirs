@@ -1,0 +1,6 @@
+usr/share/doc/emi-lb-nagios-plugins
+usr/libexec/grid-monitoring
+usr/libexec/grid-monitoring/probes
+usr/libexec/grid-monitoring/probes/emi.lb
+var/lib/grid-monitoring
+var/lib/grid-monitoring/emi.lb

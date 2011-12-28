@@ -89,7 +89,7 @@ fi
 /usr/%{_lib}/glite-lb/examples/glite-lb-harvester-test.sh
 /usr/%{_lib}/glite-lb/examples/glite-lb-harvester-dbg
 /usr/share/doc/%{name}-%{version}/README
-/usr/share/man/man8/glite-lb-harvester.8.gz
+/usr/share/man/man1/glite-lb-harvester.1.gz
 
 
 %changelog

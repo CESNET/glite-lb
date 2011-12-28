@@ -168,7 +168,7 @@ glite-lb-ws-interlogd: ${INTERLOG_WS_OBJS}
 ${MAN_GZ}: ${MAN}
 	rm -f ${MAN_GZ} ${MAN}
 	cp $? .
-	gzip -f $(notdir $?)
+	gzip -9 -f $(notdir $?)
 
 man: ${MAN_GZ}
 

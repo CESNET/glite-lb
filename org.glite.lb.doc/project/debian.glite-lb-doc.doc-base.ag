@@ -1,0 +1,7 @@
+Document: glite-lb-doc-ag
+Title: Logging and Bookkeeping - Administrator's Guide
+Abstract: L&B Administrator’s Guide explains how to administer the Logging and Bookkeeping (L&B) service. Several deployment scenarios are described together with the installation, configuration, running and troubleshooting steps.
+Section: Network/Monitoring
+
+Format: PDF
+Files: /usr/share/doc/glite-lb-doc/LBAG.pdf.gz

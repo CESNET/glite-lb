@@ -1,0 +1,34 @@
+Source: glite-lb-common
+Priority: extra
+Maintainer: @MAINTAINER@
+Uploaders: @UPLOADERS@
+Build-Depends: debhelper (>= 7.0.50~), chrpath, glite-lb-types, libc-ares-dev, libclassad1, libclassad-dev, libexpat1, libexpat1-dev, libcppunit-dev, libglite-jobid-api-cpp-dev, libglite-jobid-api-c-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-trio-dev, libtool
+Standards-Version: 3.9.1
+Section: libs
+Homepage: @URL@
+DM-Upload-Allowed: yes
+@DEBIAN_VCS@
+
+Package: libglite-lb-common13
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: @SUMMARY@
+@DEBIAN_DESCRIPTION@
+
+Package: libglite-lb-common-dev
+Section: libdevel
+Architecture: any
+Provides: glite-lb-common
+Depends: libglite-lb-common13 (= ${binary:Version}), ${misc:Depends}, libglite-jobid-api-c-dev, libglite-lbjp-common-gss-dev
+Description: Development files for gLite L&B common library
+ This package contains development libraries and header files for gLite L&B
+ common library.
+
+Package: glite-lb-common-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: libglite-lb-common13 (= ${binary:Version}), ${misc:Depends}
+Description: gLite L&B common library debugging symbols
+ This package contains debugging symbols for gLite L&B common library.
