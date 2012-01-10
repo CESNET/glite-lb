@@ -18,10 +18,8 @@
 
 \subsection{Complete list of packages}
 
-\LB is currently distributed mainly in RPMs packages. It is available also in
-binary form packed as .tar.gz. Recent attempts to multiplatform porting and
-recent ETICS building system development promise a future possibility to
-distribute the software in other distribution formats, e.g. DEB packages. 
+\LB is currently distributed mainly in RPMs packages and, since \LBver{3.2} also in \emph{deb} packages. It is available also in
+binary form packed as \texttt{.tar.gz}.
 
 In \LBver{1.x}, the list of all LB packages was the following:
 
@@ -78,6 +76,7 @@ glite-jp-common & Job Provenance auxiliary library \\
 \noindent
 And for \LBver{2.0 and newer}:
 
+\nopagebreak
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-jobid-api-c & gLite jobId C API library \\ 
 % pro beh LB neni triba
@@ -94,6 +93,27 @@ glite-lbjp-common-gsoap-plugin & GSS plugin for gSoap (formerly \emph{glite-secu
 
 where all \verb'glite-lbjp-common-*' packages are common both to \LB and 
 Job Provenance (\JP).
+
+\subsubsection{Development packages}
+
+Since \LBver{3.2} development files have been separated from runtime packages, and they are distributed in standalone \texttt{-devel} packages. They are not required for \LB's operation. The following list of development RPMs is given form the sake of completeness:
+
+\begin{tabularx}{\textwidth}{>{\tt}p{6cm}>{\tt}X}
+glite-jobid-api-c-devel 
+glite-jobid-api-cpp-devel 
+glite-lb-client-devel 
+glite-lb-common-devel 
+glite-lb-logger-devel 
+glite-lb-state-machine-devel &
+glite-lbjp-common-db-devel 
+glite-lbjp-common-gsoap-plugin-devel 
+glite-lbjp-common-gss-devel 
+glite-lbjp-common-jp-interface-devel 
+glite-lbjp-common-log-devel 
+glite-lbjp-common-maildir-devel 
+glite-lbjp-common-server-bones-devel 
+glite-lbjp-common-trio-devel
+\end{tabularx}
 
 \subsection{Common logging format}
 \label{inst:comlog}
@@ -120,6 +140,7 @@ one gets only the debugging info related to the underlying database subsystem ca
 
 Currently supported log categories are:
 
+\nopagebreak
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 SECURITY & Security matters \\
 ACCESS & Communication issues \\
