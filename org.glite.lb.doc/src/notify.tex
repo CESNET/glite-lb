@@ -255,7 +255,7 @@ https://skurut68-2.cesnet.cz:9100/p2jBsy5WkFItY284lW2o8A        Waiting
 \end{verbatim}
 
 
-\subsubsection{Example: Waiting for notifications on jobs reaching terminal states}
+\subsubsection{Example: Waiting for notifications on jobs reaching selected states}
 
 This example shows how to set up notifications for jobs reaching state \emph{done} or \emph {aborted}. Since we prefer to receive just one notification per job, we will also use the \texttt{-c} option, which makes sure that notifications will be generated only on actual job state change.
 
@@ -289,4 +289,38 @@ https://skurut68-2.cesnet.cz:9100/KWXmsqvsTQKizQ4OMiXItA	Done
 https://skurut68-2.cesnet.cz:9100/O1zs50Nm1r03vx2GLyaxQw	Done
     /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
 \end{verbatim}
+
+\subsubsection{Example: Notify on job reaching terminal state}
+
+This example shows how to register for notifications on finished jobs, i.e. jobs reaching one of the possible terminal states. The user does not need to specify a list of states -- terminal states are recognized on server side.\footnote{Since \LBver{3.2}, where this feature was released, terminal states are: \emph{cleared}, \emph{aborted}, \emph{cancelled}, and \emph{purged}} This use case applies to users who wish to be notified only when their jobs finish, and possibly also pack a history of events with the notification (using argument \texttt{-H}).
+
+\begin{verbatim}
+  GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 glite-lb-notify new -T
+\end{verbatim}
+
+returns:
+
+\begin{verbatim}
+  notification ID: https://skurut68-2.cesnet.cz:9100/NOTIF:NLGsqGqvFpzFirHW4UCA6Q
+  valid: '2012-01-11 13:06:22 UTC' (1326287182)
+\end{verbatim}
+
+Wait for notification (with timeout 120 seconds):
+\begin{verbatim}
+  GLITE_WMS_NOTIF_SERVER=skurut68-2.cesnet.cz:9100 glite-lb-notify receive \
+   -i 120 https://skurut68-2.cesnet.cz:9100/NOTIF:NLGsqGqvFpzFirHW4UCA6Q
+\end{verbatim}
+
+returns:
+\begin{verbatim}
+https://skurut68-2.cesnet.cz:9100/2NziNtvLRcuh88FXLs96GA        Cleared
+    /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
+https://skurut68-2.cesnet.cz:9100/ERkZaVtRX1E3y6UaNVtAmg        Aborted
+    /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
+https://skurut68-2.cesnet.cz:9100/N_Bb0kztImcLnGWc5keDug        Cleared
+    /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
+https://skurut68-2.cesnet.cz:9100/Z88Q_i4cI26bSAZqbfdRVg        Cleared
+    /DC=cz/DC=cesnet-ca/O=Masaryk University/CN=Miroslav Ruda
+\end{verbatim}
+
 
