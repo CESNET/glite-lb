@@ -729,14 +729,14 @@ reported correctly.
 
 \req Installed glite-lb-client package, valid user's X509 credentials,
 known destination (address:port) of running \LB server.
-Can be invoked from any machine. \newcounter{examplesfootnote}
+Can be invoked from any machine.\newcounter{examplesfootnote}
 \footnote{Example scripts or binaries used here can be found either
 in \texttt{/opt/glite/examples} (if installed from a LB node repository) or
-\texttt{/usr/lib64/glite-lb/examples} (if installed from the EMI repository).} \setcounter{examplesfootnote}{\thefootnote}
+\texttt{/usr/lib64/glite-lb/examples} (if installed from the EMI repository). Please note that these examples are primarily intended for developers, and their use (e.g. command line options) is not covered by documentation execpt for these few specific use cases.}\setcounter{examplesfootnote}{\thefootnote}
 
 \how 
 \begin{quote}
-\verb'glite-lb-job_reg -m' \emph{server\_name:port}
+\texttt{glite-lb-job\_reg -m} \emph{server\_name:port} \texttt{-s Application}
 \end{quote}
 A~new jobid is generated and printed.  Run 
 \begin{quote}
@@ -753,13 +753,13 @@ The command should report ``Submitted'' job status.
 Send several \LB events, simulating normal job life cycle.
 Checks delivery of the events via \LB logger.
 
-\req Installed glite-lb-client package, valid user's X509 credentials,
+\req Installed package \texttt{glite-lb-client}, valid X509 credentials,
 known destination (address:port) of running \LB server.
-Must be run on a~machine where glite-lb-logger package is set up and running.\footnotemark[\theexamplesfootnote]
+Must be run on a~machine where \texttt{glite-lb-logger} package is set up and running.\footnotemark[\theexamplesfootnote]
 
 \how
 \begin{quote}
-\verb'glite-lb-running.sh -m ' \emph{server\_name:port}
+\texttt{glite-lb-running.sh -m} \emph{server\_name:port}
 \end{quote}
 
 The command prints a~new jobid, followed by diagnostic messages as the events are logged. 
@@ -796,5 +796,25 @@ And check with:
 \subsubsection{Notification delivery}
 
 Register for receiving notifications, and log events which trigger
-the notification delivery. Checks the whole notification mechanism.
-The test is quite complex, though, see notification sections in~\cite{lbug,lbtp}.
+notification delivery. This checks the whole notification mechanism.
+
+\req Package \texttt{glite-lb-client} installed, valid user credentials, environment variables (namely \texttt{GLITE\_WMS\_NOTIF\_SERVER}) set to point to the \LB server.
+
+\how
+First register for notifications. Option \texttt{-O}\footnote{Supported since \LBver{2.0}. For older versions, you need to use option \texttt{-j} and give at least one JobID of a job that already exists!} allows you to register for notifications on all your jobs:
+\begin{quote}
+\texttt{glite-lb-notify new -O}
+\end{quote}
+This prints out a notification ID (\emph{NotifID}) and validity information. Continue by listening for notifications, using that ID:
+\begin{quote}
+\texttt{glite-lb-notify receive} \emph{NotifID}
+\end{quote}
+Then, using a different console, register at least one job and generate events. Make sure you use the same Identity used to register for notifications in the first place.
+\begin{quote}
+\texttt{glite-lb-running.sh -m} \emph{server\_name:port}
+\end{quote}
+
+\result
+The listener (\texttt{glite-lb-notify}) should print out notifications (JobID, state and owner), showing progressive changes of job state as events arrive to the server. There will be multiple notifications showing the same state. That is normal since not all events result in a job state change. If you want to see notifications only for job state changes, use option \texttt{-c} on registration.
+
+For more test scenarios, see notification-related sections in~\cite{lbug,lbtp}. Especially \cite{lbug} has a comprehensive set of examples using the \texttt{glite-lb-notify} command.
