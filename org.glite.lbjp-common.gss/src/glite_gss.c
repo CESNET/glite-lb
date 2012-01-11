@@ -713,7 +713,7 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
       buffer.length = strlen(proxy_file);
 
       major_status = gss_import_cred(&minor_status, &gss_cred,
-				     get_oid("GSI"), 1,
+				     GSS_C_NO_OID, 1,
 				     &buffer, 0, NULL);
       free(buffer.value);
       if (GSS_ERROR(major_status)) {
