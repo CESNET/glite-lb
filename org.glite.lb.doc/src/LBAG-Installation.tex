@@ -206,7 +206,7 @@ To use 3\,GB or more efficiently, 64bit OS and MySQL server versions are recomme
 offered load.
 \end{itemize}
 
-\subsubsection{Standard installation}
+\subsubsection{Standard Installation}
 
 \begin{itemize}
 \item Installing from \textbf{EMI or UMD repository} (applies to \LBver{3.0} and higher):
@@ -278,7 +278,29 @@ In addition to those, YAIM LB module uses following parameters:
 
 Lists are separated by comma.
 
-\subsubsection{Migration to a different OS version}
+\subsubsection{Configuration Files}
+
+Using \emph{yaim}, you do not need to edit \LB's configuration files for your installation to work. On the other hand, if you cannot use \emph{yaim}, you may configure your \LB server through config files detailed bellow. Since \LBver{3.0} configuration files are located in \texttt{/etc/glite-lb/}.
+
+\begin{tabularx}{\textwidth}{>{\tt}lX}
+glite-lb-authz.conf & Authorization policy, in use since \LBver{2.1}. Extensively explained in Section \ref{inst:authz} (page \pageref{inst:authz}).\\
+log4crc & Logging output configuration, in use since \LBver{2.0}. Explained in Section \ref{inst:comlog} (page \pageref{inst:comlog}).\\
+msg.conf & Messaging plugin and features configuration, in use since \LBver{3.0}. Explained in Section \ref{inst:messaging} (page \pageref{inst:messaging}).
+\end{tabularx}
+
+Besides configuration files observed directly by \LB's services, there is a score of other files installed by \LB and used by other system services. They are:
+
+\begin{tabularx}{\textwidth}{>{\tt}lX}
+/etc/cron.d/glite-lb-purge.cron & Regular execution of the \LB purger (see Section \ref{inst:purge}).\\
+/etc/cron.d/locallogger.cron & Prevent stale handle on \texttt{hostcert.pem}.\\
+%/etc/cron.d/glite-lb-notif.cron & Refresh registration of \LB notifications set up by site admins.\\
+/etc/init.d/glite-lb-bkserverd & Start up the \LB server. Many command line options are hard-coded in the script.\footnotemark\\
+/etc/init.d/glite-lb-harvester & Start up the \LB harvester. Some command line options are hard-coded in the script.\\
+/etc/init.d/glite-lb-locallogger & Start up the \LB local logger. Some command line options are hard-coded in the script.
+\end{tabularx}
+\footnotetext{When using \emph{yaim}, these scripts are generated and command line options inserted by \emph{yaim}.}
+
+\subsubsection{Migration to a Different OS Version}
 \label{inst:OSmigration}
 Migration of a LB server to different machine is possible using
 following simple procedure (just file copy of the MySQL database). We
