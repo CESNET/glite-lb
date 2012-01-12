@@ -113,20 +113,7 @@ or
     https://pelargir.ics.muni.cz:9000/1234567890?text
 \end{verbatim}
 
-\subsubsection{\LB Server Configuration}
-
-As of \LBver{3.0}, it is also possible to use the HTTPs interface to retrieve essential information on \LB Server configuration. For example:
-\begin{verbatim}
-  firefox https://scientific65.zcu.cz:9010/?configuration
-\end{verbatim}
-
-Among others, the following fields may be discerned from the URL:
-
-\begin{tabularx}{\textwidth}{lX}
-\label{s:findbroker}
-\texttt{msg\_brokers} & A list of messaging brokers that \LB server uses to deliver messages.\\
-\texttt{msg\_prefixes} & A list of permissible prefixes that must be used in messaging topics.\\
-\end{tabularx}
+\input{https_configuration}
 
 \subsection{Job state changes as an RSS feed}
 The \LB includes an RSS interface allowing users to keep trace of their jobs in a very simple way using an RSS reader. The parameters of the RSS feeds are predefined, so no configuration is required.

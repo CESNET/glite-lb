@@ -302,6 +302,8 @@ Besides configuration files observed directly by \LB's services, there is a scor
 \end{tabularx}
 \footnotetext{When using \emph{yaim}, these scripts are generated and command line options inserted by \emph{yaim}.}
 
+\input{https_configuration}
+
 \subsubsection{Migration to a Different OS Version}
 \label{inst:OSmigration}
 Migration of a LB server to different machine is possible using
@@ -428,6 +430,7 @@ Overall, \texttt{msg.conf} specifies the following information:
 \item Broker settings (attribute \texttt{broker}). They may require an adaptive change in case the currently configured broker disappears and automatic checks fail to switch the settings to another one on time.
 \item Permissible topic title prefixes (attribute \texttt{prefix}). Registrations for delivery to topics not matching the prefix will be rejected. In case no prefix is specified, \LB applies the default EGI prefix: \texttt{grid.emi.}
 \end{itemize}
+Note: Current broker and prefix settings can be retrieved from the \LB server by any authenticated user reading the server's configuration page -- see Section \ref{s:findbroker}.
 
 
 \subsubsection{Index configuration}

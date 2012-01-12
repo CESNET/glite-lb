@@ -1,0 +1,15 @@
+\subsubsection{Reading \LB Server Configuration over HTTPs}
+
+As of \LBver{3.0}, it is also possible to use the HTTPs interface to retrieve essential information on \LB Server configuration. For example:
+\begin{verbatim}
+  firefox https://pelargir.ics.muni.cz:9000/?configuration
+\end{verbatim}
+
+Among others, the following fields may be discerned from the URL:
+
+\begin{tabularx}{\textwidth}{lX}
+\label{s:findbroker}
+\texttt{msg\_brokers} & A list of messaging brokers that \LB server uses to deliver messages.\\
+\texttt{msg\_prefixes} & A list of permissible prefixes that must be used in messaging topics.\\
+\end{tabularx}
+

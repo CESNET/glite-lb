@@ -99,7 +99,7 @@ LBUG.pdf: ${COMMON} \
 	LBUG.tex \
 	LBUG-Abstract.tex \
 	LBUG-Introduction.tex components.tex \
-	LBUG-Tools.tex logevent.tex notify.tex log_usertag.tex change_acl.tex \
+	LBUG-Tools.tex logevent.tex https_configuration.tex notify.tex log_usertag.tex change_acl.tex \
 	LBUG-Troubleshooting.tex \
 	LBUG-Appendix.tex events.tex status.tex faq.tex
 
@@ -107,6 +107,7 @@ LBAG.pdf: ${COMMON} \
 	LBAG.tex \
 	LBAG-Abstract.tex \
 	LBAG-Introduction.tex components.tex \
+	https_configuration.tex \
 	LBAG-Installation.tex \
 	LBAG-Running.tex \
 	LBAG-Troubleshooting.tex faq.tex
