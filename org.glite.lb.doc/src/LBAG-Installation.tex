@@ -291,13 +291,14 @@ msg.conf & Messaging plugin and features configuration, in use since \LBver{3.0}
 
 Besides configuration files observed directly by \LB's services, there is a score of other files installed by \LB and used by other system services. They are:
 
+\newcounter{initdfootnote}
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 /etc/cron.d/glite-lb-purge.cron & Nightly execution of the \LB purger (see Section \ref{inst:purge}).\\
 /etc/cron.d/locallogger.cron & Prevent stale handle on \texttt{hostcert.pem} by running a \texttt{touch} on it quarter-daily.\\
 %/etc/cron.d/glite-lb-notif.cron & Refresh registration of \LB notifications set up by site admins.\\
-/etc/init.d/glite-lb-bkserverd & Start up the \LB server. Many command line options are hard-coded in the script.\footnotemark\\
-/etc/init.d/glite-lb-harvester & Start up the \LB harvester. Some command line options are hard-coded in the script.\\
-/etc/init.d/glite-lb-locallogger & Start up the \LB local logger. Some command line options are hard-coded in the script.
+/etc/init.d/glite-lb-bkserverd & Start up the \LB server. Many command line options are hard-coded in the script.\footnotemark\setcounter{initdfootnote}{\thefootnote}\\
+/etc/init.d/glite-lb-harvester & Start up the \LB harvester. Some command line options are hard-coded in the script.\footnotemark[\theinitdfootnote]\\
+/etc/init.d/glite-lb-locallogger & Start up the \LB local logger. Some command line options are hard-coded in the script.\footnotemark[\theinitdfootnote]
 \end{tabularx}
 \footnotetext{When using \emph{yaim}, these scripts are generated and command line options inserted by \emph{yaim}.}
 
