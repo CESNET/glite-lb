@@ -30,25 +30,25 @@ gLite\footnote{\url{http://www.glite.org}} middleware~\cite{glite}, and then in 
 The complete \LB Documentation consists of the following parts:
 \begin{itemize}
 \item \textbf{\LB User's Guide} 
-   \ifx\insideUG\undefined{\cite{lbug}}\else{- this document}\fi. 
+   \ifx\insideUG\undefined{\cite{lbug}}\else{-- this document}\fi. 
    \input{LBUG-Abstract}
 \item \textbf{\LB Administrator's Guide} 
-   \ifx\insideAG\undefined{\cite{lbag}}\else{- this document}\fi. 
+   \ifx\insideAG\undefined{\cite{lbag}}\else{-- this document}\fi. 
    \input{LBAG-Abstract}
 \item \textbf{\LB Developer's Guide} 
-   \ifx\insideDG\undefined{\cite{lbdg}}\else{- this document}\fi. 
+   \ifx\insideDG\undefined{\cite{lbdg}}\else{-- this document}\fi. 
    \input{LBDG-Abstract}
 \item \textbf{\LB Test Plan} 
-   \ifx\insideTP\undefined{\cite{lbtp}}\else{- this document}\fi. 
+   \ifx\insideTP\undefined{\cite{lbtp}}\else{-- this document}\fi. 
    \input{LBTP-Abstract}
 \end{itemize}
 
 \textbf{The following versions of \LB service are covered by these documents:}
 \begin{itemize}
-%\item \LBver{x.x}: included in the EMI-3 Monte Bianco release
-\item \LBver{3.2}: included in the EMI-2 Matterhorn release
-\item \LBver{3.1}: an update for the EMI-1 Kebnekaise release
-\item \LBver{3.0}: included in the EMI-1 Kebnekaise release
+%\item \LBver{x.x}: included in the EMI-3 \emph{Monte Bianco} release
+\item \LBver{3.2}: included in the EMI-2 \emph{Matterhorn} release
+\item \LBver{3.1}: an update for the EMI-1 \emph{Kebnekaise} release
+\item \LBver{3.0}: included in the EMI-1 \emph{Kebnekaise} release
 \item \LBver{2.1}: replacement for \LBver{2.0} in gLite 3.2,
 \item \LBver{2.0}: current stable version, in production as part of gLite 3.2,
 \item \LBver{1.x}: old stable version, in production as part of gLite 3.1.
@@ -57,9 +57,10 @@ The complete \LB Documentation consists of the following parts:
 
 \textbf{\LB packages can be obtained from two distinguished sources:}
 
+\nopagebreak
 \begin{itemize}
-\item \textbf{gLite releases}: gLite node-type repositories, offering a specific repository for each node type such as \emph{glite-LB}
-\item \textbf{emi releases}: EMI repository or EGI's UMD repository, offering all EMI middleware packages from a single repository and relying on EPEL for dependencies
+\item \textbf{gLite releases}: gLite node-type repositories, offering a specific repository for each node type such as \emph{glite-LB}. Only binary RPM packages are available from that source.
+\item \textbf{emi releases}: EMI repository\footnote{\url{http://emisoft.web.cern.ch/emisoft/}} or EGI's UMD repository,\footnote{\url{http://repository.egi.eu/}} offering all EMI middleware packages from a single repository. There are RPM packages, both source and binary, the latter relying on EPEL for dependencies. There are also DEB packages (starting with EMI-2) and \texttt{tar.gz} archives.
 \end{itemize}
 
 \emph{Note:} Despite offering the same functionality, binary packages obtained from different repositories differ and switching from one to the other for upgrades may not be altogether straightforward.
