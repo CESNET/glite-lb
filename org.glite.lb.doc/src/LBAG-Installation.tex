@@ -383,6 +383,22 @@ Overall, \texttt{msg.conf} specifies the following information:
 \item Permissible topic title prefixes (attribute \texttt{prefix}). Registrations for delivery to topics not matching the prefix will be rejected. In case no prefix is specified, \LB applies the default EGI prefix: \texttt{grid.emi.}
 \end{itemize}
 
+\subsubsection{Messaging: Persistent Registration for Notifications}
+\label{inst:messaging}
+
+Starting with \LBver{3.2} there is a mechanism for site admins to set up and maintain ``permanent'' registrations for notifications, which should be always kept active on the server. A maintainer script regularly checks existing registrations, extends their validity, and sets up new registrations.
+
+The process is governed by a separate configuration file \texttt{/etc/glite-lb/site-notif.conf}. The format of the file is simple, one line per registration, with each line giving a single-word title and a list of arguments to use for registration.\footnote{Command \texttt{glite-lb-notify} is used to make the registrations. See \cite{lbug} for applicable arguments.}
+
+For instance the following line in \texttt{/etc/glite-lb/site-notif.conf}:
+
+\begin{verbatim}
+testnotif	--state running -c -a x-msg://grid.emi.lbexample
+\end{verbatim}
+
+\indent{}will set up and maintain registration for messages to be generated whenever a job changes state (\texttt{-c}) to \emph{running.} Messages will be delivered to topic \texttt{grid.emi.lbexample}. The word \texttt{testnotif} is just a plain-text handle.
+
+The maintainer script runs regularly and makes sure that registrations do not expire and that the messaging infrastructure keeps receiving them. In case of a listener (messaging broker) being unavailable for a prolonged period of time, the registration is terminated to prevent build-up of undelivered messages. A new registration will be created next time round, and if the listener comes up before then, normal operation will resume.
 
 \subsubsection{Index configuration}
 
