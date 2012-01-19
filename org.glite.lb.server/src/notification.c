@@ -688,8 +688,9 @@ static int split_cond_list(
 
 
 	if ( !conditions || !conditions[0] ) {
-		if (ctx->noAuth) nconds_ct = jobs_ct = 0;
-		else return edg_wll_SetError(ctx, EINVAL, "Empty condition list");
+		nconds_ct = jobs_ct = 0;
+		//if (ctx->noAuth) nconds_ct = jobs_ct = 0;
+		//else return edg_wll_SetError(ctx, EINVAL, "Empty condition list");
 	}
 	else for ( nconds_ct = jobs_ct = i = 0; conditions[i]; i++ ) {
 		if ( conditions[i][0].attr && conditions[i][0].attr != EDG_WLL_QUERY_ATTR_JOBID )
