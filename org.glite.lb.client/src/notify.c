@@ -553,13 +553,14 @@ cleanup:
 		*/
 		free(conditions);
 	}
-	
-	if (edg_wll_Error(ctx,&errt,&errd))
+
+	int retval;
+	if (retval = edg_wll_Error(ctx,&errt,&errd)) 
 		fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
 
 	edg_wll_NotifCloseFd(ctx);
 	edg_wll_FreeContext(ctx);
 	edg_wll_poolFree();
 
-	return 0;
+	return retval;
 }
