@@ -97,6 +97,14 @@ edg_wll_get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
 int
 edg_wll_acl_print(edg_wll_Context ctx, edg_wll_Acl a, char **policy);
 
+int
+check_jobstat_authz(edg_wll_Context ctx,
+                    const edg_wll_JobStat *stat,
+                    int job_flags,
+                    edg_wll_Acl acl,
+                    struct _edg_wll_GssPrincipal_data *peer,
+                    int *authz_flags);
+
 #ifdef __cplusplus
 }
 #endif

@@ -89,38 +89,6 @@ static char* matched_substr(char *in, regmatch_t match)
 	return s;
 }
 
-static int
-check_jobstat_authz(edg_wll_Context ctx,
-	edg_wll_JobStat *stat,
-	edg_wll_Acl acl,
-	int *flags)
-{
-	struct _edg_wll_GssPrincipal_data princ;
-
-	*flags = 0;
-
-	if (ctx->noAuth)
-		return 1;
-	if (ctx->peerName == NULL)
-		return 0;
-	if (edg_wll_gss_equal_subj(ctx->peerName, stat->owner))
-		return 1;
-	if (stat->payload_owner && edg_wll_gss_equal_subj(ctx->peerName, stat->payload_owner))
-		return 1;
-	if (acl && edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ) == 0)
-		return 1;
-	edg_wll_ResetError(ctx);
-	princ.name = ctx->peerName;
-	princ.fqans = ctx->fqans;
-	if (check_authz_policy(&ctx->authz_policy, &princ, READ_ALL))
-		return 1;
-	if (check_authz_policy(&ctx->authz_policy, &princ, STATUS_FOR_MONITORING)) {
-		*flags |= STATUS_FOR_MONITORING;
-		return 1;
-	}
-	return 0;
-}
-
 int edg_wll_JobStatusServer(
 	edg_wll_Context	ctx,
 	glite_jobid_const_t		job,
@@ -145,7 +113,7 @@ int edg_wll_JobStatusServer(
 	glite_lbu_Statement sh = NULL;
 	int num_sub, num_f, i, ii;
 	int authz_flags = 0;
-
+	struct _edg_wll_GssPrincipal_data peer;
 
 	edg_wll_ResetError(ctx);
 
@@ -175,7 +143,11 @@ int edg_wll_JobStatusServer(
 		
 		if (edg_wll_GetACL(ctx, job, &acl)) goto rollback;
 
-		if (check_jobstat_authz(ctx, stat, acl, &authz_flags) == 0) {
+		
+		memset(&peer, 0, sizeof(peer));
+		peer.name = ctx->peerName;
+		peer.fqans = ctx->fqans;
+		if (check_jobstat_authz(ctx, stat, flags, acl, &peer, &authz_flags) == 0) {
 			edg_wll_SetError(ctx, EPERM, "not owner");
 			goto rollback;
 		}
@@ -425,8 +397,11 @@ rollback:
 	free(string_jobid);
 	free(md5_jobid);
 
-	if (authz_flags)
+	if (authz_flags & STATUS_FOR_MONITORING)
 		blacken_fields(stat, authz_flags);
+
+	if (authz_flags & READ_ANONYMIZED)
+		anonymize_stat(ctx, stat);
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }

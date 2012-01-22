@@ -84,7 +84,6 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		       const char      *dest_url,
 		       const char      *owner,
                        int              flags,
-		       int		authz_flags,
 		       int		expires,
 		       const edg_wll_JobStat notif_job_stat);
 
@@ -120,7 +119,7 @@ int edg_wll_NotifMatch(edg_wll_Context context, const edg_wll_JobStat *oldstat, 
 /**
  * Check permissions on job status.
  */
-int edg_wll_NotifCheckACL(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip, int *authz_flags);
+int edg_wll_NotifCheckAuthz(edg_wll_Context ctx,edg_wll_JobStat *stat,int flags,const char *recip);
 
 #ifdef __cplusplus
 }

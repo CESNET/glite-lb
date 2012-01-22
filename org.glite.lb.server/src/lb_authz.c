@@ -1170,3 +1170,42 @@ end:
 
     return ret;
 }
+
+int
+check_jobstat_authz(edg_wll_Context ctx,
+	    	    const edg_wll_JobStat *stat,
+	    	    int job_flags,
+	    	    edg_wll_Acl acl,
+	    	    struct _edg_wll_GssPrincipal_data *peer,
+	    	    int *authz_flags)
+{
+    *authz_flags = 0;
+
+    if (peer == NULL || peer->name == NULL)
+	return 0;
+
+    if (edg_wll_gss_equal_subj(peer->name, stat->owner))
+	return 1;
+    if (stat->payload_owner && edg_wll_gss_equal_subj(peer->name, stat->payload_owner))
+	return 1;
+
+    if (job_flags & EDG_WLL_NOTIF_HISTORY ||
+	check_authz_policy(&ctx->authz_policy, peer, READ_ANONYMIZED))
+	*authz_flags |= READ_ANONYMIZED;
+
+    if (ctx->noAuth ||
+	edg_wll_amIroot(peer->name, peer->fqans, &ctx->authz_policy))
+	return 1;
+    if (acl && edg_wll_CheckACL_princ(ctx, acl, EDG_WLL_CHANGEACL_READ, peer) == 0)
+	return 1;
+    edg_wll_ResetError(ctx);
+
+    if (check_authz_policy(&ctx->authz_policy, peer, READ_ALL))
+	return 1;
+    if (check_authz_policy(&ctx->authz_policy, peer, STATUS_FOR_MONITORING)) {
+	*authz_flags |= STATUS_FOR_MONITORING;
+	return 1;
+    }
+
+    return 0;
+}

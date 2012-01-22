@@ -17,11 +17,14 @@ limitations under the License.
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include <cclassad.h>
 
 #include <glite/security/glite_gss.h>
 #include "authz_policy.h"
+#include "server_state.h"
+#include "crypto.h"
 
 struct action_name action_names[] = {
     { ADMIN_ACCESS,	"ADMIN_ACCESS" },
@@ -34,6 +37,7 @@ struct action_name action_names[] = {
     { READ_ALL, "READ_ALL" },
     { PURGE, "PURGE" },
     { GRANT_OWNERSHIP, "GRANT_OWNERSHIP" },
+    { READ_ANONYMIZED, "READ_ANONYMIZED" },
 };
 
 static int num_actions =
@@ -200,4 +204,48 @@ blacken_fields(edg_wll_JobStat *stat, int flags)
     edg_wll_CpyStatus(&new_stat, stat);
     edg_wll_FreeStatus(&new_stat);
     return 0;
+}
+
+int
+anonymize_stat(edg_wll_Context ctx, edg_wll_JobStat *stat)
+{
+    char *salt = NULL, *hash;
+    int ret;
+
+    ret = edg_wll_GetServerState(ctx, EDG_WLL_STATE_ANONYMIZATION_SALT, &salt);
+    switch (ret) {
+	case ENOENT:
+	    edg_wll_ResetError(ctx);
+	    ret = generate_salt(ctx, &salt);
+	    if (ret)
+		break;
+	    ret = edg_wll_SetServerState(ctx, EDG_WLL_STATE_ANONYMIZATION_SALT, salt);
+	    break;
+	default:
+	    break;
+    }
+    if (ret)
+	goto end;
+
+    ret = sha256_salt(ctx, stat->owner, salt, &hash);
+    if (ret)
+	goto end;
+    free(stat->owner);
+    stat->owner = hash;
+
+    if (stat->payload_owner) {
+	ret = sha256_salt(ctx, stat->payload_owner, salt, &hash);
+	if (ret)
+	    goto end;
+	free(stat->payload_owner);
+	stat->payload_owner = hash;
+    }
+
+    ret = 0;
+
+end:
+    if (salt)
+	free(salt);
+    
+    return ret;
 }

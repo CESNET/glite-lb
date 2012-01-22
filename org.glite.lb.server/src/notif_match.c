@@ -49,7 +49,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	edg_wll_NotifId		nid = NULL;
 	char	*jobq,*ju = NULL,*jobc[6];
 	glite_lbu_Statement	jobs = NULL;
-	int	ret,flags,authz_flags = 0;
+	int	ret,flags;
 	size_t i;
 	time_t	expires,now = time(NULL);
 	
@@ -121,8 +121,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "[%d] NOTIFY:%s expired at %s UTC", 
 				getpid(),jobc[0],asctime(gmtime(&expires)));
 		}
-		else if (notif_match_conditions(ctx,oldstat,&newstat,jobc[4],flags) &&
-				edg_wll_NotifCheckACL(ctx,&newstat,jobc[3], &authz_flags))
+		else if (notif_match_conditions(ctx,oldstat,&newstat,jobc[4],flags))
 		{
 			char	*errt, *errd;
 			char	*dest;
@@ -152,7 +151,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			/* XXX: only temporary hack!!!
 			 */
 			ctx->p_instance = strdup("");
-			if ( edg_wll_NotifJobStatus(ctx, nid, dest, jobc[3], atoi(jobc[5]), authz_flags, expires, newstat) )
+			if ( edg_wll_NotifJobStatus(ctx, nid, dest, jobc[3], atoi(jobc[5]), expires, newstat) )
 			{
 				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
 				goto err;
@@ -234,48 +233,38 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *old
  * effective VOMS groups of the recipient are not available here, should be 
  * probably stored along with the registration.
  */
-int edg_wll_NotifCheckACL(edg_wll_Context ctx,const edg_wll_JobStat *stat,const char *recip, int *authz_flags)
+int edg_wll_NotifCheckAuthz(edg_wll_Context ctx,edg_wll_JobStat *stat,
+			    int flags,const char *recip)
 {
 	int		ret;
 	struct _edg_wll_GssPrincipal_data princ;
 	edg_wll_Acl	acl = NULL;
+	int		authz_flags = 0;
 
 	memset(&princ, 0, sizeof(princ));
-	*authz_flags = 0;
-
-	edg_wll_ResetError(ctx);
-	if (strcmp(stat->owner,recip) == 0
-		|| edg_wll_amIroot(recip,NULL,&ctx->authz_policy)) return 1;
-	if (stat->payload_owner && strcmp(stat->payload_owner,recip) == 0)
-		return 1;
 	princ.name = (char *)recip;
-	if (check_authz_policy(&ctx->authz_policy, &princ, READ_ALL))
-		return 1;
 
 	if (stat->acl) {
 		acl =  calloc(1,sizeof *acl);
 		ret = edg_wll_DecodeACL(stat->acl,&acl->value);
 		if (ret) {
-			edg_wll_FreeAcl(acl);
-			edg_wll_SetError(ctx,EINVAL,"decoding ACL");
-			return 0;
+			free(acl);
+			acl = NULL;
 		}
+	}
 
-		acl->string = stat->acl; 
-		ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ);
-		acl->string = NULL;
+	ret = check_jobstat_authz(ctx, stat, flags, acl, &princ, &authz_flags);
+	if (acl)
 		edg_wll_FreeAcl(acl);
-		if (ret == 0)
-			return 1;
-		edg_wll_ResetError(ctx);
-	}
+	if (ret != 1)
+		return ret;
 
-	if (check_authz_policy(&ctx->authz_policy, &princ, STATUS_FOR_MONITORING)) {
-		*authz_flags |= STATUS_FOR_MONITORING;
-                return 1;
-	}
+	if (authz_flags & STATUS_FOR_MONITORING)
+		blacken_fields(stat, authz_flags);
+	if (authz_flags & READ_ANONYMIZED)
+		anonymize_stat(ctx, stat);
 
-	return 0;
+	return ret;
 }
 
 
