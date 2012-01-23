@@ -172,6 +172,7 @@ typedef struct _edg_wll_JobStat {
 #define EDG_WLL_STAT_CHILDSTAT	4	/**< apply the flags recursively to subjobs */
 #define EDG_WLL_STAT_CHILDHIST_FAST 8		/**< partially complete histogram of child job states */
 #define EDG_WLL_STAT_CHILDHIST_THOROUGH 16	/**< full and up-to date histogram of child job states */
+#define EDG_WLL_NOTIF_ANONYMIZE	32	/**< Always return user identity anonymized */
 #define EDG_WLL_NOTIF_TERMINAL_STATES 64	/**< Generate notifications on terminal states */
 #define EDG_WLL_NOTIF_HISTORY 128	/**< Attach all job's events to the notification */
 #define EDG_WLL_NOTIF_BOOTSTRAP 256	/**< send the state of the all already existing jobs too */

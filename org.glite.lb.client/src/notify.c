@@ -63,6 +63,7 @@ static void usage(char *cmd)
 			"    -B | --bootstrap	Also send past events matching conditions\n"
 			"    -T | --terminal	Notify only when a job reaches terminal state\n"
 			"    -H | --history	Same as -T plus attach a history of all job's Events\n"
+			"    -N | --aNonymize	Anonymize all owner data in all messages under this registration\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
 		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } -t requested_validity ] notifids \n"
@@ -140,6 +141,7 @@ int main(int argc,char **argv)
 			{"bootstrap", no_argument, 0, 'B'},
 			{"terminal", no_argument, 0, 'T'},
 			{"history", no_argument, 0, 'H'},
+			{"anonymize", no_argument, 0, 'N'},
 			{0, 0, 0, 0}};
            	int option_index = 0;
 		char *single, *statelist, *notif_server;
@@ -151,7 +153,7 @@ int main(int argc,char **argv)
 		conditions = (edg_wll_QueryRec **)calloc(MAX_NEW_CONDS + 1,sizeof(edg_wll_QueryRec *));
 		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 
-		while ((c = getopt_long(argc-1,argv+1,"j:o:v:n:s:a:t:f:cOS:JBTH",long_options,&option_index)) > 0) { switch (c) {
+		while ((c = getopt_long(argc-1,argv+1,"j:o:v:n:s:a:t:f:cOS:JBTHN",long_options,&option_index)) > 0) { switch (c) {
 			case 'j':
 				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
@@ -212,6 +214,8 @@ int main(int argc,char **argv)
 				flags |= EDG_WLL_NOTIF_TERMINAL_STATES; break;
 			case 'H':
 				flags |= EDG_WLL_NOTIF_TERMINAL_STATES | EDG_WLL_NOTIF_HISTORY; break;
+			case 'N':
+				flags |= EDG_WLL_NOTIF_ANONYMIZE; break;
 			case 'c':
 				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_STATUS;

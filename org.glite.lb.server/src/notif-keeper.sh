@@ -29,10 +29,12 @@ while read line ; do
 	cleanline=`echo $line | sed -r 's/^\s*//'`
 	echo "$line" | grep -E "^#" > /dev/null
 	if [ $? -ne 0 ]; then
-		HANDLES[$TOTALNOTIFS]=`echo $cleanline | sed -r 's/\s+.*$//'`
-		OPTIONS[$TOTALNOTIFS]=`echo $cleanline | sed -r 's/^\w+\s+//'`
-		TOPICS[$TOTALNOTIFS]=`echo ${OPTIONS[${TOTALNOTIFS}]} | grep -E -o '\-a[ ]+x-msg://[^ ]+' | sed -r 's/^.*msg:\/\///'`
-		TOTALNOTIFS=$(($TOTALNOTIFS+1))
+		if [ "$cleanline" != "" ]; then
+			HANDLES[$TOTALNOTIFS]=`echo $cleanline | sed -r 's/\s+.*$//'`
+			OPTIONS[$TOTALNOTIFS]=`echo $cleanline | sed -r 's/^\w+\s+//'`
+			TOPICS[$TOTALNOTIFS]=`echo ${OPTIONS[${TOTALNOTIFS}]} | grep -E -o '\-a[ ]+x-msg://[^ ]+' | sed -r 's/^.*msg:\/\///'`
+			TOTALNOTIFS=$(($TOTALNOTIFS+1))
+		fi
 	fi
 done < $infile
 
