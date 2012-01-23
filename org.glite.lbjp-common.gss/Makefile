@@ -139,10 +139,10 @@ test_coverage:
 	cd coverage && for i in ${OBJS}; do gcov -o .libs/ $$i ; done
 
 gss_server: gss_server.o example_common.o
-	${LINK} -o $@ ${default_gss} $^ -lefence
+	${LINK} -o $@ ${default_gss} $^ 
 	
 gss_client: gss_client.o example_common.o
-	${LINK} -o $@ ${default_gss} $^ -lefence
+	${LINK} -o $@ ${default_gss} $^
 
 examples:
 
