@@ -50,7 +50,7 @@ main(int argc, char *argv[])
     ret = edg_wll_gss_acquire_cred_gsi(NULL, NULL, &cred, &gss_ret);
     if (ret) {
 	print_gss_err(ret, &gss_ret, "Failed to load credentials");
-	return 1;
+	fprintf(stderr, "continuing with default ones ...\n");
     }
 
     while (1) {
