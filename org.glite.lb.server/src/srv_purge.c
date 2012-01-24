@@ -250,6 +250,11 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 	purge_ctx_t prg;
 	struct _edg_wll_GssPrincipal_data princ;
 
+	memset(&prg, 0, sizeof prg);
+	prg.naffected_jobs = 0;
+	prg.parse = 0;
+	prg.dumpfile = -1;
+
 	memset(&princ, 0, sizeof princ);
 	princ.name = ctx->peerName;
         princ.fqans = ctx->fqans;
@@ -261,11 +266,6 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 
 	edg_wll_ResetError(ctx);
 	memset(result, 0, sizeof(*result));
-
-	memset(&prg, 0, sizeof prg);
-	prg.naffected_jobs = 0;
-	prg.parse = 0;
-	prg.dumpfile = -1;
 
 	if ( (request->flags & EDG_WLL_PURGE_SERVER_DUMP) && 
 		 ((prg.dumpfile = edg_wll_CreateTmpPurgeFile(ctx, &tmpfname)) == -1 ) )
@@ -798,6 +798,10 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 				edg_wll_ResetError(ctx);
 			}
 
+			// notifications
+			memcpy(&new_stat, stat, sizeof new_stat);
+			new_stat.state = EDG_WLL_JOB_PURGED;
+			edg_wll_NotifMatch(ctx, stat, &new_stat);
 		}
 
 		if ( purge )
@@ -912,14 +916,6 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 			}
 			glite_lbu_FreeStmt(&q);
 			free(stmt); stmt = NULL;
-		}
-
-		if ( purge )
-		{
-			// notifications
-			memcpy(&new_stat, stat, sizeof new_stat);
-			new_stat.state = EDG_WLL_JOB_PURGED;
-			edg_wll_NotifMatch(ctx, stat, &new_stat);
 		}
 
 		if (dump >= 0) 

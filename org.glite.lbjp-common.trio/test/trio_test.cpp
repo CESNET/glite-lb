@@ -29,12 +29,14 @@ class TrioTest: public  CppUnit::TestFixture
 	CPPUNIT_TEST(escapeULM);
 	CPPUNIT_TEST(escapeXML);
 	CPPUNIT_TEST(escapeSQL);
+	CPPUNIT_TEST(escapeJSON);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
 	void escapeULM();
 	void escapeXML();
 	void escapeSQL();
+	void escapeJSON();
 };
 
 void TrioTest::escapeULM()
@@ -45,6 +47,8 @@ void TrioTest::escapeULM()
 	std::cerr << e << std::endl;
 
 	CPPUNIT_ASSERT_MESSAGE("escape ULM failed",!strcmp(e,r));
+
+	free(e);
 }
 
 void TrioTest::escapeXML()
@@ -55,6 +59,8 @@ void TrioTest::escapeXML()
 	std::cerr << e << std::endl;
 
 	CPPUNIT_ASSERT_MESSAGE("escape XML failed",!strcmp(e,r));
+
+	free(e);
 }
 
 void TrioTest::escapeSQL()
@@ -65,6 +71,20 @@ void TrioTest::escapeSQL()
 	std::cerr << e << std::endl;
 
 	CPPUNIT_ASSERT_MESSAGE("escape SQL failed",!strcmp(e,r));
+
+	free(e);
+}
+
+void TrioTest::escapeJSON() {
+	char	*e, *r = "START Jásoň doesn't like: \\\\\\n\\r\\b\\r\\t\\f and \\u001b END";
+	int	ret;
+
+	ret = trio_asprintf(&e, "START %|Js END", "Jásoň doesn't like: \\\n\r\b\r\t\f and \x1B");
+	std::cerr << e << std::endl;
+
+	CPPUNIT_ASSERT_MESSAGE("escape JSON failed",ret > 0 && strcmp(e,r) == 0);
+
+	free(e);
 }
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TrioTest );

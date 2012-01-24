@@ -50,16 +50,20 @@ static void usage(char *cmd)
 			me);
 	}
 	if ( !cmd || !strcmp(cmd, "new") )
-		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity -j jobid  { -o owner | -O }  -n network_server -v virtual_organization --states state1,state2,... -c -f flags]\n"
+		fprintf(stderr,"\n'new' command usage: %s new [ { -s socket_fd | -a fake_addr } -t requested_validity -j jobid  { -o owner | -O }  -n network_server -v virtual_organization --state state1,state2,... -c -J -B -T -H -f flags]\n"
 			"    jobid		Job ID to connect notif. reg. with\n"
 			"    owner		Match this owner DN\n"
 			"    requested_validity	Validity of notification req. in seconds\n"
-			"    flags		0 - return basic status, 1 - return also JDL in status\n"
-			"         		256 - bootstrap stream (send all existing jobs too)\n"
+			"    flags		Numeric flags, can be also represented by cmdline options bellow\n"
 			"    network_server	Match only this network server (WMS entry point)\n"
 			"    -O			Match owner - credentials are retrieved from environment\n"
 			"    -c			Match only on state change\n"
 			"    -S | --state	Match on events resulting in listed (coma-delimited) states\n"
+			"    -J | --jdl		Attach JDL to job status being returned\n"
+			"    -B | --bootstrap	Also send past events matching conditions\n"
+			"    -T | --terminal	Notify only when a job reaches terminal state\n"
+			"    -H | --history	Same as -T plus attach a history of all job's Events\n"
+			"    -N | --aNonymize	Anonymize all owner data in all messages under this registration\n"
 			, me);
 	if ( !cmd || !strcmp(cmd, "bind") )
 		fprintf(stderr,"\n'bind' command usage: %s bind [ { -s socket_fd | -a fake_addr } -t requested_validity ] notifids \n"
@@ -133,6 +137,11 @@ int main(int argc,char **argv)
                 edg_wll_GssStatus	gss_code;
 		static struct option long_options[] = {
 			{"state", required_argument, 0, 'S'},
+			{"jdl", no_argument, 0, 'J'},
+			{"bootstrap", no_argument, 0, 'B'},
+			{"terminal", no_argument, 0, 'T'},
+			{"history", no_argument, 0, 'H'},
+			{"anonymize", no_argument, 0, 'N'},
 			{0, 0, 0, 0}};
            	int option_index = 0;
 		char *single, *statelist, *notif_server;
@@ -144,7 +153,7 @@ int main(int argc,char **argv)
 		conditions = (edg_wll_QueryRec **)calloc(MAX_NEW_CONDS + 1,sizeof(edg_wll_QueryRec *));
 		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 
-		while ((c = getopt_long(argc-1,argv+1,"j:o:v:n:s:a:t:f:cOS:",long_options,&option_index)) > 0) { switch (c) {
+		while ((c = getopt_long(argc-1,argv+1,"j:o:v:n:s:a:t:f:cOS:JBTHN",long_options,&option_index)) > 0) { switch (c) {
 			case 'j':
 				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
@@ -196,7 +205,17 @@ int main(int argc,char **argv)
 			case 't':
 				valid = time(NULL) + atol(optarg); break;
 			case 'f':
-				flags = atoi(optarg); break;
+				flags |= atoi(optarg); break;
+			case 'J':
+				flags |= EDG_WLL_STAT_CLASSADS; break;
+			case 'B':
+				flags |= EDG_WLL_NOTIF_BOOTSTRAP; break;
+			case 'T':
+				flags |= EDG_WLL_NOTIF_TERMINAL_STATES; break;
+			case 'H':
+				flags |= EDG_WLL_NOTIF_TERMINAL_STATES | EDG_WLL_NOTIF_HISTORY; break;
+			case 'N':
+				flags |= EDG_WLL_NOTIF_ANONYMIZE; break;
 			case 'c':
 				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
@@ -538,13 +557,14 @@ cleanup:
 		*/
 		free(conditions);
 	}
-	
-	if (edg_wll_Error(ctx,&errt,&errd))
+
+	int retval;
+	if (retval = edg_wll_Error(ctx,&errt,&errd)) 
 		fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
 
 	edg_wll_NotifCloseFd(ctx);
 	edg_wll_FreeContext(ctx);
 	edg_wll_poolFree();
 
-	return 0;
+	return retval;
 }

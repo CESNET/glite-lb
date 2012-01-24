@@ -34,6 +34,7 @@ typedef enum {
     READ_ALL		= 1 << 7,
     PURGE		= 1 << 8,
     GRANT_OWNERSHIP	= 1 << 9,
+    READ_ANONYMIZED 	= 1 << 10,
 } authz_action;
 
 typedef struct action_name {
@@ -69,5 +70,8 @@ find_authz_attr(const char *name);
 
 int
 blacken_fields(edg_wll_JobStat *, int flags);
+
+int
+anonymize_stat(edg_wll_Context, edg_wll_JobStat *);
 
 #endif

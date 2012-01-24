@@ -83,7 +83,7 @@ OBJS:=${JOBID_OBJS} ${PERF_OBJS} lb_plain_io.o events.o mini_http.o query_rec.o 
 	status.o xml_conversions.o xml_parse.o ulm_parse.o param.o \
 	events_parse.o il_string.o il_int.o notifid.o \
 	il_log.o il_msg.o log_msg.o context.o \
-	connpool.o 
+	connpool.o events_json.o
 LOBJS:=${OBJS:.o=.lo}
 
 THROBJS:=${OBJS:.o=.thr.o}
@@ -92,7 +92,8 @@ THRLOBJS:=${OBJS:.o=.thr.lo}
 HDRS:=context.h context-int.h lb_plain_io.h mini_http.h authz.h xml_parse.h \
 	xml_conversions.h log_proto.h events_parse.h il_string.h il_msg.h \
 	ulm_parse.h connpool.h notifid.h notif_rec.h padstruct.h \
-	query_rec.h timeouts.h LoggingExceptions.h CountRef.h ${PERF_HDRS} 
+	query_rec.h timeouts.h LoggingExceptions.h CountRef.h ${PERF_HDRS} \
+	events_json.h
 GEN_HDRS:=events.h jobstat.h common_version.h
 
 NOTHRSTATICLIB:=libglite_lb_common_${nothrflavour}.a

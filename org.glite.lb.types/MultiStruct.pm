@@ -9,6 +9,7 @@ sub new {
 	$self->{fields} = {};	# typ->{ name->StructField, ... }
 	$self->{order} = {};
 	$self->{flesh} = {};
+	$self->{terminal} = "";
 
 	bless $self;
 }
@@ -81,6 +82,11 @@ sub load {
 			next;
 		}
 
+		if (/^\@terminal\s+(\S+)$/) {
+			$self->{terminal} = $self->{terminal} . " " . $1;
+			next;
+		}
+
 		s/^\s*//;
 		my ($ftype,$fname,$comment) = split /\s+/,$_,3;
 		if ($ftype eq '_code_') {
@@ -143,6 +149,16 @@ sub getTypesOrdered {
 		my $ob = $self->{order}->{$b};
 		$oa <=> $ob;
 	} @names;
+}
+
+sub getTerminalStatusOrdered {
+	my $self = shift;
+	for my $stat ($self->getTypesOrdered) {
+		if ($self->{terminal} =~ m/\b$stat\b/) { 
+			push(@out, 1); }
+		else { push(@out, 0); }
+	}
+	@out;
 }
 
 sub getTypeComment {
@@ -208,6 +224,22 @@ sub getAllFieldsOrdered {
 		my $ob = $self->selectField($b)->{order};
 		$oa <=> $ob;
 	} @names;
+}
+
+sub getMaxSize {
+	my $self = shift;
+	my $count = 0;
+	my @fields;
+
+	for my $t (keys %{$self->{fields}}) {
+		next if $t eq '_common_';
+		next if not exists $self->{fields}->{$t};
+		@fields = keys %{$self->{fields}->{$t}};
+		if ($#fields > $count) { $count = $#fields; }
+	}
+
+	@fields = keys %{$self->{fields}->{_common_}};
+	return $#fields + $count + 1 + 1;
 }
 
 1;

@@ -146,7 +146,7 @@ my %externs = (
 	},
 	jdk => {
 		prefix=> '/usr/java/latest',
-		locations => [ '/usr/lib/jvm/java', '/usr/java/latest' ],
+		locations => [ '/usr/lib/jvm/java', '/usr/lib/jvm/default-java', '/usr/java/latest' ],
 	},
 	libtar => {
 		prefix=> '/usr'
@@ -436,7 +436,7 @@ sub mode_build {
 	print "\t$_: $jar{$_}\n" for @myjars;
 	for (@ext) { if (defined($externs{$_}{flags})) { print "$externs{$_}{flags}"; } };
 	print "\nThis is a poor-man configure, it's up to you to have sources and externals there\n\n";
-	
+
 	mkinc($_) for @modules;
 
 	if ($module) {
@@ -594,7 +594,7 @@ BEGIN{
 	'gridsite.1.5-compat' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B build_common_cpp:B doxygen:B/ ],
 	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
-	'canl.c' => [ qw/cares:B openssl:B libtool:B/ ],
+	'canl.c' => [ qw/cares:B openssl:B libtool:B bison:B flex:B/ ],
 );
 
 %need_jars = (
@@ -682,7 +682,7 @@ for my $jar (keys %need_jars) {
 	'jobid.api-cpp' =>  [ qw/jobid.api-c/ ],
 	'jobid.api-java' =>  [ qw// ],
 
-	'lbjp-common.jp-interface' => [ qw/lbjp-common.db jobid.api-c/ ],
+	'lbjp-common.jp-interface' => [ qw/lbjp-common.trio lbjp-common.db jobid.api-c/ ],
 
 	'jp.client' => [ qw/
                 jp.ws-interface
@@ -1040,7 +1040,7 @@ $buildroot{'gridsite.core'} = 'src';
 
 sub full
 {
-	my $short = shift;
+	my ($short) = @_;
 	my $subsys = $short;
 	$subsys =~ s/\..*//;
 
@@ -1050,10 +1050,11 @@ sub full
 
 sub get_version
 {
-	my ($top_srcdir) = @_;
+	my ($fmod, $top_srcdir) = @_;
 
-	my ($subsys,$module) = split /\./,$fmod,2;
+	my ($subsys,$mod) = split /\./,$fmod,2;
 	my ($major,$minor,$rev,$age);
+	my $old_;
 
 	if ($version) {
 		$version =~ /([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)-(.+)/;
@@ -1067,12 +1068,14 @@ sub get_version
 		open V,"$path/version.properties"
 			or die "$path/version.properties: $!\n";
 
-		while ($_ = <V>) {
+		$old_ = $_;
+		while (<V>) {
 			chomp;
 			($major,$minor,$rev) = ($1,$2,$3) if /module\.version\s*=\s*([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)/;
 			$age = $1 if /module\.age\s*=\s*([[:digit:]]+)/;
 		}
 		close V;
+		$_ = $old_;
 
 		$version = "$major.$minor.$rev-$age";
 	}
@@ -1082,7 +1085,7 @@ sub get_version
 
 sub get_description
 {
-	my $top_srcdir = shift;
+	my ($top_srcdir) = @_;
 
 	my $cvs_module = $top_srcdir;
 	my $package_description = "";
@@ -1125,10 +1128,10 @@ canl.c
 /;
 	@aux{@m} = (1) x ($#m+1);
 
-	my $short = shift;
+	my ($short) = @_;
 	my $full = full $short;
-	my ($subsys,$module) = split /\./,$short,2;
-	my $packageName = "$project{tag_prefix}{$subsys}$subsys-${module}";
+	my ($subsys,$mod) = split /\./,$short,2;
+	my $packageName = "$project{tag_prefix}{$subsys}$subsys-${mod}";
 
 	unless ($aux{$short}) {
 		print "Makefile.inc not needed in $full\n";
@@ -1136,14 +1139,17 @@ canl.c
 	}
 
 	my $top_srcdir = '.';
+	my $abs_srcdir = '';
 	my $build = '';
 
 	if ($module) {
 		$top_srcdir = $0;
 		$top_srcdir =~ s,/?[^/]*$,,;
+		$abs_srcdir = $top_srcdir;
 		$top_srcdir =~ s,^$,\.,;
 	} else {
 		$build = "$full/";
+		$abs_srcdir = "$full/";
 		unless ($buildroot{$_} eq '') {
 			$top_srcdir = '..';
 			$build .= "$buildroot{$_}/";
@@ -1153,17 +1159,18 @@ canl.c
 		}
 	}
 
-	my ($major, $minor, $rev, $age) = get_version $top_srcdir;
-	my ($package_summary, $package_description) = get_description $top_srcdir;
-	if ($package_description) { $package_description =~ s/(.{1,79}\S|\S+)\s+/$1\n/mg; }
+	my ($major, $minor, $rev, $age) = get_version $short, $abs_srcdir;
+	my ($package_summary, $package_description) = get_description $abs_srcdir;
+	if ($package_description) { $package_description =~ s/(.{1,78}\S|\S+)\s+/$1\n/mg; }
 	my $package_description_debian = $package_description;
 	$package_description_debian =~ s/^/ /mg;
 
 	my ($old_locale, $specdate, $debdate);
 
-	mkdir $build."project" unless (-d $build."project");
-	open PKGCHL,">".$build."project/changelog"
-		or die $build."project/changelog: $!\n";
+	# files for ETICS always in root source directory
+	mkdir $abs_srcdir."project" unless (-d $abs_srcdir."project");
+	open PKGCHL,">".$abs_srcdir."project/changelog"
+		or die $abs_srcdir."project/changelog: $!\n";
 	$old_locale = setlocale(LC_TIME);
 	setlocale(LC_TIME, "C");
 	$specdate = strftime("%a %b %d %Y", gmtime());
@@ -1177,14 +1184,6 @@ canl.c
 	unless ($top_srcdir eq '.') {
 		unlink $build."Makefile";
 		symlink "$top_srcdir/Makefile",$build."Makefile" or die "symlink $top_srcdir/Makefile ".$build."Makefile: $!\n";
-		for my $file ('.pre', '.post', '.preun', '.postun') {
-			my $pfile = "project/$file";
-			if (-f "$full/$pfile") {
-				mkdir "$build/project" unless (-d "$build/project");
-				unlink $build.$pfile;
-				symlink "../$top_srcdir/$pfile", $build.$pfile or die "symlink ../$top_srcdir/$pfile ".$build."$pfile: $!\n";
-			}
-		}
 	}
 
 	open MKINC,">".$build."Makefile.inc"
@@ -1225,9 +1224,9 @@ top_srcdir = $top_srcdir
 	my $dh;
 	my $debian = 0;
 
-	opendir $dh, "$top_srcdir/project" || die "Can't open $top_srcdir/project: $!";
-	for $_ (readdir $dh) {
-		if (/^(.*)\.spec$/) {
+	opendir $dh, "$abs_srcdir/project" || die "Can't open $abs_srcdir/project: $!";
+	for my $dir (readdir $dh) {
+		if ($dir=~/^(.*)\.spec$/) {
 			if ($1 ne $packageName) {
 				printf STDERR "Changed RPM name: $packageName --> $1\n";
 				$packageName=$1;
@@ -1237,11 +1236,12 @@ top_srcdir = $top_srcdir
 	}
 	closedir $dh;
 
-	for my $file ("$packageName.spec", "debian.rules", "debian.control", "debian.changelog") {
-		if (-f "$top_srcdir/project/$file") {
+	for my $file ("$packageName.spec", "debian.rules", "debian.control", "debian.changelog", "debian.copyright") {
+		if (-f "$abs_srcdir/project/$file") {
+			my $old_ = $_;
 			printf STDERR "Creating $build$file\n";
 			open DST, ">$build$file";
-			open SRC, "<$top_srcdir/project/$file";
+			open SRC, "<$abs_srcdir/project/$file";
 			while (<SRC>) {
 				if (/\@MODULE\@/) { s/\@MODULE\@/$full/g; }
 				if (/\@URL\@/) { s/\@URL\@/$package{url}/g; }
@@ -1262,6 +1262,7 @@ top_srcdir = $top_srcdir
 			}
 			close SRC;
 			close DST;
+			$_ = $old_;
 		}
 	}
 
@@ -1269,7 +1270,7 @@ top_srcdir = $top_srcdir
 
 	`rm -rfv  ${build}debian`;
 	mkdir $build."debian" or die $!;
-	`cp $top_srcdir/project/debian.* ${build}debian/ 2>/dev/null`;
+	`cp $abs_srcdir/project/debian.* ${build}debian/ 2>/dev/null`;
 	`mv ${build}debian.* ${build}debian/ 2>/dev/null`;
 	`rm -f ${build}debian/*.orig`;
 	opendir $dh, "${build}debian" || die "Can't open ${build}debian: $!";
@@ -1316,7 +1317,7 @@ sub mode_etics {
 	my ($subsys,$module) = split /\./,$fmod,2;
 	my $full = full "$subsys.$module";
 
-	my ($major,$minor,$rev,$age) = get_version $full;
+	my ($major,$minor,$rev,$age) = get_version $fmod, $full;
 
 	# XXX: --with ignored for platform-dependend packages
 	my @copts = ();

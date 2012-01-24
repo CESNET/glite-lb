@@ -241,3 +241,72 @@ char *glite_lbu_EscapeSQL(const char *in)
 
 	return out;
 }
+
+char *glite_lbu_EscapeJSON(const char *in) {
+	const char * tmp_in;
+	char	*out = NULL;
+	int	i,j,cnt;
+
+	if (!in) return NULL;
+
+	for (cnt = 0, tmp_in = in; *tmp_in; tmp_in++) {
+		switch (*tmp_in) {
+		case '"':
+		case '\\':
+		case '/':
+		case '\b':
+		case '\f':
+		case '\n':
+		case '\r':
+		case '\t':
+			cnt++;
+			break;
+		default:
+			if ((unsigned char)*tmp_in < 0x20) cnt += 6;
+			break;
+		}
+	}
+
+	out = malloc(strlen(in)+1+cnt);
+
+	for (i=j=0; in[i]; i++) {
+		switch (in[i]) {
+		case '"':
+		case '\\':
+		case '/':
+			out[j++] = '\\';
+			out[j++] = in[i];
+			break;
+		case '\b':
+			out[j++] = '\\';
+			out[j++] = 'b';
+			break;
+		case '\f':
+			out[j++] = '\\';
+			out[j++] = 'f';
+			break;
+		case '\n':
+			out[j++] = '\\';
+			out[j++] = 'n';
+			break;
+		case '\r':
+			out[j++] = '\\';
+			out[j++] = 'r';
+			break;
+		case '\t':
+			out[j++] = '\\';
+			out[j++] = 't';
+			break;
+		default:
+			if ((unsigned char)in[i] < 0x20) {
+				snprintf(out + j, 7, "\\u%04x", in[i]);
+				j += 6;
+			} else
+				out[j++] = in[i];
+			break;
+		}
+	}
+	out[j] = 0;
+
+	return out;
+}

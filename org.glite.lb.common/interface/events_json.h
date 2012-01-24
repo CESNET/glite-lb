@@ -1,5 +1,5 @@
-#ifndef GLITE_LB_SERVER_STATE_H
-#define GLITE_LB_SERVER_STATE_H
+#ifndef GLITE_LB_EVENTS_JSON_H
+#define GLITE_LB_EVENTS_JSON_H
 
 #ident "$Header$"
 /*
@@ -20,11 +20,31 @@ limitations under the License.
 */
 
 
-#define EDG_WLL_STATE_DUMP_START	"StartDump"
-#define EDG_WLL_STATE_DUMP_END		"EndDump"
-#define EDG_WLL_STATE_ANONYMIZATION_SALT	"AnonymizationSalt"
+#ifdef BUILDING_LB_COMMON
+#include "events.h"
+#else
+#include "glite/lb/events.h"
+#endif
 
-int edg_wll_GetServerState(edg_wll_Context,const char *,char **);
-int edg_wll_SetServerState(edg_wll_Context,const char *,const char *);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#endif /* GLITE_LB_SERVER_STATE_H */
+/** 
+ * Generate a special Notification ULM line from edg_wll_Event structure
+ * \param context IN: context to work with
+ * \param event IN: event to unparse
+ */
+extern int edg_wll_UnparseEventJSON(
+	edg_wll_Context	context,
+	edg_wll_Event *	event,
+	char **line
+);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif /* GLITE_LB_EVENTS_JSON_H */

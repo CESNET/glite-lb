@@ -607,7 +607,7 @@ typedef struct {
   int base;
   int varsize;
 #ifdef QUALIFIER_ESCAPE
-  enum dg_escape { ESCAPE_NONE, ESCAPE_ULM, ESCAPE_XML, ESCAPE_SQL } escape;
+  enum dg_escape { ESCAPE_NONE, ESCAPE_ULM, ESCAPE_XML, ESCAPE_SQL, ESCAPE_JSON } escape;
 #endif
   int indexAfterSpecifier;
   union {
@@ -1330,6 +1330,7 @@ TrioPreprocess(int type,
 		    case 'U': escape = ESCAPE_ULM; break;
 		    case 'X': escape = ESCAPE_XML; break;
 		    case 'S': escape = ESCAPE_SQL; break;
+		    case 'J': escape = ESCAPE_JSON; break;
 		    default: return TRIO_ERROR_RETURN(TRIO_EINVAL,index);
 		  }
 		  break;
@@ -2873,6 +2874,9 @@ TrioFormatProcess(trio_T *data,
 				break;
 			case ESCAPE_SQL:
 				s = glite_lbu_EscapeSQL(parameters[i].data.string);
+				break;
+			case ESCAPE_JSON:
+				s = glite_lbu_EscapeJSON(parameters[i].data.string);
 				break;
 			case ESCAPE_NONE:
 				s = strdup(parameters[i].data.string ? parameters[i].data.string : empty);
