@@ -153,6 +153,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		$current_prefix=$module;
 		$current_prefix=~s/^org\.//;
 		$current_prefix=~s/\./-/g;
+		$current_prefix=~s/emi-canl-canl/emi-canl/; #exception for caNl
 		$current_prefix="$current_prefix" . "_R_";
 		$current_tag="$current_prefix" . "$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
 	}
@@ -344,15 +345,18 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	$currentconfig="$module_$module" . "_R_$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
 	$currentconfig=~s/^org.//;
 	$currentconfig=~s/\./-/g;
+	$currentconfig=~s/emi-canl-canl/emi-canl/; #exception for caNl
 	$newconfig="$module_$module" . "_R_$major" . "_$minor" . "_$revision" . "_$age";
 	$newconfig=~s/^org.//;
 	$newconfig=~s/\./-/g;
+	$newconfig=~s/emi-canl-canl/emi-canl/; #exception for caNl
 	if ( $project eq "emi" ) { $newconfig=~s/^glite/emi/; }
 
 
 	$module=~/([^\.]+?)\.([^\.]+?)$/;
 	$subsysname=$1;
 	$modulename=$2;
+	$modulename=~s/canl-c/c/; #exception for caNl
 
 	printf("Project=$project\nModule=$module\nname=$modulename\nsubsys=$subsysname\n");
 	system("$GLITE_LB_LOCATION/configure --mode=etics --module $subsysname.$modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age $proj_opt");
