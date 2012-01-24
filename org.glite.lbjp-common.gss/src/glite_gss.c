@@ -675,10 +675,27 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
    gss_buffer_desc buffer = GSS_C_EMPTY_BUFFER;
    gss_name_t gss_name = GSS_C_NO_NAME;
    gss_OID_set_desc mechs;
+   gss_OID_set avail_mechs = NULL;
    OM_uint32 lifetime;
    char *proxy_file = NULL;
    char *name = NULL;
-   int ret;
+   int ret, gsi_available;
+
+   *cred = NULL;
+
+   major_status = gss_indicate_mechs(&minor_status, &avail_mechs);
+   /* ignore error */
+
+   major_status = gss_test_oid_set_member(&minor_status, get_oid("GSI"),
+					  avail_mechs, &gsi_available);
+   if (!GSS_ERROR(major_status) && !gsi_available) {
+       if (cert_file != NULL || key_file != NULL) {
+	   errno = EINVAL;
+	   ret = EDG_WLL_GSS_ERROR_ERRNO;
+       } else
+	   ret = 0;
+       goto end;
+   }
 
    if ((cert_file == NULL && key_file != NULL) ||
        (cert_file != NULL && key_file == NULL))
@@ -778,6 +795,9 @@ end:
 
    if (gss_cred != GSS_C_NO_CREDENTIAL)
       gss_release_cred(&minor_status2, &gss_cred);
+
+   if (avail_mechs)
+       gss_release_oid_set(&minor_status2, &avail_mechs);
 
    if (GSS_ERROR(major_status)) {
       if (gss_code) {
