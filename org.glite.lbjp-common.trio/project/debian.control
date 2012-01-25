@@ -9,7 +9,7 @@ Homepage: @URL@
 DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
-Package: libglite-lbjp-common-trio
+Package: libglite-lbu-trio2
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -20,7 +20,7 @@ Package: libglite-lbjp-common-trio-dev
 Section: libdevel
 Architecture: any
 Provides: glite-lbjp-common-trio
-Depends: libglite-lbjp-common-trio (= ${binary:Version}), ${misc:Depends}
+Depends: libglite-lbu-trio2 (= ${binary:Version}), ${misc:Depends}
 Description: Development files for gLite L&B/JP common trio library
  This package contains development libraries and header files for gLite L&B/JP
  common trio library.
@@ -29,6 +29,6 @@ Package: glite-lbjp-common-trio-dbg
 Section: debug
 Architecture: any
 Priority: extra
-Depends: libglite-lbjp-common-trio (= ${binary:Version}), ${misc:Depends}
+Depends: libglite-lbu-trio2 (= ${binary:Version}), ${misc:Depends}
 Description: gLite L&B/JP common trio library debugging symbols
  This package contains debugging symbols for gLite L&B/JP common trio library.

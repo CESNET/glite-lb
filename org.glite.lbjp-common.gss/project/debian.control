@@ -9,7 +9,7 @@ Homepage: @URL@
 DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
-Package: libglite-lbjp-common-gss
+Package: libglite-security-gss9
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -20,7 +20,7 @@ Package: libglite-lbjp-common-gss-dev
 Section: libdevel
 Architecture: any
 Provides: glite-lbjp-common-gss
-Depends: libglite-lbjp-common-gss (= ${binary:Version}), ${misc:Depends}, libglobus-gssapi-gsi-dev
+Depends: libglite-security-gss9 (= ${binary:Version}), ${misc:Depends}, libglobus-gssapi-gsi-dev
 Description: Development files for gLite L&B/JP common gss library
  This package contains development libraries and header files for gLite gss
  library.
@@ -29,6 +29,6 @@ Package: glite-lbjp-common-gss-dbg
 Section: debug
 Architecture: any
 Priority: extra
-Depends: libglite-lbjp-common-gss (= ${binary:Version}), ${misc:Depends}
+Depends: libglite-security-gss9 (= ${binary:Version}), ${misc:Depends}
 Description: gLite gss library debugging symbols
  This package contains debugging symbols for gLite gss library.
