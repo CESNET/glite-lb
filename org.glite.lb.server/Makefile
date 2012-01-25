@@ -369,7 +369,7 @@ install:
 		ln -sf "glite-lb/glite-lb-$$f" "${DESTDIR}${PREFIX}${sysconfdir}/glite-lb-$$f"; \
 	done
 	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
-	${INSTALL} -m 755 ${top_srcdir}/config/site-notif.conf ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
+	${INSTALL} -m 644 ${top_srcdir}/config/site-notif.conf ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
 	${INSTALL} -m 644 glite-lb-server-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-server-purge
