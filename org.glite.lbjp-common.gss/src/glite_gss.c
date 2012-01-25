@@ -692,9 +692,12 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
        if (cert_file != NULL || key_file != NULL) {
 	   errno = EINVAL;
 	   ret = EDG_WLL_GSS_ERROR_ERRNO;
-       } else
-	   ret = 0;
-       goto end;
+	   goto end;
+       } else {
+	       ret = 0;
+	       lifetime = 0;
+	       goto end1;
+       }
    }
 
    if ((cert_file == NULL && key_file != NULL) ||
@@ -770,6 +773,9 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
    name = buffer.value;
    memset(&buffer, 0, sizeof(buffer));
     
+
+end1:
+
    *cred = calloc(1, sizeof(**cred));
    if (*cred == NULL) {
       ret = EDG_WLL_GSS_ERROR_ERRNO;

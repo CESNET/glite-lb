@@ -61,14 +61,30 @@ GLOBUS_NOTHR_INC:= -I${globus_prefix}/include/${nothrflavour}
 GLOBUS_THR_INC:= -I${globus_prefix}/include/${thrflavour}
 
 GLOBUS_NOTHR_LIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${nothrflavour} \
-	-lglobus_gssapi_gsi_${nothrflavour}
+	-lglobus_common_${nothrflavour} 
 GLOBUS_THR_LIBS:= -L${globus_prefix}/lib \
-	-lglobus_common_${thrflavour} \
-	-lglobus_gssapi_gsi_${thrflavour}
+	-lglobus_common_${thrflavour} 
 
 GLOBUS_GSSAPI_GSI_LIBS?=${GLOBUS_NOTHR_LIBS}
 GLOBUS_GSSAPI_GSI_CFLAGS?=${GLOBUS_NOTHR_INC}
+
+GLOBUS_GSSAPI_NOTHR_LIBS=-lglobus_gssapi_gsi_${nothrflavour}
+GLOBUS_GSSAPI_THR_LIBS=-lglobus_gssapi_gsi_${thrflavour}
+
+KERBEROS_GSSAPI_LIBS=-lgssapi_krb5 
+KERBEROS_GSSAPI_CFLAGS=-DNO_GLOBUS_GSSAPI
+
+ifeq ($(gssapi_provider),kerberos)
+GSSAPI_NOTHR_LIBS=${KERBEROS_GSSAPI_LIBS} -lssl_${nothrflavour}
+GSSAPI_THR_LIBS=${KERBEROS_GSSAPI_LIBS} -lssl_${thrflavour}
+GSSAPI_THR_INC=${KERBEROS_GSSAPI_CFLAGS}
+GSSAPI_NOTHR_INC=${KERBEROS_GSSAPI_CFLAGS}
+else
+GSSAPI_NOTHR_LIBS=${GLOBUS_GSSAPI_NOTHR_LIBS}
+GSSAPI_THR_LIBS=${GLOBUS_GSSAPI_THR_LIBS}
+GSSAPI_THR_INC=
+GSSAPI_NOTHR_INC=
+endif
 
 LIBCARES_CFLAGS?=-I${cares_prefix}/include
 LIBCARES_LIBS?=-L${cares_prefix}/${libdir} -L${cares_prefix}/lib -lcares
@@ -104,7 +120,7 @@ ${GSS_STATICLIB}: ${GSS_OBJS}
 	ranlib $@
 
 ${GSS_LTLIB}: ${GSS_OBJS}
-	${LINK} ${version_info} -o $@ ${GSS_LOBJS} ${GLOBUS_GSSAPI_GSI_LIBS} ${LIBCARES_LIBS}
+	${LINK} ${version_info} -o $@ ${GSS_LOBJS} ${GLOBUS_NOTHR_LIBS} ${GSSAPI_NOTHR_LIBS} ${LIBCARES_LIBS}
 else
 ${GSS_NOTHRSTATICLIB}: ${GSS_OBJS}
 	ar crv $@ ${GSS_OBJS}
@@ -115,10 +131,10 @@ ${GSS_THRSTATICLIB}: ${GSS_THROBJS}
 	ranlib $@
 
 ${GSS_NOTHRLTLIB}: ${GSS_OBJS}
-	${LINK} ${version_info} -o $@ ${GSS_LOBJS} ${GLOBUS_NOTHR_LIBS} ${LIBCARES_LIBS}
+	${LINK} ${version_info} -o $@ ${GSS_LOBJS} ${GLOBUS_NOTHR_LIBS} ${GSSAPI_NOTHR_LIBS} ${LIBCARES_LIBS}
 
 ${GSS_THRLTLIB}: ${GSS_THROBJS}
-	${LINK} ${version_info} -o $@ ${GSS_THRLOBJS} ${GLOBUS_THR_LIBS} ${LIBCARES_LIBS}
+	${LINK} ${version_info} -o $@ ${GSS_THRLOBJS} ${GLOBUS_THR_LIBS} ${GSSAPI_THR_LIBS} ${LIBCARES_LIBS}
 endif
 
 
@@ -140,7 +156,7 @@ test_coverage:
 
 gss_server: gss_server.o example_common.o
 	${LINK} -o $@ ${default_gss} $^ 
-	
+
 gss_client: gss_client.o example_common.o
 	${LINK} -o $@ ${default_gss} $^
 
@@ -169,10 +185,10 @@ distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
 %.o: %.c
-	${COMPILE} ${GLOBUS_GSSAPI_GSI_CFLAGS} ${LIBCARES_CFLAGS} -o $@ -c $<
+	${COMPILE} ${GLOBUS_NOTHR_INC} ${GSSAPI_NOTHR_INC} ${LIBCARES_CFLAGS} -o $@ -c $<
 
 %.thr.o: %.c
-	${COMPILE} ${GLOBUS_THR_INC} ${LIBCARES_CFLAGS} -o $@ -c $<
+	${COMPILE} ${GLOBUS_THR_INC} ${GSSAPI_THR_INC} ${LIBCARES_CFLAGS} -o $@ -c $<
 
 test_gss.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${GLOBUS_GSSAPI_GSI_CFLAGS} ${CPPUNIT_CFLAGS} -Wno-error $<
