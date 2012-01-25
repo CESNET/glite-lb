@@ -455,7 +455,6 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	}
    }
 
-   edg_wll_gss_initialize();
    edg_wll_gss_watch_creds(cert_file,&cert_mtime);
    /* XXX DK: support noAuth */
    ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &gss_stat);

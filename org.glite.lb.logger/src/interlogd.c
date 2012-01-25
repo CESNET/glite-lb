@@ -511,6 +511,10 @@ main (int argc, char **argv)
   /* get credentials */
   if (CAcert_dir)
      setenv("X509_CERT_DIR", CAcert_dir, 1);
+  if(edg_wll_gss_initialize()) {
+	  glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Failed to initialize GSS.");
+	  exit(EXIT_FAILURE);
+  }
   edg_wll_gss_watch_creds(cert_file,&cert_mtime);
   cred_handle = malloc(sizeof(*cred_handle));
   if(cred_handle == NULL) {
@@ -525,13 +529,19 @@ main (int argc, char **argv)
 
      if (ret == EDG_WLL_GSS_ERROR_GSS)
 	edg_wll_gss_get_error(&gss_stat, "edg_wll_gss_acquire_cred_gsi()", &gss_err);
-     glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_FATAL, "Failed to load GSI credential: %s, exiting.",
+     glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_FATAL, "Failed to load GSI credential: %s",
 		      (gss_err) ? gss_err : "edg_wll_gss_acquire_cred_gsi() failed");
      if (gss_err)
 	free(gss_err);
-     exit(EXIT_FAILURE);
+     if(gss_stat.minor_status != 0) {
+	     exit(EXIT_FAILURE);
+     } else {
+	     glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "Continuing unauthenticated (yet).");
+     }
   }
-  glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "Using certificate %s", cred_handle->creds->name);
+  if(cred_handle && cred_handle->creds) {
+	  glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "Using certificate %s", cred_handle->creds->name);
+  }
 
   /* parse config, initialize plugins */
   glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Initializing plugins:\n");
