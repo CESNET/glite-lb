@@ -43,7 +43,9 @@ done < $infile
 function vecho() {
 	if [ $1 -le $Verbose ]; then
 		shift
-		printf "${HANDLES[${i}]}: \t"
+		if [ "${HANDLES[${i}]}" != "" ]; then
+			printf "${HANDLES[${i}]}: \t"
+		fi
 		echo $*
 	fi
 }
@@ -58,7 +60,7 @@ function lookup_notifid() {
 function setup_new() {
 	opts=${OPTIONS[$1]}
 	vecho 2 glite-lb-notify new ${opts}
-	retnotifid=`glite-lb-notify new ${opts} | grep -E "notification ID: " | sed 's/^notification ID: //'`
+	retnotifid=`glite-lb-notify new ${opts} | grep -E "notification ID: " | sed 's/^notification ID: //'` 
 	vecho 2 $retnotifid
 }
 
@@ -98,6 +100,7 @@ function check_timestamp() {
 	tsfile=$FilePrefix.${TOPICS[${1}]}.stat
 	if [ ! -f "$tsfile" ]; then
 		vecho 0 WARNING: stat file $tsfile not found!
+		age_check=1;
 	else
 		vecho 1 Parsing stat file $tsfile
 		storedlc=`grep -E "^last_connected=" $tsfile | sed 's/^last_connected=//'`
@@ -115,6 +118,23 @@ function check_timestamp() {
 		else
 			vecho 2 Age OK
 			age_check=0;
+		fi
+	fi
+	
+	if [ $age_check -gt 0 ]; then
+		uniq=`echo ${NOTIFID[${1}]} | sed -r 's/^.*NOTIF://'`
+		vecho 2 looking at notif file $FilePrefix.$uniq
+		if [ -f $FilePrefix.$uniq ]; then
+			currsize=`wc -c $FilePrefix.$uniq`
+		else
+			currsize=0;
+		fi
+		if [ $currsize -lt $SIZE ]; then
+			vecho 1 "Size under grace limit ($currsize kB)"
+			age_check=0;
+		else
+			vecho 1 "Size over grace limit ($currsize kB)"
+			age_check=1;
 		fi
 	fi
 }
@@ -152,11 +172,15 @@ EndHelpHeader
         echo " -n | --site-notif      Location of the site-notif.conf (input definition) file."
         echo " -a | --stale-age	      Time in seconds since last read before the registration is"
 	echo "                        considered stale (default 345600 = 4 days)."
+	echo " -s | --grace-size      Message queue size limit in kBytes. Registration will be"
+	echo "                        extended even if stale, provided the message queue is bellow"
+	echo "                        the limit. (default 2048 = 2 MB)"
         echo " -v | --verbose         Verbose cmdline output. (Repeat for higher verbosity)"
 }
 
 Verbose=0
 AGE=345600
+SIZE=2048
 while test -n "$1"
 do
         case "$1" in
@@ -164,6 +188,7 @@ do
                 "-f" | "--file-prefix") shift ; FilePrefix=$1 ;;
                 "-n" | "--site-notif") shift ; SiteNotif=$1 ;;
 		"-a" | "--stale-age" ) shift ; AGE=$1 ;;
+		"-s" | "--grace-size" ) shift ; SIZE=$1 ;;
                 "-v" | "--verbose") Verbose=$(($Verbose+1)) ;;
                 "-vv" ) Verbose=$(($Verbose+2)) ;;
 		*) echo WARNING: unknown argument $1 ;;
@@ -171,19 +196,6 @@ do
         shift
 done
 
-
-# -- set up --
-
-#if [ -z "$SERVER" ]; then
-#	echo "Usage: $0 LB_SERVER [ TTL NEW_NOTIF_ARGUMRNTS... ]"
-#	echo
-#	echo "Environment:"
-#	echo "	DROP: drop the notification"
-#	echo "	DEBUG: show progress"
-#	exit 1
-#fi
-#shift
-#shift
 
 if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] ;then
         X509_USER_CERT="$GLITE_HOST_CERT"
@@ -194,12 +206,12 @@ fi
 
 if [ -z "$GLITE_LB_LOCATION_VAR" ]; then
 	export GLITE_LB_LOCATION_VAR=/var/glite
-	vecho 0 "WARNING: GLITE_LB_LOCATION_VAR not specified, using default"
+	vecho 1 "WARNING: GLITE_LB_LOCATION_VAR not specified, using default"
 fi
 
 if [ -z "$FilePrefix" ]; then
 	export FilePrefix=/var/tmp/glite-lb-notif
-	vecho 0 "WARNING: Notif file prefix not specified, using default"
+	vecho 1 "WARNING: Notif file prefix not specified, using default"
 fi
 
 if [ -z "$SiteNotif" ]; then
@@ -207,7 +219,12 @@ if [ -z "$SiteNotif" ]; then
 		vecho 1 Configuration file site-notif.conf not specified, using default
 		SiteNotif="/etc/glite-lb/site-notif.conf"
 	else
-		vecho 0 "ERROR: No configuration file (site-notif.conf)"
+		vecho 0 "ERROR: No configuration file (/etc/glite-lb/site-notif.conf)"
+		exit 1
+	fi
+else
+	if [ ! -f "$SiteNotif" ]; then 
+		vecho 0 "ERROR: The specified configuration file does not exist ($SiteNotif)"
 		exit 1
 	fi
 fi
@@ -227,6 +244,11 @@ export X509_USER_KEY
 
 read_list $SiteNotif
 
+if [ ${TOTALNOTIFS} -eq 0 ]; then 
+	vecho 0 "Invoked with nothing to do."
+	exit 0
+fi
+
 for ((i=0 ; i < ${TOTALNOTIFS} ; i++))
 do
 	NOW=`date +%s`
@@ -236,8 +258,12 @@ do
 
 	if [ "${NOTIFID[${i}]}" == "" ]; then
 		setup_new $i
-		NOTIFID[i]=$retnotifid
-		vecho 1 "New registration ($retnotifid)"
+		if [ "$retnotifid" != "" ]; then
+			NOTIFID[i]=$retnotifid
+			vecho 0 "New registration ($retnotifid)"
+		else
+			vecho 0 "ERROR: Registration for handle ${HANDLES[${i}]} specified in file $SiteNotif failed!"
+		fi
 	else 
 		check_opts $i
 		if [ $checkopts_ret -eq 0 ]; then
@@ -247,21 +273,22 @@ do
 				if [ "${NOTIFID[${i}]}" == "" ]; then
 					setup_new $i
 					NOTIFID[i]=$retnotifid
-					vecho 1 "Failed to extend. Registration recreated ($retnotifid)."
+					vecho 0 "Failed to extend. Registration recreated ($retnotifid)."
 				else
-					vecho 1 "Registration extended (${NOTIFID[${i}]})"
+					vecho 0 "Registration extended (${NOTIFID[${i}]})"
 				fi
 			else
 				drop $i
-				vecho 1 "Registration stale => dropped"
+				vecho 0 "Registration stale => dropped"
 			fi
 		else
 			drop $i 
 			setup_new $i
 			NOTIFID[i]=$retnotifid
-			vecho 1 "Options changed. Registration dropped and recreated ($retnotifid)."
+			vecho 0 "Options changed. Registration dropped and recreated ($retnotifid)."
 		fi
 	fi
 	vecho 1 "Writing $fname"
 	printf "#This file is maintained automatically by script $0 initiated by cron\nOptions: ${OPTIONS[${i}]}\nNotifid: ${NOTIFID[${i}]}\n" > $fname
 done
+

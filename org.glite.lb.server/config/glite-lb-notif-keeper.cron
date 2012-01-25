@@ -1,1 +1,1 @@
-0 */4 * * *	glite	( test -f /etc/profile.d/grid-env.sh || exit 0; . /etc/profile.d/grid-env.sh; printf "`date "+\%b \%e \%T"` `hostname -s` glite-lb-notif-keeper: "; @glite_prefix@/sbin/glite-lb-notif-keeper )
+0 */4 * * *	glite	. /etc/profile.d/grid-env.sh ; export GLITE_WMS_NOTIF_SERVER=${HOSTNAME}:9000; @glite_prefix@/sbin/glite-lb-notif-keeper --site-notif /etc/glite-lb/site-notif.conf > /tmp/notif.keeper.log.$$; logger -t glite-lb-notif-keeper -f /tmp/notif.keeper.log.$$ 
