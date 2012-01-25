@@ -248,7 +248,7 @@ EXAMPLES=
 
 TESTS=test_coverage test_xml test_query_events test_soap_conv
 
-SCRIPTS=startup glite-lb-server-purge.cron glite-lb-proxy-purge.cron
+SCRIPTS=startup glite-lb-server-purge.cron glite-lb-proxy-purge.cron glite-lb-notif-keeper.cron
 SCRIPTS_SRC=$(addprefix ${top_srcdir}/config/,${SCRIPTS})
 
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
@@ -345,6 +345,7 @@ stage: compile
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb ${DESTDIR}${PREFIX}${sysconfdir}/init.d
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
@@ -361,16 +362,19 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules
 	${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules
 	ln -sf liblcas_lb.so ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules/lcas_lb.mod
+	${INSTALL} -m 755 ${top_srcdir}/src/notif-keeper.sh ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-notif-keeper
 
 	for f in dbsetup.sql index.conf.template; do \
 		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb; \
 		ln -sf "glite-lb/glite-lb-$$f" "${DESTDIR}${PREFIX}${sysconfdir}/glite-lb-$$f"; \
 	done
 	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
+	${INSTALL} -m 755 ${top_srcdir}/config/site-notif.conf ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
 	${INSTALL} -m 644 glite-lb-server-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-server-purge
 	${INSTALL} -m 644 glite-lb-proxy-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-proxy-purge
+	${INSTALL} -m 644 glite-lb-notif-keeper.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-notif-keeper
 	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-purge.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-purge
 	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-lcas.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-lcas
 
@@ -380,7 +384,6 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 ifdef LB_PERF
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_proxy.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif
 
