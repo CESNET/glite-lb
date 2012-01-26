@@ -1184,13 +1184,14 @@ check_jobstat_authz(edg_wll_Context ctx,
     if (peer == NULL || peer->name == NULL)
 	return 0;
 
+    if (job_flags & EDG_WLL_NOTIF_ANONYMIZE) *authz_flags |= READ_ANONYMIZED;
+
     if (edg_wll_gss_equal_subj(peer->name, stat->owner))
 	return 1;
     if (stat->payload_owner && edg_wll_gss_equal_subj(peer->name, stat->payload_owner))
 	return 1;
 
-    if (job_flags & EDG_WLL_NOTIF_ANONYMIZE ||
-	check_authz_policy(&ctx->authz_policy, peer, READ_ANONYMIZED))
+    if ((!(*authz_flags & READ_ANONYMIZED)) && (check_authz_policy(&ctx->authz_policy, peer, READ_ANONYMIZED)))
 	*authz_flags |= READ_ANONYMIZED;
 
     if (ctx->noAuth ||
