@@ -88,10 +88,10 @@ char * edg_wll_TagListToString(edg_wll_TagValue *list) {
 	for(tag = list; tag->tag; tag++) {
 		len += strlen(tag->tag);
 		len += strlen(tag->value);
-		len++;
+		len += 2;
 	}
 	
-	out = malloc(len*sizeof(char));
+	out = malloc(len*sizeof(char) + 1);
 	if(NULL == out) return NULL;
 
 	*out = '\0';
