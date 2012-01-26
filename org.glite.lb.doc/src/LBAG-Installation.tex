@@ -285,7 +285,8 @@ Using \emph{yaim}, you do not need to edit \LB's configuration files for your in
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-lb-authz.conf & Authorization policy, in use since \LBver{2.1}. Extensively explained in Section \ref{inst:authz} (page \pageref{inst:authz}).\\
 log4crc & Logging output configuration, in use since \LBver{2.0}. Explained in Section \ref{inst:comlog} (page \pageref{inst:comlog}).\\
-msg.conf & Messaging plugin and features configuration, in use since \LBver{3.0}. Explained in Section \ref{inst:messaging} (page \pageref{inst:messaging}).
+msg.conf & Messaging plugin and features configuration, in use since \LBver{3.0}. Explained in Section \ref{inst:messaging} (page \pageref{inst:messaging}).\\
+site-notif.conf & Permanent notification registrations to be maintained on the server. Available since \LBver{3.2}. Explained in section \ref{inst:sitenotif} (page \pageref{inst:sitenotif}).
 %\\glite-lb-my.cnf & Pre-prepared \emph{MySQL} configuration file, designed to be included in \texttt{my.cnf} by the \texttt{!include} directive. Available since \LBver{3.2}.
 \end{tabularx}
 
@@ -295,7 +296,7 @@ Besides configuration files observed directly by \LB's services, there is a scor
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 /etc/cron.d/glite-lb-purge.cron & Nightly execution of the \LB purger (see Section \ref{inst:purge}).\\
 /etc/cron.d/locallogger.cron & Prevent stale handle on \texttt{hostcert.pem} by running a \texttt{touch} on it quarter-daily.\\
-%/etc/cron.d/glite-lb-notif.cron & Refresh registration of \LB notifications set up by site admins.\\
+/etc/cron.d/glite-lb-notif-keeper.cron & Refresh registration of \LB notifications set up by site admins py regular calls to \texttt{glite-lb-notif-keeper}. Present since \LBver{3.2}\\
 /etc/init.d/glite-lb-bkserverd & Start up the \LB server. Many command line options are hard-coded in the script.\footnotemark\setcounter{initdfootnote}{\thefootnote}\\
 /etc/init.d/glite-lb-harvester & Start up the \LB harvester. Some command line options are hard-coded in the script.\footnotemark[\theinitdfootnote]\\
 /etc/init.d/glite-lb-locallogger & Start up the \LB local logger. Some command line options are hard-coded in the script.\footnotemark[\theinitdfootnote]
@@ -339,9 +340,9 @@ installations, YAIM configuration process will create transactional
 database automatically. For existing LB server database the migration 
 process is not automatically handled.
 
-Note: If you want to add transaction when migrating to \LB 2.x skip
-this section and use \LB 2.x migration procedure. The migration of
-database to support transactions is included in \LB 2.x migration procedure.
+Note: If you want to add transactions when migrating to \LBver{2.0 or higher} skip
+this section and use \LBver{2.x} migration procedure. The migration of
+database to support transactions is included ini that procedure.
 
 Steps:
 \begin{itemize}
@@ -434,21 +435,31 @@ Note: Current broker and prefix settings can be retrieved from the \LB server by
 
 
 \subsubsection{Messaging: Persistent Registration for Notifications}
-\label{inst:messaging}
+\label{inst:sitenotif}
 
 Starting with \LBver{3.2} there is a mechanism for site admins to set up and maintain ``permanent'' registrations for notifications, which should be always kept active on the server. A maintainer script regularly checks existing registrations, extends their validity, and sets up new registrations.
 
-The process is governed by a separate configuration file \texttt{/etc/glite-lb/site-notif.conf}. The format of the file is simple, one line per registration, with each line giving a single-word title and a list of arguments to use for registration.\footnote{Command \texttt{glite-lb-notify} is used to make the registrations. See \cite{lbug} for applicable arguments.}
+The process is governed by a separate configuration file \texttt{/etc/glite-lb/site-notif.conf}. The format of the file is simple, one line per registration, with each line giving a single-word handle and a list of arguments to use for registration.\footnote{Command \texttt{glite-lb-notify} is used to make the registrations. See \cite{lbug} for applicable arguments.}
 
 For instance the following line in \texttt{/etc/glite-lb/site-notif.conf}:
 
 \begin{verbatim}
-testnotif	--state running -c -a x-msg://grid.emi.lbexample
+testnotif       --state running -c -N -a x-msg://grid.emi.lbexample
 \end{verbatim}
 
-\indent{}will set up and maintain registration for messages to be generated whenever a job changes state (\texttt{-c}) to \emph{running.} Messages will be delivered to topic \texttt{grid.emi.lbexample}. The word \texttt{testnotif} is just a plain-text handle.
+\indent{}will set up and maintain registration for messages to be generated whenever a job changes state (\texttt{-c}) to \emph{running} (\texttt{-{}-state running}). Messages will be delivered to topic \texttt{grid.emi.lbexample} and user identification (DN) will be replaced with a hash (\texttt{-N}). The word \texttt{testnotif} is just a plain-text handle.
 
-The maintainer script runs regularly and makes sure that registrations do not expire and that the messaging infrastructure keeps receiving them. In case of a listener (messaging broker) being unavailable for a prolonged period of time, the registration is terminated to prevent build-up of undelivered messages. A new registration will be created next time round, and if the listener comes up before then, normal operation will resume.
+In another practical example, the following line in \texttt{/etc/glite-lb/site-notif.conf}:
+
+\begin{verbatim}
+voDboard        -T -v testvo -a x-msg://grid.emi.testvo.dashboard
+\end{verbatim}
+
+\indent{}will set up and maintain registration for messages to be generated whenever a job belonging to VO \emph{testvo} (\texttt{-v testvo}) reaches a terminal state (\texttt{-T}),\footnote{Terminal states are recognized by the server and as of \LBver{3.2} they are: \emph{cleared}, \emph{aborted}, \emph{canceled} and \emph{purged}.} and delivered to topic \texttt{grid.emi.testvo.dashboard}. Again, the word \texttt{voDboard} is simply a plain-text handle.
+
+The maintainer script \texttt {glite-lb-notif-keeper} runs regularly and makes sure that registrations do not expire and that the messaging infrastructure keeps receiving them. In case of a listener (messaging broker) being unavailable for a prolonged period of time, the registration is terminated to prevent build-up of undelivered messages. A new registration will be created next time round, and if the listener comes up before then, normal operation will resume.
+
+\paragraph{Applying changes} After changing the \texttt{site-notif.conf} file, the simplest option is to do nothing and wait for cron to invoke the maintainer script. You may also run the script manually from the command line.
 
 \subsubsection{Index configuration}
 
@@ -487,6 +498,7 @@ rights that can be granted to the users:
 \item \verb'LOG_CE_EVENTS'
 \item \verb'LOG_GENERAL_EVENTS'
 \item \verb'GRANT_OWNERSHIP' (since \LBver{3.0})
+\item \verb'READ_ANONYMIZED' (since \LBver{3.2})
 \end{itemize}
 
 The first action disables all authorization checks. The next four categories concern with acquring data from the \LB
@@ -515,6 +527,9 @@ while preserving a basic level of privacy.
 \verb'GET_STATISTICS' allows its bearers to query for on-line statitistics
 generated by the \LB server. See~\ref{maintain:statistics} for more
 information about the purpose of the function.
+
+\verb'READ_ANONYMIZED' allows reading access to job information on the server,
+but only in an anonymized form (user identification hashed).
 
 \LBver{1.x} allowed anyone possessing a trusted digital certificate to send an
 arbitrary event to the \LB server. While enabling an easy setup, such an
