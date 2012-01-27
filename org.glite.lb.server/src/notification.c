@@ -1035,7 +1035,7 @@ static int notif_streaming_event_cb(edg_wll_Context ctx, glite_jobid_t jobid, ed
 
 	dest = strdup(row[0]);
 	/*XXX: ??? copied from notif_match.c */ free(ctx->p_instance); ctx->p_instance = strdup("");
-	if (edg_wll_NotifJobStatus(ctx, lctx->nid, dest, owner, flags, expire, (const edg_wll_JobStat)(*stat)) != 0) {
+	if (edg_wll_NotifJobStatus(ctx, lctx->nid, dest, owner, flags, expire, (const edg_wll_JobStat)(*stat), 0) != 0) {
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "[%d] NOTIFY stream: %s, error", getpid(), lctx->nid_s);
 		goto cleanup;
 	}

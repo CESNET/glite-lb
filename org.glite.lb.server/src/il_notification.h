@@ -85,7 +85,8 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		       const char      *owner,
                        int              flags,
 		       int		expires,
-		       const edg_wll_JobStat notif_job_stat);
+		       const edg_wll_JobStat notif_job_stat,
+		       int		authz_flags);
 
 
 /** Change address for notification delivery.
@@ -119,7 +120,7 @@ int edg_wll_NotifMatch(edg_wll_Context context, const edg_wll_JobStat *oldstat, 
 /**
  * Check permissions on job status.
  */
-int edg_wll_NotifCheckAuthz(edg_wll_Context ctx,edg_wll_JobStat *stat,int flags,const char *recip);
+int edg_wll_NotifCheckAuthz(edg_wll_Context ctx,edg_wll_JobStat *stat,int flags,const char *recip, int *authz_flags);
 
 #ifdef __cplusplus
 }

@@ -188,7 +188,8 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		       const char      *owner,
                        int		flags,
 		       int		expires,
-		       const edg_wll_JobStat notif_job_stat)
+		       const edg_wll_JobStat notif_job_stat,
+		       int		authz_flags)
 {
 	int 		ret=0;
 	char   		*xml_data, *xml_esc_data=NULL;
@@ -202,17 +203,6 @@ edg_wll_NotifJobStatus(edg_wll_Context	context,
 		stat.rsl = NULL;
 	}
 
-	ret = edg_wll_NotifCheckAuthz(context, &stat, flags, owner);
-	if (ret != 1) {
-		char *ju;
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
-				 "[%d] authorization failed when sending notification for job %s",
-				 getpid(),
-				 ju = glite_jobid_getUnique(stat.jobId));
-		free(ju);
-		return edg_wll_SetError(context, EPERM, NULL);
-	}
-		
 	if(edg_wll_JobStatusToXML(context, stat, &xml_data)) 
 		goto out;
 	

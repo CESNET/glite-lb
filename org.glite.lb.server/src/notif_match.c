@@ -58,6 +58,10 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	char *history = NULL;
 	int  history_fetched = 0;
 	edg_wll_JobStat newstat = *stat; // shallow copy
+	edg_wll_JobStat* statcopy[2][2][2];
+	int m, a, h;
+
+	memset(statcopy, 0, sizeof(statcopy));
 
 	edg_wll_ResetError(ctx);
 
@@ -114,6 +118,8 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 
 	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
 
+	statcopy[0][0][0]=&newstat;
+			
 	while ((ret = edg_wll_FetchRow(ctx,jobs,sizeof(jobc)/sizeof(jobc[0]),NULL,jobc)) > 0) {
 		flags = atoi(jobc[5]);
 		if (now > (expires = glite_lbu_StrToTime(jobc[2]))) {
@@ -125,17 +131,49 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 		{
 			char	*errt, *errd;
 			char	*dest;
+			int	authz_flags;
 
-			if (flags & EDG_WLL_NOTIF_HISTORY && !history_fetched) {
-				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: event history for job %s", jobc[0]);
-				if (fetch_history(ctx, &newstat) != 0) {
-					edg_wll_Error(ctx, &errt, &errd);
-					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "NOTIFY: query events for %s failed, %s: %s", jobc[0], errt, errd);
-					free(errt);
-					free(errd);
-					edg_wll_ResetError(ctx);
+			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "\n*NOTIFY: %s, job %s\n", jobc[0], ju = edg_wlc_JobIdGetUnique(newstat.jobId));
+
+		        ret = edg_wll_NotifCheckAuthz(ctx, &newstat, flags, jobc[3], &authz_flags);
+		        if (ret != 1) {     
+		                char *ju;
+                		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO,
+		                                 "[%d] authorization failed when sending notification for job %s",
+                                		 getpid(),
+                		                 ju = glite_jobid_getUnique(newstat.jobId));
+		                free(ju);
+		                edg_wll_SetError(ctx, EPERM, NULL);
+				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
+				continue;
+        		}
+
+			m = (authz_flags & STATUS_FOR_MONITORING) == STATUS_FOR_MONITORING;
+			a = (authz_flags & READ_ANONYMIZED) == READ_ANONYMIZED;
+			h = (flags & EDG_WLL_NOTIF_HISTORY) == EDG_WLL_NOTIF_HISTORY;
+
+			if (!statcopy[m][a][h]) {
+				statcopy[m][a][h]=(edg_wll_JobStat*)calloc(sizeof(edg_wll_JobStat),1);
+				edg_wll_CpyStatus(&newstat, statcopy[m][a][h]); 
+
+				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: Populating status copy for flag combination [%d][%d][%d]", m, a, h);
+
+			        if (authz_flags & STATUS_FOR_MONITORING)
+			                blacken_fields(statcopy[m][a][h], authz_flags);
+			        if (authz_flags & READ_ANONYMIZED)
+			                anonymize_stat(ctx, statcopy[m][a][h]);
+
+				if (flags & EDG_WLL_NOTIF_HISTORY && !history_fetched) {
+					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: event history for job %s", jobc[0]);
+					if (fetch_history(ctx, statcopy[m][a][h]) != 0) {
+						edg_wll_Error(ctx, &errt, &errd);
+						glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "NOTIFY: query events for %s failed, %s: %s", jobc[0], errt, errd);
+						free(errt);
+						free(errd);
+						edg_wll_ResetError(ctx);
+					}
+					history_fetched = 1;
 				}
-				history_fetched = 1;
 			}
 
 			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: %s, job %s", jobc[0], ju = edg_wlc_JobIdGetUnique(newstat.jobId));
@@ -151,7 +189,7 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 			/* XXX: only temporary hack!!!
 			 */
 			ctx->p_instance = strdup("");
-			if ( edg_wll_NotifJobStatus(ctx, nid, dest, jobc[3], atoi(jobc[5]), expires, newstat) )
+			if ( edg_wll_NotifJobStatus(ctx, nid, dest, jobc[3], atoi(jobc[5]), expires, *statcopy[m][a][h], authz_flags) )
 			{
 				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
 				goto err;
@@ -163,6 +201,13 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 	if (ret < 0) goto err;
 	
 err:
+	for ( m = 0; m < 2 ; m++ )
+		for ( a = 0; a < 2 ; a++ )
+			for ( h = 0; h < 2 ; h++ )
+				if (statcopy[m][a][h] && (m || a || h)) {
+					edg_wll_FreeStatus(statcopy[m][a][h]);
+					free(statcopy[m][a][h]);
+				}
 	free(history);
 	free(ctx->p_instance); ctx->p_instance = NULL;
 	if ( nid ) edg_wll_NotifIdFree(nid);
@@ -234,12 +279,13 @@ static int notif_match_conditions(edg_wll_Context ctx,const edg_wll_JobStat *old
  * probably stored along with the registration.
  */
 int edg_wll_NotifCheckAuthz(edg_wll_Context ctx,edg_wll_JobStat *stat,
-			    int flags,const char *recip)
+			    int flags,const char *recip, int *authz_flags)
 {
 	int		ret;
 	struct _edg_wll_GssPrincipal_data princ;
 	edg_wll_Acl	acl = NULL;
-	int		authz_flags = 0;
+
+	*authz_flags = 0;
 
 	memset(&princ, 0, sizeof(princ));
 	princ.name = (char *)recip;
@@ -253,16 +299,11 @@ int edg_wll_NotifCheckAuthz(edg_wll_Context ctx,edg_wll_JobStat *stat,
 		}
 	}
 
-	ret = check_jobstat_authz(ctx, stat, flags, acl, &princ, &authz_flags);
+	ret = check_jobstat_authz(ctx, stat, flags, acl, &princ, authz_flags);
 	if (acl)
 		edg_wll_FreeAcl(acl);
 	if (ret != 1)
 		return ret;
-
-	if (authz_flags & STATUS_FOR_MONITORING)
-		blacken_fields(stat, authz_flags);
-	if (authz_flags & READ_ANONYMIZED)
-		anonymize_stat(ctx, stat);
 
 	return ret;
 }
