@@ -105,17 +105,17 @@ edg_wll_JobStat *edg_wll_CpyStatus(const edg_wll_JobStat *src, edg_wll_JobStat *
 			if ($ft eq 'jobid') {
 				gen "\tif ( edg_wlc_JobIdDup(src->$_, &(dest->$_)) ) goto err;\n";
 			}
-			if ($ft eq 'string') {
+			elsif ($ft eq 'string') {
 				gen "\tif ( src->$_ != NULL )\n";
 				gen "\t\tif ( !(dest->$_ = strdup(src->$_)) ) goto err;\n";
 			}
-			if ($ft eq 'intlist') {
+			elsif ($ft eq 'intlist') {
 				gen "\tif ( src->$_ != NULL )\n\t{\n";
 				gen "\t\ti = 1 + src->$_\[0];\n";
 				gen "\t\tif ( !(dest->$_ = malloc(sizeof(*src->$_)*i)) ) goto err;\n";
 				gen "\t\tmemcpy(dest->$_,src->$_,sizeof(*src->$_)*i);\n\t}\n";
 			}
-			if ($ft eq 'strlist') {
+			elsif ($ft eq 'strlist') {
 				gen "\tif ( src->$_ != NULL )\n\t{\n";
 				gen "\t\tfor ( i = 0; src->$_\[i]; i++ ) ;\n";
 				gen "\t\tif ( !(dest->$_ = malloc(sizeof(*src->$_)*(i+1))) ) goto err;\n";
@@ -123,7 +123,7 @@ edg_wll_JobStat *edg_wll_CpyStatus(const edg_wll_JobStat *src, edg_wll_JobStat *
 				gen "\t\t\tif ( !(dest->$_\[i] = strdup(src->$_\[i])) ) goto err;\n";
 				gen "\t\tdest->$_\[i] = NULL;\n\t}\n";
 			}
-			if ($ft eq 'stslist') {
+			elsif ($ft eq 'stslist') {
 				gen "\tif ( src->$_ != NULL )\n\t{\n";
 				gen "\t\tfor ( i = 0; src->$_\[i].state; i++ ) ;\n";
 				gen "\t\tif ( !(dest->$_ = malloc(sizeof(*src->$_)*(i+1))) ) goto err;\n";
@@ -131,11 +131,11 @@ edg_wll_JobStat *edg_wll_CpyStatus(const edg_wll_JobStat *src, edg_wll_JobStat *
 				gen "\t\t\tif ( !edg_wll_CpyStatus(&src->$_\[i], &dest->$_\[i]) ) goto err;\n";
 				gen "\t\tdest->$_\[i].state = EDG_WLL_JOB_UNDEF;\n\t}\n";
 			}
-			if (($ft eq 'bool') or ($ft eq 'timeval') or ($ft eq 'logsrc')
+			elsif (($ft eq 'bool') or ($ft eq 'timeval') or ($ft eq 'logsrc')
 				or ($ft eq 'port') or ($ft eq 'level') or ($ft eq 'int')) {
 				gen "\tdest->$_ = src->$_;\n";
 			}
-			if ($ft eq 'taglist') {
+			elsif ($ft eq 'taglist') {
 				gen qq{
 !	if (src->$_ != NULL) \{
 !		for (i=0; src->$_\[i].tag; i++);
@@ -147,6 +147,12 @@ edg_wll_JobStat *edg_wll_CpyStatus(const edg_wll_JobStat *src, edg_wll_JobStat *
 !		dest->$_\[i].tag = NULL;
 !        \}
 				};
+			}
+			elsif ($ft eq 'cclassad') {
+				gen "\tif ( src->$_ != NULL )\n";
+			}
+			else {
+				print "#error: field type coverage incomplete: '$ft'";
 			}
 		}
 @@@}
