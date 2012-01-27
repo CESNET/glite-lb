@@ -198,36 +198,22 @@ function config_glite_lb() {
   chmod og+rx /var/lib/mysql/ 
   chown mysql:mysql /var/run/mysqld/
 
-  # add option  --max_allowed_packet=17M
-  if [ ! -f /etc/my.cnf ]; then
-    echo "[mysqld]" >> /etc/my.cnf
-    echo "max_allowed_packet=17M" >> /etc/my.cnf
+  # include MySQL options for L&B server
+  my_cnf=/etc/mysql/my.cnf
+  if [ ! -f "$my_cnf" ]; then
+    my_cnf=/etc/my.cnf
+  fi
+  grep '^!includedir\s\+/etc/mysql/conf.d/?' "$my_cnf" >/dev/null 2>&1
+  if [ $? != 0 ]; then
+    echo '!includedir /etc/mysql/conf.d/' >> "$my_cnf"
+  fi
+
+  if [ -x /sbin/service ]; then
+    /sbin/chkconfig mysqld on
+    /sbin/service mysqld restart
   else
-    grep "^[mysqld]" /etc/my.cnf > /dev/null
-    if [ ! $? = 0 ]; then
-      echo "[mysqld]" >> /etc/my.cnf
-      echo "max_allowed_packet=17M" >> /etc/my.cnf
-    fi
+    /etc/init.d/mysql restart
   fi
-
-  # disable network, restart mysql, if needd
-  grep "skip-networking" /etc/my.cnf > /dev/null
-  if [ ! $? = 0 ]; then
-    mv /etc/my.cnf /etc/my.cnf.orig
-    sed 's/\[mysqld\]/[mysqld]\nskip-networking/' /etc/my.cnf.orig > /etc/my.cnf
-    rm -f /etc/my.cnf.orig
-    ps ax | grep -v grep |grep mysqld_safe > /dev/null 2>&1
-    if [ $? = 0 ] ; then
-      /etc/init.d/mysqld stop
-    fi
-  fi
-
-  /sbin/chkconfig mysqld on
-  ps ax | grep -v grep |grep mysqld_safe > /dev/null 2>&1
-  if [ ! $? = 0 ] ; then
-    /etc/init.d/mysqld start
-    sleep 1
-  fi 
 
   ls /tmp/mysql.sock > /dev/null 2>&1
   if [ ! $? = 0 ]; then
