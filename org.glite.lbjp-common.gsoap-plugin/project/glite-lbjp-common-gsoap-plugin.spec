@@ -86,6 +86,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/include/glite/security/glite_gsplugin.h
 /usr/include/glite/security/glite_gsplugin-int.h
 /usr/%{_lib}/libglite_security_gsoap_plugin_*.so
+/usr/%{_lib}/pkgconfig/*.pc
 
 
 %changelog
