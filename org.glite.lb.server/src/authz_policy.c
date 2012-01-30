@@ -249,3 +249,32 @@ end:
     
     return ret;
 }
+
+char *anonymize_string(edg_wll_Context ctx, char *string)
+{
+    static char *salt = NULL;
+    char *hash;
+    int ret;
+
+    if (!salt) {
+	    ret = edg_wll_GetServerState(ctx, EDG_WLL_STATE_ANONYMIZATION_SALT, &salt);
+	    switch (ret) {
+		case ENOENT:
+		    edg_wll_ResetError(ctx);
+		    ret = generate_salt(ctx, &salt);
+		    if (ret)
+			break;
+		    ret = edg_wll_SetServerState(ctx, EDG_WLL_STATE_ANONYMIZATION_SALT, salt);
+		    break;
+		default:
+		    break;
+	    }
+    	    if (ret) goto end;
+    }
+
+    sha256_salt(ctx, string, salt, &hash);
+
+    end:
+
+    return hash;
+}

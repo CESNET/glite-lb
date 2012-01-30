@@ -74,4 +74,7 @@ blacken_fields(edg_wll_JobStat *, int flags);
 int
 anonymize_stat(edg_wll_Context, edg_wll_JobStat *);
 
+char *
+anonymize_string(edg_wll_Context ctx, char *string);
+
 #endif
