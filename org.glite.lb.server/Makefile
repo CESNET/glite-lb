@@ -378,7 +378,7 @@ install:
 	${INSTALL} -m 644 glite-lb-notif-keeper.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-notif-keeper
 	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-purge.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-purge
 	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-lcas.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-lcas
-	${INSTALL} -m 644 ${top_srcdir}/config/my.cnf ${DESTDIR}${PREFIX}${sysconfdir}/etc/mysql/conf.d/glite-lb-server.cnf
+	${INSTALL} -m 644 ${top_srcdir}/config/my.cnf ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d/glite-lb-server.cnf
 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix})
