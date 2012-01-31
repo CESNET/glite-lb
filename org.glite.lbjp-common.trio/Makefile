@@ -29,8 +29,14 @@ LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
+os=${shell uname}
+DL_LIBS:=
+ifeq (${os},Linux)
+  DL_LIBS:=-ldl
+endif
+
 REPORTS:=${top_srcdir}/reports
-TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit -ldl
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit ${DL_LIBS}
 TEST_INC:=-I${cppunit_prefix}/include
 
 
