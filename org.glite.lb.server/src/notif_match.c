@@ -321,7 +321,6 @@ int edg_wll_NotifCheckAuthz(edg_wll_Context ctx,edg_wll_JobStat *stat,
 static edg_wll_Event* fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat) {
         edg_wll_QueryRec         jc0[2], *jc[2];
         edg_wll_Event *events = NULL;
-        size_t i;
 
 	jc[0] = jc0;
 	jc[1] = NULL;
@@ -331,7 +330,7 @@ static edg_wll_Event* fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat) 
 	jc[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 
 	if (edg_wll_QueryEventsServer(ctx, 1, (const edg_wll_QueryRec **)jc, NULL, &events) == 0) {
-		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: fetched %zd events", i);
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: events fetched");
 
 	}
 
