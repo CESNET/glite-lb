@@ -540,7 +540,6 @@ BEGIN{
 		'myproxy-server'=>'myproxy-server',
 		'myproxy-admin'=>'myproxy-admin',
 		cares=>'c-ares',
-		voms=>'org.glite.security.voms-api-cpp',
 		utiljava=>'org.glite.security.util-java',
 		gpt=>'gpt',
 		fetchcrl=>'fetch-crl',
@@ -558,7 +557,7 @@ BEGIN{
 	'lb.logger' => [ qw/cppunit:B libtool:B/ ],
 	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B/ ],
 	'lb.nagios' => [ qw/globus_proxy_utils:R/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms lcas gridsite bison:B libtool:B libxml2 flex:B/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql:R mysql-server:R mysql-devel:B cppunit:B gsoap:B classads voms:B lcas gridsite bison:B libtool:B libxml2 flex:B/ ],
 	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B/ ],
 	'lb.ws-interface' => [ qw/libxslt:B tidy:B/ ],
@@ -592,7 +591,7 @@ BEGIN{
 	'gridsite.service-clients' => [ qw/curl:R gsoap:R gsoapxx:R/ ],
 	'gridsite.gsexec' => [ qw// ],
 	'gridsite.1.5-compat' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B build_common_cpp:B doxygen:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms libtool:B/ ],
+	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms:B libtool:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
 	'canl.c' => [ qw/cares:B openssl:B libtool:B bison:B flex:B/ ],
 );
@@ -828,11 +827,13 @@ for my $ext (keys %deps_aux) {
 				gsoapxx=>'-',
 				build_common_cpp=>'org.glite.build.common-cpp',
 				jdk=>'jdk',
+				voms=>'org.glite.security.voms-api-cpp',
 			},
 		},
 		etics_externs_devel => {
 			default => {
 				gridsite=>'org.gridsite.devel',
+				voms=>'org.glite.security.voms-api',
 			},
 		},
 		etics_projects => {
@@ -896,6 +897,7 @@ for my $ext (keys %deps_aux) {
 				gsoapxx=>'-',
 				build_common_cpp=>'emi.misc.glite.build-common-cpp',
 				jdk=>'java',
+				voms => 'emi.voms.voms-api',
 			},
 			sl5_x86_64_gcc412EPEL => {
 				'myproxy-devel' => 'myproxy-devel.x86_64',
@@ -932,7 +934,7 @@ for my $ext (keys %deps_aux) {
 				cppunit => 'cppunit-devel',
 				expat => 'expat-devel',
 				gsoap => 'gsoap-devel',
-				voms => 'org.glite.security.voms-api',
+				voms => 'emi.voms.voms-api-devel',
 				libtar => 'libtar-devel',
 				log4c => 'log4c-devel',
 				postgresql => 'postgresql-devel',
