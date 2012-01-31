@@ -459,7 +459,7 @@ voDboard        -T -v testvo -a x-msg://grid.emi.testvo.dashboard
 
 The maintainer script \texttt {glite-lb-notif-keeper} runs regularly and makes sure that registrations do not expire and that the messaging infrastructure keeps receiving them. In case of a listener (messaging broker) being unavailable for a prolonged period of time, the registration is terminated to prevent build-up of undelivered messages. A new registration will be created next time round, and if the listener comes up before then, normal operation will resume.
 
-\paragraph{Applying changes} After changing the \texttt{site-notif.conf} file, the simplest option is to do nothing and wait for cron to invoke the maintainer script. You may also run the script manually from the command line.
+\paragraph{Applying changes} After changing the \texttt{site-notif.conf} file, the simplest option is to do nothing and wait for \emph{cron} to invoke the maintainer script \texttt{glite-lb-notif-keeper}. You may also run the script manually from the command line. The script handles newly added registrations as well as registrations whose conditions have changed. It does not deal with registrations (lines) removed from the configuration file, though. Those are simply left to expire, typically 12 hours after the latest renewal. In case immediate removal is required, you need to drop the existing registration using \texttt{glite-lb-notify drop}.\footnote{Note that the server's identity is used to create the registrations, i.e. that the server is the owner. You may need to supply the server's identity to be able to remove a problematic registration.}
 
 \subsubsection{Index configuration}
 
