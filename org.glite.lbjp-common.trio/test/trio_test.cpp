@@ -76,10 +76,10 @@ void TrioTest::escapeSQL()
 }
 
 void TrioTest::escapeJSON() {
-	char	*e, *r = "START Jásoň doesn't like: \\\\\\n\\r\\b\\r\\t\\f and \\u001b END";
+	char	*e, *r = "START Jason doesn't like: \\\\\\n\\r\\b\\r\\t\\f and \\u001b END";
 	int	ret;
 
-	ret = trio_asprintf(&e, "START %|Js END", "Jásoň doesn't like: \\\n\r\b\r\t\f and \x1B");
+	ret = trio_asprintf(&e, "START %|Js END", "Jason doesn't like: \\\n\r\b\r\t\f and \x1B");
 	std::cerr << e << std::endl;
 
 	CPPUNIT_ASSERT_MESSAGE("escape JSON failed",ret > 0 && strcmp(e,r) == 0);
