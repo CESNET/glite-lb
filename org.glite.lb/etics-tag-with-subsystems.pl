@@ -335,6 +335,26 @@ usage: $0 [-c <current configuration>] module.name
 		printf(NEWCONF "$m = $modconfig\n");
 
 		close (MOD);
+
+		$shortname=$m;
+		$shortname=~s/^org\.glite\.//;
+		$shortname=~s/^emi\.//;
+		open( SC, "PATH=\$PATH:./:./org.glite.lb configure --listmodules $shortname|" );
+	        while ( <SC> ) {
+        	        $subconfs=$_;
+                	break;
+	        }
+	        close SC;
+        	chomp($subconfs);
+
+	        my @subconfs=split(/ /, $subconfs);
+        	foreach $submod (@subconfs) {
+			$subpref = $project eq "emi" ? "emi" : "org.glite";
+			$subconf = "$subpref.$submod";
+			$subconf =~s/\./-/g;
+			$subconf =~s/^org-//;
+			printf(NEWCONF "$subpref.$submod = ${subconf}_R_${m_major}_${m_minor}_${m_revision}_${m_age}\n");
+		}
         }
 
 	close(NEWCONF);

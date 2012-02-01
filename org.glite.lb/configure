@@ -320,13 +320,14 @@ if ($listmodules) {
 	my @m;
 
 	if (exists $lbmodules{$listmodules}) {
-		@m = map "$name_prefix.$listmodules.$_",@{$lbmodules{$listmodules}};
+		@m = map exists $subpackages{$listmodules . '.' . $_} ? "" : "$name_prefix.$listmodules.$_",@{$lbmodules{$listmodules}};
 	} else {
 		for my $sub (keys %subpackages) {
 			push @m, $sub if ($subpackages{$sub} eq $listmodules);
 		}
 	}
-	print "@m\n";
+	print map $_ eq "" ? "" : "$_ ", @m;
+	print "\n";
 	exit 0;
 }
 

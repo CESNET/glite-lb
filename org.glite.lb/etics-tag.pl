@@ -367,29 +367,40 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		system("etics-configuration prepare -o $TMPDIR/$currentconfig.ini.$$ -c $currentconfig $module");
 	}
 
-#	open OLDCONF, "$TMPDIR/$currentconfig.ini.$$" or die $!; 
-#	open NEWCONF, ">", "$TMPDIR/$newconfig.ini.$$" or die $!;
-
-#       while ($_ = <OLDCONF>) {
-#                chomp;
-
-##                $_=~s/module\.age\s*=\s*(\S+)/module\.age=$age/;
-#		$_=~s/$currentconfig/$newconfig/;
-#		$_=~s/^\s*version\s*=\s*[.0-9]+/version = $major.$minor.$revision/;
-#                $_=~s/^\s*age\s*=\s*\S+/age = $age/;
-
-#		printf(NEWCONF "$_\n");
-#        }
-
-#	close(OLDCONF);
-#	close(NEWCONF);
-
 	if ($increment eq "n") { # There was no version change and the configuration should already exist
 		printf(EXEC "\n#Modify new configuration\netics-configuration modify -i $TMPDIR/$newconfig.ini.$$\n"); }
 	else { # New configuration needs to be created
 	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$\n"); }
-	printf(EXEC "etics-commit\n");
+	$listconfig=$newconfig . ".ini.$$";
 
+	# **********************************
+	# Subconfigurations
+	# **********************************
+
+	open( SC, "$GLITE_LB_LOCATION/configure --listmodules $subsysname.$modulename|" ); 
+	while ( <SC> ) {
+		$subconfs=$_;
+		break;
+	}
+	close SC;
+	chomp($subconfs);
+
+	my @subconfs=split(/ /, $subconfs);
+	foreach $subconf (@subconfs) {
+		$newconfig=$project . "-" . $subconf  . "_R_$major" . "_$minor" . "_$revision" . "_$age";
+		$newconfig=~s/\./-/;
+
+		system("$GLITE_LB_LOCATION/configure --mode=etics --module $subconf --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age $proj_opt");
+
+		if ($increment eq "n") { # There was no version change and the configuration should already exist
+			printf(EXEC "\n#Modify configuration\netics-configuration modify -i $TMPDIR/$newconfig.ini.$$\n"); }
+		else { # New configuration needs to be created
+		printf(EXEC "etics-configuration add -i $TMPDIR/$newconfig.ini.$$\n"); }
+		$listconfig=$listconfig . " $TMPDIR/$newconfig.ini.$$";
+	}
+
+	printf(EXEC "etics-commit\n");
+	
 
 	# **********************************
 	# Final bows
@@ -401,5 +412,5 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 
 	printf("\n\n---------\nDone!\n\nExecution script written in:\t$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh\nChangeLog candidate written in:\t$tmpChangeLog\n");
 	printf("Old configuration stored in:\t$TMPDIR/$currentconfig.ini.$$\n") if (defined $opt_g);
-	printf("New configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
+	printf("New configuration written in:\t$TMPDIR/$listconfig\n\n");
 
