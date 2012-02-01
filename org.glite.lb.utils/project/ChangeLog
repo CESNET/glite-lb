@@ -100,3 +100,6 @@
 2.2.0-1
 - Preparation for a new multiplatform release
 
+2.2.1-1
+- Debian packaging for L&B
+
