@@ -80,3 +80,6 @@
 - Preparation for a new multiplatform release
 - Decrease the priority of the message about ended slave to stop scaring caring admins (SB #81369)
 
+2.2.0-2
+- Module rebuilt
+
