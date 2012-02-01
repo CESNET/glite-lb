@@ -203,3 +203,7 @@
 - Fix removing of .la files (for ETICS build).
 - Now with post-install
 
+5.1.1-1
+- Notification client supports new flags (anonymization, terminal states, job history)
+- Support of Debian packaging
+
