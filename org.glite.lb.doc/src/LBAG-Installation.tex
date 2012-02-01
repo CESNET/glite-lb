@@ -455,7 +455,7 @@ In another practical example, the following line in \texttt{/etc/glite-lb/site-n
 voDboard        -T -v testvo -a x-msg://grid.emi.testvo.dashboard
 \end{verbatim}
 
-\indent{}will set up and maintain registration for messages to be generated whenever a job belonging to VO \emph{testvo} (\texttt{-v testvo}) reaches a terminal state (\texttt{-T}),\footnote{Terminal states are recognized by the server and as of \LBver{3.2} they are: \emph{cleared}, \emph{aborted}, \emph{canceled} and \emph{purged}.} and delivered to topic \texttt{grid.emi.testvo.dashboard}. Again, the word \texttt{voDboard} is simply a plain-text handle.
+\indent{}will set up and maintain registration for messages to be generated whenever a job belonging to VO \emph{testvo} (\texttt{-v testvo}) reaches a terminal state (\texttt{-T}),\footnote{Terminal states are recognized by the server. As of \LBver{3.2} they are: \emph{cleared}, \emph{aborted}, \emph{canceled} and \emph{purged}.} and delivered to topic \texttt{grid.emi.testvo.dashboard}. Again, the word \texttt{voDboard} is simply a plain-text handle.
 
 The maintainer script \texttt {glite-lb-notif-keeper} runs regularly and makes sure that registrations do not expire and that the messaging infrastructure keeps receiving them. In case of a listener (messaging broker) being unavailable for a prolonged period of time, the registration is terminated to prevent build-up of undelivered messages. A new registration will be created next time round, and if the listener comes up before then, normal operation will resume.
 
