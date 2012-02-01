@@ -165,3 +165,6 @@
 8.1.0-1
 - Preparation for a new multiplatform release
 
+8.1.1-1
+- Completed routine for job state structure copying
+
