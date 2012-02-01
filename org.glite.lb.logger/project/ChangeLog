@@ -181,3 +181,6 @@
 2.3.0-1
 - Preparation for a new multiplatform release
 
+2.3.1-1
+- Start-up scripts according to Fedora Packaging Guidelines
+
