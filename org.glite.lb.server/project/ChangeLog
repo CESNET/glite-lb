@@ -327,3 +327,13 @@
 - Extended support for Torque Jobs
 - Support for packing Job History with L&B notification
 
+2.3.1-1
+- Configuration of MySQL server in separated file (savannah task #20340)
+- Support for generating notifications in terminal states
+- Support for budling Job History with notifications
+- Anonymization in notification messages, triggered by flag or an authorization category
+- Redesign of notification status handling for higher efficiency
+- notif-keeper mechanism
+- Debian packaging for L&B
+- Start-up scripts according to Fedora Packaging Guidelines
+
