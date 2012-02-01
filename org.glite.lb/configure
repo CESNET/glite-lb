@@ -317,7 +317,15 @@ if ($help) { usage(); exit 0; }
 
 if ($listmodules) {
 	my $name_prefix = ($listmodules eq 'gridsite' and $project eq 'glite') ? 'org' : $project{etics_name};
-	my @m = map "$name_prefix.$listmodules.$_",@{$lbmodules{$listmodules}};
+	my @m;
+
+	if (exists $lbmodules{$listmodules}) {
+		@m = map "$name_prefix.$listmodules.$_",@{$lbmodules{$listmodules}};
+	} else {
+		for my $sub (keys %subpackages) {
+			push @m, $sub if ($subpackages{$sub} eq $listmodules);
+		}
+	}
 	print "@m\n";
 	exit 0;
 }
@@ -1986,6 +1994,7 @@ General options (defaults in []):
   --thrflavour=flavour
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
   --listmodules=subsys          list modules of a subsystem
+  --listmodules=module          list subpackages of a module
   --version=maj.min.rev-age	specify version here instead of reading version.properties
   --branch=branch		CVS branch/etics name suffix (HEAD, branch_2_1, ...)
   --libdir=libdir		typically [lib,lib64] postfix
