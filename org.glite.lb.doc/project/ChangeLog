@@ -151,3 +151,13 @@
 - Preparation for a new multiplatform release
 - Portable syntax of test condition in install commands.
 
+1.3.1-1
+- New section on checking server configuration remotely
+- The TestPlan document is installed along with other docs
+- Front matter facelift
+- Extended explanation of configuration files
+- Notif keeping explained
+- LB versions printed in italic rather than bold
+- Smoke Test clarifications (GGUS #78132)
+- Explanation of the Job History feature
+
