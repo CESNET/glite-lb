@@ -85,3 +85,7 @@
 4.4.0-1
 - Preparation for a new multiplatform release
 
+4.4.1-1
+- Configuration of MySQL server in separated file (savannah task #20340)
+- Start-up scripts according to Fedora Packaging Guidelines
+
