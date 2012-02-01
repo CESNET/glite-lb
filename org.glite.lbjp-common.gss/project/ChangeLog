@@ -100,3 +100,13 @@
   - warning fixes (type cast, 32/64 portability)
   - document gss functions in code
 
+3.1.1-1
+- Update build for flavour-less globus (using GSSAPI_* variables for complete Kerberos or GSI compilation flags).
+- build and fixes for Kerberos GSSAPI support
+- stop linking against efence
+- don't fail on problems with creds
+- the _gsi call made use only GSI and return silently if there's nothing to do
+- Shorted name for the Kerberos mechanism
+- Work around the globus bug that actually makes it impossible to specify own OID to import_creds.
+  See https://bugzilla.mcs.anl.gov/globus/show_bug.cgi?id=7238
+

@@ -102,3 +102,7 @@
 - Preparation for a new multiplatform release
 - Build fixes
 
+3.1.1-1
+- Code reduction -- compile only one gsoap-plugin library linked with system gsoap
+- pkg-config files added
+
