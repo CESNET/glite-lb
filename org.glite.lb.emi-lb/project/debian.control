@@ -12,7 +12,7 @@ DM-Upload-Allowed: yes
 Package: emi-lb
 Section: net
 Architecture: any
-Depends: ${misc:Depends}, bdii, emi-version, fetch-crl, glite-lb-client-java, glite-lb-doc, glite-lb-harvester, glite-lb-logger, glite-lb-logger-msg, glite-lb-server, glite-lb-utils, glite-lb-ws-test, glite-lb-yaim, glue-schema
+Depends: ${misc:Depends}, bdii, emi-version, fetch-crl, glite-lb-client-java, glite-lb-client-progs, glite-lb-doc, glite-lb-harvester, glite-lb-logger, glite-lb-logger-msg, glite-lb-server, glite-lb-utils, glite-lb-ws-test, glite-lb-yaim, glue-schema
 #TODO: glue-service-provider/glite-info-provider-service
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
