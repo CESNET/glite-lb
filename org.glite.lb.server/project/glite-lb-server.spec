@@ -117,12 +117,10 @@ fi
 %dir /usr/share/doc/%{name}-%{version}/
 %config /etc/logrotate.d/glite-lb-purge
 %config /etc/logrotate.d/glite-lb-lcas
-/etc/cron.d/glite-lb-server-purge
-/etc/cron.d/glite-lb-proxy-purge
+%config /etc/mysql/conf.d/glite-lb-server.cnf
+/etc/cron.d/*
 /etc/glite-lb-index.conf.template
-/etc/glite-lb/glite-lb-dbsetup.sql
-/etc/glite-lb/glite-lb-migrate_db2version20
-/etc/glite-lb/glite-lb-index.conf.template
+/etc/glite-lb/*
 /etc/init.d/glite-lb-bkserverd
 /usr/%{_lib}/modules/lcas_lb.mod
 /usr/%{_lib}/modules/liblcas_lb.so
@@ -135,6 +133,7 @@ fi
 /usr/bin/glite-lb-bkindex
 /usr/bin/glite-lb-mon-db
 /usr/bin/glite-lb-bkserverd
+/usr/sbin/glite-lb-notif-keeper
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/package.description

@@ -2,12 +2,15 @@ etc/cron.d
 etc/glite-lb
 etc/init.d
 etc/logrotate.d
+etc/mysql
+etc/mysql/conf.d
 usr/bin
 usr/include
 usr/include/glite
 usr/include/glite/lb
 usr/lib
 usr/lib/modules
+usr/sbin
 usr/share/doc/glite-lb-server
 usr/share/man/man1
 usr/share/man/man8
