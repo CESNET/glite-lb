@@ -3,7 +3,7 @@ Name: glite-lb-logger
 Version: @MAJOR@.@MINOR@.@REVISION@
 Release: @AGE@%{?dist}
 Url: @URL@
-License: Apache Software License
+License: ASL 2.0
 Vendor: EMI
 Group: System Environment/Daemons
 BuildRequires: cppunit-devel%{?_isa}

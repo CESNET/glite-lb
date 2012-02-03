@@ -3,7 +3,7 @@ Name: glite-jobid-api-cpp
 Version: @MAJOR@.@MINOR@.@REVISION@
 Release: @AGE@%{?dist}
 Url: @URL@
-License: Apache Software License
+License: ASL 2.0
 Vendor: EMI
 Group: Development/Libraries
 BuildRequires: glite-jobid-api-c-devel
