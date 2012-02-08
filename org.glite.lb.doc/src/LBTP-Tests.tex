@@ -127,10 +127,10 @@ to a~remote \LB\ server. Try re-registration using flag \code{EDG\_WLL\_LOGLFLAG
 
 \result\ All sub tests (API calls) return 0.
 
-\begin{hints}
-\path{glite-lb-regjob} example can be used. It generates a~unique jobid,
-prints it and calls \LB\ API appropriately.
-\end{hints}
+%\begin{hints}
+%\path{glite-lb-regjob} example can be used. It generates a~unique jobid,
+%prints it and calls \LB\ API appropriately.
+%\end{hints}
 
 
 
@@ -172,10 +172,10 @@ with \code{edg\_wll\_JobLog} call.
 contained in the local logger files. The files should be removed by
 interlogger after approx. 1 min.
 
-\begin{hints}
-\path{glite-lb-joblog} example outputs the events in (almost) the same
-format as the local logger files.
-\end{hints}
+%\begin{hints}
+%\path{glite-lb-joblog} example outputs the events in (almost) the same
+%format as the local logger files.
+%\end{hints}
 
 
 
@@ -335,9 +335,9 @@ and invoke \code{edg\_wll\_NotifReceive}.
 \result\ All the events should trigger notifications reported by the running
 notification client.
 
-\begin{hints}
-\path{glite-lb-notify} example can be used with its commands \path{new} and \path{receive}.
-\end{hints}
+%\begin{hints}
+%\path{glite-lb-notify} example can be used with its commands \path{new} and \path{receive}.
+%\end{hints}
 
 
 \subsubsection{Include another job}
@@ -360,10 +360,10 @@ notification client.
 
 \result\ Notifications should be received by the client.
 
-\begin{hints}
-Commands \path{change} and \path{receive} of \path{glite-lb-notify}
-can be used.
-\end{hints}
+%\begin{hints}
+%Commands \path{change} and \path{receive} of \path{glite-lb-notify}
+%can be used.
+%\end{hints}
 
 % notifikace -- zmena adresy/portu
 % pak poslat udalost, musi dojit
@@ -403,6 +403,7 @@ immediately.
 \begin{enumerate}
 \item Register a job.
 \item Start a~notification client,
+\item Retrieve broker address from the server (since \LBver{3.2})
 register with \code{edg\_wll\_NotifNew} for any state changes of the job,
 and listen for messages. 
 \end{enumerate}
@@ -414,9 +415,9 @@ and listen for messages.
 \result\ All the events should trigger notifications that will be reported 
 through ActiveMQ messages.
 
-\begin{hints}
-The \path{glite-lb-notify} example can be used to register a notification and \path{glite-lb-cmsclient} can be used to receive messages.
-\end{hints}
+%\begin{hints}
+%The \path{glite-lb-notify} example can be used to register a notification and \path{glite-lb-cmsclient} can be used to receive messages.
+%\end{hints}
 
 
 
@@ -458,10 +459,10 @@ same as retrieved in~\ref{purge1}. The final purge invocation should
 do nothing (i.e. nothing was left in the database).
 
 % test_purge
-\begin{hints}
-The example \path{org.glite.lb.client/examples/purge\_test} does exactly this sequence of steps,
-including the checks.
-\end{hints}
+%\begin{hints}
+%The example \path{org.glite.lb.client/examples/purge\_test} does exactly this sequence of steps,
+%including the checks.
+%\end{hints}
 
 \subsection{Other Service Tests}
 
@@ -536,7 +537,7 @@ including the checks.
 \result\ The status of all files should match the pre-determined mask.
 
 
-\subsubsection{Nagios probe}
+\subsubsection{Nagios Probe}
 \label{permissions}
 \req\ All \LB\ services configured and running, nagios probe\footnote{see also page \pageref{s:nagios}} installed.
 
@@ -552,6 +553,25 @@ including the checks.
 \result\ The probe has returned OK and exit code was 0.
 
 \note\ The probe includes artificial delays. The test takes approx. 10\,s to finish.
+
+\subsubsection{HTTPs Interface}
+\label{permissions}
+\req\ All \LB\ services configured and running.
+
+\what
+\begin{enumerate}
+\item Register a test job
+\item Register a test notification
+\item Query user jobs over the HTTPs interface
+\item Query test job status over the HTTPs interface
+\item Query notification status over the HTTPs interface
+\item Download server configuration page and check if essential values are present
+\item Download statistics page and check if essential values are present and $> 0$
+\end{enumerate}
+
+\how\ \ctblb{lb-test-https.sh}
+
+\result\ All information was succesfully downloaded and matched expectations.
 
 
 \section{LB ``In the Wild''---Real-World WMS Test}
