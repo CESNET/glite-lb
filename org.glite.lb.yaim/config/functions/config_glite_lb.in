@@ -311,7 +311,7 @@ EOF
     rm -f "$GLITE_LB_LOCATION_ETC/glite-lb/msg.conf"
   else
     if [ "$GLITE_LB_MSG_BROKER" = 'true' -o "$GLITE_LB_MSG_BROKER" = 'auto' -o -z "$GLITE_LB_MSG_BROKER" ]; then
-      GLITE_LB_MSG_BROKER="`${GLITE_LB_LOCATION}/share/glite-lb/msg-brokers-openwire --bdii $LCG_GFAL_INFOSYS --network $GLITE_LB_MSG_NETWORK --sort find | head -n 1 | sed 's,openwire://,tcp://,'`";
+      GLITE_LB_MSG_BROKER="`${GLITE_LB_LOCATION}/share/glite-lb/msg-brokers --bdii $LCG_GFAL_INFOSYS --network $GLITE_LB_MSG_NETWORK --sort find | head -n 1 | sed 's,openwire://,tcp://,'`";
     fi
     if [ ! -z "$GLITE_LB_MSG_BROKER" ]; then
       cat > "$GLITE_LB_LOCATION_ETC/glite-lb/msg.conf" <<EOF

@@ -166,11 +166,12 @@ sub search_bdii ($%) {
 
 sub list_brokers ($) {
     my($ldap, %search, $endpoint, $match, $network, $value, @uris);
+    my($proto,%uris);
     my($check) = @_;
 
     $ldap = connect_bdii();
     %search = (
-        filter => "(&(objectClass=GlueService)(GlueServiceType=msg.broker.openwire)",
+        filter => "(&(objectClass=GlueService)(GlueServiceType=msg.broker.*)",
         attrs  => [ qw(GlueServiceEndpoint GlueServiceUniqueID) ],
     );
     $search{filter} .= "(GlueServiceStatus=OK)" if ($check);
@@ -191,12 +192,25 @@ sub list_brokers ($) {
 	}
 	$value = $endpoint->get_value("GlueServiceEndpoint");
 	if ($match) {
-	    push(@uris, $value);
+            $proto = '';
+            if ($value =~ /^([^:]*):\/\/.*/) { $proto = $1; }
+            push(@{$uris{$proto}}, $value);
 	    debug(2, "  keep URI %s", $value);
 	} else {
 	    debug(2, "  skip URI %s", $value);
 	}
     }
+
+    foreach $proto ('stomp+ssl', 'openwire+ssl', 'stomp', 'openwire') {
+	if (exists $uris{$proto}) {
+            push(@uris,@{$uris{$proto}});
+            delete $uris{$proto};
+        }
+    }
+    foreach $proto (keys %uris) {
+            push(@uris,@{$uris{$proto}});
+    }
+    
     debug(1, "got %d broker URIs from BDII", scalar(@uris));
     warning("got an empty brokers list from BDII") unless @uris;
     return(@uris);

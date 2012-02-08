@@ -106,7 +106,7 @@ install:
 	${INSTALL} -m 755 ${EXAMPLES} ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
-	${INSTALL} -m 755 ${top_srcdir}/src/msg-brokers-openwire ${DESTDIR}${PREFIX}${prefix}/share/glite-lb
+	${INSTALL} -m 755 ${top_srcdir}/src/msg-brokers ${DESTDIR}${PREFIX}${prefix}/share/glite-lb
 
 %.lo %.o: %.cpp
 	${COMPILEXX} -c $< -o $@

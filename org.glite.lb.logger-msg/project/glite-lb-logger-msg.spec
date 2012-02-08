@@ -63,7 +63,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/package.summary
 /usr/share/doc/%{name}-%{version}/package.description
-/usr/share/glite-lb/msg-brokers-openwire
+/usr/share/glite-lb/*
 
 
 %changelog
