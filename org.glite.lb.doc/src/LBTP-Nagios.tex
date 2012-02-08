@@ -80,7 +80,7 @@ The probe can return one of the following:
 & \emph{Notification Interlogger Not Running} & Events are being delivered correctly and server responds properly to status queries, but it its not delivering notification messages. The notification interlogger is probably not running.\\
 \hline
 \multirow{5}{*}{UNKNOWN} & \emph{Probe timed out} & The probe was unable to finish before the alotted time. Consider increasing the timeout with \texttt{-t}. The minimum reasonable value is 10\,s. \\
-& \emph{No server specified} & Server address was not specified when running the probe. Give one with \texttt{-H} \\
+& \emph{No server specified} & Server address was not specified when running the probe. Give one with \texttt{-H}. \\
 & \emph{Probe could not write temporary files} & The temporary directory was not writable. Check the default location or specify a new one with \texttt{-T}.\\
 & \emph{Some commands are not available} & Probe could not run. Some of the required commands are not present on the system. Run probe from command line with \texttt{-v[vv]} and check output. \\
 & \emph{No Credentials} & No proxy certificate was found. Probe could not run. \\
