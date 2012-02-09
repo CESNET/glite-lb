@@ -249,6 +249,8 @@ if [ ${TOTALNOTIFS} -eq 0 ]; then
 	exit 0
 fi
 
+RETVAL=0;
+
 for ((i=0 ; i < ${TOTALNOTIFS} ; i++))
 do
 	NOW=`date +%s`
@@ -263,6 +265,7 @@ do
 			vecho 0 "New registration ($retnotifid)"
 		else
 			vecho 0 "ERROR: Registration for handle ${HANDLES[${i}]} specified in file $SiteNotif failed!"
+			RETVAL=1
 		fi
 	else 
 		check_opts $i
@@ -273,7 +276,12 @@ do
 				if [ "${NOTIFID[${i}]}" == "" ]; then
 					setup_new $i
 					NOTIFID[i]=$retnotifid
-					vecho 0 "Failed to extend. Registration recreated ($retnotifid)."
+					if [ "${NOTIFID[${i}]}" == "" ]; then
+						vecho 0 "Failed to extend, failed to recreate. Check service."
+						RETVAL=1
+					else
+						vecho 0 "Failed to extend. Registration recreated ($retnotifid)."
+					fi
 				else
 					vecho 0 "Registration extended (${NOTIFID[${i}]})"
 				fi
@@ -292,3 +300,4 @@ do
 	printf "#This file is maintained automatically by script $0 initiated by cron\nOptions: ${OPTIONS[${i}]}\nNotifid: ${NOTIFID[${i}]}\n" > $fname
 done
 
+exit $RETVAL
