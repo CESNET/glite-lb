@@ -19,9 +19,9 @@
 numjobs=10
 parallel=1
 
-# XXX - there must be better way to find stage
 if [ -z "${GLITE_LOCATION}" ]; then
-	STAGEDIR=/home/michal/shared/egee/jra1-head/stage
+	# let's be in stage
+	STAGEDIR=`pwd`/usr
 else
 	STAGEDIR=${GLITE_LOCATION}
 fi
@@ -277,7 +277,7 @@ echo ""
 fi
 
 PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
-CONSUMER_ARGS="-g --silent -S /tmp -D /tmp -t 1 -d --perf-sink=1 -p 10500 -w 10503"
+CONSUMER_ARGS="-g -S /tmp -D /tmp -t 1 -d --perf-sink=1 -p 10500 -w 10503"
 PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-interlogd-perf
 LOGJOBS_ARGS=" -m localhost:10500 $COMM_ARGS"
 }

@@ -22,15 +22,19 @@
 
 if [[ -z $JOB_FILE ]]
 then
-    JOB_FILE[0]=$STAGEDIR/examples/perftest/perf_simple_avg_events.log
+    for dir in $STAGEDIR/lib/glite-lb/examples $STAGEDIR/lib64/glite-lb/examples; do
+	EXAMPLES=$dir
+	if test -d $dir; then break; fi
+    done
+    JOB_FILE[0]=$EXAMPLES/perftest/perf_simple_avg_events.log
     JOB_DESC[0]="avg_job"
-    JOB_FILE[1]=$STAGEDIR/examples/perftest/perf_simple_max_events.log
+    JOB_FILE[1]=$EXAMPLES/perftest/perf_simple_max_events.log
     JOB_DESC[1]="big_job"
-    JOB_FILE[2]=$STAGEDIR/examples/perftest/perf_dag_avg_events.log
+    JOB_FILE[2]=$EXAMPLES/perftest/perf_dag_avg_events.log
     JOB_DESC[2]="avg_dag"
-    JOB_FILE[3]=$STAGEDIR/examples/perftest/perf_dag_max_events.log
+    JOB_FILE[3]=$EXAMPLES/perftest/perf_dag_max_events.log
     JOB_DESC[3]="big_dag"
-    JOB_FILE[4]=$STAGEDIR/examples/perftest/perf_collection_avg_events.log
+    JOB_FILE[4]=$EXAMPLES/perftest/perf_collection_avg_events.log
     JOB_DESC[4]="collection"
 fi
 

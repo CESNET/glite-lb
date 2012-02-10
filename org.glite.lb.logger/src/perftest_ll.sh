@@ -18,9 +18,9 @@
 
 numjobs=1
 
-# XXX - there must be better way to find stage
 if [ -z "${GLITE_LOCATION}" ]; then
-	STAGEDIR=/home/michal/shared/egee/jra1-head/stage
+	# let's be in stage
+	STAGEDIR=`pwd`/usr
 else
 	STAGEDIR=${GLITE_LOCATION}
 fi

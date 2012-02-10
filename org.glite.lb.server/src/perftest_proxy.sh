@@ -90,7 +90,7 @@ group_a_test_n ()
 {
     PERFTEST_CONSUMER=$GLITE_LOCATION/bin/glite-lb-bkserverd
     i=$1
-    CONSUMER_ARGS="-P -d --silent --perf-sink $i -o /tmp/proxy.perf -D /tmp -t 1 " 
+    CONSUMER_ARGS="-P -d --perf-sink $i -o /tmp/proxy.perf -D /tmp -t 1 " 
     export PERFTEST_NAME="proxy_test_$i"
     echo -n "${i})"
     run_test proxy $numjobs
@@ -107,7 +107,7 @@ group_a_test_n ()
 group_a_test_5 ()
 {
     PERFTEST_COMPONENT="$GLITE_LOCATION/bin/glite-lb-bkserverd"
-    COMPONENT_ARGS="-P -d --silent -o /tmp/proxy.perf --proxy-il-sock /tmp/interlogger.perf  --proxy-il-fprefix /tmp/perftest.log -D /tmp -t 1 "
+    COMPONENT_ARGS="-P -d -o /tmp/proxy.perf --proxy-il-sock /tmp/interlogger.perf  --proxy-il-fprefix /tmp/perftest.log -D /tmp -t 1 "
 
     PERFTEST_CONSUMER="$GLITE_LOCATION/bin/glite-lb-interlogd-perf-empty"
     CONSUMER_ARGS="-d -s /tmp/interlogger.perf --file-prefix=/tmp/perftest.log -i /tmp/il-perf.pid"
@@ -126,7 +126,7 @@ group_a_test_5 ()
 group_a_test_6 ()
 {
     PERFTEST_COMPONENT="$GLITE_LOCATION/bin/glite-lb-bkserverd"
-    COMPONENT_ARGS="-P -d --silent -o /tmp/proxy.perf --proxy-il-sock /tmp/interlogger.perf  --proxy-il-fprefix /tmp/perftest.log -D /tmp -t 1 "
+    COMPONENT_ARGS="-P -d -o /tmp/proxy.perf --proxy-il-sock /tmp/interlogger.perf  --proxy-il-fprefix /tmp/perftest.log -D /tmp -t 1 "
 
     PERFTEST_CONSUMER="$GLITE_LOCATION/bin/glite-lb-interlogd-perf"
     CONSUMER_ARGS="-d --nosend -s /tmp/interlogger.perf --file-prefix=/tmp/perftest.log -i /tmp/il-perf.pid"
