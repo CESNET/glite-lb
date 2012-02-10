@@ -716,11 +716,14 @@ int check_job_query_index(edg_wll_Context ctx, const edg_wll_QueryRec **jc)
 	if ( !jc || !*jc )
 		return edg_wll_SetError(ctx,EDG_WLL_ERROR_NOINDEX,"unrestricted queries unsupported");
 
+	glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "Checking indices\n");
+
+
 	/*
-	 *	First check presense of jobid - Primary key
+	 *	First check presense of jobid - Primary key, and parent - built-in index
 	 */
 	for ( i = 0; jc[i]; i++ ) for ( j = 0; jc[i][j].attr; j++ )
-		if ( jc[i][j].attr == EDG_WLL_QUERY_ATTR_JOBID ) return 0;
+		if ( (jc[i][j].attr == EDG_WLL_QUERY_ATTR_JOBID) || (jc[i][j].attr == EDG_WLL_QUERY_ATTR_PARENT) ) return 0;
 
 	if ( !ctx->job_index )
 		return edg_wll_SetError(ctx, EDG_WLL_ERROR_NOINDEX, "no indices configured: jobid required in query");
