@@ -26,7 +26,7 @@ Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gs
 Summary: Development files for gLite GSS library
 Group: Development/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: globus-gssapi-gsi-devel
+Requires: globus-gssapi-gsi-devel, pkgconfig
 Provides: glite-security-gss%{?_isa} = %{version}-%{release}
 Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
 
