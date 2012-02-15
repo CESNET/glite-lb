@@ -27,55 +27,55 @@ This subsection gives a comprehensive overview of all system functionality tests
 
 Besides pure System Functionality Tests, this list also includes In-the-Wild tests and Regression Tests discussed in a few following chapters. They are used in the same manner and, typically, on the same occasions, which is why they are all listed in the same place. 
 
-\begin{tabularx}{\textwidth}{|l|l|X|}
+\begin{tabularx}{\textwidth}{|l|X|}
 \hline
-     {\bf Executable} & {\bf Status} & {\bf Use} \\
+     {\bf Executable} & {\bf Use} \\
 \hline
-{\tt lb-test-job-registration.sh} & Implemented & Tries to register a job and checks if the registration worked. \\
+{\tt lb-test-job-registration.sh} & Tries to register a job and checks if the registration worked. \\
 \hline
-{\tt lb-test-event-delivery.sh} & Implemented & Tries to register a job and log events. Checks if the registration worked and events resulted in state change accordingly. \\
+{\tt lb-test-event-delivery.sh} & Tries to register a job and log events. Checks if the registration worked and events resulted in state change accordingly. \\
 \hline
-{\tt lb-test-https.sh} & Implemented & Test the HTTPs interface. \\
+{\tt lb-test-https.sh} & Test the HTTPs interface. \\
 \hline
-{\tt lb-test-logevent.sh} & Implemented & Test if local logger accepts events correctly (i.e. returns 0). \\
+{\tt lb-test-logevent.sh} & Test if local logger accepts events correctly (i.e. returns 0). \\
 \hline
-{\tt lb-test-il-recovery.sh} & Implemented & Tests if interlogger recovers correctly and processes events logged in between when restarted. \\
+{\tt lb-test-il-recovery.sh} & Tests if interlogger recovers correctly and processes events logged in between when restarted. \\
 \hline
-{\tt lb-test-job-states.sh} & Implemented & Test that job state queries return correctly and that testing jobs are in expected states. \\
+{\tt lb-test-job-states.sh} & Test that job state queries return correctly and that testing jobs are in expected states. \\
 \hline
-{\tt lb-test-collections.sh} & Implemented & Perform various collection-specific tests. \\
+{\tt lb-test-collections.sh} & Perform various collection-specific tests. \\
 \hline
-{\tt lb-test-proxy-delivery.sh} & Implemented & Test correct event delivery through \LB proxy. \\
+{\tt lb-test-proxy-delivery.sh} & Test correct event delivery through \LB proxy. \\
 \hline
-{\tt lb-test-ws.sh} & Implemented & Query events and job states through the Web-Service interface. \\
+{\tt lb-test-ws.sh} & Query events and job states through the Web-Service interface. \\
 \hline
-{\tt lb-test-notif.sh} & Implemented & Test if notifications are delivered correctly for testing jobs. \\
+{\tt lb-test-notif.sh} & Test if notifications are delivered correctly for testing jobs. \\
 \hline
 %{\tt lb-test-notif-additional.sh} & Proposed & Test notification delivery with additional options. \\
 %\hline
-{\tt lb-test-notif-switch.sh} & Implemented & Test the correct behavior of a notification once its target jobid changes.  \\
+{\tt lb-test-notif-switch.sh} & Test the correct behavior of a notification once its target jobid changes.  \\
 \hline
-{\tt lb-test-notif-recovery.sh} & Implemented & Test if notification client receives notifications correctly upon restart.  \\
+{\tt lb-test-notif-recovery.sh} & Test if notification client receives notifications correctly upon restart.  \\
 \hline
-{\tt lb-test-purge.pl} & Implemented & Test that \LB server purge works correctly. \\
+{\tt lb-test-purge.pl} & Test that \LB server purge works correctly. \\
 \hline
-{\tt lb-test-wild.pl} & Implemented & Test \LB ``in the wild'' (test with real-life WMS). \\
+{\tt lb-test-wild.pl} & Test \LB ``in the wild'' (test with real-life WMS). \\
 \hline
-{\tt lb-test-bdii.sh} & Implemented & Test \LB server is published correctly over BDII. \\
+{\tt lb-test-bdii.sh} & Test \LB server is published correctly over BDII. \\
 \hline
-{\tt lb-test-sandbox-transfer.sh} & Implemented & Test \LB's support for logging sandbox transfers. \\
+{\tt lb-test-sandbox-transfer.sh} & Test \LB's support for logging sandbox transfers. \\
 \hline
-{\tt lb-test-changeacl.sh} & Implemented & Test proper parsing of \code{ChangeACL} events. \\
+{\tt lb-test-changeacl.sh} & Test proper parsing of \code{ChangeACL} events. \\
 \hline
-{\tt lb-test-statistics.sh} & Implemented & Test statistic functions provided by \LB \\
+{\tt lb-test-statistics.sh} & Test statistic functions provided by \LB \\
 \hline
-{\tt lb-test-threaded.sh} & Implemented & Rudimentary test for threaded clients \LB \\
+{\tt lb-test-threaded.sh} & Rudimentary test for threaded clients \LB \\
 \hline
-{\tt lb-test-notif-msg.sh} & Implemented & Test delivery of \LB notifications over ActiveMQ \\
+{\tt lb-test-notif-msg.sh} & Test delivery of \LB notifications over ActiveMQ \\
 \hline
-{\tt lb-test-permissions.sh} & Implemented & Check ownership and permission settings for config and runtime files \\
+{\tt lb-test-permissions.sh} & Check ownership and permission settings for config and runtime files \\
 \hline
-{\tt lb-test-nagios-probe.sh} & Implemented & Run the nagios probe and check results \\
+{\tt lb-test-nagios-probe.sh} & Run the nagios probe and check results \\
 \hline
 \end{tabularx}
 
