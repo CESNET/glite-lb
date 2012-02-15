@@ -751,7 +751,7 @@ int check_job_query_index(edg_wll_Context ctx, const edg_wll_QueryRec **jc)
 	}
 
 	return edg_wll_SetError(ctx,EDG_WLL_ERROR_NOINDEX,
-			is_all_query(jc) ? "\"-all\" queries denied by server configuration" : NULL);
+			is_all_query(jc) ? "\"-all\" queries denied by server configuration" : "No indexed condition in query");
 }
 
 #define opToString(op)										\
@@ -1075,6 +1075,15 @@ static char *jc_to_head_where(
 			}
 			break;
 
+		case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
+			ct++;
+			if ( jc[m][n].op != EDG_WLL_QUERY_OP_EQUAL && jc[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
+			{
+				edg_wll_SetError(ctx, EINVAL, "only `=' and '!=' supported with network server");
+				return NULL;
+			}
+			break;
+
 		case EDG_WLL_QUERY_ATTR_PARENT:
 			ct++;
 			if ( jc[m][n].op != EDG_WLL_QUERY_OP_EQUAL && jc[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
@@ -1287,6 +1296,7 @@ static char *jc_to_head_where(
 			break;
 
 		case EDG_WLL_QUERY_ATTR_DESTINATION:
+		case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
 		case EDG_WLL_QUERY_ATTR_LOCATION:
 		case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 		case EDG_WLL_QUERY_ATTR_USERTAG:
