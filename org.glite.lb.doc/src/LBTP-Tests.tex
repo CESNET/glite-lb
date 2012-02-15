@@ -43,6 +43,8 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-job-states.sh} & Implemented & Test that job state queries return correctly and that testing jobs are in expected states. \\
 \hline
+{\tt lb-test-collections.sh} & Implemented & Perform various collection-specific tests. \\
+\hline
 {\tt lb-test-proxy-delivery.sh} & Implemented & Test correct event delivery through \LB proxy. \\
 \hline
 {\tt lb-test-ws.sh} & Implemented & Query events and job states through the Web-Service interface. \\
@@ -227,7 +229,16 @@ events (e.g. destination computing element) wrt. the values reported in the job 
 \result\ Job states should change on event delivery as expect, related jobs should ``know'' their IDs.
 
 
+\subsubsection{Collection-specific Tests}
 
+\req\ All \LB\ services running
+
+\what\
+There is no specific workflow for this test. It is a placeholder for various minor feature and regression tests related to job collections.
+
+\how\ \ctblb{lb-test-collections.sh}
+
+\result\ All included checks should finish OK.
 
 
 %\subsubsection{Non-simple job states}
