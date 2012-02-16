@@ -165,6 +165,7 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	glite_jobid_t	p_jobid;
 	edg_wll_SeqCode	p_seqcode;
 	int		count_statistics;
+	int 		count_server_stats;
 
 	int		greyjobs;
 	char		**fqans; /* null-terminated list of peer's VOMS FQANs */
