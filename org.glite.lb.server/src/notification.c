@@ -36,6 +36,7 @@ limitations under the License.
 #include "index.h"
 #include "lb_xml_parse.h"
 #include "get_events.h"
+#include "server_stats.h"
 
 
 typedef struct {
@@ -166,7 +167,11 @@ int edg_wll_NotifNewServer(
 				free(prefmsg);
 				goto cleanup;
 			}
+
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_NOTIF_MSG_REGS);
 		}
+		else
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_NOTIF_LEGACY_REGS);
 
 		if ( !strncmp(address_override, "0.0.0.0", aux-address_override) || 
 		     !strncmp(address_override, "[::]", aux-address_override) ||

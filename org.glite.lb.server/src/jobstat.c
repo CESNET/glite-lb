@@ -42,6 +42,7 @@ limitations under the License.
 #include "db_supp.h"
 #include "db_calls.h"
 #include "authz_policy.h"
+#include "server_stats.h"
 
 #define DAG_ENABLE	1
 
@@ -503,6 +504,34 @@ int edg_wll_intJobStatus(
 			if ((!maxts.tv_sec && !maxts.tv_usec)
 			    || (ts.tv_sec > maxts.tv_sec)
 			    || (ts.tv_sec == maxts.tv_sec && ts.tv_usec > maxts.tv_usec)) maxts = ts;
+			// event has been processed by state machine, refresh statistics
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_JOB_EVENTS);
+			// check if this is job registration (counted only here)
+			if (events[i].type == EDG_WLL_EVENT_REGJOB){
+				switch (intstat->pub.jobtype) {
+                                case EDG_WLL_STAT_SIMPLE:
+                                case EDG_WLL_STAT_DAG:
+                                case EDG_WLL_STAT_COLLECTION:
+                                        edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_GLITEJOB_REGS);
+                                        break;
+                                case EDG_WLL_STAT_PBS:
+                                        edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_PBSJOB_REGS);
+                                        break;
+                                case EDG_WLL_STAT_CONDOR:
+                                        edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_CONDOR_REGS);
+                                        break;
+                                case EDG_WLL_STAT_CREAM:
+                                        edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_CREAM_REGS);
+                                        break;
+                                case EDG_WLL_STAT_FILE_TRANSFER:
+                                case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
+                                        edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_SANDBOX_REGS);
+                                        break;
+                                default:
+                                        glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "Unknown job type, registration will not be counted in statistics.");
+                                        break;
+                                }
+			}
 		}
 		/* no events or status computation error */
 		if (intJobStat_to_JobStat(intstat)->state == EDG_WLL_JOB_UNDEF) {
@@ -1238,6 +1267,9 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
 
 	edg_wll_UpdateStatistics(ctx, oldstat, e, intJobStat_to_JobStat(ijsp));
 
+	// event has been processed by state machine, refresh statistics 
+        edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_JOB_EVENTS);
+
 	if (ctx->rgma_export) write2rgma_chgstatus(ijsp, oldstat_rgmaline);
 
 	if (stat_out) {
@@ -1286,6 +1318,9 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 		edg_wll_StoreIntState(ctx, ijsp, seq);
 
 		edg_wll_UpdateStatistics(ctx, oldstat, e, intJobStat_to_JobStat(ijsp));
+
+		// event has been processed by state machine, refresh statistics 
+                edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_JOB_EVENTS);
 
 		/* check whether subjob state change does not change parent state */
 		if ((intJobStat_to_JobStat(ijsp)->parent_job) 

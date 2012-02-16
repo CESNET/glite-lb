@@ -169,7 +169,7 @@ BKSERVER_BASE_OBJS:= \
 	lb_xml_parse_V21.o lb_text.o \
 	openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o stats.o db_calls.o db_supp.o lb_rss.o pretty_print_wrapper.o \
+	notification.o il_notification.o notif_match.o stats.o server_stats.o db_calls.o db_supp.o lb_rss.o pretty_print_wrapper.o \
 	policy_gram.o policy_lex.o authz_policy.o crypto.o
 
 gsoap_version ?= ${gsoap_default_version}
@@ -213,7 +213,7 @@ endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
 	jobstat.o query.o get_events.o write2rgma.o index_lex.o \
-	lb_authz.o store.o bkindex.o stats.o\
+	lb_authz.o store.o bkindex.o stats.o server_stats.o\
 	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o lb_text.o server_state.o lb_xml_parse_V21.o lb_html.o cond_dump.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.o lb_rss.o pretty_print_wrapper.o authz_policy.o crypto.o
 
 INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${LB_MACHINE_LIB} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
@@ -233,7 +233,7 @@ LIB_OBJS_BK:= \
 	lb_xml_parse_V21.o lb_text.o \
 	openserver.o query.o userjobs.o db_store.o request.o store.o \
 	stored_master.o srv_purge.o server_state.o dump.o lb_authz.o load.o \
-	notification.o il_notification.o notif_match.o stats.o write2rgma.o \
+	notification.o il_notification.o notif_match.o stats.o server_stats.o write2rgma.o \
 	db_calls.o db_supp.o lb_rss.o pretty_print_wrapper.o authz_policy.o \
 	crypto.o
 

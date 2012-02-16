@@ -32,6 +32,7 @@ limitations under the License.
 #include "glite/lbu/log.h"
 
 #include "store.h"
+#include "server_stats.h"
 
 #ifdef LB_PERF
 #include "srv_perf.h"
@@ -124,6 +125,7 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 	{
 	        glite_common_log_msg(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, buf);
 		handle_il_message(ctx, buf);
+		edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_LBPROTO);
 	}
         free(buf);
 

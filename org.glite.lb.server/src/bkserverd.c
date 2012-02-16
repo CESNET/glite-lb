@@ -72,6 +72,7 @@ enum lb_srv_perf_sink sink_mode;
 #include "lb_authz.h"
 #include "il_notification.h"
 #include "stats.h"
+#include "server_stats.h"
 #include "db_calls.h"
 #include "db_supp.h"
 #include "openserver.h"
@@ -142,8 +143,10 @@ int						rgma_export = 0;
 static int				noAuth = 0;
 static int				noIndex = 0;
 static int				strict_locking = 0;
-static int greyjobs = 0;
-static int count_statistics = 1;
+static int 				greyjobs = 0;
+static int 				count_statistics = 1;
+static int 				count_server_stats = 1;
+static char 				*server_stats_file = NULL;
 static int				hardJobsLimit = 0;
 static int				hardEventsLimit = 0;
 static int				hardRespSizeLimit = 0;
@@ -215,6 +218,8 @@ static struct option opts[] = {
 	{"notif-il-sock",	1, NULL,	'X'},
 	{"notif-il-fprefix",	1, NULL,	'Y'},
 	{"count-statistics",	1, NULL,	'T'},
+	{"count-server-stats",  1, NULL,        'e'},
+        {"server-stats-file",   1, NULL,        'f'},
 	{"request-timeout",	1, NULL,	't'},
 #ifdef LB_PERF
 	{"perf-sink",           1, NULL,        'K'},
@@ -234,7 +239,7 @@ static struct option opts[] = {
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:zb:gPBo:q:W:Z:GI:l:E"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:e:f:zb:gPBo:q:W:Z:GI:l:E"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -277,6 +282,10 @@ static void usage(char *me)
 		"\t--notif-il-fprefix\t file prefix for notifications\n"
 		"\t--count-statistics=1\t count certain statistics on jobs\n"
 		"\t                  =2\t ... and allow anonymous access\n"
+		"\t--count-server-stats=0\t do not count server statistics\n"
+                "\t                    =1\t count server statistics (default)\n"
+                "\t                    =2\t count server statistics, restrict access only to superusers\n"
+                "\t--server-stats-file path to file where server statistics are persistently stored\n"
 		"\t-t, --request-timeout\t request timeout for one client\n"
 #ifdef LB_PERF
 		"\t-K, --perf-sink\t where to sink events\n"
@@ -477,6 +486,10 @@ int main(int argc, char *argv[])
 			  break;
 		case 'T': count_statistics = atoi(optarg);
 			  break;
+		case 'e': count_server_stats = atoi(optarg);
+                          break;
+                case 'f': server_stats_file = strdup(optarg);
+                          break;
 		case 't': request_timeout = atoi(optarg);
 			  break;
 #ifdef LB_PERF
@@ -795,6 +808,9 @@ int main(int argc, char *argv[])
 	use_dbcaps = ctx->dbcaps;
 
 	if (count_statistics) edg_wll_InitStatistics(ctx);
+
+	if (count_server_stats) edg_wll_InitServerStatistics(ctx, server_stats_file);
+
 	edg_wll_FreeContext(ctx);
 
 	if ( !debug ) {
@@ -1622,6 +1638,8 @@ int bk_accept_ws(int conn, struct timeval *timeout, void *cdata)
 		ctx->processRequest_cb(ctx);
 		ctx->processRequest_cb = NULL;
 	}
+
+	edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_WS_QUERIES);
 
 	return ENOTCONN;
 }

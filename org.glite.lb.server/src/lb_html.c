@@ -21,6 +21,8 @@ limitations under the License.
 #include "lb_proto.h"
 #include "cond_dump.h"
 #include "pretty_print_wrapper.h"
+#include "server_stats.h"
+#include "authz_policy.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
@@ -502,6 +504,87 @@ int edg_wll_WSDLOutput(edg_wll_Context ctx UNUSED_VAR, char **message, char *fil
 	*message = wsdl;
 	
 	return 0;
+}
+
+int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message) {
+        char *out;
+
+        struct _edg_wll_GssPrincipal_data princ;
+        memset(&princ, 0, sizeof princ);
+        princ.name = ctx->peerName;
+        princ.fqans = ctx->fqans;
+        if (ctx->count_server_stats == 2 && !ctx->noAuth && !check_authz_policy(&ctx->authz_policy, &princ, ADMIN_ACCESS))  
+        {
+                asprintf(&out,"<h2>LB Server Usage Statistics</h2>\n"
+                        "Only superusers can view server usage statistics on this particular server.\n");
+        }
+        else
+        {
+                char* times[SERVER_STATISTICS_COUNT];
+                int i;
+                for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
+                        if (edg_wll_ServerStatisticsGetStart(ctx, i))
+                                times[i] = strdup((const char*)ctime(edg_wll_ServerStatisticsGetStart(ctx, i)));
+                        else
+                                times[i] = 0;
+
+                asprintf(&out,
+                        "<h2>LB Server Usage Statistics</h2>\n"
+                        "<table halign=\"left\">\n"
+                        "<tr><td>Variable</td><td>Value</td><td>Measured from</td></tr>\n"
+                        "<tr><td>gLite job regs</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>PBS job regs</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>Condor job regs</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>CREAM job regs</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>Sandbox regs</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>Notification regs (legacy interface)</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>Notification regs (msg interface)</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>Job events</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>Notifications sent (legacy)</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>Notifications sent (msg)</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>L&B protocol accesses</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>WS queries</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>HTML accesses</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>Plain text accesses</td><td>%i</td><td>%s</td></tr>\n"
+                        "<tr><td>RSS accesses</td><td>%i</td><td>%s</td></tr>\n"
+                        "</table>\n",
+			edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_GLITEJOB_REGS),
+                        times[SERVER_STATS_GLITEJOB_REGS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_PBSJOB_REGS),
+                        times[SERVER_STATS_PBSJOB_REGS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_CONDOR_REGS),
+                        times[SERVER_STATS_CONDOR_REGS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_CREAM_REGS),
+                        times[SERVER_STATS_CREAM_REGS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_SANDBOX_REGS),
+                        times[SERVER_STATS_SANDBOX_REGS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_LEGACY_REGS),
+                        times[SERVER_STATS_NOTIF_LEGACY_REGS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_MSG_REGS),
+                        times[SERVER_STATS_NOTIF_MSG_REGS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_JOB_EVENTS),
+                        times[SERVER_STATS_JOB_EVENTS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_LEGACY_SENT),
+                        times[SERVER_STATS_NOTIF_LEGACY_SENT],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_MSG_SENT),
+                        times[SERVER_STATS_NOTIF_MSG_SENT],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_LBPROTO),
+                        times[SERVER_STATS_LBPROTO],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_WS_QUERIES),
+                        times[SERVER_STATS_WS_QUERIES],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_HTML_VIEWS),
+                        times[SERVER_STATS_HTML_VIEWS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_TEXT_VIEWS),
+                        times[SERVER_STATS_TEXT_VIEWS],
+                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_RSS_VIEWS),
+                        times[SERVER_STATS_RSS_VIEWS]
+                );
+
+                for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
+                        free(times[i]);
+        }
+
+        *message = out;
 }
 
 char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)

@@ -41,6 +41,7 @@ limitations under the License.
 #include "lb_html.h"
 #include "lb_rss.h"
 #include "stats.h"
+#include "server_stats.h"
 #include "jobstat.h"
 #include "get_events.h"
 #include "purge.h"
@@ -679,10 +680,14 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
 			switch (edg_wll_UserJobsServer(ctx, EDG_WLL_STAT_CHILDREN, &jobsOut, &statesOut)) {
-				case 0: if (text)
+				case 0: if (text){
 						edg_wll_UserInfoToText(ctx, jobsOut, &message);
-					else if (html)
+						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
+					}
+					else if (html){
 						edg_wll_UserInfoToHTML(ctx, jobsOut, statesOut, &message);
+						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
+					}
 					else ret = HTTP_OK;
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
@@ -732,9 +737,12 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				ret = HTTP_BADREQ;
 			}
 			else switch (edg_wll_JobStatusServer(ctx,jobId,EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN,&stat)) {
-				case 0: if (text) 
+				case 0: if (text) { 
 						edg_wll_JobStatusToText(ctx,stat,&message); 
-					else if (html)
+						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
+					}
+					else if (html) {
+						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
 						switch(stat.jobtype){
 						case EDG_WLL_STAT_CREAM:
 							edg_wll_CreamJobStatusToHTML(ctx,stat,&message);
@@ -748,6 +756,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 							edg_wll_GeneralJobStatusToHTML(ctx,stat,&message);
 							break;
 						}
+					}
 					
 					else ret = HTTP_OK;
 					break;
@@ -772,10 +781,14 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                         char *userid = strmd5(can_peername, NULL);
 			getUserNotifications(ctx, userid, &notifids);
 			free(can_peername);
-			if (text)
+			if (text) {
 	                        edg_wll_UserNotifsToText(ctx, notifids, &message);
-                        else if (html)
+				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
+			}
+                        else if (html) {
 	                        edg_wll_UserNotifsToHTML(ctx, notifids, &message);
+				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
+			}
                         else ret = HTTP_OK;
 
 	/*GET /NOTIF:[notifId]: Notification info*/
@@ -792,10 +805,14 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			}
 			free(pomCopy);
 
-			if (text)
+			if (text) {
 				edg_wll_NotificationToText(ctx, &ni, &message);
-			else
+				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
+			}
+			else {
 				edg_wll_NotificationToHTML(ctx, &ni, &message);
+				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
+			}
 
 			freeNotifInfo(&ni);
 
@@ -823,13 +840,16 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				ret = HTTP_NOTFOUND;
 	                        edg_wll_SetError(ctx, ENOENT, "current index configuration does not support RSS feeds");
 			}
-			else 
+			else { 
 				edg_wll_RSSFeed(ctx, states, requestPTR, &message);
+				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_RSS_VIEWS);
+			}
 	/*GET /?wsdl */
 #define WSDL_LB "LB.wsdl"
 #define WSDL_LBTYPES "LBTypes.wsdl"
 #define WSDL_LB4AGU "lb4agu.wsdl"
 		} else if (strncmp(requestPTR, "/?wsdl", strlen("/?wsdl")) == 0) {
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 			char *filename;
 			asprintf(&filename, "%s/" WSDL_PATH "/%s", glite_location(), WSDL_LB);
 			if (edg_wll_WSDLOutput(ctx, &message, filename))
@@ -837,6 +857,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			free(filename);
 	/* GET /?types */
 		} else if (strncmp(requestPTR, "/?types", strlen("/?types")) == 0) {
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
                         char *filename;
                         asprintf(&filename, "%s/" WSDL_PATH "/%s", glite_location(), WSDL_LBTYPES);
                         if (edg_wll_WSDLOutput(ctx, &message, filename))
@@ -844,6 +865,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			free(filename);
 	/* GET /?agu */
                 } else if (strncmp(requestPTR, "/?agu", strlen("/?agu")) == 0) {
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
                         char *filename;
                         asprintf(&filename, "%s/" WSDL_PATH "/%s", glite_location(), WSDL_LB4AGU);
                         if (edg_wll_WSDLOutput(ctx, &message, filename))
@@ -851,11 +873,17 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			free(filename);
 	/* GET /?version */
 		} else if (strncmp(requestPTR, "/?version", strlen("/?version")) == 0) {
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 			asprintf(&message, "%s", VERSION);
 	/* GET /?configuration*/
 		} else if (strncmp(requestPTR, "/?configuration", strlen("/?configuration")) == 0) {
 			// also browser-readable HTML version here?
 			edg_wll_ConfigurationToText(ctx, &message);
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
+	/* GET /?stats*/
+		} else if (strncmp(requestPTR, "/?stats", strlen("/?stats")) == 0) {
+			edg_wll_StatisticsToHTML(ctx, &message);
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
 		free(requestPTR); requestPTR = NULL;
@@ -1343,6 +1371,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			
         /* POST [something else]: not understood */
 		else ret = HTTP_BADREQ;
+
+		if (ret != HTTP_BADREQ)
+			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_LBPROTO);
 
 		free(requestPTR); requestPTR = NULL;
 

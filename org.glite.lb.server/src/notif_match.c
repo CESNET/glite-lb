@@ -38,6 +38,7 @@ limitations under the License.
 #include "index.h"
 #include "authz_policy.h"
 #include "get_events.h"
+#include "server_stats.h"
 
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *, int flags);
 static edg_wll_Event* fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat);
@@ -197,6 +198,11 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 				goto err;
 			}
 		}
+
+		if (! strncmp(jobc[1], "x-msg", 5))
+                        edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_NOTIF_MSG_SENT);
+                else
+                        edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_NOTIF_LEGACY_SENT);
 		
 		for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
 	}
