@@ -522,14 +522,22 @@ int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message) {
         {
                 char* times[SERVER_STATISTICS_COUNT];
                 int i;
+		char *head;
                 for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
                         if (edg_wll_ServerStatisticsGetStart(ctx, i))
                                 times[i] = strdup((const char*)ctime(edg_wll_ServerStatisticsGetStart(ctx, i)));
                         else
                                 times[i] = 0;
 
+		if (edg_wll_ServerStatisticsInTmp())
+                        asprintf(&head,
+                        "<b>WARNING: L&B statistics are stored in /tmp, please, configure L&B server to make them really persistent!</b><br/><br/>\n");
+                else
+                        asprintf(&head, "");
+
                 asprintf(&out,
                         "<h2>LB Server Usage Statistics</h2>\n"
+			"%s"
                         "<table halign=\"left\">\n"
                         "<tr><td>Variable</td><td>Value</td><td>Measured from</td></tr>\n"
                         "<tr><td>gLite job regs</td><td>%i</td><td>%s</td></tr>\n"
@@ -548,6 +556,7 @@ int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message) {
                         "<tr><td>Plain text accesses</td><td>%i</td><td>%s</td></tr>\n"
                         "<tr><td>RSS accesses</td><td>%i</td><td>%s</td></tr>\n"
                         "</table>\n",
+			head,
 			edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_GLITEJOB_REGS),
                         times[SERVER_STATS_GLITEJOB_REGS],
                         edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_PBSJOB_REGS),
@@ -582,6 +591,7 @@ int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message) {
 
                 for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
                         free(times[i]);
+		free(head);
         }
 
         *message = out;

@@ -38,5 +38,6 @@ int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *file);
 int edg_wll_ServerStatisticsIncrement(edg_wll_Context ctx, enum edg_wll_server_statistics_type type);
 int edg_wll_ServerStatisticsGetValue(edg_wll_Context ctx, enum edg_wll_server_statistics_type type);
 time_t* edg_wll_ServerStatisticsGetStart(edg_wll_Context ctx, enum edg_wll_server_statistics_type type);
+int edg_wll_ServerStatisticsInTmp();
 
 #endif /* GLITE_LB_SERVER_STATS_H */
