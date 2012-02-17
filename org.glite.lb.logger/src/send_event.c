@@ -209,7 +209,8 @@ event_queue_connect(struct event_queue *eq, struct queue_thread *me)
     glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 		     "    trying to connect to %s:%d", 
 		     eq->dest_name, eq->dest_port);
-    ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &me->gss, &gss_stat);
+    /* ret = edg_wll_gss_connect(local_cred_handle->creds, eq->dest_name, eq->dest_port, &tv, &me->gss, &gss_stat); */
+    ret = edg_wll_gss_connect_name(local_cred_handle->creds, eq->dest_name, eq->dest_port, eq->owner, /* mech */NULL, &tv, &me->gss, &gss_stat);
     if(pthread_mutex_lock(&cred_handle_lock) < 0)
 	    abort();
     /* check if we need to release the credentials */

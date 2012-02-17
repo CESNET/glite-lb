@@ -40,7 +40,7 @@ struct event_queue_msg {
 };
 
 struct event_queue *
-event_queue_create(char *server_name, struct il_output_plugin *output)
+event_queue_create(char *server_name,  struct il_output_plugin *output)
 {
   struct event_queue *eq;
   char *p,*s, c;
@@ -149,6 +149,9 @@ event_queue_free(struct event_queue *eq)
 	  free(eq->dest_name);
   if(eq->dest)
 	  free(eq->dest);
+  if(eq->owner) 
+	  free(eq->owner);
+
   free(eq);
 
   return(0);
@@ -253,6 +256,17 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
 
   if(++eq->cur_len > eq->max_len)
 	  eq->max_len = eq->cur_len;
+
+  if(msg->owner) {
+	  if(eq->owner) {
+		  if(strcmp(eq->owner, msg->owner)) {
+			  free(eq->owner);
+			  eq->owner = strdup(msg->owner);
+		  }
+	  } else {
+		  eq->owner = strdup(msg->owner);
+	  }
+  }
 
   event_queue_unlock(eq);
   /* end of critical section */

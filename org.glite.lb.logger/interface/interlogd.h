@@ -178,6 +178,7 @@ struct server_msg {
 	char                   *dest_name;
 	int                     dest_port;
 	char                   *dest;
+	char                   *owner;
 	time_t                  expires;        /* time (in seconds from epoch) the message expires */
 };
 
@@ -195,6 +196,7 @@ struct event_queue {
 	char                   *dest_name;
 	int                     dest_port;
 	char		       *dest;
+	char                   *owner;
 	struct event_queue_msg *head;           /* first message in the queue */
 	struct event_queue_msg *tail_ems;       /* last priority message in the queue (or NULL) */
 	int                     num_threads;    /* number of delivery threads */

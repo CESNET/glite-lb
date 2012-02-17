@@ -138,6 +138,7 @@ server_msg_copy(struct server_msg *src)
   msg->dest_name = src->dest_name ? strdup(src->dest_name) : NULL;
   msg->dest_port = src->dest_port;
   msg->dest = src->dest ? strdup(src->dest) : NULL;
+  msg->owner = src->owner ? strdup(src->owner) : NULL;
 #endif
   msg->expires = src->expires;
   msg->generation = src->generation;
@@ -191,6 +192,9 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 		msg->len = create_msg(event, &msg->msg, &msg->receipt_to, &msg->expires);
 	}
 	msg->expires = notif_event->notification.expires;
+	if(notif_event->notification.owner) {
+		msg->owner = strdup(notif_event->notification.owner);
+	}
 	edg_wll_FreeEvent(notif_event);
 	free(notif_event);
 	if(msg->len < 0) {
@@ -239,6 +243,7 @@ server_msg_free(struct server_msg *msg)
 #if defined(IL_NOTIFICATIONS)
   if(msg->dest_name) free(msg->dest_name);
   if(msg->dest) free(msg->dest);
+  if(msg->owner) free(msg->owner);
 #endif
   free(msg);
   return 0;

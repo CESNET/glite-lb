@@ -135,7 +135,7 @@ queue_list_get(char *job_id_s)
 int
 queue_list_is_log(struct event_queue *eq)
 {
-  return(eq == queue_list_get(NULL));
+	return(eq == queue_list_get(NULL));
 }
 
 
