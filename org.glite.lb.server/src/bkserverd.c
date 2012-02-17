@@ -146,7 +146,7 @@ static int				strict_locking = 0;
 static int 				greyjobs = 0;
 static int 				count_statistics = 1;
 static int 				count_server_stats = 1;
-static char 				*server_stats_file = NULL;
+static char 				*stats_file_prefix = NULL;
 static int				hardJobsLimit = 0;
 static int				hardEventsLimit = 0;
 static int				hardRespSizeLimit = 0;
@@ -219,7 +219,7 @@ static struct option opts[] = {
 	{"notif-il-fprefix",	1, NULL,	'Y'},
 	{"count-statistics",	1, NULL,	'T'},
 	{"count-server-stats",  1, NULL,        'e'},
-        {"server-stats-file",   1, NULL,        'f'},
+        {"statistics-prefix",   1, NULL,        'f'},
 	{"request-timeout",	1, NULL,	't'},
 #ifdef LB_PERF
 	{"perf-sink",           1, NULL,        'K'},
@@ -285,7 +285,7 @@ static void usage(char *me)
 		"\t--count-server-stats=0\t do not count server statistics\n"
                 "\t                    =1\t count server statistics (default)\n"
                 "\t                    =2\t count server statistics, restrict access only to superusers\n"
-                "\t--server-stats-file path to file where server statistics are persistently stored\n"
+                "\t--statistics-prefix statistics persistency files full-path prefix\n"
 		"\t-t, --request-timeout\t request timeout for one client\n"
 #ifdef LB_PERF
 		"\t-K, --perf-sink\t where to sink events\n"
@@ -488,7 +488,7 @@ int main(int argc, char *argv[])
 			  break;
 		case 'e': count_server_stats = atoi(optarg);
                           break;
-                case 'f': server_stats_file = strdup(optarg);
+                case 'f': stats_file_prefix = strdup(optarg);
                           break;
 		case 't': request_timeout = atoi(optarg);
 			  break;
@@ -809,7 +809,7 @@ int main(int argc, char *argv[])
 
 	if (count_statistics) edg_wll_InitStatistics(ctx);
 
-	if (count_server_stats) edg_wll_InitServerStatistics(ctx, server_stats_file);
+	if (count_server_stats) edg_wll_InitServerStatistics(ctx, stats_file_prefix);
 
 	edg_wll_FreeContext(ctx);
 

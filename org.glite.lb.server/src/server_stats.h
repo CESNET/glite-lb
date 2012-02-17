@@ -33,7 +33,7 @@ enum edg_wll_server_statistics_type{
 	SERVER_STATS_LBPROTO
 };
 
-int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *file);
+int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix);
 
 int edg_wll_ServerStatisticsIncrement(edg_wll_Context ctx, enum edg_wll_server_statistics_type type);
 int edg_wll_ServerStatisticsGetValue(edg_wll_Context ctx, enum edg_wll_server_statistics_type type);

@@ -16,29 +16,27 @@ static int serverStatisticsFD;
 static int stats_in_tmp = 0;
 static int msync_counter = 0;
 
-int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *file)
+int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix)
 {
 	//TODO get file name from command line
         char *fname;
-	char *lblocenv = NULL;
-	if (file)
-		asprintf(&fname, "%s", file);
-	else{
-		
-		if (! (lblocenv = getenv("GLITE_LB_LOCATION_VAR"))) {
+/*	if (prefix)
+		asprintf(&fname, "%s/lb_server_stats", file);
+	else{*/
+	if (! prefix){
+		if (! (prefix = getenv("GLITE_LB_LOCATION_VAR"))) {
 			struct stat info;
 			if (stat("/var/glite", &info) == 0 && S_ISDIR(info.st_mode))
-				asprintf(&fname, "/var/glite/lb_server_stats");
+				asprintf(&prefix, "/var/glite/");
 			else {
-				asprintf(&fname, "/tmp/lb_server_stats");
+				asprintf(&prefix, "/tmp/");
 				stats_in_tmp = 1;
 			}
 			glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_INFO,
-                        "server stats file not configured, using default %s", fname);
+                        "server stats file not configured, using default %s/lb_server_stats", prefix);
 		}
-		else
-		        asprintf(&fname, "%s/lb_server_stats", lblocenv);
 	}
+	asprintf(&fname, "%s/lb_server_stats", prefix);
 	serverStatisticsFD = open(fname, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (serverStatisticsFD < 0){
 		serverStatisticsFD = open("/tmp/lb_server_stats", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
