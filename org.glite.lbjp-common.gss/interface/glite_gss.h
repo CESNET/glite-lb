@@ -109,6 +109,16 @@ edg_wll_gss_connect_ext(edg_wll_GssCred cred,
                     	edg_wll_GssStatus* gss_code);
 
 int
+edg_wll_gss_connect_name(edg_wll_GssCred cred,
+			 char const *hostname,
+			 int port,
+			 const char *servername,
+			 gss_OID_set mechs,
+			 struct timeval *timeout,
+			 edg_wll_GssConnection *connection,
+			 edg_wll_GssStatus* gss_code);
+
+int
 edg_wll_gss_accept(edg_wll_GssCred cred,
 		   int sock,
 		   struct timeval *timeout,
