@@ -85,8 +85,7 @@ static void
 free_hostent(struct hostent *h);
 
 static int
-try_conn_and_auth(edg_wll_GssCred cred, char const *hostname,
-	          const char *service, gss_OID mech,
+try_conn_and_auth(edg_wll_GssCred cred, gss_name_t target, gss_OID mech,
 		  char *addr,  int addrtype, int port, struct timeval *timeout,
 		  edg_wll_GssConnection *connection, edg_wll_GssStatus* gss_code);
 
@@ -827,11 +826,11 @@ end:
 #define _EXPIRED_ALERT_RETRY_DELAY 10   /* ms */
 
 /** Create a socket and initiate secured connection. */
-int 
-edg_wll_gss_connect_ext(edg_wll_GssCred cred, char const *hostname, int port,
-			const char *service, gss_OID_set mechs, 
-		        struct timeval *timeout, edg_wll_GssConnection *connection,
-		        edg_wll_GssStatus* gss_code)
+static int
+gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
+	    gss_name_t target, gss_OID_set mechs,
+	    struct timeval *timeout, edg_wll_GssConnection *connection,
+	    edg_wll_GssStatus* gss_code)
 {
    int ret;
    struct asyn_result ar;
@@ -841,6 +840,8 @@ edg_wll_gss_connect_ext(edg_wll_GssCred cred, char const *hostname, int port,
    unsigned int j,k;
    int i;
    gss_OID mech;
+   gss_OID_set_desc my_mechs = {.count = 0, .elements = GSS_C_NO_OID};
+   const char *mech_name;
 
    memset(connection, 0, sizeof(*connection));
    for (j = 0; j< sizeof(addr_types)/sizeof(*addr_types); j++) {
@@ -864,6 +865,19 @@ edg_wll_gss_connect_ext(edg_wll_GssCred cred, char const *hostname, int port,
 			ret = EDG_WLL_GSS_ERROR_HERRNO;
 			continue; 
 	}
+
+	if (mechs == GSS_C_NO_OID_SET) {
+	    mech_name = getenv("GLITE_GSS_MECH");
+	    if (mech_name == NULL)
+		mech_name = "GSI";
+
+	    mech = get_oid(mech_name);
+	    if (mech != GSS_C_NO_OID) {
+		my_mechs.elements = mech;
+		my_mechs.count = 1;
+		mechs = &my_mechs;
+	    }
+	}
    
    	i = 0;
 	while (ar.ent->h_addr_list[i])
@@ -875,7 +889,7 @@ edg_wll_gss_connect_ext(edg_wll_GssCred cred, char const *hostname, int port,
 		else
 		    mech = &mechs->elements[k];
 
-		ret = try_conn_and_auth (cred, hostname, service, mech,
+		ret = try_conn_and_auth (cred, target, mech,
 					ar.ent->h_addr_list[i], 
 					ar.ent->h_addrtype, port, timeout, connection, gss_code);
 		if (ret == 0)
@@ -898,6 +912,49 @@ edg_wll_gss_connect_ext(edg_wll_GssCred cred, char const *hostname, int port,
    return ret;
 }
 
+int 
+edg_wll_gss_connect_ext(edg_wll_GssCred cred, char const *hostname, int port,
+			const char *service, gss_OID_set mechs, 
+		        struct timeval *timeout, edg_wll_GssConnection *connection,
+		        edg_wll_GssStatus* gss_code)
+{
+    char *servername = NULL;
+    gss_name_t target = GSS_C_NO_NAME;
+    OM_uint32 maj_stat, min_stat;
+    gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
+    int ret;
+
+    asprintf(&servername, "%s@%s",
+	    (service) ? service : "host", hostname);
+    if (servername == NULL) {
+	errno = ENOMEM;
+	return EDG_WLL_GSS_ERROR_ERRNO;
+    }
+    input_token.value = servername;
+    input_token.length = strlen(servername) + 1;
+
+    maj_stat = gss_import_name(&min_stat, &input_token,
+	    GSS_C_NT_HOSTBASED_SERVICE, &target);
+    if (GSS_ERROR(maj_stat)) {
+	if (gss_code) {
+	    gss_code->major_status = maj_stat;
+	    gss_code->minor_status = min_stat;
+	}
+	ret = EDG_WLL_GSS_ERROR_GSS;
+	goto end;
+    }
+
+    ret = gss_connect(cred, hostname, port, target, mechs,
+		      timeout, connection, gss_code);
+
+end:
+    if (target != GSS_C_NO_NAME)
+	gss_release_name(&min_stat, &target);
+    free(servername);
+
+    return ret;
+}
+
 int
 edg_wll_gss_connect_name(edg_wll_GssCred cred,
 			 char const *hostname,
@@ -908,7 +965,37 @@ edg_wll_gss_connect_name(edg_wll_GssCred cred,
 			 edg_wll_GssConnection *connection,
 			 edg_wll_GssStatus* gss_code)
 {
-    return ENOSYS;
+    gss_name_t target = GSS_C_NO_NAME;
+    OM_uint32 maj_stat, min_stat;
+    gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
+    int ret;
+
+    if (servername == NULL) {
+	errno = ENOSYS;
+	return EDG_WLL_GSS_ERROR_ERRNO;
+    }
+    input_token.value = (char *) servername;
+    input_token.length = strlen(servername) + 1;
+
+    maj_stat = gss_import_name(&min_stat, &input_token,
+	    GSS_C_NT_USER_NAME, &target);
+    if (GSS_ERROR(maj_stat)) {
+	if (gss_code) {
+	    gss_code->major_status = maj_stat;
+	    gss_code->minor_status = min_stat;
+	}
+	ret = EDG_WLL_GSS_ERROR_GSS;
+	goto end;
+    }
+
+    ret = gss_connect(cred, hostname, port, target, mechs,
+		      timeout, connection, gss_code);
+
+end:
+    if (target != GSS_C_NO_NAME)
+	gss_release_name(&min_stat, &target);
+
+    return ret;
 }
 
 
@@ -917,28 +1004,13 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
                     struct timeval *timeout, edg_wll_GssConnection *connection,
                     edg_wll_GssStatus* gss_code)
 {
-    gss_OID_set_desc mechs = {.count = 0, .elements = GSS_C_NO_OID};
-    gss_OID oid;
-    const char *mech;
-
-    mech = getenv("GLITE_GSS_MECH");
-    if (mech == NULL)
-	mech = "GSI";
-
-    oid = get_oid(mech);
-    if (oid != GSS_C_NO_OID) {
-	mechs.elements = oid;
-	mechs.count = 1;
-    }
-
     return edg_wll_gss_connect_ext(cred, hostname, port,
-				   NULL, &mechs,
+				   NULL, NULL,
 				   timeout, connection, gss_code);
 }
 
 /* try connection and authentication for the given addr*/
-static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname,
-			      const char *service, gss_OID mech,
+static int try_conn_and_auth (edg_wll_GssCred cred, gss_name_t target, gss_OID mech,
 	                      char *addr,  int addrtype, int port,
 			      struct timeval *timeout, edg_wll_GssConnection *connection,
 			      edg_wll_GssStatus* gss_code) 
@@ -949,10 +1021,8 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname,
    int context_established = 0;
    gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
    gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
-   gss_name_t server = GSS_C_NO_NAME;
    gss_ctx_id_t context = GSS_C_NO_CONTEXT;
    gss_cred_id_t gss_cred = GSS_C_NO_CREDENTIAL;
-   char *servername = NULL;
    int retry = _EXPIRED_ALERT_RETRY_COUNT;
 
    maj_stat = min_stat = min_stat2 = req_flags = 0;
@@ -966,27 +1036,6 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname,
    if (ret)
       return ret;
 
-   asprintf(&servername, "%s@%s",
-	    (service) ? service : "host", hostname);
-   if (servername == NULL) {
-      errno = ENOMEM;
-      ret = EDG_WLL_GSS_ERROR_ERRNO;
-      goto end;
-   }
-   input_token.value = servername;
-   input_token.length = strlen(servername) + 1;
-
-   maj_stat = gss_import_name(&min_stat, &input_token,
-	 		      GSS_C_NT_HOSTBASED_SERVICE, &server);
-   if (GSS_ERROR(maj_stat)) {
-      ret = EDG_WLL_GSS_ERROR_GSS;
-      goto end;
-   }
-
-   free(servername);
-   servername = NULL;
-   memset(&input_token, 0, sizeof(input_token));
-
    if (cred && cred->gss_cred)
        gss_cred = cred->gss_cred;
 
@@ -995,7 +1044,7 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname,
    while (!context_established) {
       /* XXX verify ret_flags match what was requested */
       maj_stat = gss_init_sec_context(&min_stat, gss_cred, &context,
-				      server, mech,
+				      target, mech,
 				      req_flags | GSS_C_MUTUAL_FLAG | GSS_C_CONF_FLAG,
 				      0, GSS_C_NO_CHANNEL_BINDINGS,
 				      &input_token, NULL, &output_token,
@@ -1075,10 +1124,6 @@ end:
       gss_code->major_status = maj_stat;
       gss_code->minor_status = min_stat;
    }
-   if (server != GSS_C_NO_NAME)
-      gss_release_name(&min_stat2, &server);
-   if (servername != NULL)
-      free(servername);
    if (ret)
       close(sock);
 
