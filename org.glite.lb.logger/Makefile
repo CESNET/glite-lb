@@ -135,16 +135,16 @@ startup: ${top_srcdir}/config/startup
 	chmod +x $@
 
 glite-lb-logd: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-perf: ${LOGD_OBJS}
-	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${LOGD_OBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-nofile: ${LOGD_NOBJS}
-	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-logd-perf-nofile: ${LOGD_NOBJS}
-	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB}
+	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-interlogd: ${INTERLOG_OBJS}
 	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
