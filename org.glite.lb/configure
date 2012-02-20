@@ -98,9 +98,6 @@ my %externs = (
 	'myproxy-server' => {
 		prefix=> '',
 	},
-	'myproxy-libs' => {
-		prefix=> '',
-	},
 	'myproxy-admin' => {
 		prefix=> '',
 	},
@@ -570,7 +567,6 @@ BEGIN{
 %etics_externs = (
 	default => {
 		'myproxy-devel'=>'myproxy-devel',
-		'myproxy-libs'=>'myproxy-libs',
 		'myproxy-server'=>'myproxy-server',
 		'myproxy-admin'=>'myproxy-admin',
 		cares=>'c-ares',
@@ -625,7 +621,7 @@ BEGIN{
 	'gridsite.service-clients' => [ qw/curl:R gsoap:R gsoapxx:R/ ],
 	'gridsite.gsexec' => [ qw// ],
 	'gridsite.1.5-compat' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B doxygen:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B myproxy-libs:R voms:B libtool:B/ ],
+	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B voms:B libtool:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
 	'canl.c' => [ qw/cares:B openssl:B libtool:B bison:B flex:B/ ],
 );
