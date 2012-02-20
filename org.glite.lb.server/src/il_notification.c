@@ -236,7 +236,7 @@ edg_wll_NotifChangeIL(edg_wll_Context context,
                                const char      *dest_url,
 			       int	       expires)
 {
-	return(edg_wll_NotifSend(context, reg_id, dest_url, "", expires, ""));
+	return(edg_wll_NotifSend(context, reg_id, dest_url, context->peerName, expires, ""));
 }
 
 
