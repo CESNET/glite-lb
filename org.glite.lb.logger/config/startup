@@ -42,6 +42,8 @@ LL_PIDFILE=${LL_PIDFILE:-$GLITE_LB_LOCATION_VAR/glite-lb-logd.pid}
 IL_PIDFILE=${IL_PIDFILE:-$GLITE_LB_LOCATION_VAR/glite-lb-interlogd.pid}
 IL_SOCKFILE=/tmp/interlogger.sock
 
+lockfile=/var/lock/glite-lb-locallogger
+
 unset creds port log4c
 
 start_daemon()
@@ -65,7 +67,14 @@ start_daemon()
 		fi
 	fi
 	echo -n "Starting $name ..."
-	su - $GLITE_USER -c "$log4c $cmd" && echo " done" || echo " FAILED"
+	su - $GLITE_USER -c "$log4c $cmd"
+
+	if [ $? -eq 0 ]; then
+		echo " done"
+		touch $lockfile
+	else
+		echo " FAILED"
+	fi
 }
 
 status_daemon()
@@ -171,6 +180,8 @@ stop()
 	if netstat -an --unix | grep "^unix .* LISTEN.* ${GLITE_LB_IL_SOCK:-$IL_SOCKFILE}$" >/dev/null 2>&1 ;then
 		killall -9 glite-lb-interlogd
 	fi
+
+	rm -f $lockfile
 }
 
 status()

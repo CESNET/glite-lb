@@ -1,9 +1,9 @@
+#!/bin/bash
+
 # This script is intendent to be used to extend bkserver database to 
 # to be able to hold both bkserver and lbproxy jobs.
 # The operation should be non-destructive, i.e. all data should persist
 # and continue to be fully usable.
-
-#!/bin/bash
  
 usage() {
 cat <<EOF

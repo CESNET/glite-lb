@@ -40,6 +40,7 @@ GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
 
 pidfile=${GLITE_LB_HARVESTER_PIDFILE:-"$GLITE_LB_LOCATION_VAR/glite-lb-harvester.pid"}
 level=${GLITE_LB_HARVESTER_DEBUG_LEVEL:-"1"}
+lockfile=/var/lock/glite-lb-harvester
 
 # database or configuration file needed
 # (using the file as default)
@@ -89,7 +90,14 @@ start_daemon()
 		fi
 	fi
 	echo -n "Starting $name ..."
-	su - $GLITE_USER -c "$log4c $cmd" && echo " done" || echo " FAILED"
+	su - $GLITE_USER -c "$log4c $cmd"
+
+	if [ $? -eq 0 ]; then
+		echo " done"
+		touch $lockfile
+	else
+		echo " FAILED"
+	fi
 }
 
 stop_daemon()
@@ -108,11 +116,13 @@ stop_daemon()
 			if [ $try = 20 ]; then
 				kill -9 $pid
 				echo " force quit after $try retries"
+				rm -f $lockfile
 				return 1
 			fi
 	 	done
 		echo " done"
 		rm -f $pidfile
+		rm -f $lockfile
 	else
 		echo $name not running
 		return 1

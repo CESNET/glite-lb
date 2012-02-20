@@ -55,6 +55,8 @@ NOTIF_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-notif-interlogd.pid
 msgconf="$GLITE_LB_LOCATION_ETC/glite-lb/msg.conf"
 [ -f "$msgconf" ] && GLITE_LB_NOTIF_IL_OTHER_OPTIONS="$GLITE_LB_NOTIF_IL_OTHER_OPTIONS -F $msgconf"
 
+lockfile=/var/lock/glite-lb-bkserverd
+
 unset creds port log4c
 
 start_daemon()
@@ -78,7 +80,14 @@ start_daemon()
 		fi
 	fi
 	echo -n "Starting $name ..."
-	su - $GLITE_USER -c "$log4c $cmd" && echo " done" || echo " FAILED"
+	su - $GLITE_USER -c "$log4c $cmd"
+
+	if [ $? -eq 0 ]; then
+		echo " done"
+		touch $lockfile
+	else
+		echo " FAILED"
+	fi
 }
 
 stop_daemon()
@@ -97,10 +106,12 @@ stop_daemon()
 			if [ $try = 20 ]; then
 				kill -9 $pid
 				echo " force quit after $try retries"
+				rm -f $lockfile
 				return 1
 			fi
 	 	done
 		echo " done"
+		rm -f $lockfile
 		rm -f $pidfile
 	else
 		echo $name not running
@@ -156,7 +167,7 @@ start()
 	log4c="LOG4C_RCPATH='$GLITE_LB_LOCATION_ETC/glite-lb'"
 
 	policy="$GLITE_LB_LOCATION_ETC/glite-lb/glite-lb-authz.conf"
-	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-lcas.log' LCAS_ETC_DIR='$GLITE_LB_LOCATION_ETC/glite-lb'"
+	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-server-lcas.log' LCAS_ETC_DIR='$GLITE_LB_LOCATION_ETC/glite-lb'"
 	if test -f "$policy"; then
 		# lcas not enabled by default yet
 		policy="--policy '$policy'"

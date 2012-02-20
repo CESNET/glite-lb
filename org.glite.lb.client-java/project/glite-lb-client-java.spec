@@ -62,6 +62,12 @@ find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > 
 rm -rf $RPM_BUILD_ROOT
 
 
+%post -p /sbin/ldconfig
+
+
+%postun -p /sbin/ldconfig
+
+
 %files
 %defattr(-,root,root)
 /usr/%{_lib}/libglite_lb_sendviasocket.so

@@ -72,6 +72,7 @@ make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-bkserverd
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
@@ -115,9 +116,9 @@ fi
 %dir /usr/include/glite/
 %dir /usr/include/glite/lb/
 %dir /usr/share/doc/%{name}-%{version}/
-%config /etc/logrotate.d/glite-lb-purge
-%config /etc/logrotate.d/glite-lb-lcas
-%config /etc/mysql/conf.d/glite-lb-server.cnf
+%config(noreplace) /etc/logrotate.d/glite-lb-purge
+%config(noreplace) /etc/logrotate.d/glite-lb-lcas
+%config(noreplace) /etc/mysql/conf.d/glite-lb-server.cnf
 /etc/cron.d/*
 /etc/glite-lb-index.conf.template
 /etc/glite-lb/*
