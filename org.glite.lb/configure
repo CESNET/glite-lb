@@ -1559,10 +1559,10 @@ sub mode_etics {
 	}
 
 	my %cmd;
-	#$cmd_vcs{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_module 2>/dev/null";
-	$cmd_vcs{checkout} = "((test -d jra1mw/.git && (cd jra1mw; git pull)) || (git clone -q http://scientific.zcu.cz/git/jra1mw.git";
-	$cmd_vcs{checkout} .= " && (cd jra1mw; git checkout -b \${tag} --track origin/\${tag})" unless ($conftag eq /HEAD/);
-	$cmd_vcs{checkout} .= ")) && (test -d \${moduleName} || ln -s jra1mw/$cvs_module \${moduleName})";
+	$cmd_vcs{checkout} = "cvs -d \${vcsroot} co -d \${moduleName} ".($conftag eq 'HEAD' ? '-A' : '-r ${tag}')." $cvs_module 2>/dev/null";
+	#$cmd_vcs{checkout} = "((test -d jra1mw/.git && (cd jra1mw; git pull)) || (git clone -q http://scientific.zcu.cz/git/jra1mw.git";
+	#$cmd_vcs{checkout} .= " && (cd jra1mw; git checkout -b \${tag} --track origin/\${tag})" unless ($conftag eq /HEAD/);
+	#$cmd_vcs{checkout} .= ")) && (test -d \${moduleName} || ln -s jra1mw/$cvs_module \${moduleName})";
 	$cmd_vcs{checkout} .= "\n\ttest -f \${packageName}-\${version}-\${age}.src.tar.gz || (ln -s \${moduleName} \${packageName}-\${version}; tar -chf - \${packageName}-\${version} --exclude CVS --exclude .git --exclude .etics | gzip --best > \${packageName}-\${version}-\${age}.src.tar.gz; rm \${packageName}-\${version})";
 	$cmd_vcs{tag} = "cvs -d \${vcsroot} tag -R \${tag} ${moduleName}";
 
