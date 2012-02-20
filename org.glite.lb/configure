@@ -1559,12 +1559,12 @@ sub mode_etics {
 
 			if ($project ne 'glite') {
 				# don't evaluate pkg-config calls to get them into source package
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily}
+				$flags = 'RELEASE_VERSION=${age}
 	GSOAPDIR=\`pkg-config gsoap --variable=prefix\`
 	OPENSSL_GLOBUS_FLAGS=\`pkg-config globus-openssl --cflags\`
 	OPENSSL_GLOBUS_LIBS=\`pkg-config globus-openssl --libs\`';
 			} else {
-				$flags = 'RELEASE_VERSION=${age}.${platformFamily}
+				$flags = 'RELEASE_VERSION=${age}
 	GSOAPDIR=${gsoap.location}
 	OPENSSL_GLOBUS_FLAGS=-I${globus.location}/include/${globus.dbg.nothr.flavor}
 	OPENSSL_GLOBUS_LIBS=-L${globus.location}/${libdir}
@@ -1603,7 +1603,7 @@ sub mode_etics {
 	MINOR_VERSION=1.5
 	PATCH_VERSION=1.5.0
 	VERSION=\\\$(PATCH_VERSION)
-	RELEASE_VERSION=\${age}.\${platformFamily}
+	RELEASE_VERSION=\${age}
 	GSOAPDIR=\\`pkg-config gsoap --variable=prefix\\`
 	OPENSSL_GLOBUS_FLAGS=\\`pkg-config globus-openssl --cflags\\`
 	OPENSSL_GLOBUS_LIBS=\\`pkg-config globus-openssl --libs\\`
