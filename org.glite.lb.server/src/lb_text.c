@@ -177,6 +177,7 @@ int edg_wll_NotificationToText(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 	int pomL = 0;
 
 	TR("Notif_id", "%s", ni->notifid);
+	TR("Owner", "%s", ni->owner);
 	TR("Destination", "%s", ni->destination);
 	TR("Valid_until", "%s", ni->valid);
 	flags = edg_wll_stat_flags_to_string(ni->flags);

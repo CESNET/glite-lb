@@ -204,6 +204,7 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 	flags = edg_wll_stat_flags_to_string(ni->flags);
 	printf("flags %d - %s", ni->flags, flags);
 
+	TR("Owner", "%s", ni->owner, NULL);
 	TR("Destination", "%s", ni->destination, NULL);
 	TR("Valid until", "%s", ni->valid, NULL);
 	TR("Flags", "%s", flags, NULL);

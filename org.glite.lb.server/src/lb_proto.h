@@ -46,6 +46,7 @@ typedef struct _notifInfo{
 	edg_wll_QueryRec **conditions;
 	char *conditions_text;
 	int  flags;
+	char *owner;
 } notifInfo;
 
 extern char *edg_wll_HTTPErrorMessage(int);

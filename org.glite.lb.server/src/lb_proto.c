@@ -49,6 +49,7 @@ limitations under the License.
 #include "lb_xml_parse_V21.h"
 #include "db_supp.h"
 #include "server_notification.h"
+#include "authz_policy.h"
 
 
 #define METHOD_GET      "GET "
@@ -262,36 +263,47 @@ err:
 static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
 	char *q = NULL;
         glite_lbu_Statement notif = NULL;
-	char *notifc[4] = {NULL, NULL, NULL, NULL};
+	char *notifc[5] = {NULL, NULL, NULL, NULL, NULL};
 
-	char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
-        char *userid = strmd5(can_peername, NULL);
+	char *can_peername = NULL;
+        struct _edg_wll_GssPrincipal_data principal;
+	int retval = HTTP_OK;
 
-	trio_asprintf(&q, "select destination, valid, conditions, flags "
-                "from notif_registrations "
-                "where notifid='%s' "
-		"and userid='%s'",
-                notifId, userid);
+	trio_asprintf(&q, "select n.destination, n.valid, n.conditions, n.flags, u.cert_subj "
+                "from notif_registrations as n, users as u "
+                "where (n.notifid='%s') AND (n.userid=u.userid)", notifId);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
-	if (edg_wll_ExecSQL(ctx, q, &notif) < 0) goto err;
+	if (edg_wll_ExecSQL(ctx, q, &notif) < 0) return HTTP_INTERNAL;
         free(q); q = NULL;
 
-	ni->notifid = strdup(notifId);
+	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
+        memset(&principal, 0, sizeof principal);
+        principal.name = can_peername;
+        principal.fqans = ctx->fqans;
+
 	if (edg_wll_FetchRow(ctx, notif, sizeof(notifc)/sizeof(notifc[0]), NULL, notifc)){
-		ni->destination = notifc[0];
-		ni->valid = notifc[1];
-		ni->conditions_text = notifc[2];
-		parseJobQueryRec(ctx, notifc[2], strlen(notifc[2]), &(ni->conditions));
-		ni->flags = atoi(notifc[3]);
+
+        	if (edg_wll_gss_equal_subj(principal.name, notifc[4]) || ctx->noAuth || check_authz_policy(&ctx->authz_policy, &principal, ADMIN_ACCESS)) {
+			ni->notifid = strdup(notifId);
+			ni->destination = notifc[0];
+			ni->valid = notifc[1];
+			ni->conditions_text = notifc[2];
+			parseJobQueryRec(ctx, notifc[2], strlen(notifc[2]), &(ni->conditions));
+			ni->flags = atoi(notifc[3]);
+			ni->owner = notifc[4];
+		}
+		else {
+			retval = HTTP_UNAUTH;
+				edg_wll_SetError(ctx, EPERM, "You are not authorized to view details for this Notification ID.");
+		}
 	}
-	else 
-		goto err;
+	else {
+		retval = HTTP_NOTFOUND;
+		edg_wll_SetError(ctx, ENOENT, "Notification ID not known.");
+	}
 
-	return 0;
-
-err:
 	free(can_peername);
-	return  -1;
+	return  retval;
 }
 
 static void freeNotifInfo(notifInfo *ni){
@@ -309,6 +321,7 @@ static void freeNotifInfo(notifInfo *ni){
 		free(ni->conditions);
 	}
 	if (ni->conditions_text) free(ni->conditions_text);
+	if (ni->owner) free(ni->owner);
 }
 
 static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **statesOut){
@@ -798,11 +811,10 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			pomCopy = strdup(requestPTR + 1);
                         for (pom=pomCopy; *pom && !isspace(*pom); pom++);
                         *pom = 0;
-			if (getNotifInfo(ctx, strrchr(pomCopy, ':')+1, &ni)){
-				ret = HTTP_NOTFOUND;
-				edg_wll_SetError(ctx, ENOENT, "Notification ID not know.");
-				goto err;
-			}
+			
+			ret = getNotifInfo(ctx, strrchr(pomCopy, ':')+1, &ni);
+			if (ret != HTTP_OK) goto err;
+			
 			free(pomCopy);
 
 			if (text) {
