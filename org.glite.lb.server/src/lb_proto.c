@@ -50,6 +50,7 @@ limitations under the License.
 #include "db_supp.h"
 #include "server_notification.h"
 #include "authz_policy.h"
+#include "lb_authz.h"
 
 
 #define METHOD_GET      "GET "
@@ -212,31 +213,44 @@ static int outputHTML(char **headers)
 }
 
 
-static int drain_text_request(char *request){
-	int i = 0;
-	while (!isspace(request[i])) i++;
-	if (i < 5) 
-		return 0;
-	if (! strncmp(request+i-5, "?text", 5)){
-		if (i == 5)
-			strcpy(request+i-4, request+i); // keep '/'
-		else
-			strcpy(request+i-5, request+i);
-		return 1;
-	}
-	else
-		return 0;
+static int check_request_for_query(char *request, char *query) {
+	char *found = strstr(request, query);
+
+	if (found && (!strcspn(found+strlen(query),"? \f\n\r\t\v"))) return 1;
+	else return 0;
 }
 
-static int getUserNotifications(edg_wll_Context ctx, char *user, char ***notifids){
+static int strip_request_of_queries(char *request) {
+	int front, back;
+	char *tail;
+
+	front = strcspn(request, "?");
+	if (front < strlen(request)) {
+		back = strcspn(request+front, " \f\n\r\t\v"); //POSIX set of whitespaces
+		tail = strdup(request+front+back);
+		strcpy(request+front, tail);
+		free(tail);
+	}
+
+	return 0;
+}
+
+static int getUserNotifications(edg_wll_Context ctx, char *user, char ***notifids, http_admin_option option, int adm_output){
         char *q = NULL;
+	char *where_clause = NULL;
         glite_lbu_Statement notifs = NULL;
         char *notifc[1] = {NULL};
 
+	if ((option != HTTP_ADMIN_OPTION_MY) && adm_output) {
+		if (option == HTTP_ADMIN_OPTION_ALL) asprintf(&where_clause, "1");
+		else if (option == HTTP_ADMIN_OPTION_FOREIGN) asprintf(&where_clause, "userid!='%s'", user);
+	}
+	if (!where_clause) asprintf(&where_clause, "userid='%s'", user);
+
         trio_asprintf(&q, "select notifid "
                 "from notif_registrations "
-                "where userid='%s'",
-                user);
+		"where %s",
+                where_clause);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
         if (edg_wll_ExecSQL(ctx, q, &notifs) < 0) goto err;
         free(q); q = NULL;
@@ -266,7 +280,6 @@ static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
 	char *notifc[5] = {NULL, NULL, NULL, NULL, NULL};
 
 	char *can_peername = NULL;
-        struct _edg_wll_GssPrincipal_data principal;
 	int retval = HTTP_OK;
 
 	trio_asprintf(&q, "select n.destination, n.valid, n.conditions, n.flags, u.cert_subj "
@@ -277,13 +290,10 @@ static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
         free(q); q = NULL;
 
 	can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
-        memset(&principal, 0, sizeof principal);
-        principal.name = can_peername;
-        principal.fqans = ctx->fqans;
 
 	if (edg_wll_FetchRow(ctx, notif, sizeof(notifc)/sizeof(notifc[0]), NULL, notifc)){
 
-        	if (edg_wll_gss_equal_subj(principal.name, notifc[4]) || ctx->noAuth || check_authz_policy(&ctx->authz_policy, &principal, ADMIN_ACCESS)) {
+        	if (edg_wll_gss_equal_subj(can_peername, notifc[4]) || ctx->noAuth || edg_wll_amIroot(can_peername, ctx->fqans, &ctx->authz_policy)) {
 			ni->notifid = strdup(notifId);
 			ni->destination = notifc[0];
 			ni->valid = notifc[1];
@@ -636,6 +646,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	int 	html = outputHTML(headers);
 	int 	text = 0; //XXX: Plain text communication is special case of html here, hence when text=1, html=1 too
 	int	i;
+	int	isadm;
+	http_admin_option adm_opt = HTTP_ADMIN_OPTION_MY;
 
 	edg_wll_ResetError(ctx);
 
@@ -674,7 +686,12 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	if (!strncmp(request, METHOD_GET, sizeof(METHOD_GET)-1)) {
 		
 		requestPTR = strdup(request + sizeof(METHOD_GET)-1);
-		if (html) text = drain_text_request(requestPTR);
+		if (html) {
+			text = check_request_for_query(requestPTR, "?text");
+			if (check_request_for_query(requestPTR, "?all")) adm_opt = HTTP_ADMIN_OPTION_ALL;
+			else if (check_request_for_query(requestPTR, "?foreign")) adm_opt = HTTP_ADMIN_OPTION_FOREIGN;
+			strip_request_of_queries(requestPTR);
+		}
 
 
 	/* Is user authorised? */
@@ -792,14 +809,17 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			char **notifids = NULL;
 			char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
                         char *userid = strmd5(can_peername, NULL);
-			getUserNotifications(ctx, userid, &notifids);
+
+			isadm = ctx->noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
+
+			getUserNotifications(ctx, userid, &notifids, adm_opt, isadm);
 			free(can_peername);
 			if (text) {
 	                        edg_wll_UserNotifsToText(ctx, notifids, &message);
 				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 			}
                         else if (html) {
-	                        edg_wll_UserNotifsToHTML(ctx, notifids, &message);
+	                        edg_wll_UserNotifsToHTML(ctx, notifids, &message, adm_opt, isadm);
 				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
 			}
                         else ret = HTTP_OK;
@@ -904,7 +924,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	} else if (!strncmp(request,METHOD_POST,sizeof(METHOD_POST)-1)) {
 
 		requestPTR = strdup(request + sizeof(METHOD_POST)-1);
-		if (html) text = drain_text_request(requestPTR);
+		if (html) text = check_request_for_query(requestPTR, "?text");
+		strip_request_of_queries(requestPTR);
 	
 		if (!strncmp(requestPTR,KEY_QUERY_EVENTS,sizeof(KEY_QUERY_EVENTS)-1)) { 
         	        edg_wll_Event *eventsOut = NULL;

@@ -130,8 +130,9 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
         return 0;
 }
 
-int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, char **message){
+int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, char **message, http_admin_option option, int adm) {
 	char *pomA = NULL, *pomB = NULL;
+	char *mylink = NULL, *alllink = NULL, *foreignlink = NULL, *heading = NULL;
         pomB = strdup("");
 
 	int i = 0;
@@ -146,15 +147,39 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
                 i++;
         }
 
+	if (adm) {
+		asprintf(&mylink,"<BR>%s just your registrations%s",
+			option != HTTP_ADMIN_OPTION_MY ? "<A HREF=\"/NOTIF:\">View" : "<B>Viewing",
+			option != HTTP_ADMIN_OPTION_MY ? "</A>" : "</B>");
+		asprintf(&alllink,"<BR>%s all registrations%s",
+			option != HTTP_ADMIN_OPTION_ALL ? "<A HREF=\"/NOTIF:?all\">View" : "<B>Viewing",
+			option != HTTP_ADMIN_OPTION_ALL ? "</A>" : "</B>");
+		if (option == HTTP_ADMIN_OPTION_ALL) asprintf(&heading,"All notifications");
+		asprintf(&foreignlink,"<BR>%s registrations by other users%s",
+			option != HTTP_ADMIN_OPTION_FOREIGN ? "<A HREF=\"/NOTIF:?foreign\">View" : "<B>Viewing",
+			option != HTTP_ADMIN_OPTION_FOREIGN ? "</A>" : "</B>");
+		if (option == HTTP_ADMIN_OPTION_FOREIGN) asprintf(&heading,"Other users' notifications");
+	}
+	if (!heading) asprintf(&heading,"Your notifications");
+
 	char *ret;
         asprintf(&ret, "<html>\r\n\t<body>\r\n");
 	asprintf(&ret, "<html>\r\n\t<body>\r\n"
-			"<h2><B>User notifications</B></h2>\r\n"
+			"<h2><B>%s</B></h2>\r\n"
                         "<ul>%s</ul>"
+			"<P>%s%s%s"
 			"\t</body>\r\n</html>",
-                        pomA
+			heading,
+                        pomA, 
+			mylink ? mylink : "",
+			alllink ? alllink : "",
+			foreignlink ? foreignlink : ""
         );
         free(pomA);
+	free(mylink);
+	free(alllink);
+	free(foreignlink);
+	free(heading);
 
 	*message = ret;
 

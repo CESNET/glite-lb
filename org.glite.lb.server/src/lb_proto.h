@@ -49,6 +49,13 @@ typedef struct _notifInfo{
 	char *owner;
 } notifInfo;
 
+typedef enum _http_admin_option{
+	HTTP_ADMIN_OPTION_MY,
+	HTTP_ADMIN_OPTION_ALL,
+	HTTP_ADMIN_OPTION_FOREIGN,
+	HTTP_ADMIN_OPTION_LAST
+} http_admin_option;
+
 extern char *edg_wll_HTTPErrorMessage(int);
 
 extern int edg_wll_UserJobsServer(edg_wll_Context ctx, int flags, edg_wlc_JobId  **jobs, edg_wll_JobStat **states);
