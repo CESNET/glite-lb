@@ -496,6 +496,8 @@ static int replace_substr(char **text, char *s1, char *s2){
 
 	free(*text);
 	*text = out;
+
+	return 0;
 }
 
 int edg_wll_WSDLOutput(edg_wll_Context ctx UNUSED_VAR, char **message, char *filename){
@@ -559,7 +561,7 @@ int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message) {
                         asprintf(&head,
                         "<b>WARNING: L&B statistics are stored in /tmp, please, configure L&B server to make them really persistent!</b><br/><br/>\n");
                 else
-                        asprintf(&head, "");
+                        asprintf(&head, " ");
 
                 asprintf(&out,
                         "<h2>LB Server Usage Statistics</h2>\n"
@@ -621,6 +623,7 @@ int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message) {
         }
 
         *message = out;
+	return 0;
 }
 
 char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)

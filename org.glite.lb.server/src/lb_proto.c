@@ -740,8 +740,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		else if (*requestPTR=='/' && requestPTR[1] != '?'
 			&& strncmp(requestPTR, "/RSS:", strlen("/RSS:")) 
 			&& ( strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
-			     || *(requestPTR+strlen("/NOTIF")) != ':'
-			        && !isspace(*(requestPTR+strlen("/NOTIF"))))
+			     || (*(requestPTR+strlen("/NOTIF")) != ':'
+			        && !isspace(*(requestPTR+strlen("/NOTIF")))))
 			) {
 			edg_wlc_JobId jobId = NULL;
 			char *pom1,*fullid = NULL;
