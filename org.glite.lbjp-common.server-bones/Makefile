@@ -18,10 +18,10 @@ version=${module.version}
 VPATH=${top_srcdir}/src:${top_srcdir}/examples
 
 DEBUG:=-g -O0 -Wall
-CFLAGS:= ${CFLAGS} ${DEBUG} \
+CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/interface \
 	-I${stagedir}${prefix}/include \
-	-D_GNU_SOURCE 
+	-D_GNU_SOURCE ${CFLAGS}
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir}
 
 ifdef LB_PROF
@@ -86,7 +86,7 @@ doc:
 install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	${INSTALL} -m 644 ${LTLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 755 ${LTLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 644 ${STATICLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir} ; \
 	cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 

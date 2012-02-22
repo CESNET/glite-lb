@@ -11,6 +11,7 @@ Requires: glite-yaim-bdii
 Requires: perl-LDAP
 Requires: glite-yaim-core
 Obsoletes: glite-yaim-lb <= 4.2.1-1
+Provides: glite-yaim-lb = %{version}-%{release}
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/@MODULE@/%{version}/src/%{name}-@VERSION@.src.tar.gz

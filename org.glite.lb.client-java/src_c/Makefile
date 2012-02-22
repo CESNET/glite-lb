@@ -21,7 +21,7 @@ VPATH=${topdir}/src_c
 compile: ${LIB}
 
 ${LIB}: ${OBJ}
-	libtool --mode=link ${CC} -rpath ${PREFIX}${prefix}/${libdir} -o $@ ${OBJ}
+	libtool --mode=link ${CC} -rpath ${PREFIX}${prefix}/${libdir} -o $@ ${OBJ} -lm
 
 %.lo: %.c
 	libtool --mode=compile ${CC} -I.. -I${PATH_TO_JAVA}/include ${JDK_CPPFLAGS} -c $<

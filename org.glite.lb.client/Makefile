@@ -97,13 +97,13 @@ COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
 COMMON_LIB:=-lglite_lb_common
 TRIO_LIB:=-lglite_lbu_trio
 
-CFLAGS:=${CFLAGS} ${DEBUG} \
+CFLAGS:=${DEBUG} \
 	-I. \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}${prefix}/include \
 	${COVERAGE_FLAGS} \
 	-DBUILDING_LB_CLIENT \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS}
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} ${CFLAGS}
 
 CXXFLAGS:=${CFLAGS}
 
@@ -282,7 +282,7 @@ perftest_logjobs.o: perftest_logjobs.c
 	${CC} ${CFLAGS} -DLB_PERF_DROP -c $<
 
 # catches $TOOLS and logevent compilation
-%.o: %.c 
+%.lo %.o: %.c
 	${CC} ${CFLAGS} -c $<
 
 %.h: %.h.T
@@ -290,7 +290,7 @@ perftest_logjobs.o: perftest_logjobs.c
 	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
-%.o: %.cpp
+%.lo %.o: %.cpp
 	${CXX} ${CFLAGS} ${GLOBUSINC} -c $<
 
 %.c: %.c.T
@@ -354,11 +354,11 @@ install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	mkdir -p ${DESTDIR}${m4dir}
 ifdef LB_STANDALONE
-	${INSTALL} -m 644 ${c_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 755 ${c_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 else
-	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	if test -n "${staging}"; then \
-		install -m 644 ${plus_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
+		install -m 755 ${plus_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
 	fi
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}

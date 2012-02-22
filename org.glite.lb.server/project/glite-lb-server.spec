@@ -116,8 +116,7 @@ fi
 %dir /usr/include/glite/
 %dir /usr/include/glite/lb/
 %dir /usr/share/doc/%{name}-%{version}/
-%config(noreplace) /etc/logrotate.d/glite-lb-purge
-%config(noreplace) /etc/logrotate.d/glite-lb-lcas
+%config(noreplace) /etc/logrotate.d/glite-lb-server
 %config(noreplace) /etc/mysql/conf.d/glite-lb-server.cnf
 /etc/cron.d/*
 /etc/glite-lb-index.conf.template

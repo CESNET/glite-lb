@@ -65,7 +65,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}
 %dir /etc/glite-lb
-%config /etc/glite-lb/log4crc
+%config(noreplace) /etc/glite-lb/log4crc
 %doc /usr/share/doc/%{name}-%{version}/LICENSE
 %doc /usr/share/doc/%{name}-%{version}/README
 %doc /usr/share/doc/%{name}-%{version}/log4crc.example-debugging

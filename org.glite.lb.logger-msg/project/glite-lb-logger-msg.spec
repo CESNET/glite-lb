@@ -9,6 +9,7 @@ Group: System Environment/Daemons
 BuildRequires: activemq-cpp-library
 BuildRequires: cppunit-devel%{?_isa}
 BuildRequires: glite-lb-logger-devel%{?_isa}
+BuildRequires: glite-lbjp-common-log-devel%{?_isa}
 BuildRequires: glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires: libtool
 Requires: glite-lb-logger

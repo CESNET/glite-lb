@@ -5,7 +5,7 @@ Release: @AGE@%{?dist}
 Url: @URL@
 License: ASL 2.0
 Vendor: EMI
-Group: System Environment/Libraries
+Group: Development/Libraries
 BuildArch: noarch
 BuildRequires: glite-lb-types
 BuildRequires: libxslt

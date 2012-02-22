@@ -153,7 +153,7 @@ ${STATICLIB}: ${THROBJS}
 	ranlib $@
 
 ${LTLIB}: ${THROBJS}
-	${LINKXX} ${version_info} -o $@ ${THRLOBJS} \
+	${LINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss \
 		${EXT_LIBS} \
 		-lm
@@ -167,13 +167,13 @@ ${THRSTATICLIB}: ${THROBJS}
 	ranlib $@
 
 ${NOTHRLTLIB}: ${OBJS}
-	${LINKXX} ${version_info} -o $@ ${LOBJS} \
+	${LINK} ${version_info} -o $@ ${LOBJS} \
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS} \
 		-lm
 
 ${THRLTLIB}: ${THROBJS}
-	${LINKXX} ${version_info} -o $@ ${THRLOBJS} \
+	${LINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss_${thrflavour} \
 		${EXT_LIBS} \
 		-lm

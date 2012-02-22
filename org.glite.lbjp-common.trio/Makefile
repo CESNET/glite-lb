@@ -22,7 +22,7 @@ CC=gcc
 
 DEBUG:=-g -O0 -Wall
 
-CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION
+CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION ${CFLAGS}
 
 COMPILE:=libtool --mode=compile ${CC}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
@@ -108,7 +108,8 @@ install: all
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbuprefix}
-	${INSTALL} -m 644 ${LTLIB} ${STATICLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 755 ${LTLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 644 ${STATICLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbuprefix})
 
@@ -119,5 +120,5 @@ clean:
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
-%.o: %.c
+%.lo %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

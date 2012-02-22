@@ -21,7 +21,7 @@ DEBUG:=-g -O0 -Wall
 CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/interface -I${top_srcdir}/src \
 	${COVERAGE_FLAGS} \
-	-D_GNU_SOURCE
+	-D_GNU_SOURCE ${CFLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
@@ -78,11 +78,11 @@ stage:
 install: ${LIB}
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix}
-	${INSTALL} -m 644 ${LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 755 ${LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	(cd ${top_srcdir}/interface; ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix})
 
 
-%.o: %.c
+%.lo %.o: %.c
 	${COMPILE} -o $@ -c $< 
 
 

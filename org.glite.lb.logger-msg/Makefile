@@ -68,12 +68,18 @@ PLUGIN_LIB:=activemq_cpp_plugin.la
 
 EXAMPLES=glite-lb-cmsclient
 
+ifeq (${thrflavour},)
+default_flavour=
+else
+default_flavour=_${nothrflavour}
+endif
+
 default: all 
 
 all compile: ${PLUGIN_LIB} ${EXAMPLES}
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
-	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${EXT_LIB}
+	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${EXT_LIB} -lglite_lb_common${default_flavour} -lglite_jobid -lglite_lbu_log
 
 ${MAN_GZ}: ${MAN}
 	rm -f ${MAN_GZ} ${MAN}

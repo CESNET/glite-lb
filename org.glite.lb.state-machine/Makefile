@@ -35,11 +35,11 @@ EXPAT_LIBS?=${expatlib} -lexpat
 
 DEBUG:=-g -O0 -Wall
 
-CFLAGS:= ${CFLAGS} \
+CFLAGS:= \
 	${DEBUG} \
 	${CLASSADS_CFLAGS} \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
-	-I${top_srcdir}/interface 
+	-I${top_srcdir}/interface ${CFLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir}  ${LDFLAGS} 
@@ -54,9 +54,8 @@ default_flavour=
 else
 default_flavour=_${nothrflavour}
 endif
-COMMON_LIBS:= -L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavour} -lglite_security_gss${defaultflavour}
-PLUGIN_LIBS:= -L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavour} \
-	${CLASSADS_LIBS} -lstdc++ ${EXPAT_LIBS}
+COMMON_LIBS:= -L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavour} -lglite_security_gss${defaultflavour} -lglite_jobid
+PLUGIN_LIBS:= -L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavour}
 
 PLUGIN_LOBJS:=seqcode_aux.lo process_event.lo process_event_pbs.lo process_event_condor.lo process_event_cream.lo lb_plugin.lo  process_event_file_transfer.lo process_event_file_transfer_collection.lo
 MACHINE_OBJS:=seqcode_aux.o process_event.o process_event_pbs.o process_event_condor.o process_event_cream.o process_event_file_transfer.o process_event_file_transfer_collection.o intjobstat_supp.o
@@ -89,7 +88,7 @@ ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
 
 ${MACHINE_LIB}:  ${MACHINE_OBJS}
-	${LINK} ${version_info} -o $@ ${MACHINE_LOBJS} 
+	${LINK} ${version_info} -o $@ ${MACHINE_LOBJS} ${COMMON_LIBS}
 #	ar crv $@ ${MACHINE_OBJS}
 #	-ranlib $@
 
@@ -101,7 +100,7 @@ stage: compile
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir} ${DESTDIR}${PREFIX}${prefix}/interface ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
-	${INSTALL} -m 644 ${MACHINE_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir} 
+	${INSTALL} -m 755 ${MACHINE_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${DESTDIR}${PREFIX}${prefix}/interface
 	install -m 644 lb-job-attrs2.xsd ${DESTDIR}${PREFIX}${prefix}/interface
@@ -140,9 +139,6 @@ check:
 
 %.o %.lo: %.c
 	${COMPILE} -c $<
-
-%.lo: %.c
-	${COMPILE} -o $@ -c $<
 
 lb_plugin.lo: lb_plugin.c job_attrs.h job_attrs2.h
 	${COMPILE} -DPLUGIN_DEBUG -o $@ -c $<

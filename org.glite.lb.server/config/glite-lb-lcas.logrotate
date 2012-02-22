@@ -1,5 +1,0 @@
-/var/log/glite/glite-lb-server-lcas.log {
-	daily
-	rotate 4
-	missingok
-}
