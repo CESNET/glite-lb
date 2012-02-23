@@ -971,7 +971,7 @@ for my $ext (keys %deps_aux) {
 			sl5_x86_64_gcc412EPEL => {
 				'myproxy-devel' => 'myproxy-devel.x86_64',
 			},
-			sl6_x86_64_gcc445EPEL => {
+			sl6_x86_64_gcc446EPEL => {
 				'myproxy-devel' => 'myproxy-devel.x86_64',
 			},
 			deb6_x86_64_gcc445 => {
@@ -1047,7 +1047,7 @@ for my $ext (keys %deps_aux) {
 		supported_platforms => {
 			sl5_x86_64_gcc412EPEL => 1,
 			sl5_ia32_gcc412EPEL => 1,
-			sl6_x86_64_gcc445EPEL => 1,
+			sl6_x86_64_gcc446EPEL => 1,
 			deb6_x86_64_gcc445 => 1,
 		},
 		modules => {
