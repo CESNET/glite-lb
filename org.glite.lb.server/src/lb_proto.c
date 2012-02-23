@@ -641,7 +641,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	char **response,char ***headersOut,char **bodyOut,
 	int *httpErr)
 {
-	char *requestPTR = NULL, *message = NULL;
+	char *requestPTR = NULL, *message = NULL, *requestMeat = NULL;
 	int	ret = HTTP_OK;
 	int 	html = outputHTML(headers);
 	int 	text = 0; //XXX: Plain text communication is special case of html here, hence when text=1, html=1 too
@@ -687,6 +687,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	if (!strncmp(request, METHOD_GET, sizeof(METHOD_GET)-1)) {
 		
 		requestPTR = strdup(request + sizeof(METHOD_GET)-1);
+		
 		if (html) {
 			text = check_request_for_query(requestPTR, "?text");
 
@@ -703,6 +704,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			strip_request_of_queries(requestPTR);
 		}
 
+		requestMeat = strdup(requestPTR);
+		requestMeat[strcspn(requestPTR, " \f\n\r\t\v")] = '\0';
+
 	/* Is user authorised? */
 		if (!ctx->peerName){
 			ret = HTTP_UNAUTH;
@@ -710,8 +714,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		}
 
 	/* GET /: Current User Jobs */
-		else if (requestPTR[0]=='/' && 
-			(isspace(requestPTR[1]) && extra_opt == HTTP_EXTRA_OPTION_NONE)) {
+		else if ((!strcmp(requestMeat, "/")) && (extra_opt == HTTP_EXTRA_OPTION_NONE)) {
                 	edg_wlc_JobId *jobsOut = NULL;
 			edg_wll_JobStat *statesOut = NULL;
 			int	i, flags;
@@ -746,11 +749,10 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	        } 
 
 	/* GET /[jobId]: Job Status */
-		else if (requestPTR[0]=='/' && !isspace(requestPTR[1])
-			&& strncmp(requestPTR, "/RSS:", strlen("/RSS:")) 
-			&& ( strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
-			     || (*(requestPTR+strlen("/NOTIF")) != ':'
-			        && !isspace(*(requestPTR+strlen("/NOTIF")))))
+		else if (strcmp(requestMeat, "/RSS:")
+			&& strcmp(requestMeat, "/NOTIF")
+			&& strcmp(requestMeat, "/NOTIF:")
+			&& strcmp(requestMeat, "/favicon.ico")
 			) {
 			edg_wlc_JobId jobId = NULL;
 			char *pom1,*fullid = NULL;
@@ -813,8 +815,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			edg_wlc_JobIdFree(jobId);
 			edg_wll_FreeStatus(&stat);
 	/*GET /NOTIF: All user's notifications*/
-		} else if (strncmp(requestPTR, "/NOTIF", strlen("/NOTIF")) == 0 			&& (isspace(*(requestPTR+strlen("/NOTIF")))
-			|| isspace(*(requestPTR+strlen("/NOTIF:"))))){
+		} else if (!strcmp(requestMeat, "/NOTIF") || !strcmp(requestMeat, "/NOTIF:")) {
 			char **notifids = NULL;
 			char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
                         char *userid = strmd5(can_peername, NULL);
@@ -885,6 +886,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				edg_wll_RSSFeed(ctx, states, requestPTR, &message);
 				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_RSS_VIEWS);
 			}
+		} else if (!strcmp(requestMeat, "/favicon.ico")) {
+			message=NULL;
 	/*GET /?wsdl */
 #define WSDL_LB "LB.wsdl"
 #define WSDL_LBTYPES "LBTypes.wsdl"
@@ -919,6 +922,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	/* GET /?configuration*/
 		} else if (extra_opt == HTTP_EXTRA_OPTION_CONFIGURATION) {
 			// also browser-readable HTML version here?
+			isadm = ctx->noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
+			// Filo, tuto muzes pouzit k rozhodnuti, co vsechno se bude na konfiguracni strance ukazovat
+
 			edg_wll_ConfigurationToText(ctx, &message);
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 	/* GET /?stats*/
@@ -1153,6 +1159,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					}
 					*response = NULL;
 					if (requestPTR) free(requestPTR);
+					if (requestMeat) free(requestMeat);
 					exit(0);
 				}
 
@@ -1418,6 +1425,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_LBPROTO);
 
 		free(requestPTR); requestPTR = NULL;
+		free(requestMeat); requestMeat = NULL;
 
 /* other HTTP methods */
 	} else ret = HTTP_NOTALLOWED;
@@ -1432,6 +1440,7 @@ err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
 		*bodyOut = message;
 
 	if (requestPTR) free(requestPTR);
+	if (requestMeat) free(requestMeat);
 
 	*httpErr = ret;
 
