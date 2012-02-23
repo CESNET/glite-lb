@@ -753,6 +753,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			&& strcmp(requestMeat, "/NOTIF")
 			&& strcmp(requestMeat, "/NOTIF:")
 			&& strcmp(requestMeat, "/favicon.ico")
+			&& extra_opt == HTTP_EXTRA_OPTION_NONE
 			) {
 			edg_wlc_JobId jobId = NULL;
 			char *pom1,*fullid = NULL;
