@@ -56,6 +56,17 @@ typedef enum _http_admin_option{
 	HTTP_ADMIN_OPTION_LAST
 } http_admin_option;
 
+typedef enum _http_extra_option{
+	HTTP_EXTRA_OPTION_NONE,
+	HTTP_EXTRA_OPTION_WSDL,
+	HTTP_EXTRA_OPTION_TYPES,
+	HTTP_EXTRA_OPTION_AGU,
+	HTTP_EXTRA_OPTION_VERSION,
+	HTTP_EXTRA_OPTION_CONFIGURATION,
+	HTTP_EXTRA_OPTION_STATS,
+        HTTP_EXTRA_OPTION_LAST
+} http_extra_option;
+
 extern char *edg_wll_HTTPErrorMessage(int);
 
 extern int edg_wll_UserJobsServer(edg_wll_Context ctx, int flags, edg_wlc_JobId  **jobs, edg_wll_JobStat **states);

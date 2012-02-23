@@ -648,6 +648,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	int	i;
 	int	isadm;
 	http_admin_option adm_opt = HTTP_ADMIN_OPTION_MY;
+	http_extra_option extra_opt = HTTP_EXTRA_OPTION_NONE;
 
 	edg_wll_ResetError(ctx);
 
@@ -688,11 +689,19 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		requestPTR = strdup(request + sizeof(METHOD_GET)-1);
 		if (html) {
 			text = check_request_for_query(requestPTR, "?text");
+
+			if (check_request_for_query(requestPTR, "?wsdl")) extra_opt = HTTP_EXTRA_OPTION_WSDL;
+                        else if (check_request_for_query(requestPTR, "?types")) extra_opt = HTTP_EXTRA_OPTION_TYPES;
+                        else if (check_request_for_query(requestPTR, "?agu")) extra_opt = HTTP_EXTRA_OPTION_AGU;
+                        else if (check_request_for_query(requestPTR, "?version")) extra_opt = HTTP_EXTRA_OPTION_VERSION;
+                        else if (check_request_for_query(requestPTR, "?configuration")) extra_opt = HTTP_EXTRA_OPTION_CONFIGURATION;
+                        else if (check_request_for_query(requestPTR, "?stats")) extra_opt = HTTP_EXTRA_OPTION_STATS;
+
 			if (check_request_for_query(requestPTR, "?all")) adm_opt = HTTP_ADMIN_OPTION_ALL;
 			else if (check_request_for_query(requestPTR, "?foreign")) adm_opt = HTTP_ADMIN_OPTION_FOREIGN;
+
 			strip_request_of_queries(requestPTR);
 		}
-
 
 	/* Is user authorised? */
 		if (!ctx->peerName){
@@ -702,7 +711,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 
 	/* GET /: Current User Jobs */
 		else if (requestPTR[0]=='/' && 
-			(requestPTR[1]==' ' || !strncmp(requestPTR+1, "/?text", strlen("/?text")))) {
+			(isspace(requestPTR[1]) && extra_opt == HTTP_EXTRA_OPTION_NONE)) {
                 	edg_wlc_JobId *jobsOut = NULL;
 			edg_wll_JobStat *statesOut = NULL;
 			int	i, flags;
@@ -737,7 +746,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	        } 
 
 	/* GET /[jobId]: Job Status */
-		else if (*requestPTR=='/' && requestPTR[1] != '?'
+		else if (requestPTR[0]=='/' && !isspace(requestPTR[1])
 			&& strncmp(requestPTR, "/RSS:", strlen("/RSS:")) 
 			&& ( strncmp(requestPTR, "/NOTIF", strlen("/NOTIF"))
 			     || (*(requestPTR+strlen("/NOTIF")) != ':'
@@ -880,7 +889,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 #define WSDL_LB "LB.wsdl"
 #define WSDL_LBTYPES "LBTypes.wsdl"
 #define WSDL_LB4AGU "lb4agu.wsdl"
-		} else if (strncmp(requestPTR, "/?wsdl", strlen("/?wsdl")) == 0) {
+		} else if (extra_opt == HTTP_EXTRA_OPTION_WSDL) {
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 			char *filename;
 			asprintf(&filename, "%s/" WSDL_PATH "/%s", glite_location(), WSDL_LB);
@@ -888,7 +897,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				ret = HTTP_INTERNAL;
 			free(filename);
 	/* GET /?types */
-		} else if (strncmp(requestPTR, "/?types", strlen("/?types")) == 0) {
+		} else if (extra_opt == HTTP_EXTRA_OPTION_TYPES) {
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
                         char *filename;
                         asprintf(&filename, "%s/" WSDL_PATH "/%s", glite_location(), WSDL_LBTYPES);
@@ -896,7 +905,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                                 ret = HTTP_INTERNAL;
 			free(filename);
 	/* GET /?agu */
-                } else if (strncmp(requestPTR, "/?agu", strlen("/?agu")) == 0) {
+                } else if (extra_opt == HTTP_EXTRA_OPTION_AGU) {
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
                         char *filename;
                         asprintf(&filename, "%s/" WSDL_PATH "/%s", glite_location(), WSDL_LB4AGU);
@@ -904,16 +913,16 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                                 ret = HTTP_INTERNAL;
 			free(filename);
 	/* GET /?version */
-		} else if (strncmp(requestPTR, "/?version", strlen("/?version")) == 0) {
+		} else if (extra_opt == HTTP_EXTRA_OPTION_VERSION) {
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 			asprintf(&message, "%s", VERSION);
 	/* GET /?configuration*/
-		} else if (strncmp(requestPTR, "/?configuration", strlen("/?configuration")) == 0) {
+		} else if (extra_opt == HTTP_EXTRA_OPTION_CONFIGURATION) {
 			// also browser-readable HTML version here?
 			edg_wll_ConfigurationToText(ctx, &message);
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 	/* GET /?stats*/
-		} else if (strncmp(requestPTR, "/?stats", strlen("/?stats")) == 0) {
+		} else if (extra_opt == HTTP_EXTRA_OPTION_STATS) {
 			edg_wll_StatisticsToHTML(ctx, &message);
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
 	/* GET [something else]: not understood */
