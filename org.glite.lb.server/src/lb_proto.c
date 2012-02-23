@@ -889,6 +889,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			}
 		} else if (!strcmp(requestMeat, "/favicon.ico")) {
 			message=NULL;
+			ret = HTTP_NOTFOUND;
 	/*GET /?wsdl */
 #define WSDL_LB "LB.wsdl"
 #define WSDL_LBTYPES "LBTypes.wsdl"
