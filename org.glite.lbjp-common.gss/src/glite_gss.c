@@ -894,7 +894,7 @@ gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
 					ar.ent->h_addrtype, port, timeout, connection, gss_code);
 		if (ret == 0)
 			goto end;
-		if (timeout->tv_sec < 0 ||(timeout->tv_sec == 0 && timeout->tv_usec <= 0))
+		if (timeout && (timeout->tv_sec < 0 ||(timeout->tv_sec == 0 && timeout->tv_usec <= 0)))
 			goto end;
 		k++;
 	    } while (mechs != GSS_C_NO_OID_SET && k < mechs->count);
