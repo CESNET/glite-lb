@@ -219,6 +219,7 @@ int glite_lbu_InitDBContext(glite_lbu_DBContext *ctx, int backend, char *log_cat
 		(*ctx)->backend = backend;
 		(*ctx)->log_category = log_category;
 	}
+
 	return ret;
 }
 
@@ -234,6 +235,7 @@ void glite_lbu_FreeDBContext(glite_lbu_DBContext ctx) {
 
 int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char *cs) {
 	if (!VALID(ctx->backend)) return EINVAL;
+	ctx->connection_string = strdup(cs);
 	return backends[ctx->backend]->connect(ctx, cs);
 }
 
@@ -356,6 +358,63 @@ double glite_lbu_DBToTimestamp(glite_lbu_DBContext ctx, const char *str) {
 	if (!VALID(ctx->backend)) return -1;
 	return backends[ctx->backend]->DBToTimestamp(str);
 }
+
+char *glite_lbu_DBGetConnectionString(glite_lbu_DBContext ctx) {
+	return strdup(ctx->connection_string);
+}
+
+char *glite_lbu_DBGetHost(glite_lbu_DBContext ctx) {
+	//XXX this is same for msql and pg, move it into backends, when some difference occurs
+
+	char *host, *buf, *slash, *at, *colon;
+	if (! ctx->connection_string)
+		return NULL;
+
+	buf = strdup(ctx->connection_string);
+	slash = strchr(buf,'/');
+        at = strrchr(buf,'@');
+        colon = strrchr(buf,':');
+
+	if (!slash || !at || !colon){
+		//XXX should never happen when DB is opened
+		free(buf);
+		return NULL;
+	}
+
+	*slash = *at = *colon = 0;
+
+	host = strdup(at+1);
+	free(buf);
+	
+	return host;
+}
+
+char *glite_lbu_DBGetName(glite_lbu_DBContext ctx) {
+        //XXX this is same for msql and pg, move it into backends, when some difference occurs
+
+        char *name, *buf, *slash, *at, *colon;
+        if (! ctx->connection_string)
+                return NULL;
+
+        buf = strdup(ctx->connection_string);
+        slash = strchr(buf,'/');
+        at = strrchr(buf,'@');
+        colon = strrchr(buf,':');
+
+        if (!slash || !at || !colon){
+                //XXX should never happen when DB is opened
+                free(buf);
+                return NULL;
+        }
+
+        *slash = *at = *colon = 0;
+
+        name = strdup(colon+1);
+        free(buf);
+
+        return name;
+}
+
 
 
 #define STATUS(CTX) ((CTX)->err.code)

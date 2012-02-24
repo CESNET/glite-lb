@@ -329,6 +329,30 @@ time_t glite_lbu_DBToTime(glite_lbu_DBContext ctx, const char *str);
 double glite_lbu_DBToTimestamp(glite_lbu_DBContext ctx, const char *str);
 
 
+/**
+ * Get the connection string into the database
+ *
+ * \return newly allocated connection string
+ * */
+char *glite_lbu_DBGetConnectionString(glite_lbu_DBContext ctx);
+
+
+/**
+ * Get the hostname of the database
+ *
+ * \return newly allocated host
+* */
+char *glite_lbu_DBGetHost(glite_lbu_DBContext ctx);
+
+
+/**
+ * Get the name of the database
+ *
+ * \return newly allocated name
+* */
+char *glite_lbu_DBGetName(glite_lbu_DBContext ctx);
+
+
 /* Generic helper time convert functions. */
 void glite_lbu_TimeToStr(time_t t, char **str);
 void glite_lbu_TimestampToStr(double t, char **str);
