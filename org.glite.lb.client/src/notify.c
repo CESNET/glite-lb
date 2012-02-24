@@ -103,7 +103,7 @@ int main(int argc,char **argv)
 {
 	edg_wll_Context		ctx;
 	edg_wll_QueryRec  **conditions = NULL;
-	time_t				valid = time(NULL) + 999999999;
+	time_t				valid = 0;
 	char			   *errt, *errd;
 	void		*fields = NULL;
 
@@ -325,7 +325,7 @@ int main(int argc,char **argv)
 		time_t	client_tout = time(NULL) + 600;
 	        int	refresh = 0;
 		struct timeval		tout;
-		time_t	opt_valid = 0,do_refresh = client_tout + 999999999,now;
+		time_t	opt_valid = 0,do_refresh = client_tout,now;
 
 		while ((c = getopt(argc-1,argv+1,"s:a:i:f:t:r")) > 0) switch (c) {
 			case 's':
@@ -380,11 +380,10 @@ int main(int argc,char **argv)
 					goto receive_err;
 				fprintf(stderr,"notification is valid until: %s (%ld)\n", TimeToStr(valid), valid);
 				
-				if (nid) edg_wll_NotifIdFree(nid); nid = NULL;
 				param++;
 			}
 			now = time(NULL);
-			do_refresh = now + (refresh ? (valid - now)/2 : 999999999);
+			do_refresh = now + (valid - now)/2;
 			if (refresh) fprintf(stderr,"next refresh %s (%ld)\n",
 					TimeToStr(do_refresh),do_refresh);
 		}
@@ -393,8 +392,7 @@ int main(int argc,char **argv)
 			edg_wll_NotifId		recv_nid = NULL;
 			int	err;
 
-			tout.tv_sec = (client_tout < do_refresh ? 
-					client_tout : do_refresh)
+			tout.tv_sec = (refresh && client_tout >= do_refresh ? do_refresh : client_tout)
 					- time(NULL);
 			if (tout.tv_sec < 0) tout.tv_sec = 0;
 			tout.tv_usec = 0;
