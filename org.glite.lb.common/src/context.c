@@ -211,7 +211,7 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 		ctx->msg_brokers = NULL;
 	}
 	
-	if (ctx->authz_policy_file) free(authz_policy_file);
+	if (ctx->authz_policy_file) free(ctx->authz_policy_file);
 
 	edg_wll_FreeParams(ctx);
 
