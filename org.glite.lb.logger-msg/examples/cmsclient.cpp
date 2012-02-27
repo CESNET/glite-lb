@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
+#include <cstring>
 
 using namespace activemq;
 using namespace activemq::core;
