@@ -11,5 +11,21 @@ Among others, the following fields may be discerned from the URL:
 \label{s:findbroker}
 \texttt{msg\_brokers} & A list of messaging brokers that \LB server uses to deliver messages.\\
 \texttt{msg\_prefixes} & A list of permissible prefixes that must be used in messaging topics.\\
+\texttt{server\_version} & Version of the \LB server binary.\\
+\texttt{server\_identity} & The subject of the \LB server's certificate.\\
+\texttt{server\_indices} & Indices configured in the the \LB server's database. \ifx\insideAG\undefined{\LB job queries typically require at least one indexed attribute among the query conditions}\else{See more on managing indices in Section~\ref{maintain:index} (page \pageref{maintain:index})}\fi.
+\\
+\end{tabularx}
+
+Configuration details shown only to \LB super users:
+\nopagebreak
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{database\_name} & Name of database storing \LB data.\\
+\texttt{database\_host} &  Database server used by \LB.\\
+\texttt{authz\_policy\_file} & Full copy of the current authz configuration file.\ifx\insideAG\undefined{}\else{ See more on defining the authorization policy in Section~\ref{inst:authz} (page \pageref{inst:authz}).}\fi\\
+\texttt{admins} & A list of DNs that are allowed super-user access. The list will include superusers given in the authz file as well as those specified from command line through the \texttt{-{}-super-user} option.\\
+\texttt{dump\_start} & Starting time of the latest server dump.\ifx\insideAG\undefined{}\else{See more on backup dumps in Section~\ref{run:dump} (page \pageref{run:dump}).}\fi\\
+\texttt{dump\_end} & Finishing time of the latest server dump.\\
 \end{tabularx}
 
