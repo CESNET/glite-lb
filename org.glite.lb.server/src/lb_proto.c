@@ -927,7 +927,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			isadm = ctx->noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
 			// Filo, tuto muzes pouzit k rozhodnuti, co vsechno se bude na konfiguracni strance ukazovat
 
-			edg_wll_ConfigurationToText(ctx, &message);
+			edg_wll_ConfigurationToText(ctx, isadm, &message);
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 	/* GET /?stats*/
 		} else if (extra_opt == HTTP_EXTRA_OPTION_STATS) {

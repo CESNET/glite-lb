@@ -1068,9 +1068,13 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 	ctx->count_statistics = count_statistics;
 
+	ctx->count_server_stats = count_server_stats;
+
 	ctx->serverIdentity = strdup(server_subject);
 
 	ctx->rssTime = rss_time;
+
+	ctx->authz_policy_file = strdup(policy_file);
 
 	gettimeofday(&conn_start, 0);
 

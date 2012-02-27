@@ -20,6 +20,8 @@ limitations under the License.
 #include "lb_text.h"
 #include "lb_proto.h"
 #include "cond_dump.h"
+#include "server_state.h"
+#include "authz_policy.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
@@ -30,6 +32,10 @@ limitations under the License.
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))
@@ -94,7 +100,7 @@ int edg_wll_QueryToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
                 l = asprintf(&a,"%s=" type "", \
                         name, field); \
         else \
-                l = asprintf(&a,"%s=", name); \
+                l = asprintf(&a,"%s=\n", name); \
         b = realloc(b, sizeof(*b)*(pomL+l+1)); \
         strcpy(b+pomL, a); \
         pomL += l; \
@@ -273,11 +279,25 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
         return 0;
 }
 
-int edg_wll_ConfigurationToText(edg_wll_Context ctx, char **message){
+int edg_wll_ConfigurationToText(edg_wll_Context ctx, int admin, char **message){
 	char *a = NULL, *b;
 	int pomL = 0;
 	int i;
 	b = strdup("");
+
+	TRS("server_version", "%s\n", VERSION);
+
+	TRS("server_identity", "%s\n", ctx->serverIdentity);
+
+	if (ctx->job_index)
+		for (i = 0; ctx->job_index[i]; i++){
+			char *ch = edg_wll_QueryRecToColumn(ctx->job_index[i]);
+			if (i == 0) TRS("server_indices", "%s", ch)
+			else TRA("%s", ch);
+			free(ch);
+		}
+	if (i > 0)
+                TRA("%s", NULL);
 
 	if (ctx->msg_brokers)
 		for (i = 0; ctx->msg_brokers[i]; i++){
@@ -293,7 +313,53 @@ int edg_wll_ConfigurationToText(edg_wll_Context ctx, char **message){
 			else TRA("%s", ctx->msg_prefixes[i]);
 	if (i > 0)
                 TRA("%s", NULL);
-	
+
+	/* only for superusers */
+	if (admin){
+		char *dbname, *dbhost;
+		dbname = glite_lbu_DBGetName(ctx->dbctx);
+		dbhost = glite_lbu_DBGetHost(ctx->dbctx);
+		TRS("database_name", "%s\n", dbname);
+		TRS("database_host", "%s\n", dbhost);
+
+		free(dbname);
+		free(dbhost);
+
+		char *pf = NULL;
+		int fd;
+		if (ctx->authz_policy_file && (fd = open(ctx->authz_policy_file, O_RDONLY)) >= 0){
+			off_t size = lseek(fd, 0, SEEK_END) - lseek(fd, 0, SEEK_SET);
+			char *pft = (char*)malloc(size);
+			read(fd, pft, size);
+			close(fd);
+			pf = escape_text(pft);
+			
+		}
+		TRS("authz_policy_file", "%s\n", pf);
+		if (pf) free(pf);
+
+		edg_wll_authz_policy ap = edg_wll_get_server_policy();
+		int i, j, k, l = 0;
+		for (i = 0; i < ap->actions_num; i++){
+			if (ap->actions[i].id == ADMIN_ACCESS)
+				for (j = 0; j < ap->actions[i].rules_num; j++)
+					for (k = 0; k < ap->actions[i].rules[j].attrs_num; k++){
+						if (l == 0)
+							TRS("admins", "\"%s\"", ap->actions[i].rules[j].attrs[k].value)
+						else
+							TRA("\"%s\"", ap->actions[i].rules[j].attrs[k].value);
+						l++;
+					}
+		}
+		if (l) TRA("%s", NULL);
+
+		char *start = NULL, *end = NULL;
+		edg_wll_GetServerState(ctx, EDG_WLL_STATE_DUMP_START, &start);
+		edg_wll_GetServerState(ctx, EDG_WLL_STATE_DUMP_END, &end);
+		TRS("dump_start", "%s\n", start);
+		TRS("dump_end", "%s\n", end);
+	}
+
 	*message = b;
 
 	return 0;
