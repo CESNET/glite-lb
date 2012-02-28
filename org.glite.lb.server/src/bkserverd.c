@@ -1763,7 +1763,7 @@ static int wait_for_open(edg_wll_Context ctx, const char *dbstring)
 		asprintf(&dbfail_string1,"%s (%s)",errt,errd);
 		free(errt);
 		free(errd);
-		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN,
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL,
 			"[%d]: %s", getpid(), dbfail_string1);
 		free(dbfail_string1);
 	}
