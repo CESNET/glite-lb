@@ -502,13 +502,27 @@ read_token(int sock, void *token, size_t length, struct timeval *to)
 
 /*
    SSL/TLS framing:
+   SSLv3 header:
    1st byte: SSL Handshake Record Type (\x16)
    2nd-3rd bytes: SSL Version 3.0 (\x03 \x00)
                   TLS Version 1.0 (\x03 \x01)
    4th-5th bytes: Length
+
+   SSLv2 header:
+   1st-2nd  bytes: length, 1st byte has the highest bit set to 1
+                   N.B. this applies to client_hello, other messages may encode
+		   lenght in 3 bytes
+   3rd byte: type (CLIENT_HELLO) (== 1)
+   4rd-5th bytes: SSL Version 3.0 (\x03 \x00)
+		  TLS Version 1.0 (\x03 \x01)
+
+   see also e.g. openssl's s23_srvr.c
 */
 #define SSLv3_HEADER "\x16\x03\x00"
 #define TLSv1_HEADER "\x16\x03\x01"
+
+#define SSL2_CLIENT_HELLO	0x01
+#define SSL3_VERSION_MAJOR	0x03
 
 static int
 is_ssl(unsigned char *header)
@@ -516,6 +530,9 @@ is_ssl(unsigned char *header)
     if (memcmp(header, SSLv3_HEADER, 3) == 0)
 	return 1;
     if (memcmp(header, TLSv1_HEADER, 3) == 0)
+	return 1;
+    if ((header[0] & 0x80) && header[2] == SSL2_CLIENT_HELLO &&
+	    header[3] == SSL3_VERSION_MAJOR)
 	return 1;
 
     return 0;
