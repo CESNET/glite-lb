@@ -148,14 +148,14 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
         }
 
 	if (adm) {
-		asprintf(&mylink,"<BR>%s just your registrations%s",
+		asprintf(&mylink,"%s just your registrations%s | ",
 			option != HTTP_ADMIN_OPTION_MY ? "<A HREF=\"/NOTIF:\">View" : "<B>Viewing",
 			option != HTTP_ADMIN_OPTION_MY ? "</A>" : "</B>");
-		asprintf(&alllink,"<BR>%s all registrations%s",
+		asprintf(&alllink,"%s all registrations%s | ",
 			option != HTTP_ADMIN_OPTION_ALL ? "<A HREF=\"/NOTIF:?all\">View" : "<B>Viewing",
 			option != HTTP_ADMIN_OPTION_ALL ? "</A>" : "</B>");
 		if (option == HTTP_ADMIN_OPTION_ALL) asprintf(&heading,"All notifications");
-		asprintf(&foreignlink,"<BR>%s registrations by other users%s",
+		asprintf(&foreignlink,"%s registrations by other users%s<P>",
 			option != HTTP_ADMIN_OPTION_FOREIGN ? "<A HREF=\"/NOTIF:?foreign\">View" : "<B>Viewing",
 			option != HTTP_ADMIN_OPTION_FOREIGN ? "</A>" : "</B>");
 		if (option == HTTP_ADMIN_OPTION_FOREIGN) asprintf(&heading,"Other users' notifications");
@@ -166,14 +166,14 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
         asprintf(&ret, "<html>\r\n\t<body>\r\n");
 	asprintf(&ret, "<html>\r\n\t<body>\r\n"
 			"<h2><B>%s</B></h2>\r\n"
-                        "<ul>%s</ul>"
 			"<P>%s%s%s"
+                        "<ul>%s</ul>"
 			"\t</body>\r\n</html>",
 			heading,
-                        pomA, 
 			mylink ? mylink : "",
 			alllink ? alllink : "",
-			foreignlink ? foreignlink : ""
+			foreignlink ? foreignlink : "",
+                        pomA ? pomA : "No registrations found"
         );
         free(pomA);
 	free(mylink);

@@ -329,14 +329,15 @@ int edg_wll_ConfigurationToText(edg_wll_Context ctx, int admin, char **message){
 		int fd;
 		if (ctx->authz_policy_file && (fd = open(ctx->authz_policy_file, O_RDONLY)) >= 0){
 			off_t size = lseek(fd, 0, SEEK_END) - lseek(fd, 0, SEEK_SET);
-			char *pft = (char*)malloc(size);
+			char *pft = (char*)calloc(sizeof(char), size);
 			read(fd, pft, size);
 			close(fd);
 			pf = escape_text(pft);
-			
+// Why not		trio_asprintf(&pf, "%|Js", pft);
+			free(pft);
 		}
 		TRS("authz_policy_file", "%s\n", pf);
-		if (pf) free(pf);
+		free(pf);
 
 		edg_wll_authz_policy ap = edg_wll_get_server_policy();
 		int i, j, k, l = 0;
