@@ -54,7 +54,6 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/%{_lib}/glite-lb/
 %dir /usr/%{_lib}/glite-lb/examples/
 %dir /usr/share/doc/%{name}-%{version}/
-%dir /usr/share/glite-lb/
 %config(missingok) /etc/glite-lb/msg.conf.example
 /usr/%{_lib}/activemq_cpp_plugin.so
 /usr/%{_lib}/activemq_cpp_plugin.so.0
@@ -64,7 +63,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/package.summary
 /usr/share/doc/%{name}-%{version}/package.description
-/usr/share/glite-lb/*
+/usr/sbin/glite-lb-msg-*
 
 
 %changelog

@@ -19,7 +19,7 @@ version=${module.version}
 CC=gcc
 CXX=gcc
 
-VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples
+VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples:${top_srcdir}/config
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
@@ -68,6 +68,9 @@ PLUGIN_LIB:=activemq_cpp_plugin.la
 
 EXAMPLES=glite-lb-cmsclient
 
+SCRIPTS_SRC=msg.cron.in msg-config.in
+SCRIPTS=${SCRIPTS_SRC:.in=.new}
+
 ifeq (${thrflavour},)
 default_flavour=
 else
@@ -76,7 +79,7 @@ endif
 
 default: all 
 
-all compile: ${PLUGIN_LIB} ${EXAMPLES}
+all compile: ${PLUGIN_LIB} ${EXAMPLES} ${SCRIPTS}
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${EXT_LIB} -lglite_lb_common${default_flavour} -lglite_jobid -lglite_lbu_log
@@ -105,18 +108,23 @@ check:
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite-lb
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
+	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 755 ${EXAMPLES} ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
-	${INSTALL} -m 755 ${top_srcdir}/src/msg-brokers ${DESTDIR}${PREFIX}${prefix}/share/glite-lb
+	${INSTALL} -m 755 ${top_srcdir}/src/msg-brokers ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-msg-brokers
+	${INSTALL} -m 755 msg-config.new ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-msg-config
+	${INSTALL} -m 644 msg.cron.new ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-logger-msg.cron
 
 %.lo %.o: %.cpp
 	${COMPILEXX} -c $< -o $@
 
+%.new: %.in
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' $< > $@
 
 clean:
 	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ} ${EXAMPLES}
