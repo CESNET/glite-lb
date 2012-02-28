@@ -53,7 +53,10 @@ PROXY_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-proxy-interlogd.pid
 NOTIF_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-notif-interlogd.pid
 
 msgconf="$GLITE_LB_LOCATION_ETC/glite-lb/msg.conf"
-[ -f "$msgconf" ] && GLITE_LB_NOTIF_IL_OTHER_OPTIONS="$GLITE_LB_NOTIF_IL_OTHER_OPTIONS -F $msgconf"
+if [ -f "$msgconf" ]; then
+	GLITE_LB_NOTIF_IL_OTHER_OPTIONS="$GLITE_LB_NOTIF_IL_OTHER_OPTIONS -F $msgconf"
+	GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -F $msgconf"
+fi
 
 lockfile=/var/lock/glite-lb-bkserverd
 
