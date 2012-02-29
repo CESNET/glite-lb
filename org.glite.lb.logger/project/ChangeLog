@@ -184,3 +184,10 @@
 2.3.1-1
 - Start-up scripts according to Fedora Packaging Guidelines
 
+2.3.2-1
+- rpmlint fixes
+- support for notification owner check when connecting
+- License string as recognized by rpmlint and packaging guidelines
+- "Megajob" perftest updates
+- Sending events with specified owner on other side only for notifications
+
