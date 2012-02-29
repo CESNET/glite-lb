@@ -89,3 +89,9 @@
 - Configuration of MySQL server in separated file (savannah task #20340)
 - Start-up scripts according to Fedora Packaging Guidelines
 
+4.4.2-1
+- Automatically refresh the MSG brokers in configuration, without automatic daemons reloading
+- List all types of MSG brokers, in the returned list prefer stomp+ssl
+- Packaging improvements (rpmlint and lintian checks)
+- License string as recognized by rpmlint and packaging guidelines
+
