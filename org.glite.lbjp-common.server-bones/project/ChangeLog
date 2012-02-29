@@ -83,3 +83,8 @@
 2.2.0-2
 - Module rebuilt
 
+2.2.1-1
+- Packaging improvements (rpmlint and lintian checks)
+- proper provides
+- License string as recognized by rpmlint and packaging guidelines.
+
