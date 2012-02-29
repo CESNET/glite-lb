@@ -1348,7 +1348,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			edg_wll_JobStatCode base = EDG_WLL_JOB_UNDEF;
 			edg_wll_JobStatCode final = EDG_WLL_JOB_UNDEF;
 			time_t from, to;
-			int i, j, minor, res_from, res_to;
+			int i, j, minor, res_from = 0, res_to = 0;
 			float *rates = NULL, *durations = NULL , *dispersions = NULL;
 			char **groups = NULL;
 			
