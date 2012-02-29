@@ -72,3 +72,7 @@
 2.1.0-2
 - Module rebuilt
 
+2.1.1-1
+- Packaging improvements (rpmlint and lintian checks):
+- License string as recognized by rpmlint and packaging guidelines.
+
