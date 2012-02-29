@@ -161,3 +161,11 @@
 - Smoke Test clarifications (GGUS #78132)
 - Explanation of the Job History feature
 
+1.3.2-1
+- License string as recognized by rpmlint and packaging guidelines
+- implementation status column removed from the test suite overview; there are no unimplemented tests anymore
+- Description of a new test in the test plan
+- New section on https testing
+- Functionality test implementation hints commented out, all proposed tests have already been implemented
+- Explaining more config details
+
