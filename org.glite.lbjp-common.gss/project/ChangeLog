@@ -110,3 +110,12 @@
 - Work around the globus bug that actually makes it impossible to specify own OID to import_creds.
   See https://bugzilla.mcs.anl.gov/globus/show_bug.cgi?id=7238
 
+3.1.2-1
+- Required pkg-config for -devel package working properly.
+- License string as recognized by rpmlint and packaging guidelines.
+- Always initialize Globus in threaded mode
+- Recognize sslv2 records
+- Fix segfault when trying alternative addresses without timeout
+- Implementation for edg_wll_gss_connect_name()
+  - makes connection to server with a particular DN
+
