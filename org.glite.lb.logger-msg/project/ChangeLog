@@ -38,3 +38,11 @@
 1.1.1-1
 - Include job history in outgoing messages
 
+1.1.2-1
+- Automatically refresh the MSG brokers in configuration, without automatic daemons reloading
+- Packaging improvements (rpmlint and lintian checks)
+- List all types of MSG brokers, in the returned list prefer stomp+ssl
+- Build on Debian 6.0
+- Example client allows specifying output file through a cmdline argument, flushing that output file after every message
+- License string as recognized by rpmlint and packaging guidelines
+
