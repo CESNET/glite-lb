@@ -337,3 +337,22 @@
 - Debian packaging for L&B
 - Start-up scripts according to Fedora Packaging Guidelines
 
+2.3.2-1
+- Packaging improvements (rpmlint and lintian checks)
+- Implementation of server-side statistics
+- License string as recognized by rpmlint and packaging guidelines
+- Crash when running without policy file parameter fixed
+- Loging failed DB backed initialization as fatal -- partial fix for SB #91944
+- More values listed ?configuration over HTTPs
+- Send user ID on notif bind
+- Different layout of the notification list page
+- New query strings (?all, ?foreign) implemented to allow admin users to list all/foreign notifications on top of their own
+- Distinguish between non-existent notifications and other people's notifications
+- Allow superuser to vew details for all notifications
+- List owner among notification details
+- Statistics explicitly msync to disk (once per hundred modifications)
+- Report not found properly for special case HTTP request favicon.ico
+- "Megajob" perftest updates
+- Error message better than just NULL for no-index queries
+- Fix for SB #47774 -- built-in index on parent job now recognized
+
