@@ -1074,7 +1074,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 
 	ctx->rssTime = rss_time;
 
-	ctx->authz_policy_file = strdup(policy_file);
+	if (policy_file) ctx->authz_policy_file = strdup(policy_file);
 
 	gettimeofday(&conn_start, 0);
 
