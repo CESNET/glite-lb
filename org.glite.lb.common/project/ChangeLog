@@ -168,3 +168,9 @@
 8.1.1-1
 - Completed routine for job state structure copying
 
+8.1.2-1
+- Packaging improvements (rpmlint and lintian checks)
+- Context now holds authz policy file path and a server stats structure
+- License string as recognized by rpmlint and packaging guidelines
+- "Megajob" perftest updates
+
