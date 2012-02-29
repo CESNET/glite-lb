@@ -282,7 +282,7 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 int edg_wll_ConfigurationToText(edg_wll_Context ctx, int admin, char **message){
 	char *a = NULL, *b;
 	int pomL = 0;
-	int i;
+	int i = 0;
 	b = strdup("");
 
 	TRS("server_version", "%s\n", VERSION);
@@ -329,12 +329,14 @@ int edg_wll_ConfigurationToText(edg_wll_Context ctx, int admin, char **message){
 		int fd;
 		if (ctx->authz_policy_file && (fd = open(ctx->authz_policy_file, O_RDONLY)) >= 0){
 			off_t size = lseek(fd, 0, SEEK_END) - lseek(fd, 0, SEEK_SET);
-			char *pft = (char*)calloc(sizeof(char), size);
-			read(fd, pft, size);
-			close(fd);
-			pf = escape_text(pft);
-// Why not		trio_asprintf(&pf, "%|Js", pft);
-			free(pft);
+			if (size){
+				char *pft = (char*)calloc(sizeof(char), size);
+				read(fd, pft, size);
+				close(fd);
+				pf = escape_text(pft);
+// Why not			trio_asprintf(&pf, "%|Js", pft);
+				free(pft);
+			}
 		}
 		TRS("authz_policy_file", "%s\n", pf);
 		free(pf);

@@ -84,11 +84,10 @@ int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix)
 	}
 
 	// read and mmap statistics
-	read(serverStatisticsFD, serverStatisticsMap, SERVER_STATISTICS_COUNT*sizeof(*serverStatisticsMap));
-        serverStatisticsMap = mmap(NULL, SERVER_STATISTICS_COUNT*sizeof(*serverStatisticsMap), PROT_READ|PROT_WRITE, MAP_SHARED, serverStatisticsFD, 0);
+	serverStatisticsMap = mmap(NULL, SERVER_STATISTICS_COUNT*sizeof(*serverStatisticsMap), PROT_READ|PROT_WRITE, MAP_SHARED, serverStatisticsFD, 0);
         if (serverStatisticsMap == MAP_FAILED) return edg_wll_SetError(ctx,errno,"mmap()");
-
-	msync(serverStatisticsMap, SERVER_STATISTICS_COUNT*sizeof(*serverStatisticsMap), MS_ASYNC);
+	read(serverStatisticsFD, serverStatisticsMap, SERVER_STATISTICS_COUNT*sizeof(*serverStatisticsMap));
+//	msync(serverStatisticsMap, SERVER_STATISTICS_COUNT*sizeof(*serverStatisticsMap), MS_ASYNC);
 
 	free(fname);
 
