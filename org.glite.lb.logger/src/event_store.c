@@ -540,7 +540,6 @@ event_store_recover(struct event_store *es)
   struct stat stbuf;
 #if defined(IL_NOTIFICATIONS)
   char *last_dest = NULL;
-  char *last_owner = NULL;
   time_t last_exp = 0;
 #endif
 
@@ -791,10 +790,6 @@ event_store_recover(struct event_store *es)
     	last_exp = msg->expires;
     }
 
-    /* remember message owner */
-    if(last_owner == NULL) {
-        last_owner = strdup(msg->owner);
-    }
 #else
     /* first enqueue to the LS */
     if(!bs_only && (last >= last_ls)) {
@@ -858,12 +853,6 @@ event_store_recover(struct event_store *es)
 		  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO, 
 				   "    all messages for notif id %s are now destined to %s",
 			 es->job_id_s, eq_b->dest);
-                  /* set owner if not already there */ /* CHECKME: last_owner mechanism added without full grasp of the code. Please check.*/
-		  if (!(eq_b->owner)) eq_b->owner = last_owner;
-                  else {
-			free(last_owner);
-			last_owner = NULL;
-                  }
 		  if(event_queue_create_thread(eq_b, parallel) < 0) {
 			  ret = -1;
 		  } else {
