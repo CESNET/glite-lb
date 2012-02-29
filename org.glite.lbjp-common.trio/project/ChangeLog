@@ -87,3 +87,7 @@
 - Portability fixes
 - JSON-specific fixes
 
+2.2.2-1
+- Packaging improvements (rpmlint and lintian checks)
+- License string as recognized by rpmlint and packaging guidelines
+
