@@ -109,3 +109,7 @@
 1.2.1-1
 - Start-up scripts according to Fedora Packaging Guidelines
 
+1.2.2-1
+- rpmlint fixes
+- License string as recognized by rpmlint and packaging guidelines
+
