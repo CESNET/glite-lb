@@ -207,3 +207,13 @@
 - Notification client supports new flags (anonymization, terminal states, job history)
 - Support of Debian packaging
 
+5.1.2-1
+- Packaging improvements (rpmlint and lintian checks)
+- Extended job query example to allow setting selected query flags through cmdline arguments
+- Correct module name in spec file
+- License string as recognized by rpmlint and packaging guidelines.
+- Fixes in notification client:
+  - notification refresh - missing ID
+  - client timeout - '999999999 + time(NULL)' overflows on 32bit since 2006
+- "Megajob" perftest updates
+
