@@ -26,6 +26,7 @@ limitations under the License.
 #include <netdb.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <stdint.h>
 
 #include "cjobid.h"
 #include "strmd5.h"
@@ -51,7 +52,7 @@ int glite_jobid_recreate(const char* bkserver, int port, const char *unique, gli
     struct timeval tv;
     int skip;
     char* portbeg;
-    char* rndaddr = NULL;
+    int rndaddr = 0;
 
     struct hostent* he;
 
@@ -63,13 +64,17 @@ int glite_jobid_recreate(const char* bkserver, int port, const char *unique, gli
 	srandom(tv.tv_usec);
 	gethostname(hostname, 100);
 	he = gethostbyname(hostname);
-	if (!he) asprintf(&rndaddr,"%d.%d.%d.%d",rand()%256,rand()%256,rand()%256,rand()%256);
+	if (he) rndaddr = *((uint32_t *)he->h_addr_list[0]);
+	else {
+#define RAND8 (rand() & 0xFF)
+#define RAND16 (RAND8 << 8 | RAND8)
+		rndaddr = RAND16 << 16 | RAND16;
+	}
 
     	skip = strlen(hostname);
     	skip += sprintf(hostname + skip, "-IP:0x%x-pid:%d-rnd:%d-time:%d:%d",
-		    rndaddr ? rndaddr : *((int*)he->h_addr_list[0]),
+		    rndaddr,
 		    getpid(), (int)random(), (int)tv.tv_sec, (int)tv.tv_usec);
-	free(rndaddr);
     }
 
     *jobId = NULL;
