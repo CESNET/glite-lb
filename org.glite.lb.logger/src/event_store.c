@@ -786,7 +786,7 @@ event_store_recover(struct event_store *es)
     }
 
     /* check message owner */
-    if(msg->owner) {
+    if(eq_b && msg->owner) {
 	    if(eq_b->owner) {
 		    if(strcmp(eq_b->owner, msg->owner)) {
 			    free(eq_b->owner);
