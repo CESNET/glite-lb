@@ -744,7 +744,7 @@ static int check_timeout(struct timeval timeout, struct timeval before, struct t
  */
 static int do_sendmsg(int to_sock, int sock, unsigned long clnt_dispatched, int srv)
 {
-	struct msghdr		msg = {0};
+	struct msghdr		msg;
 	struct cmsghdr	   *cmsg;
 	struct iovec		sendiov;
 	int					myfds,							/* file descriptors to pass. */
@@ -756,6 +756,7 @@ static int do_sendmsg(int to_sock, int sock, unsigned long clnt_dispatched, int 
 	memset(sendbuf, 0, sizeof(sendbuf));
 	snprintf(sendbuf, sizeof(sendbuf), "%u %lu", srv, clnt_dispatched);
 
+	memset(&msg, 0, sizeof(msg));
 	msg.msg_name = NULL;
 	msg.msg_namelen = 0;
 	msg.msg_iov = &sendiov;
@@ -786,7 +787,7 @@ static int do_sendmsg(int to_sock, int sock, unsigned long clnt_dispatched, int 
 /* receive socket sock through socket from_sock */
 static int do_recvmsg(int from_sock, int *sock, unsigned long *clnt_accepted,int *srv)
 {
-	struct msghdr		msg = {0};
+	struct msghdr		msg;
 	struct cmsghdr	   *cmsg;
 	struct iovec		recviov;
 	int					myfds;							/* file descriptors to pass. */
@@ -794,6 +795,7 @@ static int do_recvmsg(int from_sock, int *sock, unsigned long *clnt_accepted,int
 	char				recvbuf[MSG_BUFSIZ];
 
 
+	memset(&msg, 0, sizeof(msg));
 	msg.msg_name = NULL;
 	msg.msg_namelen = 0;
 	msg.msg_iov = &recviov;

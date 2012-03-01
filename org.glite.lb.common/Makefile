@@ -53,7 +53,7 @@ EXPAT_LIBS?=${expatlib} -lexpat
 CLASSADS_CFLAGS?=-I${classads_prefix}/include -I${classads_prefix}/include/classad
 CLASSADS_LIBS?=${classadslib} -lclassad
 
-CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
+CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
 	-I${top_srcdir}/test \
 	-I${stagedir}${prefix}/include \
@@ -62,7 +62,7 @@ CFLAGS:=${CFLAGS} ${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
 	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS} \
-	-DBUILDING_LB_COMMON 
+	-DBUILDING_LB_COMMON ${CFLAGS}
 
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} \
 	${COVERAGE_FLAGS}

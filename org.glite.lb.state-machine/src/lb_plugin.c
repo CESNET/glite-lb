@@ -91,6 +91,9 @@ static int readline(
 );
 char* get_namespace(const char* attr);
 
+// XXX: backend_private.h into org.glite.lbjp-common.jp-interface?
+int glite_jppsbe_append_tags(void *fpctx, char *jobid, glite_jp_attrval_t *attr);
+
 static int lb_StringToAttr(const char *name) {
         unsigned int    i;
 

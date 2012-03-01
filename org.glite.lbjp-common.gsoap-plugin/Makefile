@@ -93,12 +93,12 @@ GSOAP_LIBS_lang:=${GSOAPXX_LIBS}
 endif
 
 
-CFLAGS:= ${CFLAGS} ${DEBUG} \
+CFLAGS:= ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-DWITH_NONAMESPACES \
 	-I. -I${top_srcdir2}/interface \
 	-I${stagedir}${prefix}/include \
-	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION
+	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION ${CFLAGS}
 
 LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 

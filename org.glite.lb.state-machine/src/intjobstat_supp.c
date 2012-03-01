@@ -17,6 +17,7 @@ limitations under the License.
 */
 
 
+#define _GNU_SOURCE
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -470,6 +471,7 @@ static struct timeval dec_timeval(char *in, char **rest)
 	
 	t.tv_sec = dec_int(in, &tmp_in);
 	if (tmp_in != NULL) t.tv_usec = dec_int(tmp_in, &tmp_in);
+	else t.tv_usec = 0;
 	*rest = tmp_in;
 	return t;
 }

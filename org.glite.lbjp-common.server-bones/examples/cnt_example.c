@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 
 int writen(int fd, char *ptr, int nbytes)
 {
-	int		nleft, nwritten;
+	int		nleft, nwritten = 0;
 
 	nleft = nbytes;
 	dprintf(("start writing %d bytes\n", nbytes));

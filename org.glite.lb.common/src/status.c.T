@@ -32,7 +32,7 @@ static const struct timeval null_timeval = {0,0};
                 gen qq{$sep $term};
         $sep = ", ";
         }
-        $sep = ", 0};";
+        $sep = "};";
         gen qq{$sep};
 @@@}
 

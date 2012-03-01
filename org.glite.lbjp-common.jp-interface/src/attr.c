@@ -116,7 +116,7 @@ static char * fb_to_db_full(void *ctx,const glite_jp_attrval_t *attr)
 	if (attr->origin < 0 || attr->origin > GLITE_JP_ATTR_ORIG_FILE) {
 		free(db); return NULL; 
 	}
-	len = sprintf(db,"%c:%d:%c:",attr->binary ? 'B' : 'S',
+	len = sprintf(db,"%c:%ld:%c:",attr->binary ? 'B' : 'S',
 		attr->timestamp,orig_char[attr->origin]);
 
 	if (attr->origin_detail) len += escape_colon(attr->origin_detail,db+len);

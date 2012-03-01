@@ -48,7 +48,6 @@ main(int argc, char **argv)
 	char				   *name;
 	char				   *cert, *key;
 	int						opt;
-	edg_wll_GssCred			    cred;
 
 	cert = key = NULL;
 	name = strrchr(argv[0],'/');
