@@ -785,6 +785,18 @@ event_store_recover(struct event_store *es)
 	}
     }
 
+    /* check message owner */
+    if(msg->owner) {
+	    if(eq_b->owner) {
+		    if(strcmp(eq_b->owner, msg->owner)) {
+			    free(eq_b->owner);
+			    eq_b->owner = strdup(msg->owner);
+		    }
+	    } else {
+		    eq_b->owner = strdup(msg->owner);
+	    }
+    }
+
     /* check message expiration */
     if(last_exp == 0 || last_exp != msg->expires) {
     	last_exp = msg->expires;
@@ -849,6 +861,11 @@ event_store_recover(struct event_store *es)
 
 		  /* move all events with this notif_id from eq_b to eq_dest */
 		  event_queue_move_events(eq_b, eq_dest, cmp_jobid, es->job_id_s);
+		  if(eq_dest->owner) {
+			  /* XXX - is it possible that eq_dest->owner is different than eq_b->owner? Should not... but... */
+		  } else {
+			  eq_dest->owner = strdup(eq_b->owner);
+		  }
 		  eq_b = eq_dest;
 		  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO, 
 				   "    all messages for notif id %s are now destined to %s",

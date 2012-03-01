@@ -257,19 +257,6 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
   if(++eq->cur_len > eq->max_len)
 	  eq->max_len = eq->cur_len;
 
-#ifdef IL_NOTIFICATIONS
-  if(msg->owner) {
-	  if(eq->owner) {
-		  if(strcmp(eq->owner, msg->owner)) {
-			  free(eq->owner);
-			  eq->owner = strdup(msg->owner);
-		  }
-	  } else {
-		  eq->owner = strdup(msg->owner);
-	  }
-  }
-#endif /* IL_NOTIFICATIONS */
-
   event_queue_unlock(eq);
   /* end of critical section */
 
