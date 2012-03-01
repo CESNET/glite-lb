@@ -110,6 +110,9 @@ queue_list_add(struct queue_list **ql, const char *dest, struct event_queue *eq)
   }
   el->queue = eq;
   el->next = *ql;
+#if defined(IL_NOTIFICATIONS)
+  el->expires = 0;
+#endif
   *ql = el;
   return 0;
 }
