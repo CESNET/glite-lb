@@ -191,3 +191,7 @@
 - "Megajob" perftest updates
 - Sending events with specified owner on other side only for notifications
 
+2.3.3-1
+- Owner handling moved to one place and corrected
+- Uninitialized variable fixed
+
