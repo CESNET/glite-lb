@@ -46,3 +46,6 @@
 - Example client allows specifying output file through a cmdline argument, flushing that output file after every message
 - License string as recognized by rpmlint and packaging guidelines
 
+1.1.2-2
+- Module rebuilt
+
