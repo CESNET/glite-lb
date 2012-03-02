@@ -1533,7 +1533,9 @@ edg_wll_gss_initialize(void)
 {
    int ret = 0;
 
-   globus_thread_set_model("pthread");
+   if (!getenv("GLOBUS_THREAD_MODEL")) {
+     putenv("GLOBUS_THREAD_MODEL=pthread");
+   }
 
 #ifndef NO_GLOBUS_GSSAPI
    if (globus_module_activate(GLOBUS_GSI_GSSAPI_MODULE) != GLOBUS_SUCCESS) {
