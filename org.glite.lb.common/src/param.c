@@ -24,6 +24,7 @@ limitations under the License.
 
 #include "glite/jobid/cjobid.h"
 #include "context-int.h"
+#include "connpool.h"
 // XXX:
 #include "log_proto.h" // for default log host and port
 #include "timeouts.h" // for timeouts
@@ -260,7 +261,10 @@ int edg_wll_SetParamInt(edg_wll_Context ctx,edg_wll_ContextParam param,int val)
 				char *s = mygetenv(param);
 				
 				if (!val && s) val = atoi(s);
+
+				edg_wll_poolLock();
 				connectionsHandle.poolSize = val ? val : GLITE_LB_COMMON_CONNPOOL_SIZE;
+				edg_wll_poolUnlock();
 			}
 			break;
 		case EDG_WLL_PARAM_SOURCE:           

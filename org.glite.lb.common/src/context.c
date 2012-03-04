@@ -53,15 +53,6 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	out->allowAnonymous = 1;
 	out->notifSock	= -1;
 
-	memset(&null, 0, sizeof null);
-	for (i=0; i<EDG_WLL_PARAM__LAST; i++) {
-		if ((ret = edg_wll_SetParam(out,i,null)) != 0) {
-			edg_wll_FreeParams(out);
-			free(out);
-			return ret;
-		}
-	}
-
 	out->p_tmp_timeout.tv_sec = out->p_log_timeout.tv_sec;
 	out->p_tmp_timeout.tv_usec = out->p_log_timeout.tv_usec;
 
@@ -72,6 +63,14 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	edg_wll_initConnNotif(out->connNotif);
 	out->connProxy->conn.sock = -1;
 //	out->connToUse = -1;
+
+	memset(&null, 0, sizeof null);
+	for (i=0; i<EDG_WLL_PARAM__LAST; i++) {
+		if ((ret = edg_wll_SetParam(out,i,null)) != 0) {
+			edg_wll_FreeContext(out);
+			return ret;
+		}
+	}
 
 	*ctx = out;
 

@@ -716,7 +716,7 @@ int edg_wll_accept(edg_wll_Context ctx, int fd)
 	}
 
         #ifdef EDG_WLL_CONNPOOL_DEBUG	
-        	printf("Connection with fd %d accepted. %d in the pool\n",>srvName,ctx->srvPort,ctx->connNotif->connToUse);
+        	printf("Connection with fd %d accepted. %d in the pool\n",ctx->srvName,ctx->srvPort,ctx->connNotif->connToUse);
         #endif
 		
 
