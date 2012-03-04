@@ -444,6 +444,7 @@ int set_server_name_and_port(edg_wll_Context ctx, const edg_wll_QueryRec **job_c
 	}
 	else if ( !ctx->srvName || !ctx->srvPort )
 	{
+		if (found) free(srvName);
 		if (!ctx->p_query_server) 
 			return(edg_wll_SetError(ctx, (edg_wll_ErrorCode) EINVAL, "Hostname of server to query is not set"));
 		else ctx->srvName = strdup(ctx->p_query_server);

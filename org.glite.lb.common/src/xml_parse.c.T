@@ -1395,7 +1395,14 @@ edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context ctx, char *messageBody,
                 free(errorMessage);		
 	}  else if (XMLCtx.errtxt) edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, XMLCtx.errtxt);
 
-        if ((errorCode = edg_wll_Error(ctx,NULL,NULL))) {
+	if (!(errorCode = edg_wll_Error(ctx,NULL,NULL))) {
+		if (XMLCtx.errDesc || XMLCtx.errCode) {
+			ctx->errDesc = strdup(XMLCtx.errDesc);
+			ctx->errCode = XMLCtx.errCode;
+			errorCode = XMLCtx.errCode;
+		}
+	}
+        if (errorCode) {
 		for (i=0; i<XMLCtx.position; i++)  edg_wlc_JobIdFree( (XMLCtx.jobsOutGlobal)[i] );
 		free(XMLCtx.jobsOutGlobal);
 		XMLCtx.jobsOutGlobal = NULL;
@@ -1413,6 +1420,8 @@ edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context ctx, char *messageBody,
                         XMLCtx.errDesc = NULL;
                         XMLCtx.errCode = 0;
                 }
+
+		goto end;
         }
 
 	/* malloc-ate one more row for NULL list termination */
@@ -1461,13 +1470,8 @@ edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context ctx, char *messageBody,
 		XMLCtx.jobStatGlobal = NULL; 
 	}
 	
-	if (XMLCtx.errDesc || XMLCtx.errCode) {
-		ctx->errDesc = XMLCtx.errDesc;
-		ctx->errCode = XMLCtx.errCode;
-		errorCode = XMLCtx.errCode;
-	}
 
-
+end:
 	/* print all warning if corresponding env variable is set	*/
 	if (XMLCtx.warntxt && getenv("EDG_WLL_XML_WARNINGS")) {	
 

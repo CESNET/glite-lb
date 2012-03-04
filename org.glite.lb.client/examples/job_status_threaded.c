@@ -26,6 +26,7 @@ limitations under the License.
 #include <unistd.h>
 
 #include "glite/lb/context-int.h"
+#include "glite/lb/connpool.h"
 #ifdef BUILDING_LB_CLIENT
 #include "consumer.h"
 #else
@@ -69,13 +70,13 @@ void *thread_meat(char *jobid) {
 			dgerr(ctx,"edg_wll_JobStatus"); result = 1; 
 		} else {
 			printstat_oneline(status,0);
+			edg_wll_FreeStatus(&status);
 			break;
 		}
 		sleep(3); 
 	}
 
 	if (job) edg_wlc_JobIdFree(job);
-//	if (status.state) edg_wll_FreeStatus(&status);
 
 	cleanup:
 	
@@ -140,6 +141,7 @@ int main(int argc,char *argv[]) {
 	}
 
 	free(threads);
+	edg_wll_poolFree(); // for hunting memleaks
 
 	return 0;
 }
