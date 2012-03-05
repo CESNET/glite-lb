@@ -1899,6 +1899,7 @@ void *notify_thread(void *thread_data) {
 				lprintf(t, INF, "bootstrap %s:%d (%d), time %s..%d(now)", notif->server, notif->port, i, time2str(t, bootstrap), now);
 				edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER, notif->server);
 				edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_SERVER_PORT, notif->port);
+				jobstates = NULL;
 				if ((err = edg_wll_QueryJobs(ctx, condition, flags, NULL, &jobstates)) != 0 && err != ENOENT) {
 					lprintf_ctx(t, ERR, ctx, "can't bootstrap jobs on %s:%d, time %s..%d(now)", notif->server, notif->port, time2str(t, bootstrap), now);
 					//
@@ -1925,7 +1926,7 @@ void *notify_thread(void *thread_data) {
 					if (t->next_refresh > notif->refresh) t->next_refresh = notif->refresh;
 					goto cont;
 				} else {
-					for (j = 0; jobstates[j].state != EDG_WLL_JOB_UNDEF; j++) {
+					for (j = 0; jobstates && jobstates[j].state != EDG_WLL_JOB_UNDEF; j++) {
 						notif->last_update = jobstates[j].lastUpdateTime.tv_sec + jobstates[j].lastUpdateTime.tv_usec / 1000000.0;
 						db_store_change(t, notif, i, jobstates + j);
 						edg_wll_FreeStatus(jobstates + j);
