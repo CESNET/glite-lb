@@ -16,7 +16,6 @@ use warnings;
 use Getopt::Long;
 use Net::LDAP;
 use Pod::Usage;
-use Time::HiRes qw();
 
 #
 # constants
