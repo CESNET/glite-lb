@@ -27,17 +27,6 @@ limitations under the License.
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include <dlfcn.h>
-#include <pthread.h>
-
-#ifdef WIN32
-#include <windows.h>
-#ifndef STDCALL
-#define STDCALL __stdcall
-#endif
-#else
-#define STDCALL
-#endif
 
 #include <mysql.h>
 #include <mysqld_error.h>
@@ -65,10 +54,6 @@ limitations under the License.
 #define MY_ISOKSTMT(STMT, RETRY) myisokstmt((STMT), __FUNCTION__, __LINE__, (RETRY))
 
 #define USE_TRANS(CTX) ((CTX->generic.caps & GLITE_LBU_DB_CAP_TRANSACTIONS) != 0)
-#define LOAD(SYM, SYM2) if ((*(void **)(&mysql_module.SYM) = dlsym(mysql_module.lib, SYM2)) == NULL) { \
-	err = ERR(ctx, ENOENT, "can't load symbol '%s' from mysql library (%s)", SYM2, dlerror()); \
-	break; \
-}
 
 
 
@@ -118,43 +103,6 @@ int glite_type_to_mysql[] = {
 };
 
 
-typedef struct {
-	void *lib;
-	pthread_mutex_t lock;
-
-	void * STDCALL(*mysql_init)(void *);
-	unsigned long STDCALL(*mysql_get_client_version)(void);
-	int STDCALL(*mysql_options)(MYSQL *mysql, enum mysql_option option, const char *arg);
-	unsigned int STDCALL(*mysql_errno)(MYSQL *mysql);
-	const char *STDCALL(*mysql_error)(MYSQL *mysql);
-	unsigned int STDCALL(*mysql_stmt_errno)(MYSQL_STMT *stmt);
-	const char *STDCALL(*mysql_stmt_error)(MYSQL_STMT *stmt);
-	MYSQL * STDCALL(*mysql_real_connect)(MYSQL *mysql, const char *host, const char *user, const char *passwd, const char *db, unsigned int port, const char *unix_socket, unsigned long client_flag);
-	void STDCALL(*mysql_close)(MYSQL *mysql);
-	int STDCALL(*mysql_query)(MYSQL *mysql, const char *stmt_str);
-	MYSQL_RES *STDCALL(*mysql_store_result)(MYSQL *mysql);
-	void STDCALL(*mysql_free_result)(MYSQL_RES *result);
-	my_ulonglong STDCALL(*mysql_affected_rows)(MYSQL *mysql);
-	my_bool STDCALL(*mysql_stmt_close)(MYSQL_STMT *);
-	unsigned int STDCALL(*mysql_num_fields)(MYSQL_RES *result);
-	unsigned long *STDCALL(*mysql_fetch_lengths)(MYSQL_RES *result);
-	my_bool STDCALL(*mysql_stmt_bind_result)(MYSQL_STMT *stmt, MYSQL_BIND *bind);
-	int STDCALL(*mysql_stmt_prepare)(MYSQL_STMT *stmt, const char *stmt_str, unsigned long length);
-	int STDCALL(*mysql_stmt_store_result)(MYSQL_STMT *stmt);
-	MYSQL_ROW STDCALL(*mysql_fetch_row)(MYSQL_RES *result);
-	MYSQL_FIELD *STDCALL(*mysql_fetch_field)(MYSQL_RES *result);
-	const char *STDCALL(*mysql_get_server_info)(MYSQL *mysql);
-	MYSQL_STMT *STDCALL(*mysql_stmt_init)(MYSQL *mysql);
-	my_bool STDCALL(*mysql_stmt_bind_param)(MYSQL_STMT *stmt, MYSQL_BIND *bind);
-	int STDCALL(*mysql_stmt_execute)(MYSQL_STMT *stmt);
-	int STDCALL(*mysql_stmt_fetch)(MYSQL_STMT *stmt);
-	my_ulonglong STDCALL(*mysql_stmt_insert_id)(MYSQL_STMT *stmt);
-	my_ulonglong STDCALL(*mysql_stmt_affected_rows)(MYSQL_STMT *stmt);
-	MYSQL_RES *STDCALL(*mysql_stmt_result_metadata)(MYSQL_STMT *stmt);
-	int STDCALL(*mysql_stmt_fetch_column)(MYSQL_STMT *stmt, MYSQL_BIND *bind, unsigned int column, unsigned long offset);
-} mysql_module_t;
-
-
 /* backend module declaration */
 int glite_lbu_InitDBContextMysql(glite_lbu_DBContext *ctx_gen);
 void glite_lbu_FreeDBContextMysql(glite_lbu_DBContext ctx_gen);
@@ -202,11 +150,6 @@ glite_lbu_DBBackend_t mysql_backend = {
 	lastid: glite_lbu_LastidMysql,
 };
 
-static mysql_module_t mysql_module = {
-	lib: NULL,
-	lock: PTHREAD_MUTEX_INITIALIZER,
-};
-
 
 static int myerr(glite_lbu_DBContextMysql ctx, const char *source, int line);
 static int myerrstmt(glite_lbu_StatementMysql stmt, const char *source, int line);
@@ -217,7 +160,6 @@ static int transaction_test(glite_lbu_DBContext ctx, int *caps);
 static int FetchRowSimple(glite_lbu_DBContextMysql ctx, MYSQL_RES *result, unsigned long *lengths, char **results);
 static int FetchRowPrepared(glite_lbu_DBContextMysql ctx, glite_lbu_StatementMysql stmt, unsigned int n, unsigned long *lengths, char **results);
 static void set_time(MYSQL_TIME *mtime, const double time);
-static void glite_lbu_DBCleanup(void);
 static void glite_lbu_FreeStmt_int(glite_lbu_StatementMysql stmt);
 
 
@@ -227,70 +169,10 @@ static void glite_lbu_FreeStmt_int(glite_lbu_StatementMysql stmt);
 
 int glite_lbu_InitDBContextMysql(glite_lbu_DBContext *ctx_gen) {
 	glite_lbu_DBContextMysql ctx;
-	int err = 0;
-	int ver_u;
 
 	ctx = calloc(1, sizeof *ctx);
 	if (!ctx) return ENOMEM;
 	*ctx_gen = (glite_lbu_DBContext)ctx;
-
-	/* dynamic load the client library */
-	pthread_mutex_lock(&mysql_module.lock);
-	if (!mysql_module.lib) {
-		mysql_module.lib = dlopen(MYSQL_SONAME, RTLD_LAZY | RTLD_LOCAL);
-		if (!mysql_module.lib) return ERR(ctx, ENOENT, "dlopen(): " MYSQL_SONAME ": %s", dlerror());
-		do {
-			LOAD(mysql_init, "mysql_init");
-			LOAD(mysql_get_client_version, "mysql_get_client_version");
-			LOAD(mysql_options, "mysql_options");
-			LOAD(mysql_errno, "mysql_errno");
-			LOAD(mysql_error, "mysql_error");
-			LOAD(mysql_stmt_errno, "mysql_stmt_errno");
-			LOAD(mysql_stmt_error, "mysql_stmt_error");
-			LOAD(mysql_real_connect, "mysql_real_connect");
-			LOAD(mysql_close, "mysql_close");
-			LOAD(mysql_query, "mysql_query");
-			LOAD(mysql_store_result, "mysql_store_result");
-			LOAD(mysql_free_result, "mysql_free_result");
-			LOAD(mysql_affected_rows, "mysql_affected_rows");
-			LOAD(mysql_stmt_close, "mysql_stmt_close");
-			LOAD(mysql_num_fields, "mysql_num_fields");
-			LOAD(mysql_fetch_lengths, "mysql_fetch_lengths");
-			LOAD(mysql_stmt_bind_result, "mysql_stmt_bind_result");
-			LOAD(mysql_stmt_prepare, "mysql_stmt_prepare");
-			LOAD(mysql_stmt_store_result, "mysql_stmt_store_result");
-			LOAD(mysql_fetch_row, "mysql_fetch_row");
-			LOAD(mysql_fetch_field, "mysql_fetch_field");
-			LOAD(mysql_get_server_info, "mysql_get_server_info");
-			LOAD(mysql_stmt_init, "mysql_stmt_init");
-			LOAD(mysql_stmt_bind_param, "mysql_stmt_bind_param");
-			LOAD(mysql_stmt_execute, "mysql_stmt_execute");
-			LOAD(mysql_stmt_fetch, "mysql_stmt_fetch");
-			LOAD(mysql_stmt_insert_id, "mysql_stmt_insert_id");
-			LOAD(mysql_stmt_affected_rows, "mysql_stmt_affected_rows");
-			LOAD(mysql_stmt_result_metadata, "mysql_stmt_result_metadata");
-			LOAD(mysql_stmt_fetch_column, "mysql_stmt_fetch_column");
-
-			// check the runtime version
-			ver_u = mysql_module.mysql_get_client_version();
-			if (ver_u != MYSQL_VERSION_ID) {
-				fprintf(stderr,"Warning: MySQL library version mismatch (compiled '%d', runtime '%d')\n", MYSQL_VERSION_ID, ver_u);
-#ifdef SYSLOG_H
-				syslog(LOG_WARNING,"MySQL library version mismatch (compiled '%d', runtime '%d')", MYSQL_VERSION_ID, ver_u);
-#endif
-			}
-
-			pthread_mutex_unlock(&mysql_module.lock);
-			atexit(glite_lbu_DBCleanup);
-		} while(0);
-
-		if (err) {
-			dlclose(mysql_module.lib);
-			mysql_module.lib = NULL;
-			pthread_mutex_unlock(&mysql_module.lock);
-			return err;
-		}
-	} else pthread_mutex_unlock(&mysql_module.lock);
 
 	return 0;
 }
@@ -335,7 +217,7 @@ int glite_lbu_DBQueryCapsMysql(glite_lbu_DBContext ctx_gen) {
 
 	caps = 0;
 
-	ver_s = mysql_module.mysql_get_server_info(m);
+	ver_s = mysql_get_server_info(m);
 	if (!ver_s || 3 != sscanf(ver_s,"%d.%d.%d",&major,&minor,&sub))
 		return ERR(ctx, EINVAL, "problem retreiving MySQL version");
 	version = 10000*major + 100*minor + sub;
@@ -410,8 +292,8 @@ int glite_lbu_FetchRowMysql(glite_lbu_Statement stmt_gen, unsigned int n, unsign
 
 static void glite_lbu_FreeStmt_int(glite_lbu_StatementMysql stmt) {
 	if (stmt) {
-		if (stmt->result) mysql_module.mysql_free_result(stmt->result);
-		if (stmt->stmt) mysql_module.mysql_stmt_close(stmt->stmt);
+		if (stmt->result) mysql_free_result(stmt->result);
+		if (stmt->stmt) mysql_stmt_close(stmt->stmt);
 		free(stmt->sql);
 	}
 }
@@ -553,26 +435,26 @@ int glite_lbu_ExecSQLMysql(glite_lbu_DBContext ctx_gen, const char *cmd, glite_l
 
 	while (retry_nr == 0 || do_reconnect) {
 		do_reconnect = 0;
-		if (mysql_module.mysql_query(ctx->mysql, cmd)) {
+		if (mysql_query(ctx->mysql, cmd)) {
 			/* error occured */
-			switch (merr = mysql_module.mysql_errno(ctx->mysql)) {
+			switch (merr = mysql_errno(ctx->mysql)) {
 				case 0:
 					break;
 				case ER_DUP_ENTRY: 
-					ERR(ctx, EEXIST, mysql_module.mysql_error(ctx->mysql));
+					ERR(ctx, EEXIST, mysql_error(ctx->mysql));
 					return -1;
 					break;
 				case CR_SERVER_LOST:
 				case CR_SERVER_GONE_ERROR:
 					if (ctx->in_transaction) {
-						ERR(ctx, ENOTCONN, mysql_module.mysql_error(ctx->mysql));
+						ERR(ctx, ENOTCONN, mysql_error(ctx->mysql));
 						return -1;
 					}
 					else if (retry_nr <= 0) 
 						do_reconnect = 1;
 					break;
 				case ER_LOCK_DEADLOCK:
-					ERR(ctx, EDEADLK, mysql_module.mysql_error(ctx->mysql));
+					ERR(ctx, EDEADLK, mysql_error(ctx->mysql));
 					return -1;
 					break;	
 				default:
@@ -591,9 +473,9 @@ int glite_lbu_ExecSQLMysql(glite_lbu_DBContext ctx_gen, const char *cmd, glite_l
 			return -1;
 		}
 		stmt->generic.ctx = ctx_gen;
-		stmt->result = mysql_module.mysql_store_result(ctx->mysql);
+		stmt->result = mysql_store_result(ctx->mysql);
 		if (!stmt->result) {
-			if (mysql_module.mysql_errno(ctx->mysql)) {
+			if (mysql_errno(ctx->mysql)) {
 				MY_ERR(ctx);
 				free(stmt);
 				return -1;
@@ -601,8 +483,8 @@ int glite_lbu_ExecSQLMysql(glite_lbu_DBContext ctx_gen, const char *cmd, glite_l
 		}
 		*stmt_gen = (glite_lbu_Statement)stmt;
 	} else {
-		MYSQL_RES	*r = mysql_module.mysql_store_result(ctx->mysql);
-		mysql_module.mysql_free_result(r);
+		MYSQL_RES	*r = mysql_store_result(ctx->mysql);
+		mysql_free_result(r);
 	}
 #ifdef LBS_DB_PROFILE
 	pid = getpid();
@@ -617,7 +499,7 @@ int glite_lbu_ExecSQLMysql(glite_lbu_DBContext ctx_gen, const char *cmd, glite_l
 	fprintf(stderr,"[%d] %s\n[%d] %3ld.%06ld (sum: %3ld.%06ld)\n",pid,cmd,pid,end.tv_sec,end.tv_usec,sum.tv_sec,sum.tv_usec);
 #endif
 
-	return mysql_module.mysql_affected_rows(ctx->mysql);
+	return mysql_affected_rows(ctx->mysql);
 }
 
 
@@ -629,7 +511,7 @@ int glite_lbu_QueryColumnsMysql(glite_lbu_Statement stmt_gen, char **cols)
 
 	CLR_ERR(stmt->generic.ctx);
 	if (!stmt->result) return ERR(stmt->generic.ctx, ENOTSUP, "QueryColumns implemented only for simple API");
-	while ((f = mysql_module.mysql_fetch_field(stmt->result))) cols[i++] = f->name;
+	while ((f = mysql_fetch_field(stmt->result))) cols[i++] = f->name;
 	return i == 0;
 }
 
@@ -648,21 +530,21 @@ int glite_lbu_PrepareStmtMysql(glite_lbu_DBContext ctx_gen, const char *sql, gli
 	*stmt_gen = NULL;
 
 	// create the SQL command
-	if ((stmt->stmt = mysql_module.mysql_stmt_init(ctx->mysql)) == NULL)
+	if ((stmt->stmt = mysql_stmt_init(ctx->mysql)) == NULL)
 		return STATUS(ctx);
 
 	// prepare the SQL command
 	retry = 1;
 	do {
-		mysql_module.mysql_stmt_prepare(stmt->stmt, sql, strlen(sql));
+		mysql_stmt_prepare(stmt->stmt, sql, strlen(sql));
 		ret = MY_ISOKSTMT(stmt, &retry);
 	} while (ret == 0);
 	if (ret == -1) goto failed;
 
 	// number of fields (0 for no results)
-	if ((meta = mysql_module.mysql_stmt_result_metadata(stmt->stmt)) != NULL) {
-		stmt->nrfields = mysql_module.mysql_num_fields(meta);
-		mysql_module.mysql_free_result(meta);
+	if ((meta = mysql_stmt_result_metadata(stmt->stmt)) != NULL) {
+		stmt->nrfields = mysql_num_fields(meta);
+		mysql_free_result(meta);
 	} else
 		stmt->nrfields = 0;
 
@@ -763,7 +645,7 @@ int glite_lbu_ExecPreparedStmtMysql_v(glite_lbu_Statement stmt_gen, int n, va_li
 	do {
 		// bind parameters
 		if (n) {
-			if (mysql_module.mysql_stmt_bind_param(stmt->stmt, binds) != 0) {
+			if (mysql_stmt_bind_param(stmt->stmt, binds) != 0) {
 				MY_ERRSTMT(stmt);
 				ret = -1;
 				goto statement_failed;
@@ -773,12 +655,12 @@ int glite_lbu_ExecPreparedStmtMysql_v(glite_lbu_Statement stmt_gen, int n, va_li
 		// run
 		retry = 1;
 		do {
-			mysql_module.mysql_stmt_execute(stmt->stmt);
+			mysql_stmt_execute(stmt->stmt);
 			ret = MY_ISOKSTMT(stmt, &retry);
 		} while (ret == 0);
 	statement_failed:
 		if (ret == -1) {
-			if (mysql_module.mysql_stmt_errno(stmt->stmt) == ER_UNKNOWN_STMT_HANDLER) {
+			if (mysql_stmt_errno(stmt->stmt) == ER_UNKNOWN_STMT_HANDLER) {
 				// expired the prepared command ==> restore it
 				if (glite_lbu_PrepareStmtMysql(stmt->generic.ctx, stmt->sql, &newstmt) == -1) goto failed;
 				glite_lbu_FreeStmt_int(stmt);
@@ -792,7 +674,7 @@ int glite_lbu_ExecPreparedStmtMysql_v(glite_lbu_Statement stmt_gen, int n, va_li
 	// result
 	retry = 1;
 	do {
-		mysql_module.mysql_stmt_store_result(stmt->stmt);
+		mysql_stmt_store_result(stmt->stmt);
 		ret = MY_ISOKSTMT(stmt, &retry);
 	} while (ret == 0);
 	if (ret == -1) goto failed;
@@ -805,7 +687,7 @@ int glite_lbu_ExecPreparedStmtMysql_v(glite_lbu_Statement stmt_gen, int n, va_li
 		free(lens);
 	}
 	CLR_ERR(stmt->generic.ctx);
-	return mysql_module.mysql_stmt_affected_rows(stmt->stmt);
+	return mysql_stmt_affected_rows(stmt->stmt);
 
 failed:
 	for (i = 0; i < n; i++) free(data[i]);
@@ -821,7 +703,7 @@ long int glite_lbu_LastidMysql(glite_lbu_Statement stmt_gen) {
 	my_ulonglong i;
 
 	CLR_ERR(stmt_gen->ctx);
-	i = mysql_module.mysql_stmt_insert_id(stmt->stmt);
+	i = mysql_stmt_insert_id(stmt->stmt);
 	assert(i < ((unsigned long int)-1) >> 1);
 	return (long int)i;
 }
@@ -831,7 +713,7 @@ long int glite_lbu_LastidMysql(glite_lbu_Statement stmt_gen) {
  * helping function: find oud mysql error and sets on the context
  */
 static int myerr(glite_lbu_DBContextMysql ctx, const char *source, int line) {
-	return glite_lbu_DBSetError(&ctx->generic, EIO, source, line, mysql_module.mysql_error(ctx->mysql));
+	return glite_lbu_DBSetError(&ctx->generic, EIO, source, line, mysql_error(ctx->mysql));
 }
 
 
@@ -839,7 +721,7 @@ static int myerr(glite_lbu_DBContextMysql ctx, const char *source, int line) {
  * helping function: find oud mysql stmt error and sets on the context
  */
 static int myerrstmt(glite_lbu_StatementMysql stmt, const char *source, int line) {	
-	return glite_lbu_DBSetError(stmt->generic.ctx, EIO, source, line, mysql_module.mysql_stmt_error(stmt->stmt));
+	return glite_lbu_DBSetError(stmt->generic.ctx, EIO, source, line, mysql_stmt_error(stmt->stmt));
 }
 
 
@@ -851,12 +733,12 @@ static int myerrstmt(glite_lbu_StatementMysql stmt, const char *source, int line
  * \return  1 OK
  */
 static int myisokstmt(glite_lbu_StatementMysql stmt, const char *source, int line, int *retry) {
-	switch (mysql_module.mysql_stmt_errno(stmt->stmt)) {
+	switch (mysql_stmt_errno(stmt->stmt)) {
 		case 0:
 			return 1;
 			break;
 		case ER_DUP_ENTRY:
-			glite_lbu_DBSetError(stmt->generic.ctx, EEXIST, source, line, mysql_module.mysql_stmt_error(stmt->stmt));
+			glite_lbu_DBSetError(stmt->generic.ctx, EEXIST, source, line, mysql_stmt_error(stmt->stmt));
 			return -1;
 			break;
 		case CR_SERVER_LOST:
@@ -894,12 +776,12 @@ static int db_connect(glite_lbu_DBContextMysql ctx, const char *cs, MYSQL **mysq
 
 	if (!cs) return ERR(ctx, EINVAL, "connect string not specified");
 	
-	if (!(*mysql = mysql_module.mysql_init(NULL))) return ERR(ctx, ENOMEM, NULL);
+	if (!(*mysql = mysql_init(NULL))) return ERR(ctx, ENOMEM, NULL);
 
-	mysql_module.mysql_options(*mysql, MYSQL_READ_DEFAULT_FILE, "my");
+	mysql_options(*mysql, MYSQL_READ_DEFAULT_FILE, "my");
 #if MYSQL_VERSION_ID >= 50013
 	/* XXX: may result in weird behaviour in the middle of transaction */
-	mysql_module.mysql_options(*mysql, MYSQL_OPT_RECONNECT, &reconnect);
+	mysql_options(*mysql, MYSQL_OPT_RECONNECT, &reconnect);
 #endif
 
 	host = user = pw = db = NULL;
@@ -925,7 +807,7 @@ static int db_connect(glite_lbu_DBContextMysql ctx, const char *cs, MYSQL **mysq
 	/* ljocha: CLIENT_FOUND_ROWS added to make authorization check
 	 * working in update_notif(). 
 	 * Hope it does not break anything else */ 
-	if (!mysql_module.mysql_real_connect(*mysql,host,user,pw,db,0,NULL,CLIENT_FOUND_ROWS)) {
+	if (!mysql_real_connect(*mysql,host,user,pw,db,0,NULL,CLIENT_FOUND_ROWS)) {
 		ret = MY_ERR(ctx);
 		db_close(*mysql);
 		*mysql = NULL;
@@ -942,7 +824,7 @@ static int db_connect(glite_lbu_DBContextMysql ctx, const char *cs, MYSQL **mysq
  * mysql close
  */
 static void db_close(MYSQL *mysql) {
-	if (mysql) mysql_module.mysql_close(mysql);
+	if (mysql) mysql_close(mysql);
 }
 
 
@@ -995,15 +877,15 @@ static int FetchRowSimple(glite_lbu_DBContextMysql ctx, MYSQL_RES *result, unsig
 
 	CLR_ERR(ctx);
 
-	if (!(row = mysql_module.mysql_fetch_row(result))) {
-		if (mysql_module.mysql_errno((MYSQL *) ctx->mysql)) {
+	if (!(row = mysql_fetch_row(result))) {
+		if (mysql_errno((MYSQL *) ctx->mysql)) {
 			MY_ERR(ctx);
 			return -1;
 		} else return 0;
 	}
 
-	nr = mysql_module.mysql_num_fields(result);
-	len = mysql_module.mysql_fetch_lengths(result);
+	nr = mysql_num_fields(result);
+	len = mysql_fetch_lengths(result);
 	for (i=0; i<nr; i++) {
 		if (lengths) lengths[i] = len[i];
 		if (len[i]) {
@@ -1057,12 +939,12 @@ static int FetchRowPrepared(glite_lbu_DBContextMysql ctx, glite_lbu_StatementMys
 			goto failed;
 		}
 	}
-	if (mysql_module.mysql_stmt_bind_result(stmt->stmt, binds) != 0) goto failedstmt;
+	if (mysql_stmt_bind_result(stmt->stmt, binds) != 0) goto failedstmt;
 
 	// fetch data, all can be truncated
 	retry = 1;
 	do {
-		switch(mysql_module.mysql_stmt_fetch(stmt->stmt)) {
+		switch(mysql_stmt_fetch(stmt->stmt)) {
 #ifdef MYSQL_DATA_TRUNCATED
 			case MYSQL_DATA_TRUNCATED:
 #endif
@@ -1092,7 +974,7 @@ static int FetchRowPrepared(glite_lbu_DBContextMysql ctx, glite_lbu_StatementMys
 
 			retry = 1;
 			do {
-				switch (mysql_module.mysql_stmt_fetch_column(stmt->stmt, binds + i, i, fetched)) {
+				switch (mysql_stmt_fetch_column(stmt->stmt, binds + i, i, fetched)) {
 					case 0: ret = 1; break;
 					case 1: ret = MY_ISOKSTMT(stmt, &retry); break;
 					case MYSQL_NO_DATA: ret = 0; goto quit; /* it's OK */
@@ -1138,15 +1020,3 @@ static void set_time(MYSQL_TIME *mtime, const double time) {
 	mtime->second = tm.tm_sec;
 	mtime->second_part = (time - itime) * 1000;
 }
-
-
-static void glite_lbu_DBCleanup(void) {
-	pthread_mutex_lock(&mysql_module.lock);
-	if (mysql_module.lib) {
-		dlclose(mysql_module.lib);
-		mysql_module.lib = NULL;
-	}
-	pthread_mutex_unlock(&mysql_module.lock);
-}
-
-

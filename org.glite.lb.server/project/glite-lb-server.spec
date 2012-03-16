@@ -23,7 +23,6 @@ BuildRequires: glite-lbjp-common-trio-devel
 BuildRequires: gridsite-devel
 BuildRequires: gsoap-devel
 BuildRequires: libxml2
-BuildRequires: mysql-devel
 BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: gridsite-shared

@@ -50,12 +50,12 @@ struct glite_lbu_bufInsert_s {
 
 
 /* possible backends */
-#ifdef MYSQL_SONAME
+#ifdef MYSQL_ENABLED
 extern glite_lbu_DBBackend_t mysql_backend;
 #else
 #define mysql_backend no_backend
 #endif
-#ifdef PSQL_SONAME
+#ifdef PSQL_ENABLED
 extern glite_lbu_DBBackend_t psql_backend;
 #else
 #define psql_backend no_backend

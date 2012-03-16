@@ -9,7 +9,6 @@ Group: System Environment/Libraries
 BuildRequires: cppunit-devel
 BuildRequires: chrpath
 BuildRequires: log4c-devel
-BuildRequires: mysql
 BuildRequires: mysql-devel
 BuildRequires: glite-lbjp-common-trio-devel
 BuildRequires: glite-lbjp-common-log-devel

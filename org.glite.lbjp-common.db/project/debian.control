@@ -2,7 +2,7 @@ Source: glite-lbjp-common-db
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, libcppunit-dev, liblog4c-dev, libglite-lbjp-common-trio-dev, libglite-lbjp-common-log-dev, libmysqlclient-dev, libmysqlclient16, libpq-dev, libtool
+Build-Depends: debhelper (>= 7.0.50~), chrpath, libcppunit-dev, liblog4c-dev, libglite-lbjp-common-trio-dev, libglite-lbjp-common-log-dev, libmysqlclient-dev, libpq-dev, libtool
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@

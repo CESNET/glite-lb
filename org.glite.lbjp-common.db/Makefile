@@ -26,19 +26,6 @@ VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples:${top_src
 
 DEBUG:=-g -O0 -W -Wall
 
-os=${shell uname}
-DL_LIBS:=
-ifeq (${os},Linux)
-  DL_LIBS:=-ldl
-endif
-
-MYSQL_SONAME:=$(shell ${top_srcdir}/project/get_soname.sh mysqlclient ${mysql-devel_prefix}/${libdir} ${mysql_prefix}/${libdir} ${mysql-devel_prefix}/lib ${mysql_prefix}/lib)
-PSQL_SONAME:=$(shell ${top_srcdir}/project/get_soname.sh pq ${postgresql_prefix}/${libdir} ${postgresql_prefix}/lib)
-
-MYSQL_CPPFLAGS:=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/mysql
-PSQL_CPPFLAGS:=-I${postgresql_prefix}/include -I${postgresql_prefix}/include/postgresql
-
-
 CFLAGS:= ${CFLAGS} \
 	${DEBUG} \
 	-DVERSION=\"${version}\" \
@@ -53,11 +40,15 @@ ifdef LBS_DB_PROFILE
 endif
 ifneq (${mysql-devel_prefix},no)
 	OBJS:=${OBJS} db-mysql.o
-	CFLAGS:=${CFLAGS} -DMYSQL_SONAME=\"${MYSQL_SONAME}\"
+	CFLAGS:=${CFLAGS} -DMYSQL_ENABLED=1
+	MYSQL_CFLAGS?=-I${mysql-devel_prefix}/include -I${mysql-devel_prefix}/include/mysql
+	MYSQL_LIBS?=-L${mysql-devel_prefix}/${libdir} -L${mysql-devel_prefix}/${libdir}/mysql -lmysqlclient
 endif
 ifneq (${postgresql_prefix},no)
 	OBJS:=${OBJS} db-pg.o
-	CFLAGS:=${CFLAGS} -DPSQL_SONAME=\"${PSQL_SONAME}\"
+	CFLAGS:=${CFLAGS} -DPSQL_ENABLED=1
+	PSQL_CFLAGS?=-I${postgresql_prefix}/include -I${postgresql_prefix}/include/postgresql
+	PSQL_LIBS?=-L${postgresql_prefix}/${libdir} -lpq
 endif
 
 TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit
@@ -71,7 +62,7 @@ LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
-EXT_LIBS:=-lglite_lbu_trio -lglite_lbu_log -lpthread ${DL_LIBS}
+EXT_LIBS:=-lglite_lbu_trio -lglite_lbu_log ${MYSQL_LIBS} ${PSQL_LIBS}
 TESTOBJS:=${OBJS} dbtest.o
 OBJS:=${OBJS} db.o
 HDRS:=db.h
@@ -95,40 +86,26 @@ version_info:=-version-info ${shell \
 
 default all: compile doc
 
-check_soname:
-	if [ "${mysql-devel_prefix}" != no ]; then \
-		if [ "${MYSQL_SONAME}" = notfound ]; then \
-			echo "MySQL shared library not found!"; \
-			false; \
-		fi \
-	fi
-	if [ "${postgresql_prefix}" != no ]; then \
-		if [ "${PSQL_SONAME}" = notfound ]; then \
-			echo "PostgreSQL shared library not found!"; \
-			false; \
-		fi \
-	fi
-
-libglite_lbu_db.la: check_soname ${LOBJS}
+libglite_lbu_db.la: ${LOBJS}
 	${LINK} ${version_info} -o $@ $+ ${EXT_LIBS}
 
-libglite_lbu_dbtest.la: check_soname ${LTESTOBJS}
+libglite_lbu_dbtest.la: ${LTESTOBJS}
 	${LINK} ${version_info} -o $@ $+ ${EXT_LIBS}
 
 dbtest.lo dbtest.o: db.c db.h
 	${COMPILE} -DGLITE_LBU_DEFAULT_RESULT_BUFFER_LENGTH=10 -c $< -o $@
 
 db_test_mysql: db_test_mysql.lo libglite_lbu_dbtest.la
-	${LINK} -o $@ $+ ${EXT_LIBS}
+	${LINK} -o $@ $+
 
 db_test_psql: db_test_psql.lo libglite_lbu_dbtest.la
-	${LINK} -o $@ $+ ${EXT_LIBS}
+	${LINK} -o $@ $+
 
 db_expire: db_expire.lo libglite_lbu_dbtest.la
-	${LINK} -o $@ $+ ${EXT_LIBS}
+	${LINK} -o $@ $+
 
 timezone: timezone.lo libglite_lbu_db.la
-	${LINKXX} -o $@ $+ ${TEST_LIBS} ${EXT_LIBS}
+	${LINKXX} -o $@ $+ ${TEST_LIBS}
 
 compile: libglite_lbu_db.la
 
@@ -182,10 +159,10 @@ distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
 db-mysql.o db-mysql.lo: db-mysql.c
-	${COMPILE} ${MYSQL_CPPFLAGS} -c $<
+	${COMPILE} ${MYSQL_CFLAGS} -c $<
 
 db-pg.o db-pg.lo: db-pg.c
-	${COMPILE} ${PSQL_CPPFLAGS} -c $<
+	${COMPILE} ${PSQL_CFLAGS} -c $<
 
 db_test_mysql.o db_test_mysql.lo: db_test.c
 	${COMPILE} -DMYSQL_BACKEND=1 -c $< -o $@
@@ -205,4 +182,4 @@ db_test_mysql.lo: libglite_lbu_dbtest.la db.h db-int.h db_test.c
 db-mysql.lo: db-mysql.c db-int.h db.h
 db-pg.lo: db-pg.c db-int.h db.h
 
-.PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage check_soname distclean
+.PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage distclean

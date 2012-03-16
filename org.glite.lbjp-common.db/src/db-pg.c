@@ -25,9 +25,7 @@ limitations under the License.
 
 #include <sys/types.h>
 #include <assert.h>
-#include <dlfcn.h>
 #include <errno.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,11 +55,6 @@ limitations under the License.
 
 #define set_error(CTX, CODE, DESC...) glite_lbu_DBSetError((glite_lbu_DBContext)(CTX), (CODE), __FUNCTION__, __LINE__, ##DESC)
 
-#define LOAD(SYM, SYM2) if ((*(void **)(&psql_module.SYM) = dlsym(psql_module.lib, SYM2)) == NULL) { \
-	err = set_error(ctx, ENOENT, "can't load symbol '%s' from psql library (%s)", SYM2, dlerror()); \
-	break; \
-}
-
 
 struct glite_lbu_DBContextPsql_s {
 	struct glite_lbu_DBContext_s generic;
@@ -78,33 +71,6 @@ struct glite_lbu_StatementPsql_s {
 };
 typedef struct glite_lbu_StatementPsql_s *glite_lbu_StatementPsql;
 
-typedef struct {
-	void *lib;
-	pthread_mutex_t lock;
-
-	/* functions from 8.3.8 client library version (libpq-fe.h) */
-	PGconn *STDCALL(*PQconnectdb)(const char *conninfo);
-	ConnStatusType STDCALL(*PQstatus)(const PGconn *conn);
-	void STDCALL(*PQfinish)(PGconn *conn);
-	char *STDCALL(*PQerrorMessage)(const PGconn *conn);
-	int STDCALL(*PQnfields)(const PGresult *res);
-	char *STDCALL(*PQgetvalue)(const PGresult *res, int tup_num, int field_num);
-	int STDCALL(*PQgetlength)(const PGresult *res, int tup_num, int field_num);
-	void STDCALL(*PQclear)(PGresult *res);
-	PGresult *STDCALL(*PQexec)(PGconn *conn, const char *query);
-	ExecStatusType STDCALL(*PQresultStatus)(const PGresult *res);
-	char *STDCALL(*PQresultErrorMessage)(const PGresult *res);
-	char *STDCALL(*PQcmdTuples)(PGresult *res);
-	int STDCALL(*PQntuples)(const PGresult *res);
-	char *STDCALL(*PQfname)(const PGresult *res, int field_num);
-	size_t STDCALL(*PQescapeStringConn)(PGconn *conn,
-		char *to, const char *from, size_t length,
-		int *error);
-	void STDCALL(*PQfreemem)(void *ptr);
-} psql_module_t;
-
-
-static void glite_lbu_DBCleanup(void);
 
 /* backend module declaration */
 int glite_lbu_InitDBContextPsql(glite_lbu_DBContext *ctx_gen);
@@ -153,11 +119,6 @@ glite_lbu_DBBackend_t psql_backend = {
 	lastid: NULL/*glite_lbu_LastidPsql*/,
 };
 
-static psql_module_t psql_module = {
-	lib: NULL,
-	lock: PTHREAD_MUTEX_INITIALIZER,
-};
-
 
 /* nicer identifiers in PREPARE/EXECUTE commands */
 static const char *prepared_names[4] = {"select", "update", "insert", "other"};
@@ -170,41 +131,6 @@ int glite_lbu_InitDBContextPsql(glite_lbu_DBContext *ctx_gen) {
 	ctx = calloc(1, sizeof *ctx);
 	if (!ctx) return ENOMEM;
 	*ctx_gen = (glite_lbu_DBContext)ctx;
-
-	/* dynamic load of the client library */
-	pthread_mutex_lock(&psql_module.lock);
-	if (!psql_module.lib) {
-		psql_module.lib = dlopen(PSQL_SONAME, RTLD_LAZY | RTLD_LOCAL);
-		if (!psql_module.lib) return set_error(ctx, ENOENT, "dlopen(): " PSQL_SONAME ": %s", dlerror());
-		do {
-			LOAD(PQconnectdb, "PQconnectdb");
-			LOAD(PQstatus, "PQstatus");
-			LOAD(PQfinish, "PQfinish");
-			LOAD(PQerrorMessage, "PQerrorMessage");
-			LOAD(PQnfields, "PQnfields");
-			LOAD(PQgetvalue, "PQgetvalue");
-			LOAD(PQgetlength, "PQgetlength");
-			LOAD(PQclear, "PQclear");
-			LOAD(PQexec, "PQexec");
-			LOAD(PQresultStatus, "PQresultStatus");
-			LOAD(PQresultErrorMessage, "PQresultErrorMessage");
-			LOAD(PQcmdTuples, "PQcmdTuples");
-			LOAD(PQntuples, "PQntuples");
-			LOAD(PQfname, "PQfname");
-			LOAD(PQescapeStringConn, "PQescapeStringConn");
-			LOAD(PQfreemem, "PQfreemem");
-
-			pthread_mutex_unlock(&psql_module.lock);
-			atexit(glite_lbu_DBCleanup);
-		} while(0);
-
-		if (err) {
-			dlclose(psql_module.lib);
-			psql_module.lib = NULL;
-			pthread_mutex_unlock(&psql_module.lock);
-			return err;
-		}
-	} else pthread_mutex_unlock(&psql_module.lock);
 
 	return 0;
 }
@@ -248,15 +174,15 @@ int glite_lbu_DBConnectPsql(glite_lbu_DBContext ctx_gen, const char *cs) {
 
 	 glite_common_log(ctx_gen->log_category, LOG_PRIORITY_DEBUG, 
 		"connection string = %s\n", pgcs);
-	ctx->conn = psql_module.PQconnectdb(pgcs);
+	ctx->conn = PQconnectdb(pgcs);
 	free(pgcsbuf);
 	if (!ctx->conn) return ENOMEM;
 
 	
 
-	if (psql_module.PQstatus(ctx->conn) != CONNECTION_OK) {
-		asprintf(&err, "Can't connect, %s", psql_module.PQerrorMessage(ctx->conn));
-		psql_module.PQfinish(ctx->conn);
+	if (PQstatus(ctx->conn) != CONNECTION_OK) {
+		asprintf(&err, "Can't connect, %s", PQerrorMessage(ctx->conn));
+		PQfinish(ctx->conn);
 		ctx->conn = NULL;
 		set_error(ctx, EIO, err);
 		free(err);
@@ -271,7 +197,7 @@ void glite_lbu_DBClosePsql(glite_lbu_DBContext ctx_gen) {
 	glite_lbu_DBContextPsql ctx = (glite_lbu_DBContextPsql)ctx_gen;
 
 	if (ctx->conn) {
-		psql_module.PQfinish(ctx->conn);
+		PQfinish(ctx->conn);
 		ctx->conn = NULL;
 	}
 }
@@ -336,7 +262,7 @@ int glite_lbu_FetchRowPsql(glite_lbu_Statement stmt_gen, unsigned int maxn, unsi
 
 	if (stmt->row >= stmt->nrows) return 0;
 
-	n = psql_module.PQnfields(stmt->res);
+	n = PQnfields(stmt->res);
 	if (n <= 0) {
 		set_error(stmt->generic.ctx, EINVAL, "Result set w/o columns");
 		return -1;
@@ -347,7 +273,7 @@ int glite_lbu_FetchRowPsql(glite_lbu_Statement stmt_gen, unsigned int maxn, unsi
 	}
 	for (i = 0; i < n; i++) {
 		/* sanity check for internal error (NULL when invalid row) */
-		s = psql_module.PQgetvalue(stmt->res, stmt->row, i) ? : "";
+		s = PQgetvalue(stmt->res, stmt->row, i) ? : "";
 		if ((results[i] = strdup(s)) == NULL)
 			goto nomem;
 		if (lengths) lengths[i] = strlen(s);
@@ -373,13 +299,13 @@ void glite_lbu_FreeStmtPsql(glite_lbu_Statement *stmt_gen) {
 	if (!*stmt_gen) return;
 	stmt = (glite_lbu_StatementPsql)(*stmt_gen);
 	ctx = (glite_lbu_DBContextPsql)stmt->generic.ctx;
-	if (stmt->res) psql_module.PQclear(stmt->res);
+	if (stmt->res) PQclear(stmt->res);
 	if (stmt->name) {
 		asprintf(&sql, "DEALLOCATE %s", stmt->name);
 		glite_common_log_msg(ctx->generic.log_category, LOG_PRIORITY_DEBUG, sql);
-		stmt->res = psql_module.PQexec(ctx->conn, sql);
+		stmt->res = PQexec(ctx->conn, sql);
 		free(sql);
-		psql_module.PQclear(stmt->res);
+		PQclear(stmt->res);
 	}
 	free(stmt->name);
 	free(stmt->sql);
@@ -398,27 +324,27 @@ int glite_lbu_ExecSQLPsql(glite_lbu_DBContext ctx_gen, const char *cmd, glite_lb
 	//lprintf("command = %s\n", cmd);
 	glite_common_log(ctx_gen->log_category, LOG_PRIORITY_DEBUG, "command = %s\n", cmd);
 	if (stmt_out) *stmt_out = NULL;
-	if ((res = psql_module.PQexec(ctx->conn, cmd)) == NULL) {
+	if ((res = PQexec(ctx->conn, cmd)) == NULL) {
 		ctx->generic.err.code = ENOMEM;
 		return -1;
 	}
 
-	status = psql_module.PQresultStatus(res);
+	status = PQresultStatus(res);
 	if (status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK) {
-		errmsg = psql_module.PQresultErrorMessage(res);
+		errmsg = PQresultErrorMessage(res);
 		if (errmsg) {
 			errmsg = strdup(errmsg);
 			if ((pos = strrchr(errmsg, '\n')) != NULL) pos[0] = '\0';
 		}
 		set_error(ctx, EIO, errmsg);
 		free(errmsg);
-		psql_module.PQclear(res);
+		PQclear(res);
 		return -1;
 	}
 
-	nstr = psql_module.PQcmdTuples(res);
+	nstr = PQcmdTuples(res);
 	if (nstr && nstr[0]) n = atoi(nstr);
-	else n = psql_module.PQntuples(res);
+	else n = PQntuples(res);
 	if (stmt_out) {
 		stmt = calloc(1, sizeof(*stmt));
 		stmt->generic.ctx = ctx_gen;
@@ -426,7 +352,7 @@ int glite_lbu_ExecSQLPsql(glite_lbu_DBContext ctx_gen, const char *cmd, glite_lb
 		stmt->nrows = n;
 		*stmt_out = (glite_lbu_Statement)stmt;
 	} else {
-		psql_module.PQclear(res);
+		PQclear(res);
 	}
 	return n;
 }
@@ -436,9 +362,9 @@ int glite_lbu_QueryColumnsPsql(glite_lbu_Statement stmt_gen, char **cols) {
 	glite_lbu_StatementPsql stmt = (glite_lbu_StatementPsql)stmt_gen;
 	int n, i;
 
-	n = psql_module.PQnfields(stmt->res);
+	n = PQnfields(stmt->res);
 	for (i = 0; i < n; i++) {
-		cols[i] = psql_module.PQfname(stmt->res, i);
+		cols[i] = PQfname(stmt->res, i);
 	}
 	return -1;
 }
@@ -471,9 +397,9 @@ int glite_lbu_PrepareStmtPsql(glite_lbu_DBContext ctx_gen, const char *sql, glit
 
 	asprintf(&sqlPrep, "PREPARE %s AS %s", stmt->name, stmt->sql);
 	glite_common_log_msg(ctx_gen->log_category, LOG_PRIORITY_DEBUG, sqlPrep);
-	res = psql_module.PQexec(ctx->conn, sqlPrep);
-	if (psql_module.PQresultStatus(res) != PGRES_COMMAND_OK) {
-		asprintf(&s, "error preparing command: %s", psql_module.PQerrorMessage(ctx->conn));
+	res = PQexec(ctx->conn, sqlPrep);
+	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+		asprintf(&s, "error preparing command: %s", PQerrorMessage(ctx->conn));
 		set_error(ctx, EIO, s);
 		free(s); s = NULL;
 		goto quit;
@@ -484,7 +410,7 @@ int glite_lbu_PrepareStmtPsql(glite_lbu_DBContext ctx_gen, const char *sql, glit
 
 quit:
 	free(sqlPrep);
-	if (res) psql_module.PQclear(res);
+	if (res) PQclear(res);
 	if (!retval) return 0;
 
 	free(stmt->name);
@@ -508,7 +434,7 @@ int glite_lbu_ExecPreparedStmtPsql_v(glite_lbu_Statement stmt_gen, int n, va_lis
 		return set_error(ctx, EINVAL, "PrepareStmt() not called");
 
 	if (stmt->res) {
-		psql_module.PQclear(stmt->res);
+		PQclear(stmt->res);
 		stmt->res = NULL;
 	}
 
@@ -545,7 +471,7 @@ int glite_lbu_ExecPreparedStmtPsql_v(glite_lbu_Statement stmt_gen, int n, va_lis
 				"blob, len = %lu, ptr = %p\n", binary_len, s);
 			if (s) {
 				tmp = malloc(2*binary_len + 1);
-				psql_module.PQescapeStringConn(ctx->conn, tmp, s, binary_len, NULL);
+				PQescapeStringConn(ctx->conn, tmp, s, binary_len, NULL);
 				asprintf(&tmpdata[i], "'%s'", tmp);
 				glite_common_log(ctx->generic.log_category, LOG_PRIORITY_DEBUG, "escaped: '%s'\n", tmpdata[i]);
 				free(tmp);
@@ -601,18 +527,18 @@ int glite_lbu_ExecPreparedStmtPsql_v(glite_lbu_Statement stmt_gen, int n, va_lis
 	if (n) strcat(sql, ")");
 
 	glite_common_log_msg(ctx->generic.log_category, LOG_PRIORITY_DEBUG, sql);
-	stmt->res = psql_module.PQexec(ctx->conn, sql);
-	status = psql_module.PQresultStatus(stmt->res);
+	stmt->res = PQexec(ctx->conn, sql);
+	status = PQresultStatus(stmt->res);
 	if (status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK) {
-		asprintf(&s, "error executing prepared command '%s' parameters '%s': %s", stmt->sql, sql, psql_module.PQerrorMessage(ctx->conn));
+		asprintf(&s, "error executing prepared command '%s' parameters '%s': %s", stmt->sql, sql, PQerrorMessage(ctx->conn));
 		set_error(ctx, EIO, s);
 		free(s); s = NULL;
 		goto quit;
 	}
-	nstr = psql_module.PQcmdTuples(stmt->res);
+	nstr = PQcmdTuples(stmt->res);
 	//lprintf("cmdtuples: '%s'\n", nstr);
 	if (nstr && nstr[0]) retval = atoi(nstr);
-	else retval = psql_module.PQntuples(stmt->res);
+	else retval = PQntuples(stmt->res);
 	stmt->nrows = retval;
 	stmt->row = 0;
 	//lprintf("ntuples/retval: %d\n", retval);
@@ -623,14 +549,3 @@ quit:
 	free(sql);
 	return retval;
 }
-
-
-static void glite_lbu_DBCleanup(void) {
-	pthread_mutex_lock(&psql_module.lock);
-	if (psql_module.lib) {
-		dlclose(psql_module.lib);
-		psql_module.lib = NULL;
-	}
-	pthread_mutex_unlock(&psql_module.lock);
-}
-

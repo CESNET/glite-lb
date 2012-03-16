@@ -33,12 +33,16 @@ edg_wll_ErrorCode edg_wll_Open(edg_wll_Context ctx, char *cs)
 	char *cols[20];
 	glite_lbu_Statement stmt;
 
-	if (!ctx->dbctx && glite_lbu_InitDBContext((glite_lbu_DBContext*) &ctx->dbctx, GLITE_LBU_DB_BACKEND_MYSQL, LOG_CATEGORY_LB_SERVER_DB) != 0) {
+	if (!ctx->dbctx && (ret = glite_lbu_InitDBContext((glite_lbu_DBContext*) &ctx->dbctx, GLITE_LBU_DB_BACKEND_MYSQL, LOG_CATEGORY_LB_SERVER_DB)) != 0) {
 		char *ed;
 
-		glite_lbu_DBError(ctx->dbctx, NULL, &ed);
-		edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, ed);
-		free(ed);
+		if (ctx->dbctx) {
+			glite_lbu_DBError(ctx->dbctx, NULL, &ed);
+			edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, ed);
+			free(ed);
+		} else
+			edg_wll_SetError(ctx, EDG_WLL_ERROR_DB_INIT, strerror(ret));
+
 		return EDG_WLL_ERROR_DB_INIT;
 	}
 	if (glite_lbu_DBConnect(ctx->dbctx,cs) != 0) return edg_wll_SetErrorDB(ctx);
@@ -109,8 +113,10 @@ close_db:
 
 edg_wll_ErrorCode edg_wll_Close(edg_wll_Context ctx)
 {
-	glite_lbu_DBClose(ctx->dbctx);
-	glite_lbu_FreeDBContext(ctx->dbctx);
-	ctx->dbctx = NULL;
+	if (ctx->dbctx) {
+		glite_lbu_DBClose(ctx->dbctx);
+		glite_lbu_FreeDBContext(ctx->dbctx);
+		ctx->dbctx = NULL;
+	}
 	return edg_wll_ResetError(ctx);
 }
