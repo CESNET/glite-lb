@@ -108,10 +108,11 @@ int edg_wll_UserJobsServer(
 	if (states) {
 		edg_wll_QueryRec	oc[2],*ocp[2] = { oc, NULL };
 
+		memset(oc, 0, sizeof(oc));
 		oc[0].attr = EDG_WLL_QUERY_ATTR_OWNER;
 		oc[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 
-		if (check_job_query_index(ctx,ocp)) {
+		if (check_job_query_index(ctx,(const edg_wll_QueryRec **)ocp)) {
 			edg_wll_ResetError(ctx);
 			*states = NULL;
 			goto err;
