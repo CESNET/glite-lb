@@ -20,6 +20,8 @@ int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix)
 {
 	//TODO get file name from command line
         char *fname;
+	int err;
+
 /*	if (prefix)
 		asprintf(&fname, "%s/lb_server_stats", file);
 	else{*/
@@ -46,8 +48,9 @@ int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix)
 	}
 	if (serverStatisticsFD < 0) {
 		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_WARN, "Cannot use server statistics!");
+		err = edg_wll_SetError(ctx,errno,fname);
 		free(fname);
-		return edg_wll_SetError(ctx,errno,fname);
+		return err;
 	}
 
 	off_t size = lseek(serverStatisticsFD, 0, SEEK_END) - lseek(serverStatisticsFD, 0, SEEK_SET);
