@@ -37,6 +37,7 @@ limitations under the License.
 #include "lb_xml_parse.h"
 #include "get_events.h"
 #include "server_stats.h"
+#include "lb_authz.h"
 
 
 typedef struct {
@@ -49,7 +50,7 @@ typedef struct {
 
 
 static char *get_user(edg_wll_Context ctx, int create, char **subj);
-static int check_notif_request(edg_wll_Context, const edg_wll_NotifId, char **, char **);
+static int check_notif_request(edg_wll_Context, const edg_wll_NotifId, char **, char **, int allowRoot);
 static int split_cond_list(edg_wll_Context, edg_wll_QueryRec const * const *,
 						edg_wll_QueryRec ***, char ***);
 static int update_notif(edg_wll_Context, const edg_wll_NotifId,
@@ -293,7 +294,7 @@ int edg_wll_NotifBindServer(
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;
 
-		if ( check_notif_request(ctx, nid, NULL, NULL) )
+		if ( check_notif_request(ctx, nid, NULL, NULL, 0) )
 			goto rollback;
 
 		if ( check_notif_age(ctx, nid) ) {
@@ -398,7 +399,7 @@ int edg_wll_NotifChangeServer(
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;
 
-		if ( check_notif_request(ctx, nid, NULL, NULL) )
+		if ( check_notif_request(ctx, nid, NULL, NULL, 0) )
 			goto rollback;
 
 		if ( check_notif_age(ctx, nid) ) {
@@ -504,7 +505,7 @@ int edg_wll_NotifRefreshServer(
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;		
 
-		if ( check_notif_request(ctx, nid, NULL, &dest) )
+		if ( check_notif_request(ctx, nid, NULL, &dest, 0) )
 			goto rollback;
 
 		if ( check_notif_age(ctx, nid) ) {
@@ -545,7 +546,7 @@ int edg_wll_NotifDropServer(
 	do {
 		if (edg_wll_Transaction(ctx) != 0) goto err;
 
-		if ( check_notif_request(ctx, nid, NULL, NULL) )
+		if ( check_notif_request(ctx, nid, NULL, NULL, 1) )
 			goto rollback;
 
 		if ( drop_notif_request(ctx, nid) )
@@ -621,9 +622,11 @@ static int check_notif_request(
 	edg_wll_Context				ctx,
 	const edg_wll_NotifId		nid,
 	char					  **owner,
-	char	**destination)
+	char	**destination,
+	int	allowRoot)
 {
 	char	   *nid_s = NULL,
+			*user_clause = NULL, *can_peername = NULL,
 			   *stmt = NULL, *user, *dest = NULL;
 	int			ret;
 	glite_lbu_Statement	s = NULL;
@@ -643,11 +646,21 @@ static int check_notif_request(
 		goto cleanup;
 	}
 
+	if ( (allowRoot) &&
+		(can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0)) &&
+		(edg_wll_amIroot(can_peername, ctx->fqans, &ctx->authz_policy))) 
+			trio_asprintf(&stmt,
+				"select destination from notif_registrations "
+				"where notifid='%|Ss' FOR UPDATE",
+				nid_s, user);
+	
+	else
 	trio_asprintf(&stmt,
 				"select destination from notif_registrations "
 				"where notifid='%|Ss' and userid='%|Ss' FOR UPDATE",
 				nid_s, user);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	free(can_peername);
 
 	if ( (ret = edg_wll_ExecSQL(ctx, stmt, &s)) < 0 )
 		goto cleanup;
