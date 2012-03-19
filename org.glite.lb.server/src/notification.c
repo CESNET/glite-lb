@@ -626,7 +626,7 @@ static int check_notif_request(
 	int	allowRoot)
 {
 	char	   *nid_s = NULL,
-			*user_clause = NULL, *can_peername = NULL,
+			*can_peername = NULL,
 			   *stmt = NULL, *user, *dest = NULL;
 	int			ret;
 	glite_lbu_Statement	s = NULL;
