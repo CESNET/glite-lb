@@ -123,9 +123,9 @@ function check_timestamp() {
 	
 	if [ $age_check -gt 0 ]; then
 		uniq=`echo ${NOTIFID[${1}]} | sed -r 's/^.*NOTIF://'`
-		vecho 2 looking at notif file $FilePrefix.$uniq
+		vecho 2 looking at notif files $FilePrefix.$uniq*
 		if [ -f $FilePrefix.$uniq ]; then
-			currsize=`wc -c $FilePrefix.$uniq`
+			currsize=`wc -c $FilePrefix.$uniq* | tail -n 1`
 		else
 			currsize=0;
 		fi
