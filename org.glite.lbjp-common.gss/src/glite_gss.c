@@ -33,6 +33,9 @@ limitations under the License.
 #include <ares.h>
 #include <ares_version.h>
 #include <errno.h>
+#ifdef GLITE_LBU_THREADED
+#include <pthread.h>
+#endif
 
 #include <globus_common.h>
 
@@ -65,6 +68,9 @@ struct asyn_result {
 };
 
 static int globus_common_activated = 0;
+#ifdef GLITE_LBU_THREADED
+static pthread_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 typedef struct gssapi_mech {
     const char* name;
@@ -1059,6 +1065,10 @@ static int try_conn_and_auth (edg_wll_GssCred cred, gss_name_t target, gss_OID m
    do { /* XXX: the black magic above */
 
    while (!context_established) {
+#ifdef GLITE_LBU_THREADED
+      /* XXX: gss_init_sec_context() not thread-safe? */
+      pthread_mutex_lock(&init_lock);
+#endif
       /* XXX verify ret_flags match what was requested */
       maj_stat = gss_init_sec_context(&min_stat, gss_cred, &context,
 				      target, mech,
@@ -1066,6 +1076,9 @@ static int try_conn_and_auth (edg_wll_GssCred cred, gss_name_t target, gss_OID m
 				      0, GSS_C_NO_CHANNEL_BINDINGS,
 				      &input_token, NULL, &output_token,
 				      NULL, NULL);
+#ifdef GLITE_LBU_THREADED
+      pthread_mutex_unlock(&init_lock);
+#endif
       if (input_token.length > 0) {
 	 free(input_token.value);
 	 input_token.length = 0;
@@ -1533,6 +1546,9 @@ edg_wll_gss_initialize(void)
 {
    int ret = 0;
 
+#ifdef GLITE_LBU_THREADED
+   pthread_mutex_lock(&init_lock);
+#endif
    if (!getenv("GLOBUS_THREAD_MODEL")) {
      putenv("GLOBUS_THREAD_MODEL=pthread");
    }
@@ -1546,6 +1562,9 @@ edg_wll_gss_initialize(void)
 
    if (globus_module_activate(GLOBUS_COMMON_MODULE) == GLOBUS_SUCCESS)
 	globus_common_activated = 1;
+#ifdef GLITE_LBU_THREADED
+   pthread_mutex_unlock(&init_lock);
+#endif
 
    return ret;
 }
@@ -1558,6 +1577,9 @@ edg_wll_gss_initialize(void)
 void
 edg_wll_gss_finalize(void)
 {
+#ifdef GLITE_LBU_THREADED
+   pthread_mutex_lock(&init_lock);
+#endif
 #ifndef NO_GLOBUS_GSSAPI
    globus_module_deactivate(GLOBUS_GSI_GSSAPI_MODULE);
 #endif
@@ -1565,6 +1587,9 @@ edg_wll_gss_finalize(void)
       globus_module_deactivate(GLOBUS_COMMON_MODULE);
       globus_common_activated = 0;
    }
+#ifdef GLITE_LBU_THREADED
+   pthread_mutex_unlock(&init_lock);
+#endif
 }
 
 
@@ -1868,10 +1893,16 @@ edg_wll_gss_gethostname(char *name, int len)
 {
    int ret;
 
+#ifdef GLITE_LBU_THREADED
+   pthread_mutex_lock(&init_lock);
+#endif
    if (globus_common_activated)
       ret = globus_libc_gethostname(name, len);
    else
       ret = gethostname(name, len);
+#ifdef GLITE_LBU_THREADED
+   pthread_mutex_unlock(&init_lock);
+#endif
 
    return ret;
 }
@@ -1969,6 +2000,9 @@ edg_wll_gss_set_signal_handler(int signum,
    int ret;
    intptr_t signum2; 
 
+#ifdef GLITE_LBU_THREADED
+   pthread_mutex_lock(&init_lock);
+#endif
    if (!globus_common_activated) {
 	   struct sigaction	sa,osa;
 	   
@@ -1976,15 +2010,17 @@ edg_wll_gss_set_signal_handler(int signum,
 	   sigemptyset(&sa.sa_mask);
 	   sa.sa_handler = handler_func;
 	   ret = sigaction(signum, &sa, &osa);
-	   return ret;
-   }
-
-   signum2 = signum;
-   ret = globus_callback_space_register_signal_handler(signum,
+   } else {
+	   signum2 = signum;
+	   ret = globus_callback_space_register_signal_handler(signum,
 						       GLOBUS_TRUE,
 						       (globus_callback_func_t)handler_func,
 						       (void *)signum2,
 						       GLOBUS_CALLBACK_GLOBAL_SPACE);
+   }
+#ifdef GLITE_LBU_THREADED
+   pthread_mutex_unlock(&init_lock);
+#endif
 
    return ret;
 }
