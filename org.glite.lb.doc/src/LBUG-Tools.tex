@@ -87,11 +87,14 @@ To list all user's jobs, it is possible to query only the \LB server address, e.
 \begin{verbatim}
   firefox https://pelargir.ics.muni.cz:9000
 \end{verbatim}
-To list all user's notification registrations curently valid on a given \LB server, use a URL constructed as in folowing example:
+To list all user's notification registrations curently valid on a given \LB server, use an URL constructed as in folowing example:
 \begin{verbatim}
   firefox https://pelargir.ics.muni.cz:9000/NOTIF
 \end{verbatim}
-A notification ID also have a form of URL. If you direct your browser to a particular notification ID, the \LB server will provide the notification details for it.
+
+On top of that, \LB super users may use query strings \texttt{?all} or \texttt{?foreign} to display registrations belonging to anyone or anyone but themselves, respectively.
+
+A notification ID also takes the form of an URL. If you direct your browser to a particular notification ID, the \LB server will provide related registration details.
 \begin{verbatim}
   firefox https://pelargir.ics.muni.cz:9000/NOTIF:1234567890
 \end{verbatim}

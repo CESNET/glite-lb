@@ -77,6 +77,8 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-nagios-probe.sh} & Run the nagios probe and check results \\
 \hline
+{\tt lb-test-notif-keeper.sh} & Test the \texttt{notif-keeper} script \\
+\hline
 \end{tabularx}
 
 \subsubsection{Event logging examples}
@@ -431,6 +433,29 @@ through ActiveMQ messages.
 %\end{hints}
 
 
+\subsection{Site Notification Maintenance}
+\label{notifkeeper}
+
+\req\ All \LB\ services running.
+
+\what
+\begin{enumerate}
+\item Create or modify a \texttt{site-notif.conf} file
+\item Run the ``keeper'' script and check if the effect was as desired
+\begin{itemize}
+\item Setting up a new notification
+\item Changing its conditions
+\item Registering for anonymized notifications
+\item \dots
+\end{itemize}
+\item Repeat from step~1 with different settings until all scenarios have been checked
+\end{enumerate}
+
+\how\ \ctblb{lb-test-notif-keeper.sh}
+
+\note\ The test includes artificial delays. Takes approx. 30\,s to finish.
+
+\result\ Notifications must be registered and messages must arrive matching the currently applicable contents of the config file.
 
 
 \subsection{Server purge}
