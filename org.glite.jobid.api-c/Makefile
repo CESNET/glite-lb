@@ -36,7 +36,12 @@ LIBLOBJS:=${LIBOBJS:.o=.lo}
 
 LIB:=libglite_jobid.la
 
-TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit -ldl
+os=${shell uname}
+DL_LIBS:=
+ifeq (${os},Linux)
+	DL_LIBS:=-ldl
+endif
+TEST_LIBS:=-L${cppunit_prefix}/${libdir} -lcppunit ${DL_LIBS}
 TEST_INC:=-I${cppunit_prefix}/include
 
 compile all: ${LIB}

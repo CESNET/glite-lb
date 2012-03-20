@@ -16,7 +16,7 @@ ret2=$?
 
 kill -SIGTERM $SRV_PID
 
-n=`grep 'disconnect handler' /tmp/log.$$ | wc -l`
+n=`grep 'disconnect handler' /tmp/log.$$ | wc -l | sed 's/ //g'`
 rm -f /tmp/log.$$
 
 if [ $ret1 -ne 0 -o $ret2 -ne 0 ]; then
