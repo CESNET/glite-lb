@@ -105,6 +105,7 @@ fi
 
 
 %files devel
+%defattr(-,root,root)
 %dir /usr/include/glite/
 %dir /usr/include/glite/lb/
 /usr/include/glite/lb/*.h

@@ -108,7 +108,6 @@ fi
 
 %files
 %defattr(-,root,root)
-/etc/glite-lb-dbsetup.sql
 %dir /etc/cron.d/
 %dir /etc/glite-lb/
 %dir /usr/%{_lib}/modules/
@@ -117,9 +116,10 @@ fi
 %dir /usr/share/doc/%{name}-%{version}/
 %config(noreplace) /etc/logrotate.d/glite-lb-server
 %config(noreplace) /etc/mysql/conf.d/glite-lb-server.cnf
+%config(noreplace) /etc/glite-lb/*
+/etc/glite-lb-dbsetup.sql
 /etc/cron.d/*
 /etc/glite-lb-index.conf.template
-/etc/glite-lb/*
 /etc/init.d/glite-lb-bkserverd
 /usr/%{_lib}/modules/lcas_lb.mod
 /usr/%{_lib}/modules/liblcas_lb.so
