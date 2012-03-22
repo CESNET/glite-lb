@@ -556,6 +556,16 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 		else event->any.priority = 0;
 	}
 
+	if (event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT)) {
+		if(init_confirmation() < 0) { 
+			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Error initializing 2nd UNIX socket (%s) for priority messages confirmation.\n",confirm_sock_name); 
+			answer = errno; 
+			goto edg_wll_log_proto_server_end; 
+		} else {
+			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Initializing 2nd UNIX socket (%s) for priority messages confirmation...[ok]\n",confirm_sock_name);
+		}
+	}
+
 	/* if not command, save message to file */
 	if(strstr(msg, "DG.TYPE=\"command\"") == NULL) {
 		/* compose the name of the log file */
@@ -595,13 +605,6 @@ int edg_wll_log_proto_server(edg_wll_GssConnection *con, struct timeval *timeout
 	if (!(event->any.priority & (EDG_WLL_LOGFLAG_SYNC|EDG_WLL_LOGFLAG_SYNC_COMPAT))) {
 		if (!send_answer_back(con,answer,timeout)) { 
 			answer_sent = 1;
-		}
-		if(init_confirmation() < 0) { 
-			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_WARN,"Error initializing 2nd UNIX socket (%s) for priority messages confirmation.\n",confirm_sock_name); 
-			answer = errno; 
-			goto edg_wll_log_proto_server_end; 
-		} else {
-			glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Initializing 2nd UNIX socket (%s) for priority messages confirmation...[ok]\n",confirm_sock_name);
 		}
 	} 
 
