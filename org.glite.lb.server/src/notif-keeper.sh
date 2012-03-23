@@ -33,7 +33,14 @@ while read line ; do
 			HANDLES[$TOTALNOTIFS]=`echo $cleanline | sed -r 's/\s+.*$//'`
 			OPTIONS[$TOTALNOTIFS]=`echo $cleanline | sed -r 's/^\w+\s+//'`
 			TOPICS[$TOTALNOTIFS]=`echo ${OPTIONS[${TOTALNOTIFS}]} | grep -E -o '\-a[ ]+x-msg://[^ ]+' | sed -r 's/^.*msg:\/\///'`
-			TOTALNOTIFS=$(($TOTALNOTIFS+1))
+			if [ -z "${TOPICS[${TOTALNOTIFS}]}" -a $LEGACY -ne 1 ]; then
+				printf "${HANDLES[$TOTALNOTIFS]}: \tERROR: Topic not specified! Set topic or allow legacy notifications explicitly with -a\n"
+				unset HANDLES[$TOTALNOTIFS]
+				unset OPTIONS[$TOTALNOTIFS]
+				unset TOPICS[$TOTALNOTIFS]
+			else
+				TOTALNOTIFS=$(($TOTALNOTIFS+1))
+			fi
 		fi
 	fi
 done < $infile
@@ -124,16 +131,16 @@ function check_timestamp() {
 	if [ $age_check -gt 0 ]; then
 		uniq=`echo ${NOTIFID[${1}]} | sed -r 's/^.*NOTIF://'`
 		vecho 2 looking at notif files $FilePrefix.$uniq*
-		if [ -f $FilePrefix.$uniq ]; then
-			currsize=`wc -c $FilePrefix.$uniq* | tail -n 1`
+		if [ -f $FilePrefix.$uniq* ]; then
+			currsize=`wc -c $FilePrefix.$uniq* | tail -n 1 | awk '{ print $1 }'`
 		else
 			currsize=0;
 		fi
 		if [ $currsize -lt $SIZE ]; then
-			vecho 1 "Size under grace limit ($currsize kB)"
+			vecho 1 "Size under grace limit ($currsize kB < $SIZE kB)"
 			age_check=0;
 		else
-			vecho 1 "Size over grace limit ($currsize kB)"
+			vecho 1 "Size over grace limit ($currsize kB > $SIZE kB)"
 			age_check=1;
 		fi
 	fi
@@ -175,12 +182,14 @@ EndHelpHeader
 	echo " -s | --grace-size      Message queue size limit in kBytes. Registration will be"
 	echo "                        extended even if stale, provided the message queue is bellow"
 	echo "                        the limit. (default 2048 = 2 MB)"
+	echo " -l | --allow-legacy    Allow conditions without the -a option"
         echo " -v | --verbose         Verbose cmdline output. (Repeat for higher verbosity)"
 }
 
 Verbose=0
 AGE=345600
 SIZE=2048
+LEGACY=0
 while test -n "$1"
 do
         case "$1" in
@@ -190,6 +199,7 @@ do
 		"-a" | "--stale-age" ) shift ; AGE=$1 ;;
 		"-s" | "--grace-size" ) shift ; SIZE=$1 ;;
                 "-v" | "--verbose") Verbose=$(($Verbose+1)) ;;
+		"-l" | "--allow-legacy" ) LEGACY=1 ;;
                 "-vv" ) Verbose=$(($Verbose+2)) ;;
 		*) echo WARNING: unknown argument $1 ;;
         esac
