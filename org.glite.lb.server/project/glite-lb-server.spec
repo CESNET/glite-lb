@@ -91,6 +91,9 @@ exit 0
 
 %post
 /sbin/chkconfig --add glite-lb-bkserverd
+if [ $1 -eq 1 ] ; then
+	/sbin/chkconfig glite-lb-bkserverd off
+fi
 
 
 %preun

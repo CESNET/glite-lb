@@ -333,8 +333,28 @@ EOF
   # upgrade from L&B <= 3.1.1
   rm -fv /etc/cron.d/glite-lb-purge.cron /etc/logrotate.d/lb-purger /etc/logrotate.d/lb-lcas
 
+  # start-up on boot
   . @glite_etc@/profile.d/grid-env.sh
+  if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
+    update-rc.d glite-lb-bkserverd defaults
+    update-rc.d glite-lb-locallogger defaults
+    if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
+      update-rc.d glite-lb-harvester defaults
+    fi
+  else
+    /sbin/chkconfig glite-lb-bkserverd on
+    /sbin/chkconfig glite-lb-locallogger on
+    if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
+      /sbin/chkconfig glite-lb-harvester on
+    fi
+  fi
+
   ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd restart
+  if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
+    ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-harvester restart
+  else
+    ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-harvester stop
+  fi
 
   if [ ! $? = 0 ] ; then
     yaimlog ABORT "Service glite-lb-bkserverd failed to start!"

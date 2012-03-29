@@ -63,6 +63,9 @@ exit 0
 
 %post
 /sbin/chkconfig --add glite-lb-harvester
+if [ $1 -eq 1 ] ; then
+	/sbin/chkconfig glite-lb-harvester off
+fi
 
 
 %preun
