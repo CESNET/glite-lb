@@ -89,3 +89,6 @@
 2.2.0-3
 - Module rebuilt
 
+2.2.1-1
+- Compile-time warning fixes
+
