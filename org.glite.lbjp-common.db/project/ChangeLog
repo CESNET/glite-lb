@@ -118,3 +118,10 @@
 - Connection string is stored in db context
 - License string as recognized by rpmlint and packaging guidelines
 
+3.1.2-1
+- Remove dynamic load of DB libraries
+  - Originally added because of conflicting dependencies with globus
+  - Adds explicit runtime dependency on mysql and postgresql (SB #91944)
+- DB dependencies update
+- Fixed reaction to DB initialization errors
+
