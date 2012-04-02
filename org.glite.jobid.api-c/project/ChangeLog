@@ -76,3 +76,6 @@
 - Packaging improvements (rpmlint and lintian checks):
 - License string as recognized by rpmlint and packaging guidelines.
 
+2.1.2-1
+- EMI-2-supported-platform adjustment
+
