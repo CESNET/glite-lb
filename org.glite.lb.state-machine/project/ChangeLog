@@ -111,3 +111,7 @@
 - Packaging improvements (rpmlint and lintian checks)
 - License string as recognized by rpmlint and packaging guidelines
 
+1.3.2-1
+- Fixed build with flavoured globus
+- Compile-time warning fixes
+
