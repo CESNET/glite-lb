@@ -113,3 +113,7 @@
 - rpmlint fixes
 - License string as recognized by rpmlint and packaging guidelines
 
+1.2.3-1
+- Do not set up daemons to start during installation. Starting scripts configured by yaim
+- Crash fixed (no jobs on error)
+
