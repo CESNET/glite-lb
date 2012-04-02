@@ -195,3 +195,8 @@
 - Owner handling moved to one place and corrected
 - Uninitialized variable fixed
 
+2.3.4-1
+- Do not set up daemons to start during installation. Starting scripts configured by yaim
+- Avoid replacing files in /etc/glite-lb (rpmlint warnings)
+- Do not elave excess sockets in /tmp (fix for SB#92708)
+
