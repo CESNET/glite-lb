@@ -356,3 +356,17 @@
 - Error message better than just NULL for no-index queries
 - Fix for SB #47774 -- built-in index on parent job now recognized
 
+2.3.3-1
+- Remove dynamic load of DB libraries
+  - Originally added because of conflicting dependencies with globus
+  - Adds explicit runtime dependency on mysql and postgresql (SB #91944)
+- DB dependencies update
+- Fixed reaction to DB initialization errors
+- Do not set up daemons to start during installation. Starting scripts configured by yaim
+- Avoid replacing files in /etc/glite-lb (rpmlint warnings)
+- glite-lb-notif-keeper does not allow legacy notifs by default (may be enabled by cmd-line option)
+- glite-lb-notif-keeper includes all files for the given notif registration in size checking
+- Super users allowed to drop any notification
+- Memcheck error fixed in server-side statistics
+- Uninitialized memory fixed in job query code
+
