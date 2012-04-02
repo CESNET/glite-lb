@@ -174,3 +174,8 @@
 - License string as recognized by rpmlint and packaging guidelines
 - "Megajob" perftest updates
 
+8.1.3-1
+- Compile-time warning fixes
+- Fixed race condition during context initializations
+- Memory leaks fixed in client and common library when looking for non-existant job
+
