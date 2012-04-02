@@ -88,3 +88,6 @@
 - License string as recognized by rpmlint and packaging guidelines.
 - Packaging improvements (rpmlint and lintian checks)
 
+1.2.1-2
+- Module rebuilt
+
