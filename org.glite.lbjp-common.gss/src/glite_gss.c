@@ -38,6 +38,7 @@ limitations under the License.
 #endif
 
 #include <globus_common.h>
+#include <globus_gsi_callback.h>
 
 #include <gssapi.h>
 #include <openssl/err.h>
@@ -1052,7 +1053,6 @@ static int try_conn_and_auth (edg_wll_GssCred cred, gss_name_t target, gss_OID m
 
    if (edg_wll_gss_oid_equal(mech, get_oid("GSI"))) {
        req_flags = GSS_C_GLOBUS_SSL_COMPATIBLE;
-       setenv("GLOBUS_GSSAPI_NAME_COMPATIBILITY", "STRICT_RFC2818", 0);
    }
 
    ret = do_connect(&sock, addr, addrtype, port, timeout);
@@ -1065,10 +1065,6 @@ static int try_conn_and_auth (edg_wll_GssCred cred, gss_name_t target, gss_OID m
    do { /* XXX: the black magic above */
 
    while (!context_established) {
-#ifdef GLITE_LBU_THREADED
-      /* XXX: gss_init_sec_context() not thread-safe? */
-      pthread_mutex_lock(&init_lock);
-#endif
       /* XXX verify ret_flags match what was requested */
       maj_stat = gss_init_sec_context(&min_stat, gss_cred, &context,
 				      target, mech,
@@ -1076,9 +1072,6 @@ static int try_conn_and_auth (edg_wll_GssCred cred, gss_name_t target, gss_OID m
 				      0, GSS_C_NO_CHANNEL_BINDINGS,
 				      &input_token, NULL, &output_token,
 				      NULL, NULL);
-#ifdef GLITE_LBU_THREADED
-      pthread_mutex_unlock(&init_lock);
-#endif
       if (input_token.length > 0) {
 	 free(input_token.value);
 	 input_token.length = 0;
@@ -1545,13 +1538,13 @@ int
 edg_wll_gss_initialize(void)
 {
    int ret = 0;
+   int index;
 
 #ifdef GLITE_LBU_THREADED
    pthread_mutex_lock(&init_lock);
 #endif
-   if (!getenv("GLOBUS_THREAD_MODEL")) {
-     putenv("GLOBUS_THREAD_MODEL=pthread");
-   }
+   setenv("GLOBUS_THREAD_MODEL", "pthread", 0);
+   setenv("GLOBUS_GSSAPI_NAME_COMPATIBILITY", "STRICT_RFC2818", 0);
 
 #ifndef NO_GLOBUS_GSSAPI
    if (globus_module_activate(GLOBUS_GSI_GSSAPI_MODULE) != GLOBUS_SUCCESS) {
@@ -1562,6 +1555,10 @@ edg_wll_gss_initialize(void)
 
    if (globus_module_activate(GLOBUS_COMMON_MODULE) == GLOBUS_SUCCESS)
 	globus_common_activated = 1;
+
+   // some pre-initializations (workarounds thread-safe problem
+   // in gss_init_sec_context)
+   globus_gsi_callback_get_SSL_callback_data_index(&index);
 #ifdef GLITE_LBU_THREADED
    pthread_mutex_unlock(&init_lock);
 #endif
@@ -1720,6 +1717,11 @@ get_peer_cred(edg_wll_GssConnection *gss, const char *my_cert_file,
     * the server.
     * */
 
+#ifdef GLITE_LBU_THREADED
+   // to protect the environment
+   // XXX: only partial fix, every getenv() can still cause race-condition
+   pthread_mutex_lock(&init_lock);
+#endif
    orig_cert = getenv("X509_USER_CERT");
    orig_key = getenv("X509_USER_KEY");
 
@@ -1740,6 +1742,9 @@ get_peer_cred(edg_wll_GssConnection *gss, const char *my_cert_file,
        setenv("X509_USER_KEY", orig_key, 1);
    else 
        unsetenv("X509_USER_KEY");
+#ifdef GLITE_LBU_THREADED
+   pthread_mutex_unlock(&init_lock);
+#endif
 
    if (GSS_ERROR(maj_stat)) {
       if (gss_code) {
