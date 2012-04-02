@@ -88,3 +88,7 @@
 - proper provides
 - License string as recognized by rpmlint and packaging guidelines.
 
+2.2.2-1
+- Compile-time warning fixes
+- EMI-2-supported-platform adjustment
+
