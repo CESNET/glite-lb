@@ -288,6 +288,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			case EDG_WLL_SOURCE_PBS_SERVER:
 				js->pub.state = EDG_WLL_JOB_SCHEDULED;
 				break;
+			case EDG_WLL_SOURCE_PBS_SMOM:
 			case EDG_WLL_SOURCE_PBS_MOM:
 				js->pub.state = EDG_WLL_JOB_RUNNING;
 				break;
@@ -310,6 +311,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			case EDG_WLL_SOURCE_PBS_SERVER:
 				js->pub.state = EDG_WLL_JOB_WAITING;
 				break;
+			case EDG_WLL_SOURCE_PBS_SMOM:
 			case EDG_WLL_SOURCE_PBS_MOM:
 				js->pub.state = EDG_WLL_JOB_WAITING;
 				js->pbs_reruning = 1;
@@ -334,6 +336,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				js->pub.state = EDG_WLL_JOB_DONE;
 				js->pub.done_code = EDG_WLL_STAT_OK;
 				break;
+			case EDG_WLL_SOURCE_PBS_SMOM:
 			case EDG_WLL_SOURCE_PBS_MOM:
 				if (!js->pbs_reruning) {
 					js->pub.state = EDG_WLL_JOB_DONE;
