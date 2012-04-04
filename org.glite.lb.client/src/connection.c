@@ -304,11 +304,15 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 	if ( (index = ConnectionIndex(ctx, ctx->srvName, ctx->srvPort)) == -1 ) {
 		/* no such open connection in pool */
 		if (ctx->connections->connOpened == ctx->connections->poolSize)
-			if(ReleaseConnection(ctx, NULL, 0)) goto end;
+			if(ReleaseConnection(ctx, NULL, 0)) {
+		    		edg_wll_poolUnlock(); 
+				goto end;
+			}
 		
 		index = AddConnection(ctx, ctx->srvName, ctx->srvPort);
 		if (index < 0) {
                     edg_wll_SetError(ctx,EAGAIN,"connection pool size exceeded");
+		    edg_wll_poolUnlock(); 
 		    goto end;
 		}
 

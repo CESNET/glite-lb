@@ -249,11 +249,13 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 		if (ctx->connections->connOpened == ctx->connections->poolSize)
 			if (ReleaseConnection(ctx, NULL, 0)) {
                     		answer = edg_wll_SetError(ctx,EAGAIN,"cannot release connection (pool size exceeded)");
+				edg_wll_poolUnlock();
 				goto edg_wll_log_connect_end;
 			}
 		index = AddConnection(ctx, ctx->p_destination, ctx->p_dest_port);
 		if (index < 0) {
                     answer = edg_wll_SetError(ctx,EAGAIN,"cannot add connection to pool");
+		    edg_wll_poolUnlock();
 		    goto edg_wll_log_connect_end;
 		}
 #ifdef EDG_WLL_LOG_STUB	
