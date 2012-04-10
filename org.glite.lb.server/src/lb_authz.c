@@ -1019,6 +1019,10 @@ find_entry(edg_wll_Context ctx, GRSTgaclAcl *acl, GRSTgaclPerm perm,
     return NULL;
 }
 
+/* function aux_add_cred() is a candidate for removal. Its call to
+GRSTgaclEntryAddCred() spoils the live acl structure (chaining creds behind
+each other) and results in double-free => segfault
+
 static int
 aux_add_cred(edg_wll_Context ctx,
 	     GRSTgaclAcl *aux,
@@ -1068,7 +1072,11 @@ aux_add_cred(edg_wll_Context ctx,
 
 end:
     return ret;
-}
+}*/
+
+/* function output_authz_rule() is a candidate for removal. It has been replaced
+with output_all_authz_rules() which does basically the same thing but for all
+matching entries, not just the first one.
 
 static int
 output_authz_rule(edg_wll_Context ctx,
@@ -1120,55 +1128,86 @@ output_authz_rule(edg_wll_Context ctx,
 	free(s);
     }
     return 0;
+}*/
+
+
+static int
+output_all_authz_rules(edg_wll_Context ctx,
+		  GRSTgaclAcl *acl,
+		  enum edg_wll_ChangeACLPermission permission,
+		  char **out)
+{
+    GRSTgaclPerm perm;
+    GRSTgaclEntry *entry;
+    GRSTgaclCred *cred;
+    char *allow = NULL, *deny = NULL;
+    char *dec = NULL, *stmp;
+    int deny1st = 1, allow1st = 1;
+
+    perm = perm_lb2gacl(permission);
+    if (perm == GRST_PERM_NONE)
+	return edg_wll_SetError(ctx,EINVAL,"Unknown permission for ACL in output_all_authz_rules()");
+
+    for (entry = acl->firstentry; entry != NULL; entry = entry->next) {
+	
+	if (entry->allowed == perm) {
+	    for (cred = entry->firstcred; cred; cred = cred->next) {
+		dec = GRSThttpUrlDecode(cred->auri);
+		asprintf(&stmp, "%s%s%s\n",
+			(allow1st) ? "\tallowed: " : allow,
+			(allow1st) ? "" : "\t\t ",
+			dec);
+		free(dec);
+		free(allow);
+		allow=stmp;
+		allow1st=0;
+	    }
+	}
+        else if (entry->denied == perm) {
+            for (cred = entry->firstcred; cred; cred = cred->next) {
+                dec = GRSThttpUrlDecode(cred->auri);
+                asprintf(&stmp, "%s%s%s\n",
+			(deny1st) ? "\tdenied:  " : deny,
+                        (deny1st) ? "" : "\t\t ",
+                        dec);
+                free(dec);
+                free(deny);
+                deny=stmp;
+		deny1st=0;
+            }
+	}
+    }
+
+    if (allow || deny) {
+	    asprintf(&stmp, "%s%s:\n%s%s", (*out) ? (*out) : "", edg_wll_ChangeACLPermissionToString(permission), allow ? allow : "", deny ? deny : "");
+	    free(*out);
+	    *out = stmp;
+    }
+    free(allow); free(deny);
+    return 0;
 }
 
-/* The auxiliary GACL ACL below is used just as an convenient container easying the parsing. The 
-   structure is not used for any controling access */
 int
 edg_wll_acl_print(edg_wll_Context ctx, edg_wll_Acl a, char **policy)
 {
     GRSTgaclEntry *entry;
-    GRSTgaclAcl *aux = NULL;
     GRSTgaclAcl *acl;
     char *pol = NULL;
-    int ret;
 
-    if (a == NULL || a->value == NULL)
+    if (a == NULL || a->value == NULL) {
 	edg_wll_SetError(ctx, EINVAL, "ACL not set");
-    acl = a->value;
-
-    aux = GRSTgaclAclNew();
-    if (aux == NULL)
-	return edg_wll_SetError(ctx, ENOMEM, "Creating ACLs");
-
-    for (entry = acl->firstentry; entry != NULL; entry = entry->next) {
-	if (entry->allowed != 0)
-	    aux_add_cred(ctx, aux, entry->allowed, EDG_WLL_CHANGEACL_ALLOW, entry->firstcred);
-	if (entry->denied != 0)
-	    aux_add_cred(ctx, aux, entry->denied, EDG_WLL_CHANGEACL_DENY, entry->firstcred);
+	return 1;
     }
 
-    ret = output_authz_rule(ctx, aux, EDG_WLL_CHANGEACL_READ, &pol);
-    if (ret)
-	goto end;
+    acl = a->value;
 
-    ret = output_authz_rule(ctx, aux, EDG_WLL_CHANGEACL_TAG, &pol);
-    if (ret)
-	goto end;
+    output_all_authz_rules(ctx, acl, EDG_WLL_CHANGEACL_READ, &pol);
+    output_all_authz_rules(ctx, acl, EDG_WLL_CHANGEACL_TAG, &pol);
 
-    ret = 0;
     *policy = pol;
     pol = NULL;
 
-end:
-    if (pol)
-	free(pol);
-    /* prevent from free()ing allocated memory not allocated by us */
-    for (entry = aux->firstentry; entry != NULL; entry = entry->next)
-	entry->firstcred = NULL;
-    GRSTgaclAclFree(aux);
-
-    return ret;
+    return 0;
 }
 
 int
