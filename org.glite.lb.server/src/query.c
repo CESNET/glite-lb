@@ -1209,22 +1209,15 @@ static char *jc_to_head_where(
 			break;
 
 		case EDG_WLL_QUERY_ATTR_PARENT:
-			if (   !is_indexed(&(jc[m][n]), ctx)
-				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
-			{
-				*where_flags |= FL_FILTER;
-				break;
-			}
-
 			*where_flags |= FL_SEL_STATUS;
 			aux = edg_wlc_JobIdGetUnique(jc[m][n].value.j);
 			if ( conds )
 			{
-				trio_asprintf(&tmps, "%s OR s.%s%s'%|Ss'", conds, cname, opToString(jc[m][n].op), aux);
+				trio_asprintf(&tmps, "%s OR s.parent_job%s'%|Ss'", conds, opToString(jc[m][n].op), aux);
 				free(conds); conds = tmps;
 			}
 			else
-				trio_asprintf(&conds, "s.%s%s'%|Ss'", cname, opToString(jc[m][n].op), aux);
+				trio_asprintf(&conds, "s.parent_job%s'%|Ss'", opToString(jc[m][n].op), aux);
 			free(aux);
 			break;
 
