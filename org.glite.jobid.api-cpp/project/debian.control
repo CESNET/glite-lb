@@ -12,7 +12,7 @@ DM-Upload-Allowed: yes
 Package: libglite-jobid-api-cpp-dev
 Section: libdevel
 Architecture: any
-Depends: libglite-jobid-api-c, ${misc:Depends}
+Depends: libglite-jobid2, ${misc:Depends}
 Provides: glite-jobid-api-cpp
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
