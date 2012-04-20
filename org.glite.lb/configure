@@ -40,7 +40,7 @@ my $nothrflavour = 'gcc64dbg';
 my $mode = 'build';
 my $help = 0;
 my $listmodules;
-my $version;
+my ($version, $force_version);
 my $branch;
 my $output;
 my $lb_tag = '';
@@ -230,7 +230,7 @@ my @opts = (
 	'nothrflavour:s' => \$nothrflavour,
 	'mode=s' => \$mode,
 	'listmodules=s' => \$listmodules,
-	'version=s' => \$version,
+	'version=s' => \$force_version,
 	'branch=s' => \$branch,
 	'output=s' => \$output,
 	'stage=s' => \$stagedir,
@@ -1193,8 +1193,8 @@ sub get_version
 	my ($major,$minor,$rev,$age);
 	my $old_;
 
-	if ($version) {
-		$version =~ /([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)-(.+)/;
+	if ($force_version) {
+		$force_version =~ /([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)-(.+)/;
 		($major,$minor,$rev,$age) = ($1,$2,$3,$4);
 	}
 	else {
@@ -1213,9 +1213,8 @@ sub get_version
 		}
 		close V;
 		$_ = $old_;
-
-		$version = "$major.$minor.$rev-$age";
 	}
+	$version = "$major.$minor.$rev-$age";
 
 	return ($major, $minor, $rev, $age);
 }
@@ -1365,7 +1364,7 @@ top_srcdir = $top_srcdir
 	for my $dir (readdir $dh) {
 		if ($dir=~/^(.*)\.spec$/) {
 			if ($1 ne $packageName) {
-				printf STDERR "Changed RPM name: $packageName --> $1\n";
+				printf STDERR "Changed RPM name: $packageName --> $1\n" if ($debug);;
 				$packageName=$1;
 			}
 			last;
@@ -1376,7 +1375,7 @@ top_srcdir = $top_srcdir
 	for my $file ("$packageName.spec", "debian.rules", "debian.control", "debian.changelog", "debian.copyright") {
 		if (-f "$abs_srcdir/project/$file") {
 			my $old_ = $_;
-			printf STDERR "Creating $build$file\n";
+			printf STDERR "Creating $build$file\n" if ($debug);;
 			open DST, ">$build$file";
 			open SRC, "<$abs_srcdir/project/$file";
 			while (<SRC>) {
@@ -1395,6 +1394,11 @@ top_srcdir = $top_srcdir
 				if (/\@DEBIAN_VCS\@/) { s/\@DEBIAN_VCS\@/$package{debian_vcs}/g; }
 				if (/\@DEBIAN_DATE\@/) { s/\@DEBIAN_DATE\@/$debdate/g; }
 				if (/\@SPEC_DATE\@/) { s/\@SPEC_DATE\@/$specdate/g; }
+				if (/^\s*.+\/configure\s/ and $force_version) {
+					print "Version forced to $version\n" if ($debug);;
+					s/--version\s+\S+\s?//;
+					s/$/ --version $version/;
+				}
 				printf DST "%s", "$_";
 			}
 			close SRC;
@@ -1403,7 +1407,7 @@ top_srcdir = $top_srcdir
 		}
 	}
 
-	print "Creating ${build}debian/\n";
+	print "Creating ${build}debian/\n" if ($debug);;
 
 	`rm -rfv  ${build}debian`;
 	mkdir $build."debian" or die $!;
@@ -2014,7 +2018,7 @@ General options (defaults in []):
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
   --listmodules=subsys          list modules of a subsystem
   --listmodules=module          list subpackages of a module
-  --version=maj.min.rev-age	specify version here instead of reading version.properties
+  --version=maj.min.rev-age	version used instead of reading version.properties
   --branch=branch		CVS branch/etics name suffix (HEAD, branch_2_1, ...)
   --libdir=libdir		typically [lib,lib64] postfix
   --project=PROJECT		build or generate etics for a project (glite/emi1/emi) [emi]
