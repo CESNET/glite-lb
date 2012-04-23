@@ -117,3 +117,6 @@
 - Do not set up daemons to start during installation. Starting scripts configured by yaim
 - Crash fixed (no jobs on error)
 
+1.2.3-2
+- Module rebuilt
+
