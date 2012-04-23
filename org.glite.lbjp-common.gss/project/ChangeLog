@@ -125,3 +125,6 @@
 - Globus pre-initialization magic workaround for gss_init_sec_context()
 - Locking around gss_import_sec_context() and setenv() to protect environment (not real fix, setenv() shouldn't be used at all)
 
+3.1.3-2
+- Module rebuilt
+
