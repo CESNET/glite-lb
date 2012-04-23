@@ -200,3 +200,6 @@
 - Avoid replacing files in /etc/glite-lb (rpmlint warnings)
 - Do not elave excess sockets in /tmp (fix for SB#92708)
 
+2.3.4-2
+- Module rebuilt
+
