@@ -222,3 +222,6 @@
 - Memory leaks fixed in client and common library when looking for non-existant job
 - Fixed race condition during context initializations
 
+5.1.4-1
+- Fixed connection pool unlocking in error conditions (SB #92783)
+
