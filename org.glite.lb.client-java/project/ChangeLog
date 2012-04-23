@@ -91,3 +91,6 @@
 1.2.1-2
 - Module rebuilt
 
+1.2.2-1
+- Limit number of jars used for axis (scanning script with the expected list)
+
