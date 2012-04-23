@@ -125,3 +125,6 @@
 - DB dependencies update
 - Fixed reaction to DB initialization errors
 
+3.1.2-2
+- Module rebuilt
+
