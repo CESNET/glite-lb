@@ -370,3 +370,9 @@
 - Memcheck error fixed in server-side statistics
 - Uninitialized memory fixed in job query code
 
+2.3.4-1
+- Update dependency on LCAS in Debian
+- Build of Debian packages fixed
+- Job ACL output refactoring, fixing SB #92766
+- Recognize built-in index on parent_job when evaluating queries -- SB #78743
+
