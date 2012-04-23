@@ -99,3 +99,6 @@
 - Fixed yaim script (proper return code)
 - Do not set up daemons to start during installation. Starting scripts configured by yaim
 
+4.4.3-2
+- Module rebuilt
+
