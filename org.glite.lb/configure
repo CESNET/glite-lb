@@ -597,7 +597,7 @@ BEGIN{
 	'lb.logger' => [ qw/cppunit:B libtool:B globus:B/ ],
 	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B globus:B/ ],
 	'lb.nagios' => [ qw/globus_proxy_utils:R/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql-server:R cppunit:B gsoap:B classads voms:B lcas gridsite:B bison:B libtool:B libxml2 flex:B/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql-server:R cppunit:B gsoap:B classads:B voms:B lcas gridsite:B bison:B libtool:B libxml2 flex:B/ ],
 	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B globus:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B globus:B/ ],
 	'lb.ws-interface' => [ qw/libxslt:B tidy:B/ ],
