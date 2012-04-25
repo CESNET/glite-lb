@@ -14,6 +14,7 @@ BuildRequires: gsoap
 BuildRequires: gsoap-devel
 BuildRequires: glite-lbjp-common-gss-devel
 BuildRequires: libtool
+BuildRequires: pkgconfig
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Obsoletes: glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
 AutoReqProv: yes

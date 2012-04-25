@@ -38,6 +38,7 @@ BuildRequires: expat-devel
 BuildRequires: voms
 BuildRequires: bison
 BuildRequires: chrpath
+BuildRequires: pkgconfig
 Requires: mysql-server
 # for upgrade from EMI-1:
 # new function glite_srvbones_daemon_listen() in 2.2.0

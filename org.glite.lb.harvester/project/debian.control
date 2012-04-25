@@ -2,7 +2,7 @@ Source: glite-lb-harvester
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, docbook-utils, libglite-jobid-api-c-dev, libglite-lb-client-dev, libglite-lb-common-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-db-dev, libglite-lbjp-common-log-dev, libglite-lbjp-common-trio-dev, libtool
+Build-Depends: debhelper (>= 7.0.50~), chrpath, docbook-utils, libglite-jobid-api-c-dev, libglite-lb-client-dev, libglite-lb-common-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-db-dev, libglite-lbjp-common-log-dev, libglite-lbjp-common-trio-dev, libtool, pkg-config
 Standards-Version: 3.9.1
 Section: misc
 Homepage: @URL@

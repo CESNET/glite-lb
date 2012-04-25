@@ -14,6 +14,7 @@ BuildRequires: glite-lbjp-common-gss-devel%{?_isa}
 BuildRequires: glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires: glite-lbjp-common-log-devel%{?_isa}
 BuildRequires: libtool
+BuildRequires: pkgconfig
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts

@@ -9,6 +9,7 @@ Group: Development/Libraries
 BuildRequires: glite-jobid-api-c-devel
 BuildRequires: libtool
 BuildRequires: cppunit-devel
+BuildRequires: pkgconfig
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-c/%{version}/src/%{name}-@VERSION@.src.tar.gz

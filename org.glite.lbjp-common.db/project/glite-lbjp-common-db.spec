@@ -13,6 +13,7 @@ BuildRequires: mysql-devel
 BuildRequires: glite-lbjp-common-trio-devel
 BuildRequires: glite-lbjp-common-log-devel
 BuildRequires: libtool
+BuildRequires: pkgconfig
 BuildRequires: postgresql-devel
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv: yes
