@@ -38,7 +38,9 @@ limitations under the License.
 #endif
 
 #include <globus_common.h>
+#ifndef NO_GLOBUS_GSSAPI
 #include <globus_gsi_callback.h>
+#endif
 
 #include <gssapi.h>
 #include <openssl/err.h>
@@ -1558,7 +1560,10 @@ edg_wll_gss_initialize(void)
 
    // some pre-initializations (workarounds thread-safe problem
    // in gss_init_sec_context)
+#ifndef NO_GLOBUS_GSSAPI
    globus_gsi_callback_get_SSL_callback_data_index(&index);
+#endif
+
 #ifdef GLITE_LBU_THREADED
    pthread_mutex_unlock(&init_lock);
 #endif
