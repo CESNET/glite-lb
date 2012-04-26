@@ -224,7 +224,9 @@ WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common${default_flavour} \
 
 HDRS=index.h lb_authz.h store.h
 
-MAN_GZ:=glite-lb-bkindex.8.gz glite-lb-bkserverd.8.gz glite-lb-mon-db.1.gz
+MAN1_GZ:=glite-lb-mon-db.1.gz
+MAN8_GZ:=glite-lb-bkindex.8.gz glite-lb-bkserverd.8.gz
+MAN_GZ:=$(MAN1_GZ) $(MAN8_GZ)
 MAN = $(MAN_GZ:.gz=)
 
 LIB_OBJS_BK:= \
@@ -356,7 +358,8 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
-	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
+	${INSTALL} -m 644 ${MAN1_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
+	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	for p in bkserverd bkindex mon-db; do \
 		${INSTALL} -m 755 "glite-lb-$$p" "${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-$$p"; \
 	done
@@ -383,7 +386,6 @@ install:
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix})
 	install -m 644 ${STATIC_LIB_BK} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
-	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 ifdef LB_PERF
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_proxy.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif

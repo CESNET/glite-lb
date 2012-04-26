@@ -38,6 +38,9 @@ install: build-stamp
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 	rm -vf $(CURDIR)/debian/tmp/usr/lib/*.la
 	rm -vf $(CURDIR)/debian/tmp/usr/lib/*.a
+	rm -vf $(CURDIR)/debian/tmp/usr/lib/modules/*.la
+	rm -vf $(CURDIR)/debian/tmp/usr/lib/modules/*.a
+	find $(CURDIR)/debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 	mv $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-server-@MAJOR@.@MINOR@.@REVISION@ $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-server
 	(cd $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-server; \
 	 rm -fv ChangeLog LICENSE; \
