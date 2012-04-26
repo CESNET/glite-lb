@@ -400,15 +400,15 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 		my $jdk_prefix;
 
 		print "Looking for some caffein ... ";
-		if (defined $ENV{'JDK_HOME'}) {
+		if (defined($ENV{'JDK_HOME'}) and -f "$ENV{'JDK_HOME'}/include/jni.h") {
 			$jdk_prefix = $ENV{'JDK_HOME'};
 			print "JDK_HOME=$jdk_prefix\n";
-		} elsif (defined $ENV{'JAVA_HOME'}) {
+		} elsif (defined($ENV{'JAVA_HOME'}) and -f "$ENV{'JAVA_HOME'}/include/jni.h") {
 			$jdk_prefix = $ENV{'JAVA_HOME'};
 			print "JAVA_HOME=$jdk_prefix\n";
 		} else {
 			foreach my $i (0..$#{$externs{$ext}{locations}}) {
-				if (-e $externs{$ext}{locations}[$i]) {
+				if (-e $externs{$ext}{locations}[$i] and -f "$externs{$ext}{locations}[$i]/include/jni.h") {
 					$jdk_prefix=$externs{$ext}{locations}[$i];
 					print "(found directory $jdk_prefix)\n";
 					last;
