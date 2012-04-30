@@ -61,6 +61,7 @@ typedef struct _edg_wll_SeqCode {
 				/* 40-51 EV.CODE=%03d: */
 				/* 53-56 SRC=%c */
 	char		condor[EDG_WLL_SEQ_CONDOR_SIZE];			
+	char		cream[EDG_WLL_SEQ_SIZE];
 } edg_wll_SeqCode;
 
 /* non-gsi one-element analogy of connPool for L&B Proxy server */
