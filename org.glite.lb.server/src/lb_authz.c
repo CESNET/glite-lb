@@ -1219,11 +1219,13 @@ check_jobstat_authz(edg_wll_Context ctx,
 	    	    int *authz_flags)
 {
     *authz_flags = 0;
+    if (job_flags & EDG_WLL_NOTIF_ANONYMIZE) *authz_flags |= READ_ANONYMIZED;
+
+    if (ctx->noAuth)
+	return 1;
 
     if (peer == NULL || peer->name == NULL)
 	return 0;
-
-    if (job_flags & EDG_WLL_NOTIF_ANONYMIZE) *authz_flags |= READ_ANONYMIZED;
 
     if (edg_wll_gss_equal_subj(peer->name, stat->owner))
 	return 1;
@@ -1233,8 +1235,7 @@ check_jobstat_authz(edg_wll_Context ctx,
     if ((!(*authz_flags & READ_ANONYMIZED)) && (check_authz_policy(&ctx->authz_policy, peer, READ_ANONYMIZED)))
 	*authz_flags |= READ_ANONYMIZED;
 
-    if (ctx->noAuth ||
-	edg_wll_amIroot(peer->name, peer->fqans, &ctx->authz_policy))
+    if (edg_wll_amIroot(peer->name, peer->fqans, &ctx->authz_policy))
 	return 1;
     if (acl && edg_wll_CheckACL_princ(ctx, acl, EDG_WLL_CHANGEACL_READ, peer) == 0)
 	return 1;
