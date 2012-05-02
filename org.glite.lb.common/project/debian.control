@@ -2,7 +2,7 @@ Source: glite-lb-common
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, glite-lb-types, libc-ares-dev, libclassad1, libclassad-dev, libexpat1, libexpat1-dev, libcppunit-dev, libglite-jobid-api-cpp-dev, libglite-jobid-api-c-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-trio-dev, libtool, pkg-config
+Build-Depends: debhelper (>= 7.0.50~), chrpath, glite-lb-types, libc-ares-dev, libclassad0-dev, | libclassad-dev, libexpat1, libexpat1-dev, libcppunit-dev, libglite-jobid-api-cpp-dev, libglite-jobid-api-c-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-trio-dev, libtool, pkg-config
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@
