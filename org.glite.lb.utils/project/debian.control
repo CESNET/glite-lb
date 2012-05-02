@@ -2,7 +2,7 @@ Source: glite-lb-utils
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, glite-lb-types, libcppunit-dev, libglite-jobid-api-c-dev, libglite-lb-client-dev, libglite-lb-state-machine-dev, libglite-lbjp-common-jp-interface-dev, libglite-lbjp-common-maildir-dev, libglite-lbjp-common-trio-dev, pkg-config
+Build-Depends: debhelper (>= 7.0.50~), chrpath, glite-lb-types, libcppunit-dev, libglite-jobid-api-c-dev, libglite-lb-client-dev, libglite-lb-state-machine-dev, libglite-lbjp-common-jp-interface-dev, libglite-lbjp-common-maildir-dev, libglite-lbjp-common-trio-dev
 Standards-Version: 3.9.1
 Section: misc
 Homepage: @URL@

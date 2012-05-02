@@ -198,7 +198,7 @@ EOF
 		echo -n "."
 #		createuser $PG_ARGS -A -D "$RTM_NAME" >/dev/null 2>&1
 #		echo -n "."
-		createdb $PG_ARGS --encoding "UTF-8" --template template0 --owner "$RTM_USER" "$RTM_NAME" >psql-create.log 2>&1 || return $?
+		createdb $PG_ARGS --encoding "UTF-8" --owner "$RTM_USER" "$RTM_NAME" >psql-create.log 2>&1 || return $?
 		rm psql-create.log
 		echo -n "."
 		rtm_db_created="1"

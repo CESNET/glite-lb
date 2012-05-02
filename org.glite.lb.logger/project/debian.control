@@ -2,7 +2,7 @@ Source: glite-lb-logger
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, libcppunit-dev, libglite-jobid-api-c-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-log-dev, libglite-lbjp-common-trio-dev, libtool, pkg-config
+Build-Depends: debhelper (>= 7.0.50~), chrpath, libcppunit-dev, libglite-jobid-api-c-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-log-dev, libglite-lbjp-common-trio-dev, libtool
 Standards-Version: 3.9.1
 Section: misc
 Homepage: @URL@
