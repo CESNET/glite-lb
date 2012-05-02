@@ -1,7 +1,0 @@
-Document: glite-lb-doc-ug
-Title: Logging and Bookkeeping - User's Guide
-Abstract: L&B User’s Guide explains how to use the Logging and Bookkeeping (L&B) service from the user’s point of view. The service architecture is described thoroughly. Examples on using L&B event logging command to log a user tag and change job ACL are given, as well as L&B query and notification use cases.
-Section: Network/Monitoring
-
-Format: PDF
-Files: /usr/share/doc/glite-lb-doc/LBUG.pdf.gz
