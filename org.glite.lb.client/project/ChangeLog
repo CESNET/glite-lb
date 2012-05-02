@@ -225,3 +225,6 @@
 5.1.4-1
 - Fixed connection pool unlocking in error conditions (SB #92783)
 
+5.1.4-2
+- Module rebuilt
+
