@@ -54,6 +54,7 @@ static const char* const request_headers[] = {
 	NULL
 };
 
+static int zero = 0;
 
 
 
@@ -94,58 +95,74 @@ static void get_name_and_port(const char *address, char **name, int *port)
 }	
 
 
+static int daemon_listen(edg_wll_Context ctx, const char *name, char *port, int *conn_out) {
+	struct	addrinfo *ai;
+	struct	addrinfo hints;
+	int	conn;
+	int 	gaie;
+
+	memset (&hints, '\0', sizeof (hints));
+	hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = AF_INET6;
+
+	gaie = getaddrinfo (name, port, &hints, &ai);
+	if (gaie != 0 || ai == NULL) {
+		hints.ai_family = 0;
+		gaie = getaddrinfo (NULL, port, &hints, &ai);
+	}
+
+	gaie = getaddrinfo (name, port, &hints, &ai);
+	if (gaie != 0) {
+		return edg_wll_SetError(ctx, EADDRNOTAVAIL, gai_strerror(gaie));
+	}
+	if (ai == NULL) {
+		return edg_wll_SetError(ctx, EADDRNOTAVAIL, "no result from getaddrinfo");
+	}
+
+	conn = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+	if ( conn < 0 ) { 
+		freeaddrinfo(ai);
+		return edg_wll_SetError(ctx, errno, "socket() failed");
+	}
+	//setsockopt(conn, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+	if (ai->ai_family == AF_INET6)
+		setsockopt(conn, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(zero));
+
+	if ( bind(conn, ai->ai_addr, ai->ai_addrlen) )
+	{
+		edg_wll_SetError(ctx, errno, "bind() failed");
+		close(conn); 
+		freeaddrinfo(ai);
+		return edg_wll_Error(ctx, NULL, NULL);
+	}
+
+	if ( listen(conn, CON_QUEUE) ) { 
+		edg_wll_SetError(ctx, errno, "listen() failed");
+		close(conn); 
+		return edg_wll_Error(ctx, NULL, NULL);
+	}
+
+	freeaddrinfo(ai);
+
+	*conn_out = conn;
+	return 0;
+}
+
+
 static int my_bind(edg_wll_Context ctx, const char *name, int port, int *fd)
 {
-	int		sock;
 	int		ret;
-	struct addrinfo	*ai;
-	struct addrinfo	hints;
 	char 		*portstr = NULL;
 
 	asprintf(&portstr, "%d", port);
 	if (portstr == NULL) {
 		return edg_wll_SetError(ctx, ENOMEM, "my_bind(): ENOMEM converting port number");
 	}
-
-	memset (&hints, '\0', sizeof (hints));
-	hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
-	hints.ai_socktype = SOCK_STREAM;
-
-	ret = getaddrinfo (name, portstr, &hints, &ai);
+	ret = daemon_listen(ctx, name, portstr, fd);
 	free(portstr);
-	if (ret != 0) {
-		return edg_wll_SetError(ctx, EADDRNOTAVAIL, gai_strerror(ret));
-	}
-	if (ai == NULL) {
-		return edg_wll_SetError(ctx, EADDRNOTAVAIL, "no result from getaddrinfo");
-	}
 
-	sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-	if (sock == -1) { 
-		freeaddrinfo(ai);
-		return  edg_wll_SetError(ctx, errno, "socket() failed");
-	}
-
-//	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-	ret = bind(sock, ai->ai_addr, ai->ai_addrlen);
-	if (ret == -1) { 
-		edg_wll_SetError(ctx, errno, "bind() failed");
-		close(sock); 
-		freeaddrinfo(ai);
-		return edg_wll_Error(ctx, NULL, NULL);
-	}
-	freeaddrinfo(ai);
-
-	ret = listen(sock, CON_QUEUE);
-	if (ret == -1) { 
-		edg_wll_SetError(ctx, errno, "listen() failed");
-		close(sock); 
-		return edg_wll_Error(ctx, NULL, NULL);
-	}
-
-	*fd = sock;
-	
-	return edg_wll_Error(ctx,NULL,NULL);
+	return ret;
 }
 	
 

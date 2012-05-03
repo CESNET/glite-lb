@@ -1,0 +1,4 @@
+usr/lib/lib*.so.*
+usr/share/doc/glite-lb-client/changelog.gz
+usr/share/doc/glite-lb-client/package.*
+usr/share/doc/glite-lb-client/README-notify

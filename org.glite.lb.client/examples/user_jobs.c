@@ -20,6 +20,7 @@ limitations under the License.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "glite/lb/context.h"
 #include "glite/lb/xml_conversions.h"
@@ -31,13 +32,27 @@ limitations under the License.
 
 int use_proxy = 0;
 
+static const char *get_opt_string = "hxn";
+
+static struct option opts[] = {
+	{"help",	0,	NULL,	'h'},
+	{"proxy",	0,	NULL,	'x'},
+	{"no-states",	0,	NULL,	'n'},
+	{NULL,	0,	NULL,	0}
+};
+
 int (*user_jobs)(edg_wll_Context, edg_wlc_JobId **, edg_wll_JobStat **);
 
 
 void
 usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-h] [-x] [userid]\n", me);
+	fprintf(stderr,"usage: %s [options] [userid]\n"
+		"\t-h, --help     	show this help\n"
+		"\t-x, --proxy    	contact proxy\n"
+		"\t-n, --no-states	do not show job states"
+		"\n",
+		me);
 }
 
 int main(int argc,char **argv)
@@ -46,21 +61,31 @@ int main(int argc,char **argv)
 	char		*errt,*errd;
 	edg_wlc_JobId		*jobs = NULL;
 	edg_wll_JobStat		*states = NULL;
-	int		i,j;
+	int		opt,i,j;
 	char 		*owner = NULL;
+	int		show_states = 1;
 
 	user_jobs = edg_wll_UserJobs;
-	for ( i = 1; i < argc; i++ ) {
-		if ( !strcmp(argv[i], "-h") || !strcmp(argv[i], "--help") ) {
+
+	while ((opt = getopt_long(argc, argv, get_opt_string, opts, NULL)) != EOF) {
+		switch (opt) {
+		case 'h':
 			usage(argv[0]);
 			exit(0);
-		} else if ( !strcmp(argv[i], "-x") ) {
+		case 'x':
 			user_jobs = edg_wll_UserJobsProxy;
-			continue;
+			break;
+		case 'n':
+			show_states = 0;
+			break;
+		default:
+			if (owner || !optarg) {
+				usage(argv[0]);
+				exit(1);
+			}
+			owner = strdup(optarg);
+			break;
 		}
-
-		owner = strdup(argv[i]);
-		break; 	
 	}
 
 	if (edg_wll_InitContext(&ctx) != 0) {
@@ -70,11 +95,13 @@ int main(int argc,char **argv)
 	if ( user_jobs == edg_wll_UserJobsProxy  && owner )
 		edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, owner);
 
-	if (user_jobs(ctx,&jobs,&states)) goto err;
- 	for (i=0; states[i].state != EDG_WLL_JOB_UNDEF; i++) {	
+	if (user_jobs(ctx,&jobs,show_states ? &states : NULL)) goto err;
+ 	for (i=0; states && states[i].state != EDG_WLL_JOB_UNDEF; i++) {
 		char *id = edg_wlc_JobIdUnparse(states[i].jobId),
 		     *st = edg_wll_StatToString(states[i].state);
 		
+		printf("Job: %s\n", id);
+
 		if (!states[i].parent_job) {
 			if (states[i].jobtype == EDG_WLL_STAT_SIMPLE) { 
 				printf("      %s .... %s %s\n", id, st, (states[i].state==EDG_WLL_JOB_DONE) ? edg_wll_done_codeToString(states[i].done_code) : "" );
@@ -102,6 +129,13 @@ int main(int argc,char **argv)
 			
 		free(id);
 		free(st);
+	}
+	if (!show_states) {
+		for (i = 0; jobs[i]; i++) {
+			char *id = edg_wlc_JobIdUnparse(jobs[i]);
+			printf("	%s\n", id);
+			free(id);
+		}
 	}
 
 	printf("\nFound %d jobs\n",i);

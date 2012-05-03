@@ -24,6 +24,7 @@ void glite_lb_print_stat_fields(void **,edg_wll_JobStat *);
 void glite_lb_dump_stat_fields(void);
 
 #include <time.h>
+#include <stdio.h>
 
 static char *TimeToStr(time_t t) 
 {

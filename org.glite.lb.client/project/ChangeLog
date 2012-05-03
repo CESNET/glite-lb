@@ -126,6 +126,12 @@
 4.1.8-1
 - Optimized handling of simultaneous proxy&direct logging (fix for bug #77366)
 
+4.1.9-1
+- Fixed default setting for GLITE_LB_EXPORT_PURGE_ARGS
+
+4.1.10-1
+- Proper handling of background purge error messages (fix for bug #77974)
+
 5.0.0-1
 - Fixes for parallel release in EMI & gLite
 - Version numbering fixed
@@ -176,3 +182,46 @@
 
 5.0.6-1
 - Using rpath only as $prefix/$libdir (fixes rpmlint rpath check in mock environment)
+
+5.0.7-1
+- Fixed default setting for GLITE_LB_EXPORT_PURGE_ARGS
+- Proper handling of background purge error messages (fix for bug #77974)
+- Fix locations in automatic purge (SB #81646).
+- Makefile adjustments for eticsless build
+
+5.0.8-1
+- Finalized ETICS+rpath+libtool mock build problem, workaround inside ETICS configurations now
+- Fixing rpath problem in mock builds
+
+5.0.9-1
+- Examples linked explicitely with L&B common library
+- Reduce memory consumption on query (SB #46437)
+- Support Debian 6 build
+
+5.1.0-1
+- Preparation for a new multiplatform release
+- Fix removing of .la files (for ETICS build).
+- Now with post-install
+
+5.1.1-1
+- Notification client supports new flags (anonymization, terminal states, job history)
+- Support of Debian packaging
+
+5.1.2-1
+- Packaging improvements (rpmlint and lintian checks)
+- Extended job query example to allow setting selected query flags through cmdline arguments
+- Correct module name in spec file
+- License string as recognized by rpmlint and packaging guidelines.
+- Fixes in notification client:
+  - notification refresh - missing ID
+  - client timeout - '999999999 + time(NULL)' overflows on 32bit since 2006
+- "Megajob" perftest updates
+
+5.1.3-1
+- New example script
+- Memory leaks fixed in client and common library when looking for non-existant job
+- Fixed race condition during context initializations
+
+5.1.4-1
+- Fixed connection pool unlocking in error conditions (SB #92783)
+

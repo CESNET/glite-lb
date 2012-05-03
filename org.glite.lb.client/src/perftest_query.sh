@@ -20,13 +20,17 @@ clients=${1:-3}
 
 jobs=${2:-/tmp/perftest_10.jobids}
 
-# XXX - there must be better way to find stage
 if [ -z "${GLITE_LOCATION}" ]; then
-        STAGEDIR=/home/michal/shared/egee/jra1-head/stage
+	# let's be in stage
+        STAGEDIR=`pwd`/stage/usr
 else
         STAGEDIR=${GLITE_LOCATION}
 fi
-JOBSTAT=$STAGEDIR/examples/glite-lb-job_status
+for dir in $STAGEDIR/lib/glite-lb/examples $STAGEDIR/lib64/glite-lb/examples; do
+	EXAMPLES=$dir
+	if test -d $dir; then break; fi
+done
+JOBSTAT=$EXAMPLES/glite-lb-job_status
 
 ask() {
 	$JOBSTAT `cat $jobs`

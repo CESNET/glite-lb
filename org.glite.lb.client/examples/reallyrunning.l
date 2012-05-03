@@ -1,0 +1,4 @@
+# macro definition for REALLYRUNNING state
+
+:running:
+-s LogMonitor,-e ReallyRunning,--wn_seq="${EDG_WL_SEQUENCE:-UI=000003:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000}"

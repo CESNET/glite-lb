@@ -71,6 +71,9 @@ static void usage(void)
 	fprintf(stderr, "    -e                 query events (default is 'query jobs')\n");
 	fprintf(stderr, "    -P                 query the L&B Proxy server\n");
 	fprintf(stderr, "    -p                 L&B Proxy socket path\n");
+	fprintf(stderr, "    -C                 send classad flag with job state queries\n");
+	fprintf(stderr, "    -S                 send childstat flag with job state queries\n");
+	fprintf(stderr, "    -N                 send no_jobs flag with job state queries\n");
 	fprintf(stderr, "    -r type            returned results: limited | all | none\n\n");
 	fprintf(stderr, "    -J num             jobs soft limit\n\n");
 	fprintf(stderr, "    -E num             events soft limit (query events only)\n\n");
@@ -93,13 +96,15 @@ int main(int argc,char *argv[])
 							jobsLimit	= 0,
 							stdisp		= 0,
 							eventsLimit	= 0,
+							resultsLimit	= 0,
 							i, j, ret,
-							errCode;
+							errCode,
+							flags		= 0;
 
 	myname	= argv[0];
 	ret		= 0;
 	do {
-		switch ( getopt(argc,argv,"hvsePp:i:m:r:J:E:") ) {
+		switch ( getopt(argc,argv,"hvsePp:i:m:r:J:E:CSNR:") ) {
 		case 'h': usage();  exit(0);
 		case '?': usage(); exit(EINVAL);
 		case 'v': verbose = 1; break;
@@ -117,6 +122,10 @@ int main(int argc,char *argv[])
 			break;
 		case 'J': jobsLimit = atoi(optarg); break;
 		case 'E': eventsLimit = atoi(optarg); break;
+		case 'R': resultsLimit = atoi(optarg); break;
+		case 'C': flags = flags | EDG_WLL_STAT_CHILDSTAT; break;
+		case 'S': flags = flags | EDG_WLL_STAT_CLASSADS; break;
+		case 'N': flags = flags | 1024; break; //crude, I know
 		case -1: ret = 1; break;
 		}
 	} while ( !ret );
@@ -131,6 +140,12 @@ int main(int argc,char *argv[])
 		if ( verbose ) printf("Soft query limit for jobs: %d\n", jobsLimit);
 	}
 	else if ( verbose ) printf("Soft query limit for jobs not set\n");
+
+	if ( resultsLimit > 0 ) {
+		edg_wll_SetParam(ctx, EDG_WLL_PARAM_QUERY_RESULTS, resultsLimit);
+		if ( verbose ) printf("Results limit for jobs: %d\n", resultsLimit);
+	}
+	else if ( verbose ) printf("Results limit for jobs not set\n");
 
 	if ( query_events ) {
 		if ( eventsLimit > 0 ) {
@@ -202,14 +217,14 @@ int main(int argc,char *argv[])
 		}
 
 		if ( query_jobs ) {
-			if ( query_bkserver )
+			if ( query_bkserver ) 
 				errCode = edg_wll_QueryJobsExt(ctx,
 								(const edg_wll_QueryRec **) jc,
-								0, &jobsOut, stdisp? &statesOut: NULL);
+								flags, &jobsOut, stdisp? &statesOut: NULL);
 			else
 				errCode = edg_wll_QueryJobsExtProxy(ctx,
 								(const edg_wll_QueryRec **) jc,
-								0, &jobsOut, stdisp? &statesOut: NULL);
+								flags, &jobsOut, stdisp? &statesOut: NULL);
 		} else {
 			if ( query_bkserver )
 				errCode = edg_wll_QueryEventsExt(ctx,
@@ -931,7 +946,6 @@ static void dgerr(edg_wll_Context ctx, char *where)
 
 
 	edg_wll_Error(ctx, &errText, &errDesc);
-	fprintf(stderr, "%s", errText);
 	if ( where )
 		fprintf(stderr, ": %s", where);
 	if ( errDesc )

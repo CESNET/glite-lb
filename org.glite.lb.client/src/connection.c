@@ -304,11 +304,15 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 	if ( (index = ConnectionIndex(ctx, ctx->srvName, ctx->srvPort)) == -1 ) {
 		/* no such open connection in pool */
 		if (ctx->connections->connOpened == ctx->connections->poolSize)
-			if(ReleaseConnection(ctx, NULL, 0)) goto end;
+			if(ReleaseConnection(ctx, NULL, 0)) {
+		    		edg_wll_poolUnlock(); 
+				goto end;
+			}
 		
 		index = AddConnection(ctx, ctx->srvName, ctx->srvPort);
 		if (index < 0) {
                     edg_wll_SetError(ctx,EAGAIN,"connection pool size exceeded");
+		    edg_wll_poolUnlock(); 
 		    goto end;
 		}
 
@@ -568,7 +572,10 @@ int http_check_status(
 			break;
 		case HTTP_UNSUPPORTED:
 			edg_wll_SetError(ctx, ENOTSUP, "Protocol versions incompatible");
-			break;								
+			break;
+		case HTTP_ACCEPTED:
+			edg_wll_SetError(ctx,EDG_WLL_ERROR_ACCEPTED_OK,response+len);
+			break;
 		case HTTP_INTERNAL:
 			/* fall through */
 		default: 
@@ -713,7 +720,7 @@ int edg_wll_accept(edg_wll_Context ctx, int fd)
 	}
 
         #ifdef EDG_WLL_CONNPOOL_DEBUG	
-        	printf("Connection with fd %d accepted. %d in the pool\n",>srvName,ctx->srvPort,ctx->connNotif->connToUse);
+        	printf("Connection with fd %d accepted. %d in the pool\n",ctx->srvName,ctx->srvPort,ctx->connNotif->connToUse);
         #endif
 		
 

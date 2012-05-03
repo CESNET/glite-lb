@@ -5,7 +5,6 @@ globalprefix=glite
 lbprefix=lb
 package=glite-lb-client
 version=0.0.0
-
 CC:=gcc
 CXX:=g++
 
@@ -20,6 +19,12 @@ version=${module.version}
 # we are (the number can be even negative).
 
 VERSION_AHEAD=-3
+
+# hacks needed for ETICS:
+# - rpath out of installation directory ${PREFIX}
+#   (the proper value is ${prefix}/${libdir})
+# - installed *.la files should be removed
+rpath?=${PREFIX}${prefix}/${libdir}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
 AT3=${stagedir}${prefix}/sbin/glite-lb-at3
@@ -41,6 +46,7 @@ l_SRC = \
 	running.l \
 	running_dag.l \
 	running_subjob.l \
+	reallyrunning.l \
 	scheduled.l \
 	scheduled_dag.l \
 	scheduled_subjob.l \
@@ -92,13 +98,13 @@ COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
 COMMON_LIB:=-lglite_lb_common
 TRIO_LIB:=-lglite_lbu_trio
 
-CFLAGS:=${CFLAGS} ${DEBUG} \
+CFLAGS:=${DEBUG} \
 	-I. \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}${prefix}/include \
 	${COVERAGE_FLAGS} \
 	-DBUILDING_LB_CLIENT \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS}
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} ${CFLAGS}
 
 CXXFLAGS:=${CFLAGS}
 
@@ -107,7 +113,7 @@ EXT_LIB:=
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
 CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 
-LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} ${COVERAGE_FLAGS}
+LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} -L${PREFIX}${prefix}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
@@ -206,28 +212,28 @@ default: all
 
 ifeq (${thrflavour},)
 ${LIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${rpath} \
 			${COMMON_LIB} ${TRIO_LIB} \
 			-lglite_security_gss
 
 ${PLUSLIB}: ${PLUSTHROBJS} ${LIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${prefix}/${libdir} ${LIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${rpath} ${LIB} ${PLUS_EXTRA_LIB}
 else
 ${NOTHRLIB}: ${LIBOBJS}
-	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBLOBJS} -rpath ${rpath} \
 			${COMMON_LIB_NOTHR} ${TRIO_LIB} \
 			-lglite_security_gss_${nothrflavour}
 
 ${THRLIB}: ${LIBTHROBJS}
-	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${prefix}/${libdir} \
+	${LINK} ${version_info} -o $@ ${LIBTHRLOBJS} -rpath ${rpath} \
 			${COMMON_LIB_THR} ${TRIO_LIB} \
 			-lglite_security_gss_${thrflavour}
 
 ${NOTHRPLUSLIB}: ${PLUSOBJS} ${NOTHRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${prefix}/${libdir} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSLOBJS} -rpath ${rpath} ${NOTHRLIB} ${PLUS_EXTRA_LIB}
 
 ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
-	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${prefix}/${libdir} ${THRLIB} ${PLUS_EXTRA_LIB}
+	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${rpath} ${THRLIB} ${PLUS_EXTRA_LIB}
 endif
 
 logevent: logevent.o args.o
@@ -239,14 +245,11 @@ notify: notify.o
 register_sandbox: %: %.o
 	${LINK} -o $@ $@.o ${default_clientlib} ${EXT_LIB}
 
-${TOOLS} ${EXAMPLES}: %: %.o
-	${LINK} -o $@ $< ${default_clientlib} ${EXT_LIB} 
-
-${EXAMPLES_CL}: %: %.o
+${TOOLS} ${EXAMPLES} ${EXAMPLES_CL}: %: %.o
 	${LINK} -o $@ $< ${default_clientlib} ${default_commonlib} ${EXT_LIB} 
 
 ${EXAMPLES_CL_THR}: %: %.o
-	${LINK} -o $@ $< ${default_clientlib_thr} ${default_commonlib_thr} ${EXT_LIB} 
+	${LINK} -o $@ $< ${default_clientlib_thr} ${default_commonlib_thr} ${EXT_LIB} -lpthread
 
 ${TOOLS}: ${default_clientlib}
 
@@ -270,17 +273,17 @@ ${LIBTHROBJS}: %.thr.o: %.c
 ${MAN_GZ}: ${MAN}
 	rm -f ${MAN_GZ} ${MAN}
 	cp $? .
-	gzip -f $(notdir $?)
+	gzip -9 -f $(notdir $?)
 
 ${MAN8_GZ}: ${MAN8}
 	cp $? .
-	gzip -f $(notdir $?)
+	gzip -9 -f $(notdir $?)
 
 perftest_logjobs.o: perftest_logjobs.c
 	${CC} ${CFLAGS} -DLB_PERF_DROP -c $<
 
 # catches $TOOLS and logevent compilation
-%.o: %.c 
+%.lo %.o: %.c
 	${CC} ${CFLAGS} -c $<
 
 %.h: %.h.T
@@ -288,7 +291,7 @@ perftest_logjobs.o: perftest_logjobs.c
 	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
-%.o: %.cpp
+%.lo %.o: %.cpp
 	${CXX} ${CFLAGS} ${GLOBUSINC} -c $<
 
 %.c: %.c.T
@@ -352,11 +355,11 @@ install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	mkdir -p ${DESTDIR}${m4dir}
 ifdef LB_STANDALONE
-	${INSTALL} -m 644 ${c_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 755 ${c_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 else
-	${INSTALL} -m 644 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	if test -n "${staging}"; then \
-		install -m 644 ${plus_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
+		install -m 755 ${plus_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
 	fi
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
@@ -394,10 +397,32 @@ clean:
 	rm -rvf ${lib_LTLIBRARIES} ${TOOLS} logevent  register_sandbox ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl StatusAttrNames.pl uiwrap.T
-	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
+
+distclean:
+	rm -rvf Makefile.inc *.spec debian/
 
 check_version:
 	${CHECK_VERSION} ${stagedir}${prefix}/include/glite/lb/common_version.h
 
+post-install:
+	rm -rfv ${PREFIX}${prefix}/${libdir}/*.la
 
-.PHONY: default all compile examples check stage install clean check_version link
+post-install-rpath:
+	for file in `find ${PREFIX}${prefix}/${libdir} -type f` \
+	            `find ${PREFIX}${prefix}/bin -type f` \
+	            `find ${PREFIX}${prefix}/sbin -type f` \
+	; do \
+		if test -h $$file; then continue; fi; \
+		orpath=`chrpath -l $$file 2>/dev/null`; \
+		if test $$? = 0 ; then \
+			orpath=`echo $$orpath | sed 's:.*RPATH=::'`; \
+			rpath=`echo $$orpath | sed "s:${PREFIX}${prefix}:${sysroot}${prefix}:g" | tr ':' '\n' | grep -v '^$$' | tr '\n' ':' | sed 's/:$$//'`; \
+			if test "$$orpath" = "$$rpath"; then continue; fi; \
+			echo "$$file"; \
+			echo " -> $$rpath"; \
+			chrpath -r $$rpath $$file; \
+			chrpath -d $$file; \
+		fi; \
+	done
+
+.PHONY: default all compile examples check stage install clean distclean check_version link post-install post-install-rpath
