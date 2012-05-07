@@ -418,10 +418,7 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 			ret = strdup(ctx->p_seqcode.condor);
 			break;
 		case EDG_WLL_SEQ_CREAM:
-			if (ctx->p_seqcode.cream && ctx->p_seqcode.cream[0])
-				ret = strdup(ctx->p_seqcode.cream); 
-			else
-				ret = strdup("no_seqcodes_with_CREAM");	
+			ret = strdup("no_seqcodes_with_CREAM");	
 			break;
 		default:
 			edg_wll_SetError(ctx,EINVAL,"edg_wll_GetSequenceCode(): unknown sequence code type");
@@ -495,10 +492,6 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 				strncpy(ctx->p_seqcode.condor, seqcode_str, sizeof(ctx->p_seqcode.condor));
 			break;
 		case EDG_WLL_SEQ_CREAM:
-			if (!seqcode_str)
-                                memset(&ctx->p_seqcode.cream, 0, sizeof ctx->p_seqcode.cream);
-                        else
-                                strncpy(ctx->p_seqcode.cream, seqcode_str, sizeof(ctx->p_seqcode.cream));
 			break; /* XXX: not yet */
 		default:
 			return edg_wll_SetError(ctx, EINVAL,
