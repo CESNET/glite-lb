@@ -22,6 +22,7 @@ limitations under the License.
 #include <errno.h>
 
 #include <openssl/x509.h>
+#include <gssapi.h>
 #include "lcas/lcas_pem.h"
 #include "voms/voms_apic.h"
 #include "glite/lb/context-int.h"
