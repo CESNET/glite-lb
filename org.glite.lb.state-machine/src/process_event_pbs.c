@@ -244,9 +244,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 		if (USABLE_DATA(res)) {
 			if(e->any.source == EDG_WLL_SOURCE_PBS_SERVER) {
 				/* queue */
-				if (!js->pub.pbs_queue)
-					js->pub.pbs_queue = strdup(e->PBSQueued.queue);
-				assert(!strcmp(js->pub.pbs_queue, e->PBSQueued.queue));
+				rep(js->pub.pbs_queue, e->PBSQueued.queue);
 				
 				/* job owner */
 				if(!js->pub.pbs_owner) 
@@ -338,10 +336,13 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				break;
 			case EDG_WLL_SOURCE_PBS_SMOM:
 			case EDG_WLL_SOURCE_PBS_MOM:
-				if (!js->pbs_reruning) {
-					js->pub.state = EDG_WLL_JOB_DONE;
-					js->pub.done_code = EDG_WLL_STAT_OK;
-				}
+				/* we are not done until server says so */
+				/*
+				 * if (!js->pbs_reruning) {
+				 *      js->pub.state = EDG_WLL_JOB_DONE;
+				 *	js->pub.done_code = EDG_WLL_STAT_OK;
+				 *}
+				 */
 				break;
 			default:
 				assert(0); //done event from strange source
@@ -357,7 +358,7 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 	case EDG_WLL_EVENT_PBSRESOURCEUSAGE:
 		if (USABLE(res)) {
 			// signalize state done, done_code uknown
-			js->pub.state = EDG_WLL_JOB_DONE;
+			/* nonsense: js->pub.state = EDG_WLL_JOB_DONE; */
 		}
 		if (USABLE_DATA(res)) {
 			/*trio_asprintf(&new_resource_usage,"%s%s\t%s = %f [%s]",
