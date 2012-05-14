@@ -148,6 +148,10 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
    memset (&ctx->vomsGroups, 0, sizeof(ctx->vomsGroups));
    edg_wll_ResetError(ctx);
 
+#ifdef NO_GLOBUS_GSSAPI
+   return 0;
+#else
+
    if (ctx->fqans) {
       char **f;
       for (f = ctx->fqans; f && *f; f++)
@@ -172,7 +176,6 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
       ret = -1; /* XXX VOMS Error */
       goto end;
    }
-
    ret = VOMS_RetrieveFromCtx(gss->context, RECURSE_CHAIN, voms_info, &err);
    if (ret == 0) {
       if (err == VERR_NOEXT)
@@ -200,6 +203,8 @@ end:
       VOMS_Destroy(voms_info);
 
    return ret;
+
+#endif /* NO_GLOBUS_GSSAPI */
 }
 
 void
