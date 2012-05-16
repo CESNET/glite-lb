@@ -954,7 +954,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	                else {
 				int	fatal = 0;
 
-				switch (edg_wll_QueryEventsServer(ctx,ctx->noAuth,
+				switch (edg_wll_QueryEventsServer(ctx,ctx->noAuth | check_authz_policy_ctx(ctx, READ_ALL),
 				    (const edg_wll_QueryRec **)job_conditions, 
 				    (const edg_wll_QueryRec **)event_conditions, &eventsOut)) {
 
