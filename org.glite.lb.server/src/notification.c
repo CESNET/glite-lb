@@ -86,8 +86,6 @@ int edg_wll_NotifNewServer(
 	notif_stream_t	*arg = NULL;
 	int npref, okpref;
 	char   *msgpref;
-        struct _edg_wll_GssPrincipal_data princ;
-        memset(&princ, 0, sizeof princ);
 
 
 	/*	Format notification ID
@@ -136,15 +134,13 @@ int edg_wll_NotifNewServer(
 
 	/*	Check permissions
 	 */
-        princ.name = ctx->peerName;
-        princ.fqans = ctx->fqans;
-	if (!ctx->noAuth && check_authz_policy(&ctx->authz_policy, &princ, READ_ANONYMIZED))
+	if (!ctx->noAuth && check_authz_policy_ctx(ctx, READ_ANONYMIZED))
 		for (i=0; conditions && conditions[i]; i++)
 			for (j=0; conditions[i][j].attr; j++)
 				if (conditions[i][j].attr == EDG_WLL_QUERY_ATTR_OWNER && 
 					!edg_wll_gss_equal_subj(conditions[i][j].value.c, ctx->peerName) &&
-					!check_authz_policy(&ctx->authz_policy, &princ, ADMIN_ACCESS) &&
-					!check_authz_policy(&ctx->authz_policy, &princ, READ_ALL)) {
+					!check_authz_policy_ctx(ctx, ADMIN_ACCESS) &&
+					!check_authz_policy_ctx(ctx, READ_ALL)) {
 						edg_wll_SetError(ctx, EPERM, "Forbidden subject. You are only authorized to register for anonymized notifications.");
 						goto cleanup;
 					}

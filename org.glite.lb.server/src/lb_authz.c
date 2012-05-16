@@ -923,7 +923,6 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
    const char *request = NULL;
    int ret;
    authz_action action;
-   struct _edg_wll_GssPrincipal_data princ;
 
    switch (ev->any.type) {
 	case EDG_WLL_EVENT_REGJOB:
@@ -971,9 +970,7 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
    if (policy_file == NULL)
         return 0;
 
-   princ.name = ctx->peerName;
-   princ.fqans = ctx->fqans;
-   ret = check_authz_policy(&ctx->authz_policy, &princ, action);
+   ret = check_authz_policy_ctx(ctx, action);
    if (ret == 1)
       return 0;
 

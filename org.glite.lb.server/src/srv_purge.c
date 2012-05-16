@@ -248,18 +248,13 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 	struct timeval	tp;
 	edg_wll_JobStat	stat;
 	purge_ctx_t prg;
-	struct _edg_wll_GssPrincipal_data princ;
 
 	memset(&prg, 0, sizeof prg);
 	prg.naffected_jobs = 0;
 	prg.parse = 0;
 	prg.dumpfile = -1;
 
-	memset(&princ, 0, sizeof princ);
-	princ.name = ctx->peerName;
-        princ.fqans = ctx->fqans;
-
-	if (!ctx->noAuth && !check_authz_policy(&ctx->authz_policy, &princ, PURGE)) {
+	if (!ctx->noAuth && !check_authz_policy_ctx(ctx, PURGE)) {
 		edg_wll_SetError(ctx,EPERM,"only superusers may purge");
 		goto abort;
 	}

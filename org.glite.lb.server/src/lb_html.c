@@ -537,11 +537,7 @@ int edg_wll_WSDLOutput(edg_wll_Context ctx UNUSED_VAR, char **message, char *fil
 int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message) {
         char *out;
 
-        struct _edg_wll_GssPrincipal_data princ;
-        memset(&princ, 0, sizeof princ);
-        princ.name = ctx->peerName;
-        princ.fqans = ctx->fqans;
-        if (ctx->count_server_stats == 2 && !ctx->noAuth && !check_authz_policy(&ctx->authz_policy, &princ, ADMIN_ACCESS))  
+        if (ctx->count_server_stats == 2 && !ctx->noAuth && !check_authz_policy_ctx(ctx, ADMIN_ACCESS))  
         {
                 asprintf(&out,"<h2>LB Server Usage Statistics</h2>\n"
                         "Only superusers can view server usage statistics on this particular server.\n");
