@@ -19,7 +19,7 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/perl/gLite/LB ${DESTDIR}${PREFIX}${prefix}/share/glite-lb/at3 ${DESTDIR}${PREFIX}${prefix}/sbin
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/perl/gLite/LB ${DESTDIR}${PREFIX}${prefix}/share/glite-lb/at3 ${DESTDIR}${PREFIX}${prefix}/sbin ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	for p in ${PM} ; do \
 		install -m 644 ${top_srcdir}/$$p ${DESTDIR}${PREFIX}${prefix}/share/perl/gLite/LB; \
 	done
