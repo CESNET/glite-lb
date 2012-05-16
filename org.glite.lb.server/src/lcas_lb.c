@@ -24,7 +24,9 @@ limitations under the License.
 
 #include "lcas/lcas_modules.h"
 #include "lcas/lcas_utils.h"
+#ifndef NO_GLOBUS_GSSAPI
 #include "voms/voms_apic.h"
+#endif
 #include <glite/lb/context.h>
 #include "authz_policy.h"
 #include "lb_authz.h"
@@ -88,6 +90,7 @@ plugin_confirm_authorization(lcas_request_t request, lcas_cred_id_t lcas_cred)
 #endif
    }
 
+#ifndef NO_GLOBUS_GSSAPI
    if (cred) {
       voms_info = VOMS_Init(NULL, NULL);
       if (voms_info == NULL) {
@@ -100,14 +103,17 @@ plugin_confirm_authorization(lcas_request_t request, lcas_cred_id_t lcas_cred)
       if (ret == 1)
           edg_wll_get_fqans(ctx, voms_info, &princ.fqans);
    }
+#endif
 
    ret = check_authz_policy(edg_wll_get_server_policy(), &princ, action);
    ret = (ret == 1) ? LCAS_MOD_SUCCESS : LCAS_MOD_FAIL;
 
 end:
    edg_wll_FreeContext(ctx);
+#ifndef NO_GLOBUS_GSSAPI
    if (voms_info)
       VOMS_Destroy(voms_info);
+#endif
    if (cert)
       X509_free(cert);
    if (chain)

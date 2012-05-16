@@ -1184,7 +1184,7 @@ int edg_wll_JobStatusToXMLV21(edg_wll_Context ctx, edg_wll_JobStat stat, char **
 	if (stat.children) edg_wll_add_strlist_to_XMLBody(&pomB, stat.children, "children", "jobId", "\t\t\t", NULL);
 	if (stat.children_hist) edg_wll_add_intlist_to_XMLBody(&pomB, stat.children_hist, "children_hist", return_string_el, "\t\t\t", 1, stat.children_hist[0]);
 	if (stat.children_states) edg_wll_add_stslist_to_XMLBodyV21(ctx, &pomB, stat.children_states, "children_states", "", EDG_WLL_JOB_UNDEF);
-	if (stat.user_tags) edg_wll_add_taglist_to_XMLBody(&pomB, stat.user_tags, "user_tags", "tag", "name", "\t\t\t", NULL);
+	if (stat.user_tags) edg_wll_add_usertag_to_XMLBody(&pomB, stat.user_tags, "user_tags", "tag", "name", "\t\t\t", NULL);
 	if (stat.stateEnterTimes) edg_wll_add_intlist_to_XMLBody(&pomB, stat.stateEnterTimes, "stateEnterTimes", return_string_el, "\t\t\t",1, stat.stateEnterTimes[0]);
 
 	pomC = edg_wll_StatToString(stat.state);

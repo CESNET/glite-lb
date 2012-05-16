@@ -425,6 +425,8 @@ int main(int argc, char *argv[])
 	purge_timeout[EDG_WLL_JOB_CLEARED] = 60*60*24*3;
 	purge_timeout[EDG_WLL_JOB_ABORTED] = 60*60*24*7;
 	purge_timeout[EDG_WLL_JOB_CANCELLED] = 60*60*24*7;
+
+
 	if (edg_wll_InitContext(&ctx) != 0) {
 		fprintf(stderr, "Couldn't create L&B context, exiting.\n");
 		exit(1);
@@ -678,7 +680,7 @@ int main(int argc, char *argv[])
 		ret = edg_wll_gss_watch_creds(server_cert, &cert_mtime);
 		if (ret < 0)
         		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed, unable to access credentials\n");
-		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &gss_code) )
+		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &gss_code) && mycred->name != NULL)
 		{
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server identity: %s", mycred->name);
 			server_subject = strdup(mycred->name);
@@ -689,7 +691,6 @@ int main(int argc, char *argv[])
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_ERROR, "Server running unauthenticated");
 			server_subject = strdup("anonymous LB");
 		}
-
 		if ( noAuth ) 
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server in promiscuous mode");
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, 
@@ -877,7 +878,6 @@ int main(int argc, char *argv[])
 
         if (port) free(port);
 	edg_wll_gss_release_cred(&mycred, NULL);
-
 
 	return 0;
 }
@@ -1199,6 +1199,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "[%d] client DN: %s",getpid(),ctx->peerName);
 	}
 
+#if 0
 	if ( edg_wll_SetVomsGroups(ctx, &ctx->connections->serverConnection->gss, server_cert, server_key, vomsdir, cadir) )
 	{
 		char *errt, *errd;
@@ -1208,13 +1209,15 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		free(errt); free(errd);
 		edg_wll_ResetError(ctx); 
 	}
+#endif
+
 	if (ctx->vomsGroups.len > 0)
 	{
 		int i;
   
 		 glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, "[%d] client's VOMS groups:",getpid());
 		for ( i = 0; i < ctx->vomsGroups.len; i++ )
-			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, "\t%s:%s", ctx->vomsGroups.val[i].vo, ctx->vomsGroups.val[i].name);
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_DEBUG, "\t %s:%s", ctx->vomsGroups.val[i].vo, ctx->vomsGroups.val[i].name);
 	}
 	if (ctx->fqans && *(ctx->fqans))
 	{

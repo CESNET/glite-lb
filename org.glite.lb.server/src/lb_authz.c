@@ -22,8 +22,10 @@ limitations under the License.
 #include <errno.h>
 
 #include <openssl/x509.h>
+#ifndef NO_GLOBUS_GSSAPI
 #include "lcas/lcas_pem.h"
 #include "voms/voms_apic.h"
+#endif
 #include "glite/lb/context-int.h"
 #include "lb_authz.h"
 #include "glite/lbu/log.h"
@@ -60,6 +62,7 @@ edg_wll_get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
    attrs = NULL;
    num = 0;
 
+#ifndef NO_GLOBUS_GSSAPI
    for (voms_cert = voms_info->data; voms_cert && *voms_cert; voms_cert++) {
       for (f = (*voms_cert)->fqan; f && *f; f++) {
          tmp = realloc(attrs, (num + 1) * sizeof(*attrs));
@@ -80,11 +83,13 @@ edg_wll_get_fqans(edg_wll_Context ctx, struct vomsdata *voms_info,
       attrs = tmp;
       attrs[num++] = NULL;
    }
+#endif
    
    *fqans = attrs;
    return 0;
 }
 
+#ifndef NO_GLOBUS_GSSAPI
 static int
 add_groups(edg_wll_Context ctx, struct voms *voms_cert, char *vo_name,
       	   edg_wll_VomsGroups *groups)
@@ -135,6 +140,7 @@ get_groups(edg_wll_Context ctx, struct vomsdata *voms_info,
    res_groups->val = groups.val;
    return 0;
 }
+#endif
 
 int
 edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *server_cert, char *server_key, char *voms_dir, char *ca_dir)
@@ -149,6 +155,10 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
    /* XXX DK: correct cleanup ?? */
    memset (&ctx->vomsGroups, 0, sizeof(ctx->vomsGroups));
    edg_wll_ResetError(ctx);
+
+#ifdef NO_GLOBUS_GSSAPI
+   return 0;
+#else
 
    if (ctx->fqans) {
       char **f;
@@ -174,7 +184,6 @@ edg_wll_SetVomsGroups(edg_wll_Context ctx, edg_wll_GssConnection *gss, char *ser
       ret = -1; /* XXX VOMS Error */
       goto end;
    }
-
    ret = VOMS_RetrieveFromCtx(gss->context, RECURSE_CHAIN, voms_info, &err);
    if (ret == 0) {
       if (err == VERR_NOEXT)
@@ -202,8 +211,11 @@ end:
       VOMS_Destroy(voms_info);
 
    return ret;
+
+#endif /* NO_GLOBUS_GSSAPI */
 }
 
+#ifndef NO_GLOBUS_GSSAPI
 void
 edg_wll_FreeVomsGroups(edg_wll_VomsGroups *groups)
 {
@@ -219,6 +231,7 @@ edg_wll_FreeVomsGroups(edg_wll_VomsGroups *groups)
 	 free(groups->val[len].name);
    }
 }
+#endif
 
 static int
 parse_creds(edg_wll_Context ctx, edg_wll_VomsGroups *groups, char **fqans,
@@ -950,6 +963,7 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
 	     break;
    }
 
+#ifndef NO_GLOBUS_GSSAPI
    if (enable_lcas) {
       /* XXX make a real RSL ? */
       request = (char *) action2name(action);
@@ -965,6 +979,7 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
       if (ret)
 	 goto end;
    }
+#endif
 
    /* by default the server is open to any authenticated client */
    if (policy_file == NULL)

@@ -99,6 +99,7 @@ LIBCARES_LIBS?=${cares_libs} -lcares
 GSOAP_CFLAGS?=-I${gsoap_prefix}/include -I${gsoap_prefix}/
 EXPAT_CFLAGS?=-I${expat_prefix}/include
 GLOBUS_GSSAPI_GSI_CFLAGS?=-I${globus_prefix}/include/${nothrflavour}
+KERBEROS_GSSAPI_GSI_CFLAGS=-DNO_GLOBUS_GSSAPI
 
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
 CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
@@ -106,8 +107,16 @@ CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 VOMS_CFLAGS?=-I${voms_prefix}/include -I${voms_prefix}/include/glite/security
 VOMS_LIBS?=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
 
+ifeq ($(gssapi_provider), kerberos)
+GSSAPI_GSI_CFLAGS=${KERBEROS_GSSAPI_GSI_CFLAGS}
+VOMS_LIBS=
+VOMS_CFLAGS=
+else
+GSSAPI_GSI_CFLAGS=${GLOBUS_GSSAPI_GSI_CFLAGS}
+endif
+
 CFLAGS:= ${CFLAGS} \
-	${GLOBUS_GSSAPI_GSI_CFLAGS} \
+	${GSSAPI_GSI_CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	 ${GSOAP_CFLAGS} \
@@ -157,9 +166,14 @@ EXT_LIBS:=  \
 	-lz \
 	${GRIDSITE_LIBS} \
 	${CLASSADS_LIBS} \
-	${LIBCARES_LIBS} \
+	${LIBCARES_LIBS} 
+
+ifeq ($(gssapi_provider), kerberos)
+else
+EXT_LIBS+= \
 	${LCAS_LIBS} \
 	${VOMS_LIBS}
+endif
 
 COMMON_LIBS:= -L${stagedir}${prefix}/${libdir} -lglite_lb_common${default_flavour} -lglite_security_gss${default_flavour} -lglite_lbu_trio -lglite_lbu_maildir -lglite_lbu_log
 

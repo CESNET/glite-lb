@@ -27,7 +27,11 @@ extern "C" {
 #ifndef NO_GACL
 #include <gridsite.h>
 #endif
+#ifndef NO_GLOBUS_GSSAPI
 #include <voms/voms_apic.h>
+#else
+struct vomsdata { int dummy; };
+#endif
 
 typedef struct _edg_wll_Acl {
 #ifndef NO_GACL
@@ -80,8 +84,10 @@ edg_wll_GetACL(edg_wll_Context, glite_jobid_const_t, edg_wll_Acl *);
 extern int
 edg_wll_SetVomsGroups(edg_wll_Context, edg_wll_GssConnection *, char *, char *, char *, char *);
 
+#ifndef NO_GLOBUS_GSSAPI
 extern void
 edg_wll_FreeVomsGroups(edg_wll_VomsGroups *);
+#endif
 
 extern int
 check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev);

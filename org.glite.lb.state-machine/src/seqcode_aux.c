@@ -52,7 +52,7 @@ limitations under the License.
 
 int component_seqcode(const char *a, edg_wll_Source index)
 {
-	unsigned int    c[EDG_WLL_SEQ_FORMAT_NUMBER+1];
+	unsigned int    c[EDG_WLL_SOURCE__LAST];
 	int		res;
 	char		sc[EDG_WLL_SEQ_SIZE];
 
@@ -80,7 +80,7 @@ int component_seqcode(const char *a, edg_wll_Source index)
 
 char * set_component_seqcode(char *a,edg_wll_Source index,int val)
 {
-	unsigned int    c[EDG_WLL_SEQ_FORMAT_NUMBER+1];
+	unsigned int    c[EDG_WLL_SOURCE__LAST];
 	int		res;
 	char 		*ret;
 	char		sc[EDG_WLL_SEQ_SIZE];
@@ -139,70 +139,31 @@ int same_branch(const char *a, const char *b)
 
 int edg_wll_compare_pbs_seq(const char *a,const char *b)
 {
-	char	timestamp_a[14], pos_a[10], src_a;
-	char	timestamp_b[14], pos_b[10], src_b;
-	int	ev_code_a, ev_code_b;
-	int	res;
+	unsigned int c[EDG_WLL_SEQ_PBS_FORMAT_NUMBER+1], d[EDG_WLL_SEQ_PBS_FORMAT_NUMBER+1];
+	int	i, res;
 
-	res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_a, pos_a, &ev_code_a, &src_a);	
-
-	if (res != 4) {
-/* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", a); */
-		fprintf(stderr, "unparsable sequence code %s\n", a);
+	res = sscanf(a, EDG_WLL_SEQ_PBS_FORMAT_SCANF,
+		     &c[0], &c[1], &c[2], &c[3], &c[4]);
+	if(res != EDG_WLL_SEQ_PBS_FORMAT_NUMBER) {
+		fprintf(stderr, "unparsable sequence code %s: %d\n", a, res);
+		return -1;
+	}
+		     
+	res = sscanf(b, EDG_WLL_SEQ_PBS_FORMAT_SCANF,
+		     &d[0], &d[1], &d[2], &d[3], &d[4]);
+	if(res != EDG_WLL_SEQ_PBS_FORMAT_NUMBER) {
+		fprintf(stderr, "unparsable sequence code %s: %d\n", b, res);
 		return -1;
 	}
 
-	res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_b, pos_b, &ev_code_b, &src_b);	
-
-	if (res != 4) {
-/* FIXME:		syslog(LOG_ERR, "unparsable sequence code %s\n", b); */
-		fprintf(stderr, "unparsable sequence code %s\n", b);
-		return -1;
-	}
-
-	/* wild card for PBSJobReg - this event should always come as firt one 		*/
-	/* bacause it hold job.type, which is necessary for further event processing	*/
-	if (ev_code_a == EDG_WLL_EVENT_REGJOB) return -1;
-	if (ev_code_b == EDG_WLL_EVENT_REGJOB) return 1;
-
-	/* sort event w.t.r. to timestamps */
-	if ((res = strcmp(timestamp_a,timestamp_b)) != 0) {
-		return res;
-	}
-	else {
-		/* if timestamps equal, sort if w.t.r. to file position */
-		/* if you both events come from the same log file	*/
-		if (src_a == src_b) {
-			/* zero mean in fact duplicate events in log	*/
-			return strcmp(pos_a,pos_b);
-		}
-		/* if the events come from diffrent log files		*/
-		/* it is possible to prioritize some src log file	*/
-		else	{
-			/* prioritize events from pbs_mom */
-			if (src_a == 'm') return 1;
-			if (src_b == 'm') return -1;
-
-			/* then prioritize events from pbs_server */
-			if (src_a == 's') return 1;
-			if (src_b == 's') return -1;
-
-			/* other priorities comes here... */
-		}	
+	for (i = 0 ; i <= EDG_WLL_SEQ_PBS_FORMAT_NUMBER; i++) {
+		if (c[i] < d[i]) return -1;
+		if (c[i] > d[i]) return  1;
 	}
 
 	return 0;
 }
 
-edg_wll_PBSEventSource get_pbs_event_source(const char *pbs_seq_num) {
-	switch (pbs_seq_num[EDG_WLL_SEQ_PBS_SIZE - 2]) {
-		case 'c': return(EDG_WLL_PBS_EVENT_SOURCE_SCHEDULER);
-		case 's': return(EDG_WLL_PBS_EVENT_SOURCE_SERVER);
-		case 'm': return(EDG_WLL_PBS_EVENT_SOURCE_MOM);
-		case 'a': return(EDG_WLL_PBS_EVENT_SOURCE_ACCOUNTING);
-		default: return(EDG_WLL_PBS_EVENT_SOURCE_UNDEF);
-	}
-}
 
 edg_wll_CondorEventSource get_condor_event_source(const char *condor_seq_num) {
 	switch (condor_seq_num[EDG_WLL_SEQ_CONDOR_SIZE - 2]) {
@@ -219,15 +180,73 @@ edg_wll_CondorEventSource get_condor_event_source(const char *condor_seq_num) {
 	}
 }
 
+
+int edg_wll_compare_condor_seq(const char *a, const char *b) {
+        char    timestamp_a[14], pos_a[10], src_a;
+        char    timestamp_b[14], pos_b[10], src_b;
+        int     ev_code_a, ev_code_b;
+        int     res;
+
+        res = sscanf(a,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_a, pos_a, &ev_code_a, &src_a);   
+
+        if (res != 4) {
+/* FIXME:               syslog(LOG_ERR, "unparsable sequence code %s\n", a); */
+                fprintf(stderr, "unparsable sequence code %s\n", a);
+                return -1;
+        }
+
+        res = sscanf(b,"TIMESTAMP=%14s:POS=%10s:EV.CODE=%3d:SRC=%c", timestamp_b, pos_b, &ev_code_b, &src_b);   
+
+        if (res != 4) {
+/* FIXME:               syslog(LOG_ERR, "unparsable sequence code %s\n", b); */
+                fprintf(stderr, "unparsable sequence code %s\n", b);
+                return -1;
+        }
+
+        /* wild card for JobReg - this event should always come as firt one          */
+        /* bacause it hold job.type, which is necessary for further event processing    */
+        if (ev_code_a == EDG_WLL_EVENT_REGJOB) return -1;
+        if (ev_code_b == EDG_WLL_EVENT_REGJOB) return 1;
+
+        /* sort event w.t.r. to timestamps */
+        if ((res = strcmp(timestamp_a,timestamp_b)) != 0) {
+                return res;
+        }
+        else {
+                /* if timestamps equal, sort if w.t.r. to file position */
+                /* if you both events come from the same log file       */
+                if (src_a == src_b) {
+                        /* zero mean in fact duplicate events in log    */
+                        return strcmp(pos_a,pos_b);
+                }
+                /* if the events come from diffrent log files           */
+                /* it is possible to prioritize some src log file       */
+                else    {
+                        /* prioritize events from pbs_mom */
+                        if (src_a == 'm') return 1;
+                        if (src_b == 'm') return -1;
+
+                        /* then prioritize events from pbs_server */
+                        if (src_a == 's') return 1;
+                        if (src_b == 's') return -1;
+
+                        /* other priorities comes here... */
+                }       
+        }
+
+        return 0;
+}
+
+
 int edg_wll_compare_seq(const char *a, const char *b)
 {
-	unsigned int    c[EDG_WLL_SEQ_FORMAT_NUMBER+1];
-	unsigned int    d[EDG_WLL_SEQ_FORMAT_NUMBER+1];
+	unsigned int    c[EDG_WLL_SOURCE__LAST];
+	unsigned int    d[EDG_WLL_SOURCE__LAST];
 	int		res, i;
 	char		sca[EDG_WLL_SEQ_SIZE], scb[EDG_WLL_SEQ_SIZE];
 
 
-	if ( (strstr(a,"TIMESTAMP=") == a) && (strstr(b,"TIMESTAMP=") == b) ) 
+	if ( (strstr(a,"SMOM=") != NULL) && (strstr(b,"SMOM=") != NULL) ) 
 		return edg_wll_compare_pbs_seq(a,b);
 
 	if (!strstr(a, "LBS")) snprintf(sca,EDG_WLL_SEQ_SIZE,"%s:LBS=000000",a);
