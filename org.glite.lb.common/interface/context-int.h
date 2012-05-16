@@ -43,23 +43,22 @@ extern "C" {
 #endif
 
 #define EDG_WLL_SEQ_NULL 	"UI=000000:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000"
-#define EDG_WLL_SEQ_PBS_NULL 	"TIMESTAMP=00000000000000:POS=0000000000:EV.CODE=000:SRC=?" 
+#define EDG_WLL_SEQ_PBS_NULL 	"CLIENT=000000:SERVER=0000000000:SCHED=000000:SMOM=000000:MOM=000000" 
 #define EDG_WLL_SEQ_CONDOR_NULL EDG_WLL_SEQ_PBS_NULL
 #define EDG_WLL_SEQ_SIZE      	(sizeof(EDG_WLL_SEQ_NULL))
 #define EDG_WLL_SEQ_PBS_SIZE	(sizeof(EDG_WLL_SEQ_PBS_NULL))
 #define EDG_WLL_SEQ_CONDOR_SIZE EDG_WLL_SEQ_PBS_SIZE
 #define EDG_WLL_SEQ_FORMAT_PRINTF	"UI=%06d:NS=%010d:WM=%06d:BH=%010d:JSS=%06d:LM=%06d:LRMS=%06d:APP=%06d:LBS=%06d"
 #define EDG_WLL_SEQ_FORMAT_SCANF	"UI=%d:NS=%d:WM=%d:BH=%d:JSS=%d:LM=%d:LRMS=%d:APP=%d:LBS=%d"
-#define EDG_WLL_SEQ_FORMAT_NUMBER	9
+#define EDG_WLL_SEQ_FORMAT_NUMBER       9
+#define EDG_WLL_SEQ_PBS_FORMAT_PRINTF   "CLIENT=%06d:SERVER=%010d:SCHED=%06d:SMOM=%06d:MOM=%06d"
+#define EDG_WLL_SEQ_PBS_FORMAT_SCANF    "CLIENT=%d:SERVER=%d:SCHED=%d:SMOM=%d:MOM=%d"
+#define EDG_WLL_SEQ_PBS_FORMAT_NUMBER   5
 
 typedef struct _edg_wll_SeqCode {
 	unsigned int	type;				/* seq code type    */
-	unsigned int	c[EDG_WLL_SOURCE__LAST];	/* glite seq. code  */
+	unsigned int	c[EDG_WLL_SOURCE__LAST];	/* glite and PBS seq. code  */
 	char		pbs[EDG_WLL_SEQ_PBS_SIZE];	/* PBS seq. code    */
-				/* 0-24 TIMESTAMP=YYYYMMDDHHMMSS: */
-				/* 25-39 POS=%010u: */
-				/* 40-51 EV.CODE=%03d: */
-				/* 53-56 SRC=%c */
 	char		condor[EDG_WLL_SEQ_CONDOR_SIZE];			
 } edg_wll_SeqCode;
 

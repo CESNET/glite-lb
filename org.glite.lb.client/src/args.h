@@ -34,6 +34,7 @@ typedef enum {
     EDG_WLL_ARGS_SUBOPTIONS,
     EDG_WLL_ARGS_SELECTSTRING,
     EDG_WLL_ARGS_TIMEVAL,
+    EDG_WLL_ARGS_TAGLIST,
 } edg_wll_ArgsCode;
 
 typedef struct {

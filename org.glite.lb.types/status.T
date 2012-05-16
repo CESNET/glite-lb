@@ -110,6 +110,7 @@ string	history			Job history.
 _pad_	55
 
 string	pbs_state	Job state which would probably return PBS qstat (Q/R/C/....)
+int	pbs_substate	Job substate
 string  pbs_queue	Name of queue in which is job queued
 string  pbs_owner	Owner of job
 string  pbs_name	Name of job
@@ -117,7 +118,8 @@ string  pbs_reason	Glued reasons/errors leading to pending events
 string  pbs_scheduler	Name of pbs scheduler
 string  pbs_dest_host	Hostname of node where job is running
 int	pbs_pid		PID of running job
-string	pbs_resource_usage	Glued resource usage
+taglist pbs_resource_requested	Resources requested
+taglist	pbs_resource_usage	Resource usage
 int	pbs_exit_status	Job exit status
 string	pbs_error_desc	Glued error descriptions from error events
 

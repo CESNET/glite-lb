@@ -126,7 +126,8 @@ int main(int argc, char *argv[])
 	"edg_wll_NotifId", "EDG_WLL_ARGS_NOTIFID",
 	"edg_wll_Source", "EDG_WLL_ARGS_SOURCE",
 	"uint16_t", "EDG_WLL_ARGS_UINT16",
-	"struct timeval", "EDG_WLL_ARGS_TIMEVAL"
+	"struct timeval", "EDG_WLL_ARGS_TIMEVAL",
+	"edg_wll_TagValue *", "EDG_WLL_ARGS_TAGLIST",
 		  );
     my %vars = ();
     for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }

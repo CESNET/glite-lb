@@ -28,6 +28,7 @@ limitations under the License.
 #include "jobstat.h"
 
 
+extern char *edg_wll_TagListToString(edg_wll_TagValue *);
 
 static const struct timeval null_timeval = {0,0};
 
@@ -448,7 +449,17 @@ void edg_wll_add_intlist_to_XMLBody(char **body, const int *toAdd, const char *t
 }
 
 
-void edg_wll_add_taglist_to_XMLBody(char **body,  const edg_wll_TagValue *toAdd, const char *tag,  const char *subTag, const char *subTag2, const char *indent, const  char *null)
+void edg_wll_add_taglist_to_XMLBody(char **body, const edg_wll_TagValue *toAdd, const char *tag, const edg_wll_TagValue *null)
+{
+	char *s_taglist;
+
+	s_taglist = edg_wll_TagListToString(toAdd);
+	edg_wll_add_string_to_XMLBody(body, s_taglist, tag, NULL);
+	free(s_taglist);
+}
+
+
+void edg_wll_add_usertag_to_XMLBody(char **body,  const edg_wll_TagValue *toAdd, const char *tag,  const char *subTag, const char *subTag2, const char *indent, const  char *null)
 {
         char *pomA, *pomB, *newBody;
         char **list = NULL;
@@ -746,6 +757,17 @@ void *edg_wll_from_string_to_cclassad(edg_wll_XML_ctx *XMLCtx)
 	return (NULL);
 }
 
+edg_wll_TagValue *edg_wll_from_string_to_taglist(edg_wll_XML_ctx *XMLCtx)
+{
+	char *s, *out = NULL;
+
+	s = glite_lbu_UnescapeXML((const char*) XMLCtx->char_buf);
+	if(s) {
+		edg_wll_TagListParse(s, &out);
+	}
+
+	return out;
+}
 
 /************************************************************************/
 /* various conversion functions					*/

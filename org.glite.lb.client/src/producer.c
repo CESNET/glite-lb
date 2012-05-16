@@ -728,7 +728,6 @@ static int edg_wll_SetLoggingJobMaster(
 		} else {
 			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, cred->name);
 		}
-
 		if (cred != NULL)
 			edg_wll_gss_release_cred(&cred, NULL);
 	}

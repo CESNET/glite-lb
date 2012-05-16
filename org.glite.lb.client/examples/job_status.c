@@ -343,7 +343,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 		printf("%spbs_dest_host : %s\n", ind, stat.pbs_dest_host);
 		printf("%spbs_pid : %d\n", ind, stat.pbs_pid);
 		printf("%spbs_resource_usage : %s%s\n", ind,
-			(stat.pbs_resource_usage) ? "\n" : "", stat.pbs_resource_usage);
+		       (stat.pbs_resource_usage) ? "\n" : "", edg_wll_TagListToString(stat.pbs_resource_usage));
 		printf("%spbs_exit_status : %d\n", ind, stat.pbs_exit_status);
 		printf("%spbs_error_desc : %s%s\n", ind, 
 			(stat.pbs_error_desc) ? "\n" : "", stat.pbs_error_desc);

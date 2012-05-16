@@ -66,6 +66,37 @@ for my $e (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	"SysClStat",
 };
 
+/* Free the tags and values from list */
+void edg_wll_FreeTagList(edg_wll_TagValue *list) {
+	edg_wll_TagValue *tag;
+
+	if(NULL == list) return;
+
+	for(tag = list; tag->tag; tag++) {
+		free(tag->tag);
+		if(tag->value) free(tag->value);
+	}
+}
+
+/* Deep copy the tag list */
+edg_wll_TagValue *edg_wll_CopyTagList(edg_wll_TagValue *src) {
+	edg_wll_TagValue *dst, *tag, *dtag;
+	int count;
+	
+	if(NULL == src) return NULL;
+
+	for(tag = src, count = 0; tag->tag; tag++, count++);
+
+	dst = (edg_wll_TagValue*)calloc(count + 1, sizeof(edg_wll_TagValue));
+	for(tag = src, dtag = dst; tag->tag; tag++, dtag++) {
+		dtag->tag = strdup(tag->tag);
+		dtag->value = strdup(tag->value);
+	}
+
+	return dst;
+}
+
+
 /**
  * \fn edg_wll_EventCode edg_wll_StringToEvent(const char *name)
  * \param name          a string event name (e.g. "JobTransfer")
@@ -392,6 +423,9 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 		if ($ft eq 'notifid') {
 			gen $indent."\tif (event->$tl.$fn) edg_wll_NotifIdFree(event->$tl.$fn);\n"
 		}
+		if ($ft eq 'taglist') {
+			gen $intent."\tif (event->$tl.$fn) { edg_wll_FreeTagList(event->$tl.$fn); free(event->$tl.$fn); }\n"
+		}	
 	}
 	gen $indent.$indent."break;\n"
 }

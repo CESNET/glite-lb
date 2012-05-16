@@ -36,6 +36,7 @@ static const struct timeval null_timeval = {0,0};
         gen qq{$sep};
 @@@}
 
+extern void edg_wll_FreeTagList(edg_wll_TagValue *);
 
 void edg_wll_FreeStatus(edg_wll_JobStat *stat)
 { 
@@ -65,10 +66,11 @@ void edg_wll_FreeStatus(edg_wll_JobStat *stat)
                 }
                 if ($ft eq 'taglist') {
                         gen "\tif (stat->$_ != NULL ) {\n";
-			gen "\t\tfor (i=0; stat->$_\[i].tag; i++) {\n";
-			gen "\t\t\tfree(stat->$_\[i].tag);\n";
-			gen "\t\t\tfree(stat->$_\[i].value);\n";
-			gen "\t\t}\n";
+			#gen "\t\tfor (i=0; stat->$_\[i].tag; i++) {\n";
+			#gen "\t\t\tfree(stat->$_\[i].tag);\n";
+			#gen "\t\t\tfree(stat->$_\[i].value);\n";
+			#gen "\t\t}\n";
+			gen "\t\tedg_wll_FreeTagList(stat->$_);\n";
 			gen "\t\tfree(stat->$_);\n";
 			gen "\t}\n";
                 }
@@ -136,17 +138,7 @@ edg_wll_JobStat *edg_wll_CpyStatus(const edg_wll_JobStat *src, edg_wll_JobStat *
 				gen "\tdest->$_ = src->$_;\n";
 			}
 			elsif ($ft eq 'taglist') {
-				gen qq{
-!	if (src->$_ != NULL) \{
-!		for (i=0; src->$_\[i].tag; i++);
-!		dest->$_ = malloc(sizeof(*src->$_)*(i+1));
-!		for (i=0; src->$_\[i].tag; i++) \{
-!			dest->$_\[i].tag = strdup(src->$_\[i].tag);
-!			dest->$_\[i].value = strdup(src->$_\[i].value);
-!		\}
-!		dest->$_\[i].tag = NULL;
-!        \}
-				};
+				gen "\tdest->$_ = edg_wll_CopyTagList(src->$_);\n";
 			}
 			elsif ($ft eq 'cclassad') {
 				gen "\tif ( src->$_ != NULL )\n";

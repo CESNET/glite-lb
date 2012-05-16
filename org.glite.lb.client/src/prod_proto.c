@@ -274,7 +274,6 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	edg_wll_connectionTryLock(ctx, index);
 	edg_wll_poolUnlock();
 
-#if 0
 	/* acquire gss credentials */
 	ret = edg_wll_gss_acquire_cred_gsi(
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
@@ -295,7 +294,7 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 		fprintf(stderr,"edg_wll_log_connect: going on anonymously!\n");
 	}
 #endif
-#endif
+
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"edg_wll_log_connect: opening connection to local-logger %s:%d\n",
 			ctx->connections->connPool[index].peerName,
@@ -310,6 +309,7 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
 	      &ctx->connections->connPool[index].gsiCred, &gss_stat);
+
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {
 		answer = edg_wll_SetErrorGss(ctx, "edg_wll_gss_acquire_cred_gsi(): failed to load GSI credentials", &gss_stat);

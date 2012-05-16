@@ -138,7 +138,8 @@ void edg_wll_add_uint16_t_to_XMLBody(char **body, const uint16_t toAdd, const ch
 void edg_wll_add_logsrc_to_XMLBody(char **body, const edg_wll_Source toAdd, const char *tag, const edg_wll_Source null);
 void edg_wll_add_intlist_to_XMLBody(char **body, const int *toAdd, const char *tag, char *(*indexToTag)(), const char *indent, const int from, const int to);
 void edg_wll_add_strlist_to_XMLBody(char **body, char * const *toAdd, const char *tag, const char *subTag, const char *indent, const  char *null);
-void edg_wll_add_taglist_to_XMLBody(char **body,  const edg_wll_TagValue *toAdd, const char *tag,  const char *subTag, const char *indent, const char *subTag2, const  char *null);
+void edg_wll_add_taglist_to_XMLBody(char **body, const edg_wll_TagValue *toAdd, const char *tag, const edg_wll_TagValue *null);
+void edg_wll_add_usertag_to_XMLBody(char **body,  const edg_wll_TagValue *toAdd, const char *tag,  const char *subTag, const char *indent, const char *subTag2, const  char *null);
 void edg_wll_add_time_t_list_to_XMLBody(char **body, const time_t *toAdd, const char *tag, char *(*indexToTag)(), const char *indent, const int from, const int to);
 void edg_wll_add_cclassad_to_XMLBody(char **body, void *toAdd, const char *tag, const char *null);
 char *edg_wll_from_string_to_string(edg_wll_XML_ctx *XMLCtx);
@@ -154,6 +155,7 @@ struct timeval edg_wll_from_string_to_timeval(edg_wll_XML_ctx *XMLCtx);
 time_t edg_wll_from_string_to_time_t(edg_wll_XML_ctx *XMLCtx);
 edg_wll_Source edg_wll_from_string_to_logsrc(edg_wll_XML_ctx *XMLCtx);
 void *edg_wll_from_string_to_cclassad(edg_wll_XML_ctx *XMLCtx);
+edg_wll_TagValue *edg_wll_from_string_to_taglist(edg_wll_XML_ctx *XMLCtx);
 
 char *edg_wll_stat_flags_to_string(int flags);
 int edg_wll_string_to_stat_flags(char *cflags);

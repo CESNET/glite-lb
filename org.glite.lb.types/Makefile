@@ -3,10 +3,13 @@ top_srcdir=.
 
 -include Makefile.inc
 
+globalprefix=glite
+lbprefix=lb
 
 PM=StructField.pm MultiStruct.pm
 T=events.T status.T types.T
 SCRIPTS=at3 check_version.pl
+HDRS=lb_types.h
 
 default: compile
 
@@ -25,6 +28,7 @@ install: compile
 	done
 	install -m 755 ${top_srcdir}/at3.in ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-at3
 	install -m 755 ${top_srcdir}/check_version.pl ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-check_version.pl
+	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) 
 	
 clean:
 

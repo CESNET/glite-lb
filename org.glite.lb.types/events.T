@@ -251,16 +251,59 @@
 
 @flesh PBS
 
+@type PBSInternalStateChange		Change of internal PBS job state
+	int	oldstate
+	_null_	-1
+	int     oldsubstate
+	_null_	-1
+	int	newstate
+	_null_	-1
+	int	newsubstate
+	_null_	-1
+
+
+@type PBSTransfer		Start, success, or failure of job transfer to another component.
+	logsrc	destination	Destination where the job is being transfered to.
+	string	dest_instance	Service (instance) that takes over control of the job.
+	_optional_
+	int     result          Result code of the transfer attempt (START, OK, REFUSED or FAIL).
+	_code_  START           The sending component has started or is about to start the transfer.
+	_code_  OK              The job was sent successfully.
+	_code_  REFUSED         The job was refused by the other component.
+	_code_  FAIL            The transfer failed for other reason than explicit refusal (eg. network timeout).
+	string	reason		Detailed description of the transfer, especially reason of failure.
+	_optional_
+	string	dest_jobid	Job id as assigned by the receiving software component.
+	_optional_
+
+@type PBSAccepted		Accepting job (successful counterpart to Transfer).
+	logsrc	from		The software component  the job was received from.
+	string	from_instance	Instance of the component the job was received from.
+	_optional_
+	string	local_jobid	New job id as assigned by the receiving component.
+	_optional_
+
+@type PBSRefused		Refusing job (unsuccessful counterpart to Transfer).
+	logsrc	from		The software component that tried to send the job.
+	string	from_instance	Instance of the component that tried to send the job.
+	_optional_
+	string	reason		Description of the reason why the job was refused.
+	_optional_
+
 @type PBSQueued		Job enqued
 	string	queue		Queue name
-	string	owner		Job owner
 	string	name		Job name
+	string  owner		Job owner
+
+@type PBSDequeued	Job dequeued
 
 @type PBSMatch		Scheduler created exec host
 	string	dest_host	Aka exec host
 
 @type PBSPending	Scheduler is not able to find exec host, or some error occured
 	string	reason		Reasons of job pendation or errors
+
+@type PBSWaiting	Job is waiting for some condition
 
 @type PBSRun		Job attempted to be run by the logging component
 	string	scheduler	Scheduler ID
@@ -272,20 +315,18 @@
 
 @type PBSRerun            Job rerun requested
 
+@type PBSAbort		Job aborted
+
 @type PBSDone		Job terminated
 	int	exit_status	Exit status
 	_optional_		Bypass need of 'null value'
 
-@type PBSDequeued	Job dequeued
 
 @type PBSResourceUsage	Resources requested/consumed
 	int	usage		Type of record
 	_code_	REQUESTED	Requested value
 	_code_	USED		Consumed quantity
-	string	name		Name of resource
-	double	quantity	The quantity
-	_optional_		Bypass need of 'null value'
-	string	unit		Units (sec, kB, etc.)
+	taglist resources	List of resources
 
 @type PBSError		Any error occured
 	string	error_desc	Error reason
