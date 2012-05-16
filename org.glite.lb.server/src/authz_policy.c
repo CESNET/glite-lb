@@ -123,6 +123,19 @@ check_authz_policy(edg_wll_authz_policy policy,
     return 0;
 }
 
+int
+check_authz_policy_ctx(edg_wll_Context ctx,
+		      authz_action action)
+{
+        struct _edg_wll_GssPrincipal_data princ;
+        memset(&princ, 0, sizeof princ);
+
+        princ.name = ctx->peerName;
+        princ.fqans = ctx->fqans;
+
+	return check_authz_policy(&ctx->authz_policy, &princ, action);	
+}
+
 authz_action
 find_authz_action(const char *name)
 {
