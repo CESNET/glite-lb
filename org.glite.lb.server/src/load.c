@@ -50,6 +50,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 {
 	int					fd,
 						reject_fd = -1,
+						JPreg,
 						readret, i, ret;
 	size_t					maxsize;
 	char			   *line = NULL, *errdesc,
@@ -101,6 +102,8 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 		
 		do {
 			if (edg_wll_Transaction(ctx)) goto err;
+
+			store_job_server_proxy(ctx, event, &JPreg);
 
 			edg_wll_StoreEvent(ctx, event, line, NULL); 
 
