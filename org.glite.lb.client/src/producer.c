@@ -129,7 +129,8 @@ int edg_wll_DoLogEvent(
 			edg_wll_UpdateError(ctx,EDG_WLL_IL_PROTO,"edg_wll_DoLogEvent(): edg_wll_log_read error");
 	
 	edg_wll_DoLogEvent_end:
-		if (ret == -1 && conn >= 0) edg_wll_log_close(ctx,conn);
+		if (ret == -1 && conn >= 0) { edg_wll_log_close(ctx,conn); }
+		else if(conn >= 0) { edg_wll_connectionUnlock(ctx, conn); }
 
 	} while (++attempt <= 2 && (answer == ENOTCONN || answer == EPIPE));
 
