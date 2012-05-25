@@ -396,6 +396,8 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 	char *ret = NULL;
 
 	switch (ctx->p_seqcode.type) {
+		case EDG_WLL_SEQ_CREAM:
+			 /* fall through */
 		case EDG_WLL_SEQ_DUPLICATE:
 			/* fall through */
 		case EDG_WLL_SEQ_NORMAL:
@@ -417,9 +419,6 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 		case EDG_WLL_SEQ_CONDOR:
 			ret = strdup(ctx->p_seqcode.condor);
 			break;
-		case EDG_WLL_SEQ_CREAM:
-			ret = strdup("no_seqcodes_with_CREAM");	/* XXX: not yet */
-			break;
 		default:
 			edg_wll_SetError(ctx,EINVAL,"edg_wll_GetSequenceCode(): unknown sequence code type");
 			return NULL;
@@ -440,6 +439,8 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 	ctx->p_seqcode.type = seq_type;
 
 	switch (seq_type) {
+		case EDG_WLL_SEQ_CREAM:
+			/* fall through */
 		case EDG_WLL_SEQ_DUPLICATE:
 			/* fall through */
 		case EDG_WLL_SEQ_NORMAL:
@@ -465,9 +466,13 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			if (res == EDG_WLL_SOURCE_LB_SERVER-1) {
 				/* pre-collections compatibility */
 				c[EDG_WLL_SOURCE_LB_SERVER] = 0;
-			} else if (res != EDG_WLL_SEQ_FORMAT_NUMBER)
-				return edg_wll_SetError(ctx, EINVAL,
-					"edg_wll_SetSequenceCode(): syntax error in sequence code");
+			} else if (res != EDG_WLL_SEQ_FORMAT_NUMBER) {
+				if (seq_type == EDG_WLL_SEQ_CREAM)
+					return 0;
+				else
+					return edg_wll_SetError(ctx, EINVAL,
+						"edg_wll_SetSequenceCode(): syntax error in sequence code");
+			}
 
 			if (seq_type == EDG_WLL_SEQ_DUPLICATE) {
 				if (ctx->p_source <= EDG_WLL_SOURCE_NONE || 
@@ -491,8 +496,6 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			else
 				strncpy(ctx->p_seqcode.condor, seqcode_str, sizeof(ctx->p_seqcode.condor));
 			break;
-		case EDG_WLL_SEQ_CREAM:
-			break; /* XXX: not yet */
 		default:
 			return edg_wll_SetError(ctx, EINVAL,
 				"edg_wll_SetSequenceCode(): unrecognized value of seq_type parameter");
@@ -506,6 +509,8 @@ int edg_wll_IncSequenceCode(edg_wll_Context ctx)
 	edg_wll_ResetError(ctx);
 
 	switch (ctx->p_seqcode.type) {
+		case EDG_WLL_SEQ_CREAM:
+			/* fall through */
 		case EDG_WLL_SEQ_DUPLICATE:
 			/* fall through */
 		case EDG_WLL_SEQ_NORMAL:
@@ -519,7 +524,6 @@ int edg_wll_IncSequenceCode(edg_wll_Context ctx)
 			ctx->p_seqcode.c[ctx->p_source]++;
 			break;
 		case EDG_WLL_SEQ_PBS:
-		case EDG_WLL_SEQ_CREAM:
 			/* no action */
 			break;
 		default:
