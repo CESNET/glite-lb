@@ -350,9 +350,8 @@ static void printstat(edg_wll_JobStat stat, int level)
 	}
 
 	/* CREAM state section */
-	if (stat.jobtype == EDG_WLL_STAT_CREAM) {
-		char 	*cream_stat_name = edg_wll_CreamStatToString(stat.cream_state);
-
+	char *cream_stat_name = edg_wll_CreamStatToString(stat.cream_state);
+	if (stat.jobtype == EDG_WLL_STAT_CREAM || cream_stat_name) {
 		printf("%scream_state : %s\n", ind, cream_stat_name);
 		printf("%scream_owner : %s\n", ind, stat.cream_owner);
 		printf("%scream_endpoint : %s\n", ind, stat.cream_endpoint);
@@ -365,9 +364,8 @@ static void printstat(edg_wll_JobStat stat, int level)
 		printf("%scream_cancelling : %d\n", ind, stat.cream_cancelling);
 		printf("%scream_cpu_time : %d\n", ind, stat.cream_cpu_time);
 		printf("%scream_jw_status : %s\n", ind,  edg_wll_JWStatToString(stat.cream_jw_status));
-
-		free(cream_stat_name);
 	}
+	if (cream_stat_name) free(cream_stat_name);
 
 	/* File Transfer section */
 	printf("%sft_compute_job : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.ft_compute_job)); free(j1);
