@@ -925,13 +925,19 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		} else if (extra_opt == HTTP_EXTRA_OPTION_CONFIGURATION) {
 			// also browser-readable HTML version here?
 			isadm = ctx->noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
-
 			edg_wll_ConfigurationToText(ctx, isadm, &message);
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 	/* GET /?stats*/
 		} else if (extra_opt == HTTP_EXTRA_OPTION_STATS) {
-			edg_wll_StatisticsToHTML(ctx, &message);
-			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
+			isadm = ctx->noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
+			if ( !isadm && ctx->count_server_stats == 2 ) {
+				ret = HTTP_UNAUTH;
+				edg_wll_SetError(ctx, EPERM, "Only superusers can view server usage statistics on this particular server.");
+			}
+			else {
+				edg_wll_StatisticsToHTML(ctx, &message, text);
+				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
+			}
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
 		free(requestPTR); requestPTR = NULL;

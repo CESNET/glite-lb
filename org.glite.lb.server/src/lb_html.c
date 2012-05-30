@@ -534,89 +534,46 @@ int edg_wll_WSDLOutput(edg_wll_Context ctx UNUSED_VAR, char **message, char *fil
 	return 0;
 }
 
-int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message) {
+int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message, int text) {
         char *out;
+	char* times[SERVER_STATISTICS_COUNT];
+	int i;
+	char *out_tmp;
+	time_t *starttime;
 
-        if (ctx->count_server_stats == 2 && !ctx->noAuth && !check_authz_policy_ctx(ctx, ADMIN_ACCESS))  
-        {
-                asprintf(&out,"<h2>LB Server Usage Statistics</h2>\n"
-                        "Only superusers can view server usage statistics on this particular server.\n");
-        }
-        else
-        {
-                char* times[SERVER_STATISTICS_COUNT];
-                int i;
-		char *head;
-                for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
-                        if (edg_wll_ServerStatisticsGetStart(ctx, i))
-                                times[i] = strdup((const char*)ctime(edg_wll_ServerStatisticsGetStart(ctx, i)));
-                        else
-                                times[i] = 0;
+	for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
+		if (starttime = edg_wll_ServerStatisticsGetStart(ctx, i)) 
+			if (text) asprintf(&(times[i]), "%ld", *starttime);
+			else times[i] = strdup((const char*)ctime(starttime));
+		else
+			times[i] = NULL;
 
-		if (edg_wll_ServerStatisticsInTmp())
-                        asprintf(&head,
-                        "<b>WARNING: L&B statistics are stored in /tmp, please, configure L&B server to make them really persistent!</b><br/><br/>\n");
-                else
-                        asprintf(&head, " ");
+	if (!text) asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Server Usage Statistics</TITLE>\n<BODY>\n"
+		"<h2>LB Server Usage Statistics</h2>\n"
+		"%s"
+		"<table halign=\"left\">\n"
+		"<tr><td>Variable</td><td>Value</td><td>Measured from</td></tr>\n",
+		edg_wll_ServerStatisticsInTmp() ? "<b>WARNING: L&B statistics are stored in /tmp, please, configure L&B server to make them really persistent!</b><br/><br/>\n" : "");
+	else
+		asprintf(&out, "");
 
-                asprintf(&out,
-                        "<h2>LB Server Usage Statistics</h2>\n"
-			"%s"
-                        "<table halign=\"left\">\n"
-                        "<tr><td>Variable</td><td>Value</td><td>Measured from</td></tr>\n"
-                        "<tr><td>gLite job regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>PBS job regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Condor job regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>CREAM job regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Sandbox regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Notification regs (legacy interface)</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Notification regs (msg interface)</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Job events</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Notifications sent (legacy)</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Notifications sent (msg)</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>L&B protocol accesses</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>WS queries</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>HTML accesses</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Plain text accesses</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>RSS accesses</td><td>%i</td><td>%s</td></tr>\n"
-                        "</table>\n",
-			head,
-			edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_GLITEJOB_REGS),
-                        times[SERVER_STATS_GLITEJOB_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_PBSJOB_REGS),
-                        times[SERVER_STATS_PBSJOB_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_CONDOR_REGS),
-                        times[SERVER_STATS_CONDOR_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_CREAM_REGS),
-                        times[SERVER_STATS_CREAM_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_SANDBOX_REGS),
-                        times[SERVER_STATS_SANDBOX_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_LEGACY_REGS),
-                        times[SERVER_STATS_NOTIF_LEGACY_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_MSG_REGS),
-                        times[SERVER_STATS_NOTIF_MSG_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_JOB_EVENTS),
-                        times[SERVER_STATS_JOB_EVENTS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_LEGACY_SENT),
-                        times[SERVER_STATS_NOTIF_LEGACY_SENT],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_MSG_SENT),
-                        times[SERVER_STATS_NOTIF_MSG_SENT],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_LBPROTO),
-                        times[SERVER_STATS_LBPROTO],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_WS_QUERIES),
-                        times[SERVER_STATS_WS_QUERIES],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_HTML_VIEWS),
-                        times[SERVER_STATS_HTML_VIEWS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_TEXT_VIEWS),
-                        times[SERVER_STATS_TEXT_VIEWS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_RSS_VIEWS),
-                        times[SERVER_STATS_RSS_VIEWS]
-                );
+	for (i = 0; i < SERVER_STATISTICS_COUNT; i++) {
+		asprintf(&out_tmp, text ? "%s%s=%i,%s\n" : "%s<tr><td>%s</td><td>%i</td><td>%s</td></tr>\n", out,
+			text ? edg_wll_server_statistics_type_key[i] : edg_wll_server_statistics_type_title[i],
+			edg_wll_ServerStatisticsGetValue(ctx, i),
+			times[i]);
+		free(out);
+		out = out_tmp;
+	}
 
-                for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
-                        free(times[i]);
-		free(head);
-        }
+	if (!text) {
+		asprintf(&out_tmp, "%s</table>\n</BODY>\n</HTML>", out);
+		free(out);
+		out = out_tmp;
+	}
+
+	for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
+		free(times[i]);
 
         *message = out;
 	return 0;
