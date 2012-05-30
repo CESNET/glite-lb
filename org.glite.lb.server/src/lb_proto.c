@@ -936,7 +936,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			}
 			else {
 				edg_wll_StatisticsToHTML(ctx, &message, text);
-				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
+				edg_wll_ServerStatisticsIncrement(ctx, text ? SERVER_STATS_TEXT_VIEWS : SERVER_STATS_HTML_VIEWS);
 			}
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
