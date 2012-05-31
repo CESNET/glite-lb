@@ -722,15 +722,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
 			switch (edg_wll_UserJobsServer(ctx, EDG_WLL_STAT_CHILDREN, &jobsOut, &statesOut)) {
-				case 0: if (text){
-						edg_wll_UserInfoToText(ctx, jobsOut, &message);
-						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
-					}
-					else if (html){
-						edg_wll_UserInfoToHTML(ctx, jobsOut, statesOut, &message);
-						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
-					}
-					else ret = HTTP_OK;
+				case 0: edg_wll_UserInfoToHTML(ctx, jobsOut, statesOut, &message, text);
+					edg_wll_ServerStatisticsIncrement(ctx, text ? SERVER_STATS_TEXT_VIEWS : SERVER_STATS_HTML_VIEWS);
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
 				case EPERM: ret = HTTP_UNAUTH; break;

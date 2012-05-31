@@ -25,10 +25,16 @@ limitations under the License.
 #include "glite/lb/jobstat.h"
 #include "lb_proto.h"
 
+typedef struct {
+	char *id_unparsed;
+	char *parent_unparsed;
+	char *key;
+	int order; } JobIdSorter;
+
 int edg_wll_QueryToHTML(edg_wll_Context,edg_wll_Event *,char **);
 int edg_wll_GeneralJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **);
 int edg_wll_CreamJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **);
-int edg_wll_UserInfoToHTML(edg_wll_Context, edg_wlc_JobId *, edg_wll_JobStat *, char **);
+int edg_wll_UserInfoToHTML(edg_wll_Context, edg_wlc_JobId *, edg_wll_JobStat *, char **, int text);
 int edg_wll_UserNotifsToHTML(edg_wll_Context ctx, char **notifids, char **message, http_admin_option option, int adm);
 int edg_wll_NotificationToHTML(edg_wll_Context ctx, notifInfo *ni, char **message);
 char *edg_wll_ErrorToHTML(edg_wll_Context,int);

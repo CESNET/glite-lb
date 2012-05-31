@@ -121,41 +121,6 @@ int edg_wll_QueryToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
         free(a); a=NULL; \
 }
 
-
-int edg_wll_UserInfoToText(edg_wll_Context ctx, edg_wlc_JobId *jobsOut, char **message)
-{
-        char *a = NULL, *b;
-        int i = 0;
-        b = strdup("");
-
-        while (jobsOut[i]){
-                char *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
-
-                if (i == 0)
-                        asprintf(&a, "%s%s", b, chid);
-                else
-                        asprintf(&a, "%s,%s", b, chid);
-
-                free(chid);
-                free(b);
-                b = a;
-                i++;
-        }
-
-	if (a){
-		asprintf(&a, "User_jobs=%s\n", b);
-		free(b);
-		b = a;
-	}
-	b = a;
-
-	asprintf(&a, "%sUser_subject=%s\n", b, ctx->peerName ? ctx->peerName: "<anonymous>");
-
-        *message = a;
-
-        return 0;
-}
-
 int edg_wll_UserNotifsToText(edg_wll_Context ctx, char **notifids, char **message){
 	char *a = NULL, *b;
         int i = 0;

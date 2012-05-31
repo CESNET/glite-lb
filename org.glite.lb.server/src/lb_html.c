@@ -48,84 +48,96 @@ int edg_wll_QueryToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 	return -1;
 }
 
+int jobstat_cmp (const void *a, const void *b) {
+	static int compr;
+	// This code should sort IDs by parent ID first, then by JobID.
+	compr = strcmp(((JobIdSorter*)a)->key, ((JobIdSorter*)b)->key);
+	if (compr) return compr;
+	if (!((JobIdSorter*)a)->parent_unparsed) return -1;
+	if (!((JobIdSorter*)b)->parent_unparsed) return 1;
+	return strcmp(((JobIdSorter*)a)->id_unparsed, ((JobIdSorter*)b)->id_unparsed);
+}
+
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, edg_wll_JobStat *statsOut, char **message)
+int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, edg_wll_JobStat *statsOut, char **message, int text)
 {
-	//TODO remove quadratic complexity one day...
+        char *pomA = NULL, *pomB, *pomC;
+	int i, total = 0, bufsize, written = 0, linlen, wassub = 0, lineoverhead;
+	JobIdSorter *order;
+	
 
-        char *pomA = NULL, *pomB;
-        int i = 0, j;
+        while (jobsOut && jobsOut[total]) total++;
 
-        /* head */
-        pomB = strdup("");
+	order=(JobIdSorter*)malloc(sizeof(JobIdSorter) * total);
 
-        while (jobsOut && jobsOut[i]) {
-                char    *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
+	for (i = 0; i < total; i++) {
+		order[i].id_unparsed = edg_wlc_JobIdUnparse(jobsOut[i]);
+		order[i].parent_unparsed = edg_wlc_JobIdUnparse(statsOut[i].parent_job);
+		order[i].key = order[i].parent_unparsed ? order[i].parent_unparsed : order[i].id_unparsed;
+		order[i].order = i;
+	} 
 
-		if (! statsOut){
-			 asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
-                                pomB, chid,chid);
-                        free(pomB);
-                        pomB = pomA;
-		}
-		else if ((statsOut[i].jobtype != EDG_WLL_STAT_FILE_TRANSFER_COLLECTION 
-			&& statsOut[i].jobtype != EDG_WLL_STAT_FILE_TRANSFER 
-			&& ! statsOut[i].parent_job )
-			|| ((statsOut[i].jobtype == EDG_WLL_STAT_FILE_TRANSFER_COLLECTION 
-			|| statsOut[i].jobtype == EDG_WLL_STAT_FILE_TRANSFER) 
-			&& ! statsOut[i].ft_compute_job)
-			){
-			asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
-        	        	pomB, chid,chid);
-	                free(pomB);
-        	        pomB = pomA;
-			if (statsOut[i].jobtype == EDG_WLL_STAT_COLLECTION){
-				asprintf(&pomA,"%s\t\t <ul>\r\n", pomB);
-                                free(pomB);
-                                pomB = pomA;
-				j = 0;
-				while (jobsOut[j]) {
-					char *chid_parent = edg_wlc_JobIdUnparse(statsOut[j].parent_job);
-					if (chid_parent && (strcmp(chid, chid_parent) == 0)){
-						char *chid_children = edg_wlc_JobIdUnparse(jobsOut[j]);
-						asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
-			                               	pomB, chid_children,chid_children);
-						free(chid_children);
-			                        free(pomB);
-                        			pomB = pomA;
-					}
-					free(chid_parent);
-					j++;
-				}
-				asprintf(&pomA,"%s\t\t </ul>\r\n", pomB);
-                                free(pomB);
-                                pomB = pomA;
-			}
-			free(chid);
-		}
-
-                i++;
-        }
-
-	char *ret;
-	asprintf(&ret, "<html>\r\n\t<body>\r\n");
-	pomA = ret;
-	if (pomB[0]){
-		asprintf(&ret, "%s<h2><B>User jobs</B></h2>\r\n"
-			"<ul>%s</ul>",
-			pomA, pomB
-		);
-		free(pomA);
-		free(pomB);
+	if (text) {
+		linlen = asprintf(&pomA,"User_jobs=");
+		asprintf(&pomC, "User_subject=%s\n", ctx->peerName ? ctx->peerName: "<anonymous>");
+		lineoverhead = 2;
 	}
-	pomA = ret;
-	asprintf(&ret, "%sUser subject: %s<p>"
-		"\t</body>\r\n</html>",
-		pomA, ctx->peerName?ctx->peerName: "&lt;anonymous&gt;"
-	);
+	else {		
+		qsort(order, total, sizeof(JobIdSorter), jobstat_cmp); 
+	
+		linlen = asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>User Jobs</TITLE>\n<BODY>\n"
+			"<h2><B>User Jobs</B></h2>\nTotal of %d<P><UL>\n",total);
+
+		asprintf(&pomC, "</UL>User subject: %s<p>\n"
+			"</BODY>\n</HTML>",
+			ctx->peerName?ctx->peerName: "&lt;anonymous&gt;" );
+
+		lineoverhead = 35;//Good idea to change this value if the table row format changes, but not 100-% necessary. Loop will realloc if necessary.
+	}
+
+	bufsize = (strlen(order[0].id_unparsed)*2+lineoverhead)*total + linlen + strlen(pomC);
+	pomB = (char*)malloc(sizeof(char) * bufsize);
+
+	strcpy(pomB + written, pomA);
+	written=linlen;
 	free(pomA);
 
-        *message = ret;
+        /* head */
+	for (i = 0; i < total; i++) {
+		if (text) linlen = asprintf(&pomA,"%s%s", order[i].id_unparsed, i + 1 == total ? "\n" : ",");
+		else {
+			linlen = asprintf(&pomA, "%s<li><a href=\"%s\">%s</a></li>\n",
+				order[i].parent_unparsed ? (wassub++ ? "" : "<ul>") : (wassub ? "</UL>" : ""),
+				order[i].id_unparsed,
+				order[i].id_unparsed );
+			if (!order[i].parent_unparsed) wassub = 0;
+		}
+
+		while (written+linlen >= bufsize) {
+			bufsize = (bufsize + 5) * 1.2;
+			pomB = realloc(pomB, sizeof(char) * bufsize);
+		}
+
+		strcpy(pomB + written, pomA);
+		written = written + linlen;
+		free(pomA);
+	}
+
+	if (written+strlen(pomC)+strlen("</UL>") >= bufsize) {
+		pomB = realloc(pomB, bufsize + strlen(pomC) + strlen("</UL>"));
+	}
+
+	if (wassub) { strcpy(pomB + written, "</UL>"); written = written + strlen("</UL>"); }
+	strcpy(pomB + written, pomC);
+	free(pomC);
+
+	for (i = 0; i < total; i++) {
+		free(order[i].id_unparsed);
+		free(order[i].parent_unparsed);
+	} 
+	free(order);
+
+        *message = pomB;
 
         return 0;
 }
