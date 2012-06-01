@@ -152,7 +152,7 @@
 	jobid	parent		Grid job id of the parent job registering this new one.
 	_optional_
 
-	int	jobtype		Type of the job being registered (SIMPLE, DAG, PARTITIONABLE or PARTITIONED).
+	int	jobtype		Type of the job being registered (SIMPLE, DAG, PARTITIONABLE etc.).
 	_code_	SIMPLE		The job is simple job.
 	_code_	DAG		The job is dag (containing static set of subjobs).
 	_code_	PARTITIONABLE	The job is partitionable (may become partitioned).
@@ -163,6 +163,7 @@
 	_code_	CREAM		CREAM job
         _code_	FILE_TRANSFER_COLLECTION File transfer collection
         _code_	FILE_TRANSFER            File transfer
+	_code_  VIRTUAL_MACHINE	Virtual machine 
 	
 	int	nsubjobs	Number of subjobs this job plans to spawn.
 	_optional_
@@ -521,3 +522,10 @@
 	string  compute_job	Jobid of (compute) job the sandbox belongs. Exclusive with transfer_job.
 	_optional_	
 
+
+@flesh VirtualMachine
+
+@type VMCreate			create (register) virtual machine
+	string name		machine name
+
+@type VMRunning			machine running

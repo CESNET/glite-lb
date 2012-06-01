@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 {
 	char *src = NULL,*job = NULL,*server = NULL,*seq,*jdl = NULL, *seed = NULL;
 	int lbproxy = 0;
-	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0, pbs=0, cream=0, type, flags=0;
+	int done = 0,num_subjobs = 0,reg_subjobs = 0,i, collection = 0, pbs=0, cream=0, vm = 0, type, flags=0;
 	edg_wll_Context	ctx;
 	edg_wlc_JobId	jobid,*subjobs;
 
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:PcE")) {
+		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:PcvE")) {
 			case 'x': lbproxy = 1; break;
 			case 'X': lbproxy = 1; 
 				  edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, optarg);
@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
 			case 'C': collection = 1; break;
 			case 'P': pbs = 1; break;
 			case 'c': cream = 1; break;
+			case 'v': vm = 1; break;
 			case 'l': jdl = (char *) strdup(optarg); break;
 			case 'e': seed = strdup(optarg); break;
 			case 'E': flags = flags | EDG_WLL_LOGLFLAG_EXCL; break;
@@ -125,10 +126,12 @@ int main(int argc, char *argv[])
 
 	type = pbs ? EDG_WLL_REGJOB_PBS
 		: (cream ? EDG_WLL_REGJOB_CREAM
-			: (num_subjobs ?
-				(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG)
-				:EDG_WLL_REGJOB_SIMPLE
-			  )
+			: (vm ? EDG_WLL_REGJOB_VIRTUAL_MACHINE
+				: (num_subjobs ?
+					(collection?EDG_WLL_REGJOB_COLLECTION:EDG_WLL_REGJOB_DAG)
+					:EDG_WLL_REGJOB_SIMPLE
+				  )
+			)
 		  );
 
 	if (lbproxy) {

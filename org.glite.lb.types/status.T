@@ -15,6 +15,7 @@ int	jobtype		Type of job
 	_code_ CREAM			CREAM job
 	_code_ FILE_TRANSFER_COLLECTION	job containing all file transfers (i.e. sandbox)
 	_code_ FILE_TRANSFER		subjob holding one file transfer
+	_code_ VIRTUAL_MACHINE		job representing virtual machine
 jobid	parent_job			parent job of subjob
 
 string	seed		string used for generation of subjob IDs

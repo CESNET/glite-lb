@@ -342,7 +342,7 @@ static int flesh_seq(int event)
 {
 	switch (event) {
 @@@{
-	%seq = ( CREAM => 'CREAM', 'PBS' => 'PBS', 'gLite' => 'NORMAL', Condor=>'CONDOR', Transfer=>'NORMAL' );
+	%seq = ( CREAM => 'CREAM', 'PBS' => 'PBS', 'gLite' => 'NORMAL', Condor=>'CONDOR', Transfer=>'NORMAL', 'VirtualMachine'=>'NORMAL' );
 	for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	       $event->getTypes)
 	{
