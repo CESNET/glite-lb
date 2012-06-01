@@ -106,7 +106,8 @@ int main(int argc,char **argv)
 	}
 
 	if (!jobid_s || type == EDG_WLL_SANDBOX_SANDBOX_TYPE_UNDEFINED
-			|| !from || !to)
+			|| (nsubjobs==0 && (!from || !to)) 
+			|| (nsubjobs>0 && ((!from && to) || (from && !to))))
 	{
 		usage(argv[0]); 
 		exit(1);
@@ -142,7 +143,7 @@ int main(int argc,char **argv)
 		"n/a","n/a",
 		nsubjobs,NULL,&subjobs));
 
-	if (nsubjobs == 0) {	
+	if (from && to) {	
 		check_log(edg_wll_LogFileTransferRegister,ftjobid_s,(ctx,from,to));
 	}
 	else {
@@ -182,20 +183,20 @@ int main(int argc,char **argv)
 	                free(ftsubjobid_s);
 		}
 
-		edg_wll_SetLoggingJob(ctx,ftjobid,NULL,EDG_WLL_SEQ_NORMAL);
+		/*edg_wll_SetLoggingJob(ctx,ftjobid,NULL,EDG_WLL_SEQ_NORMAL);
 		check_log(edg_wll_RegisterFTSubjobs, ftjobid_s, (
 			ctx,
 			ftjobid,
 			"NS",
 			nsubjobs, subjobs
-		));
+		));*/
 
 		for (i=0; subjobs[i]; i++) {
 			char    *ftsubjobid_s = edg_wlc_JobIdUnparse(subjobs[i]);
 			edg_wll_SetLoggingJob(ctx, subjobs[i], NULL, EDG_WLL_SEQ_NORMAL);
-			check_log(edg_wll_LogFileTransferRegister, ftsubjobid_s,(
-				ctx, from, to
-			));
+			//check_log(edg_wll_LogFileTransferRegister, ftsubjobid_s,(
+			//	ctx, from, to
+			//));
 			check_log(edg_wll_LogSandbox, ftsubjobid_s, (
 				ctx,
 				edg_wll_SandboxSandbox_typeToString(type),
