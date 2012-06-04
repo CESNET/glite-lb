@@ -609,8 +609,9 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			/* consistence check -- should not receive two contradicting ReallyRunning's within single
 			   deep resub cycle */
 			if (fine_res == RET_BADBRANCH) {
-				syslog(LOG_ERR,"ReallyRunning on bad branch %s",
-						e->any.source == EDG_WLL_SOURCE_LOG_MONITOR ? e->reallyRunning.wn_seq : e->any.seqcode);
+				syslog(LOG_ERR,"ReallyRunning on bad branch %s (%s)",
+						e->any.source == EDG_WLL_SOURCE_LOG_MONITOR ? e->reallyRunning.wn_seq : e->any.seqcode,
+						e->any.jobId);
 				break;
 			}
 			/* select the branch unless TOOOLD, i.e. before deep resubmission */
