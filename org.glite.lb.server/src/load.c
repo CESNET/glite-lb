@@ -50,6 +50,7 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 {
 	int					fd,
 						reject_fd = -1,
+						ctxgrey = ctx->greyjobs,
 						readret, i, ret;
 	size_t					maxsize;
 	char			   *line = NULL, *errdesc,
@@ -63,6 +64,8 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 
 	if ( (fd = open(req->server_file, O_RDONLY)) == -1 )
 		return edg_wll_SetError(ctx, errno, "Server can not open the file");
+
+	ctx->greyjobs = 1;
 
 	memset(result,0,sizeof(*result));
 	i = 0;
@@ -133,6 +136,8 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 cycle_clean:
 		ctx->event_load = 0;
 	}
+
+	ctx->greyjobs = ctxgrey;
 
 	if ( reject_fd != -1 )
 		close(reject_fd);
