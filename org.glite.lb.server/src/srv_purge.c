@@ -557,6 +557,7 @@ static int get_jobid_suffix(edg_wll_Context ctx, glite_jobid_const_t job, enum e
         	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
 	        case EDG_WLL_STAT__PARTITIONED_UNUSED:
         	case EDG_WLL_STAT_COLLECTION:
+		case EDG_WLL_STAT_CREAM:
                 case EDG_WLL_STAT_FILE_TRANSFER:
                 case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
 			// glite jobs, no suffix
@@ -606,6 +607,7 @@ static int get_jobid_prefix(edg_wll_Context ctx, glite_jobid_const_t job, enum e
         	case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
 	        case EDG_WLL_STAT__PARTITIONED_UNUSED:
         	case EDG_WLL_STAT_COLLECTION:
+		case EDG_WLL_STAT_CREAM:
 		case EDG_WLL_STAT_FILE_TRANSFER:
 		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
 			// glite job prefix
