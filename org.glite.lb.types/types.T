@@ -63,6 +63,7 @@
 		double=>'"double"',
 		logsrc=>'"Sources"',
 		timeval=>'"Timeval"',
+		taglist=>'"java.util.HashMap"',
 	}
 );
 

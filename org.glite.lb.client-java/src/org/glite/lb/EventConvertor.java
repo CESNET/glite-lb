@@ -709,15 +709,20 @@ public class EventConvertor {
         org.glite.wsdl.types.lb.EventPBSResourceUsage wsdlEvent = event.getPBSResourceUsage();
         EventPBSResourceUsage ev = new EventPBSResourceUsage();
 
-        if (wsdlEvent.getName() != null) ev.setName(wsdlEvent.getName());
-        if (wsdlEvent.getQuantity() != null) {
-            ev.setQuantity(wsdlEvent.getQuantity());
-        }
-        if (wsdlEvent.getUnit() != null) ev.setUnit(wsdlEvent.getUnit());
         if (wsdlEvent.getUsage() != null) {
             ev.setUsage(EventPBSResourceUsage.Usage.valueOf(wsdlEvent.getUsage().getValue()));
         } else ev.setUsage(EventPBSResourceUsage.Usage.UNDEFINED);
+	{
+		int i;
+		org.glite.wsdl.types.lb.TagValue[] resources = wsdlEvent.getResources();
 
+		if (resources != null) {
+			java.util.HashMap rm = new java.util.HashMap();
+			for (i = 0; i < resources.length; i++)
+				rm.put(resources[i].getTag(), resources[i].getValue());
+			ev.setResources(rm);
+		}
+	}
         setCommonAttributes(wsdlEvent.getTimestamp(), wsdlEvent.getArrived(),
            wsdlEvent.getHost(), wsdlEvent.getLevel(), wsdlEvent.getPriority(),
            wsdlEvent.getJobId(), wsdlEvent.getSeqcode(), wsdlEvent.getUser(),
