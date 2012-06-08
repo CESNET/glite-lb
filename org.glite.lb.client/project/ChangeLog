@@ -228,3 +228,9 @@
 5.1.4-2
 - Module rebuilt
 
+5.2.0-1
+- Torque jobs support
+- Showing CREAM data for WMS->CREAM jobs
+- Merge from branch_3_2
+- Unnecessary events removed from Sandbox collection registration
+
