@@ -203,3 +203,7 @@
 2.3.4-2
 - Module rebuilt
 
+2.4.0-1
+- Merge from branch_3_2
+- Torque jobs support
+

@@ -382,3 +382,9 @@
   - Explicit pkg-config dependency (needed to build lbjp-common.gss on Debian)
 - Enabling job status queries over socket (fixes the proxy purge, second part of the SB #88630)
 
+2.4.0-1
+- Resolved packaging warnings
+- Job status queries over socket enabled (fixes the proxy purge, second part of the SB #88630)
+- Merge from branch_3_2
+- Torque jobs support
+
