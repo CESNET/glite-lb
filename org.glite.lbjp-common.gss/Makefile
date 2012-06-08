@@ -158,7 +158,7 @@ check.gss: test_gss
 	echo test_gss not run automatically util we have got some credentials in X509_USER_PROXY
 
 test_gss: test_gss.o
-	${LINKXX} -o $@ test_gss.o ${default_gss} ${CPPUNIT_LIBS} ${GLOBUS_GSSAPI_GSI_LIBS} ${LIBCARES_LIBS}
+	${LINKXX} -o $@ test_gss.o ${default_gss} ${CPPUNIT_LIBS} ${LIBCARES_LIBS}
 
 test_coverage:
 	-mkdir coverage
