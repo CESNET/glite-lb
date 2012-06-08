@@ -10,6 +10,9 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module lbjp-common.gss
+	# krb: echo "gssapi_provider=kerberos" >> Makefile.inc
+	# krb: echo "GLOBUS_COMMON_CFLAGS=`pkg-config --cflags globus-common`" >> Makefile.inc
+	# krb: echo "GLOBUS_COMMON_LIBS=`pkg-config --libs globus-common`" >> Makefile.inc
 	touch $@
 
 build: build-arch build-indep

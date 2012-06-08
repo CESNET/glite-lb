@@ -1,3 +1,5 @@
+#krb: %global gssapi_provider_kerberos 1
+
 Summary: @SUMMARY@
 Name: glite-lbjp-common-gss
 Version: @MAJOR@.@MINOR@.@REVISION@
@@ -10,7 +12,12 @@ BuildRequires: c-ares-devel
 BuildRequires: c-ares
 BuildRequires: chrpath
 BuildRequires: cppunit-devel
+%if %gssapi_provider_kerberos
+BuildRequires: globus-common-devel
+BuildRequires: krb5-devel
+%else
 BuildRequires: globus-gssapi-gsi-devel
+%endif
 BuildRequires: libtool
 BuildRequires: pkgconfig
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
@@ -27,7 +34,13 @@ Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gs
 Summary: Development files for gLite GSS library
 Group: Development/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: globus-gssapi-gsi-devel, pkgconfig
+%if %gssapi_provider_kerberos
+Requires: globus-common-devel
+Requires: krb5-devel
+%else
+Requires: globus-gssapi-gsi-devel
+%endif
+Requires: pkgconfig
 Provides: glite-security-gss%{?_isa} = %{version}-%{release}
 Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
 
@@ -43,6 +56,13 @@ library.
 
 %build
 /usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module lbjp-common.gss
+if [ "%gssapi_provider_kerberos" == "1" ]; then
+	echo Kerberos
+	echo "gssapi_provider=kerberos" >> Makefile.inc
+	echo "GLOBUS_COMMON_CFLAGS=`pkg-config --cflags globus-common`" >> Makefile.inc
+	echo "GLOBUS_COMMON_LIBS=`pkg-config --libs globus-common`" >> Makefile.inc
+fi
+
 make
 
 
