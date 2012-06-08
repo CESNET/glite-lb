@@ -45,6 +45,9 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/share/perl/
 %dir /usr/share/perl/gLite/
 %dir /usr/share/perl/gLite/LB/
+%dir /usr/include/glite/
+%dir /usr/include/glite/lb/
+/usr/include/glite/lb/*
 /usr/sbin/glite-lb-at3
 /usr/sbin/glite-lb-check_version.pl
 /usr/share/perl/gLite/LB/StructField.pm
