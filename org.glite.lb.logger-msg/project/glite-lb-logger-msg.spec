@@ -12,6 +12,7 @@ BuildRequires: glite-lb-logger-devel%{?_isa}
 BuildRequires: glite-lbjp-common-log-devel%{?_isa}
 BuildRequires: glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires: libtool
+BuildRequires: pkgconfig
 Requires: glite-lb-logger
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv: yes

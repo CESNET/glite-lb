@@ -22,6 +22,7 @@ limitations under the License.
 #include <errno.h>
 
 #include <openssl/x509.h>
+#include <gssapi.h>
 #ifndef NO_GLOBUS_GSSAPI
 #include "lcas/lcas_pem.h"
 #include "voms/voms_apic.h"
@@ -935,7 +936,6 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
    const char *request = NULL;
    int ret;
    authz_action action;
-   struct _edg_wll_GssPrincipal_data princ;
 
    switch (ev->any.type) {
 	case EDG_WLL_EVENT_REGJOB:
@@ -985,9 +985,7 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
    if (policy_file == NULL)
         return 0;
 
-   princ.name = ctx->peerName;
-   princ.fqans = ctx->fqans;
-   ret = check_authz_policy(&ctx->authz_policy, &princ, action);
+   ret = check_authz_policy_ctx(ctx, action);
    if (ret == 1)
       return 0;
 
@@ -1234,22 +1232,20 @@ check_jobstat_authz(edg_wll_Context ctx,
 	    	    int *authz_flags)
 {
     *authz_flags = 0;
+    if (job_flags & EDG_WLL_NOTIF_ANONYMIZE) *authz_flags |= READ_ANONYMIZED;
+
+    if (ctx->noAuth)
+	return 1;
 
     if (peer == NULL || peer->name == NULL)
 	return 0;
-
-    if (job_flags & EDG_WLL_NOTIF_ANONYMIZE) *authz_flags |= READ_ANONYMIZED;
 
     if (edg_wll_gss_equal_subj(peer->name, stat->owner))
 	return 1;
     if (stat->payload_owner && edg_wll_gss_equal_subj(peer->name, stat->payload_owner))
 	return 1;
 
-    if ((!(*authz_flags & READ_ANONYMIZED)) && (check_authz_policy(&ctx->authz_policy, peer, READ_ANONYMIZED)))
-	*authz_flags |= READ_ANONYMIZED;
-
-    if (ctx->noAuth ||
-	edg_wll_amIroot(peer->name, peer->fqans, &ctx->authz_policy))
+    if (edg_wll_amIroot(peer->name, peer->fqans, &ctx->authz_policy))
 	return 1;
     if (acl && edg_wll_CheckACL_princ(ctx, acl, EDG_WLL_CHANGEACL_READ, peer) == 0)
 	return 1;
@@ -1257,9 +1253,12 @@ check_jobstat_authz(edg_wll_Context ctx,
 
     if (check_authz_policy(&ctx->authz_policy, peer, READ_ALL))
 	return 1;
+    if ((!(*authz_flags & READ_ANONYMIZED)) && (check_authz_policy(&ctx->authz_policy, peer, READ_ANONYMIZED))) {
+	*authz_flags |= READ_ANONYMIZED;
+	return 1;
+    }
     if (check_authz_policy(&ctx->authz_policy, peer, STATUS_FOR_MONITORING)) {
 	*authz_flags |= STATUS_FOR_MONITORING;
-	return 1;
     }
 
     return 0;

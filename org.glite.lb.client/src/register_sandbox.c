@@ -106,8 +106,8 @@ int main(int argc,char **argv)
 	}
 
 	if (!jobid_s || type == EDG_WLL_SANDBOX_SANDBOX_TYPE_UNDEFINED
-			|| (nsubjobs==0 && (!from || !to)) 
-			|| (nsubjobs>0 && ((!from && to) || (from && !to))))
+		|| (nsubjobs==0 && (!from || !to)) 
+		|| (nsubjobs>0 && ((!from && to) || (from && !to))))
 	{
 		usage(argv[0]); 
 		exit(1);
@@ -194,9 +194,6 @@ int main(int argc,char **argv)
 		for (i=0; subjobs[i]; i++) {
 			char    *ftsubjobid_s = edg_wlc_JobIdUnparse(subjobs[i]);
 			edg_wll_SetLoggingJob(ctx, subjobs[i], NULL, EDG_WLL_SEQ_NORMAL);
-			//check_log(edg_wll_LogFileTransferRegister, ftsubjobid_s,(
-			//	ctx, from, to
-			//));
 			check_log(edg_wll_LogSandbox, ftsubjobid_s, (
 				ctx,
 				edg_wll_SandboxSandbox_typeToString(type),

@@ -11,6 +11,7 @@ BuildRequires: gsoap-devel
 BuildRequires: glite-lb-ws-interface
 BuildRequires: glite-lbjp-common-gsoap-plugin-devel
 BuildRequires: libtool
+BuildRequires: pkgconfig
 Requires: glite-lb-ws-interface
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv: yes

@@ -2,7 +2,7 @@ Source: glite-lb-client
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, libtool, libclassad1, libclassad-dev, glite-lb-types, libglite-jobid-api-c-dev, libglite-jobid-api-cpp-dev, libglite-lb-common-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-trio-dev
+Build-Depends: debhelper (>= 7.0.50~), chrpath, libtool, libclassad0-dev | libclassad-dev, glite-lb-types, libglite-jobid-api-c-dev, libglite-jobid-api-cpp-dev, libglite-lb-common-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-trio-dev, pkg-config
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@

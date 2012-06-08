@@ -38,6 +38,7 @@ BuildRequires: expat-devel
 BuildRequires: voms
 BuildRequires: bison
 BuildRequires: chrpath
+BuildRequires: pkgconfig
 Requires: mysql-server
 # for upgrade from EMI-1:
 # new function glite_srvbones_daemon_listen() in 2.2.0
@@ -140,12 +141,9 @@ fi
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/package.description
 /usr/share/doc/%{name}-%{version}/package.summary
-/usr/share/man/man1/glite-lb-bkindex.8.gz
-/usr/share/man/man1/glite-lb-bkserverd.8.gz
 /usr/share/man/man1/glite-lb-mon-db.1.gz
 /usr/share/man/man8/glite-lb-bkindex.8.gz
 /usr/share/man/man8/glite-lb-bkserverd.8.gz
-/usr/share/man/man8/glite-lb-mon-db.1.gz
 
 
 %changelog

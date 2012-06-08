@@ -2,7 +2,7 @@ Source: glite-jobid-api-cpp
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), libglite-jobid-api-c-dev, libcppunit-dev, libtool
+Build-Depends: debhelper (>= 7.0.50~), libglite-jobid-api-c-dev, libcppunit-dev, libtool, pkg-config
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@

@@ -59,6 +59,9 @@ parse_server_policy(edg_wll_Context ctx, const char *filename, edg_wll_authz_pol
 int
 check_authz_policy(edg_wll_authz_policy, edg_wll_GssPrincipal, authz_action);
 
+int
+check_authz_policy_ctx(edg_wll_Context ctx, authz_action);
+
 authz_action
 find_authz_action(const char *name);
 

@@ -50,12 +50,11 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 {
 	int					fd,
 						reject_fd = -1,
+						ctxgrey = ctx->greyjobs,
 						readret, i, ret;
 	size_t					maxsize;
 	char			   *line = NULL, *errdesc,
 						buff[30];
-	edg_wll_Event	   *event;
-	edg_wlc_JobId		jobid = NULL;
 
 
 	edg_wll_ResetError(ctx);
@@ -65,6 +64,8 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 
 	if ( (fd = open(req->server_file, O_RDONLY)) == -1 )
 		return edg_wll_SetError(ctx, errno, "Server can not open the file");
+
+	ctx->greyjobs = 1;
 
 	memset(result,0,sizeof(*result));
 	i = 0;
@@ -79,9 +80,9 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 		if ( readret == 0 )
 			break;
 
+		ctx->event_load = 1;
 		i++;
-		if (   sscanf(line, "DG.ARRIVED=%s %*s", buff) != 1
-			|| edg_wll_ParseEvent(ctx, line, &event) )
+		if (db_store(ctx, line))
 		{
 			char errs[100];
 			sprintf(errs, "Error parsing event at line %d", i);
@@ -90,21 +91,6 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 			fprintf(stderr, "%s", errs);
 			continue;
 		}
-		edg_wll_ULMDateToTimeval(buff, &(event->any.arrived));
-
-		if ( i == 1 )
-		{
-			result->from = event->any.arrived.tv_sec;
-			result->to = event->any.arrived.tv_sec;
-		}
-		ctx->event_load = 1;
-		
-		do {
-			if (edg_wll_Transaction(ctx)) goto err;
-
-			edg_wll_StoreEvent(ctx, event, line, NULL); 
-
-		} while (edg_wll_TransNeedRetry(ctx));
 
 		if ((ret = edg_wll_Error(ctx, NULL, &errdesc)) != 0) {
 			int		len = strlen(line),
@@ -146,43 +132,12 @@ int edg_wll_LoadEventsServer(edg_wll_Context ctx,const edg_wll_LoadRequest *req,
 			}
 			write(reject_fd,"\n",1);
 		}
-		else {
-			result->to = event->any.arrived.tv_sec;
-			if ( jobid )
-			{
-				char *md5_jobid = edg_wlc_JobIdGetUnique(jobid);
-				
-				if ( strcmp(md5_jobid, edg_wlc_JobIdGetUnique(event->any.jobId)) )
-				{
-					edg_wll_JobStat st;
-
-					edg_wll_JobStatusServer(ctx, jobid, 0, &st);
-					edg_wll_FreeStatus(&st);
-
-					edg_wlc_JobIdFree(jobid);
-					edg_wlc_JobIdDup(event->any.jobId, &jobid);
-				}
-				free(md5_jobid);
-			}
-			else
-				edg_wlc_JobIdDup(event->any.jobId, &jobid);
-		}
-
 
 cycle_clean:
 		ctx->event_load = 0;
-		edg_wll_FreeEvent(event);
 	}
 
-err:
-	if ( jobid )
-	{
-		edg_wll_JobStat st;
-
-		edg_wll_JobStatusServer(ctx, jobid, 0, &st);
-		edg_wll_FreeStatus(&st);
-		edg_wlc_JobIdFree(jobid);
-	}
+	ctx->greyjobs = ctxgrey;
 
 	if ( reject_fd != -1 )
 		close(reject_fd);

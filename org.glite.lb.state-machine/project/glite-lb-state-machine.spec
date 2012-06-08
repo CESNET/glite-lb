@@ -18,6 +18,7 @@ BuildRequires: glite-lbjp-common-jp-interface-devel
 BuildRequires: glite-lbjp-common-trio-devel
 BuildRequires: libtool
 BuildRequires: libxslt
+BuildRequires: pkgconfig
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.state-machine/%{version}/src/%{name}-@VERSION@.src.tar.gz

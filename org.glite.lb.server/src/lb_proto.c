@@ -722,15 +722,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
 			switch (edg_wll_UserJobsServer(ctx, EDG_WLL_STAT_CHILDREN, &jobsOut, &statesOut)) {
-				case 0: if (text){
-						edg_wll_UserInfoToText(ctx, jobsOut, &message);
-						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
-					}
-					else if (html){
-						edg_wll_UserInfoToHTML(ctx, jobsOut, statesOut, &message);
-						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
-					}
-					else ret = HTTP_OK;
+				case 0: edg_wll_UserInfoToHTML(ctx, jobsOut, statesOut, &message, text);
+					edg_wll_ServerStatisticsIncrement(ctx, text ? SERVER_STATS_TEXT_VIEWS : SERVER_STATS_HTML_VIEWS);
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
 				case EPERM: ret = HTTP_UNAUTH; break;
@@ -925,13 +918,19 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		} else if (extra_opt == HTTP_EXTRA_OPTION_CONFIGURATION) {
 			// also browser-readable HTML version here?
 			isadm = ctx->noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
-
 			edg_wll_ConfigurationToText(ctx, isadm, &message);
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 	/* GET /?stats*/
 		} else if (extra_opt == HTTP_EXTRA_OPTION_STATS) {
-			edg_wll_StatisticsToHTML(ctx, &message);
-			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
+			isadm = ctx->noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
+			if ( !isadm && ctx->count_server_stats == 2 ) {
+				ret = HTTP_UNAUTH;
+				edg_wll_SetError(ctx, EPERM, "Only superusers can view server usage statistics on this particular server.");
+			}
+			else {
+				edg_wll_StatisticsToHTML(ctx, &message, text);
+				edg_wll_ServerStatisticsIncrement(ctx, text ? SERVER_STATS_TEXT_VIEWS : SERVER_STATS_HTML_VIEWS);
+			}
 	/* GET [something else]: not understood */
 		} else ret = HTTP_BADREQ;
 		free(requestPTR); requestPTR = NULL;
@@ -954,7 +953,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	                else {
 				int	fatal = 0;
 
-				switch (edg_wll_QueryEventsServer(ctx,ctx->noAuth,
+				switch (edg_wll_QueryEventsServer(ctx,ctx->noAuth | check_authz_policy_ctx(ctx, READ_ALL),
 				    (const edg_wll_QueryRec **)job_conditions, 
 				    (const edg_wll_QueryRec **)event_conditions, &eventsOut)) {
 

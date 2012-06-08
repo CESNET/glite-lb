@@ -27,6 +27,7 @@ limitations under the License.
 #include "glite/lb/context-int.h"
 #include "glite/lb/events.h"
 #include "glite/lb/events_parse.h"
+#include "glite/lb/ulm_parse.h"
 #include "purge.h"
 #include "store.h"
 #include "il_lbproxy.h"
@@ -64,6 +65,12 @@ db_store(edg_wll_Context ctx, char *event)
   if(edg_wll_ParseEvent(ctx, event, &ev)) goto err;
 
   local_job = is_job_local(ctx, ev->any.jobId);
+
+  if(ctx->event_load) {
+    char buff[30];
+    if(sscanf(event, "DG.ARRIVED=%s %*s", buff) == 1)
+      edg_wll_ULMDateToTimeval(buff, &(ev->any.arrived));
+  }
 
   if (!ctx->isProxy && check_store_authz(ctx, ev) != 0)
     goto err;

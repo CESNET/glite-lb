@@ -402,7 +402,7 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 
 	switch (ctx->p_seqcode.type) {
 		case EDG_WLL_SEQ_CREAM:
-			/* fall through */
+			 /* fall through */
 		case EDG_WLL_SEQ_DUPLICATE:
 			/* fall through */
 		case EDG_WLL_SEQ_NORMAL:
@@ -478,16 +478,17 @@ int edg_wll_SetSequenceCode(edg_wll_Context ctx,
 			if (res == EDG_WLL_SOURCE_LB_SERVER-1) {
 				/* pre-collections compatibility */
 				c[EDG_WLL_SOURCE_LB_SERVER] = 0;
-			} else if (res != EDG_WLL_SEQ_FORMAT_NUMBER)
+			} else if (res != EDG_WLL_SEQ_FORMAT_NUMBER) {
 				if (seq_type == EDG_WLL_SEQ_CREAM)
 					return 0;
 				else
 					return edg_wll_SetError(ctx, EINVAL,
 						"edg_wll_SetSequenceCode(): syntax error in sequence code");
+			}
 
 			if (seq_type == EDG_WLL_SEQ_DUPLICATE) {
 				if (ctx->p_source <= EDG_WLL_SOURCE_NONE || 
-						ctx->p_source >= EDG_WLL_SOURCE__LAST) 
+						ctx->p_source >= EDG_WLL_SOURCE__LAST)
 				{
 					return edg_wll_SetError(ctx,EINVAL,
 						"edg_wll_SetSequenceCode(): context param: source missing");

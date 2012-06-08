@@ -12,6 +12,7 @@ BuildRequires: glite-jobid-api-c-devel
 BuildRequires: glite-lbjp-common-db-devel
 BuildRequires: glite-lbjp-common-trio-devel
 BuildRequires: libtool
+BuildRequires: pkgconfig
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.jp-interface/%{version}/src/%{name}-@VERSION@.src.tar.gz

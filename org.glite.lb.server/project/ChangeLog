@@ -376,3 +376,9 @@
 - Job ACL output refactoring, fixing SB #92766
 - Recognize built-in index on parent_job when evaluating queries -- SB #78743
 
+2.3.5-1
+- Packaging fixes
+  - libclassad0-dev permitted as dependency too (older package)
+  - Explicit pkg-config dependency (needed to build lbjp-common.gss on Debian)
+- Enabling job status queries over socket (fixes the proxy purge, second part of the SB #88630)
+

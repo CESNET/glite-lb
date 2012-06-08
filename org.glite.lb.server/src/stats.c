@@ -547,15 +547,11 @@ static int findStat(
 )
 {
 	edg_wll_JobStatCode later_state;
-	struct _edg_wll_GssPrincipal_data princ;
 
 	edg_wll_ResetError(ctx);
-	memset(&princ, 0, sizeof princ);
-	princ.name = ctx->peerName;
-	princ.fqans = ctx->fqans;
 	switch (ctx->count_statistics) {
                 case 0: return edg_wll_SetError(ctx,ENOSYS,NULL);
-                case 1: if (!ctx->noAuth && !check_authz_policy(&ctx->authz_policy, &princ, GET_STATISTICS))
+                case 1: if (!ctx->noAuth && !check_authz_policy_ctx(ctx, GET_STATISTICS))
 				return edg_wll_SetError(ctx, EPERM, NULL);
                 case 2: break;
                 default: abort();

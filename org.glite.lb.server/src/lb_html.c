@@ -48,84 +48,96 @@ int edg_wll_QueryToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut
 	return -1;
 }
 
+int jobstat_cmp (const void *a, const void *b) {
+	static int compr;
+	// This code should sort IDs by parent ID first, then by JobID.
+	compr = strcmp(((JobIdSorter*)a)->key, ((JobIdSorter*)b)->key);
+	if (compr) return compr;
+	if (!((JobIdSorter*)a)->parent_unparsed) return -1;
+	if (!((JobIdSorter*)b)->parent_unparsed) return 1;
+	return strcmp(((JobIdSorter*)a)->id_unparsed, ((JobIdSorter*)b)->id_unparsed);
+}
+
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
-int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, edg_wll_JobStat *statsOut, char **message)
+int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, edg_wll_JobStat *statsOut, char **message, int text)
 {
-	//TODO remove quadratic complexity one day...
+        char *pomA = NULL, *pomB, *pomC;
+	int i, total = 0, bufsize, written = 0, linlen, wassub = 0, lineoverhead;
+	JobIdSorter *order;
+	
 
-        char *pomA = NULL, *pomB;
-        int i = 0, j;
+        while (jobsOut && jobsOut[total]) total++;
 
-        /* head */
-        pomB = strdup("");
+	order=(JobIdSorter*)malloc(sizeof(JobIdSorter) * total);
 
-        while (jobsOut && jobsOut[i]) {
-                char    *chid = edg_wlc_JobIdUnparse(jobsOut[i]);
+	for (i = 0; i < total; i++) {
+		order[i].id_unparsed = edg_wlc_JobIdUnparse(jobsOut[i]);
+		order[i].parent_unparsed = edg_wlc_JobIdUnparse(statsOut[i].parent_job);
+		order[i].key = order[i].parent_unparsed ? order[i].parent_unparsed : order[i].id_unparsed;
+		order[i].order = i;
+	} 
 
-		if (! statsOut){
-			 asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
-                                pomB, chid,chid);
-                        free(pomB);
-                        pomB = pomA;
-		}
-		else if ((statsOut[i].jobtype != EDG_WLL_STAT_FILE_TRANSFER_COLLECTION 
-			&& statsOut[i].jobtype != EDG_WLL_STAT_FILE_TRANSFER 
-			&& ! statsOut[i].parent_job )
-			|| ((statsOut[i].jobtype == EDG_WLL_STAT_FILE_TRANSFER_COLLECTION 
-			|| statsOut[i].jobtype == EDG_WLL_STAT_FILE_TRANSFER) 
-			&& ! statsOut[i].ft_compute_job)
-			){
-			asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
-        	        	pomB, chid,chid);
-	                free(pomB);
-        	        pomB = pomA;
-			if (statsOut[i].jobtype == EDG_WLL_STAT_COLLECTION){
-				asprintf(&pomA,"%s\t\t <ul>\r\n", pomB);
-                                free(pomB);
-                                pomB = pomA;
-				j = 0;
-				while (jobsOut[j]) {
-					char *chid_parent = edg_wlc_JobIdUnparse(statsOut[j].parent_job);
-					if (chid_parent && (strcmp(chid, chid_parent) == 0)){
-						char *chid_children = edg_wlc_JobIdUnparse(jobsOut[j]);
-						asprintf(&pomA,"%s\t\t <li><a href=\"%s\">%s</a></li>\r\n",
-			                               	pomB, chid_children,chid_children);
-						free(chid_children);
-			                        free(pomB);
-                        			pomB = pomA;
-					}
-					free(chid_parent);
-					j++;
-				}
-				asprintf(&pomA,"%s\t\t </ul>\r\n", pomB);
-                                free(pomB);
-                                pomB = pomA;
-			}
-			free(chid);
-		}
-
-                i++;
-        }
-
-	char *ret;
-	asprintf(&ret, "<html>\r\n\t<body>\r\n");
-	pomA = ret;
-	if (pomB[0]){
-		asprintf(&ret, "%s<h2><B>User jobs</B></h2>\r\n"
-			"<ul>%s</ul>",
-			pomA, pomB
-		);
-		free(pomA);
-		free(pomB);
+	if (text) {
+		linlen = asprintf(&pomA,"User_jobs=");
+		asprintf(&pomC, "User_subject=%s\n", ctx->peerName ? ctx->peerName: "<anonymous>");
+		lineoverhead = 2;
 	}
-	pomA = ret;
-	asprintf(&ret, "%sUser subject: %s<p>"
-		"\t</body>\r\n</html>",
-		pomA, ctx->peerName?ctx->peerName: "&lt;anonymous&gt;"
-	);
+	else {		
+		qsort(order, total, sizeof(JobIdSorter), jobstat_cmp); 
+	
+		linlen = asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>User Jobs</TITLE>\n<BODY>\n"
+			"<h2><B>User Jobs</B></h2>\nTotal of %d<P><UL>\n",total);
+
+		asprintf(&pomC, "</UL>User subject: %s<p>\n"
+			"</BODY>\n</HTML>",
+			ctx->peerName?ctx->peerName: "&lt;anonymous&gt;" );
+
+		lineoverhead = 35;//Good idea to change this value if the table row format changes, but not 100-% necessary. Loop will realloc if necessary.
+	}
+
+	bufsize = (strlen(order[0].id_unparsed)*2+lineoverhead)*total + linlen + strlen(pomC);
+	pomB = (char*)malloc(sizeof(char) * bufsize);
+
+	strcpy(pomB + written, pomA);
+	written=linlen;
 	free(pomA);
 
-        *message = ret;
+        /* head */
+	for (i = 0; i < total; i++) {
+		if (text) linlen = asprintf(&pomA,"%s%s", order[i].id_unparsed, i + 1 == total ? "\n" : ",");
+		else {
+			linlen = asprintf(&pomA, "%s<li><a href=\"%s\">%s</a></li>\n",
+				order[i].parent_unparsed ? (wassub++ ? "" : "<ul>") : (wassub ? "</UL>" : ""),
+				order[i].id_unparsed,
+				order[i].id_unparsed );
+			if (!order[i].parent_unparsed) wassub = 0;
+		}
+
+		while (written+linlen >= bufsize) {
+			bufsize = (bufsize + 5) * 1.2;
+			pomB = realloc(pomB, sizeof(char) * bufsize);
+		}
+
+		strcpy(pomB + written, pomA);
+		written = written + linlen;
+		free(pomA);
+	}
+
+	if (written+strlen(pomC)+strlen("</UL>") >= bufsize) {
+		pomB = realloc(pomB, bufsize + strlen(pomC) + strlen("</UL>"));
+	}
+
+	if (wassub) { strcpy(pomB + written, "</UL>"); written = written + strlen("</UL>"); }
+	strcpy(pomB + written, pomC);
+	free(pomC);
+
+	for (i = 0; i < total; i++) {
+		free(order[i].id_unparsed);
+		free(order[i].parent_unparsed);
+	} 
+	free(order);
+
+        *message = pomB;
 
         return 0;
 }
@@ -534,93 +546,46 @@ int edg_wll_WSDLOutput(edg_wll_Context ctx UNUSED_VAR, char **message, char *fil
 	return 0;
 }
 
-int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message) {
+int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message, int text) {
         char *out;
+	char* times[SERVER_STATISTICS_COUNT];
+	int i;
+	char *out_tmp;
+	time_t *starttime;
 
-        struct _edg_wll_GssPrincipal_data princ;
-        memset(&princ, 0, sizeof princ);
-        princ.name = ctx->peerName;
-        princ.fqans = ctx->fqans;
-        if (ctx->count_server_stats == 2 && !ctx->noAuth && !check_authz_policy(&ctx->authz_policy, &princ, ADMIN_ACCESS))  
-        {
-                asprintf(&out,"<h2>LB Server Usage Statistics</h2>\n"
-                        "Only superusers can view server usage statistics on this particular server.\n");
-        }
-        else
-        {
-                char* times[SERVER_STATISTICS_COUNT];
-                int i;
-		char *head;
-                for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
-                        if (edg_wll_ServerStatisticsGetStart(ctx, i))
-                                times[i] = strdup((const char*)ctime(edg_wll_ServerStatisticsGetStart(ctx, i)));
-                        else
-                                times[i] = 0;
+	for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
+		if (starttime = edg_wll_ServerStatisticsGetStart(ctx, i)) 
+			if (text) asprintf(&(times[i]), "%ld", *starttime);
+			else times[i] = strdup((const char*)ctime(starttime));
+		else
+			times[i] = NULL;
 
-		if (edg_wll_ServerStatisticsInTmp())
-                        asprintf(&head,
-                        "<b>WARNING: L&B statistics are stored in /tmp, please, configure L&B server to make them really persistent!</b><br/><br/>\n");
-                else
-                        asprintf(&head, " ");
+	if (!text) asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Server Usage Statistics</TITLE>\n<BODY>\n"
+		"<h2>LB Server Usage Statistics</h2>\n"
+		"%s"
+		"<table halign=\"left\">\n"
+		"<tr><td>Variable</td><td>Value</td><td>Measured from</td></tr>\n",
+		edg_wll_ServerStatisticsInTmp() ? "<b>WARNING: L&B statistics are stored in /tmp, please, configure L&B server to make them really persistent!</b><br/><br/>\n" : "");
+	else
+		asprintf(&out, "");
 
-                asprintf(&out,
-                        "<h2>LB Server Usage Statistics</h2>\n"
-			"%s"
-                        "<table halign=\"left\">\n"
-                        "<tr><td>Variable</td><td>Value</td><td>Measured from</td></tr>\n"
-                        "<tr><td>gLite job regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>PBS job regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Condor job regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>CREAM job regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Sandbox regs</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Notification regs (legacy interface)</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Notification regs (msg interface)</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Job events</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Notifications sent (legacy)</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Notifications sent (msg)</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>L&B protocol accesses</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>WS queries</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>HTML accesses</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>Plain text accesses</td><td>%i</td><td>%s</td></tr>\n"
-                        "<tr><td>RSS accesses</td><td>%i</td><td>%s</td></tr>\n"
-                        "</table>\n",
-			head,
-			edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_GLITEJOB_REGS),
-                        times[SERVER_STATS_GLITEJOB_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_PBSJOB_REGS),
-                        times[SERVER_STATS_PBSJOB_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_CONDOR_REGS),
-                        times[SERVER_STATS_CONDOR_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_CREAM_REGS),
-                        times[SERVER_STATS_CREAM_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_SANDBOX_REGS),
-                        times[SERVER_STATS_SANDBOX_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_LEGACY_REGS),
-                        times[SERVER_STATS_NOTIF_LEGACY_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_MSG_REGS),
-                        times[SERVER_STATS_NOTIF_MSG_REGS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_JOB_EVENTS),
-                        times[SERVER_STATS_JOB_EVENTS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_LEGACY_SENT),
-                        times[SERVER_STATS_NOTIF_LEGACY_SENT],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_NOTIF_MSG_SENT),
-                        times[SERVER_STATS_NOTIF_MSG_SENT],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_LBPROTO),
-                        times[SERVER_STATS_LBPROTO],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_WS_QUERIES),
-                        times[SERVER_STATS_WS_QUERIES],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_HTML_VIEWS),
-                        times[SERVER_STATS_HTML_VIEWS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_TEXT_VIEWS),
-                        times[SERVER_STATS_TEXT_VIEWS],
-                        edg_wll_ServerStatisticsGetValue(ctx, SERVER_STATS_RSS_VIEWS),
-                        times[SERVER_STATS_RSS_VIEWS]
-                );
+	for (i = 0; i < SERVER_STATISTICS_COUNT; i++) {
+		asprintf(&out_tmp, text ? "%s%s=%i,%s\n" : "%s<tr><td>%s</td><td>%i</td><td>%s</td></tr>\n", out,
+			text ? edg_wll_server_statistics_type_key[i] : edg_wll_server_statistics_type_title[i],
+			edg_wll_ServerStatisticsGetValue(ctx, i),
+			times[i]);
+		free(out);
+		out = out_tmp;
+	}
 
-                for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
-                        free(times[i]);
-		free(head);
-        }
+	if (!text) {
+		asprintf(&out_tmp, "%s</table>\n</BODY>\n</HTML>", out);
+		free(out);
+		out = out_tmp;
+	}
+
+	for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
+		free(times[i]);
 
         *message = out;
 	return 0;

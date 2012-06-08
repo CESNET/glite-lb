@@ -12,6 +12,7 @@ BuildRequires: chrpath
 BuildRequires: cppunit-devel
 BuildRequires: globus-gssapi-gsi-devel
 BuildRequires: libtool
+BuildRequires: pkgconfig
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
 AutoReqProv: yes

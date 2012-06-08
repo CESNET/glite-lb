@@ -2,7 +2,7 @@ Source: glite-lb-doc
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~)
+Build-Depends: debhelper (>= 7.0.50~), texlive-latex-extra
 Standards-Version: 3.9.1
 Section: doc
 Homepage: @URL@

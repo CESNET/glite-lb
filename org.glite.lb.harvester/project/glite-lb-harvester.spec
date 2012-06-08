@@ -16,6 +16,7 @@ BuildRequires: glite-lbjp-common-db-devel
 BuildRequires: glite-lbjp-common-log-devel
 BuildRequires: glite-lbjp-common-trio-devel
 BuildRequires: libtool
+BuildRequires: pkgconfig
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts

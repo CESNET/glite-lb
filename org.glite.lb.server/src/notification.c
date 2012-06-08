@@ -38,6 +38,7 @@ limitations under the License.
 #include "get_events.h"
 #include "server_stats.h"
 #include "lb_authz.h"
+#include "authz_policy.h"
 
 
 typedef struct {
@@ -71,7 +72,7 @@ int edg_wll_NotifNewServer(
 	const edg_wll_NotifId 			nid,
 	time_t						   *valid)
 {
-	int					i;
+	int					i,j;
 	char			   *q			= NULL,
 					   *nid_s		= NULL,
 					   *time_s		= NULL,
@@ -130,6 +131,19 @@ int edg_wll_NotifNewServer(
 		edg_wll_SetError(ctx, errno, NULL);
 		goto cleanup;
 	}
+
+	/*	Check permissions
+	 */
+	if (!ctx->noAuth && check_authz_policy_ctx(ctx, READ_ANONYMIZED))
+		for (i=0; conditions && conditions[i]; i++)
+			for (j=0; conditions[i][j].attr; j++)
+				if (conditions[i][j].attr == EDG_WLL_QUERY_ATTR_OWNER && 
+					!edg_wll_gss_equal_subj(conditions[i][j].value.c, ctx->peerName) &&
+					!check_authz_policy_ctx(ctx, ADMIN_ACCESS) &&
+					!check_authz_policy_ctx(ctx, READ_ALL)) {
+						edg_wll_SetError(ctx, EPERM, "Forbidden subject. You are only authorized to register for anonymized notifications.");
+						goto cleanup;
+					}
 
 	/*	Format the address
 	 */
