@@ -123,6 +123,8 @@ void EventParseTest::$l()
 					$value = "edg_wll_NotifIdParse(\"https://some.host:1234/NOTIF:x67qr549qc\",&e1->$l.$fn);";
 				} elsif ($f->{type} eq "timeval") { 
 					$value = "e1->$l.$fn.tv_sec = 326890800; e1->$l.$fn.tv_usec = 1;";
+				} elsif ($f->{type} eq "taglist") {
+					$value = "edg_wll_TagListParse(\"key=value\", &e1->$l.$fn);";
 				} else { 
 					gen "% FIXME: unknown type $f->{type} for $fn \n"; 
 				}
