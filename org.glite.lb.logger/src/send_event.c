@@ -321,6 +321,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 	        me->timeout = 0;
 	      else
 	        me->timeout = TIMEOUT;
+	      server_msg_release(msg);
 	      return(0);
 	    }
  	    
@@ -335,6 +336,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 		        glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN, "  error reading server %s reply: %s", 
 					 eq->dest_name, error_get_msg());
                     }
+		    server_msg_release(msg);
 		    return(0);
 	    }
 	}
@@ -364,6 +366,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 	    if(!(ENOENT == code_min)) {
 		    /* non fatal errors (for us) */
 		    me->timeout = TIMEOUT;
+		    server_msg_release(msg);
 		    return(0);
 	    }
 	
@@ -374,9 +377,11 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
     default: /* LB_PROTO */
       /* the event was not accepted by the server */
       /* update the event pointer */
-        if(event_store_commit(msg->es, msg->ev_len, queue_list_is_log(eq), msg->generation) < 0)
-	/* failure committing message, this is bad */
-	return(-1);
+      if(event_store_commit(msg->es, msg->ev_len, queue_list_is_log(eq), msg->generation) < 0) {
+	      /* failure committing message, this is bad */
+	      server_msg_release(msg);
+	      return(-1);
+      }
       /* if we have just delivered priority message from the queue, send confirmation */
       ret = 1;
 #if defined(INTERLOGD_EMS)
