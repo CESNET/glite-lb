@@ -37,6 +37,7 @@ struct event_queue_msg {
   struct server_msg *msg;
   struct event_queue_msg *prev;
   struct event_queue_msg *next;
+  struct event_queue *eq;             /* queue we are currently in */
 };
 
 struct event_queue *
@@ -257,6 +258,8 @@ event_queue_insert(struct event_queue *eq, struct server_msg *msg)
   if(++eq->cur_len > eq->max_len)
 	  eq->max_len = eq->cur_len;
 
+  el->eq = eq;
+
   event_queue_unlock(eq);
   /* end of critical section */
 
@@ -306,6 +309,7 @@ event_queue_get(struct event_queue *eq, struct queue_thread *me, struct server_m
 	  me->current = el;
 	  me->jobid = el->msg->job_id_s;
 	  *msg = el->msg;
+	  server_msg_use(*msg);
   }
   event_queue_unlock(eq);
 
@@ -331,19 +335,37 @@ event_queue_remove(struct event_queue *eq, struct queue_thread *me)
   /* this is critical section */
   event_queue_lock(eq);
 
-  if(el == el->prev) {
-	  /* last element */
-	  eq->head = NULL;
-	  eq->tail_ems = NULL;
+  me->current = NULL;
+  me->jobid = NULL;
+
+  if(eq == el->eq) {
+	  /* message is still ours, remove from queue */
+	  if(el == el->prev) {
+		  /* last element */
+		  eq->head = NULL;
+		  eq->tail_ems = NULL;
+	  } else {
+		  el->next->prev = el->prev;
+		  el->prev->next = el->next;
+		  if(el == eq->head) {
+			  eq->head = el->prev;
+		  }
+		  if(el == eq->tail_ems) {
+			  eq->tail_ems = el->prev;
+		  }
+	  }
+	  
+	  if(--eq->cur_len == 0)
+		  eq->times_empty++;
+	  
+	  if(eq->cur_len <= queue_size_low) {
+		  eq->throttling = 0;
+	  }
   } else {
-	  el->next->prev = el->prev;
-	  el->prev->next = el->next;
-	  if(el == eq->head) {
-		  eq->head = el->prev;
-	  }
-	  if(el == eq->tail_ems) {
-		  eq->tail_ems = el->prev;
-	  }
+	  /* not ours anymore */
+	  server_msg_release(el->msg);
+	  event_queue_unlock(eq);
+	  return 0;
   }
 
 #if 0 /* OLD IMPLEMENTATION */
@@ -387,16 +409,7 @@ event_queue_remove(struct event_queue *eq, struct queue_thread *me)
 #endif
 #endif /* OLD IMPLEMENTATION */
 
-  if(--eq->cur_len == 0)
-	  eq->times_empty++;
-
-  if(eq->cur_len <= queue_size_low) {
-	  eq->throttling = 0;
-  }
   
-  me->current = NULL;
-  me->jobid = NULL;
-
   event_queue_unlock(eq);
   /* end of critical section */
 
@@ -439,7 +452,7 @@ event_queue_move_events(struct event_queue *eq_s,
 					 eq_d ? eq_d->dest_name : "trash", eq_d ? eq_d->dest_port : -1);
 			q = p->prev;
 			/* remove message from the source queue */
-			if(p->next == p->prev) {
+			if(p == p->prev) {
 				/* removing last message */
 				eq_s->head = NULL;
 				eq_s->tail_ems = NULL;
@@ -472,6 +485,7 @@ event_queue_move_events(struct event_queue *eq_s,
 				if(++eq_d->cur_len > eq_d->max_len) {
 					eq_d->max_len = eq_d->cur_len;
 				}
+				p->eq = eq_d;
 			} else {
 				/* signal that the message was 'delivered' */
 				event_store_commit(p->msg->es, p->msg->ev_len, queue_list_is_log(eq_s),

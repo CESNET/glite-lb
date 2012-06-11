@@ -180,6 +180,8 @@ struct server_msg {
 	char                   *dest;
 	char                   *owner;
 	time_t                  expires;        /* time (in seconds from epoch) the message expires */
+	int                     use_count;      /* number of queue threads trying to deliver this message */
+	pthread_mutex_t         use_lock;       /* protect the use_count */
 };
 
 
@@ -240,6 +242,8 @@ int server_msg_init(struct server_msg *, il_octet_string_t *);
 int server_msg_is_priority(struct server_msg *);
 #endif
 int server_msg_free(struct server_msg *);
+void server_msg_use(struct server_msg *);
+int server_msg_release(struct server_msg *);
 
 /* general event queue methods */
 struct event_queue *event_queue_create(char *, struct il_output_plugin *);

@@ -142,6 +142,8 @@ server_msg_copy(struct server_msg *src)
 #endif
   msg->expires = src->expires;
   msg->generation = src->generation;
+  msg->use_count = 0;
+  pthread_mutex_init(&msg->use_lock, NULL);
   return(msg);
 }
 
@@ -160,6 +162,8 @@ server_msg_init(struct server_msg *msg, il_octet_string_t *event)
 
 	memset(msg, 0, sizeof(*msg));
 
+	pthread_mutex_init(&msg->use_lock, NULL);
+	msg->use_count = 0;
 
 #if defined(IL_NOTIFICATIONS)
 
@@ -238,13 +242,41 @@ server_msg_free(struct server_msg *msg)
 {
   assert(msg != NULL);
 
-  if(msg->msg) free(msg->msg);
-  if(msg->job_id_s) free(msg->job_id_s);
+  if(server_msg_release(msg) <= 0) {
+	  pthread_mutex_destroy(&msg->use_lock);
+	  if(msg->msg) free(msg->msg);
+	  if(msg->job_id_s) free(msg->job_id_s);
 #if defined(IL_NOTIFICATIONS)
-  if(msg->dest_name) free(msg->dest_name);
-  if(msg->dest) free(msg->dest);
-  if(msg->owner) free(msg->owner);
+	  if(msg->dest_name) free(msg->dest_name);
+	  if(msg->dest) free(msg->dest);
+	  if(msg->owner) free(msg->owner);
 #endif
-  free(msg);
+	  free(msg);
+  }
   return 0;
+}
+
+
+void
+server_msg_use(struct server_msg *msg)
+{
+	assert(msg != NULL);
+
+	pthread_mutex_lock(&msg->use_lock);
+	(msg->use_count)++;
+	pthread_mutex_unlock(&msg->use_lock);
+}
+
+
+int
+server_msg_release(struct server_msg *msg)
+{
+	int ret;
+
+	assert(msg != NULL);
+	
+	pthread_mutex_lock(&msg->use_lock);
+	ret = --(msg->use_count);
+	pthread_mutex_unlock(&msg->use_lock);
+	return ret;
 }
