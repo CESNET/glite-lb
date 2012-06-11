@@ -154,7 +154,7 @@
 		logsrc=>'"($a) == ($b)"',
 		timeval=>'"($a).tv_sec == ($b).tv_sec && ($a).tv_usec == ($b).tv_usec"',
 		cclassad=>'"($a == $b)"',
-		taglist=>'"($a == $b)"',
+		taglist=>'"edg_wll_TagListCompare($a, $b)"',
 	}
 );
 

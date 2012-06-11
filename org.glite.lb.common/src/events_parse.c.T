@@ -111,6 +111,25 @@ char * edg_wll_TagListToString(edg_wll_TagValue *list) {
 }
 
 
+int
+edg_wll_TagListCompare(edg_wll_TagValue *a, edg_wll_TagValue *b) 
+{
+	char *a_s, *b_s;
+	int ret;
+
+	if(!a || !b) 
+		return a == b;
+
+	a_s = edg_wll_TagListToString(a);
+	b_s = edg_wll_TagListToString(b);
+
+	ret = strcmp(a_s, b_s);
+	free(a_s);
+	free(b_s);
+	
+	return 0 == ret;
+}
+
 /**
  * Edg_wll_ParseEvent - parse ULM message to internal structures
  * Calls: calloc, free, sprintf, strdup
