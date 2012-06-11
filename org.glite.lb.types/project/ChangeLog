@@ -101,3 +101,6 @@
 - Merge from branch_3_2
 - Torque jobs support
 
+1.4.0-2
+- Module rebuilt with packaging updates
+
