@@ -133,3 +133,8 @@
 - Merge from branch_3_2
 - Fixed compilation with Kerberos GSSAPI
 
+3.2.1-1
+- Fixed build of the test for kerberos gssapi provider
+- Fixed missing openssl dependency
+- Packaging with kerberos provider
+
