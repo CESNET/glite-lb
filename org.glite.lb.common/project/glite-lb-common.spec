@@ -34,6 +34,7 @@ Summary: Development files for gLite L&B common library
 Group: Development/Libraries
 Requires: %{name}%{?_isa} = %{version}-%{release}
 Requires: glite-jobid-api-c-devel
+Requires: glite-lb-types
 Requires: glite-lbjp-common-gss-devel
 
 
