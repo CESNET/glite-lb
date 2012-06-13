@@ -27,6 +27,7 @@ limitations under the License.
 
 #include "lb_xml_parse.h"
 #include <glite/lb/xml_parse.h>
+#include <glite/lb/events_parse.h>
 
 class XMLParseTest: public  CppUnit::TestFixture
 {

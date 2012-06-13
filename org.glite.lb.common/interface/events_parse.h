@@ -114,6 +114,10 @@ extern int edg_wll_TagListParse(
 	const char *src,
 	edg_wll_TagValue **list);
 
+extern int edg_wll_TagListCompare(
+	edg_wll_TagValue *a,
+	 edg_wll_TagValue *b);
+
 #ifdef __cplusplus
 }
 #endif
