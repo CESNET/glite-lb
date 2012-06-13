@@ -124,7 +124,7 @@ void EventParseTest::$l()
 				} elsif ($f->{type} eq "timeval") { 
 					$value = "e1->$l.$fn.tv_sec = 326890800; e1->$l.$fn.tv_usec = 1;";
 				} elsif ($f->{type} eq "taglist") {
-					$value = "edg_wll_TagListParse(\"key=value\", &e1->$l.$fn);";
+					$value = "edg_wll_TagListParse(strdup(\"key=value\"), &e1->$l.$fn);";
 				} else { 
 					gen "% FIXME: unknown type $f->{type} for $fn \n"; 
 				}
