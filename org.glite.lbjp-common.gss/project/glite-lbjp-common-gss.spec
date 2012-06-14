@@ -1,4 +1,4 @@
-#krb: %global gssapi_provider_kerberos 1
+%global gssapi_provider_kerberos %{?gssapi_provider_kerberos:0}
 
 Summary: @SUMMARY@
 Name: glite-lbjp-common-gss
