@@ -84,60 +84,6 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 	glite_lbu_TimeToStr(from, &from_s);
 	glite_lbu_TimeToStr(to, &to_s);
 
-	trio_asprintf(&stmt,
-			"select event,dg_jobid,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived,seqcode "
-			"from events e,users u,jobs j "
-			"where u.userid=e.userid "
-			"and j.jobid = e.jobid "
-			"and j.dg_jobid like 'https://%|Ss:%d/%%' "
-			"and arrived > %s and arrived <= %s "
-			"order by arrived,event",
-			ctx->srvName,ctx->srvPort,
-			from_s,to_s);
-	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
-	
-	if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto clean;
-
-	while ((ret = edg_wll_FetchRow(ctx,q,sizeof(res)/sizeof(res[0]),NULL,res)) > 0) {
-		assert(ret == sizofa(res));
-		event = atoi(res[0]); free(res[0]); res[0] = NULL;
-
-		if (convert_event_head(ctx,res+1,&e)
-			|| edg_wll_get_event_flesh(ctx,event,&e))
-		{
-			char	*et,*ed;
-			int	i;
-
-		/* Most likely sort of internal inconsistency. 
-		 * Must not be fatal -- just complain
-		 */
-			edg_wll_Error(ctx,&et,&ed);
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s event %d: %s (%s)", res[1], event, et, ed);
-			free(et); free(ed);
-			for (i=0; i<sizofa(res); i++) free(res[i]);
-			edg_wll_ResetError(ctx);
-		}
-		else {
-			event_s = edg_wll_UnparseEvent(ctx,&e);
-			char	arr_s[100];
-
-		        edg_wll_ULMTimevalToDate(e.any.arrived.tv_sec, e.any.arrived.tv_usec, arr_s);
-			asprintf(&dumpline, "DG.ARRIVED=%s %s\n", arr_s, event_s);
-			len = strlen(dumpline); 
-			total = 0;
-			while (total != len) {
-				written = write(dump,dumpline+total,len-total);
-				if (written < 0 && errno != EAGAIN) {
-					edg_wll_SetError(ctx,errno,"writing dump file");
-					break;
-				}
-				total += written;
-			}
-			free(event_s);
-		}
-		edg_wll_FreeEvent(&e); memset(&e,0,sizeof e);
-	}
-
 	// Take care of implicit subjob registration events
         trio_asprintf(&stmt2,
                         "select s.jobid,s.parent_job,ef.ulm,j.dg_jobid,s.int_status,e.arrived from states s, events_flesh ef, events e,jobs j "
@@ -198,6 +144,60 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 		free(dumpline);
 		edg_wll_FreeEvent(f);
 		if (total != len) goto clean; 
+	}
+
+	trio_asprintf(&stmt,
+			"select event,dg_jobid,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived,seqcode "
+			"from events e,users u,jobs j "
+			"where u.userid=e.userid "
+			"and j.jobid = e.jobid "
+			"and j.dg_jobid like 'https://%|Ss:%d/%%' "
+			"and arrived > %s and arrived <= %s "
+			"order by arrived,event",
+			ctx->srvName,ctx->srvPort,
+			from_s,to_s);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	
+	if (edg_wll_ExecSQL(ctx,stmt,&q) < 0) goto clean;
+
+	while ((ret = edg_wll_FetchRow(ctx,q,sizeof(res)/sizeof(res[0]),NULL,res)) > 0) {
+		assert(ret == sizofa(res));
+		event = atoi(res[0]); free(res[0]); res[0] = NULL;
+
+		if (convert_event_head(ctx,res+1,&e)
+			|| edg_wll_get_event_flesh(ctx,event,&e))
+		{
+			char	*et,*ed;
+			int	i;
+
+		/* Most likely sort of internal inconsistency. 
+		 * Must not be fatal -- just complain
+		 */
+			edg_wll_Error(ctx,&et,&ed);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s event %d: %s (%s)", res[1], event, et, ed);
+			free(et); free(ed);
+			for (i=0; i<sizofa(res); i++) free(res[i]);
+			edg_wll_ResetError(ctx);
+		}
+		else {
+			event_s = edg_wll_UnparseEvent(ctx,&e);
+			char	arr_s[100];
+
+		        edg_wll_ULMTimevalToDate(e.any.arrived.tv_sec, e.any.arrived.tv_usec, arr_s);
+			asprintf(&dumpline, "DG.ARRIVED=%s %s\n", arr_s, event_s);
+			len = strlen(dumpline); 
+			total = 0;
+			while (total != len) {
+				written = write(dump,dumpline+total,len-total);
+				if (written < 0 && errno != EAGAIN) {
+					edg_wll_SetError(ctx,errno,"writing dump file");
+					break;
+				}
+				total += written;
+			}
+			free(event_s);
+		}
+		edg_wll_FreeEvent(&e); memset(&e,0,sizeof e);
 	}
 
 	time(&end);
