@@ -72,7 +72,7 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 
 	for (i = 0; i < total; i++) {
 		order[i].id_unparsed = edg_wlc_JobIdUnparse(jobsOut[i]);
-		order[i].parent_unparsed = edg_wlc_JobIdUnparse(statsOut[i].parent_job);
+		order[i].parent_unparsed = statsOut ? edg_wlc_JobIdUnparse(statsOut[i].parent_job) : NULL;
 		order[i].key = order[i].parent_unparsed ? order[i].parent_unparsed : order[i].id_unparsed;
 		order[i].order = i;
 	} 
