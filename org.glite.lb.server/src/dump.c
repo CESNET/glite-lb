@@ -84,6 +84,68 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 	glite_lbu_TimeToStr(from, &from_s);
 	glite_lbu_TimeToStr(to, &to_s);
 
+	// Take care of implicit subjob registration events
+        trio_asprintf(&stmt2,
+                        "select s.jobid,s.parent_job,ef.ulm,j.dg_jobid,s.int_status,e.arrived from states s, events_flesh ef, events e,jobs j "
+                        "where s.parent_job<>'*no parent job*' AND "
+			"ef.jobid=s.parent_job AND (e.code=%d OR e.code=%d) AND "
+			"e.jobid=ef.jobid AND e.event=ef.event AND "
+			"e.arrived > %s AND e.arrived <= %s AND "
+			"j.jobid=s.jobid",
+			EDG_WLL_EVENT_REGJOB, EDG_WLL_EVENT_FILETRANSFERREGISTER,
+			from_s,to_s);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt2);
+	if (edg_wll_ExecSQL(ctx,stmt2,&q2) < 0) goto clean;
+
+	while ((ret = edg_wll_FetchRow(ctx,q2,sizeof(res2)/sizeof(res2[0]),NULL,res2)) > 0) {
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "Dumping subjob %s, parent %s", res2[0], res2[1]);
+
+		edg_wll_ParseEvent(ctx,res2[2],&f);
+
+		f->regJob.nsubjobs = 0;
+		f->regJob.parent = f->any.jobId;
+
+		f->any.jobId=NULL;
+		edg_wlc_JobIdParse(res2[3], &f->any.jobId);
+
+	        f->any.arrived.tv_sec = glite_lbu_StrToTime(res2[5]);
+	        f->any.arrived.tv_usec = 0;
+
+		char *rest;
+		stat = dec_intJobStat(res2[4], &rest);
+		//nasty but not the only similar solution in code
+		switch (stat->pub.jobtype) {
+			case EDG_WLL_STAT_SIMPLE:
+				f->regJob.jobtype = EDG_WLL_REGJOB_SIMPLE; break;
+			case EDG_WLL_STAT_FILE_TRANSFER:
+				f->regJob.jobtype = EDG_WLL_REGJOB_FILE_TRANSFER; break;
+			default:
+				f->regJob.jobtype = EDG_WLL_REGJOB_JOBTYPE_UNDEFINED;
+				glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_WARN, "Job %s has type %d but it also lists a parent job %s", res2[2], stat->pub.jobtype, res2[1]);
+		}
+
+		char	arr_s[100];
+		event_s = edg_wll_UnparseEvent(ctx,f);
+		edg_wll_ULMTimevalToDate(f->any.arrived.tv_sec, f->any.arrived.tv_usec, arr_s);
+		asprintf(&dumpline, "DG.ARRIVED=%s %s\n", arr_s, event_s);
+
+		len = strlen(dumpline); 
+		total = 0;
+		while (total != len) {
+			written = write(dump,dumpline+total,len-total);
+			if (written < 0 && errno != EAGAIN) {
+				edg_wll_SetError(ctx,errno,"writing dump file");
+				break;
+			}
+			total += written;
+		}
+		edg_wll_FreeStatus(intJobStat_to_JobStat(stat));
+		free(event_s);
+		free(dumpline);
+		edg_wll_FreeEvent(f);
+		if (total != len) goto clean; 
+	}
+
 	trio_asprintf(&stmt,
 			"select event,dg_jobid,code,prog,host,u.cert_subj,time_stamp,usec,level,arrived,seqcode "
 			"from events e,users u,jobs j "
