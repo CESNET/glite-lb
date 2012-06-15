@@ -849,7 +849,7 @@ int edg_wll_UserJobsResToSoap(
 
 static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
 {
-	assert(EDG_WLL_SOURCE_CREAM_EXECUTOR + 1 == EDG_WLL_SOURCE__LAST);
+	assert(EDG_WLL_SOURCE_PBS_SCHEDULER + 1 == EDG_WLL_SOURCE__LAST);
 
 	switch ( in ) {
         case UserInterface: *out = EDG_WLL_SOURCE_USER_INTERFACE; break;
@@ -863,6 +863,11 @@ static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
         case LBServer: *out = EDG_WLL_SOURCE_LB_SERVER; break;
         case CREAMInterface: *out = EDG_WLL_SOURCE_CREAM_INTERFACE; break;
         case CREAMExecutor: *out = EDG_WLL_SOURCE_CREAM_EXECUTOR; break;
+	case PBSClient: *out = EDG_WLL_SOURCE_PBS_CLIENT; break;
+	case PBSServer: *out = EDG_WLL_SOURCE_PBS_SERVER; break;
+        case PBSsMom: *out = EDG_WLL_SOURCE_PBS_SMOM; break;
+        case PBSMom: *out = EDG_WLL_SOURCE_PBS_MOM; break;
+        case PBSScheduler: *out = EDG_WLL_SOURCE_PBS_SCHEDULER; break;
         default: assert(0); break;
         }
 }
@@ -975,7 +980,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 
 static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 {
-	assert(EDG_WLL_SOURCE_CREAM_EXECUTOR + 1 == EDG_WLL_SOURCE__LAST);
+	assert(EDG_WLL_SOURCE_PBS_SCHEDULER + 1 == EDG_WLL_SOURCE__LAST);
 
 	switch ( in ) {
 	        case EDG_WLL_SOURCE_USER_INTERFACE: *out = UserInterface; break;
@@ -989,6 +994,11 @@ static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 		case EDG_WLL_SOURCE_LB_SERVER: *out = LBServer; break;
 		case EDG_WLL_SOURCE_CREAM_INTERFACE: *out = CREAMInterface; break;
 		case EDG_WLL_SOURCE_CREAM_EXECUTOR: *out = CREAMExecutor; break;
+		case EDG_WLL_SOURCE_PBS_CLIENT: *out = PBSClient; break;
+		case EDG_WLL_SOURCE_PBS_SERVER: *out = PBSServer; break;
+		case EDG_WLL_SOURCE_PBS_SMOM: *out = PBSsMom; break;
+		case EDG_WLL_SOURCE_PBS_MOM: *out = PBSMom; break;
+		case EDG_WLL_SOURCE_PBS_SCHEDULER: *out = PBSScheduler; break;
         	case EDG_WLL_SOURCE_NONE:
         	case EDG_WLL_SOURCE__LAST:
 		default:

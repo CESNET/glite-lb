@@ -219,6 +219,11 @@
 			<val name="LBServer"/>
 			<val name="CREAMInterface"/>
 			<val name="CREAMExecutor"/>
+			<val name="PBSClient"/>
+			<val name="PBSServer"/>
+			<val name="PBSsMom"/>
+			<val name="PBSMom"/>
+			<val name="PBSScheduler"/>
 		</enum>
 
 		<struct name="stateEnterTimesItem">

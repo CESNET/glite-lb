@@ -87,6 +87,11 @@ limitations under the License.
 #define LBServer	lbt__eventSource__LBServer
 #define CREAMInterface	lbt__eventSource__CREAMInterface
 #define CREAMExecutor	lbt__eventSource__CREAMExecutor
+#define PBSClient	lbt__eventSource__PBSClient
+#define PBSServer	lbt__eventSource__PBSServer
+#define PBSsMom		lbt__eventSource__PBSsMom
+#define PBSMom		lbt__eventSource__PBSMom
+#define PBSScheduler	lbt__eventSource__PBSScheduler
 
 #endif
 
