@@ -104,3 +104,6 @@
 1.4.0-2
 - Module rebuilt with packaging updates
 
+1.4.1-1
+- Tag List type comparison implemented
+
