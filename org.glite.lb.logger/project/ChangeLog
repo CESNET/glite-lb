@@ -207,3 +207,6 @@
 - Merge from branch_3_2
 - Torque jobs support
 
+2.4.1-1
+- Fixed occasional memory handling errors (SB#95013)
+

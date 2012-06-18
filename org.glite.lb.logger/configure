@@ -1460,7 +1460,7 @@ sub mode_etics_packaging {
 	my ($workspaceDir, $srcPackageName, $srcAge, $topDir);
 
 	# old-school packaging by ETICS for EMI-1
-	if ($project eq 'emi' and $project_version == 1) { return; }
+	if ($project eq 'emi' and $project_version == 1 and $fmod ne 'gridsite.core') { return; }
 
 	if ($fmod eq 'gridsite.core') {
 		$workspaceDir = '..';
