@@ -1,1 +1,0 @@
-./stage/bin/glite-lb-bkserverd -d --perf-sink=4 -p 10000 -w 10003  -S /tmp/purge_michal -D /tmp/dump_michal --silent
