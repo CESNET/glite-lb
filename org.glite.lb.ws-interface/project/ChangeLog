@@ -98,3 +98,6 @@
 3.4.0-1
 - Torque jobs support
 
+3.4.1-1
+- Torque event sources for WS interface
+
