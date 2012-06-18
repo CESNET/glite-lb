@@ -388,3 +388,8 @@
 - Merge from branch_3_2
 - Torque jobs support
 
+2.4.1-1
+- Fixed compilation of job lists over https with owner index missing
+- Support Torque event sources in WS queries
+- Server's XML unit test fixed
+
