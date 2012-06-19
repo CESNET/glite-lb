@@ -58,9 +58,12 @@ if [ -f "$msgconf" ]; then
 	GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -F $msgconf"
 fi
 
+KRB5_KTNAME=${KRB5_KTNAME:-'FILE:/var/glite/krb5kt_lb'}
+KRB5CCNAME=${KRB5CCNAME:-'FILE:/var/glite/krb5cc_lb'}
+
 lockfile=/var/lock/glite-lb-bkserverd
 
-unset creds port log4c
+unset creds port env
 
 start_daemon()
 {
@@ -83,7 +86,7 @@ start_daemon()
 		fi
 	fi
 	echo -n "Starting $name ..."
-	su - $GLITE_USER -c "$log4c $cmd"
+	su - $GLITE_USER -c "$env $cmd"
 
 	if [ $? -eq 0 ]; then
 		echo " done"
@@ -157,17 +160,23 @@ start()
 		return 1
 	fi
 
-	[ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
-		creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
+	env="LOG4C_RCPATH='$GLITE_LB_LOCATION_ETC/glite-lb'"
 
-	if test -z "$creds"; then
-		if su - $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem"; then
-			echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
-			creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
+	if [ x"$GLITE_GSS_MECH" = x"krb5" ]; then
+		env="$env KRB5_KTNAME='$KRB5_KTNAME' KRB5CCNAME='$KRB5CCNAME'"
+	else
+		[ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
+			creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
+
+		if test -z "$creds"; then
+			if su - $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem"; then
+				echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
+				creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
+			fi
 		fi
-	fi
 
-	log4c="LOG4C_RCPATH='$GLITE_LB_LOCATION_ETC/glite-lb'"
+		[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
+	fi
 
 	policy="$GLITE_LB_LOCATION_ETC/glite-lb/glite-lb-authz.conf"
 	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-server-lcas.log' LCAS_ETC_DIR='$GLITE_LB_LOCATION_ETC/glite-lb'"
@@ -212,8 +221,6 @@ start()
 		# target Job Provenance
 		[ -n "$GLITE_LB_EXPORT_JPPS" ] && jpps="--jpps $GLITE_LB_EXPORT_JPPS"
 	fi
-
-	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
 	[ -n "$GLITE_LB_SERVER_PORT" ] && port="-p $GLITE_LB_SERVER_PORT"
 	[ -n "$GLITE_LB_SERVER_WPORT" ] && wport="-w $GLITE_LB_SERVER_WPORT"
