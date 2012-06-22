@@ -80,7 +80,7 @@ endif
 endif
 
 GRIDSITE_CFLAGS?=-I${gridsite_prefix}/include `xml2-config --cflags`
-GRIDSITE_LIBS?=-L${gridsite_prefix}/${libdir} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
+GRIDSITE_LIBS?=-L${gridsite_prefix}/${libdir} -L${gridsite_prefix}/lib -lgridsite `xml2-config --libs`
 
 ifeq (${GLITE_LB_SERVER_WITH_LCAS},yes)
 LCAS_CFLAGS?=-I${lcas_prefix}/include -I${lcas_prefix}/include/glite/security -DHAVE_LCAS
