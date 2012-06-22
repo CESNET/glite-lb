@@ -114,7 +114,6 @@ fi
 %defattr(-,root,root)
 %dir /etc/cron.d/
 %dir /etc/glite-lb/
-%dir /usr/%{_lib}/modules/
 %dir /usr/include/glite/
 %dir /usr/include/glite/lb/
 %dir /usr/share/doc/%{name}-%{version}/
@@ -125,10 +124,6 @@ fi
 /etc/cron.d/*
 /etc/glite-lb-index.conf.template
 /etc/init.d/glite-lb-bkserverd
-/usr/%{_lib}/modules/lcas_lb.mod
-/usr/%{_lib}/modules/liblcas_lb.so
-/usr/%{_lib}/modules/liblcas_lb.so.0
-/usr/%{_lib}/modules/liblcas_lb.so.0.0.0
 /usr/include/glite/lb/index.h
 /usr/include/glite/lb/lb_authz.h
 /usr/include/glite/lb/store.h

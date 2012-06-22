@@ -24,7 +24,9 @@ limitations under the License.
 #include <openssl/x509.h>
 #include <gssapi.h>
 #ifndef NO_GLOBUS_GSSAPI
+#ifdef HAVE_LCAS
 #include "lcas/lcas_pem.h"
+#endif
 #include "voms/voms_apic.h"
 #endif
 #include "glite/lb/context-int.h"
@@ -964,6 +966,7 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
    }
 
 #ifndef NO_GLOBUS_GSSAPI
+#ifdef HAVE_LCAS
    if (enable_lcas) {
       /* XXX make a real RSL ? */
       request = (char *) action2name(action);
@@ -979,6 +982,7 @@ check_store_authz(edg_wll_Context ctx, edg_wll_Event *ev)
       if (ret)
 	 goto end;
    }
+#endif
 #endif
 
    /* by default the server is open to any authenticated client */

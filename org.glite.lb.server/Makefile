@@ -27,6 +27,7 @@ version=${module.version}
 default all: compile
 
 GLITE_LB_SERVER_WITH_WS=yes
+GLITE_LB_SERVER_WITH_LCAS=no
 
 ifdef LB_STANDALONE
 	LB_STANDALONE_FLAGS:=-DLB_STANDALONE
@@ -81,8 +82,10 @@ endif
 GRIDSITE_CFLAGS?=-I${gridsite_prefix}/include `xml2-config --cflags`
 GRIDSITE_LIBS?=-L${gridsite_prefix}/${libdir} -L${gridsite_prefix}/lib -lgridsite_globus `xml2-config --libs`
 
-LCAS_CFLAGS?=-I${lcas_prefix}/include -I${lcas_prefix}/include/glite/security
+ifeq (${GLITE_LB_SERVER_WITH_LCAS},yes)
+LCAS_CFLAGS?=-I${lcas_prefix}/include -I${lcas_prefix}/include/glite/security -DHAVE_LCAS
 LCAS_LIBS?=-L${lcas_prefix}/${libdir} -llcas
+endif
 
 ifneq (${classads_prefix},/usr)
 	classads_libs := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib
@@ -256,9 +259,11 @@ LIB_OBJS_BK:= \
 MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
 MONDB_LIBS:=${COMMON_LIBS} ${LB_MACHINE_LIB} ${LB_UTILS_DB_LIB} ${EXT_LIBS}
 
+ifeq (${GLITE_LB_SERVER_WITH_LCAS},yes)
 LCAS_PLUGIN_OBJS:=lcas_lb.o
 LCAS_PLUGIN_LOBJS:=${LCAS_PLUGIN_OBJS:.o=.lo}
 LCAS_PLUGIN_LIB:=liblcas_lb.la
+endif
 
 EXAMPLES=
 
@@ -378,8 +383,10 @@ install:
 		${INSTALL} -m 755 "glite-lb-$$p" "${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-$$p"; \
 	done
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules
-	${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules
-	ln -sf liblcas_lb.so ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules/lcas_lb.mod
+	if test -n "${LCAS_PLUGIN_LIB}"; then \
+		${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules; \
+		ln -sf liblcas_lb.so ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules/lcas_lb.mod; \
+	fi
 	${INSTALL} -m 755 ${top_srcdir}/src/notif-keeper.sh ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-notif-keeper
 
 	for f in dbsetup.sql index.conf.template; do \
