@@ -10,6 +10,7 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module lbjp-common.db
+	# heimdal: sed -i.orig -e 's/postgresql_prefix.*/postgresql_prefix = no/' Makefile.inc
 	touch $@
 
 build: build-arch build-indep
