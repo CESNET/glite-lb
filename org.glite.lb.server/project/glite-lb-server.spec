@@ -7,6 +7,12 @@ License: ASL 2.0
 Vendor: EMI
 Group: System Environment/Daemons
 BuildRequires: expat
+# gssapi is needed explicitly for glite-lb-server, but the proper package is
+# known only in glite-lbjp-common-gss-devel:
+#  - gssapi from Globus (globus-gssapi-gsi-devel)
+#  - gssapi from MIT Kerberos (krb5-devel)
+#  - gssapi from Heimdal Kerberos
+#BuildRequires: globus-gssapi-gsi-devel
 BuildRequires: globus-gssapi-gsi-devel
 BuildRequires: glite-jobid-api-c-devel
 BuildRequires: glite-lb-common-devel

@@ -9,7 +9,12 @@ Group: System Environment/Libraries
 BuildRequires: c-ares-devel
 BuildRequires: cppunit-devel
 BuildRequires: chrpath
-BuildRequires: globus-gssapi-gsi-devel
+# gssapi is needed explicitly for gsoap-plugin, but the proper package is
+# known only in glite-lbjp-common-gss-devel:
+#  - gssapi from Globus (globus-gssapi-gsi-devel)
+#  - gssapi from MIT Kerberos (krb5-devel)
+#  - gssapi from Heimdal Kerberos
+#BuildRequires: globus-gssapi-gsi-devel
 BuildRequires: gsoap
 BuildRequires: gsoap-devel
 BuildRequires: glite-lbjp-common-gss-devel
