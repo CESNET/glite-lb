@@ -36,7 +36,6 @@ BuildRequires: flex
 BuildRequires: voms-devel
 BuildRequires: classads-devel
 BuildRequires: libtool
-BuildRequires: lcas-devel
 BuildRequires: c-ares
 BuildRequires: classads
 BuildRequires: libxml2-devel
