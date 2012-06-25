@@ -126,10 +126,6 @@ my %externs = (
 	gridsite => {
 		prefix => '/opt/glite'
 	},
-	lcas => {
-		prefix => '/opt/glite',
-		pkg => 'lcas'
-	},
 	trustmanager => {
 		prefix => '/opt/glite'
 	},
@@ -600,7 +596,7 @@ BEGIN{
 	'lb.logger' => [ qw/cppunit:B libtool:B globus:B pkgconfig:B/ ],
 	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B globus:B pkgconfig:B/ ],
 	'lb.nagios' => [ qw/globus_proxy_utils:R/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql-server:R cppunit:B gsoap:B classads:B voms:B lcas gridsite:B bison:B libtool:B libxml2 flex:B pkgconfig:B/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql-server:R cppunit:B gsoap:B classads:B voms:B gridsite:B bison:B libtool:B libxml2 flex:B pkgconfig:B/ ],
 	'lb.state-machine' => [ qw/classads:B libtool:B libxslt:B expat:B globus:B pkgconfig:B/ ],
 	'lb.utils' => [ qw/cppunit:B libtool:B globus:B pkgconfig:B/ ],
 	'lb.ws-interface' => [ qw/libxslt:B tidy:B/ ],
@@ -910,7 +906,6 @@ for my $ext (keys %deps_aux) {
 				glue_schema=>'glue-schema',
 				trustmanager=>'org.glite.security.trustmanager',
 				axis=>'axis',
-				lcas=>'org.glite.security.lcas',
 				gsoapxx=>'-',
 				jdk=>'jdk',
 				voms=>'org.glite.security.voms-api-cpp',
@@ -924,7 +919,7 @@ for my $ext (keys %deps_aux) {
 		},
 		etics_projects => {
 			vdt=>[qw/globus globus_essentials globus_proxy_utils gpt/],
-			'org.glite'=>[qw/voms gridsite lcas gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
+			'org.glite'=>[qw/voms gridsite gip_release gip_service bdii glite_version glite_info_templates glue_schema yaim_core/],
 		},
 		etics_locations => {
 			'*' => '',
@@ -980,7 +975,6 @@ for my $ext (keys %deps_aux) {
 				trustmanager=>'emi.java-security.trustmanager',
 				trustmanager_axis=>'emi.java-security.trustmanager-axis',
 				axis=>'axis1.4',
-				lcas=>'emi.sac.lcas',
 				gsoapxx=>'-',
 				jdk=>'java',
 				voms => 'emi.voms.voms-api',
@@ -1050,7 +1044,7 @@ for my $ext (keys %deps_aux) {
 			},
 		},
 		etics_projects => {
-			'emi'=>[qw/voms voms-devel gridsite lcas gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
+			'emi'=>[qw/voms voms-devel gridsite gip_service bdii glite_version glue_schema yaim_core yaim_bdii trustmanager trustmanager_axis/],
 		},
 		etics_locations => {
 			axis => 'axis',
@@ -1460,7 +1454,7 @@ sub mode_etics_packaging {
 	my ($workspaceDir, $srcPackageName, $srcAge, $topDir);
 
 	# old-school packaging by ETICS for EMI-1
-	if ($project eq 'emi' and $project_version == 1) { return; }
+	if ($project eq 'emi' and $project_version == 1 and $fmod ne 'gridsite.core') { return; }
 
 	if ($fmod eq 'gridsite.core') {
 		$workspaceDir = '..';
