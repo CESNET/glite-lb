@@ -142,3 +142,6 @@
 - Proper gssapi provider in rpm (rpm ignores the comments for macros).
 - Proper length of strings specified (GGUS #82746, SB #95337)
 
+3.2.2-2
+- Module rebuilt
+
