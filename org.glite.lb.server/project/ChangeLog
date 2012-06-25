@@ -393,3 +393,10 @@
 - Support Torque event sources in WS queries
 - Server's XML unit test fixed
 
+2.4.2-1
+- Using SSL version of gridsite (openssl not bundled in globus anymore)
+- Disable the lcas module, unavailable anyway
+- Support GLITE_GSS_MECH in startup scripts
+  - using Kerberos environment variables instead of certificates for "krb5"
+- Avoid explicit dependencies on globus GSSAPI
+
