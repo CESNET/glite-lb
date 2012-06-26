@@ -54,8 +54,8 @@ my (%projects, %project);
 my $debug = 0;
 my $pkg_config_env = (defined $ENV{PKG_CONFIG_PATH}) ? "$ENV{PKG_CONFIG_PATH}:" : '';
 
-my @nodes = qw/client server logger logger-msg nagios utils client-java doc ws-test db jpprimary jpindex jpclient harvester lb px proxyrenewal/;
-my @default_nodes = qw/lb px proxyrenewal nagios/;
+my @nodes = qw/client server logger logger-msg nagios utils client-java doc ws-test db jpprimary jpindex jpclient harvester lb px proxyrenewal canl/;
+my @default_nodes = qw/lb px proxyrenewal nagios canl/;
 my %enable_nodes;
 my %disable_nodes;
 my %default_nodes; @default_nodes{@default_nodes} = (1) x ($#default_nodes + 1);
