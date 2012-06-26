@@ -1382,10 +1382,10 @@ distcheck: ${package}-${version}.tar.gz
 	mkdir -p dist
 	cp ${package}-${version}.tar.gz dist
 	(cd dist; tar -xzf ${package}-${version}.tar.gz)
-	a=`(cd dist/${package}-${version}; find . | sort)`; \
-	b=`(cd ${top_srcdir}; find . -path ./dist -prune -or -print | sort)`; \
+	a=`(cd dist/${package}-${version}; find . -type f | sort)`; \
+	b=`(cd ${top_srcdir}; find . -path ./dist -prune -or -type f -print | sort)`; \
 	echo "$$a" >dist/files-dist; \
-	echo "$$b" | grep -v Makefile.inc | grep -v ${package}-${version}.tar.gz | egrep -v ^./debian | egrep -v ^./[^/]*.spec | grep -v .cvsignore | grep -v project/changelog >dist/files-original
+	echo "$$b" | egrep -v "(^./Makefile.inc$$|^./${package}-${version}.tar.gz$$|^./debian|^./[^/]*.spec$$|\.cvsignore|^\./project/changelog$$|/CVS)" >dist/files-original
 	diff -U0 dist/files-dist dist/files-original
 
 rpm: ${package}-${version}.tar.gz
