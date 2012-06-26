@@ -1406,43 +1406,48 @@ top_srcdir = $top_srcdir
 		}
 	}
 
-	print "Creating ${build}debian/\n" if ($debug);;
+	if ($module and -d $build."debian") {
+		print "Skipping ${build}debian/ (no rewrite in single module mode)\n" if ($debug);
+		`rm -f ${build}debian.*`;
+	} else {
+		print "Creating ${build}debian/\n" if ($debug);;
 
-	`rm -rfv  ${build}debian`;
-	mkdir $build."debian" or die $!;
-	`cp $abs_srcdir/project/debian.* ${build}debian/ 2>/dev/null`;
-	`mv ${build}debian.* ${build}debian/ 2>/dev/null`;
-	`rm -f ${build}debian/*.orig`;
-	opendir $dh, "${build}debian" || die "Can't open ${build}debian: $!";
-	for $_ (readdir $dh) {
-		if (/^debian\.(.*)/) {
-			`mv ${build}debian/$_ ${build}debian/$1`;
-			$debian = 1;
+		`rm -rfv  ${build}debian`;
+		mkdir $build."debian" or die $!;
+		`cp $abs_srcdir/project/debian.* ${build}debian/ 2>/dev/null`;
+		`mv ${build}debian.* ${build}debian/ 2>/dev/null`;
+		`rm -f ${build}debian/*.orig`;
+		opendir $dh, "${build}debian" || die "Can't open ${build}debian: $!";
+		for $_ (readdir $dh) {
+			if (/^debian\.(.*)/) {
+				`mv ${build}debian/$_ ${build}debian/$1`;
+				$debian = 1;
+			}
 		}
-	}
-	closedir $dh;
+		closedir $dh;
 
-	if ($debian) {
-		my ($dir, $file);
+		if ($debian) {
+			my ($dir, $file);
 
-		chmod 0755, "${build}debian/rules";
-		$file="${build}debian/docs"; if (not -f $file) { `touch $file`; }
-		$dir="${build}debian/source"; if (not -d $dir) { mkdir $dir; }
-		$file="${build}debian/source/format"; if (not -f $file) { `echo "3.0 (quilt)" > $file` }
-		$file="${build}debian/compat"; if (not -f $file) { `echo "7" > $file` }
-		$file="${build}debian/changelog"; if (not -f $file) {
-			open FH, ">$file" or die $!;
-			print FH qq{$packageName ($major.$minor.$rev-$age) unstable; urgency=low
+			chmod 0755, "${build}debian/rules";
+			$file="${build}debian/docs"; if (not -f $file) { `touch $file`; }
+			$dir="${build}debian/source"; if (not -d $dir) { mkdir $dir; }
+			$file="${build}debian/source/format"; if (not -f $file) { `echo "3.0 (quilt)" > $file` }
+			$file="${build}debian/compat"; if (not -f $file) { `echo "7" > $file` }
+			$file="${build}debian/changelog"; if (not -f $file) {
+				open FH, ">$file" or die $!;
+				print FH qq{$packageName ($major.$minor.$rev-$age) unstable; urgency=low
 
   * Automatically generated package
 
  -- $package{maintainer}  $debdate
 };
-			close FH;
-		}
+				close FH;
+			}
 
-	} else {
-		`rm -rf ${build}debian`;
+		} else {
+			`rm -rf ${build}debian`;
+		}
 	}
 }
 
