@@ -29,6 +29,8 @@ LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
+SOURCES=interface/*.h src/*.c src/*.h project/.post* test/*.cpp Makefile
+
 LIBOBJS:=cjobid.o strmd5.o 
 HDRS:=cjobid.h strmd5.h
 
@@ -73,6 +75,7 @@ base64_test: %: %.cpp compile
 clean:
 	rm -rvf *.o *.lo .libs/ lib* *.c *.cpp *.h
 	rm -vf base64_test base64_test.xml
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -90,5 +93,4 @@ install: ${LIB}
 %.lo %.o: %.c
 	${COMPILE} -o $@ -c $< 
 
-
-.PHONY: default all compile check stage install clean distclean
+.PHONY: default all compile check stage install clean distclean dist distcheck

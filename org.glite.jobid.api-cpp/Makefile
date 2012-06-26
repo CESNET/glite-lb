@@ -10,6 +10,7 @@ CC:=gcc
 CXX:=g++
 
 -include Makefile.inc
+-include ${top_srcdir}/project/version.properties
 
 version=${module.version}
 
@@ -28,6 +29,8 @@ LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
+SOURCES=interface/*.h Makefile
+
 LIBOBJS:=
 HDRS:=JobId.h
 
@@ -43,6 +46,7 @@ check: compile
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -57,5 +61,4 @@ stage:
 %.o: %.c
 	${COMPILE} -o $@ -c $< 
 
-
-.PHONY: default all compile check install clean distclean
+.PHONY: default all compile check install clean distclean dist distcheck
