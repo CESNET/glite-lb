@@ -24,6 +24,8 @@ CC=gcc
 
 VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples
 
+SOURCES=interface/*.h project/.post* src/*.c Makefile
+
 DEBUG:=-g -O0 -W -Wall
 
 CFLAGS:= ${CFLAGS} \
@@ -93,6 +95,7 @@ install: all
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -102,4 +105,4 @@ distclean:
 
 maildir.lo: maildir.c maildir.h
 
-.PHONY: default all compile check examples doc stage dist distsrc distbin install clean distclean test_coverage
+.PHONY: default all compile check examples doc stage dist distsrc distbin install clean distclean test_coverage dist distcheck

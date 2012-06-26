@@ -17,6 +17,13 @@ version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/examples
 
+SOURCES=\
+	examples/*.c examples/*.sh \
+	interface/*.h \
+	project/.post* \
+	src/*.c \
+	Makefile
+
 DEBUG:=-g -O0 -Wall
 CFLAGS:=${DEBUG} \
 	-I${top_srcdir}/interface \
@@ -92,9 +99,12 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* srv_example cnt_example
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
 %.o %.lo: %.c
 	${COMPILE} -c $<
+
+.PHONY: default all compile stage check example doc install clean distclean dist distcheck

@@ -4,7 +4,7 @@ builddir=build
 top_builddir=${top_srcdir}/${builddir}
 stagedir=.
 globalprefix=glite
-package=gsoap-plugin
+package=glite-lbjp-common-gsoap-plugin
 version=1.0.0
 PREFIX=/opt/glite
 prefix=
@@ -14,6 +14,15 @@ gsoap_prefix=/opt/gsoap
 gsoapxx_prefix?=${gsoap_prefix}
 
 CC=gcc
+
+SOURCES=\
+	examples/*.c examples/*.S \
+	interface/*.h interface/*.h.in \
+	project/.post* project/gsoap-plugin*.in project/libtoolhack/gcc \
+	src/*.c \
+	test/*.cpp \
+	LICENSE Makefile
+SOURCES_EXEC=project/libtoolhack/gcc
 
 gsoap_versions_flavours?=${gsoap_default_version}
 
@@ -349,6 +358,7 @@ clean:
 		rm -rvf `echo $$v | tr -d .`; \
 	done
 	rm -fv ${PKG_CONFIG_FILES}
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -382,3 +392,5 @@ glite_gsplugin${langsuffix}.o glite_gsplugin${langsuffix}.thr.o: soap_version.h
 soap_version.h: stdsoap2.h
 	head stdsoap2.h | \
 	perl -ne '/^\s*stdsoap2.h\s+([0-9])\.([0-9])\.(\S+)\s.*/ && printf "#define GSOAP_VERSION %d%02d%02d\n#define GSOAP_MIN_VERSION \"$$3\"\n#ident \"soap_version.h $$1.$$2.$$3\"\n",$$1,$$2,$$3' >$@
+
+.PHONY: default all compile check check.cxx examples all-libs-with-soap libs-with-soap link-gsoap pkgconfig doc stage install install-soaplib clean distclean dist distcheck

@@ -78,8 +78,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/gsoap-plugin-%{version}
-%doc /usr/share/doc/gsoap-plugin-%{version}/LICENSE
+%dir /usr/share/doc/%{name}-%{version}
+%doc /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/%{_lib}/libglite_security_gsoap_plugin_*.so.9.@MINOR@.@REVISION@
 /usr/%{_lib}/libglite_security_gsoap_plugin_*.so.9
 

@@ -20,6 +20,13 @@ version=${module.version}
 CC=gcc
 VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/tests
 
+SOURCES=\
+	config/log4crc* \
+	project/.post* \
+	src/*.c src/*.h \
+	tests/*.c tests/log4crc \
+	LICENSE Makefile README
+
 LOG4C_CFLAGS:=-I${log4c_prefix}/include
 LOG4C_LIBS:=-L${log4c_prefix}/${libdir} -L${log4c_prefix}/lib -llog4c
 
@@ -79,6 +86,7 @@ install: compile
 clean:
 	rm -rvf *.o *.lo .libs lib*
 	rm -rvf test
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -94,3 +102,5 @@ test: test.o
 
 %.o %.lo: %.c
 	${COMPILE} -c $<
+
+.PHONY: default all compile stage install check clean distclean dist distcheck

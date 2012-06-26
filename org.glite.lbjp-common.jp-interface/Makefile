@@ -23,6 +23,8 @@ version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/project:${jpproject}
 
+SOURCES=interface/*.h project/.post* src/*.c test/*.cpp Makefile
+
 DEBUG:=-g -O0 -W -Wno-sign-compare
 CFLAGS:=${CFLAGS} ${DEBUG} -D_GNU_SOURCE -I. -I${top_srcdir}/interface -I${stagedir}${prefix}/include
 
@@ -104,6 +106,7 @@ clean:
 	rm -rvf *.o *.lo .libs lib*
 	rm -vf type_test type_test.xml
 	rm -f glite jp
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -112,4 +115,6 @@ distclean:
 	${COMPILE} -o $@ -c $<
 
 %.lo: %.c
-	${COMPILE} -o $@ -c $< 
+	${COMPILE} -o $@ -c $<
+
+.PHONY: default all compile check doc stage install clean distclean dist distcheck

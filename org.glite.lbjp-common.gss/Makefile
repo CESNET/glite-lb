@@ -4,7 +4,7 @@ builddir=build
 top_builddir=${top_srcdir}/${builddir}
 stagedir=.
 globalprefix=glite
-package=gss
+package=glite-lbjp-common-gss
 version=1.0.0
 PREFIX=/opt/glite
 prefix=
@@ -35,6 +35,15 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples
+
+SOURCES=\
+	examples/*.c examples/*.h \
+	interface/*.h \
+	project/.post* \
+	project/doc/*.cls project/doc/*.pdf project/doc/*.tex project/doc/Makefile \
+	src/*.c \
+	test/*.cpp \
+	LICENSE Makefile
 
 default: all
 
@@ -191,6 +200,7 @@ install:
 
 clean:
 	rm -rf *.o *.lo *.a *.la .libs test_gss gss_server gss_client
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -203,3 +213,5 @@ distclean:
 
 test_gss.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${GLOBUS_GSSAPI_GSI_CFLAGS} ${CPPUNIT_CFLAGS} -Wno-error $<
+
+.PHONY: default all compile check check.gss test_coverage examples doc stage install clean distclean dist distcheck

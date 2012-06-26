@@ -24,6 +24,8 @@ CC=gcc
 
 VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples:${top_srcdir}/test
 
+SOURCES=doc/C.dox examples/*.c interface/*.h project/.post* src/*.c test/*.cpp LICENSE Makefile
+
 DEBUG:=-g -O0 -W -Wall
 
 CFLAGS:= ${CFLAGS} \
@@ -129,19 +131,6 @@ olddoc:
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
-dist: distsrc distbin
-
-distsrc:
-	mkdir -p ${top_srcdir}/${package}-${version}
-	cd ${top_srcdir} && GLOBIGNORE="${package}-${version}" && cp -Rf * ${package}-${version}
-	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${version}
-	rm -rf ${top_srcdir}/${package}-${version}
-
-distbin:
-	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
-	save_dir=`pwd`; cd tmpbuilddir${stagedir}${prefix} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
-	rm -rf tmpbuilddir
-        
 install: all
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
@@ -154,6 +143,7 @@ install: all
 clean:
 	rm -rvf *.o *.lo *.loT .libs lib* *.c *.h *.dox C/ CPP/
 	rm -rvf db_expire db_test db_test_mysql db_test_psql timezone
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -182,4 +172,4 @@ db_test_mysql.lo: libglite_lbu_dbtest.la db.h db-int.h db_test.c
 db-mysql.lo: db-mysql.c db-int.h db.h
 db-pg.lo: db-pg.c db-int.h db.h
 
-.PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage distclean
+.PHONY: default all compile check examples doc stage dist distsrc distbin install clean test_coverage distclean dist distcheck

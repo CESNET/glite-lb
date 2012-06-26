@@ -29,6 +29,13 @@ LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 
+SOURCES=\
+	interface/*.h \
+	project/.post* \
+	src/*.c src/*.h \
+	test/*.cpp \
+	LICENSE Makefile
+
 os=${shell uname}
 DL_LIBS:=
 ifeq (${os},Linux)
@@ -90,19 +97,6 @@ trio_test: trio_test.cpp
 	${CXX} -c ${CFLAGS} ${TEST_INC} $<
 	${LINKXX} -o $@ trio_test.o ${LTLIB} ${TEST_LIBS}
 
-dist: distsrc distbin
-
-distsrc:
-	mkdir -p ${top_srcdir}/${package}-${version}
-	cd ${top_srcdir} && GLOBIGNORE="${package}-${version}" && cp -Rf * ${package}-${version}
-	cd ${top_srcdir} && tar -czf ${distdir}/${package}-${version}_src.tar.gz --exclude-from=project/tar_exclude ${package}-${version}
-	rm -rf ${top_srcdir}/${package}-${version}
-
-distbin:
-	$(MAKE) install PREFIX=`pwd`/tmpbuilddir${stagedir}
-	save_dir=`pwd`; cd tmpbuilddir${stagedir} && tar -czf $$save_dir/${top_srcdir}/${distdir}/${package}-${version}_bin.tar.gz *; cd $$save_dir
-	rm -rf tmpbuilddir
-
 install: all
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
@@ -116,9 +110,12 @@ install: all
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
 	rm -vf trio_test
+	rm -rvf dist ${package}-*.tar.gz
 	
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
 %.lo %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<
+
+.PHONY: default all compile stage check mkreports runtest install clean distclean dist distcheck
