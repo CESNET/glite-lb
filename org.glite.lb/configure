@@ -1517,11 +1517,13 @@ sub mode_etics_packaging {
 	if ($fmod eq 'gridsite.core') {
 		$workspaceDir = '..';
 		$srcPackageName = 'gridsite';
+		$srcTarBall = "../$srcPackageName-\${version}.src.tar.gz";
 		$srcAge = '';
 		$topDir = '../';
 	} else {
 		$workspaceDir = '${workspaceDir}';
 		$srcPackageName = '${packageName}';
+		$srcTarBall = "$srcPackageName-\${version}.tar.gz";
 		$srcAge = '-${age}';
 		$topDir = '';
 	}
@@ -1531,8 +1533,8 @@ sub mode_etics_packaging {
 	$cmd->{default}{packaging} = $rpmprepare;
 	$cmd->{default}{packaging} .= "dir=\${workspaceDir}/rpm_build_src_\$\$
 	mkdir -p \${package.tgzLocation} \${package.SRPMSLocation} \$dir/{BUILD,RPMS,SOURCES,SRPMS} 2>/dev/null || true
-	cp -vf $workspaceDir/$srcPackageName-\${version}${srcAge}.src.tar.gz \${package.tgzLocation}/
-	cp -vf $workspaceDir/$srcPackageName-\${version}${srcAge}.src.tar.gz \$dir/SOURCES/
+	cp -vf $srcTarBall \${package.tgzLocation}/$srcPackageName-\${version}${srcAge}.src.tar.gz
+	cp -vf $srcTarBall \$dir/SOURCES/$srcPackageName-\${version}${srcAge}.src.tar.gz
 	rpmbuild -bs --nodeps --define \"_topdir \$dir\" $srcPackageName.spec
 	cp -v \$dir/SRPMS/*.src.rpm \${package.SRPMSLocation}/
 	rm -rf \$dir";
@@ -1544,8 +1546,8 @@ sub mode_etics_packaging {
 		$cmd->{$p}{packaging} = $debprepare;
 		$cmd->{$p}{packaging} .= "dir=\${workspaceDir}/dpkg_build_src_\$\$
 	mkdir -p \${package.tgzLocation} \${package.SDEBSLocation} \$dir 2>/dev/null || true
-	cp -vf $workspaceDir/$srcPackageName-\${version}${srcAge}.src.tar.gz \${package.tgzLocation}/
-	cp -vf $workspaceDir/$srcPackageName-\${version}${srcAge}.src.tar.gz \$dir/${srcPackageName}_\${version}.orig.tar.gz
+	cp -vf $srcTarBall \${package.tgzLocation}/$srcPackageName-\${version}${srcAge}.src.tar.gz
+	cp -vf $srcTarBall \$dir/${srcPackageName}_\${version}.orig.tar.gz
 	tar xzf \$dir/${srcPackageName}_\${version}.orig.tar.gz -C \$dir
 	cp -rf ${topDir}debian/ \$dir/$srcPackageName-\${version}/
 	cd \$dir/$srcPackageName-\${version}
@@ -1655,7 +1657,6 @@ sub mode_etics {
 	#$cmd_vcs{checkout} = "((test -d jra1mw/.git && (cd jra1mw; git pull)) || (git clone -q http://scientific.zcu.cz/git/jra1mw.git";
 	#$cmd_vcs{checkout} .= " && (cd jra1mw; git checkout -b \${tag} --track origin/\${tag})" unless ($conftag eq /HEAD/);
 	#$cmd_vcs{checkout} .= ")) && (test -d \${moduleName} || ln -s jra1mw/$cvs_module \${moduleName})";
-	$cmd_vcs{checkout} .= "\n\ttest -f \${packageName}-\${version}-\${age}.src.tar.gz || (ln -s \${moduleName} \${packageName}-\${version}; tar -chf - \${packageName}-\${version} --exclude CVS --exclude .git --exclude .etics | gzip --best > \${packageName}-\${version}-\${age}.src.tar.gz; rm \${packageName}-\${version})";
 	$cmd_vcs{tag} = "cvs -d \${vcsroot} tag -R \${tag} ${moduleName}";
 
 	$cmd{default}{init} = 'None';
@@ -1747,7 +1748,7 @@ sub mode_etics {
 			$cmd{default}{compile} = "make rpath=$project{local_prefix}/\${libdir}";
 			$cmd{default}{install} = "make install post-install rpath=$project{local_prefix}/\${libdir}";
 		}
-		mode_etics_packaging($fmod, \%cmd);
+		mode_etics_packaging($fmod, \%cmd, "make dist\n\t", "make dist\n\t");
 	}
 
 	my $defprops = '';
