@@ -1,5 +1,6 @@
 top_srcdir=..
 stagedir=.
+package=glite-lb-ws-test
 version=0.0.0
 PREFIX=/opt/glite
 prefix=
@@ -16,6 +17,12 @@ voms_prefix=/opt/voms
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+
+SOURCES=\
+	examples/*.c examples/*.h examples/*.pl examples/ws_typemap.dat \
+	tests/*.c \
+	Makefile
+SOURCES_EXEC=examples/*.sh
 
 CEXAMPLES:=ws_getversion ws_jobstat ws_joblog ws_lb4agu_GetActivityStatus ws_lb4agu_GetActivityInfo
 #TODO ws_query_ex 
@@ -85,6 +92,7 @@ install:
 
 clean:
 	rm -rvf .libs LB.xh *.xml ${GSOAP_FILES_PREFIX}* *.o *.lo *.nsmap soap_version.h ${CEXAMPLES} ${TESTS}
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -97,4 +105,4 @@ soap_version.h:
 	perl -ne '$$. == 2 && /.*([0-9]+)\.([0-9]+)\.([0-9]+)([a-z]?).*/ && printf "#define GSOAP_VERSION %d%02d%02d\n#define GSOAP_VERSION_LETTER '\''".($$4?$$4:"\\0")."'\''\n",$$1,$$2,$$3' soapH.h >$@
 	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
 
-.PHONY: default all check stage install clean distclean
+.PHONY: default all check stage install clean distclean dist distcheck

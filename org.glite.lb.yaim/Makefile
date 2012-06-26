@@ -8,11 +8,18 @@ prefix=
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
+version=${module.version}
+
 yaim_prefix=/opt/glite
 ifeq (${project},emi)
 yaim_project=/emi
 endif
 
+SOURCES=\
+	config/defaults/glite-lb.pre \
+	config/functions/* config/functions/emi/* \
+	config/node-info.d/glite-lb config/node-info.d/emi/glite-lb \
+	Makefile
 FILES=glite-lb.pre config_glite_lb LICENSE COPYRIGHT node-version arch service update
 
 all ${FILES}:
@@ -26,7 +33,7 @@ all ${FILES}:
 	# metapackage info
 	echo -e "${gLiteCopyrightText}\n\n${gLiteLicenseText}" > LICENSE
 	cp LICENSE COPYRIGHT
-	echo ${module.version}-${module.age} > node-version
+	echo ${version}-${module.age} > node-version
 	echo ${platformArch} > arch
 	echo "NA" > service
 	echo "NA" > update
@@ -41,7 +48,7 @@ install: ${FILES}
 	install -m 0644 config_glite_lb ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/functions
 	install -m 0644 ${top_srcdir}/config/node-info.d${yaim_project}/glite-lb ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/node-info.d
 	install -m 0644 glite-lb.pre ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/defaults
-	echo "$(package) $(module.version)-$(module.age)" > ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/etc/versions/$(package)
+	echo "$(package) $(version)-$(module.age)" > ${DESTDIR}${PREFIX}${yaim_prefix}/yaim/etc/versions/$(package)
 	mkdir -p ${DESTDIR}${PREFIX}${yaim_prefix}/release/glite-LB
 	cp -fp LICENSE COPYRIGHT node-version arch service update ${DESTDIR}${PREFIX}${yaim_prefix}/release/glite-LB/
 
@@ -51,8 +58,9 @@ stage:
 check:
 
 clean:
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
-.PHONY: default all check install stage clean distclean
+.PHONY: default all check install stage clean distclean dist distcheck

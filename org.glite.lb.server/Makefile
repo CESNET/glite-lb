@@ -24,6 +24,16 @@ gridsite_prefix=/opt/glite
 
 version=${module.version}
 
+SOURCES=\
+	config/glite-lb-* config/my.cnf config/site-notif.conf config/startup \
+	doc/*.1 doc/*.8 \
+	interface/*.h \
+	src/*.c src/*.cpp src/*.h src/*.c.T src/*.l src/*.y src/*.sh src/ws_typemap.dat \
+	project/.post* project/.pre* \
+	test/*.cpp test/*.cpp.T test/*.sh test/oneJob.qry \
+	LICENSE Makefile
+SOURCES_EXEC=config/startup src/*.sh test/*.sh
+
 default all: compile
 
 GLITE_LB_SERVER_WITH_WS=yes
@@ -412,8 +422,9 @@ ifdef LB_PERF
 endif
 
 clean:
-	rm -rvf *.c *.cpp *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-* ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} ${SCRIPTS}
+	rm -rvf *.c *.cpp *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-bkindex glite-lb-bkserverd glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} ${SCRIPTS} ${MAN_GZ}
 	rm -rvf test_xml.cpp
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -457,3 +468,4 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 bkserverd.o ws_fault.o: soap_version.h
 endif
 
+.PHONY: default all compile check test_coverage test.xml test.query examples doc man stage install clean distclean dist distcheck

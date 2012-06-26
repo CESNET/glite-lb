@@ -18,6 +18,13 @@ version=${module.version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
+SOURCES=\
+	doc/*.1 doc/*.8 doc/README.* \
+	examples/glite-lb-* \
+	src/*.c src/*.c.T src/*.sh \
+	LICENSE Makefile
+SOURCES_EXEC=examples/*.sh src/*.sh
+
 CC=gcc
 AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 

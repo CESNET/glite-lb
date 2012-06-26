@@ -18,6 +18,17 @@ CC=gcc
 
 VPATH:=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc
 
+SOURCES=\
+	config/startup config/glite-lb-logger.* \
+	doc/*.8 \
+	interface/*.h \
+	project/.post* project/.pre* \
+	src/*.c src/*.cpp src/*.h src/*.sh \
+	src-nt/*.cpp src-nt/*.H src-nt/Makefile src-nt/test/*.cpp \
+	test/*.c test/*.cpp test/*.h \
+	LICENSE Makefile
+SOURCES_EXEC=config/startup src/*.sh
+
 VERSION=-DVERSION=\"GLite-${version}\"
 
 SUFFIXES=.no
@@ -244,6 +255,9 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 
 clean:
 	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ} startup
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
+
+.PHONY: default all compile man stage check check.il check.ll install clean distclean dist distcheck

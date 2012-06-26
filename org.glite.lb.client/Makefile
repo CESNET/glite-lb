@@ -34,6 +34,17 @@ CHECK_VERSION:=VERSION=${version} VERSION_AHEAD=${VERSION_AHEAD} perl ${check_ve
 
 SUFFIXES = .T .l
 
+SOURCES = \
+	doc/* \
+	examples/*.c examples/*.l examples/*.sh examples/Makefile examples/README.examples \
+	interface/*.h interface/*.h.T \
+	m4/*.m4 \
+	project/.post* \
+	src/*.c src/*.h src/*.T src/*.pl src/*.cpp \
+	test/*.c test/*.cpp test/*.T test/PLOT test/TEST \
+	LICENSE Makefile
+SOURCES_EXEC=examples/gen_* examples/*.pl examples/*.sh src/*.sh test/TEST
+
 l_SRC = \
 	chkpt.l \
 	cleared.l \
@@ -342,8 +353,6 @@ JobStatus.h JobStatus.cpp: StatusAttrNames.pl
 #	rm -f $@
 #	ln -s ${stagedir}${prefix}/share/perl/gLite/LB/$@ $@
 
-dist: distsrc distbin
-
 install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
@@ -397,6 +406,7 @@ clean:
 	rm -rvf ${lib_LTLIBRARIES} ${TOOLS} logevent  register_sandbox ${MAN_GZ} ${MAN8_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl StatusAttrNames.pl uiwrap.T
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -425,4 +435,4 @@ post-install-rpath:
 		fi; \
 	done
 
-.PHONY: default all compile examples check stage install clean distclean check_version link post-install post-install-rpath
+.PHONY: default all compile examples check stage install clean distclean check_version link post-install post-install-rpath dist distcheck

@@ -21,6 +21,14 @@ CXX=gcc
 
 VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples:${top_srcdir}/config
 
+SOURCES=\
+	config/msg.* \
+	examples/*.cpp \
+	project/il.conf \
+	src/*.cpp src/msg-* \
+	LICENSE Makefile
+SOURCES_EXEC=src/msg-brokers
+
 VERSION=-DVERSION=\"GLite-${version}\"
 
 ACTIVEMQ_CFLAGS?=`PKG_CONFIG_PATH=${activemq_prefix}/${libdir}/pkgconfig pkg-config --cflags activemq-cpp`
@@ -128,6 +136,9 @@ install:
 
 clean:
 	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ} ${EXAMPLES}
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
+
+.PHONY: default all compile man stage check install clean distclean dist distcheck

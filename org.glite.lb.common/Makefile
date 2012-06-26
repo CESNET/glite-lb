@@ -14,9 +14,9 @@ expat_prefix=/opt/expat
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
-jobiddir=${top_srcdir}/../org.glite.jobid.api-c
-
 version=${module.version}
+
+jobiddir=${top_srcdir}/../org.glite.jobid.api-c
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc
 AT3=${stagedir}${prefix}/sbin/glite-lb-at3
@@ -24,6 +24,17 @@ AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 SUFFIXES = .T
 
 CC=gcc
+
+SOURCES=\
+	doc/*.dox doc/*.tex.T \
+	examples/perf_*.log \
+	interface/*.h interface/*.h.T \
+	m4/*.m4 \
+	project/.post* \
+	src/*.c src/*.c.T src/*.sh \
+	test/*.cpp test/*.cpp.T \
+	LICENSE Makefile
+SOURCES_EXEC=src/*.sh
 
 DEBUG:=-g -O0 -Wall
 
@@ -240,6 +251,7 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -272,3 +284,5 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp test_
 	rm -f $@
 	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
+
+.PHONY: default all generate compile stage check mkreports check.parse check.il testcoverage doc olddoc install clean distclean dist distcheck

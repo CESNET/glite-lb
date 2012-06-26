@@ -1,17 +1,24 @@
 stagedir=../stage
 top_srcdir=.
+package=glite-lb-types
 
 -include Makefile.inc
+-include ${top_srcdir}/project/version.properties
+
+version=${module.version}
 
 globalprefix=glite
 lbprefix=lb
+
+SOURCES=interface/*.h at3.in *.pm *.T check_version.pl Makefile
+SOURCES_EXEC=at3.in check_version.pl
 
 PM=StructField.pm MultiStruct.pm
 T=events.T status.T types.T
 SCRIPTS=at3 check_version.pl
 HDRS=lb_types.h
 
-default: compile
+default all: compile
 
 compile:
 
@@ -31,10 +38,11 @@ install: compile
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) 
 	
 clean:
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
 check:
 
-.PHONY: default compile stage install check clean distclean
+.PHONY: default all compile stage install check clean distclean dist distcheck

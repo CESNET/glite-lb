@@ -1,7 +1,6 @@
 top_srcdir=..
 stagedir=.
 package=glite-lb-harvester
-module.version=0.0.0
 PREFIX=/opt/glite
 prefix=
 sysconfdir=/opt/glite/etc
@@ -10,10 +9,20 @@ libdir=lib
 
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
-version:=${module.version}
+
+version=${module.version}
 
 CC=gcc
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
+
+SOURCES=\
+	config/startup \
+	doc/* \
+	examples/test.* \
+	project/.post* project/.pre* \
+	src/*.c \
+	Makefile
+SOURCES_EXEC=config/startup examples/*.sh
 
 CPPFLAGS:=-I${stagedir}${prefix}/include -D_GNU_SOURCE -D_REENTRANT ${CPPFLAGS}
 CFLAGS:=-W -Wall -g -O2 ${CFLAGS}
@@ -82,8 +91,9 @@ install: compile
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-harvester
 
 clean:
-	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs
-	rm -rvf harvester harvester-dbg glite-lb-harvester.* startup
+	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs *.log
+	rm -rvf harvester harvester-dbg glite-lb-harvester.1 startup
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -103,4 +113,4 @@ harvester-dbg.o: harvester.c
 %.1: %.sgml
 	docbook2man $<
 
-.PHONY: default all compile debug check doc stage install clean distclean
+.PHONY: default all compile debug check doc stage install clean distclean dist distcheck

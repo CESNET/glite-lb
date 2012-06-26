@@ -10,6 +10,9 @@ INSTALL=install
 
 version=${module.version}
 
+SOURCES=src/LB-probe Makefile
+SOURCES_EXEC=src/LB-probe
+
 all:
 
 install:
@@ -28,8 +31,9 @@ check:
 	@echo "No test"
 
 clean:
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
-.PHONY: all install stage clean check
+.PHONY: all install stage clean check distclean dist distcheck

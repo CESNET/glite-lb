@@ -1,7 +1,11 @@
 top_srcdir=.
 stagedir=../stage
+package=glite-lb-client-java
 
 -include Makefile.inc
+-include ${top_srcdir}/project/version.properties
+
+version=${module.version}
 
 # broken 
 # SimpleLLTest.class ProducerTestLL.class ProducerTestIL.class
@@ -9,6 +13,14 @@ stagedir=../stage
 FULL_EXAMPLES := $(addprefix ${top_srcdir}/examples/,SSLClient.java SSLServer.java QueryDemo.java NotificationExample.java CreamTest.java)
 SSL_EXAMPLES := $(addprefix ${top_srcdir}/examples/simple-ssl/,MyX509KeyManager.java MyX509TrustManager.java ExampleSSLSocketFactory.java LBClientSSL.java)
 TM_EXAMPLES := $(addprefix ${top_srcdir}/examples/simple-trustmanager/,LBClientTM.java)
+
+SOURCES=\
+	examples/*.java examples/*/*.java \
+	project/list-jars.sh project/genEventTypes.pl \
+	src_c/*.c src_c/Makefile \
+	src/org/glite/lb/*.java \
+	Makefile
+SOURCES_EXEC=project/list-jars.sh project/genEventTypes.pl
 
 VPATH := ${top_srcdir}/src/org/glite/lb ${top_srcdir}/examples ${top_srcdir}/examples/simple-ssl ${top_srcdir}/examples/simple-trustmanager
 
@@ -106,8 +118,9 @@ install:
 
 clean:
 	rm -rf build
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
-.PHONY: all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c examples genevents genws check stage install clean distclean wtf
+.PHONY: all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c examples genevents genws check stage install clean distclean wtf dist distcheck

@@ -14,6 +14,10 @@ prefix=
 version=${module.version}
 
 VPATH = ${top_srcdir}/src
+SOURCES=\
+	examples/*.c examples/*.cpp examples/Makefile examples/README* examples/*.C \
+	src/lbjp.bib src/*.cls src/*.sty src/*.tex src/*.tex.T src/README* src/images/*.pdf \
+	GGUS19469-reply.txt LICENSE Makefile
 # example source code is part of the org.glite.lb.client
 EXAMPLE_SOURCE_DIR=${top_srcdir}/examples
 KPATH = TEXINPUTS=".:$(EXAMPLE_SOURCE_DIR):$(VPATH)//:"
@@ -79,6 +83,7 @@ install:
 
 clean:
 	rm -rvf LBUG* LBAG* LBDG* LBTP* events.tex status.tex ver.tex comment*
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -136,4 +141,4 @@ LBTG.pdf: ${COMMON} \
 	LBTG-Abstract.tex \
 	LBAG-Troubleshooting.tex
 
-.PHONY: default all generate doc stage check install clean distclean doc
+.PHONY: default all generate doc stage check install clean distclean doc dist distcheck

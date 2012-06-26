@@ -24,6 +24,12 @@ XMLLINT:=xmllint --nonet
 TIDY=tidy -i -q --show-warnings no --tidy-mark no --wrap 0
 docbookxls:=http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl
 
+SOURCES=\
+	examples/*.pl \
+	src/*.xsd src/*.xml src/*.xml.T src/*.wsdl src/*.xsl src/README* \
+	LICENSE Makefile
+SOURCES_EXEC=examples/*.pl
+
 STAGETO=share/wsdl/glite-lb
 
 WSDL=LB.wsdl LBTypes.wsdl
@@ -61,6 +67,7 @@ install:
 
 clean:
 	rm -vf *.h *.html *.xml *.wsdl glue2-copy.xsd
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -85,3 +92,5 @@ LB.html: doc.xml LBTypes.xml LB.xml puke-ug.xsl
 
 ws_interface_version.h: ${top_srcdi${top_srcdir}/project/version.properties
 	echo "#define GLITE_LB_WS_INTERFACE_VERSION \"${version}\"" >$@
+
+.PHONY: all compile check stage install clean distclean dist distcheck

@@ -14,13 +14,17 @@ version=${module.version}
 
 VPATH = ${top_srcdir}/src:${top_srcdir}/interface
 
-default all: compile
-
 CC=gcc
 CXX=g++
 AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 
 SUFFIXES = .T 
+
+SOURCES=\
+	interface/*.h interface/*.xsd interface/*.xsd.T \
+	project/.post* \
+	src/*.c src/*.xsl \
+	LICENSE Makefile
 
 ifneq (${classads_prefix},/usr)
 	classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib 
@@ -115,6 +119,7 @@ install:
 clean:
 	rm -rvf .libs *.o *.lo ${PLUGIN_LIB} ${MACHINE_LIB}
 	rm -rfv job_attrs.h job_attrs2.h lb-job-attrs2.xsd glite-jpis-config.xml
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -151,3 +156,5 @@ job_attrs2.h: lb-job-attrs2.xsd job_attrs2.xsl
 
 glite-jpis-config.xml: lb-job-attrs2.xsd jpis_config.xsl
 	${XSLTPROC} ${top_srcdir}/src/jpis_config.xsl lb-job-attrs2.xsd >$@ || ( rm -f $@; false)
+
+.PHONY: default all compile doc stage clean distclean check dist distcheck
