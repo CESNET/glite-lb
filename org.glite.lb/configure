@@ -1362,6 +1362,9 @@ top_srcdir = $top_srcdir
 	print MKINC "gsoap_default_version=".gsoap_version()."\n"  if $need_gsoap;
 
 	print MKINC '
+-include ${top_srcdir}/project/version.properties
+version=${module.version}
+
 ${package}-${version}.tar.gz:
 	rm -rf dist
 	for dist in ${SOURCES} ${SOURCES_EXEC} configure project/ChangeLog project/debian.* project/*.spec project/package.* project/version.properties; do \
