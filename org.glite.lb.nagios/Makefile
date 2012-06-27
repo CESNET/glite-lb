@@ -5,6 +5,8 @@ version=0.0.0
 prefix=
 INSTALL=install
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -36,4 +38,4 @@ clean:
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
-.PHONY: all install stage clean check distclean dist distcheck
+.PHONY: default all install stage clean check distclean dist distcheck

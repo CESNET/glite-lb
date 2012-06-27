@@ -11,6 +11,8 @@ sysconfdir=/opt/glite/etc
 nothrflavour=gcc32
 thrflavour=gcc32pthr
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -84,8 +86,6 @@ default_flavour=
 else
 default_flavour=_${nothrflavour}
 endif
-
-default: all 
 
 all compile: ${PLUGIN_LIB} ${EXAMPLES} ${SCRIPTS}
 

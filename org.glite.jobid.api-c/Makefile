@@ -9,6 +9,8 @@ version=0.0.0
 CC:=gcc
 CXX:=g++
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 

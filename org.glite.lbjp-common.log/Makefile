@@ -12,6 +12,8 @@ prefix=
 sysconfdir=/etc
 log4c_prefix=/usr
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -63,7 +65,7 @@ offset=0
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
-default all: compile
+all: compile
 
 compile: ${LTLIB}
 

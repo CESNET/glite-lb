@@ -11,6 +11,8 @@ prefix=
 
 expat_prefix=/opt/expat
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -133,8 +135,6 @@ STAGE_PERFTEST=mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 else
 STAGE_PERFTEST=true
 endif
-
-default: all
 
 generate: ${GEN_HDRS}
 

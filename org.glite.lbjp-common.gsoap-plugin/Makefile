@@ -26,6 +26,8 @@ SOURCES_EXEC=project/libtoolhack/gcc
 
 gsoap_versions_flavours?=${gsoap_default_version}
 
+default: all
+
 -include Makefile.inc
 -include ../Makefile.inc
 
@@ -68,8 +70,6 @@ langsuffix:=.${lang}
 endif
 
 VPATH=${top_srcdir2}/src:${top_srcdir2}/test:${top_srcdir2}/examples:${top_srcdir2}/interface:${top_srcdir2}/project
-
-default: all
 
 DEBUG:=-g -O0 -W -Wall -Wno-unused-parameter
 # not for globus and gsoap: -Werror

@@ -19,6 +19,8 @@ voms_prefix=/opt/glite
 lcas_prefix=/opt/glite
 gridsite_prefix=/opt/glite
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -34,7 +36,7 @@ SOURCES=\
 	LICENSE Makefile
 SOURCES_EXEC=config/startup src/*.sh test/*.sh
 
-default all: compile
+all: compile
 
 GLITE_LB_SERVER_WITH_WS=yes
 GLITE_LB_SERVER_WITH_LCAS=no

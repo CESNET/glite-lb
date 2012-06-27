@@ -9,6 +9,8 @@ PREFIX=/opt/glite
 prefix=
 sysconfdir=/opt/glite/etc
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -132,8 +134,6 @@ INTERLOG_TEST_OBJS:= \
 
 MAN_GZ:=glite-lb-interlogd.8.gz glite-lb-logd.8.gz
 MAN = $(MAN_GZ:.gz=)
-
-default: all 
 
 all compile: startup $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
 

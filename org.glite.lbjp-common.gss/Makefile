@@ -15,6 +15,8 @@ cppunit_prefix=/opt/cppunit
 
 CC=gcc
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -44,8 +46,6 @@ SOURCES=\
 	src/*.c \
 	test/*.cpp \
 	LICENSE Makefile
-
-default: all
 
 DEBUG:=-g -O0 -W -Wall -Wno-unused-parameter
 # not for globus, gsoap: -Werror

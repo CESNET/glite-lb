@@ -7,6 +7,8 @@ sysconfdir=/opt/glite/etc
 globus_prefix=/opt/globus
 libdir=lib
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -54,8 +56,6 @@ endif
 COMPILE:=libtool --mode=compile ${CC} ${CPPFLAGS} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
-
-default: all
 
 compile all: startup harvester doc debug
 

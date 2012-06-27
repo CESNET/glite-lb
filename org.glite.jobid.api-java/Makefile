@@ -2,6 +2,8 @@ top_srcdir=.
 stagedir=../stage
 package=glite-jobid-api-java
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -34,4 +36,4 @@ clean:
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
-.PHONY: all compile stage install check clean distclean dist distcheck
+.PHONY: default all compile stage install check clean distclean dist distcheck

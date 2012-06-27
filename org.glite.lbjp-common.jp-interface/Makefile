@@ -16,6 +16,8 @@ gsoap_prefix=/software/gsoap-2.6
 
 CC=gcc
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -71,7 +73,7 @@ lib_LTLIBRARIES=${commonlib_nothr} ${commonlib_thr}
 default_commonlib=${commonlib_nothr}
 endif
 
-default all: compile
+all: compile
 
 compile: ${lib_LTLIBRARIES}
 

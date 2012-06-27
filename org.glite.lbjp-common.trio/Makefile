@@ -11,6 +11,8 @@ PREFIX=/opt/glite
 lbuprefix=lbu
 prefix=
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -54,8 +56,6 @@ HDRS:=trio.h escape.h
 
 STATICLIB:=libglite_lbu_trio.a
 LTLIB:=libglite_lbu_trio.la
-
-default: all
 
 all compile: ${STATICLIB} ${LTLIB}
 

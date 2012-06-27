@@ -13,6 +13,8 @@ gsoap_prefix=/opt/gsoap
 classads_prefix=/opt/classads
 voms_prefix=/opt/voms
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -28,7 +30,7 @@ CEXAMPLES:=ws_getversion ws_jobstat ws_joblog ws_lb4agu_GetActivityStatus ws_lb4
 #TODO ws_query_ex 
 TESTS:=sizeof_soap_test
 
-default all: ${CEXAMPLES}
+all: ${CEXAMPLES}
 
 GLOBUS_GSSAPI_GSI_CFLAGS?=-I${globus_prefix}/include/${nothrflavour}
 

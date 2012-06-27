@@ -8,6 +8,8 @@ version=0.0.0
 PREFIX=/opt/glite
 prefix=
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -30,7 +32,7 @@ DVIPS = $(KPATH) dvips
 AT3=${stagedir}${prefix}/sbin/glite-lb-at3
 INSTALL=install
 
-default all: generate doc
+all: generate doc
 
 generate: events.tex status.tex ver.tex
 

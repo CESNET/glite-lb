@@ -10,6 +10,8 @@ version=0.0.0
 PREFIX=/opt/glite
 prefix=
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -93,4 +95,4 @@ LB.html: doc.xml LBTypes.xml LB.xml puke-ug.xsl
 ws_interface_version.h: ${top_srcdi${top_srcdir}/project/version.properties
 	echo "#define GLITE_LB_WS_INTERFACE_VERSION \"${version}\"" >$@
 
-.PHONY: all compile check stage install clean distclean dist distcheck
+.PHONY: default all compile check stage install clean distclean dist distcheck

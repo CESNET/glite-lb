@@ -2,6 +2,8 @@ stagedir=../stage
 top_srcdir=.
 package=glite-lb-types
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -18,7 +20,7 @@ T=events.T status.T types.T
 SCRIPTS=at3 check_version.pl
 HDRS=lb_types.h
 
-default all: compile
+all: compile
 
 compile:
 

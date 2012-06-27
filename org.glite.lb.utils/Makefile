@@ -11,6 +11,8 @@ prefix=
 expat_prefix=/opt/expat
 gsoap_prefix=/opt/gsoap
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -80,8 +82,6 @@ MAN_GZ:=glite-lb-mon.1.gz
 MAN8_GZ:=glite-lb-purge.8.gz
 MAN = $(MAN_GZ:.gz=)
 MAN8 = $(MAN8_GZ:.gz=)
-
-default: all
 
 compile all: ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ}
 

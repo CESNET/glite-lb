@@ -2,6 +2,8 @@ top_srcdir=.
 stagedir=../stage
 package=glite-lb-client-java
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -123,4 +125,4 @@ clean:
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
-.PHONY: all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c examples genevents genws check stage install clean distclean wtf dist distcheck
+.PHONY: default all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c examples genevents genws check stage install clean distclean wtf dist distcheck

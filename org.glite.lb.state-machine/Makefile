@@ -8,6 +8,8 @@ package=glite-lb-state-machine
 PREFIX=/opt/glite
 prefix=
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 version=${module.version}
@@ -70,7 +72,7 @@ MACHINE_LIB=libglite_lb_statemachine.la
 
 XSD=lb-job-attrs2.xsd
 
-default all: compile
+all: compile
 
 compile: ${MACHINE_LIB} ${PLUGIN_LIB} ${XSD}
 

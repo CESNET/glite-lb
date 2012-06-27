@@ -5,6 +5,8 @@ version=0.0.0
 PREFIX=/opt/glite
 prefix=
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 

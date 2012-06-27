@@ -8,6 +8,8 @@ version=0.0.0
 CC:=gcc
 CXX:=g++
 
+default: all
+
 -include Makefile.inc
 -include ${top_srcdir}/project/version.properties
 
@@ -218,8 +220,6 @@ compile all: check_version generate ${lib_LTLIBRARIES} ${TOOLS} logevent notify 
 endif
 
 generate: ${GEN_HDRS}
-
-default: all
 
 ifeq (${thrflavour},)
 ${LIB}: ${LIBTHROBJS}
