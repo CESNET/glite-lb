@@ -79,6 +79,8 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-notif-keeper.sh} & Test the \texttt{notif-keeper} script \\
 \hline
+{\tt lb-test-dump-load.sh} & Test the dump (backup) and load (restore) procedure \\
+\hline
 \end{tabularx}
 
 \subsubsection{Event logging examples}
@@ -609,6 +611,29 @@ do nothing (i.e. nothing was left in the database).
 
 \result\ All information was succesfully downloaded and matched expectations.
 
+\subsubsection{Dump \& Load Events}
+\label{dumpload}
+\req\ All \LB\ services configured and running.
+
+\what
+\begin{enumerate}
+\item Register tests jobs of all applicable types, including collections and DAGs
+\item Generate events to change the state of all types of test jobs. At least one subjob in any type of collection must remain free of events to test embryonic registration
+\item Check all those jobs are in their expected states.
+\item Dump events for all test jobs
+\item Purge all test jobs from the \LB server
+\item Test that all test jobs were actually purged (status query must return \texttt{EIDRM})
+\item Load dumped events
+\item Check that all test jobs are in their expected states as before
+\end{enumerate}
+
+\how\ \ctblb{lb-test-dump-load.sh}
+
+\result\ All jobs were first purged and then restored to their previous states.
+
+\note\ The test registers multiple jobs for each type to reduce the probability of an accidental positive result (could be caused by random event ordering).
+
+\note\ The probe includes artificial delays (about 12\,s worth) but also performs a lot of action. The test takes approx. 150\,s to finish.
 
 \section{LB ``In the Wild''---Real-World WMS Test}
 \req\ All \LB services running, working grid infrastructure accessible (including permissions). 
