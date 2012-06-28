@@ -81,6 +81,8 @@ Besides pure System Functionality Tests, this list also includes In-the-Wild tes
 \hline
 {\tt lb-test-dump-load.sh} & Test the dump (backup) and load (restore) procedure \\
 \hline
+{\tt lb-test-collections.sh} & A placeholder for collection-specific regression tests \\
+\hline
 \end{tabularx}
 
 \subsubsection{Event logging examples}
@@ -634,6 +636,21 @@ do nothing (i.e. nothing was left in the database).
 \note\ The test registers multiple jobs for each type to reduce the probability of an accidental positive result (could be caused by random event ordering).
 
 \note\ The probe includes artificial delays (about 12\,s worth) but also performs a lot of action. The test takes approx. 150\,s to finish.
+
+\subsubsection{Collection-specific tests}
+\label{dumpload}
+\req\ All \LB\ services configured and running.
+
+\what
+\begin{enumerate}
+\item Register a collection
+\item Try querying for jobs by parent ID only
+\end{enumerate}
+
+\how\ \ctblb{lb-test-collections.sh}
+
+\result\ Children were returned.
+
 
 \section{LB ``In the Wild''---Real-World WMS Test}
 \req\ All \LB services running, working grid infrastructure accessible (including permissions). 
