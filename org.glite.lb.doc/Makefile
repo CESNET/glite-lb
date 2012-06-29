@@ -84,7 +84,7 @@ install:
 	done
 
 clean:
-	rm -rvf LBUG* LBAG* LBDG* LBTP* events.tex status.tex ver.tex comment*
+	rm -rvf LBUG* LBAG* LBDG* LBTP* LBTG* events.tex status.tex ver.tex comment*
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:

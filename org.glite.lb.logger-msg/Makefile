@@ -135,7 +135,7 @@ install:
 	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' $< > $@
 
 clean:
-	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ} ${EXAMPLES}
+	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ} ${EXAMPLES} ${SCRIPTS}
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:

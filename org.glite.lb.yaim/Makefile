@@ -60,6 +60,7 @@ stage:
 check:
 
 clean:
+	rm -fv ${FILES}
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
