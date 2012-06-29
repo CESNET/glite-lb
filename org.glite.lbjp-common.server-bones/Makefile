@@ -25,6 +25,7 @@ SOURCES=\
 	project/.post* \
 	src/*.c \
 	Makefile
+SOURCES_EXEC=examples/*.sh
 
 DEBUG:=-g -O0 -Wall
 CFLAGS:=${DEBUG} \
