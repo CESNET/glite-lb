@@ -1,3 +1,5 @@
+default: all
+
 -include ../../Makefile.inc
 
 CC=gcc
@@ -18,7 +20,7 @@ OBJ=send_via_socket.lo
 
 VPATH=${topdir}/src_c
 
-compile: ${LIB}
+all compile: ${LIB}
 
 ${LIB}: ${OBJ}
 	libtool --mode=link ${CC} -rpath ${PREFIX}${prefix}/${libdir} -o $@ ${OBJ} -lm
@@ -32,3 +34,5 @@ install: compile
 
 clean:
 	rm -rf ${OBJ} .libs ${LIB}
+
+.PHONY: default all compile install clean
