@@ -259,6 +259,27 @@ char *edg_wll_CreamStatToString(enum edg_wll_StatCream_state statCode)
         return strdup(cream_statNames[statCode]);
 }
 
+static const char * const vm_statNames[] = {
+@@@{
+                my $f = selectField $status vm_state;
+                if ($f->{codes}) {
+                        for (@{$f->{codes}}) {
+                                my $lc = lc $_->{name};
+                                my $uc = ucfirst $lc;
+                                gen qq{
+!       "$uc",
+};
+                        }
+                }
+@@@}
+};
+
+
+char *edg_wll_VMStatToString(enum edg_wll_StatVm_state statCode)
+{
+        if ((int)statCode < 0 || statCode >= sizeof(vm_statNames)/sizeof(vm_statNames[0])) return (char *) NULL;
+        return strdup(vm_statNames[statCode]);
+}
 
 
 char *edg_wll_JDLField(edg_wll_JobStat *stat, const char *field_name)

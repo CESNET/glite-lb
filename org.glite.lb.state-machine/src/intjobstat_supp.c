@@ -575,6 +575,12 @@ char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_int(ret, stat->ft_sandbox_type);
 	if (ret) ret = enc_string(ret, stat->ft_src);
 	if (ret) ret = enc_string(ret, stat->ft_dest);
+	if (ret) ret = enc_int(ret, stat->vm_state);
+	if (ret) ret = enc_string(ret, stat->vm_image);
+	if (ret) ret = enc_string(ret, stat->vm_require);
+	if (ret) ret = enc_string(ret, stat->vm_usage);
+	if (ret) ret = enc_string(ret, stat->vm_hostname);
+	if (ret) ret = enc_string(ret, stat->vm_machine);
 
 	return ret;
 }
@@ -682,7 +688,12 @@ edg_wll_JobStat* dec_JobStat(char *in, char **rest)
 	if (tmp_in != NULL) stat->ft_sandbox_type = dec_int(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->ft_src = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->ft_dest = dec_string(tmp_in, &tmp_in);
-	
+	if (tmp_in != NULL) stat->vm_state = dec_int(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->vm_image = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->vm_require = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->vm_usage = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->vm_hostname = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->vm_machine = dec_string(tmp_in, &tmp_in);
 
 	*rest = tmp_in;
 

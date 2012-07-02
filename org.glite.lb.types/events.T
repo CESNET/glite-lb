@@ -526,6 +526,25 @@
 @flesh VirtualMachine
 
 @type VMCreate			create (register) virtual machine
-	string name		machine name
+	string image            machine image
+	string require          machine requirements
 
-@type VMRunning			machine running
+@type VMHost
+	string hostvm		hostname of VM
+
+@type VMRunning			VM is running
+
+@type VMShutdown
+
+@type VMStop
+
+@type VMResume
+
+@type VMDone
+	int 	status_code
+	_code_ 	OK
+	_code_ 	DELETE
+	_code_ 	FAILURE
+	string 	usage	
+	_optional_
+

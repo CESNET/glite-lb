@@ -183,6 +183,23 @@ string	ft_dest			File transfer destination
 
 _pad_	20
 
+int	vm_state		VM job state
+	_null_ 	-1
+	_code_	VM_PENDING	pending
+	_code_	VM_BOOT		boot
+	_code_	VM_RUNNING	running
+	_code_	VM_SHUTDOWN	shutdown
+	_code_	VM_STOPPED	stopped
+	_code_	VM_DONE		done
+	_code_ 	VM_FAILURE	failure
+string	vm_image		VM image
+string	vm_require		VM requirement on physical machine
+string	vm_usage		VM usage
+string	vm_hostname		VM hostname
+string	vm_machine		physical machine on which VM runs
+
+_pad_ 	20
+
 @type Submitted		Entered by the user to the User Interface or registered by Job Partitioner.
 @type Waiting		Accepted by WMS, waiting for resource allocation.
 @type Ready		Matching resources found.

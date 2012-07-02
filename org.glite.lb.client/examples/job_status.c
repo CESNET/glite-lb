@@ -246,6 +246,9 @@ static void printstat(edg_wll_JobStat stat, int level)
 		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
 			printf("%sjobtype : FILE_TRANSFER_COLLECTION\n", ind);
                         break;
+		case EDG_WLL_STAT_VIRTUAL_MACHINE:
+			printf("%sjobtype : VIRTUAL_MACHINE\n", ind);
+                        break;
 		default:
 			printf("%sjobtype : UNKNOWN\n", ind);
 			break;
@@ -377,7 +380,15 @@ static void printstat(edg_wll_JobStat stat, int level)
 		printf("%sft_sandbox_type : UNKNOWN\n", ind);
 	printf("%sft_src : %s\n", ind, stat.ft_src);
 	printf("%sft_dest : %s\n", ind, stat.ft_dest);
-	
+
+	char *vm_stat_name = edg_wll_VMStatToString(stat.vm_state);
+	if (stat.jobtype == EDG_WLL_STAT_VIRTUAL_MACHINE){
+		printf("%svm_state : %s\n", ind, vm_stat_name);
+		printf("%svm_hostname : %s\n", ind, stat.vm_hostname);
+		printf("%svm_image : %s\n", ind, stat.vm_image);
+		printf("%svm_require : %s\n", ind, stat.vm_require);
+		printf("%svm_usage : %s\n", ind, stat.vm_usage);
+	}	
 
 	printf("\n");	
 	

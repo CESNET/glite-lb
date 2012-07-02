@@ -64,19 +64,65 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 	switch (e->any.type) {
 		case EDG_WLL_EVENT_REGJOB:
 			if (USABLE(res)) {
-				js->pub.state = EDG_WLL_JOB_SUBMITTED;
+				js->pub.vm_state = EDG_WLL_STAT_VM_PENDING;
 			}
-			/*if (USABLE_DATA(res)) {
-				edg_wlc_JobIdFree(js->pub.parent_job);
-				edg_wlc_JobIdDup(e->regJob.parent, &js->pub.parent_job);
-			}*/
 			break;
+		case EDG_WLL_EVENT_VMCREATE:
+			if (USABLE_DATA(res)) {
+				rep_cond(js->pub.vm_require, e->vMCreate.require);
+				rep_cond(js->pub.vm_image, e->vMCreate.image);
+			}
+			break;
+		case EDG_WLL_EVENT_VMHOST:
+			if (USABLE_DATA(res)) {
+				rep_cond(js->pub.vm_hostname, e->vMHost.hostvm);
+				//XXX transfer to prolog/boot state?
+			}
+			break;
+		case EDG_WLL_EVENT_VMRUNNING:
+			if (USABLE(res)) {
+				js->pub.vm_state = EDG_WLL_STAT_VM_RUNNING;
+			}
+			break;
+		case EDG_WLL_EVENT_VMSHUTDOWN:
+                        if (USABLE(res)) {
+                                js->pub.vm_state = EDG_WLL_STAT_VM_SHUTDOWN;
+                        }
+                        break;
+		case EDG_WLL_EVENT_VMSTOP:
+                        if (USABLE(res)) {
+                                js->pub.vm_state = EDG_WLL_STAT_VM_STOPPED;
+                        }
+                        break;
+		case EDG_WLL_EVENT_VMRESUME:
+                        if (USABLE(res)) {
+                                js->pub.vm_state = EDG_WLL_STAT_VM_PENDING;
+				//XXX clear hostname here?
+                        }
+                        break;
+		case EDG_WLL_EVENT_VMDONE:
+                        if (USABLE(res)) {
+				switch (e->vMDone.status_code){
+					case EDG_WLL_VMDONE_OK:
+					case EDG_WLL_VMDONE_DELETE:
+						js->pub.vm_state = EDG_WLL_STAT_VM_DONE;
+						break;
+					case EDG_WLL_VMDONE_FAILURE:
+						js->pub.vm_state = EDG_WLL_STAT_VM_FAILURE;
+						break;
+					case EDG_WLL_VMDONE_STATUS_CODE_UNDEFINED:
+						break;
+				}
+				if (USABLE_DATA(res))
+					rep_cond(js->pub.vm_usage, e->vMDone.usage);
+                        }
+                        break;
 		default:
 			break;
 	}
 
 	if (USABLE(res)) {
-		rep(js->last_seqcode, e->any.seqcode);
+		//rep(js->last_seqcode, e->any.seqcode);
 
 		js->pub.lastUpdateTime = e->any.timestamp;
 		if (old_state != js->pub.state) {
@@ -85,8 +131,7 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 				= (int)js->pub.lastUpdateTime.tv_sec;
 		}
 	}
-	if (! js->pub.location) js->pub.location = strdup("this is FILE TRANSFER");
-
+	if (! js->pub.location) js->pub.location = strdup("this is VIRTUAL MACHINE");
 
 	return RET_OK;
 }
