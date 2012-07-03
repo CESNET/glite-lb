@@ -559,13 +559,13 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
 	 goto end;
       }
       
-      asprintf((char**)&buffer.value, "X509_USER_PROXY=%s", proxy_file);
-      if (buffer.value == NULL) {
+      ret = asprintf((char**)&buffer.value, "X509_USER_PROXY=%s", proxy_file);
+      if (ret == -1) {
 	 errno = ENOMEM;
 	 ret = EDG_WLL_GSS_ERROR_ERRNO;
 	 goto end;
       }
-      buffer.length = strlen(proxy_file);
+      buffer.length = ret;
 
       major_status = gss_import_cred(&minor_status, &gss_cred, GSS_C_NO_OID, 1,
 				     &buffer, 0, NULL);
@@ -734,8 +734,8 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *
       return ret;
 
    /* XXX find appropriate fqdn */
-   asprintf (&servername, "host@%s", hostname);
-   if (servername == NULL) {
+   ret = asprintf (&servername, "host@%s", hostname);
+   if (ret == -1) {
       errno = ENOMEM;
       ret = EDG_WLL_GSS_ERROR_ERRNO;
       goto end;
