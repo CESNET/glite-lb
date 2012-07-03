@@ -762,7 +762,7 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *
    while (!context_established) {
       /* XXX verify ret_flags match what was requested */
       maj_stat = gss_init_sec_context(&min_stat, cred->gss_cred, &context,
-				      server, GSS_C_NO_OID,
+				      GSS_C_NO_NAME, GSS_C_NO_OID,
 				      req_flags | GSS_C_MUTUAL_FLAG | GSS_C_CONF_FLAG,
 				      0, GSS_C_NO_CHANNEL_BINDINGS,
 				      &input_token, NULL, &output_token,
