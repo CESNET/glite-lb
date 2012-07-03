@@ -559,13 +559,13 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
 	 goto end;
       }
       
-      asprintf((char**)&buffer.value, "X509_USER_PROXY=%s", proxy_file);
-      if (buffer.value == NULL) {
+      ret = asprintf((char**)&buffer.value, "X509_USER_PROXY=%s", proxy_file);
+      if (ret == -1) {
 	 errno = ENOMEM;
 	 ret = EDG_WLL_GSS_ERROR_ERRNO;
 	 goto end;
       }
-      buffer.length = strlen(proxy_file);
+      buffer.length = ret;
 
       major_status = gss_import_cred(&minor_status, &gss_cred, GSS_C_NO_OID, 1,
 				     &buffer, 0, NULL);
@@ -659,11 +659,11 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
    struct asyn_result ar;
    int h_errno;
    int addr_types[] = {AF_INET6, AF_INET};
-   memset(connection, 0, sizeof(*connection));
-
-
    int ipver = AF_INET6; //def value; try IPv6 first
-   int j;
+   unsigned int j;
+   int i;
+
+   memset(connection, 0, sizeof(*connection));
    for (j = 0; j< sizeof(addr_types)/sizeof(*addr_types); j++) {
 	ipver = addr_types[j];
 	ar.ent = (struct hostent *) calloc (1, sizeof(struct hostent));
@@ -686,14 +686,14 @@ edg_wll_gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
 			continue; 
 	}
    
-	int i = 0;
+   	i = 0;
 	while (ar.ent->h_addr_list[i])
 	{
 		ret = try_conn_and_auth (cred, hostname, ar.ent->h_addr_list[i], 
 					ar.ent->h_addrtype, port, timeout, connection, gss_code);
 		if (ret == 0)
 			goto end;
-		if (timeout->tv_sec < 0 ||(timeout->tv_sec == 0 && timeout->tv_usec <= 0))
+		if (timeout && (timeout->tv_sec < 0 ||(timeout->tv_sec == 0 && timeout->tv_usec <= 0)))
 			goto end;
 		i++;
 	}
@@ -734,8 +734,8 @@ static int try_conn_and_auth (edg_wll_GssCred cred, char const *hostname, char *
       return ret;
 
    /* XXX find appropriate fqdn */
-   asprintf (&servername, "host@%s", hostname);
-   if (servername == NULL) {
+   ret = asprintf (&servername, "host@%s", hostname);
+   if (ret == -1) {
       errno = ENOMEM;
       ret = EDG_WLL_GSS_ERROR_ERRNO;
       goto end;
@@ -1104,7 +1104,7 @@ edg_wll_gss_close(edg_wll_GssConnection *con, struct timeval *timeout)
 {
    OM_uint32 min_stat;
    gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
-   struct timeval def_timeout = { 0, 100000};
+   /*struct timeval def_timeout = { 0, 100000};*/
 
    if (con->context != GSS_C_NO_CONTEXT) {
       gss_delete_sec_context(&min_stat, (gss_ctx_id_t *)&con->context, &output_token);

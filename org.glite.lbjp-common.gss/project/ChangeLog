@@ -85,3 +85,13 @@
   - warning fixes (type cast, 32/64 portability)
   - gss functions documented in code
 
+3.0.5-1
+- compiler warnings, cosmetic changes
+- LB/GSS rutines try connecting to alternate addresses
+- savannah bug #85224 fixed. DN matches are not case-sensitive anymore.
+
+3.0.6-1
+- Not delete debian/ directory (for new packaging in newer branches)
+- Fix segfault when trying alternative addresses without timeout
+- Specify proper length of strings (GGUS #82746)
+

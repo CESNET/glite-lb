@@ -538,11 +538,8 @@ static int slave(slave_data_init_hnd data_init_hnd, int sock)
 					srv = -1;
 					glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "[%d] %s, connection closed",getpid(),strerror(rv));
 					continue;
-				} else if (rv == -EINPROGRESS) {
-					/*	background operation -> parent forked -> kill slave */
-					glite_common_log(set_log_category, LOG_PRIORITY_DEBUG, "[%d] terminating parent",getpid());
-					exit(0);
-				} else if ( rv < 0 ) {
+				}
+				else if ( rv < 0 ) {
 					/*	unknown error -> clasified as FATAL -> kill slave
 					 */
 					glite_common_log(set_log_category, LOG_PRIORITY_INFO, "[%d] %s, terminating",getpid(),strerror(-rv));
