@@ -65,6 +65,7 @@ EXPAT_CFLAGS?=-I${expat_prefix}/include
 EXPAT_LIBS?=${expatlib} -lexpat
 CLASSADS_CFLAGS?=-I${classads_prefix}/include -I${classads_prefix}/include/classad
 CLASSADS_LIBS?=${classadslib} -lclassad
+GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
 
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I. \
@@ -75,7 +76,7 @@ CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
 	-DDATAGRID_EXTENSION ${LB_STANDALONE_FLAGS} \
-	-DBUILDING_LB_COMMON ${CFLAGS}
+	-DBUILDING_LB_COMMON ${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CFLAGS}
 
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} \
 	${COVERAGE_FLAGS}

@@ -61,12 +61,15 @@ default_thrflavour=_${thrflavour}
 default_nothrflavour=_${nothrflavour}
 endif
 
+GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
+
 DEBUG:=-g -O0
-CFLAGS:=${CFLAGS} ${DEBUG} \
+CFLAGS:=${DEBUG} \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I${top_srcdir}/interface \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
-	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} 
+	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} \
+	${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CFLAGS}
 
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} \
 	${COVERAGE_FLAGS} 

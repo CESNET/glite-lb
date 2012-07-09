@@ -103,6 +103,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/include/glite/security
 /usr/include/glite/security/glite_gss.h
 /usr/%{_lib}/libglite_security_gss.so
+/usr/%{_lib}/pkgconfig/*.pc
 
 
 %changelog

@@ -122,6 +122,8 @@ CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 VOMS_CFLAGS?=-I${voms_prefix}/include -I${voms_prefix}/include/glite/security
 VOMS_LIBS?=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
 
+GLITE_LBJP_COMMON_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss glite-security-gsoap-plugin --cflags`
+
 ifeq ($(gssapi_provider), kerberos)
 GSSAPI_GSI_CFLAGS=${KERBEROS_GSSAPI_GSI_CFLAGS}
 VOMS_LIBS=
@@ -130,7 +132,7 @@ else
 GSSAPI_GSI_CFLAGS=${GLOBUS_GSSAPI_GSI_CFLAGS}
 endif
 
-CFLAGS:= ${CFLAGS} \
+CFLAGS:= \
 	${GSSAPI_GSI_CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
@@ -143,7 +145,8 @@ CFLAGS:= ${CFLAGS} \
 	${VOMS_CFLAGS} \
 	${COVERAGE_FLAGS} \
 	$(GRIDSITE_CFLAGS) ${LCAS_CFLAGS} ${GSOAP_CFLAGS} \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB \
+	${GLITE_LBJP_COMMON_CFLAGS} ${CFLAGS}
 
 CXXFLAGS:=${CFLAGS}
 

@@ -40,8 +40,9 @@ endif
 EXPAT_CFLAGS?=-I${expat_prefix}/include
 EXPAT_LIB?=${expatlib} -lexpat
 GSOAP_CFLAGS?=-I${gsoap_prefix}/include -I${gsoap_prefix}/
+GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
 
-CFLAGS:= ${CFLAGS} \
+CFLAGS:= \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
@@ -49,7 +50,8 @@ CFLAGS:= ${CFLAGS} \
 	${EXPAT_CFLAGS} \
 	${GSOAP_CFLAGS} \
 	${COVERAGE_FLAGS} \
-	-D_GNU_SOURCE
+	-D_GNU_SOURCE ${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CFLAGS}
+
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
@@ -127,6 +129,7 @@ install:
 
 clean:
 	rm -rfv ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ} *.lo *.o .libs/
+	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
