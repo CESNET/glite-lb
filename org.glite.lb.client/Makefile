@@ -188,7 +188,7 @@ EXAMPLES:=${EXAMPLES_SRC:.c=}
 # EXAMPLES_PLUS_SRC:=indexed_attrs_plus.cpp job_status_plus.cpp query_events_plus.cpp listener.cpp user_jobs_plus.cpp job_log_plus.cpp notify_plus.cpp
 # EXAMPLES_PLUS:=${EXAMPLES_PLUS_SRC:.cpp=}
 
-EXAMPLES_CL_SRC:=user_jobs.c job_status.c multiple_user_jobs.c
+EXAMPLES_CL_SRC:=user_jobs.c job_status.c multiple_user_jobs.c qstat.c
 EXAMPLES_CL:=${EXAMPLES_CL_SRC:.c=}
 
 EXAMPLES_CL_THR_SRC:=user_jobs_threaded.c job_status_threaded.c
