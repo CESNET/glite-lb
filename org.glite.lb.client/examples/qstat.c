@@ -22,6 +22,7 @@ limitations under the License.
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "glite/lb/context-int.h"
 #ifdef BUILDING_LB_CLIENT
@@ -32,6 +33,8 @@ limitations under the License.
 #include "glite/lb/xml_conversions.h"
 #include "glite/lb/jobstat.h"
 
+extern char *edg_wll_TagListToString(edg_wll_TagValue *);
+
 static void dgerr(edg_wll_Context,char *);
 static void printstat(edg_wll_JobStat,int);
 
@@ -41,13 +44,37 @@ static void printstat(edg_wll_JobStat,int);
 #define PBS_MAXSEQNUM           8
 #define PBS_MAXJOBARRAYLEN      6
 #define PBS_MINNAMELEN         16
+#define PBS_NAMELEN            16
 #define OWNERL                 15
 #define TIMEUL                  8
 #define STATEL                  1
 #define LOCL                   15
 
+/* original qstat options */
+#define GETOPT_ARGS "aeE:filn1qrsu:xGMQRBW:-:"
+
+/* defines for alternative display formats */
+#define ALT_DISPLAY_a 1 /* -a option - show all jobs */
+#define ALT_DISPLAY_i 2 /* -i option - show not running */
+#define ALT_DISPLAY_r 4 /* -r option - show only running */
+#define ALT_DISPLAY_u 8 /* -u option - list user's jobs */
+#define ALT_DISPLAY_n 0x10 /* -n option - add node list */
+#define ALT_DISPLAY_s 0x20 /* -s option - add scheduler comment */
+#define ALT_DISPLAY_R 0x40 /* -R option - add SRFS info */
+#define ALT_DISPLAY_q 0x80 /* -q option - alt queue display */
+#define ALT_DISPLAY_Mb 0x100 /* show sizes in MB */
+#define ALT_DISPLAY_Mw 0x200 /* -M option - show sizes in MW */
+#define ALT_DISPLAY_G  0x400 /* -G option - show sizes in GB */
+#define ALT_DISPLAY_o  0x800   /* -1 option - add node list on same line */
+#define ALT_DISPLAY_l 0x1000 /* -l option - show long job name */
+
+#define MAXLINESIZE 65536
 
 static char 	*myname;
+
+/* globals */
+int linesize = 77;
+int alias_opt = 0;
 
 static void usage(char *);
 static int query_all(edg_wll_Context, edg_wll_JobStat **, edg_wlc_JobId **);
@@ -126,14 +153,14 @@ void prt_attr(
 
 void display_statjob(
 
-	edg_wll_JobStat      status,    /* I (data) */
+	edg_wll_JobStat      *status,    /* I (data) */
 	int                  prtheader, /* I (boolean) */
 	int                  full)      /* I (boolean) */
 	
 {
-	
 	edg_wll_TagValue *a;
-	
+	int i;
+
 	int l;
 	char *c;
 	char *jid;
@@ -145,20 +172,7 @@ void display_statjob(
 	char format[80];
 	char long_name[17];
 	time_t epoch;
-	
-#if 0
-	mxml_t *DE;
-	mxml_t *JE;
-	mxml_t *AE;
-	mxml_t *RE1;
-	mxml_t *JI;
-#endif
-	
-	/* XML only support for full output */
-	
-	if (DisplayXML == TRUE)
-		full = 1;
-	
+		
 	if (!full)
 	{
 		sprintf(format, "%%-%ds %%-%ds %%-%ds %%%ds %%%ds %%-%ds\n",
@@ -177,18 +191,9 @@ void display_statjob(
 			printf("------------------------- ---------------- --------------- -------- - -----\n");
 		}
 	}    /* END if (!full) */
-	
-	if (DisplayXML == TRUE)
-	{
-		/* create parent */
 		
-#if 0
-		DE = NULL;
-		
-		MXMLCreateE(&DE, "Data"); 
-#endif
-	}
-	
+
+	for(i = 0; status[i].state; i++)
 	{
 		jid = NULL;
 		name = NULL;
@@ -199,233 +204,143 @@ void display_statjob(
 		
 		if (full)
 		{
-			if (DisplayXML == TRUE)
-			{
-#if 0
-				JE = NULL;
-				MXMLCreateE(&JE, "Job");
-				MXMLAddE(DE, JE);
-				JI = NULL;
-				MXMLCreateE(&JI, "Job_Id");
-				MXMLSetVal(JI, p->name,mdfString);
-				MXMLAddE(JE, JI);
-#endif
-			}
-			else
-			{
-				printf("Job Id: %s\n",
-				       stat.pbs_name);
-			}
+			printf("Job Id: %s\n", jid = glite_jobid_getUnique(status[i].jobId));
+			free(jid);
 			
-			/* TODO: no attributes yet a = p->attribs; */
-			a = NULL;
-			
-#if 0
-			RE1 = NULL;
-#endif
-			
-			while (a != NULL && a->tag != NULL)
-			{
-				if (DisplayXML == TRUE)
-				{
-					/* lookup a->name -> XML attr name */
-#if 0
-					
-					AE = NULL;
-					
-					if (a->resource != NULL)
-					{
-						if (RE1 == NULL)
-						{
-							MXMLCreateE(&RE1, a->name);
-							MXMLAddE(JE, RE1);
-						}
-						
-						MXMLCreateE(&AE, a->resource);
-						
-						MXMLSetVal(AE, a->value, mdfString);
-						MXMLAddE(RE1, AE);
-					}
-					else
-					{
-						RE1 = NULL;
-						MXMLCreateE(&AE, a->name);
-						MXMLSetVal(AE, a->value, mdfString);
-						MXMLAddE(JE, AE);
-					}
-#endif
-				}
-				else
-				{
-					if (!strcmp(a->tag, ATTR_ctime) ||
-					    !strcmp(a->tag, ATTR_etime) ||
-					    !strcmp(a->tag, ATTR_mtime) ||
-					    !strcmp(a->tag, ATTR_qtime) ||
-					    !strcmp(a->tag, ATTR_start_time) ||
-					    !strcmp(a->tag, ATTR_comp_time) ||
-					    !strcmp(a->tag, ATTR_checkpoint_time) ||
-					    !strcmp(a->tag, ATTR_a))
-					{
-						epoch = (time_t)atoi(a->value);
-						prt_attr(a->tag, NULL /* a->resource */, ctime(&epoch));
-					}
-					else
-					{
-						prt_attr(a->tag, NULL /* a->resource */, a->value);
-						printf("\n");
-					}
-				}
-				
-				a++;
-			}
+			printstat(status[i], 1);
+
 		}   /* END if (full) */
 		else
 		{
 			/* display summary data */
-			
-			if (status.pbs_name != NULL)
-			{
-				c = status.pbs_name;
-				
+
+			/* Job ID (PBS style, so truncated unique part of LB jobid) */
+			jid = glite_jobid_getUnique(status[i].jobId);
+			if(jid != NULL) {
+
+				c = jid;
 				while ((*c != '.') && (*c != '\0'))
 					c++;
 				
-				if (alias_opt == TRUE)
+				if (alias_opt)
 				{
 					/* show the alias as well as the first part of the server name */
 					if (*c == '.')
 					{
 						c++;
-						
 						while((*c != '.') && (*c != '\0'))
 							c++;
 					}
 				}
 				
 				c++;    /* List the first part of the server name, too. */
-				
 				while ((*c != '.') && (*c != '\0'))
 					c++;
-				
 				*c = '\0';
 				
-				l = strlen(status.pbs_name);
+				l = strlen(jid);
 				
 				if (l > (PBS_MAXSEQNUM + PBS_MAXJOBARRAYLEN + 8))
 				{
 					/* truncate job name */
-					
-					c = p->name + PBS_MAXSEQNUM + PBS_MAXJOBARRAYLEN + 14;
+					c = jid + PBS_MAXSEQNUM + PBS_MAXJOBARRAYLEN + 14;
 					
 					*c = '\0';
 				}
-				
-				jid = status.pbs_name;
 			}
 			
-			/* TODO: attributes missing a = p->attribs; */
-			a = NULL;
-
-			while (a != NULL && a->tag != NULL)
+			if(status[i].pbs_name) 
 			{
-				if (strcmp(a->tag, ATTR_name) == 0)
-				{
-					l = strlen(a->value);
+				l = strlen(status[i].pbs_name);
 					
-					/* truncate AName */
-					if (l > PBS_NAMELEN)
-					{
-						l = l - PBS_NAMELEN + 3;
+				/* truncate AName */
+				if (l > PBS_NAMELEN)
+				{
+					l = l - PBS_NAMELEN + 3;
+					c = status[i].pbs_name + l;
+						
+					while ((*c != '/') && (*c != '\0'))
+						c++;
+						
+					if (*c == '\0')
 						c = a->value + l;
-						
-						while ((*c != '/') && (*c != '\0'))
-							c++;
-						
-						if (*c == '\0')
-							c = a->value + l;
-						
-						strcpy(long_name, "...");
-						strcat(long_name, c);
-						c = long_name;
-					}
-					else
-					{
-						c = a->value;
-					}
 					
-					name = c;
+					strcpy(long_name, "...");
+					strcat(long_name, c);
+					c = long_name;
 				}
-				else if (!strcmp(a->tag, ATTR_owner))
+				else
 				{
-					c = a->value;
-						
-					while ((*c != '@') && (*c != '\0'))
-						c++;
-					
-					*c = '\0';
-						
-					l = strlen(a->value);
-					if (l > OWNERL)
-					{
-						c = a->value + OWNERL;
-						*c = '\0';
-					}
-					
-					owner = a->value;
+					c = status[i].pbs_name;
 				}
-				else if (!strcmp(a->tag, ATTR_used))
-				{
-					if (!strcmp(a->resource, "cput"))
-					{
-						l = strlen(a->value);
-						
-						if (l > TIMEUL)
-							{
-								c = a->value + TIMEUL;
-								
-								*c = '\0';
-							}
-						
-						timeu = a->value;
-					}
-				}
-				else if (!strcmp(a->name, ATTR_state))
-				{
-					l = strlen(a->value);
 					
-					if (l > STATEL)
-					{
-						c = a->value + STATEL;
-						
-						*c = '\0';
-					}
-					
-					state = a->value;
-				}
-				else if (!strcmp(a->name, ATTR_queue))
-				{
-					c = a->value;
-					
-					while ((*c != '@') && (*c != '\0'))
-						c++;
-					
-					*c = '\0';
-					
-					l = strlen(a->value);
-					
-					if (l > LOCL)
-					{
-						c = a->value + LOCL;
-						
-						*c = '\0';
-					}
-					
-					location = a->value;
-				}
-			
-				a++;
+				name = c;
 			}
 			
+			if(status[i].pbs_owner)
+			{
+				c = status[i].pbs_owner;
+						
+				while ((*c != '@') && (*c != '\0'))
+					c++;
+				
+				*c = '\0';
+						
+				l = strlen(status[i].pbs_owner);
+				if (l > OWNERL)
+				{
+					c = status[i].pbs_owner + OWNERL;
+					*c = '\0';
+				}
+				owner = status[i].pbs_owner;
+			}
+
+			if(status[i].pbs_resource_usage) {
+				edg_wll_TagValue *tag;
+
+				for(tag = status[i].pbs_resource_usage; tag->tag; tag++) {
+					if(!strcmp(tag->tag, "cput")) {
+
+						l = strlen(tag->value);
+						if (l > TIMEUL)
+						{
+							c = tag->value + TIMEUL;
+								*c = '\0';
+						}
+						timeu = tag->value;
+						break;
+					}
+				}
+			}
+
+			if(status[i].pbs_state) {
+				l = strlen(status[i].pbs_state);
+				if (l > STATEL)
+				{
+					c = status[i].pbs_state + STATEL;
+					*c = '\0';
+				}
+				state = status[i].pbs_state;
+			}
+
+			if(status[i].pbs_queue) {
+				c = status[i].pbs_queue;
+					
+				while ((*c != '@') && (*c != '\0'))
+					c++;
+				
+				*c = '\0';
+					
+				l = strlen(status[i].pbs_queue);
+				if (l > LOCL)
+				{
+					c = status[i].pbs_queue + LOCL;
+					*c = '\0';
+				}
+				location = status[i].pbs_queue;
+				
+			}
+
 			if (timeu == NULL)
 				timeu = "0";
 			
@@ -440,30 +355,11 @@ void display_statjob(
 			       location);
 		}  /* END else (full) */
 		
-		if (DisplayXML != TRUE)
-		{
-#if 0
-			if (full)
-				printf("\n");
-#endif
-		}
-	}  /* END for (p = status) */
-	
-	if (DisplayXML == TRUE)
-	{
-#if 0
-		char *tmpBuf = NULL, *tail = NULL;
-		int  bufsize;
-		
-		MXMLToXString(DE, &tmpBuf, &bufsize, INT_MAX, &tail, TRUE);
-		
-		MXMLDestroyE(&DE);
-		
-		fprintf(stdout, "%s\n",
-			tmpBuf);
-#endif
-	}
+		if (full)
+			printf("\n");
 
+	}  /* END for */
+	
 	return;
 }  /* END display_statjob() */
 
@@ -471,28 +367,238 @@ void display_statjob(
 int main(int argc,char *argv[])
 {
 	edg_wll_Context	sctx[MAX_SERVERS];
-	char		*servers[MAX_SERVERS];
-	int		i, result=0, nsrv=0, histflags = 0;
-
+	char		*pc, *servers[MAX_SERVERS];
+	int		c, i, result=0, nsrv=0, histflags = 0;
+	int             f_opt = 0, alt_opt = 0;
 	
 	myname = argv[0];
 	printf("\n");
 
-	if ( argc < 2 || strcmp(argv[1],"--help") == 0 ) { usage(argv[0]); return 0; }
+	while((c = getopt(argc, argv, GETOPT_ARGS)) != EOF) {
+		switch(c) {
+		case '1':
+			/* do not break lines in output */
+			alt_opt |= ALT_DISPLAY_o;
+			break;
+
+		case 'a':
+			/* alternative display */
+			alt_opt |= ALT_DISPLAY_a;
+			break;
+
+		case 'e':
+			/* display only jobs in executable queues */
+			break;
+
+		case 'E':
+			/* not documented */
+			break;
+
+		case 'i':
+			/* do not display running jobs */
+			alt_opt |= ALT_DISPLAY_i;
+			break;
+			
+		case 'n':
+			/* display also allocated nodes */
+			alt_opt |= ALT_DISPLAY_n;
+			break;
+
+		case 'q':
+			/* display queue status */
+			alt_opt |= ALT_DISPLAY_q;
+			break;
+
+		case 'r':
+			/* display only running (or suspended) jobs */
+			alt_opt |= ALT_DISPLAY_r;
+			break;
+		       
+		case 's':
+			/* display also job comments */
+			alt_opt |= ALT_DISPLAY_s;
+			break;
+
+		case 'u':
+			/* display jobs owned by given users */
+			alt_opt |= ALT_DISPLAY_u;
+			break;
+
+		case 'R':
+			/* display also disk reservation information */
+			alt_opt |= ALT_DISPLAY_R;
+			break;
+
+		case 'G':
+			/* show size in GB units */
+			alt_opt |= ALT_DISPLAY_G;
+			break;
+
+		case 'M':
+			/* display size in Megawords */
+			alt_opt |= ALT_DISPLAY_Mw;
+			break;
+
+		case 'f':
+			/* display full job status */
+			if(alt_opt) {
+				fprintf(stderr, "%s: option -f conflicts with other display options\n", myname);
+				usage(myname);
+				exit(2);
+			}
+			f_opt = 1;
+			break;
+
+		case 'x':
+			/* display output in XML (implies -f) */
+			break;
+
+		case 'B':
+			/* display batch server status */
+			break;
+
+		case 'l':
+			/* display long name of job */
+			alt_opt |= ALT_DISPLAY_l;
+			break;
+
+		case 'Q':
+			/* display queue status */
+			break;
+
+		case '-':
+			/* handle '--' options */
+			if(optarg && !strcmp(optarg, "version")) {
+			}
+			if(optarg && !strcmp(optarg, "about")) {
+			}
+			if(optarg && !strcmp(optarg, "help")) {
+			}
+			break;
+
+		case 'W':
+			/* display format options */
+			pc = optarg;
+			
+			while (*pc) {
+				switch (*pc) {
+					
+				case 'a':
+					alt_opt |= ALT_DISPLAY_a;
+					break;
+
+				case 'i':
+					alt_opt |= ALT_DISPLAY_i;
+					break;
+
+				case 'r':
+					alt_opt |= ALT_DISPLAY_r;
+					break;
+
+				case 'u':
+					/* note - u option is assumed to be last in  */
+					/* string and all remaining is the name list */
+					alt_opt |= ALT_DISPLAY_u;
+					while (*++pc == ' ');
+					pc = pc + strlen(pc) - 1; /* for the later incr */
+					break;
+					
+				case 'n':
+					alt_opt |= ALT_DISPLAY_n;
+					break;
+
+				case 's':
+					alt_opt |= ALT_DISPLAY_s;
+					break;
+
+				case 'q':
+					break;
+
+				case 'R':
+					alt_opt |= ALT_DISPLAY_R;
+					break;
+
+				case 'G':
+					alt_opt |= ALT_DISPLAY_G;
+					break;
+
+				case 'M':
+					alt_opt |= ALT_DISPLAY_Mw;
+					break;
+
+				case ' ':
+					break;  /* ignore blanks */
+					
+				default:
+					break;
+				}
+				
+				++pc;
+			}
+
+		case '?':
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	/* certain combinations are not allowed */
+
+	c = alt_opt & (ALT_DISPLAY_a | ALT_DISPLAY_i | ALT_DISPLAY_r | ALT_DISPLAY_q);
+
+	if ((c != 0) &&
+	    (c != ALT_DISPLAY_a) &&
+	    (c != ALT_DISPLAY_i) &&
+	    (c != ALT_DISPLAY_r) &&
+	    (c != ALT_DISPLAY_q)) {
+		fprintf(stderr, "%s: conflicting options\n", myname);
+		usage(myname);
+		exit(2);
+	}
+
+	c = alt_opt & (ALT_DISPLAY_Mw | ALT_DISPLAY_G);
+	if (c == (ALT_DISPLAY_Mw | ALT_DISPLAY_G))  {
+		fprintf(stderr, "%s: conflicting options\n", myname);
+		usage(myname);
+		exit(2);
+	}
+
+	if ((alt_opt & ALT_DISPLAY_q) && (f_opt == 1)) {
+		fprintf(stderr, "%s: conflicting options\n", myname);
+		usage(myname);
+		exit(2);
+	}
+
+	if ((alt_opt & ALT_DISPLAY_o) && !((alt_opt & ALT_DISPLAY_n) || (f_opt)))
+	{
+		fprintf(stderr, "%s: conflicting options\n", myname);
+		usage(myname);
+		exit(2);
+	}
+
+	if (alt_opt & ALT_DISPLAY_o)
+	{
+		linesize = MAXLINESIZE;
+		alt_opt &= ~ALT_DISPLAY_o;
+	}
 
 	if ( edg_wll_InitContext(&sctx[0]) ) {
 		fprintf(stderr,"cannot initialize edg_wll_Context\n");
 		exit(1);
 	}
 
-	if ( !strcmp(argv[1], "-all" ) ) {
+	if ( optind >= argc )  {
 		edg_wll_JobStat		*statesOut;
 		edg_wlc_JobId		*jobsOut;
 
 		jobsOut = NULL;
 		statesOut = NULL;
-		if ( (result = query_all(sctx[0], &statesOut, &jobsOut)) ) dgerr(sctx[0], "edg_wll_QueryJobs");
-		else for ( i = 0; statesOut[i].state; i++ ) printstat(statesOut[i],0);
+		if ( (result = query_all(sctx[0], &statesOut, &jobsOut)) ) 
+			dgerr(sctx[0], "edg_wll_QueryJobs");
+		else 
+			display_statjob(statesOut, 1, f_opt);
 
 		if ( jobsOut ) {
 			for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
@@ -507,84 +613,45 @@ int main(int argc,char *argv[])
 		return result;
 	} 
 
-	if ( !strcmp(argv[1], "-x") ) {
-		edg_wlc_JobId 	job;		
-		edg_wll_JobStat status;
-
-		if ( argc < 3 ) { usage(argv[0]); return 1; }
-		if ( edg_wll_InitContext(&sctx[0]) ) {
-			fprintf(stderr,"%s: cannot initialize edg_wll_Context\n",myname);
-			exit(1);
-		}
-		edg_wll_SetParam(sctx[0], EDG_WLL_PARAM_LBPROXY_SERVE_SOCK, argv[2]);
-		for ( i = 3; i < argc; i++ ) {
-			memset(&status, 0, sizeof status);
-			if (edg_wlc_JobIdParse(argv[i],&job)) {
-				fprintf(stderr,"%s: %s: cannot parse jobId\n", myname, argv[i]);
-				continue;
-			}
-			if ( edg_wll_JobStatusProxy(sctx[0], job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT, &status)) {
-				dgerr(sctx[0], "edg_wll_JobStatusProxy"); result = 1;
-			} else printstat(status, 0);
-
-			if ( job ) edg_wlc_JobIdFree(job);
-			if ( status.state ) edg_wll_FreeStatus(&status);
-		}
-		edg_wll_FreeContext(sctx[0]);
-
-		return result;
-	}
-
-	for ( i = 1; i < argc; i++ ) {
-                if ( !strcmp(argv[i], "-fullhist") ) {
-                        histflags = EDG_WLL_STAT_CHILDHIST_THOROUGH;
-                        printf("\nFound a FULLHIST flag\n\n");
-                }
-
-                if ( !strcmp(argv[i], "-fasthist") ) {
-                        histflags = EDG_WLL_STAT_CHILDHIST_FAST;
-                        printf("\nFound a FASTHIST flag\n\n");
-                }    
-	}
-
-	for ( i = 1; i < argc; i++ ) {
+	for (i = optind ; i < argc; i++ ) {
 		int		j;
 		char		*bserver;
 		edg_wlc_JobId 	job;		
-		edg_wll_JobStat status;
+		edg_wll_JobStat status[2];
 
-		memset(&status,0,sizeof status);
+		memset(&status, 0, sizeof status);
 	
-		if ((strcmp(argv[i], "-fullhist"))&&(strcmp(argv[i], "-fasthist"))) {
-			if (edg_wlc_JobIdParse(argv[i],&job)) {
-				fprintf(stderr,"%s: %s: cannot parse jobId\n", myname,argv[i]);
-				continue;
-			}
-        	        bserver = edg_wlc_JobIdGetServer(job);
-                	if (!bserver) {
-                        	fprintf(stderr,"%s: %s: cannot extract bookkeeping server address\n", myname,argv[i]);
-				edg_wlc_JobIdFree(job);
-        	                continue;
-                	}
-	                for ( j = 0; j < nsrv && strcmp(bserver, servers[j]); j++ );
-        	        if ( j == nsrv ) {
-                	        if ( i > 0 ) edg_wll_InitContext(&sctx[j]);
-                        	nsrv++;
-	                        servers[j] = bserver;
-        	        }
-
-			if (edg_wll_JobStatus(sctx[j], job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT | histflags, &status)) {
-				dgerr(sctx[j],"edg_wll_JobStatus"); result = 1; 
-			} else printstat(status,0);
-
-			if (job) edg_wlc_JobIdFree(job);
-			if (status.state) edg_wll_FreeStatus(&status);
+		if (edg_wlc_JobIdParse(argv[i], &job)) {
+			fprintf(stderr,"%s: %s: cannot parse jobId\n", myname, argv[i]);
+			continue;
 		}
+		bserver = edg_wlc_JobIdGetServer(job);
+		if (!bserver) {
+			fprintf(stderr,"%s: %s: cannot extract bookkeeping server address\n", myname, argv[i]);
+			edg_wlc_JobIdFree(job);
+			continue;
+		}
+		for ( j = 0; j < nsrv && strcmp(bserver, servers[j]); j++ );
+		if ( j == nsrv ) {
+			if ( i > optind ) 
+				edg_wll_InitContext(&sctx[j]);
+			nsrv++;
+			servers[j] = bserver;
+		}
+
+		if (edg_wll_JobStatus(sctx[j], job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT | histflags, status)) {
+			dgerr(sctx[j],"edg_wll_JobStatus"); result = 1; 
+		} else display_statjob(status, 1, f_opt);
+
+		if (job) edg_wlc_JobIdFree(job);
+		if (status[0].state) edg_wll_FreeStatus(status);
+		
 	}
 	for ( i = 0; i < nsrv; i++ ) edg_wll_FreeContext(sctx[i]);
-
+	
 	return result;
 }
+
 
 static void
 usage(char *name)
@@ -592,9 +659,10 @@ usage(char *name)
 	fprintf(stderr, 
 		"Usage: \n\n"
 		"%s [-f [-1]] [-l] [-W site_specific] [-x] [job_identifier... | destination...]\n\n"
-		"%s [-a|-i|-r|-e] [-l] [-n [-1]] [-s]  [-G|-M]  [-R]  [-u  user_list] [job_identifier... |  destination...]\n"
+		"%s [-a|-i|-r|-e] [-l] [-n [-1]] [-s]  [-G|-M]  [-R]  [-u  user_list] [job_identifier... |  destination...]\n",
 		name, name);
 }
+
 
 static int
 query_all(edg_wll_Context ctx, edg_wll_JobStat **statesOut, edg_wlc_JobId **jobsOut)
@@ -771,8 +839,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 		printf("%spbs_scheduler : %s\n", ind, stat.pbs_scheduler);
 		printf("%spbs_dest_host : %s\n", ind, stat.pbs_dest_host);
 		printf("%spbs_pid : %d\n", ind, stat.pbs_pid);
-		printf("%spbs_resource_usage : %s%s\n", ind,
-		       (stat.pbs_resource_usage) ? "\n" : "", edg_wll_TagListToString(stat.pbs_resource_usage));
+		printf("%spbs_resource_usage : %s\n", ind, edg_wll_TagListToString(stat.pbs_resource_usage));
 		printf("%spbs_exit_status : %d\n", ind, stat.pbs_exit_status);
 		printf("%spbs_error_desc : %s%s\n", ind, 
 			(stat.pbs_error_desc) ? "\n" : "", stat.pbs_error_desc);
