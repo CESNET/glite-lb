@@ -368,7 +368,7 @@ static char *get_op(char *src, edg_wll_QueryOp *op)
 	else if ( src[i] == '>' ) *op = EDG_WLL_QUERY_OP_GREATER;
 	else if ( src[i] == '<' )
 	{
-		if ( (src[i+1] != '\0') && (src[i] == '>') ) {
+		if ( (src[i+1] != '\0') && (src[i+1] == '>') ) {
 			*op = EDG_WLL_QUERY_OP_UNEQUAL;
 			i++;
 		} else
