@@ -1747,8 +1747,8 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 
 						if ( !strcmp(conds[i][j].value.c, extr_val) ) {
 							if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
-							else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 						}
+						else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 					}
 				}
 				break;
