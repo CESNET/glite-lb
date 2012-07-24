@@ -18,7 +18,7 @@ JAVA:=${jdk_prefix}/bin/java
 
 GEN:=${stagedir}${prefix}/sbin/glite-lb-at3 ${top_srcdir}/project/genEventTypes.pl
 AT3DIR:=${stagedir}${prefix}/share/glite-lb/at3
-axis_classpath:=$(shell ${top_srcdir}/project/list-jars.sh ${axis_prefix}/lib ${axis_prefix}/share/java /usr/share/java /usr/lib/java)
+axis_classpath:=$(shell ${top_srcdir}/project/list-jars.sh ${axis_prefix}/lib ${axis_prefix}/share/java ${axis_prefix}/share/java/axis /usr/share/java /usr/lib/java /usr/lib/java/axis)
 trustmanager_classpath:=$(shell ls -1 ${trustmanager_prefix}/share/java/glite-security-trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager-axis.jar ${stagedir}${prefix}/share/java/trustmanager.jar ${stagedir}${prefix}/share/java/trustmanager-axis.jar 2>/dev/null | tr '\012' :)
 
 all compile: compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar examples build-c

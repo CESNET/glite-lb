@@ -89,6 +89,12 @@ ifneq (${classads_prefix},/usr)
 endif
 CLASSADS_CFLAGS?=-I${classads_prefix}/include -I${classads_prefix}/include/classad
 CLASSADS_LIBS?=${classads_libs} -lclassad
+classad_namespace:=${shell if ${classads_prefix}/bin/classad_version | grep -i 'classad namespace.*yes' >/dev/null; then echo yes; fi}
+ifeq (${classad_namespace},yes)
+CLASSADS_CFLAGS+=-DCLASSAD_NAMESPACE=classad::
+else
+CLASSADS_CFLAGS+=-DCLASSAD_NAMESPACE=
+endif
 
 ifneq (${cares_prefix},/usr)
 	cares_libs := -L${cares_prefix}/${libdir} -L${cares_prefix}/lib
@@ -97,7 +103,13 @@ LIBCARES_CFLAGS?=-I${cares_prefix}/include
 LIBCARES_LIBS?=${cares_libs} -lcares
 
 GSOAP_CFLAGS?=-I${gsoap_prefix}/include -I${gsoap_prefix}/
+ifeq (${expat_prefix},/usr)
+EXPAT_CFLAGS?=
+EXPAT_LIBS?=-lexpat
+else
 EXPAT_CFLAGS?=-I${expat_prefix}/include
+EXPAT_LIBS?=-L${expat_prefix}/${libdir} -lexpat
+endif
 GLOBUS_GSSAPI_GSI_CFLAGS?=-I${globus_prefix}/include/${nothrflavour}
 
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
@@ -154,7 +166,6 @@ XSLTPROC:=xsltproc --novalid
 gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${gsoap_prefix}/bin; else echo ${gsoap_prefix}; fi }
 
 EXT_LIBS:=  \
-	-lz \
 	${GRIDSITE_LIBS} \
 	${CLASSADS_LIBS} \
 	${LIBCARES_LIBS} \
@@ -178,7 +189,7 @@ dotless_gsoap_ver:=${shell echo ${gsoap_version} | tr -d . }
 ifeq ($(shell test -f ${stagedir}${prefix}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}_c.so && echo ok),ok)
 	langflavour:=_c
 endif
-GSOAP_LIB:=-L${stagedir}${prefix}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}${prefix}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour} -lglite_security_gss${default_flavour} ${GSOAP_LIBS}
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	BKSERVER_OBJS:= \
@@ -193,9 +204,11 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 		${LB_UTILS_DB_LIB} \
 		${GSOAP_LIB} \
 		${EXT_LIBS} \
-		${classadslib} \
+		${EXPAT_LIBS} \
 		-lglite_lbu_maildir \
-		-lglite_lbu_log
+		-lglite_lbu_log \
+		-lglite_lbu_trio \
+		-lglite_jobid
 else
 	BKSERVER_OBJS:= ${BKSERVER_BASE_OBJS}
 		
@@ -206,9 +219,11 @@ else
 		${LB_UTILS_DB_LIB} \
 		-lglite_security_gss${default_flavour} \
 		${EXT_LIBS} \
-		${classadslib} \
+		${EXPAT_LIBS} \
 		-lglite_lbu_maildir \
-		-lglite_lbu_log
+		-lglite_lbu_log \
+		-lglite_lbu_trio \
+		-lglite_jobid
 endif
 
 INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
@@ -216,7 +231,8 @@ INDEX_OBJS:= index.o index_parse.o jobstat_supp.o openserver.o \
 	lb_authz.o store.o bkindex.o stats.o server_stats.o\
 	request.o db_store.o srv_purge.o notif_match.o il_lbproxy.o dump.o lb_xml_parse.o il_notification.o lb_proto.o lb_text.o server_state.o lb_xml_parse_V21.o lb_html.o cond_dump.o notification.o seqcode.o userjobs.o load.o db_calls.o db_supp.o lb_rss.o pretty_print_wrapper.o authz_policy.o crypto.o
 
-INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${LB_MACHINE_LIB} ${EXT_LIBS} ${LB_UTILS_DB_LIB}
+INDEX_LIBS:= ${SRVBONES_LIB} ${COMMON_LIBS} ${LB_MACHINE_LIB} ${EXT_LIBS} \
+	${EXPAT_LIBS} ${LB_UTILS_DB_LIB} -lglite_lbu_trio -lglite_jobid
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o ws_typeref.o
 WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common${default_flavour} \
@@ -240,7 +256,8 @@ LIB_OBJS_BK:= \
 	crypto.o
 
 MONDB_OBJS:=mon-db.o ${LIB_OBJS_BK}
-MONDB_LIBS:=${COMMON_LIBS} ${LB_MACHINE_LIB} ${LB_UTILS_DB_LIB} ${EXT_LIBS}
+MONDB_LIBS:=${COMMON_LIBS} ${LB_MACHINE_LIB} ${LB_UTILS_DB_LIB} ${EXT_LIBS} \
+	${EXPAT_LIBS} -lglite_lbu_trio -lglite_jobid
 
 LCAS_PLUGIN_OBJS:=lcas_lb.o
 LCAS_PLUGIN_LOBJS:=${LCAS_PLUGIN_OBJS:.o=.lo}
@@ -305,7 +322,7 @@ test.xml: test_xml
 
 test_xml: test_xml.cpp
 	${CXX} -c ${CFLAGS} ${CPPUNIT_CFLAGS} $<
-	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${LB_COMMON_LIB} ${CPPUNIT_LIBS}
+	${LINKXX} -o $@ test_xml.o lb_xml_parse.o ${LB_COMMON_LIB} ${CPPUNIT_LIBS} ${EXPAT_LIBS} -lglite_lbu_trio -lglite_jobid
 
 test.query: test_query_events
 	# XXX coredumps ./test_query_events
@@ -316,7 +333,7 @@ query_events_objs := test_query_events.o query.o get_events.o jobstat_supp.o ind
 
 test_query_events: ${query_events_objs}
 	${LINKXX} -o $@ ${query_events_objs} \
-	${CPPUNIT_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${classadslib} -lglite_lbu_log
+	${CPPUNIT_LIBS} ${LB_COMMON_LIB} ${LB_MACHINE_LIB} ${CLASSADS_LIBS} -lglite_lbu_log -lglite_lbu_trio -lglite_security_gss${default_flavour} -lglite_jobid
 
 test.soapconv: test_soap_conv
 	LD_LIBRARY_PATH=${cares_prefix}/${libdir}:${classads_prefix}/${libdir}:${LD_LIBRARY_PATH} ./test_soap_conv

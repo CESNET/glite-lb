@@ -17,7 +17,7 @@ thrflavour=gcc32pthr
 version=${module.version}
 
 CC=gcc
-CXX=gcc
+CXX=g++
 
 VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/examples:${top_srcdir}/config
 
@@ -90,7 +90,7 @@ ${MAN_GZ}: ${MAN}
 	gzip -f $(notdir $?)
 
 glite-lb-cmsclient: cmsclient.o
-	$(CC) $< ${EXT_LIB} -o $@
+	$(CXX) $< ${EXT_LIB} -o $@
 
 man: ${MAN_GZ}
 
