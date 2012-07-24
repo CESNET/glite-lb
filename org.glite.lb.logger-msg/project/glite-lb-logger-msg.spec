@@ -6,7 +6,11 @@ Url: @URL@
 License: ASL 2.0
 Vendor: EMI
 Group: System Environment/Daemons
+%if 0%{?fedora}
+BuildRequires: activemq-cpp-devel%{_isa}
+%else
 BuildRequires: activemq-cpp-library
+%endif
 BuildRequires: cppunit-devel%{?_isa}
 BuildRequires: glite-lb-logger-devel%{?_isa}
 BuildRequires: glite-lbjp-common-log-devel%{?_isa}
