@@ -877,6 +877,17 @@ for my $ext (keys %deps_aux) {
 	'canl' => 'emi-',
 );
 
+%cvs_tag_suffix = (
+	'lb' => '',
+	'jp' => '',
+	'jobid' => '',
+	'lbjp-common' => '',
+	'gridsite' => '-core',
+	'px' => '',
+	'canl' => '',
+);
+
+
 # ==== projects specification ====
 # etics_name ........... ETICS project name
 # conf_prefix .......... ETICS configurations name prefix
@@ -896,6 +907,7 @@ for my $ext (keys %deps_aux) {
 		etics_name => 'org.glite',
 		conf_prefix => { %cvs_tag_prefix },
 		tag_prefix => { %cvs_tag_prefix },
+		tag_suffix => { %cvs_tag_suffix },
 		flavours => '--thrflavour=${globus.thr.flavor} --nothrflavour=${globus.nothr.flavor}',
 		local_prefix => '',
 		etics_externs => {
@@ -965,6 +977,7 @@ for my $ext (keys %deps_aux) {
 			'canl' => 'emi-',
 		},
 		tag_prefix => { %cvs_tag_prefix },
+		tag_suffix => { %cvs_tag_suffix },
 		flavours => '--thrflavour= --nothrflavour=',
 		local_prefix => '/usr',
 		etics_externs => {
@@ -1621,7 +1634,7 @@ sub mode_etics {
 	else {
 		$conf = "$confprefix$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 # XXX: gridsite hack
-		$conftag = $subsys eq 'gridsite' ? "$project{tag_prefix}{$subsys}${subsys}_R_${major}_${minor}_${rev}" : 
+		$conftag = $subsys eq 'gridsite' ? "$project{tag_prefix}{$subsys}${subsys}$project{tag_suffix}{$subsys}_R_${major}_${minor}_${rev}" : 
 			"$project{tag_prefix}{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 
 		# lowering age for older packaging
