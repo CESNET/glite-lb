@@ -285,6 +285,9 @@ if ($project =~ /^([^0-9]*)(.*)$/) {
 }
 %project = %{$projects{$project}};
 $project_version = $project{current_version} unless $project_version;
+if ($project ne 'emi' or $project_version <= 1) {
+	$lbmodules{'gridsite'} = [ qw/apache shared commands core devel slashgrid services service-clients gsexec/ ];
+}
 for my $platform (keys %{$project{etics_externs}}) {
 	for $_ (keys %{$project{etics_externs}{$platform}}) {
 		$etics_externs{$platform}{$_} = $project{etics_externs}{$platform}{$_};
@@ -400,15 +403,15 @@ if ($mode eq 'build') { for my $ext (keys %externs) {
 		my $jdk_prefix;
 
 		print "Looking for some caffein ... ";
-		if (defined $ENV{'JDK_HOME'}) {
+		if (defined($ENV{'JDK_HOME'}) and -f "$ENV{'JDK_HOME'}/include/jni.h") {
 			$jdk_prefix = $ENV{'JDK_HOME'};
 			print "JDK_HOME=$jdk_prefix\n";
-		} elsif (defined $ENV{'JAVA_HOME'}) {
+		} elsif (defined($ENV{'JAVA_HOME'}) and -f "$ENV{'JAVA_HOME'}/include/jni.h") {
 			$jdk_prefix = $ENV{'JAVA_HOME'};
 			print "JAVA_HOME=$jdk_prefix\n";
 		} else {
 			foreach my $i (0..$#{$externs{$ext}{locations}}) {
-				if (-e $externs{$ext}{locations}[$i]) {
+				if (-e $externs{$ext}{locations}[$i] and -f "$externs{$ext}{locations}[$i]/include/jni.h") {
 					$jdk_prefix=$externs{$ext}{locations}[$i];
 					print "(found directory $jdk_prefix)\n";
 					last;
@@ -591,49 +594,50 @@ BEGIN{
 );
 
 %need_externs_aux = (
-	'lb.client' => [ qw/cppunit:B classads libtool:B globus:B/ ],
-	'lb.common' => [ qw/expat cares:B cppunit:B classads libtool:B globus:B/ ],
+	'lb.client' => [ qw/cppunit:B classads:B libtool:B globus:B pkgconfig:B/ ],
+	'lb.common' => [ qw/expat cares:B cppunit:B classads:B libtool:B globus:B pkgconfig:B/ ],
 	'lb.doc' => [ qw/tetex-latex:B/ ],
-	'lb.logger' => [ qw/cppunit:B libtool:B globus:B/ ],
-	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B globus:B/ ],
+	'lb.logger' => [ qw/cppunit:B libtool:B globus:B pkgconfig:B/ ],
+	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B globus:B pkgconfig:B/ ],
 	'lb.nagios' => [ qw/globus_proxy_utils:R/ ],
-	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql-server:R cppunit:B gsoap:B classads voms:B lcas gridsite:B bison:B libtool:B libxml2 flex:B/ ],
-	'lb.state-machine' => [ qw/classads libtool:B libxslt:B expat:B globus:B/ ],
-	'lb.utils' => [ qw/cppunit:B libtool:B globus:B/ ],
+	'lb.server' => [ qw/globus_essentials:R globus:B expat cares mysql-server:R cppunit:B gsoap:B classads:B voms:B lcas gridsite:B bison:B libtool:B libxml2 flex:B pkgconfig:B/ ],
+	'lb.state-machine' => [ qw/classads:B libtool:B libxslt:B expat:B globus:B pkgconfig:B/ ],
+	'lb.utils' => [ qw/cppunit:B libtool:B globus:B pkgconfig:B/ ],
 	'lb.ws-interface' => [ qw/libxslt:B tidy:B/ ],
-	'lb.ws-test' => [ qw/gsoap:B libtool:B globus:B/ ],
+	'lb.ws-test' => [ qw/gsoap:B libtool:B globus:B pkgconfig:B/ ],
 	'lb.types' => [ qw// ],
-	'lb.harvester' => [ qw/docbook-utils:B libtool:B globus:B/ ],
-	'lbjp-common.db' => [ qw/mysql-devel:B postgresql:B cppunit:B log4c:B libtool:B/ ],
+	'lb.harvester' => [ qw/docbook-utils:B libtool:B globus:B pkgconfig:B/ ],
+	'lbjp-common.db' => [ qw/mysql-devel:B postgresql:B cppunit:B log4c:B libtool:B pkgconfig:B/ ],
 	'lbjp-common.log' => [ qw/log4c libtool:B/ ],
 	'lbjp-common.maildir' => [ qw/libtool:B/ ],
 	'lbjp-common.server-bones' => [ qw/libtool:B/ ],
-	'lbjp-common.trio' => [ qw/cppunit:B libtool:B/ ],
-	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B libtool:B/ ],
-	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B libtool:B/ ],
-	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap gsoapxx libtool:B/ ],
-	'jobid.api-c' =>  [ qw/cppunit:B libtool:B openssl:B/ ],
-	'jobid.api-cpp' =>  [ qw/cppunit:B libtool:B/ ],
+	'lbjp-common.trio' => [ qw/cppunit:B libtool:B pkgconfig:B/ ],
+	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B libtool:B pkgconfig:B/ ],
+	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B libtool:B pkgconfig:B/ ],
+	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap gsoapxx libtool:B pkgconfig:B/ ],
+	'jobid.api-c' =>  [ qw/cppunit:B libtool:B openssl:B pkgconfig:B/ ],
+	'jobid.api-cpp' =>  [ qw/cppunit:B libtool:B pkgconfig:B/ ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
-	'jp.client' => [ qw/gsoap libtar globus_essentials:R globus:B/ ],
+	'jp.client' => [ qw/gsoap libtar globus_essentials:R globus:B pkgconfig:B/ ],
         'jp.doc' => [],
-        'jp.index' => [ qw/gsoap globus_essentials:R globus:B mysql-server:R/ ],
-        'jp.primary' => [ qw/classads gsoap libtar globus_essentials:R globus:B  mysql-server:R/ ],
+        'jp.index' => [ qw/gsoap globus_essentials:R globus:B mysql-server:R pkgconfig:B/ ],
+        'jp.primary' => [ qw/classads:B gsoap libtar globus_essentials:R globus:B  mysql-server:R pkgconfig:B/ ],
         'jp.server-common' => [],
         'jp.ws-interface' => [],
-	'gridsite.core' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B doxygen:B/ ],
+	'gridsite.core' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B doxygen:B pkgconfig:B/ ],
 	'gridsite.commands' => [ qw/curl:R openssl:R/ ],
 	'gridsite.apache' => [ qw/libxml2:R openssl:R curl:R/ ],
 	'gridsite.libs' => [ qw/libxml2:R openssl:R/ ],
+	'gridsite.shared' => [ qw/libxml2:R openssl:R/ ],
 	'gridsite.devel' => [ qw// ],
 	'gridsite.slashgrid' => [ qw/curl:R fuse:R/],
 	'gridsite.services' => [ qw/curl:R gsoap:R/ ],
 	'gridsite.service-clients' => [ qw/curl:R gsoap:R gsoapxx:R/ ],
 	'gridsite.gsexec' => [ qw// ],
 	'gridsite.1.5-compat' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B doxygen:B/ ],
-	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B voms:B libtool:B/ ],
+	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B voms:B libtool:B pkgconfig:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
-	'canl.c' => [ qw/cares:B openssl:B libtool:B bison:B flex:B krb5-devel:B/ ],
+	'canl.c' => [ qw/cares:B openssl:B libtool:B bison:B flex:B krb5-devel:B pkgconfig:B tetex-latex:B/ ],
 );
 
 %need_jars = (
@@ -751,6 +755,7 @@ for my $jar (keys %need_jars) {
 	'gridsite.commands' => [ qw/gridsite.core:B/ ],
 	'gridsite.apache' => [ qw/gridsite.core:B/ ],
 	'gridsite.libs' => [ qw/gridsite.core:B / ],
+	'gridsite.shared' => [ qw/gridsite.core:B / ],
 	'gridsite.devel' => [ qw/gridsite.core:B/ ],
 	'gridsite.slashgrid' => [ qw/gridsite.core:B/],
 	'gridsite.services' => [ qw/gridsite.core:B/ ],
@@ -1407,43 +1412,48 @@ top_srcdir = $top_srcdir
 		}
 	}
 
-	print "Creating ${build}debian/\n" if ($debug);;
+	if ($module and -d $build."debian") {
+		print "Skipping ${build}debian/ (no rewrite in single module mode)\n" if ($debug);
+		`rm -f ${build}debian.*`;
+	} else {
+		print "Creating ${build}debian/\n" if ($debug);;
 
-	`rm -rfv  ${build}debian`;
-	mkdir $build."debian" or die $!;
-	`cp $abs_srcdir/project/debian.* ${build}debian/ 2>/dev/null`;
-	`mv ${build}debian.* ${build}debian/ 2>/dev/null`;
-	`rm -f ${build}debian/*.orig`;
-	opendir $dh, "${build}debian" || die "Can't open ${build}debian: $!";
-	for $_ (readdir $dh) {
-		if (/^debian\.(.*)/) {
-			`mv ${build}debian/$_ ${build}debian/$1`;
-			$debian = 1;
+		`rm -rfv  ${build}debian`;
+		mkdir $build."debian" or die $!;
+		`cp $abs_srcdir/project/debian.* ${build}debian/ 2>/dev/null`;
+		`mv ${build}debian.* ${build}debian/ 2>/dev/null`;
+		`rm -f ${build}debian/*.orig`;
+		opendir $dh, "${build}debian" || die "Can't open ${build}debian: $!";
+		for $_ (readdir $dh) {
+			if (/^debian\.(.*)/) {
+				`mv ${build}debian/$_ ${build}debian/$1`;
+				$debian = 1;
+			}
 		}
-	}
-	closedir $dh;
+		closedir $dh;
 
-	if ($debian) {
-		my ($dir, $file);
+		if ($debian) {
+			my ($dir, $file);
 
-		chmod 0755, "${build}debian/rules";
-		$file="${build}debian/docs"; if (not -f $file) { `touch $file`; }
-		$dir="${build}debian/source"; if (not -d $dir) { mkdir $dir; }
-		$file="${build}debian/source/format"; if (not -f $file) { `echo "3.0 (quilt)" > $file` }
-		$file="${build}debian/compat"; if (not -f $file) { `echo "7" > $file` }
-		$file="${build}debian/changelog"; if (not -f $file) {
-			open FH, ">$file" or die $!;
-			print FH qq{$packageName ($major.$minor.$rev-$age) unstable; urgency=low
+			chmod 0755, "${build}debian/rules";
+			$file="${build}debian/docs"; if (not -f $file) { `touch $file`; }
+			$dir="${build}debian/source"; if (not -d $dir) { mkdir $dir; }
+			$file="${build}debian/source/format"; if (not -f $file) { `echo "3.0 (quilt)" > $file` }
+			$file="${build}debian/compat"; if (not -f $file) { `echo "7" > $file` }
+			$file="${build}debian/changelog"; if (not -f $file) {
+				open FH, ">$file" or die $!;
+				print FH qq{$packageName ($major.$minor.$rev-$age) unstable; urgency=low
 
   * Automatically generated package
 
  -- $package{maintainer}  $debdate
 };
-			close FH;
-		}
+				close FH;
+			}
 
-	} else {
-		`rm -rf ${build}debian`;
+		} else {
+			`rm -rf ${build}debian`;
+		}
 	}
 }
 
@@ -1455,7 +1465,7 @@ sub mode_etics_packaging {
 	my ($workspaceDir, $srcPackageName, $srcAge, $topDir);
 
 	# old-school packaging by ETICS for EMI-1
-	if ($project eq 'emi' and $project_version == 1) { return; }
+	if ($project eq 'emi' and $project_version == 1 and $fmod ne 'gridsite.core') { return; }
 
 	if ($fmod eq 'gridsite.core') {
 		$workspaceDir = '..';
@@ -1552,23 +1562,27 @@ sub mode_etics {
 		$conftag = $branch;
 		# forced low age number
 		$age = $branch eq 'HEAD' ? '0head' : '0dev';
+		# add project major version number
+		$age .= '.'.$project_version;
 		push @copts, '--version ${version}-${age}';
 	}
 	else {
 		$conf = "$confprefix$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 # XXX: gridsite hack
-		$conftag = $subsys eq 'gridsite' ? "$project{tag_prefix}{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}" : 
+		$conftag = $subsys eq 'gridsite' ? "$project{tag_prefix}{$subsys}${subsys}_R_${major}_${minor}_${rev}" : 
 			"$project{tag_prefix}{$subsys}$subsys-${module}_R_${major}_${minor}_${rev}_${age}";
 
 		# lowering age for older packaging
 		if ($project eq 'emi' and $project_version == 1) {
 			$age = $age - 1;
 		}
-	}
 
-	# emi1 suffix for older packaging
+		# '.emi1' suffix for older packaging
+		if ($project eq 'emi' and $project_version == 1) {
+			$age = $age.'.'.$project.$project_version;
+		}
+	}
 	if ($project eq 'emi' and $project_version == 1) {
-		$age = $age.$project.$project_version;
 		$conf = $conf.$project.$project_version;
 	}
 
@@ -1630,7 +1644,7 @@ sub mode_etics {
 			}
 
 			$cmd{default}{configure} = "cat > Makefile.inc <<EOF
-	project = $project
+	project = $project$project_version
 	top_srcdir = ..
 	$flags
 	EOF";
@@ -1868,7 +1882,7 @@ $output};
 
 			`diff -b "$file" "$file.new"`;
 			if ($? == 0) {
-				print STDERR "($file not changed)\n";
+				print STDERR "($file not changed)\n" if ($debug);
 				unlink "$file.new";
 			} else {
 				print STDERR "Writing $file\n";
