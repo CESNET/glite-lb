@@ -97,3 +97,7 @@
 2.2.2-3
 - Module rebuilt
 
+2.2.3-1
+- Missing files in clean targets added
+- Explicit pkg-config dependency
+
