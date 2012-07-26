@@ -112,3 +112,7 @@
 2.2.1-4
 - Module rebuilt
 
+2.2.2-1
+- Improve build and packaging for Fedora
+- Explicit pkg-config dependency
+
