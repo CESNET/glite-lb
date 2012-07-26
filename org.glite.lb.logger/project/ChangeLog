@@ -203,3 +203,8 @@
 2.3.4-2
 - Module rebuilt
 
+2.3.5-1
+- Improved build and packaging for Fedora
+- Fix for notification interlogger failures (bug #95013)
+- Explicit pkg-config dependency
+
