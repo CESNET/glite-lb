@@ -8,7 +8,6 @@ version=0.0.0
 PREFIX=/opt/glite
 prefix=
 
-expat_prefix=/opt/expat
 gsoap_prefix=/opt/gsoap
 
 default: all
@@ -34,11 +33,6 @@ SUFFIXES = .T
 
 DEBUG:=-g -O0 -Wall
 
-ifneq (${expat_prefix},/usr)
-	expatlib := -L${expat_prefix}/${libdir} -L${expat_prefix}/lib
-endif
-EXPAT_CFLAGS?=-I${expat_prefix}/include
-EXPAT_LIB?=${expatlib} -lexpat
 GSOAP_CFLAGS?=-I${gsoap_prefix}/include -I${gsoap_prefix}/
 GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
 
@@ -47,7 +41,6 @@ CFLAGS:= \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
-	${EXPAT_CFLAGS} \
 	${GSOAP_CFLAGS} \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE ${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CFLAGS}
@@ -62,7 +55,7 @@ INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
-EXT_LIBS:= ${EXPAT_LIBS}
+EXT_LIBS:=
 
 ifeq (${thrflavour},)
 COMMON_LIB:=-lglite_lb_common
@@ -76,8 +69,14 @@ PLUS_LIB:=-lglite_lb_clientpp_${nothrflavour}
 JP_LIBS:=-lglite_jp_common_${nothrflavour}
 endif
 
-UTILS:=mon purge dump load dump_exporter
-ALLUTILS:=${UTILS} state_history statistics
+os=${shell uname}
+DL_LIBS=
+ifeq (${os},Linux)
+	DL_LIBS=-ldl
+endif
+
+UTILS:=purge dump load
+ALLUTILS:=${UTILS} mon dump_exporter state_history statistics
 STATISTICS_OBJS:=statistics.o process_attrs.o process_attrs2.o
 
 MAN_GZ:=glite-lb-mon.1.gz
@@ -90,11 +89,17 @@ compile all: ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ}
 ${UTILS}: %: %.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} -lglite_lbu_maildir
 
+mon: %: %.o
+	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} -lglite_jobid
+
+dump_exporter: %: %.o
+	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} -lglite_jobid -lglite_lbu_maildir
+
 statistics: ${STATISTICS_OBJS}
-	${LINK} -rdynamic -o $@ ${STATISTICS_OBJS} ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} 
+	${LINK} -rdynamic -o $@ ${STATISTICS_OBJS} ${COMMON_LIB} ${JP_LIBS} ${EXT_LIBS} -lglite_lbu_trio ${DL_LIBS}
 
 state_history: state_history.o
-	${LINK} -o $@ state_history.o -lglite_lb_statemachine ${PLUS_LIB}
+	${LINK} -o $@ state_history.o -lglite_jobid ${COMMON_LIB} ${CLIENT_LIB} -lglite_lb_statemachine ${PLUS_LIB}
 
 check: compile 
 

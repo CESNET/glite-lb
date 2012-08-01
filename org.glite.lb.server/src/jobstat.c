@@ -200,7 +200,7 @@ int edg_wll_JobStatusServer(
 							edg_wll_SetError(ctx, ENOMEM, "edg_wll_JobStatusServer() calloc children_states failed!");
 							goto rollback;
 						}
-						while ((num_f = edg_wll_FetchRow(ctx, sh, sizeof(out_stat), NULL, out_stat)) == 3
+						while ((num_f = edg_wll_FetchRow(ctx, sh, sizeof(out_stat)/sizeof(out_stat[0]), NULL, out_stat)) == 3
 							&& i < num_sub) {
 							if (!strcmp(INTSTAT_VERSION,out_stat[0])) {
 								js = dec_intJobStat(out_stat[1], &s_out);

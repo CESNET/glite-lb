@@ -109,7 +109,7 @@ install: all
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
-	rm -vf trio_test
+	rm -rvf trio_test ${REPORTS}
 	rm -rvf dist ${package}-*.tar.gz
 	
 distclean:

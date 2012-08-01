@@ -21,8 +21,8 @@ limitations under the License.
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <glite/lbu/trio.h>
@@ -132,39 +132,6 @@ void glite_lbu_TimestampToStr(double t, char **str) {
 }
 
 
-static time_t tm2time(struct tm *tm) {
-	static struct tm tm_last = { tm_year:0, tm_mon:0 };
-	static time_t t = (time_t)-1;
-	static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-	char *tz;
-
-	pthread_mutex_lock(&lock);
-	if (tm->tm_year == tm_last.tm_year && tm->tm_mon == tm_last.tm_mon) {
-		t = t + (tm->tm_sec - tm_last.tm_sec)
-		      + (tm->tm_min - tm_last.tm_min) * 60
-		      + (tm->tm_hour - tm_last.tm_hour) * 3600
-		      + (tm->tm_mday - tm_last.tm_mday) * 86400;
-		memcpy(&tm_last, tm, sizeof tm_last);
-	} else {
-		tz = getenv("TZ");
-		if (tz) tz = strdup(tz);
-		setenv("TZ", "UTC", 1);
-		tzset();
-
-		t =  mktime(tm);
-		memcpy(&tm_last, tm, sizeof tm_last);
-
-		if (tz) setenv("TZ", tz, 1);
-		else unsetenv("TZ");
-		free(tz);
-		tzset();
-	}
-	pthread_mutex_unlock(&lock);
-
-	return t;
-}
-
-
 time_t glite_lbu_StrToTime(const char *str) {
 	struct tm       tm;
 
@@ -175,7 +142,7 @@ time_t glite_lbu_StrToTime(const char *str) {
 	tm.tm_year -= 1900;
 	tm.tm_mon--;
 
-	return tm2time(&tm);
+	return timegm(&tm);
 }
 
 
@@ -191,7 +158,7 @@ double glite_lbu_StrToTimestamp(const char *str) {
 	tm.tm_mon--;
 	tm.tm_sec = sec;
 
-	return (sec - tm.tm_sec) + tm2time(&tm);
+	return (sec - tm.tm_sec) + timegm(&tm);
 }
 
 
@@ -247,7 +214,7 @@ void glite_lbu_DBClose(glite_lbu_DBContext ctx) {
 
 
 int glite_lbu_DBQueryCaps(glite_lbu_DBContext ctx) {
-	if (!VALID(ctx->backend)) return EINVAL;
+	if (!VALID(ctx->backend)) return -1;
 	return backends[ctx->backend]->queryCaps(ctx);
 }
 
@@ -277,7 +244,7 @@ int glite_lbu_Rollback(glite_lbu_DBContext ctx) {
 
 
 int glite_lbu_FetchRow(glite_lbu_Statement stmt, unsigned int n, unsigned long *lengths, char **results) {
-	if (!VALID(stmt->ctx->backend)) return EINVAL;
+	if (!VALID(stmt->ctx->backend)) return -1;
 	return backends[stmt->ctx->backend]->fetchRow(stmt, n, lengths, results);
 }
 
@@ -295,7 +262,7 @@ int glite_lbu_QueryIndices(glite_lbu_DBContext ctx, const char *table, char ***k
 
 
 int glite_lbu_ExecSQL(glite_lbu_DBContext ctx, const char *cmd, glite_lbu_Statement *stmt) {
-	if (!VALID(ctx->backend)) return EINVAL;
+	if (!VALID(ctx->backend)) return -1;
 	return backends[ctx->backend]->execSQL(ctx, cmd, stmt);
 }
 
@@ -313,7 +280,7 @@ int glite_lbu_PrepareStmt(glite_lbu_DBContext ctx, const char *sql, glite_lbu_St
 
 
 int glite_lbu_ExecPreparedStmt_v(glite_lbu_Statement stmt, int n, va_list ap) {
-	if (!VALID(stmt->ctx->backend)) return EINVAL;
+	if (!VALID(stmt->ctx->backend)) return -1;
 	return backends[stmt->ctx->backend]->execPreparedStmt_v(stmt, n, ap);
 }
 
@@ -331,7 +298,7 @@ int glite_lbu_ExecPreparedStmt(glite_lbu_Statement stmt, int n, ...) {
 
 
 long int glite_lbu_Lastid(glite_lbu_Statement stmt) {
-	if (!VALID(stmt->ctx->backend)) return EINVAL;
+	if (!VALID(stmt->ctx->backend)) return 0;
 	return backends[stmt->ctx->backend]->lastid(stmt);
 }
 

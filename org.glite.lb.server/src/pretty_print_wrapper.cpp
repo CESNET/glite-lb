@@ -22,8 +22,8 @@ limitations under the License.
 #include <string.h>
 
 int pretty_print(char *jdl, char **formated_print){
-	ClassAd        *classad;
-	ClassAdParser  parser;
+	CLASSAD_NAMESPACE ClassAd        *classad;
+	CLASSAD_NAMESPACE ClassAdParser  parser;
 
 	classad = parser.ParseClassAd(std::string(jdl), true);
 	if (! classad){
@@ -31,7 +31,7 @@ int pretty_print(char *jdl, char **formated_print){
 		return -1;	// not ClassAd data
 	}
 
-	PrettyPrint	pp;
+	CLASSAD_NAMESPACE PrettyPrint	pp;
 	std::string buf;
 	pp.Unparse(buf, classad);
 	*formated_print = strdup(buf.c_str());

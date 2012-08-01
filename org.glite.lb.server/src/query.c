@@ -359,24 +359,30 @@ static int queryjobs_cb(edg_wll_Context ctx, glite_jobid_t jobid, edg_wll_JobSta
 	size_t maxn = store->maxn;
 	void *tmp;
 
-	if (n >= maxn) {
+	// one more item for the array ending shouldn't be needed,
+	// only preventively here
+	if (n + 1 >= maxn) {
 		maxn = maxn ? maxn << 1 : 256;
-		if ((tmp = realloc(store->jobs, maxn * sizeof(*store->jobs))) == NULL)
+		if ((tmp = realloc(store->jobs, (maxn + 1) * sizeof(*store->jobs))) == NULL)
 			return edg_wll_SetError(ctx, errno ? : ENOMEM, NULL);
 		store->jobs = tmp;
 
 		if (!(store->flags & EDG_WLL_STAT_NO_STATES)) {
-			if ((tmp = realloc(store->states, maxn * sizeof(*store->states))) == NULL)
+			if ((tmp = realloc(store->states, (maxn + 1) * sizeof(*store->states))) == NULL)
 				return edg_wll_SetError(ctx, errno ? : ENOMEM, NULL);
 			store->states = tmp;
 		}
 
 		store->maxn = maxn;
 	}
+
 	store->jobs[n] = jobid;
+	store->jobs[n + 1] = NULL;
+
 	if (!(store->flags & EDG_WLL_STAT_NO_STATES)) {
 		if (status) store->states[n] = *status;
 		else memset(&store->states[n], 0, sizeof(*store->states));
+		memset(&store->states[n + 1], 0, sizeof(*store->states));
 	}
 	store->n++;
 
@@ -675,10 +681,10 @@ limit_cycle_cleanup:
 		}
 	}
 
+cleanup:
 	// finish
 	cb(ctx, NULL, NULL, data);
 
-cleanup:
 	free(qbase);
 	free(state_where);
 	free(tags_where);
@@ -1747,8 +1753,8 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 
 						if ( !strcmp(conds[i][j].value.c, extr_val) ) {
 							if ( conds[i][j].op == EDG_WLL_QUERY_OP_EQUAL ) goto or_satisfied;
-							else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 						}
+						else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 					}
 				}
 				break;

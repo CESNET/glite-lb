@@ -97,6 +97,10 @@
 2.2.2-3
 - Module rebuilt
 
+2.2.3-1
+- Missing files in clean targets added
+- Explicit pkg-config dependency
+
 2.3.0-1
 - Merge from branch_3_2
 

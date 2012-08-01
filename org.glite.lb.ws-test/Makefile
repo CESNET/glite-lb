@@ -61,7 +61,7 @@ dotless_gsoap_ver:=${shell echo ${gsoap_default_version} | tr -d . }
 ifeq ($(shell test -f ${stagedir}${prefix}/${libdir}/libglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}_c.so && echo ok),ok)
 	langflavour:=_c
 endif
-GSOAP_LIB:=-L${stagedir}${prefix}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour}
+GSOAP_LIB:=-L${stagedir}${prefix}/${libdir} -lglite_security_gsoap_plugin_${dotless_gsoap_ver}${default_flavour}${langflavour} ${GSOAP_LIBS}
 
 WS_CLIENT_OBJS:= $(GSOAP_FILES_PREFIX)C.o $(GSOAP_FILES_PREFIX)Client.o ws_fault.o
 # ws_typeref.o

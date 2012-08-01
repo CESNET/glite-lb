@@ -126,7 +126,6 @@ static const char *prepared_names[4] = {"select", "update", "insert", "other"};
 
 int glite_lbu_InitDBContextPsql(glite_lbu_DBContext *ctx_gen) {
 	glite_lbu_DBContextPsql ctx;
-	int err = 0;
 
 	ctx = calloc(1, sizeof *ctx);
 	if (!ctx) return ENOMEM;

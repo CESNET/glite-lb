@@ -29,6 +29,7 @@ limitations under the License.
 #include <sys/time.h>
 
 
+#include "glite/jobid/cjobid.h"
 #include "glite/lbu/maildir.h"
 #include "glite/lb/context.h"
 #include "glite/lb/events.h"

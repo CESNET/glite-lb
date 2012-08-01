@@ -382,6 +382,29 @@
   - Explicit pkg-config dependency (needed to build lbjp-common.gss on Debian)
 - Enabling job status queries over socket (fixes the proxy purge, second part of the SB #88630)
 
+2.3.6-1
+- Improved building and packaging for Fedora
+- New convenience function to check current user's (ctx) authorization for actions
+- Fixed dump/load
+  - Generate fake registration events for subjobs on dump
+  - Register jobs on load, recalculate states
+  - Greyjobs temporarily allowed when loading from a dump file
+  - Not only events but also jobs stored in DB on load (SB #92557, SB #92564)
+  - Jobs registered on load, states recalculated
+- Fixed crash when building with -O2
+- Fixed handling of READ_ANONYMIZED permission in queries
+- Owner-based conditions forbidden in notif registrations if the only authorization category is READ_ANONYMIZED (fixes a possible security issue)
+- Fixed crash when running without owner index.
+- Job listing over HTML simplified (algorithm complexity reduced)
+- HTML/text output production now in a single function
+- Server statistics available in text format as well as in HTML
+- Stats list constructed systematically
+- Error code returned if statistics cannot be retireved
+- The READ_ALL auth rule observed in event-only queries. Fix for SB #92128
+- End of notification stream also when error occures. Preventively keep ending item in the array anyway.
+- Fixed the <> relationship evaluation for JDL attribute queries
+- CREAM jobs also turned to zombies on purge
+
 2.4.0-1
 - Resolved packaging warnings
 - Job status queries over socket enabled (fixes the proxy purge, second part of the SB #88630)

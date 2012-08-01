@@ -251,19 +251,19 @@ ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
 endif
 
 logevent: logevent.o args.o
-	${LINK} -o $@ logevent.o args.o ${default_clientlib} ${EXT_LIB} 
+	${LINK} -o $@ logevent.o args.o ${default_clientlib} ${EXT_LIB} ${PLUS_EXTRA_LIB} -lm
 
 notify: notify.o
-	${LINKXX} -o $@ notify.o ${default_clientpluslib} ${EXT_LIB} ${PLUS_EXTRA_LIB}
+	${LINK} -o $@ notify.o ${default_clientpluslib} ${EXT_LIB} ${PLUS_EXTRA_LIB}
 
 register_sandbox: %: %.o
-	${LINK} -o $@ $@.o ${default_clientlib} ${EXT_LIB}
+	${LINK} -o $@ $@.o ${default_clientlib} ${EXT_LIB} ${PLUS_EXTRA_LIB}
 
 ${TOOLS} ${EXAMPLES} ${EXAMPLES_CL}: %: %.o
-	${LINK} -o $@ $< ${default_clientlib} ${default_commonlib} ${EXT_LIB} 
+	${LINK} -o $@ $< ${default_clientlib} ${default_commonlib} ${EXT_LIB} ${PLUS_EXTRA_LIB}
 
 ${EXAMPLES_CL_THR}: %: %.o
-	${LINK} -o $@ $< ${default_clientlib_thr} ${default_commonlib_thr} ${EXT_LIB} -lpthread
+	${LINK} -o $@ $< ${default_clientlib_thr} ${default_commonlib_thr} ${EXT_LIB} ${PLUS_EXTRA_LIB} -lpthread
 
 ${TOOLS}: ${default_clientlib}
 

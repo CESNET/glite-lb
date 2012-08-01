@@ -176,6 +176,11 @@
 1.3.4-1
 - CREAM and SB Transfers documentation
 
+1.3.5-1
+- Added dependency on LaTex for Debian and Fedora.
+- New functionality tests described
+- L&B 2.0 not to be advertised as stable release anymore
+
 1.4.0-1
 - Merge from branch_3_2
 

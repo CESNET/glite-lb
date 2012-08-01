@@ -63,6 +63,12 @@ endif
 
 GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
 
+os=${shell uname}
+DL_LIBS=
+ifeq (${os},Linux)
+       DL_LIBS=-ldl
+endif
+
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I${top_srcdir}/interface \
@@ -89,10 +95,9 @@ INSTALL:=libtool --mode=install install
 HDRS:=interlogd.h il_error.h
 
 COMMON_LIB:=-lglite_lb_common
-
-EXT_LIB:=-lglite_lbu_trio -lglite_lbu_log
-
 GLITE_GSS_LIB:=-lglite_security_gss
+
+EXT_LIB:=-lglite_lbu_trio -lglite_lbu_log ${GLITE_GSS_LIB} -lglite_jobid
 
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
 CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
@@ -161,10 +166,10 @@ glite-lb-logd-perf-nofile: ${LOGD_NOBJS}
 	${LINK} -o $@ ${LOGD_NOBJS} ${COMMON_LIB}${default_nothrflavour} ${EXT_LIB}
 
 glite-lb-interlogd: ${INTERLOG_OBJS}
-	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
+	${LINK} -o $@ ${INTERLOG_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread ${DL_LIBS}
 
 glite-lb-notif-interlogd: ${INTERLOG_NOTIF_OBJS}
-	${LINK} -export-dynamic -o $@ ${INTERLOG_NOTIF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
+	${LINK} -export-dynamic -o $@ ${INTERLOG_NOTIF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread ${DL_LIBS}
 
 glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
 	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
@@ -201,7 +206,7 @@ check.ll:
 	-echo commented out -- fix needed
 
 check.il: ${INTERLOG_TEST_OBJS}
-	${LINKXX} -o $@ ${COMMON_LIB}${default_thrflavour} ${CPPUNIT_LIBS} ${EXT_LIB} -lpthread $+
+	${LINKXX} -o $@ ${COMMON_LIB}${default_thrflavour} ${CPPUNIT_LIBS} ${GLITE_GSS_LIB} -lglite_jobid -lpthread ${DL_LIBS} $+
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin
@@ -258,9 +263,10 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 
 clean:
 	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ} startup
+	rm -rvf check.ll check.il
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
 
-.PHONY: default all compile man stage check check.il check.ll install clean distclean dist distcheck
+.PHONY: default all compile man stage check install clean distclean dist distcheck

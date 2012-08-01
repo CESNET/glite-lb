@@ -9,7 +9,11 @@ License: ASL 2.0
 Vendor: EMI
 Group: System Environment/Libraries
 BuildRequires: ant
+%if 0%{?fedora}
+BuildRequires: axis
+%else
 BuildRequires: axis1.4
+%endif
 BuildRequires: chrpath
 BuildRequires: emi-trustmanager
 BuildRequires: emi-trustmanager-axis
