@@ -185,6 +185,8 @@ struct _edg_wll_authz_policy	authz_policy = { NULL, 0};
 static int 		exclusive_zombies = 1;
 static char		**msg_brokers = NULL;
 static char		**msg_prefixes = NULL;
+char *		html_header = NULL;
+static int	html_header_forced = 0;
 
 
 static struct option opts[] = {
@@ -211,6 +213,7 @@ static struct option opts[] = {
 	{"super-user",	1, NULL,	'R'},
 //	{"super-users-file",	1, NULL,'F'},
 	{"msg-conf",	1, NULL,'F'},
+	{"html-header",	1, NULL,'H'},
 	{"no-index",	1, NULL,	'x'},
 	{"strict-locking",0, NULL,	'O'},
 	{"limits",	1, NULL,	'L'},
@@ -239,7 +242,7 @@ static struct option opts[] = {
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:e:f:zb:gPBo:q:W:Z:GI:l:E"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:e:f:zb:gPBo:q:W:Z:GI:l:EH:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -302,6 +305,7 @@ static void usage(char *me)
 		"\t-l,--policy\tauthorization policy file\n"
 		"\t-E,--exclusive-zombies-off\twith 'exclusive' flag, allow reusing IDs of purged jobs\n"
 		"\t-F,--msg-conf\t path to configuration file with messaging settings\n"
+		"\t-H,--html-header\t path to HTML header file for customized/branded HTML output\n"
 
 	,me);
 }
@@ -481,6 +485,7 @@ int main(int argc, char *argv[])
 		case 'i': strcpy(pidfile,optarg); pidfile_forced = 1; break;
 		case 'R': add_root(ctx, optarg, ADMIN_ACCESS); break;
 		case 'F': msg_conf = strdup(optarg); break;
+		case 'H': html_header = strdup(optarg); html_header_forced = 1; break;
 		case 'x': noIndex = atoi(optarg);
 			  if (noIndex < 0 || noIndex > 2) { usage(name); return 1; }
 			  break;
@@ -578,6 +583,24 @@ int main(int argc, char *argv[])
 		edg_wll_Error(ctx,&et,&ed);
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Cannot load server policy: %s: %s\n", et, ed);
 		return 1;
+	}
+
+	if (!html_header) {
+		char *html_header_prefix = getenv("GLITE_LB_LOCATION_ETC");
+		if (!html_header_prefix) html_header_prefix=strdup("/etc/glite-lb");
+		asprintf(&html_header, "%s/html_header.html", html_header_prefix);
+		free(html_header_prefix);
+	}
+	if (html_header) {
+		char *et, *ed;
+		FILE *fp = fopen("file","r");
+		if( fp ) {
+			fclose(fp);
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, "Using HTML header file %s", html_header);
+		} else {
+			glite_common_log(LOG_CATEGORY_CONTROL, html_header_forced ? LOG_PRIORITY_ERROR : LOG_PRIORITY_INFO, "Cannot open HTML header file %s", html_header);
+		}
+		ctx->html_header_file=html_header;
 	}
 
 	if (msg_conf) {

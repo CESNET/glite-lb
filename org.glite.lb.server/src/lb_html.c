@@ -61,10 +61,10 @@ int jobstat_cmp (const void *a, const void *b) {
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
 int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, edg_wll_JobStat *statsOut, char **message, int text)
 {
-        char *pomA = NULL, *pomB, *pomC;
+        char *pomA = NULL, *pomB, *pomC, *header = NULL;
 	int i, total = 0, bufsize, written = 0, linlen, wassub = 0, lineoverhead;
 	JobIdSorter *order;
-	
+	FILE *header_file;
 
         while (jobsOut && jobsOut[total]) total++;
 
@@ -84,9 +84,13 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 	}
 	else {		
 		qsort(order, total, sizeof(JobIdSorter), jobstat_cmp); 
+
+		if (header_file = fopen(ctx->html_header_file, "r")) getdelim( &header, 0, '\0', header_file);
 	
-		linlen = asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>User Jobs</TITLE>\n<BODY>\n"
-			"<h2><B>User Jobs</B></h2>\nTotal of %d<P><UL>\n",total);
+		linlen = asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>User Jobs</TITLE>\n<HEAD>\n%s\n</HEAD>\n<BODY>\n"
+			"<h2><B>User Jobs</B></h2>\nTotal of %d<P><UL>\n", header ? header : "", total);
+
+		free(header);
 
 		asprintf(&pomC, "</UL>User subject: %s<p>\n"
 			"</BODY>\n</HTML>",

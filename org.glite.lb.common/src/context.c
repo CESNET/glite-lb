@@ -212,6 +212,8 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 	
 	if (ctx->authz_policy_file) free(ctx->authz_policy_file);
 
+	if (ctx->html_header_file) free(ctx->html_header_file);
+
 	edg_wll_FreeParams(ctx);
 
 	free(ctx);
