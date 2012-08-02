@@ -600,7 +600,6 @@ int main(int argc, char *argv[])
 		} else {
 			glite_common_log(LOG_CATEGORY_CONTROL, html_header_forced ? LOG_PRIORITY_ERROR : LOG_PRIORITY_INFO, "Cannot open HTML header file %s", html_header);
 		}
-		ctx->html_header_file=html_header;
 	}
 
 	if (msg_conf) {
@@ -1098,6 +1097,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	ctx->rssTime = rss_time;
 
 	if (policy_file) ctx->authz_policy_file = strdup(policy_file);
+	if (html_header) ctx->html_header_file = strdup(html_header);
 
 	gettimeofday(&conn_start, 0);
 

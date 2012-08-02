@@ -42,6 +42,22 @@ limitations under the License.
 #define UNUSED_VAR
 #endif
 
+char *get_html_header(edg_wll_Context ctx, int text) {
+	char *header = NULL;
+	size_t header_len = 0;
+	FILE *header_file;
+
+	if (text) return NULL;
+
+	if ((header_file = fopen(ctx->html_header_file, "r"))) { 
+		getdelim( &header, &header_len, '\0', header_file);
+		fclose (header_file);
+	}
+	else header=strdup("<style type=\"text/css\">tr.notused {color: gray; text-align: left;}</style>");
+
+	return header;
+}
+
 int edg_wll_QueryToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Event *eventsOut UNUSED_VAR, char **message UNUSED_VAR)
 {
 /* not implemented yet */
@@ -64,7 +80,6 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
         char *pomA = NULL, *pomB, *pomC, *header = NULL;
 	int i, total = 0, bufsize, written = 0, linlen, wassub = 0, lineoverhead;
 	JobIdSorter *order;
-	FILE *header_file;
 
         while (jobsOut && jobsOut[total]) total++;
 
@@ -85,8 +100,8 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 	else {		
 		qsort(order, total, sizeof(JobIdSorter), jobstat_cmp); 
 
-		if (header_file = fopen(ctx->html_header_file, "r")) getdelim( &header, 0, '\0', header_file);
-	
+		header = get_html_header(ctx, text);
+
 		linlen = asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>User Jobs</TITLE>\n<HEAD>\n%s\n</HEAD>\n<BODY>\n"
 			"<h2><B>User Jobs</B></h2>\nTotal of %d<P><UL>\n", header ? header : "", total);
 
@@ -148,7 +163,7 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 
 int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, char **message, http_admin_option option, int adm) {
 	char *pomA = NULL, *pomB = NULL;
-	char *mylink = NULL, *alllink = NULL, *foreignlink = NULL, *heading = NULL;
+	char *mylink = NULL, *alllink = NULL, *foreignlink = NULL, *heading = NULL, *header = NULL;
         pomB = strdup("");
 
 	int i = 0;
@@ -178,13 +193,14 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 	}
 	if (!heading) asprintf(&heading,"Your notifications");
 
+	header = get_html_header(ctx, 0);
 	char *ret;
-        asprintf(&ret, "<html>\r\n\t<body>\r\n");
-	asprintf(&ret, "<html>\r\n\t<body>\r\n"
+	asprintf(&ret, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Notifications</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
 			"<h2><B>%s</B></h2>\r\n"
 			"<P>%s%s%s"
                         "<ul>%s</ul>"
-			"\t</body>\r\n</html>",
+			"\t</body>\r\n</HTML>",
+			header,
 			heading,
 			mylink ? mylink : "",
 			alllink ? alllink : "",
@@ -196,6 +212,7 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 	free(alllink);
 	free(foreignlink);
 	free(heading);
+	free(header);
 
 	*message = ret;
 
@@ -207,11 +224,11 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 	int l; \
 	if ((field) != (null)){ \
 		l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
-			"<td>" type "</td></tr>", (field)); \
+			"<td>" type "</td></tr>\n", (field)); \
 	} \
 	else{ \
-		l = asprintf(&pomA,"<tr><th align=\"left\"><span style=\"color:grey\">" name \
-			"</span></th></tr>"); \
+                l = asprintf(&pomA,"<tr class=\"notused\"><th>" name \
+                        "</th></tr>\n"); \
 	} \
 	pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
 	strcpy(pomB+pomL, pomA); \
@@ -225,11 +242,11 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
         int l; \
         if ((field) != (null)){ \
                 l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
-                        "<td><a href=\""type"\">" type "</a></td></tr>", (field), (field)); \
+                        "<td><a href=\""type"\">" type "</a></td></tr>\n", (field), (field)); \
         } \
         else{ \
-                l = asprintf(&pomA,"<tr><th align=\"left\"><span style=\"color:grey\">" name \
-                        "</span></th></tr>"); \
+                l = asprintf(&pomA,"<tr class=\"notused\"><th>" name \
+                        "</th></tr>\n"); \
         } \
         pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
         strcpy(pomB+pomL, pomA); \
@@ -239,7 +256,7 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 }
 
 int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
-	char *pomA = NULL, *pomB = NULL, *flags = NULL, *cond;
+	char *pomA = NULL, *pomB = NULL, *flags = NULL, *cond, *header = NULL;
 	int pomL = 0;
 
 	flags = edg_wll_stat_flags_to_string(ni->flags);
@@ -261,11 +278,14 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 	}
 	free(cond);
 
-	asprintf(&pomA, "<html>\r\n\t<body>\r\n"
+	header = get_html_header(ctx, 0);
+	asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Notification Detail</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
 		"<h2>Notification %s</h2>\r\n"
 		"<table halign=\"left\">%s</table>"
 		"\t</body>\r\n</html>",
+		header,
 		ni->notifid, pomB);
+	free(header);
 	
 	*message = pomA;
 
@@ -277,7 +297,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 {
         char *pomA = NULL, *pomB = NULL;
 	int pomL = 0;
-	char	*chid,*chstat,*chis = NULL, *chos = NULL, *chpa = NULL;
+	char	*chid,*chstat,*chis = NULL, *chos = NULL, *chpa = NULL, *header = NULL;
 	char	*jdl,*rsl,*children;
 	int	i;
 
@@ -348,13 +368,16 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		}
 	}
 
-        asprintf(&pomA, "<html>\r\n\t<body>\r\n"
+	header = get_html_header(ctx, 0);
+	asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Job Detail</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
 			"<h2>%s</h2>\r\n"
 			"<table halign=\"left\">%s</table>"
 			"%s%s%s"
 			"\t</body>\r\n</html>",
+			header,
                 	chid,pomB,jdl,rsl, children);
         free(pomB);
+	free(header);
 
         *message = pomA;
 
@@ -370,7 +393,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 
 int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
 {
-	char *chid, *pomA = NULL, *pomB = NULL, *jdl;
+	char *chid, *pomA = NULL, *pomB = NULL, *jdl, *header = NULL;
 	char *lbstat, *creamstat;
 	int pomL = 0;
 
@@ -423,11 +446,13 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
                         asprintf(&jdl,"<h3>Job description (not a ClassAd)"
                                 "</h3>\r\n<pre>%s</pre>\r\n",stat.cream_jdl);
         }
-	 asprintf(&pomA, "<html>\r\n\t<body>\r\n"
+	header = get_html_header(ctx, 0);
+	asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Job Detail</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
                         "<h2>%s</h2>\r\n"
                         "<table halign=\"left\">%s</table>"
                         "%s"
                         "\t</body>\r\n</html>",
+			header,
                         chid,pomB,jdl);
         free(pomB); free(jdl);
 
@@ -438,7 +463,7 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
 
 int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
 {
-        char *pomA = NULL, *pomB = NULL, *lbstat, *children;
+        char *pomA = NULL, *pomB = NULL, *lbstat, *children, *header = NULL;
         int pomL = 0, i;
         char    *chid,*chcj,*chpar,*chsbt=NULL;
 
@@ -477,14 +502,16 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
                         children = pomA;
                 }
 	}
-
-        asprintf(&pomA, "<html>\r\n\t<body>\r\n"
+	header = get_html_header(ctx, 0);
+	asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Job Detail</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
                         "<h2>%s</h2>\r\n"
                         "<table halign=\"left\">%s</table>\r\n"
 			"%s\n"
                         "\t</body>\r\n</html>",
+			header,
                         chid, pomB, children);
         free(pomB);
+	free(header);
 
         *message = pomA;
 
@@ -518,7 +545,7 @@ static int replace_substr(char **text, char *s1, char *s2){
 
 int edg_wll_WSDLOutput(edg_wll_Context ctx UNUSED_VAR, char **message, char *filename){
 	FILE *f;
-	char *wsdl, *p, *start;
+	char *wsdl/*, *p, *start*/; // unused vars commented out
 	int i, b;
 
 	if ((f = fopen(filename, "r")) == NULL){
@@ -551,27 +578,31 @@ int edg_wll_WSDLOutput(edg_wll_Context ctx UNUSED_VAR, char **message, char *fil
 }
 
 int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message, int text) {
-        char *out;
+        char *out, *header = NULL;
 	char* times[SERVER_STATISTICS_COUNT];
 	int i;
 	char *out_tmp;
 	time_t *starttime;
 
 	for (i = 0; i < SERVER_STATISTICS_COUNT; i++)
-		if (starttime = edg_wll_ServerStatisticsGetStart(ctx, i)) 
+		if ((starttime = edg_wll_ServerStatisticsGetStart(ctx, i))) 
 			if (text) asprintf(&(times[i]), "%ld", *starttime);
 			else times[i] = strdup((const char*)ctime(starttime));
 		else
 			times[i] = NULL;
 
-	if (!text) asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Server Usage Statistics</TITLE>\n<BODY>\n"
+	header = get_html_header(ctx, text);
+	if (!text) asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Server Usage Statistics</TITLE>\n<HEAD>%s\n</HEAD>\n<BODY>\n"
 		"<h2>LB Server Usage Statistics</h2>\n"
 		"%s"
 		"<table halign=\"left\">\n"
 		"<tr><td>Variable</td><td>Value</td><td>Measured from</td></tr>\n",
+		header ? header : "",
 		edg_wll_ServerStatisticsInTmp() ? "<b>WARNING: L&B statistics are stored in /tmp, please, configure L&B server to make them really persistent!</b><br/><br/>\n" : "");
 	else
 		asprintf(&out, "");
+
+	free(header);
 
 	for (i = 0; i < SERVER_STATISTICS_COUNT; i++) {
 		asprintf(&out_tmp, text ? "%s%s=%i,%s\n" : "%s<tr><td>%s</td><td>%i</td><td>%s</td></tr>\n", out,
@@ -597,14 +628,15 @@ int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message, int text) {
 
 char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)
 {
-	char	*out,*et,*ed;
+	char	*out,*et,*ed,*header = NULL;
 	char	*msg = edg_wll_HTTPErrorMessage(code);
 	edg_wll_ErrorCode	e;
 
 	e = edg_wll_Error(ctx,&et,&ed);
-	asprintf(&out,"<html><head><title>Error</title></head>\n"
+	header = get_html_header(ctx, 0);
+	asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Error</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n"
 		"<body><h1>%s</h1>\n"
-		"%d: %s (%s)</body></html>",msg,e,et,ed);
+		"%d: %s (%s)</body></html>",header,msg,e,et,ed);
 
 	free(et); free(ed);
 	return out;
