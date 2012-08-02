@@ -284,14 +284,14 @@ err:
 static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
 	char *q = NULL;
         glite_lbu_Statement notif = NULL;
-	char *notifc[5] = {NULL, NULL, NULL, NULL, NULL};
+	char *notifc[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 
 	char *can_peername = NULL;
 	int retval = HTTP_OK;
 
-	trio_asprintf(&q, "select n.destination, n.valid, n.conditions, n.flags, u.cert_subj "
-                "from notif_registrations as n, users as u "
-                "where (n.notifid='%s') AND (n.userid=u.userid)", notifId);
+	trio_asprintf(&q, "select n.destination, n.valid, n.conditions, n.flags, u.cert_subj, j.jobid "
+                "from notif_registrations as n, users as u, notif_jobs as j "
+                "where (n.notifid='%s') AND (n.userid=u.userid) AND (n.notifid=j.notifid)", notifId);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 	if (edg_wll_ExecSQL(ctx, q, &notif) < 0) return HTTP_INTERNAL;
         free(q); q = NULL;
@@ -308,6 +308,7 @@ static int getNotifInfo(edg_wll_Context ctx, char *notifId, notifInfo *ni){
 			parseJobQueryRec(ctx, notifc[2], strlen(notifc[2]), &(ni->conditions));
 			ni->flags = atoi(notifc[3]);
 			ni->owner = notifc[4];
+			ni->jobid = notifc[5];
 		}
 		else {
 			retval = HTTP_UNAUTH;
@@ -339,6 +340,7 @@ static void freeNotifInfo(notifInfo *ni){
 	}
 	if (ni->conditions_text) free(ni->conditions_text);
 	if (ni->owner) free(ni->owner);
+	if (ni->jobid) free(ni->jobid);
 }
 
 static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **statesOut){

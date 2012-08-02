@@ -47,6 +47,7 @@ typedef struct _notifInfo{
 	char *conditions_text;
 	int  flags;
 	char *owner;
+	char *jobid;
 } notifInfo;
 
 typedef enum _http_admin_option{

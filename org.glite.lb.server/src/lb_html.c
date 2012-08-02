@@ -198,6 +198,7 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 	asprintf(&ret, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Notifications</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
 			"<h2><B>%s</B></h2>\r\n"
 			"<P>%s%s%s"
+			"<P>Total of %d"
                         "<ul>%s</ul>"
 			"\t</body>\r\n</HTML>",
 			header,
@@ -205,7 +206,7 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 			mylink ? mylink : "",
 			alllink ? alllink : "",
 			foreignlink ? foreignlink : "",
-                        pomA ? pomA : "No registrations found"
+                        i, pomA ? pomA : "No registrations found"
         );
         free(pomA);
 	free(mylink);
@@ -266,6 +267,11 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 	TR("Destination", "%s", ni->destination, NULL);
 	TR("Valid until", "%s", ni->valid, NULL);
 	TR("Flags", "%s", flags, NULL);
+	if (strcmp(ni->jobid,"all_jobs")) {
+		TRL("Job ID", "%s", ni->jobid, NULL); }
+	else {
+		TR("Job ID", "%s", "&mdash;", NULL);
+	}
         free(flags);
 
 	if (! edg_wll_Condition_Dump(ni, &cond, 0)){
@@ -634,7 +640,7 @@ char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)
 
 	e = edg_wll_Error(ctx,&et,&ed);
 	header = get_html_header(ctx, 0);
-	asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Error</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n"
+	asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<HEAD>\n<TITLE>Error</TITLE>\n%s\n</HEAD>\n"
 		"<body><h1>%s</h1>\n"
 		"%d: %s (%s)</body></html>",header,msg,e,et,ed);
 
