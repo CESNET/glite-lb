@@ -88,6 +88,13 @@ static const char* const response_headers_html[] = {
         NULL
 };
 
+static const char* const response_headers_plain[] = {
+        "Cache-Control: no-cache",
+        "Server: edg_wll_Server/" PROTO_VERSION "/" COMP_PROTO,
+        "Content-Type: text/plain",
+        NULL
+};
+
 volatile sig_atomic_t purge_quit = 0;
 
 
@@ -1431,7 +1438,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	} else ret = HTTP_NOTALLOWED;
 
 err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
-	*headersOut = (char **) (html ? response_headers_html : response_headers_dglb);
+	*headersOut = (char **) (html ? (text ? response_headers_plain : response_headers_html) : response_headers_dglb);
 	if ((ret != HTTP_OK && ret != HTTP_ACCEPTED) && text)
                 *bodyOut = edg_wll_ErrorToText(ctx,ret);
 	else if ((ret != HTTP_OK && ret != HTTP_ACCEPTED) && html)
