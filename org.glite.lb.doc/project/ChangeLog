@@ -184,3 +184,7 @@
 1.4.0-1
 - Merge from branch_3_2
 
+1.4.1-1
+- Simplified source tarball and packages distribution
+- Debian package builds in vanilla chroot environment
+
