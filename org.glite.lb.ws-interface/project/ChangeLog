@@ -104,3 +104,6 @@
 3.4.1-1
 - Torque event sources for WS interface
 
+3.4.2-1
+- Simplified source tarball and packages distribution
+
