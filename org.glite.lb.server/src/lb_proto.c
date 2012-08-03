@@ -677,7 +677,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	char **response,char ***headersOut,char **bodyOut,
 	int *httpErr)
 {
-	char *requestPTR = NULL, *message = NULL, *requestMeat = NULL;
+	char *requestPTR = NULL, *message = NULL, *requestMeat = NULL, *querystr, *queryconds = NULL;
 	int	ret = HTTP_OK;
 	int 	html = outputHTML(headers);
 	int 	text = 0; //XXX: Plain text communication is special case of html here, hence when text=1, html=1 too
@@ -737,6 +737,16 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			if (check_request_for_query(requestPTR, "?all")) adm_opt = HTTP_ADMIN_OPTION_ALL;
 			else if (check_request_for_query(requestPTR, "?foreign")) adm_opt = HTTP_ADMIN_OPTION_FOREIGN;
 
+			if ((querystr = strstr(requestPTR, "?query="))) {
+				int len = strcspn(querystr+strlen("?query="),"? \f\n\r\t\v");
+				if (len) {
+					extra_opt = HTTP_EXTRA_OPTION_QUERY;
+					queryconds = (char*)calloc((len+1),sizeof(char));
+					queryconds = strncpy(queryconds, querystr+strlen("?query="), len);
+					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
+			                        "Query over HTML \"%s\"", queryconds);
+				}
+			}
 			strip_request_of_queries(requestPTR);
 		}
 
@@ -750,7 +760,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		}
 
 	/* GET /: Current User Jobs */
-		else if ((!strcmp(requestMeat, "/")) && (extra_opt == HTTP_EXTRA_OPTION_NONE)) {
+		else if ((!strcmp(requestMeat, "/")) && ((extra_opt == HTTP_EXTRA_OPTION_NONE) || ( extra_opt == HTTP_EXTRA_OPTION_QUERY))) {
                 	edg_wlc_JobId *jobsOut = NULL;
 			edg_wll_JobStat *statesOut = NULL;
 			int	i, flags;
@@ -1491,6 +1501,8 @@ err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
 		*bodyOut = edg_wll_ErrorToHTML(ctx,ret);
 	else
 		*bodyOut = message;
+
+	free(queryconds);
 
 	if (requestPTR) free(requestPTR);
 	if (requestMeat) free(requestMeat);

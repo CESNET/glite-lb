@@ -78,6 +78,15 @@ typedef enum _edg_wll_QueryAttr{
 /*	if adding new attribute, add conversion string to common/xml_conversions.c too !! */
 } edg_wll_QueryAttr;
 
+/**
+ * Names for the predefined types of query attributes
+ */
+extern char     *edg_wll_QueryAttrNames[];
+
+/**
+ * Names for the predefined types of query operands
+ */
+extern char     *edg_wll_QueryOpNames[];
 
 /**
  * Predefined types for query operands

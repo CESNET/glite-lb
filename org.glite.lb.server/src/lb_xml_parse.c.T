@@ -29,6 +29,7 @@ limitations under the License.
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
+#include "glite/lb/query_rec.h"
 
 #include "lb_xml_parse.h"
 
@@ -62,14 +63,6 @@ limitations under the License.
 // XXX will be redundant soon
 #define USERJOBS_BEGIN		"<edg_wll_UserJobs"
 #define USERJOBS_END		"</edg_wll_UserJobs>\r\n"
-
-
-static char	*ops[] = { "equal","less","greater","within","unequal","changed" },
-		*attrs[] = {	"jobid","owner","status","location","destination",
-				"donecode","usertag","time","level","host","source",
-				"instance","type","chkpt_tag", "resubmitted", "parent_job",
-				"exitcode", "jdl", "stateentertime", "lastupdatetime", 
-				"networkserver"  };
 
 static const struct timeval null_timeval = {0,0};
 
@@ -108,9 +101,9 @@ static void startJobQueryRec(void *data, const char *el, const char **attr)
 			}
 			break;
 		case 2:
-			for (i=0; i<sizeof(ops)/sizeof(ops[0]); i++)
-				if (!strcasecmp(el,ops[i])) break;
-			if (i == sizeof(ops)/sizeof(ops[0])) unexp()
+			for (i=0; i<sizeof(edg_wll_QueryOpNames)/sizeof(edg_wll_QueryOpNames[0]); i++)
+				if (!strcasecmp(el,edg_wll_QueryOpNames[i])) break;
+			if (i == sizeof(edg_wll_QueryOpNames)/sizeof(edg_wll_QueryOpNames[0])) unexp()
 			else {
 				if (!XMLCtx->job_conditions) break;
 
@@ -122,9 +115,9 @@ static void startJobQueryRec(void *data, const char *el, const char **attr)
 				XMLCtx->bound = 0;
 			}
 			break;
-		case 3: for (i=0; i<sizeof(attrs)/sizeof(attrs[0]) && 
-				strcasecmp(el,attrs[i]); i++);
-			if (i == sizeof(attrs)/sizeof(attrs[0])) unexp()
+		case 3: for (i=0; i<sizeof(edg_wll_QueryAttrNames)/sizeof(edg_wll_QueryAttrNames[0]) && 
+				strcasecmp(el,edg_wll_QueryAttrNames[i]); i++);
+			if (i == sizeof(edg_wll_QueryAttrNames)/sizeof(edg_wll_QueryAttrNames[0])) unexp()
 			else {
 				if (!XMLCtx->job_conditions) break;
 				if (!XMLCtx->job_conditions[XMLCtx->row]) break;
@@ -231,9 +224,9 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 			else unexp()
 			break;
 		case 3:
-			for (i=0; i<sizeof(ops)/sizeof(ops[0]); i++)
-				if (!strcasecmp(el,ops[i])) break;
-			if (i == sizeof(ops)/sizeof(ops[0])) unexp()
+			for (i=0; i<sizeof(edg_wll_QueryOpNames)/sizeof(edg_wll_QueryOpNames[0]); i++)
+				if (!strcasecmp(el,edg_wll_QueryOpNames[i])) break;
+			if (i == sizeof(edg_wll_QueryOpNames)/sizeof(edg_wll_QueryOpNames[0])) unexp()
 			else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_JOB_CONDITION) {
 				if (!XMLCtx->job_conditions) break;
 
@@ -255,9 +248,9 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 			}
 			
 			break;
-		case 4: for (i=0; i<sizeof(attrs)/sizeof(attrs[0]) && 
-				strcasecmp(el,attrs[i]); i++);
-			if (i == sizeof(attrs)/sizeof(attrs[0])) unexp()
+		case 4: for (i=0; i<sizeof(edg_wll_QueryAttrNames)/sizeof(edg_wll_QueryAttrNames[0]) && 
+				strcasecmp(el,edg_wll_QueryAttrNames[i]); i++);
+			if (i == sizeof(edg_wll_QueryAttrNames)/sizeof(edg_wll_QueryAttrNames[0])) unexp()
 			else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_JOB_CONDITION) { 
 				if (!XMLCtx->job_conditions[XMLCtx->row]) break;
 				if ( (i+1) == EDG_WLL_QUERY_ATTR_USERTAG) {

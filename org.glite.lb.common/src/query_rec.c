@@ -26,6 +26,21 @@ limitations under the License.
 #include "glite/jobid/cjobid.h"
 #include "query_rec.h"
 
+/**
+ * Names for the predefined types of query attributes
+ */
+char     *edg_wll_QueryAttrNames[] = {    "jobid","owner","status","location","destination",
+                                "donecode","usertag","time","level","host","source",
+                                "instance","type","chkpt_tag", "resubmitted", "parent_job",
+                                "exitcode", "jdl", "stateentertime", "lastupdatetime",
+                                "networkserver"  };
+
+/**
+ * Names for the predefined types of query operands
+ */
+char     *edg_wll_QueryOpNames[] = { "equal","less","greater","within","unequal","changed" };
+
+
 /*
  * edg_wll_QueryRec manipulation routines
  */
