@@ -242,3 +242,9 @@
 5.2.0-2
 - Module rebuilt
 
+5.2.1-1
+- qstat example added to the build
+- Debian package builds in vanilla chroot environment
+- Simplified source tarball and packages distribution
+- basic state machine for VM
+
