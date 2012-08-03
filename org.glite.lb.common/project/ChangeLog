@@ -197,3 +197,9 @@
 8.2.0-2
 - Module rebuilt
 
+8.2.1-1
+- Debian package builds in vanilla chroot environment
+- Simplified source tarball and packages distribution
+- Initial support for included HTML styles
+- Basic state machine for VM
+
