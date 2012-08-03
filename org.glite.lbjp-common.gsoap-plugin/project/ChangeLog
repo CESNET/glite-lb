@@ -124,3 +124,7 @@
 3.2.0-2
 - Module rebuilt
 
+3.2.1-1
+- Debian package builds in vanilla chroot environment
+- Simplified source tarball and packages distribution
+
