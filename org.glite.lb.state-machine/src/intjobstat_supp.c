@@ -581,6 +581,9 @@ char *enc_JobStat(char *old, edg_wll_JobStat* stat)
 	if (ret) ret = enc_string(ret, stat->vm_usage);
 	if (ret) ret = enc_string(ret, stat->vm_hostname);
 	if (ret) ret = enc_string(ret, stat->vm_machine);
+	if (ret) ret = enc_string(ret, stat->vm_id);
+        if (ret) ret = enc_string(ret, stat->vm_name);
+	if (ret) ret = enc_string(ret, stat->vm_phy_hostname);
 
 	return ret;
 }
@@ -694,6 +697,9 @@ edg_wll_JobStat* dec_JobStat(char *in, char **rest)
 	if (tmp_in != NULL) stat->vm_usage = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->vm_hostname = dec_string(tmp_in, &tmp_in);
 	if (tmp_in != NULL) stat->vm_machine = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->vm_id = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->vm_name = dec_string(tmp_in, &tmp_in);
+	if (tmp_in != NULL) stat->vm_phy_hostname = dec_string(tmp_in, &tmp_in);
 
 	*rest = tmp_in;
 

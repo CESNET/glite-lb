@@ -388,6 +388,9 @@ static void printstat(edg_wll_JobStat stat, int level)
 		printf("%svm_image : %s\n", ind, stat.vm_image);
 		printf("%svm_require : %s\n", ind, stat.vm_require);
 		printf("%svm_usage : %s\n", ind, stat.vm_usage);
+		printf("%svm_name : %s\n", ind, stat.vm_name);
+		printf("%svm_id : %s\n", ind, stat.vm_id);
+		printf("%svm_phy_hostname : %s\n", ind, stat.vm_phy_hostname);
 	}	
 
 	printf("\n");	

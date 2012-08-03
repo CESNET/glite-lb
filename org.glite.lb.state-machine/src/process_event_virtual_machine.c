@@ -71,11 +71,16 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 			if (USABLE_DATA(res)) {
 				rep_cond(js->pub.vm_require, e->vMCreate.require);
 				rep_cond(js->pub.vm_image, e->vMCreate.image);
+				rep_cond(js->pub.vm_id, e->vMCreate.id);
+				rep_cond(js->pub.vm_name, e->vMCreate.name);
+				rep_cond(js->pub.owner, e->vMCreate.owner);
+				rep_cond(js->pub.vm_hostname, e->vMCreate.hostname);
+				rep_cond(js->pub.destination, e->vMCreate.hostname);
 			}
 			break;
 		case EDG_WLL_EVENT_VMHOST:
 			if (USABLE_DATA(res)) {
-				rep_cond(js->pub.vm_hostname, e->vMHost.hostvm);
+				rep_cond(js->pub.vm_phy_hostname, e->vMHost.hostname);
 				//XXX transfer to prolog/boot state?
 			}
 			break;

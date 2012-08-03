@@ -197,6 +197,9 @@ string	vm_require		VM requirement on physical machine
 string	vm_usage		VM usage
 string	vm_hostname		VM hostname
 string	vm_machine		physical machine on which VM runs
+string	vm_id			VM id
+string 	vm_name			VM name
+string	vm_phy_hostname		hostname of physical machine running VM
 
 _pad_ 	20
 

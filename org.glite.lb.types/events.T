@@ -528,9 +528,13 @@
 @type VMCreate			create (register) virtual machine
 	string image            machine image
 	string require          machine requirements
+	string id		machine id
+	string name		machine name
+	string owner		machine owner
+	string hostname         hostname of VM
 
 @type VMHost
-	string hostvm		hostname of VM
+	string hostname		hostname of physical machine of VM
 
 @type VMRunning			VM is running
 
