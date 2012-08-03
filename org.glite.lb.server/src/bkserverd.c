@@ -1025,7 +1025,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	int			npref, totpref;
 
 
-
+#if 0
 	switch ( edg_wll_gss_watch_creds(server_cert, &cert_mtime) ) {
 	case 0: break;
 	case 1:
@@ -1041,6 +1041,15 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_ERROR, "[%d] edg_wll_gss_watch_creds failed, unable to access credentials", getpid());
 		break;
 	}
+#else
+		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, &gss_code) ) {
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "[%d] reloading credentials successful", getpid());
+			edg_wll_gss_release_cred(&mycred, NULL);
+			mycred = newcred;
+		} else { 
+			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_WARN, "[%d] reloading credentials failed, using old ones", getpid());
+		}
+#endif
 
 	if ( edg_wll_InitContext(&ctx) )
 	{
