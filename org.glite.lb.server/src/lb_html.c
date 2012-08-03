@@ -632,37 +632,6 @@ int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message, int text) {
 	return 0;
 }
 
-int edg_wll_VMHostToHTML(edg_wll_Context ctx UNUSED_VAR, char *hostname, edg_wll_JobStat *states, char **message){
-        char *pomA = NULL, *pomB = NULL;
-	int i;
-
-        if (states) for (i = 0; states[i].state != EDG_WLL_JOB_UNDEF; i++){
-		char *status = edg_wll_VMStatToString(states[i].vm_state);
-		char *chid = edg_wlc_JobIdUnparse(states[i].jobId);
-		if (pomB)
-			asprintf(&pomA, "%s\t\t <li> <a href=\"%s\">%s</a> (%s)\r\n",
-				pomB, chid, chid, status);
-		else
-			asprintf(&pomA, "<li> <a href=\"%s\">%s</a> (%s)\r\n",
-                                chid, chid, status);
-		free(pomB);
-		pomB = pomA;
-                free(chid);
-		free(status);
-        }
-
-	asprintf(&pomA, "<html>\r\n\t<body>\r\n"
-                        "<h2>%s</h2>\r\n"
-                        "<table halign=\"left\">%s</table>"
-                        "\t</body>\r\n</html>",
-                        hostname,pomB);
-        free(pomB);
-
-        *message = pomA;
-
-        return 0;
-}
-
 char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)
 {
 	char	*out,*et,*ed,*header = NULL;

@@ -435,33 +435,6 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 	return 0;
 }
 
-static int getVMsOnHost(edg_wll_Context ctx, char *hostname, edg_wll_JobStat **statesOut){
-        edg_wlc_JobId *jobsOut;
-        edg_wll_QueryRec **conds;
-        int i;
-
-                conds = malloc(2*sizeof(*conds));
-                conds[0] = malloc(2*sizeof(**conds));
-                conds[0][0].attr = EDG_WLL_QUERY_ATTR_DESTINATION;
-                conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[0][0].value.c = hostname;
-                conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[1] = NULL;
-	
-
-        if (edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conds, 0, &jobsOut, statesOut)){
-                *statesOut = NULL;
-        }
-
-        for (i = 0; conds[i]; i++)
-                free(conds[i]);
-        free(conds);
-
-        return 0;
-}
-
-
-
 static void hup_handler(int sig) {
 	purge_quit = 1;
 }
@@ -781,7 +754,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		else if (strcmp(requestMeat, "/RSS:")
 			&& strcmp(requestMeat, "/NOTIF")
 			&& strncmp(requestMeat, "/NOTIF:", 7)
-			&& strncmp(requestMeat, "/VMHOST:", 8)
 			&& strcmp(requestMeat, "/favicon.ico")
 			&& extra_opt == HTTP_EXTRA_OPTION_NONE
 			) {
@@ -916,22 +888,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			else { 
 				edg_wll_RSSFeed(ctx, states, requestPTR, &message);
 				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_RSS_VIEWS);
-			}
-	/*GET /VMHOST:[hostname] all VMs associated with hostname */
-		} else if (strncmp(requestMeat, "/VMHOST:", strlen("/VMHOST:")) == 0) {
-			char *host = requestMeat + strlen("/VMHOST:");
-			edg_wll_JobStat *states;
-			if (getVMsOnHost(ctx, host, &states)){
-				ret = HTTP_INTERNAL;
-                                goto err;
-			}
-			if (text){
-//				edg_wll_VMHostToText(ctx, requestPTR + strlen("/VMHOST:"), states, &message);
-//				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
-			}
-			else{
-				edg_wll_VMHostToHTML(ctx, host, states, &message);
-				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
 			}
 		} else if (!strcmp(requestMeat, "/favicon.ico")) {
 			message=NULL;
