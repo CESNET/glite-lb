@@ -110,3 +110,7 @@
 1.4.1-1
 - Tag List type comparison implemented
 
+1.4.2-1
+- Simplified source tarball and packages distribution
+- Basic state machine for VM
+
