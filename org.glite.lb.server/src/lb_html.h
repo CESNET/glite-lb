@@ -39,6 +39,7 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx, char **notifids, char **messag
 int edg_wll_NotificationToHTML(edg_wll_Context ctx, notifInfo *ni, char **message);
 char *edg_wll_ErrorToHTML(edg_wll_Context,int);
 int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx, edg_wll_JobStat stat, char **message);
+int edg_wll_VMHostToHTML(edg_wll_Context ctx, char *hostname, edg_wll_JobStat *states, char **message);
 int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message, int text);
 
 #endif /* GLITE_LB_HTML_H */
