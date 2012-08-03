@@ -219,3 +219,7 @@
 - Support GLITE_GSS_MECH in startup scripts
   - using Kerberos environment variables instead of certificates for "krb5"
 
+2.4.3-1
+- Debian package builds in vanilla chroot environment
+- Simplified source tarball and packages distribution
+
