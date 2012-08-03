@@ -423,3 +423,11 @@
   - using Kerberos environment variables instead of certificates for "krb5"
 - Avoid explicit dependencies on globus GSSAPI
 
+2.4.3-1
+- Debian package builds in vanilla chroot environment
+- Simplified source tarball and packages distribution
+- Workaround for failing GSS connections (reload server creds on every connection)
+- Initial support for included HTML styles
+- Showing related jobid with notification details
+- Showing number of registrations in notification listiting
+
