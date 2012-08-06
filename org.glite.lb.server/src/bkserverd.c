@@ -587,9 +587,8 @@ int main(int argc, char *argv[])
 
 	if (!html_header) {
 		char *html_header_prefix = getenv("GLITE_LB_LOCATION_ETC");
-		if (!html_header_prefix) html_header_prefix=strdup("/etc/glite-lb");
+		if (!html_header_prefix) html_header_prefix="/etc/glite-lb";
 		asprintf(&html_header, "%s/html_header.html", html_header_prefix);
-		free(html_header_prefix);
 	}
 	if (html_header) {
 		char *et, *ed;
@@ -795,7 +794,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (!dbstring) dbstring = getenv("LBDB");
-	if (!dbstring) dbstring = strdup(DEFAULTCS);
+	if (!dbstring) dbstring = DEFAULTCS;
 		
 	/* Just check the database and let it be. The slaves do the job. */
 	if (wait_for_open(ctx, dbstring)) {
