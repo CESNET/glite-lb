@@ -101,9 +101,9 @@ static void startJobQueryRec(void *data, const char *el, const char **attr)
 			}
 			break;
 		case 2:
-			for (i=0; i<sizeof(edg_wll_QueryOpNames)/sizeof(edg_wll_QueryOpNames[0]); i++)
+			for (i=0; i<EDG_WLL_QUERY_OP__LAST; i++)
 				if (!strcasecmp(el,edg_wll_QueryOpNames[i])) break;
-			if (i == sizeof(edg_wll_QueryOpNames)/sizeof(edg_wll_QueryOpNames[0])) unexp()
+			if (i == EDG_WLL_QUERY_OP__LAST) unexp()
 			else {
 				if (!XMLCtx->job_conditions) break;
 
@@ -115,30 +115,30 @@ static void startJobQueryRec(void *data, const char *el, const char **attr)
 				XMLCtx->bound = 0;
 			}
 			break;
-		case 3: for (i=0; i<sizeof(edg_wll_QueryAttrNames)/sizeof(edg_wll_QueryAttrNames[0]) && 
+		case 3: for (i=1; i<EDG_WLL_QUERY_ATTR__LAST && 
 				strcasecmp(el,edg_wll_QueryAttrNames[i]); i++);
-			if (i == sizeof(edg_wll_QueryAttrNames)/sizeof(edg_wll_QueryAttrNames[0])) unexp()
+			if (i == EDG_WLL_QUERY_ATTR__LAST) unexp()
 			else {
 				if (!XMLCtx->job_conditions) break;
 				if (!XMLCtx->job_conditions[XMLCtx->row]) break;
 
-				if ( (i+1) == EDG_WLL_QUERY_ATTR_USERTAG) {
+				if ( (i) == EDG_WLL_QUERY_ATTR_USERTAG) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
 	                                if (strcmp(attr[0],"name")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
 				} 
-				else if ( (i+1) == EDG_WLL_QUERY_ATTR_TIME ) {
+				else if ( (i) == EDG_WLL_QUERY_ATTR_TIME ) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
                                         if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
 				}
-				if ( (i+1) == EDG_WLL_QUERY_ATTR_JDL_ATTR) {
+				if ( (i) == EDG_WLL_QUERY_ATTR_JDL_ATTR) {
 					if (!attr[0] || !attr[1]) 
 						XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = NULL;
 					else if (strcmp(attr[0],"name")) { unexp() break;}
 					else XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
 				} 
-				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr = i+1;
+				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr = i;
 			}		
 			break;
 		default: unexp(); break;
@@ -224,9 +224,9 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 			else unexp()
 			break;
 		case 3:
-			for (i=0; i<sizeof(edg_wll_QueryOpNames)/sizeof(edg_wll_QueryOpNames[0]); i++)
+			for (i=0; i<EDG_WLL_QUERY_OP__LAST; i++)
 				if (!strcasecmp(el,edg_wll_QueryOpNames[i])) break;
-			if (i == sizeof(edg_wll_QueryOpNames)/sizeof(edg_wll_QueryOpNames[0])) unexp()
+			if (i == EDG_WLL_QUERY_OP__LAST) unexp()
 			else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_JOB_CONDITION) {
 				if (!XMLCtx->job_conditions) break;
 
@@ -248,37 +248,37 @@ static void startQueryEventsRequest(void *data, const char *el, const char **att
 			}
 			
 			break;
-		case 4: for (i=0; i<sizeof(edg_wll_QueryAttrNames)/sizeof(edg_wll_QueryAttrNames[0]) && 
+		case 4: for (i=1; i<EDG_WLL_QUERY_ATTR__LAST && 
 				strcasecmp(el,edg_wll_QueryAttrNames[i]); i++);
-			if (i == sizeof(edg_wll_QueryAttrNames)/sizeof(edg_wll_QueryAttrNames[0])) unexp()
+			if (i == EDG_WLL_QUERY_ATTR__LAST) unexp()
 			else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_JOB_CONDITION) { 
 				if (!XMLCtx->job_conditions[XMLCtx->row]) break;
-				if ( (i+1) == EDG_WLL_QUERY_ATTR_USERTAG) {
+				if ( (i) == EDG_WLL_QUERY_ATTR_USERTAG) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
 	                                if (attr[0] && strcmp(attr[0],"name")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.tag = strdup(attr[1]);
 				} 
-				else if ( (i+1) == EDG_WLL_QUERY_ATTR_TIME ) {
+				else if ( (i) == EDG_WLL_QUERY_ATTR_TIME ) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
                                         if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
 					//printf("\nchecking time attr\n%s = %s (%d)\n\n", attr[0], attr[1], edg_wll_StringToStat(attr[1]));
 				}
-				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr = i+1;
+				XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].attr = i;
 			}
 			else if (XMLCtx->type == EDG_WLL_QUERY_TYPE_EVENT_CONDITION) {
 				if (!XMLCtx->event_conditions[XMLCtx->row2]) break;
-				if ( (i+1) == EDG_WLL_QUERY_ATTR_USERTAG) {
+				if ( (i) == EDG_WLL_QUERY_ATTR_USERTAG) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
 	                                if (attr[0] && strcmp(attr[0],"name")) { unexp() break;}
 					XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position].attr_id.tag = strdup(attr[1]);
 				} 
-				else if ( (i+1) == EDG_WLL_QUERY_ATTR_TIME ) {
+				else if ( (i) == EDG_WLL_QUERY_ATTR_TIME ) {
 					if (!attr[0] || !attr[1]) { unexp() break;}
                                         if (attr[0] && strcmp(attr[0],"state")) { unexp() break;}
 					XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position].attr_id.state = edg_wll_StringToStat(attr[1]);
 				}
-				XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position2].attr = i+1;
+				XMLCtx->event_conditions[XMLCtx->row2][XMLCtx->position2].attr = i;
 			}
 			break;
 		default: unexp(); break;
