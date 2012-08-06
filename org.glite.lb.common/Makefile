@@ -194,7 +194,7 @@ endif
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
-check: compile mkreports check.parse check.il
+check: compile mkreports check.parse check.il check.query_rec
 
 mkreports:
 	-mkdir -p ${REPORTS}
@@ -210,6 +210,12 @@ check.il: il_test
 
 il_test: il_test.o il_int_test.o il_string_test.o il_msg_test.o
 	${LINKXX} -o $@ $+ ${default_commonlib} ${CPPUNIT_LIBS} ${EXT_LIBS}
+
+check.query_rec: test_query_rec
+	./test_query_rec
+
+test_query_rec: test_query_rec.o
+	${LINK} $< -o $@ ${JOBID_LIB}
 
 test_coverage:
 	-mkdir coverage
@@ -251,12 +257,15 @@ install:
 	${STAGE_PERFTEST} ;
 
 clean:
-	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex
+	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex test_query_rec
 	rm -rvf ${REPORTS}
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
+
+test_query_rec.o: query_rec.c
+	${COMPILE} ${CFLAGS} -DGLITE_LB_QUERY_REC_TEST -c $< -o $@
 
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

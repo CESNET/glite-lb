@@ -21,7 +21,9 @@ limitations under the License.
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
+#ifdef GLITE_LB_QUERY_REC_TEST
 #include <assert.h>
+#endif
 
 #include "glite/jobid/cjobid.h"
 #include "query_rec.h"
@@ -84,3 +86,12 @@ void edg_wll_QueryRecFree(edg_wll_QueryRec *prec)
 	}
 }
 
+
+#ifdef GLITE_LB_QUERY_REC_TEST
+int main() {
+	assert(sizeof(edg_wll_QueryAttrNames) / sizeof(edg_wll_QueryAttrNames[0]) == EDG_WLL_QUERY_ATTR__LAST);
+	assert(sizeof(edg_wll_QueryOpNames) / sizeof(edg_wll_QueryOpNames[0]) == EDG_WLL_QUERY_OP__LAST);
+
+	return 0;
+}
+#endif
