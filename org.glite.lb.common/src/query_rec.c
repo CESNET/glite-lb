@@ -28,7 +28,6 @@ limitations under the License.
 
 /**
  * Names for the predefined types of query attributes
- * NOTE: FOR HISTORIC REASONS, The NAME INDEX IS ONE LESS than the corresponding enum value!
  */
 char     *edg_wll_QueryAttrNames[] = {    "undef", "jobid","owner","status","location","destination",
                                 "donecode","usertag","time","level","host","source",
