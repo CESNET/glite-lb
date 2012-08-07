@@ -34,6 +34,7 @@ limitations under the License.
 #include "glite/lb/xml_conversions.h"
 #include "glite/jobid/strmd5.h"
 #include "glite/lbu/trio.h"
+#include "glite/lbu/escape.h"
 #include "glite/lbu/log.h"
 
 #include "lb_proto.h"
@@ -483,6 +484,142 @@ static char *glite_location() {
 	return location;
 }
 
+int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_QueryRec ***conditions, int *flags) {
+	edg_wll_QueryRec  **conds = NULL;
+	char *q = glite_lbu_UnescapeURL(query);
+	char *vartok, *vartok2, *cond, *attribute, *op, *operator, *value, *orvals, *errmsg = NULL;
+	int len, i=0, j, attr;
+	edg_wll_ErrorCode err = 0;
+
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "Query over HTML \"%s\"", q);
+
+	for( cond = strtok_r(q, "&", &vartok); cond ; cond = strtok_r(NULL, "&", &vartok) ) {
+		conds=(edg_wll_QueryRec**)realloc(conds, sizeof(edg_wll_QueryRec*) * (i+2));
+		conds[i+1] = NULL;
+
+		len = strcspn(cond, "=<>");
+		attribute=(char*)calloc((len+1),sizeof(char));
+		strncpy(attribute, cond, len);
+		orvals=cond+len;
+		
+		fprintf(stderr, "****%s:\n", attribute);
+
+		for (attr=1; i<EDG_WLL_QUERY_ATTR__LAST && strcasecmp(attribute,edg_wll_QueryAttrNames[attr]); attr++);
+		if (attr == EDG_WLL_QUERY_ATTR__LAST) {
+			asprintf(&errmsg, "Unknown argument \"%s\" in query", attribute);
+			err = edg_wll_SetError(ctx, EINVAL, errmsg);
+			goto err;
+		} // No else here. Don't worry, attribute will be assigned to the query structure later
+
+		j=0;
+		for( op = strtok_r(orvals, "|", &vartok2); op ; op = strtok_r(NULL, "&", &vartok2) ) {
+			conds[i]=(edg_wll_QueryRec*)realloc(conds[i], sizeof(edg_wll_QueryRec) * (j+2));
+			conds[i][j+1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+
+			conds[i][j].attr = (edg_wll_QueryAttr)attr;
+
+			len = strspn(op, "=<>");
+			operator = (char*)calloc((len+1),sizeof(char));
+			strncpy(operator, op, len);
+			value=op+len;
+			fprintf(stderr, "\t\"%s\" \"%s\" (%d)\n", operator, value, len);
+
+			if (!strcmp(operator, "<")) conds[i][j].op = EDG_WLL_QUERY_OP_LESS;
+			else if (!strcmp(operator, ">")) conds[i][j].op = EDG_WLL_QUERY_OP_GREATER;
+			else if (!strcmp(operator, "=")) conds[i][j].op = EDG_WLL_QUERY_OP_EQUAL;
+			else if ((!strcmp(operator, "<>"))||(!strcmp(operator, "><"))) conds[i][j].op = EDG_WLL_QUERY_OP_UNEQUAL;
+			else {
+				asprintf(&errmsg, "Unknown operator \"%s\" in query", operator);
+				err = edg_wll_SetError(ctx, EINVAL, errmsg);
+				goto err;
+			}
+
+			switch(attr) {
+//				case EDG_WLL_QUERY_ATTR_LEVEL:
+//				case EDG_WLL_QUERY_ATTR_EVENT_TYPE:
+//				case EDG_WLL_QUERY_ATTR_CHKPT_TAG:
+				case EDG_WLL_QUERY_ATTR_JOBID:
+				case EDG_WLL_QUERY_ATTR_PARENT:
+					if ( glite_jobid_parse(value, (glite_jobid_t *)&conds[i][j].value.j) ) {
+						asprintf(&errmsg, "Cannot parse jobid \"%s\" in query", value);
+						err = edg_wll_SetError(ctx, EINVAL, errmsg);
+						goto err;
+					}
+						
+					break;
+				case EDG_WLL_QUERY_ATTR_OWNER:
+				case EDG_WLL_QUERY_ATTR_LOCATION:
+				case EDG_WLL_QUERY_ATTR_DESTINATION:
+				case EDG_WLL_QUERY_ATTR_HOST:
+				case EDG_WLL_QUERY_ATTR_INSTANCE:
+				case EDG_WLL_QUERY_ATTR_USERTAG:
+				case EDG_WLL_QUERY_ATTR_JDL_ATTR:
+				case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
+				case EDG_WLL_QUERY_ATTR_SOURCE:
+					conds[i][j].value.c = strdup(value);
+					break;
+				case EDG_WLL_QUERY_ATTR_STATUS:
+					
+					break;
+				case EDG_WLL_QUERY_ATTR_DONECODE:
+				case EDG_WLL_QUERY_ATTR_EXITCODE:
+				case EDG_WLL_QUERY_ATTR_RESUBMITTED:
+					conds[i][j].value.i = strtol(value, NULL, 10);
+					switch (errno) {
+						case EINVAL: 
+							asprintf(&errmsg, "Cannot parse numeric value \"%s\" for attribute %s in query", value, attribute);
+							err = edg_wll_SetError(ctx, EINVAL, errmsg);
+	                                                goto err;
+						case ERANGE: 
+							asprintf(&errmsg, "Numeric value \"%s\" for attribute %s in query exceeds range", value, attribute);
+							err = edg_wll_SetError(ctx, EINVAL, errmsg);
+	                                                goto err;
+					}
+					break;
+				case EDG_WLL_QUERY_ATTR_TIME:
+				case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
+				case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
+					conds[i][j].value.t.tv_sec = strtol(value, NULL, 10);
+					switch (errno) {
+						case EINVAL: 
+							asprintf(&errmsg, "Cannot parse numeric value \"%s\" for attribute %s in query", value, attribute);
+							err = edg_wll_SetError(ctx, EINVAL, errmsg);
+	                                                goto err;
+						case ERANGE: 
+							asprintf(&errmsg, "Numeric value \"%s\" for attribute %s in query exceeds range", value, attribute);
+							err = edg_wll_SetError(ctx, EINVAL, errmsg);
+	                                                goto err;
+					}
+					conds[i][j].value.t.tv_usec = 0;
+					break;
+				default:
+					asprintf(&errmsg, "Value conversion for attribute \"%s\" not supported in current implementation", attribute);
+					err = edg_wll_SetError(ctx, EINVAL, errmsg);
+					goto err;
+					break;
+			}
+
+			j++;
+		}
+
+		free(attribute);	
+		i++;
+	}
+
+err:
+
+	if (err) 
+		for ( i = 0; conds[i]; i++ ) {
+			for ( j = 0; conds[i][j].attr != EDG_WLL_QUERY_ATTR_UNDEF; j++ )
+				edg_wll_QueryRecFree(&conds[i][j]);
+			free(conds[j]);
+		}
+
+	free(q);
+	free(errmsg);
+	return err;
+}
+
 edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
 	char *request,char **headers,char *messageBody,
 	char **response,char ***headersOut,char **bodyOut)
@@ -743,8 +880,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					extra_opt = HTTP_EXTRA_OPTION_QUERY;
 					queryconds = (char*)calloc((len+1),sizeof(char));
 					queryconds = strncpy(queryconds, querystr+strlen("?query="), len);
-					glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG,
-			                        "Query over HTML \"%s\"", queryconds);
+
+					edg_wll_QueryRec **job_conditions = NULL;
+					parse_query_conditions(ctx, queryconds, &job_conditions, 0);
 				}
 			}
 			strip_request_of_queries(requestPTR);
