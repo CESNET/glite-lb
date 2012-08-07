@@ -1800,6 +1800,7 @@ void callback_ares_getnameinfo(void *arg, int status, char *node, char *service)
 			arp->err = NO_DATA;
 		}
 		break;
+	    case ARES_ENODATA:
 	    case ARES_EBADNAME:
 	    case ARES_ENOTFOUND:
 		arp->err = HOST_NOT_FOUND;

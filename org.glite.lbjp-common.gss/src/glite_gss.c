@@ -154,6 +154,7 @@ static void callback_ares_gethostbyname(void *arg, int status, struct hostent *h
 			arp->ent->h_length = h->h_length;
 			arp->err = NETDB_SUCCESS;
 		break;
+	    case ARES_ENODATA:
 	    case ARES_EBADNAME:
 	    case ARES_ENOTFOUND:
 		arp->err = HOST_NOT_FOUND;
