@@ -83,4 +83,13 @@ char *glite_lbu_EscapeSQL(const char *);
 
 char *glite_lbu_EscapeJSON(const char *in);
 
+/*!
+ * \fn char *glite_lbu_UnescapeURL(const char *str)
+ * \param str		a string to unescape
+ * \return		new (allocated) unescaped string
+ * \brief in given string unescape all percent-encoded characters
+ */
+
+char *glite_lbu_UnescapeURL(const char *);
+
 #endif /* __EDG_WORKLOAD_LOGGING_COMMON_ESCAPE_H__ */

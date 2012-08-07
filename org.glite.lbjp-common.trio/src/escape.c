@@ -310,3 +310,29 @@ char *glite_lbu_EscapeJSON(const char *in) {
 
 	return out;
 }
+
+char *glite_lbu_UnescapeURL(const char *in) {
+	char *out;
+	char *spec = in;
+	char *reserved;
+	unsigned int val;
+
+	if(!in) return NULL;
+	out = (char*)calloc(strlen(in), sizeof(char));
+
+	strncpy(out, spec, strcspn(spec, "%")); // Copy the first part of the string up to the first '%'
+
+	while ((spec = strchr(spec, '%'))) {
+		if(sscanf(spec+1, "%02X", &val)) { //Treat as percent-escaped hex if the format is right
+			asprintf(&reserved,"%c", val);
+			strcat(out, reserved);
+			free(reserved);
+			spec = spec + 3;
+		}
+		else spec = spec + 1; //Otherwise just skip the '%' sign. This should not happen. This increment is here just to prevent cycle lockups in case of browser malfunction.
+		strncpy(out+strlen(out), spec, strcspn(spec, "%"));
+	}
+
+	return(out);
+}
+
