@@ -87,6 +87,11 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file,
 			     edg_wll_GssStatus* gss_code);
 
 int
+edg_wll_gss_acquire_cred_krb5(const char *cert_file,
+			      edg_wll_GssCred *cred,
+			      edg_wll_GssStatus* gss_code);
+
+int
 edg_wll_gss_release_cred(edg_wll_GssCred *cred,
 			 edg_wll_GssStatus* gss_code);
 
