@@ -481,7 +481,6 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 	char *e;
 	char *s;
 
-
 	if (XMLCtx->level == 4 &&
 		XMLCtx->job_conditions != NULL &&
 		XMLCtx->job_conditions[XMLCtx->row] != NULL) {
@@ -557,6 +556,11 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 				else
 					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value2.t.tv_sec =
 						edg_wll_from_string_to_time_t(XMLCtx);
+				break;
+			case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.i = 
+						edg_wll_from_string_to_edg_wll_StatJobtype(XMLCtx);
+
 				break;
 			default: 
 				edg_wll_freeBuf(XMLCtx);
@@ -681,6 +685,11 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 					else
 						XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value2.t.tv_sec =
 							edg_wll_from_string_to_time_t(XMLCtx);
+					break;
+				case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+						XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.i = 
+							edg_wll_from_string_to_edg_wll_StatJobtype(XMLCtx);
+
 					break;
 				default: 
 					edg_wll_freeBuf(XMLCtx);

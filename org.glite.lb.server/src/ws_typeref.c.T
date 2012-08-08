@@ -443,6 +443,7 @@ int edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 	case STATEENTERTIME: *out = EDG_WLL_QUERY_ATTR_STATEENTERTIME; break;
 	case LASTUPDATETIME: *out = EDG_WLL_QUERY_ATTR_LASTUPDATETIME; break;
 	case NETWORKSERVER: *out = EDG_WLL_QUERY_ATTR_NETWORK_SERVER; break;
+	case JOBTYPE: *out = EDG_WLL_QUERY_ATTR_JOB_TYPE; break;
 	default: return 0;
 	}
 
@@ -476,6 +477,7 @@ int edg_wll_AttrToSoap(const edg_wll_QueryAttr in, enum lbt__queryAttr *out)
 	case EDG_WLL_QUERY_ATTR_STATEENTERTIME: *out = STATEENTERTIME; break;
 	case EDG_WLL_QUERY_ATTR_LASTUPDATETIME: *out = LASTUPDATETIME; break;
 	case EDG_WLL_QUERY_ATTR_NETWORK_SERVER: *out = NETWORKSERVER; break;
+	case EDG_WLL_QUERY_ATTR_JOB_TYPE: *out = JOBTYPE; break;
 	default: return 0;
 	}
 
@@ -575,6 +577,7 @@ int edg_wll_QueryValToSoap(
 	case EDG_WLL_QUERY_ATTR_EVENT_TYPE:
 	case EDG_WLL_QUERY_ATTR_RESUBMITTED:
 	case EDG_WLL_QUERY_ATTR_EXITCODE:
+	case EDG_WLL_QUERY_ATTR_JOB_TYPE:
 		VALUEQR_SET(out, i, soap_malloc(soap, sizeof(*(VALUEQR_GET(out, i)))));
 		if ( !VALUEQR_GET(out, i) ) return SOAP_FAULT;
 		*(VALUEQR_GET(out, i)) = in->i;

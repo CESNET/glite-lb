@@ -638,6 +638,22 @@ edg_wll_JobStatCode edg_wll_from_string_to_edg_wll_JobStatCode(edg_wll_XML_ctx *
 
 
 
+enum edg_wll_StatJobtype edg_wll_from_string_to_edg_wll_StatJobtype(edg_wll_XML_ctx *XMLCtx)
+{
+        enum edg_wll_StatJobtype out = -1;
+        char *s;
+
+        s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
+        if (s) {
+           out = edg_wll_JobtypeStrToCode(s);
+           free(s);
+        }
+        edg_wll_freeBuf(XMLCtx); 
+
+        return(out);
+}
+
+
 
 /* XMLCtx->eventsOutGlobal[XMLCtx->position].jobClear.clearReason = 
 	edg_wll_from_string_to_int(XMLCtx); 				*/
@@ -976,6 +992,7 @@ static const char * const query_attrConsts[] = {
 	"EDG_WLL_QUERY_ATTR_JDL_ATTR",
 	"EDG_WLL_QUERY_ATTR_STATEENTERTIME",
 	"EDG_WLL_QUERY_ATTR_LASTUPDATETIME",
+        "EDG_WLL_QUERY_ATTR_JOB_TYPE",
         "EDG_WLL_QUERY_ATTR__LAST",
 };
 

@@ -839,6 +839,15 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 			ct++;
 			break;
 
+		case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+			if ( ec[m][n].op != EDG_WLL_QUERY_OP_EQUAL && ec[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
+			{
+				edg_wll_SetError(ctx, EINVAL, "only `=' and '!=' supported with jobtype");
+				return NULL;
+			}
+			ct++;
+			break;
+
 		default:
 			sprintf(msg, "ec_to_head_where(): attr=%d unsupported", ec[m][n].attr);
 			edg_wll_SetError(ctx, EINVAL, msg);
@@ -1135,6 +1144,15 @@ static char *jc_to_head_where(
 				return NULL;
 			}
 			break;
+		case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+			if ( jc[m][n].op != EDG_WLL_QUERY_OP_EQUAL && jc[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
+			{
+				edg_wll_SetError(ctx, EINVAL, "only `=' and '!=' supported with jobtype");
+				return NULL;
+			}
+			ct++;
+			break;
+
 
 		default:
 			sprintf(msg, "jc_to_head_where(): attr=%d unsupported", jc[m][n].attr);
@@ -1269,6 +1287,7 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_DONECODE:
 		case EDG_WLL_QUERY_ATTR_EXITCODE:
 		case EDG_WLL_QUERY_ATTR_STATUS:
+		case EDG_WLL_QUERY_ATTR_JOB_TYPE:
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 			{
@@ -1806,6 +1825,16 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					break;
 				case EDG_WLL_QUERY_OP_CHANGED:
 					if (oldstat->lastUpdateTime.tv_sec != stat->lastUpdateTime.tv_sec) goto or_satisfied;
+					break;
+				}
+			case EDG_WLL_QUERY_ATTR_JOB_TYPE: 
+				switch ( conds[i][j].op )
+				{
+				case EDG_WLL_QUERY_OP_EQUAL:
+					if ( conds[i][j].value.i == stat->jobtype ) goto or_satisfied;
+					break;
+				case EDG_WLL_QUERY_OP_UNEQUAL:
+					if ( conds[i][j].value.i != stat->jobtype ) goto or_satisfied;
 					break;
 				}
 			default:

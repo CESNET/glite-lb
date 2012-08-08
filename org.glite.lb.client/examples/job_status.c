@@ -31,6 +31,7 @@ limitations under the License.
 #endif
 #include "glite/lb/xml_conversions.h"
 #include "glite/lb/jobstat.h"
+#include "glite/lb/events_parse.h"
 
 static void dgerr(edg_wll_Context,char *);
 static void printstat(edg_wll_JobStat,int);

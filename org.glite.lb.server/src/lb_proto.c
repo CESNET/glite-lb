@@ -593,6 +593,13 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 					}
 					conds[i][j].value.t.tv_usec = 0;
 					break;
+				case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+					if ( 0 > (conds[i][j].value.i = edg_wll_JobtypeStrToCode(value))) {
+						asprintf(&errmsg, "Unknown job type \"%s\" in query", value);
+						err = edg_wll_SetError(ctx, EINVAL, errmsg);
+						goto err;
+					}
+					break;
 				default:
 					asprintf(&errmsg, "Value conversion for attribute \"%s\" not supported in current implementation", attribute);
 					err = edg_wll_SetError(ctx, ENOSYS, errmsg);

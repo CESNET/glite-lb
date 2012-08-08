@@ -68,12 +68,13 @@ typedef enum _edg_wll_QueryAttr{
 	EDG_WLL_QUERY_ATTR_EVENT_TYPE,	/**< Event type \see _edg_wll_QueryRec */
 	EDG_WLL_QUERY_ATTR_CHKPT_TAG,	/**< Checkpoint tag */
 	EDG_WLL_QUERY_ATTR_RESUBMITTED,	/**< Job was resubmitted */
-	EDG_WLL_QUERY_ATTR_PARENT,	/**< Job was resubmitted */
+	EDG_WLL_QUERY_ATTR_PARENT,	/**< Parent Job ID */
 	EDG_WLL_QUERY_ATTR_EXITCODE,	/**< Unix exit code */
 	EDG_WLL_QUERY_ATTR_JDL_ATTR,	/**< Arbitrary JDL attribute */
 	EDG_WLL_QUERY_ATTR_STATEENTERTIME,	/**< When entered current status */
 	EDG_WLL_QUERY_ATTR_LASTUPDATETIME,	/**< Time of the last known event of the job */
 	EDG_WLL_QUERY_ATTR_NETWORK_SERVER,	/**< Network server aka RB aka WMproxy endpoint */
+	EDG_WLL_QUERY_ATTR_JOB_TYPE,	/**< Event type \see _edg_wll_QueryRec */
 	EDG_WLL_QUERY_ATTR__LAST
 /*	if adding new attribute, add conversion string to common/xml_conversions.c too !! */
 } edg_wll_QueryAttr;

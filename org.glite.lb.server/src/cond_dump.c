@@ -102,6 +102,8 @@ int edg_wll_Condition_Dump(notifInfo *ni, char **output, int oneline){
 				break;
 			case EDG_WLL_QUERY_ATTR_NETWORK_SERVER: GS("networkserver");
 				break;
+			case EDG_WLL_QUERY_ATTR_JOB_TYPE: GS("jobtype");
+				break;
 			default:
 				assert(! "Unknown attribute!");
 				break;
@@ -215,6 +217,11 @@ int edg_wll_Condition_Dump(notifInfo *ni, char **output, int oneline){
 					asprintf(&buf, "%i", l2->value.i);
 					GS(buf);
                                         free(buf);
+        	                        break;
+	                        case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+					asprintf(&buf, "%s", edg_wll_StatusJobtypeNames[l2->value.i]);
+					GS(buf);
+					free(buf);
         	                        break;
 				default:
 					assert(! "Unknown condition attribute!");

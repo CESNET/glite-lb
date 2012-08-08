@@ -434,6 +434,7 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 	else if ( !strcmp(tmps, "state_enter_time") ) cond->attr = EDG_WLL_QUERY_ATTR_STATEENTERTIME;
 	else if ( !strcmp(tmps, "last_update_time") ) cond->attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
 	else if ( !strcmp(tmps, "jdl_attr") ) cond->attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
+	else if ( !strcmp(tmps, "job_type") ) cond->attr = EDG_WLL_QUERY_ATTR_JOB_TYPE;
 
 
        /**< When entered current status */
@@ -489,17 +490,7 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 		break;
 
 	case EDG_WLL_QUERY_ATTR_STATUS:
-		if ( !strcasecmp(tmps, "Submitted") ) cond->value.i = EDG_WLL_JOB_SUBMITTED;
-		else if ( !strcasecmp(tmps, "Waiting") ) cond->value.i = EDG_WLL_JOB_WAITING;
-		else if ( !strcasecmp(tmps, "Ready") ) cond->value.i = EDG_WLL_JOB_READY;
-		else if ( !strcasecmp(tmps, "Scheduled") ) cond->value.i = EDG_WLL_JOB_SCHEDULED;
-		else if ( !strcasecmp(tmps, "Running") ) cond->value.i = EDG_WLL_JOB_RUNNING;
-		else if ( !strcasecmp(tmps, "Done") ) cond->value.i = EDG_WLL_JOB_DONE;
-		else if ( !strcasecmp(tmps, "Aborted") ) cond->value.i = EDG_WLL_JOB_ABORTED;
-		else if ( !strcasecmp(tmps, "Cancelled") ) cond->value.i = EDG_WLL_JOB_CANCELLED;
-		else if ( !strcasecmp(tmps, "Cleared") ) cond->value.i = EDG_WLL_JOB_CLEARED;
-		else
-		{
+		if ( 0 > (cond->value.i = edg_wll_StringToStat(tmps))) {
 			fprintf(stderr,"%s: invalid status value (%s)\n", myname, tmps);
 			return 0;
 		}
@@ -538,17 +529,7 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 			fprintf(stderr,"%s: time condition must be associated with state condition\n", myname);
 			return NULL;
 		}
-		if ( !strcasecmp(tmps, "Submitted") ) cond->attr_id.state = EDG_WLL_JOB_SUBMITTED;
-		else if ( !strcasecmp(tmps, "Waiting") ) cond->attr_id.state = EDG_WLL_JOB_WAITING;
-		else if ( !strcasecmp(tmps, "Ready") ) cond->attr_id.state = EDG_WLL_JOB_READY;
-		else if ( !strcasecmp(tmps, "Scheduled") ) cond->attr_id.state = EDG_WLL_JOB_SCHEDULED;
-		else if ( !strcasecmp(tmps, "Running") ) cond->attr_id.state = EDG_WLL_JOB_RUNNING;
-		else if ( !strcasecmp(tmps, "Done") ) cond->attr_id.state = EDG_WLL_JOB_DONE;
-		else if ( !strcasecmp(tmps, "Aborted") ) cond->attr_id.state = EDG_WLL_JOB_ABORTED;
-		else if ( !strcasecmp(tmps, "Cancelled") ) cond->attr_id.state = EDG_WLL_JOB_CANCELLED;
-		else if ( !strcasecmp(tmps, "Cleared") ) cond->attr_id.state = EDG_WLL_JOB_CLEARED;
-		else
-		{
+		if ( 0 > (cond->value.i = edg_wll_StringToStat(tmps))) {
 			fprintf(stderr,"%s: invalid status value (%s)\n", myname, tmps);
 			return 0;
 		}
@@ -566,6 +547,12 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 				return NULL;
 			}
 			cond->value2.t.tv_sec = StrToTime(tmps);
+		}
+		break;
+	case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+		if ( 0 > (cond->value.i = edg_wll_JobtypeStrToCode(tmps))) {
+			fprintf(stderr,"%s: invalid job type (%s)\n", myname, tmps);
+			return 0;
 		}
 		break;
 
@@ -808,6 +795,7 @@ static void printconds(edg_wll_QueryRec **cond)
 			case EDG_WLL_QUERY_ATTR_SOURCE: printf("source"); break;
 			case EDG_WLL_QUERY_ATTR_INSTANCE: printf("instance"); break;
 			case EDG_WLL_QUERY_ATTR_EVENT_TYPE: printf("ev_type"); break;
+			case EDG_WLL_QUERY_ATTR_JOB_TYPE: printf("job_type"); break;
 			default: break;
 			}
 			switch ( cond[i][j].op )

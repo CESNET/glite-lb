@@ -43,6 +43,7 @@ limitations under the License.
 #define STATEENTERTIME	lbt__queryAttr__STATEENTERTIME
 #define LASTUPDATETIME	lbt__queryAttr__LASTUPDATETIME
 #define NETWORKSERVER	lbt__queryAttr__NETWORKSERVER
+#define JOBTYPE		lbt__queryAttr__JOBTYPE
 
 #define EQUAL		lbt__queryOp__EQUAL
 #define UNEQUAL		lbt__queryOp__UNEQUAL

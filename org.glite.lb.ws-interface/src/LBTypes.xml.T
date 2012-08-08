@@ -289,6 +289,7 @@
 			<val name="STATEENTERTIME">Staus enter time.</val>
 			<val name="LASTUPDATETIME">Last update time.</val>
 			<val name="NETWORKSERVER">Network server aka RB aka WMproxy endpoint</val>
+			<val name="JOBTYPE">Type of the job</val>
 		</enum>
 
 		<struct name="queryRecord">
