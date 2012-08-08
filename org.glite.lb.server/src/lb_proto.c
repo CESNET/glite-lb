@@ -495,6 +495,7 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 
 	for( cond = strtok_r(q, "&", &vartok); cond ; cond = strtok_r(NULL, "&", &vartok) ) {
 		conds=(edg_wll_QueryRec**)realloc(conds, sizeof(edg_wll_QueryRec*) * (i+2));
+		conds[i] = NULL;
 		conds[i+1] = NULL;
 
 		len = strcspn(cond, "=<>");
