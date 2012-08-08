@@ -69,10 +69,12 @@ extern "C" {
 !	EDG_WLL_NUMBER_OF_${un}S	/**< Number of ${n}s */
 };
 			my $an="edg_wll_Status" . $n . "Names[]";
+			my $fn="enum edg_wll_Stat$n edg_wll_$n" . "StrToCode(const char *in);";
 			gen qq{
 !\};
 
 extern char     *$an;
+$fn
 
 };
 		}
