@@ -68,8 +68,12 @@ extern "C" {
 			gen qq{
 !	EDG_WLL_NUMBER_OF_${un}S	/**< Number of ${n}s */
 };
+			my $an="edg_wll_Status" . $n . "Names[]";
 			gen qq{
 !\};
+
+extern char     *$an;
+
 };
 		}
 	}
@@ -170,6 +174,7 @@ typedef struct _edg_wll_JobStat {
 #define EDG_WLL_NOTIF_BOOTSTRAP 256	/**< send the state of the all already existing jobs too */
 #define EDG_WLL_NOTIF_VOLATILE 512	/**< (not used yet) send the notifications directly, without reliability and persistency */
 /* starting from bit 10 private flags begins - do not add 1024 and more! */
+
 
 
 /**

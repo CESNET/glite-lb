@@ -36,6 +36,29 @@ static const struct timeval null_timeval = {0,0};
         gen qq{$sep};
 @@@}
 
+
+@@@{
+        for my $n ($status->getAllFieldsOrdered) {
+# XXX: we've got only _common_ in jobStatus, no clash possible
+                my $f = selectField $status $n;
+                if ($f->{codes}) {
+                        my $n = ucfirst getName $f;
+			printf("\nchar     *edg_wll_Status$n");
+			printf("Names[] = \{");
+			my $num = 0;
+                        for (@{$f->{codes}}) {
+                                my $uc = uc $_->{name};
+                                $uc =~ tr/-/_/;
+				if ( $num != 0 ) { printf (","); }
+				printf(" \"$uc\"");
+				$num++;
+                        }
+                        my $un = uc $n;
+			printf (" };\n");
+                }
+        }
+@@@}
+
 extern void edg_wll_FreeTagList(edg_wll_TagValue *);
 
 void edg_wll_FreeStatus(edg_wll_JobStat *stat)
