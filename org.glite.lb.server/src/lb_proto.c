@@ -504,7 +504,7 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 		
 		fprintf(stderr, "****%s:\n", attribute);
 
-		for (attr=1; i<EDG_WLL_QUERY_ATTR__LAST && strcasecmp(attribute,edg_wll_QueryAttrNames[attr]); attr++);
+		for (attr=1; attr<EDG_WLL_QUERY_ATTR__LAST && strcasecmp(attribute,edg_wll_QueryAttrNames[attr]); attr++);
 		if (attr == EDG_WLL_QUERY_ATTR__LAST) {
 			asprintf(&errmsg, "Unknown argument \"%s\" in query", attribute);
 			err = edg_wll_SetError(ctx, EINVAL, errmsg);
@@ -545,7 +545,6 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 						err = edg_wll_SetError(ctx, EINVAL, errmsg);
 						goto err;
 					}
-						
 					break;
 				case EDG_WLL_QUERY_ATTR_OWNER:
 				case EDG_WLL_QUERY_ATTR_LOCATION:
@@ -559,7 +558,11 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 					conds[i][j].value.c = strdup(value);
 					break;
 				case EDG_WLL_QUERY_ATTR_STATUS:
-					
+					if ( 0 > (conds[i][j].value.i = edg_wll_StringToStat(value))) {
+						asprintf(&errmsg, "Unknown job state \"%s\" in query", value);
+						err = edg_wll_SetError(ctx, EINVAL, errmsg);
+						goto err;
+					}
 					break;
 				case EDG_WLL_QUERY_ATTR_DONECODE:
 				case EDG_WLL_QUERY_ATTR_EXITCODE:
@@ -594,11 +597,11 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 					break;
 				default:
 					asprintf(&errmsg, "Value conversion for attribute \"%s\" not supported in current implementation", attribute);
-					err = edg_wll_SetError(ctx, EINVAL, errmsg);
+					err = edg_wll_SetError(ctx, ENOSYS, errmsg);
 					goto err;
 					break;
 			}
-
+			free(operator);
 			j++;
 		}
 
@@ -607,14 +610,6 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 	}
 
 err:
-
-	if (err) 
-		for ( i = 0; conds[i]; i++ ) {
-			for ( j = 0; conds[i][j].attr != EDG_WLL_QUERY_ATTR_UNDEF; j++ )
-				edg_wll_QueryRecFree(&conds[i][j]);
-			free(conds[j]);
-		}
-
 	free(q);
 	free(errmsg);
 	return err;
@@ -818,10 +813,11 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	int	ret = HTTP_OK;
 	int 	html = outputHTML(headers);
 	int 	text = 0; //XXX: Plain text communication is special case of html here, hence when text=1, html=1 too
-	int	i;
+	int	i, j;
 	int	isadm;
 	http_admin_option adm_opt = HTTP_ADMIN_OPTION_MY;
 	http_extra_option extra_opt = HTTP_EXTRA_OPTION_NONE;
+	edg_wll_QueryRec **job_conditions = NULL;
 
 	edg_wll_ResetError(ctx);
 
@@ -881,8 +877,16 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					queryconds = (char*)calloc((len+1),sizeof(char));
 					queryconds = strncpy(queryconds, querystr+strlen("?query="), len);
 
-					edg_wll_QueryRec **job_conditions = NULL;
-					parse_query_conditions(ctx, queryconds, &job_conditions, 0);
+					switch(parse_query_conditions(ctx, queryconds, &job_conditions, 0)) {
+						case 0:
+							break;
+						case EINVAL:
+							ret = HTTP_INVALID; goto err;
+						case ENOSYS:
+							ret = HTTP_NOTIMPL; goto err;
+						default:
+							ret = HTTP_BADREQ; goto err;
+					}
 				}
 			}
 			strip_request_of_queries(requestPTR);
@@ -902,7 +906,8 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
                 	edg_wlc_JobId *jobsOut = NULL;
 			edg_wll_JobStat *statesOut = NULL;
 			int	i, flags;
-			
+
+			// XXX: query strings are now not recognized as flags. Needs modifying.
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
 			switch (edg_wll_UserJobsServer(ctx, EDG_WLL_STAT_CHILDREN, &jobsOut, &statesOut)) {
@@ -1145,7 +1150,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	
 		if (!strncmp(requestPTR,KEY_QUERY_EVENTS,sizeof(KEY_QUERY_EVENTS)-1)) { 
         	        edg_wll_Event *eventsOut = NULL;
-			edg_wll_QueryRec **job_conditions = NULL, **event_conditions = NULL;
+			edg_wll_QueryRec **event_conditions = NULL;
 			int i,j;
 
         	        if (parseQueryEventsRequest(ctx, messageBody, &job_conditions, &event_conditions)) 
@@ -1174,15 +1179,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					if (edg_wll_QueryEventsToXML(ctx, eventsOut, &message))
 						ret = HTTP_INTERNAL;
 			}
-
-			if (job_conditions) {
-	                        for (j = 0; job_conditions[j]; j++) {
-	                                for (i = 0 ; (job_conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
-        	                                edg_wll_QueryRecFree(&job_conditions[j][i]);
-                	                free(job_conditions[j]);
-                        	}
-	                        free(job_conditions);
-        	        }
 
 	                if (event_conditions) {
         	                for (j = 0; event_conditions[j]; j++) {
@@ -1639,6 +1635,15 @@ err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
 		*bodyOut = edg_wll_ErrorToHTML(ctx,ret);
 	else
 		*bodyOut = message;
+
+	if (job_conditions) {
+		for (j = 0; job_conditions[j]; j++) {
+			for (i = 0 ; (job_conditions[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
+				edg_wll_QueryRecFree(&job_conditions[j][i]);
+			free(job_conditions[j]);
+		}
+		free(job_conditions);
+	}
 
 	free(queryconds);
 
