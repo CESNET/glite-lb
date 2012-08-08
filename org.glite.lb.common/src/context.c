@@ -542,6 +542,8 @@ int edg_wll_IncSequenceCode(edg_wll_Context ctx)
 	switch (ctx->p_seqcode.type) {
 		case EDG_WLL_SEQ_CREAM:
 			/* fall through */
+		case EDG_WLL_SEQ_PBS:
+			/* fall through */
 		case EDG_WLL_SEQ_DUPLICATE:
 			/* fall through */
 		case EDG_WLL_SEQ_NORMAL:
@@ -553,9 +555,6 @@ int edg_wll_IncSequenceCode(edg_wll_Context ctx)
 			}
 
 			ctx->p_seqcode.c[ctx->p_source]++;
-			break;
-		case EDG_WLL_SEQ_PBS:
-			/* no action */
 			break;
 		default:
 			break;
