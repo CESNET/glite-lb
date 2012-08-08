@@ -54,7 +54,18 @@ static const struct timeval null_timeval = {0,0};
 				$num++;
                         }
                         my $un = uc $n;
-			printf (" };\n");
+			printf (" };\n\n");
+			my $fn="enum edg_wll_Stat$n edg_wll_$n" . "StrToCode(const char *in) {";
+			gen qq{
+!$fn
+!	int i;
+!
+!	for (i = 0; i < EDG_WLL_NUMBER_OF_${un}S && strcasecmp(in, edg_wll_Status${n}Names[i]); i++);
+!	if (i == EDG_WLL_NUMBER_OF_${un}S ) return -1;
+!	return (enum edg_wll_Stat$n)i;
+!\}
+};
+
                 }
         }
 @@@}

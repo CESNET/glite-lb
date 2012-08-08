@@ -2655,6 +2655,9 @@ int edg_wll_JobQueryRecToXML(
 						else 
 							edg_wll_add_time_t_to_XMLBody(&pomValue, conditions[row][i].value.t.tv_sec, "lastupdatetime", -1);
 						break;
+	                                case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+						edg_wll_add_int_to_XMLBody(&pomValue, conditions[row][i].value.i, "jobtype", -1);
+	                                        break;
 
 	                        default:
 	                                free(pomValue);
