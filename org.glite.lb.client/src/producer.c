@@ -694,6 +694,7 @@ static int edg_wll_SetLoggingJobMaster(
 {
         int     err;
 	char	*code_loc = NULL;
+	char    *p_user;
 
         edg_wll_ResetError(ctx);
 
@@ -712,25 +713,36 @@ static int edg_wll_SetLoggingJobMaster(
 		edg_wll_GssStatus	gss_stat;
 		edg_wll_GssCred	cred = NULL;
 
-		/* acquire gss credentials */
-		err = edg_wll_gss_acquire_cred_gsi(
-		      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
-		      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
-		      &cred, &gss_stat);
-		/* give up if unable to acquire prescribed credentials */
-		if (err) {
-			edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
-
-			// XXX: stop here - further changes need to be done in 
-			//	edg_wll_gss_connect() to support annonymous connetion
-			return edg_wll_SetError(ctx, ENOENT, "No credentials found.");
-
-			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, EDG_WLL_LOG_USER_DEFAULT);
-		} else {
-			edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, cred->name);
+		/* do not overwrite user param if already set */
+		edg_wll_GetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, &p_user);
+		if(NULL == p_user) {
+#ifndef NO_GLOBUS_GSSAPI		
+			/* acquire  gss credentials */
+			err = edg_wll_gss_acquire_cred_gsi(
+				ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
+				ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+				&cred, &gss_stat);
+#else
+			/* acquire krb5 credentials */
+			err = edg_wll_gss_acquire_cred_krb5(
+				ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
+				&cred, &gss_stat);
+#endif
+			/* give up if unable to acquire prescribed credentials */
+			if (err) {
+				edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
+				
+				// XXX: stop here - further changes need to be done in 
+				//	edg_wll_gss_connect() to support annonymous connetion
+				return edg_wll_SetError(ctx, ENOENT, "No credentials found.");
+				
+				edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, EDG_WLL_LOG_USER_DEFAULT);
+			} else {
+				edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, cred->name);
+			}
+			if (cred != NULL)
+				edg_wll_gss_release_cred(&cred, NULL);
 		}
-		if (cred != NULL)
-			edg_wll_gss_release_cred(&cred, NULL);
 	}
 
 	/* query LBProxyServer for sequence code if not user-suplied */
@@ -809,12 +821,27 @@ static int edg_wll_RegisterJobMaster(
 	char **			wms_dn)
 {
 	char	*seq,*type_s,*parent_s,*wms_dn_s;
-	int	err = 0,i;
+	int	err = 0,i,seq_type;
 	struct timeval sync_to;
 
 	seq = type_s = parent_s = wms_dn_s = NULL;
 
 	edg_wll_ResetError(ctx);
+	/* use corerct sequence number type for given type of job */
+	switch(type) {
+	case EDG_WLL_REGJOB_PBS:
+		seq_type = EDG_WLL_SEQ_PBS;
+		break;
+	case EDG_WLL_REGJOB_CREAM:
+		seq_type = EDG_WLL_SEQ_CREAM;
+		break;
+	case EDG_WLL_REGJOB_CONDOR:
+		seq_type = EDG_WLL_SEQ_CONDOR;
+		break;
+	default:
+		seq_type = EDG_WLL_SEQ_NORMAL;
+		break;
+	}
 	memcpy(&sync_to, &ctx->p_sync_timeout, sizeof sync_to);
 
 	if ( ((flags & (EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_LOCAL)) == 
@@ -860,10 +887,10 @@ static int edg_wll_RegisterJobMaster(
 	}
 
 	if (flags & EDG_WLL_LOGFLAG_PROXY) {
-		edg_wll_SetSequenceCode(ctx, NULL, EDG_WLL_SEQ_NORMAL);
+		edg_wll_SetSequenceCode(ctx, NULL, seq_type);
 		seq = edg_wll_GetSequenceCode(ctx);
 	}
-	err=edg_wll_SetLoggingJobMaster(ctx,job,seq,NULL,EDG_WLL_SEQ_NORMAL,flags);
+	err=edg_wll_SetLoggingJobMaster(ctx,job,seq,NULL,seq_type,flags);
 
 	if (err != 0) {
                 edg_wll_UpdateError(ctx,EINVAL,"edg_wll_RegisterJobMaster(): unable to set logging job");
