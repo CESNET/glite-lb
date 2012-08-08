@@ -502,8 +502,6 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 		strncpy(attribute, cond, len);
 		orvals=cond+len;
 		
-		fprintf(stderr, "****%s:\n", attribute);
-
 		for (attr=1; attr<EDG_WLL_QUERY_ATTR__LAST && strcasecmp(attribute,edg_wll_QueryAttrNames[attr]); attr++);
 		if (attr == EDG_WLL_QUERY_ATTR__LAST) {
 			asprintf(&errmsg, "Unknown argument \"%s\" in query", attribute);
@@ -522,7 +520,6 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 			operator = (char*)calloc((len+1),sizeof(char));
 			strncpy(operator, op, len);
 			value=op+len;
-			fprintf(stderr, "\t\"%s\" \"%s\" (%d)\n", operator, value, len);
 
 			if (!strcmp(operator, "<")) conds[i][j].op = EDG_WLL_QUERY_OP_LESS;
 			else if (!strcmp(operator, ">")) conds[i][j].op = EDG_WLL_QUERY_OP_GREATER;
@@ -610,6 +607,19 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 	}
 
 err:
+	if (err) {
+		*conds=NULL;
+		if (conds) {
+			for (j = 0; conds[j]; j++) {
+				for (i = 0 ; (conds[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
+					edg_wll_QueryRecFree(&conds[j][i]);
+				free(conds[j]);
+			}
+			free(conds);
+		}
+	}
+	else *conditions=conds;
+
 	free(q);
 	free(errmsg);
 	return err;
@@ -910,7 +920,10 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			// XXX: query strings are now not recognized as flags. Needs modifying.
 			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
 
-			switch (edg_wll_UserJobsServer(ctx, EDG_WLL_STAT_CHILDREN, &jobsOut, &statesOut)) {
+			switch ( extra_opt == HTTP_EXTRA_OPTION_QUERY ?
+                                edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)job_conditions, flags, &jobsOut, &statesOut) :
+                                edg_wll_UserJobsServer(ctx, EDG_WLL_STAT_CHILDREN, &jobsOut, &statesOut)) {
+
 				case 0: edg_wll_UserInfoToHTML(ctx, jobsOut, statesOut, &message, text);
 					edg_wll_ServerStatisticsIncrement(ctx, text ? SERVER_STATS_TEXT_VIEWS : SERVER_STATS_HTML_VIEWS);
 					break;
