@@ -71,6 +71,8 @@ typedef enum _http_extra_option{
 
 extern char *edg_wll_HTTPErrorMessage(int);
 
+int edg_wll_ParseQueryConditions(edg_wll_Context ctx, const char *query, edg_wll_QueryRec ***conditions);
+
 extern int edg_wll_UserJobsServer(edg_wll_Context ctx, int flags, edg_wlc_JobId  **jobs, edg_wll_JobStat **states);
 
 extern int edg_wll_QuerySequenceCodeServer(edg_wll_Context ctx, edg_wlc_JobId jobid, const char *source, char **seqcode);

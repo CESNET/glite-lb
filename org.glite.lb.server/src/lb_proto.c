@@ -484,7 +484,7 @@ static char *glite_location() {
 	return location;
 }
 
-int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_QueryRec ***conditions, int *flags) {
+int edg_wll_ParseQueryConditions(edg_wll_Context ctx, const char *query, edg_wll_QueryRec ***conditions) {
 	edg_wll_QueryRec  **conds = NULL;
 	char *q = glite_lbu_UnescapeURL(query);
 	char *vartok, *vartok2, *cond, *attribute, *op, *operator, *value, *orvals, *errmsg = NULL;
@@ -498,7 +498,13 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 		conds[i] = NULL;
 		conds[i+1] = NULL;
 
+
 		len = strcspn(cond, "=<>");
+		if (len == strlen(cond)) {
+			asprintf(&errmsg, "Missing operator in condition \"%s\"", cond);
+			err = edg_wll_SetError(ctx, EINVAL, errmsg);
+			goto err;
+		}
 		attribute=(char*)calloc((len+1),sizeof(char));
 		strncpy(attribute, cond, len);
 		orvals=cond+len;
@@ -511,16 +517,28 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 		} // No else here. Don't worry, attribute will be assigned to the query structure later
 
 		j=0;
-		for( op = strtok_r(orvals, "|", &vartok2); op ; op = strtok_r(NULL, "&", &vartok2) ) {
+		for( op = strtok_r(orvals, "|", &vartok2); op ; op = strtok_r(NULL, "|", &vartok2) ) {
+			if (strlen(op) == 0) continue;
 			conds[i]=(edg_wll_QueryRec*)realloc(conds[i], sizeof(edg_wll_QueryRec) * (j+2));
+			conds[i][j].value.c = NULL;
 			conds[i][j+1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 
 			conds[i][j].attr = (edg_wll_QueryAttr)attr;
 
 			len = strspn(op, "=<>");
+			if (len == 0) {
+				asprintf(&errmsg, "Missing operator before \"%s\"", op);
+				err = edg_wll_SetError(ctx, EINVAL, errmsg);
+				goto err;
+			}
 			operator = (char*)calloc((len+1),sizeof(char));
 			strncpy(operator, op, len);
 			value=op+len;
+			if (strlen(value) == 0) {
+				asprintf(&errmsg, "No value given for attribute \"%s\"", attribute);
+				err = edg_wll_SetError(ctx, EINVAL, errmsg);
+				goto err;
+			}
 
 			if (!strcmp(operator, "<")) conds[i][j].op = EDG_WLL_QUERY_OP_LESS;
 			else if (!strcmp(operator, ">")) conds[i][j].op = EDG_WLL_QUERY_OP_GREATER;
@@ -616,7 +634,6 @@ int parse_query_conditions(edg_wll_Context ctx, const char *query, edg_wll_Query
 
 err:
 	if (err) {
-		*conds=NULL;
 		if (conds) {
 			for (j = 0; conds[j]; j++) {
 				for (i = 0 ; (conds[j][i].attr != EDG_WLL_QUERY_ATTR_UNDEF); i++ )
@@ -895,7 +912,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					queryconds = (char*)calloc((len+1),sizeof(char));
 					queryconds = strncpy(queryconds, querystr+strlen("?query="), len);
 
-					switch(parse_query_conditions(ctx, queryconds, &job_conditions, 0)) {
+					switch(edg_wll_ParseQueryConditions(ctx, queryconds, &job_conditions)) {
 						case 0:
 							break;
 						case EINVAL:
