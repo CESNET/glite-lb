@@ -592,7 +592,7 @@ int main(int argc, char *argv[])
 	}
 	if (html_header) {
 		char *et, *ed;
-		FILE *fp = fopen("file","r");
+		FILE *fp = fopen(html_header, "r");
 		if( fp ) {
 			fclose(fp);
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_DEBUG, "Using HTML header file %s", html_header);

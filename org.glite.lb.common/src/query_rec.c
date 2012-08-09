@@ -90,6 +90,7 @@ void edg_wll_QueryRecFree(edg_wll_QueryRec *prec)
 
 #ifdef GLITE_LB_QUERY_REC_TEST
 int main() {
+	// These assertions fail if the contents of edg_wll_QueryAttrNames[] are not synced with _edg_wll_QueryAttr
 	assert(sizeof(edg_wll_QueryAttrNames) / sizeof(edg_wll_QueryAttrNames[0]) == EDG_WLL_QUERY_ATTR__LAST);
 	assert(sizeof(edg_wll_QueryOpNames) / sizeof(edg_wll_QueryOpNames[0]) == EDG_WLL_QUERY_OP__LAST);
 

@@ -318,7 +318,7 @@ char *glite_lbu_UnescapeURL(const char *in) {
 	unsigned int val;
 
 	if(!in) return NULL;
-	out = (char*)calloc(strlen(in), sizeof(char));
+	out = (char*)calloc(strlen(in)+1, sizeof(char));
 
 	strncpy(out, spec, strcspn(spec, "%")); // Copy the first part of the string up to the first '%'
 
