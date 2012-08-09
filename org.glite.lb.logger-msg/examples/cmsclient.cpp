@@ -159,6 +159,8 @@ public:
 			e.printStackTrace();
 		} catch (Exception& e) {
 			e.printStackTrace();
+		} catch (...) {
+			fprintf(stderr, "Unknown Exception occurred.\n");
 		}
 	}
 
