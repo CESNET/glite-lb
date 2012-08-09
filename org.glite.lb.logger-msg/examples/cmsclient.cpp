@@ -79,7 +79,7 @@ public:
 		this->clientAck = clientAck;
 	}
 
-	virtual ~SimpleAsyncConsumer(){
+	virtual ~SimpleAsyncConsumer() throw(){
 		this->cleanup();
 	}
 
@@ -132,7 +132,7 @@ public:
 	}
 
 	// Called from the consumer since this class is a registered MessageListener.
-	virtual void onMessage( const Message* message ){
+	virtual void onMessage( const Message* message ) throw() {
 
 		static int count = 0;
 
@@ -156,6 +156,8 @@ public:
 			fprintf(outputfile, "Message #%d Received: %s\n", count, text.c_str() );
 			fflush(outputfile);
 		} catch (CMSException& e) {
+			e.printStackTrace();
+		} catch (Exception& e) {
 			e.printStackTrace();
 		}
 	}

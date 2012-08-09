@@ -33,8 +33,8 @@ SOURCES_EXEC=src/msg-brokers
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
-ACTIVEMQ_CFLAGS?=`PKG_CONFIG_PATH=${activemq_prefix}/${libdir}/pkgconfig pkg-config --cflags activemq-cpp`
-ACTIVEMQ_LIBS?=-L${activemq_prefix}/${libdir} -lactivemq-cpp
+ACTIVEMQ_CPP_CFLAGS?=`${activemq_prefix}/bin/activemqcpp-config --cflags`
+ACTIVEMQ_CPP_LIBS?=`${activemq_prefix}/bin/activemqcpp-config --libs`
 
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
 CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
@@ -44,7 +44,7 @@ GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${pref
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src \
-	${ACTIVEMQ_CFLAGS} \
+	${ACTIVEMQ_CPP_CFLAGS} \
 	-D_GNU_SOURCE \
 	${COVERAGE_FLAGS} \
 	${VERSION} ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} \
@@ -71,7 +71,7 @@ HDRS:=
 
 COMMON_LIB:=
 
-EXT_LIB:=${ACTIVEMQ_LIBS}
+EXT_LIB:=${ACTIVEMQ_CPP_LIBS}
 
 GLITE_GSS_LIB:=
 
