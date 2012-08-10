@@ -591,7 +591,6 @@ int main(int argc, char *argv[])
 		asprintf(&html_header, "%s/html_header.html", html_header_prefix);
 	}
 	if (html_header) {
-		char *et, *ed;
 		FILE *fp = fopen(html_header, "r");
 		if( fp ) {
 			fclose(fp);

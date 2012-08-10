@@ -77,8 +77,8 @@ int jobstat_cmp (const void *a, const void *b) {
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
 int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, edg_wll_JobStat *statsOut, char **message, int text)
 {
-        char *pomA = NULL, *pomB, *pomC, *header = NULL;
-	int i, total = 0, bufsize, written = 0, linlen, wassub = 0, lineoverhead;
+        char *pomA = NULL, *pomB, *pomC, *header = NULL, *recent_parent = NULL;
+	int i, total = 0, bufsize, written = 0, linlen, wassub = 0, issub = 0, lineoverhead;
 	JobIdSorter *order;
 
         while (jobsOut && jobsOut[total]) total++;
@@ -125,11 +125,12 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 	for (i = 0; i < total; i++) {
 		if (text) linlen = asprintf(&pomA,"%s%s", order[i].id_unparsed, i + 1 == total ? "\n" : ",");
 		else {
+			issub = order[i].parent_unparsed && recent_parent && !strcmp(recent_parent, order[i].parent_unparsed) ? 1 : 0;
 			linlen = asprintf(&pomA, "%s<li><a href=\"%s\">%s</a></li>\n",
-				order[i].parent_unparsed ? (wassub++ ? "" : "<ul>") : (wassub ? "</UL>" : ""),
+				issub ? (wassub++ ? "" : "<ul>") : (wassub ? "</UL>" : ""),
 				order[i].id_unparsed,
 				order[i].id_unparsed );
-			if (!order[i].parent_unparsed) wassub = 0;
+			if (!issub || !order[i].parent_unparsed) { wassub = 0; recent_parent = order[i].id_unparsed; }
 		}
 
 		while (written+linlen >= bufsize) {
