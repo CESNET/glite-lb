@@ -716,18 +716,11 @@ static int edg_wll_SetLoggingJobMaster(
 		/* do not overwrite user param if already set */
 		edg_wll_GetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, &p_user);
 		if(NULL == p_user) {
-#ifndef NO_GLOBUS_GSSAPI		
 			/* acquire  gss credentials */
-			err = edg_wll_gss_acquire_cred_gsi(
+			err = edg_wll_gss_acquire_cred(
 				ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 				ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
 				&cred, &gss_stat);
-#else
-			/* acquire krb5 credentials */
-			err = edg_wll_gss_acquire_cred_krb5(
-				ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
-				&cred, &gss_stat);
-#endif
 			/* give up if unable to acquire prescribed credentials */
 			if (err) {
 				edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
