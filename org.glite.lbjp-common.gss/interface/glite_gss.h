@@ -81,15 +81,12 @@ void
 edg_wll_gss_finalize(void);
 
 int
-edg_wll_gss_acquire_cred_gsi(const char *cert_file,
-		             const char *key_file,
-		             edg_wll_GssCred *cred,
-			     edg_wll_GssStatus* gss_code);
+edg_wll_gss_acquire_cred(const char *cert_file,
+			 const char *key_file,
+			 edg_wll_GssCred *cred,
+			 edg_wll_GssStatus* gss_code);
 
-int
-edg_wll_gss_acquire_cred_krb5(const char *cert_file,
-			      edg_wll_GssCred *cred,
-			      edg_wll_GssStatus* gss_code);
+#define edg_wll_gss_acquire_cred_gsi edg_wll_gss_acquire_cred
 
 int
 edg_wll_gss_release_cred(edg_wll_GssCred *cred,

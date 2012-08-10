@@ -688,12 +688,11 @@ destroy_proxy(char *proxy_file)
 }
 
 /** Load or reload credentials. It should be called regularly (credential files can be changed).
-  This call works only for GSSAPI from Globus.
  @see edg_wll_gss_watch_creds
  */
 int
-edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wll_GssCred *cred,
-      			     edg_wll_GssStatus* gss_code)
+edg_wll_gss_acquire_cred(const char *cert_file, const char *key_file, edg_wll_GssCred *cred,
+			 edg_wll_GssStatus* gss_code)
 {
    OM_uint32 major_status = 0, minor_status, minor_status2;
    gss_cred_id_t gss_cred = GSS_C_NO_CREDENTIAL;
@@ -703,17 +702,21 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
    gss_OID_set avail_mechs = NULL;
    OM_uint32 lifetime;
    char *proxy_file = NULL;
-   char *name = NULL;
-   int ret, gsi_available;
+   char *name = NULL, *mech_name = NULL;
+   int ret, mech_available;
 
    *cred = NULL;
 
    major_status = gss_indicate_mechs(&minor_status, &avail_mechs);
    /* ignore error */
 
-   major_status = gss_test_oid_set_member(&minor_status, get_oid("GSI"),
-					  avail_mechs, &gsi_available);
-   if (!GSS_ERROR(major_status) && !gsi_available) {
+   mech_name = getenv("GLITE_GSS_MECH");
+   if (mech_name == NULL)
+	   mech_name = "GSI";
+
+   major_status = gss_test_oid_set_member(&minor_status, get_oid(mech_name),
+					  avail_mechs, &mech_available);
+   if (!GSS_ERROR(major_status) && !mech_available) {
        if (cert_file != NULL || key_file != NULL) {
 	   errno = EINVAL;
 	   ret = EDG_WLL_GSS_ERROR_ERRNO;
@@ -731,7 +734,7 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
 
    if (cert_file == NULL) {
       mechs.count = 1;
-      mechs.elements = get_oid("GSI");
+      mechs.elements = get_oid(mech_name);
       
       major_status = gss_acquire_cred(&minor_status, GSS_C_NO_NAME, 0,
 	    			      &mechs, GSS_C_BOTH,
@@ -740,7 +743,7 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
 	 ret = EDG_WLL_GSS_ERROR_GSS;
 	 goto end;
       }
-   } else {
+   } else if(!strcmp(mech_name, "GSI")) {
 #ifndef NO_GLOBUS_GSSAPI
       proxy_file = (char *)cert_file;
       if (strcmp(cert_file, key_file) != 0 &&
@@ -766,10 +769,16 @@ edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wl
 	 goto end;
       }
 #else
+      /* XXX - this mechanism is not supported */
       errno = EINVAL;
       ret = EDG_WLL_GSS_ERROR_ERRNO;
       goto end;
 #endif
+   } else {
+	   /* TODO: cert file specified for non-GSI mechanism - is it really error? */
+      errno = EINVAL;
+      ret = EDG_WLL_GSS_ERROR_ERRNO;
+      goto end;
    }
 
   /* gss_import_cred() doesn't check validity of credential loaded, so let's
@@ -821,109 +830,6 @@ end:
       free(proxy_file);
    }
 
-   if (gss_name != GSS_C_NO_NAME)
-      gss_release_name(&minor_status2, &gss_name);
-
-   if (gss_cred != GSS_C_NO_CREDENTIAL)
-      gss_release_cred(&minor_status2, &gss_cred);
-
-   if (avail_mechs)
-       gss_release_oid_set(&minor_status2, &avail_mechs);
-
-   if (GSS_ERROR(major_status)) {
-      if (gss_code) {
-	 gss_code->major_status = major_status;
-	 gss_code->minor_status = minor_status;
-      }
-      ret = EDG_WLL_GSS_ERROR_GSS;
-   }
-
-   return ret;
-}
-
-
-int
-edg_wll_gss_acquire_cred_krb5(const char *cert_file, edg_wll_GssCred *cred,
-			      edg_wll_GssStatus* gss_code)
-{
-   OM_uint32 major_status = 0, minor_status, minor_status2;
-   gss_cred_id_t gss_cred = GSS_C_NO_CREDENTIAL;
-   gss_buffer_desc buffer = GSS_C_EMPTY_BUFFER;
-   gss_name_t gss_name = GSS_C_NO_NAME;
-   gss_OID_set_desc mechs;
-   gss_OID_set avail_mechs = NULL;
-   OM_uint32 lifetime;
-   char *proxy_file = NULL;
-   char *name = NULL;
-   int ret, mech_available;
-
-   *cred = NULL;
-
-   major_status = gss_indicate_mechs(&minor_status, &avail_mechs);
-   /* ignore error */
-
-   major_status = gss_test_oid_set_member(&minor_status, get_oid("krb5"),
-					  avail_mechs, &mech_available);
-   if (!GSS_ERROR(major_status) && !mech_available) {
-	   ret = 0;
-	   lifetime = 0;
-	   goto end1;
-   }
-
-   mechs.count = 1;
-   mechs.elements = get_oid("krb5");
-      
-   major_status = gss_acquire_cred(&minor_status, GSS_C_NO_NAME, 0,
-				   &mechs, GSS_C_BOTH,
-				   &gss_cred, NULL, NULL);
-   if (GSS_ERROR(major_status)) {
-	   ret = EDG_WLL_GSS_ERROR_GSS;
-	   goto end;
-   }
-
-  /* gss_import_cred() doesn't check validity of credential loaded, so let's
-    * verify it now */
-    major_status = gss_inquire_cred(&minor_status, gss_cred, &gss_name,
-	  			    &lifetime, NULL, NULL);
-    if (GSS_ERROR(major_status)) {
-       ret = EDG_WLL_GSS_ERROR_GSS;
-       goto end;
-    }
-
-    /* Must cast to time_t since OM_uint32 is unsinged and hence we couldn't
-     * detect negative values. */
-    if ((time_t) lifetime <= 0) {
-       major_status = GSS_S_CREDENTIALS_EXPIRED;
-       minor_status = 0; /* XXX */
-       ret = EDG_WLL_GSS_ERROR_GSS;
-       goto end;
-    }
-
-   major_status = gss_display_name(&minor_status, gss_name, &buffer, NULL);
-   if (GSS_ERROR(major_status)) {
-      ret = EDG_WLL_GSS_ERROR_GSS;
-      goto end;
-   }
-   name = buffer.value;
-   memset(&buffer, 0, sizeof(buffer));
-    
-end1:
-
-   *cred = calloc(1, sizeof(**cred));
-   if (*cred == NULL) {
-      ret = EDG_WLL_GSS_ERROR_ERRNO;
-      free(name);
-      goto end;
-   }
-
-   (*cred)->gss_cred = gss_cred;
-   gss_cred = GSS_C_NO_CREDENTIAL;
-   (*cred)->lifetime = lifetime;
-   (*cred)->name = name;
-
-   ret = 0;
-
-end:
    if (gss_name != GSS_C_NO_NAME)
       gss_release_name(&minor_status2, &gss_name);
 
