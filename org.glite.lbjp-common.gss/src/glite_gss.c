@@ -687,6 +687,15 @@ destroy_proxy(char *proxy_file)
    return 0;
 }
 
+/* XXX for backward compatibility, remove this on next major version bump */
+#undef edg_wll_gss_acquire_cred_gsi
+int
+edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wll_GssCred *cred,
+			 edg_wll_GssStatus* gss_code)
+{
+	return edg_wll_gss_acquire_cred(cert_file, key_file, cred, gss_code);
+}
+
 /** Load or reload credentials. It should be called regularly (credential files can be changed).
  @see edg_wll_gss_watch_creds
  */
