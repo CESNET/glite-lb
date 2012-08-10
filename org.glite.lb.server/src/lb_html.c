@@ -44,16 +44,17 @@ limitations under the License.
 
 char *get_html_header(edg_wll_Context ctx, int text) {
 	char *header = NULL;
-	size_t header_len = 0;
+	size_t header_len = 0, rlen = 0;
 	FILE *header_file;
 
 	if (text) return NULL;
 
 	if ((header_file = fopen(ctx->html_header_file, "r"))) { 
-		getdelim( &header, &header_len, '\0', header_file);
+		rlen = getdelim( &header, &header_len, '\0', header_file);
 		fclose (header_file);
 	}
-	else header=strdup("<style type=\"text/css\">tr.notused {color: gray; text-align: left;}</style>");
+	
+	if (rlen == -1 ) header=strdup("<style type=\"text/css\">tr.notused {color: gray; text-align: left;}</style>");
 
 	return header;
 }
