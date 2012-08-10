@@ -418,7 +418,7 @@ int edg_wll_JobStatFlagsToSoap(struct soap *soap, const int in, struct lbt__jobF
 
 int edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 {
-	assert(EDG_WLL_QUERY_ATTR_NETWORK_SERVER + 1 == EDG_WLL_QUERY_ATTR__LAST);
+	assert(EDG_WLL_QUERY_ATTR_JOB_TYPE + 1 == EDG_WLL_QUERY_ATTR__LAST);
 
 	switch ( in )
 	{
@@ -452,7 +452,7 @@ int edg_wll_SoapToAttr(const enum lbt__queryAttr in, edg_wll_QueryAttr *out)
 
 int edg_wll_AttrToSoap(const edg_wll_QueryAttr in, enum lbt__queryAttr *out)
 {
-	assert(EDG_WLL_QUERY_ATTR_NETWORK_SERVER + 1 == EDG_WLL_QUERY_ATTR__LAST);
+	assert(EDG_WLL_QUERY_ATTR_JOB_TYPE + 1 == EDG_WLL_QUERY_ATTR__LAST);
 
 	switch ( in )
 	{
