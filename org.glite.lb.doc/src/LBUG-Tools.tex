@@ -116,7 +116,47 @@ or
     https://pelargir.ics.muni.cz:9000/1234567890?text
 \end{verbatim}
 
+\subsubsection{Querying for Jobs by Attribute}
+\label{HTML:queries}
+
+A subset of the \LB querying API---specifically job queries---has been made available over the HTML interface as of \LBver{3.3}. It supports the full range\footnote{There a single exception: it does not implement any syntax for using the \emph{within} operator, which must therefore be expressed as a combination of \emph{greater than AND lower than} conditions} of job queries as discussed in \cite{lbdg} and is also subject to the same limitations, i. e., that multiple conditions may only be combined in the following structure:
+$$(attr_{1}cond_{1} \vee \dots \vee attr_{1}cond_{n}) \wedge \dots \wedge (attr_{n}cond_{1} \vee \dots \vee attr_{n}cond_{n})$$
+In other words, different attributes given in the query are always \emph{AND}ed, meaning that they must all be satisfied at once, but different \emph{OR} conditions can be given for the same attribute within the same query.
+
+Conditions are conveyed to the \LB server through a query string starting with \texttt{?query}, which becomes a part of the URL, allowing frequently used queries to be stored as bookmarks in any Web browser. For instance, to check for all your currenlty running jobs, an URL constructed along the following pattern could be used:
+
+\begin{verbatim}
+https://pelargir.ics.muni.cz:9000/?query=status=running
+\end{verbatim}
+
+It is important to note that in its default configuration, \LB server requires at least one indexed attribute to be included in the query.\footnote{The list of indexed attributes can be received from the given \LB server's configuration page (see Section~\ref{s:findbroker}).} In most installations, attributes such as \emph{owner} or \emph{last update time} will be indexed. Toquery for all running jobs in such conditions, add an indexed attribute to your query. For instance:
+
+\begin{verbatim}
+https://pelargir.ics.muni.cz:9000/?query=status=running&lastupdatetime>1577836800
+\end{verbatim}
+
+Note that temporal attributes such as \emph{last update time} or \emph{state enter time} accept UNIX time values.
+
+Since \emph{OR}ed conditions may only apply to a single attribute, the name of the attribute is given only once in the condition. For instance, to query for jobs in state \emph{running} or \emph{scheduled}:
+
+\begin{verbatim}
+https://pelargir.ics.muni.cz:9000/?query=status=scheduled|=running
+\end{verbatim}
+
+{\raggedright{}Currently the query attributes supported are: \texttt{jobid}, \texttt{owner}, \texttt{status}, \texttt{location}, \texttt{destination}, \texttt{donecode}, \texttt{usertag}, \texttt{time}, \texttt{level}, \texttt{host}, \texttt{source}, \texttt{instance}, \texttt{type}, \texttt{chkpt\_tag}, \texttt{resubmitted}, \texttt{parent\_job}, \texttt{exitcode}, \texttt{jdl}, \texttt{stateentertime}, \texttt{lastupdatetime}, \texttt{networkserver} and \texttt{jobtype}.}
+
+Supported operators are: \texttt{=}, \texttt{<>}, \texttt{>} or \texttt{<}.
+
+Supported job state values (attribute \texttt{status}) are listed in Appendix~\ref{a:jobstat}.
+
+{\raggedright{}Supported job type values are: \jobtypenames.}
+
+All queries result in a list of JobIDs of jobs that match the specified criteria.
+
 \input{https_configuration}
+
+\subsubsection{Summary of Applicable Query Strings}
+\label{HTML:querystrings}
 
 \subsection{Job state changes as an RSS feed}
 The \LB includes an RSS interface allowing users to keep trace of their jobs in a very simple way using an RSS reader. The parameters of the RSS feeds are predefined, so no configuration is required.

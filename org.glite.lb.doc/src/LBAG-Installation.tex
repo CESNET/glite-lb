@@ -286,8 +286,9 @@ Using \emph{yaim}, you do not need to edit \LB's configuration files for your in
 glite-lb-authz.conf & Authorization policy, in use since \LBver{2.1}. Extensively explained in Section \ref{inst:authz} (page \pageref{inst:authz}).\\
 log4crc & Logging output configuration, in use since \LBver{2.0}. Explained in Section \ref{inst:comlog} (page \pageref{inst:comlog}).\\
 msg.conf & Messaging plugin and features configuration, in use since \LBver{3.0}. Explained in Section \ref{inst:messaging} (page \pageref{inst:messaging}).\\
-site-notif.conf & Permanent notification registrations to be maintained on the server. Available since \LBver{3.2}. Explained in section \ref{inst:sitenotif} (page \pageref{inst:sitenotif}).
-%\\glite-lb-my.cnf & Pre-prepared \emph{MySQL} configuration file, designed to be included in \texttt{my.cnf} by the \texttt{!include} directive. Available since \LBver{3.2}.
+site-notif.conf & Permanent notification registrations to be maintained on the server. Available since \LBver{3.2}. Explained in section \ref{inst:sitenotif} (page \pageref{inst:sitenotif}).\\
+%glite-lb-my.cnf & Pre-prepared \emph{MySQL} configuration file, designed to be included in \texttt{my.cnf} by the \texttt{!include} directive. Available since \LBver{3.2}.\\
+html-header.html & Recognized since \LBver{3.3}; optional HTML header to be included in all \LB server's HTML output. Explained in section \ref{inst:branding} (page \pageref{inst:branding}).
 \end{tabularx}
 
 Besides configuration files observed directly by \LB's services, there is a score of other files installed by \LB and used by other system services. They are:
@@ -694,6 +695,15 @@ disk separate from OS and MySQL log files (\texttt{innodb\_log\_group\_home\_dir
 \texttt{/var/lib/mysql/} by default) is recommended.
 
 \end{itemize}
+
+\subsubsection{Branding \LB's HTML output}
+\label{inst:branding}
+
+Since \LBver{3.3}, the server allows site admins to specify header files to be used in all HTML output, branding it with their home organization's visual style or logos. The server looks for the file at \texttt{/etc/glite-lb/html-header.html} but option \texttt{-H} can be used to specify a different location. The contents of the file are inserted verbatim between the \texttt{<head>} and \texttt{</head>} tags and typically they will give a \texttt{<style>} definition. 
+
+The include file's existence is checked on server startup, meaning that it must exist at that moment to be used in the session at all. It is not stored in memory, however, but rather read again from disk every time HTML output is being generated. This simplifies debugging/development of the style file.
+
+It is important to note that \LB does in no way parse the file. It simply includes it ``as is'' and making the resulting output valid is the sole responsibility of the site administrator.
 
 \subsection{\LB proxy}
 \label{inst:LBproxy}

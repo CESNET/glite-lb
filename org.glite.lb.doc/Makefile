@@ -34,7 +34,7 @@ INSTALL=install
 
 all: generate doc
 
-generate: events.tex status.tex ver.tex
+generate: events.tex status.tex ver.tex nameslists.tex
 
 doc: LBUG.pdf LBAG.pdf LBDG.pdf LBTP.pdf LBTG.pdf
 
@@ -84,7 +84,7 @@ install:
 	done
 
 clean:
-	rm -rvf LBUG* LBAG* LBDG* LBTP* LBTG* events.tex status.tex ver.tex comment*
+	rm -rvf LBUG* LBAG* LBDG* LBTP* LBTG* events.tex status.tex nameslists.tex ver.tex comment*
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
@@ -108,7 +108,7 @@ LBUG.pdf: ${COMMON} \
 	LBUG-Introduction.tex components.tex \
 	LBUG-Tools.tex logevent.tex https_configuration.tex notify.tex log_usertag.tex change_acl.tex \
 	LBUG-Troubleshooting.tex \
-	LBUG-Appendix.tex events.tex status.tex faq.tex
+	LBUG-Appendix.tex events.tex status.tex nameslists.tex faq.tex
 
 LBAG.pdf: ${COMMON} \
 	LBAG.tex \
