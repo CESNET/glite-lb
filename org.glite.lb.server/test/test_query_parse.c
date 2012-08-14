@@ -22,7 +22,6 @@ limitations under the License.
 #include <stdio.h>
 #include <assert.h>
 #include "glite/lb/context.h"
-#include "glite/lb/consumer.h"
 #include "lb_proto.h"
 #include "authz_policy.h"
 

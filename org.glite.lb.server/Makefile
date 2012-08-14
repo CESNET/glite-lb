@@ -32,7 +32,7 @@ SOURCES=\
 	interface/*.h \
 	src/*.c src/*.cpp src/*.h src/*.c.T src/*.l src/*.y src/*.sh src/ws_typemap.dat \
 	project/.post* project/.pre* \
-	test/*.cpp test/*.cpp.T test/*.sh test/oneJob.qry \
+	test/*.cpp test/*.cpp.T test/*.sh test/oneJob.qry test/*.c \
 	LICENSE Makefile
 SOURCES_EXEC=config/startup src/*.sh test/*.sh
 
@@ -299,7 +299,7 @@ endif
 
 EXAMPLES=
 
-TESTS=test_coverage test_xml test_query_events test_soap_conv
+TESTS=test_coverage test_xml test_query_events test_soap_conv test_query_parse
 
 SCRIPTS=startup glite-lb-server-purge.cron glite-lb-proxy-purge.cron glite-lb-notif-keeper.cron
 SCRIPTS_SRC=$(addprefix ${top_srcdir}/config/,${SCRIPTS})
