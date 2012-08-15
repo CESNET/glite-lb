@@ -431,3 +431,12 @@
 - Showing related jobid with notification details
 - Showing number of registrations in notification listiting
 
+2.4.4-1
+- New unit tests
+- HTML output fixed to avoid listing subjobs under foreign parents if filters are applied
+- Added support for job_type query attribute (query for jobs by type)
+- HTML interface for VM jobs (initial implementation)
+- Job queries through HTTP query strings
+- Query attribute name definitions moved from lb.server to lb.common
+- Checks in WS calls updated
+
