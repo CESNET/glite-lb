@@ -188,3 +188,7 @@
 - Simplified source tarball and packages distribution
 - Debian package builds in vanilla chroot environment
 
+1.4.2-1
+- Web querying interface explained
+- HTML branding explained
+
