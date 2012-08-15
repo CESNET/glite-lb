@@ -53,6 +53,7 @@ char *get_html_header(edg_wll_Context ctx, int text) {
 		rlen = getdelim( &header, &header_len, '\0', header_file);
 		fclose (header_file);
 	}
+	else rlen = -1;
 	
 	if (rlen == -1 ) header=strdup("<style type=\"text/css\">tr.notused {color: gray; text-align: left;}</style>");
 
