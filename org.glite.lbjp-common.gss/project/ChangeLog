@@ -156,3 +156,8 @@
 - Debian package builds in vanilla chroot environment
 - Simplified source tarball and packages distribution
 
+3.2.4-1
+- Krb5-specific mechanism code moved into generic acquire_cred() function
+- Krb5 counterpart for acquire_cred() added
+- Improved backward compatibility
+
