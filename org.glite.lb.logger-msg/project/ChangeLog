@@ -72,3 +72,7 @@
 - Debian package builds in vanilla chroot environment
 - Simplified source tarball and packages distribution
 
+1.2.2-1
+- ActiveMQ with more strict compiler (fixes build on Fedora 17)
+- Exceptions properly caught
+
