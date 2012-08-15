@@ -203,3 +203,9 @@
 - Initial support for included HTML styles
 - Basic state machine for VM
 
+8.2.2-1
+- Query attribute name definitions moved from lb.server to lb.common
+- Improved enum types handling, including naming arrays for miscelanous enums, and functions to convert names to int values
+- Added support for job_type query attribute (query for jobs by type)
+- PBS seqcode updating fixed, broken after CREAM merge
+
