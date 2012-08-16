@@ -440,3 +440,7 @@
 - Query attribute name definitions moved from lb.server to lb.common
 - Checks in WS calls updated
 
+2.4.5-1
+- Fixed default location for html-header.html file
+- Better handling of c-ares error codes
+
