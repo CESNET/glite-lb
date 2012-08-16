@@ -161,3 +161,6 @@
 - Krb5 counterpart for acquire_cred() added
 - Improved backward compatibility
 
+3.2.5-1
+- Better handling for c-ares error codes
+
