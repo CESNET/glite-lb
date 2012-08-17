@@ -774,30 +774,7 @@ static void printconds(edg_wll_QueryRec **cond)
 		{
 			if ( j )
 				printf(" OR ");
-			switch ( cond[i][j].attr )
-			{
-			case EDG_WLL_QUERY_ATTR_JOBID: printf("jobid"); break;
-			case EDG_WLL_QUERY_ATTR_OWNER: printf("owner"); break;
-			case EDG_WLL_QUERY_ATTR_STATUS: printf("status"); break;
-			case EDG_WLL_QUERY_ATTR_LOCATION: printf("location"); break;
-			case EDG_WLL_QUERY_ATTR_DESTINATION: printf("destination"); break;
-			case EDG_WLL_QUERY_ATTR_DONECODE: printf("done_code"); break;
-			case EDG_WLL_QUERY_ATTR_EXITCODE: printf("exit_code"); break;
-			case EDG_WLL_QUERY_ATTR_PARENT: printf("parent_job"); break;
-			case EDG_WLL_QUERY_ATTR_RESUBMITTED: printf("resubmitted"); break;
-			case EDG_WLL_QUERY_ATTR_USERTAG: printf("%s",cond[i][j].attr_id.tag); break;
-			case EDG_WLL_QUERY_ATTR_TIME: printf("time"); break;
-			case EDG_WLL_QUERY_ATTR_STATEENTERTIME: printf("state_enter_time"); break;
-			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME: printf("last_update_time"); break;
-			case EDG_WLL_QUERY_ATTR_JDL_ATTR: printf("jdl_attr"); break;
-			case EDG_WLL_QUERY_ATTR_LEVEL: printf("level"); break;
-			case EDG_WLL_QUERY_ATTR_HOST: printf("host"); break;
-			case EDG_WLL_QUERY_ATTR_SOURCE: printf("source"); break;
-			case EDG_WLL_QUERY_ATTR_INSTANCE: printf("instance"); break;
-			case EDG_WLL_QUERY_ATTR_EVENT_TYPE: printf("ev_type"); break;
-			case EDG_WLL_QUERY_ATTR_JOB_TYPE: printf("job_type"); break;
-			default: break;
-			}
+			printf("%s", edg_wll_QueryAttrNames[cond[i][j].attr]);
 			switch ( cond[i][j].op )
 			{
 			case EDG_WLL_QUERY_OP_EQUAL: printf("="); break;

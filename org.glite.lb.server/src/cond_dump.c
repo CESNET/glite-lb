@@ -58,54 +58,14 @@ int edg_wll_Condition_Dump(notifInfo *ni, char **output, int oneline){
 			GS("(");
 		l2 = *l1;
 		switch (l2->attr){
-			case EDG_WLL_QUERY_ATTR_JOBID: GS("jobId");
-				break;
-			case EDG_WLL_QUERY_ATTR_OWNER: GS("owner");
-				break;
-			case EDG_WLL_QUERY_ATTR_STATUS: GS("status");
-				break;
-			case EDG_WLL_QUERY_ATTR_LOCATION: GS("location");
-				break;
-                        case EDG_WLL_QUERY_ATTR_DESTINATION: GS("destination");
-				break;
-			case EDG_WLL_QUERY_ATTR_DONECODE: GS("donecode");
-				break;
 			case EDG_WLL_QUERY_ATTR_USERTAG:
 				GS(l2->attr_id.tag);
-				break;
-			case EDG_WLL_QUERY_ATTR_TIME: GS("time");
-				break;
-			case EDG_WLL_QUERY_ATTR_LEVEL: GS("level");
-				break;
-			case EDG_WLL_QUERY_ATTR_HOST: GS("host");
-				break;
-                        case EDG_WLL_QUERY_ATTR_SOURCE: GS("source");
-				break;
-                        case EDG_WLL_QUERY_ATTR_INSTANCE: GS("instance");
-				break;
-                        case EDG_WLL_QUERY_ATTR_EVENT_TYPE: GS("eventtype");
-				break;
-			case EDG_WLL_QUERY_ATTR_CHKPT_TAG: GS("chkpttag");
-				break;
-			case EDG_WLL_QUERY_ATTR_RESUBMITTED: GS("resubmitted");
-				break;
-			case EDG_WLL_QUERY_ATTR_PARENT: GS("parent_job");
-				break;
-			case EDG_WLL_QUERY_ATTR_EXITCODE: GS("exitcode");
 				break;
 			case EDG_WLL_QUERY_ATTR_JDL_ATTR: 
 				GS(l2->attr_id.tag);  //get JDL attribute name
 				break;
-			case EDG_WLL_QUERY_ATTR_STATEENTERTIME: GS("stateentertime");
-				break;
-			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME: GS("lastupdatetime");
-				break;
-			case EDG_WLL_QUERY_ATTR_NETWORK_SERVER: GS("networkserver");
-				break;
-			case EDG_WLL_QUERY_ATTR_JOB_TYPE: GS("jobtype");
-				break;
 			default:
-				assert(! "Unknown attribute!");
+				GS(edg_wll_QueryAttrNames[l2->attr]);
 				break;
 		}
 		for (l2 = *l1; l2->attr; l2++){
