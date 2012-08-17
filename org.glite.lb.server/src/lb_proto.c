@@ -844,11 +844,11 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	char **response,char ***headersOut,char **bodyOut,
 	int *httpErr)
 {
-	char *requestPTR = NULL, *message = NULL, *requestMeat = NULL, *querystr, *queryconds = NULL;
+	char *requestPTR = NULL, *message = NULL, *requestMeat = NULL, *querystr, *queryconds = NULL, *flagstr, *queryflags = NULL;
 	int	ret = HTTP_OK;
 	int 	html = outputHTML(headers);
 	int 	text = 0; //XXX: Plain text communication is special case of html here, hence when text=1, html=1 too
-	int	i, j;
+	int	i, j, rflags = 0;
 	int	isadm;
 	http_admin_option adm_opt = HTTP_ADMIN_OPTION_MY;
 	http_extra_option extra_opt = HTTP_EXTRA_OPTION_NONE;
@@ -924,6 +924,18 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 					}
 				}
 			}
+
+                        if ((flagstr = strstr(requestPTR, "?flags="))) {
+                                int len = strcspn(flagstr+strlen("?flags="),"? \f\n\r\t\v");
+                                if (len) {
+                                        queryflags = (char*)calloc((len+1),sizeof(char));
+                                        queryflags = strncpy(queryflags, flagstr+strlen("?flags="), len);
+					glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "HTML query flags: \"%s\"", queryflags);
+					rflags = edg_wll_string_to_stat_flags(queryflags);
+					free(queryflags);
+                                }
+                        }
+
 			strip_request_of_queries(requestPTR);
 		}
 
@@ -940,13 +952,10 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		else if ((!strcmp(requestMeat, "/")) && ((extra_opt == HTTP_EXTRA_OPTION_NONE) || ( extra_opt == HTTP_EXTRA_OPTION_QUERY))) {
                 	edg_wlc_JobId *jobsOut = NULL;
 			edg_wll_JobStat *statesOut = NULL;
-			int	i, flags;
-
-			// XXX: query strings are now not recognized as flags. Needs modifying.
-			flags = (requestPTR[1]=='?') ? edg_wll_string_to_stat_flags(requestPTR + 2) : 0;
+			int	i;
 
 			switch ( extra_opt == HTTP_EXTRA_OPTION_QUERY ?
-                                edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)job_conditions, flags, &jobsOut, &statesOut) :
+                                edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)job_conditions, rflags, &jobsOut, &statesOut) :
                                 edg_wll_UserJobsServer(ctx, EDG_WLL_STAT_CHILDREN, &jobsOut, &statesOut)) {
 
 				case 0: edg_wll_UserInfoToHTML(ctx, jobsOut, statesOut, &message, text);
@@ -999,7 +1008,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				edg_wll_SetError(ctx,EDG_WLL_ERROR_JOBID_FORMAT,fullid);
 				ret = HTTP_BADREQ;
 			}
-			else switch (edg_wll_JobStatusServer(ctx,jobId,EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN,&stat)) {
+			else switch (edg_wll_JobStatusServer(ctx,jobId,EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN | rflags, &stat)) {
 				case 0: if (text) { 
 						edg_wll_JobStatusToText(ctx,stat,&message); 
 						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
