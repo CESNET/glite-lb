@@ -47,7 +47,7 @@ static const struct timeval null_timeval = {0,0};
 			printf("Names[] = \{");
 			my $num = 0;
                         for (@{$f->{codes}}) {
-                                my $uc = uc $_->{name};
+                                my $uc = ucfirst(lc(uc $_->{name}));
                                 $uc =~ tr/-/_/;
 				if ( $num != 0 ) { printf (","); }
 				printf(" \"$uc\"");
