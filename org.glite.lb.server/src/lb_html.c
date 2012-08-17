@@ -322,6 +322,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	TRL("Parent job", "%s", chpa, NULL);
 	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)), NULL);
 	free(chstat);
+	TR("Type","%s",edg_wll_StatusJobtypeNames[stat.jobtype], NULL);
 	TR("Owner","%s",stat.owner, NULL);
 	TR("Payload Owner","%s",stat.payload_owner, NULL);
 	TR("Condor Id","%s",stat.condorId, NULL);
@@ -415,6 +416,7 @@ int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat
 	free(lbstat);
 	TR("CREAM Status", "%s", (creamstat = edg_wll_CreamStatToString(stat.cream_state)), NULL);
 	free(creamstat);
+	TR("Type","%s",edg_wll_StatusJobtypeNames[stat.jobtype], NULL);
 	TR("Owner", "%s", stat.cream_owner, NULL);
 	TR("Endpoint", "%s", stat.cream_endpoint, NULL);
 	TR("Worker node", "%s", stat.cream_node, NULL);
@@ -482,6 +484,7 @@ int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_Job
 
 	TR("Status", "%s", (lbstat = edg_wll_StatToString(stat.state)), NULL);
 	free(lbstat);
+	TR("Type","%s",edg_wll_StatusJobtypeNames[stat.jobtype], NULL);
         TR("Owner","%s",stat.owner, NULL);
 	chcj = edg_wlc_JobIdUnparse(stat.ft_compute_job);
 	TRL("Compute job", "%s", chcj, NULL);

@@ -180,6 +180,7 @@ int edg_wll_JobStatusToText(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat
 
 	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)));
 	free(chstat);
+	TR("type","%s",edg_wll_StatusJobtypeNames[stat.jobtype]);
 	TR("owner","%s",stat.owner);
 	TR("payload_owner","%s",stat.payload_owner);
 	TR("condorId","%s",stat.condorId);
