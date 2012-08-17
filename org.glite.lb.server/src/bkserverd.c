@@ -587,8 +587,8 @@ int main(int argc, char *argv[])
 
 	if (!html_header) {
 		char *html_header_prefix = getenv("GLITE_LB_LOCATION_ETC");
-		if (!html_header_prefix) html_header_prefix="/etc/glite-lb";
-		asprintf(&html_header, "%s/html-header.html", html_header_prefix);
+		if (!html_header_prefix) html_header_prefix="/etc";
+		asprintf(&html_header, "%s/glite-lb/html-header.html", html_header_prefix);
 	}
 	if (html_header) {
 		FILE *fp = fopen(html_header, "r");
