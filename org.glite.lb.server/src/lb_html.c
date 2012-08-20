@@ -23,11 +23,16 @@ limitations under the License.
 #include "pretty_print_wrapper.h"
 #include "server_stats.h"
 #include "authz_policy.h"
+#include "index.h"
+#include "server_state.h"
+#include "lb_authz.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
 
 #include "glite/lbu/log.h"
+#include "glite/lbu/db.h"
+#include "glite/lbu/escape.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -41,6 +46,94 @@ limitations under the License.
 #else
 #define UNUSED_VAR
 #endif
+
+#define TR(name,type,field,null) \
+{ \
+	int l; \
+	if ((field) != (null)){ \
+		l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
+			"<td>" type "</td></tr>\n", (field)); \
+	} \
+	else{ \
+                l = asprintf(&pomA,"<tr class=\"notused\"><th>" name \
+                        "</th></tr>\n"); \
+	} \
+	pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
+	strcpy(pomB+pomL, pomA); \
+	pomL += l; \
+	free(pomA); \
+	pomA=NULL; \
+}
+
+#define TRL(name,type,field,null) \
+{ \
+        int l; \
+        if ((field) != (null)){ \
+                l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
+                        "<td><a href=\""type"\">" type "</a></td></tr>\n", (field), (field)); \
+        } \
+        else{ \
+                l = asprintf(&pomA,"<tr class=\"notused\"><th>" name \
+                        "</th></tr>\n"); \
+        } \
+        pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
+        strcpy(pomB+pomL, pomA); \
+        pomL += l; \
+        free(pomA); \
+	pomA=NULL; \
+}
+
+#define TRS(name,type,field) \
+{ \
+        int l; \
+        if (field) \
+                l = asprintf(&a,"%s=" type "", \
+                        name, field); \
+        else \
+                l = asprintf(&a,"%s=\n", name); \
+        b = realloc(b, sizeof(*b)*(pomL+l+1)); \
+        strcpy(b+pomL, a); \
+        pomL += l; \
+        free(a); a=NULL; \
+}
+
+#define TRA(type,field) \
+{ \
+        int l; \
+        if (field) \
+                l = asprintf(&a,"," type "", \
+                        field); \
+        else \
+                l = asprintf(&a,"\n"); \
+        b = realloc(b, sizeof(*b)*(pomL+l+1)); \
+        strcpy(b+pomL, a); \
+        pomL += l; \
+        free(a); a=NULL; \
+}
+
+void add_row(char **body, char *text_title, char *html_title, char *value, char *link, http_output_type text) {
+	char *newbody = NULL, *target;
+	int len;
+
+	switch (text) {
+		case HTTP_OUTPUT_TYPE_HTML:
+			if (value) {
+				if (link) len = asprintf(&newbody,"%s<tr><th align=\"left\">%s</th><td><a href=\"%s\">%s</a></td></tr>\n", *body ? *body : "", html_title, link, value);
+				else len = asprintf(&newbody,"%s<tr><th align=\"left\">%s</th><td>%s</td></tr>\n", *body ? *body : "", html_title, value);
+			}
+			else len = asprintf(&newbody,"%s<tr class=\"notused\"><th>%s</th></tr>\n", *body ? *body : "", html_title);
+			break;
+		case HTTP_OUTPUT_TYPE_TEXT_APPEND:
+			if ((target = strrchr(*body ? *body : "", '\n'))) target[0]='\0'; 
+		case HTTP_OUTPUT_TYPE_TEXT:
+			len = asprintf(&newbody,"%s%s=%s\n", *body ? *body : "", text_title, value ? value : "");
+			break;
+	}
+
+	free(*body);
+        *body = newbody;
+
+}
 
 char *get_html_header(edg_wll_Context ctx, int text) {
 	char *header = NULL;
@@ -75,6 +168,111 @@ int jobstat_cmp (const void *a, const void *b) {
 	if (!((JobIdSorter*)b)->parent_unparsed) return 1;
 	return strcmp(((JobIdSorter*)a)->id_unparsed, ((JobIdSorter*)b)->id_unparsed);
 }
+
+int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, int text){
+        char *a = NULL, *b, *header, *out, *out_tmp;
+        int i = 0;
+        b = strdup("");
+
+        header = get_html_header(ctx, text);
+        if (!text) asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Server Configuration</TITLE>\n<HEAD>%s\n</HEAD>\n<BODY>\n"
+                "<h2>LB Server Configuration</h2>\n"
+                "<table halign=\"left\">\n"
+                "<tr><td>Option</td><td>Value</td></tr>\n",
+                header ? header : "");
+        else
+                out = strdup("");
+
+        free(header);
+
+	add_row(&out, "server_version", "Server version", VERSION, NULL, text);
+
+	add_row(&out, "server_identity", "Server identity", ctx->serverIdentity, NULL, text);
+
+	for (i = 0; ctx->job_index && ctx->job_index[i]; i++){
+		char *idx_title = edg_wll_QueryRecToColumn(ctx->job_index[i]);
+		asprintf(&out_tmp, "%s%s%s", a ? a : "", a ? (text ? "," : "<BR>") : "", idx_title);
+		free(a);
+		a = out_tmp;
+	}
+	add_row(&out, "server_indices", "Server indices", a, NULL, text);
+	free(a);
+
+	a = NULL;	
+	for (i = 0; ctx->msg_brokers && ctx->msg_brokers[i]; i++){
+		asprintf(&out_tmp, "%s%s%s", a ? a : "", a ? (text ? "," : "<BR>") : "", ctx->msg_brokers[i]);
+		free(a);
+		a = out_tmp;
+	}
+	add_row(&out, "msg_brokers", "Messaging brokers", a, NULL, text);
+	free(a);
+
+	a = NULL;	
+	for (i = 0; ctx->msg_prefixes && ctx->msg_prefixes[i]; i++){
+		asprintf(&out_tmp, "%s%s%s", a ? a : "", a ? (text ? "," : "<BR>") : "", ctx->msg_prefixes[i]);
+		free(a);
+		a = out_tmp;
+	}
+	add_row(&out, "msg_prefixes", "Messaging prefixes", a, NULL, text);
+	free(a);
+
+        /* only for superusers */
+        if (admin){
+                char *dbname, *dbhost;
+                dbname = glite_lbu_DBGetName(ctx->dbctx);
+                dbhost = glite_lbu_DBGetHost(ctx->dbctx);
+		add_row(&out, "database_name", "Database name", dbname, NULL, text);
+		add_row(&out, "database_host", "Database host", dbhost, NULL, text);
+                free(dbname);
+                free(dbhost);
+
+                char *pf = NULL, *pf_pars = NULL;
+		FILE *authz_file;
+		size_t rlen, alloc_len;
+		if ((authz_file = fopen(ctx->authz_policy_file, "r"))) { 
+			rlen = getdelim(&pf, &alloc_len, '\0', authz_file);
+			fclose (authz_file);
+		}
+		else rlen = -1;
+
+		if (text) pf_pars = glite_lbu_EscapeULM(pf);
+
+		add_row(&out, "authz_policy_file", "Authorization<BR>policy file", rlen < 0 ? NULL : (pf_pars ? pf_pars : pf), NULL, text);
+		free(pf_pars);
+		free(pf);
+
+		a = NULL;
+                edg_wll_authz_policy ap = edg_wll_get_server_policy();
+                int i, j, k;
+                for (i = 0; i < ap->actions_num; i++){
+                        if (ap->actions[i].id == ADMIN_ACCESS)
+                                for (j = 0; j < ap->actions[i].rules_num; j++)
+                                        for (k = 0; k < ap->actions[i].rules[j].attrs_num; k++){
+						asprintf(&out_tmp, "%s%s%s", a ? a : "", a ? (text ? "," : "<BR>") : "", ap->actions[i].rules[j].attrs[k].value);
+						free(a);
+						a = out_tmp;
+                                        }
+                }
+		add_row(&out, "admins", "Super Users", a, NULL, text);
+		free(a);
+
+                char *start = NULL, *end = NULL;
+                edg_wll_GetServerState(ctx, EDG_WLL_STATE_DUMP_START, &start);
+                edg_wll_GetServerState(ctx, EDG_WLL_STATE_DUMP_END, &end);
+		add_row(&out, "dump_start", "Last dump start", start, NULL, text);
+		add_row(&out, "dump_end", "Last dump end", end, NULL, text);
+        }
+
+        if (!text) {
+                asprintf(&out_tmp, "%s</table>\n</BODY>\n</HTML>", out);
+                free(out);
+                out = out_tmp;
+        }
+
+        *message = out;
+        return 0;
+}
+
 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
 int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, edg_wll_JobStat *statsOut, char **message, int text)
@@ -223,153 +421,149 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 	return 0;
 }
 
-#define TR(name,type,field,null) \
-{ \
-	int l; \
-	if ((field) != (null)){ \
-		l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
-			"<td>" type "</td></tr>\n", (field)); \
-	} \
-	else{ \
-                l = asprintf(&pomA,"<tr class=\"notused\"><th>" name \
-                        "</th></tr>\n"); \
-	} \
-	pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
-	strcpy(pomB+pomL, pomA); \
-	pomL += l; \
-	free(pomA); \
-	pomA=NULL; \
-}
 
-#define TRL(name,type,field,null) \
-{ \
-        int l; \
-        if ((field) != (null)){ \
-                l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
-                        "<td><a href=\""type"\">" type "</a></td></tr>\n", (field), (field)); \
-        } \
-        else{ \
-                l = asprintf(&pomA,"<tr class=\"notused\"><th>" name \
-                        "</th></tr>\n"); \
-        } \
-        pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
-        strcpy(pomB+pomL, pomA); \
-        pomL += l; \
-        free(pomA); \
-	pomA=NULL; \
-}
+int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message, int text){
+	char *out_tmp = NULL, *flags = NULL, *cond, *header = NULL, *out;
+	int alljobs = strcmp(ni->jobid,"all_jobs");
 
-int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, char **message){
-	char *pomA = NULL, *pomB = NULL, *flags = NULL, *cond, *header = NULL;
-	int pomL = 0;
+        header = get_html_header(ctx, text);
+        if (!text) asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Notification Detail</TITLE>\n<HEAD>%s\n</HEAD>\n<BODY>\n"
+                "<h2>Notification %s</h2>\n"
+                "<table halign=\"left\">\n",
+                header ? header : "",
+		ni->notifid);
+        else
+                out = strdup("");
+
+        free(header);
 
 	flags = edg_wll_stat_flags_to_string(ni->flags);
-	printf("flags %d - %s", ni->flags, flags);
 
-	TR("Owner", "%s", ni->owner, NULL);
-	TR("Destination", "%s", ni->destination, NULL);
-	TR("Valid until", "%s", ni->valid, NULL);
-	TR("Flags", "%s", flags, NULL);
-	if (strcmp(ni->jobid,"all_jobs")) {
-		TRL("Job ID", "%s", ni->jobid, NULL); }
-	else {
-		TR("Job ID", "%s", "&mdash;", NULL);
-	}
+	add_row(&out, "Notif_id", "Notification ID", ni->notifid, NULL, text);
+	add_row(&out, "Owner", "Owner", ni->owner, NULL, text);
+	add_row(&out, "Destination", "Destination", ni->destination, NULL, text);
+	add_row(&out, "Valid_until", "Valid until", ni->valid, NULL, text);
+	add_row(&out, "Flags", "Flags", flags, NULL, text);
+	add_row(&out, "Job_id", "Job ID", alljobs ? ni->jobid : NULL, alljobs ? ni->jobid : NULL, text);
+
         free(flags);
 
-	if (! edg_wll_Condition_Dump(ni, &cond, 0)){
-		asprintf(&pomA, "%s<h3>Conditions</h3>\r\n<pre>%s</pre>\r\n",
-        	        pomB, cond);
-	        free(pomB);
-        	pomB = pomA;
-		pomL = strlen(pomB);
-
-	}
+	edg_wll_Condition_Dump(ni, &cond, text);
+	add_row(&out, "Conditions", "Conditions", cond, NULL, text);
 	free(cond);
 
-	header = get_html_header(ctx, 0);
-	asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Notification Detail</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
-		"<h2>Notification %s</h2>\r\n"
-		"<table halign=\"left\">%s</table>"
-		"\t</body>\r\n</html>",
-		header,
-		ni->notifid, pomB);
-	free(header);
+        if (!text) {
+                asprintf(&out_tmp, "%s</table>\n</BODY>\n</HTML>", out);
+                free(out);
+                out = out_tmp;
+        }
 	
-	*message = pomA;
+	*message = out;
 
 	return 0;
 }
 
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
-int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
+int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message, int text)
 {
-        char *pomA = NULL, *pomB = NULL;
-	int pomL = 0;
-	char	*chid,*chstat,*chis = NULL, *chos = NULL, *chpa = NULL, *header = NULL;
-	char	*jdl,*rsl,*children;
+        char *out_tmp = NULL, *header = NULL, *out, *jdl = NULL, *rsl = NULL, *children = NULL, *chtemp;
+	time_t time;
+
+        char *pomA = NULL;
 	int	i;
 
-	jdl = strdup("");
-	rsl = strdup("");
-	children = strdup("");
+        chtemp = edg_wlc_JobIdUnparse(stat.jobId);
+
+        header = get_html_header(ctx, text);
+        if (!text) asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Job Detail</TITLE>\n<HEAD>%s\n</HEAD>\n<BODY>\n"
+                "<h2>%s</h2>\n"
+                "<table halign=\"left\">\n",
+                header ? header : "",
+                chtemp);
+        else
+                out = strdup("");
+
+        free(header);
+
+	add_row(&out, "Job", "Job ID", chtemp, chtemp, text);
+	free(chtemp);
+	chtemp = stat.parent_job ? edg_wlc_JobIdUnparse(stat.parent_job) : NULL;
+	add_row(&out, "parent_job", "Parent job", chtemp, chtemp, text);
+	free(chtemp);
+	add_row(&out, "Status", "Status", (chtemp = edg_wll_StatToString(stat.state)), NULL, text);
+	free(chtemp);
+	add_row(&out, "job_type", "Type", edg_wll_StatusJobtypeNames[stat.jobtype], NULL, text);
+	add_row(&out, "owner", "Owner", stat.owner, NULL, text);
+	add_row(&out, "payload_owner", "Payload Owner", stat.payload_owner, NULL, text);
+	add_row(&out, "condorId", "Condor Id", stat.condorId, NULL, text);
+	add_row(&out, "globusId", "Globus Id", stat.globusId, NULL, text);
+	add_row(&out, "localId", "Local Id", stat.localId, NULL, text);
+	add_row(&out, "reason", "Reason", stat.reason, NULL, text);
+	time = stat.stateEnterTime.tv_sec;
+	asprintf(&chtemp, "%s", ctime(&time));
+	chtemp[strlen(chtemp)-1]='\0';
+	add_row(&out, "stateEnterTime", "State entered", time > 0 ? chtemp : NULL, NULL, text);
+	free(chtemp);
+	time = stat.lastUpdateTime.tv_sec;
+	asprintf(&chtemp, "%s", ctime(&time));
+	chtemp[strlen(chtemp)-1]='\0';
+	add_row(&out, "lastUpdateTime", "Last update", time > 0 ? chtemp : NULL, NULL, text);
+	free(chtemp);
+	add_row(&out, "expectUpdate", "Expect update", stat.expectUpdate ? "YES" : "NO", NULL, text);
+	add_row(&out, "expectFrom", "Expect update from", stat.expectFrom, NULL, text);
+	add_row(&out, "location", "Location", stat.location, NULL, text);
+	add_row(&out, "destination", "Destination", stat.destination, NULL, text);
+	add_row(&out, "cancelling", "Cancelling", stat.cancelling>0 ? "YES" : "NO", NULL, text);
+	add_row(&out, "cancelReason", "Cancel reason", stat.cancelReason, NULL, text);
+	asprintf(&chtemp, "%d", stat.cpuTime);
+	add_row(&out, "cpuTime", "CPU time", chtemp, NULL, text);
+	free(chtemp);
+	if (stat.done_code != -1) asprintf(&chtemp, "%d", stat.done_code); 
+	else chtemp = NULL;
+	add_row(&out, "done_code", "Done code", chtemp, NULL, text);
+	free(chtemp);
+	if (stat.exit_code != -1) asprintf(&chtemp, "%d", stat.exit_code); 
+	else chtemp = NULL;
+	add_row(&out, "exit_code", "Exit code", chtemp, NULL, text);
+	free(chtemp);
+	chtemp = stat.isb_transfer ? edg_wlc_JobIdUnparse(stat.isb_transfer) : NULL;
+	add_row(&out, "input_sandbox", "input sandbox", chtemp, chtemp, text);
+	free(chtemp);
+	chtemp = stat.osb_transfer ? edg_wlc_JobIdUnparse(stat.osb_transfer) : NULL;
+	add_row(&out, "output_sandbox", "Output sandbox", chtemp, chtemp, text);
+	free(chtemp);
+
+        if (!text) {
+                asprintf(&out_tmp, "%s</table>\n</BODY>\n</HTML>", out);
+                free(out);
+                out = out_tmp;
+        }
 	
-        chid = edg_wlc_JobIdUnparse(stat.jobId);
-	if (stat.isb_transfer) chis = edg_wlc_JobIdUnparse(stat.isb_transfer);
-	if (stat.osb_transfer) chos = edg_wlc_JobIdUnparse(stat.osb_transfer);
-	if (stat.parent_job) chpa = edg_wlc_JobIdUnparse(stat.parent_job);
-
-	TRL("Parent job", "%s", chpa, NULL);
-	TR("Status","%s",(chstat = edg_wll_StatToString(stat.state)), NULL);
-	free(chstat);
-	TR("Type","%s",edg_wll_StatusJobtypeNames[stat.jobtype], NULL);
-	TR("Owner","%s",stat.owner, NULL);
-	TR("Payload Owner","%s",stat.payload_owner, NULL);
-	TR("Condor Id","%s",stat.condorId, NULL);
-	TR("Globus Id","%s",stat.globusId, NULL);
-	TR("Local Id","%s",stat.localId, NULL);
-	TR("Reason","%s",stat.reason, NULL);
-	if ( (stat.stateEnterTime.tv_sec) || (stat.stateEnterTime.tv_usec) ) {
-		time_t  time = stat.stateEnterTime.tv_sec;
-		TR("State entered","%s",ctime(&time), NULL);
-	}
-	else
-		TR("State entered", "%s", (char*)NULL, NULL);
-        if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
-		time_t  time = stat.lastUpdateTime.tv_sec;
-		TR("Last update","%s",ctime(&time), NULL);
-	}
-	else
-		TR("Last update", "%s", (char*)NULL, NULL);
-	TR("Expect update","%s",stat.expectUpdate ? "YES" : "NO", NULL);
-	TR("Expect update from","%s",stat.expectFrom, NULL);
-	TR("Location","%s",stat.location, NULL);
-	TR("Destination","%s",stat.destination, NULL);
-	TR("Cancelling","%s",stat.cancelling>0 ? "YES" : "NO", NULL);
-	TR("Cancel reason","%s",stat.cancelReason, NULL);
-	TR("CPU time","%d",stat.cpuTime, 0);
-
-	
-	TR("Done code","%d",stat.done_code, -1);
-	TR("Exit code","%d",stat.exit_code, -1);
-
-	TRL("Input sandbox", "%s", chis, NULL);
-	TRL("Output sandbox", "%s", chos, NULL);
-
 	if (stat.jdl){
-		char *jdl_unp;
-		if (pretty_print(stat.jdl, &jdl_unp) == 0)
-			asprintf(&jdl,"<h3>Job description</h3>\r\n"
-                                "<pre>%s</pre>\r\n",jdl_unp);
-		else
-			asprintf(&jdl,"<h3>Job description (not a ClassAd)"
-				"</h3>\r\n<pre>%s</pre>\r\n",stat.jdl);
+		if (text) {
+		        char* my_jdl = glite_lbu_EscapeULM(stat.jdl);
+	                asprintf(&jdl,"jdl=%s\n", my_jdl);
+        	        free(my_jdl);
+		}
+		else {
+			char *jdl_unp;
+			if (pretty_print(stat.jdl, &jdl_unp) == 0)
+				asprintf(&jdl,"<h3>Job description</h3>\r\n"
+                        	        "<pre>%s</pre>\r\n",jdl_unp);
+			else
+				asprintf(&jdl,"<h3>Job description (not a ClassAd)"
+					"</h3>\r\n<pre>%s</pre>\r\n",stat.jdl);
+		}
 	}
+	else if (text) asprintf(&jdl,"jdl=\n");
 
-	if (stat.rsl) asprintf(&rsl,"<h3>RSL</h3>\r\n"
-		"<pre>%s</pre>\r\n",stat.rsl);
+	if (stat.rsl) {
+		if (text) asprintf(&rsl,"<h3>RSL</h3>\r\n<pre>%s</pre>\r\n",stat.rsl);
+		else asprintf(&rsl,"rsl=%s\n", stat.rsl);
+	}
+	else if (text) asprintf(&rsl,"rsl=\n");
 
-	if ((stat.jobtype == EDG_WLL_STAT_COLLECTION) && (stat.children_num > 0)){
+	if ((!text) && (stat.jobtype == EDG_WLL_STAT_COLLECTION) && (stat.children_num > 0)){
 		asprintf(&children, "<h3>Children</h3>\r\n");
 		for (i = 0; i < stat.children_num; i++){
 			asprintf(&pomA,"%s\t\t <li/> <a href=\"%s\">%s</a>\r\n",
@@ -378,23 +572,16 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		}
 	}
 
-	header = get_html_header(ctx, 0);
-	asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Job Detail</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
-			"<h2>%s</h2>\r\n"
-			"<table halign=\"left\">%s</table>"
-			"%s%s%s"
-			"\t</body>\r\n</html>",
-			header,
-                	chid,pomB,jdl,rsl, children);
-        free(pomB);
-	free(header);
+	asprintf(&pomA, "%s%s%s%s%s", 
+                	out,
+			jdl ? jdl : "",
+			rsl ? rsl : "",
+			children ? children : "",
+			text ? "" : "\n</body></html>");
 
         *message = pomA;
 
-	free(chid);
-	if (chis) free(chis);
-	if (chos) free(chos);
-	if (chpa) free(chpa);
+	free(out);
 	free(jdl);
 	free(rsl);
 	free(children);
@@ -612,7 +799,7 @@ int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message, int text) {
 		header ? header : "",
 		edg_wll_ServerStatisticsInTmp() ? "<b>WARNING: L&B statistics are stored in /tmp, please, configure L&B server to make them really persistent!</b><br/><br/>\n" : "");
 	else
-		asprintf(&out, "");
+                out = strdup("");
 
 	free(header);
 

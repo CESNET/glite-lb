@@ -31,12 +31,19 @@ typedef struct {
 	char *key;
 	int order; } JobIdSorter;
 
+typedef enum _http_output_type{
+	HTTP_OUTPUT_TYPE_HTML,
+	HTTP_OUTPUT_TYPE_TEXT,
+	HTTP_OUTPUT_TYPE_TEXT_APPEND
+} http_output_type;
+
 int edg_wll_QueryToHTML(edg_wll_Context,edg_wll_Event *,char **);
-int edg_wll_GeneralJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **);
+int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, int text);
+int edg_wll_GeneralJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **, int text);
 int edg_wll_CreamJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **);
 int edg_wll_UserInfoToHTML(edg_wll_Context, edg_wlc_JobId *, edg_wll_JobStat *, char **, int text);
 int edg_wll_UserNotifsToHTML(edg_wll_Context ctx, char **notifids, char **message, http_admin_option option, int adm);
-int edg_wll_NotificationToHTML(edg_wll_Context ctx, notifInfo *ni, char **message);
+int edg_wll_NotificationToHTML(edg_wll_Context ctx, notifInfo *ni, char **message, int text);
 char *edg_wll_ErrorToHTML(edg_wll_Context,int);
 int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx, edg_wll_JobStat stat, char **message);
 int edg_wll_VMHostToHTML(edg_wll_Context ctx, char *hostname, edg_wll_JobStat *states, char **message);

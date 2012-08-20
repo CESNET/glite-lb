@@ -1009,12 +1009,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				ret = HTTP_BADREQ;
 			}
 			else switch (edg_wll_JobStatusServer(ctx,jobId,EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN | rflags, &stat)) {
-				case 0: if (text) { 
-						edg_wll_JobStatusToText(ctx,stat,&message); 
-						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
-					}
-					else if (html) {
-						edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
+				case 0:  
 						switch(stat.jobtype){
 						case EDG_WLL_STAT_CREAM:
 							edg_wll_CreamJobStatusToHTML(ctx,stat,&message);
@@ -1025,12 +1020,12 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 							break;
 						default:
 							//XXX need some more implementations
-							edg_wll_GeneralJobStatusToHTML(ctx,stat,&message);
+							edg_wll_GeneralJobStatusToHTML(ctx,stat,&message,text);
 							break;
 						}
-					}
+						edg_wll_ServerStatisticsIncrement(ctx, text ? SERVER_STATS_TEXT_VIEWS : SERVER_STATS_HTML_VIEWS);
 					
-					else ret = HTTP_OK;
+						ret = HTTP_OK;
 					break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
 				case EINVAL: ret = HTTP_INVALID; break;
@@ -1078,14 +1073,9 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			
 			free(pomCopy);
 
-			if (text) {
-				edg_wll_NotificationToText(ctx, &ni, &message);
-				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
-			}
-			else {
-				edg_wll_NotificationToHTML(ctx, &ni, &message);
-				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
-			}
+			edg_wll_NotificationToHTML(ctx, &ni, &message, text);
+
+			edg_wll_ServerStatisticsIncrement(ctx, text ? SERVER_STATS_TEXT_VIEWS : SERVER_STATS_HTML_VIEWS);
 
 			freeNotifInfo(&ni);
 
@@ -1171,7 +1161,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 		} else if (extra_opt == HTTP_EXTRA_OPTION_CONFIGURATION) {
 			// also browser-readable HTML version here?
 			isadm = ctx->noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
-			edg_wll_ConfigurationToText(ctx, isadm, &message);
+			edg_wll_ConfigurationToHTML(ctx, isadm, &message, text);
 			edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
 	/* GET /?stats*/
 		} else if (extra_opt == HTTP_EXTRA_OPTION_STATS) {
