@@ -687,9 +687,10 @@ edg_wll_InitAcl(edg_wll_Acl *acl)
 void
 edg_wll_FreeAcl(edg_wll_Acl acl)
 {
-   if ( acl->value ) GRSTgaclAclFree(acl->value);
-   if ( acl->string ) free(acl->string);
-   free(acl);
+   if (acl) {
+	   if ( acl->value ) GRSTgaclAclFree(acl->value);
+	   if ( acl->string ) free(acl->string); 
+	   free(acl); }
 }
 
 int
