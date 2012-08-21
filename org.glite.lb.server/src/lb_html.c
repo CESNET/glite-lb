@@ -261,6 +261,7 @@ int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, 
                 edg_wll_GetServerState(ctx, EDG_WLL_STATE_DUMP_END, &end);
 		add_row(&out, "dump_start", "Last dump start", start, NULL, text);
 		add_row(&out, "dump_end", "Last dump end", end, NULL, text);
+		add_row(&out, "html_header", "HTML Header file", ctx->html_header_file, NULL, text);
         }
 
         if (!text) {
@@ -532,6 +533,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	chtemp = stat.osb_transfer ? edg_wlc_JobIdUnparse(stat.osb_transfer) : NULL;
 	add_row(&out, "output_sandbox", "Output sandbox", chtemp, chtemp, text);
 	free(chtemp);
+	add_row(&out, "acl", "ACL", stat.acl, NULL, text);
 
         if (!text) {
                 asprintf(&out_tmp, "%s</table>\n</BODY>\n</HTML>", out);
