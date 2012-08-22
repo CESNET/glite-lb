@@ -494,6 +494,24 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	add_row(&out, "Status", "Status", (chtemp = edg_wll_StatToString(stat.state)), NULL, text);
 	free(chtemp);
 	add_row(&out, "job_type", "Type", edg_wll_StatusJobtypeNames[stat.jobtype], NULL, text);
+
+	switch (stat.jobtype) {
+		case EDG_WLL_STAT_CREAM:
+		        chtemp = edg_wll_CreamStatToString(stat.cream_state);
+        		add_row(&out, "CREAM_Status", "CREAM Status", chtemp, NULL, text);
+	        	free(chtemp);
+			break;
+		case EDG_WLL_STAT_VIRTUAL_MACHINE:
+		        chtemp = edg_wll_VMStatToString(stat.vm_state);
+        		add_row(&out, "VM_Status", "VM Status", chtemp, NULL, text);
+	        	free(chtemp);
+			break;
+		case EDG_WLL_STAT_PBS:
+			break;
+//		case EDG_WLL_STAT_FILE_TRANSFER:
+//		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
+	}
+
 	add_row(&out, "owner", "Owner", stat.owner, NULL, text);
 	add_row(&out, "payload_owner", "Payload Owner", stat.payload_owner, NULL, text);
 	add_row(&out, "condorId", "Condor Id", stat.condorId, NULL, text);
@@ -534,6 +552,23 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	add_row(&out, "output_sandbox", "Output sandbox", chtemp, chtemp, text);
 	free(chtemp);
 	add_row(&out, "acl", "ACL", stat.acl, NULL, text);
+        if (stat.user_tags) {
+		chtemp = NULL;
+                for (i=0; stat.user_tags[i].tag; i++) {
+			asprintf(&out_tmp, "%s%s%s%s=%s%s",
+				chtemp ? chtemp : "",
+				i > 0 ? (text ? "," : "<BR>") : "",
+				text ? "\"" : "",
+				stat.user_tags[i].tag,
+				stat.user_tags[i].value,
+				text ? "\"" : "");
+			free(chtemp);
+			chtemp = out_tmp;
+		}
+		add_row(&out, "user_tags", "User Tags", chtemp, NULL, text);
+		free(chtemp);
+	}
+
 
         if (!text) {
                 asprintf(&out_tmp, "%s</table>\n</BODY>\n</HTML>", out);
