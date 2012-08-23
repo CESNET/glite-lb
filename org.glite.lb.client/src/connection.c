@@ -361,9 +361,10 @@ int edg_wll_open(edg_wll_Context ctx, int* connToUse)
 
 	if (acquire_cred) {
 		edg_wll_GssCred newcred = NULL;
-		if (edg_wll_gss_acquire_cred_gsi(
+		if (edg_wll_gss_acquire_cred(
 	        	ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 		       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+			GSS_C_INITIATE,
 		       &newcred, &gss_stat)) {
 		    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
 		    goto err;
@@ -749,9 +750,10 @@ int edg_wll_accept(edg_wll_Context ctx, int fd)
 
 	if (acquire_cred) {
 		edg_wll_GssCred newcred = NULL;
-		if (edg_wll_gss_acquire_cred_gsi(
+		if (edg_wll_gss_acquire_cred(
 	        	ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 		       ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+			GSS_C_ACCEPT,
 		       &newcred, &gss_stat)) {
 		    edg_wll_SetErrorGss(ctx, "failed to load GSI credentials", &gss_stat);
 		    goto err;

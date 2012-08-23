@@ -461,7 +461,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
    if (ret < 0)
    	glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed, unable to access credentials\n");
    /* XXX DK: support noAuth */
-   ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred, &gss_stat);
+   ret = edg_wll_gss_acquire_cred(cert_file, key_file, GSS_C_ACCEPT, &cred, &gss_stat);
    if (ret) {
 	/* XXX DK: call edg_wll_gss_get_error() */
 	glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"Failed to get GSI credentials. Exiting.\n");
@@ -585,7 +585,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	edg_wll_GssCred newcred;
 	case 0: break;
 	case 1:
-		ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file,&newcred,&gss_stat);
+		ret = edg_wll_gss_acquire_cred(cert_file,key_file,GSS_C_ACCEPT, &newcred,&gss_stat);
 		if (ret) {
 			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"Reloading credentials failed, continue with older\n");
 		} else {

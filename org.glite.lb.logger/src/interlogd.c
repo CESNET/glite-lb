@@ -526,7 +526,7 @@ main (int argc, char **argv)
   }
   cred_handle->creds = NULL;
   cred_handle->counter = 0;
-  ret = edg_wll_gss_acquire_cred_gsi(cert_file, key_file, &cred_handle->creds, &gss_stat);
+  ret = edg_wll_gss_acquire_cred(cert_file, key_file, GSS_C_INITIATE, &cred_handle->creds, &gss_stat);
   if (ret) {
      char *gss_err = NULL;
 

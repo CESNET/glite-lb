@@ -701,7 +701,7 @@ int main(int argc, char *argv[])
 		ret = edg_wll_gss_watch_creds(server_cert, &cert_mtime);
 		if (ret < 0)
         		glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"edg_wll_gss_watch_creds failed, unable to access credentials\n");
-		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &mycred, &gss_code) && mycred->name != NULL)
+		if ( !edg_wll_gss_acquire_cred(server_cert, server_key, GSS_C_ACCEPT, &mycred, &gss_code) && mycred->name != NULL)
 		{
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_INFO, "Server identity: %s", mycred->name);
 			server_subject = strdup(mycred->name);
@@ -1028,7 +1028,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	switch ( edg_wll_gss_watch_creds(server_cert, &cert_mtime) ) {
 	case 0: break;
 	case 1:
-		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, &gss_code) ) {
+		if ( !edg_wll_gss_acquire_cred(server_cert, server_key, GSS_C_ACCEPT, &newcred, &gss_code) ) {
 			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "[%d] reloading credentials successful", getpid());
 			edg_wll_gss_release_cred(&mycred, NULL);
 			mycred = newcred;
@@ -1041,7 +1041,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		break;
 	}
 #else
-		if ( !edg_wll_gss_acquire_cred_gsi(server_cert, server_key, &newcred, &gss_code) ) {
+	if ( !edg_wll_gss_acquire_cred(server_cert, server_key, GSS_C_ACCEPT, &newcred, &gss_code) ) {
 			glite_common_log(LOG_CATEGORY_SECURITY, LOG_PRIORITY_INFO, "[%d] reloading credentials successful", getpid());
 			edg_wll_gss_release_cred(&mycred, NULL);
 			mycred = newcred;

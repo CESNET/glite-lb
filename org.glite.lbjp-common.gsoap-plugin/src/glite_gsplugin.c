@@ -200,7 +200,7 @@ glite_gsplugin(struct soap *soap, struct soap_plugin *p, void *arg)
 			free(pdata);
 			return ENOMEM;
 		}
-		if ( edg_wll_gss_acquire_cred_gsi(NULL, NULL, &pdata->ctx->cred, &gss_code) ) {
+		if ( edg_wll_gss_acquire_cred(NULL, NULL, GSS_C_ACCEPT, &pdata->ctx->cred, &gss_code) ) {
 			/*	XXX: Let user know, that cred. load failed. Somehow...
 			 */
 			glite_gsplugin_free_context(pdata->ctx);
@@ -299,7 +299,7 @@ glite_gsplugin_connect(
 
 	if ( ctx->cred == NULL ) {
 		pdprintf(("GSLITE_GSPLUGIN: loading default credentials\n"));
-		ret = edg_wll_gss_acquire_cred_gsi(NULL, NULL,
+		ret = edg_wll_gss_acquire_cred(NULL, NULL, GSS_C_INITIATE,
                 	&ctx->cred, &gss_stat);
 		if ( ret ) {
 			msg = "failed to load GSI credentials";

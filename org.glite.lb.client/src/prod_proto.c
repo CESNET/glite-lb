@@ -275,9 +275,10 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 	edg_wll_poolUnlock();
 
 	/* acquire gss credentials */
-	ret = edg_wll_gss_acquire_cred_gsi(
+	ret = edg_wll_gss_acquire_cred(
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+	      GSS_C_INITIATE,
 	      &ctx->connections->connPool[index].gsiCred, &gss_stat);
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {
@@ -305,9 +306,10 @@ int edg_wll_log_connect(edg_wll_Context ctx, int *conn)
 		int	opt;
 
 	/* acquire gss credentials */
-	ret = edg_wll_gss_acquire_cred_gsi(
+	ret = edg_wll_gss_acquire_cred(
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+	      GSS_C_INITIATE,
 	      &ctx->connections->connPool[index].gsiCred, &gss_stat);
 
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
@@ -707,9 +709,10 @@ int edg_wll_log_direct_connect(edg_wll_Context ctx, edg_wll_GssConnection *conn)
 	edg_wlc_JobIdGetServerParts(ctx->p_jobid,&host,&port);
 	port +=1;
 	/* acquire gss credentials */
-	ret = edg_wll_gss_acquire_cred_gsi(
+	ret = edg_wll_gss_acquire_cred(
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 	      ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+	      GSS_C_INITIATE,
 	      &cred, &gss_stat);
 	/* give up if unable to acquire prescribed credentials, otherwise go on anonymously */
 	if (ret && ctx->p_proxy_filename) {

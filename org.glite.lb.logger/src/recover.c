@@ -62,7 +62,7 @@ recover_thread(void *q)
 			edg_wll_GssCred new_creds = NULL;
 
 			int int_ret;
-			int_ret = edg_wll_gss_acquire_cred_gsi(cert_file,key_file, 
+			int_ret = edg_wll_gss_acquire_cred(cert_file,key_file, GSS_C_INITIATE,
 				&new_creds, NULL);
 			if (new_creds != NULL) {
 				if(pthread_mutex_lock(&cred_handle_lock) < 0)

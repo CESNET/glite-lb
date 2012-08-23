@@ -720,6 +720,7 @@ static int edg_wll_SetLoggingJobMaster(
 			err = edg_wll_gss_acquire_cred(
 				ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_cert_filename,
 				ctx->p_proxy_filename ? ctx->p_proxy_filename : ctx->p_key_filename,
+				GSS_C_INITIATE,
 				&cred, &gss_stat);
 			/* give up if unable to acquire prescribed credentials */
 			if (err) {

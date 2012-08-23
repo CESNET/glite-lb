@@ -224,7 +224,7 @@ int main(int argc,char **argv)
 				break;
 			case 'O':
 				if (excl) { usage("new"); return EX_USAGE; } else excl = 1;
-				if ( !edg_wll_gss_acquire_cred_gsi(NULL, NULL, &mycred, &gss_code) )
+				if ( !edg_wll_gss_acquire_cred(NULL, NULL, GSS_C_INITIATE, &mycred, &gss_code) )
 				{
 					conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 					conditions[i][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
