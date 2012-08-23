@@ -28,6 +28,7 @@ limitations under the License.
 
 #include "glite/lbu/trio.h"
 #include "glite/lb/events.h"
+#include "glite/lb/events_json.h"
 #include "glite/lb/context-int.h"
 #include "glite/lb/intjobstat.h"
 #include "glite/lb/process_event.h"
@@ -59,7 +60,6 @@ limitations under the License.
 
 #define mov(a,b) { free(a); a = b; b = NULL; }
 
-static void warn (const char* format, ...) UNUSED_VAR ;
 static char *job_owner(edg_wll_Context,char *);
 static edg_wll_ErrorCode get_job_parent(edg_wll_Context ctx, glite_jobid_const_t job, glite_jobid_t *parent);
 
@@ -89,6 +89,108 @@ static char* matched_substr(char *in, regmatch_t match)
 
 	return s;
 }
+
+
+edg_wll_Event* fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat) {
+        edg_wll_QueryRec         jc0[2], *jc[2];
+        edg_wll_Event *events = NULL;
+
+        jc[0] = jc0;
+        jc[1] = NULL;
+        jc[0][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
+        jc[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+        jc[0][0].value.j = stat->jobId;
+        jc[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+
+        edg_wll_QueryEventsServer(ctx, 1, (const edg_wll_QueryRec **)jc, NULL, &events);
+
+        return events;
+}
+
+
+int collate_history(edg_wll_Context ctx, edg_wll_JobStat *stat, edg_wll_Event* events, int authz_flags) {
+        char                    *event_str = NULL, *history = NULL;
+        void *tmpptr;
+        size_t i;
+        size_t  size, len, maxsize = 1024, newsize;
+        char *olduser;
+        char *oldacluser;
+
+        if (!events || !events[0].type) {
+                history = strdup(HISTORY_EMPTY);
+        } else {
+                history = malloc(maxsize);
+                strcpy(history, HISTORY_HEADER);
+                size = HISTORY_HEADER_SIZE;
+
+                oldacluser = NULL;
+                olduser = NULL;
+                for (i = 0; events && events[i].type; i++) {
+
+                        if ((authz_flags & READ_ANONYMIZED) || (authz_flags & STATUS_FOR_MONITORING)) {
+                                //XXX Intorduce a better method of keeping track if more members/types are affected
+                                olduser=events[i].any.user;
+                                events[i].any.user=(authz_flags & STATUS_FOR_MONITORING) ? NULL : anonymize_string(ctx, events[i].any.user);
+                                if (events[i].any.type==EDG_WLL_EVENT_CHANGEACL) {
+                                        oldacluser=events[i].changeACL.user_id;
+                                        events[i].changeACL.user_id=(authz_flags & STATUS_FOR_MONITORING) ? NULL : anonymize_string(ctx, events[i].changeACL.user_id);
+                                }
+                        }
+
+                        if (edg_wll_UnparseEventJSON(ctx, events + i, &event_str) != 0) goto err;
+
+                        if (olduser) {
+                                free(events[i].any.user);
+                                events[i].any.user=olduser;
+                                olduser = NULL;
+                        }
+                        if (oldacluser) {
+                                free(events[i].changeACL.user_id);
+                                events[i].changeACL.user_id=oldacluser;
+                                oldacluser = NULL;
+                        }
+                        len = strlen(event_str);
+                        newsize = size + len + HISTORY_SEPARATOR_SIZE + HISTORY_FOOTER_SIZE + 1;
+                        if (newsize > maxsize) {
+                                maxsize <<= 1;
+                                if (newsize > maxsize) maxsize = newsize;
+                                if ((tmpptr = realloc(history, maxsize)) == NULL) {
+                                        edg_wll_SetError(ctx, ENOMEM, NULL);
+                                        goto err;
+                                }
+                                history = tmpptr;
+                        }
+                        strncpy(history + size, event_str, len + 1);
+                        size += len;
+                        if (events[i+1].type) {
+                                strcpy(history + size, HISTORY_SEPARATOR);
+                                size += HISTORY_SEPARATOR_SIZE;
+                        }
+                        free(event_str);
+                        event_str = NULL;
+                }
+                strcpy(history + size, HISTORY_FOOTER);
+                size += HISTORY_FOOTER_SIZE;
+                stat->history = history;
+                history = NULL;
+        }
+
+        err:
+        free(history);
+        return edg_wll_Error(ctx, NULL, NULL);
+}
+
+
+int clear_history(edg_wll_Context ctx, edg_wll_Event* events) {
+        int i;
+
+        for (i = 0; events && events[i].type; i++)
+                edg_wll_FreeEvent(&events[i]);
+        free(events);
+
+        return edg_wll_Error(ctx, NULL, NULL);
+}
+
 
 int edg_wll_JobStatusServer(
 	edg_wll_Context	ctx,
@@ -381,6 +483,15 @@ int edg_wll_JobStatusServer(
 			}
 		}
 #endif
+		if (flags & EDG_WLL_NOTIF_HISTORY) {
+			edg_wll_Event* events = NULL;
+			if (!(events = fetch_history(ctx, stat))) {
+				edg_wll_SetError(ctx, ctx->errCode, "Error extracting job history");
+			}
+			else {
+				collate_history(ctx, stat, events, authz_flags);
+			}
+		}
 
 		whole_cycle = 1;
 rollback:
@@ -653,24 +764,6 @@ err:
 	return edg_wll_Error(ctx, NULL, NULL);
 }
 
-
-/*
- * Helper for warning printouts
- */
-
-static void warn(const char* format, ...)
-{
-	va_list l;
-	va_start(l, format);
-
-	/*
-	fprintf(stderr, "Warning: ");
-	vfprintf(stderr, format, l);
-	fputc('\n', stderr);
-	*/
-
-	va_end(l);
-}
 
 static char *job_owner(edg_wll_Context ctx,char *md5_jobid)
 {

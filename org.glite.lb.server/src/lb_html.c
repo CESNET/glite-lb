@@ -467,7 +467,7 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
 int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message, int text)
 {
-        char *out_tmp = NULL, *header = NULL, *out, *jdl = NULL, *rsl = NULL, *children = NULL, *chtemp;
+        char *out_tmp = NULL, *header = NULL, *out, *history = NULL, *jdl = NULL, *rsl = NULL, *children = NULL, *chtemp;
 	time_t time;
 
         char *pomA = NULL;
@@ -485,6 +485,18 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
                 out = strdup("");
 
         free(header);
+
+	if (stat.history) {
+		if (!text) asprintf(&history,"<h3>Job History</h3>\r\n<pre>%s</pre>\r\n", stat.history);
+		else {
+			out_tmp = glite_lbu_EscapeULM(stat.history);
+			asprintf(&history,"history=%s\n", out_tmp);
+			free(out_tmp); }
+	}
+	else {
+		if (!text) asprintf(&history,"<H3><A HREF=\"%s?flags=history\">Display full history of this job</A></H3>\n", chtemp);
+		else asprintf(&history,"history=\n");
+	}
 
 	add_row(&out, "Job", "Job ID", chtemp, chtemp, text);
 	free(chtemp);
@@ -510,6 +522,9 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 			break;
 //		case EDG_WLL_STAT_FILE_TRANSFER:
 //		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
+		default:
+			// No handling for other job types
+			break;
 	}
 
 	add_row(&out, "owner", "Owner", stat.owner, NULL, text);
@@ -595,7 +610,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	else if (text) asprintf(&jdl,"jdl=\n");
 
 	if (stat.rsl) {
-		if (text) asprintf(&rsl,"<h3>RSL</h3>\r\n<pre>%s</pre>\r\n",stat.rsl);
+		if (!text) asprintf(&rsl,"<h3>RSL</h3>\r\n<pre>%s</pre>\r\n",stat.rsl);
 		else asprintf(&rsl,"rsl=%s\n", stat.rsl);
 	}
 	else if (text) asprintf(&rsl,"rsl=\n");
@@ -609,8 +624,9 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		}
 	}
 
-	asprintf(&pomA, "%s%s%s%s%s", 
+	asprintf(&pomA, "%s%s%s%s%s%s", 
                 	out,
+			history ? history : "",
 			jdl ? jdl : "",
 			rsl ? rsl : "",
 			children ? children : "",

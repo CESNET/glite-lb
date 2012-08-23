@@ -26,7 +26,6 @@ limitations under the License.
 #include <assert.h>
 
 #include "glite/lb/context-int.h"
-#include "glite/lb/events_json.h"
 #include "glite/lbu/trio.h"
 #include "glite/lbu/log.h"
 
@@ -39,11 +38,9 @@ limitations under the License.
 #include "authz_policy.h"
 #include "get_events.h"
 #include "server_stats.h"
+#include "jobstat.h"
 
 static int notif_match_conditions(edg_wll_Context,const edg_wll_JobStat *,const edg_wll_JobStat *,const char *, int flags);
-static edg_wll_Event* fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat);
-static int collate_history(edg_wll_Context ctx, edg_wll_JobStat *stat, edg_wll_Event* events, int authz_flags);
-static int clear_history();
 
 int edg_wll_NotifExpired(edg_wll_Context,const char *);
 
@@ -315,113 +312,3 @@ int edg_wll_NotifCheckAuthz(edg_wll_Context ctx,edg_wll_JobStat *stat,
 	return ret;
 }
 
-
-#define HISTORY_EMPTY "[]"
-#define HISTORY_HEADER "[\n"
-#define HISTORY_HEADER_SIZE 2
-#define HISTORY_FOOTER "\n]"
-#define HISTORY_FOOTER_SIZE 2
-#define HISTORY_SEPARATOR ",\n"
-#define HISTORY_SEPARATOR_SIZE 2
-
-static edg_wll_Event* fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat) {
-        edg_wll_QueryRec         jc0[2], *jc[2];
-        edg_wll_Event *events = NULL;
-
-	jc[0] = jc0;
-	jc[1] = NULL;
-	jc[0][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
-	jc[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-	jc[0][0].value.j = stat->jobId;
-	jc[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-
-	if (edg_wll_QueryEventsServer(ctx, 1, (const edg_wll_QueryRec **)jc, NULL, &events) == 0) {
-		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "NOTIFY: events fetched");
-
-	}
-
-	return events;
-}
-
-static int collate_history(edg_wll_Context ctx, edg_wll_JobStat *stat, edg_wll_Event* events, int authz_flags) {
-	char			*event_str = NULL, *history = NULL;
-	void *tmpptr;
-	size_t i;
-        size_t  size, len, maxsize = 1024, newsize;
-	char *olduser;
-	char *oldacluser;
-
-	if (!events || !events[0].type) {
-		history = strdup(HISTORY_EMPTY);
-	} else {
-		history = malloc(maxsize);
-		strcpy(history, HISTORY_HEADER);
-		size = HISTORY_HEADER_SIZE;
-
-		oldacluser = NULL;
-		olduser = NULL;
-		for (i = 0; events && events[i].type; i++) {
-	
-			if ((authz_flags & READ_ANONYMIZED) || (authz_flags & STATUS_FOR_MONITORING)) {
-				//XXX Intorduce a better method of keeping track if more members/types are affected
-				olduser=events[i].any.user;
-				events[i].any.user=(authz_flags & STATUS_FOR_MONITORING) ? NULL : anonymize_string(ctx, events[i].any.user);
-				if (events[i].any.type==EDG_WLL_EVENT_CHANGEACL) {
-					oldacluser=events[i].changeACL.user_id;
-					events[i].changeACL.user_id=(authz_flags & STATUS_FOR_MONITORING) ? NULL : anonymize_string(ctx, events[i].changeACL.user_id);
-				}
-			}
-
-			if (edg_wll_UnparseEventJSON(ctx, events + i, &event_str) != 0) goto err;
-
-			if (olduser) {
-				free(events[i].any.user);
-				events[i].any.user=olduser;
-				olduser = NULL;
-			}
-			if (oldacluser) {
-				free(events[i].changeACL.user_id);
-				events[i].changeACL.user_id=oldacluser;
-				oldacluser = NULL;
-			}
-
-			len = strlen(event_str);
-			newsize = size + len + HISTORY_SEPARATOR_SIZE + HISTORY_FOOTER_SIZE + 1;
-			if (newsize > maxsize) {
-				maxsize <<= 1;
-				if (newsize > maxsize) maxsize = newsize;
-				if ((tmpptr = realloc(history, maxsize)) == NULL) {
-					edg_wll_SetError(ctx, ENOMEM, NULL);
-					goto err;
-				}
-				history = tmpptr;
-			}
-			strncpy(history + size, event_str, len + 1);
-			size += len;
-			if (events[i+1].type) {
-				strcpy(history + size, HISTORY_SEPARATOR);
-				size += HISTORY_SEPARATOR_SIZE;
-			}
-			free(event_str);
-			event_str = NULL;
-		}
-		strcpy(history + size, HISTORY_FOOTER);
-		size += HISTORY_FOOTER_SIZE;
-		stat->history = history;
-		history = NULL;
-	}
-
-	err:
-	free(history);
-	return edg_wll_Error(ctx, NULL, NULL);
-}
-
-static int clear_history(edg_wll_Context ctx, edg_wll_Event* events) {
-	int i;
-
-	for (i = 0; events && events[i].type; i++)
-		edg_wll_FreeEvent(&events[i]);
-	free(events);
-
-	return edg_wll_Error(ctx, NULL, NULL);
-}

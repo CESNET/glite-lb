@@ -25,6 +25,14 @@ limitations under the License.
 #include "glite/lb/intjobstat_supp.h"
 #include "glite/lbu/db.h"
 
+#define HISTORY_EMPTY "[]"
+#define HISTORY_HEADER "[\n"
+#define HISTORY_HEADER_SIZE 2
+#define HISTORY_FOOTER "\n]"
+#define HISTORY_FOOTER_SIZE 2
+#define HISTORY_SEPARATOR ",\n"
+#define HISTORY_SEPARATOR_SIZE 2
+
 int edg_wll_JobStatusServer(edg_wll_Context, glite_jobid_const_t, int, edg_wll_JobStat *);
 
 
@@ -60,5 +68,10 @@ int add_stringlist(char ***, const char *);
 
 edg_wll_ErrorCode edg_wll_GetSubjobHistogram(edg_wll_Context, glite_jobid_const_t parent_jobid, int *hist);
 edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context, glite_jobid_const_t parent_jobid, intJobStat *ijs);
+
+edg_wll_Event* fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat);
+int collate_history(edg_wll_Context ctx, edg_wll_JobStat *stat, edg_wll_Event* events, int authz_flags);
+int clear_history();
+
 
 #endif /* GLITE_LB_LBS_JOBSTAT_H*/
