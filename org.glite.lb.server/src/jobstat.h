@@ -71,7 +71,7 @@ edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context, glite_jobid_cons
 
 edg_wll_Event* fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat);
 int collate_history(edg_wll_Context ctx, edg_wll_JobStat *stat, edg_wll_Event* events, int authz_flags);
-int clear_history();
+//int clear_history();
 
 
 #endif /* GLITE_LB_LBS_JOBSTAT_H*/

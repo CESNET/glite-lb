@@ -180,17 +180,15 @@ int collate_history(edg_wll_Context ctx, edg_wll_JobStat *stat, edg_wll_Event* e
         return edg_wll_Error(ctx, NULL, NULL);
 }
 
-
-int clear_history(edg_wll_Context ctx, edg_wll_Event* events) {
-        int i;
-
-        for (i = 0; events && events[i].type; i++)
-                edg_wll_FreeEvent(&events[i]);
-        free(events);
-
-        return edg_wll_Error(ctx, NULL, NULL);
-}
-
+//int clear_history(edg_wll_Context ctx, edg_wll_Event* events) {
+//        int i;
+//
+//        for (i = 0; events && events[i].type; i++)
+//                edg_wll_FreeEvent(&events[i]);
+//        free(events);
+//
+//       return edg_wll_Error(ctx, NULL, NULL);
+//}
 
 int edg_wll_JobStatusServer(
 	edg_wll_Context	ctx,
