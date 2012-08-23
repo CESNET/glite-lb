@@ -16,6 +16,40 @@ static int serverStatisticsFD;
 static int stats_in_tmp = 0;
 static int msync_counter = 0;
 
+char *edg_wll_server_statistics_type_title[] = {
+        "gLite job regs",
+        "PBS job regs",
+        "Condor job regs",
+        "CREAM job regs",
+        "Sandbox regs",
+        "Job events",
+        "HTML accesses",
+        "Plain text accesses",
+        "RSS accesses",
+        "Notification regs (legacy interface)",
+        "Notification regs (msg interface)",
+        "Notifications sent (legacy)",
+        "Notifications sent (msg)",
+        "WS queries",
+        "L&B protocol accesses" };
+
+char *edg_wll_server_statistics_type_key[] = {
+        "glite_jobs",
+        "pbs_jobs",
+        "condor_jobs",
+        "cream_jobs",
+        "sb_ft_jobs",
+        "events",
+        "queries_html",
+        "queries_text",
+        "queries_rss",
+        "notif_regs_legacy",
+        "notif_regs_msg",
+        "notifs_legacy",
+        "notis_msg",
+        "queries_ws",
+        "queries_api" };
+
 int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix)
 {
 	//TODO get file name from command line
@@ -97,7 +131,7 @@ int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix)
         return 0;
 }
 
-int edg_wll_ServerStatisticsIncrement(edg_wll_Context ctx, enum edg_wll_server_statistics_type type)
+int edg_wll_ServerStatisticsIncrement(edg_wll_Context ctx, edg_wll_server_statistics_type type)
 {
 	if (! serverStatisticsMap)
 		return -1;
@@ -119,7 +153,7 @@ int edg_wll_ServerStatisticsIncrement(edg_wll_Context ctx, enum edg_wll_server_s
 	return 0;
 }
 
-int edg_wll_ServerStatisticsGetValue(edg_wll_Context ctx, enum edg_wll_server_statistics_type type)
+int edg_wll_ServerStatisticsGetValue(edg_wll_Context ctx, edg_wll_server_statistics_type type)
 {
 	if (! serverStatisticsMap)
 		return -1;
@@ -138,7 +172,7 @@ int edg_wll_ServerStatisticsGetValue(edg_wll_Context ctx, enum edg_wll_server_st
         return ret;
 }
 
-time_t* edg_wll_ServerStatisticsGetStart(edg_wll_Context ctx, enum edg_wll_server_statistics_type type)
+time_t* edg_wll_ServerStatisticsGetStart(edg_wll_Context ctx, edg_wll_server_statistics_type type)
 {
 	if (! serverStatisticsMap)
 		return NULL;
