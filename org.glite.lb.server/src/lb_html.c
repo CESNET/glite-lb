@@ -47,70 +47,6 @@ limitations under the License.
 #define UNUSED_VAR
 #endif
 
-#define TR(name,type,field,null) \
-{ \
-	int l; \
-	if ((field) != (null)){ \
-		l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
-			"<td>" type "</td></tr>\n", (field)); \
-	} \
-	else{ \
-                l = asprintf(&pomA,"<tr class=\"notused\"><th>" name \
-                        "</th></tr>\n"); \
-	} \
-	pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
-	strcpy(pomB+pomL, pomA); \
-	pomL += l; \
-	free(pomA); \
-	pomA=NULL; \
-}
-
-#define TRL(name,type,field,null) \
-{ \
-        int l; \
-        if ((field) != (null)){ \
-                l = asprintf(&pomA,"<tr><th align=\"left\">" name ":</th>" \
-                        "<td><a href=\""type"\">" type "</a></td></tr>\n", (field), (field)); \
-        } \
-        else{ \
-                l = asprintf(&pomA,"<tr class=\"notused\"><th>" name \
-                        "</th></tr>\n"); \
-        } \
-        pomB = realloc(pomB, sizeof(*pomB)*(pomL+l+1)); \
-        strcpy(pomB+pomL, pomA); \
-        pomL += l; \
-        free(pomA); \
-	pomA=NULL; \
-}
-
-#define TRS(name,type,field) \
-{ \
-        int l; \
-        if (field) \
-                l = asprintf(&a,"%s=" type "", \
-                        name, field); \
-        else \
-                l = asprintf(&a,"%s=\n", name); \
-        b = realloc(b, sizeof(*b)*(pomL+l+1)); \
-        strcpy(b+pomL, a); \
-        pomL += l; \
-        free(a); a=NULL; \
-}
-
-#define TRA(type,field) \
-{ \
-        int l; \
-        if (field) \
-                l = asprintf(&a,"," type "", \
-                        field); \
-        else \
-                l = asprintf(&a,"\n"); \
-        b = realloc(b, sizeof(*b)*(pomL+l+1)); \
-        strcpy(b+pomL, a); \
-        pomL += l; \
-        free(a); a=NULL; \
-}
-
 void add_row(char **body, char *text_title, char *html_title, char *value, char *link, http_output_type text) {
 	char *newbody = NULL, *target;
 	int len;
@@ -467,7 +403,7 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
 int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message, int text)
 {
-        char *out_tmp = NULL, *header = NULL, *out, *history = NULL, *jdl = NULL, *rsl = NULL, *children = NULL, *chtemp;
+        char *out_tmp = NULL, *header = NULL, *out, *history = NULL, *jdl = NULL, *cream_jdl = NULL, *rsl = NULL, *children = NULL, *chtemp;
 	time_t time;
 
         char *pomA = NULL;
@@ -483,6 +419,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
                 chtemp);
         else
                 out = strdup("");
+
 
         free(header);
 
@@ -500,6 +437,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 
 	add_row(&out, "Job", "Job ID", chtemp, chtemp, text);
 	free(chtemp);
+	add_row(&out, "cream_id", "CREAM ID", stat.cream_id, NULL, text);
 	chtemp = stat.parent_job ? edg_wlc_JobIdUnparse(stat.parent_job) : NULL;
 	add_row(&out, "parent_job", "Parent job", chtemp, chtemp, text);
 	free(chtemp);
@@ -509,24 +447,110 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 
 	switch (stat.jobtype) {
 		case EDG_WLL_STAT_CREAM:
-		        chtemp = edg_wll_CreamStatToString(stat.cream_state);
-        		add_row(&out, "CREAM_Status", "CREAM Status", chtemp, NULL, text);
-	        	free(chtemp);
+			chtemp = stat.cream_state ? edg_wll_CreamStatToString(stat.cream_state) : NULL;
+			add_row(&out, "CREAM_Status", "CREAM Status", chtemp, NULL, text);
+			free(chtemp);
+			add_row(&out, "cream_endpoint", "CREAM Endpoint", stat.cream_endpoint, NULL, text);
+			add_row(&out, "cream_node", "CREAM Worker node", stat.cream_node, NULL, text);
+			add_row(&out, "cream_reason", "CREAM Reason", stat.cream_reason, NULL, text);
+			add_row(&out, "cream_lrms_id", "CREAM LRMS id", stat.cream_lrms_id, NULL, text);
+			add_row(&out, "cream_node", "CREAM Node", stat.cream_node, NULL, text);
+			add_row(&out, "cream_cancelling", "CREAM Cancelling", stat.cream_cancelling > 0 ? "YES" : "NO", NULL, text);
+			asprintf(&chtemp, "%d", stat.cream_cpu_time);
+			add_row(&out, "cream_cpu_time", "CREAM CPU time", chtemp, NULL, text);
+			free(chtemp);
+			if (stat.cream_done_code != -1) asprintf(&chtemp, "%d", stat.cream_done_code); else chtemp = NULL;
+			add_row(&out, "cream_done_code", "CREAM Done code", chtemp, NULL, text);
+			free(chtemp);
+			if (stat.cream_exit_code != -1) asprintf(&chtemp, "%d", stat.cream_exit_code); else chtemp = NULL;
+			add_row(&out, "cream_exit_code", "CREAM Exit code", chtemp, NULL, text);
+			free(chtemp);
 			break;
+
+		case EDG_WLL_STAT_FILE_TRANSFER:
+			chtemp = edg_wlc_JobIdUnparse(stat.ft_compute_job);
+			add_row(&out, "compute_job", "Compute job", chtemp, NULL, text);
+			free(chtemp);
+			add_row(&out, "sandbox_type", "Sandbox type", edg_wll_StatusFt_sandbox_typeNames[stat.ft_sandbox_type], NULL, text);
+			add_row(&out, "ft_source", "File transfer source", stat.ft_src, NULL, text);
+			add_row(&out, "ft_destination", "File transfer destination", stat.ft_dest, NULL, text);
+			break;
+
 		case EDG_WLL_STAT_VIRTUAL_MACHINE:
-		        chtemp = edg_wll_VMStatToString(stat.vm_state);
-        		add_row(&out, "VM_Status", "VM Status", chtemp, NULL, text);
-	        	free(chtemp);
+			add_row(&out, "vm_state", "VM State", chtemp = edg_wll_VMStatToString(stat.vm_state), NULL, text);
+			free(chtemp);
+			add_row(&out, "vm_image", "VM image", stat.vm_image, NULL, text);
+			add_row(&out, "vm_require", "VM require", stat.vm_require, NULL, text);
+			add_row(&out, "vm_usage", "VM usage", stat.vm_usage, NULL, text);
+			add_row(&out, "vm_hostname", "VM hostname", stat.vm_hostname, NULL, text);
+			add_row(&out, "vm_machine", "VM machine", stat.vm_machine, NULL, text);
+			add_row(&out, "vm_id", "VM ID", stat.vm_id, NULL, text);
+			add_row(&out, "vm_name", "VN name", stat.vm_name, NULL, text);
+			add_row(&out, "vm_phy_hostname", "VM physical hostname", stat.vm_phy_hostname, NULL, text);
 			break;
+
 		case EDG_WLL_STAT_PBS:
+			add_row(&out, "pbs_state", "PBS state", stat.pbs_state, NULL, text);
+			asprintf(&chtemp, "%d", stat.pbs_substate);
+			add_row(&out, "pbs_substate", "PBS Substate", chtemp, NULL, text);
+			free(chtemp);
+			add_row(&out, "pbs_queue", "PBS queue", stat.pbs_queue, NULL, text);
+			add_row(&out, "pbs_owner", "PBS owner", stat.pbs_owner, NULL, text);
+			add_row(&out, "pbs_name", "PBS name", stat.pbs_name, NULL, text);
+			add_row(&out, "pbs_reason", "PBS reason", stat.pbs_reason, NULL, text);
+			add_row(&out, "pbs_scheduler", "PBS scheduler", stat.pbs_scheduler, NULL, text);
+			add_row(&out, "pbs_dest_host", "PBS destination host", stat.pbs_dest_host, NULL, text);
+			if (stat.pbs_exit_status != -1) asprintf(&chtemp, "%d", stat.pbs_pid); else chtemp=NULL;
+			add_row(&out, "pbs_pid", "PBS PID", chtemp, NULL, text);
+			free(chtemp);
+			if (stat.pbs_exit_status != -1) asprintf(&chtemp, "%d", stat.pbs_exit_status); else chtemp=NULL;
+			add_row(&out, "pbs_exit_status", "PBS Exit Status", chtemp, NULL, text);
+			free(chtemp);
+			add_row(&out, "pbs_error_desc", "PBS error description", stat.pbs_error_desc, NULL, text);
+
+			if (stat.pbs_resource_requested) {
+				chtemp = NULL;
+				for (i=0; stat.pbs_resource_requested[i].tag; i++) { 
+					asprintf(&out_tmp, "%s%s%s%s=%s%s",
+						chtemp ? chtemp : "",
+						i > 0 ? (text ? "," : "<BR>") : "",
+						text ? "\"" : "",
+						stat.pbs_resource_requested[i].tag,
+						stat.pbs_resource_requested[i].value,
+						text ? "\"" : "");
+					free(chtemp);
+					chtemp = out_tmp;
+				}
+				add_row(&out, "pbs_resource_requested", "PBS Resource Requested", chtemp, NULL, text);
+				free(chtemp);
+			}
+			if (stat.pbs_resource_usage) {
+				chtemp = NULL;
+				for (i=0; stat.pbs_resource_usage[i].tag; i++) { 
+					asprintf(&out_tmp, "%s%s%s%s=%s%s",
+						chtemp ? chtemp : "",
+						i > 0 ? (text ? "," : "<BR>") : "",
+						text ? "\"" : "",
+						stat.pbs_resource_usage[i].tag,
+						stat.pbs_resource_usage[i].value,
+						text ? "\"" : "");
+					free(chtemp);
+					chtemp = out_tmp;
+				}
+				add_row(&out, "pbs_resource_usage", "PBS Resource Usage", chtemp, NULL, text);
+				free(chtemp);
+			}
 			break;
-//		case EDG_WLL_STAT_FILE_TRANSFER:
-//		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
+
 		default:
-			// No handling for other job types
+			// No specific action for other types of jobs
 			break;
 	}
 
+        chtemp = stat.vm_state ? edg_wll_VMStatToString(stat.vm_state) : NULL;
+	add_row(&out, "VM_Status", "VM Status", chtemp, NULL, text);
+       	free(chtemp);
+	
 	add_row(&out, "owner", "Owner", stat.owner, NULL, text);
 	add_row(&out, "payload_owner", "Payload Owner", stat.payload_owner, NULL, text);
 	add_row(&out, "condorId", "Condor Id", stat.condorId, NULL, text);
@@ -609,13 +633,32 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	}
 	else if (text) asprintf(&jdl,"jdl=\n");
 
+        if (stat.cream_jdl){
+		if (text) {
+		        char* my_jdl = glite_lbu_EscapeULM(stat.cream_jdl);
+	                asprintf(&cream_jdl,"cream_jdl=%s\n", my_jdl);
+        	        free(my_jdl);
+		}
+                char *jdl_unp;
+                if (pretty_print(stat.cream_jdl, &jdl_unp) == 0)
+                        asprintf(&cream_jdl,"<h3>CREAM Job description</h3>\r\n"
+                                "<pre>%s</pre>\r\n",jdl_unp);
+                else
+                        asprintf(&cream_jdl,"<h3>CREAM Job description (not a ClassAd)"
+                                "</h3>\r\n<pre>%s</pre>\r\n",stat.cream_jdl);
+        }
+
+
 	if (stat.rsl) {
 		if (!text) asprintf(&rsl,"<h3>RSL</h3>\r\n<pre>%s</pre>\r\n",stat.rsl);
 		else asprintf(&rsl,"rsl=%s\n", stat.rsl);
 	}
 	else if (text) asprintf(&rsl,"rsl=\n");
 
-	if ((!text) && (stat.jobtype == EDG_WLL_STAT_COLLECTION) && (stat.children_num > 0)){
+	if ((!text) && ((stat.jobtype == EDG_WLL_STAT_COLLECTION) ||
+				stat.jobtype == EDG_WLL_STAT_FILE_TRANSFER_COLLECTION ||
+				stat.jobtype == EDG_WLL_STAT_DAG) && 
+				(stat.children_num > 0)){
 		asprintf(&children, "<h3>Children</h3>\r\n");
 		for (i = 0; i < stat.children_num; i++){
 			asprintf(&pomA,"%s\t\t <li/> <a href=\"%s\">%s</a>\r\n",
@@ -624,10 +667,11 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		}
 	}
 
-	asprintf(&pomA, "%s%s%s%s%s%s", 
+	asprintf(&pomA, "%s%s%s%s%s%s%s", 
                 	out,
 			history ? history : "",
 			jdl ? jdl : "",
+			cream_jdl ? cream_jdl : "",
 			rsl ? rsl : "",
 			children ? children : "",
 			text ? "" : "\n</body></html>");
@@ -637,138 +681,6 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	free(out);
 	free(jdl);
 	free(rsl);
-	free(children);
-        return 0;
-}
-
-int edg_wll_CreamJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
-{
-	char *chid, *pomA = NULL, *pomB = NULL, *jdl, *header = NULL;
-	char *lbstat, *creamstat;
-	int pomL = 0;
-
-	jdl = strdup("");
-
-	chid = edg_wlc_JobIdUnparse(stat.jobId);
-
-	TR("CREAM ID", "%s", stat.cream_id, NULL);
-	TR("Status", "%s", (lbstat = edg_wll_StatToString(stat.state)), NULL);
-	free(lbstat);
-	TR("CREAM Status", "%s", (creamstat = edg_wll_CreamStatToString(stat.cream_state)), NULL);
-	free(creamstat);
-	TR("Type","%s",edg_wll_StatusJobtypeNames[stat.jobtype], NULL);
-	TR("Owner", "%s", stat.cream_owner, NULL);
-	TR("Endpoint", "%s", stat.cream_endpoint, NULL);
-	TR("Worker node", "%s", stat.cream_node, NULL);
-	TR("Reason", "%s", stat.cream_reason, NULL);
-	TR("Failure reason", "%s", stat.cream_failure_reason, NULL);
-	
-	if ( (stat.stateEnterTime.tv_sec) || (stat.stateEnterTime.tv_usec) ) {
-                time_t  time = stat.stateEnterTime.tv_sec;
-                TR("State entered","%s",ctime(&time), NULL);
-        }
-        else
-                TR("State entered", "%s", (char*)NULL, NULL);
-        if ( (stat.lastUpdateTime.tv_sec) || (stat.lastUpdateTime.tv_usec) ) {
-                time_t  time = stat.lastUpdateTime.tv_sec;
-                TR("Last update","%s",ctime(&time), NULL);
-        }
-        else
-                TR("Last update", "%s", (char*)NULL, NULL);
-
-
-	TR("LRMS id", "%s", stat.cream_lrms_id, NULL);
-	TR("Node", "%s", stat.cream_node, NULL);
-	TR("Cancelling", "%s", stat.cream_cancelling > 0 ? "YES" : "NO", NULL);
-	TR("CPU time", "%d", stat.cream_cpu_time, 0);
-	TR("Done code", "%d", stat.cream_done_code, -1);
-        TR("Exit code", "%d", stat.cream_exit_code, -1);
-
-	/*
-                cream_jw_status
-        */
-	
-	if (stat.cream_jdl){
-                char *jdl_unp;
-                if (pretty_print(stat.cream_jdl, &jdl_unp) == 0)
-                        asprintf(&jdl,"<h3>Job description</h3>\r\n"
-                                "<pre>%s</pre>\r\n",jdl_unp);
-                else
-                        asprintf(&jdl,"<h3>Job description (not a ClassAd)"
-                                "</h3>\r\n<pre>%s</pre>\r\n",stat.cream_jdl);
-        }
-	header = get_html_header(ctx, 0);
-	asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Job Detail</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
-                        "<h2>%s</h2>\r\n"
-                        "<table halign=\"left\">%s</table>"
-                        "%s"
-                        "\t</body>\r\n</html>",
-			header,
-                        chid,pomB,jdl);
-        free(pomB); free(jdl);
-
-        *message = pomA;
-
-	return 0;
-}
-
-int edg_wll_FileTransferStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message)
-{
-        char *pomA = NULL, *pomB = NULL, *lbstat, *children, *header = NULL;
-        int pomL = 0, i;
-        char    *chid,*chcj,*chpar,*chsbt=NULL;
-
-	children = strdup("");
-
-        chid = edg_wlc_JobIdUnparse(stat.jobId);
-
-	TR("Status", "%s", (lbstat = edg_wll_StatToString(stat.state)), NULL);
-	free(lbstat);
-	TR("Type","%s",edg_wll_StatusJobtypeNames[stat.jobtype], NULL);
-        TR("Owner","%s",stat.owner, NULL);
-	chcj = edg_wlc_JobIdUnparse(stat.ft_compute_job);
-	TRL("Compute job", "%s", chcj, NULL);
-	free(chcj);
-
-	if (stat.jobtype == EDG_WLL_STAT_FILE_TRANSFER){
-		chpar = edg_wlc_JobIdUnparse(stat.parent_job);
-	        TRL("Parent job", "%s", chpar, NULL);
-        	free(chpar);
-		switch(stat.ft_sandbox_type){
-			case EDG_WLL_STAT_INPUT: chsbt = strdup("INPUT");
-				break;
-			case EDG_WLL_STAT_OUTPUT: chsbt = strdup("OUTPUT");
-				break;
-			default:
-				break;
-		}
-		TR("Sandbox type", "%s", chsbt, NULL);
-		TR("File transfer source", "%s", stat.ft_src, NULL);
-		TR("File transfer destination", "%s", stat.ft_dest, NULL);
-	}
-	else if ((stat.jobtype == EDG_WLL_STAT_FILE_TRANSFER_COLLECTION) && (stat.children_num > 0)){
-		asprintf(&children, "<h3>Children</h3>\r\n");
-                for (i = 0; i < stat.children_num; i++){
-                        asprintf(&pomA,"%s\t\t <li/> <a href=\"%s\">%s</a>\r\n",
-                        children, stat.children[i], stat.children[i]);
-                        children = pomA;
-                }
-	}
-	header = get_html_header(ctx, 0);
-	asprintf(&pomA, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Job Detail</TITLE>\n<HEAD>\n<HEAD>\n%s\n</HEAD>\n<body>\r\n"
-                        "<h2>%s</h2>\r\n"
-                        "<table halign=\"left\">%s</table>\r\n"
-			"%s\n"
-                        "\t</body>\r\n</html>",
-			header,
-                        chid, pomB, children);
-        free(pomB);
-	free(header);
-
-        *message = pomA;
-
-	if (chsbt) free(chsbt);
-        free(chid);
 	free(children);
         return 0;
 }
@@ -876,37 +788,6 @@ int edg_wll_StatisticsToHTML(edg_wll_Context ctx, char **message, int text) {
 
         *message = out;
 	return 0;
-}
-
-int edg_wll_VMHostToHTML(edg_wll_Context ctx UNUSED_VAR, char *hostname, edg_wll_JobStat *states, char **message){
-        char *pomA = NULL, *pomB = NULL;
-	int i;
-
-        if (states) for (i = 0; states[i].state != EDG_WLL_JOB_UNDEF; i++){
-		char *status = edg_wll_VMStatToString(states[i].vm_state);
-		char *chid = edg_wlc_JobIdUnparse(states[i].jobId);
-		if (pomB)
-			asprintf(&pomA, "%s\t\t <li> <a href=\"%s\">%s</a> (%s)\r\n",
-				pomB, chid, chid, status);
-		else
-			asprintf(&pomA, "<li> <a href=\"%s\">%s</a> (%s)\r\n",
-                                chid, chid, status);
-		free(pomB);
-		pomB = pomA;
-                free(chid);
-		free(status);
-        }
-
-	asprintf(&pomA, "<html>\r\n\t<body>\r\n"
-                        "<h2>%s</h2>\r\n"
-                        "<table halign=\"left\">%s</table>"
-                        "\t</body>\r\n</html>",
-                        hostname,pomB);
-        free(pomB);
-
-        *message = pomA;
-
-        return 0;
 }
 
 char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)

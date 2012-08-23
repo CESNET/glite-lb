@@ -436,33 +436,6 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 	return 0;
 }
 
-static int getVMsOnHost(edg_wll_Context ctx, char *hostname, edg_wll_JobStat **statesOut){
-        edg_wlc_JobId *jobsOut;
-        edg_wll_QueryRec **conds;
-        int i;
-
-                conds = malloc(2*sizeof(*conds));
-                conds[0] = malloc(2*sizeof(**conds));
-                conds[0][0].attr = EDG_WLL_QUERY_ATTR_DESTINATION;
-                conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[0][0].value.c = hostname;
-                conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[1] = NULL;
-	
-
-        if (edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conds, 0, &jobsOut, statesOut)){
-                *statesOut = NULL;
-        }
-
-        for (i = 0; conds[i]; i++)
-                free(conds[i]);
-        free(conds);
-
-        return 0;
-}
-
-
-
 static void hup_handler(int sig) {
 	purge_quit = 1;
 }
@@ -1009,24 +982,10 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				ret = HTTP_BADREQ;
 			}
 			else switch (edg_wll_JobStatusServer(ctx,jobId,EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN | rflags, &stat)) {
-				case 0:  
-						switch(stat.jobtype){
-						case EDG_WLL_STAT_CREAM:
-							edg_wll_CreamJobStatusToHTML(ctx,stat,&message);
-							break;
-						case EDG_WLL_STAT_FILE_TRANSFER:
-						case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
-							edg_wll_FileTransferStatusToHTML(ctx,stat,&message);
-							break;
-						default:
-							//XXX need some more implementations
-							edg_wll_GeneralJobStatusToHTML(ctx,stat,&message,text);
-							break;
-						}
-						edg_wll_ServerStatisticsIncrement(ctx, text ? SERVER_STATS_TEXT_VIEWS : SERVER_STATS_HTML_VIEWS);
-					
-						ret = HTTP_OK;
-					break;
+				case 0:
+					edg_wll_GeneralJobStatusToHTML(ctx,stat,&message,text);
+					edg_wll_ServerStatisticsIncrement(ctx, text ? SERVER_STATS_TEXT_VIEWS : SERVER_STATS_HTML_VIEWS);
+					ret = HTTP_OK; break;
 				case ENOENT: ret = HTTP_NOTFOUND; break;
 				case EINVAL: ret = HTTP_INVALID; break;
 				case EPERM : ret = HTTP_UNAUTH; break;
@@ -1106,22 +1065,6 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			else { 
 				edg_wll_RSSFeed(ctx, states, requestPTR, &message);
 				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_RSS_VIEWS);
-			}
-	/*GET /VMHOST:[hostname] all VMs associated with hostname */
-		} else if (strncmp(requestMeat, "/VMHOST:", strlen("/VMHOST:")) == 0) {
-			char *host = requestMeat + strlen("/VMHOST:");
-			edg_wll_JobStat *states;
-			if (getVMsOnHost(ctx, host, &states)){
-				ret = HTTP_INTERNAL;
-                                goto err;
-			}
-			if (text){
-//				edg_wll_VMHostToText(ctx, requestPTR + strlen("/VMHOST:"), states, &message);
-//				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_TEXT_VIEWS);
-			}
-			else{
-				edg_wll_VMHostToHTML(ctx, host, states, &message);
-				edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_HTML_VIEWS);
 			}
 		} else if (!strcmp(requestMeat, "/favicon.ico")) {
 			message=NULL;
