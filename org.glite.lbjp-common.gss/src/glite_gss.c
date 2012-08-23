@@ -694,14 +694,15 @@ int
 edg_wll_gss_acquire_cred_gsi(const char *cert_file, const char *key_file, edg_wll_GssCred *cred,
 			 edg_wll_GssStatus* gss_code)
 {
-	return edg_wll_gss_acquire_cred(cert_file, key_file, cred, gss_code);
+	return edg_wll_gss_acquire_cred(cert_file, key_file, GSS_C_BOTH, cred, gss_code);
 }
 
 /** Load or reload credentials. It should be called regularly (credential files can be changed).
  @see edg_wll_gss_watch_creds
  */
 int
-edg_wll_gss_acquire_cred(const char *cert_file, const char *key_file, edg_wll_GssCred *cred,
+edg_wll_gss_acquire_cred(const char *cert_file, const char *key_file, const gss_cred_usage_t cred_usage,
+			 edg_wll_GssCred *cred,
 			 edg_wll_GssStatus* gss_code)
 {
    OM_uint32 major_status = 0, minor_status, minor_status2;
@@ -747,7 +748,7 @@ edg_wll_gss_acquire_cred(const char *cert_file, const char *key_file, edg_wll_Gs
       mechs.elements = get_oid(mech_name);
       
       major_status = gss_acquire_cred(&minor_status, GSS_C_NO_NAME, 0,
-	    			      &mechs, GSS_C_BOTH,
+	    			      &mechs, cred_usage,
 				      &gss_cred, NULL, NULL);
       if (GSS_ERROR(major_status)) {
 	 ret = EDG_WLL_GSS_ERROR_GSS;
