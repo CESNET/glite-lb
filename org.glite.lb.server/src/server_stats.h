@@ -33,8 +33,8 @@ typedef enum _edg_wll_server_statistics_type{
 } edg_wll_server_statistics_type;
 // Add new values in front of LAST and do not change order
 // Also for new vales, add text descriptions to server_stats.c
-extern char     *edg_wll_QueryAttrNames[];
-extern char     *edg_wll_QueryOpNames[];
+extern char     *edg_wll_server_statistics_type_title[];
+extern char     *edg_wll_server_statistics_type_key[];
 
 
 int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix);
