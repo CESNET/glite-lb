@@ -41,6 +41,13 @@ void edg_wll_StoreAnonymous(
 	int		/* IN (boolean) */
 );
 
+enum edg_wll_JobConnectionType {
+	EDG_WLL_JOBCONNECTION_UNKNOWN,
+	EDG_WLL_JOBCONNECTION_ACTIVE,
+	EDG_WLL_JOBCONNECTION_INACTIVE,
+	EDG_WLL_JOBCONNECTION_CANCELLED
+};
+
 int db_store(edg_wll_Context, char *);
 int db_parent_store(edg_wll_Context, edg_wll_Event *, intJobStat *);
 int handle_request(edg_wll_Context,char *);
@@ -50,7 +57,10 @@ int is_job_local(edg_wll_Context, glite_jobid_const_t jobId);
 int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *register_to_JP);
 int register_subjobs_embryonic(edg_wll_Context,const edg_wll_RegJobEvent *);
 edg_wll_ErrorCode intJobStat_embryonic(edg_wll_Context ctx, glite_jobid_const_t jobid, const edg_wll_RegJobEvent *e, intJobStat *stat);
-
+int edg_wll_jobsconnection_create(edg_wll_Context ctx, glite_jobid_const_t jobid_from, glite_jobid_const_t jobid_to, enum edg_wll_StatJobtype jobtype, enum edg_wll_JobConnectionType connectiontype);
+int edg_wll_jobsconnection_modify(edg_wll_Context ctx, glite_jobid_const_t jobid_from, glite_jobid_const_t jobid_to, enum edg_wll_JobConnectionType);
+int edg_wll_jobsconnection_modifyall(edg_wll_Context ctx, glite_jobid_const_t jobid, enum edg_wll_JobConnectionType oldtype, enum edg_wll_JobConnectionType newtype);
+int edg_wll_jobsconnection_purgeall(edg_wll_Context ctx, glite_jobid_const_t jobid);
 
 int edg_wll_delete_event(edg_wll_Context,const char *, int);
 

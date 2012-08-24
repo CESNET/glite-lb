@@ -803,6 +803,11 @@ int purge_one(edg_wll_Context ctx,edg_wll_JobStat *stat,int dump, int purge, int
 
 		if ( purge )
 		{
+			edg_wll_jobsconnection_purgeall(ctx, job);
+		}
+
+		if ( purge )
+		{
 			trio_asprintf(&stmt,"delete from jobs where jobid = '%|Ss'",dbjob);
 			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 			if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) goto rollback;

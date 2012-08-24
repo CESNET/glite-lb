@@ -896,3 +896,100 @@ static void lowercase_usertag(edg_wll_Event *ev)
 		ev->userTag.name[i] = tolower(ev->userTag.name[i]);
 	}
 }
+
+int edg_wll_jobsconnection_create(edg_wll_Context ctx, glite_jobid_const_t jobid_from, glite_jobid_const_t jobid_to, enum edg_wll_StatJobtype jobtype, enum edg_wll_JobConnectionType connectiontype){
+        char *stmt;
+
+	char *jobid_from_u, *jobid_to_u;
+	jobid_from_u = edg_wlc_JobIdGetUnique(jobid_from);
+	jobid_to_u = edg_wlc_JobIdGetUnique(jobid_to);
+
+	// clear previous connection of same jobs (e.g. resubmition on same machine)
+	trio_asprintf(&stmt,
+		"delete from job_connections where jobid_from='%s' and jobid_to='%s'",
+		jobid_from_u, jobid_to_u
+	);
+
+	edg_wll_ExecSQL(ctx,stmt,NULL);
+
+	free(stmt);
+
+        trio_asprintf(&stmt,
+                "insert into job_connections (jobid_from, jobid_to, jobtype, connection) values ('%s', '%s', %i, %i)", 
+		jobid_from_u, jobid_to_u, jobtype, connectiontype
+        );
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	free(jobid_from_u);
+	free(jobid_to_u);
+
+        edg_wll_ExecSQL(ctx,stmt,NULL);
+
+        free(stmt);
+
+        return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int edg_wll_jobsconnection_modify(edg_wll_Context ctx, glite_jobid_const_t jobid_from, glite_jobid_const_t jobid_to, enum edg_wll_JobConnectionType connectiontype){
+        char *stmt;
+
+        char *jobid_from_u, *jobid_to_u;
+        jobid_from_u = edg_wlc_JobIdGetUnique(jobid_from);
+        jobid_to_u = edg_wlc_JobIdGetUnique(jobid_to);
+
+        trio_asprintf(&stmt,
+                "update job_connections set connection=%i where jobid_from='%s' and jobid_to='%s'",
+                connectiontype, jobid_from_u, jobid_to_u
+        );
+        glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+        free(jobid_from_u);
+        free(jobid_to_u);
+
+        edg_wll_ExecSQL(ctx,stmt,NULL);
+
+        free(stmt);
+
+        return edg_wll_Error(ctx, NULL, NULL);
+}
+
+int edg_wll_jobsconnection_modifyall(edg_wll_Context ctx, glite_jobid_const_t jobid, enum edg_wll_JobConnectionType oldtype, enum edg_wll_JobConnectionType newtype){
+        char *stmt;
+
+        char *jobid_u;
+        jobid_u = edg_wlc_JobIdGetUnique(jobid);
+
+        trio_asprintf(&stmt,
+                "update job_connections set connection=%i where connection=%i and (jobid_from='%s' or jobid_to='%s')",
+                newtype, oldtype, jobid_u, jobid_u
+        );
+        glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+        free(jobid_u);
+
+        edg_wll_ExecSQL(ctx,stmt,NULL);
+
+        free(stmt);
+
+        return edg_wll_Error(ctx, NULL, NULL);
+}
+
+
+int edg_wll_jobsconnection_purgeall(edg_wll_Context ctx, glite_jobid_const_t jobid){
+	char *stmt;
+
+	char *jobid_u;
+	jobid_u = edg_wlc_JobIdGetUnique(jobid);
+
+	trio_asprintf(&stmt,
+		"delete from job_connections where jobid_from='%s' or jobid_to='%s'",
+		jobid_u, jobid_u
+	);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
+	free(jobid_u);
+
+	edg_wll_ExecSQL(ctx,stmt,NULL);
+
+	free(stmt);
+
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+

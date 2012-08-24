@@ -155,4 +155,12 @@ create table zombie_suffixes (
 	primary key (suffix_id)
 ) engine=innodb;
 
+create table job_connections (
+	jobid_from	char(32)	binary not null,
+	jobid_to	char(32)	binary not null,
+	jobtype		int		not null,
+	connection      int             not null,
+	primary key (jobid_from),
+	index (jobid_to)
+) engine=innodb;
 

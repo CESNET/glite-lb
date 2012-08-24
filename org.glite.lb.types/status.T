@@ -185,21 +185,24 @@ _pad_	20
 
 int	vm_state		VM job state
 	_null_ 	-1
-	_code_	VM_PENDING	pending
-	_code_	VM_BOOT		boot
-	_code_	VM_RUNNING	running
-	_code_	VM_SHUTDOWN	shutdown
-	_code_	VM_STOPPED	stopped
-	_code_	VM_DONE		done
-	_code_ 	VM_FAILURE	failure
-string	vm_image		VM image
-string	vm_require		VM requirement on physical machine
-string	vm_usage		VM usage
-string	vm_hostname		VM hostname
-string	vm_machine		physical machine on which VM runs
-string	vm_id			VM id
-string 	vm_name			VM name
-string	vm_phy_hostname		hostname of physical machine running VM
+	_code_	VM_PENDING		pending
+	_code_	VM_BOOT			boot
+	_code_	VM_RUNNING		running
+	_code_  VM_REALLY-RUNNING 	really running
+	_code_	VM_SHUTDOWN		shutdown
+	_code_	VM_STOPPED		stopped
+	_code_	VM_DONE			done
+	_code_ 	VM_FAILURE		failure
+string	vm_image			VM image
+string	vm_require			VM requirement on physical machine
+string	vm_usage			VM usage
+string	vm_hostname			VM hostname
+string	vm_machine			physical machine on which VM runs
+string	vm_id				VM id
+string 	vm_name				VM name
+string	vm_phy_hostname			hostname of physical machine running VM
+bool	vm_system_halting		system is shooting down
+string  vm_manager			name of the VM manager
 
 _pad_ 	20
 

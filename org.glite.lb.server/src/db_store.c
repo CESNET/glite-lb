@@ -46,7 +46,10 @@ extern int proxy_purge;
 
 
 static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev, edg_wll_JobStat *oldstat, edg_wll_JobStat *newstat, int reg_to_JP);
-
+static int log_connectjob_event(edg_wll_Context ctx, glite_jobid_const_t jobif_from, glite_jobid_const_t jobid_to, enum edg_wll_StatJobtype jobtype);
+static int log_disconnectjob_event(edg_wll_Context ctx, glite_jobid_const_t jobif_from, glite_jobid_const_t jobid_to);
+static enum edg_wll_StatJobtype get_jobtype_from_connectjob(enum edg_wll_ConnectJobJobtype  jobtype);
+static enum edg_wll_ConnectJobJobtype get_connectjobtype_from_jobtype(enum edg_wll_StatJobtype jobtype);
 
 int
 db_store(edg_wll_Context ctx, char *event)
@@ -146,6 +149,40 @@ db_store(edg_wll_Context ctx, char *event)
 			if (register_subjobs_embryonic(ctx,&ev->regJob)) goto rollback;
 			reg_to_JP |= REG_SUBJOBS_TO_JP;
 	}
+
+	if (ev->any.type == EDG_WLL_EVENT_CONNECTJOB) {
+		edg_wlc_JobId jobId = NULL;
+		if (edg_wlc_JobIdParse(ev->connectJob.dest_jobid, &jobId)) {
+			edg_wll_SetError(ctx, EDG_WLL_ERROR_JOBID_FORMAT, ev->connectJob.dest_jobid);
+			goto err; /* should end here? */
+		}
+		// create connection A->B 
+		edg_wll_jobsconnection_create(ctx, ev->any.jobId, jobId, get_jobtype_from_connectjob(ev->connectJob.jobtype), EDG_WLL_JOBCONNECTION_ACTIVE);
+		// and log event to create B->A (if A->B is not logged by LB)
+		if (ev->any.source != EDG_WLL_SOURCE_LB_SERVER)
+			log_connectjob_event(ctx, jobId, ev->any.jobId, newstat.jobtype);
+
+		edg_wlc_JobIdFree(jobId);
+	}
+
+	if (ev->any.type == EDG_WLL_EVENT_DISCONNECTJOB)  {
+		edg_wlc_JobId jobId = NULL;
+                if (edg_wlc_JobIdParse(ev->connectJob.dest_jobid, &jobId)) {
+                        edg_wll_SetError(ctx, EDG_WLL_ERROR_JOBID_FORMAT, ev->connectJob.dest_jobid);
+                        goto err; /* should end here? */
+                }
+
+		// invalidate connection A->B
+		edg_wll_jobsconnection_modify(ctx, ev->any.jobId, jobId, EDG_WLL_JOBCONNECTION_CANCELLED);
+		// and log event to invalidate B->A (if A->B is not logged by LB)
+                if (ev->any.source != EDG_WLL_SOURCE_LB_SERVER)
+                        log_disconnectjob_event(ctx, jobId, ev->any.jobId);
+		edg_wlc_JobIdFree(jobId);
+	}
+
+	// job is going to halt, set connections to inactive
+	if ((newstat.state != oldstat.state) && ((newstat.state == EDG_WLL_JOB_DONE) || (newstat.state == EDG_WLL_JOB_ABORTED) || (newstat.state == EDG_WLL_JOB_CANCELLED)))
+		edg_wll_jobsconnection_modifyall(ctx, ev->any.jobId, EDG_WLL_JOBCONNECTION_ACTIVE, EDG_WLL_JOBCONNECTION_INACTIVE);
 
 commit:
 rollback:;
@@ -341,4 +378,153 @@ static int db_store_finalize(edg_wll_Context ctx, char *event, edg_wll_Event *ev
 
 err:
 	return edg_wll_Error(ctx,NULL,NULL);
+}
+
+static int log_connectjob_event(edg_wll_Context ctx, glite_jobid_const_t jobif_from, glite_jobid_const_t jobid_to, enum edg_wll_StatJobtype jobtype){
+	int     ret = 0;
+	char	*event_str;
+
+	edg_wll_Event  *event = edg_wll_InitEvent(EDG_WLL_EVENT_CONNECTJOB);
+
+	event->any.priority = EDG_WLL_LOGFLAG_INTERNAL;
+	if (ctx->serverIdentity)
+		event->any.user = strdup(ctx->serverIdentity);
+	else
+		event->any.user = strdup("LBProxy");
+	event->any.seqcode = edg_wll_GetSequenceCode(ctx);
+	edg_wlc_JobIdDup(jobif_from, &(event->any.jobId));
+	gettimeofday(&event->any.timestamp,0);
+	event->any.source = EDG_WLL_SOURCE_LB_SERVER;
+
+	event->connectJob.dest_jobid = edg_wlc_JobIdUnparse(jobid_to);
+	event->connectJob.jobtype = get_connectjobtype_from_jobtype(jobtype);
+
+	event_str = edg_wll_UnparseEvent(ctx, event);
+
+	ret = db_store(ctx, event_str);
+
+	edg_wll_FreeEvent(event);
+        free(event);
+	free(event_str);
+
+	return ret;
+}
+
+static int log_disconnectjob_event(edg_wll_Context ctx, glite_jobid_const_t jobif_from, glite_jobid_const_t jobid_to){
+        int     ret = 0;
+        char    *event_str;
+
+        edg_wll_Event  *event = edg_wll_InitEvent(EDG_WLL_EVENT_DISCONNECTJOB);
+
+        event->any.priority = EDG_WLL_LOGFLAG_INTERNAL;
+        if (ctx->serverIdentity)
+                event->any.user = strdup(ctx->serverIdentity);
+        else
+                event->any.user = strdup("LBProxy");
+        event->any.seqcode = edg_wll_GetSequenceCode(ctx);
+        edg_wlc_JobIdDup(jobif_from, &(event->any.jobId));
+        gettimeofday(&event->any.timestamp,0);
+        event->any.source = EDG_WLL_SOURCE_LB_SERVER;
+
+        event->connectJob.dest_jobid = edg_wlc_JobIdUnparse(jobid_to);
+
+        event_str = edg_wll_UnparseEvent(ctx, event);
+
+        ret = db_store(ctx, event_str);
+
+        edg_wll_FreeEvent(event);
+        free(event);
+        free(event_str);
+
+        return ret;
+}
+
+
+/* this is ugly, however, shift to match second structure could make incompatibility when any of them is permuted */
+static enum edg_wll_StatJobtype get_jobtype_from_connectjob(enum edg_wll_ConnectJobJobtype  jobtype){
+	enum edg_wll_StatJobtype ret;
+
+	switch(jobtype){
+		case EDG_WLL_CONNECTJOB_SIMPLE:
+			ret = EDG_WLL_STAT_SIMPLE;
+			break;
+		case EDG_WLL_CONNECTJOB_DAG:
+			ret = EDG_WLL_STAT_DAG;
+			break;
+		case EDG_WLL_CONNECTJOB_PARTITIONABLE:
+			ret = EDG_WLL_STAT__PARTITIONABLE_UNUSED; /* for completeness */
+			break;
+		case EDG_WLL_CONNECTJOB_PARTITIONED:
+			ret = EDG_WLL_STAT__PARTITIONED_UNUSED; /* for completeness */
+			break;
+		case EDG_WLL_CONNECTJOB_COLLECTION:
+			ret = EDG_WLL_STAT_COLLECTION;
+			break;
+		case EDG_WLL_CONNECTJOB_PBS:
+			ret = EDG_WLL_STAT_PBS;
+			break;
+		case EDG_WLL_CONNECTJOB_CONDOR:
+			ret = EDG_WLL_STAT_CONDOR;
+			break;
+		case EDG_WLL_CONNECTJOB_CREAM:
+			ret = EDG_WLL_STAT_CREAM;
+			break;
+		case EDG_WLL_CONNECTJOB_FILE_TRANSFER_COLLECTION:
+			ret = EDG_WLL_STAT_FILE_TRANSFER_COLLECTION;
+			break;
+		case EDG_WLL_CONNECTJOB_FILE_TRANSFER:
+			ret = EDG_WLL_STAT_FILE_TRANSFER;
+			break;
+		case EDG_WLL_CONNECTJOB_VIRTUAL_MACHINE:
+			ret = EDG_WLL_STAT_VIRTUAL_MACHINE;
+			break;
+		default :
+			break;
+	}
+
+	return ret;
+}
+
+static enum edg_wll_ConnectJobJobtype get_connectjobtype_from_jobtype(enum edg_wll_StatJobtype jobtype){
+	enum edg_wll_ConnectJobJobtype ret;
+
+	switch(jobtype){
+                case EDG_WLL_STAT_SIMPLE:
+                        ret = EDG_WLL_CONNECTJOB_SIMPLE;
+                        break;
+                case EDG_WLL_STAT_DAG:
+                        ret = EDG_WLL_CONNECTJOB_DAG;
+                        break;
+                case EDG_WLL_STAT__PARTITIONABLE_UNUSED:
+                        ret = EDG_WLL_CONNECTJOB_PARTITIONABLE; /* for completeness */
+                        break;
+                case EDG_WLL_STAT__PARTITIONED_UNUSED:
+                        ret = EDG_WLL_CONNECTJOB_PARTITIONED; /* for completeness */
+                        break;
+                case EDG_WLL_STAT_COLLECTION:
+                        ret = EDG_WLL_CONNECTJOB_COLLECTION;
+                        break;
+                case EDG_WLL_STAT_PBS:
+                        ret = EDG_WLL_CONNECTJOB_PBS;
+                        break;
+                case EDG_WLL_STAT_CONDOR:
+                        ret = EDG_WLL_CONNECTJOB_CONDOR;
+                        break;
+                case EDG_WLL_STAT_CREAM:
+                        ret = EDG_WLL_CONNECTJOB_CREAM;
+                        break;
+                case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
+                        ret = EDG_WLL_CONNECTJOB_FILE_TRANSFER_COLLECTION;
+                        break;
+                case EDG_WLL_STAT_FILE_TRANSFER:
+                        ret = EDG_WLL_CONNECTJOB_FILE_TRANSFER;
+                        break;
+                case EDG_WLL_STAT_VIRTUAL_MACHINE:
+                        ret = EDG_WLL_CONNECTJOB_VIRTUAL_MACHINE;
+                        break;
+                default :
+                        break;
+        }
+
+	return ret;
 }

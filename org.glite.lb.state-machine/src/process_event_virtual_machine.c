@@ -65,6 +65,7 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 		case EDG_WLL_EVENT_REGJOB:
 			if (USABLE(res)) {
 				js->pub.vm_state = EDG_WLL_STAT_VM_PENDING;
+				js->pub.state = EDG_WLL_JOB_SUBMITTED;
 			}
 			break;
 		case EDG_WLL_EVENT_VMCREATE:
@@ -86,13 +87,39 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 			break;
 		case EDG_WLL_EVENT_VMRUNNING:
 			if (USABLE(res)) {
-				js->pub.vm_state = EDG_WLL_STAT_VM_RUNNING;
+				switch( e->vMRunning.vm_source){
+				case EDG_WLL_VMRUNNING_CM:
+				case EDG_WLL_VMRUNNING_VMM:
+					js->pub.vm_state = EDG_WLL_STAT_VM_RUNNING;
+					break;
+				case EDG_WLL_VMRUNNING_MACHINE:
+					js->pub.vm_state = EDG_WLL_STAT_VM_REALLY_RUNNING;
+                                        break;
+				default:
+					break; 
+				}
+				js->pub.state = EDG_WLL_JOB_RUNNING;
 			}
 			break;
 		case EDG_WLL_EVENT_VMSHUTDOWN:
                         if (USABLE(res)) {
-                                js->pub.vm_state = EDG_WLL_STAT_VM_SHUTDOWN;
+				switch (e->vMShutdown.vm_source){
+				case EDG_WLL_VMSHUTDOWN_CM:
+					js->pub.vm_state = EDG_WLL_STAT_VM_SHUTDOWN;
+					break;
+				case EDG_WLL_VMSHUTDOWN_VMM:
+					js->pub.vm_system_halting = 1;
+					break;
+				case EDG_WLL_VMSHUTDOWN_MACHINE:
+					js->pub.vm_system_halting = 1;
+					if (js->pub.vm_state == EDG_WLL_STAT_VM_REALLY_RUNNING)
+						js->pub.vm_state = EDG_WLL_STAT_VM_RUNNING;
+					break;
+				}
                         }
+			if (USABLE_DATA(res))
+				if (e->vMDone.usage)
+					rep_cond(js->pub.vm_usage, e->vMDone.usage);
                         break;
 		case EDG_WLL_EVENT_VMSTOP:
                         if (USABLE(res)) {
@@ -102,6 +129,8 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 		case EDG_WLL_EVENT_VMRESUME:
                         if (USABLE(res)) {
                                 js->pub.vm_state = EDG_WLL_STAT_VM_PENDING;
+				js->pub.state = EDG_WLL_JOB_WAITING;
+				js->pub.vm_system_halting = 0;
 				//XXX clear hostname here?
                         }
                         break;
@@ -111,9 +140,12 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 					case EDG_WLL_VMDONE_OK:
 					case EDG_WLL_VMDONE_DELETE:
 						js->pub.vm_state = EDG_WLL_STAT_VM_DONE;
+						js->pub.state = EDG_WLL_JOB_DONE;
 						break;
 					case EDG_WLL_VMDONE_FAILURE:
 						js->pub.vm_state = EDG_WLL_STAT_VM_FAILURE;
+						js->pub.state = EDG_WLL_JOB_DONE
+;
 						break;
 					case EDG_WLL_VMDONE_STATUS_CODE_UNDEFINED:
 						break;

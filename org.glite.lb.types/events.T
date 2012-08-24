@@ -250,6 +250,25 @@
 
 @type TakePayloadOwnership	Take over ownership of actual job payload
 
+@type ConnectJob	Connect two jobs
+	string	dest_jobid		ID of connected job
+	int     jobtype         Type of the job being connected (SIMPLE, DAG, PARTITIONABLE etc.).
+        _code_  SIMPLE          The job is simple job.
+        _code_  DAG             The job is dag (containing static set of subjobs).
+        _code_  PARTITIONABLE   The job is partitionable (may become partitioned).
+        _code_  PARTITIONED     The job is partitioned (dynamically created dag).
+        _code_  COLLECTION      The job is collection (containing static set of subjobs).
+        _code_  PBS             PBS job
+        _code_  CONDOR          Condor job
+        _code_  CREAM           CREAM job
+        _code_  FILE_TRANSFER_COLLECTION File transfer collection
+        _code_  FILE_TRANSFER            File transfer
+        _code_  VIRTUAL_MACHINE Virtual machine
+
+@type DisconnectJob        Disconnect two jobs
+        string  dest_jobid              ID of connected job
+
+
 @flesh PBS
 
 @type PBSInternalStateChange		Change of internal PBS job state
@@ -532,13 +551,24 @@
 	string name		machine name
 	string owner		machine owner
 	string hostname         hostname of VM
+	string manager		VM manager
 
 @type VMHost
 	string hostname		hostname of physical machine of VM
 
 @type VMRunning			VM is running
+	int 	vm_source
+	_code_  CM		cloud manager
+	_code_	VMM		VM manager
+	_code_	MACHINE		system
 
 @type VMShutdown
+	int vm_source
+	_code_  CM              cloud manager
+        _code_  VMM             VM manager
+        _code_  MACHINE         system
+	string  usage
+        _optional_
 
 @type VMStop
 
