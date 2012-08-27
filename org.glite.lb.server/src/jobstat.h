@@ -33,6 +33,14 @@ limitations under the License.
 #define HISTORY_SEPARATOR ",\n"
 #define HISTORY_SEPARATOR_SIZE 2
 
+
+enum edg_wll_JobConnectionType {
+        EDG_WLL_JOBCONNECTION_UNDEFINED,
+        EDG_WLL_JOBCONNECTION_ACTIVE,
+        EDG_WLL_JOBCONNECTION_INACTIVE,
+        EDG_WLL_JOBCONNECTION_CANCELLED
+};
+
 int edg_wll_JobStatusServer(edg_wll_Context, glite_jobid_const_t, int, edg_wll_JobStat *);
 
 
@@ -72,6 +80,6 @@ edg_wll_ErrorCode edg_wll_StoreSubjobHistogram(edg_wll_Context, glite_jobid_cons
 edg_wll_Event* fetch_history(edg_wll_Context ctx, edg_wll_JobStat *stat);
 int collate_history(edg_wll_Context ctx, edg_wll_JobStat *stat, edg_wll_Event* events, int authz_flags);
 //int clear_history();
-
+edg_wll_ErrorCode edg_wll_getConnectedJobs(edg_wll_Context ctx, glite_jobid_const_t job,  enum edg_wll_JobConnectionType connection, glite_jobid_t *connected_jobs, enum edg_wll_StatJobtype *job_types, enum edg_wll_JobConnectionType *connection_types);
 
 #endif /* GLITE_LB_LBS_JOBSTAT_H*/

@@ -1542,3 +1542,45 @@ cleanup:
 
 }
 
+edg_wll_ErrorCode edg_wll_getConnectedJobs(edg_wll_Context ctx, glite_jobid_const_t job,  enum edg_wll_JobConnectionType connection, glite_jobid_t *connected_jobs, enum edg_wll_StatJobtype *job_types, enum edg_wll_JobConnectionType *connection_types) {
+	char *stmt;
+	glite_lbu_Statement sh = NULL;
+	int i, n;
+	char *job_u;
+	char *out_stat[3];
+
+	job_u = edg_wlc_JobIdGetUnique(job);
+
+	if (connection == EDG_WLL_JOBCONNECTION_UNDEFINED)
+		trio_asprintf(&stmt, "SELECT jobid_to, jobtype, connection FROM job_connections WHERE jobid_from='%s'", job_u);
+	else
+		trio_asprintf(&stmt, "SELECT jobid_to, jobtype, connection FROM job_connections WHERE jobid_from='%s' AND connection=%i", job_u, connection);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+	free(job_u);
+
+	n = edg_wll_ExecSQL(ctx,stmt,&sh);
+	free(stmt);
+
+	connected_jobs = (glite_jobid_t*)malloc((n+1)*sizeof(glite_jobid_t));
+	job_types = (enum edg_wll_StatJobtype*)malloc((n+1)*sizeof(enum edg_wll_StatJobtype));
+	connection_types = (enum edg_wll_JobConnectionType*)malloc((n+1)*sizeof(enum edg_wll_JobConnectionType));
+
+	i = 0;
+	if (n > 0) {
+		while (edg_wll_FetchRow(ctx, sh, sizeof(out_stat)/sizeof(out_stat[0]), NULL, out_stat) == 3) {
+			glite_jobid_recreate((const char*) ctx->srvName, ctx->srvPort, out_stat[0], &(connected_jobs[i]));
+			job_types[i] = atoi(out_stat[1]);
+			connection_types[i] = atoi(out_stat[2]);
+			free(out_stat[0]);
+			free(out_stat[1]);
+			free(out_stat[2]);
+			i++;
+		}
+	}
+	connected_jobs[i] = NULL;
+	job_types[i] = EDG_WLL_NUMBER_OF_JOBTYPES; /* no undefined value */
+	connection_types[i] = EDG_WLL_JOBCONNECTION_UNDEFINED;
+
+	return edg_wll_Error(ctx, NULL, NULL);
+}
+

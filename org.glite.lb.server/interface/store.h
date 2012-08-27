@@ -41,13 +41,6 @@ void edg_wll_StoreAnonymous(
 	int		/* IN (boolean) */
 );
 
-enum edg_wll_JobConnectionType {
-	EDG_WLL_JOBCONNECTION_UNKNOWN,
-	EDG_WLL_JOBCONNECTION_ACTIVE,
-	EDG_WLL_JOBCONNECTION_INACTIVE,
-	EDG_WLL_JOBCONNECTION_CANCELLED
-};
-
 int db_store(edg_wll_Context, char *);
 int db_parent_store(edg_wll_Context, edg_wll_Event *, intJobStat *);
 int handle_request(edg_wll_Context,char *);

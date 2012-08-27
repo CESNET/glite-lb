@@ -160,7 +160,6 @@ create table job_connections (
 	jobid_to	char(32)	binary not null,
 	jobtype		int		not null,
 	connection      int             not null,
-	primary key (jobid_from),
-	index (jobid_to)
+	primary key (jobid_from, jobid_to)
 ) engine=innodb;
 
