@@ -239,18 +239,14 @@ void glite_jobid_free(glite_jobid_t job)
 
 char* glite_jobid_unparse(glite_jobid_const_t jobid)
 {
-    char *out, port[40];
+    char *out;
 
     if (!jobid)
 	return NULL;
 
-    if (jobid->BSport)
-	sprintf(port,":%d",jobid->BSport);
-    else
-        *port = 0;
-
-    asprintf(&out, GLITE_JOBID_PROTO_PREFIX"%s%s/%s%s%s",
-	     jobid->BShost,port,
+    asprintf(&out, GLITE_JOBID_PROTO_PREFIX"%s:%d/%s%s%s",
+	     jobid->BShost,
+	     jobid->BSport? jobid->BSport : GLITE_JOBID_DEFAULT_PORT,
 	     jobid->id,
 	     (jobid->info ? "?" : ""),
 	     (jobid->info ? jobid->info : ""));
