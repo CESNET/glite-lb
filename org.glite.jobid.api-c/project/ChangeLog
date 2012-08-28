@@ -91,3 +91,6 @@
 2.2.1-1
 - Simplified source tarball and packages distribution
 
+2.2.2-1
+- Always include port when creating URL
+
