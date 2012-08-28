@@ -164,3 +164,6 @@
 3.2.5-1
 - Better handling for c-ares error codes
 
+3.2.6-1
+- New parameter to indicate the type of credentials to require
+
