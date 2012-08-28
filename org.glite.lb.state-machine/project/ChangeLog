@@ -136,3 +136,9 @@
 - Simplified source tarball and packages distribution
 - Basic state machine for VM
 
+1.4.2-1
+- Job connections -- explicitly created and deactivated by event
+- New events: running/shutdown from machine, VM manager and cloud manager for better state computation
+- VM manager name in create event and usage in shutdown event
+- VM states mapped to gLite states
+
