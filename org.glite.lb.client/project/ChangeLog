@@ -253,3 +253,8 @@
 - Trying to honour job owner set in context when registering job
 - Added support for job_type query attribute in the query_ext example
 
+5.2.3-1
+- Using enum naming arrays where applicable
+- Job connections -- explicitly created and deactivated by event
+- New parameter to indicate the type of credentials to acquire
+
