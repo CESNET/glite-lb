@@ -444,3 +444,25 @@
 - Fixed default location for html-header.html file
 - Better handling of c-ares error codes
 
+2.4.6-1
+- Job connections -- explicitly created and deactivated by event, implicitly deactivated by job done/canceled/aborted status, purged with job
+- New events: running/shutdown from machine, VM manager and cloud manager for better state computation
+- VM manager name in create event and usage in shutdown event
+- VM states mapped to gLite states
+- New parameter to indicate the type of credentials to acquire
+- Using enum naming arrays where applicable
+- Unused function clear_history() provisionally removed
+- Job history colation code moved from notif_match to jobstat
+- History flag is now observed in job status queries
+- Job history is displayed in HTML Job Detail if present
+- edg_wll_FreeAcl() prevented from crashing on NULL
+- Information added to HTML and text output:
+  - Job type
+  - Job type-specific status info
+  - User Tags
+  - ACLs
+- Listing HTML header file path in server configuration
+- Major consolidation and refactoring of HTML and text output generating code
+- Using ?flags=... query string in URL for flags
+- Statistics type definitions separated from declarations to suppress compiler warnings
+
