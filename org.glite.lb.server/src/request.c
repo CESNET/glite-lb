@@ -67,7 +67,7 @@ create_reply(const edg_wll_Context ctx, char **buf)
 
   err_code_min = 0;
 
-  switch(edg_wll_Error(ctx,NULL,&err_msg)) {
+  switch(err_code = edg_wll_Error(ctx,NULL,&err_msg)) {
 
   case 0:
     err_code = LB_OK;
@@ -86,9 +86,14 @@ create_reply(const edg_wll_Context ctx, char **buf)
     break;
     
   default:
-    err_code = LB_DBERR;
-    err_code_min = edg_wll_Error(ctx,NULL,NULL);
-    break;
+	  if(err_code > EDG_WLL_ERROR_BASE) {
+		  /* that would mean parse error, do not bother sending it again */
+		  err_code = LB_PROTO;
+	  } else {
+		  err_code = LB_DBERR;
+	  }
+	  err_code_min = edg_wll_Error(ctx,NULL,NULL);
+	  break;
 
   } 
 
