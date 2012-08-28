@@ -200,6 +200,12 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 				/* update job location */
 				switch(e->PBSTransfer.destination) {
 				case EDG_WLL_SOURCE_PBS_SERVER:
+					rep(js->pub.location, e->PBSTransfer.dest_instance);
+					break;
+
+				case EDG_WLL_SOURCE_PBS_MOM:
+				case EDG_WLL_SOURCE_PBS_SMOM:
+					rep(js->pub.ce_node, e->PBSTransfer.dest_instance);
 					break;
 				default:
 					/* where is it going? */
@@ -219,12 +225,14 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 			case EDG_WLL_SOURCE_PBS_SERVER:
 				/* accepted by server means job is submitted */
 				js->pub.state = EDG_WLL_JOB_SUBMITTED;
+				rep(js->pub.location, e->any.src_instance);
 				break;
 
 			case EDG_WLL_SOURCE_PBS_SMOM:
 			case EDG_WLL_SOURCE_PBS_MOM:
 				/* accepted by MOM: job is going to run */
 				js->pub.state = EDG_WLL_JOB_SCHEDULED;
+				rep(js->pub.ce_node, e->any.src_instance);
 				break;
 
 			default:
