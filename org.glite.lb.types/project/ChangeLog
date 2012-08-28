@@ -114,3 +114,6 @@
 - Simplified source tarball and packages distribution
 - Basic state machine for VM
 
+1.4.3-1
+- New events: running/shutdown from machine, VM manager and cloud manager for better state computation
+
