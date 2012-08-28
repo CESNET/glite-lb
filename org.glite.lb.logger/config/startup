@@ -29,6 +29,10 @@ GLITE_LB_LOCATION=${GLITE_LB_LOCATION:-'@glite_prefix@'}
 GLITE_LB_LOCATION_ETC=${GLITE_LB_LOCATION_ETC:-'@glite_etc@'}
 GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
 
+KRB5_KTNAME="FILE:/var/glite/krb5kt_lb"
+KRB5CCNAME="FILE:/var/glite/krb5cc_lb"
+LOG4C_RCPATH="$GLITE_LB_LOCATION_ETC/glite-lb"
+
 [ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
 [ -f /etc/glite.conf ] && . /etc/glite.conf
 [ -f $GLITE_LB_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LB_LOCATION_ETC/glite-wms.conf
@@ -41,9 +45,6 @@ GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
 LL_PIDFILE=${LL_PIDFILE:-$GLITE_LB_LOCATION_VAR/glite-lb-logd.pid}
 IL_PIDFILE=${IL_PIDFILE:-$GLITE_LB_LOCATION_VAR/glite-lb-interlogd.pid}
 IL_SOCKFILE=/tmp/interlogger.sock
-
-KRB5_KTNAME=${KRB5_KTNAME:-'FILE:/var/glite/krb5kt_lb'}
-KRB5CCNAME=${KRB5CCNAME:-'FILE:/var/glite/krb5cc_lb'}
 
 lockfile=/var/lock/glite-lb-locallogger
 
@@ -123,23 +124,24 @@ start()
 		return 1
 	fi
 
-	env="LOG4C_RCPATH='$GLITE_LB_LOCATION_ETC/glite-lb'"
+	if [ -n "$LOG4C_RCPATH" ]; then env="$env LOG4C_RCPATH='$LOG4C_RCPATH'"; fi
+	if [ -n "$KRB5_KTNAME" ]; then env="$env KRB5_KTNAME='$KRB5_KTNAME'"; fi
+	if [ -n "$KRB5CCNAME" ]; then env="$env KRB5CCNAME='$KRB5CCNAME'"; fi
 
-	if [ x"$GLITE_GSS_MECH" = x"krb5" ]; then
-		env="$env KRB5_KTNAME='$KRB5_KTNAME' KRB5CCNAME='$KRB5CCNAME'"
-	else
-		[ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] &&
-			creds="-c $GLITE_HOST_CERT -k $GLITE_HOST_KEY"
-
-		if test -z "$creds"; then
-			if su - $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem"; then
-				echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
-				creds="-c /etc/grid-security/hostcert.pem -k /etc/grid-security/hostkey.pem"
-			fi
-		fi
-
-		[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
+	if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ]; then
+		env="$env X509_USER_CERT=$GLITE_HOST_CERT X509_USER_KEY=$GLITE_HOST_KEY"
+		creds=1
 	fi
+
+	if test -z "$creds"; then
+		if su - $GLITE_USER -c "test -r /etc/grid-security/hostkey.pem -a -r /etc/grid-security/hostcert.pem"; then
+			echo "$0: WARNING: /etc/grid-security/hostkey.pem readable by $GLITE_USER"
+			env="$env X509_USER_CERT=$GLITE_HOST_CERT X509_USER_KEY=$GLITE_HOST_KEY"
+			creds=1
+		fi
+	fi
+
+	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
 	[ -n "$GLITE_LB_LOGGER_PORT" ] && port="--port $GLITE_LB_LOGGER_PORT"
 	[ -n "$GLITE_LB_IL_SOCK" ] && sock="--socket $GLITE_LB_IL_SOCK"
@@ -149,10 +151,10 @@ start()
 	chown $GLITE_USER /var/glite/log
         (cd /tmp && ls -f /tmp |grep ^dglogd_sock_ |xargs rm -f)
 	start_daemon "glite-lb-logd" "$LL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-logd \
-		-i $LL_PIDFILE $creds $port $sock $fprefix"
+		-i $LL_PIDFILE $port $sock $fprefix"
 
 	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-interlogd \
-		-i $IL_PIDFILE $creds $sock $fprefix" "$IL_SOCKFILE"
+		-i $IL_PIDFILE $sock $fprefix" "$IL_SOCKFILE"
 }
 
 killwait()
