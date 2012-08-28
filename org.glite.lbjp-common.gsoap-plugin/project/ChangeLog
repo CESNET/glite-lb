@@ -128,3 +128,6 @@
 - Debian package builds in vanilla chroot environment
 - Simplified source tarball and packages distribution
 
+3.2.2-1
+- New parameter to indicate the type of credentials to acquire
+
