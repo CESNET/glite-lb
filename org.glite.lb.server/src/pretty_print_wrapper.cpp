@@ -17,9 +17,9 @@ limitations under the License.
 
 #include "pretty_print_wrapper.h"
 
-#include <classad_distribution.h>
 #include <string>
 #include <string.h>
+#include <classad_distribution.h>
 
 int pretty_print(char *jdl, char **formated_print){
 	CLASSAD_NAMESPACE ClassAd        *classad;

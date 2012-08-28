@@ -1229,6 +1229,25 @@ edg_wll_acl_print(edg_wll_Context ctx, edg_wll_Acl a, char **policy)
 }
 
 int
+equal_mapped(const char *a, const char *b, struct _edg_wll_id_mapping *mapping)
+{
+    int i;
+
+    if (mapping == NULL || mapping->num == 0)
+	return 0;
+
+    for (i = 0; i < mapping->num; i++) {
+	if (edg_wll_gss_equal_subj(a, mapping->rules[i]->a) &&
+	    edg_wll_gss_equal_subj(b, mapping->rules[i]->b))
+	    return 1;
+	if (edg_wll_gss_equal_subj(a, mapping->rules[i]->b) &&
+	    edg_wll_gss_equal_subj(b, mapping->rules[i]->a))
+	    return 1;
+    }
+    return 0;
+}
+
+int
 check_jobstat_authz(edg_wll_Context ctx,
 	    	    const edg_wll_JobStat *stat,
 	    	    int job_flags,
@@ -1247,6 +1266,9 @@ check_jobstat_authz(edg_wll_Context ctx,
 
     if (edg_wll_gss_equal_subj(peer->name, stat->owner))
 	return 1;
+    if (equal_mapped(peer->name, stat->owner, &ctx->id_mapping))
+	return 1;
+
     if (stat->payload_owner && edg_wll_gss_equal_subj(peer->name, stat->payload_owner))
 	return 1;
 
@@ -1267,4 +1289,71 @@ check_jobstat_authz(edg_wll_Context ctx,
     }
 
     return 0;
+}
+
+int
+parse_gridmap(edg_wll_Context ctx,
+	      const char *file,
+	      struct _edg_wll_id_mapping *mapping)
+{
+    FILE *fd = NULL;
+    char line[4096];
+    char *p, *a, *b;
+    int ret;
+    struct _edg_wll_mapping_rule *rule = NULL, **tmp;
+
+    fd = fopen(file, "r");
+    if (fd == NULL)
+	return edg_wll_SetError(ctx, errno, "Failed to open mapping file");
+
+    /* XXX -1 */
+    while (fgets(line, sizeof(line), fd) != NULL) {
+	p = strchr(line, '\n');
+	if (p)
+	    *p = '\0';
+
+	p = line;
+	while(p && *p == ' ')
+	    p++;
+	a = p;
+
+	p = strchr(line, ' ');
+	if (!p) {
+	    ret = edg_wll_SetError(ctx, EINVAL, "Wrong format of mapping file");
+	    goto end;
+	}
+	*p++ = '\0';
+	
+	while(p && *p == ' ')
+	    p++;
+	b = p;
+
+	rule = malloc(sizeof(*rule));
+	if (rule == NULL) {
+	    ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
+	    goto end;
+	}
+	rule->a = strdup(a);
+	rule->b = strdup(b);
+	if (rule->a == NULL || rule->b == NULL) {
+	    ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
+	    goto end;
+	}
+
+	tmp = realloc(mapping->rules, (mapping->num+1) * sizeof(*tmp));
+	if (tmp == NULL) {
+	    ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
+	    goto end;
+	}
+	mapping->rules = tmp;
+	mapping->rules[mapping->num++] = rule;
+	rule = NULL;
+    }
+
+    ret = 0;
+
+end:
+    fclose(fd);
+
+    return ret;
 }

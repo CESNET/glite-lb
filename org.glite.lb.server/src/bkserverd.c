@@ -187,6 +187,8 @@ static char		**msg_brokers = NULL;
 static char		**msg_prefixes = NULL;
 char *		html_header = NULL;
 static int	html_header_forced = 0;
+static char     *gridmap = NULL;
+struct _edg_wll_id_mapping id_mapping = {NULL, 0};
 
 
 static struct option opts[] = {
@@ -239,10 +241,11 @@ static struct option opts[] = {
 	{"rss-time", 	1,	NULL,	'I'},
 	{"policy",	1,	NULL,	'l'},
 	{"exclusive-zombies-off",	0,	NULL,	'E'},
+	{"gridmap-file",1,	NULL,   'M'},
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:e:f:zb:gPBo:q:W:Z:GI:l:EH:"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:M:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:e:f:zb:gPBo:q:W:Z:GI:l:EH:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -272,6 +275,7 @@ static void usage(char *me)
 		"\t-s, --slaves\t number of slave servers to fork\n"
 		"\t-i, --pidfile\t file to store master pid\n"
 		"\t-L, --limits\t query limits numbers in format \"events_limit:jobs_limit:size_limit\"\n"
+		"\t-M, --gridmap-file\tgridmap-file to map clients identities\"\n"
 		"\t-N, --notif-dur default[:max]\t Duration of notification registrations in seconds (default and maximal)\n"
 		"\t-S, --purge-prefix\t purge files full-path prefix\n"
 		"\t-D, --dump-prefix\t dump files full-path prefix\n"
@@ -468,6 +472,7 @@ int main(int argc, char *argv[])
 				return 1;
 			}
 			break;
+		case 'M': gridmap = strdup(optarg); break;
 		case 'N': {
 				int	std,max;
 				switch (sscanf(optarg,"%d:%d",&std,&max)) {
@@ -582,6 +587,14 @@ int main(int argc, char *argv[])
 
 		edg_wll_Error(ctx,&et,&ed);
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Cannot load server policy: %s: %s\n", et, ed);
+		return 1;
+	}
+
+	if (gridmap && parse_gridmap(ctx, gridmap, &id_mapping)) {
+		char *et, *ed;
+
+		edg_wll_Error(ctx,&et,&ed);
+		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "Cannot load identity mapping: %s: %s\n", et, ed);
 		return 1;
 	}
 
@@ -1107,6 +1120,8 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	if (policy_file) ctx->authz_policy_file = strdup(policy_file);
 	if (html_header) ctx->html_header_file = strdup(html_header);
 	else ctx->html_header_file = NULL;
+
+	ctx->id_mapping = id_mapping;
 
 	gettimeofday(&conn_start, 0);
 

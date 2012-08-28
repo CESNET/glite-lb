@@ -59,6 +59,16 @@ typedef struct _edg_wll_authz_policy {
 
 typedef struct _edg_wll_authz_policy *edg_wll_authz_policy;
 
+typedef struct _edg_wll_mapping_rule {
+	char *a;
+	char *b;
+} _edg_wll_mapping_rule;
+
+typedef struct _edg_wll_id_mapping {
+	struct _edg_wll_mapping_rule **rules;
+	int num;
+} _edg_wll_id_mapping;
+
 int
 edg_wll_add_authz_rule(edg_wll_Context ctx,
 		       edg_wll_authz_policy policy,

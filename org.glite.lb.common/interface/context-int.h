@@ -188,6 +188,8 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	char 		*authz_policy_file;
 
 	char		*html_header_file;
+
+	_edg_wll_id_mapping	id_mapping;
 )
 
 /* to be used internally: set, update and and clear the error information in 
