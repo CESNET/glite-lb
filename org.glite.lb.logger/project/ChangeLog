@@ -223,3 +223,6 @@
 - Debian package builds in vanilla chroot environment
 - Simplified source tarball and packages distribution
 
+2.4.4-1
+- New parameter to indicate the type of credentials to acquire
+
