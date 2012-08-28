@@ -84,7 +84,7 @@ char *get_html_header(edg_wll_Context ctx, int text) {
 	}
 	else rlen = -1;
 	
-	if (rlen == -1 ) header=strdup("<style type=\"text/css\">tr.notused {color: gray; text-align: left;}</style>");
+	if (rlen == -1 ) header=strdup("<style type=\"text/css\">\ntr.notused {color: gray; text-align: left;}\n.jobtype {display: none;}\n.jobstate {display: none;}</style>");
 
 	return header;
 }
@@ -214,8 +214,8 @@ int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, 
 /* construct Message-Body of Response-Line for edg_wll_UserJobs */
 int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOut, edg_wll_JobStat *statsOut, char **message, int text)
 {
-        char *pomA = NULL, *pomB, *pomC, *header = NULL, *recent_parent = NULL;
-	int i, total = 0, bufsize, written = 0, linlen, wassub = 0, issub = 0, lineoverhead;
+        char *pomA = NULL, *pomB, *pomC, *header = NULL, *recent_parent = NULL, *st;
+	int i, total = 0, bufsize, written = 0, linlen, wassub = 0, issub = 0, lineoverhead, jt;
 	JobIdSorter *order;
 
         while (jobsOut && jobsOut[total]) total++;
@@ -262,11 +262,27 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 	for (i = 0; i < total; i++) {
 		if (text) linlen = asprintf(&pomA,"%s%s", order[i].id_unparsed, i + 1 == total ? "\n" : ",");
 		else {
+			jt = statsOut[order[i].order].jobtype;
+			switch (jt) {
+				case EDG_WLL_STAT_CREAM:
+					st = edg_wll_CreamStatToString(statsOut[order[i].order].cream_state);
+				case EDG_WLL_STAT_VIRTUAL_MACHINE:
+					st = edg_wll_VMStatToString(statsOut[order[i].order].vm_state);
+				case EDG_WLL_STAT_PBS:
+					st = statsOut[order[i].order].pbs_state ?
+						strdup(statsOut[order[i].order].pbs_state) :
+						 edg_wll_StatToString(statsOut[order[i].order].state);
+				default:
+					st = edg_wll_StatToString(statsOut[order[i].order].state);
+			}
 			issub = order[i].parent_unparsed && recent_parent && !strcmp(recent_parent, order[i].parent_unparsed) ? 1 : 0;
-			linlen = asprintf(&pomA, "%s<li><a href=\"%s\">%s</a></li>\n",
+			linlen = asprintf(&pomA, "%s<li><a href=\"%s\">%s</a> <span class=\"jobtype\">&mdash; %s</span> <span class=\"jobstate\">%s</span></li>\n",
 				issub ? (wassub++ ? "" : "<ul>") : (wassub ? "</UL>" : ""),
 				order[i].id_unparsed,
-				order[i].id_unparsed );
+				order[i].id_unparsed,
+				jt >= 0 && jt < EDG_WLL_NUMBER_OF_JOBTYPES ? edg_wll_StatusJobtypeNames[jt] : "Unknown!",
+				st);
+			free(st);
 			if (!issub || !order[i].parent_unparsed) { wassub = 0; recent_parent = order[i].id_unparsed; }
 		}
 
@@ -443,7 +459,8 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	free(chtemp);
 	add_row(&out, "Status", "Status", (chtemp = edg_wll_StatToString(stat.state)), NULL, text);
 	free(chtemp);
-	add_row(&out, "job_type", "Type", edg_wll_StatusJobtypeNames[stat.jobtype], NULL, text);
+	add_row(&out, "job_type", "Type", stat.jobtype >= 0 && stat.jobtype < EDG_WLL_NUMBER_OF_JOBTYPES ?
+		edg_wll_StatusJobtypeNames[stat.jobtype] : "Unknown!", NULL, text);
 
 	switch (stat.jobtype) {
 		case EDG_WLL_STAT_CREAM:
