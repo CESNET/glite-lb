@@ -212,3 +212,8 @@
 8.2.3-1
 - Avoid using all-caps in enum naming arrays
 
+8.2.4-1
+- Very basic identity mapping based on gridmap-file
+  - Works for state queries
+- New structure to describe inter-job relationship
+
