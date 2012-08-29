@@ -101,6 +101,7 @@ A notification ID also takes the form of an URL. If you direct your browser to a
 In all cases it is necessary to have the user certificate installed in the browser.
 
 \subsubsection{Plain Text Modifier}
+\label{HTML:plaintext}
 
 Since \LBver{2.0}, it is also possible to obtain the above results in a machine readable 
 \verb'key=value' form by adding a suffix \verb'text' to the above URLs. For example
@@ -183,17 +184,17 @@ This feature is supported since \LBver{3.3}
 \label{HTML:querystrings}
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
-\texttt{?agu} & agu \\
-\texttt{?all} & Applies only to notifications. Makes sure notification registrations by all users are displayed if privileges suffice. Explained in Sect.\,\ref{simple}. \\
-\texttt{?configuration} & Displays various configuration properties of the server. Explained in Sect.\,\ref{s:findbroker}. \\
-\texttt{?flags} & Flags \\
-\texttt{?foreign} & Applies only to notifications. Makes sure notification registrations by all users but yourselves are displayed if privileges suffice. Explained in Sect.\,\ref{simple}. \\
-\texttt{?query} & Query \\
-\texttt{?stats} & Stats \\
-\texttt{?text} & Text \\
-\texttt{?types} & types \\
-\texttt{?version} & Version \\
-\texttt{?wsdl} & WSDL \\
+\texttt{?agu} & Suppresses normal output and returns up-to-date WSDL for AGU methods \\
+\texttt{?all} & Applies only to notifications. Makes sure notification registrations by all users are displayed if privileges suffice. Explained in~\ref{simple}. \\
+\texttt{?configuration} & Suppresses normal output and displays various configuration properties of the server. Explained in~\ref{s:findbroker}. \\
+\texttt{?flags} & Specifies query flags, explained in~\ref{HTML:flags}. \\
+\texttt{?foreign} & Applies only to notifications. Makes sure notification registrations by all users but yourselves are displayed if privileges suffice. Explained in~\ref{simple}. \\
+\texttt{?query} & Specifies query conditions when querying for jobs. Explained in~\ref{HTML:queries}. \\
+\texttt{?stats} & Suppresses normal output and displays server usage statistics instead. \\
+\texttt{?text} & Instead of HTML, returns output in plain text \texttt{key=value} format. Explained in~\ref{HTML:plaintext}.\\
+\texttt{?types} & Suppresses normal output and returns up-to-date WSDL for WS type definitions. \\
+\texttt{?version} & Suppresses normal output and displays server version instead. \\
+\texttt{?wsdl} & Suppresses normal output and returns the up-to-date WSDL used by \LB's WS interface. \\
 \end{tabularx}
 
 \subsection{Job state changes as an RSS feed}
