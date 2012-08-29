@@ -336,4 +336,5 @@ char *edg_wll_JDLField(edg_wll_JobStat *stat, const char *field_name)
 		return NULL;
 }
 
+char *edg_wll_JobConnectionTypeNames[] = { NULL, "Active", "Inactive", "Cancelled" };
 

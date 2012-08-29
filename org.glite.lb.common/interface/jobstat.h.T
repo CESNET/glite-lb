@@ -177,6 +177,27 @@ typedef struct _edg_wll_JobStat {
 #define EDG_WLL_NOTIF_VOLATILE 512	/**< (not used yet) send the notifications directly, without reliability and persistency */
 /* starting from bit 10 private flags begins - do not add 1024 and more! */
 
+/**
+ * Type (status) of an inter-job relationship
+**/
+typedef enum _edg_wll_JobConnectionType {
+        EDG_WLL_JOBCONNECTION_UNDEFINED,
+        EDG_WLL_JOBCONNECTION_ACTIVE,
+        EDG_WLL_JOBCONNECTION_INACTIVE,
+        EDG_WLL_JOBCONNECTION_CANCELLED
+} edg_wll_JobConnectionType;
+
+extern char *edg_wll_JobConnectionTypeNames[];
+
+/**
+ * Structured type for expressing inter-job relationships
+**/
+typedef struct _edg_wll_RelationshipRecord {
+	glite_jobid_t			jobid;		/* JobID of the related job */
+	enum edg_wll_StatJobtype	jobtype;	/* Type of the related job */
+	edg_wll_JobConnectionType	reltype;	/* Type (status) of the relationship */
+} edg_wll_RelationshipRecord;
+
 
 
 /**
