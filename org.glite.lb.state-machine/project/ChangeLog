@@ -142,3 +142,6 @@
 - VM manager name in create event and usage in shutdown event
 - VM states mapped to gLite states
 
+1.4.3-1
+- Torque job location updated
+
