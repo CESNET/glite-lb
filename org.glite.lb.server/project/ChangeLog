@@ -466,3 +466,11 @@
 - Using ?flags=... query string in URL for flags
 - Statistics type definitions separated from declarations to suppress compiler warnings
 
+2.4.7-1
+- Startup script updated due to new GSS mechanisms
+  - Certificates passed through environment instead of argument
+- New structure to describe inter-job relationship
+- Related jobs, if any, are now displayed in HTML output
+- Very basic identity mapping based on gridmap-file. Works for state queries.
+- Return codes for IL augmented to avoid re-sending faulty messages
+
