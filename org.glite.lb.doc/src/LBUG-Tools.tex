@@ -153,10 +153,48 @@ Supported job state values (attribute \texttt{status}) are listed in Appendix~\r
 
 All queries result in a list of JobIDs of jobs that match the specified criteria.
 
+This feature is supported since \LBver{3.3}
+
+\subsubsection{Applying Flags}
+\label{HTML:flags}
+
+Query conditions explained in Section~\ref{HTML:queries} but also simple requests may be combined with flags supplied through the \texttt{?flags} query string. For instance, when querying for a colection status, the following use of flags will initiate thorough recalculation of child job state histogram and make sure that classad data (namely JDL) are retrieved.
+
+\begin{verbatim}
+https://skurut68-2.cesnet.cz:9100/D1qbFGwvXLnd927JOcja1Q?flags=classadd+childhist_thorough
+\end{verbatim}
+
+The following flags are supported in job and job status queries:
+\texttt{classadd},
+\texttt{children},
+\texttt{childstat},
+\texttt{no\_jobs},
+\texttt{no\_states},
+\texttt{childhist\_fast},
+\texttt{childhist\_thorough},
+\texttt{anonymized}, and
+\texttt{history}.
+
+This feature is supported since \LBver{3.3}
+
 \input{https_configuration}
 
 \subsubsection{Summary of Applicable Query Strings}
 \label{HTML:querystrings}
+
+\begin{tabularx}{\textwidth}{>{\tt}lX}
+\texttt{?agu} & agu \\
+\texttt{?all} & Applies only to notifications. Makes sure notification registrations by all users are displayed if privileges suffice. Explained in Sect.\,\ref{simple}. \\
+\texttt{?configuration} & Displays various configuration properties of the server. Explained in Sect.\,\ref{s:findbroker}. \\
+\texttt{?flags} & Flags \\
+\texttt{?foreign} & Applies only to notifications. Makes sure notification registrations by all users but yourselves are displayed if privileges suffice. Explained in Sect.\,\ref{simple}. \\
+\texttt{?query} & Query \\
+\texttt{?stats} & Stats \\
+\texttt{?text} & Text \\
+\texttt{?types} & types \\
+\texttt{?version} & Version \\
+\texttt{?wsdl} & WSDL \\
+\end{tabularx}
 
 \subsection{Job state changes as an RSS feed}
 The \LB includes an RSS interface allowing users to keep trace of their jobs in a very simple way using an RSS reader. The parameters of the RSS feeds are predefined, so no configuration is required.
