@@ -59,6 +59,7 @@ static void usage(char *cmd)
 			"    -O			Match owner - credentials are retrieved from environment\n"
 			"    -c			Match only on state change\n"
 			"    -S | --state	Match on events resulting in listed (coma-delimited) states\n"
+			"    -E | --type	Match on events relating to listed types of jobs (coma-delimited)\n"
 			"    -J | --jdl		Attach JDL to job status being returned\n"
 			"    -B | --bootstrap	Also send past events matching conditions\n"
 			"    -T | --terminal	Notify only when a job reaches terminal state\n"
@@ -142,10 +143,12 @@ int main(int argc,char **argv)
 			{"terminal", no_argument, 0, 'T'},
 			{"history", no_argument, 0, 'H'},
 			{"anonymize", no_argument, 0, 'N'},
+			{"type", no_argument, 0, 'E'},
 			{0, 0, 0, 0}};
            	int option_index = 0;
-		char *single, *statelist, *notif_server;
+		char *single, *statelist, *notif_server, *typelist, *type, *typestor;
 		edg_wll_JobStatCode single_code;
+		enum edg_wll_StatJobtype typecode;
 		int statno, stdelims, sti;
 		unsigned int notif_server_port;
 
@@ -153,7 +156,7 @@ int main(int argc,char **argv)
 		conditions = (edg_wll_QueryRec **)calloc(MAX_NEW_CONDS + 1,sizeof(edg_wll_QueryRec *));
 		conditions[0] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 
-		while ((c = getopt_long(argc-1,argv+1,"j:o:v:n:s:a:t:f:cOS:JBTHN",long_options,&option_index)) > 0) { switch (c) {
+		while ((c = getopt_long(argc-1,argv+1,"j:o:v:n:s:a:t:f:cOS:JBTHNE:",long_options,&option_index)) > 0) { switch (c) {
 			case 'j':
 				conditions[i] = (edg_wll_QueryRec *)calloc(2,sizeof(edg_wll_QueryRec));
 				conditions[i][0].attr = EDG_WLL_QUERY_ATTR_JOBID;
@@ -261,7 +264,31 @@ int main(int argc,char **argv)
 					}
 				}
 				i++;
-				break; 
+				break;
+			case 'E':
+				typelist = optarg;
+				statno = 0;
+				for( type = strtok_r(typelist, ",", &typestor); type ; type = strtok_r(NULL, ",", &typestor))
+					statno++;
+				conditions[i] = (edg_wll_QueryRec *)calloc(statno+1,sizeof(edg_wll_QueryRec));
+				statno = 0;
+				for( type = strtok_r(typelist, ",", &typestor); type ; type = strtok_r(NULL, ",", &typestor)) {
+					typecode=edg_wll_JobtypeStrToCode(type);
+					if (((int)typecode)<0) {
+						fprintf(stderr,"'%s' is not a valid job type! Exitting.\n", type);	
+						goto cleanup;
+					}
+					else {
+						fprintf(stderr, "Adding condition for %s, typecode %d\n", type, typecode);
+						conditions[i][statno].attr = EDG_WLL_QUERY_ATTR_JOB_TYPE;
+						conditions[i][statno].op = EDG_WLL_QUERY_OP_EQUAL;
+						conditions[i][statno].value.i = typecode;
+						statelist = NULL;
+						statno++;
+					}
+				}
+				i++;
+				break;
 			default:
 				usage("new"); return EX_USAGE;
 			}
