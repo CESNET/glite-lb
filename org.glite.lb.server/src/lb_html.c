@@ -26,6 +26,7 @@ limitations under the License.
 #include "index.h"
 #include "server_state.h"
 #include "lb_authz.h"
+#include "jobstat.h"
 
 #include "glite/lb/context-int.h"
 #include "glite/lb/xml_conversions.h"
@@ -103,6 +104,15 @@ int jobstat_cmp (const void *a, const void *b) {
 	if (!((JobIdSorter*)a)->parent_unparsed) return -1;
 	if (!((JobIdSorter*)b)->parent_unparsed) return 1;
 	return strcmp(((JobIdSorter*)a)->id_unparsed, ((JobIdSorter*)b)->id_unparsed);
+}
+
+int relationship_cmp (const void *a, const void *b) {
+	// This code should sort IDs by parent ID first, then by JobID.
+	if (((edg_wll_RelationshipRecord*)a)->reltype > ((edg_wll_RelationshipRecord*)b)->reltype) return (1);
+	if (((edg_wll_RelationshipRecord*)a)->reltype < ((edg_wll_RelationshipRecord*)b)->reltype) return (-1);
+	if (((edg_wll_RelationshipRecord*)a)->jobtype > ((edg_wll_RelationshipRecord*)b)->jobtype) return (1);
+	if (((edg_wll_RelationshipRecord*)a)->jobtype < ((edg_wll_RelationshipRecord*)b)->jobtype) return (-1);
+	return (0);
 }
 
 int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, int text){
@@ -419,11 +429,12 @@ int edg_wll_NotificationToHTML(edg_wll_Context ctx UNUSED_VAR, notifInfo *ni, ch
 /* construct Message-Body of Response-Line for edg_wll_JobStatus */
 int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat stat, char **message, int text)
 {
-        char *out_tmp = NULL, *header = NULL, *out, *history = NULL, *jdl = NULL, *cream_jdl = NULL, *rsl = NULL, *children = NULL, *chtemp;
+        char *out_tmp = NULL, *header = NULL, *out, *history = NULL, *jdl = NULL, *cream_jdl = NULL, *rsl = NULL, *children = NULL, *relations = NULL, *chtemp;
 	time_t time;
 
         char *pomA = NULL;
 	int	i;
+	size_t	linlen, outlen;
 
         chtemp = edg_wlc_JobIdUnparse(stat.jobId);
 
@@ -684,8 +695,45 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		}
 	}
 
-	asprintf(&pomA, "%s%s%s%s%s%s%s", 
+	if (!text) {
+		edg_wll_RelationshipRecord *connections;
+		int total = 0;
+
+		edg_wll_getConnectedJobs(ctx, stat.jobId, EDG_WLL_JOBCONNECTION_UNDEFINED, &connections);
+
+		if (connections) {
+			outlen = asprintf(&relations, "<h3>Related Jobs</h3>\n<UL>\n");
+			for( total = 0; connections[total].jobid; total++ );
+		
+			qsort(connections, total, sizeof(edg_wll_RelationshipRecord), relationship_cmp); 
+
+			for( i = 0; connections[i].jobid; i++ ) {
+				chtemp = edg_wlc_JobIdUnparse(connections[i].jobid);
+
+				linlen = asprintf(&pomA, "<li><a href=\"%s\">%s</a> <span class=\"jobtype\">&mdash; %s</span> <span class=\"jobstate\">%s</span></li>\n%s",
+					chtemp,
+					chtemp,
+					connections[i].jobtype >= 0 && connections[i].jobtype < EDG_WLL_NUMBER_OF_JOBTYPES ?
+						edg_wll_StatusJobtypeNames[connections[i].jobtype] : "Unknown!",
+					edg_wll_JobConnectionTypeNames[connections[i].reltype],
+					connections[i+1].jobid ? "" : "</UL>\n");
+
+				relations = realloc(relations, sizeof(char) * (outlen + linlen + 1));
+				strcat(relations, pomA);
+				outlen = outlen + linlen;
+				free(pomA);
+
+				free(chtemp);
+				edg_wlc_JobIdFree(connections[i].jobid);
+			}
+			free(connections);
+			
+		}
+	}
+
+	asprintf(&pomA, "%s%s%s%s%s%s%s%s", 
                 	out,
+			relations ? relations : "",
 			history ? history : "",
 			jdl ? jdl : "",
 			cream_jdl ? cream_jdl : "",
@@ -699,6 +747,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	free(jdl);
 	free(rsl);
 	free(children);
+	free(relations);
         return 0;
 }
 

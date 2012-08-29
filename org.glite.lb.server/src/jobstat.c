@@ -1542,12 +1542,14 @@ cleanup:
 
 }
 
-edg_wll_ErrorCode edg_wll_getConnectedJobs(edg_wll_Context ctx, glite_jobid_const_t job,  enum edg_wll_JobConnectionType connection, glite_jobid_t *connected_jobs, enum edg_wll_StatJobtype *job_types, enum edg_wll_JobConnectionType *connection_types) {
+edg_wll_ErrorCode edg_wll_getConnectedJobs(edg_wll_Context ctx, glite_jobid_const_t job, edg_wll_JobConnectionType connection, edg_wll_RelationshipRecord **connections) {
 	char *stmt;
 	glite_lbu_Statement sh = NULL;
-	int i, n;
+	int i = 0, n;
 	char *job_u;
 	char *out_stat[3];
+	glite_jobid_t	tempjobid;
+	edg_wll_RelationshipRecord *conns = NULL;
 
 	job_u = edg_wlc_JobIdGetUnique(job);
 
@@ -1561,25 +1563,24 @@ edg_wll_ErrorCode edg_wll_getConnectedJobs(edg_wll_Context ctx, glite_jobid_cons
 	n = edg_wll_ExecSQL(ctx,stmt,&sh);
 	free(stmt);
 
-	connected_jobs = (glite_jobid_t*)malloc((n+1)*sizeof(glite_jobid_t));
-	job_types = (enum edg_wll_StatJobtype*)malloc((n+1)*sizeof(enum edg_wll_StatJobtype));
-	connection_types = (enum edg_wll_JobConnectionType*)malloc((n+1)*sizeof(enum edg_wll_JobConnectionType));
-
-	i = 0;
 	if (n > 0) {
+		conns = (edg_wll_RelationshipRecord*)malloc((n+1)*sizeof(edg_wll_RelationshipRecord));
 		while (edg_wll_FetchRow(ctx, sh, sizeof(out_stat)/sizeof(out_stat[0]), NULL, out_stat) == 3) {
-			glite_jobid_recreate((const char*) ctx->srvName, ctx->srvPort, out_stat[0], &(connected_jobs[i]));
-			job_types[i] = atoi(out_stat[1]);
-			connection_types[i] = atoi(out_stat[2]);
+			glite_jobid_recreate((const char*) ctx->srvName, ctx->srvPort, out_stat[0], &tempjobid);
+			conns[i].jobid = tempjobid;
+			conns[i].jobtype = atoi(out_stat[1]);
+			conns[i].reltype = atoi(out_stat[2]);
 			free(out_stat[0]);
 			free(out_stat[1]);
 			free(out_stat[2]);
 			i++;
 		}
+		conns[i].jobid = NULL;
+		conns[i].jobtype = -1; 
+		conns[i].reltype = EDG_WLL_JOBCONNECTION_UNDEFINED;
 	}
-	connected_jobs[i] = NULL;
-	job_types[i] = EDG_WLL_NUMBER_OF_JOBTYPES; /* no undefined value */
-	connection_types[i] = EDG_WLL_JOBCONNECTION_UNDEFINED;
+
+	*connections = conns;
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
