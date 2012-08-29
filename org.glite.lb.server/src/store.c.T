@@ -897,7 +897,7 @@ static void lowercase_usertag(edg_wll_Event *ev)
 	}
 }
 
-int edg_wll_jobsconnection_create(edg_wll_Context ctx, glite_jobid_const_t jobid_from, glite_jobid_const_t jobid_to, enum edg_wll_StatJobtype jobtype, enum edg_wll_JobConnectionType connectiontype){
+int edg_wll_jobsconnection_create(edg_wll_Context ctx, glite_jobid_const_t jobid_from, glite_jobid_const_t jobid_to, enum edg_wll_StatJobtype jobtype, edg_wll_JobConnectionType connectiontype){
         char *stmt;
 
 	char *jobid_from_u, *jobid_to_u;
@@ -929,7 +929,7 @@ int edg_wll_jobsconnection_create(edg_wll_Context ctx, glite_jobid_const_t jobid
         return edg_wll_Error(ctx, NULL, NULL);
 }
 
-int edg_wll_jobsconnection_modify(edg_wll_Context ctx, glite_jobid_const_t jobid_from, glite_jobid_const_t jobid_to, enum edg_wll_JobConnectionType connectiontype){
+int edg_wll_jobsconnection_modify(edg_wll_Context ctx, glite_jobid_const_t jobid_from, glite_jobid_const_t jobid_to, edg_wll_JobConnectionType connectiontype){
         char *stmt;
 
         char *jobid_from_u, *jobid_to_u;
@@ -951,7 +951,7 @@ int edg_wll_jobsconnection_modify(edg_wll_Context ctx, glite_jobid_const_t jobid
         return edg_wll_Error(ctx, NULL, NULL);
 }
 
-int edg_wll_jobsconnection_modifyall(edg_wll_Context ctx, glite_jobid_const_t jobid, enum edg_wll_JobConnectionType oldtype, enum edg_wll_JobConnectionType newtype){
+int edg_wll_jobsconnection_modifyall(edg_wll_Context ctx, glite_jobid_const_t jobid, edg_wll_JobConnectionType oldtype, edg_wll_JobConnectionType newtype){
         char *stmt;
 
         char *jobid_u;
