@@ -226,3 +226,7 @@
 2.4.4-1
 - New parameter to indicate the type of credentials to acquire
 
+2.4.5-1
+- Startup script updated due to new GSS mechanisms
+  - Certificates passed through environment instead of argument
+
