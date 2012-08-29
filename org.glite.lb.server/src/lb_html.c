@@ -710,7 +710,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 			for( i = 0; connections[i].jobid; i++ ) {
 				chtemp = edg_wlc_JobIdUnparse(connections[i].jobid);
 
-				linlen = asprintf(&pomA, "<li><a href=\"%s\">%s</a> <span class=\"jobtype\">&mdash; %s</span> <span class=\"jobstate\">%s</span></li>\n%s",
+				linlen = asprintf(&pomA, "<li><a href=\"%s\">%s</a> <span class=\"jobtype\">&mdash; %s</span> <span class=\"jobstate\">Relationship %s</span></li>\n%s",
 					chtemp,
 					chtemp,
 					connections[i].jobtype >= 0 && connections[i].jobtype < EDG_WLL_NUMBER_OF_JOBTYPES ?
