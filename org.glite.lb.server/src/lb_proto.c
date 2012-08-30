@@ -951,7 +951,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	        } 
 
 	/* GET /[jobId]: Job Status */
-		else if (strcmp(requestMeat, "/RSS:")
+		else if (strncmp(requestMeat, "/RSS:", 5)
 			&& strcmp(requestMeat, "/NOTIF")
 			&& strncmp(requestMeat, "/NOTIF:", 7)
 			&& strncmp(requestMeat, "/VMHOST:", 8)
