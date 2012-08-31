@@ -1312,6 +1312,8 @@ parse_gridmap(edg_wll_Context ctx,
 	if (p)
 	    *p = '\0';
 
+	if(strlen(line) == strspn(line, " \t")) continue;
+
 	p = line;
 	while(p && *p == ' ')
 	    p++;
