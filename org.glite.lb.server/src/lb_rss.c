@@ -79,8 +79,8 @@ int edg_wll_RSSFeed(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobStat *states, cha
 		time = states[i].stateEnterTime.tv_sec;
 		TR("State entered: %s\n", ctime(&time));
 		TRC("<![CDATA[<br/>]]>\n");
-		TR("Destination: %s</description>\n", states[i].destination);
-		TRC("</item>\n");
+		TR("Destination: %s\n", states[i].destination);
+		TRC("</description>\n</item>\n");
 		
 		
 		free(chid);
