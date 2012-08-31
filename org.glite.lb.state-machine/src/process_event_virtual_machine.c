@@ -85,6 +85,11 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 				//XXX transfer to prolog/boot state?
 			}
 			break;
+		case EDG_WLL_EVENT_VMIMAGE:
+			if (USABLE_DATA(res)) {
+				rep_cond(js->pub.vm_image, e->vMCreate.image);
+			}
+			break;
 		case EDG_WLL_EVENT_VMRUNNING:
 			if (USABLE(res)) {
 				switch( e->vMRunning.vm_source){

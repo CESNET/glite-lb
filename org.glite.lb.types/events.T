@@ -545,16 +545,20 @@
 @flesh VirtualMachine
 
 @type VMCreate			create (register) virtual machine
-	string image            machine image
 	string require          machine requirements
 	string id		machine id
 	string name		machine name
 	string owner		machine owner
 	string hostname         hostname of VM
 	string manager		VM manager
+	string image            machine image
+	_optional_
 
 @type VMHost
 	string hostname		hostname of physical machine of VM
+
+@type VMImage
+	string image		machine image
 
 @type VMRunning			VM is running
 	int 	vm_source
