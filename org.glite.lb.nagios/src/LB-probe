@@ -249,7 +249,27 @@ fi
 
 vprintf 1 "\n[LB Probe] Testing credentials"
 
-timeleft=`grid-proxy-info | grep -E "^timeleft" | sed "s/timeleft\s*:\s//"`
+if [ "$GLITE_GSS_MECH" == "krb5" ]; then
+	klist | grep krbtgt > /dev/null
+	if [ $? -ne 0 ]; then
+		timeleft=""
+	else
+		klist | grep krbtgt | grep Expired > /dev/null
+		if [ $? -ne 0 ]; then
+			timeleft="1"
+		else
+			timeleft="0:00:00"
+		fi
+	fi
+else
+	timeleft=`grid-proxy-info | grep -E "^timeleft" | sed "s/timeleft\s*:\s//"` 2>/dev/null
+	if [ "$timeleft" = "" ]; then
+		vprintf 1 "\n[LB Probe] No proxy, trying to regenerate from host creds"
+		grid-proxy-init -cert $GLITE_HOST_CERT -key $GLITE_HOST_KEY 2>&1 > /dev/null
+		timeleft=`grid-proxy-info | grep -E "^timeleft" | sed "s/timeleft\s*:\s//"`
+		HOSTCREDS=1
+	fi
+fi
 
 if [ "$timeleft" = "" ]; then
         vprintf 1 "\n[LB Probe] Test failed -- No credentials\n\n"
@@ -399,6 +419,10 @@ else
 			echo $jobid > ${joblist}
 			try_purge ${joblist}
 
+		fi
+
+		if [ $HOSTCREDS -eq 1 ]; then
+			grid-proxy-destroy
 		fi
 	fi
 fi
