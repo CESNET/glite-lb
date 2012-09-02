@@ -12,6 +12,6 @@ DM-Upload-Allowed: yes
 Package: glite-lb-yaim
 Section: admin
 Architecture: all
-Depends: ${misc:Depends}, glite-yaim-bdii, libnet-ldap-perl, glite-yaim-core
+Depends: ${misc:Depends}, glite-yaim-bdii, glite-yaim-core
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@

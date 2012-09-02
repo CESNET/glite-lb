@@ -2,7 +2,7 @@ Source: glite-lb-logger-msg
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), activemq-cpp-dev, chrpath, glite-lb-logger-dev, libcppunit-dev, libglite-lbjp-common-log-dev, libglite-lbjp-common-trio-dev, libtool, pkg-config
+Build-Depends: debhelper (>= 7.0.50~), activemq-cpp-dev, chrpath, glite-lb-logger-dev, libcppunit-dev, libglite-lbjp-common-log-dev, libglite-lbjp-common-trio-dev, libnet-ldap-perl, libtool, pkg-config
 Standards-Version: 3.9.1
 Section: misc
 Homepage: @URL@
