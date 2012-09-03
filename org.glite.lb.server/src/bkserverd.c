@@ -1034,7 +1034,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 				*name_num = NULL,
 				*name = NULL;
 	int					h_errno, ret;
-	int			npref, totpref;
+	int			npref, totpref, i;
 
 
 #if 0
@@ -1121,7 +1121,11 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	if (html_header) ctx->html_header_file = strdup(html_header);
 	else ctx->html_header_file = NULL;
 
-	ctx->id_mapping = id_mapping;
+	ctx->id_mapping.num = id_mapping.num;
+	for ( i = 0; i < ctx->id_mapping.num; i++ ) {
+		ctx->id_mapping.rules[i]->a = strdup(id_mapping.rules[i]->a);
+		ctx->id_mapping.rules[i]->b = strdup(id_mapping.rules[i]->b);
+	}
 
 	gettimeofday(&conn_start, 0);
 
