@@ -28,3 +28,8 @@
 1.2.1-1
 - Simplified source tarball and packages distribution
 
+1.2.2-1
+- Real-workd experience reflected in the probe
+  - partial support for krb5 mech
+  - support for generating proxies form host certificates
+
