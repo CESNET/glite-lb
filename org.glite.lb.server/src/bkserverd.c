@@ -1122,9 +1122,10 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	else ctx->html_header_file = NULL;
 
 	ctx->id_mapping.num = id_mapping.num;
+	ctx->id_mapping.rules = (_edg_wll_mapping_rule*)malloc(ctx->id_mapping.num * sizeof(_edg_wll_mapping_rule));
 	for ( i = 0; i < ctx->id_mapping.num; i++ ) {
-		ctx->id_mapping.rules[i]->a = strdup(id_mapping.rules[i]->a);
-		ctx->id_mapping.rules[i]->b = strdup(id_mapping.rules[i]->b);
+		ctx->id_mapping.rules[i].a = strdup(id_mapping.rules[i].a);
+		ctx->id_mapping.rules[i].b = strdup(id_mapping.rules[i].b);
 	}
 
 	gettimeofday(&conn_start, 0);

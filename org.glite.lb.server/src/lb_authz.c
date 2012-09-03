@@ -1237,11 +1237,11 @@ equal_mapped(const char *a, const char *b, struct _edg_wll_id_mapping *mapping)
 	return 0;
 
     for (i = 0; i < mapping->num; i++) {
-	if (edg_wll_gss_equal_subj(a, mapping->rules[i]->a) &&
-	    edg_wll_gss_equal_subj(b, mapping->rules[i]->b))
+	if (edg_wll_gss_equal_subj(a, mapping->rules[i].a) &&
+	    edg_wll_gss_equal_subj(b, mapping->rules[i].b))
 	    return 1;
-	if (edg_wll_gss_equal_subj(a, mapping->rules[i]->b) &&
-	    edg_wll_gss_equal_subj(b, mapping->rules[i]->a))
+	if (edg_wll_gss_equal_subj(a, mapping->rules[i].b) &&
+	    edg_wll_gss_equal_subj(b, mapping->rules[i].a))
 	    return 1;
     }
     return 0;
@@ -1300,7 +1300,6 @@ parse_gridmap(edg_wll_Context ctx,
     char line[4096];
     char *p, *a, *b;
     int ret;
-    struct _edg_wll_mapping_rule *rule = NULL, **tmp;
 
     fd = fopen(file, "r");
     if (fd == NULL)
@@ -1330,26 +1329,18 @@ parse_gridmap(edg_wll_Context ctx,
 	    p++;
 	b = p;
 
-	rule = malloc(sizeof(*rule));
-	if (rule == NULL) {
-	    ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
-	    goto end;
-	}
-	rule->a = strdup(a);
-	rule->b = strdup(b);
-	if (rule->a == NULL || rule->b == NULL) {
-	    ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
-	    goto end;
-	}
 
-	tmp = realloc(mapping->rules, (mapping->num+1) * sizeof(*tmp));
-	if (tmp == NULL) {
+	mapping->rules = realloc(mapping->rules, (mapping->num+1) * sizeof(_edg_wll_mapping_rule));
+	if (mapping->rules == NULL) {
 	    ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
 	    goto end;
 	}
-	mapping->rules = tmp;
-	mapping->rules[mapping->num++] = rule;
-	rule = NULL;
+	if (!(mapping->rules[mapping->num].a = strdup(a)) ||
+	    !(mapping->rules[mapping->num].b = strdup(b))) {
+	    ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
+	    goto end;
+	}
+	mapping->num++;
     }
 
     ret = 0;
