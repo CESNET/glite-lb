@@ -237,6 +237,7 @@ vprintf 1 "[LB Probe] Starting test"
 
 EXITCODE=0
 EXITMESSAGE=""
+HOSTCREDS=0
 
 # check_binaries
 vprintf 2 "\n[LB Probe] Testing if all binaries are available"
