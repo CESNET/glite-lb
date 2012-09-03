@@ -1712,8 +1712,11 @@ sub mode_etics {
 	top_srcdir = ..
 	$flags
 	EOF";
-			$cmd{default}{compile} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir}";
-			$cmd{default}{install} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir} install";
+			# no stage builds since EMI-3
+			if ($project ne 'emi' or $project_version <= 2) {
+				$cmd{default}{compile} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir}";
+				$cmd{default}{install} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir} install";
+			}
 			mode_etics_packaging($fmod, \%cmd,
 				"make prefix=\${prefix}$project{local_prefix} rpm-prepare
 	cp gridsite.spec ../\n\t",
@@ -1757,12 +1760,15 @@ sub mode_etics {
 	}
 	else {
 		$cmd{default}{configure} = "/usr/bin/perl $confdir/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
-		$cmd{default}{compile} = 'make';
-		$cmd{default}{test} = 'make check';
-		$cmd{default}{install} = 'make install';
-		if ($subsys eq 'lb' and $module eq 'client') {
-			$cmd{default}{compile} = "make rpath=$project{local_prefix}/\${libdir}";
-			$cmd{default}{install} = "make install post-install rpath=$project{local_prefix}/\${libdir}";
+		# no stage builds since EMI-3
+		if ($project ne 'emi' or $project_version <= 2) {
+			$cmd{default}{compile} = 'make';
+			$cmd{default}{test} = 'make check';
+			$cmd{default}{install} = 'make install';
+			if ($subsys eq 'lb' and $module eq 'client') {
+				$cmd{default}{compile} = "make rpath=$project{local_prefix}/\${libdir}";
+				$cmd{default}{install} = "make install post-install rpath=$project{local_prefix}/\${libdir}";
+			}
 		}
 		mode_etics_packaging($fmod, \%cmd, "make dist\n\t", "make dist\n\t");
 	}
