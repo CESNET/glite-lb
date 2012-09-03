@@ -79,7 +79,7 @@ char *get_html_header(edg_wll_Context ctx, int text) {
 
 	if (text) return NULL;
 
-	if ((header_file = fopen(ctx->html_header_file, "r"))) { 
+	if (ctx->html_header_file && (header_file = fopen(ctx->html_header_file, "r")) != NULL) { 
 		rlen = getdelim( &header, &header_len, '\0', header_file);
 		fclose (header_file);
 	}
@@ -382,7 +382,7 @@ int edg_wll_UserNotifsToHTML(edg_wll_Context ctx UNUSED_VAR, char **notifids, ch
 			"<P>Total of %d"
                         "<ul>%s</ul>"
 			"\t</body>\r\n</HTML>",
-			header,
+			header ? header : "",
 			heading,
 			mylink ? mylink : "",
 			alllink ? alllink : "",
@@ -883,7 +883,7 @@ char *edg_wll_ErrorToHTML(edg_wll_Context ctx,int code)
 	header = get_html_header(ctx, 0);
 	asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<HEAD>\n<TITLE>Error</TITLE>\n%s\n</HEAD>\n"
 		"<body><h1>%s</h1>\n"
-		"%d: %s (%s)</body></html>",header,msg,e,et,ed);
+		"%d: %s (%s)</body></html>",header ? header : "",msg,e,et,ed);
 
 	free(et); free(ed);
 	return out;
