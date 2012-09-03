@@ -474,3 +474,10 @@
 - Very basic identity mapping based on gridmap-file. Works for state queries.
 - Return codes for IL augmented to avoid re-sending faulty messages
 
+2.4.8-1
+- Simplified and fixed ID mapping list construction.
+- ID mappings listed in server configuration page
+- Relationship state info made clearer
+- Added RSS feed runningVM
+- Bug Fix: malformed RSS when destination is unknown, more robust feed recognition
+
