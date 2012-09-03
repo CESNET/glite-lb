@@ -258,3 +258,6 @@
 - Job connections -- explicitly created and deactivated by event
 - New parameter to indicate the type of credentials to acquire
 
+5.2.4-1
+- Job type querying attribute supported in glite-lb-notify
+
