@@ -111,6 +111,7 @@ check_jobstat_authz(edg_wll_Context ctx,
                     struct _edg_wll_GssPrincipal_data *peer,
                     int *authz_flags);
 
+int
 parse_gridmap(edg_wll_Context ctx,
               const char *file,
               struct _edg_wll_id_mapping *mapping);
