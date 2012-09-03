@@ -145,3 +145,6 @@
 1.4.3-1
 - Torque job location updated
 
+1.4.4-1
+- Extra VMCreate event added
+

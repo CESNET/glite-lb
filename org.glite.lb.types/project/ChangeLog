@@ -117,3 +117,6 @@
 1.4.3-1
 - New events: running/shutdown from machine, VM manager and cloud manager for better state computation
 
+1.4.4-1
+- Extra VMCreate event added
+
