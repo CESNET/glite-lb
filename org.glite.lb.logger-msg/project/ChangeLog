@@ -76,3 +76,6 @@
 - ActiveMQ with more strict compiler (fixes build on Fedora 17)
 - Exceptions properly caught
 
+1.2.2-2
+- Module rebuilt
+
