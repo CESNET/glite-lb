@@ -208,6 +208,23 @@ int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, 
 		add_row(&out, "dump_start", "Last dump start", start, NULL, text);
 		add_row(&out, "dump_end", "Last dump end", end, NULL, text);
 		add_row(&out, "html_header", "HTML Header file", ctx->html_header_file, NULL, text);
+
+		a = NULL;
+		for (i = 0; i < ctx->id_mapping.num; i++ ) {
+			asprintf(&out_tmp, "%s%s%s%s%s%s%s",
+				a ? a : "",
+				text ? "\"" : "<code>",
+				ctx->id_mapping.rules[i].a,
+				text ? "\"=\"" : " ",
+				ctx->id_mapping.rules[i].b,
+				text ? "\"" : "<code>",
+				i == ctx->id_mapping.num - 1 ? "" : (text ? "," : "<BR>"));
+			free(a);
+			a=out_tmp;
+		}
+		if (a) add_row(&out, "id_mapping", "ID Mapping", a, NULL, text);
+		free(a);
+
         }
 
         if (!text) {
