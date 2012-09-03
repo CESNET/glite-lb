@@ -194,9 +194,8 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 	}
 	if (ctx->id_mapping.num) {
 		for (i = 0; i < ctx->id_mapping.num; i++) {
-			free(ctx->id_mapping.rules[i]->a);
-			free(ctx->id_mapping.rules[i]->b);
-			free(ctx->id_mapping.rules[i]);
+			free(ctx->id_mapping.rules[i].a);
+			free(ctx->id_mapping.rules[i].b);
 		}
 		free(ctx->id_mapping.rules);
 		ctx->id_mapping.num = 0;

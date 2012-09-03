@@ -65,7 +65,7 @@ typedef struct _edg_wll_mapping_rule {
 } _edg_wll_mapping_rule;
 
 typedef struct _edg_wll_id_mapping {
-	struct _edg_wll_mapping_rule **rules;
+	struct _edg_wll_mapping_rule *rules;
 	int num;
 } _edg_wll_id_mapping;
 
