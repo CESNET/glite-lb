@@ -123,8 +123,7 @@ int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, 
         header = get_html_header(ctx, text);
         if (!text) asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Server Configuration</TITLE>\n<HEAD>%s\n</HEAD>\n<BODY>\n"
                 "<h2>LB Server Configuration</h2>\n"
-                "<table halign=\"left\">\n"
-                "<tr><td>Option</td><td>Value</td></tr>\n",
+                "<table halign=\"left\">\n",
                 header ? header : "");
         else
                 out = strdup("");
