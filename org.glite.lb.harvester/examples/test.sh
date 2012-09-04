@@ -76,6 +76,8 @@ init() {
 	done
 
 	[ -f /etc/glite.conf ] && . /etc/glite.conf
+	[ -f /etc/default/glite-lb ] && . /etc/default/glite-lb
+	[ -f /etc/sysconfig/glite-lb ] && . /etc/sysconfig/glite-lb
 	[ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 	
         if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] ;then

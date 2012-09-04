@@ -25,17 +25,18 @@
 # limitations under the License.
 #
 
-GLITE_LB_LOCATION=${GLITE_LB_LOCATION:-'@glite_prefix@'}
-GLITE_LB_LOCATION_ETC=${GLITE_LB_LOCATION_ETC:-'@glite_etc@'}
+GLITE_LOCATION=${GLITE_LOCATION:-'@glite_prefix@'}
+GLITE_LOCATION_ETC=${GLITE_LOCATION_ETC:-'@glite_etc@'}
 GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
+GLITE_USER=${GLITE_USER:-'glite'}
+GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}
+GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
 
 [ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
 [ -f /etc/glite.conf ] && . /etc/glite.conf
-[ -f $GLITE_LB_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LB_LOCATION_ETC/glite-wms.conf
-
-[ -f $GLITE_LB_LOCATION/lb.conf ] && . $GLITE_LB_LOCATION_ETC/lb.conf
-[ -f $GLITE_LB_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LB_LOCATION_VAR/etc/lb.conf
-
+[ -f $GLITE_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LOCATION_ETC/glite-wms.conf
+[ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
 pidfile=${GLITE_LB_HARVESTER_PIDFILE:-"$GLITE_LB_LOCATION_VAR/glite-lb-harvester.pid"}
@@ -44,7 +45,7 @@ lockfile=/var/lock/glite-lb-harvester
 
 # database or configuration file needed
 # (using the file as default)
-etc=$GLITE_LB_LOCATION/glite-lb
+etc=$GLITE_LOCATION_ETC/glite-lb
 [ -z "$GLITE_LB_HARVESTER_DBCS" -a -z "$GLITE_LB_HARVESTER_CONFIG" ] && GLITE_LB_HARVESTER_CONFIG=$etc/harvester.conf
 if [ -n "$GLITE_LB_HARVESTER_CONFIG" ]; then
 	[ ! -d "$etc" ] && mkdir -p "$etc"
@@ -158,19 +159,13 @@ status_daemon()
 
 start()
 {
-	if test -z "$GLITE_USER" ;then
-		echo 'Error: GLITE_USER is not set'
-		echo FAILED
-		return 1
-	fi
-
-	log4c="LOG4C_RCPATH='$GLITE_LB_LOCATION_ETC/glite-lb'"
+	log4c="LOG4C_RCPATH='$GLITE_LOCATION_ETC/glite-lb'"
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
 	[ -n "$GLITE_LB_HARVESTER_PORT" ] && port="-p $GLITE_LB_HARVESTER_PORT"
 
-	start_daemon glite-lb-harvester "$pidfile" "$GLITE_LB_LOCATION/bin/glite-lb-harvester \
+	start_daemon glite-lb-harvester "$pidfile" "$GLITE_LOCATION/bin/glite-lb-harvester \
 		$creds $conf -i $pidfile -d $level $port --daemon\
 		$GLITE_LB_HARVESTER_OTHER_OPTIONS" "$HARVESTER_NOTIFSFILE"
 }

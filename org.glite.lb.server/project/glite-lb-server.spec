@@ -120,20 +120,16 @@ fi
 %config(noreplace) /etc/logrotate.d/glite-lb-server
 %config(noreplace) /etc/mysql/conf.d/glite-lb-server.cnf
 %config(noreplace) /etc/glite-lb/*
-/etc/glite-lb-dbsetup.sql
+%config(noreplace) /etc/glite-lb-dbsetup.sql
 /etc/cron.d/*
 /etc/glite-lb-index.conf.template
 /etc/init.d/glite-lb-bkserverd
-/usr/include/glite/lb/index.h
-/usr/include/glite/lb/lb_authz.h
-/usr/include/glite/lb/store.h
-/usr/include/glite/lb/srv_perf.h
-/usr/bin/glite-lb-bkindex
-/usr/bin/glite-lb-mon-db
-/usr/bin/glite-lb-bkserverd
-/usr/sbin/glite-lb-notif-keeper
+/usr/include/glite/lb/*
+/usr/bin/*
+/usr/sbin/*
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE
+/usr/share/doc/%{name}-%{version}/glite-lb
 /usr/share/doc/%{name}-%{version}/package.description
 /usr/share/doc/%{name}-%{version}/package.summary
 /usr/share/man/man1/glite-lb-mon-db.1.gz

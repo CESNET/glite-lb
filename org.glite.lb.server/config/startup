@@ -25,22 +25,23 @@
 # limitations under the License.
 #
 
-GLITE_LB_LOCATION=${GLITE_LB_LOCATION:-'@glite_prefix@'}
+GLITE_LOCATION=${GLITE_LOCATION:-'@glite_prefix@'}
 GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
-GLITE_LB_LOCATION_ETC=${GLITE_LB_LOCATION_ETC:-'@glite_etc@'}
-GLITE_JP_LOCATION=${GLITE_JP_LOCATION:-$GLITE_LB_LOCATION}
+GLITE_LOCATION_ETC=${GLITE_LOCATION_ETC:-'@glite_etc@'}
+GLITE_JP_LOCATION=${GLITE_JP_LOCATION:-$GLITE_LOCATION}
+GLITE_USER=${GLITE_USER:-'glite'}
+GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}
+GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
 
 KRB5_KTNAME="FILE:/var/glite/krb5kt_lb"
 KRB5CCNAME="FILE:/var/glite/krb5cc_lb"
-LOG4C_RCPATH="$GLITE_LB_LOCATION_ETC/glite-lb"
+LOG4C_RCPATH="$GLITE_LOCATION_ETC/glite-lb"
 
 [ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
 [ -f /etc/glite.conf ] && . /etc/glite.conf
-[ -f $GLITE_LB_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LB_LOCATION_ETC/glite-wms.conf
-
-[ -f $GLITE_LB_LOCATION_ETC/lb.conf ] && . $GLITE_LB_LOCATION_ETC/lb.conf
-[ -f $GLITE_LB_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LB_LOCATION_VAR/etc/lb.conf
-
+[ -f $GLITE_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LOCATION_ETC/glite-wms.conf
+[ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
 [ -n "$GLITE_LB_SERVER_PIDFILE" ] && BK_PIDFILE=$GLITE_LB_SERVER_PIDFILE ||
@@ -56,7 +57,7 @@ GLITE_LB_PROXY_FPREFIX=${GLITE_LB_PROXY_FPREFIX:-'/tmp/glite-lbproxy-ilog_events
 PROXY_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-proxy-interlogd.pid
 NOTIF_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-notif-interlogd.pid
 
-msgconf="$GLITE_LB_LOCATION_ETC/glite-lb/msg.conf"
+msgconf="$GLITE_LOCATION_ETC/glite-lb/msg.conf"
 if [ -f "$msgconf" ]; then
 	GLITE_LB_NOTIF_IL_OTHER_OPTIONS="$GLITE_LB_NOTIF_IL_OTHER_OPTIONS -F $msgconf"
 	GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -F $msgconf"
@@ -155,12 +156,6 @@ status_daemon()
 
 start()
 {
-	if test -z "$GLITE_USER" ;then
-		echo 'Error: GLITE_USER is not set'
-		echo FAILED
-		return 1
-	fi
-
 	if [ -n "$LOG4C_RCPATH" ]; then env="$env LOG4C_RCPATH='$LOG4C_RCPATH'"; fi
 	if [ -n "$KRB5_KTNAME" ]; then env="$env KRB5_KTNAME='$KRB5_KTNAME'"; fi
 	if [ -n "$KRB5CCNAME" ]; then env="$env KRB5CCNAME='$KRB5CCNAME'"; fi
@@ -180,8 +175,8 @@ start()
 
 	[ -z "$creds" ] && echo $0: WARNING: No credentials specified. Using default lookup which is dangerous. >&2
 
-	policy="$GLITE_LB_LOCATION_ETC/glite-lb/glite-lb-authz.conf"
-	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-server-lcas.log' LCAS_ETC_DIR='$GLITE_LB_LOCATION_ETC/glite-lb'"
+	policy="$GLITE_LOCATION_ETC/glite-lb/glite-lb-authz.conf"
+	lcas_log="LCAS_LOG_FILE='/var/log/glite/glite-lb-server-lcas.log' LCAS_ETC_DIR='$GLITE_LOCATION_ETC/glite-lb'"
 	if test -f "$policy"; then
 		# lcas not enabled by default yet
 		policy="--policy '$policy'"
@@ -248,14 +243,14 @@ start()
 		;;
 	esac
 
-	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$lcas_log $GLITE_LB_LOCATION/bin/glite-lb-bkserverd \
+	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$lcas_log $GLITE_LOCATION/bin/glite-lb-bkserverd \
 		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
 		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
 		$super -i $BK_PIDFILE $port $wport $dumpdir $purgedir $lbreg_maildir $proxy $policy\
 		$GLITE_LB_SERVER_OTHER_OPTIONS" "/tmp/lb_proxy_serve.sock /tmp/lb_proxy_store.sock"
 
-	if test -x $GLITE_LB_LOCATION/bin/glite-lb-notif-interlogd; then
-		start_daemon glite-lb-notif-interlogd "$NOTIF_IL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-notif-interlogd \
+	if test -x $GLITE_LOCATION/bin/glite-lb-notif-interlogd; then
+		start_daemon glite-lb-notif-interlogd "$NOTIF_IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
 			-f $GLITE_LB_NOTIF_FPREFIX -s $GLITE_LB_NOTIF_SOCK \
 			-i $NOTIF_IL_PIDFILE -M 10485760 \
 			$GLITE_LB_NOTIF_IL_OTHER_OPTIONS" "$GLITE_LB_NOTIF_SOCK"
@@ -272,8 +267,8 @@ start()
 	fi
 
 	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both" ; then
-		if test -x $GLITE_LB_LOCATION/bin/glite-lb-interlogd; then
-			start_daemon "glite-lb-interlog for proxy" "$PROXY_IL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-interlogd \
+		if test -x $GLITE_LOCATION/bin/glite-lb-interlogd; then
+			start_daemon "glite-lb-interlog for proxy" "$PROXY_IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-interlogd \
 				-f $GLITE_LB_PROXY_FPREFIX -s $GLITE_LB_PROXY_SOCK \
 				-i $PROXY_IL_PIDFILE \
 				$GLITE_LB_PROXY_IL_OTHER_OPTIONS" "$GLITE_LB_PROXY_SOCK"

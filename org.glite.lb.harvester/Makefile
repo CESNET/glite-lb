@@ -42,6 +42,12 @@ LIBS:=-L${stagedir}${prefix}/${libdir} \
 	-lpthread -lglite_security_gss_${thrflavour}
 endif
 
+ifeq ($(os_type),debian)
+sysdefaultdir=${sysconfdir}/default
+else
+sysdefaultdir=${sysconfdir}/sysconfig
+endif
+
 ifneq ($(GLITE_LB_HARVESTER_WITH_LBU_DB),no)
 CPPFLAGS:=$(CPPFLAGS) -DWITH_LBU_DB=1
 LIBS:=$(LIBS) -lglite_lbu_db
@@ -65,7 +71,7 @@ startup: ${top_srcdir}/config/startup
 	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
 		glite_var="${localstatedir}"; \
 	fi; \
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $< > $@
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' $< > $@
 	chmod +x $@
 
 check:

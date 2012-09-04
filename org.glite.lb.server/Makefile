@@ -27,14 +27,14 @@ default: all
 version=${module.version}
 
 SOURCES=\
-	config/glite-lb-* config/my.cnf config/site-notif.conf config/startup \
+	config/glite-lb* config/my.cnf config/*.conf config/startup config/setup \
 	doc/*.1 doc/*.8 \
 	interface/*.h \
 	src/*.c src/*.cpp src/*.h src/*.c.T src/*.l src/*.y src/*.sh src/ws_typemap.dat \
 	project/.post* project/.pre* \
 	test/*.cpp test/*.cpp.T test/*.sh test/oneJob.qry test/*.c \
 	LICENSE Makefile
-SOURCES_EXEC=config/startup src/*.sh test/*.sh
+SOURCES_EXEC=config/startup config/setup src/*.sh test/*.sh
 
 all: compile
 
@@ -58,6 +58,12 @@ ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 	NSMAP=LoggingAndBookkeeping.nsmap
 else
 	WS_CFLAGS=
+endif
+
+ifeq ($(os_type),debian)
+sysdefaultdir=${sysconfdir}/default
+else
+sysdefaultdir=${sysconfdir}/sysconfig
 endif
 
 GSOAP_FILES_PREFIX:= bk_ws_
@@ -301,7 +307,7 @@ EXAMPLES=
 
 TESTS=test_coverage test_xml test_query_events test_soap_conv test_query_parse
 
-SCRIPTS=startup glite-lb-server-purge.cron glite-lb-proxy-purge.cron glite-lb-notif-keeper.cron
+SCRIPTS=startup setup glite-lb-server-purge.cron glite-lb-proxy-purge.cron glite-lb-notif-keeper.cron glite-lb
 SCRIPTS_SRC=$(addprefix ${top_srcdir}/config/,${SCRIPTS})
 
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
@@ -322,7 +328,7 @@ ${SCRIPTS}: ${SCRIPTS_SRC}
 	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
 		glite_var="${localstatedir}"; \
 	fi; \
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" ${top_srcdir}/config/$@ > $@
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' ${top_srcdir}/config/$@ > $@
 
 check: compile test.xml test.query test.query_parse
 	-echo check.query not complete yet
@@ -435,11 +441,13 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/config/site-notif.conf ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
+	${INSTALL} -m 755 setup ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-setup
 	${INSTALL} -m 644 glite-lb-server-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-server-purge
 	${INSTALL} -m 644 glite-lb-proxy-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-proxy-purge
 	${INSTALL} -m 644 glite-lb-notif-keeper.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-notif-keeper
 	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-server.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-server
 	${INSTALL} -m 644 ${top_srcdir}/config/my.cnf ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d/glite-lb-server.cnf
+	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/glite-lb
 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix})

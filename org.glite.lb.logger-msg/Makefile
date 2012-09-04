@@ -90,6 +90,12 @@ else
 default_flavour=_${nothrflavour}
 endif
 
+ifeq ($(os_type),debian)
+sysdefaultdir=${sysconfdir}/default
+else
+sysdefaultdir=${sysconfdir}/sysconfig
+endif
+
 all compile: ${PLUGIN_LIB} ${EXAMPLES} ${SCRIPTS}
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
@@ -135,7 +141,7 @@ install:
 	${COMPILEXX} -c $< -o $@
 
 %.new: %.in
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' $< > $@
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e 's:@defaultdir@:${sysdefaultdir}:g' $< > $@
 
 clean:
 	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ} ${EXAMPLES} ${SCRIPTS}

@@ -69,6 +69,12 @@ ifeq (${os},Linux)
        DL_LIBS=-ldl
 endif
 
+ifeq ($(os_type),debian)
+sysdefaultdir=${sysconfdir}/default
+else
+sysdefaultdir=${sysconfdir}/sysconfig
+endif
+
 DEBUG:=-g -O0
 CFLAGS:=${DEBUG} \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I${top_srcdir}/interface \
@@ -150,7 +156,7 @@ startup: ${top_srcdir}/config/startup
 	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
 		glite_var="${localstatedir}"; \
 	fi; \
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $< > $@
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' $< > $@
 	chmod +x $@
 
 glite-lb-logd: ${LOGD_OBJS}

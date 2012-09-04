@@ -1,6 +1,7 @@
 #! /bin/bash
 
 test -f /etc/profile.d/grid-env.sh && . /etc/profile.d/grid-env.sh
+test -f @defaultdir@/glite-lb && . @defaultdir@/glite-lb
 
 GLITE_LOCATION=${GLITE_LOCATION:-'@glite_prefix@'}
 LCG_GFAL_INFOSYS=${LCG_GFAL_INFOSYS:-'lcg-bdii.cern.ch:2170'}

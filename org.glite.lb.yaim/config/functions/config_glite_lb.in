@@ -39,8 +39,8 @@ function config_glite_lb_setenv(){
   yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 15d --cancelled 15d --other 60d}"
   yaimgridenv_set GLITE_LB_EXPORT_JPPS ${GLITE_LB_EXPORT_JPPS:-}
 
-  yaimgridenv_set GLITE_LB_LOCATION "${GLITE_LB_LOCATION:-@glite_prefix@}"
-  yaimgridenv_set GLITE_LB_LOCATION_ETC "${GLITE_LB_LOCATION_ETC:-@glite_etc@}"
+  yaimgridenv_set GLITE_LOCATION "${GLITE_LOCATION:-@glite_prefix@}"
+  yaimgridenv_set GLITE_LOCATION_ETC "${GLITE_LOCATION_ETC:-@glite_etc@}"
   yaimgridenv_set GLITE_LB_LOCATION_VAR "${GLITE_LB_LOCATION_VAR:-@glite_var@}"
   yaimgridenv_set GLITE_JP_LOCATION "${GLITE_JP_LOCATION:-}"
 
@@ -98,77 +98,6 @@ function config_glite_lb_setenv(){
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/apr-dev
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/aprutil-dev
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/activemq-cpp-library
-
-  GLITE_LB_RTM_ENABLED="${GLITE_LB_RTM_ENABLED:-false}"
-  GLITE_LB_MSG_BROKER="${GLITE_LB_MSG_BROKER:-true}"
-  GLITE_LB_MSG_NETWORK="${GLITE_LB_MSG_NETWORK:-PROD}"
-  LCG_GFAL_INFOSYS="${LCG_GFAL_INFOSYS:-lcg-bdii.cern.ch:2170}"
-
-  #GLITE_LB_SUPER_USERS="${GLITE_LB_SUPER_USERS:-}"
-  #GLITE_LB_WMS_DN="${GLITE_LB_WMS_DN:-}"
-  GLITE_LB_RTM_DN="${GLITE_LB_RTM_DN:-/C=UK/O=eScience/OU=Imperial/L=Physics/CN=heppc24.hep.ph.ic.ac.uk/Email=janusz.martyniak@imperial.ac.uk}"
-  #GLITE_LB_AUTHZ_ADMIN_ACCESS="${GLITE_LB_AUTHZ_ADMIN_ACCESS:-}"
-  #GLITE_LB_AUTHZ_READ_ALL="${GLITE_LB_AUTHZ_READ_ALL:-}"
-  #GLITE_LB_AUTHZ_READ_PURGE="${GLITE_LB_AUTHZ_READ_PURGE:-}"
-  #GLITE_LB_AUTHZ_STATUS_FOR_MONITORING="${GLITE_LB_AUTHZ_STATUS_FOR_MONITORING:-}"
-  #GLITE_LB_AUTHZ_GET_STATISTICS="${GLITE_LB_AUTHZ_GET_STATISTICS:-}"
-  #GLITE_LB_AUTHZ_GRANT_OWNERSHIP="${GLITE_LB_AUTHZ_GRANT_OWNERSHIP:-}"
-  GLITE_LB_AUTHZ_REGISTER_JOBS="${GLITE_LB_AUTHZ_REGISTER_JOBS:-.*}"
-  GLITE_LB_AUTHZ_LOG_WMS_EVENTS="${GLITE_LB_AUTHZ_LOG_WMS_EVENTS:-.*}"
-  GLITE_LB_AUTHZ_LOG_CE_EVENTS="${GLITE_LB_AUTHZ_LOG_CE_EVENTS:-.*}"
-  GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS="${GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS:-.*}"
-}
-
-function config_glite_lb_authz() {
-	superusers="$1"
-	rtm="$2"
-	wms="$GLITE_LB_WMS_DN"
-
-	authconf="$GLITE_LB_LOCATION_ETC/glite-lb/glite-lb-authz.conf"
-
-	cat <<EOF > "$authconf".new
-resource "LB" {
-EOF
-	for section in ADMIN_ACCESS STATUS_FOR_MONITORING GET_STATISTICS REGISTER_JOBS READ_ALL PURGE GRANT_OWNERSHIP LOG_WMS_EVENTS LOG_CE_EVENTS LOG_GENERAL_EVENTS; do
-		eval value=\"$`echo GLITE_LB_AUTHZ_$section`\"
-		case "$section" in
-		ADMIN_ACCESS) value="$value,$superusers" ;;
-		GET_STATISTICS) value="$value,$wms" ;;
-		READ_ALL) value="$value,$wms,$rtm" ;;
-		PURGE) value="$value,$wms" ;;
-		LOG_WMS_EVENTS) value="$value,$wms" ;;
-		esac
-		value="`echo \"$value\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\"\n\t}/'`"
-		cat <<EOF >> "$authconf".new
-
-action "$section" {
-$value
-}
-EOF
-	done
-	cat <<EOF >> "$authconf".new
-
-}
-EOF
-
-	# something changed
-	if test -f "$authconf"; then
-		diff -w "$authconf" "$authconf".new >/dev/null
-		if test "$?" != "0"; then
-			yaimlog WARNING "Original authz configuration moved to '$authconf.yaimorig'"
-			mv "$authconf" "$authconf".yaimorig
-		fi
-	fi
-
-	# superusers file deprecated
-	if test -s "${GLITE_LB_LOCATION_ETC}/LB-super-users"; then
-		yaimlog WARNING "Found old superusers file '${GLITE_LB_LOCATION_ETC}/LB-super-users', check 'ADMIN_ACCESS' section in glite-lb-authz.conf"
-		echo "# deprecated file, replaced by ADMIN_ACCESS action in glite-lb-authz.conf" > "${GLITE_LB_LOCATION_ETC}/LB-super-users.old"
-		cat "${GLITE_LB_LOCATION_ETC}/LB-super-users" >> "${GLITE_LB_LOCATION_ETC}/LB-super-users.old"
-		rm "${GLITE_LB_LOCATION_ETC}/LB-super-users"
-	fi
-
-	mv "$authconf".new "$authconf"
 }
 
 function config_glite_lb() {
@@ -198,103 +127,6 @@ function config_glite_lb() {
   chmod og+rx /var/lib/mysql/ 
   chown mysql:mysql /var/run/mysqld/
 
-  # include MySQL options for L&B server
-  my_cnf=/etc/mysql/my.cnf
-  if [ ! -f "$my_cnf" ]; then
-    my_cnf=/etc/my.cnf
-  fi
-  grep '^!includedir\s\+/etc/mysql/conf.d/?' "$my_cnf" >/dev/null 2>&1
-  if [ $? != 0 ]; then
-    echo '!includedir /etc/mysql/conf.d/' >> "$my_cnf"
-  fi
-
-  if [ -x /sbin/service ]; then
-    /sbin/chkconfig mysqld on
-    /sbin/service mysqld restart
-  else
-    /etc/init.d/mysql restart
-  fi
-
-  ls /tmp/mysql.sock > /dev/null 2>&1
-  if [ ! $? = 0 ]; then
-    ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
-  fi
-  
-  # set mysql password
-  set_mysql_passwd || return 1 # the function uses $MYSQL_PASSWORD
-
-  # Check if database exist
-  mysqlshow --password="$MYSQL_PASSWORD" | grep "\<lbserver20\>" > /dev/null 2>&1
-
-  if [ ! $? = 0 ]; then
-    mysql -u root --password="$MYSQL_PASSWORD" -e "CREATE DATABASE lbserver20"
-    mysql --password="$MYSQL_PASSWORD" lbserver20 < ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-dbsetup.sql
-    mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver IDENTIFIED BY '' WITH GRANT OPTION;"
-    mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@'$HOSTNAME' IDENTIFIED BY '' WITH GRANT OPTION;"
-    mysql -u root --password="$MYSQL_PASSWORD" -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@localhost IDENTIFIED BY '' WITH GRANT OPTION;"
-    mysql -u root --password="$MYSQL_PASSWORD" -e "ALTER TABLE short_fields MAX_ROWS=1000000000;" lbserver20
-    mysql -u root --password="$MYSQL_PASSWORD" -e "ALTER TABLE long_fields MAX_ROWS=55000000;" lbserver20
-    mysql -u root --password="$MYSQL_PASSWORD" -e "ALTER TABLE states MAX_ROWS=9500000;" lbserver20
-    mysql -u root --password="$MYSQL_PASSWORD" -e "ALTER TABLE events MAX_ROWS=175000000;" lbserver20
-  else
-    yaimlog WARNING "Database lbserver20 already exists"
-  fi
-
-  # adjust indexes
-  # 1) if L&B with local harvester or L&B for Real Time Monitoring ==> lastUpdateTime needed
-  # 2) if GLITE_LB_INDEX_OWNER specified ==> create/destroy owner index
-  need_reindex=0
-  $GLITE_LB_LOCATION/bin/glite-lb-bkindex -d 2>/dev/null | tail -n +3 | head -n -2 | sed 's/\([^,]\)$/\1,/' > /var/tmp/glite-lb-bkindexes.txt
-  if [ x"$GLITE_LB_RTM_ENABLED" = x"true" -o x"GLITE_LB_HARVESTER_ENABLED" = x"true" ]; then
-    # index for querying older jobs by real time monitor
-    grep '\[ type = "system"; name = "lastUpdateTime" \]' /var/tmp/glite-lb-bkindexes.txt >/dev/null
-    if [ $? != 0 ]; then
-	need_reindex=1
-	yaimlog INFO "Index 'lastUpdateTime' will be added"
-	echo '[ type = "system"; name = "lastUpdateTime" ],' >> /var/tmp/glite-lb-bkindexes.txt
-    fi
-  fi
-  if [ x"$GLITE_LB_INDEX_OWNER" = x"true" ]; then
-    grep 'name = "owner"' /var/tmp/glite-lb-bkindexes.txt >/dev/null
-    if [ $? != 0 ]; then
-	need_reindex=1
-	yaimlog INFO "Index 'owner' will be added"
-	echo '[ type = "system"; name = "owner" ],' >> /var/tmp/glite-lb-bkindexes.txt
-    fi
-  elif [ x"$GLITE_LB_INDEX_OWNER" = x"false" ]; then
-    grep 'name = "owner"' /var/tmp/glite-lb-bkindexes.txt >/dev/null
-    if [ $? = 0 ]; then
-	need_reindex=1
-	yaimlog INFO "Index 'owner' will be deleted"
-	mv /var/tmp/glite-lb-bkindexes.txt /var/tmp/glite-lb-bkindexes.txt.2
-	grep -v 'name = "owner"' /var/tmp/glite-lb-bkindexes.txt.2 > /var/tmp/glite-lb-bkindexes.txt
-	rm -f /var/tmp/glite-lb-bkindexes.txt.2
-    fi
-  fi
-  if [ $need_reindex = 1 ]; then
-    cat << EOF | $GLITE_LB_LOCATION/bin/glite-lb-bkindex -rv
-[
-	JobIndices = {
-`cat /var/tmp/glite-lb-bkindexes.txt`
-	}
-]
-EOF
-  fi
-  rm -f /var/tmp/glite-lb-bkindexes.txt
-
-  mkdir -p $GLITE_HOME_DIR/.certs
-  chown $GLITE_USER:$GLITE_USER $GLITE_HOME_DIR/.certs
-  chmod 0755 $GLITE_HOME_DIR/.certs
-  cp -f /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem $GLITE_HOME_DIR/.certs/
-  if [ ! $? = 0 ] ; then
-    yaimlog WARNING "Please copy host certificate and key into /etc/grid-security and"
-    yaimlog WARNING  "  $GLITE_HOME_DIR/.certs/, change the owner of the ones in"
-    yaimlog WARNING  "  $GLITE_HOME_DIR/.certs/ to $GLITE_USER"
-  fi
-  chown $GLITE_USER:$GLITE_USER $GLITE_HOME_DIR/.certs/hostcert.pem $GLITE_HOME_DIR/.certs/hostkey.pem
-  chmod 0644 $GLITE_HOME_DIR/.certs/hostcert.pem
-  chmod 0400 $GLITE_HOME_DIR/.certs/hostkey.pem
-
   # LCAS plugin
   # config file
   lcas_libarch=lib
@@ -304,63 +136,14 @@ EOF
     fi
   fi
   lcas_plugin="$GLITE_LB_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
-  echo "pluginname=\"$lcas_plugin\"" > ${GLITE_LB_LOCATION_ETC}/glite-lb/lcas.db
+  echo "pluginname=\"$lcas_plugin\"" > ${GLITE_LOCATION_ETC}/glite-lb/lcas.db
 
-  out="`$GLITE_LB_LOCATION/sbin/glite-lb-msg-config $GLITE_LB_LOCATION_ETC/glite-lb/msg.conf 2>&1`"
-  ret=$?
-  if [ $ret -eq 0 ]; then level=INFO; else level=WARNING; fi
-  if [ -n "$out" -o $ret -ne 0 ]; then
-    yaimlog $level "$out"
-  fi
-
-  # upgrade from L&B <= 3.1.1
-  # (legacy start-up stuff)
-  if [ -f @glite_etc@/gLiteservice ] ; then
-    grep -v 'glite-lb-bkserverd' > /tmp/gLiteservice
-    mv /tmp/gLiteservice @glite_etc@/gLiteservice
-  fi
-
-  if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
-    config_glite_lb_authz "$GLITE_LB_SUPER_USERS" "$GLITE_LB_RTM_DN"
-  else
-    config_glite_lb_authz "$GLITE_LB_SUPER_USERS" ""
-  fi
-
-  if [ ! -f ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf ]; then
-    echo $HOSTNAME > ${GLITE_LB_LOCATION_ETC}/glite-lb/glite-lb-harvester.conf
-  fi
-
-  # upgrade from L&B <= 3.1.1
-  rm -fv /etc/cron.d/glite-lb-purge.cron /etc/logrotate.d/lb-purger /etc/logrotate.d/lb-lcas
-
-  # start-up on boot
-  . @glite_etc@/profile.d/grid-env.sh
-  if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
-    update-rc.d glite-lb-bkserverd defaults
-    update-rc.d glite-lb-locallogger defaults
-    if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
-      update-rc.d glite-lb-harvester defaults
-    fi
-  else
-    /sbin/chkconfig glite-lb-bkserverd on
-    /sbin/chkconfig glite-lb-locallogger on
-    if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
-      /sbin/chkconfig glite-lb-harvester on
-    fi
-  fi
-
-  ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd restart
-  if [ ! $? = 0 ] ; then
-    yaimlog ABORT "Service glite-lb-bkserverd failed to start!"
+  # main L&B setup
+  . ${GLITE_LOCATION}/sbin/glite-lb-setup yaim
+  if [ $? != 0 ]; then
+    yaimlog ABORT "glite-lb-setup failed!"
     return 1
   fi
 
-  if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
-    ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-harvester restart
-  else
-    ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-harvester stop
-  fi
-
   return 0
-
 }

@@ -25,21 +25,22 @@
 # limitations under the License.
 #
 
-GLITE_LB_LOCATION=${GLITE_LB_LOCATION:-'@glite_prefix@'}
-GLITE_LB_LOCATION_ETC=${GLITE_LB_LOCATION_ETC:-'@glite_etc@'}
+GLITE_LOCATION=${GLITE_LOCATION:-'@glite_prefix@'}
+GLITE_LOCATION_ETC=${GLITE_LOCATION_ETC:-'@glite_etc@'}
 GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
+GLITE_USER=${GLITE_USER:-'glite'}
+GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}
+GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
 
 KRB5_KTNAME="FILE:/var/glite/krb5kt_lb"
 KRB5CCNAME="FILE:/var/glite/krb5cc_lb"
-LOG4C_RCPATH="$GLITE_LB_LOCATION_ETC/glite-lb"
+LOG4C_RCPATH="$GLITE_LOCATION_ETC/glite-lb"
 
 [ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
 [ -f /etc/glite.conf ] && . /etc/glite.conf
-[ -f $GLITE_LB_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LB_LOCATION_ETC/glite-wms.conf
-
-[ -f $GLITE_LB_LOCATION_ETC/lb.conf ] && . $GLITE_LB_LOCATION_ETC/lb.conf
-[ -f $GLITE_LB_LOCATION_VAR/etc/lb.conf ] && . $GLITE_LB_LOCATION_VAR/etc/lb.conf
-
+[ -f $GLITE_LOCATION_ETC/glite-wms.conf ] && . $GLITE_LOCATION_ETC/glite-wms.conf
+[ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
 LL_PIDFILE=${LL_PIDFILE:-$GLITE_LB_LOCATION_VAR/glite-lb-logd.pid}
@@ -118,12 +119,6 @@ start()
 		return 0
 	esac
 
-	if test -z "$GLITE_USER" ;then
-		echo 'Error: GLITE_USER is not set'
-		echo FAILED
-		return 1
-	fi
-
 	if [ -n "$LOG4C_RCPATH" ]; then env="$env LOG4C_RCPATH='$LOG4C_RCPATH'"; fi
 	if [ -n "$KRB5_KTNAME" ]; then env="$env KRB5_KTNAME='$KRB5_KTNAME'"; fi
 	if [ -n "$KRB5CCNAME" ]; then env="$env KRB5CCNAME='$KRB5CCNAME'"; fi
@@ -150,10 +145,10 @@ start()
 	mkdir -p /var/glite/log 
 	chown $GLITE_USER /var/glite/log
         (cd /tmp && ls -f /tmp |grep ^dglogd_sock_ |xargs rm -f)
-	start_daemon "glite-lb-logd" "$LL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-logd \
+	start_daemon "glite-lb-logd" "$LL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-logd \
 		-i $LL_PIDFILE $port $sock $fprefix"
 
-	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LB_LOCATION/bin/glite-lb-interlogd \
+	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-interlogd \
 		-i $IL_PIDFILE $sock $fprefix" "$IL_SOCKFILE"
 }
 
