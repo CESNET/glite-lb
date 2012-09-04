@@ -646,7 +646,7 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	add_row_d(&out, "resubmitted", "Resubmitted", stat.resubmitted, 0, text);
 	add_row(&out, "cancelling", "Cancelling", stat.cancelling>0 ? "YES" : "NO", NULL, text);
 	add_row(&out, "cancelReason", "Cancel reason", stat.cancelReason, NULL, text);
-	add_row_d(&out, "cpuTime", "CPU time", stat.cpuTime, 0, text);
+	add_row_d(&out, "cpuTime", "CPU time", stat.cpuTime, -1, text);
 	add_row_d(&out, "done_code", "Done code", stat.done_code, (unsigned int)-1, text);
 	add_row_d(&out, "exit_code", "Exit code", stat.exit_code, -1, text);
 	chtemp = stat.isb_transfer ? edg_wlc_JobIdUnparse(stat.isb_transfer) : NULL;
