@@ -82,7 +82,6 @@ int edg_wll_QueryEventsServer(
 					ret = 0,
 					offset = 0, limit = 0,
 					limit_loop = 1,
-					eperm = 0,
 					where_flags = 0;
 	char *peerid = NULL;
 	char *can_peername = NULL, *can_peerid = NULL;
@@ -221,7 +220,6 @@ int edg_wll_QueryEventsServer(
 					if ( edg_wll_JobStatusServer(ctx, out[i].any.jobId, 0, &state_out) )
 					{
 						edg_wll_FreeEvent(out+i);
-						if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
 						goto fetch_cycle_cleanup;
 					}
 				
@@ -253,7 +251,6 @@ int edg_wll_QueryEventsServer(
 					ret = edg_wll_GetACL(ctx, out[i].any.jobId, &acl);
 					free(jobid);
 					if (ret || acl == NULL) {
-						eperm = 1;
 						edg_wll_FreeEvent(out+i);
 						edg_wll_ResetError(ctx); /* XXX: should be reported somewhere at least in debug mode */
 						goto fetch_cycle_cleanup;
@@ -262,7 +259,6 @@ int edg_wll_QueryEventsServer(
 					ret = edg_wll_CheckACL(ctx, acl, EDG_WLL_CHANGEACL_READ);
 					edg_wll_FreeAcl(acl);
 					if (ret) {
-						eperm = 1;
 						edg_wll_FreeEvent(out+i);
 						edg_wll_ResetError(ctx); /* XXX: should be reported somewhere at least in debug mode */
 						goto fetch_cycle_cleanup;
@@ -296,9 +292,7 @@ limit_cycle_cleanup:
 		glite_lbu_FreeStmt(&sh);
 	} while ( limit_loop );
 
-	if ( i == 0 && eperm )
-		edg_wll_SetError(ctx, EPERM, "matching events found but authorization failed");
-	else if ( i == 0 )
+	if ( i == 0 )
 		edg_wll_SetError(ctx, ENOENT, "no matching events found");
 	else
 	{
@@ -454,7 +448,6 @@ int edg_wll_QueryJobsServerStream(
 	int					i = 0,
 						j = 0,
 						ret = 0,
-						eperm = 0,
 						eidrm = 0,
 						limit = 0, offset = 0,
 						limit_loop = 1,
@@ -569,7 +562,6 @@ int edg_wll_QueryJobsServerStream(
 				if ( edg_wll_JobStatusServer(ctx, jobid, (where_flags & FL_SEL_JDL)?(flags|EDG_WLL_STAT_CLASSADS):flags, &status) )
 				{
 					glite_jobid_free(jobid);
-					if (edg_wll_Error(ctx,NULL,NULL) == EPERM) eperm = 1;
 					goto fetch_cycle_cleanup;
 				}
 
@@ -587,7 +579,6 @@ int edg_wll_QueryJobsServerStream(
 #if 0
 			if ( !ctx->noAuth && (!ctx->peerName || strcmp(res[1], strmd5(ctx->peerName, NULL))) )
 			{
-				eperm = 1;
 				glite_jobid_free(jobid);
 				edg_wll_FreeStatus(&status);
 				goto fetch_cycle_cleanup;
@@ -674,11 +665,8 @@ limit_cycle_cleanup:
 	}
 
 	if ( !n ) {
-		if (eperm) edg_wll_SetError(ctx, EPERM, "matching jobs found but authorization failed");
-		else {
-			if (eidrm) edg_wll_SetError(ctx, EIDRM, "matching job already purged");
-			else edg_wll_SetError(ctx, ENOENT, "no matching jobs found");
-		}
+		if (eidrm) edg_wll_SetError(ctx, EIDRM, "matching job already purged");
+		else edg_wll_SetError(ctx, ENOENT, "no matching jobs found");
 	}
 
 cleanup:
