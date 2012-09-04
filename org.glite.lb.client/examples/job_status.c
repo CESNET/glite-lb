@@ -222,38 +222,7 @@ static void printstat(edg_wll_JobStat stat, int level)
 	printf("%sjobId : %s\n", ind, j1 = edg_wlc_JobIdUnparse(stat.jobId)); free(j1);
 	printf("%sowner : %s\n", ind, stat.owner);
 	printf("%spayload_owner : %s\n", ind, stat.payload_owner);
-	switch (stat.jobtype) {
-		case EDG_WLL_STAT_SIMPLE:
-			printf("%sjobtype : SIMPLE\n", ind);
-			break;
-		case EDG_WLL_STAT_DAG:
-			printf("%sjobtype : DAG\n", ind);
-                        break;
-		case EDG_WLL_STAT_COLLECTION:
-			printf("%sjobtype : COLLECTION\n", ind);
-                        break;
-		case EDG_WLL_STAT_PBS:
-			printf("%sjobtype : PBS\n", ind);
-                        break;
-		case EDG_WLL_STAT_CONDOR:
-			printf("%sjobtype : CONDOR\n", ind);
-                        break;
-		case EDG_WLL_STAT_CREAM:
-			printf("%sjobtype : CREAM\n", ind);
-                        break;
-		case EDG_WLL_STAT_FILE_TRANSFER:
-			printf("%sjobtype : FILE_TRANSFER\n", ind);
-                        break;
-		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
-			printf("%sjobtype : FILE_TRANSFER_COLLECTION\n", ind);
-                        break;
-		case EDG_WLL_STAT_VIRTUAL_MACHINE:
-			printf("%sjobtype : VIRTUAL_MACHINE\n", ind);
-                        break;
-		default:
-			printf("%sjobtype : UNKNOWN\n", ind);
-			break;
-	}
+	printf("%sjobtype : %s\n", ind, edg_wll_StatusJobtypeNames[stat.jobtype]);
 	printf("%sparent_job : %s\n", ind,
 			j2 = edg_wlc_JobIdUnparse(stat.parent_job));
 	if (stat.jobtype) {;
