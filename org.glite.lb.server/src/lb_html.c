@@ -460,8 +460,9 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	time_t time;
 
         char *pomA = NULL;
-	int	i;
+	int	i, total = 0;
 	size_t	linlen, outlen;
+	edg_wll_RelationshipRecord *connections;
 
         chtemp = edg_wlc_JobIdUnparse(stat.jobId);
 
@@ -781,22 +782,29 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		}
 	}
 
-	if (!text) {
-		edg_wll_RelationshipRecord *connections;
-		int total = 0;
 
-		edg_wll_getConnectedJobs(ctx, stat.jobId, EDG_WLL_JOBCONNECTION_UNDEFINED, &connections);
+	edg_wll_getConnectedJobs(ctx, stat.jobId, EDG_WLL_JOBCONNECTION_UNDEFINED, &connections);
 
-		if (connections) {
-			outlen = asprintf(&relations, "<h3>Related Jobs</h3>\n<UL>\n");
-			for( total = 0; connections[total].jobid; total++ );
-		
-			qsort(connections, total, sizeof(edg_wll_RelationshipRecord), relationship_cmp); 
+	if (connections) {
+		outlen = text ?
+			asprintf(&relations, "related_jobs=") :
+			asprintf(&relations, "<h3>Related Jobs</h3>\n<UL>\n");
+		for( total = 0; connections[total].jobid; total++ );
+	
+		qsort(connections, total, sizeof(edg_wll_RelationshipRecord), relationship_cmp); 
 
-			for( i = 0; connections[i].jobid; i++ ) {
-				chtemp = edg_wlc_JobIdUnparse(connections[i].jobid);
+		for( i = 0; connections[i].jobid; i++ ) {
+			chtemp = edg_wlc_JobIdUnparse(connections[i].jobid);
 
-				linlen = asprintf(&pomA, "<li><a href=\"%s\">%s</a> <span class=\"jobtype\">&mdash; %s</span> <span class=\"jobstate\">Relationship %s</span></li>\n%s",
+			linlen = text ?
+				asprintf(&pomA, "%s%s %s %s%s",
+					i ? "," : "",
+					chtemp,
+					connections[i].jobtype >= 0 && connections[i].jobtype < EDG_WLL_NUMBER_OF_JOBTYPES ?
+	                                        edg_wll_StatusJobtypeNames[connections[i].jobtype] : "Unknown!",
+                                	edg_wll_JobConnectionTypeNames[connections[i].reltype],
+					connections[i+1].jobid ? "" : "\n") :
+				asprintf(&pomA, "<li><a href=\"%s\">%s</a> <span class=\"jobtype\">&mdash; %s</span> <span class=\"jobstate\">Relationship %s</span></li>\n%s",
 					chtemp,
 					chtemp,
 					connections[i].jobtype >= 0 && connections[i].jobtype < EDG_WLL_NUMBER_OF_JOBTYPES ?
@@ -804,17 +812,15 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 					edg_wll_JobConnectionTypeNames[connections[i].reltype],
 					connections[i+1].jobid ? "" : "</UL>\n");
 
-				relations = realloc(relations, sizeof(char) * (outlen + linlen + 1));
-				strcat(relations, pomA);
-				outlen = outlen + linlen;
-				free(pomA);
+			relations = realloc(relations, sizeof(char) * (outlen + linlen + 1));
+			strcat(relations, pomA);
+			outlen = outlen + linlen;
+			free(pomA);
 
-				free(chtemp);
-				edg_wlc_JobIdFree(connections[i].jobid);
-			}
-			free(connections);
-			
+			free(chtemp);
+			edg_wlc_JobIdFree(connections[i].jobid);
 		}
+		free(connections);
 	}
 
 	asprintf(&pomA, "%s%s%s%s%s%s%s%s", 
