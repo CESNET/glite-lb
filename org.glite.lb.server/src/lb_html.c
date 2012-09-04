@@ -41,6 +41,7 @@ limitations under the License.
 #include <time.h>
 #include <assert.h>
 #include <errno.h>
+#include <values.h>
 
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))
@@ -70,6 +71,16 @@ void add_row(char **body, char *text_title, char *html_title, char *value, char 
 	free(*body);
         *body = newbody;
 
+}
+
+void add_row_d(char **body, char *text_title, char *html_title, long value, long neutral, http_output_type text) {
+	char *chtemp;
+
+	if (value == neutral) chtemp = NULL;
+	else asprintf(&chtemp, "%ld", value);
+
+	add_row(body, text_title, html_title, chtemp, NULL, text);
+	free(chtemp);
 }
 
 char *get_html_header(edg_wll_Context ctx, int text) {
@@ -490,6 +501,34 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		edg_wll_StatusJobtypeNames[stat.jobtype] : "Unknown!", NULL, text);
 
 	switch (stat.jobtype) {
+		case EDG_WLL_STAT_SIMPLE:
+			add_row(&out, "jw_status", "JW status", (chtemp = edg_wll_JWStatToString(stat.jw_status)) , NULL, text);
+			free(chtemp);
+			break;
+		case EDG_WLL_STAT_DAG:
+		case EDG_WLL_STAT_COLLECTION:
+		case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
+			add_row(&out, "seed", "Seed", stat.seed, NULL, text);
+			add_row_d(&out, "children_num", "No. of Children", stat.children_num, 0, text);
+	                if (stat.children_hist) {
+				chtemp = NULL;
+				for (i=1; i<=stat.children_hist[0]; i++) {
+					asprintf(&out_tmp, "%s%s%s%s%s%d%s",
+						chtemp ? chtemp : "",
+						i == 1 ? "" : (text ? "," : "<BR>"),
+						text ? "" : (stat.children_hist[i] ? "<B>" : ""),
+						edg_wll_StatToString(i-1),
+						text ? "=" : "&emsp;",
+						stat.children_hist[i],
+						text ? "" : (stat.children_hist[i] ? "</B>" : "") );
+					free(chtemp);
+					chtemp = out_tmp; 
+				}
+				add_row(&out, "children_hist", "Child histogram", out_tmp, NULL, text);
+				free(chtemp);
+			}
+			add_row_d(&out, "subjob_failed", "Subjob Failed", stat.subjob_failed, 0, text);
+			break;
 		case EDG_WLL_STAT_CREAM:
 			chtemp = stat.cream_state ? edg_wll_CreamStatToString(stat.cream_state) : NULL;
 			add_row(&out, "CREAM_Status", "CREAM Status", chtemp, NULL, text);
@@ -500,15 +539,9 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 			add_row(&out, "cream_lrms_id", "CREAM LRMS id", stat.cream_lrms_id, NULL, text);
 			add_row(&out, "cream_node", "CREAM Node", stat.cream_node, NULL, text);
 			add_row(&out, "cream_cancelling", "CREAM Cancelling", stat.cream_cancelling > 0 ? "YES" : "NO", NULL, text);
-			asprintf(&chtemp, "%d", stat.cream_cpu_time);
-			add_row(&out, "cream_cpu_time", "CREAM CPU time", chtemp, NULL, text);
-			free(chtemp);
-			if (stat.cream_done_code != -1) asprintf(&chtemp, "%d", stat.cream_done_code); else chtemp = NULL;
-			add_row(&out, "cream_done_code", "CREAM Done code", chtemp, NULL, text);
-			free(chtemp);
-			if (stat.cream_exit_code != -1) asprintf(&chtemp, "%d", stat.cream_exit_code); else chtemp = NULL;
-			add_row(&out, "cream_exit_code", "CREAM Exit code", chtemp, NULL, text);
-			free(chtemp);
+			add_row_d(&out, "cream_cpu_time", "CREAM CPU time", stat.cream_cpu_time, -1, text);
+			add_row_d(&out, "cream_done_code", "CREAM Done code", stat.cream_done_code, -1, text);
+			add_row_d(&out, "cream_exit_code", "CREAM Exit code", stat.cream_exit_code, -1, text);
 			break;
 
 		case EDG_WLL_STAT_FILE_TRANSFER:
@@ -535,21 +568,15 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 
 		case EDG_WLL_STAT_PBS:
 			add_row(&out, "pbs_state", "PBS state", stat.pbs_state, NULL, text);
-			asprintf(&chtemp, "%d", stat.pbs_substate);
-			add_row(&out, "pbs_substate", "PBS Substate", chtemp, NULL, text);
-			free(chtemp);
+			add_row_d(&out, "pbs_substate", "PBS Substate", stat.pbs_substate, -1, text);
 			add_row(&out, "pbs_queue", "PBS queue", stat.pbs_queue, NULL, text);
 			add_row(&out, "pbs_owner", "PBS owner", stat.pbs_owner, NULL, text);
 			add_row(&out, "pbs_name", "PBS name", stat.pbs_name, NULL, text);
 			add_row(&out, "pbs_reason", "PBS reason", stat.pbs_reason, NULL, text);
 			add_row(&out, "pbs_scheduler", "PBS scheduler", stat.pbs_scheduler, NULL, text);
 			add_row(&out, "pbs_dest_host", "PBS destination host", stat.pbs_dest_host, NULL, text);
-			if (stat.pbs_exit_status != -1) asprintf(&chtemp, "%d", stat.pbs_pid); else chtemp=NULL;
-			add_row(&out, "pbs_pid", "PBS PID", chtemp, NULL, text);
-			free(chtemp);
-			if (stat.pbs_exit_status != -1) asprintf(&chtemp, "%d", stat.pbs_exit_status); else chtemp=NULL;
-			add_row(&out, "pbs_exit_status", "PBS Exit Status", chtemp, NULL, text);
-			free(chtemp);
+			add_row_d(&out, "pbs_pid", "PBS PID", stat.pbs_pid, -1, text);
+			add_row_d(&out, "pbs_exit_status", "PBS Exit Status", stat.pbs_exit_status, -1, text);
 			add_row(&out, "pbs_error_desc", "PBS error description", stat.pbs_error_desc, NULL, text);
 
 			if (stat.pbs_resource_requested) {
@@ -615,19 +642,13 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 	add_row(&out, "expectFrom", "Expect update from", stat.expectFrom, NULL, text);
 	add_row(&out, "location", "Location", stat.location, NULL, text);
 	add_row(&out, "destination", "Destination", stat.destination, NULL, text);
+	add_row(&out, "ce_node", "CE Node", stat.ce_node, NULL, text);
+	add_row_d(&out, "resubmitted", "Resubmitted", stat.resubmitted, 0, text);
 	add_row(&out, "cancelling", "Cancelling", stat.cancelling>0 ? "YES" : "NO", NULL, text);
 	add_row(&out, "cancelReason", "Cancel reason", stat.cancelReason, NULL, text);
-	asprintf(&chtemp, "%d", stat.cpuTime);
-	add_row(&out, "cpuTime", "CPU time", chtemp, NULL, text);
-	free(chtemp);
-	if (stat.done_code != -1) asprintf(&chtemp, "%d", stat.done_code); 
-	else chtemp = NULL;
-	add_row(&out, "done_code", "Done code", chtemp, NULL, text);
-	free(chtemp);
-	if (stat.exit_code != -1) asprintf(&chtemp, "%d", stat.exit_code); 
-	else chtemp = NULL;
-	add_row(&out, "exit_code", "Exit code", chtemp, NULL, text);
-	free(chtemp);
+	add_row_d(&out, "cpuTime", "CPU time", stat.cpuTime, 0, text);
+	add_row_d(&out, "done_code", "Done code", stat.done_code, (unsigned int)-1, text);
+	add_row_d(&out, "exit_code", "Exit code", stat.exit_code, -1, text);
 	chtemp = stat.isb_transfer ? edg_wlc_JobIdUnparse(stat.isb_transfer) : NULL;
 	add_row(&out, "input_sandbox", "input sandbox", chtemp, chtemp, text);
 	free(chtemp);
@@ -651,7 +672,56 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		add_row(&out, "user_tags", "User Tags", chtemp, NULL, text);
 		free(chtemp);
 	}
+	add_row_d(&out, "payload_running", "Payload Running", stat.payload_running, 0, text);
+	free(chtemp);
 
+        if (stat.possible_destinations) {
+		chtemp = NULL;
+                for (i=0; stat.possible_destinations[i]; i++) {
+			asprintf(&out_tmp, "%s%s%s",
+				chtemp ? chtemp : "",
+				i == 0 ? "" : (text ? "," : "<BR>"),
+				stat.possible_destinations[i] );
+			free(chtemp);
+			chtemp = out_tmp; 
+		}
+		add_row(&out, "possible_destinations", "Possible destinations", out_tmp, NULL, text);
+		free(chtemp);
+        }
+
+        if (stat.possible_ce_nodes) {
+		chtemp = NULL;
+                for (i=0; stat.possible_ce_nodes[i]; i++) {
+			asprintf(&out_tmp, "%s%s%s",
+				chtemp ? chtemp : "",
+				i == 0 ? "" : (text ? "," : "<BR>"),
+				stat.possible_ce_nodes[i] );
+			free(chtemp);
+			chtemp = out_tmp; 
+		}
+		add_row(&out, "possible_ce_nodes", "Possible CE Nodes", out_tmp, NULL, text);
+		free(chtemp);
+        }
+
+	add_row_d(&out, "suspended", "Suspended", stat.suspended, 0, text);
+	add_row(&out, "suspend_reason", "Suspend Reason", stat.suspend_reason, NULL, text);
+	add_row(&out, "failure_reasons", "Failure Reasons", stat.failure_reasons, NULL, text);
+	add_row_d(&out, "remove_from_proxy", "Remove From Proxy", stat.remove_from_proxy, 0, text);
+	add_row(&out, "ui_host", "UI host", stat.ui_host, NULL, text);
+        if (stat.user_fqans) {
+		chtemp = NULL;
+                for (i=0; stat.user_fqans[i]; i++) {
+			asprintf(&out_tmp, "%s%s%s",
+				chtemp ? chtemp : "",
+				i == 0 ? "" : (text ? "," : "<BR>"),
+				stat.user_fqans[i] );
+			free(chtemp);
+			chtemp = out_tmp; 
+		}
+		add_row(&out, "user_fqans", "User FQANs", out_tmp, NULL, text);
+		free(chtemp);
+        }
+	
 
         if (!text) {
                 asprintf(&out_tmp, "%s</table>\n</BODY>\n</HTML>", out);
