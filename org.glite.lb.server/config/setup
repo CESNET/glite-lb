@@ -30,8 +30,8 @@ qecho() {
 check_mysql_connection() {
 	# check the mysql connection
 	MYSQL_ARGS="-u $MYSQL_USER"
-	if ! mysqladmin ping $MYSQL_ARGS >/tmp/glite-setup.$$ 2>&1; then
-		if test -n "$MYSQL_PASSWORD" && mysqladmin ping $MYSQL_ARGS -p$MYSQL_PASSWORD 2>/tmp/glite-setup.$$ 2>&1; then
+	if ! echo | mysql $MYSQL_ARGS >/tmp/glite-setup.$$ 2>&1; then
+		if test -n "$MYSQL_PASSWORD" && echo | mysql $MYSQL_ARGS -p$MYSQL_PASSWORD 2>/tmp/glite-setup.$$ 2>&1; then
 			MYSQL_ARGS="$MYSQL_ARGS -p$MYSQL_PASSWORD"
 		else
 			return 1
@@ -244,7 +244,7 @@ if test "$setup_db" = 1; then
 
 	# check if database exist and setup if necessary
 	if ! mysqlshow $MYSQL_ARGS | grep "\<lbserver20\>" > /dev/null 2>&1 || \
-	   ! mysqlshow $MYSQL_ARGS lbserver20 jobs | grep 'Table: jobs\>'; then
+	   ! mysqlshow $MYSQL_ARGS lbserver20 jobs | grep 'Table: jobs\>' > /dev/null 2>&1; then
 		mysql $MYSQL_ARGS -e "CREATE DATABASE lbserver20"
 		mysql $MYSQL_ARGS -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver IDENTIFIED BY '' WITH GRANT OPTION;"
 		mysql $MYSQL_ARGS -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@'$HOSTNAME' IDENTIFIED BY '' WITH GRANT OPTION;"
@@ -547,8 +547,8 @@ fi
 # ==== the end ====
 
 if test -z "$error"; then
-	exit 0
+	true
 else
 	echo "glite-lb-setup: ERROR: $error"
-	exit 1
+	false
 fi
