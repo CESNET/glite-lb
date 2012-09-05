@@ -680,6 +680,11 @@ limit_cycle_cleanup:
 			else edg_wll_SetError(ctx, ENOENT, "no matching jobs found");
 		}
 	}
+	else {
+		// There was permission problem but there were still some results
+		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_DEBUG, "Results were returned for query, but also error code %d. Resetting.", edg_wll_Error(ctx,NULL,NULL));
+		if (edg_wll_Error(ctx,NULL,NULL) == EPERM) edg_wll_ResetError(ctx);
+	}
 
 cleanup:
 	// finish
