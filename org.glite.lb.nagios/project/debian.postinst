@@ -1,4 +1,0 @@
-#!/bin/sh
-set -e
-chown nagios:nagios /usr/libexec/grid-monitoring/probes/emi.lb >/dev/null 2>&1 || :
-#DEBHELPER#
