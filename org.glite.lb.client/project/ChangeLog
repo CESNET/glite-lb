@@ -261,3 +261,8 @@
 5.2.4-1
 - Job type querying attribute supported in glite-lb-notify
 
+5.2.5-1
+- Usi generated naming array instead of switch() in the job_status example
+- Debugging output removed from glite-lb-notify
+- Missing header (possible cause of memory nahdling errors) added to producer code
+
