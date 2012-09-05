@@ -674,7 +674,6 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 		free(chtemp);
 	}
 	add_row_d(&out, "payload_running", "Payload Running", stat.payload_running, 0, text);
-	free(chtemp);
 
         if (stat.possible_destinations) {
 		chtemp = NULL;
