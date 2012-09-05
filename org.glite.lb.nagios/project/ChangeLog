@@ -33,3 +33,7 @@
   - partial support for krb5 mech
   - support for generating proxies form host certificates
 
+1.2.3-1
+- Test notification gets dropped even if delivery failed
+- Plugin performance data compatible with more widely spread plugins
+
