@@ -436,7 +436,7 @@ vprintf 1 "\n[LB Probe] Test finished\n\n"
 }
 
 if [ $EXITCODE -eq 0 ]; then
-	EXITMESSAGE="OK|`expr $CLRTIME - $REGTIME`s"
+	EXITMESSAGE="OK|time=`expr $CLRTIME - $REGTIME`s"
 else
 	EXITMESSAGE="WARNING: $EXITMESSAGE" 
 fi
