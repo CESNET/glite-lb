@@ -388,6 +388,7 @@ else
 				vprintf 1 "\n[LB Probe] Test failed -- Notifications were not delivered\n\n"
 				vprintf 0 "DOWN: Notification Interlogger Not Running\n"
 				rm $NOTIFFILE $STATEFILE
+				dropresult=`glite-lb-notify drop ${notifid} 2>&1`
 				exit 2
 			fi
 
