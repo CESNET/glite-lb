@@ -279,7 +279,6 @@ int main(int argc,char **argv)
 						goto cleanup;
 					}
 					else {
-						fprintf(stderr, "Adding condition for %s, typecode %d\n", type, typecode);
 						conditions[i][statno].attr = EDG_WLL_QUERY_ATTR_JOB_TYPE;
 						conditions[i][statno].op = EDG_WLL_QUERY_OP_EQUAL;
 						conditions[i][statno].value.i = typecode;
