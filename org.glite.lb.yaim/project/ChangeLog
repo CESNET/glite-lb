@@ -114,3 +114,17 @@
 4.5.1-2
 - Module rebuilt
 
+4.5.2-1
+- gLite L&B setup script:
+  - switch yaim to use the (sourced) setup script
+  - GLITE_USER, GLITE_HOST_CERT, GLITE_HOST_KEY not required
+  - GLITE_LB_LOCATION removed
+  - all defaults in the setup script now
+  - added Kerberos support (not launched by default)
+  - detect distribution and use that for the scripts
+  - configuration file in /etc/default or /etc/sysconfig
+    (replacement for the profile.d and site-info.def file)
+  - hide other startup scripts output
+  - more strict check for L&B database, migration for L&B 4
+  - update msg-config script
+
