@@ -33,6 +33,7 @@ my $root = $pwd.'/stage';
 my $sysroot = '';
 my $sysconfdir;
 my $localstatedir;
+my $os_type;
 my $staged;
 my $module;
 my $thrflavour = 'gcc64dbgpthr';
@@ -234,6 +235,7 @@ my @opts = (
 	'sysroot:s' => \$sysroot,
 	'sysconfdir=s' => \$sysconfdir,
 	'localstatedir=s' => \$localstatedir,
+	'os-type=s' => \$os_type,
 	'lb-tag=s' => \$lb_tag,
 	'lbjp-common-tag=s' => \$lbjp_tag,
 	'jp-tag=s' => \$jp_tag,
@@ -266,6 +268,7 @@ if (not $sysconfdir) { $sysconfdir = $prefix eq '/usr' ? '/etc' : "$prefix/etc";
 if (not $localstatedir) { $localstatedir = $prefix eq '/usr' ? '/var' : "$prefix/var"; }
 $sysconfdir=~s/\/$//;
 $localstatedir=~s/\/$//;
+if (not $os_type) { $os_type = os_type(); }
 
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
@@ -1353,6 +1356,7 @@ stagedir = $stagedir
 sysroot = $sysroot
 sysconfdir = $sysconfdir
 localstatedir = $localstatedir
+os_type = $os_type
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 libdir = $libdir
@@ -1712,8 +1716,11 @@ sub mode_etics {
 	top_srcdir = ..
 	$flags
 	EOF";
-			$cmd{default}{compile} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir}";
-			$cmd{default}{install} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir} install";
+			# no stage builds since EMI-3
+			if ($project ne 'emi' or $project_version <= 2) {
+				$cmd{default}{compile} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir}";
+				$cmd{default}{install} = "make prefix=\${prefix}$project{local_prefix} libdir=\${libdir} install";
+			}
 			mode_etics_packaging($fmod, \%cmd,
 				"make prefix=\${prefix}$project{local_prefix} rpm-prepare
 	cp gridsite.spec ../\n\t",
@@ -1757,12 +1764,15 @@ sub mode_etics {
 	}
 	else {
 		$cmd{default}{configure} = "/usr/bin/perl $confdir/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
-		$cmd{default}{compile} = 'make';
-		$cmd{default}{test} = 'make check';
-		$cmd{default}{install} = 'make install';
-		if ($subsys eq 'lb' and $module eq 'client') {
-			$cmd{default}{compile} = "make rpath=$project{local_prefix}/\${libdir}";
-			$cmd{default}{install} = "make install post-install rpath=$project{local_prefix}/\${libdir}";
+		# no stage builds since EMI-3
+		if ($project ne 'emi' or $project_version <= 2) {
+			$cmd{default}{compile} = 'make';
+			$cmd{default}{test} = 'make check';
+			$cmd{default}{install} = 'make install';
+			if ($subsys eq 'lb' and $module eq 'client') {
+				$cmd{default}{compile} = "make rpath=$project{local_prefix}/\${libdir}";
+				$cmd{default}{install} = "make install post-install rpath=$project{local_prefix}/\${libdir}";
+			}
 		}
 		mode_etics_packaging($fmod, \%cmd, "make dist\n\t", "make dist\n\t");
 	}
@@ -2078,6 +2088,24 @@ sub reshuffle_platforms($$) {
 	}
 }
 
+sub os_type {
+	my $ver;
+
+	open FH, '<', '/etc/issue' or return "redhat";
+	$_=<FH>;
+	close FH;
+
+	if (/Debian|Ubuntu/i) { return "debian"; }
+	elsif (/Scientific|Redhat|Centos/i) { return "redhat"; }
+	elsif (/Fedora/i) {
+		$ver = `rpm -q --queryformat '%{version}' fedora-release 2>/dev/null`;
+		if ($ver and $ver >= 15) { return "fedora"; }
+		else { return "redhat"; }
+	} else {
+		return "redhat";
+	}
+}
+
 sub usage {
 	my @ext = keys %externs;
 	my @myjars = keys %jar;
@@ -2091,6 +2119,8 @@ General options (defaults in []):
   --root=DIR			installation root (custom relocation root -> sysroot) [./stage]
   --sysroot=DIR			system root (custom relocation root -> sysroot) []
   --sysconfdir=DIR              system configuration directory [PREFIX/etc]
+  --localstatedir=DIR           system local status directory [PREFIX/var]
+  --os-type=DIST                system type (debian/redhat/fedora)
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
   --thrflavour=flavour
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
