@@ -25,6 +25,7 @@ limitations under the License.
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <syslog.h>
+#include <stdarg.h>
 #include <string.h>
 
 #include "glite/jobid/cjobid.h"
