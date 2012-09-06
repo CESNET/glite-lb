@@ -107,6 +107,7 @@ typedef enum _edg_wll_Source {
 	EDG_WLL_SOURCE_CLOUD_MANAGER,
 	EDG_WLL_SOURCE_VM_MANAGER,
 	EDG_WLL_SOURCE_VM_SYSTEM,
+
 	EDG_WLL_SOURCE__LAST		/* marker, for internal use only */
 } edg_wll_Source;
 
