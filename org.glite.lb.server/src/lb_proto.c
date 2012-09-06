@@ -1139,7 +1139,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			isadm = ctx->noAuth || edg_wll_amIroot(ctx->peerName, ctx->fqans,&ctx->authz_policy);
 			if ( !isadm && ctx->count_server_stats == 2 ) {
 				ret = HTTP_UNAUTH;
-				edg_wll_SetError(ctx, EPERM, "Only superusers can view server usage statistics on this particular server.");
+				edg_wll_SetError(ctx, EPERM, "Only superusers can view server usage statistics on this server.");
 			}
 			else {
 				edg_wll_StatisticsToHTML(ctx, &message, text);

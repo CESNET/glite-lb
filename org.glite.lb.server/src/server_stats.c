@@ -31,7 +31,8 @@ char *edg_wll_server_statistics_type_title[] = {
         "Notifications sent (legacy)",
         "Notifications sent (msg)",
         "WS queries",
-        "L&B protocol accesses" };
+        "L&B protocol accesses",
+	"VM regs" };
 
 char *edg_wll_server_statistics_type_key[] = {
         "glite_jobs",
@@ -48,7 +49,8 @@ char *edg_wll_server_statistics_type_key[] = {
         "notifs_legacy",
         "notis_msg",
         "queries_ws",
-        "queries_api" };
+        "queries_api",
+	"vm_jobs" };
 
 int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix)
 {

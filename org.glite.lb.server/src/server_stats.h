@@ -13,6 +13,8 @@ typedef struct _edg_wll_server_statistics{
 	time_t start;
 } edg_wll_server_statistics;
 
+// Add new values at the end of the enum (before SERVER_STATISTICS_COUNT)
+// Also for new vales, add text descriptions to server_stats.c
 typedef enum _edg_wll_server_statistics_type{
 	SERVER_STATS_GLITEJOB_REGS = 0,
 	SERVER_STATS_PBSJOB_REGS,
@@ -29,10 +31,10 @@ typedef enum _edg_wll_server_statistics_type{
 	SERVER_STATS_NOTIF_MSG_SENT,
 	SERVER_STATS_WS_QUERIES,
 	SERVER_STATS_LBPROTO,
+	SERVER_STATS_VM_REGS,
 	SERVER_STATISTICS_COUNT
 } edg_wll_server_statistics_type;
-// Add new values in front of LAST and do not change order
-// Also for new vales, add text descriptions to server_stats.c
+
 extern char     *edg_wll_server_statistics_type_title[];
 extern char     *edg_wll_server_statistics_type_key[];
 

@@ -636,6 +636,8 @@ int edg_wll_intJobStatus(
                                 case EDG_WLL_STAT_FILE_TRANSFER_COLLECTION:
                                         edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_SANDBOX_REGS);
                                         break;
+				case EDG_WLL_STAT_VIRTUAL_MACHINE:
+					edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_VM_REGS);
                                 default:
                                         glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "Unknown job type, registration will not be counted in statistics.");
                                         break;
