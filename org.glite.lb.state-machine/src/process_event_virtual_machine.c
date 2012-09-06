@@ -92,12 +92,13 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 			break;
 		case EDG_WLL_EVENT_VMRUNNING:
 			if (USABLE(res)) {
-				switch( e->vMRunning.vm_source){
-				case EDG_WLL_VMRUNNING_CM:
-				case EDG_WLL_VMRUNNING_VMM:
-					js->pub.vm_state = EDG_WLL_STAT_VM_RUNNING;
+				switch( e->any.source){
+				case EDG_WLL_SOURCE_CLOUD_MANAGER:
+				case EDG_WLL_SOURCE_VM_MANAGER:
+					if (js->pub.vm_state != EDG_WLL_STAT_VM_REALLY_RUNNING)
+						js->pub.vm_state = EDG_WLL_STAT_VM_RUNNING;
 					break;
-				case EDG_WLL_VMRUNNING_MACHINE:
+				case EDG_WLL_SOURCE_VM_SYSTEM:
 					js->pub.vm_state = EDG_WLL_STAT_VM_REALLY_RUNNING;
                                         break;
 				default:
@@ -108,14 +109,14 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 			break;
 		case EDG_WLL_EVENT_VMSHUTDOWN:
                         if (USABLE(res)) {
-				switch (e->vMShutdown.vm_source){
-				case EDG_WLL_VMSHUTDOWN_CM:
+				switch (e->any.source){
+				case EDG_WLL_SOURCE_CLOUD_MANAGER:
 					js->pub.vm_state = EDG_WLL_STAT_VM_SHUTDOWN;
 					break;
-				case EDG_WLL_VMSHUTDOWN_VMM:
+				case EDG_WLL_SOURCE_VM_MANAGER:
 					js->pub.vm_system_halting = 1;
 					break;
-				case EDG_WLL_VMSHUTDOWN_MACHINE:
+				case EDG_WLL_SOURCE_VM_SYSTEM:
 					js->pub.vm_system_halting = 1;
 					if (js->pub.vm_state == EDG_WLL_STAT_VM_REALLY_RUNNING)
 						js->pub.vm_state = EDG_WLL_STAT_VM_RUNNING;

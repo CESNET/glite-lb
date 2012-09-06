@@ -871,6 +871,9 @@ static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
         case PBSsMom: *out = EDG_WLL_SOURCE_PBS_SMOM; break;
         case PBSMom: *out = EDG_WLL_SOURCE_PBS_MOM; break;
         case PBSScheduler: *out = EDG_WLL_SOURCE_PBS_SCHEDULER; break;
+	case CloudManager: *out = EDG_WLL_SOURCE_CLOUD_MANAGER; break;
+	case VMManager: *out = EDG_WLL_SOURCE_VM_MANAGER; break;
+	case VMSystem: *out = EDG_WLL_SOURCE_VM_SYSTEM; break;
         default: assert(0); break;
         }
 }
@@ -1002,6 +1005,10 @@ static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 		case EDG_WLL_SOURCE_PBS_SMOM: *out = PBSsMom; break;
 		case EDG_WLL_SOURCE_PBS_MOM: *out = PBSMom; break;
 		case EDG_WLL_SOURCE_PBS_SCHEDULER: *out = PBSScheduler; break;
+		case EDG_WLL_SOURCE_CLOUD_MANAGER: *out = CloudManager; break;
+		case EDG_WLL_SOURCE_VM_MANAGER: *out = VMManager; break;
+		case EDG_WLL_SOURCE_VM_SYSTEM: *out = VMSystem; break;
+
         	case EDG_WLL_SOURCE_NONE:
         	case EDG_WLL_SOURCE__LAST:
 		default:

@@ -35,7 +35,7 @@ extern int opterr,optind;
 
 static void usage(char *me)
 {
-	fprintf(stderr,"usage: %s [-m bkserver] [-x|-X non-default_sock_path] [-j dg_jobid] [-s source_id] [-n num_subjobs [-S][-C]] [-P] [-l jdl_file] [-e seed] [-E]\n", me);
+	fprintf(stderr,"usage: %s [-m bkserver] [-x|-X non-default_sock_path] [-j dg_jobid] [-s source_id] [-o owner] [-n num_subjobs [-S][-C]] [-P] [-l jdl_file] [-e seed] [-E]\n", me);
 }
 
 int main(int argc, char *argv[])
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	opterr = 0;
 
 	do {
-		switch (getopt(argc,argv,"xX:s:j:m:n:SCl:e:PcvE")) {
+		switch (getopt(argc,argv,"xX:s:j:m:o:n:SCl:e:PcvE")) {
 			case 'x': lbproxy = 1; break;
 			case 'X': lbproxy = 1; 
 				  edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_STORE_SOCK, optarg);
@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
 			case 's': src = (char *) strdup(optarg); break;
 			case 'j': job = (char *) strdup(optarg); break;
 			case 'm': server = strdup(optarg); break;
+			case 'o': edg_wll_SetParam(ctx, EDG_WLL_PARAM_LBPROXY_USER, optarg); break;
 			case 'n': num_subjobs = atoi(optarg); break;
 			case 'S': reg_subjobs = 1; break;
 			case 'C': collection = 1; break;

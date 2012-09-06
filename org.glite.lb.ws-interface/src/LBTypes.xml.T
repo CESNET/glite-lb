@@ -224,6 +224,9 @@
 			<val name="PBSsMom"/>
 			<val name="PBSMom"/>
 			<val name="PBSScheduler"/>
+			<val name="CloudManager"/>
+			<val name="VMManager"/>
+			<val name="VMSystem"/>
 		</enum>
 
 		<struct name="stateEnterTimesItem">

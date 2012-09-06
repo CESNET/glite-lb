@@ -561,16 +561,8 @@
 	string image		machine image
 
 @type VMRunning			VM is running
-	int 	vm_source
-	_code_  CM		cloud manager
-	_code_	VMM		VM manager
-	_code_	MACHINE		system
 
 @type VMShutdown
-	int vm_source
-	_code_  CM              cloud manager
-        _code_  VMM             VM manager
-        _code_  MACHINE         system
 	string  usage
         _optional_
 

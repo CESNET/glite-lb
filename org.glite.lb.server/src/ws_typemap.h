@@ -93,6 +93,9 @@ limitations under the License.
 #define PBSsMom		lbt__eventSource__PBSsMom
 #define PBSMom		lbt__eventSource__PBSMom
 #define PBSScheduler	lbt__eventSource__PBSScheduler
+#define CloudManager	lbt__eventSource__CloudManager
+#define VMManager	lbt__eventSource__VMManager
+#define VMSystem	lbt__eventSource__VMSystem
 
 #endif
 

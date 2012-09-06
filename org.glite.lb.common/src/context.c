@@ -360,7 +360,10 @@ static const char* const srcNames[] = {
 	"PBSServer",
 	"PBSMomSuperior",
 	"PBSMom",
-	"PBSScheduler"
+	"PBSScheduler",
+	"CloudManager",
+	"VMManager",
+	"VMSystem"
 };
 
 edg_wll_Source edg_wll_StringToSource(const char *name)
