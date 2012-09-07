@@ -852,7 +852,7 @@ int edg_wll_UserJobsResToSoap(
 
 static void edg_wll_SoapToSource(enum lbt__eventSource in, edg_wll_Source *out)
 {
-	assert(EDG_WLL_SOURCE_PBS_SCHEDULER + 1 == EDG_WLL_SOURCE__LAST);
+	assert(EDG_WLL_SOURCE_VM_SYSTEM + 1 == EDG_WLL_SOURCE__LAST);
 
 	switch ( in ) {
         case UserInterface: *out = EDG_WLL_SOURCE_USER_INTERFACE; break;
@@ -986,7 +986,7 @@ foreach ('_common_', sort { $event->{order}->{$a} <=> $event->{order}->{$b} } ge
 
 static void edg_wll_SourceToSoap(edg_wll_Source in, enum lbt__eventSource *out)
 {
-	assert(EDG_WLL_SOURCE_PBS_SCHEDULER + 1 == EDG_WLL_SOURCE__LAST);
+	assert(EDG_WLL_SOURCE_VM_SYSTEM + 1 == EDG_WLL_SOURCE__LAST);
 
 	switch ( in ) {
 	        case EDG_WLL_SOURCE_USER_INTERFACE: *out = UserInterface; break;
