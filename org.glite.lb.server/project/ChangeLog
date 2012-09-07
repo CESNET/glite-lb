@@ -500,3 +500,10 @@
 - Even partial results returned for job queries
   - Avoid confusion by failure on last job
 
+2.4.10-1
+- VM registrations included in statistics (backward compatible)
+- Fix to SB #96702 ported to HEAD (L&B 3.3, 4.0)
+  - Conditioned job queries never return EPERM
+- New sources added: CloudManager, VMManager, VMSystem
+- Sources removed from VMRunning and VMShutdown events
+
