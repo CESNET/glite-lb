@@ -148,3 +148,7 @@
 1.4.4-1
 - Extra VMCreate event added
 
+1.4.5-1
+- New sources added: CloudManager, VMManager, VMSystem
+- Sources removed from VMRunning and VMShutdown events
+
