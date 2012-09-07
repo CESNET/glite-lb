@@ -278,9 +278,16 @@ if [ "$timeleft" = "" ]; then
 	exit 3
 else
         if [ "$timeleft" = "0:00:00" ]; then
-                vprintf 1 "\n[LB Probe] Test failed -- Credentials expired\n\n"
-		vprintf 0 "UNKNOWN: Credentials Expired\n"
-		exit 3
+		vprintf 1 "\n[LB Probe] Proxy expired, trying to regenerate from host creds"
+		grid-proxy-init -cert $GLITE_HOST_CERT -key $GLITE_HOST_KEY 2>&1 > /dev/null
+		timeleft=`grid-proxy-info | grep -E "^timeleft" | sed "s/timeleft\s*:\s//"`
+	        if [ "$timeleft" = "0:00:00" ]; then
+			vprintf 1 "\n[LB Probe] Test failed -- Credentials expired\n\n"
+			vprintf 0 "UNKNOWN: Credentials Expired\n"
+			exit 3
+		else
+			HOSTCREDS=1
+		fi
         else
 		
 		vprintf 1 "\n[LB Probe] Getting server version"
@@ -424,6 +431,7 @@ else
 		fi
 
 		if [ $HOSTCREDS -eq 1 ]; then
+			vprintf 1 "\n[LB Probe] Removing host creds-based proxy"
 			grid-proxy-destroy
 		fi
 	fi
