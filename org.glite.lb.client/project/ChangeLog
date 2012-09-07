@@ -266,3 +266,8 @@
 - Debugging output removed from glite-lb-notify
 - Missing header (possible cause of memory nahdling errors) added to producer code
 
+5.2.6-1
+- Job_reg example allows to explicitly set job's owner
+- New sources added: CloudManager, VMManager, VMSystem
+- Sources removed from VMRunning and VMShutdown events
+
