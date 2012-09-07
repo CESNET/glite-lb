@@ -113,3 +113,7 @@
 3.4.3-2
 - Module rebuilt
 
+3.4.4-1
+- New sources added: CloudManager, VMManager, VMSystem
+- Sources removed from VMRunning and VMShutdown events
+
