@@ -37,3 +37,6 @@
 - Test notification gets dropped even if delivery failed
 - Plugin performance data compatible with more widely spread plugins
 
+1.2.4-1
+- Probe now copes better with expired host creds-based proxies
+
