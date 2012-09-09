@@ -16,7 +16,10 @@
 # limitations under the License.
 #
 
-GLITE_LOCATION=${GLITE_LOCATION:-"/opt/glite"}
+GLITE_LOCATION=${GLITE_LOCATION:-"@glite_prefix@"}
+[ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
+[ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
+
 NOTIFY=${GLITE_LB_NOTIFY:-"$GLITE_LOCATION/bin/glite-lb-notify"}
 
 # This function reads the full list of notifications to maintain into an array

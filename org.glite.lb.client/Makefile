@@ -397,7 +397,6 @@ endif
 	done
 	${INSTALL} -m 644 ${top_srcdir}/examples/Makefile "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
 	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
-	${INSTALL} -m 755 ${top_srcdir}/src/export.sh "${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-export.sh"
 	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-notify.pl
 	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-sandbox_transfers.sh
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1

@@ -30,7 +30,7 @@ SOURCES=\
 	config/glite-lb* config/my.cnf config/*.conf config/startup config/setup \
 	doc/*.1 doc/*.8 \
 	interface/*.h \
-	src/*.c src/*.cpp src/*.h src/*.c.T src/*.l src/*.y src/*.sh src/ws_typemap.dat \
+	src/*.c src/*.cpp src/*.h src/*.c.T src/*.l src/*.y src/*.sh src/*.sh.in src/ws_typemap.dat \
 	project/.post* project/.pre* \
 	test/*.cpp test/*.cpp.T test/*.sh test/oneJob.qry test/*.c \
 	LICENSE Makefile
@@ -308,6 +308,7 @@ EXAMPLES=
 TESTS=test_coverage test_xml test_query_events test_soap_conv test_query_parse
 
 SCRIPTS=startup setup glite-lb-server-purge.cron glite-lb-proxy-purge.cron glite-lb-notif-keeper.cron glite-lb
+SCRIPTS2=export.sh notif-keeper.sh
 SCRIPTS_SRC=$(addprefix ${top_srcdir}/config/,${SCRIPTS})
 
 glite-lb-bkserverd: ${NSMAP} ${BKSERVER_OBJS}
@@ -319,7 +320,7 @@ glite-lb-bkindex: ${INDEX_OBJS}
 glite-lb-mon-db: ${MONDB_OBJS}
 	${LINKXX} -o $@ ${MONDB_OBJS} ${MONDB_LIBS}
 
-compile: generate ${SCRIPTS} glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${MAN_GZ}
+compile: generate ${SCRIPTS} ${SCRIPTS2} glite-lb-bkserverd glite-lb-bkindex glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${MAN_GZ}
 
 generate: store.c index.c 
 
@@ -329,6 +330,13 @@ ${SCRIPTS}: ${SCRIPTS_SRC}
 		glite_var="${localstatedir}"; \
 	fi; \
 	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' ${top_srcdir}/config/$@ > $@
+
+%.sh: %.sh.in
+	glite_var="${localstatedir}/glite"; \
+	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
+		glite_var="${localstatedir}"; \
+	fi; \
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' $< > $@
 
 check: compile test.xml test.query test.query_parse
 	-echo check.query not complete yet
@@ -431,7 +439,8 @@ install:
 		${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules; \
 		ln -sf liblcas_lb.so ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules/lcas_lb.mod; \
 	fi
-	${INSTALL} -m 755 ${top_srcdir}/src/notif-keeper.sh ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-notif-keeper
+	${INSTALL} -m 755 export.sh ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-export
+	${INSTALL} -m 755 notif-keeper.sh ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-notif-keeper
 
 	for f in dbsetup.sql index.conf.template; do \
 		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb; \
@@ -458,7 +467,7 @@ ifdef LB_PERF
 endif
 
 clean:
-	rm -rvf *.c *.cpp *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-bkindex glite-lb-bkserverd glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} ${SCRIPTS} ${MAN_GZ}
+	rm -rvf *.c *.cpp *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-bkindex glite-lb-bkserverd glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} ${SCRIPTS} ${SCRIPTS2} ${MAN_GZ}
 	rm -rvf test_xml.cpp
 	rm -rvf dist ${package}-*.tar.gz
 

@@ -123,7 +123,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/glite-lb-notify
 /usr/bin/glite-lb-register_sandbox
 /usr/%{_lib}/glite-lb/examples/*
-/usr/sbin/glite-lb-export.sh
 
 
 %changelog

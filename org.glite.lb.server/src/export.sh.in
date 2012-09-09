@@ -17,11 +17,18 @@
 #
 
 #
-# script for exporing jobs from bkserver which should be periodically run
-# together with running jp-importer
+# script for purging jobs from bkserver which should be run periodically
+# jobs export and import into Job Provenance may be optionally enabled
 #
-# it uses configuration from enviroment ==> may require a configuration wrapper
-#
+
+GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
+GLITE_USER=${GLITE_USER:-'glite'}
+GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}
+GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
+
+[ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
+[ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
 
 #autodetect the prefix
 PREFIX=${GLITE_LOCATION:-`dirname $0`/..}

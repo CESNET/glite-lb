@@ -371,6 +371,7 @@ fi
 
 if test "$setup_bdii" = "1"; then
 	export INFO_SERVICE_CONFIG='/etc/glite/info/service'
+	bdii=0
 	if test -x /etc/init.d/bdii; then
 		if test -f  ${INFO_SERVICE_CONFIG}/glite-info-service-lbserver.conf.template -a -f  ${INFO_SERVICE_CONFIG}/glite-info-glue2-lbserver.conf.template; then
 			bdii=1
@@ -398,6 +399,7 @@ EOF
 		sed -i  "s#.*rootpw.*#rootpw	${BDII_PASSWD}#" /etc/bdii/bdii-slapd.conf
 
 		if test -x /sbin/service; then
+			/sbin/chkconfig bdii on
 			out="`/sbin/service bdii restart 2>&1`"
 		else
 			out="`/etc/init.d/bdii restart 2>&1`"
@@ -518,7 +520,6 @@ if test "$setup_startup" = "1" -a "$startup_error" != "1"; then
 		fi
 	else
 		/sbin/chkconfig mysqld on
-		test -z "$bdii" && /sbin/chkconfig bdii on
 		/sbin/chkconfig glite-lb-bkserverd on
 		/sbin/chkconfig glite-lb-locallogger on
 		if test x"$GLITE_LB_HARVETER_ENABLED" = x"true"; then
@@ -532,7 +533,9 @@ if test "$setup_startup" = "1" -a "$startup_error" != "1"; then
 	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
 		$GLITE_LOCATION_ETC/init.d/glite-lb-harvester restart || startup_error=1
 	else
-		$GLITE_LOCATION_ETC/init.d/glite-lb-harvester stop >/dev/null
+		if test -x $GLITE_LOCATION/bin/glite-lb-harvester; then
+			$GLITE_LOCATION_ETC/init.d/glite-lb-harvester stop >/dev/null
+		fi
 	fi
 
 	if test "$startup_error" = "0"; then

@@ -28,6 +28,11 @@ GLITE_WMS_QUERY_TIMEOUT=300
 # purge timeouts
 GLITE_LB_EXPORT_PURGE_ARGS='--cleared 2d --aborted 15d --cancelled 15d --other 60d'
 
+# glite-info
+
+#SITE_NAME=
+#SITE_EMAIL=
+
 #
 # L&B configuration
 #
