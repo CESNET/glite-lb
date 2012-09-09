@@ -299,18 +299,22 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 	for (i = 0; i < total; i++) {
 		if (text) linlen = asprintf(&pomA,"%s%s", order[i].id_unparsed, i + 1 == total ? "\n" : ",");
 		else {
-			jt = statsOut[order[i].order].jobtype;
-			switch (jt) {
-				case EDG_WLL_STAT_CREAM:
-					st = edg_wll_CreamStatToString(statsOut[order[i].order].cream_state);
-				case EDG_WLL_STAT_VIRTUAL_MACHINE:
-					st = edg_wll_VMStatToString(statsOut[order[i].order].vm_state);
-				case EDG_WLL_STAT_PBS:
-					st = statsOut[order[i].order].pbs_state ?
-						strdup(statsOut[order[i].order].pbs_state) :
-						 edg_wll_StatToString(statsOut[order[i].order].state);
-				default:
-					st = edg_wll_StatToString(statsOut[order[i].order].state);
+			st = NULL;
+			jt = EDG_WLL_NUMBER_OF_JOBTYPES;
+			if (statsOut) {
+				jt = statsOut[order[i].order].jobtype;
+				switch (jt) {
+					case EDG_WLL_STAT_CREAM:
+						st = edg_wll_CreamStatToString(statsOut[order[i].order].cream_state);
+					case EDG_WLL_STAT_VIRTUAL_MACHINE:
+						st = edg_wll_VMStatToString(statsOut[order[i].order].vm_state);
+					case EDG_WLL_STAT_PBS:
+						st = statsOut[order[i].order].pbs_state ?
+							strdup(statsOut[order[i].order].pbs_state) :
+							edg_wll_StatToString(statsOut[order[i].order].state);
+					default:
+						st = edg_wll_StatToString(statsOut[order[i].order].state);
+				}
 			}
 			issub = order[i].parent_unparsed && recent_parent && !strcmp(recent_parent, order[i].parent_unparsed) ? 1 : 0;
 			linlen = asprintf(&pomA, "%s<li><a href=\"%s\">%s</a> <span class=\"jobtype\">&mdash; %s</span> <span class=\"jobstate\">%s</span></li>\n",
@@ -318,7 +322,7 @@ int edg_wll_UserInfoToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wlc_JobId *jobsOu
 				order[i].id_unparsed,
 				order[i].id_unparsed,
 				jt >= 0 && jt < EDG_WLL_NUMBER_OF_JOBTYPES ? edg_wll_StatusJobtypeNames[jt] : "Unknown!",
-				st);
+				st ? : "(no details)");
 			free(st);
 			if (!issub || !order[i].parent_unparsed) { wassub = 0; recent_parent = order[i].id_unparsed; }
 		}
