@@ -43,6 +43,8 @@ Requires: mysql-server
 # for upgrade from EMI-1:
 # new function glite_srvbones_daemon_listen() in 2.2.0
 Requires: glite-lbjp-common-server-bones%{?_isa} >= 2.2.0
+Requires: glite-lb-client-progs
+Requires: glite-lb-utils
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts

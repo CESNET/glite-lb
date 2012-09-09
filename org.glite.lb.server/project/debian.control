@@ -18,7 +18,7 @@ DM-Upload-Allowed: yes
 Package: glite-lb-server
 Section: misc
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, mysql-server
+Depends: ${shlibs:Depends}, ${misc:Depends}, mysql-server, glite-lb-client-progs, glite-lb-utils
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
 
