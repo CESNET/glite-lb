@@ -208,3 +208,6 @@
 - Fix for notification interlogger failures (bug #95013)
 - Explicit pkg-config dependency
 
+2.3.6-1
+- Fixed getting status of interlogd
+
