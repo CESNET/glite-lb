@@ -135,3 +135,6 @@
 3.1.4-2
 - Module rebuilt
 
+3.1.5-1
+- Add a return code from newer c-ares (fixes DNS resolution on Fedora 17 with c-ares 1.7.5)
+
