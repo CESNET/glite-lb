@@ -405,3 +405,8 @@
 - Fixed the <> relationship evaluation for JDL attribute queries
 - CREAM jobs also turned to zombies on purge
 
+2.3.7-1
+- Returning also incomplete results for job queries (permissions were missing for some jobs only)
+- Do not return EPERM on queries with multiple potential results (Fix fo SB #96702)
+- Properly handle ARES_ENODATA return value by c-ares
+
