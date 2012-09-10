@@ -40,7 +40,7 @@ int edg_wll_UserJobsServer(
 	edg_wll_JobStat	**states
 )
 {
-	char	*userid, *stmt = NULL,
+	char	*userid, *stmt = NULL, *opt_userid,
 		*res = NULL;
 	char	*can_peername;
 	char	*srv_name = NULL;
@@ -77,7 +77,29 @@ int edg_wll_UserJobsServer(
 	free(stmt); stmt = NULL;
 	free(res); res = NULL;
 
-	trio_asprintf(&stmt,"select dg_jobid from jobs where userid = '%|Ss' and grey='0'",userid);
+	trio_asprintf (&opt_userid,"userid = '%|Ss'", userid);
+
+	//Alternative identities
+	if(ctx->id_mapping.num) {
+		int i;
+		char *alter, *opt_tmp;
+
+		for (i = 0; i< ctx->id_mapping.num; i++) {
+			alter = NULL;
+			if (edg_wll_gss_equal_subj(ctx->peerName, ctx->id_mapping.rules[i].a))
+				alter = strmd5(ctx->id_mapping.rules[i].b, NULL);
+			else if (edg_wll_gss_equal_subj(ctx->peerName, ctx->id_mapping.rules[i].b))
+				alter = strmd5(ctx->id_mapping.rules[i].a, NULL);
+			if (alter) {
+				trio_asprintf(&opt_tmp, "%s OR userid = '%|Ss'", opt_userid, alter);
+				free(opt_userid);
+				opt_userid = opt_tmp;
+			}
+		}
+	}
+
+	trio_asprintf(&stmt,"select dg_jobid from jobs where (%s) and grey='0'",opt_userid);
+	free(opt_userid);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 	switch (njobs = edg_wll_ExecSQL(ctx,stmt,&sth)) {
 		case 0: edg_wll_SetError(ctx,ENOENT,ctx->peerName);

@@ -1344,6 +1344,7 @@ parse_gridmap(edg_wll_Context ctx,
 		}
 
 		strncpy(a, line + index, len); // Copy token contents and assign
+		edg_wll_gss_normalize_subj(a, 1);
 		if (!i) mapping->rules[mapping->num].a = a;
 		else mapping->rules[mapping->num].b = a;
 
