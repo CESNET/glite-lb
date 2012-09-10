@@ -193,7 +193,7 @@ status()
 	retval=0
 
 	status_daemon "glite-lb-logd" "$LL_PIDFILE" || retval=1
-	status_daemon "glite-lb-interlogd" "$LL_PIDFILE" || retval=1
+	status_daemon "glite-lb-interlogd" "$IL_PIDFILE" || retval=1
 
 	return $retval
 }
