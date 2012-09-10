@@ -1,1 +1,0 @@
-./stage/bin/glite-lb-proxy -d --silent -p /tmp/proxy_michal.perf --proxy-il-sock /tmp/perftest_michal.sock --proxy-il-fprefix /tmp/perftest_michal.log
