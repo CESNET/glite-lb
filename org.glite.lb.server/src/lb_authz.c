@@ -1298,8 +1298,8 @@ parse_gridmap(edg_wll_Context ctx,
 {
     FILE *fd = NULL;
     char line[4096];
-    char *p, *a, *b;
-    int ret;
+    char *p, *a;
+    int ret, index = 0, len, i, lineno = 0;
 
     fd = fopen(file, "r");
     if (fd == NULL)
@@ -1307,42 +1307,58 @@ parse_gridmap(edg_wll_Context ctx,
 
     /* XXX -1 */
     while (fgets(line, sizeof(line), fd) != NULL) {
-	p = strchr(line, '\n');
-	if (p)
+	lineno++;
+	if ((p = strchr(line, '\n')))	// Removes trailing \n
 	    *p = '\0';
 
-	if(strlen(line) == strspn(line, " \t")) continue;
+	index = strspn(line, " \t");
 
-	p = line;
-	while(p && *p == ' ')
-	    p++;
-	a = p;
-
-	p = strchr(line, ' ');
-	if (!p) {
-	    ret = edg_wll_SetError(ctx, EINVAL, "Wrong format of mapping file");
-	    goto end;
-	}
-	*p++ = '\0';
-	
-	while(p && *p == ' ')
-	    p++;
-	b = p;
-
+	if(strlen(line) == index) continue; // Skips empty lines
+	if(line[index]=='#') continue; // Skips commented-out lines
 
 	mapping->rules = realloc(mapping->rules, (mapping->num+1) * sizeof(_edg_wll_mapping_rule));
 	if (mapping->rules == NULL) {
 	    ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
 	    goto end;
 	}
-	if (!(mapping->rules[mapping->num].a = strdup(a)) ||
-	    !(mapping->rules[mapping->num].b = strdup(b))) {
-	    ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
-	    goto end;
+
+	for (i = 0; i < 2; i++) {
+
+		if (i) {
+			if((index + len) < strlen(line)) index = index + len + strspn(line + index + len, " \t"); // Move index to next
+			else {
+				char *errdesc;
+				asprintf(&errdesc, "Wrong format of mapping file, line %d", lineno);
+				ret = edg_wll_SetError(ctx, EINVAL, errdesc);
+				goto end;
+			}
+		}
+
+		len = (line[index] == '"' || line[index] == '\'') ?	// Get token length
+			strcspn(line + (++index), "\"'") :
+			strcspn(line + index, " ");
+
+		if(!(a = calloc(sizeof(char*), len + 1))) { // Allocate and check
+			ret = edg_wll_SetError(ctx, ENOMEM, "Not enough memory");
+			goto end;
+		}
+
+		strncpy(a, line + index, len); // Copy token contents and assign
+		if (!i) mapping->rules[mapping->num].a = a;
+		else mapping->rules[mapping->num].b = a;
+
+		if(!strlen(a)) {
+			char *errdesc;
+			asprintf(&errdesc, "Orphaned ID in mapping file, line %d", lineno);
+			ret = edg_wll_SetError(ctx, EINVAL, errdesc);
+			goto end;
+		}
+
+		if(line[index+len] == '"' || line[index+len] == '\'') len++;
 	}
+
 	mapping->num++;
     }
-
     ret = 0;
 
 end:

@@ -221,13 +221,13 @@ int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, 
 
 		a = NULL;
 		for (i = 0; i < ctx->id_mapping.num; i++ ) {
-			asprintf(&out_tmp, "%s%s%s%s%s%s%s",
+			asprintf(&out_tmp, "%s%s\"%s\"%s\"%s\"%s%s",
 				a ? a : "",
-				text ? "\"" : "<code>",
+				text ? "" : "<code>",
 				ctx->id_mapping.rules[i].a,
-				text ? "\"=\"" : " ",
+				text ? "=" : " ",
 				ctx->id_mapping.rules[i].b,
-				text ? "\"" : "<code>",
+				text ? "" : "<code>",
 				i == ctx->id_mapping.num - 1 ? "" : (text ? "," : "<BR>"));
 			free(a);
 			a=out_tmp;
