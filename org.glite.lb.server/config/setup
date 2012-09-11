@@ -41,6 +41,13 @@ check_mysql_connection() {
 }
 
 
+check_mysql_table() {
+	local db=$1
+	local table=$2
+	mysqlshow $MYSQL_ARGS $db 2>/dev/null | tail -n +5 | grep "\<$table\>" > /dev/null 2>&1
+}
+
+
 config_glite_lb_authz() {
 	superusers="$1"
 	rtm="$2"
@@ -105,6 +112,7 @@ setup_all() {
 	setup_authz=1
 	setup_harvester=1
 	setup_bdii=1
+	setup_emir=1
 	setup_upgrade=1
 	setup_startup=1
 }
@@ -122,7 +130,7 @@ OPTIONS are:
 	-h,--help .... usage
 
 ACTIONS are:
-	db certs msg authz harvester bdii upgrade startup
+	db certs msg authz harvester bdii emir upgrade startup
 	krb    .... setup Kerberos
 	krbgsi .... setup Kerberos and enable GSI autentization
 	all ....... all actions (default)
@@ -158,6 +166,7 @@ EOF
 	authz)	setup_authz=1 ;;
 	harvester) setup_harvester=1 ;;
 	bdii)	setup_bdii=1 ;;
+	emir)   setup_emir=1 ;;
 	upgrade) setup_upgrade=1 ;;
 	startup) setup_startup=1 ;;
 	krb)	setup_kerberos=1 ;;
@@ -168,7 +177,7 @@ EOF
 	esac
 	shift
 done
-for action in db certs msg authz harvester bdii upgrade startup kerberos kerberos_gsi all none yaim logger; do
+for action in db certs msg authz harvester bdii emir upgrade startup kerberos kerberos_gsi all none yaim logger; do
 	eval value=\"$`echo setup_$action`\"
 	if test "$value" = "1"; then
 		setup=1;
@@ -179,8 +188,10 @@ if test "$setup" != "1" -a "$setup_check" != "1"; then
 fi
 
 if test "$setup_check" = "1"; then
-	if check_mysql_connection && mysqlshow $MYSQL_ARGS | grep "\<lbserver20\>" > /dev/null 2>&1; then
-		qecho "Database lbserver20 already exists."
+	if check_mysql_connection && \
+	   mysqlshow $MYSQL_ARGS 2>/dev/null | grep "\<lbserver20\>" > /dev/null 2>&1 && \
+	   check_mysql_table lbserver20 job_connections; then
+		qecho "database lbserver20 already exists."
 		exit 0
 	fi
 	rm -f /tmp/glite-setup.$$
@@ -243,8 +254,8 @@ if test "$setup_db" = 1; then
 	fi
 
 	# check if database exist and setup if necessary
-	if ! mysqlshow $MYSQL_ARGS | grep "\<lbserver20\>" > /dev/null 2>&1 || \
-	   ! mysqlshow $MYSQL_ARGS lbserver20 jobs | grep 'Table: jobs\>' > /dev/null 2>&1; then
+	if ! mysqlshow $MYSQL_ARGS 2>/dev/null | grep "\<lbserver20\>" > /dev/null 2>&1 || \
+	   ! check_mysql_table lbserver20 jobs; then
 		mysql $MYSQL_ARGS -e "CREATE DATABASE lbserver20"
 		mysql $MYSQL_ARGS -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver IDENTIFIED BY '' WITH GRANT OPTION;"
 		mysql $MYSQL_ARGS -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@'$HOSTNAME' IDENTIFIED BY '' WITH GRANT OPTION;"
@@ -291,7 +302,7 @@ EOF
 
 	# migrate L&B 3.x to L&B 4.0
 	if test -f $GLITE_LOCATION_ETC/glite-lb/glite-lb-migrate_db2version40; then
-		if ! mysqlshow $MYSQL_ARGS lbserver20 job_connections | grep 'Table: job_connection\>' > /dev/null 2>&1; then
+		if ! check_mysql_table lbserver20 job_connections; then
 			sh $GLITE_LOCATION_ETC/glite-lb/glite-lb-migrate_db2version40 -s
 			if test $? -eq 0; then
 				qecho "Database migrated to L&B 4.x"
@@ -371,10 +382,13 @@ fi
 
 if test "$setup_bdii" = "1"; then
 	export INFO_SERVICE_CONFIG='/etc/glite/info/service'
-	bdii=0
 	if test -x /etc/init.d/bdii; then
 		if test -f  ${INFO_SERVICE_CONFIG}/glite-info-service-lbserver.conf.template -a -f  ${INFO_SERVICE_CONFIG}/glite-info-glue2-lbserver.conf.template; then
-			bdii=1
+			if test -n "`which sudo 2>/dev/null`"; then
+				bdii=1
+			else
+				echo "glite-lb-setup: WARNING: sudo not found, BDII won't be configured"
+			fi
 		else
 			echo "glite-lb-setup: WARNING: glite-info-provider-service not installed, BDII won't be configured"
 		fi
@@ -413,6 +427,119 @@ EOF
 	fi
 fi
 
+# ==== emir ====
+
+if test "$setup_emir" = "1"; then
+	if test -z "$EMIR_URL"; then
+		echo "glite-lb-setup: WARNING: EMIR_URL not set, EMIR won't be configured"
+		emir=0
+	fi
+	if test -n "`which emir-serp 2>/dev/null`"; then
+		emir_daemon=emir-serp
+		emir_conf=emir-serp
+		emir_mult=1
+	fi
+	if test -n "`which emird 2>/dev/null`"; then
+		emir_daemon=emird
+		emir_conf=emir
+		emir_mult=60
+	fi
+	if test "$emir" != "0" -a -z "$emir_daemon"; then
+		echo "glite-lb-setup: WARNING: emir-serp (emird) not installed, EMIR won't be configured"
+		emir=0
+	fi
+fi
+if test "$setup_emir" = "1" -a "$emir" != "0"; then
+	# interface version
+	if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
+		out=`dpkg-query -W glite-lb-ws-interface 2>/dev/null | cut -f2 | cut -d- -f1`
+	else
+		out=`rpm -q glite-lb-ws-interface 2>/dev/null | cut -d- -f5`
+	fi
+	if test -z  "$out"; then
+		out=`cat $GLITE_LOCATION/include/glite/lb/ws_interface_version.h 2>/dev/null | sed 's/.*"\(.*\)"/\1/'`
+	fi
+	GLITE_LB_INTERFACE_VERSION=${out:-'?.?.?'}
+
+	# some GLUE2 Service Location parameters
+	SITE_LONGITUDE=${SITE_LONGITUDE:-$SITE_LONG}
+	SITE_LATITUDE=${SITE_LATITUDE:-$SITE_LAT}
+	for i in Longitude Latitude Address Place Country PostCode; do
+		key=SITE_`echo $i | tr '[:lower:]' '[:upper:]'`
+		eval value="\$$key"
+		if test -n "$value"; then
+			if ! echo $i | grep ^L >/dev/null 2>&1; then value="\"$value\""; fi
+			json="$json	\"Service_Location_$i\": $value,
+"
+		fi
+	done
+
+	# L&B service info
+	mkdir -p /var/cache/$emir_daemon 2>/dev/null
+	cat > /var/cache/$emir_daemon/glite-lb-bkserver.json <<EOF
+{
+$json	"Service_ID": "`hostname -f`_lbserver",
+	"Service_Name": "${SITE_NAME:-site}-Server",
+	"Service_Type": "org.glite.lb.Server",
+	"Service_QualityLevel": "production",
+	"Service_CreationTime": { "\$date": "`TZ=C date +%FT%TZ`" },
+	"Service_Endpoint_ID": "`hostname -f`_lbserver_org.glite.lb.Server",
+	"Service_Endpoint_URL": "https://`hostname -f`:9003",
+	"Service_Endpoint_Capability": "information.logging",
+	"Service_Endpoint_Technology": "webservice",
+	"Service_Endpoint_InterfaceName": "org.glite.lb.Server",
+	"Service_Endpoint_InterfaceVersion": "$GLITE_LB_INTERFACE_VERSION",
+	"Service_Endpoint_ServingState": "production",
+	"Service_Endpoint_QualityLevel": "production",
+	"Service_Endpoint_WSDL": "http://egee.cesnet.cz/cms/export/sites/egee/en/WSDL/3.1/LB.wsdl"
+}
+EOF
+
+	period=$((4*$emir_mult))
+	validity=$((24*$emir_mult))
+	cat > /etc/emi/$emir_daemon/$emir_daemon.ini << EOF
+[$emir_conf]
+url = $EMIR_URL
+period = $period
+validity = $validity
+
+#cert = /etc/grid-security/emi/hostcert.pem
+#key = /etc/grid-security/emi/hostkey.pem
+#cadir = /etc/grid-security/certificates
+
+verbosity = debug
+
+[advancedService]
+json_file_location = /var/cache/$emir_daemon/glite-lb-bkserver.json
+EOF
+
+	# enable (for Debain) after configuring
+	if test -d /etc/default -a -f /etc/default/$emir_daemon; then
+		sed -i 's/.*ENABLED.*=.*/ENABLED=yes/' /etc/default/$emir_daemon
+	fi
+
+	# start the beast
+	if test -x /sbin/service; then
+		/sbin/chkconfig $emir_daemon on 2>/dev/null
+		# emird doesn't support chkconfig
+		if test $? -ne 0 && ! grep "$emir_daemon start" /etc/rc.local >/dev/null 2>&1; then
+			echo "/etc/init.d/$emir_daemon start" >> /etc/rc.local
+			chmod +x /etc/rc.local
+			qecho "$emir_daemon added to /etc/rc.local"
+		fi
+		out="`/sbin/service $emir_daemon restart 2>&1`"
+	else
+		out="`/etc/init.d/$emir_daemon restart 2>&1`"
+	fi
+	if test $? -eq 0; then
+		qecho "EMIR configured"
+	else
+		echo "$out"
+		error="$error emir"
+	fi
+fi
+
+
 # ==== upgrade ====
 
 if test "$setup_upgrade" = "1"; then
@@ -436,7 +563,7 @@ if test "$setup_kerberos" = "1"; then
 		kerberos=0
 	fi
 
-	if ! test -x `which klist`; then
+	if ! test -n "`which klist 2>/dev/null`"; then
 		echo "glite-lb-setup: ERROR: kerberos clients not found"
 		kerberos=0
 	fi
@@ -475,14 +602,22 @@ EOF
 fi
 
 if test "$setup_kerberos_gsi" = "1"; then
-	if ! ldd $GLITE_LOCATION/bin/glite-lb-bkserver | grep libheim >/dev/null 2>&1; then
+	if ! ldd $GLITE_LOCATION/bin/glite-lb-bkserverd | grep libheim >/dev/null 2>&1; then
 		echo "glite-lb-setup: ERROR: GSI mode with kerberos requires L&B built in Heimdal Kerberos implementation"
 		error="$error krbgsi"
 		kerberos=0
 	fi
 	if test "$kerberos" != "0"; then
+		libfile=`ldconfig -p | grep libglobus_gssapi_gsi.so | sed 's/.*=>\s*//'`
+		if test -z "$libfile"; then
+			echo "glite-lb-setup: ERROR: libglobus_gssapi_gsi.so not found, GSI mode not configured"
+			error="$error krbgsi"
+			kerberos=0
+		fi
+	fi
+	if test "$kerberos" != "0"; then
 		mkdir /etc/gss >/dev/null 2>&1
-		echo "gsi	1.3.6.1.4.1.3536.1.1	/usr/lib/libglobus_gssapi_gsi.so.4" > /etc/gss/mech
+		echo "gsi	1.3.6.1.4.1.3536.1.1	$libfile" > /etc/gss/mech
 
 		qecho "GSI mode with Kerberos configured"
 		echo "glite-lb-setup: NOTE: tuned Globus and Heimdal Kerberos libraries required for support GSI with Kerberos"

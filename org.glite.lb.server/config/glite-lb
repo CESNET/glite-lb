@@ -30,8 +30,18 @@ GLITE_LB_EXPORT_PURGE_ARGS='--cleared 2d --aborted 15d --cancelled 15d --other 6
 
 # glite-info
 
+# testbed: http://zam052v04.zam.kfa-juelich.de:54321
+# official example: http://emiregistry2.grid.niif.hu:54321
+#EMIR_URL=
+
 #SITE_NAME=
 #SITE_EMAIL=
+#SITE_LONG=
+#SITE_LAT=
+#SITE_ADDRESS=
+#SITE_PLACE=
+#SITE_COUNTRY=
+#SITE_POSTCODE=
 
 #
 # L&B configuration
@@ -73,7 +83,7 @@ GLITE_LB_RTM_DN='/C=UK/O=eScience/OU=Imperial/L=Physics/CN=heppc24.hep.ph.ic.ac.
 #
 
 # bkserver additional options
-#GLITE_LB_SERVER_OTHER_OPTIONS=--greyjobs --html-header @glite_etc@/glite-lb/html-header.html --gridmap-file @glite_etc@/glite-lb/gridmap
+#GLITE_LB_SERVER_OTHER_OPTIONS='--greyjobs --html-header @glite_etc@/glite-lb/html-header.html --gridmap-file @glite_etc@/glite-lb/gridmap'
 # notification interlogger additional options
 #GLITE_LB_NOTIF_IL_OTHER_OPTIONS=
 # proxy interlogger additional options

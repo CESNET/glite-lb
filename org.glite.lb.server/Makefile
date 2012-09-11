@@ -34,7 +34,7 @@ SOURCES=\
 	project/.post* project/.pre* \
 	test/*.cpp test/*.cpp.T test/*.sh test/oneJob.qry test/*.c \
 	LICENSE Makefile
-SOURCES_EXEC=config/startup config/setup src/*.sh test/*.sh
+SOURCES_EXEC=config/glite-lb-migrate* config/startup config/setup src/*.sh test/*.sh
 
 all: compile
 
@@ -447,6 +447,7 @@ install:
 		ln -sf "glite-lb/glite-lb-$$f" "${DESTDIR}${PREFIX}${sysconfdir}/glite-lb-$$f"; \
 	done
 	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
+	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version40 ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	${INSTALL} -m 644 ${top_srcdir}/config/site-notif.conf ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
