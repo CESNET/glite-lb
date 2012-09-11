@@ -63,6 +63,7 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 	edg_wll_initConnNotif(out->connNotif);
 	out->connProxy->conn.sock = -1;
 //	out->connToUse = -1;
+	out->id_mapping.num = 0;
 
 	memset(&null, 0, sizeof null);
 	for (i=0; i<EDG_WLL_PARAM__LAST; i++) {
