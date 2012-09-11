@@ -59,7 +59,7 @@ int edg_wll_TagListParse(const char *src, edg_wll_TagValue **list) {
 	if(NULL == *list) 
 		return -1;
 
-	for(p = strtok(src, ","), tag = *list; p; p = strtok(NULL, ","), tag++) {
+	for(p = strtok(src, ","), tag = *list; p; p = strtok(NULL, ",")) {
 		char *s = strchr(p, '=');
 
 		if(NULL == s || '\0' == *(s+1)) 
@@ -69,6 +69,7 @@ int edg_wll_TagListParse(const char *src, edg_wll_TagValue **list) {
 		tag->tag = strdup(p);
 		*s = '=';
 		tag->value = strdup(s+1);
+		tag++;
 	}
 	tag->tag = NULL;
 	tag->value = NULL;
