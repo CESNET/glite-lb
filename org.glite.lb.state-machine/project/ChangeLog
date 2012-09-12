@@ -152,3 +152,6 @@
 - New sources added: CloudManager, VMManager, VMSystem
 - Sources removed from VMRunning and VMShutdown events
 
+1.4.6-1
+- Improved mapping of VM states to gLite states
+
