@@ -507,3 +507,25 @@
 - New sources added: CloudManager, VMManager, VMSystem
 - Sources removed from VMRunning and VMShutdown events
 
+2.4.11-1
+- EMIR support and more testing of setup script
+  - emir-serp or emird packages
+  - add to /etc/rc.local if necessary
+  - enable on Debian if necessary
+  - URL needs to be specified (commented out example)
+- Installing L&B 4.x database migration script
+- Setup script tuned
+- Fixed detection of MySQL tables with newer MySQL
+- Searching dynamically for proper libglobus_gssapi_gsi.so.* library to use for GSI mode with Heimdal Kerberos
+- Checking sudo in BDII section.
+- Updates and fixes due to setup script changes
+  - Avoid stopping harvester when not installed
+  - Fixed startup event with missing bdii package
+  - BDII startup setup moved to bdii section (everything BDII-related is now in bdii action)
+  - SITE* variables into into glite-lb configuration example
+  - Cron scripts and the purge and notif-keeper scripts updated
+  - Purger script moved from glite-lb-client-progs to glite-lb-server
+- edg_wll_UserJobsServer() now observes alternative identities if ID mappings exist
+- Grid map file loading algorithm updated to accept tokens in quotes and normalize contents
+- Details in HTML mode skipped to prevent crash when there is no owner index
+
