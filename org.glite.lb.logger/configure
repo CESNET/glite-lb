@@ -125,7 +125,8 @@ my %externs = (
 		pkg => 'voms-2.0'
 	},
 	gridsite => {
-		prefix => '/opt/glite'
+		prefix => '/opt/glite',
+		pkg => 'gridsite-openssl'
 	},
 	trustmanager => {
 		prefix => '/opt/glite'

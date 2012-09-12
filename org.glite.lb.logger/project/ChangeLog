@@ -244,3 +244,6 @@ gLite L&B setup script:
 - more strict check for L&B database, migration for L&B 4
 - update msg-config script
 
+2.4.7-1
+- Getting interlogd status fixed
+
