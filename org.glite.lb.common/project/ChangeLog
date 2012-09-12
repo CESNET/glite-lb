@@ -224,3 +224,6 @@
 - New sources added: CloudManager, VMManager, VMSystem
 - Sources removed from VMRunning and VMShutdown events
 
+8.2.7-1
+- Safe initiation of ID mapping in context.
+
