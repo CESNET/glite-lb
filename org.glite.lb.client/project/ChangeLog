@@ -271,3 +271,6 @@
 - New sources added: CloudManager, VMManager, VMSystem
 - Sources removed from VMRunning and VMShutdown events
 
+5.2.7-1
+- Updates and fixes due to setup script changes
+
