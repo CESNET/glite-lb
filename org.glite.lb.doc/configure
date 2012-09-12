@@ -33,6 +33,7 @@ my $root = $pwd.'/stage';
 my $sysroot = '';
 my $sysconfdir;
 my $localstatedir;
+my $os_type;
 my $staged;
 my $module;
 my $thrflavour = 'gcc64dbgpthr';
@@ -124,7 +125,8 @@ my %externs = (
 		pkg => 'voms-2.0'
 	},
 	gridsite => {
-		prefix => '/opt/glite'
+		prefix => '/opt/glite',
+		pkg => 'gridsite-openssl'
 	},
 	trustmanager => {
 		prefix => '/opt/glite'
@@ -234,6 +236,7 @@ my @opts = (
 	'sysroot:s' => \$sysroot,
 	'sysconfdir=s' => \$sysconfdir,
 	'localstatedir=s' => \$localstatedir,
+	'os-type=s' => \$os_type,
 	'lb-tag=s' => \$lb_tag,
 	'lbjp-common-tag=s' => \$lbjp_tag,
 	'jp-tag=s' => \$jp_tag,
@@ -266,6 +269,7 @@ if (not $sysconfdir) { $sysconfdir = $prefix eq '/usr' ? '/etc' : "$prefix/etc";
 if (not $localstatedir) { $localstatedir = $prefix eq '/usr' ? '/var' : "$prefix/var"; }
 $sysconfdir=~s/\/$//;
 $localstatedir=~s/\/$//;
+if (not $os_type) { $os_type = os_type(); }
 
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
 $externs{'mysql-devel'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-devel'}{prefix} eq '';
@@ -1353,6 +1357,7 @@ stagedir = $stagedir
 sysroot = $sysroot
 sysconfdir = $sysconfdir
 localstatedir = $localstatedir
+os_type = $os_type
 thrflavour = $thrflavour
 nothrflavour = $nothrflavour
 libdir = $libdir
@@ -2084,6 +2089,24 @@ sub reshuffle_platforms($$) {
 	}
 }
 
+sub os_type {
+	my $ver;
+
+	open FH, '<', '/etc/issue' or return "redhat";
+	$_=<FH>;
+	close FH;
+
+	if (/Debian|Ubuntu/i) { return "debian"; }
+	elsif (/Scientific|Redhat|Centos/i) { return "redhat"; }
+	elsif (/Fedora/i) {
+		$ver = `rpm -q --queryformat '%{version}' fedora-release 2>/dev/null`;
+		if ($ver and $ver >= 15) { return "fedora"; }
+		else { return "redhat"; }
+	} else {
+		return "redhat";
+	}
+}
+
 sub usage {
 	my @ext = keys %externs;
 	my @myjars = keys %jar;
@@ -2097,6 +2120,8 @@ General options (defaults in []):
   --root=DIR			installation root (custom relocation root -> sysroot) [./stage]
   --sysroot=DIR			system root (custom relocation root -> sysroot) []
   --sysconfdir=DIR              system configuration directory [PREFIX/etc]
+  --localstatedir=DIR           system local status directory [PREFIX/var]
+  --os-type=DIST                system type (debian/redhat/fedora)
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
   --thrflavour=flavour
   --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
