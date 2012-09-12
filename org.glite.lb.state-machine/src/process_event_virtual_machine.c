@@ -112,6 +112,7 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 				switch (e->any.source){
 				case EDG_WLL_SOURCE_CLOUD_MANAGER:
 					js->pub.vm_state = EDG_WLL_STAT_VM_SHUTDOWN;
+					js->pub.state = EDG_WLL_JOB_WAITING;
 					break;
 				case EDG_WLL_SOURCE_VM_MANAGER:
 					js->pub.vm_system_halting = 1;
@@ -130,6 +131,7 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
 		case EDG_WLL_EVENT_VMSTOP:
                         if (USABLE(res)) {
                                 js->pub.vm_state = EDG_WLL_STAT_VM_STOPPED;
+				js->pub.state = EDG_WLL_JOB_WAITING;
                         }
                         break;
 		case EDG_WLL_EVENT_VMRESUME:
