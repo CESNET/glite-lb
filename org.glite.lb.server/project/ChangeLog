@@ -529,3 +529,6 @@
 - Grid map file loading algorithm updated to accept tokens in quotes and normalize contents
 - Details in HTML mode skipped to prevent crash when there is no owner index
 
+2.4.12-1
+- RSS feed doneVM implemented
+
