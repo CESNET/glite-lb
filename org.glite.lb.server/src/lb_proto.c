@@ -349,27 +349,62 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
         //edg_wll_JobStat *statesOut;
         edg_wll_QueryRec **conds;
 	int i;
+	enum FEED_TYPE {
+		FINISHED,
+		RUNNING_VM,
+		DONE_VM,
+		RUNNING,
+		ABORTED,
+		UNKNOWN} feed;
 
 	char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 
-	if (strcmp(feedType, "finished") == 0){
+	if (strcmp(feedType, "finished") == 0) { feed = FINISHED; }
+	else if ((strcmp(feedType, "runningVM") == 0)) { feed = RUNNING_VM; }
+	else if ((strcmp(feedType, "doneVM") == 0)) { feed = DONE_VM; }
+	else if (strcmp(feedType, "running") == 0) { feed = RUNNING; }
+	else if (strcmp(feedType, "aborted") == 0) { feed = ABORTED; }
+	else { feed = UNKNOWN; }
+
+	switch (feed) {
+	   case FINISHED:
+	   case RUNNING:
+	   case ABORTED:
 		conds = malloc(4*sizeof(*conds));
 		conds[0] = malloc(2*sizeof(**conds));
 		conds[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
 		conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
 		conds[0][0].value.c = can_peername;
 		conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-		conds[1] = malloc(4*sizeof(**conds));
-		conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-		conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
-		conds[1][0].value.i = EDG_WLL_JOB_DONE;
-		conds[1][1].attr = EDG_WLL_QUERY_ATTR_STATUS;
-                conds[1][1].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[1][1].value.i = EDG_WLL_JOB_ABORTED;
-		conds[1][2].attr = EDG_WLL_QUERY_ATTR_STATUS;
-                conds[1][2].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[1][2].value.i = EDG_WLL_JOB_CANCELLED;
-		conds[1][3].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+		switch (feed) {
+	   	    case FINISHED:
+			conds[1] = malloc(4*sizeof(**conds));
+			conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+			conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
+			conds[1][0].value.i = EDG_WLL_JOB_DONE;
+			conds[1][1].attr = EDG_WLL_QUERY_ATTR_STATUS;
+        	        conds[1][1].op = EDG_WLL_QUERY_OP_EQUAL;
+	                conds[1][1].value.i = EDG_WLL_JOB_ABORTED;
+			conds[1][2].attr = EDG_WLL_QUERY_ATTR_STATUS;
+	                conds[1][2].op = EDG_WLL_QUERY_OP_EQUAL;
+	                conds[1][2].value.i = EDG_WLL_JOB_CANCELLED;
+			conds[1][3].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+			break;
+	   	    case RUNNING:
+			conds[1] = malloc(2*sizeof(**conds));
+			conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+			conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
+			conds[1][0].value.i = EDG_WLL_JOB_RUNNING;
+			conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+			break;
+	   	    case ABORTED:
+			conds[1] = malloc(2*sizeof(**conds));
+			conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+			conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
+			conds[1][0].value.i = EDG_WLL_JOB_ABORTED;
+			conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+			break;
+		}
 		conds[2] = malloc(2*sizeof(**conds));
 		conds[2][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
 		conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
@@ -377,77 +412,53 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 		conds[2][0].value.t.tv_usec = 0;
 		conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 		conds[3] = NULL;
-	}
-	else if (strcmp(feedType, "runningVM") == 0){
-                conds = malloc(5*sizeof(*conds));
-                conds[0] = malloc(2*sizeof(**conds));
-                conds[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
-                conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[0][0].value.c = can_peername;
-                conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+		break;
+	   case RUNNING_VM:
+	   case DONE_VM:
+		switch (feed) {
+	   	    case RUNNING_VM:
+                	conds = malloc(4*sizeof(*conds));
+			conds[0] = malloc(2*sizeof(**conds));
+			conds[0][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+			conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+			conds[0][0].value.i = EDG_WLL_JOB_RUNNING;
+			conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+                	conds[3] = NULL;
+			break;
+	   	    case DONE_VM:
+                	conds = malloc(5*sizeof(*conds));
+			conds[0] = malloc(2*sizeof(**conds));
+			conds[0][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
+			conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
+			conds[0][0].value.i = EDG_WLL_JOB_DONE;
+			conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+			conds[3] = malloc(2*sizeof(**conds));
+			conds[3][0].attr = EDG_WLL_QUERY_ATTR_DONECODE;
+			conds[3][0].op = EDG_WLL_QUERY_OP_EQUAL;
+			conds[3][0].value.i = EDG_WLL_STAT_OK;
+			conds[3][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+                	conds[4] = NULL;
+			break;
+		}
                 conds[1] = malloc(2*sizeof(**conds));
-                conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-                conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[1][0].value.i = EDG_WLL_JOB_RUNNING;
+                conds[1][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
+                conds[1][0].op = EDG_WLL_QUERY_OP_GREATER;
+                conds[1][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
+                conds[1][0].value.t.tv_usec = 0;
                 conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
                 conds[2] = malloc(2*sizeof(**conds));
-                conds[2][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
-                conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
-                conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
-                conds[2][0].value.t.tv_usec = 0;
+                conds[2][0].attr = EDG_WLL_QUERY_ATTR_JOB_TYPE;
+                conds[2][0].op = EDG_WLL_QUERY_OP_EQUAL;
+                conds[2][0].value.i = EDG_WLL_STAT_VIRTUAL_MACHINE;
                 conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[3] = malloc(2*sizeof(**conds));
-                conds[3][0].attr = EDG_WLL_QUERY_ATTR_JOB_TYPE;
-                conds[3][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[3][0].value.i = EDG_WLL_STAT_VIRTUAL_MACHINE;
-                conds[3][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[4] = NULL;
-        }
-	else if (strcmp(feedType, "running") == 0){
-                conds = malloc(4*sizeof(*conds));
-                conds[0] = malloc(2*sizeof(**conds));
-                conds[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
-                conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[0][0].value.c = can_peername;
-                conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[1] = malloc(2*sizeof(**conds));
-                conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-                conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[1][0].value.i = EDG_WLL_JOB_RUNNING;
-                conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[2] = malloc(2*sizeof(**conds));
-                conds[2][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
-                conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
-                conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
-                conds[2][0].value.t.tv_usec = 0;
-                conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[3] = NULL;
-        }
-	else if (strcmp(feedType, "aborted") == 0){
-                conds = malloc(4*sizeof(*conds));
-                conds[0] = malloc(2*sizeof(**conds));
-                conds[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
-                conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[0][0].value.c = can_peername;
-                conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[1] = malloc(2*sizeof(**conds));
-                conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-                conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[1][0].value.i = EDG_WLL_JOB_ABORTED;
-                conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[2] = malloc(2*sizeof(**conds));
-                conds[2][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
-                conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
-                conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
-                conds[2][0].value.t.tv_usec = 0;
-                conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[3] = NULL;
-        }
-	else{
+		break;
+	   case UNKNOWN:
+	   default:
 		*statesOut = NULL;
 		free(can_peername);
 		return -1;
 	}
+
 
 	if (edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conds, 0, &jobsOut, statesOut)){
 		*statesOut = NULL;
