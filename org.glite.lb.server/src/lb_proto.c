@@ -354,8 +354,7 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 		RUNNING_VM,
 		DONE_VM,
 		RUNNING,
-		ABORTED,
-		UNKNOWN} feed;
+		ABORTED} feed;
 
 	char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 
@@ -364,7 +363,11 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
 	else if ((strcmp(feedType, "doneVM") == 0)) { feed = DONE_VM; }
 	else if (strcmp(feedType, "running") == 0) { feed = RUNNING; }
 	else if (strcmp(feedType, "aborted") == 0) { feed = ABORTED; }
-	else { feed = UNKNOWN; }
+	else {  
+		*statesOut = NULL;
+		free(can_peername);
+		return -1;
+	}
 
 	switch (feed) {
 	   case FINISHED:
@@ -452,11 +455,6 @@ static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **sta
                 conds[2][0].value.i = EDG_WLL_STAT_VIRTUAL_MACHINE;
                 conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
 		break;
-	   case UNKNOWN:
-	   default:
-		*statesOut = NULL;
-		free(can_peername);
-		return -1;
 	}
 
 
@@ -1084,7 +1082,11 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 			feedType = strdup(requestPTR + strlen("/RSS:"));
 			feedType[strrchr(feedType, ' ')-feedType] = 0;
 			if (getJobsRSS(ctx, feedType, &states) < 0){
-				ret = HTTP_INTERNAL;
+				char *errmessage;
+				ret = HTTP_NOTFOUND;
+				asprintf(&errmessage, "Unknown RSS feed \"%s\"", feedType);
+				edg_wll_SetError(ctx, ENOENT, errmessage);
+				free(errmessage);
 				free(feedType);
                                 goto err;
 			}
