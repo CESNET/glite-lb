@@ -146,14 +146,19 @@ int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, in
                         if (USABLE(res)) {
 				switch (e->vMDone.status_code){
 					case EDG_WLL_VMDONE_OK:
+						js->pub.vm_state = EDG_WLL_STAT_VM_DONE;
+						js->pub.state = EDG_WLL_JOB_DONE;
+						js->pub.done_code = EDG_WLL_STAT_OK;
+						break;
 					case EDG_WLL_VMDONE_DELETE:
 						js->pub.vm_state = EDG_WLL_STAT_VM_DONE;
 						js->pub.state = EDG_WLL_JOB_DONE;
+						js->pub.done_code = EDG_WLL_STAT_CANCELLED;
 						break;
 					case EDG_WLL_VMDONE_FAILURE:
 						js->pub.vm_state = EDG_WLL_STAT_VM_FAILURE;
-						js->pub.state = EDG_WLL_JOB_DONE
-;
+						js->pub.state = EDG_WLL_JOB_DONE;
+						js->pub.cream_done_code = EDG_WLL_STAT_FAILED;
 						break;
 					case EDG_WLL_VMDONE_STATUS_CODE_UNDEFINED:
 						break;
