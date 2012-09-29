@@ -172,7 +172,7 @@ create_db() {
 		echo -n "."
 		mysql $MYSQL_ARGS -e "GRANT ALL on $DB_NAME.* to $DB_USER@$DB_HOST" && \
 		echo -n "."
-		mysql -u $DB_USER $DB_NAME -h $DB_HOST < $GLITE_LOCATION_ETC/glite-lb/glite-lb-dbsetup.sql || return $?
+		mysql -u $DB_USER $DB_NAME -h $DB_HOST < $GLITE_LOCATION/share/glite/glite-lb-dbsetup.sql || return $?
 		echo -n "."
 		mkdir -p `pwd`/LB
 		cat > `pwd`/LB/glite-lb-index.conf << EOF
@@ -190,8 +190,8 @@ EOF
 	fi
 	echo -n "OK psql."
 	rm -f 'test.sql'
-	if [ -f "$GLITE_LOCATION_ETC/glite-lb/harvester-test-dbsetup.sql" ]; then
-		ln -s "$GLITE_LOCATION_ETC/glite-lb/harvester-test-dbsetup.sql" test.sql
+	if [ -f "$GLITE_LOCATION/share/glite/glite-lb-harvester-test-dbsetup.sql" ]; then
+		ln -s "$GLITE_LOCATION/share/glite/glite-lb-harvester-test-dbsetup.sql" test.sql
 	else
 		wget --quiet -O 'test.sql' 'http://jra1mw.cvs.cern.ch/cgi-bin/jra1mw.cgi/org.glite.lb.harvester/examples/test.sql?revision=HEAD'
 	fi

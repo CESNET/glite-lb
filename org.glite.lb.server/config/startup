@@ -2,12 +2,13 @@
 ### BEGIN INIT INFO
 # Provides: glite-lb-bkserverd
 # Description: L&B server daemon
+# Short-Description: L&B server daemon
 # Required-Start: $remote_fs $network $syslog
 # Required-Stop: $remote_fs $network $syslog
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
 ### END INIT INFO
-# chkconfig: 345 75 25
+# chkconfig: - 75 25
 #
 # Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 # See http://www.eu-egee.org/partners/ for details on the copyright holders.

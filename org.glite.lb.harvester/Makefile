@@ -72,6 +72,9 @@ startup: ${top_srcdir}/config/startup
 		glite_var="${localstatedir}"; \
 	fi; \
 	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' $< > $@
+ifneq ($(os_type),debian)
+	sed -i 's/# \(Default-Start\|Default-Stop\):.*/# \1:/' $@
+endif
 	chmod +x $@
 
 check:
@@ -86,13 +89,14 @@ stage: compile
 install: compile
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples \
 		${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} \
+		${DESTDIR}${PREFIX}${prefix}/share/glite \
 		${DESTDIR}${PREFIX}${prefix}/share/man/man1 \
 		${DESTDIR}${PREFIX}${sysconfdir}/init.d \
 		${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	${INSTALL} -m 755 harvester ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-harvester
 	${INSTALL} -m 755 harvester-dbg ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-harvester-dbg
 	${INSTALL} -m 755 ${top_srcdir}/examples/test.sh ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-harvester-test.sh
-	${INSTALL} -m 444 ${top_srcdir}/examples/test.sql ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb/harvester-test-dbsetup.sql
+	${INSTALL} -m 444 ${top_srcdir}/examples/test.sql ${DESTDIR}${PREFIX}${prefix}/share/glite/glite-lb-harvester-test-dbsetup.sql
 	${INSTALL} -m 444 ${top_srcdir}/doc/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 444 glite-lb-harvester.1 ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-harvester

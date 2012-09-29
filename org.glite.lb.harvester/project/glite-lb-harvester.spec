@@ -87,13 +87,14 @@ fi
 %dir /etc/glite-lb/
 %dir /usr/%{_lib}/glite-lb/
 %dir /usr/%{_lib}/glite-lb/examples/
+%dir /usr/share/glite/
 %dir /usr/share/doc/%{name}-%{version}/
-/etc/glite-lb/harvester-test-dbsetup.sql
 /etc/init.d/glite-lb-harvester
 /usr/bin/glite-lb-harvester
 /usr/%{_lib}/glite-lb/examples/glite-lb-harvester-test.sh
 /usr/%{_lib}/glite-lb/examples/glite-lb-harvester-dbg
 /usr/share/doc/%{name}-%{version}/README
+/usr/share/glite/*
 /usr/share/man/man1/glite-lb-harvester.1.gz
 
 

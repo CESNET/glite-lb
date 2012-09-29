@@ -116,17 +116,13 @@ fi
 %defattr(-,root,root)
 %dir /etc/cron.d/
 %dir /etc/glite-lb/
-%dir /usr/include/glite/
-%dir /usr/include/glite/lb/
 %dir /usr/share/doc/%{name}-%{version}/
+%dir /usr/share/glite/
 %config(noreplace) /etc/logrotate.d/glite-lb-server
 %config(noreplace) /etc/mysql/conf.d/glite-lb-server.cnf
 %config(noreplace) /etc/glite-lb/*
-%config(noreplace) /etc/glite-lb-dbsetup.sql
 /etc/cron.d/*
-/etc/glite-lb-index.conf.template
 /etc/init.d/glite-lb-bkserverd
-/usr/include/glite/lb/*
 /usr/bin/*
 /usr/sbin/*
 /usr/share/doc/%{name}-%{version}/ChangeLog
@@ -134,6 +130,7 @@ fi
 /usr/share/doc/%{name}-%{version}/glite-lb
 /usr/share/doc/%{name}-%{version}/package.description
 /usr/share/doc/%{name}-%{version}/package.summary
+/usr/share/glite/*
 /usr/share/man/man1/glite-lb-mon-db.1.gz
 /usr/share/man/man8/glite-lb-bkindex.8.gz
 /usr/share/man/man8/glite-lb-bkserverd.8.gz

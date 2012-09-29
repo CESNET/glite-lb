@@ -247,7 +247,7 @@ if test "$setup_db" = 1; then
 	fi
 	rm -f /tmp/glite-setup.$$
 
-	if test ! -f $GLITE_LOCATION_ETC/glite-lb/glite-lb-dbsetup.sql; then
+	if test ! -f $GLITE_LOCATION/share/glite/glite-lb-dbsetup.sql; then
 		echo "glite-lb-setup: ERROR: glite-lb-dbsetup.sql not found (glite-lb-server not installed?)"
 		error="$error db"
 		exit 1
@@ -261,7 +261,7 @@ if test "$setup_db" = 1; then
 		mysql $MYSQL_ARGS -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@'$HOSTNAME' IDENTIFIED BY '' WITH GRANT OPTION;"
 		mysql $MYSQL_ARGS -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@localhost IDENTIFIED BY '' WITH GRANT OPTION;"
 
-		mysql -u lbserver lbserver20 < $GLITE_LOCATION_ETC/glite-lb/glite-lb-dbsetup.sql
+		mysql -u lbserver lbserver20 < $GLITE_LOCATION/share/glite/glite-lb-dbsetup.sql
 		mysql -u lbserver -e "ALTER TABLE short_fields MAX_ROWS=1000000000;" lbserver20
 		mysql -u lbserver -e "ALTER TABLE long_fields MAX_ROWS=55000000;" lbserver20
 		mysql -u lbserver -e "ALTER TABLE states MAX_ROWS=9500000;" lbserver20
@@ -301,9 +301,9 @@ EOF
 	rm /tmp/glite-lb-bkindex.$$
 
 	# migrate L&B 3.x to L&B 4.0
-	if test -f $GLITE_LOCATION_ETC/glite-lb/glite-lb-migrate_db2version40; then
+	if test -f $GLITE_LOCATION/sbin/glite-lb-migrate_db2version40; then
 		if ! check_mysql_table lbserver20 job_connections; then
-			sh $GLITE_LOCATION_ETC/glite-lb/glite-lb-migrate_db2version40 -s
+			sh $GLITE_LOCATION/sbin/glite-lb-migrate_db2version40 -s
 			if test $? -eq 0; then
 				qecho "Database migrated to L&B 4.x"
 			else

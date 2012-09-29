@@ -129,13 +129,13 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 755 ${EXAMPLES} ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
-	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	${INSTALL} -m 755 ${top_srcdir}/src/msg-brokers ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-msg-brokers
 	${INSTALL} -m 755 msg-config.new ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-msg-config
-	${INSTALL} -m 644 msg.cron.new ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-logger-msg.cron
+	${INSTALL} -m 644 msg.cron.new ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-logger-msg
 
 %.lo %.o: %.cpp
 	${COMPILEXX} -c $< -o $@

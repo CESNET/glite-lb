@@ -3,10 +3,9 @@ etc/glite-lb/*
 etc/init.d/*
 etc/logrotate.d/*
 etc/mysql/conf.d/*
-etc/*
 usr/bin/*
-usr/include/glite/lb/*
 usr/sbin/*
 usr/share/doc/glite-lb-server/*
+usr/share/glite/*
 usr/share/man/man1/*
 usr/share/man/man8/*

@@ -330,6 +330,9 @@ ${SCRIPTS}: ${SCRIPTS_SRC}
 		glite_var="${localstatedir}"; \
 	fi; \
 	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' ${top_srcdir}/config/$@ > $@
+ifneq ($(os_type),debian)
+	sed -i 's/# \(Default-Start\|Default-Stop\):.*/# \1:/' $@
+endif
 
 %.sh: %.sh.in
 	glite_var="${localstatedir}/glite"; \
@@ -420,10 +423,10 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb ${DESTDIR}${PREFIX}${sysconfdir}/init.d
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d
@@ -442,12 +445,10 @@ install:
 	${INSTALL} -m 755 export.sh ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-export
 	${INSTALL} -m 755 notif-keeper.sh ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-notif-keeper
 
-	for f in dbsetup.sql index.conf.template; do \
-		${INSTALL} -m 644 ${top_srcdir}/config/"glite-lb-$$f" ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb; \
-		ln -sf "glite-lb/glite-lb-$$f" "${DESTDIR}${PREFIX}${sysconfdir}/glite-lb-$$f"; \
-	done
-	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
-	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version40 ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
+	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-dbsetup.sql ${DESTDIR}${PREFIX}${prefix}/share/glite
+	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-index.conf.template ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
+	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version20 ${DESTDIR}${PREFIX}${prefix}/sbin
+	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version40 ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 644 ${top_srcdir}/config/site-notif.conf ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
@@ -459,10 +460,7 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/config/my.cnf ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d/glite-lb-server.cnf
 	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/glite-lb
 
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
-	(cd ${top_srcdir}/interface && install -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix})
 	install -m 644 ${STATIC_LIB_BK} ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	${INSTALL} -m 644 ${top_srcdir}/interface/srv_perf.h ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 ifdef LB_PERF
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_proxy.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif

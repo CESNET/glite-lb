@@ -157,6 +157,9 @@ startup: ${top_srcdir}/config/startup
 		glite_var="${localstatedir}"; \
 	fi; \
 	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' $< > $@
+ifneq ($(os_type),debian)
+	sed -i 's/# \(Default-Start\|Default-Stop\):.*/# \1:/' $@
+endif
 	chmod +x $@
 
 glite-lb-logd: ${LOGD_OBJS}

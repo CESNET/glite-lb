@@ -5,11 +5,9 @@ etc/logrotate.d
 etc/mysql
 etc/mysql/conf.d
 usr/bin
-usr/include
-usr/include/glite
-usr/include/glite/lb
 usr/lib
 usr/sbin
+usr/share/glite
 usr/share/doc/glite-lb-server
 usr/share/man/man1
 usr/share/man/man8
