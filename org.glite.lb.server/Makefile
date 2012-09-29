@@ -430,6 +430,7 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d
+	-mkdir -p ${DESTDIR}${PREFIX}${sysdefaultdir}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${MAN1_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
@@ -459,6 +460,7 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-server.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-server
 	${INSTALL} -m 644 ${top_srcdir}/config/my.cnf ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d/glite-lb-server.cnf
 	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/glite-lb
+	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${sysdefaultdir}
 
 	install -m 644 ${STATIC_LIB_BK} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 ifdef LB_PERF

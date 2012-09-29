@@ -121,6 +121,7 @@ fi
 %config(noreplace) /etc/logrotate.d/glite-lb-server
 %config(noreplace) /etc/mysql/conf.d/glite-lb-server.cnf
 %config(noreplace) /etc/glite-lb/*
+%config(noreplace missingok) /etc/sysconfig/glite-lb
 /etc/cron.d/*
 /etc/init.d/glite-lb-bkserverd
 /usr/bin/*

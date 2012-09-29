@@ -24,13 +24,19 @@ SOURCES=\
 	Makefile
 FILES=glite-lb.pre config_glite_lb LICENSE COPYRIGHT node-version arch service update
 
+ifeq ($(os_type),debian)
+sysdefaultdir=${sysconfdir}/default
+else
+sysdefaultdir=${sysconfdir}/sysconfig
+endif
+
 all ${FILES}:
 	glite_var="${localstatedir}/glite"; \
 	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
 		glite_var="${localstatedir}"; \
 	fi; \
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $(top_srcdir)/config/defaults/glite-lb.pre > glite-lb.pre; \
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:' -e 's:@glite_etc@:${sysconfdir}:' -e "s:@glite_var@:$$glite_var:" $(top_srcdir)/config/functions/config_glite_lb.in > config_glite_lb
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" $(top_srcdir)/config/defaults/glite-lb.pre > glite-lb.pre; \
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' $(top_srcdir)/config/functions/config_glite_lb.in > config_glite_lb
 
 	# metapackage info
 	echo -e "${gLiteCopyrightText}\n\n${gLiteLicenseText}" > LICENSE

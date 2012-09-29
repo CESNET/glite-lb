@@ -19,6 +19,7 @@ GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS=${GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS:-'.*'}
 
 GLITE_HOME_DIR=`getent passwd ${GLITE_USER} | cut -d: -f6`
 
+ACTIONS="db certs msg authz harvester bdii emir upgrade crl startup krb krbgsi"
 
 qecho() {
 	if test "$quiet" != "1"; then
@@ -114,6 +115,7 @@ setup_all() {
 	setup_bdii=1
 	setup_emir=1
 	setup_upgrade=1
+	setup_crl=1
 	setup_startup=1
 }
 
@@ -127,12 +129,14 @@ Usage: glite-lb-setup [OPTIONS] [ACTIONS]
 OPTIONS are:
 	-q,--quiet ... print only errors
 	-c,--check ... check the availability of DB
+	-l,--list .... list actions to be executed and exit
 	-h,--help .... usage
 
 ACTIONS are:
-	db certs msg authz harvester bdii emir upgrade startup
+	db certs msg authz harvester bdii emir upgrade crl startup
 	krb    .... setup Kerberos
 	krbgsi .... setup Kerberos and enable GSI autentization
+
 	all ....... all actions (default)
 	none ...... no actions (default for check)
 	yaim ...... actions for yaim
@@ -146,6 +150,9 @@ EOF
 	-c|--check)
 		setup_check=1
 		;;
+	-l|--list)
+		setup_list=1
+		;;
 	all)
 		setup_all=1
 		setup_all
@@ -154,6 +161,7 @@ EOF
 	yaim)
 		setup_all
 		setup_bdii=0
+		setup_crl=0
 		;;
 	logger)
 		setup_certs=1
@@ -168,16 +176,18 @@ EOF
 	bdii)	setup_bdii=1 ;;
 	emir)   setup_emir=1 ;;
 	upgrade) setup_upgrade=1 ;;
+	crl)	setup_crl=1 ;;
 	startup) setup_startup=1 ;;
-	krb)	setup_kerberos=1 ;;
-	krbgsi)	setup_kerberos=1; setup_kerberos_gsi=1 ;;
+	krb)	setup_krb=1 ;;
+	krbgsi)	setup_krb=1; setup_krbgsi=1 ;;
 	*)
 		echo "glite-lb-setup: ERROR: unknown argument '$1'"
+		exit 1
 		;;
 	esac
 	shift
 done
-for action in db certs msg authz harvester bdii emir upgrade startup kerberos kerberos_gsi all none yaim logger; do
+for action in $ACTIONS all none yaim logger; do
 	eval value=\"$`echo setup_$action`\"
 	if test "$value" = "1"; then
 		setup=1;
@@ -199,6 +209,17 @@ if test "$setup_check" = "1"; then
 	if test "$setup" != "1"; then
 		exit 1
 	fi
+fi
+
+if test "$setup_list" = "1"; then
+	for action in $ACTIONS; do
+		eval value=\"$`echo setup_$action`\"
+		if test "$value" = "1"; then
+			echo -n "$action "
+		fi
+	done
+	echo
+	exit 0
 fi
 
 if test -z "$GLITE_HOME_DIR"; then
@@ -321,7 +342,7 @@ if test "$setup_certs" = "1"; then
 		mkdir -p $GLITE_HOME_DIR/.certs
 		chown $GLITE_USER:$GLITE_USER $GLITE_HOME_DIR/.certs
 	fi
-	cp -f /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem $GLITE_HOME_DIR/.certs/
+	cp -fp /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem $GLITE_HOME_DIR/.certs/
 	if test $? -eq 0; then
 		chown $GLITE_USER:$GLITE_USER $GLITE_HOME_DIR/.certs/hostcert.pem $GLITE_HOME_DIR/.certs/hostkey.pem
 		chmod 0644 $GLITE_HOME_DIR/.certs/hostcert.pem
@@ -450,6 +471,17 @@ if test "$setup_emir" = "1"; then
 	fi
 fi
 if test "$setup_emir" = "1" -a "$emir" != "0"; then
+	cp -fp /etc/grid-security/hostcert.pem /etc/grid-security/emi-hostcert.pem && \
+	cp -fp /etc/grid-security/hostkey.pem /etc/grid-security/emi-hostkey.pem
+	if test $? -eq 0; then
+		chown emi:emi /etc/grid-security/emi-hostcert.pem /etc/grid-security/emi-hostkey.pem
+		chmod 0644 /etc/grid-security/emi-hostcert.pem
+		chmod 0400 /etc/grid-security/emi-hostkey.pem
+		qecho "Certificates copied to /etc/grid-security/emi-host*.pem"
+	else
+		echo "glite-lb-setup: WARNING: copying certificates for EMIR failed"
+	fi
+
 	# interface version
 	if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
 		out=`dpkg-query -W glite-lb-ws-interface 2>/dev/null | cut -f2 | cut -d- -f1`
@@ -475,8 +507,8 @@ if test "$setup_emir" = "1" -a "$emir" != "0"; then
 	done
 
 	# L&B service info
-	mkdir -p /var/cache/$emir_daemon 2>/dev/null
-	cat > /var/cache/$emir_daemon/glite-lb-bkserver.json <<EOF
+	mkdir -p /var/cache/$emir_daemon/services/ 2>/dev/null
+	cat > /var/cache/$emir_daemon/services/glite-lb-bkserverd.json <<EOF
 {
 $json	"Service_ID": "`hostname -f`_lbserver",
 	"Service_Name": "${SITE_NAME:-site}-Server",
@@ -497,23 +529,27 @@ EOF
 
 	period=$((4*$emir_mult))
 	validity=$((24*$emir_mult))
+	inifile=/etc/emi/$emir_daemon/$emir_daemon.ini
+	if test ! -f $inifile.orig -a -f $inifile; then
+		cp $inifile $inifile.orig
+	fi
 	cat > /etc/emi/$emir_daemon/$emir_daemon.ini << EOF
 [$emir_conf]
 url = $EMIR_URL
 period = $period
 validity = $validity
 
-#cert = /etc/grid-security/emi/hostcert.pem
-#key = /etc/grid-security/emi/hostkey.pem
-#cadir = /etc/grid-security/certificates
+cert = /etc/grid-security/emi-hostcert.pem
+key = /etc/grid-security/emi-hostkey.pem
+cadir = /etc/grid-security/certificates
 
 verbosity = debug
 
 [advancedService]
-json_file_location = /var/cache/$emir_daemon/glite-lb-bkserver.json
+json_file_location = /var/cache/$emir_daemon/services/glite-lb-bkserverd.json
 EOF
 
-	# enable (for Debain) after configuring
+	# enable (for Debian) after configuring
 	if test -d /etc/default -a -f /etc/default/$emir_daemon; then
 		sed -i 's/.*ENABLED.*=.*/ENABLED=yes/' /etc/default/$emir_daemon
 	fi
@@ -555,9 +591,25 @@ if test "$setup_upgrade" = "1"; then
 fi
 
 
+# ==== fetch CRL ====
+
+if test "$setup_crl" = "1"; then
+	if test -x /usr/sbin/fetch-crl; then
+		if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
+			:
+		else
+			/sbin/service fetch-crl-cron start
+			/sbin/chkconfig fetch-crl-cron on
+		fi
+	else
+		echo "glite-lb-setup: WARNING: fetch-crl not found, fetching won't be configured"
+	fi
+fi
+
+
 # ==== kerberos (experimental) ====
 
-if test "$setup_kerberos" = "1"; then
+if test "$setup_krb" = "1"; then
 	if test ! -f /etc/krb5.keytab; then
 		echo "glite-lb-setup: ERROR: keytab not found"
 		kerberos=0
@@ -601,7 +653,7 @@ EOF
 	fi
 fi
 
-if test "$setup_kerberos_gsi" = "1"; then
+if test "$setup_krbgsi" = "1"; then
 	if ! ldd $GLITE_LOCATION/bin/glite-lb-bkserverd | grep libheim >/dev/null 2>&1; then
 		echo "glite-lb-setup: ERROR: GSI mode with kerberos requires L&B built in Heimdal Kerberos implementation"
 		error="$error krbgsi"
