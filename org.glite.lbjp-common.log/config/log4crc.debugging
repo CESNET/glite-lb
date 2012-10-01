@@ -32,7 +32,7 @@
         <appender name="syslog" type="syslog" layout="basic"/>
 
         <!-- default layouts ======================================= -->
-        <layout name="basic" type="basic"/>
-        <layout name="dated" type="dated"/>
+        <layout name="basic" type="basic_r"/>
+        <layout name="dated" type="dated_r"/>
 </log4c>
 
