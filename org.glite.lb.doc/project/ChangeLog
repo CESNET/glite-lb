@@ -181,3 +181,12 @@
 - New functionality tests described
 - L&B 2.0 not to be advertised as stable release anymore
 
+1.3.6-1
+- Debian package builds in vanilla chroot environment (backported from HEAD):
+  - create pkg-config file for gss (depends on used GSSAPI provider)
+  - spread proper CFLAGS needed for gss (to find gssapi.h) using pkg-config
+  - missing build dependencies
+  - missing dependency for libglite-lbjp-common-gsoap-plugin-dev (lb.ws-test build)
+  - fix dependency of msg-plugin
+  - no runtime dependencies for build
+
