@@ -92,13 +92,15 @@ GSOAP_CFLAGS_lang:=${GSOAPXX_CFLAGS}
 GSOAP_LIBS_lang:=${GSOAPXX_LIBS}
 endif
 
+GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
 
 CFLAGS:= ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-DWITH_NONAMESPACES \
 	-I. -I${top_srcdir2}/interface \
 	-I${stagedir}${prefix}/include \
-	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION ${CFLAGS}
+	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION \
+	${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CFLAGS}
 
 LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
@@ -372,7 +374,7 @@ distclean:
 	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<
 
 %.pc: %.pc.in
-	sed -e "s/@VERSION@/${version}/" -e "s/@LIBDIR@/${libdir}/" -e "s/@LIB_SUFFIX@/${dotless_ver}/" $< > $@; \
+	sed -e "s,@PREFIX@,${PREFIX}${prefix}," -e "s/@VERSION@/${version}/" -e "s/@LIBDIR@/${libdir}/" -e "s/@LIB_SUFFIX@/${dotless_ver}/" $< > $@
 
 test_gsplugin_cxx.o: %.o: %.cpp stdsoap2.h
 	${COMPILEXX} ${GSOAPXX_DEFAULT_CFLAGS} -c ${GLOBUS_INC} $<

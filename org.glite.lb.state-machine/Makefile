@@ -32,6 +32,7 @@ CLASSADS_CFLAGS?=-I${classads_prefix}/include -I${classads_prefix}/include/class
 CLASSADS_LIBS?=${classadslib} -lclassad
 EXPAT_CFLAGS?=
 EXPAT_LIBS?=${expatlib} -lexpat
+GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
 
 DEBUG:=-g -O0 -Wall
 
@@ -39,7 +40,7 @@ CFLAGS:= \
 	${DEBUG} \
 	${CLASSADS_CFLAGS} \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
-	-I${top_srcdir}/interface ${CFLAGS}
+	-I${top_srcdir}/interface ${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CFLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir}  ${LDFLAGS} 

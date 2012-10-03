@@ -8,7 +8,6 @@ Vendor: EMI
 Group: Development/Tools
 BuildArch: noarch
 Requires: glite-yaim-bdii
-Requires: perl-LDAP
 Requires: glite-yaim-core
 Obsoletes: glite-yaim-lb <= 4.2.1-1
 Provides: glite-yaim-lb = %{version}-%{release}

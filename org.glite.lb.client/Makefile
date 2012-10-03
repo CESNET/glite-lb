@@ -98,13 +98,16 @@ COMMON_LIB_THR:=-lglite_lb_common_${thrflavour}
 COMMON_LIB:=-lglite_lb_common
 TRIO_LIB:=-lglite_lbu_trio
 
+GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
+
 CFLAGS:=${DEBUG} \
 	-I. \
 	-I${top_srcdir}/src -I${top_srcdir}/interface \
 	-I${stagedir}${prefix}/include \
 	${COVERAGE_FLAGS} \
 	-DBUILDING_LB_CLIENT \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} ${CFLAGS}
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} \
+	${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CFLAGS}
 
 CXXFLAGS:=${CFLAGS}
 

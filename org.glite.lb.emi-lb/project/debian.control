@@ -13,6 +13,6 @@ Package: emi-lb
 Section: net
 Architecture: any
 Depends: ${misc:Depends}, bdii, emi-version, fetch-crl, glite-lb-client-progs, glite-lb-doc, glite-lb-harvester, glite-lb-logger, glite-lb-logger-msg, glite-lb-server, glite-lb-utils, glite-lb-ws-test, glue-schema
-Recommends: glite-info-provider-service glite-lb-client-java glite-lb-yaim
+Recommends: glite-info-provider-service, glite-lb-client-java, glite-lb-yaim
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@

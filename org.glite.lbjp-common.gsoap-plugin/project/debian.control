@@ -20,7 +20,7 @@ Package: libglite-lbjp-common-gsoap-plugin-dev
 Section: libdevel
 Architecture: any
 Provides: glite-lbjp-common-gsoap-plugin, glite-security-gsoap-plugin
-Depends: libglite-lbjp-common-gsoap-plugin (= ${binary:Version}), ${misc:Depends}
+Depends: libglite-lbjp-common-gsoap-plugin (= ${binary:Version}), libglite-lbjp-common-gss-dev, ${misc:Depends}
 Description: Development files for gLite gsoap-plugin
  This package contains development libraries and header files for gLite
  gsoap-plugin.

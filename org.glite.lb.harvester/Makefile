@@ -15,7 +15,8 @@ version:=${module.version}
 CC=gcc
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
-CPPFLAGS:=-I${stagedir}${prefix}/include -D_GNU_SOURCE -D_REENTRANT ${CPPFLAGS}
+GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
+CPPFLAGS:=-I${stagedir}${prefix}/include -D_GNU_SOURCE -D_REENTRANT ${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CPPFLAGS}
 CFLAGS:=-W -Wall -g -O2 ${CFLAGS}
 LDFLAGS:=${LDFLAGS} 
 ifeq (${thrflavour},)

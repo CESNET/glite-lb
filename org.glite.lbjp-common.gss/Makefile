@@ -34,7 +34,7 @@ offset=6
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples
+VPATH=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/project
 
 default: all
 
@@ -82,11 +82,13 @@ GSSAPI_THR_LIBS=${GLOBUS_COMMON_LIBS} ${KERBEROS_GSSAPI_LIBS} -lssl
 GSSAPI_THR_INC=${GLOBUS_COMMON_CFLAGS} ${KERBEROS_GSSAPI_CFLAGS}
 GSSAPI_NOTHR_LIBS=${GLOBUS_NOTHR_LIBS} ${KERBEROS_GSSAPI_LIBS} -lssl
 GSSAPI_NOTHR_INC=${GLOBUS_NOTHR_INC} ${KERBEROS_GSSAPI_CFLAGS}
+GSSAPI_PROVIDER_PKG=
 else
 GSSAPI_THR_LIBS=${GLOBUS_GSSAPI_GSI_LIBS}
 GSSAPI_THR_INC=${GLOBUS_GSSAPI_GSI_CFLAGS}
 GSSAPI_NOTHR_LIBS=${GLOBUS_NOTHR_LIBS} ${GLOBUS_GSSAPI_NOTHR_LIBS}
 GSSAPI_NOTHR_INC=${GLOBUS_NOTHR_INC}
+GSSAPI_PROVIDER_PKG=globus-gssapi-gsi
 endif
 
 LIBCARES_CFLAGS?=-I${cares_prefix}/include
@@ -116,6 +118,7 @@ lib_LIBRARIES=${GSS_NOTHRSTATICLIB} ${GSS_THRSTATICLIB}
 default_gss=${GSS_NOTHRLTLIB}
 endif
 
+PKG_CONFIG_FILES=gss.pc
 
 ifeq ($(thrflavour),)
 ${GSS_STATICLIB}: ${GSS_THROBJS}
@@ -141,7 +144,7 @@ ${GSS_THRLTLIB}: ${GSS_THROBJS}
 endif
 
 
-all compile: $(lib_LTLIBRARIES) ${lib_LIBRARIES} examples
+all compile: $(lib_LTLIBRARIES) ${lib_LIBRARIES} examples ${PKG_CONFIG_FILES}
 
 check: compile check.gss
 
@@ -171,7 +174,7 @@ stage:
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 install:
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security
 	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
@@ -180,9 +183,10 @@ install:
 	if [ x${DOSTAGE} = xyes ]; then \
 		install -m 644 ${lib_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
 	fi
+	${INSTALL} -m 644 gss.pc ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig/glite-security-gss.pc
 
 clean:
-	rm -rf *.o *.lo *.a *.la .libs test_gss gss_server gss_client
+	rm -rf *.o *.lo *.a *.la .libs test_gss gss_server gss_client *.pc
 
 distclean:
 	rm -rvf Makefile.inc *.spec debian/
@@ -192,6 +196,9 @@ distclean:
 
 %.thr.o: %.c
 	${COMPILE} -D_REENTRANT -DGLITE_LBU_THREADED ${GSSAPI_THR_INC} ${LIBCARES_CFLAGS} -o $@ -c $<
+
+%.pc: %.pc.in
+	sed -e "s,@PREFIX@,${PREFIX}${prefix}," -e "s/@VERSION@/${version}/" -e "s/@LIBDIR@/${libdir}/" -e "s/@GSSAPI_PROVIDER@/${GSSAPI_PROVIDER_PKG}/" $< > $@
 
 test_gss.o: %.o: %.cpp
 	${CXX} -c ${CFLAGS} ${GLOBUS_GSSAPI_GSI_CFLAGS} ${CPPUNIT_CFLAGS} -Wno-error $<

@@ -118,7 +118,9 @@ CPPUNIT_CFLAGS?=-I${cppunit_prefix}/include
 VOMS_CFLAGS?=-I${voms_prefix}/include -I${voms_prefix}/include/glite/security
 VOMS_LIBS?=-L${voms_prefix}/${libdir} -lvomsapi${vomsflavour}
 
-CFLAGS:= ${CFLAGS} \
+GLITE_LBJP_COMMON_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss glite-security-gsoap-plugin --cflags`
+
+CFLAGS:= \
 	${GLOBUS_GSSAPI_GSI_CFLAGS} \
 	${WS_CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
@@ -131,7 +133,8 @@ CFLAGS:= ${CFLAGS} \
 	${VOMS_CFLAGS} \
 	${COVERAGE_FLAGS} \
 	$(GRIDSITE_CFLAGS) ${LCAS_CFLAGS} ${GSOAP_CFLAGS} \
-	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB
+	-D_GNU_SOURCE ${LB_STANDALONE_FLAGS} ${LB_PERF_FLAGS} -DLB_EVENTS_BLOB \
+	${GLITE_LBJP_COMMON_CFLAGS} ${CFLAGS}
 
 CXXFLAGS:=${CFLAGS}
 
