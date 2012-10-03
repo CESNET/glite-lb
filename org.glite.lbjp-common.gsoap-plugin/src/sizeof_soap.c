@@ -20,7 +20,7 @@ limitations under the License.
 int
 main(int argc, char **argv)
 {	
-	printf("%zd\n", sizeof(struct soap));
+	printf("%lu\n", sizeof(struct soap));
 
 	return 0;
 }

@@ -52,7 +52,7 @@ main(int argc, char **argv)
 	edg_wll_GssConnection		connection;
 	glite_gsplugin_Context		ctx;
 	struct sockaddr_storage		a;
-	socklen_t			alen;
+	int				alen;
 	char			 	 *name, *msg;
 	int			 	opt,
 					port = 19999;

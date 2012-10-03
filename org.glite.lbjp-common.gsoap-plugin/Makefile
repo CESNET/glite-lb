@@ -15,7 +15,8 @@ gsoapxx_prefix?=${gsoap_prefix}
 
 CC=gcc
 
-gsoap_versions_flavours?=${gsoap_default_version}
+gsoap_versions_noflavours?=2.6.2 2.7.0f 2.7.6b 2.7.6d 2.7.9d 2.7.9b
+gsoap_versions_flavours?=2.7.10
 
 -include Makefile.inc
 -include ../Makefile.inc
@@ -58,7 +59,7 @@ langflavour:=_${lang}
 langsuffix:=.${lang}
 endif
 
-VPATH=${top_srcdir2}/src:${top_srcdir2}/test:${top_srcdir2}/examples:${top_srcdir2}/interface:${top_srcdir2}/project
+VPATH=${top_srcdir2}/src:${top_srcdir2}/test:${top_srcdir2}/examples:${top_srcdir2}/interface
 
 default: all
 
@@ -92,15 +93,13 @@ GSOAP_CFLAGS_lang:=${GSOAPXX_CFLAGS}
 GSOAP_LIBS_lang:=${GSOAPXX_LIBS}
 endif
 
-GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
 
-CFLAGS:= ${DEBUG} \
+CFLAGS:= ${CFLAGS} ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-DWITH_NONAMESPACES \
 	-I. -I${top_srcdir2}/interface \
 	-I${stagedir}${prefix}/include \
-	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION \
-	${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CFLAGS}
+	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION
 
 LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
@@ -171,8 +170,6 @@ LOBJS_S:=${OBJS_S:.o=.lo}
 THROBJS_S:=${OBJS_S:.o=.thr.o}
 THRLOBJS_S:=${OBJS_S:.o=.thr.lo}
 
-PKG_CONFIG_FILES=gsoap-plugin.pc gsoap-plugin++.pc
-
 ifeq (${thrflavour},)
 ${STATICLIB}: ${OBJS}
 	ar crv $@ ${OBJS}
@@ -219,7 +216,7 @@ endif
 
 all compile: \
 	${lib_LTLIBRARIES} \
-	all-libs-with-soap examples glite_gscompat.h pkgconfig
+	all-libs-with-soap examples glite_gscompat.h
 
 check: check.cxx
 
@@ -311,15 +308,13 @@ glite_gscompat.h: glite_gscompat.h.in sizeof_soap
 	size=${shell ./sizeof_soap}; \
 	sed "s/@sizeof_struct_soap@/$$size/" ${top_srcdir2}/interface/glite_gscompat.h.in > $@
 
-pkgconfig: ${PKG_CONFIG_FILES}
-
 doc:
 
 stage:
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 install:
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
@@ -333,9 +328,6 @@ install:
 		${MAKE} -C `echo $$v | tr -d .` -f ${top_srcdir_l2}/Makefile install-soaplib gsoap_version=$$v lang=c PREFIX=${PREFIX} top_srcdir2=${top_srcdir_l2} || exit $?; \
 		${MAKE} -C `echo $$v | tr -d .` -f ${top_srcdir_l2}/Makefile install-soaplib gsoap_version=$$v lang=cxx PREFIX=${PREFIX} top_srcdir2=${top_srcdir_l2} || exit $?; \
 	done
-	for p in gsoap-plugin.pc gsoap-plugin++.pc; do \
-		${INSTALL} -m 644 $$p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig/glite-security-$$p; \
-	done
 
 install-soaplib:
 	${INSTALL} -m 755 ${lib_LTLIBRARIES_S} ${DESTDIR}${PREFIX}${prefix}/${libdir}
@@ -347,13 +339,10 @@ clean:
 	rm -rvf *.c *.h *.xml *.nsmap *.o *.lo .libs ${EXAMPLES} ${TESTS}
 	rm -rvf CalcService.wsdl wscalc.xsd
 	rm -rvf glite_gscompat.h sizeof_soap
+	rm -rvf log.xml rpmbuild/ RPMS/ tgz/ debian/
 	for v in ${gsoap_versions_noflavours} ${gsoap_versions_flavours}; do \
 		rm -rvf `echo $$v | tr -d .`; \
 	done
-	rm -fv ${PKG_CONFIG_FILES}
-
-distclean:
-	rm -rvf Makefile.inc *.spec debian/
 
 %.c.o: %.c
 	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<
@@ -372,9 +361,6 @@ distclean:
 
 %.thr.o: %.c
 	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<
-
-%.pc: %.pc.in
-	sed -e "s,@PREFIX@,${PREFIX}${prefix}," -e "s/@VERSION@/${version}/" -e "s/@LIBDIR@/${libdir}/" -e "s/@LIB_SUFFIX@/${dotless_ver}/" $< > $@
 
 test_gsplugin_cxx.o: %.o: %.cpp stdsoap2.h
 	${COMPILEXX} ${GSOAPXX_DEFAULT_CFLAGS} -c ${GLOBUS_INC} $<
