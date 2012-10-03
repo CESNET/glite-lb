@@ -9,30 +9,18 @@ usage() {
 cat <<EOF
 NAME:
 	glite-lb-migrate_db2version40
-		script for migrating older LB server or proxy databases
+		script for migrating older LB server database
 		to new schema required for storing job connections 
 USAGE:
-	glite-lb-migrate_db2version40 -s|-p [-d db_name]
+	glite-lb-migrate_db2version40 [-d db_name]
 
-		-s		migrate old server DB to new version
-		-p		migrate old proxy DB to new version
 		-d db_name	non-default database name
 EOF
 
 }
 
-SERVER=""
-PROXY=""
-
-while getopts "spd:h" OPTION 
+while getopts "d:h" OPTION 
 do
-    case "$OPTION" in 
-    "s") SERVER=1
-    ;;
-
-    "p") PROXY=1
-    ;;
-
     "d") DB_NAME=$OPTARG
     ;;
 
@@ -44,24 +32,8 @@ do
     esac
 done
 
-if [ -z "$SERVER" -a -z "$PROXY" ]; then
-	usage;
-	exit;
-fi
-
-if [ "$SERVER" -a "$PROXY" ]; then
-	usage;
-	exit;
-fi
-
-
-# default DB name (for server or proxy, overriden by -d option)
 if [ -z "$DB_NAME" ]; then
-	if [ "$SERVER" ]; then
-		DB_NAME="lbserver20"
-	else
-		DB_NAME="lbproxy"
-	fi
+	DB_NAME="lbserver20"
 fi
 
 
