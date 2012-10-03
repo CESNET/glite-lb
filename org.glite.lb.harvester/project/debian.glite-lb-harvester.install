@@ -1,6 +1,0 @@
-etc/glite-lb/*
-etc/init.d/glite-lb-harvester
-usr/bin/*
-usr/lib/glite-lb/examples/*
-usr/share/doc/glite-lb-harvester/*
-usr/share/man/man1/*
