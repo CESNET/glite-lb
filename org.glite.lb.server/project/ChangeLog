@@ -410,3 +410,12 @@
 - Do not return EPERM on queries with multiple potential results (Fix fo SB #96702)
 - Properly handle ARES_ENODATA return value by c-ares
 
+2.3.8-1
+- Debian package builds in vanilla chroot environment (backported from HEAD):
+  - create pkg-config file for gss (depends on used GSSAPI provider)
+  - spread proper CFLAGS needed for gss (to find gssapi.h) using pkg-config
+  - missing build dependencies
+  - missing dependency for libglite-lbjp-common-gsoap-plugin-dev (lb.ws-test build)
+  - fix dependency of msg-plugin
+  - no runtime dependencies for build
+
