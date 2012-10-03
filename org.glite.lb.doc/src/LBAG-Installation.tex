@@ -410,6 +410,18 @@ There are no specific configuration changes required when migrating from \LBver{
 
 \emph{Note:} Upgrading from \LBver{2.x} provided by gLite \LB node repository to \LBver{3.0 or higher} provided by the EMI repository has never been tested.
 
+\subsubsection{Migration to \LB 4.x}
+\label{inst:migrate40}
+There was a change in the database schema between \LBver{3.x} and \LBver{4.x}. This procedure applies to upgarding from \LBver{2.x and 3.x}. To upgrade from \LBver{1.x}, first follow the instructions for upgrading from \LBver{1.x} to \LBver{2.x} (Section~\ref{inst:migrate20}, page~\pageref{inst:migrate20}) and then continue here.
+
+The change is rather straightforward. When migrating from previous versions, perform a distribution update. Then stop the \LB server, run the DB migration script, and start the \LB server again:
+
+\begin{verbatim}
+/etc/init.d/glite-lb-bkserverd stop
+glite-lb-migrate_db2version40
+/etc/init.d/glite-lb-bkserverd start
+\end{verbatim}
+
 %\TODO{automated conversion through YAIM ?}
 
 \subsubsection{Connecting to the Messaging Infrastructure}
