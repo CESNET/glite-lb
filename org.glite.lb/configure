@@ -603,7 +603,7 @@ BEGIN{
 %need_externs_aux = (
 	'lb.client' => [ qw/cppunit:B classads:B libtool:B globus:B pkgconfig:B/ ],
 	'lb.common' => [ qw/expat cares:B cppunit:B classads:B libtool:B globus:B pkgconfig:B/ ],
-	'lb.doc' => [ qw/tetex-latex:B/ ],
+	'lb.doc' => [ qw/tetex-latex:B texlive-latex-recommended:B texlive-fonts-recommended:B texlive-latex-extra:B/ ],
 	'lb.logger' => [ qw/cppunit:B libtool:B globus:B pkgconfig:B/ ],
 	'lb.logger-msg' => [ qw/cppunit:B activemq libtool:B globus:B pkgconfig:B/ ],
 	'lb.nagios' => [ qw/globus_proxy_utils:R/ ],
@@ -644,7 +644,7 @@ BEGIN{
 	'gridsite.1.5-compat' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B doxygen:B/ ],
 	'px.proxyrenewal' => [ qw/globus:B globus_essentials:R myproxy-devel:B voms:B libtool:B pkgconfig:B/ ],
 	'px.myproxy-config' => [ qw/myproxy-admin:R/ ], # in myproxy-config.spec
-	'canl.c' => [ qw/cares:B openssl:B libtool:B bison:B flex:B krb5-devel:B pkgconfig:B tetex-latex:B/ ],
+	'canl.c' => [ qw/cares:B openssl:B libtool:B bison:B flex:B krb5-devel:B pkgconfig:B tetex-latex:B texlive-latex-recommended:B texlive-fonts-recommended:B texlive-latex-extra:/ ],
 );
 
 %need_jars = (
@@ -996,6 +996,9 @@ for my $ext (keys %deps_aux) {
 				bdii=>'emi.bdii.core',
 				glite_version=>'emi.emi-version',
 				glue_schema=>'emi.bdii.glue-schema',
+				'texlive-fonts-recommended' => '-',
+				'texlive-latex-recommended' => '-',
+				'texlive-latex-extra' => '-',
 				trustmanager=>'emi.java-security.trustmanager',
 				trustmanager_axis=>'emi.java-security.trustmanager-axis',
 				axis=>'axis1.4',
@@ -1011,6 +1014,10 @@ for my $ext (keys %deps_aux) {
 			},
 			deb6_x86_64_gcc445 => {
 				axis => 'axis1.4',
+				'tetex-latex' => '-',
+				'texlive-fonts-recommended' => 'texlive-fonts-recommended',
+				'texlive-latex-recommended' => 'texlive-latex-recommended',
+				'texlive-latex-extra' => 'texlive-latex-extra',
 				# mappings in ETICS project configuration
 				#globus_essentials => 'libglobus-gssapi-gsi4',
 				#globus => 'libglobus-gssapi-gsi-dev',
@@ -1025,7 +1032,6 @@ for my $ext (keys %deps_aux) {
 				#libxslt => 'xsltproc',
 				#'jakarta-commons-codec' => 'libcommons-codec-java',
 				#'jakarta-commons-lang' => 'libcommons-lang-java',
-				#'tetex-latex' => 'texlive-latex-extra',
 				#'perl-LDAP' => 'libnet-ldap-perl',
 				#'fuse-lib' => 'libfuse2',
 				#'fuse' => 'fuse-utils',
