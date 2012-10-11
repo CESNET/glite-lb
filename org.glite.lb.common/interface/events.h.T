@@ -477,6 +477,7 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 #define EDG_WLL_LOGFLAG_DIRECT		16 /**< logging directly to bkserver */
 #define EDG_WLL_LOGFLAG_INTERNAL	32 /**< internally generated event, don't forward */
 #define EDG_WLL_LOGLFLAG_EXCL		64 /**< exclusive flag, to be used with RegisterJob only (if job already exists, than registration fails) */
+#define EDG_WLL_LOGFLAG_FILE		128 /**< logging to local file to be consumed by IL (IL must be running on the same node, which is not a typical setup) */
 
 /*
  *@} end of group

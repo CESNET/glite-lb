@@ -58,6 +58,8 @@ static const char *myenv[] = {
 	"%sLBPROXY_SERVE_SOCK",
 	"%sLBPROXY_USER",
 	"%sJPREG_TMPDIR",
+	"%sLOG_FILE_PREFIX",
+	"%sLOG_IL_SOCK",
 };
 
 /* XXX: does not parse URL, just hostname[:port] */
@@ -204,6 +206,17 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 			free(ctx->jpreg_dir);
 			ctx->jpreg_dir = val ? strdup(val) : NULL;
 			break;
+	        case EDG_WLL_PARAM_LOG_FILE_PREFIX:
+			if(!val) val = mygetenv(param);
+			free(ctx->p_event_file_prefix);
+			ctx->p_event_file_prefix = val ? strdup(val) : NULL;
+			break;
+        	case EDG_WLL_PARAM_LOG_IL_SOCK:
+			if(!val) val = mygetenv(param);
+			free(ctx->p_il_sock);
+			ctx->p_il_sock = val ? strdup(val) : NULL;
+			break;
+
 		default:
 			return edg_wll_SetError(ctx,EINVAL,"unknown parameter");
 	}
@@ -355,6 +368,8 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:
 		case EDG_WLL_PARAM_LBPROXY_USER:
 		case EDG_WLL_PARAM_JPREG_TMPDIR:
+	        case EDG_WLL_PARAM_LOG_FILE_PREFIX:
+	        case EDG_WLL_PARAM_LOG_IL_SOCK:
 			return edg_wll_SetParamString(ctx,param,va_arg(ap,char *));
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 		case EDG_WLL_PARAM_LOG_SYNC_TIMEOUT: 
@@ -468,6 +483,14 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 			p_string = va_arg(ap, char **);
 			*p_string = estrdup(ctx->jpreg_dir);
 			break;
+	        case EDG_WLL_PARAM_LOG_FILE_PREFIX:
+			p_string = va_arg(ap, char **);
+			*p_string = estrdup(ctx->p_event_file_prefix);
+			break;
+	        case EDG_WLL_PARAM_LOG_IL_SOCK:
+			p_string = va_arg(ap, char **);
+			*p_string = estrdup(ctx->p_il_sock);
+			break;
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 			p_tv = va_arg(ap,struct timeval *);
 			*p_tv = ctx->p_log_timeout;
@@ -484,7 +507,7 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 			p_tv = va_arg(ap,struct timeval *);
 			*p_tv = ctx->p_notif_timeout;
 			break;
-
+			
 		default: 
 			return edg_wll_SetError(ctx, EINVAL, "unknown parameter");
 			break;
@@ -506,6 +529,8 @@ void edg_wll_FreeParams(edg_wll_Context ctx) {
 	if (ctx->p_key_filename) free(ctx->p_key_filename);
 	if (ctx->p_lbproxy_store_sock) free(ctx->p_lbproxy_store_sock);
 	if (ctx->p_lbproxy_serve_sock) free(ctx->p_lbproxy_serve_sock);
+	if (ctx->p_event_file_prefix) free(ctx->p_event_file_prefix);
+	if (ctx->p_il_sock) free(ctx->p_il_sock);
 
 	ctx->p_jobid = NULL;
 	ctx->p_host = NULL;
@@ -519,6 +544,8 @@ void edg_wll_FreeParams(edg_wll_Context ctx) {
 	ctx->p_key_filename = NULL;
 	ctx->p_lbproxy_store_sock = NULL;
 	ctx->p_lbproxy_serve_sock = NULL;
+	ctx->p_event_file_prefix = NULL;
+	ctx->p_il_sock = NULL;
 
 	/* do not free (references only)
 	 * ctx->job_index
