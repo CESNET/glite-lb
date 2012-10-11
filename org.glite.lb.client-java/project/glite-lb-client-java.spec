@@ -1,5 +1,3 @@
-%global distver %(rpm -q --quiet redhat-release && rpm -q --queryformat "%{VERSION}" redhat-release || rpm -q --quiet centos-release && rpm -q --queryformat "%{VERSION}" centos-release || rpm -q --quiet sl-release && rpm -q --queryformat "%{VERSION}" sl-release | sed 's/^\\([0-9]*\\).*/\\1/')
-
 Name:           glite-lb-client-java
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -25,11 +23,7 @@ BuildRequires:  glite-jobid-api-java
 BuildRequires:  glite-lb-types
 BuildRequires:  glite-lb-ws-interface
 BuildRequires:  jakarta-commons-lang
-%if 0%{?distver} >= 6
-BuildRequires:  java-1.6.0-openjdk-devel
-%else
 BuildRequires:  java-devel
-%endif
 BuildRequires:  libtool
 Requires:       emi-trustmanager-axis
 Requires:       emi-trustmanager

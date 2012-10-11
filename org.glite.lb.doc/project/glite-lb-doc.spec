@@ -1,5 +1,3 @@
-%global is_fedora %(rpm -q --quiet fedora-release && echo 1 || echo 0)
-
 Name:           glite-lb-doc
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -13,8 +11,8 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.doc
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch:      noarch
-%if %is_fedora
-BuildRequires:  texlive-latex
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
+BuildRequires:  tex(latex)
 %else
 BuildRequires:  tetex-latex
 %endif

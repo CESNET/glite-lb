@@ -1,5 +1,3 @@
-%global distver %(rpm -q --quiet redhat-release && rpm -q --queryformat "%{VERSION}" redhat-release || rpm -q --quiet centos-release && rpm -q --queryformat "%{VERSION}" centos-release || rpm -q --quiet sl-release && rpm -q --queryformat "%{VERSION}" sl-release | sed 's/^\\([0-9]*\\).*/\\1/')
-
 Name:           glite-jobid-api-java
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -15,11 +13,7 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch:      noarch
 BuildRequires:  ant
 BuildRequires:  jakarta-commons-codec
-%if 0%{?distver} >= 6
-BuildRequires:  java-1.6.0-openjdk-devel%{?_isa}
-%else
 BuildRequires:  java-devel
-%endif
 Requires:       jakarta-commons-codec
 
 %description
