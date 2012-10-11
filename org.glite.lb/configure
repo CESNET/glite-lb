@@ -36,8 +36,8 @@ my $localstatedir;
 my $os_type;
 my $staged;
 my $module;
-my $thrflavour = 'gcc64dbgpthr';
-my $nothrflavour = 'gcc64dbg';
+my $thrflavour = '';
+my $nothrflavour = '';
 my $mode = 'build';
 my $help = 0;
 my $listmodules;
@@ -2131,7 +2131,7 @@ General options (defaults in []):
   --os-type=DIST                system type (debian/redhat/fedora)
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
   --thrflavour=flavour
-  --nothrflavour=flavour	threaded and non-treaded flavours [gcc64dbgpthr,gcc64dbg]
+  --nothrflavour=flavour	threaded and non-treaded flavours []
   --listmodules=subsys          list modules of a subsystem
   --listmodules=module          list subpackages of a module
   --version=maj.min.rev-age	version used instead of reading version.properties
