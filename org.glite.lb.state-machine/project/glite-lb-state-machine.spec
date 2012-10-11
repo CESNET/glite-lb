@@ -1,40 +1,40 @@
-Summary: @SUMMARY@
-Name: glite-lb-state-machine
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildRequires: chrpath
-BuildRequires: classads-devel
-BuildRequires: expat-devel
-BuildRequires: glite-jobid-api-c-devel
-BuildRequires: glite-lb-common-devel
-BuildRequires: glite-lb-types
-BuildRequires: glite-lbjp-common-db-devel
-BuildRequires: glite-lbjp-common-gss-devel
-BuildRequires: glite-lbjp-common-jp-interface-devel
-BuildRequires: glite-lbjp-common-trio-devel
-BuildRequires: libtool
-BuildRequires: libxslt
-BuildRequires: pkgconfig
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.state-machine/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-lb-state-machine
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.state-machine/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  chrpath
+BuildRequires:  classads-devel
+BuildRequires:  expat-devel
+BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-lb-common-devel
+BuildRequires:  glite-lb-types
+BuildRequires:  glite-lbjp-common-db-devel
+BuildRequires:  glite-lbjp-common-gss-devel
+BuildRequires:  glite-lbjp-common-jp-interface-devel
+BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  libtool
+BuildRequires:  libxslt
+BuildRequires:  pkgconfig
 
 %description
 @DESCRIPTION@
 
 
-%package devel
-Summary: Development files for gLite L&B state machine
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: glite-lb-common-devel
+%package        devel
+Summary:        Development files for gLite L&B state machine
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       glite-lb-common-devel
 
-
-%description devel
+%description    devel
 This package contains development libraries and header files for gLite L&B
 state machine.
 
@@ -77,7 +77,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/%{_lib}/libglite_lb_statemachine.so.@MAJOR@
 /usr/%{_lib}/glite_lb_plugin.so.0
 /usr/%{_lib}/glite_lb_plugin.so.0.0.0
-
 
 %files devel
 %defattr(-,root,root)

@@ -1,41 +1,41 @@
-Summary: @SUMMARY@
-Name: glite-lb-logger
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Daemons
-BuildRequires: cppunit-devel%{?_isa}
-BuildRequires: chrpath
-BuildRequires: glite-lb-common-devel%{?_isa}
-BuildRequires: glite-jobid-api-c-devel%{?_isa}
-BuildRequires: glite-lbjp-common-gss-devel%{?_isa}
-BuildRequires: glite-lbjp-common-trio-devel%{?_isa}
-BuildRequires: glite-lbjp-common-log-devel%{?_isa}
-BuildRequires: libtool
-BuildRequires: pkgconfig
+Name:           glite-lb-logger
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
+
+Group:          System Environment/Daemons
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.logger/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  cppunit-devel%{?_isa}
+BuildRequires:  chrpath
+BuildRequires:  glite-lb-common-devel%{?_isa}
+BuildRequires:  glite-jobid-api-c-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-gss-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-log-devel%{?_isa}
+BuildRequires:  libtool
+BuildRequires:  pkgconfig
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.logger/%{version}/src/%{name}-@VERSION@.src.tar.gz
-
 
 %description
 @DESCRIPTION@
 
 
-%package devel
-Summary: Development files for gLite L&B logger
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: glite-lb-common-devel%{?_isa}
-Requires: glite-lbjp-common-gss-devel%{?_isa}
-Requires: glite-lbjp-common-log-devel%{?_isa}
+%package        devel
+Summary:        Development files for gLite L&B logger
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       glite-lb-common-devel%{?_isa}
+Requires:       glite-lbjp-common-gss-devel%{?_isa}
+Requires:       glite-lbjp-common-log-devel%{?_isa}
 
-
-%description devel
+%description    devel
 This package contains header files for building plugins for gLite L&B logger.
 
 
@@ -105,7 +105,6 @@ fi
 /usr/share/doc/%{name}-%{version}/package.summary
 /usr/share/man/man8/glite-lb-interlogd.8.gz
 /usr/share/man/man8/glite-lb-logd.8.gz
-
 
 %files devel
 %defattr(-,root,root)

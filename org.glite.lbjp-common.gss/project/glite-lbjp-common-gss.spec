@@ -1,51 +1,51 @@
 %global gssapi_provider_kerberos %{?gssapi_provider_kerberos:0}
 
-Summary: @SUMMARY@
-Name: glite-lbjp-common-gss
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildRequires: c-ares-devel
-BuildRequires: c-ares
-BuildRequires: chrpath
-BuildRequires: cppunit-devel
-%if %gssapi_provider_kerberos
-BuildRequires: globus-common-devel
-BuildRequires: krb5-devel
-%else
-BuildRequires: globus-gssapi-gsi-devel
-%endif
-BuildRequires: libtool
-BuildRequires: openssl-devel
-BuildRequires: pkgconfig
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gss/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-lbjp-common-gss
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gss/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  c-ares-devel
+BuildRequires:  c-ares
+BuildRequires:  chrpath
+BuildRequires:  cppunit-devel
+%if %gssapi_provider_kerberos
+BuildRequires:  globus-common-devel
+BuildRequires:  krb5-devel
+%else
+BuildRequires:  globus-gssapi-gsi-devel
+%endif
+BuildRequires:  libtool
+BuildRequires:  openssl-devel
+BuildRequires:  pkgconfig
+Obsoletes:      glite-security-gss%{?_isa} < 2.1.5-1
 
 %description
 @DESCRIPTION@
 
 
-%package devel
-Summary: Development files for gLite GSS library
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
+%package        devel
+Summary:        Development files for gLite GSS library
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 %if %gssapi_provider_kerberos
-Requires: globus-common-devel
-Requires: krb5-devel
+Requires:       globus-common-devel
+Requires:       krb5-devel
 %else
-Requires: globus-gssapi-gsi-devel
+Requires:       globus-gssapi-gsi-devel
 %endif
-Requires: pkgconfig
-Provides: glite-security-gss%{?_isa} = %{version}-%{release}
-Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
+Requires:       pkgconfig
+Provides:       glite-security-gss%{?_isa} = %{version}-%{release}
+Obsoletes:      glite-security-gss%{?_isa} < 2.1.5-1
 
-
-%description devel
+%description    devel
 This package contains development libraries and header files for gLite GSS
 library.
 
@@ -94,7 +94,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/%{_lib}/libglite_security_gss.so.9.@MINOR@.@REVISION@
 /usr/%{_lib}/libglite_security_gss.so.9
-
 
 %files devel
 %defattr(-,root,root)

@@ -1,30 +1,30 @@
-Summary: @SUMMARY@
-Name: glite-lbjp-common-log
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildRequires: chrpath
-BuildRequires: libtool
-BuildRequires: log4c-devel
-BuildRequires: log4c
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.log/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-lbjp-common-log
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
+
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.log/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  chrpath
+BuildRequires:  libtool
+BuildRequires:  log4c-devel
+BuildRequires:  log4c
 
 
 %description
 @DESCRIPTION@
 
+%package        devel
+Summary:        Development files for gLite L&B/JP common log module
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 
-%package devel
-Summary: Development files for gLite L&B/JP common log module
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
-
-
-%description devel
+%description    devel
 This package contains development libraries and header files for gLite L&B/JP
 common log module.
 
@@ -71,7 +71,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc /usr/share/doc/%{name}-%{version}/log4crc.example-production
 /usr/%{_lib}/libglite_lbu_log.so.@MAJOR@.@MINOR@.@REVISION@
 /usr/%{_lib}/libglite_lbu_log.so.@MAJOR@
-
 
 %files devel
 %defattr(-,root,root)

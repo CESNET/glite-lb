@@ -1,21 +1,22 @@
-Summary: @SUMMARY@
-Name: glite-lb-ws-test
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Base
-BuildRequires: chrpath
-BuildRequires: gsoap-devel
-BuildRequires: glite-lb-ws-interface
-BuildRequires: glite-lbjp-common-gsoap-plugin-devel
-BuildRequires: libtool
-BuildRequires: pkgconfig
-Requires: glite-lb-ws-interface
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.types/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-lb-ws-test
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Base
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.types/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  chrpath
+BuildRequires:  gsoap-devel
+BuildRequires:  glite-lb-ws-interface
+BuildRequires:  glite-lbjp-common-gsoap-plugin-devel
+BuildRequires:  libtool
+BuildRequires:  pkgconfig
+Requires:       glite-lb-ws-interface
 
 %description
 @DESCRIPTION@

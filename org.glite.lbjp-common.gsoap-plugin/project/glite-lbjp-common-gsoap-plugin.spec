@@ -1,44 +1,44 @@
-Summary: @SUMMARY@
-Name: glite-lbjp-common-gsoap-plugin
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildRequires: c-ares-devel
-BuildRequires: cppunit-devel
-BuildRequires: chrpath
+Name:           glite-lbjp-common-gsoap-plugin
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
+
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gsoap-plugin/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  c-ares-devel
+BuildRequires:  cppunit-devel
+BuildRequires:  chrpath
 # gssapi is needed explicitly for gsoap-plugin, but the proper package is
 # known only in glite-lbjp-common-gss-devel:
 #  - gssapi from Globus (globus-gssapi-gsi-devel)
 #  - gssapi from MIT Kerberos (krb5-devel)
 #  - gssapi from Heimdal Kerberos
 #BuildRequires: globus-gssapi-gsi-devel
-BuildRequires: gsoap
-BuildRequires: gsoap-devel
-BuildRequires: glite-lbjp-common-gss-devel
-BuildRequires: libtool
-BuildRequires: pkgconfig
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Obsoletes: glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gsoap-plugin/%{version}/src/%{name}-@VERSION@.src.tar.gz
-
+BuildRequires:  gsoap
+BuildRequires:  gsoap-devel
+BuildRequires:  glite-lbjp-common-gss-devel
+BuildRequires:  libtool
+BuildRequires:  pkgconfig
+Obsoletes:      glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
 
 %description
 @DESCRIPTION@
 
 
-%package devel
-Summary: Development files for gLite gsoap-plugin
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: glite-lbjp-common-gss-devel
-Provides: glite-security-gsoap-plugin%{?_isa} = %{version}-%{release}
-Obsoletes: glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
+%package        devel
+Summary:        Development files for gLite gsoap-plugin
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       glite-lbjp-common-gss-devel
+Provides:       glite-security-gsoap-plugin%{?_isa} = %{version}-%{release}
+Obsoletes:      glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
 
-
-%description devel
+%description    devel
 This package contains development libraries and header files for gLite
 gsoap-plugin.
 
@@ -81,7 +81,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/%{_lib}/libglite_security_gsoap_plugin_*.so.9.@MINOR@.@REVISION@
 /usr/%{_lib}/libglite_security_gsoap_plugin_*.so.9
-
 
 %files devel
 %defattr(-,root,root)

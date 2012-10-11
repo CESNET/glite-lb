@@ -1,51 +1,50 @@
-Summary: @SUMMARY@
-Name: glite-lb-client
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildRequires: classads
-BuildRequires: classads-devel
-BuildRequires: cppunit-devel
-BuildRequires: chrpath
-BuildRequires: glite-lb-types
-BuildRequires: glite-jobid-api-c-devel
-BuildRequires: glite-jobid-api-cpp-devel
-BuildRequires: glite-lb-common-devel
-BuildRequires: glite-lbjp-common-gss-devel
-BuildRequires: glite-lbjp-common-trio-devel
-BuildRequires: libtool
-BuildRequires: pkgconfig
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.client/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-lb-client
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.client/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  classads
+BuildRequires:  classads-devel
+BuildRequires:  cppunit-devel
+BuildRequires:  chrpath
+BuildRequires:  glite-lb-types
+BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-jobid-api-cpp-devel
+BuildRequires:  glite-lb-common-devel
+BuildRequires:  glite-lbjp-common-gss-devel
+BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  libtool
+BuildRequires:  pkgconfig
 
 %description
 @DESCRIPTION@
 
 
-%package devel
-Summary: Development files for gLite L&B client library
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: glite-lb-common-devel
-Requires: glite-jobid-api-c-devel
-Requires: glite-jobid-api-cpp-devel
+%package        devel
+Summary:        Development files for gLite L&B client library
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       glite-lb-common-devel
+Requires:       glite-jobid-api-c-devel
+Requires:       glite-jobid-api-cpp-devel
 
-
-%description devel
+%description    devel
 This package contains development libraries and header files for gLite L&B
 client library.
 
 
-%package progs
-Summary: gLite L&B client programs and examples
-Group: System Environment/Base
+%package        progs
+Summary:        gLite L&B client programs and examples
+Group:          System Environment/Base
 
-
-%description progs
+%description    progs
 This package contains client programs and examples for gLite L&B.
 
 
@@ -94,7 +93,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/doc/%{name}-%{version}/package.description
 /usr/share/doc/%{name}-%{version}/package.summary
 
-
 %files devel
 %defattr(-,root,root)
 %dir /usr/share/emi/
@@ -112,7 +110,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/man/man1/glite-lb-logevent.1.gz
 /usr/share/man/man8/glite-lb-dump.8.gz
 /usr/share/man/man8/glite-lb-load.8.gz
-
 
 %files progs
 %defattr(-,root,root)

@@ -1,28 +1,28 @@
-Summary: @SUMMARY@
-Name: glite-lbjp-common-maildir
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildRequires: chrpath
-BuildRequires: libtool
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.maildir/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-lbjp-common-maildir
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.maildir/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  chrpath
+BuildRequires:  libtool
 
 %description
 @DESCRIPTION@
 
 
-%package devel
-Summary: Development files for gLite L&B/JP common maildir library
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
+%package        devel
+Summary:        Development files for gLite L&B/JP common maildir library
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 
-
-%description devel
+%description    devel
 This package contains development libraries and header files for gLite L&B/JP
 common maildir library.
 
@@ -63,7 +63,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 /usr/%{_lib}/libglite_lbu_maildir.so.@MAJOR@.@MINOR@.@REVISION@
 /usr/%{_lib}/libglite_lbu_maildir.so.@MAJOR@
-
 
 %files devel
 %defattr(-,root,root)

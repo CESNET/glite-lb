@@ -1,14 +1,17 @@
-Summary: Virtual package for development with gLite jobid C++ API
-Name: glite-jobid-api-cpp
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: Development/Libraries
-BuildRequires: glite-jobid-api-c-devel
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-c/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-jobid-api-cpp
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        Virtual package for development with gLite jobid C++ API
+
+Group:          Development/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-c/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  pkgconfig
 
 
 %description
@@ -16,14 +19,14 @@ This is a virtual package providing runtime and development files for gLite
 jobid C++ API.
 
 
-%package devel
-Summary: @SUMMARY@
-Group: Development/Libraries
-Requires: glite-jobid-api-c%{?_isa}
-Provides: %{name} = %{version}-%{release}
+%package        devel
+Summary:        @SUMMARY@
+Group:          Development/Libraries
+Requires:       glite-jobid-api-c%{?_isa}
+Provides:       %{name} = %{version}-%{release}
 
 
-%description devel
+%description    devel
 @DESCRIPTION@
 
 

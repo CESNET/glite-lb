@@ -1,31 +1,31 @@
-Summary: @SUMMARY@
-Name: glite-jobid-api-c
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildRequires: chrpath
-BuildRequires: libtool
-BuildRequires: cppunit-devel
-BuildRequires: openssl-devel
-BuildRequires: pkgconfig
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-c/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-jobid-api-c
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-c/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  chrpath
+BuildRequires:  libtool
+BuildRequires:  cppunit-devel
+BuildRequires:  openssl-devel
+BuildRequires:  pkgconfig
 
 %description
 @DESCRIPTION@
 
 
-%package devel
-Summary: Development files for gLite jobid C library
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
+%package        devel
+Summary:        Development files for gLite jobid C library
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 
-
-%description devel
+%description    devel
 This package contains development libraries and header files for gLite jobid
 C library.
 
@@ -66,7 +66,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 /usr/%{_lib}/libglite_jobid.so.@MAJOR@.@MINOR@.@REVISION@
 /usr/%{_lib}/libglite_jobid.so.@MAJOR@
-
 
 %files devel
 %defattr(-,root,root)

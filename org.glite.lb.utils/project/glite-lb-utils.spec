@@ -1,25 +1,26 @@
-Summary: @SUMMARY@
-Name: glite-lb-utils
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Base
-BuildRequires: chrpath
-BuildRequires: cppunit-devel
-BuildRequires: glite-lb-types
-BuildRequires: glite-jobid-api-c-devel
-BuildRequires: glite-lb-client-devel
-BuildRequires: glite-lb-state-machine-devel
-BuildRequires: glite-lbjp-common-jp-interface-devel
-BuildRequires: glite-lbjp-common-maildir-devel
-BuildRequires: glite-lbjp-common-trio-devel
-BuildRequires: libtool
-BuildRequires: pkgconfig
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.utils/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-lb-utils
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Base
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.utils/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  chrpath
+BuildRequires:  cppunit-devel
+BuildRequires:  glite-lb-types
+BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-lb-client-devel
+BuildRequires:  glite-lb-state-machine-devel
+BuildRequires:  glite-lbjp-common-jp-interface-devel
+BuildRequires:  glite-lbjp-common-maildir-devel
+BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  libtool
+BuildRequires:  pkgconfig
 
 %description
 @DESCRIPTION@

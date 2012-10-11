@@ -1,20 +1,21 @@
-Summary: @SUMMARY@
-Name: emi-lb-nagios-plugins
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Daemons
-BuildArch: noarch
-Requires: glite-lb-client
-Requires: glite-lb-utils
-Requires: glite-lb-ws-test
-Requires: globus-proxy-utils
-Provides: glite-lb-nagios-plugins = %{name}-%{version}-%{release}
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.nagios/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           emi-lb-nagios-plugins
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Daemons
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.nagios/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildArch:      noarch
+Requires:       glite-lb-client
+Requires:       glite-lb-utils
+Requires:       glite-lb-ws-test
+Requires:       globus-proxy-utils
+Provides:       glite-lb-nagios-plugins = %{name}-%{version}-%{release}
 
 %description
 @DESCRIPTION@

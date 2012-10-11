@@ -1,25 +1,26 @@
 %global distver %(rpm -q --quiet redhat-release && rpm -q --queryformat "%{VERSION}" redhat-release || rpm -q --quiet centos-release && rpm -q --queryformat "%{VERSION}" centos-release || rpm -q --quiet sl-release && rpm -q --queryformat "%{VERSION}" sl-release | sed 's/^\\([0-9]*\\).*/\\1/')
 
-Summary: @SUMMARY@
-Name: glite-jobid-api-java
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildArch: noarch
-BuildRequires: ant
-BuildRequires: jakarta-commons-codec
-%if 0%{?distver} >= 6
-BuildRequires: java-1.6.0-openjdk-devel%{?_isa}
-%else
-BuildRequires: java-devel
-%endif
-Requires: jakarta-commons-codec
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-java/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-jobid-api-java
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-java/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildArch:      noarch
+BuildRequires:  ant
+BuildRequires:  jakarta-commons-codec
+%if 0%{?distver} >= 6
+BuildRequires:  java-1.6.0-openjdk-devel%{?_isa}
+%else
+BuildRequires:  java-devel
+%endif
+Requires:       jakarta-commons-codec
 
 %description
 @DESCRIPTION@

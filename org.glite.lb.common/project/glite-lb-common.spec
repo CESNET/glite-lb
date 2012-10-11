@@ -1,43 +1,43 @@
-Summary: @SUMMARY@
-Name: glite-lb-common
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildRequires: c-ares-devel
-BuildRequires: chrpath
-BuildRequires: classads
-BuildRequires: classads-devel
-BuildRequires: cppunit-devel
-BuildRequires: expat
-BuildRequires: expat-devel
-BuildRequires: glite-jobid-api-cpp-devel
-BuildRequires: glite-jobid-api-c-devel
-BuildRequires: glite-lbjp-common-gss-devel
-BuildRequires: glite-lbjp-common-trio-devel
-BuildRequires: libtool
-BuildRequires: glite-lb-types
-BuildRequires: pkgconfig
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.common/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-lb-common
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.common/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  c-ares-devel
+BuildRequires:  chrpath
+BuildRequires:  classads
+BuildRequires:  classads-devel
+BuildRequires:  cppunit-devel
+BuildRequires:  expat
+BuildRequires:  expat-devel
+BuildRequires:  glite-jobid-api-cpp-devel
+BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-lbjp-common-gss-devel
+BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  libtool
+BuildRequires:  glite-lb-types
+BuildRequires:  pkgconfig
 
 %description
 @DESCRIPTION@
 
 
-%package devel
-Summary: Development files for gLite L&B common library
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: glite-jobid-api-c-devel
-Requires: glite-lb-types
-Requires: glite-lbjp-common-gss-devel
+%package        devel
+Summary:        Development files for gLite L&B common library
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       glite-jobid-api-c-devel
+Requires:       glite-lb-types
+Requires:       glite-lbjp-common-gss-devel
 
-
-%description devel
+%description    devel
 This package contains development libraries and header files for gLite L&B
 common library.
 
@@ -83,7 +83,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/doc/%{name}-%{version}/package.summary
 /usr/%{_lib}/libglite_lb_common.so.13.@MINOR@.@REVISION@
 /usr/%{_lib}/libglite_lb_common.so.13
-
 
 %files devel
 %defattr(-,root,root)

@@ -1,56 +1,57 @@
-Summary: @SUMMARY@
-Name: glite-lb-server
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Daemons
-BuildRequires: expat
+Name:           glite-lb-server
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
+
+Group:          System Environment/Daemons
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.server/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  expat
 # gssapi is needed explicitly for glite-lb-server, but the proper package is
 # known only in glite-lbjp-common-gss-devel:
 #  - gssapi from Globus (globus-gssapi-gsi-devel)
 #  - gssapi from MIT Kerberos (krb5-devel)
 #  - gssapi from Heimdal Kerberos
 #BuildRequires: globus-gssapi-gsi-devel
-BuildRequires: globus-gssapi-gsi-devel
-BuildRequires: glite-jobid-api-c-devel
-BuildRequires: glite-lb-common-devel
-BuildRequires: glite-lb-state-machine-devel
-BuildRequires: glite-lb-types
-BuildRequires: glite-lb-ws-interface
-BuildRequires: glite-lbjp-common-db-devel
-BuildRequires: glite-lbjp-common-gss-devel
-BuildRequires: glite-lbjp-common-gsoap-plugin-devel
-BuildRequires: glite-lbjp-common-log-devel
-BuildRequires: glite-lbjp-common-maildir-devel
-BuildRequires: glite-lbjp-common-server-bones-devel
-BuildRequires: glite-lbjp-common-trio-devel
-BuildRequires: gridsite-devel
-BuildRequires: gsoap-devel
-BuildRequires: c-ares-devel
-BuildRequires: cppunit-devel
-BuildRequires: flex
-BuildRequires: voms-devel
-BuildRequires: classads-devel
-BuildRequires: libtool
-BuildRequires: libxml2-devel
-BuildRequires: expat-devel
-BuildRequires: bison
-BuildRequires: chrpath
-BuildRequires: pkgconfig
-Requires: mysql-server
+BuildRequires:  globus-gssapi-gsi-devel
+BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-lb-common-devel
+BuildRequires:  glite-lb-state-machine-devel
+BuildRequires:  glite-lb-types
+BuildRequires:  glite-lb-ws-interface
+BuildRequires:  glite-lbjp-common-db-devel
+BuildRequires:  glite-lbjp-common-gss-devel
+BuildRequires:  glite-lbjp-common-gsoap-plugin-devel
+BuildRequires:  glite-lbjp-common-log-devel
+BuildRequires:  glite-lbjp-common-maildir-devel
+BuildRequires:  glite-lbjp-common-server-bones-devel
+BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  gridsite-devel
+BuildRequires:  gsoap-devel
+BuildRequires:  c-ares-devel
+BuildRequires:  cppunit-devel
+BuildRequires:  flex
+BuildRequires:  voms-devel
+BuildRequires:  classads-devel
+BuildRequires:  libtool
+BuildRequires:  libxml2-devel
+BuildRequires:  expat-devel
+BuildRequires:  bison
+BuildRequires:  chrpath
+BuildRequires:  pkgconfig
+Requires:       mysql-server
 # for upgrade from EMI-1:
 # new function glite_srvbones_daemon_listen() in 2.2.0
-Requires: glite-lbjp-common-server-bones%{?_isa} >= 2.2.0
-Requires: glite-lb-client-progs
-Requires: glite-lb-utils
+Requires:       glite-lbjp-common-server-bones%{?_isa} >= 2.2.0
+Requires:       glite-lb-client-progs
+Requires:       glite-lb-utils
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.server/%{version}/src/%{name}-@VERSION@.src.tar.gz
-
 
 %description
 @DESCRIPTION@

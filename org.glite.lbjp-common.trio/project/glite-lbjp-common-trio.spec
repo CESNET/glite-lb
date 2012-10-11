@@ -1,30 +1,30 @@
-Summary: @SUMMARY@
-Name: glite-lbjp-common-trio
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Libraries
-BuildRequires: cppunit-devel
-BuildRequires: chrpath
-BuildRequires: libtool
-BuildRequires: pkgconfig
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.trio/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Name:           glite-lbjp-common-trio
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
 
+Group:          System Environment/Libraries
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.trio/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  cppunit-devel
+BuildRequires:  chrpath
+BuildRequires:  libtool
+BuildRequires:  pkgconfig
 
 %description
 @DESCRIPTION@
 
 
-%package devel
-Summary: Development files for gLite L&B/JP common trio library
-Group: Development/Libraries
-Requires: %{name}%{?_isa} = %{version}-%{release}
+%package        devel
+Summary:        Development files for gLite L&B/JP common trio library
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 
-
-%description devel
+%description    devel
 This package contains development libraries and header files for gLite L&B/JP
 common trio library.
 
@@ -67,7 +67,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/%{_lib}/libglite_lbu_trio.so.@MAJOR@.@MINOR@.@REVISION@
 /usr/%{_lib}/libglite_lbu_trio.so.@MAJOR@
-
 
 %files devel
 %defattr(-,root,root)

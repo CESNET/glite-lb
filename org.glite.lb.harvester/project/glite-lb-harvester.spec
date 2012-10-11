@@ -1,28 +1,29 @@
-Summary: @SUMMARY@
-Name: glite-lb-harvester
-Version: @MAJOR@.@MINOR@.@REVISION@
-Release: @AGE@%{?dist}
-Url: @URL@
-License: ASL 2.0
-Vendor: EMI
-Group: System Environment/Daemons
-BuildRequires: chrpath
-BuildRequires: docbook-utils
-BuildRequires: glite-jobid-api-c-devel
-BuildRequires: glite-lb-client-devel
-BuildRequires: glite-lb-common-devel
-BuildRequires: glite-lbjp-common-gss-devel
-BuildRequires: glite-lbjp-common-db-devel
-BuildRequires: glite-lbjp-common-log-devel
-BuildRequires: glite-lbjp-common-trio-devel
-BuildRequires: libtool
-BuildRequires: pkgconfig
+Name:           glite-lb-harvester
+Version:        @MAJOR@.@MINOR@.@REVISION@
+Release:        @AGE@%{?dist}
+Summary:        @SUMMARY@
+
+Group:          System Environment/Daemons
+License:        ASL 2.0
+Url:            @URL@
+Vendor:         EMI
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.harvester/%{version}/src/%{name}-@VERSION@.src.tar.gz
+BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+
+BuildRequires:  chrpath
+BuildRequires:  docbook-utils
+BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-lb-client-devel
+BuildRequires:  glite-lb-common-devel
+BuildRequires:  glite-lbjp-common-gss-devel
+BuildRequires:  glite-lbjp-common-db-devel
+BuildRequires:  glite-lbjp-common-log-devel
+BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  libtool
+BuildRequires:  pkgconfig
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.harvester/%{version}/src/%{name}-@VERSION@.src.tar.gz
-
 
 %description
 @DESCRIPTION@
