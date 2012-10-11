@@ -969,7 +969,7 @@ for my $ext (keys %deps_aux) {
 	},
 
 	emi => {
-		current_version => 2,
+		current_version => 3,
 		etics_name => 'emi',
 		conf_prefix => {
 			'lb' => 'emi-',
@@ -1654,12 +1654,12 @@ sub mode_etics {
 			$age = $age - 1;
 		}
 
-		# '.emi1' suffix for older packaging
-		if ($project eq 'emi' and $project_version == 1) {
+		# .emi1/.emi2 suffix for older packaging
+		if ($project eq 'emi' and $project_version <= 2) {
 			$age = $age.'.'.$project.$project_version;
 		}
 	}
-	if ($project eq 'emi' and $project_version == 1) {
+	if ($project eq 'emi' and $project_version <= 2) {
 		$conf = $conf.$project.$project_version;
 	}
 
