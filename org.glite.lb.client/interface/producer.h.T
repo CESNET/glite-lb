@@ -129,6 +129,27 @@ extern int edg_wll_LogEventProxy(
         char *fmt, ...);        
 
 /**
+ * Formats a logging message and stores it to local file to be delivered by IL
+ * (which is also notified through UNIX socket)
+ * \brief generic synchronous logging function
+ * \param[in,out] context	context to work with,
+ * \param[in] event		type of the event,
+ * \param[in] fmt		printf()-like format string,
+ * \param[in] ...		event specific values/data according to fmt,
+ * \retval 0            successful completition,
+ * \retval EINVAL       bad jobId, unknown event code, or the format string together with the remaining arguments does not form a valid event,             
+ * \retval ENOSPC       L&B infrastructure failed to accept the event due to lack of disk space etc.,
+ * \retval ENOMEM       failed to allocate memory,
+ * \retval ECONNREFUSED cannot connect to the specified L&B Proxy
+ * \retval EAGAIN       non blocking return from the call, the event may or may not get logged,
+ * \retval EDG_WLL_ERROR_NOJOBID logging call attempted without assigning jobId to the context.
+ */             
+extern int edg_wll_LogEventFile(
+        edg_wll_Context context, 
+        edg_wll_EventCode event,
+        char *fmt, ...);        
+
+/**
  * Instructs interlogger to to deliver all pending events related to current job
  * \brief flush events from interlogger
  * \note sort of status query more than a command
@@ -179,6 +200,23 @@ extern int edg_wll_SetLoggingJob(
  * \param[in] flags 		flags on code handling (\see API documentation)
  */
 extern int edg_wll_SetLoggingJobProxy(
+	edg_wll_Context	context,
+	glite_jobid_const_t	job,
+	const char *		code,
+	const char *		user,
+	int			flags
+);
+
+/**
+ * Set a current job for given context.
+ * \note Should be called before any call logging locally to file to be consumed by IL.
+ * \param[in,out] context 	context to work with
+ * \param[in] job 		further logging calls are related to this job
+ * \param[in] code 		sequence code as obtained from previous component
+ * \param[in] user 		user credentials
+ * \param[in] flags 		flags on code handling (\see API documentation)
+ */
+extern int edg_wll_SetLoggingJobFile(
 	edg_wll_Context	context,
 	glite_jobid_const_t	job,
 	const char *		code,

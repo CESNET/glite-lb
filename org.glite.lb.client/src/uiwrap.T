@@ -8,12 +8,15 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
 	my $funcproxy = $func . "Proxy";
 	my $funcc = $func . "CODETOREPLACE";	# name of generated CODE function
 	my $funccproxy = $funcc . "Proxy";
+	my $funcfile = $func . "File";
+	my $funccfile = $funcc . "File";
 	my $p = "edg_wll_Context context"; 	# parameters of generated function
 	my $pc = $p;				# parameters of generated CODE function
 	my $q = "context,EDG_WLL_EVENT_$tu,EDG_WLL_FORMAT_$tu"; # parameters for LogEvent called in generated function
 	my $qc = $q;				# parameters for LogEvent called in generated CODE function
 	my $text = "";				# whole text for generated function
 	my $textproxy = "";			# whole text for generated CODE function
+	my $textfile = "";
 	my $doc = " * \\param[in,out] context\tcontext to work with, \n"; # parameters description for generated function
 	my $docc = $doc;			# parameters description for generated CODE function
 
@@ -63,15 +66,25 @@ for my $t (sort { $event->{order}->{$a} <=> $event->{order}->{$b} }
  * $funcproxy - simple wrapper around edg_wll_LogEventProxy for event $t
  *
 };
+	$textfile = qq{
+/**
+ * \\brief $funcfile
+ *
+ * $funcfile - simple wrapper around edg_wll_LogEventFile for event $t
+ *
+};
 	if ($PRINTDOC) {
 		$text = $text . $doc . " * \\see edg_wll_LogEvent()\n";
-		$textproxy = $textproxy . $doc . "* \\see edg_wll_LogEventProxy()\n"
+		$textproxy = $textproxy . $doc . "* \\see edg_wll_LogEventProxy()\n";
+		$textfile = $textfile . $doc . " *  \\see edg_wll_LogEventFile()\n";
 	}
 	$text = $text . " */\n";
 	$textproxy = $textproxy . " */\n";
+	$textfile = $textfile . " */\n";
 	if ($PRINTPROTOTYPESONLY) {
 		$text = $text . "\nextern int $func($p);\n";
 		$textproxy = $textproxy . "\nextern int $funcproxy($p);\n";
+		$textfile = $textfile . "\nextern int $funcfile($p);\n";
 	} else {
 		$text = $text . qq{
 int $func($p)
@@ -91,9 +104,19 @@ $free
 	return ret;
 \}
 };
+		$textfile = $textfile . qq{
+int $funcfile($p)
+\{
+$decl
+	ret = edg_wll_LogEventFile($q);
+$free
+	return ret;
+\}
+};
 	}
 	gen "$text";
 	gen "$textproxy";
+	gen "$textfile";
 
 	#
 	# generate also CODE functions:
@@ -106,6 +129,7 @@ $free
 		my $code = uc $_->{name};
 		my $funccc = $funcc; $funccc =~ s/CODETOREPLACE/$code/g;
 		my $funcccproxy = $funccproxy; $funcccproxy =~ s/CODETOREPLACE/$code/g;
+		my $funcccfile = $funccfile; $funcccfile =~ s/CODETOREPLACE/$code/g;
 		my $qcc = $qc; $qcc =~ s/CODETOREPLACE/"$code"/g;
 		my $textc = qq{
 /**
@@ -121,15 +145,25 @@ $free
  * $funcccproxy - simple wrapper around edg_wll_LogEventProxy for event $t, $fn $code
  *
 };
+		my $textcfile = qq{
+/**
+ * \\brief $funcccfile
+ *
+ * $funcccfile - simple wrapper around edg_wll_LogEventFile for event $t, $fn $code
+ *
+};
 		if ($PRINTDOC) {
 			$textc = $textc . $docc . " * \\see edg_wll_LogEvent()\n";
 			$textcproxy = $textcproxy . $docc . " * \\see edg_wll_LogEventProxy()\n";
+			$textcfile = $textcfile . $docc . " * \\see edg_wll_LogEventFile()\n";
 		}
 		$textc = $textc . " */\n";
 		$textcproxy = $textcproxy . " */\n";
+		$textcfile = $textcfile . " */\n";
 		if ($PRINTPROTOTYPESONLY) {
 			$textc = $textc . "\nextern int $funccc($pc);\n";
 			$textcproxy = $textcproxy . "\nextern int $funcccproxy($pc);\n";
+			$textcfile = $textcfile . "\nextern int $funcccfile($pc);\n";
 		} else {
 			$textc = $textc . qq{
 int $funccc($pc)
@@ -149,9 +183,19 @@ $free
 	return ret;
 \}
 };
+			$textcfile = $textcfile . qq{
+int $funcccfile($pc)
+\{
+$decl
+	ret = edg_wll_LogEventFile($qcc);
+$free
+	return ret;
+\}
+};
 		}
 		gen "$textc";
 		gen "$textcproxy";
+		gen "$textcfile";
 	} # for codes
 	} # if
 	} # for getFields

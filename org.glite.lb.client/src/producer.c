@@ -38,6 +38,10 @@ limitations under the License.
 #include "prod_proto.h"
 #include "consumer.h" // for QuerySequenceCode
 
+#define FCNTL_ATTEMPTS		5
+#define FCNTL_TIMEOUT		1
+#define DEFAULT_SOCKET "/tmp/interlogger.sock"
+
 #ifdef FAKE_VERSION
 int edg_wll_DoLogEvent(edg_wll_Context ctx, edg_wll_LogLine logline);
 int edg_wll_DoLogEventServer(edg_wll_Context ctx, int flags, edg_wll_LogLine logline);
@@ -269,6 +273,63 @@ edg_wll_DoLogEventServer_end:
 
 }
 
+/**
+ *----------------------------------------------------------------------
+ *  Save already formatted ULM string to event file
+ *   and notify IL through local socket
+ * \brief save message to file, notify IL
+ * \param[in,out] ctx		context to work with,
+ * \param[in] logline		formated ULM string
+ *----------------------------------------------------------------------
+ */
+int edg_wll_DoLogEventFile(
+	edg_wll_Context ctx,
+	edg_wll_LogLine logline)
+{
+
+	long	filepos;
+	char	*jobid_s,
+		*event_file = NULL;
+	int	err = 0;
+
+#define _err(n)		{ err = n; goto out; }
+
+	edg_wll_ResetError(ctx);
+
+	jobid_s = edg_wlc_JobIdGetUnique(ctx->p_jobid);
+	if ( !jobid_s ) {
+		_err(edg_wll_SetError(ctx, ENOMEM, "edg_wlc_JobIdGetUnique()"));
+	}
+
+	asprintf(&event_file, "%s.%s", 
+		 ctx->p_event_file_prefix ? ctx->p_event_file_prefix : EDG_WLL_LOG_PREFIX_DEFAULT, 
+		 jobid_s);
+	if ( !event_file ) {
+		_err(edg_wll_SetError(ctx, ENOMEM, "asprintf()"));
+	}
+
+	if ( edg_wll_log_event_write(ctx, event_file, logline,
+				     (ctx->p_tmp_timeout.tv_sec > FCNTL_ATTEMPTS ?
+				      ctx->p_tmp_timeout.tv_sec : FCNTL_ATTEMPTS),
+				     FCNTL_TIMEOUT, &filepos) ) {
+
+		_err(edg_wll_UpdateError(ctx, 0, "edg_wll_log_event_write()"));
+	}
+
+	if ( edg_wll_log_event_send(ctx, 
+				    ctx->p_il_sock ? ctx->p_il_sock : DEFAULT_SOCKET,
+				    filepos,
+				    logline, strlen(logline), 1, &ctx->p_tmp_timeout) ) {
+		_err(edg_wll_UpdateError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_event_send()"));
+	}
+
+out:
+	if ( jobid_s ) free(jobid_s);
+	if ( event_file ) free(event_file);
+
+	return handle_errors(ctx, err, "edg_wll_DoLogEventFile()");
+}
+
 #endif /* FAKE_VERSION */
 
 /**
@@ -337,8 +398,10 @@ static int edg_wll_FormatLogLine(
 	}
 /* TODO: merge - add always, probably new ctx->p_user 
 	has this already been agreed? */
-	if ( ( (flags & EDG_WLL_LOGFLAG_PROXY) || (flags & EDG_WLL_LOGFLAG_DIRECT) ) && 
-	   (ctx->p_user_lbproxy) ) {
+	if ( ( (flags & EDG_WLL_LOGFLAG_PROXY)
+	       || (flags & EDG_WLL_LOGFLAG_DIRECT) 
+	       || (flags & EDG_WLL_LOGFLAG_FILE) ) && 
+	     (ctx->p_user_lbproxy) ) {
 		if (trio_asprintf(&dguser,EDG_WLL_FORMAT_USER,ctx->p_user_lbproxy) == -1) {
 			edg_wll_SetError(ctx,ret = ENOMEM,"edg_wll_FormatLogLine(): trio_asprintf() error"); 
 			goto edg_wll_formatlogline_end; 
@@ -393,6 +456,7 @@ edg_wll_formatlogline_end:
  * 	EDG_WLL_LOGFLAG_LOCAL	- local-logger
  * 	EDG_WLL_LOGFLAG_PROXY	- lbproxy
  * 	EDG_WLL_LOGFLAG_DIRECT	- bkserver
+ *      EDG_WLL_LOGFLAG_FILE    - local file (IL)
  * \param[in] event		type of the event,
  * \param[in] fmt		printf()-like format string,
  * \param[in] fmt_args		event specific values/data according to fmt.
@@ -410,7 +474,7 @@ static int edg_wll_LogEventMasterVa(
         int     err_store;
         char    *err_desc_store = NULL;
 
-	if ((flags & (EDG_WLL_LOGFLAG_LOCAL|EDG_WLL_LOGFLAG_PROXY|EDG_WLL_LOGFLAG_DIRECT)) == 0) {
+	if ((flags & (EDG_WLL_LOGFLAG_LOCAL|EDG_WLL_LOGFLAG_PROXY|EDG_WLL_LOGFLAG_DIRECT|EDG_WLL_LOGFLAG_FILE)) == 0) {
 		return edg_wll_SetError(ctx,ret = EINVAL,"edg_wll_LogEventMaster(): no known flag specified");
 	}
 
@@ -444,6 +508,10 @@ static int edg_wll_LogEventMasterVa(
                 ret = edg_wll_DoLogEventServer(ctx, flags, out);
                 if (ret) goto edg_wll_logeventmaster_end;
         }
+	if (flags & EDG_WLL_LOGFLAG_FILE) {
+		ret = edg_wll_DoLogEventFile(ctx, out);
+		if (ret) goto edg_wll_logeventmaster_end;
+	}
 #endif
 
 edg_wll_logeventmaster_end:
@@ -479,6 +547,7 @@ edg_wll_logeventmaster_end:
  * 	EDG_WLL_LOGFLAG_LOCAL	- local-logger
  * 	EDG_WLL_LOGFLAG_PROXY	- lbproxy
  * 	EDG_WLL_LOGFLAG_DIRECT	- bkserver
+ *      EDG_WLL_LOGFLAG_FILE    - file (IL)
  * \param[in] event		type of the event,
  * \param[in] fmt		printf()-like format string,
  * \param[in] ...		event specific values/data according to fmt.
@@ -570,6 +639,32 @@ int edg_wll_LogEventProxy(
         ret=edg_wll_LogEventMasterVa(ctx,EDG_WLL_LOGFLAG_PROXY,
 		event,fmt,fmt_args);
         if (ret) edg_wll_UpdateError(ctx,0,"edg_wll_LogEventProxy(): ");
+        va_end(fmt_args);
+
+        return edg_wll_Error(ctx,NULL,NULL);
+}
+
+/**
+ *----------------------------------------------------------------------
+ * Formats a logging message and stores it to local file to be delivered by IL.
+ * \brief generic asynchronous logging function
+ * \note simple wrapper around edg_wll_LogEventMaster()
+ *----------------------------------------------------------------------
+ */
+int edg_wll_LogEventFile(
+        edg_wll_Context ctx,
+        edg_wll_EventCode event,
+        char *fmt, ...)
+{
+        int     ret=0;
+        va_list fmt_args;
+
+        edg_wll_ResetError(ctx);
+
+        va_start(fmt_args,fmt);
+        ret=edg_wll_LogEventMasterVa(ctx,EDG_WLL_LOGFLAG_FILE,
+		event,fmt,fmt_args);
+        if (ret) edg_wll_UpdateError(ctx,0,"edg_wll_LogEventFile(): ");
         va_end(fmt_args);
 
         return edg_wll_Error(ctx,NULL,NULL);
@@ -708,7 +803,8 @@ static int edg_wll_SetLoggingJobMaster(
 	}
 
 	/* add user credentials to context */
-	if ((logging_flags & EDG_WLL_LOGFLAG_PROXY) && user) {
+	if (user && ((logging_flags & EDG_WLL_LOGFLAG_PROXY)
+		     ||(logging_flags & EDG_WLL_LOGFLAG_FILE))) {
 		edg_wll_SetParamString(ctx, EDG_WLL_PARAM_LBPROXY_USER, user);
 	} else {
 		edg_wll_GssStatus	gss_stat;
@@ -782,6 +878,16 @@ int edg_wll_SetLoggingJobProxy(
         int seq_code_flags)
 {
 	return edg_wll_SetLoggingJobMaster(ctx,job,code,user,seq_code_flags,EDG_WLL_LOGFLAG_PROXY);
+}
+
+int edg_wll_SetLoggingJobFile(
+        edg_wll_Context ctx, 
+        glite_jobid_const_t job,
+        const char *code,
+        const char *user,
+        int seq_code_flags)
+{
+	return edg_wll_SetLoggingJobMaster(ctx,job,code,user,seq_code_flags,EDG_WLL_LOGFLAG_FILE);
 }
 
 /**
