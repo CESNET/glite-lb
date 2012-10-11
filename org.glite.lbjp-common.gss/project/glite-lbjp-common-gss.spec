@@ -23,7 +23,6 @@ BuildRequires: openssl-devel
 BuildRequires: pkgconfig
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Obsoletes: glite-security-gss%{?_isa} < 2.1.5-1
-AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gss/%{version}/src/%{name}-@VERSION@.src.tar.gz
 
 

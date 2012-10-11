@@ -21,7 +21,6 @@ Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.harvester/%{version}/src/%{name}-@VERSION@.src.tar.gz
 
 

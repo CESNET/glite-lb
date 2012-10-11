@@ -9,7 +9,6 @@ Group: System Environment/Libraries
 BuildRequires: chrpath
 BuildRequires: libtool
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.maildir/%{version}/src/%{name}-@VERSION@.src.tar.gz
 
 

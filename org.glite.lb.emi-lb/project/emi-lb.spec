@@ -26,7 +26,6 @@ Requires: glite-info-provider-service
 Requires: glue-schema
 Obsoletes: glite-LB <= 3.3.3-3
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.emi-lb/%{version}/src/%{name}-@VERSION@.src.tar.gz
 
 

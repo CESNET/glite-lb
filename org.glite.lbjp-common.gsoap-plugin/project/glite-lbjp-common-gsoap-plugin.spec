@@ -22,7 +22,6 @@ BuildRequires: libtool
 BuildRequires: pkgconfig
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Obsoletes: glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
-AutoReqProv: yes
 Source: http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gsoap-plugin/%{version}/src/%{name}-@VERSION@.src.tar.gz
 
 
