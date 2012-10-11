@@ -70,15 +70,15 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}
 %doc /usr/share/doc/%{name}-%{version}/LICENSE
-/usr/%{_lib}/libglite_lbu_db.so.@MAJOR@.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_lbu_db.so.@MAJOR@
+%{_libdir}/libglite_lbu_db.so.@MAJOR@.@MINOR@.@REVISION@
+%{_libdir}/libglite_lbu_db.so.@MAJOR@
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite
-%dir /usr/include/glite/lbu
-/usr/include/glite/lbu/db.h
-/usr/%{_lib}/libglite_lbu_db.so
+%dir %{_includedir}/glite
+%dir %{_includedir}/glite/lbu
+%{_includedir}/glite/lbu/db.h
+%{_libdir}/libglite_lbu_db.so
 
 
 %changelog

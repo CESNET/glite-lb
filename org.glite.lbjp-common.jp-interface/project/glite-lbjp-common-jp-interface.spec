@@ -65,23 +65,23 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/%{_lib}/libglite_jp_common.so.@MAJOR@.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_jp_common.so.@MAJOR@
+%{_libdir}/libglite_jp_common.so.@MAJOR@.@MINOR@.@REVISION@
+%{_libdir}/libglite_jp_common.so.@MAJOR@
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite
-%dir /usr/include/glite/jp
-/usr/include/glite/jp/types.h
-/usr/include/glite/jp/indexdb.h
-/usr/include/glite/jp/attr.h
-/usr/include/glite/jp/file_plugin.h
-/usr/include/glite/jp/context.h
-/usr/include/glite/jp/type_plugin.h
-/usr/include/glite/jp/backend.h
-/usr/include/glite/jp/known_attr.h
-/usr/include/glite/jp/builtin_plugins.h
-/usr/%{_lib}/libglite_jp_common.so
+%dir %{_includedir}/glite
+%dir %{_includedir}/glite/jp
+%{_includedir}/glite/jp/types.h
+%{_includedir}/glite/jp/indexdb.h
+%{_includedir}/glite/jp/attr.h
+%{_includedir}/glite/jp/file_plugin.h
+%{_includedir}/glite/jp/context.h
+%{_includedir}/glite/jp/type_plugin.h
+%{_includedir}/glite/jp/backend.h
+%{_includedir}/glite/jp/known_attr.h
+%{_includedir}/glite/jp/builtin_plugins.h
+%{_libdir}/libglite_jp_common.so
 
 
 %changelog

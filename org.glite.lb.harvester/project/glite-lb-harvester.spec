@@ -90,9 +90,9 @@ fi
 %dir /usr/share/glite/
 %dir /usr/share/doc/%{name}-%{version}/
 /etc/init.d/glite-lb-harvester
-/usr/bin/glite-lb-harvester
-/usr/%{_lib}/glite-lb/examples/glite-lb-harvester-test.sh
-/usr/%{_lib}/glite-lb/examples/glite-lb-harvester-dbg
+%{_bindir}/glite-lb-harvester
+%{_libdir}/glite-lb/examples/glite-lb-harvester-test.sh
+%{_libdir}/glite-lb/examples/glite-lb-harvester-dbg
 /usr/share/doc/%{name}-%{version}/README
 /usr/share/glite/*
 /usr/share/man/man1/glite-lb-harvester.1.gz

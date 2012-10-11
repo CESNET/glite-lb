@@ -73,19 +73,19 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/%{_lib}/libglite_lb_statemachine.so.@MAJOR@.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_lb_statemachine.so.@MAJOR@
-/usr/%{_lib}/glite_lb_plugin.so.0
-/usr/%{_lib}/glite_lb_plugin.so.0.0.0
+%{_libdir}/libglite_lb_statemachine.so.@MAJOR@.@MINOR@.@REVISION@
+%{_libdir}/libglite_lb_statemachine.so.@MAJOR@
+%{_libdir}/glite_lb_plugin.so.0
+%{_libdir}/glite_lb_plugin.so.0.0.0
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite/
-%dir /usr/include/glite/lb/
+%dir %{_includedir}/glite/
+%dir %{_includedir}/glite/lb/
 %dir /usr/interface/
-/usr/%{_lib}/glite_lb_plugin.so
-/usr/%{_lib}/libglite_lb_statemachine.so
-/usr/include/glite/lb/*.h
+%{_libdir}/glite_lb_plugin.so
+%{_libdir}/libglite_lb_statemachine.so
+%{_includedir}/glite/lb/*.h
 /usr/interface/*.xsd
 
 

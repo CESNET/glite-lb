@@ -124,7 +124,7 @@ fi
 %config(noreplace missingok) /etc/sysconfig/glite-lb
 /etc/cron.d/*
 /etc/init.d/glite-lb-bkserverd
-/usr/bin/*
+%{_bindir}/*
 /usr/sbin/*
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE

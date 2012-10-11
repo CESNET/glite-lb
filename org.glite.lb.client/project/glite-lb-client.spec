@@ -83,10 +83,10 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}/
-/usr/%{_lib}/libglite_lb_client.so.11.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_lb_client.so.11
-/usr/%{_lib}/libglite_lb_clientpp.so.11.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_lb_clientpp.so.11
+%{_libdir}/libglite_lb_client.so.11.@MINOR@.@REVISION@
+%{_libdir}/libglite_lb_client.so.11
+%{_libdir}/libglite_lb_clientpp.so.11.@MINOR@.@REVISION@
+%{_libdir}/libglite_lb_clientpp.so.11
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/README-notify
@@ -99,11 +99,11 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/share/emi/build/
 %dir /usr/share/emi/build/m4/
 %dir /usr/share/doc/%{name}-%{version}/examples/
-%dir /usr/include/glite/
-%dir /usr/include/glite/lb/
-/usr/include/glite/lb/*.h
-/usr/%{_lib}/libglite_lb_client.so
-/usr/%{_lib}/libglite_lb_clientpp.so
+%dir %{_includedir}/glite/
+%dir %{_includedir}/glite/lb/
+%{_includedir}/glite/lb/*.h
+%{_libdir}/libglite_lb_client.so
+%{_libdir}/libglite_lb_clientpp.so
 /usr/share/doc/%{name}-%{version}/examples/*
 /usr/share/emi/build/m4/glite_lb.m4
 /usr/share/man/man1/glite-lb-notify.1.gz
@@ -115,10 +115,10 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %dir /usr/%{_lib}/glite-lb/
 %dir /usr/%{_lib}/glite-lb/examples/
-/usr/bin/glite-lb-logevent
-/usr/bin/glite-lb-notify
-/usr/bin/glite-lb-register_sandbox
-/usr/%{_lib}/glite-lb/examples/*
+%{_bindir}/glite-lb-logevent
+%{_bindir}/glite-lb-notify
+%{_bindir}/glite-lb-register_sandbox
+%{_libdir}/glite-lb/examples/*
 
 
 %changelog

@@ -64,16 +64,16 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/%{_lib}/libglite_jobid.so.@MAJOR@.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_jobid.so.@MAJOR@
+%{_libdir}/libglite_jobid.so.@MAJOR@.@MINOR@.@REVISION@
+%{_libdir}/libglite_jobid.so.@MAJOR@
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite
-%dir /usr/include/glite/jobid
-/usr/include/glite/jobid/strmd5.h
-/usr/include/glite/jobid/cjobid.h
-/usr/%{_lib}/libglite_jobid.so
+%dir %{_includedir}/glite
+%dir %{_includedir}/glite/jobid
+%{_includedir}/glite/jobid/strmd5.h
+%{_includedir}/glite/jobid/cjobid.h
+%{_libdir}/libglite_jobid.so
 
 
 %changelog

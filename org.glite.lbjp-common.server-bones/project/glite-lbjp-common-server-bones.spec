@@ -62,15 +62,15 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/%{_lib}/libglite_lbu_server_bones.so.@MAJOR@.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_lbu_server_bones.so.@MAJOR@
+%{_libdir}/libglite_lbu_server_bones.so.@MAJOR@.@MINOR@.@REVISION@
+%{_libdir}/libglite_lbu_server_bones.so.@MAJOR@
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite
-%dir /usr/include/glite/lbu
-/usr/include/glite/lbu/srvbones.h
-/usr/%{_lib}/libglite_lbu_server_bones.so
+%dir %{_includedir}/glite
+%dir %{_includedir}/glite/lbu
+%{_includedir}/glite/lbu/srvbones.h
+%{_libdir}/libglite_lbu_server_bones.so
 
 
 %changelog

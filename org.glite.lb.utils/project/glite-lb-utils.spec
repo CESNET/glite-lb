@@ -53,14 +53,14 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}/
-/usr/bin/glite-lb-bkpurge-offline
-/usr/bin/glite-lb-dump
-/usr/bin/glite-lb-dump_exporter
-/usr/bin/glite-lb-load
-/usr/bin/glite-lb-mon
-/usr/bin/glite-lb-purge
-/usr/bin/glite-lb-state_history
-/usr/bin/glite-lb-statistics
+%{_bindir}/glite-lb-bkpurge-offline
+%{_bindir}/glite-lb-dump
+%{_bindir}/glite-lb-dump_exporter
+%{_bindir}/glite-lb-load
+%{_bindir}/glite-lb-mon
+%{_bindir}/glite-lb-purge
+%{_bindir}/glite-lb-state_history
+%{_bindir}/glite-lb-statistics
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/package.description

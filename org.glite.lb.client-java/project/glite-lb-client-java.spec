@@ -68,9 +68,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/%{_lib}/libglite_lb_sendviasocket.so
-/usr/%{_lib}/libglite_lb_sendviasocket.so.0
-/usr/%{_lib}/libglite_lb_sendviasocket.so.0.0.0
+%{_libdir}/libglite_lb_sendviasocket.so
+%{_libdir}/libglite_lb_sendviasocket.so.0
+%{_libdir}/libglite_lb_sendviasocket.so.0.0.0
 /usr/share/java/lb-client-java.jar
 /usr/share/java/lb-client-java-examples.jar
 

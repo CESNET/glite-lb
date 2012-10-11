@@ -44,12 +44,12 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir /usr/include/glite/
-%dir /usr/include/glite/lb/
+%dir %{_includedir}/glite/
+%dir %{_includedir}/glite/lb/
 %dir /usr/share/doc/%{name}-%{version}/
 %dir /usr/share/wsdl/
 %dir /usr/share/wsdl/glite-lb/
-/usr/include/glite/lb/ws_interface_version.h
+%{_includedir}/glite/lb/ws_interface_version.h
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/package.summary

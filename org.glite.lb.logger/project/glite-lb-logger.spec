@@ -96,9 +96,9 @@ fi
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}/
 /etc/init.d/glite-lb-locallogger
-/usr/bin/glite-lb-notif-interlogd
-/usr/bin/glite-lb-interlogd
-/usr/bin/glite-lb-logd
+%{_bindir}/glite-lb-notif-interlogd
+%{_bindir}/glite-lb-interlogd
+%{_bindir}/glite-lb-logd
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/package.description
@@ -108,9 +108,9 @@ fi
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite/
-%dir /usr/include/glite/lb/
-/usr/include/glite/lb/*.h
+%dir %{_includedir}/glite/
+%dir %{_includedir}/glite/lb/
+%{_includedir}/glite/lb/*.h
 
 
 %changelog

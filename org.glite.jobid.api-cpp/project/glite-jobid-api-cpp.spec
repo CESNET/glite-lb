@@ -57,9 +57,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite
-%dir /usr/include/glite/jobid
-/usr/include/glite/jobid/JobId.h
+%dir %{_includedir}/glite
+%dir %{_includedir}/glite/jobid
+%{_includedir}/glite/jobid/JobId.h
 
 
 %changelog

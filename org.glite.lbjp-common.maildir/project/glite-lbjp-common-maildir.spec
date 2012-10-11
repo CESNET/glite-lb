@@ -61,15 +61,15 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/%{_lib}/libglite_lbu_maildir.so.@MAJOR@.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_lbu_maildir.so.@MAJOR@
+%{_libdir}/libglite_lbu_maildir.so.@MAJOR@.@MINOR@.@REVISION@
+%{_libdir}/libglite_lbu_maildir.so.@MAJOR@
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite
-%dir /usr/include/glite/lbu
-/usr/include/glite/lbu/maildir.h
-/usr/%{_lib}/libglite_lbu_maildir.so
+%dir %{_includedir}/glite
+%dir %{_includedir}/glite/lbu
+%{_includedir}/glite/lbu/maildir.h
+%{_libdir}/libglite_lbu_maildir.so
 
 
 %changelog

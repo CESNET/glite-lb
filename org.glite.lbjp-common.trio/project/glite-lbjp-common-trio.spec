@@ -65,16 +65,16 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}
 %doc /usr/share/doc/%{name}-%{version}/LICENSE
-/usr/%{_lib}/libglite_lbu_trio.so.@MAJOR@.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_lbu_trio.so.@MAJOR@
+%{_libdir}/libglite_lbu_trio.so.@MAJOR@.@MINOR@.@REVISION@
+%{_libdir}/libglite_lbu_trio.so.@MAJOR@
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite
-%dir /usr/include/glite/lbu
-/usr/include/glite/lbu/escape.h
-/usr/include/glite/lbu/trio.h
-/usr/%{_lib}/libglite_lbu_trio.so
+%dir %{_includedir}/glite
+%dir %{_includedir}/glite/lbu
+%{_includedir}/glite/lbu/escape.h
+%{_includedir}/glite/lbu/trio.h
+%{_libdir}/libglite_lbu_trio.so
 
 
 %changelog

@@ -69,15 +69,15 @@ rm -rf $RPM_BUILD_ROOT
 %doc /usr/share/doc/%{name}-%{version}/README
 %doc /usr/share/doc/%{name}-%{version}/log4crc.example-debugging
 %doc /usr/share/doc/%{name}-%{version}/log4crc.example-production
-/usr/%{_lib}/libglite_lbu_log.so.@MAJOR@.@MINOR@.@REVISION@
-/usr/%{_lib}/libglite_lbu_log.so.@MAJOR@
+%{_libdir}/libglite_lbu_log.so.@MAJOR@.@MINOR@.@REVISION@
+%{_libdir}/libglite_lbu_log.so.@MAJOR@
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/include/glite
-%dir /usr/include/glite/lbu
-/usr/include/glite/lbu/log.h
-/usr/%{_lib}/libglite_lbu_log.so
+%dir %{_includedir}/glite
+%dir %{_includedir}/glite/lbu
+%{_includedir}/glite/lbu/log.h
+%{_libdir}/libglite_lbu_log.so
 
 
 %changelog

@@ -50,11 +50,11 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %dir /usr/%{_lib}/glite-lb/
 %dir /usr/%{_lib}/glite-lb/examples/
-/usr/%{_lib}/glite-lb/examples/glite-lb-ws_getversion
-/usr/%{_lib}/glite-lb/examples/glite-lb-ws_joblog
-/usr/%{_lib}/glite-lb/examples/glite-lb-ws_lb4agu_GetActivityStatus
-/usr/%{_lib}/glite-lb/examples/glite-lb-ws_jobstat
-/usr/%{_lib}/glite-lb/examples/glite-lb-ws_lb4agu_GetActivityInfo
+%{_libdir}/glite-lb/examples/glite-lb-ws_getversion
+%{_libdir}/glite-lb/examples/glite-lb-ws_joblog
+%{_libdir}/glite-lb/examples/glite-lb-ws_lb4agu_GetActivityStatus
+%{_libdir}/glite-lb/examples/glite-lb-ws_jobstat
+%{_libdir}/glite-lb/examples/glite-lb-ws_lb4agu_GetActivityInfo
 
 
 %changelog
