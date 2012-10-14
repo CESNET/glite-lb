@@ -1,1 +1,1 @@
-Standalone extended implementation of printf and scanf. Provides specialized formating options used by LB and JP.
+Standalone extended implementation of printf and scanf. Provides specialized formatting options used by Logging and Bookkeeping and Job Provenance.
