@@ -16,7 +16,7 @@ BuildRequires:  c-ares-devel
 BuildRequires:  c-ares
 BuildRequires:  chrpath
 BuildRequires:  cppunit-devel
-%if %gssapi_provider_kerberos
+%if %{?gssapi_provider_kerberos:0}
 BuildRequires:  globus-common-devel
 BuildRequires:  krb5-devel
 %else
@@ -35,7 +35,7 @@ Obsoletes:      glite-security-gss%{?_isa} < 2.1.5-1
 Summary:        Development files for gLite GSS library
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
-%if %gssapi_provider_kerberos
+%if %{?gssapi_provider_kerberos:0}
 Requires:       globus-common-devel
 Requires:       krb5-devel
 %else
