@@ -1,28 +1,29 @@
+# no binaries, only depends on arch-specific library
+%global debug_package %{nil}
+
 Name:           glite-jobid-api-cpp
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
-Summary:        Virtual package for development with gLite jobid C++ API
+Summary:        Dummy base package for gLite jobid C++ API
 
 Group:          Development/Libraries
 License:        ASL 2.0
 Url:            @URL@
 Vendor:         EMI
-Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-c/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-cpp/%{version}/src/%{name}-@VERSION@.src.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:  glite-jobid-api-c-devel
 BuildRequires:  pkgconfig
 
 
 %description
-This is a virtual package providing runtime and development files for gLite
-jobid C++ API.
+This is a dummy package to build gLite jobid C++ API.
 
 
 %package        devel
 Summary:        @SUMMARY@
 Group:          Development/Libraries
-Requires:       glite-jobid-api-c%{?_isa}
+Requires:       glite-jobid-api-c-devel%{?_isa}
 Provides:       %{name} = %{version}-%{release}
 
 

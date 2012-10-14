@@ -2,7 +2,7 @@ Source: glite-jobid-api-cpp
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), libglite-jobid-api-c-dev
+Build-Depends: debhelper (>= 7.0.50~)
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@
@@ -12,7 +12,7 @@ DM-Upload-Allowed: yes
 Package: libglite-jobid-api-cpp-dev
 Section: libdevel
 Architecture: any
-Depends: libglite-jobid2, ${misc:Depends}
+Depends: libglite-jobid-api-c-dev, ${misc:Depends}
 Provides: glite-jobid-api-cpp
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
