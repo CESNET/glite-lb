@@ -34,7 +34,7 @@ SOURCES=\
 	m4/*.m4 \
 	project/.post* \
 	src/*.c src/*.c.T src/*.sh \
-	test/*.cpp test/*.cpp.T \
+	test/*.c test/*.cpp test/*.cpp.T \
 	LICENSE Makefile
 SOURCES_EXEC=src/*.sh
 
@@ -222,6 +222,9 @@ test_coverage:
 	cd coverage && $(MAKE) -f ../Makefile top_srcdir=../../ COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage" check
 	cd coverage && for i in ${OBJS}; do gcov -o .libs/ $$i ; done
 
+padding: padding.o
+	${LINK} $< -o $@
+
 cjobid.c strmd5.c:
 	if [ ! -d ${jobiddir} ]; then echo "Directory ${jobiddir} not found"; exit 1; fi
 	mkdir -p glite/jobid
@@ -257,7 +260,8 @@ install:
 	${STAGE_PERFTEST} ;
 
 clean:
-	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ test_parse il_test parse.cpp events.tex status.tex test_query_rec
+	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
+	rm -fv test_parse il_test parse.cpp events.tex status.tex test_query_rec padding
 	rm -rvf ${REPORTS}
 	rm -rvf dist ${package}-*.tar.gz
 

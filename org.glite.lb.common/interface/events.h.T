@@ -380,7 +380,7 @@ _EDG_WLL_EVENT_COMMON
  * \union edg_wll_Event
  * \brief All event types union
  */
-glite_lb_padded_union(_edg_wll_Event,30,
+glite_lb_padded_union(_edg_wll_Event,32,
         edg_wll_EventCode           type; /* it is probably never used */
         edg_wll_AnyEvent            any;
 @@@{
