@@ -532,3 +532,11 @@
 2.4.12-1
 - RSS feed doneVM implemented
 
+3.0.0-1
+- Major version bump
+- L&B setup script further development:
+- RPMlint warnings fixed
+- DB Migration script need not distinguish between server or proxy DB
+- RTM DN updated in L&B server setup script
+- Updates for EMIR
+
