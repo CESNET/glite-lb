@@ -83,3 +83,8 @@
 1.3.1-1
 - Simplified source tarball and packages distribution
 
+1.3.2-1
+- Cleanup Makefile and dependencies in jobid.api-cpp
+- Preparation for major version bump.
+- Preparation for Fedora & EPEL packaging
+
