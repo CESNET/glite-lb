@@ -131,3 +131,7 @@
 3.2.2-1
 - New parameter to indicate the type of credentials to acquire
 
+3.2.3-1
+- Preparation for major version bump.
+- Preparation for Fedora & EPEL packaging
+
