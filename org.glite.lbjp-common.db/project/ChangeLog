@@ -141,3 +141,7 @@
 3.2.1-1
 - Simplified source tarball and packages distribution
 
+3.2.2-1
+- Preparation for major version bump.
+- Preparation for Fedora & EPEL packaging
+
