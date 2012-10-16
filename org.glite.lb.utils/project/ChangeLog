@@ -123,3 +123,6 @@
 - Debian package builds in vanilla chroot environment
 - Simplified source tarball and packages distribution
 
+2.3.2-1
+- Preparation for Fedora & EPEL packaging
+
