@@ -247,3 +247,7 @@ gLite L&B setup script:
 2.4.7-1
 - Getting interlogd status fixed
 
+2.4.8-1
+- RPMlint warnings fixed
+- Preparation for Fedora & EPEL packaging
+
