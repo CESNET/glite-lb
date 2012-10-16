@@ -61,8 +61,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%{_libdir}/libglite_lbu_maildir.so.@MAJOR@.@MINOR@.@REVISION@
-%{_libdir}/libglite_lbu_maildir.so.@MAJOR@
+%{_libdir}/libglite_lbu_maildir.so.*
 
 %files devel
 %defattr(-,root,root)

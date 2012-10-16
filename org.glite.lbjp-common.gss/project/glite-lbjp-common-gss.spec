@@ -92,8 +92,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}
 %doc /usr/share/doc/%{name}-%{version}/LICENSE
-%{_libdir}/libglite_security_gss.so.9.@MINOR@.@REVISION@
-%{_libdir}/libglite_security_gss.so.9
+%{_libdir}/libglite_security_gss.so.*
 
 %files devel
 %defattr(-,root,root)

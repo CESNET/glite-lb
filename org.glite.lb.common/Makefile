@@ -153,8 +153,8 @@ all compile: generate ${lib_LTLIBRARIES} ${lib_LIBRARIES}
 # where offset is a sum of maximal released minor's of all previous major's
 # 
 
-# counted minors: 1.1, 2.0, 3.1, 4.0, 5.1, 6.1, 7.1
-offset=5
+# counted minors: 1.1, 2.0, 3.1, 4.0, 5.1, 6.1, 7.1, 8.2
+offset=7
 
 version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }

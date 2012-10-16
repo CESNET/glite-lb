@@ -81,8 +81,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/package.description
 /usr/share/doc/%{name}-%{version}/package.summary
-%{_libdir}/libglite_lb_common.so.13.@MINOR@.@REVISION@
-%{_libdir}/libglite_lb_common.so.13
+%{_libdir}/libglite_lb_common.so.*
 
 %files devel
 %defattr(-,root,root)

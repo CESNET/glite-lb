@@ -86,8 +86,8 @@ compile: ${MACHINE_LIB} ${PLUGIN_LIB} ${XSD}
 # where offset is a sum of maximal released minor's of all previous major's
 # 
 
-# counted minors: 1.0
-offset=0
+# counted minors: 1.4
+offset=4
 version_info:=-version-info ${shell \
         perl -e '$$,=":"; @F=split /\./,"${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 

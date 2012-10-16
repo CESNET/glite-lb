@@ -83,10 +83,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}/
-%{_libdir}/libglite_lb_client.so.11.@MINOR@.@REVISION@
-%{_libdir}/libglite_lb_client.so.11
-%{_libdir}/libglite_lb_clientpp.so.11.@MINOR@.@REVISION@
-%{_libdir}/libglite_lb_clientpp.so.11
+%{_libdir}/libglite_lb_client.so.*
+%{_libdir}/libglite_lb_clientpp.so.*
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/README-notify

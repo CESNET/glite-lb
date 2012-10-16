@@ -70,8 +70,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}
 %doc /usr/share/doc/%{name}-%{version}/LICENSE
-%{_libdir}/libglite_lbu_db.so.@MAJOR@.@MINOR@.@REVISION@
-%{_libdir}/libglite_lbu_db.so.@MAJOR@
+%{_libdir}/libglite_lbu_db.so.*
 
 %files devel
 %defattr(-,root,root)

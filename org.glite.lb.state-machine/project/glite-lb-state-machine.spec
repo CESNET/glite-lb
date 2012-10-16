@@ -73,10 +73,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%{_libdir}/libglite_lb_statemachine.so.@MAJOR@.@MINOR@.@REVISION@
-%{_libdir}/libglite_lb_statemachine.so.@MAJOR@
-%{_libdir}/glite_lb_plugin.so.0
-%{_libdir}/glite_lb_plugin.so.0.0.0
+%{_libdir}/libglite_lb_statemachine.so.*
+%{_libdir}/glite_lb_plugin.so.*
 
 %files devel
 %defattr(-,root,root)

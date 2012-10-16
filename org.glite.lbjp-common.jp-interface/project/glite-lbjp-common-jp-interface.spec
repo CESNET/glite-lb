@@ -65,8 +65,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%{_libdir}/libglite_jp_common.so.@MAJOR@.@MINOR@.@REVISION@
-%{_libdir}/libglite_jp_common.so.@MAJOR@
+%{_libdir}/libglite_jp_common.so.*
 
 %files devel
 %defattr(-,root,root)
