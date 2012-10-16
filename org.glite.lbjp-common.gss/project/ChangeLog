@@ -167,3 +167,7 @@
 3.2.6-1
 - New parameter to indicate the type of credentials to require
 
+3.2.7-1
+- Preparation for major version bump.
+- Preparation for Fedora & EPEL packaging
+
