@@ -94,3 +94,7 @@ gLite L&B setup script:
 - update msg-config script
 Fixed dependency of msg-plugin for Debian
 
+1.2.4-1
+- RPMlint warnings fixed
+- Preparation for Fedora & EPEL packaging
+
