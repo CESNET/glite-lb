@@ -7,7 +7,7 @@ Group:          Development/Tools
 License:        ASL 2.0
 Url:            @URL@
 Vendor:         EMI
-Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.doc/%{version}/src/%{name}-@VERSION@.src.tar.gz
+Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.doc/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch:      noarch

@@ -1420,7 +1420,7 @@ rpm: ${package}-${version}.tar.gz
 	dir=dist/rpm_build_src; \
 	rm -rf $$dir; \
 	mkdir -p $$dir/BUILD $$dir/RPMS $$dir/SOURCES $$dir/SRPMS; \
-	cp ${package}-${version}.tar.gz $$dir/SOURCES/${package}-${version}-${module.age}.src.tar.gz && \
+	cp ${package}-${version}.tar.gz $$dir/SOURCES/${package}-${version}.tar.gz && \
 	rpmbuild -bs --nodeps --define "_topdir $$dir" ${package}.spec && \
 	cp -v $$dir/SRPMS/*.src.rpm dist/
 
