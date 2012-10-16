@@ -274,3 +274,8 @@
 5.2.7-1
 - Updates and fixes due to setup script changes
 
+6.0.0-1
+- Major version bump (binary API change)
+- Added functions for sending events to files for IL
+- Preparation for Fedora & EPEL packaging
+
