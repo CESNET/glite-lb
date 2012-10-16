@@ -1572,13 +1572,14 @@ sub mode_etics_packaging {
 		$workspaceDir = '..';
 		$srcPackageName = 'gridsite';
 		$srcTarBall = "../$srcPackageName-\${version}.src.tar.gz";
-		$srcAge = '';
+		$srcAge = '.src';
 		$topDir = '../';
 	} else {
 		$workspaceDir = '${workspaceDir}';
 		$srcPackageName = '${packageName}';
 		$srcTarBall = "$srcPackageName-\${version}.tar.gz";
-		$srcAge = '-${age}';
+		$srcAge = '';
+		if ($project eq 'emi' and $project_version <= 2) { $srcAge = '-${age}.src'; }
 		$topDir = '';
 	}
 
@@ -1587,8 +1588,8 @@ sub mode_etics_packaging {
 	$cmd->{default}{packaging} = $rpmprepare;
 	$cmd->{default}{packaging} .= "dir=\${workspaceDir}/rpm_build_src_\$\$
 	mkdir -p \${package.tgzLocation} \${package.SRPMSLocation} \$dir/{BUILD,RPMS,SOURCES,SRPMS} 2>/dev/null || true
-	cp -vf $srcTarBall \${package.tgzLocation}/$srcPackageName-\${version}${srcAge}.src.tar.gz
-	cp -vf $srcTarBall \$dir/SOURCES/$srcPackageName-\${version}${srcAge}.src.tar.gz
+	cp -vf $srcTarBall \${package.tgzLocation}/$srcPackageName-\${version}${srcAge}.tar.gz
+	cp -vf $srcTarBall \$dir/SOURCES/$srcPackageName-\${version}${srcAge}.tar.gz
 	rpmbuild -bs --nodeps --define \"_topdir \$dir\" $srcPackageName.spec
 	cp -v \$dir/SRPMS/*.src.rpm \${package.SRPMSLocation}/
 	rm -rf \$dir";
@@ -1600,7 +1601,7 @@ sub mode_etics_packaging {
 		$cmd->{$p}{packaging} = $debprepare;
 		$cmd->{$p}{packaging} .= "dir=\${workspaceDir}/dpkg_build_src_\$\$
 	mkdir -p \${package.tgzLocation} \${package.SDEBSLocation} \$dir 2>/dev/null || true
-	cp -vf $srcTarBall \${package.tgzLocation}/$srcPackageName-\${version}${srcAge}.src.tar.gz
+	cp -vf $srcTarBall \${package.tgzLocation}/$srcPackageName-\${version}${srcAge}.tar.gz
 	cp -vf $srcTarBall \$dir/${srcPackageName}_\${version}.orig.tar.gz
 	tar xzf \$dir/${srcPackageName}_\${version}.orig.tar.gz -C \$dir
 	cp -rf ${topDir}debian/ \$dir/$srcPackageName-\${version}/
