@@ -40,3 +40,6 @@
 1.2.4-1
 - Probe now copes better with expired host creds-based proxies
 
+1.2.5-1
+- Preparation for Fedora & EPEL packaging
+
