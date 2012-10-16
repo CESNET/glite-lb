@@ -227,3 +227,8 @@
 8.2.7-1
 - Safe initiation of ID mapping in context.
 
+9.0.0-1
+- Major version bump.
+- Increased padding in data structures, at least 25% reserved space for both 32-bit and 64-bit architectures
+- Preparation for Fedora & EPEL packaging
+
