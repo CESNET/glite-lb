@@ -202,3 +202,7 @@
 1.4.5-1
 - Preparation for a major version bump
 
+1.4.6-1
+- Described Migration to L&B 4.0
+- Preparation for Fedora & EPEL packaging
+
