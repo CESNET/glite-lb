@@ -124,3 +124,7 @@
 - New sources added: CloudManager, VMManager, VMSystem
 - Sources removed from VMRunning and VMShutdown events
 
+2.0.0-1
+- Major version bump
+- Preparation for Fedora & EPEL packaging
+
