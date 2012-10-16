@@ -128,3 +128,7 @@
   - more strict check for L&B database, migration for L&B 4
   - update msg-config script
 
+4.5.3-1
+- Further development of L&B setup scripts
+- Preparation for Fedora & EPEL packaging
+
