@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE log4c SYSTEM "">
 
-<log4c version="1.2.1">
-
+<log4c>
         <config>
                 <bufsize>1024</bufsize>
                 <debug level="0"/>
