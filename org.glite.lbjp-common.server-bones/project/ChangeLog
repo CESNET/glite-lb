@@ -105,3 +105,7 @@
 - Package build fixed
 - Simplified source tarball and packages distribution
 
+2.3.2-1
+- Preparation for major version bump.
+- Preparation for Fedora & EPEL packaging
+
