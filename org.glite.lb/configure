@@ -1504,7 +1504,7 @@ deb: ${package}-${version}.tar.gz
 					s/--version\s+\S+\s?//;
 					s/$/ --version $version/;
 				}
-				if (/^Source:.*/) { s,^(Source:\s*).*?([^/]*)$,\1$url_spec/\2,; }
+				if (/^Source:.*/ and $file =~ /\.spec$/) { s,^(Source:\s*).*?([^/]*)$,\1$url_spec/\2,; }
 				printf DST "%s", "$_";
 			}
 			close SRC;
