@@ -304,7 +304,7 @@ if ($project =~ /^([^0-9]*)(.*)$/) {
 %project = %{$projects{$project}};
 $project_version = $project{current_version} unless $project_version;
 if ($project ne 'emi' or $project_version <= 1) {
-	$lbmodules{'gridsite'} = [ qw/apache shared commands core devel slashgrid services service-clients gsexec/ ];
+	$lbmodules{'gridsite'} = [ qw/apache shared commands core devel services service-clients/ ];
 }
 for my $platform (keys %{$project{etics_externs}}) {
 	for $_ (keys %{$project{etics_externs}{$platform}}) {
@@ -649,7 +649,7 @@ BEGIN{
         'jp.primary' => [ qw/classads:B gsoap libtar globus_essentials:R globus:B  mysql-server:R pkgconfig:B/ ],
         'jp.server-common' => [],
         'jp.ws-interface' => [],
-	'gridsite.core' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B fuse-devel:B libxml2:B openssl:B doxygen:B pkgconfig:B/ ],
+	'gridsite.core' => [ qw/httpd-devel:B gsoap:B globus:B curl:B doxygen:B libxml2:B openssl:B doxygen:B pkgconfig:B libtool:B/ ],
 	'gridsite.commands' => [ qw/curl:R openssl:R/ ],
 	'gridsite.apache' => [ qw/libxml2:R openssl:R curl:R/ ],
 	'gridsite.libs' => [ qw/libxml2:R openssl:R/ ],
@@ -776,7 +776,7 @@ for my $jar (keys %need_jars) {
         / ],
 	'jp.ws-interface' => [ qw// ],
 
-	'gridsite.core' => [ qw// ],
+	'gridsite.core' => [ qw/canl.c:B/ ],
 	'gridsite.commands' => [ qw/gridsite.core:B/ ],
 	'gridsite.apache' => [ qw/gridsite.core:B/ ],
 	'gridsite.libs' => [ qw/gridsite.core:B / ],
