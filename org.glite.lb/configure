@@ -249,6 +249,7 @@ my @opts = (
 	'jp-tag=s' => \$jp_tag,
 	'jobid-tag=s' => \$jobid_tag,
 	'canl-tag=s' => \$canl_tag,
+	'px-tag=s' => \$px_tag,
 	'help' => \$help,
 	'libdir=s' => \$libdir,
 	'project=s' => \$project,
@@ -589,6 +590,13 @@ sub mode_checkout() {
 			for (@{$lbmodules{'canl'}}){
 				if ("canl.".$_ eq $module){
                                         $tag = '-r '.$canl_tag;
+                                }
+			}
+		}
+		if ($px_tag) {
+			for (@{$lbmodules{'px'}}){
+				if ("px.".$_ eq $module){
+                                        $tag = '-r '.$px_tag;
                                 }
 			}
 		}
@@ -2211,6 +2219,7 @@ What to build:
   --lbjp-common-tag=tag         checkout lbjp-common modules with specific tag
   --jobid-tag=tag		checkout jobid modules with specific tag
   --canl-tag=tag		checkout canl modules with specific tag
+  --px-tag=tag			checkout px modules with specific tag
 
 Dependencies (summary of what will be used is always printed):
   --with-EXTERNAL=PATH		where to look for an external [autodetect]
