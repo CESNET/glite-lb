@@ -12,8 +12,8 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  chrpath
 BuildRequires:  libtool
-BuildRequires:  cppunit-devel
-BuildRequires:  openssl-devel
+BuildRequires:  cppunit-devel%{?_isa}
+BuildRequires:  openssl-devel%{?_isa}
 BuildRequires:  pkgconfig
 
 %description
