@@ -196,7 +196,7 @@ my %lbmodules = (
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface gss gsoap-plugin db-devel log-devel maildir-devel server-bones-devel trio-devel jp-interface-devel gss-devel gsoap-plugin-devel/],
 	'jobid' => [qw/api-c api-c-devel api-cpp api-cpp-devel api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
-	'gridsite' => [ qw/apache libs commands core devel slashgrid services service-clients gsexec/ ],
+	'gridsite' => [ qw/apache libs commands core devel services service-clients/ ],
 	'px' => [ qw/proxyrenewal myproxy-yaim proxyrenewal-devel proxyrenewal-progs/ ],
 	'canl' => [ qw/c c-devel/ ],
 	);
@@ -225,6 +225,13 @@ my %subpackages = (
 	'px.proxyrenewal-devel' => 'px.proxyrenewal',
 	'px.proxyrenewal-progs' => 'px.proxyrenewal',
 	'canl.c-devel' => 'canl.c',
+	'gridsite.apache' => 'gridsite.core',
+	'gridsite.shared' => 'gridsite.core',
+	'gridsite.commands' => 'gridsite.core',
+	'gridsite.devel' => 'gridsite.core',
+	'gridsite.libs' => 'gridsite.core',
+	'gridsite.services' => 'gridsite.core',
+	'gridsite.service-clients' => 'gridsite.core',
 );
 
 my @opts = (
@@ -332,6 +339,9 @@ for my $ext (keys %need_externs_aux) {
 if ($project eq 'emi') {
 	$extranodmod{lb} = 'lb.emi-lb';
 	$extranodmod{px} = 'px.emi-px';
+}
+if ($project ne 'emi' or $project_version <= 2) {
+	$project{modules}{gridsite} = [ qw/slashgrid gsexec/ ];
 }
 for $_ (keys %{$project{modules}}) {
 	push @{$lbmodules{$_}},@{$project{modules}{$_}};
@@ -1731,7 +1741,7 @@ sub mode_etics {
 	if (exists $subpackages{$fmod}) {
 		$cmd{default}{packaging} = "echo building nothing, $subpackages{$fmod} will build this package";
 		$cmd_vcs{checkout} = "true";
-	} elsif (not $branch and ($project ne 'emi' or $project_version >= 3)) {
+	} elsif ($project eq 'emi' and $project_version >= 3) {
 	# for non-branched configuration for EMI-3 do the build from external source package
 		my $pkgName = $fmod eq 'gridsite.core' ? 'gridsite' : '${packageName}';
 
@@ -1896,7 +1906,7 @@ checkstyle = None
 	}
 
 	# no platform properties since EMI-3
-	if ($branch or $project ne 'emi' or $project_version <= 2) {
+	if ($project ne 'emi' or $project_version <= 2) {
 		print C qq{[Platform-default:Property]
 $buildroot
 $package_description$package_summary$defprops};
@@ -1931,7 +1941,7 @@ $package_description$package_summary$defprops};
 		my $output = '';
 
 		# build dependencies needed only for EMI <= 2
-		if ($branch or $project ne 'emi' or $project_version <= 2) {
+		if ($project ne 'emi' or $project_version <= 2) {
 			for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
 				my $eext = $etics_externs{$platform}{$_};
 				my $edev = $project{etics_externs_devel}{$platform}{$_};
