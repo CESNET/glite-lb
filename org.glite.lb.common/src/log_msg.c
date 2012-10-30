@@ -27,6 +27,7 @@ limitations under the License.
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <grp.h>
 
 #include "context-int.h"
 
@@ -141,6 +142,7 @@ int edg_wll_log_event_write(
 	int				filedesc,
 					i, filelock_status=-1;
 	struct stat statbuf;
+	char *group_name;
 
 try_again:
 	if ( (outfile = fopen(event_file, "a")) == NULL ) {
@@ -192,6 +194,18 @@ try_again:
 		edg_wll_SetError(ctx, ETIMEDOUT, "timed out trying to lock event file");
 		goto cleanup;
 	}
+
+	/* make the file writable for given group, if specified */
+	if(NULL != (group_name = getenv("GLITE_GROUP"))) {
+		struct group *glite_group = getgrnam(group_name);
+
+		if(NULL != glite_group) {
+			/* errors are ignored */
+			fchown(filedesc, -1, glite_group->gr_gid);
+			fchmod(filedesc, 0660);
+		}
+	}
+
 
 	if ( fseek(outfile, 0, SEEK_END) == -1 ) {	
 		edg_wll_SetError(ctx, errno, "fseek()");
