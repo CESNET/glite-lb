@@ -195,7 +195,6 @@ try_again:
 		goto cleanup;
 	}
 
-#if 0
 	/* make the file writable for given group, if specified */
 	if(NULL != (group_name = getenv("GLITE_GROUP"))) {
 		struct group *glite_group = getgrnam(group_name);
@@ -206,7 +205,6 @@ try_again:
 			fchmod(filedesc, 0660);
 		}
 	}
-#endif
 
 	if ( fseek(outfile, 0, SEEK_END) == -1 ) {	
 		edg_wll_SetError(ctx, errno, "fseek()");
