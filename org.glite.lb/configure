@@ -1561,7 +1561,7 @@ deb: ${package}-${version}.tar.gz
 			$file="${build}debian/compat"; if (not -f $file) { `echo "7" > $file` }
 			$file="${build}debian/changelog"; if (not -f $file) {
 				open FH, ">$file" or die $!;
-				print FH qq{$packageName ($major.$minor.$rev-$age) unstable; urgency=low
+				print FH qq{$packageName ($major.$minor.$rev-$age) stable; urgency=low
 
   * Automatically generated package
 
