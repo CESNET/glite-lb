@@ -1,6 +1,5 @@
 etc/init.d/glite-lb-harvester
 usr/bin/*
 usr/lib/glite-lb/examples/*
-usr/share/doc/glite-lb-harvester/*
 usr/share/glite/*
 usr/share/man/man1/*

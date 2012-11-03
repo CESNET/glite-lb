@@ -3,6 +3,10 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
+p_dbg=glite-lbjp-common-gss-dbg
+p_dev=libglite-lbjp-common-gss-dev
+p_lib=libglite-security-gss9
+
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
@@ -41,17 +45,19 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	rm -rvf $(CURDIR)/debian/tmp/usr/share
-	rm -vf $(CURDIR)/debian/tmp/usr/lib/*.la
-	rm -vf $(CURDIR)/debian/tmp/usr/lib/*.a
-	find $(CURDIR)/debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+	rm -vf debian/tmp/usr/lib/*.la
+	rm -rf debian/tmp/usr/share
+	mkdir -p debian/$(p_dbg)/usr/share/doc
+	mkdir -p debian/$(p_dev)/usr/share/doc
+	ln -s $(p_lib) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
+	ln -s $(p_lib) debian/$(p_dev)/usr/share/doc/$(p_dev)
 
 binary-indep:
 
 binary-arch: install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs
+	dh_installchangelogs project/ChangeLog
 	dh_installdocs
 	dh_installexamples
 	dh_installman
@@ -59,7 +65,7 @@ binary-arch: install
 	dh_installcron
 	dh_install --fail-missing
 	dh_link
-	dh_strip --dbg-package=glite-lbjp-common-gss-dbg
+	dh_strip --dbg-package=$(p_dbg)
 	dh_compress
 	dh_fixperms
 	dh_makeshlibs

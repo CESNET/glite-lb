@@ -76,11 +76,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}/
-/usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/package.description
-/usr/share/doc/%{name}-%{version}/package.summary
+%doc LICENSE project/ChangeLog
 %{_libdir}/libglite_lb_common.so.*
 
 %files devel

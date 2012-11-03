@@ -94,15 +94,11 @@ fi
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}/
+%doc LICENSE project/ChangeLog
 /etc/init.d/glite-lb-locallogger
 %{_bindir}/glite-lb-notif-interlogd
 %{_bindir}/glite-lb-interlogd
 %{_bindir}/glite-lb-logd
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/package.description
-/usr/share/doc/%{name}-%{version}/package.summary
 /usr/share/man/man8/glite-lb-interlogd.8.gz
 /usr/share/man/man8/glite-lb-logd.8.gz
 

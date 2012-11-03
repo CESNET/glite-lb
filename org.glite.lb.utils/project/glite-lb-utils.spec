@@ -52,7 +52,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}/
+%doc LICENSE project/ChangeLog doc/README.LB-monitoring doc/README.LB-statistics
 %{_bindir}/glite-lb-bkpurge-offline
 %{_bindir}/glite-lb-dump
 %{_bindir}/glite-lb-dump_exporter
@@ -61,14 +61,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/glite-lb-purge
 %{_bindir}/glite-lb-state_history
 %{_bindir}/glite-lb-statistics
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/package.description
-/usr/share/doc/%{name}-%{version}/package.summary
-/usr/share/doc/%{name}-%{version}/README.LB-monitoring
-/usr/share/doc/%{name}-%{version}/README.LB-statistics
-/usr/share/man/man1/glite-lb-mon.1.gz
-/usr/share/man/man8/glite-lb-purge.8.gz
+/usr/share/man/*/*.gz
 
 
 %changelog

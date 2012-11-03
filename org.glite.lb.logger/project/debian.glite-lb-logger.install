@@ -1,4 +1,3 @@
 etc/init.d/*
 usr/bin/*
-usr/share/doc/glite-lb-logger/*
 usr/share/man/man8/*

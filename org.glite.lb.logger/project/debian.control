@@ -12,7 +12,7 @@ DM-Upload-Allowed: yes
 Package: glite-lb-logger
 Section: misc
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, glite-lbjp-common-log
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
 

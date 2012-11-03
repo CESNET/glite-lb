@@ -3,6 +3,8 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
+p_base=emi-lb-nagios-plugins
+
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
@@ -36,15 +38,11 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	mv $(CURDIR)/debian/tmp/usr/share/doc/emi-lb-nagios-plugins-@MAJOR@.@MINOR@.@REVISION@ $(CURDIR)/debian/tmp/usr/share/doc/emi-lb-nagios-plugins
-	(cd $(CURDIR)/debian/tmp/usr/share/doc/emi-lb-nagios-plugins; \
-	 rm -fv ChangeLog LICENSE; \
-	 cat $(CURDIR)/project/ChangeLog | gzip -9 > changelog.gz)
 
 binary-indep: install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs
+	dh_installchangelogs project/ChangeLog
 	dh_installdocs
 	dh_installexamples
 	dh_installman

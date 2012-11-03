@@ -52,7 +52,6 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	install -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && install -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 	-test -f LB.html && install -m 644 LB.html ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 # install the generated stuff instead
 #	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${DESTDIR}${PREFIX}${prefix}/${STAGETO}

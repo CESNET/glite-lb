@@ -36,16 +36,15 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	rm -vf $(CURDIR)/debian/tmp/usr/lib/*.la
-	rm -vf $(CURDIR)/debian/tmp/usr/lib/*.a
-	find $(CURDIR)/debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+	rm -vf debian/tmp/usr/lib/*.la
+	rm -vf debian/tmp/usr/lib/*.a
 
 binary-indep:
 
 binary-arch: install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs
+	dh_installchangelogs project/ChangeLog
 	dh_installdocs
 	dh_installexamples
 	dh_installman

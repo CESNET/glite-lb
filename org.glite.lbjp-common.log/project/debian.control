@@ -2,12 +2,20 @@ Source: glite-lbjp-common-log
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, libtool, liblog4c3, liblog4c-dev
+Build-Depends: debhelper (>= 7.0.50~), libtool, liblog4c-dev
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@
 DM-Upload-Allowed: yes
 @DEBIAN_VCS@
+
+Package: glite-lbjp-common-log
+Section: libs
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Common files for gLite L&B/JP common log module
+ This package provides log4c configuration file for gLite L&B/JP common log
+ module.
 
 Package: libglite-lbu-log1
 Section: libs

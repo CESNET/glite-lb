@@ -6,7 +6,6 @@ etc/logrotate.d/*
 etc/mysql/conf.d/*
 usr/bin/*
 usr/sbin/*
-usr/share/doc/glite-lb-server/*
 usr/share/glite/*
 usr/share/man/man1/*
 usr/share/man/man8/*

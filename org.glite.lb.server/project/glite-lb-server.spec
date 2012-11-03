@@ -114,9 +114,9 @@ fi
 
 %files
 %defattr(-,root,root)
+%doc LICENSE project/ChangeLog config/glite-lb
 %dir /etc/cron.d/
 %dir /etc/glite-lb/
-%dir /usr/share/doc/%{name}-%{version}/
 %dir /usr/share/glite/
 %config(noreplace) /etc/logrotate.d/glite-lb-server
 %config(noreplace) /etc/mysql/conf.d/glite-lb-server.cnf
@@ -126,11 +126,6 @@ fi
 /etc/init.d/glite-lb-bkserverd
 %{_bindir}/*
 /usr/sbin/*
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/glite-lb
-/usr/share/doc/%{name}-%{version}/package.description
-/usr/share/doc/%{name}-%{version}/package.summary
 /usr/share/glite/*
 /usr/share/man/man1/glite-lb-mon-db.1.gz
 /usr/share/man/man8/glite-lb-bkindex.8.gz

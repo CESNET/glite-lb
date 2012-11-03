@@ -1,9 +1,4 @@
 etc/glite-lb
-etc/init.d
-usr/bin
-usr/lib
 usr/lib/glite-lb
 usr/lib/glite-lb/examples
 usr/share/glite
-usr/share/doc/glite-lb-harvester
-usr/share/man/man1

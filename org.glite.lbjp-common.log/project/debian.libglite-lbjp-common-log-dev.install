@@ -1,2 +1,3 @@
 usr/include/glite/lbu/*.h
+usr/lib/lib*.a
 usr/lib/lib*.so

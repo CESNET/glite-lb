@@ -49,7 +49,6 @@ LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir}  ${LDFLAGS} 
-SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
@@ -80,7 +79,7 @@ ALLUTILS:=${UTILS} mon dump_exporter state_history statistics
 STATISTICS_OBJS:=statistics.o process_attrs.o process_attrs2.o
 
 MAN_GZ:=glite-lb-mon.1.gz
-MAN8_GZ:=glite-lb-purge.8.gz
+MAN8_GZ:=glite-lb-dump.8.gz glite-lb-load.8.gz glite-lb-purge.8.gz
 MAN = $(MAN_GZ:.gz=)
 MAN8 = $(MAN8_GZ:.gz=)
 
@@ -117,12 +116,10 @@ stage: compile
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin 
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${top_srcdir}/doc/README* ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8

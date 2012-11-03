@@ -56,20 +56,15 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
+%doc LICENSE project/ChangeLog config/msg.conf.example
 %dir /etc/glite-lb/
 %dir /usr/%{_lib}/glite-lb/
 %dir /usr/%{_lib}/glite-lb/examples/
-%dir /usr/share/doc/%{name}-%{version}/
 /etc/cron.d/glite-lb-logger-msg
 %{_libdir}/activemq_cpp_plugin.so
 %{_libdir}/activemq_cpp_plugin.so.0
 %{_libdir}/activemq_cpp_plugin.so.0.0.0
 %{_libdir}/glite-lb/examples/glite-lb-cmsclient
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/msg.conf.example
-/usr/share/doc/%{name}-%{version}/package.summary
-/usr/share/doc/%{name}-%{version}/package.description
 /usr/sbin/glite-lb-msg-*
 
 

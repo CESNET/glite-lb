@@ -1,5 +1,3 @@
 etc/glite-lb
 usr/lib/glite-lb
 usr/lib/glite-lb/examples
-usr/sbin
-usr/share/doc/glite-lb-logger-msg

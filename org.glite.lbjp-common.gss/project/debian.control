@@ -2,7 +2,7 @@ Source: glite-lbjp-common-gss
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, libcppunit-dev, libc-ares2, libc-ares-dev, libglobus-gssapi-gsi-dev, libssl-dev, libtool, pkg-config
+Build-Depends: debhelper (>= 7.0.50~), libcppunit-dev, libc-ares2, libc-ares-dev, libglobus-gssapi-gsi-dev, libssl-dev, libtool, pkg-config
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@

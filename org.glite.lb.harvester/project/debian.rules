@@ -3,6 +3,9 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
+p_base=glite-lb-harvester
+p_dbg=glite-lb-harvester-dbg
+
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
@@ -36,17 +39,15 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	mv $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-harvester-@MAJOR@.@MINOR@.@REVISION@ $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-harvester
-	(cd $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-harvester; \
-	 rm -fv ChangeLog LICENSE; \
-	 cat $(CURDIR)/project/ChangeLog | gzip -9 > changelog.gz)
+	mkdir -p debian/$(p_base)/usr/share/doc
+	mv debian/tmp/usr/share/doc/glite-lb-harvester-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
 
 binary-indep:
 
 binary-arch: install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs
+	dh_installchangelogs project/ChangeLog
 	dh_installdocs
 	dh_installexamples
 	dh_installman
@@ -55,7 +56,7 @@ binary-arch: install
 	dh_installcron
 	dh_install --fail-missing
 	dh_link
-	dh_strip --dbg-package=glite-lb-harvester-dbg
+	dh_strip --dbg-package=$(p_dbg)
 	dh_compress
 	dh_fixperms
 	dh_makeshlibs

@@ -65,6 +65,7 @@ make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+cp -p project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
@@ -87,16 +88,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libglite_lb_clientpp.so.*
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/README-notify
-/usr/share/doc/%{name}-%{version}/package.description
-/usr/share/doc/%{name}-%{version}/package.summary
 
 %files devel
 %defattr(-,root,root)
+%dir /usr/share/doc/%{name}-%{version}/examples/
 %dir /usr/share/emi/
 %dir /usr/share/emi/build/
 %dir /usr/share/emi/build/m4/
-%dir /usr/share/doc/%{name}-%{version}/examples/
 %dir %{_includedir}/glite/
 %dir %{_includedir}/glite/lb/
 %{_includedir}/glite/lb/*.h
@@ -104,10 +102,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libglite_lb_clientpp.so
 /usr/share/doc/%{name}-%{version}/examples/*
 /usr/share/emi/build/m4/glite_lb.m4
-/usr/share/man/man1/glite-lb-notify.1.gz
-/usr/share/man/man1/glite-lb-logevent.1.gz
-/usr/share/man/man8/glite-lb-dump.8.gz
-/usr/share/man/man8/glite-lb-load.8.gz
 
 %files progs
 %defattr(-,root,root)
@@ -117,6 +111,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/glite-lb-notify
 %{_bindir}/glite-lb-register_sandbox
 %{_libdir}/glite-lb/examples/*
+/usr/share/doc/%{name}-%{version}/README-notify
+/usr/share/man/man1/glite-lb-notify.1.gz
+/usr/share/man/man1/glite-lb-logevent.1.gz
 
 
 %changelog

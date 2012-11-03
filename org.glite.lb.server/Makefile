@@ -432,7 +432,6 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysdefaultdir}
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${MAN1_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	for p in bkserverd bkindex mon-db; do \

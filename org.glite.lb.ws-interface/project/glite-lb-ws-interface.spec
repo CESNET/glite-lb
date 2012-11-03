@@ -44,16 +44,12 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
+%doc LICENSE project/ChangeLog
 %dir %{_includedir}/glite/
 %dir %{_includedir}/glite/lb/
-%dir /usr/share/doc/%{name}-%{version}/
 %dir /usr/share/wsdl/
 %dir /usr/share/wsdl/glite-lb/
 %{_includedir}/glite/lb/ws_interface_version.h
-/usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/package.summary
-/usr/share/doc/%{name}-%{version}/package.description
 /usr/share/wsdl/glite-lb/LB.wsdl
 /usr/share/wsdl/glite-lb/glue2.xsd
 /usr/share/wsdl/glite-lb/lb4agu.wsdl

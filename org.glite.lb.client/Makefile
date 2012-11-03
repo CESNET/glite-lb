@@ -195,9 +195,7 @@ EXAMPLES_CL_THR_SRC:=user_jobs_threaded.c job_status_threaded.c
 EXAMPLES_CL_THR:=${EXAMPLES_CL_THR_SRC:.c=}
 
 MAN_GZ:=glite-lb-logevent.1.gz glite-lb-notify.1.gz
-MAN8_GZ:=glite-lb-dump.8.gz glite-lb-load.8.gz
 MAN = $(MAN_GZ:.gz=)
-MAN8 = $(MAN8_GZ:.gz=)
 
 PLUS_EXTRA_LIB:=-lglite_jobid
 
@@ -217,9 +215,9 @@ m4dir=${PREFIX}${prefix}/share/build/m4
 endif
 
 ifdef LB_STANDALONE
-compile all: generate ${c_LIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${MAN8_GZ}
+compile all: generate ${c_LIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ}
 else
-compile all: check_version generate ${lib_LTLIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${MAN8_GZ}
+compile all: check_version generate ${lib_LTLIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ}
 endif
 
 generate: ${GEN_HDRS}
@@ -289,10 +287,6 @@ ${MAN_GZ}: ${MAN}
 	cp $? .
 	gzip -9 -f $(notdir $?)
 
-${MAN8_GZ}: ${MAN8}
-	cp $? .
-	gzip -9 -f $(notdir $?)
-
 perftest_logjobs.o: perftest_logjobs.c
 	${CC} ${CFLAGS} -DLB_PERF_DROP -c $<
 
@@ -338,7 +332,7 @@ producer_test: producer_test.o prod_proto_test.o
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${CPPUNIT_CFLAGS} $<
 
-man: ${MAN_GZ} ${MAN8_GZ}
+man: ${MAN_GZ}
 
 stage:  compile
 	$(MAKE) install PREFIX=${stagedir} staging=1
@@ -364,7 +358,6 @@ install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	mkdir -p ${DESTDIR}${m4dir}
 ifdef LB_STANDALONE
 	${INSTALL} -m 755 ${c_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
@@ -375,7 +368,6 @@ else
 	fi
 endif
 	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-notify ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) 
 	${INSTALL} -m 644 ${GEN_HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} 
@@ -400,12 +392,11 @@ endif
 	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-notify.pl
 	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-sandbox_transfers.sh
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
-	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/m4/glite_lb.m4 ${DESTDIR}${m4dir}/
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
-	rm -rvf ${lib_LTLIBRARIES} ${TOOLS} logevent  register_sandbox ${MAN_GZ} ${MAN8_GZ}
+	rm -rvf ${lib_LTLIBRARIES} ${TOOLS} logevent  register_sandbox ${MAN_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl StatusAttrNames.pl uiwrap.T
 	rm -rvf dist ${package}-*.tar.gz

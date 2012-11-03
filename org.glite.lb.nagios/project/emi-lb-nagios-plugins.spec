@@ -51,16 +51,13 @@ exit 0
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}/
+%doc project/ChangeLog
 %dir /usr/libexec/
 %dir /usr/libexec/grid-monitoring/
 %dir /usr/libexec/grid-monitoring/probes/
 %dir /usr/libexec/grid-monitoring/probes/emi.lb/
 %dir /var/lib/grid-monitoring/
 %dir /var/lib/grid-monitoring/emi.lb/
-/usr/share/doc/%{name}-%{version}/package.summary
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/package.description
 /usr/libexec/grid-monitoring/probes/emi.lb/LB-probe
 
 

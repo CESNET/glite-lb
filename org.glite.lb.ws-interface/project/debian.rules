@@ -3,6 +3,8 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
+p_base=glite-lb-ws-interface
+
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
@@ -36,15 +38,14 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	mv $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-ws-interface-@MAJOR@.@MINOR@.@REVISION@ $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-ws-interface
-	(cd $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-ws-interface; \
-	 rm -fv ChangeLog LICENSE; \
-	 cat $(CURDIR)/project/ChangeLog | gzip -9 > changelog.gz)
+	#mkdir -p debian/$(p_base)/usr/share/doc/$(p_base)
+	#mv debian/tmp/usr/share/doc/glite-lb-ws-interface-*/*.html debian/$(p_base)/usr/share/doc/$(p_base)
+	rm -rf debian/tmp/usr/share/doc/glite-lb-ws-interface-@MAJOR@.@MINOR@.@REVISION@
 
 binary-indep: install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs
+	dh_installchangelogs project/ChangeLog
 	dh_installdocs
 	dh_installexamples
 	dh_installman

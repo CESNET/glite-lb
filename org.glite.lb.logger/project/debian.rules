@@ -3,6 +3,10 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
+p_base=glite-lb-logger
+p_dbg=glite-lb-logger-dbg
+p_dev=glite-lb-logger-dev
+
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
@@ -36,18 +40,19 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	find $(CURDIR)/debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-	mv $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-logger-@MAJOR@.@MINOR@.@REVISION@ $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-logger
-	(cd $(CURDIR)/debian/tmp/usr/share/doc/glite-lb-logger; \
-	 rm -fv ChangeLog LICENSE; \
-	 cat $(CURDIR)/project/ChangeLog | gzip -9 > changelog.gz)
+	find debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+	rm -rf debian/tmp/usr/share/doc
+	mkdir -p debian/$(p_dbg)/usr/share/doc
+	mkdir -p debian/$(p_dev)/usr/share/doc
+	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
+	ln -s $(p_base) debian/$(p_dev)/usr/share/doc/$(p_dev)
 
 binary-indep:
 
 binary-arch: install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs
+	dh_installchangelogs project/ChangeLog
 	dh_installdocs
 	dh_installexamples
 	dh_installman
@@ -56,7 +61,7 @@ binary-arch: install
 	dh_installcron
 	dh_install --fail-missing
 	dh_link
-	dh_strip --dbg-package=glite-lb-logger-dbg
+	dh_strip --dbg-package=$(p_dbg)
 	dh_compress
 	dh_fixperms
 	dh_makeshlibs
