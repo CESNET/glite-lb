@@ -357,7 +357,7 @@ if ($listmodules) {
 	if (exists $lbmodules{$listmodules}) {
 		@m = map exists $subpackages{$listmodules . '.' . $_} ? "" : "$name_prefix.$listmodules.$_",@{$lbmodules{$listmodules}};
 	} else {
-		if ($project eq 'emi' and $project_version == 1) {
+		if ($project eq 'emi' and $project_version == 1 and $listmodules ne 'gridsite.core') {
 			# no sub-packages in EMI-1
 		} else {
 			for my $sub (keys %subpackages) {
