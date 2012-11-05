@@ -13,9 +13,6 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Requires:       bdii
 Requires:       emi-version
 Requires:       fetch-crl
-%if ! 0%{?fedora}
-Requires:       glite-lb-client-java
-%endif
 Requires:       glite-lb-client-progs
 Requires:       glite-lb-doc
 Requires:       glite-lb-harvester
