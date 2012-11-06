@@ -540,3 +540,6 @@
 - RTM DN updated in L&B server setup script
 - Updates for EMIR
 
+3.0.1-1
+- License and packaging fixes
+
