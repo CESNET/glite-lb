@@ -135,3 +135,6 @@
 - Preparation for major version bump.
 - Preparation for Fedora & EPEL packaging
 
+3.2.4-1
+- License and packaging fixes
+
