@@ -162,3 +162,6 @@
 - Major version bump
 - Preparation for Fedora & EPEL packaging
 
+2.0.1-1
+- License and packaging fixes
+
