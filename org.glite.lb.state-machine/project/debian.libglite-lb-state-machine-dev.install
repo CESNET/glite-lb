@@ -2,4 +2,3 @@ usr/include/glite/lb/*.h
 usr/interface/*.xsd
 usr/lib/lib*.a
 usr/lib/lib*.so
-usr/lib/glite*.so

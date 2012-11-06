@@ -25,6 +25,13 @@ Description: Development files for gLite L&B state machine
  This package contains development libraries and header files for gLite L&B
  state machine.
 
+Package: glite-lb-state-machine-plugins
+Section: misc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: L&B state machine plugins
+ This package contains L&B state machine plugins for Job Provenance.
+
 Package: glite-lb-state-machine-dbg
 Section: debug
 Architecture: any

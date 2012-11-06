@@ -6,6 +6,7 @@
 p_dbg=glite-lb-state-machine-dbg
 p_dev=libglite-lb-state-machine-dev
 p_lib=libglite-lb-state-machine5
+p_plugs=glite-lb-state-machine-plugins
 
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
@@ -45,8 +46,10 @@ install: build-stamp
 	find debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	mkdir -p debian/$(p_dev)/usr/share/doc
+	mkdir -p debian/$(p_plugs)/usr/share/doc
 	ln -s $(p_lib) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
 	ln -s $(p_lib) debian/$(p_dev)/usr/share/doc/$(p_dev)
+	ln -s $(p_lib) debian/$(p_plugs)/usr/share/doc/$(p_plugs)
 
 binary-indep:
 

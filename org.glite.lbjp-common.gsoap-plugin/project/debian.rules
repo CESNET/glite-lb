@@ -3,7 +3,7 @@
 
 p_dbg=glite-lbjp-common-gsoap-plugin-dbg
 p_dev=libglite-lbjp-common-gsoap-plugin-dev
-p_lib=libglite-lbjp-common-gsoap-plugin9
+p_lib=libglite-lbjp-common-gsoap-plugin
 
 -include /usr/share/dpkg/buildflags.mk
 

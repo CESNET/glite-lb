@@ -39,6 +39,14 @@ This package contains development libraries and header files for gLite L&B
 state machine.
 
 
+%package        plugins
+Summary:        L&B state machine plugins
+Group:          System Environment/Libraries
+
+%description    plugins
+This package contains L&B state machine plugins for Job Provenance.
+
+
 %prep
 %setup -q
 
@@ -75,17 +83,20 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
 %{_libdir}/libglite_lb_statemachine.so.*
-%{_libdir}/glite_lb_plugin.so.*
 
 %files devel
 %defattr(-,root,root)
 %dir %{_includedir}/glite/
 %dir %{_includedir}/glite/lb/
 %dir /usr/interface/
-%{_libdir}/glite_lb_plugin.so
 %{_libdir}/libglite_lb_statemachine.so
 %{_includedir}/glite/lb/*.h
 /usr/interface/*.xsd
+
+%files plugins
+%defattr(-,root,root)
+%{_libdir}/glite_lb_plugin.so
+%{_libdir}/glite_lb_plugin.so.*
 
 
 %changelog
