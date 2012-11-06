@@ -98,3 +98,6 @@ Fixed dependency of msg-plugin for Debian
 - RPMlint warnings fixed
 - Preparation for Fedora & EPEL packaging
 
+1.2.5-1
+- License and packaging fixes
+
