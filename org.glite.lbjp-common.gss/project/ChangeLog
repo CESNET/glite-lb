@@ -171,3 +171,6 @@
 - Preparation for major version bump.
 - Preparation for Fedora & EPEL packaging
 
+3.2.8-1
+- License and packaging fixes
+
