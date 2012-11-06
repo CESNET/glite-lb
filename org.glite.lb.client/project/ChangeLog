@@ -279,3 +279,6 @@
 - Added functions for sending events to files for IL
 - Preparation for Fedora & EPEL packaging
 
+6.0.1-1
+- License and packaging fixes
+
