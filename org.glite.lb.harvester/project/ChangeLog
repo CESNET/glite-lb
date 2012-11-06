@@ -148,3 +148,6 @@ gLite L&B setup script:
 - RPMlint warnings fixed
 - Preparation for Fedora & EPEL packaging
 
+1.3.4-1
+- License and packaging fixes
+
