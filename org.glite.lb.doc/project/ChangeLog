@@ -206,3 +206,6 @@
 - Described Migration to L&B 4.0
 - Preparation for Fedora & EPEL packaging
 
+1.4.7-1
+- License and packaging fixes
+
