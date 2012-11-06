@@ -39,6 +39,7 @@ make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+install LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
 
 
 %clean
@@ -50,16 +51,14 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/share/doc/%{name}-%{version}/
 %dir /usr/share/doc/%{name}-%{version}/examples/
 /usr/share/doc/%{name}-%{version}/examples/*
+/usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LICENSE
 /usr/share/doc/%{name}-%{version}/README
-/usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/LBAG.pdf
 /usr/share/doc/%{name}-%{version}/LBUG.pdf
 /usr/share/doc/%{name}-%{version}/LBDG.pdf
 /usr/share/doc/%{name}-%{version}/LBTG.pdf
 /usr/share/doc/%{name}-%{version}/LBTP.pdf
-/usr/share/doc/%{name}-%{version}/package.summary
-/usr/share/doc/%{name}-%{version}/package.description
 
 
 %changelog

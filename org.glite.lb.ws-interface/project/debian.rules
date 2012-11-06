@@ -38,9 +38,7 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	#mkdir -p debian/$(p_base)/usr/share/doc/$(p_base)
-	#mv debian/tmp/usr/share/doc/glite-lb-ws-interface-*/*.html debian/$(p_base)/usr/share/doc/$(p_base)
-	rm -rf debian/tmp/usr/share/doc/glite-lb-ws-interface-@MAJOR@.@MINOR@.@REVISION@
+	#mv debian/tmp/usr/share/doc/glite-lb-ws-interface-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
 
 binary-indep: install
 	dh_testdir

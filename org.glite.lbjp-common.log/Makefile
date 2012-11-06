@@ -27,7 +27,7 @@ SOURCES=\
 	project/.post* \
 	src/*.c src/*.h \
 	tests/*.c tests/log4crc \
-	LICENSE Makefile README
+	Makefile README
 
 LOG4C_CFLAGS:=-I${log4c_prefix}/include
 LOG4C_LIBS:=-L${log4c_prefix}/${libdir} -L${log4c_prefix}/lib -llog4c
@@ -76,7 +76,6 @@ install: compile
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix} 
 	${INSTALL} -m 644 ${top_srcdir}/src/log.h ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix} 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	${INSTALL} -m 644 ${top_srcdir}/config/log4crc ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb/log4crc

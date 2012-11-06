@@ -46,7 +46,6 @@ install: build-stamp
 	find debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 	mkdir -p debian/$(p_base)/usr/share/doc
 	mv debian/tmp/usr/share/doc/glite-lb-server-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
-	rm -f debian/$(p_base)/usr/share/doc/$(p_base)/LICENSE
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
 

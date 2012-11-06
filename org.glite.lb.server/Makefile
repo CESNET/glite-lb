@@ -33,7 +33,7 @@ SOURCES=\
 	src/*.c src/*.cpp src/*.h src/*.c.T src/*.l src/*.y src/*.sh src/*.sh.in src/ws_typemap.dat \
 	project/.post* project/.pre* \
 	test/*.cpp test/*.cpp.T test/*.sh test/oneJob.qry test/*.c \
-	LICENSE Makefile
+	Makefile
 SOURCES_EXEC=config/glite-lb-migrate* config/startup config/setup src/*.sh test/*.sh
 
 all: compile
@@ -431,7 +431,6 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysdefaultdir}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${MAN1_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	for p in bkserverd bkindex mon-db; do \

@@ -43,7 +43,6 @@ install: build-stamp
 	mkdir -p debian/$(p_base)/usr/share/doc
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	mv debian/tmp/usr/share/doc/glite-lb-utils-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
-	rm -f debian/$(p_base)/usr/share/doc/$(p_base)/LICENSE
 	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
 
 binary-indep:

@@ -28,7 +28,7 @@ SOURCES=\
 	examples/*.cpp \
 	project/il.conf \
 	src/*.cpp src/msg-* \
-	LICENSE Makefile
+	Makefile
 SOURCES_EXEC=src/msg-brokers
 
 VERSION=-DVERSION=\"GLite-${version}\"
@@ -128,7 +128,6 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 755 ${EXAMPLES} ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples

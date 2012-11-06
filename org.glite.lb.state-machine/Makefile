@@ -26,7 +26,7 @@ SOURCES=\
 	interface/*.h interface/*.xsd interface/*.xsd.T \
 	project/.post* \
 	src/*.c src/*.xsl \
-	LICENSE Makefile
+	Makefile
 
 ifneq (${classads_prefix},/usr)
 	classadslib := -L${classads_prefix}/${libdir} -L${classads_prefix}/lib 

@@ -44,7 +44,7 @@ SOURCES = \
 	project/.post* \
 	src/*.c src/*.h src/*.T src/*.pl src/*.cpp \
 	test/*.c test/*.cpp test/*.T test/PLOT test/TEST \
-	LICENSE Makefile
+	Makefile
 SOURCES_EXEC=examples/gen_* examples/*.pl examples/*.sh src/*.sh test/TEST
 
 l_SRC = \
@@ -367,7 +367,6 @@ else
 		install -m 755 ${plus_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
 	fi
 endif
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-notify ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) 
 	${INSTALL} -m 644 ${GEN_HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} 

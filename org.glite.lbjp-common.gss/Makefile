@@ -45,7 +45,7 @@ SOURCES=\
 	project/doc/*.cls project/doc/*.pdf project/doc/*.tex project/doc/Makefile \
 	src/*.c \
 	test/*.cpp \
-	LICENSE Makefile
+	Makefile
 
 DEBUG:=-g -O0 -W -Wall -Wno-unused-parameter
 # not for globus, gsoap: -Werror
@@ -192,10 +192,8 @@ stage:
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security
 	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
 	if [ x${DOSTAGE} = xyes ]; then \
 		install -m 644 ${lib_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \

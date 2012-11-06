@@ -84,16 +84,15 @@ fi
 
 %files
 %defattr(-,root,root)
+%doc LICENSE project/ChangeLog doc/README
 %dir /etc/glite-lb/
 %dir /usr/%{_lib}/glite-lb/
 %dir /usr/%{_lib}/glite-lb/examples/
 %dir /usr/share/glite/
-%dir /usr/share/doc/%{name}-%{version}/
 /etc/init.d/glite-lb-harvester
 %{_bindir}/glite-lb-harvester
 %{_libdir}/glite-lb/examples/glite-lb-harvester-test.sh
 %{_libdir}/glite-lb/examples/glite-lb-harvester-dbg
-/usr/share/doc/%{name}-%{version}/README
 /usr/share/glite/*
 /usr/share/man/man1/glite-lb-harvester.1.gz
 

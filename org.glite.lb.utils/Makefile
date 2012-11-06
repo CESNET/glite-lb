@@ -23,7 +23,7 @@ SOURCES=\
 	doc/*.1 doc/*.8 doc/README.* \
 	examples/glite-lb-* \
 	src/*.c src/*.c.T src/*.sh \
-	LICENSE Makefile
+	Makefile
 SOURCES_EXEC=examples/*.sh src/*.sh
 
 CC=gcc
@@ -119,7 +119,6 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${top_srcdir}/doc/README* ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8

@@ -22,7 +22,7 @@ SOURCES=\
 	config/functions/* config/functions/emi/* \
 	config/node-info.d/glite-lb config/node-info.d/emi/glite-lb \
 	Makefile
-FILES=glite-lb.pre config_glite_lb LICENSE COPYRIGHT node-version arch service update
+FILES=glite-lb.pre config_glite_lb COPYRIGHT node-version arch service update
 
 ifeq ($(os_type),debian)
 sysdefaultdir=${sysconfdir}/default
@@ -39,8 +39,7 @@ all ${FILES}:
 	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' $(top_srcdir)/config/functions/config_glite_lb.in > config_glite_lb
 
 	# metapackage info
-	echo -e "${gLiteCopyrightText}\n\n${gLiteLicenseText}" > LICENSE
-	cp LICENSE COPYRIGHT
+	echo -e "${gLiteCopyrightText}\n\n${gLiteLicenseText}" > COPYRIGHT
 	echo ${version}-${module.age} > node-version
 	echo ${platformArch} > arch
 	echo "NA" > service

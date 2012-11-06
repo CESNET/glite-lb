@@ -35,7 +35,7 @@ SOURCES=\
 	project/.post* \
 	src/*.c src/*.c.T src/*.sh \
 	test/*.c test/*.cpp test/*.cpp.T \
-	LICENSE Makefile
+	Makefile
 SOURCES_EXEC=src/*.sh
 
 DEBUG:=-g -O0 -Wall
@@ -244,9 +244,8 @@ olddoc: generate events.tex status.tex
 
 install: 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+#	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 #	cp -r C CPP ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} ;
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) ;

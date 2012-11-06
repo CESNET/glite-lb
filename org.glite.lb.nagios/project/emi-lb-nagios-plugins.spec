@@ -51,7 +51,7 @@ exit 0
 
 %files
 %defattr(-,root,root)
-%doc project/ChangeLog
+%doc LICENSE project/ChangeLog
 %dir /usr/libexec/
 %dir /usr/libexec/grid-monitoring/
 %dir /usr/libexec/grid-monitoring/probes/

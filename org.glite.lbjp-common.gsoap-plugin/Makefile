@@ -21,7 +21,7 @@ SOURCES=\
 	project/.post* project/gsoap-plugin*.pc.in project/libtoolhack/gcc \
 	src/*.c \
 	test/*.cpp \
-	LICENSE Makefile
+	Makefile
 SOURCES_EXEC=project/libtoolhack/gcc
 
 gsoap_versions_flavours?=${gsoap_default_version}
@@ -330,9 +330,7 @@ stage:
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
-	${INSTALL} -m 644 ${top_srcdir2}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	cd ${top_srcdir2}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
 	${INSTALL} -m 644 glite_gscompat.h ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
 	for v in ${gsoap_versions_noflavours}; do \

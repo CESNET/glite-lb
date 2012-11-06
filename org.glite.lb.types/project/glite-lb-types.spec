@@ -41,6 +41,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
+%doc LICENSE project/ChangeLog
 %dir /usr/share/glite-lb/at3/
 %dir /usr/share/perl/
 %dir /usr/share/perl/gLite/

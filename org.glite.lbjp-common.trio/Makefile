@@ -18,7 +18,7 @@ default: all
 
 version=${module.version}
 
-VPATH=${top_srcdir}/src:${top_srcdir}/test::${top_srcdir}/doc
+VPATH=${top_srcdir}/src:${top_srcdir}/test
 
 CC=gcc
 
@@ -36,7 +36,7 @@ SOURCES=\
 	project/.post* \
 	src/*.c src/*.h \
 	test/*.cpp \
-	LICENSE Makefile
+	Makefile
 
 os=${shell uname}
 DL_LIBS:=
@@ -99,12 +99,10 @@ trio_test: trio_test.cpp
 
 install: all
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbuprefix}
 	${INSTALL} -m 755 ${LTLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 644 ${STATICLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbuprefix})
 
 clean:

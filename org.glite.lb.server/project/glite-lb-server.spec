@@ -75,6 +75,7 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-bkserverd
+install LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
@@ -114,10 +115,13 @@ fi
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog config/glite-lb
 %dir /etc/cron.d/
 %dir /etc/glite-lb/
+%dir /usr/share/doc/%{name}-%{version}
 %dir /usr/share/glite/
+/usr/share/doc/%{name}-%{version}/ChangeLog
+/usr/share/doc/%{name}-%{version}/LICENSE
+/usr/share/doc/%{name}-%{version}/glite-lb
 %config(noreplace) /etc/logrotate.d/glite-lb-server
 %config(noreplace) /etc/mysql/conf.d/glite-lb-server.cnf
 %config(noreplace) /etc/glite-lb/*

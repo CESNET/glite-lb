@@ -28,7 +28,7 @@ SOURCES=\
 	src/*.c src/*.cpp src/*.h src/*.sh \
 	src-nt/*.cpp src-nt/*.H src-nt/Makefile src-nt/test/*.cpp \
 	test/*.c test/*.cpp test/*.h \
-	LICENSE Makefile
+	Makefile
 SOURCES_EXEC=config/startup src/*.sh
 
 VERSION=-DVERSION=\"GLite-${version}\"
@@ -220,7 +220,6 @@ check.il: ${INTERLOG_TEST_OBJS}
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
 	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/bin
@@ -232,7 +231,6 @@ ifdef LB_PERF
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-locallogger
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	( cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} )
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 

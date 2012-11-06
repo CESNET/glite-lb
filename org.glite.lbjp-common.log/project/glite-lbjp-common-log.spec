@@ -44,6 +44,7 @@ make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+install LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 
@@ -62,6 +63,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/share/doc/%{name}-%{version}
 %dir /etc/glite-lb
 %config(noreplace) /etc/glite-lb/log4crc
+%doc /usr/share/doc/%{name}-%{version}/ChangeLog
 %doc /usr/share/doc/%{name}-%{version}/LICENSE
 %doc /usr/share/doc/%{name}-%{version}/README
 %doc /usr/share/doc/%{name}-%{version}/log4crc.example-debugging

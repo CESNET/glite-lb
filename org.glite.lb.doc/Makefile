@@ -19,7 +19,7 @@ VPATH = ${top_srcdir}/src
 SOURCES=\
 	examples/*.c examples/*.cpp examples/Makefile examples/README* examples/*.C \
 	src/lbjp.bib src/*.cls src/*.sty src/*.tex src/*.tex.T src/README* src/images/*.pdf \
-	GGUS19469-reply.txt LICENSE Makefile
+	GGUS19469-reply.txt Makefile
 # example source code is part of the org.glite.lb.client
 EXAMPLE_SOURCE_DIR=${top_srcdir}/examples
 KPATH = TEXINPUTS=".:$(EXAMPLE_SOURCE_DIR):$(VPATH)//:"
@@ -69,8 +69,6 @@ check:
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	( cd ${top_srcdir}/project && ${INSTALL} -m 644 ChangeLog package.description package.summary ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} )
 	${INSTALL} -m 644 ${top_srcdir}/src/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 LBUG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 644 LBAG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}

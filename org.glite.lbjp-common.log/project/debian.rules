@@ -41,7 +41,6 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	rm -vf debian/tmp/usr/share/doc/glite-lbjp-common-log*/LICENSE
 	rm -vf debian/tmp/usr/lib/*.la
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	mkdir -p debian/$(p_dev)/usr/share/doc

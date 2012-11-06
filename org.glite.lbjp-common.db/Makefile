@@ -26,7 +26,7 @@ CC=gcc
 
 VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/examples:${top_srcdir}/test
 
-SOURCES=doc/C.dox examples/*.c interface/*.h project/.post* src/*.c test/*.cpp LICENSE Makefile
+SOURCES=doc/C.dox examples/*.c interface/*.h project/.post* src/*.c test/*.cpp Makefile
 
 DEBUG:=-g -O0 -W -Wall
 
@@ -135,10 +135,9 @@ stage: compile
 
 install: all
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+#	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
-	${INSTALL} -m 644 ${top_srcdir}/LICENSE ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	-cp -r C ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+#	-cp -r C ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 755 "libglite_lbu_db.la" "${DESTDIR}${PREFIX}${prefix}/${libdir}/libglite_lbu_db.la"; \
 	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 

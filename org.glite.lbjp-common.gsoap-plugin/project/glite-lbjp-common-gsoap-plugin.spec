@@ -77,8 +77,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}
-%doc /usr/share/doc/%{name}-%{version}/LICENSE
+%doc project/ChangeLog LICENSE
 %{_libdir}/libglite_security_gsoap_plugin_*.so.*
 
 %files devel
