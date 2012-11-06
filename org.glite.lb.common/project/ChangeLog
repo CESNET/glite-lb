@@ -232,3 +232,7 @@
 - Increased padding in data structures, at least 25% reserved space for both 32-bit and 64-bit architectures
 - Preparation for Fedora & EPEL packaging
 
+9.0.1-1
+- License and packaging fixes
+- Support for setting group ownership for event files
+
