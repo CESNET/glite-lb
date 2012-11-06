@@ -121,3 +121,6 @@
 - Major version bump
 - Preparation for Fedora & EPEL packaging
 
+4.0.1-1
+- License and packaging fixes
+
