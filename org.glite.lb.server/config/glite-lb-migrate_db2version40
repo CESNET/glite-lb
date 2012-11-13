@@ -21,6 +21,7 @@ EOF
 
 while getopts "d:h" OPTION 
 do
+    case "$OPTION" in
     "d") DB_NAME=$OPTARG
     ;;
 

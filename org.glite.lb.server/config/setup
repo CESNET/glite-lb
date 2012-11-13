@@ -324,7 +324,7 @@ EOF
 	# migrate L&B 3.x to L&B 4.0
 	if test -f $GLITE_LOCATION/sbin/glite-lb-migrate_db2version40; then
 		if ! check_mysql_table lbserver20 job_connections; then
-			sh $GLITE_LOCATION/sbin/glite-lb-migrate_db2version40 -s
+			sh $GLITE_LOCATION/sbin/glite-lb-migrate_db2version40
 			if test $? -eq 0; then
 				qecho "Database migrated to L&B 4.x"
 			else
