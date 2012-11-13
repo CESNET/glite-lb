@@ -397,7 +397,7 @@ test.query_parse: test_query_parse
 	./test_query_parse
 
 test_query_parse: test_query_parse.o
-	${LINKXX} -o $@ ${COMMON_LIBS} ${LB_UTILS_DB_LIB} ${LB_MACHINE_LIB} lb_proto.o db_supp.o lb_authz.o lb_html.o authz_policy.o query.o lb_xml_parse_V21.o lb_xml_parse.o server_stats.o lb_rss.o lb_text.o srv_purge.o notification.o userjobs.o jobstat.o dump.o crypto.o load.o server_state.o get_events.o write2rgma.o stats.o db_store.o notif_match.o il_notification.o index.o store.o db_calls.o il_lbproxy.o cond_dump.o jobstat_supp.o openserver.o seqcode.o pretty_print_wrapper.o ${EXT_LIBS} ${CPPUNIT_LIBS} $+
+	${LINKXX} -o $@ ${COMMON_LIBS} ${LB_UTILS_DB_LIB} ${LB_MACHINE_LIB} lb_proto.o db_supp.o lb_authz.o lb_html.o authz_policy.o query.o lb_xml_parse_V21.o lb_xml_parse.o server_stats.o lb_rss.o lb_text.o srv_purge.o notification.o userjobs.o jobstat.o dump.o crypto.o load.o server_state.o get_events.o write2rgma.o stats.o db_store.o notif_match.o il_notification.o index.o store.o db_calls.o il_lbproxy.o cond_dump.o jobstat_supp.o openserver.o seqcode.o pretty_print_wrapper.o ${EXT_LIBS} ${CPPUNIT_LIBS} ${EXPAT_LIBS} -lglite_jobid $+
 
 examples: ${EXAMPLES}
 

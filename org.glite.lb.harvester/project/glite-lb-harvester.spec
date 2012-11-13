@@ -46,6 +46,7 @@ make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-harvester
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 
@@ -84,7 +85,7 @@ fi
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog doc/README
+%dir /usr/share/doc/%{name}-%{version}/
 %dir /etc/glite-lb/
 %dir /usr/%{_lib}/glite-lb/
 %dir /usr/%{_lib}/glite-lb/examples/
@@ -93,6 +94,9 @@ fi
 %{_bindir}/glite-lb-harvester
 %{_libdir}/glite-lb/examples/glite-lb-harvester-test.sh
 %{_libdir}/glite-lb/examples/glite-lb-harvester-dbg
+/usr/share/doc/%{name}-%{version}/ChangeLog
+/usr/share/doc/%{name}-%{version}/LICENSE
+/usr/share/doc/%{name}-%{version}/README
 /usr/share/glite/*
 /usr/share/man/man1/glite-lb-harvester.1.gz
 
