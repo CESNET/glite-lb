@@ -11,7 +11,6 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-c
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  cppunit-devel
-BuildRequires:  chrpath
 BuildRequires:  libtool
 BuildRequires:  pkgconfig
 
@@ -48,7 +47,6 @@ mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
-find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 
 
 %clean

@@ -13,8 +13,6 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-c
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  c-ares-devel
-BuildRequires:  c-ares
-BuildRequires:  chrpath
 BuildRequires:  cppunit-devel
 %if %{?gssapi_provider_kerberos:0}
 BuildRequires:  globus-common-devel
@@ -57,10 +55,9 @@ library.
 %build
 /usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module lbjp-common.gss
 if [ "%gssapi_provider_kerberos" == "1" ]; then
-	echo Kerberos
-	echo "gssapi_provider=kerberos" >> Makefile.inc
-	echo "GLOBUS_COMMON_CFLAGS=`pkg-config --cflags globus-common`" >> Makefile.inc
-	echo "GLOBUS_COMMON_LIBS=`pkg-config --libs globus-common`" >> Makefile.inc
+    echo "gssapi_provider=kerberos" >> Makefile.inc
+    echo "GLOBUS_COMMON_CFLAGS=`pkg-config --cflags globus-common`" >> Makefile.inc
+    echo "GLOBUS_COMMON_LIBS=`pkg-config --libs globus-common`" >> Makefile.inc
 fi
 
 make
@@ -76,7 +73,6 @@ mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
-find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 
 %clean
 rm -rf $RPM_BUILD_ROOT
