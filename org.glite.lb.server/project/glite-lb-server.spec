@@ -134,6 +134,7 @@ fi
 /usr/share/man/man1/glite-lb-mon-db.1.gz
 /usr/share/man/man8/glite-lb-bkindex.8.gz
 /usr/share/man/man8/glite-lb-bkserverd.8.gz
+/usr/share/man/man8/glite-lb-setup.8.gz
 
 
 %changelog
