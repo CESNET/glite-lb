@@ -29,7 +29,7 @@ LATEX = $(KPATH) latex
 PDFLATEX = $(KPATH) pdflatex
 BIBTEX = $(KPATHBIB) bibtex
 DVIPS = $(KPATH) dvips
-AT3=${stagedir}${prefix}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/bin/glite-lb-at3
 INSTALL=install
 
 all: generate doc

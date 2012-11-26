@@ -21,7 +21,7 @@ version=${module.version}
 jobiddir=${top_srcdir}/../org.glite.jobid.api-c
 
 VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc
-AT3=${stagedir}${prefix}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/bin/glite-lb-at3
 
 SUFFIXES = .T
 

@@ -18,7 +18,7 @@ VPATH = ${top_srcdir}/src:${top_srcdir}/interface
 
 CC=gcc
 CXX=g++
-AT3=${stagedir}${prefix}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/bin/glite-lb-at3
 
 SUFFIXES = .T 
 

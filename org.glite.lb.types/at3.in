@@ -16,16 +16,16 @@
 # limitations under the License.
 #
 
-use File::Basename;
-
 my $lines = $ENV{AT3_LINES};
+my ($prefix, $perlinstalldir);
 
-my $prefix;
-use File::Basename;
+BEGIN {
+	$prefix = '@prefix@';
+	$perlinstalldir = '@perlinstalldir@';
+}
 
-BEGIN{ $prefix = dirname($0)."/.."; }
+use lib "$perlinstalldir";
 
-use lib "$prefix/share/perl";
 use gLite::LB::MultiStruct;
 require "$prefix/share/glite-lb/at3/types.T";
 

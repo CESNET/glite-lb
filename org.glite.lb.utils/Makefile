@@ -27,7 +27,7 @@ SOURCES=\
 SOURCES_EXEC=examples/*.sh src/*.sh
 
 CC=gcc
-AT3=${stagedir}${prefix}/sbin/glite-lb-at3
+AT3=${stagedir}${prefix}/bin/glite-lb-at3
 
 SUFFIXES = .T
 
