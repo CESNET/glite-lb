@@ -48,7 +48,12 @@ mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-harvester
+mkdir $RPM_BUILD_ROOT/etc/rc.d
+mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+mkdir -p $RPM_BUILD_ROOT/var/glite
+mkdir -p $RPM_BUILD_ROOT/var/run/glite
+touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-harvester.pid
 
 
 %clean
@@ -58,8 +63,6 @@ rm -rf $RPM_BUILD_ROOT
 %pre
 getent group glite >/dev/null || groupadd -r glite
 getent passwd glite >/dev/null || useradd -r -g glite -d /var/glite -c "gLite user" glite
-mkdir -p /var/glite /var/log/glite 2>/dev/null || :
-chown glite:glite /var/glite /var/log/glite
 exit 0
 
 
@@ -85,20 +88,23 @@ fi
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}/
-%dir /etc/glite-lb/
-%dir /usr/%{_lib}/glite-lb/
-%dir /usr/%{_lib}/glite-lb/examples/
-%dir /usr/share/glite/
-/etc/init.d/glite-lb-harvester
+%dir %attr(0755, glite, glite) %{_localstatedir}/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
+%dir %{_docdir}/%{name}-%{version}/
+%dir %{_sysconfdir}/glite-lb/
+%dir %{_libdir}/glite-lb/
+%dir %{_libdir}/glite-lb/examples/
+%dir %{_datadir}/glite/
+%ghost %{_localstatedir}/run/glite/glite-lb-harvester.pid
+%{_initrddir}/glite-lb-harvester
 %{_bindir}/glite-lb-harvester
 %{_libdir}/glite-lb/examples/glite-lb-harvester-test.sh
 %{_libdir}/glite-lb/examples/glite-lb-harvester-dbg
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/README
-/usr/share/glite/*
-/usr/share/man/man1/glite-lb-harvester.1.gz
+%{_docdir}/%{name}-%{version}/ChangeLog
+%{_docdir}/%{name}-%{version}/LICENSE
+%{_docdir}/%{name}-%{version}/README
+%{_datadir}/glite/*
+%{_mandir}/man1/glite-lb-harvester.1.gz
 
 
 %changelog

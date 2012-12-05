@@ -45,12 +45,10 @@ limitations under the License.
 
 #define FCNTL_ATTEMPTS		5
 #define FCNTL_TIMEOUT		1
-#define FILE_PREFIX             "/tmp/notif_events"
-#define DEFAULT_SOCKET          "/tmp/notif_interlogger.sock"
 #define NOTIF_TIMEOUT		1
 
-char *notif_ilog_socket_path = DEFAULT_SOCKET;
-char *notif_ilog_file_prefix = FILE_PREFIX;
+char *notif_ilog_socket_path = EDG_WLL_NOTIF_SOCKET_DEFAULT;
+char *notif_ilog_file_prefix = EDG_WLL_NOTIF_PREFIX_DEFAULT;
 
 
 static

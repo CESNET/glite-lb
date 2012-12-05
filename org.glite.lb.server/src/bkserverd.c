@@ -122,7 +122,7 @@ extern void _start (void), etext (void);
 
 /* file to store pid and generate semaphores key */
 #ifndef EDG_BKSERVERD_PIDFILE
-#define EDG_BKSERVERD_PIDFILE	"/var/run/glite-lb-bkserverd.pid"
+#define EDG_BKSERVERD_PIDFILE	"/var/run/glite/glite-lb-bkserverd.pid"
 #endif
 
 #ifndef GLITE_LBPROXY_SOCK_PREFIX

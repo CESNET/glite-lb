@@ -61,7 +61,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/glite-lb-purge
 %{_bindir}/glite-lb-state_history
 %{_bindir}/glite-lb-statistics
-/usr/share/man/*/*.gz
+%{_mandir}/*/*.gz
 
 
 %changelog

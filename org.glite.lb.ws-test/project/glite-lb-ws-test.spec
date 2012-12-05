@@ -49,8 +49,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
-%dir /usr/%{_lib}/glite-lb/
-%dir /usr/%{_lib}/glite-lb/examples/
+%dir %{_libdir}/glite-lb/
+%dir %{_libdir}/glite-lb/examples/
 %{_libdir}/glite-lb/examples/glite-lb-ws_getversion
 %{_libdir}/glite-lb/examples/glite-lb-ws_joblog
 %{_libdir}/glite-lb/examples/glite-lb-ws_lb4agu_GetActivityStatus

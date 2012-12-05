@@ -40,7 +40,7 @@ GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
 [ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
-pidfile=${GLITE_LB_HARVESTER_PIDFILE:-"$GLITE_LB_LOCATION_VAR/glite-lb-harvester.pid"}
+pidfile=${GLITE_LB_HARVESTER_PIDFILE:-'/var/run/glite/glite-lb-harvester.pid'}
 level=${GLITE_LB_HARVESTER_DEBUG_LEVEL:-"1"}
 lockfile=/var/lock/glite-lb-harvester
 

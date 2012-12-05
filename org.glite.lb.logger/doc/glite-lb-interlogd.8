@@ -69,7 +69,7 @@ Don't run as daemon (do not fork and put itself into background). Additional dia
 
 .TP
 .BI \-i " FILE" "\fR,\fP --pidfile " FILE
-Store process id into this file rather than default /var/glite/glite-lb-[notif]-interlogd.pid
+Store process id into this file rather than default /var/glite/glite-lb-[notif|proxy]-interlogd.pid
 
 .TP
 .BI \-f " PREFIX" "\fR,\fP --file-prefix " PREFIX
@@ -83,12 +83,12 @@ protocol+server prefix from the jobid and appending the rest to this
 .I PREFIX.
 
 .I PREFIX
-defaults to /var/glite/log/dglogd.log.
+defaults to /var/spool/glite/lb-locallogger/dglogd.log, /var/spool/glite/lb-proxy/dglogd.log, or /var/spool/glite/lb-notif/dglogd.log.
 
 On startup, interlogger checks all files matching the pattern
 .I PREFIX*.
 
-The value has to be same as used in the cooperating glite-lb-logd.
+The value has to be same as used in the cooperating glite-lb-logd (or glite-lb-bkserverd for proxy).
 
 .TP
 .BI \-k " FILE" "\fR,\fP --key " FILE
@@ -131,13 +131,13 @@ Print help and exit.
 
 .SH FILES
 .TP
-.I /tmp/interlogger.sock
-Default name of local socket.
+.I /var/run/glite-lb-*.sock
+Default name of local socket for logger, notification logger and proxy logger.
 .TP
-.I /var/glite/log/dglogd.log*
-Default location of event files.
-
-.I /var/glite/log/dglogd.log*.ctl
+.I /var/spool/glite/lb-*/dglogd.log*
+Default locations of event files.
+.TP
+.I /var/spool/glite/lb-*/dglogd.log*.ctl
 Interlogger's control files keeping the information on status of
 the corresponding event file wrt. delivery to the target server.
 
@@ -173,7 +173,7 @@ is set, it is used to locate proxy certificate file.
 Please, report all bugs to EU EGEE Bug Tracking System located at https://savannah.cern.ch
 
 .SH SEE ALSO
-.B te-lb-bkserverd\fR(8),\fP glite-lb-logd\fR(8),\fP glite-lb-logevent\fR(1),\fP
+.B glite-lb-bkserverd\fR(8),\fP glite-lb-logd\fR(8),\fP glite-lb-logevent\fR(1),\fP
 
 .SH AUTHOR
 EU EGEE, JRA1.

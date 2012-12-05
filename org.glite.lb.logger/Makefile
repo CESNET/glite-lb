@@ -44,14 +44,13 @@ ifdef LB_PERF
 	INTERLOGD:=glite-lb-interlogd-perf \
 		   glite-lb-interlogd-perf-empty 
 #		   glite-lb-interlogd-perf-inline-empty
-	NOTIF_INTERLOGD:=glite-lb-notif-interlogd
 	LB_PERF_FLAGS:=-DLB_PERF
 else
 	LOGD:=glite-lb-logd
 	INTERLOGD:=glite-lb-interlogd
-	NOTIF_INTERLOGD:=glite-lb-notif-interlogd
-	WS_INTERLOGD:=glite-lb-ws-interlogd
 endif
+NOTIF_INTERLOGD:=glite-lb-notif-interlogd
+PROXY_INTERLOGD:=glite-lb-proxy-interlogd
 
 ifeq (${thrflavour},)
 default_thrflavour=
@@ -225,6 +224,7 @@ install:
 	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
+	ln -sf ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-proxy-interlogd
 ifdef LB_PERF
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${DESTDIR}${PREFIX}${prefix}/sbin

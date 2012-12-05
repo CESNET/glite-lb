@@ -57,7 +57,21 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-locallogger
+mkdir $RPM_BUILD_ROOT/etc/rc.d
+mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+mkdir -p $RPM_BUILD_ROOT/var/glite
+mkdir -p $RPM_BUILD_ROOT/var/run/glite
+mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-locallogger
+mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-notif
+mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-proxy
+touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-interlogger.sock
+touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-notif.sock
+touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-proxy.sock
+touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-interlogd.pid
+touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-logd.pid
+touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-notif-interlogd.pid
+touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-proxy-interlogd.pid
 
 
 %clean
@@ -67,8 +81,6 @@ rm -rf $RPM_BUILD_ROOT
 %pre
 getent group glite >/dev/null || groupadd -r glite
 getent passwd glite >/dev/null || useradd -r -g glite -d /var/glite -c "gLite user" glite
-mkdir -p /var/glite /var/log/glite 2>/dev/null || :
-chown glite:glite /var/glite /var/log/glite
 exit 0
 
 
@@ -94,13 +106,27 @@ fi
 
 %files
 %defattr(-,root,root)
+%dir %attr(0755, glite, glite) %{_localstatedir}/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
+%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-notif
+%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
 %doc LICENSE project/ChangeLog
-/etc/init.d/glite-lb-locallogger
-%{_bindir}/glite-lb-notif-interlogd
+%ghost %{_localstatedir}/run/glite/glite-lb-interlogger.sock
+%ghost %{_localstatedir}/run/glite/glite-lb-notif.sock
+%ghost %{_localstatedir}/run/glite/glite-lb-proxy.sock
+%ghost %{_localstatedir}/run/glite/glite-lb-interlogd.pid
+%ghost %{_localstatedir}/run/glite/glite-lb-logd.pid
+%ghost %{_localstatedir}/run/glite/glite-lb-notif-interlogd.pid
+%ghost %{_localstatedir}/run/glite/glite-lb-proxy-interlogd.pid
+%{_initrddir}/glite-lb-locallogger
 %{_bindir}/glite-lb-interlogd
 %{_bindir}/glite-lb-logd
-/usr/share/man/man8/glite-lb-interlogd.8.gz
-/usr/share/man/man8/glite-lb-logd.8.gz
+%{_bindir}/glite-lb-notif-interlogd
+%{_bindir}/glite-lb-proxy-interlogd
+%{_mandir}/man8/glite-lb-interlogd.8.gz
+%{_mandir}/man8/glite-lb-logd.8.gz
 
 %files devel
 %defattr(-,root,root)

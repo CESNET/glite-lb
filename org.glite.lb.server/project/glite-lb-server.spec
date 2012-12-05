@@ -74,10 +74,18 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-bkserverd
+mkdir $RPM_BUILD_ROOT/etc/rc.d
+mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+mkdir -p $RPM_BUILD_ROOT/var/glite
+mkdir -p $RPM_BUILD_ROOT/var/run/glite
+mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-locallogger
+mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-notif
+mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-proxy
+touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-bkserverd.pid
 
 
 %clean
@@ -87,8 +95,6 @@ rm -rf $RPM_BUILD_ROOT
 %pre
 getent group glite >/dev/null || groupadd -r glite
 getent passwd glite >/dev/null || useradd -r -g glite -d /var/glite -c "gLite user" glite
-mkdir -p /var/glite /var/log/glite 2>/dev/null || :
-chown glite:glite /var/glite /var/log/glite
 exit 0
 
 
@@ -114,26 +120,33 @@ fi
 
 %files
 %defattr(-,root,root)
-%dir /etc/cron.d/
-%dir /etc/glite-lb/
-%dir /usr/share/doc/%{name}-%{version}
-%dir /usr/share/glite/
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/glite-lb
-%config(noreplace) /etc/logrotate.d/glite-lb-server
-%config(noreplace) /etc/mysql/conf.d/glite-lb-server.cnf
-%config(noreplace) /etc/glite-lb/*
-%config(noreplace missingok) /etc/sysconfig/glite-lb
-/etc/cron.d/*
-/etc/init.d/glite-lb-bkserverd
+%dir %attr(0755, glite, glite) %{_localstatedir}/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
+%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-notif
+%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
+%dir %{_datadir}/glite/
+%dir %{_docdir}/%{name}-%{version}
+%dir %{_sysconfdir}/cron.d/
+%dir %{_sysconfdir}/glite-lb/
+%config(noreplace) %{_sysconfdir}/glite-lb/*
+%config(noreplace) %{_sysconfdir}/logrotate.d/glite-lb-server
+%config(noreplace) %{_sysconfdir}/mysql/conf.d/glite-lb-server.cnf
+%config(noreplace missingok) %{_sysconfdir}/sysconfig/glite-lb
+%ghost %{_localstatedir}/run/glite/glite-lb-bkserverd.pid
+%{_docdir}/%{name}-%{version}/ChangeLog
+%{_docdir}/%{name}-%{version}/LICENSE
+%{_docdir}/%{name}-%{version}/glite-lb
+%{_sysconfdir}/cron.d/*
+%{_initrddir}/glite-lb-bkserverd
 %{_bindir}/*
-/usr/sbin/*
-/usr/share/glite/*
-/usr/share/man/man1/glite-lb-mon-db.1.gz
-/usr/share/man/man8/glite-lb-bkindex.8.gz
-/usr/share/man/man8/glite-lb-bkserverd.8.gz
-/usr/share/man/man8/glite-lb-setup.8.gz
+%{_sbindir}/*
+%{_datadir}/glite/*
+%{_mandir}/man1/glite-lb-mon-db.1.gz
+%{_mandir}/man8/glite-lb-bkindex.8.gz
+%{_mandir}/man8/glite-lb-bkserverd.8.gz
+%{_mandir}/man8/glite-lb-setup.8.gz
 
 
 %changelog

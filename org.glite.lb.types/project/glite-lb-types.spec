@@ -43,7 +43,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
-%dir /usr/share/glite-lb/at3/
+%dir %{_datadir}/glite-lb/at3/
 %dir %{perl_vendorlib}/gLite/
 %dir %{perl_vendorlib}/gLite/LB/
 %dir %{_includedir}/glite/
@@ -53,9 +53,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/glite/lb/*
 %{perl_vendorlib}/gLite/LB/StructField.pm
 %{perl_vendorlib}/gLite/LB/MultiStruct.pm
-/usr/share/glite-lb/at3/events.T
-/usr/share/glite-lb/at3/status.T
-/usr/share/glite-lb/at3/types.T
+%{_datadir}/glite-lb/at3/events.T
+%{_datadir}/glite-lb/at3/status.T
+%{_datadir}/glite-lb/at3/types.T
 
 
 %changelog

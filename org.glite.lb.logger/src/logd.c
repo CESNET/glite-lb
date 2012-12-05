@@ -48,7 +48,7 @@ limitations under the License.
 #include "glite/lb/lb_perftest.h"
 #endif
 
-#define DEFAULT_PIDFILE "/var/glite/glite-lb-logd.pid"
+#define DEFAULT_PIDFILE "/var/run/glite/glite-lb-logd.pid"
 
 typedef void (*logd_handler_t)(int);
 
@@ -64,8 +64,7 @@ static int noAuth = 0;
 static int noIPC = 0;
 static int noParse = 0;
 
-#define DEFAULT_SOCKET "/tmp/interlogger.sock"
-char *socket_path = DEFAULT_SOCKET;
+char *socket_path = EDG_WLL_LOG_SOCKET_DEFAULT;
 
 extern int confirm_sock;
 extern char confirm_sock_name[256];

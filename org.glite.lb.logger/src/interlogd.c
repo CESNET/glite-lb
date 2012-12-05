@@ -29,6 +29,7 @@ limitations under the License.
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <libgen.h>
 #include <sys/stat.h>
 #include <sys/param.h>
 
@@ -41,13 +42,16 @@ limitations under the License.
 
 #define EXIT_FAILURE 1
 #if defined(IL_NOTIFICATIONS)
-#define DEFAULT_PREFIX "/tmp/notif_events"
-#define DEFAULT_SOCKET "/tmp/notif_interlogger.sock"
-#define DEFAULT_PIDFILE "/var/glite/glite-lb-notif-interlogd.pid"
+#define DEFAULT_PREFIX EDG_WLL_NOTIF_PREFIX_DEFAULT
+#define DEFAULT_SOCKET EDG_WLL_NOTIF_SOCKET_DEFAULT
+#define DEFAULT_PIDFILE "/var/run/glite/glite-lb-notif-interlogd.pid"
 #else
 #define DEFAULT_PREFIX EDG_WLL_LOG_PREFIX_DEFAULT
-#define DEFAULT_SOCKET "/tmp/interlogger.sock"
-#define DEFAULT_PIDFILE  "/var/glite/glite-lb-interlogd.pid"
+#define DEFAULT_SOCKET EDG_WLL_LOG_SOCKET_DEFAULT
+#define DEFAULT_PIDFILE  "/var/run/glite/glite-lb-interlogd.pid"
+#define DEFAULT_PROXY_PREFIX EDG_WLL_PROXY_PREFIX_DEFAULT
+#define DEFAULT_PROXY_SOCKET EDG_WLL_PROXY_SOCKET_DEFAULT
+#define DEFAULT_PROXY_PIDFILE  "/var/run/glite/glite-lb-proxy-interlogd.pid"
 #endif
 
 
@@ -64,6 +68,8 @@ pthread_mutex_t cred_handle_lock = PTHREAD_MUTEX_INITIALIZER;
 time_t key_mtime = 0, cert_mtime = 0;
 
 static char *pidfile = DEFAULT_PIDFILE;
+char *file_prefix = DEFAULT_PREFIX;
+char *socket_path = DEFAULT_SOCKET;
 
 static void usage (int status)
 {
@@ -75,18 +81,21 @@ static void usage (int status)
 	       "  -V, --version              output version information and exit\n"
 	       "  -d, --debug                do not run as daemon\n"
 	       "  -f, --file-prefix <prefix> path and prefix for event files\n"
+	       "                             (default: %s)\n"
 	       "  -c, --cert <file>          location of server certificate\n"
 	       "  -k, --key  <file>          location of server private key\n"
 	       "  -C, --CAdir <dir>          directory containing CA certificates\n"
 	       "  -b, --book                 send events to bookkeeping server only\n"
-	       "  -i, --pidfile		         pid file\n"
+	       "  -i, --pidfile               pid file\n"
+	       "                             (default: %s)\n"
 	       "  -l, --log-server <host>    specify address of log server\n"
 	       "  -s, --socket <path>        non-default path of local socket\n"
+	       "                             (default: %s)\n"
 	       "  -L, --lazy [<timeout>]     be lazy when closing connections to servers (default, timeout==0 means turn lazy off)\n"
 	       "  -p, --parallel [<num>]     use <num> parallel streams to the same server\n"
 	       "  -q, --queue-low <num>      queue length that enables another insertions\n"
 	       "  -Q, --queue-high <num>     max queue length\n"
-		   "  -F, --conf <file>			 load configuration from config file\n"
+	       "  -F, --conf <file>          load configuration from config file\n"
 #ifdef LB_PERF
 	       "  -n, --nosend               PERFTEST: consume events instead of sending\n"
 	       "  -S, --nosync               PERFTEST: do not check logd files for lost events\n"
@@ -97,14 +106,13 @@ static void usage (int status)
 	       "  -j, --njobs <n>            PERFTEST: number of jobs to send\n"
 #endif
 #endif
-	       , program_name, program_name);
+	       , program_name, program_name, file_prefix, pidfile, socket_path);
 	exit(status);
 }
 
 
 /* Option flags and variables */
 static int debug;
-char *file_prefix = DEFAULT_PREFIX;
 int bs_only = 0;
 int lazy_close = 1;
 int default_close_timeout;
@@ -122,7 +130,6 @@ char *cert_file = NULL;
 char *key_file  = NULL;
 char *CAcert_dir = NULL;
 char *log_server = NULL;
-char *socket_path = DEFAULT_SOCKET;
 static char *conf_file = NULL;
 static char *config = NULL;
 
@@ -415,6 +422,16 @@ main (int argc, char **argv)
   int ret;
   FILE *pidf;
 
+#ifndef IL_NOTIFICATIONS
+  p = strdup(argv[0]);
+  program_name = basename(p);
+  if (strcmp(program_name, "glite-lb-proxy-interlogd") == 0) {
+    file_prefix = DEFAULT_PROXY_PREFIX;
+    socket_path = DEFAULT_PROXY_SOCKET;
+    pidfile = DEFAULT_PROXY_PIDFILE;
+  }
+  free(p);
+#endif
   program_name = argv[0];
 
   setlinebuf(stdout);

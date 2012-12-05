@@ -44,21 +44,15 @@ make install DESTDIR=$RPM_BUILD_ROOT
 rm -rf $RPM_BUILD_ROOT
 
 
-%post
-chown nagios:nagios /usr/libexec/grid-monitoring/probes/emi.lb >/dev/null 2>&1 || :
-exit 0
-
-
 %files
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
-%dir /usr/libexec/
-%dir /usr/libexec/grid-monitoring/
-%dir /usr/libexec/grid-monitoring/probes/
-%dir /usr/libexec/grid-monitoring/probes/emi.lb/
+%dir %{_libexecdir}/grid-monitoring/
+%dir %{_libexecdir}/grid-monitoring/probes/
+%dir %attr(0755, nagios, nagios) %{_libexecdir}/grid-monitoring/probes/emi.lb/
 %dir /var/lib/grid-monitoring/
 %dir /var/lib/grid-monitoring/emi.lb/
-/usr/libexec/grid-monitoring/probes/emi.lb/LB-probe
+%{_libexecdir}/grid-monitoring/probes/emi.lb/LB-probe
 
 
 %changelog

@@ -83,37 +83,37 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}/
+%dir %{_docdir}/%{name}-%{version}/
 %{_libdir}/libglite_lb_client.so.*
 %{_libdir}/libglite_lb_clientpp.so.*
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/LICENSE
+%{_docdir}/%{name}-%{version}/ChangeLog
+%{_docdir}/%{name}-%{version}/LICENSE
 
 %files devel
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}/examples/
-%dir /usr/share/emi/
-%dir /usr/share/emi/build/
-%dir /usr/share/emi/build/m4/
+%dir %{_docdir}/%{name}-%{version}/examples/
+%dir %{_datadir}/emi/
+%dir %{_datadir}/emi/build/
+%dir %{_datadir}/emi/build/m4/
 %dir %{_includedir}/glite/
 %dir %{_includedir}/glite/lb/
 %{_includedir}/glite/lb/*.h
 %{_libdir}/libglite_lb_client.so
 %{_libdir}/libglite_lb_clientpp.so
-/usr/share/doc/%{name}-%{version}/examples/*
-/usr/share/emi/build/m4/glite_lb.m4
+%{_docdir}/%{name}-%{version}/examples/*
+%{_datadir}/emi/build/m4/glite_lb.m4
 
 %files progs
 %defattr(-,root,root)
-%dir /usr/%{_lib}/glite-lb/
-%dir /usr/%{_lib}/glite-lb/examples/
+%dir %{_libdir}/glite-lb/
+%dir %{_libdir}/glite-lb/examples/
 %{_bindir}/glite-lb-logevent
 %{_bindir}/glite-lb-notify
 %{_bindir}/glite-lb-register_sandbox
 %{_libdir}/glite-lb/examples/*
-/usr/share/doc/%{name}-%{version}/README-notify
-/usr/share/man/man1/glite-lb-notify.1.gz
-/usr/share/man/man1/glite-lb-logevent.1.gz
+%{_docdir}/%{name}-%{version}/README-notify
+%{_mandir}/man1/glite-lb-notify.1.gz
+%{_mandir}/man1/glite-lb-logevent.1.gz
 
 
 %changelog

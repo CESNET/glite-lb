@@ -44,9 +44,9 @@ LOG4C_RCPATH="$GLITE_LOCATION_ETC/glite-lb"
 [ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
-LL_PIDFILE=${LL_PIDFILE:-$GLITE_LB_LOCATION_VAR/glite-lb-logd.pid}
-IL_PIDFILE=${IL_PIDFILE:-$GLITE_LB_LOCATION_VAR/glite-lb-interlogd.pid}
-IL_SOCKFILE=/tmp/interlogger.sock
+LL_PIDFILE=/var/run/glite/glite-lb-logd.pid
+IL_PIDFILE=/var/run/glite/glite-lb-interlogd.pid
+IL_SOCKFILE=/var/run/glite/glite-lb-interlogger.sock
 
 lockfile=/var/lock/glite-lb-locallogger
 
@@ -150,7 +150,7 @@ start()
 		-i $LL_PIDFILE $port $sock $fprefix"
 
 	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-interlogd \
-		-i $IL_PIDFILE $sock $fprefix" "$IL_SOCKFILE"
+		-i $IL_PIDFILE $sock $fprefix" "${GLITE_LB_IL_SOCK:-$IL_SOCKFILE}"
 }
 
 killwait()

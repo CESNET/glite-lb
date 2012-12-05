@@ -60,14 +60,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}
-%dir /etc/glite-lb
-%config(noreplace) /etc/glite-lb/log4crc
-%doc /usr/share/doc/%{name}-%{version}/ChangeLog
-%doc /usr/share/doc/%{name}-%{version}/LICENSE
-%doc /usr/share/doc/%{name}-%{version}/README
-%doc /usr/share/doc/%{name}-%{version}/log4crc.example-debugging
-%doc /usr/share/doc/%{name}-%{version}/log4crc.example-production
+%dir %{_docdir}/%{name}-%{version}
+%dir %{_sysconfdir}/glite-lb
+%config(noreplace) %{_sysconfdir}/glite-lb/log4crc
+%doc %{_docdir}/%{name}-%{version}/ChangeLog
+%doc %{_docdir}/%{name}-%{version}/LICENSE
+%doc %{_docdir}/%{name}-%{version}/README
+%doc %{_docdir}/%{name}-%{version}/log4crc.example-debugging
+%doc %{_docdir}/%{name}-%{version}/log4crc.example-production
 %{_libdir}/libglite_lbu_log.so.*
 
 %files devel

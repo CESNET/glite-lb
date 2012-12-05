@@ -47,13 +47,13 @@ rm -rf $RPM_BUILD_ROOT
 %doc LICENSE project/ChangeLog
 %dir %{_includedir}/glite/
 %dir %{_includedir}/glite/lb/
-%dir /usr/share/wsdl/
-%dir /usr/share/wsdl/glite-lb/
+%dir %{_datadir}/wsdl/
+%dir %{_datadir}/wsdl/glite-lb/
 %{_includedir}/glite/lb/ws_interface_version.h
-/usr/share/wsdl/glite-lb/LB.wsdl
-/usr/share/wsdl/glite-lb/glue2.xsd
-/usr/share/wsdl/glite-lb/lb4agu.wsdl
-/usr/share/wsdl/glite-lb/LBTypes.wsdl
+%{_datadir}/wsdl/glite-lb/LB.wsdl
+%{_datadir}/wsdl/glite-lb/glue2.xsd
+%{_datadir}/wsdl/glite-lb/lb4agu.wsdl
+%{_datadir}/wsdl/glite-lb/LBTypes.wsdl
 
 
 %changelog

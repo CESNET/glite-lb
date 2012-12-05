@@ -48,17 +48,17 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir /usr/share/doc/%{name}-%{version}/
-%dir /usr/share/doc/%{name}-%{version}/examples/
-/usr/share/doc/%{name}-%{version}/examples/*
-/usr/share/doc/%{name}-%{version}/ChangeLog
-/usr/share/doc/%{name}-%{version}/LICENSE
-/usr/share/doc/%{name}-%{version}/README
-/usr/share/doc/%{name}-%{version}/LBAG.pdf
-/usr/share/doc/%{name}-%{version}/LBUG.pdf
-/usr/share/doc/%{name}-%{version}/LBDG.pdf
-/usr/share/doc/%{name}-%{version}/LBTG.pdf
-/usr/share/doc/%{name}-%{version}/LBTP.pdf
+%dir %{_docdir}/%{name}-%{version}/
+%dir %{_docdir}/%{name}-%{version}/examples/
+%{_docdir}/%{name}-%{version}/examples/*
+%{_docdir}/%{name}-%{version}/ChangeLog
+%{_docdir}/%{name}-%{version}/LICENSE
+%{_docdir}/%{name}-%{version}/README
+%{_docdir}/%{name}-%{version}/LBAG.pdf
+%{_docdir}/%{name}-%{version}/LBUG.pdf
+%{_docdir}/%{name}-%{version}/LBDG.pdf
+%{_docdir}/%{name}-%{version}/LBTG.pdf
+%{_docdir}/%{name}-%{version}/LBTP.pdf
 
 
 %changelog

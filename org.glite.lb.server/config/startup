@@ -46,17 +46,16 @@ LOG4C_RCPATH="$GLITE_LOCATION_ETC/glite-lb"
 [ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 
 [ -n "$GLITE_LB_SERVER_PIDFILE" ] && BK_PIDFILE=$GLITE_LB_SERVER_PIDFILE ||
-	BK_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-bkserverd.pid
-[ -z "$GLITE_LB_NOTIF_SOCK" ] && GLITE_LB_NOTIF_SOCK="/tmp/glite-lb-notif.sock"
+	BK_PIDFILE=/var/run/glite/glite-lb-bkserverd.pid
 [ -n "$GLITE_JP_IMPORTER_PIDFILE" ] && jp_importer_pidfile=$GLITE_JP_IMPORTER_PIDFILE ||
 	jp_importer_pidfile=$GLITE_LB_LOCATION_VAR/glite-jp-importer.pid
 
 GLITE_LB_TYPE=${GLITE_LB_TYPE:-'server'} # server, proxy, both
-GLITE_LB_PROXY_SOCK=${GLITE_LB_PROXY_SOCK:-'/tmp/glite-lbproxy-ilog.sock'}
-GLITE_LB_PROXY_FPREFIX=${GLITE_LB_PROXY_FPREFIX:-'/tmp/glite-lbproxy-ilog_events'}
+GLITE_LB_NOTIF_SOCK=${GLITE_LB_NOTIF_SOCK:-'/var/run/glite/glite-lb-notif.sock'}
+GLITE_LB_PROXY_SOCK=${GLITE_LB_PROXY_SOCK:-'/var/run/glite/glite-lb-proxy.sock'}
 
-PROXY_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-proxy-interlogd.pid
-NOTIF_IL_PIDFILE=$GLITE_LB_LOCATION_VAR/glite-lb-notif-interlogd.pid
+PROXY_IL_PIDFILE=/var/run/glite/glite-lb-proxy-interlogd.pid
+NOTIF_IL_PIDFILE=/var/run/glite/glite-lb-notif-interlogd.pid
 
 msgconf="$GLITE_LOCATION_ETC/glite-lb/msg.conf"
 if [ -f "$msgconf" ]; then
@@ -66,7 +65,7 @@ fi
 
 lockfile=/var/lock/glite-lb-bkserverd
 
-unset creds port env
+unset creds env bkargs notifargs
 
 start_daemon()
 {
@@ -220,9 +219,16 @@ start()
 		[ -n "$GLITE_LB_EXPORT_JPPS" ] && jpps="--jpps $GLITE_LB_EXPORT_JPPS"
 	fi
 
-	[ -n "$GLITE_LB_SERVER_PORT" ] && port="-p $GLITE_LB_SERVER_PORT"
-	[ -n "$GLITE_LB_SERVER_WPORT" ] && wport="-w $GLITE_LB_SERVER_WPORT"
-	[ -z "$GLITE_LB_NOTIF_FPREFIX" ] && GLITE_LB_NOTIF_FPREFIX="/var/tmp/glite-lb-notif"
+	[ -n "$GLITE_LB_SERVER_PORT" ] && bkargs="$bkargs -p $GLITE_LB_SERVER_PORT"
+	[ -n "$GLITE_LB_SERVER_WPORT" ] && bkargs="$bkargs -w $GLITE_LB_SERVER_WPORT"
+	if [ -n "$GLITE_LB_NOTIF_SOCK" ]; then
+		bkargs="$bkargs --notif-il-sock=$GLITE_LB_NOTIF_SOCK"
+		notifargs="$notifargs -s $GLITE_LB_NOTIF_SOCK"
+	fi
+	if [ -n "$GLITE_LB_NOTIF_FPREFIX" ]; then
+		bkargs="$bkargs --notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX"
+		notifargs="$notifargs -f $GLITE_LB_NOTIF_FPREFIX"
+	fi
 	if [ -n "$GLITE_LB_SERVER_DEBUG" ] ; then
 		if which tscat >/dev/null; then
 			GLITE_LB_SERVER_OTHER_OPTIONS="$GLITE_LB_SERVER_OTHER_OPTIONS -d -s 1 2>&1 | tscat >> $GLITE_LB_LOCATION_VAR/lb.log &"
@@ -232,28 +238,34 @@ start()
 			GLITE_LB_NOTIF_OTHER_OPTIONS="$GLITE_LB_NOTIF_OTHER_OPTIONS -v -d >> $GLITE_LB_LOCATION_VAR/notif-il.log 2>&1 &"
 		fi
 	fi
+	if [ -n "$GLITE_LB_PROXY_SOCK" ]; then
+		bkproxy="--proxy-il-sock $GLITE_LB_PROXY_SOCK"
+		ilproxy="-s $GLITE_LB_PROXY_SOCK"
+	fi
+	if [ -n "$GLITE_LB_PROXY_FPREFIX" ]; then
+		bkproxy="$bkproxy --proxy-il-fprefix $GLITE_LB_PROXY_FPREFIX"
+		ilproxy="$ilproxy -f $GLITE_LB_PROXY_FPREFIX"
+	fi
 	case "$GLITE_LB_TYPE" in
 	proxy)
-		proxy="-P --proxy-il-sock $GLITE_LB_PROXY_SOCK --proxy-il-fprefix $GLITE_LB_PROXY_FPREFIX"
+		bkproxy="-P $bkproxy"
 		;;
 	both)
-		proxy="-B --proxy-il-sock $GLITE_LB_PROXY_SOCK --proxy-il-fprefix $GLITE_LB_PROXY_FPREFIX"
+		bkproxy="-B $bkproxy"
 		;;
 	*)
-		proxy=''
+		bkproxy=''
 		;;
 	esac
 
 	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$lcas_log $GLITE_LOCATION/bin/glite-lb-bkserverd \
-		--notif-il-sock=$GLITE_LB_NOTIF_SOCK \
-		--notif-il-fprefix=$GLITE_LB_NOTIF_FPREFIX \
-		$super -i $BK_PIDFILE $port $wport $dumpdir $purgedir $lbreg_maildir $proxy $policy\
+		$super -i $BK_PIDFILE $bkargs $dumpdir $purgedir $lbreg_maildir $bkproxy $policy\
 		$GLITE_LB_SERVER_OTHER_OPTIONS" "/tmp/lb_proxy_serve.sock /tmp/lb_proxy_store.sock"
 
 	if test -x $GLITE_LOCATION/bin/glite-lb-notif-interlogd; then
 		start_daemon glite-lb-notif-interlogd "$NOTIF_IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
-			-f $GLITE_LB_NOTIF_FPREFIX -s $GLITE_LB_NOTIF_SOCK \
 			-i $NOTIF_IL_PIDFILE -M 10485760 \
+			$notifargs \
 			$GLITE_LB_NOTIF_IL_OTHER_OPTIONS" "$GLITE_LB_NOTIF_SOCK"
 	else
 		echo Warning: glite-lb-notif-interlogd not installed, LB notifications will not work
@@ -268,13 +280,12 @@ start()
 	fi
 
 	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both" ; then
-		if test -x $GLITE_LOCATION/bin/glite-lb-interlogd; then
-			start_daemon "glite-lb-interlog for proxy" "$PROXY_IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-interlogd \
-				-f $GLITE_LB_PROXY_FPREFIX -s $GLITE_LB_PROXY_SOCK \
-				-i $PROXY_IL_PIDFILE \
+		if test -x $GLITE_LOCATION/bin/glite-lb-proxy-interlogd; then
+			start_daemon glite-lb-proxy-interlogd "$PROXY_IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-proxy-interlogd \
+				-i $PROXY_IL_PIDFILE $ilproxy \
 				$GLITE_LB_PROXY_IL_OTHER_OPTIONS" "$GLITE_LB_PROXY_SOCK"
 		else
-			echo Warning: glite-lb-interlogd not installed, logging to LB proxy will not work
+			echo Warning: glite-lb-proxy-interlogd not installed, logging to LB proxy will not work
 		fi
 	fi
 }

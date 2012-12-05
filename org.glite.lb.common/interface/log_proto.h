@@ -46,8 +46,20 @@ extern "C" {
 /**
  * default prefix for names of log files 
  */
-/** default prefix */
-#define EDG_WLL_LOG_PREFIX_DEFAULT              "/var/glite/log/dglogd.log"
+/** default prefix of logd files */
+#define EDG_WLL_LOG_PREFIX_DEFAULT              "/var/spool/glite/lb-locallogger/dglogd.log"
+/** default prefix of proxy files */
+#define EDG_WLL_PROXY_PREFIX_DEFAULT            "/var/spool/glite/lb-proxy/dglogd.log"
+/** default prefix of notification files */
+#define EDG_WLL_NOTIF_PREFIX_DEFAULT            "/var/spool/glite/lb-notif/dglogd.log"
+
+
+/**
+ * default locations of sockets
+ */
+#define EDG_WLL_LOG_SOCKET_DEFAULT              "/var/run/glite/glite-lb-interlogger.sock"
+#define EDG_WLL_PROXY_SOCKET_DEFAULT            "/var/run/glite/glite-lb-proxy.sock"
+#define EDG_WLL_NOTIF_SOCKET_DEFAULT            "/var/run/glite/glite-lb-notif.sock"
 
 
 /** 
