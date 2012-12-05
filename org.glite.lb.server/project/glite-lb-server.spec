@@ -17,7 +17,6 @@ BuildRequires:  expat
 #  - gssapi from MIT Kerberos (krb5-devel)
 #  - gssapi from Heimdal Kerberos
 #BuildRequires: globus-gssapi-gsi-devel
-BuildRequires:  globus-gssapi-gsi-devel
 BuildRequires:  glite-jobid-api-c-devel
 BuildRequires:  glite-lb-common-devel
 BuildRequires:  glite-lb-state-machine-devel
