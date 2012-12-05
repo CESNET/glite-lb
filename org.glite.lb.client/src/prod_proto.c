@@ -43,8 +43,6 @@ limitations under the License.
 #define TCP_CORK TCP_NOPUSH
 #endif
 
-static const char* socket_path="/tmp/lb_proxy_store.sock";
-
 /**
  *----------------------------------------------------------------------
  * Handle GSS failures on the client side
@@ -507,6 +505,9 @@ int edg_wll_log_proxy_connect(edg_wll_Context ctx, edg_wll_PlainConnection *conn
 	int	answer = 0, retries;
 	int 	flags;
 	struct sockaddr_un saddr;
+#ifndef UNIX_PATH_MAX
+#define UNIX_PATH_MAX (sizeof(saddr.sun_path))
+#endif
 
 	edg_wll_ResetError(ctx);
 
@@ -514,6 +515,14 @@ int edg_wll_log_proxy_connect(edg_wll_Context ctx, edg_wll_PlainConnection *conn
 	fprintf(stderr,"edg_wll_log_proxy_connect: setting connection to lbroxy (remaining timeout %d.%06d sec)\n",
 		(int) ctx->p_tmp_timeout.tv_sec, (int) ctx->p_tmp_timeout.tv_usec);
 #endif
+	if (!ctx->p_lbproxy_store_sock) {
+		edg_wll_SetError(ctx, answer = EINVAL, "edg_wll_log_proxy_connect(): missing lbproxy store socket parameter");
+		goto edg_wll_log_proxy_connect_end;
+	}
+	if (strlen(ctx->p_lbproxy_store_sock) >= UNIX_PATH_MAX - 1) {
+		edg_wll_SetError(ctx, answer = E2BIG, "edg_wll_log_proxy_connect(): lbproxy store socket name too big");
+		goto edg_wll_log_proxy_connect_end;
+	}
 	conn->sock = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (conn->sock < 0) {
 		edg_wll_SetError(ctx,answer = errno,"edg_wll_log_proxy_connect(): socket() error");
@@ -521,8 +530,7 @@ int edg_wll_log_proxy_connect(edg_wll_Context ctx, edg_wll_PlainConnection *conn
 	}
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sun_family = AF_UNIX;
-	strcpy(saddr.sun_path, ctx->p_lbproxy_store_sock?
-				ctx->p_lbproxy_store_sock: socket_path);
+	strncpy(saddr.sun_path, ctx->p_lbproxy_store_sock, UNIX_PATH_MAX);
 	if ((flags = fcntl(conn->sock, F_GETFL, 0)) < 0 || fcntl(conn->sock, F_SETFL, flags | O_NONBLOCK) < 0) {
 		edg_wll_SetError(ctx,answer = errno,"edg_wll_log_proxy_connect(): fcntl() error");
 		close(conn->sock); conn->sock = -1;
@@ -530,7 +538,7 @@ int edg_wll_log_proxy_connect(edg_wll_Context ctx, edg_wll_PlainConnection *conn
 	}
 #ifdef EDG_WLL_LOG_STUB
 	fprintf(stderr,"edg_wll_log_proxy_connect: opening connection to lbproxy (socket '%s')\n",
-		ctx->p_lbproxy_store_sock? ctx->p_lbproxy_store_sock: socket_path);
+		ctx->p_lbproxy_store_sock);
 #endif
 	retries = 0;
 	while ((answer = connect(conn->sock, (struct sockaddr *)&saddr, sizeof(saddr))) < 0 &&
