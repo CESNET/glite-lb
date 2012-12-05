@@ -115,6 +115,9 @@ setup_all() {
 	setup_bdii=1
 	setup_emir=1
 	setup_upgrade=1
+	setup_upgrade_logger=1
+	setup_upgrade_notif=1
+	setup_upgrade_proxy=1
 	setup_crl=1
 	setup_startup=1
 }
@@ -133,7 +136,9 @@ OPTIONS are:
 	-h,--help .... usage
 
 ACTIONS are:
-	db certs msg authz harvester bdii emir upgrade crl startup
+	db certs msg authz harvester bdii emir
+	upgrade upgrade_logger upgrade_notif upgrade_proxy
+	crl startup
 	krb    .... setup Kerberos
 	krbgsi .... setup Kerberos and enable GSI autentization
 
@@ -175,7 +180,14 @@ EOF
 	harvester) setup_harvester=1 ;;
 	bdii)	setup_bdii=1 ;;
 	emir)   setup_emir=1 ;;
-	upgrade) setup_upgrade=1 ;;
+	upgrade) setup_upgrade=1;
+		setup_upgrade_logger=1;
+		setup_upgrade_notif=1;
+		setup_upgrade_proxy=1
+		;;
+	upgrade_logger) setup_upgrade_logger=1 ;;
+	upgrade_notif) setup_upgrade_notif=1 ;;
+	upgrade_proxy) setup_upgrade_proxy=1 ;;
 	crl)	setup_crl=1 ;;
 	startup) setup_startup=1 ;;
 	krb)	setup_krb=1 ;;
@@ -590,6 +602,25 @@ if test "$setup_upgrade" = "1"; then
 	rm -fv /etc/cron.d/glite-lb-purge.cron /etc/logrotate.d/lb-purger /etc/logrotate.d/lb-lcas
 fi
 
+if test "$setup_upgrade_logger" = "1"; then
+	# upgrade from L&B <= 4.0.1
+	rm -f /tmp/interlogger.sock
+	if test -d /var/glite/log; then
+		find /var/glite/log -type f -name dglogd.log.\* -exec mv {} /var/spool/glite/lb-locallogger \;
+	fi
+fi
+
+if test "$setup_upgrade_notif" = "1"; then
+	# upgrade from L&B <= 4.0.1
+	rm -f /tmp/glite-lb-notif.sock
+	find /var/tmp/glite-lb-notif.\* -type f -name dglogd.log.\* -exec mv {} /var/spool/lb-notif \;
+fi
+
+if test "$setup_upgrade_proxy" = "1"; then
+	# upgrade from L&B <= 4.0.1
+	rm -f /tmp/glite-lbproxy-ilog.sock
+	find /tmp/glite-lbproxy-ilog_events.\* -type f -name dglogd.log.\* -exec mv {} /var/spool/lb-proxy \;
+fi
 
 # ==== fetch CRL ====
 

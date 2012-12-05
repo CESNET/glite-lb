@@ -30,7 +30,7 @@ List \fBACTIONS\fR to be executed and exit. This option can be used to view and/
 Display help.
 
 .SH ACTIONS
-\fBACTIONS\fR are individual tasks or groups of tasks to be performed during setup.
+ACTIONS are individual tasks or groups of tasks to be performed during setup.
 
 .TP
 \fBall\fR (group)
@@ -66,7 +66,7 @@ Creates file \fI/etc/glite-lb/glite-lb-authz.conf\fR based on all of the followi
 
 .TP
 \fBharvester\fR
-If enabled, L&B harvester will use local L&B server.
+If enabled ($GLITE_LB_HARVESTER_ENABLED), L&B harvester will be set up and launched. It will be configured to gather notifications from local L&B server.
 
 .TP
 \fBbdii\fR
@@ -82,7 +82,19 @@ Package \fIemird\fR or \fIemir-serp\fR must be intalled for this action to take 
 
 .TP
 \fBupgrade\fR
-Checks for various obsolete files to remove.
+Checks for various obsolete files to move or remove.
+
+.TP
+\fBupgrade_logger\fR (part of upgrade action)
+Move L&B logger event files, if needed (upgrade from L&B >= 4.0.1).
+
+.TP
+\fBupgrade_notif\fR (part of upgrade action)
+Move L&B notification event files, if needed (upgrade from L&B >= 4.0.1).
+
+.TP
+\fBupgrade_proxy\fR (part of upgrade action)
+Move L&B proxy event files, if needed (upgrade from L&B >= 4.0.1).
 
 .TP
 \fBcrl\fR
