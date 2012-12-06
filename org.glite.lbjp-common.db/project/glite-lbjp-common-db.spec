@@ -69,7 +69,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
-%{_libdir}/libglite_lbu_db.so.*
+%{_libdir}/libglite_lbu_db.so.3
+%{_libdir}/libglite_lbu_db.so.3.*
 
 %files devel
 %defattr(-,root,root)

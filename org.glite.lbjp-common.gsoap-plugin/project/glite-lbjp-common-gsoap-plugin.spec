@@ -78,7 +78,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc project/ChangeLog LICENSE
-%{_libdir}/libglite_security_gsoap_plugin_*.so.*
+%{_libdir}/libglite_security_gsoap_plugin_*.so.9
+%{_libdir}/libglite_security_gsoap_plugin_*.so.9.*
 
 %files devel
 %defattr(-,root,root)

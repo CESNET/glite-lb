@@ -84,8 +84,10 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %dir %{_docdir}/%{name}-%{version}/
-%{_libdir}/libglite_lb_client.so.*
-%{_libdir}/libglite_lb_clientpp.so.*
+%{_libdir}/libglite_lb_client.so.14
+%{_libdir}/libglite_lb_client.so.14.*
+%{_libdir}/libglite_lb_clientpp.so.14
+%{_libdir}/libglite_lb_clientpp.so.14.*
 %{_docdir}/%{name}-%{version}/ChangeLog
 %{_docdir}/%{name}-%{version}/LICENSE
 

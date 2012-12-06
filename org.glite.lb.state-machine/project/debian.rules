@@ -5,7 +5,7 @@
 
 p_dbg=glite-lb-state-machine-dbg
 p_dev=libglite-lb-state-machine-dev
-p_lib=libglite-lb-state-machine5
+p_lib=libglite-lb-state-machine6
 p_plugs=glite-lb-state-machine-plugins
 
 # Uncomment this to turn on verbose mode.

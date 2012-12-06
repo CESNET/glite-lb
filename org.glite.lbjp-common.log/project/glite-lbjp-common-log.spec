@@ -68,7 +68,8 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_docdir}/%{name}-%{version}/README
 %doc %{_docdir}/%{name}-%{version}/log4crc.example-debugging
 %doc %{_docdir}/%{name}-%{version}/log4crc.example-production
-%{_libdir}/libglite_lbu_log.so.*
+%{_libdir}/libglite_lbu_log.so.1
+%{_libdir}/libglite_lbu_log.so.1.*
 
 %files devel
 %defattr(-,root,root)

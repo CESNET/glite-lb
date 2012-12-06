@@ -65,7 +65,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
-%{_libdir}/libglite_jobid.so.*
+%{_libdir}/libglite_jobid.so.2
+%{_libdir}/libglite_jobid.so.2.*
 
 %files devel
 %defattr(-,root,root)

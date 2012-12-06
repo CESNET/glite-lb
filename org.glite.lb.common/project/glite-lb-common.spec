@@ -77,7 +77,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
-%{_libdir}/libglite_lb_common.so.*
+%{_libdir}/libglite_lb_common.so.16
+%{_libdir}/libglite_lb_common.so.16.*
 
 %files devel
 %defattr(-,root,root)
