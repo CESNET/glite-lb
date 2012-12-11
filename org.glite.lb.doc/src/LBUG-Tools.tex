@@ -198,19 +198,30 @@ This feature is supported since \LBver{3.3}
 \end{tabularx}
 
 \subsection{Job state changes as an RSS feed}
-The \LB includes an RSS interface allowing users to keep trace of their jobs in a very simple way using an RSS reader. The parameters of the RSS feeds are predefined, so no configuration is required.
+\LB includes an RSS interface allowing users to keep track of their jobs in a very simple way using an RSS reader. There are pre-defined feeds, which require no additional configuration. As of \LBver{4.0}, custom feeds can also be set up with the use of any recognized job condition.
 
-The address of a feed is given by the URL of the \LB server and a \textit{/RSS:rss\_feed\_name} postfix, e.g.
+The address of a pre-defined feed is given by the URL of the \LB server and a \textit{/RSS:rss\_feed\_name} postfix, e.g.
 \begin{verbatim}
    https://pelargir.ics.muni.cz:9000/RSS:finished
 \end{verbatim}  
 
-There are currently 3 feeds implemented in LB:
+\LBver{2.x and 3.x} implemented three distingushed feeds:
 \begin{itemize}
  \item \textit{finished} for jobs in terminal states (Done/OK, Aborted and Canceled)
  \item \textit{running} for running jobs
  \item \textit{aborted} for aborted jobs
 \end{itemize}
+
+\LBver{4.0} adds two new pre-defined feeds:
+\begin{itemize}
+ \item \textit{runningVM} for running virtual machines
+ \item \textit{doneVM} for succesfully finished virtual machines
+\end{itemize}
+
+Besides that, \LBver{4.0} makes the \texttt{?query} query string (explained in Section \ref{HTML:queries}) available for defining custom RSS feeds. To set up a custom feed, do not specify a feed name but add the \texttt{?query} query string to your URL, after the \texttt{RSS:} prefix. For instance, to set up an RSS feed of jobs in either \emph{submitted} or \emph{scheduled} state:
+\begin{verbatim}
+   https://pelargir.ics.muni.cz:9000/RSS:?query=status=submitted|=scheduled
+\end{verbatim}  
 
 \subsection{Other useful tools}
 

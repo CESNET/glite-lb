@@ -344,127 +344,62 @@ static void freeNotifInfo(notifInfo *ni){
 	if (ni->jobid) free(ni->jobid);
 }
 
-static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **statesOut){
+static int getJobsRSS(edg_wll_Context ctx, char *feedType, edg_wll_JobStat **statesOut, edg_wll_QueryRec **qconditions){
 	edg_wlc_JobId *jobsOut;
         //edg_wll_JobStat *statesOut;
         edg_wll_QueryRec **conds;
 	int i;
-	enum FEED_TYPE {
-		FINISHED,
-		RUNNING_VM,
-		DONE_VM,
-		RUNNING,
-		ABORTED} feed;
+	char *fullrssquery = NULL;
 
 	char *can_peername = edg_wll_gss_normalize_subj(ctx->peerName, 0);
 
-	if (strcmp(feedType, "finished") == 0) { feed = FINISHED; }
-	else if ((strcmp(feedType, "runningVM") == 0)) { feed = RUNNING_VM; }
-	else if ((strcmp(feedType, "doneVM") == 0)) { feed = DONE_VM; }
-	else if (strcmp(feedType, "running") == 0) { feed = RUNNING; }
-	else if (strcmp(feedType, "aborted") == 0) { feed = ABORTED; }
+	if (strcmp(feedType, "finished") == 0) { asprintf(&fullrssquery, "owner=%s&status=done|=aborted|=cancelled", can_peername); }
+	else if ((strcmp(feedType, "runningVM") == 0)) { asprintf(&fullrssquery, "owner=%s&status=running&jobtype=virtual_machine", can_peername); }
+	else if ((strcmp(feedType, "doneVM") == 0)) { asprintf(&fullrssquery, "owner=%s&status=done&donecode=ok&jobtype=virtual_machine", can_peername); }
+	else if (strcmp(feedType, "running") == 0) { asprintf(&fullrssquery, "owner=%s&status=running", can_peername); }
+	else if (strcmp(feedType, "aborted") == 0) { asprintf(&fullrssquery, "owner=%s&status=aborted", can_peername); }
+
+	if (fullrssquery) {
+		i = edg_wll_ParseQueryConditions(ctx, fullrssquery, &conds);
+		free(fullrssquery);
+		if (i) return i;
+	}
 	else {  
-		*statesOut = NULL;
-		free(can_peername);
-		return -1;
+		if (!qconditions) {
+			*statesOut = NULL;
+			free(can_peername);
+			edg_wll_SetError(ctx, EINVAL, "Invalid RSS feed specified");
+			return EINVAL;
+		}
+		else {
+			conds = qconditions;
+		}
 	}
 
-	switch (feed) {
-	   case FINISHED:
-	   case RUNNING:
-	   case ABORTED:
-		conds = malloc(4*sizeof(*conds));
-		conds[0] = malloc(2*sizeof(**conds));
-		conds[0][0].attr = EDG_WLL_QUERY_ATTR_OWNER;
-		conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-		conds[0][0].value.c = can_peername;
-		conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-		switch (feed) {
-	   	    case FINISHED:
-			conds[1] = malloc(4*sizeof(**conds));
-			conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-			conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
-			conds[1][0].value.i = EDG_WLL_JOB_DONE;
-			conds[1][1].attr = EDG_WLL_QUERY_ATTR_STATUS;
-        	        conds[1][1].op = EDG_WLL_QUERY_OP_EQUAL;
-	                conds[1][1].value.i = EDG_WLL_JOB_ABORTED;
-			conds[1][2].attr = EDG_WLL_QUERY_ATTR_STATUS;
-	                conds[1][2].op = EDG_WLL_QUERY_OP_EQUAL;
-	                conds[1][2].value.i = EDG_WLL_JOB_CANCELLED;
-			conds[1][3].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-			break;
-	   	    case RUNNING:
-			conds[1] = malloc(2*sizeof(**conds));
-			conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-			conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
-			conds[1][0].value.i = EDG_WLL_JOB_RUNNING;
-			conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-			break;
-	   	    case ABORTED:
-			conds[1] = malloc(2*sizeof(**conds));
-			conds[1][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-			conds[1][0].op = EDG_WLL_QUERY_OP_EQUAL;
-			conds[1][0].value.i = EDG_WLL_JOB_ABORTED;
-			conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-			break;
-		}
-		conds[2] = malloc(2*sizeof(**conds));
-		conds[2][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
-		conds[2][0].op = EDG_WLL_QUERY_OP_GREATER;
-		conds[2][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
-		conds[2][0].value.t.tv_usec = 0;
-		conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-		conds[3] = NULL;
-		break;
-	   case RUNNING_VM:
-	   case DONE_VM:
-		switch (feed) {
-	   	    case RUNNING_VM:
-                	conds = malloc(4*sizeof(*conds));
-			conds[0] = malloc(2*sizeof(**conds));
-			conds[0][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-			conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-			conds[0][0].value.i = EDG_WLL_JOB_RUNNING;
-			conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                	conds[3] = NULL;
-			break;
-	   	    case DONE_VM:
-                	conds = malloc(5*sizeof(*conds));
-			conds[0] = malloc(2*sizeof(**conds));
-			conds[0][0].attr = EDG_WLL_QUERY_ATTR_STATUS;
-			conds[0][0].op = EDG_WLL_QUERY_OP_EQUAL;
-			conds[0][0].value.i = EDG_WLL_JOB_DONE;
-			conds[0][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-			conds[3] = malloc(2*sizeof(**conds));
-			conds[3][0].attr = EDG_WLL_QUERY_ATTR_DONECODE;
-			conds[3][0].op = EDG_WLL_QUERY_OP_EQUAL;
-			conds[3][0].value.i = EDG_WLL_STAT_OK;
-			conds[3][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                	conds[4] = NULL;
-			break;
-		}
-                conds[1] = malloc(2*sizeof(**conds));
-                conds[1][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
-                conds[1][0].op = EDG_WLL_QUERY_OP_GREATER;
-                conds[1][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
-                conds[1][0].value.t.tv_usec = 0;
-                conds[1][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-                conds[2] = malloc(2*sizeof(**conds));
-                conds[2][0].attr = EDG_WLL_QUERY_ATTR_JOB_TYPE;
-                conds[2][0].op = EDG_WLL_QUERY_OP_EQUAL;
-                conds[2][0].value.i = EDG_WLL_STAT_VIRTUAL_MACHINE;
-                conds[2][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
-		break;
-	}
+	for ( i=0; conds[i]; i++ ); // Look up the trailing position in the array: the time condition will be added to it
+
+	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "RSS: adding time condition (No. %d) to query. rssTime = %ld", i, (long)ctx->rssTime);
+
+	conds = realloc(conds,(i+2)*sizeof(*conds)); // Extend array by 1
+	
+	conds[i] = malloc(2*sizeof(**conds));
+	conds[i][0].attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
+	conds[i][0].op = EDG_WLL_QUERY_OP_GREATER;
+	conds[i][0].value.t.tv_sec = time(NULL) - ctx->rssTime;
+	conds[i][0].value.t.tv_usec = 0;
+	conds[i][1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+	conds[i+1] = NULL;
 
 
 	if (edg_wll_QueryJobsServer(ctx, (const edg_wll_QueryRec **)conds, 0, &jobsOut, statesOut)){
 		*statesOut = NULL;
 	}
 
-	for (i = 0; conds[i]; i++)
-		free(conds[i]);
-	free(conds);
+	if (!qconditions) {
+		for (i = 0; conds[i]; i++)
+			free(conds[i]);
+		free(conds);
+	}
 	free(can_peername);
 
 	return 0;
@@ -851,7 +786,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	char **response,char ***headersOut,char **bodyOut,
 	int *httpErr)
 {
-	char *requestPTR = NULL, *message = NULL, *requestMeat = NULL, *querystr, *queryconds = NULL, *flagstr, *queryflags = NULL;
+	char *requestPTR = NULL, *message = NULL, *requestMeat = NULL, *querystr, *queryconds = NULL, *flagstr, *queryflags = NULL, *feedType = NULL;
 	int	ret = HTTP_OK;
 	int 	html = outputHTML(headers);
 	int 	text = 0; //XXX: Plain text communication is special case of html here, hence when text=1, html=1 too
@@ -1075,22 +1010,24 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 	/*GET /RSS:[feed type] RSS feed */
 		} else if (strncmp(requestPTR, "/RSS:", strlen("/RSS:")) == 0){
 			edg_wll_JobStat *states;
-			char *feedType;
 			int i;
 			int idx;
 
 			feedType = strdup(requestPTR + strlen("/RSS:"));
 			feedType[strrchr(feedType, ' ')-feedType] = 0;
-			if (getJobsRSS(ctx, feedType, &states) < 0){
-				char *errmessage;
-				ret = HTTP_NOTFOUND;
-				asprintf(&errmessage, "Unknown RSS feed \"%s\"", feedType);
-				edg_wll_SetError(ctx, ENOENT, errmessage);
-				free(errmessage);
-				free(feedType);
-                                goto err;
+			switch(getJobsRSS(ctx, feedType, &states, (edg_wll_QueryRec **)job_conditions)) {
+				case 0:
+					break;
+				case EINVAL:
+					ret = HTTP_INVALID;
+                                	goto err;
+				case ENOSYS:
+					ret = HTTP_NOTIMPL;
+                                	goto err;
+				default:
+					return HTTP_BADREQ;
+                                	goto err;
 			}
-			free(feedType);
 
 			// check if owner and lastupdatetime is indexed
 			idx = 0;
@@ -1667,6 +1604,7 @@ err:	asprintf(response,"HTTP/1.1 %d %s",ret,edg_wll_HTTPErrorMessage(ret));
 	}
 
 	free(queryconds);
+	free(feedType);
 
 	if (requestPTR) free(requestPTR);
 	if (requestMeat) free(requestMeat);
