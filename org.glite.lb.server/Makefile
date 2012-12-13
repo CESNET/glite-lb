@@ -27,7 +27,7 @@ default: all
 version=${module.version}
 
 SOURCES=\
-	config/glite-lb* config/my.cnf config/*.conf config/startup config/setup \
+	config/glite-lb* config/my.cnf config/*.conf config/startup config/setup config/systemd.* \
 	doc/*.1 doc/*.8 \
 	interface/*.h \
 	src/*.c src/*.cpp src/*.h src/*.c.T src/*.l src/*.y src/*.sh src/*.sh.in src/ws_typemap.dat \
@@ -64,6 +64,10 @@ ifeq ($(os_type),debian)
 sysdefaultdir=${sysconfdir}/default
 else
 sysdefaultdir=${sysconfdir}/sysconfig
+endif
+
+ifeq ($(os_type),fedora)
+unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
 endif
 
 GSOAP_FILES_PREFIX:= bk_ws_
@@ -333,6 +337,9 @@ ${SCRIPTS}: ${SCRIPTS_SRC}
 ifneq ($(os_type),debian)
 	sed -i 's/# \(Default-Start\|Default-Stop\):.*/# \1:/' $@
 endif
+	sed "s/^@$(os_type)@//" $@ > $@.tmp
+	grep -v '^@' $@.tmp > $@
+	rm $@.tmp
 
 %.sh: %.sh.in
 	glite_var="${localstatedir}/glite"; \
@@ -420,7 +427,7 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
 install:
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb ${DESTDIR}${PREFIX}${sysconfdir}/init.d
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite
@@ -450,7 +457,6 @@ install:
 	${INSTALL} -m 755 ${top_srcdir}/config/glite-lb-migrate_db2version40 ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 644 ${top_srcdir}/config/site-notif.conf ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
-	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
 	${INSTALL} -m 755 setup ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-setup
 	${INSTALL} -m 644 glite-lb-server-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-server-purge
 	${INSTALL} -m 644 glite-lb-proxy-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-proxy-purge
@@ -463,6 +469,13 @@ install:
 	install -m 644 ${STATIC_LIB_BK} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 ifdef LB_PERF
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_proxy.sh ${DESTDIR}${PREFIX}${prefix}/sbin
+endif
+ifeq ($(os_type),fedora)
+	mkdir -p ${DESTDIR}${PREFIX}${unitdir}
+	install -m 644 ${top_srcdir}/config/systemd.bkserverd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-bkserverd.service
+else
+	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
+	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
 endif
 
 clean:

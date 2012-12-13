@@ -1,0 +1,20 @@
+[Unit]
+Description=gLite Logging and Bookkeeping notification interlogger
+Documentation=man:glite-lb-setup(8) http://egee.cesnet.cz/en/JRA1/LB/documentation.php
+
+[Service]
+Type=forking
+User=glite
+Group=glite
+Environment=KRB5_KTNAME=FILE:/var/glite/krb5kt_lb
+Environment=KRB5CCNAME=FILE:/var/glite/krb5cc_lb
+Environment=LOG4C_RCPATH=/etc/glite-lb
+Environment=X509_USER_CERT=/var/glite/.certs/hostcert.pem
+Environment=X509_USER_KEY=/var/glite/.certs/hostkey.pem
+EnvironmentFile=-/etc/profile.d/grid-env.sh
+EnvironmentFile=-/etc/sysconfig/glite-lb
+PIDFile=/var/run/glite/glite-lb-notif-interlogd.pid
+ExecStart=/usr/bin/glite-lb-notif-interlogd -M 10485760 $GLITE_LB_NOTIF_IL_OPTIONS
+
+[Install]
+WantedBy=multi-user.target

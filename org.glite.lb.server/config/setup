@@ -17,7 +17,10 @@ GLITE_LB_AUTHZ_LOG_WMS_EVENTS=${GLITE_LB_AUTHZ_LOG_WMS_EVENTS:-'.*'}
 GLITE_LB_AUTHZ_LOG_CE_EVENTS=${GLITE_LB_AUTHZ_LOG_CE_EVENTS:-'.*'}
 GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS=${GLITE_LB_AUTHZ_LOG_GENERAL_EVENTS:-'.*'}
 
-GLITE_HOME_DIR=`getent passwd ${GLITE_USER} | cut -d: -f6`
+GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}
+GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
+
 
 ACTIONS="db certs msg authz harvester bdii emir upgrade crl startup krb krbgsi"
 
@@ -234,7 +237,7 @@ if test "$setup_list" = "1"; then
 	exit 0
 fi
 
-if test -z "$GLITE_HOME_DIR"; then
+if test -z "$GLITE_HOME"; then
 	echo "glite-lb-setup: ERROR: The home directory of ${GLITE_USER} doesn't exist. Check whether the user ${GLITE_USER} was properly created"
 	exit 2
 fi
@@ -259,11 +262,9 @@ if test "$setup_db" = 1; then
 	fi
 
 	# restart for the new options
-	if test -x /sbin/service; then
-		out="`/sbin/service mysqld restart 2>&1`"
-	else
-		out="`/etc/init.d/mysql restart 2>&1`"
-	fi
+@fedora@	out="`systemctl restart mysqld.service 2>&1`"
+@redhat@	out="`/sbin/service mysqld restart 2>&1`"
+@debian@	out="`/etc/init.d/mysql restart 2>&1`"
 	if test $? -ne 0; then
 		echo "$out"
 		echo "glite-lb-setup: ERROR: starting MySQL failed"
@@ -350,20 +351,20 @@ fi
 # ==== certificates ====
 
 if test "$setup_certs" = "1"; then
-	if test ! -d $GLITE_HOME_DIR/.certs; then
-		mkdir -p $GLITE_HOME_DIR/.certs
-		chown $GLITE_USER:$GLITE_USER $GLITE_HOME_DIR/.certs
+	if test ! -d $GLITE_HOME/.certs; then
+		mkdir -p $GLITE_HOME/.certs
+		chown $GLITE_USER:$GLITE_USER $GLITE_HOME/.certs
 	fi
-	cp -fp /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem $GLITE_HOME_DIR/.certs/
+	cp -fp /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem $GLITE_HOME/.certs/
 	if test $? -eq 0; then
-		chown $GLITE_USER:$GLITE_USER $GLITE_HOME_DIR/.certs/hostcert.pem $GLITE_HOME_DIR/.certs/hostkey.pem
-		chmod 0644 $GLITE_HOME_DIR/.certs/hostcert.pem
-		chmod 0400 $GLITE_HOME_DIR/.certs/hostkey.pem
-		qecho "Certificates copied to $GLITE_HOME_DIR/.certs/"
+		chown $GLITE_USER:$GLITE_USER $GLITE_HOME/.certs/hostcert.pem $GLITE_HOME/.certs/hostkey.pem
+		chmod 0644 $GLITE_HOME/.certs/hostcert.pem
+		chmod 0400 $GLITE_HOME/.certs/hostkey.pem
+		qecho "Certificates copied to $GLITE_HOME/.certs/"
 	else
 		echo "glite-lb-setup: WARNING: Please copy host certificate and key into /etc/grid-security and"
-		echo "  $GLITE_HOME_DIR/.certs/, change the owner of the ones in"
-		echo "  $GLITE_HOME_DIR/.certs/ to $GLITE_USER"
+		echo "  $GLITE_HOME/.certs/, change the owner of the ones in"
+		echo "  $GLITE_HOME/.certs/ to $GLITE_USER"
 		error="$error certs"
 	fi
 fi
@@ -415,7 +416,9 @@ fi
 
 if test "$setup_bdii" = "1"; then
 	export INFO_SERVICE_CONFIG='/etc/glite/info/service'
-	if test -x /etc/init.d/bdii; then
+@fedora@	if systemctl --all | grep bdii.service >/dev/null 2>&1; then
+@redhat@	if test -x /etc/init.d/bdii; then
+@debian@	if test -x /etc/init.d/bdii; then
 		if test -f  ${INFO_SERVICE_CONFIG}/glite-info-service-lbserver.conf.template -a -f  ${INFO_SERVICE_CONFIG}/glite-info-glue2-lbserver.conf.template; then
 			if test -n "`which sudo 2>/dev/null`"; then
 				bdii=1
@@ -445,12 +448,11 @@ BDII_RAM_DISK=
 EOF
 		sed -i  "s#.*rootpw.*#rootpw	${BDII_PASSWD}#" /etc/bdii/bdii-slapd.conf
 
-		if test -x /sbin/service; then
-			/sbin/chkconfig bdii on
-			out="`/sbin/service bdii restart 2>&1`"
-		else
-			out="`/etc/init.d/bdii restart 2>&1`"
-		fi
+@fedora@		systemctl enable bdii.service
+@fedora@		out="`systemctl restart bdii.service 2>&1`"
+@redhat@		/sbin/chkconfig bdii on
+@redhat@		out="`/sbin/service bdii restart 2>&1`"
+@debian@		out="`/etc/init.d/bdii restart 2>&1`"
 		if test $? -eq 0; then
 			qecho "BDII configured"
 		else
@@ -469,16 +471,9 @@ if test "$setup_emir" = "1"; then
 	fi
 	if test -n "`which emir-serp 2>/dev/null`"; then
 		emir_daemon=emir-serp
-		emir_conf=emir-serp
-		emir_mult=1
-	fi
-	if test -n "`which emird 2>/dev/null`"; then
-		emir_daemon=emird
-		emir_conf=emir
-		emir_mult=60
 	fi
 	if test "$emir" != "0" -a -z "$emir_daemon"; then
-		echo "glite-lb-setup: WARNING: emir-serp (emird) not installed, EMIR won't be configured"
+		echo "glite-lb-setup: WARNING: emir-serp not installed, EMIR won't be configured"
 		emir=0
 	fi
 fi
@@ -539,14 +534,14 @@ $json	"Service_ID": "`hostname -f`_lbserver",
 }
 EOF
 
-	period=$((4*$emir_mult))
-	validity=$((24*$emir_mult))
+	period=4
+	validity=24
 	inifile=/etc/emi/$emir_daemon/$emir_daemon.ini
 	if test ! -f $inifile.orig -a -f $inifile; then
 		cp $inifile $inifile.orig
 	fi
 	cat > /etc/emi/$emir_daemon/$emir_daemon.ini << EOF
-[$emir_conf]
+[$emir_daemon]
 url = $EMIR_URL
 period = $period
 validity = $validity
@@ -567,18 +562,11 @@ EOF
 	fi
 
 	# start the beast
-	if test -x /sbin/service; then
-		/sbin/chkconfig $emir_daemon on 2>/dev/null
-		# emird doesn't support chkconfig
-		if test $? -ne 0 && ! grep "$emir_daemon start" /etc/rc.local >/dev/null 2>&1; then
-			echo "/etc/init.d/$emir_daemon start" >> /etc/rc.local
-			chmod +x /etc/rc.local
-			qecho "$emir_daemon added to /etc/rc.local"
-		fi
-		out="`/sbin/service $emir_daemon restart 2>&1`"
-	else
-		out="`/etc/init.d/$emir_daemon restart 2>&1`"
-	fi
+@fedora@	systemctl enable ${emir_daemon}.service
+@fedora@	out="`systemctl restart ${emir_daemon}.service 2>&1`"
+@redhat@	/sbin/chkconfig $emir_daemon on 2>/dev/null
+@redhat@	out="`/sbin/service $emir_daemon restart 2>&1`"
+@debian@	out="`/etc/init.d/$emir_daemon restart 2>&1`"
 	if test $? -eq 0; then
 		qecho "EMIR configured"
 	else
@@ -730,31 +718,95 @@ if test "$setup_startup" = "1"; then
 	fi
 fi
 if test "$setup_startup" = "1" -a "$startup_error" != "1"; then
-	if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
-		update-rc.d glite-lb-bkserverd defaults
-		update-rc.d glite-lb-locallogger defaults
-		if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
-			update-rc.d glite-lb-harvester defaults
-		fi
-	else
-		/sbin/chkconfig mysqld on
-		/sbin/chkconfig glite-lb-bkserverd on
-		/sbin/chkconfig glite-lb-locallogger on
-		if test x"$GLITE_LB_HARVETER_ENABLED" = x"true"; then
-			/sbin/chkconfig glite-lb-harvester on
-		fi
-	fi
-
-	startup_error=0
-	$GLITE_LOCATION_ETC/init.d/glite-lb-bkserverd restart || startup_error=1
-	$GLITE_LOCATION_ETC/init.d/glite-lb-locallogger restart || startup_error=1
-	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
-		$GLITE_LOCATION_ETC/init.d/glite-lb-harvester restart || startup_error=1
-	else
-		if test -x $GLITE_LOCATION/bin/glite-lb-harvester; then
-			$GLITE_LOCATION_ETC/init.d/glite-lb-harvester stop >/dev/null
-		fi
-	fi
+@fedora@	case "$GLITE_LB_TYPE" in
+@fedora@	proxy)
+@fedora@		GLITE_LB_SERVER_PROXY_OPTIONS="-P "
+@fedora@		;;
+@fedora@	both)
+@fedora@		GLITE_LB_SERVER_PROXY_OPTIONS="-B "
+@fedora@		;;
+@fedora@	*)
+@fedora@		GLITE_LB_SERVER_PROXY_OPTIONS=""
+@fedora@		;;
+@fedora@	esac
+@fedora@
+@fedora@	systemd_unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
+@fedora@	systemd_confdir=`pkg-config systemd --variable=systemdsystemconfdir`
+@fedora@	for i in bkserverd logd interlogd notif-interlogd proxy-interlogd harvester; do
+@fedora@		sed -e "s|\(X509_USER_CERT\).*|\1=$GLITE_HOST_CERT|" \
+@fedora@		    -e "s|\(X509_USER_KEY\).*|\1=$GLITE_HOST_KEY|" \
+@fedora@		    $systemd_unitdir/glite-lb-$i.service > $systemd_confdir/glite-lb-$i.service
+@fedora@	done
+@fedora@	sed -i -e "s|\$GLITE_LB_SERVER_PROXY_OPTIONS |$GLITE_LB_SERVER_PROXY_OPTIONS|" $systemd_confdir/glite-lb-bkserverd.service
+@fedora@	systemctl --system daemon-reload
+@fedora@
+@fedora@	systemctl enable mysqld.service
+@fedora@	systemctl enable glite-lb-bkserverd.service
+@fedora@	systemctl enable glite-lb-logd.service
+@fedora@	systemctl enable glite-lb-interlogd.service
+@fedora@	systemctl enable glite-lb-notif-interlogd.service
+@fedora@	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both"; then
+@fedora@		systemctl enable glite-lb-proxy-interlogd.service
+@fedora@	else
+@fedora@		systemctl disable glite-lb-proxy-interlogd.service
+@fedora@	fi
+@fedora@	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
+@fedora@		systemctl enable glite-lb-harvester.service
+@fedora@	else
+@fedora@		systemctl disable glite-lb-harvester.service
+@fedora@	fi
+@fedora@
+@fedora@	startup_error=0
+@fedora@	systemctl restart glite-lb-bkserverd.service || startup_error=1
+@fedora@	systemctl restart glite-lb-logd.service || startup_error=1
+@fedora@	systemctl restart glite-lb-interlogd.service || startup_error=1
+@fedora@	systemctl restart glite-lb-notif-interlogd.service || startup_error=1
+@fedora@	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both"; then
+@fedora@		systemctl restart glite-lb-proxy-interlogd.service || startup_error=1
+@fedora@	else
+@fedora@		systemctl stop glite-lb-proxy-interlogd.service >/dev/null 2>&1
+@fedora@	fi
+@fedora@	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
+@fedora@		systemctl restart glite-lb-harvester.service || startup_error=1
+@fedora@	else
+@fedora@		systemctl stop glite-lb-harvester.service >/dev/null 2>&1
+@fedora@	fi
+@debian@	update-rc.d glite-lb-bkserverd defaults
+@debian@	update-rc.d glite-lb-locallogger defaults
+@debian@	update-rc.d glite-lb-harvester defaults
+@debian@	update-rc.d glite-lb-bkserverd enable
+@debian@	update-rc.d glite-lb-locallogger enable
+@debian@	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
+@debian@		update-rc.d glite-lb-harvester enable
+@debian@	else
+@debian@		update-rc.d glite-lb-harvester disable
+@debian@	fi
+@debian@
+@debian@	startup_error=0
+@debian@	$GLITE_LOCATION_ETC/init.d/glite-lb-bkserverd restart || startup_error=1
+@debian@	$GLITE_LOCATION_ETC/init.d/glite-lb-locallogger restart || startup_error=1
+@debian@	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
+@debian@		$GLITE_LOCATION_ETC/init.d/glite-lb-harvester restart || startup_error=1
+@debian@	else
+@debian@		$GLITE_LOCATION_ETC/init.d/glite-lb-harvester stop >/dev/null 2>&1
+@debian@	fi
+@redhat@	/sbin/chkconfig mysqld on
+@redhat@	/sbin/chkconfig glite-lb-bkserverd on
+@redhat@	/sbin/chkconfig glite-lb-locallogger on
+@redhat@	if test x"$GLITE_LB_HARVETER_ENABLED" = x"true"; then
+@redhat@		/sbin/chkconfig glite-lb-harvester on
+@redhat@	else
+@redhat@		/sbin/chkconfig glite-lb-harvester off
+@redhat@	fi
+@redhat@
+@redhat@	startup_error=0
+@redhat@	/sbin/service glite-lb-bkserverd restart || startup_error=1
+@redhat@	/sbin/service glite-lb-locallogger restart || startup_error=1
+@redhat@	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
+@redhat@		/sbin/service glite-lb-harvester restart || startup_error=1
+@redhat@	else
+@redhat@		/sbin/service glite-lb-harvester stop >/dev/null 2>&1
+@redhat@	fi
 
 	if test "$startup_error" = "0"; then
 		qecho "Services started successfully"

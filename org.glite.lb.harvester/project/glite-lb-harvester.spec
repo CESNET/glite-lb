@@ -21,9 +21,16 @@ BuildRequires:  glite-lbjp-common-log-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
 BuildRequires:  pkgconfig
+%if 0%{?fedora}
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
+BuildRequires: systemd
+%else
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
+%endif
 
 %description
 @DESCRIPTION@
@@ -47,9 +54,11 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
+%if ! 0%{?fedora}
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-harvester
 mkdir $RPM_BUILD_ROOT/etc/rc.d
 mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
+%endif
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT/var/glite
 mkdir -p $RPM_BUILD_ROOT/var/run/glite
@@ -67,23 +76,49 @@ exit 0
 
 
 %post
+%if 0%{?fedora}
+# Fedora 18: systemd_post glite-lb-harvester.service
+if [ $1 -eq 1 ] ; then
+    # Initial installation
+    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+fi
+%else
 /sbin/chkconfig --add glite-lb-harvester
 if [ $1 -eq 1 ] ; then
 	/sbin/chkconfig glite-lb-harvester off
 fi
+%endif
 
 
 %preun
+%if 0%{?fedora}
+# Fedora 18: systemd_preun glite-lb-harvester.service
+if [ $1 -eq 0 ] ; then
+    # Package removal, not upgrade
+    /bin/systemctl --no-reload disable glite-lb-harvester.service > /dev/null 2>&1 || :
+    /bin/systemctl stop glite-lb-harvester.service > /dev/null 2>&1 || :
+fi
+%else
 if [ $1 -eq 0 ] ; then
     /sbin/service glite-lb-harvester stop >/dev/null 2>&1
     /sbin/chkconfig --del glite-lb-harvester
 fi
+%endif
 
 
 %postun
+%if 0%{?fedora}
+# Fedora 18: systemd_postun_with_restart glite-lb-harvester.service
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+if [ $1 -ge 1 ] ; then
+    # Package upgrade, not uninstall
+    /bin/systemctl try-restart glite-lb-harvester.service >/dev/null 2>&1 || :
+fi
+%else
 if [ "$1" -ge "1" ] ; then
     /sbin/service glite-lb-harvester condrestart >/dev/null 2>&1 || :
 fi
+%endif
 
 
 %files
@@ -96,7 +131,11 @@ fi
 %dir %{_libdir}/glite-lb/examples/
 %dir %{_datadir}/glite/
 %ghost %{_localstatedir}/run/glite/glite-lb-harvester.pid
+%if 0%{?fedora}
+%{_unitdir}/glite-lb-harvester.service
+%else
 %{_initrddir}/glite-lb-harvester
+%endif
 %{_bindir}/glite-lb-harvester
 %{_libdir}/glite-lb/examples/glite-lb-harvester-test.sh
 %{_libdir}/glite-lb/examples/glite-lb-harvester-dbg

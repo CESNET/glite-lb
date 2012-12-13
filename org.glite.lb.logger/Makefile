@@ -21,7 +21,7 @@ CC=gcc
 VPATH:=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc
 
 SOURCES=\
-	config/startup config/glite-lb-logger.* \
+	config/startup config/glite-lb-logger.* config/systemd.* \
 	doc/*.8 \
 	interface/*.h \
 	project/.post* project/.pre* \
@@ -72,6 +72,10 @@ ifeq ($(os_type),debian)
 sysdefaultdir=${sysconfdir}/default
 else
 sysdefaultdir=${sysconfdir}/sysconfig
+endif
+
+ifeq ($(os_type),fedora)
+unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
 endif
 
 DEBUG:=-g -O0
@@ -218,7 +222,6 @@ check.il: ${INTERLOG_TEST_OBJS}
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin
-	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
 	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/bin
@@ -230,9 +233,18 @@ ifdef LB_PERF
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif
-	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-locallogger
 	( cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} )
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
+ifeq ($(os_type),fedora)
+	mkdir -p ${DESTDIR}${PREFIX}${unitdir}
+	install -m 644 ${top_srcdir}/config/systemd.logd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-logd.service
+	install -m 644 ${top_srcdir}/config/systemd.interlogd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-interlogd.service
+	install -m 644 ${top_srcdir}/config/systemd.notif-interlogd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-notif-interlogd.service
+	install -m 644 ${top_srcdir}/config/systemd.proxy-interlogd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-proxy-interlogd.service
+else
+	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
+	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-locallogger
+endif
 
 ${INTERLOG_NOTIF_OBJS}: %.notif.lo: %.c
 	${COMPILE} ${CFLAGS} -DIL_NOTIFICATIONS -c $< -o $@

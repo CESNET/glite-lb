@@ -18,7 +18,7 @@ CC=gcc
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
 SOURCES=\
-	config/startup \
+	config/systemd.* config/startup \
 	doc/* \
 	examples/test.* \
 	project/.post* project/.pre* \
@@ -46,6 +46,10 @@ ifeq ($(os_type),debian)
 sysdefaultdir=${sysconfdir}/default
 else
 sysdefaultdir=${sysconfdir}/sysconfig
+endif
+
+ifeq ($(os_type),fedora)
+unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
 endif
 
 ifneq ($(GLITE_LB_HARVESTER_WITH_LBU_DB),no)
@@ -91,7 +95,6 @@ install: compile
 		${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} \
 		${DESTDIR}${PREFIX}${prefix}/share/glite \
 		${DESTDIR}${PREFIX}${prefix}/share/man/man1 \
-		${DESTDIR}${PREFIX}${sysconfdir}/init.d \
 		${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	${INSTALL} -m 755 harvester ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-harvester
 	${INSTALL} -m 755 harvester-dbg ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-harvester-dbg
@@ -99,7 +102,13 @@ install: compile
 	${INSTALL} -m 444 ${top_srcdir}/examples/test.sql ${DESTDIR}${PREFIX}${prefix}/share/glite/glite-lb-harvester-test-dbsetup.sql
 	${INSTALL} -m 444 ${top_srcdir}/doc/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 444 glite-lb-harvester.1 ${DESTDIR}${PREFIX}${prefix}/share/man/man1
+ifeq ($(os_type),fedora)
+	mkdir -p ${DESTDIR}${PREFIX}${unitdir}
+	${INSTALL} -m 644 ${top_srcdir}/config/systemd.harvester ${DESTDIR}${PREFIX}${unitdir}/glite-lb-harvester.service
+else
+	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-harvester
+endif
 
 clean:
 	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs *.log

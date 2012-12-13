@@ -48,9 +48,16 @@ Requires:       mysql-server
 Requires:       glite-lbjp-common-server-bones%{?_isa} >= 2.2.0
 Requires:       glite-lb-client-progs
 Requires:       glite-lb-utils
+%if 0%{?fedora}
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
+BuildRequires: systemd
+%else
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
+%endif
 
 %description
 @DESCRIPTION@
@@ -73,14 +80,17 @@ make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+%if ! 0%{?fedora}
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-bkserverd
 mkdir $RPM_BUILD_ROOT/etc/rc.d
 mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
+%endif
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-mkdir -p $RPM_BUILD_ROOT/var/glite
+mkdir -p $RPM_BUILD_ROOT/var/glite/dump
+mkdir -p $RPM_BUILD_ROOT/var/glite/purge
 mkdir -p $RPM_BUILD_ROOT/var/run/glite
 mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-locallogger
 mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-notif
@@ -99,28 +109,56 @@ exit 0
 
 
 %post
+%if 0%{?fedora}
+# Fedora 18: systemd_post glite-lb-bkserverd.service
+if [ $1 -eq 1 ] ; then
+    # Initial installation
+    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+fi
+%else
 /sbin/chkconfig --add glite-lb-bkserverd
 if [ $1 -eq 1 ] ; then
 	/sbin/chkconfig glite-lb-bkserverd off
 fi
+%endif
 
 
 %preun
+%if 0%{?fedora}
+# Fedora 18: systemd_preun glite-lb-bkserverd.service
+if [ $1 -eq 0 ] ; then
+    # Package removal, not upgrade
+    /bin/systemctl --no-reload disable glite-lb-bkserverd.service > /dev/null 2>&1 || :
+    /bin/systemctl stop glite-lb-bkserverd.service > /dev/null 2>&1 || :
+fi
+%else
 if [ $1 -eq 0 ] ; then
     /sbin/service glite-lb-bkserverd stop >/dev/null 2>&1
     /sbin/chkconfig --del glite-lb-bkserverd
 fi
+%endif
 
 
 %postun
+%if 0%{?fedora}
+# Fedora 18: systemd_postun_with_restart glite-lb-bkserverd.service
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+if [ $1 -ge 1 ] ; then
+    # Package upgrade, not uninstall
+    /bin/systemctl try-restart glite-lb-bkserverd.service >/dev/null 2>&1 || :
+fi
+%else
 if [ "$1" -ge "1" ] ; then
     /sbin/service glite-lb-bkserverd condrestart >/dev/null 2>&1 || :
 fi
+%endif
 
 
 %files
 %defattr(-,root,root)
 %dir %attr(0755, glite, glite) %{_localstatedir}/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/glite/dump
+%dir %attr(0755, glite, glite) %{_localstatedir}/glite/purge
 %dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
@@ -139,7 +177,11 @@ fi
 %{_docdir}/%{name}-%{version}/ChangeLog
 %{_docdir}/%{name}-%{version}/LICENSE
 %{_docdir}/%{name}-%{version}/glite-lb
+%if 0%{?fedora}
+%{_unitdir}/glite-lb-bkserverd.service
+%else
 %{_initrddir}/glite-lb-bkserverd
+%endif
 %{_bindir}/*
 %{_sbindir}/*
 %{_datadir}/glite/*
