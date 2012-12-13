@@ -130,6 +130,7 @@ fi
 %dir %{_docdir}/%{name}-%{version}
 %dir %{_sysconfdir}/cron.d/
 %dir %{_sysconfdir}/glite-lb/
+%config(noreplace) %{_sysconfdir}/cron.d/*
 %config(noreplace) %{_sysconfdir}/glite-lb/*
 %config(noreplace) %{_sysconfdir}/logrotate.d/glite-lb-server
 %config(noreplace) %{_sysconfdir}/mysql/conf.d/glite-lb-server.cnf
@@ -138,7 +139,6 @@ fi
 %{_docdir}/%{name}-%{version}/ChangeLog
 %{_docdir}/%{name}-%{version}/LICENSE
 %{_docdir}/%{name}-%{version}/glite-lb
-%{_sysconfdir}/cron.d/*
 %{_initrddir}/glite-lb-bkserverd
 %{_bindir}/*
 %{_sbindir}/*
