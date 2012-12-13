@@ -54,7 +54,13 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
-%if ! 0%{?fedora}
+%if 0%{?fedora}
+# preserve directory in /var/run
+mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
+cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-harvester.conf <<EOF
+d %{_localstatedir}/run/glite 0755 glite glite -
+EOF
+%else
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-harvester
 mkdir $RPM_BUILD_ROOT/etc/rc.d
 mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
@@ -132,6 +138,7 @@ fi
 %dir %{_datadir}/glite/
 %ghost %{_localstatedir}/run/glite/glite-lb-harvester.pid
 %if 0%{?fedora}
+%{_prefix}/lib/tmpfiles.d/glite-lb-harvester.conf
 %{_unitdir}/glite-lb-harvester.service
 %else
 %{_initrddir}/glite-lb-harvester

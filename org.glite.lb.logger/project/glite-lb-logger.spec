@@ -62,7 +62,13 @@ make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-%if ! 0%{?fedora}
+%if 0%{?fedora}
+# preserve directory in /var/run
+mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
+cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-logger.conf <<EOF
+d %{_localstatedir}/run/glite 0755 glite glite -
+EOF
+%else
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-locallogger
 mkdir $RPM_BUILD_ROOT/etc/rc.d
 mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
@@ -170,6 +176,7 @@ fi
 %ghost %{_localstatedir}/run/glite/glite-lb-notif-interlogd.pid
 %ghost %{_localstatedir}/run/glite/glite-lb-proxy-interlogd.pid
 %if 0%{?fedora}
+%{_prefix}/lib/tmpfiles.d/glite-lb-logger.conf
 %{_unitdir}//glite-lb-logd.service
 %{_unitdir}//glite-lb-interlogd.service
 %{_unitdir}//glite-lb-notif-interlogd.service

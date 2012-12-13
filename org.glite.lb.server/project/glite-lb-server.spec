@@ -78,9 +78,14 @@ make check
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-%if ! 0%{?fedora}
+%if 0%{?fedora}
+# preserve directory in /var/run
+mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
+cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-server.conf <<EOF
+d %{_localstatedir}/run/glite 0755 glite glite -
+EOF
+%else
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-bkserverd
 mkdir $RPM_BUILD_ROOT/etc/rc.d
 mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
@@ -178,6 +183,7 @@ fi
 %{_docdir}/%{name}-%{version}/LICENSE
 %{_docdir}/%{name}-%{version}/glite-lb
 %if 0%{?fedora}
+%{_prefix}/lib/tmpfiles.d/glite-lb-server.conf
 %{_unitdir}/glite-lb-bkserverd.service
 %else
 %{_initrddir}/glite-lb-bkserverd
