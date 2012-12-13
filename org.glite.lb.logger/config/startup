@@ -199,13 +199,17 @@ status()
 	return $retval
 }
 
+# upgrade from L&B <= 4.0.1
+if [ -f /var/glite/glite-lb-logd.pid -a ! -f $LL_PIDFILE ]; then mv /var/glite/glite-lb-logd.pid /var/run/glite 2>/dev/null; fi
+if [ -f /var/glite/glite-lb-interlogd.pid -a ! -f $IL_PIDFILE ]; then mv /var/glite/glite-lb-interlogd.pid /var/run/glite 2>/dev/null; fi
+
 case x$1 in
 	xstart)	start;;
 	xstop)	stop;;
 	xrestart|xforce-reload) stop; start;;
 	xstatus) status;;
 	xcondrestart|xtry-restart)
-		status >/dev/null 2>&1 || exit 0
+		status 2>/dev/null | grep 'running as' >/dev/null 2>&1 || exit 0
 		stop; start
 		;;
 	x*)	echo usage: $0 start,stop,restart,status >&2

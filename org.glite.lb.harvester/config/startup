@@ -197,6 +197,9 @@ cleanup()
 	fi
 }
 
+# upgrade from L&B <= 4.0.1
+if [ -f /var/glite/glite-lb-harvester.pid -a ! -f $pidfile ]; then mv /var/glite/glite-lb-harvester.pid /var/run/glite 2>/dev/null; fi
+
 case x$1 in
 	xstart)	start;;
 	xstop)	stop;;
