@@ -519,7 +519,7 @@ int edg_wll_log_proxy_connect(edg_wll_Context ctx, edg_wll_PlainConnection *conn
 		edg_wll_SetError(ctx, answer = EINVAL, "edg_wll_log_proxy_connect(): missing lbproxy store socket parameter");
 		goto edg_wll_log_proxy_connect_end;
 	}
-	if (strlen(ctx->p_lbproxy_store_sock) >= UNIX_PATH_MAX - 1) {
+	if (strlen(ctx->p_lbproxy_store_sock) >= UNIX_PATH_MAX) {
 		edg_wll_SetError(ctx, answer = E2BIG, "edg_wll_log_proxy_connect(): lbproxy store socket name too big");
 		goto edg_wll_log_proxy_connect_end;
 	}
