@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
 {
 	int			i;
 	char *portstr = NULL;
-	int					opt, pidfile_forced = 0;
+	int					opt;
 	char				pidfile[PATH_MAX] = EDG_BKSERVERD_PIDFILE,
 					   *name;
 #ifdef GLITE_LB_SERVER_WITH_WS
@@ -487,7 +487,7 @@ int main(int argc, char *argv[])
 			}  break;
 		case 'X': notif_ilog_socket_path = strdup(optarg); break;
 		case 'Y': notif_ilog_file_prefix = strdup(optarg); break;
-		case 'i': strcpy(pidfile,optarg); pidfile_forced = 1; break;
+		case 'i': strcpy(pidfile,optarg); break;
 		case 'R': add_root(ctx, optarg, ADMIN_ACCESS); break;
 		case 'F': msg_conf = strdup(optarg); break;
 		case 'H': html_header = strdup(optarg); html_header_forced = 1; break;
@@ -554,9 +554,6 @@ int main(int argc, char *argv[])
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "Starting 2 slaves");
 		slaves = 2;
 	}
-
-	if (!pidfile_forced && geteuid())
-		snprintf(pidfile,sizeof pidfile, "%s/glite-lb-bkserverd.pid", getenv("HOME"));
 
 	fpid = fopen(pidfile,"r");
 	if ( fpid )
