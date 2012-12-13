@@ -613,13 +613,13 @@ fi
 if test "$setup_upgrade_notif" = "1"; then
 	# upgrade from L&B <= 4.0.1
 	rm -f /tmp/glite-lb-notif.sock
-	find /var/tmp/glite-lb-notif.\* -type f -name dglogd.log.\* -exec mv {} /var/spool/lb-notif \;
+	find /var/tmp -type f -name glite-lb-notif.\* -exec mv {} /var/spool/lb-notif \;
 fi
 
 if test "$setup_upgrade_proxy" = "1"; then
 	# upgrade from L&B <= 4.0.1
 	rm -f /tmp/glite-lbproxy-ilog.sock
-	find /tmp/glite-lbproxy-ilog_events.\* -type f -name dglogd.log.\* -exec mv {} /var/spool/lb-proxy \;
+	find /tmp -type f -name glite-lbproxy-ilog_events.\* -exec mv {} /var/spool/lb-proxy \;
 fi
 
 # ==== fetch CRL ====
