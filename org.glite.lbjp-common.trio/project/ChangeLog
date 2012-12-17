@@ -120,3 +120,7 @@
 2.3.4-1
 - License and packaging fixes
 
+2.3.5-1
+- Library sonames tracked in rpm
+- Packaging cleanup when publishing to Fedora
+
