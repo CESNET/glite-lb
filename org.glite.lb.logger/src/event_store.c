@@ -1268,6 +1268,7 @@ event_store_from_file(char *filename)
 	struct event_store *es;
 	FILE *event_file;
 	char *event_s, *job_id_s = NULL;
+	struct stat st_buf;
 	int ret;
 #if defined(IL_NOTIFICATIONS)
 	edg_wll_Event *notif_event;
@@ -1280,6 +1281,19 @@ event_store_from_file(char *filename)
 	if(strstr(filename, "quarantine") != NULL) {
 		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, "  file name belongs to quarantine, not touching that.");
 		return(0);
+	}
+
+	
+	if(stat(filename, &st_buf) < 0) {
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO,
+				 "  could not stat file, skipping");
+		return 0;
+	}
+
+	if(!S_ISREG(st_buf.st_mode)) {
+		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_INFO,
+				 "  this is not a regular file, skipping");
+		return 0;
 	}
 
 	event_file = fopen(filename, "r");
