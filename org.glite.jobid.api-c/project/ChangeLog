@@ -107,3 +107,6 @@
 2.2.4-1
 - License and packaging fixes
 
+2.2.5-1
+- Library sonames tracked in rpm
+
