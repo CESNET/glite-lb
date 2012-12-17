@@ -101,6 +101,9 @@
 - Missing files in clean targets added
 - Explicit pkg-config dependency
 
+2.2.3-2
+- Module rebuilt
+
 2.3.0-1
 - Merge from branch_3_2
 

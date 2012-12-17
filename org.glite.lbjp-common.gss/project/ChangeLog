@@ -135,6 +135,18 @@
 3.1.4-2
 - Module rebuilt
 
+3.1.5-1
+- Add a return code from newer c-ares (fixes DNS resolution on Fedora 17 with c-ares 1.7.5)
+
+3.1.6-1
+- Debian package builds in vanilla chroot environment (backported from HEAD):
+  - create pkg-config file for gss (depends on used GSSAPI provider)
+  - spread proper CFLAGS needed for gss (to find gssapi.h) using pkg-config
+  - missing build dependencies
+  - missing dependency for libglite-lbjp-common-gsoap-plugin-dev (lb.ws-test build)
+  - fix dependency of msg-plugin
+  - no runtime dependencies for build
+
 3.2.0-1
 - -L/usr/lib not added explicitly to link options
 - Merge from branch_3_2

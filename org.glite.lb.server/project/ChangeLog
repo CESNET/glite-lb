@@ -405,6 +405,20 @@
 - Fixed the <> relationship evaluation for JDL attribute queries
 - CREAM jobs also turned to zombies on purge
 
+2.3.7-1
+- Returning also incomplete results for job queries (permissions were missing for some jobs only)
+- Do not return EPERM on queries with multiple potential results (Fix fo SB #96702)
+- Properly handle ARES_ENODATA return value by c-ares
+
+2.3.8-1
+- Debian package builds in vanilla chroot environment (backported from HEAD):
+  - create pkg-config file for gss (depends on used GSSAPI provider)
+  - spread proper CFLAGS needed for gss (to find gssapi.h) using pkg-config
+  - missing build dependencies
+  - missing dependency for libglite-lbjp-common-gsoap-plugin-dev (lb.ws-test build)
+  - fix dependency of msg-plugin
+  - no runtime dependencies for build
+
 2.4.0-1
 - Resolved packaging warnings
 - Job status queries over socket enabled (fixes the proxy purge, second part of the SB #88630)

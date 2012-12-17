@@ -208,6 +208,18 @@
 - Fix for notification interlogger failures (bug #95013)
 - Explicit pkg-config dependency
 
+2.3.6-1
+- Fixed getting status of interlogd
+
+2.3.7-1
+- Debian package builds in vanilla chroot environment (backported from HEAD):
+  - create pkg-config file for gss (depends on used GSSAPI provider)
+  - spread proper CFLAGS needed for gss (to find gssapi.h) using pkg-config
+  - missing build dependencies
+  - missing dependency for libglite-lbjp-common-gsoap-plugin-dev (lb.ws-test build)
+  - fix dependency of msg-plugin
+  - no runtime dependencies for build
+
 2.4.0-1
 - Merge from branch_3_2
 - Torque jobs support
