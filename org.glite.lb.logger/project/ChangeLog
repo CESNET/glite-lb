@@ -266,3 +266,10 @@ gLite L&B setup script:
 2.4.9-1
 - License and packaging fixes
 
+2.4.10-1
+- Starting unit files on Fedora
+- Runtime file location defaults changed and unified (SB #98940)
+- Conrestart fix in startup scripts with multimple deamons
+- The /var/run/glite directory preserved for Fedora (/var/run is at tmpfs filesystem on Fedora -- fixes startup after reboot)
+- Logger attaches only to regular files
+
