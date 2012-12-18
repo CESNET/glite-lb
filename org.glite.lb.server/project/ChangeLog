@@ -557,3 +557,17 @@
 3.0.1-1
 - License and packaging fixes
 
+3.0.2-1
+- Starting unit files on Fedora
+- Manual page for the L&B setup script
+- Broken database migration from L&B 3.0 -> L&B 4.0 fixed
+- Conditional upgrade checks (setting L&B server without logger)
+- Log files move fixed when upgrading from L&B 4.0.1
+- Runtime files in setup script muved (upgrade from L&B <= 4.0.1)
+- Conrestart fixed in startup scripts with multimple deamons
+- Runtime file location defaults changed and unified (SB #98940)
+- The /var/run/glite directory preserved for Fedora (/var/run is at tmpfs filesystem on Fedora -- fixes startup after reboot)
+- Forgotten buildrequire removed (it should always go from gss module)
+- Static default value for pidfile (pidfile won't be in home directory)
+- Custom RSS feeds, based on ?query
+
