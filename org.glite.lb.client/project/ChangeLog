@@ -291,3 +291,9 @@
 6.0.1-1
 - License and packaging fixes
 
+6.0.2-1
+- Library sonames tracked in rpm
+- Runtime file location defaults (SB #98940)
+- More precise path lenght size check
+- Default value for store proxy socket only in param.c, check path length size
+
