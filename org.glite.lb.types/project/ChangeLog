@@ -134,3 +134,10 @@
 2.0.1-1
 - License and packaging fixes
 
+2.0.2-1
+- Packaging of glite-lb-types (perl stuff) improved
+  - Tools installed into /usr/bin instead of /usr/sbin
+  - Perl modules installed into vendor perl directory (different across distributions)
+- Runtime file location defaults changed and unified (SB #98940)
+- Versioned perl requirement as per Fedora Packaging Guidelines
+

@@ -174,3 +174,6 @@
 2.0.1-1
 - License and packaging fixes
 
+2.0.2-1
+- Library sonames tracked in rpm
+
