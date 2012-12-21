@@ -663,14 +663,14 @@ if test "$setup_krb" = "1"; then
 			PRINC=`klist -k | grep "host/" | head -1 | awk '{print $2}'`
 		fi
 
-		cp /etc/krb5.keytab /var/glite/krb5kt_lb || error="$error krb"
-		chown glite:glite /var/glite/krb5kt_lb
+		cp /etc/krb5.keytab $GLITE_HOME/krb5kt_lb || error="$error krb"
+		chown glite:glite $GLITE_HOME/krb5kt_lb
 
 		cat > /etc/cron.d/glite-lb-ticket <<EOF
-0 */2 * * *	root	(ticket=/var/glite/krb5cc_lb; KRB5CCNAME="FILE:\${ticket}0" kinit -k $PRINC; chown glite:glite \${ticket}0; mv \${ticket}0 \$ticket)
+0 */2 * * *	root	(ticket=$GLITE_HOME/krb5cc_lb; KRB5CCNAME="FILE:\${ticket}0" kinit -k $PRINC; chown glite:glite \${ticket}0; mv \${ticket}0 \$ticket)
 EOF
-		KRB5CCNAME=/var/glite/krb5cc_lb kinit -k $PRINC
-		chown glite:glite /var/glite/krb5cc_lb
+		KRB5CCNAME=$GLITE_HOME/krb5cc_lb kinit -k $PRINC
+		chown glite:glite $GLITE_HOME/krb5cc_lb
 
 		qecho "Kerberos configured"
 	fi
@@ -739,6 +739,10 @@ if test "$setup_startup" = "1" -a "$startup_error" != "1"; then
 @fedora@	for i in bkserverd logd interlogd notif-interlogd proxy-interlogd harvester; do
 @fedora@		sed -e "s|\(X509_USER_CERT\).*|\1=$GLITE_HOST_CERT|" \
 @fedora@		    -e "s|\(X509_USER_KEY\).*|\1=$GLITE_HOST_KEY|" \
+@fedora@		    -e "s|\(KRB5_KTNAME\).*|\1=FILE:$GLITE_HOME/krb5kt_lb|" \
+@fedora@		    -e "s|\(KRB5CCNAME\).*|\1=FILE:$GLITE_HOME/krb5cc_lb|" \
+@fedora@		    -e "s|\(--dump-prefix\)=[^ \t]*|\1=$GLITE_HOME/dump |" \
+@fedora@		    -e "s|\(--purge-prefix\)=[^ \t]*|\1=$GLITE_HOME/purge |" \
 @fedora@		    $systemd_unitdir/glite-lb-$i.service > $systemd_confdir/glite-lb-$i.service
 @fedora@	done
 @fedora@	sed -i -e "s|\$GLITE_LB_SERVER_PROXY_OPTIONS |$GLITE_LB_SERVER_PROXY_OPTIONS|" $systemd_confdir/glite-lb-bkserverd.service

@@ -34,8 +34,8 @@ GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
 GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}
 GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
 
-KRB5_KTNAME="FILE:/var/glite/krb5kt_lb"
-KRB5CCNAME="FILE:/var/glite/krb5cc_lb"
+KRB5_KTNAME="FILE:$GLITE_HOME/krb5kt_lb"
+KRB5CCNAME="FILE:$GLITE_HOME/krb5cc_lb"
 LOG4C_RCPATH="$GLITE_LOCATION_ETC/glite-lb"
 
 [ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
@@ -143,8 +143,6 @@ start()
 	[ -n "$GLITE_LB_IL_SOCK" ] && sock="--socket $GLITE_LB_IL_SOCK"
 	[ -n "$GLITE_LB_IL_FPREFIX" ] && fprefix="--file-prefix $GLITE_LB_IL_FPREFIX"
 
-	mkdir -p /var/glite/log 
-	chown $GLITE_USER /var/glite/log
         (cd /tmp && ls -f /tmp |grep ^dglogd_sock_ |xargs rm -f)
 	start_daemon "glite-lb-logd" "$LL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-logd \
 		-i $LL_PIDFILE $port $sock $fprefix"

@@ -218,7 +218,9 @@ else
 fi
 
 if [ -z "$GLITE_LB_LOCATION_VAR" ]; then
-	export GLITE_LB_LOCATION_VAR=/var/glite
+	GLITE_USER=${GLITE_USER:-'glite'}
+	GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+	export GLITE_LB_LOCATION_VAR=$GLITE_HOME
 	vecho 1 "WARNING: GLITE_LB_LOCATION_VAR not specified, using default"
 fi
 

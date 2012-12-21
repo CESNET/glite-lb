@@ -66,7 +66,7 @@ mkdir $RPM_BUILD_ROOT/etc/rc.d
 mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
 %endif
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-mkdir -p $RPM_BUILD_ROOT/var/glite
+mkdir -p $RPM_BUILD_ROOT/var/lib/glite
 mkdir -p $RPM_BUILD_ROOT/var/run/glite
 touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-harvester.pid
 
@@ -77,7 +77,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %pre
 getent group glite >/dev/null || groupadd -r glite
-getent passwd glite >/dev/null || useradd -r -g glite -d /var/glite -c "gLite user" glite
+getent passwd glite >/dev/null || useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
 exit 0
 
 
@@ -129,7 +129,7 @@ fi
 
 %files
 %defattr(-,root,root)
-%dir %attr(0755, glite, glite) %{_localstatedir}/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
 %dir %{_docdir}/%{name}-%{version}/
 %dir %{_sysconfdir}/glite-lb/

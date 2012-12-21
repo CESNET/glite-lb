@@ -64,8 +64,8 @@ int edg_wll_InitServerStatistics(edg_wll_Context ctx, char *prefix)
 	if (! prefix){
 		if (! (prefix = getenv("GLITE_LB_LOCATION_VAR"))) {
 			struct stat info;
-			if (stat("/var/glite", &info) == 0 && S_ISDIR(info.st_mode))
-				asprintf(&prefix, "/var/glite/");
+			if (stat("/var/lib/glite", &info) == 0 && S_ISDIR(info.st_mode))
+				asprintf(&prefix, "/var/lib/glite/");
 			else {
 				asprintf(&prefix, "/tmp/");
 				stats_in_tmp = 1;

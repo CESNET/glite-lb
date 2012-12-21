@@ -2,8 +2,8 @@
 set -e
 
 getent group glite >/dev/null || groupadd -r glite
-getent passwd glite >/dev/null || useradd -r -g glite -d /var/glite -c "gLite user" glite
-mkdir -p /var/glite /var/run/glite 2>/dev/null || :
-chown glite:glite /var/glite /var/run/glite
+getent passwd glite >/dev/null || useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
+mkdir -p /var/lib/glite /var/run/glite 2>/dev/null || :
+chown glite:glite /var/lib/glite /var/run/glite
 
 #DEBHELPER#

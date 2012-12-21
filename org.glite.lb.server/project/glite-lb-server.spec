@@ -94,8 +94,8 @@ install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-mkdir -p $RPM_BUILD_ROOT/var/glite/dump
-mkdir -p $RPM_BUILD_ROOT/var/glite/purge
+mkdir -p $RPM_BUILD_ROOT/var/lib/glite/dump
+mkdir -p $RPM_BUILD_ROOT/var/lib/glite/purge
 mkdir -p $RPM_BUILD_ROOT/var/run/glite
 mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-locallogger
 mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-notif
@@ -109,7 +109,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %pre
 getent group glite >/dev/null || groupadd -r glite
-getent passwd glite >/dev/null || useradd -r -g glite -d /var/glite -c "gLite user" glite
+getent passwd glite >/dev/null || useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
 exit 0
 
 
@@ -161,9 +161,9 @@ fi
 
 %files
 %defattr(-,root,root)
-%dir %attr(0755, glite, glite) %{_localstatedir}/glite
-%dir %attr(0755, glite, glite) %{_localstatedir}/glite/dump
-%dir %attr(0755, glite, glite) %{_localstatedir}/glite/purge
+%dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite
+%dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite/dump
+%dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite/purge
 %dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger

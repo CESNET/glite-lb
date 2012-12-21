@@ -18,8 +18,8 @@ GLITE_WMS_QUERY_TIMEOUT=300
 #X509_CERT_DIR='/etc/grid-security/certificates'
 # VOMS directory
 #X509_VOMS_DIR='/etc/grid-security/vomsdir'
-#GLITE_HOST_CERT='/var/glite/.certs/hostcert.pem'
-#GLITE_HOST_KEY='/var/glite/.certs/hostkey.pem'
+#GLITE_HOST_CERT='/var/lib/glite/.certs/hostcert.pem'
+#GLITE_HOST_KEY='/var/lib/glite/.certs/hostkey.pem'
 
 #
 # purge and exports
