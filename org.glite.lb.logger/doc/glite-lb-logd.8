@@ -57,7 +57,7 @@ protocol+server prefix from the jobid and appending the rest to this
 .I PREFIX. 
 
 .I PREFIX 
-defaults to /var/glite/log/dglogd.log.
+defaults to /var/spool/glite/lb-locallogger/dglogd.log.
 
 The value has to be same as used in the cooperating glite-lb-logd.
 
@@ -81,7 +81,7 @@ The value has to be same as used in the cooperating glite-lb-interlogd.
 .BI \-i " FILE" "\fR,\fP --pidfile " FILE
 Store pid into 
 .I FILE\fR.\fP
-Defaults to /var/glite/glite-lb-logd.pid.
+Defaults to /var/run/glite/glite-lb-logd.pid.
 
 .TP
 .B "-V\fR,\fP --version"
@@ -117,7 +117,7 @@ Dangerous, for debugging only! Don't use at all.
 Default name of local socket.
 
 .TP
-.I /var/glite/log/dglogd.log*
+.I /var/spool/glite/lb-locallogger/dglogd.log*
 Default location of the event storage files.
 .TP
 No configuration files needed.
