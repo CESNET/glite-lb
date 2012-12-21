@@ -166,3 +166,6 @@ gLite L&B setup script:
 - Runtime file location defaults changed and unified (SB #98940)
 - The /var/run/glite directory preserved for Fedora (/var/run is at tmpfs filesystem on Fedora -- fixes startup after reboot)
 
+1.3.6-1
+- Change home directory of glite user to be compliant with FHS (finalize SB #98940)
+- Update dump and purge locations, updates for (unused) L&B mill
