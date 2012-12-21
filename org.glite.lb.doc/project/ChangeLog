@@ -222,3 +222,5 @@
 - Runtime file location defaults changed and unified (SB #98940)
 - Explanation of custom RSS feeds based on ?query
 
+1.4.9-1
+- Update documentation (runtime directory locations, homedir for glite)
