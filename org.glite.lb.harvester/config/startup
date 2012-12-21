@@ -28,7 +28,6 @@
 
 GLITE_LOCATION=${GLITE_LOCATION:-'@glite_prefix@'}
 GLITE_LOCATION_ETC=${GLITE_LOCATION_ETC:-'@glite_etc@'}
-GLITE_LB_LOCATION_VAR=${GLITE_LB_LOCATION_VAR:-'@glite_var@'}
 GLITE_USER=${GLITE_USER:-'glite'}
 GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
 GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}

@@ -41,7 +41,6 @@ function config_glite_lb_setenv(){
 
   yaimgridenv_set GLITE_LOCATION "${GLITE_LOCATION:-@glite_prefix@}"
   yaimgridenv_set GLITE_LOCATION_ETC "${GLITE_LOCATION_ETC:-@glite_etc@}"
-  yaimgridenv_set GLITE_LB_LOCATION_VAR "${GLITE_LB_LOCATION_VAR:-@glite_var@}"
   yaimgridenv_set GLITE_JP_LOCATION "${GLITE_JP_LOCATION:-}"
 
   yaimgridenv_set GLITE_LB_NOTIF_SOCK "${GLITE_LB_NOTIF_SOCK:-}"

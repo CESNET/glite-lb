@@ -10,7 +10,6 @@
 
 #GLITE_LOCATION=@glite_prefix@
 #GLITE_LOCATION_ETC='@glite_etc@'
-#GLITE_LB_LOCATION_VAR='@glite_var@'
 
 # query timeout
 GLITE_WMS_QUERY_TIMEOUT=300
