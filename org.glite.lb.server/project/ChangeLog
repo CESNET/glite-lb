@@ -571,3 +571,6 @@
 - Static default value for pidfile (pidfile won't be in home directory)
 - Custom RSS feeds, based on ?query
 
+3.0.3-1
+- Change home directory of glite user to be compliant with FHS (finalize SB #98940)
+- Update dump and purge locations, updates for (unused) mill
