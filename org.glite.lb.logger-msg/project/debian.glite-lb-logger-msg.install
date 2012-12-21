@@ -1,4 +1,0 @@
-etc/cron.d/*
-usr/lib/activemq_cpp_plugin.so*
-usr/lib/glite-lb/examples/*
-usr/sbin/glite-lb-msg-*
