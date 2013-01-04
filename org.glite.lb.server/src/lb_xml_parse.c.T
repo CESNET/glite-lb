@@ -562,6 +562,10 @@ static void endJobQueryRec(void *data, const char *el UNUSED_VAR)
 						edg_wll_from_string_to_edg_wll_StatJobtype(XMLCtx);
 
 				break;
+			case EDG_WLL_QUERY_ATTR_VM_STATUS:
+					XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.i =
+						edg_wll_from_string_to_edg_wll_StatVm_state(XMLCtx);
+				break;
 			default: 
 				edg_wll_freeBuf(XMLCtx);
 				XMLCtx->level--;
@@ -691,6 +695,9 @@ static void endQueryEventsRequest(void *data, const char *el UNUSED_VAR)
 							edg_wll_from_string_to_edg_wll_StatJobtype(XMLCtx);
 
 					break;
+				case EDG_WLL_QUERY_ATTR_VM_STATUS:
+						XMLCtx->job_conditions[XMLCtx->row][XMLCtx->position].value.i =
+							edg_wll_from_string_to_edg_wll_StatVm_state(XMLCtx);
 				default: 
 					edg_wll_freeBuf(XMLCtx);
 					XMLCtx->level--;

@@ -183,6 +183,10 @@ int edg_wll_Condition_Dump(notifInfo *ni, char **output, int oneline){
 					GS(buf);
 					free(buf);
         	                        break;
+				case EDG_WLL_QUERY_ATTR_VM_STATUS:
+					/*XXX op. within not implemented  */
+					GS(edg_wll_VMStatToString((edg_wll_JobStatCode)l2->value.i));
+					break;
 				default:
 					assert(! "Unknown condition attribute!");
 					break;

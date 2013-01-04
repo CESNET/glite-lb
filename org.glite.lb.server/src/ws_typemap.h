@@ -44,6 +44,7 @@ limitations under the License.
 #define LASTUPDATETIME	lbt__queryAttr__LASTUPDATETIME
 #define NETWORKSERVER	lbt__queryAttr__NETWORKSERVER
 #define JOBTYPE		lbt__queryAttr__JOBTYPE
+#define VM_STATUS       lbt__queryAttr__VM_USCORESTATUS
 
 #define EQUAL		lbt__queryOp__EQUAL
 #define UNEQUAL		lbt__queryOp__UNEQUAL

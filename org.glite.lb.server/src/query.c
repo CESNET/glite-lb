@@ -842,6 +842,15 @@ static char *ec_to_head_where(edg_wll_Context ctx,const edg_wll_QueryRec **ec)
 			ct++;
 			break;
 
+		case EDG_WLL_QUERY_ATTR_VM_STATUS:
+			if ( ec[m][n].op != EDG_WLL_QUERY_OP_EQUAL && ec[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
+			{
+				edg_wll_SetError(ctx, EINVAL, "only `=' and '!=' supported with VM status");
+				return NULL;
+			}
+			ct++;
+			break;
+
 		default:
 			sprintf(msg, "ec_to_head_where(): attr=%d unsupported", ec[m][n].attr);
 			edg_wll_SetError(ctx, EINVAL, msg);
@@ -1147,6 +1156,15 @@ static char *jc_to_head_where(
 			ct++;
 			break;
 
+		case EDG_WLL_QUERY_ATTR_VM_STATUS:
+                        if ( jc[m][n].op != EDG_WLL_QUERY_OP_EQUAL && jc[m][n].op != EDG_WLL_QUERY_OP_UNEQUAL )
+                        {
+                                edg_wll_SetError(ctx, EINVAL, "only `=' and '!=' supported with VM status");
+                                return NULL;
+                        }
+                        ct++;
+                        break;
+
 
 		default:
 			sprintf(msg, "jc_to_head_where(): attr=%d unsupported", jc[m][n].attr);
@@ -1282,6 +1300,7 @@ static char *jc_to_head_where(
 		case EDG_WLL_QUERY_ATTR_EXITCODE:
 		case EDG_WLL_QUERY_ATTR_STATUS:
 		case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+		case EDG_WLL_QUERY_ATTR_VM_STATUS:
 			if (   !is_indexed(&(jc[m][n]), ctx)
 				|| !(cname = edg_wll_QueryRecToColumn(&(jc[m][n]))) )
 			{
@@ -1657,6 +1676,7 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					} else if ( conds[i][j].op == EDG_WLL_QUERY_OP_UNEQUAL ) goto or_satisfied;
 					// TODO: EDG_WLL_QUERY_OP_LESS, EDG_WLL_QUERY_OP_GREATER, EDG_WLL_QUERY_OP_WITHIN, EDG_WLL_QUERY_OP_CHANGED
 				}
+				break;
 			case EDG_WLL_QUERY_ATTR_NETWORK_SERVER:
 				if ( stat->network_server )
 				{
@@ -1796,6 +1816,7 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					if (oldstat->stateEnterTime.tv_sec != stat->stateEnterTime.tv_sec) goto or_satisfied;
 					break;
 				}
+				break;
 			case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 				if ( !stat->lastUpdateTime.tv_sec )
 					break;
@@ -1821,6 +1842,7 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					if (oldstat->lastUpdateTime.tv_sec != stat->lastUpdateTime.tv_sec) goto or_satisfied;
 					break;
 				}
+				break;
 			case EDG_WLL_QUERY_ATTR_JOB_TYPE: 
 				switch ( conds[i][j].op )
 				{
@@ -1831,6 +1853,18 @@ int match_status(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, const edg_
 					if ( conds[i][j].value.i != stat->jobtype ) goto or_satisfied;
 					break;
 				}
+				break;
+			case EDG_WLL_QUERY_ATTR_VM_STATUS:
+				switch ( conds[i][j].op )
+                                {
+                                case EDG_WLL_QUERY_OP_EQUAL:
+                                        if ( conds[i][j].value.i == stat->vm_state ) goto or_satisfied;
+                                        break;
+                                case EDG_WLL_QUERY_OP_UNEQUAL:
+                                        if ( conds[i][j].value.i != stat->vm_state ) goto or_satisfied;
+                                        break;
+                                }
+				break;
 			default:
 				break;
 			}

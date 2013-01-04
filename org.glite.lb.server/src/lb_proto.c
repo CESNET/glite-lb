@@ -560,6 +560,13 @@ int edg_wll_ParseQueryConditions(edg_wll_Context ctx, const char *query, edg_wll
 						goto err;
 					}
 					break;
+				case EDG_WLL_QUERY_ATTR_VM_STATUS:
+					if ( 0 > (conds[i][j].value.i = edg_wll_StringToVMStat(value))) {
+                                                asprintf(&errmsg, "Unknown VM job state \"%s\" in query", value);
+                                                err = edg_wll_SetError(ctx, EINVAL, errmsg);
+                                                goto err;
+                                        }
+					break;
 				default:
 					asprintf(&errmsg, "Value conversion for attribute \"%s\" not supported in current implementation", attribute);
 					err = edg_wll_SetError(ctx, ENOSYS, errmsg);
