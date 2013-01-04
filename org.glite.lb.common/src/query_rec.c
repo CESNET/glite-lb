@@ -35,7 +35,7 @@ char     *edg_wll_QueryAttrNames[] = {    "undef", "jobid","owner","status","loc
                                 "donecode","usertag","time","level","host","source",
                                 "instance","type","chkpt_tag", "resubmitted", "parent_job",
                                 "exitcode", "jdl", "stateentertime", "lastupdatetime",
-                                "networkserver", "jobtype"  };
+                                "networkserver", "jobtype", "vm_status"  };
 
 /**
  * Names for the predefined types of query operands
@@ -79,6 +79,7 @@ void edg_wll_QueryRecFree(edg_wll_QueryRec *prec)
 		case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 		case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
 		case EDG_WLL_QUERY_ATTR_JOB_TYPE:
+		case EDG_WLL_QUERY_ATTR_VM_STATUS:
 			/* do nothing */
 			break;
 		default:

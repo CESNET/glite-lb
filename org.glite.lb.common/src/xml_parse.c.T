@@ -2658,6 +2658,10 @@ int edg_wll_JobQueryRecToXML(
 	                                case EDG_WLL_QUERY_ATTR_JOB_TYPE:
 	                                        edg_wll_add_string_to_XMLBody(&pomValue, edg_wll_StatusJobtypeNames[conditions[row][i].value.i],
 							 "jobtype", NULL);
+						break;
+					case EDG_WLL_QUERY_ATTR_VM_STATUS:
+						/*XXX currently no within or changed implemented */
+						edg_wll_add_edg_wll_StatVm_state_to_XMLBody(&pomValue, conditions[row][i].value.i, "vm_status", -1); /* have no undef state*/
 	                                        break;
 
 	                        default:

@@ -273,6 +273,21 @@ void edg_wll_add_edg_wll_JobStatCode_to_XMLBody(char **body, edg_wll_JobStatCode
 	}
 }
 
+void edg_wll_add_edg_wll_StatVm_state_to_XMLBody(char **body, enum edg_wll_StatVm_state toAdd, const char *tag, const enum edg_wll_StatVm_state null)
+{
+        if (toAdd != null) {
+                char *newBody, *pom;
+
+                trio_asprintf(&newBody,"%s\t\t\t<%s>%|Xs</%s>\r\n",
+                        *body, tag, pom = edg_wll_VMStatToString(toAdd), tag);
+
+                free(*body);
+                free(pom);
+                *body = newBody;
+        }
+}
+
+
 void edg_wll_add_edg_wll_EventCode_to_XMLBody(char **body, edg_wll_EventCode toAdd, const char *tag, const edg_wll_EventCode null)
 {
 	char *newBody, *pom;
@@ -638,6 +653,23 @@ edg_wll_JobStatCode edg_wll_from_string_to_edg_wll_JobStatCode(edg_wll_XML_ctx *
 
 
 
+enum edg_wll_StatVm_state edg_wll_from_string_to_edg_wll_StatVm_state(edg_wll_XML_ctx *XMLCtx)
+{
+        edg_wll_JobStatCode out = -1;
+        char *s;
+
+        s = glite_lbu_UnescapeXML((const char *) XMLCtx->char_buf);
+        if (s) {
+           out = edg_wll_StringToVMStat(s);
+           free(s);
+        }
+        edg_wll_freeBuf(XMLCtx);
+
+        return(out);
+}
+
+
+
 enum edg_wll_StatJobtype edg_wll_from_string_to_edg_wll_StatJobtype(edg_wll_XML_ctx *XMLCtx)
 {
         enum edg_wll_StatJobtype out = -1;
@@ -993,6 +1025,7 @@ static const char * const query_attrConsts[] = {
 	"EDG_WLL_QUERY_ATTR_STATEENTERTIME",
 	"EDG_WLL_QUERY_ATTR_LASTUPDATETIME",
         "EDG_WLL_QUERY_ATTR_JOB_TYPE",
+	"EDG_WLL_QUERY_ATTR_VM_STATUS",
         "EDG_WLL_QUERY_ATTR__LAST",
 };
 

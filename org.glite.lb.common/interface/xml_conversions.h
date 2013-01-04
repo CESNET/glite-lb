@@ -131,6 +131,7 @@ void edg_wll_add_timeval_to_XMLBody(char **body, struct timeval toAdd, const cha
 void edg_wll_add_jobid_to_XMLBody(char **body, glite_jobid_const_t toAdd, const char *tag, const void *null);
 void edg_wll_add_notifid_to_XMLBody(char **body, edg_wll_NotifId toAdd, const char *tag, const void *null);
 void edg_wll_add_edg_wll_JobStatCode_to_XMLBody(char **body, edg_wll_JobStatCode toAdd, const char *tag, const edg_wll_JobStatCode null);
+void edg_wll_add_edg_wll_StatVm_state_to_XMLBody(char **body, enum edg_wll_StatVm_state toAdd, const char *tag, const enum edg_wll_StatVm_state null);
 void edg_wll_add_edg_wll_EventCode_to_XMLBody(char **body, edg_wll_EventCode toAdd, const char *tag, const edg_wll_EventCode null);
 void edg_wll_add_time_t_to_XMLBody(char **body, const time_t toAdd, const char *tag, const time_t null);
 void edg_wll_add_tagged_time_t_to_XMLBody(char **body, const time_t toAdd, const char *tag, const char *name, const char *tag2, const time_t null);
@@ -146,6 +147,7 @@ char *edg_wll_from_string_to_string(edg_wll_XML_ctx *XMLCtx);
 glite_jobid_t edg_wll_from_string_to_jobid(edg_wll_XML_ctx *XMLCtx);
 edg_wll_NotifId edg_wll_from_string_to_notifid(edg_wll_XML_ctx *XMLCtx);
 edg_wll_JobStatCode edg_wll_from_string_to_edg_wll_JobStatCode(edg_wll_XML_ctx *XMLCtx);
+enum edg_wll_StatVm_state edg_wll_from_string_to_edg_wll_StatVm_state(edg_wll_XML_ctx *XMLCtx);
 int edg_wll_from_string_to_int(edg_wll_XML_ctx *XMLCtx);
 float edg_wll_from_string_to_float(edg_wll_XML_ctx *XMLCtx);
 double edg_wll_from_string_to_double(edg_wll_XML_ctx *XMLCtx);

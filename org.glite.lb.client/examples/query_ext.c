@@ -435,6 +435,7 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 	else if ( !strcmp(tmps, "last_update_time") ) cond->attr = EDG_WLL_QUERY_ATTR_LASTUPDATETIME;
 	else if ( !strcmp(tmps, "jdl_attr") ) cond->attr = EDG_WLL_QUERY_ATTR_JDL_ATTR;
 	else if ( !strcmp(tmps, "job_type") ) cond->attr = EDG_WLL_QUERY_ATTR_JOB_TYPE;
+	else if ( !strcmp(tmps, "vm_status") ) cond->attr = EDG_WLL_QUERY_ATTR_VM_STATUS; 
 
 
        /**< When entered current status */
@@ -549,9 +550,17 @@ static char *get_job_condition(char *src, edg_wll_QueryRec *cond)
 			cond->value2.t.tv_sec = StrToTime(tmps);
 		}
 		break;
+
 	case EDG_WLL_QUERY_ATTR_JOB_TYPE:
 		if ( 0 > (cond->value.i = edg_wll_JobtypeStrToCode(tmps))) {
 			fprintf(stderr,"%s: invalid job type (%s)\n", myname, tmps);
+			return 0;
+		}
+		break;
+	
+	case EDG_WLL_QUERY_ATTR_VM_STATUS:
+		if ( 0 > (cond->value.i = edg_wll_StringToVMStat(tmps))) {
+			fprintf(stderr,"%s: invalid VM status value (%s)\n", myname, tmps);
 			return 0;
 		}
 		break;

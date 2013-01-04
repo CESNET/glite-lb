@@ -315,6 +315,15 @@ char *edg_wll_VMStatToString(enum edg_wll_StatVm_state statCode)
         return strdup(vm_statNames[statCode]);
 }
 
+enum edg_wll_StatVm_state edg_wll_StringToVMStat(const char* name)
+{
+	unsigned int     i;
+
+	for (i=0; i<sizeof(vm_statNames)/sizeof(vm_statNames[0]); i++)
+                if (strcasecmp(vm_statNames[i],name) == 0) return (enum edg_wll_StatVm_state) i;
+        return (enum edg_wll_StatVm_state) -1;
+}
+
 
 char *edg_wll_JDLField(edg_wll_JobStat *stat, const char *field_name)
 {
