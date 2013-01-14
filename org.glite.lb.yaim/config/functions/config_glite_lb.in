@@ -135,6 +135,7 @@ resource "LB" {
 EOF
 	for section in ADMIN_ACCESS STATUS_FOR_MONITORING GET_STATISTICS REGISTER_JOBS READ_ALL PURGE GRANT_OWNERSHIP LOG_WMS_EVENTS LOG_CE_EVENTS LOG_GENERAL_EVENTS; do
 		eval value=\"$`echo GLITE_LB_AUTHZ_$section`\"
+		eval value_fqan=\"$`echo GLITE_LB_AUTHZ_${section}_FQAN`\"
 		case "$section" in
 		ADMIN_ACCESS) value="$value,$superusers" ;;
 		GET_STATISTICS) value="$value,$wms" ;;
@@ -143,11 +144,15 @@ EOF
 		LOG_WMS_EVENTS) value="$value,$wms" ;;
 		esac
 		value="`echo \"$value\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tsubject = \"\1\"\n\t}/'`"
+		value_fqan="`echo \"$value_fqan\" | tr ',' '\n' | grep -v ^$ | sed 's/\(.*\)/\trule permit {\n\t\tfqan = \"\1\"\n\t}/'`"
+		if test -n "$value"; then value="$value
+"; fi
+		if test -n "$value_fqan"; then value_fqan="$value_fqan
+"; fi
 		cat <<EOF >> "$authconf".new
 
 action "$section" {
-$value
-}
+$value$value_fqan}
 EOF
 	done
 	cat <<EOF >> "$authconf".new
