@@ -96,6 +96,7 @@ find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite/dump
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite/purge
+mkdir -p $RPM_BUILD_ROOT/var/log/glite
 mkdir -p $RPM_BUILD_ROOT/var/run/glite
 mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-locallogger
 mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-notif
@@ -164,6 +165,7 @@ fi
 %dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite/dump
 %dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite/purge
+%dir %attr(0755, glite, glite) %{_localstatedir}/log/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
