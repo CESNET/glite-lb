@@ -322,13 +322,6 @@ EOF
     yaimlog $level "$out"
   fi
 
-  # upgrade from L&B <= 3.1.1
-  # (legacy start-up stuff)
-  if [ -f @glite_etc@/gLiteservice ] ; then
-    grep -v 'glite-lb-bkserverd' > /tmp/gLiteservice
-    mv /tmp/gLiteservice @glite_etc@/gLiteservice
-  fi
-
   if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
     config_glite_lb_authz "$GLITE_LB_SUPER_USERS" "$GLITE_LB_RTM_DN"
   else
@@ -345,18 +338,25 @@ EOF
   # start-up on boot
   . @glite_etc@/profile.d/grid-env.sh
   if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
-    update-rc.d glite-lb-bkserverd defaults
-    update-rc.d glite-lb-locallogger defaults
-    if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
-      update-rc.d glite-lb-harvester defaults
-    fi
+    update-rc.d glite-lb-bkserverd disable
+    update-rc.d glite-lb-locallogger disable
+    update-rc.d glite-lb-harvester disable
   else
-    /sbin/chkconfig glite-lb-bkserverd on
-    /sbin/chkconfig glite-lb-locallogger on
-    if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
-      /sbin/chkconfig glite-lb-harvester on
-    fi
+    /sbin/chkconfig glite-lb-bkserverd off
+    /sbin/chkconfig glite-lb-locallogger off
+    /sbin/chkconfig glite-lb-harvester off
   fi
+  # with YAIM let's use only the /etc/init.d/gLite startup
+  grep -v 'glite-lb-' @glite_etc@/gLiteservices 2>/dev/null > /tmp/gLiteservices
+  echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd" >> /tmp/gLiteservices
+  echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-locallogger" >> /tmp/gLiteservices
+  if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
+    echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-harvester" >> /tmp/gLiteservices
+  fi
+  if ! diff /tmp/gLiteservices @glite_etc@/gLiteservices >/dev/null 2>&1; then
+    cp /tmp/gLiteservices @glite_etc@/gLiteservices
+  fi
+  rm /tmp/gLiteservices
 
   ${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd restart
   if [ ! $? = 0 ] ; then
