@@ -49,6 +49,14 @@ Actions to be run when launching setup from within the YAIM configurator. Some r
 Only actions needed to set up and L&B logger will be performed. This action consists in setting up certificates, messaging, and running the update action.
 
 .TP
+\fBupgrade\fR (group)
+All upgrade actions (remove various obsolete files, ...).
+
+.TP
+\fBemir\fR (group)
+Publish L&B service info to EMIR - complete setup. Provides service info for L&B (emir_info action) and setup and launch emir-serp daemon (emir_daemon action).
+
+.TP
 \fBdb\fR
 Checks MySQL, enables MySQL configuration for L&B, sets up the database and creates indices. Migrates DB from L&B version 3.x if necessary. MySQL server startup is handled in \fBstartup\fR, if enabled.
 
@@ -75,14 +83,16 @@ Sets up the BDII service and gLite info provider wrappers for L&B. BDII service 
 Packages \fIbdii\fR, \fIsudo\fR, and \fIglite-info-provider-service\fR must be intalled for this action to take effect.
 
 .TP
-\fBemir\fR
-Creates service info file and sets up emi-serp.
+\fBemir_info\fR
+Creates service info file for L&B.
 
-Package \fIemird\fR or \fIemir-serp\fR must be intalled for this action to take effect.
+Package \fIemir-serp\fR must be intalled for this action to take effect.
 
 .TP
-\fBupgrade\fR
-Checks for various obsolete files to move or remove.
+\fBemir_daemon\fR
+Sets up emir-serp daemon.
+
+Package \fIemir-serp\fR must be intalled for this action to take effect.
 
 .TP
 \fBupgrade_logger\fR (part of upgrade action)

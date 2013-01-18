@@ -22,7 +22,7 @@ GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}
 GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
 
 
-ACTIONS="db certs msg authz harvester bdii emir upgrade crl startup krb krbgsi"
+ACTIONS="db certs msg authz harvester bdii emir_info emir_daemon upgrade crl startup krb krbgsi"
 
 qecho() {
 	if test "$quiet" != "1"; then
@@ -121,7 +121,8 @@ setup_all() {
 	setup_authz=1
 	setup_harvester=1
 	setup_bdii=1
-	setup_emir=1
+	setup_emir_info=1
+	setup_emir_daemon=1
 	setup_upgrade=1
 	setup_upgrade_logger=1
 	setup_upgrade_notif=1
@@ -144,16 +145,20 @@ OPTIONS are:
 	-h,--help .... usage
 
 ACTIONS are:
-	db certs msg authz harvester bdii emir
-	upgrade upgrade_logger upgrade_notif upgrade_proxy
+	db certs msg authz harvester bdii
+	emir_info .... prepare service info file
+	emir_daemon .. configure EMIR client daemon
+	upgrade_logger upgrade_notif upgrade_proxy
 	crl startup
-	krb    .... setup Kerberos
-	krbgsi .... setup Kerberos and enable GSI autentization
+	krb    ....... setup Kerberos
+	krbgsi ....... setup Kerberos and enable GSI autentization
 
-	all ....... all actions (default)
-	none ...... no actions (default for check)
-	yaim ...... actions for yaim
-	logger .... actions for glite-lb-logger
+	all .......... all actions (default)
+	none ......... no actions (default for check)
+	yaim ......... actions for yaim
+	logger ....... actions for glite-lb-logger
+	upgrade ...... all upgrade actions
+	emir ......... emir_info + emir_daemon
 EOF
 		exit 0
 		;;
@@ -181,18 +186,23 @@ EOF
 		setup_msg=1
 		setup_upgrade=1
 		;;
+	upgrade) setup_upgrade=1;
+		setup_upgrade_logger=1;
+		setup_upgrade_notif=1;
+		setup_upgrade_proxy=1
+		;;
+	emir)
+		setup_emir_info=1
+		setup_emir_daemon=1
+		;;
 	db)	setup_db=1 ;;
 	certs)	setup_certs=1 ;;
 	msg)	setup_msg=1 ;;
 	authz)	setup_authz=1 ;;
 	harvester) setup_harvester=1 ;;
 	bdii)	setup_bdii=1 ;;
-	emir)   setup_emir=1 ;;
-	upgrade) setup_upgrade=1;
-		setup_upgrade_logger=1;
-		setup_upgrade_notif=1;
-		setup_upgrade_proxy=1
-		;;
+	emir_info) setup_emir_info=1 ;;
+	emir_daemon) setup_emir_daemon=1 ;;
 	upgrade_logger) setup_upgrade_logger=1 ;;
 	upgrade_notif) setup_upgrade_notif=1 ;;
 	upgrade_proxy) setup_upgrade_proxy=1 ;;
@@ -207,7 +217,7 @@ EOF
 	esac
 	shift
 done
-for action in $ACTIONS all none yaim logger; do
+for action in $ACTIONS all none yaim logger upgrade emir; do
 	eval value=\"$`echo setup_$action`\"
 	if test "$value" = "1"; then
 		setup=1;
@@ -467,13 +477,15 @@ EOF
 	fi
 fi
 
-# ==== emir ====
+# ==== emir (info, daemon) ====
 
-if test "$setup_emir" = "1"; then
+if test "$setup_emir_daemon" = "1"; then
 	if test -z "$EMIR_URL"; then
 		echo "glite-lb-setup: WARNING: EMIR_URL not set, EMIR won't be configured"
 		emir=0
 	fi
+fi
+if test "$setup_emir_info" = "1" -o "$setup_emir_daemon" = "1"; then
 	if test -n "`which emir-serp 2>/dev/null`"; then
 		emir_daemon=emir-serp
 	fi
@@ -482,18 +494,8 @@ if test "$setup_emir" = "1"; then
 		emir=0
 	fi
 fi
-if test "$setup_emir" = "1" -a "$emir" != "0"; then
-	cp -fp /etc/grid-security/hostcert.pem /etc/grid-security/emi-hostcert.pem && \
-	cp -fp /etc/grid-security/hostkey.pem /etc/grid-security/emi-hostkey.pem
-	if test $? -eq 0; then
-		chown emi:emi /etc/grid-security/emi-hostcert.pem /etc/grid-security/emi-hostkey.pem
-		chmod 0644 /etc/grid-security/emi-hostcert.pem
-		chmod 0400 /etc/grid-security/emi-hostkey.pem
-		qecho "Certificates copied to /etc/grid-security/emi-host*.pem"
-	else
-		echo "glite-lb-setup: WARNING: copying certificates for EMIR failed"
-	fi
 
+if test "$setup_emir_info" = "1" -a "$emir" != "0"; then
 	# interface version
 	if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
 		out=`dpkg-query -W glite-lb-ws-interface 2>/dev/null | cut -f2 | cut -d- -f1`
@@ -519,7 +521,7 @@ if test "$setup_emir" = "1" -a "$emir" != "0"; then
 	done
 
 	# L&B service info
-	mkdir -p /var/cache/$emir_daemon/services/ 2>/dev/null
+	mkdir -p /var/cache/$emir_daemon/services/ 2>/dev/null || :
 	cat > /var/cache/$emir_daemon/services/glite-lb-bkserverd.json <<EOF
 {
 $json	"Service_ID": "`hostname -f`_lbserver",
@@ -538,6 +540,19 @@ $json	"Service_ID": "`hostname -f`_lbserver",
 	"Service_Endpoint_WSDL": "http://egee.cesnet.cz/cms/export/sites/egee/en/WSDL/3.1/LB.wsdl"
 }
 EOF
+fi
+
+if test "$setup_emir_daemon" = "1" -a "$emir" != "0"; then
+	cp -fp /etc/grid-security/hostcert.pem /etc/grid-security/emi-hostcert.pem && \
+	cp -fp /etc/grid-security/hostkey.pem /etc/grid-security/emi-hostkey.pem
+	if test $? -eq 0; then
+		chown emi:emi /etc/grid-security/emi-hostcert.pem /etc/grid-security/emi-hostkey.pem
+		chmod 0644 /etc/grid-security/emi-hostcert.pem
+		chmod 0400 /etc/grid-security/emi-hostkey.pem
+		qecho "Certificates copied to /etc/grid-security/emi-host*.pem"
+	else
+		echo "glite-lb-setup: WARNING: copying certificates for EMIR failed"
+	fi
 
 	period=4
 	validity=24
@@ -558,7 +573,7 @@ cadir = /etc/grid-security/certificates
 verbosity = debug
 
 [advancedService]
-json_file_location = /var/cache/$emir_daemon/services/glite-lb-bkserverd.json
+json_dir_location = /var/cache/$emir_daemon/services/
 EOF
 
 	# enable (for Debian) after configuring
@@ -576,7 +591,7 @@ EOF
 		qecho "EMIR configured"
 	else
 		echo "$out"
-		error="$error emir"
+		error="$error emir_daemon"
 	fi
 fi
 
