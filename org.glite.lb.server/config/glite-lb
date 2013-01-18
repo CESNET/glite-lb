@@ -29,7 +29,7 @@ GLITE_LB_EXPORT_PURGE_ARGS='--cleared 2d --aborted 15d --cancelled 15d --other 6
 
 # glite-info
 
-# testbed: http://zam052v04.zam.kfa-juelich.de:54321
+# testbed: http://emitbdsr1.cern.ch:9126
 # official example: http://emiregistry2.grid.niif.hu:54321
 #EMIR_URL=
 
