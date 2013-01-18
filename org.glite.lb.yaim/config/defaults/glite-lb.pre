@@ -4,8 +4,8 @@
 # system settings
 #
 
-#GLITE_LB_LOCATION='@glite_prefix@'
-#GLITE_LB_LOCATION_ETC='@glite_etc@'
+#GLITE_LOCATION='@glite_prefix@'
+#GLITE_LOCATION_ETC='@glite_etc@'
 
 # query timeout
 #GLITE_WMS_QUERY_TIMEOUT=300
