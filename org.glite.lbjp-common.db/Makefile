@@ -156,7 +156,7 @@ clean:
 	rm -rvf db_expire db_test db_test_mysql db_test_psql timezone
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 db-mysql.o db-mysql.lo: db-mysql.c
 	${COMPILE} ${MYSQL_CFLAGS} -c $<

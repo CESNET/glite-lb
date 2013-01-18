@@ -45,7 +45,7 @@ clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 install: 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix}

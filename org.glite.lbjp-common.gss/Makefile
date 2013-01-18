@@ -189,7 +189,7 @@ clean:
 	rm -rf *.o *.lo *.a *.la .libs test_gss gss_server gss_client *.pc
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 %.o: %.c
 	${COMPILE} ${GSSAPI_NOTHR_INC} ${LIBCARES_CFLAGS} -o $@ -c $<

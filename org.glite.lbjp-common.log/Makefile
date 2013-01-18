@@ -81,7 +81,7 @@ clean:
 	rm -rvf test
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 check: test
 	LOG4C_RCPATH=${top_srcdir}/tests ./test

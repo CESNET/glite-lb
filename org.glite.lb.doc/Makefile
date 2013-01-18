@@ -81,7 +81,7 @@ clean:
 	rm -rvf LBUG* LBAG* LBDG* LBTP* events.tex status.tex ver.tex comment*
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 
 # dependencies:

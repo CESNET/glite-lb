@@ -415,7 +415,7 @@ clean:
 	rm -rvf test_xml.cpp
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 %.c: %.c.T
 	rm -f $@

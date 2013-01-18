@@ -87,7 +87,7 @@ clean:
 	rm -rvf harvester harvester-dbg glite-lb-harvester.* startup
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 harvester: harvester.o
 	${LINK} -o $@ $+ ${LIBS}

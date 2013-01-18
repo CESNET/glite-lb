@@ -21,6 +21,6 @@ clean:
 	${ant_prefix}/bin/ant ${ANT_ARGS} clean
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 .PHONY: all compile stage install check clean distclean

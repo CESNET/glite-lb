@@ -95,7 +95,7 @@ clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 %.o %.lo: %.c
 	${COMPILE} -c $<

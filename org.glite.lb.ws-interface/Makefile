@@ -63,7 +63,7 @@ clean:
 	rm -vf *.h *.html *.xml *.wsdl glue2-copy.xsd
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 %.xml: %.xml.T
 	rm -f $@

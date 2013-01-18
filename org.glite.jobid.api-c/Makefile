@@ -75,7 +75,7 @@ clean:
 	rm -vf base64_test base64_test.xml
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 stage:
 	$(MAKE) install PREFIX=${stagedir}

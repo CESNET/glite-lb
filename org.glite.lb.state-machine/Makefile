@@ -118,7 +118,7 @@ clean:
 	rm -rfv job_attrs.h job_attrs2.h lb-job-attrs2.xsd glite-jpis-config.xml
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 check:
 	@echo No tests yet

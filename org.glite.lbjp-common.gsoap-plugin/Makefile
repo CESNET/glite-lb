@@ -353,7 +353,7 @@ clean:
 	rm -fv ${PKG_CONFIG_FILES}
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 %.c.o: %.c
 	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<

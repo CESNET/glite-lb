@@ -30,6 +30,6 @@ check:
 clean:
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 .PHONY: all install stage clean check

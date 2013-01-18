@@ -244,7 +244,7 @@ clean:
 	rm -rvf ${REPORTS}
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<

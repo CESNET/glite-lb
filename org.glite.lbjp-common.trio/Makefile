@@ -118,7 +118,7 @@ clean:
 	rm -rvf trio_test ${REPORTS}
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 %.lo %.o: %.c
 	${COMPILE} ${CFLAGS} -c $<
