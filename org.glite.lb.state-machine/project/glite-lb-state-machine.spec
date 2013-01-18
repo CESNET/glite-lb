@@ -52,12 +52,12 @@ This package contains L&B state machine plugins for Job Provenance.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module lb.state-machine
-make
+/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.state-machine
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
 %check
-make check
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
 
 
 %install

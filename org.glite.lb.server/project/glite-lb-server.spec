@@ -68,12 +68,12 @@ Requires(preun): initscripts
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module lb.server
-make
+/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.server
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
 %check
-make check
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
 
 
 %install
@@ -90,7 +90,7 @@ sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb
 mkdir $RPM_BUILD_ROOT/etc/rc.d
 mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
 %endif
-install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT/usr/share/doc/%{name}-%{version}
+install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'

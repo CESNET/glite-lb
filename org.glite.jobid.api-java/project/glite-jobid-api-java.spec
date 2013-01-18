@@ -25,7 +25,7 @@ Requires:       jakarta-commons-codec
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module jobid.api-java
+/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module jobid.api-java
 make
 
 

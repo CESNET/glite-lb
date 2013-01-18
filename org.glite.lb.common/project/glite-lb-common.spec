@@ -47,12 +47,12 @@ common library.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module lb.common
-make
+/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.common
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
 %check
-make check
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
 
 
 %install

@@ -26,7 +26,7 @@ Provides:       glite-lb-nagios-plugins = %{name}-%{version}-%{release}
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module lb.nagios
+/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.nagios
 make
 
 

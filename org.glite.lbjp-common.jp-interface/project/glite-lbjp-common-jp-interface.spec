@@ -37,12 +37,12 @@ interface library.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=%{_lib} --project=emi --module lbjp-common.jp-interface
-make
+/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.jp-interface
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
 %check
-make check
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
 
 
 %install
