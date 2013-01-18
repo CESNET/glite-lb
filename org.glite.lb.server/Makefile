@@ -484,7 +484,7 @@ clean:
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 %.c: %.c.T
 	rm -f $@

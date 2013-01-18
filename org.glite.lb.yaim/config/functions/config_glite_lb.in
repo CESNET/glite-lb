@@ -150,6 +150,24 @@ function config_glite_lb() {
     return 1
   fi
 
+  # with YAIM let's use only the /etc/init.d/gLite startup
+  if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
+    update-rc.d glite-lb-bkserverd disable
+    update-rc.d glite-lb-locallogger disable
+    update-rc.d glite-lb-harvester disable
+  else
+    /sbin/chkconfig glite-lb-bkserverd off
+    /sbin/chkconfig glite-lb-locallogger off
+    /sbin/chkconfig glite-lb-harvester off
+  fi
+  grep -v 'glite-lb-' @glite_etc@/gLiteservices 2>/dev/null > /tmp/gLiteservices
+  mv /tmp/gLiteservices @glite_etc@/gLiteservices
+  echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-bkserverd" >> @glite_etc@/gLiteservices
+  echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-locallogger" >> @glite_etc@/gLiteservices
+  if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
+    echo "${GLITE_LB_LOCATION_ETC}/init.d/glite-lb-harvester" >> @glite_etc@/gLiteservices
+  fi
+
   # set mysql password
   set_mysql_passwd || return 1 # the function uses $MYSQL_PASSWORD
 

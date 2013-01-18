@@ -401,7 +401,7 @@ clean:
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 check_version:
 	${CHECK_VERSION} ${stagedir}${prefix}/include/glite/lb/common_version.h

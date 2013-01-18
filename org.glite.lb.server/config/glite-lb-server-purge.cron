@@ -1,1 +1,1 @@
-1 1 * * *	glite	( export GLITE_LB_EXPORT_BKSERVER=`hostname -f`; export GLITE_LB_PURGE_TARGET_RUNTIME=84600s; printf "`date "+\%b \%e \%T"` `hostname -s` glite-lb-export: "; @glite_prefix@/sbin/glite-lb-export ) >> /var/log/glite/glite-lb-server-purge.log 2>&1
+1 1 * * *	glite	( export GLITE_LB_EXPORT_BKSERVER=`hostname -f`; export GLITE_LB_PURGE_TARGET_RUNTIME=84600s; printf "`date "+\%b \%e \%T"` `hostname -s` glite-lb-export: "; @glite_prefix@/sbin/glite-lb-export server ) >> /var/log/glite/glite-lb-server-purge.log 2>&1

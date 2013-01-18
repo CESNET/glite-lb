@@ -31,6 +31,16 @@ GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
 
 #autodetect the prefix
 PREFIX=${GLITE_LOCATION:-`dirname $0`/..}
+PURGE_TYPE=${1:-server}
+
+if [ "$GLITE_LB_TYPE" != "both" -a "$PURGE_TYPE" != "$GLITE_LB_TYPE" ]; then
+	echo "No $PURGE_TYPE purge on L&B $GLITE_LB_TYPE"
+	exit 0
+fi
+
+if [ "$PURGE_TYPE" = "proxy" ]; then
+	GLITE_LB_PURGE_OTHER_OPTIONS="$GLITE_LB_PURGE_OTHER_OPTIONS -x"
+fi
 
 if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] ;then
 	creds="-c '$GLITE_HOST_CERT' -k '$GLITE_HOST_KEY'"

@@ -100,7 +100,7 @@ clean:
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 LB.xh: ws_typemap.dat ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl
 	${gsoap_bin_prefix}/wsdl2h -c -t ${top_srcdir}/examples/ws_typemap.dat -I${stagedir}${prefix}/share/wsdl/glite-lb -o $@ ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl

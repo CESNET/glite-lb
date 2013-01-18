@@ -116,7 +116,7 @@ clean:
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 harvester: harvester.o
 	${LINK} -o $@ $+ ${LIBS}

@@ -34,6 +34,6 @@ clean:
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 .PHONY: default all install stage clean check distclean dist distcheck

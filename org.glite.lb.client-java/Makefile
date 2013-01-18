@@ -123,6 +123,6 @@ clean:
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 .PHONY: default all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c examples genevents genws check stage install clean distclean wtf dist distcheck

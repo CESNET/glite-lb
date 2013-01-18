@@ -361,7 +361,7 @@ clean:
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 %.c.o: %.c
 	${COMPILE} ${GSOAP_DEFAULT_CFLAGS} -o $@ -c $<

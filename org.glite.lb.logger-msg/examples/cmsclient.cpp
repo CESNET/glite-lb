@@ -79,7 +79,7 @@ public:
 		this->clientAck = clientAck;
 	}
 
-	virtual ~SimpleAsyncConsumer() throw(){
+	virtual ~SimpleAsyncConsumer() throw() {
 		this->cleanup();
 	}
 

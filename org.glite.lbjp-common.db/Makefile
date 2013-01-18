@@ -147,7 +147,7 @@ clean:
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
-	rm -rvf Makefile.inc *.spec debian/
+	rm -rvf project/changelog Makefile.inc *.spec debian/
 
 db-mysql.o db-mysql.lo: db-mysql.c
 	${COMPILE} ${MYSQL_CFLAGS} -c $<
