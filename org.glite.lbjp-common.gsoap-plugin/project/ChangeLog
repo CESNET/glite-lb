@@ -150,3 +150,6 @@
 3.2.5-1
 - Library sonames tracked in rpm
 
+3.2.6-1
+- Changes based on Fedora reviews
+
