@@ -124,3 +124,6 @@
 - Library sonames tracked in rpm
 - Packaging cleanup when publishing to Fedora
 
+2.3.6-1
+- Changes based on Fedora reviews
+
