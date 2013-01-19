@@ -141,3 +141,6 @@
 2.3.4-1
 - Runtime file location defaults changed and unified (SB #98940)
 
+2.3.5-1
+- Changes based on Fedora reviews
+
