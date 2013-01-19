@@ -169,3 +169,8 @@ gLite L&B setup script:
 1.3.6-1
 - Change home directory of glite user to be compliant with FHS (finalize SB #98940)
 - Update dump and purge locations, updates for (unused) L&B mill
+1.3.7-1
+- Missing /var/log/glite directory fixed
+- Legacy build scripts updated
+- Changes based on Fedora reviews
+
