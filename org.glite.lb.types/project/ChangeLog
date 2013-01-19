@@ -141,3 +141,6 @@
 - Runtime file location defaults changed and unified (SB #98940)
 - Versioned perl requirement as per Fedora Packaging Guidelines
 
+2.0.3-1
+- Changes based on Fedora reviews
+
