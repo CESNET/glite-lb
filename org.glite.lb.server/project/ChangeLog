@@ -574,3 +574,17 @@
 3.0.3-1
 - Change home directory of glite user to be compliant with FHS (finalize SB #98940)
 - Update dump and purge locations, updates for (unused) mill
+
+3.0.4-1
+- EMIR URL example updated
+- LCAS removed -- rotating LCAS log not needed
+- Less aggressive EMIR setup
+  - Using directory for service files
+  - Separate daemon configuration and generating service info
+  - Integration with YAIM EMIR set-up not supported yet
+- Missing /var/log/glite directory fixed
+- Legacy build scripts updated
+- VM job type querying
+- Bugfix in match_status (several missed breaks in switch on condition attributes)
+- Changes based on Fedora reviews
+
