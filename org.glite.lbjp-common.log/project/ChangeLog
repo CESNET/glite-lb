@@ -104,3 +104,6 @@
 - Library sonames tracked in rpm
 - Runtime file location defaults changed and unified (SB #98940)
 
+1.3.5-1
+- Changes based on Fedora reviews
+
