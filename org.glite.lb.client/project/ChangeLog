@@ -297,3 +297,7 @@
 - More precise path lenght size check
 - Default value for store proxy socket only in param.c, check path length size
 
+6.0.3-1
+- VM job type querying
+- Changes based on Fedora reviews
+
