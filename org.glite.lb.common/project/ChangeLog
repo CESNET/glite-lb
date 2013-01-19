@@ -249,3 +249,7 @@
 - Runtime file location defaults changed and unified (SB #98940)
 - Library sonames tracked in rpm
 
+9.0.3-1
+- VM job type querying
+- Changes based on Fedora reviews
+
