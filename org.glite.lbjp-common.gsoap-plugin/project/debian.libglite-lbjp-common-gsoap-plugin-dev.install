@@ -1,4 +1,0 @@
-usr/include/glite/security/*.h
-usr/lib/lib*.a
-usr/lib/lib*.so
-usr/lib/pkgconfig/*.pc
