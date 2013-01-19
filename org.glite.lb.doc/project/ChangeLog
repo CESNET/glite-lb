@@ -224,3 +224,7 @@
 
 1.4.9-1
 - Update documentation (runtime directory locations, homedir for glite)
+
+1.4.10-1
+- Changes based on Fedora reviews
+
