@@ -11,7 +11,7 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.doc
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch:      noarch
-%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
+%if 0%{?fedora} >= 9 || 0%{?rhel} >= 6
 BuildRequires:  tex(latex)
 %else
 BuildRequires:  tetex-latex
