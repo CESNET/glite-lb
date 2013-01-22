@@ -1751,7 +1751,7 @@ sub mode_etics {
 
 		for my $p ('deb5_x86_64_gcc432', 'deb5_ia32_gcc432', 'deb6_x86_64_gcc445', 'deb6_ia32_gcc445') {
 			for my $c (keys %{$cmd{default}}) { $cmd{$p}{$c} = $cmd{default}{$c}; }
-			$cmd{$p}{clean} = 'rm -rf ${package.SRPMSLocation}';
+			$cmd{$p}{clean} = 'rm -rf ${package.tgzLocation}';
 			$cmd{$p}{init} = "wget -P \${package.tgzLocation} $url_deb/${pkgName}_\${version}-\${age}.debian.tar.gz $url_deb/${pkgName}_\${version}-\${age}.dsc $url_deb/${pkgName}_\${version}.orig.tar.gz";
 			$cmd{$p}{packaging} = 'true';
 		}
