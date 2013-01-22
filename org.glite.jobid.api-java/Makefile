@@ -25,7 +25,7 @@ stage:
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java
-	cp dist/jobid-api-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
+	cp dist/glite-jobid-api-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
 
 check:
 

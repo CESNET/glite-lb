@@ -2,8 +2,8 @@
 <!-- You may freely edit this file. See commented blocks below for -->
 <!-- some examples of how to customize the build. -->
 <!-- (If you delete it and reopen the project it will be recreated.) -->
-<project name="jobid-api-java" default="default" basedir=".">
-    <description>Builds, tests, and runs the project jobid-api-java.</description>
+<project name="glite-jobid-api-java" default="default" basedir=".">
+    <description>Builds, tests, and runs the project glite-jobid-api-java.</description>
     <import file="nbproject/build-impl.xml"/>
     <!--
 

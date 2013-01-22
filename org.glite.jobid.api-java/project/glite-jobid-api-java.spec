@@ -14,10 +14,23 @@ BuildArch:      noarch
 BuildRequires:  ant
 BuildRequires:  jakarta-commons-codec
 BuildRequires:  java-devel
+BuildRequires:  jpackage-utils
 Requires:       jakarta-commons-codec
+Requires:       jpackage-utils
 
 %description
 @DESCRIPTION@
+
+
+%package        javadoc
+Summary:        Java API documentation for %{name}
+Group:          Documentation
+Requires:       %{name} = %{version}-%{release}
+Requires:       jpackage-utils
+
+%description    javadoc
+This package contains java API documentation for java implementation of gLite
+jobid.
 
 
 %prep
@@ -37,8 +50,8 @@ make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
-find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
+mkdir -p $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+cp -rp dist/javadoc $RPM_BUILD_ROOT%{_javadocdir}/%{name}
 
 
 %clean
@@ -48,7 +61,11 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
-/usr/share/java/jobid-api-java.jar
+%{_javadir}/%{name}.jar
+
+%files javadoc
+%defattr(-,root,root)
+%{_javadocdir}/%{name}
 
 
 %changelog

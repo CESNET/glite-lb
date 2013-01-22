@@ -32,6 +32,7 @@ JAVA:=${jdk_prefix}/bin/java
 
 GEN:=${stagedir}${prefix}/bin/glite-lb-at3 ${top_srcdir}/project/genEventTypes.pl
 AT3DIR:=${stagedir}${prefix}/share/glite-lb/at3
+jobid_classpath:=${stagedir}${prefix}/share/java/glite-jobid-api-java.jar
 axis_classpath:=$(shell ${top_srcdir}/project/list-jars.sh ${axis_prefix}/lib ${axis_prefix}/share/java ${axis_prefix}/share/java/axis /usr/share/java /usr/lib/java /usr/lib/java/axis)
 trustmanager_classpath:=$(shell ls -1 ${trustmanager_prefix}/share/java/glite-security-trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager-axis.jar ${stagedir}${prefix}/share/java/trustmanager.jar ${stagedir}${prefix}/share/java/trustmanager-axis.jar 2>/dev/null | tr '\012' :)
 
@@ -42,7 +43,7 @@ wtf:
 
 compile-java-axis: genws
 	${JAVAC} \
-		-classpath ${jakarta-commons-lang_jar}:${stagedir}${prefix}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath} \
+		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath} \
 		-d build \
 		build/axis/org/glite/wsdl/services/lb/*.java \
 		build/axis/org/glite/wsdl/services/lb4agu/*.java \
@@ -55,18 +56,18 @@ compile-java-axis: genws
 compile-java-lb: Event.java Timeval.java Sources.java Level.java SeqCode.java Escape.java
 	-mkdir -p build/classes
 	${JAVAC} \
-		-classpath ${jakarta-commons-lang_jar}:${stagedir}${prefix}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build/classes \
+		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build/classes \
 		-d build $+
 
 compile-java-gen: genevents
 	${JAVAC} \
-		-classpath ${jakarta-commons-lang_jar}:${stagedir}${prefix}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build:build/classes \
+		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build:build/classes \
 		-d build \
 		build/gen/*.java
 
 compile-java-lb2: Context.java ContextDirect.java ContextIL.java ContextLL.java EventConvertor.java ILFileWriter.java ILProto.java Job.java LBCredentials.java LBException.java NotifParser.java Notification.java SSL.java SSLSend.java ServerConnection.java
 	${JAVAC} \
-		-classpath ${jakarta-commons-lang_jar}:${stagedir}${prefix}/share/java/jobid-api-java.jar:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build:build/classes \
+		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build:build/classes \
 		-d build/classes $+
 
 build-jar: lb-client-java.jar
@@ -87,7 +88,7 @@ examples: build/classes/examples
 
 build/classes/examples: ${FULL_EXAMPLES} ${SSL_EXAMPLES} ${TM_EXAMPLES}
 	-mkdir -p build/classes/examples/src/simple-ssl build/classes/examples/src/simple-trustmanager
-	${jdk_prefix}/bin/javac -d build/classes/examples -cp build:build/classes:build/classes/examples:${stagedir}${prefix}/share/java/jobid-api-java.jar:${axis_classpath} ${FULL_EXAMPLES}
+	${jdk_prefix}/bin/javac -d build/classes/examples -cp build:build/classes:build/classes/examples:${jobid_classpath}:${axis_classpath} ${FULL_EXAMPLES}
 	${jdk_prefix}/bin/javac -d build/classes/examples -cp build:build/classes:build/classes/examples:${axis_classpath} ${SSL_EXAMPLES}
 	${jdk_prefix}/bin/javac -d build/classes/examples -cp build:build/classes:${trustmanager_classpath}:${axis_classpath} ${TM_EXAMPLES}
 	cp ${FULL_EXAMPLES} build/classes/examples/src
