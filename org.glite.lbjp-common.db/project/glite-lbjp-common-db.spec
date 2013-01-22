@@ -81,5 +81,5 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* @SPEC_DATE@ @MAINTAINER@ - @MAJOR@.@MINOR@.@REVISION@-@AGE@%{?dist}
+* @SPEC_DATE@ @MAINTAINER@ - @MAJOR@.@MINOR@.@REVISION@-@AGE@
 - automatically generated package
