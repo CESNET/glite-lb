@@ -1369,19 +1369,11 @@ canl.c
 
 	my ($old_locale, $specdate, $debdate);
 
-	# files for ETICS always in root source directory
-	mkdir $abs_srcdir."project" unless (-d $abs_srcdir."project");
-	open PKGCHL,">".$abs_srcdir."project/changelog"
-		or die $abs_srcdir."project/changelog: $!\n";
 	$old_locale = setlocale(LC_TIME);
 	setlocale(LC_TIME, "C");
 	$specdate = strftime("%a %b %d %Y", gmtime());
 	$debdate = strftime("%a, %d %b %Y %H:%M:%S %z", gmtime());
 	setlocale(LC_TIME, $old_locale);
-	print PKGCHL qq{* $specdate CESNET team <emi-lb\@metacentrum.cz>
-- automatically generated package
-};
-	close PKGCHL;
 
 	unless ($top_srcdir eq '.') {
 		unlink $build."Makefile";
