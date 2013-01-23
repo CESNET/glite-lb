@@ -180,3 +180,6 @@
 2.0.3-1
 - Changes based on Fedora reviews
 
+2.0.4-1
+- Fixes to follow recent Debian updates
+
