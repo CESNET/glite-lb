@@ -155,3 +155,6 @@
 4.5.7-1
 - Changes based on Fedora reviews
 
+4.5.8-1
+- Fixes to follow recent Debian updates
+
