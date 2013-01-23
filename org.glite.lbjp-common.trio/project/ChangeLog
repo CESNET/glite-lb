@@ -127,3 +127,6 @@
 2.3.6-1
 - Changes based on Fedora reviews
 
+2.3.7-1
+- Fixes to follow recent Debian updates
+
