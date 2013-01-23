@@ -228,3 +228,8 @@
 1.4.10-1
 - Changes based on Fedora reviews
 
+1.4.11-1
+- Fixes to follow recent Debian updates
+- Installation docs update -- not showing the option as shell variable
+- Integration of EMIR setup in L&B with yaim
+
