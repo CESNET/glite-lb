@@ -116,3 +116,7 @@
 2.0.1-1
 - Changes based on Fedora reviews
 
+2.0.2-1
+- Fixes to follow recent Debian updates
+- Modifications to follow updated jobid.api-java packaging
+
