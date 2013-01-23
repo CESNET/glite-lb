@@ -588,3 +588,7 @@
 - Bugfix in match_status (several missed breaks in switch on condition attributes)
 - Changes based on Fedora reviews
 
+3.0.5-1
+- Integration of EMIR setup in L&B with yaim
+- Fixes to follow recent Debian updates
+
