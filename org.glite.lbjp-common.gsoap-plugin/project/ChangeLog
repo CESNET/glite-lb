@@ -153,3 +153,6 @@
 3.2.6-1
 - Changes based on Fedora reviews
 
+3.2.7-1
+- Fixes to follow recent Debian updates
+

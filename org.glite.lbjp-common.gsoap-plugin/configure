@@ -192,9 +192,9 @@ my (%etics_externs, %etics_projects);
 # additional modules from $project{modules} are automatically added
 #
 my %lbmodules = (
-	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test harvester yaim logger-msg nagios client-devel client-progs common-devel logger-devel state-machine-devel/], 
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim logger-msg nagios client-devel client-progs common-devel logger-devel state-machine-devel/], 
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface gss gsoap-plugin db-devel log-devel maildir-devel server-bones-devel trio-devel jp-interface-devel gss-devel gsoap-plugin-devel/],
-	'jobid' => [qw/api-c api-c-devel api-cpp api-cpp-devel/],
+	'jobid' => [qw/api-c api-c-devel api-cpp api-cpp-devel api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache libs commands core devel services service-clients/ ],
 	'px' => [ qw/proxyrenewal myproxy-yaim proxyrenewal-devel proxyrenewal-progs/ ],
@@ -1369,19 +1369,11 @@ canl.c
 
 	my ($old_locale, $specdate, $debdate);
 
-	# files for ETICS always in root source directory
-	mkdir $abs_srcdir."project" unless (-d $abs_srcdir."project");
-	open PKGCHL,">".$abs_srcdir."project/changelog"
-		or die $abs_srcdir."project/changelog: $!\n";
 	$old_locale = setlocale(LC_TIME);
 	setlocale(LC_TIME, "C");
 	$specdate = strftime("%a %b %d %Y", gmtime());
 	$debdate = strftime("%a, %d %b %Y %H:%M:%S %z", gmtime());
 	setlocale(LC_TIME, $old_locale);
-	print PKGCHL qq{* $specdate CESNET team <emi-lb\@metacentrum.cz>
-- automatically generated package
-};
-	close PKGCHL;
 
 	unless ($top_srcdir eq '.') {
 		unlink $build."Makefile";
@@ -1751,7 +1743,7 @@ sub mode_etics {
 
 		for my $p ('deb5_x86_64_gcc432', 'deb5_ia32_gcc432', 'deb6_x86_64_gcc445', 'deb6_ia32_gcc445') {
 			for my $c (keys %{$cmd{default}}) { $cmd{$p}{$c} = $cmd{default}{$c}; }
-			$cmd{$p}{clean} = 'rm -rf ${package.SRPMSLocation}';
+			$cmd{$p}{clean} = 'rm -rf ${package.tgzLocation}';
 			$cmd{$p}{init} = "wget -P \${package.tgzLocation} $url_deb/${pkgName}_\${version}-\${age}.debian.tar.gz $url_deb/${pkgName}_\${version}-\${age}.dsc $url_deb/${pkgName}_\${version}.orig.tar.gz";
 			$cmd{$p}{packaging} = 'true';
 		}
