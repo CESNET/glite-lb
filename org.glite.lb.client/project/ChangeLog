@@ -301,3 +301,6 @@
 - VM job type querying
 - Changes based on Fedora reviews
 
+6.0.4-1
+- Fixes to follow recent Debian updates
+
