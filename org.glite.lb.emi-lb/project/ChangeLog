@@ -8,3 +8,6 @@
 - License and packaging fixes
 - glite-lb-client-java removed from the metapackage
 
+1.0.2-2
+- Package rebuilt to adjust to next-generation dpkg-dev
+

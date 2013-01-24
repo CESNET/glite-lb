@@ -192,9 +192,9 @@ my (%etics_externs, %etics_projects);
 # additional modules from $project{modules} are automatically added
 #
 my %lbmodules = (
-	'lb' => [ qw/client common doc logger server state-machine types utils ws-interface ws-test harvester yaim logger-msg nagios client-devel client-progs common-devel logger-devel state-machine-devel/], 
+	'lb' => [ qw/client client-java common doc logger server state-machine types utils ws-interface ws-test harvester yaim logger-msg nagios client-devel client-progs common-devel logger-devel state-machine-devel/], 
 	'lbjp-common' => [qw/db log maildir server-bones trio jp-interface gss gsoap-plugin db-devel log-devel maildir-devel server-bones-devel trio-devel jp-interface-devel gss-devel gsoap-plugin-devel/],
-	'jobid' => [qw/api-c api-c-devel api-cpp api-cpp-devel/],
+	'jobid' => [qw/api-c api-c-devel api-cpp api-cpp-devel api-java/],
 	'jp' => [ qw/client doc index primary server-common ws-interface/ ],
 	'gridsite' => [ qw/apache libs commands core devel services service-clients/ ],
 	'px' => [ qw/proxyrenewal myproxy-yaim proxyrenewal-devel proxyrenewal-progs/ ],
@@ -1369,19 +1369,11 @@ canl.c
 
 	my ($old_locale, $specdate, $debdate);
 
-	# files for ETICS always in root source directory
-	mkdir $abs_srcdir."project" unless (-d $abs_srcdir."project");
-	open PKGCHL,">".$abs_srcdir."project/changelog"
-		or die $abs_srcdir."project/changelog: $!\n";
 	$old_locale = setlocale(LC_TIME);
 	setlocale(LC_TIME, "C");
 	$specdate = strftime("%a %b %d %Y", gmtime());
 	$debdate = strftime("%a, %d %b %Y %H:%M:%S %z", gmtime());
 	setlocale(LC_TIME, $old_locale);
-	print PKGCHL qq{* $specdate CESNET team <emi-lb\@metacentrum.cz>
-- automatically generated package
-};
-	close PKGCHL;
 
 	unless ($top_srcdir eq '.') {
 		unlink $build."Makefile";
@@ -1751,7 +1743,7 @@ sub mode_etics {
 
 		for my $p ('deb5_x86_64_gcc432', 'deb5_ia32_gcc432', 'deb6_x86_64_gcc445', 'deb6_ia32_gcc445') {
 			for my $c (keys %{$cmd{default}}) { $cmd{$p}{$c} = $cmd{default}{$c}; }
-			$cmd{$p}{clean} = 'rm -rf ${package.SRPMSLocation}';
+			$cmd{$p}{clean} = 'rm -rf ${package.tgzLocation}';
 			$cmd{$p}{init} = "wget -P \${package.tgzLocation} $url_deb/${pkgName}_\${version}-\${age}.debian.tar.gz $url_deb/${pkgName}_\${version}-\${age}.dsc $url_deb/${pkgName}_\${version}.orig.tar.gz";
 			$cmd{$p}{packaging} = 'true';
 		}
@@ -1940,47 +1932,47 @@ $package_description$package_summary$defprops};
 		my $used = 0;
 		my $output = '';
 
-		# build dependencies needed only for EMI <= 2
-		if ($project ne 'emi' or $project_version <= 2) {
-			for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
-				my $eext = $etics_externs{$platform}{$_};
-				my $edev = $project{etics_externs_devel}{$platform}{$_};
+		for (@{$need_externs{"$subsys.$module"}},@{$need_jars{"$subsys.$module"}}) {
+			my $eext = $etics_externs{$platform}{$_};
+			my $edev = $project{etics_externs_devel}{$platform}{$_};
 
-				# for the default platform using package of the same
-				# name for runtime dependency
-				if (not $eext) {
-					if ($platform eq 'default') {
+			# for the default platform using package of the same
+			# name for runtime dependency
+			if (not $eext) {
+				if ($platform eq 'default') {
 #print "default runtime $_ on default\n";
-						$eext = $_; }
-					else {
+					$eext = $_; }
+				else {
 #print "no runtime $_ on $platform\n";
-						$eext = '-'; }
-				}
-				if ($eext eq '-' and $edev eq '-') {
-#print "skipping $_ on $platform\n";
-					next;
-				}
-
-				my $proj = 'externals';
-				for my $p (keys %etics_projects) {
-					for $m (@{$etics_projects{$p}}) {
-						$proj = $p if $m eq $_;
-					}
-				}
-
-				my $type = $need_externs_type{"$subsys.$module"}->{$_};
-
-				if ($edev) {
-					if ($type eq 'B') {
-						# no runtime - change to devel pkg
-						$eext = $edev;
-					} elsif ($type eq 'BR' or $type eq 'RB') {
-						# additional devel pkg
-						if ($edev ne '-') { $output .= "$proj|$edev = B\n"; }
-					}
-				}
-				if ($eext ne '-') { $output .= "$proj|$eext = $type\n"; }
+					$eext = '-'; }
 			}
+			if ($eext eq '-' and $edev eq '-') {
+#print "skipping $_ on $platform\n";
+				next;
+			}
+
+			my $proj = 'externals';
+			for my $p (keys %etics_projects) {
+				for $m (@{$etics_projects{$p}}) {
+					$proj = $p if $m eq $_;
+				}
+			}
+
+			# external dependencies only for EMI <= 2
+			if ($proj eq 'externals' and $project eq 'emi' and $project_version >= 3) { next; }
+
+			my $type = $need_externs_type{"$subsys.$module"}->{$_};
+
+			if ($edev) {
+				if ($type eq 'B') {
+					# no runtime - change to devel pkg
+					$eext = $edev;
+				} elsif ($type eq 'BR' or $type eq 'RB') {
+					# additional devel pkg
+					if ($edev ne '-') { $output .= "$proj|$edev = B\n"; }
+				}
+			}
+			if ($eext ne '-') { $output .= "$proj|$eext = $type\n"; }
 		}
 
 		if ($platform eq 'default') {
@@ -2003,12 +1995,12 @@ $output};
 	close C;
 
 	for $file ("$cvs_module/project/debian.rules", "$cvs_module/project/$packageName.spec") {
-		my $lib;
+		my ($lib, $pkg_prefix);
 		my $main_module;
 		@copts = ();
 
-		if ($file =~ /debian\.rules$/) { $lib = 'lib'; }
-		else { $lib = '%{_lib}'; }
+		if ($file =~ /debian\.rules$/) { $lib = 'lib'; $pkg_prefix = "$project{local_prefix}"; }
+		else { $lib = '%{_lib}'; $pkg_prefix = '%{_prefix}'; }
 
 		my $main_module = "$subsys.$module";
 		if (exists $subpackages{$main_module}) { $main_module = $subpackages{$main_module}; }
@@ -2027,7 +2019,7 @@ $output};
 			while (<SRC>) {
 				if (/^(\s*).+\/configure\s/) {
 					printf DST "%s", "$1";
-					printf DST "/usr/bin/perl $confdir/configure $project{flavours} --root=/ --prefix=$project{local_prefix} --libdir=$lib --project=$project --module $main_module@copts\n";
+					printf DST "/usr/bin/perl $confdir/configure $project{flavours} --root=/ --prefix=$pkg_prefix --libdir=$lib --project=$project --module $main_module@copts\n";
 				} else {
 					printf DST "%s", "$_";
 				}
@@ -2177,13 +2169,10 @@ sub os_type {
 	close FH;
 
 	if (/Debian|Ubuntu/i) { return "debian"; }
-	elsif (/Scientific|Redhat|Centos/i) { return "redhat"; }
-	elsif (/Fedora/i) {
-		$ver = `rpm -q --queryformat '%{version}' fedora-release 2>/dev/null`;
-		if ($ver and $ver >= 15) { return "fedora"; }
+	elsif (/Scientific|Redhat|Centos|Fedora/i) {
+		`pkg-config --exists systemd`;
+		if ($? == 0) { return "fedora"; }
 		else { return "redhat"; }
-	} else {
-		return "redhat";
 	}
 }
 
