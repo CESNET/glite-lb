@@ -286,3 +286,6 @@ gLite L&B setup script:
 2.4.13-1
 - Fixes to follow recent Debian updates
 
+2.4.14-1
+- Some compile-time warnings fixed
+
