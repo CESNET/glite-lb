@@ -147,3 +147,6 @@
 2.0.4-1
 - Fixes to follow recent Debian updates
 
+2.0.5-1
+- Missing lb.types function declarations added
+
