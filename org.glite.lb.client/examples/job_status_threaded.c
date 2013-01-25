@@ -81,6 +81,8 @@ void *thread_meat(char *jobid) {
 	cleanup:
 	
 	edg_wll_FreeContext(ctx);
+
+	return NULL;
 }
 
 static void

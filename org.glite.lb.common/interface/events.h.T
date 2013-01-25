@@ -120,15 +120,6 @@ extern char *edg_wll_EventToString(edg_wll_EventCode event);
 
 
 /**
- * Free allocated edg_wll_TagValue * list
- * \param list IN: list to free
- */
-extern void edg_wll_FreeTagList(
-	edg_wll_TagValue *list
-);
-
-
-/**
  * \typedef edg_wll_KeyNameCode
  * Predefined ULM key types
  */

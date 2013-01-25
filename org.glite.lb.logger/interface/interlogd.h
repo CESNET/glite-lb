@@ -238,9 +238,7 @@ void cred_handle_destroy(void *);
 struct server_msg *server_msg_create(il_octet_string_t *, long);
 struct server_msg *server_msg_copy(struct server_msg *);
 int server_msg_init(struct server_msg *, il_octet_string_t *);
-#if defined(INTERLOGD_EMS)
 int server_msg_is_priority(struct server_msg *);
-#endif
 int server_msg_free(struct server_msg *);
 void server_msg_use(struct server_msg *);
 int server_msg_release(struct server_msg *);

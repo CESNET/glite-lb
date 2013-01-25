@@ -70,8 +70,6 @@ static const struct timeval null_timeval = {0,0};
         }
 @@@}
 
-extern void edg_wll_FreeTagList(edg_wll_TagValue *);
-
 void edg_wll_FreeStatus(edg_wll_JobStat *stat)
 { 
   if (stat) {

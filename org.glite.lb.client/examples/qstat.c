@@ -33,8 +33,6 @@ limitations under the License.
 #include "glite/lb/xml_conversions.h"
 #include "glite/lb/jobstat.h"
 
-extern char *edg_wll_TagListToString(edg_wll_TagValue *);
-
 static void dgerr(edg_wll_Context,char *);
 static void printstat(edg_wll_JobStat,int);
 

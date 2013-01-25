@@ -148,6 +148,7 @@ glite_jobid_t edg_wll_from_string_to_jobid(edg_wll_XML_ctx *XMLCtx);
 edg_wll_NotifId edg_wll_from_string_to_notifid(edg_wll_XML_ctx *XMLCtx);
 edg_wll_JobStatCode edg_wll_from_string_to_edg_wll_JobStatCode(edg_wll_XML_ctx *XMLCtx);
 enum edg_wll_StatVm_state edg_wll_from_string_to_edg_wll_StatVm_state(edg_wll_XML_ctx *XMLCtx);
+enum edg_wll_StatJobtype edg_wll_from_string_to_edg_wll_StatJobtype(edg_wll_XML_ctx *XMLCtx);
 int edg_wll_from_string_to_int(edg_wll_XML_ctx *XMLCtx);
 float edg_wll_from_string_to_float(edg_wll_XML_ctx *XMLCtx);
 double edg_wll_from_string_to_double(edg_wll_XML_ctx *XMLCtx);

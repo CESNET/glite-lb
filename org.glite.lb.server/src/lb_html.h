@@ -39,6 +39,7 @@ typedef enum _http_output_type{
 
 int edg_wll_QueryToHTML(edg_wll_Context,edg_wll_Event *,char **);
 int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, int text);
+int edg_wll_WSDLOutput(edg_wll_Context ctx, char **message, char *filename);
 int edg_wll_GeneralJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **, int text);
 int edg_wll_UserInfoToHTML(edg_wll_Context, edg_wlc_JobId *, edg_wll_JobStat *, char **, int text);
 int edg_wll_UserNotifsToHTML(edg_wll_Context ctx, char **notifids, char **message, http_admin_option option, int adm);

@@ -28,8 +28,6 @@ limitations under the License.
 #include "jobstat.h"
 
 
-extern char *edg_wll_TagListToString(edg_wll_TagValue *);
-
 static const struct timeval null_timeval = {0,0};
 
 
@@ -807,7 +805,8 @@ void *edg_wll_from_string_to_cclassad(edg_wll_XML_ctx *XMLCtx)
 
 edg_wll_TagValue *edg_wll_from_string_to_taglist(edg_wll_XML_ctx *XMLCtx)
 {
-	char *s, *out = NULL;
+	char *s;
+	edg_wll_TagValue *out = NULL;
 
 	s = glite_lbu_UnescapeXML((const char*) XMLCtx->char_buf);
 	if(s) {

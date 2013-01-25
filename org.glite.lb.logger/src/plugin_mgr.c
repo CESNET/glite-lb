@@ -66,9 +66,9 @@ int plugin_mgr_init(const char *plugin_name, char *cfg)
 
 	DL_RESOLVESYM(plugin->plugin_def.plugin_init, dl_handle, "plugin_init", int(*)(char *));
 	DL_RESOLVESYM(plugin->plugin_def.plugin_supports_scheme, dl_handle,  "plugin_supports_scheme", int(*)(const char *));
-	DL_RESOLVESYM(plugin->plugin_def.event_queue_connect, dl_handle, "event_queue_connect", int (*)(struct event_queue*));
-	DL_RESOLVESYM(plugin->plugin_def.event_queue_send, dl_handle, "event_queue_send", int (*)(struct event_queue *));
-	DL_RESOLVESYM(plugin->plugin_def.event_queue_close, dl_handle, "event_queue_close", int (*)(struct event_queue *));
+	DL_RESOLVESYM(plugin->plugin_def.event_queue_connect, dl_handle, "event_queue_connect", int (*)(struct event_queue*, struct queue_thread *));
+	DL_RESOLVESYM(plugin->plugin_def.event_queue_send, dl_handle, "event_queue_send", int (*)(struct event_queue *,struct queue_thread *));
+	DL_RESOLVESYM(plugin->plugin_def.event_queue_close, dl_handle, "event_queue_close", int (*)(struct event_queue *,struct queue_thread *));
 
 	return (*plugin->plugin_def.plugin_init)(cfg);
 }

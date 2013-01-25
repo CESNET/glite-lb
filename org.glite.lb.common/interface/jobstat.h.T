@@ -254,6 +254,10 @@ extern char *edg_wll_CreamStatToString(enum edg_wll_StatCream_state);
  */
 extern char *edg_wll_VMStatToString(enum edg_wll_StatVm_state);
 
+/**
+ * Convert string VM status to numeric code
+ */
+extern enum edg_wll_StatVm_state edg_wll_StringToVMStat(const char* name);
 
 /** 
  * Extract a variable from the JDL attribute 

@@ -41,6 +41,33 @@ typedef struct _edg_wll_TagValue {
 } edg_wll_TagValue;
 
 
+/**
+ * Free allocated edg_wll_TagValue * list
+ * \param list IN: list to free
+ */
+void edg_wll_FreeTagList(edg_wll_TagValue *list);
+
+/**
+ * Deep copy the tag list
+ */
+edg_wll_TagValue *edg_wll_CopyTagList(edg_wll_TagValue *src);
+
+/**
+ * Function for parsing name=value tag lists
+ */
+int edg_wll_TagListParse(const char *src, edg_wll_TagValue **list);
+
+/**
+ * Comparing tag list values
+ */
+int edg_wll_TagListCompare(edg_wll_TagValue *a, edg_wll_TagValue *b);
+
+/**
+ *  Function for stringifying name=value tag lists
+ */
+char * edg_wll_TagListToString(edg_wll_TagValue *list);
+
+
 #ifdef __cplusplus
 }
 #endif
