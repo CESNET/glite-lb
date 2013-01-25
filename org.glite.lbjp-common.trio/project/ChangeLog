@@ -130,3 +130,6 @@
 2.3.7-1
 - Fixes to follow recent Debian updates
 
+2.3.8-1
+- Fixed build-time warnings
+
