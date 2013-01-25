@@ -256,3 +256,6 @@
 9.0.4-1
 - Fixes to follow recent Debian updates
 
+9.0.5-1
+- Missing lb.types function declarations added
+
