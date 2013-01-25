@@ -592,3 +592,6 @@
 - Integration of EMIR setup in L&B with yaim
 - Fixes to follow recent Debian updates
 
+3.0.6-1
+- A compile-time warning fixed
+
