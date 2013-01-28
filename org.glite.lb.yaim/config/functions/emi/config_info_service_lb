@@ -89,6 +89,7 @@ cat << EOF > ${INFO_PROVIDER_PATH}/glite-info-provider-service-${SERVICE_LC}-wra
 #!/bin/sh
 export PATH=$PATH:${INFO_SERVICE_SCRIPT}
 export ${SERVICE}_HOST=${SERVICE_HOST}
+export LBSERVER_PID_FILE=/var/glite/glite-lb-bkserverd.pid
 ${INFO_SERVICE_SCRIPT}/glite-info-service ${INFO_SERVICE_CONFIG}/glite-info-service-${SERVICE_LC}.conf $SITE_NAME
 ${INFO_SERVICE_SCRIPT}/glite-info-glue2-simple ${INFO_SERVICE_CONFIG}/glite-info-glue2-${SERVICE_LC}.conf $SITE_NAME
 EOF
