@@ -450,6 +450,8 @@ if test "$setup_bdii" = "1"; then
 		cp ${INFO_SERVICE_CONFIG}/glite-info-service-lbserver.conf.template ${INFO_SERVICE_CONFIG}/glite-info-service-lbserver.conf
 		cp ${INFO_SERVICE_CONFIG}/glite-info-glue2-lbserver.conf.template ${INFO_SERVICE_CONFIG}/glite-info-glue2-lbserver.conf
 		cat <<EOF >/var/lib/bdii/gip/provider/glite-info-provider-service-lbserver-wrapper
+#!/bin/sh
+export LBSERVER_PID_FILE=/var/run/glite/glite-lb-bkserverd.pid 
 /usr/bin/glite-info-service ${INFO_SERVICE_CONFIG}/glite-info-service-lbserver.conf $SITE_NAME
 /usr/bin/glite-info-glue2-simple ${INFO_SERVICE_CONFIG}/glite-info-glue2-lbserver.conf $SITE_NAME
 EOF
