@@ -33,6 +33,12 @@ limitations under the License.
 #include "glite/lb/lb_perftest.h"
 #endif
 
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+#define il_strerror_r strerror_r
+#else
+#define il_strerror_r(a,b,c)  if(1) { char *p = strerror_r((a), (b), (c)); if(p && p != (b)) { int len = strlen(p); memset((b), 0, (c)); strncpy((b), p, len > (c) ? (c) : len); } }
+#endif
+
 int
 enqueue_msg(struct event_queue *eq, struct server_msg *msg)
 /* global: parallel */
@@ -230,9 +236,12 @@ handle_cmd(il_octet_string_t *event, long offset)
 	while(num_replies < num_threads) {
 		int ret;
 		if((ret=pthread_cond_timedwait(&flush_cond, &flush_lock, &endtime)) < 0) {
+			char buf[256];
+
+			il_strerror_r(errno, buf, sizeof(buf));
 			glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 					 "    error waiting for thread reply: %s", 
-					 strerror(errno));
+					 buf);
 			result = (ret == ETIMEDOUT) ? 0 : -1;
 			break;
 		}

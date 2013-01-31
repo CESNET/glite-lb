@@ -34,6 +34,12 @@ limitations under the License.
 
 #include "interlogd.h"
 
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+#define il_strerror_r strerror_r
+#else
+#define il_strerror_r(a,b,c)  if(1) { char *p = strerror_r((a), (b), (c)); if(p && p != (b)) { int len = strlen(p); memset((b), 0, (c)); strncpy((b), p, len > (c) ? (c) : len); } }
+#endif
+
 #ifdef __GNUC__
 #define UNUSED_VAR __attribute__((unused))
 #else
@@ -601,9 +607,10 @@ event_store_recover(struct event_store *es)
   /* check the file modification time and size to avoid unnecessary operations */
   memset(&stbuf, 0, sizeof(stbuf));
   if(fstat(fd, &stbuf) < 0) {
+	  il_strerror_r(errno, err_msg, sizeof(err_msg));
 	  glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
 			   "    could not stat event file %s: %s", 
-			   es->event_file_name, strerror(errno));
+			   es->event_file_name, err_msg);
 	  fclose(ef);
 	  event_store_unlock(es);
 	  if(pthread_rwlock_unlock(&es->offset_lock))
@@ -1007,6 +1014,7 @@ event_store_clean(struct event_store *es)
   int fd;
   FILE *ef;
   struct flock efl;
+  char buf[256];
 
   assert(es != NULL);
 
@@ -1043,8 +1051,9 @@ event_store_clean(struct event_store *es)
     event_store_unlock(es);
     if(pthread_rwlock_unlock(&es->offset_lock))
 	    abort();
+    il_strerror_r(errno, buf, sizeof(buf));
     glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR,  
-		     "  event_store_clean: error opening event file: %s", strerror(errno));
+		     "  event_store_clean: error opening event file: %s", buf);
     return(1);
   }
 
@@ -1378,6 +1387,8 @@ out:
 int
 event_store_init(char *prefix)
 {
+  char buf[256];
+
   if(file_prefix == NULL) {
     file_prefix = strdup(prefix);
     store_list = NULL;
@@ -1390,7 +1401,6 @@ event_store_init(char *prefix)
     char *p, *dir;
     DIR *event_dir;
     struct dirent *entry;
-
 
     /* get directory name */
     p = strrchr(file_prefix, '/');
@@ -1496,10 +1506,11 @@ event_store_init(char *prefix)
 		      strcat(ef, s);
 		      glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
 				       "  removing stale file %s", ef);
-		      if(unlink(ef))
+		      if(unlink(ef)) {
+			      il_strerror_r(errno, buf, sizeof(buf));
 			      glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_ERROR, 
-					       "  could not remove file %s: %s\n", ef, strerror(errno));
-
+					       "  could not remove file %s: %s\n", ef, buf);
+		      }
 	      }
 	      free(ef);
 

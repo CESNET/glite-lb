@@ -584,7 +584,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	edg_wll_GssCred newcred;
 	case 0: break;
 	case 1:
-		ret = edg_wll_gss_acquire_cred(cert_file,key_file,GSS_C_ACCEPT, &newcred,&gss_stat);
+		ret = edg_wll_gss_acquire_cred(cert_file,key_file, GSS_C_ACCEPT, &newcred,&gss_stat);
 		if (ret) {
 			glite_common_log(LOG_CATEGORY_SECURITY,LOG_PRIORITY_WARN,"Reloading credentials failed, continue with older\n");
 		} else {

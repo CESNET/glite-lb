@@ -33,6 +33,11 @@ extern void _start (void), etext (void);
 #include "glite/security/glite_gss.h"
 #include "il_error.h"
 
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+#define il_strerror_r strerror_r
+#else
+#define il_strerror_r(a,b,c)  if(1) { char *p = strerror_r((a), (b), (c)); if(p && p != (b)) { int len = strlen(p); memset((b), 0, (c)); strncpy((b), p, len > (c) ? (c) : len); } }
+#endif
 
 static pthread_key_t err_key;
 
@@ -104,6 +109,7 @@ int
 set_error(int code, long minor, char *msg)
 {
   struct error_inf *err;
+  char buf[256];
 
   err = error_get_err();
 
@@ -113,7 +119,9 @@ set_error(int code, long minor, char *msg)
   switch(code) {
 
   case IL_SYS:
-    snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, strerror(err->code_min));
+    *buf = 0;
+    il_strerror_r(err->code_min, buf, sizeof(buf)); 
+    snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, buf);
     break;
 
   case IL_HOST:
@@ -136,7 +144,9 @@ set_error(int code, long minor, char *msg)
       break;
 
     case EDG_WLL_GSS_ERROR_ERRNO:
-      snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, strerror(errno));
+      *buf = 0;
+      il_strerror_r(errno, buf, sizeof(buf)); 
+      snprintf(err->msg, IL_ERR_MSG_LEN, "%s: %s", msg, buf);
       break;
       
     case EDG_WLL_GSS_ERROR_HERRNO:

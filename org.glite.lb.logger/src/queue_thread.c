@@ -23,8 +23,15 @@ limitations under the License.
 #include <signal.h>
 #include <unistd.h>
 #include <sys/param.h>
+#include <string.h>
 
 #include "interlogd.h"
+
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+#define il_strerror_r strerror_r
+#else
+#define il_strerror_r(a,b,c)  if(1) { char *p = strerror_r((a), (b), (c)); if(p && p != (b)) { int len = strlen(p); memset((b), 0, (c)); strncpy((b), p, len > (c) ? (c) : len); } }
+#endif
 
 static 
 void 
@@ -70,21 +77,24 @@ void
 event_queue_write_stat(struct event_queue *eq) {
 	FILE *statfile;
 	char fn[MAXPATHLEN];
+	char buf[256];
 
 	snprintf(fn, sizeof(fn), "%s.%s.stat", file_prefix, eq->dest_name);
 	statfile = fopen(fn, "w");
 	if(NULL == statfile) {
+		il_strerror_r(errno, buf, sizeof(buf));
 		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN,
 				 "Error opening destination stat file %s: %s", 
-				 fn, strerror(errno));
+				 fn, buf);
 		return;
 	}
 	if(fprintf(statfile, "last_connected=%ld\nlast_sent=%ld\n",
 		   eq->last_connected,
 		   eq->last_sent) < 0) {
+		il_strerror_r(errno, buf, sizeof(buf));
 		glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_WARN,
 				 "Error writing destination statistics into %s: %s",
-				 fn, strerror(errno));
+				 fn, buf);
 	}
 	fclose(statfile);
 }
