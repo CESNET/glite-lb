@@ -486,7 +486,7 @@ if test "$setup_emir_daemon" = "1"; then
 		emir=0
 		qecho "skipping native publishing to EMIR (BDII_EMIR_ENABLE is $BDII_EMIR_ENABLE)"
 	fi
-	if test "$emir" != "0" -z "$EMIR_URL"; then
+	if test "$emir" != "0" -a -z "$EMIR_URL"; then
 		echo "glite-lb-setup: WARNING: EMIR_URL not set, EMIR won't be configured"
 		emir=0
 	fi
