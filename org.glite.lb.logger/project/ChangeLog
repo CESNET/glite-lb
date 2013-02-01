@@ -289,3 +289,6 @@ gLite L&B setup script:
 2.4.14-1
 - Some compile-time warnings fixed
 
+2.4.15-1
+- Thread-safe error reporting
+
