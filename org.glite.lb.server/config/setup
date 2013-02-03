@@ -646,12 +646,15 @@ fi
 
 if test "$setup_crl" = "1"; then
 	if test -x /usr/sbin/fetch-crl; then
-		if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
-			:
-		else
-			/sbin/service fetch-crl-cron start
-			/sbin/chkconfig fetch-crl-cron on
-		fi
+@debian@		# additional fetch-crl setup not needed
+@redhat@		/sbin/chkconfig fetch-crl-boot on
+@redhat@		/sbin/chkconfig fetch-crl-cron on
+@redhat@		/sbin/service fetch-crl-boot start
+@redhat@		/sbin/service fetch-crl-cron start
+@fedora@		systemctl enable fetch-crl-boot.service
+@fedora@		systemctl enable fetch-crl-cron.service
+@fedora@		systemctl start fetch-crl-boot.service
+@fedora@		systemctl start fetch-crl-cron.service
 	else
 		echo "glite-lb-setup: WARNING: fetch-crl not found, fetching won't be configured"
 	fi
