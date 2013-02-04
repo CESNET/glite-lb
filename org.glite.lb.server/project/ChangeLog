@@ -599,3 +599,6 @@
 - Fixed typo in syntax
 - pidfile location for BDII provider
 
+3.0.8-1
+- YAIM-less deployment improvements
+- Seamless upgrade of kerberos-flavoured L&B server
