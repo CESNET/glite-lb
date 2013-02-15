@@ -83,9 +83,11 @@ int edg_wll_InitStatistics(edg_wll_Context ctx)
 {
 	edg_wll_Stats *stats = default_stats; 	/* XXX: hardcoded */
 	int	i,j;
+	char *zero = NULL;
+	size_t zero_size = 0;
 
 	for (i=0; stats[i].type; i++) {
-		char	fname[50],*zero;
+		char	fname[50];
 
 		strcpy(fname,"/tmp/lb_stats.XXXXXX");
 		stats[i].fd = mkstemp(fname);
@@ -99,7 +101,11 @@ int edg_wll_InitStatistics(edg_wll_Context ctx)
 			stats[i].grpsize += sizeof(struct edg_wll_stats_archive)-sizeof(struct edg_wll_stats_cell);
 			stats[i].grpsize += stats[i].archives[j].length * sizeof(struct edg_wll_stats_cell);
 		}
-		zero = calloc(1,stats[i].grpsize);
+		if (stats[i].grpsize > zero_size) {
+			free(zero);
+			zero = calloc(1, stats[i].grpsize);
+			zero_size = stats[i].grpsize;
+		}
 		write(stats[i].fd,zero,stats[i].grpsize);
 		stats[i].map = mmap(NULL,stats[i].grpsize,PROT_READ|PROT_WRITE,MAP_SHARED,stats[i].fd,0);
 		if (stats[i].map == MAP_FAILED) return edg_wll_SetError(ctx,errno,"mmap()");
@@ -119,6 +125,7 @@ int edg_wll_InitStatistics(edg_wll_Context ctx)
 			stats[i].htab = NULL;
 		}
 	}
+	free(zero);
 	return 0;
 }
 

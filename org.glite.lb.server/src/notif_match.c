@@ -116,6 +116,8 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
 		ju = edg_wlc_JobIdGetUnique(stat->jobId),NOTIF_ALL_JOBS,cond_where ? cond_where : "",cond_and_where ? cond_and_where : "");
 
 	free(ju); ju = NULL;
+	free(cond_where); cond_where = NULL;
+	free(cond_and_where); cond_and_where = NULL;
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, jobq);
 
 	if (edg_wll_ExecSQL(ctx,jobq,&jobs) < 0) goto err;
@@ -220,6 +222,8 @@ err:
 	if ( nid ) edg_wll_NotifIdFree(nid);
 	free(jobq);
 	glite_lbu_FreeStmt(&jobs);
+	free(cond_where);
+	free(cond_and_where);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
 

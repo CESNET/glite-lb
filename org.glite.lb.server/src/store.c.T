@@ -532,6 +532,7 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,char
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
+	free(stmt);
 #endif
 
 	return err;
