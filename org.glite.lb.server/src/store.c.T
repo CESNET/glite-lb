@@ -451,11 +451,14 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,char
 #endif
 
 	char	*stmt;
-	int	err = 0;
+	int	err = 0, local_ulm = 0;
 
 	assert(ulm || e);
 	edg_wll_ResetError(ctx);
-	if (!ulm) ulm = edg_wll_UnparseEvent(ctx, e);
+	if (!ulm) {
+		ulm = edg_wll_UnparseEvent(ctx, e);
+		local_ulm = 1;
+	}
 	if (!ulm) return edg_wll_Error(ctx, NULL, NULL);
 
 #ifndef LB_EVENTS_BLOB
@@ -527,13 +530,14 @@ static int store_flesh(edg_wll_Context ctx,edg_wll_Event *e,const char *ulm,char
 		free(stmt);
 	}
 #else
-	if (!ulm) ulm = edg_wll_UnparseEvent(ctx, e);
 	trio_asprintf(&stmt, "insert into events_flesh (jobid, event, ulm) values ('%|Ss', %d, '%|Ss')", jobid, no, ulm);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
 
 	if (edg_wll_ExecSQL(ctx,stmt,NULL) < 0) err = edg_wll_Error(ctx,NULL,NULL);
 	free(stmt);
 #endif
+
+	if (local_ulm) free(ulm);
 
 	return err;
 }
