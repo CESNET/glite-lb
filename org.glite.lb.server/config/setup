@@ -377,7 +377,7 @@ if test "$setup_certs" = "1"; then
 		chmod 0400 $GLITE_HOME/.certs/hostkey.pem
 		qecho "Certificates copied to $GLITE_HOME/.certs/"
 	else
-		echo "glite-lb-setup: WARNING: Please copy host certificate and key into /etc/grid-security and"
+		echo "glite-lb-setup: ERROR: Please copy host certificate and key into /etc/grid-security and"
 		echo "  $GLITE_HOME/.certs/, change the owner of the ones in"
 		echo "  $GLITE_HOME/.certs/ to $GLITE_USER"
 		error="$error certs"
@@ -397,7 +397,7 @@ if test "$setup_msg" = "1"; then
 			qecho "Messaging brokers: $out"
 		else
 			echo "glite-lb-setup: ERROR: $out"
-			error="$error msg"
+			error_ok="$error_ok msg"
 		fi
 	else
 		echo "glite-lb-setup: WARNING: MSG plugin for glite-lb-logger not installed (package glite-lb-logger-msg)"
@@ -474,7 +474,7 @@ EOF
 			qecho "BDII configured"
 		else
 			echo "$out"
-			error="$error bdii"
+			error_ok="$error_ok bdii"
 		fi
 	fi
 fi
@@ -597,7 +597,7 @@ EOF
 		qecho "EMIR configured"
 	else
 		echo "$out"
-		error="$error emir_daemon"
+		error_ok="$error_ok emir_daemon"
 	fi
 fi
 
@@ -647,6 +647,7 @@ fi
 if test "$setup_crl" = "1"; then
 	if test -x /usr/sbin/fetch-crl; then
 @debian@		# additional fetch-crl setup not needed
+@debian@		:
 @redhat@		/sbin/chkconfig fetch-crl-cron on
 @redhat@		/sbin/chkconfig fetch-crl-boot on
 @redhat@		/sbin/service fetch-crl-cron start
@@ -859,9 +860,12 @@ fi
 
 # ==== the end ====
 
+if test -n "$error" -o -n "$error_ok"; then
+	echo "glite-lb-setup: ERROR:$error$error_ok"
+fi
+
 if test -z "$error"; then
 	true
 else
-	echo "glite-lb-setup: ERROR: $error"
 	false
 fi
