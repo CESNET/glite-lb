@@ -266,16 +266,16 @@ Additional helper or legacy parameters:
 \item \texttt{GLITE\_WMS\_LCGMON\_FILE} -- pathname of file where job state
 export data are written for use by lgcmon/R-GMA 
 (default: \texttt{/var/glite/logging/status.log}). \emph{Note: This feature is now obsolete and only available in \LBver{1.x}.}
+\item \texttt{GLITE\_LOCATION\_VAR} -- directory for local state files (default: '/opt/glite/var' or '/var/glite') \emph{Note: There is used home directory of \$GLITE\_USER instead since \LBver{4.x}.}
 \end{itemize}
 
 
 In addition to those, YAIM LB module uses following parameters:
 \begin{itemize}
 \item \texttt{INSTALL\_ROOT} -- installation root, shouldn't be changed (default: '/opt' or '/')
-\item \texttt{GLITE\_LOCATION\_VAR} -- directory for local state files (default: '/opt/glite/var' or '/var/glite')
-\item \texttt{GLITE\_USER} -- unprivileged user name (default: 'glite')
+\item \texttt{GLITE\_USER} -- unprivileged user name, changing not recommended (default: 'glite')
 \item \textbf{SITE\_NAME} -- site name (mandatory)
-\item \textbf{SITE\_EMAIL} -- site email, for cron scripts (mandatory)
+\item \texttt{SITE\_EMAIL} -- site email (not mandatory since \LB version 4.x)
 \end{itemize}
 
 Lists are separated by comma.
