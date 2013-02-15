@@ -67,6 +67,7 @@ int main(int argc,char **argv)
 		{ "source",1,NULL,'s' },
 		{ "sequence",1,NULL,'c' },
 		{ "subjobs",1,NULL,'n' },
+		{ NULL, 0, NULL, 0 },
 	};
 
 	char	*jobid_s = NULL, *ftjobid_s = NULL, *from = NULL, *to = NULL, *source_s = "LRMS",
