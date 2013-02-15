@@ -127,7 +127,7 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 		handle_il_message(ctx, buf);
 		edg_wll_ServerStatisticsIncrement(ctx, SERVER_STATS_LBPROTO);
 	}
-        free(buf);
+        free(buf); buf = NULL;
 
 	if ( (len = create_reply(ctx, &buf)) > 0 ) {
 		if (ctx->isProxy) {
@@ -145,6 +145,7 @@ int edg_wll_StoreProto(edg_wll_Context ctx)
 			}
 		}
 	} else ret = edg_wll_UpdateError(ctx, E2BIG, "StoreProto(): error creating reply");
+	free(buf); buf = NULL;
 
 	return edg_wll_Error(ctx,NULL,NULL);
 }

@@ -182,12 +182,14 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 	}
 	if (ctx->authz_policy.actions_num) {
 		for (i = 0; i < ctx->authz_policy.actions_num; i++) {
-			int j;
-			struct _edg_wll_authz_attr *a;
+			int j, k;
+			struct _edg_wll_authz_rule *r;
 			for (j = 0; j < ctx->authz_policy.actions[i].rules_num; j++) {
-				a = ctx->authz_policy.actions[i].rules[j].attrs;
-				if (a && a->value)
-					free(a->value);
+				r = &ctx->authz_policy.actions[i].rules[j];
+				for (k = 0; r->attrs && k < r->attrs_num; k++) {
+					free(r->attrs[k].value);
+				}
+				free(r->attrs);
 			}
 			free(ctx->authz_policy.actions[i].rules);
 		}
