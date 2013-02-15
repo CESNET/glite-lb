@@ -553,7 +553,10 @@ int edg_wll_GeneralJobStatusToHTML(edg_wll_Context ctx UNUSED_VAR, edg_wll_JobSt
 			chtemp = edg_wlc_JobIdUnparse(stat.ft_compute_job);
 			add_row(&out, "compute_job", "Compute job", chtemp, NULL, text);
 			free(chtemp);
-			add_row(&out, "sandbox_type", "Sandbox type", edg_wll_StatusFt_sandbox_typeNames[stat.ft_sandbox_type], NULL, text);
+
+			if (stat.ft_sandbox_type < EDG_WLL_NUMBER_OF_FT_SANDBOX_TYPES && stat.ft_sandbox_type != (enum edg_wll_StatFt_sandbox_type)-1) i = stat.ft_sandbox_type;
+			else i = -1;
+			add_row(&out, "sandbox_type", "Sandbox type", i != -1 ? edg_wll_StatusFt_sandbox_typeNames[i] : NULL, NULL, text);
 			add_row(&out, "ft_source", "File transfer source", stat.ft_src, NULL, text);
 			add_row(&out, "ft_destination", "File transfer destination", stat.ft_dest, NULL, text);
 			break;
