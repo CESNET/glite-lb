@@ -295,7 +295,7 @@ int edg_wll_ConfigurationToText(edg_wll_Context ctx, int admin, char **message){
 		if (ctx->authz_policy_file && (fd = open(ctx->authz_policy_file, O_RDONLY)) >= 0){
 			off_t size = lseek(fd, 0, SEEK_END) - lseek(fd, 0, SEEK_SET);
 			if (size){
-				char *pft = (char*)calloc(sizeof(char), size);
+				char *pft = (char*)calloc(sizeof(char), size + 1);
 				read(fd, pft, size);
 				close(fd);
 				pf = escape_text(pft);
