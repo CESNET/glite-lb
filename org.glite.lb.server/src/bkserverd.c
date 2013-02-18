@@ -144,6 +144,7 @@ static int				noAuth = 0;
 static int				noIndex = 0;
 static int				strict_locking = 0;
 static int 				greyjobs = 0;
+static int                              async_registrations = 0;
 static int 				count_statistics = 1;
 static int 				count_server_stats = 1;
 static char 				*stats_file_prefix = NULL;
@@ -231,6 +232,7 @@ static struct option opts[] = {
 #endif
 	{"transactions",	1,	NULL,	'b'},
 	{"greyjobs",	0,	NULL,	'g'},
+	{"async-registrations", 0, NULL, 'Q'},
 	{"withproxy",	0,	NULL,	'B'},
 	{"proxyonly",	0,	NULL,	'P'},
 	{"sock",	1,	NULL,	'o'},
@@ -245,7 +247,7 @@ static struct option opts[] = {
 	{NULL,0,NULL,0}
 };
 
-static const char *get_opt_string = "Ac:k:C:V:p:a:drm:M:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:e:f:zb:gPBo:q:W:Z:GI:l:EH:"
+static const char *get_opt_string = "Ac:k:C:V:p:a:drm:M:ns:i:S:D:J:jR:F:xOL:N:X:Y:T:t:e:f:zb:gQPBo:q:W:Z:GI:l:EH:"
 #ifdef GLITE_LB_SERVER_WITH_WS
 	"w:"
 #endif
@@ -298,6 +300,7 @@ static void usage(char *me)
 		"\t-K, --perf-sink\t where to sink events\n"
 #endif
 		"\t-g,--greyjobs\t allow delayed registration (grey jobs), implies --strict-locking\n"
+		"\t-Q,--async-registrations\t allow asynchronous registrations (weaker form of grey jobs) \n"
 		"\t-P,--proxyonly\t	run only proxy service\n"
 		"\t-B,--withproxy\t	run both server and proxy service\n"
 		"\t-o,--sock\t path-name to the local socket for communication with LB proxy\n"
@@ -508,8 +511,10 @@ int main(int argc, char *argv[])
 		case 'K': sink_mode = atoi(optarg);
 			  break;
 #endif
-		case 'g': greyjobs = strict_locking = 1;
+		case 'g': greyjobs = strict_locking = 1; 
 			  break;
+	        case 'Q': async_registrations = 1; /* XXX should set strict locking too? */
+		          break;
 		case 'P': mode = SERVICE_PROXY;
 			  break;
 		case 'B': mode = SERVICE_PROXY_SERVER;
@@ -1291,6 +1296,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 	}
 	ctx->strict_locking = strict_locking;
 	ctx->greyjobs = greyjobs;
+	ctx->async_registrations = async_registrations;
 	ctx->exclusive_zombies = exclusive_zombies;
 
 	for (totpref = 0; msg_prefixes[totpref]; totpref++);

@@ -194,7 +194,7 @@ glite_lb_padded_struct(_edg_wll_Context,200,
 	char            *p_event_file_prefix;
 
 	char            *p_il_sock;
-
+        int             async_registrations;
 )
 
 /* to be used internally: set, update and and clear the error information in 

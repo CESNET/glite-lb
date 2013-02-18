@@ -35,6 +35,7 @@ typedef enum {
     PURGE		= 1 << 8,
     GRANT_OWNERSHIP	= 1 << 9,
     READ_ANONYMIZED 	= 1 << 10,
+    REGISTER_FOREIGN    = 1 << 11,
 } authz_action;
 
 typedef struct action_name {

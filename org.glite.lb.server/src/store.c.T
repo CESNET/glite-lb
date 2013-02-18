@@ -46,6 +46,7 @@ limitations under the License.
 #include "store.h"
 #include "get_events.h"
 #include "lb_authz.h"
+#include "authz_policy.h"
 #include "jobstat.h"
 #include "db_calls.h"
 #include "db_supp.h"
@@ -284,7 +285,7 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 	char 		*unique = edg_wlc_JobIdGetUnique(event->any.jobId);
 	char            *q = NULL, *userid = NULL, *subj = NULL, *owner = NULL;
 	glite_lbu_Statement    stmt = NULL, stmt_zomb = NULL;
-	int             nar, grey = 0;
+	int             nar, grey = 0, async = 0;
 	char		*can_peername = NULL;
 	int             local_job = is_job_local(ctx, event->any.jobId);
 	char 		*res[3] = {NULL, NULL, NULL};
@@ -316,9 +317,16 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		/* XXX: directness is checked by any.user == peerName. Not perfect but better than event flags. */
 
 			if (!ctx->isProxy && !edg_wll_gss_equal_subj(event->any.user, ctx->peerName) && !ctx->greyjobs) {
-				edg_wll_SetError(ctx,EPERM,"job registration must go directly");
-				goto err;
-
+				if(ctx->async_registrations) {
+					/* check authorization to register job as different user */
+					if(check_authz_policy_ctx(ctx, REGISTER_FOREIGN)) {
+						edg_wll_SetError(ctx, EPERM, "not allowed to register jobs as different user");
+						goto err;
+					}
+				} else {
+					edg_wll_SetError(ctx,EPERM,"job registration must go directly");
+					goto err;
+				}
 			}
 			if ((event->any.priority & EDG_WLL_LOGLFLAG_EXCL) && ctx->exclusive_zombies) {
 				trio_asprintf(&q,"select jobid from zombie_jobs "
@@ -336,37 +344,66 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		}
 		else {
 			if (ctx->greyjobs) grey = 1;
+			else if(ctx->async_registrations) { 
+				/* TODO: possibly add another permission */
+				if(check_authz_policy_ctx(ctx, REGISTER_FOREIGN)) {
+					edg_wll_SetError(ctx, EPERM, "not allowed to log events to unregistered job");
+					goto err;
+				}
+				async = 1;
+			}
 			else {
 				edg_wll_SetError(ctx, ENOENT, "job not registered");
 				goto err;
 			}
 		}
 
-		can_peername = grey ?  strdup("GREY JOB") : edg_wll_gss_normalize_subj(event->any.user, 0);
+		/* first event is not registration:
+		 *   - when grey jobs are allowed, job is owned by "GREY JOB"
+		 *   - when asynchronous registrations are allowed, job is owned by the logging component
+		 * when none of the above applies, we should not get here at all.
+		 */
+		can_peername = grey ?  strdup("GREY JOB") : ( async ? edg_wll_gss_normalize_subj(ctx->peerName, 0) : edg_wll_gss_normalize_subj(event->any.user, 0) );
 		userid = strdup(strmd5(can_peername, NULL));
 		if (store_user(ctx,userid,can_peername)) goto err;
+		/* store job as unregistered (grey) when either grey jobs or async registrations are allowed */
 		if (store_job(ctx,(glite_jobid_const_t) event->any.jobId,
-			userid, ctx->isProxy, local_job, grey, 0 )) goto err;
-		if (event->any.type == EDG_WLL_EVENT_REGJOB && event->regJob.wms_dn) {
-			char *names = strdup(event->regJob.wms_dn);
-			char *p, *name;
-			int ret;
-
-			name = names;
-			while ((p = strchr(name, '\n'))) {
-				*p = '\0';
-				ret = edg_wll_UpdateACL(ctx, event->any.jobId, name,
+			userid, ctx->isProxy, local_job, grey | async, 0 )) goto err;
+		if (event->any.type == EDG_WLL_EVENT_REGJOB) {
+			if(event->regJob.wms_dn) {
+				char *names = strdup(event->regJob.wms_dn);
+				char *p, *name;
+				int ret;
+				
+				name = names;
+				while ((p = strchr(name, '\n'))) {
+					*p = '\0';
+					ret = edg_wll_UpdateACL(ctx, event->any.jobId, name,
+								EDG_WLL_CHANGEACL_DN,
+								EDG_WLL_CHANGEACL_READ,
+								EDG_WLL_CHANGEACL_ALLOW,
+								EDG_WLL_CHANGEACL_ADD);
+					if (ret) { 
+						free(names);
+						goto err;
+					}
+					name = p+1;
+				}
+				free(names);
+			} else if(async) {
+				int ret;
+				
+				/* allow logging component to modify job */
+				ret = edg_wll_UpdateACL(ctx, event->any.jobId, 
+							strdup(edg_wll_gss_normalize_subj(ctx->peerName, 0)),
 							EDG_WLL_CHANGEACL_DN,
 							EDG_WLL_CHANGEACL_READ,
 							EDG_WLL_CHANGEACL_ALLOW,
 							EDG_WLL_CHANGEACL_ADD);
 				if (ret) { 
-					free(names);
 					goto err;
 				}
-				name = p+1;
 			}
-			free(names);
 		}
 
 		*register_to_JP = (local_job) ? REG_JOB_TO_JP : 0;
@@ -378,9 +415,17 @@ int store_job_server_proxy(edg_wll_Context ctx, edg_wll_Event *event, int *regis
 		if (stmt) { glite_lbu_FreeStmt(&stmt); stmt = NULL; }
 
 
-		if (ctx->greyjobs && !strcmp(res[2],"1") && 
+		if ((ctx->greyjobs || ctx->async_registrations) && !strcmp(res[2],"1") && 
 			(event->any.type == EDG_WLL_EVENT_REGJOB)) 
 		{
+			/* late registration event for already existing job */
+
+			/* check permission to change owner if not doing greyjobs (ie. in async registration) */
+			if(!ctx->greyjobs) {
+				
+			}
+
+			/* set proper job owner */
 			can_peername = edg_wll_gss_normalize_subj(event->any.user, 0);
 			userid = strdup(strmd5(can_peername, NULL));
 			if (store_user(ctx,userid,can_peername)) goto err;

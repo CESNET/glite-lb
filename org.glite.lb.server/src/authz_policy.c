@@ -38,6 +38,7 @@ struct action_name action_names[] = {
     { PURGE, "PURGE" },
     { GRANT_OWNERSHIP, "GRANT_OWNERSHIP" },
     { READ_ANONYMIZED, "READ_ANONYMIZED" },
+    { REGISTER_FOREIGN, "REGISTER_FOREIGN" },
 };
 
 static int num_actions =
