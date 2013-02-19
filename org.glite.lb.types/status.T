@@ -144,15 +144,17 @@ _pad_	25
 
 int	cream_state	CREAM job state
 	_null_	-1
-	_code_	REGISTERED	registered
-	_code_	PENDING		pending
-	_code_	IDLE		idle
-	_code_	RUNNING		running
-	_code_	REALLY-RUNNING	really-running
-	_code_	HELD		held
-	_code_	DONE-OK		done-ok
-	_code_	DONE-FAILED	done-failed
-	_code_	ABORTED		aborted
+	_code_	CREAM_REGISTERED	registered
+	_code_	CREAM_PENDING		pending
+	_code_	CREAM_IDLE		idle
+	_code_	CREAM_RUNNING		running
+	_code_	CREAM_REALLY-RUNNING	really-running
+	_code_	CREAM_HELD		held
+	_code_	CREAM_DONE-OK		done-ok
+	_code_	CREAM_DONE-FAILED	done-failed
+	_code_	CREAM_ABORTED		aborted
+	_code_  CREAM_CANCELLED		cancelled
+	_code_  CREAM_PURGED		purged
 
 string  cream_id		CREAM local job id
 string	cream_owner		Job owner
