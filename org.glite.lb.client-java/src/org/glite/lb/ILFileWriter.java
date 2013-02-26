@@ -48,6 +48,8 @@ public class ILFileWriter {
         long fileLength = 0;
         FileLock fileLock = null;
         File file;
+	Runtime run = Runtime.getRuntime();
+	String cmd[] = {"chmod", "g+rw", null};
 
         for (int i = 0; i < repeatWriteToFile; i++) {
             try {
@@ -66,6 +68,8 @@ public class ILFileWriter {
 		    out.close();
 
                     if (file.exists()) {
+			cmd[2] = prefix;
+			run.exec(cmd);
                         break;
                     }
                 }
