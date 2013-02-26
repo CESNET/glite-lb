@@ -27,6 +27,9 @@ Summary:        Java API documentation for %{name}
 Group:          Documentation
 Requires:       %{name} = %{version}-%{release}
 Requires:       jpackage-utils
+%if 0%{?rhel} >= 6
+BuildArch:      noarch
+%endif
 
 %description    javadoc
 This package contains java API documentation for java implementation of gLite
@@ -50,8 +53,8 @@ make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT%{_javadocdir}/%{name}
-cp -rp dist/javadoc $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+mkdir -p $RPM_BUILD_ROOT%{_javadocdir}
+mv $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}/api $RPM_BUILD_ROOT%{_javadocdir}/%{name}
 
 
 %clean

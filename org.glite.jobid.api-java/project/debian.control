@@ -4,14 +4,24 @@ Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
 Build-Depends: debhelper (>= 7.0.50~), ant, libcommons-codec-java, default-jdk
 Standards-Version: 3.9.1
-Section: libs
+Section: java
 Homepage: @URL@
 DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
-Package: glite-jobid-api-java
-Section: libs
+Package: libglite-jobid-api-java
+Section: java
 Architecture: all
 Depends: libcommons-codec-java, ${misc:Depends}
+Replaces: glite-jobid-api-java
+Provides: glite-jobid-api-java
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
+
+Package: libglite-jobid-api-java-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Suggests: libglite-jobid-api-java, default-jdk-doc
+Description: Java API documentation for gLite jobid java library
+ This package contains java API documentation for gLite jobid java library.

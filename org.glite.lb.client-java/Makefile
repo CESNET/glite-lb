@@ -34,6 +34,7 @@ VPATH := ${top_srcdir}/src/org/glite/lb ${top_srcdir}/examples ${top_srcdir}/exa
 JAVAC:=${jdk_prefix}/bin/javac
 JAVAH:=${jdk_prefix}/bin/javah
 JAVA:=${jdk_prefix}/bin/java
+JAVADOC:=${jdk_prefix}/bin/javadoc
 
 GEN:=${stagedir}${prefix}/bin/glite-lb-at3 ${top_srcdir}/project/genEventTypes.pl
 AT3DIR:=${stagedir}${prefix}/share/glite-lb/at3
@@ -41,7 +42,7 @@ jobid_classpath:=${stagedir}${prefix}/share/java/glite-jobid-api-java.jar
 axis_classpath:=$(shell ${top_srcdir}/project/list-jars.sh ${axis_prefix}/lib ${axis_prefix}/share/java ${axis_prefix}/share/java/axis /usr/share/java /usr/lib/java /usr/lib/java/axis)
 trustmanager_classpath:=$(shell ls -1 ${trustmanager_prefix}/share/java/glite-security-trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager-axis.jar ${stagedir}${prefix}/share/java/trustmanager.jar ${stagedir}${prefix}/share/java/trustmanager-axis.jar 2>/dev/null | tr '\012' :)
 
-all compile: compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar examples build-c
+all compile: compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar examples doc build-c
 
 wtf:
 	echo "axis_classpath: ${axis_classpath}"
@@ -118,18 +119,24 @@ genws: build/axis
 build/axis:
 	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java -o build/axis ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl
 
+build/javadoc: build/gen
+	${JAVADOC} -d build/javadoc -classpath ${jobid_classpath} src/org/glite/lb/*.java build/gen/*.java examples/*.java examples/*/*.java
+
 check:
 	@echo "No check"
 
 stage:
 	$(MAKE) install PREFIX=${stagedir}
 
+doc: build/javadoc
+
 install:
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
 	cp build/glite-lb-client-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
 	cp build/glite-lb-client-java-axis.jar ${DESTDIR}${PREFIX}${prefix}/share/java
 	cp build/classes/examples/glite-lb-client-java-examples.jar ${DESTDIR}${PREFIX}${prefix}/share/java
 	cd build/c && $(MAKE) install PREFIX=${PREFIX}
+	cp -rp build/javadoc/* ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
 
 clean:
 	rm -rf build
@@ -138,4 +145,4 @@ clean:
 distclean:
 	rm -rvf project/changelog Makefile.inc *.spec debian/
 
-.PHONY: default all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c examples genevents genws check stage install clean distclean wtf dist distcheck
+.PHONY: default all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c doc examples genevents genws check stage install clean distclean wtf dist distcheck

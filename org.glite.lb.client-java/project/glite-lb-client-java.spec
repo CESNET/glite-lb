@@ -69,6 +69,20 @@ This package contains java L&B client examples for Axis 1.4. For the
 communication is used trustmanager or pure SSL.
 
 
+%package        javadoc
+Summary:        Java API documentation for %{name}
+Group:          Documentation
+Requires:       %{name} = %{version}-%{release}
+Requires:       jpackage-utils
+%if 0%{?rhel} >= 6
+BuildArch:      noarch
+%endif
+
+%description    javadoc
+This package contains java API documentation for java implementation of gLite
+L&B client.
+
+
 %prep
 %setup -q
 
@@ -86,6 +100,9 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT%{_javadocdir}
+mv $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}/api $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
@@ -117,6 +134,9 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %{_javadir}/%{name}-examples.jar
 
+%files javadoc
+%defattr(-,root,root)
+%{_javadocdir}/%{name}
 
 %changelog
 * @SPEC_DATE@ @MAINTAINER@ - @MAJOR@.@MINOR@.@REVISION@-@AGE@

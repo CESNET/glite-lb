@@ -17,15 +17,16 @@ SOURCES=\
 	nbproject/private/*.properties nbproject/private/*.xml \
 	src/org/glite/jobid/*.java
 
-all compile:
+all compile doc:
 	${ant_prefix}/bin/ant ${ANT_ARGS}
 
 stage:
 	$(MAKE) install PREFIX=${stagedir}
 
 install:
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
 	cp dist/glite-jobid-api-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
+	cp -rp dist/javadoc/* ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
 
 check:
 
