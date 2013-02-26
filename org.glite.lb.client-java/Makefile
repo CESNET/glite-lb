@@ -79,12 +79,12 @@ build-jar: glite-lb-client-java.jar glite-lb-client-java-axis.jar glite-lb-clien
 
 glite-lb-client-java.jar: compile-java-lb
 	cd build && ${jdk_prefix}/bin/jar cf $@ org/glite/lb
-	${jdk_prefix}/bin/jar i build/$@
+	cd build && ${jdk_prefix}/bin/jar i $@
 
 glite-lb-client-java-axis.jar: genws compile-java-lb2
 	cd build/classes && ${jdk_prefix}/bin/jar cf ../$@ $(addprefix org/glite/lb/,$(AXIS_CLASSES))
 	cd build && ${jdk_prefix}/bin/jar uf $@ holders org/glite/wsdl
-	${jdk_prefix}/bin/jar i build/$@
+	cd build && ${jdk_prefix}/bin/jar i $@
 
 build-c:
 	${JAVAH} -classpath build:build/classes -jni -d build org.glite.lb.ContextIL
