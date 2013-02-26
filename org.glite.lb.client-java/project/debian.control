@@ -12,7 +12,7 @@ DM-Upload-Allowed: yes
 Package: libglite-lb-client-java
 Section: java
 Architecture: any
-Depends: ${misc:Depends}, glite-jobid-api-java, libcommons-lang-java
+Depends: ${misc:Depends}, ${shlibs:Depends}, glite-jobid-api-java, libcommons-lang-java
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
 
