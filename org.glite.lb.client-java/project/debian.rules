@@ -3,6 +3,10 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
+p_lib=libglite-lb-client-java
+p_axis=libglite-lb-client-axis-java
+p_examples=glite-lb-client-java-examples
+
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
@@ -36,6 +40,10 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+	mkdir -p debian/$(p_axis)/usr/share/doc
+	mkdir -p debian/$(p_examples)/usr/share/doc
+	ln -s $(p_lib) debian/$(p_axis)/usr/share/doc/$(p_axis)
+	ln -s $(p_lib) debian/$(p_examples)/usr/share/doc/$(p_examples)
 	rm -vf debian/tmp/usr/lib/*.la
 	rm -vf debian/tmp/usr/lib/*.a
 

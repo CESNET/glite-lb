@@ -15,6 +15,11 @@ version=${module.version}
 FULL_EXAMPLES := $(addprefix ${top_srcdir}/examples/,SSLClient.java SSLServer.java QueryDemo.java NotificationExample.java CreamTest.java)
 SSL_EXAMPLES := $(addprefix ${top_srcdir}/examples/simple-ssl/,MyX509KeyManager.java MyX509TrustManager.java ExampleSSLSocketFactory.java LBClientSSL.java)
 TM_EXAMPLES := $(addprefix ${top_srcdir}/examples/simple-trustmanager/,LBClientTM.java)
+CORE_SOURCES:=Context.java ContextIL.java Escape.java Event.java ILFileWriter.java ILProto.java LBException.java Level.java Timeval.java Sources.java SeqCode.java
+AXIS_SOURCES:=ContextDirect.java ContextLL.java EventConvertor.java Job.java LBCredentials.java NotifParser.java Notification.java SSL.java SSLSend.java ServerConnection.java
+
+CORE_CLASSES=$(CORE_SOURCES:.java=.class)
+AXIS_CLASSES=$(AXIS_SOURCES:.java=.class) ServerConnection$$1.class ServerConnection$$QueryResultsFlag.class
 
 SOURCES=\
 	examples/*.java examples/*/*.java \
@@ -24,7 +29,7 @@ SOURCES=\
 	Makefile
 SOURCES_EXEC=project/list-jars.sh project/genEventTypes.pl
 
-VPATH := ${top_srcdir}/src/org/glite/lb ${top_srcdir}/examples ${top_srcdir}/examples/simple-ssl ${top_srcdir}/examples/simple-trustmanager
+VPATH := ${top_srcdir}/src/org/glite/lb ${top_srcdir}/examples ${top_srcdir}/examples/simple-ssl ${top_srcdir}/examples/simple-trustmanager build/org/glite/lb build/classes/org/glite/lb
 
 JAVAC:=${jdk_prefix}/bin/javac
 JAVAH:=${jdk_prefix}/bin/javah
@@ -53,7 +58,7 @@ compile-java-axis: genws
 		build/axis/org/glite/wsdl/elements/lb/*.java \
 		build/axis/holders/StringArrayHolder.java
 
-compile-java-lb: Event.java Timeval.java Sources.java Level.java SeqCode.java Escape.java
+compile-java-lb: $(CORE_SOURCES)
 	-mkdir -p build/classes
 	${JAVAC} \
 		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build/classes \
@@ -65,17 +70,21 @@ compile-java-gen: genevents
 		-d build \
 		build/gen/*.java
 
-compile-java-lb2: Context.java ContextDirect.java ContextIL.java ContextLL.java EventConvertor.java ILFileWriter.java ILProto.java Job.java LBCredentials.java LBException.java NotifParser.java Notification.java SSL.java SSLSend.java ServerConnection.java
+compile-java-lb2: $(AXIS_SOURCES)
 	${JAVAC} \
 		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build:build/classes \
 		-d build/classes $+
 
-build-jar: lb-client-java.jar
+build-jar: glite-lb-client-java.jar glite-lb-client-java-axis.jar glite-lb-client-java-examples.jar
 
-lb-client-java.jar:
-	cd build && ${jdk_prefix}/bin/jar cf lb-client-java.jar holders org
-	cd build/classes && ${jdk_prefix}/bin/jar uf ../lb-client-java.jar org
-	${jdk_prefix}/bin/jar i build/lb-client-java.jar
+glite-lb-client-java.jar: compile-java-lb
+	cd build && ${jdk_prefix}/bin/jar cf $@ org/glite/lb
+	${jdk_prefix}/bin/jar i build/$@
+
+glite-lb-client-java-axis.jar: genws compile-java-lb2
+	cd build/classes && ${jdk_prefix}/bin/jar cf ../$@ $(addprefix org/glite/lb/,$(AXIS_CLASSES))
+	cd build && ${jdk_prefix}/bin/jar uf $@ holders org/glite/wsdl
+	${jdk_prefix}/bin/jar i build/$@
 
 build-c:
 	${JAVAH} -classpath build:build/classes -jni -d build org.glite.lb.ContextIL
@@ -94,7 +103,9 @@ build/classes/examples: ${FULL_EXAMPLES} ${SSL_EXAMPLES} ${TM_EXAMPLES}
 	cp ${FULL_EXAMPLES} build/classes/examples/src
 	cp ${SSL_EXAMPLES} build/classes/examples/src/simple-ssl
 	cp ${TM_EXAMPLES} build/classes/examples/src/simple-trustmanager
-	cd build/classes/examples && ${jdk_prefix}/bin/jar cfi lb-client-java-examples.jar src org $(addsuffix .class,$(basename $(notdir ${FULL_EXAMPLES}))) && ${jdk_prefix}/bin/jar i lb-client-java-examples.jar
+
+glite-lb-client-java-examples.jar: examples
+	cd build/classes/examples && ${jdk_prefix}/bin/jar cf $@ src org $(addsuffix .class,$(basename $(notdir ${FULL_EXAMPLES}))) && ${jdk_prefix}/bin/jar i $@
 
 genevents: build/gen
 
@@ -115,8 +126,9 @@ stage:
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java
-	cp build/lb-client-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
-	cp build/classes/examples/lb-client-java-examples.jar ${DESTDIR}${PREFIX}${prefix}/share/java
+	cp build/glite-lb-client-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
+	cp build/glite-lb-client-java-axis.jar ${DESTDIR}${PREFIX}${prefix}/share/java
+	cp build/classes/examples/glite-lb-client-java-examples.jar ${DESTDIR}${PREFIX}${prefix}/share/java
 	cd build/c && $(MAKE) install PREFIX=${PREFIX}
 
 clean:

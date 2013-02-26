@@ -24,14 +24,49 @@ BuildRequires:  glite-lb-types
 BuildRequires:  glite-lb-ws-interface
 BuildRequires:  jakarta-commons-lang
 BuildRequires:  java-devel
+BuildRequires:  jpackage-utils
 BuildRequires:  libtool
+Requires:       glite-jobid-api-java
+Requires:       jakarta-commons-lang
+Requires:       jpackage-utils
+
+%description
+@DESCRIPTION@
+
+
+%package        axis
+Summary:        Axis 1.4 flavor of Java L&B client
+Group:          System Environment/Libraries
+Requires:       %{name} = %{version}-%{release}
 Requires:       emi-trustmanager-axis
 Requires:       emi-trustmanager
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
+Requires:       jpackage-utils
+%if 0%{?rhel} >= 6
+BuildArch:      noarch
+%endif
 
-%description
-@DESCRIPTION@
+%description    axis
+This package contains java L&B client library based on Axis 1.4.
+
+
+%package        examples
+Summary:        Java L&B client examples
+Group:          Applications/Communications
+Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}-axis
+Requires:       emi-trustmanager-axis
+Requires:       emi-trustmanager
+Requires:       glite-jobid-api-java
+Requires:       jpackage-utils
+%if 0%{?rhel} >= 6
+BuildArch:      noarch
+%endif
+
+%description    examples
+This package contains java L&B client examples for Axis 1.4. For the
+communication is used trustmanager or pure SSL.
 
 
 %prep
@@ -72,8 +107,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libglite_lb_sendviasocket.so
 %{_libdir}/libglite_lb_sendviasocket.so.0
 %{_libdir}/libglite_lb_sendviasocket.so.0.0.0
-/usr/share/java/lb-client-java.jar
-/usr/share/java/lb-client-java-examples.jar
+%{_javadir}/%{name}.jar
+
+%files axis
+%defattr(-,root,root)
+%{_javadir}/%{name}-axis.jar
+
+%files examples
+%defattr(-,root,root)
+%{_javadir}/%{name}-examples.jar
 
 
 %changelog
