@@ -25,11 +25,11 @@ Description: Development files for gLite L&B/JP common maildir library
  This package contains development libraries and header files for gLite L&B/JP
  common maildir library.
 
-Package: glite-lbjp-common-maildir-dbg
+Package: libglite-lbu-maildir2-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-lbu-maildir2 (= ${binary:Version}), ${misc:Depends}
-Description: gLite L&B/JP common maildir library debugging symbols
+Description: Debugging symbols for gLite L&B/JP common maildir library
  This package contains debugging symbols for gLite L&B/JP common maildir
  library.

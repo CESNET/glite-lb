@@ -25,10 +25,10 @@ Description: Development files for gLite L&B/JP common server bones
  This package contains development libraries and header files for gLite L&B/JP
  common server-bones.
 
-Package: glite-lbjp-common-server-bones-dbg
+Package: libglite-lbu-server-bones2-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-lbu-server-bones2 (= ${binary:Version}), ${misc:Depends}
-Description: gLite L&B/JP common server bones debugging symbols
+Description: Debugging symbols for gLite L&B/JP common server bones
  This package contains debugging symbols for gLite L&B/JP common server-bones.

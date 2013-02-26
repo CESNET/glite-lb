@@ -25,10 +25,10 @@ Description: Development files for gLite L&B/JP common gss library
  This package contains development libraries and header files for gLite gss
  library.
 
-Package: glite-lbjp-common-gss-dbg
+Package: libglite-security-gss9-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-security-gss9 (= ${binary:Version}), ${misc:Depends}
-Description: gLite gss library debugging symbols
+Description: Debugging symbols for gLite gss library
  This package contains debugging symbols for gLite gss library.

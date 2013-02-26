@@ -3,7 +3,7 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
-p_dbg=glite-lb-common-dbg
+p_dbg=libglite-lb-common16-dbg
 p_lib=libglite-lb-common16
 p_dev=libglite-lb-common-dev
 

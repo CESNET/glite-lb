@@ -28,5 +28,5 @@ Section: debug
 Architecture: any
 Priority: extra
 Depends: glite-lb-logger (= ${binary:Version}), ${misc:Depends}
-Description: gLite L&B logger debugging symbols
+Description: Debugging symbols for gLite L&B logger
  This package contains debugging symbols for gLite L&B logger.

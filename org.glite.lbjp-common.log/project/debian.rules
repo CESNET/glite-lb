@@ -4,7 +4,7 @@
 -include /usr/share/dpkg/buildflags.mk
 
 p_base=glite-lbjp-common-log
-p_dbg=glite-lbjp-common-log-dbg
+p_dbg=libglite-lbu-log1-dbg
 p_lib=libglite-lbu-log1
 p_dev=libglite-lbjp-common-log-dev
 

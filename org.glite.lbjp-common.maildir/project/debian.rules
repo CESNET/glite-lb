@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-p_dbg=glite-lbjp-common-maildir-dbg
+p_dbg=libglite-lbu-maildir2-dbg
 p_dev=libglite-lbjp-common-maildir-dev
 p_lib=libglite-lbu-maildir2
 

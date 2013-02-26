@@ -27,5 +27,5 @@ Section: debug
 Architecture: any
 Priority: extra
 Depends: glite-lb-server (= ${binary:Version}), ${misc:Depends}
-Description: gLite L&B server debugging symbols
+Description: Debugging symbols for gLite L&B server
  This package contains debugging symbols for gLite L&B server.

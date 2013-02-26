@@ -3,7 +3,7 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
-p_dbg=glite-lbjp-common-gss-dbg
+p_dbg=libglite-security-gss9-dbg
 p_dev=libglite-lbjp-common-gss-dev
 p_lib=libglite-security-gss9
 

@@ -25,10 +25,10 @@ Description: Development files for gLite L&B common library
  This package contains development libraries and header files for gLite L&B
  common library.
 
-Package: glite-lb-common-dbg
+Package: libglite-lb-common16-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-lb-common16 (= ${binary:Version}), ${misc:Depends}
-Description: gLite L&B common library debugging symbols
+Description: Debugging symbols for gLite L&B common library
  This package contains debugging symbols for gLite L&B common library.

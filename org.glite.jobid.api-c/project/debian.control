@@ -25,10 +25,10 @@ Description: Development files for gLite jobid C library
  This package contains development libraries and header files for gLite jobid
  C library.
 
-Package: glite-jobid-api-c-dbg
+Package: libglite-jobid2-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-jobid2 (= ${binary:Version}), ${misc:Depends}
-Description: gLite jobid library debugging symbols
+Description: Debugging symbols for gLite jobid library
  This package contains debugging symbols for gLite jobid library.

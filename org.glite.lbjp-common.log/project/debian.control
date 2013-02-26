@@ -33,10 +33,10 @@ Description: Development files for gLite L&B/JP common log module
  This package contains development libraries and header files for gLite L&B/JP
  common log module.
 
-Package: glite-lbjp-common-log-dbg
+Package: libglite-lbu-log1-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-lbu-log1 (= ${binary:Version}), ${misc:Depends}
-Description: gLite L&B/JP common log module debugging symbols
+Description: Debugging symbols for gLite L&B/JP common log module
  This package contains debugging symbols for gLite L&B/JP common log module.

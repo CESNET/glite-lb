@@ -32,10 +32,18 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: gLite L&B client programs and examples
  This package contains client programs and examples for gLite L&B.
 
-Package: glite-lb-client-dbg
+Package: libglite-lb-client14-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-lb-client14 (= ${binary:Version}), ${misc:Depends}
-Description: gLite L&B client library debugging symbols
+Description: Debugging symbols for gLite L&B client library
  This package contains debugging symbols for gLite L&B client library.
+
+Package: glite-lb-client-progs-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: glite-lb-client-progs (= ${binary:Version}), ${misc:Depends}
+Description: Debugging symbols for gLite L&B client tools
+ This package contains debugging symbols for gLite L&B client tools.

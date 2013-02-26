@@ -3,7 +3,6 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
-p_dbg=glite-lb-state-machine-dbg
 p_dev=libglite-lb-state-machine-dev
 p_lib=libglite-lb-state-machine6
 p_plugs=glite-lb-state-machine-plugins
@@ -44,12 +43,14 @@ install: build-stamp
 	rm -vf debian/tmp/usr/lib/*.la
 	rm -vf debian/tmp/usr/lib/glite*.a
 	find debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-	mkdir -p debian/$(p_dbg)/usr/share/doc
 	mkdir -p debian/$(p_dev)/usr/share/doc
 	mkdir -p debian/$(p_plugs)/usr/share/doc
-	ln -s $(p_lib) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
+	mkdir -p debian/$(p_lib)-dbg/usr/share/doc
+	mkdir -p debian/$(p_plugs)-dbg/usr/share/doc
 	ln -s $(p_lib) debian/$(p_dev)/usr/share/doc/$(p_dev)
 	ln -s $(p_lib) debian/$(p_plugs)/usr/share/doc/$(p_plugs)
+	ln -s $(p_lib) debian/$(p_lib)-dbg/usr/share/doc/$(p_lib)-dbg
+	ln -s $(p_lib) debian/$(p_plugs)-dbg/usr/share/doc/$(p_plugs)-dbg
 
 binary-indep:
 
@@ -64,7 +65,8 @@ binary-arch: install
 	dh_installcron
 	dh_install --fail-missing
 	dh_link
-	dh_strip --dbg-package=$(p_dbg)
+	dh_strip -p$(p_lib) --dbg-package=$(p_lib)-dbg
+	dh_strip -p$(p_plugs) --dbg-package=$(p_plugs)-dbg
 	dh_compress
 	dh_fixperms
 	dh_makeshlibs

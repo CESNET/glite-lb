@@ -25,10 +25,10 @@ Description: Development files for gLite L&B/JP common trio library
  This package contains development libraries and header files for gLite L&B/JP
  common trio library.
 
-Package: glite-lbjp-common-trio-dbg
+Package: libglite-lbu-trio2-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-lbu-trio2 (= ${binary:Version}), ${misc:Depends}
-Description: gLite L&B/JP common trio library debugging symbols
+Description: Debugging symbols for gLite L&B/JP common trio library
  This package contains debugging symbols for gLite L&B/JP common trio library.

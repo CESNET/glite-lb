@@ -3,7 +3,7 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
-p_dbg=glite-jobid-api-c-dbg
+p_dbg=libglite-jobid2-dbg
 p_dev=libglite-jobid-api-c-dev
 p_lib=libglite-jobid2
 

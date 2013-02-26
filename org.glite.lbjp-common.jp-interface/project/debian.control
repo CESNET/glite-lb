@@ -25,10 +25,10 @@ Description: Development files for gLite L&B/JP interface library
  This package contains development libraries and header files for gLite L&B/JP
  interface library.
 
-Package: glite-lbjp-common-jp-interface-dbg
+Package: libglite-jp-common2-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-jp-common2 (= ${binary:Version}), ${misc:Depends}
-Description: gLite L&B/JP interface library debugging symbols
+Description: Debugging symbols for gLite L&B/JP interface library
  This package contains debugging symbols for gLite L&B/JP interface library.

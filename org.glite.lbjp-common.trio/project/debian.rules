@@ -3,7 +3,7 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
-p_dbg=glite-lbjp-common-trio-dbg
+p_dbg=libglite-lbu-trio2-dbg
 p_dev=libglite-lbjp-common-trio-dev
 p_lib=libglite-lbu-trio2
 

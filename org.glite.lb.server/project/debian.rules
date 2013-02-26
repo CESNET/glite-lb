@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-b_base=glite-lb-server
+p_base=glite-lb-server
 p_dbg=glite-lb-server-dbg
 
 -include /usr/share/dpkg/buildflags.mk

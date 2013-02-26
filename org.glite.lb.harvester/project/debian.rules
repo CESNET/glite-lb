@@ -40,6 +40,8 @@ install: build-stamp
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 	mkdir -p debian/$(p_base)/usr/share/doc
+	mkdir -p debian/$(p_dbg)/usr/share/doc
+	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
 	mv debian/tmp/usr/share/doc/glite-lb-harvester-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
 
 binary-indep:

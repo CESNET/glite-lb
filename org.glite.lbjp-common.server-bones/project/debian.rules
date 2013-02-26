@@ -3,7 +3,7 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
-p_dbg=glite-lbjp-common-server-bones-dbg
+p_dbg=libglite-lbu-server-bones2-dbg
 p_dev=libglite-lbjp-common-server-bones-dev
 p_lib=libglite-lbu-server-bones2
 

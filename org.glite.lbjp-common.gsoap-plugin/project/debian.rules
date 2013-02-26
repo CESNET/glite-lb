@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-p_dbg=glite-lbjp-common-gsoap-plugin-dbg
+p_dbg=libglite-lbjp-common-gsoap-plugin-dbg
 p_dev=libglite-lbjp-common-gsoap-plugin-dev
 p_lib=libglite-lbjp-common-gsoap-plugin
 

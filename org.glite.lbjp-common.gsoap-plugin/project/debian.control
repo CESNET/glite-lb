@@ -31,10 +31,10 @@ Description: Development files for gLite gsoap-plugin
  This package contains development libraries and header files for gLite
  gsoap-plugin.
 
-Package: glite-lbjp-common-gsoap-plugin-dbg
+Package: libglite-lbjp-common-gsoap-plugin-dbg
 Section: debug
 Architecture: any
 Priority: extra
 Depends: libglite-lbjp-common-gsoap-plugin (= ${binary:Version}), ${misc:Depends}
-Description: gLite gsoap-plugin library debugging symbols
+Description: Debugging symbols for gLite gsoap-plugin library
  This package contains debugging symbols for gLite gsoap-plugin library.
