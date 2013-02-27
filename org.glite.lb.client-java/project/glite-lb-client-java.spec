@@ -26,6 +26,7 @@ BuildRequires:  jakarta-commons-lang
 BuildRequires:  java-devel
 BuildRequires:  jpackage-utils
 BuildRequires:  libtool
+BuildRequires:  log4j
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
 Requires:       jpackage-utils
@@ -60,6 +61,7 @@ Requires:       emi-trustmanager-axis
 Requires:       emi-trustmanager
 Requires:       glite-jobid-api-java
 Requires:       jpackage-utils
+Requires:       log4j
 %if 0%{?rhel} >= 6
 BuildArch:      noarch
 %endif
