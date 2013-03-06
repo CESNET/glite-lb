@@ -95,11 +95,13 @@ The probe recognizes the following command line arguments:
 
 \begin{tabularx}{\textwidth}{l l X}
  \texttt{-h} & \texttt{-{}-help} & Print out simple console help \\
- \texttt{-v[vv]} & \texttt{-{}-verbose} & Set verbosity level (\texttt{-{}-verbose} denotes a single \texttt{v}). \\
- \texttt{-H} & \texttt{-{}-hostname} & \LB node address. Environmental variable \texttt{GLITE\_WMS\_QUERY\_SERVER} used if unspecified. \\
- \texttt{-p} & \texttt{-{}-port} & \LB server port. Other port numbers (logger, WS interface) are derrived from it. Environmental variable \texttt{GLITE\_WMS\_QUERY\_SERVER} or default port \texttt{9000} used if unspecified. \\
+ \texttt{-v[v[v]]} & \texttt{-{}-verbose} & Set verbosity level (\texttt{-{}-verbose} denotes a single \texttt{v}). \\
+ \texttt{-H} & \texttt{-{}-hostname} & \LB node address. \texttt{GLITE\_WMS\_QUERY\_SERVER} environmental variable is used if unspecified. \\
+ \texttt{-p} & \texttt{-{}-port} & \LB server port. Other port numbers (logger, WS interface) are derrived from it. \texttt{GLITE\_WMS\_QUERY\_SERVER} environmental variable or default port \texttt{9000} are used if unspecified. \\
  \texttt{-t} & \texttt{-{}-timeout} & Timeout in seconds. The minimum reasonable timeout is approx.~10\,s. There is no default, except the internal waiting cycle for notifications, which will time out after approx.~20\,s.\footnote{The probe adjusts the internal waiting cycle to spend a maximum of $\frac{3}{4}$ of the specified timeout interval while waiting for notifications to deliver. It will finish correctly before timing out if undelivered notifications are the only problem.} \\
  \texttt{-T} & \texttt{-{}-tmpdir} & Directory to store temporary files. By default the probe uses \texttt{/var/lib/grid-monitoring/emi.lb} and falls back to \texttt{/tmp} if the former does not exist or is not writable. \\
+ \texttt{-a} & \texttt{-{}-notif-endpoint} & Endpoint for listening to notifications. This should only be used if there are strict firewall settings on the client machine and only a specific port is kept open for the probe. By default, a random high port number is used.\\
+ \texttt{-x} & \texttt{-{}-proxy} & User proxy file. It only needs to be specified if the proxy cannot be found at the default location, or pointed to by environmental variables. \\
 \end{tabularx}
 
 \subsubsection{Environmental Variables}
@@ -109,6 +111,7 @@ In essence the probe recognizes the same environmental variables as the \LB clie
 \texttt{GLITE\_WMS\_QUERY\_SERVER} & \textbf{The} \LB server. This is the server that will be contacted and tested if no hostname is supplied to the probe. \\
 \texttt{GLITE\_LB\_SERVER\_PORT GLITE\_LB\_LOGGER\_PORT} & Specifies the \LB server port or the \LB local logger port, respectively. It is used only in case a hostname is given as a command line argument to the probe wit no port number. \\
 % This is not a very nice way to set two parapgraps aside. I hate the fixed width setting but I could not find any other solution.
+\texttt{X509\_USER\_PROXY} & Alternative location of the user's proxy certificate to use in the test.
 \end{tabularx}
 
 \subsubsection{Sample Nagios Service Definition}
