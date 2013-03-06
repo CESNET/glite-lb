@@ -44,7 +44,7 @@ Console output:
 
 EndHelpHeader
 
-	echo "Usage: $progname [-h] [-v[v[v]]] {[-H server] [-p port] | [server[:port]]} [-t <timeout>] [-T <tmpdir>]"
+	echo "Usage: $progname [-h] [-v[v[v]]] {[-H server] [-p port] | [server[:port]]} [-a clientname:port] [-x proxy] [-t <timeout>] [-T <tmpdir>]"
 	echo "Options:"
 	echo "    -h | --help       Show this help message"
 	echo "    -v[vv]            Verbosity level"
@@ -52,6 +52,8 @@ EndHelpHeader
 	echo "    -p <server>       port (Environmental variables or defaults are used if unspecified)"
 	echo "    -t <timeout>      Probe timeout in seconds"
 	echo "    -T <tmpdir>       Temporary directory (default /var/lib/grid-monitoring/emi.lb)"
+	echo "    -a <host:port>    Endpoint for listening to notifications"
+	echo "    -x <proxy>        User proxy file (default /tmp/x509up_u<UID>"
 	echo ""
 }
 
@@ -125,6 +127,7 @@ function log_cleared()
 VERBLEVEL=0
 TIMEOUT=0
 TMPDIR="/var/lib/grid-monitoring/emi.lb"
+NOTIFendPOINT=""
 
 while test -n "$1"
 do
@@ -137,6 +140,8 @@ do
 		"-p" | "--port") shift && SRVPORT="$SRVPORT:${1}" ;;
 		"-t" | "--timeout") shift && TIMEOUT=$1 ;;
 		"-T" | "--tmpdir") shift && TMPDIR=$1 ;;
+		"-a" | "--notif-endpoint") shift && NOTIFendPOINT="-a $1 " ;;
+		"-x" | "--proxy") shift && export X509_USER_PROXY=$1 ;;
 		*) SRVPORT="$1" ;;
 	esac
 	shift
@@ -153,6 +158,8 @@ watchpid=$!
 trap 'exit 3' INT
 
 fi
+
+vprintf 3 "[LB Probe] Global variable values as received from cmdline:\n[LB Probe] VERBLEVEL=$VERBLEVEL\n[LB Probe] TIMEOUT=$TIMEOUT\n[LB Probe] TMPDIR=$TMPDIR\n[LB Probe] NOTIFendPOINT=$NOTIFendPOINT\n[LB Probe] SRVPORT=$SRVPORT\n"
 
 #Set path to L&B example commands used by the probe
 for exdir in /usr/lib64/glite-lb/examples /usr/lib/glite-lb/examples /opt/glite/examples
@@ -332,7 +339,7 @@ else
 			CLRNOTIFIED=0;
 			while [ $CLRNOTIFIED -eq 0 -a $TOREPS -gt 0 ]
 			do
-				glite-lb-notify receive -i 5 ${notifid} >> $NOTIFFILE 2> /dev/null 
+				glite-lb-notify receive ${NOTIFendPOINT}-i 5 ${notifid} >> $NOTIFFILE 2> /dev/null 
 
 				CLRNOTIFIED=`cat $NOTIFFILE | grep -E "$jobid.*Cleared" | wc -l` > /dev/null
 				TOREPS=$(( $TOREPS - 1 ))
