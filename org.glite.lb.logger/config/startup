@@ -122,6 +122,7 @@ start()
 	if [ -n "$LOG4C_RCPATH" ]; then env="$env LOG4C_RCPATH='$LOG4C_RCPATH'"; fi
 	if [ -n "$KRB5_KTNAME" ]; then env="$env KRB5_KTNAME='$KRB5_KTNAME'"; fi
 	if [ -n "$KRB5CCNAME" ]; then env="$env KRB5CCNAME='$KRB5CCNAME'"; fi
+	if [ -n "$GLITE_GSS_MECH" ]; then env="$env GLITE_GSS_MECH='$GLITE_GSS_MECH'"; fi
 
 	if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ]; then
 		env="$env X509_USER_CERT=$GLITE_HOST_CERT X509_USER_KEY=$GLITE_HOST_KEY"
