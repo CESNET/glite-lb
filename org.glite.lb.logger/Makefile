@@ -21,7 +21,7 @@ CC=gcc
 VPATH:=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc
 
 SOURCES=\
-	config/startup config/glite-lb-logger.* config/systemd.* \
+	config/startup config/startup.* config/glite-lb-logger.* config/systemd.* \
 	doc/*.8 \
 	interface/*.h \
 	project/.post* project/.pre* \
@@ -29,7 +29,7 @@ SOURCES=\
 	src-nt/*.cpp src-nt/*.H src-nt/Makefile src-nt/test/*.cpp \
 	test/*.c test/*.cpp test/*.h \
 	Makefile
-SOURCES_EXEC=config/startup src/*.sh
+SOURCES_EXEC=config/startup config/startup.* src/*.sh
 
 VERSION=-DVERSION=\"GLite-${version}\"
 
@@ -152,17 +152,23 @@ INTERLOG_TEST_OBJS:= \
 MAN_GZ:=glite-lb-interlogd.8.gz glite-lb-logd.8.gz
 MAN = $(MAN_GZ:.gz=)
 
-all compile: startup $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
+SCRIPTS:=startup
+SCRIPTS_SRC=$(addprefix ${top_srcdir}/config/,${SCRIPTS})
 
-startup: ${top_srcdir}/config/startup
+all compile: ${SCRIPTS} $(LOGD) $(INTERLOGD) $(NOTIF_INTERLOGD) ${MAN_GZ}
+
+${SCRIPTS}: ${SCRIPTS_SRC}
 	glite_var="${localstatedir}/glite"; \
 	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
 		glite_var="${localstatedir}"; \
 	fi; \
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' $< > $@
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' ${top_srcdir}/config/$@ > $@
 ifneq ($(os_type),debian)
 	sed -i 's/# \(Default-Start\|Default-Stop\):.*/# \1:/' $@
 endif
+	sed "s/^@$(os_type)@//" $@ > $@.tmp
+	grep -v '^@' $@.tmp > $@
+	rm $@.tmp
 	chmod +x $@
 
 glite-lb-logd: ${LOGD_OBJS}
@@ -280,7 +286,7 @@ il_test.o IlTestBase.o server_msgTest.o event_queueTest.o input_queue_socketTest
 	${CXX} ${CFLAGS} ${CPPUNIT_CFLAGS} -c $< -o $@
 
 clean:
-	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ} startup
+	rm -rvf .libs/ *.o *.lo *.no ${LOGD} ${INTERLOGD} ${NOTIF_INTERLOGD} ${MAN_GZ} ${SCRIPTS}
 	rm -rvf check.ll check.il
 	rm -rvf dist ${package}-*.tar.gz
 

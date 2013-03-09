@@ -157,18 +157,23 @@ function config_glite_lb() {
 
   # with YAIM let's use only the /etc/init.d/gLite startup
   if egrep -i "Debian|Ubuntu" /etc/issue >/dev/null; then
-    update-rc.d glite-lb-bkserverd disable
-    update-rc.d glite-lb-locallogger disable
-    update-rc.d glite-lb-harvester disable
+    for i in bkserverd harvester locallogger logd interlogd notif-interlogd proxy-interlogd; do
+      update-rc.d glite-lb-$i disable >/dev/null 2>&1
+    done
   else
-    /sbin/chkconfig glite-lb-bkserverd off
-    /sbin/chkconfig glite-lb-locallogger off
-    /sbin/chkconfig glite-lb-harvester off
+    for i in bkserverd harvester locallogger logd interlogd notif-interlogd proxy-interlogd; do
+      /sbin/chkconfig glite-lb-$i off >/dev/null 2>&1
+    done
   fi
   grep -v 'glite-lb-' @glite_etc@/gLiteservices 2>/dev/null > /tmp/gLiteservices
   mv /tmp/gLiteservices @glite_etc@/gLiteservices
   echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-bkserverd" >> @glite_etc@/gLiteservices
-  echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-locallogger" >> @glite_etc@/gLiteservices
+  echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-logd" >> @glite_etc@/gLiteservices
+  echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-interlogd" >> @glite_etc@/gLiteservices
+  echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-notif-interlogd" >> @glite_etc@/gLiteservices
+  if [ x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both" ]; then
+    echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-proxy-interlogd" >> @glite_etc@/gLiteservices
+  fi
   if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
     echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-harvester" >> @glite_etc@/gLiteservices
   fi

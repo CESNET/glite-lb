@@ -28,7 +28,7 @@ build-stamp: configure-stamp
 clean: configure-stamp
 	dh_testdir
 	dh_testroot
-	rm -f configure-stamp build-stamp
+	rm -f configure-stamp build-stamp debian/glite-lb-bkserverd.init
 	$(MAKE) clean
 	rm -f Makefile.inc config.status *.spec
 	dh_clean
@@ -46,6 +46,8 @@ install: build-stamp
 	mv debian/tmp/usr/share/doc/glite-lb-server-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
+	rm debian/tmp/etc/init.d/glite-lb-bkserverd
+	cp -p config/startup.debian.bkserverd debian/glite-lb-bkserverd.init
 
 binary-indep:
 
@@ -57,7 +59,7 @@ binary-arch: install
 	dh_installexamples
 	dh_installman
 	dh_installlogrotate
-	dh_installinit --onlyscripts --no-start
+	dh_installinit --name=glite-lb-bkserverd
 	dh_installcron
 	dh_install --fail-missing
 	dh_link

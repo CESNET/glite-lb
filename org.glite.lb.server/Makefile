@@ -27,14 +27,14 @@ default: all
 version=${module.version}
 
 SOURCES=\
-	config/glite-lb* config/my.cnf config/*.conf config/startup config/setup config/systemd.* \
+	config/glite-lb* config/my.cnf config/*.conf config/startup config/startup.* config/setup config/systemd.* \
 	doc/*.1 doc/*.8 \
 	interface/*.h \
 	src/*.c src/*.cpp src/*.h src/*.c.T src/*.l src/*.y src/*.sh src/*.sh.in src/ws_typemap.dat \
 	project/.post* project/.pre* \
 	test/*.cpp test/*.cpp.T test/*.sh test/oneJob.qry test/*.c \
 	Makefile
-SOURCES_EXEC=config/glite-lb-migrate* config/startup config/setup src/*.sh test/*.sh
+SOURCES_EXEC=config/glite-lb-migrate* config/startup config/startup.* config/setup src/*.sh test/*.sh
 
 all: compile
 

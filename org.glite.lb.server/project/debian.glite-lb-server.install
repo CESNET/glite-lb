@@ -1,7 +1,6 @@
 etc/cron.d/*
 etc/default/*
 etc/glite-lb/*
-etc/init.d/*
 etc/logrotate.d/*
 etc/mysql/conf.d/*
 usr/bin/*

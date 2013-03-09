@@ -86,9 +86,9 @@ cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-server.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %else
-sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-bkserverd
-mkdir $RPM_BUILD_ROOT/etc/rc.d
-mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
+rm -rf $RPM_BUILD_ROOT/etc/init.d
+mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
+install -m 0755 config/startup.redhat.bkserverd $RPM_BUILD_ROOT/etc/rc.d/init.d/glite-lb-bkserverd
 %endif
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;

@@ -18,13 +18,13 @@ CC=gcc
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
 SOURCES=\
-	config/systemd.* config/startup \
+	config/systemd.* config/startup config/startup.* \
 	doc/* \
 	examples/test.* \
 	project/.post* project/.pre* \
 	src/*.c \
 	Makefile
-SOURCES_EXEC=config/startup examples/*.sh
+SOURCES_EXEC=config/startup config/startup.* examples/*.sh
 
 GLITE_LBJP_COMMON_GSS_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gss --cflags`
 CPPFLAGS:=-I${stagedir}${prefix}/include -D_GNU_SOURCE -D_REENTRANT ${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CPPFLAGS}

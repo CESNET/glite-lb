@@ -13,6 +13,7 @@ Environment=X509_USER_CERT=/var/lib/glite/.certs/hostcert.pem
 Environment=X509_USER_KEY=/var/lib/glite/.certs/hostkey.pem
 EnvironmentFile=-/etc/profile.d/grid-env.sh
 EnvironmentFile=-/etc/sysconfig/glite-lb
+EnvironmentFile=-/etc/sysconfig/glite-lb-notif-interlogd
 PIDFile=/var/run/glite/glite-lb-notif-interlogd.pid
 ExecStart=/usr/bin/glite-lb-notif-interlogd -M 10485760 $GLITE_LB_NOTIF_IL_OPTIONS
 

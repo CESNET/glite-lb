@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+#	/etc/rc.d/init.d/glite-lb-logd
+#
+#	gLite Logging and Bookkeeping local logger
+#
+# chkconfig: - 76 24
+# description: gLite L&B local logger deamon receives events and stores \
+#              them locally to be send by interlogger.
+# processname: glite-lb-logd
+# pidfile: /var/run/glite/glite-lb-logd.pid
+
+### BEGIN INIT INFO
+# Provides: glite-lb-logd
+# Required-Start: $remote_fs $network $syslog
+# Required-Stop: $remote_fs $network $syslog
+# Short-Description: gLite Logging and Bookkeeping local logger
+# Description:       gLite L&B local logger deamon receives events and stores
+#                    them locally to be send by interlogger.
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+prog=glite-lb-logd
+exec=/usr/bin/$prog
+lockfile=/var/lock/subsys/$prog
+
+GLITE_USER='glite'
+GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+GLITE_HOST_CERT="$GLITE_HOME/.certs/hostcert.pem"
+GLITE_HOST_KEY="$GLITE_HOME/.certs/hostkey.pem"
+KRB5_KTNAME="FILE:$GLITE_HOME/krb5kt_lb"
+KRB5CCNAME="FILE:$GLITE_HOME/krb5cc_lb"
+LOG4C_RCPATH="/etc/glite-lb"
+
+[ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
+[ -f /etc/glite.conf ] && . /etc/glite.conf
+[ -f /etc/glite-wms.conf ] && . /etc/glite-wms.conf
+[ -f /etc/sysconfig/glite-lb ] && . /etc/sysconfig/glite-lb
+[ -f /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
+
+start() {
+	[ -x $exec ] || exit 5
+
+	[ -n "$LOG4C_RCPATH" ] && env="$env LOG4C_RCPATH='$LOG4C_RCPATH'"
+	[ -n "$KRB5_KTNAME" ] && env="$env KRB5_KTNAME='$KRB5_KTNAME'"
+	[ -n "$KRB5CCNAME" ] && env="$env KRB5CCNAME='$KRB5CCNAME'"
+	[ -n "$GLITE_GSS_MECH" ] && env="$env GLITE_GSS_MECH='$GLITE_GSS_MECH'"
+
+	if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ]; then
+		env="$env X509_USER_CERT=$GLITE_HOST_CERT X509_USER_KEY=$GLITE_HOST_KEY"
+		creds=1
+	else
+		echo "$0: WARNING: No credentials specified." >&2
+	fi
+
+	echo -n "Starting $prog: "
+	daemon --user $GLITE_USER $env $exec $GLITE_LB_LOGD_OPTIONS
+	retval=$?
+	echo
+	[ $retval -eq 0 ] && touch $lockfile
+	return $retval
+}
+
+stop() {
+	echo -n "Shutting down $prog: "
+	killproc $prog
+	retval=$?
+	echo
+	[ $retval -eq 0 ] && rm -f $lockfile
+	return $retval
+}
+
+case "$1" in
+    start)
+	status $prog >/dev/null 2>&1 && exit 0
+	start
+	;;
+    stop)
+	status $prog >/dev/null 2>&1 || exit 0
+	stop
+	;;
+    status)
+	status $prog
+	;;
+    restart|reload|force-reload)
+	stop
+	start
+	;;
+    condrestart|try-restart)
+	status $prog >/dev/null 2>&1 || exit 0
+	stop
+	start
+	;;
+    *)
+	echo "Usage: <servicename> {start|stop|status|reload|restart|condrestart|try-restart|force-reload}"
+	exit 2
+	;;
+esac
+exit $?

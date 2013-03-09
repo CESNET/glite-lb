@@ -28,7 +28,7 @@ build-stamp: configure-stamp
 clean: configure-stamp
 	dh_testdir
 	dh_testroot
-	rm -f configure-stamp build-stamp
+	rm -f configure-stamp build-stamp debian/glite-lb-harvester.init
 	$(MAKE) clean
 	rm -f Makefile.inc config.status *.spec
 	dh_clean
@@ -43,6 +43,8 @@ install: build-stamp
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
 	mv debian/tmp/usr/share/doc/glite-lb-harvester-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
+	rm -rf debian/tmp/etc/init.d
+	cp -p config/startup.debian.harvester debian/glite-lb-harvester.init
 
 binary-indep:
 
@@ -54,7 +56,7 @@ binary-arch: install
 	dh_installexamples
 	dh_installman
 	dh_installlogrotate
-	dh_installinit --onlyscripts --no-start
+	dh_installinit
 	dh_installcron
 	dh_install --fail-missing
 	dh_link

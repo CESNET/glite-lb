@@ -1,0 +1,140 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          glite-lb-bkserverd
+# Required-Start:    $remote_fs $network $syslog mysql
+# Required-Stop:     $remote_fs $network $syslog mysql
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: gLite Logging and Bookkeeping server
+# Description:       Primary purpose of gLite L&B server is tracking jobs as
+#                    they are processed by individual grid components.
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="L&B server"
+NAME=glite-lb-bkserverd
+DAEMON=/usr/bin/$NAME
+PIDFILE=/var/run/glite/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+RUN_SERVER=yes
+
+GLITE_USER='glite'
+GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+GLITE_HOST_CERT="$GLITE_HOME/.certs/hostcert.pem"
+GLITE_HOST_KEY="$GLITE_HOME/.certs/hostkey.pem"
+KRB5_KTNAME="FILE:$GLITE_HOME/krb5kt_lb"
+KRB5CCNAME="FILE:$GLITE_HOME/krb5cc_lb"
+LOG4C_RCPATH="/etc/glite-lb"
+
+[ -x "$DAEMON" ] || exit 0
+
+[ -r /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
+[ -r /etc/glite.conf ] && . /etc/glite.conf
+[ -r /etc/glite-wms.conf ] && . /etc/glite-wms.conf
+[ -r /etc/default/glite-lb ] && . /etc/default/glite-lb
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+. /lib/init/vars.sh
+. /lib/lsb/init-functions
+
+if [ "x$RUN_SERVER" != "xyes" ]; then
+	echo "$DESC disabled."
+	echo "For automatic configuration, please run glite-lb-setup script."
+	echo "When configuring L&B manually, please also set RUN_SERVER to 'yes' in"
+	echo "/etc/default/glite-lb."
+	exit 0
+fi
+
+do_start()
+{
+	[ -n "$LOG4C_RCPATH" ] && env="$env LOG4C_RCPATH='$LOG4C_RCPATH'"
+	[ -n "$KRB5_KTNAME" ] && env="$env KRB5_KTNAME='$KRB5_KTNAME'"
+	[ -n "$KRB5CCNAME" ] && env="$env KRB5CCNAME='$KRB5CCNAME'"
+	[ -n "$GLITE_GSS_MECH" ] && env="$env GLITE_GSS_MECH='$GLITE_GSS_MECH'"
+
+	if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ]; then
+		env="$env X509_USER_CERT=$GLITE_HOST_CERT X509_USER_KEY=$GLITE_HOST_KEY"
+		creds=1
+	else
+		echo "$0: WARNING: No credentials specified." >&2
+	fi
+
+	args="--dump-prefix=$GLITE_HOME/dump --purge-prefix=$GLITE_HOME/purge"
+	[ -f /etc/glite-lb/glite-lb-authz.conf ] && args="$args --policy /etc/glite-lb/glite-lb-authz.conf"
+	case "$GLITE_LB_TYPE" in
+	proxy)
+		args="$args -P"
+		;;
+	both)
+		args="$args -B"
+		;;
+	*)
+		;;
+	esac
+	rm -f /tmp/lb_proxy_serve.sock /tmp/lb_proxy_store.sock
+
+	start-stop-daemon --start --quiet --pidfile $PIDFILE \
+		--chuid $GLITE_USER --exec $DAEMON --test > /dev/null \
+		|| return 1
+	start-stop-daemon --start --quiet --pidfile $PIDFILE \
+		--chuid $GLITE_USER --exec /usr/bin/env $env $DAEMON -- \
+		$args $GLITE_LB_SERVER_OPTIONS \
+		|| return 2
+}
+
+do_stop()
+{
+	start-stop-daemon --stop --quiet --retry=TERM/10/KILL/5 --pidfile $PIDFILE --exec $DAEMON
+	RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
+	start-stop-daemon --stop --quiet --oknodo --retry=0/10/KILL/5 --exec $DAEMON
+	[ "$?" = 2 ] && return 2
+	rm -f $PIDFILE
+	return "$RETVAL"
+}
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  status)
+	status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+	;;
+  restart|force-reload)
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		case "$?" in
+			0) log_end_msg 0 ;;
+			1) log_end_msg 1 ;; # Old process is still running
+			*) log_end_msg 1 ;; # Failed to start
+		esac
+		;;
+	  *)
+		# Failed to stop
+		log_end_msg 1
+		;;
+	esac
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+:

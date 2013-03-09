@@ -1,4 +1,3 @@
-etc/init.d/glite-lb-harvester
 usr/bin/*
 usr/lib/glite-lb/examples/*
 usr/share/glite/*

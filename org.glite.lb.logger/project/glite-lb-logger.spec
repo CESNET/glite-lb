@@ -69,9 +69,11 @@ cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-logger.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %else
-sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-locallogger
 mkdir $RPM_BUILD_ROOT/etc/rc.d
 mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
+for i in logd interlogd notif-interlogd proxy-interlogd; do
+	install -m 0755 config/startup.redhat.$i $RPM_BUILD_ROOT/etc/rc.d/init.d/glite-lb-$i
+done
 %endif
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite
@@ -106,9 +108,15 @@ if [ $1 -eq 1 ] ; then
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
 %else
-/sbin/chkconfig --add glite-lb-locallogger
+/sbin/chkconfig --add glite-lb-logd
+/sbin/chkconfig --add glite-lb-interlogd
+/sbin/chkconfig --add glite-lb-notif-interlogd
+/sbin/chkconfig --add glite-lb-proxy-interlogd
 if [ $1 -eq 1 ] ; then
-	/sbin/chkconfig glite-lb-locallogger off
+	/sbin/chkconfig glite-lb-logd off
+	/sbin/chkconfig glite-lb-interlogd off
+	/sbin/chkconfig glite-lb-notif-interlogd off
+	/sbin/chkconfig glite-lb-proxy-interlogd off
 fi
 %endif
 
@@ -132,8 +140,14 @@ if [ $1 -eq 0 ] ; then
 fi
 %else
 if [ $1 -eq 0 ] ; then
-    /sbin/service glite-lb-locallogger stop >/dev/null 2>&1
-    /sbin/chkconfig --del glite-lb-locallogger
+    /sbin/service glite-lb-logd stop >/dev/null 2>&1
+    /sbin/service glite-lb-interlogd stop >/dev/null 2>&1
+    /sbin/service glite-lb-notif-interlogd stop >/dev/null 2>&1
+    /sbin/service glite-lb-proxy-interlogd stop >/dev/null 2>&1
+    /sbin/chkconfig --del glite-lb-logd
+    /sbin/chkconfig --del glite-lb-interlogd
+    /sbin/chkconfig --del glite-lb-notif-interlogd
+    /sbin/chkconfig --del glite-lb-proxy-interlogd
 fi
 %endif
 
@@ -154,7 +168,13 @@ if [ $1 -ge 1 ] ; then
 fi
 %else
 if [ "$1" -ge "1" ] ; then
-    /sbin/service glite-lb-locallogger condrestart >/dev/null 2>&1 || :
+    /sbin/service glite-lb-logd condrestart >/dev/null 2>&1 || :
+    /sbin/service glite-lb-interlogd condrestart >/dev/null 2>&1 || :
+    /sbin/service glite-lb-notif-interlogd condrestart >/dev/null 2>&1 || :
+    /sbin/service glite-lb-proxy-interlogd condrestart >/dev/null 2>&1 || :
+
+    # upgrade from lb.logger <= 2.4.15 (L&B <= 4.0.4)
+    /sbin/chkconfig --del glite-lb-locallogger
 fi
 %endif
 
@@ -183,6 +203,10 @@ fi
 %{_unitdir}//glite-lb-proxy-interlogd.service
 %else
 %{_initrddir}/glite-lb-locallogger
+%{_initrddir}/glite-lb-logd
+%{_initrddir}/glite-lb-interlogd
+%{_initrddir}/glite-lb-notif-interlogd
+%{_initrddir}/glite-lb-proxy-interlogd
 %endif
 %{_bindir}/glite-lb-interlogd
 %{_bindir}/glite-lb-logd

@@ -29,7 +29,7 @@ build-stamp: configure-stamp
 clean: configure-stamp
 	dh_testdir
 	dh_testroot
-	rm -f configure-stamp build-stamp
+	rm -f configure-stamp build-stamp debian/*.init
 	$(MAKE) clean
 	rm -f Makefile.inc config.status *.spec
 	dh_clean
@@ -45,6 +45,10 @@ install: build-stamp
 	mkdir -p debian/$(p_dev)/usr/share/doc
 	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
 	ln -s $(p_base) debian/$(p_dev)/usr/share/doc/$(p_dev)
+	cp -p config/startup.debian.logd debian/glite-lb-logd.init
+	cp -p config/startup.debian.interlogd debian/glite-lb-interlogd.init
+	cp -p config/startup.debian.notif-interlogd debian/glite-lb-notif-interlogd.init
+	cp -p config/startup.debian.proxy-interlogd debian/glite-lb-proxy-interlogd.init
 
 binary-indep:
 
@@ -56,7 +60,11 @@ binary-arch: install
 	dh_installexamples
 	dh_installman
 	dh_installlogrotate
-	dh_installinit --onlyscripts --no-start --name=glite-lb-locallogger
+	dh_installinit --onlyscripts --no-start -p$(p_base) --name=glite-lb-locallogger
+	dh_installinit --name=glite-lb-logd
+	dh_installinit --name=glite-lb-interlogd
+	dh_installinit --name=glite-lb-notif-interlogd
+	dh_installinit --name=glite-lb-proxy-interlogd
 	dh_installcron
 	dh_install --fail-missing
 	dh_link

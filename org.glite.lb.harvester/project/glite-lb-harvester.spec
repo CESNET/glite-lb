@@ -61,9 +61,9 @@ cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-harvester.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %else
-sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/init.d/glite-lb-harvester
-mkdir $RPM_BUILD_ROOT/etc/rc.d
-mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
+rm -rf $RPM_BUILD_ROOT/etc/init.d
+mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
+install -m 0755 config/startup.redhat.harvester $RPM_BUILD_ROOT/etc/rc.d/init.d/glite-lb-harvester
 %endif
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite

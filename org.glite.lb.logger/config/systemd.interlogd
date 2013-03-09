@@ -13,8 +13,9 @@ Environment=X509_USER_CERT=/var/lib/glite/.certs/hostcert.pem
 Environment=X509_USER_KEY=/var/lib/glite/.certs/hostkey.pem
 EnvironmentFile=-/etc/profile.d/grid-env.sh
 EnvironmentFile=-/etc/sysconfig/glite-lb
+EnvironmentFile=-/etc/sysconfig/glite-lb-interlogd
 PIDFile=/var/run/glite/glite-lb-interlogd.pid
-ExecStart=/usr/bin/glite-lb-interlogd $GLITE_LB_INTERLOGD_OPTIONS
+ExecStart=/usr/bin/glite-lb-interlogd $GLITE_LB_IL_OPTIONS
 
 [Install]
 WantedBy=multi-user.target

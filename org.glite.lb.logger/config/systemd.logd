@@ -14,6 +14,7 @@ Environment=X509_USER_CERT=/var/lib/glite/.certs/hostcert.pem
 Environment=X509_USER_KEY=/var/lib/glite/.certs/hostkey.pem
 EnvironmentFile=-/etc/profile.d/grid-env.sh
 EnvironmentFile=-/etc/sysconfig/glite-lb
+EnvironmentFile=-/etc/sysconfig/glite-lb-logd
 PIDFile=/var/run/glite/glite-lb-logd.pid
 ExecStart=/usr/bin/glite-lb-logd $GLITE_LB_LOGD_OPTIONS
 

@@ -82,10 +82,23 @@ GLITE_LB_RTM_DN='/C=UK/O=eScience/OU=Imperial/L=Physics/CN=heppc24.hep.ph.ic.ac.
 #
 
 # bkserver additional options
-#GLITE_LB_SERVER_OTHER_OPTIONS='--greyjobs --html-header @glite_etc@/glite-lb/html-header.html --gridmap-file @glite_etc@/glite-lb/gridmap'
+#GLITE_LB_SERVER_OPTIONS='--greyjobs --html-header @glite_etc@/glite-lb/html-header.html --gridmap-file @glite_etc@/glite-lb/gridmap'
+# locallogger additional options
+#GLITE_LB_LOGD_OPTIONS=
+# interlogger additional options
+#GLITE_LB_IL_OPTIONS=
 # notification interlogger additional options
-#GLITE_LB_NOTIF_IL_OTHER_OPTIONS=
+#GLITE_LB_NOTIF_IL_OPTIONS=
 # proxy interlogger additional options
-#GLITE_LB_PROXY_IL_OTHER_OPTIONS=
+#GLITE_LB_PROXY_IL_OPTIONS=
 # harvester additional options
-#GLITE_LB_HARVESTER_OTHER_OPTIONS=
+#GLITE_LB_HARVESTER_OPTIONS=
+
+@debian@#
+@debian@# change to 'yes' to enable the individual deamons
+@debian@#
+@debian@RUN_SERVER=no
+@debian@RUN_IL=no
+@debian@RUN_PROXY_IL=no
+@debian@RUN_NOTIF_IL=no
+@debian@RUN_LOGD=no
